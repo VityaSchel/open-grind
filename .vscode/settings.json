@@ -1,3 +1,27 @@
 {
-  "svelte.enable-ts-plugin": true
+	"editor.tabCompletion": "on",
+	"eslint.validate": ["javascript", "typescript"],
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[svelte]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[rust]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"editor.indentSize": "tabSize",
+	"editor.detectIndentation": false,
+	"svelte.enable-ts-plugin": true,
+	"json.schemaDownload.trustedDomains": {
+		"https://schema.tauri.app/config/2": true
+	}
 }
