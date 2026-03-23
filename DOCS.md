@@ -30,8 +30,10 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Get shared media in conversation](#get-shared-media-in-conversation)
 			- [AI chat suggestions](#ai-chat-suggestions)
 		- [Saved phrases](#saved-phrases)
+			- [Saved phrase](#saved-phrase)
 			- [Get saved phrases](#get-saved-phrases)
 			- [Add a saved phrase](#add-a-saved-phrase)
+			- [Add a saved phrase (legacy)](#add-a-saved-phrase-legacy)
 			- [Delete a saved phrase](#delete-a-saved-phrase)
 			- [Track phrase usage frequency](#track-phrase-usage-frequency)
 		- [Messages](#messages)
@@ -70,8 +72,27 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Translate a message](#translate-a-message)
 			- [OCR recognition in chat](#ocr-recognition-in-chat)
 			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
-	- [Geohash](#geohash)
-	- [Position ID](#position-id)
+	- [Profiles](#profiles)
+		- [Profile](#profile)
+		- [Geohash](#geohash)
+		- [ViewSourceEnum](#viewsourceenum)
+		- [Get profile by ID](#get-profile-by-id)
+		- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
+		- [Update own profile (full)](#update-own-profile-full)
+		- [Update own profile (partial)](#update-own-profile-partial)
+		- [Delete own profile](#delete-own-profile)
+		- [Delete profile photos](#delete-profile-photos)
+		- [Check if profiles are reachable](#check-if-profiles-are-reachable)
+		- [Add favorite](#add-favorite)
+		- [Remove favorite](#remove-favorite)
+		- [Update location](#update-location)
+		- [Record profile views (batch)](#record-profile-views-batch)
+		- [Record single profile view](#record-single-profile-view)
+		- [Record profile view v2](#record-profile-view-v2)
+		- [Search places by name](#search-places-by-name)
+		- [Position ID](#position-id)
+	- [Right Now](#right-now)
+		- [RightNowStatusEnum](#rightnowstatusenum)
 
 ## Getting started
 
@@ -324,6 +345,8 @@ WIP
 POST /v4/chat/conversation/{conversationId}/pin
 ```
 
+No body.
+
 #### Unpin conversation
 
 WIP
@@ -331,6 +354,8 @@ WIP
 ```
 POST /v4/chat/conversation/{conversationId}/unpin
 ```
+
+No body.
 
 #### Mark messages as read up to messageId
 
@@ -340,6 +365,8 @@ WIP
 POST /v4/chat/conversation/{conversationId}/read/{messageId}
 ```
 
+No body.
+
 #### Mute conversation
 
 WIP
@@ -348,6 +375,8 @@ WIP
 POST /v1/push/conversation/{conversationId}/mute
 ```
 
+No body.
+
 #### Unmute conversation
 
 WIP
@@ -355,6 +384,8 @@ WIP
 ```
 POST /v1/push/conversation/{conversationId}/unmute
 ```
+
+No body.
 
 #### Get shared media in conversation
 
@@ -374,27 +405,44 @@ GET /v1/chat/suggestions?conversationId=
 
 ### Saved phrases
 
-#### Get saved phrases
+#### Saved phrase
 
-WIP
+- `id` — string
+- `text` — string
+- `type` — string, e.g. `"user"`
+
+#### Get saved phrases
 
 ```
 GET /v1/chat/phrases
 ```
 
+Response:
+
+- `phrases` — array of [Saved phrases](#saved-phrase)
+
 #### Add a saved phrase
 
-WIP
 
 ```
 POST /v1/chat/phrases
 ```
 
-*Also `POST /v3/me/prefs/phrases`*
+Body:
+
+- `phrase` — [Saved phrase](#saved-phrase)
+
+#### Add a saved phrase (legacy)
+
+```
+POST /v3/me/prefs/phrases
+```
+
+Body:
+
+- `phrase` — string
 
 #### Delete a saved phrase
-
-WIP
 
 ```
 DELETE /v3/me/prefs/phrases/{id}
@@ -407,6 +455,8 @@ WIP
 ```
 POST /v4/phrases/frequency/{id}
 ```
+
+No body.
 
 ### Messages
 
@@ -659,6 +709,11 @@ WIP
 POST /v4/chat/message/unsend
 ```
 
+Body:
+
+- `conversationId` — string
+- `messageId` — string
+
 #### Delete a message
 
 WIP
@@ -675,6 +730,11 @@ WIP
 POST /v4/chatstatus/typing
 ```
 
+Body:
+
+- `conversationId` — string
+- `status` — string, e.g. `""`
+
 #### React to a message
 
 WIP
@@ -682,6 +742,12 @@ WIP
 ```
 POST /v4/chat/message/reaction
 ```
+
+Body:
+
+- `conversationId` — string
+- `messageId` — string
+- `reactionType` — integer
 
 ### Misc
 
@@ -692,6 +758,16 @@ WIP
 ```
 POST /v5/chat/translate
 ```
+
+Body:
+
+- `conversationId` — string
+- `messageId` — string
+- `targetLanguageCode` — string, e.g. `en`
+
+Response:
+
+- `translatedText` — string
 
 #### OCR recognition in chat
 
@@ -709,13 +785,237 @@ WIP
 POST /v1/wingman/feedback
 ```
 
-## Geohash
+Body:
 
-https://en.wikipedia.org/wiki/Geohash
+- `message_id` — string
+- `prompt_id` — string
+- `rating` — number, e.g. `1`
+- `text` — string, feedback text
+- `timestamp` — unix timestamp in milliseconds
+
+## Profiles
+
+### Profile
+
+- `profileId` — string with numeric id
+- `created` — unix timestamp in milliseconds
+- `lastUpdatedTime` — unix timestamp in milliseconds
+- `seen` — unix timestamp in milliseconds
+- `onlineUntil` — long number or `null`
+- `isFavorite` — boolean
+- `isNew` — boolean
+- `isRoaming` — boolean
+- `isVisiting` — boolean
+- `isBlockable` — boolean
+- `isInAList` — boolean
+- `lastChatTimestamp` — number
+- `lastViewed` — number or `null`
+- `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
+- `verifiedInstagramId` — string or `null`
+- `showUnlockReward` — boolean
+- `medias` — array of profile photos objects
+  - `mediaHash` — string
+  - `state` — integer or `null`
+  - `reason` — string or `null`
+  - `order` — integer or `null`
+  - `profileId` — string
+  - `isSelected` — boolean or `null`
+  - `takenOnGrindr` — boolean or `null`
+  - `createdAt` — long number or `null`
+  - `width` — integer or `null`
+  - `height` — integer or `null`
+- `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
+- `rightNowText` — string or `null`
+- `rightNowThumbnailUrl` — string or `null`
+- `rightNowFullImageUrl` — string or `null`
+- `rightNowPosted` — long number or `null`
+- `rightNowDistance` — long number or `null`
+- `rightNowMedias` — array of objects
+  - `mediaId` — long number or `null`
+  - `thumbnailUrl` — string
+  - `fullImageUrl` — string
+  - `contentType` — string
+  - `isNsfw` — boolean or `null`
+- `travelPlans` — array of objects
+  - `endDateUtc` — long or `null`
+  - `geohash` — string
+  - `id` — long number or `null`
+  - `locationName` — string
+  - `showOnProfile` — boolean or `null`
+  - `startDateUtc` — long number or `null`
+- `notes` — string, may be absent
+- `displayName` — string
+- `age` — number or `null`
+- `aboutMe` — string or `null`
+- `profileImageMediaHash` — string or `null`
+- `height` — number or `null`
+- `weight` — number or `null`
+- `showDistance` — boolean
+- `approximateDistance` — boolean
+- `showAge` — boolean
+- `showPosition` — boolean
+- `showTribes` — boolean
+- `distance` — number or `null`
+- `ethnicity` — number or `null`, wip
+- `bodyType` — number or `null`, wip
+- `sexualPosition` — [Position ID](#position-id) or `null`
+- `hivStatus` — number or `null`, wip
+- `lastTestedDate` — unix timestamp in milliseconds
+- `relationshipStatus` — number or `null`, wip
+- `lookingFor` — array of numbers, wip
+- `grindrTribes` — array of numbers, wip
+- `genders` — array of numbers, wip
+- `pronouns` — array of numbers, wip
+- `vaccines` — array of numbers, wip
+- `sexualHealth` — array of numbers, wip
+- `meetAt` — array of numbers, wip
+- `nsfw` — number or `null`
+- `profileTags` — array of strings
+- `identity` — Identity (wip) or `null`
+- `genderCategory` — number, wip
+- `pronounsCategory` — number, wip
+- `socialNetworks` — object
+  - `twitter` — object, may be absent
+    - `userId` — string or `null`
+  - `facebook` — object, may be absent
+    - `userId` — string or `null`
+  - `instagram` — object, may be absent
+    - `userId` — string or `null`
+- `boosting` — boolean
+
+### Geohash
+
+<https://en.wikipedia.org/wiki/Geohash>
+
+Example: `ezr`
+
+Geohash explorer: <https://geohash.softeng.co/>
+
+### ViewSourceEnum
+
+- `DISCOVER`
+- `FOR_YOU`
+- `UNKNOWN` (fallback)
+
+### Get profile by ID
+
+GET /v7/profiles/{id}
+
+Query:
+
+- `id` — profile ID
+
+### Get multiple profiles by ID
+
+POST /v3/profiles
+
+Body:
+
+- `targetProfileIds` — array of strings with numeric ids
+
+Response:
+
+- `profiles` — array of [Profile](#profile)
+
+### Update own profile (full)
+
+PUT /v3.1/me/profile
+
+Body:
+
+[Profile](#profile) object, fully replaces current version.
+
+### Update own profile (partial)
+
+PATCH /v4/me/profile
+
+Body:
+
+[Profile](#profile) object, only updates specified keys.
+
+### Delete own profile
+
+DELETE /v3/me/profile
+
+### Delete profile photos
+
+DELETE /v3/me/profile/images
+
+Body:
+
+- `media_hashes` — array of strings
+
+### Check if profiles are reachable
+
+POST /v4/profiles/reachable
+
+Body:
+
+- `profileIds` — array of strings with numeric ids
+
+Response:
+
+- `profileIds` — array of strings with numeric ids
+
+### Add favorite
+
+POST /v3/me/favorites/{id}
+
+### Remove favorite
+
+DELETE /v3/me/favorites/{id}
+
+### Update location
+
+PUT /v4/location
+
+Body: 
+
+- `geohash` — string, see [geohash](#geohash)
+
+### Record profile views (batch)
+
+POST /v4/views
+
+Body:
+
+- `viewedProfileIds` — array of strings with numeric ids
+- `foundVia` — unknown or `null`
+
+### Record single profile view
+
+POST /v4/views/{profileId}
+
+### Record profile view v2
+
+POST /v5/views/{profileId}
+
+Body:
+
+- `foundVia` — unknown or `null`
+- `source` — [ViewSourceEnum](#viewsourceenum)
+
+### Search places by name
+
+GET /v3/places/search
+
+Query:
+
+- `placeName` — string, e.g. `Paris`
+
+Response:
+
+- `places` — array of objects
+  - `name` — string
+  - `address` — string
+  - `lat` — number
+  - `lon` — number
+  - `placeId` — string with number
+  - `importance` — float
 
 WIP
 
-## Position ID
+### Position ID
 
 - 1 — "Top"
 - 2 — "Bottom"
@@ -723,3 +1023,11 @@ WIP
 - 4 — "Vers Bottom"
 - 5 — "Vers Top"
 - 6 — "Side"
+
+## Right Now
+
+### RightNowStatusEnum
+
+- `NOT_ACTIVE`
+- `HOSTING`
+- `NOT_HOSTING`
