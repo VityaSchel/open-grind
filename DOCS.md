@@ -14,15 +14,62 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [`L-Locale`](#l-locale)
 	- [API Authorization](#api-authorization)
 	- [Authentication](#authentication)
-	- [Session ID](#session-id)
-	- [List conversations](#list-conversations)
-	- [Conversation](#conversation)
-	- [List messages in conversation](#list-messages-in-conversation)
-	- [Get single message in conversation](#get-single-message-in-conversation)
-	- [Message](#message)
-	- [Message type](#message-type)
-	- [Message contents](#message-contents)
-	- [Send a message to conversation](#send-a-message-to-conversation)
+		- [Sign in](#sign-in)
+		- [Session ID](#session-id)
+	- [Messaging](#messaging)
+		- [Conversations](#conversations)
+			- [Conversation](#conversation)
+			- [List conversations](#list-conversations)
+			- [Refresh specific messages](#refresh-specific-messages)
+			- [Delete conversation](#delete-conversation)
+			- [Pin conversation](#pin-conversation)
+			- [Unpin conversation](#unpin-conversation)
+			- [Mark messages as read up to messageId](#mark-messages-as-read-up-to-messageid)
+			- [Mute conversation](#mute-conversation)
+			- [Unmute conversation](#unmute-conversation)
+			- [Get shared media in conversation](#get-shared-media-in-conversation)
+			- [AI chat suggestions](#ai-chat-suggestions)
+		- [Saved phrases](#saved-phrases)
+			- [Get saved phrases](#get-saved-phrases)
+			- [Add a saved phrase](#add-a-saved-phrase)
+			- [Delete a saved phrase](#delete-a-saved-phrase)
+			- [Track phrase usage frequency](#track-phrase-usage-frequency)
+		- [Messages](#messages)
+			- [Message](#message)
+			- [Message type](#message-type)
+			- [Message contents](#message-contents)
+				- [`"Album"`](#album)
+				- [`"ExpiringAlbum"`](#expiringalbum)
+				- [`"ExpiringAlbumV2"`](#expiringalbumv2)
+				- [`"AlbumContentReaction"`](#albumcontentreaction)
+				- [`"AlbumContentReply"`](#albumcontentreply)
+				- [`"Audio"`](#audio)
+				- [`"Video"`](#video)
+				- [`"PrivateVideo"`](#privatevideo)
+				- [`"NonExpiringVideo"`](#nonexpiringvideo)
+				- [`"Gaymoji"`](#gaymoji)
+				- [`"Generative"`](#generative)
+				- [`"Giphy"`](#giphy)
+				- [`"Image"`](#image)
+				- [`"ExpiringImage"`](#expiringimage)
+				- [`"Location"`](#location)
+				- [`"ProfileLink"`](#profilelink)
+				- [`"ProfilePhotoReply"`](#profilephotoreply)
+				- [`"Retract"`](#retract)
+				- [`"Text"`](#text)
+				- [`"Unknown"`](#unknown)
+				- [`"VideoCall"`](#videocall)
+			- [List messages in conversation](#list-messages-in-conversation)
+			- [Get a single message in conversation](#get-a-single-message-in-conversation)
+			- [Send a message to conversation](#send-a-message-to-conversation)
+			- [Unsend a message](#unsend-a-message)
+			- [Delete a message](#delete-a-message)
+			- [Send typing indicator](#send-typing-indicator)
+			- [React to a message](#react-to-a-message)
+		- [Misc](#misc)
+			- [Translate a message](#translate-a-message)
+			- [OCR recognition in chat](#ocr-recognition-in-chat)
+			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
 	- [Geohash](#geohash)
 	- [Position ID](#position-id)
 
@@ -97,6 +144,8 @@ Session ID is a JWT, see [Session ID](#session-id).
 
 ## Authentication
 
+### Sign in
+
 Make sure you're passing all [Security headers](#security-headers) or you might stumble upon `{"code":28,"message":"ACCOUNT_BANNED","profileId":null,"type":1,"reason":null,"isBanAutomated":true,"thirdPartyUserIdToShow":null,"banSubReason":null}` — but don't fret — it's a fake error, your account isn't banned and API simply blocked your request, not account.
 
 ```
@@ -121,7 +170,7 @@ Response:
 - profileId — string with numbers, account's ID
 - sessionId — JWT token (see [Session ID](#session-id))
 
-## Session ID
+### Session ID
 
 JWT obtained from [authentication](#authentication) flow. Decoded JWT content:
 
@@ -170,7 +219,55 @@ Payload claims:
   - `restrictionReason` — unknown value, appears to be `null`
   - `grit` — unknown UUIDv4 string
 
-## List conversations
+## Messaging
+
+### Conversations
+
+#### Conversation
+
+- `type` — string, e.g. `"full_conversation_v1"`
+- `data` — nested object
+	- `conversationId` — string with numbers separated by `:`, e.g. `"12345678:23456789"`
+	- `name` — string, profile name, may be an empty string, e.g. `""`
+	- `participants` — array of objects
+		- `profileId` — integer
+		- `primaryMediaHash` — unknown, appears to be `null`
+		- `lastOnline` — unix timestamp in milliseconds
+		- `onlineUntil` — unix timestamp in milliseconds or `null`
+		- `distanceMetres` — float number or `null`
+		- `position` — [Position ID](#position-id) or `null`
+		- `isInAList` — boolean
+		- `hasDatingPotential` — boolean
+	- `lastActivityTimestamp` — unix timestamp in milliseconds
+	- `unreadCount` — integer
+	- `preview` — nested object
+		- `conversationId` — nested object
+    		- `value` — number in string, separated by `:`
+		- `messageId` — string, see [Message](#message) for format
+		- `chat1MessageId` — string with UUIDv4
+		- `senderId` — integer
+		- `type` — string, e.g. `"Text"`
+		- `chat1Type` — string, e.g. `"text"`
+		- `text` — string, message text
+		- `url` — unknown, appears to be `null`
+		- `lat` — unknown, appears to be `null`
+		- `lon` — unknown, appears to be `null`
+		- `albumId` — unknown, appears to be `null`
+		- `albumContentId` — unknown, appears to be `null`
+		- `albumContentReply` — unknown, appears to be `null`
+		- `duration` — unknown, appears to be `null`
+		- `imageHash` — unknown, appears to be `null`
+		- `photoContentReply` — unknown, appears to be `null`
+	- `muted` — boolean
+	- `pinned` — boolean
+	- `favorite` — boolean
+	- `context` — unknown, appears to be `null`
+	- `onlineUntil` — unknown, appears to be `null`
+	- `translatable` — boolean
+	- `rightNow` — string, e.g. `"NOT_ACTIVE"`
+	- `hasUnreadThrob` — boolean
+
+#### List conversations
 
 Requires [Authorization](#api-authorization).
 
@@ -203,87 +300,117 @@ Response:
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
 
-## Conversation
+#### Refresh specific messages
 
-
-- `type` — string, e.g. `"full_conversation_v1"`
-- `data` — nested object
-	- `conversationId` — string with numbers separated by `:`, e.g. `"12345678:23456789"`
-	- `name` — string, profile name, may be an empty string, e.g. `""`
-	- `participants` — array of objects
-		- `profileId` — integer
-		- `primaryMediaHash` — unknown, appears to be `null`
-		- `lastOnline` — unix timestamp in milliseconds
-		- `onlineUntil` — unix timestamp in milliseconds or `null`
-		- `distanceMetres` — float number or `null`
-		- `position` — [Position ID](#position-id) or `null`
-		- `isInAList` — boolean
-		- `hasDatingPotential` — boolean
-	- `lastActivityTimestamp` — unix timestamp in milliseconds
-	- `unreadCount` — integer
-	- `preview` — nested object
-		- `conversationId` — nested object
-    		- `value` — number in string, separated by `:`
-		- `messageId` — string, see [Message](#message) for format
-		- `chat1MessageId` — string with uuid
-		- `senderId` — integer
-		- `type` — string, e.g. `"Text"`
-		- `chat1Type` — string, e.g. `"text"`
-		- `text` — string, message text
-		- `url` — unknown, appears to be `null`
-		- `lat` — unknown, appears to be `null`
-		- `lon` — unknown, appears to be `null`
-		- `albumId` — unknown, appears to be `null`
-		- `albumContentId` — unknown, appears to be `null`
-		- `albumContentReply` — unknown, appears to be `null`
-		- `duration` — unknown, appears to be `null`
-		- `imageHash` — unknown, appears to be `null`
-		- `photoContentReply` — unknown, appears to be `null`
-	- `muted` — boolean
-	- `pinned` — boolean
-	- `favorite` — boolean
-	- `context` — unknown, appears to be `null`
-	- `onlineUntil` — unknown, appears to be `null`
-	- `translatable` — boolean
-	- `rightNow` — string, e.g. `"NOT_ACTIVE"`
-	- `hasUnreadThrob` — boolean
-
-## List messages in conversation
-
-Requires [Authorization](#api-authorization).
+WIP
 
 ```
-GET /v5/chat/conversation/{conversationId}/message
+POST /v4/chat/conversation/{conversationId}/message-by-id
 ```
 
-Query (optional):
+#### Delete conversation
 
-- `pageKey` — optional, unknown string
-- `profile` — optional, unknown boolean
-
-Response:
-
-- `lastReadTimestamp` — unix timestamp in milliseconds
-- `messages` — array of [Message](#message)
-- `metadata` — nested object
-  - `translate` — boolean
-  - `hasSharedAlbums` — boolean
-  - `isInAList` — boolean
-- `profile` — unknown value, appears to be null
-
-## Get single message in conversation
-
-Requires [Authorization](#api-authorization).
+WIP
 
 ```
-GET /v4/chat/conversation/{conversationId}/message/{messageId}
+DELETE /v4/chat/conversation/{conversationId}
 ```
 
-Response:
+#### Pin conversation
 
-- `message` — [Message](#message)
+WIP
 
-## Message
+```
+POST /v4/chat/conversation/{conversationId}/pin
+```
+
+#### Unpin conversation
+
+WIP
+
+```
+POST /v4/chat/conversation/{conversationId}/unpin
+```
+
+#### Mark messages as read up to messageId
+
+WIP
+
+```
+POST /v4/chat/conversation/{conversationId}/read/{messageId}
+```
+
+#### Mute conversation
+
+WIP
+
+```
+POST /v1/push/conversation/{conversationId}/mute
+```
+
+#### Unmute conversation
+
+WIP
+
+```
+POST /v1/push/conversation/{conversationId}/unmute
+```
+
+#### Get shared media in conversation
+
+WIP
+
+```
+GET /v5/chat/media/shared/images/with-me/{conversationId}
+```
+
+#### AI chat suggestions
+
+WIP
+
+```
+GET /v1/chat/suggestions?conversationId=
+```
+
+### Saved phrases
+
+#### Get saved phrases
+
+WIP
+
+```
+GET /v1/chat/phrases
+```
+
+#### Add a saved phrase
+
+WIP
+
+```
+POST /v1/chat/phrases
+```
+
+*Also `POST /v3/me/prefs/phrases`*
+
+#### Delete a saved phrase
+
+WIP
+
+```
+DELETE /v3/me/prefs/phrases/{id}
+```
+
+#### Track phrase usage frequency
+
+WIP
+
+```
+POST /v4/phrases/frequency/{id}
+```
+
+### Messages
+
+#### Message
 
 - `messageId` — string, appears to be a unix timestamp in milliseconds and UUIDv4 separated by `:`, e.g. `"1774296692000:843daee8-1e93-47d6-bc7f-3d981925a393"`
 - `conversationId` — string, see [Conversation](#conversation)
@@ -298,7 +425,7 @@ Response:
 - `chat1Type` — String, e.g. `"text"`
 - `replyPreview` — unknown or `null`
 
-## Message type
+#### Message type
 
 - `"Album"`
 - `"AlbumContentReaction"`
@@ -322,11 +449,187 @@ Response:
 - `"NonExpiringVideo"`
 - `"VideoCall"`
 
-## Message contents
+#### Message contents
+
+Payload in [`body`](#message) based on [message's `type`](#message-type)
+
+##### `"Album"`
+
+- `albumId` — number
+- `ownerProfileId` — number or `null`
+- `coverUrl` —  string or `null`
+- `previewUrl` —  string or `null`
+- `hasPhoto` — boolean
+- `hasVideo` — boolean
+- `isViewable` — boolean
+- `albumNumber` — integer or `null`
+- `totalAlbumsShared` — integer or `null`
+- `hasUnseenContent` — boolean
+- `expiresAt` — number or `null`
+- `viewableUntil` — number or `null`
+- `expirationType` —  string or `null`
+- 
+##### `"ExpiringAlbum"`
+
+WIP
+
+##### `"ExpiringAlbumV2"`
+
+WIP
+
+##### `"AlbumContentReaction"`
+
+WIP
+
+##### `"AlbumContentReply"`
+
+WIP
+
+##### `"Audio"`
+
+- `mediaId` — number
+- `url` — string
+- `fileCacheKey` — string
+- `mimeType` — string
+- `length` — number or null
+- `duration` — number or null
+- `expiresAt` — number
+
+##### `"Video"`
+
+- `mediaId` — number or `null`
+- `url` — string or `null`
+- `fileCacheKey` — string
+- `contentType` — string or `null`
+- `length` — number
+- `maxViews` — integer or `null`
+- `looping` — boolean or `null`
+
+Additionally, for expiring videos:
+
+- `viewsRemaining` —
+
+##### `"PrivateVideo"`
+
+All from [Video](#video), additionally:
+
+- `viewCount` — integer
+
+##### `"NonExpiringVideo"`
+
+Unknown, WIP
+
+##### `"Gaymoji"`
+
+- `imageHash` — string
+
+##### `"Generative"`
+
+Unknown, WIP
+
+##### `"Giphy"`
+
+- `id` — string
+- `urlPath` — string
+- `stillPath` — string
+- `previewPath` — string
+- `width` — integer
+- `height` — integer
+- `imageHash` — string
+
+##### `"Image"`
+
+- `mediaId` — number
+- `url` — string
+- `width` — integer or `null`
+- `height` — integer or `null`
+- `imageHash` — string
+- `duration` — number or `null`
+
+Additionally, only for regular images:
+
+- `mimeType` — string
+- `takenOnGrindr` — boolean or `null`
+- `createdAt` — number or `null`
+- `imageType` — string
+- `tapType` — integer or `null`
+
+##### `"ExpiringImage"`
+
+All from [image](#image), additionally:
+
+- `viewsRemaining` — number or `null`
+
+##### `"Location"`
+
+- `lat` — number
+- `lon` — number
+
+##### `"ProfileLink"`
+
+Unknown, WIP
+
+##### `"ProfilePhotoReply"`
+
+- `imageHash` — string
+- `photoContentReply` — string
+
+##### `"Retract"`
+
+- `targetMessageId` — string
+
+##### `"Text"`
+
+- `text` — string
+
+##### `"Unknown"`
+
+Empty type
+
+##### `"VideoCall"`
+
+Only for "status" messages:
+
+- `result` — string or `null`
+- `videoCallDuration` — number or `null`
 
 
+#### List messages in conversation
 
-## Send a message to conversation
+Requires [Authorization](#api-authorization).
+
+```
+GET /v5/chat/conversation/{conversationId}/message
+```
+
+Query (optional):
+
+- `pageKey` — optional, unknown string
+- `profile` — optional, unknown boolean
+
+Response:
+
+- `lastReadTimestamp` — unix timestamp in milliseconds
+- `messages` — array of [Message](#message)
+- `metadata` — nested object
+  - `translate` — boolean
+  - `hasSharedAlbums` — boolean
+  - `isInAList` — boolean
+- `profile` — unknown value, appears to be null
+
+#### Get a single message in conversation
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v4/chat/conversation/{conversationId}/message/{messageId}
+```
+
+Response:
+
+- `message` — [Message](#message)
+
+#### Send a message to conversation
 
 Please don't use this for spam. Be civil.
 
@@ -348,9 +651,67 @@ Body:
 
 Response:
 
+#### Unsend a message
 
+WIP
+
+```
+POST /v4/chat/message/unsend
+```
+
+#### Delete a message
+
+WIP
+
+```
+POST /v4/chat/message/delete
+```
+
+#### Send typing indicator
+
+WIP
+
+```
+POST /v4/chatstatus/typing
+```
+
+#### React to a message
+
+WIP
+
+```
+POST /v4/chat/message/reaction
+```
+
+### Misc
+
+#### Translate a message
+
+WIP
+
+```
+POST /v5/chat/translate
+```
+
+#### OCR recognition in chat
+
+WIP
+
+```
+POST /v5/recognition/chat
+```
+
+#### Rate an AI message suggestion
+
+WIP
+
+```
+POST /v1/wingman/feedback
+```
 
 ## Geohash
+
+https://en.wikipedia.org/wiki/Geohash
 
 WIP
 
