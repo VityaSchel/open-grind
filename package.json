@@ -8,7 +8,9 @@
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"dev": "vite dev",
+		"dev": "bun dev:desktop",
+		"dev:web": "vite dev",
+		"dev:desktop": "tauri dev",
 		"preview": "vite preview",
 		"tauri": "tauri"
 	},

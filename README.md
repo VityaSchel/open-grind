@@ -10,7 +10,7 @@ Download the latest version from [releases](https://git.hloth.dev/hloth/open-gri
 
 ## Development
 
-Interested in contributing to the project? Head to [CONTRIBUTING.md](./CONTRIBUTING.md) to get started.
+Interested in contributing to the project? Head to [CONTRIBUTING.md](./CONTRIBUTING.md) to get started. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 ## Problems, bugs, feature requests?
 

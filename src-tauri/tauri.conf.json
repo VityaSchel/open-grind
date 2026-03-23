@@ -4,7 +4,7 @@
 	"version": "0.1.0",
 	"identifier": "dev.hloth.open-grind",
 	"build": {
-		"beforeDevCommand": "bun run dev",
+		"beforeDevCommand": "bun run dev:web",
 		"devUrl": "http://localhost:1420",
 		"beforeBuildCommand": "bun run build",
 		"frontendDist": "../build"

@@ -9,4 +9,4 @@ To minimize effort and time spent on porting code across platform, the project i
 [src/](./src/) — frontend built with Svelte
 [src-tauri/](./src-tauri/) — backend built with Rust
 
-All PRs are welcome!
+PRs are welcome! All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
