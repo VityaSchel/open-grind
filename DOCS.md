@@ -90,7 +90,14 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Record single profile view](#record-single-profile-view)
 		- [Record profile view v2](#record-profile-view-v2)
 		- [Search places by name](#search-places-by-name)
-		- [Position ID](#position-id)
+		- [Managed fields](#managed-fields)
+			- [Pronouns](#pronouns)
+			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
+			- [Genders](#genders)
+			- [Profile tags](#profile-tags)
+			- [Position ID](#position-id)
+			- [Ethnicity](#ethnicity)
+			- [Relationship status](#relationship-status)
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
 
@@ -325,6 +332,8 @@ Response:
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v4/chat/conversation/{conversationId}/message-by-id
 ```
@@ -333,6 +342,8 @@ POST /v4/chat/conversation/{conversationId}/message-by-id
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 DELETE /v4/chat/conversation/{conversationId}
 ```
@@ -340,6 +351,8 @@ DELETE /v4/chat/conversation/{conversationId}
 #### Pin conversation
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v4/chat/conversation/{conversationId}/pin
@@ -351,6 +364,8 @@ No body.
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v4/chat/conversation/{conversationId}/unpin
 ```
@@ -360,6 +375,8 @@ No body.
 #### Mark messages as read up to messageId
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v4/chat/conversation/{conversationId}/read/{messageId}
@@ -371,6 +388,8 @@ No body.
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v1/push/conversation/{conversationId}/mute
 ```
@@ -380,6 +399,8 @@ No body.
 #### Unmute conversation
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v1/push/conversation/{conversationId}/unmute
@@ -391,6 +412,8 @@ No body.
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 GET /v5/chat/media/shared/images/with-me/{conversationId}
 ```
@@ -398,6 +421,8 @@ GET /v5/chat/media/shared/images/with-me/{conversationId}
 #### AI chat suggestions
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 GET /v1/chat/suggestions?conversationId=
@@ -413,6 +438,10 @@ GET /v1/chat/suggestions?conversationId=
 
 #### Get saved phrases
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
 ```
 GET /v1/chat/phrases
 ```
@@ -423,6 +452,9 @@ Response:
 
 #### Add a saved phrase
 
+WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v1/chat/phrases
@@ -434,6 +466,10 @@ Body:
 
 #### Add a saved phrase (legacy)
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v3/me/prefs/phrases
 ```
@@ -444,6 +480,10 @@ Body:
 
 #### Delete a saved phrase
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
 ```
 DELETE /v3/me/prefs/phrases/{id}
 ```
@@ -451,6 +491,8 @@ DELETE /v3/me/prefs/phrases/{id}
 #### Track phrase usage frequency
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v4/phrases/frequency/{id}
@@ -681,6 +723,8 @@ Response:
 
 #### Send a message to conversation
 
+WIP
+
 Please don't use this for spam. Be civil.
 
 Requires [Authorization](#api-authorization).
@@ -705,6 +749,8 @@ Response:
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v4/chat/message/unsend
 ```
@@ -718,6 +764,8 @@ Body:
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v4/chat/message/delete
 ```
@@ -725,6 +773,8 @@ POST /v4/chat/message/delete
 #### Send typing indicator
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v4/chatstatus/typing
@@ -738,6 +788,8 @@ Body:
 #### React to a message
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v4/chat/message/reaction
@@ -754,6 +806,8 @@ Body:
 #### Translate a message
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v5/chat/translate
@@ -773,6 +827,8 @@ Response:
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 POST /v5/recognition/chat
 ```
@@ -780,6 +836,8 @@ POST /v5/recognition/chat
 #### Rate an AI message suggestion
 
 WIP
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v1/wingman/feedback
@@ -798,21 +856,36 @@ Body:
 ### Profile
 
 - `profileId` — string with numeric id
-- `created` — unix timestamp in milliseconds
-- `lastUpdatedTime` — unix timestamp in milliseconds
-- `seen` — unix timestamp in milliseconds
+- `displayName` — string or `null`
+- `aboutMe` — string or `null`
+- `age` — number or `null`
+- `showAge` — boolean
+- `ethnicity` — integer or `null`, see [Ethnicity](#ethnicity)
+- `relationshipStatus` — integer or `null`, see [Relationship status](#relationship-status)
+- `grindrTribes` — array of integers, wip
+- `lookingFor` — array of integers, wip
+- `vaccines` — array of integers, wip
+- `bodyType` — number or `null`, wip
+- `sexualPosition` — integer or `null`, see [Position ID](#position-id)
+- `hivStatus` — number or `null`, wip
+- `lastTestedDate` — unix timestamp in milliseconds or `null`
+- `height` — number or `null`
+- `weight` — number or `null`
+- `socialNetworks` — object
+  - `twitter` — object, may be absent
+    - `userId` — string or `null`
+  - `facebook` — object, may be absent
+    - `userId` — string or `null`
+  - `instagram` — object, may be absent
+    - `userId` — string or `null`
+- `showDistance` — boolean
+- `approximateDistance` — boolean
+- `seen` — unix timestamp in milliseconds or `null`
 - `onlineUntil` — long number or `null`
+- `distance` — number or `null`
 - `isFavorite` — boolean
-- `isNew` — boolean
-- `isRoaming` — boolean
-- `isVisiting` — boolean
-- `isBlockable` — boolean
-- `isInAList` — boolean
-- `lastChatTimestamp` — number
-- `lastViewed` — number or `null`
-- `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
-- `verifiedInstagramId` — string or `null`
-- `showUnlockReward` — boolean
+- `profileImageMediaHash` — string or `null`
+- `identity` — Identity (wip) or `null`
 - `medias` — array of profile photos objects
   - `mediaHash` — string
   - `state` — integer or `null`
@@ -824,18 +897,42 @@ Body:
   - `createdAt` — long number or `null`
   - `width` — integer or `null`
   - `height` — integer or `null`
+- `lastChatTimestamp` — number
+- `isNew` — boolean
+- `lastViewed` — number or `null`
+- `meetAt` — array of numbers, wip
+- `nsfw` — number or `null`
+- `hashtags` — unknown array
+- `profileTags` — array of strings, see [Profile tags](#profile-tags)
+- `lastUpdatedTime` — unix timestamp in milliseconds
+- `genders` — array of numbers, wip
+- `pronouns` — array of numbers, wip
+- `tapped` — boolean
+- `tapType` — boolean
+- `lastReceivedTapTimestamp`
+- `isTeleporting`
+- `isRoaming` — boolean
+- `arrivalDays`
+- `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
+- `unreadCount`
 - `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
 - `rightNowText` — string or `null`
-- `rightNowThumbnailUrl` — string or `null`
-- `rightNowFullImageUrl` — string or `null`
 - `rightNowPosted` — long number or `null`
 - `rightNowDistance` — long number or `null`
+- `rightNowThumbnailUrl` — string or `null`
+- `rightNowFullImageUrl` — string or `null`
+- `rightNowShareLocation` — `null`
 - `rightNowMedias` — array of objects
   - `mediaId` — long number or `null`
   - `thumbnailUrl` — string
   - `fullImageUrl` — string
   - `contentType` — string
   - `isNsfw` — boolean or `null`
+- `verifiedInstagramId` — string or `null`
+- `lastThrobTimestamp`
+- `isBlockable` — boolean
+- `sexualHealth` — array of numbers, wip
+- `isVisiting` — boolean
 - `travelPlans` — array of objects
   - `endDateUtc` — long or `null`
   - `geohash` — string
@@ -843,45 +940,11 @@ Body:
   - `locationName` — string
   - `showOnProfile` — boolean or `null`
   - `startDateUtc` — long number or `null`
-- `notes` — string, may be absent
-- `displayName` — string
-- `age` — number or `null`
-- `aboutMe` — string or `null`
-- `profileImageMediaHash` — string or `null`
-- `height` — number or `null`
-- `weight` — number or `null`
-- `showDistance` — boolean
-- `approximateDistance` — boolean
-- `showAge` — boolean
-- `showPosition` — boolean
+- `isInAList` — boolean
 - `showTribes` — boolean
-- `distance` — number or `null`
-- `ethnicity` — number or `null`, wip
-- `bodyType` — number or `null`, wip
-- `sexualPosition` — [Position ID](#position-id) or `null`
-- `hivStatus` — number or `null`, wip
-- `lastTestedDate` — unix timestamp in milliseconds
-- `relationshipStatus` — number or `null`, wip
-- `lookingFor` — array of numbers, wip
-- `grindrTribes` — array of numbers, wip
-- `genders` — array of numbers, wip
-- `pronouns` — array of numbers, wip
-- `vaccines` — array of numbers, wip
-- `sexualHealth` — array of numbers, wip
-- `meetAt` — array of numbers, wip
-- `nsfw` — number or `null`
-- `profileTags` — array of strings
-- `identity` — Identity (wip) or `null`
-- `genderCategory` — number, wip
-- `pronounsCategory` — number, wip
-- `socialNetworks` — object
-  - `twitter` — object, may be absent
-    - `userId` — string or `null`
-  - `facebook` — object, may be absent
-    - `userId` — string or `null`
-  - `instagram` — object, may be absent
-    - `userId` — string or `null`
-- `boosting` — boolean
+- `showPosition` — boolean
+- `tribesImInto` — null
+- `showVipBadge` — boolean
 
 ### Geohash
 
@@ -899,7 +962,11 @@ Geohash explorer: <https://geohash.softeng.co/>
 
 ### Get profile by ID
 
+Requires [Authorization](#api-authorization).
+
+```
 GET /v7/profiles/{id}
+```
 
 Query:
 
@@ -907,7 +974,13 @@ Query:
 
 ### Get multiple profiles by ID
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v3/profiles
+```
 
 Body:
 
@@ -919,7 +992,13 @@ Response:
 
 ### Update own profile (full)
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 PUT /v3.1/me/profile
+```
 
 Body:
 
@@ -927,7 +1006,13 @@ Body:
 
 ### Update own profile (partial)
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 PATCH /v4/me/profile
+```
 
 Body:
 
@@ -935,11 +1020,23 @@ Body:
 
 ### Delete own profile
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 DELETE /v3/me/profile
+```
 
 ### Delete profile photos
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 DELETE /v3/me/profile/images
+```
 
 Body:
 
@@ -947,7 +1044,13 @@ Body:
 
 ### Check if profiles are reachable
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v4/profiles/reachable
+```
 
 Body:
 
@@ -959,13 +1062,27 @@ Response:
 
 ### Add favorite
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v3/me/favorites/{id}
+```
 
 ### Remove favorite
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 DELETE /v3/me/favorites/{id}
+```
 
 ### Update location
+
+Requires [Authorization](#api-authorization).
 
 PUT /v4/location
 
@@ -975,7 +1092,13 @@ Body:
 
 ### Record profile views (batch)
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v4/views
+```
 
 Body:
 
@@ -984,11 +1107,23 @@ Body:
 
 ### Record single profile view
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v4/views/{profileId}
+```
 
 ### Record profile view v2
 
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
 POST /v5/views/{profileId}
+```
 
 Body:
 
@@ -997,7 +1132,11 @@ Body:
 
 ### Search places by name
 
+Requires [Authorization](#api-authorization).
+
+```
 GET /v3/places/search
+```
 
 Query:
 
@@ -1013,9 +1152,84 @@ Response:
   - `placeId` — string with number
   - `importance` — float
 
-WIP
+### Managed fields
 
-### Position ID
+Managed fields are profile fields that aren't hardcoded but pulled dynamically from server, such as pronouns, ethnicity and relationship statuses.
+
+#### Pronouns
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/pronouns
+```
+
+Response:
+
+Array of objects:
+
+- `pronounId` — integer
+- `pronoun` — string, e.g. `"-"` or `"They/Them/Theirs"`
+
+#### Suggest gender or pronoun
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v4/genderpronoun/suggestions
+```
+
+Body:
+
+- `category` — string, either `gender` or `pronoun`
+- `suggestedValue` — string
+
+Response:
+
+Empty
+
+#### Genders
+
+```
+GET /public/v2/genders
+```
+
+Response:
+
+Array of objects:
+
+- `genderId` — integer
+- `gender` — string
+- `displayGroup` — integer
+- `sortProfile` — integer or `null`
+- `sortFilter` — integer or `null`
+- `genderPlural` — string or `null`
+- `excludeOnProfileSelection` — array of integers or `null`
+- `excludeOnFilterSelection` — array of integers or `null`
+- `alsoClassifiedAs` — array of integers
+
+#### Profile tags
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/tags
+```
+
+Response:
+
+Array of objects:
+
+- `language` — string
+- `categoryCollection` — array of objects
+  - `text` — string
+  - `possessiveText` string or `null`
+  - `tags` — array of objects
+    - `tagId` — integer
+    - `text` — string
+    - `key` — string
+
+#### Position ID
 
 - 1 — "Top"
 - 2 — "Bottom"
@@ -1023,6 +1237,29 @@ WIP
 - 4 — "Vers Bottom"
 - 5 — "Vers Top"
 - 6 — "Side"
+
+#### Ethnicity
+
+- 1 — Asian
+- 2 — Black
+- 3 — Latino
+- 4 — Middle Eastern
+- 5 — Mixed
+- 6 — Native American
+- 7 — White
+- 8 — Other
+- 9 — South Asian
+
+#### Relationship status
+
+- 1 — Single
+- 2 — Dating
+- 3 — Exclusive
+- 4 — Committed
+- 5 — Partnered
+- 6 — Engaged
+- 7 — Married
+- 8 — Open Relationship
 
 ## Right Now
 
