@@ -72,32 +72,51 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Translate a message](#translate-a-message)
 			- [OCR recognition in chat](#ocr-recognition-in-chat)
 			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
-	- [Profiles](#profiles)
-		- [Profile](#profile)
-		- [Geohash](#geohash)
-		- [ViewSourceEnum](#viewsourceenum)
-		- [Get profile by ID](#get-profile-by-id)
-		- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
-		- [Update own profile (full)](#update-own-profile-full)
-		- [Update own profile (partial)](#update-own-profile-partial)
-		- [Delete own profile](#delete-own-profile)
-		- [Delete profile photos](#delete-profile-photos)
-		- [Check if profiles are reachable](#check-if-profiles-are-reachable)
-		- [Add favorite](#add-favorite)
-		- [Remove favorite](#remove-favorite)
-		- [Update location](#update-location)
-		- [Record profile views (batch)](#record-profile-views-batch)
-		- [Record single profile view](#record-single-profile-view)
-		- [Record profile view v2](#record-profile-view-v2)
-		- [Search places by name](#search-places-by-name)
+	- [Users](#users)
+		- [Profiles](#profiles)
+			- [Profile](#profile)
+			- [Get profile by ID](#get-profile-by-id)
+			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
+			- [Update own profile (full)](#update-own-profile-full)
+			- [Update own profile (partial)](#update-own-profile-partial)
+			- [Delete own profile](#delete-own-profile)
+			- [Delete profile photos](#delete-profile-photos)
+			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
+		- [Favorites](#favorites)
+			- [Add favorite](#add-favorite)
+			- [Remove favorite](#remove-favorite)
+			- [Get note](#get-note)
+			- [Add note](#add-note)
+			- [Delete note](#delete-note)
+		- [Location](#location-1)
+			- [Geohash](#geohash)
+			- [Search places by name](#search-places-by-name)
+			- [Update location](#update-location)
+		- [Interest](#interest)
+			- [ViewSourceEnum](#viewsourceenum)
+			- [Record profile views (batch)](#record-profile-views-batch)
+			- [Record single profile view](#record-single-profile-view)
+			- [Record profile view v2](#record-profile-view-v2)
+			- [Get sent taps](#get-sent-taps)
+			- [Send a tap](#send-a-tap)
+			- [Get received taps](#get-received-taps)
 		- [Managed fields](#managed-fields)
 			- [Pronouns](#pronouns)
-			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
 			- [Genders](#genders)
+			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
+		- [Hardcoded fields](#hardcoded-fields)
 			- [Profile tags](#profile-tags)
 			- [Position ID](#position-id)
 			- [Ethnicity](#ethnicity)
 			- [Relationship status](#relationship-status)
+			- [Body type](#body-type)
+			- [HIV status](#hiv-status)
+			- [Accept NSFW pics](#accept-nsfw-pics)
+			- [Meet at](#meet-at)
+			- [Sexual health](#sexual-health)
+			- [Looking for](#looking-for)
+			- [Tribes](#tribes)
+			- [Vaccines](#vaccines)
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
 
@@ -452,8 +471,6 @@ Response:
 
 #### Add a saved phrase
 
-WIP
-
 Requires [Authorization](#api-authorization).
 
 ```
@@ -462,13 +479,17 @@ POST /v1/chat/phrases
 
 Body:
 
+- `text` — string
+
+Response:
+
 - `phrase` — [Saved phrase](#saved-phrase)
 
 #### Add a saved phrase (legacy)
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+This endpoint is somewhat broken and sometimes throws 500 ISE error.
 
 ```
 POST /v3/me/prefs/phrases
@@ -478,9 +499,11 @@ Body:
 
 - `phrase` — string
 
-#### Delete a saved phrase
+Response:
 
-WIP
+- `phrase` — [Saved phrase](#saved-phrase)
+
+#### Delete a saved phrase
 
 Requires [Authorization](#api-authorization).
 
@@ -488,17 +511,25 @@ Requires [Authorization](#api-authorization).
 DELETE /v3/me/prefs/phrases/{id}
 ```
 
+Response:
+
+Empty.
+
 #### Track phrase usage frequency
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Unknown what this endpoint does, it does not appear that it influences the phrase's sorting position in [Get saved phrases](#get-saved-phrases) response
 
 ```
 POST /v4/phrases/frequency/{id}
 ```
 
 No body.
+
+Response:
+
+Empty
 
 ### Messages
 
@@ -508,8 +539,10 @@ No body.
 - `conversationId` — string, see [Conversation](#conversation)
 - `senderId` — number
 - `timestamp` — unix timestamp in milliseconds, appears to be same as in `messageId`
-- `unsent` — boolean
-- `reactions` — array, unknown contents
+- `unsent` — boolean, if this is true, `body` is set to `null`
+- `reactions` — array of objects:
+  - `profileId` — integer
+  - `reactionType` — integer (`1` is "🔥")
 - `type` — string, see [Message type](#message-type)
 - `body` — object with [Message contents](#message-contents)
 - `replyToMessage` — unknown or `null`
@@ -674,6 +707,8 @@ Unknown, WIP
 
 - `text` — string
 
+Might have `"body": null` for [unsent](#unsend-a-message) messages
+
 ##### `"Unknown"`
 
 Empty type
@@ -740,16 +775,23 @@ Body:
   - `type` — `Direct`, `Group`, `HumanWingman`
   - `targetId` — integer
 - `body` — object with [Message contents](#message-contents) or `null`
-- `ref` — string or `null`
-- `replyToMessageId` — string or `null`
+
+Unknown body parameters:
+
+- `ref` — string or `null`, optional
+- `replyToMessageId` — string or `null`, optional, WIP
 
 Response:
 
+[Message](#message) object.
+
 #### Unsend a message
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Turns a message in chat into "This message was unsent."
+
+Repeated requests are completed without errors.
 
 ```
 POST /v4/chat/message/unsend
@@ -758,21 +800,42 @@ POST /v4/chat/message/unsend
 Body:
 
 - `conversationId` — string
-- `messageId` — string
+- `messageId` — string, must be sent by you
+
+Response:
+
+Empty.
+
+Errors:
+
+- 500 Internal Error if conversation or message was not found or if it wasn't sent by you
 
 #### Delete a message
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Deletes a message on your side. Does not delete message for other chat participant.
+
+Repeated requests are completed without errors.
 
 ```
 POST /v4/chat/message/delete
 ```
 
-#### Send typing indicator
+Body:
 
-WIP
+- `conversationId` — string
+- `messageId` — string
+
+Response:
+
+Empty.
+
+Errors:
+
+- 500 Internal Error if conversation or message was not found
+
+#### Send typing indicator
 
 Requires [Authorization](#api-authorization).
 
@@ -783,13 +846,23 @@ POST /v4/chatstatus/typing
 Body:
 
 - `conversationId` — string
-- `status` — string, e.g. `""`
+- `status` — either `"Typing"` or `"Cleared"`
+
+Response:
+
+Empty.
+
+Errors:
+
+- 403 Action not permitted if conversation not found
 
 #### React to a message
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+There is no discovered way to undo the reaction as of yet.
+
+Repeated requests are completed without errors.
 
 ```
 POST /v4/chat/message/reaction
@@ -799,15 +872,23 @@ Body:
 
 - `conversationId` — string
 - `messageId` — string
-- `reactionType` — integer
+- `reactionType` — integer, (`1` is "🔥")
+
+Response:
+
+Empty.
+
+Errors:
+
+- 500 Internal Error if conversation or message was not found
 
 ### Misc
 
 #### Translate a message
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Paid feature.
 
 ```
 POST /v5/chat/translate
@@ -823,11 +904,17 @@ Response:
 
 - `translatedText` — string
 
+Errors:
+
+- HTTP status 402, error `User has reached their entitlement limits`
+
 #### OCR recognition in chat
 
 WIP
 
 Requires [Authorization](#api-authorization).
+
+Appears to be a submitting endpoint rather than a retrieving one.
 
 ```
 POST /v5/recognition/chat
@@ -851,9 +938,19 @@ Body:
 - `text` — string, feedback text
 - `timestamp` — unix timestamp in milliseconds
 
-## Profiles
+Response:
 
-### Profile
+Empty object (`{}`).
+
+Errors:
+
+- HTTP status 400 (bad request)
+
+## Users
+
+### Profiles
+
+#### Profile
 
 - `profileId` — string with numeric id
 - `displayName` — string or `null`
@@ -862,12 +959,12 @@ Body:
 - `showAge` — boolean
 - `ethnicity` — integer or `null`, see [Ethnicity](#ethnicity)
 - `relationshipStatus` — integer or `null`, see [Relationship status](#relationship-status)
-- `grindrTribes` — array of integers, wip
-- `lookingFor` — array of integers, wip
-- `vaccines` — array of integers, wip
-- `bodyType` — number or `null`, wip
+- `grindrTribes` — array of integers, see [Tribes](#tribes)
+- `lookingFor` — array of integers, see [Looking for](#looking-for)
+- `vaccines` — array of integers, see [Vaccines](#vaccines)
+- `bodyType` — number or `null`, see [Body type](#body-type)
 - `sexualPosition` — integer or `null`, see [Position ID](#position-id)
-- `hivStatus` — number or `null`, wip
+- `hivStatus` — number or `null`, see [HIV status](#hiv-status)
 - `lastTestedDate` — unix timestamp in milliseconds or `null`
 - `height` — number or `null`
 - `weight` — number or `null`
@@ -885,36 +982,32 @@ Body:
 - `distance` — number or `null`
 - `isFavorite` — boolean
 - `profileImageMediaHash` — string or `null`
-- `identity` — Identity (wip) or `null`
+- `identity` — identity (unknown, wip) or `null`
 - `medias` — array of profile photos objects
   - `mediaHash` — string
-  - `state` — integer or `null`
+  - `type` — integer
+  - `state` — integer
   - `reason` — string or `null`
-  - `order` — integer or `null`
-  - `profileId` — string
-  - `isSelected` — boolean or `null`
   - `takenOnGrindr` — boolean or `null`
   - `createdAt` — long number or `null`
-  - `width` — integer or `null`
-  - `height` — integer or `null`
 - `lastChatTimestamp` — number
 - `isNew` — boolean
 - `lastViewed` — number or `null`
-- `meetAt` — array of numbers, wip
-- `nsfw` — number or `null`
+- `meetAt` — array of integers, see [Meet at](#meet-at)
+- `nsfw` — integer or `null`, see [Accept NSFW pics](#accept-nsfw-pics)
 - `hashtags` — unknown array
 - `profileTags` — array of strings, see [Profile tags](#profile-tags)
 - `lastUpdatedTime` — unix timestamp in milliseconds
-- `genders` — array of numbers, wip
-- `pronouns` — array of numbers, wip
+- `genders` — array of integers, see [Genders](#genders)
+- `pronouns` — array of integers, see [Pronouns](#pronouns)
 - `tapped` — boolean
 - `tapType` — boolean
-- `lastReceivedTapTimestamp`
-- `isTeleporting`
+- `lastReceivedTapTimestamp` — number or `null`
+- `isTeleporting` — boolean
 - `isRoaming` — boolean
-- `arrivalDays`
+- `arrivalDays` — number or `null`
 - `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
-- `unreadCount`
+- `unreadCount` — number, may be absent
 - `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
 - `rightNowText` — string or `null`
 - `rightNowPosted` — long number or `null`
@@ -929,9 +1022,9 @@ Body:
   - `contentType` — string
   - `isNsfw` — boolean or `null`
 - `verifiedInstagramId` — string or `null`
-- `lastThrobTimestamp`
+- `lastThrobTimestamp` — unknown
 - `isBlockable` — boolean
-- `sexualHealth` — array of numbers, wip
+- `sexualHealth` — array of integers, see [Sexual health](#sexual-health)
 - `isVisiting` — boolean
 - `travelPlans` — array of objects
   - `endDateUtc` — long or `null`
@@ -946,21 +1039,7 @@ Body:
 - `tribesImInto` — null
 - `showVipBadge` — boolean
 
-### Geohash
-
-<https://en.wikipedia.org/wiki/Geohash>
-
-Example: `ezr`
-
-Geohash explorer: <https://geohash.softeng.co/>
-
-### ViewSourceEnum
-
-- `DISCOVER`
-- `FOR_YOU`
-- `UNKNOWN` (fallback)
-
-### Get profile by ID
+#### Get profile by ID
 
 Requires [Authorization](#api-authorization).
 
@@ -972,9 +1051,7 @@ Query:
 
 - `id` — profile ID
 
-### Get multiple profiles by ID
-
-WIP
+#### Get multiple profiles by ID
 
 Requires [Authorization](#api-authorization).
 
@@ -990,7 +1067,7 @@ Response:
 
 - `profiles` — array of [Profile](#profile)
 
-### Update own profile (full)
+#### Update own profile (full)
 
 WIP
 
@@ -1004,7 +1081,7 @@ Body:
 
 [Profile](#profile) object, fully replaces current version.
 
-### Update own profile (partial)
+#### Update own profile (partial)
 
 WIP
 
@@ -1018,7 +1095,7 @@ Body:
 
 [Profile](#profile) object, only updates specified keys.
 
-### Delete own profile
+#### Delete own profile
 
 WIP
 
@@ -1028,7 +1105,7 @@ Requires [Authorization](#api-authorization).
 DELETE /v3/me/profile
 ```
 
-### Delete profile photos
+#### Delete profile photos
 
 WIP
 
@@ -1042,7 +1119,7 @@ Body:
 
 - `media_hashes` — array of strings
 
-### Check if profiles are reachable
+#### Check if profiles are reachable
 
 WIP
 
@@ -1060,77 +1137,85 @@ Response:
 
 - `profileIds` — array of strings with numeric ids
 
-### Add favorite
+### Favorites
 
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v3/me/favorites/{id}
-```
-
-### Remove favorite
-
-WIP
+#### Add favorite
 
 Requires [Authorization](#api-authorization).
 
 ```
-DELETE /v3/me/favorites/{id}
+POST /v3/me/favorites/{profileId}
 ```
 
-### Update location
+Response:
 
-Requires [Authorization](#api-authorization).
+Empty object (`{}`).
 
-PUT /v4/location
-
-Body: 
-
-- `geohash` — string, see [geohash](#geohash)
-
-### Record profile views (batch)
-
-WIP
+#### Remove favorite
 
 Requires [Authorization](#api-authorization).
 
 ```
-POST /v4/views
+DELETE /v3/me/favorites/{profileId}
 ```
 
-Body:
+Response:
 
-- `viewedProfileIds` — array of strings with numeric ids
-- `foundVia` — unknown or `null`
+Empty object (`{}`).
 
-### Record single profile view
-
-WIP
+#### Get note
 
 Requires [Authorization](#api-authorization).
 
 ```
-POST /v4/views/{profileId}
+GET /v1/favorites/notes/{targetProfileId}
 ```
 
-### Record profile view v2
+Response:
 
-WIP
+- `notes` — string, empty for non existing notes
+- `phoneNumber` — string, might be empty
+
+#### Add note
 
 Requires [Authorization](#api-authorization).
 
 ```
-POST /v5/views/{profileId}
+PUT /v1/favorites/notes/{targetProfileId}
 ```
 
-Body:
+- `notes` — string, required
+- `phoneNumber` — string, required
 
-- `foundVia` — unknown or `null`
-- `source` — [ViewSourceEnum](#viewsourceenum)
+*The `counterpartyId` parameter seems to be ignored, it's unknown what its purpose is.*
 
-### Search places by name
+Response:
+
+Empty, HTTP status 204.
+
+#### Delete note
+
+Requires [Authorization](#api-authorization).
+
+```
+DELETE /v1/favorites/notes/{targetProfileId}
+```
+
+*Essentially equivalent to [Add note](#add-note) with `notes` set to `""`.*
+
+### Location
+
+#### Geohash
+
+Grindr requires geohash to be exactly 12 characters long.
+
+<https://en.wikipedia.org/wiki/Geohash>
+
+Example: `gcw2jp5u2d1b`
+
+Geohash explorer: <https://geohash.softeng.co/>
+
+#### Search places by name
 
 Requires [Authorization](#api-authorization).
 
@@ -1152,6 +1237,94 @@ Response:
   - `placeId` — string with number
   - `importance` — float
 
+#### Update location
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v4/location
+```
+
+Body: 
+
+- `geohash` — string, exactly 12 characters, see [geohash](#geohash)
+
+Response:
+
+Empty.
+
+### Interest
+
+#### ViewSourceEnum
+
+- `DISCOVER`
+- `FOR_YOU`
+- `UNKNOWN` (fallback)
+
+#### Record profile views (batch)
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v4/views
+```
+
+Body:
+
+- `viewedProfileIds` — array of strings with numeric ids
+- `foundVia` — unknown or `null`
+
+#### Record single profile view
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v4/views/{profileId}
+```
+
+#### Record profile view v2
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v5/views/{profileId}
+```
+
+Body:
+
+- `foundVia` — unknown or `null`
+- `source` — [ViewSourceEnum](#viewsourceenum)
+
+#### Get sent taps
+
+WIP
+
+```
+GET /v1/interactions/taps/sent
+```
+
+#### Send a tap
+
+WIP
+
+```
+POST /v2/taps/add
+```
+
+#### Get received taps
+
+WIP
+
+```
+GET /v2/taps/received
+```
+
 ### Managed fields
 
 Managed fields are profile fields that aren't hardcoded but pulled dynamically from server, such as pronouns, ethnicity and relationship statuses.
@@ -1170,23 +1343,6 @@ Array of objects:
 
 - `pronounId` — integer
 - `pronoun` — string, e.g. `"-"` or `"They/Them/Theirs"`
-
-#### Suggest gender or pronoun
-
-Requires [Authorization](#api-authorization).
-
-```
-PUT /v4/genderpronoun/suggestions
-```
-
-Body:
-
-- `category` — string, either `gender` or `pronoun`
-- `suggestedValue` — string
-
-Response:
-
-Empty
 
 #### Genders
 
@@ -1207,6 +1363,25 @@ Array of objects:
 - `excludeOnProfileSelection` — array of integers or `null`
 - `excludeOnFilterSelection` — array of integers or `null`
 - `alsoClassifiedAs` — array of integers
+
+#### Suggest gender or pronoun
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v4/genderpronoun/suggestions
+```
+
+Body:
+
+- `category` — string, either `gender` or `pronoun`
+- `suggestedValue` — string
+
+Response:
+
+Empty
+
+### Hardcoded fields
 
 #### Profile tags
 
@@ -1261,7 +1436,78 @@ Array of objects:
 - 7 — Married
 - 8 — Open Relationship
 
+#### Body type
+
+- 1 — "Toned"
+- 2 — "Average"
+- 3 — "Large"
+- 4 — "Muscular"
+- 5 — "Slim"
+- 6 — "Stocky"
+
+#### HIV status
+
+- 1 — "Negative"
+- 2 — "Negative, on PrEP"
+- 3 — "Positive"
+- 4 — "Positive, undetectable"
+
+#### Accept NSFW pics
+
+- 1 — "Never"
+- 2 — "Not At First"
+- 3 — "Yes Please"
+
+#### Meet at
+
+- 1 — "My Place"
+- 2 — "Your Place"
+- 3 — "Bar"
+- 4 — "Coffee Shop"
+- 5 — "Restaurant"
+
+#### Sexual health
+
+- 1 — "Condoms"
+- 2 — "I'm on doxyPEP"
+- 3 — "I'm on PrEP"
+- 4 — "I'm HIV undetectable"
+- 5 — "Prefer to discuss"
+
+#### Looking for
+
+- 2 — Chat
+- 3 — Dates
+- 4 — Friends
+- 5 — Networking
+- 6 — Relationship
+- 7 — Hookups
+
+#### Tribes
+
+- 1 — "Bear"
+- 2 — "Clean-Cut"
+- 3 — "Daddy"
+- 4 — "Discreet"
+- 5 — "Geek"
+- 6 — "Jock"
+- 7 — "Leather"
+- 8 — "Otter"
+- 9 — "Poz"
+- 10 — "Rugged"
+- 11 — "Sober"
+- 12 — "Trans"
+- 13 — "Twink"
+
+#### Vaccines
+
+- 1 - COVID-19
+- 2 — Monkeypox
+- 3 — Meningitis
+
 ## Right Now
+
+WIP
 
 ### RightNowStatusEnum
 
