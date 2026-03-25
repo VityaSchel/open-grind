@@ -33,6 +33,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Saved phrase](#saved-phrase)
 			- [Get saved phrases](#get-saved-phrases)
 			- [Add a saved phrase](#add-a-saved-phrase)
+			- [Get saved phrases (legacy)](#get-saved-phrases-legacy)
 			- [Add a saved phrase (legacy)](#add-a-saved-phrase-legacy)
 			- [Delete a saved phrase](#delete-a-saved-phrase)
 			- [Track phrase usage frequency](#track-phrase-usage-frequency)
@@ -85,6 +86,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Favorites](#favorites)
 			- [Add favorite](#add-favorite)
 			- [Remove favorite](#remove-favorite)
+			- [Get all notes](#get-all-notes)
 			- [Get note](#get-note)
 			- [Add note](#add-note)
 			- [Delete note](#delete-note)
@@ -100,6 +102,8 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Get sent taps](#get-sent-taps)
 			- [Send a tap](#send-a-tap)
 			- [Get received taps](#get-received-taps)
+			- [Get views number](#get-views-number)
+			- [Get viewers list](#get-viewers-list)
 		- [Managed fields](#managed-fields)
 			- [Pronouns](#pronouns)
 			- [Genders](#genders)
@@ -119,6 +123,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Vaccines](#vaccines)
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
+	- [Rate limits](#rate-limits)
 
 ## Getting started
 
@@ -187,7 +192,7 @@ Authorization header is formed from Grindr3 prefix and auth token:
 Authorization: Grindr3 [session ID]
 ```
 
-Session ID is a JWT, see [Session ID](#session-id).
+Session ID is a JWT, see [Session ID](#session-id). Session IDs are short-lived (exactly 30 minutes) and non-extendable (expiration duration is fixed). However, issuing subsequent requests to [Sign in endpoint](#sign-in) with any of `authToken`s (regardless of whether they're expired or not) allows you to generate more Session IDs. Previous Session ID JWT tokens aren't revoked, meaning you can request a new Session ID any time you need to make a request, but to avoid hitting [rate limits](#rate-limits), consider caching them until a token either expires or becomes non valid for any other reason.
 
 ## Authentication
 
@@ -202,7 +207,7 @@ POST /v8/sessions
 Body:
 
 - `email` — string with email
-- `password` — string with password, don't specify if using authToken
+- `password` — string with password, don't specify if using `authToken`
 - `authToken` — string obtained from login+password flow or `null`
 - `token` — FCM (push service) string or `null`
 - `geohash` — [geohash](#geohash) string or `null`
@@ -359,19 +364,27 @@ POST /v4/chat/conversation/{conversationId}/message-by-id
 
 #### Delete conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Deletes the conversation on your side. Does not delete the conversation for other chat's participant.
+
+Repeated requests are completed without errors.
 
 ```
 DELETE /v4/chat/conversation/{conversationId}
 ```
 
+Response:
+
+Empty.
+
 #### Pin conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Affects sorting position in [list conversations](#list-conversations) endpoint response.
+
+Repeated requests are completed without errors. Requests on non existing conversations seem to be affecting them after they have been created.
 
 ```
 POST /v4/chat/conversation/{conversationId}/pin
@@ -379,17 +392,27 @@ POST /v4/chat/conversation/{conversationId}/pin
 
 No body.
 
+Response:
+
+Empty.
+
 #### Unpin conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Affects sorting position in [list conversations](#list-conversations) endpoint response. Requests on non existing conversations seem to be affecting them after they have been created.
+
+Repeated requests are completed without errors.
 
 ```
 POST /v4/chat/conversation/{conversationId}/unpin
 ```
 
 No body.
+
+Response:
+
+Empty.
 
 #### Mark messages as read up to messageId
 
@@ -405,9 +428,12 @@ No body.
 
 #### Mute conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Requests on non existing conversations seem to be affecting them after they have been created.
+
+Repeated requests are completed without errors.
+
 
 ```
 POST /v1/push/conversation/{conversationId}/mute
@@ -415,17 +441,27 @@ POST /v1/push/conversation/{conversationId}/mute
 
 No body.
 
+Response:
+
+Empty
+
 #### Unmute conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
+
+Requests on non existing conversations seem to be affecting them after they have been created.
+
+Repeated requests are completed without errors.
 
 ```
 POST /v1/push/conversation/{conversationId}/unmute
 ```
 
 No body.
+
+Response:
+
+Empty
 
 #### Get shared media in conversation
 
@@ -457,8 +493,6 @@ GET /v1/chat/suggestions?conversationId=
 
 #### Get saved phrases
 
-WIP
-
 Requires [Authorization](#api-authorization).
 
 ```
@@ -485,11 +519,28 @@ Response:
 
 - `phrase` — [Saved phrase](#saved-phrase)
 
+#### Get saved phrases (legacy)
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3/me/prefs
+```
+
+Response:
+
+- `phrases` — object
+  - key is phrase ID (uuid)
+    - `phraseId` — string, uuid
+    - `phraseText` — string
+    - `timestamp` — unix timestamp in milliseconds
+    - `frequency` — integer, see [Track phrase usage frequency](#track-phrase-usage-frequency)
+
 #### Add a saved phrase (legacy)
 
 Requires [Authorization](#api-authorization).
 
-This endpoint is somewhat broken and sometimes throws 500 ISE error.
+This endpoint is somewhat broken and sometimes throws 500 ISE error or .
 
 ```
 POST /v3/me/prefs/phrases
@@ -519,7 +570,7 @@ Empty.
 
 Requires [Authorization](#api-authorization).
 
-Unknown what this endpoint does, it does not appear that it influences the phrase's sorting position in [Get saved phrases](#get-saved-phrases) response
+Doesn't appear to influence the phrase's sorting position in [Get saved phrases](#get-saved-phrases) response. Increments value in [Get saved phrases (legacy)](#get-saved-phrases-legacy) endpoint.
 
 ```
 POST /v4/phrases/frequency/{id}
@@ -1163,6 +1214,22 @@ Response:
 
 Empty object (`{}`).
 
+#### Get all notes
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/favorites/notes
+```
+
+Response:
+
+Array of objects:
+
+- `notes` — string
+- `phoneNumber` — string, might be empty
+- `counterpartyId` — profile ID
+
 #### Get note
 
 Requires [Authorization](#api-authorization).
@@ -1323,6 +1390,32 @@ WIP
 
 ```
 GET /v2/taps/received
+```
+
+#### Get views number
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v6/views/eyeball
+```
+
+Response:
+
+- `viewedCount` — number or `null`
+- `mostRecent` — object or `null`
+	`profileId` — string with number
+	`photoHash` — 40 characters hex string
+	`timestamp` — unix timestamp in milliseconds
+
+#### Get viewers list
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v7/views/list
 ```
 
 ### Managed fields
@@ -1514,3 +1607,7 @@ WIP
 - `NOT_ACTIVE`
 - `HOSTING`
 - `NOT_HOSTING`
+
+## Rate limits
+
+WIP, help with this section is greatly appreciated.
