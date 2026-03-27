@@ -60,8 +60,8 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 				- [`"ProfilePhotoReply"`](#profilephotoreply)
 				- [`"Retract"`](#retract)
 				- [`"Text"`](#text)
-				- [`"Unknown"`](#unknown)
 				- [`"VideoCall"`](#videocall)
+				- [`"Unknown"`](#unknown)
 			- [List messages in conversation](#list-messages-in-conversation)
 			- [Get a single message in conversation](#get-a-single-message-in-conversation)
 			- [Send a message to conversation](#send-a-message-to-conversation)
@@ -75,6 +75,8 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
 	- [Users](#users)
 		- [Profiles](#profiles)
+			- [ProfileMasked](#profilemasked)
+			- [ProfileMin](#profilemin)
 			- [Profile](#profile)
 			- [Get profile by ID](#get-profile-by-id)
 			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
@@ -83,6 +85,15 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Delete own profile](#delete-own-profile)
 			- [Delete profile photos](#delete-profile-photos)
 			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
+		- [Assignments](#assignments)
+		- [Media](#media)
+			- [Public CDN files](#public-cdn-files)
+				- [Profile images](#profile-images)
+				- [Thumbnails images](#thumbnails-images)
+				- [Grindr Gaymoji](#grindr-gaymoji)
+				- [GaymojiCategory](#gaymojicategory)
+			- [Signed CDN files](#signed-cdn-files)
+			- [Chat media](#chat-media)
 		- [Favorites](#favorites)
 			- [Add favorite](#add-favorite)
 			- [Remove favorite](#remove-favorite)
@@ -96,6 +107,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Update location](#update-location)
 		- [Interest](#interest)
 			- [ViewSourceEnum](#viewsourceenum)
+			- [Tap ID](#tap-id)
 			- [Record profile views (batch)](#record-profile-views-batch)
 			- [Record single profile view](#record-single-profile-view)
 			- [Record profile view v2](#record-profile-view-v2)
@@ -219,8 +231,8 @@ Possible errors:
 
 Response:
 
-- profileId — string with numbers, account's ID
-- sessionId — JWT token (see [Session ID](#session-id))
+- `profileId` — string with numbers, account's ID
+- `sessionId` — JWT token (see [Session ID](#session-id))
 
 ### Session ID
 
@@ -283,7 +295,7 @@ Payload claims:
 	- `name` — string, profile name, may be an empty string, e.g. `""`
 	- `participants` — array of objects
 		- `profileId` — integer
-		- `primaryMediaHash` — unknown, appears to be `null`
+		- `primaryMediaHash` — unknown, appears to be `null`, see [Media](#media)
 		- `lastOnline` — unix timestamp in milliseconds
 		- `onlineUntil` — unix timestamp in milliseconds or `null`
 		- `distanceMetres` — float number or `null`
@@ -627,7 +639,7 @@ Empty
 
 #### Message contents
 
-Payload in [`body`](#message) based on [message's `type`](#message-type)
+Payload in [`body`](#message) based on [message's `type`](#message-type), might be `null` for [unsent](#unsend-a-message) messages.
 
 ##### `"Album"`
 
@@ -664,12 +676,11 @@ WIP
 ##### `"Audio"`
 
 - `mediaId` — number
-- `url` — string
-- `fileCacheKey` — string
-- `mimeType` — string
-- `length` — number or null
-- `duration` — number or null
-- `expiresAt` — number
+- `mediaHash` — string or `null`
+- `url` — string, see [Signed CDN files -> Chat media](#chat-media)
+- `contentType` — string, e.g. `audio/aac`
+- `length` — number in milliseconds (1/1000th of a second) or `null`
+- `expiresAt` — unix timestamp in milliseconds, 15 minutes
 
 ##### `"Video"`
 
@@ -683,7 +694,7 @@ WIP
 
 Additionally, for expiring videos:
 
-- `viewsRemaining` —
+- `viewsRemaining` — integer, capped at `2147483647` for "unlimited" views
 
 ##### `"PrivateVideo"`
 
@@ -705,9 +716,11 @@ Unknown, WIP
 
 ##### `"Giphy"`
 
+URLs point at `https://media0.giphy.com`
+
 - `id` — string
-- `urlPath` — string
-- `stillPath` — string
+- `urlPath` — string, full URL to gif file
+- `stillPath` — string, single frame, URL to gif file
 - `previewPath` — string
 - `width` — integer
 - `height` — integer
@@ -720,15 +733,11 @@ Unknown, WIP
 - `width` — integer or `null`
 - `height` — integer or `null`
 - `imageHash` — string
-- `duration` — number or `null`
 
 Additionally, only for regular images:
 
-- `mimeType` — string
 - `takenOnGrindr` — boolean or `null`
 - `createdAt` — number or `null`
-- `imageType` — string
-- `tapType` — integer or `null`
 
 ##### `"ExpiringImage"`
 
@@ -758,19 +767,16 @@ Unknown, WIP
 
 - `text` — string
 
-Might have `"body": null` for [unsent](#unsend-a-message) messages
-
-##### `"Unknown"`
-
-Empty type
-
 ##### `"VideoCall"`
 
 Only for "status" messages:
 
-- `result` — string or `null`
+- `result` — string or `null`, appears to have the following values: `SUCCESSFUL`, `Duration:`, `Busy`, `BUSY`, `Cancelled`, `Declined`, `DECLINED`, `Missed`, `AB_Unsupported`, `No_Answer`, `UNANSWERED`, `Lite_Unsupport`
 - `videoCallDuration` — number or `null`
 
+##### `"Unknown"`
+
+Empty type
 
 #### List messages in conversation
 
@@ -1001,20 +1007,48 @@ Errors:
 
 ### Profiles
 
+#### ProfileMasked
+
+- `distance` — number or `null`
+- `lastViewed` — number or `null`
+- `profileImageMediaHash` — string or `null`, see [Media](#media)
+- `isFavorite` — boolean
+- `seen` — unix timestamp in milliseconds or `null`
+- `sexualPosition` — integer or `null`, see [Position ID](#position-id)
+- `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
+- `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
+
+#### ProfileMin
+
+- *everything from [ProfileMasked](#profilemasked), additionally:*
+- `profileId` — string with numeric id
+- `onlineUntil` — long number or `null`
+- `displayName` — string or `null`
+- `age` — number, may be `0` or `null`
+- `showAge` — boolean
+- `showDistance` — boolean
+- `approximateDistance` — boolean
+- `lastChatTimestamp` — number, may be `0`
+- `isNew` — boolean
+- `lastUpdatedTime` — unix timestamp in milliseconds, may be `0`
+- `medias` — array of profile photos objects
+  - `mediaHash` — string, see [Media](#media)
+  - `type` — integer
+  - `state` — integer
+  - `reason` — string or `null`
+  - `takenOnGrindr` — boolean or `null`
+  - `createdAt` — long number or `null`
+
 #### Profile
 
-- `profileId` — string with numeric id
-- `displayName` — string or `null`
+- *everything from [ProfileMin](#profilemin), additionally:*
 - `aboutMe` — string or `null`
-- `age` — number or `null`
-- `showAge` — boolean
 - `ethnicity` — integer or `null`, see [Ethnicity](#ethnicity)
 - `relationshipStatus` — integer or `null`, see [Relationship status](#relationship-status)
 - `grindrTribes` — array of integers, see [Tribes](#tribes)
 - `lookingFor` — array of integers, see [Looking for](#looking-for)
 - `vaccines` — array of integers, see [Vaccines](#vaccines)
 - `bodyType` — number or `null`, see [Body type](#body-type)
-- `sexualPosition` — integer or `null`, see [Position ID](#position-id)
 - `hivStatus` — number or `null`, see [HIV status](#hiv-status)
 - `lastTestedDate` — unix timestamp in milliseconds or `null`
 - `height` — number or `null`
@@ -1026,29 +1060,11 @@ Errors:
     - `userId` — string or `null`
   - `instagram` — object, may be absent
     - `userId` — string or `null`
-- `showDistance` — boolean
-- `approximateDistance` — boolean
-- `seen` — unix timestamp in milliseconds or `null`
-- `onlineUntil` — long number or `null`
-- `distance` — number or `null`
-- `isFavorite` — boolean
-- `profileImageMediaHash` — string or `null`
 - `identity` — identity (unknown, wip) or `null`
-- `medias` — array of profile photos objects
-  - `mediaHash` — string
-  - `type` — integer
-  - `state` — integer
-  - `reason` — string or `null`
-  - `takenOnGrindr` — boolean or `null`
-  - `createdAt` — long number or `null`
-- `lastChatTimestamp` — number
-- `isNew` — boolean
-- `lastViewed` — number or `null`
 - `meetAt` — array of integers, see [Meet at](#meet-at)
 - `nsfw` — integer or `null`, see [Accept NSFW pics](#accept-nsfw-pics)
 - `hashtags` — unknown array
 - `profileTags` — array of strings, see [Profile tags](#profile-tags)
-- `lastUpdatedTime` — unix timestamp in milliseconds
 - `genders` — array of integers, see [Genders](#genders)
 - `pronouns` — array of integers, see [Pronouns](#pronouns)
 - `tapped` — boolean
@@ -1057,9 +1073,7 @@ Errors:
 - `isTeleporting` — boolean
 - `isRoaming` — boolean
 - `arrivalDays` — number or `null`
-- `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
 - `unreadCount` — number, may be absent
-- `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
 - `rightNowText` — string or `null`
 - `rightNowPosted` — long number or `null`
 - `rightNowDistance` — long number or `null`
@@ -1187,6 +1201,122 @@ Body:
 Response:
 
 - `profileIds` — array of strings with numeric ids
+
+### Assignments
+
+WIP
+
+GET v3/assignment
+
+### Media
+
+Media files in Grindr are stored on cdns.grindr.com:443 hosted by Amazon CloudFront powered by AmazonS3. All CDN files are accessible without [authorization](#api-authorization) but some are protected with signed URLs. No [security headers](#security-headers) or `Authorization` need to be present in reuqest to CDN.
+
+Caching is supported via [ETag header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/ETag) — MD5 hash of image file. Image files might have `image/jpeg`, `image/png` or `image/webp` type, based on original.
+
+Media files are identified by either a 40-character (public files) or 64-character (signed files) hexademical string. Although not confirmed for all types of media, it appears to be SHA-1 hash for 40-character hash and SHA-256 hash for 64-character hash. Confirmed cases: [Audio](#audio) uses SHA-256 for its 64-character mediaHash.
+
+There are two types of files stored on CDN.
+
+#### Public CDN files
+
+CDN files that are public are accessible directly using their hash, e.g. [profile images](#profile-images)
+
+Base URL:
+
+```
+https://cdns.grindr.com
+```
+
+##### Profile images
+
+```
+/images/profile/{size}/{mediaHash}
+```
+
+One side will always be the requested size and another will be less or equal to the requested size.
+
+Available sizes for `{size}` parameter:
+
+- `2048x2048` (might be unavailable)
+- `1024x1024`
+- `480x480`
+- `320x320`
+
+##### Thumbnails images
+
+```
+/images/thumb/{size}/{mediaHash}
+```
+
+Image will be cropped at center and both sides will be exactly the requested size.
+
+Available sizes for `{size}` parameter:
+- `480x480` (might be unavailable)
+- `320x320`
+- `75x75`
+
+##### Grindr Gaymoji
+
+List gaymojis:
+
+```
+/grindr/chat/gaymoji
+```
+
+Response:
+
+Formatted JSON object:
+
+- `lastUpdateTime` — unix timestamp in milliseconds
+- `gaymoji` — array of objects
+  - `name` — unique identificator consisting of alphanumeric characters, hyphens and underscores
+  - `id` — same as `name` + `.png`
+  - `category` — [GaymojiCategory](#gaymojicategory)
+- `category` — array of objects
+  - `name` — [GaymojiCategory](#gaymojicategory)
+  - `expiredTime` — unix timestamp in milliseconds, may be `0`
+
+The image file assosiated with the Gaymoji is hosted at:
+
+```
+/grindr/chat/gaymoji/{id}
+```
+
+ID must include file extension.
+
+##### GaymojiCategory
+
+One of the following values:
+
+- `body`
+- `dating+sex`
+- `featured`
+- `holiday`
+- `mood`
+- `objects`
+- `profile`
+- `wen_ching_taiwan_stickers`
+
+#### Signed CDN files
+
+CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.
+
+Base URL appears to be:
+
+```
+https://d2wxe7lth7kp8g.cloudfront.net/
+```
+
+Although it might change in the future, so it's best to pull full URL from `url` property on media object itself.
+
+#### Chat media
+
+Media uploaded directly to DMs are accessible by this URL:
+
+```
+/{uploaderProfileId}/{mediaHash}?Expires={unixTimestampSeconds}&Signature={signature}&Key-Pair-Id={keyPairId}
+```
 
 ### Favorites
 
@@ -1328,6 +1458,15 @@ Empty.
 - `FOR_YOU`
 - `UNKNOWN` (fallback)
 
+#### Tap ID
+
+- `0` — "FRIENDLY" ("hi" or 🍪 based on client's rendering settings)
+- `1` — "HOT" (🔥)
+- `2` — "LOOKING" (😈)
+- `3` — "NONE"
+
+Cookie taps are essentially bubbles "hi" but your client can choose to render them as 🍪. There is no separate cookie tap type.
+
 #### Record profile views (batch)
 
 WIP
@@ -1372,17 +1511,30 @@ Body:
 
 WIP
 
+Requires [Authorization](#api-authorization).
+
 ```
 GET /v1/interactions/taps/sent
 ```
 
 #### Send a tap
 
-WIP
+Requires [Authorization](#api-authorization).
+
+Repeated requests result in `Invalid request` error and HTTP status 400.
 
 ```
 POST /v2/taps/add
 ```
+
+Body:
+
+- `recipientId` — long integer, [profile id](#profile)
+- `tapType` — [Tap ID](#tap-id), invalid or non existing Tap IDs are still recorded as successfull
+
+Response:
+
+- `isMutual` — boolean
 
 #### Get received taps
 
@@ -1410,13 +1562,32 @@ Response:
 
 #### Get viewers list
 
-WIP
-
 Requires [Authorization](#api-authorization).
 
 ```
 GET /v7/views/list
 ```
+
+Response:
+
+- `totalViewers` — integer
+- `previews` — array of objects
+  - *everything from [ProfileMasked](#profilemasked), additionally:*
+  - `isInBadNeighborhood` — boolean
+  - `isViewedMeFreshFace` — boolean
+  - `isSecretAdmirer` — boolean
+  - `viewedCount` — object
+    - `totalCount` — integer
+    - `maxDisplayCount` — integer
+- `profiles` — array of objects
+  - *everything from previews, additionally:*
+  - *everything from [ProfileMin](#profilemin), additionally:*
+  - `hasFaceRecognition` — boolean
+  - `isIncognito` — boolean
+  - `boosting` — boolean
+  - `showUnlockReward` — boolean
+  - `unreadMessageCount` — integer
+  - `hasChatted` — boolean
 
 ### Managed fields
 
