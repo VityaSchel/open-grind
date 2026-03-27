@@ -69,14 +69,48 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Delete a message](#delete-a-message)
 			- [Send typing indicator](#send-typing-indicator)
 			- [React to a message](#react-to-a-message)
+		- [Albums](#albums)
+			- [AlbumExpirationType](#albumexpirationtype)
+			- [AlbumPreview](#albumpreview)
+			- [AlbumMin](#albummin)
+			- [AlbumContentMin](#albumcontentmin)
+			- [AlbumContent](#albumcontent)
+			- [AlbumCoverUrl](#albumcoverurl)
+			- [Get my albums](#get-my-albums)
+			- [Get an album](#get-an-album)
+			- [Get an album media poster](#get-an-album-media-poster)
+			- [Record view of an album](#record-view-of-an-album)
+			- [Record view of media in an album](#record-view-of-media-in-an-album)
+			- [Get info about profile's album](#get-info-about-profiles-album)
+			- [Get albums shared by a profile](#get-albums-shared-by-a-profile)
+			- [Create an album](#create-an-album)
+			- [Rename an album](#rename-an-album)
+			- [Delete an album](#delete-an-album)
+			- [Upload media to an album](#upload-media-to-an-album)
+			- [Reorder media in an album](#reorder-media-in-an-album)
+			- [Delete a media from an album](#delete-a-media-from-an-album)
+			- [Albums content processing, WIP](#albums-content-processing-wip)
+			- [Share an album](#share-an-album)
+			- [Get album shares](#get-album-shares)
+			- [Unshare an album](#unshare-an-album)
+			- [Unshare an album from everybody](#unshare-an-album-from-everybody)
+			- [Albums content chat list-by-id, WIP](#albums-content-chat-list-by-id-wip)
+			- [Get album limits](#get-album-limits)
+			- [Albums red dot, WIP](#albums-red-dot-wip)
+			- [Pressie albums feed, WIP](#pressie-albums-feed-wip)
+			- [Pressie albums feed paywall, WIP](#pressie-albums-feed-paywall-wip)
+			- [Pressie albums feed profile ID, WIP](#pressie-albums-feed-profile-id-wip)
+			- [Pressie albums feed update read, WIP](#pressie-albums-feed-update-read-wip)
 		- [Misc](#misc)
 			- [Translate a message](#translate-a-message)
 			- [OCR recognition in chat](#ocr-recognition-in-chat)
 			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
 	- [Users](#users)
 		- [Profiles](#profiles)
+			- [ProfileMaskedMin](#profilemaskedmin)
 			- [ProfileMasked](#profilemasked)
 			- [ProfileMin](#profilemin)
+			- [ProfileShort](#profileshort)
 			- [Profile](#profile)
 			- [Get profile by ID](#get-profile-by-id)
 			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
@@ -609,7 +643,7 @@ Empty
 - `type` — string, see [Message type](#message-type)
 - `body` — object with [Message contents](#message-contents)
 - `replyToMessage` — unknown or `null`
-- `dynamic` — boolean
+- `dynamic` — boolean, unknown purpose, WIP
 - `chat1Type` — String, e.g. `"text"`
 - `replyPreview` — unknown or `null`
 
@@ -643,20 +677,16 @@ Payload in [`body`](#message) based on [message's `type`](#message-type), might 
 
 ##### `"Album"`
 
-- `albumId` — number
+- *everything from [AlbumPreview]*
+- `coverUrl` —  [AlbumCoverUrl](#AlbumCoverUrl)
 - `ownerProfileId` — number or `null`
-- `coverUrl` —  string or `null`
-- `previewUrl` —  string or `null`
-- `hasPhoto` — boolean
-- `hasVideo` — boolean
 - `isViewable` — boolean
-- `albumNumber` — integer or `null`
-- `totalAlbumsShared` — integer or `null`
-- `hasUnseenContent` — boolean
-- `expiresAt` — number or `null`
+- `hasVideo` — boolean
+- `hasPhoto` — boolean
 - `viewableUntil` — number or `null`
+- `expiresAt` — integer or `null`
 - `expirationType` —  string or `null`
-- 
+
 ##### `"ExpiringAlbum"`
 
 WIP
@@ -698,8 +728,7 @@ Additionally, for expiring videos:
 
 ##### `"PrivateVideo"`
 
-All from [Video](#video), additionally:
-
+- *everything from [Video](#video)*
 - `viewCount` — integer
 
 ##### `"NonExpiringVideo"`
@@ -741,8 +770,7 @@ Additionally, only for regular images:
 
 ##### `"ExpiringImage"`
 
-All from [image](#image), additionally:
-
+- *everything from [Image](#image)*
 - `viewsRemaining` — number or `null`
 
 ##### `"Location"`
@@ -896,6 +924,8 @@ Errors:
 
 Requires [Authorization](#api-authorization).
 
+WIP, does not seem to work.
+
 ```
 POST /v4/chatstatus/typing
 ```
@@ -938,6 +968,379 @@ Empty.
 Errors:
 
 - 500 Internal Error if conversation or message was not found
+
+### Albums
+
+WIP. No idea what SpankBank, pressie albums and paywalled albums are.
+
+#### AlbumExpirationType
+
+- `INDEFINITE` — "Indefinitely"
+- `ONCE` — "View Once"
+- `TEN_MINUTES` — "For 10 Minutes"
+- `ONE_HOUR` — "For 60 Minutes"
+- `ONE_DAY` — "For 24 Hours"
+
+#### AlbumPreview
+
+- `albumId` — long integer
+- `albumNumber` — integer
+- `totalAlbumsShared` — integer
+- `hasUnseenContent` — boolean
+
+#### AlbumMin
+
+- *everything from [AlbumPreview](#AlbumPreview)*
+- `albumName` — unknown or `null`
+- `profileId` — integer
+- `albumViewable` — boolean
+
+#### AlbumContentMin
+
+- `contentId` — long integer
+- `contentType` — string
+- `coverUrl` — [AlbumCoverUrl](#AlbumCoverUrl)
+- `statusId` — unknown integer, WIP
+
+#### AlbumContent
+
+- *everything from [AlbumContentMin](#AlbumContentMin)*
+- `thumbUrl` — string, unblurred preview, see [Media -> Signed CDN files](#signed-cdn-files)
+- `url` — string, original file, see [Media -> Signed CDN files](#signed-cdn-files)
+- `processing` — boolean
+- `remainingViews` — integer, might be -1
+- `rejectionId` - unknown or null
+
+#### AlbumCoverUrl
+
+String with URL or `null`, blurred downscaled preview.
+
+JPEG photo with the first frame of video in case of video files.
+
+See [Media -> Signed CDN files](#signed-cdn-files).
+
+#### Get my albums
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/albums
+```
+
+Response:
+
+- `albums` — array of album, WIP
+
+#### Get an album
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v2/albums/{albumId}
+```
+
+Response:
+
+- *everything from [AlbumMin](#albummin)*
+- `content` — array of [AlbumContent](#albumcontent)
+- `sharedCount` — integer
+- `createdAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
+- `updatedAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
+
+Errors:
+
+- HTTP status 403 — if you don't have access to album or it doesn't exist
+
+#### Get an album media poster
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/albums/{albumId}/content/{contentId}/poster
+```
+
+Response:
+
+- `blurredPosterUrl` — string, see [Media -> Signed CDN files](#signed-cdn-files)
+- `posterUrl` — string, see [Media -> Signed CDN files](#signed-cdn-files)
+
+#### Record view of an album
+
+WIP
+
+```
+GET /v3/albums/{albumId}/view
+```
+
+#### Record view of media in an album
+
+WIP
+
+```
+POST /v1/albums/{albumId}/view/content/{contentId}
+```
+
+Response:
+
+- `remainingViews` — integer
+
+#### Get info about profile's album
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v2/albums/shares
+```
+
+Body:
+
+- `profileId` — integer
+
+Response:
+
+- `profileId` — long integer
+- `hasAlbum` — boolean
+- `hasSharedWithMe` — boolean
+
+#### Get albums shared by a profile
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v2/albums/shares/{profileId}
+```
+
+Response:
+
+- `albums` — array of objects
+  - *everything from [AlbumMin](#albummin)*
+  - `content` — a single [AlbumContentMin](#albumcontentmin), a blurred preview
+  - `contentCount` — object
+    - `imageCount` — integer
+    - `videoCount` — integer
+  - `expiresAt` — integer or `null`
+  - `expirationType` — [AlbumExpirationType](#albumexpirationtype)
+
+#### Create an album
+
+WIP
+
+```
+POST /v2/albums
+```
+
+Body:
+
+- `albumName` — string
+
+Response:
+
+- `albumId` — long integer
+
+#### Rename an album
+
+WIP
+
+```
+PUT /v2/albums/{albumId}
+```
+
+Body:
+
+- `albumName` — string
+
+Response:
+
+- `albumName` — string
+
+#### Delete an album
+
+WIP
+
+```
+DELETE /v1/albums/{albumId}
+```
+
+#### Upload media to an album
+
+WIP
+
+```
+POST /v1/albums/{albumId}/content
+```
+
+Query:
+
+- `width` — number
+- `height` — number
+- `isFresh` — boolean
+
+Body:
+
+MultipartBody
+
+Response:
+
+- `contentId` — Media file ID
+
+#### Reorder media in an album
+
+WIP
+
+```
+POST /v1/albums/{albumId}/content/order
+```
+
+Body:
+
+- `contentIds` — array of long integers
+
+#### Delete a media from an album
+
+WIP
+
+```
+DELETE /v1/albums/{albumId}/content/{contentId}
+```
+
+#### Albums content processing, WIP
+
+WIP
+
+```
+GET /v1/albums/{albumId}/content/{contentId}/processing
+```
+
+Response:
+
+- `processing` — boolean
+
+#### Share an album
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v4/albums/{albumId}/shares
+```
+
+Body:
+
+- `profiles` — array of objects
+  - `expirationType` — [AlbumExpirationType](#albumexpirationtype)
+  - `profileId` — integer
+
+#### Get album shares
+
+WIP
+
+Returns profiles the album was shared with.
+
+```
+GET /v1/albums/{albumId}/shares
+```
+
+- `profileIds` — array of strings
+
+#### Unshare an album
+
+WIP
+
+```
+PUT /v1/albums/{albumId}/unshares
+```
+
+Body:
+
+- `profiles` — array of objects
+  - `expiresAt` — long integer or `null`
+  - `profileId` — long integer or `null`
+
+#### Unshare an album from everybody
+
+WIP
+
+```
+PUT /v1/albums/{albumId}/shares/remove
+```
+
+#### Albums content chat list-by-id, WIP
+
+WIP
+
+```
+POST /v1/albums/{albumId}/content/chat/list-by-id
+```
+
+Query:
+
+- `isFresh` — boolean
+
+Body:
+
+- `ids` — array of long integers
+
+#### Get album limits
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/albums/storage
+```
+
+Response:
+
+- `subscriptionType` — string, e.g. `FreeAlbums`
+- `maxAlbums` — integer
+- `maxContentItemsPerAlbum` — integer
+- `maxShares` — integer
+- `maxViewableAlbums` — integer
+- `maxViewableVideos` — integer
+- `maxContentSize` — long integer, size in bytes
+- `maxContentSizeHumanReadable` — string, incorrectly uses decimal multiples notation (MB) when in fact calculates binary notation (MiB), so API's `120.00 MB` is actually 120 MiB or 125.8291 MB
+- `maxVideoLength` — long integer, length in milliseconds (1/1000th of a second)
+- `minVideoLength` — long integer, length in milliseconds (1/1000th of a second)
+- `maxShareableAlbums` — integer
+- `maxVideosPerAlbum` — integer
+
+#### Albums red dot, WIP
+
+WIP
+
+```
+PUT /v1/albums/red-dot
+```
+
+#### Pressie albums feed, WIP
+
+WIP
+
+```
+POST /v3/pressie-albums/feed
+```
+
+#### Pressie albums feed paywall, WIP
+
+WIP
+
+```
+POST /v3/pressie-albums/feed/paywall/
+```
+
+#### Pressie albums feed profile ID, WIP
+
+WIP
+
+```
+GET /v3/pressie-albums/feed/{profileId}
+```
+
+#### Pressie albums feed update read, WIP
+
+WIP
+
+```
+POST /v3/pressie-albums/feed/update/read
+```
 
 ### Misc
 
@@ -1007,12 +1410,16 @@ Errors:
 
 ### Profiles
 
-#### ProfileMasked
+#### ProfileMaskedMin
 
 - `distance` — number or `null`
-- `lastViewed` — number or `null`
 - `profileImageMediaHash` — string or `null`, see [Media](#media)
 - `isFavorite` — boolean
+
+#### ProfileMasked
+
+- *everything from [ProfileMaskedMin](#profilemaskedmin)*
+- `lastViewed` — number or `null`
 - `seen` — unix timestamp in milliseconds or `null`
 - `sexualPosition` — integer or `null`, see [Position ID](#position-id)
 - `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
@@ -1020,10 +1427,14 @@ Errors:
 
 #### ProfileMin
 
-- *everything from [ProfileMasked](#profilemasked), additionally:*
 - `profileId` — string with numeric id
-- `onlineUntil` — long number or `null`
 - `displayName` — string or `null`
+- `onlineUntil` — long number or `null`
+
+#### ProfileShort
+
+- *everything from [ProfileMasked](#profilemasked)*
+- *everything from [ProfileMin](#profilemin)*
 - `age` — number, may be `0` or `null`
 - `showAge` — boolean
 - `showDistance` — boolean
@@ -1041,7 +1452,7 @@ Errors:
 
 #### Profile
 
-- *everything from [ProfileMin](#profilemin), additionally:*
+- *everything from [ProfileShort](#profileshort)*
 - `aboutMe` — string or `null`
 - `ethnicity` — integer or `null`, see [Ethnicity](#ethnicity)
 - `relationshipStatus` — integer or `null`, see [Relationship status](#relationship-status)
@@ -1206,7 +1617,7 @@ Response:
 
 WIP
 
-GET v3/assignment
+GET /v3/assignment
 
 ### Media
 
@@ -1538,11 +1949,24 @@ Response:
 
 #### Get received taps
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 GET /v2/taps/received
 ```
+
+Response:
+
+- `profiles`
+	- *everything from [ProfileMaskedMin](#profilemaskedmin)*
+	- *everything from [ProfileMin](#profilemin)*
+	- `timestamp`
+	- `tapType`
+	- `lastOnline`
+	- `isBoosting`
+	- `isMutual`
+	- `rightNowType`
+	- `isViewable`
 
 #### Get views number
 
@@ -1556,9 +1980,9 @@ Response:
 
 - `viewedCount` — number or `null`
 - `mostRecent` — object or `null`
-	`profileId` — string with number
-	`photoHash` — 40 characters hex string
-	`timestamp` — unix timestamp in milliseconds
+	- `profileId` — string with number
+	- `photoHash` — 40 characters hex string
+	- `timestamp` — unix timestamp in milliseconds
 
 #### Get viewers list
 
@@ -1572,7 +1996,7 @@ Response:
 
 - `totalViewers` — integer
 - `previews` — array of objects
-  - *everything from [ProfileMasked](#profilemasked), additionally:*
+  - *everything from [ProfileMasked](#profilemasked)*
   - `isInBadNeighborhood` — boolean
   - `isViewedMeFreshFace` — boolean
   - `isSecretAdmirer` — boolean
@@ -1580,8 +2004,8 @@ Response:
     - `totalCount` — integer
     - `maxDisplayCount` — integer
 - `profiles` — array of objects
-  - *everything from previews, additionally:*
-  - *everything from [ProfileMin](#profilemin), additionally:*
+  - *everything from `previews`*
+  - *everything from [ProfileShort](#profileshort)*
   - `hasFaceRecognition` — boolean
   - `isIncognito` — boolean
   - `boosting` — boolean
