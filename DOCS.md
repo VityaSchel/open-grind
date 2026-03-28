@@ -20,15 +20,15 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Conversations](#conversations)
 			- [Conversation ID](#conversation-id)
 			- [Conversation](#conversation)
-			- [List conversations](#list-conversations)
-			- [Refresh specific messages](#refresh-specific-messages)
-			- [Delete conversation](#delete-conversation)
-			- [Pin conversation](#pin-conversation)
-			- [Unpin conversation](#unpin-conversation)
-			- [Mark messages as read up to messageId](#mark-messages-as-read-up-to-messageid)
-			- [Mute conversation](#mute-conversation)
-			- [Unmute conversation](#unmute-conversation)
+			- [Get conversations](#get-conversations)
+			- [Delete a conversation](#delete-a-conversation)
+			- [Pin a conversation](#pin-a-conversation)
+			- [Unpin a conversation](#unpin-a-conversation)
+			- [Mute a conversation](#mute-a-conversation)
+			- [Unmute a conversation](#unmute-a-conversation)
 			- [Get shared media in conversation](#get-shared-media-in-conversation)
+			- [Refresh messages](#refresh-messages)
+			- [Mark messages as read](#mark-messages-as-read)
 			- [AI chat suggestions](#ai-chat-suggestions)
 		- [Saved phrases](#saved-phrases)
 			- [Saved phrase](#saved-phrase)
@@ -63,9 +63,9 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 				- [`"Text"`](#text)
 				- [`"VideoCall"`](#videocall)
 				- [`"Unknown"`](#unknown)
-			- [List messages in conversation](#list-messages-in-conversation)
-			- [Get a single message in conversation](#get-a-single-message-in-conversation)
-			- [Send a message to conversation](#send-a-message-to-conversation)
+			- [Get messages in a conversation](#get-messages-in-a-conversation)
+			- [Get a single message in a conversation](#get-a-single-message-in-a-conversation)
+			- [Send a message to a conversation](#send-a-message-to-a-conversation)
 			- [Unsend a message](#unsend-a-message)
 			- [Delete a message](#delete-a-message)
 			- [Send typing indicator](#send-typing-indicator)
@@ -174,6 +174,25 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
 	- [Rate limits](#rate-limits)
+	- [WebSocket](#websocket)
+		- [Events](#events)
+			- [Generic events](#generic-events)
+				- [`ws.connection.established`](#wsconnectionestablished)
+				- [`ws.error`](#wserror)
+			- [Notifications events](#notifications-events)
+				- [`chat.v1.message_sent`](#chatv1message_sent)
+				- [`chat.v1.refresh_dynamic`](#chatv1refresh_dynamic)
+				- [`tap.v1.tap_sent`](#tapv1tap_sent)
+				- [`chat.v1.conversation.delete`](#chatv1conversationdelete)
+				- [chat.v1.message.ack](#chatv1messageack)
+				- [notification.undelivered](#notificationundelivered)
+				- [chat.v1.typing.start](#chatv1typingstart)
+				- [chat.v1.typing.stop](#chatv1typingstop)
+		- [Commands](#commands)
+			- [WebSocket command ref](#websocket-command-ref)
+			- [WebSocket command request](#websocket-command-request)
+				- [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
+			- [WebSocket command response](#websocket-command-response)
 	- [Appendix](#appendix)
 
 ## Getting started
@@ -208,7 +227,7 @@ Example: `a1b2c3d4e5f60789;GLOBAL;2;8026152960;2400x1080;550e8400-e29b-41d4-a716
 
 ### `User-Agent`
 
-Absense or incorrect forming of this header might lead to HTTP status 400 and `urn:gr:err:header` API error.
+Absense or incorrect forming of this header might lead to HTTP status 400 and `urn:gr:err:header` API error or 403 [WebSocket](#websocket) connection error.
 
 ```
 grindr3/25.20.0.147239;147239;<subscriptionTier>;Android <osVersion>;<deviceModel>;<manufacturer>
@@ -324,6 +343,8 @@ Payload claims:
 
 ## Messaging
 
+See also: [WebSocket](#websocket)
+
 ### Conversations
 
 #### Conversation ID
@@ -374,7 +395,7 @@ String with numbers separated by `:`, e.g. `"12345678:23456789"`
 	- `rightNow` — string, e.g. `"NOT_ACTIVE"`
 	- `hasUnreadThrob` — boolean
 
-#### List conversations
+#### Get conversations
 
 Requires [Authorization](#api-authorization).
 
@@ -407,17 +428,7 @@ Response:
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
 
-#### Refresh specific messages
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v4/chat/conversation/{conversationId}/message-by-id
-```
-
-#### Delete conversation
+#### Delete a conversation
 
 Requires [Authorization](#api-authorization).
 
@@ -433,13 +444,13 @@ Response:
 
 Empty.
 
-#### Pin conversation
+#### Pin a conversation
 
 Requires [Authorization](#api-authorization).
 
 Affects sorting position in [list conversations](#list-conversations) endpoint response.
 
-Repeated requests are completed without errors. Requests on non existing conversations seem to be affecting them after they have been created.
+Repeated requests are completed without errors. Requests on nonexistent conversations seem to be affecting them after they have been created.
 
 ```
 POST /v4/chat/conversation/{conversationId}/pin
@@ -451,11 +462,11 @@ Response:
 
 Empty.
 
-#### Unpin conversation
+#### Unpin a conversation
 
 Requires [Authorization](#api-authorization).
 
-Affects sorting position in [list conversations](#list-conversations) endpoint response. Requests on non existing conversations seem to be affecting them after they have been created.
+Affects sorting position in [list conversations](#list-conversations) endpoint response. Requests on nonexistent conversations seem to be affecting them after they have been created.
 
 Repeated requests are completed without errors.
 
@@ -469,23 +480,11 @@ Response:
 
 Empty.
 
-#### Mark messages as read up to messageId
-
-WIP
+#### Mute a conversation
 
 Requires [Authorization](#api-authorization).
 
-```
-POST /v4/chat/conversation/{conversationId}/read/{messageId}
-```
-
-No body.
-
-#### Mute conversation
-
-Requires [Authorization](#api-authorization).
-
-Requests on non existing conversations seem to be affecting them after they have been created.
+Requests on nonexistent conversations seem to be affecting them after they have been created.
 
 Repeated requests are completed without errors.
 
@@ -500,11 +499,11 @@ Response:
 
 Empty
 
-#### Unmute conversation
+#### Unmute a conversation
 
 Requires [Authorization](#api-authorization).
 
-Requests on non existing conversations seem to be affecting them after they have been created.
+Requests on nonexistent conversations seem to be affecting them after they have been created.
 
 Repeated requests are completed without errors.
 
@@ -528,15 +527,62 @@ Requires [Authorization](#api-authorization).
 GET /v5/chat/media/shared/images/with-me/{conversationId}
 ```
 
-#### AI chat suggestions
+#### Refresh messages
 
-WIP
+Unknown, WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v4/chat/conversation/{conversationId}/message-by-id
+```
+
+Body:
+
+- `messageIds` — array of strings
+
+Response:
+
+- `messages` — array of [Message](#message)
+
+#### Mark messages as read
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v4/chat/conversation/{conversationId}/read/{messageId}
+```
+
+Regardless of messageId passed, the whole conversation's [`unreadCount`](#conversation) will be reset to 0. messageId is taken into account to present the "Read" label to sender.
+
+If you'd like to mark conversation as read but don't show it to other participant, you could pass a valid but nonexistent messageId, such as `0:00000000-0000-0000-0000-000000000000`.
+
+Invalid messageIds will cause HTTP status 400 Bad Request errors.
+
+No body.
+
+Response:
+
+Empty.
+
+#### AI chat suggestions
 
 Requires [Authorization](#api-authorization).
 
 ```
 GET /v1/chat/suggestions?conversationId=
 ```
+
+Query:
+
+- `conversationId` — string
+
+Response:
+
+- `suggestions` — array of objects
+  - `id` — UUIDv3
+  - `text` — string
+  - `type` — `SAVED_PHRASE` | `SMART_PHRASE`
 
 ### Saved phrases
 
@@ -856,9 +902,11 @@ Only for "status" messages:
 
 Empty type
 
-#### List messages in conversation
+#### Get messages in a conversation
 
 Requires [Authorization](#api-authorization).
+
+Invoking this endpoint does not [mark messages as read](#mark-messages-as-read-up-to-message-id).
 
 ```
 GET /v5/chat/conversation/{conversationId}/message
@@ -867,7 +915,7 @@ GET /v5/chat/conversation/{conversationId}/message
 Query (optional):
 
 - `pageKey` — optional, unknown string
-- `profile` — optional, unknown boolean
+- `profile` — boolean (`profile=true` | `profile=` + any other value), optional
 
 Response:
 
@@ -877,9 +925,15 @@ Response:
   - `translate` — boolean
   - `hasSharedAlbums` — boolean
   - `isInAList` — boolean
-- `profile` — unknown value, appears to be null
+- `profile` — object if `profile` query parameter is set to `true` or `null`
+  - `profileId` — long integer
+  - `name` — string, may be empty
+  - `mediaHash` — string or `null`, see [Media](#media)
+  - `onlineUntil` — unknown or `null`
+  - `distance` — float or `null`
+  - `showDistance` — boolean
 
-#### Get a single message in conversation
+#### Get a single message in a conversation
 
 Requires [Authorization](#api-authorization).
 
@@ -891,13 +945,13 @@ Response:
 
 - `message` — [Message](#message)
 
-#### Send a message to conversation
+#### Send a message to a conversation
 
-WIP
+Requires [Authorization](#api-authorization).
 
 Please don't use this for spam. Be civil.
 
-Requires [Authorization](#api-authorization).
+See also: [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
 
 ```
 POST /v4/chat/message/send
@@ -911,12 +965,15 @@ Body:
   - `targetId` — integer
 - `body` — object with [Message contents](#message-contents) or `null`
 
-Unknown body parameters:
+Additional body fields for [websocket](#send-a-message-to-a-conversation-via-ws) only:
 
-- `ref` — string or `null`, optional
-- `replyToMessageId` — string or `null`, optional, WIP
+- `replyToMessageId` — string or `null`, optional
+
+When `replyToMessageId` is used in HTTP API appears to cause 400 Bad Request error.
 
 Response:
+
+HTTP status 201.
 
 [Message](#message) object.
 
@@ -1071,7 +1128,7 @@ Previously shared [albums in chat](#album) inherit new `expirationType` settings
 - `thumbUrl` — string, unblurred preview, see [Media -> Signed CDN files](#signed-cdn-files)
 - `url` — string, original file, see [Media -> Signed CDN files](#signed-cdn-files), may be `""` if `remainingViews` is 0
 - `processing` — boolean
-- `rejectionId` - unknown or null
+- `rejectionId` - unknown or `null`
 
 #### AlbumCoverUrl
 
@@ -1901,7 +1958,7 @@ GET /v1/favorites/notes/{targetProfileId}
 
 Response:
 
-- `notes` — string, empty for non existing notes
+- `notes` — string, empty for nonexistent notes
 - `phoneNumber` — string, might be empty
 
 #### Add note
@@ -2061,7 +2118,7 @@ POST /v2/taps/add
 Body:
 
 - `recipientId` — long integer, [profile id](#profile)
-- `tapType` — [Tap ID](#tap-id), invalid or non existing Tap IDs are still recorded as successfull
+- `tapType` — [Tap ID](#tap-id), invalid or nonexistent Tap IDs are still recorded as successfull
 
 Response:
 
@@ -2326,6 +2383,139 @@ WIP
 ## Rate limits
 
 WIP, help with this section is greatly appreciated.
+
+## WebSocket
+
+WebSocket URL:
+
+```
+wss://grindr.mobi/v1/ws
+```
+
+Only [Authorization](#api-authorization) and [User-Agent](#user-agent) are required in the connection request. Expired authorization tokens do not cause connection to be closed, although attempting to use such expired token with a [command](#websocket-command-request) will result in it being closed by server with status code 4401.
+
+Upon successful connection, a [`ws.connection.established`](#wsconnectionestablished) event is received by client.
+
+### Events
+
+Events are formatted as a compact JSON object that has a `type` string property and other top-level properties defined below, different for each event type.
+
+#### Generic events
+
+##### `ws.connection.established`
+
+Connection established. Sent by server automatically as soon as the WebSocket is opened.
+
+- `timestamp` — unix timestamp in milliseconds
+
+##### `ws.error`
+
+Response to a command, generic error.
+
+- `message` — e.g. `"Could not convert frame to command"`
+
+#### Notifications events
+
+All notifications include the following fields:
+
+- `notificationId` — UUIDv4 or `null`
+- `ref` — always `null` for notifications
+
+##### `chat.v1.message_sent`
+
+Message received, sent, unsent or got reaction.
+
+- `payload` — [Message](#message)
+
+##### `chat.v1.refresh_dynamic`
+
+Album shared, unshared, expiration settings changed or viewed.
+
+- `payload` — object
+  - `conversationId` — [Conversation ID](#conversation-id)
+  - `messageType` — [Message Type](#message-type)
+
+##### `tap.v1.tap_sent`
+
+Tap received or sent.
+
+- `payload` — object
+  - `timestamp`
+  - `senderId`
+  - `recipientId`
+  - `tapType`
+  - `senderProfileImageHash`
+  - `senderDisplayName`
+  - `isMutual`
+
+##### `chat.v1.conversation.delete`
+
+Conversation deleted, e.g. when another profile blocked you. Also fires for unlock events.
+
+- `payload` — object
+  - `conversationIds` — array of [Conversation ID](#conversation-id)
+
+##### chat.v1.message.ack
+
+WIP
+
+##### notification.undelivered
+
+WIP
+
+##### chat.v1.typing.start
+
+WIP
+
+##### chat.v1.typing.stop
+
+WIP
+
+### Commands
+
+WebSocket API supports commands that mimic HTTP requests.
+
+#### WebSocket command ref
+
+String, required in each command.
+
+Used to identify responses to concurrent requests.
+
+**It's imperative that you use a different ref for each request, as responses seem to be cached/requests skipped.** Does not have any limits on length or disallowed characters. `null` values are not allowed as input. Any other value is coerced into string.
+
+#### WebSocket command request
+
+All requests must have these fields in addition to any top-level properties specified for each request type:
+
+- `type` — string, command type, e.g. `chat.v1.message.send`
+- `ref` — [WebSocket command ref](#websocket-command-ref)
+- `token` — string, [Session ID](#session-id)
+
+Invalid or expired tokens passed in token field cause socket closing with status code 4401.
+
+##### Send a message to a conversation via WS
+
+```
+chat.v1.message.send
+```
+
+- `payload` — body of [Send a message to a conversation](#send-a-message-to-a-conversation)
+
+[Response](#websocket-command-response):
+
+See: [HTTP API -> Send a message to a conversation](#send-a-message-to-a-conversation)
+
+#### WebSocket command response
+
+Command response is an [event](#events) sent with `type` property value being `[command].response`.
+
+Additionally, responses have the following fields:
+
+- `status` — HTTP status code for this response
+- `ref` — [WebSocket command ref](#websocket-command-ref)
+- `payload` — object, result of request
+
+Response's `payload` usually mirrors the response of HTTP API endpoint.
 
 ## Appendix
 
