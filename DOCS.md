@@ -18,6 +18,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Session ID](#session-id)
 	- [Messaging](#messaging)
 		- [Conversations](#conversations)
+			- [Conversation ID](#conversation-id)
 			- [Conversation](#conversation)
 			- [List conversations](#list-conversations)
 			- [Refresh specific messages](#refresh-specific-messages)
@@ -73,9 +74,12 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [AlbumExpirationType](#albumexpirationtype)
 			- [AlbumPreview](#albumpreview)
 			- [AlbumMin](#albummin)
+			- [AlbumDetails](#albumdetails)
+			- [AlbumExpiration](#albumexpiration)
 			- [AlbumContentMin](#albumcontentmin)
 			- [AlbumContent](#albumcontent)
 			- [AlbumCoverUrl](#albumcoverurl)
+			- [Album name](#album-name)
 			- [Get my albums](#get-my-albums)
 			- [Get an album](#get-an-album)
 			- [Get an album media poster](#get-an-album-media-poster)
@@ -88,10 +92,10 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Delete an album](#delete-an-album)
 			- [Upload media to an album](#upload-media-to-an-album)
 			- [Reorder media in an album](#reorder-media-in-an-album)
-			- [Delete a media from an album](#delete-a-media-from-an-album)
+			- [Delete media from an album](#delete-media-from-an-album)
 			- [Albums content processing, WIP](#albums-content-processing-wip)
-			- [Share an album](#share-an-album)
 			- [Get album shares](#get-album-shares)
+			- [Share an album](#share-an-album)
 			- [Unshare an album](#unshare-an-album)
 			- [Unshare an album from everybody](#unshare-an-album-from-everybody)
 			- [Albums content chat list-by-id, WIP](#albums-content-chat-list-by-id-wip)
@@ -170,6 +174,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
 	- [Rate limits](#rate-limits)
+	- [Appendix](#appendix)
 
 ## Getting started
 
@@ -321,15 +326,19 @@ Payload claims:
 
 ### Conversations
 
+#### Conversation ID
+
+String with numbers separated by `:`, e.g. `"12345678:23456789"`
+
 #### Conversation
 
 - `type` — string, e.g. `"full_conversation_v1"`
 - `data` — nested object
-	- `conversationId` — string with numbers separated by `:`, e.g. `"12345678:23456789"`
+	- `conversationId` — [Conversation ID](#conversation-id)
 	- `name` — string, profile name, may be an empty string, e.g. `""`
 	- `participants` — array of objects
-		- `profileId` — integer
-		- `primaryMediaHash` — unknown, appears to be `null`, see [Media](#media)
+		- `profileId` — integer, [Profile ID](#profilemin)
+		- `primaryMediaHash` — string or `null`, see [Media -> Public CDN files](#public-cdn-files)
 		- `lastOnline` — unix timestamp in milliseconds
 		- `onlineUntil` — unix timestamp in milliseconds or `null`
 		- `distanceMetres` — float number or `null`
@@ -340,17 +349,17 @@ Payload claims:
 	- `unreadCount` — integer
 	- `preview` — nested object
 		- `conversationId` — nested object
-    		- `value` — number in string, separated by `:`
+    		- `value` — [Conversation ID](#conversation-id)
 		- `messageId` — string, see [Message](#message) for format
-		- `chat1MessageId` — string with UUIDv4
-		- `senderId` — integer
-		- `type` — string, e.g. `"Text"`
-		- `chat1Type` — string, e.g. `"text"`
-		- `text` — string, message text
+		- `chat1MessageId` — string with UUIDv4, second part of `messageId`
+		- `senderId` — integer, [Profile ID](#profilemin)
+		- `type` — [Message type](#message-type)
+		- `chat1Type` — string, see [Message type](#message-type)
+		- `text` — string or `null`, message text
 		- `url` — unknown, appears to be `null`
 		- `lat` — unknown, appears to be `null`
 		- `lon` — unknown, appears to be `null`
-		- `albumId` — unknown, appears to be `null`
+		- `albumId` — integer, appears to be `null`
 		- `albumContentId` — unknown, appears to be `null`
 		- `albumContentReply` — unknown, appears to be `null`
 		- `duration` — unknown, appears to be `null`
@@ -637,14 +646,14 @@ Empty
 - `senderId` — number
 - `timestamp` — unix timestamp in milliseconds, appears to be same as in `messageId`
 - `unsent` — boolean, if this is true, `body` is set to `null`
-- `reactions` — array of objects:
+- `reactions` — array of objects
   - `profileId` — integer
   - `reactionType` — integer (`1` is "🔥")
 - `type` — string, see [Message type](#message-type)
 - `body` — object with [Message contents](#message-contents)
 - `replyToMessage` — unknown or `null`
 - `dynamic` — boolean, unknown purpose, WIP
-- `chat1Type` — String, e.g. `"text"`
+- `chat1Type` — string, see [Message type](#message-type)
 - `replyPreview` — unknown or `null`
 
 #### Message type
@@ -671,37 +680,72 @@ Empty
 - `"NonExpiringVideo"`
 - `"VideoCall"`
 
+There also appears to be a related `chat1Type`, could be legacy type.
+
+Possible values:
+
+- `"map"`
+- `"image"`
+- `"expiring_album"`
+- `"expiring_image"`
+- `"private_video"`
+- `"expiring_video"`
+- `"gaymoji"`
+- `"giphy"`
+- `"audio"`
+- `"video_call"`
+- `"video_call_v3"`
+- `"audio_call"`
+- `"text"`
+- `"unknown"`
+- `"retracted"`
+- `"retracted_location"`
+- `"album_share"`
+- `"album_react"`
+- `"album_content_reaction"`
+- `"album_content_reply"`
+
 #### Message contents
 
 Payload in [`body`](#message) based on [message's `type`](#message-type), might be `null` for [unsent](#unsend-a-message) messages.
 
 ##### `"Album"`
 
-- *everything from [AlbumPreview]*
-- `coverUrl` —  [AlbumCoverUrl](#AlbumCoverUrl)
-- `ownerProfileId` — number or `null`
+- *everything from [AlbumPreview](#albumpreview)*
+- *everything from [AlbumExpiration](#albumexpiration)*
+- `coverUrl` — [AlbumCoverUrl](#AlbumCoverUrl)
+- `ownerProfileId` — number or `null` if album has expired or was locked
 - `isViewable` — boolean
 - `hasVideo` — boolean
 - `hasPhoto` — boolean
 - `viewableUntil` — number or `null`
-- `expiresAt` — integer or `null`
-- `expirationType` —  string or `null`
 
 ##### `"ExpiringAlbum"`
 
-WIP
+- *everything from ["Album" message type](#album)*
 
 ##### `"ExpiringAlbumV2"`
 
-WIP
+For [AlbumExpirationType](#albumexpirationtype) = `ONCE` but might have other values if expiration settings were changed later.
+
+- *everything from ["ExpiringAlbum" message type](#expiringalbum)*
 
 ##### `"AlbumContentReaction"`
 
-WIP
+Implies "🔥" reaction as there does not appear to be any choice.
+
+- `albumId` — integer
+- `ownerProfileId` — integer or `null` if album has expired or was locked
+- `albumContentId` — integer
+- `previewUrl` — string or `null` if album has expired or was locked, see [Signed CDN files -> Chat media](#chat-media)
+- `expiresAt` — unix timestamp in milliseconds or `null`
+- `viewable` — boolean
 
 ##### `"AlbumContentReply"`
 
-WIP
+- *everything from ["AlbumContentReaction" message type](#albumcontentreaction)*
+- `albumContentReply` — string
+- `contentType` — string or `null` if album has expired or was locked
 
 ##### `"Audio"`
 
@@ -728,7 +772,7 @@ Additionally, for expiring videos:
 
 ##### `"PrivateVideo"`
 
-- *everything from [Video](#video)*
+- *everything from ["Video" message type](#video)*
 - `viewCount` — integer
 
 ##### `"NonExpiringVideo"`
@@ -770,7 +814,7 @@ Additionally, only for regular images:
 
 ##### `"ExpiringImage"`
 
-- *everything from [Image](#image)*
+- *everything from ["Image" message type](#image)*
 - `viewsRemaining` — number or `null`
 
 ##### `"Location"`
@@ -784,10 +828,14 @@ Unknown, WIP
 
 ##### `"ProfilePhotoReply"`
 
+Unknown, WIP
+
 - `imageHash` — string
 - `photoContentReply` — string
 
 ##### `"Retract"`
+
+Unknown, WIP
 
 - `targetMessageId` — string
 
@@ -796,6 +844,8 @@ Unknown, WIP
 - `text` — string
 
 ##### `"VideoCall"`
+
+WIP
 
 Only for "status" messages:
 
@@ -975,25 +1025,38 @@ WIP. No idea what SpankBank, pressie albums and paywalled albums are.
 
 #### AlbumExpirationType
 
-- `INDEFINITE` — "Indefinitely"
-- `ONCE` — "View Once"
-- `TEN_MINUTES` — "For 10 Minutes"
-- `ONE_HOUR` — "For 60 Minutes"
-- `ONE_DAY` — "For 24 Hours"
+- `"INDEFINITE"` or `0` — "Indefinitely"
+- `"ONCE"` or `1` — "View Once", limited by 30 minutes from request
+- `"TEN_MINUTES"` or `2` — "For 10 Minutes"
+- `"ONE_HOUR"` or `3` — "For 60 Minutes"
+- `"ONE_DAY"` or `4` — "For 24 Hours"
+
+Previously shared [albums in chat](#album) inherit new `expirationType` settings from newer sharings of the album.
 
 #### AlbumPreview
 
 - `albumId` — long integer
-- `albumNumber` — integer
-- `totalAlbumsShared` — integer
+- `albumNumber` — integer or `null` if album has expired or was locked
+- `totalAlbumsShared` — integer or `null` if album has expired or was locked
 - `hasUnseenContent` — boolean
 
 #### AlbumMin
 
 - *everything from [AlbumPreview](#AlbumPreview)*
-- `albumName` — unknown or `null`
+- `albumName` — appears to always be `null`
 - `profileId` — integer
 - `albumViewable` — boolean
+
+#### AlbumDetails
+
+- `sharedCount` — integer
+- `createdAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
+- `updatedAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
+
+#### AlbumExpiration
+
+- `expiresAt` — unix timestamp in milliseconds or `null`
+- `expirationType` — [AlbumExpirationType](#albumexpirationtype)
 
 #### AlbumContentMin
 
@@ -1006,9 +1069,8 @@ WIP. No idea what SpankBank, pressie albums and paywalled albums are.
 
 - *everything from [AlbumContentMin](#AlbumContentMin)*
 - `thumbUrl` — string, unblurred preview, see [Media -> Signed CDN files](#signed-cdn-files)
-- `url` — string, original file, see [Media -> Signed CDN files](#signed-cdn-files)
+- `url` — string, original file, see [Media -> Signed CDN files](#signed-cdn-files), may be `""` if `remainingViews` is 0
 - `processing` — boolean
-- `remainingViews` — integer, might be -1
 - `rejectionId` - unknown or null
 
 #### AlbumCoverUrl
@@ -1017,7 +1079,15 @@ String with URL or `null`, blurred downscaled preview.
 
 JPEG photo with the first frame of video in case of video files.
 
+Becomes unavailable (`AccessDenied`) after album has expired.
+
 See [Media -> Signed CDN files](#signed-cdn-files).
+
+#### Album name
+
+String, may be empty (`""`) or `null`, non-string values are coerced into string.
+
+Maximum length: 255 UTF-8 bytes, which is 255 characters for ASCII strings (1 ASCII character is encoded as 1 byte) but less if you include emojis or non-ascii characters (2+ bytes/one codepoit).
 
 #### Get my albums
 
@@ -1029,7 +1099,14 @@ GET /v1/albums
 
 Response:
 
-- `albums` — array of album, WIP
+- `albums` — array of objects
+  - *everything from [AlbumDetails](#albumdetails)*
+  - `albumId` — long integer
+  - `albumName` — [Album name](#album-name)
+  - `profileId` — integer
+  - `version` — integer
+  - `content` — [AlbumContent](#albumcontent)
+  - `isShareable` — boolean
 
 #### Get an album
 
@@ -1042,10 +1119,10 @@ GET /v2/albums/{albumId}
 Response:
 
 - *everything from [AlbumMin](#albummin)*
-- `content` — array of [AlbumContent](#albumcontent)
-- `sharedCount` — integer
-- `createdAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
-- `updatedAt` — string, date formatted as ISO 8601, e.g. `2026-03-27T20:39:00`
+- *everything from [AlbumDetails](#albumdetails)*
+- `content` — array of objects
+  - *everything from [AlbumContent](#albumcontent)*
+  - `remainingViews` — integer, might be -1; absent if this is your album
 
 Errors:
 
@@ -1066,15 +1143,21 @@ Response:
 
 #### Record view of an album
 
-WIP
+Repeated requests after invoking this endpoint on view ONCE albums cause HTTP status 403 Forbidden and `Action not permitted` error.
 
 ```
 GET /v3/albums/{albumId}/view
 ```
 
+Response:
+
+Empty
+
 #### Record view of media in an album
 
-WIP
+Requires [Authorization](#api-authorization).
+
+Repeated requests after reaching remainingViews=0 do not cause any errors.
 
 ```
 POST /v1/albums/{albumId}/view/content/{contentId}
@@ -1114,16 +1197,15 @@ Response:
 
 - `albums` — array of objects
   - *everything from [AlbumMin](#albummin)*
+  - *everything from [AlbumExpiration](#albumexpiration)*
   - `content` — a single [AlbumContentMin](#albumcontentmin), a blurred preview
   - `contentCount` — object
     - `imageCount` — integer
     - `videoCount` — integer
-  - `expiresAt` — integer or `null`
-  - `expirationType` — [AlbumExpirationType](#albumexpirationtype)
 
 #### Create an album
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v2/albums
@@ -1131,15 +1213,19 @@ POST /v2/albums
 
 Body:
 
-- `albumName` — string
+- `albumName` — [Album name](#album-name)
 
 Response:
 
 - `albumId` — long integer
 
+Error:
+
+- HTTP status 402 Payment required if you reached [limit](#get-album-limits) for number of created albums
+
 #### Rename an album
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 PUT /v2/albums/{albumId}
@@ -1147,23 +1233,32 @@ PUT /v2/albums/{albumId}
 
 Body:
 
-- `albumName` — string
+- `albumName` — [Album name](#album-name)
 
 Response:
 
-- `albumName` — string
+- `albumId` — integer
+- `albumName` — [Album name](#album-name)
 
 #### Delete an album
 
-WIP
+Requires [Authorization](#api-authorization).
+
+Repeated requests cause 403 Forbidden and `Action not permitted` error.
 
 ```
 DELETE /v1/albums/{albumId}
 ```
 
+Response:
+
+Empty
+
 #### Upload media to an album
 
-WIP
+Requires [Authorization](#api-authorization).
+
+Repeated requests with the same file (its contents) are skipped and a cached result from the first upload request is returned.
 
 ```
 POST /v1/albums/{albumId}/content
@@ -1171,21 +1266,24 @@ POST /v1/albums/{albumId}/content
 
 Query:
 
-- `width` — number
-- `height` — number
-- `isFresh` — boolean
+- `width` — number, optional, doesn't affect the resulting image
+- `height` — number, optional, doesn't affect the resulting image
+- `isFresh` — boolean, optional, unknown how it affects the resulting image, WIP
 
 Body:
 
-MultipartBody
+Content-Type: multipart/form-data
+
+- `content` — file to upload
 
 Response:
 
 - `contentId` — Media file ID
+- `contentUrl` — `null`
 
 #### Reorder media in an album
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v1/albums/{albumId}/content/order
@@ -1193,15 +1291,21 @@ POST /v1/albums/{albumId}/content/order
 
 Body:
 
-- `contentIds` — array of long integers
+- `contentIds` — array of long integers, each Media file ID must appear exactly once
 
-#### Delete a media from an album
+#### Delete media from an album
 
-WIP
+Requires [Authorization](#api-authorization).
+
+Technically, this does not delete the media from CDN. All signed URLs will continue to work until expired. Uploading same file will result in getting it assigned the same `contentId`.
 
 ```
 DELETE /v1/albums/{albumId}/content/{contentId}
 ```
+
+Response:
+
+Empty
 
 #### Albums content processing, WIP
 
@@ -1215,20 +1319,6 @@ Response:
 
 - `processing` — boolean
 
-#### Share an album
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v4/albums/{albumId}/shares
-```
-
-Body:
-
-- `profiles` — array of objects
-  - `expirationType` — [AlbumExpirationType](#albumexpirationtype)
-  - `profileId` — integer
-
 #### Get album shares
 
 WIP
@@ -1241,9 +1331,29 @@ GET /v1/albums/{albumId}/shares
 
 - `profileIds` — array of strings
 
+#### Share an album
+
+Requires [Authorization](#api-authorization).
+
+Automatically sends the shared album to chat with all listed profiles.
+
+```
+POST /v4/albums/{albumId}/shares
+```
+
+Body:
+
+- `profiles` — array of objects
+  - `expirationType` — [AlbumExpirationType](#albumexpirationtype)
+  - `profileId` — integer
+
+Response:
+
+Empty
+
 #### Unshare an album
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 PUT /v1/albums/{albumId}/unshares
@@ -1252,12 +1362,18 @@ PUT /v1/albums/{albumId}/unshares
 Body:
 
 - `profiles` — array of objects
-  - `expiresAt` — long integer or `null`
-  - `profileId` — long integer or `null`
+  - `profileId` — long integer
+  - `shareId` — unknown integer, can be `0`
+
+Response:
+
+Empty
 
 #### Unshare an album from everybody
 
 WIP
+
+Unknown, returns 403
 
 ```
 PUT /v1/albums/{albumId}/shares/remove
@@ -1266,6 +1382,8 @@ PUT /v1/albums/{albumId}/shares/remove
 #### Albums content chat list-by-id, WIP
 
 WIP
+
+Unknown, `{"ids":[852120758]}` returns 400
 
 ```
 POST /v1/albums/{albumId}/content/chat/list-by-id
@@ -1286,6 +1404,8 @@ Requires [Authorization](#api-authorization).
 ```
 GET /v1/albums/storage
 ```
+
+*Interestingly, /v2/albums/storage appears to exist, though not used in current version of APK.*
 
 Response:
 
@@ -2206,3 +2326,7 @@ WIP
 ## Rate limits
 
 WIP, help with this section is greatly appreciated.
+
+## Appendix
+
+API is likely written in Java with Spring Boot framework, judging by `urn:gr:` errors and unix timestamp in milliseconds.
