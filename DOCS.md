@@ -111,16 +111,20 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
 	- [Users](#users)
 		- [Profiles](#profiles)
+			- [RectF](#rectf)
 			- [ProfileMaskedMin](#profilemaskedmin)
 			- [ProfileMasked](#profilemasked)
 			- [ProfileMin](#profilemin)
 			- [ProfileShort](#profileshort)
 			- [Profile](#profile)
-			- [Get profile by ID](#get-profile-by-id)
+			- [Get a profile by ID](#get-a-profile-by-id)
 			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
 			- [Update own profile (full)](#update-own-profile-full)
 			- [Update own profile (partial)](#update-own-profile-partial)
 			- [Delete own profile](#delete-own-profile)
+			- [Upload media](#upload-media)
+			- [Get my profile photos](#get-my-profile-photos)
+			- [Edit profile photos](#edit-profile-photos)
 			- [Delete profile photos](#delete-profile-photos)
 			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
 		- [Assignments](#assignments)
@@ -132,6 +136,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 				- [GaymojiCategory](#gaymojicategory)
 			- [Signed CDN files](#signed-cdn-files)
 			- [Chat media](#chat-media)
+			- [MediaState](#mediastate)
 		- [Favorites](#favorites)
 			- [Add favorite](#add-favorite)
 			- [Remove favorite](#remove-favorite)
@@ -1587,6 +1592,17 @@ Errors:
 
 ### Profiles
 
+#### RectF
+
+Array of 4 floats or `nulls`:
+
+- Bottom edge ("y2"), in pixels
+- Left edge ("x1"), in pixels
+- Right edge ("x2"), in pixels
+- Top edge ("y1"), in pixels
+
+When used in query, stringified as follows: `y2,x1,x2,y1`.
+
 #### ProfileMaskedMin
 
 - `distance` — number or `null`
@@ -1692,7 +1708,7 @@ Errors:
 - `tribesImInto` — null
 - `showVipBadge` — boolean
 
-#### Get profile by ID
+#### Get a profile by ID
 
 Requires [Authorization](#api-authorization).
 
@@ -1758,19 +1774,94 @@ Requires [Authorization](#api-authorization).
 DELETE /v3/me/profile
 ```
 
-#### Delete profile photos
-
-WIP
+#### Upload media
 
 Requires [Authorization](#api-authorization).
+
+```
+POST /v4/media/upload
+```
+
+*Also there is a legacy `POST /v3/me/profile/images` and deprecated `POST /v1/media/upload`.*
+
+Query:
+
+- `thumbCoords` — [RectF](#rectf), see note below
+- `takenOnGrindr` — boolean, only for v4 endpoint
+
+You must ensure thumbCoords's width and height dimensions are equal, i.e. y2-y1 must equal to x2-x1. Submitting non-suqare thumbnail won't trigger any errors and it will be uploaded to CDN, however attempting to use such illegal thumbnail dimensions image in [Edit profile photos](#edit-profile-photos) will result in it being silently dropped/skipped.
+
+Body:
+
+Binary media file
+
+Response:
+
+- `hash` — string
+- `imageSizes` — array of objects
+  - `size` — integer or `null`
+  - `fullUrl` — string
+  - `thumbnail` — boolean or `null`
+  - `state` — string, [MediaState](#mediastate)
+  - `mediaHash` — string, see [Media -> Public CDN files](#public-cdn-files)
+  - `rejectionReason` — string or `null`
+- `mediaId` — integer
+
+#### Get my profile photos
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3.1/me/profile/images
+```
+
+Response:
+
+- `medias` — array of objects
+  - `mediaHash` — string, see [Media -> Public CDN files](#public-cdn-files)
+  - `type` — unknown integer
+  - `state` — integer, [MediaState](#mediastate), WIP
+
+#### Edit profile photos
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v3/me/profile/images
+```
+
+Body:
+
+- `primaryImageHash` — string or `null`, see [Media -> Public CDN file](#public-cdn-files)
+- `secondaryImageHashes` — array (max. length: 5) of strings or `null` (note: see below), see [Media -> Public CDN file](#public-cdn-files)
+
+Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.
+
+Supplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](#upload-media).
+
+Repeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however official mobile client seems to drop repeating media when processing `secondaryImageHashes` response.
+
+Response:
+
+Empty.
+
+#### Delete profile photos
+
+Requires [Authorization](#api-authorization).
+
+This endpoint removes photo from your profile as well as deletes the media from CDN.
 
 ```
 DELETE /v3/me/profile/images
 ```
 
-Body:
+Body (yes, body, not query):
 
 - `media_hashes` — array of strings
+
+Response:
+
+Empty.
 
 #### Check if profiles are reachable
 
@@ -1905,6 +1996,14 @@ Media uploaded directly to DMs are accessible by this URL:
 ```
 /{uploaderProfileId}/{mediaHash}?Expires={unixTimestampSeconds}&Signature={signature}&Key-Pair-Id={keyPairId}
 ```
+
+#### MediaState
+
+Public media in Grindr undergo through an automated moderation check before they appear in profile. State can be either `null` for medias uploaded privately ([chats](#upload-media-to-an-album)) or one of below for public-facing media.
+
+- `Pending` — awaiting moderation check
+
+WIP
 
 ### Favorites
 
