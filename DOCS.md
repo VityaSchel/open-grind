@@ -32,7 +32,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Refresh messages](#refresh-messages)
 			- [Mark messages as read](#mark-messages-as-read)
 			- [AI chat suggestions](#ai-chat-suggestions)
-			- [Chat AI summary, WIP](#chat-ai-summary-wip)
+			- [Chat AI summary feedback, WIP](#chat-ai-summary-feedback-wip)
 		- [Saved phrases](#saved-phrases)
 			- [Saved phrase](#saved-phrase)
 			- [Get saved phrases](#get-saved-phrases)
@@ -124,69 +124,6 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [ProfileMin](#profilemin)
 			- [ProfileShort](#profileshort)
 			- [Profile](#profile)
-			- [Get a profile by ID](#get-a-profile-by-id)
-			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
-			- [Update own profile (full)](#update-own-profile-full)
-			- [Update own profile (partial)](#update-own-profile-partial)
-			- [Delete own profile](#delete-own-profile)
-			- [Profile tags suggestions](#profile-tags-suggestions)
-			- [Upload media](#upload-media)
-			- [Upload media (legacy)](#upload-media-legacy)
-			- [Get my profile photos](#get-my-profile-photos)
-			- [Edit profile photos](#edit-profile-photos)
-			- [Delete profile photos](#delete-profile-photos)
-			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
-			- [Get profile insights](#get-profile-insights)
-		- [Cascade](#cascade)
-			- [Get Cascade (legacy)](#get-cascade-legacy)
-			- [Get Cascade, WIP](#get-cascade-wip)
-			- [Search, WIP](#search-wip)
-		- [Social events, WIP](#social-events-wip)
-		- [Assignments](#assignments)
-		- [Entitlements](#entitlements)
-		- [Links](#links)
-		- [Travels, WIP](#travels-wip)
-		- [Roam, WIP](#roam-wip)
-		- [Age verification, WIP](#age-verification-wip)
-		- [Blocks, WIP](#blocks-wip)
-		- [Hides, WIP](#hides-wip)
-		- [Discover, WIP](#discover-wip)
-		- [Media](#media)
-			- [Public CDN files](#public-cdn-files)
-				- [Profile images](#profile-images)
-				- [Thumbnails images](#thumbnails-images)
-				- [Grindr Gaymoji](#grindr-gaymoji)
-				- [GaymojiCategory](#gaymojicategory)
-			- [Signed CDN files](#signed-cdn-files)
-			- [Chat media](#chat-media)
-			- [MediaState](#mediastate)
-		- [Favorites](#favorites)
-			- [Add favorite](#add-favorite)
-			- [Remove favorite](#remove-favorite)
-			- [Get all notes](#get-all-notes)
-			- [Get note](#get-note)
-			- [Add note](#add-note)
-			- [Delete note](#delete-note)
-		- [Location](#location-1)
-			- [Geohash](#geohash)
-			- [Search places by name](#search-places-by-name)
-			- [Update location](#update-location)
-		- [Interest](#interest)
-			- [ViewSourceEnum](#viewsourceenum)
-			- [Tap ID](#tap-id)
-			- [Record profile views (batch)](#record-profile-views-batch)
-			- [Record single profile view](#record-single-profile-view)
-			- [Record profile view v2](#record-profile-view-v2)
-			- [Get sent taps](#get-sent-taps)
-			- [Send a tap](#send-a-tap)
-			- [Get received taps](#get-received-taps)
-			- [Get views number](#get-views-number)
-			- [Get viewers list](#get-viewers-list)
-		- [Managed fields](#managed-fields)
-			- [Pronouns](#pronouns)
-			- [Genders](#genders)
-			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
-		- [Hardcoded fields](#hardcoded-fields)
 			- [Profile tags](#profile-tags)
 			- [Position ID](#position-id)
 			- [Ethnicity](#ethnicity)
@@ -199,11 +136,83 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Looking for](#looking-for)
 			- [Tribes](#tribes)
 			- [Vaccines](#vaccines)
+			- [Managed fields](#managed-fields)
+			- [Get a profile by ID](#get-a-profile-by-id)
+			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
+			- [Update own profile (full)](#update-own-profile-full)
+			- [Update own profile (partial)](#update-own-profile-partial)
+			- [Profile tags suggestions](#profile-tags-suggestions)
+			- [Upload media](#upload-media)
+			- [Upload media (legacy)](#upload-media-legacy)
+			- [Get my profile photos](#get-my-profile-photos)
+			- [Edit profile photos](#edit-profile-photos)
+			- [Delete profile photos](#delete-profile-photos)
+			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
+			- [Get profile insights](#get-profile-insights)
+			- [Get pronouns](#get-pronouns)
+			- [Get genders](#get-genders)
+			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
+		- [Favorites](#favorites)
+			- [Add favorite](#add-favorite)
+			- [Remove favorite](#remove-favorite)
+			- [Get all notes](#get-all-notes)
+			- [Get note](#get-note)
+			- [Add note](#add-note)
+			- [Delete note](#delete-note)
+	- [Reports, WIP](#reports-wip)
+	- [Browse](#browse)
+		- [Location](#location-1)
+			- [Geohash](#geohash)
+			- [Search places by name](#search-places-by-name)
+			- [Update location](#update-location)
+		- [Cascade](#cascade)
+			- [Get Cascade (legacy)](#get-cascade-legacy)
+			- [Get Cascade, WIP](#get-cascade-wip)
+			- [Search, WIP](#search-wip)
+		- [Social events](#social-events)
+		- [Bulk exposure](#bulk-exposure)
+		- [Assignments](#assignments)
+			- [Assignment](#assignment)
+			- [Get public assignments](#get-public-assignments)
+			- [Get assignments](#get-assignments)
+		- [Entitlements](#entitlements)
+		- [Links](#links)
+		- [Travels, WIP](#travels-wip)
+		- [Roam, WIP](#roam-wip)
+		- [Age verification, WIP](#age-verification-wip)
+		- [Blocks, WIP](#blocks-wip)
+		- [Hides, WIP](#hides-wip)
+		- [Discover, WIP](#discover-wip)
+	- [Media](#media)
+		- [Public CDN files](#public-cdn-files)
+			- [Profile images](#profile-images)
+			- [Thumbnails images](#thumbnails-images)
+			- [Grindr Gaymoji](#grindr-gaymoji)
+			- [GaymojiCategory](#gaymojicategory)
+		- [Signed CDN files](#signed-cdn-files)
+			- [Chat media](#chat-media)
+			- [MediaState](#mediastate)
+	- [Interest](#interest)
+		- [Views](#views)
+			- [ViewSourceEnum](#viewsourceenum)
+			- [Get views number](#get-views-number)
+			- [Get viewers list](#get-viewers-list)
+			- [Record profile views (batch)](#record-profile-views-batch)
+			- [Record single profile view](#record-single-profile-view)
+			- [Record profile view v2](#record-profile-view-v2)
+		- [Taps](#taps)
+			- [Tap ID](#tap-id)
+			- [Get received taps](#get-received-taps)
+			- [Send a tap](#send-a-tap)
+			- [Get sent taps](#get-sent-taps)
 		- [Alist, WIP](#alist-wip)
 	- [Right Now](#right-now)
-		- [RightNowStatusEnum](#rightnowstatusenum)
+			- [RightNowStatusEnum](#rightnowstatusenum)
+			- [Right Now methods, WIP](#right-now-methods-wip)
 	- [Settings](#settings)
-		- [Account, WIP](#account-wip)
+		- [Account](#account)
+			- [Account settings, WIP](#account-settings-wip)
+			- [Delete account](#delete-account)
 	- [Third party integrations](#third-party-integrations)
 		- [Spotify](#spotify)
 			- [Get Spotify favorites profile ID, WIP](#get-spotify-favorites-profile-id-wip)
@@ -212,8 +221,8 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Tracks, WIP](#tracks-wip)
 	- [StoreApiRest, WIP](#storeapirest-wip)
 	- [Notifications, WIP](#notifications-wip)
-	- [Reports, WIP](#reports-wip)
 	- [Random images, WIP](#random-images-wip)
+		- ["For You" images, WIP](#for-you-images-wip)
 	- [Ratings, WIP](#ratings-wip)
 	- [Top Picks, WIP](#top-picks-wip)
 	- [Signal share, WIP](#signal-share-wip)
@@ -236,23 +245,21 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 	- [Rate limits](#rate-limits)
 	- [WebSocket](#websocket)
 		- [Events](#events)
-			- [Generic events](#generic-events)
-				- [`ws.connection.established`](#wsconnectionestablished)
-				- [`ws.error`](#wserror)
-			- [Notifications events](#notifications-events)
-				- [`chat.v1.message_sent`](#chatv1message_sent)
-				- [`chat.v1.refresh_dynamic`](#chatv1refresh_dynamic)
-				- [`tap.v1.tap_sent`](#tapv1tap_sent)
-				- [`chat.v1.conversation.delete`](#chatv1conversationdelete)
-				- [chat.v1.message.ack](#chatv1messageack)
-				- [notification.undelivered](#notificationundelivered)
-				- [chat.v1.typing.start](#chatv1typingstart)
-				- [chat.v1.typing.stop](#chatv1typingstop)
+			- [`ws.connection.established`](#wsconnectionestablished)
+			- [`ws.error`](#wserror)
+		- [Notification Event](#notification-event)
+			- [`chat.v1.message_sent`](#chatv1message_sent)
+			- [`chat.v1.refresh_dynamic`](#chatv1refresh_dynamic)
+			- [`tap.v1.tap_sent`](#tapv1tap_sent)
+			- [`chat.v1.conversation.delete`](#chatv1conversationdelete)
+			- [`chat.v1.message.ack`](#chatv1messageack)
+			- [`notification.undelivered`](#notificationundelivered)
+			- [`chat.v1.typing.start`](#chatv1typingstart)
+			- [`chat.v1.typing.stop`](#chatv1typingstop)
 		- [Commands](#commands)
 			- [WebSocket command ref](#websocket-command-ref)
-			- [WebSocket command request](#websocket-command-request)
-				- [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
 			- [WebSocket command response](#websocket-command-response)
+			- [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
 	- [Appendix](#appendix)
 
 ## Getting started
@@ -662,7 +669,7 @@ Response:
   - `text` — string
   - `type` — `SAVED_PHRASE` | `SMART_PHRASE`
 
-#### Chat AI summary, WIP
+#### Chat AI summary feedback, WIP
 
 POST /v1/chat/summary/feedback WingmanSummaryFeedbackDto 
 
@@ -1462,6 +1469,11 @@ Response:
 
 GET /v1/pics/limited/status . UnlimitedPhotoStatusResponse
 
+Response:
+
+- available — integer
+- total — integer
+
 #### Pics expiring, WIP
 
 POST /v4/pics/expiring ExpiringPhotoReportSentRequest ExpiringPhotoStatusResponse
@@ -1476,7 +1488,7 @@ GET /v4/videos/expiring/status . PrivateVideoStatusResponse
 
 #### Get album shares
 
-WIP
+Requires [Authorization](#api-authorization).
 
 Returns profiles the album was shared with.
 
@@ -1484,7 +1496,9 @@ Returns profiles the album was shared with.
 GET /v1/albums/{albumId}/shares
 ```
 
-- `profileIds` — array of strings
+Response:
+
+- `profileIds` — array of integers
 
 #### Share an album
 
@@ -1801,6 +1815,132 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
 - `tribesImInto` — null
 - `showVipBadge` — boolean
 
+#### Profile tags
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/tags
+```
+
+Response:
+
+Array of objects:
+
+- `language` — string
+- `categoryCollection` — array of objects
+  - `text` — string
+  - `possessiveText` string or `null`
+  - `tags` — array of objects
+    - `tagId` — integer
+    - `text` — string
+    - `key` — string
+
+#### Position ID
+
+- 1 — "Top"
+- 2 — "Bottom"
+- 3 — "Versatile"
+- 4 — "Vers Bottom"
+- 5 — "Vers Top"
+- 6 — "Side"
+
+#### Ethnicity
+
+- 1 — Asian
+- 2 — Black
+- 3 — Latino
+- 4 — Middle Eastern
+- 5 — Mixed
+- 6 — Native American
+- 7 — White
+- 8 — Other
+- 9 — South Asian
+
+#### Relationship status
+
+- 1 — Single
+- 2 — Dating
+- 3 — Exclusive
+- 4 — Committed
+- 5 — Partnered
+- 6 — Engaged
+- 7 — Married
+- 8 — Open Relationship
+
+#### Body type
+
+- 1 — "Toned"
+- 2 — "Average"
+- 3 — "Large"
+- 4 — "Muscular"
+- 5 — "Slim"
+- 6 — "Stocky"
+
+#### HIV status
+
+- 1 — "Negative"
+- 2 — "Negative, on PrEP"
+- 3 — "Positive"
+- 4 — "Positive, undetectable"
+
+#### Accept NSFW pics
+
+- 1 — "Never"
+- 2 — "Not At First"
+- 3 — "Yes Please"
+
+#### Meet at
+
+- 1 — "My Place"
+- 2 — "Your Place"
+- 3 — "Bar"
+- 4 — "Coffee Shop"
+- 5 — "Restaurant"
+
+#### Sexual health
+
+- 1 — "Condoms"
+- 2 — "I'm on doxyPEP"
+- 3 — "I'm on PrEP"
+- 4 — "I'm HIV undetectable"
+- 5 — "Prefer to discuss"
+
+#### Looking for
+
+- 2 — Chat
+- 3 — Dates
+- 4 — Friends
+- 5 — Networking
+- 6 — Relationship
+- 7 — Hookups
+
+#### Tribes
+
+- 1 — "Bear"
+- 2 — "Clean-Cut"
+- 3 — "Daddy"
+- 4 — "Discreet"
+- 5 — "Geek"
+- 6 — "Jock"
+- 7 — "Leather"
+- 8 — "Otter"
+- 9 — "Poz"
+- 10 — "Rugged"
+- 11 — "Sober"
+- 12 — "Trans"
+- 13 — "Twink"
+
+#### Vaccines
+
+- 1 - COVID-19
+- 2 — Monkeypox
+- 3 — Meningitis
+
+#### Managed fields
+
+Managed fields, such as [gender](#get-genders) and [pronouns](#get-pronouns) are profile fields that aren't hardcoded but pulled dynamically from server.
+
 #### Get a profile by ID
 
 Requires [Authorization](#api-authorization).
@@ -1856,16 +1996,6 @@ PATCH /v4/me/profile
 Body:
 
 [Profile](#profile) object, only updates specified keys.
-
-#### Delete own profile
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-DELETE /v3/me/profile
-```
 
 #### Profile tags suggestions
 
@@ -2014,6 +2144,202 @@ GET /v2/profile-insights/{profileId}
 
 Response: ProfileInsightsV2Response, WIP
 
+
+#### Get pronouns
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/pronouns
+```
+
+Response:
+
+Array of objects:
+
+- `pronounId` — integer
+- `pronoun` — string, e.g. `"-"` or `"They/Them/Theirs"`
+
+#### Get genders
+
+```
+GET /public/v2/genders
+```
+
+*Also aliased to `GET /public/v1/genders`*
+
+Response:
+
+Array of objects:
+
+- `genderId` — integer
+- `gender` — string
+- `displayGroup` — integer
+- `sortProfile` — integer or `null`
+- `sortFilter` — integer or `null`
+- `genderPlural` — string or `null`
+- `excludeOnProfileSelection` — array of integers or `null`
+- `excludeOnFilterSelection` — array of integers or `null`
+- `alsoClassifiedAs` — array of integers
+
+#### Suggest gender or pronoun
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v4/genderpronoun/suggestions
+```
+
+Body:
+
+- `category` — string, either `gender` or `pronoun`
+- `suggestedValue` — string
+
+Response:
+
+Empty
+
+### Favorites
+
+#### Add favorite
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v3/me/favorites/{profileId}
+```
+
+Response:
+
+Empty object (`{}`).
+
+#### Remove favorite
+
+Requires [Authorization](#api-authorization).
+
+```
+DELETE /v3/me/favorites/{profileId}
+```
+
+Response:
+
+Empty object (`{}`).
+
+#### Get all notes
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/favorites/notes
+```
+
+Response:
+
+Array of objects:
+
+- `notes` — string
+- `phoneNumber` — string, might be empty
+- `counterpartyId` — profile ID
+
+#### Get note
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/favorites/notes/{targetProfileId}
+```
+
+Response:
+
+- `notes` — string, empty for nonexistent notes
+- `phoneNumber` — string, might be empty
+
+#### Add note
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v1/favorites/notes/{targetProfileId}
+```
+
+- `notes` — string, required
+- `phoneNumber` — string, required
+
+*The `counterpartyId` parameter seems to be ignored, it's unknown what its purpose is.*
+
+Response:
+
+Empty, HTTP status 204.
+
+#### Delete note
+
+Requires [Authorization](#api-authorization).
+
+```
+DELETE /v1/favorites/notes/{targetProfileId}
+```
+
+*Essentially equivalent to [Add note](#add-note) with `notes` set to `""`.*
+
+## Reports, WIP
+
+GET /v4/flags/{id} . ReportProfileResponse
+POST /v4/flags/{id} ReportProfileRequest
+GET /v3.1/flags/{id} . ReportProfileResponse
+POST /v3.1/flags/{id} ReportProfileRequest
+
+## Browse
+
+### Location
+
+#### Geohash
+
+Grindr requires geohash to be exactly 12 characters long.
+
+<https://en.wikipedia.org/wiki/Geohash>
+
+Example: `gcw2jp5u2d1b`
+
+Geohash explorer: <https://geohash.softeng.co/>
+
+#### Search places by name
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3/places/search
+```
+
+Query:
+
+- `placeName` — string, e.g. `Paris`
+
+Response:
+
+- `places` — array of objects
+  - `name` — string
+  - `address` — string
+  - `lat` — number
+  - `lon` — number
+  - `placeId` — string with number
+  - `importance` — float
+
+#### Update location
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v4/location
+```
+
+Body: 
+
+- `geohash` — string, exactly 12 characters, see [geohash](#geohash)
+
+Response:
+
+Empty.
+
 ### Cascade
 
 #### Get Cascade (legacy)
@@ -2106,37 +2432,112 @@ GET /v7/search
 
 Response: ProfileSearchResponseV7, WIP
 
-### Social events, WIP
+### Social events
 
-GET /v1/social-events?geohash=string&sort=string&region=string . EventsListResponse
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/social-events
+```
+
+Query:
+
+- `geohash` — string, optional
+- `sort` — string, optional
+- `region` — string, optional
+
+Response:
+
+- `events` — array of objects
+  - `socialEventId` — long
+  - `name` — string
+  - `location` — string
+  - `startTime` — unix timestamp in milliseconds
+  - `endTime` — unix timestamp in milliseconds
+  - `eventType` — string, e.g. `FESTIVAL` | `KINK` | `PRIDE`
+  - `eventImageUrl` — string
+  - `imageSource` — string
+  - `region` — string
+  - `attendeesPreview` — array of objects
+    - `profileId` — long integer
+    - `profileImageUrl` — string, may be empty
+  - `timezone` — string
+  - `isAttending` — boolean
+
+### Bulk exposure
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v2/bulk-exposure
+```
+
+Body:
+
+- `exposures` — array of objects
+  - `key` — string
+  - `geohash` — [Geohash](#geohash)
+
+Response:
+
+Empty.
 
 ### Assignments
 
+#### Assignment
+
+- `key` — string, e.g. `"ai-consent-2026"`
+- `value` — string, e.g. `"off"` or `"on"` or `"Test"`
+- `payload` — arbitrary data object
+- `type` — string, e.g. `"FEATURE_FLAG"` or `"EXPERIMENT"`
+
+#### Get public assignments
+
+```
 GET /public/v1/public-features
+```
 
-Response: GrindrAssignmentsResponse, WIP
+Response:
 
-POST /v2/bulk-exposure
+- `assignments` — array of [Assignment](#assignment)
 
-Body: BatchExposureRequest, WIP
+#### Get assignments
 
-GET /v3/assignment?geohash=
+Requires [Authorization](#api-authorization).
 
-Response: GrindrAssignmentsResponse, WIP
+```
+GET /v3/assignment
+```
+
+Query:
+
+- `geohash` — [Geohash](#geohash)
+
+Response:
+
+- `assignments` — array of [Assignment](#assignment)
 
 ### Entitlements
 
+```
 GET /v1/entitlements
+```
 
-Response: EntitlementCounts
+Response:
+
+- `rightNow` — integer
 
 ### Links
+
+Unknown, WIP
 
 ```
 GET /v4/links/{key}
 ```
 
-Response: LinkResolveResponse, WIP
+Response:
+
+- `destination` — string
 
 ### Travels, WIP
 
@@ -2183,7 +2584,7 @@ GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
 GET /v2/discover?geohash=string . DiscoverResponse
 POST /v1/me/pass/{profileId}
 
-### Media
+## Media
 
 Media files in Grindr are stored on cdns.grindr.com:443 hosted by Amazon CloudFront powered by AmazonS3. All CDN files are accessible without [authorization](#api-authorization) but some are protected with signed URLs. No [security headers](#security-headers) or `Authorization` need to be present in reuqest to CDN.
 
@@ -2193,7 +2594,7 @@ Media files are identified by either a 40-character (public files) or 64-charact
 
 There are two types of files stored on CDN.
 
-#### Public CDN files
+### Public CDN files
 
 CDN files that are public are accessible directly using their hash, e.g. [profile images](#profile-images)
 
@@ -2203,7 +2604,7 @@ Base URL:
 https://cdns.grindr.com
 ```
 
-##### Profile images
+#### Profile images
 
 ```
 /images/profile/{size}/{mediaHash}
@@ -2218,7 +2619,7 @@ Available sizes for `{size}` parameter:
 - `480x480`
 - `320x320`
 
-##### Thumbnails images
+#### Thumbnails images
 
 ```
 /images/thumb/{size}/{mediaHash}
@@ -2231,7 +2632,7 @@ Available sizes for `{size}` parameter:
 - `320x320`
 - `75x75`
 
-##### Grindr Gaymoji
+#### Grindr Gaymoji
 
 List gaymojis:
 
@@ -2260,7 +2661,7 @@ The image file assosiated with the Gaymoji is hosted at:
 
 ID must include file extension.
 
-##### GaymojiCategory
+#### GaymojiCategory
 
 One of the following values:
 
@@ -2273,7 +2674,7 @@ One of the following values:
 - `profile`
 - `wen_ching_taiwan_stickers`
 
-#### Signed CDN files
+### Signed CDN files
 
 CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.
 
@@ -2301,244 +2702,15 @@ Public media in Grindr undergo through an automated moderation check before they
 
 WIP
 
-### Favorites
+## Interest
 
-#### Add favorite
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v3/me/favorites/{profileId}
-```
-
-Response:
-
-Empty object (`{}`).
-
-#### Remove favorite
-
-Requires [Authorization](#api-authorization).
-
-```
-DELETE /v3/me/favorites/{profileId}
-```
-
-Response:
-
-Empty object (`{}`).
-
-#### Get all notes
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v1/favorites/notes
-```
-
-Response:
-
-Array of objects:
-
-- `notes` — string
-- `phoneNumber` — string, might be empty
-- `counterpartyId` — profile ID
-
-#### Get note
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v1/favorites/notes/{targetProfileId}
-```
-
-Response:
-
-- `notes` — string, empty for nonexistent notes
-- `phoneNumber` — string, might be empty
-
-#### Add note
-
-Requires [Authorization](#api-authorization).
-
-```
-PUT /v1/favorites/notes/{targetProfileId}
-```
-
-- `notes` — string, required
-- `phoneNumber` — string, required
-
-*The `counterpartyId` parameter seems to be ignored, it's unknown what its purpose is.*
-
-Response:
-
-Empty, HTTP status 204.
-
-#### Delete note
-
-Requires [Authorization](#api-authorization).
-
-```
-DELETE /v1/favorites/notes/{targetProfileId}
-```
-
-*Essentially equivalent to [Add note](#add-note) with `notes` set to `""`.*
-
-### Location
-
-#### Geohash
-
-Grindr requires geohash to be exactly 12 characters long.
-
-<https://en.wikipedia.org/wiki/Geohash>
-
-Example: `gcw2jp5u2d1b`
-
-Geohash explorer: <https://geohash.softeng.co/>
-
-#### Search places by name
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v3/places/search
-```
-
-Query:
-
-- `placeName` — string, e.g. `Paris`
-
-Response:
-
-- `places` — array of objects
-  - `name` — string
-  - `address` — string
-  - `lat` — number
-  - `lon` — number
-  - `placeId` — string with number
-  - `importance` — float
-
-#### Update location
-
-Requires [Authorization](#api-authorization).
-
-```
-PUT /v4/location
-```
-
-Body: 
-
-- `geohash` — string, exactly 12 characters, see [geohash](#geohash)
-
-Response:
-
-Empty.
-
-### Interest
+### Views
 
 #### ViewSourceEnum
 
 - `DISCOVER`
 - `FOR_YOU`
 - `UNKNOWN` (fallback)
-
-#### Tap ID
-
-- `0` — "FRIENDLY" ("hi" or 🍪 based on client's rendering settings)
-- `1` — "HOT" (🔥)
-- `2` — "LOOKING" (😈)
-- `3` — "NONE"
-
-Cookie taps are essentially bubbles "hi" but your client can choose to render them as 🍪. There is no separate cookie tap type.
-
-#### Record profile views (batch)
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v4/views
-```
-
-Body:
-
-- `viewedProfileIds` — array of strings with numeric ids
-- `foundVia` — unknown or `null`
-
-#### Record single profile view
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v4/views/{profileId}
-```
-
-#### Record profile view v2
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v5/views/{profileId}
-```
-
-Body:
-
-- `foundVia` — unknown or `null`
-- `source` — [ViewSourceEnum](#viewsourceenum)
-
-#### Get sent taps
-
-WIP
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v1/interactions/taps/sent
-```
-
-#### Send a tap
-
-Requires [Authorization](#api-authorization).
-
-Repeated requests result in `Invalid request` error and HTTP status 400.
-
-```
-POST /v2/taps/add
-```
-
-Body:
-
-- `recipientId` — long integer, [profile id](#profile)
-- `tapType` — [Tap ID](#tap-id), invalid or nonexistent Tap IDs are still recorded as successfull
-
-Response:
-
-- `isMutual` — boolean
-
-#### Get received taps
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v2/taps/received
-```
-
-Response:
-
-- `profiles`
-	- *everything from [ProfileMaskedMin](#profilemaskedmin)*
-	- *everything from [ProfileMin](#profilemin)*
-	- `timestamp`
-	- `tapType`
-	- `lastOnline`
-	- `isBoosting`
-	- `isMutual`
-	- `rightNowType`
-	- `isViewable`
 
 #### Get views number
 
@@ -2585,187 +2757,113 @@ Response:
   - `unreadMessageCount` — integer
   - `hasChatted` — boolean
 
-### Managed fields
+#### Record profile views (batch)
 
-Managed fields are profile fields that aren't hardcoded but pulled dynamically from server, such as pronouns, ethnicity and relationship statuses.
-
-#### Pronouns
+WIP
 
 Requires [Authorization](#api-authorization).
 
 ```
-GET /v1/pronouns
-```
-
-Response:
-
-Array of objects:
-
-- `pronounId` — integer
-- `pronoun` — string, e.g. `"-"` or `"They/Them/Theirs"`
-
-#### Genders
-
-```
-GET /public/v2/genders
-```
-
-*Also aliased to `GET /public/v1/genders`*
-
-Response:
-
-Array of objects:
-
-- `genderId` — integer
-- `gender` — string
-- `displayGroup` — integer
-- `sortProfile` — integer or `null`
-- `sortFilter` — integer or `null`
-- `genderPlural` — string or `null`
-- `excludeOnProfileSelection` — array of integers or `null`
-- `excludeOnFilterSelection` — array of integers or `null`
-- `alsoClassifiedAs` — array of integers
-
-#### Suggest gender or pronoun
-
-Requires [Authorization](#api-authorization).
-
-```
-PUT /v4/genderpronoun/suggestions
+POST /v4/views
 ```
 
 Body:
 
-- `category` — string, either `gender` or `pronoun`
-- `suggestedValue` — string
+- `viewedProfileIds` — array of strings with numeric ids
+- `foundVia` — unknown or `null`
 
-Response:
+#### Record single profile view
 
-Empty
-
-### Hardcoded fields
-
-#### Profile tags
+WIP
 
 Requires [Authorization](#api-authorization).
 
 ```
-GET /v1/tags
+POST /v4/views/{profileId}
+```
+
+#### Record profile view v2
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v5/views/{profileId}
+```
+
+Body:
+
+- `foundVia` — unknown or `null`
+- `source` — [ViewSourceEnum](#viewsourceenum)
+
+### Taps
+
+#### Tap ID
+
+- `0` — "FRIENDLY" ("hi" or 🍪 based on client's rendering settings)
+- `1` — "HOT" (🔥)
+- `2` — "LOOKING" (😈)
+- `3` — "NONE"
+
+Cookie taps are essentially bubbles "hi" but your client can choose to render them as 🍪. There is no separate cookie tap type.
+
+#### Get received taps
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v2/taps/received
 ```
 
 Response:
 
-Array of objects:
+- `profiles`
+	- *everything from [ProfileMaskedMin](#profilemaskedmin)*
+	- *everything from [ProfileMin](#profilemin)*
+	- `timestamp`
+	- `tapType`
+	- `lastOnline`
+	- `isBoosting`
+	- `isMutual`
+	- `rightNowType`
+	- `isViewable`
 
-- `language` — string
-- `categoryCollection` — array of objects
-  - `text` — string
-  - `possessiveText` string or `null`
-  - `tags` — array of objects
-    - `tagId` — integer
-    - `text` — string
-    - `key` — string
+#### Send a tap
 
-#### Position ID
+Requires [Authorization](#api-authorization).
 
-- 1 — "Top"
-- 2 — "Bottom"
-- 3 — "Versatile"
-- 4 — "Vers Bottom"
-- 5 — "Vers Top"
-- 6 — "Side"
+Repeated requests result in `Invalid request` error and HTTP status 400.
 
-#### Ethnicity
+```
+POST /v2/taps/add
+```
 
-- 1 — Asian
-- 2 — Black
-- 3 — Latino
-- 4 — Middle Eastern
-- 5 — Mixed
-- 6 — Native American
-- 7 — White
-- 8 — Other
-- 9 — South Asian
+Body:
 
-#### Relationship status
+- `recipientId` — long integer, [profile id](#profile)
+- `tapType` — [Tap ID](#tap-id), invalid or nonexistent Tap IDs are still recorded as successfull
 
-- 1 — Single
-- 2 — Dating
-- 3 — Exclusive
-- 4 — Committed
-- 5 — Partnered
-- 6 — Engaged
-- 7 — Married
-- 8 — Open Relationship
+Response:
 
-#### Body type
+- `isMutual` — boolean
 
-- 1 — "Toned"
-- 2 — "Average"
-- 3 — "Large"
-- 4 — "Muscular"
-- 5 — "Slim"
-- 6 — "Stocky"
+#### Get sent taps
 
-#### HIV status
+Requires [Authorization](#api-authorization).
 
-- 1 — "Negative"
-- 2 — "Negative, on PrEP"
-- 3 — "Positive"
-- 4 — "Positive, undetectable"
+```
+GET /v1/interactions/taps/sent
+```
 
-#### Accept NSFW pics
+Response:
 
-- 1 — "Never"
-- 2 — "Not At First"
-- 3 — "Yes Please"
-
-#### Meet at
-
-- 1 — "My Place"
-- 2 — "Your Place"
-- 3 — "Bar"
-- 4 — "Coffee Shop"
-- 5 — "Restaurant"
-
-#### Sexual health
-
-- 1 — "Condoms"
-- 2 — "I'm on doxyPEP"
-- 3 — "I'm on PrEP"
-- 4 — "I'm HIV undetectable"
-- 5 — "Prefer to discuss"
-
-#### Looking for
-
-- 2 — Chat
-- 3 — Dates
-- 4 — Friends
-- 5 — Networking
-- 6 — Relationship
-- 7 — Hookups
-
-#### Tribes
-
-- 1 — "Bear"
-- 2 — "Clean-Cut"
-- 3 — "Daddy"
-- 4 — "Discreet"
-- 5 — "Geek"
-- 6 — "Jock"
-- 7 — "Leather"
-- 8 — "Otter"
-- 9 — "Poz"
-- 10 — "Rugged"
-- 11 — "Sober"
-- 12 — "Trans"
-- 13 — "Twink"
-
-#### Vaccines
-
-- 1 - COVID-19
-- 2 — Monkeypox
-- 3 — Meningitis
+- `senderId` — integer
+- `receiverId` — integer
+- `tapType` — [Tap ID](#tap-id)
+- `sentOn` — unix timestamp in milliseconds
+- `deleted` — boolean
+- `readOn` — unknown or `null`
 
 ### Alist, WIP
 
@@ -2779,6 +2877,14 @@ DELETE /v1/alist/profiles/{profileId}
 
 WIP
 
+#### RightNowStatusEnum
+
+- `NOT_ACTIVE`
+- `HOSTING`
+- `NOT_HOSTING`
+
+#### Right Now methods, WIP
+
 GET /v3/rightnow/active-post . RightNowGetActivePostResponse
 GET /v3/rightnow/profiles/{profileId} . RightNowGetOtherUserPostResponse
 PATCH /{version}/rightnow/posts/{postId} UpdatePostRequest
@@ -2790,15 +2896,11 @@ POST /v1/media/upload?img_1_bottom=integer&img_1_left=integer&img_1_right=intege
 GET /v1/rightnow/googleplay/sku . RightNowSkuResponse
 POST /v1/rightnow/requests RightNowCreateRequestData
 
-### RightNowStatusEnum
-
-- `NOT_ACTIVE`
-- `HOSTING`
-- `NOT_HOSTING`
-
 ## Settings
 
-### Account, WIP
+### Account
+
+#### Account settings, WIP
 
 POST /v3/users/password-validation ValidatePasswordComplexityRequest
 POST /v3/gcm-push-tokens FcmPushRequest
@@ -2829,6 +2931,16 @@ POST /v4/sms/verifycode SmsVerifyCodeRequest
 POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
 
 POST /api/token (URL-encoded) see below SpotifyAuthResponse
+
+#### Delete account
+
+WIP
+
+Requires [Authorization](#api-authorization).
+
+```
+DELETE /v3/me/profile
+```
 
 ## Third party integrations
 
@@ -2886,14 +2998,9 @@ POST /public/v1/notifications/ack
 
 Body: NotificationAckBody, WIP
 
-## Reports, WIP
-
-GET /v4/flags/{id} . ReportProfileResponse
-POST /v4/flags/{id} ReportProfileRequest
-GET /v3.1/flags/{id} . ReportProfileResponse
-POST /v3.1/flags/{id} ReportProfileRequest
-
 ## Random images, WIP
+
+### "For You" images, WIP
 
 GET /v1/random-images/foryou?count=0 . WoodworkRandomImageResponse
 
@@ -3048,45 +3155,46 @@ Upon successful connection, a [`ws.connection.established`](#wsconnectionestabli
 
 Events are formatted as a compact JSON object that has a `type` string property and other top-level properties defined below, different for each event type.
 
-#### Generic events
-
-##### `ws.connection.established`
+#### `ws.connection.established`
 
 Connection established. Sent by server automatically as soon as the WebSocket is opened.
 
 - `timestamp` — unix timestamp in milliseconds
 
-##### `ws.error`
+#### `ws.error`
 
 Response to a command, generic error.
 
 - `message` — e.g. `"Could not convert frame to command"`
 
-#### Notifications events
+### Notification Event
 
 All notifications include the following fields:
 
 - `notificationId` — UUIDv4 or `null`
 - `ref` — always `null` for notifications
 
-##### `chat.v1.message_sent`
+#### `chat.v1.message_sent`
 
 Message received, sent, unsent or got reaction.
 
+- *everything from [Notification Event](#notification-event)*
 - `payload` — [Message](#message)
 
-##### `chat.v1.refresh_dynamic`
+#### `chat.v1.refresh_dynamic`
 
 Album shared, unshared, expiration settings changed or viewed.
 
+- *everything from [Notification Event](#notification-event)*
 - `payload` — object
   - `conversationId` — [Conversation ID](#conversation-id)
   - `messageType` — [Message Type](#message-type)
 
-##### `tap.v1.tap_sent`
+#### `tap.v1.tap_sent`
 
 Tap received or sent.
 
+- *everything from [Notification Event](#notification-event)*
 - `payload` — object
   - `timestamp`
   - `senderId`
@@ -3096,42 +3204,33 @@ Tap received or sent.
   - `senderDisplayName`
   - `isMutual`
 
-##### `chat.v1.conversation.delete`
+#### `chat.v1.conversation.delete`
 
 Conversation deleted, e.g. when another profile blocked you. Also fires for unlock events.
 
+- *everything from [Notification Event](#notification-event)*
 - `payload` — object
   - `conversationIds` — array of [Conversation ID](#conversation-id)
 
-##### chat.v1.message.ack
+#### `chat.v1.message.ack`
 
 WIP
 
-##### notification.undelivered
+#### `notification.undelivered`
 
 WIP
 
-##### chat.v1.typing.start
+#### `chat.v1.typing.start`
 
 WIP
 
-##### chat.v1.typing.stop
+#### `chat.v1.typing.stop`
 
 WIP
 
 ### Commands
 
 WebSocket API supports commands that mimic HTTP requests.
-
-#### WebSocket command ref
-
-String, required in each command.
-
-Used to identify responses to concurrent requests.
-
-**It's imperative that you use a different ref for each request, as responses seem to be cached/requests skipped.** Does not have any limits on length or disallowed characters. `null` values are not allowed as input. Any other value is coerced into string.
-
-#### WebSocket command request
 
 All requests must have these fields in addition to any top-level properties specified for each request type:
 
@@ -3141,17 +3240,13 @@ All requests must have these fields in addition to any top-level properties spec
 
 Invalid or expired tokens passed in token field cause socket closing with status code 4401.
 
-##### Send a message to a conversation via WS
+#### WebSocket command ref
 
-```
-chat.v1.message.send
-```
+String, required in each command.
 
-- `payload` — body of [Send a message to a conversation](#send-a-message-to-a-conversation)
+Used to identify responses to concurrent requests.
 
-[Response](#websocket-command-response):
-
-See: [HTTP API -> Send a message to a conversation](#send-a-message-to-a-conversation)
+**It's imperative that you use a different ref for each request, as responses seem to be cached/requests skipped.** Does not have any limits on length or disallowed characters. `null` values are not allowed as input. Any other value is coerced into string.
 
 #### WebSocket command response
 
@@ -3164,6 +3259,18 @@ Additionally, responses have the following fields:
 - `payload` — object, result of request
 
 Response's `payload` usually mirrors the response of HTTP API endpoint.
+
+#### Send a message to a conversation via WS
+
+```
+chat.v1.message.send
+```
+
+- `payload` — body of [Send a message to a conversation](#send-a-message-to-a-conversation)
+
+[Response](#websocket-command-response):
+
+See: [HTTP API -> Send a message to a conversation](#send-a-message-to-a-conversation)
 
 ## Appendix
 
