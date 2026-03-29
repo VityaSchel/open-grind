@@ -16,11 +16,13 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 	- [Authentication](#authentication)
 		- [Sign in](#sign-in)
 		- [Session ID](#session-id)
+	- [Bootstrap](#bootstrap)
 	- [Messaging](#messaging)
 		- [Conversations](#conversations)
 			- [Conversation ID](#conversation-id)
 			- [Conversation](#conversation)
 			- [Get conversations](#get-conversations)
+			- [Get conversations by ID, WIP](#get-conversations-by-id-wip)
 			- [Delete a conversation](#delete-a-conversation)
 			- [Pin a conversation](#pin-a-conversation)
 			- [Unpin a conversation](#unpin-a-conversation)
@@ -30,6 +32,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Refresh messages](#refresh-messages)
 			- [Mark messages as read](#mark-messages-as-read)
 			- [AI chat suggestions](#ai-chat-suggestions)
+			- [Chat AI summary, WIP](#chat-ai-summary-wip)
 		- [Saved phrases](#saved-phrases)
 			- [Saved phrase](#saved-phrase)
 			- [Get saved phrases](#get-saved-phrases)
@@ -94,6 +97,10 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Reorder media in an album](#reorder-media-in-an-album)
 			- [Delete media from an album](#delete-media-from-an-album)
 			- [Albums content processing, WIP](#albums-content-processing-wip)
+			- [Pics, WIP](#pics-wip)
+			- [Pics expiring, WIP](#pics-expiring-wip)
+			- [Pics expiring status, WIP](#pics-expiring-status-wip)
+			- [Videos expiring status, WIP](#videos-expiring-status-wip)
 			- [Get album shares](#get-album-shares)
 			- [Share an album](#share-an-album)
 			- [Unshare an album](#unshare-an-album)
@@ -122,12 +129,28 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Update own profile (full)](#update-own-profile-full)
 			- [Update own profile (partial)](#update-own-profile-partial)
 			- [Delete own profile](#delete-own-profile)
+			- [Profile tags suggestions](#profile-tags-suggestions)
 			- [Upload media](#upload-media)
+			- [Upload media (legacy)](#upload-media-legacy)
 			- [Get my profile photos](#get-my-profile-photos)
 			- [Edit profile photos](#edit-profile-photos)
 			- [Delete profile photos](#delete-profile-photos)
 			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
+			- [Get profile insights](#get-profile-insights)
+		- [Cascade](#cascade)
+			- [Get Cascade (legacy)](#get-cascade-legacy)
+			- [Get Cascade, WIP](#get-cascade-wip)
+			- [Search, WIP](#search-wip)
+		- [Social events, WIP](#social-events-wip)
 		- [Assignments](#assignments)
+		- [Entitlements](#entitlements)
+		- [Links](#links)
+		- [Travels, WIP](#travels-wip)
+		- [Roam, WIP](#roam-wip)
+		- [Age verification, WIP](#age-verification-wip)
+		- [Blocks, WIP](#blocks-wip)
+		- [Hides, WIP](#hides-wip)
+		- [Discover, WIP](#discover-wip)
 		- [Media](#media)
 			- [Public CDN files](#public-cdn-files)
 				- [Profile images](#profile-images)
@@ -176,8 +199,40 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Looking for](#looking-for)
 			- [Tribes](#tribes)
 			- [Vaccines](#vaccines)
+		- [Alist, WIP](#alist-wip)
 	- [Right Now](#right-now)
 		- [RightNowStatusEnum](#rightnowstatusenum)
+	- [Settings](#settings)
+		- [Account, WIP](#account-wip)
+	- [Third party integrations](#third-party-integrations)
+		- [Spotify](#spotify)
+			- [Get Spotify favorites profile ID, WIP](#get-spotify-favorites-profile-id-wip)
+			- [Post Spotify favorites, WIP](#post-spotify-favorites-wip)
+			- [Auth, WIP](#auth-wip)
+			- [Tracks, WIP](#tracks-wip)
+	- [StoreApiRest, WIP](#storeapirest-wip)
+	- [Notifications, WIP](#notifications-wip)
+	- [Reports, WIP](#reports-wip)
+	- [Random images, WIP](#random-images-wip)
+	- [Ratings, WIP](#ratings-wip)
+	- [Top Picks, WIP](#top-picks-wip)
+	- [Signal share, WIP](#signal-share-wip)
+	- [Drawer, WIP](#drawer-wip)
+	- [Legal agreements, WIP](#legal-agreements-wip)
+	- [GrindrStore, WIP](#grindrstore-wip)
+	- [Heatmap, WIP](#heatmap-wip)
+	- [Reddot, WIP](#reddot-wip)
+	- [Videocalls, WIP](#videocalls-wip)
+	- [Modal, WIP](#modal-wip)
+	- [Warnings, WIP](#warnings-wip)
+	- [Logging, WIP](#logging-wip)
+	- [Rewarded chats, WIP](#rewarded-chats-wip)
+	- [Rewarded ads, WIP](#rewarded-ads-wip)
+	- [Boosting, WIP](#boosting-wip)
+	- [GIFs, WIP](#gifs-wip)
+	- [Access requests, WIP](#access-requests-wip)
+	- [Offers, WIP](#offers-wip)
+	- [VIP, WIP](#vip-wip)
 	- [Rate limits](#rate-limits)
 	- [WebSocket](#websocket)
 		- [Events](#events)
@@ -346,6 +401,12 @@ Payload claims:
   - `restrictionReason` — unknown value, appears to be `null`
   - `grit` — unknown UUIDv4 string
 
+## Bootstrap
+
+GET /v3/bootstrap
+
+Response: BootstrapResponse
+
 ## Messaging
 
 See also: [WebSocket](#websocket)
@@ -432,6 +493,18 @@ Response:
 - `totalPartialConversations` — number, e.g. `0`
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
+
+#### Get conversations by ID, WIP
+
+POST /v1/inbox/conversation
+
+Body:
+
+List of strings
+
+Response:
+
+ConversationResponse, WIP
 
 #### Delete a conversation
 
@@ -588,6 +661,10 @@ Response:
   - `id` — UUIDv3
   - `text` — string
   - `type` — `SAVED_PHRASE` | `SMART_PHRASE`
+
+#### Chat AI summary, WIP
+
+POST /v1/chat/summary/feedback WingmanSummaryFeedbackDto 
 
 ### Saved phrases
 
@@ -1381,6 +1458,22 @@ Response:
 
 - `processing` — boolean
 
+#### Pics, WIP
+
+GET /v1/pics/limited/status . UnlimitedPhotoStatusResponse
+
+#### Pics expiring, WIP
+
+POST /v4/pics/expiring ExpiringPhotoReportSentRequest ExpiringPhotoStatusResponse
+
+#### Pics expiring status, WIP
+
+GET /v4/pics/expiring/status . ExpiringPhotoStatusResponse
+
+#### Videos expiring status, WIP
+
+GET /v4/videos/expiring/status . PrivateVideoStatusResponse
+
 #### Get album shares
 
 WIP
@@ -1774,7 +1867,33 @@ Requires [Authorization](#api-authorization).
 DELETE /v3/me/profile
 ```
 
+#### Profile tags suggestions
+
+See [Hardcoded fields -> Profile tags](#profile-tags).
+
+PUT /v4/profile-tags/suggestions ProfileTagsSuggestionRequest
+GET /v5/profile-tags/translations (header: L-Locale) . TranslationsResponse
+
 #### Upload media
+
+```
+POST /v5/chat/media/upload
+```
+
+Query:
+- `length` — long
+- `looping` — boolean
+- `takenOnGrindr` — boolean
+
+Content-Type header
+
+Body:
+
+File
+
+Response: MediaUploadResponse, WIP
+
+#### Upload media (legacy)
 
 Requires [Authorization](#api-authorization).
 
@@ -1782,7 +1901,7 @@ Requires [Authorization](#api-authorization).
 POST /v4/media/upload
 ```
 
-*Also there is a legacy `POST /v3/me/profile/images` and deprecated `POST /v1/media/upload`.*
+*Also there is a legacy `POST /v3/me/profile/images`.*
 
 Query:
 
@@ -1881,11 +2000,188 @@ Response:
 
 - `profileIds` — array of strings with numeric ids
 
-### Assignments
+#### Get profile insights
+
+```
+GET /v1/profile-insights/{profileId}
+```
+
+Response: ProfileInsightsResponse, WIP
+
+```
+GET /v2/profile-insights/{profileId}
+```
+
+Response: ProfileInsightsV2Response, WIP
+
+### Cascade
+
+#### Get Cascade (legacy)
 
 WIP
 
-GET /v3/assignment
+```
+GET /v3/cascade
+```
+
+Query:
+
+- `nearbyGeoHash` — string
+- `exploreGeoHash` — string
+- `onlineOnly` — boolean
+- `photoOnly` — boolean
+- `faceOnly` — boolean
+- `notRecentlyChatted` — boolean
+- `hasAlbum` — boolean
+- `ageMin` — integer
+- `ageMax` — integer
+- `heightCmMin` — float
+- `heightCmMax` — float
+- `weightGramsMin` — float
+- `weightGramsMax` — float
+- `tribes` — string
+- `lookingFor` — string
+- `relationshipStatuses` — string
+- `bodyTypes` — string
+- `sexualPositions` — string
+- `meetAt` — string
+- `nsfwPics` — string
+- `tags` — string
+- `fresh` — boolean
+- `pageNumber` — integer
+- `genders` — string
+- `rightNow` — boolean
+- `favorites` — boolean
+- `showSponsoredProfiles` — boolean
+- `shuffle` — boolean
+- `exploreUuid` — string
+- `hot` — boolean
+- `sexualHealth` — string
+
+Response:
+
+Unknown, WIP
+
+#### Get Cascade, WIP
+
+GET /v4/cascade
+
+Query:
+
+- Unknown, arbitrary
+
+Response: CascadeResponse
+
+#### Search, WIP
+
+GET /v7/search
+
+- `nearbyGeoHash` — string
+- `exploreGeoHash` — string
+- `online` — boolean
+- `photoOnly` — boolean
+- `faceOnly` — boolean
+- `notRecentlyChatted` — boolean
+- `hasAlbum` — boolean
+- `ageMinimum` — integer
+- `ageMaximum` — integer
+- `heightMinimum` — float
+- `heightMaximum` — float
+- `weightMinimum` — float
+- `weightMaximum` — float
+- `grindrTribesIds` — string
+- `lookingForIds` — string
+- `relationshipStatusIds` — string
+- `bodyTypeIds` — string
+- `sexualPositionIds` — string
+- `meetAtIds` — string
+- `nsfwIds` — string
+- `pageNumber` — integer
+- `profileTags` — string
+- `searchAfterDistance` — string
+- `searchAfterProfileId` — string
+- `fresh` — boolean
+- `freeFilter` — boolean
+- `genders` — string
+
+Response: ProfileSearchResponseV7, WIP
+
+### Social events, WIP
+
+GET /v1/social-events?geohash=string&sort=string&region=string . EventsListResponse
+
+### Assignments
+
+GET /public/v1/public-features
+
+Response: GrindrAssignmentsResponse, WIP
+
+POST /v2/bulk-exposure
+
+Body: BatchExposureRequest, WIP
+
+GET /v3/assignment?geohash=
+
+Response: GrindrAssignmentsResponse, WIP
+
+### Entitlements
+
+GET /v1/entitlements
+
+Response: EntitlementCounts
+
+### Links
+
+```
+GET /v4/links/{key}
+```
+
+Response: LinkResolveResponse, WIP
+
+### Travels, WIP
+
+POST /v6/profiles/travel AddTravelPlanApiRequest
+POST /v6/profiles/travel/update UpdateTravelPlanApiRequest
+DELETE /v6/profiles/travel/{travelPlanId} . PlacesResponse
+GET /v6/profiles/travel/{profileId} . TravelPlansApiResponse
+
+### Roam, WIP
+
+GET /v1/location/neighborhood/{geohash}
+PUT /v1/roam/location RoamPutLocationRequest
+GET /v1/roam . RoamSession
+PUT /v1/roam/status/{location}
+PUT /v1/roam/arrival/{days}
+
+### Age verification, WIP
+
+Help needed
+
+POST /v1/age-verification/verify/document AgeVerificationPhotoIdMatchRequest AgeVerificationFaceTecResponse
+POST /v1/age-verification/session . AgeVerificationSessionResponse
+POST /v1/age-verification/verify/enrollment . AgeVerificationFaceTecResponse
+POST /v1/age-verification/verify/liveness3d AgeVerificationFaceTecRequest AgeVerificationFaceTecResponse
+GET /v1/age-verification/options . AgeVerificationOptionsResponse AgeVerificationOptionsResponse
+
+### Blocks, WIP
+
+DELETE /v3/me/blocks
+POST /v3/me/blocks/{profileId}
+GET /v3.1/me/blocks . GetBlocksResponse
+DELETE /v3/me/blocks/{targetProfileId}
+
+### Hides, WIP
+
+DELETE /v1/hides
+GET /v1/hides . GetHiddenProfilesResponse
+DELETE /v1/hides/{profileId}
+POST /v1/me/hides/{profileId}
+
+### Discover, WIP
+
+GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
+GET /v2/discover?geohash=string . DiscoverResponse
+POST /v1/me/pass/{profileId}
 
 ### Media
 
@@ -1940,7 +2236,7 @@ Available sizes for `{size}` parameter:
 List gaymojis:
 
 ```
-/grindr/chat/gaymoji
+GET /grindr/chat/gaymoji
 ```
 
 Response:
@@ -2314,6 +2610,8 @@ Array of objects:
 GET /public/v2/genders
 ```
 
+*Also aliased to `GET /public/v1/genders`*
+
 Response:
 
 Array of objects:
@@ -2469,15 +2767,266 @@ Array of objects:
 - 2 — Monkeypox
 - 3 — Meningitis
 
+### Alist, WIP
+
+GET /v1/alist/profiles/{profileId} . AListFullProfileApiResponse
+GET /v1/alist/updates . AListUpdatesApiResponse
+POST /v1/alist/feedback/{conversationId} AListFeedback
+GET /v3/alist/profiles?filter=string[] . AListProfilesResponse
+DELETE /v1/alist/profiles/{profileId} 
+
 ## Right Now
 
 WIP
+
+GET /v3/rightnow/active-post . RightNowGetActivePostResponse
+GET /v3/rightnow/profiles/{profileId} . RightNowGetOtherUserPostResponse
+PATCH /{version}/rightnow/posts/{postId} UpdatePostRequest
+POST /v4/rightnow/posts CreatePostRequest RightNowCreatePostResponse
+POST /v3/rightnow/posts CreatePostRequest RightNowCreatePostResponse
+PATCH /v1/rightnow/posts/{postId}/settings UpdatePostSettingsRequest
+GET /v5/rightnow/feed?sort=RightNowSortOption&hosting=boolean&ageMin=integer&ageMax=integer&sexualPositions=string . RightNowGetFeedResponse
+POST /v1/media/upload?img_1_bottom=integer&img_1_left=integer&img_1_right=integer&img_1_top=integer binary RightNowMediaUploadResponse
+GET /v1/rightnow/googleplay/sku . RightNowSkuResponse
+POST /v1/rightnow/requests RightNowCreateRequestData
 
 ### RightNowStatusEnum
 
 - `NOT_ACTIVE`
 - `HOSTING`
 - `NOT_HOSTING`
+
+## Settings
+
+### Account, WIP
+
+POST /v3/users/password-validation ValidatePasswordComplexityRequest
+POST /v3/gcm-push-tokens FcmPushRequest
+POST /v3/users/update-password ChangePasswordRequest ChangePasswordResponse
+POST /v3/users/email UpdateEmailRequest AuthResponse
+POST (dynamic, WIP) LoginEmailRequest AuthResponse
+POST /v4/sms/users/update-password ChangePasswordPhoneRequest ChangePasswordResponse
+POST (dynamic, WIP) CreateAccountEmailRequest FirstPartyCreateAccountResponse
+POST /v7/users/thirdparty CreateThirdPartyAccountRequest ThirdPartyCreateAccountResponse
+POST /v3/users/forgot-password ForgotPwdEmailRequest ForgotPwdEmailResponse
+POST /v3/users/thirdparty/exchange GoogleAccessTokenRequest GoogleAccessTokenResponse
+POST /v4/sms/sessions LoginPhoneRequest AuthResponse
+POST (dynamic, WIP) ThirdPartyRequest ThirdPartyAuthResponse
+POST (dynamic, WIP) ThirdPartySessionRequest ThirdPartyAuthResponse
+
+GET /v3/me/prefs/settings . GrindrSettings
+PUT /v1/visiting/settings VisitingStatusRequest
+GET /v1/visiting/settings . VisitingStatusSettings
+POST /v4/recognition/face FaceDetectionResult
+PUT /v1/visiting/home HomeLocationRequestHomeLocationResponse
+PUT /v3/me/prefs/settings UpdateSettingsRequest
+GET /v1/visiting/home . HomeLocationResponse
+
+POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
+POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
+POST /v4/sms/sendcode SmsSendCodeRequest
+POST /v4/sms/verifycode SmsVerifyCodeRequest
+POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
+
+POST /api/token (URL-encoded) see below SpotifyAuthResponse
+
+## Third party integrations
+
+### Spotify
+
+#### Get Spotify favorites profile ID, WIP
+
+```
+GET /v4/spotify/favorites/{profileId}
+```
+
+Response: SpotifyBackendResponse
+
+#### Post Spotify favorites, WIP
+
+```
+POST /v4/spotify/favorites
+```
+
+Body: SpotifyPostRequest, WIP
+
+#### Auth, WIP
+
+`grant_type` string, `refresh_token` string
+| `grant_type` string, `code` string, `redirect_uri` string
+| `grant_type` string
+
+#### Tracks, WIP
+
+GET /v1/search?q=string&type=string . SpotifySearchTrackResponse
+GET /v1/tracks?ids=string . SpotifyGetTrackResponse
+GET /v1/me/player/recently-played . SpotifyRecentlyPlayedResponse
+
+## StoreApiRest, WIP
+
+GET /v3/store/googleplay/products/store . StoreResponse
+GET /v1/store/googleplay/products/profile_drawer . StoreResponse
+POST /v1/consumables/attribution/tokens PaymentTokenRequest PaymentTokenResponse
+GET /v1/store/googleplay/products/consumables (deprecated) . ConsumableProductsResponse
+GET /v1/shop/googleplay/products/explore . StoreInProfileResponse
+GET /v2/store/googleplay/products/{oneStopShopCategory} . StoreResponse
+POST /v1/store/attribution/tokens PaymentTokenRequest PaymentTokenResponse
+GET /v4/store/products/{productId} . Product
+GET /v1/shop/googleplay/products/profile_drawer . StoreInProfileResponse
+POST /v3.1/store/googleplay/purchases PurchaseData UNKNOWN
+POST /v3.1/store/googleplay/purchases/restorations PurchaseData[] UNKNOWN
+POST /v1/store/googleplay/consumables/purchases ConsumableTokenRequest .
+POST /v1/store/googleplay/subscriptions/purchases SubscriptionTokenRequest .
+POST /v1/store/googleplay/subscriptions/restorations SubscriptionRestorationRequest SubscriptionRestorationResponse
+GET /v3/me/subscriptions?status=string&platform=string . SubscriptionResponse
+
+## Notifications, WIP
+
+POST /public/v1/notifications/ack
+
+Body: NotificationAckBody, WIP
+
+## Reports, WIP
+
+GET /v4/flags/{id} . ReportProfileResponse
+POST /v4/flags/{id} ReportProfileRequest
+GET /v3.1/flags/{id} . ReportProfileResponse
+POST /v3.1/flags/{id} ReportProfileRequest
+
+## Random images, WIP
+
+GET /v1/random-images/foryou?count=0 . WoodworkRandomImageResponse
+
+## Ratings, WIP
+
+POST /v1/ratings/ack
+
+## Top Picks, WIP
+
+GET /v1/toppicks/entitlements/messaging/{profileId} . TopPicksEntitlementResponse
+PUT /v1/toppicks/passed/{passedProfileId}
+POST /v1/toppicks/entitlements/messaging/{profileId}
+
+## Signal share, WIP
+
+GET /v1/signalshare . SignalShareInfoResponse
+
+## Drawer, WIP
+
+GET /v4/chat/media/drawer . MediaItem[]
+GET /v4/chat/media/drawer/{conversationId} . MediaItem[]
+DELETE /v4/chat/media/drawer/{mediaId}
+PUT /v4/chat/media/drawer/{mediaId}
+
+## Legal agreements, WIP
+
+DELETE /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest (yes, with body)
+POST /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest
+GET /v5/legal-agreements/subscriber-sponsored-content . SponsoredContentConsentAgreementResponse
+POST /v1/agreements/ban BanAgreementRequest
+
+GET /v3/me/legal-agreements . AcceptedLegalAgreementsResponse
+DELETE /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
+GET /v5/legal-agreements/vip-matchmaker . VipMatchmakerConsentAgreementResponse
+POST /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
+DELETE /v4/legal-agreements/top-picks
+GET /v5/legal-agreements/top-picks . TopPicksConsentAgreementResponse
+GET /v4/legal-agreements/right-now . RightNowConsentAgreementResponse
+DELETE /v5/legal-agreements/top-picks TopPicksAcceptConsentRequest
+PUT /v3/me/legal-agreements AcceptLegalAgreementsRequest
+POST /v4/legal-agreements/right-now RightNowAcceptConsentRequest
+POST /v4/legal-agreements/top-picks TopPicksAcceptConsentRequest
+GET /v4/legal-agreements/top-picks . TopPicksConsentAgreementResponse
+GET /v3/legal-agreements . LegalAgreementsInfo
+
+PUT /v1/opt-out ConsentRequest
+DELETE /v1/opt-out ConsentRequest (body)
+POST /v1/opt-out ConsentRequest ConsentOptStatusResponse
+
+## GrindrStore, WIP
+
+POST /v3.1/store/grindrstore/coupons CouponRequest
+
+## Heatmap, WIP
+
+GET /v1/explore_heatmaps/all_locations . ExploreHeatmapsResponse
+POST /v1/explore_heatmaps ExploreHeatmapsRequest ExploreHeatmapsResponse
+
+## Reddot, WIP
+
+GET /v1/reddot . RedDotListResponse
+POST /v1/reddot/{type}
+
+## Videocalls, WIP
+
+GET /v3/video-call . VideoCallInfoResponse
+POST /v1/video-call CreateVideoCallRequest CreateVideoCallResponse
+PATCH /v1/video-call . RenewVideoCallResponse
+PATCH /v1/video-call/join JoinVideoCallRequest JoinVideoCallResponse
+PATCH /v1/video-call/leave LeaveVideoCallRequestChatV3
+
+## Modal, WIP
+
+GET /v1/modal
+POST /v1/modal/{modalName}
+
+## Warnings, WIP
+
+PUT /v1/warnings
+GET /v2/warnings . BannedWarningList
+
+## Logging, WIP
+
+POST /v3/logging/mobile/logs binary
+POST /v3/logging/mobile/logs binary
+POST /v1/uxevent UxEventRequest
+
+## Rewarded chats, WIP
+
+POST /{version}/rewarded-chats
+GET /{version}/rewarded-chats . ExploreFreeChatsResponse
+
+## Rewarded ads, WIP
+
+PUT /v1/rewarded-ads/consumption RewardedAdStatusRequest
+PUT /v1/rewarded-ads/rewards/restriction RewardedAdRestrictionRequest
+GET /v1/rewarded-ads/rewards . RewardedAdApiResponse
+
+## Boosting, WIP
+
+GET /v2/boost/sessions . BoostSessionResponse
+POST /v1/consumables/redeem/boost . BoostRedeemedResponse
+POST /v1/boost/preferences/mega SuperBoostPreferencesRequest
+POST /v1/boost/preferences/super SuperBoostPreferencesRequest
+POST /v1/boost/preferences/standard BoostPreferencesRequest
+GET /v1/consumables/inventory . ConsumableInventoryResponse
+
+## GIFs, WIP
+
+GET /v1/gifs/trending?limit=50&rating=r . GiphyResponse
+GET /v1/gifs/search?limit=50&rating=r&q=string&offset=int . GiphyResponse
+
+## Access requests, WIP
+
+POST /v2/access-requests/codes DataPortabilityVerificationCode
+GET /v2/access-requests . AccessPortabilityResponse
+POST /v1/access-requests DataPortabilityRequest
+POST /v1/access-requests/confirmations
+POST /v2/access-requests DataPortabilityRequest
+POST /v2/access-requests/confirm
+POST /v1/access-requests/codes DataPortabilityVerificationCode
+GET /v1/access-requests . DataPortabilityResponse
+
+## Offers, WIP
+
+POST /v2/offers?offerType=string . Offer
+GET /v2/offers/eligible . EligibleOffers
+GET /v2/offers . Offer
+
+## VIP, WIP
+
+PUT /v1/vip/passed/{passedProfileId}
+GET /v1/vip-profiles . StarProfilesResponse
 
 ## Rate limits
 
