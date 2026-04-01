@@ -123,6 +123,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [ProfileMasked](#profilemasked)
 			- [ProfileMin](#profilemin)
 			- [ProfileShort](#profileshort)
+			- [ProfileFields](#profilefields)
 			- [Profile](#profile)
 			- [Profile tags](#profile-tags)
 			- [Sexual position ID](#sexual-position-id)
@@ -136,6 +137,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Looking for](#looking-for)
 			- [Tribes](#tribes)
 			- [Vaccines](#vaccines)
+			- [SocialNetwork](#socialnetwork)
 			- [Managed fields](#managed-fields)
 			- [Get a profile by ID](#get-a-profile-by-id)
 			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
@@ -166,6 +168,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Search places by name](#search-places-by-name)
 			- [Update location](#update-location)
 		- [Grid](#grid)
+			- [GridQuery](#gridquery)
 			- [CascadeQuery](#cascadequery)
 			- [CascadeResponseProfile](#cascaderesponseprofile)
 			- [CascadeResponse](#cascaderesponse)
@@ -178,7 +181,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 				- [`xtra_mpu_v1`](#xtra_mpu_v1)
 			- [Get Cascade](#get-cascade)
 			- [Get Cascade (legacy)](#get-cascade-legacy)
-			- [Search, WIP](#search-wip)
+			- [Search](#search)
 		- [Social events](#social-events)
 		- [Entitlements](#entitlements)
 		- [Links](#links)
@@ -1762,15 +1765,22 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
   - `takenOnGrindr` — boolean or `null`
   - `createdAt` — long number or `null`
 
+#### ProfileFields
+
+- `meetAt` — array of integers, see [Meet at](#meet-at)
+- `vaccines` — array of integers, see [Vaccines](#vaccines)
+- `genders` — array of integers, see [Genders](#genders)
+- `pronouns` — array of integers, see [Pronouns](#pronouns)
+
 #### Profile
 
 - *everything from [ProfileShort](#profileshort)*
+- *everything from [ProfileFields](#profilefields)*
 - `aboutMe` — string or `null`
 - `ethnicity` — integer or `null`, see [Ethnicity](#ethnicity)
 - `relationshipStatus` — integer or `null`, see [Relationship status](#relationship-status)
 - `grindrTribes` — array of integers, see [Tribes](#tribes)
 - `lookingFor` — array of integers, see [Looking for](#looking-for)
-- `vaccines` — array of integers, see [Vaccines](#vaccines)
 - `bodyType` — number or `null`, see [Body type](#body-type)
 - `hivStatus` — number or `null`, see [HIV status](#hiv-status)
 - `lastTestedDate` — unix timestamp in milliseconds or `null`
@@ -1784,12 +1794,9 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
   - `instagram` — object, may be absent
     - `userId` — string or `null`
 - `identity` — identity (unknown, wip) or `null`
-- `meetAt` — array of integers, see [Meet at](#meet-at)
 - `nsfw` — integer or `null`, see [Accept NSFW pics](#accept-nsfw-pics)
 - `hashtags` — unknown array
 - `profileTags` — array of strings, see [Profile tags](#profile-tags)
-- `genders` — array of integers, see [Genders](#genders)
-- `pronouns` — array of integers, see [Pronouns](#pronouns)
 - `tapped` — boolean
 - `tapType` — boolean
 - `lastReceivedTapTimestamp` — number or `null`
@@ -1949,6 +1956,11 @@ Array of objects:
 - 2 — Monkeypox
 - 3 — Meningitis
 
+#### SocialNetwork
+
+- `site` — string, e.g. `"twitter"` | `"facebook"` | `"instagram"`
+- `userId` — string, username
+
 #### Managed fields
 
 Managed fields, such as [gender](#get-genders) and [pronouns](#get-pronouns) are profile fields that aren't hardcoded but pulled dynamically from server.
@@ -1964,6 +1976,10 @@ GET /v7/profiles/{id}
 Query:
 
 - `id` — profile ID
+
+Response:
+
+WIP
 
 #### Get multiple profiles by ID
 
@@ -2356,17 +2372,41 @@ Empty.
 
 [Cascade](#get-cascade) returns stuff like advertisements, upsells and partial profiles, presumably ranking by algorithms or paid subscriptions. [Search](#search-wip) returns full profiles, seemengly ranked simply by distance.
 
-#### CascadeQuery
+#### GridQuery
 
 - `nearbyGeoHash` — [Geohash](#geohash)
-- `exploreGeoHash` — [Geohash](#geohash)
-- `photoOnly` — boolean
-- `faceOnly` — boolean
-- `notRecentlyChatted` — boolean
-- `hasAlbum` — boolean
-- `fresh` — boolean
-- `genders` — string, see [Get genders](#get-genders)
-- `pageNumber` — integer
+- `exploreGeoHash` — [Geohash](#geohash), optional
+- `photoOnly` — boolean, optional
+- `faceOnly` — boolean, optional
+- `notRecentlyChatted` — boolean, optional
+- `hasAlbum` — boolean, optional
+- `fresh` — boolean, optional
+- `genders` — string, see [Get genders](#get-genders), optional
+- `pageNumber` — integer, optional
+
+#### CascadeQuery
+
+- *everything from [GridQuery](#gridquery)*
+- `onlineOnly` — boolean, optional
+- `ageMin` — integer, optional
+- `ageMax` — integer, optional
+- `heightCmMin` — float, optional
+- `heightCmMax` — float, optional
+- `weightGramsMin` — float, optional
+- `weightGramsMax` — float, optional
+- `tribes` — string, see [Tribes](#tribes), optional
+- `lookingFor` — string, see [Looking for](#looking-for), optional
+- `relationshipStatuses` — string, see [Relationship status](#relationship-status), optional
+- `bodyTypes` — string, see [Body type](#body-type), optional
+- `sexualPositions` — string, see [Sexual position ID](#sexual-position-id), optional
+- `meetAt` — string, see [Meet at](#meet-at), optional
+- `nsfwPics` — string, see [Accept NSFW pics](#accept-nsfw-pics), optional
+- `tags` — string, see [Profile tags](#profile-tags), optional
+- `rightNow` — boolean, optional
+- `favorites` — boolean, optional
+- `showSponsoredProfiles` — boolean, optional
+- `shuffle` — boolean, optional
+- `hot` — boolean, optional
 
 #### CascadeResponseProfile
 
@@ -2439,24 +2479,47 @@ Only for [v3/cascade](#get-cascade-legacy):
 
 Only for [v3/cascade](#get-cascade-legacy):
 
+- *everything from [ProfileFields](#profilefields)*
 - `@type` — string, `"CascadeItemData$FullProfileV1"`
-- `tribes` — array
-- `meetAt` — array
-- `vaccines` — array
-- `genders` — array
-- `pronouns` — array
-- `socialNetworks`
-- `takenOnGrindrMetadata`
+- `tribes` — array of integers, see [Tribes](#tribes)
+- `socialNetworks` — array of [SocialNetwork](#socialnetwork)
+- `takenOnGrindrMetadata` — object
+  - *key is [Media hash](#media)*
+    - `takenOnGrindr` — boolean
+    - `createdAt` — unix timestamp in milliseconds
 
 Only for [v4/cascade](#get-cascade):
 
 - `age` — integer
 - `heightCm` — integer
 - `weightGrams` — integer
-- `bodyType` — integer
+- `bodyType` — integer, see [Body type](#body-type)
 
 ##### `explore_aggregation_v1`
 
+- `uuid` — string, UUIDv4
+- `headerName` — string, e.g. `🌎 Explore`
+- `source` — string, e.g. `cascade`
+- `items` — array of objects:
+  - `@type` — string, see below
+  - *`"ExploreAggregationItem$Location"` type*:
+  - `data` — object:
+    - `onlineCount` — integer
+    - `uuid` — string, UUIDv3
+    - `location` — object
+      - `id` — integer
+      - `name` — string, e.g. `Minneapolis`
+      - `suffix` — string, e.g. `🇺🇸`
+      - `lat` — float
+      - `lon` — float
+    - `profiles` — array of objects:
+      - `profileImageUrl` — string, URL
+  - *`"ExploreAggregationItem$Cta"` type*:
+  - *empty*
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, always `"CascadeItemData$ExploreAggregationV1"`
 
 ##### `advert_v1`
 
@@ -2500,7 +2563,7 @@ GET /v4/cascade
 
 Query:
 
-- Unknown, WIP
+[CascadeQuery](#cascadequery)
 
 Response:
 
@@ -2517,62 +2580,78 @@ GET /v3/cascade
 Query:
 
 - *everything from [CascadeQuery](#cascadequery)*
-- `onlineOnly` — boolean
-- `ageMin` — integer
-- `ageMax` — integer
-- `heightCmMin` — float
-- `heightCmMax` — float
-- `weightGramsMin` — float
-- `weightGramsMax` — float
-- `tribes` — string, see [Tribes](#tribes)
-- `lookingFor` — string, see [Looking for](#looking-for)
-- `relationshipStatuses` — string, see [Relationship status](#relationship-status)
-- `bodyTypes` — string, see [Body type](#body-type)
-- `sexualPositions` — string, see [Sexual position ID](#sexual-position-id)
-- `sexualHealth` — string, see [Sexual health](#sexual-health)
-- `meetAt` — string, see [Meet at](#meet-at)
-- `nsfwPics` — string, see [Accept NSFW pics](#accept-nsfw-pics)
-- `tags` — string, see [Profile tags](#profile-tags)
-- `rightNow` — boolean
-- `favorites` — boolean
-- `showSponsoredProfiles` — boolean
-- `shuffle` — boolean
-- `exploreUuid` — string, unknown, WIP
-- `hot` — boolean
+- `exploreUuid` — string, unknown, WIP, optional
+- `sexualHealth` — string, see [Sexual health](#sexual-health), optional
 
 Response:
 
 [CascadeResponse](#cascaderesponse)
 
-#### Search, WIP
+#### Search
 
 Requires [Authorization](#api-authorization).
+
+Results array appears to be capped to 600 per page. Use `searchAfterProfileId` or `searchAfterDistance` for pagination.
 
 ```
 GET /v7/search
 ```
 
-- *everything from [CascadeQuery](#cascadequery)*
-- `online` — boolean
-- `ageMinimum` — integer
-- `ageMaximum` — integer
-- `heightMinimum` — float
-- `heightMaximum` — float
-- `weightMinimum` — float
-- `weightMaximum` — float
-- `grindrTribesIds` — string, see [Tribes](#tribes)
-- `lookingForIds` — string, see [Looking for](#looking-for)
-- `relationshipStatusIds` — string, see [Relationship status](#relationship-status)
-- `bodyTypeIds` — string, see [Body type](#body-type)
-- `sexualPositionIds` — string, see [Sexual position](#position-id)
-- `meetAtIds` — string
-- `nsfwIds` — string
-- `profileTags` — string
-- `searchAfterDistance` — string
-- `searchAfterProfileId` — string
-- `freeFilter` — boolean
+- *everything from [GridQuery](#gridquery)*
+- `online` — boolean, optional
+- `ageMinimum` — integer, optional
+- `ageMaximum` — integer, optional
+- `heightMinimum` — float, optional
+- `heightMaximum` — float, optional
+- `weightMinimum` — float, optional
+- `weightMaximum` — float, optional
+- `grindrTribesIds` — string, see [Tribes](#tribes), optional
+- `lookingForIds` — string, see [Looking for](#looking-for), optional
+- `relationshipStatusIds` — string, see [Relationship status](#relationship-status), optional
+- `bodyTypeIds` — string, see [Body type](#body-type), optional
+- `sexualPositionIds` — string, see [Sexual position](#position-id), optional
+- `meetAtIds` — string, see [Meet at](#meet-at), optional
+- `nsfwIds` — string, see [Accept NSFW pics](#accept-nsfw-pics), optional
+- `profileTags` — string, see [Profile tags](#profile-tags), optional
+- `searchAfterDistance` — string, optional
+- `searchAfterProfileId` — string, optional
+- `freeFilter` — boolean, optional
 
-Response: ProfileSearchResponseV7, WIP
+Response:
+
+- `profiles` — array of objects:
+  - `age` — integer or `null`
+  - `displayName` — string
+  - `distance` — float
+  - `hasFaceRecognition` — boolean
+  - `isFavorite` — boolean
+  - `new` — boolean
+  - `lastChatTimestamp` — number
+  - `lastViewed` — unix timestamp in milliseconds or `null`
+  - `lastUpdatedTime` — unix timestamp in milliseconds
+  - `medias` — array of objects or `null`:
+    - `mediaHash` — [Media hash](#media)
+    - `type` — integer, WIP
+    - `state` — integer, WIP
+  - `profileId` — integer
+  - `profileImageMediaHash` — [Media hash](#media) or `null
+  - `profileTags` — array of [Profile tags](#profile-tags)
+  - `seen` — unix timestamp in milliseconds
+  - `showAge` —  boolean
+  - `showDistance` — boolean
+  - `approximateDistance` — boolean
+  - `boosting` — boolean
+  - `hasAlbum` — boolean
+  - `gender` — array of integers or `[-1]`, see [Get genders](#get-genders)
+- `lastDistanceInKm` — float
+- `lastProfileId` — integer
+- `inserts` — object:
+  - `mpuFree` — integer
+  - `mpuXtra` — integer
+  - `boostUpsell` — array of integers
+  - `mrecCascadeFirst` — integer
+  - `mrecCascadeSecond` — integer
+  - `mrecCascadeThird` — integer
 
 ### Social events
 
