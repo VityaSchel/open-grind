@@ -125,7 +125,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [ProfileShort](#profileshort)
 			- [Profile](#profile)
 			- [Profile tags](#profile-tags)
-			- [Position ID](#position-id)
+			- [Sexual position ID](#sexual-position-id)
 			- [Ethnicity](#ethnicity)
 			- [Relationship status](#relationship-status)
 			- [Body type](#body-type)
@@ -165,16 +165,21 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Geohash](#geohash)
 			- [Search places by name](#search-places-by-name)
 			- [Update location](#update-location)
-		- [Cascade](#cascade)
+		- [Grid](#grid)
+			- [CascadeQuery](#cascadequery)
+			- [CascadeResponseProfile](#cascaderesponseprofile)
+			- [CascadeResponse](#cascaderesponse)
+				- [`partial_profile_v1`](#partial_profile_v1)
+				- [`full_profile_v1`](#full_profile_v1)
+				- [`explore_aggregation_v1`](#explore_aggregation_v1)
+				- [`advert_v1`](#advert_v1)
+				- [`boost_upsell_v1`](#boost_upsell_v1)
+				- [`unlimited_mpu_v1`](#unlimited_mpu_v1)
+				- [`xtra_mpu_v1`](#xtra_mpu_v1)
+			- [Get Cascade](#get-cascade)
 			- [Get Cascade (legacy)](#get-cascade-legacy)
-			- [Get Cascade, WIP](#get-cascade-wip)
 			- [Search, WIP](#search-wip)
 		- [Social events](#social-events)
-		- [Bulk exposure](#bulk-exposure)
-		- [Assignments](#assignments)
-			- [Assignment](#assignment)
-			- [Get public assignments](#get-public-assignments)
-			- [Get assignments](#get-assignments)
 		- [Entitlements](#entitlements)
 		- [Links](#links)
 		- [Travels, WIP](#travels-wip)
@@ -183,6 +188,13 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Blocks, WIP](#blocks-wip)
 		- [Hides, WIP](#hides-wip)
 		- [Discover, WIP](#discover-wip)
+	- [Analytics](#analytics)
+		- [Assignments](#assignments)
+			- [Assignment](#assignment)
+			- [Get public assignments](#get-public-assignments)
+			- [Get assignments](#get-assignments)
+		- [Trackers](#trackers)
+			- [Bulk exposure](#bulk-exposure)
 	- [Media](#media)
 		- [Public CDN files](#public-cdn-files)
 			- [Profile images](#profile-images)
@@ -207,7 +219,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [Get sent taps](#get-sent-taps)
 		- [Alist, WIP](#alist-wip)
 	- [Right Now](#right-now)
-			- [RightNowStatusEnum](#rightnowstatusenum)
+			- [RightNowStatus](#rightnowstatus)
 			- [Right Now methods, WIP](#right-now-methods-wip)
 	- [Settings](#settings)
 		- [Account](#account)
@@ -436,7 +448,7 @@ String with numbers separated by `:`, e.g. `"12345678:23456789"`
 		- `lastOnline` — unix timestamp in milliseconds
 		- `onlineUntil` — unix timestamp in milliseconds or `null`
 		- `distanceMetres` — float number or `null`
-		- `position` — [Position ID](#position-id) or `null`
+		- `position` — [Sexual position ID](#sexual-position-id) or `null`
 		- `isInAList` — boolean
 		- `hasDatingPotential` — boolean
 	- `lastActivityTimestamp` — unix timestamp in milliseconds
@@ -490,7 +502,7 @@ Body (optional):
 - `rightNowOnly` — boolean
 - `onlineNowOnly` — boolean
 - `distanceMeters` — "double" number value or `null`
-- `positions` — array of integers, [position IDs](#position-id)
+- `positions` — array of integers, [sexual position IDs](#sexual-position-id)
 
 Response:
 
@@ -1721,9 +1733,9 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
 - *everything from [ProfileMaskedMin](#profilemaskedmin)*
 - `lastViewed` — number or `null`
 - `seen` — unix timestamp in milliseconds or `null`
-- `sexualPosition` — integer or `null`, see [Position ID](#position-id)
+- `sexualPosition` — integer or `null`, see [Sexual position ID](#sexual-position-id)
 - `foundVia` — [ViewSourceEnum](#viewsourceenum) or `null`
-- `rightNow` — [RightNowStatusEnum](#rightnowstatusenum)
+- `rightNow` — [RightNowStatus](#RightNowStatus)
 
 #### ProfileMin
 
@@ -1836,7 +1848,7 @@ Array of objects:
     - `text` — string
     - `key` — string
 
-#### Position ID
+#### Sexual position ID
 
 - 1 — "Top"
 - 2 — "Bottom"
@@ -2340,11 +2352,163 @@ Response:
 
 Empty.
 
-### Cascade
+### Grid
+
+[Cascade](#get-cascade) returns stuff like advertisements, upsells and partial profiles, presumably ranking by algorithms or paid subscriptions. [Search](#search-wip) returns full profiles, seemengly ranked simply by distance.
+
+#### CascadeQuery
+
+- `nearbyGeoHash` — [Geohash](#geohash)
+- `exploreGeoHash` — [Geohash](#geohash)
+- `photoOnly` — boolean
+- `faceOnly` — boolean
+- `notRecentlyChatted` — boolean
+- `hasAlbum` — boolean
+- `fresh` — boolean
+- `genders` — string, see [Get genders](#get-genders)
+- `pageNumber` — integer
+
+#### CascadeResponseProfile
+
+- `profileId` — integer
+- `onlineUntil` — unix timestamp in milliseconds
+- `displayName` — string
+- `distanceMeters` — integer, may be absent
+- `rightNow` — [RightNowStatus](#RightNowStatus)
+- `unreadCount` — integer
+- `isVisiting` — boolean
+- `isPopular` — boolean
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `lastOnline` — unix timestamp in milliseconds
+- `photoMediaHashes` - array of strings, see [Media](#media)
+- `lookingFor` — array of integers, see [Looking for](#looking-for)
+- `sexualPosition` — integer, see [Sexual position ID](#sexual-position-id), may be absent
+- `approximateDistance` — boolean
+- `isFavorite` — boolean
+- `isBoosting` — boolean
+- `hasChattedInLast24Hrs` — boolean
+- `hasUnviewedSpark` — boolean
+- `isTeleporting` — boolean
+- `isRoaming` — boolean
+- `isRightNow` — boolean
+- `hasUnreadThrob` — boolean
+- `isBlockable` — boolean
+- `isBoostingSomewhereElse` — boolean
+
+Only for [v4/cascade](#get-cascade):
+
+- `primaryImageUrl` — string, URL
+- `favorite` — boolean
+- `viewed` — boolean
+- `chatted` — boolean
+- `roaming` — boolean
+
+#### CascadeResponse
+
+- `items` — array of objects
+  - `type` — string, see below
+  - `data` — object, has different field for each `type`:
+    - *[`full_profile_v1`](#full_profile_v1)*
+    - *[`advert_v1`](#advert_v1)*
+    - *[`top_picks_v1`](#advert_v1)*
+    - *[`partial_profile_v1`](#partial_profile_v1)*
+    - *[`explore_aggregation_v1`](#explore_aggregation_v1)*
+    - *[`boost_upsell_v1`](#boost_upsell_v1)*
+    - *[`unlimited_mpu_v1`](#unlimited_mpu_v1)*
+    - *[`xtra_mpu_v1`](#xtra_mpu_v1)*
+- `nextPage` — integer
+- `shuffled` — boolean
+- `hiddenProfiles` — unknown
+- `hiddenProfileInfo` — unknown
+
+
+##### `partial_profile_v1`
+
+- *everything from [CascadeResponseProfile](#cascaderesponseprofile)*
+- `upsellItemType` — string, e.g. `"xtra_mpu_v1"`
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, `"CascadeItemData$PartialProfileV1"`
+
+##### `full_profile_v1`
+
+- *everything from [CascadeResponseProfile](#cascaderesponseprofile)*
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, `"CascadeItemData$FullProfileV1"`
+- `tribes` — array
+- `meetAt` — array
+- `vaccines` — array
+- `genders` — array
+- `pronouns` — array
+- `socialNetworks`
+- `takenOnGrindrMetadata`
+
+Only for [v4/cascade](#get-cascade):
+
+- `age` — integer
+- `heightCm` — integer
+- `weightGrams` — integer
+- `bodyType` — integer
+
+##### `explore_aggregation_v1`
+
+
+##### `advert_v1`
+
+- `cascadePlacementName` — string, e.g. `"mrec-cascade-first"`
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, always `"CascadeItemData$Advert"`
+
+##### `boost_upsell_v1`
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, always `"CascadeItemData$BoostUpsellV1"`
+
+Empty for [v4/cascade](#get-cascade).
+
+##### `unlimited_mpu_v1`
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, always `"CascadeItemData$UnlimitedMpuV1"`
+
+Empty for [v4/cascade](#get-cascade).
+
+##### `xtra_mpu_v1`
+
+Only for [v3/cascade](#get-cascade-legacy):
+
+- `@type` — string, always `"CascadeItemData$XtraMpuV1"`
+
+Empty for [v4/cascade](#get-cascade).
+
+#### Get Cascade
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v4/cascade
+```
+
+Query:
+
+- Unknown, WIP
+
+Response:
+
+[CascadeResponse](#cascaderesponse)
 
 #### Get Cascade (legacy)
 
-WIP
+Requires [Authorization](#api-authorization).
 
 ```
 GET /v3/cascade
@@ -2352,83 +2516,61 @@ GET /v3/cascade
 
 Query:
 
-- `nearbyGeoHash` — string
-- `exploreGeoHash` — string
+- *everything from [CascadeQuery](#cascadequery)*
 - `onlineOnly` — boolean
-- `photoOnly` — boolean
-- `faceOnly` — boolean
-- `notRecentlyChatted` — boolean
-- `hasAlbum` — boolean
 - `ageMin` — integer
 - `ageMax` — integer
 - `heightCmMin` — float
 - `heightCmMax` — float
 - `weightGramsMin` — float
 - `weightGramsMax` — float
-- `tribes` — string
-- `lookingFor` — string
-- `relationshipStatuses` — string
-- `bodyTypes` — string
-- `sexualPositions` — string
-- `meetAt` — string
-- `nsfwPics` — string
-- `tags` — string
-- `fresh` — boolean
-- `pageNumber` — integer
-- `genders` — string
+- `tribes` — string, see [Tribes](#tribes)
+- `lookingFor` — string, see [Looking for](#looking-for)
+- `relationshipStatuses` — string, see [Relationship status](#relationship-status)
+- `bodyTypes` — string, see [Body type](#body-type)
+- `sexualPositions` — string, see [Sexual position ID](#sexual-position-id)
+- `sexualHealth` — string, see [Sexual health](#sexual-health)
+- `meetAt` — string, see [Meet at](#meet-at)
+- `nsfwPics` — string, see [Accept NSFW pics](#accept-nsfw-pics)
+- `tags` — string, see [Profile tags](#profile-tags)
 - `rightNow` — boolean
 - `favorites` — boolean
 - `showSponsoredProfiles` — boolean
 - `shuffle` — boolean
-- `exploreUuid` — string
+- `exploreUuid` — string, unknown, WIP
 - `hot` — boolean
-- `sexualHealth` — string
 
 Response:
 
-Unknown, WIP
-
-#### Get Cascade, WIP
-
-GET /v4/cascade
-
-Query:
-
-- Unknown, arbitrary
-
-Response: CascadeResponse
+[CascadeResponse](#cascaderesponse)
 
 #### Search, WIP
 
-GET /v7/search
+Requires [Authorization](#api-authorization).
 
-- `nearbyGeoHash` — string
-- `exploreGeoHash` — string
+```
+GET /v7/search
+```
+
+- *everything from [CascadeQuery](#cascadequery)*
 - `online` — boolean
-- `photoOnly` — boolean
-- `faceOnly` — boolean
-- `notRecentlyChatted` — boolean
-- `hasAlbum` — boolean
 - `ageMinimum` — integer
 - `ageMaximum` — integer
 - `heightMinimum` — float
 - `heightMaximum` — float
 - `weightMinimum` — float
 - `weightMaximum` — float
-- `grindrTribesIds` — string
-- `lookingForIds` — string
-- `relationshipStatusIds` — string
-- `bodyTypeIds` — string
-- `sexualPositionIds` — string
+- `grindrTribesIds` — string, see [Tribes](#tribes)
+- `lookingForIds` — string, see [Looking for](#looking-for)
+- `relationshipStatusIds` — string, see [Relationship status](#relationship-status)
+- `bodyTypeIds` — string, see [Body type](#body-type)
+- `sexualPositionIds` — string, see [Sexual position](#position-id)
 - `meetAtIds` — string
 - `nsfwIds` — string
-- `pageNumber` — integer
 - `profileTags` — string
 - `searchAfterDistance` — string
 - `searchAfterProfileId` — string
-- `fresh` — boolean
 - `freeFilter` — boolean
-- `genders` — string
 
 Response: ProfileSearchResponseV7, WIP
 
@@ -2463,59 +2605,6 @@ Response:
     - `profileImageUrl` — string, may be empty
   - `timezone` — string
   - `isAttending` — boolean
-
-### Bulk exposure
-
-Requires [Authorization](#api-authorization).
-
-```
-POST /v2/bulk-exposure
-```
-
-Body:
-
-- `exposures` — array of objects
-  - `key` — string
-  - `geohash` — [Geohash](#geohash)
-
-Response:
-
-Empty.
-
-### Assignments
-
-#### Assignment
-
-- `key` — string, e.g. `"ai-consent-2026"`
-- `value` — string, e.g. `"off"` or `"on"` or `"Test"`
-- `payload` — arbitrary data object
-- `type` — string, e.g. `"FEATURE_FLAG"` or `"EXPERIMENT"`
-
-#### Get public assignments
-
-```
-GET /public/v1/public-features
-```
-
-Response:
-
-- `assignments` — array of [Assignment](#assignment)
-
-#### Get assignments
-
-Requires [Authorization](#api-authorization).
-
-```
-GET /v3/assignment
-```
-
-Query:
-
-- `geohash` — [Geohash](#geohash)
-
-Response:
-
-- `assignments` — array of [Assignment](#assignment)
 
 ### Entitlements
 
@@ -2583,6 +2672,67 @@ POST /v1/me/hides/{profileId}
 GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
 GET /v2/discover?geohash=string . DiscoverResponse
 POST /v1/me/pass/{profileId}
+
+## Analytics
+
+Grindr uses lots of metrics and analytics for tracking users behavior. Since such tracking goes against Open Grind's values, no effort will be directed to document this section in detail.
+
+### Assignments
+
+Assignments are used for feature flagging and A/B testing. They can be assigned to users based on their geohash, allowing for location-based feature rollouts and experiments.
+
+#### Assignment
+
+- `key` — string, e.g. `"ai-consent-2026"`
+- `value` — string, e.g. `"off"` or `"on"` or `"Test"`
+- `payload` — arbitrary data object
+- `type` — string, e.g. `"FEATURE_FLAG"` or `"EXPERIMENT"`
+
+#### Get public assignments
+
+```
+GET /public/v1/public-features
+```
+
+Response:
+
+- `assignments` — array of [Assignment](#assignment)
+
+#### Get assignments
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3/assignment
+```
+
+Query:
+
+- `geohash` — [Geohash](#geohash)
+
+Response:
+
+- `assignments` — array of [Assignment](#assignment)
+
+### Trackers
+
+#### Bulk exposure
+
+Requires [Authorization](#api-authorization).
+
+```
+POST /v2/bulk-exposure
+```
+
+Body:
+
+- `exposures` — array of objects
+  - `key` — string
+  - `geohash` — [Geohash](#geohash)
+
+Response:
+
+Empty.
 
 ## Media
 
@@ -2877,7 +3027,7 @@ DELETE /v1/alist/profiles/{profileId}
 
 WIP
 
-#### RightNowStatusEnum
+#### RightNowStatus
 
 - `NOT_ACTIVE`
 - `HOSTING`
