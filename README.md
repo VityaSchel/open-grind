@@ -1,10 +1,12 @@
 # Open Grind
 
-Unofficial FLOSS Grindr client. WIP, see [DOCS.md](./DOCS.md).
+Unofficial Grindr client. Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
 
-<!-- Unofficial Grindr client. Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
+## 🚧 There's nothing there just yet! 🚧
 
-Work in progress. See [ROADMAP.md](./ROADMAP.md).
+Come back in a couple of weeks when the API specification for developers at [DOCS.md](./DOCS.md) is finished 🤓
+
+<!-- Work in progress. See [ROADMAP.md](./ROADMAP.md).
 
 ## Usage
 
