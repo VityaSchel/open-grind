@@ -1482,7 +1482,7 @@ Response:
 
 #### Pics, WIP
 
-GET /v1/pics/limited/status . UnlimitedPhotoStatusResponse
+- GET /v1/pics/limited/status . UnlimitedPhotoStatusResponse
 
 Response:
 
@@ -1491,15 +1491,15 @@ Response:
 
 #### Pics expiring, WIP
 
-POST /v4/pics/expiring ExpiringPhotoReportSentRequest ExpiringPhotoStatusResponse
+- POST /v4/pics/expiring ExpiringPhotoReportSentRequest ExpiringPhotoStatusResponse
 
 #### Pics expiring status, WIP
 
-GET /v4/pics/expiring/status . ExpiringPhotoStatusResponse
+- GET /v4/pics/expiring/status . ExpiringPhotoStatusResponse
 
 #### Videos expiring status, WIP
 
-GET /v4/videos/expiring/status . PrivateVideoStatusResponse
+- GET /v4/videos/expiring/status . PrivateVideoStatusResponse
 
 #### Get album shares
 
@@ -1898,6 +1898,8 @@ Array of objects:
 
 #### HIV status
 
+Not to be confused with [Sexual health](#sexual-health).
+
 - 1 — "Negative"
 - 2 — "Negative, on PrEP"
 - 3 — "Positive"
@@ -1918,6 +1920,8 @@ Array of objects:
 - 5 — "Restaurant"
 
 #### Sexual health
+
+Not to be confused with [HIV status](#hiv-status).
 
 - 1 — "Condoms"
 - 2 — "I'm on doxyPEP"
@@ -2029,8 +2033,8 @@ Body:
 
 See [Hardcoded fields -> Profile tags](#profile-tags).
 
-PUT /v4/profile-tags/suggestions ProfileTagsSuggestionRequest
-GET /v5/profile-tags/translations (header: L-Locale) . TranslationsResponse
+- PUT /v4/profile-tags/suggestions ProfileTagsSuggestionRequest
+- GET /v5/profile-tags/translations (header: L-Locale) . TranslationsResponse
 
 #### Upload media
 
@@ -2311,10 +2315,10 @@ DELETE /v1/favorites/notes/{targetProfileId}
 
 ## Reports, WIP
 
-GET /v4/flags/{id} . ReportProfileResponse
-POST /v4/flags/{id} ReportProfileRequest
-GET /v3.1/flags/{id} . ReportProfileResponse
-POST /v3.1/flags/{id} ReportProfileRequest
+- GET /v4/flags/{id} . ReportProfileResponse
+- POST /v4/flags/{id} ReportProfileRequest
+- GET /v3.1/flags/{id} . ReportProfileResponse
+- POST /v3.1/flags/{id} ReportProfileRequest
 
 ## Browse
 
@@ -2709,48 +2713,48 @@ Response:
 
 ### Travels, WIP
 
-POST /v6/profiles/travel AddTravelPlanApiRequest
-POST /v6/profiles/travel/update UpdateTravelPlanApiRequest
-DELETE /v6/profiles/travel/{travelPlanId} . PlacesResponse
-GET /v6/profiles/travel/{profileId} . TravelPlansApiResponse
+- POST /v6/profiles/travel AddTravelPlanApiRequest
+- POST /v6/profiles/travel/update UpdateTravelPlanApiRequest
+- DELETE /v6/profiles/travel/{travelPlanId} . PlacesResponse
+- GET /v6/profiles/travel/{profileId} . TravelPlansApiResponse
 
 ### Roam, WIP
 
-GET /v1/location/neighborhood/{geohash}
-PUT /v1/roam/location RoamPutLocationRequest
-GET /v1/roam . RoamSession
-PUT /v1/roam/status/{location}
-PUT /v1/roam/arrival/{days}
+- GET /v1/location/neighborhood/{geohash}
+- PUT /v1/roam/location RoamPutLocationRequest
+- GET /v1/roam . RoamSession
+- PUT /v1/roam/status/{location}
+- PUT /v1/roam/arrival/{days}
 
 ### Age verification, WIP
 
 Help needed
 
-POST /v1/age-verification/verify/document AgeVerificationPhotoIdMatchRequest AgeVerificationFaceTecResponse
-POST /v1/age-verification/session . AgeVerificationSessionResponse
-POST /v1/age-verification/verify/enrollment . AgeVerificationFaceTecResponse
-POST /v1/age-verification/verify/liveness3d AgeVerificationFaceTecRequest AgeVerificationFaceTecResponse
-GET /v1/age-verification/options . AgeVerificationOptionsResponse AgeVerificationOptionsResponse
+- POST /v1/age-verification/verify/document AgeVerificationPhotoIdMatchRequest AgeVerificationFaceTecResponse
+- POST /v1/age-verification/session . AgeVerificationSessionResponse
+- POST /v1/age-verification/verify/enrollment . AgeVerificationFaceTecResponse
+- POST /v1/age-verification/verify/liveness3d AgeVerificationFaceTecRequest AgeVerificationFaceTecResponse
+- GET /v1/age-verification/options . AgeVerificationOptionsResponse AgeVerificationOptionsResponse
 
 ### Blocks, WIP
 
-DELETE /v3/me/blocks
-POST /v3/me/blocks/{profileId}
-GET /v3.1/me/blocks . GetBlocksResponse
-DELETE /v3/me/blocks/{targetProfileId}
+- DELETE /v3/me/blocks
+- POST /v3/me/blocks/{profileId}
+- GET /v3.1/me/blocks . GetBlocksResponse
+- DELETE /v3/me/blocks/{targetProfileId}
 
 ### Hides, WIP
 
-DELETE /v1/hides
-GET /v1/hides . GetHiddenProfilesResponse
-DELETE /v1/hides/{profileId}
-POST /v1/me/hides/{profileId}
+- DELETE /v1/hides
+- GET /v1/hides . GetHiddenProfilesResponse
+- DELETE /v1/hides/{profileId}
+- POST /v1/me/hides/{profileId}
 
 ### Discover, WIP
 
-GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
-GET /v2/discover?geohash=string . DiscoverResponse
-POST /v1/me/pass/{profileId}
+- GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
+- GET /v2/discover?geohash=string . DiscoverResponse
+- POST /v1/me/pass/{profileId}
 
 ## Analytics
 
@@ -3096,11 +3100,11 @@ Response:
 
 ### Alist, WIP
 
-GET /v1/alist/profiles/{profileId} . AListFullProfileApiResponse
-GET /v1/alist/updates . AListUpdatesApiResponse
-POST /v1/alist/feedback/{conversationId} AListFeedback
-GET /v3/alist/profiles?filter=string[] . AListProfilesResponse
-DELETE /v1/alist/profiles/{profileId} 
+- GET /v1/alist/profiles/{profileId} . AListFullProfileApiResponse
+- GET /v1/alist/updates . AListUpdatesApiResponse
+- POST /v1/alist/feedback/{conversationId} AListFeedback
+- GET /v3/alist/profiles?filter=string[] . AListProfilesResponse
+- DELETE /v1/alist/profiles/{profileId} 
 
 ## Right Now
 
@@ -3114,16 +3118,16 @@ WIP
 
 #### Right Now methods, WIP
 
-GET /v3/rightnow/active-post . RightNowGetActivePostResponse
-GET /v3/rightnow/profiles/{profileId} . RightNowGetOtherUserPostResponse
-PATCH /{version}/rightnow/posts/{postId} UpdatePostRequest
-POST /v4/rightnow/posts CreatePostRequest RightNowCreatePostResponse
-POST /v3/rightnow/posts CreatePostRequest RightNowCreatePostResponse
-PATCH /v1/rightnow/posts/{postId}/settings UpdatePostSettingsRequest
-GET /v5/rightnow/feed?sort=RightNowSortOption&hosting=boolean&ageMin=integer&ageMax=integer&sexualPositions=string . RightNowGetFeedResponse
-POST /v1/media/upload?img_1_bottom=integer&img_1_left=integer&img_1_right=integer&img_1_top=integer binary RightNowMediaUploadResponse
-GET /v1/rightnow/googleplay/sku . RightNowSkuResponse
-POST /v1/rightnow/requests RightNowCreateRequestData
+- GET /v3/rightnow/active-post . RightNowGetActivePostResponse
+- GET /v3/rightnow/profiles/{profileId} . RightNowGetOtherUserPostResponse
+- PATCH /{version}/rightnow/posts/{postId} UpdatePostRequest
+- POST /v4/rightnow/posts CreatePostRequest RightNowCreatePostResponse
+- POST /v3/rightnow/posts CreatePostRequest RightNowCreatePostResponse
+- PATCH /v1/rightnow/posts/{postId}/settings UpdatePostSettingsRequest
+- GET /v5/rightnow/feed?sort=RightNowSortOption&hosting=boolean&ageMin=integer&ageMax=integer&sexualPositions=string . RightNowGetFeedResponse
+- POST /v1/media/upload?img_1_bottom=integer&img_1_left=integer&img_1_right=integer&img_1_top=integer binary RightNowMediaUploadResponse
+- GET /v1/rightnow/googleplay/sku . RightNowSkuResponse
+- POST /v1/rightnow/requests RightNowCreateRequestData
 
 ## Settings
 
@@ -3131,35 +3135,35 @@ POST /v1/rightnow/requests RightNowCreateRequestData
 
 #### Account settings, WIP
 
-POST /v3/users/password-validation ValidatePasswordComplexityRequest
-POST /v3/gcm-push-tokens FcmPushRequest
-POST /v3/users/update-password ChangePasswordRequest ChangePasswordResponse
-POST /v3/users/email UpdateEmailRequest AuthResponse
-POST (dynamic, WIP) LoginEmailRequest AuthResponse
-POST /v4/sms/users/update-password ChangePasswordPhoneRequest ChangePasswordResponse
-POST (dynamic, WIP) CreateAccountEmailRequest FirstPartyCreateAccountResponse
-POST /v7/users/thirdparty CreateThirdPartyAccountRequest ThirdPartyCreateAccountResponse
-POST /v3/users/forgot-password ForgotPwdEmailRequest ForgotPwdEmailResponse
-POST /v3/users/thirdparty/exchange GoogleAccessTokenRequest GoogleAccessTokenResponse
-POST /v4/sms/sessions LoginPhoneRequest AuthResponse
-POST (dynamic, WIP) ThirdPartyRequest ThirdPartyAuthResponse
-POST (dynamic, WIP) ThirdPartySessionRequest ThirdPartyAuthResponse
+- POST /v3/users/password-validation ValidatePasswordComplexityRequest
+- POST /v3/gcm-push-tokens FcmPushRequest
+- POST /v3/users/update-password ChangePasswordRequest ChangePasswordResponse
+- POST /v3/users/email UpdateEmailRequest AuthResponse
+- POST (dynamic, WIP) LoginEmailRequest AuthResponse
+- POST /v4/sms/users/update-password ChangePasswordPhoneRequest ChangePasswordResponse
+- POST (dynamic, WIP) CreateAccountEmailRequest FirstPartyCreateAccountResponse
+- POST /v7/users/thirdparty CreateThirdPartyAccountRequest ThirdPartyCreateAccountResponse
+- POST /v3/users/forgot-password ForgotPwdEmailRequest ForgotPwdEmailResponse
+- POST /v3/users/thirdparty/exchange GoogleAccessTokenRequest GoogleAccessTokenResponse
+- POST /v4/sms/sessions LoginPhoneRequest AuthResponse
+- POST (dynamic, WIP) ThirdPartyRequest ThirdPartyAuthResponse
+- POST (dynamic, WIP) ThirdPartySessionRequest ThirdPartyAuthResponse
 
-GET /v3/me/prefs/settings . GrindrSettings
-PUT /v1/visiting/settings VisitingStatusRequest
-GET /v1/visiting/settings . VisitingStatusSettings
-POST /v4/recognition/face FaceDetectionResult
-PUT /v1/visiting/home HomeLocationRequestHomeLocationResponse
-PUT /v3/me/prefs/settings UpdateSettingsRequest
-GET /v1/visiting/home . HomeLocationResponse
+- GET /v3/me/prefs/settings . GrindrSettings
+- PUT /v1/visiting/settings VisitingStatusRequest
+- GET /v1/visiting/settings . VisitingStatusSettings
+- POST /v4/recognition/face FaceDetectionResult
+- PUT /v1/visiting/home HomeLocationRequestHomeLocationResponse
+- PUT /v3/me/prefs/settings UpdateSettingsRequest
+- GET /v1/visiting/home . HomeLocationResponse
 
-POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
-POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
-POST /v4/sms/sendcode SmsSendCodeRequest
-POST /v4/sms/verifycode SmsVerifyCodeRequest
-POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
+- POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
+- POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
+- POST /v4/sms/sendcode SmsSendCodeRequest
+- POST /v4/sms/verifycode SmsVerifyCodeRequest
+- POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
 
-POST /api/token (URL-encoded) see below SpotifyAuthResponse
+- POST /api/token (URL-encoded) see below SpotifyAuthResponse
 
 #### Delete account
 
@@ -3199,27 +3203,27 @@ Body: SpotifyPostRequest, WIP
 
 #### Tracks, WIP
 
-GET /v1/search?q=string&type=string . SpotifySearchTrackResponse
-GET /v1/tracks?ids=string . SpotifyGetTrackResponse
-GET /v1/me/player/recently-played . SpotifyRecentlyPlayedResponse
+- GET /v1/search?q=string&type=string . SpotifySearchTrackResponse
+- GET /v1/tracks?ids=string . SpotifyGetTrackResponse
+- GET /v1/me/player/recently-played . SpotifyRecentlyPlayedResponse
 
 ## StoreApiRest, WIP
 
-GET /v3/store/googleplay/products/store . StoreResponse
-GET /v1/store/googleplay/products/profile_drawer . StoreResponse
-POST /v1/consumables/attribution/tokens PaymentTokenRequest PaymentTokenResponse
-GET /v1/store/googleplay/products/consumables (deprecated) . ConsumableProductsResponse
-GET /v1/shop/googleplay/products/explore . StoreInProfileResponse
-GET /v2/store/googleplay/products/{oneStopShopCategory} . StoreResponse
-POST /v1/store/attribution/tokens PaymentTokenRequest PaymentTokenResponse
-GET /v4/store/products/{productId} . Product
-GET /v1/shop/googleplay/products/profile_drawer . StoreInProfileResponse
-POST /v3.1/store/googleplay/purchases PurchaseData UNKNOWN
-POST /v3.1/store/googleplay/purchases/restorations PurchaseData[] UNKNOWN
-POST /v1/store/googleplay/consumables/purchases ConsumableTokenRequest .
-POST /v1/store/googleplay/subscriptions/purchases SubscriptionTokenRequest .
-POST /v1/store/googleplay/subscriptions/restorations SubscriptionRestorationRequest SubscriptionRestorationResponse
-GET /v3/me/subscriptions?status=string&platform=string . SubscriptionResponse
+- GET /v3/store/googleplay/products/store . StoreResponse
+- GET /v1/store/googleplay/products/profile_drawer . StoreResponse
+- POST /v1/consumables/attribution/tokens PaymentTokenRequest PaymentTokenResponse
+- GET /v1/store/googleplay/products/consumables (deprecated) . ConsumableProductsResponse
+- GET /v1/shop/googleplay/products/explore . StoreInProfileResponse
+- GET /v2/store/googleplay/products/{oneStopShopCategory} . StoreResponse
+- POST /v1/store/attribution/tokens PaymentTokenRequest PaymentTokenResponse
+- GET /v4/store/products/{productId} . Product
+- GET /v1/shop/googleplay/products/profile_drawer . StoreInProfileResponse
+- POST /v3.1/store/googleplay/purchases PurchaseData UNKNOWN
+- POST /v3.1/store/googleplay/purchases/restorations PurchaseData[] UNKNOWN
+- POST /v1/store/googleplay/consumables/purchases ConsumableTokenRequest .
+- POST /v1/store/googleplay/subscriptions/purchases SubscriptionTokenRequest .
+- POST /v1/store/googleplay/subscriptions/restorations SubscriptionRestorationRequest SubscriptionRestorationResponse
+- GET /v3/me/subscriptions?status=string&platform=string . SubscriptionResponse
 
 ## Notifications, WIP
 
@@ -3231,7 +3235,7 @@ Body: NotificationAckBody, WIP
 
 ### "For You" images, WIP
 
-GET /v1/random-images/foryou?count=0 . WoodworkRandomImageResponse
+- GET /v1/random-images/foryou?count=0 . WoodworkRandomImageResponse
 
 ## Ratings, WIP
 
@@ -3239,130 +3243,130 @@ POST /v1/ratings/ack
 
 ## Top Picks, WIP
 
-GET /v1/toppicks/entitlements/messaging/{profileId} . TopPicksEntitlementResponse
-PUT /v1/toppicks/passed/{passedProfileId}
-POST /v1/toppicks/entitlements/messaging/{profileId}
+- GET /v1/toppicks/entitlements/messaging/{profileId} . TopPicksEntitlementResponse
+- PUT /v1/toppicks/passed/{passedProfileId}
+- POST /v1/toppicks/entitlements/messaging/{profileId}
 
 ## Signal share, WIP
 
-GET /v1/signalshare . SignalShareInfoResponse
+- GET /v1/signalshare . SignalShareInfoResponse
 
 ## Drawer, WIP
 
-GET /v4/chat/media/drawer . MediaItem[]
-GET /v4/chat/media/drawer/{conversationId} . MediaItem[]
-DELETE /v4/chat/media/drawer/{mediaId}
-PUT /v4/chat/media/drawer/{mediaId}
+- GET /v4/chat/media/drawer . MediaItem[]
+- GET /v4/chat/media/drawer/{conversationId} . MediaItem[]
+- DELETE /v4/chat/media/drawer/{mediaId}
+- PUT /v4/chat/media/drawer/{mediaId}
 
 ## Legal agreements, WIP
 
-DELETE /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest (yes, with body)
-POST /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest
-GET /v5/legal-agreements/subscriber-sponsored-content . SponsoredContentConsentAgreementResponse
-POST /v1/agreements/ban BanAgreementRequest
+- DELETE /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest (yes, with body)
+- POST /v5/legal-agreements/subscriber-sponsored-content SponsoredContentAcceptConsentRequest
+- GET /v5/legal-agreements/subscriber-sponsored-content . SponsoredContentConsentAgreementResponse
+- POST /v1/agreements/ban BanAgreementRequest
 
-GET /v3/me/legal-agreements . AcceptedLegalAgreementsResponse
-DELETE /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
-GET /v5/legal-agreements/vip-matchmaker . VipMatchmakerConsentAgreementResponse
-POST /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
-DELETE /v4/legal-agreements/top-picks
-GET /v5/legal-agreements/top-picks . TopPicksConsentAgreementResponse
-GET /v4/legal-agreements/right-now . RightNowConsentAgreementResponse
-DELETE /v5/legal-agreements/top-picks TopPicksAcceptConsentRequest
-PUT /v3/me/legal-agreements AcceptLegalAgreementsRequest
-POST /v4/legal-agreements/right-now RightNowAcceptConsentRequest
-POST /v4/legal-agreements/top-picks TopPicksAcceptConsentRequest
-GET /v4/legal-agreements/top-picks . TopPicksConsentAgreementResponse
-GET /v3/legal-agreements . LegalAgreementsInfo
+- GET /v3/me/legal-agreements . AcceptedLegalAgreementsResponse
+- DELETE /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
+- GET /v5/legal-agreements/vip-matchmaker . VipMatchmakerConsentAgreementResponse
+- POST /v5/legal-agreements/vip-matchmaker VipMatchmakerAcceptConsentRequest
+- DELETE /v4/legal-agreements/top-picks
+- GET /v5/legal-agreements/top-picks . TopPicksConsentAgreementResponse
+- GET /v4/legal-agreements/right-now . RightNowConsentAgreementResponse
+- DELETE /v5/legal-agreements/top-picks TopPicksAcceptConsentRequest
+- PUT /v3/me/legal-agreements AcceptLegalAgreementsRequest
+- POST /v4/legal-agreements/right-now RightNowAcceptConsentRequest
+- POST /v4/legal-agreements/top-picks TopPicksAcceptConsentRequest
+- GET /v4/legal-agreements/top-picks . TopPicksConsentAgreementResponse
+- GET /v3/legal-agreements . LegalAgreementsInfo
 
-PUT /v1/opt-out ConsentRequest
-DELETE /v1/opt-out ConsentRequest (body)
-POST /v1/opt-out ConsentRequest ConsentOptStatusResponse
+- PUT /v1/opt-out ConsentRequest
+- DELETE /v1/opt-out ConsentRequest (body)
+- POST /v1/opt-out ConsentRequest ConsentOptStatusResponse
 
 ## GrindrStore, WIP
 
-POST /v3.1/store/grindrstore/coupons CouponRequest
+- POST /v3.1/store/grindrstore/coupons CouponRequest
 
 ## Heatmap, WIP
 
-GET /v1/explore_heatmaps/all_locations . ExploreHeatmapsResponse
-POST /v1/explore_heatmaps ExploreHeatmapsRequest ExploreHeatmapsResponse
+- GET /v1/explore_heatmaps/all_locations . ExploreHeatmapsResponse
+- POST /v1/explore_heatmaps ExploreHeatmapsRequest ExploreHeatmapsResponse
 
 ## Reddot, WIP
 
-GET /v1/reddot . RedDotListResponse
-POST /v1/reddot/{type}
+- GET /v1/reddot . RedDotListResponse
+- POST /v1/reddot/{type}
 
 ## Videocalls, WIP
 
-GET /v3/video-call . VideoCallInfoResponse
-POST /v1/video-call CreateVideoCallRequest CreateVideoCallResponse
-PATCH /v1/video-call . RenewVideoCallResponse
-PATCH /v1/video-call/join JoinVideoCallRequest JoinVideoCallResponse
-PATCH /v1/video-call/leave LeaveVideoCallRequestChatV3
+- GET /v3/video-call . VideoCallInfoResponse
+- POST /v1/video-call CreateVideoCallRequest CreateVideoCallResponse
+- PATCH /v1/video-call . RenewVideoCallResponse
+- PATCH /v1/video-call/join JoinVideoCallRequest JoinVideoCallResponse
+- PATCH /v1/video-call/leave LeaveVideoCallRequestChatV3
 
 ## Modal, WIP
 
-GET /v1/modal
-POST /v1/modal/{modalName}
+- GET /v1/modal
+- POST /v1/modal/{modalName}
 
 ## Warnings, WIP
 
-PUT /v1/warnings
-GET /v2/warnings . BannedWarningList
+- PUT /v1/warnings
+- GET /v2/warnings . BannedWarningList
 
 ## Logging, WIP
 
-POST /v3/logging/mobile/logs binary
-POST /v3/logging/mobile/logs binary
-POST /v1/uxevent UxEventRequest
+- POST /v3/logging/mobile/logs binary
+- POST /v3/logging/mobile/logs binary
+- POST /v1/uxevent UxEventRequest
 
 ## Rewarded chats, WIP
 
-POST /{version}/rewarded-chats
-GET /{version}/rewarded-chats . ExploreFreeChatsResponse
+- POST /{version}/rewarded-chats
+- GET /{version}/rewarded-chats . ExploreFreeChatsResponse
 
 ## Rewarded ads, WIP
 
-PUT /v1/rewarded-ads/consumption RewardedAdStatusRequest
-PUT /v1/rewarded-ads/rewards/restriction RewardedAdRestrictionRequest
-GET /v1/rewarded-ads/rewards . RewardedAdApiResponse
+- PUT /v1/rewarded-ads/consumption RewardedAdStatusRequest
+- PUT /v1/rewarded-ads/rewards/restriction RewardedAdRestrictionRequest
+- GET /v1/rewarded-ads/rewards . RewardedAdApiResponse
 
 ## Boosting, WIP
 
-GET /v2/boost/sessions . BoostSessionResponse
-POST /v1/consumables/redeem/boost . BoostRedeemedResponse
-POST /v1/boost/preferences/mega SuperBoostPreferencesRequest
-POST /v1/boost/preferences/super SuperBoostPreferencesRequest
-POST /v1/boost/preferences/standard BoostPreferencesRequest
-GET /v1/consumables/inventory . ConsumableInventoryResponse
+- GET /v2/boost/sessions . BoostSessionResponse
+- POST /v1/consumables/redeem/boost . BoostRedeemedResponse
+- POST /v1/boost/preferences/mega SuperBoostPreferencesRequest
+- POST /v1/boost/preferences/super SuperBoostPreferencesRequest
+- POST /v1/boost/preferences/standard BoostPreferencesRequest
+- GET /v1/consumables/inventory . ConsumableInventoryResponse
 
 ## GIFs, WIP
 
-GET /v1/gifs/trending?limit=50&rating=r . GiphyResponse
-GET /v1/gifs/search?limit=50&rating=r&q=string&offset=int . GiphyResponse
+- GET /v1/gifs/trending?limit=50&rating=r . GiphyResponse
+- GET /v1/gifs/search?limit=50&rating=r&q=string&offset=int . GiphyResponse
 
 ## Access requests, WIP
 
-POST /v2/access-requests/codes DataPortabilityVerificationCode
-GET /v2/access-requests . AccessPortabilityResponse
-POST /v1/access-requests DataPortabilityRequest
-POST /v1/access-requests/confirmations
-POST /v2/access-requests DataPortabilityRequest
-POST /v2/access-requests/confirm
-POST /v1/access-requests/codes DataPortabilityVerificationCode
-GET /v1/access-requests . DataPortabilityResponse
+- POST /v2/access-requests/codes DataPortabilityVerificationCode
+- GET /v2/access-requests . AccessPortabilityResponse
+- POST /v1/access-requests DataPortabilityRequest
+- POST /v1/access-requests/confirmations
+- POST /v2/access-requests DataPortabilityRequest
+- POST /v2/access-requests/confirm
+- POST /v1/access-requests/codes DataPortabilityVerificationCode
+- GET /v1/access-requests . DataPortabilityResponse
 
 ## Offers, WIP
 
-POST /v2/offers?offerType=string . Offer
-GET /v2/offers/eligible . EligibleOffers
-GET /v2/offers . Offer
+- POST /v2/offers?offerType=string . Offer
+- GET /v2/offers/eligible . EligibleOffers
+- GET /v2/offers . Offer
 
 ## VIP, WIP
 
-PUT /v1/vip/passed/{passedProfileId}
-GET /v1/vip-profiles . StarProfilesResponse
+- PUT /v1/vip/passed/{passedProfileId}
+- GET /v1/vip-profiles . StarProfilesResponse
 
 ## Rate limits
 
