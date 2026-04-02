@@ -1,6 +1,6 @@
 # Grindr API specification
 
-Last update: 2026.03.22 / v25.20.0 (147239)
+Last update: 2026.04.02 / v25.20.0 (147239)
 
 Licensed under [MIT](./LICENSE). You must credit author and reference this project if you're going to use any parts of this document.
 
