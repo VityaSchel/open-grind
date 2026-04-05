@@ -540,7 +540,7 @@ Body:
 - Array of conversation IDs in the format `12345678:23456789`
 
 Response (array):
-- conversationId - string, e.g. `647135273:771038429`
+- `conversationId` - string, e.g. `647135273:771038429`
 - `name` - string, profile name, may be an empty string, e.g. `""`
 - `participants` - array of objects
     - `profileId` - integer, [Profile ID](#profilemin)
@@ -3736,8 +3736,6 @@ New view received, e.g. when another profile views your profile.
     - `profileId` — ID of the profile that viewed
     - `photoHash` — hash of the profile photo, if available
     - `timestamp` — unix timestamp in milliseconds of the view
-
-
 
 ### Commands
 
