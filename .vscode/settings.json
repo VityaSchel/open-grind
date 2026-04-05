@@ -23,5 +23,10 @@
 	"svelte.enable-ts-plugin": true,
 	"json.schemaDownload.trustedDomains": {
 		"https://schema.tauri.app/config/2": true
+	},
+    "[markdown]": {
+		"editor.indentSize": 2,
+		"editor.detectIndentation": false,
+		"editor.insertSpaces": true
 	}
 }
