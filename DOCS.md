@@ -22,7 +22,6 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Conversation ID](#conversation-id)
       - [Conversation](#conversation)
       - [Get conversations](#get-conversations)
-      - [Get conversations by ID](#get-conversations-by-id)
       - [Get conversations by IDs](#get-conversations-by-ids)
       - [Delete a conversation](#delete-a-conversation)
       - [Pin a conversation](#pin-a-conversation)
@@ -527,24 +526,6 @@ Response:
 - `totalPartialConversations` — number, e.g. `0`
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
-
-#### Get conversations by ID
-
-```
-GET /v5/chat/conversation/{conversationId}
-```
-
-Query (optional):
-- `profile` - boolean, if set to `true`, response will include `profile` field with the other participant's profile info
-
-Response:
-- `lastReadTimestamp` - unix timestamp in milliseconds
-- `messages` - array of [Message](#message)
-- `metadata` - 
-  - `translate` - boolean
-  - `hasSharedAlbums` - boolean
-  - `isInAList` - boolean
-- `profile`, [ProfileChat](#profilechat), is present only if `profile` query parameter is set to `true`
 
 #### Get conversations by IDs
 
@@ -1089,6 +1070,18 @@ Invoking this endpoint does not [mark messages as read](#mark-messages-as-read-u
 ```
 GET /v5/chat/conversation/{conversationId}/message
 ```
+
+Query (optional):
+- `profile` - boolean, if set to `true`, response will include `profile` field with the other participant's profile info
+
+Response:
+- `lastReadTimestamp` - unix timestamp in milliseconds
+- `messages` - array of [Message](#message)
+- `metadata` - 
+  - `translate` - boolean
+  - `hasSharedAlbums` - boolean
+  - `isInAList` - boolean
+- `profile`, [ProfileChat](#profilechat), is present only if `profile` query parameter is set to `true`
 
 Query (optional):
 
