@@ -188,8 +188,16 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 		- [Travels, WIP](#travels-wip)
 		- [Roam, WIP](#roam-wip)
 		- [Age verification, WIP](#age-verification-wip)
-		- [Blocks, WIP](#blocks-wip)
-		- [Hides, WIP](#hides-wip)
+		- [Blocks](#blocks)
+			- [Get blocked users](#get-blocked-users)
+			- [Block a user](#block-a-user)
+			- [Unblock a user](#unblock-a-user)
+			- [Unblock all users](#unblock-all-users)
+		- [Hides](#hides)
+			- [Get hidden users](#get-hidden-users)
+			- [Hide a user](#hide-a-user)
+			- [Unhide a user](#unhide-a-user)
+			- [Unhide all hidden users](#unhide-all-hidden-users)
 		- [Discover, WIP](#discover-wip)
 	- [Analytics](#analytics)
 		- [Assignments](#assignments)
@@ -2294,6 +2302,8 @@ Requires [Authorization](#api-authorization).
 PUT /v1/favorites/notes/{targetProfileId}
 ```
 
+Body:
+
 - `notes` — string, required
 - `phoneNumber` — string, required
 
@@ -2736,19 +2746,126 @@ Help needed
 - POST /v1/age-verification/verify/liveness3d AgeVerificationFaceTecRequest AgeVerificationFaceTecResponse
 - GET /v1/age-verification/options . AgeVerificationOptionsResponse AgeVerificationOptionsResponse
 
-### Blocks, WIP
+### Blocks
 
-- DELETE /v3/me/blocks
-- POST /v3/me/blocks/{profileId}
-- GET /v3.1/me/blocks . GetBlocksResponse
-- DELETE /v3/me/blocks/{targetProfileId}
+Blocking a user automatically deletes the conversation for both of you.
 
-### Hides, WIP
+#### Get blocked users
 
-- DELETE /v1/hides
-- GET /v1/hides . GetHiddenProfilesResponse
-- DELETE /v1/hides/{profileId}
-- POST /v1/me/hides/{profileId}
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3.1/me/blocks
+```
+
+Response:
+
+- `blocking` — array of objects
+  - `profileId` — integer
+  - `blockedTime` — integer, appears to be `0`
+
+#### Block a user
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+POST /v3/me/blocks/{profileId}
+```
+
+Response:
+
+- `updateTime` — integer, appears to be `0`
+
+#### Unblock a user
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+DELETE /v3/me/blocks/{targetProfileId}
+```
+
+Response:
+
+Empty.
+
+#### Unblock all users
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+DELETE /v3/me/blocks
+```
+
+Response:
+
+Emtpy.
+
+### Hides
+
+Unknown how it's different from [blocks](#blocks), WIP. Blocks API is preferred until this is figured out.
+
+#### Get hidden users
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/hides
+```
+
+Response:
+
+- `hides` — array of objects
+  - `profileId` — integer
+  - `displayName` — string
+  - `mediaHash` — string, appears to be just `"hash"`
+
+#### Hide a user
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+POST /v1/me/hides/{profileId}
+```
+
+Response:
+
+- `updateTime` — integer, appears to be `0`
+
+#### Unhide a user
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+DELETE /v1/hides/{profileId}
+```
+
+Response:
+
+Emtpy.
+
+#### Unhide all hidden users
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+DELETE /v1/hides
+```
+
+Response:
+
+Emtpy.
 
 ### Discover, WIP
 
