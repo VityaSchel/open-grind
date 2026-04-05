@@ -22,7 +22,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Conversation ID](#conversation-id)
       - [Conversation](#conversation)
       - [Get conversations](#get-conversations)
-      - [Get conversations by ID, WIP](#get-conversations-by-id-wip)
+      - [Get conversations by IDs](#get-conversations-by-ids)
       - [Delete a conversation](#delete-a-conversation)
       - [Pin a conversation](#pin-a-conversation)
       - [Unpin a conversation](#unpin-a-conversation)
@@ -58,6 +58,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
         - [`"Generative"`](#generative)
         - [`"Giphy"`](#giphy)
         - [`"Image"`](#image)
+        - [`"ChatImage"`](#chatimage)
         - [`"ExpiringImage"`](#expiringimage)
         - [`"Location"`](#location)
         - [`"ProfileLink"`](#profilelink)
@@ -283,6 +284,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [`notification.undelivered`](#notificationundelivered)
       - [`chat.v1.typing.start`](#chatv1typingstart)
       - [`chat.v1.typing.stop`](#chatv1typingstop)
+      - [`viewed_me.v1.new_view_received`](#viewed_mev1new_view_received)
     - [Commands](#commands)
       - [WebSocket command ref](#websocket-command-ref)
       - [WebSocket command response](#websocket-command-response)
@@ -528,17 +530,52 @@ Response:
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
 
-#### Get conversations by ID, WIP
+#### Get conversations by IDs
 
+```
 POST /v1/inbox/conversation
+```
 
-Body:
+Body: 
+- Array of conversation IDs in the format `12345678:23456789`
 
-List of strings
-
-Response:
-
-ConversationResponse, WIP
+Response (array):
+- conversationId - string, e.g. `647135273:771038429`
+- `name` - string, profile name, may be an empty string, e.g. `""`
+- `participants` - array of objects
+    - `profileId` - integer, [Profile ID](#profilemin)
+    - `primaryMediaHash` - string or `null`, see [Media -> Public CDN files -> Profile Images](#profile-images)
+    - `lastOnline` - unix timestamp in milliseconds
+    - `distanceMetres` - float number or `null`
+  - `lastActivityTimestamp` - unix timestamp in milliseconds
+  - `unreadCount` - integer
+  - `preview` - nested object
+    - `conversationId` - nested object
+      - `value` - [Conversation ID](#conversation-id)
+    - `messageId` - string, see [Message](#message) for format
+    - `chat1MessageId` - string with UUIDv4, second part of `messageId`
+    - `senderId` - integer, [Profile ID](#profilemin)
+    - `type` - [Message type](#message-type)
+    - `chat1Type` - string, see [Message type](#message-type)
+    - `text` - string or `null`, message text
+    - `url` - unknown, appears to be `null`
+    - `lat` - unknown, appears to be `null`
+    - `lon` - unknown, appears to be `null`
+    - `albumId` - integer, appears to be `null`
+    - `albumContentId` - unknown, appears to be `null`
+    - `albumContentReply` - unknown, appears to be `null`
+    - `duration` - unknown, appears to be `null`
+    - `imageHash` - unknown, appears to be `null`
+    - `photoContentReply` - unknown, appears to be `null`
+  - `muted` - boolean
+  - `pinned` - boolean
+  - `favorite` - boolean
+  - `context` - unknown, appears to be `null`
+  - `onlineUntil` - unknown, appears to be `null`
+  - `translatable` - boolean
+  - `rightNow` - string, e.g. `"NOT_ACTIVE"`
+  - `hasUnreadThrob` - boolean
+  
 
 #### Delete a conversation
 
@@ -631,17 +668,19 @@ Empty
 
 #### Get shared media in conversation
 
-WIP
-
 Requires [Authorization](#api-authorization).
 
 ```
 GET /v5/chat/media/shared/images/with-me/{conversationId}
 ```
 
+Response:
+
+- `images` - array of [ChatImage](#chatimage)
+
 #### Refresh messages
 
-Unknown, WIP
+Requests the messages from the message id
 
 Requires [Authorization](#api-authorization).
 
@@ -682,7 +721,7 @@ Empty.
 Requires [Authorization](#api-authorization).
 
 ```
-GET /v1/chat/suggestions?conversationId=
+GET /v1/chat/suggestions
 ```
 
 Query:
@@ -973,6 +1012,13 @@ Additionally, only for regular images:
 
 - `takenOnGrindr` — boolean or `null`
 - `createdAt` — number or `null`
+
+##### `"ChatImage"`
+- `mediaId` — number
+- `url` — string
+- `expiresAt` — unix timestamp in milliseconds
+- `takenOnGrindr` — boolean
+- `createdTs` — number
 
 ##### `"ExpiringImage"`
 
@@ -3678,6 +3724,20 @@ WIP
 #### `chat.v1.typing.stop`
 
 WIP
+
+#### `viewed_me.v1.new_view_received`
+
+New view received, e.g. when another profile views your profile.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `viewedCount` — total number of profiles that viewed you, including the most recent one
+  - `mostRecent` — object
+    - `profileId` — ID of the profile that viewed
+    - `photoHash` — hash of the profile photo, if available
+    - `timestamp` — unix timestamp in milliseconds of the view
+
+
 
 ### Commands
 
