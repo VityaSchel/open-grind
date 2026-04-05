@@ -1072,18 +1072,6 @@ GET /v5/chat/conversation/{conversationId}/message
 ```
 
 Query (optional):
-- `profile` - boolean, if set to `true`, response will include `profile` field with the other participant's profile info
-
-Response:
-- `lastReadTimestamp` - unix timestamp in milliseconds
-- `messages` - array of [Message](#message)
-- `metadata` - 
-  - `translate` - boolean
-  - `hasSharedAlbums` - boolean
-  - `isInAList` - boolean
-- `profile`, [ProfileChat](#profilechat), is present only if `profile` query parameter is set to `true`
-
-Query (optional):
 
 - `pageKey` — optional, unknown string
 - `profile` — boolean (`profile=true` | `profile=` + any other value), optional
