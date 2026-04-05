@@ -517,7 +517,7 @@ Response:
 - `maxDisplayLockCount` — number, e.g. `99`
 - `nextPage` — integer, e.g. `2`
 
-#### Get conversations by ID, WIP
+#### Get conversations by ID
 
 GET /v5/chat/conversation/{conversationId}
 
