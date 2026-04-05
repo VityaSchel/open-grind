@@ -239,6 +239,15 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
   - [Settings](#settings)
     - [Account](#account)
       - [Account settings, WIP](#account-settings-wip)
+      - [Get preferences](#get-preferences)
+      - [Set preferences](#set-preferences)
+      - [Get visiting settings](#get-visiting-settings)
+      - [Set visiting settings](#set-visiting-settings)
+      - [Get home location](#get-home-location)
+      - [Set home location](#set-home-location)
+      - [SMS verification, WIP](#sms-verification-wip)
+      - [Face recognition, WIP](#face-recognition-wip)
+      - [Spotify token, WIP](#spotify-token-wip)
       - [Delete account](#delete-account)
   - [Third party integrations](#third-party-integrations)
     - [Spotify](#spotify)
@@ -3374,19 +3383,102 @@ WIP
 - POST (dynamic, WIP) ThirdPartyRequest ThirdPartyAuthResponse
 - POST (dynamic, WIP) ThirdPartySessionRequest ThirdPartyAuthResponse
 
-- GET /v3/me/prefs/settings . GrindrSettings
-- PUT /v1/visiting/settings VisitingStatusRequest
-- GET /v1/visiting/settings . VisitingStatusSettings
-- POST /v4/recognition/face FaceDetectionResult
+#### Get preferences
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v3/me/prefs/settings
+```
+
+Response:
+
+- `profileId` — integer
+- `locationSearchOptOut` — boolean
+- `incognito` — boolean
+- `hideViewedMe` — boolean
+- `approximateDistance` — boolean
+- `viewRightNowNsfw` — boolean
+
+#### Set preferences
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v3/me/prefs/settings
+```
+
+Body:
+
+- `locationSearchOptOut` — boolean
+- `incognito` — boolean
+- `hideViewedMe` — boolean
+- `approximateDistance` — boolean
+- `viewRightNowNsfw` — boolean
+
+Response:
+
+Empty.
+
+#### Get visiting settings
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/visiting/settings
+```
+
+Response:
+
+- `setting` — string, e.g. `"AUTO"`
+
+#### Set visiting settings
+
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v1/visiting/settings
+```
+
+Body:
+
+- `setting` — string, e.g. `"AUTO"`, WIP
+
+Resonse:
+
+Empty.
+
+#### Get home location
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/visiting/home
+```
+
+Response:
+
+- `name` — string
+- `lat` — float
+- `lon` — float
+
+#### Set home location
+
 - PUT /v1/visiting/home HomeLocationRequestHomeLocationResponse
-- PUT /v3/me/prefs/settings UpdateSettingsRequest
-- GET /v1/visiting/home . HomeLocationResponse
+
+#### SMS verification, WIP
 
 - POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
 - POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
 - POST /v4/sms/sendcode SmsSendCodeRequest
 - POST /v4/sms/verifycode SmsVerifyCodeRequest
 - POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
+
+#### Face recognition, WIP
+
+- POST /v4/recognition/face FaceDetectionResult
+
+#### Spotify token, WIP
 
 - POST /api/token (URL-encoded) see below SpotifyAuthResponse
 
