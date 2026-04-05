@@ -123,7 +123,6 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [ProfileMaskedMin](#profilemaskedmin)
       - [ProfileMasked](#profilemasked)
       - [ProfileMin](#profilemin)
-      - [ProfileChat](#profilechat)
       - [ProfileShort](#profileshort)
       - [ProfileFields](#profilefields)
       - [Profile](#profile)
@@ -1800,15 +1799,6 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
 - `profileId` — string with numeric id
 - `displayName` — string or `null`
 - `onlineUntil` — long number or `null`
-  
-#### ProfileChat
-
-- `profileId` — string with numeric id
-- `name` — string or `null`
-- `mediaHash` — string or `null` (idk hash of what mb pfp)
-- `onlineUntil` — long number or `null`
-- `distance` — number or `null`
-- `showDistance` — boolean
 
 #### ProfileShort
 
