@@ -273,6 +273,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [`notification.undelivered`](#notificationundelivered)
       - [`chat.v1.typing.start`](#chatv1typingstart)
       - [`chat.v1.typing.stop`](#chatv1typingstop)
+      - [`viewed_me.v1.new_view_received`](#viewed_mev1new_view_received)
     - [Commands](#commands)
       - [WebSocket command ref](#websocket-command-ref)
       - [WebSocket command response](#websocket-command-response)
@@ -3489,6 +3490,20 @@ WIP
 #### `chat.v1.typing.stop`
 
 WIP
+
+#### `viewed_me.v1.new_view_received`
+
+New view received, e.g. when another profile views your profile.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `viewedCount` — total number of profiles that viewed you, including the most recent one
+  - `mostRecent` — object
+    - `profileId` — ID of the profile that viewed
+    - `photoHash` — hash of the profile photo, if available
+    - `timestamp` — unix timestamp in milliseconds of the view
+
+
 
 ### Commands
 
