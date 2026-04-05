@@ -122,6 +122,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
 			- [ProfileMaskedMin](#profilemaskedmin)
 			- [ProfileMasked](#profilemasked)
 			- [ProfileMin](#profilemin)
+			- [ProfileChat](#profilechat)
 			- [ProfileShort](#profileshort)
 			- [ProfileFields](#profilefields)
 			- [Profile](#profile)
@@ -518,15 +519,20 @@ Response:
 
 #### Get conversations by ID, WIP
 
-POST /v1/inbox/conversation
+GET /v5/chat/conversation/{conversationId}
 
-Body:
-
-List of strings
+Query (optional):
+- `profile` - boolean, if set to `true`, response will include `profile` field with the other participant's profile info
 
 Response:
-
-ConversationResponse, WIP
+- `lastReadTimestamp` - unix timestamp in milliseconds
+- `messages` - array of [Message](#message)
+- `metadata` - 
+  - `translate` - boolean
+  - `hasSharedAlbums` - boolean
+  - `isInAList` - boolean
+- `profile`, [ProfileChat](#profilechat), is present only if `profile` query parameter is set to `true`
+  
 
 #### Delete a conversation
 
@@ -1745,6 +1751,15 @@ When used in query, stringified as follows: `y2,x1,x2,y1`.
 - `profileId` — string with numeric id
 - `displayName` — string or `null`
 - `onlineUntil` — long number or `null`
+  
+#### ProfileChat
+
+- `profileId` — string with numeric id
+- `name` — string or `null`
+- `mediaHash` — string or `null` (idk hash of what mb pfp)
+- `onlineUntil` — long number or `null`
+- `distance` — number or `null`
+- `showDistance` — boolean
 
 #### ProfileShort
 
