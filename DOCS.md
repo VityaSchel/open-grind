@@ -23,6 +23,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Conversation](#conversation)
       - [Get conversations](#get-conversations)
       - [Get conversations by ID](#get-conversations-by-id)
+      - [Get conversations by IDs](#get-conversations-by-ids)
       - [Delete a conversation](#delete-a-conversation)
       - [Pin a conversation](#pin-a-conversation)
       - [Unpin a conversation](#unpin-a-conversation)
@@ -544,6 +545,52 @@ Response:
   - `hasSharedAlbums` - boolean
   - `isInAList` - boolean
 - `profile`, [ProfileChat](#profilechat), is present only if `profile` query parameter is set to `true`
+
+#### Get conversations by IDs
+
+```
+POST /v1/inbox/conversation
+```
+
+Body: 
+- Array of conversation IDs in the format `12345678:23456789`
+
+Response (array):
+- conversationId - string, e.g. `647135273:771038429`
+- `name` - string, profile name, may be an empty string, e.g. `""`
+- `participants` - array of objects
+    - `profileId` - integer, [Profile ID](#profilemin)
+    - `primaryMediaHash` - string or `null`, see [Media -> Public CDN files -> Profile Images](#profile-images)
+    - `lastOnline` - unix timestamp in milliseconds
+    - `distanceMetres` - float number or `null`
+  - `lastActivityTimestamp` - unix timestamp in milliseconds
+  - `unreadCount` - integer
+  - `preview` - nested object
+    - `conversationId` - nested object
+      - `value` - [Conversation ID](#conversation-id)
+    - `messageId` - string, see [Message](#message) for format
+    - `chat1MessageId` - string with UUIDv4, second part of `messageId`
+    - `senderId` - integer, [Profile ID](#profilemin)
+    - `type` - [Message type](#message-type)
+    - `chat1Type` - string, see [Message type](#message-type)
+    - `text` - string or `null`, message text
+    - `url` - unknown, appears to be `null`
+    - `lat` - unknown, appears to be `null`
+    - `lon` - unknown, appears to be `null`
+    - `albumId` - integer, appears to be `null`
+    - `albumContentId` - unknown, appears to be `null`
+    - `albumContentReply` - unknown, appears to be `null`
+    - `duration` - unknown, appears to be `null`
+    - `imageHash` - unknown, appears to be `null`
+    - `photoContentReply` - unknown, appears to be `null`
+  - `muted` - boolean
+  - `pinned` - boolean
+  - `favorite` - boolean
+  - `context` - unknown, appears to be `null`
+  - `onlineUntil` - unknown, appears to be `null`
+  - `translatable` - boolean
+  - `rightNow` - string, e.g. `"NOT_ACTIVE"`
+  - `hasUnreadThrob` - boolean
   
 
 #### Delete a conversation
@@ -688,8 +735,6 @@ Empty.
 #### AI chat suggestions
 
 Requires [Authorization](#api-authorization).
-
-- Note this endpoint returns 404 and idk why
 
 ```
 GET /v1/chat/suggestions
