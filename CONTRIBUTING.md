@@ -14,3 +14,39 @@ PRs are welcome! All contributions must be aligned with [CODE_OF_CONDUCT.md](./C
 ## DOCS.md
 
 All research efforts contributing to [DOCS.md](./DOCS.md) are highly valued and appreciated! Seek for "WIP" in document's text to find out which areas of API have not been reverse engineered yet.
+
+## Quick start
+
+JS:
+
+```ts
+const securityHeaders = {
+	"L-Locale": "en_US",
+	"Accept-Language": "en-US",
+	requireRealDeviceInfo: "true",
+	"L-Time-Zone": "Europe/Madrid",
+	"User-Agent": "grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google",
+	"L-Device-Info":
+		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+	// modify params randomly if you're getting ACCOUNT_BANNED at login stage
+};
+
+const req = await fetch("https://grindr.mobi/v8/sessions", {
+	method: "POST",
+	headers: {
+		Accept: "application/json",
+		...securityHeaders,
+	},
+	body: JSON.stringify({
+		email: "yourmail@example.org",
+		password: "comment out this field after you log in once, use authToken to refresh session",
+		// authToken:
+		//	"just reuse any of previous authTokens, even expired",
+		token: null,
+		geohash: null,
+	}),
+});
+
+process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
+
+```
