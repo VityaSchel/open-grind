@@ -5,285 +5,289 @@ Last update: 2026.04.02 / v25.20.0 (147239)
 Licensed under [MIT](./LICENSE). You must credit author and reference this project if you're going to use any parts of this document.
 
 - [Grindr API specification](#grindr-api-specification)
-	- [Getting started](#getting-started)
-	- [Security headers](#security-headers)
-		- [`L-Device-Info`](#l-device-info)
-		- [`User-Agent`](#user-agent)
-		- [`requireRealDeviceInfo`](#requirerealdeviceinfo)
-		- [`L-Time-Zone`](#l-time-zone)
-		- [`L-Locale`](#l-locale)
-	- [API Authorization](#api-authorization)
-	- [Authentication](#authentication)
-		- [Sign in](#sign-in)
-		- [Session ID](#session-id)
-	- [Bootstrap](#bootstrap)
-	- [Messaging](#messaging)
-		- [Conversations](#conversations)
-			- [Conversation ID](#conversation-id)
-			- [Conversation](#conversation)
-			- [Get conversations](#get-conversations)
-			- [Get conversations by ID, WIP](#get-conversations-by-id-wip)
-			- [Delete a conversation](#delete-a-conversation)
-			- [Pin a conversation](#pin-a-conversation)
-			- [Unpin a conversation](#unpin-a-conversation)
-			- [Mute a conversation](#mute-a-conversation)
-			- [Unmute a conversation](#unmute-a-conversation)
-			- [Get shared media in conversation](#get-shared-media-in-conversation)
-			- [Refresh messages](#refresh-messages)
-			- [Mark messages as read](#mark-messages-as-read)
-			- [AI chat suggestions](#ai-chat-suggestions)
-			- [Chat AI summary feedback, WIP](#chat-ai-summary-feedback-wip)
-		- [Saved phrases](#saved-phrases)
-			- [Saved phrase](#saved-phrase)
-			- [Get saved phrases](#get-saved-phrases)
-			- [Add a saved phrase](#add-a-saved-phrase)
-			- [Get saved phrases (legacy)](#get-saved-phrases-legacy)
-			- [Add a saved phrase (legacy)](#add-a-saved-phrase-legacy)
-			- [Delete a saved phrase](#delete-a-saved-phrase)
-			- [Track phrase usage frequency](#track-phrase-usage-frequency)
-		- [Messages](#messages)
-			- [Message](#message)
-			- [Message type](#message-type)
-			- [Message contents](#message-contents)
-				- [`"Album"`](#album)
-				- [`"ExpiringAlbum"`](#expiringalbum)
-				- [`"ExpiringAlbumV2"`](#expiringalbumv2)
-				- [`"AlbumContentReaction"`](#albumcontentreaction)
-				- [`"AlbumContentReply"`](#albumcontentreply)
-				- [`"Audio"`](#audio)
-				- [`"Video"`](#video)
-				- [`"PrivateVideo"`](#privatevideo)
-				- [`"NonExpiringVideo"`](#nonexpiringvideo)
-				- [`"Gaymoji"`](#gaymoji)
-				- [`"Generative"`](#generative)
-				- [`"Giphy"`](#giphy)
-				- [`"Image"`](#image)
-				- [`"ExpiringImage"`](#expiringimage)
-				- [`"Location"`](#location)
-				- [`"ProfileLink"`](#profilelink)
-				- [`"ProfilePhotoReply"`](#profilephotoreply)
-				- [`"Retract"`](#retract)
-				- [`"Text"`](#text)
-				- [`"VideoCall"`](#videocall)
-				- [`"Unknown"`](#unknown)
-			- [Get messages in a conversation](#get-messages-in-a-conversation)
-			- [Get a single message in a conversation](#get-a-single-message-in-a-conversation)
-			- [Send a message to a conversation](#send-a-message-to-a-conversation)
-			- [Unsend a message](#unsend-a-message)
-			- [Delete a message](#delete-a-message)
-			- [Send typing indicator](#send-typing-indicator)
-			- [React to a message](#react-to-a-message)
-		- [Albums](#albums)
-			- [AlbumExpirationType](#albumexpirationtype)
-			- [AlbumPreview](#albumpreview)
-			- [AlbumMin](#albummin)
-			- [AlbumDetails](#albumdetails)
-			- [AlbumExpiration](#albumexpiration)
-			- [AlbumContentMin](#albumcontentmin)
-			- [AlbumContent](#albumcontent)
-			- [AlbumCoverUrl](#albumcoverurl)
-			- [Album name](#album-name)
-			- [Get my albums](#get-my-albums)
-			- [Get an album](#get-an-album)
-			- [Get an album media poster](#get-an-album-media-poster)
-			- [Record view of an album](#record-view-of-an-album)
-			- [Record view of media in an album](#record-view-of-media-in-an-album)
-			- [Get info about profile's album](#get-info-about-profiles-album)
-			- [Get albums shared by a profile](#get-albums-shared-by-a-profile)
-			- [Create an album](#create-an-album)
-			- [Rename an album](#rename-an-album)
-			- [Delete an album](#delete-an-album)
-			- [Upload media to an album](#upload-media-to-an-album)
-			- [Reorder media in an album](#reorder-media-in-an-album)
-			- [Delete media from an album](#delete-media-from-an-album)
-			- [Albums content processing, WIP](#albums-content-processing-wip)
-			- [Pics, WIP](#pics-wip)
-			- [Pics expiring, WIP](#pics-expiring-wip)
-			- [Pics expiring status, WIP](#pics-expiring-status-wip)
-			- [Videos expiring status, WIP](#videos-expiring-status-wip)
-			- [Get album shares](#get-album-shares)
-			- [Share an album](#share-an-album)
-			- [Unshare an album](#unshare-an-album)
-			- [Unshare an album from everybody](#unshare-an-album-from-everybody)
-			- [Albums content chat list-by-id, WIP](#albums-content-chat-list-by-id-wip)
-			- [Get album limits](#get-album-limits)
-			- [Albums red dot, WIP](#albums-red-dot-wip)
-			- [Pressie albums feed, WIP](#pressie-albums-feed-wip)
-			- [Pressie albums feed paywall, WIP](#pressie-albums-feed-paywall-wip)
-			- [Pressie albums feed profile ID, WIP](#pressie-albums-feed-profile-id-wip)
-			- [Pressie albums feed update read, WIP](#pressie-albums-feed-update-read-wip)
-		- [Misc](#misc)
-			- [Translate a message](#translate-a-message)
-			- [OCR recognition in chat](#ocr-recognition-in-chat)
-			- [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
-	- [Users](#users)
-		- [Profiles](#profiles)
-			- [RectF](#rectf)
-			- [ProfileMaskedMin](#profilemaskedmin)
-			- [ProfileMasked](#profilemasked)
-			- [ProfileMin](#profilemin)
-			- [ProfileShort](#profileshort)
-			- [ProfileFields](#profilefields)
-			- [Profile](#profile)
-			- [Profile tags](#profile-tags)
-			- [Sexual position ID](#sexual-position-id)
-			- [Ethnicity](#ethnicity)
-			- [Relationship status](#relationship-status)
-			- [Body type](#body-type)
-			- [HIV status](#hiv-status)
-			- [Accept NSFW pics](#accept-nsfw-pics)
-			- [Meet at](#meet-at)
-			- [Sexual health](#sexual-health)
-			- [Looking for](#looking-for)
-			- [Tribes](#tribes)
-			- [Vaccines](#vaccines)
-			- [SocialNetwork](#socialnetwork)
-			- [Managed fields](#managed-fields)
-			- [Get a profile by ID](#get-a-profile-by-id)
-			- [Get multiple profiles by ID](#get-multiple-profiles-by-id)
-			- [Update own profile (full)](#update-own-profile-full)
-			- [Update own profile (partial)](#update-own-profile-partial)
-			- [Profile tags suggestions](#profile-tags-suggestions)
-			- [Upload media](#upload-media)
-			- [Upload media (legacy)](#upload-media-legacy)
-			- [Get my profile photos](#get-my-profile-photos)
-			- [Edit profile photos](#edit-profile-photos)
-			- [Delete profile photos](#delete-profile-photos)
-			- [Check if profiles are reachable](#check-if-profiles-are-reachable)
-			- [Get profile insights](#get-profile-insights)
-			- [Get pronouns](#get-pronouns)
-			- [Get genders](#get-genders)
-			- [Suggest gender or pronoun](#suggest-gender-or-pronoun)
-		- [Favorites](#favorites)
-			- [Add favorite](#add-favorite)
-			- [Remove favorite](#remove-favorite)
-			- [Get all notes](#get-all-notes)
-			- [Get note](#get-note)
-			- [Add note](#add-note)
-			- [Delete note](#delete-note)
-	- [Reports, WIP](#reports-wip)
-	- [Browse](#browse)
-		- [Location](#location-1)
-			- [Geohash](#geohash)
-			- [Search places by name](#search-places-by-name)
-			- [Update location](#update-location)
-		- [Grid](#grid)
-			- [GridQuery](#gridquery)
-			- [CascadeQuery](#cascadequery)
-			- [CascadeResponseProfile](#cascaderesponseprofile)
-			- [CascadeResponse](#cascaderesponse)
-				- [`partial_profile_v1`](#partial_profile_v1)
-				- [`full_profile_v1`](#full_profile_v1)
-				- [`explore_aggregation_v1`](#explore_aggregation_v1)
-				- [`advert_v1`](#advert_v1)
-				- [`boost_upsell_v1`](#boost_upsell_v1)
-				- [`unlimited_mpu_v1`](#unlimited_mpu_v1)
-				- [`xtra_mpu_v1`](#xtra_mpu_v1)
-			- [Get Cascade](#get-cascade)
-			- [Get Cascade (legacy)](#get-cascade-legacy)
-			- [Search](#search)
-		- [Social events](#social-events)
-		- [Entitlements](#entitlements)
-		- [Links](#links)
-		- [Travels, WIP](#travels-wip)
-		- [Roam, WIP](#roam-wip)
-		- [Age verification, WIP](#age-verification-wip)
-		- [Blocks](#blocks)
-			- [Get blocked users](#get-blocked-users)
-			- [Block a user](#block-a-user)
-			- [Unblock a user](#unblock-a-user)
-			- [Unblock all users](#unblock-all-users)
-		- [Hides](#hides)
-			- [Get hidden users](#get-hidden-users)
-			- [Hide a user](#hide-a-user)
-			- [Unhide a user](#unhide-a-user)
-			- [Unhide all hidden users](#unhide-all-hidden-users)
-		- [Discover, WIP](#discover-wip)
-	- [Analytics](#analytics)
-		- [Assignments](#assignments)
-			- [Assignment](#assignment)
-			- [Get public assignments](#get-public-assignments)
-			- [Get assignments](#get-assignments)
-		- [Trackers](#trackers)
-			- [Bulk exposure](#bulk-exposure)
-	- [Media](#media)
-		- [Public CDN files](#public-cdn-files)
-			- [Profile images](#profile-images)
-			- [Thumbnails images](#thumbnails-images)
-			- [Grindr Gaymoji](#grindr-gaymoji)
-			- [GaymojiCategory](#gaymojicategory)
-		- [Signed CDN files](#signed-cdn-files)
-			- [Chat media](#chat-media)
-			- [MediaState](#mediastate)
-	- [Interest](#interest)
-		- [Views](#views)
-			- [ViewSourceEnum](#viewsourceenum)
-			- [Get views number](#get-views-number)
-			- [Get viewers list](#get-viewers-list)
-			- [Record profile views (batch)](#record-profile-views-batch)
-			- [Record single profile view](#record-single-profile-view)
-			- [Record profile view v2](#record-profile-view-v2)
-		- [Taps](#taps)
-			- [Tap ID](#tap-id)
-			- [Get received taps](#get-received-taps)
-			- [Send a tap](#send-a-tap)
-			- [Get sent taps](#get-sent-taps)
-		- [Alist, WIP](#alist-wip)
-	- [Right Now](#right-now)
-			- [RightNowStatus](#rightnowstatus)
-			- [Right Now methods, WIP](#right-now-methods-wip)
-	- [Settings](#settings)
-		- [Account](#account)
-			- [Account settings, WIP](#account-settings-wip)
-			- [Delete account](#delete-account)
-	- [Third party integrations](#third-party-integrations)
-		- [Spotify](#spotify)
-			- [Get Spotify favorites profile ID, WIP](#get-spotify-favorites-profile-id-wip)
-			- [Post Spotify favorites, WIP](#post-spotify-favorites-wip)
-			- [Auth, WIP](#auth-wip)
-			- [Tracks, WIP](#tracks-wip)
-	- [StoreApiRest, WIP](#storeapirest-wip)
-	- [Notifications, WIP](#notifications-wip)
-	- [Random images, WIP](#random-images-wip)
-		- ["For You" images, WIP](#for-you-images-wip)
-	- [Ratings, WIP](#ratings-wip)
-	- [Top Picks, WIP](#top-picks-wip)
-	- [Signal share, WIP](#signal-share-wip)
-	- [Drawer, WIP](#drawer-wip)
-	- [Legal agreements, WIP](#legal-agreements-wip)
-	- [GrindrStore, WIP](#grindrstore-wip)
-	- [Heatmap, WIP](#heatmap-wip)
-	- [Reddot, WIP](#reddot-wip)
-	- [Videocalls, WIP](#videocalls-wip)
-	- [Modal, WIP](#modal-wip)
-	- [Warnings, WIP](#warnings-wip)
-	- [Logging, WIP](#logging-wip)
-	- [Rewarded chats, WIP](#rewarded-chats-wip)
-	- [Rewarded ads, WIP](#rewarded-ads-wip)
-	- [Boosting, WIP](#boosting-wip)
-	- [GIFs, WIP](#gifs-wip)
-	- [Access requests, WIP](#access-requests-wip)
-	- [Offers, WIP](#offers-wip)
-	- [VIP, WIP](#vip-wip)
-	- [Rate limits](#rate-limits)
-	- [WebSocket](#websocket)
-		- [Events](#events)
-			- [`ws.connection.established`](#wsconnectionestablished)
-			- [`ws.error`](#wserror)
-		- [Notification Event](#notification-event)
-			- [`chat.v1.message_sent`](#chatv1message_sent)
-			- [`chat.v1.refresh_dynamic`](#chatv1refresh_dynamic)
-			- [`tap.v1.tap_sent`](#tapv1tap_sent)
-			- [`chat.v1.conversation.delete`](#chatv1conversationdelete)
-			- [`chat.v1.message.ack`](#chatv1messageack)
-			- [`notification.undelivered`](#notificationundelivered)
-			- [`chat.v1.typing.start`](#chatv1typingstart)
-			- [`chat.v1.typing.stop`](#chatv1typingstop)
-		- [Commands](#commands)
-			- [WebSocket command ref](#websocket-command-ref)
-			- [WebSocket command response](#websocket-command-response)
-			- [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
-	- [Appendix](#appendix)
+  - [Getting started](#getting-started)
+  - [Security headers](#security-headers)
+    - [`L-Device-Info`](#l-device-info)
+    - [`User-Agent`](#user-agent)
+    - [`requireRealDeviceInfo`](#requirerealdeviceinfo)
+    - [`L-Time-Zone`](#l-time-zone)
+    - [`L-Locale`](#l-locale)
+  - [API Authorization](#api-authorization)
+  - [Authentication](#authentication)
+    - [Sign in](#sign-in)
+    - [Session ID](#session-id)
+  - [Bootstrap](#bootstrap)
+  - [Messaging](#messaging)
+    - [Conversations](#conversations)
+      - [Conversation ID](#conversation-id)
+      - [Conversation](#conversation)
+      - [Get conversations](#get-conversations)
+      - [Get conversations by ID, WIP](#get-conversations-by-id-wip)
+      - [Delete a conversation](#delete-a-conversation)
+      - [Pin a conversation](#pin-a-conversation)
+      - [Unpin a conversation](#unpin-a-conversation)
+      - [Mute a conversation](#mute-a-conversation)
+      - [Unmute a conversation](#unmute-a-conversation)
+      - [Get shared media in conversation](#get-shared-media-in-conversation)
+      - [Refresh messages](#refresh-messages)
+      - [Mark messages as read](#mark-messages-as-read)
+      - [AI chat suggestions](#ai-chat-suggestions)
+      - [Chat AI summary feedback, WIP](#chat-ai-summary-feedback-wip)
+    - [Saved phrases](#saved-phrases)
+      - [Saved phrase](#saved-phrase)
+      - [Get saved phrases](#get-saved-phrases)
+      - [Add a saved phrase](#add-a-saved-phrase)
+      - [Get saved phrases (legacy)](#get-saved-phrases-legacy)
+      - [Add a saved phrase (legacy)](#add-a-saved-phrase-legacy)
+      - [Delete a saved phrase](#delete-a-saved-phrase)
+      - [Track phrase usage frequency](#track-phrase-usage-frequency)
+    - [Messages](#messages)
+      - [Message](#message)
+      - [Message type](#message-type)
+      - [Message contents](#message-contents)
+        - [`"Album"`](#album)
+        - [`"ExpiringAlbum"`](#expiringalbum)
+        - [`"ExpiringAlbumV2"`](#expiringalbumv2)
+        - [`"AlbumContentReaction"`](#albumcontentreaction)
+        - [`"AlbumContentReply"`](#albumcontentreply)
+        - [`"Audio"`](#audio)
+        - [`"Video"`](#video)
+        - [`"PrivateVideo"`](#privatevideo)
+        - [`"NonExpiringVideo"`](#nonexpiringvideo)
+        - [`"Gaymoji"`](#gaymoji)
+        - [`"Generative"`](#generative)
+        - [`"Giphy"`](#giphy)
+        - [`"Image"`](#image)
+        - [`"ExpiringImage"`](#expiringimage)
+        - [`"Location"`](#location)
+        - [`"ProfileLink"`](#profilelink)
+        - [`"ProfilePhotoReply"`](#profilephotoreply)
+        - [`"Retract"`](#retract)
+        - [`"Text"`](#text)
+        - [`"VideoCall"`](#videocall)
+        - [`"Unknown"`](#unknown)
+      - [Get messages in a conversation](#get-messages-in-a-conversation)
+      - [Get a single message in a conversation](#get-a-single-message-in-a-conversation)
+      - [Send a message to a conversation](#send-a-message-to-a-conversation)
+      - [Unsend a message](#unsend-a-message)
+      - [Delete a message](#delete-a-message)
+      - [Send typing indicator](#send-typing-indicator)
+      - [React to a message](#react-to-a-message)
+    - [Albums](#albums)
+      - [AlbumExpirationType](#albumexpirationtype)
+      - [AlbumPreview](#albumpreview)
+      - [AlbumMin](#albummin)
+      - [AlbumDetails](#albumdetails)
+      - [AlbumExpiration](#albumexpiration)
+      - [AlbumContentMin](#albumcontentmin)
+      - [AlbumContent](#albumcontent)
+      - [AlbumCoverUrl](#albumcoverurl)
+      - [Album name](#album-name)
+      - [Get my albums](#get-my-albums)
+      - [Get an album](#get-an-album)
+      - [Get an album media poster](#get-an-album-media-poster)
+      - [Record view of an album](#record-view-of-an-album)
+      - [Record view of media in an album](#record-view-of-media-in-an-album)
+      - [Get info about profile's album](#get-info-about-profiles-album)
+      - [Get albums shared by a profile](#get-albums-shared-by-a-profile)
+      - [Create an album](#create-an-album)
+      - [Rename an album](#rename-an-album)
+      - [Delete an album](#delete-an-album)
+      - [Upload media to an album](#upload-media-to-an-album)
+      - [Reorder media in an album](#reorder-media-in-an-album)
+      - [Delete media from an album](#delete-media-from-an-album)
+      - [Albums content processing, WIP](#albums-content-processing-wip)
+      - [Pics, WIP](#pics-wip)
+      - [Pics expiring, WIP](#pics-expiring-wip)
+      - [Pics expiring status, WIP](#pics-expiring-status-wip)
+      - [Videos expiring status, WIP](#videos-expiring-status-wip)
+      - [Get album shares](#get-album-shares)
+      - [Share an album](#share-an-album)
+      - [Unshare an album](#unshare-an-album)
+      - [Unshare an album from everybody](#unshare-an-album-from-everybody)
+      - [Albums content chat list-by-id, WIP](#albums-content-chat-list-by-id-wip)
+      - [Get album limits](#get-album-limits)
+      - [Albums red dot, WIP](#albums-red-dot-wip)
+      - [Pressie albums feed, WIP](#pressie-albums-feed-wip)
+      - [Pressie albums feed paywall, WIP](#pressie-albums-feed-paywall-wip)
+      - [Pressie albums feed profile ID, WIP](#pressie-albums-feed-profile-id-wip)
+      - [Pressie albums feed update read, WIP](#pressie-albums-feed-update-read-wip)
+    - [Misc](#misc)
+      - [Translate a message](#translate-a-message)
+      - [OCR recognition in chat](#ocr-recognition-in-chat)
+      - [Rate an AI message suggestion](#rate-an-ai-message-suggestion)
+  - [Users](#users)
+    - [Profiles](#profiles)
+      - [RectF](#rectf)
+      - [ProfileMaskedMin](#profilemaskedmin)
+      - [ProfileMasked](#profilemasked)
+      - [ProfileMin](#profilemin)
+      - [ProfileShort](#profileshort)
+      - [ProfileFields](#profilefields)
+      - [Profile](#profile)
+      - [Profile tags](#profile-tags)
+      - [Sexual position ID](#sexual-position-id)
+      - [Ethnicity](#ethnicity)
+      - [Relationship status](#relationship-status)
+      - [Body type](#body-type)
+      - [HIV status](#hiv-status)
+      - [Accept NSFW pics](#accept-nsfw-pics)
+      - [Meet at](#meet-at)
+      - [Sexual health](#sexual-health)
+      - [Looking for](#looking-for)
+      - [Tribes](#tribes)
+      - [Vaccines](#vaccines)
+      - [SocialNetwork](#socialnetwork)
+      - [Managed fields](#managed-fields)
+      - [Get a profile by ID](#get-a-profile-by-id)
+      - [Get multiple profiles by ID](#get-multiple-profiles-by-id)
+      - [Update own profile (full)](#update-own-profile-full)
+      - [Update own profile (partial)](#update-own-profile-partial)
+      - [Profile tags suggestions](#profile-tags-suggestions)
+      - [Upload media](#upload-media)
+      - [Upload media (legacy)](#upload-media-legacy)
+      - [Get my profile photos](#get-my-profile-photos)
+      - [Edit profile photos](#edit-profile-photos)
+      - [Delete profile photos](#delete-profile-photos)
+      - [Check if profiles are reachable](#check-if-profiles-are-reachable)
+      - [Get profile insights](#get-profile-insights)
+      - [Get pronouns](#get-pronouns)
+      - [Get genders](#get-genders)
+      - [Suggest gender or pronoun](#suggest-gender-or-pronoun)
+    - [Favorites](#favorites)
+      - [Add favorite](#add-favorite)
+      - [Remove favorite](#remove-favorite)
+      - [Get all notes](#get-all-notes)
+      - [Get note](#get-note)
+      - [Add note](#add-note)
+      - [Delete note](#delete-note)
+  - [Reports, WIP](#reports-wip)
+  - [Browse](#browse)
+    - [Location](#location-1)
+      - [Geohash](#geohash)
+      - [Search places by name](#search-places-by-name)
+      - [Update location](#update-location)
+    - [Grid](#grid)
+      - [GridQuery](#gridquery)
+      - [CascadeQuery](#cascadequery)
+      - [CascadeResponseProfile](#cascaderesponseprofile)
+      - [CascadeResponse](#cascaderesponse)
+        - [`partial_profile_v1`](#partial_profile_v1)
+        - [`full_profile_v1`](#full_profile_v1)
+        - [`explore_aggregation_v1`](#explore_aggregation_v1)
+        - [`advert_v1`](#advert_v1)
+        - [`boost_upsell_v1`](#boost_upsell_v1)
+        - [`unlimited_mpu_v1`](#unlimited_mpu_v1)
+        - [`xtra_mpu_v1`](#xtra_mpu_v1)
+      - [Get Cascade](#get-cascade)
+      - [Get Cascade (legacy)](#get-cascade-legacy)
+      - [Search](#search)
+    - [Social events](#social-events)
+    - [Entitlements](#entitlements)
+    - [Links](#links)
+    - [Travels, WIP](#travels-wip)
+    - [Roam, WIP](#roam-wip)
+    - [Age verification, WIP](#age-verification-wip)
+    - [Blocks](#blocks)
+      - [Get blocked users](#get-blocked-users)
+      - [Block a user](#block-a-user)
+      - [Unblock a user](#unblock-a-user)
+      - [Unblock all users](#unblock-all-users)
+    - [Hides](#hides)
+      - [Get hidden users](#get-hidden-users)
+      - [Hide a user](#hide-a-user)
+      - [Unhide a user](#unhide-a-user)
+      - [Unhide all hidden users](#unhide-all-hidden-users)
+    - [Discover, WIP](#discover-wip)
+      - [Get discover profiles](#get-discover-profiles)
+      - [Get discover profiles (legacy)](#get-discover-profiles-legacy)
+      - [Post a pass](#post-a-pass)
+  - [Analytics](#analytics)
+    - [Assignments](#assignments)
+      - [Assignment](#assignment)
+      - [Get public assignments](#get-public-assignments)
+      - [Get assignments](#get-assignments)
+    - [Trackers](#trackers)
+      - [Bulk exposure](#bulk-exposure)
+  - [Media](#media)
+    - [Public CDN files](#public-cdn-files)
+      - [Profile images](#profile-images)
+      - [Thumbnails images](#thumbnails-images)
+      - [Grindr Gaymoji](#grindr-gaymoji)
+      - [GaymojiCategory](#gaymojicategory)
+    - [Signed CDN files](#signed-cdn-files)
+      - [Chat media](#chat-media)
+      - [MediaState](#mediastate)
+  - [Interest](#interest)
+    - [Views](#views)
+      - [ViewSourceEnum](#viewsourceenum)
+      - [Get views number](#get-views-number)
+      - [Get viewers list](#get-viewers-list)
+      - [Record profile views (batch)](#record-profile-views-batch)
+      - [Record single profile view](#record-single-profile-view)
+      - [Record profile view v2](#record-profile-view-v2)
+    - [Taps](#taps)
+      - [Tap ID](#tap-id)
+      - [Get received taps](#get-received-taps)
+      - [Send a tap](#send-a-tap)
+      - [Get sent taps](#get-sent-taps)
+    - [Alist, WIP](#alist-wip)
+  - [Right Now](#right-now)
+      - [RightNowStatus](#rightnowstatus)
+      - [Right Now methods, WIP](#right-now-methods-wip)
+  - [Settings](#settings)
+    - [Account](#account)
+      - [Account settings, WIP](#account-settings-wip)
+      - [Delete account](#delete-account)
+  - [Third party integrations](#third-party-integrations)
+    - [Spotify](#spotify)
+      - [Get Spotify favorites profile ID, WIP](#get-spotify-favorites-profile-id-wip)
+      - [Post Spotify favorites, WIP](#post-spotify-favorites-wip)
+      - [Auth, WIP](#auth-wip)
+      - [Tracks, WIP](#tracks-wip)
+  - [StoreApiRest, WIP](#storeapirest-wip)
+  - [Notifications](#notifications)
+  - [Woodwork, WIP](#woodwork-wip)
+    - [Random promotion images](#random-promotion-images)
+      - [Get a random "For You" collection image](#get-a-random-for-you-collection-image)
+  - [Ratings](#ratings)
+  - [Top Picks, WIP](#top-picks-wip)
+  - [Signal share, WIP](#signal-share-wip)
+  - [Drawer, WIP](#drawer-wip)
+  - [Legal agreements, WIP](#legal-agreements-wip)
+  - [GrindrStore, WIP](#grindrstore-wip)
+  - [Heatmap, WIP](#heatmap-wip)
+  - [Reddot, WIP](#reddot-wip)
+  - [Videocalls, WIP](#videocalls-wip)
+  - [Modal, WIP](#modal-wip)
+  - [Warnings, WIP](#warnings-wip)
+  - [Logging, WIP](#logging-wip)
+  - [Rewarded chats, WIP](#rewarded-chats-wip)
+  - [Rewarded ads, WIP](#rewarded-ads-wip)
+  - [Boosting, WIP](#boosting-wip)
+  - [GIFs, WIP](#gifs-wip)
+  - [Access requests, WIP](#access-requests-wip)
+  - [Offers, WIP](#offers-wip)
+  - [VIP, WIP](#vip-wip)
+  - [Rate limits](#rate-limits)
+  - [WebSocket](#websocket)
+    - [Events](#events)
+      - [`ws.connection.established`](#wsconnectionestablished)
+      - [`ws.error`](#wserror)
+    - [Notification Event](#notification-event)
+      - [`chat.v1.message_sent`](#chatv1message_sent)
+      - [`chat.v1.refresh_dynamic`](#chatv1refresh_dynamic)
+      - [`tap.v1.tap_sent`](#tapv1tap_sent)
+      - [`chat.v1.conversation.delete`](#chatv1conversationdelete)
+      - [`chat.v1.message.ack`](#chatv1messageack)
+      - [`notification.undelivered`](#notificationundelivered)
+      - [`chat.v1.typing.start`](#chatv1typingstart)
+      - [`chat.v1.typing.stop`](#chatv1typingstop)
+    - [Commands](#commands)
+      - [WebSocket command ref](#websocket-command-ref)
+      - [WebSocket command response](#websocket-command-response)
+      - [Send a message to a conversation via WS](#send-a-message-to-a-conversation-via-ws)
+  - [Appendix](#appendix)
 
 ## Getting started
 
@@ -451,45 +455,45 @@ String with numbers separated by `:`, e.g. `"12345678:23456789"`
 
 - `type` — string, e.g. `"full_conversation_v1"`
 - `data` — nested object
-	- `conversationId` — [Conversation ID](#conversation-id)
-	- `name` — string, profile name, may be an empty string, e.g. `""`
-	- `participants` — array of objects
-		- `profileId` — integer, [Profile ID](#profilemin)
-		- `primaryMediaHash` — string or `null`, see [Media -> Public CDN files](#public-cdn-files)
-		- `lastOnline` — unix timestamp in milliseconds
-		- `onlineUntil` — unix timestamp in milliseconds or `null`
-		- `distanceMetres` — float number or `null`
-		- `position` — [Sexual position ID](#sexual-position-id) or `null`
-		- `isInAList` — boolean
-		- `hasDatingPotential` — boolean
-	- `lastActivityTimestamp` — unix timestamp in milliseconds
-	- `unreadCount` — integer
-	- `preview` — nested object
-		- `conversationId` — nested object
-    		- `value` — [Conversation ID](#conversation-id)
-		- `messageId` — string, see [Message](#message) for format
-		- `chat1MessageId` — string with UUIDv4, second part of `messageId`
-		- `senderId` — integer, [Profile ID](#profilemin)
-		- `type` — [Message type](#message-type)
-		- `chat1Type` — string, see [Message type](#message-type)
-		- `text` — string or `null`, message text
-		- `url` — unknown, appears to be `null`
-		- `lat` — unknown, appears to be `null`
-		- `lon` — unknown, appears to be `null`
-		- `albumId` — integer, appears to be `null`
-		- `albumContentId` — unknown, appears to be `null`
-		- `albumContentReply` — unknown, appears to be `null`
-		- `duration` — unknown, appears to be `null`
-		- `imageHash` — unknown, appears to be `null`
-		- `photoContentReply` — unknown, appears to be `null`
-	- `muted` — boolean
-	- `pinned` — boolean
-	- `favorite` — boolean
-	- `context` — unknown, appears to be `null`
-	- `onlineUntil` — unknown, appears to be `null`
-	- `translatable` — boolean
-	- `rightNow` — string, e.g. `"NOT_ACTIVE"`
-	- `hasUnreadThrob` — boolean
+  - `conversationId` — [Conversation ID](#conversation-id)
+  - `name` — string, profile name, may be an empty string, e.g. `""`
+  - `participants` — array of objects
+    - `profileId` — integer, [Profile ID](#profilemin)
+    - `primaryMediaHash` — string or `null`, see [Media -> Public CDN files](#public-cdn-files)
+    - `lastOnline` — unix timestamp in milliseconds
+    - `onlineUntil` — unix timestamp in milliseconds or `null`
+    - `distanceMetres` — float number or `null`
+    - `position` — [Sexual position ID](#sexual-position-id) or `null`
+    - `isInAList` — boolean
+    - `hasDatingPotential` — boolean
+  - `lastActivityTimestamp` — unix timestamp in milliseconds
+  - `unreadCount` — integer
+  - `preview` — nested object
+    - `conversationId` — nested object
+        - `value` — [Conversation ID](#conversation-id)
+    - `messageId` — string, see [Message](#message) for format
+    - `chat1MessageId` — string with UUIDv4, second part of `messageId`
+    - `senderId` — integer, [Profile ID](#profilemin)
+    - `type` — [Message type](#message-type)
+    - `chat1Type` — string, see [Message type](#message-type)
+    - `text` — string or `null`, message text
+    - `url` — unknown, appears to be `null`
+    - `lat` — unknown, appears to be `null`
+    - `lon` — unknown, appears to be `null`
+    - `albumId` — integer, appears to be `null`
+    - `albumContentId` — unknown, appears to be `null`
+    - `albumContentReply` — unknown, appears to be `null`
+    - `duration` — unknown, appears to be `null`
+    - `imageHash` — unknown, appears to be `null`
+    - `photoContentReply` — unknown, appears to be `null`
+  - `muted` — boolean
+  - `pinned` — boolean
+  - `favorite` — boolean
+  - `context` — unknown, appears to be `null`
+  - `onlineUntil` — unknown, appears to be `null`
+  - `translatable` — boolean
+  - `rightNow` — string, e.g. `"NOT_ACTIVE"`
+  - `hasUnreadThrob` — boolean
 
 #### Get conversations
 
@@ -2051,15 +2055,17 @@ POST /v5/chat/media/upload
 ```
 
 Query:
+
 - `length` — long
 - `looping` — boolean
 - `takenOnGrindr` — boolean
 
-Content-Type header
 
 Body:
 
 File
+
+Correct request's `Content-Type` header is required.
 
 Response: MediaUploadResponse, WIP
 
@@ -2738,7 +2744,7 @@ Response:
 
 ### Age verification, WIP
 
-Help needed
+Help needed.
 
 - POST /v1/age-verification/verify/document AgeVerificationPhotoIdMatchRequest AgeVerificationFaceTecResponse
 - POST /v1/age-verification/session . AgeVerificationSessionResponse
@@ -2869,9 +2875,65 @@ Emtpy.
 
 ### Discover, WIP
 
-- GET /v3/discover?geohash=string&previewedProfiles=long[] . DiscoverResponseV3
-- GET /v2/discover?geohash=string . DiscoverResponse
-- POST /v1/me/pass/{profileId}
+Help needed.
+
+#### Get discover profiles
+
+WIP
+
+```
+GET /v3/discover
+```
+
+Query:
+
+- `geohash` — [Geohash](#geohash)
+- `previewedProfiles` — array of long integers
+
+Response:
+
+If subscription is purchased,
+
+Unknown, WIP.
+
+If subscription is not purchased,
+
+- `status` — string, `"SubscriptionRequired"`
+- `body` — object
+  - `upsell` — string, `"Unknown"`
+  - `profiles` — array, unknown
+
+#### Get discover profiles (legacy)
+
+WIP
+
+```
+GET /v2/discover
+```
+
+Query:
+
+- `geohash` — [Geohash](#geohash)
+
+Response:
+
+If subscription is purchased,
+
+Unknown, WIP.
+
+If subscription is not purchased,
+
+- `status` — string, `"SubscriptionRequired"`
+- `body` — object
+  - `upsell` — string, `"Unknown"`
+
+#### Post a pass
+
+WIP
+
+```
+POST /v1/me/pass/{profileId}
+```
 
 ## Analytics
 
@@ -3074,9 +3136,9 @@ Response:
 
 - `viewedCount` — number or `null`
 - `mostRecent` — object or `null`
-	- `profileId` — string with number
-	- `photoHash` — 40 characters hex string
-	- `timestamp` — unix timestamp in milliseconds
+  - `profileId` — string with number
+  - `photoHash` — 40 characters hex string
+  - `timestamp` — unix timestamp in milliseconds
 
 #### Get viewers list
 
@@ -3169,15 +3231,15 @@ GET /v2/taps/received
 Response:
 
 - `profiles`
-	- *everything from [ProfileMaskedMin](#profilemaskedmin)*
-	- *everything from [ProfileMin](#profilemin)*
-	- `timestamp`
-	- `tapType`
-	- `lastOnline`
-	- `isBoosting`
-	- `isMutual`
-	- `rightNowType`
-	- `isViewable`
+  - *everything from [ProfileMaskedMin](#profilemaskedmin)*
+  - *everything from [ProfileMin](#profilemin)*
+  - `timestamp`
+  - `tapType`
+  - `lastOnline`
+  - `isBoosting`
+  - `isMutual`
+  - `rightNowType`
+  - `isViewable`
 
 #### Send a tap
 
@@ -3342,21 +3404,57 @@ Body: SpotifyPostRequest, WIP
 - POST /v1/store/googleplay/subscriptions/restorations SubscriptionRestorationRequest SubscriptionRestorationResponse
 - GET /v3/me/subscriptions?status=string&platform=string . SubscriptionResponse
 
-## Notifications, WIP
+## Notifications
 
+WIP
+
+```
 POST /public/v1/notifications/ack
+```
 
-Body: NotificationAckBody, WIP
+- `notificationId` — string
+- `source` — string, `"WEBSOCKET"` | `"PUSH"`, optional
 
-## Random images, WIP
+Response:
 
-### "For You" images, WIP
+Empty.
 
-- GET /v1/random-images/foryou?count=0 . WoodworkRandomImageResponse
+## Woodwork, WIP
 
-## Ratings, WIP
+[Woodwork](https://www.woodwork.com/) is a service by Grindr.
 
+### Random promotion images
+
+#### Get a random "For You" collection image
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/random-images/foryou
+```
+
+Query:
+
+- `count` — integer, optional, capped in range [1, 4]
+
+Response:
+
+- `images` — array of objects with length `count`
+  - `url` — string, URL
+  - `id` — string, e.g. `"WoodworkImage1"`
+- `collection` — string, always `foryou`
+
+## Ratings
+
+Appears to be the "rate the app in a store" dialog.
+
+```
 POST /v1/ratings/ack
+```
+
+Response:
+
+- `acknowledgmentTime` — unix timestamp in milliseconds
 
 ## Top Picks, WIP
 
@@ -3371,8 +3469,11 @@ POST /v1/ratings/ack
 ## Drawer, WIP
 
 - GET /v4/chat/media/drawer . MediaItem[]
+
 - GET /v4/chat/media/drawer/{conversationId} . MediaItem[]
+
 - DELETE /v4/chat/media/drawer/{mediaId}
+
 - PUT /v4/chat/media/drawer/{mediaId}
 
 ## Legal agreements, WIP
