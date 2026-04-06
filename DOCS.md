@@ -262,8 +262,13 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Get a random "For You" collection image](#get-a-random-for-you-collection-image)
   - [Ratings](#ratings)
   - [Top Picks, WIP](#top-picks-wip)
-  - [Signal share, WIP](#signal-share-wip)
+  - [Signal share](#signal-share)
   - [Drawer, WIP](#drawer-wip)
+    - [DrawerMedia](#drawermedia)
+    - [Get media in drawer](#get-media-in-drawer)
+    - [Get media in drawer for a conversation](#get-media-in-drawer-for-a-conversation)
+    - [Add media to drawer](#add-media-to-drawer)
+    - [Delete media from drawer](#delete-media-from-drawer)
   - [Legal agreements, WIP](#legal-agreements-wip)
   - [GrindrStore, WIP](#grindrstore-wip)
   - [Heatmap, WIP](#heatmap-wip)
@@ -1023,6 +1028,7 @@ Additionally, only for regular images:
 - `createdAt` — number or `null`
 
 ##### `"ChatImage"`
+
 - `mediaId` — number
 - `url` — string
 - `expiresAt` — unix timestamp in milliseconds
@@ -2122,7 +2128,11 @@ File
 
 Correct request's `Content-Type` header is required.
 
-Response: MediaUploadResponse, WIP
+Response:
+
+- `mediaId` — long integer
+- `mediaHash` — string, see [Media -> Signed CDN files](#signed-cdn-files)
+- `url` — string, URL
 
 #### Upload media (legacy)
 
@@ -3458,21 +3468,38 @@ GET /v1/visiting/home
 
 Response:
 
-- `name` — string
+- `name` — string, [human-readable name](#search-places-by-name) of location
 - `lat` — float
 - `lon` — float
 
 #### Set home location
 
-- PUT /v1/visiting/home HomeLocationRequestHomeLocationResponse
+Requires [Authorization](#api-authorization).
+
+```
+PUT /v1/visiting/home
+```
+
+Body:
+
+- `lat` — float
+- `lon` — float
+
+Response:
+
+- `name` — string, [human-readable name](#search-places-by-name) of location
+- `lat` — float
+- `lon` — float
 
 #### SMS verification, WIP
 
-- POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
-- POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
 - POST /v4/sms/sendcode SmsSendCodeRequest
 - POST /v4/sms/verifycode SmsVerifyCodeRequest
+
 - POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
+- POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
+
+- POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
 
 #### Face recognition, WIP
 
@@ -3600,19 +3627,82 @@ Response:
 - PUT /v1/toppicks/passed/{passedProfileId}
 - POST /v1/toppicks/entitlements/messaging/{profileId}
 
-## Signal share, WIP
+## Signal share
 
-- GET /v1/signalshare . SignalShareInfoResponse
+Requires [Authorization](#api-authorization).
+
+```
+GET /v1/signalshare
+```
+
+Response:
+
+- `profileId` — long integer
+- `sevenDayRevenue` — float, unknown, WIP
+- `thirtyDayRevenue` — float, unknown, WIP
 
 ## Drawer, WIP
 
-- GET /v4/chat/media/drawer . MediaItem[]
+### DrawerMedia
 
-- GET /v4/chat/media/drawer/{conversationId} . MediaItem[]
+- `id` — long integer
+- `url` — string, URL
+- `contentType` — string
+- `createdTs` — unix timestamp in milliseconds
+- `used` — boolean
+- `takenOnGrindr` — boolean
 
-- DELETE /v4/chat/media/drawer/{mediaId}
+### Get media in drawer
 
-- PUT /v4/chat/media/drawer/{mediaId}
+Requires [Authorization](#api-authorization).
+
+```
+GET /v4/chat/media/drawer
+```
+
+Response:
+
+Array of [DrawerMedia](#drawermedia).
+
+### Get media in drawer for a conversation
+
+Requires [Authorization](#api-authorization).
+
+```
+GET /v4/chat/media/drawer/{conversationId}
+```
+
+Array of [DrawerMedia](#drawermedia).
+
+### Add media to drawer
+
+Requires [Authorization](#api-authorization).
+
+MediaId must be obtained through [uploading](#upload-media).
+
+Repeated requests cause 500 HTTP status "Internal Error".
+
+```
+PUT /v4/chat/media/drawer/{mediaId}
+```
+
+Response:
+
+Empty.
+
+### Delete media from drawer
+
+Requires [Authorization](#api-authorization).
+
+Repeated requests are completed without errors.
+
+```
+DELETE /v4/chat/media/drawer/{mediaId}
+```
+
+Response:
+
+Empty with HTTP status 202.
 
 ## Legal agreements, WIP
 
