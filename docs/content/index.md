@@ -3,16 +3,16 @@
 layout: home
 
 hero:
-  name: "Open Grind Docs"
-  text: "Open Grind project documentation and Grindr API reference"
-  tagline: My great project tagline
+  name: "Open Grind"
+  text: "Unofficial Grindr client"
+  tagline: Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Download
+      link: /download
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: Source code
+      link: https://git.hloth.dev/hloth/open-grind
 
 features:
   - title: Feature A

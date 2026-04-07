@@ -4,21 +4,30 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
 	srcDir: "content",
 
-	title: "Open Grind Docs",
+	title: "Open Grind",
 	description: "Open Grind project documentation and Grindr API reference",
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
 			{ text: "Home", link: "/" },
-			{ text: "Examples", link: "/markdown-examples" },
+			{ text: "Grindr API", link: "/grindr-api" },
 		],
 
 		sidebar: [
 			{
-				text: "Examples",
+				text: "Reference",
 				items: [
-					{ text: "Markdown Examples", link: "/markdown-examples" },
-					{ text: "Runtime API Examples", link: "/api-examples" },
+					{ text: "Download", link: "/download" },
+					{
+						text: "Grindr API",
+						link: "/",
+						base: "/grindr-api/",
+						collapsed: true,
+						items: [
+							{ text: "Foo", link: "foo" },
+							{ text: "Bar", link: "bar" },
+						],
+					},
 				],
 			},
 		],
@@ -26,5 +35,11 @@ export default defineConfig({
 		socialLinks: [
 			{ icon: "git", link: "https://git.hloth.dev/hloth/open-grind/" },
 		],
+
+		footer: {
+			message: "Open Grind is not affiliated with Grindr in any way.",
+			copyright:
+				'Licensed under the <a href="https://git.hloth.dev/hloth/open-grind/src/branch/main/LICENSE">MIT</a> License.',
+		},
 	},
 });

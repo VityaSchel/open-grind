@@ -11,9 +11,9 @@ To minimize effort and time spent on porting code across platform, the project i
 
 PRs are welcome! All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
-## DOCS.md
+## Documentation
 
-All research efforts contributing to [DOCS.md](./DOCS.md) are highly valued and appreciated! Seek for "WIP" in document's text to find out which areas of API have not been reverse engineered yet.
+All research efforts contributing to [docs](./docs/content) are highly valued and appreciated! Seek for "WIP" in documents texts to find out which areas of API haven't been reverse engineered yet.
 
 ## Quick start
 
