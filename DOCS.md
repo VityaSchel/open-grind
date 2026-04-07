@@ -245,7 +245,12 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Set visiting settings](#set-visiting-settings)
       - [Get home location](#get-home-location)
       - [Set home location](#set-home-location)
-      - [SMS verification, WIP](#sms-verification-wip)
+    - [SMS verification](#sms-verification)
+      - [SmsSendCodeRequest](#smssendcoderequest)
+      - [Send SMS code](#send-sms-code)
+      - [Verify SMS code](#verify-sms-code)
+      - [Request SMS code for password change](#request-sms-code-for-password-change)
+      - [Verify SMS code (legacy)](#verify-sms-code-legacy)
       - [Face recognition, WIP](#face-recognition-wip)
       - [Spotify token, WIP](#spotify-token-wip)
       - [Delete account](#delete-account)
@@ -3491,15 +3496,78 @@ Response:
 - `lat` — float
 - `lon` — float
 
-#### SMS verification, WIP
+### SMS verification
 
-- POST /v4/sms/sendcode SmsSendCodeRequest
-- POST /v4/sms/verifycode SmsVerifyCodeRequest
+#### SmsSendCodeRequest
 
-- POST /v4/sms/verification/{profileId}/sendcode SmsSendCodeRequest
-- POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
+- `country_code` — string
+- `phone_number` — string
 
-- POST /v4/sms/users/update-password/sendcode SmsSendCodeRequest
+#### Send SMS code
+
+```
+- POST /v4/sms/verification/{profileId}/sendcode
+```
+
+Body:
+
+[SmsSendCodeRequest](#smssendcoderequest)
+
+Response:
+
+- `code` — number or `null`
+- `message` — string, e.g. `"Profile is not verification required"` or `"Profile is already verified"`
+
+#### Verify SMS code
+
+```
+POST /v4/sms/verification/{profileId}/verifycode SmsVerifyCodeRequest
+```
+
+Response:
+
+- `code` — number or `null`
+- `message` — string, e.g. `"Profile is not verification required"` or `"Profile is already verified"`
+
+#### Request SMS code for password change
+
+```
+POST /v4/sms/users/update-password/sendcode
+```
+
+Body:
+
+[SmsSendCodeRequest](#smssendcoderequest)
+
+<!-- #### SMS verification
+
+```
+POST /v4/sms/sendcode
+```
+
+Body:
+
+[SmsSendCodeRequest](#smssendcoderequest)
+
+Response:
+
+Empty. -->
+
+#### Verify SMS code (legacy)
+
+```
+POST /v4/sms/verifycode
+```
+
+Body:
+
+- `country_code` — string
+- `phone_number` — string
+- `code` — string
+
+Response:
+
+Empty.
 
 #### Face recognition, WIP
 
