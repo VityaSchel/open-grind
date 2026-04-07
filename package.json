@@ -5,6 +5,7 @@
 	"author": "Viktor Shchelochkov <hi@hloth.dev> (https://hloth.dev)",
 	"type": "module",
 	"scripts": {
+		"docs": "bun run --cwd docs start",
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
