@@ -4,6 +4,8 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
 	srcDir: "content",
 
+	cleanUrls: true,
+
 	title: "Open Grind",
 	description: "Open Grind project documentation and Grindr API reference",
 	themeConfig: {
