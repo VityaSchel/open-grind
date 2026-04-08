@@ -109,7 +109,7 @@ Licensed under [MIT](./LICENSE). You must credit author and reference this proje
       - [Albums content chat list-by-id, WIP](#albums-content-chat-list-by-id-wip)
       - [Get album limits](#get-album-limits)
       - [Albums red dot, WIP](#albums-red-dot-wip)
-      - [Pressie albums feed](#pressie-albums-feed)
+      - [Gets albums shared with us](#gets-albums-shared-with-us)
       - [Pressie albums feed paywall](#pressie-albums-feed-paywall)
       - [Pressie albums feed profile ID, WIP](#pressie-albums-feed-profile-id-wip)
       - [Pressie albums feed update read, WIP](#pressie-albums-feed-update-read-wip)
@@ -474,7 +474,7 @@ See also: [WebSocket](#websocket)
 
 #### Conversation ID
 
-String with numbers separated by `:`, e.g. `"12345678:23456789"`, also known as `${profileId1}:${profileId2}`. The order of these is the smaller user id is first then the larger one is second, regardless of who started the chat.
+String with two long integers separated by `:`, e.g. `"12345678:23456789"`. Long integers are IDs of [Profile](#profile). The order of these IDs is always from smaller ID to higher ID, regardless of who started the chat.
 
 #### Conversation
 
@@ -560,7 +560,7 @@ POST /v1/inbox/conversation
 ```
 
 Body: 
-- Array of conversation IDs in the format `12345678:23456789`
+- Array of [Conversation IDs](#conversation-id)
 
 Response (array):
 - `conversationId` - string, e.g. `647135273:771038429`
@@ -1100,7 +1100,7 @@ GET /v5/chat/conversation/{conversationId}/message
 
 Query (optional):
 
-- `pageKey` — optional, This is the last `messageId` from the previous response encodded as URL encoding. This will then return messages before this provided id, if not provided it will return the most recent messages.
+- `pageKey` — optional, return messages with IDs before specified value
 - `profile` — boolean (`profile=true` | `profile=` + any other value), optional
 
 Response:
@@ -1697,23 +1697,26 @@ PUT /v1/albums/red-dot
 ```
 
 Response: 
-Empty
 
-#### Pressie albums feed
+Empty.
 
-Gets albums shared with us.
+#### Gets albums shared with us
+
+Requires [Authorization](#api-authorization).
 
 ```
 POST /v3/pressie-albums/feed
 ```
 
-Request:
-- `isFavorite` — boolean, optional, filters albums shared by people marked as favorite
-- `isOnline` — boolean, optional, filters albums shared by people that are currently online
-- `onlyVideo` — boolean, optional, filters albums to those that include at least one video
-- `blur` — boolean, optional, if `true`, all media urls in response are blurred
+Body:
+
+- `isFavorite` — boolean, optional, only albums shared by [favorite](#favorites) users
+- `isOnline` — boolean, optional, only albums shared by currently online users
+- `onlyVideo` — boolean, optional, only albums with at least one video
+- `blur` — boolean, optional, blur media urls in response
 
 Response:
+
 - `profileFeeds` - array of objects
   - `profileId` — integer
   - `paywallStatus` — string, e.g. `ALLOW`
@@ -1758,6 +1761,7 @@ POST /v3/pressie-albums/feed/paywall/
 No body.
 
 Response:
+
 - `albumPaywallContent` - array of objects
   - `albumId` — long integer
   - `profile` — object
@@ -2862,6 +2866,7 @@ Response:
 ### Travels
 
 #### Get travel plans
+
 Requires [Authorization](#api-authorization).
 
 ```
@@ -2869,6 +2874,7 @@ GET /v6/profiles/travel/{profileId}
 ```
 
 Response:
+
 - `travelPlans` — array of objects
   - `travelPlanId` — long integer, required for update, ignored for create
   - `profileId` — long integer
@@ -2879,6 +2885,7 @@ Response:
   - `notes` — string
   
 #### Create travel plans
+
 Requires [Authorization](#api-authorization).
 
 ```
@@ -2886,6 +2893,7 @@ POST /v6/profiles/travel
 ```
 
 Body:
+
 - `profileId` — long integer
 - `geohash` — [Geohash](#geohash)
 - `startDate` — long integer, unix timestamp in milliseconds
@@ -2894,7 +2902,8 @@ Body:
 - `notes` — string
 
 Response:
-Empty
+
+Empty.
 
 #### Update travel plans
 
@@ -2905,6 +2914,7 @@ POST /v6/profiles/travel/update
 ```
 
 Body:
+
 - `travelPlanId` — long integer
 - `profileId` — long integer
 - `geohash` — [Geohash](#geohash)
@@ -2914,21 +2924,22 @@ Body:
 - `notes` — string
 
 Response:
-Empty
+
+Empty.
 
 #### Delete travel plans
 
 Requires [Authorization](#api-authorization).
 
-Deletes travel plan with specified `travelPlanId`.
-Repeated deletion returns 200, same as first deletion.
+Repeated requests are completed without errors.
 
 ```
 DELETE /v6/profiles/travel/{travelPlanId}
 ```
 
 Response:
-Empty
+
+Empty.
 
 ### Roam, WIP
 
