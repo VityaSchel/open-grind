@@ -4,7 +4,7 @@ Unofficial Grindr client. Crossplatform, free, libre, ad-free, tracker-free, pri
 
 ## 🚧 There's nothing there just yet! 🚧
 
-Come back in a couple of weeks when the API specification for developers at [DOCS.md](./DOCS.md) is finished 🤓
+Come back in a couple of weeks when the API specification for developers at <https://opengrind.hloth.dev/grindr-api> is finished 🤓
 
 <!-- Work in progress. See [ROADMAP.md](./ROADMAP.md).
 

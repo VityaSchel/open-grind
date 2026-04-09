@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Download
-      link: /download
+      link: /guide/download
     - theme: alt
       text: Source code
       link: https://git.hloth.dev/hloth/open-grind

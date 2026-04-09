@@ -1,8 +1,18 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitepress";
+import { grindrApiReference } from "../lib";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 	srcDir: "content",
+
+	vite: {
+		resolve: {
+			alias: {
+				$lib: fileURLToPath(new URL("../lib", import.meta.url)),
+			},
+		},
+	},
 
 	cleanUrls: true,
 
@@ -15,24 +25,25 @@ export default defineConfig({
 			{ text: "Grindr API", link: "/grindr-api" },
 		],
 
-		sidebar: [
-			{
-				text: "Reference",
-				items: [
-					{ text: "Download", link: "/download" },
-					{
-						text: "Grindr API",
-						link: "/",
-						base: "/grindr-api/",
-						collapsed: true,
-						items: [
-							{ text: "Foo", link: "foo" },
-							{ text: "Bar", link: "bar" },
-						],
-					},
-				],
-			},
-		],
+		search: {
+			provider: "local",
+		},
+
+		sidebar: {
+			"/guide/": [
+				{
+					text: "User guide",
+					items: [{ text: "Download", link: "/guide/download" }],
+				},
+			],
+			"/grindr-api/": [
+				{
+					text: "Grindr API",
+					link: "/grindr-api/",
+					items: grindrApiReference,
+				},
+			],
+		},
 
 		socialLinks: [
 			{ icon: "git", link: "https://git.hloth.dev/hloth/open-grind/" },

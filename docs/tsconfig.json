@@ -1,4 +1,8 @@
 {
+	"include": ["./**/*.ts", "./**/*.vue", "./**/*.md"],
+	"vueCompilerOptions": {
+		"vitePressExtensions": [".md"]
+	},
 	"compilerOptions": {
 		// Environment setup & latest features
 		"lib": ["ESNext"],
