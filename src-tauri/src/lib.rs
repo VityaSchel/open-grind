@@ -31,8 +31,10 @@ pub fn run() {
         .manage(AppState {
             client: OnceLock::new(),
         })
+        .manage(Arc::new(api::google_oauth::GoogleOauthBridge::new()))
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
+            api::auth::login_with_google,
             api::auth::refresh_token,
             api::auth::logout,
             api::auth::auth_state,
@@ -41,6 +43,8 @@ pub fn run() {
             api::ws::ws_connect,
             api::ws::ws_send,
             api::client::rotate_api_params,
+            api::google_oauth::google_oauth_token_captured,
+            api::google_oauth::google_oauth_error,
         ])
         .setup(|app| {
             #[cfg(all(target_os = "macos", not(feature = "keychain")))]

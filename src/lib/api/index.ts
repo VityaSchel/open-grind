@@ -18,6 +18,12 @@ export const methods = {
 			profileId: z.coerce.number().int().nonnegative(),
 		}),
 	},
+	login_with_google: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+		}),
+	},
 	auth_state: {
 		request: z.undefined(),
 		response: z.int().nonnegative().nullable(),

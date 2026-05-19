@@ -33,6 +33,33 @@
 			);
 		}
 	}
+
+	let googleSubmitting = $state(false);
+
+	async function signInWithGoogle() {
+		if (googleSubmitting || submitting) return;
+		try {
+			googleSubmitting = true;
+			await callMethod("login_with_google");
+			void goto("/");
+		} catch (error) {
+			console.error(error);
+			const appError = asAppError(error);
+			if (appError) {
+				if (
+					!(
+						appError.kind === "Auth" && appError.message === "Sign-in cancelled"
+					)
+				) {
+					toast.error(appError.prettyMessage);
+				}
+			} else {
+				toast.error("Google sign-in failed");
+			}
+		} finally {
+			googleSubmitting = false;
+		}
+	}
 </script>
 
 <form
@@ -121,8 +148,22 @@
 			</div>
 		</Card.Content>
 		<Card.Footer class="flex-col gap-2">
-			<Button type="submit" class="w-full" disabled={submitting}>Login</Button>
-			<!-- <Button variant="outline" class="w-full">Login with Google</Button> -->
+			<Button
+				type="submit"
+				class="w-full"
+				disabled={submitting || googleSubmitting}
+			>
+				Login
+			</Button>
+			<Button
+				type="button"
+				variant="outline"
+				class="w-full"
+				disabled={submitting || googleSubmitting}
+				onclick={signInWithGoogle}
+			>
+				{googleSubmitting ? "Signing in…" : "Login with Google"}
+			</Button>
 		</Card.Footer>
 	</Card.Root>
 </form>
