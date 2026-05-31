@@ -514,11 +514,11 @@ impl GrindrHeaders {
         ));
         items.push((
             HeaderName::from_static("l-locale"),
-            HeaderValue::from_str(&device.locale).map_err(invalid_header)?,
+            HeaderValue::from_static("en_US"),
         ));
         items.push((
             HeaderName::from_static("accept-language"),
-            HeaderValue::from_str(&device.accept_language).map_err(invalid_header)?,
+            HeaderValue::from_static("en-US"),
         ));
         items.push((
             HeaderName::from_static("accept-encoding"),

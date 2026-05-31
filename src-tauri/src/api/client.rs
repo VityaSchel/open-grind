@@ -1,6 +1,7 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use serde::Serialize;
+use tauri::{AppHandle, Emitter};
 use tokio::sync::{Mutex, RwLock};
 use wreq::{
     Client, EmulationProvider, Http2Config, PseudoOrder, SettingsOrder, SslCurve, TlsConfig,
@@ -113,6 +114,7 @@ pub struct GrindrClient {
     pub(super) fingerprint: RwLock<Arc<Fingerprint>>,
     pub(super) session: RwLock<Option<Session>>,
     pub(super) refresh_lock: Mutex<()>,
+    pub(super) app: OnceLock<AppHandle>,
 }
 
 #[derive(Debug, Serialize)]
@@ -187,7 +189,25 @@ impl GrindrClient {
             })),
             session: RwLock::new(session),
             refresh_lock: Mutex::new(()),
+            app: OnceLock::new(),
         })
+    }
+
+    pub fn set_app_handle(&self, app: AppHandle) {
+        let _ = self.app.set(app);
+    }
+
+    pub(super) fn emit<S: Serialize + Clone>(&self, event: &str, payload: S) {
+        if let Some(app) = self.app.get() {
+            if let Err(e) = app.emit(event, payload) {
+                eprintln!("[client] failed to emit {event}: {e}");
+            }
+        }
+    }
+
+    pub async fn clear_session(&self) {
+        self.session.write().await.take();
+        super::auth::AuthStorage::delete_session();
     }
 
     pub async fn fingerprint(&self) -> Arc<Fingerprint> {

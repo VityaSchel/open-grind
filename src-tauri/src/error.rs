@@ -8,6 +8,7 @@ pub enum AppError {
     Http(String),
     Auth(String),
     Api { code: i32, message: String },
+    Unauthorized { code: i32, message: String },
     NotInitialized,
 }
 
@@ -17,6 +18,9 @@ impl fmt::Display for AppError {
             AppError::Http(msg) => write!(f, "HTTP error: {msg}"),
             AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
             AppError::Api { code, message } => write!(f, "API error {code}: {message}"),
+            AppError::Unauthorized { code, message } => {
+                write!(f, "Unauthorized ({code}): {message}")
+            }
             AppError::NotInitialized => write!(f, "GrindrClient not initialized"),
         }
     }

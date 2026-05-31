@@ -181,28 +181,23 @@ impl GrindrClient {
     }
 
     pub async fn authorization_header(&self) -> Option<String> {
-        let expires_at = self
-            .session
-            .read()
-            .await
-            .as_ref()
-            .map(|s| s.expires_at)
-            .unwrap_or(0);
+        let expires_at = match self.session.read().await.as_ref() {
+            Some(s) => s.expires_at,
+            None => return None,
+        };
 
         if expires_at < (chrono::Utc::now().timestamp() as u64 + 60) {
             let _guard = self.refresh_lock.lock().await;
 
-            let still_expired = self
-                .session
-                .read()
-                .await
-                .as_ref()
-                .map(|s| s.expires_at)
-                .unwrap_or(0)
-                < (chrono::Utc::now().timestamp() as u64 + 60);
+            let still_expired = match self.session.read().await.as_ref() {
+                Some(s) => s.expires_at < (chrono::Utc::now().timestamp() as u64 + 60),
+                None => return None,
+            };
 
             if still_expired {
-                let _ = self.refresh_token().await;
+                if let Err(e) = self.refresh_token().await {
+                    self.handle_refresh_error(&e).await;
+                }
             }
         }
 
@@ -212,6 +207,32 @@ impl GrindrClient {
             .as_ref()
             .map(|s| format!("Grindr3 {}", s.session_id))
     }
+
+    pub(super) async fn handle_refresh_error(&self, error: &AppError) {
+        eprintln!("[auth] token refresh failed: {error}");
+
+        let unauthorized = matches!(error, AppError::Unauthorized { .. });
+        if unauthorized {
+            self.clear_session().await;
+        } else if self.session.read().await.is_none() {
+            return;
+        }
+
+        self.emit(
+            "auth:session-error",
+            SessionErrorPayload {
+                message: error.to_string(),
+                unauthorized,
+            },
+        );
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SessionErrorPayload {
+    message: String,
+    unauthorized: bool,
 }
 
 #[tauri::command]
@@ -227,21 +248,22 @@ pub async fn login(
 
 #[tauri::command]
 pub async fn refresh_token(state: tauri::State<'_, AppState>) -> Result<LoginResult, AppError> {
-    let result = state.client()?.refresh_token().await?;
-    state.auth_notify.notify_one();
-    Ok(result)
+    let client = state.client()?;
+    match client.refresh_token().await {
+        Ok(result) => {
+            state.auth_notify.notify_one();
+            Ok(result)
+        }
+        Err(e) => {
+            client.handle_refresh_error(&e).await;
+            Err(e)
+        }
+    }
 }
 
 #[tauri::command]
 pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
-    state
-        .client()?
-        .session
-        .write()
-        .await
-        .take()
-        .ok_or_else(|| AppError::Auth("Not logged in".to_owned()))?;
-    AuthStorage::delete_session();
+    state.client()?.clear_session().await;
     Ok(())
 }
 

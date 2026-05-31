@@ -18,6 +18,7 @@
 	});
 
 	import RequestBlockedAlert from "$lib/api/request-blocked/RequestBlockedAlert.svelte";
+	import SessionErrorAlert from "$lib/api/session-error/SessionErrorAlert.svelte";
 	import favicon from "$lib/assets/favicon.png";
 
 	let {
@@ -50,3 +51,4 @@
 	{@render children?.()}
 </IconContext>
 <RequestBlockedAlert />
+<SessionErrorAlert />

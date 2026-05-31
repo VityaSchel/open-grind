@@ -58,6 +58,10 @@ pub fn run() {
                 let _ = app.state::<AppState>().client.set(client);
             }
 
+            if let Ok(client) = app.state::<AppState>().client() {
+                client.set_app_handle(app.handle().clone());
+            }
+
             #[cfg(all(target_os = "macos", not(feature = "keychain")))]
             {
                 let handle = app.handle().clone();

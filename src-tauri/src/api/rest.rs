@@ -54,7 +54,7 @@ impl GrindrClient {
         let response = request.send().await?;
 
         if !response.status().is_success() {
-            let status = response.status().as_u16() as i32;
+            let status = response.status().as_u16();
             let bytes = response.bytes().await.unwrap_or_default();
             return Err(parse_api_error(&bytes, status));
         }
@@ -113,18 +113,24 @@ impl GrindrClient {
 
 const MAX_ERROR_BODY: usize = 1024;
 
-fn parse_api_error(bytes: &[u8], http_status: i32) -> AppError {
+fn parse_api_error(bytes: &[u8], http_status: u16) -> AppError {
+    let (code, message) = extract_api_error(bytes, http_status);
+    if http_status == 401 {
+        AppError::Unauthorized { code, message }
+    } else {
+        AppError::Api { code, message }
+    }
+}
+
+fn extract_api_error(bytes: &[u8], http_status: u16) -> (i32, String) {
     if let Ok(json) = serde_json::from_slice::<serde_json::Value>(bytes) {
         let code = json
             .get("code")
             .and_then(|c| c.as_i64())
             .map(|c| c as i32)
-            .unwrap_or(http_status);
+            .unwrap_or(http_status as i32);
         if let Some(msg) = json.get("message").and_then(|m| m.as_str()) {
-            return AppError::Api {
-                code,
-                message: msg.to_owned(),
-            };
+            return (code, msg.to_owned());
         }
     }
     let text = String::from_utf8_lossy(bytes);
@@ -138,14 +144,12 @@ fn parse_api_error(bytes: &[u8], http_status: i32) -> AppError {
     } else {
         text.into_owned()
     };
-    AppError::Api {
-        code: http_status,
-        message: if truncated.is_empty() {
-            "Unknown error".to_owned()
-        } else {
-            truncated
-        },
-    }
+    let message = if truncated.is_empty() {
+        "Unknown error".to_owned()
+    } else {
+        truncated
+    };
+    (http_status as i32, message)
 }
 
 #[derive(Deserialize)]

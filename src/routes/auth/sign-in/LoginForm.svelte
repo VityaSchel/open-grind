@@ -28,17 +28,16 @@
 			console.error(error);
 			const appError = asAppError(error);
 			if (appError) {
-				if (
-					z
-						.object({
-							kind: z.literal("Api"),
-							message: z.object({
-								code: z.literal(4),
-								message: z.literal("Invalid input parameters"),
-							}),
-						})
-						.safeParse(appError).success
-				) {
+				const invalidInputParameters = z
+					.object({
+						kind: z.literal("Api"),
+						message: z.object({
+							code: z.literal(4),
+							message: z.literal("Invalid input parameters"),
+						}),
+					})
+					.safeParse(appError).success;
+				if (invalidInputParameters || appError.kind === "Unauthorized") {
 					toast.error("Invalid email or password");
 				} else {
 					toast.error(appError.prettyMessage);

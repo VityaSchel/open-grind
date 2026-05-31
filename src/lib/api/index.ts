@@ -22,6 +22,12 @@ export const methods = {
 		request: z.undefined(),
 		response: z.number().int().nonnegative().nullable(),
 	},
+	refresh_token: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+		}),
+	},
 	rotate_api_params: {
 		request: z.undefined(),
 		response: z.object({
@@ -47,7 +53,7 @@ export async function callMethod<T extends keyof typeof methods>(
 export function asAppError(error: unknown) {
 	const { data, success } = z
 		.object({
-			kind: z.enum(["Http", "Auth", "Api", "NotInitialized"]),
+			kind: z.enum(["Http", "Auth", "Api", "Unauthorized", "NotInitialized"]),
 			message: z
 				.string()
 				.or(
