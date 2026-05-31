@@ -1,5 +1,4 @@
 import { toast } from "svelte-sonner";
-import z from "zod";
 
 import { markConversationAsRead } from "$lib/api/conversation";
 import { reactToMessage, sendMessage } from "$lib/api/messages";
@@ -52,12 +51,7 @@ export class ConversationState {
 		this.ourProfileId = ourProfileId;
 		this.#conversations = conversations;
 		conversations.setActive(conversationId);
-		this.lastReadTimestamp =
-			z.coerce
-				.number()
-				.int()
-				.safeParse(localStorage.getItem(`chat:read:${conversationId}`)).data ??
-			null;
+		this.lastReadTimestamp = null;
 		void this.#initialLoad();
 
 		this.#removeReconcileListener = conversations.onReconcile(() =>
@@ -168,6 +162,7 @@ export class ConversationState {
 
 			this.messages = removeDuplicateMessages(next);
 			this.#updatePreview(this.messages.at(0));
+			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
 
 			for (const m of fresh) {
@@ -193,6 +188,7 @@ export class ConversationState {
 			}));
 			this.profile = cached.profile;
 			this.pageKey = cached.pageKey;
+			this.lastReadTimestamp = cached.lastReadTimestamp;
 			this.loading = false;
 			this.#conversations.markRead(this.conversationId);
 			void this.#reconcileMessages();
@@ -214,6 +210,7 @@ export class ConversationState {
 			this.pageKey = result.pageKey;
 			this.#updatePreview(this.messages.at(0));
 			this.#conversations.markRead(this.conversationId);
+			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
 		} catch (err) {
 			this.error = err instanceof Error ? err : new Error(String(err));
@@ -235,6 +232,7 @@ export class ConversationState {
 				...result.messages.map((m) => ({ ...m, status: "sent" as const })),
 			]);
 			this.pageKey = result.pageKey;
+			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
 		} catch (err) {
 			toast.error("Failed to load more messages");
@@ -302,6 +300,7 @@ export class ConversationState {
 			profile: this.profile,
 			pageKey: this.pageKey,
 			cachedAt: Date.now(),
+			lastReadTimestamp: this.lastReadTimestamp,
 		});
 	}
 
@@ -370,11 +369,6 @@ export class ConversationState {
 		if (queue.length === 0) return;
 		queue.sort((a, b) => a.timestamp - b.timestamp);
 		const highest = queue[queue.length - 1];
-		this.lastReadTimestamp = highest.timestamp;
-		localStorage.setItem(
-			`chat:read:${this.conversationId}`,
-			String(highest.timestamp),
-		);
 		const { revealMessageRead } = await getPreferences();
 		if (revealMessageRead) {
 			try {

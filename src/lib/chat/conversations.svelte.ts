@@ -26,6 +26,7 @@ export type CachedConversation = {
 	};
 	pageKey: string | null;
 	cachedAt: number;
+	lastReadTimestamp: number | null;
 };
 
 class ConversationsState {
