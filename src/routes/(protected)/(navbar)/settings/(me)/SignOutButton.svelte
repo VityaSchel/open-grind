@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { CaretRightIcon, SignOutIcon } from "phosphor-svelte";
 
 	import { callMethod } from "$lib/api";
@@ -9,11 +10,10 @@
 	async function onSignOut() {
 		try {
 			await callMethod("logout");
-			window.location.href = "/auth/sign-in";
 		} catch (error) {
 			console.error(error);
-			return null;
 		}
+		await goto("/auth/sign-in");
 	}
 
 	let alertOpen = $state(false);

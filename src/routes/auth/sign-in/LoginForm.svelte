@@ -4,14 +4,33 @@
 	import z from "zod";
 
 	import { asAppError, callMethod } from "$lib/api";
+	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
+	import Link from "$lib/components/ui/link/Link.svelte";
 
 	let email = $state("");
 	let password = $state("");
 	let submitting = $state(false);
+
+	let recaptchaChecked = false;
+	let recaptchaDialogOpen = $state(false);
+
+	async function maybeCheckRecaptcha() {
+		if (recaptchaChecked) return;
+		recaptchaChecked = true;
+		try {
+			const enabled = await callMethod("recaptcha_first_party_enabled");
+			if (enabled) recaptchaDialogOpen = true;
+		} catch (error) {
+			console.error(
+				"[login] failed to check recaptcha_first_party assignment",
+				error,
+			);
+		}
+	}
 </script>
 
 <form
@@ -39,6 +58,7 @@
 					.safeParse(appError).success;
 				if (invalidInputParameters || appError.kind === "Unauthorized") {
 					toast.error("Invalid email or password");
+					void maybeCheckRecaptcha();
 				} else {
 					toast.error(appError.prettyMessage);
 				}
@@ -103,3 +123,22 @@
 		</Card.Footer>
 	</Card.Root>
 </form>
+
+<AlertDialog.Root bind:open={recaptchaDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Captcha verification required</AlertDialog.Title>
+			<AlertDialog.Description>
+				Grindr requires captcha verification for your device or account, which
+				Open Grind does not currently support. <Link
+					href="https://git.opengrind.org/open-grind/open-grind/issues/129"
+				>
+					Follow for updates on issue #129
+				</Link>.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Action>OK</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

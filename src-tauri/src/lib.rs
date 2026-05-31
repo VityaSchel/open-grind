@@ -18,6 +18,7 @@ pub fn run() {
 
     let (ws_tx, ws_rx) = mpsc::channel(64);
     let auth_notify = Arc::new(Notify::new());
+    let logout_notify = Arc::new(Notify::new());
 
     let mut builder = tauri::Builder::default();
 
@@ -37,12 +38,14 @@ pub fn run() {
             ws_tx,
             ws_rx: tokio::sync::Mutex::new(Some(ws_rx)),
             auth_notify,
+            logout_notify,
         })
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
             api::auth::refresh_token,
             api::auth::logout,
             api::auth::auth_state,
+            api::auth::recaptcha_first_party_enabled,
             api::rest::request,
             api::ws::ws_connect,
             api::ws::ws_send,

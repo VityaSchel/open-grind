@@ -4,6 +4,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager};
+use tokio::sync::Notify;
 use tokio::time::sleep;
 use wreq::websocket::{Message, WebSocket};
 
@@ -103,7 +104,8 @@ async fn connect_and_run(app: &AppHandle) -> Result<(), AppError> {
         .take()
         .ok_or_else(|| AppError::Http("WS already running".to_owned()))?;
 
-    let result = run_message_loop(&mut ws, &mut cmd_rx, &session_id, app).await;
+    let result =
+        run_message_loop(&mut ws, &mut cmd_rx, &session_id, app, &state.logout_notify).await;
 
     *state.ws_rx.lock().await = Some(cmd_rx);
 
@@ -115,9 +117,16 @@ async fn run_message_loop(
     cmd_rx: &mut tokio::sync::mpsc::Receiver<WsCommand>,
     session_id: &str,
     app: &AppHandle,
+    logout_notify: &Notify,
 ) -> Result<(), AppError> {
+    let logged_out = logout_notify.notified();
+    tokio::pin!(logged_out);
+
     loop {
         tokio::select! {
+            _ = &mut logged_out => {
+                return Err(AppError::Auth("logged out".to_owned()));
+            }
             msg = ws.next() => match msg {
                 Some(Ok(Message::Text(text))) => {
                     if let Ok(val) = serde_json::from_str::<Value>(text.as_str()) {

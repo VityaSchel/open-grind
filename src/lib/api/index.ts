@@ -39,6 +39,10 @@ export const methods = {
 		request: z.undefined(),
 		response: z.undefined(),
 	},
+	recaptcha_first_party_enabled: {
+		request: z.undefined(),
+		response: z.boolean(),
+	},
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 export async function callMethod<T extends keyof typeof methods>(

@@ -68,6 +68,18 @@ struct JwtClaims {
     exp: u64,
 }
 
+#[derive(Debug, Deserialize)]
+struct AssignmentsResponse {
+    #[serde(default)]
+    assignments: Vec<Assignment>,
+}
+
+#[derive(Debug, Deserialize)]
+struct Assignment {
+    key: String,
+    value: String,
+}
+
 impl LoginRequest {
     pub fn new(email: String, password: String) -> Self {
         Self {
@@ -180,6 +192,21 @@ impl GrindrClient {
         Ok(LoginResult { profile_id })
     }
 
+    pub async fn recaptcha_first_party_enabled(&self) -> Result<bool, AppError> {
+        let resp: AssignmentsResponse = self
+            .request_json::<(), AssignmentsResponse>(
+                wreq::Method::GET,
+                "/public/v1/assignments",
+                None,
+            )
+            .await?;
+
+        Ok(resp
+            .assignments
+            .iter()
+            .any(|a| a.key == "recaptcha_first_party" && a.value == "on"))
+    }
+
     pub async fn authorization_header(&self) -> Option<String> {
         let expires_at = match self.session.read().await.as_ref() {
             Some(s) => s.expires_at,
@@ -264,7 +291,17 @@ pub async fn refresh_token(state: tauri::State<'_, AppState>) -> Result<LoginRes
 #[tauri::command]
 pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
     state.client()?.clear_session().await;
+    // Tear down the live WS connection; the loop falls back to waiting for the
+    // next login instead of reconnecting with a now-invalid session.
+    state.logout_notify.notify_waiters();
     Ok(())
+}
+
+#[tauri::command]
+pub async fn recaptcha_first_party_enabled(
+    state: tauri::State<'_, AppState>,
+) -> Result<bool, AppError> {
+    state.client()?.recaptcha_first_party_enabled().await
 }
 
 #[tauri::command]

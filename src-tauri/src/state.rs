@@ -10,6 +10,7 @@ pub struct AppState {
     pub ws_tx: mpsc::Sender<WsCommand>,
     pub ws_rx: tokio::sync::Mutex<Option<mpsc::Receiver<WsCommand>>>,
     pub auth_notify: Arc<Notify>,
+    pub logout_notify: Arc<Notify>,
 }
 
 impl AppState {
