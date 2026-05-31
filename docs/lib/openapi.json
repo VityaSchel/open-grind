@@ -11547,7 +11547,12 @@
 						]
 					},
 					"expirationType": {
-						"$ref": "#/components/schemas/AlbumExpirationType"
+						"nullable": true,
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/AlbumExpirationType"
+							}
+						]
 					}
 				},
 				"x-render-on-tag": "messaging/albums",

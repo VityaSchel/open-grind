@@ -33,7 +33,7 @@ export type AlbumExpirationType = z.infer<typeof albumExpirationTypeSchema>;
 
 export const albumExpirationSchema = z.object({
 	expiresAt: unixTimestampMsSchema.nullable(),
-	expirationType: albumExpirationTypeSchema.optional(),
+	expirationType: albumExpirationTypeSchema.optional().nullable(),
 });
 
 export const albumContentMin = z.object({
