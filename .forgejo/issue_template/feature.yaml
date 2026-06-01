@@ -1,6 +1,6 @@
 name: Feature Request
 about: Suggest a new feature or an improvement to an existing feature
-title: "[Feature]: "
+title: ""
 ref: "main"
 labels:
   - enhancement

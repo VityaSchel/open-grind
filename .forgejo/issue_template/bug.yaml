@@ -1,6 +1,6 @@
 name: Bug Report
 about: Something is broken
-title: "[Bug]: "
+title: ""
 ref: "main"
 labels:
   - bug
@@ -17,7 +17,7 @@ body:
         - ["Version deprecated" error](https://git.opengrind.org/open-grind/open-grind/issues/119)
         - [Cloudflare blocking requests](https://git.opengrind.org/open-grind/open-grind/issues/81)
 
-        **Do NOT put `Something went wrong` in the title**, instead copy details, **redact them manually** and describe what happened.
+        **Do NOT put "Something went wrong" in the title**, instead copy details, **redact them manually** and describe what happened.
   - type: textarea
     id: what-happened
     attributes:
@@ -36,5 +36,5 @@ body:
     id: version
     attributes:
       label: Version of Open Grind
-      description: You can find this in the app's settings. Put `N/A` only if version is not applicable.
+      description: You can find this in the app's settings. Put "N/A" only if version is not applicable.
       placeholder: e.g. v0.1.0-alpha.5
