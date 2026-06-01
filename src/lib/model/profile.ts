@@ -282,12 +282,12 @@ export const rightNowMediaSchema = z.object({
 export type RightNowMedia = z.infer<typeof rightNowMediaSchema>;
 
 export const travelPlanSchema = z.object({
-	endDateUtc: z.number().nullable(),
+	endDate: z.number().nullable(),
 	geohash: z.string(),
-	id: z.number().int().nullable(),
+	travelPlanId: z.number().int().nullable(),
 	locationName: z.string(),
 	showOnProfile: z.boolean().nullable(),
-	startDateUtc: z.number().nullable(),
+	startDate: z.number().nullable(),
 });
 
 export type TravelPlan = z.infer<typeof travelPlanSchema>;

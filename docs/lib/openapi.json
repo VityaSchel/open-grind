@@ -10566,7 +10566,7 @@
 			"TravelPlanEmbedded": {
 				"type": "object",
 				"properties": {
-					"endDateUtc": {
+					"endDate": {
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -10577,7 +10577,7 @@
 					"geohash": {
 						"$ref": "#/components/schemas/Geohash"
 					},
-					"id": {
+					"travelPlanId": {
 						"type": "integer",
 						"format": "int64",
 						"nullable": true
@@ -10589,7 +10589,7 @@
 						"type": "boolean",
 						"nullable": true
 					},
-					"startDateUtc": {
+					"startDate": {
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -10600,12 +10600,12 @@
 				},
 				"x-render-on-tag": "users/profiles",
 				"required": [
-					"endDateUtc",
+					"endDate",
 					"geohash",
-					"id",
+					"travelPlanId",
 					"locationName",
 					"showOnProfile",
-					"startDateUtc"
+					"startDate"
 				]
 			},
 			"RightNowMedia": {
