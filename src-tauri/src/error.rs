@@ -28,9 +28,17 @@ impl fmt::Display for AppError {
 
 impl std::error::Error for AppError {}
 
-impl From<wreq::Error> for AppError {
-    fn from(e: wreq::Error) -> Self {
-        AppError::Http(e.to_string())
+impl From<grindr::GrindrError> for AppError {
+    fn from(e: grindr::GrindrError) -> Self {
+        match e {
+            grindr::GrindrError::Http(msg) => AppError::Http(msg),
+            grindr::GrindrError::Auth(msg) => AppError::Auth(msg),
+            grindr::GrindrError::Api { code, message } => AppError::Api { code, message },
+            grindr::GrindrError::Unauthorized { code, message } => {
+                AppError::Unauthorized { code, message }
+            }
+            _ => AppError::Http(e.to_string()),
+        }
     }
 }
 

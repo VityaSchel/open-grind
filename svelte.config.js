@@ -4,37 +4,39 @@
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const projectVersion = JSON.parse(
-		fs.readFileSync(
-			path.join(
-				path.dirname(fileURLToPath(import.meta.url)),
-				"./package.json",
-			),
-			"utf-8",
-		),
-	).version
-const grindrApiVersion = fs
-	.readFileSync(
-		path.join(
-			path.dirname(fileURLToPath(import.meta.url)),
-			"./src-tauri/src/api/headers.rs",
-		),
+	fs.readFileSync(
+		path.join(path.dirname(fileURLToPath(import.meta.url)), "./package.json"),
 		"utf-8",
-	)
-	.match(/const APP_VERSION: &str = "([^"]+)";/)[1];
-const grindrApiBuildNumber = fs
-	.readFileSync(
-		path.join(
-			path.dirname(fileURLToPath(import.meta.url)),
-			"./src-tauri/src/api/headers.rs",
-		),
-		"utf-8",
-	)
-	.match(/const BUILD_NUMBER: &str = "([^"]+)";/)[1];
+	),
+).version;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const cargoMetadata = JSON.parse(
+	execSync("cargo metadata --format-version 1", {
+		cwd: path.join(__dirname, "src-tauri"),
+		maxBuffer: 16 * 1024 * 1024,
+	}),
+);
+const grindrManifest = cargoMetadata.packages.find(
+	(p) => p.name === "grindr",
+)?.manifest_path;
+if (!grindrManifest)
+	throw new Error("grindr crate not found in cargo metadata");
+const headersRs = fs.readFileSync(
+	path.join(path.dirname(grindrManifest), "src", "headers.rs"),
+	"utf-8",
+);
+const grindrApiVersion = headersRs.match(
+	/const APP_VERSION: &str = "([^"]+)";/,
+)[1];
+const grindrApiBuildNumber = headersRs.match(
+	/const BUILD_NUMBER: &str = "([^"]+)";/,
+)[1];
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

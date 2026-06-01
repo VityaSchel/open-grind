@@ -21,23 +21,13 @@ keychain = ["dep:apple-native-keyring-store"]
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
-# Used only by `ci/fingerprint_check.rs`, not present in production builds
-[dev-dependencies]
-sha2 = "0.10"
-
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-wreq = { version = "5.3", features = ["json", "websocket"] }
-wreq-util = "2.2"
+grindr = "0.1"
 tokio = { version = "1", features = ["sync", "time", "rt", "macros"] }
-futures-util = { version = "0.3", default-features = false, features = ["sink"] }
-uuid = { version = "1", features = ["v4"] }
-jsonwebtoken = "10.3.0"
-rand = "0.10.1"
-chrono = "0.4.44"
 tauri-plugin-fs = "2"
 tauri-plugin-geolocation = "2"
 tauri-plugin-os = "2"

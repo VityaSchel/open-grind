@@ -1,24 +1,19 @@
-// `api` is `pub` so that `ci/fingerprint_check.rs` can reuse same header / client builders
 pub mod api;
 mod error;
 mod state;
 mod storage;
 
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
+
 use tauri::Manager;
-use tokio::sync::{mpsc, Notify};
 
 use crate::state::AppState;
-use api::client::GrindrClient;
+use crate::storage::{AuthStorage, DeviceStorage};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(debug_assertions)]
     let devtools = tauri_plugin_devtools::init();
-
-    let (ws_tx, ws_rx) = mpsc::channel(64);
-    let auth_notify = Arc::new(Notify::new());
-    let logout_notify = Arc::new(Notify::new());
 
     let mut builder = tauri::Builder::default();
 
@@ -35,10 +30,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(AppState {
             client: OnceLock::new(),
-            ws_tx,
-            ws_rx: tokio::sync::Mutex::new(Some(ws_rx)),
-            auth_notify,
-            logout_notify,
         })
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
@@ -57,28 +48,56 @@ pub fn run() {
 
             storage::init_keyring();
 
-            if let Ok(client) = GrindrClient::new() {
-                let _ = app.state::<AppState>().client.set(client);
-            }
+            let device = match DeviceStorage::load() {
+                Ok(Some(d)) => d,
+                Ok(None) => {
+                    let d = grindr::DeviceInfo::generate();
+                    if let Err(e) = DeviceStorage::save(&d) {
+                        eprintln!("[setup] could not persist device info: {e}");
+                    }
+                    d
+                }
+                Err(e) => {
+                    eprintln!("[setup] could not load device info, regenerating: {e}");
+                    grindr::DeviceInfo::generate()
+                }
+            };
 
-            if let Ok(client) = app.state::<AppState>().client() {
-                client.set_app_handle(app.handle().clone());
-            }
+            let session = match AuthStorage::get_session() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("[setup] could not load session: {e}");
+                    None
+                }
+            };
 
-            #[cfg(all(target_os = "macos", not(feature = "keychain")))]
+            let client =
+                grindr::GrindrClient::new(device, session).expect("failed to build GrindrClient");
+
             {
-                let handle = app.handle().clone();
+                let mut session_rx = client.session_receiver();
                 tauri::async_runtime::spawn(async move {
-                    let state = handle.state::<AppState>();
-                    if let Ok(client) = state.client() {
-                        client.reload_session().await;
-                        if client.authorization_header().await.is_some() {
-                            state.auth_notify.notify_one();
+                    while session_rx.changed().await.is_ok() {
+                        match session_rx.borrow().as_ref() {
+                            Some(s) => {
+                                if let Err(e) = AuthStorage::set_session(s) {
+                                    eprintln!("[session] persist failed: {e}");
+                                }
+                            }
+                            None => AuthStorage::delete_session(),
                         }
                     }
                 });
             }
+
+            app.state::<AppState>()
+                .client
+                .set(client)
+                .ok()
+                .expect("client already set");
+
             api::ws::spawn_ws_task(app.handle().clone());
+
             Ok(())
         })
         .run(tauri::generate_context!())
