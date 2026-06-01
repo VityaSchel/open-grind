@@ -333,8 +333,20 @@ export function previewFromMessage(message: ApiResponseMessage | undefined): {
 				imageHash: null,
 			};
 		case "Image":
-		case "ExpiringImage":
+			return {
+				type: "Image",
+				text: null,
+				albumId: null,
+				imageHash: message.body.imageHash,
+			};
 		case "Album":
+			return {
+				type: message.type,
+				text: null,
+				albumId: message.body.albumId,
+				imageHash: null,
+			};
+		case "ExpiringImage":
 		case "ExpiringAlbum":
 		case "ExpiringAlbumV2":
 		default:
