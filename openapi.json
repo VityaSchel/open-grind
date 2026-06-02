@@ -284,10 +284,46 @@
 					}
 				},
 				"summary": "Sign in",
-				"description": "Make sure you're passing all [Security headers](/grindr-api/security-headers) or you might stumble upon `{\"code\":28,\"message\":\"ACCOUNT_BANNED\",\"profileId\":null,\"type\":1,\"reason\":null,\"isBanAutomated\":true,\"thirdPartyUserIdToShow\":null,\"banSubReason\":null}` — but don't fret — it's a fake error, your account isn't banned and API simply blocked your request, not account.",
+				"description": "Make sure you're passing all [Security headers](/grindr-api/security-headers) or you might stumble upon `{\"code\":28,\"message\":\"ACCOUNT_BANNED\",\"profileId\":null,\"type\":1,\"reason\":null,\"isBanAutomated\":true,\"thirdPartyUserIdToShow\":null,\"banSubReason\":null}` — but don't fret — it's a fake error, your account isn't banned and API simply blocked your request, not account. Endpoint selection depends on the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments): when disabled (default) sign-in uses `/v8/sessions`; when enabled the client uses `POST /v9/sessions` with an extra `captchaToken`, sharing the same body otherwise.",
 				"x-errors": {
 					"ACCOUNT_BANNED": "could be malformed request",
 					"INVALID_INPUT_PARAMETERS": "incorrect credentials"
+				}
+			}
+		},
+		"/v9/sessions": {
+			"post": {
+				"tags": [
+					"authentication"
+				],
+				"operationId": "signInV9",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SessionCreateRequestV9"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthSessionResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Sign in via reCAPTCHA",
+				"description": "reCAPTCHA variant of `POST /v8/sessions`. The client uses this endpoint instead of `/v8/sessions` only when the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) is enabled. That assignment is sent by server and resolved before login. The body is identical to `SessionCreateRequest` plus a `captchaToken` (a reCAPTCHA Enterprise token for the `login` action). The official client always populates `captchaToken` here and aborts locally if it can't obtain one, so a `null`/absent token never reaches this endpoint from the app.",
+				"x-errors": {
+					"ACCOUNT_BANNED": "could be malformed request",
+					"INVALID_INPUT_PARAMETERS": "incorrect credentials; on this endpoint a rejected `captchaToken` (e.g. expired or low-score) is also a plausible cause — server behavior, not confirmed from the client"
 				}
 			}
 		},
@@ -7455,45 +7491,6 @@
 				"description": "Doesn't appear to influence the phrase's sorting position in [Get saved phrases](/grindr-api/messaging/saved-phrases#get-saved-phrases) response. Increments value in [Get saved phrases (legacy)](/grindr-api/messaging/saved-phrases#get-saved-phrases-legacy) endpoint."
 			}
 		},
-		"/v?/sessions/email": {
-			"post": {
-				"tags": [
-					"settings/account"
-				],
-				"operationId": "loginEmail",
-				"summary": "Login via email",
-				"x-wip": true,
-				"x-wip-note": "URL is dynamic and currently unknown.",
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "LoginEmailRequest"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "AuthResponse"
-								}
-							}
-						},
-						"description": "OK"
-					}
-				}
-			}
-		},
 		"/v?/users/registration/email": {
 			"post": {
 				"tags": [
@@ -9942,6 +9939,28 @@
 					"geohash"
 				]
 			},
+			"SessionCreateRequestV9": {
+				"description": "Request body for [Sign in via reCAPTCHA](#sign-in-via-recaptcha) (`POST /v9/sessions`). Identical to `SessionCreateRequest` plus one extra field, `captchaToken`. The client uses this shape only when the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) is enabled for the device.",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/SessionCreateRequest"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"captchaToken": {
+								"type": "string",
+								"nullable": true,
+								"description": "reCAPTCHA Enterprise token for the `FirstPartyLogin` action. Non-null for the email + password sign-in; `null` for the `authToken` session-refresh flow. The token is only fetched by device when the `recaptcha_first_party` assignment is enabled."
+							}
+						}
+					}
+				],
+				"x-render-on-tag": "authentication",
+				"required": [
+					"captchaToken"
+				]
+			},
 			"AuthSessionResponse": {
 				"type": "object",
 				"properties": {
@@ -10547,7 +10566,7 @@
 			"TravelPlanEmbedded": {
 				"type": "object",
 				"properties": {
-					"endDateUtc": {
+					"endDate": {
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -10558,7 +10577,7 @@
 					"geohash": {
 						"$ref": "#/components/schemas/Geohash"
 					},
-					"id": {
+					"travelPlanId": {
 						"type": "integer",
 						"format": "int64",
 						"nullable": true
@@ -10570,7 +10589,7 @@
 						"type": "boolean",
 						"nullable": true
 					},
-					"startDateUtc": {
+					"startDate": {
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -10581,12 +10600,12 @@
 				},
 				"x-render-on-tag": "users/profiles",
 				"required": [
-					"endDateUtc",
+					"endDate",
 					"geohash",
-					"id",
+					"travelPlanId",
 					"locationName",
 					"showOnProfile",
-					"startDateUtc"
+					"startDate"
 				]
 			},
 			"RightNowMedia": {
@@ -10750,8 +10769,12 @@
 								"type": "boolean"
 							},
 							"tapType": {
-								"type": "boolean",
-								"nullable": true
+								"nullable": true,
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/TapType"
+									}
+								]
 							},
 							"lastReceivedTapTimestamp": {
 								"allOf": [
@@ -11524,7 +11547,12 @@
 						]
 					},
 					"expirationType": {
-						"$ref": "#/components/schemas/AlbumExpirationType"
+						"nullable": true,
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/AlbumExpirationType"
+							}
+						]
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
@@ -13708,7 +13736,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [fav_header_v1](/grindr-api/browse/grid#fav_header_v1)"
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [fav_header_v1](/grindr-api/browse/grid#fav_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -14024,6 +14052,181 @@
 					"available",
 					"displayed",
 					"total"
+				]
+			},
+			"HiddenProfileV1": {
+				"type": "object",
+				"description": "Hidden profile. Same shape as [full_profile_v1](/grindr-api/browse/grid#full_profile_v1).",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/CascadeResponseProfile"
+					}
+				],
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "hidden_profile_v1",
+				"x-property-groups": [
+					{
+						"heading": "Only for [v4/cascade](/grindr-api/browse/grid#get-cascade):",
+						"properties": {
+							"age": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"heightCm": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"weightGrams": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"bodyType": {
+								"type": "integer",
+								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
+							}
+						},
+						"required": [
+							"bodyType"
+						]
+					}
+				]
+			},
+			"SmartBoostProfileV1": {
+				"type": "object",
+				"description": "Smart boost profile. Same shape as [full_profile_v1](/grindr-api/browse/grid#full_profile_v1).",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/CascadeResponseProfile"
+					}
+				],
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "smart_boost_profile_v1",
+				"x-property-groups": [
+					{
+						"heading": "Only for [v4/cascade](/grindr-api/browse/grid#get-cascade):",
+						"properties": {
+							"age": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"heightCm": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"weightGrams": {
+								"type": "integer",
+								"description": "integer, optional"
+							},
+							"bodyType": {
+								"type": "integer",
+								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
+							}
+						},
+						"required": [
+							"bodyType"
+						]
+					}
+				]
+			},
+			"SponsoredProfileV1": {
+				"type": "object",
+				"properties": {
+					"cascadePlacementName": {
+						"type": "string"
+					},
+					"alternativeProfile": {
+						"description": "Fallback [full_profile_v1](/grindr-api/browse/grid#full_profile_v1) shape, shown when the sponsored ad is unavailable.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/CascadeResponseProfile"
+							}
+						]
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "sponsored_profile_v1",
+				"required": [
+					"cascadePlacementName",
+					"alternativeProfile"
+				]
+			},
+			"BrazeEventProfileV1": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer"
+					},
+					"onlineUntil": {
+						"description": "unix timestamp in milliseconds, may be absent",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"displayName": {
+						"type": "string",
+						"description": "string, may be absent"
+					},
+					"primaryImageUrl": {
+						"type": "string",
+						"description": "string, URL, may be absent"
+					},
+					"eventName": {
+						"type": "string",
+						"description": "string, Braze event name"
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "braze_event_profile_v1",
+				"required": [
+					"profileId",
+					"eventName"
+				]
+			},
+			"FavsXtraUpsellV1": {
+				"type": "object",
+				"properties": {
+					"available": {
+						"type": "integer"
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "favs_xtra_upsell_v1",
+				"required": [
+					"available"
+				]
+			},
+			"FavsUnlimitedUpsellV1": {
+				"type": "object",
+				"description": "Empty.",
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "favs_unlimited_upsell_v1"
+			},
+			"FavoritesHeaderNoFreeResultsV1": {
+				"type": "object",
+				"description": "Empty.",
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "favorites_header_no_free_results_v1"
+			},
+			"FavoritesHeaderNoXtraResultsV1": {
+				"type": "object",
+				"description": "Empty.",
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "favorites_header_no_xtra_results_v1"
+			},
+			"ProfileHideStatus": {
+				"type": "object",
+				"description": "Unlike other cascade items, `count` sits directly on the item alongside `type`, not under `data`.",
+				"properties": {
+					"count": {
+						"type": "integer"
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "profile_hide_status",
+				"required": [
+					"count"
 				]
 			},
 			"SearchProfileResult": {
