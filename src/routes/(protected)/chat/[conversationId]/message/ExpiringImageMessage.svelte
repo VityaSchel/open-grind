@@ -1,9 +1,9 @@
 <script lang="ts">
 	import "photoswipe/style.css";
 	import { ImagesIcon } from "phosphor-svelte";
-	import { toast } from "svelte-sonner";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import { showErrorToast } from "$lib/api/error";
 	import { getSingleMessage } from "$lib/api/messages";
 	import {
 		type ExpiringImageMessage,
@@ -56,24 +56,29 @@
 
 	$effect(() => {
 		if (imageState.status !== "loading") return;
-		(async () => {
-			const { body: image } = await getSingleMessage({
-				conversationId,
-				messageId,
-			}).then((res) => expiringImageMessageSchema.parse(res.message));
-			if (image.url === null) throw new Error("Image URL is null");
-			cachedImage = { url: image.url };
-			imageState = {
-				status: "open",
-				image: {
-					url: image.url,
-				},
-			};
-		})().catch((error) => {
-			console.error(error);
-			toast.error("Failed to load expiring image");
-			imageState = { status: "idle" };
-		});
+		void (async () => {
+			try {
+				const { body: image } = await getSingleMessage({
+					conversationId,
+					messageId,
+				}).then((res) => expiringImageMessageSchema.parse(res.message));
+				if (image.url === null) throw new Error("Image URL is null");
+				cachedImage = { url: image.url };
+				imageState = {
+					status: "open",
+					image: {
+						url: image.url,
+					},
+				};
+			} catch (error) {
+				console.error(error);
+				showErrorToast({
+					label: "Failed to load expiring image",
+					error,
+				});
+				imageState = { status: "idle" };
+			}
+		})();
 	});
 
 	$effect(() => {
@@ -99,7 +104,10 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				toast.error("Failed to open expiring image");
+				showErrorToast({
+					label: "Failed to open expiring image",
+					error,
+				});
 				imageState = { status: "idle" };
 			});
 		return () => lightbox?.destroy();

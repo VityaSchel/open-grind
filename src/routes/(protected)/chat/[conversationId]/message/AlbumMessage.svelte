@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "photoswipe/style.css";
 	import { ImagesIcon, VideoIcon } from "phosphor-svelte";
-	import { toast } from "svelte-sonner";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/album";
+	import { showErrorToast } from "$lib/api/error";
 	import type { AlbumMessage } from "$lib/model/message";
 	import LockedMedia from "../LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
@@ -129,7 +129,10 @@
 			albumState = { status: "open", album: loaded };
 		})().catch((error) => {
 			console.error(error);
-			toast.error("Failed to load album content");
+			showErrorToast({
+				label: "Failed to load album content",
+				error,
+			});
 			albumState = { status: "idle" };
 		});
 	});
@@ -181,7 +184,10 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				toast.error("Failed to open album");
+				showErrorToast({
+					label: "Failed to open album",
+					error,
+				});
 				albumState = { status: "idle" };
 			});
 		return () => {

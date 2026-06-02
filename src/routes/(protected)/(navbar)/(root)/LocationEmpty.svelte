@@ -10,6 +10,7 @@
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 	import { toast } from "svelte-sonner";
 
+	import { showErrorToast } from "$lib/api/error";
 	import { setPreferences } from "$lib/app-data/preferences.svelte";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -44,9 +45,12 @@
 					} = await getCurrentPosition();
 
 					await submitGeohash(encodeGeohash(latitude, longitude));
-				} catch (e) {
-					console.error(e);
-					toast.error("Failed to get current location");
+				} catch (error) {
+					console.error(error);
+					showErrorToast({
+						label: "Failed to get current location",
+						error,
+					});
 				}
 			} else {
 				toast.error(
@@ -65,7 +69,10 @@
 			onUpdate?.();
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to save location");
+			showErrorToast({
+				label: "Failed to save location",
+				error,
+			});
 		}
 	}
 </script>

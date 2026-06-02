@@ -4,6 +4,7 @@
 	import { expoOut } from "svelte/easing";
 	import { fade } from "svelte/transition";
 
+	import { showErrorToast } from "$lib/api/error";
 	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Textarea } from "$lib/components/ui/textarea";
@@ -22,7 +23,10 @@
 			textContent = "";
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to send message");
+			showErrorToast({
+				label: "Failed to send message",
+				error,
+			});
 		}
 	}
 </script>

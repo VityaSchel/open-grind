@@ -4,6 +4,7 @@
 	import z from "zod";
 
 	import { asAppError, callMethod } from "$lib/api";
+	import { showErrorToast } from "$lib/api/error";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
@@ -63,7 +64,7 @@
 					toast.error(appError.prettyMessage);
 				}
 			} else {
-				toast.error("An unknown error occurred");
+				showErrorToast({ error });
 			}
 		} finally {
 			submitting = false;

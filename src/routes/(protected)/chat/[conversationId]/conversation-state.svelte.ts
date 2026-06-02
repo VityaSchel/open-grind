@@ -1,6 +1,5 @@
-import { toast } from "svelte-sonner";
-
 import { markConversationAsRead } from "$lib/api/conversation";
+import { showErrorToast } from "$lib/api/error";
 import { reactToMessage, sendMessage } from "$lib/api/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import {
@@ -190,7 +189,7 @@ export class ConversationState {
 			this.pageKey = cached.pageKey;
 			this.lastReadTimestamp = cached.lastReadTimestamp;
 			this.loading = false;
-			this.#conversations.markRead(this.conversationId);
+			void this.#conversations.markRead(this.conversationId);
 			void this.#reconcileMessages();
 			return;
 		}
@@ -209,7 +208,7 @@ export class ConversationState {
 			this.profile = result.profile;
 			this.pageKey = result.pageKey;
 			this.#updatePreview(this.messages.at(0));
-			this.#conversations.markRead(this.conversationId);
+			void this.#conversations.markRead(this.conversationId);
 			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
 		} catch (err) {
@@ -234,9 +233,12 @@ export class ConversationState {
 			this.pageKey = result.pageKey;
 			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
-		} catch (err) {
-			toast.error("Failed to load more messages");
-			console.error(err);
+		} catch (error) {
+			console.error(error);
+			showErrorToast({
+				label: "Failed to load more messages",
+				error,
+			});
 		} finally {
 			this.loadingMore = false;
 		}
@@ -376,9 +378,12 @@ export class ConversationState {
 					conversationId: this.conversationId,
 					messageId: highest.messageId,
 				});
-			} catch (err) {
-				console.error("Failed to mark conversation as read", err);
-				toast.error("Failed to mark conversation as read");
+			} catch (error) {
+				console.error(error);
+				showErrorToast({
+					label: "Failed to mark conversation as read",
+					error,
+				});
 			}
 		}
 	}

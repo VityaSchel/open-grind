@@ -11,6 +11,7 @@
 	import { toast } from "svelte-sonner";
 	import type { Map as LeafletMap, LeafletMouseEventHandlerFn } from "leaflet";
 
+	import { showErrorToast } from "$lib/api/error";
 	import { getPlaces } from "$lib/api/places";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -199,9 +200,12 @@
 									"Location permission denied. Change this in your system settings to use this button.",
 								);
 							}
-						} catch (e) {
-							console.error(e);
-							toast.error("Failed to get current location");
+						} catch (error) {
+							console.error(error);
+							showErrorToast({
+								label: "Failed to get current location",
+								error,
+							});
 						} finally {
 							gpsRequestInProgress = false;
 						}

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { GpsFixIcon, PencilSimpleIcon } from "phosphor-svelte";
 	import { onMount } from "svelte";
-	import { toast } from "svelte-sonner";
 
+	import { showErrorToast } from "$lib/api/error";
 	import {
 		getPreferences,
 		setPreferences,
@@ -31,7 +31,10 @@
 			onUpdate?.();
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to save location");
+			showErrorToast({
+				label: "Failed to save location",
+				error,
+			});
 		}
 	}
 
@@ -44,7 +47,10 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				toast.error("Failed to load location");
+				showErrorToast({
+					label: "Failed to load location",
+					error,
+				});
 				pinPos = undefined;
 			});
 	});

@@ -1,10 +1,10 @@
-import { toast } from "svelte-sonner";
 import z from "zod";
 
 import {
 	getConversations,
 	markConversationAsRead,
 } from "$lib/api/conversation";
+import { showErrorToast } from "$lib/api/error";
 import { previewFromMessage } from "$lib/model/message";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -160,7 +160,11 @@ class ConversationsState {
 			}
 			this.#sortEntries();
 		} catch (error) {
-			console.error("Failed to reconcile conversation list", error);
+			console.error(error);
+			showErrorToast({
+				label: "Failed to reconcile conversation list",
+				error,
+			});
 		}
 
 		for (const handler of [...this.#reconcileListeners]) {
@@ -185,7 +189,10 @@ class ConversationsState {
 			await this.#load(this.nextPage);
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to load more conversations");
+			showErrorToast({
+				label: "Failed to load more conversations",
+				error,
+			});
 		} finally {
 			this.loadingMore = false;
 		}
@@ -205,7 +212,11 @@ class ConversationsState {
 			);
 			this.entries.unshift(...newEntries);
 		} catch (error) {
-			console.error("Failed to sync conversation into sidebar", error);
+			console.error(error);
+			showErrorToast({
+				label: "Failed to sync conversation into sidebar",
+				error,
+			});
 		}
 	}
 
@@ -230,7 +241,7 @@ class ConversationsState {
 
 	setActive(conversationId: string): void {
 		this.#activeConversationId = conversationId;
-		this.markRead(conversationId);
+		void this.markRead(conversationId);
 	}
 
 	clearActive(conversationId: string): void {
@@ -271,7 +282,7 @@ class ConversationsState {
 		);
 	}
 
-	markRead(conversationId: string): void {
+	async markRead(conversationId: string) {
 		const entry = this.entries.find(
 			(e) => e.data.conversationId === conversationId,
 		);
@@ -279,11 +290,16 @@ class ConversationsState {
 			const unreadCount = entry.data.unreadCount;
 			if (unreadCount > 0) {
 				entry.data.unreadCount = 0;
-				markConversationAsRead({ conversationId }).catch((error) => {
-					console.error("Failed to mark conversation as read", error);
-					toast.error("Failed to mark conversation as read");
+				try {
+					await markConversationAsRead({ conversationId });
+				} catch (error) {
+					console.error(error);
+					showErrorToast({
+						label: "Failed to mark conversation as read",
+						error,
+					});
 					entry.data.unreadCount = unreadCount;
-				});
+				}
 			}
 		}
 	}

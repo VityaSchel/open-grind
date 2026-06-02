@@ -1,7 +1,7 @@
 import { untrack } from "svelte";
-import { toast } from "svelte-sonner";
 import z from "zod";
 
+import { showErrorToast } from "$lib/api/error";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import type { cascadeV3QuerySchema } from "$lib/model/grid/cascade/query/v3";
 import {
@@ -74,7 +74,10 @@ class GridState {
 			this.nextPage = result.nextPage;
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to load more profiles");
+			showErrorToast({
+				label: "Failed to load more profiles",
+				error,
+			});
 		} finally {
 			this.loadingMore = false;
 		}
@@ -115,7 +118,10 @@ class GridState {
 			}
 		} catch (error) {
 			console.error(batchIndex, error);
-			toast.error("Failed to load profiles");
+			showErrorToast({
+				label: "Failed to load profiles",
+				error,
+			});
 			this.#loadingBatches.delete(batchIndex);
 		}
 	}

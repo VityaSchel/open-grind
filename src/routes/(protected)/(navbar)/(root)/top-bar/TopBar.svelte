@@ -1,10 +1,10 @@
 <script lang="ts">
 	import isEqual from "lodash-es/isEqual";
 	import { onMount, untrack } from "svelte";
-	import { toast } from "svelte-sonner";
 	import { expoOut } from "svelte/easing";
 	import { Tween } from "svelte/motion";
 
+	import { showErrorToast } from "$lib/api/error";
 	import {
 		getPreferences,
 		setPreferences,
@@ -75,7 +75,10 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				toast.error("Failed to load filters");
+				showErrorToast({
+					label: "Failed to load filters",
+					error,
+				});
 			});
 	});
 
@@ -91,7 +94,10 @@
 			}
 		} catch (error) {
 			console.error(error);
-			toast.error("Failed to update filters");
+			showErrorToast({
+				label: "Failed to update filters",
+				error,
+			});
 		}
 	}
 

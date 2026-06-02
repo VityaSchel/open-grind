@@ -2,6 +2,7 @@
 	import { tick, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
+	import { showErrorToast } from "$lib/api/error";
 	import { deleteMessageForMe, unsendMessage } from "$lib/api/messages";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
@@ -132,16 +133,24 @@
 							conversationId: conversationState.conversationId,
 							messageId: message.messageId,
 						});
-					} catch {
-						toast.error("Failed to delete message");
+					} catch (error) {
+						console.error(error);
+						showErrorToast({
+							label: "Failed to delete message",
+							error,
+						});
 						revert?.();
 					}
 				}}
 				onReact={async (reactionType: number) => {
 					try {
 						await conversationState.reactTo(message.messageId, reactionType);
-					} catch {
-						toast.error("Failed to react to message");
+					} catch (error) {
+						console.error(error);
+						showErrorToast({
+							label: "Failed to react to message",
+							error,
+						});
 					}
 				}}
 				onUnsend={isOut && !message.unsent
@@ -155,8 +164,12 @@
 									conversationId: conversationState.conversationId,
 									messageId: message.messageId,
 								});
-							} catch {
-								toast.error("Failed to unsend message");
+							} catch (error) {
+								console.error(error);
+								showErrorToast({
+									label: "Failed to unsend message",
+									error,
+								});
 								revert?.();
 							}
 						}
