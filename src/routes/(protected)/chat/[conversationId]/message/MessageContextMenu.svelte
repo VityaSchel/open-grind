@@ -9,7 +9,7 @@
 	import { toast } from "svelte-sonner";
 	import type { ComponentProps } from "svelte";
 
-	import fireEmoji from "$lib/assets/emojis/fire-sm.avif";
+	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
 	import ContextMenu from "$lib/components/ContextMenu.svelte";
 	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
