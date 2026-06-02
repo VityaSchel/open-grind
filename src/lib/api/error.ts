@@ -47,7 +47,6 @@ export function showErrorToast({
 	error: unknown;
 }) {
 	toast.error(label, {
-		description: label,
 		action: {
 			label: "Copy details",
 			onClick: () => copyError(error),
