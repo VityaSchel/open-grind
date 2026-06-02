@@ -1,5 +1,5 @@
 import { getCascadeV3 } from "$lib/api/grid";
-import { getProfiles } from "$lib/api/profile";
+import { getProfiles } from "$lib/api/users/profiles";
 
 export type FullGridProfile = {
 	type: "full";

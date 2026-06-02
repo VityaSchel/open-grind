@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CaretRightIcon } from "phosphor-svelte";
 
-	import { getMyProfile } from "$lib/api/profile";
+	import { getMyProfile } from "$lib/api/users/profiles";
 	import BrokenUserAvatar from "$lib/components/BrokenUserAvatar.svelte";
 	import DisplayName from "$lib/components/DisplayName.svelte";
 	import * as Item from "$lib/components/ui/item";

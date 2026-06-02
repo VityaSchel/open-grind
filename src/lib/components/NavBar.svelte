@@ -5,7 +5,7 @@
 	import DropIcon from "phosphor-svelte/lib/DropIcon";
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 
-	import { getMyProfile } from "$lib/api/profile";
+	import { getMyProfile } from "$lib/api/users/profiles";
 	import { getOrCreateConversationsState } from "$lib/chat/conversations-context.svelte";
 	import BrokenUserAvatar from "$lib/components/BrokenUserAvatar.svelte";
 	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";

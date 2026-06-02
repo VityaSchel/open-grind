@@ -1,39 +1,33 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { ChatCircleIcon } from "phosphor-svelte";
 
-	import { getProfile } from "$lib/api/profile";
+	import { getProfile } from "$lib/api/users/profiles";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import Button from "$lib/components/ui/button/button.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
-	import Ethnicity from "./Ethnicity.svelte";
-	import Genders from "./GendersPronouns.svelte";
-	import HealthPractices from "./HealthPractices.svelte";
+	import Ethnicity from "./fields/Ethnicity.svelte";
+	import Genders from "./fields/GendersPronouns.svelte";
+	import HealthPractices from "./fields/HealthPractices.svelte";
+	import HivStatus from "./fields/HivStatus.svelte";
+	import LastTested from "./fields/LastTested.svelte";
+	import LookingFor from "./fields/LookingFor.svelte";
+	import MeetAt from "./fields/MeetAt.svelte";
+	import NSFWPics from "./fields/NSFWPics.svelte";
+	import RelationshipStatus from "./fields/RelationshipStatus.svelte";
+	import Socials from "./fields/Socials.svelte";
+	import Tribes from "./fields/Tribes.svelte";
 	import Height from "./HeightWeightBodyType.svelte";
-	import HivStatus from "./HivStatus.svelte";
 	import ImageCarousel from "./ImageCarousel.svelte";
-	import LastTested from "./LastTested.svelte";
-	import LookingFor from "./LookingFor.svelte";
-	import MeetAt from "./MeetAt.svelte";
-	import NSFWPics from "./NSFWPics.svelte";
+	import ProfileNavBar from "./nav/ProfileNavBar.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
-	import RelationshipStatus from "./RelationshipStatus.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
-	import Socials from "./Socials.svelte";
-	import Tribes from "./Tribes.svelte";
 
 	let { data }: import("./$types").PageProps = $props();
 
-	const profileId = $derived(Number(page.params.profileId));
 	const ourProfileId = $derived(data.ourProfileId);
-	const isOurProfile = $derived(profileId === ourProfileId);
-	const conversationId = $derived(
-		[profileId, ourProfileId].toSorted((a, b) => a - b).join(":"),
-	);
-
+	const profileId = $derived(Number(page.params.profileId));
 	const profile = $derived(getProfile(profileId));
 </script>
 
@@ -69,13 +63,7 @@
 				medias,
 			} = profile}
 			<ImageCarousel {medias} />
-			{#if !isOurProfile}
-				<nav class="absolute -translate-y-1/2 right-2">
-					<Button size="icon-lg" class="size-14" href="/chat/{conversationId}">
-						<ChatCircleIcon weight="fill" class="size-8" />
-					</Button>
-				</nav>
-			{/if}
+			<ProfileNavBar {ourProfileId} {profileId} {profile} />
 			<div class="flex flex-col p-4 pb-12">
 				<h1 class="text-2xl wrap-break-word">
 					{#if displayName !== null}

@@ -127,6 +127,17 @@ export async function fetchRest(
 			text() {
 				return new TextDecoder().decode(responseBody);
 			},
+			assertOk() {
+				if (status >= 200 && status < 300) {
+					return;
+				}
+				const text = this.text();
+				throw new ApiError({
+					message: `API request failed with status ${status}`,
+					request: requestInfo,
+					response: { status, body: text },
+				});
+			},
 			json() {
 				const text = new TextDecoder().decode(responseBody);
 				const responseInfo = { status, body: text };
