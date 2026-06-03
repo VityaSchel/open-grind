@@ -1,7 +1,8 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
-import { tapProfileSchema, type TapType } from "$lib/model/interest/taps";
+import { tapProfileSchema } from "$lib/model/interest/tap-profile";
+import { type TapType } from "$lib/model/interest/taps";
 import type { Profile } from "$lib/model/profile";
 
 const getReceivedTapsResponseSchema = z.object({

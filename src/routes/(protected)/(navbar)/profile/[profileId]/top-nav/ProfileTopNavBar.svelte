@@ -1,6 +1,5 @@
 <script lang="ts">
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
-	import OpenConversationButton from "./OpenConversationButton.svelte";
 
 	let {
 		ourProfileId,
@@ -15,9 +14,10 @@
 	const isOurProfile = $derived(profileId === ourProfileId);
 </script>
 
-<nav class="absolute -translate-y-1/2 right-2 flex items-center gap-1.5">
+<nav
+	class="absolute -translate-y-1/2 right-2 flex flex-row-reverse items-center gap-1.5"
+>
 	{#if !isOurProfile}
 		<FavoriteProfileToggle {profileId} isFavorite={profile.isFavorite} />
-		<OpenConversationButton {profileId} {ourProfileId} />
 	{/if}
 </nav>

@@ -5,6 +5,7 @@
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import AboutMe from "./AboutMe.svelte";
+	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
 	import Distance from "./Distance.svelte";
 	import Ethnicity from "./fields/Ethnicity.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";
@@ -19,10 +20,10 @@
 	import Tribes from "./fields/Tribes.svelte";
 	import Height from "./HeightWeightBodyType.svelte";
 	import ImageCarousel from "./ImageCarousel.svelte";
-	import ProfileNavBar from "./nav/ProfileNavBar.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
+	import ProfileTopNavBar from "./top-nav/ProfileTopNavBar.svelte";
 
 	let { data }: import("./$types").PageProps = $props();
 
@@ -61,10 +62,11 @@
 				sexualHealth: sexualHealthValue,
 				socialNetworks,
 				medias,
+				tapType,
 			} = profile}
 			<ImageCarousel {medias} />
-			<ProfileNavBar {ourProfileId} {profileId} {profile} />
-			<div class="flex flex-col p-4 pb-12">
+			<ProfileTopNavBar {ourProfileId} {profileId} {profile} />
+			<div class="flex flex-col p-4 pb-24">
 				<h1 class="text-2xl wrap-break-word">
 					{#if displayName !== null}
 						<span class="font-semibold">
@@ -126,6 +128,7 @@
 					</div>
 				{/if}
 			</div>
+			<ProfileBottomNavBar {ourProfileId} {profileId} {tapType} />
 		{:catch error}
 			<div class="h-full flex">
 				<ApiErrorDisplay {error} class="m-auto" />

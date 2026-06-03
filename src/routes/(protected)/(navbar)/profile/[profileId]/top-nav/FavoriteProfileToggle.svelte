@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { StarIcon } from "phosphor-svelte";
-	import { toast } from "svelte-sonner";
 
+	import { showErrorToast } from "$lib/api/error";
 	import {
 		addFavoriteUser,
 		removeFavoriteUser,
@@ -35,9 +35,12 @@
 			}
 		} catch (error) {
 			console.error(error);
-			toast.error(
-				"An error occurred while updating favorites. Please try again.",
-			);
+			showErrorToast({
+				label: isFavorite
+					? "Failed to remove from favorites"
+					: "Failed to add to favorites",
+				error,
+			});
 		} finally {
 			submitting = false;
 		}
@@ -46,8 +49,8 @@
 	aria-checked={isFavorite}
 	role="switch"
 	aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-	class="size-14"
+	class="size-12"
 	disabled={submitting}
 >
-	<StarIcon weight={isFavorite ? "fill" : "regular"} class="size-8" />
+	<StarIcon weight={isFavorite ? "fill" : "bold"} class="size-6" />
 </Button>
