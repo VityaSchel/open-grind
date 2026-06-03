@@ -63,7 +63,7 @@
 		</a>
 		<a
 			href="/interest"
-			data-active={page.route.id === "/(protected)/(navbar)/interest"}
+			data-active={page.route.id?.startsWith("/(protected)/(navbar)/interest")}
 		>
 			<FireIcon weight="fill" />
 			Interest
