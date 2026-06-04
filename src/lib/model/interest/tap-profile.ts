@@ -9,9 +9,11 @@ export const tapProfileSchema = z.object({
 	...profileMinSchema.shape,
 	timestamp: unixTimestampMsSchema,
 	tapType: tapTypeSchema.or(z.literal(3).transform(() => null)),
-	lastOnline: unixTimestampMsSchema,
+	lastOnline: unixTimestampMsSchema.nullable(),
 	isBoosting: z.boolean(),
 	isMutual: z.boolean(),
 	rightNowType: z.string(),
 	isViewable: z.boolean(),
 });
+
+export type TapProfile = z.infer<typeof tapProfileSchema>;

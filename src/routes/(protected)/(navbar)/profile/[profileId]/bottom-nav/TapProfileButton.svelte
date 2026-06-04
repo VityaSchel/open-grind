@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error";
 	import { sendTap } from "$lib/api/interest/taps";
-	import cookieEmoji from "$lib/assets/emojis/cookie/72px.png";
-	import demonEmoji from "$lib/assets/emojis/demon/72px.png";
-	import fireEmoji from "$lib/assets/emojis/fire/72px.png";
+	import TapIcon from "$lib/components/TapIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { TapType, tapTypes } from "$lib/model/interest/taps";
+	import { TapType } from "$lib/model/interest/taps";
 
 	let {
 		profileId,
@@ -41,12 +39,6 @@
 		}
 	}
 
-	const emojis = {
-		[TapType.Friendly]: cookieEmoji,
-		[TapType.Hot]: fireEmoji,
-		[TapType.Looking]: demonEmoji,
-	};
-
 	const defaultTapType = TapType.Hot;
 
 	const sent = $derived(tapType !== null);
@@ -65,22 +57,14 @@
 	class={{ "disabled:opacity-100": sent }}
 >
 	{#if tapType === null}
-		{@render tapIcon(defaultTapType)}
+		<TapIcon tapType={defaultTapType} />
 	{:else}
-		{@render tapIcon(tapType)}
+		<TapIcon {tapType} />
 	{/if}
 </Button>
-{#snippet tapIcon(tapType: TapType)}
-	<img
-		src={emojis[tapType]}
-		alt={`${tapTypes[tapType]} emoji`}
-		width="24"
-		height="24"
-	/>
-{/snippet}
 {#snippet tapOption(tapType: TapType)}
 	<DropdownMenu.Item class="w-10 px-2" onclick={() => send(tapType)}>
-		{@render tapIcon(tapType)}
+		<TapIcon {tapType} />
 	</DropdownMenu.Item>
 {/snippet}
 <DropdownMenu.Root bind:open>

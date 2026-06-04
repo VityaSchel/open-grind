@@ -1,32 +1,40 @@
 <script lang="ts">
 	import { page } from "$app/state";
 
+	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
 
 	let { children }: { children?: import("svelte").Snippet } = $props();
 </script>
 
+{#snippet tab(href: string, label: string)}
+	<Button
+		{href}
+		class={[
+			toggleVariants({ variant: "default" }),
+			"text-muted-foreground hover:bg-foreground/10",
+			{
+				"bg-popover/50": page.url.pathname === href,
+			},
+		]}
+	>
+		{label}
+	</Button>
+{/snippet}
+<ProgressiveBlur
+	direction="topToBottom"
+	tag="nav"
+	class="fixed top-0 left-0 w-full z-10 pt-[calc(1rem+var(--safe-area-top))] pb-2 px-4"
+	bgClass="bg-linear-to-b from-background to-transparent"
+	contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
+>
+	{@render tab("/interest/views", "Views")}
+	{@render tab("/interest/taps", "Taps")}
+</ProgressiveBlur>
 <div class="flex w-full p-4 flex-1">
 	<main class="max-w-120 w-full flex flex-col mx-auto gap-3 flex-1">
-		<div class="flex items-center w-full *:flex-1">
-			{#snippet tab(href: string, label: string)}
-				<Button
-					{href}
-					class={[
-						toggleVariants({ variant: "default" }),
-						"text-muted-foreground",
-						{
-							"bg-popover": page.url.pathname === href,
-						},
-					]}
-				>
-					{label}
-				</Button>
-			{/snippet}
-			{@render tab("/interest/views", "Views")}
-			{@render tab("/interest/taps", "Taps")}
-		</div>
+		<div class="h-10"></div>
 		{@render children?.()}
 	</main>
 </div>
