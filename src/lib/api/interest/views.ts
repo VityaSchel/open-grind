@@ -16,3 +16,13 @@ export async function getViews() {
 		res.jsonParsed(viewsListResponseSchema),
 	);
 }
+
+export async function recordProfileView({ profileId }: { profileId: number }) {
+	return await fetchRest("/v4/views", {
+		method: "POST",
+		body: {
+			viewedProfileIds: [String(profileId)],
+			foundVia: null,
+		},
+	});
+}
