@@ -10,6 +10,7 @@
 		displayName = null,
 		age = null,
 		distance = null,
+		unread = null,
 		href = null,
 		class: className,
 		overlay,
@@ -18,6 +19,7 @@
 		displayName?: string | null;
 		age?: number | null;
 		distance?: number | null;
+		unread?: number | null;
 		href?: string | null;
 		class?: import("svelte/elements").ClassValue;
 		overlay?: Snippet;
@@ -33,24 +35,39 @@
 			<DistanceFormatted {distance} />
 		</span>
 	{/if}
-	{#if displayName !== null || age !== null}
-		<div class="z-1 flex w-full gap-0.5 p-0.5">
-			<Badge
-				variant="outline"
-				class="min-w-0 max-w-full shrink gap-0 bg-popover/20 backdrop-blur-2xl"
-			>
-				{#if displayName !== null}
-					<span class="block shrink truncate font-semibold">{displayName}</span>
-				{/if}
-				{#if displayName !== null && age !== null}
-					,&nbsp;
-				{/if}
-				{#if age !== null}
-					<span class="line-clamp-1 block max-w-full shrink-0 truncate">
-						{age}
-					</span>
-				{/if}
-			</Badge>
+	{#if displayName !== null || age !== null || (unread ?? 0) > 0}
+		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
+			{#if displayName !== null || age !== null}
+				<Badge
+					variant="outline"
+					class="min-w-0 max-w-full shrink gap-0 bg-popover/20 backdrop-blur-2xl"
+				>
+					{#if displayName !== null}
+						<span class="block shrink truncate font-semibold"
+							>{displayName}</span
+						>
+					{/if}
+					{#if displayName !== null && age !== null}
+						,&nbsp;
+					{/if}
+					{#if age !== null}
+						<span class="line-clamp-1 block max-w-full shrink-0 truncate">
+							{age}
+						</span>
+					{/if}
+				</Badge>
+			{/if}
+			{#if unread !== null && unread > 0}
+				<span
+					class="flex size-5 shrink-0 items-center justify-center rounded-full border border-black/20 bg-primary text-[11px] font-semibold text-primary-foreground"
+				>
+					{#if unread > 99}
+						<span class="text-[10px]">99+</span>
+					{:else}
+						{unread}
+					{/if}
+				</span>
+			{/if}
 		</div>
 	{/if}
 	{@render overlay?.()}

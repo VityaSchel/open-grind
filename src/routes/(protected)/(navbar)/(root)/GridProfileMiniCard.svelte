@@ -9,6 +9,7 @@
 		age = null,
 		distance = null,
 		medias = null,
+		unread = null,
 		isFavorite = false,
 		hadRecentChat = false,
 	}: {
@@ -17,6 +18,7 @@
 		age?: number | null;
 		distance?: number | null;
 		medias?: { mediaHash: string }[] | null;
+		unread?: number | null;
 		isFavorite?: boolean;
 		hadRecentChat?: boolean;
 	} = $props();
@@ -27,6 +29,7 @@
 	{displayName}
 	{age}
 	{distance}
+	{unread}
 	href="/profile/{id}"
 >
 	{#snippet overlay()}
