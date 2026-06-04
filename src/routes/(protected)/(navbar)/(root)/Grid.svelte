@@ -6,7 +6,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import { gridState } from "./grid-state.svelte";
-	import ProfileMiniCard from "./ProfileMiniCard.svelte";
+	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
 	let {
 		geohash,
@@ -96,7 +96,7 @@
 	{:else}
 		{#each gridProfiles as item (item.id)}
 			{#if item.type === "full"}
-				<ProfileMiniCard
+				<GridProfileMiniCard
 					id={item.id}
 					displayName={item.displayName}
 					distance={item.distance}

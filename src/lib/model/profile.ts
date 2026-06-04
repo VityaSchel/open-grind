@@ -1,7 +1,7 @@
 import z from "zod";
 
 import { tapTypeSchema } from "$lib/model/interest/taps";
-import { viewSourceEnumSchema } from "$lib/model/interest/views";
+import { viewSourceEnumSchema } from "$lib/model/interest/view-source";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowStatusSchema } from "$lib/model/right-now";
 

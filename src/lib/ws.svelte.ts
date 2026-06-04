@@ -40,10 +40,28 @@ export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
 	}),
 });
 
+export const viewedMeV1NewViewReceivedEventSchema =
+	notificationEventSchema.safeExtend({
+		type: z.literal("viewed_me.v1.new_view_received"),
+		payload: z.object({
+			viewedCount: z.number().int().nullable(),
+			mostRecent: z
+				.object({
+					profileId: z.coerce.number().int().nonnegative(),
+					photoHash: z.string().nullish(),
+					timestamp: unixTimestampMsSchema,
+				})
+				.nullable(),
+		}),
+	});
+
 export type ChatV1MessageSentEventPayload = z.infer<
 	typeof chatV1MessageSentEventSchema
 >;
 export type TapV1TapSentEventPayload = z.infer<typeof tapV1TapSentEventSchema>;
+export type ViewedMeV1NewViewReceivedEventPayload = z.infer<
+	typeof viewedMeV1NewViewReceivedEventSchema
+>;
 export type ChatV1ConversationDeleteEventPayload = z.infer<
 	typeof chatV1ConversationDeleteEventSchema
 >;
