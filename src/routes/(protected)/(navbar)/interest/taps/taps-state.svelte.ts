@@ -1,5 +1,6 @@
 import { showErrorToast } from "$lib/api/error";
 import { getReceivedTaps } from "$lib/api/interest/taps";
+import { reconciler } from "$lib/reconcile";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
 import type { TapProfile } from "$lib/model/interest/tap-profile";
 
@@ -24,25 +25,14 @@ export class TapsState {
 
 	#initial: Promise<void>;
 	#destroyed = false;
-	#firstConnect = true;
-	#wasHidden = false;
-	#lastReconcileAt = 0;
-	#unlistenConnected: Promise<() => void>;
+	#unsubscribeReconcile: () => void;
 	#unlistenTap: Promise<() => void>;
-	#removeVisibility: (() => void) | null = null;
 
 	constructor({ ourProfileId }: { ourProfileId: number }) {
 		this.ourProfileId = ourProfileId;
 		this.#initial = this.#initialLoad();
 
-		this.#unlistenConnected = ws.onConnected(() => {
-			if (this.#destroyed) return;
-			if (this.#firstConnect) {
-				this.#firstConnect = false;
-				return;
-			}
-			void this.#reconcile();
-		});
+		this.#unsubscribeReconcile = reconciler.subscribe(() => this.#reconcile());
 
 		this.#unlistenTap = ws.on(
 			"tap.v1.tap_sent",
@@ -67,31 +57,13 @@ export class TapsState {
 				});
 			},
 		);
-
-		if (typeof document !== "undefined") {
-			const onVisibility = () => {
-				if (this.#destroyed) return;
-				if (document.visibilityState === "hidden") {
-					this.#wasHidden = true;
-					return;
-				}
-				if (!this.#wasHidden) return;
-				this.#wasHidden = false;
-				void this.#reconcile();
-			};
-			document.addEventListener("visibilitychange", onVisibility);
-			this.#removeVisibility = () =>
-				document.removeEventListener("visibilitychange", onVisibility);
-		}
 	}
 
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
-		this.#unlistenConnected.then((unlisten) => unlisten()).catch(console.error);
+		this.#unsubscribeReconcile();
 		this.#unlistenTap.then((unlisten) => unlisten()).catch(console.error);
-		this.#removeVisibility?.();
-		this.#removeVisibility = null;
 	}
 
 	loadMore(): void {
@@ -121,9 +93,6 @@ export class TapsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		const now = Date.now();
-		if (now - this.#lastReconcileAt < 2000) return;
-		this.#lastReconcileAt = now;
 		await this.#initial.catch(() => {});
 		if (this.#destroyed) return;
 		try {

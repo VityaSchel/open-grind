@@ -1,5 +1,6 @@
 import { showErrorToast } from "$lib/api/error";
 import { getViews } from "$lib/api/interest/views";
+import { reconciler } from "$lib/reconcile";
 import { viewedMeV1NewViewReceivedEventSchema, ws } from "$lib/ws.svelte";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 
@@ -43,24 +44,13 @@ export class ViewsState {
 
 	#initial: Promise<void>;
 	#destroyed = false;
-	#firstConnect = true;
-	#wasHidden = false;
-	#lastReconcileAt = 0;
-	#unlistenConnected: Promise<() => void>;
+	#unsubscribeReconcile: () => void;
 	#unlistenView: Promise<() => void>;
-	#removeVisibility: (() => void) | null = null;
 
 	constructor() {
 		this.#initial = this.#initialLoad();
 
-		this.#unlistenConnected = ws.onConnected(() => {
-			if (this.#destroyed) return;
-			if (this.#firstConnect) {
-				this.#firstConnect = false;
-				return;
-			}
-			void this.#reconcile();
-		});
+		this.#unsubscribeReconcile = reconciler.subscribe(() => this.#reconcile());
 
 		this.#unlistenView = ws.on(
 			"viewed_me.v1.new_view_received",
@@ -79,31 +69,13 @@ export class ViewsState {
 				});
 			},
 		);
-
-		if (typeof document !== "undefined") {
-			const onVisibility = () => {
-				if (this.#destroyed) return;
-				if (document.visibilityState === "hidden") {
-					this.#wasHidden = true;
-					return;
-				}
-				if (!this.#wasHidden) return;
-				this.#wasHidden = false;
-				void this.#reconcile();
-			};
-			document.addEventListener("visibilitychange", onVisibility);
-			this.#removeVisibility = () =>
-				document.removeEventListener("visibilitychange", onVisibility);
-		}
 	}
 
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
-		this.#unlistenConnected.then((unlisten) => unlisten()).catch(console.error);
+		this.#unsubscribeReconcile();
 		this.#unlistenView.then((unlisten) => unlisten()).catch(console.error);
-		this.#removeVisibility?.();
-		this.#removeVisibility = null;
 	}
 
 	loadMore(): void {
@@ -136,9 +108,6 @@ export class ViewsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		const now = Date.now();
-		if (now - this.#lastReconcileAt < 2000) return;
-		this.#lastReconcileAt = now;
 		await this.#initial.catch(() => {});
 		if (this.#destroyed) return;
 		try {
