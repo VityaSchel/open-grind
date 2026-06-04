@@ -93,7 +93,7 @@ export async function getProfile(profileId: number) {
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
-		}).then((res) => res.debugJsonParsed(profileResponseSchema))
+		}).then((res) => res.jsonParsed(profileResponseSchema))
 	).profiles[0];
 	if (isProbablyBlocked(profile)) {
 		const blockedByUs = await getBlockedUsers().then((blocking) =>
