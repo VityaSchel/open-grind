@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
+	import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 	let {
 		ourProfileId,
@@ -19,5 +20,6 @@
 >
 	{#if !isOurProfile}
 		<FavoriteProfileToggle {profileId} isFavorite={profile.isFavorite} />
+		<ProfileActionsMenu {profileId} />
 	{/if}
 </nav>
