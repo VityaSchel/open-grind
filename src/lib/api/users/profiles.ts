@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
+import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import {
 	type Profile,
@@ -8,6 +9,72 @@ import {
 	profileSchema,
 	profileShortSchema,
 } from "$lib/model/profile";
+
+function isProbablyBlocked(profile: Profile) {
+	const nullFields = [
+		"aboutMe",
+		"age",
+		"ethnicity",
+		"relationshipStatus",
+		"bodyType",
+		"sexualPosition",
+		"hivStatus",
+		"lastTestedDate",
+		"height",
+		"weight",
+		"seen",
+		"onlineUntil",
+		"distance",
+		"profileImageMediaHash",
+		"identity",
+		"lastChatTimestamp",
+		"lastViewed",
+		"nsfw",
+		"lastUpdatedTime",
+		"genders",
+		"pronouns",
+		"tapType",
+	];
+	const falseFields = [
+		"showAge",
+		"showDistance",
+		"approximateDistance",
+		"isFavorite",
+		"isNew",
+		"tapped",
+	];
+	const emptyArrayFields = [
+		"grindrTribes",
+		"lookingFor",
+		"medias",
+		"hashtags",
+		"profileTags",
+		"meetAt",
+	];
+	const probablyBlocked =
+		nullFields.every((field) => profile[field as keyof Profile] === null) &&
+		falseFields.every((field) => profile[field as keyof Profile] === false) &&
+		emptyArrayFields.every(
+			(field) =>
+				Array.isArray(profile[field as keyof Profile]) &&
+				(profile[field as keyof Profile] as unknown[]).length === 0,
+		) &&
+		profile.vaccines &&
+		profile.vaccines.length === 0 &&
+		Object.keys(profile.socialNetworks).length === 0 &&
+		profile.lastReceivedTapTimestamp === null;
+	return probablyBlocked;
+}
+
+export class BlockedProfileError extends Error {
+	blockedByUs: boolean;
+
+	constructor({ blockedByUs }: { blockedByUs: boolean }) {
+		super("Blocked");
+		this.name = "BlockedProfileError";
+		this.blockedByUs = blockedByUs;
+	}
+}
 
 const profileResponseSchema = z.object({
 	profiles: z.array(profileSchema).length(1),
@@ -28,6 +95,12 @@ export async function getProfile(profileId: number) {
 			method: "GET",
 		}).then((res) => res.jsonParsed(profileResponseSchema))
 	).profiles[0];
+	if (isProbablyBlocked(profile)) {
+		const blockedByUs = await getBlockedUsers().then((blocking) =>
+			blocking.some((blocked) => blocked.profileId === profileId),
+		);
+		throw new BlockedProfileError({ blockedByUs });
+	}
 	profilesCache.set(profileId, { profile, updatedAt: Date.now() });
 	return profile;
 }

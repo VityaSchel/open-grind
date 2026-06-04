@@ -1,16 +1,18 @@
 <script lang="ts">
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
+	import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 	let {
 		ourProfileId,
-		profileId,
 		profile,
+		onBlocked,
 	}: {
 		ourProfileId: number;
-		profileId: number;
 		profile: import("$lib/model/profile").Profile;
+		onBlocked: () => void;
 	} = $props();
 
+	const profileId = $derived(profile.profileId);
 	const isOurProfile = $derived(profileId === ourProfileId);
 </script>
 
@@ -19,5 +21,6 @@
 >
 	{#if !isOurProfile}
 		<FavoriteProfileToggle {profileId} isFavorite={profile.isFavorite} />
+		<ProfileActionsMenu {profileId} {onBlocked}  />
 	{/if}
 </nav>

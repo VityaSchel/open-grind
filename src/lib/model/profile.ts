@@ -321,7 +321,7 @@ export const profileShortSchema = profileMaskedSchema
 		approximateDistance: z.boolean(),
 		lastChatTimestamp: z.number().nullable(),
 		isNew: z.boolean(),
-		lastUpdatedTime: z.number().nonnegative(),
+		lastUpdatedTime: z.number().nonnegative().nullable(),
 		medias: z.array(
 			z.object({
 				mediaHash: mediaHashPublicSchema,
@@ -337,8 +337,8 @@ export const profileShortSchema = profileMaskedSchema
 export const profileFieldsSchema = z.object({
 	meetAt: z.array(meetAtSchema).optional(),
 	vaccines: z.array(vaccinesSchema).optional(),
-	genders: z.array(z.number().int().nonnegative()).optional(),
-	pronouns: z.array(z.number().int().nonnegative()).optional(),
+	genders: z.array(z.number().int().nonnegative()).nullable().optional(),
+	pronouns: z.array(z.number().int().nonnegative()).nullable().optional(),
 });
 
 export const profileRightNowSchema = z.object({

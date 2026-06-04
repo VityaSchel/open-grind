@@ -1,0 +1,66 @@
+<script lang="ts">
+	import { DotsThreeIcon, FlagIcon, ProhibitIcon } from "phosphor-svelte";
+	import { toast } from "svelte-sonner";
+
+	import { blockUser } from "$lib/api/browse/blocks";
+	import { showErrorToast } from "$lib/api/error";
+	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
+	import { Button } from "$lib/components/ui/button";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+
+	let {
+		profileId,
+		onBlocked,
+	}: {
+		profileId: number;
+		onBlocked: () => void;
+	} = $props();
+
+	let submitting = $state(false);
+</script>
+
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props: { class: className, ...props } })}
+			<Button
+				size="icon-lg"
+				variant="secondary"
+				aria-label="Profile menu"
+				class={[className, "size-12"]}
+				disabled={submitting}
+				{...props}
+			>
+				<DotsThreeIcon class="size-8" />
+			</Button>
+		{/snippet}
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Content class="w-42" align="end">
+		<DropdownMenu.Item
+			onSelect={() => {
+				toast(ToastUnimplemented, {
+					componentProps: {
+						feature: "Report profile",
+						issue: 41,
+					},
+				});
+			}}
+		>
+			<FlagIcon class="size-5" />
+			Report profile
+		</DropdownMenu.Item>
+		<DropdownMenu.Item
+			onSelect={async () => {
+				try {
+					await blockUser({ profileId });
+					onBlocked();
+				} catch (error) {
+					console.error(error);
+					showErrorToast({ label: "Failed to block user", error });
+				}
+			}}
+		>
+			<ProhibitIcon class="size-5" />
+			Block profile
+		</DropdownMenu.Item>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>

@@ -16,15 +16,15 @@
 	const isOurProfile = $derived(profileId === ourProfileId);
 </script>
 
-<div
-	class="fixed bottom-[calc(0.5rem+var(--safe-area-bottom)+4rem)] left-1/2 -translate-x-1/2 max-w-full w-90.5 px-2"
->
-	<nav
-		class="flex flex-row items-center gap-2 bg-muted p-2 rounded-full backdrop-blur-lg shadow-xl"
+{#if !isOurProfile}
+	<div
+		class="fixed bottom-[calc(0.5rem+var(--safe-area-bottom)+4rem)] left-1/2 -translate-x-1/2 max-w-full w-90.5 px-2"
 	>
-		{#if !isOurProfile}
+		<nav
+			class="flex flex-row items-center gap-2 bg-muted p-2 rounded-full backdrop-blur-lg shadow-xl"
+		>
 			<OpenConversationButton {profileId} {ourProfileId} />
 			<TapProfileButton {profileId} bind:tapType />
-		{/if}
-	</nav>
-</div>
+		</nav>
+	</div>
+{/if}
