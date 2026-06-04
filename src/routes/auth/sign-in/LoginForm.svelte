@@ -44,6 +44,7 @@
 				email,
 				password,
 			});
+			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
 			console.error(error);
