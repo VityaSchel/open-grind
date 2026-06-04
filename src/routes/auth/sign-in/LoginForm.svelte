@@ -5,6 +5,7 @@
 
 	import { asAppError, callMethod } from "$lib/api";
 	import { showErrorToast } from "$lib/api/error";
+	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
