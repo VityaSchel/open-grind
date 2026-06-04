@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from "$app/state";
 
-	import { getProfile } from "$lib/api/users/profiles";
+	import { BlockedProfileError, getProfile } from "$lib/api/users/profiles";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import AboutMe from "./AboutMe.svelte";
+	import BlockedProfile from "./BlockedProfile.svelte";
 	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
 	import Distance from "./Distance.svelte";
 	import Ethnicity from "./fields/Ethnicity.svelte";
@@ -29,12 +30,12 @@
 
 	const ourProfileId = $derived(data.ourProfileId);
 	const profileId = $derived(Number(page.params.profileId));
-	const profile = $derived(getProfile(profileId));
+	let profilePromise = $derived(getProfile(profileId));
 </script>
 
 <div class="flex flex-1">
 	<main class="w-full max-w-200 flex-1 mx-auto relative">
-		{#await profile}
+		{#await profilePromise}
 			<Skeleton />
 		{:then profile}
 			{@const {
@@ -65,7 +66,15 @@
 				tapType,
 			} = profile}
 			<ImageCarousel {medias} />
-			<ProfileTopNavBar {ourProfileId} {profileId} {profile} />
+			<ProfileTopNavBar
+				{ourProfileId}
+				{profile}
+				onBlocked={() => {
+					profilePromise = Promise.reject(
+						new BlockedProfileError({ blockedByUs: true }),
+					);
+				}}
+			/>
 			<div class="flex flex-col p-4 pb-24">
 				<h1 class="text-2xl wrap-break-word">
 					{#if displayName !== null}
@@ -131,7 +140,16 @@
 			<ProfileBottomNavBar {ourProfileId} {profileId} {tapType} />
 		{:catch error}
 			<div class="h-full flex">
-				<ApiErrorDisplay {error} class="m-auto" />
+				{#if error instanceof BlockedProfileError}
+					<BlockedProfile
+						blockedByUs={error.blockedByUs}
+						onRefresh={() => {
+							profilePromise = getProfile(profileId);
+						}}
+					/>
+				{:else}
+					<ApiErrorDisplay {error} class="m-auto" />
+				{/if}
 			</div>
 		{/await}
 	</main>
