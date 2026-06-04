@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from "svelte";
+	import { onMount, tick, untrack } from "svelte";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
@@ -20,7 +20,9 @@
 		),
 	);
 	$effect(() => {
-		if (latestActivity >= 0) conversations.markInboxViewed();
+		// Fixes effect_update_depth_exceeded
+		void latestActivity;
+		untrack(() => conversations.markInboxViewed());
 	});
 
 	let container: HTMLDivElement | null = $state(null);

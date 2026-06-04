@@ -2,7 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
+import { tapTypeSchema } from "$lib/model/interest/taps";
+import { mediaHashPublicSchema } from "$lib/model/media";
 import { apiResponseMessageSchema } from "$lib/model/message";
+import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const notificationEventSchema = z.object({
 	type: z.string(),
@@ -24,9 +27,23 @@ export const chatV1ConversationDeleteEventSchema =
 		}),
 	});
 
+export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
+	type: z.literal("tap.v1.tap_sent"),
+	payload: z.object({
+		timestamp: unixTimestampMsSchema,
+		senderId: z.number(),
+		recipientId: z.number(),
+		tapType: tapTypeSchema.or(z.literal(3).transform(() => null)).nullable(),
+		senderProfileImageHash: mediaHashPublicSchema.nullable(),
+		senderDisplayName: z.string().nullable(),
+		isMutual: z.boolean(),
+	}),
+});
+
 export type ChatV1MessageSentEventPayload = z.infer<
 	typeof chatV1MessageSentEventSchema
 >;
+export type TapV1TapSentEventPayload = z.infer<typeof tapV1TapSentEventSchema>;
 export type ChatV1ConversationDeleteEventPayload = z.infer<
 	typeof chatV1ConversationDeleteEventSchema
 >;

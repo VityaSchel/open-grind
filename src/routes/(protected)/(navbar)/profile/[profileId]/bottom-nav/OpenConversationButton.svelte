@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { ChatCircleIcon } from "phosphor-svelte";
-
 	import Button from "$lib/components/ui/button/button.svelte";
 
 	let {
@@ -16,6 +14,11 @@
 	);
 </script>
 
-<Button size="icon-lg" class="size-14" href="/chat/{conversationId}">
-	<ChatCircleIcon weight="fill" class="size-8" />
+<Button
+	variant="outline"
+	size="lg"
+	class="flex-1 justify-start bg-input/20!"
+	href="/chat/{conversationId}"
+>
+	<span class="text-muted-foreground font-normal">Write a message...</span>
 </Button>

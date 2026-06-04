@@ -1,0 +1,56 @@
+<script lang="ts">
+	import { onDestroy, untrack } from "svelte";
+
+	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
+	import EmptyTapsList from "./EmptyTapsList.svelte";
+	import TapReceivedProfile from "./TapReceivedProfile.svelte";
+	import { TapsState } from "./taps-state.svelte";
+
+	let {
+		ourProfileId,
+		class: className,
+	}: {
+		ourProfileId: number;
+		class?: import("svelte/elements").ClassValue;
+	} = $props();
+
+	const taps = untrack(() => new TapsState({ ourProfileId }));
+	onDestroy(() => taps.destroy());
+
+	function observeSentinel(node: HTMLElement) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) taps.loadMore();
+			},
+			{ rootMargin: "400px" },
+		);
+		observer.observe(node);
+		return {
+			destroy() {
+				observer.disconnect();
+			},
+		};
+	}
+</script>
+
+<div class={["flex flex-col gap-1 flex-1 min-w-29.25", className]}>
+	{#if taps.loading}
+		{#each Array(8)}
+			<Skeleton class="w-full h-24.5 shrink-0" />
+		{/each}
+	{:else if taps.error}
+		<div class="flex-1 flex">
+			<ApiErrorDisplay error={taps.error} class="m-auto" />
+		</div>
+	{:else}
+		{#each taps.taps as tap (tap.profileId)}
+			<TapReceivedProfile {tap} />
+		{:else}
+			<EmptyTapsList />
+		{/each}
+		{#if taps.hasMore}
+			<div class="h-0" use:observeSentinel></div>
+		{/if}
+	{/if}
+</div>

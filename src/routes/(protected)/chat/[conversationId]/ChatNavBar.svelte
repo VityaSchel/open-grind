@@ -2,6 +2,7 @@
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
 	import DisplayName from "$lib/components/DisplayName.svelte";
+	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
 	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Card from "$lib/components/ui/card";
@@ -61,11 +62,7 @@
 						</Card.Description>
 					{:else}
 						<Card.Description class="truncate">
-							{#if profile.distance < 1000}
-								{Math.round(profile.distance)} m
-							{:else}
-								{(profile.distance / 1000).toFixed(1)} km
-							{/if}
+							<DistanceFormatted distance={profile.distance} />
 						</Card.Description>
 					{/if}
 				</div>
