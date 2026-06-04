@@ -1,12 +1,26 @@
 import { showErrorToast } from "$lib/api/error";
 import { getReceivedTaps } from "$lib/api/interest/taps";
-import { ws } from "$lib/ws.svelte";
+import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
 import type { TapProfile } from "$lib/model/interest/tap-profile";
 
+const PAGE_SIZE = 20;
+
 export class TapsState {
-	taps: TapProfile[] = $state([]);
 	loading = $state(true);
 	error: Error | null = $state(null);
+	visibleCount = $state(PAGE_SIZE);
+
+	#all: TapProfile[] = $state([]);
+
+	get taps(): TapProfile[] {
+		return this.#all.slice(0, this.visibleCount);
+	}
+
+	get hasMore(): boolean {
+		return this.visibleCount < this.#all.length;
+	}
+
+	readonly ourProfileId: number;
 
 	#initial: Promise<void>;
 	#destroyed = false;
@@ -14,9 +28,11 @@ export class TapsState {
 	#wasHidden = false;
 	#lastReconcileAt = 0;
 	#unlistenConnected: Promise<() => void>;
+	#unlistenTap: Promise<() => void>;
 	#removeVisibility: (() => void) | null = null;
 
-	constructor() {
+	constructor({ ourProfileId }: { ourProfileId: number }) {
+		this.ourProfileId = ourProfileId;
 		this.#initial = this.#initialLoad();
 
 		this.#unlistenConnected = ws.onConnected(() => {
@@ -27,6 +43,30 @@ export class TapsState {
 			}
 			void this.#reconcile();
 		});
+
+		this.#unlistenTap = ws.on(
+			"tap.v1.tap_sent",
+			tapV1TapSentEventSchema,
+			(event) => {
+				if (this.#destroyed) return;
+				const tap = event.payload;
+				if (tap.recipientId !== this.ourProfileId) return;
+				this.#upsert({
+					distance: null,
+					profileImageMediaHash: tap.senderProfileImageHash,
+					isFavorite: false,
+					profileId: tap.senderId,
+					displayName: tap.senderDisplayName,
+					timestamp: tap.timestamp,
+					tapType: tap.tapType,
+					lastOnline: tap.timestamp,
+					isBoosting: false,
+					isMutual: tap.isMutual,
+					rightNowType: "",
+					isViewable: true,
+				});
+			},
+		);
 
 		if (typeof document !== "undefined") {
 			const onVisibility = () => {
@@ -49,8 +89,20 @@ export class TapsState {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#unlistenConnected.then((unlisten) => unlisten()).catch(console.error);
+		this.#unlistenTap.then((unlisten) => unlisten()).catch(console.error);
 		this.#removeVisibility?.();
 		this.#removeVisibility = null;
+	}
+
+	loadMore(): void {
+		if (!this.hasMore) return;
+		this.visibleCount += PAGE_SIZE;
+	}
+
+	#upsert(tap: TapProfile): void {
+		const existing = this.#all.findIndex((t) => t.profileId === tap.profileId);
+		if (existing !== -1) this.#all.splice(existing, 1);
+		this.#all = [tap, ...this.#all];
 	}
 
 	async #initialLoad(): Promise<void> {
@@ -59,7 +111,7 @@ export class TapsState {
 		try {
 			const { profiles } = await getReceivedTaps();
 			if (this.#destroyed) return;
-			this.taps = profiles;
+			this.#all = profiles;
 		} catch (err) {
 			if (this.#destroyed) return;
 			this.error = err instanceof Error ? err : new Error(String(err));
@@ -77,7 +129,7 @@ export class TapsState {
 		try {
 			const { profiles } = await getReceivedTaps();
 			if (this.#destroyed) return;
-			this.taps = profiles;
+			this.#all = profiles;
 			this.error = null;
 		} catch (error) {
 			console.error(error);

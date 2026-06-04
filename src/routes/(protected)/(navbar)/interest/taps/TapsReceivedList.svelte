@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from "svelte";
+	import { onDestroy, untrack } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
@@ -8,13 +8,30 @@
 	import { TapsState } from "./taps-state.svelte";
 
 	let {
+		ourProfileId,
 		class: className,
 	}: {
+		ourProfileId: number;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
-	const taps = new TapsState();
+	const taps = untrack(() => new TapsState({ ourProfileId }));
 	onDestroy(() => taps.destroy());
+
+	function observeSentinel(node: HTMLElement) {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) taps.loadMore();
+			},
+			{ rootMargin: "400px" },
+		);
+		observer.observe(node);
+		return {
+			destroy() {
+				observer.disconnect();
+			},
+		};
+	}
 </script>
 
 <div class={["flex flex-col gap-1 flex-1 min-w-29.25", className]}>
@@ -32,5 +49,8 @@
 		{:else}
 			<EmptyTapsList />
 		{/each}
+		{#if taps.hasMore}
+			<div class="h-0" use:observeSentinel></div>
+		{/if}
 	{/if}
 </div>
