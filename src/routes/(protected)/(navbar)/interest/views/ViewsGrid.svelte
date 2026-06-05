@@ -69,6 +69,6 @@
 	@reference "$layout";
 
 	.views-grid {
-		@apply grid grid-cols-3 gap-0.5 xs:grid-cols-4;
+		@apply grid gap-0.5 grid-cols-2 xxs:grid-cols-3;
 	}
 </style>
