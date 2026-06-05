@@ -142,6 +142,11 @@ export async function getMyProfile() {
 	return profile;
 }
 
+export function clearProfileCaches() {
+	myProfileCache = null;
+	profilesCache.clear();
+}
+
 export async function getProfileUploadedPhotos() {
 	return await fetchRest("/v3.1/me/profile/images").then((res) =>
 		res.jsonParsed(

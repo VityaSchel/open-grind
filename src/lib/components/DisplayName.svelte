@@ -1,9 +1,13 @@
 <script lang="ts">
-	let { name }: { name: string | null } = $props();
+	let {
+		name,
+		class: className,
+	}: { name: string | null; class?: import("svelte/elements").ClassValue } =
+		$props();
 </script>
 
 {#if name}
-	{name}
+	<span class={className}>{name}</span>
 {:else}
-	<span class="font-normal tracking-tight italic">Someone</span>
+	<span class={["font-normal tracking-tight italic", className]}>Someone</span>
 {/if}

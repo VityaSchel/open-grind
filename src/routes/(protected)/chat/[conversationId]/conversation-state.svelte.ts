@@ -6,6 +6,7 @@ import {
 	apiResponseMessageSchema,
 	previewFromMessage,
 } from "$lib/model/message";
+import { reconciler } from "$lib/reconcile";
 import { chatV1MessageSentEventSchema, ws } from "$lib/ws.svelte";
 import type { ConversationsState } from "$lib/chat/conversations.svelte";
 import type {
@@ -35,7 +36,7 @@ export class ConversationState {
 	#conversations: ConversationsState;
 	#readQueue: { messageId: string; timestamp: number }[] = [];
 	#readTimer: ReturnType<typeof setTimeout> | null = null;
-	#removeReconcileListener: () => void;
+	#unsubscribeReconcile: () => void;
 
 	constructor({
 		conversationId,
@@ -53,7 +54,7 @@ export class ConversationState {
 		this.lastReadTimestamp = null;
 		void this.#initialLoad();
 
-		this.#removeReconcileListener = conversations.onReconcile(() =>
+		this.#unsubscribeReconcile = reconciler.subscribe(() =>
 			this.#reconcileMessages(),
 		);
 
@@ -98,7 +99,7 @@ export class ConversationState {
 		this.#destroyed = true;
 		this.#conversations.clearActive(this.conversationId);
 		this.#unlistenWs.then((unlisten) => unlisten()).catch(console.error);
-		this.#removeReconcileListener();
+		this.#unsubscribeReconcile();
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
 	}
 
@@ -174,6 +175,11 @@ export class ConversationState {
 		} catch (error) {
 			console.error("Failed to reconcile messages", error);
 		}
+	}
+
+	retry(): void {
+		if (this.#destroyed) return;
+		void this.#initialLoad();
 	}
 
 	async #initialLoad(): Promise<void> {

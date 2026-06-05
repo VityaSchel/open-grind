@@ -213,6 +213,7 @@ export async function fetchRest(
 				(error instanceof Error ? error.message : String(error)),
 			request: requestInfo,
 			response: null,
+			kind: appError?.kind ?? null,
 			cause: error,
 		});
 	}

@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { toast } from "svelte-sonner";
 
+	import { showErrorToast } from "$lib/api/error";
 	import {
 		getPreferences,
-		// setPreferences,
+		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
-	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 
 	let value = $state(false);
@@ -26,18 +25,19 @@
 	description="Let others know when you've viewed their profile. Your profile view history remains unaffected."
 	bind:checked={
 		() => value,
-		// (v: boolean) => {
-		() => {
-			toast(ToastUnimplemented, {
-				componentProps: {
-					feature: "This setting",
-					issue: 42,
-				},
-			});
-			// value = v;
-			// setPreferences({ revealProfileViews: v }).catch((e) => {
-			// 	console.error("Failed to save preferences", e);
-			// });
+		(v: boolean) => {
+			value = v;
+			void (async () => {
+				try {
+					await setPreferences({ revealProfileViews: v });
+				} catch (error) {
+					console.error(error);
+					showErrorToast({
+						label: "Failed to save preferences",
+						error,
+					});
+				}
+			})();
 		}
 	}
 />

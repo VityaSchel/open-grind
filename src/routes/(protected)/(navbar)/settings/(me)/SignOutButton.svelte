@@ -3,6 +3,7 @@
 	import { CaretRightIcon, SignOutIcon } from "phosphor-svelte";
 
 	import { callMethod } from "$lib/api";
+	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as Item from "$lib/components/ui/item";
 	import ButtonItemContent from "./ButtonItemContent.svelte";
@@ -13,6 +14,7 @@
 		} catch (error) {
 			console.error(error);
 		}
+		clearProfileCaches();
 		await goto("/auth/sign-in");
 	}
 

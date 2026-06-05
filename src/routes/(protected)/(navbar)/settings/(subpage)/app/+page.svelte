@@ -10,7 +10,13 @@
 
 <div class="flex w-full px-4">
 	<main class="pb-18 flex flex-col gap-3 w-full max-w-120 m-auto">
-		{#snippet item({ title }: { title: string })}
+		{#snippet item({
+			title,
+			unimplemented,
+		}: {
+			title: string;
+			unimplemented: { feature: string; issue: number };
+		})}
 			<Item.Root variant="outline">
 				{#snippet child({ props })}
 					<a
@@ -18,10 +24,7 @@
 						{...props}
 						onclick={() =>
 							toast(ToastUnimplemented, {
-								componentProps: {
-									feature: "App settings",
-									issue: 46,
-								},
+								componentProps: unimplemented,
 							})}
 					>
 						<Item.Content class="max-xxxxs:min-w-0">
@@ -37,13 +40,22 @@
 				{/snippet}
 			</Item.Root>
 		{/snippet}
-		{@render item({ title: "Notifications" })}
+		{@render item({
+			title: "Notifications",
+			unimplemented: { feature: "Notifications", issue: 45 },
+		})}
 		<h2>Privacy</h2>
 		<RevealMessageReadSetting />
 		<RevealProfileViewSetting />
 		<h2>Security</h2>
-		{@render item({ title: "Discreet App Icon" })}
-		{@render item({ title: "PIN" })}
+		{@render item({
+			title: "Discreet App Icon",
+			unimplemented: { feature: "Discreet App Icon", issue: 97 },
+		})}
+		{@render item({
+			title: "PIN",
+			unimplemented: { feature: "PIN", issue: 50 },
+		})}
 	</main>
 </div>
 

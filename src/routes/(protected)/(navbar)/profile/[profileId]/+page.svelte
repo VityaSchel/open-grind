@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { page } from "$app/state";
 
+	import { showErrorToast } from "$lib/api/error";
+	import { recordProfileView } from "$lib/api/interest/views";
 	import { BlockedProfileError, getProfile } from "$lib/api/users/profiles";
+	import { getPreferences } from "$lib/app-data/preferences.svelte";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import AboutMe from "./AboutMe.svelte";
@@ -30,6 +33,24 @@
 
 	const ourProfileId = $derived(data.ourProfileId);
 	const profileId = $derived(Number(page.params.profileId));
+
+	$effect(() => {
+		const id = profileId;
+		if (!Number.isFinite(id) || id === ourProfileId) return;
+		void (async () => {
+			try {
+				const { revealProfileViews } = await getPreferences();
+				if (!revealProfileViews) return;
+				await recordProfileView({ profileId: id });
+			} catch (error) {
+				console.error(error);
+				showErrorToast({
+					label: "Failed to record profile view preference or action",
+					error,
+				});
+			}
+		})();
+	});
 
 	let optimisticBlockProfileId = $state<number | null>(null);
 	const optimisticallyBlocked = $derived(
@@ -61,7 +82,7 @@
 								onRefresh={reset}
 							/>
 						{:else}
-							<ApiErrorDisplay {error} class="m-auto" />
+							<ApiErrorDisplay {error} onRetry={reset} class="m-auto" />
 						{/if}
 					</div>
 				{/snippet}

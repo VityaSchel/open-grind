@@ -6,6 +6,7 @@ import {
 } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
 import { previewFromMessage } from "$lib/model/message";
+import { reconciler } from "$lib/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1MessageSentEventSchema,
@@ -34,18 +35,14 @@ class ConversationsState {
 	nextPage = $state<number | null>(null);
 	loadingMore = $state(false);
 	inboxLastViewedAt = $state(0);
-	initial: Promise<void>;
+	initial: Promise<void> = $state(Promise.resolve());
 	listScrollY = 0;
 
 	readonly ourProfileId: number;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
 	#messageCache = new Map<string, CachedConversation>();
-	#firstConnect = true;
-	#wasHidden = false;
-	#lastReconcileAt = 0;
-	#reconcileListeners = new Set<() => void | Promise<void>>();
-	#removeVisibility: (() => void) | null = null;
+	#unsubscribeReconcile: () => void;
 	#destroyed = false;
 
 	constructor(ourProfileId: number) {
@@ -53,15 +50,9 @@ class ConversationsState {
 		this.inboxLastViewedAt = this.#loadInboxLastViewed();
 		this.initial = this.#load(1);
 
+		this.#unsubscribeReconcile = reconciler.subscribe(() => this.#reconcile());
+
 		this.#wsPromises.push(
-			ws.onConnected(() => {
-				if (this.#destroyed) return;
-				if (this.#firstConnect) {
-					this.#firstConnect = false;
-					return;
-				}
-				void this.#reconcile();
-			}),
 			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
 				if (this.#destroyed) return;
 				const message = event.payload;
@@ -97,43 +88,18 @@ class ConversationsState {
 				},
 			),
 		);
-
-		if (typeof document !== "undefined") {
-			const onVisibility = () => {
-				if (this.#destroyed) return;
-				if (document.visibilityState === "hidden") {
-					this.#wasHidden = true;
-					return;
-				}
-				if (!this.#wasHidden) return;
-				this.#wasHidden = false;
-				void this.#reconcile();
-			};
-			document.addEventListener("visibilitychange", onVisibility);
-			this.#removeVisibility = () =>
-				document.removeEventListener("visibilitychange", onVisibility);
-		}
 	}
 
 	async destroy(): Promise<void> {
 		this.#destroyed = true;
+		this.#unsubscribeReconcile();
 		const unlisteners = await Promise.all(this.#wsPromises);
 		for (const unlisten of unlisteners) unlisten();
 		this.#wsPromises = [];
-		this.#removeVisibility?.();
-		this.#removeVisibility = null;
-		this.#reconcileListeners.clear();
-	}
-
-	onReconcile(handler: () => void | Promise<void>): () => void {
-		this.#reconcileListeners.add(handler);
-		return () => this.#reconcileListeners.delete(handler);
 	}
 
 	async #reconcile(): Promise<void> {
-		const now = Date.now();
-		if (now - this.#lastReconcileAt < 2000) return;
-		this.#lastReconcileAt = now;
+		if (this.#destroyed) return;
 		await this.initial.catch(() => {});
 
 		const activeId = this.#activeConversationId;
@@ -166,20 +132,19 @@ class ConversationsState {
 				error,
 			});
 		}
-
-		for (const handler of [...this.#reconcileListeners]) {
-			try {
-				await handler();
-			} catch (error) {
-				console.error("Reconcile listener failed", error);
-			}
-		}
 	}
 
 	async #load(page: number): Promise<void> {
 		const result = await getConversations(page);
 		this.entries.push(...result.entries);
 		this.nextPage = result.nextPage;
+	}
+
+	retry(): void {
+		if (this.#destroyed) return;
+		this.entries = [];
+		this.nextPage = null;
+		this.initial = this.#load(1);
 	}
 
 	async loadMore(): Promise<void> {

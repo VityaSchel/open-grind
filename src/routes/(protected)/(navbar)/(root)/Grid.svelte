@@ -3,10 +3,9 @@
 	import { onMount } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import { Button } from "$lib/components/ui/button";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import { gridState } from "./grid-state.svelte";
-	import ProfileMiniCard from "./ProfileMiniCard.svelte";
+	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
 	let {
 		geohash,
@@ -80,7 +79,7 @@
 </script>
 
 <div
-	class="grid grid-cols-2 xxs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full gap-0.5 px-1 flex-1"
+	class="profile-grid sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1"
 >
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
@@ -88,18 +87,21 @@
 		{/each}
 	{:else if gridState.error}
 		<div class="p-4 flex col-span-full">
-			<div class="m-auto flex flex-col items-center gap-2">
-				<ApiErrorDisplay error={gridState.error} />
-				<Button onclick={() => gridState.refresh()}>Retry</Button>
-			</div>
+			<ApiErrorDisplay
+				error={gridState.error}
+				onRetry={() => gridState.refresh()}
+				class="m-auto"
+			/>
 		</div>
 	{:else}
 		{#each gridProfiles as item (item.id)}
 			{#if item.type === "full"}
-				<ProfileMiniCard
+				<GridProfileMiniCard
 					id={item.id}
 					displayName={item.displayName}
 					distance={item.distance}
+					unread={item.unread}
+					onlineUntil={item.onlineUntil}
 					isFavorite={item.isFavorite}
 					hadRecentChat={item.hasChattedInLast24Hrs}
 					medias={item.profilePhotosHashes?.map((mediaHash) => ({
