@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { uniqBy } from "lodash-es";
 	import { onMount } from "svelte";
+	import { cn } from "tailwind-variants";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";
@@ -78,9 +79,7 @@
 	}
 </script>
 
-<div
-	class="profile-grid sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1"
->
+<div class="profile-grid">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
 			<div class="aspect-square bg-stone-700 animate-pulse"></div>

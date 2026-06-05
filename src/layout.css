@@ -129,10 +129,6 @@ a {
 	background: red;
 }
 
-.scrollbar-thin {
-	scrollbar-width: thin;
-}
-
 .profile-card-distance {
 	@apply text-[11px] font-medium tracking-tight text-white/85;
 	text-shadow:
@@ -140,6 +136,12 @@ a {
 		0px 0px 2px rgba(0, 0, 0, 0.2);
 }
 
-.profile-grid {
-	@apply grid grid-cols-2 x360:grid-cols-3 gap-0.5 px-1;
+@layer components {
+	.scrollbar-thin {
+		scrollbar-width: thin;
+	}
+
+	.profile-grid {
+		@apply grid grid-cols-2 x360:grid-cols-3 gap-0.5 px-1 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1 max-w-400 mx-auto;
+	}
 }

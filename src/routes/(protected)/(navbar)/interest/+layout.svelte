@@ -33,7 +33,7 @@
 	{@render tab("/interest/taps", "Taps")}
 </ProgressiveBlur>
 <div class="flex w-full p-4 flex-1">
-	<main class="max-w-120 w-full flex flex-col mx-auto gap-3 flex-1">
+	<main class="w-full flex flex-col mx-auto gap-3 flex-1">
 		<div class="h-10"></div>
 		{@render children?.()}
 	</main>
