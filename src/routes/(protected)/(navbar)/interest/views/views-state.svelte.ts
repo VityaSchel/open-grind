@@ -64,8 +64,11 @@ export class ViewsState {
 					displayName: null,
 					profileImageMediaHash: recent.photoHash ?? null,
 					distance: null,
+					onlineUntil: null,
 					lastViewed: recent.timestamp,
 					isSecretAdmirer: false,
+					isFavorite: false,
+					viewedCount: { totalCount: 1, maxDisplayCount: 99 },
 				});
 			},
 		);
@@ -83,12 +86,33 @@ export class ViewsState {
 		this.visibleCount += PAGE_SIZE;
 	}
 
-	#upsert(view: ViewerProfile): void {
-		const existing = this.#profiles.findIndex(
-			(v) => v.profileId === view.profileId,
+	retry(): void {
+		this.#initial = this.#initialLoad();
+	}
+
+	#upsert(fresh: ViewerProfile): void {
+		const index = this.#profiles.findIndex(
+			(v) => v.profileId === fresh.profileId,
 		);
-		if (existing !== -1) this.#profiles.splice(existing, 1);
-		this.#profiles = [view, ...this.#profiles];
+		let next = fresh;
+		if (index !== -1) {
+			const [prev] = this.#profiles.splice(index, 1);
+			next = {
+				...prev,
+				...fresh,
+				displayName: fresh.displayName ?? prev.displayName,
+				profileImageMediaHash:
+					fresh.profileImageMediaHash ?? prev.profileImageMediaHash,
+				distance: fresh.distance ?? prev.distance,
+				onlineUntil: fresh.onlineUntil ?? prev.onlineUntil,
+				isFavorite: prev.isFavorite,
+				viewedCount: {
+					...prev.viewedCount,
+					totalCount: prev.viewedCount.totalCount + 1,
+				},
+			};
+		}
+		this.#profiles = [next, ...this.#profiles];
 	}
 
 	async #initialLoad(): Promise<void> {

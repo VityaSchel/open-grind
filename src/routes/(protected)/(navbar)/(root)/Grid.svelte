@@ -79,7 +79,7 @@
 </script>
 
 <div
-	class="grid grid-cols-2 xxs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full gap-0.5 px-1 flex-1"
+	class="profile-grid sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1"
 >
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}

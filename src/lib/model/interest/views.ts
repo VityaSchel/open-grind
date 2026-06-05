@@ -12,6 +12,10 @@ export const viewPreviewSchema = z.object({
 	isFavorite: profileMaskedMinSchema.shape.isFavorite,
 	lastViewed: profileMaskedSchema.shape.lastViewed,
 	isSecretAdmirer: z.boolean(),
+	viewedCount: z.object({
+		totalCount: z.number().int().nonnegative(),
+		maxDisplayCount: z.number().int().nonnegative(),
+	}),
 });
 
 export type ViewPreview = z.infer<typeof viewPreviewSchema>;

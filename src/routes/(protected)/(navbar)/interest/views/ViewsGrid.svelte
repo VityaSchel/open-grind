@@ -2,6 +2,7 @@
 	import { onDestroy, untrack } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import { Skeleton } from "$lib/components/ui/skeleton";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";
 	import ViewedProfile from "./ViewedProfile.svelte";
@@ -34,9 +35,9 @@
 
 <div class={["flex flex-1 flex-col", className]}>
 	{#if views.loading}
-		<div class="views-grid">
-			{#each Array(12)}
-				<div class="aspect-square animate-pulse bg-neutral-700"></div>
+		<div class="profile-grid">
+			{#each Array(24)}
+				<Skeleton class="aspect-square rounded-none" />
 			{/each}
 		</div>
 	{:else if views.error}
@@ -50,7 +51,7 @@
 	{:else if views.views.length === 0}
 		<EmptyViewsGrid />
 	{:else}
-		<div class="views-grid">
+		<div class="profile-grid">
 			{#each views.views as entry (entry.key)}
 				{#if entry.type === "profile"}
 					<ViewedProfile view={entry.profile} />
@@ -64,11 +65,3 @@
 		{/if}
 	{/if}
 </div>
-
-<style lang="postcss">
-	@reference "$layout";
-
-	.views-grid {
-		@apply grid gap-0.5 grid-cols-2 xxs:grid-cols-3;
-	}
-</style>
