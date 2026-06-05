@@ -33,6 +33,7 @@ export default defineConfig(async () => ({
 
 	test: {
 		environment: "node",
+		environmentMatchGlobs: [["src/**/*.svelte.test.ts", "jsdom"]],
 		include: ["src/**/*.test.ts"],
 	},
 }));
