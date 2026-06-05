@@ -310,12 +310,16 @@ export const apiResponseMessageSchema = z
 export type Message = z.infer<typeof messageSchema>;
 export type ApiResponseMessage = z.infer<typeof apiResponseMessageSchema>;
 
-export function previewFromMessage(message: ApiResponseMessage | undefined): {
+export type MessagePreview = {
 	type: string;
 	text: string | null;
 	albumId: number | null;
 	imageHash: string | null;
-} {
+};
+
+export function previewFromMessage(
+	message: ApiResponseMessage | undefined,
+): MessagePreview {
 	if (!message) return { type: "", text: null, albumId: null, imageHash: null };
 	switch (message.type) {
 		case "Unsent":
@@ -357,4 +361,12 @@ export function previewFromMessage(message: ApiResponseMessage | undefined): {
 				imageHash: null,
 			};
 	}
+}
+
+export function previewLabel(preview: MessagePreview | null): string | null {
+	if (preview === null) return null;
+	if (preview.text !== null) return preview.text;
+	if (preview.albumId !== null) return "Album";
+	if (preview.imageHash !== null || preview.type === "Image") return "Photo";
+	return null;
 }

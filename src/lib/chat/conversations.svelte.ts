@@ -1,11 +1,12 @@
 import z from "zod";
+import { toast } from "svelte-sonner";
 
 import {
 	getConversations,
 	markConversationAsRead,
 } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
-import { previewFromMessage } from "$lib/model/message";
+import { previewFromMessage, previewLabel } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -59,11 +60,13 @@ class ConversationsState {
 				const entry = this.entries.find(
 					(entry) => entry.data.conversationId === message.conversationId,
 				);
+				const isIncoming = message.senderId !== this.ourProfileId;
 				if (entry) {
 					const isActive =
 						message.conversationId === this.#activeConversationId;
-					if (!isActive && message.senderId !== this.ourProfileId) {
+					if (!isActive && isIncoming) {
 						entry.data.unreadCount += 1;
+						this.#showIncomingMessageToast(message, entry.data.name);
 					}
 					if (!isActive) {
 						this.invalidateConversation(message.conversationId);
@@ -74,6 +77,9 @@ class ConversationsState {
 						timestamp: message.timestamp,
 					});
 				} else {
+					if (isIncoming) {
+						this.#showIncomingMessageToast(message, null);
+					}
 					void this.ensureLoaded(message.conversationId);
 				}
 			}),
@@ -244,6 +250,20 @@ class ConversationsState {
 				.int()
 				.nonnegative()
 				.safeParse(localStorage.getItem(this.#inboxStorageKey())).data ?? 0
+		);
+	}
+
+	#showIncomingMessageToast(
+		message: ApiResponseMessage,
+		conversationName: string | null,
+	): void {
+		const description = previewLabel(previewFromMessage(message)) ?? undefined;
+		toast(
+			conversationName ? `New message from ${conversationName}` : "New message",
+			{
+				description,
+				id: `incoming-message:${message.messageId}`,
+			},
 		);
 	}
 

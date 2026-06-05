@@ -6,6 +6,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Item from "$lib/components/ui/item";
 	import type { Conversation } from "$lib/model/conversation";
+	import { previewLabel } from "$lib/model/message";
 
 	let {
 		conversation,
@@ -15,6 +16,7 @@
 
 	const preview = $derived(conversation.data.preview);
 	const participant = $derived(conversation.data.participants[0]);
+	const previewText = $derived(previewLabel(preview));
 
 	const selected = $derived(
 		page.params.conversationId === conversation.data.conversationId,
@@ -35,16 +37,8 @@
 				"font-medium text-white": conversation.data.unreadCount > 0,
 			}}
 		>
-			{#if preview !== null}
-				{#if preview.text !== null}
-					{preview.text}
-				{:else if preview.albumId !== null}
-					Album
-				{:else if preview.imageHash !== null || preview.type === "Image"}
-					Photo
-				{:else}
-					<span class="preview-not-available"> Preview not available </span>
-				{/if}
+			{#if previewText !== null}
+				{previewText}
 			{:else}
 				<span class="preview-not-available"> Preview not available </span>
 			{/if}
