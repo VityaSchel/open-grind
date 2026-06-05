@@ -13,5 +13,7 @@
 	mediaHash={view.profileImageMediaHash}
 	displayName={view.displayName}
 	distance={view.distance}
+	onlineUntil={view.onlineUntil}
+	isFavorite={view.isFavorite}
 	href="/profile/{view.profileId}"
 />

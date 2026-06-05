@@ -9,6 +9,7 @@ import {
 export const viewPreviewSchema = z.object({
 	profileImageMediaHash: profileMaskedMinSchema.shape.profileImageMediaHash,
 	distance: profileMaskedMinSchema.shape.distance,
+	isFavorite: profileMaskedMinSchema.shape.isFavorite,
 	lastViewed: profileMaskedSchema.shape.lastViewed,
 	isSecretAdmirer: z.boolean(),
 });
@@ -19,6 +20,7 @@ export const viewerProfileSchema = z.object({
 	...viewPreviewSchema.shape,
 	profileId: profileMinSchema.shape.profileId,
 	displayName: profileMinSchema.shape.displayName,
+	onlineUntil: profileMinSchema.shape.onlineUntil,
 });
 
 export type ViewerProfile = z.infer<typeof viewerProfileSchema>;

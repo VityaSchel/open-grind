@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DisplayName from "$lib/components/DisplayName.svelte";
+	import OnlineDot from "$lib/components/OnlineDot.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Item from "$lib/components/ui/item";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
@@ -7,6 +8,7 @@
 	let {
 		avatarMediaHash,
 		title,
+		onlineUntil = null,
 		active,
 		avatarLink,
 		link,
@@ -15,6 +17,7 @@
 	}: {
 		avatarMediaHash: string | null;
 		title: string | null;
+		onlineUntil?: number | null;
 		active?: boolean;
 		avatarLink?: string;
 		link: string;
@@ -37,13 +40,14 @@
 	<Item.Content class="flex-1 min-w-0">
 		<Item.Title
 			class={[
-				"truncate inline min-w-0 w-auto",
+				"truncate min-w-0 w-auto flex items-center gap-1",
 				{
 					"text-muted-foreground": !title,
 				},
 			]}
 		>
-			<DisplayName name={title} />
+			<OnlineDot {onlineUntil} />
+			<DisplayName name={title} class="truncate" />
 		</Item.Title>
 		{@render description?.()}
 	</Item.Content>
@@ -57,14 +61,17 @@
 		<a href={avatarLink} class="rounded-l-2xl @max-[9rem]:hidden">
 			{@render avatar()}
 		</a>
-		<a href={link} class="content gap-0.5 p-4 ps-2 rounded-r-2xl @max-[9rem]:hidden!">
+		<a
+			href={link}
+			class="content gap-0.5 p-4 ps-2 rounded-r-2xl @max-[9rem]:hidden!"
+		>
 			{@render content()}
 		</a>
 		<a href={link} class="rounded-2xl @[9rem]:hidden min-w-24">
 			{@render avatar()}
 		</a>
 	{:else}
-		<a href={link} class="content gap-2.5 pe-4 rounded-2xl">
+		<a href={link} class="content gap-2.5 pe-4 rounded-2xl overflow-clip">
 			{@render avatar()}
 			{@render content()}
 		</a>
@@ -75,6 +82,6 @@
 	@reference "$layout";
 
 	.content {
-		@apply flex flex-1 self-stretch items-center min-w-0 ;
+		@apply flex flex-1 self-stretch items-center min-w-0;
 	}
 </style>

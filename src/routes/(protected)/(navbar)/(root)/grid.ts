@@ -8,6 +8,7 @@ export type FullGridProfile = {
 	distance: number | null;
 	profilePhotosHashes: string[] | null;
 	unread: number | null;
+	onlineUntil: number | null;
 	isFavorite: boolean;
 	hasChattedInLast24Hrs: boolean;
 };
@@ -36,6 +37,7 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				distance: profile.distanceMeters ?? null,
 				profilePhotosHashes: profile.photoMediaHashes,
 				unread: profile.unreadCount ?? null,
+				onlineUntil: profile.onlineUntil ?? null,
 				isFavorite: profile.isFavorite,
 				hasChattedInLast24Hrs: profile.hasChattedInLast24Hrs,
 			});
@@ -84,6 +86,7 @@ export async function resolvePartialBatch(
 			distance: profile.distance ?? null,
 			profilePhotosHashes: profile.medias?.map((m) => m.mediaHash) ?? null,
 			unread: null,
+			onlineUntil: profile.onlineUntil ?? null,
 			isFavorite: profile.isFavorite,
 			hasChattedInLast24Hrs:
 				profile.lastChatTimestamp !== null &&

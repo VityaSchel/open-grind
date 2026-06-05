@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { ChatIcon, StarIcon } from "phosphor-svelte";
 	import type { Snippet } from "svelte";
 
 	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
+	import OnlineDot from "$lib/components/OnlineDot.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
 
@@ -11,6 +13,9 @@
 		age = null,
 		distance = null,
 		unread = null,
+		onlineUntil = null,
+		isFavorite = false,
+		hadRecentChat = false,
 		href = null,
 		class: className,
 		overlay,
@@ -20,6 +25,9 @@
 		age?: number | null;
 		distance?: number | null;
 		unread?: number | null;
+		onlineUntil?: number | null;
+		isFavorite?: boolean;
+		hadRecentChat?: boolean;
 		href?: string | null;
 		class?: import("svelte/elements").ClassValue;
 		overlay?: Snippet;
@@ -35,28 +43,44 @@
 			<DistanceFormatted {distance} />
 		</span>
 	{/if}
-	{#if displayName !== null || age !== null || (unread ?? 0) > 0}
-		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
-			{#if displayName !== null || age !== null}
-				<Badge
-					variant="outline"
-					class="min-w-0 max-w-full shrink gap-0 bg-popover/20 backdrop-blur-2xl"
-				>
-					{#if displayName !== null}
-						<span class="block shrink truncate font-semibold"
-							>{displayName}</span
-						>
-					{/if}
-					{#if displayName !== null && age !== null}
-						,&nbsp;
-					{/if}
-					{#if age !== null}
-						<span class="line-clamp-1 block max-w-full shrink-0 truncate">
-							{age}
-						</span>
-					{/if}
-				</Badge>
+	{#if isFavorite || hadRecentChat}
+		<div
+			class="absolute top-2 inset-s-2 z-1 flex w-1/6 flex-col items-center gap-1"
+		>
+			{#if isFavorite}
+				<div class="badge">
+					<StarIcon weight="fill" class="m-auto size-4/6 text-yellow-500" />
+				</div>
 			{/if}
+			{#if hadRecentChat}
+				<div class="badge">
+					<ChatIcon
+						weight="fill"
+						class="m-auto size-3/5 -translate-y-px text-sky-400"
+					/>
+				</div>
+			{/if}
+		</div>
+	{/if}
+	{#if displayName !== null || age !== null}
+		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
+			<Badge
+				variant="outline"
+				class="min-w-0 max-w-full shrink gap-0 bg-popover/20 backdrop-blur-2xl"
+			>
+				<OnlineDot {onlineUntil} class="me-1" />
+				{#if displayName !== null}
+					<span class="block shrink truncate font-semibold">{displayName}</span>
+				{/if}
+				{#if displayName !== null && age !== null}
+					,&nbsp;
+				{/if}
+				{#if age !== null}
+					<span class="line-clamp-1 block max-w-full shrink-0 truncate">
+						{age}
+					</span>
+				{/if}
+			</Badge>
 			{#if unread !== null && unread > 0}
 				<span
 					class="flex size-5 shrink-0 items-center justify-center rounded-full border border-black/20 bg-primary text-[11px] font-semibold text-primary-foreground"
@@ -87,3 +111,11 @@
 		{@render content()}
 	</div>
 {/if}
+
+<style lang="postcss">
+	@reference "$layout";
+
+	.badge {
+		@apply flex aspect-square h-auto w-full rounded-full border border-white/10 bg-popover/40 backdrop-blur-2xl;
+	}
+</style>

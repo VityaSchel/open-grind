@@ -16,6 +16,7 @@
 <ProfileItem
 	avatarMediaHash={tap.profileImageMediaHash}
 	title={tap.displayName}
+	onlineUntil={tap.onlineUntil}
 	link="/profile/{tap.profileId}"
 >
 	{#snippet description()}
@@ -26,7 +27,7 @@
 		{/if}
 	{/snippet}
 	{#snippet actions()}
-		<Item.Actions class="flex flex-col items-end gap-1 min-w-0">
+		<Item.Actions class="flex flex-col items-end gap-1 min-w-6 @max-[9rem]:hidden">
 			<span
 				class="text-muted-foreground font-medium text-right truncate max-w-full"
 			>

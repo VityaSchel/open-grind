@@ -22,4 +22,5 @@
 	alt={`${tapTypes[tapType]} emoji`}
 	width="24"
 	height="24"
+	class="shrink-0"
 />

@@ -101,6 +101,7 @@
 					displayName={item.displayName}
 					distance={item.distance}
 					unread={item.unread}
+					onlineUntil={item.onlineUntil}
 					isFavorite={item.isFavorite}
 					hadRecentChat={item.hasChattedInLast24Hrs}
 					medias={item.profilePhotosHashes?.map((mediaHash) => ({
