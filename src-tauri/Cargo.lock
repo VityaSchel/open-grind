@@ -3325,7 +3325,7 @@ dependencies = [
 
 [[package]]
 name = "open-grind"
-version = "0.1.0-alpha.5"
+version = "0.1.0-beta.1"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",
