@@ -82,7 +82,7 @@
 								onRefresh={reset}
 							/>
 						{:else}
-							<ApiErrorDisplay {error} class="m-auto" />
+							<ApiErrorDisplay {error} onRetry={reset} class="m-auto" />
 						{/if}
 					</div>
 				{/snippet}

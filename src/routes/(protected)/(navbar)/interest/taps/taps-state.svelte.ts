@@ -71,6 +71,10 @@ export class TapsState {
 		this.visibleCount += PAGE_SIZE;
 	}
 
+	retry(): void {
+		this.#initial = this.#initialLoad();
+	}
+
 	#upsert(tap: TapProfile): void {
 		const existing = this.#all.findIndex((t) => t.profileId === tap.profileId);
 		if (existing !== -1) this.#all.splice(existing, 1);

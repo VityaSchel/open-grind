@@ -41,7 +41,11 @@
 		{/each}
 	{:else if taps.error}
 		<div class="flex-1 flex">
-			<ApiErrorDisplay error={taps.error} class="m-auto" />
+			<ApiErrorDisplay
+				error={taps.error}
+				onRetry={() => taps.retry()}
+				class="m-auto"
+			/>
 		</div>
 	{:else}
 		{#each taps.taps as tap (tap.profileId)}

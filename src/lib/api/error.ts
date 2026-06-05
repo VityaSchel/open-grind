@@ -42,10 +42,25 @@ export function copyError(error: unknown) {
 export function showErrorToast({
 	label = "An error occured",
 	error,
+	onRetry,
 }: {
 	label?: string;
 	error: unknown;
+	onRetry?: () => void;
 }) {
+	if (onRetry && error instanceof ApiError && error.retryable) {
+		toast.error(label, {
+			action: {
+				label: "Retry",
+				onClick: onRetry,
+			},
+			cancel: {
+				label: "Copy details",
+				onClick: () => copyError(error),
+			},
+		});
+		return;
+	}
 	toast.error(label, {
 		action: {
 			label: "Copy details",

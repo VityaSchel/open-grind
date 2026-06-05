@@ -102,7 +102,11 @@
 			/>
 		{/each}
 	{:else if conversationState.error}
-		<ApiErrorDisplay error={conversationState.error} class="m-auto" />
+		<ApiErrorDisplay
+			error={conversationState.error}
+			onRetry={() => conversationState.retry()}
+			class="m-auto"
+		/>
 	{:else}
 		{#if conversationState.loadingMore}
 			<Spinner class="mt-25 shrink-0 self-center" />

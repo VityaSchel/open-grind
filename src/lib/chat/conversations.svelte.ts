@@ -35,7 +35,7 @@ class ConversationsState {
 	nextPage = $state<number | null>(null);
 	loadingMore = $state(false);
 	inboxLastViewedAt = $state(0);
-	initial: Promise<void>;
+	initial: Promise<void> = $state(Promise.resolve());
 	listScrollY = 0;
 
 	readonly ourProfileId: number;
@@ -138,6 +138,13 @@ class ConversationsState {
 		const result = await getConversations(page);
 		this.entries.push(...result.entries);
 		this.nextPage = result.nextPage;
+	}
+
+	retry(): void {
+		if (this.#destroyed) return;
+		this.entries = [];
+		this.nextPage = null;
+		this.initial = this.#load(1);
 	}
 
 	async loadMore(): Promise<void> {

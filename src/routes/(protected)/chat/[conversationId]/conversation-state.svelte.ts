@@ -177,6 +177,11 @@ export class ConversationState {
 		}
 	}
 
+	retry(): void {
+		if (this.#destroyed) return;
+		void this.#initialLoad();
+	}
+
 	async #initialLoad(): Promise<void> {
 		const cached = this.#conversations.getCachedConversation(
 			this.conversationId,

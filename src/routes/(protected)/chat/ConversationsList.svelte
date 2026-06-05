@@ -90,7 +90,11 @@
 		{/if}
 	{:catch error}
 		<div class="flex-1 flex">
-			<ApiErrorDisplay {error} class="m-auto" />
+			<ApiErrorDisplay
+				{error}
+				onRetry={() => conversations.retry()}
+				class="m-auto"
+			/>
 		</div>
 	{/await}
 </div>

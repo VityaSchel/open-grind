@@ -41,7 +41,11 @@
 		</div>
 	{:else if views.error}
 		<div class="flex flex-1">
-			<ApiErrorDisplay error={views.error} class="m-auto" />
+			<ApiErrorDisplay
+				error={views.error}
+				onRetry={() => views.retry()}
+				class="m-auto"
+			/>
 		</div>
 	{:else if views.views.length === 0}
 		<EmptyViewsGrid />

@@ -3,7 +3,6 @@
 	import { onMount } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import { Button } from "$lib/components/ui/button";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import { gridState } from "./grid-state.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
@@ -88,10 +87,11 @@
 		{/each}
 	{:else if gridState.error}
 		<div class="p-4 flex col-span-full">
-			<div class="m-auto flex flex-col items-center gap-2">
-				<ApiErrorDisplay error={gridState.error} />
-				<Button onclick={() => gridState.refresh()}>Retry</Button>
-			</div>
+			<ApiErrorDisplay
+				error={gridState.error}
+				onRetry={() => gridState.refresh()}
+				class="m-auto"
+			/>
 		</div>
 	{:else}
 		{#each gridProfiles as item (item.id)}
