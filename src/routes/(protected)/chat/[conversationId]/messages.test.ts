@@ -14,6 +14,10 @@ const baseMessage = {
 	reactions: [],
 };
 
+function localDayStart(timestamp: number): number {
+	return new Date(timestamp).setHours(0, 0, 0, 0);
+}
+
 describe("getStackedMessages", () => {
 	it("groups adjacent messages from the same sender within the same minute", () => {
 		const messages = getStackedMessages({
@@ -53,44 +57,52 @@ describe("getStackedMessages", () => {
 });
 
 describe("groupMessagesByDate", () => {
-	it("marks the first rendered message of each day", () => {
+	it("marks the oldest message shown for each day", () => {
+		const newestTs = Date.UTC(2026, 5, 5, 12, 0, 0);
+		const olderSameDayTs = Date.UTC(2026, 5, 5, 8, 30, 0);
+		const previousDayTs = Date.UTC(2026, 5, 4, 12, 15, 0);
+
 		const messages = groupMessagesByDate({
 			messages: [
 				{
 					...baseMessage,
 					messageId: "newest",
 					senderId: 1,
-					timestamp: Date.UTC(2026, 5, 5, 12, 0, 0),
+					timestamp: newestTs,
 				},
 				{
 					...baseMessage,
 					messageId: "older-same-day",
 					senderId: 2,
-					timestamp: Date.UTC(2026, 5, 5, 8, 30, 0),
+					timestamp: olderSameDayTs,
 				},
 				{
 					...baseMessage,
 					messageId: "previous-day",
 					senderId: 2,
-					timestamp: Date.UTC(2026, 5, 4, 23, 45, 0),
+					timestamp: previousDayTs,
 				},
 			],
 		});
 
-		expect(messages.find((message) => message.messageId === "newest")?.dayStart).toBe(
-			Date.UTC(2026, 5, 5, 0, 0, 0),
-		);
 		expect(
 			messages.find((message) => message.messageId === "older-same-day")?.dayStart,
-		).toBeUndefined();
+		).toBe(localDayStart(olderSameDayTs));
+		expect(messages.find((message) => message.messageId === "newest")?.dayStart).toBe(
+			undefined,
+		);
 		expect(
 			messages.find((message) => message.messageId === "previous-day")?.dayStart,
-		).toBe(Date.UTC(2026, 5, 4, 0, 0, 0));
+		).toBe(localDayStart(previousDayTs));
 	});
 });
 
 describe("processMessages", () => {
 	it("combines stacking and date grouping in one pass", () => {
+		const firstTs = Date.UTC(2026, 5, 5, 9, 0, 20);
+		const secondTs = Date.UTC(2026, 5, 5, 9, 0, 5);
+		const thirdTs = Date.UTC(2026, 5, 4, 12, 15, 0);
+
 		const messages = processMessages({
 			ourProfileId: 7,
 			messages: [
@@ -98,19 +110,19 @@ describe("processMessages", () => {
 					...baseMessage,
 					messageId: "1",
 					senderId: 7,
-					timestamp: Date.UTC(2026, 5, 5, 9, 0, 20),
+					timestamp: firstTs,
 				},
 				{
 					...baseMessage,
 					messageId: "2",
 					senderId: 7,
-					timestamp: Date.UTC(2026, 5, 5, 9, 0, 5),
+					timestamp: secondTs,
 				},
 				{
 					...baseMessage,
 					messageId: "3",
 					senderId: 9,
-					timestamp: Date.UTC(2026, 5, 4, 22, 15, 0),
+					timestamp: thirdTs,
 				},
 			],
 		});
@@ -119,13 +131,16 @@ describe("processMessages", () => {
 			messageId: "1",
 			indexInStack: 1,
 			stackLength: 2,
-			dayStart: Date.UTC(2026, 5, 5, 0, 0, 0),
+		});
+		expect(messages[1]).toMatchObject({
+			messageId: "2",
+			dayStart: localDayStart(secondTs),
 		});
 		expect(messages[2]).toMatchObject({
 			messageId: "3",
 			indexInStack: 0,
 			stackLength: 1,
-			dayStart: Date.UTC(2026, 5, 4, 0, 0, 0),
+			dayStart: localDayStart(thirdTs),
 		});
 	});
 });

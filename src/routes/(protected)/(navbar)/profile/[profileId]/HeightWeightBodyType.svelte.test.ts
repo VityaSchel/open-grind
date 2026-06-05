@@ -1,4 +1,6 @@
-import { render, screen } from "@testing-library/svelte";
+// @vitest-environment jsdom
+
+import { render } from "@testing-library/svelte";
 import { describe, expect, it } from "vitest";
 
 import { BodyType } from "$lib/model/profile";
@@ -6,7 +8,7 @@ import HeightWeightBodyType from "./HeightWeightBodyType.svelte";
 
 describe("HeightWeightBodyType", () => {
 	it("renders height, weight, and body type together", () => {
-		render(HeightWeightBodyType, {
+		const { container } = render(HeightWeightBodyType, {
 			props: {
 				height: 180,
 				weight: 90_000,
@@ -14,9 +16,9 @@ describe("HeightWeightBodyType", () => {
 			},
 		});
 
-		expect(screen.getByText("180 cm")).toBeDefined();
-		expect(screen.getByText("90 kg")).toBeDefined();
-		expect(screen.getByText("Average")).toBeDefined();
+		expect(container.textContent).toContain("180 cm");
+		expect(container.textContent).toContain("90 kg");
+		expect(container.textContent).toContain("Average");
 	});
 
 	it("renders nothing when all values are missing", () => {
@@ -28,6 +30,6 @@ describe("HeightWeightBodyType", () => {
 			},
 		});
 
-		expect(container.innerHTML).toBe("");
+		expect(container.textContent).toBe("");
 	});
 });

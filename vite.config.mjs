@@ -8,6 +8,11 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(async () => ({
 	plugins: [sveltekit(), tailwindcss()],
+	resolve: process.env.VITEST
+		? {
+				conditions: ["browser"],
+			}
+		: undefined,
 
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
@@ -32,8 +37,7 @@ export default defineConfig(async () => ({
 	},
 
 	test: {
-		environment: "node",
-		environmentMatchGlobs: [["src/**/*.svelte.test.ts", "jsdom"]],
+		environment: "jsdom",
 		include: ["src/**/*.test.ts"],
 	},
 }));
