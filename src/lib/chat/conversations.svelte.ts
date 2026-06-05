@@ -57,13 +57,13 @@ class ConversationsState {
 			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
 				if (this.#destroyed) return;
 				const message = event.payload;
+				const isActive =
+					message.conversationId === this.#activeConversationId;
 				const entry = this.entries.find(
 					(entry) => entry.data.conversationId === message.conversationId,
 				);
 				const isIncoming = message.senderId !== this.ourProfileId;
 				if (entry) {
-					const isActive =
-						message.conversationId === this.#activeConversationId;
 					if (!isActive && isIncoming) {
 						entry.data.unreadCount += 1;
 						this.#showIncomingMessageToast(message, entry.data.name);
@@ -77,7 +77,7 @@ class ConversationsState {
 						timestamp: message.timestamp,
 					});
 				} else {
-					if (isIncoming) {
+					if (!isActive && isIncoming) {
 						this.#showIncomingMessageToast(message, null);
 					}
 					void this.ensureLoaded(message.conversationId);
