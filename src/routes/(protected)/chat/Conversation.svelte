@@ -25,7 +25,7 @@
 	active={selected}
 	avatarMediaHash={participant.primaryMediaHash ?? null}
 	title={conversation.data.name}
-	onlineUntil={conversation.data.onlineUntil}
+	onlineUntil={conversation.data.onlineUntil ?? participant.onlineUntil}
 	link="/chat/{conversation.data.conversationId}"
 	avatarLink="/profile/{participant.profileId}"
 >

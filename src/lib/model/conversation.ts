@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { mediaHashPublicSchema } from "$lib/model/media";
+import { sexualPositionSchema } from "$lib/model/profile";
 import { rightNowStatusSchema } from "$lib/model/right-now";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
@@ -14,6 +15,12 @@ export const fullConversationSchema = z.object({
 				z.object({
 					profileId: z.number(),
 					primaryMediaHash: mediaHashPublicSchema.nullable(),
+					lastOnline: unixTimestampMsSchema.nullable(),
+					onlineUntil: unixTimestampMsSchema.nullable(),
+					distanceMetres: z.number().nullable(),
+					position: sexualPositionSchema.nullable(), // SexualPositionId
+					isInAList: z.boolean(),
+					hasDatingPotential: z.boolean(),
 				}),
 			)
 			.length(1),
