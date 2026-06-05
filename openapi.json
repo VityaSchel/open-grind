@@ -12141,7 +12141,8 @@
 						"description": "string or `null`, see [Media -> Public CDN files](/grindr-api/media/public-cdn-files)"
 					},
 					"lastOnline": {
-						"description": "unix timestamp in milliseconds",
+						"nullable": true,
+						"description": "unix timestamp in milliseconds or `null`",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -12324,7 +12325,8 @@
 						"nullable": true
 					},
 					"onlineUntil": {
-						"nullable": true
+						"nullable": true,
+						"description": "`null` on the conversation; use [ConversationParticipant](/grindr-api/messaging/conversations#conversationparticipant)'s `onlineUntil` instead."
 					},
 					"translatable": {
 						"type": "boolean"
