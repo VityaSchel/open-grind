@@ -5,8 +5,8 @@
 	import RelativeTimeDynamic from "$lib/components/RelativeTimeDynamic.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Item from "$lib/components/ui/item";
-	import type { Conversation } from "$lib/model/conversation";
 	import { previewLabel } from "$lib/model/message";
+	import type { Conversation } from "$lib/model/conversation";
 
 	let {
 		conversation,
