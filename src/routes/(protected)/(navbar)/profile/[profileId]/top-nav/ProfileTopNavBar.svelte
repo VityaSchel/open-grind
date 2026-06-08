@@ -1,4 +1,5 @@
 <script lang="ts">
+	import EditProfileButton from "./EditProfileButton.svelte";
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
 	import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
@@ -19,7 +20,9 @@
 <nav
 	class="absolute -translate-y-1/2 right-2 flex flex-row-reverse items-center gap-1.5"
 >
-	{#if !isOurProfile}
+	{#if isOurProfile}
+		<EditProfileButton />
+	{:else}
 		<FavoriteProfileToggle {profileId} isFavorite={profile.isFavorite} />
 		<ProfileActionsMenu {profileId} {onBlocked}  />
 	{/if}

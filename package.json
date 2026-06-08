@@ -55,6 +55,7 @@
 		"@types/lodash-es": "^4.17.12",
 		"bits-ui": "^2.18.1",
 		"clsx": "^2.1.1",
+		"embla-carousel-svelte": "^8.6.0",
 		"eslint": "^10.3.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-perfectionist": "^5.9.0",

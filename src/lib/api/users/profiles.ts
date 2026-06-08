@@ -4,10 +4,12 @@ import { fetchRest } from "$lib/api";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import {
+	genderSchema,
 	type Profile,
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
+	pronounSchema,
 } from "$lib/model/profile";
 
 function isProbablyBlocked(profile: Profile) {
@@ -145,6 +147,130 @@ export async function getMyProfile() {
 export function clearProfileCaches() {
 	myProfileCache = null;
 	profilesCache.clear();
+}
+
+export type ProfileEdit = Partial<
+	Pick<
+		Profile,
+		| "displayName"
+		| "age"
+		| "showAge"
+		| "showDistance"
+		| "aboutMe"
+		| "ethnicity"
+		| "relationshipStatus"
+		| "bodyType"
+		| "hivStatus"
+		| "sexualPosition"
+		| "nsfw"
+		| "showTribes"
+		| "showPosition"
+		| "grindrTribes"
+		| "tribesImInto"
+		| "lookingFor"
+		| "meetAt"
+		| "vaccines"
+		| "sexualHealth"
+		| "genders"
+		| "pronouns"
+		| "lastTestedDate"
+		| "socialNetworks"
+		| "height"
+		| "weight"
+	>
+>;
+
+export function applyProfileEdit(base: Profile, patch: ProfileEdit): Profile {
+	const merged = { ...base, ...patch };
+	if (patch.socialNetworks) {
+		merged.socialNetworks = { ...base.socialNetworks, ...patch.socialNetworks };
+	}
+	return merged;
+}
+
+function mergeProfileEditIntoCaches(
+	cacheProfileId: number,
+	patch: ProfileEdit,
+) {
+	const cached = profilesCache.get(cacheProfileId);
+	if (cached) {
+		profilesCache.set(cacheProfileId, {
+			profile: applyProfileEdit(cached.profile, patch),
+			updatedAt: Date.now(),
+		});
+	}
+	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
+		const next: Record<string, unknown> = { ...myProfileCache.profile };
+		for (const key of Object.keys(patch)) {
+			if (key in next) next[key] = patch[key as keyof ProfileEdit];
+		}
+		myProfileCache = {
+			profile: next as typeof myProfileCache.profile,
+			updatedAt: Date.now(),
+		};
+	}
+}
+
+export async function patchOwnProfile(
+	cacheProfileId: number,
+	patch: ProfileEdit,
+) {
+	const res = await fetchRest("/v4/me/profile", {
+		method: "PATCH",
+		body: patch,
+	});
+	res.assertOk();
+	mergeProfileEditIntoCaches(cacheProfileId, patch);
+}
+
+export async function deleteProfilePhotos(
+	cacheProfileId: number,
+	mediaHashes: string[],
+) {
+	if (mediaHashes.length === 0) return;
+	const res = await fetchRest("/v3/me/profile/images", {
+		method: "DELETE",
+		body: { media_hashes: mediaHashes },
+	});
+	res.assertOk();
+	const removed = new Set(mediaHashes);
+	const cached = profilesCache.get(cacheProfileId);
+	if (cached) {
+		profilesCache.set(cacheProfileId, {
+			profile: {
+				...cached.profile,
+				medias: cached.profile.medias.filter((m) => !removed.has(m.mediaHash)),
+			},
+			updatedAt: Date.now(),
+		});
+	}
+	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
+		myProfileCache = {
+			profile: {
+				...myProfileCache.profile,
+				medias: myProfileCache.profile.medias.filter(
+					(m) => !removed.has(m.mediaHash),
+				),
+			},
+			updatedAt: Date.now(),
+		};
+	}
+}
+
+const gendersResponseSchema = z.array(genderSchema);
+
+export async function getGenders() {
+	return await fetchRest("/public/v2/genders").then((res) =>
+		res.jsonParsed(gendersResponseSchema),
+	);
+}
+
+const pronounsResponseSchema = z.array(pronounSchema);
+
+export async function getPronouns() {
+	return await fetchRest("/v1/pronouns").then((res) =>
+		res.jsonParsed(pronounsResponseSchema),
+	);
 }
 
 export async function getProfileUploadedPhotos() {
