@@ -251,6 +251,25 @@ export const vaccinesSchema = z.enum(Vaccine);
 
 export type VaccineId = z.infer<typeof vaccinesSchema>;
 
+export const genderSchema = z.object({
+	genderId: z.number().int(),
+	gender: z.string(),
+	displayGroup: z.number().int().optional(),
+	sortProfile: z.number().int().nullable().optional(),
+	genderPlural: z.string().nullable().optional(),
+	excludeOnProfileSelection: z.array(z.number().int()).nullable().optional(),
+	alsoClassifiedAs: z.array(z.number().int()).optional(),
+});
+
+export type Gender = z.infer<typeof genderSchema>;
+
+export const pronounSchema = z.object({
+	pronounId: z.number().int(),
+	pronoun: z.string(),
+});
+
+export type Pronoun = z.infer<typeof pronounSchema>;
+
 export const socialNetworksSchema = z.object({
 	twitter: z
 		.object({

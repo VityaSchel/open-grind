@@ -119,19 +119,19 @@ export class ConversationState {
 					? result.messages[result.messages.length - 1].timestamp
 					: Number.POSITIVE_INFINITY;
 
-			const next: OptimisticMessage[] = [];
+			const newValue: OptimisticMessage[] = [];
 			const seenLocalIds = new Set<string>();
 			let dropped = 0;
 			let updated = 0;
 			for (const local of this.messages) {
 				if (local.status !== "sent") {
-					next.push(local);
+					newValue.push(local);
 					continue;
 				}
 				seenLocalIds.add(local.messageId);
 				const serverVersion = serverById.get(local.messageId);
 				if (serverVersion) {
-					next.push({ ...serverVersion, status: "sent" as const });
+					newValue.push({ ...serverVersion, status: "sent" as const });
 					if (
 						serverVersion.unsent !== local.unsent ||
 						serverVersion.type !== local.type ||
@@ -141,7 +141,7 @@ export class ConversationState {
 						updated++;
 					}
 				} else if (local.timestamp < oldestServerTs) {
-					next.push(local);
+					newValue.push(local);
 				} else {
 					dropped++;
 				}
@@ -151,7 +151,7 @@ export class ConversationState {
 			for (const sv of result.messages) {
 				if (seenLocalIds.has(sv.messageId)) continue;
 				const msg: OptimisticMessage = { ...sv, status: "sent" as const };
-				next.push(msg);
+				newValue.push(msg);
 				fresh.push(msg);
 			}
 
@@ -160,7 +160,7 @@ export class ConversationState {
 				return;
 			}
 
-			this.messages = removeDuplicateMessages(next);
+			this.messages = removeDuplicateMessages(newValue);
 			this.#updatePreview(this.messages.at(0));
 			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
