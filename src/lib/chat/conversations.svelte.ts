@@ -59,10 +59,10 @@ class ConversationsState {
 				const message = event.payload;
 				const isActive =
 					message.conversationId === this.#activeConversationId;
+				const isIncoming = message.senderId !== this.ourProfileId;
 				const entry = this.entries.find(
 					(entry) => entry.data.conversationId === message.conversationId,
 				);
-				const isIncoming = message.senderId !== this.ourProfileId;
 				if (entry) {
 					if (!isActive && isIncoming) {
 						entry.data.unreadCount += 1;
@@ -78,9 +78,19 @@ class ConversationsState {
 					});
 				} else {
 					if (!isActive && isIncoming) {
-						this.#showIncomingMessageToast(message, null);
+						void this.ensureLoaded(message.conversationId).then(() => {
+							const conversation = this.entries.find(
+								(entry) =>
+									entry.data.conversationId === message.conversationId,
+							);
+							this.#showIncomingMessageToast(
+								message,
+								conversation?.data.name ?? null,
+							);
+						});
+					} else {
+						void this.ensureLoaded(message.conversationId);
 					}
-					void this.ensureLoaded(message.conversationId);
 				}
 			}),
 			ws.on(
@@ -263,6 +273,8 @@ class ConversationsState {
 			{
 				description,
 				id: `incoming-message:${message.messageId}`,
+				position: "top-center",
+				class: "!bg-background !text-foreground border-border border shadow-lg",
 			},
 		);
 	}
