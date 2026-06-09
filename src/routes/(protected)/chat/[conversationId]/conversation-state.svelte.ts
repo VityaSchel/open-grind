@@ -7,7 +7,11 @@ import {
 	previewFromMessage,
 } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
-import { chatV1MessageSentEventSchema, ws } from "$lib/ws.svelte";
+import {
+	chatV1ConversationReadEventSchema,
+	chatV1MessageSentEventSchema,
+	ws,
+} from "$lib/ws.svelte";
 import type { ConversationsState } from "$lib/chat/conversations.svelte";
 import type {
 	ApiResponseMessage,
@@ -58,10 +62,8 @@ export class ConversationState {
 			this.#reconcileMessages(),
 		);
 
-		this.#unlistenWs = ws.on(
-			"chat.v1.message_sent",
-			chatV1MessageSentEventSchema,
-			(event) => {
+		this.#wsPromises.push(
+			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
 				if (this.#destroyed) return;
 				if (event.payload.conversationId !== this.conversationId) return;
 				if (event.payload.senderId === this.ourProfileId) {
@@ -87,18 +89,37 @@ export class ConversationState {
 					messageId: msg.messageId,
 					timestamp: msg.timestamp,
 				});
-			},
+			}),
+			ws.on(
+				"chat.v1.conversation_read",
+				chatV1ConversationReadEventSchema,
+				(event) => {
+					if (this.#destroyed) return;
+					if (event.payload.conversationId !== this.conversationId) return;
+					if (event.payload.profileId === this.ourProfileId) return;
+					if (
+						this.lastReadTimestamp === null ||
+						event.payload.timestamp > this.lastReadTimestamp
+					) {
+						this.lastReadTimestamp = event.payload.timestamp;
+						this.#syncCache();
+					}
+				},
+			),
 		);
 	}
 
-	#unlistenWs: Promise<() => void>;
+	#wsPromises: Promise<() => void>[] = [];
 
 	#destroyed = false;
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#conversations.clearActive(this.conversationId);
-		this.#unlistenWs.then((unlisten) => unlisten()).catch(console.error);
+		for (const promise of this.#wsPromises) {
+			promise.then((unlisten) => unlisten()).catch(console.error);
+		}
+		this.#wsPromises = [];
 		this.#unsubscribeReconcile();
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
 	}

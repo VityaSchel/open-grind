@@ -27,6 +27,16 @@ export const chatV1ConversationDeleteEventSchema =
 		}),
 	});
 
+export const chatV1ConversationReadEventSchema =
+	notificationEventSchema.safeExtend({
+		type: z.literal("chat.v1.conversation_read"),
+		payload: z.object({
+			conversationId: z.string(),
+			profileId: z.coerce.number(),
+			timestamp: unixTimestampMsSchema,
+		}),
+	});
+
 export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
 	type: z.literal("tap.v1.tap_sent"),
 	payload: z.object({
@@ -64,6 +74,9 @@ export type ViewedMeV1NewViewReceivedEventPayload = z.infer<
 >;
 export type ChatV1ConversationDeleteEventPayload = z.infer<
 	typeof chatV1ConversationDeleteEventSchema
+>;
+export type ChatV1ConversationReadEventPayload = z.infer<
+	typeof chatV1ConversationReadEventSchema
 >;
 
 export type WsStatus = "disconnected" | "connecting" | "connected" | "error";

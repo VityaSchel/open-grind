@@ -43,19 +43,49 @@ Conversation deleted, e.g. when another profile blocked you. Also fires for unbl
 - `payload` — object
   - `conversationIds` — array of [Conversation ID](/grindr-api/messaging/conversations#conversation-id)
 
-## `chat.v1.message.ack`
+## `chat.v1.conversation_read`
 
-WIP
+Display read receipt. Sent to all chat participants including yourself reading from another device, check `profileId` to distinguish.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `conversationId` — [Conversation ID](/grindr-api/messaging/conversations#conversation-id)
+  - `profileId` — id of the participant who performed the read, sent as a string
+  - `timestamp` — unix timestamp in milliseconds; all messages up to and including this time are read by `profileId`
+
+## `chat.v1.message_deleted`
+
+Message deleted.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — WIP
+
+## `chat.v1.conversation.update`
+
+Conversation metadata changed.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `conversationIds` — array of [Conversation ID](/grindr-api/messaging/conversations#conversation-id)
+
+## `chat.v1.typing_status`
+
+Typing indicator changed.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — object
+  - `conversationId` — [Conversation ID](/grindr-api/messaging/conversations#conversation-id)
+  - `profileId` — id of the participant whose typing status changed
+  - `status` — one of `Typing`, `Cleared`, `Sent`
+
+## `chat.v1.cache_bomb.inbox`
+
+Signals the client to refresh its inbox.
+
+- *everything from [Notification Event](#notification-event)*
+- `payload` — WIP
 
 ## `notification.undelivered`
-
-WIP
-
-## `chat.v1.typing.start`
-
-WIP
-
-## `chat.v1.typing.stop`
 
 WIP
 
