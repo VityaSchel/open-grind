@@ -155,7 +155,7 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 	{ text: "Warnings, WIP", link: "/grindr-api/warnings" },
 	{ text: "Logging, WIP", link: "/grindr-api/logging" },
 	{ text: "Rewarded chats, WIP", link: "/grindr-api/rewarded-chats" },
-	{ text: "Rewarded ads, WIP", link: "/grindr-api/rewarded-ads" },
+	{ text: "Rewarded ads", link: "/grindr-api/rewarded-ads" },
 	{ text: "Boosting, WIP", link: "/grindr-api/boosting" },
 	{ text: "GIFs, WIP", link: "/grindr-api/gifs" },
 	{ text: "Access requests, WIP", link: "/grindr-api/access-requests" },
