@@ -109,8 +109,7 @@
 			"x-wip": true
 		},
 		{
-			"name": "rewarded-ads",
-			"x-wip": true
+			"name": "rewarded-ads"
 		},
 		{
 			"name": "rewarded-chats",
@@ -1958,17 +1957,51 @@
 					"rewarded-ads"
 				],
 				"operationId": "updateRewardedAdConsumption",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Report rewarded ad consumption",
+				"description": "Reports status of a rewarded ad watch. Send `STARTED` when the ad begins and `COMPLETED` when it finishes. A `COMPLETED` report grants the reward identified by `type` (e.g. `READ_RECEIPTS`).",
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"source",
+									"status",
+									"type",
+									"adId"
 								],
-								"x-original-type": "RewardedAdStatusRequest"
+								"properties": {
+									"source": {
+										"type": "string",
+										"description": "Ad mediation network that served the ad, e.g. `APPLOVIN`."
+									},
+									"status": {
+										"description": "Lifecycle status being reported.",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RewardedAdConsumptionStatus"
+											}
+										]
+									},
+									"type": {
+										"description": "Reward being consumed.",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RewardedAdType"
+											}
+										]
+									},
+									"adId": {
+										"type": "string",
+										"description": "Identifier of the ad instance, as reported by the ad SDK."
+									}
+								}
 							}
 						}
 					}
@@ -1977,8 +2010,7 @@
 					"200": {
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/rewarded-ads/rewards/restriction": {
@@ -1987,17 +2019,32 @@
 					"rewarded-ads"
 				],
 				"operationId": "updateRewardedAdRewardRestriction",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Restrict a rewarded ad reward",
+				"description": "Updates the restriction for the given rewarded ad reward `type`, sent by the client when a reward should no longer be offered.",
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"type"
 								],
-								"x-original-type": "RewardedAdRestrictionRequest"
+								"properties": {
+									"type": {
+										"description": "Reward to restrict.",
+										"allOf": [
+											{
+												"$ref": "#/components/schemas/RewardedAdType"
+											}
+										]
+									}
+								}
 							}
 						}
 					}
@@ -2006,8 +2053,7 @@
 					"200": {
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/rewarded-ads/rewards": {
@@ -2016,20 +2062,36 @@
 					"rewarded-ads"
 				],
 				"operationId": "getRewardedAdRewards",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "List rewarded ad rewards",
+				"description": "Returns the rewarded ad rewards available to the current user and their state. Watching an ad for an `ELIGIBLE` reward temporarily unlocks the corresponding feature (for example `READ_RECEIPTS`).",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RewardedAdApiResponse"
+									"type": "object",
+									"required": [
+										"rewards"
+									],
+									"properties": {
+										"rewards": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/RewardedAdReward"
+											}
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/{version}/rewarded-chats": {
@@ -7530,26 +7592,28 @@
 				}
 			}
 		},
-		"/v?/sessions/thirdparty": {
+		"/v8/sessions/thirdparty": {
 			"post": {
 				"tags": [
-					"settings/account"
+					"authentication"
 				],
 				"operationId": "loginThirdParty",
 				"summary": "Login via third party",
 				"x-wip": true,
-				"x-wip-note": "URL is dynamic and currently unknown.",
+				"description": "Single endpoint used for both **initial third-party sign-in** and **third-party session refresh**, distinguished by the request body shape (`oneOf`).\n\n**Google (vendor `2`):** the app obtains a Google *server auth code* on-device (`GoogleSignInOptions.requestServerAuthCode(...)`), exchanges it for a Google `access_token` via [Exchange Google auth code](#exchange-google-auth-code) (`POST /v3/users/thirdparty/exchange`), then sends that token here as `thirdPartyToken` (`ThirdPartyRequest`). **Facebook (vendor `1`)** sends its access token directly.\n\nWhen `registered` is `true`, `authenticationResponse` carries the session and the client stores `authToken`, `sessionId` (JWT), `profileId`, `thirdPartyUserId` and `thirdPartyUserIdToShow`. When `registered` is `false`, the identity has no account yet and the client continues to [Create third party account](#create-third-party-account).\n\n**Session refresh** reuses this same URL with `ThirdPartySessionRequest` (`{ thirdPartyUserId, authToken, geohash }`): the provider token is **not** re-sent — only the stable `thirdPartyUserId` and the rolling Grindr `authToken`. The response is the same `ThirdPartyAuthResponse`, yielding a fresh `sessionId` (JWT) and a rotated `authToken`.",
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
+								"oneOf": [
 									{
-										"$ref": "#/components/schemas/UndocumentedObject"
+										"$ref": "#/components/schemas/ThirdPartyRequest"
+									},
+									{
+										"$ref": "#/components/schemas/ThirdPartySessionRequest"
 									}
-								],
-								"x-original-type": "ThirdPartyRequest"
+								]
 							}
 						}
 					}
@@ -7559,47 +7623,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "ThirdPartyAuthResponse"
-								}
-							}
-						},
-						"description": "OK"
-					}
-				}
-			}
-		},
-		"/v?/sessions/thirdparty/session": {
-			"post": {
-				"tags": [
-					"settings/account"
-				],
-				"operationId": "loginThirdPartySession",
-				"summary": "Create third party session",
-				"x-wip": true,
-				"x-wip-note": "URL is dynamic and currently unknown.",
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "ThirdPartySessionRequest"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "ThirdPartyAuthResponse"
+									"$ref": "#/components/schemas/ThirdPartyAuthResponse"
 								}
 							}
 						},
@@ -7823,7 +7847,8 @@
 					}
 				},
 				"summary": "Create third party account",
-				"x-wip": true
+				"x-wip": true,
+				"description": "Creates a Grindr account for a third-party identity, used when [Login via third party](#login-via-third-party) returns `registered: false`. The endpoint version is chosen from the first-party reCAPTCHA [assignment](/grindr-api/analytics/assignments): reCAPTCHA disabled → `POST /v7/users/thirdparty` (this endpoint); reCAPTCHA enabled → `POST /v8/users/thirdparty`, or `POST /v8/dev/users/thirdparty` when a dummy captcha token is used. The body is `CreateThirdPartyAccountRequest` in all variants."
 			}
 		},
 		"/v3/users/forgot-password": {
@@ -7867,20 +7892,18 @@
 		"/v3/users/thirdparty/exchange": {
 			"post": {
 				"tags": [
-					"settings/account"
+					"authentication"
 				],
 				"operationId": "exchangeGoogleAccessToken",
+				"summary": "Exchange Google auth code",
+				"x-wip": true,
+				"description": "First step of the **Google** sign-in flow. The app sends the Google *server auth code* (`serverAuthCode` from the native Google Sign-In result, requested against server client id `1036042917246-68g7siev1clho9lhqevahao9hlbpvssf.apps.googleusercontent.com`). The backend holds the matching web-client secret, performs the authorization-code → token exchange with Google, and returns the Google OAuth tokens. The client keeps `access_token` and passes it as `thirdPartyToken` to [Login via third party](#login-via-third-party). Session refreshes do not repeat this step.",
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "GoogleAccessTokenRequest"
+								"$ref": "#/components/schemas/GoogleAccessTokenRequest"
 							}
 						}
 					}
@@ -7890,16 +7913,13 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "GoogleAccessTokenResponse"
+									"$ref": "#/components/schemas/GoogleAccessTokenResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"summary": "Exchange Google access token",
-				"x-wip": true
+				}
 			}
 		},
 		"/v4/sms/sessions": {
@@ -9983,6 +10003,180 @@
 					"sessionId",
 					"authToken"
 				]
+			},
+			"GoogleAccessTokenRequest": {
+				"type": "object",
+				"description": "Request body for [Exchange Google auth code](#exchange-google-auth-code) (`POST /v3/users/thirdparty/exchange`). Wraps the Google *server auth code* obtained on-device from native Google Sign-In.",
+				"properties": {
+					"code": {
+						"type": "string",
+						"description": "Google OAuth 2.0 server auth code (`serverAuthCode` from the Google Sign-In result)."
+					}
+				},
+				"required": [
+					"code"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"GoogleAccessTokenResponse": {
+				"type": "object",
+				"description": "Response from [Exchange Google auth code](#exchange-google-auth-code). Standard Google OAuth 2.0 token payload returned after the backend exchanges the server auth code. The client keeps only `access_token`, which it passes as `thirdPartyToken` to [Login via third party](#login-via-third-party).",
+				"properties": {
+					"access_token": {
+						"type": "string",
+						"description": "Google OAuth access token. Used as `thirdPartyToken` in `POST /v8/sessions/thirdparty`."
+					},
+					"token_type": {
+						"type": "string",
+						"description": "OAuth token type, e.g. `\"Bearer\"`."
+					},
+					"id_token": {
+						"type": "string",
+						"description": "Google OpenID Connect ID token (JWT)."
+					},
+					"expires_in": {
+						"type": "integer",
+						"format": "int64",
+						"description": "Access token lifetime in seconds."
+					}
+				},
+				"required": [
+					"access_token",
+					"token_type",
+					"id_token",
+					"expires_in"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"ThirdPartyRequest": {
+				"type": "object",
+				"description": "Request body for the **initial** [Login via third party](#login-via-third-party) (`POST /v8/sessions/thirdparty`). For Google, `thirdPartyToken` is the `access_token` from [Exchange Google auth code](#exchange-google-auth-code); for Facebook it is the Facebook access token.",
+				"properties": {
+					"thirdPartyVendor": {
+						"type": "integer",
+						"enum": [
+							1,
+							2
+						],
+						"description": "`1` — Facebook, `2` — Google",
+						"x-enum-labels": {
+							"1": "Facebook",
+							"2": "Google"
+						}
+					},
+					"thirdPartyToken": {
+						"type": "string",
+						"description": "Provider access token (Google `access_token` / Facebook token)."
+					},
+					"geohash": {
+						"nullable": true,
+						"description": "[geohash](/grindr-api/browse/location#geohash) string or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Geohash"
+							}
+						]
+					}
+				},
+				"required": [
+					"thirdPartyVendor",
+					"thirdPartyToken"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"ThirdPartySessionRequest": {
+				"type": "object",
+				"description": "Request body for **session refresh** via third party, sent to the same `POST /v8/sessions/thirdparty` endpoint as the initial login. Used once a `thirdPartyUserId` is stored (account created/logged in via Google or Facebook). The provider token is **not** re-sent — only the stable `thirdPartyUserId` plus the stored Grindr `authToken`.",
+				"properties": {
+					"thirdPartyUserId": {
+						"type": "string",
+						"description": "Stable provider user id from the previous login (`authenticationResponse.thirdPartyUserId`)."
+					},
+					"authToken": {
+						"type": "string",
+						"description": "Grindr `authToken` from the previous session (rotated on every refresh)."
+					},
+					"geohash": {
+						"nullable": true,
+						"description": "[geohash](/grindr-api/browse/location#geohash) string or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Geohash"
+							}
+						]
+					}
+				},
+				"required": [
+					"thirdPartyUserId",
+					"authToken"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"ThirdPartyAuthenticationResponse": {
+				"type": "object",
+				"description": "Session payload nested in `ThirdPartyAuthResponse.authenticationResponse`; present when `registered` is `true`. `sessionId` is the same JWT as in `AuthSessionResponse`.",
+				"properties": {
+					"profileId": {
+						"type": "string",
+						"pattern": "^[0-9]+$",
+						"description": "Account ID."
+					},
+					"sessionId": {
+						"$ref": "#/components/schemas/SessionId"
+					},
+					"authToken": {
+						"type": "string",
+						"description": "Auth token used for session refresh."
+					},
+					"thirdPartyUserId": {
+						"type": "string",
+						"description": "Stable provider user id; persisted and re-sent as `thirdPartyUserId` on refresh."
+					},
+					"thirdPartyUserIdToShow": {
+						"type": "string",
+						"description": "Display variant of the provider user id (e.g. email/handle)."
+					}
+				},
+				"required": [
+					"profileId",
+					"sessionId",
+					"authToken",
+					"thirdPartyUserId",
+					"thirdPartyUserIdToShow"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"ThirdPartyAuthResponse": {
+				"type": "object",
+				"description": "Response from [Login via third party](#login-via-third-party) and from third-party session refresh. When `registered` is `true`, `authenticationResponse` carries the session. When `registered` is `false`, no account is linked yet and the client proceeds to [Create third party account](#create-third-party-account) using `thirdPartyUserInfo`.",
+				"properties": {
+					"registered": {
+						"type": "boolean",
+						"description": "`true` if a Grindr account is already linked to this provider identity."
+					},
+					"thirdPartyUserInfo": {
+						"nullable": true,
+						"description": "Provider profile info used to pre-fill account creation when `registered` is `false`.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/UndocumentedObject"
+							}
+						]
+					},
+					"authenticationResponse": {
+						"nullable": true,
+						"description": "Session payload, present when `registered` is `true`.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ThirdPartyAuthenticationResponse"
+							}
+						]
+					}
+				},
+				"required": [
+					"registered"
+				],
+				"x-render-on-tag": "authentication"
 			},
 			"NotificationsAckRequest": {
 				"type": "object",
@@ -14948,6 +15142,114 @@
 			"MediaHash": {
 				"type": "string",
 				"description": "See [Media -> Public CDN files -> Profile Images](/grindr-api/media/public-cdn-files#profile-images)"
+			},
+			"RewardedAdType": {
+				"type": "string",
+				"enum": [
+					"LAST_VIEWED_ME_PROFILE",
+					"ADS_FREE_SESSION",
+					"READ_RECEIPTS",
+					"CASCADE_PROFILES_UNLOCK",
+					"TAPS_RECEIVED_UNLOCK"
+				],
+				"description": "Feature that can be temporarily unlocked by watching a rewarded ad.",
+				"x-enum-labels": {
+					"LAST_VIEWED_ME_PROFILE": "Reveal the most recent profile that viewed you",
+					"ADS_FREE_SESSION": "Temporarily remove ads",
+					"READ_RECEIPTS": "Temporarily enable message read receipts",
+					"CASCADE_PROFILES_UNLOCK": "Unlock additional cascade (grid) profiles",
+					"TAPS_RECEIVED_UNLOCK": "Reveal taps you have received"
+				},
+				"x-render-on-tag": "rewarded-ads",
+				"x-display-name": "Rewarded Ad Type"
+			},
+			"RewardedAdRewardStatus": {
+				"type": "string",
+				"enum": [
+					"ELIGIBLE",
+					"ACTIVE",
+					"EXHAUSTED"
+				],
+				"description": "Current state of a rewarded ad reward for the requesting user.",
+				"x-enum-labels": {
+					"ELIGIBLE": "The user may watch an ad to activate this reward",
+					"ACTIVE": "The reward is currently unlocked; see `remainingTime`",
+					"EXHAUSTED": "The reward has been used and is not currently available"
+				},
+				"x-render-on-tag": "rewarded-ads",
+				"x-display-name": "Rewarded Ad Reward Status"
+			},
+			"RewardedAdInterval": {
+				"type": "string",
+				"enum": [
+					"DAYS",
+					"HOURS",
+					"MINUTES"
+				],
+				"description": "Unit of time that `duration` is measured in.",
+				"x-render-on-tag": "rewarded-ads",
+				"x-display-name": "Rewarded Ad Interval"
+			},
+			"RewardedAdConsumptionStatus": {
+				"type": "string",
+				"enum": [
+					"STARTED",
+					"COMPLETED"
+				],
+				"description": "Lifecycle status reported while consuming a rewarded ad.",
+				"x-enum-labels": {
+					"STARTED": "The ad began playing",
+					"COMPLETED": "The ad finished and the reward should be granted"
+				},
+				"x-render-on-tag": "rewarded-ads",
+				"x-display-name": "Rewarded Ad Consumption Status"
+			},
+			"RewardedAdReward": {
+				"type": "object",
+				"description": "State of a single rewarded ad reward. All fields are nullable.",
+				"properties": {
+					"type": {
+						"description": "Feature this reward unlocks.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RewardedAdType"
+							}
+						]
+					},
+					"status": {
+						"description": "Current state of the reward.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RewardedAdRewardStatus"
+							}
+						]
+					},
+					"duration": {
+						"type": "integer",
+						"format": "int64",
+						"description": "Length of the unlock window, measured in `interval` units (e.g. `1` with interval `HOURS`)."
+					},
+					"interval": {
+						"description": "Unit for `duration`.",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RewardedAdInterval"
+							}
+						]
+					},
+					"remainingTime": {
+						"type": "integer",
+						"format": "int64",
+						"description": "Time remaining before an `ACTIVE` reward expires. `null` unless the reward is active."
+					},
+					"countdownTime": {
+						"type": "integer",
+						"format": "int64",
+						"description": "Time remaining before an `EXHAUSTED` reward becomes `ELIGIBLE` again. `null` unless applicable."
+					}
+				},
+				"x-render-on-tag": "rewarded-ads",
+				"x-display-name": "Rewarded Ad Reward"
 			}
 		}
 	},
