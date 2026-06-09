@@ -194,7 +194,14 @@
 							}
 							if (permissions.location === "granted") {
 								const pos = await getCurrentPosition();
-								map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+								map.setView(
+									[pos.coords.latitude, pos.coords.longitude],
+									Math.max(map.getZoom(), 16),
+								);
+								pinPos = {
+									lat: pos.coords.latitude,
+									lon: pos.coords.longitude,
+								};
 							} else {
 								toast.error(
 									"Location permission denied. Change this in your system settings to use this button.",
