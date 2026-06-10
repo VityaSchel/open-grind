@@ -1,4 +1,3 @@
-import { toast } from "svelte-sonner";
 import z from "zod";
 
 import {
@@ -6,7 +5,8 @@ import {
 	markConversationAsRead,
 } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
-import { previewFromMessage, previewLabel } from "$lib/model/message";
+import { showIncomingMessageToast } from "$lib/components/incoming-message-toast/incoming-message-toast-manager";
+import { previewFromMessage } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -56,42 +56,7 @@ class ConversationsState {
 		this.#wsPromises.push(
 			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
 				if (this.#destroyed) return;
-				const message = event.payload;
-				const isActive =
-					message.conversationId === this.#activeConversationId;
-				const isIncoming = message.senderId !== this.ourProfileId;
-				const entry = this.entries.find(
-					(entry) => entry.data.conversationId === message.conversationId,
-				);
-				if (entry) {
-					if (!isActive && isIncoming) {
-						entry.data.unreadCount += 1;
-						this.#showIncomingMessageToast(message, entry.data.name);
-					}
-					if (!isActive) {
-						this.invalidateConversation(message.conversationId);
-					}
-					this.updatePreview({
-						conversationId: message.conversationId,
-						preview: previewFromMessage(message),
-						timestamp: message.timestamp,
-					});
-				} else {
-					if (!isActive && isIncoming) {
-						void this.ensureLoaded(message.conversationId).then(() => {
-							const conversation = this.entries.find(
-								(entry) =>
-									entry.data.conversationId === message.conversationId,
-							);
-							this.#showIncomingMessageToast(
-								message,
-								conversation?.data.name ?? null,
-							);
-						});
-					} else {
-						void this.ensureLoaded(message.conversationId);
-					}
-				}
+				void this.#handleMessageSent(event.payload);
 			}),
 			ws.on(
 				"chat.v1.conversation.delete",
@@ -114,6 +79,31 @@ class ConversationsState {
 		this.#wsPromises = [];
 	}
 
+	async #handleMessageSent(message: ApiResponseMessage): Promise<void> {
+		const isActive = message.conversationId === this.#activeConversationId;
+		const isIncoming = message.senderId !== this.ourProfileId;
+		let entry = this.#find(message.conversationId);
+		if (entry) {
+			if (!isActive && isIncoming) {
+				entry.data.unreadCount += 1;
+			}
+			if (!isActive) {
+				this.invalidateConversation(message.conversationId);
+			}
+			this.updatePreview({
+				conversationId: message.conversationId,
+				preview: previewFromMessage(message),
+				timestamp: message.timestamp,
+			});
+		} else {
+			await this.ensureLoaded(message.conversationId);
+			entry = this.#find(message.conversationId);
+		}
+		if (!isActive && isIncoming && entry) {
+			this.#showIncomingMessageToast({ message, conversation: entry });
+		}
+	}
+
 	async #reconcile(): Promise<void> {
 		if (this.#destroyed) return;
 		await this.initial.catch(() => {});
@@ -123,17 +113,21 @@ class ConversationsState {
 			if (id !== activeId) this.#messageCache.delete(id);
 		}
 
+		await this.#syncLatest({
+			errorLabel: "Failed to reconcile conversation list",
+		});
+	}
+
+	async #syncLatest({ errorLabel }: { errorLabel: string }): Promise<void> {
 		try {
 			const result = await getConversations(1);
 			for (const incoming of result.entries) {
-				const existing = this.entries.find(
-					(e) => e.data.conversationId === incoming.data.conversationId,
-				);
+				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
 					existing.data.preview = incoming.data.preview;
 					existing.data.lastActivityTimestamp =
 						incoming.data.lastActivityTimestamp;
-					if (incoming.data.conversationId !== activeId) {
+					if (incoming.data.conversationId !== this.#activeConversationId) {
 						existing.data.unreadCount = incoming.data.unreadCount;
 					}
 				} else {
@@ -143,10 +137,7 @@ class ConversationsState {
 			this.#sortEntries();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to reconcile conversation list",
-				error,
-			});
+			showErrorToast({ label: errorLabel, error });
 		}
 	}
 
@@ -180,25 +171,10 @@ class ConversationsState {
 	}
 
 	async ensureLoaded(conversationId: string): Promise<void> {
-		if (this.entries.some((e) => e.data.conversationId === conversationId)) {
-			return;
-		}
-		try {
-			const result = await getConversations(1);
-			const newEntries = result.entries.filter(
-				(entry) =>
-					!this.entries.some(
-						(e) => e.data.conversationId === entry.data.conversationId,
-					),
-			);
-			this.entries.unshift(...newEntries);
-		} catch (error) {
-			console.error(error);
-			showErrorToast({
-				label: "Failed to sync conversation into sidebar",
-				error,
-			});
-		}
+		if (this.#find(conversationId)) return;
+		await this.#syncLatest({
+			errorLabel: "Failed to sync conversation into sidebar",
+		});
 	}
 
 	remove(conversationId: string) {
@@ -263,26 +239,25 @@ class ConversationsState {
 		);
 	}
 
-	#showIncomingMessageToast(
-		message: ApiResponseMessage,
-		conversationName: string | null,
-	): void {
-		const description = previewLabel(previewFromMessage(message)) ?? undefined;
-		toast(
-			conversationName ? `New message from ${conversationName}` : "New message",
-			{
-				description,
-				id: `incoming-message:${message.messageId}`,
-				position: "top-center",
-				class: "!bg-background !text-foreground border-border border shadow-lg",
+	#showIncomingMessageToast({
+		message,
+		conversation,
+	}: {
+		message: ApiResponseMessage;
+		conversation: Conversation;
+	}): void {
+		showIncomingMessageToast({
+			message,
+			sender: {
+				name: conversation.data.name,
+				avatarMediaHash: conversation.data.participants[0].primaryMediaHash,
 			},
-		);
+			conversationId: conversation.data.conversationId,
+		});
 	}
 
 	async markRead(conversationId: string) {
-		const entry = this.entries.find(
-			(e) => e.data.conversationId === conversationId,
-		);
+		const entry = this.#find(conversationId);
 		if (entry) {
 			const unreadCount = entry.data.unreadCount;
 			if (unreadCount > 0) {
@@ -310,13 +285,15 @@ class ConversationsState {
 		preview: Conversation["data"]["preview"];
 		timestamp: Conversation["data"]["lastActivityTimestamp"];
 	}): void {
-		const entry = this.entries.find(
-			(e) => e.data.conversationId === conversationId,
-		);
+		const entry = this.#find(conversationId);
 		if (!entry) return;
 		entry.data.preview = preview;
 		entry.data.lastActivityTimestamp = timestamp;
 		this.#sortEntries();
+	}
+
+	#find(conversationId: string): Conversation | undefined {
+		return this.entries.find((e) => e.data.conversationId === conversationId);
 	}
 
 	#sortEntries(): void {
