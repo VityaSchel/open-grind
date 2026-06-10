@@ -3,6 +3,7 @@
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations.svelte";
 	import Conversation from "./Conversation.svelte";
@@ -56,6 +57,8 @@
 			},
 		};
 	}
+
+	let updating = $state(false);
 </script>
 
 <div
@@ -71,6 +74,19 @@
 			<Skeleton class="w-full h-24.5 shrink-0" />
 		{/each}
 	{:then}
+		<DataRefreshControl
+			{container}
+			{updating}
+			sticky
+			class="mb-3"
+			position="top"
+			onclick={() => {
+				updating = true;
+				setTimeout(() => {
+					updating = false;
+				}, 1000);
+			}}
+		/>
 		{#each conversations.entries as conversation, i (conversation.data.conversationId)}
 			{#if i < EAGER_COUNT}
 				<Conversation {conversation} />

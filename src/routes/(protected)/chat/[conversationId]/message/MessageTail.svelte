@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { getMessageContext } from "./context";
+
 	let {
 		isOut,
 		class: className,
 	}: { isOut: boolean; class?: import("svelte/elements").ClassValue } =
 		$props();
+
+	const { weirdWebKitHalfPixelOffsetBugFix } = $derived(getMessageContext()());
 </script>
 
 <svg
@@ -12,6 +16,7 @@
 	class={[
 		"absolute bottom-0",
 		{
+			"translate-y-[-0.5px]": weirdWebKitHalfPixelOffsetBugFix,
 			"right-full translate-x-[0.5px]": !isOut,
 			"-scale-x-100 left-full translate-x-[-0.5px]": isOut,
 		},
