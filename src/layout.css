@@ -145,3 +145,38 @@ a {
 		@apply grid grid-cols-2 x360:grid-cols-3 gap-0.5 px-1 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1 max-w-400 mx-auto;
 	}
 }
+
+.toast[data-styled="true"] {
+	background-color: var(--color-accent) !important;
+	color: var(--popover) !important;
+	border-radius: 1.25rem !important;
+	border: 1px solid var(--color-border) !important;
+}
+
+.incoming-message-toast[data-sonner-toast] {
+	opacity: 1 !important;
+	--fly-out: translateY(calc(-100% - var(--offset-top, 24px) - 12px));
+}
+
+.incoming-message-toast[data-sonner-toast][data-mounted="false"] {
+	--y: var(--fly-out) !important;
+}
+
+.incoming-message-toast[data-sonner-toast][data-removed="true"] {
+	--y: var(--fly-out) !important;
+	transition: transform 180ms ease-in !important;
+}
+
+.incoming-message-toast[data-sonner-toast][data-swipe-out="true"][data-swipe-direction="up"] {
+	animation-name: incoming-message-toast-swipe-out-up !important;
+}
+
+@keyframes incoming-message-toast-swipe-out-up {
+	from {
+		transform: var(--y) translateY(var(--swipe-amount-y));
+	}
+
+	to {
+		transform: var(--fly-out);
+	}
+}
