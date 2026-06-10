@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { apiResponseMessageSchema, messageSchema } from "$lib/model/message";
+import {
+	apiResponseMessageSchema,
+	messageSchema,
+	previewFromMessage,
+} from "$lib/model/message";
 
 describe("messageSchema", () => {
 	it("accepts outgoing text messages", () => {
@@ -73,6 +77,58 @@ describe("apiResponseMessageSchema", () => {
 					reactionType: 1,
 				},
 			],
+		});
+	});
+});
+
+describe("previewFromMessage", () => {
+	it("extracts preview text from text messages", () => {
+		expect(
+			previewFromMessage({
+				type: "Text",
+				body: { text: "hello" },
+				messageId: "msg-1",
+				conversationId: "conversation-1",
+				senderId: 42,
+				timestamp: 1_710_000_000_000,
+				unsent: false,
+				reactions: [],
+			}),
+		).toEqual({
+			type: "Text",
+			text: "hello",
+			albumId: null,
+			imageHash: null,
+		});
+	});
+
+	it("extracts album previews without inventing text", () => {
+		expect(
+			previewFromMessage({
+				type: "Album",
+				body: {
+					albumId: 7,
+					hasUnseenContent: false,
+					expiresAt: null,
+					coverUrl: "https://example.com/cover.jpg",
+					ownerProfileId: 42,
+					isViewable: true,
+					hasVideo: false,
+					hasPhoto: true,
+					expirationType: null,
+				},
+				messageId: "msg-2",
+				conversationId: "conversation-1",
+				senderId: 42,
+				timestamp: 1_710_000_000_000,
+				unsent: false,
+				reactions: [],
+			}),
+		).toEqual({
+			type: "Album",
+			text: null,
+			albumId: 7,
+			imageHash: null,
 		});
 	});
 });
