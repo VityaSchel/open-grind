@@ -42,8 +42,7 @@
 <Toaster
 	position="bottom-center"
 	toastOptions={{
-		style:
-			"background-color: var(--accent); color: var(--popover); border: 1px solid var(--border);",
+		class: "toast",
 	}}
 	expand
 />

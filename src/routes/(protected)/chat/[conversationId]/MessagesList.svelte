@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { tick, untrack } from "svelte";
-	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error";
 	import { deleteMessageForMe, unsendMessage } from "$lib/api/messages";

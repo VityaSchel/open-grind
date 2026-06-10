@@ -106,12 +106,7 @@ export async function deleteMessageForMe({
 			conversationId,
 			messageId,
 		},
-	}).then((res) => {
-		if (res.status !== 200) {
-			console.log(res.json());
-			throw new Error("Failed to delete message");
-		}
-	});
+	}).then((res) => res.assertOk());
 }
 
 export async function unsendMessage({
@@ -127,10 +122,5 @@ export async function unsendMessage({
 			conversationId,
 			messageId,
 		},
-	}).then((res) => {
-		if (res.status !== 200) {
-			console.log(res.json());
-			throw new Error("Failed to unsend message");
-		}
-	});
+	}).then((res) => res.assertOk());
 }
