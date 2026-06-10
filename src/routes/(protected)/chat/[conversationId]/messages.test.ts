@@ -44,11 +44,13 @@ describe("getStackedMessages", () => {
 			],
 		});
 
-		expect(messages.map(({ messageId, indexInStack, stackLength }) => ({
-			messageId,
-			indexInStack,
-			stackLength,
-		}))).toEqual([
+		expect(
+			messages.map(({ messageId, indexInStack, stackLength }) => ({
+				messageId,
+				indexInStack,
+				stackLength,
+			})),
+		).toEqual([
 			{ messageId: "a", indexInStack: 1, stackLength: 2 },
 			{ messageId: "b", indexInStack: 0, stackLength: 2 },
 			{ messageId: "c", indexInStack: 0, stackLength: 1 },
@@ -86,13 +88,15 @@ describe("groupMessagesByDate", () => {
 		});
 
 		expect(
-			messages.find((message) => message.messageId === "older-same-day")?.dayStart,
+			messages.find((message) => message.messageId === "older-same-day")
+				?.dayStart,
 		).toBe(localDayStart(olderSameDayTs));
-		expect(messages.find((message) => message.messageId === "newest")?.dayStart).toBe(
-			undefined,
-		);
 		expect(
-			messages.find((message) => message.messageId === "previous-day")?.dayStart,
+			messages.find((message) => message.messageId === "newest")?.dayStart,
+		).toBe(undefined);
+		expect(
+			messages.find((message) => message.messageId === "previous-day")
+				?.dayStart,
 		).toBe(localDayStart(previousDayTs));
 	});
 });
