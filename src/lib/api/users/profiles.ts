@@ -11,6 +11,7 @@ import {
 	profileShortSchema,
 	pronounSchema,
 } from "$lib/model/profile";
+import { profileTagsResponseSchema } from "$lib/model/tags";
 
 function isProbablyBlocked(profile: Profile) {
 	const nullFields = [
@@ -286,5 +287,11 @@ export async function getProfileUploadedPhotos() {
 				),
 			}),
 		),
+	);
+}
+
+export async function getProfileTags() {
+	return await fetchRest("/v1/tags").then((res) =>
+		res.jsonParsed(profileTagsResponseSchema),
 	);
 }

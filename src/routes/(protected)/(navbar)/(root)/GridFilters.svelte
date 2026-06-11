@@ -10,6 +10,7 @@
 		gridSearchFiltersSchema,
 	} from "$lib/components/filters/filters";
 	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
+	import TagsFilter from "$lib/components/filters/TagsFilter.svelte";
 	import HealthPracticesFilter from "$lib/components/filters/HealthPracticesFilter.svelte";
 	import HeightFilter from "$lib/components/filters/HeightFilter.svelte";
 	import LookingForFilter from "$lib/components/filters/LookingForFilter.svelte";
@@ -70,6 +71,10 @@
 	<PhotosFilter
 		bind:checked={filtersChanges.photosEnabled}
 		bind:value={filtersChanges.photos}
+	/>
+	<TagsFilter
+		bind:checked={filtersChanges.tagsEnabled}
+		bind:value={filtersChanges.tags}
 	/>
 {/snippet}
 {#snippet col3()}
@@ -146,6 +151,7 @@
 			<div class="flex lg:hidden">
 				{@render col1()}
 				{@render col2()}
+				{@render col3()}
 			</div>
 			<div class="hidden lg:flex">
 				{@render col1()}
@@ -153,7 +159,7 @@
 			<div class="hidden lg:flex">
 				{@render col2()}
 			</div>
-			<div class="flex">
+			<div class="hidden lg:flex">
 				{@render col3()}
 			</div>
 		</div>

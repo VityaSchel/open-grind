@@ -188,6 +188,9 @@ class GridState {
 				...(gridSearchFilters?.healthPracticesEnabled && {
 					sexualHealth: gridSearchFilters?.healthPractices,
 				}),
+				...(gridSearchFilters?.tagsEnabled && gridSearchFilters?.tags && {
+					tags: gridSearchFilters?.tags,
+				}),
 				fresh: gridSearchFilters?.isFresh || undefined,
 			} satisfies z.infer<typeof cascadeV3QuerySchema>;
 			this.currentQuery = query;
