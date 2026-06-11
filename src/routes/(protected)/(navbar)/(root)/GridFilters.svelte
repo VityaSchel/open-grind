@@ -17,6 +17,7 @@
 	import PhotosFilter from "$lib/components/filters/PhotosFilter.svelte";
 	import PositionFilter from "$lib/components/filters/position/PositionFilterField.svelte";
 	import RelationshipStatusFilter from "$lib/components/filters/RelationshipStatusFilter.svelte";
+	import TagsFilter from "$lib/components/filters/TagsFilter.svelte";
 	import TribesFilter from "$lib/components/filters/TribesFilter.svelte";
 	import WeightFilter from "$lib/components/filters/WeightFilter.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -70,6 +71,10 @@
 	<PhotosFilter
 		bind:checked={filtersChanges.photosEnabled}
 		bind:value={filtersChanges.photos}
+	/>
+	<TagsFilter
+		bind:checked={filtersChanges.tagsEnabled}
+		bind:value={filtersChanges.tags}
 	/>
 {/snippet}
 {#snippet col3()}
@@ -134,7 +139,7 @@
 			<Sheet.Title>Filters</Sheet.Title>
 		</Sheet.Header>
 		<div
-			class="flex max-md:flex-col *:flex-col gap-8 lg:gap-12 *:flex-1 *:gap-4 flex-1 px-4 w-full **:break-inside-avoid overflow-auto max-h-full min-h-0 shrink py-1 pb-4"
+			class="flex max-lg:flex-col *:flex-col gap-4 lg:gap-12 *:flex-1 *:gap-4 flex-1 px-4 w-full **:break-inside-avoid overflow-auto max-h-full min-h-0 shrink py-1 pb-4"
 			onscroll={(event) => {
 				if (event.target instanceof HTMLDivElement) {
 					contentScroll =
@@ -143,17 +148,13 @@
 				}
 			}}
 		>
-			<div class="flex lg:hidden">
-				{@render col1()}
-				{@render col2()}
-			</div>
-			<div class="hidden lg:flex">
+			<div class="flex max-w-full">
 				{@render col1()}
 			</div>
-			<div class="hidden lg:flex">
+			<div class="flex max-w-full">
 				{@render col2()}
 			</div>
-			<div class="flex">
+			<div class="flex max-w-full">
 				{@render col3()}
 			</div>
 		</div>

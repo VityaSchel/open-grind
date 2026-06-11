@@ -10,12 +10,14 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	let label = $state("");
+
+	const uid = $props.id();
 </script>
 
 <div class="inline-block space-y-3 w-full">
 	<FilterField>
-		<Checkbox id="filters-age" bind:checked />
-		<Label for="filters-age">Age</Label>
+		<Checkbox id="filters-age-{uid}" bind:checked />
+		<Label for="filters-age-{uid}">Age</Label>
 		<span class="ml-auto min-w-0 truncate">
 			{label}
 		</span>

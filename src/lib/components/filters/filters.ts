@@ -22,6 +22,9 @@ export const filterAgeSchema = z.array(z.number().min(18).max(102)).length(2);
 export const filterGendersEnabledSchema = z.boolean();
 export const filterGendersSchema = z.array(z.number().int().nonnegative());
 
+export const filterTagsEnabledSchema = z.boolean();
+export const filterTagsSchema = z.array(z.string());
+
 export const filterPositionEnabledSchema = z.boolean();
 export const FilterPosition = {
 	...SexualPosition,
@@ -118,6 +121,9 @@ export const gridSearchFiltersSchema = z.object({
 	genderEnabled: filterGendersEnabledSchema,
 	genders: filterGendersSchema,
 
+	tagsEnabled: filterTagsEnabledSchema,
+	tags: filterTagsSchema,
+
 	positionEnabled: filterPositionEnabledSchema,
 	positions: filterPositionSchema,
 
@@ -168,6 +174,9 @@ export const defaultFilters: GridSearchFilters = {
 
 	genderEnabled: false,
 	genders: [],
+
+	tagsEnabled: false,
+	tags: [],
 
 	positionEnabled: false,
 	positions: [],

@@ -7,6 +7,7 @@ import {
 	filterMeetAtSchema,
 	filterPositionSchema,
 	filterRelationshipStatusSchema,
+	filterTagsSchema,
 	filterTribesSchema,
 } from "$lib/components/filters/filters";
 import { gridQuerySchema } from "$lib/model/grid";
@@ -27,7 +28,7 @@ export const cascadeQuerySchema = z.object({
 	sexualPositions: filterPositionSchema.optional(),
 	meetAt: filterMeetAtSchema.optional(),
 	nsfwPics: filterAcceptNSFWPicsSchema.optional(),
-	tags: z.string().optional(),
+	tags: filterTagsSchema.optional(),
 	rightNow: z.boolean().optional(),
 	favorites: z.boolean().optional(),
 	showSponsoredProfiles: z.boolean().optional(),
