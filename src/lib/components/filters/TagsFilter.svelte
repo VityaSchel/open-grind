@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { getTags } from "$lib/api/tags";
+	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import type { Tag } from "$lib/model/tags";
-
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {
@@ -12,96 +12,127 @@
 		value = $bindable(),
 	}: {
 		checked: boolean;
-		value: string;
+		value: string[];
 	} = $props();
 
 	let searchQuery = $state("");
 	let expanded = $state(false);
 
-	// Load tags catalog
-	let tagsPromise = $state(
-		getTags().then((langs) => {
-			const allTagsList: Tag[] = [];
-			const seenText = new Set<string>();
-			for (const lang of langs) {
-				for (const cat of lang.categoryCollection) {
-					for (const tag of cat.tags) {
-						if (!seenText.has(tag.text.toLowerCase())) {
-							seenText.add(tag.text.toLowerCase());
-							allTagsList.push(tag);
-						}
+	const MAX_SEARCH_RESULTS = 50;
+	const SEARCH_DEBOUNCE_MS = 50;
+
+	let query = $state("");
+	$effect(() => {
+		const next = searchQuery.trim().toLowerCase();
+		const timeout = setTimeout(() => (query = next), SEARCH_DEBOUNCE_MS);
+		return () => clearTimeout(timeout);
+	});
+
+	async function load() {
+		const langs = await getTags();
+		const flat: (Tag & { textLower: string })[] = [];
+		const seenText = new Set<string>();
+		for (const lang of langs) {
+			for (const category of lang.categoryCollection) {
+				for (const tag of category.tags) {
+					const textLower = tag.text.toLowerCase();
+					if (!seenText.has(textLower)) {
+						seenText.add(textLower);
+						flat.push({ ...tag, textLower });
 					}
 				}
 			}
-			return {
-				raw: langs,
-				flat: allTagsList.sort((a, b) => a.text.localeCompare(b.text)),
-			};
-		}),
-	);
+		}
+		return {
+			categories: langs[0]?.categoryCollection ?? [],
+			flat: flat.sort((a, b) => a.text.localeCompare(b.text)),
+		};
+	}
+
+	const tagsPromise = $derived(load());
+
+	const valueLabel = $derived(value.join(", "));
 </script>
 
 <FilterDropdown
 	id="tags"
 	label="Tags"
-	endLabel={value || undefined}
+	endLabel={value.length > 5 || valueLabel.length > 20
+		? `${value.length} selected`
+		: valueLabel}
 	bind:checked={
 		() => checked,
-		(v: boolean) => {
-			checked = v;
-			if (!v) {
-				value = "";
+		(newValue: boolean) => {
+			checked = newValue;
+			if (!newValue) {
+				value = [];
 			}
 		}
 	}
 >
 	<div class="flex flex-col min-w-0">
-		<Input
-			type="text"
-			placeholder="Search tags..."
-			bind:value={searchQuery}
-			class="h-8 rounded-md text-sm border-muted mb-1"
-		/>
+		<div class="w-full pe-1">
+			<Input
+				id="search-tags"
+				type="search"
+				placeholder="Search tags..."
+				bind:value={searchQuery}
+				class="text-sm mb-2"
+			/>
+		</div>
 
 		{#await tagsPromise}
 			<div class="flex justify-center py-4">
 				<Spinner />
 			</div>
-		{:then { raw, flat }}
-			{@const filtered = searchQuery.trim()
-				? flat.filter((t) =>
-						t.text.toLowerCase().includes(searchQuery.toLowerCase()),
-					)
+		{:then { categories, flat }}
+			{@const filtered = query
+				? flat
+						.filter((t) => t.textLower.includes(query))
+						.sort(
+							(a, b) =>
+								Number(b.textLower.startsWith(query)) -
+								Number(a.textLower.startsWith(query)),
+						)
 				: []}
+			{@const shown = filtered.slice(0, MAX_SEARCH_RESULTS)}
 
 			<ToggleGroup.Root
-				type="single"
+				size="sm"
+				type="multiple"
 				variant="outline"
 				spacing={2}
 				class="flex-wrap w-full gap-1"
 				bind:value={
-					() => value || "",
-					(v: string | undefined) => {
-						value = v || "";
-						checked = !!v;
+					() => value,
+					(v: string[]) => {
+						value = v;
+						checked = !!v.length;
 					}
 				}
 			>
-				{#if searchQuery.trim()}
-					{#if filtered.length > 0}
-						{#each filtered as tag (tag.tagId)}
+				{#if query}
+					{#if shown.length > 0}
+						{#each shown as tag (tag.tagId)}
 							<ToggleGroup.Item value={tag.text}>
 								{tag.text}
 							</ToggleGroup.Item>
 						{/each}
+						{#if filtered.length > shown.length}
+							<div
+								class="text-xs text-muted-foreground py-2 w-full text-center"
+							>
+								Showing first {shown.length} of {filtered.length} matches, keep typing
+								to narrow down
+							</div>
+						{/if}
 					{:else}
 						<div class="text-xs text-muted-foreground py-2 w-full text-center">
 							No tags match "{searchQuery}"
 						</div>
 					{/if}
 				{:else}
-					<!-- Show categories when no search query -->
-					{#each raw[0]?.categoryCollection ?? [] as category, catIndex}
+					{#each categories as category, catIndex (category.text)}
 						{#if category.tags.length > 0 && (expanded || catIndex < 2)}
 							<div
 								class="w-full text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5 mb-1 px-1"
@@ -118,21 +149,21 @@
 				{/if}
 			</ToggleGroup.Root>
 
-			{#if !searchQuery.trim()}
-				<button
-					type="button"
-					class="text-xs text-muted-foreground hover:text-foreground font-medium underline mt-1.5 self-start px-1"
+			{#if !query}
+				<Button
+					variant="secondary"
+					class="mt-2 w-fit"
 					onclick={() => (expanded = !expanded)}
 				>
 					{#if expanded}
-						Less categories
+						Less
 					{:else}
-						More categories
+						More
 					{/if}
-				</button>
+				</Button>
 			{/if}
 		{:catch}
-			<div class="text-sm text-destructive py-2">Failed to load tags</div>
+			<div class="text-sm text-destructive">Failed to load tags</div>
 		{/await}
 	</div>
 </FilterDropdown>

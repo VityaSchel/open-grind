@@ -23,7 +23,7 @@ export const filterGendersEnabledSchema = z.boolean();
 export const filterGendersSchema = z.array(z.number().int().nonnegative());
 
 export const filterTagsEnabledSchema = z.boolean();
-export const filterTagsSchema = z.string();
+export const filterTagsSchema = z.array(z.string());
 
 export const filterPositionEnabledSchema = z.boolean();
 export const FilterPosition = {
@@ -176,7 +176,7 @@ export const defaultFilters: GridSearchFilters = {
 	genders: [],
 
 	tagsEnabled: false,
-	tags: "",
+	tags: [],
 
 	positionEnabled: false,
 	positions: [],

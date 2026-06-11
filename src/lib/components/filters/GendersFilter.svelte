@@ -16,7 +16,7 @@
 		value: number[];
 	} = $props();
 
-	let genders = $state(
+	const genders = $derived(
 		getGenders().then((genders) =>
 			genders
 				.filter((g) => g.displayGroup > 0)

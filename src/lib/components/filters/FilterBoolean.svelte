@@ -14,11 +14,13 @@
 		children?: import("svelte").Snippet;
 		endAdornment?: import("svelte").Snippet;
 	} = $props();
+
+	const uid = $props.id();
 </script>
 
 <FilterField>
-	<Checkbox id="filters-{id}" bind:checked />
-	<Label for="filters-{id}" class="min-h-5">{@render children?.()}</Label>
+	<Checkbox id="filters-{id}-{uid}" bind:checked />
+	<Label for="filters-{id}-{uid}" class="min-h-5">{@render children?.()}</Label>
 	{#if endAdornment}
 		<span class="ml-auto min-w-0 truncate">
 			{@render endAdornment()}
