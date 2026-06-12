@@ -11,12 +11,12 @@
 		applyAndroidInsets,
 		applyBackGestureHandler,
 	} from "$lib/android-native-bridge";
-	import { getPreferences } from "$lib/app-data/preferences.svelte";
+	import { hydratePreferences } from "$lib/app-data/preferences.svelte";
 
 	onMount(() => {
 		applyAndroidInsets();
 		applyBackGestureHandler();
-		void getPreferences().catch((error) => {
+		void hydratePreferences().catch((error) => {
 			console.error("Failed to hydrate preferences", error);
 		});
 	});
