@@ -49,6 +49,15 @@ function stringRecordToValues<T extends z.ZodObject>(
 		else if (inner instanceof z.ZodBoolean)
 			result[key] = raw === "true" || raw === "1";
 		else if (inner instanceof z.ZodBigInt) result[key] = BigInt(raw);
+		else if (inner instanceof z.ZodArray)
+			result[key] = raw === "" ? [] : raw.split(",").map((value) => {
+				const element = unwrapSchema(inner.element as z.ZodType);
+				if (element instanceof z.ZodNumber) return Number(value);
+				if (element instanceof z.ZodBoolean)
+					return value === "true" || value === "1";
+				if (element instanceof z.ZodBigInt) return BigInt(value);
+				return value;
+			});
 		else result[key] = raw;
 	}
 	return result;
