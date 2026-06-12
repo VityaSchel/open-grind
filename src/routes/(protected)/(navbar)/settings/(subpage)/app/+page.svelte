@@ -6,6 +6,7 @@
 	import * as Item from "$lib/components/ui/item";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
+	import UnitsSetting from "./UnitsSetting.svelte";
 </script>
 
 {#snippet item({
@@ -38,6 +39,8 @@
 		{/snippet}
 	</Item.Root>
 {/snippet}
+<h2>Display</h2>
+<UnitsSetting />
 {@render item({
 	title: "Notifications",
 	unimplemented: { feature: "Notifications", issue: 45 },

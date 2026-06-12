@@ -4,6 +4,7 @@ import z from "zod";
 
 import { gridSearchFiltersSchema } from "$lib/components/filters/filters";
 import { geohashSchema } from "$lib/model/geohash";
+import { type UnitSystem, unitSystemSchema } from "$lib/units";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({
@@ -11,12 +12,14 @@ const preferencesSchema = z.object({
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
+	units: unitSystemSchema.default("metric"),
 	warnBeforeCopyingErrorDetails: z.boolean().default(true),
 });
 
 type Preferences = z.infer<typeof preferencesSchema>;
 
 let writeQueue: Promise<unknown> = Promise.resolve();
+let preferencesSnapshot = $state<Preferences>(preferencesSchema.parse({}));
 
 function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
 	const run = writeQueue.then(task);
@@ -41,7 +44,11 @@ async function readFromDisk(): Promise<Preferences> {
 export async function getPreferences(): Promise<Preferences> {
 	if (cache !== null) return structuredClone(cache);
 	hydrating ??= readFromDisk()
-		.then((preferences) => (cache = preferences))
+		.then((preferences) => {
+			cache = preferences;
+			preferencesSnapshot = preferences;
+			return preferences;
+		})
 		.catch((error: unknown) => {
 			toast.error("Failed to load preferences. Reset to defaults?", {
 				action: {
@@ -59,6 +66,15 @@ export async function getPreferences(): Promise<Preferences> {
 	return structuredClone(await hydrating);
 }
 
+
+export function getUnitsSnapshot(): UnitSystem {
+	return preferencesSnapshot.units;
+}
+
+export async function hydratePreferences(): Promise<void> {
+	await getPreferences();
+}
+
 export async function setPreferences(
 	newValues: Partial<Preferences>,
 ): Promise<void> {
@@ -70,6 +86,7 @@ export async function setPreferences(
 		});
 		await writeAppDataFileAtomic("preferences.data", encode(preferences));
 		cache = preferences;
+		preferencesSnapshot = preferences;
 	});
 }
 
@@ -78,6 +95,7 @@ async function resetToDefaults(): Promise<void> {
 		const preferences = preferencesSchema.parse({});
 		await writeAppDataFileAtomic("preferences.data", encode(preferences));
 		cache = preferences;
+		preferencesSnapshot = preferences;
 	});
 	window.location.reload();
 }

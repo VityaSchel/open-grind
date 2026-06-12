@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
+	import { formatDistance } from "$lib/units";
+
 	let { distance }: { distance: number } = $props();
+
+	const units = $derived(getUnitsSnapshot());
 </script>
 
-{#if distance < 1000}
-	{Math.round(distance)} m
-{:else}
-	{(distance / 1000).toFixed(1)} km
-{/if}
+{formatDistance(distance, units)}
