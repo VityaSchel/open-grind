@@ -3,14 +3,14 @@
 
 	import {
 		getPreferences,
-		getPreferencesSnapshot,
+		getUnitsSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import type { UnitSystem } from "$lib/units";
 
-	let value = $state<UnitSystem>(getPreferencesSnapshot().units);
+	let value = $state<UnitSystem>(getUnitsSnapshot());
 
 	onMount(() => {
 		void getPreferences()

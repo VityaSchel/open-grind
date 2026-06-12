@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
 	import { formatHeight } from "$lib/units";
@@ -9,7 +9,7 @@
 		value = $bindable(),
 	}: { checked: boolean; value: number[] } = $props();
 
-	const units = $derived(getPreferencesSnapshot().units);
+	const units = $derived(getUnitsSnapshot());
 </script>
 
 <div class="block space-y-3 w-full">

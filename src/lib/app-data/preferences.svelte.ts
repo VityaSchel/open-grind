@@ -4,7 +4,7 @@ import z from "zod";
 
 import { gridSearchFiltersSchema } from "$lib/components/filters/filters";
 import { geohashSchema } from "$lib/model/geohash";
-import { unitSystemSchema } from "$lib/units";
+import { type UnitSystem, unitSystemSchema } from "$lib/units";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({
@@ -66,8 +66,13 @@ export async function getPreferences(): Promise<Preferences> {
 	return structuredClone(await hydrating);
 }
 
-export function getPreferencesSnapshot(): Preferences {
-	return preferencesSnapshot;
+
+export function getUnitsSnapshot(): UnitSystem {
+	return preferencesSnapshot.units;
+}
+
+export async function hydratePreferences(): Promise<void> {
+	await getPreferences();
 }
 
 export async function setPreferences(
