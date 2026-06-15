@@ -209,7 +209,6 @@ export async function fetchRest(
 		const appError = asAppError(error);
 		if (appError) {
 			if (appError.kind === "Auth" && appError.message === "Not logged in") {
-				toast("Please log in to continue");
 				goto("/auth/sign-in").catch((error) => console.error(error));
 			}
 		}

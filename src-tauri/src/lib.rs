@@ -43,8 +43,6 @@ pub fn run() {
             api::ws::ws_connect,
             api::ws::ws_send,
             api::client::rotate_api_params,
-            api::google_oauth::google_oauth_token_captured,
-            api::google_oauth::google_oauth_error,
         ])
         .setup(|app| {
             #[cfg(all(target_os = "macos", not(feature = "keychain")))]
