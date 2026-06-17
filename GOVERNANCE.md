@@ -13,10 +13,10 @@ Community guidelines are defined in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). 
 
 ## Maintainers
 
-| Username                                                                  | Links                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [@hloth](https://git.opengrind.org/hloth) — **decision making authority** | [Donate](https://hloth.dev/donate)<br />Contact (secure E2EE, preferred): [@hloth:hloth.dev in Matrix](https://matrix.to/#/@hloth:hloth.dev)<br />Contact (urgent, less secure): [legal@hloth.dev](mailto://legal@hloth.dev) |
-|                                                                           |                                                                                                                                                                                                                              |
+| Username                                                                  | Links                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [@hloth](https://git.opengrind.org/hloth) — **decision making authority** | [Donate](https://hloth.dev/donate)<br />Contact (secure E2EE, preferred): [@hloth:hloth.dev in Matrix](https://matrix.to/#/@hloth:hloth.dev)<br />Contact (urgent, less secure): [admin@opengrind.org](mailto://admin@opengrind.org) |
+|                                                                           |                                                                                                                                                                                                                                      |
 
 ## Contributors
 

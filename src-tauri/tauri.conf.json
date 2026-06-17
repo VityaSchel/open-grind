@@ -19,7 +19,7 @@
 				"minWidth": 320,
 				"minHeight": 300,
 				"theme": "Dark",
-				"userAgent": "OpenGrind/0.1.0 (+https://opengrind.org/; contact: legal@hloth.dev)",
+				"userAgent": "OpenGrind/0.1.0 (+https://opengrind.org/; contact: admin@opengrind.org)",
 				"titleBarStyle": "Visible",
 				"backgroundColor": "#1e1e1e"
 			}
