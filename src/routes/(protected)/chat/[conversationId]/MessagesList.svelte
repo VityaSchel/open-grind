@@ -115,7 +115,7 @@
 			class="m-auto"
 		/>
 	{:else}
-		<div class="flex flex-col gap-1 min-h-full shrink-0 justify-end">
+		<div class="flex flex-col gap-1 min-h-full shrink-0 justify-end overscroll-auto">
 			{#if conversationState.loadingMore}
 				<Spinner class="mt-25 shrink-0 self-center" />
 			{/if}
@@ -193,7 +193,6 @@
 			bind:this={refreshControl}
 			{container}
 			{updating}
-			sticky
 			class="mt-3 mb-2"
 			position="bottom"
 			onclick={() => {

@@ -64,7 +64,7 @@
 <div
 	bind:this={container}
 	class={[
-		"flex flex-col gap-1 p-4 pb-[calc(0.5rem+var(--content-pb))] w-full h-full overflow-auto min-w-29.25",
+		"flex flex-col gap-1 p-4 pb-[calc(0.5rem+var(--content-pb))] w-full h-full overflow-auto min-w-29.25 overscroll-auto",
 		className,
 	]}
 	onscroll={() => (conversations.listScrollY = container?.scrollTop ?? 0)}
@@ -77,7 +77,6 @@
 		<DataRefreshControl
 			{container}
 			{updating}
-			sticky
 			class="mb-3"
 			position="top"
 			onclick={() => {
