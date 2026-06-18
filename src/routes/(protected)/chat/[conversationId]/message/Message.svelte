@@ -100,16 +100,16 @@
 
 	function onContextMenu() {
 		if (!messageElement) return;
-		const { x, y } = messageElement.getBoundingClientRect();
+		const rect = messageElement.getBoundingClientRect();
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = {
-			x,
-			y,
-			width: messageElement.clientWidth,
-			height: messageElement.offsetHeight,
+			x: rect.x,
+			y: rect.y,
+			width: rect.width,
+			height: rect.height,
 		};
 		tick()
 			.then(() => contextMenu?.showModal())
