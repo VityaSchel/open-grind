@@ -1,4 +1,5 @@
 <script lang="ts">
+	import isEqual from "lodash-es/isEqual";
 	import {
 		FacebookLogoIcon,
 		InstagramLogoIcon,
@@ -6,6 +7,8 @@
 	} from "phosphor-svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { expoOut } from "svelte/easing";
+	import { fly } from "svelte/transition";
 
 	import { showErrorToast } from "$lib/api/error";
 	import {
@@ -138,13 +141,47 @@
 	let medias = $state(
 		initial.medias.map((media) => ({ mediaHash: media.mediaHash })),
 	);
-	let savedMediaHashes = initial.medias.map((media) => media.mediaHash);
 
 	let saving = $state(false);
 	const aboutMeOverLimit = $derived(aboutMe.length > fieldLimits.aboutMe);
 
+	function formSnapshot() {
+		return {
+			displayName,
+			aboutMe,
+			genderIds: [...genderIds],
+			pronounIds: [...pronounIds],
+			age,
+			showAge,
+			sexualPosition,
+			showPosition,
+			height,
+			weightKg,
+			bodyType,
+			ethnicity,
+			relationshipStatus,
+			showTribes,
+			grindrTribes: [...grindrTribes],
+			tribesImInto: [...tribesImInto],
+			lookingFor: [...lookingFor],
+			meetAt: [...meetAt],
+			nsfw,
+			hivStatus,
+			lastTestedDate,
+			sexualHealth: [...sexualHealth],
+			vaccineIds: [...vaccineIds],
+			instagram,
+			twitter,
+			facebook,
+			mediaHashes: medias.map((media) => media.mediaHash),
+		};
+	}
+
+	let savedForm = $state(formSnapshot());
+	const dirty = $derived(!isEqual(formSnapshot(), savedForm));
+
 	async function save() {
-		if (saving || aboutMeOverLimit) return;
+		if (saving || aboutMeOverLimit || !dirty) return;
 		saving = true;
 		const patch = {
 			displayName: displayName.trim() || null,
@@ -177,7 +214,7 @@
 			},
 		} as ProfileEdit;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
-		const removedHashes = savedMediaHashes.filter(
+		const removedHashes = savedForm.mediaHashes.filter(
 			(hash) => !currentHashes.has(hash),
 		);
 		try {
@@ -185,7 +222,7 @@
 				patchOwnProfile(ourProfileId, patch),
 				deleteProfilePhotos(ourProfileId, removedHashes),
 			]);
-			savedMediaHashes = [...currentHashes];
+			savedForm = formSnapshot();
 			toast.success("Profile updated");
 		} catch (error) {
 			showErrorToast({ label: "Failed to update profile", error });
@@ -352,20 +389,25 @@
 		/>
 	</section>
 
-	<div class="sticky bottom-(--content-pb) z-10 -mx-4 px-4 py-3">
-		<Button
-			type="submit"
-			size="lg"
-			class="h-12 w-full text-base"
-			disabled={saving || aboutMeOverLimit}
-			onclick={() => save()}
+	{#if dirty}
+		<div
+			class="sticky bottom-(--content-pb) z-10 -mx-4 px-4 py-3"
+			transition:fly={{ y: 80, duration: 300, easing: expoOut }}
 		>
-			{#if saving}
-				<Spinner class="size-5" />
-			{/if}
-			Save changes
-		</Button>
-	</div>
+			<Button
+				type="submit"
+				size="lg"
+				class="h-12 w-full text-base"
+				disabled={saving || aboutMeOverLimit}
+				onclick={() => save()}
+			>
+				{#if saving}
+					<Spinner class="size-5" />
+				{/if}
+				Save changes
+			</Button>
+		</div>
+	{/if}
 </form>
 
 <style lang="postcss">
