@@ -264,6 +264,8 @@
 	<MessageContextMenu
 		{contextMenuOpen}
 		{content}
+		{isOut}
+		selectable={message.type === "Text"}
 		onClose={() => (contextMenuOpen = false)}
 		style={inheritedStyles}
 		textContent={message.type === "Text" ? message.body.text : undefined}

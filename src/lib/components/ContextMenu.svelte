@@ -12,11 +12,15 @@
 		style,
 		content,
 		onClose,
+		isOut = false,
+		selectable = false,
 		children,
 	}: {
 		contextMenuOpen: { x: number; y: number; width: number; height: number };
 		style: string;
 		onClose: () => void;
+		isOut?: boolean;
+		selectable?: boolean;
 		content: import("svelte").Snippet<[boolean]>;
 		children?: import("svelte").Snippet<[Placement]>;
 	} = $props();
@@ -88,7 +92,7 @@
 		style:width="{contextMenuOpen.width}px"
 		style:height="{contextMenuOpen.height}px"
 		{style}
-		inert
+		inert={!selectable}
 	>
 		{@render content(true)}
 	</div>
