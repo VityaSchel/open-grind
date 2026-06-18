@@ -13,8 +13,9 @@
 	import { showErrorToast } from "$lib/api/error";
 	import {
 		deleteProfilePhotos,
-		patchOwnProfile,
-		type ProfileEdit,
+		ProfileModerationError,
+		type ProfileUpdate,
+		updateOwnProfile,
 	} from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import { WheelPicker } from "$lib/components/ui/carousel";
@@ -183,7 +184,7 @@
 	async function save() {
 		if (saving || aboutMeOverLimit || !dirty) return;
 		saving = true;
-		const patch = {
+		const body = {
 			displayName: displayName.trim() || null,
 			aboutMe: aboutMe.trim() || null,
 			genders: genderIds,
@@ -212,20 +213,28 @@
 				twitter: twitter ? { userId: twitter } : undefined,
 				facebook: facebook ? { userId: facebook } : undefined,
 			},
-		} as ProfileEdit;
+			approximateDistance: initial.approximateDistance,
+			profileTags: initial.profileTags,
+		} as ProfileUpdate;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
 		const removedHashes = savedForm.mediaHashes.filter(
 			(hash) => !currentHashes.has(hash),
 		);
 		try {
 			await Promise.all([
-				patchOwnProfile(ourProfileId, patch),
+				updateOwnProfile(ourProfileId, body),
 				deleteProfilePhotos(ourProfileId, removedHashes),
 			]);
 			savedForm = formSnapshot();
 			toast.success("Profile updated");
 		} catch (error) {
-			showErrorToast({ label: "Failed to update profile", error });
+			if (error instanceof ProfileModerationError) {
+				toast.error(
+					`Couldn't save: ${error.fields.join(" and ")} contains terms that aren't allowed`,
+				);
+			} else {
+				showErrorToast({ label: "Failed to update profile", error });
+			}
 		} finally {
 			saving = false;
 		}
