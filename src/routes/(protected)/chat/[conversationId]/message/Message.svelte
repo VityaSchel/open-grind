@@ -207,11 +207,18 @@
 		tabindex="0"
 		aria-label="Message"
 		ondblclick={(event) => {
+			const selection = window.getSelection();
+			if (
+				selection &&
+				!selection.isCollapsed &&
+				messageElement?.contains(selection.anchorNode)
+			)
+				return;
 			if (!isOut && onReact) {
 				event.preventDefault();
 				onReact(1);
+				selection?.removeAllRanges();
 			}
-			window.getSelection()?.removeAllRanges();
 		}}
 		onkeydown={(event) => {
 			if (event.key === "Enter" || event.key === " ") {
