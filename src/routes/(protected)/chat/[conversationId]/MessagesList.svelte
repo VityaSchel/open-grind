@@ -90,7 +90,6 @@
 		};
 	}
 
-	let updating = $state(false);
 </script>
 
 <div
@@ -192,15 +191,10 @@
 		<DataRefreshControl
 			bind:this={refreshControl}
 			{container}
-			{updating}
+			updating={conversationState.refreshing}
 			class="mt-3 mb-2"
 			position="bottom"
-			onclick={() => {
-				updating = true;
-				setTimeout(() => {
-					updating = false;
-				}, 1000);
-			}}
+			onclick={() => void conversationState.refresh()}
 		/>
 	{/if}
 </div>

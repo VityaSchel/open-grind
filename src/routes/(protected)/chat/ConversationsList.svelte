@@ -58,7 +58,6 @@
 		};
 	}
 
-	let updating = $state(false);
 </script>
 
 <div
@@ -76,15 +75,10 @@
 	{:then}
 		<DataRefreshControl
 			{container}
-			{updating}
+			updating={conversations.refreshing}
 			class="mb-3"
 			position="top"
-			onclick={() => {
-				updating = true;
-				setTimeout(() => {
-					updating = false;
-				}, 1000);
-			}}
+			onclick={() => void conversations.refresh()}
 		/>
 		{#each conversations.entries as conversation, i (conversation.data.conversationId)}
 			{#if i < EAGER_COUNT}

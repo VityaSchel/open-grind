@@ -12,6 +12,7 @@ export type ViewGridEntry =
 
 export class ViewsState {
 	loading = $state(true);
+	refreshing = $state(false);
 	error: Error | null = $state(null);
 	visibleCount = $state(PAGE_SIZE);
 
@@ -90,6 +91,10 @@ export class ViewsState {
 		this.#initial = this.#initialLoad();
 	}
 
+	refresh(): Promise<void> {
+		return this.#reconcile();
+	}
+
 	#upsert(fresh: ViewerProfile): void {
 		const index = this.#profiles.findIndex(
 			(v) => v.profileId === fresh.profileId,
@@ -132,9 +137,11 @@ export class ViewsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		await this.#initial.catch(() => {});
-		if (this.#destroyed) return;
+		if (this.#destroyed || this.refreshing) return;
+		this.refreshing = true;
 		try {
+			await this.#initial.catch(() => {});
+			if (this.#destroyed) return;
 			const { profiles, previews } = await getViews();
 			if (this.#destroyed) return;
 			this.#profiles = profiles;
@@ -146,6 +153,8 @@ export class ViewsState {
 				label: "Failed to refresh views",
 				error,
 			});
+		} finally {
+			this.refreshing = false;
 		}
 	}
 }

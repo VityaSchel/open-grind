@@ -31,6 +31,7 @@ export class ConversationState {
 	pageKey: string | null = $state(null);
 	loading = $state(true);
 	loadingMore = $state(false);
+	refreshing = $state(false);
 	error: Error | null = $state(null);
 	lastReadTimestamp: number | null = $state(null);
 
@@ -125,7 +126,8 @@ export class ConversationState {
 	}
 
 	async #reconcileMessages(): Promise<void> {
-		if (this.loading || this.#destroyed) return;
+		if (this.loading || this.#destroyed || this.refreshing) return;
+		this.refreshing = true;
 		try {
 			const result = await getConversation({
 				conversationId: this.conversationId,
@@ -195,7 +197,17 @@ export class ConversationState {
 			}
 		} catch (error) {
 			console.error("Failed to reconcile messages", error);
+			showErrorToast({
+				label: "Failed to refresh messages",
+				error,
+			});
+		} finally {
+			this.refreshing = false;
 		}
+	}
+
+	refresh(): Promise<void> {
+		return this.#reconcileMessages();
 	}
 
 	retry(): void {

@@ -8,6 +8,7 @@ const PAGE_SIZE = 20;
 
 export class TapsState {
 	loading = $state(true);
+	refreshing = $state(false);
 	error: Error | null = $state(null);
 	visibleCount = $state(PAGE_SIZE);
 
@@ -75,6 +76,10 @@ export class TapsState {
 		this.#initial = this.#initialLoad();
 	}
 
+	refresh(): Promise<void> {
+		return this.#reconcile();
+	}
+
 	#upsert(tap: TapProfile): void {
 		const existing = this.#all.findIndex((t) => t.profileId === tap.profileId);
 		if (existing !== -1) this.#all.splice(existing, 1);
@@ -97,9 +102,11 @@ export class TapsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		await this.#initial.catch(() => {});
-		if (this.#destroyed) return;
+		if (this.#destroyed || this.refreshing) return;
+		this.refreshing = true;
 		try {
+			await this.#initial.catch(() => {});
+			if (this.#destroyed) return;
 			const { profiles } = await getReceivedTaps();
 			if (this.#destroyed) return;
 			this.#all = profiles;
@@ -110,6 +117,8 @@ export class TapsState {
 				label: "Failed to refresh taps",
 				error,
 			});
+		} finally {
+			this.refreshing = false;
 		}
 	}
 }
