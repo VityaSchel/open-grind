@@ -160,7 +160,7 @@ class ConversationsState {
 				: oldestFetchedTs;
 			for (const entry of [...this.entries]) {
 				const id = entry.data.conversationId;
-				if (id === activeId || fetched.has(id)) continue;
+				if (fetched.has(id)) continue;
 				if (entry.data.lastActivityTimestamp > windowFloor) {
 					this.remove(id);
 				}

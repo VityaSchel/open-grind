@@ -9,6 +9,7 @@ import {
 } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
 import {
+	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
 	ws,
@@ -106,6 +107,16 @@ export class ConversationState {
 						this.lastReadTimestamp = event.payload.timestamp;
 						this.#syncCache();
 					}
+				},
+			),
+			ws.on(
+				"chat.v1.conversation.delete",
+				chatV1ConversationDeleteEventSchema,
+				(event) => {
+					if (this.#destroyed) return;
+					if (!event.payload.conversationIds.includes(this.conversationId))
+						return;
+					void this.#reconcileMessages();
 				},
 			),
 		);
