@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import { IconContext } from "phosphor-svelte";
 	import "@fontsource-variable/ibm-plex-sans/wght.css";
 	import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
@@ -26,6 +27,16 @@
 	}: {
 		children?: import("svelte").Snippet;
 	} = $props();
+
+	const hasBottomNavBar = $derived(
+		page.route.id?.startsWith("/(protected)/(navbar)") ?? false,
+	);
+	const toastOffset = $derived({
+		top: "calc(var(--safe-area-top) + 0.5rem)",
+		bottom: hasBottomNavBar
+			? "calc(var(--content-pb) + 0.5rem)"
+			: "calc(var(--safe-area-bottom) + 0.5rem)",
+	});
 </script>
 
 <svelte:head>
@@ -41,6 +52,8 @@
 ></div>
 <Toaster
 	position="bottom-center"
+	offset={toastOffset}
+	mobileOffset={toastOffset}
 	toastOptions={{
 		style:
 			"background-color: var(--accent); color: var(--popover); border: 1px solid var(--border);",
