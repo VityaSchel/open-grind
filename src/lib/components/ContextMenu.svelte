@@ -25,6 +25,15 @@
 		children?: import("svelte").Snippet<[Placement]>;
 	} = $props();
 
+	const preferredPlacement: Placement = $derived(
+		isOut ? "left-start" : "right-start",
+	);
+	const fallbackPlacements: Placement[] = $derived(
+		isOut
+			? ["right-start", "bottom-end", "top-end"]
+			: ["left-start", "bottom-start", "top-start"],
+	);
+
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
 	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
@@ -37,13 +46,11 @@
 	$effect(() => {
 		if (!contextMenuTrigger || !contextMenuList) return;
 		computePosition(contextMenuTrigger, contextMenuList, {
-			placement: "right-start",
+			placement: preferredPlacement,
 			middleware: [
 				offset(8),
-				flip({
-					fallbackPlacements: ["left-start", "bottom-end"],
-				}),
-				shift(),
+				flip({ fallbackPlacements, fallbackStrategy: "bestFit" }),
+				shift({ padding: 8 }),
 			],
 			strategy: "fixed",
 		})
