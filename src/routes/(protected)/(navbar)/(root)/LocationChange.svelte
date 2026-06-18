@@ -21,7 +21,7 @@
 		expansion: number;
 	} = $props();
 
-	let pinPos: { lat: number; lon: number } | undefined = $state();
+	let pinPos: { lat: number; lon: number; zoom: number } | undefined = $state();
 	let geoMapPickerOpen = $state(false);
 
 	async function onSubmit(geohash: string) {
@@ -42,7 +42,10 @@
 		getPreferences()
 			.then(({ geohash }) => {
 				if (geohash) {
-					pinPos = decodeGeohash(geohash);
+					pinPos = {
+						...decodeGeohash(geohash),
+						zoom: 17,
+					};
 				}
 			})
 			.catch((error) => {
