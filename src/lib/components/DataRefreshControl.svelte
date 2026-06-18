@@ -12,12 +12,16 @@
 		updating,
 		position,
 		container,
+		windowScroll = false,
+		offset = 0,
 		class: className,
 		onclick,
 	}: {
 		updating?: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
+		windowScroll?: boolean;
+		offset?: number;
 		class: ClassValue;
 		onclick?: () => void;
 	} = $props();
@@ -43,9 +47,8 @@
 	let scrolling = $state(false);
 	let scrolled = $state(false);
 	let distance = $state(Infinity);
+	let measuredOffset = $state(0);
 
-	// Plain (non-reactive) flag: only ever read from DOM event handlers, never
-	// from a reactive scope, so it must not trigger effects when it changes.
 	let suppressRevealUntilIdle = false;
 
 	const progress = new Tween(0, revealTransition);
@@ -53,9 +56,12 @@
 	const space = $derived(realHeight + gap);
 	const distanceBeyondButton = $derived(distance - (revealed ? space : 0));
 
+	const effectiveOffset = $derived(windowScroll ? measuredOffset + offset : 0);
 	const verticalOffsetMax = $derived.by(() => {
 		let value = realHeight;
-		if (container) {
+		if (windowScroll) {
+			value += effectiveOffset;
+		} else if (container) {
 			const paddingStyle =
 				window.getComputedStyle(container)[
 					position === "top" ? "paddingTop" : "paddingBottom"
@@ -64,24 +70,38 @@
 		}
 		return -value;
 	});
-	const stickyMargin = $derived(scrolled ? stickyScrolledOffset : 0);
+	const stickyMargin = $derived(
+		effectiveOffset + (scrolled ? stickyScrolledOffset : 0),
+	);
 	const verticalOffset = Tween.of(
 		() => (updating ? stickyMargin : verticalOffsetMax),
 		labelTransition,
 	);
 
+	const scrollEl = $derived.by(() => {
+		if (!windowScroll) return container;
+		if (typeof document === "undefined") return null;
+		return document.scrollingElement ?? document.documentElement;
+	});
+	const scrollTop = () => scrollEl?.scrollTop ?? 0;
 	const maxScrollY = () =>
-		container ? container.scrollHeight - container.clientHeight : 0;
+		scrollEl ? scrollEl.scrollHeight - scrollEl.clientHeight : 0;
+	const scrollToY = (top: number, behavior: ScrollBehavior) => {
+		if (windowScroll) window.scroll({ top, behavior });
+		else container?.scroll({ top, behavior });
+	};
+	const scrollByY = (delta: number) => {
+		if (scrollEl) scrollEl.scrollTop += delta;
+	};
 	const occupiedAt = (p: number) =>
 		Math.round(p * realHeight) + Math.round(-gap * (1 - p)) + gap;
 
 	export function scrollToRest(behavior: ScrollBehavior = "instant") {
-		if (!container) return;
+		if (!scrollEl) return;
 		const rest = occupiedAt(progress.current);
 		const top = position === "top" ? rest : maxScrollY() - rest;
-		if (Math.abs(container.scrollTop - top) >= 1)
-			suppressRevealUntilIdle = true;
-		container.scroll({ top, behavior });
+		if (Math.abs(scrollTop() - top) >= 1) suppressRevealUntilIdle = true;
+		scrollToY(top, behavior);
 	}
 
 	// Reveal while updating; conceal once idle and scrolled clear of the button.
@@ -113,8 +133,8 @@
 		const occupied = occupiedAt(progress.current);
 		const delta = occupied - compensated;
 		compensated = occupied;
-		if (!container || delta === 0 || position !== "top") return;
-		container.scrollTop += delta;
+		if (delta === 0 || position !== "top") return;
+		scrollByY(delta);
 	});
 
 	// Initialize measurements and resting position once the container exists.
@@ -123,22 +143,43 @@
 			mounted = false;
 			return;
 		}
-		const el = container;
 		mounted = true;
-		gap = parseInt(window.getComputedStyle(el).gap, 10) || 0;
-		el.style.overflowAnchor = "none";
-		void tick().then(() => scrollToRest());
+		gap = parseInt(window.getComputedStyle(container).gap, 10) || 0;
+		const anchorEl = windowScroll
+			? scrollEl instanceof HTMLElement
+				? scrollEl
+				: null
+			: container;
+		const previousAnchor = anchorEl?.style.overflowAnchor ?? "";
+		if (anchorEl) anchorEl.style.overflowAnchor = "none";
+		if (!windowScroll) void tick().then(() => scrollToRest());
+		return () => {
+			if (anchorEl) anchorEl.style.overflowAnchor = previousAnchor;
+		};
 	});
 
-	// Track scroll/wheel activity on the container to reveal/conceal the control.
 	$effect(() => {
-		if (!container) return;
+		if (!windowScroll || !container || position !== "top") return;
+		const el = container;
+		const measure = () => {
+			const header = document.querySelector("[data-fixed-header]");
+			measuredOffset = header
+				? header.getBoundingClientRect().bottom
+				: el.getBoundingClientRect().top + scrollTop();
+		};
+		void tick().then(measure);
+		window.addEventListener("resize", measure);
+		return () => window.removeEventListener("resize", measure);
+	});
+
+	// Track scroll/wheel activity to reveal/conceal the control.
+	$effect(() => {
+		if (!container || !scrollEl) return;
+		const target: EventTarget = windowScroll ? window : container;
 
 		const updateDistance = () => {
 			distance =
-				position === "top"
-					? container.scrollTop
-					: maxScrollY() - container.scrollTop;
+				position === "top" ? scrollTop() : maxScrollY() - scrollTop();
 		};
 
 		let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -168,9 +209,7 @@
 
 		const onScroll = () => {
 			scrolled =
-				position === "top"
-					? container.scrollTop > 0
-					: container.scrollTop < maxScrollY() - 1;
+				position === "top" ? scrollTop() > 0 : scrollTop() < maxScrollY() - 1;
 			markActivity();
 			updateDistance();
 			if (revealed || suppressRevealUntilIdle) {
@@ -214,13 +253,15 @@
 		});
 		mutationObserver.observe(container, { childList: true });
 
-		container.addEventListener("scroll", onScroll);
-		container.addEventListener("scrollend", onScrollEnd);
-		container.addEventListener("wheel", onWheel, { passive: true });
+		target.addEventListener("scroll", onScroll);
+		target.addEventListener("scrollend", onScrollEnd);
+		target.addEventListener("wheel", onWheel as EventListener, {
+			passive: true,
+		});
 		return () => {
-			container.removeEventListener("scroll", onScroll);
-			container.removeEventListener("scrollend", onScrollEnd);
-			container.removeEventListener("wheel", onWheel);
+			target.removeEventListener("scroll", onScroll);
+			target.removeEventListener("scrollend", onScrollEnd);
+			target.removeEventListener("wheel", onWheel as EventListener);
 			clearTimeout(idleTimer);
 			clearTimeout(boundaryRevealTimer);
 			resizeObserver.disconnect();
@@ -232,7 +273,8 @@
 {#if mounted}
 	<div
 		class={[
-			"flex flex-col overflow-clip shrink-0 h-(--drc-height) opacity-(--drc-opacity) sticky z-10",
+			"flex flex-col overflow-clip shrink-0 h-(--drc-height) opacity-(--drc-opacity) sticky",
+			{ "z-0": windowScroll, "z-10": !windowScroll },
 			{ "justify-end": position === "top" },
 			{
 				"mt-(--drc-margin)": position === "bottom",
