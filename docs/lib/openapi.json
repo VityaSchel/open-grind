@@ -8865,12 +8865,22 @@
 				},
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/BannedTermsResponse"
+								}
+							}
+						}
 					}
 				},
 				"summary": "Update own profile (full)",
-				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces current version.",
-				"x-wip": true
+				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
+				"x-notes": [
+					"Because the profile is replaced fully, every editable field must be sent on each request, including fields not exposed in the edit UI such as `approximateDistance` and `profileTags`.",
+					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A successful update answers with an empty body; rejected fields come back in a [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse), and the offending field is not changed."
+				]
 			}
 		},
 		"/v4/me/profile": {
@@ -8900,8 +8910,10 @@
 					}
 				},
 				"summary": "Update own profile (partial)",
-				"description": "[Profile](/grindr-api/users/profiles#profile) object, only updates specified keys.",
-				"x-wip": true
+				"description": "[ProfilePatch](/grindr-api/users/profiles#profilepatch) object, only updates the specified keys. Applies structured fields only (e.g. `genders`, `pronouns`, `grindrTribes`, `tribesImInto`, `profileTags`, `sexualPosition`, and the `showAge`/`showDistance`/`showPosition`/`showTribes` flags).",
+				"x-notes": [
+					"The free-text fields `displayName` and `aboutMe` are silently ignored here even though `ProfilePatch` includes them — they are only persisted (and moderated) by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full)."
+				]
 			}
 		},
 		"/v4/profile-tags/suggestions": {
@@ -11074,6 +11086,47 @@
 						"$ref": "#/components/schemas/Profile"
 					}
 				],
+				"x-render-on-tag": "users/profiles"
+			},
+			"BannedTerms": {
+				"type": "object",
+				"properties": {
+					"terms": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "The banned terms that were detected in the submitted text."
+					}
+				},
+				"x-render-on-tag": "users/profiles",
+				"required": [
+					"terms"
+				]
+			},
+			"BannedTermsResponse": {
+				"type": "object",
+				"description": "Returned by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full) when moderated free-text fields contained banned terms. Each present key is a field that was rejected. Empty or absent body means the update was fully accepted.",
+				"properties": {
+					"display_name": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when `displayName` was rejected."
+					},
+					"about_me": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when `aboutMe` was rejected."
+					}
+				},
 				"x-render-on-tag": "users/profiles"
 			},
 			"ProfileSummaryWithRightNow": {
