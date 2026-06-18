@@ -1,3 +1,4 @@
+import { ApiError } from "$lib/api";
 import { markConversationAsRead } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
 import { reactToMessage, sendMessage } from "$lib/api/messages";
@@ -197,10 +198,14 @@ export class ConversationState {
 			}
 		} catch (error) {
 			console.error("Failed to reconcile messages", error);
-			showErrorToast({
-				label: "Failed to refresh messages",
-				error,
-			});
+			if (error instanceof ApiError && error.response?.status === 403) {
+				this.error = error;
+			} else {
+				showErrorToast({
+					label: "Failed to refresh messages",
+					error,
+				});
+			}
 		} finally {
 			this.refreshing = false;
 		}
@@ -274,10 +279,14 @@ export class ConversationState {
 			this.#syncCache();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load more messages",
-				error,
-			});
+			if (error instanceof ApiError && error.response?.status === 403) {
+				this.error = error;
+			} else {
+				showErrorToast({
+					label: "Failed to load more messages",
+					error,
+				});
+			}
 		} finally {
 			this.loadingMore = false;
 		}

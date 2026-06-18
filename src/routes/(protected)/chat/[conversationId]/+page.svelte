@@ -59,5 +59,6 @@
 	<MessagesList {conversationState} />
 	<MessageComposer
 		onSend={(message: Message) => conversationState.send(message)}
+		disabled={conversationState.loading || conversationState.error !== null}
 	/>
 </Card.Content>

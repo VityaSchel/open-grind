@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick, untrack } from "svelte";
 
+	import { ApiError } from "$lib/api";
 	import { showErrorToast } from "$lib/api/error";
 	import { deleteMessageForMe, unsendMessage } from "$lib/api/messages";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
@@ -89,7 +90,6 @@
 			},
 		};
 	}
-
 </script>
 
 <div
@@ -108,13 +108,21 @@
 			/>
 		{/each}
 	{:else if conversationState.error}
-		<ApiErrorDisplay
-			error={conversationState.error}
-			onRetry={() => conversationState.retry()}
-			class="m-auto"
-		/>
+		{#if conversationState.error instanceof ApiError && conversationState.error.response?.status === 403}
+			<p class="text-muted-foreground text-sm text-center m-auto">
+				Conversation is no longer available
+			</p>
+		{:else}
+			<ApiErrorDisplay
+				error={conversationState.error}
+				onRetry={() => conversationState.retry()}
+				class="m-auto"
+			/>
+		{/if}
 	{:else}
-		<div class="flex flex-col gap-1 min-h-full shrink-0 justify-end overscroll-auto">
+		<div
+			class="flex flex-col gap-1 min-h-full shrink-0 justify-end overscroll-auto"
+		>
 			{#if conversationState.loadingMore}
 				<Spinner class="mt-25 shrink-0 self-center" />
 			{/if}
