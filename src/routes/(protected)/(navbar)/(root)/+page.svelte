@@ -21,7 +21,9 @@
 			<LocationChooser onUpdate={() => (preferences = getPreferences())} />
 		</main>
 	{:else}
-		<main class="flex flex-col p-4 gap-4">
+		<main
+			class="flex flex-col p-4 gap-4 min-h-[calc(100dvh-var(--safe-area-top)-var(--content-pb)+3.5rem)]"
+		>
 			<TopBar
 				onUpdatePreferences={() => (preferences = getPreferences())}
 				onRefreshGrid={() => gridState.refresh()}

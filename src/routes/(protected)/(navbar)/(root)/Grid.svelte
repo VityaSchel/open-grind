@@ -78,7 +78,7 @@
 	}
 </script>
 
-<div class="profile-grid">
+<div class="profile-grid relative">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
 			<div class="aspect-square bg-stone-700 animate-pulse"></div>
@@ -121,7 +121,10 @@
 			{/each}
 		{/if}
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
-			<div class="col-span-full h-0" use:observeSentinel></div>
+			<div
+				class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+				use:observeSentinel
+			></div>
 		{/if}
 	{/if}
 </div>

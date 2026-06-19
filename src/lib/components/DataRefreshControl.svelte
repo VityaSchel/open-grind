@@ -24,7 +24,7 @@
 		windowScroll?: boolean;
 		offset?: number;
 		class: ClassValue;
-		containerClass: ClassValue;
+		containerClass?: ClassValue;
 		onclick?: () => void;
 	} = $props();
 

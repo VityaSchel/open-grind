@@ -80,23 +80,25 @@
 			position="top"
 			onclick={() => void conversations.refresh()}
 		/>
-		{#each conversations.entries as conversation, i (conversation.data.conversationId)}
-			{#if i < EAGER_COUNT}
-				<Conversation {conversation} />
+		<div class="flex flex-col gap-1 min-h-[calc(100%+1rem)]">
+			{#each conversations.entries as conversation, i (conversation.data.conversationId)}
+				{#if i < EAGER_COUNT}
+					<Conversation {conversation} />
+				{:else}
+					<LazyConversation {conversation} />
+				{/if}
 			{:else}
-				<LazyConversation {conversation} />
-			{/if}
-		{:else}
-			<EmptyConversationsList />
-		{/each}
-		{#if conversations.loadingMore}
-			{#each Array(6)}
-				<Skeleton class="w-full h-24.5 shrink-0" />
+				<EmptyConversationsList />
 			{/each}
-		{/if}
-		{#if conversations.nextPage !== null}
-			<div class="h-0" use:observeSentinel></div>
-		{/if}
+			{#if conversations.loadingMore}
+				{#each Array(6)}
+					<Skeleton class="w-full h-24.5 shrink-0" />
+				{/each}
+			{/if}
+			{#if conversations.nextPage !== null}
+				<div class="h-0" use:observeSentinel></div>
+			{/if}
+		</div>
 	{:catch error}
 		<div class="flex-1 flex">
 			<ApiErrorDisplay
