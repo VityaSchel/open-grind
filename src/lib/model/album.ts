@@ -8,7 +8,7 @@ export const albumPreviewSchema = z.object({
 });
 
 export const albumMinSchema = albumPreviewSchema.extend({
-	albumName: z.null(),
+	albumName: z.string().nullable(),
 	profileId: z.number().int(),
 	albumViewable: z.boolean(),
 });
