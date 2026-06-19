@@ -57,7 +57,6 @@
 			},
 		};
 	}
-
 </script>
 
 <div
@@ -77,6 +76,7 @@
 			{container}
 			updating={conversations.refreshing}
 			class="mb-3"
+			containerClass="z-10"
 			position="top"
 			onclick={() => void conversations.refresh()}
 		/>

@@ -201,6 +201,7 @@
 			{container}
 			updating={conversationState.refreshing}
 			class="mt-3 mb-2"
+			containerClass="z-10"
 			position="bottom"
 			onclick={() => void conversationState.refresh()}
 		/>

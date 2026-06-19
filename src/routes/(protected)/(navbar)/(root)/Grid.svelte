@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { uniqBy } from "lodash-es";
 	import { onMount } from "svelte";
-	import { cn } from "tailwind-variants";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";

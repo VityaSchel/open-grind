@@ -27,15 +27,18 @@
 				onRefreshGrid={() => gridState.refresh()}
 				bind:this={topBar}
 			/>
-			<div class="flex flex-col gap-4" bind:this={gridContainer}>
-				<DataRefreshControl
-					container={gridContainer}
-					windowScroll
-					updating={gridState.refreshing}
-					position="top"
-					class="mb-3"
-					onclick={() => void gridState.reload()}
-				/>
+			<div class="flex flex-col" bind:this={gridContainer}>
+				{#if !gridState.loading && !gridState.error}
+					<DataRefreshControl
+						container={gridContainer}
+						windowScroll
+						updating={gridState.refreshing}
+						position="top"
+						class="mb-3"
+						containerClass="z-1"
+						onclick={() => void gridState.reload()}
+					/>
+				{/if}
 				<Grid {geohash} onResetFilters={() => void topBar?.resetFilters()} />
 			</div>
 		</main>

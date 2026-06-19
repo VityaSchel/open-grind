@@ -15,6 +15,7 @@
 		windowScroll = false,
 		offset = 0,
 		class: className,
+		containerClass,
 		onclick,
 	}: {
 		updating?: boolean;
@@ -23,6 +24,7 @@
 		windowScroll?: boolean;
 		offset?: number;
 		class: ClassValue;
+		containerClass: ClassValue;
 		onclick?: () => void;
 	} = $props();
 
@@ -178,8 +180,7 @@
 		const target: EventTarget = windowScroll ? window : container;
 
 		const updateDistance = () => {
-			distance =
-				position === "top" ? scrollTop() : maxScrollY() - scrollTop();
+			distance = position === "top" ? scrollTop() : maxScrollY() - scrollTop();
 		};
 
 		let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -274,7 +275,6 @@
 	<div
 		class={[
 			"flex flex-col overflow-clip shrink-0 h-(--drc-height) opacity-(--drc-opacity) sticky",
-			{ "z-0": windowScroll, "z-10": !windowScroll },
 			{ "justify-end": position === "top" },
 			{
 				"mt-(--drc-margin)": position === "bottom",
@@ -283,6 +283,7 @@
 				"top-(--drc-offset)": position === "top",
 				"bottom-(--drc-offset)": position === "bottom",
 			},
+			containerClass,
 		]}
 		style="
 			--drc-progress: {progress.current};
@@ -296,7 +297,10 @@
 		{@render button()}
 	</div>
 {:else}
-	<div class="absolute flex invisible" bind:offsetHeight={realHeight}>
+	<div
+		class={["absolute flex invisible", containerClass]}
+		bind:offsetHeight={realHeight}
+	>
 		{@render button()}
 	</div>
 {/if}

@@ -149,6 +149,13 @@ export function clearProfileCaches() {
 	profilesCache.clear();
 }
 
+export function invalidateProfile(profileId: number) {
+	profilesCache.delete(profileId);
+	if (myProfileCache?.profile.profileId === profileId) {
+		myProfileCache = null;
+	}
+}
+
 export type ProfileEdit = Partial<
 	Pick<
 		Profile,
