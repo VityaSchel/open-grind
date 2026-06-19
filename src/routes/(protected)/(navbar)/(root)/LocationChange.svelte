@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GpsFixIcon, PencilSimpleIcon } from "phosphor-svelte";
+	import { MapPinIcon } from "phosphor-svelte";
 	import { onMount } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error";
@@ -14,11 +14,9 @@
 	let {
 		onUpdate,
 		class: className,
-		expansion,
 	}: {
 		onUpdate?: () => void;
 		class?: import("svelte/elements").ClassValue;
-		expansion: number;
 	} = $props();
 
 	let pinPos: { lat: number; lon: number; zoom: number } | undefined = $state();
@@ -68,19 +66,12 @@
 <Button
 	variant="secondary"
 	class={[
-		"transition-none relative *:absolute *:top-1/2 *:left-1/2 *:-translate-1/2 *:flex *:items-center *:justify-center *:gap-1.5 overflow-clip",
+		"transition-none relative *:absolute *:top-1/2 *:left-1/2 *:-translate-1/2 *:flex *:items-center *:justify-center *:gap-1.5 overflow-clip w-11",
 		className,
 	]}
-	style="width: max(44px, {expansion * 100}%)"
 	onclick={() => (geoMapPickerOpen = true)}
 >
-	<div style="opacity: {expansion}">
-		<PencilSimpleIcon weight="fill" />
-		Change location
-	</div>
-	<div style="opacity: {1 - expansion}">
-		<GpsFixIcon weight="fill" />
-	</div>
+	<MapPinIcon weight="fill" />
 </Button>
 <LocationChooser
 	{onSubmit}
