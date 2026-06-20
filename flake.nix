@@ -91,6 +91,7 @@
             androidSdk
             pkgs.pkg-config
             pkgs.stdenv.cc
+            pkgs.libclang.lib
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
             pkgs.libiconv
@@ -104,6 +105,7 @@
             ANDROID_NDK_ROOT = ndkRoot;
             NDK_HOME = ndkRoot;
             GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkRoot}/build-tools/${androidBuildToolsVersion}/aapt2";
+            LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
           }
           // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
             LIBRARY_PATH = "${pkgs.libiconv}/lib";
