@@ -87,11 +87,24 @@ const profilesCache = new Map<
 	{ profile: Profile; updatedAt: number }
 >();
 
-export async function getProfile(profileId: number) {
+const profilesInFlight = new Map<number, Promise<Profile>>();
+
+export async function getProfile(profileId: number): Promise<Profile> {
 	const cached = profilesCache.get(profileId);
 	if (cached && Date.now() - cached.updatedAt < 1000 * 60) {
 		return cached.profile;
 	}
+	let request = profilesInFlight.get(profileId);
+	if (!request) {
+		request = fetchProfile(profileId).finally(() => {
+			profilesInFlight.delete(profileId);
+		});
+		profilesInFlight.set(profileId, request);
+	}
+	return request;
+}
+
+async function fetchProfile(profileId: number): Promise<Profile> {
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
