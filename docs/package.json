@@ -5,21 +5,22 @@
 	"type": "module",
 	"module": "index.ts",
 	"scripts": {
-		"build": "bun run generate && vitepress build",
-		"deploy": "bun run build && bun gh-pages -d .vitepress/dist",
-		"preview": "vitepress preview",
-		"start": "bun run generate && vitepress dev",
-		"generate": "bun run scripts/generate-docs.ts && prettier --write lib/index.ts",
 		"audit:coverage": "bun run scripts/audit-coverage.ts",
 		"audit:links": "bun run scripts/audit-links.ts",
 		"audit:openapi": "bun run scripts/audit-openapi.ts",
 		"audit:queries": "bun run scripts/audit-queries.ts",
+		"build": "bun run generate && vitepress build",
 		"cleanup": "bun run scripts/cleanup-openapi.ts",
+		"deploy": "bun run build && bun gh-pages -d .vitepress/dist",
+		"generate": "bun run scripts/generate-docs.ts && prettier --write lib/index.ts",
+		"preview": "vitepress preview",
+		"start": "bun run generate && vitepress dev",
 		"validate": "bun run scripts/validate-openapi.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
 		"gh-pages": "^6.3.0",
+		"prettier": "^3.8.4",
 		"vitepress": "^2.0.0-alpha.17"
 	},
 	"peerDependencies": {
