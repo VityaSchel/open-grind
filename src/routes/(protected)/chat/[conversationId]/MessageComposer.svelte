@@ -10,7 +10,10 @@
 	import { Textarea } from "$lib/components/ui/textarea";
 	import type { Message } from "$lib/model/message";
 
-	let { onSend }: { onSend: (params: Message) => void | Promise<void> } =
+	let {
+		onSend,
+		disabled,
+	}: { onSend: (params: Message) => void | Promise<void>; disabled: boolean } =
 		$props();
 
 	let textContent = $state("");
@@ -52,6 +55,7 @@
 			}
 		}}
 		bind:value={textContent}
+		{disabled}
 	/>
 	{#if textContent === ""}
 		<div class="button" transition:fade={{ duration: 400, easing: expoOut }}>
@@ -68,6 +72,7 @@
 						},
 					});
 				}}
+				{disabled}
 			>
 				<MicrophoneIcon
 					weight="fill"
@@ -83,6 +88,7 @@
 				variant="ghost"
 				size="icon"
 				class="size-full cursor-pointer p-2"
+				{disabled}
 			>
 				<PaperPlaneRightIcon
 					weight="fill"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getPreferences } from "$lib/app-data/preferences.svelte";
+	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
 	import { gridState } from "./grid-state.svelte";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";
@@ -8,6 +9,7 @@
 	let preferences = $state(getPreferences());
 
 	let topBar: TopBar | null = $state(null);
+	let gridContainer: HTMLElement | null = $state(null);
 </script>
 
 <svelte:head>
@@ -19,13 +21,28 @@
 			<LocationChooser onUpdate={() => (preferences = getPreferences())} />
 		</main>
 	{:else}
-		<main class="flex flex-col p-4 gap-4">
+		<main
+			class="flex flex-col p-4 gap-4 min-h-[calc(100dvh-var(--safe-area-top)-var(--content-pb)+3.5rem)]"
+		>
 			<TopBar
 				onUpdatePreferences={() => (preferences = getPreferences())}
 				onRefreshGrid={() => gridState.refresh()}
 				bind:this={topBar}
 			/>
-			<Grid {geohash} onResetFilters={() => void topBar?.resetFilters()} />
+			<div class="flex flex-col" bind:this={gridContainer}>
+				{#if !gridState.loading && !gridState.error}
+					<DataRefreshControl
+						container={gridContainer}
+						windowScroll
+						updating={gridState.refreshing}
+						position="top"
+						class="mb-3"
+						containerClass="z-1"
+						onclick={() => void gridState.reload()}
+					/>
+				{/if}
+				<Grid {geohash} onResetFilters={() => void topBar?.resetFilters()} />
+			</div>
 		</main>
 	{/if}
 {/await}

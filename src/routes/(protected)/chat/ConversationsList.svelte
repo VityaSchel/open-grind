@@ -3,6 +3,7 @@
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations.svelte";
 	import Conversation from "./Conversation.svelte";
@@ -61,7 +62,7 @@
 <div
 	bind:this={container}
 	class={[
-		"flex flex-col gap-1 p-4 pb-[calc(0.5rem+var(--content-pb))] w-full h-full overflow-auto min-w-29.25",
+		"flex flex-col gap-1 p-4 pb-[calc(0.5rem+var(--content-pb))] w-full h-full overflow-auto min-w-29.25 overscroll-auto",
 		className,
 	]}
 	onscroll={() => (conversations.listScrollY = container?.scrollTop ?? 0)}
@@ -71,23 +72,33 @@
 			<Skeleton class="w-full h-24.5 shrink-0" />
 		{/each}
 	{:then}
-		{#each conversations.entries as conversation, i (conversation.data.conversationId)}
-			{#if i < EAGER_COUNT}
-				<Conversation {conversation} />
+		<DataRefreshControl
+			{container}
+			updating={conversations.refreshing}
+			class="mb-3"
+			containerClass="z-10"
+			position="top"
+			onclick={() => void conversations.refresh()}
+		/>
+		<div class="flex flex-col gap-1 min-h-[calc(100%+1rem)]">
+			{#each conversations.entries as conversation, i (conversation.data.conversationId)}
+				{#if i < EAGER_COUNT}
+					<Conversation {conversation} />
+				{:else}
+					<LazyConversation {conversation} />
+				{/if}
 			{:else}
-				<LazyConversation {conversation} />
-			{/if}
-		{:else}
-			<EmptyConversationsList />
-		{/each}
-		{#if conversations.loadingMore}
-			{#each Array(6)}
-				<Skeleton class="w-full h-24.5 shrink-0" />
+				<EmptyConversationsList />
 			{/each}
-		{/if}
-		{#if conversations.nextPage !== null}
-			<div class="h-0" use:observeSentinel></div>
-		{/if}
+			{#if conversations.loadingMore}
+				{#each Array(6)}
+					<Skeleton class="w-full h-24.5 shrink-0" />
+				{/each}
+			{/if}
+			{#if conversations.nextPage !== null}
+				<div class="h-0" use:observeSentinel></div>
+			{/if}
+		</div>
 	{:catch error}
 		<div class="flex-1 flex">
 			<ApiErrorDisplay

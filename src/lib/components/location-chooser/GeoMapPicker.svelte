@@ -48,18 +48,27 @@
 		return response;
 	});
 
-	let pendingCenter: { lat: number; lon: number } | undefined = $state();
-	export function centerAt({ lat, lon }: { lat: number; lon: number }) {
+	let pendingCenter: { lat: number; lon: number; zoom: number } | undefined =
+		$state();
+	export function centerAt({
+		lat,
+		lon,
+		zoom,
+	}: {
+		lat: number;
+		lon: number;
+		zoom: number;
+	}) {
 		if (!map) {
-			pendingCenter = { lat, lon };
+			pendingCenter = { lat, lon, zoom };
 		} else {
-			map.setView([lat, lon], 17);
+			map.setView([lat, lon], zoom);
 		}
 	}
 
 	$effect(() => {
 		if (pendingCenter && map) {
-			map.setView([pendingCenter.lat, pendingCenter.lon], 17);
+			map.setView([pendingCenter.lat, pendingCenter.lon], pendingCenter.zoom);
 			pendingCenter = undefined;
 		}
 	});

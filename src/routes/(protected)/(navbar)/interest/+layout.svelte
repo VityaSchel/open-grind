@@ -25,6 +25,7 @@
 <ProgressiveBlur
 	direction="topToBottom"
 	tag="nav"
+	data-fixed-header
 	class="fixed top-0 left-0 w-full z-10 pt-[calc(1rem+var(--safe-area-top))] pb-2 px-4"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
@@ -33,7 +34,9 @@
 	{@render tab("/interest/taps", "Taps")}
 </ProgressiveBlur>
 <div class="flex w-full p-4 flex-1">
-	<main class="w-full flex flex-col mx-auto gap-3 flex-1">
+	<main
+		class="w-full flex flex-col mx-auto gap-3 flex-1 min-h-[calc(100dvh+1.5rem-var(--safe-area-top)-var(--content-pb))]"
+	>
 		<div class="h-10"></div>
 		{@render children?.()}
 	</main>

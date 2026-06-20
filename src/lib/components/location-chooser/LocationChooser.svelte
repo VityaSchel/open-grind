@@ -18,6 +18,7 @@
 			| {
 					lat: number;
 					lon: number;
+					zoom: number;
 			  }
 			| undefined;
 	} = $props();
@@ -33,12 +34,21 @@
 
 	let geoMapPicker: GeoMapPicker | null = $state(null);
 
-	let pendingCenter: { lat: number; lon: number } | null = $state(null);
-	export function centerAt({ lat, lon }: { lat: number; lon: number }) {
+	let pendingCenter: { lat: number; lon: number; zoom: number } | null =
+		$state(null);
+	export function centerAt({
+		lat,
+		lon,
+		zoom,
+	}: {
+		lat: number;
+		lon: number;
+		zoom: number;
+	}) {
 		if (!geoMapPicker) {
-			pendingCenter = { lat, lon };
+			pendingCenter = { lat, lon, zoom };
 		} else {
-			geoMapPicker.centerAt({ lat, lon });
+			geoMapPicker.centerAt({ lat, lon, zoom });
 		}
 	}
 

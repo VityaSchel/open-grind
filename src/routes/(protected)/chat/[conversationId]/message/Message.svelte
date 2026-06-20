@@ -100,16 +100,16 @@
 
 	function onContextMenu() {
 		if (!messageElement) return;
-		const { x, y } = messageElement.getBoundingClientRect();
+		const rect = messageElement.getBoundingClientRect();
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = {
-			x,
-			y,
-			width: messageElement.clientWidth,
-			height: messageElement.offsetHeight,
+			x: rect.x,
+			y: rect.y,
+			width: rect.width,
+			height: rect.height,
 		};
 		tick()
 			.then(() => contextMenu?.showModal())
@@ -207,11 +207,18 @@
 		tabindex="0"
 		aria-label="Message"
 		ondblclick={(event) => {
+			const selection = window.getSelection();
+			if (
+				selection &&
+				!selection.isCollapsed &&
+				messageElement?.contains(selection.anchorNode)
+			)
+				return;
 			if (!isOut && onReact) {
 				event.preventDefault();
 				onReact(1);
+				selection?.removeAllRanges();
 			}
-			window.getSelection()?.removeAllRanges();
 		}}
 		onkeydown={(event) => {
 			if (event.key === "Enter" || event.key === " ") {
@@ -257,6 +264,8 @@
 	<MessageContextMenu
 		{contextMenuOpen}
 		{content}
+		{isOut}
+		selectable={message.type === "Text"}
 		onClose={() => (contextMenuOpen = false)}
 		style={inheritedStyles}
 		textContent={message.type === "Text" ? message.body.text : undefined}

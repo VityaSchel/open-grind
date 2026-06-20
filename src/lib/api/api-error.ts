@@ -33,7 +33,12 @@ export class ApiError extends Error {
 
 	get retryable(): boolean {
 		if (this.kind === "Http") return true;
-		if (this.response !== null && this.response.status >= 500) return true;
+		if (this.kind === "Auth" || this.kind === "Unauthorized") return true;
+		if (this.response !== null) {
+			const { status } = this.response;
+			if (status >= 500) return true;
+			if (status === 401 || status === 408 || status === 429) return true;
+		}
 		return false;
 	}
 

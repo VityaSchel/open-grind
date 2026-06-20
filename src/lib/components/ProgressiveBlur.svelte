@@ -8,6 +8,7 @@
 		children,
 		direction,
 		tag = "div",
+		...rest
 	}: {
 		class?: import("svelte/elements").ClassValue;
 		bgClass?: import("svelte/elements").ClassValue;
@@ -15,6 +16,7 @@
 		children?: import("svelte").Snippet;
 		direction: "topToBottom" | "bottomToTop";
 		tag?: keyof HTMLElementTagNameMap;
+		[key: string]: unknown;
 	} = $props();
 
 	const blurConfig = [
@@ -30,7 +32,7 @@
 	];
 </script>
 
-<svelte:element this={tag} class={className}>
+<svelte:element this={tag} class={className} {...rest}>
 	<div class={["absolute top-0 left-0 size-full z-11", bgClass]}></div>
 	{#each blurConfig as config, index}
 		<div

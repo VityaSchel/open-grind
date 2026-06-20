@@ -88,11 +88,24 @@ const profilesCache = new Map<
 	{ profile: Profile; updatedAt: number }
 >();
 
-export async function getProfile(profileId: number) {
+const profilesInFlight = new Map<number, Promise<Profile>>();
+
+export async function getProfile(profileId: number): Promise<Profile> {
 	const cached = profilesCache.get(profileId);
 	if (cached && Date.now() - cached.updatedAt < 1000 * 60) {
 		return cached.profile;
 	}
+	let request = profilesInFlight.get(profileId);
+	if (!request) {
+		request = fetchProfile(profileId).finally(() => {
+			profilesInFlight.delete(profileId);
+		});
+		profilesInFlight.set(profileId, request);
+	}
+	return request;
+}
+
+async function fetchProfile(profileId: number): Promise<Profile> {
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
@@ -150,6 +163,13 @@ export function clearProfileCaches() {
 	profilesCache.clear();
 }
 
+export function invalidateProfile(profileId: number) {
+	profilesCache.delete(profileId);
+	if (myProfileCache?.profile.profileId === profileId) {
+		myProfileCache = null;
+	}
+}
+
 export type ProfileEdit = Partial<
 	Pick<
 		Profile,
@@ -181,7 +201,11 @@ export type ProfileEdit = Partial<
 	>
 >;
 
-export function applyProfileEdit(base: Profile, patch: ProfileEdit): Profile {
+
+export type ProfileUpdate = ProfileEdit &
+	Pick<Profile, "approximateDistance" | "profileTags">;
+
+export function applyProfileEdit(base: Profile, patch: Partial<Profile>): Profile {
 	const merged = { ...base, ...patch };
 	if (patch.socialNetworks) {
 		merged.socialNetworks = { ...base.socialNetworks, ...patch.socialNetworks };
@@ -191,7 +215,7 @@ export function applyProfileEdit(base: Profile, patch: ProfileEdit): Profile {
 
 function mergeProfileEditIntoCaches(
 	cacheProfileId: number,
-	patch: ProfileEdit,
+	patch: Partial<Profile>,
 ) {
 	const cached = profilesCache.get(cacheProfileId);
 	if (cached) {
@@ -203,7 +227,7 @@ function mergeProfileEditIntoCaches(
 	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
 		const next: Record<string, unknown> = { ...myProfileCache.profile };
 		for (const key of Object.keys(patch)) {
-			if (key in next) next[key] = patch[key as keyof ProfileEdit];
+			if (key in next) next[key] = patch[key as keyof Profile];
 		}
 		myProfileCache = {
 			profile: next as typeof myProfileCache.profile,
@@ -222,6 +246,65 @@ export async function patchOwnProfile(
 	});
 	res.assertOk();
 	mergeProfileEditIntoCaches(cacheProfileId, patch);
+}
+
+const bannedTermsSchema = z
+	.object({ terms: z.array(z.string()).nullish() })
+	.nullish();
+
+const profileModerationSchema = z.object({
+	display_name: bannedTermsSchema,
+	about_me: bannedTermsSchema,
+	gender_display: bannedTermsSchema,
+	pronouns_display: bannedTermsSchema,
+});
+
+const moderatedFieldLabels: Record<
+	keyof z.infer<typeof profileModerationSchema>,
+	string
+> = {
+	display_name: "Display name",
+	about_me: "About me",
+	gender_display: "Gender",
+	pronouns_display: "Pronouns",
+};
+
+export class ProfileModerationError extends Error {
+	fields: string[];
+
+	constructor(fields: string[]) {
+		super(`Banned terms in: ${fields.join(", ")}`);
+		this.name = "ProfileModerationError";
+		this.fields = fields;
+	}
+}
+
+export async function updateOwnProfile(
+	cacheProfileId: number,
+	profile: ProfileUpdate,
+) {
+	const res = await fetchRest("/v3.1/me/profile", {
+		method: "PUT",
+		body: profile,
+	});
+	res.assertOk();
+
+	let moderation: z.infer<typeof profileModerationSchema> = {};
+	try {
+		moderation = profileModerationSchema.parse(res.json());
+	} catch {
+		moderation = {};
+	}
+	const rejected = (
+		Object.keys(moderatedFieldLabels) as (keyof typeof moderatedFieldLabels)[]
+	)
+		.filter((key) => (moderation[key]?.terms?.length ?? 0) > 0)
+		.map((key) => moderatedFieldLabels[key]);
+	if (rejected.length > 0) {
+		throw new ProfileModerationError(rejected);
+	}
+
+	mergeProfileEditIntoCaches(cacheProfileId, profile);
 }
 
 export async function deleteProfilePhotos(

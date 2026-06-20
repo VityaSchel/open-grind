@@ -1,4 +1,5 @@
 <script lang="ts">
+	import isEqual from "lodash-es/isEqual";
 	import {
 		FacebookLogoIcon,
 		InstagramLogoIcon,
@@ -6,12 +7,15 @@
 	} from "phosphor-svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { expoOut } from "svelte/easing";
+	import { fly } from "svelte/transition";
 
 	import { showErrorToast } from "$lib/api/error";
 	import {
 		deleteProfilePhotos,
-		patchOwnProfile,
-		type ProfileEdit,
+		ProfileModerationError,
+		type ProfileUpdate,
+		updateOwnProfile,
 	} from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import { WheelPicker } from "$lib/components/ui/carousel";
@@ -138,15 +142,49 @@
 	let medias = $state(
 		initial.medias.map((media) => ({ mediaHash: media.mediaHash })),
 	);
-	let savedMediaHashes = initial.medias.map((media) => media.mediaHash);
 
 	let saving = $state(false);
 	const aboutMeOverLimit = $derived(aboutMe.length > fieldLimits.aboutMe);
 
+	function formSnapshot() {
+		return {
+			displayName,
+			aboutMe,
+			genderIds: [...genderIds],
+			pronounIds: [...pronounIds],
+			age,
+			showAge,
+			sexualPosition,
+			showPosition,
+			height,
+			weightKg,
+			bodyType,
+			ethnicity,
+			relationshipStatus,
+			showTribes,
+			grindrTribes: [...grindrTribes],
+			tribesImInto: [...tribesImInto],
+			lookingFor: [...lookingFor],
+			meetAt: [...meetAt],
+			nsfw,
+			hivStatus,
+			lastTestedDate,
+			sexualHealth: [...sexualHealth],
+			vaccineIds: [...vaccineIds],
+			instagram,
+			twitter,
+			facebook,
+			mediaHashes: medias.map((media) => media.mediaHash),
+		};
+	}
+
+	let savedForm = $state(formSnapshot());
+	const dirty = $derived(!isEqual(formSnapshot(), savedForm));
+
 	async function save() {
-		if (saving || aboutMeOverLimit) return;
+		if (saving || aboutMeOverLimit || !dirty) return;
 		saving = true;
-		const patch = {
+		const body = {
 			displayName: displayName.trim() || null,
 			aboutMe: aboutMe.trim() || null,
 			genders: genderIds,
@@ -175,20 +213,28 @@
 				twitter: twitter ? { userId: twitter } : undefined,
 				facebook: facebook ? { userId: facebook } : undefined,
 			},
-		} as ProfileEdit;
+			approximateDistance: initial.approximateDistance,
+			profileTags: initial.profileTags,
+		} as ProfileUpdate;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
-		const removedHashes = savedMediaHashes.filter(
+		const removedHashes = savedForm.mediaHashes.filter(
 			(hash) => !currentHashes.has(hash),
 		);
 		try {
 			await Promise.all([
-				patchOwnProfile(ourProfileId, patch),
+				updateOwnProfile(ourProfileId, body),
 				deleteProfilePhotos(ourProfileId, removedHashes),
 			]);
-			savedMediaHashes = [...currentHashes];
+			savedForm = formSnapshot();
 			toast.success("Profile updated");
 		} catch (error) {
-			showErrorToast({ label: "Failed to update profile", error });
+			if (error instanceof ProfileModerationError) {
+				toast.error(
+					`Couldn't save: ${error.fields.join(" and ")} contains terms that aren't allowed`,
+				);
+			} else {
+				showErrorToast({ label: "Failed to update profile", error });
+			}
 		} finally {
 			saving = false;
 		}
@@ -352,20 +398,25 @@
 		/>
 	</section>
 
-	<div class="sticky bottom-(--content-pb) z-10 -mx-4 px-4 py-3">
-		<Button
-			type="submit"
-			size="lg"
-			class="h-12 w-full text-base"
-			disabled={saving || aboutMeOverLimit}
-			onclick={() => save()}
+	{#if dirty}
+		<div
+			class="sticky bottom-(--content-pb) z-10 -mx-4 px-4 py-3"
+			transition:fly={{ y: 80, duration: 300, easing: expoOut }}
 		>
-			{#if saving}
-				<Spinner class="size-5" />
-			{/if}
-			Save changes
-		</Button>
-	</div>
+			<Button
+				type="submit"
+				size="lg"
+				class="h-12 w-full text-base"
+				disabled={saving || aboutMeOverLimit}
+				onclick={() => save()}
+			>
+				{#if saving}
+					<Spinner class="size-5" />
+				{/if}
+				Save changes
+			</Button>
+		</div>
+	{/if}
 </form>
 
 <style lang="postcss">

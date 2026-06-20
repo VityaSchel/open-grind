@@ -35,6 +35,7 @@ class ConversationsState {
 	entries = $state<Conversation[]>([]);
 	nextPage = $state<number | null>(null);
 	loadingMore = $state(false);
+	refreshing = $state(false);
 	inboxLastViewedAt = $state(0);
 	initial: Promise<void> = $state(Promise.resolve());
 	listScrollY = 0;
@@ -105,17 +106,81 @@ class ConversationsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		if (this.#destroyed) return;
-		await this.initial.catch(() => {});
+		if (this.#destroyed || this.refreshing) return;
+		this.refreshing = true;
+		try {
+			await this.initial.catch(() => {});
 
-		const activeId = this.#activeConversationId;
-		for (const id of [...this.#messageCache.keys()]) {
-			if (id !== activeId) this.#messageCache.delete(id);
+			const activeId = this.#activeConversationId;
+			for (const id of [...this.#messageCache.keys()]) {
+				if (id !== activeId) this.#messageCache.delete(id);
+			}
+
+			const oldestLoadedTs = this.entries.reduce(
+				(min, e) => Math.min(min, e.data.lastActivityTimestamp),
+				Number.POSITIVE_INFINITY,
+			);
+			const fetched = new Map<string, Conversation>();
+			let oldestFetchedTs = Number.POSITIVE_INFINITY;
+			let page: number | null = 1;
+			let reachedEnd = false;
+			for (let guard = 0; page !== null && guard < 100; guard++) {
+				const currentPage: number = page;
+				const result = await getConversations(currentPage);
+				for (const entry of result.entries) {
+					if (!fetched.has(entry.data.conversationId)) {
+						fetched.set(entry.data.conversationId, entry);
+					}
+					oldestFetchedTs = Math.min(
+						oldestFetchedTs,
+						entry.data.lastActivityTimestamp,
+					);
+				}
+				page = result.nextPage;
+				if (page === null) {
+					reachedEnd = true;
+					break;
+				}
+				if (oldestFetchedTs <= oldestLoadedTs) break;
+			}
+			// Continue lazy loading from wherever the refresh stopped.
+			this.nextPage = reachedEnd ? null : page;
+
+			for (const incoming of fetched.values()) {
+				const existing = this.#find(incoming.data.conversationId);
+				if (existing) {
+					existing.data.preview = incoming.data.preview;
+					existing.data.lastActivityTimestamp =
+						incoming.data.lastActivityTimestamp;
+					if (incoming.data.conversationId !== activeId) {
+						existing.data.unreadCount = incoming.data.unreadCount;
+					}
+				} else {
+					this.entries.push(incoming);
+				}
+			}
+
+			const windowFloor = reachedEnd
+				? Number.NEGATIVE_INFINITY
+				: oldestFetchedTs;
+			for (const entry of [...this.entries]) {
+				const id = entry.data.conversationId;
+				if (fetched.has(id)) continue;
+				if (entry.data.lastActivityTimestamp > windowFloor) {
+					this.remove(id);
+				}
+			}
+
+			this.#sortEntries();
+		} catch (error) {
+			console.error(error);
+			showErrorToast({
+				label: "Failed to refresh conversations",
+				error,
+			});
+		} finally {
+			this.refreshing = false;
 		}
-
-		await this.#syncLatest({
-			errorLabel: "Failed to reconcile conversation list",
-		});
 	}
 
 	async #syncLatest({ errorLabel }: { errorLabel: string }): Promise<void> {
@@ -143,8 +208,15 @@ class ConversationsState {
 
 	async #load(page: number): Promise<void> {
 		const result = await getConversations(page);
-		this.entries.push(...result.entries);
+		const known = new Set(this.entries.map((e) => e.data.conversationId));
+		for (const entry of result.entries) {
+			if (!known.has(entry.data.conversationId)) this.entries.push(entry);
+		}
 		this.nextPage = result.nextPage;
+	}
+
+	refresh(): Promise<void> {
+		return this.#reconcile();
 	}
 
 	retry(): void {

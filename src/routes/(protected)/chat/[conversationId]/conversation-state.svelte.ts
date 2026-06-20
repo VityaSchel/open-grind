@@ -1,3 +1,4 @@
+import { ApiError } from "$lib/api";
 import { markConversationAsRead } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
 import { reactToMessage, sendMessage } from "$lib/api/messages";
@@ -8,6 +9,7 @@ import {
 } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
 import {
+	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
 	ws,
@@ -31,6 +33,7 @@ export class ConversationState {
 	pageKey: string | null = $state(null);
 	loading = $state(true);
 	loadingMore = $state(false);
+	refreshing = $state(false);
 	error: Error | null = $state(null);
 	lastReadTimestamp: number | null = $state(null);
 
@@ -106,6 +109,16 @@ export class ConversationState {
 					}
 				},
 			),
+			ws.on(
+				"chat.v1.conversation.delete",
+				chatV1ConversationDeleteEventSchema,
+				(event) => {
+					if (this.#destroyed) return;
+					if (!event.payload.conversationIds.includes(this.conversationId))
+						return;
+					void this.#reconcileMessages();
+				},
+			),
 		);
 	}
 
@@ -125,7 +138,8 @@ export class ConversationState {
 	}
 
 	async #reconcileMessages(): Promise<void> {
-		if (this.loading || this.#destroyed) return;
+		if (this.loading || this.#destroyed || this.refreshing) return;
+		this.refreshing = true;
 		try {
 			const result = await getConversation({
 				conversationId: this.conversationId,
@@ -195,7 +209,21 @@ export class ConversationState {
 			}
 		} catch (error) {
 			console.error("Failed to reconcile messages", error);
+			if (error instanceof ApiError && error.response?.status === 403) {
+				this.error = error;
+			} else {
+				showErrorToast({
+					label: "Failed to refresh messages",
+					error,
+				});
+			}
+		} finally {
+			this.refreshing = false;
 		}
+	}
+
+	refresh(): Promise<void> {
+		return this.#reconcileMessages();
 	}
 
 	retry(): void {
@@ -262,10 +290,14 @@ export class ConversationState {
 			this.#syncCache();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load more messages",
-				error,
-			});
+			if (error instanceof ApiError && error.response?.status === 403) {
+				this.error = error;
+			} else {
+				showErrorToast({
+					label: "Failed to load more messages",
+					error,
+				});
+			}
 		} finally {
 			this.loadingMore = false;
 		}

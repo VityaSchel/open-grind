@@ -14,6 +14,9 @@ import {
 	getMyProfile,
 	getProfile,
 	patchOwnProfile,
+	ProfileModerationError,
+	type ProfileUpdate,
+	updateOwnProfile,
 } from "$lib/api/users/profiles";
 import type { Profile } from "$lib/model/profile";
 
@@ -22,7 +25,16 @@ const PROFILE_ID = 123;
 function ok(data: unknown) {
 	return {
 		assertOk() {},
+		json: () => data,
 		jsonParsed: () => data,
+	};
+}
+
+function update(patch: Partial<ProfileUpdate> = {}): ProfileUpdate {
+	return {
+		approximateDistance: false,
+		profileTags: [],
+		...patch,
 	};
 }
 
@@ -57,6 +69,9 @@ beforeEach(() => {
 			}
 			if (path === "/v4/me/profile" && method === "PATCH") {
 				return Promise.resolve(ok(null));
+			}
+			if (path === "/v3.1/me/profile" && method === "PUT") {
+				return Promise.resolve(ok({}));
 			}
 			if (path === "/v4/me/profile") {
 				return Promise.resolve(ok({ profiles: [shortProfile()] }));
@@ -110,6 +125,43 @@ describe("patchOwnProfile", () => {
 			facebook: { userId: "fb" },
 			instagram: { userId: "ig" },
 		});
+	});
+});
+
+describe("updateOwnProfile", () => {
+	it("uses the full-replace PUT endpoint", async () => {
+		await updateOwnProfile(PROFILE_ID, update({ displayName: "Neo" }));
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			"/v3.1/me/profile",
+			expect.objectContaining({ method: "PUT" }),
+		);
+	});
+
+	it("merges free-text fields the PATCH endpoint ignores into the cache", async () => {
+		await getProfile(PROFILE_ID);
+
+		await updateOwnProfile(
+			PROFILE_ID,
+			update({ displayName: "Neo", aboutMe: "the one" }),
+		);
+
+		const cached = await getProfile(PROFILE_ID);
+		expect(cached.displayName).toBe("Neo");
+		expect(cached.aboutMe).toBe("the one");
+	});
+
+	it("throws on banned terms and skips the cache merge", async () => {
+		await getProfile(PROFILE_ID);
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(ok({ about_me: { terms: ["banned"] } })),
+		);
+
+		await expect(
+			updateOwnProfile(PROFILE_ID, update({ aboutMe: "banned" })),
+		).rejects.toBeInstanceOf(ProfileModerationError);
+
+		expect((await getProfile(PROFILE_ID)).aboutMe).toBeUndefined();
 	});
 });
 

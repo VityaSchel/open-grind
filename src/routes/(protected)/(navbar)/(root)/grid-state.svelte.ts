@@ -17,6 +17,7 @@ class GridState {
 	nextPage = $state<number | null>(0);
 	loadingMore = $state(false);
 	loading = $state(false);
+	refreshing = $state(false);
 	error = $state<Error | null>(null);
 
 	get errorMessage(): string | null {
@@ -41,6 +42,16 @@ class GridState {
 		this.#reset();
 		this.scrollY = 0;
 		void this.#fetchProfiles(this.#geohash);
+	}
+
+	async reload(): Promise<void> {
+		if (!this.#geohash || this.refreshing) return;
+		this.refreshing = true;
+		try {
+			await this.#fetchProfiles(this.#geohash, { silent: true });
+		} finally {
+			this.refreshing = false;
+		}
 	}
 
 	#reset(): void {
@@ -126,7 +137,10 @@ class GridState {
 		}
 	}
 
-	async #fetchProfiles(geohash: string): Promise<void> {
+	async #fetchProfiles(
+		geohash: string,
+		opts?: { silent?: boolean },
+	): Promise<void> {
 		try {
 			const { gridSearchFilters } = await getPreferences();
 			const query = {
@@ -199,13 +213,21 @@ class GridState {
 			this.items = result.items;
 			this.partialBatches = result.partialBatches;
 			this.nextPage = result.nextPage;
+			this.error = null;
 			this.loading = false;
 		} catch (err) {
 			console.error(err);
-			this.error =
-				err instanceof Error
-					? err
-					: new Error("Failed to fetch profiles", { cause: err });
+			if (opts?.silent) {
+				showErrorToast({
+					label: "Failed to refresh profiles",
+					error: err,
+				});
+			} else {
+				this.error =
+					err instanceof Error
+						? err
+						: new Error("Failed to fetch profiles", { cause: err });
+			}
 			this.loading = false;
 		}
 	}
