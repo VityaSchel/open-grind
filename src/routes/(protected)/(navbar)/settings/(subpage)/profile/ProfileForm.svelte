@@ -229,9 +229,12 @@
 			toast.success("Profile updated");
 		} catch (error) {
 			if (error instanceof ProfileModerationError) {
-				toast.error(
-					`Couldn't save: ${error.fields.join(" and ")} contains terms that aren't allowed`,
-				);
+				const detail = error.rejected
+					.map((r) => `${r.field}: ${r.terms.join(", ")}`)
+					.join("; ");
+				toast.error("Couldn't save — these terms aren't allowed", {
+					description: detail || undefined,
+				});
 			} else {
 				showErrorToast({ label: "Failed to update profile", error });
 			}

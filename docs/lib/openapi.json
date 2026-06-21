@@ -8865,7 +8865,10 @@
 				},
 				"responses": {
 					"200": {
-						"description": "OK",
+						"description": "The update was accepted. The response body is empty."
+					},
+					"400": {
+						"description": "A moderated free-text field contained banned terms. The body is a [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) (`type` = `urn:gr:err:hit_banned_terms`) naming the offending fields and their terms. The whole update is rejected — no field is persisted.",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -8879,7 +8882,7 @@
 				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
 				"x-notes": [
 					"Because the profile is replaced fully, every editable field must be sent on each request, including fields not exposed in the edit UI such as `approximateDistance` and `profileTags`.",
-					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A successful update answers with an empty body; rejected fields come back in a [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse), and the offending field is not changed."
+					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A clean update answers `200` with an empty body. If a moderated field contains banned terms the request fails with a `400` [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) naming the offending fields; the update is rejected **wholesale**, so none of the submitted fields — not even the clean ones — are persisted. Only a `200` should be treated as success."
 				]
 			}
 		},
@@ -11106,8 +11109,24 @@
 			},
 			"BannedTermsResponse": {
 				"type": "object",
-				"description": "Returned by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full) when moderated free-text fields contained banned terms. Each present key is a field that was rejected. Empty or absent body means the update was fully accepted.",
+				"description": "Body of the `400` returned by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full) when a moderated free-text field contained banned terms. Each present field key is a field that was rejected. The whole update is rejected — no field is persisted. A fully-accepted update instead answers `200` with an empty body.",
 				"properties": {
+					"type": {
+						"type": "string",
+						"description": "Error type URN. `urn:gr:err:hit_banned_terms` for this response.",
+						"example": "urn:gr:err:hit_banned_terms"
+					},
+					"title": {
+						"type": "string",
+						"example": "Hit banned terms"
+					},
+					"status": {
+						"type": "integer",
+						"example": 400
+					},
+					"traceId": {
+						"type": "string"
+					},
 					"display_name": {
 						"allOf": [
 							{
@@ -11125,6 +11144,24 @@
 						],
 						"nullable": true,
 						"description": "Present when `aboutMe` was rejected."
+					},
+					"gender_display": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when the custom gender display text was rejected."
+					},
+					"pronouns_display": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when the custom pronoun display text was rejected."
 					}
 				},
 				"x-render-on-tag": "users/profiles"

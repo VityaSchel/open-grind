@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
+import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import {
@@ -252,31 +253,56 @@ const bannedTermsSchema = z
 	.object({ terms: z.array(z.string()).nullish() })
 	.nullish();
 
-const profileModerationSchema = z.object({
+const bannedTermsErrorSchema = z.object({
+	type: z.literal("urn:gr:err:hit_banned_terms"),
 	display_name: bannedTermsSchema,
 	about_me: bannedTermsSchema,
 	gender_display: bannedTermsSchema,
 	pronouns_display: bannedTermsSchema,
 });
 
-const moderatedFieldLabels: Record<
-	keyof z.infer<typeof profileModerationSchema>,
-	string
-> = {
-	display_name: "Display name",
-	about_me: "About me",
-	gender_display: "Gender",
-	pronouns_display: "Pronouns",
-};
+const moderatedFieldKeys = [
+	"display_name",
+	"about_me",
+	"gender_display",
+	"pronouns_display",
+] as const;
+
+const moderatedFieldLabels: Record<(typeof moderatedFieldKeys)[number], string> =
+	{
+		display_name: "Display name",
+		about_me: "About me",
+		gender_display: "Gender",
+		pronouns_display: "Pronouns",
+	};
+
+export type ModeratedField = { field: string; terms: string[] };
 
 export class ProfileModerationError extends Error {
-	fields: string[];
+	rejected: ModeratedField[];
 
-	constructor(fields: string[]) {
-		super(`Banned terms in: ${fields.join(", ")}`);
+	constructor(rejected: ModeratedField[]) {
+		super(`Banned terms in: ${rejected.map((r) => r.field).join(", ")}`);
 		this.name = "ProfileModerationError";
-		this.fields = fields;
+		this.rejected = rejected;
 	}
+}
+
+function readBannedTerms(body: string): ModeratedField[] | null {
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(body);
+	} catch {
+		return null;
+	}
+	const result = bannedTermsErrorSchema.safeParse(parsed);
+	if (!result.success) return null;
+	return moderatedFieldKeys
+		.map((key) => ({
+			field: moderatedFieldLabels[key],
+			terms: result.data[key]?.terms ?? [],
+		}))
+		.filter((entry) => entry.terms.length > 0);
 }
 
 export async function updateOwnProfile(
@@ -287,24 +313,24 @@ export async function updateOwnProfile(
 		method: "PUT",
 		body: profile,
 	});
-	res.assertOk();
 
-	let moderation: z.infer<typeof profileModerationSchema> = {};
-	try {
-		moderation = profileModerationSchema.parse(res.json());
-	} catch {
-		moderation = {};
+	if (res.status === 200) {
+		mergeProfileEditIntoCaches(cacheProfileId, profile);
+		return;
 	}
-	const rejected = (
-		Object.keys(moderatedFieldLabels) as (keyof typeof moderatedFieldLabels)[]
-	)
-		.filter((key) => (moderation[key]?.terms?.length ?? 0) > 0)
-		.map((key) => moderatedFieldLabels[key]);
-	if (rejected.length > 0) {
+
+	const body = res.text();
+	const rejected = readBannedTerms(body);
+	if (rejected !== null) {
 		throw new ProfileModerationError(rejected);
 	}
 
-	mergeProfileEditIntoCaches(cacheProfileId, profile);
+	res.assertOk();
+	throw new ApiError({
+		message: `Unexpected ${res.status} response from profile update`,
+		request: { method: "PUT", path: "/v3.1/me/profile", body: profile },
+		response: { status: res.status, body },
+	});
 }
 
 export async function deleteProfilePhotos(

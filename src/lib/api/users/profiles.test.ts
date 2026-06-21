@@ -24,9 +24,33 @@ const PROFILE_ID = 123;
 
 function ok(data: unknown) {
 	return {
+		status: 200,
 		assertOk() {},
 		json: () => data,
 		jsonParsed: () => data,
+		text: () => (data == null ? "" : JSON.stringify(data)),
+	};
+}
+
+function okRaw(text: string, status = 200) {
+	return {
+		status,
+		assertOk() {
+			if (status < 200 || status >= 300) {
+				throw new Error(`API request failed with status ${status}`);
+			}
+		},
+		text: () => text,
+	};
+}
+
+function httpError(status: number, body: unknown) {
+	return {
+		status,
+		assertOk() {
+			throw new Error(`API request failed with status ${status}`);
+		},
+		text: () => (typeof body === "string" ? body : JSON.stringify(body)),
 	};
 }
 
@@ -151,17 +175,72 @@ describe("updateOwnProfile", () => {
 		expect(cached.aboutMe).toBe("the one");
 	});
 
-	it("throws on banned terms and skips the cache merge", async () => {
+	it("merges into the cache when the server answers with an empty body", async () => {
+		await getProfile(PROFILE_ID);
+		fetchRestMock.mockImplementationOnce(() => Promise.resolve(okRaw("")));
+
+		await updateOwnProfile(PROFILE_ID, update({ displayName: "Trinity" }));
+
+		expect((await getProfile(PROFILE_ID)).displayName).toBe("Trinity");
+	});
+
+	it("throws ProfileModerationError with the banned terms on a 400", async () => {
 		await getProfile(PROFILE_ID);
 		fetchRestMock.mockImplementationOnce(() =>
-			Promise.resolve(ok({ about_me: { terms: ["banned"] } })),
+			Promise.resolve(
+				httpError(400, {
+					type: "urn:gr:err:hit_banned_terms",
+					title: "Hit banned terms",
+					status: 400,
+					display_name: { terms: ["BANNED_TERM"] },
+				}),
+			),
+		);
+
+		const error = await updateOwnProfile(
+			PROFILE_ID,
+			update({ displayName: "BANNED_TERM" }),
+		).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(ProfileModerationError);
+		expect((error as ProfileModerationError).rejected).toEqual([
+			{ field: "Display name", terms: ["BANNED_TERM"] },
+		]);
+		expect((await getProfile(PROFILE_ID)).displayName).toBeUndefined();
+	});
+
+	it("hard-fails on a non-200 whose body is not a banned-terms error", async () => {
+		await getProfile(PROFILE_ID);
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(httpError(400, { type: "urn:gr:err:something_else" })),
 		);
 
 		await expect(
-			updateOwnProfile(PROFILE_ID, update({ aboutMe: "banned" })),
-		).rejects.toBeInstanceOf(ProfileModerationError);
+			updateOwnProfile(PROFILE_ID, update({ displayName: "Neo" })),
+		).rejects.toThrow("status 400");
 
-		expect((await getProfile(PROFILE_ID)).aboutMe).toBeUndefined();
+		expect((await getProfile(PROFILE_ID)).displayName).toBeUndefined();
+	});
+
+	it("hard-fails on a non-200 with an unparseable body", async () => {
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(httpError(500, "<html>err</html>")),
+		);
+
+		await expect(
+			updateOwnProfile(PROFILE_ID, update({ displayName: "Neo" })),
+		).rejects.toThrow("status 500");
+	});
+
+	it("does not treat a non-200 success code as success", async () => {
+		await getProfile(PROFILE_ID);
+		fetchRestMock.mockImplementationOnce(() => Promise.resolve(okRaw("", 204)));
+
+		await expect(
+			updateOwnProfile(PROFILE_ID, update({ displayName: "Neo" })),
+		).rejects.toBeInstanceOf(Error);
+
+		expect((await getProfile(PROFILE_ID)).displayName).toBeUndefined();
 	});
 });
 

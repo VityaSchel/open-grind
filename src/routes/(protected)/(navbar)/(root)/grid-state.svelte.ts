@@ -28,6 +28,7 @@ class GridState {
 
 	#geohash: string | null = null;
 	#loadingBatches = new Set<number>();
+	#fetchToken = 0;
 
 	load(geohash: string): void {
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
@@ -141,6 +142,7 @@ class GridState {
 		geohash: string,
 		opts?: { silent?: boolean },
 	): Promise<void> {
+		const token = ++this.#fetchToken;
 		try {
 			const { gridSearchFilters } = await getPreferences();
 			const query = {
@@ -207,8 +209,9 @@ class GridState {
 				}),
 				fresh: gridSearchFilters?.isFresh || undefined,
 			} satisfies z.infer<typeof cascadeV3QuerySchema>;
-			this.currentQuery = query;
 			const result = await getGrid(query);
+			if (token !== this.#fetchToken) return;
+			this.currentQuery = query;
 			this.#loadingBatches.clear();
 			this.items = result.items;
 			this.partialBatches = result.partialBatches;
@@ -216,6 +219,7 @@ class GridState {
 			this.error = null;
 			this.loading = false;
 		} catch (err) {
+			if (token !== this.#fetchToken) return;
 			console.error(err);
 			if (opts?.silent) {
 				showErrorToast({

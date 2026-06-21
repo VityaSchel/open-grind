@@ -4,7 +4,7 @@
 
 Unofficial Grindr client. Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
 
-Status as of 21th May, 2026: **🚧 Early MVP testing build is available 🚧**.
+Status as of 21th June, 2026: **🚧 Early MVP build is available 🚧**.
 
 ## Usage
 
