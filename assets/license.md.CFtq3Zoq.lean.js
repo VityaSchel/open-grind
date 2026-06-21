@@ -1,1 +1,0 @@
-import{_ as t,o,c as r,ak as i}from"./chunks/framework.Dpc0wyhY.js";const I=JSON.parse('{"title":"MIT License","description":"","frontmatter":{},"headers":[],"relativePath":"license.md","filePath":"license.md"}'),n={name:"license.md"};function a(s,e,h,T,c,l){return o(),r("div",null,[...e[0]||(e[0]=[i("",5)])])}const O=t(n,[["render",a]]);export{I as __pageData,O as default};
