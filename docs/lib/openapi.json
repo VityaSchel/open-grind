@@ -9900,6 +9900,15 @@
 				],
 				"x-render-on-tag": "right-now"
 			},
+			"RightNowShareLocation": {
+				"type": "string",
+				"enum": [
+					"DISTANCE_AND_MAP",
+					"DISTANCE_ONLY",
+					"NONE"
+				],
+				"x-render-on-tag": "right-now"
+			},
 			"ViewSourceEnum": {
 				"type": "string",
 				"enum": [
@@ -10823,8 +10832,7 @@
 				"properties": {
 					"mediaId": {
 						"type": "integer",
-						"format": "int64",
-						"nullable": true
+						"format": "int64"
 					},
 					"thumbnailUrl": {
 						"type": "string"
@@ -10836,8 +10844,7 @@
 						"type": "string"
 					},
 					"isNsfw": {
-						"type": "boolean",
-						"nullable": true
+						"type": "boolean"
 					}
 				},
 				"x-render-on-tag": "users/profiles",
@@ -11037,9 +11044,12 @@
 								"type": "boolean"
 							},
 							"rightNowShareLocation": {
-								"type": "string",
-								"nullable": true,
-								"description": "`\"NONE\"` or `null`"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									}
+								],
+								"nullable": true
 							},
 							"rightNowMedias": {
 								"type": "array",
