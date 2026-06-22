@@ -19,7 +19,7 @@ export const filterIsFreshSchema = z.boolean();
 export const filterAgeEnabledSchema = z.boolean();
 export const filterAgeSchema = z.array(z.number().min(18).max(102)).length(2);
 
-export const filterGendersEnabledSchema = z.boolean();
+export const filterGendersEnabledSchema = z.boolean().default(false);
 export const filterGendersSchema = z.array(z.number().int().nonnegative());
 
 export const filterTagsEnabledSchema = z.boolean();
@@ -111,107 +111,61 @@ export const filterHealthPracticesSchema = z.array(
 );
 
 export const gridSearchFiltersSchema = z.object({
-	isFavorite: filterIsFavoriteSchema,
-	isOnline: filterIsOnlineSchema,
-	isRightNow: filterIsRightNowSchema,
+	isFavorite: filterIsFavoriteSchema.default(false),
+	isOnline: filterIsOnlineSchema.default(false),
+	isRightNow: filterIsRightNowSchema.default(false),
 
-	ageEnabled: filterAgeEnabledSchema,
-	age: filterAgeSchema,
+	ageEnabled: filterAgeEnabledSchema.default(false),
+	age: filterAgeSchema.default([18, 102]),
 
-	genderEnabled: filterGendersEnabledSchema,
-	genders: filterGendersSchema,
+	genderEnabled: filterGendersEnabledSchema.default(false),
+	genders: filterGendersSchema.default([]),
 
-	tagsEnabled: filterTagsEnabledSchema,
-	tags: filterTagsSchema,
+	tagsEnabled: filterTagsEnabledSchema.default(false),
+	tags: filterTagsSchema.default([]),
 
-	positionEnabled: filterPositionEnabledSchema,
-	positions: filterPositionSchema,
+	positionEnabled: filterPositionEnabledSchema.default(false),
+	positions: filterPositionSchema.default([]),
 
-	photosEnabled: filterPhotosEnabledSchema,
-	photos: filterPhotosSchema,
+	photosEnabled: filterPhotosEnabledSchema.default(false),
+	photos: filterPhotosSchema.default([]),
 
-	tribesEnabled: filterTribesEnabledSchema,
-	tribes: filterTribesSchema,
+	tribesEnabled: filterTribesEnabledSchema.default(false),
+	tribes: filterTribesSchema.default([]),
 
-	bodyTypesEnabled: filterBodyTypeEnabledSchema,
-	bodyTypes: filterBodyTypeSchema,
+	bodyTypesEnabled: filterBodyTypeEnabledSchema.default(false),
+	bodyTypes: filterBodyTypeSchema.default([]),
 
-	heightEnabled: filterHeightEnabledSchema,
-	height: filterHeightSchema,
+	heightEnabled: filterHeightEnabledSchema.default(false),
+	height: filterHeightSchema.default([120, 242]),
 
-	weightEnabled: filterWeightEnabledSchema,
-	weight: filterWeightSchema,
+	weightEnabled: filterWeightEnabledSchema.default(false),
+	weight: filterWeightSchema.default([40, 273]),
 
-	relationshipStatusesEnabled: filterRelationshipStatusEnabledSchema,
-	relationshipStatuses: filterRelationshipStatusSchema,
+	relationshipStatusesEnabled:
+		filterRelationshipStatusEnabledSchema.default(false),
+	relationshipStatuses: filterRelationshipStatusSchema.default([]),
 
-	acceptNSFWPicsEnabled: filterAcceptNSFWPicsEnabledSchema,
-	acceptNSFWPics: filterAcceptNSFWPicsSchema,
+	acceptNSFWPicsEnabled: filterAcceptNSFWPicsEnabledSchema.default(false),
+	acceptNSFWPics: filterAcceptNSFWPicsSchema.default([]),
 
-	lookingForEnabled: filterLookingForEnabledSchema,
-	lookingFor: filterLookingForSchema,
+	lookingForEnabled: filterLookingForEnabledSchema.default(false),
+	lookingFor: filterLookingForSchema.default([]),
 
-	meetAtEnabled: filterMeetAtEnabledSchema,
-	meetAt: filterMeetAtSchema,
+	meetAtEnabled: filterMeetAtEnabledSchema.default(false),
+	meetAt: filterMeetAtSchema.default([]),
 
-	haventChattedTodayEnabled: filterHaventChattedTodayEnabledSchema,
+	haventChattedTodayEnabled:
+		filterHaventChattedTodayEnabledSchema.default(false),
 
-	healthPracticesEnabled: filterHealthPracticesEnabledSchema,
-	healthPractices: filterHealthPracticesSchema,
+	healthPracticesEnabled: filterHealthPracticesEnabledSchema.default(false),
+	healthPractices: filterHealthPracticesSchema.default([]),
 
-	isFresh: filterIsFreshSchema,
+	isFresh: filterIsFreshSchema.default(false),
 });
 
 export type GridSearchFilters = z.infer<typeof gridSearchFiltersSchema>;
 
-export const defaultFilters: GridSearchFilters = {
-	isFavorite: false,
-	isOnline: false,
-	isRightNow: false,
-
-	ageEnabled: false,
-	age: [18, 102],
-
-	genderEnabled: false,
-	genders: [],
-
-	tagsEnabled: false,
-	tags: [],
-
-	positionEnabled: false,
-	positions: [],
-
-	photosEnabled: false,
-	photos: [],
-
-	tribesEnabled: false,
-	tribes: [],
-
-	bodyTypesEnabled: false,
-	bodyTypes: [],
-
-	heightEnabled: false,
-	height: [120, 242],
-
-	weightEnabled: false,
-	weight: [40, 273],
-
-	relationshipStatusesEnabled: false,
-	relationshipStatuses: [],
-
-	acceptNSFWPicsEnabled: false,
-	acceptNSFWPics: [],
-
-	lookingForEnabled: false,
-	lookingFor: [],
-
-	meetAtEnabled: false,
-	meetAt: [],
-
-	haventChattedTodayEnabled: false,
-
-	healthPracticesEnabled: false,
-	healthPractices: [],
-
-	isFresh: false,
-} satisfies GridSearchFilters;
+export const defaultFilters: GridSearchFilters = gridSearchFiltersSchema.parse(
+	{},
+);

@@ -50,6 +50,7 @@ export async function getPreferences(): Promise<Preferences> {
 			return preferences;
 		})
 		.catch((error: unknown) => {
+			console.error(error);
 			toast.error("Failed to load preferences. Reset to defaults?", {
 				action: {
 					label: "Reset",
@@ -65,7 +66,6 @@ export async function getPreferences(): Promise<Preferences> {
 		});
 	return structuredClone(await hydrating);
 }
-
 
 export function getUnitsSnapshot(): UnitSystem {
 	return preferencesSnapshot.units;

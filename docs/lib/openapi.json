@@ -10685,7 +10685,8 @@
 						"type": "array",
 						"items": {
 							"type": "integer"
-						}
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders). As of June 22, 2026, submitting gender ID `62` (\"Ask me\") causes a `500 Internal Server Error`."
 					},
 					"pronouns": {
 						"type": "array",
