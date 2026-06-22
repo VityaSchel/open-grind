@@ -3,12 +3,12 @@ import z from "zod";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const cascadeResponseProfileSchema = z.object({
-	profileId: z.number().int().nonnegative(),
+	profileId: z.int().nonnegative(),
 	onlineUntil: unixTimestampMsSchema.nullable(),
 	displayName: z.string().nullable().optional(),
-	distanceMeters: z.number().int().nonnegative().optional(),
+	distanceMeters: z.int().nonnegative().optional(),
 	rightNow: z.string(),
-	unreadCount: z.number().int().nonnegative(),
+	unreadCount: z.int().nonnegative(),
 	isVisiting: z.boolean(),
 	isPopular: z.boolean(),
 });
@@ -46,10 +46,10 @@ export const cascadeResponseXtraMpuV1Schema = z.object({
 export const cascadeExploreAggregationLocationItemSchema = z.object({
 	"@type": z.literal("ExploreAggregationItem$Location"),
 	data: z.object({
-		onlineCount: z.number().int().nonnegative(),
+		onlineCount: z.int().nonnegative(),
 		uuid: z.string(),
 		location: z.object({
-			id: z.number().int(),
+			id: z.int(),
 			name: z.string(),
 			suffix: z.string(),
 			lat: z.number(),
@@ -81,9 +81,9 @@ export const cascadeResponseExploreAggregationV1Schema = z.object({
 export const cascadeResponseFavHeaderV1Schema = z.object({
 	type: z.literal("favs_header_v1"),
 	data: z.object({
-		available: z.number().int().nonnegative(),
-		displayed: z.number().int().nonnegative(),
-		total: z.number().int().nonnegative(),
+		available: z.int().nonnegative(),
+		displayed: z.int().nonnegative(),
+		total: z.int().nonnegative(),
 	}),
 });
 
@@ -120,7 +120,7 @@ export const cascadeResponseSponsoredProfileV1Schema = z.object({
 export const cascadeResponseBrazeEventProfileV1Schema = z.object({
 	type: z.literal("braze_event_profile_v1"),
 	data: z.object({
-		profileId: z.number().int().nonnegative(),
+		profileId: z.int().nonnegative(),
 		onlineUntil: unixTimestampMsSchema.nullable().optional(),
 		displayName: z.string().nullable().optional(),
 		primaryImageUrl: z.url().nullable().optional(),
@@ -131,7 +131,7 @@ export const cascadeResponseBrazeEventProfileV1Schema = z.object({
 export const cascadeResponseFavsXtraUpsellV1Schema = z.object({
 	type: z.literal("favs_xtra_upsell_v1"),
 	data: z.object({
-		available: z.number().int().nonnegative(),
+		available: z.int().nonnegative(),
 	}),
 });
 
@@ -152,12 +152,12 @@ export const cascadeResponseFavoritesHeaderNoXtraResultsV1Schema = z.object({
 
 export const cascadeResponseProfileHideStatusSchema = z.object({
 	type: z.literal("profile_hide_status"),
-	count: z.number().int().nonnegative(),
+	count: z.int().nonnegative(),
 });
 
 export const cascadeResponseSchema = z.object({
 	items: z.array(z.unknown()),
-	nextPage: z.number().int().nonnegative().nullable(),
+	nextPage: z.int().nonnegative().nullable(),
 	shuffled: z.boolean(),
 	hiddenProfiles: z.unknown(),
 	hiddenProfileInfo: z.unknown(),

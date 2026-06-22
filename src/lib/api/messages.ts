@@ -17,7 +17,7 @@ const conversationMessagesSchema = z.object({
 		mediaHash: z.string().nullable(),
 		name: z.string().nullable(),
 		onlineUntil: z.number().nullable(),
-		profileId: z.number().int(),
+		profileId: z.int(),
 		showDistance: z.boolean(),
 	}),
 });

@@ -15,13 +15,13 @@ const messageBaseSchema = z.object({
 export const apiResponseMessageOverlaySchema = z.object({
 	messageId: z.string(),
 	conversationId: z.string(),
-	senderId: z.number().int().nonnegative(),
+	senderId: z.int().nonnegative(),
 	timestamp: unixTimestampMsSchema,
 	unsent: z.boolean(),
 	reactions: z.array(
 		z.object({
-			profileId: z.number().int().nonnegative(),
-			reactionType: z.number().int().nonnegative(),
+			profileId: z.int().nonnegative(),
+			reactionType: z.int().nonnegative(),
 		}),
 	),
 	// replyToMessage: z.unknown().nullable(),
@@ -35,8 +35,7 @@ export const albumMessageSchema = messageBaseSchema.safeExtend({
 	body: z.object({
 		...albumPreviewSchema.shape,
 		...albumExpirationSchema.shape,
-		coverUrl: z.url(),
-		ownerProfileId: z.number().int().nonnegative().nullable(),
+		coverUrl: z.url(),ownerProfileId: z.int().nonnegative().nullable(),
 		isViewable: z.boolean(),
 		hasVideo: z.boolean(),
 		hasPhoto: z.boolean(),
@@ -69,9 +68,9 @@ export type ExpiringAlbumV2Message = z.infer<
 export const albumContentReactionMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("AlbumContentReaction"),
 	body: z.object({
-		albumId: z.number().int().nonnegative(),
-		ownerProfileId: z.number().int().nonnegative().nullable(),
-		albumContentId: z.number().int().nonnegative(),
+		albumId: z.int().nonnegative(),
+		ownerProfileId: z.int().nonnegative().nullable(),
+		albumContentId: z.int().nonnegative(),
 		previewUrl: z.url().nullable(),
 		expiresAt: unixTimestampMsSchema.nullable(),
 		viewable: z.boolean(),
@@ -98,11 +97,11 @@ export type AlbumContentReplyMessage = z.infer<
 export const audioMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Audio"),
 	body: z.object({
-		mediaId: z.number().int().nonnegative(),
+		mediaId: z.int().nonnegative(),
 		mediaHash: mediaHashPrivateSchema.nullable(),
 		url: z.url(),
 		contentType: z.string().nullable(),
-		length: z.number().int().nonnegative().nullable(),
+		length: z.int().nonnegative().nullable(),
 		expiresAt: unixTimestampMsSchema.nullable(),
 	}),
 });
@@ -112,14 +111,14 @@ export type AudioMessage = z.infer<typeof audioMessageSchema>;
 export const videoMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Video"),
 	body: z.object({
-		mediaId: z.number().int().nonnegative().nullable(),
+		mediaId: z.int().nonnegative().nullable(),
 		url: z.url().nullable(),
 		fileCacheKey: z.string().optional(),
 		contentType: z.string().nullable(),
-		length: z.number().int().nonnegative(),
-		maxViews: z.number().int().nonnegative().nullable(),
+		length: z.int().nonnegative(),
+		maxViews: z.int().nonnegative().nullable(),
 		looping: z.boolean().nullable(),
-		viewsRemaining: z.number().int().nonnegative().optional(),
+		viewsRemaining: z.int().nonnegative().optional(),
 	}),
 });
 
@@ -157,8 +156,8 @@ export const giphyMessageSchema = messageBaseSchema.safeExtend({
 		urlPath: z.url(),
 		stillPath: z.url(),
 		previewPath: z.string(),
-		width: z.number().int().nonnegative(),
-		height: z.number().int().nonnegative(),
+		width: z.int().nonnegative(),
+		height: z.int().nonnegative(),
 		imageHash: z.string(),
 	}),
 });
@@ -167,9 +166,9 @@ export type GiphyMessage = z.infer<typeof giphyMessageSchema>;
 
 const imageBaseMessageSchema = messageBaseSchema.safeExtend({
 	body: z.object({
-		mediaId: z.number().int().nonnegative(),
-		width: z.number().int().nonnegative().nullable(),
-		height: z.number().int().nonnegative().nullable(),
+		mediaId: z.int().nonnegative(),
+		width: z.int().nonnegative().nullable(),
+		height: z.int().nonnegative().nullable(),
 	}),
 });
 
@@ -191,7 +190,7 @@ export const expiringImageMessageSchema = imageBaseMessageSchema.safeExtend({
 	body: z.object({
 		...imageBaseMessageSchema.shape.body.shape,
 		url: z.url().nullable(),
-		viewsRemaining: z.number().int().nonnegative().nullable(),
+		viewsRemaining: z.int().nonnegative().nullable(),
 	}),
 });
 
@@ -211,7 +210,7 @@ export const privateVideoMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("PrivateVideo"),
 	body: z.object({
 		...videoMessageSchema.shape.body.shape,
-		viewCount: z.number().int().nonnegative().nullable(),
+		viewCount: z.int().nonnegative().nullable(),
 	}),
 });
 

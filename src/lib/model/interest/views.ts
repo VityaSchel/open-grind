@@ -13,8 +13,8 @@ export const viewPreviewSchema = z.object({
 	lastViewed: profileMaskedSchema.shape.lastViewed,
 	isSecretAdmirer: z.boolean(),
 	viewedCount: z.object({
-		totalCount: z.number().int().nonnegative(),
-		maxDisplayCount: z.number().int().nonnegative(),
+		totalCount: z.int().nonnegative(),
+		maxDisplayCount: z.int().nonnegative(),
 	}),
 });
 

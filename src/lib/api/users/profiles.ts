@@ -202,11 +202,13 @@ export type ProfileEdit = Partial<
 	>
 >;
 
-
 export type ProfileUpdate = ProfileEdit &
 	Pick<Profile, "approximateDistance" | "profileTags">;
 
-export function applyProfileEdit(base: Profile, patch: Partial<Profile>): Profile {
+export function applyProfileEdit(
+	base: Profile,
+	patch: Partial<Profile>,
+): Profile {
 	const merged = { ...base, ...patch };
 	if (patch.socialNetworks) {
 		merged.socialNetworks = { ...base.socialNetworks, ...patch.socialNetworks };
@@ -268,13 +270,15 @@ const moderatedFieldKeys = [
 	"pronouns_display",
 ] as const;
 
-const moderatedFieldLabels: Record<(typeof moderatedFieldKeys)[number], string> =
-	{
-		display_name: "Display name",
-		about_me: "About me",
-		gender_display: "Gender",
-		pronouns_display: "Pronouns",
-	};
+const moderatedFieldLabels: Record<
+	(typeof moderatedFieldKeys)[number],
+	string
+> = {
+	display_name: "Display name",
+	about_me: "About me",
+	gender_display: "Gender",
+	pronouns_display: "Pronouns",
+};
 
 export type ModeratedField = { field: string; terms: string[] };
 
@@ -390,8 +394,8 @@ export async function getProfileUploadedPhotos() {
 				medias: z.array(
 					z.object({
 						mediaHash: mediaHashPublicSchema,
-						type: z.number().int(),
-						state: z.number().int(),
+						type: z.int(),
+						state: z.int(),
 					}),
 				),
 			}),

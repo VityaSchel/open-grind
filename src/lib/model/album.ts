@@ -3,18 +3,18 @@ import z from "zod";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const albumPreviewSchema = z.object({
-	albumId: z.number().int(),
+	albumId: z.int(),
 	hasUnseenContent: z.boolean(),
 });
 
 export const albumMinSchema = albumPreviewSchema.extend({
 	albumName: z.string().nullable(),
-	profileId: z.number().int(),
+	profileId: z.int(),
 	albumViewable: z.boolean(),
 });
 
 export const albumDetailsSchema = z.object({
-	sharedCount: z.number().int(),
+	sharedCount: z.int(),
 	createdAt: z.iso.datetime({ local: true }),
 	updatedAt: z.iso.datetime({ local: true }),
 });
@@ -37,10 +37,10 @@ export const albumExpirationSchema = z.object({
 });
 
 export const albumContentMin = z.object({
-	contentId: z.number().int(),
+	contentId: z.int(),
 	contentType: z.string(),
 	coverUrl: z.url(),
-	statusId: z.number().int(),
+	statusId: z.int(),
 });
 
 export const albumContentSchema = albumContentMin.extend({

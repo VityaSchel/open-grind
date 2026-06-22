@@ -13,7 +13,7 @@ const albumResponseSchema = z.object({
 	content: z.array(
 		z.object({
 			...albumContentSchema.shape,
-			remainingViews: z.number().int().optional(),
+			remainingViews: z.int().optional(),
 		}),
 	),
 });

@@ -20,7 +20,7 @@ export const filterAgeEnabledSchema = z.boolean();
 export const filterAgeSchema = z.array(z.number().min(18).max(102)).length(2);
 
 export const filterGendersEnabledSchema = z.boolean().default(false);
-export const filterGendersSchema = z.array(z.number().int().nonnegative());
+export const filterGendersSchema = z.array(z.int().nonnegative());
 
 export const filterTagsEnabledSchema = z.boolean();
 export const filterTagsSchema = z.array(z.string());

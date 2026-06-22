@@ -3,7 +3,10 @@ import z from "zod";
 import { tapTypeSchema } from "$lib/model/interest/taps";
 import { viewSourceEnumSchema } from "$lib/model/interest/view-source";
 import { mediaHashPublicSchema } from "$lib/model/media";
-import { rightNowStatusSchema } from "$lib/model/right-now";
+import {
+	rightNowShareLocationSchema,
+	rightNowStatusSchema,
+} from "$lib/model/right-now";
 
 export const SexualPosition = {
 	Top: 1,
@@ -252,19 +255,19 @@ export const vaccinesSchema = z.enum(Vaccine);
 export type VaccineId = z.infer<typeof vaccinesSchema>;
 
 export const genderSchema = z.object({
-	genderId: z.number().int(),
+	genderId: z.int(),
 	gender: z.string(),
-	displayGroup: z.number().int().optional(),
-	sortProfile: z.number().int().nullable().optional(),
+	displayGroup: z.int().optional(),
+	sortProfile: z.int().nullable().optional(),
 	genderPlural: z.string().nullable().optional(),
-	excludeOnProfileSelection: z.array(z.number().int()).nullable().optional(),
-	alsoClassifiedAs: z.array(z.number().int()).optional(),
+	excludeOnProfileSelection: z.array(z.int()).nullable().optional(),
+	alsoClassifiedAs: z.array(z.int()).optional(),
 });
 
 export type Gender = z.infer<typeof genderSchema>;
 
 export const pronounSchema = z.object({
-	pronounId: z.number().int(),
+	pronounId: z.int(),
 	pronoun: z.string(),
 });
 
@@ -291,11 +294,11 @@ export const socialNetworksSchema = z.object({
 export type SocialNetworks = z.infer<typeof socialNetworksSchema>;
 
 export const rightNowMediaSchema = z.object({
-	mediaId: z.number().int().nullable(),
+	mediaId: z.int(),
 	thumbnailUrl: z.string(),
 	fullImageUrl: z.string(),
 	contentType: z.string(),
-	isNsfw: z.boolean().nullable(),
+	isNsfw: z.boolean(),
 });
 
 export type RightNowMedia = z.infer<typeof rightNowMediaSchema>;
@@ -303,7 +306,7 @@ export type RightNowMedia = z.infer<typeof rightNowMediaSchema>;
 export const travelPlanSchema = z.object({
 	endDate: z.number().nullable(),
 	geohash: z.string(),
-	travelPlanId: z.number().int().nullable(),
+	travelPlanId: z.int().nullable(),
 	locationName: z.string(),
 	showOnProfile: z.boolean().nullable(),
 	startDate: z.number().nullable(),
@@ -319,7 +322,7 @@ export const profileMaskedMinSchema = z.object({
 
 export const profileMaskedSchema = profileMaskedMinSchema.extend({
 	lastViewed: z.number().nullable(),
-	seen: z.number().int().nonnegative().nullable(),
+	seen: z.int().nonnegative().nullable(),
 	rightNow: rightNowStatusSchema,
 	sexualPosition: sexualPositionSchema.nullable().optional(),
 	foundVia: viewSourceEnumSchema.nullable().optional(),
@@ -334,7 +337,7 @@ export const profileMinSchema = z.object({
 export const profileShortSchema = profileMaskedSchema
 	.extend(profileMinSchema.shape)
 	.extend({
-		age: z.number().int().nonnegative().nullable(),
+		age: z.int().nonnegative().nullable(),
 		showAge: z.boolean(),
 		showDistance: z.boolean(),
 		approximateDistance: z.boolean(),
@@ -344,8 +347,8 @@ export const profileShortSchema = profileMaskedSchema
 		medias: z.array(
 			z.object({
 				mediaHash: mediaHashPublicSchema,
-				type: z.number().int().nonnegative(),
-				state: z.number().int().nonnegative(),
+				type: z.int().nonnegative(),
+				state: z.int().nonnegative(),
 				reason: z.string().nullable(),
 				takenOnGrindr: z.boolean().nullable(),
 				createdAt: z.number().nonnegative().nullable(),
@@ -356,8 +359,8 @@ export const profileShortSchema = profileMaskedSchema
 export const profileFieldsSchema = z.object({
 	meetAt: z.array(meetAtSchema).optional(),
 	vaccines: z.array(vaccinesSchema).optional(),
-	genders: z.array(z.number().int().nonnegative()).nullable().optional(),
-	pronouns: z.array(z.number().int().nonnegative()).nullable().optional(),
+	genders: z.array(z.int().nonnegative()).nullable().optional(),
+	pronouns: z.array(z.int().nonnegative()).nullable().optional(),
 });
 
 export const profileRightNowSchema = z.object({
@@ -409,7 +412,7 @@ export const profileSchema = profileShortSchema
 		isInAList: z.boolean(),
 		tribesImInto: z.array(tribeSchema).nullable(),
 		showVipBadge: z.boolean(),
-		rightNowShareLocation: z.literal("NONE").nullable(),
+		rightNowShareLocation: rightNowShareLocationSchema.nullable(),
 		rightNowMedias: z.array(rightNowMediaSchema),
 	});
 

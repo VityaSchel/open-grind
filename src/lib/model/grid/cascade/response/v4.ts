@@ -36,7 +36,7 @@ export const cascadeV4ResponseFullProfileV1Schema = z.object({
 	data: z.object({
 		...cascadeResponseFullProfileV1Schema.shape.data.shape,
 		...cascadeV4ResponseProfileSchema.shape,
-		age: z.number().int().nonnegative().optional(),
+		age: z.int().nonnegative().optional(),
 		heightCm: z.number().nonnegative().optional(),
 		weightGrams: z.number().nonnegative().optional(),
 		bodyType: bodyTypeSchema,

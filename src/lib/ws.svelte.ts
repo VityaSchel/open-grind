@@ -54,7 +54,7 @@ export const viewedMeV1NewViewReceivedEventSchema =
 	notificationEventSchema.safeExtend({
 		type: z.literal("viewed_me.v1.new_view_received"),
 		payload: z.object({
-			viewedCount: z.number().int().nullable(),
+			viewedCount: z.int().nullable(),
 			mostRecent: z
 				.object({
 					profileId: z.coerce.number().int().nonnegative(),

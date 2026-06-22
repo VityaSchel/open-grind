@@ -20,7 +20,7 @@ export const methods = {
 	},
 	auth_state: {
 		request: z.undefined(),
-		response: z.number().int().nonnegative().nullable(),
+		response: z.int().nonnegative().nullable(),
 	},
 	refresh_token: {
 		request: z.undefined(),
