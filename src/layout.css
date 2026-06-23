@@ -153,6 +153,10 @@ a {
 	border: 1px solid var(--color-border) !important;
 }
 
+[data-sonner-toaster][data-y-position="top"] {
+	z-index: 149999;
+}
+
 .incoming-message-toast[data-sonner-toast] {
 	opacity: 1 !important;
 	--fly-out: translateY(calc(-100% - var(--offset-top, 24px) - 12px));
