@@ -108,7 +108,7 @@
 </script>
 
 <div
-	class="h-[calc(100dvh-var(--safe-area-top)-var(--content-pb))] overflow-y-auto overscroll-contain"
+	class="h-[calc(100dvh-var(--safe-area-top))] overflow-y-auto overscroll-contain"
 	bind:this={profileContainer}
 >
 	<main class="w-full max-w-200 mx-auto relative min-h-full">
@@ -144,7 +144,25 @@
 					class="m-auto"
 				/>
 			</div>
-		{:else if profile && !loading}
+		{:else if loading || !profile}
+			<div class="flex flex-col max-w-full">
+				<Skeleton
+					class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] rounded-none"
+				/>
+
+				<div class="p-4 flex flex-col max-w-full gap-3.5 pb-24">
+					<Skeleton class="w-40 max-w-full h-6" />
+					<Skeleton class="w-30 max-w-full h-3" />
+					<Skeleton class="w-50 max-w-full h-3 mt-0.5" />
+					<div class="flex flex-wrap mt-2 gap-1">
+						{#each [10,12,18,16,15] as w}
+							<Skeleton class="w-(--w) h-4.5" --w="calc(var(--spacing) * {w})" />
+						{/each}
+					</div>
+					<Skeleton class="w-full h-27 rounded-4xl mt-2.25" />
+				</div>
+			</div>
+		{:else}
 			{@const {
 				displayName,
 				age,
@@ -247,8 +265,6 @@
 				{/if}
 			</div>
 			<ProfileBottomNavBar {ourProfileId} {profileId} {tapType} />
-		{:else}
-			<Skeleton />
 		{/if}
 	</main>
 </div>
