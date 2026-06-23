@@ -216,7 +216,7 @@ export function applyProfileEdit(
 	return merged;
 }
 
-function mergeProfileEditIntoCaches(
+export function mergeProfileEditIntoCaches(
 	cacheProfileId: number,
 	patch: Partial<Profile>,
 ) {

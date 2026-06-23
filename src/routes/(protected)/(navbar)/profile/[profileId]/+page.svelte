@@ -7,6 +7,7 @@
 		BlockedProfileError,
 		getProfile,
 		invalidateProfile,
+		mergeProfileEditIntoCaches,
 	} from "$lib/api/users/profiles";
 	import { getPreferences } from "$lib/app-data/preferences.svelte";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
@@ -273,8 +274,13 @@
 					tapType={profile.tapType}
 					onTap={(tapType) => {
 						if (!profile) return;
+						const tapped = tapType !== null;
 						profile.tapType = tapType;
-						profile.tapped = tapType !== null;
+						profile.tapped = tapped;
+						mergeProfileEditIntoCaches(profile.profileId, {
+							tapType,
+							tapped,
+						});
 					}}
 				/>
 			{/if}

@@ -214,6 +214,7 @@
 				facebook: facebook ? { userId: facebook } : undefined,
 			},
 			approximateDistance: initial.approximateDistance,
+			showDistance: initial.showDistance,
 			profileTags: initial.profileTags,
 		} as ProfileUpdate;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
