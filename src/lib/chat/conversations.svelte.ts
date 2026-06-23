@@ -84,6 +84,12 @@ class ConversationsState {
 		const isActive = message.conversationId === this.#activeConversationId;
 		const isIncoming = message.senderId !== this.ourProfileId;
 		let entry = this.#find(message.conversationId);
+
+		if (entry && message.timestamp <= entry.data.lastActivityTimestamp) {
+			if (!isActive) this.invalidateConversation(message.conversationId);
+			return;
+		}
+
 		if (entry) {
 			if (!isActive && isIncoming) {
 				entry.data.unreadCount += 1;

@@ -3,10 +3,7 @@ import { markConversationAsRead } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
 import { reactToMessage, sendMessage } from "$lib/api/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import {
-	apiResponseMessageSchema,
-	previewFromMessage,
-} from "$lib/model/message";
+import { previewFromMessage } from "$lib/model/message";
 import { reconciler } from "$lib/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -68,30 +65,43 @@ export class ConversationState {
 		this.#wsPromises.push(
 			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
 				if (this.#destroyed) return;
-				if (event.payload.conversationId !== this.conversationId) return;
-				if (event.payload.senderId === this.ourProfileId) {
+				const incoming = event.payload;
+				if (incoming.conversationId !== this.conversationId) return;
+
+				const existing = this.messages.find(
+					(m) => m.messageId === incoming.messageId,
+				);
+				if (existing) {
+					Object.assign(existing, incoming, { status: "sent" as const });
+					this.#syncCache();
+					return;
+				}
+
+				if (incoming.senderId === this.ourProfileId) {
 					const pending = this.messages.find((m) => m.status === "pending");
 					if (pending) {
 						pending.status = "sent";
-						pending.messageId = event.payload.messageId;
+						pending.messageId = incoming.messageId;
 						this.#syncCache();
 						return;
 					}
 				}
-				if (this.messages.some((m) => m.messageId === event.payload.messageId))
-					return;
-				const parsed = apiResponseMessageSchema.safeParse(event.payload);
-				if (!parsed.success) {
-					console.error("[ws] failed to parse incoming message", parsed.error);
-					return;
-				}
-				const msg: OptimisticMessage = { ...parsed.data, status: "sent" };
+
+				const newestTimestamp = this.messages.reduce(
+					(max, m) => Math.max(max, m.timestamp),
+					Number.NEGATIVE_INFINITY,
+				);
+				if (incoming.timestamp < newestTimestamp) return;
+
+				const msg: OptimisticMessage = { ...incoming, status: "sent" };
 				this.messages = [msg, ...this.messages];
 				this.#syncCache();
-				void this.reportRead({
-					messageId: msg.messageId,
-					timestamp: msg.timestamp,
-				});
+				if (msg.senderId !== this.ourProfileId) {
+					void this.reportRead({
+						messageId: msg.messageId,
+						timestamp: msg.timestamp,
+					});
+				}
 			}),
 			ws.on(
 				"chat.v1.conversation_read",
