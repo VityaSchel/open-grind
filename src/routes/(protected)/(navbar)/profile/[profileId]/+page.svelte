@@ -107,172 +107,177 @@
 	);
 </script>
 
-<div
-	class="h-[calc(100dvh-var(--safe-area-top))] overflow-y-auto overscroll-contain"
-	bind:this={profileContainer}
->
-	<main class="w-full max-w-200 mx-auto relative min-h-full">
-		<DataRefreshControl
-			container={profileContainer}
-			updating={refreshing}
-			position="top"
-			class="my-3"
-			containerClass="z-10"
-			onclick={refresh}
+{#if optimisticallyBlocked}
+	<div class="flex-1 flex">
+		<BlockedProfile
+			blockedByUs={true}
+			onRefresh={() => {
+				optimisticBlockProfileId = null;
+			}}
 		/>
-		{#if optimisticallyBlocked}
-			<div class="h-full flex">
-				<BlockedProfile
-					blockedByUs={true}
-					onRefresh={() => {
-						optimisticBlockProfileId = null;
+	</div>
+{:else if loadError instanceof BlockedProfileError}
+	<div class="flex-1 flex">
+		<BlockedProfile
+			blockedByUs={loadError.blockedByUs}
+			onRefresh={() => void loadProfile(profileId, false)}
+		/>
+	</div>
+{:else if loadError}
+	<div class="flex-1 flex">
+		<ApiErrorDisplay
+			error={loadError}
+			onRetry={() => void loadProfile(profileId, false)}
+			class="m-auto"
+		/>
+	</div>
+{:else}
+	<div
+		class="h-[calc(100dvh-var(--safe-area-top))] overflow-y-auto overscroll-contain"
+		bind:this={profileContainer}
+	>
+		<main class="w-full max-w-200 mx-auto relative min-h-full">
+			<DataRefreshControl
+				container={profileContainer}
+				updating={refreshing}
+				position="top"
+				class="my-3"
+				containerClass="z-10"
+				onclick={refresh}
+			/>
+			{#if loading || !profile}
+				<div class="flex flex-col max-w-full">
+					<Skeleton
+						class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] rounded-none"
+					/>
+
+					<div class="p-4 flex flex-col max-w-full gap-3.5 pb-40">
+						<Skeleton class="w-40 max-w-full h-6" />
+						<Skeleton class="w-30 max-w-full h-3" />
+						<Skeleton class="w-50 max-w-full h-3 mt-0.5" />
+						<div class="flex flex-wrap mt-2 gap-1">
+							{#each [10, 12, 18, 16, 15] as w}
+								<Skeleton
+									class="w-(--w) h-4.5"
+									--w="calc(var(--spacing) * {w})"
+								/>
+							{/each}
+						</div>
+						<Skeleton class="w-full h-27 rounded-4xl mt-2.25" />
+					</div>
+				</div>
+			{:else}
+				{@const {
+					displayName,
+					age,
+					onlineUntil,
+					seen,
+					distance,
+					sexualPosition,
+					height,
+					weight,
+					bodyType,
+					profileTags,
+					aboutMe,
+					genders,
+					pronouns,
+					ethnicity,
+					relationshipStatus,
+					grindrTribes,
+					lookingFor,
+					meetAt,
+					nsfw,
+					hivStatus,
+					lastTestedDate: lastTestedDateValue,
+					sexualHealth: sexualHealthValue,
+					socialNetworks,
+					medias,
+				} = profile}
+				<ImageCarousel {medias} />
+				<ProfileTopNavBar
+					{ourProfileId}
+					{profile}
+					onBlocked={() => {
+						optimisticBlockProfileId = profileId;
 					}}
 				/>
-			</div>
-		{:else if loadError instanceof BlockedProfileError}
-			<div class="h-full flex">
-				<BlockedProfile
-					blockedByUs={loadError.blockedByUs}
-					onRefresh={() => void loadProfile(profileId, false)}
-				/>
-			</div>
-		{:else if loadError}
-			<div class="h-full flex">
-				<ApiErrorDisplay
-					error={loadError}
-					onRetry={() => void loadProfile(profileId, false)}
-					class="m-auto"
-				/>
-			</div>
-		{:else if loading || !profile}
-			<div class="flex flex-col max-w-full">
-				<Skeleton
-					class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] rounded-none"
-				/>
-
-				<div class="p-4 flex flex-col max-w-full gap-3.5 pb-40">
-					<Skeleton class="w-40 max-w-full h-6" />
-					<Skeleton class="w-30 max-w-full h-3" />
-					<Skeleton class="w-50 max-w-full h-3 mt-0.5" />
-					<div class="flex flex-wrap mt-2 gap-1">
-						{#each [10,12,18,16,15] as w}
-							<Skeleton class="w-(--w) h-4.5" --w="calc(var(--spacing) * {w})" />
-						{/each}
-					</div>
-					<Skeleton class="w-full h-27 rounded-4xl mt-2.25" />
-				</div>
-			</div>
-		{:else}
-			{@const {
-				displayName,
-				age,
-				onlineUntil,
-				seen,
-				distance,
-				sexualPosition,
-				height,
-				weight,
-				bodyType,
-				profileTags,
-				aboutMe,
-				genders,
-				pronouns,
-				ethnicity,
-				relationshipStatus,
-				grindrTribes,
-				lookingFor,
-				meetAt,
-				nsfw,
-				hivStatus,
-				lastTestedDate: lastTestedDateValue,
-				sexualHealth: sexualHealthValue,
-				socialNetworks,
-				medias,
-			} = profile}
-			<ImageCarousel {medias} />
-			<ProfileTopNavBar
-				{ourProfileId}
-				{profile}
-				onBlocked={() => {
-					optimisticBlockProfileId = profileId;
-				}}
-			/>
-			<div class="flex flex-col p-4 pb-40">
-				<h1 class="text-2xl wrap-break-word">
-					{#if displayName !== null}
-						<span class="font-semibold">
-							{displayName}
-						</span>{:else}<span
-							class="font-normal tracking-tight italic text-muted-foreground"
-						>
-							Someone
-						</span>{/if}{#if age !== null}, {age}
-					{/if}
-				</h1>
-				<div class="flex items-center gap-3 text-sm mt-1">
-					<OnlineStatus onlineUntil={onlineUntil ?? null} {seen} />
-					<Distance {distance} />
-				</div>
-				{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
-					<div class="flex items-center gap-3 text-sm mt-2">
-						{#if sexualPosition !== null && sexualPosition !== undefined}
-							<SexualPosition {sexualPosition} />
+				<div class="flex flex-col p-4 pb-40">
+					<h1 class="text-2xl wrap-break-word">
+						{#if displayName !== null}
+							<span class="font-semibold">
+								{displayName}
+							</span>{:else}<span
+								class="font-normal tracking-tight italic text-muted-foreground"
+							>
+								Someone
+							</span>{/if}{#if age !== null}, {age}
 						{/if}
-						<Height {height} {weight} {bodyType} />
+					</h1>
+					<div class="flex items-center gap-3 text-sm mt-1">
+						<OnlineStatus onlineUntil={onlineUntil ?? null} {seen} />
+						<Distance {distance} />
 					</div>
-				{/if}
-				<ProfileTags tags={profileTags} />
-				{#if aboutMe !== null}
-					<AboutMe>{aboutMe}</AboutMe>
-				{/if}
-				{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
-					<div class="flex flex-col gap-2 mt-4">
-						<span class="uppercase text-sm text-muted-foreground">Stats</span>
-						<Genders {genders} {pronouns} />
-						<Tribes tribes={grindrTribes} />
-						<Ethnicity {ethnicity} />
-						<RelationshipStatus {relationshipStatus} />
-					</div>
-				{/if}
-				{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
-					<div class="flex flex-col gap-2 mt-4">
-						<span class="uppercase text-sm text-muted-foreground">
-							Expectations
-						</span>
-						<LookingFor {lookingFor} />
-						<MeetAt {meetAt} />
-						<NSFWPics nsfwPics={nsfw} />
-					</div>
-				{/if}
-				{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
-					<div class="flex flex-col gap-2 mt-4">
-						<span class="uppercase text-sm text-muted-foreground">
-							Health
-						</span>
-						<HivStatus {hivStatus} />
-						<LastTested lastTestedDate={lastTestedDateValue} />
-						<HealthPractices healthPractices={sexualHealthValue} />
-					</div>
-				{/if}
-				{#if socialNetworks && Object.keys(socialNetworks).length > 0}
-					<div class="flex flex-col gap-2 mt-4">
-						<span class="uppercase text-sm text-muted-foreground">
-							Socials
-						</span>
-						<Socials socials={socialNetworks} />
-					</div>
-				{/if}
-			</div>
-			<ProfileBottomNavBar
-				{ourProfileId}
-				{profileId}
-				tapType={profile.tapType}
-				onTap={(tapType) => {
-					if (!profile) return;
-					profile.tapType = tapType;
-					profile.tapped = tapType !== null;
-				}}
-			/>
-		{/if}
-	</main>
-</div>
+					{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
+						<div class="flex items-center gap-3 text-sm mt-2">
+							{#if sexualPosition !== null && sexualPosition !== undefined}
+								<SexualPosition {sexualPosition} />
+							{/if}
+							<Height {height} {weight} {bodyType} />
+						</div>
+					{/if}
+					<ProfileTags tags={profileTags} />
+					{#if aboutMe !== null}
+						<AboutMe>{aboutMe}</AboutMe>
+					{/if}
+					{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
+						<div class="flex flex-col gap-2 mt-4">
+							<span class="uppercase text-sm text-muted-foreground">Stats</span>
+							<Genders {genders} {pronouns} />
+							<Tribes tribes={grindrTribes} />
+							<Ethnicity {ethnicity} />
+							<RelationshipStatus {relationshipStatus} />
+						</div>
+					{/if}
+					{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
+						<div class="flex flex-col gap-2 mt-4">
+							<span class="uppercase text-sm text-muted-foreground">
+								Expectations
+							</span>
+							<LookingFor {lookingFor} />
+							<MeetAt {meetAt} />
+							<NSFWPics nsfwPics={nsfw} />
+						</div>
+					{/if}
+					{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
+						<div class="flex flex-col gap-2 mt-4">
+							<span class="uppercase text-sm text-muted-foreground">
+								Health
+							</span>
+							<HivStatus {hivStatus} />
+							<LastTested lastTestedDate={lastTestedDateValue} />
+							<HealthPractices healthPractices={sexualHealthValue} />
+						</div>
+					{/if}
+					{#if socialNetworks && Object.keys(socialNetworks).length > 0}
+						<div class="flex flex-col gap-2 mt-4">
+							<span class="uppercase text-sm text-muted-foreground">
+								Socials
+							</span>
+							<Socials socials={socialNetworks} />
+						</div>
+					{/if}
+				</div>
+				<ProfileBottomNavBar
+					{ourProfileId}
+					{profileId}
+					tapType={profile.tapType}
+					onTap={(tapType) => {
+						if (!profile) return;
+						profile.tapType = tapType;
+						profile.tapped = tapType !== null;
+					}}
+				/>
+			{/if}
+		</main>
+	</div>
+{/if}
