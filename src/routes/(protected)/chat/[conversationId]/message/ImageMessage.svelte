@@ -128,6 +128,7 @@
 			style:aspect-ratio={message.width !== null && message.height !== null
 				? `${message.width} / ${message.height}`
 				: undefined}
+			draggable="false"
 		/>
 	</a>
 	{@render media.adornments?.()}

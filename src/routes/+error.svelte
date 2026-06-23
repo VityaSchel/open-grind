@@ -69,6 +69,7 @@
 								class="rotate-y-180 size-full rounded-full bg-neutral-200 select-none"
 								src={clippy}
 								alt="Clippy"
+								draggable="false"
 							/>
 							<Tooltip.Root open={flipProgress.current === 1}>
 								<Tooltip.Content

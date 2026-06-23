@@ -46,6 +46,7 @@
 					width="16"
 					height="16"
 					class="inline align-middle"
+					draggable="false"
 				/>
 			</span>
 		{/if}

@@ -23,4 +23,5 @@
 	width="24"
 	height="24"
 	class="shrink-0"
+	draggable="false"
 />

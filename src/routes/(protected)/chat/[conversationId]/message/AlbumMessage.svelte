@@ -216,6 +216,7 @@
 			src={message.coverUrl}
 			alt=""
 			class="w-full rounded-[inherit] bg-card-foreground/10 h-full object-cover absolute top-0 left-0"
+			draggable="false"
 		/>
 		<div class={["absolute top-0 left-0 size-full @container", contentClass]}>
 			<div

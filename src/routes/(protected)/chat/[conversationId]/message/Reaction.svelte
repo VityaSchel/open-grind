@@ -10,7 +10,13 @@
 	variant="secondary"
 >
 	{#if type === 1}
-		<img src={fireEmoji} alt="Fire emoji" width="16" height="16" />
+		<img
+			src={fireEmoji}
+			alt="Fire emoji"
+			width="16"
+			height="16"
+			draggable="false"
+		/>
 	{:else}
 		&#65533;
 	{/if}
