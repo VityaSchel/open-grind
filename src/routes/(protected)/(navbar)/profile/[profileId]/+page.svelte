@@ -150,7 +150,7 @@
 					class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] rounded-none"
 				/>
 
-				<div class="p-4 flex flex-col max-w-full gap-3.5 pb-24">
+				<div class="p-4 flex flex-col max-w-full gap-3.5 pb-40">
 					<Skeleton class="w-40 max-w-full h-6" />
 					<Skeleton class="w-30 max-w-full h-3" />
 					<Skeleton class="w-50 max-w-full h-3 mt-0.5" />
@@ -198,7 +198,7 @@
 					optimisticBlockProfileId = profileId;
 				}}
 			/>
-			<div class="flex flex-col p-4 pb-24">
+			<div class="flex flex-col p-4 pb-40">
 				<h1 class="text-2xl wrap-break-word">
 					{#if displayName !== null}
 						<span class="font-semibold">
