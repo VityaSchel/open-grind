@@ -8,10 +8,12 @@
 
 	let {
 		profileId,
-		tapType = $bindable(),
+		tapType,
+		onTap,
 	}: {
 		profileId: number;
 		tapType: TapType | null;
+		onTap: (tapType: TapType | null) => void;
 	} = $props();
 
 	let customAnchor: HTMLButtonElement | null = $state(null);
@@ -22,7 +24,7 @@
 		if (sending || tapType !== null) return;
 		sending = true;
 		try {
-			tapType = reaction;
+			onTap(reaction);
 			await sendTap({
 				recipientId: profileId,
 				tapType: reaction,
@@ -33,7 +35,7 @@
 				label: "Failed to send tap",
 				error,
 			});
-			tapType = null;
+			onTap(null);
 		} finally {
 			sending = false;
 		}

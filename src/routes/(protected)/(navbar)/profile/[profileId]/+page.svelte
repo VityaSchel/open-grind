@@ -188,7 +188,6 @@
 				sexualHealth: sexualHealthValue,
 				socialNetworks,
 				medias,
-				tapType,
 			} = profile}
 			<ImageCarousel {medias} />
 			<ProfileTopNavBar
@@ -264,7 +263,16 @@
 					</div>
 				{/if}
 			</div>
-			<ProfileBottomNavBar {ourProfileId} {profileId} {tapType} />
+			<ProfileBottomNavBar
+				{ourProfileId}
+				{profileId}
+				tapType={profile.tapType}
+				onTap={(tapType) => {
+					if (!profile) return;
+					profile.tapType = tapType;
+					profile.tapped = tapType !== null;
+				}}
+			/>
 		{/if}
 	</main>
 </div>
