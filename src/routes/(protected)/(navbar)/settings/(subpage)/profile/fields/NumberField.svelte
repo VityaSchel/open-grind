@@ -1,4 +1,4 @@
-22<script lang="ts">
+<script lang="ts">
 	import { untrack } from "svelte";
 
 	import { Input } from "$lib/components/ui/input";
