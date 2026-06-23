@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { platform } from "@tauri-apps/plugin-os";
 	import { MicrophoneIcon, PaperPlaneRightIcon } from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 	import { expoOut } from "svelte/easing";
@@ -17,6 +18,8 @@
 		$props();
 
 	let textContent = $state("");
+
+	const isMobile = ["android", "ios"].includes(platform());
 
 	async function onSubmit() {
 		const text = textContent.trim();
@@ -44,12 +47,13 @@
 	<Textarea
 		placeholder="Say something..."
 		class="min-h-9.5 rounded-[20px] shrink-0 max-h-31.5 py-2 pr-9.5 h-fit! leading-5 placeholder-shown:truncate"
+		enterkeyhint={isMobile ? "enter" : "send"}
 		onkeydown={(
 			event: KeyboardEvent & {
 				currentTarget: EventTarget & HTMLTextAreaElement;
 			},
 		) => {
-			if (event.key === "Enter" && !event.shiftKey) {
+			if (!isMobile && event.key === "Enter" && !event.shiftKey) {
 				event.preventDefault();
 				event.currentTarget.form?.requestSubmit();
 			}
