@@ -25,9 +25,9 @@
 
 <ProgressiveBlur
 	direction="topToBottom"
-	class="w-full shrink-0 h-19 z-20 fixed top-(--safe-area-top) left-0"
+	class="w-full shrink-0 z-20 fixed top-0 left-0 h-[calc(4.75rem+var(--safe-area-top))]"
 	bgClass="bg-linear-to-b from-background to-transparent"
-	contentClass="flex items-center h-full pe-5.5"
+	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
 >
 	<a
