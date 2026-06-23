@@ -44,7 +44,7 @@
 		"android": {
 			"autoIncrementVersionCode": false,
 			"minSdkVersion": 28,
-			"versionCode": 1004
+			"versionCode": 1010
 		}
 	}
 }
