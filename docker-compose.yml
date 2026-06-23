@@ -1,0 +1,26 @@
+# Result: src-tauri/gen/android/app/build/outputs/apk/universal/release/
+services:
+  build:
+    platform: linux/amd64
+    build:
+      context: .
+    image: open-grind-build
+    init: true
+    working_dir: /work
+    volumes:
+      - .:/work
+      - og-nix:/nix
+      - og-cargo-target:/work/src-tauri/target  # Rust build artifacts
+      - og-node-modules:/work/node_modules      # bun dependencies
+      - og-cargo-home:/root/.cargo              # crate registry, git deps
+      - og-gradle:/root/.gradle                 # Gradle dist, caches
+      - og-bun:/root/.bun                       # bun download cache
+    command: ["nix", "run", ".#build-android"]
+
+volumes:
+  og-nix:
+  og-cargo-target:
+  og-node-modules:
+  og-cargo-home:
+  og-gradle:
+  og-bun:
