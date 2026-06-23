@@ -86,7 +86,7 @@
 		<Dialog.Content
 			preventOverflowTextSelection={false}
 			showCloseButton={false}
-			class="max-xs:max-w-full flex flex-col"
+			class="max-xs:max-w-[calc(100%-1rem)] max-xs:text-center flex flex-col"
 		>
 			<Dialog.Header class="max-w-full">
 				<Dialog.Title>{warning.title}</Dialog.Title>
