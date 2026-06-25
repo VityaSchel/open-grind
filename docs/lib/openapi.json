@@ -8746,6 +8746,7 @@
 					"users/profiles"
 				],
 				"operationId": "getProfileById",
+				"description": "Fetch a single profile by ID. When `id` is your own profile, the response carries no self-presence: both `onlineUntil` and `seen` are returned as `null`. Treat the authenticated user as online instead of rendering them as offline.",
 				"security": [
 					{
 						"Grindr3Auth": []
