@@ -4,13 +4,15 @@
 	let {
 		onlineUntil,
 		seen,
+		self = false,
 	}: {
 		onlineUntil: number | null;
 		seen: number | null;
+		self?: boolean;
 	} = $props();
 </script>
 
-{#if onlineUntil !== null && onlineUntil > Date.now()}
+{#if self || (onlineUntil !== null && onlineUntil > Date.now())}
 	<div class="flex items-center gap-1.5 whitespace-nowrap">
 		<span class="bg-green-500 rounded-full size-2 inline-block ms-0.5 shrink-0">
 		</span>
