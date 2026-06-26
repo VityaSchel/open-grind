@@ -20,8 +20,8 @@
 						},
 					})}
 			>
-				<Item.Content class="max-xxxxs:min-w-0">
-					<Item.Title class="min-w-0 max-w-full truncate inline-block">
+				<Item.Content class="max-cramped:min-w-0">
+					<Item.Title class="inline-block max-w-full min-w-0 truncate">
 						{title}
 					</Item.Title>
 				</Item.Content>
@@ -37,8 +37,8 @@
 	<Item.Root variant="outline">
 		{#snippet child({ props })}
 			<a {href} {...props}>
-				<Item.Content class="max-xxxxs:min-w-0">
-					<Item.Title class="min-w-0 max-w-full truncate inline-block">
+				<Item.Content class="max-cramped:min-w-0">
+					<Item.Title class="inline-block max-w-full min-w-0 truncate">
 						{title}
 					</Item.Title>
 				</Item.Content>

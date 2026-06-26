@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import betterTailwindcss from "eslint-plugin-better-tailwindcss";
 import perfectionist from "eslint-plugin-perfectionist";
 import svelte from "eslint-plugin-svelte";
 import { defineConfig } from "eslint/config";
@@ -73,6 +74,40 @@ export default defineConfig(
 			"@typescript-eslint/require-array-sort-compare": [
 				"error",
 				{ ignoreStringArrays: true },
+			],
+		},
+	},
+	{
+		files: ["src/routes/**/*.svelte"],
+		plugins: {
+			"better-tailwindcss": betterTailwindcss,
+		},
+		settings: {
+			"better-tailwindcss": {
+				entryPoint: "src/layout.css",
+			},
+		},
+		rules: {
+			"better-tailwindcss/no-restricted-classes": [
+				"warn",
+				{
+					restrict: [
+						{
+							pattern: "-\\[[0-9.]+(px|rem|em)\\]",
+							message:
+								"Raw dimensional value in a route — promote it to a semantic token in src/layout.css (@theme).",
+						},
+						{
+							pattern: "\\[&",
+							message:
+								"Child-selector styling belongs in a component (src/lib), not a page.",
+						},
+						{
+							pattern: "\\[#",
+							message: "Hardcoded color — use a semantic color token.",
+						},
+					],
+				},
 			],
 		},
 	},

@@ -86,11 +86,18 @@
 	--radius-3xl: calc(var(--radius) * 2.2);
 	--radius-4xl: calc(var(--radius) * 2.6);
 
-	--breakpoint-xs: 424px;
-	--breakpoint-xxs: 384px;
-	--breakpoint-x360: 360px;
-	--breakpoint-xxxs: 320px;
-	--breakpoint-xxxxs: 250px;
+	--breakpoint-split: 560px;
+	--breakpoint-settings-dialog: 424px;
+	--breakpoint-grid3: 360px;
+	--breakpoint-cramped: 250px;
+
+	--container-row: 9rem;
+
+	--text-2xs: 0.6875rem; /* 11px */
+	--text-3xs: 0.625rem; /* 10px */
+
+	--spacing-avatar: 37.5px;
+	--spacing-list-rail: 117px;
 }
 
 @layer base {
@@ -111,7 +118,10 @@ body {
 	overscroll-behavior: none;
 	user-select: none;
 	-webkit-user-select: none;
-	--content-pb: calc(4rem + var(--safe-area-bottom));
+	--nav-height: 4rem;
+	--content-pb: calc(var(--nav-height) + var(--safe-area-bottom));
+	--screen-safe: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
+	--screen-scroll: calc(100dvh - var(--safe-area-top) - var(--content-pb));
 	text-rendering: geometricPrecision;
 	image-rendering: optimizeQuality;
 	shape-rendering: geometricPrecision;
@@ -130,7 +140,7 @@ a {
 }
 
 .profile-card-distance {
-	@apply text-[11px] font-medium tracking-tight text-white/85;
+	@apply text-2xs font-medium tracking-tight text-white/85;
 	text-shadow:
 		0px 1px 1px rgba(0, 0, 0, 0.2),
 		0px 0px 2px rgba(0, 0, 0, 0.2);
@@ -142,8 +152,28 @@ a {
 	}
 
 	.profile-grid {
-		@apply grid grid-cols-2 x360:grid-cols-3 gap-0.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 w-full flex-1 max-w-400 mx-auto rounded-[17px] overflow-clip;
+		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 gap-0.5 overflow-clip rounded-[17px] grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
 	}
+}
+
+/* Safe-area / inset layout vocabulary — see --nav-height / --screen-* tokens above */
+@utility h-screen-safe {
+	height: var(--screen-safe);
+}
+@utility max-h-screen-safe {
+	max-height: var(--screen-safe);
+}
+@utility pt-fixed-header {
+	padding-top: calc(1rem + var(--safe-area-top));
+}
+@utility pb-fixed-nav {
+	padding-bottom: calc(0.5rem + var(--safe-area-bottom));
+}
+@utility pb-nav-clear {
+	padding-bottom: calc(0.5rem + var(--content-pb));
+}
+@utility max-h-photo {
+	max-height: min(70vh, 500px);
 }
 
 .toast[data-styled="true"] {

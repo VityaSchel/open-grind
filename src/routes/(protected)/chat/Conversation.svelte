@@ -45,14 +45,14 @@
 		</Item.Description>
 	{/snippet}
 	{#snippet actions()}
-		<Item.Actions class="flex flex-col items-end gap-1 min-w-0">
+		<Item.Actions class="flex min-w-0 flex-col items-end gap-1">
 			<span
-				class="text-muted-foreground font-medium text-right truncate max-w-full"
+				class="max-w-full truncate text-right font-medium text-muted-foreground"
 			>
 				<RelativeTimeDynamic date={conversation.data.lastActivityTimestamp} />
 			</span>
 			{#if conversation.data.unreadCount > 0}
-				<Badge class="px-[5.5px] @max-[9rem]:hidden">
+				<Badge class="px-[5.5px] @max-row:hidden">
 					{conversation.data.unreadCount}
 				</Badge>
 			{/if}
@@ -63,6 +63,6 @@
 <style lang="postcss">
 	@reference "$layout";
 	.preview-not-available {
-		@apply font-normal tracking-tight italic text-muted-foreground;
+		@apply font-normal tracking-tight text-muted-foreground italic;
 	}
 </style>

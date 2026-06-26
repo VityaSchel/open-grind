@@ -39,13 +39,13 @@
 		<UserAvatar {mediaHash} class="size-full" size="xl" />
 	</div>
 	{#if distance !== null}
-		<span class="absolute top-1 right-1.5 profile-card-distance">
+		<span class="profile-card-distance absolute top-1 right-1.5">
 			<DistanceFormatted {distance} />
 		</span>
 	{/if}
 	{#if isFavorite || hadRecentChat}
 		<div
-			class="absolute top-2 inset-s-2 z-1 flex w-1/6 flex-col items-center gap-1"
+			class="absolute inset-s-2 top-2 z-1 flex w-1/6 flex-col items-center gap-1"
 		>
 			{#if isFavorite}
 				<div class="badge">
@@ -66,7 +66,7 @@
 		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
 			<Badge
 				variant="outline"
-				class="min-w-0 max-w-full shrink gap-0 bg-popover/20 backdrop-blur-2xl"
+				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 backdrop-blur-2xl"
 			>
 				<OnlineDot {onlineUntil} class="me-1" />
 				{#if displayName !== null}
@@ -83,10 +83,10 @@
 			</Badge>
 			{#if unread !== null && unread > 0}
 				<span
-					class="flex size-5 shrink-0 items-center justify-center rounded-full border border-black/20 bg-primary text-[11px] font-semibold text-primary-foreground"
+					class="flex size-5 shrink-0 items-center justify-center rounded-full border border-black/20 bg-primary text-2xs font-semibold text-primary-foreground"
 				>
 					{#if unread > 99}
-						<span class="text-[10px]">99+</span>
+						<span class="text-3xs">99+</span>
 					{:else}
 						{unread}
 					{/if}

@@ -39,14 +39,14 @@
 
 <div
 	bind:this={container}
-	class={["flex flex-col gap-1 flex-1 min-w-29.25", className]}
+	class={["flex min-w-list-rail flex-1 flex-col gap-1", className]}
 >
 	{#if taps.loading}
 		{#each Array(8)}
-			<Skeleton class="w-full h-24.5 shrink-0" />
+			<Skeleton class="h-24.5 w-full shrink-0" />
 		{/each}
 	{:else if taps.error}
-		<div class="flex-1 flex">
+		<div class="flex flex-1">
 			<ApiErrorDisplay
 				error={taps.error}
 				onRetry={() => taps.retry()}

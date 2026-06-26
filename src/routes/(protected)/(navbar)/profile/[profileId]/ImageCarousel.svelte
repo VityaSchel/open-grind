@@ -104,10 +104,10 @@
 	let indicatorHeight = $state(BULLET_SIZE);
 </script>
 
-<div class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] relative">
+<div class="relative aspect-3/4 h-auto max-h-photo w-full">
 	{#if medias.length}
 		<div
-			class="size-full max-h-[inherit] flex flex-col snap-y snap-mandatory *:snap-center overflow-auto carousel relative"
+			class="carousel relative flex size-full max-h-[inherit] snap-y snap-mandatory flex-col overflow-auto *:snap-center"
 			bind:this={gallery}
 			onscroll={() => {
 				if (!gallery) return;
@@ -134,25 +134,25 @@
 			{/each}
 		</div>
 		<div
-			class="absolute right-2 top-1/2 -translate-y-1/2 p-2 backdrop-blur-sm bg-background/30 rounded-full flex flex-col"
+			class="absolute top-1/2 right-2 flex -translate-y-1/2 flex-col rounded-full bg-background/30 p-2 backdrop-blur-sm"
 			style:gap="{GAP}px"
 			style:padding="{PADDING_VERTICAL}px {PADDING_HORIZONTAL}px"
 		>
 			{#each medias, i (i)}
-				<span class="bg-neutral-200/40 size-2 block rounded-full"></span>
+				<span class="block size-2 rounded-full bg-neutral-200/40"></span>
 			{/each}
 			<span
-				class="absolute left-2 bg-neutral-300 w-2 block rounded-full"
+				class="absolute left-2 block w-2 rounded-full bg-neutral-300"
 				style="top: {indicatorY}px; height: {BULLET_SIZE}px"
 				style:height="{indicatorHeight}px"
 			></span>
 		</div>
 	{:else}
-		<div class="bg-neutral-700 size-full absolute">
+		<div class="absolute size-full bg-neutral-700">
 			<UserIcon
 				weight="fill"
 				color="var(--color-stone-400)"
-				class="size-3/4 top-1/2 left-1/2 -translate-1/2 absolute"
+				class="absolute top-1/2 left-1/2 size-3/4 -translate-1/2"
 			/>
 		</div>
 	{/if}
@@ -169,7 +169,7 @@
 		}
 		.pswp .pswp__created-at-label {
 			text-shadow: 1px 1px 3px var(--pswp-icon-color-secondary);
-			@apply absolute bottom-0 left-1/2 -translate-x-1/2 text-white/90 font-medium w-full flex justify-center items-center bg-linear-to-t from-background/60 pt-4;
+			@apply absolute bottom-0 left-1/2 flex w-full -translate-x-1/2 items-center justify-center bg-linear-to-t from-background/60 pt-4 font-medium text-white/90;
 			height: calc(4rem + var(--safe-area-bottom));
 			padding-bottom: calc(0.5rem + var(--safe-area-bottom));
 		}

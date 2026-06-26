@@ -1,7 +1,13 @@
 {
 	"useTabs": true,
 	"plugins": [
-		"prettier-plugin-svelte"
+		"prettier-plugin-svelte",
+		"prettier-plugin-tailwindcss"
+	],
+	"tailwindStylesheet": "./src/layout.css",
+	"tailwindFunctions": [
+		"cn",
+		"tv"
 	],
 	"overrides": [
 		{

@@ -26,8 +26,8 @@
 						componentProps: unimplemented,
 					})}
 			>
-				<Item.Content class="max-xxxxs:min-w-0">
-					<Item.Title class="min-w-0 max-w-full truncate inline-block">
+				<Item.Content class="max-cramped:min-w-0">
+					<Item.Title class="inline-block max-w-full min-w-0 truncate">
 						{title}
 					</Item.Title>
 				</Item.Content>
@@ -62,6 +62,6 @@
 	@reference "$layout";
 
 	h2 {
-		@apply ps-4 mt-2 text-xl font-semibold tracking-tight truncate;
+		@apply mt-2 truncate ps-4 text-xl font-semibold tracking-tight;
 	}
 </style>

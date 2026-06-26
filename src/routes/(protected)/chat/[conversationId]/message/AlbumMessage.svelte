@@ -165,7 +165,7 @@
 						video.src = slide.url;
 						video.controls = true;
 						video.playsInline = true;
-						video.className = "max-w-full max-h-[80vh]";
+						video.className = "max-w-full max-h-full m-auto";
 						content.element.appendChild(video);
 						content.state = "loading";
 						if (video.readyState >= 3) {
@@ -215,12 +215,12 @@
 		<img
 			src={message.coverUrl}
 			alt=""
-			class="w-full rounded-[inherit] bg-card-foreground/10 h-full object-cover absolute top-0 left-0"
+			class="absolute top-0 left-0 h-full w-full rounded-[inherit] bg-card-foreground/10 object-cover"
 			draggable="false"
 		/>
-		<div class={["absolute top-0 left-0 size-full @container", contentClass]}>
+		<div class={["@container absolute top-0 left-0 size-full", contentClass]}>
 			<div
-				class="*:bg-card *:rounded-full *:w-[20cqw] *:aspect-square *:p-2 absolute bottom-1/5 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-0.5"
+				class="absolute bottom-1/5 left-1/2 flex -translate-x-1/2 items-center gap-1 px-2 py-0.5 *:aspect-square *:w-[20cqw] *:rounded-full *:bg-card *:p-2"
 			>
 				{#if message.hasPhoto}
 					<div>

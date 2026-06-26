@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { untrack } from "svelte";
-	import { MediaQuery } from "svelte/reactivity";
 
+	import { below } from "$lib/breakpoints.svelte";
 	import {
 		getOrCreateConversationsState,
 		setConversations,
@@ -28,6 +28,7 @@
 		if (!paneGroup) return;
 		const observer = new ResizeObserver(() => {
 			if (!paneGroup) return;
+			// 117 == --spacing-list-rail
 			conversationsListCollapsedSizePercentage = 117 / paneGroup.offsetWidth;
 			conversationsListMinWidthPercentage = 200 / paneGroup.offsetWidth;
 			pageContentMinWidthPercentage = 280 / paneGroup.offsetWidth;
@@ -38,16 +39,16 @@
 
 	const isChatSelected = $derived(page.params.conversationId !== undefined);
 
-	const mobile = new MediaQuery("(width < 424px)");
+	const mobile = below("split");
 </script>
 
 <main
-	class="flex w-full flex-1 h-dvh pt-(--safe-area-top) pb-(--safe-area-bottom)"
+	class="flex h-dvh w-full flex-1 pt-(--safe-area-top) pb-(--safe-area-bottom)"
 >
 	{#if !mobile.current}
 		<Resizable.PaneGroup
 			direction="horizontal"
-			class="max-w-300 mx-auto max-h-full h-auto! max-xs:hidden!"
+			class="mx-auto h-auto! max-h-full max-w-300 max-split:hidden!"
 			bind:ref={paneGroup}
 			autoSaveId="/(protected)/chat/layout"
 		>
@@ -56,24 +57,22 @@
 				minSize={conversationsListMinWidthPercentage * 100}
 				collapsedSize={conversationsListCollapsedSizePercentage * 100}
 				collapsible
-				class="min-w-29.25"
+				class="min-w-list-rail"
 			>
 				<ConversationsList class="pe-0.75" />
 			</Resizable.Pane>
 			<Resizable.Handle
-				class="cursor-col-resize! px-2 bg-transparent"
+				class="cursor-col-resize! bg-transparent px-2"
 				withHandle
 			/>
 			<Resizable.Pane
 				defaultSize={57}
 				minSize={pageContentMinWidthPercentage * 100}
 			>
-				<div
-					class="flex-1 self-stretch p-4 ps-1 pb-[calc(0.5rem+var(--content-pb))] h-full"
-				>
+				<div class="h-full flex-1 self-stretch p-4 ps-1 pb-nav-clear">
 					<Card.Root
 						class={[
-							"h-full rounded-2xl p-0 gap-0 relative dark:ring-neutral-800",
+							"relative h-full gap-0 rounded-2xl p-0 dark:ring-neutral-800",
 							{
 								"bg-card/20 ring-0": !isChatSelected,
 							},
@@ -87,12 +86,12 @@
 	{/if}
 	{#if isChatSelected}
 		{#if mobile.current}
-			<div class="flex-1 self-stretch flex flex-col max-w-full">
+			<div class="flex max-w-full flex-1 flex-col self-stretch">
 				{@render children?.()}
 			</div>
 		{/if}
 	{:else}
-		<ConversationsList class="xs:hidden" />
+		<ConversationsList class="split:hidden" />
 	{/if}
 </main>
 {#if !mobile.current || page.route.id !== "/(protected)/chat/[conversationId]"}

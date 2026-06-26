@@ -70,12 +70,12 @@
 
 <ProgressiveBlur
 	data-fixed-header
-	class="fixed top-0 left-0 w-full z-10"
+	class="fixed top-0 left-0 z-10 w-full"
 	bgClass="bg-linear-to-b from-background to-transparent"
-	contentClass="flex flex-col pt-[calc(1rem+var(--safe-area-top))]"
+	contentClass="flex flex-col pt-fixed-header"
 	direction="topToBottom"
 >
-	<div class="flex overflow-x-auto scrollbar-thin p-4 pt-0 gap-0.5">
+	<div class="scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0">
 		<LocationChange onUpdate={onUpdatePreferences} />
 		<QuickFilters bind:openFilters bind:filters {onUpdateFilters} />
 	</div>

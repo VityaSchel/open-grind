@@ -38,7 +38,7 @@
 		{@render icon()}
 	</Item.Media>
 	<Item.Content class="min-w-0">
-		<Item.Title class="truncate max-w-full inline-block">{label}</Item.Title>
+		<Item.Title class="inline-block max-w-full truncate">{label}</Item.Title>
 	</Item.Content>
 	<Item.Actions>
 		<ArrowSquareOutIcon class="size-4" />
@@ -77,7 +77,7 @@
 			target="_blank"
 			rel="nofollow noreferrer noopener"
 		>
-			<span class="inline-block truncate w-full text-center">
+			<span class="inline-block w-full truncate text-center">
 				{link.label}
 			</span>
 		</Button>
@@ -86,7 +86,7 @@
 		<Dialog.Content
 			preventOverflowTextSelection={false}
 			showCloseButton={false}
-			class="max-xs:max-w-[calc(100%-1rem)] max-xs:text-center flex flex-col"
+			class="flex flex-col max-settings-dialog:max-w-[calc(100%-1rem)] max-settings-dialog:text-center"
 		>
 			<Dialog.Header class="max-w-full">
 				<Dialog.Title>{warning.title}</Dialog.Title>
@@ -94,7 +94,7 @@
 					{warning.description}
 				</Dialog.Description>
 			</Dialog.Header>
-			<Dialog.Footer class="flex-col sm:flex-col max-w-full">
+			<Dialog.Footer class="max-w-full flex-col sm:flex-col">
 				{@render warningButton({ variant: "default", ...warning.primary })}
 				{@render warningButton({ variant: "secondary", ...warning.secondary })}
 			</Dialog.Footer>

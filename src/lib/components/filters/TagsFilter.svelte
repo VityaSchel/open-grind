@@ -70,14 +70,14 @@
 		}
 	}
 >
-	<div class="flex flex-col min-w-0">
+	<div class="flex min-w-0 flex-col">
 		<div class="w-full pe-1">
 			<Input
 				id="search-tags"
 				type="search"
 				placeholder="Search tags..."
 				bind:value={searchQuery}
-				class="text-sm mb-2"
+				class="mb-2 text-sm"
 			/>
 		</div>
 
@@ -102,7 +102,7 @@
 				type="multiple"
 				variant="outline"
 				spacing={2}
-				class="flex-wrap w-full gap-1"
+				class="w-full flex-wrap gap-1"
 				bind:value={
 					() => value,
 					(v: string[]) => {
@@ -120,14 +120,14 @@
 						{/each}
 						{#if filtered.length > shown.length}
 							<div
-								class="text-xs text-muted-foreground py-2 w-full text-center"
+								class="w-full py-2 text-center text-xs text-muted-foreground"
 							>
 								Showing first {shown.length} of {filtered.length} matches, keep typing
 								to narrow down
 							</div>
 						{/if}
 					{:else}
-						<div class="text-xs text-muted-foreground py-2 w-full text-center">
+						<div class="w-full py-2 text-center text-xs text-muted-foreground">
 							No tags match "{searchQuery}"
 						</div>
 					{/if}
@@ -135,7 +135,7 @@
 					{#each categories as category, catIndex (category.text)}
 						{#if category.tags.length > 0 && (expanded || catIndex < 2)}
 							<div
-								class="w-full text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1.5 mb-1 px-1"
+								class="mt-1.5 mb-1 w-full px-1 text-3xs font-semibold tracking-wider text-muted-foreground uppercase"
 							>
 								{category.text}
 							</div>

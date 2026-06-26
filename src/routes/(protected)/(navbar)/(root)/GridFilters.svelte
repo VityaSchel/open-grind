@@ -126,11 +126,11 @@
 		side="bottom"
 		showCloseButton={false}
 		preventOverflowTextSelection={false}
-		class="max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom))] mt-(--safe-area-top) mb-(--safe-area-bottom)"
+		class="mt-(--safe-area-top) mb-(--safe-area-bottom) max-h-screen-safe"
 	>
 		<Sheet.Header
 			class={[
-				"p-4 border border-x-0 border-t-0 border-transparent transition-colors",
+				"border border-x-0 border-t-0 border-transparent p-4 transition-colors",
 				{
 					"border-muted": contentScroll > 0,
 				},
@@ -139,7 +139,7 @@
 			<Sheet.Title>Filters</Sheet.Title>
 		</Sheet.Header>
 		<div
-			class="flex max-lg:flex-col *:flex-col gap-4 lg:gap-12 *:flex-1 *:gap-4 flex-1 px-4 w-full **:break-inside-avoid overflow-auto max-h-full min-h-0 shrink py-1 pb-4"
+			class="flex max-h-full min-h-0 w-full flex-1 shrink gap-4 overflow-auto px-4 py-1 pb-4 *:flex-1 *:flex-col *:gap-4 **:break-inside-avoid max-lg:flex-col lg:gap-12"
 			onscroll={(event) => {
 				if (event.target instanceof HTMLDivElement) {
 					contentScroll =
@@ -160,7 +160,7 @@
 		</div>
 		<Sheet.Footer
 			class={[
-				"p-4 sm:items-end border border-x-0 border-b-0 border-transparent transition-colors",
+				"border border-x-0 border-b-0 border-transparent p-4 transition-colors sm:items-end",
 				{
 					"border-muted": contentScroll < 1,
 				},

@@ -27,20 +27,20 @@
 </script>
 
 {#snippet avatar()}
-	<Item.Media class="p-2 translate-y-0! rounded-2xl relative">
+	<Item.Media class="relative translate-y-0! rounded-2xl p-2">
 		<Avatar.Root class="size-20 after:rounded-xl">
 			<UserAvatar
 				mediaHash={avatarMediaHash}
-				class="rounded-xl bg-neutral-700 *:rounded-xl size-20"
+				class="size-20 rounded-xl bg-neutral-700 *:rounded-xl"
 			/>
 		</Avatar.Root>
 	</Item.Media>
 {/snippet}
 {#snippet content()}
-	<Item.Content class="flex-1 min-w-0">
+	<Item.Content class="min-w-0 flex-1">
 		<Item.Title
 			class={[
-				"truncate min-w-0 w-auto flex items-center gap-1",
+				"flex w-auto min-w-0 items-center gap-1 truncate",
 				{
 					"text-muted-foreground": !title,
 				},
@@ -55,23 +55,23 @@
 {/snippet}
 <Item.Root
 	variant={active ? "muted" : "outline"}
-	class="p-0 gap-0 flex items-stretch flex-nowrap @container min-w-24"
+	class="@container flex min-w-24 flex-nowrap items-stretch gap-0 p-0"
 >
 	{#if avatarLink}
-		<a href={avatarLink} class="rounded-l-2xl @max-[9rem]:hidden">
+		<a href={avatarLink} class="rounded-l-2xl @max-row:hidden">
 			{@render avatar()}
 		</a>
 		<a
 			href={link}
-			class="content gap-0.5 p-4 ps-2 rounded-r-2xl @max-[9rem]:hidden!"
+			class="content gap-0.5 rounded-r-2xl p-4 ps-2 @max-row:hidden!"
 		>
 			{@render content()}
 		</a>
-		<a href={link} class="rounded-2xl @[9rem]:hidden min-w-24">
+		<a href={link} class="min-w-24 rounded-2xl @row:hidden">
 			{@render avatar()}
 		</a>
 	{:else}
-		<a href={link} class="content gap-2.5 pe-4 rounded-2xl overflow-clip">
+		<a href={link} class="content gap-2.5 overflow-clip rounded-2xl pe-4">
 			{@render avatar()}
 			{@render content()}
 		</a>
@@ -82,6 +82,6 @@
 	@reference "$layout";
 
 	.content {
-		@apply flex flex-1 self-stretch items-center min-w-0;
+		@apply flex min-w-0 flex-1 items-center self-stretch;
 	}
 </style>

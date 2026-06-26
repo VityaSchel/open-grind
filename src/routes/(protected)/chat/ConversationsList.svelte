@@ -62,14 +62,14 @@
 <div
 	bind:this={container}
 	class={[
-		"flex flex-col gap-1 p-4 pb-[calc(0.5rem+var(--content-pb))] w-full h-full overflow-auto min-w-29.25 overscroll-auto",
+		"flex h-full w-full min-w-list-rail flex-col gap-1 overflow-auto overscroll-auto p-4 pb-nav-clear",
 		className,
 	]}
 	onscroll={() => (conversations.listScrollY = container?.scrollTop ?? 0)}
 >
 	{#await conversations.initial}
 		{#each Array(8)}
-			<Skeleton class="w-full h-24.5 shrink-0" />
+			<Skeleton class="h-24.5 w-full shrink-0" />
 		{/each}
 	{:then}
 		<DataRefreshControl
@@ -80,7 +80,7 @@
 			position="top"
 			onclick={() => void conversations.refresh()}
 		/>
-		<div class="flex flex-col gap-1 min-h-[calc(100%+1rem)]">
+		<div class="flex min-h-[calc(100%+1rem)] flex-col gap-1">
 			{#each conversations.entries as conversation, i (conversation.data.conversationId)}
 				{#if i < EAGER_COUNT}
 					<Conversation {conversation} />
@@ -92,7 +92,7 @@
 			{/each}
 			{#if conversations.loadingMore}
 				{#each Array(6)}
-					<Skeleton class="w-full h-24.5 shrink-0" />
+					<Skeleton class="h-24.5 w-full shrink-0" />
 				{/each}
 			{/if}
 			{#if conversations.nextPage !== null}
@@ -100,7 +100,7 @@
 			{/if}
 		</div>
 	{:catch error}
-		<div class="flex-1 flex">
+		<div class="flex flex-1">
 			<ApiErrorDisplay
 				{error}
 				onRetry={() => conversations.retry()}

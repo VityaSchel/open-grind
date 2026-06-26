@@ -84,9 +84,11 @@
 		void loadProfile(profileId, true);
 	}
 
+	const ourProfile = $derived(profileId === ourProfileId);
+
 	$effect(() => {
 		const id = profileId;
-		if (!Number.isFinite(id) || id === ourProfileId) return;
+		if (!Number.isFinite(id) || ourProfile) return;
 		void (async () => {
 			try {
 				const { revealProfileViews } = await getPreferences();
@@ -109,7 +111,7 @@
 </script>
 
 {#if optimisticallyBlocked}
-	<div class="flex-1 flex">
+	<div class="flex flex-1">
 		<BlockedProfile
 			blockedByUs={true}
 			onRefresh={() => {
@@ -118,14 +120,14 @@
 		/>
 	</div>
 {:else if loadError instanceof BlockedProfileError}
-	<div class="flex-1 flex">
+	<div class="flex flex-1">
 		<BlockedProfile
 			blockedByUs={loadError.blockedByUs}
 			onRefresh={() => void loadProfile(profileId, false)}
 		/>
 	</div>
 {:else if loadError}
-	<div class="flex-1 flex">
+	<div class="flex flex-1">
 		<ApiErrorDisplay
 			error={loadError}
 			onRetry={() => void loadProfile(profileId, false)}
@@ -134,10 +136,12 @@
 	</div>
 {:else}
 	<div
-		class="h-[calc(100dvh-var(--safe-area-top))] overflow-y-auto overscroll-contain"
+		class="-mb-(--nav-height) h-screen-safe overflow-y-auto overscroll-contain"
 		bind:this={profileContainer}
 	>
-		<main class="w-full max-w-200 mx-auto relative min-h-full">
+		<main
+			class="relative mx-auto min-h-[calc(var(--screen-safe)+3.5rem)] w-full max-w-200"
+		>
 			<DataRefreshControl
 				container={profileContainer}
 				updating={refreshing}
@@ -147,24 +151,30 @@
 				onclick={refresh}
 			/>
 			{#if loading || !profile}
-				<div class="flex flex-col max-w-full">
-					<Skeleton
-						class="w-full h-auto aspect-3/4 max-h-[min(70vh,500px)] rounded-none"
-					/>
+				<div class="flex max-w-full flex-col">
+					<Skeleton class="aspect-3/4 h-auto max-h-photo w-full rounded-none" />
 
-					<div class="p-4 flex flex-col max-w-full gap-3.5 pb-40">
-						<Skeleton class="w-40 max-w-full h-6" />
-						<Skeleton class="w-30 max-w-full h-3" />
-						<Skeleton class="w-50 max-w-full h-3 mt-0.5" />
-						<div class="flex flex-wrap mt-2 gap-1">
+					<div
+						class={[
+							"flex max-w-full flex-col gap-3.5 p-4",
+							{
+								"pb-24": ourProfile,
+								"pb-40": !ourProfile,
+							},
+						]}
+					>
+						<Skeleton class="h-6 w-40 max-w-full" />
+						<Skeleton class="h-3 w-30 max-w-full" />
+						<Skeleton class="mt-0.5 h-3 w-50 max-w-full" />
+						<div class="mt-2 flex flex-wrap gap-1">
 							{#each [10, 12, 18, 16, 15] as w}
 								<Skeleton
-									class="w-(--w) h-4.5"
+									class="h-4.5 w-(--w)"
 									--w="calc(var(--spacing) * {w})"
 								/>
 							{/each}
 						</div>
-						<Skeleton class="w-full h-27 rounded-4xl mt-2.25" />
+						<Skeleton class="mt-2.25 h-27 w-full rounded-4xl" />
 					</div>
 				</div>
 			{:else}
@@ -202,24 +212,36 @@
 						optimisticBlockProfileId = profileId;
 					}}
 				/>
-				<div class="flex flex-col p-4 pb-40">
+				<div
+					class={[
+						"flex flex-col p-4",
+						{
+							"pb-24": ourProfile,
+							"pb-40": !ourProfile,
+						},
+					]}
+				>
 					<h1 class="text-2xl wrap-break-word">
 						{#if displayName !== null}
 							<span class="font-semibold">
 								{displayName}
 							</span>{:else}<span
-								class="font-normal tracking-tight italic text-muted-foreground"
+								class="font-normal tracking-tight text-muted-foreground italic"
 							>
 								Someone
 							</span>{/if}{#if age !== null}, {age}
 						{/if}
 					</h1>
-					<div class="flex items-center gap-3 text-sm mt-1">
-						<OnlineStatus onlineUntil={onlineUntil ?? null} {seen} />
+					<div class="mt-1 flex items-center gap-3 text-sm">
+						<OnlineStatus
+							onlineUntil={onlineUntil ?? null}
+							{seen}
+							self={ourProfile}
+						/>
 						<Distance {distance} />
 					</div>
 					{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
-						<div class="flex items-center gap-3 text-sm mt-2">
+						<div class="mt-2 flex items-center gap-3 text-sm">
 							{#if sexualPosition !== null && sexualPosition !== undefined}
 								<SexualPosition {sexualPosition} />
 							{/if}
@@ -231,8 +253,8 @@
 						<AboutMe>{aboutMe}</AboutMe>
 					{/if}
 					{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
-						<div class="flex flex-col gap-2 mt-4">
-							<span class="uppercase text-sm text-muted-foreground">Stats</span>
+						<div class="mt-4 flex flex-col gap-2">
+							<span class="text-sm text-muted-foreground uppercase">Stats</span>
 							<Genders {genders} {pronouns} />
 							<Tribes tribes={grindrTribes} />
 							<Ethnicity {ethnicity} />
@@ -240,8 +262,8 @@
 						</div>
 					{/if}
 					{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
-						<div class="flex flex-col gap-2 mt-4">
-							<span class="uppercase text-sm text-muted-foreground">
+						<div class="mt-4 flex flex-col gap-2">
+							<span class="text-sm text-muted-foreground uppercase">
 								Expectations
 							</span>
 							<LookingFor {lookingFor} />
@@ -250,8 +272,8 @@
 						</div>
 					{/if}
 					{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
-						<div class="flex flex-col gap-2 mt-4">
-							<span class="uppercase text-sm text-muted-foreground">
+						<div class="mt-4 flex flex-col gap-2">
+							<span class="text-sm text-muted-foreground uppercase">
 								Health
 							</span>
 							<HivStatus {hivStatus} />
@@ -260,8 +282,8 @@
 						</div>
 					{/if}
 					{#if socialNetworks && Object.keys(socialNetworks).length > 0}
-						<div class="flex flex-col gap-2 mt-4">
-							<span class="uppercase text-sm text-muted-foreground">
+						<div class="mt-4 flex flex-col gap-2">
+							<span class="text-sm text-muted-foreground uppercase">
 								Socials
 							</span>
 							<Socials socials={socialNetworks} />

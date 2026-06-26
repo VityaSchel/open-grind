@@ -30,7 +30,7 @@
 <ProgressiveBlur
 	direction="bottomToTop"
 	tag="nav"
-	class="fixed bottom-0 z-50 w-full pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]"
+	class="fixed bottom-0 z-50 w-full pt-2 pb-fixed-nav"
 	bgClass="bg-linear-to-t from-background to-transparent"
 	contentClass="overflow-auto no-scrollbar left-1/2 -translate-x-1/2 m-auto flex justify-center gap-2 px-2"
 >
@@ -70,16 +70,16 @@
 			<ChatCircleIcon weight="fill" />
 			Inbox
 			{#if hasUnread}
-				<Badge class="absolute top-1 inset-e-2 size-2.5 p-0 rounded-full" />
+				<Badge class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0" />
 			{/if}
 		</a>
 	</div>
 	<a
 		href="/settings"
 		class={[
-			"size-14 flex shrink-0 rounded-full border p-1 bg-muted",
+			"flex size-14 shrink-0 rounded-full border bg-muted p-1",
 			{
-				"border-accent border-2":
+				"border-2 border-accent":
 					page.route.id === "/(protected)/(navbar)/settings/(me)",
 				"border-border":
 					page.route.id !== "/(protected)/(navbar)/settings/(me)",
@@ -103,6 +103,6 @@
 	@reference "../../layout.css";
 
 	.links a {
-		@apply rounded-full border border-transparent! px-3 py-1 text-xs data-active:font-medium group-data-vertical/tabs:rounded-2xl group-data-vertical/tabs:px-3 group-data-vertical/tabs:py-1.5 [&_svg:not([class*='size-'])]:size-4 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground/60 hover:bg-input/20 dark:text-muted-foreground dark:hover:bg-input/20 relative inline-flex h-[calc(100%-1px)] flex-col gap-0.5 flex-1 items-center justify-center whitespace-nowrap focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 dark:data-active:text-accent dark:data-active:border-input  data-active:text-foreground;
+		@apply relative inline-flex h-[calc(100%-1px)] flex-1 flex-col items-center justify-center gap-0.5 rounded-full border border-transparent! px-3 py-1 text-xs whitespace-nowrap text-foreground/60 group-data-vertical/tabs:rounded-2xl group-data-vertical/tabs:px-3 group-data-vertical/tabs:py-1.5 hover:bg-input/20 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 dark:text-muted-foreground dark:hover:bg-input/20 data-active:font-medium data-active:text-foreground dark:data-active:border-input dark:data-active:text-accent [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4;
 	}
 </style>

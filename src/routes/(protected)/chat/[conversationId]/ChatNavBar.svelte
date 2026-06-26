@@ -16,36 +16,36 @@
 
 <ProgressiveBlur
 	direction="topToBottom"
-	class="w-full shrink-0 h-19 absolute z-10"
-	bgClass="bg-linear-to-b max-xs:from-background xs:from-card to-transparent"
+	class="absolute z-10 h-19 w-full shrink-0"
+	bgClass="bg-linear-to-b max-split:from-background split:from-card to-transparent"
 	contentClass="flex items-center h-full"
 	tag="nav"
 >
-	<a href="/chat" class="flex items-center justify-center w-19 h-full">
+	<a href="/chat" class="flex h-full w-19 items-center justify-center">
 		<ArrowLeftIcon size={32} />
 	</a>
 	{#if conversationState.loading || conversationState.profile === null}
-		<div class="py-4 ps-0 flex-1 flex items-center gap-3">
-			<Skeleton class="rounded-full size-[37.5px]" />
+		<div class="flex flex-1 items-center gap-3 py-4 ps-0">
+			<Skeleton class="size-avatar rounded-full" />
 			<div class="flex flex-col gap-2">
-				<Skeleton class="rounded-md w-20 h-4" />
-				<Skeleton class="rounded-md w-12 h-3" />
+				<Skeleton class="h-4 w-20 rounded-md" />
+				<Skeleton class="h-3 w-12 rounded-md" />
 			</div>
 		</div>
 	{:else if conversationState.error}
 		<span class="flex-1">Failed to load conversation</span>
 	{:else}
 		{@const profile = conversationState.profile}
-		<a href="/profile/{profile.profileId}" class="flex-1 ps-0 py-4 pe-4">
+		<a href="/profile/{profile.profileId}" class="flex-1 py-4 ps-0 pe-4">
 			<Card.Header class="flex items-center gap-4 px-0">
-				<Avatar.Root class="size-[37.5px] after:rounded-full">
+				<Avatar.Root class="size-avatar after:rounded-full">
 					<UserAvatar
 						mediaHash={profile.mediaHash ?? null}
-						class="*:rounded-full size-full"
+						class="size-full *:rounded-full"
 						size="lg"
 					/>
 				</Avatar.Root>
-				<div class="flex flex-col min-w-0">
+				<div class="flex min-w-0 flex-col">
 					<Card.Title
 						class={[
 							"min-w-0 truncate",

@@ -25,7 +25,7 @@
 			{...props}
 			class={["rounded-full", props.class, "flex-nowrap!"]}
 		>
-			<Item.Media class="size-14 bg-neutral-700 rounded-full translate-y-none">
+			<Item.Media class="translate-y-none size-14 rounded-full bg-neutral-700">
 				{#await myProfilePhotos then photos}
 					{@const mainPhoto = photos[0]}
 					{#if mainPhoto}
@@ -40,20 +40,20 @@
 				{/await}
 			</Item.Media>
 			<Item.Content class="min-w-0">
-				<Item.Title class="truncate min-w-0 w-full inline-block text-left">
+				<Item.Title class="inline-block w-full min-w-0 truncate text-left">
 					{#await myProfile}
-						<Skeleton class="h-3.75 my-0.5 w-32" />
+						<Skeleton class="my-0.5 h-3.75 w-32" />
 					{:then profile}
 						<DisplayName name={profile.displayName} />
 					{:catch}
 						<span class="load-fail">Failed to load name</span>
 					{/await}
 				</Item.Title>
-				<Item.Description class="truncate inline-block">
+				<Item.Description class="inline-block truncate">
 					View your profile
 				</Item.Description>
 			</Item.Content>
-			<Item.Actions class="max-xxxxs:hidden">
+			<Item.Actions class="max-cramped:hidden">
 				<CaretRightIcon class="size-4" />
 			</Item.Actions>
 		</a>
@@ -64,6 +64,6 @@
 	@reference "$layout";
 
 	.load-fail {
-		@apply italic text-muted-foreground;
+		@apply text-muted-foreground italic;
 	}
 </style>

@@ -38,7 +38,7 @@
 		</div>
 		{#if preview.lastViewed !== null || totalCount > 1}
 			<div
-				class="absolute inset-x-0 bottom-0 z-1 flex items-center justify-between gap-1 bg-linear-to-t from-black/65 to-transparent pb-1 pt-6 text-[11px] font-medium text-white/90 px-1.5"
+				class="absolute inset-x-0 bottom-0 z-1 flex items-center justify-between gap-1 bg-linear-to-t from-black/65 to-transparent px-1.5 pt-6 pb-1 text-2xs font-medium text-white/90"
 			>
 				<span class="truncate">
 					{#if preview.lastViewed !== null}

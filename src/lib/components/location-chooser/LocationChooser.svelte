@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { MediaQuery } from "svelte/reactivity";
-
+	import { above } from "$lib/breakpoints.svelte";
 	import GeoMapPicker from "$lib/components/location-chooser/GeoMapPicker.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
@@ -23,7 +22,7 @@
 			| undefined;
 	} = $props();
 
-	const isDesktop = new MediaQuery("(min-width: 768px)");
+	const isDesktop = above("md");
 
 	function onSubmitPin() {
 		if (!pinPos) return;
@@ -63,12 +62,12 @@
 {#if isDesktop.current}
 	<Dialog.Root bind:open>
 		<Dialog.Content
-			class="sm:max-w-200 h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom)-4rem)] flex flex-col"
+			class="flex h-[calc(var(--screen-safe)-4rem)] flex-col sm:max-w-200"
 			preventOverflowTextSelection={false}
 			showCloseButton={false}
 		>
 			<div
-				class="h-full touch-manipulation rounded-lg overflow-clip flex-1"
+				class="h-full flex-1 touch-manipulation overflow-clip rounded-lg"
 				data-vaul-no-drag
 			>
 				<GeoMapPicker bind:pinPos bind:this={geoMapPicker} />
@@ -87,10 +86,10 @@
 	<Drawer.Root bind:open>
 		<Drawer.Content
 			preventOverflowTextSelection={false}
-			class="h-full! mt-0! mb-(--safe-area-bottom)"
+			class="mt-0! mb-(--safe-area-bottom) h-full!"
 		>
 			<div
-				class="h-full touch-manipulation rounded-lg overflow-clip mt-4 mb-2"
+				class="mt-4 mb-2 h-full touch-manipulation overflow-clip rounded-lg"
 				data-vaul-no-drag
 			>
 				<GeoMapPicker bind:pinPos bind:this={geoMapPicker} />

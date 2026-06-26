@@ -27,9 +27,9 @@
 		{/if}
 	{/snippet}
 	{#snippet actions()}
-		<Item.Actions class="flex flex-col items-end gap-1 min-w-6 @max-[9rem]:hidden">
+		<Item.Actions class="flex min-w-6 flex-col items-end gap-1 @max-row:hidden">
 			<span
-				class="text-muted-foreground font-medium text-right truncate max-w-full"
+				class="max-w-full truncate text-right font-medium text-muted-foreground"
 			>
 				<RelativeTimeDynamic date={tap.timestamp} />
 			</span>

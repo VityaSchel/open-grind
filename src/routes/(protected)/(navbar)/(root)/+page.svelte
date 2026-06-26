@@ -17,12 +17,12 @@
 </svelte:head>
 {#await preferences then { geohash }}
 	{#if geohash === null}
-		<main class="m-auto flex flex-1 max-w-full">
+		<main class="m-auto flex max-w-full flex-1">
 			<LocationChooser onUpdate={() => (preferences = getPreferences())} />
 		</main>
 	{:else}
 		<main
-			class="flex flex-col p-4 gap-4 min-h-[calc(100dvh-var(--safe-area-top)-var(--content-pb)+3.5rem)]"
+			class="flex min-h-[calc(var(--screen-scroll)+3.5rem)] flex-col gap-4 p-4"
 		>
 			<TopBar
 				onUpdatePreferences={() => (preferences = getPreferences())}
