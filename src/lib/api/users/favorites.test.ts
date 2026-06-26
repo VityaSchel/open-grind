@@ -7,10 +7,7 @@ vi.mock("$lib/api", async (importOriginal) => ({
 	fetchRest: fetchRestMock,
 }));
 
-import {
-	addFavoriteUser,
-	removeFavoriteUser,
-} from "$lib/api/users/favorites";
+import { addFavoriteUser, removeFavoriteUser } from "$lib/api/users/favorites";
 
 const assertOk = vi.fn();
 

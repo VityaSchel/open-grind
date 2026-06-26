@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { decodeGeohash, encodeGeohash, geohashSchema } from "$lib/model/geohash";
+import {
+	decodeGeohash,
+	encodeGeohash,
+	geohashSchema,
+} from "$lib/model/geohash";
 
 describe("geohashSchema", () => {
 	it("accepts twelve-character base32 geohashes", () => {

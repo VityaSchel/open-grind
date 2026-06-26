@@ -14,7 +14,9 @@ import {
 
 describe("grid search filter schemas", () => {
 	it("accepts the default filter state", () => {
-		expect(gridSearchFiltersSchema.parse(defaultFilters)).toEqual(defaultFilters);
+		expect(gridSearchFiltersSchema.parse(defaultFilters)).toEqual(
+			defaultFilters,
+		);
 	});
 
 	it("enforces filter range boundaries", () => {
