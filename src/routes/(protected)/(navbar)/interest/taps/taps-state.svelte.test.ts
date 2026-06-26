@@ -36,8 +36,8 @@ vi.mock("$lib/reconcile", () => ({
 import type { TapProfile } from "$lib/model/interest/tap-profile";
 import { TapsState } from "./taps-state.svelte";
 
-vi.mock("$lib/ws.svelte", async () => ({
-	...(await import("$lib/ws-events")),
+vi.mock("$lib/ws.svelte", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
 	ws: {
 		on(
 			eventType: string,
@@ -61,7 +61,10 @@ function emitTap(payload: unknown) {
 	tapHandlers[0]?.(subscription.schema.parse(payload));
 }
 
-function tap(profileId: number, overrides: Partial<TapProfile> = {}): TapProfile {
+function tap(
+	profileId: number,
+	overrides: Partial<TapProfile> = {},
+): TapProfile {
 	return {
 		distance: null,
 		profileImageMediaHash: null,

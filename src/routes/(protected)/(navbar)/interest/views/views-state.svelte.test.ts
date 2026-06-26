@@ -34,8 +34,8 @@ vi.mock("$lib/reconcile", () => ({
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 import { ViewsState } from "./views-state.svelte";
 
-vi.mock("$lib/ws.svelte", async () => ({
-	...(await import("$lib/ws-events")),
+vi.mock("$lib/ws.svelte", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
 	ws: {
 		on(
 			eventType: string,

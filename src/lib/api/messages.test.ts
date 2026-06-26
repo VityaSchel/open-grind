@@ -33,12 +33,20 @@ function apiMessage(overrides = {}) {
 function response({
 	data,
 	status = 200,
+	assertOkErrorMessage,
 }: {
 	data?: unknown;
 	status?: number;
+	assertOkErrorMessage?: string;
 } = {}) {
 	return {
 		status,
+		assertOk() {
+			if (status >= 200 && status < 300) return;
+			throw new Error(
+				assertOkErrorMessage ?? `API request failed with status ${status}`,
+			);
+		},
 		json: () => data,
 		jsonParsed: vi.fn((schema: { parse(value: unknown): unknown }) =>
 			schema.parse(data),
@@ -145,7 +153,13 @@ describe("message API wrappers", () => {
 
 	it("throws when delete requests return non-200 statuses", async () => {
 		vi.spyOn(console, "log").mockImplementation(() => {});
-		fetchRestMock.mockResolvedValue(response({ data: { error: true }, status: 500 }));
+		fetchRestMock.mockResolvedValue(
+			response({
+				data: { error: true },
+				status: 500,
+				assertOkErrorMessage: "Failed to delete message",
+			}),
+		);
 
 		await expect(
 			deleteMessageForMe({
@@ -165,7 +179,13 @@ describe("message API wrappers", () => {
 
 	it("throws when unsend requests return non-200 statuses", async () => {
 		vi.spyOn(console, "log").mockImplementation(() => {});
-		fetchRestMock.mockResolvedValue(response({ data: { error: true }, status: 500 }));
+		fetchRestMock.mockResolvedValue(
+			response({
+				data: { error: true },
+				status: 500,
+				assertOkErrorMessage: "Failed to unsend message",
+			}),
+		);
 
 		await expect(
 			unsendMessage({
