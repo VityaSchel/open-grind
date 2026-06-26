@@ -7,6 +7,7 @@
 		getPreferences,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
+	import CommandCenterTrigger from "$lib/components/command-center/CommandCenterTrigger.svelte";
 	import { defaultFilters } from "$lib/components/filters/filters";
 	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
 	import GridFilters from "../GridFilters.svelte";
@@ -78,6 +79,7 @@
 	<div class="flex overflow-x-auto scrollbar-thin p-4 pt-0 gap-0.5">
 		<LocationChange onUpdate={onUpdatePreferences} />
 		<QuickFilters bind:openFilters bind:filters {onUpdateFilters} />
+		<CommandCenterTrigger />
 	</div>
 </ProgressiveBlur>
 <div class="h-9"></div>
