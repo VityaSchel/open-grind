@@ -3,6 +3,7 @@
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 
+	import OpenProfileByIdCommand from "$lib/components/command-center/open-profile-by-id/OpenProfileByIdCommand.svelte";
 	import * as Command from "$lib/components/ui/command";
 	import {
 		commandCenterClose,
@@ -65,6 +66,9 @@
 						{/snippet}
 					</CommandSuggestion>
 				</Command.Group>
+			{/if}
+			{#if commandCenterState.query.startsWith("#")}
+				<OpenProfileByIdCommand />
 			{/if}
 			{#if commandCenterState.query.startsWith("/")}
 				<QuickGoToCommandGroup />
