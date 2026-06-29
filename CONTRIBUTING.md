@@ -9,6 +9,7 @@ To minimize effort and time spent on porting code across platform, the project i
   - [Documentation](#documentation)
   - [Quick start](#quick-start)
   - [Reverse engineering API](#reverse-engineering-api)
+  - [Development](#development)
   - [Contribution guidelines](#contribution-guidelines)
   - [Codebase notes](#codebase-notes)
 
@@ -75,6 +76,10 @@ const req = await fetch("https://grindr.mobi/v8/sessions", {
 process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 
 ```
+
+## Development
+
+Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app. Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
 
 </details>
 

@@ -2,6 +2,7 @@
 	import { TrashIcon } from "phosphor-svelte";
 
 	import { Button } from "$lib/components/ui/button";
+	import { profileMediaUrl } from "$lib/media";
 
 	let {
 		mediaHash,
@@ -10,11 +11,13 @@
 		mediaHash: string;
 		onDelete: () => void;
 	} = $props();
+
+	const src = $derived(profileMediaUrl(mediaHash, "thumb"));
 </script>
 
 <div class="bg-muted relative aspect-square overflow-hidden rounded-xl">
 	<img
-		src="https://cdns.grindr.com/images/thumb/320x320/{mediaHash}"
+		{src}
 		alt=""
 		class="size-full object-cover object-center"
 		loading="lazy"

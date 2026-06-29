@@ -2,6 +2,8 @@
 	import { env } from "$env/dynamic/public";
 	import { UserIcon } from "phosphor-svelte";
 
+	import { profileMediaUrl } from "$lib/media";
+
 	let {
 		mediaHash,
 		class: className = "size-80",
@@ -16,7 +18,7 @@
 <div class={[className]}>
 	{#if mediaHash}
 		<img
-			src="https://cdns.grindr.com/images/thumb/320x320/{mediaHash}"
+			src={profileMediaUrl(mediaHash, "thumb")}
 			alt="Profile avatar"
 			class={[
 				"w-full h-full object-cover object-center bg-neutral-600",
