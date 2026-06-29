@@ -39,7 +39,10 @@
 </script>
 
 <Drawer.Root bind:open>
-	<Drawer.Content preventOverflowTextSelection={false}>
+	<Drawer.Content
+		preventOverflowTextSelection={false}
+		class="max-w-160 mx-auto"
+	>
 		<Drawer.Header class="flex flex-row justify-between items-center">
 			<div class="flex-1 flex justify-start">
 				<Button
