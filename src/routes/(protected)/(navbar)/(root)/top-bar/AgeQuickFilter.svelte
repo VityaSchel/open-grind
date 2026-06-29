@@ -4,28 +4,20 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 
 	let {
 		open = $bindable(),
-		enabled = $bindable(),
-		value = $bindable(),
-		onUpdateFilters,
 	}: {
 		open: boolean;
-		enabled: boolean;
-		value: number[];
-		onUpdateFilters: () => void;
 	} = $props();
 
-	let filtersChanges: { age: number[]; ageEnabled: boolean } = $state({
-		age: defaultFilters.age,
-		ageEnabled: defaultFilters.ageEnabled,
-	});
+	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	let { ageEnabled: enabled, age: value } = $derived(filters);
 
 	$effect(() => {
 		if (open) {
-			filtersChanges.age = value;
-			filtersChanges.ageEnabled = enabled;
+			filters = { ...(gridState.filters.value ?? defaultFilters) };
 		}
 	});
 
@@ -43,7 +35,7 @@
 					variant="link"
 					class="cursor-pointer"
 					onclick={() => {
-						filtersChanges.age = defaultFilters.age;
+						value = defaultFilters.age;
 					}}
 				>
 					Reset
@@ -51,20 +43,17 @@
 			</div>
 			<Drawer.Title>Age</Drawer.Title>
 			<div class="flex-1 flex justify-end">
-				<Switch
-					id="age-filter-enabled"
-					bind:checked={filtersChanges.ageEnabled}
-				/>
+				<Switch id="age-filter-enabled" bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
 		<div class="px-4 flex flex-col gap-1.5 mb-2">
 			<div class="w-full text-center mb-2">{label}</div>
 			<AgeFilterSlider
 				bind:value={
-					() => filtersChanges.age,
+					() => value,
 					(v: number[]) => {
-						filtersChanges.ageEnabled = true;
-						filtersChanges.age = v;
+						enabled = true;
+						value = v;
 					}
 				}
 				bind:label
@@ -74,9 +63,10 @@
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}
 				onclick={() => {
-					value = filtersChanges.age;
-					enabled = filtersChanges.ageEnabled;
-					onUpdateFilters();
+					gridState.filters.set({
+						ageEnabled: enabled,
+						age: value,
+					});
 					open = false;
 				}}
 			>

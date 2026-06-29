@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { DotsThreeIcon, FlagIcon, ProhibitIcon } from "phosphor-svelte";
+	import {
+		CopyIcon,
+		DotsThreeIcon,
+		FlagIcon,
+		ProhibitIcon,
+	} from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 
 	import { blockUser } from "$lib/api/browse/blocks";
@@ -35,6 +40,22 @@
 		{/snippet}
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="w-42" align="end">
+		<DropdownMenu.Item
+			onSelect={async () => {
+				try {
+					const clipboard =
+						await import("@tauri-apps/plugin-clipboard-manager");
+					await clipboard.writeText(String(profileId));
+					toast.success("Profile ID copied to clipboard");
+				} catch (error) {
+					console.error(error);
+					showErrorToast({ label: "Failed to copy profile ID", error });
+				}
+			}}
+		>
+			<CopyIcon class="size-5" />
+			Copy profile ID
+		</DropdownMenu.Item>
 		<DropdownMenu.Item
 			onSelect={() => {
 				toast(ToastUnimplemented, {

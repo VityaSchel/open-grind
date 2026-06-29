@@ -1,0 +1,21 @@
+<script>
+	import { platform } from "@tauri-apps/plugin-os";
+	import { TerminalIcon } from "phosphor-svelte";
+
+	import { Button } from "$lib/components/ui/button";
+	import * as Kbd from "$lib/components/ui/kbd";
+	import { commandCenterState } from "./command-center-state.svelte";
+
+	const isMobile = ["android", "ios"].includes(platform());
+</script>
+
+<Button
+	variant="outline"
+	onclick={() => (commandCenterState.open = true)}
+	class={{ "pe-1.5": !isMobile }}
+>
+	<TerminalIcon />
+	{#if !isMobile}
+		<Kbd.Root>&#8984; + K</Kbd.Root>
+	{/if}
+</Button>

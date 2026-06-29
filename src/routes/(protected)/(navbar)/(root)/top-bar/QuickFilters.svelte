@@ -1,33 +1,27 @@
 <script lang="ts">
 	import { SlidersHorizontalIcon } from "phosphor-svelte";
-	import type z from "zod";
 
+	import { defaultFilters } from "$lib/components/filters/filters";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import type { gridSearchFiltersSchema } from "$lib/components/filters/filters";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 	import AgeQuickFilter from "./AgeQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
 
 	let {
 		openFilters = $bindable(),
-		filters = $bindable(),
-		onUpdateFilters,
 	}: {
 		openFilters: {
 			all: boolean;
 			age: boolean;
 			position: boolean;
 		};
-		filters: z.infer<typeof gridSearchFiltersSchema>;
-		onUpdateFilters: () => void;
 	} = $props();
 
-	const booleanFiltersKeys = [
-		"isFavorite",
-		"isOnline",
-		"isRightNow",
-		"isFresh",
-	] as const;
+	const TOGGLE_FILTER_KEYS = ["isOnline", "isRightNow", "isFresh"] as const;
+
+	const filters = $derived(gridState.filters.value ?? defaultFilters);
+	const { ageEnabled, positionEnabled } = $derived(filters);
 </script>
 
 <Button variant="secondary" onclick={() => (openFilters.all = true)}>
@@ -37,7 +31,7 @@
 	variant="secondary"
 	onclick={() => (openFilters.age = true)}
 	class={{
-		"bg-white hover:bg-neutral-200 text-popover": filters.ageEnabled,
+		"bg-white hover:bg-neutral-200 text-popover": ageEnabled,
 	}}
 >
 	Age
@@ -46,7 +40,7 @@
 	variant="secondary"
 	onclick={() => (openFilters.position = true)}
 	class={{
-		"bg-white hover:bg-neutral-200 text-popover": filters.positionEnabled,
+		"bg-white hover:bg-neutral-200 text-popover": positionEnabled,
 	}}
 >
 	Position
@@ -55,12 +49,13 @@
 	type="multiple"
 	variant="default"
 	bind:value={
-		() => booleanFiltersKeys.filter((value) => filters[value]),
-		(values: (typeof booleanFiltersKeys)[number][]) => {
-			booleanFiltersKeys.forEach((key) => {
-				filters[key] = values.includes(key);
+		() => TOGGLE_FILTER_KEYS.filter((key) => filters[key]),
+		(values: (typeof TOGGLE_FILTER_KEYS)[number][]) => {
+			gridState.filters.set({
+				isOnline: values.includes("isOnline"),
+				isRightNow: values.includes("isRightNow"),
+				isFresh: values.includes("isFresh"),
 			});
-			onUpdateFilters();
 		}
 	}
 	size="sm"
@@ -86,15 +81,5 @@
 	</ToggleGroup.Item>
 </ToggleGroup.Root>
 
-<AgeQuickFilter
-	bind:open={openFilters.age}
-	bind:enabled={filters.ageEnabled}
-	bind:value={filters.age}
-	{onUpdateFilters}
-/>
-<PositionQuickFilter
-	bind:open={openFilters.position}
-	bind:enabled={filters.positionEnabled}
-	bind:value={filters.positions}
-	{onUpdateFilters}
-/>
+<AgeQuickFilter bind:open={openFilters.age} />
+<PositionQuickFilter bind:open={openFilters.position} />

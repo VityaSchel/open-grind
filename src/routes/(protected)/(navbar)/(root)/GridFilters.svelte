@@ -1,13 +1,14 @@
 <script lang="ts">
-	import type z from "zod";
+	import { untrack } from "svelte";
 
+	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
 	import AcceptNSFWPicsFilter from "$lib/components/filters/AcceptNSFWPicsFilter.svelte";
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
 	import BodyTypeFilter from "$lib/components/filters/BodyTypeFilter.svelte";
 	import FilterBoolean from "$lib/components/filters/FilterBoolean.svelte";
 	import {
 		defaultFilters,
-		gridSearchFiltersSchema,
+		type GridSearchFilters,
 	} from "$lib/components/filters/filters";
 	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
 	import HealthPracticesFilter from "$lib/components/filters/HealthPracticesFilter.svelte";
@@ -22,103 +23,111 @@
 	import WeightFilter from "$lib/components/filters/WeightFilter.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 
 	let {
 		open = $bindable(),
-		filters = $bindable(),
-		onUpdateFilters,
 	}: {
-		filters: z.infer<typeof gridSearchFiltersSchema>;
-		onUpdateFilters: () => void;
 		open: boolean;
 	} = $props();
 
-	let filtersChanges = $state(defaultFilters);
+	function snapshotFilters(): GridSearchFilters {
+		return { ...(gridState.filters.value ?? defaultFilters) };
+	}
+
+	let filters = $state(snapshotFilters());
 
 	$effect(() => {
 		if (open) {
-			filtersChanges = { ...filters };
+			filters = untrack(snapshotFilters);
 		}
 	});
 
 	let contentScroll = $state(0);
+
+	$effect(() => {
+		if (open) {
+			const onBackGesture = () => {
+				open = false;
+				return false;
+			};
+			backGestureEventHandlers.add(onBackGesture);
+			return () => {
+				backGestureEventHandlers.delete(onBackGesture);
+			};
+		}
+	});
 </script>
 
 {#snippet col1()}
-	<FilterBoolean id="favorite" bind:checked={filtersChanges.isFavorite}>
+	<FilterBoolean id="favorite" bind:checked={filters.isFavorite}>
 		Favorites
 	</FilterBoolean>
-	<FilterBoolean id="online" bind:checked={filtersChanges.isOnline}>
+	<FilterBoolean id="online" bind:checked={filters.isOnline}>
 		Online
 	</FilterBoolean>
-	<FilterBoolean id="right-now" bind:checked={filtersChanges.isRightNow}>
+	<FilterBoolean id="right-now" bind:checked={filters.isRightNow}>
 		Right now
 	</FilterBoolean>
-	<AgeFilter
-		bind:checked={filtersChanges.ageEnabled}
-		bind:value={filtersChanges.age}
-	/>
+	<AgeFilter bind:checked={filters.ageEnabled} bind:value={filters.age} />
 	<GendersFilter
-		bind:checked={filtersChanges.genderEnabled}
-		bind:value={filtersChanges.genders}
+		bind:checked={filters.genderEnabled}
+		bind:value={filters.genders}
 	/>
 {/snippet}
 {#snippet col2()}
 	<PositionFilter
-		bind:checked={filtersChanges.positionEnabled}
-		bind:value={filtersChanges.positions}
+		bind:checked={filters.positionEnabled}
+		bind:value={filters.positions}
 	/>
 	<PhotosFilter
-		bind:checked={filtersChanges.photosEnabled}
-		bind:value={filtersChanges.photos}
+		bind:checked={filters.photosEnabled}
+		bind:value={filters.photos}
 	/>
-	<TagsFilter
-		bind:checked={filtersChanges.tagsEnabled}
-		bind:value={filtersChanges.tags}
-	/>
+	<TagsFilter bind:checked={filters.tagsEnabled} bind:value={filters.tags} />
 {/snippet}
 {#snippet col3()}
 	<TribesFilter
-		bind:checked={filtersChanges.tribesEnabled}
-		bind:value={filtersChanges.tribes}
+		bind:checked={filters.tribesEnabled}
+		bind:value={filters.tribes}
 	/>
 	<BodyTypeFilter
-		bind:checked={filtersChanges.bodyTypesEnabled}
-		bind:value={filtersChanges.bodyTypes}
+		bind:checked={filters.bodyTypesEnabled}
+		bind:value={filters.bodyTypes}
 	/>
 	<HeightFilter
-		bind:checked={filtersChanges.heightEnabled}
-		bind:value={filtersChanges.height}
+		bind:checked={filters.heightEnabled}
+		bind:value={filters.height}
 	/>
 	<WeightFilter
-		bind:checked={filtersChanges.weightEnabled}
-		bind:value={filtersChanges.weight}
+		bind:checked={filters.weightEnabled}
+		bind:value={filters.weight}
 	/>
 	<RelationshipStatusFilter
-		bind:checked={filtersChanges.relationshipStatusesEnabled}
-		bind:value={filtersChanges.relationshipStatuses}
+		bind:checked={filters.relationshipStatusesEnabled}
+		bind:value={filters.relationshipStatuses}
 	/>
 	<AcceptNSFWPicsFilter
-		bind:checked={filtersChanges.acceptNSFWPicsEnabled}
-		bind:value={filtersChanges.acceptNSFWPics}
+		bind:checked={filters.acceptNSFWPicsEnabled}
+		bind:value={filters.acceptNSFWPics}
 	/>
 	<LookingForFilter
-		bind:checked={filtersChanges.lookingForEnabled}
-		bind:value={filtersChanges.lookingFor}
+		bind:checked={filters.lookingForEnabled}
+		bind:value={filters.lookingFor}
 	/>
 	<MeetAtFilter
-		bind:checked={filtersChanges.meetAtEnabled}
-		bind:value={filtersChanges.meetAt}
+		bind:checked={filters.meetAtEnabled}
+		bind:value={filters.meetAt}
 	/>
 	<FilterBoolean
 		id="havent-chatted-today"
-		bind:checked={filtersChanges.haventChattedTodayEnabled}
+		bind:checked={filters.haventChattedTodayEnabled}
 	>
 		Haven't chatted today
 	</FilterBoolean>
 	<HealthPracticesFilter
-		bind:checked={filtersChanges.healthPracticesEnabled}
-		bind:value={filtersChanges.healthPractices}
+		bind:checked={filters.healthPracticesEnabled}
+		bind:value={filters.healthPractices}
 	/>
 {/snippet}
 <Sheet.Root bind:open>
@@ -169,8 +178,7 @@
 			<Button
 				type="submit"
 				onclick={() => {
-					filters = filtersChanges;
-					onUpdateFilters();
+					gridState.filters.set(filters);
 					open = false;
 				}}
 			>

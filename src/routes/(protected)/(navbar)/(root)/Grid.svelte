@@ -3,16 +3,14 @@
 	import { onMount } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";
-	import { gridState } from "./grid-state.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
 	let {
 		geohash,
-		onResetFilters,
 	}: {
 		geohash: string;
-		onResetFilters: () => void;
 	} = $props();
 
 	const gridProfiles = $derived(uniqBy(gridState.items, "id"));
@@ -113,7 +111,7 @@
 				></div>
 			{/if}
 		{:else}
-			<EmptyGrid {onResetFilters} />
+			<EmptyGrid />
 		{/each}
 		{#if gridState.loadingMore}
 			{#each Array.from({ length: 20 })}

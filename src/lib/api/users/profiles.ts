@@ -14,7 +14,7 @@ import {
 } from "$lib/model/profile";
 import { profileTagsResponseSchema } from "$lib/model/tags";
 
-function isProbablyBlocked(profile: Profile) {
+function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [
 		"aboutMe",
 		"age",
@@ -80,6 +80,13 @@ export class BlockedProfileError extends Error {
 	}
 }
 
+export class ProfileUnavailableError extends Error {
+	constructor() {
+		super("Profile unavailable");
+		this.name = "ProfileUnavailableError";
+	}
+}
+
 const profileResponseSchema = z.object({
 	profiles: z.array(profileSchema).length(1),
 });
@@ -106,17 +113,24 @@ export async function getProfile(profileId: number): Promise<Profile> {
 	return request;
 }
 
+const MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME = "3";
+const MAGIC_PROFILE_BLOCK_DISPLAY_NAME = "4";
+
 async function fetchProfile(profileId: number): Promise<Profile> {
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
 		}).then((res) => res.jsonParsed(profileResponseSchema))
 	).profiles[0];
-	if (isProbablyBlocked(profile)) {
-		const blockedByUs = await getBlockedUsers().then((blocking) =>
-			blocking.some((blocked) => blocked.profileId === profileId),
-		);
-		throw new BlockedProfileError({ blockedByUs });
+	if (isProbablyUnavailable(profile)) {
+		if (profile.displayName === MAGIC_PROFILE_BLOCK_DISPLAY_NAME) {
+			const blockedByUs = await getBlockedUsers().then((blocking) =>
+				blocking.some((blocked) => blocked.profileId === profileId),
+			);
+			throw new BlockedProfileError({ blockedByUs });
+		} else if (profile.displayName === MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME) {
+			throw new ProfileUnavailableError();
+		}
 	}
 	profilesCache.set(profileId, { profile, updatedAt: Date.now() });
 	return profile;
