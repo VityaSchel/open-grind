@@ -152,7 +152,7 @@ a {
 	}
 
 	.profile-grid {
-		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 gap-0.5 overflow-clip rounded-[17px] grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
+		@apply mx-auto content-start grid w-full max-w-400 flex-1 grid-cols-2 gap-0.5 overflow-clip rounded-[17px] grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
 	}
 }
 
