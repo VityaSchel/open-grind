@@ -152,11 +152,18 @@
 		}
 	}
 
+	function isChromiumWebview() {
+		return "userAgentData" in navigator;
+	}
+
 	async function signInWithGoogle() {
 		if (submitting) return;
 		submitting = "google";
 		try {
-			await callMethod("login_with_google");
+			submitting = "google";
+			await callMethod("login_with_google", {
+				chromiumWebview: isChromiumWebview(),
+			});
 			void goto("/");
 		} catch (error) {
 			console.error(error);
@@ -186,11 +193,7 @@
 				Enter your email below to sign in to your account
 			</Card.Description>
 			<Card.Action>
-				<Button
-					variant="link"
-					href="/auth/sign-up"
-					class="px-0"
-				>
+				<Button variant="link" href="/auth/sign-up" class="px-0">
 					Sign Up
 				</Button>
 			</Card.Action>

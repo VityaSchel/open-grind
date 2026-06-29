@@ -19,7 +19,9 @@ export const methods = {
 		}),
 	},
 	login_with_google: {
-		request: z.undefined(),
+		request: z.object({
+			chromiumWebview: z.boolean(),
+		}),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
 		}),

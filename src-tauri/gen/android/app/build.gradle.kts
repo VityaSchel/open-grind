@@ -105,9 +105,7 @@ rust {
 }
 
 dependencies {
-    // 1.16.0 adds UserAgentMetadata.Builder.setFormFactors (needed to spoof
-    // sec-ch-ua-form-factors away from "Mobile" for the Google OAuth window).
-    implementation("androidx.webkit:webkit:1.16.0")
+    implementation("androidx.webkit:webkit:1.14.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("com.google.android.material:material:1.12.0")

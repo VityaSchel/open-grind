@@ -3,7 +3,7 @@ mod error;
 mod state;
 mod storage;
 
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use tauri::Manager;
 

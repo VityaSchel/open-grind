@@ -42,6 +42,13 @@ impl From<grindr::GrindrError> for AppError {
     }
 }
 
+// The native Google sign-in flow talks to Google directly over its own wreq client.
+impl From<wreq::Error> for AppError {
+    fn from(e: wreq::Error) -> Self {
+        AppError::Http(e.to_string())
+    }
+}
+
 impl From<AppError> for String {
     fn from(e: AppError) -> Self {
         e.to_string()
