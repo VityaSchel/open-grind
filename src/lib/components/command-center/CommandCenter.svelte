@@ -10,6 +10,7 @@
 		commandCenterState,
 	} from "./command-center-state.svelte";
 	import CommandSuggestion from "./CommandSuggestion.svelte";
+	import FilterGridCommand from "./filter-grid/FilterGridCommand.svelte";
 	import QuickGoToCommandGroup from "./quick-go-to/QuickGoToCommandGroup.svelte";
 
 	onMount(() => {
@@ -69,6 +70,9 @@
 			{/if}
 			{#if commandCenterState.query.startsWith("#")}
 				<OpenProfileByIdCommand />
+			{/if}
+			{#if commandCenterState.query.startsWith("?")}
+				<FilterGridCommand />
 			{/if}
 			{#if commandCenterState.query.startsWith("/")}
 				<QuickGoToCommandGroup />
