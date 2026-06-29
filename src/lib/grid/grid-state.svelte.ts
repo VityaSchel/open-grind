@@ -2,7 +2,6 @@ import { untrack } from "svelte";
 import z from "zod";
 
 import { showErrorToast } from "$lib/api/error";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
 import type { cascadeV3QuerySchema } from "$lib/model/grid/cascade/query/v3";
 import {
 	getGrid,
@@ -10,15 +9,17 @@ import {
 	profileCache,
 	resolvePartialBatch,
 } from "./grid";
+import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
 class GridState {
+	filters = new GridSearchFiltersState({ onRefresh: () => this.refresh() });
 	items = $state<GridProfile[]>([]);
 	partialBatches: { batch: { profileId: number }[] }[] = [];
-	nextPage = $state<number | null>(0);
+	nextPage: number | null = $state(0);
 	loadingMore = $state(false);
 	loading = $state(false);
 	refreshing = $state(false);
-	error = $state<Error | null>(null);
+	error: Error | null = $state(null);
 
 	get errorMessage(): string | null {
 		return this.error?.message ?? null;
@@ -144,70 +145,70 @@ class GridState {
 	): Promise<void> {
 		const token = ++this.#fetchToken;
 		try {
-			const { gridSearchFilters } = await getPreferences();
+			const filters = this.filters.value;
 			const query = {
 				nearbyGeoHash: geohash,
-				favorites: gridSearchFilters?.isFavorite || undefined,
-				onlineOnly: gridSearchFilters?.isOnline || undefined,
-				rightNow: gridSearchFilters?.isRightNow || undefined,
-				...(gridSearchFilters?.ageEnabled && {
-					ageMin: gridSearchFilters?.age[0],
-					ageMax: gridSearchFilters?.age[1],
+				favorites: filters?.isFavorite || undefined,
+				onlineOnly: filters?.isOnline || undefined,
+				rightNow: filters?.isRightNow || undefined,
+				...(filters?.ageEnabled && {
+					ageMin: filters?.age[0],
+					ageMax: filters?.age[1],
 				}),
-				...(gridSearchFilters?.genderEnabled && {
-					genders: gridSearchFilters?.genders,
+				...(filters?.genderEnabled && {
+					genders: filters?.genders,
 				}),
-				...(gridSearchFilters?.positionEnabled && {
-					sexualPositions: gridSearchFilters?.positions,
+				...(filters?.positionEnabled && {
+					sexualPositions: filters?.positions,
 				}),
-				...(gridSearchFilters?.photosEnabled &&
-					gridSearchFilters?.photos.includes("has-photos") && {
+				...(filters?.photosEnabled &&
+					filters?.photos.includes("has-photos") && {
 						photoOnly: true,
 					}),
-				...(gridSearchFilters?.photosEnabled &&
-					gridSearchFilters?.photos.includes("has-albums") && {
+				...(filters?.photosEnabled &&
+					filters?.photos.includes("has-albums") && {
 						hasAlbum: true,
 					}),
-				...(gridSearchFilters?.photosEnabled &&
-					gridSearchFilters?.photos.includes("has-face-pics") && {
+				...(filters?.photosEnabled &&
+					filters?.photos.includes("has-face-pics") && {
 						faceOnly: true,
 					}),
-				...(gridSearchFilters?.tribesEnabled && {
-					tribes: gridSearchFilters?.tribes,
+				...(filters?.tribesEnabled && {
+					tribes: filters?.tribes,
 				}),
-				...(gridSearchFilters?.bodyTypesEnabled && {
-					bodyTypes: gridSearchFilters?.bodyTypes,
+				...(filters?.bodyTypesEnabled && {
+					bodyTypes: filters?.bodyTypes,
 				}),
-				...(gridSearchFilters?.heightEnabled && {
-					heightCmMin: gridSearchFilters?.height[0],
-					heightCmMax: gridSearchFilters?.height[1],
+				...(filters?.heightEnabled && {
+					heightCmMin: filters?.height[0],
+					heightCmMax: filters?.height[1],
 				}),
-				...(gridSearchFilters?.weightEnabled && {
-					weightGramsMin: gridSearchFilters?.weight[0] * 1000,
-					weightGramsMax: gridSearchFilters?.weight[1] * 1000,
+				...(filters?.weightEnabled && {
+					weightGramsMin: filters?.weight[0] * 1000,
+					weightGramsMax: filters?.weight[1] * 1000,
 				}),
-				...(gridSearchFilters?.relationshipStatusesEnabled && {
-					relationshipStatuses: gridSearchFilters?.relationshipStatuses,
+				...(filters?.relationshipStatusesEnabled && {
+					relationshipStatuses: filters?.relationshipStatuses,
 				}),
-				...(gridSearchFilters?.acceptNSFWPicsEnabled &&
-					gridSearchFilters?.acceptNSFWPics !== undefined && {
-						nsfwPics: gridSearchFilters?.acceptNSFWPics,
+				...(filters?.acceptNSFWPicsEnabled &&
+					filters?.acceptNSFWPics !== undefined && {
+						nsfwPics: filters?.acceptNSFWPics,
 					}),
-				...(gridSearchFilters?.lookingForEnabled && {
-					lookingFor: gridSearchFilters?.lookingFor,
+				...(filters?.lookingForEnabled && {
+					lookingFor: filters?.lookingFor,
 				}),
-				...(gridSearchFilters?.meetAtEnabled && {
-					meetAt: gridSearchFilters?.meetAt,
+				...(filters?.meetAtEnabled && {
+					meetAt: filters?.meetAt,
 				}),
-				notRecentlyChatted:
-					gridSearchFilters?.haventChattedTodayEnabled || undefined,
-				...(gridSearchFilters?.healthPracticesEnabled && {
-					sexualHealth: gridSearchFilters?.healthPractices,
+				notRecentlyChatted: filters?.haventChattedTodayEnabled || undefined,
+				...(filters?.healthPracticesEnabled && {
+					sexualHealth: filters?.healthPractices,
 				}),
-				...(gridSearchFilters?.tagsEnabled && gridSearchFilters?.tags && {
-					tags: gridSearchFilters?.tags,
-				}),
-				fresh: gridSearchFilters?.isFresh || undefined,
+				...(filters?.tagsEnabled &&
+					filters?.tags && {
+						tags: filters?.tags,
+					}),
+				fresh: filters?.isFresh || undefined,
 			} satisfies z.infer<typeof cascadeV3QuerySchema>;
 			const result = await getGrid(query);
 			if (token !== this.#fetchToken) return;

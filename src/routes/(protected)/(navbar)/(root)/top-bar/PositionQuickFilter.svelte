@@ -9,31 +9,20 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 
 	let {
 		open = $bindable(),
-		enabled = $bindable(),
-		value = $bindable(),
-		onUpdateFilters,
 	}: {
 		open: boolean;
-		enabled: boolean;
-		value: z.infer<typeof filterPositionSchema>;
-		onUpdateFilters: () => void;
 	} = $props();
 
-	let filtersChanges: {
-		positions: z.infer<typeof filterPositionSchema>;
-		positionEnabled: boolean;
-	} = $state({
-		positions: defaultFilters.positions,
-		positionEnabled: defaultFilters.positionEnabled,
-	});
+	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	let { positionEnabled: enabled, positions: value } = $derived(filters);
 
 	$effect(() => {
 		if (open) {
-			filtersChanges.positions = value;
-			filtersChanges.positionEnabled = enabled;
+			filters = { ...(gridState.filters.value ?? defaultFilters) };
 		}
 	});
 </script>
@@ -46,7 +35,7 @@
 					variant="link"
 					class="cursor-pointer"
 					onclick={() => {
-						filtersChanges.positions = defaultFilters.positions;
+						value = defaultFilters.positions;
 					}}
 				>
 					Reset
@@ -54,19 +43,16 @@
 			</div>
 			<Drawer.Title>Positions</Drawer.Title>
 			<div class="flex-1 flex justify-end">
-				<Switch
-					id="positions-filter-enabled"
-					bind:checked={filtersChanges.positionEnabled}
-				/>
+				<Switch id="positions-filter-enabled" bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
 		<div class="px-4 flex flex-col gap-1.5 mb-2">
 			<PositionFilterToggle
 				bind:value={
-					() => filtersChanges.positions,
+					() => value,
 					(v: z.infer<typeof filterPositionSchema>) => {
-						filtersChanges.positionEnabled = true;
-						filtersChanges.positions = v;
+						enabled = true;
+						value = v;
 					}
 				}
 			/>
@@ -75,9 +61,10 @@
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}
 				onclick={() => {
-					value = filtersChanges.positions;
-					enabled = filtersChanges.positionEnabled;
-					onUpdateFilters();
+					gridState.filters.set({
+						positionEnabled: enabled,
+						positions: value,
+					});
 					open = false;
 				}}
 			>

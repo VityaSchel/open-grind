@@ -3,10 +3,9 @@
 	import { FunnelIcon } from "phosphor-svelte";
 
 	import { showErrorToast } from "$lib/api/error";
-	import { setPreferences } from "$lib/app-data/preferences.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Command from "$lib/components/ui/command";
-	import { gridState } from "../../../../routes/(protected)/(navbar)/(root)/grid-state.svelte";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -19,8 +18,7 @@
 	async function apply() {
 		if (!canApply) return;
 		try {
-			await setPreferences({ gridSearchFilters: result.filters });
-			gridState.refresh();
+			void gridState.filters.set({ ...result.filters });
 			commandCenterClose();
 			await goto("/");
 		} catch (error) {

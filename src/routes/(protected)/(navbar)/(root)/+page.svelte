@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getPreferences } from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
-	import { gridState } from "./grid-state.svelte";
+	import { gridState } from "$lib/grid/grid-state.svelte";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
@@ -41,7 +41,7 @@
 						onclick={() => void gridState.reload()}
 					/>
 				{/if}
-				<Grid {geohash} onResetFilters={() => void topBar?.resetFilters()} />
+				<Grid {geohash} />
 			</div>
 		</main>
 	{/if}

@@ -1,14 +1,5 @@
 <script lang="ts">
-	import isEqual from "lodash-es/isEqual";
-	import { onMount } from "svelte";
-
-	import { showErrorToast } from "$lib/api/error";
-	import {
-		getPreferences,
-		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
 	import CommandCenterTrigger from "$lib/components/command-center/CommandCenterTrigger.svelte";
-	import { defaultFilters } from "$lib/components/filters/filters";
 	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
 	import GridFilters from "../GridFilters.svelte";
 	import LocationChange from "../LocationChange.svelte";
@@ -16,7 +7,6 @@
 
 	let {
 		onUpdatePreferences,
-		onRefreshGrid,
 	}: {
 		onUpdatePreferences: () => void;
 		onRefreshGrid: () => void;
@@ -27,46 +17,6 @@
 		age: false,
 		position: false,
 	});
-
-	let filters = $state(defaultFilters);
-
-	onMount(() => {
-		getPreferences()
-			.then(({ gridSearchFilters: preferredFilters = defaultFilters }) => {
-				filters = preferredFilters;
-			})
-			.catch((error) => {
-				console.error(error);
-				showErrorToast({
-					label: "Failed to load filters",
-					error,
-				});
-			});
-	});
-
-	async function onUpdateFilters() {
-		try {
-			const { gridSearchFilters: oldFilters = defaultFilters } =
-				await getPreferences();
-			if (!isEqual(oldFilters, filters)) {
-				await setPreferences({
-					gridSearchFilters: filters,
-				});
-				onRefreshGrid();
-			}
-		} catch (error) {
-			console.error(error);
-			showErrorToast({
-				label: "Failed to update filters",
-				error,
-			});
-		}
-	}
-
-	export function resetFilters() {
-		filters = defaultFilters;
-		void onUpdateFilters();
-	}
 </script>
 
 <ProgressiveBlur
@@ -78,9 +28,9 @@
 >
 	<div class="flex overflow-x-auto scrollbar-thin p-4 pt-0 gap-0.5">
 		<LocationChange onUpdate={onUpdatePreferences} />
-		<QuickFilters bind:openFilters bind:filters {onUpdateFilters} />
+		<QuickFilters bind:openFilters />
 		<CommandCenterTrigger />
 	</div>
 </ProgressiveBlur>
 <div class="h-9"></div>
-<GridFilters bind:filters bind:open={openFilters.all} {onUpdateFilters} />
+<GridFilters bind:open={openFilters.all} />
