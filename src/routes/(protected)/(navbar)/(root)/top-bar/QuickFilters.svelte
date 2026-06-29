@@ -18,16 +18,10 @@
 		};
 	} = $props();
 
-	const BOOLEAN_FILTER_KEYS = [
-		"isFavorite",
-		"isOnline",
-		"isRightNow",
-		"isFresh",
-	] as const;
+	const TOGGLE_FILTER_KEYS = ["isOnline", "isRightNow", "isFresh"] as const;
 
-	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	const filters = $derived(gridState.filters.value ?? defaultFilters);
 	const { ageEnabled, positionEnabled } = $derived(filters);
-	let { isOnline, isRightNow, isFresh } = $derived(filters);
 </script>
 
 <Button variant="secondary" onclick={() => (openFilters.all = true)}>
@@ -55,18 +49,13 @@
 	type="multiple"
 	variant="default"
 	bind:value={
-		() => BOOLEAN_FILTER_KEYS.filter((value) => filters?.[value]),
-		(values: (typeof BOOLEAN_FILTER_KEYS)[number][]) => {
-			if (filters !== null) {
-				BOOLEAN_FILTER_KEYS.forEach((key) => {
-					filters[key] = values.includes(key);
-				});
-				gridState.filters.set({
-					isOnline,
-					isRightNow,
-					isFresh,
-				});
-			}
+		() => TOGGLE_FILTER_KEYS.filter((key) => filters[key]),
+		(values: (typeof TOGGLE_FILTER_KEYS)[number][]) => {
+			gridState.filters.set({
+				isOnline: values.includes("isOnline"),
+				isRightNow: values.includes("isRightNow"),
+				isFresh: values.includes("isFresh"),
+			});
 		}
 	}
 	size="sm"

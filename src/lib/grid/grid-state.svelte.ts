@@ -13,7 +13,7 @@ import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
 class GridState {
 	filters = new GridSearchFiltersState({ onRefresh: () => this.refresh() });
-	items = $state<GridProfile[]>([]);
+	items: GridProfile[] = $state([]);
 	partialBatches: { batch: { profileId: number }[] }[] = [];
 	nextPage: number | null = $state(0);
 	loadingMore = $state(false);
@@ -145,6 +145,8 @@ class GridState {
 	): Promise<void> {
 		const token = ++this.#fetchToken;
 		try {
+			await this.filters.ready;
+			if (token !== this.#fetchToken) return;
 			const filters = this.filters.value;
 			const query = {
 				nearbyGeoHash: geohash,

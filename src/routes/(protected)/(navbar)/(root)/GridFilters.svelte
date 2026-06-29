@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from "svelte";
+
 	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
 	import AcceptNSFWPicsFilter from "$lib/components/filters/AcceptNSFWPicsFilter.svelte";
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
@@ -22,7 +24,6 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { proxify } from "$lib/utils.svelte";
 
 	let {
 		open = $bindable(),
@@ -30,13 +31,15 @@
 		open: boolean;
 	} = $props();
 
-	let filters = $derived(
-		proxify({ ...(gridState.filters.value ?? defaultFilters) }),
-	);
+	function snapshotFilters(): GridSearchFilters {
+		return { ...(gridState.filters.value ?? defaultFilters) };
+	}
+
+	let filters = $state(snapshotFilters());
 
 	$effect(() => {
 		if (open) {
-			filters = proxify({ ...(gridState.filters.value ?? defaultFilters) });
+			filters = untrack(snapshotFilters);
 		}
 	});
 
@@ -175,7 +178,7 @@
 			<Button
 				type="submit"
 				onclick={() => {
-					gridState.filters.set(filters as GridSearchFilters);
+					gridState.filters.set(filters);
 					open = false;
 				}}
 			>

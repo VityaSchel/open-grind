@@ -13,10 +13,11 @@ import {
 export class GridSearchFiltersState {
 	value: GridSearchFilters | null = $state(null);
 	onRefresh: () => void;
+	ready: Promise<void>;
 
 	constructor({ onRefresh }: { onRefresh: () => void }) {
 		this.onRefresh = onRefresh;
-		void this.#load();
+		this.ready = this.#load();
 	}
 
 	set(gridSearchFilters: Partial<GridSearchFilters>) {
@@ -30,7 +31,7 @@ export class GridSearchFiltersState {
 	}
 
 	resetFilters() {
-		this.value = defaultFilters;
+		this.value = { ...defaultFilters };
 		void this.#save();
 	}
 

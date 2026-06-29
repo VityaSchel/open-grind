@@ -12,7 +12,9 @@ export function commandCenterClose() {
 	commandCenterState.open = false;
 	void tick().then(() => {
 		setTimeout(() => {
-			commandCenterState.query = "";
+			if (!commandCenterState.open) {
+				commandCenterState.query = "";
+			}
 		}, 200);
 	});
 }

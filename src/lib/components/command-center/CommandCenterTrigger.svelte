@@ -16,6 +16,6 @@
 >
 	<TerminalIcon />
 	{#if !isMobile}
-		<Kbd.Root>⌘ + K</Kbd.Root>
+		<Kbd.Root>&#8984; + K</Kbd.Root>
 	{/if}
 </Button>

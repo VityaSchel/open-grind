@@ -8,7 +8,6 @@
 
 	let preferences = $state(getPreferences());
 
-	let topBar: TopBar | null = $state(null);
 	let gridContainer: HTMLElement | null = $state(null);
 </script>
 
@@ -24,11 +23,7 @@
 		<main
 			class="flex flex-col p-4 gap-4 min-h-[calc(100dvh-var(--safe-area-top)-var(--content-pb)+3.5rem)]"
 		>
-			<TopBar
-				onUpdatePreferences={() => (preferences = getPreferences())}
-				onRefreshGrid={() => gridState.refresh()}
-				bind:this={topBar}
-			/>
+			<TopBar onUpdatePreferences={() => (preferences = getPreferences())} />
 			<div class="flex flex-col" bind:this={gridContainer}>
 				{#if !gridState.loading && !gridState.error}
 					<DataRefreshControl

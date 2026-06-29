@@ -9,7 +9,6 @@
 		onUpdatePreferences,
 	}: {
 		onUpdatePreferences: () => void;
-		onRefreshGrid: () => void;
 	} = $props();
 
 	let openFilters = $state({
