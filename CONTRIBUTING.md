@@ -77,11 +77,11 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 
 ```
 
+</details>
+
 ## Development
 
 Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app. Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
-
-</details>
 
 ## Contribution guidelines
 
