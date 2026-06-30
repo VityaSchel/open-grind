@@ -13,9 +13,11 @@
 		{href}
 		class={[
 			toggleVariants({ variant: "default" }),
-			"text-muted-foreground hover:bg-foreground/10",
+			"text-muted-foreground",
 			{
-				"bg-popover/50": page.url.pathname === href,
+				"hover:bg-muted-foreground/10": page.url.pathname !== href,
+				"bg-muted-foreground/15 hover:bg-muted-foreground/20":
+					page.url.pathname === href,
 			},
 		]}
 	>
