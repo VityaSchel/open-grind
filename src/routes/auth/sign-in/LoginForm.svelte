@@ -71,87 +71,6 @@
 		}
 	}
 
-	async function signInWithGoogle() {
-		if (submitting) return;
-		submitting = "google";
-		try {
-			await callMethod("login_with_google");
-			void goto("/");
-		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			if (appError) {
-				if (
-					!(
-						appError.kind === "Auth" && appError.message === "Sign-in cancelled"
-					)
-				) {
-					toast.error(appError.prettyMessage);
-				}
-			} else {
-				toast.error("Google sign-in failed");
-			}
-		} finally {
-			submitting = false;
-		}
-	}
-</script>
-
-<form
-	onsubmit={async (event) => {
-		event.preventDefault();
-		submitting = "password";
-		try {
-			await callMethod("login", {
-				email,
-				password,
-			});
-			clearProfileCaches();
-			void goto("/");
-		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			if (appError) {
-				const invalidInputParameters = z
-					.object({
-						kind: z.literal("Api"),
-						message: z.object({
-							code: z.literal(4),
-							message: z.literal("Invalid input parameters"),
-						}),
-					})
-					.safeParse(appError).success;
-				if (invalidInputParameters || appError.kind === "Unauthorized") {
-					toast.error("Invalid email or password");
-					void maybeCheckRecaptcha();
-				} else {
-					toast.error(appError.prettyMessage);
-				}
-			} else {
-				showErrorToast({ error });
-			}
-		} finally {
-			submitting = false;
-		}
-	}
-
-	let recaptchaChecked = false;
-	let recaptchaDialogOpen = $state(false);
-
-	async function maybeCheckRecaptcha() {
-		if (recaptchaChecked) return;
-		recaptchaChecked = true;
-		try {
-			const enabled = await callMethod("recaptcha_first_party_enabled");
-			if (enabled) recaptchaDialogOpen = true;
-		} catch (error) {
-			console.error(
-				"[login] failed to check recaptcha_first_party assignment",
-				error,
-			);
-		}
-	}
-
 	function isChromiumWebview() {
 		return "userAgentData" in navigator;
 	}
@@ -160,7 +79,6 @@
 		if (submitting) return;
 		submitting = "google";
 		try {
-			submitting = "google";
 			await callMethod("login_with_google", {
 				chromiumWebview: isChromiumWebview(),
 			});
@@ -186,7 +104,7 @@
 </script>
 
 <form onsubmit={signIn} class="contents">
-	<Card.Root class="w-full max-w-sm m-auto">
+	<Card.Root class="m-auto w-full max-w-sm">
 		<Card.Header>
 			<Card.Title>Sign in to your account</Card.Title>
 			<Card.Description>

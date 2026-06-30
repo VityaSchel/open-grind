@@ -82,9 +82,15 @@ async fn fetch_native(
     }
 
     let oauth_token = embedded::capture_oauth_token(app, &device.android_id, bridge).await?;
-    let master = protocol::exchange_master_token(&oauth_token, &device.android_id).await?;
-    let access =
-        protocol::exchange_access_token(&master.token, &master.email, &device.android_id).await?;
+    eprintln!("[google_oauth] exchanging oauth_token for master token");
+    let master = protocol::exchange_master_token(&oauth_token, &device.android_id)
+        .await
+        .inspect_err(|e| eprintln!("[google_oauth] master-token exchange failed: {e}"))?;
+    eprintln!("[google_oauth] master token ok; exchanging for access token");
+    let access = protocol::exchange_access_token(&master.token, &master.email, &device.android_id)
+        .await
+        .inspect_err(|e| eprintln!("[google_oauth] access-token exchange failed: {e}"))?;
+    eprintln!("[google_oauth] access token ok");
 
     device.master_token = Some(master.token);
     device.email = Some(master.email);

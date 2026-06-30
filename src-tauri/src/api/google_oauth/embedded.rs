@@ -16,7 +16,10 @@ use super::constants::{ACCOUNTS_ORIGIN, EMBEDDED_SETUP_UA, EMBEDDED_SETUP_URL, W
 use super::GoogleOauthBridge;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(1500);
-const OVERALL_TIMEOUT: Duration = Duration::from_secs(300);
+// Generous: the flow can include a reCAPTCHA challenge + consent, which takes a while.
+const OVERALL_TIMEOUT: Duration = Duration::from_secs(900);
+// The injected Cancel button navigates here; intercepted to abort the flow.
+const CANCEL_PATH: &str = "/__open_grind_cancel__";
 
 pub async fn capture_oauth_token(
     app: &AppHandle,
@@ -26,7 +29,7 @@ pub async fn capture_oauth_token(
     let rx = bridge.begin()?;
 
     if let Some(existing) = app.get_webview_window(WINDOW_LABEL) {
-        let _ = existing.close();
+        dismiss(app, &existing);
     }
 
     let url = Url::parse(EMBEDDED_SETUP_URL).map_err(|e| {
@@ -34,11 +37,19 @@ pub async fn capture_oauth_token(
         AppError::Http(format!("invalid EmbeddedSetup URL: {e}"))
     })?;
 
+    let bridge_for_nav = bridge.clone();
     let window = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
         .title("Sign in with Google")
         .inner_size(460.0, 720.0)
         .user_agent(EMBEDDED_SETUP_UA)
         .initialization_script(&init_script(android_id))
+        .on_navigation(move |url| {
+            if url.host_str() == Some("accounts.google.com") && url.path() == CANCEL_PATH {
+                bridge_for_nav.fulfill(Err("Sign-in cancelled".to_string()));
+                return false;
+            }
+            true
+        })
         .build()
         .map_err(|e| {
             bridge.fulfill(Err(format!("failed to open sign-in window: {e}")));
@@ -73,13 +84,68 @@ pub async fn capture_oauth_token(
 
     let outcome = tokio::time::timeout(OVERALL_TIMEOUT, rx).await;
     done.store(true, Ordering::SeqCst);
-    let _ = window.close();
+    dismiss(app, &window);
 
     match outcome {
         Ok(Ok(result)) => result.map_err(AppError::Auth),
         Ok(Err(_)) => Err(AppError::Auth("sign-in flow ended unexpectedly".into())),
         Err(_) => Err(AppError::Auth("Google sign-in timed out".into())),
     }
+}
+
+/// Tear down the OAuth view. wry uses a single `setContentView` per Activity on
+/// Android, so opening the OAuth window displaced the main app webview. Tauri
+/// exposes no webview-level `close()` there (it's `#[cfg(desktop)]`), so we
+/// restore the main webview as the content view, which removes the OAuth one.
+fn dismiss(app: &AppHandle, oauth: &tauri::WebviewWindow) {
+    if let Some((_, main)) = app
+        .webview_windows()
+        .into_iter()
+        .find(|(label, _)| label != WINDOW_LABEL)
+    {
+        let _ = main.with_webview(|platform_webview| {
+            platform_webview.jni_handle().exec(|env, activity, main_webview| {
+                if let Err(e) = jni_set_content_view(env, activity, main_webview) {
+                    if env.exception_check().unwrap_or(false) {
+                        let _ = env.exception_clear();
+                    }
+                    eprintln!("[google_oauth] failed to restore main webview: {e:?}");
+                }
+            });
+        });
+    }
+    let _ = oauth.close();
+}
+
+fn jni_set_content_view(
+    env: &mut jni::JNIEnv,
+    activity: &jni::objects::JObject,
+    view: &jni::objects::JObject,
+) -> jni::errors::Result<()> {
+    use jni::objects::JValue;
+
+    // Detach from any current parent first (a view can't be added twice).
+    let parent = env
+        .call_method(view, "getParent", "()Landroid/view/ViewParent;", &[])?
+        .l()?;
+    if !parent.is_null() {
+        let _ = env.call_method(
+            &parent,
+            "removeView",
+            "(Landroid/view/View;)V",
+            &[JValue::Object(view)],
+        );
+        if env.exception_check()? {
+            env.exception_clear()?;
+        }
+    }
+    env.call_method(
+        activity,
+        "setContentView",
+        "(Landroid/view/View;)V",
+        &[JValue::Object(view)],
+    )?;
+    Ok(())
 }
 
 fn read_oauth_cookie(
@@ -93,6 +159,7 @@ fn read_oauth_cookie(
         platform_webview.jni_handle().exec(move |env, _activity, _webview| {
             match jni_get_oauth_token(env) {
                 Ok(Some(token)) => {
+                    eprintln!("[google_oauth] captured oauth_token (len {})", token.len());
                     done.store(true, Ordering::SeqCst);
                     bridge.fulfill(Ok(token));
                 }
@@ -150,41 +217,8 @@ fn parse_oauth_token(cookie_header: &str) -> Option<String> {
 }
 
 fn init_script(android_id: &str) -> String {
-    // android_id is hex, safe to inline into the script literal.
-    format!(
-        r#"
-(function() {{
-    'use strict';
-    var ANDROID_ID = "{android_id}";
-    function value(name) {{
-        switch (name) {{
-            case 'getAndroidId': return ANDROID_ID;
-            case 'getBuildVersionSdk': return '34';
-            case 'getPlayServicesVersionCode': return '240913000';
-            case 'getAllowedDomains': return '[]';
-            case 'getDeviceDataVersionInfo': return '';
-            case 'getAccountManagementType': return '0';
-            case 'isUserOwner': return true;
-            case 'hasTelephony': return false;
-            default: return '';
-        }}
-    }}
-    var handler = {{
-        get: function(_target, prop) {{
-            if (typeof prop !== 'string') return undefined;
-            return function() {{
-                try {{
-                    console.log('[mm] ' + prop + '(' +
-                        Array.prototype.slice.call(arguments).join(',') + ')');
-                }} catch (e) {{}}
-                return value(prop);
-            }};
-        }}
-    }};
-    try {{ window.mm = new Proxy({{}}, handler); }} catch (e) {{}}
-}})();
-"#
-    )
+    // android_id is hex, safe to substitute into the template.
+    include_str!("embedded_init.js").replace("__ANDROID_ID__", android_id)
 }
 
 #[cfg(test)]
