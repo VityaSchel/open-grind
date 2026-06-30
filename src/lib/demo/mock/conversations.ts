@@ -78,6 +78,8 @@ const demoConversationSeeds: DemoConversation[] = [
 		lastActivityAgo: 7,
 		messages: [
 			{ fromMe: false, text: "Lorem ipsum dolor sit amet consectetur." },
+			{ fromMe: false, text: "Lorem ipsum dolor sit amet." },
+			{ fromMe: false, text: "Lorem ipsum dolor sit." },
 		],
 	},
 	{
