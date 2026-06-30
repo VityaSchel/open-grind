@@ -7,6 +7,7 @@ import z from "zod";
 import { ApiError } from "$lib/api/api-error";
 import { requestBlockedAlertState } from "$lib/api/request-blocked/request-blocked-state.svelte";
 import { fromBase64, toBase64 } from "$lib/base64";
+import { demoCallMethod, demoEnabled, demoRoute } from "$lib/demo";
 
 export const methods = {
 	login: {
@@ -51,6 +52,9 @@ export async function callMethod<T extends keyof typeof methods>(
 		? []
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<z.infer<(typeof methods)[T]["response"]>> {
+	if (demoEnabled) {
+		return demoCallMethod(method) as z.infer<(typeof methods)[T]["response"]>;
+	}
 	return await invoke(method, args[0]);
 }
 
@@ -82,6 +86,94 @@ export function asAppError(error: unknown) {
 	}
 }
 
+type RequestInfo = { method: string; path: string; body: unknown };
+
+function buildRestResponse(
+	status: number,
+	responseBody: Uint8Array,
+	requestInfo: RequestInfo,
+) {
+	return {
+		status,
+		bytes() {
+			return responseBody;
+		},
+		text() {
+			return new TextDecoder().decode(responseBody);
+		},
+		assertOk() {
+			if (status >= 200 && status < 300) {
+				return;
+			}
+			const text = this.text();
+			throw new ApiError({
+				message: `API request failed with status ${status}`,
+				request: requestInfo,
+				response: { status, body: text },
+			});
+		},
+		json() {
+			const text = this.text();
+			const responseInfo = { status, body: text };
+			if (
+				status === 403 &&
+				text.includes("<title>Attention Required! | Cloudflare</title>") &&
+				text.includes("Sorry, you have been blocked")
+			) {
+				if (!requestBlockedAlertState.disable) {
+					requestBlockedAlertState.open = true;
+				}
+				throw new ApiError({
+					message: "Request blocked",
+					request: requestInfo,
+					response: responseInfo,
+				});
+			}
+			try {
+				return JSON.parse(text);
+			} catch (error) {
+				console.error("Failed to parse JSON response", {
+					path: requestInfo.path,
+					text,
+				});
+				throw new ApiError({
+					message: "Failed to parse API response",
+					request: requestInfo,
+					response: responseInfo,
+					cause: error,
+				});
+			}
+		},
+		jsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
+			const data = this.json();
+			const bodyText = this.text();
+			try {
+				return parseApiResponse({
+					schema,
+					data,
+					path: requestInfo.path,
+					method: requestInfo.method,
+				});
+			} catch (error) {
+				if (error instanceof ApiError) throw error;
+				throw new ApiError({
+					message:
+						error instanceof Error
+							? error.message
+							: "API response validation failed",
+					request: requestInfo,
+					response: { status, body: bodyText },
+					cause: error,
+				});
+			}
+		},
+		debugJsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
+			console.log(this.json());
+			return this.jsonParsed(schema);
+		},
+	};
+}
+
 export async function fetchRest(
 	path: string,
 	options: {
@@ -90,11 +182,17 @@ export async function fetchRest(
 		abortController?: AbortController;
 	} = { method: "GET" },
 ) {
+	const method = options.method ?? "GET";
 	const requestInfo = {
-		method: options.method ?? "GET",
+		method,
 		path,
 		body: options.body,
 	};
+	if (demoEnabled) {
+		const { status, body } = demoRoute(path, method, options.body);
+		const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
+		return buildRestResponse(status, responseBody, requestInfo);
+	}
 	try {
 		const payload = encode({
 			method: options.method || "GET",
@@ -119,85 +217,7 @@ export async function fetchRest(
 		const { status, body: responseBody } = z
 			.object({ status: z.number(), body: z.instanceof(Uint8Array) })
 			.parse(decoded);
-		return {
-			status,
-			bytes() {
-				return responseBody;
-			},
-			text() {
-				return new TextDecoder().decode(responseBody);
-			},
-			assertOk() {
-				if (status >= 200 && status < 300) {
-					return;
-				}
-				const text = this.text();
-				throw new ApiError({
-					message: `API request failed with status ${status}`,
-					request: requestInfo,
-					response: { status, body: text },
-				});
-			},
-			json() {
-				const text = new TextDecoder().decode(responseBody);
-				const responseInfo = { status, body: text };
-				if (
-					status === 403 &&
-					text.includes("<title>Attention Required! | Cloudflare</title>") &&
-					text.includes("Sorry, you have been blocked")
-				) {
-					if (!requestBlockedAlertState.disable) {
-						requestBlockedAlertState.open = true;
-					}
-					throw new ApiError({
-						message: "Request blocked",
-						request: requestInfo,
-						response: responseInfo,
-					});
-				}
-				try {
-					return JSON.parse(text);
-				} catch (error) {
-					console.error("Failed to parse JSON response", {
-						path,
-						text,
-					});
-					throw new ApiError({
-						message: "Failed to parse API response",
-						request: requestInfo,
-						response: responseInfo,
-						cause: error,
-					});
-				}
-			},
-			jsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
-				const data = this.json();
-				const bodyText = new TextDecoder().decode(responseBody);
-				try {
-					return parseApiResponse({
-						schema,
-						data,
-						path,
-						method: options.method || "GET",
-					});
-				} catch (error) {
-					if (error instanceof ApiError) throw error;
-					throw new ApiError({
-						message:
-							error instanceof Error
-								? error.message
-								: "API response validation failed",
-						request: requestInfo,
-						response: { status, body: bodyText },
-						cause: error,
-					});
-				}
-			},
-			debugJsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
-				console.log(this.json());
-				return this.jsonParsed(schema);
-			},
-		};
+		return buildRestResponse(status, responseBody, requestInfo);
 	} catch (error) {
 		if (error instanceof ApiError) throw error;
 		const appError = asAppError(error);

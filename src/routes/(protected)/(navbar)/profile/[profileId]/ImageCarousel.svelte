@@ -6,6 +6,7 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
+	import { profileMediaUrl } from "$lib/media";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 	let {
@@ -126,11 +127,8 @@
 			}}
 		>
 			{#each medias as { mediaHash, createdAt }}
-				<ImageCarouselItem
-					src="https://cdns.grindr.com/images/profile/1024x1024/{mediaHash}"
-					thumb="https://cdns.grindr.com/images/profile/1024x1024/{mediaHash}"
-					{createdAt}
-				/>
+				{@const src = profileMediaUrl(mediaHash, "full")}
+				<ImageCarouselItem {src} thumb={src} {createdAt} />
 			{/each}
 		</div>
 		<div
