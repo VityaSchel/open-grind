@@ -35,7 +35,8 @@ export const albumMessageSchema = messageBaseSchema.safeExtend({
 	body: z.object({
 		...albumPreviewSchema.shape,
 		...albumExpirationSchema.shape,
-		coverUrl: z.url(),ownerProfileId: z.int().nonnegative().nullable(),
+		coverUrl: z.url().nullable(),
+		ownerProfileId: z.int().nonnegative().nullable(),
 		isViewable: z.boolean(),
 		hasVideo: z.boolean(),
 		hasPhoto: z.boolean(),
@@ -343,6 +344,8 @@ export function previewFromMessage(
 				imageHash: message.body.imageHash,
 			};
 		case "Album":
+		case "ExpiringAlbum":
+		case "ExpiringAlbumV2":
 			return {
 				type: message.type,
 				text: null,
@@ -350,8 +353,6 @@ export function previewFromMessage(
 				imageHash: null,
 			};
 		case "ExpiringImage":
-		case "ExpiringAlbum":
-		case "ExpiringAlbumV2":
 		default:
 			return {
 				type: message.type,

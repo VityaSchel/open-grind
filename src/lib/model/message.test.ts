@@ -4,6 +4,7 @@ import {
 	apiResponseMessageSchema,
 	messageSchema,
 	previewFromMessage,
+	previewLabel,
 } from "$lib/model/message";
 
 describe("messageSchema", () => {
@@ -131,4 +132,38 @@ describe("previewFromMessage", () => {
 			imageHash: null,
 		});
 	});
+
+	it.each(["ExpiringAlbum", "ExpiringAlbumV2"] as const)(
+		"keeps the albumId for %s so the preview reads as an album",
+		(type) => {
+			const preview = previewFromMessage({
+				type,
+				body: {
+					albumId: 9,
+					hasUnseenContent: false,
+					expiresAt: 1_710_000_000_000,
+					coverUrl: "https://example.com/cover.jpg",
+					ownerProfileId: 42,
+					isViewable: true,
+					hasVideo: false,
+					hasPhoto: true,
+					expirationType: "ONCE",
+					viewableUntil: 1_710_000_000_000,
+				},
+				messageId: "msg-3",
+				conversationId: "conversation-1",
+				senderId: 42,
+				timestamp: 1_710_000_000_000,
+				unsent: false,
+				reactions: [],
+			});
+			expect(preview).toEqual({
+				type,
+				text: null,
+				albumId: 9,
+				imageHash: null,
+			});
+			expect(previewLabel(preview)).toBe("Album");
+		},
+	);
 });

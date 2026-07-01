@@ -39,7 +39,7 @@ export const albumExpirationSchema = z.object({
 export const albumContentMin = z.object({
 	contentId: z.int(),
 	contentType: z.string(),
-	coverUrl: z.url(),
+	coverUrl: z.url().nullable(),
 	statusId: z.int(),
 });
 

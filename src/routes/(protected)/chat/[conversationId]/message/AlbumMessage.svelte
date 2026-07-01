@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { ImagesIcon, VideoIcon } from "phosphor-svelte";
+	import { ImageBrokenIcon, ImagesIcon, VideoIcon } from "phosphor-svelte";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/album";
@@ -212,12 +212,24 @@
 		disabled={albumState.status !== "idle"}
 		bind:this={media.el}
 	>
-		<img
-			src={message.coverUrl}
-			alt=""
-			class="absolute top-0 left-0 h-full w-full rounded-[inherit] bg-card-foreground/10 object-cover"
-			draggable="false"
-		/>
+		{#if message.coverUrl !== null}
+			<img
+				src={message.coverUrl}
+				alt=""
+				class="absolute top-0 left-0 h-full w-full rounded-[inherit] bg-card-foreground/10 object-cover"
+				draggable="false"
+			/>
+		{:else}
+			<div
+				class="flex size-full items-center justify-center rounded-[inherit] bg-card-foreground/20"
+			>
+				<ImageBrokenIcon
+					weight="fill"
+					class="aspect-square w-8 h-auto"
+					color="var(--color-neutral-600)"
+				/>
+			</div>
+		{/if}
 		<div class={["@container absolute top-0 left-0 size-full", contentClass]}>
 			<div
 				class="absolute bottom-1/5 left-1/2 flex -translate-x-1/2 items-center gap-1 px-2 py-0.5 *:aspect-square *:w-[20cqw] *:rounded-full *:bg-card *:p-2"

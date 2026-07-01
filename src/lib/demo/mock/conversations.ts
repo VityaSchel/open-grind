@@ -1,10 +1,27 @@
+import {
+	type ApiResponseMessage,
+	previewFromMessage,
+} from "$lib/model/message";
+import type { AlbumExpirationType } from "$lib/model/album";
 import type { Conversation } from "$lib/model/conversation";
-import type { ApiResponseMessage } from "$lib/model/message";
-import { demoMeProfileId, MINUTE, NOW } from "../config";
+import { DAY, demoMeProfileId, MINUTE, NOW } from "../config";
 import { hashFromSeed } from "./avatars";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
-type DemoMessage = { fromMe: boolean; text?: string; image?: boolean };
+type DemoMessage = { fromMe: boolean; reactions?: number } & (
+	| { kind?: "text"; text: string }
+	| { kind: "image" }
+	| { kind: "expiringImage"; expired?: boolean }
+	| {
+			kind: "album";
+			albumId: number;
+			expiring?: "v1" | "v2";
+			locked?: boolean;
+			unseen?: boolean;
+			coverUrl?: null;
+	  }
+	| { kind: "unsent" }
+);
 
 type DemoConversation = {
 	withId: number;
@@ -26,9 +43,20 @@ const demoConversationSeeds: DemoConversation[] = [
 		lastActivityAgo: 4,
 		messages: [
 			{ fromMe: false, text: "Hey! Lorem ipsum dolor sit amet." },
-			{ fromMe: true, text: "Hello — consectetur adipiscing elit." },
+			{
+				fromMe: true,
+				text: "Hello — consectetur adipiscing elit.",
+				reactions: 1,
+			},
 			{ fromMe: false, text: "Sed do eiusmod tempor incididunt?" },
-			{ fromMe: false, text: "Ut labore et dolore magna aliqua." },
+			{ fromMe: false, kind: "album", albumId: 5001, unseen: true },
+			{
+				fromMe: false,
+				kind: "album",
+				albumId: 5001,
+				coverUrl: null,
+				unseen: true,
+			},
 		],
 	},
 	{
@@ -41,7 +69,10 @@ const demoConversationSeeds: DemoConversation[] = [
 		messages: [
 			{ fromMe: false, text: "👀" },
 			{ fromMe: true, text: "Lorem ipsum?" },
-			{ fromMe: false, image: true },
+			{ fromMe: true, kind: "expiringImage" },
+			{ fromMe: false, kind: "expiringImage", expired: true },
+			{ fromMe: false, text: "Did you catch it? 🔥" },
+			{ fromMe: false, kind: "image", reactions: 1 },
 		],
 	},
 	{
@@ -54,6 +85,14 @@ const demoConversationSeeds: DemoConversation[] = [
 		messages: [
 			{ fromMe: true, text: "Quis nostrud exercitation." },
 			{ fromMe: false, text: "Ullamco laboris nisi." },
+			{ fromMe: true, kind: "unsent" },
+			{
+				fromMe: false,
+				kind: "album",
+				albumId: 5002,
+				expiring: "v1",
+				locked: true,
+			},
 			{ fromMe: true, text: "Ut aliquip ex ea commodo." },
 		],
 	},
@@ -66,6 +105,7 @@ const demoConversationSeeds: DemoConversation[] = [
 		lastActivityAgo: 18,
 		messages: [
 			{ fromMe: false, text: "Lorem ipsum" },
+			{ fromMe: false, kind: "album", albumId: 5003, expiring: "v2" },
 			{ fromMe: true, text: "ok 👍" },
 		],
 	},
@@ -91,13 +131,22 @@ const demoConversationSeeds: DemoConversation[] = [
 		lastActivityAgo: 320,
 		messages: [
 			{ fromMe: true, text: "Duis aute irure dolor." },
-			{ fromMe: false, text: "🐻 lorem ipsum" },
+			{ fromMe: false, kind: "expiringImage" },
+			{ fromMe: false, text: "🐻 lorem ipsum", reactions: 2 },
 		],
 	},
 ];
 
 const MESSAGE_GAP = 7 * MINUTE;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
+
+function picsum(seed: string, width = 600, height = 800): string {
+	return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${width}/${height}`;
+}
+
+function localDateTime(timestamp: number): string {
+	return new Date(timestamp).toISOString().slice(0, 19);
+}
 
 export function conversationIdFor(withId: number): string {
 	return `${Math.min(demoMeProfileId, withId)}:${Math.max(demoMeProfileId, withId)}`;
@@ -120,36 +169,90 @@ function buildMessage(
 	const conversationId = conversationIdFor(conv.withId);
 	const messageId = `${index}:demo-${conv.withId}-${index}`;
 	const senderId = message.fromMe ? demoMeProfileId : conv.withId;
-	if (message.image) {
-		return {
-			type: "Image",
-			body: {
-				mediaId: 900_000 + conv.withId,
-				width: 600,
-				height: 800,
-				url: DEMO_IMAGE_URL,
-				imageHash: hashFromSeed(`msg-${conv.withId}-${index}`),
-				takenOnGrindr: false,
-				createdAt: timestamp,
-			},
-			messageId,
-			conversationId,
-			senderId,
-			timestamp,
-			unsent: false,
-			reactions: [],
-		};
+	const reactions = Array.from({ length: message.reactions ?? 0 }, () => ({
+		profileId: message.fromMe ? conv.withId : demoMeProfileId,
+		reactionType: 1,
+	}));
+	const base = { messageId, conversationId, senderId, timestamp, reactions };
+	switch (message.kind) {
+		case "image":
+			return {
+				type: "Image",
+				body: {
+					mediaId: 900_000 + conv.withId,
+					width: 600,
+					height: 800,
+					url: DEMO_IMAGE_URL,
+					imageHash: hashFromSeed(`msg-${conv.withId}-${index}`),
+					takenOnGrindr: false,
+					createdAt: timestamp,
+				},
+				...base,
+				unsent: false,
+			};
+		case "expiringImage":
+			return {
+				type: "ExpiringImage",
+				body: {
+					mediaId: 910_000 + conv.withId + index,
+					width: 600,
+					height: 800,
+					url: picsum(`expiring-${conv.withId}-${index}`),
+					viewsRemaining: message.expired ? 0 : 1,
+				},
+				...base,
+				unsent: false,
+			};
+		case "album": {
+			const albumBody = {
+				albumId: message.albumId,
+				hasUnseenContent: message.unseen ?? false,
+				expiresAt: message.expiring ? timestamp + DAY : null,
+				expirationType: (message.expiring
+					? "ONCE"
+					: "INDEFINITE") satisfies AlbumExpirationType,
+				coverUrl:
+					message.coverUrl === null
+						? null
+						: message.locked
+							? null
+							: albumCoverUrl(message.albumId),
+				ownerProfileId: message.fromMe ? demoMeProfileId : conv.withId,
+				isViewable: !message.locked,
+				hasVideo: false,
+				hasPhoto: true,
+				viewableUntil: message.expiring ? timestamp + DAY : null,
+			};
+			if (message.expiring === "v2")
+				return {
+					type: "ExpiringAlbumV2",
+					body: albumBody,
+					...base,
+					unsent: false,
+				};
+			if (message.expiring === "v1")
+				return {
+					type: "ExpiringAlbum",
+					body: albumBody,
+					...base,
+					unsent: false,
+				};
+			return { type: "Album", body: albumBody, ...base, unsent: false };
+		}
+		case "unsent":
+			return { type: "Unsent", body: null, ...base, unsent: true };
+		default:
+			return {
+				type: "Text",
+				body: { text: message.text },
+				...base,
+				unsent: false,
+			};
 	}
-	return {
-		type: "Text",
-		body: { text: message.text ?? "" },
-		messageId,
-		conversationId,
-		senderId,
-		timestamp,
-		unsent: false,
-		reactions: [],
-	};
+}
+
+function albumCoverUrl(albumId: number): string {
+	return picsum(`album-${albumId}-cover`, 300, 400);
 }
 
 function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
@@ -166,17 +269,6 @@ function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	return ordered.reverse();
 }
 
-function previewFor(conv: DemoConversation) {
-	const last = conv.messages.at(-1);
-	const isImage = last?.image ?? false;
-	return {
-		type: isImage ? "Image" : "Text",
-		text: isImage ? null : (last?.text ?? null),
-		albumId: null,
-		imageHash: null,
-	};
-}
-
 export function demoConversations(page: number): {
 	entries: Conversation[];
 	nextPage: number | null;
@@ -186,6 +278,7 @@ export function demoConversations(page: number): {
 		.map((conv): Conversation => {
 			const seed = profileSeed(conv.withId);
 			const photos = photosOf(conv.withId);
+			const latest = threadMessages(conv).at(0);
 			return {
 				type: "full_conversation_v1",
 				data: {
@@ -205,7 +298,7 @@ export function demoConversations(page: number): {
 					],
 					lastActivityTimestamp: lastActivityOf(conv),
 					unreadCount: conv.unread,
-					preview: previewFor(conv),
+					preview: previewFromMessage(latest),
 					muted: conv.muted,
 					pinned: conv.pinned,
 					favorite: conv.favorite,
@@ -243,6 +336,42 @@ export function demoConversationMessages(
 	const lastReadTimestamp =
 		conv.unread > 0 ? (messages[conv.unread]?.timestamp ?? null) : NOW;
 	return { lastReadTimestamp, messages, profile };
+}
+
+export function demoSingleMessage(conversationId: string, messageId: string) {
+	const conv = demoConversationById.get(conversationId);
+	const message = conv
+		? threadMessages(conv).find((entry) => entry.messageId === messageId)
+		: undefined;
+	return { message: message ?? null };
+}
+
+export function demoAlbumContent(albumId: number) {
+	const count = 3 + (albumId % 3);
+	const content = Array.from({ length: count }, (_, i) => {
+		const thumb = picsum(`album-${albumId}-${i}`, 300, 400);
+		return {
+			contentId: albumId * 100 + i,
+			contentType: "image/jpeg",
+			coverUrl: thumb,
+			statusId: 1,
+			thumbUrl: thumb,
+			url: picsum(`album-${albumId}-${i}`),
+			processing: false,
+			rejectionId: null,
+		};
+	});
+	return {
+		albumId,
+		hasUnseenContent: false,
+		albumName: null,
+		profileId: demoMeProfileId,
+		albumViewable: true,
+		sharedCount: 1,
+		createdAt: localDateTime(NOW - 3 * DAY),
+		updatedAt: localDateTime(NOW - DAY),
+		content,
+	};
 }
 
 export function demoSentMessage(body: unknown): ApiResponseMessage {

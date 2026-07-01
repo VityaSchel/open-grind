@@ -1,8 +1,10 @@
 import { demoMeProfileId } from "./config";
 import {
+	demoAlbumContent,
 	demoConversationMessages,
 	demoConversations,
 	demoSentMessage,
+	demoSingleMessage,
 } from "./mock/conversations";
 import {
 	buildFullProfile,
@@ -101,6 +103,18 @@ export function demoRoute(
 				params.get("pageKey") ?? undefined,
 			),
 		);
+	}
+	if (
+		method === "GET" &&
+		segments[0] === "v4" &&
+		segments[2] === "conversation" &&
+		segments[4] === "message" &&
+		segments.length === 6
+	) {
+		return ok(demoSingleMessage(segments[3], segments[5]));
+	}
+	if (method === "GET" && segments[0] === "v2" && segments[1] === "albums") {
+		return ok(demoAlbumContent(Number(segments[2])));
 	}
 	if (method === "POST" && rawPath === "/v4/chat/message/send") {
 		return ok(demoSentMessage(body));

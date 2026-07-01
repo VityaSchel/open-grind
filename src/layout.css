@@ -86,11 +86,6 @@
 	--radius-3xl: calc(var(--radius) * 2.2);
 	--radius-4xl: calc(var(--radius) * 2.6);
 
-	--breakpoint-split: 560px;
-	--breakpoint-settings-dialog: 424px;
-	--breakpoint-grid3: 360px;
-	--breakpoint-cramped: 250px;
-
 	--container-row: 9rem;
 
 	--text-2xs: 0.6875rem; /* 11px */
@@ -98,6 +93,13 @@
 
 	--spacing-avatar: 37.5px;
 	--spacing-list-rail: 117px;
+}
+
+@theme {
+	--breakpoint-split: 560px;
+	--breakpoint-settings-dialog: 424px;
+	--breakpoint-grid3: 360px;
+	--breakpoint-cramped: 250px;
 }
 
 @layer base {

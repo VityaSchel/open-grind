@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import z from "zod";
 
 import { demoRoute } from "$lib/demo";
+import {
+	albumContentSchema,
+	albumDetailsSchema,
+	albumMinSchema,
+} from "$lib/model/album";
 import { fullConversationSchema } from "$lib/model/conversation";
 import { cascadeV3ResponseSchema } from "$lib/model/grid/cascade/response/v3";
 import { searchProfileSchema } from "$lib/model/grid/search";
@@ -10,7 +15,11 @@ import {
 	viewerProfileSchema,
 	viewPreviewSchema,
 } from "$lib/model/interest/views";
-import { apiResponseMessageSchema } from "$lib/model/message";
+import {
+	apiResponseMessageSchema,
+	expiringImageMessageSchema,
+	previewLabel,
+} from "$lib/model/message";
 import {
 	profileRightNowSchema,
 	profileSchema,
@@ -92,6 +101,9 @@ describe("demo route data matches the real schemas", () => {
 		expect(times).toEqual([...times].sort((a, b) => b - a));
 		const imageConv = entries.find((e) => e.data.preview?.type === "Image");
 		expect(imageConv?.data.preview?.text).toBeNull();
+		const albumConv = entries.find((e) => e.data.preview?.type === "Album");
+		expect(albumConv?.data.preview?.albumId).not.toBeNull();
+		expect(previewLabel(albumConv?.data.preview ?? null)).toBe("Album");
 	});
 
 	it("conversation messages validate and align with the preview", () => {
@@ -111,6 +123,59 @@ describe("demo route data matches the real schemas", () => {
 				messages[messages.length - 1].timestamp,
 			);
 		}
+	});
+
+	const albumResponseSchema = z.object({
+		...albumMinSchema.shape,
+		...albumDetailsSchema.shape,
+		content: z.array(
+			z.object({
+				...albumContentSchema.shape,
+				remainingViews: z.int().optional(),
+			}),
+		),
+	});
+
+	it("album and expiring-image messages resolve to valid content", () => {
+		const inbox = route("/v4/inbox?page=1", "POST") as {
+			entries: { data: { conversationId: string } }[];
+		};
+		let albums = 0;
+		let expiringImages = 0;
+		for (const entry of inbox.entries) {
+			const id = entry.data.conversationId;
+			const body = route(
+				`/v5/chat/conversation/${id}/message?profile=true`,
+			) as { messages: unknown[] };
+			const messages = z.array(apiResponseMessageSchema).parse(body.messages);
+			for (const message of messages) {
+				if (
+					message.type === "Album" ||
+					message.type === "ExpiringAlbum" ||
+					message.type === "ExpiringAlbumV2"
+				) {
+					albums++;
+					const album = albumResponseSchema.parse(
+						route(`/v2/albums/${message.body.albumId}`),
+					);
+					expect(album.content.length).toBeGreaterThan(0);
+				} else if (message.type === "ExpiringImage") {
+					expiringImages++;
+					const single = expiringImageMessageSchema.parse(
+						(
+							route(
+								`/v4/chat/conversation/${id}/message/${message.messageId}`,
+							) as { message: unknown }
+						).message,
+					);
+					if (message.body.viewsRemaining !== 0) {
+						expect(single.body.url).not.toBeNull();
+					}
+				}
+			}
+		}
+		expect(albums).toBeGreaterThan(0);
+		expect(expiringImages).toBeGreaterThan(0);
 	});
 
 	it("paginated message requests are empty", () => {
