@@ -20,7 +20,13 @@ pub fn run() {
     #[cfg(debug_assertions)]
     let builder = builder.plugin(devtools);
 
+    #[cfg(target_os = "android")]
+    {
+        builder = builder.plugin(tauri_plugin_android_fs::init());
+    }
+
     builder
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_geolocation::init())

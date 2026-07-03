@@ -40,6 +40,7 @@ tauri-plugin-devtools = "2.0.0"
 # Native Google sign-in: HTTP to android.clients.google.com and a random androidId.
 wreq = { version = "5.3", features = ["json"] }
 rand = "0.10.1"
+tauri-plugin-dialog = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "0.2.3", features = ["keychain", "protected"], optional = true }
@@ -57,3 +58,4 @@ linux-keyutils-keyring-store = "0.2.1"
 android-native-keyring-store = "0.5.0"
 # Reads the EmbeddedSetup oauth_token cookie via android.webkit.CookieManager.
 jni = "0.21"
+tauri-plugin-android-fs = "=28.2.2"

@@ -29,6 +29,7 @@
 		"@tailwindcss/vite": "^4.2.4",
 		"@tauri-apps/api": "^2.11.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.3.2",
+		"@tauri-apps/plugin-dialog": "~2",
 		"@tauri-apps/plugin-fs": "~2.5.1",
 		"@tauri-apps/plugin-geolocation": "~2.3.2",
 		"@tauri-apps/plugin-opener": "~2.5",
@@ -40,6 +41,7 @@
 		"sveaflet": "^0.1.4",
 		"svelte-sonner": "^1.1.1",
 		"tailwindcss": "^4.2.4",
+		"tauri-plugin-android-fs-api": "28.2.2",
 		"tinykeys": "^4.0.0",
 		"zod": "^4.4.3"
 	},
