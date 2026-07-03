@@ -14,15 +14,10 @@
 	bind:value
 	id="tribes"
 	label="Tribes"
-	items={[
-		...Object.entries(tribes).map(([value, label]) => ({
-			value: Number(value),
-			label,
-		})),
-		{
-			value: -1,
-			label: "Not Specified",
-		},
-	]}
+	items={Object.entries(tribes).map(([value, label]) => ({
+		value: Number(value),
+		label,
+	}))}
 	convert={Number}
+	notSpecified
 />

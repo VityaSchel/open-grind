@@ -9,6 +9,7 @@
 		label,
 		items,
 		convert,
+		notSpecified = false,
 	}: {
 		checked: boolean;
 		value: T[];
@@ -16,22 +17,29 @@
 		label: string;
 		items: { value: T; label: string }[];
 		convert: (v: string) => T;
+		notSpecified?: boolean;
 	} = $props();
+
+	const allItems = $derived(
+		notSpecified
+			? [...items, { value: convert("-1"), label: "Not Specified" }]
+			: items,
+	);
 </script>
 
-<div class="flex flex-col min-w-0">
+<div class="flex min-w-0 flex-col">
 	<FilterDropdown {id} {label} bind:checked>
 		<ToggleGroup.Root
 			type="multiple"
 			variant="outline"
 			spacing={2}
-			class="flex-wrap w-full gap-1"
+			class="w-full flex-wrap gap-1"
 			bind:value={
 				() => value.map(String),
 				(v: string[]) => ((checked = v.length > 0), (value = v.map(convert)))
 			}
 		>
-			{#each items as { value, label }}
+			{#each allItems as { value, label }}
 				<ToggleGroup.Item value={String(value)}>{label}</ToggleGroup.Item>
 			{/each}
 		</ToggleGroup.Root>

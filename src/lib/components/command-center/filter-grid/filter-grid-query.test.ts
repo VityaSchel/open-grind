@@ -92,6 +92,20 @@ describe("parseFilterGridQuery", () => {
 		expect(result.filters.tribesEnabled).toBe(false);
 	});
 
+	it("accepts the -1 not-specified sentinel for nsfw and genders", () => {
+		const nsfw = parseFilterGridQuery("?nsfw=1,-1");
+		expect(nsfw.parsed[0].valid).toBe(true);
+		expect(nsfw.filters.acceptNSFWPicsEnabled).toBe(true);
+		expect(nsfw.filters.acceptNSFWPics).toEqual([1, -1]);
+		expect(nsfw.parsed[0].valueText).toBe("Never, Not specified");
+
+		const genders = parseFilterGridQuery("?genders=-1,42");
+		expect(genders.parsed[0].valid).toBe(true);
+		expect(genders.filters.genderEnabled).toBe(true);
+		expect(genders.filters.genders).toEqual([-1, 42]);
+		expect(genders.parsed[0].valueText).toBe("Not specified, 42");
+	});
+
 	it("flags unknown keys as invalid", () => {
 		const result = parseFilterGridQuery("?nope=1");
 		expect(result.parsed[0].valid).toBe(false);

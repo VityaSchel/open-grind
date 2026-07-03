@@ -18,4 +18,5 @@
 		label,
 	}))}
 	convert={Number}
+	notSpecified
 />

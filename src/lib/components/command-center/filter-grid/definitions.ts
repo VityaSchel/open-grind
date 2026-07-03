@@ -1,5 +1,6 @@
 import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
 import {
+	FilterAcceptNSFWPics,
 	FilterBodyType,
 	FilterHealthPractice,
 	FilterLookingFor,
@@ -10,7 +11,6 @@ import {
 	type GridSearchFilters,
 } from "$lib/components/filters/filters";
 import {
-	AcceptNSFWPics,
 	acceptNSFWPics,
 	bodyTypes,
 	healthPractices,
@@ -224,7 +224,7 @@ export const filters: Filter[] = [
 		["nsfwPics", "nsfw"],
 		"acceptNSFWPics",
 		"acceptNSFWPicsEnabled",
-		AcceptNSFWPics,
+		FilterAcceptNSFWPics,
 		acceptNSFWPics,
 	),
 	enumFilter(
@@ -253,14 +253,17 @@ export const filters: Filter[] = [
 	),
 	{
 		label: "genders",
-		render: (f) => f.genders.join(", "),
+		render: (f) =>
+			f.genders
+				.map((id) => (id === -1 ? "Not specified" : String(id)))
+				.join(", "),
 		params: [
 			{
 				keys: ["genders", "gender"],
 				apply: idListApply(
 					"genders",
 					"genderEnabled",
-					(id) => id >= 0,
+					(id) => id === -1 || id >= 0,
 					"Invalid gender id",
 				),
 			},

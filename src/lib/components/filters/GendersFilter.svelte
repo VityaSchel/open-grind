@@ -37,7 +37,7 @@
 	let expanded = $state(false);
 </script>
 
-<div class="flex flex-col gap-2 min-w-0">
+<div class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="gender" bind:checked>Gender</FilterBoolean>
 	<div class="ps-6">
 		{#await genders}
@@ -47,7 +47,7 @@
 				type="multiple"
 				variant="outline"
 				spacing={2}
-				class="flex-wrap w-full gap-1"
+				class="w-full flex-wrap gap-1"
 				bind:value={
 					() => value.map(String),
 					(v: string[]) => ((checked = v.length > 0), (value = v.map(Number)))
@@ -62,6 +62,7 @@
 						</div>
 					{/if}
 				{/each}
+				<ToggleGroup.Item value="-1">Not Specified</ToggleGroup.Item>
 				<Button variant="secondary" onclick={() => (expanded = !expanded)}>
 					{#if expanded}
 						Less

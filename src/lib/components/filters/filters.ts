@@ -1,7 +1,7 @@
 import z from "zod";
 
 import {
-	acceptNSFWPicsSchema,
+	AcceptNSFWPics,
 	BodyType,
 	HealthPractice,
 	LookingFor,
@@ -20,7 +20,9 @@ export const filterAgeEnabledSchema = z.boolean();
 export const filterAgeSchema = z.array(z.number().min(18).max(102)).length(2);
 
 export const filterGendersEnabledSchema = z.boolean().default(false);
-export const filterGendersSchema = z.array(z.int().nonnegative());
+export const filterGendersSchema = z.array(
+	z.int().nonnegative().or(z.literal(-1)),
+);
 
 export const filterTagsEnabledSchema = z.boolean();
 export const filterTagsSchema = z.array(z.string());
@@ -78,7 +80,13 @@ export const filterRelationshipStatusSchema = z.array(
 );
 
 export const filterAcceptNSFWPicsEnabledSchema = z.boolean();
-export const filterAcceptNSFWPicsSchema = z.array(acceptNSFWPicsSchema);
+export const FilterAcceptNSFWPics = {
+	...AcceptNSFWPics,
+	NotSpecified: -1,
+} as const;
+export type FilterAcceptNSFWPicsId =
+	(typeof FilterAcceptNSFWPics)[keyof typeof FilterAcceptNSFWPics];
+export const filterAcceptNSFWPicsSchema = z.array(z.enum(FilterAcceptNSFWPics));
 
 export const filterLookingForEnabledSchema = z.boolean();
 export const FilterLookingFor = {

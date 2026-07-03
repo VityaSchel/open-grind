@@ -3998,7 +3998,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "see [Sexual health](/grindr-api/users/profiles#sexual-health)"
+						"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual health](/grindr-api/users/profiles#sexual-health)"
 					}
 				],
 				"responses": {
@@ -4141,7 +4141,7 @@
 						"in": "query",
 						"schema": {
 							"type": "string",
-							"description": "string, see [Body type](/grindr-api/users/profiles#body-type)"
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Body type](/grindr-api/users/profiles#body-type)"
 						}
 					},
 					{
@@ -9763,7 +9763,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Tribes](/grindr-api/users/profiles#tribes)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Tribes](/grindr-api/users/profiles#tribes)"
 				}
 			},
 			"CascadeLookingForQuery": {
@@ -9771,7 +9771,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Looking for](/grindr-api/users/profiles#looking-for)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Looking for](/grindr-api/users/profiles#looking-for)"
 				}
 			},
 			"CascadeRelationshipStatusesQuery": {
@@ -9779,7 +9779,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Relationship status](/grindr-api/users/profiles#relationship-status)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Relationship status](/grindr-api/users/profiles#relationship-status)"
 				}
 			},
 			"CascadeBodyTypesQuery": {
@@ -9787,7 +9787,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Body type](/grindr-api/users/profiles#body-type)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Body type](/grindr-api/users/profiles#body-type)"
 				}
 			},
 			"CascadeSexualPositionsQuery": {
@@ -9795,7 +9795,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "array of integers concatenated with a `,`, see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id)"
 				}
 			},
 			"CascadeMeetAtQuery": {
@@ -9803,7 +9803,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Meet at](/grindr-api/users/profiles#meet-at)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Meet at](/grindr-api/users/profiles#meet-at)"
 				}
 			},
 			"CascadeNsfwPicsQuery": {
@@ -9811,7 +9811,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Accept NSFW pics](/grindr-api/users/profiles#accept-nsfw-pics)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Accept NSFW pics](/grindr-api/users/profiles#accept-nsfw-pics)"
 				}
 			},
 			"CascadeTagsQuery": {
@@ -14942,7 +14942,7 @@
 			},
 			"SexualHealth": {
 				"type": "object",
-				"description": "Sexual health (also \"Health Practices\"). Not to be confused with [HIV status](/grindr-api/users/profiles#hiv-status).",
+				"description": "Sexual health (also \"Health Practices\"). Not to be confused with [HIV status](/grindr-api/users/profiles#hiv-status). The app also defines Sober (`6`) and Drug free (`7`) via `UpdatedHealthStatus`, gated behind the `updated-sexual-health` feature flag; as of the latest app/API version neither is accepted by the `sexualHealth` filter nor rendered, so they are omitted here and may be added in the future.",
 				"x-enum-labels": {
 					"1": "Condoms",
 					"2": "I'm on doxyPEP",

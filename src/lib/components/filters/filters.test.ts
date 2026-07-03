@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
 	defaultFilters,
+	FilterAcceptNSFWPics,
+	filterAcceptNSFWPicsSchema,
 	filterAgeSchema,
 	FilterBodyType,
+	filterGendersSchema,
 	filterHeightSchema,
 	FilterLookingFor,
 	FilterPosition,
@@ -34,5 +37,14 @@ describe("grid search filter schemas", () => {
 		]);
 		expect(FilterBodyType.NotSpecified).toBe(-1);
 		expect(FilterLookingFor.NotSpecified).toBe(-1);
+		expect(FilterAcceptNSFWPics.NotSpecified).toBe(-1);
+		expect(
+			filterAcceptNSFWPicsSchema.parse([FilterAcceptNSFWPics.NotSpecified]),
+		).toEqual([FilterAcceptNSFWPics.NotSpecified]);
+	});
+
+	it("accepts not-specified (-1) alongside gender ids", () => {
+		expect(filterGendersSchema.parse([-1, 42])).toEqual([-1, 42]);
+		expect(filterGendersSchema.safeParse([-2]).success).toBe(false);
 	});
 });
