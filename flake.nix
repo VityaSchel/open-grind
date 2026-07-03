@@ -142,6 +142,21 @@
 
               bun ci
               bun run tauri android build --"$TARGET"
+
+              if [ -n "''${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then sfx=""; else sfx="-unsigned"; fi
+              base="$ROOT/src-tauri/gen/android/app/build/outputs"
+
+              echo
+              if [ "$TARGET" = "aab" ]; then
+                echo "Produced app bundle(s) under: $base/bundle/"
+              else
+                apk="$base/apk/universal/release/app-universal-release$sfx.apk"
+                if [ -f "$apk" ]; then
+                  printf 'Produced: %s (%s)\n' "$apk" "$(du -h "$apk" | cut -f1)"
+                else
+                  printf 'Produced: %s\n' "$apk"
+                fi
+              fi
             '';
           };
         in
