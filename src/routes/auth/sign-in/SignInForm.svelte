@@ -71,29 +71,31 @@
 		}
 	}
 
-	function isChromiumWebview() {
-		return "userAgentData" in navigator;
-	}
-
 	async function signInWithGoogle() {
 		if (submitting) return;
 		submitting = "google";
 		try {
-			await callMethod("login_with_google", {
-				chromiumWebview: isChromiumWebview(),
-			});
+			await callMethod("login_with_google");
+			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
-			console.error(error);
 			const appError = asAppError(error);
+			if (
+				appError?.kind === "Auth" &&
+				appError.message === "companion-unavailable"
+			) {
+				void goto("/auth/sign-in/google");
+				return;
+			}
+			if (
+				appError?.kind === "Auth" &&
+				appError.message === "Sign-in cancelled"
+			) {
+				return;
+			}
+			console.error(error);
 			if (appError) {
-				if (
-					!(
-						appError.kind === "Auth" && appError.message === "Sign-in cancelled"
-					)
-				) {
-					toast.error(appError.prettyMessage);
-				}
+				toast.error(appError.prettyMessage);
 			} else {
 				toast.error("Google sign-in failed");
 			}

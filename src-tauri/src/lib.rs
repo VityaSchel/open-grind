@@ -3,7 +3,7 @@ mod error;
 mod state;
 mod storage;
 
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 
 use tauri::Manager;
 
@@ -15,12 +15,10 @@ pub fn run() {
     #[cfg(debug_assertions)]
     let devtools = tauri_plugin_devtools::init();
 
-    let mut builder = tauri::Builder::default();
+    let builder = tauri::Builder::default();
 
     #[cfg(debug_assertions)]
-    {
-        builder = builder.plugin(devtools);
-    }
+    let builder = builder.plugin(devtools);
 
     builder
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -28,13 +26,14 @@ pub fn run() {
         .plugin(tauri_plugin_geolocation::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(api::google_oauth::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
-        .manage(Arc::new(api::google_oauth::GoogleOauthBridge::new()))
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
             api::auth::login_with_google,
+            api::auth::google_sign_in,
             api::auth::refresh_token,
             api::auth::logout,
             api::auth::auth_state,

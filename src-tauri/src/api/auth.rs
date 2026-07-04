@@ -31,11 +31,18 @@ pub async fn login(
 pub async fn login_with_google(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
-    chromium_webview: bool,
 ) -> Result<LoginResult, AppError> {
-    let access_token =
-        super::google_oauth::fetch_google_access_token(&app, chromium_webview).await?;
+    let access_token = super::google_oauth::fetch_google_access_token(&app).await?;
     let result = state.client()?.google_sign_in(&access_token).await?;
+    Ok(LoginResult::from(result))
+}
+
+#[tauri::command]
+pub async fn google_sign_in(
+    state: tauri::State<'_, AppState>,
+    token: String,
+) -> Result<LoginResult, AppError> {
+    let result = state.client()?.google_sign_in(&token).await?;
     Ok(LoginResult::from(result))
 }
 

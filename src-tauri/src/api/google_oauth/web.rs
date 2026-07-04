@@ -14,7 +14,19 @@ const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
 
-const INIT_SCRIPT: &str = include_str!("oauth_init.js");
+const INIT_SCRIPT: &str = concat!(
+    include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/vendor/grindr-google-oauth-webextension/shared/gis-core.js"
+    )),
+    "\n",
+    include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/vendor/grindr-google-oauth-webextension/shared/oauth-ui.js"
+    )),
+    "\n",
+    include_str!("oauth_init.js")
+);
 
 pub async fn fetch_access_token(
     app: &AppHandle,

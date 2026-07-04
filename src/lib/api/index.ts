@@ -19,8 +19,14 @@ export const methods = {
 		}),
 	},
 	login_with_google: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+		}),
+	},
+	google_sign_in: {
 		request: z.object({
-			chromiumWebview: z.boolean(),
+			token: z.string().min(1),
 		}),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
