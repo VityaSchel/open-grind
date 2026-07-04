@@ -1,8 +1,8 @@
 <script>
-	import LoginForm from "./LoginForm.svelte";
+	import SignInForm from "./SignInForm.svelte";
 </script>
 
 <svelte:head>
 	<title>Sign In</title>
 </svelte:head>
-<LoginForm />
+<SignInForm />

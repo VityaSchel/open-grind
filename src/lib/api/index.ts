@@ -19,6 +19,20 @@ export const methods = {
 			profileId: z.coerce.number().int().nonnegative(),
 		}),
 	},
+	login_with_google: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+		}),
+	},
+	google_sign_in: {
+		request: z.object({
+			token: z.string().min(1),
+		}),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+		}),
+	},
 	auth_state: {
 		request: z.undefined(),
 		response: z.int().nonnegative().nullable(),
@@ -223,7 +237,6 @@ export async function fetchRest(
 		const appError = asAppError(error);
 		if (appError) {
 			if (appError.kind === "Auth" && appError.message === "Not logged in") {
-				toast("Please log in to continue");
 				goto("/auth/sign-in").catch((error) => console.error(error));
 			}
 		}

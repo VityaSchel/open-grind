@@ -6,40 +6,21 @@
 	import { asAppError, callMethod } from "$lib/api";
 	import { showErrorToast } from "$lib/api/error";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
-	import Link from "$lib/components/ui/link/Link.svelte";
+	import { Spinner } from "$lib/components/ui/spinner";
+	import RecaptchaUnsupported from "./RecaptchaUnsupported.svelte";
 
 	let email = $state("");
 	let password = $state("");
-	let submitting = $state(false);
+	let submitting: false | "password" | "google" = $state(false);
 
-	let recaptchaChecked = false;
-	let recaptchaDialogOpen = $state(false);
-
-	async function maybeCheckRecaptcha() {
-		if (recaptchaChecked) return;
-		recaptchaChecked = true;
-		try {
-			const enabled = await callMethod("recaptcha_first_party_enabled");
-			if (enabled) recaptchaDialogOpen = true;
-		} catch (error) {
-			console.error(
-				"[login] failed to check recaptcha_first_party assignment",
-				error,
-			);
-		}
-	}
-</script>
-
-<form
-	onsubmit={async (event) => {
+	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
+		submitting = "password";
 		try {
-			submitting = true;
 			await callMethod("login", {
 				email,
 				password,
@@ -71,14 +52,65 @@
 		} finally {
 			submitting = false;
 		}
-	}}
-	class="contents"
->
-	<Card.Root class="w-full max-w-sm m-auto">
+	}
+
+	let recaptchaChecked = false;
+	let recaptchaDialogOpen = $state(false);
+
+	async function maybeCheckRecaptcha() {
+		if (recaptchaChecked) return;
+		recaptchaChecked = true;
+		try {
+			const enabled = await callMethod("recaptcha_first_party_enabled");
+			if (enabled) recaptchaDialogOpen = true;
+		} catch (error) {
+			console.error(
+				"[login] failed to check recaptcha_first_party assignment",
+				error,
+			);
+		}
+	}
+
+	async function signInWithGoogle() {
+		if (submitting) return;
+		submitting = "google";
+		try {
+			await callMethod("login_with_google");
+			clearProfileCaches();
+			void goto("/");
+		} catch (error) {
+			const appError = asAppError(error);
+			if (
+				appError?.kind === "Auth" &&
+				appError.message === "companion-unavailable"
+			) {
+				void goto("/auth/sign-in/google");
+				return;
+			}
+			if (
+				appError?.kind === "Auth" &&
+				appError.message === "Sign-in cancelled"
+			) {
+				return;
+			}
+			console.error(error);
+			if (appError) {
+				toast.error(appError.prettyMessage);
+			} else {
+				toast.error("Google sign-in failed");
+			}
+		} finally {
+			submitting = false;
+		}
+	}
+</script>
+
+<form onsubmit={signIn} class="contents">
+	<Card.Root class="m-auto w-full max-w-sm">
 		<Card.Header>
-			<Card.Title>Login to your account</Card.Title>
+			<Card.Title>Sign in to your account</Card.Title>
 			<Card.Description>
-				Enter your email below to login to your account
+				Enter your email below to sign in to your account
 			</Card.Description>
 			<Card.Action>
 				<Button variant="link" href="/auth/sign-up" class="px-0">
@@ -96,7 +128,7 @@
 						placeholder="m@example.com"
 						required
 						bind:value={email}
-						disabled={submitting}
+						disabled={submitting !== false}
 					/>
 				</div>
 				<div class="grid gap-2">
@@ -115,33 +147,31 @@
 						required
 						autocomplete="current-password"
 						bind:value={password}
-						disabled={submitting}
+						disabled={submitting !== false}
 					/>
 				</div>
 			</div>
 		</Card.Content>
 		<Card.Footer class="flex-col gap-2">
-			<Button type="submit" class="w-full" disabled={submitting}>Login</Button>
-			<!-- <Button variant="outline" class="w-full">Login with Google</Button> -->
+			<Button type="submit" class="w-full" disabled={submitting !== false}>
+				{#if submitting === "password"}
+					<Spinner />
+				{/if}
+				Sign in
+			</Button>
+			<Button
+				type="button"
+				variant="outline"
+				class="w-full"
+				disabled={submitting !== false}
+				onclick={signInWithGoogle}
+			>
+				{#if submitting === "google"}
+					<Spinner />
+				{/if}
+				Sign in with Google
+			</Button>
 		</Card.Footer>
 	</Card.Root>
 </form>
-
-<AlertDialog.Root bind:open={recaptchaDialogOpen}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Captcha verification required</AlertDialog.Title>
-			<AlertDialog.Description>
-				Grindr requires captcha verification for your device or account, which
-				Open Grind does not currently support. <Link
-					href="https://git.opengrind.org/open-grind/open-grind/issues/129"
-				>
-					Follow for updates on issue #129
-				</Link>.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Action>OK</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<RecaptchaUnsupported bind:open={recaptchaDialogOpen} />

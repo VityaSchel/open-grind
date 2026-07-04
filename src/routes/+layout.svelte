@@ -43,7 +43,6 @@
 	import RequestBlockedAlert from "$lib/api/request-blocked/RequestBlockedAlert.svelte";
 	import SessionErrorAlert from "$lib/api/session-error/SessionErrorAlert.svelte";
 	import favicon from "$lib/assets/favicon.png";
-	import CommandCenter from "$lib/components/command-center/CommandCenter.svelte";
 
 	let {
 		children,
@@ -99,4 +98,3 @@
 </IconContext>
 <RequestBlockedAlert />
 <SessionErrorAlert />
-<CommandCenter />
