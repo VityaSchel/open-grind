@@ -95,11 +95,16 @@
 	--spacing-list-rail: 117px;
 }
 
+/* Keep in sync with src/lib/breakpoints.svelte.ts */
 @theme {
 	--breakpoint-split: 560px;
 	--breakpoint-settings-dialog: 424px;
 	--breakpoint-grid3: 360px;
 	--breakpoint-cramped: 250px;
+}
+
+@theme {
+	--radius-grid: 17px;
 }
 
 @layer base {
@@ -153,8 +158,94 @@ a {
 		scrollbar-width: thin;
 	}
 
-	.profile-grid {
-		@apply mx-auto content-start grid w-full max-w-400 flex-1 grid-cols-2 gap-0.5 overflow-clip rounded-[17px] grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
+	.photo-grid {
+		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
+
+		> :first-child {
+			border-top-left-radius: var(--radius-grid);
+		}
+	}
+
+	/* Round the grid's corner cells so per-cell overlays and outlines follow
+	   the container's clip radius. Column counts must match the grid-cols-*
+	   breakpoints on .photo-grid above. */
+	@media (width < theme(--breakpoint-grid3)) {
+		.photo-grid {
+			> :nth-child(2) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(2n + 1):nth-last-child(-n + 2) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(2n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
+	}
+	@media (width >= theme(--breakpoint-grid3)) and (width < theme(--breakpoint-sm)) {
+		.photo-grid {
+			> :nth-child(3) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(3n + 1):nth-last-child(-n + 3) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(3n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
+	}
+	@media (width >= theme(--breakpoint-sm)) and (width < theme(--breakpoint-md)) {
+		.photo-grid {
+			> :nth-child(4) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(4n + 1):nth-last-child(-n + 4) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(4n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
+	}
+	@media (width >= theme(--breakpoint-md)) and (width < theme(--breakpoint-lg)) {
+		.photo-grid {
+			> :nth-child(5) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(5n + 1):nth-last-child(-n + 5) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(5n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
+	}
+	@media (width >= theme(--breakpoint-lg)) and (width < theme(--breakpoint-xl)) {
+		.photo-grid {
+			> :nth-child(6) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(6n + 1):nth-last-child(-n + 6) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(6n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
+	}
+	@media (width >= theme(--breakpoint-xl)) {
+		.photo-grid {
+			> :nth-child(7) {
+				border-top-right-radius: var(--radius-grid);
+			}
+			> :nth-child(7n + 1):nth-last-child(-n + 7) {
+				border-bottom-left-radius: var(--radius-grid);
+			}
+			> :nth-child(7n):last-child {
+				border-bottom-right-radius: var(--radius-grid);
+			}
+		}
 	}
 }
 

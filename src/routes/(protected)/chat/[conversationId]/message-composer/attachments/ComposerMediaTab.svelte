@@ -78,14 +78,14 @@
 
 <div class="relative flex min-h-0 flex-1 flex-col overflow-clip">
 	<div
-		class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-[17px]"
+		class="rounded-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
 	>
 		{#if error !== null}
 			<div class="flex flex-1">
 				<ApiErrorDisplay {error} onRetry={() => void load()} class="m-auto" />
 			</div>
 		{:else if media === null}
-			<div class="profile-grid">
+			<div class="photo-grid">
 				{#each Array(12)}
 					<Skeleton class="aspect-square rounded-none" />
 				{/each}
@@ -100,7 +100,7 @@
 				</Empty.Header>
 			</Empty.Root>
 		{:else}
-			<div class={["profile-grid", selected.size > 0 && "pb-20"]}>
+			<div class={["photo-grid", selected.size > 0 && "pb-20"]}>
 				{#each media as item (item.id)}
 					{@const isSelected = selected.has(item.id)}
 					<button
@@ -118,12 +118,12 @@
 						<img
 							src={item.url}
 							alt=""
-							class="size-full bg-card-foreground/10 object-cover"
+							class="size-full rounded-[inherit] bg-card-foreground/10 object-cover"
 							draggable="false"
 						/>
 						{#if isSelected}
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-primary/50 outline-2 -outline-offset-2 outline-primary"
+								class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-primary/50 outline-2 -outline-offset-2 outline-primary"
 							>
 								<div
 									class="flex size-8 items-center justify-center rounded-full bg-primary"
@@ -133,7 +133,7 @@
 							</div>
 						{:else if item.used}
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-black/50"
+								class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-black/50"
 							>
 								<span class="font-medium text-white">Sent</span>
 							</div>
