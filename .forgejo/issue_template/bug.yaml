@@ -37,4 +37,4 @@ body:
     attributes:
       label: Version of Open Grind
       description: You can find this in the app's settings. Put "N/A" only if version is not applicable.
-      placeholder: e.g. v0.1.0-beta.1
+      placeholder: e.g. v0.1.0-beta.2
