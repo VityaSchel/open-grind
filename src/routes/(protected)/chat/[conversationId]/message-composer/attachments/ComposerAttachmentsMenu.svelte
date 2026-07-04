@@ -54,7 +54,7 @@
 <Drawer.Root bind:open {snapPoints} fadeFromIndex={0} bind:activeSnapPoint>
 	<Drawer.Content
 		bind:ref={drawerRef}
-		class="h-full"
+		class="mx-auto h-full max-w-200"
 		preventOverflowTextSelection={false}
 	>
 		<Tabs.Root
