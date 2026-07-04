@@ -374,6 +374,8 @@ export function demoAlbumContent(albumId: number) {
 	};
 }
 
+let demoSentCounter = 0;
+
 export function demoSentMessage(body: unknown): ApiResponseMessage {
 	const sent = body as {
 		type?: string;
@@ -382,18 +384,38 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 	};
 	const targetId = sent.target?.targetId ?? 0;
 	const timestamp = NOW;
+	const overlay = {
+		messageId: `${timestamp}:demo-sent-${targetId}-${demoSentCounter++}`,
+		conversationId: conversationIdFor(targetId),
+		senderId: demoMeProfileId,
+		timestamp,
+		unsent: false,
+		reactions: [],
+	};
+	if (sent.type === "Image" && sent.body && typeof sent.body === "object") {
+		const { mediaId } = sent.body as { mediaId: number };
+		const item = demoDrawerMedia().find((media) => media.id === mediaId);
+		return {
+			type: "Image",
+			body: {
+				mediaId,
+				width: null,
+				height: null,
+				url: item?.url ?? DEMO_IMAGE_URL,
+				imageHash: hashFromSeed(`drawer-${mediaId}`),
+				takenOnGrindr: item?.takenOnGrindr ?? false,
+				createdAt: item?.createdTs ?? timestamp,
+			},
+			...overlay,
+		};
+	}
 	return {
 		type: "Text",
 		body:
 			sent.type === "Text" && sent.body && typeof sent.body === "object"
 				? (sent.body as { text: string })
 				: { text: "" },
-		messageId: `${timestamp}:demo-sent-${targetId}`,
-		conversationId: conversationIdFor(targetId),
-		senderId: demoMeProfileId,
-		timestamp,
-		unsent: false,
-		reactions: [],
+		...overlay,
 	};
 }
 

@@ -129,6 +129,36 @@ describe("message API wrappers", () => {
 		});
 	});
 
+	it("sends image messages by media reference only", async () => {
+		const imageBody = {
+			mediaId: 910_001,
+			width: null,
+			height: null,
+			url: "https://cdns.grindr.com/images/chat/a".padEnd(100, "b"),
+			imageHash: "a".repeat(64),
+			takenOnGrindr: false,
+			createdAt: 1_710_000_000_000,
+		};
+		const responseMessage = apiMessage({ type: "Image", body: imageBody });
+		fetchRestMock.mockResolvedValue(response({ data: responseMessage }));
+
+		await expect(
+			sendMessage({
+				toUserId: 99,
+				message: { type: "Image", body: imageBody },
+			}),
+		).resolves.toEqual(responseMessage);
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/send", {
+			method: "POST",
+			body: {
+				type: "Image",
+				target: { type: "Direct", targetId: 99 },
+				body: { mediaId: 910_001 },
+			},
+		});
+	});
+
 	it("posts reactions without parsing a response body", async () => {
 		const res = response();
 		fetchRestMock.mockResolvedValue(res);

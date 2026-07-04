@@ -67,11 +67,8 @@
 					: "h-[calc(60dvh-3.375rem-var(--safe-area-top)-var(--safe-area-bottom))]",
 			]}
 		>
-			<Tabs.Content
-				value="media"
-				class="mt-2 flex min-h-0 flex-col overflow-y-auto overscroll-contain rounded-[17px]"
-			>
-				<ComposerMediaTab />
+			<Tabs.Content value="media" class="mt-2 flex min-h-0 flex-col">
+				<ComposerMediaTab onClose={() => (open = false)} />
 			</Tabs.Content>
 			<Tabs.Content value="albums" class="flex min-h-0">
 				<ComposerUnimplementedTab label="Sharing albums" issue={33} />

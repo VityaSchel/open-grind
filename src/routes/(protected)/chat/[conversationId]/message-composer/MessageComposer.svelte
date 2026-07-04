@@ -32,6 +32,7 @@
 
 	setMessageComposerContext(() => ({
 		disabled,
+		sendMessage: onSend,
 	}));
 </script>
 
