@@ -1,10 +1,17 @@
 import { MediaQuery } from "svelte/reactivity";
 
-const token = (name: string) =>
-	getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+export const breakpoints = {
+	md: "48rem",
+	split: "560px",
+	"settings-dialog": "424px",
+	grid3: "360px",
+	cramped: "250px",
+} as const;
 
-export const below = (breakpoint: string) =>
-	new MediaQuery(`(width < ${token(`--breakpoint-${breakpoint}`)})`);
+export type Breakpoint = keyof typeof breakpoints;
 
-export const above = (breakpoint: string) =>
-	new MediaQuery(`(width >= ${token(`--breakpoint-${breakpoint}`)})`);
+export const below = (breakpoint: Breakpoint) =>
+	new MediaQuery(`(width < ${breakpoints[breakpoint]})`);
+
+export const above = (breakpoint: Breakpoint) =>
+	new MediaQuery(`(width >= ${breakpoints[breakpoint]})`);
