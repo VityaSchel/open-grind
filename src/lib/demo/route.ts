@@ -30,6 +30,7 @@ export function demoCallMethod(method: string): unknown {
 		case "auth_state":
 			return demoMeProfileId;
 		case "login":
+		case "google_sign_in":
 		case "refresh_token":
 			return { profileId: demoMeProfileId };
 		case "rotate_api_params":
