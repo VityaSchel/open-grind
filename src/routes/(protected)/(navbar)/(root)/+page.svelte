@@ -24,7 +24,10 @@
 			class="flex min-h-[calc(var(--screen-scroll)+3.5rem)] flex-col gap-4 p-4"
 		>
 			<TopBar onUpdatePreferences={() => (preferences = getPreferences())} />
-			<div class="flex flex-col" bind:this={gridContainer}>
+			<div
+				class="@container/photo-grid flex flex-col"
+				bind:this={gridContainer}
+			>
 				{#if !gridState.loading && !gridState.error}
 					<DataRefreshControl
 						container={gridContainer}

@@ -2,16 +2,20 @@
 	import { page } from "$app/state";
 	import CheckIcon from "phosphor-svelte/lib/CheckIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
+	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
+	import { toast } from "svelte-sonner";
 	import { expoOut, sineIn } from "svelte/easing";
 	import { SvelteSet } from "svelte/reactivity";
 	import { fly } from "svelte/transition";
 
+	import { addMediaToDrawer } from "$lib/api/chat-media";
 	import { type DrawerMedia, getDrawerMedia } from "$lib/api/media-drawer";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { pickMultipleMedia } from "$lib/media-picker";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	let {
@@ -27,6 +31,7 @@
 
 	let media = $state<DrawerMedia[] | null>(null);
 	let error = $state<unknown>(null);
+	let uploadingCount = $state(0);
 
 	async function load() {
 		media = null;
@@ -46,6 +51,31 @@
 			selected.delete(item.id);
 		} else if (selected.size < maxSelected) {
 			selected.add(item.id);
+		}
+	}
+
+	async function addPhoto() {
+		let picked;
+		try {
+			picked = await pickMultipleMedia("image");
+		} catch (err) {
+			console.error(err);
+			toast.error("Couldn't open the photo picker");
+			return;
+		}
+		if (picked.length === 0) return;
+
+		uploadingCount += picked.length;
+		for (const item of picked) {
+			try {
+				const added = await addMediaToDrawer(item);
+				media = [added, ...(media ?? []).filter(({ id }) => id !== added.id)];
+			} catch (err) {
+				console.error(err);
+				toast.error("Couldn't add photo");
+			} finally {
+				uploadingCount--;
+			}
 		}
 	}
 
@@ -78,7 +108,7 @@
 
 <div class="relative flex min-h-0 flex-1 flex-col overflow-clip">
 	<div
-		class="rounded-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+		class="@container/photo-grid rounded-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
 	>
 		{#if error !== null}
 			<div class="flex flex-1">
@@ -90,7 +120,7 @@
 					<Skeleton class="aspect-square rounded-none" />
 				{/each}
 			</div>
-		{:else if media.length === 0}
+		{:else if media.length === 0 && uploadingCount === 0}
 			<Empty.Root>
 				<Empty.Header>
 					<Empty.Media variant="icon">
@@ -98,9 +128,27 @@
 					</Empty.Media>
 					<Empty.Title>No media sent yet</Empty.Title>
 				</Empty.Header>
+				<Empty.Content>
+					<Button onclick={addPhoto}>
+						<PlusIcon weight="bold" />
+						Add photo
+					</Button>
+				</Empty.Content>
 			</Empty.Root>
 		{:else}
 			<div class={["photo-grid", selected.size > 0 && "pb-20"]}>
+				<button
+					type="button"
+					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
+					aria-label="Add photo"
+					onclick={addPhoto}
+				>
+					<PlusIcon weight="bold" class="size-6" />
+					<span class="text-xs font-medium">Add photo</span>
+				</button>
+				{#each Array(uploadingCount)}
+					<Skeleton class="aspect-square rounded-none" />
+				{/each}
 				{#each media as item (item.id)}
 					{@const isSelected = selected.has(item.id)}
 					<button

@@ -36,7 +36,10 @@
 	}
 </script>
 
-<div bind:this={container} class={["flex flex-1 flex-col gap-3", className]}>
+<div
+	bind:this={container}
+	class={["@container/photo-grid flex flex-1 flex-col gap-3", className]}
+>
 	{#if views.loading}
 		<div class="photo-grid">
 			{#each Array(24)}

@@ -419,20 +419,48 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 	};
 }
 
-export function demoDrawerMedia(): {
+type DemoDrawerMedia = {
 	id: number;
 	url: string;
 	contentType: string;
 	createdTs: number;
 	used: boolean;
 	takenOnGrindr: boolean;
-}[] {
-	return Array.from({ length: 10 }, (_, index) => ({
-		id: 910_000 + index,
-		url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
-		contentType: "image/jpeg",
-		createdTs: NOW - (index + 1) * HOUR,
-		used: index % 3 === 0,
+};
+
+let uploadedDrawerMediaId = 920_000;
+const uploadedDrawerMedia: DemoDrawerMedia[] = [];
+
+export function demoUploadChatMedia(
+	bytes: Uint8Array<ArrayBuffer>,
+	contentType: string,
+): { mediaId: number; url: string; mediaHash: string } {
+	const item: DemoDrawerMedia = {
+		id: uploadedDrawerMediaId++,
+		url: URL.createObjectURL(new Blob([bytes], { type: contentType })),
+		contentType,
+		createdTs: Date.now(),
+		used: false,
 		takenOnGrindr: false,
-	}));
+	};
+	uploadedDrawerMedia.unshift(item);
+	return {
+		mediaId: item.id,
+		url: item.url,
+		mediaHash: hashFromSeed(`drawer-${item.id}`),
+	};
+}
+
+export function demoDrawerMedia(): DemoDrawerMedia[] {
+	return [
+		...uploadedDrawerMedia,
+		...Array.from({ length: 10 }, (_, index) => ({
+			id: 910_000 + index,
+			url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
+			contentType: "image/jpeg",
+			createdTs: NOW - (index + 1) * HOUR,
+			used: index % 3 === 0,
+			takenOnGrindr: false,
+		})),
+	];
 }

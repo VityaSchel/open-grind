@@ -1890,10 +1890,11 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.3.0+26.9.1.163471"
+version = "0.3.1+26.9.1.163471"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e677b9c74259d56c79cc8855701a6164175e563c84309ce3d266e3051c8551a5"
+checksum = "9c8ab9dfbd18f13401bc56c014e50eaa53c03c3a137a1585f2a370972d843271"
 dependencies = [
+ "bytes",
  "futures-util",
  "jsonwebtoken",
  "rand 0.10.1",

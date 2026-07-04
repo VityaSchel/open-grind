@@ -99,12 +99,24 @@
 @theme {
 	--breakpoint-split: 560px;
 	--breakpoint-settings-dialog: 424px;
-	--breakpoint-grid3: 360px;
 	--breakpoint-cramped: 250px;
 }
 
 @theme {
 	--radius-grid: 17px;
+}
+
+/* .photo-grid column-count thresholds, queried against the nearest
+   @container/photo-grid ancestor. Values are the former viewport breakpoints
+   (360/640/768/1024/1280) minus 2rem page padding (p-4) so full-page grids
+   keep the same column counts (modulo a classic scrollbar's width, which
+   viewport queries included but a container's content box does not). */
+@theme {
+	--container-grid3: 328px;
+	--container-grid4: 608px;
+	--container-grid5: 736px;
+	--container-grid6: 992px;
+	--container-grid7: 1248px;
 }
 
 @layer base {
@@ -158,8 +170,10 @@ a {
 		scrollbar-width: thin;
 	}
 
+	/* Requires an ancestor with @container/photo-grid — column counts follow
+	   that container's width, not the viewport. */
 	.photo-grid {
-		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid grid3:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7;
+		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid @grid3/photo-grid:grid-cols-3 @grid4/photo-grid:grid-cols-4 @grid5/photo-grid:grid-cols-5 @grid6/photo-grid:grid-cols-6 @grid7/photo-grid:grid-cols-7;
 
 		> :first-child {
 			border-top-left-radius: var(--radius-grid);
@@ -168,8 +182,8 @@ a {
 
 	/* Round the grid's corner cells so per-cell overlays and outlines follow
 	   the container's clip radius. Column counts must match the grid-cols-*
-	   breakpoints on .photo-grid above. */
-	@media (width < theme(--breakpoint-grid3)) {
+	   thresholds on .photo-grid above. */
+	@container photo-grid (width < theme(--container-grid3)) {
 		.photo-grid {
 			> :nth-child(2) {
 				border-top-right-radius: var(--radius-grid);
@@ -182,7 +196,7 @@ a {
 			}
 		}
 	}
-	@media (width >= theme(--breakpoint-grid3)) and (width < theme(--breakpoint-sm)) {
+	@container photo-grid (width >= theme(--container-grid3)) and (width < theme(--container-grid4)) {
 		.photo-grid {
 			> :nth-child(3) {
 				border-top-right-radius: var(--radius-grid);
@@ -195,7 +209,7 @@ a {
 			}
 		}
 	}
-	@media (width >= theme(--breakpoint-sm)) and (width < theme(--breakpoint-md)) {
+	@container photo-grid (width >= theme(--container-grid4)) and (width < theme(--container-grid5)) {
 		.photo-grid {
 			> :nth-child(4) {
 				border-top-right-radius: var(--radius-grid);
@@ -208,7 +222,7 @@ a {
 			}
 		}
 	}
-	@media (width >= theme(--breakpoint-md)) and (width < theme(--breakpoint-lg)) {
+	@container photo-grid (width >= theme(--container-grid5)) and (width < theme(--container-grid6)) {
 		.photo-grid {
 			> :nth-child(5) {
 				border-top-right-radius: var(--radius-grid);
@@ -221,7 +235,7 @@ a {
 			}
 		}
 	}
-	@media (width >= theme(--breakpoint-lg)) and (width < theme(--breakpoint-xl)) {
+	@container photo-grid (width >= theme(--container-grid6)) and (width < theme(--container-grid7)) {
 		.photo-grid {
 			> :nth-child(6) {
 				border-top-right-radius: var(--radius-grid);
@@ -234,7 +248,7 @@ a {
 			}
 		}
 	}
-	@media (width >= theme(--breakpoint-xl)) {
+	@container photo-grid (width >= theme(--container-grid7)) {
 		.photo-grid {
 			> :nth-child(7) {
 				border-top-right-radius: var(--radius-grid);
