@@ -1,0 +1,28 @@
+diff --git a/dist/use-drawer-content.svelte.js b/dist/use-drawer-content.svelte.js
+index 854a49f0ee696573fc6a89d673c274a1da79f5f0..f32d1ee93463e3c6300511a21730f3fc608617f7 100644
+--- a/dist/use-drawer-content.svelte.js
++++ b/dist/use-drawer-content.svelte.js
+@@ -120,6 +120,10 @@ export function useDrawerContent(opts) {
+     }
+     function onpointerout(e) {
+         opts.onpointerout.current?.(e);
++        // A pressed button means the pointer is captured and this is a
++        // boundary event (e.g. from setPointerCapture), not an aborted drag.
++        if (e && e.buttons > 0)
++            return;
+         handleOnPointerUp(lastKnownPointerEvent);
+     }
+     function oncontextmenu(e) {
+diff --git a/dist/use-drawer-root.svelte.js b/dist/use-drawer-root.svelte.js
+index dffcf102fa23b5ab751407901513910d06980e09..47bc5fab71b46fa2ca4b55fa54eb167f2a0464fa 100644
+--- a/dist/use-drawer-root.svelte.js
++++ b/dist/use-drawer-root.svelte.js
+@@ -380,7 +380,7 @@ export function useDrawerRoot(opts) {
+         const swipeAmount = getTranslate(drawerNode, opts.direction.current);
+         if (!event ||
+             (event.target && !shouldDrag(event.target, false)) ||
+-            !swipeAmount ||
++            swipeAmount === null ||
+             Number.isNaN(swipeAmount)) {
+             return;
+         }

@@ -4,7 +4,7 @@ import {
 } from "$lib/model/message";
 import type { AlbumExpirationType } from "$lib/model/album";
 import type { Conversation } from "$lib/model/conversation";
-import { DAY, demoMeProfileId, MINUTE, NOW } from "../config";
+import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { hashFromSeed } from "./avatars";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
@@ -395,4 +395,22 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 		unsent: false,
 		reactions: [],
 	};
+}
+
+export function demoDrawerMedia(): {
+	id: number;
+	url: string;
+	contentType: string;
+	createdTs: number;
+	used: boolean;
+	takenOnGrindr: boolean;
+}[] {
+	return Array.from({ length: 10 }, (_, index) => ({
+		id: 910_000 + index,
+		url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
+		contentType: "image/jpeg",
+		createdTs: NOW - (index + 1) * HOUR,
+		used: index % 3 === 0,
+		takenOnGrindr: false,
+	}));
 }

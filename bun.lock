@@ -67,6 +67,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "vaul-svelte@1.0.0-next.7": "patches/vaul-svelte@1.0.0-next.7.patch",
+  },
   "overrides": {
     "cookie": "^0.7.0",
   },

@@ -2,16 +2,18 @@
 	import { platform } from "@tauri-apps/plugin-os";
 
 	import { Textarea } from "$lib/components/ui/textarea";
+	import { demoEnabled } from "$lib/demo";
+	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
 	let {
 		value = $bindable(),
-		disabled,
 	}: {
 		value: string;
-		disabled?: boolean;
 	} = $props();
 
-	const isMobile = ["android", "ios"].includes(platform());
+	const isMobile = !demoEnabled && ["android", "ios"].includes(platform());
+
+	const { disabled } = $derived(getMessageComposerContext()());
 </script>
 
 <Textarea

@@ -5,20 +5,20 @@
 	"author": "Open Grind Governance (https://opengrind.org/governance)",
 	"type": "module",
 	"scripts": {
-		"docs": "bun run --cwd docs start",
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"dev": "bun dev:desktop",
-		"dev:web": "vite dev",
-		"dev:desktop": "tauri dev",
 		"dev:android": "bash scripts/dev-android.sh",
+		"dev:desktop": "tauri dev",
+		"dev:web": "vite dev",
+		"docs": "bun run --cwd docs start",
+		"gen:icons": "bash scripts/gen-icons.sh",
 		"preview": "vite preview",
-		"test": "bun run test:unit && bun run test:rust",
-		"test:unit": "svelte-kit sync && vitest run",
-		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
 		"tauri": "tauri",
-		"gen:icons": "bash scripts/gen-icons.sh"
+		"test": "bun run test:unit && bun run test:rust",
+		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
+		"test:unit": "svelte-kit sync && vitest run"
 	},
 	"overrides": {
 		"cookie": "^0.7.0"
@@ -83,5 +83,8 @@
 		"vaul-svelte": "^1.0.0-next.7",
 		"vite": "^6.4.2",
 		"vitest": "^4.1.5"
+	},
+	"patchedDependencies": {
+		"vaul-svelte@1.0.0-next.7": "patches/vaul-svelte@1.0.0-next.7.patch"
 	}
 }

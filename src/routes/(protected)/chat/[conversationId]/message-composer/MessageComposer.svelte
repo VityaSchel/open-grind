@@ -1,19 +1,11 @@
 <script lang="ts">
-	import {
-		MicrophoneIcon,
-		PaperclipIcon,
-		PaperPlaneRightIcon,
-	} from "phosphor-svelte";
-	import { toast } from "svelte-sonner";
-	import { expoOut } from "svelte/easing";
-	import { scale } from "svelte/transition";
-
 	import { showErrorToast } from "$lib/api/error";
-	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
 	import type { Message } from "$lib/model/message";
-	import ComposerButton from "./ComposerButton.svelte";
+	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
+	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
+	import { setMessageComposerContext } from "./message-composer-context.svelte";
 	import MessageTextInput from "./MessageTextInput.svelte";
-	import PrimaryComposerButton from "./PrimaryComposerButton.svelte";
+	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
 
 	let {
 		onSend,
@@ -37,6 +29,10 @@
 			});
 		}
 	}
+
+	setMessageComposerContext(() => ({
+		disabled,
+	}));
 </script>
 
 <form
@@ -48,34 +44,9 @@
 >
 	<MessageTextInput bind:value={textContent} />
 	{#if textContent === ""}
-		<div class="absolute right-7 bottom-0" transition:scale={{ duration: 600, easing: expoOut, start: 0 }}>
-			<ComposerButton class="right-7 pe-1.5 static" onclick={() => {}} {disabled}>
-				{#snippet icon({ ...props })}
-					<PaperclipIcon {...props} />
-				{/snippet}
-			</ComposerButton>
-		</div>
-		<PrimaryComposerButton
-			onclick={() => {
-				toast(ToastUnimplemented, {
-					componentProps: {
-						feature: "Voice messages",
-						issue: 35,
-					},
-				});
-			}}
-			{disabled}
-			class="ps-0"
-		>
-			{#snippet icon({ ...props })}
-				<MicrophoneIcon weight="fill" {...props} />
-			{/snippet}
-		</PrimaryComposerButton>
+		<ComposerAttachments />
+		<ComposerVoiceMessage />
 	{:else}
-		<PrimaryComposerButton type="submit" {disabled}>
-			{#snippet icon({ ...props })}
-				<PaperPlaneRightIcon weight="fill" {...props} />
-			{/snippet}
-		</PrimaryComposerButton>
+		<ComposerSubmitButton />
 	{/if}
 </form>
