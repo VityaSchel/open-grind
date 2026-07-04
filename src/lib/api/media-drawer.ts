@@ -1,0 +1,21 @@
+import z from "zod";
+
+import { fetchRest } from "$lib/api";
+import { unixTimestampMsSchema } from "$lib/model/types";
+
+const drawerMediaSchema = z.object({
+	id: z.int(),
+	url: z.url(),
+	contentType: z.string(),
+	createdTs: unixTimestampMsSchema,
+	used: z.boolean(),
+	takenOnGrindr: z.boolean(),
+});
+
+export type DrawerMedia = z.infer<typeof drawerMediaSchema>;
+
+export async function getDrawerMedia(conversationId: string) {
+	return await fetchRest(`/v4/chat/media/drawer/${conversationId}`).then(
+		(res) => res.jsonParsed(z.array(drawerMediaSchema)),
+	);
+}

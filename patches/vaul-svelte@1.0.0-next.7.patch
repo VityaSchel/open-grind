@@ -1,0 +1,137 @@
+diff --git a/node_modules/vaul-svelte/.bun-tag-104b909328cdfe56 b/.bun-tag-104b909328cdfe56
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/vaul-svelte/.bun-tag-1c40d6c2ed2f7f0e b/.bun-tag-1c40d6c2ed2f7f0e
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/vaul-svelte/.bun-tag-69437ae7b37af656 b/.bun-tag-69437ae7b37af656
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/vaul-svelte/.bun-tag-b90901c023fffc08 b/.bun-tag-b90901c023fffc08
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/components/drawer/drawer.svelte b/dist/components/drawer/drawer.svelte
+index 740a6e5ee8fb48ac3a0dabb2eb7f8d1a09be75a2..ca8eb1684d92a166b3853f6119909a58e0b65bf5 100644
+--- a/dist/components/drawer/drawer.svelte
++++ b/dist/components/drawer/drawer.svelte
+@@ -197,6 +197,16 @@
+ 		animation: none !important;
+ 	}
+ 
++	/* Keep the exit keyframes' end state applied after the animation finishes.
++	   bits-ui unmounts asynchronously (animation.finished -> tick -> flush), so
++	   without fill-mode the transform reverts to the open position and the
++	   ever-present transform transition slides the drawer back up for the
++	   frame(s) before removal. See radix-ui/primitives#1849 for the same fix. */
++	:global([data-vaul-drawer][data-state="closed"]),
++	:global([data-vaul-overlay][data-state="closed"]) {
++		animation-fill-mode: forwards;
++	}
++
+ 	:global([data-vaul-overlay][data-vaul-snap-points="true"]) {
+ 		opacity: 0;
+ 		transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+diff --git a/dist/use-drawer-content.svelte.js b/dist/use-drawer-content.svelte.js
+index 854a49f0ee696573fc6a89d673c274a1da79f5f0..f32d1ee93463e3c6300511a21730f3fc608617f7 100644
+--- a/dist/use-drawer-content.svelte.js
++++ b/dist/use-drawer-content.svelte.js
+@@ -120,6 +120,10 @@ export function useDrawerContent(opts) {
+     }
+     function onpointerout(e) {
+         opts.onpointerout.current?.(e);
++        // A pressed button means the pointer is captured and this is a
++        // boundary event (e.g. from setPointerCapture), not an aborted drag.
++        if (e && e.buttons > 0)
++            return;
+         handleOnPointerUp(lastKnownPointerEvent);
+     }
+     function oncontextmenu(e) {
+diff --git a/dist/use-drawer-root.svelte.js b/dist/use-drawer-root.svelte.js
+index dffcf102fa23b5ab751407901513910d06980e09..cffc9e06dd157d9b6fbcad636125f49bdf710780 100644
+--- a/dist/use-drawer-root.svelte.js
++++ b/dist/use-drawer-root.svelte.js
+@@ -315,10 +315,46 @@ export function useDrawerRoot(opts) {
+     function closeDrawer(fromWithin) {
+         cancelDrag();
+         opts.onClose?.current();
++        let restoreTransform = null;
++        if (drawerNode) {
++            const swipeAmount = getTranslate(drawerNode, opts.direction.current);
++            // If the drawer was dragged past the fully-closed position, the
++            // exit keyframes' target of 100% (of the drawer's own size) lies
++            // ABOVE the current position, so the close animation would pull
++            // the drawer back into view. Pin the target to where it already is.
++            const rect = drawerNode.getBoundingClientRect();
++            const dim = isVertical(opts.direction.current) ? rect.height : rect.width;
++            if (swipeAmount !== null && Math.abs(swipeAmount) > dim) {
++                drawerNode.style.setProperty("--initial-transform", `${Math.abs(swipeAmount)}px`);
++            }
++            // Closing flips the data-vaul-* attributes, which makes Svelte
++            // re-apply the spread style attribute and wipe the imperative
++            // inline transform (snap position or drag position). The exit
++            // keyframes have no `from`, so the animation would start from the
++            // fully-open position, visibly jumping the drawer back up. Restore
++            // the transform right after the flush so the animation starts
++            // where the drawer actually is.
++            if (swipeAmount !== null && swipeAmount !== 0) {
++                restoreTransform = isVertical(opts.direction.current)
++                    ? `translate3d(0, ${swipeAmount}px, 0)`
++                    : `translate3d(${swipeAmount}px, 0, 0)`;
++            }
++        }
+         if (!fromWithin) {
+             handleOpenChange(false);
+             opts.open.current = false;
+         }
++        if (restoreTransform !== null) {
++            const node = drawerNode;
++            // rAF, not afterTick: for dialog-initiated closes (outside tap,
++            // Escape) the open flip happens after closeDrawer(true) returns,
++            // so a tick can resolve before the wiping flush is scheduled.
++            // Microtask flushes always drain before rAF, and rAF runs before
++            // paint, so the restored transform is never visibly skipped.
++            window.requestAnimationFrame(() => {
++                set(node, { transform: restoreTransform });
++            });
++        }
+         window.setTimeout(() => {
+             if (opts.snapPoints.current && opts.snapPoints.current.length > 0) {
+                 opts.activeSnapPoint.current = opts.snapPoints.current[0];
+@@ -380,7 +416,7 @@ export function useDrawerRoot(opts) {
+         const swipeAmount = getTranslate(drawerNode, opts.direction.current);
+         if (!event ||
+             (event.target && !shouldDrag(event.target, false)) ||
+-            !swipeAmount ||
++            swipeAmount === null ||
+             Number.isNaN(swipeAmount)) {
+             return;
+         }
+diff --git a/dist/use-snap-points.svelte.js b/dist/use-snap-points.svelte.js
+index 643d6e686c0b38a4ff82670e586795fe25278219..1dd5d0fc32e28b95fa0c277381456bfd6fc05fb7 100644
+--- a/dist/use-snap-points.svelte.js
++++ b/dist/use-snap-points.svelte.js
+@@ -112,7 +112,11 @@ export function useSnapPoints({ snapPoints, drawerNode: drawerNode, overlayNode:
+         // where the drawer snaps to the previous point and then closes,
+         // rather than continuing to close from the current point
+         const releasing = isReleasing();
+-        if (!activeSnapPoint.current || releasing)
++        // Never snap while closed/closing: closeDrawer resets activeSnapPoint
++        // to the first snap point after TRANSITIONS.DURATION, which races the
++        // equally-long exit animation and would move the closing drawer back
++        // to the snap position right before unmount.
++        if (!open.current || !activeSnapPoint.current || releasing)
+             return;
+         const newIndex = snapPoints.current?.findIndex((snapPoint) => snapPoint === activeSnapPoint.current) ??
+             -1;
+@@ -172,6 +176,11 @@ export function useSnapPoints({ snapPoints, drawerNode: drawerNode, overlayNode:
+             }
+             if (isFirst && dragDirection < 0 && dismissible) {
+                 closeDrawer();
++                // Without this return we'd fall through to
++                // snapToPoint(snapPointsOffset[-1]), which writes an invalid
++                // transform but re-enables the transform transition on the
++                // closing drawer, animating the post-animation revert.
++                return;
+             }
+             if (activeSnapPointIndex === null)
+                 return;

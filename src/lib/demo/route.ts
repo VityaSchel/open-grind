@@ -3,6 +3,7 @@ import {
 	demoAlbumContent,
 	demoConversationMessages,
 	demoConversations,
+	demoDrawerMedia,
 	demoSentMessage,
 	demoSingleMessage,
 } from "./mock/conversations";
@@ -119,6 +120,9 @@ export function demoRoute(
 	}
 	if (method === "POST" && rawPath === "/v4/chat/message/send") {
 		return ok(demoSentMessage(body));
+	}
+	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer/")) {
+		return ok(demoDrawerMedia());
 	}
 	if (method === "GET" && rawPath === "/v3/places/search") {
 		return ok({ places: [] });

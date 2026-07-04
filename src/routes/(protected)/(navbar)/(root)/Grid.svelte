@@ -76,7 +76,7 @@
 	}
 </script>
 
-<div class="profile-grid relative">
+<div class="photo-grid relative">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
 			<div class="aspect-square bg-stone-700 animate-pulse"></div>

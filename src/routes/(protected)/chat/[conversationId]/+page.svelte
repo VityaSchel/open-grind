@@ -7,7 +7,7 @@
 	import type { Message } from "$lib/model/message";
 	import ChatNavBar from "./ChatNavBar.svelte";
 	import { ConversationState } from "./conversation-state.svelte";
-	import MessageComposer from "./MessageComposer.svelte";
+	import MessageComposer from "./message-composer/MessageComposer.svelte";
 	import MessagesList from "./MessagesList.svelte";
 
 	let { data }: import("./$types").PageProps = $props();

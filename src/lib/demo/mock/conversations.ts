@@ -4,7 +4,7 @@ import {
 } from "$lib/model/message";
 import type { AlbumExpirationType } from "$lib/model/album";
 import type { Conversation } from "$lib/model/conversation";
-import { DAY, demoMeProfileId, MINUTE, NOW } from "../config";
+import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { hashFromSeed } from "./avatars";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
@@ -374,6 +374,8 @@ export function demoAlbumContent(albumId: number) {
 	};
 }
 
+let demoSentCounter = 0;
+
 export function demoSentMessage(body: unknown): ApiResponseMessage {
 	const sent = body as {
 		type?: string;
@@ -382,17 +384,55 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 	};
 	const targetId = sent.target?.targetId ?? 0;
 	const timestamp = NOW;
-	return {
-		type: "Text",
-		body:
-			sent.type === "Text" && sent.body && typeof sent.body === "object"
-				? (sent.body as { text: string })
-				: { text: "" },
-		messageId: `${timestamp}:demo-sent-${targetId}`,
+	const overlay = {
+		messageId: `${timestamp}:demo-sent-${targetId}-${demoSentCounter++}`,
 		conversationId: conversationIdFor(targetId),
 		senderId: demoMeProfileId,
 		timestamp,
 		unsent: false,
 		reactions: [],
 	};
+	if (sent.type === "Image" && sent.body && typeof sent.body === "object") {
+		const { mediaId } = sent.body as { mediaId: number };
+		const item = demoDrawerMedia().find((media) => media.id === mediaId);
+		return {
+			type: "Image",
+			body: {
+				mediaId,
+				width: null,
+				height: null,
+				url: item?.url ?? DEMO_IMAGE_URL,
+				imageHash: hashFromSeed(`drawer-${mediaId}`),
+				takenOnGrindr: item?.takenOnGrindr ?? false,
+				createdAt: item?.createdTs ?? timestamp,
+			},
+			...overlay,
+		};
+	}
+	return {
+		type: "Text",
+		body:
+			sent.type === "Text" && sent.body && typeof sent.body === "object"
+				? (sent.body as { text: string })
+				: { text: "" },
+		...overlay,
+	};
+}
+
+export function demoDrawerMedia(): {
+	id: number;
+	url: string;
+	contentType: string;
+	createdTs: number;
+	used: boolean;
+	takenOnGrindr: boolean;
+}[] {
+	return Array.from({ length: 10 }, (_, index) => ({
+		id: 910_000 + index,
+		url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
+		contentType: "image/jpeg",
+		createdTs: NOW - (index + 1) * HOUR,
+		used: index % 3 === 0,
+		takenOnGrindr: false,
+	}));
 }
