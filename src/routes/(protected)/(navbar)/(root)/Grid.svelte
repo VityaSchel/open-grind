@@ -74,15 +74,17 @@
 			},
 		};
 	}
+
+	console.log(gridState.items); //889876230
 </script>
 
 <div class="photo-grid relative">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
-			<div class="aspect-square bg-stone-700 animate-pulse"></div>
+			<div class="aspect-square animate-pulse bg-stone-700"></div>
 		{/each}
 	{:else if gridState.error}
-		<div class="p-4 flex col-span-full">
+		<div class="col-span-full flex p-4">
 			<ApiErrorDisplay
 				error={gridState.error}
 				onRetry={() => gridState.refresh()}
@@ -99,6 +101,7 @@
 					unread={item.unread}
 					onlineUntil={item.onlineUntil}
 					isFavorite={item.isFavorite}
+					isVisiting={item.isVisiting}
 					hadRecentChat={item.hasChattedInLast24Hrs}
 					medias={item.profilePhotosHashes?.map((mediaHash) => ({
 						mediaHash,
@@ -106,7 +109,7 @@
 				/>
 			{:else}
 				<div
-					class="aspect-square bg-stone-700 animate-pulse"
+					class="aspect-square animate-pulse bg-stone-700"
 					use:observePartial={{ batchIndex: item.batchIndex }}
 				></div>
 			{/if}
@@ -115,7 +118,7 @@
 		{/each}
 		{#if gridState.loadingMore}
 			{#each Array.from({ length: 20 })}
-				<div class="aspect-square bg-stone-700 animate-pulse"></div>
+				<div class="aspect-square animate-pulse bg-stone-700"></div>
 			{/each}
 		{/if}
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}

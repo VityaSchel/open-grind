@@ -10,6 +10,7 @@
 		unread = null,
 		onlineUntil = null,
 		isFavorite = false,
+		isVisiting = false,
 		hadRecentChat = false,
 	}: {
 		id: number;
@@ -20,6 +21,7 @@
 		unread?: number | null;
 		onlineUntil?: number | null;
 		isFavorite?: boolean;
+		isVisiting?: boolean;
 		hadRecentChat?: boolean;
 	} = $props();
 </script>
@@ -32,6 +34,7 @@
 	{unread}
 	{onlineUntil}
 	{isFavorite}
+	{isVisiting}
 	{hadRecentChat}
 	href="/profile/{id}"
 />
