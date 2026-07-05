@@ -14,6 +14,11 @@ const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
 
+const OAUTH_UI_CSS: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/vendor/grindr-google-oauth-webextension/shared/oauth-ui.css"
+));
+
 const INIT_SCRIPT: &str = concat!(
     include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -27,6 +32,11 @@ const INIT_SCRIPT: &str = concat!(
     "\n",
     include_str!("oauth_init.js")
 );
+
+fn init_script() -> String {
+    let css = serde_json::to_string(OAUTH_UI_CSS).unwrap_or_else(|_| "\"\"".to_string());
+    format!("window.__grindrOauthCss = {css};\n{INIT_SCRIPT}")
+}
 
 pub async fn fetch_access_token(
     app: &AppHandle,
@@ -48,7 +58,7 @@ pub async fn fetch_access_token(
         .title("Sign in with Google")
         .inner_size(500.0, 720.0)
         .user_agent(USER_AGENT)
-        .initialization_script(INIT_SCRIPT)
+        .initialization_script(init_script())
         .on_navigation(move |url| {
             if url.host_str() != Some("web.grindr.com") || url.path() != RESULT_PATH {
                 return true;

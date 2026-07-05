@@ -13,14 +13,8 @@ body:
         There is a good chance it has already been suggested and being worked on. If that's the case, please give the existing issue a 👍 or add a comment instead of creating a new one.
 
         Known feature requests:
-        - [Sign in with Google](https://git.opengrind.org/open-grind/open-grind/issues/27)
         - [Send albums](https://git.opengrind.org/open-grind/open-grind/issues/33)
-        - [Send pictures](https://git.opengrind.org/open-grind/open-grind/issues/35)
-        - [Search by tags](https://git.opengrind.org/open-grind/open-grind/issues/85)
         - [Swipe left-right through profiles](https://git.opengrind.org/open-grind/open-grind/issues/111)
-        - [Edit your profile](https://git.opengrind.org/open-grind/open-grind/issues/44)
-        - [Tap profiles (send reactions)](https://git.opengrind.org/open-grind/open-grind/issues/40)
-        - [See who viewed your profile](https://git.opengrind.org/open-grind/open-grind/issues/42)
   - type: textarea
     id: description
     attributes:

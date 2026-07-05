@@ -50,11 +50,57 @@
 		} catch {}
 	};
 
+	const matchAccessTokenInString = (text) => {
+		const match = /access_token["'\s]*[=:]\s*["']?([^"'&\s\\)}\]]+)/i.exec(
+			text,
+		);
+		return match ? decodeURIComponent(match[1]) : null;
+	};
+
+	const extractAccessToken = (data) => {
+		let found = null;
+		const walk = (value, depth) => {
+			if (found || value == null || depth > 6) return;
+			if (typeof value === "string") {
+				if (!value.includes("access_token")) return;
+				found = matchAccessTokenInString(value);
+				if (found) return;
+				try {
+					walk(JSON.parse(value), depth + 1);
+				} catch {}
+				return;
+			}
+			if (typeof value === "object") {
+				if (typeof value.access_token === "string") {
+					found = value.access_token;
+					return;
+				}
+				for (const key of Object.keys(value)) {
+					walk(value[key], depth + 1);
+					if (found) return;
+				}
+			}
+		};
+
+		if (typeof data === "string") {
+			const direct = matchAccessTokenInString(data);
+			if (direct) return direct;
+			try {
+				walk(JSON.parse(data), 0);
+			} catch {
+				walk(data, 0);
+			}
+		} else {
+			walk(data, 0);
+		}
+		return found;
+	};
+
 	const captureTokenFromGoogleRelay = () => {
 		let captured = false;
 		const handle = (data) => {
 			if (captured) return;
-			const token = window.__grindrGis.extractAccessToken(data);
+			const token = extractAccessToken(data);
 			if (token) {
 				captured = true;
 				reportToken(token);
@@ -138,6 +184,16 @@
 		}
 	};
 
+	const injectStyles = () => {
+		try {
+			const css = window.__grindrOauthCss;
+			if (!css) return;
+			const style = document.createElement("style");
+			style.textContent = css;
+			(document.head || document.documentElement).appendChild(style);
+		} catch {}
+	};
+
 	const startGoogleSignIn = () => {
 		try {
 			window.stop();
@@ -149,8 +205,10 @@
 				'<meta name="viewport" content="width=device-width,initial-scale=1" />' +
 				"<title>Sign in with Google</title></head><body></body>";
 		} catch {}
-		const button = window.__grindrOauthUi.mount();
+		injectStyles();
+		window.__grindrOauthUi.mount();
 		window.__grindrOauthUi.setPhase("ready");
+		const button = document.querySelector(".grindr-oauth-button");
 		button?.addEventListener("click", requestToken);
 	};
 
