@@ -41,7 +41,7 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				profilePhotosHashes: profile.photoMediaHashes,
 				unread: profile.unreadCount ?? null,
 				onlineUntil: profile.onlineUntil ?? null,
-        isFavorite: profile.isFavorite,
+				isFavorite: profile.isFavorite,
 				isVisiting: profile.isVisiting,
 				hasChattedInLast24Hrs: profile.hasChattedInLast24Hrs,
       });
