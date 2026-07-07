@@ -74,17 +74,15 @@
 			},
 		};
 	}
-
-	console.log(gridState.items); //889876230
 </script>
 
 <div class="photo-grid relative">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
-			<div class="aspect-square animate-pulse bg-stone-700"></div>
+			<div class="aspect-square bg-stone-700 animate-pulse"></div>
 		{/each}
 	{:else if gridState.error}
-		<div class="col-span-full flex p-4">
+		<div class="p-4 flex col-span-full">
 			<ApiErrorDisplay
 				error={gridState.error}
 				onRetry={() => gridState.refresh()}
@@ -109,7 +107,7 @@
 				/>
 			{:else}
 				<div
-					class="aspect-square animate-pulse bg-stone-700"
+					class="aspect-square bg-stone-700 animate-pulse"
 					use:observePartial={{ batchIndex: item.batchIndex }}
 				></div>
 			{/if}
@@ -118,7 +116,7 @@
 		{/each}
 		{#if gridState.loadingMore}
 			{#each Array.from({ length: 20 })}
-				<div class="aspect-square animate-pulse bg-stone-700"></div>
+				<div class="bg-stone-700 aspect-square animate-pulse"></div>
 			{/each}
 		{/if}
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}

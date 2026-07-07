@@ -44,9 +44,9 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				isFavorite: profile.isFavorite,
 				isVisiting: profile.isVisiting,
 				hasChattedInLast24Hrs: profile.hasChattedInLast24Hrs,
-      });
+            });
 
-    } else if (item.type === "partial_profile_v1") {
+        } else if (item.type === "partial_profile_v1") {
 			if (currentBatch.length === 150) {
 				partialBatches.push({ batch: currentBatch });
 				currentBatch = [];
@@ -57,13 +57,13 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				type: "partial",
 				id: item.data.profileId,
 				batchIndex,
-      });
+			});
 
 			if (item.data.isVisiting) {
-        isVisitingCache.add(item.data.profileId);
+				isVisitingCache.add(item.data.profileId);
 			}
 		}
-  }
+	}
 
 	if (currentBatch.length > 0) {
 		partialBatches.push({ batch: currentBatch });
