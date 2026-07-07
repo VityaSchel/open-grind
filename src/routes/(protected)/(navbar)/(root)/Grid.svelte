@@ -116,7 +116,7 @@
 		{/each}
 		{#if gridState.loadingMore}
 			{#each Array.from({ length: 20 })}
-				<div class="bg-stone-700 aspect-square animate-pulse"></div>
+				<div class="aspect-square bg-stone-700 animate-pulse"></div>
 			{/each}
 		{/if}
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
