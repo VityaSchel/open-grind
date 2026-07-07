@@ -156,6 +156,8 @@ export class ConversationState {
 			});
 			if (this.#destroyed) return;
 
+			this.profile = result.profile;
+
 			const serverById = new Map(
 				result.messages.map((m) => [m.messageId, m] as const),
 			);

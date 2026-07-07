@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { formatDistanceToNowStrict } from "date-fns";
+	import { formatDistanceStrict } from "date-fns";
+
+	import { getNow, subscribeNow } from "$lib/now.svelte";
 
 	let {
 		onlineUntil,
@@ -10,9 +12,13 @@
 		seen: number | null;
 		self?: boolean;
 	} = $props();
+
+	$effect(() => subscribeNow());
+
+	const online = $derived(onlineUntil !== null && onlineUntil > getNow());
 </script>
 
-{#if self || (onlineUntil !== null && onlineUntil > Date.now())}
+{#if self || online}
 	<div class="flex items-center gap-1.5 whitespace-nowrap">
 		<span class="bg-green-500 rounded-full size-2 inline-block ms-0.5 shrink-0">
 		</span>
@@ -20,7 +26,7 @@
 	</div>
 {:else if seen !== null}
 	<span class="text-gray-500">
-		Online {formatDistanceToNowStrict(seen, {
+		Online {formatDistanceStrict(seen, getNow(), {
 			addSuffix: true,
 		})}
 	</span>

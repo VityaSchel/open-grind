@@ -67,7 +67,24 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 	};
 }
 
-export const profileCache = new Map<number, FullGridProfile>();
+const PROFILE_CACHE_TTL_MS = 60_000;
+
+const profileCache = new Map<
+	number,
+	{ profile: FullGridProfile; updatedAt: number }
+>();
+
+export function getCachedProfile(id: number): FullGridProfile | null {
+	const cached = profileCache.get(id);
+	if (!cached || Date.now() - cached.updatedAt >= PROFILE_CACHE_TTL_MS) {
+		return null;
+	}
+	return cached.profile;
+}
+
+export function setCachedProfile(profile: FullGridProfile): void {
+	profileCache.set(profile.id, { profile, updatedAt: Date.now() });
+}
 
 export async function resolvePartialBatch(
 	profileIds: number[],

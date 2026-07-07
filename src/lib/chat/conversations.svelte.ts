@@ -1,8 +1,11 @@
 import z from "zod";
 
 import {
+	deleteConversationForMe,
 	getConversations,
 	markConversationAsRead,
+	setConversationMuted,
+	setConversationPinned,
 } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
 import { showIncomingMessageToast } from "$lib/components/incoming-message-toast/incoming-message-toast-manager";
@@ -155,12 +158,7 @@ class ConversationsState {
 			for (const incoming of fetched.values()) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					existing.data.preview = incoming.data.preview;
-					existing.data.lastActivityTimestamp =
-						incoming.data.lastActivityTimestamp;
-					if (incoming.data.conversationId !== activeId) {
-						existing.data.unreadCount = incoming.data.unreadCount;
-					}
+					this.#mergeIncoming(existing, incoming);
 				} else {
 					this.entries.push(incoming);
 				}
@@ -195,12 +193,7 @@ class ConversationsState {
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					existing.data.preview = incoming.data.preview;
-					existing.data.lastActivityTimestamp =
-						incoming.data.lastActivityTimestamp;
-					if (incoming.data.conversationId !== this.#activeConversationId) {
-						existing.data.unreadCount = incoming.data.unreadCount;
-					}
+					this.#mergeIncoming(existing, incoming);
 				} else {
 					this.entries.unshift(incoming);
 				}
@@ -219,6 +212,7 @@ class ConversationsState {
 			if (!known.has(entry.data.conversationId)) this.entries.push(entry);
 		}
 		this.nextPage = result.nextPage;
+		this.#sortEntries();
 	}
 
 	refresh(): Promise<void> {
@@ -354,6 +348,104 @@ class ConversationsState {
 		}
 	}
 
+	async #requestWithRollback<T>({
+		items,
+		request,
+		rollback,
+		errorLabel,
+	}: {
+		items: T[];
+		request: (item: T) => Promise<unknown>;
+		rollback: (item: T) => void;
+		errorLabel: string;
+	}): Promise<void> {
+		const results = await Promise.allSettled(items.map(request));
+		const failures: T[] = [];
+		let error: unknown = null;
+		results.forEach((result, index) => {
+			if (result.status !== "rejected") return;
+			failures.push(items[index]);
+			error ??= result.reason;
+		});
+		if (failures.length === 0) return;
+		for (const item of failures.toReversed()) rollback(item);
+		this.#sortEntries();
+		console.error(error);
+		showErrorToast({ label: errorLabel, error });
+	}
+
+	async #setFlag({
+		conversationIds,
+		field,
+		value,
+		request,
+		errorLabel,
+	}: {
+		conversationIds: string[];
+		field: "pinned" | "muted";
+		value: boolean;
+		request: (conversationId: string) => Promise<unknown>;
+		errorLabel: string;
+	}): Promise<void> {
+		const targets = conversationIds
+			.map((id) => this.#find(id))
+			.filter(
+				(entry): entry is Conversation =>
+					entry !== undefined && entry.data[field] !== value,
+			);
+		if (targets.length === 0) return;
+		for (const entry of targets) entry.data[field] = value;
+		if (field === "pinned") this.#sortEntries();
+
+		await this.#requestWithRollback({
+			items: targets,
+			request: (entry) => request(entry.data.conversationId),
+			rollback: (entry) => {
+				entry.data[field] = !value;
+			},
+			errorLabel,
+		});
+	}
+
+	setPinned(conversationIds: string[], pinned: boolean): Promise<void> {
+		return this.#setFlag({
+			conversationIds,
+			field: "pinned",
+			value: pinned,
+			request: (conversationId) =>
+				setConversationPinned({ conversationId, pinned }),
+			errorLabel: pinned
+				? "Failed to pin conversation"
+				: "Failed to unpin conversation",
+		});
+	}
+
+	setMuted(conversationIds: string[], muted: boolean): Promise<void> {
+		return this.#setFlag({
+			conversationIds,
+			field: "muted",
+			value: muted,
+			request: (conversationId) =>
+				setConversationMuted({ conversationId, muted }),
+			errorLabel: muted
+				? "Failed to mute conversation"
+				: "Failed to unmute conversation",
+		});
+	}
+
+	async deleteConversations(conversationIds: string[]): Promise<void> {
+		await this.#requestWithRollback({
+			items: conversationIds.map((conversationId) => ({
+				conversationId,
+				revert: this.remove(conversationId).revert,
+			})),
+			request: ({ conversationId }) =>
+				deleteConversationForMe({ conversationId }),
+			rollback: ({ revert }) => revert(),
+			errorLabel: "Failed to delete conversation",
+		});
+	}
+
 	updatePreview({
 		conversationId,
 		preview,
@@ -374,9 +466,19 @@ class ConversationsState {
 		return this.entries.find((e) => e.data.conversationId === conversationId);
 	}
 
+	#mergeIncoming(existing: Conversation, incoming: Conversation): void {
+		const { unreadCount, ...data } = incoming.data;
+		Object.assign(existing.data, data);
+		if (incoming.data.conversationId !== this.#activeConversationId) {
+			existing.data.unreadCount = unreadCount;
+		}
+	}
+
 	#sortEntries(): void {
 		this.entries = this.entries.toSorted(
-			(a, b) => b.data.lastActivityTimestamp - a.data.lastActivityTimestamp,
+			(a, b) =>
+				Number(b.data.pinned) - Number(a.data.pinned) ||
+				b.data.lastActivityTimestamp - a.data.lastActivityTimestamp,
 		);
 	}
 

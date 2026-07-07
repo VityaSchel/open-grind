@@ -4,10 +4,11 @@ import z from "zod";
 import { showErrorToast } from "$lib/api/error";
 import type { cascadeV3QuerySchema } from "$lib/model/grid/cascade/query/v3";
 import {
+	getCachedProfile,
 	getGrid,
 	type GridProfile,
-	profileCache,
 	resolvePartialBatch,
+	setCachedProfile,
 } from "./grid";
 import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
@@ -106,7 +107,7 @@ class GridState {
 			const uncachedIds: number[] = [];
 
 			for (const id of profileIds) {
-				const cached = profileCache.get(id);
+				const cached = getCachedProfile(id);
 				if (cached) {
 					const idx = this.items.findIndex((i) => i.id === id);
 					if (idx !== -1) this.items[idx] = cached;
@@ -117,7 +118,7 @@ class GridState {
 
 			const resolved = await resolvePartialBatch(uncachedIds);
 			for (const profile of resolved) {
-				profileCache.set(profile.id, profile);
+				setCachedProfile(profile);
 				const idx = this.items.findIndex((i) => i.id === profile.id);
 				if (idx !== -1) this.items[idx] = profile;
 			}
