@@ -13,6 +13,8 @@ body:
         There is a good chance it has already been reported and being worked on. If that's the case, please give the existing issue a 👍 or add a comment instead of creating a new one.
 
         Known issues:
+        - ["API error 4: Invalid input parameters"](https://git.opengrind.org/open-grind/open-grind/issues/198)
+        - ["Can't connect to Grindr"](https://git.opengrind.org/open-grind/open-grind/issues/198)
         - ["Incorrect password" error when trying to log in](https://git.opengrind.org/open-grind/open-grind/issues/83)
         - ["Version deprecated" error](https://git.opengrind.org/open-grind/open-grind/issues/119)
         - [Cloudflare blocking requests](https://git.opengrind.org/open-grind/open-grind/issues/81)
@@ -38,3 +40,12 @@ body:
       label: Version of Open Grind
       description: You can find this in the app's settings. Put "N/A" only if version is not applicable.
       placeholder: e.g. v0.1.0-beta.2
+  - type: checkboxes
+    id: existing-issues-searcehd
+    attributes:
+      label: Existing issues searched
+      description: By submitting this issue, you confirm you have [searched existing issues](https://git.opengrind.org/open-grind/open-grind/issues). Not only by querying search but also [viewing latest closed issues](https://git.opengrind.org/open-grind/open-grind/issues?q=&type=all&sort=relevance&state=closed&labels=&milestone=0&project=0&assignee=0&poster=0&archived=false).
+      options:
+        - label: I have checked that this is a new issue that wasn't reported before.
+          required: true
+
