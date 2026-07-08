@@ -2,11 +2,9 @@
 
 ## Open Grind status
 
-**Open Grind is not affiliated with GrindrPlus.** GrindrPlus project is dead after the developers have shut down all resources in May 2026. There is no support for GrindrPlus installation issues in this chat.
-
 ### \> How to download Open Grind APK?
 
-**Follow instructions at https://opengrind.org/guides/download**. Do not download apk files outside of that page. If you're advanced technical user, consider building Open Grind yourself on your computer.
+**Follow instructions at https://opengrind.org/guides/download**. Do not download apk files outside of Releases page. If you're advanced technical user, consider building Open Grind yourself on your computer.
 
 ### \> When an “X” feature will be available? When the next update comes out?
 
@@ -14,7 +12,7 @@ Visit [issues tracker](https://git.opengrind.org/open-grind/open-grind/issues) t
 
 ### \> Can I pay to gain access to the testing phase early? Or to speed up development?
 
-No, **Open Grind is 100% free, transparent and will always be**. No NFTs, no merch, no paid versions, no badges, it's literally impossible to give money to Open Grind project. Anyone who claims otherwise is a scammer.
+No, **Open Grind is 100% free, transparent and will always be**. No crypto, no NFTs, no merch, no paid versions, no community badges, no paid support, nothing at all. It's literally impossible to give money to Open Grind project. Anyone who claims otherwise is a scammer.
 
 If you do intend to volunteerly donate money as a thank-you **to particular contributors**, refer to [FUNDING.md](https://git.opengrind.org/open-grind/open-grind/src/branch/main/FUNDING.md) file to find a list of donation links for each individual contributor.
 
@@ -24,9 +22,26 @@ Donations are optional, won't grant any privileges, and **there is no single gov
 
 Neither are affiliated/verified/endorsed by Open Grind. Never trust APKs downloaded from unofficial sources. Any third party clients put your personal sensitive information at risk, which is why Open Grind strives to be 100% transparent and has [reproducable builds](https://git.opengrind.org/open-grind/open-grind/src/branch/android-init/BUILDING.md).
 
+### \> How many users Open Grind has?
+
+We genuinely have no idea, and it's a good thing: there are exactly zero trackers, analytics, data collection in the app. There is no "ping", "install counter", automatic update checking or anything else that could give an estimate of how many people have actually installed the app; Grindr can't infer that either because Open Grind strives to be stealthy and mask itself in the official app disguise.
+
+The only indirect counters are:
+
+1. Download count on Releases page
+   - It **does not track IP address**, it's a simple integer counter that is increased each time someone sends the HTTP request to download the file. Nothing about the request is logged or stored.
+2. Number of joined accounts in the official discussion venues
+   - Such as number of participants in the official Matrix chat room (no limit on how many accounts a person can have or which homeservers they join from)
+   - Number of registered users on git.opengrind.org (**IP addresses are not stored**)
+   - Keep in mind these platforms do not collect or store any personally-identifiable data about users
+
+**As of July 8, 2026, the estimated number of users is ~25000 based on the downloads counter.**
+
 ## Open Grind features
 
 ### \> Is Open Grind similar to GrindrPlus?
+
+**Open Grind is not affiliated with GrindrPlus.** GrindrPlus project is dead after the developers have shut down all resources in May 2026. There is no support for GrindrPlus installation issues in this chat.
 
 GrindrPlus was a modified version of Grindr application. Open Grind is a completely separate third-party client that's written from scratch. Any features from Grindr's official app have to be developed from scratch in the app, but that also means no patches are necessary to remove bloat from the official version.
 
@@ -58,11 +73,15 @@ Currently not possible. Use the official app to create an account and then sign 
 
 ### \> How to sign in with Google?
 
-See https://opengrind.org/guide/sign-in-with-google
+See https://opengrind.org/guides/sign-in-with-google
 
 ### \> How to login with phone number?
 
 Currently not possible. Track https://git.opengrind.org/open-grind/open-grind/issues/29 to follow updates.
+
+### \> Are there any AI features in Open Grind?
+
+No, and likely will never be.
 
 ## Open Grind development
 

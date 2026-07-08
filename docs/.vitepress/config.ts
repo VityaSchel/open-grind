@@ -44,7 +44,11 @@ export default defineConfig({
 					text: "User guides",
 					items: [
 						{ text: "Download", link: "/guides/download" },
-						{ text: "Sign in with Google", link: "/guides/sign-in-with-google" },
+						{
+							text: "Sign in with Google",
+							link: "/guides/sign-in-with-google",
+						},
+						{ text: "FAQ", link: "/guides/faq" },
 					],
 				},
 			],
