@@ -3998,7 +3998,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "see [Sexual health](/grindr-api/users/profiles#sexual-health)"
+						"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual health](/grindr-api/users/profiles#sexual-health)"
 					}
 				],
 				"responses": {
@@ -4141,7 +4141,7 @@
 						"in": "query",
 						"schema": {
 							"type": "string",
-							"description": "string, see [Body type](/grindr-api/users/profiles#body-type)"
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Body type](/grindr-api/users/profiles#body-type)"
 						}
 					},
 					{
@@ -8746,6 +8746,7 @@
 					"users/profiles"
 				],
 				"operationId": "getProfileById",
+				"description": "Fetch a single profile by ID. When `id` is your own profile, the response carries no self-presence: both `onlineUntil` and `seen` are returned as `null`. Treat the authenticated user as online instead of rendering them as offline.",
 				"security": [
 					{
 						"Grindr3Auth": []
@@ -8865,7 +8866,10 @@
 				},
 				"responses": {
 					"200": {
-						"description": "OK",
+						"description": "The update was accepted. The response body is empty."
+					},
+					"400": {
+						"description": "A moderated free-text field contained banned terms. The body is a [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) (`type` = `urn:gr:err:hit_banned_terms`) naming the offending fields and their terms. The whole update is rejected — no field is persisted.",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -8879,7 +8883,7 @@
 				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
 				"x-notes": [
 					"Because the profile is replaced fully, every editable field must be sent on each request, including fields not exposed in the edit UI such as `approximateDistance` and `profileTags`.",
-					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A successful update answers with an empty body; rejected fields come back in a [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse), and the offending field is not changed."
+					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A clean update answers `200` with an empty body. If a moderated field contains banned terms the request fails with a `400` [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) naming the offending fields; the update is rejected **wholesale**, so none of the submitted fields — not even the clean ones — are persisted. Only a `200` should be treated as success."
 				]
 			}
 		},
@@ -9759,7 +9763,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Tribes](/grindr-api/users/profiles#tribes)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Tribes](/grindr-api/users/profiles#tribes)"
 				}
 			},
 			"CascadeLookingForQuery": {
@@ -9767,7 +9771,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Looking for](/grindr-api/users/profiles#looking-for)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Looking for](/grindr-api/users/profiles#looking-for)"
 				}
 			},
 			"CascadeRelationshipStatusesQuery": {
@@ -9775,7 +9779,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Relationship status](/grindr-api/users/profiles#relationship-status)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Relationship status](/grindr-api/users/profiles#relationship-status)"
 				}
 			},
 			"CascadeBodyTypesQuery": {
@@ -9783,7 +9787,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Body type](/grindr-api/users/profiles#body-type)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Body type](/grindr-api/users/profiles#body-type)"
 				}
 			},
 			"CascadeSexualPositionsQuery": {
@@ -9791,7 +9795,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "array of integers concatenated with a `,`, see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id)"
 				}
 			},
 			"CascadeMeetAtQuery": {
@@ -9799,7 +9803,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Meet at](/grindr-api/users/profiles#meet-at)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Meet at](/grindr-api/users/profiles#meet-at)"
 				}
 			},
 			"CascadeNsfwPicsQuery": {
@@ -9807,7 +9811,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Accept NSFW pics](/grindr-api/users/profiles#accept-nsfw-pics)"
+					"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Accept NSFW pics](/grindr-api/users/profiles#accept-nsfw-pics)"
 				}
 			},
 			"CascadeTagsQuery": {
@@ -9894,6 +9898,15 @@
 					"NOT_ACTIVE",
 					"HOSTING",
 					"NOT_HOSTING"
+				],
+				"x-render-on-tag": "right-now"
+			},
+			"RightNowShareLocation": {
+				"type": "string",
+				"enum": [
+					"DISTANCE_AND_MAP",
+					"DISTANCE_ONLY",
+					"NONE"
 				],
 				"x-render-on-tag": "right-now"
 			},
@@ -10682,7 +10695,8 @@
 						"type": "array",
 						"items": {
 							"type": "integer"
-						}
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders). As of June 22, 2026, submitting gender ID `62` (\"Ask me\") causes a `500 Internal Server Error`."
 					},
 					"pronouns": {
 						"type": "array",
@@ -10819,8 +10833,7 @@
 				"properties": {
 					"mediaId": {
 						"type": "integer",
-						"format": "int64",
-						"nullable": true
+						"format": "int64"
 					},
 					"thumbnailUrl": {
 						"type": "string"
@@ -10832,8 +10845,7 @@
 						"type": "string"
 					},
 					"isNsfw": {
-						"type": "boolean",
-						"nullable": true
+						"type": "boolean"
 					}
 				},
 				"x-render-on-tag": "users/profiles",
@@ -11033,9 +11045,12 @@
 								"type": "boolean"
 							},
 							"rightNowShareLocation": {
-								"type": "string",
-								"nullable": true,
-								"description": "`\"NONE\"` or `null`"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									}
+								],
+								"nullable": true
 							},
 							"rightNowMedias": {
 								"type": "array",
@@ -11106,8 +11121,24 @@
 			},
 			"BannedTermsResponse": {
 				"type": "object",
-				"description": "Returned by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full) when moderated free-text fields contained banned terms. Each present key is a field that was rejected. Empty or absent body means the update was fully accepted.",
+				"description": "Body of the `400` returned by [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full) when a moderated free-text field contained banned terms. Each present field key is a field that was rejected. The whole update is rejected — no field is persisted. A fully-accepted update instead answers `200` with an empty body.",
 				"properties": {
+					"type": {
+						"type": "string",
+						"description": "Error type URN. `urn:gr:err:hit_banned_terms` for this response.",
+						"example": "urn:gr:err:hit_banned_terms"
+					},
+					"title": {
+						"type": "string",
+						"example": "Hit banned terms"
+					},
+					"status": {
+						"type": "integer",
+						"example": 400
+					},
+					"traceId": {
+						"type": "string"
+					},
 					"display_name": {
 						"allOf": [
 							{
@@ -11125,6 +11156,24 @@
 						],
 						"nullable": true,
 						"description": "Present when `aboutMe` was rejected."
+					},
+					"gender_display": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when the custom gender display text was rejected."
+					},
+					"pronouns_display": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BannedTerms"
+							}
+						],
+						"nullable": true,
+						"description": "Present when the custom pronoun display text was rejected."
 					}
 				},
 				"x-render-on-tag": "users/profiles"
@@ -14893,7 +14942,7 @@
 			},
 			"SexualHealth": {
 				"type": "object",
-				"description": "Sexual health (also \"Health Practices\"). Not to be confused with [HIV status](/grindr-api/users/profiles#hiv-status).",
+				"description": "Sexual health (also \"Health Practices\"). Not to be confused with [HIV status](/grindr-api/users/profiles#hiv-status). The app also defines Sober (`6`) and Drug free (`7`) via `UpdatedHealthStatus`, gated behind the `updated-sexual-health` feature flag; as of the latest app/API version neither is accepted by the `sexualHealth` filter nor rendered, so they are omitted here and may be added in the future.",
 				"x-enum-labels": {
 					"1": "Condoms",
 					"2": "I'm on doxyPEP",
