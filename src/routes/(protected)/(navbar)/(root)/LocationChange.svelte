@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { MapPinIcon } from "phosphor-svelte";
-	import { onMount } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error";
 	import {
-		getPreferences,
+		getGeohashSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
@@ -12,10 +11,8 @@
 	import { decodeGeohash } from "$lib/model/geohash";
 
 	let {
-		onUpdate,
 		class: className,
 	}: {
-		onUpdate?: () => void;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
@@ -26,7 +23,6 @@
 		try {
 			await setPreferences({ geohash });
 			geoMapPickerOpen = false;
-			onUpdate?.();
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
@@ -36,25 +32,16 @@
 		}
 	}
 
-	onMount(() => {
-		getPreferences()
-			.then(({ geohash }) => {
-				if (geohash) {
-					pinPos = {
-						...decodeGeohash(geohash),
-						zoom: 17,
-					};
+	function openPicker() {
+		const geohash = getGeohashSnapshot();
+		pinPos = geohash
+			? {
+					...decodeGeohash(geohash),
+					zoom: 17,
 				}
-			})
-			.catch((error) => {
-				console.error(error);
-				showErrorToast({
-					label: "Failed to load location",
-					error,
-				});
-				pinPos = undefined;
-			});
-	});
+			: undefined;
+		geoMapPickerOpen = true;
+	}
 
 	let locationChooser: LocationChooser;
 
@@ -66,10 +53,10 @@
 <Button
 	variant="secondary"
 	class={[
-		"transition-none relative *:absolute *:top-1/2 *:left-1/2 *:-translate-1/2 *:flex *:items-center *:justify-center *:gap-1.5 overflow-clip w-11",
+		"relative w-11 overflow-clip transition-none *:absolute *:top-1/2 *:left-1/2 *:flex *:-translate-1/2 *:items-center *:justify-center *:gap-1.5",
 		className,
 	]}
-	onclick={() => (geoMapPickerOpen = true)}
+	onclick={openPicker}
 >
 	<MapPinIcon weight="fill" />
 </Button>

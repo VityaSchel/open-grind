@@ -17,12 +17,6 @@
 	import * as Empty from "$lib/components/ui/empty";
 	import { encodeGeohash } from "$lib/model/geohash";
 
-	let {
-		onUpdate,
-	}: {
-		onUpdate?: () => void;
-	} = $props();
-
 	let geoMapPickerOpen = $state(false);
 
 	const geoApiSupported = $derived(["android", "ios"].includes(platform()));
@@ -66,7 +60,6 @@
 		try {
 			await setPreferences({ geohash });
 			geoMapPickerOpen = false;
-			onUpdate?.();
 		} catch (error) {
 			console.error(error);
 			showErrorToast({

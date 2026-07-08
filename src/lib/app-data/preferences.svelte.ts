@@ -71,6 +71,10 @@ export function getUnitsSnapshot(): UnitSystem {
 	return preferencesSnapshot.units;
 }
 
+export function getGeohashSnapshot(): string | null {
+	return preferencesSnapshot.geohash;
+}
+
 export async function hydratePreferences(): Promise<void> {
 	await getPreferences();
 }

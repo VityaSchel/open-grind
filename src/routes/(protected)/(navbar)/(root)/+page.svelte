@@ -1,12 +1,16 @@
 <script lang="ts">
-	import { getPreferences } from "$lib/app-data/preferences.svelte";
+	import {
+		getGeohashSnapshot,
+		hydratePreferences,
+	} from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
 
-	let preferences = $state(getPreferences());
+	const preferencesHydrated = hydratePreferences();
+	const geohash = $derived(getGeohashSnapshot());
 
 	let gridContainer: HTMLElement | null = $state(null);
 </script>
@@ -14,16 +18,16 @@
 <svelte:head>
 	<title>Open Grind</title>
 </svelte:head>
-{#await preferences then { geohash }}
+{#await preferencesHydrated then}
 	{#if geohash === null}
 		<main class="m-auto flex max-w-full flex-1">
-			<LocationChooser onUpdate={() => (preferences = getPreferences())} />
+			<LocationChooser />
 		</main>
 	{:else}
 		<main
 			class="flex min-h-[calc(var(--screen-scroll)+3.5rem)] flex-col gap-4 p-4"
 		>
-			<TopBar onUpdatePreferences={() => (preferences = getPreferences())} />
+			<TopBar />
 			<div
 				class="@container/photo-grid flex flex-col"
 				bind:this={gridContainer}

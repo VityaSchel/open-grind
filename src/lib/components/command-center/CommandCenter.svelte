@@ -1,9 +1,15 @@
 <script lang="ts">
-	import { FunnelIcon, MagnifyingGlassIcon, UserIcon } from "phosphor-svelte";
+	import {
+		FunnelIcon,
+		MagnifyingGlassIcon,
+		MapPinIcon,
+		UserIcon,
+	} from "phosphor-svelte";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 
 	import OpenProfileByIdCommand from "$lib/components/command-center/open-profile-by-id/OpenProfileByIdCommand.svelte";
+	import SetLocationByGeohashCommand from "$lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte";
 	import * as Command from "$lib/components/ui/command";
 	import {
 		commandCenterClose,
@@ -66,6 +72,11 @@
 							<MagnifyingGlassIcon />
 						{/snippet}
 					</CommandSuggestion>
+					<CommandSuggestion prefix="@" command="set location by geohash">
+						{#snippet icon()}
+							<MapPinIcon />
+						{/snippet}
+					</CommandSuggestion>
 				</Command.Group>
 			{/if}
 			{#if commandCenterState.query.startsWith("#")}
@@ -76,6 +87,9 @@
 			{/if}
 			{#if commandCenterState.query.startsWith("/")}
 				<QuickGoToCommandGroup />
+			{/if}
+			{#if commandCenterState.query.startsWith("@")}
+				<SetLocationByGeohashCommand />
 			{/if}
 		</Command.List>
 	</Command.Root>

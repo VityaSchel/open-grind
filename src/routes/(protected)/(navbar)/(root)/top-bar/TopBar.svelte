@@ -5,12 +5,6 @@
 	import LocationChange from "../LocationChange.svelte";
 	import QuickFilters from "./QuickFilters.svelte";
 
-	let {
-		onUpdatePreferences,
-	}: {
-		onUpdatePreferences: () => void;
-	} = $props();
-
 	let openFilters = $state({
 		all: false,
 		age: false,
@@ -26,7 +20,7 @@
 	direction="topToBottom"
 >
 	<div class="scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0">
-		<LocationChange onUpdate={onUpdatePreferences} />
+		<LocationChange />
 		<QuickFilters bind:openFilters />
 		<CommandCenterTrigger />
 	</div>
