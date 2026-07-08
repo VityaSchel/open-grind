@@ -37,6 +37,7 @@ class GridState {
 			return;
 		this.#geohash = geohash;
 		this.#reset();
+		this.scrollY = 0;
 		void this.#fetchProfiles(geohash);
 	}
 

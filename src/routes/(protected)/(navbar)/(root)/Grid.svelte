@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { afterNavigate, beforeNavigate } from "$app/navigation";
 	import { uniqBy } from "lodash-es";
-	import { onMount } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
@@ -23,12 +23,15 @@
 		gridState.refresh();
 	}
 
-	onMount(() => {
-		const saveScroll = () => {
-			gridState.scrollY = window.scrollY;
-		};
-		window.addEventListener("scroll", saveScroll, { passive: true });
-		return () => window.removeEventListener("scroll", saveScroll);
+	beforeNavigate(() => {
+		gridState.scrollY = window.scrollY;
+	});
+
+	afterNavigate((navigation) => {
+		if (navigation.type === "popstate") return;
+		if (!gridState.loading && gridState.error === null) {
+			window.scrollTo({ top: gridState.scrollY, behavior: "instant" });
+		}
 	});
 
 	let scrolled = $state(false);
@@ -79,10 +82,10 @@
 <div class="photo-grid relative">
 	{#if gridState.loading}
 		{#each Array.from({ length: 20 })}
-			<div class="aspect-square bg-stone-700 animate-pulse"></div>
+			<div class="aspect-square animate-pulse bg-stone-700"></div>
 		{/each}
 	{:else if gridState.error}
-		<div class="p-4 flex col-span-full">
+		<div class="col-span-full flex p-4">
 			<ApiErrorDisplay
 				error={gridState.error}
 				onRetry={() => gridState.refresh()}
@@ -106,7 +109,7 @@
 				/>
 			{:else}
 				<div
-					class="aspect-square bg-stone-700 animate-pulse"
+					class="aspect-square animate-pulse bg-stone-700"
 					use:observePartial={{ batchIndex: item.batchIndex }}
 				></div>
 			{/if}
@@ -115,7 +118,7 @@
 		{/each}
 		{#if gridState.loadingMore}
 			{#each Array.from({ length: 20 })}
-				<div class="aspect-square bg-stone-700 animate-pulse"></div>
+				<div class="aspect-square animate-pulse bg-stone-700"></div>
 			{/each}
 		{/if}
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
