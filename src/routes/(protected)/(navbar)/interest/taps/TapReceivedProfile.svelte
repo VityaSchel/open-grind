@@ -14,8 +14,8 @@
 </script>
 
 <ProfileItem
-	avatarMediaHash={tap.profileImageMediaHash}
-	title={tap.displayName}
+	avatar={{ mediaHash: tap.profileImageMediaHash }}
+	title={{ value: tap.displayName }}
 	onlineUntil={tap.onlineUntil}
 	link="/profile/{tap.profileId}"
 >

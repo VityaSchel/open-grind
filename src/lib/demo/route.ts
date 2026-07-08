@@ -3,8 +3,11 @@ import {
 	demoAlbumContent,
 	demoConversationMessages,
 	demoConversations,
+	demoDeleteConversation,
 	demoDrawerMedia,
 	demoSentMessage,
+	demoSetConversationMuted,
+	demoSetConversationPinned,
 	demoSingleMessage,
 } from "./mock/conversations";
 import {
@@ -120,6 +123,38 @@ export function demoRoute(
 	}
 	if (method === "POST" && rawPath === "/v4/chat/message/send") {
 		return ok(demoSentMessage(body));
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v4" &&
+		segments[1] === "chat" &&
+		segments[2] === "conversation" &&
+		segments.length === 5 &&
+		(segments[4] === "pin" || segments[4] === "unpin")
+	) {
+		demoSetConversationPinned(segments[3], segments[4] === "pin");
+		return ok({});
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v1" &&
+		segments[1] === "push" &&
+		segments[2] === "conversation" &&
+		segments.length === 5 &&
+		(segments[4] === "mute" || segments[4] === "unmute")
+	) {
+		demoSetConversationMuted(segments[3], segments[4] === "mute");
+		return ok({});
+	}
+	if (
+		method === "DELETE" &&
+		segments[0] === "v4" &&
+		segments[1] === "chat" &&
+		segments[2] === "conversation" &&
+		segments.length === 4
+	) {
+		demoDeleteConversation(segments[3]);
+		return ok({});
 	}
 	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer/")) {
 		return ok(demoDrawerMedia());

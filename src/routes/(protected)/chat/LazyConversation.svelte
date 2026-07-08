@@ -1,11 +1,18 @@
 <script lang="ts">
 	import type { Conversation as ConversationType } from "$lib/model/conversation";
+	import type { SelectionSet } from "$lib/selection.svelte";
 	import Conversation from "./Conversation.svelte";
 
 	let {
 		conversation,
+		selection = null,
+		onEnterSelection,
+		onRequestDelete,
 	}: {
 		conversation: ConversationType;
+		selection?: SelectionSet<string> | null;
+		onEnterSelection?: () => void;
+		onRequestDelete?: () => void;
 	} = $props();
 
 	let mounted = $state(false);
@@ -30,7 +37,12 @@
 </script>
 
 {#if mounted}
-	<Conversation {conversation} />
+	<Conversation
+		{conversation}
+		{selection}
+		{onEnterSelection}
+		{onRequestDelete}
+	/>
 {:else}
-	<div class="w-full h-24.5 shrink-0 rounded-2xl bg-muted/30" use:observe></div>
+	<div class="h-24.5 w-full shrink-0 rounded-2xl bg-muted/30" use:observe></div>
 {/if}

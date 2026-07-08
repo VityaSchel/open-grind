@@ -33,7 +33,7 @@ export async function markConversationAsRead({
 		{
 			method: "POST",
 		},
-	);
+	).then((res) => res.assertOk());
 }
 
 export async function deleteConversationForMe({
@@ -43,5 +43,35 @@ export async function deleteConversationForMe({
 }) {
 	return await fetchRest(`/v4/chat/conversation/${conversationId}`, {
 		method: "DELETE",
-	});
+	}).then((res) => res.assertOk());
+}
+
+export async function setConversationPinned({
+	conversationId,
+	pinned,
+}: {
+	conversationId: Conversation["data"]["conversationId"];
+	pinned: boolean;
+}) {
+	return await fetchRest(
+		`/v4/chat/conversation/${conversationId}/${pinned ? "pin" : "unpin"}`,
+		{
+			method: "POST",
+		},
+	).then((res) => res.assertOk());
+}
+
+export async function setConversationMuted({
+	conversationId,
+	muted,
+}: {
+	conversationId: Conversation["data"]["conversationId"];
+	muted: boolean;
+}) {
+	return await fetchRest(
+		`/v1/push/conversation/${conversationId}/${muted ? "mute" : "unmute"}`,
+		{
+			method: "POST",
+		},
+	).then((res) => res.assertOk());
 }

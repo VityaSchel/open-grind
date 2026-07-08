@@ -156,6 +156,28 @@ const demoConversationById = new Map(
 	demoConversationSeeds.map((conv) => [conversationIdFor(conv.withId), conv]),
 );
 
+const pinnedOverrides = new Map<string, boolean>();
+const mutedOverrides = new Map<string, boolean>();
+const deletedConversationIds = new Set<string>();
+
+export function demoSetConversationPinned(
+	conversationId: string,
+	pinned: boolean,
+): void {
+	pinnedOverrides.set(conversationId, pinned);
+}
+
+export function demoSetConversationMuted(
+	conversationId: string,
+	muted: boolean,
+): void {
+	mutedOverrides.set(conversationId, muted);
+}
+
+export function demoDeleteConversation(conversationId: string): void {
+	deletedConversationIds.add(conversationId);
+}
+
 function lastActivityOf(conv: DemoConversation): number {
 	return NOW - conv.lastActivityAgo * MINUTE;
 }
@@ -275,14 +297,18 @@ export function demoConversations(page: number): {
 } {
 	if (page > 1) return { entries: [], nextPage: null };
 	const entries: Conversation[] = demoConversationSeeds
+		.filter(
+			(conv) => !deletedConversationIds.has(conversationIdFor(conv.withId)),
+		)
 		.map((conv): Conversation => {
+			const conversationId = conversationIdFor(conv.withId);
 			const seed = profileSeed(conv.withId);
 			const photos = photosOf(conv.withId);
 			const latest = threadMessages(conv).at(0);
 			return {
 				type: "full_conversation_v1",
 				data: {
-					conversationId: conversationIdFor(conv.withId),
+					conversationId,
 					name: seed.name ?? "Grindr user",
 					participants: [
 						{
@@ -299,8 +325,8 @@ export function demoConversations(page: number): {
 					lastActivityTimestamp: lastActivityOf(conv),
 					unreadCount: conv.unread,
 					preview: previewFromMessage(latest),
-					muted: conv.muted,
-					pinned: conv.pinned,
+					muted: mutedOverrides.get(conversationId) ?? conv.muted,
+					pinned: pinnedOverrides.get(conversationId) ?? conv.pinned,
 					favorite: conv.favorite,
 					rightNow: "NOT_ACTIVE",
 					onlineUntil: onlineUntilOf(seed),

@@ -138,6 +138,7 @@ body {
 	user-select: none;
 	-webkit-user-select: none;
 	--nav-height: 4rem;
+	--selection-bar-height: 4.75rem;
 	--content-pb: calc(var(--nav-height) + var(--safe-area-bottom));
 	--screen-safe: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
 	--screen-scroll: calc(100dvh - var(--safe-area-top) - var(--content-pb));
@@ -152,6 +153,10 @@ a {
 
 [class^="scroll-lock-"] {
 	overflow: hidden;
+}
+
+:root[data-context-menu-open] body {
+	pointer-events: none !important;
 }
 
 *[data-tauri-drag-region] {

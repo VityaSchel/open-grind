@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
+
 	import { cn } from "$lib/utils.js";
 
 	let {
@@ -12,6 +13,9 @@
 <ContextMenuPrimitive.Trigger
 	bind:ref
 	data-slot="context-menu-trigger"
-	class={cn("cn-context-menu-trigger select-none", className)}
+	class={cn(
+		"cn-context-menu-trigger select-none in-data-context-menu-open:*:pointer-events-none",
+		className
+	)}
 	{...restProps}
 />

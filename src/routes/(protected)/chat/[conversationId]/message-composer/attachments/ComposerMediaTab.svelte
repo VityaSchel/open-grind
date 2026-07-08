@@ -1,21 +1,21 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import CheckIcon from "phosphor-svelte/lib/CheckIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 	import { toast } from "svelte-sonner";
 	import { expoOut, sineIn } from "svelte/easing";
-	import { SvelteSet } from "svelte/reactivity";
 	import { fly } from "svelte/transition";
 
 	import { addMediaToDrawer } from "$lib/api/chat-media";
 	import { type DrawerMedia, getDrawerMedia } from "$lib/api/media-drawer";
 	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import SelectionCheck from "$lib/components/SelectionCheck.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { pickMultipleMedia } from "$lib/media-picker";
+	import { SelectionSet } from "$lib/selection.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	let {
@@ -26,8 +26,7 @@
 
 	const composer = getMessageComposerContext();
 
-	const maxSelected = 10;
-	const selected = new SvelteSet<number>();
+	const selected = new SelectionSet<number>(10);
 
 	let media = $state<DrawerMedia[] | null>(null);
 	let error = $state<unknown>(null);
@@ -45,14 +44,6 @@
 	}
 
 	void load();
-
-	function toggle(item: DrawerMedia) {
-		if (selected.has(item.id)) {
-			selected.delete(item.id);
-		} else if (selected.size < maxSelected) {
-			selected.add(item.id);
-		}
-	}
 
 	async function addPhoto() {
 		let picked;
@@ -108,7 +99,7 @@
 
 <div class="relative flex min-h-0 flex-1 flex-col overflow-clip">
 	<div
-		class="@container/photo-grid rounded-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+		class="@container/photo-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-grid"
 	>
 		{#if error !== null}
 			<div class="flex flex-1">
@@ -156,12 +147,12 @@
 						class={[
 							"relative aspect-square",
 							{
-								"cursor-pointer": selected.size < maxSelected || isSelected,
+								"cursor-pointer": selected.canSelectMore || isSelected,
 							},
 						]}
 						aria-label={isSelected ? "Deselect media" : "Select media"}
 						aria-pressed={isSelected}
-						onclick={() => toggle(item)}
+						onclick={() => selected.toggle(item.id)}
 					>
 						<img
 							src={item.url}
@@ -173,11 +164,7 @@
 							<div
 								class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-primary/50 outline-2 -outline-offset-2 outline-primary"
 							>
-								<div
-									class="flex size-8 items-center justify-center rounded-full bg-primary"
-								>
-									<CheckIcon weight="bold" class="size-5 text-white" />
-								</div>
+								<SelectionCheck />
 							</div>
 						{:else if item.used}
 							<div

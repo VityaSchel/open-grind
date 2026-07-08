@@ -11,6 +11,8 @@ import {
 	deleteConversationForMe,
 	getConversations,
 	markConversationAsRead,
+	setConversationMuted,
+	setConversationPinned,
 } from "$lib/api/conversation";
 
 const participant = {
@@ -44,8 +46,14 @@ function conversation(conversationId = "conversation-1") {
 	};
 }
 
-function response(data?: unknown) {
+function response(data?: unknown, status = 200) {
 	return {
+		status,
+		assertOk() {
+			if (status < 200 || status >= 300) {
+				throw new Error(`mock assertOk rejected status ${status}`);
+			}
+		},
 		jsonParsed: vi.fn((schema: { parse(value: unknown): unknown }) =>
 			schema.parse(data),
 		),
@@ -69,12 +77,11 @@ describe("conversation API wrappers", () => {
 	});
 
 	it("marks conversations as read using the default message id", async () => {
-		const res = response();
-		fetchRestMock.mockResolvedValue(res);
+		fetchRestMock.mockResolvedValue(response());
 
 		await expect(
 			markConversationAsRead({ conversationId: "conversation-1" }),
-		).resolves.toBe(res);
+		).resolves.toBeUndefined();
 
 		expect(fetchRestMock).toHaveBeenCalledWith(
 			"/v4/chat/conversation/conversation-1/read/0:00000000-0000-0000-0000-000000000000",
@@ -82,17 +89,80 @@ describe("conversation API wrappers", () => {
 		);
 	});
 
+	it("rejects marking as read on non-2xx responses", async () => {
+		fetchRestMock.mockResolvedValue(response(undefined, 500));
+
+		await expect(
+			markConversationAsRead({ conversationId: "conversation-1" }),
+		).rejects.toThrow("mock assertOk rejected status 500");
+	});
+
 	it("deletes conversations for the current user", async () => {
-		const res = response();
-		fetchRestMock.mockResolvedValue(res);
+		fetchRestMock.mockResolvedValue(response());
 
 		await expect(
 			deleteConversationForMe({ conversationId: "conversation-1" }),
-		).resolves.toBe(res);
+		).resolves.toBeUndefined();
 
 		expect(fetchRestMock).toHaveBeenCalledWith(
 			"/v4/chat/conversation/conversation-1",
 			{ method: "DELETE" },
 		);
+	});
+
+	it("rejects deletion on non-2xx responses", async () => {
+		fetchRestMock.mockResolvedValue(response(undefined, 500));
+
+		await expect(
+			deleteConversationForMe({ conversationId: "conversation-1" }),
+		).rejects.toThrow("mock assertOk rejected status 500");
+	});
+
+	it.each([
+		{ pinned: true, action: "pin" },
+		{ pinned: false, action: "unpin" },
+	])("$action requests for conversations", async ({ pinned, action }) => {
+		fetchRestMock.mockResolvedValue(response());
+
+		await expect(
+			setConversationPinned({ conversationId: "conversation-1", pinned }),
+		).resolves.toBeUndefined();
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			`/v4/chat/conversation/conversation-1/${action}`,
+			{ method: "POST" },
+		);
+	});
+
+	it("rejects pinning on non-2xx responses", async () => {
+		fetchRestMock.mockResolvedValue(response(undefined, 403));
+
+		await expect(
+			setConversationPinned({ conversationId: "conversation-1", pinned: true }),
+		).rejects.toThrow("mock assertOk rejected status 403");
+	});
+
+	it.each([
+		{ muted: true, action: "mute" },
+		{ muted: false, action: "unmute" },
+	])("$action requests for conversations", async ({ muted, action }) => {
+		fetchRestMock.mockResolvedValue(response());
+
+		await expect(
+			setConversationMuted({ conversationId: "conversation-1", muted }),
+		).resolves.toBeUndefined();
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			`/v1/push/conversation/conversation-1/${action}`,
+			{ method: "POST" },
+		);
+	});
+
+	it("rejects muting on non-2xx responses", async () => {
+		fetchRestMock.mockResolvedValue(response(undefined, 500));
+
+		await expect(
+			setConversationMuted({ conversationId: "conversation-1", muted: true }),
+		).rejects.toThrow("mock assertOk rejected status 500");
 	});
 });

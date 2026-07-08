@@ -4,50 +4,69 @@
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Item from "$lib/components/ui/item";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
+	import { longPressHandlers } from "$lib/long-press";
 
 	let {
-		avatarMediaHash,
+		avatar,
 		title,
 		onlineUntil = null,
 		active,
-		avatarLink,
+		selected,
 		link,
 		description,
 		actions,
+		onToggleSelected,
+		onLongPress,
 	}: {
-		avatarMediaHash: string | null;
-		title: string | null;
+		avatar: {
+			mediaHash: string | null;
+			overlay?: import("svelte").Snippet;
+			link?: string;
+		};
+		title: {
+			value: string | null;
+			badge?: import("svelte").Snippet;
+		};
 		onlineUntil?: number | null;
 		active?: boolean;
-		avatarLink?: string;
+		selected?: boolean;
 		link: string;
 		description?: import("svelte").Snippet;
 		actions?: import("svelte").Snippet;
+		onToggleSelected?: () => void;
+		onLongPress?: () => void;
 	} = $props();
+
+	const longPress = $derived(
+		onLongPress ? longPressHandlers(onLongPress) : {},
+	);
+	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
 </script>
 
-{#snippet avatar()}
+{#snippet avatarNode()}
 	<Item.Media class="relative translate-y-0! rounded-2xl p-2">
 		<Avatar.Root class="size-20 after:rounded-xl">
 			<UserAvatar
-				mediaHash={avatarMediaHash}
+				mediaHash={avatar.mediaHash}
 				class="size-20 rounded-xl bg-neutral-700 *:rounded-xl"
 			/>
 		</Avatar.Root>
+		{@render avatar.overlay?.()}
 	</Item.Media>
 {/snippet}
-{#snippet content()}
+{#snippet contentNode()}
 	<Item.Content class="min-w-0 flex-1">
 		<Item.Title
 			class={[
 				"flex w-auto min-w-0 items-center gap-1 truncate",
 				{
-					"text-muted-foreground": !title,
+					"text-muted-foreground": !title.value,
 				},
 			]}
 		>
+			{@render title.badge?.()}
 			<OnlineDot {onlineUntil} />
-			<DisplayName name={title} class="truncate" />
+			<DisplayName name={title.value} class="truncate" />
 		</Item.Title>
 		{@render description?.()}
 	</Item.Content>
@@ -55,26 +74,62 @@
 {/snippet}
 <Item.Root
 	variant={active ? "muted" : "outline"}
-	class="@container flex min-w-24 flex-nowrap items-stretch gap-0 p-0"
+	class={[
+		"@container relative flex min-w-24 flex-nowrap items-stretch gap-0 p-0",
+		{
+			"border-primary outline-2 -outline-offset-2 outline-primary outline-solid":
+				selected,
+			"[-webkit-touch-callout:none] **:[-webkit-touch-callout:none]":
+				!!onLongPress,
+		},
+	]}
+	{...longPress}
 >
-	{#if avatarLink}
-		<a href={avatarLink} class="rounded-l-2xl @max-row:hidden">
-			{@render avatar()}
+	{#if avatar.link}
+		<a
+			href={avatar.link}
+			class="rounded-l-2xl @max-row:hidden"
+			tabindex={linkTabindex}
+		>
+			{@render avatarNode()}
 		</a>
 		<a
 			href={link}
 			class="content gap-0.5 rounded-r-2xl p-4 ps-2 @max-row:hidden!"
+			tabindex={linkTabindex}
 		>
-			{@render content()}
+			{@render contentNode()}
 		</a>
-		<a href={link} class="min-w-24 rounded-2xl @row:hidden">
-			{@render avatar()}
+		<a
+			href={link}
+			class="min-w-24 rounded-2xl @row:hidden"
+			tabindex={linkTabindex}
+		>
+			{@render avatarNode()}
 		</a>
 	{:else}
-		<a href={link} class="content gap-2.5 overflow-clip rounded-2xl pe-4">
-			{@render avatar()}
-			{@render content()}
+		<a
+			href={link}
+			class="content gap-2.5 overflow-clip rounded-2xl pe-4"
+			tabindex={linkTabindex}
+		>
+			{@render avatarNode()}
+			{@render contentNode()}
 		</a>
+	{/if}
+	{#if selected}
+		<div
+			class="pointer-events-none absolute -inset-px z-1 rounded-[inherit] bg-primary/20"
+		></div>
+	{/if}
+	{#if onToggleSelected}
+		<button
+			type="button"
+			class="absolute inset-0 z-2 rounded-[inherit] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+			aria-pressed={selected ?? false}
+			aria-label={title.value ?? "Someone"}
+			onclick={onToggleSelected}
+		></button>
 	{/if}
 </Item.Root>
 

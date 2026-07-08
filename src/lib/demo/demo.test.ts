@@ -220,4 +220,37 @@ describe("demo route data matches the real schemas", () => {
 			200,
 		);
 	});
+
+	it("conversation pin/mute/delete mutations persist across inbox fetches", () => {
+		const inbox = () => {
+			const body = route("/v4/inbox?page=1", "POST") as { entries: unknown[] };
+			return z.array(fullConversationSchema).parse(body.entries);
+		};
+		const [first, second, third] = inbox();
+
+		route(
+			`/v4/chat/conversation/${first.data.conversationId}/${first.data.pinned ? "unpin" : "pin"}`,
+			"POST",
+		);
+		route(
+			`/v1/push/conversation/${second.data.conversationId}/${second.data.muted ? "unmute" : "mute"}`,
+			"POST",
+		);
+		route(`/v4/chat/conversation/${third.data.conversationId}`, "DELETE");
+
+		const after = inbox();
+		expect(
+			after.find(
+				(e) => e.data.conversationId === first.data.conversationId,
+			)?.data.pinned,
+		).toBe(!first.data.pinned);
+		expect(
+			after.find(
+				(e) => e.data.conversationId === second.data.conversationId,
+			)?.data.muted,
+		).toBe(!second.data.muted);
+		expect(
+			after.some((e) => e.data.conversationId === third.data.conversationId),
+		).toBe(false);
+	});
 });
