@@ -42,7 +42,10 @@ export default defineConfig({
 			"/guide/": [
 				{
 					text: "User guide",
-					items: [{ text: "Download", link: "/guide/download" }],
+					items: [
+						{ text: "Download", link: "/guide/download" },
+						{ text: "Sign in with Google", link: "/guide/sign-in-with-google" },
+					],
 				},
 			],
 			"/grindr-api/": [
