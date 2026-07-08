@@ -39,12 +39,12 @@ export default defineConfig({
 		},
 
 		sidebar: {
-			"/guide/": [
+			"/guides/": [
 				{
-					text: "User guide",
+					text: "User guides",
 					items: [
-						{ text: "Download", link: "/guide/download" },
-						{ text: "Sign in with Google", link: "/guide/sign-in-with-google" },
+						{ text: "Download", link: "/guides/download" },
+						{ text: "Sign in with Google", link: "/guides/sign-in-with-google" },
 					],
 				},
 			],

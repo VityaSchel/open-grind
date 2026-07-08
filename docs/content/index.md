@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Download
-      link: /guide/download
+      link: /guides/download
     - theme: alt
       text: Source code
       link: https://git.opengrind.org/open-grind/open-grind
