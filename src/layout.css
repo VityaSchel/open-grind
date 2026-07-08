@@ -304,6 +304,12 @@ a {
 	--fly-out: translateY(calc(-100% - var(--offset-top, 24px) - 12px));
 }
 
+@media not (max-width: 600px) {
+	.incoming-message-toast[data-sonner-toast] {
+		width: var(--width);
+	}
+}
+
 .incoming-message-toast[data-sonner-toast][data-mounted="false"] {
 	--y: var(--fly-out) !important;
 }
