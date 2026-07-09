@@ -7,7 +7,7 @@
 		class: className,
 	}: {
 		onlineUntil: number | null | undefined;
-		isVisiting: boolean | null | undefined;
+		isVisiting?: boolean;
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
@@ -39,18 +39,17 @@
 	        title={title}
     >
         {#if isVisiting}
-            <!-- Author: michaelampr. MIT License-->
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
-                viewBox="-1 -1 24 24"
+                viewBox="0 0 256 256"
                 width="100%"
                 height="100%"
-                preserveAspectRatio="xMinYMin"
                 class="scale-125"
             >
+                <!-- Phosphor. MIT License-->
                 <path
-                    d='M12.685 13.285l-3.44 3.06.528 2.423-2.488 2.488-2.507-3.921-3.921-2.507 2.488-2.488L5.9 13l2.927-3.573-6.171-4.114 2.828-2.829L13.2 5.057l3.793-3.793c1.171-1.172 2.985-1.258 4.05-.193s.978 2.878-.193 4.05l-3.793 3.793 2.571 7.713-2.828 2.829-4.114-6.171z'
+                    d="M215.52,197.26a8,8,0,0,1-1.86,8.39l-24,24A8,8,0,0,1,184,232a7.09,7.09,0,0,1-.79,0,8,8,0,0,1-5.87-3.52l-44.07-66.12L112,183.59V208a8,8,0,0,1-2.34,5.65s-14,14.06-15.88,15.88A7.91,7.91,0,0,1,91,231.41a8,8,0,0,1-10.41-4.35l-.06-.15-14.7-36.76L29,175.42a8,8,0,0,1-2.69-13.08l16-16A8,8,0,0,1,48,144H72.4l21.27-21.27L27.56,78.65a8,8,0,0,1-1.22-12.32l24-24a8,8,0,0,1,8.39-1.86l85.94,31.25L176.2,40.19a28,28,0,0,1,39.6,39.6l-31.53,31.53Z"
                 />
             </svg>
         {/if}
