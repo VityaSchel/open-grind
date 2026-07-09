@@ -37,9 +37,6 @@ serde_bytes = "0.11"
 base64 = "0.22"
 keyring-core = "0.7.2"
 tauri-plugin-devtools = "2.0.0"
-# Native Google sign-in: HTTP to android.clients.google.com and a random androidId.
-wreq = { version = "5.3", features = ["json"] }
-rand = "0.10.1"
 tauri-plugin-dialog = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]

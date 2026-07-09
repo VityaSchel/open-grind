@@ -3335,7 +3335,6 @@ dependencies = [
  "jni",
  "keyring-core",
  "linux-keyutils-keyring-store",
- "rand 0.10.1",
  "rmp-serde",
  "serde",
  "serde_bytes",
@@ -3352,7 +3351,6 @@ dependencies = [
  "tauri-plugin-os",
  "tokio",
  "windows-native-keyring-store",
- "wreq",
 ]
 
 [[package]]
