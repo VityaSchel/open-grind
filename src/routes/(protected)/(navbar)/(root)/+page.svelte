@@ -3,7 +3,7 @@
 		getGeohashSnapshot,
 		hydratePreferences,
 	} from "$lib/app-data/preferences.svelte";
-	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
+	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";

@@ -9,7 +9,7 @@
 	import type { ComponentProps } from "svelte";
 
 	import { Button } from "$lib/components/ui/button/index.js";
-	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
+	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 	import SheetOverlay from "./sheet-overlay.svelte";
 	import SheetPortal from "./sheet-portal.svelte";
 

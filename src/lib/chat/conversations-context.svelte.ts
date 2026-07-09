@@ -1,6 +1,6 @@
 import { createContext } from "svelte";
 
-import { ConversationsState } from "./conversations.svelte";
+import { ConversationsState } from "./conversations-state.svelte";
 
 export const [getConversations, setConversations] =
 	createContext<ConversationsState>();

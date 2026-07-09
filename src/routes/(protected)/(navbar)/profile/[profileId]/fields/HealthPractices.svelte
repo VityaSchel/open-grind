@@ -4,7 +4,7 @@
 	import {
 		type HealthPracticeId,
 		healthPractices as healthPracticesOptions,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

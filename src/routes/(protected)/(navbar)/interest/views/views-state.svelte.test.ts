@@ -23,7 +23,7 @@ const {
 
 vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/views", () => ({ getViews: getViewsMock }));
-vi.mock("$lib/reconcile", () => ({
+vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
 			reconcileHandlers.push(handler);

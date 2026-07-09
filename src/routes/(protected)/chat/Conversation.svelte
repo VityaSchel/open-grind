@@ -9,15 +9,15 @@
 	} from "phosphor-svelte";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import ProfileItem from "$lib/components/ProfileItem.svelte";
-	import RelativeTimeDynamic from "$lib/components/RelativeTimeDynamic.svelte";
-	import SelectionCheck from "$lib/components/SelectionCheck.svelte";
+	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
+	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
+	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Item from "$lib/components/ui/item";
-	import { previewLabel } from "$lib/model/message";
-	import type { Conversation } from "$lib/model/conversation";
-	import type { SelectionSet } from "$lib/selection.svelte";
+	import { previewLabel } from "$lib/model/messaging/messages";
+	import type { Conversation } from "$lib/model/messaging/conversations";
+	import type { SelectionSet } from "$lib/util/selection.svelte";
 
 	let {
 		conversation,

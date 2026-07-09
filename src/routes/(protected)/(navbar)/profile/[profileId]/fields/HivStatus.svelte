@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { hivStatuses, type HivStatusId } from "$lib/model/profile";
+	import { hivStatuses, type HivStatusId } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

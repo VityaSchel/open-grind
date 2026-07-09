@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error";
-	import type { Message } from "$lib/model/message";
+	import type { Message } from "$lib/model/messaging/messages";
 	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
 	import { setMessageComposerContext } from "./message-composer-context.svelte";

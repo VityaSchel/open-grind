@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { HouseIcon } from "phosphor-svelte";
 
-	import { type MeetAtId, meetAt as meetAtOptions } from "$lib/model/profile";
+	import { type MeetAtId, meetAt as meetAtOptions } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

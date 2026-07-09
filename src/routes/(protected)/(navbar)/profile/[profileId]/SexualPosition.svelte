@@ -12,7 +12,7 @@
 		SexualPosition,
 		type SexualPositionId,
 		sexualPositions,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 
 	let { sexualPosition }: { sexualPosition: SexualPositionId } = $props();
 </script>

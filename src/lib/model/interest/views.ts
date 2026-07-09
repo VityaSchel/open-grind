@@ -4,7 +4,7 @@ import {
 	profileMaskedMinSchema,
 	profileMaskedSchema,
 	profileMinSchema,
-} from "$lib/model/profile";
+} from "$lib/model/users/profiles";
 
 export const viewPreviewSchema = z.object({
 	profileImageMediaHash: profileMaskedMinSchema.shape.profileImageMediaHash,

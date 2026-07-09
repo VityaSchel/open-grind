@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TextMessage } from "$lib/model/message";
+	import type { TextMessage } from "$lib/model/messaging/messages";
 	import { getMessageContext, getMessageMetaContext } from "./context";
 	import MessageTail from "./MessageTail.svelte";
 

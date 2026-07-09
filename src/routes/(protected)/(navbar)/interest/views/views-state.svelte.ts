@@ -1,6 +1,6 @@
 import { showErrorToast } from "$lib/api/error";
 import { getViews } from "$lib/api/interest/views";
-import { reconciler } from "$lib/reconcile";
+import { reconciler } from "$lib/util/reconcile";
 import { viewedMeV1NewViewReceivedEventSchema, ws } from "$lib/ws.svelte";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 

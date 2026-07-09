@@ -4,7 +4,7 @@ import z from "zod";
 
 import { tapTypeSchema } from "$lib/model/interest/taps";
 import { mediaHashPublicSchema } from "$lib/model/media";
-import { apiResponseMessageSchema } from "$lib/model/message";
+import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const notificationEventSchema = z.object({

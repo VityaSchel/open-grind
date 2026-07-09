@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 
-	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
+	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
 

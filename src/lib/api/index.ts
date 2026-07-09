@@ -5,9 +5,9 @@ import { toast } from "svelte-sonner";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
-import { requestBlockedAlertState } from "$lib/api/request-blocked/request-blocked-state.svelte";
-import { fromBase64, toBase64 } from "$lib/base64";
+import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled, demoRoute } from "$lib/demo";
+import { fromBase64, toBase64 } from "$lib/util/base64";
 
 export const methods = {
 	login: {

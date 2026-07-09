@@ -14,7 +14,7 @@ import {
 	type SocialNetworks,
 	Tribe,
 	type TribeId,
-} from "$lib/model/profile";
+} from "$lib/model/users/profiles";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { registerPhoto } from "./avatars";
 import { chance, hashString, mulberry32, pick, type Rng, subset } from "./random";

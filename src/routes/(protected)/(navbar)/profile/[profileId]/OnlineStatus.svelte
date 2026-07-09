@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { formatDistanceStrict } from "date-fns";
 
-	import { getNow, subscribeNow } from "$lib/now.svelte";
+	import { getNow, subscribeNow } from "$lib/util/now.svelte";
 
 	let {
 		onlineUntil,

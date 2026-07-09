@@ -2,7 +2,7 @@
 	import emblaCarouselSvelte from "embla-carousel-svelte";
 	import type { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 
-	import { cn, type WithElementRef } from "$lib/utils.js";
+	import { cn, type WithElementRef } from "$lib/util/utils.js";
 
 	let {
 		ref = $bindable(null),

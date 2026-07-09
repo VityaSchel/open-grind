@@ -1,9 +1,9 @@
 import {
 	type ApiResponseMessage,
 	previewFromMessage,
-} from "$lib/model/message";
-import type { AlbumExpirationType } from "$lib/model/album";
-import type { Conversation } from "$lib/model/conversation";
+} from "$lib/model/messaging/messages";
+import type { AlbumExpirationType } from "$lib/model/messaging/albums";
+import type { Conversation } from "$lib/model/messaging/conversations";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { hashFromSeed } from "./avatars";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";

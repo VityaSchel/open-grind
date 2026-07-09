@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 
 const ROOT = "content/grindr-api";
+const GENERATED = "content/generated/grindr-api";
 
 function walk(dir: string): string[] {
 	const out: string[] = [];
@@ -14,7 +15,9 @@ function walk(dir: string): string[] {
 }
 
 function pageOf(filePath: string): string {
-	return filePath.replace(/^content\//, "/").replace(/\.md$/, "");
+	return filePath
+		.replace(/^content\/(?:generated\/)?/, "/")
+		.replace(/\.md$/, "");
 }
 
 function slugify(text: string): string {
@@ -36,7 +39,20 @@ function collectAnchors(filePath: string): Set<string> {
 }
 
 const pages = new Map<string, Set<string>>();
-for (const f of walk(ROOT)) pages.set(pageOf(f), collectAnchors(f));
+function register(route: string, anchors: Set<string>): void {
+	const existing = pages.get(route);
+	if (existing) for (const a of anchors) existing.add(a);
+	else pages.set(route, new Set(anchors));
+}
+for (const f of [...walk(ROOT), ...walk(GENERATED)]) {
+	const route = pageOf(f);
+	const anchors = collectAnchors(f);
+	register(route, anchors);
+	if (route.endsWith("/index")) {
+		register(route.slice(0, -"/index".length), anchors);
+		register(route.slice(0, -"index".length), anchors);
+	}
+}
 
 interface Broken {
 	file: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { healthPractices } from "$lib/model/profile";
+	import { healthPractices } from "$lib/model/users/profiles";
 	import FilterSimpleArray from "./FilterSimpleArray.svelte";
 
 	let {

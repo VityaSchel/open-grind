@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CommandCenterTrigger from "$lib/components/command-center/CommandCenterTrigger.svelte";
-	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
+	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import GridFilters from "../GridFilters.svelte";
 	import LocationChange from "../LocationChange.svelte";
 	import QuickFilters from "./QuickFilters.svelte";

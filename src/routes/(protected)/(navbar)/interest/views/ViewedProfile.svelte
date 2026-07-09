@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ProfileMiniCard from "$lib/components/ProfileMiniCard.svelte";
+	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
 	import type { ViewerProfile } from "$lib/model/interest/views";
 
 	let {

@@ -2,29 +2,29 @@ import { describe, expect, it } from "vitest";
 import z from "zod";
 
 import { demoRoute } from "$lib/demo";
-import {
-	albumContentSchema,
-	albumDetailsSchema,
-	albumMinSchema,
-} from "$lib/model/album";
-import { fullConversationSchema } from "$lib/model/conversation";
-import { cascadeV3ResponseSchema } from "$lib/model/grid/cascade/response/v3";
-import { searchProfileSchema } from "$lib/model/grid/search";
+import { cascadeV3ResponseSchema } from "$lib/model/browse/grid/cascade/response/v3";
+import { searchProfileSchema } from "$lib/model/browse/grid/search";
 import { tapProfileSchema } from "$lib/model/interest/tap-profile";
 import {
 	viewerProfileSchema,
 	viewPreviewSchema,
 } from "$lib/model/interest/views";
 import {
+	albumContentSchema,
+	albumDetailsSchema,
+	albumMinSchema,
+} from "$lib/model/messaging/albums";
+import { fullConversationSchema } from "$lib/model/messaging/conversations";
+import {
 	apiResponseMessageSchema,
 	expiringImageMessageSchema,
 	previewLabel,
-} from "$lib/model/message";
+} from "$lib/model/messaging/messages";
 import {
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
-} from "$lib/model/profile";
+} from "$lib/model/users/profiles";
 
 const shortProfileSchema = z.object({
 	...profileShortSchema.shape,

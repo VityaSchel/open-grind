@@ -11,8 +11,8 @@ import {
 	profileSchema,
 	profileShortSchema,
 	pronounSchema,
-} from "$lib/model/profile";
-import { profileTagsResponseSchema } from "$lib/model/tags";
+} from "$lib/model/users/profiles";
+import { profileTagsResponseSchema } from "$lib/model/users/tags";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [

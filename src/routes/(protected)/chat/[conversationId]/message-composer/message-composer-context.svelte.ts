@@ -1,6 +1,6 @@
 import { createContext } from "svelte";
 
-import type { Message } from "$lib/model/message";
+import type { Message } from "$lib/model/messaging/messages";
 
 export const [getMessageComposerContext, setMessageComposerContext] =
 	createContext<

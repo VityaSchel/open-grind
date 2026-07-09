@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Menubar as MenubarPrimitive } from "bits-ui";
-	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
-	import type { Snippet } from "svelte";
-	import MinusIcon from 'phosphor-svelte/lib/Minus';
 	import CheckIcon from 'phosphor-svelte/lib/Check';
+	import MinusIcon from 'phosphor-svelte/lib/Minus';
+	import type { Snippet } from "svelte";
+
+	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 
 	let {
 		ref = $bindable(null),

@@ -6,7 +6,7 @@
 	} from "phosphor-svelte";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
-	import { type SocialNetworks } from "$lib/model/profile";
+	import { type SocialNetworks } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 
 	let {

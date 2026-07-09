@@ -18,7 +18,7 @@ import {
 	type ProfileUpdate,
 	updateOwnProfile,
 } from "$lib/api/users/profiles";
-import type { Profile } from "$lib/model/profile";
+import type { Profile } from "$lib/model/users/profiles";
 
 const PROFILE_ID = 123;
 

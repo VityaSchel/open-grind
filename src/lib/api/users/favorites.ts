@@ -1,5 +1,5 @@
 import { fetchRest } from "$lib/api";
-import type { Profile } from "$lib/model/profile";
+import type { Profile } from "$lib/model/users/profiles";
 
 export async function addFavoriteUser({
 	profileId,

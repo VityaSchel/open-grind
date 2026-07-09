@@ -2,7 +2,7 @@
 	import { afterNavigate, beforeNavigate } from "$app/navigation";
 	import { uniqBy } from "lodash-es";
 
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";

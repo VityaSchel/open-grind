@@ -4,7 +4,7 @@
 	import {
 		type LookingForId,
 		lookingFor as lookingForOptions,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

@@ -2,7 +2,7 @@
 	import { page } from "$app/state";
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
-	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
+	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 
 	const base = "/(protected)/(navbar)/settings/(subpage)";
 	const routes: Record<string, { title: string; back: string }> = {

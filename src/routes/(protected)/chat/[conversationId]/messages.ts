@@ -1,5 +1,5 @@
-import { getConversationMessages } from "$lib/api/messages";
-import type { ApiResponseMessage } from "$lib/model/message";
+import { getConversationMessages } from "$lib/api/messaging/messages";
+import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
 type StackedMessage = ApiResponseMessage & {
 	indexInStack: number;

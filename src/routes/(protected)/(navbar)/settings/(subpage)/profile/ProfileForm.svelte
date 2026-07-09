@@ -35,7 +35,7 @@
 		sexualPositions,
 		tribes,
 		vaccines as vaccineLabels,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
 	import Field from "./fields/Field.svelte";

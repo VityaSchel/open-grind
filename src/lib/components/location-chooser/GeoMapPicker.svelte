@@ -11,9 +11,9 @@
 	import { toast } from "svelte-sonner";
 	import type { Map as LeafletMap, LeafletMouseEventHandlerFn } from "leaflet";
 
+	import { getPlaces } from "$lib/api/browse/location";
 	import { showErrorToast } from "$lib/api/error";
-	import { getPlaces } from "$lib/api/places";
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";

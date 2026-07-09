@@ -4,11 +4,11 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { showErrorToast } from "$lib/api/error";
-	import { getSingleMessage } from "$lib/api/messages";
+	import { getSingleMessage } from "$lib/api/messaging/messages";
 	import {
 		type ExpiringImageMessage,
 		expiringImageMessageSchema,
-	} from "$lib/model/message";
+	} from "$lib/model/messaging/messages";
 	import LockedMedia from "../LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 

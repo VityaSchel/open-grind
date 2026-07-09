@@ -4,7 +4,7 @@
 	import {
 		relationshipStatuses,
 		type RelationshipStatusId,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 
 	let {

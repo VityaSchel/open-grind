@@ -2,12 +2,12 @@
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 
-	import UserAvatar from "$lib/components/UserAvatar.svelte";
+	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import {
 		type ApiResponseMessage,
 		previewFromMessage,
 		previewLabel,
-	} from "$lib/model/message";
+	} from "$lib/model/messaging/messages";
 
 	let {
 		conversationId,

@@ -45,7 +45,7 @@ Conversation deleted, e.g. when another profile blocked you. Also fires for unbl
 
 ## `chat.v1.conversation_read`
 
-Display read receipt. Sent to all chat participants including yourself reading from another device, check `profileId` to distinguish. Only sent if user has a paid subscription or [entitlement for read states](/grindr-api/rewarded-ads). `lastReadTimestamp` still returns correct value, usable for polling.
+Display read receipt. Sent to all chat participants including yourself reading from another device, check `profileId` to distinguish. Only sent if user has a paid subscription or [entitlement for read states](/grindr-api/commerce/rewarded-ads). `lastReadTimestamp` still returns correct value, usable for polling.
 
 - *everything from [Notification Event](#notification-event)*
 - `payload` — object

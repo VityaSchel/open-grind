@@ -4,6 +4,8 @@ export const grindrApiReferenceMessaging: DefaultTheme.SidebarItem[] = [
 	{ text: "Conversations", link: "/grindr-api/messaging/conversations" },
 	{ text: "Saved phrases", link: "/grindr-api/messaging/saved-phrases" },
 	{ text: "Messages", link: "/grindr-api/messaging/messages" },
+	{ text: "Drawer, WIP", link: "/grindr-api/messaging/drawer" },
+	{ text: "GIFs, WIP", link: "/grindr-api/messaging/gifs" },
 	{ text: "Albums", link: "/grindr-api/messaging/albums" },
 	{ text: "Misc", link: "/grindr-api/messaging/misc" },
 ];
@@ -30,20 +32,15 @@ export const grindrApiReferenceBrowse: DefaultTheme.SidebarItem[] = [
 	{ text: "Discover, WIP", link: "/grindr-api/browse/discover" },
 ];
 
-export const grindrApiReferenceAnalytics: DefaultTheme.SidebarItem[] = [
-	{ text: "Assignments", link: "/grindr-api/analytics/assignments" },
-	{ text: "Trackers", link: "/grindr-api/analytics/trackers" },
+export const grindrApiReferenceInterest: DefaultTheme.SidebarItem[] = [
+	{ text: "Views", link: "/grindr-api/interest/views" },
+	{ text: "Taps", link: "/grindr-api/interest/taps" },
+	{ text: "Alist, WIP", link: "/grindr-api/interest/alist" },
 ];
 
 export const grindrApiReferenceMedia: DefaultTheme.SidebarItem[] = [
 	{ text: "Public CDN files", link: "/grindr-api/media/public-cdn-files" },
 	{ text: "Signed CDN files", link: "/grindr-api/media/signed-cdn-files" },
-];
-
-export const grindrApiReferenceInterest: DefaultTheme.SidebarItem[] = [
-	{ text: "Views", link: "/grindr-api/interest/views" },
-	{ text: "Taps", link: "/grindr-api/interest/taps" },
-	{ text: "Alist, WIP", link: "/grindr-api/interest/alist" },
 ];
 
 export const grindrApiReferenceSettings: DefaultTheme.SidebarItem[] = [
@@ -61,6 +58,43 @@ export const grindrApiReferenceThirdPartyIntegrations: DefaultTheme.SidebarItem[
 			link: "/grindr-api/third-party-integrations/spotify",
 		},
 	];
+
+export const grindrApiReferenceCommerce: DefaultTheme.SidebarItem[] = [
+	{ text: "StoreApiRest, WIP", link: "/grindr-api/commerce/storeapirest" },
+	{ text: "GrindrStore, WIP", link: "/grindr-api/commerce/grindrstore" },
+	{ text: "Offers, WIP", link: "/grindr-api/commerce/offers" },
+	{ text: "VIP, WIP", link: "/grindr-api/commerce/vip" },
+	{ text: "Boosting, WIP", link: "/grindr-api/commerce/boosting" },
+	{ text: "Top Picks, WIP", link: "/grindr-api/commerce/top-picks" },
+	{ text: "Rewarded ads", link: "/grindr-api/commerce/rewarded-ads" },
+	{ text: "Rewarded chats, WIP", link: "/grindr-api/commerce/rewarded-chats" },
+];
+
+export const grindrApiReferenceSafety: DefaultTheme.SidebarItem[] = [
+	{ text: "Reports, WIP", link: "/grindr-api/safety/reports" },
+	{ text: "Warnings, WIP", link: "/grindr-api/safety/warnings" },
+	{
+		text: "Legal agreements, WIP",
+		link: "/grindr-api/safety/legal-agreements",
+	},
+	{ text: "Access requests, WIP", link: "/grindr-api/safety/access-requests" },
+];
+
+export const grindrApiReferenceSystem: DefaultTheme.SidebarItem[] = [
+	{ text: "Bootstrap, WIP", link: "/grindr-api/system/bootstrap" },
+	{ text: "Logging, WIP", link: "/grindr-api/system/logging" },
+	{ text: "Modal, WIP", link: "/grindr-api/system/modal" },
+	{ text: "Notifications", link: "/grindr-api/system/notifications" },
+	{ text: "Reddot, WIP", link: "/grindr-api/system/reddot" },
+	{ text: "Ratings", link: "/grindr-api/system/ratings" },
+	{ text: "Heatmap, WIP", link: "/grindr-api/system/heatmap" },
+	{ text: "Signal share", link: "/grindr-api/system/signal-share" },
+];
+
+export const grindrApiReferenceAnalytics: DefaultTheme.SidebarItem[] = [
+	{ text: "Assignments", link: "/grindr-api/analytics/assignments" },
+	{ text: "Trackers", link: "/grindr-api/analytics/trackers" },
+];
 
 export const grindrApiReferenceWoodwork: DefaultTheme.SidebarItem[] = [
 	{
@@ -83,7 +117,6 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 	{ text: "Security headers", link: "/grindr-api/security-headers" },
 	{ text: "API Authorization", link: "/grindr-api/api-authorization" },
 	{ text: "Authentication", link: "/grindr-api/authentication" },
-	{ text: "Bootstrap, WIP", link: "/grindr-api/bootstrap" },
 	{
 		text: "Messaging",
 		link: "/grindr-api/messaging/",
@@ -96,18 +129,18 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 		collapsed: true,
 		items: grindrApiReferenceUsers,
 	},
-	{ text: "Reports, WIP", link: "/grindr-api/reports" },
 	{
 		text: "Browse",
 		link: "/grindr-api/browse/",
 		collapsed: true,
 		items: grindrApiReferenceBrowse,
 	},
+	{ text: "Right Now, WIP", link: "/grindr-api/right-now" },
 	{
-		text: "Analytics",
-		link: "/grindr-api/analytics/",
+		text: "Interest",
+		link: "/grindr-api/interest/",
 		collapsed: true,
-		items: grindrApiReferenceAnalytics,
+		items: grindrApiReferenceInterest,
 	},
 	{
 		text: "Media",
@@ -115,13 +148,7 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 		collapsed: true,
 		items: grindrApiReferenceMedia,
 	},
-	{
-		text: "Interest",
-		link: "/grindr-api/interest/",
-		collapsed: true,
-		items: grindrApiReferenceInterest,
-	},
-	{ text: "Right Now, WIP", link: "/grindr-api/right-now" },
+	{ text: "Videocalls, WIP", link: "/grindr-api/videocalls" },
 	{
 		text: "Settings",
 		link: "/grindr-api/settings/",
@@ -134,33 +161,36 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 		collapsed: true,
 		items: grindrApiReferenceThirdPartyIntegrations,
 	},
-	{ text: "StoreApiRest, WIP", link: "/grindr-api/storeapirest" },
-	{ text: "Notifications", link: "/grindr-api/notifications" },
+	{
+		text: "Commerce",
+		link: "/grindr-api/commerce/",
+		collapsed: true,
+		items: grindrApiReferenceCommerce,
+	},
+	{
+		text: "Safety",
+		link: "/grindr-api/safety/",
+		collapsed: true,
+		items: grindrApiReferenceSafety,
+	},
+	{
+		text: "System",
+		link: "/grindr-api/system/",
+		collapsed: true,
+		items: grindrApiReferenceSystem,
+	},
+	{
+		text: "Analytics",
+		link: "/grindr-api/analytics/",
+		collapsed: true,
+		items: grindrApiReferenceAnalytics,
+	},
 	{
 		text: "Woodwork",
 		link: "/grindr-api/woodwork/",
 		collapsed: true,
 		items: grindrApiReferenceWoodwork,
 	},
-	{ text: "Ratings", link: "/grindr-api/ratings" },
-	{ text: "Top Picks, WIP", link: "/grindr-api/top-picks" },
-	{ text: "Signal share", link: "/grindr-api/signal-share" },
-	{ text: "Drawer, WIP", link: "/grindr-api/drawer" },
-	{ text: "Legal agreements, WIP", link: "/grindr-api/legal-agreements" },
-	{ text: "GrindrStore, WIP", link: "/grindr-api/grindrstore" },
-	{ text: "Heatmap, WIP", link: "/grindr-api/heatmap" },
-	{ text: "Reddot, WIP", link: "/grindr-api/reddot" },
-	{ text: "Videocalls, WIP", link: "/grindr-api/videocalls" },
-	{ text: "Modal, WIP", link: "/grindr-api/modal" },
-	{ text: "Warnings, WIP", link: "/grindr-api/warnings" },
-	{ text: "Logging, WIP", link: "/grindr-api/logging" },
-	{ text: "Rewarded chats, WIP", link: "/grindr-api/rewarded-chats" },
-	{ text: "Rewarded ads", link: "/grindr-api/rewarded-ads" },
-	{ text: "Boosting, WIP", link: "/grindr-api/boosting" },
-	{ text: "GIFs, WIP", link: "/grindr-api/gifs" },
-	{ text: "Access requests, WIP", link: "/grindr-api/access-requests" },
-	{ text: "Offers, WIP", link: "/grindr-api/offers" },
-	{ text: "VIP, WIP", link: "/grindr-api/vip" },
 	{ text: "Rate limits", link: "/grindr-api/rate-limits" },
 	{
 		text: "WebSocket",

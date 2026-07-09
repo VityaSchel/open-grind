@@ -8,7 +8,7 @@
 	} from "$lib/app-data/preferences.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import type { UnitSystem } from "$lib/units";
+	import type { UnitSystem } from "$lib/util/units";
 
 	let value = $state<UnitSystem>(getUnitsSnapshot());
 

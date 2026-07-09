@@ -3,9 +3,9 @@
 
 	import { ApiError } from "$lib/api";
 	import { showErrorToast } from "$lib/api/error";
-	import { deleteMessageForMe, unsendMessage } from "$lib/api/messages";
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
+	import { deleteMessageForMe, unsendMessage } from "$lib/api/messaging/messages";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import type { ConversationState } from "./conversation-state.svelte";

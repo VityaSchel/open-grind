@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getTags } from "$lib/api/tags";
+	import { getTags } from "$lib/api/users/tags";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import type { Tag } from "$lib/model/tags";
+	import type { Tag } from "$lib/model/users/tags";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {

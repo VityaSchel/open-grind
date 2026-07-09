@@ -2,14 +2,14 @@
 	import { page } from "$app/state";
 	import { untrack } from "svelte";
 
-	import { below } from "$lib/breakpoints.svelte";
 	import {
 		getOrCreateConversationsState,
 		setConversations,
 	} from "$lib/chat/conversations-context.svelte";
-	import NavBar from "$lib/components/NavBar.svelte";
+	import NavBar from "$lib/components/shared/NavBar.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import * as Resizable from "$lib/components/ui/resizable";
+	import { below } from "$lib/util/breakpoints.svelte";
 	import ConversationsList from "./ConversationsList.svelte";
 
 	let { data, children }: import("./$types").LayoutProps = $props();

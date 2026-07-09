@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { cn } from "$lib/utils.js";
 	import SpinnerIcon from 'phosphor-svelte/lib/Spinner';
 	import type { SVGAttributes } from "svelte/elements";
+
+	import { cn } from "$lib/util/utils.js";
 
 	let {
 		class: className,

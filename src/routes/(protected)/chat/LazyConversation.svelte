@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Conversation as ConversationType } from "$lib/model/conversation";
-	import type { SelectionSet } from "$lib/selection.svelte";
+	import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
+	import type { SelectionSet } from "$lib/util/selection.svelte";
 	import Conversation from "./Conversation.svelte";
 
 	let {

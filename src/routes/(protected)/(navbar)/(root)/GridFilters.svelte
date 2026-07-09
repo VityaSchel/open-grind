@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
 	import AcceptNSFWPicsFilter from "$lib/components/filters/AcceptNSFWPicsFilter.svelte";
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
 	import BodyTypeFilter from "$lib/components/filters/BodyTypeFilter.svelte";
@@ -24,6 +23,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {
 		open = $bindable(),

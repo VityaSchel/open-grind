@@ -4,7 +4,7 @@
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import * as Card from "$lib/components/ui/card";
-	import type { Message } from "$lib/model/message";
+	import type { Message } from "$lib/model/messaging/messages";
 	import ChatNavBar from "./ChatNavBar.svelte";
 	import { ConversationState } from "./conversation-state.svelte";
 	import MessageComposer from "./message-composer/MessageComposer.svelte";

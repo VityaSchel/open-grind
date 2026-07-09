@@ -1,8 +1,8 @@
 <script lang="ts">
-	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
-	import ProfileItem from "$lib/components/ProfileItem.svelte";
-	import RelativeTimeDynamic from "$lib/components/RelativeTimeDynamic.svelte";
-	import TapIcon from "$lib/components/TapIcon.svelte";
+	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
+	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
+	import TapIcon from "$lib/components/profile/TapIcon.svelte";
+	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import type { TapProfile } from "$lib/model/interest/tap-profile";
 

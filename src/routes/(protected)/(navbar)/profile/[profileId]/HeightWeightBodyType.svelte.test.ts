@@ -3,7 +3,7 @@
 import { render } from "@testing-library/svelte";
 import { describe, expect, it } from "vitest";
 
-import { BodyType } from "$lib/model/profile";
+import { BodyType } from "$lib/model/users/profiles";
 import HeightWeightBodyType from "./HeightWeightBodyType.svelte";
 
 describe("HeightWeightBodyType", () => {

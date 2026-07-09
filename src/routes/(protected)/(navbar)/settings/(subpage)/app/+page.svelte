@@ -2,7 +2,7 @@
 	import { CaretRightIcon } from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 
-	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
+	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";

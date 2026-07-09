@@ -2,11 +2,11 @@
 	import { CaretRightIcon } from "phosphor-svelte";
 
 	import { getMyProfile } from "$lib/api/users/profiles";
-	import BrokenUserAvatar from "$lib/components/BrokenUserAvatar.svelte";
-	import DisplayName from "$lib/components/DisplayName.svelte";
+	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
+	import DisplayName from "$lib/components/profile/DisplayName.svelte";
+	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import UserAvatar from "$lib/components/UserAvatar.svelte";
 
 	let {
 		id,

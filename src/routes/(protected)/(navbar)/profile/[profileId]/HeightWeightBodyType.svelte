@@ -3,8 +3,8 @@
 
 	import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Separator } from "$lib/components/ui/separator";
-	import { type BodyTypeId, bodyTypes } from "$lib/model/profile";
-	import { formatHeight, formatWeightGrams } from "$lib/units";
+	import { type BodyTypeId, bodyTypes } from "$lib/model/users/profiles";
+	import { formatHeight, formatWeightGrams } from "$lib/util/units";
 
 	let {
 		height,

@@ -4,7 +4,7 @@
 	import {
 		type AcceptNSFWPicsId,
 		acceptNSFWPics as acceptNSFWPicsOptions,
-	} from "$lib/model/profile";
+	} from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 

@@ -5,8 +5,8 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
-	import { profileMediaUrl } from "$lib/media";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { profileMediaUrl } from "$lib/util/media";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 	let {

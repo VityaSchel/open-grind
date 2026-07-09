@@ -9,7 +9,7 @@
 		onBlocked,
 	}: {
 		ourProfileId: number;
-		profile: import("$lib/model/profile").Profile;
+		profile: import("$lib/model/users/profiles").Profile;
 		onBlocked: () => void;
 	} = $props();
 

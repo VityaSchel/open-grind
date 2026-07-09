@@ -2,7 +2,7 @@
 	import { TrashIcon } from "phosphor-svelte";
 
 	import { Button } from "$lib/components/ui/button";
-	import { profileMediaUrl } from "$lib/media";
+	import { profileMediaUrl } from "$lib/util/media";
 
 	let {
 		mediaHash,

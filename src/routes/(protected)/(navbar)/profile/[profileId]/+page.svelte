@@ -11,11 +11,11 @@
 		ProfileUnavailableError,
 	} from "$lib/api/users/profiles";
 	import { getPreferences } from "$lib/app-data/preferences.svelte";
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
-	import NotFound from "$lib/components/NotFound.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import type { Profile } from "$lib/model/profile";
+	import type { Profile } from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import BlockedProfile from "./BlockedProfile.svelte";
 	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";

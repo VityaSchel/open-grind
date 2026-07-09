@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { NavigationArrowIcon } from "phosphor-svelte";
 
-	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
+	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
 
 	let { distance }: { distance: number | null } = $props();
 </script>

@@ -95,7 +95,7 @@
 	--spacing-list-rail: 117px;
 }
 
-/* Keep in sync with src/lib/breakpoints.svelte.ts */
+/* Keep in sync with src/lib/util/breakpoints.svelte.ts */
 @theme {
 	--breakpoint-split: 560px;
 	--breakpoint-settings-dialog: 424px;

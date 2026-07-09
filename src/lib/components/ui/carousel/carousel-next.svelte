@@ -1,9 +1,10 @@
 <script lang="ts">
-	import type { WithoutChildren } from "bits-ui";
-	import { getEmblaContext } from "./context.js";
-	import { cn } from "$lib/utils.js";
-	import { Button, type Props } from "$lib/components/ui/button/index.js";
 	import CaretRightIcon from 'phosphor-svelte/lib/CaretRight';
+	import type { WithoutChildren } from "bits-ui";
+
+	import { Button, type Props } from "$lib/components/ui/button/index.js";
+	import { cn } from "$lib/util/utils.js";
+	import { getEmblaContext } from "./context.js";
 
 	let {
 		ref = $bindable(null),

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onDestroy, untrack } from "svelte";
 
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error";
 	import { sendTap } from "$lib/api/interest/taps";
-	import TapIcon from "$lib/components/TapIcon.svelte";
+	import TapIcon from "$lib/components/profile/TapIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { TapType } from "$lib/model/interest/taps";

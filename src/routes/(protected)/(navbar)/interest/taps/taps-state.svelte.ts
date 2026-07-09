@@ -1,6 +1,6 @@
 import { showErrorToast } from "$lib/api/error";
 import { getReceivedTaps } from "$lib/api/interest/taps";
-import { reconciler } from "$lib/reconcile";
+import { reconciler } from "$lib/util/reconcile";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
 import type { TapProfile } from "$lib/model/interest/tap-profile";
 

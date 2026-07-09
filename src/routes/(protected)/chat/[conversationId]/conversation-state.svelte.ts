@@ -1,21 +1,21 @@
 import { ApiError } from "$lib/api";
-import { markConversationAsRead } from "$lib/api/conversation";
 import { showErrorToast } from "$lib/api/error";
-import { reactToMessage, sendMessage } from "$lib/api/messages";
+import { markConversationAsRead } from "$lib/api/messaging/conversations";
+import { reactToMessage, sendMessage } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { previewFromMessage } from "$lib/model/message";
-import { reconciler } from "$lib/reconcile";
+import { previewFromMessage } from "$lib/model/messaging/messages";
+import { reconciler } from "$lib/util/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
 	ws,
 } from "$lib/ws.svelte";
-import type { ConversationsState } from "$lib/chat/conversations.svelte";
+import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 import type {
 	ApiResponseMessage,
 	Message as MessageType,
-} from "$lib/model/message";
+} from "$lib/model/messaging/messages";
 import { getConversation } from "./messages";
 
 export type OptimisticMessage = ApiResponseMessage & {

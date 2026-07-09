@@ -2,7 +2,7 @@
 	import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
-	import { formatHeight } from "$lib/units";
+	import { formatHeight } from "$lib/util/units";
 
 	let {
 		checked = $bindable(),

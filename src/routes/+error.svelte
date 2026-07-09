@@ -5,7 +5,7 @@
 	import ExclamationMarkIcon from "phosphor-svelte/lib/ExclamationMarkIcon";
 	import { toast } from "svelte-sonner";
 
-	import NotFound from "$lib/components/NotFound.svelte";
+	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";

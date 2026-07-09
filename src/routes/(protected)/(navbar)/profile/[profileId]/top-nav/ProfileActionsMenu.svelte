@@ -9,7 +9,7 @@
 
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { showErrorToast } from "$lib/api/error";
-	import ToastUnimplemented from "$lib/components/ToastUnimplemented.svelte";
+	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 

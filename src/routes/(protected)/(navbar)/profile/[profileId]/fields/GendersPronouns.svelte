@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getGenders } from "$lib/api/genders";
-	import { fetchPronouns } from "$lib/api/pronouns";
+	import { getGenders } from "$lib/api/users/genders";
+	import { fetchPronouns } from "$lib/api/users/pronouns";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import ProfileField from "./ProfileField.svelte";

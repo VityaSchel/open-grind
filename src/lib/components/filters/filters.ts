@@ -9,7 +9,7 @@ import {
 	RelationshipStatus,
 	SexualPosition,
 	Tribe,
-} from "$lib/model/profile";
+} from "$lib/model/users/profiles";
 
 export const filterIsFavoriteSchema = z.boolean();
 export const filterIsOnlineSchema = z.boolean();

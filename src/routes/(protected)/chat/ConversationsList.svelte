@@ -3,14 +3,14 @@
 	import { page } from "$app/state";
 	import { onMount, tick, untrack } from "svelte";
 
-	import { backGestureEventHandlers } from "$lib/back-gesture-event.svelte";
-	import { below } from "$lib/breakpoints.svelte";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import DataRefreshControl from "$lib/components/DataRefreshControl.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { SelectionSet } from "$lib/selection.svelte";
-	import type { ConversationsState } from "$lib/chat/conversations.svelte";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { below } from "$lib/util/breakpoints.svelte";
+	import { SelectionSet } from "$lib/util/selection.svelte";
+	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 	import Conversation from "./Conversation.svelte";
 	import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 	import DeleteConversationsDialog from "./DeleteConversationsDialog.svelte";

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
-	import DisplayName from "$lib/components/DisplayName.svelte";
-	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
-	import ProgressiveBlur from "$lib/components/ProgressiveBlur.svelte";
+	import DisplayName from "$lib/components/profile/DisplayName.svelte";
+	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
+	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
+	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Card from "$lib/components/ui/card";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import UserAvatar from "$lib/components/UserAvatar.svelte";
 	import type { ConversationState } from "./conversation-state.svelte";
 
 	let { conversationState }: { conversationState: ConversationState } =

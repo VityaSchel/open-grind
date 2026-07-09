@@ -1,6 +1,6 @@
 import { toast } from "svelte-sonner";
 
-import type { ApiResponseMessage } from "$lib/model/message";
+import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import IncomingMessageToast from "./IncomingMessageToast.svelte";
 
 export function showIncomingMessageToast({

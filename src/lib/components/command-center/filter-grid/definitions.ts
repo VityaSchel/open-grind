@@ -19,8 +19,8 @@ import {
 	relationshipStatuses,
 	sexualPositions,
 	tribes,
-} from "$lib/model/profile";
-import { formatHeight, formatWeightKg, type UnitSystem } from "$lib/units";
+} from "$lib/model/users/profiles";
+import { formatHeight, formatWeightKg, type UnitSystem } from "$lib/util/units";
 import {
 	booleanApply,
 	boundApply,

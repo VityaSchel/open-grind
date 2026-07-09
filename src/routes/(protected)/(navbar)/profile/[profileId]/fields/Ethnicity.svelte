@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { GlobeStandIcon } from "phosphor-svelte";
 
-	import { ethnicities, type EthnicityId } from "$lib/model/profile";
+	import { ethnicities, type EthnicityId } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 
 	let {

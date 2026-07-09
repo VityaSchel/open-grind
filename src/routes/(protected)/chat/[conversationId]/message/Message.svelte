@@ -3,7 +3,7 @@
 	import { expoOut } from "svelte/easing";
 	import { scale } from "svelte/transition";
 
-	import type { ApiResponseMessage } from "$lib/model/message";
+	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";

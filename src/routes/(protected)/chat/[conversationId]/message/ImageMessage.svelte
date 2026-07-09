@@ -2,7 +2,7 @@
 	import "photoswipe/style.css";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import type { ImageMessage } from "$lib/model/message";
+	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let {

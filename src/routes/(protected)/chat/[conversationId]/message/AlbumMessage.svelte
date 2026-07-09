@@ -3,9 +3,9 @@
 	import { ImageBrokenIcon, ImagesIcon, VideoIcon } from "phosphor-svelte";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/album";
 	import { showErrorToast } from "$lib/api/error";
-	import type { AlbumMessage } from "$lib/model/message";
+	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/messaging/albums";
+	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "../LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 

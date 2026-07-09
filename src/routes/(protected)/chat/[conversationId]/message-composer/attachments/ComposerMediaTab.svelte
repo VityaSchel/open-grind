@@ -6,16 +6,16 @@
 	import { expoOut, sineIn } from "svelte/easing";
 	import { fly } from "svelte/transition";
 
-	import { addMediaToDrawer } from "$lib/api/chat-media";
-	import { type DrawerMedia, getDrawerMedia } from "$lib/api/media-drawer";
-	import ApiErrorDisplay from "$lib/components/ApiErrorDisplay.svelte";
-	import SelectionCheck from "$lib/components/SelectionCheck.svelte";
+	import { addMediaToDrawer } from "$lib/api/messaging/chat-media";
+	import { type DrawerMedia, getDrawerMedia } from "$lib/api/messaging/drawer";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { pickMultipleMedia } from "$lib/media-picker";
-	import { SelectionSet } from "$lib/selection.svelte";
+	import { pickMultipleMedia } from "$lib/platform/media-picker";
+	import { SelectionSet } from "$lib/util/selection.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
 	let {
