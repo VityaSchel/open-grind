@@ -4,6 +4,8 @@ export const breakpoints = {
 	md: "48rem",
 	split: "560px",
 	"settings-dialog": "424px",
+	"selection-bar-compact": "350px",
+	"selection-bar-collapse": "300px",
 	cramped: "250px",
 } as const;
 

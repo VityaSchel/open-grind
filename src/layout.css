@@ -99,6 +99,8 @@
 @theme {
 	--breakpoint-split: 560px;
 	--breakpoint-settings-dialog: 424px;
+	--breakpoint-selection-bar-compact: 350px;
+	--breakpoint-selection-bar-collapse: 300px;
 	--breakpoint-cramped: 250px;
 }
 
