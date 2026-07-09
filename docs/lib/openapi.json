@@ -2229,6 +2229,78 @@
 				"x-wip": true
 			}
 		},
+        "/v4/rightnow/feed": {
+			"get": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "getRightNowFeed",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+                            "type": "string",
+                            "enum": [
+                                "DISTANCE",
+                                "NEWEST"
+                            ],
+				            "description": "The order of the messages (distance / newest)",
+				            "x-enum-labels": {
+					            "DISTANCE": "DISTANCE",
+					            "NEWEST": "NEWEST"
+				            }
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RightNowFeedResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
 		"/v4/rightnow/posts": {
 			"post": {
 				"tags": [
@@ -15352,8 +15424,261 @@
 				},
 				"x-render-on-tag": "rewarded-ads",
 				"x-display-name": "Rewarded Ad Reward"
-			}
-		}
+			},
+			"RightNowFeedResponse": {
+				"type": "object",
+				"properties": {
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowFeedResponseItem"
+						}
+					},
+                    "viewerCount": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "items",
+                    "viewerCount"
+                ]
+			},
+            "RightNowFeedResponseItem": {
+                "type": "object",
+                 "required": [
+                    "type",
+                    "data"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "curated_post_v1",
+                            "right_now_post_v3",
+                            "locked_post_v1"
+                        ]
+                    },
+                    "data": {
+                        "type": "object"
+                    }
+                },
+                "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                        "curated_post_v1": "#/components/schemas/CuratedPost",
+                        "right_now_post_v3": "#/components/schemas/RightNowPost",
+                        "locked_post_v1": "#/components/schemas/LockedPost"
+                    }
+                },
+                "oneOf": [
+                    { "$ref": "#/components/schemas/CuratedPost" },
+                    { "$ref": "#/components/schemas/RightNowPost" },
+                    { "$ref": "#/components/schemas/LockedPost" }
+                ]
+            },
+            "CuratedPost": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "data"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["curated_post_v1"]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "@type": {
+                                "type": "string",
+                                "example": "RightNowFeedItemData$CuratedPostV1"
+                            },
+                            "type": {
+                                "type": "string",
+                                "example": "tutorial_dense_market_v1"
+                            }
+                        },
+                        "required": [
+                            "@type",
+                            "type"
+                        ]
+                    }
+                }
+            },
+            "RightNowPost": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["right_now_post_v3"]
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PostData"
+                    }
+                },
+                "required": [
+                    "type",
+                    "data"
+                ]
+            },
+            "LockedPost": {
+                "type": "object",
+
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["locked_post_v1"]
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PostData"
+                    }
+                },
+                "required": [
+                    "type",
+                    "data"
+                ]
+            },
+            "PostData": {
+                "type": "object",
+                "required": [
+                    "@type",
+                    "id",
+                    "profileId",
+                    "media",
+                    "hosting",
+                    "posted",
+                    "expiration",
+                    "recentlyChatted",
+                    "favorite"
+                ],
+                "properties": {
+                    "@type": {
+                        "type": "string",
+                        "example": "RightNowFeedItemData$RightNowPostV3"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "profileId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "mediaHash": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "media": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RightNowPostMediaItem"
+                        }
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "distance": {
+                        "type": "integer"
+                    },
+                    "hosting": {
+                        "type": "boolean"
+                    },
+                    "posted": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "unix timestamp in milliseconds"
+                    },
+                    "expiration": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "unix timestamp in milliseconds"
+                    },
+                    "onlineUntil": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "unix timestamp in millisecondss"
+                    },
+                    "mpuScore": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "recentlyChatted": {
+                        "type": "boolean"
+                    },
+                    "favorite": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "RightNowPostMediaItem": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "data"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "image_v1"
+                    },
+                    "data": {
+                        "type": "object",
+                        "required": [
+                            "mediaId",
+                            "thumbnailUrl",
+                            "fullImageUrl",
+                            "contentType",
+                            "state",
+                            "shouldBlur",
+                            "isNsfw",
+                            "source"
+                        ],
+                        "properties": {
+                            "mediaId": {
+                                "type": "integer"
+                            },
+                            "thumbnailUrl": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "fullImageUrl": {
+                                "type": "string",
+                                "format": "uri"
+                            },
+                            "contentType": {
+                                "type": "string",
+                                "example": "image/jpeg"
+                            },
+                            "state": {
+                                "type": "string",
+                                "example": "APPROVED"
+                            },
+                            "reason": {
+                                "type": "string",
+                                "nullable": true
+                            },
+                            "isRejectAutomated": {
+                                "type": "boolean",
+                                "nullable": true
+                            },
+                            "shouldBlur": {
+                                "type": "boolean"
+                            },
+                            "isNsfw": {
+                                "type": "boolean"
+                            },
+                            "source": {
+                                "type": "string",
+                                "example": "RIGHT_NOW"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	},
 	"x-sidebar-order": [
 		"authentication",
