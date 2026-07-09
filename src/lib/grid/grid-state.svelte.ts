@@ -1,6 +1,7 @@
 import { untrack } from "svelte";
 import z from "zod";
 
+import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error";
 import type { cascadeV3QuerySchema } from "$lib/model/browse/grid/cascade/query/v3";
 import {
@@ -67,6 +68,16 @@ class GridState {
 		this.error = null;
 		this.currentQuery = null;
 		this.#loadingBatches.clear();
+	}
+
+	reset(): void {
+		this.#fetchToken += 1;
+		this.#reset();
+		this.loading = false;
+		this.refreshing = false;
+		this.scrollY = 0;
+		this.#geohash = null;
+		this.filters.reset();
 	}
 
 	async loadMore(): Promise<void> {
@@ -243,3 +254,5 @@ class GridState {
 }
 
 export const gridState = new GridState();
+
+registerAccountCache(() => gridState.reset());

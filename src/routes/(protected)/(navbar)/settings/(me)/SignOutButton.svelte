@@ -1,22 +1,10 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { CaretRightIcon, SignOutIcon } from "phosphor-svelte";
 
-	import { callMethod } from "$lib/api";
-	import { clearProfileCaches } from "$lib/api/users/profiles";
+	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as Item from "$lib/components/ui/item";
 	import ButtonItemContent from "./ButtonItemContent.svelte";
-
-	async function onSignOut() {
-		try {
-			await callMethod("logout");
-		} catch (error) {
-			console.error(error);
-		}
-		clearProfileCaches();
-		await goto("/auth/sign-in");
-	}
 
 	let alertOpen = $state(false);
 </script>
@@ -52,7 +40,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={() => onSignOut()} size="lg">
+			<AlertDialog.Action onclick={() => signOut()} size="lg">
 				Continue
 			</AlertDialog.Action>
 		</AlertDialog.Footer>

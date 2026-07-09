@@ -35,6 +35,10 @@ export class GridSearchFiltersState {
 		void this.#save();
 	}
 
+	reset() {
+		this.value = { ...defaultFilters };
+	}
+
 	async #load() {
 		try {
 			const { gridSearchFilters } = await getPreferences();

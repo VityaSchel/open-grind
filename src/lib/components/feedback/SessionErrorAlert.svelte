@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { listen } from "@tauri-apps/api/event";
-	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
 	import { callMethod } from "$lib/api";
 	import { sessionErrorState } from "$lib/api/session-error-state.svelte";
+	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 
@@ -14,11 +14,6 @@
 		message: z.string(),
 		unauthorized: z.boolean(),
 	});
-
-	async function redirectToLogin() {
-		sessionErrorState.open = false;
-		await goto("/auth/sign-in");
-	}
 
 	onMount(() => {
 		const unlisten = listen("auth:session-error", (event) => {
@@ -36,7 +31,8 @@
 			sessionErrorState.message = message;
 
 			if (unauthorized) {
-				void redirectToLogin();
+				sessionErrorState.open = false;
+				void signOut();
 			} else {
 				sessionErrorState.open = true;
 			}
@@ -71,15 +67,13 @@
 		}
 	}
 
-	async function signOut() {
+	async function onSignOut() {
 		busy = true;
 		try {
-			await callMethod("logout");
-		} catch (error) {
-			console.error(error);
+			await signOut();
 		} finally {
 			busy = false;
-			void redirectToLogin();
+			sessionErrorState.open = false;
 		}
 	}
 </script>
@@ -101,7 +95,7 @@
 			<Button variant="ghost" onclick={copyError} disabled={busy}>
 				Copy error
 			</Button>
-			<Button variant="outline" onclick={signOut} disabled={busy}>
+			<Button variant="outline" onclick={onSignOut} disabled={busy}>
 				Sign out
 			</Button>
 			<Button onclick={tryAgain} disabled={busy}>Try again</Button>

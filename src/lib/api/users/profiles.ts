@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
+import { registerAccountCache } from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
@@ -176,7 +177,10 @@ export async function getMyProfile() {
 export function clearProfileCaches() {
 	myProfileCache = null;
 	profilesCache.clear();
+	profilesInFlight.clear();
 }
+
+registerAccountCache(clearProfileCaches);
 
 export function invalidateProfile(profileId: number) {
 	profilesCache.delete(profileId);

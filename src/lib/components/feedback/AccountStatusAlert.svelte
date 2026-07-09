@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { listen } from "@tauri-apps/api/event";
-	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	import { banInfoSchema, callMethod } from "$lib/api";
-	import { accountStatusState } from "$lib/api/account-status-state.svelte";
+	import {
+		accountStatusState,
+		showAccountRestriction,
+	} from "$lib/api/account-status-state.svelte";
+	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 
@@ -49,12 +52,7 @@
 		});
 
 		void callMethod("account_restriction")
-			.then((restriction) => {
-				if (restriction) {
-					accountStatusState.status = { kind: "restriction", restriction };
-					accountStatusState.open = true;
-				}
-			})
+			.then(showAccountRestriction)
 			.catch(() => {});
 
 		return () => void unlisten.then((fn) => fn());
@@ -73,16 +71,13 @@
 		}
 	}
 
-	async function signOut() {
+	async function onSignOut() {
 		busy = true;
 		try {
-			await callMethod("logout");
-		} catch (error) {
-			console.error(error);
+			await signOut();
 		} finally {
 			busy = false;
 			accountStatusState.open = false;
-			await goto("/auth/sign-in");
 		}
 	}
 </script>
@@ -102,7 +97,7 @@
 					Copy details
 				</Button>
 			{/if}
-			<Button onclick={signOut} disabled={busy}>Sign out</Button>
+			<Button onclick={onSignOut} disabled={busy}>Sign out</Button>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

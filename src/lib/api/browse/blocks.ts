@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
+import { registerAccountCache } from "$lib/api/account-caches";
 import type { Profile } from "$lib/model/users/profiles";
 
 const getBlockedUsersResponseSchema = z.object({
@@ -16,6 +17,10 @@ let blockedUsersCache: {
 	blocking: z.infer<typeof getBlockedUsersResponseSchema>["blocking"];
 	updatedAt: number;
 } | null = null;
+
+registerAccountCache(() => {
+	blockedUsersCache = null;
+});
 
 export async function getBlockedUsers() {
 	if (

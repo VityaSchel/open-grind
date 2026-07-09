@@ -1,3 +1,4 @@
+import { registerAccountCache } from "$lib/api/account-caches";
 import { getCascadeV3 } from "$lib/api/browse/grid";
 import { getProfiles } from "$lib/api/users/profiles";
 
@@ -85,6 +86,8 @@ export function getCachedProfile(id: number): FullGridProfile | null {
 export function setCachedProfile(profile: FullGridProfile): void {
 	profileCache.set(profile.id, { profile, updatedAt: Date.now() });
 }
+
+registerAccountCache(() => profileCache.clear());
 
 export async function resolvePartialBatch(
 	profileIds: number[],

@@ -103,3 +103,16 @@ async function resetToDefaults(): Promise<void> {
 	});
 	window.location.reload();
 }
+
+const accountPreferenceKeys = ["geohash", "gridSearchFilters"] as const;
+
+export async function clearAccountPreferences(): Promise<void> {
+	await enqueueWrite(async () => {
+		const kept: Partial<Preferences> = { ...(await getPreferences()) };
+		for (const key of accountPreferenceKeys) delete kept[key];
+		const preferences = preferencesSchema.parse(kept);
+		await writeAppDataFileAtomic("preferences.data", encode(preferences));
+		cache = preferences;
+		preferencesSnapshot = preferences;
+	});
+}

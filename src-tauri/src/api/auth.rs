@@ -2,6 +2,7 @@ use serde::Serialize;
 
 use crate::error::AppError;
 use crate::state::AppState;
+use crate::storage::{AuthStorage, DeviceStorage};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -105,7 +106,17 @@ pub async fn refresh_token(state: tauri::State<'_, AppState>) -> Result<LoginRes
 
 #[tauri::command]
 pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
-    state.client()?.logout().await;
+    let client = state.client()?;
+
+    client.logout().await;
+    AuthStorage::delete_session();
+
+    let new_device = grindr::DeviceInfo::generate();
+    if let Err(e) = DeviceStorage::save(&new_device) {
+        eprintln!("[auth] could not persist rotated device info on sign out: {e}");
+    }
+    client.rotate_device(new_device).await?;
+
     Ok(())
 }
 

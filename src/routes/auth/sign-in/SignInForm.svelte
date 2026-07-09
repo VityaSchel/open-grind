@@ -3,8 +3,11 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { asAppError, asBanned, callMethod, type Restriction } from "$lib/api";
-	import { accountStatusState } from "$lib/api/account-status-state.svelte";
+	import { asAppError, asBanned, callMethod } from "$lib/api";
+	import {
+		accountStatusState,
+		showAccountRestriction,
+	} from "$lib/api/account-status-state.svelte";
 	import { showErrorToast } from "$lib/api/error";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
@@ -17,13 +20,6 @@
 	let email = $state("");
 	let password = $state("");
 	let submitting: false | "password" | "google" = $state(false);
-
-	function showRestriction(restriction: Restriction | null | undefined): boolean {
-		if (!restriction) return false;
-		accountStatusState.status = { kind: "restriction", restriction };
-		accountStatusState.open = true;
-		return true;
-	}
 
 	function handleAccountBlock(error: unknown): boolean {
 		const ban = asBanned(error);
@@ -47,7 +43,7 @@
 				email,
 				password,
 			});
-			if (showRestriction(result.restriction)) return;
+			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
@@ -100,7 +96,7 @@
 		submitting = "google";
 		try {
 			const result = await callMethod("login_with_google");
-			if (showRestriction(result.restriction)) return;
+			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {

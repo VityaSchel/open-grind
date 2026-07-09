@@ -3,6 +3,7 @@
 	import { toast } from "svelte-sonner";
 
 	import { asAppError, callMethod } from "$lib/api";
+	import { showAccountRestriction } from "$lib/api/account-status-state.svelte";
 	import { showErrorToast } from "$lib/api/error";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
@@ -22,7 +23,8 @@
 		if (retrying) return;
 		retrying = true;
 		try {
-			await callMethod("login_with_google");
+			const result = await callMethod("login_with_google");
+			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
@@ -59,7 +61,10 @@
 		event.preventDefault();
 		try {
 			submitting = true;
-			await callMethod("google_sign_in", { token: token.trim() });
+			const result = await callMethod("google_sign_in", {
+				token: token.trim(),
+			});
+			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
