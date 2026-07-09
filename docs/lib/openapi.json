@@ -15478,10 +15478,6 @@
             },
             "CuratedPost": {
                 "type": "object",
-                "required": [
-                    "type",
-                    "data"
-                ],
                 "properties": {
                     "type": {
                         "type": "string",
@@ -15504,7 +15500,11 @@
                             "type"
                         ]
                     }
-                }
+                },
+                "required": [
+                    "type",
+                    "data"
+                ]
             },
             "RightNowPost": {
                 "type": "object",
