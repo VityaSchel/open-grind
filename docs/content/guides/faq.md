@@ -4,9 +4,9 @@
 
 ### \> How to download Open Grind APK?
 
-**Follow instructions at https://opengrind.org/guides/download**. Do not download apk files outside of Releases page. If you're advanced technical user, consider building Open Grind yourself on your computer.
+**Follow instructions at https://opengrind.org/guides/download**. Do not download apk files outside of the Releases page. If you're an advanced technical user, consider building Open Grind yourself on your computer.
 
-### \> When an “X” feature will be available? When the next update comes out?
+### \> When will an “X” feature be available? When does the next update come out?
 
 Visit [issues tracker](https://git.opengrind.org/open-grind/open-grind/issues) to search for a specific feature and track its status. Visit [milestones](https://git.opengrind.org/open-grind/open-grind/milestones) to track progress of the next update. Follow #announcements:opengrind.org for major and release announcements. Join #dev:opengrind.org to see project progress in real time.
 
@@ -14,15 +14,15 @@ Visit [issues tracker](https://git.opengrind.org/open-grind/open-grind/issues) t
 
 No, **Open Grind is 100% free, transparent and will always be**. No crypto, no NFTs, no merch, no paid versions, no community badges, no paid support, nothing at all. It's literally impossible to give money to Open Grind project. Anyone who claims otherwise is a scammer.
 
-If you do intend to volunteerly donate money as a thank-you **to particular contributors**, refer to [FUNDING.md](https://git.opengrind.org/open-grind/open-grind/src/branch/main/FUNDING.md) file to find a list of donation links for each individual contributor.
+If you do intend to voluntarily donate money as a thank-you **to particular contributors**, refer to [FUNDING.md](https://git.opengrind.org/open-grind/open-grind/src/branch/main/FUNDING.md) file to find a list of donation links for each individual contributor.
 
-Donations are optional, won't grant any privileges, and **there is no single governance entity that accepts donations on Open Grind behalf.**
+Donations are optional, won't grant any privileges, and **there is no single governance entity that accepts donations on Open Grind's behalf.**
 
 ### \> What about other apps such as Free Grind and GrindrX?
 
-Neither are affiliated/verified/endorsed by Open Grind. Never trust APKs downloaded from unofficial sources. Any third party clients put your personal sensitive information at risk, which is why Open Grind strives to be 100% transparent and has [reproducable builds](https://git.opengrind.org/open-grind/open-grind/src/branch/android-init/BUILDING.md).
+Neither are affiliated/verified/endorsed by Open Grind. Never trust APKs downloaded from unofficial sources. Any third-party clients put your personal sensitive information at risk, which is why Open Grind strives to be 100% transparent and has [reproducible builds](https://git.opengrind.org/open-grind/open-grind/src/branch/android-init/BUILDING.md).
 
-### \> How many users Open Grind has?
+### \> How many users does Open Grind have?
 
 We genuinely have no idea, and it's a good thing: there are exactly zero trackers, analytics, data collection in the app. There is no "ping", "install counter", automatic update checking or anything else that could give an estimate of how many people have actually installed the app; Grindr can't infer that either because Open Grind strives to be stealthy and mask itself in the official app disguise.
 
@@ -33,7 +33,7 @@ The only indirect counters are:
 2. Number of joined accounts in the official discussion venues
    - Such as number of participants in the official Matrix chat room (no limit on how many accounts a person can have or which homeservers they join from)
    - Number of registered users on git.opengrind.org (**IP addresses are not stored**)
-   - Keep in mind these platforms do not collect or store any personally-identifiable data about users
+   - Keep in mind these platforms do not collect or store any personally identifiable data about users
 
 **As of July 8, 2026, the estimated number of users is ~25000 based on the downloads counter.**
 
@@ -41,11 +41,11 @@ The only indirect counters are:
 
 ### \> Is Open Grind similar to GrindrPlus?
 
-**Open Grind is not affiliated with GrindrPlus.** GrindrPlus project is dead after the developers have shut down all resources in May 2026. There is no support for GrindrPlus installation issues in this chat.
+**Open Grind is not affiliated with GrindrPlus.** GrindrPlus project is dead after the developers shut down all resources in May 2026. There is no support for GrindrPlus installation issues in this chat.
 
 GrindrPlus was a modified version of Grindr application. Open Grind is a completely separate third-party client that's written from scratch. Any features from Grindr's official app have to be developed from scratch in the app, but that also means no patches are necessary to remove bloat from the official version.
 
-Open Grind is completely free, open source and transparent: no ads, no purchases, no trackers, licensed under MIT software license. **Open Grind is not a fork.** However many projects started from Open Grind's foundation and some are considered forks _of_ Open Grind.
+Open Grind is completely free, open source and transparent: no ads, no purchases, no trackers, licensed under MIT software license. **Open Grind is not a fork.** However, many projects started from Open Grind's foundation and some are considered forks _of_ Open Grind.
 
 ### \> Is Open Grind a new platform? Is Open Grind similar to Grindr Web? What's MVP?
 
@@ -55,13 +55,13 @@ There's also the **[Grindr Web Unlock](https://git.opengrind.org/open-grind/grin
 
 ### \> Is location spoofing possible? Can you fake your geolocation?
 
-Yes, it's built-in. You must explicitly choose a location before you can use Open Grind. On mobile platforms you can also automatically geolocation y using your device's GPS.
+Yes, it's built-in. You must explicitly choose a location before you can use Open Grind. On mobile platforms you can also automatically set your location using your device's GPS.
 
 ### \> Is it possible to bypass age verification?
 
 **Open Grind does not implement age verification flow and does not have any means of bypassing it. There will be no attempt at integrating any logic related to age verification in the app.** If your account was locked due to age verification laws, you're advised to download the official app once and complete verification there.
 
-**If you're** unable to comply with the age verification laws because you're **underage, you're strongly advised against attempting at bypassing it or manifesting in any public communities or forums affiliated with Open Grind.**
+**If you're** unable to comply with the age verification laws because you're **underage, you're strongly advised against attempting to bypass it or manifesting in any public communities or forums affiliated with Open Grind.**
 
 ### \> Does Open Grind bypass bans?
 
@@ -69,13 +69,13 @@ There are no features that aim specifically at bypassing account bans in Open Gr
 
 ### \> How to create an account?
 
-Currently not possible. Use the official app to create an account and then sign in in Open Grind. Track https://git.opengrind.org/open-grind/open-grind/issues/21 to follow updates.
+Currently not possible. Use the official app to create an account and then sign in to Open Grind. Track https://git.opengrind.org/open-grind/open-grind/issues/21 to follow updates.
 
 ### \> How to sign in with Google?
 
 See https://opengrind.org/guides/sign-in-with-google
 
-### \> How to login with phone number?
+### \> How to log in with a phone number?
 
 Currently not possible. Track https://git.opengrind.org/open-grind/open-grind/issues/29 to follow updates.
 
@@ -105,11 +105,11 @@ That's how items are returned from API, specifically the first ten are "open" an
 
 ### \> What version number works?
 
-As of July, 2026, the confirmed working version for API is `26.9.1.163471`. If you don't know what that means, just use the latest Open Grind version.
+As of July 2026, the confirmed working version for API is `26.9.1.163471`. If you don't know what that means, just use the latest Open Grind version.
 
 ### \> Is GrindrPlus Discord server gone?
 
-Yes, it's been confirmed that it's been deleted. Last weeks, the server was mostly off topic anyway. Any intels regarding Grindr API are welcome in #dev:opengrind.org.
+Yes, it's been confirmed that it's been deleted. In recent weeks, the server was mostly off topic anyway. Any intel regarding Grindr API is welcome in #dev:opengrind.org.
 
 ### \> How to verify a certain build is safe and trusted?
 

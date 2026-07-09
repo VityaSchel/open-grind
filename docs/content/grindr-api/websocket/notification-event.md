@@ -7,7 +7,7 @@ All notifications include the following fields:
 
 ## `chat.v1.message_sent`
 
-Message received, sent, unsent or got reaction.
+Message received, sent, unsent, or got a reaction.
 
 - *everything from [Notification Event](#notification-event)*
 - `payload` — [Message](/grindr-api/messaging/messages#message)

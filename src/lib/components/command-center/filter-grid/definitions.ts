@@ -264,7 +264,7 @@ export const filters: Filter[] = [
 					"genders",
 					"genderEnabled",
 					(id) => id === -1 || id >= 0,
-					"Invalid gender id",
+					"Invalid gender ID",
 				),
 			},
 		],

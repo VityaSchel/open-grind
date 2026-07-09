@@ -27,7 +27,7 @@ Set `Accept: application/json` header on all requests except `/v3/bootstrap` —
 
 ## `L-Device-Info`
 
-Absense or incorrect forming of this header might lead to HTTP status 403 and Cloudflare block page.
+Absence or incorrect forming of this header might lead to HTTP status 403 and Cloudflare block page.
 
 ```
 <deviceId>;GLOBAL;<deviceType>;<totalRAM>;<screenResolution>;<advertisingId>
@@ -44,7 +44,7 @@ Example: `a1b2c3d4e5f60789;GLOBAL;2;8026152960;2400x1080;550e8400-e29b-41d4-a716
 
 ## `User-Agent`
 
-Absense or incorrect forming of this header might lead to HTTP status 400 and `urn:gr:err:header` API error or 403 [WebSocket](/grindr-api/websocket/index#websocket) connection error.
+Absence or incorrect forming of this header might lead to HTTP status 400 and `urn:gr:err:header` API error or 403 [WebSocket](/grindr-api/websocket/index#websocket) connection error.
 
 ```
 grindr3/25.20.0.147239;147239;<subscriptionTier>;<os>;<deviceModel>;<manufacturer>
@@ -57,7 +57,7 @@ Example: `grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google`
 
 ## `L-Time-Zone`
 
-[Time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) in format Country/Region. E.g. `America/New_York` or `Europe/Madrid`. Unknown whether this value is checked against your IP's ISP location.
+[Time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) in the format Country/Region. E.g. `America/New_York` or `Europe/Madrid`. Unknown whether this value is checked against your IP's ISP location.
 
 ## `L-Locale`
 
@@ -70,7 +70,7 @@ Note the hyphen/underscore.
 
 ## `L-Grindr-Roles`
 
-Should be a square-bracketed set of uppercased subscription tiers separated by comma without spaces or quotes, e.g. `[FREE]`. Only when user is already authorized.
+Should be a square-bracketed set of uppercased subscription tiers separated by comma without spaces or quotes, e.g. `[FREE]`. Only when the user is already authorized.
 
 ## Correct headers order
 
@@ -95,7 +95,7 @@ Other headers:
 
 ## Fingerprint
 
-Getting all of HTTP security headers right is enough for API to respond, but sooner or later you'll get hit with 403 HTTP errors from Cloudflare and HTML blocked pages. This is because Cloudflare, which protects Grindr API, learns requests fingerprints and categorizes them as coming from the Grindr official app or botnets. Tens of requests might get through as some new fingerprint, but hundreds or thousands of requests with the fingerprint different from the official app will get blocked.
+Getting all of HTTP security headers right is enough for the API to respond, but sooner or later you'll get hit with 403 HTTP errors from Cloudflare and HTML blocked pages. This is because Cloudflare, which protects Grindr API, learns request fingerprints and categorizes them as coming from the Grindr official app or botnets. Tens of requests might get through as some new fingerprint, but hundreds or thousands of requests with a fingerprint different from the official app will get blocked.
 
 Request fingerprint is a characteristic derived from many factors, such as ClientHello, TLS encryption negotiation, HTTP pseudo-headers, TCP frame size, etc. The goal is to make all of these parameters match official Grindr clients (we focus on Android apk specifically, using the Java library used in the official Grindr app).
 
@@ -175,7 +175,7 @@ In this order, IANA hex:
 | 14  | TLS_RSA_WITH_AES_128_CBC_SHA                  | `0x002f` |
 | 15  | TLS_RSA_WITH_AES_256_CBC_SHA                  | `0x0035` |
 
-No `TLS_EMPTY_RENEGOTIATION_INFO_SCSV (0x00ff)` , BoringSSL omits it whenever the `renegotiation_info` extension is present in the ClientHello ([RFC 5746 §3.4](https://www.rfc-editor.org/rfc/rfc5746#section-3.4)) and Conscrypt always sends the extension.
+No `TLS_EMPTY_RENEGOTIATION_INFO_SCSV (0x00ff)`. BoringSSL omits it whenever the `renegotiation_info` extension is present in the ClientHello ([RFC 5746 §3.4](https://www.rfc-editor.org/rfc/rfc5746#section-3.4)) and Conscrypt always sends the extension.
 
 #### Extensions
 

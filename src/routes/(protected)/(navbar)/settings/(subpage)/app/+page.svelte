@@ -50,8 +50,8 @@
 <RevealProfileViewSetting />
 <h2>Security</h2>
 {@render item({
-	title: "Discreet App Icon",
-	unimplemented: { feature: "Discreet App Icon", issue: 97 },
+	title: "Discreet app icon",
+	unimplemented: { feature: "Discreet app icon", issue: 97 },
 })}
 {@render item({
 	title: "PIN",

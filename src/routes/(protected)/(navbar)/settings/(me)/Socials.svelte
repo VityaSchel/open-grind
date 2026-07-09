@@ -29,7 +29,7 @@
 	warning={{
 		title: "Telegram channel is semiofficial",
 		description:
-			"You're about to visit a Telegram channel that operates as a convenient mirror of official announcements room hosted on Matrix. ",
+			"You're about to visit a Telegram channel that operates as a convenient mirror of the official announcements room hosted on Matrix. ",
 		primary: {
 			label: "Open Telegram channel",
 			destination: "https://t.me/opengrind",

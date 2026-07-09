@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "Open Grind"
   text: "Unofficial Grindr client"
-  tagline: Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven
+  tagline: Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven
   actions:
     - theme: brand
       text: Download
@@ -16,7 +16,7 @@ hero:
 
 features:
   - title: Unlocked grid
-    details: Unlimited profiles for free ads removed from grid, all filters unlocked
+    details: Unlimited profiles for free, ads removed from grid, all filters unlocked
   - title: Location spoofing
     details: Native geolocation change with OpenStreetMap and location search built-in
   - title: Zero ads
@@ -26,7 +26,7 @@ features:
   - title: Privacy by default
     details: No analytics, zero trackers, no data is collected by Open Grind developers
   - title: Security as foundation
-    details: Human code review, audit, supply chain security, end to end testing
+    details: Human code review, audit, supply chain security, end-to-end testing
 ---
 
 <hr />

@@ -3,7 +3,7 @@
 To get started, choose one of the methods below (Docker, Nix or manual) and follow its steps.
 
 > [!NOTE]
-> Only Android release builds are tested as of June 23th, 2026.
+> Only Android release builds are tested as of June 23rd, 2026.
 
 - [Building Open Grind](#building-open-grind)
   - [Build with Docker (easiest, Linux x86\_64 only)](#build-with-docker-easiest-linux-x86_64-only)

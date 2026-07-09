@@ -16,7 +16,7 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Grindr blocks your requests</AlertDialog.Title>
 			<AlertDialog.Description>
-				Cloudflare protecting Grindr API is currently blocking your requests
+				Cloudflare protecting the Grindr API is currently blocking your requests
 				because of suspicious activity. This is a <Link
 					href="https://git.opengrind.org/open-grind/open-grind/issues/81"
 				>

@@ -62,7 +62,7 @@
 						</div>
 					{/if}
 				{/each}
-				<ToggleGroup.Item value="-1">Not Specified</ToggleGroup.Item>
+				<ToggleGroup.Item value="-1">Not specified</ToggleGroup.Item>
 				<Button variant="secondary" onclick={() => (expanded = !expanded)}>
 					{#if expanded}
 						Less

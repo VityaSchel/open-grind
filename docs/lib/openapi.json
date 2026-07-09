@@ -165,7 +165,7 @@
 		},
 		{
 			"name": "browse/grid",
-			"description": "[Cascade](#get-cascade) returns stuff like advertisements, upsells and partial profiles, presumably ranking by algorithms or paid subscriptions. [Search](#search) returns full profiles, seemingly ranked simply by distance."
+			"description": "[Cascade](#get-cascade) returns stuff like advertisements, upsells and partial profiles, presumably ranked by algorithms or paid subscriptions. [Search](#search) returns full profiles, seemingly ranked simply by distance."
 		},
 		{
 			"name": "browse/hides",
@@ -206,7 +206,7 @@
 		},
 		{
 			"name": "media/signed-cdn-files",
-			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://d2wxe7lth7kp8g.cloudfront.net/`\n\nAlthough it might change in the future, so it's best to pull full URL from `url` property on media object itself."
+			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://d2wxe7lth7kp8g.cloudfront.net/`\n\nAlthough it might change in the future, so it's best to pull the full URL from the `url` property on the media object itself."
 		},
 		{
 			"name": "messaging/albums",
@@ -293,7 +293,7 @@
 					}
 				},
 				"summary": "Sign in",
-				"description": "Make sure you're passing all [Security headers](/grindr-api/security-headers) or you might stumble upon `{\"code\":28,\"message\":\"ACCOUNT_BANNED\",\"profileId\":null,\"type\":1,\"reason\":null,\"isBanAutomated\":true,\"thirdPartyUserIdToShow\":null,\"banSubReason\":null}` — but don't fret — it's a fake error, your account isn't banned and API simply blocked your request, not account. Endpoint selection depends on the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments): when disabled (default) sign-in uses `/v8/sessions`; when enabled the client uses `POST /v9/sessions` with an extra `captchaToken`, sharing the same body otherwise.",
+				"description": "Make sure you're passing all [Security headers](/grindr-api/security-headers) or you might stumble upon `{\"code\":28,\"message\":\"ACCOUNT_BANNED\",\"profileId\":null,\"type\":1,\"reason\":null,\"isBanAutomated\":true,\"thirdPartyUserIdToShow\":null,\"banSubReason\":null}` — but don't fret — it's a fake error, your account isn't banned and the API simply blocked your request, not the account. Endpoint selection depends on the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments): when disabled (default) sign-in uses `/v8/sessions`; when enabled the client uses `POST /v9/sessions` with an extra `captchaToken`, sharing the same body otherwise.",
 				"x-errors": {
 					"ACCOUNT_BANNED": "could be malformed request",
 					"INVALID_INPUT_PARAMETERS": "incorrect credentials"
@@ -327,7 +327,7 @@
 					}
 				},
 				"summary": "Sign in via reCAPTCHA",
-				"description": "reCAPTCHA variant of `POST /v8/sessions`. The client uses this endpoint instead of `/v8/sessions` only when the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) is enabled. That assignment is sent by server and resolved before login. The body is identical to `SessionCreateRequest` plus a `captchaToken` (a reCAPTCHA Enterprise token for the `login` action). The official client always populates `captchaToken` here and aborts locally if it can't obtain one, so a `null`/absent token never reaches this endpoint from the app.",
+				"description": "reCAPTCHA variant of `POST /v8/sessions`. The client uses this endpoint instead of `/v8/sessions` only when the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) is enabled. That assignment is sent by the server and resolved before login. The body is identical to `SessionCreateRequest` plus a `captchaToken` (a reCAPTCHA Enterprise token for the `login` action). The official client always populates `captchaToken` here and aborts locally if it can't obtain one, so a `null`/absent token never reaches this endpoint from the app.",
 				"x-errors": {
 					"ACCOUNT_BANNED": "could be malformed request",
 					"INVALID_INPUT_PARAMETERS": "incorrect credentials; on this endpoint a rejected `captchaToken` (e.g. expired or low-score) is also a plausible cause — server behavior, not confirmed from the client"
@@ -4673,7 +4673,7 @@
 										"description": "[profile id](/grindr-api/users/profiles#profile)"
 									},
 									"tapType": {
-										"description": "[Tap ID](/grindr-api/interest/taps#tap-id), invalid or nonexistent Tap IDs are still recorded as successfull",
+										"description": "[Tap ID](/grindr-api/interest/taps#tap-id), invalid or nonexistent Tap IDs are still recorded as successful",
 										"allOf": [
 											{
 												"$ref": "#/components/schemas/TapType"
@@ -4990,7 +4990,7 @@
 			"get": {
 				"tags": ["media/public-cdn-files"],
 				"operationId": "getPublicProfileImage",
-				"description": "One side will always be the requested size and another will be less or equal to the requested size.\n\nAvailable sizes for `{size}` parameter:\n\n- `2048x2048` (might be unavailable)\n- `1024x1024`\n- `480x480`\n- `320x320`",
+				"description": "One side will always be the requested size and the other will be less than or equal to the requested size.\n\nAvailable sizes for `{size}` parameter:\n\n- `2048x2048` (might be unavailable)\n- `1024x1024`\n- `480x480`\n- `320x320`",
 				"servers": [
 					{
 						"url": "https://cdns.grindr.com"
@@ -5099,7 +5099,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Thumbnails images"
+				"summary": "Thumbnail images"
 			}
 		},
 		"/{uploaderProfileId}/{mediaHash}": {
@@ -5654,7 +5654,7 @@
 					}
 				},
 				"summary": "Delete media from an album",
-				"description": "Technically, this does not delete the media from CDN. All signed URLs will continue to work until expired. Uploading same file will result in getting it assigned the same `contentId`."
+				"description": "Technically, this does not delete the media from CDN. All signed URLs will continue to work until expired. Uploading the same file will result in it being assigned the same `contentId`."
 			}
 		},
 		"/v1/albums/{albumId}/content/{contentId}/processing": {
@@ -5997,7 +5997,7 @@
 					}
 				},
 				"summary": "Get album limits",
-				"description": "Interestingly, /v2/albums/storage appears to exist, though not used in current version of APK."
+				"description": "Interestingly, /v2/albums/storage appears to exist, though it is not used in the current version of the APK."
 			}
 		},
 		"/v1/albums/red-dot": {
@@ -6271,7 +6271,7 @@
 					}
 				},
 				"summary": "Delete a conversation",
-				"description": "Deletes the conversation on your side. Does not delete the conversation for other chat's participant.",
+				"description": "Deletes the conversation on your side. Does not delete the conversation for the other chat participant.",
 				"x-idempotent": true
 			}
 		},
@@ -6464,7 +6464,7 @@
 					}
 				},
 				"summary": "Refresh messages",
-				"description": "Requests the messages from the message id"
+				"description": "Requests the messages with the given message IDs."
 			}
 		},
 		"/v4/chat/conversation/{conversationId}/read/{messageId}": {
@@ -6490,7 +6490,7 @@
 					}
 				},
 				"summary": "Mark messages as read",
-				"description": "Regardless of messageId passed, the whole conversation's [`unreadCount`](/grindr-api/messaging/conversations#conversation) will be reset to 0. messageId is taken into account to present the \"Read\" label to sender.\n\nIf you'd like to mark conversation as read but don't show it to other participant, you could pass a valid but nonexistent messageId, such as `0:00000000-0000-0000-0000-000000000000`.\n\nInvalid messageIds will cause HTTP status 400 Bad Request errors."
+				"description": "Regardless of messageId passed, the whole conversation's [`unreadCount`](/grindr-api/messaging/conversations#conversation) will be reset to 0. messageId is taken into account to present the \"Read\" label to the sender.\n\nIf you'd like to mark the conversation as read but don't show it to the other participant, you could pass a valid but nonexistent messageId, such as `0:00000000-0000-0000-0000-000000000000`.\n\nInvalid messageIds will cause HTTP status 400 Bad Request errors."
 			}
 		},
 		"/v1/chat/suggestions": {
@@ -6672,7 +6672,7 @@
 					}
 				},
 				"summary": "Send a message to a conversation",
-				"description": "Please don't use this for spam. Be civil.\n\nWhen `replyToMessageId` is used in HTTP API appears to cause 400 Bad Request error.",
+				"description": "Please don't use this for spam. Be civil.\n\nWhen `replyToMessageId` is used in the HTTP API, it appears to cause a 400 Bad Request error.",
 				"x-see-also": [
 					"/grindr-api/websocket/commands#send-a-message-to-a-conversation-via-ws"
 				]
@@ -7041,7 +7041,7 @@
 					}
 				},
 				"summary": "Add a saved phrase (legacy)",
-				"description": "This endpoint is somewhat broken and sometimes throws 500 ISE error or .",
+				"description": "This endpoint is somewhat broken and sometimes throws a 500 ISE error.",
 				"x-legacy": true
 			}
 		},
@@ -8158,7 +8158,7 @@
 					}
 				},
 				"summary": "Add note",
-				"description": "The `counterpartyId` parameter seems to be ignored, it's unknown what its purpose is."
+				"description": "The `counterpartyId` parameter seems to be ignored; it's unknown what its purpose is."
 			},
 			"delete": {
 				"tags": ["users/favorites"],
@@ -8494,7 +8494,7 @@
 					}
 				},
 				"summary": "Upload media",
-				"description": "Correct request's `Content-Type` header is required."
+				"description": "A correct `Content-Type` request header is required."
 			}
 		},
 		"/v4/media/upload": {
@@ -8548,7 +8548,7 @@
 					}
 				},
 				"summary": "Upload media (legacy)",
-				"description": "You must ensure thumbCoords's width and height dimensions are equal, i.e. y2-y1 must equal to x2-x1. Submitting non-square thumbnail won't trigger any errors and it will be uploaded to CDN, however attempting to use such illegal thumbnail dimensions image in [Edit profile photos](/grindr-api/users/profiles#edit-profile-photos) will result in it being silently dropped/skipped.\n\nAlso there is a legacy `POST /v3/me/profile/images`.",
+				"description": "You must ensure thumbCoords's width and height dimensions are equal, i.e. y2-y1 must equal x2-x1. Submitting a non-square thumbnail won't trigger any errors and it will be uploaded to the CDN, however attempting to use such illegal thumbnail dimensions image in [Edit profile photos](/grindr-api/users/profiles#edit-profile-photos) will result in it being silently dropped/skipped.\n\nAlso there is a legacy `POST /v3/me/profile/images`.",
 				"x-legacy": true
 			}
 		},
@@ -8577,7 +8577,7 @@
 					}
 				},
 				"summary": "Edit profile photos",
-				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](/grindr-api/users/profiles#upload-media).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
+				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](/grindr-api/users/profiles#upload-media).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
 			},
 			"delete": {
 				"tags": ["users/profiles"],
@@ -8603,7 +8603,7 @@
 					}
 				},
 				"summary": "Delete profile photos",
-				"description": "This endpoint removes photo from your profile as well as deletes the media from CDN.",
+				"description": "This endpoint removes the photo from your profile as well as deletes the media from the CDN.",
 				"x-body-label": "Body (yes, body, not query):"
 			}
 		},
@@ -9305,13 +9305,13 @@
 				"type": "string",
 				"minLength": 12,
 				"maxLength": 12,
-				"description": "Grindr requires geohash to be exactly 12 characters long. <https://en.wikipedia.org/wiki/Geohash>\n\nExample: `ezjmgyern222` (Madrid, Spain)\n\n> [!WARNING]\n>\n> Setting geohash inside of United Kingdom will lead to the account being locked and resetting geohash being impossible until you submit legal documents for age verification.\n\nGeohash explorer: <https://geohash.softeng.co/>",
+				"description": "Grindr requires geohash to be exactly 12 characters long. <https://en.wikipedia.org/wiki/Geohash>\n\nExample: `ezjmgyern222` (Madrid, Spain)\n\n> [!WARNING]\n>\n> Setting the geohash inside the United Kingdom will lead to the account being locked and resetting geohash being impossible until you submit legal documents for age verification.\n\nGeohash explorer: <https://geohash.softeng.co/>",
 				"x-render-on-tag": "browse/location"
 			},
 			"ConversationId": {
 				"type": "string",
 				"pattern": "^[0-9]+:[0-9]+$",
-				"description": "String with two long integers separated by `:`, e.g. `\"12345678:23456789\"`. Long integers are IDs of [Profile](/grindr-api/users/profiles#profile). The order of these IDs is always from smaller ID to higher ID, regardless of who started the chat.",
+				"description": "String with two long integers separated by `:`, e.g. `\"12345678:23456789\"`. Long integers are IDs of [Profile](/grindr-api/users/profiles#profile). The order of these IDs is always from the lower ID to the higher ID, regardless of who started the chat.",
 				"x-render-on-tag": "messaging/conversations",
 				"x-display-name": "Conversation ID"
 			},
@@ -9402,7 +9402,7 @@
 							"captchaToken": {
 								"type": "string",
 								"nullable": true,
-								"description": "reCAPTCHA Enterprise token for the `FirstPartyLogin` action. Non-null for the email + password sign-in; `null` for the `authToken` session-refresh flow. The token is only fetched by device when the `recaptcha_first_party` assignment is enabled."
+								"description": "reCAPTCHA Enterprise token for the `FirstPartyLogin` action. Non-null for the email + password sign-in; `null` for the `authToken` session-refresh flow. The token is only fetched by the device when the `recaptcha_first_party` assignment is enabled."
 							}
 						}
 					}
@@ -11365,7 +11365,7 @@
 				},
 				"x-render-on-tag": "messaging/albums",
 				"x-display-name": "Album name",
-				"description": "String, may be empty (`\"\"`) or `null`, non-string values are coerced into string.\n\nMaximum length: 255 UTF-8 bytes, which is 255 characters for ASCII strings (1 ASCII character is encoded as 1 byte) but less if you include emojis or non-ascii characters (2+ bytes/one codepoint).",
+				"description": "String, may be empty (`\"\"`) or `null`, non-string values are coerced into strings.\n\nMaximum length: 255 UTF-8 bytes, which is 255 characters for ASCII strings (1 ASCII character is encoded as 1 byte) but less if you include emojis or non-ascii characters (2+ bytes/one codepoint).",
 				"required": ["albumName"]
 			},
 			"AlbumRenameResponse": {
@@ -11455,7 +11455,7 @@
 					},
 					"maxContentSizeHumanReadable": {
 						"type": "string",
-						"description": "string, incorrectly uses decimal multiples notation (MB) when in fact calculates binary notation (MiB), so API's `120.00 MB` is actually 120 MiB or 125.8291 MB"
+						"description": "string, incorrectly uses decimal multiples notation (MB) when it in fact calculates binary notation (MiB), so API's `120.00 MB` is actually 120 MiB or 125.8291 MB"
 					},
 					"maxVideoLength": {
 						"type": "integer",
@@ -12035,7 +12035,7 @@
 					"NonExpiringVideo",
 					"VideoCall"
 				],
-				"description": "Message type discriminator. There also appears to be a related `chat1Type`, could be legacy type.",
+				"description": "Message type discriminator. There also appears to be a related `chat1Type`, which could be a legacy type.",
 				"x-render-on-tag": "messaging/messages",
 				"x-display-name": "Message type"
 			},
@@ -12446,7 +12446,7 @@
 						}
 					}
 				],
-				"description": "Body for `\"ExpiringImage\"` message type. Extends [Image](#image) but with `url` set to `null` and additional `viewsRemaining`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, `url` in message body will be replaced with `null` and image will no longer be viewable.",
+				"description": "Body for `\"ExpiringImage\"` message type. Extends [Image](#image) but with `url` set to `null` and additional `viewsRemaining`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.",
 				"x-render-on-tag": "messaging/messages",
 				"required": ["url", "viewsRemaining"]
 			},
@@ -12730,7 +12730,7 @@
 				"properties": {
 					"lastReadTimestamp": {
 						"nullable": true,
-						"description": "unix timestamp of recipient's side in milliseconds or `null`; is not affected by yours calls to [mark messages as read](/grindr-api/messaging/conversations#mark-messages-as-read)",
+						"description": "unix timestamp of recipient's side in milliseconds or `null`; is not affected by your calls to [mark messages as read](/grindr-api/messaging/conversations#mark-messages-as-read)",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -14117,7 +14117,7 @@
 			},
 			"MediaState": {
 				"type": "string",
-				"description": "Public media in Grindr undergo through an automated moderation check before they appear in profile. State can be either `null` for medias uploaded privately ([chats](/grindr-api/messaging/albums#upload-media-to-an-album)) or one of the below for public-facing media.",
+				"description": "Public media in Grindr undergo an automated moderation check before they appear on a profile. State can be either `null` for media uploaded privately ([chats](/grindr-api/messaging/albums#upload-media-to-an-album)) or one of the below for public-facing media.",
 				"enum": ["Pending"],
 				"x-render-on-tag": "media/signed-cdn-files",
 				"x-display-name": "MediaState",

@@ -33,7 +33,7 @@ fn map_plugin_error(error: PluginInvokeError) -> AppError {
             Some("companion-unavailable") => {
                 return AppError::Auth("companion-unavailable".into());
             }
-            Some("cancelled") => return AppError::Auth("Sign-in cancelled".into()),
+            Some("cancelled") => return AppError::Auth("Sign-in canceled".into()),
             _ => {}
         }
     }

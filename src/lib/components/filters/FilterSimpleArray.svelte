@@ -22,7 +22,7 @@
 
 	const allItems = $derived(
 		notSpecified
-			? [...items, { value: convert("-1"), label: "Not Specified" }]
+			? [...items, { value: convert("-1"), label: "Not specified" }]
 			: items,
 	);
 </script>

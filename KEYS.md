@@ -1,6 +1,6 @@
 # Open Grind Signing Keys
 
-See also [BUILDING.md](./BUILDING.md) for reproducable builds. This document (KEYS.md) is signed (KEYS.md.asc) with Open Grind's PGP key below, you can verify it using `gpg --verify KEYS.md.asc KEYS.md`.
+See also [BUILDING.md](./BUILDING.md) for reproducible builds. This document (KEYS.md) is signed (KEYS.md.asc) with Open Grind's PGP key below, you can verify it using `gpg --verify KEYS.md.asc KEYS.md`.
 
 ## PGP Public Key
 

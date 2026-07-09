@@ -28,7 +28,7 @@ export function copyError(error: unknown) {
 		.then(async () => {
 			toast.success("Copied to clipboard");
 			if (await getPreferences().then((p) => p.warnBeforeCopyingErrorDetails)) {
-				toast.warning("Be mindful of what you share in the internet!", {
+				toast.warning("Be mindful of what you share on the internet!", {
 					description:
 						"Error details may contain your personal and sensitive data. Redact before sharing them with others.",
 					duration: 7000,
@@ -40,7 +40,7 @@ export function copyError(error: unknown) {
 }
 
 export function showErrorToast({
-	label = "An error occured",
+	label = "An error occurred",
 	error,
 	onRetry,
 }: {

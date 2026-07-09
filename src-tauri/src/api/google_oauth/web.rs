@@ -81,7 +81,7 @@ pub async fn fetch_access_token(
     let bridge_for_close = bridge.clone();
     window.on_window_event(move |event| {
         if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
-            bridge_for_close.fulfill(Err("Sign-in cancelled".to_string()));
+            bridge_for_close.fulfill(Err("Sign-in canceled".to_string()));
         }
     });
 

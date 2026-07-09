@@ -21,7 +21,7 @@
 	}}
 >
 	{#if profileId === null}
-		Put the profile id to search
+		Enter the profile ID to search
 	{:else}
 		#{profileId}
 	{/if}

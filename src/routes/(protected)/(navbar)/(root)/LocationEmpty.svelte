@@ -77,7 +77,7 @@
 		</Empty.Media>
 		<Empty.Title>Choose location</Empty.Title>
 		<Empty.Description>
-			Pick location on the map or select from the list to find nearby profiles.
+			Pick a location on the map or select from the list to find nearby profiles.
 		</Empty.Description>
 	</Empty.Header>
 	<Empty.Content>

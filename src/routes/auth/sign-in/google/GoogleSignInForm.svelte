@@ -32,13 +32,13 @@
 				appError.message === "companion-unavailable"
 			) {
 				toast.error(
-					'Couldn\'t find Open Grind Google OAuth app on your device. Install it first, then tap "Retry". Alternatively, try pasting the OAuth token manually.',
+					'Couldn\'t find the Open Grind Google OAuth app on your device. Install it first, then tap "Retry". Alternatively, try pasting the OAuth token manually.',
 				);
 				return;
 			}
 			if (
 				appError?.kind === "Auth" &&
-				appError.message === "Sign-in cancelled"
+				appError.message === "Sign-in canceled"
 			) {
 				return;
 			}
@@ -90,7 +90,7 @@
 						</Link>
 					</li>
 					{#if !manualInput}
-						<li>On this screen tap "Retry" button</li>
+						<li>On this screen, tap the "Retry" button</li>
 					{:else}
 						<li>Sign in with Google in the companion app and copy the token</li>
 						<li>Return to this screen, paste it and tap "Sign in"</li>

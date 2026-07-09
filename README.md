@@ -2,9 +2,9 @@
 
 [![Matrix space](https://img.shields.io/matrix/opengrind:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=matrix%20space)](https://matrix.to/#/#opengrind:opengrind.org) [![chat](https://img.shields.io/matrix/general:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=chat)](https://matrix.to/#/#general:opengrind.org) [![Announcements](https://img.shields.io/matrix/announcements:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=announcements)](https://matrix.to/#/#announcements:opengrind.org)
 
-Unofficial Grindr client. Crossplatform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
+Unofficial Grindr client. Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
 
-Status as of 21th June, 2026: **🚧 Early MVP build is available 🚧**.
+Status as of 21st June, 2026: **🚧 Early MVP build is available 🚧**.
 
 ## Usage
 
@@ -20,7 +20,7 @@ Android releases are additionally signed with Java KeyStore with the following S
 
 Signing keys and verification instructions are documented in [KEYS.md](KEYS.md), itself signed by the PGP key above (verify with `gpg --verify KEYS.md.asc KEYS.md`).
 
-Open Grind supports reproducable builds. Read more in [BUILDING.md](./BUILDING.md#verifying-a-published-release).
+Open Grind supports reproducible builds. Read more in [BUILDING.md](./BUILDING.md#verifying-a-published-release).
 
 ## Development
 

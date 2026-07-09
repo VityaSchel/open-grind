@@ -8,7 +8,7 @@ All requests must have these fields in addition to any top-level properties spec
 - `ref` — [WebSocket command ref](#websocket-command-ref)
 - `token` — string, [Session ID](/grindr-api/authentication#session-id)
 
-Invalid or expired tokens passed in token field cause socket closing with status code 4401.
+Invalid or expired tokens passed in the token field cause socket closing with status code 4401.
 
 ## WebSocket command ref
 

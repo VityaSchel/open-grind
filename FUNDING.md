@@ -1,6 +1,6 @@
 # Donate to Open Grind
 
-**Open Grind does not accept monetary donations.** There is no governance entity that accepts money on Open Grind behalf. 
+**Open Grind does not accept monetary donations.** There is no governance entity that accepts money on Open Grind's behalf. 
 
 Open Grind maintainers and contributors accept donations through their own chosen platforms and payment methods. You can find the list of persons who made contributions ordered by the value in [GOVERNANCE.md](./GOVERNANCE.md).
 

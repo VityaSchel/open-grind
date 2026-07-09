@@ -56,6 +56,6 @@
 	</ToggleGroup.Item>
 	<ToggleGroup.Item value={FilterPosition.NotSpecified.toString()}>
 		<XIcon />
-		Not Specified
+		Not specified
 	</ToggleGroup.Item>
 </ToggleGroup.Root>

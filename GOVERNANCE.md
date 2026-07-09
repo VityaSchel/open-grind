@@ -38,6 +38,6 @@ Listed in order of their contributions' value[^1]:
 - For bug reports, feature requests and important project discussions: <https://git.opengrind.org/open-grind/open-grind/issues>
 - For announcements: [#announcements:opengrind.org in Matrix](https://matrix.to/#/#announcements:opengrind.org)
 - For general talk and questions: [#general:opengrind.org in Matrix](https://matrix.to/#/#general:opengrind.org)
-- For private inquires and disclosure: refer to [**decision making authority's** contacts](#maintainers)
+- For private inquiries and disclosure: refer to [**decision making authority's** contacts](#maintainers)
 
 [^1]: Primarily determined by the amount of code contributed, counted on [Contributors](https://git.opengrind.org/open-grind/open-grind/activity/contributors) page

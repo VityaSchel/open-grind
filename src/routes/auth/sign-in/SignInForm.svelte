@@ -114,7 +114,7 @@
 			}
 			if (
 				appError?.kind === "Auth" &&
-				appError.message === "Sign-in cancelled"
+				appError.message === "Sign-in canceled"
 			) {
 				return;
 			}

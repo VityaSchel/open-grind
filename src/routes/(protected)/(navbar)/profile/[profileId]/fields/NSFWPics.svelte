@@ -18,7 +18,7 @@
 {#if nsfwPics !== null}
 	<ProfileField>
 		<CameraIcon class="shrink-0" />
-		<ProfileValueLabel label="NSFW pics?">
+		<ProfileValueLabel label="NSFW Pics?">
 			{acceptNSFWPicsOptions[nsfwPics]}
 		</ProfileValueLabel>
 	</ProfileField>
