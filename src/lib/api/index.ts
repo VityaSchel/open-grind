@@ -9,6 +9,23 @@ import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte"
 import { demoCallMethod, demoEnabled, demoRoute } from "$lib/demo";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 
+export const banInfoSchema = z.object({
+	kind: z.string(),
+	code: z.number(),
+	message: z.string(),
+	reason: z.string().nullish(),
+	subReason: z.string().nullish(),
+	automated: z.boolean().nullish(),
+});
+export type BanInfo = z.infer<typeof banInfoSchema>;
+
+export const restrictionSchema = z.object({
+	kind: z.enum(["ageVerification", "timedBan", "trustVendorRejected", "other"]),
+	region: z.string().nullish(),
+	reason: z.string().nullish(),
+});
+export type Restriction = z.infer<typeof restrictionSchema>;
+
 export const methods = {
 	login: {
 		request: z.object({
@@ -17,12 +34,14 @@ export const methods = {
 		}),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
 		}),
 	},
 	login_with_google: {
 		request: z.undefined(),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
 		}),
 	},
 	google_sign_in: {
@@ -31,16 +50,22 @@ export const methods = {
 		}),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
 		}),
 	},
 	auth_state: {
 		request: z.undefined(),
 		response: z.int().nonnegative().nullable(),
 	},
+	account_restriction: {
+		request: z.undefined(),
+		response: restrictionSchema.nullish(),
+	},
 	refresh_token: {
 		request: z.undefined(),
 		response: z.object({
 			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
 		}),
 	},
 	rotate_api_params: {
@@ -72,10 +97,25 @@ export async function callMethod<T extends keyof typeof methods>(
 	return await invoke(method, args[0]);
 }
 
+export function asBanned(error: unknown): BanInfo | null {
+	const parsed = z
+		.object({ kind: z.literal("Banned"), message: banInfoSchema })
+		.safeParse(error);
+	return parsed.success ? parsed.data.message : null;
+}
+
 export function asAppError(error: unknown) {
 	const { data, success } = z
 		.object({
-			kind: z.enum(["Http", "Auth", "Api", "Unauthorized", "NotInitialized"]),
+			kind: z.enum([
+				"Http",
+				"Auth",
+				"Api",
+				"Unauthorized",
+				"Banned",
+				"RateLimited",
+				"NotInitialized",
+			]),
 			message: z
 				.string()
 				.or(

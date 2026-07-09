@@ -3,6 +3,8 @@ export type ApiErrorKind =
 	| "Auth"
 	| "Api"
 	| "Unauthorized"
+	| "Banned"
+	| "RateLimited"
 	| "NotInitialized";
 
 export class ApiError extends Error {

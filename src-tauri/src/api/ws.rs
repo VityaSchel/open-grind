@@ -1,7 +1,7 @@
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::error::AppError;
+use crate::error::{AppError, BanInfo};
 use crate::state::AppState;
 
 #[derive(Debug, Clone, Serialize)]
@@ -57,14 +57,32 @@ pub fn spawn_ws_task(app: AppHandle) {
             };
             let mut rx = client.auth_event_receiver();
             while let Ok(event) = rx.recv().await {
-                app.emit(
-                    "auth:session-error",
-                    SessionErrorPayload {
-                        message: event.message,
-                        unauthorized: event.unauthorized,
-                    },
-                )
-                .ok();
+                match event {
+                    grindr::AuthEvent::LoggedOut => {
+                        app.emit(
+                            "auth:session-error",
+                            SessionErrorPayload {
+                                message: "Session expired".to_owned(),
+                                unauthorized: true,
+                            },
+                        )
+                        .ok();
+                    }
+                    grindr::AuthEvent::RefreshFailed { message } => {
+                        app.emit(
+                            "auth:session-error",
+                            SessionErrorPayload {
+                                message,
+                                unauthorized: false,
+                            },
+                        )
+                        .ok();
+                    }
+                    grindr::AuthEvent::Banned(info) => {
+                        app.emit("auth:banned", BanInfo::from(info)).ok();
+                    }
+                    _ => {}
+                }
             }
         });
     }

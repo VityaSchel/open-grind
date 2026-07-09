@@ -3,7 +3,8 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { asAppError, callMethod } from "$lib/api";
+	import { asAppError, asBanned, callMethod, type Restriction } from "$lib/api";
+	import { accountStatusState } from "$lib/api/account-status-state.svelte";
 	import { showErrorToast } from "$lib/api/error";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
@@ -17,18 +18,41 @@
 	let password = $state("");
 	let submitting: false | "password" | "google" = $state(false);
 
+	function showRestriction(restriction: Restriction | null | undefined): boolean {
+		if (!restriction) return false;
+		accountStatusState.status = { kind: "restriction", restriction };
+		accountStatusState.open = true;
+		return true;
+	}
+
+	function handleAccountBlock(error: unknown): boolean {
+		const ban = asBanned(error);
+		if (ban) {
+			accountStatusState.status = { kind: "banned", info: ban };
+			accountStatusState.open = true;
+			return true;
+		}
+		if (asAppError(error)?.kind === "RateLimited") {
+			toast.error("Too many attempts. Please try again later.");
+			return true;
+		}
+		return false;
+	}
+
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
 		submitting = "password";
 		try {
-			await callMethod("login", {
+			const result = await callMethod("login", {
 				email,
 				password,
 			});
+			if (showRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
 			console.error(error);
+			if (handleAccountBlock(error)) return;
 			const appError = asAppError(error);
 			if (appError) {
 				const invalidInputParameters = z
@@ -75,7 +99,8 @@
 		if (submitting) return;
 		submitting = "google";
 		try {
-			await callMethod("login_with_google");
+			const result = await callMethod("login_with_google");
+			if (showRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
@@ -93,6 +118,7 @@
 			) {
 				return;
 			}
+			if (handleAccountBlock(error)) return;
 			console.error(error);
 			if (appError) {
 				toast.error(appError.prettyMessage);

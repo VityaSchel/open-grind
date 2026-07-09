@@ -41,6 +41,7 @@ pub fn run() {
             api::auth::refresh_token,
             api::auth::logout,
             api::auth::auth_state,
+            api::auth::account_restriction,
             api::auth::recaptcha_first_party_enabled,
             api::rest::request,
             api::media_upload::upload_chat_media,
