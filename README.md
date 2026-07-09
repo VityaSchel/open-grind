@@ -4,11 +4,7 @@
 
 Unofficial Grindr client. Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
 
-Status as of 21st June, 2026: **🚧 Early MVP build is available 🚧**.
-
-## Usage
-
-[Download the latest version from releases](https://git.opengrind.org/open-grind/open-grind/releases).
+**[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases)** from releases.
 
 ## Security
 

@@ -2,8 +2,6 @@
 
 Thanks for considering contributing to Open Grind.
 
-To minimize effort and time spent on porting code across platforms, the project is built with [Tauri](https://tauri.app/) — a cross-platform framework running the same codebase on Windows, Linux, macOS, Android and iOS. Native clients are currently not planned but would be highly appreciated and featured.
-
 - [Contributing to Open Grind](#contributing-to-open-grind)
   - [Contribution guidelines](#contribution-guidelines)
   - [Getting started](#getting-started)
@@ -19,8 +17,13 @@ To minimize effort and time spent on porting code across platforms, the project 
 AI-generated pull requests are not allowed. AI-assisted code is allowed. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 - Use American English spelling
+- Use [Phosphor Icons](https://phosphoricons.com) whenever possible
 
 ## Getting started
+
+**[Join the Open Grind developers chat in Matrix!](https://matrix.to/#/#dev:opengrind.org)**
+
+To minimize effort and time spent on porting code across platforms, the project is built with [Tauri](https://tauri.app/) — a cross-platform framework running the same codebase on Windows, Linux, macOS, Android and iOS. Native clients are currently not planned but would be highly appreciated and featured.
 
 Projects reference:
 
