@@ -79,6 +79,7 @@
           androidSdkRoot = "${androidSdk}/libexec/android-sdk";
           ndkRoot = "${androidSdkRoot}/ndk/${androidNdkVersion}";
           buildToolsBin = "${androidSdkRoot}/build-tools/${androidBuildToolsVersion}";
+          cmakeBin = "${androidSdkRoot}/cmake/${androidCmakeVersion}/bin";
 
           jdk = pkgs.jdk21_headless;
 
@@ -106,6 +107,7 @@
             NDK_HOME = ndkRoot;
             GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkRoot}/build-tools/${androidBuildToolsVersion}/aapt2";
             LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
+            CMAKE_GENERATOR = "Ninja";
           }
           // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
             LIBRARY_PATH = "${pkgs.libiconv}/lib";
@@ -122,7 +124,7 @@
               set -euo pipefail
 
               ${envExports}
-              export PATH="${buildToolsBin}:$PATH"
+              export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
 
               # Project root: the directory containing this flake.
               ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
@@ -168,7 +170,7 @@
               shellHook = ''
                 # Put apksigner, zipalign, aapt2 on PATH — androidenv
                 # only exposes the SDK's top-level bin (adb, sdkmanager).
-                export PATH="${buildToolsBin}:$PATH"
+                export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
 
                 echo "Open Grind dev shell: Android toolchain pinned via Nix."
                 echo "  Rust:      $(rustc --version)"
