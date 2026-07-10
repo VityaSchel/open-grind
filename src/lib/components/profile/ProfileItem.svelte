@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DisplayName from "$lib/components/profile/DisplayName.svelte";
-	import OnlineDot from "$lib/components/profile/OnlineDot.svelte";
+	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Item from "$lib/components/ui/item";
@@ -37,9 +37,7 @@
 		onLongPress?: () => void;
 	} = $props();
 
-	const longPress = $derived(
-		onLongPress ? longPressHandlers(onLongPress) : {},
-	);
+	const longPress = $derived(onLongPress ? longPressHandlers(onLongPress) : {});
 	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
 </script>
 
@@ -65,7 +63,7 @@
 			]}
 		>
 			{@render title.badge?.()}
-			<OnlineDot {onlineUntil} />
+			<ProfileStatusIndicator {onlineUntil} />
 			<DisplayName name={title.value} class="truncate" />
 		</Item.Title>
 		{@render description?.()}

@@ -3,7 +3,7 @@
 	import type { Snippet } from "svelte";
 
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
-	import OnlineDot from "$lib/components/profile/OnlineDot.svelte";
+	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 
@@ -15,6 +15,7 @@
 		unread = null,
 		onlineUntil = null,
 		isFavorite = false,
+		isVisiting = false,
 		hadRecentChat = false,
 		href = null,
 		class: className,
@@ -27,6 +28,7 @@
 		unread?: number | null;
 		onlineUntil?: number | null;
 		isFavorite?: boolean;
+		isVisiting?: boolean;
 		hadRecentChat?: boolean;
 		href?: string | null;
 		class?: import("svelte/elements").ClassValue;
@@ -68,7 +70,8 @@
 				variant="outline"
 				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 backdrop-blur-2xl"
 			>
-				<OnlineDot {onlineUntil} class="me-1" />
+				<ProfileStatusIndicator {onlineUntil} {isVisiting} class="me-1" />
+
 				{#if displayName !== null}
 					<span class="block shrink truncate font-semibold">{displayName}</span>
 				{/if}

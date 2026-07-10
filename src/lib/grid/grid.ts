@@ -11,6 +11,7 @@ export type FullGridProfile = {
 	unread: number | null;
 	onlineUntil: number | null;
 	isFavorite: boolean;
+	isVisiting: boolean;
 	hasChattedInLast24Hrs: boolean;
 };
 
@@ -21,6 +22,8 @@ export type PartialGridProfile = {
 };
 
 export type GridProfile = FullGridProfile | PartialGridProfile;
+
+const isVisitingCache: Set<number> = new Set();
 
 export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 	const response = await getCascadeV3(query);
@@ -40,9 +43,11 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				unread: profile.unreadCount ?? null,
 				onlineUntil: profile.onlineUntil ?? null,
 				isFavorite: profile.isFavorite,
+				isVisiting: profile.isVisiting,
 				hasChattedInLast24Hrs: profile.hasChattedInLast24Hrs,
-			});
-		} else if (item.type === "partial_profile_v1") {
+            });
+
+        } else if (item.type === "partial_profile_v1") {
 			if (currentBatch.length === 150) {
 				partialBatches.push({ batch: currentBatch });
 				currentBatch = [];
@@ -54,8 +59,13 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				id: item.data.profileId,
 				batchIndex,
 			});
+
+			if (item.data.isVisiting) {
+				isVisitingCache.add(item.data.profileId);
+			}
 		}
 	}
+
 	if (currentBatch.length > 0) {
 		partialBatches.push({ batch: currentBatch });
 	}
@@ -108,6 +118,7 @@ export async function resolvePartialBatch(
 			unread: null,
 			onlineUntil: profile.onlineUntil ?? null,
 			isFavorite: profile.isFavorite,
+			isVisiting: isVisitingCache.has(profile.profileId),
 			hasChattedInLast24Hrs:
 				profile.lastChatTimestamp !== null &&
 				Date.now() - profile.lastChatTimestamp < 24 * 60 * 60 * 1000,
