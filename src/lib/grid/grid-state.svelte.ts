@@ -8,7 +8,7 @@ import {
 	getCachedProfile,
 	getGrid,
 	type GridProfile,
-	resolvePartialBatch,
+	resolveLazyProfile,
 	setCachedProfile,
 } from "./grid";
 import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
@@ -16,7 +16,6 @@ import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 class GridState {
 	filters = new GridSearchFiltersState({ onRefresh: () => this.refresh() });
 	items: GridProfile[] = $state([]);
-	partialBatches: { batch: { profileId: number }[] }[] = [];
 	nextPage: number | null = $state(0);
 	loadingMore = $state(false);
 	loading = $state(false);
@@ -30,7 +29,7 @@ class GridState {
 	scrollY = 0;
 
 	#geohash: string | null = null;
-	#loadingBatches = new Set<number>();
+	#resolvingIds = new Set<number>();
 	#fetchToken = 0;
 
 	load(geohash: string): void {
@@ -61,13 +60,12 @@ class GridState {
 
 	#reset(): void {
 		this.items = [];
-		this.partialBatches = [];
 		this.nextPage = 0;
 		this.loadingMore = false;
 		this.loading = true;
 		this.error = null;
 		this.currentQuery = null;
-		this.#loadingBatches.clear();
+		this.#resolvingIds.clear();
 	}
 
 	reset(): void {
@@ -83,20 +81,14 @@ class GridState {
 	async loadMore(): Promise<void> {
 		if (this.loadingMore || !this.nextPage || !this.currentQuery) return;
 		this.loadingMore = true;
+		const token = this.#fetchToken;
 		try {
-			const batchOffset = this.partialBatches.length;
 			const result = await getGrid({
 				...this.currentQuery,
 				pageNumber: this.nextPage,
 			});
-			for (const item of result.items) {
-				this.items.push(
-					item.type === "partial"
-						? { ...item, batchIndex: item.batchIndex + batchOffset }
-						: item,
-				);
-			}
-			this.partialBatches.push(...result.partialBatches);
+			if (token !== this.#fetchToken) return;
+			this.items.push(...result.items);
 			this.nextPage = result.nextPage;
 		} catch (error) {
 			console.error(error);
@@ -109,46 +101,39 @@ class GridState {
 		}
 	}
 
-	async loadBatch(batchIndex: number): Promise<void> {
-		if (this.#loadingBatches.has(batchIndex)) return;
-		this.#loadingBatches.add(batchIndex);
+	async resolveProfile(id: number): Promise<void> {
+		if (this.#resolvingIds.has(id)) return;
+		this.#resolvingIds.add(id);
+		const token = this.#fetchToken;
 		try {
-			const batch = this.partialBatches[batchIndex];
-			if (!batch) return;
-			const profileIds = batch.batch.map((p) => p.profileId);
-			const uncachedIds: number[] = [];
+			const item = this.items.find((i) => i.id === id);
+			if (!item || item.type !== "lazy") return;
 
-			for (const id of profileIds) {
-				const cached = getCachedProfile(id);
-				if (cached) {
-					const idx = this.items.findIndex((i) => i.id === id);
-					if (idx !== -1) this.items[idx] = cached;
-				} else {
-					uncachedIds.push(id);
-				}
-			}
-
-			const resolved = await resolvePartialBatch(uncachedIds);
-			for (const profile of resolved) {
-				setCachedProfile(profile);
-				const idx = this.items.findIndex((i) => i.id === profile.id);
-				if (idx !== -1) this.items[idx] = profile;
-			}
-
-			const unresolved = uncachedIds.filter(
-				(id) => !resolved.some((profile) => profile.id === id),
-			);
-			for (const id of unresolved) {
+			const cached = getCachedProfile(id);
+			if (cached) {
 				const idx = this.items.findIndex((i) => i.id === id);
-				if (idx !== -1) this.items.splice(idx, 1);
+				if (idx !== -1) this.items[idx] = cached;
+				return;
+			}
+
+			const resolved = await resolveLazyProfile(item);
+			if (token !== this.#fetchToken) return;
+			const idx = this.items.findIndex((i) => i.id === id);
+			if (idx === -1) return;
+			if (resolved) {
+				setCachedProfile(resolved);
+				this.items[idx] = resolved;
+			} else {
+				this.items.splice(idx, 1);
 			}
 		} catch (error) {
-			console.error(batchIndex, error);
+			console.error(id, error);
 			showErrorToast({
-				label: "Failed to load profiles",
+				label: "Failed to load profile",
 				error,
 			});
-			this.#loadingBatches.delete(batchIndex);
+		} finally {
+			this.#resolvingIds.delete(id);
 		}
 	}
 
@@ -228,9 +213,8 @@ class GridState {
 			const result = await getGrid(query);
 			if (token !== this.#fetchToken) return;
 			this.currentQuery = query;
-			this.#loadingBatches.clear();
+			this.#resolvingIds.clear();
 			this.items = result.items;
-			this.partialBatches = result.partialBatches;
 			this.nextPage = result.nextPage;
 			this.error = null;
 			this.loading = false;

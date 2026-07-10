@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { afterNavigate, beforeNavigate } from "$app/navigation";
-	import { uniqBy } from "lodash-es";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import type { GridProfile } from "$lib/grid/grid";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
@@ -13,7 +13,16 @@
 		geohash: string;
 	} = $props();
 
-	const gridProfiles = $derived(uniqBy(gridState.items, "id"));
+	const gridProfiles = $derived.by(() => {
+		const byId = new Map<number, GridProfile>();
+		for (const item of gridState.items) {
+			const existing = byId.get(item.id);
+			if (!existing || (existing.type === "lazy" && item.type === "rendered")) {
+				byId.set(item.id, item);
+			}
+		}
+		return [...byId.values()];
+	});
 
 	$effect.pre(() => {
 		gridState.load(geohash);
@@ -58,12 +67,12 @@
 		};
 	}
 
-	function observePartial(node: HTMLElement, params: { batchIndex: number }) {
+	function observeLazy(node: HTMLElement, params: { id: number }) {
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) {
 					gridState
-						.loadBatch(params.batchIndex)
+						.resolveProfile(params.id)
 						.catch((error) => console.error(error));
 					observer.disconnect();
 				}
@@ -94,7 +103,7 @@
 		</div>
 	{:else}
 		{#each gridProfiles as item (item.id)}
-			{#if item.type === "full"}
+			{#if item.type === "rendered"}
 				<GridProfileMiniCard
 					id={item.id}
 					displayName={item.displayName}
@@ -111,7 +120,7 @@
 			{:else}
 				<div
 					class="aspect-square animate-pulse bg-stone-700"
-					use:observePartial={{ batchIndex: item.batchIndex }}
+					use:observeLazy={{ id: item.id }}
 				></div>
 			{/if}
 		{:else}
