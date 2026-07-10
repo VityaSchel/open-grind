@@ -36,15 +36,16 @@ Projects reference:
 
 ### Development environment
 
-1. Install prerequisites:
+1. Clone repository with submodules: `git clone --recurse-submodules ssh://git@git.opengrind.org/open-grind/open-grind.git`
+2. Install prerequisites:
    - [Bun](https://bun.sh)
    - [Rust](https://rustup.rs)
    - [Tauri CLI](https://tauri.app/start/prerequisites/)
-2. Install dependencies:
+3. Install dependencies:
     ```bash
     bun ci
     ```
-3. Then start a dev server:
+4. Then start a dev server:
     ```bash
     bun dev
     ```
@@ -109,7 +110,7 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 2. [Create an SSH key](https://docs.codeberg.org/security/ssh-key/) for authorization on your computer and add it to your SSH config
 3. [Add your SSH key](https://git.opengrind.org/user/settings/keys) to User settings -> SSH / GPG keys page on git.opengrind.org
 4. [Fork open-grind](https://git.opengrind.org/open-grind/open-grind/fork) repository on git.opengrind.org. **AGit PRs are not accepted.**
-5. Clone it locally using `git clone ssh://git@git.opengrind.org/yourusername/open-grind.git` and `cd` into it
+5. Clone it locally using `git clone --recurse-submodules ssh://git@git.opengrind.org/yourusername/open-grind.git` and `cd` into it
 6. Configure git to use **your git.opengrind.org account's email** to commit: `git config set user.email you+opengrind@example.org` — commits email must match an activated email address in your account
 7. Configure git to use your name to commit: `git config set user.name gitusername` — it's recommended to use your git.opengrind.org account's display name
 8. Configure git to sign commits: `git config set commit.gpgSign true` and tell it about your SSH/GPG key: `git config set user.signingKey '~/.ssh/<YOUR PUBLIC SSH KEY>'` (if you use SSH key to sign, also set `git config set gpg.format ssh`) — **all submitted commits must be signed by keys verified in your git.opengrind.org account.**
