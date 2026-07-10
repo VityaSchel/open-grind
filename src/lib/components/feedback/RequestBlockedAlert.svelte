@@ -12,7 +12,7 @@
 </script>
 
 <AlertDialog.Root bind:open={requestBlockedAlertState.open}>
-	<AlertDialog.Content preventOverflowTextSelection={false}>
+	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Grindr blocks your requests</AlertDialog.Title>
 			<AlertDialog.Description>

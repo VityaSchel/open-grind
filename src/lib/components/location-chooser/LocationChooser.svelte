@@ -63,7 +63,6 @@
 	<Dialog.Root bind:open>
 		<Dialog.Content
 			class="flex h-[calc(var(--screen-safe)-4rem)] flex-col sm:max-w-200"
-			preventOverflowTextSelection={false}
 			showCloseButton={false}
 		>
 			<div

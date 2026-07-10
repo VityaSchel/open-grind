@@ -13,7 +13,7 @@
 </script>
 
 <AlertDialog.Root bind:open>
-	<AlertDialog.Content preventOverflowTextSelection={false}>
+	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>
 				Delete

@@ -86,7 +86,6 @@
 	<AlertDialog.Content
 		escapeKeydownBehavior="ignore"
 		interactOutsideBehavior="ignore"
-		preventOverflowTextSelection={false}
 	>
 		<AlertDialog.Header>
 			<AlertDialog.Title>{content.title}</AlertDialog.Title>

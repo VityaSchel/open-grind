@@ -84,7 +84,6 @@
 	{/snippet}
 	<Dialog.Root bind:open={warningOpen}>
 		<Dialog.Content
-			preventOverflowTextSelection={false}
 			showCloseButton={false}
 			class="flex flex-col max-settings-dialog:max-w-[calc(100%-1rem)] max-settings-dialog:text-center"
 		>
