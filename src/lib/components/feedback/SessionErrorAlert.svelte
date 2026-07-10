@@ -82,6 +82,7 @@
 	<AlertDialog.Content
 		escapeKeydownBehavior="ignore"
 		interactOutsideBehavior="ignore"
+		preventOverflowTextSelection={false}
 	>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Can't connect to Grindr</AlertDialog.Title>

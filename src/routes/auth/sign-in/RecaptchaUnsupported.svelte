@@ -6,7 +6,7 @@
 </script>
 
 <AlertDialog.Root bind:open>
-	<AlertDialog.Content>
+	<AlertDialog.Content preventOverflowTextSelection={false}>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Captcha verification required</AlertDialog.Title>
 			<AlertDialog.Description>
