@@ -36,9 +36,7 @@
             };
           };
 
-          # Single source of truth: src-tauri/gen/android/gradle.properties.
-          # Parsed here so the flake never duplicates a constant Gradle
-          # already needs to read.
+          # Parsed from gradle.properties so versions live in exactly one place.
           gradleProperties =
             let
               raw = builtins.readFile ./src-tauri/gen/android/gradle.properties;
@@ -63,7 +61,28 @@
 
           rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
 
-          androidComposition = pkgs.androidenv.composeAndroidPackages {
+          # Strip androidenv's 32-bit i686 deps (x86_64-linux only): realizing an
+          # i686 drv calls personality(PER_LINUX32), which the arm64 kernel of
+          # Docker Desktop's VM (Apple Silicon) rejects. Unused by APK builds.
+          androidenv =
+            if pkgs.stdenv.hostPlatform.system == "x86_64-linux" then
+              import
+                (pkgs.applyPatches {
+                  name = "androidenv-no-i686";
+                  src = "${nixpkgs}/pkgs/development/mobile/androidenv";
+                  postPatch = ''
+                    substituteInPlace build-tools.nix \
+                      --replace-fail 'os == "linux" && stdenv.hostPlatform.isx86_64' 'false'
+                    substituteInPlace build-tools.nix \
+                      --replace-fail 'noAuditTmpdir = true;' \
+                        'autoPatchelfIgnoreMissingDeps = [ "*" ]; noAuditTmpdir = true;'
+                  '';
+                })
+                { inherit (pkgs) lib; pkgs = pkgs; }
+            else
+              pkgs.androidenv;
+
+          androidComposition = androidenv.composeAndroidPackages {
             platformVersions = [ androidPlatformVersion ];
             buildToolsVersions = [ androidBuildToolsVersion ];
             ndkVersions = [ androidNdkVersion ];
@@ -73,6 +92,7 @@
             includeSources = false;
             includeSystemImages = false;
             includeExtras = [ ];
+            toolsVersion = null; # deprecated, unused, and another i686 source
           };
 
           androidSdk = androidComposition.androidsdk;
@@ -83,7 +103,6 @@
 
           jdk = pkgs.jdk21_headless;
 
-          # Tools needed at runtime by `tauri android build`.
           toolchainInputs = [
             rustToolchain
             pkgs.bun
@@ -93,6 +112,7 @@
             pkgs.pkg-config
             pkgs.stdenv.cc
             pkgs.libclang.lib
+            pkgs.gnused # gradlew's arg-parsing needs sed
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
             pkgs.libiconv
@@ -105,7 +125,6 @@
             ANDROID_NDK_HOME = ndkRoot;
             ANDROID_NDK_ROOT = ndkRoot;
             NDK_HOME = ndkRoot;
-            GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidSdkRoot}/build-tools/${androidBuildToolsVersion}/aapt2";
             LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
             CMAKE_GENERATOR = "Ninja";
           }
@@ -126,24 +145,38 @@
               ${envExports}
               export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
 
-              # Project root: the directory containing this flake.
               ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
               cd "$ROOT"
 
-              # Optional pluggable keystore. Contributors point
-              # OPEN_GRIND_KEYSTORE_PROPERTIES at a properties file
-              # describing their JKS; we copy it into the gradle project
-              # so the existing signingConfig picks it up.
+              GRADLE_PROPS="$ROOT/src-tauri/gen/android/gradle.properties"
               KEYSTORE_DEST="$ROOT/src-tauri/gen/android/keystore.properties"
+
+              GRADLE_PROPS_BAK="$(mktemp)"
+              cp "$GRADLE_PROPS" "$GRADLE_PROPS_BAK"
+              cleanup() {
+                cp "$GRADLE_PROPS_BAK" "$GRADLE_PROPS"
+                rm -f "$GRADLE_PROPS_BAK" "$KEYSTORE_DEST"
+              }
+              trap cleanup EXIT
+
+              # Point AGP at the SDK's patchelf'd aapt2 via a real project property;
+              # GRADLE_OPTS -D does not reach the Gradle daemon (nixpkgs#402297).
+              printf '\nandroid.aapt2FromMavenOverride=%s/aapt2\n' "${buildToolsBin}" >> "$GRADLE_PROPS"
+
+              # OPEN_GRIND_KEYSTORE_PROPERTIES -> keystore.properties for signingConfig.
               if [ -n "''${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then
                 cp "$OPEN_GRIND_KEYSTORE_PROPERTIES" "$KEYSTORE_DEST"
-                trap 'rm -f "$KEYSTORE_DEST"' EXIT
               fi
 
               TARGET="''${1:-apk}"
 
               bun ci
-              bun run tauri android build --"$TARGET"
+              # OPEN_GRIND_ANDROID_ABI=aarch64 builds one ABI instead of universal.
+              if [ -n "''${OPEN_GRIND_ANDROID_ABI:-}" ]; then
+                bun run tauri android build --"$TARGET" --target "''${OPEN_GRIND_ANDROID_ABI}"
+              else
+                bun run tauri android build --"$TARGET"
+              fi
 
               if [ -n "''${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then sfx=""; else sfx="-unsigned"; fi
               base="$ROOT/src-tauri/gen/android/app/build/outputs"
@@ -168,8 +201,7 @@
             // {
               packages = toolchainInputs;
               shellHook = ''
-                # Put apksigner, zipalign, aapt2 on PATH — androidenv
-                # only exposes the SDK's top-level bin (adb, sdkmanager).
+                # androidenv exposes only adb/sdkmanager; add build-tools + cmake.
                 export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
 
                 echo "Open Grind dev shell: Android toolchain pinned via Nix."
