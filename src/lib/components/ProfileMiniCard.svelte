@@ -3,7 +3,7 @@
 	import type { Snippet } from "svelte";
 
 	import DistanceFormatted from "$lib/components/DistanceFormatted.svelte";
-	import OnlineDot from "$lib/components/OnlineDot.svelte";
+	import ProfileStatusIndicator from "$lib/components/ProfileStatusIndicator.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
 
@@ -70,7 +70,7 @@
 				variant="outline"
 				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 backdrop-blur-2xl"
 			>
-				<OnlineDot {onlineUntil} {isVisiting} class="me-1" />
+				<ProfileStatusIndicator {onlineUntil} {isVisiting} class="me-1" />
 
 				{#if displayName !== null}
 					<span class="block shrink truncate font-semibold">{displayName}</span>

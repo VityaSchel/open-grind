@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DisplayName from "$lib/components/DisplayName.svelte";
-	import OnlineDot from "$lib/components/OnlineDot.svelte";
+	import ProfileStatusIndicator from "$lib/components/ProfileStatusIndicator.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Item from "$lib/components/ui/item";
 	import UserAvatar from "$lib/components/UserAvatar.svelte";
@@ -46,7 +46,7 @@
 				},
 			]}
 		>
-			<OnlineDot {onlineUntil} />
+			<ProfileStatusIndicator {onlineUntil} />
 			<DisplayName name={title} class="truncate" />
 		</Item.Title>
 		{@render description?.()}
