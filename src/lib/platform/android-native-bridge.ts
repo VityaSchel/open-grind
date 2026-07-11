@@ -23,6 +23,10 @@ export function applyAndroidInsets() {
 	window.__reapplyInsets = applyAndroidInsets;
 }
 
+export function isSoftKeyboardVisible(): boolean | undefined {
+	return window.__AndroidInsets?.imeVisible?.();
+}
+
 export function applyBackGestureHandler() {
 	window.__AndroidOnBackGesture = () => {
 		const handlers = [...backGestureEventHandlers];

@@ -16,6 +16,7 @@ class MainActivity : TauriActivity() {
 	private var insetsBottom = 0
 	private var insetsLeft = 0
 	private var insetsRight = 0
+	@Volatile private var imeVisibleState = false
 	private var webViewRef: WebView? = null
 
 	override val handleBackNavigation = false
@@ -48,6 +49,7 @@ class MainActivity : TauriActivity() {
 		@JavascriptInterface fun bottom() = insetsBottom
 		@JavascriptInterface fun left() = insetsLeft
 		@JavascriptInterface fun right() = insetsRight
+		@JavascriptInterface fun imeVisible() = imeVisibleState
 	}
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
