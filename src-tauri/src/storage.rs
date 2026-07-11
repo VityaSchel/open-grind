@@ -232,3 +232,38 @@ impl AuthStorage {
         }
     }
 }
+
+pub struct SigningKeyStorage;
+
+impl SigningKeyStorage {
+    fn entry() -> Result<keyring_core::Entry, AppError> {
+        keyring_core::Entry::new("open-grind", "device-signing-key")
+            .map_err(|e| AppError::Auth(e.to_string()))
+    }
+
+    pub fn load() -> Result<Option<grindr::DeviceSigningKey>, AppError> {
+        let bytes = match Self::entry()?.get_secret() {
+            Ok(b) => b,
+            Err(keyring_core::Error::NoEntry) => return Ok(None),
+            Err(e) => return Err(AppError::Auth(e.to_string())),
+        };
+        Ok(rmp_serde::from_slice::<grindr::DeviceSigningKey>(&bytes).ok())
+    }
+
+    pub fn save(key: &grindr::DeviceSigningKey) -> Result<(), AppError> {
+        let bytes = rmp_serde::encode::to_vec(key)
+            .map_err(|e| AppError::Auth(format!("signing key encode failed: {e}")))?;
+        Self::entry()?
+            .set_secret(&bytes)
+            .map_err(|e| AppError::Auth(e.to_string()))
+    }
+
+    pub fn delete() {
+        if let Ok(entry) = Self::entry() {
+            match entry.delete_credential() {
+                Ok(()) | Err(keyring_core::Error::NoEntry) => {}
+                Err(e) => eprintln!("[signing] failed to delete keyring key: {e}"),
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use tauri::Manager;
 
 use crate::state::AppState;
-use crate::storage::{AuthStorage, DeviceStorage};
+use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -92,6 +92,27 @@ pub fn run() {
                                 }
                             }
                             None => AuthStorage::delete_session(),
+                        }
+                    }
+                });
+            }
+
+            {
+                let saved_key = SigningKeyStorage::load().unwrap_or(None);
+                let client = client.clone();
+                let mut key_rx = client.signing_key_receiver();
+                tauri::async_runtime::spawn(async move {
+                    if let Some(k) = saved_key {
+                        client.restore_signing_key(k).await;
+                    }
+                    while key_rx.changed().await.is_ok() {
+                        match key_rx.borrow().clone() {
+                            Some(k) => {
+                                if let Err(e) = SigningKeyStorage::save(&k) {
+                                    eprintln!("[signing] persist failed: {e}");
+                                }
+                            }
+                            None => SigningKeyStorage::delete(),
                         }
                     }
                 });

@@ -1,13 +1,11 @@
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use grindr::{GrindrError, Method};
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
 use crate::state::AppState;
 
-/// Response of `POST /v5/chat/media/upload`. Field names match Grindr's JSON so
-/// the same struct deserializes the response and serializes back to the
-/// frontend.
+/// Response of the signed chat-media upload, re-serialized camelCase so the same
+/// struct deserializes from Grindr and serializes back to the frontend.
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaUploadResponse {
@@ -16,9 +14,10 @@ pub struct MediaUploadResponse {
     pub media_hash: String,
 }
 
-/// Uploads raw media bytes to the chat media endpoint and returns the new
-/// `mediaId`, mirroring the app's `uploadMediaV2` (`POST v5/chat/media/upload`,
-/// `Content-type` header, `takenOnGrindr` query).
+/// Uploads raw media bytes via the device-key-signed chat-media endpoint
+/// (`POST /v6/chat/media/upload`) and returns the new `mediaId`. grindr.rs
+/// registers the session signing key and adds the `X-Key-Id`/`X-Sig`/
+/// `X-Timestamp`/`X-Nonce` headers on first use.
 #[tauri::command]
 pub async fn upload_chat_media(
     state: tauri::State<'_, AppState>,
@@ -34,17 +33,12 @@ pub async fn upload_chat_media(
 
     let response = state
         .client()?
-        .request_authenticated_bytes(
-            Method::POST,
-            &format!("/v5/chat/media/upload?takenOnGrindr={taken_on_grindr}"),
-            &content_type,
-            bytes,
-        )
+        .upload_chat_media(bytes, &content_type, None, None, taken_on_grindr)
         .await?;
 
-    if !(200..300).contains(&response.status) {
-        return Err(GrindrError::from_response(response.status, &response.body).into());
-    }
-    serde_json::from_slice(&response.body)
-        .map_err(|e| AppError::Http(format!("Failed to parse upload response: {e}")))
+    Ok(MediaUploadResponse {
+        media_id: response.media_id,
+        url: response.url,
+        media_hash: response.media_hash,
+    })
 }

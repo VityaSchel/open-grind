@@ -1,6 +1,11 @@
 import { registerAccountCache } from "$lib/api/account-caches";
-import { getCascadeV3 } from "$lib/api/browse/grid";
+import { getCascadeV4 } from "$lib/api/browse/grid";
 import { getProfiles } from "$lib/api/users/profiles";
+
+function primaryImageHashes(url: string | null | undefined): string[] | null {
+	const hash = url?.split("/").pop();
+	return hash ? [hash] : null;
+}
 
 export type RenderedGridProfile = {
 	type: "rendered";
@@ -24,8 +29,8 @@ export type LazyGridProfile = {
 
 export type GridProfile = RenderedGridProfile | LazyGridProfile;
 
-export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
-	const response = await getCascadeV3(query);
+export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
+	const response = await getCascadeV4(query);
 	const items: GridProfile[] = [];
 
 	for (const item of response.items) {
@@ -36,12 +41,12 @@ export async function getGrid(query: Parameters<typeof getCascadeV3>[0]) {
 				id: profile.profileId,
 				displayName: profile.displayName ?? null,
 				distance: profile.distanceMeters ?? null,
-				profilePhotosHashes: profile.photoMediaHashes ?? null,
+				profilePhotosHashes: primaryImageHashes(profile.primaryImageUrl),
 				unread: profile.unreadCount ?? null,
 				onlineUntil: profile.onlineUntil ?? null,
-				isFavorite: profile.isFavorite,
+				isFavorite: profile.favorite ?? false,
 				isVisiting: profile.isVisiting,
-				hasChattedInLast24Hrs: profile.hasChattedInLast24Hrs,
+				hasChattedInLast24Hrs: profile.chatted ?? false,
 			});
 		} else if (
 			item.type === "hidden_profile_v1" ||

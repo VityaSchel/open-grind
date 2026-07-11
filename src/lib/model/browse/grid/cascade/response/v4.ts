@@ -24,7 +24,7 @@ import {
 
 const cascadeV4ResponseProfileSchema = z.object({
 	...cascadeResponseProfileSchema.shape,
-	primaryImageUrl: z.url(),
+	primaryImageUrl: z.url().nullish(),
 	favorite: z.boolean().optional(),
 	viewed: z.boolean().optional(),
 	chatted: z.boolean().optional(),
@@ -39,7 +39,7 @@ export const cascadeV4ResponseFullProfileV1Schema = z.object({
 		age: z.int().nonnegative().optional(),
 		heightCm: z.number().nonnegative().optional(),
 		weightGrams: z.number().nonnegative().optional(),
-		bodyType: bodyTypeSchema,
+		bodyType: bodyTypeSchema.nullish(),
 	}),
 });
 
