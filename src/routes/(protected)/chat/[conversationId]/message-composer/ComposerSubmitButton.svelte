@@ -7,7 +7,13 @@
 	const { disabled } = $derived(getMessageComposerContext()());
 </script>
 
-<PrimaryComposerButton type="submit" {disabled}>
+<PrimaryComposerButton
+	type="submit"
+	{disabled}
+	onpointerdown={(event) => {
+		event.preventDefault();
+	}}
+>
 	{#snippet icon({ ...props })}
 		<PaperPlaneRightIcon weight="fill" {...props} />
 	{/snippet}
