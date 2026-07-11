@@ -3,6 +3,7 @@ import z from "zod";
 import {
 	filterAcceptNSFWPicsSchema,
 	filterBodyTypeSchema,
+	filterHealthPracticesSchema,
 	filterLookingForSchema,
 	filterMeetAtSchema,
 	filterPositionSchema,
@@ -29,6 +30,7 @@ export const cascadeQuerySchema = z.object({
 	meetAt: filterMeetAtSchema.optional(),
 	nsfwPics: filterAcceptNSFWPicsSchema.optional(),
 	tags: filterTagsSchema.optional(),
+	sexualHealth: filterHealthPracticesSchema.optional(),
 	rightNow: z.boolean().optional(),
 	favorites: z.boolean().optional(),
 	showSponsoredProfiles: z.boolean().optional(),
