@@ -42,6 +42,7 @@ body:
       placeholder: e.g. v0.1.0-beta.2
   - type: checkboxes
     id: existing-issues-searcehd
+    visible: [form]
     attributes:
       label: Existing issues searched
       description: By submitting this issue, you confirm you have [searched existing issues](https://git.opengrind.org/open-grind/open-grind/issues). Not only by querying search but also [viewing latest closed issues](https://git.opengrind.org/open-grind/open-grind/issues?q=&type=all&sort=relevance&state=closed&labels=&milestone=0&project=0&assignee=0&poster=0&archived=false).
