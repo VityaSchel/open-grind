@@ -17,6 +17,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {
 		pinPos = $bindable(),
@@ -70,6 +71,19 @@
 		if (pendingCenter && map) {
 			map.setView([pendingCenter.lat, pendingCenter.lon], pendingCenter.zoom);
 			pendingCenter = undefined;
+		}
+	});
+
+	$effect(() => {
+		if (showSearchResults) {
+			const onBackGesture = () => {
+				showSearchResults = false;
+				return false;
+			};
+			backGestureEventHandlers.add(onBackGesture);
+			return () => {
+				backGestureEventHandlers.delete(onBackGesture);
+			};
 		}
 	});
 

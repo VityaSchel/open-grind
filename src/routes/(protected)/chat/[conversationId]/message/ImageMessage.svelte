@@ -2,6 +2,7 @@
 	import "photoswipe/style.css";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
 
@@ -34,6 +35,17 @@
 						itemData.height = img.naturalHeight;
 					}
 					return itemData;
+				});
+
+				const onBackGesture = () => {
+					lightbox?.pswp?.close();
+					return false;
+				};
+				lightbox.on("beforeOpen", () => {
+					backGestureEventHandlers.add(onBackGesture);
+				});
+				lightbox.on("close", () => {
+					backGestureEventHandlers.delete(onBackGesture);
 				});
 
 				function setScaledRadius(img: Element) {

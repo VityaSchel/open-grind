@@ -10,6 +10,7 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {
 		open = $bindable(),
@@ -23,6 +24,19 @@
 	$effect(() => {
 		if (open) {
 			filters = { ...(gridState.filters.value ?? defaultFilters) };
+		}
+	});
+
+	$effect(() => {
+		if (open) {
+			const onBackGesture = () => {
+				open = false;
+				return false;
+			};
+			backGestureEventHandlers.add(onBackGesture);
+			return () => {
+				backGestureEventHandlers.delete(onBackGesture);
+			};
 		}
 	});
 </script>

@@ -4,6 +4,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Drawer from "$lib/components/ui/drawer/index";
 	import { encodeGeohash } from "$lib/model/geohash";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import { above } from "$lib/util/breakpoints.svelte";
 
 	let {
@@ -55,6 +56,19 @@
 		if (pendingCenter && geoMapPicker) {
 			geoMapPicker.centerAt(pendingCenter);
 			pendingCenter = null;
+		}
+	});
+
+	$effect(() => {
+		if (open) {
+			const onBackGesture = () => {
+				open = false;
+				return false;
+			};
+			backGestureEventHandlers.add(onBackGesture);
+			return () => {
+				backGestureEventHandlers.delete(onBackGesture);
+			};
 		}
 	});
 </script>

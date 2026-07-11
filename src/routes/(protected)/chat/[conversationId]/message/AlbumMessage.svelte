@@ -5,6 +5,7 @@
 
 	import { showErrorToast } from "$lib/api/error";
 	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/messaging/albums";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "../LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
@@ -154,6 +155,16 @@
 				lightbox.addFilter("itemData", (_, index) => {
 					const { url, width, height } = album.content[index];
 					return { src: url, width, height };
+				});
+				const onBackGesture = () => {
+					lightbox?.pswp?.close();
+					return false;
+				};
+				lightbox.on("beforeOpen", () => {
+					backGestureEventHandlers.add(onBackGesture);
+				});
+				lightbox.on("close", () => {
+					backGestureEventHandlers.delete(onBackGesture);
 				});
 				lightbox.on("contentLoad", (event) => {
 					const { content } = event;

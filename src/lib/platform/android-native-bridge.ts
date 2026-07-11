@@ -24,6 +24,11 @@ export function applyAndroidInsets() {
 }
 
 export function applyBackGestureHandler() {
-	window.__AndroidOnBackGesture = () =>
-		!backGestureEventHandlers.values().some((result) => result() !== true);
+	window.__AndroidOnBackGesture = () => {
+		const handlers = [...backGestureEventHandlers];
+		for (let index = handlers.length - 1; index >= 0; index--) {
+			if (handlers[index]() !== true) return false;
+		}
+		return true;
+	};
 }
