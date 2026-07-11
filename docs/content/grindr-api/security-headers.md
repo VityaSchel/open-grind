@@ -9,6 +9,11 @@ Security headers are HTTP headers that the Grindr API requires to be present and
   - [`L-Time-Zone`](#l-time-zone)
   - [`L-Locale`](#l-locale)
   - [`L-Grindr-Roles`](#l-grindr-roles)
+  - [Device-key upload signing](#device-key-upload-signing)
+    - [The device key](#the-device-key)
+    - [1. Register the key](#1-register-the-key)
+    - [2. Sign each upload](#2-sign-each-upload)
+    - [Signing errors](#signing-errors)
   - [Correct headers order](#correct-headers-order)
   - [Fingerprint](#fingerprint)
     - [TLS parameters](#tls-parameters)
@@ -71,6 +76,99 @@ Note the hyphen/underscore.
 ## `L-Grindr-Roles`
 
 Should be a square-bracketed set of uppercased subscription tiers separated by comma without spaces or quotes, e.g. `[FREE]`. Only when the user is already authorized.
+
+## Device-key upload signing
+
+Starting with app version 26.10.0, the media-upload endpoints are protected by a per-request ECDSA signature bound to an ephemeral device key. Two endpoints require it:
+
+- `POST /v5/media/upload` — profile images (signed successor of the unsigned `POST /v4/media/upload`, see [Upload media (signed)](/grindr-api/users/profiles#upload-media-signed))
+- `POST /v6/chat/media/upload` — chat / drawer media (signed successor of the unsigned `POST /v5/chat/media/upload`, see [Upload media (signed)](/grindr-api/messaging/drawer#upload-media-signed))
+
+The registration endpoints live under [Media](/grindr-api/media). The older unsigned upload versions still respond, so signing is only mandatory when calling these two newer paths.
+
+Every binary value in this scheme (`publicKey`, `keyId`, signatures, `nonce`, body hash) is **base64url without padding** — the URL-safe alphabet (`-` and `_`), no trailing `=`. Every signature is **`SHA256withECDSA`** (ECDSA on the NIST P-256 / secp256r1 curve with SHA-256), serialized as an **ASN.1 DER** sequence and then base64url-encoded.
+
+Two identifiers are reused from data the client already sends:
+
+- `userId` — the numeric profile id of the authenticated session, as a decimal string.
+- `androidId` — the 16 hex character device id, i.e. the **first** field of [`L-Device-Info`](#l-device-info) (the part before the first `;`).
+
+### The device key
+
+Generate one **P-256 (secp256r1)** key pair per session (the official app stores it in the Android Keystore under the alias `device_signing_key_<userId>`). Two strings are derived from the public key and reused everywhere:
+
+- `publicKey` = `base64url( SubjectPublicKeyInfo DER )` — the X.509 SPKI (`spki`) encoding of the public key.
+- `keyId` = `base64url( SHA-256( SubjectPublicKeyInfo DER ) )` — SHA-256 over the exact same SPKI bytes.
+
+### 1. Register the key
+
+Both calls require [Authorization](/grindr-api/api-authorization). First fetch a challenge:
+
+```
+POST /v1/verification/device-keys/challenge
+```
+
+Response (`ChallengeResponse`):
+
+```json
+{ "challenge": "<opaque string>", "expiresAt": "<ISO-8601 instant>" }
+```
+
+Build the canonical **registration string** by joining five fields with a literal `|` (U+007C `|`), in exactly this order:
+
+```
+<userId>|<keyId>|<publicKey>|<androidId>|<challenge>
+```
+
+Sign its UTF-8 bytes with the device key to obtain `registrationSignature = base64url( DER( ECDSA-P256-SHA256( message ) ) )`, then submit the key:
+
+```
+POST /v1/verification/device-keys
+```
+
+Body (`RegisterKeyRequest`):
+
+```json
+{
+  "publicKey": "<base64url(SPKI)>",
+  "keyId": "<base64url(SHA-256(SPKI))>",
+  "registrationSignature": "<base64url(DER signature)>"
+}
+```
+
+Response (`RegisterKeyResponse`): `{ "keyId": "<keyId>" }`, echoing the accepted key id.
+
+### 2. Sign each upload
+
+For every signed upload, compute three per-request values:
+
+- `nonce` = `base64url( 32 random bytes )`, freshly generated each request.
+- `timestamp` = the signing time as **Unix epoch milliseconds**, a decimal string. In-app this is `GrindrTime.getTime()` plus a small per-call offset, so it may be slightly skewed from the local clock; the server returns its own time on drift (see below).
+- `bodyHash` = `base64url( SHA-256( rawRequestBody ) )` — SHA-256 of the exact bytes placed in the request body (the raw image/video `application/octet-stream` payload), not of any wrapper.
+
+Build the canonical **upload string** by joining five fields with `|`, in exactly this order:
+
+```
+<bodyHash>|<timestamp>|<userId>|<androidId>|<nonce>
+```
+
+Sign its UTF-8 bytes with the same device key and send four headers alongside the upload:
+
+| Header        | Value                                                            |
+| ------------- | ---------------------------------------------------------------- |
+| `X-Key-Id`    | `keyId` (base64url of `SHA-256(SPKI)`)                           |
+| `X-Sig`       | `base64url( DER( ECDSA-P256-SHA256( uploadString ) ) )`          |
+| `X-Timestamp` | the same `timestamp` (epoch milliseconds) embedded in the string |
+| `X-Nonce`     | the same `nonce` embedded in the string                          |
+
+The `X-Timestamp` and `X-Nonce` header values must be byte-for-byte identical to the `timestamp` and `nonce` used inside the signed string, or verification fails.
+
+### Signing errors
+
+A rejected signature returns a problem body (`UploadSigningErrorResponse`) with `type` and `detail` fields. The client matches the failure by substring on `type`:
+
+- `timestamp_drift` — the clock is too far from the server. `detail` carries the server's current time as an ISO-8601 instant; recompute your `timestamp` offset from it and retry.
+- `nonce_replayed` — the `nonce` was seen before; retry with a fresh one.
 
 ## Correct headers order
 

@@ -32,7 +32,8 @@
 			"name": "analytics"
 		},
 		{
-			"name": "media"
+			"name": "media",
+			"description": "Media uploads (profile photos and chat media) are protected by a per-session device key. Register a P-256 key with the endpoints below, then sign each upload as described in [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing)."
 		},
 		{
 			"name": "interest"
@@ -268,7 +269,9 @@
 	"paths": {
 		"/v8/sessions": {
 			"post": {
-				"tags": ["authentication"],
+				"tags": [
+					"authentication"
+				],
 				"operationId": "signIn",
 				"requestBody": {
 					"required": true,
@@ -302,7 +305,9 @@
 		},
 		"/v9/sessions": {
 			"post": {
-				"tags": ["authentication"],
+				"tags": [
+					"authentication"
+				],
 				"operationId": "signInV9",
 				"requestBody": {
 					"required": true,
@@ -336,7 +341,9 @@
 		},
 		"/v3/bootstrap": {
 			"get": {
-				"tags": ["system/bootstrap"],
+				"tags": [
+					"system/bootstrap"
+				],
 				"operationId": "getBootstrap",
 				"responses": {
 					"200": {
@@ -361,7 +368,9 @@
 		},
 		"/v4/chat/media/drawer": {
 			"get": {
-				"tags": ["messaging/drawer"],
+				"tags": [
+					"messaging/drawer"
+				],
 				"operationId": "getDrawerMedia",
 				"security": [
 					{
@@ -388,7 +397,9 @@
 		},
 		"/v4/chat/media/drawer/{conversationId}": {
 			"get": {
-				"tags": ["messaging/drawer"],
+				"tags": [
+					"messaging/drawer"
+				],
 				"operationId": "getDrawerMediaForConversation",
 				"security": [
 					{
@@ -420,7 +431,9 @@
 		},
 		"/v4/chat/media/drawer/{mediaId}": {
 			"put": {
-				"tags": ["messaging/drawer"],
+				"tags": [
+					"messaging/drawer"
+				],
 				"operationId": "addDrawerMedia",
 				"security": [
 					{
@@ -444,7 +457,9 @@
 				"description": "MediaId must be obtained through [uploading](/grindr-api/users/profiles#upload-media)."
 			},
 			"delete": {
-				"tags": ["messaging/drawer"],
+				"tags": [
+					"messaging/drawer"
+				],
 				"operationId": "deleteDrawerMedia",
 				"security": [
 					{
@@ -470,7 +485,9 @@
 		},
 		"/public/v1/notifications/ack": {
 			"post": {
-				"tags": ["system/notifications"],
+				"tags": [
+					"system/notifications"
+				],
 				"operationId": "ackNotifications",
 				"requestBody": {
 					"required": true,
@@ -493,7 +510,9 @@
 		},
 		"/v1/ratings/ack": {
 			"post": {
-				"tags": ["system/ratings"],
+				"tags": [
+					"system/ratings"
+				],
 				"operationId": "ackRatingPrompt",
 				"responses": {
 					"200": {
@@ -522,7 +541,9 @@
 		},
 		"/v1/signalshare": {
 			"get": {
-				"tags": ["system/signal-share"],
+				"tags": [
+					"system/signal-share"
+				],
 				"operationId": "getSignalShare",
 				"security": [
 					{
@@ -563,7 +584,9 @@
 		},
 		"/v2/access-requests/codes": {
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "createAccessRequestVerificationCodeV2",
 				"requestBody": {
 					"required": true,
@@ -597,7 +620,9 @@
 		},
 		"/v2/access-requests": {
 			"get": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "getAccessRequestsV2",
 				"responses": {
 					"200": {
@@ -619,7 +644,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "createAccessRequestV2",
 				"requestBody": {
 					"required": true,
@@ -653,7 +680,9 @@
 		},
 		"/v1/access-requests": {
 			"get": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "getAccessRequestsV1",
 				"responses": {
 					"200": {
@@ -675,7 +704,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "createAccessRequestV1",
 				"requestBody": {
 					"required": true,
@@ -709,7 +740,9 @@
 		},
 		"/v1/access-requests/confirmations": {
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "confirmAccessRequestV1",
 				"responses": {
 					"200": {
@@ -728,7 +761,9 @@
 		},
 		"/v2/access-requests/confirm": {
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "confirmAccessRequestV2",
 				"responses": {
 					"200": {
@@ -747,7 +782,9 @@
 		},
 		"/v1/access-requests/codes": {
 			"post": {
-				"tags": ["safety/access-requests"],
+				"tags": [
+					"safety/access-requests"
+				],
 				"operationId": "createAccessRequestVerificationCodeV1",
 				"requestBody": {
 					"required": true,
@@ -781,7 +818,9 @@
 		},
 		"/v2/boost/sessions": {
 			"get": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "getBoostSessions",
 				"responses": {
 					"200": {
@@ -805,7 +844,9 @@
 		},
 		"/v1/consumables/redeem/boost": {
 			"post": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "redeemBoost",
 				"responses": {
 					"200": {
@@ -829,7 +870,9 @@
 		},
 		"/v1/boost/preferences/mega": {
 			"post": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "setMegaBoostPreferences",
 				"requestBody": {
 					"required": true,
@@ -856,7 +899,9 @@
 		},
 		"/v1/boost/preferences/super": {
 			"post": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "setSuperBoostPreferences",
 				"requestBody": {
 					"required": true,
@@ -883,7 +928,9 @@
 		},
 		"/v1/boost/preferences/standard": {
 			"post": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "setStandardBoostPreferences",
 				"requestBody": {
 					"required": true,
@@ -910,7 +957,9 @@
 		},
 		"/v1/consumables/inventory": {
 			"get": {
-				"tags": ["commerce/boosting"],
+				"tags": [
+					"commerce/boosting"
+				],
 				"operationId": "getConsumablesInventory",
 				"responses": {
 					"200": {
@@ -934,7 +983,9 @@
 		},
 		"/v1/gifs/trending": {
 			"get": {
-				"tags": ["messaging/gifs"],
+				"tags": [
+					"messaging/gifs"
+				],
 				"operationId": "getTrendingGifs",
 				"parameters": [
 					{
@@ -969,7 +1020,9 @@
 		},
 		"/v1/gifs/search": {
 			"get": {
-				"tags": ["messaging/gifs"],
+				"tags": [
+					"messaging/gifs"
+				],
 				"operationId": "searchGifs",
 				"parameters": [
 					{
@@ -1018,7 +1071,9 @@
 		},
 		"/v3.1/store/grindrstore/coupons": {
 			"post": {
-				"tags": ["commerce/grindrstore"],
+				"tags": [
+					"commerce/grindrstore"
+				],
 				"operationId": "submitGrindrStoreCoupon",
 				"requestBody": {
 					"required": true,
@@ -1045,7 +1100,9 @@
 		},
 		"/v1/explore_heatmaps/all_locations": {
 			"get": {
-				"tags": ["system/heatmap"],
+				"tags": [
+					"system/heatmap"
+				],
 				"operationId": "getAllExploreHeatmaps",
 				"responses": {
 					"200": {
@@ -1069,7 +1126,9 @@
 		},
 		"/v1/explore_heatmaps": {
 			"post": {
-				"tags": ["system/heatmap"],
+				"tags": [
+					"system/heatmap"
+				],
 				"operationId": "queryExploreHeatmaps",
 				"requestBody": {
 					"required": true,
@@ -1108,7 +1167,9 @@
 		},
 		"/v5/legal-agreements/subscriber-sponsored-content": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getSubscriberSponsoredContentAgreement",
 				"responses": {
 					"200": {
@@ -1130,7 +1191,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptSubscriberSponsoredContentAgreement",
 				"requestBody": {
 					"required": true,
@@ -1155,7 +1218,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "deleteSubscriberSponsoredContentAgreement",
 				"requestBody": {
 					"required": true,
@@ -1178,12 +1243,16 @@
 					}
 				},
 				"x-wip": true,
-				"x-notes": ["Note: this DELETE endpoint accepts a request body."]
+				"x-notes": [
+					"Note: this DELETE endpoint accepts a request body."
+				]
 			}
 		},
 		"/v1/agreements/ban": {
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptBanAgreement",
 				"summary": "Accept ban agreement",
 				"description": "Acknowledges the community-guideline agreement shown during a timed ban. Flips `isAgreementCompleted` in the session `banDetails`.",
@@ -1212,7 +1281,9 @@
 		},
 		"/v3/me/legal-agreements": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getAcceptedLegalAgreements",
 				"responses": {
 					"200": {
@@ -1230,7 +1301,9 @@
 				"x-wip": true
 			},
 			"put": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptLegalAgreements",
 				"requestBody": {
 					"required": true,
@@ -1257,7 +1330,9 @@
 		},
 		"/v5/legal-agreements/vip-matchmaker": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getVipMatchmakerAgreement",
 				"responses": {
 					"200": {
@@ -1275,7 +1350,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptVipMatchmakerAgreement",
 				"requestBody": {
 					"required": true,
@@ -1300,7 +1377,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "deleteVipMatchmakerAgreement",
 				"requestBody": {
 					"required": true,
@@ -1327,7 +1406,9 @@
 		},
 		"/v4/legal-agreements/top-picks": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getTopPicksAgreementV4",
 				"responses": {
 					"200": {
@@ -1345,7 +1426,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptTopPicksAgreementV4",
 				"requestBody": {
 					"required": true,
@@ -1370,7 +1453,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "deleteTopPicksAgreementV4",
 				"responses": {
 					"200": {
@@ -1382,7 +1467,9 @@
 		},
 		"/v5/legal-agreements/top-picks": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getTopPicksAgreementV5",
 				"responses": {
 					"200": {
@@ -1400,7 +1487,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "deleteTopPicksAgreementV5",
 				"requestBody": {
 					"required": true,
@@ -1427,7 +1516,9 @@
 		},
 		"/v4/legal-agreements/right-now": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getRightNowAgreement",
 				"responses": {
 					"200": {
@@ -1445,7 +1536,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "acceptRightNowAgreement",
 				"requestBody": {
 					"required": true,
@@ -1472,7 +1565,9 @@
 		},
 		"/v3/legal-agreements": {
 			"get": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "getLegalAgreementsInfo",
 				"responses": {
 					"200": {
@@ -1492,7 +1587,9 @@
 		},
 		"/v1/opt-out": {
 			"put": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "setOptOutConsent",
 				"requestBody": {
 					"required": true,
@@ -1517,7 +1614,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "deleteOptOutConsent",
 				"requestBody": {
 					"required": true,
@@ -1542,7 +1641,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/legal-agreements"],
+				"tags": [
+					"safety/legal-agreements"
+				],
 				"operationId": "createOptOutConsent",
 				"requestBody": {
 					"required": true,
@@ -1577,7 +1678,9 @@
 		},
 		"/v3/logging/mobile/logs": {
 			"post": {
-				"tags": ["system/logging"],
+				"tags": [
+					"system/logging"
+				],
 				"operationId": "uploadMobileLogs",
 				"requestBody": {
 					"required": true,
@@ -1600,7 +1703,9 @@
 		},
 		"/v1/uxevent": {
 			"post": {
-				"tags": ["system/logging"],
+				"tags": [
+					"system/logging"
+				],
 				"operationId": "submitUxEvent",
 				"requestBody": {
 					"required": true,
@@ -1627,7 +1732,9 @@
 		},
 		"/v1/modal": {
 			"get": {
-				"tags": ["system/modal"],
+				"tags": [
+					"system/modal"
+				],
 				"operationId": "getModal",
 				"responses": {
 					"200": {
@@ -1646,7 +1753,9 @@
 		},
 		"/v1/modal/{modalName}": {
 			"post": {
-				"tags": ["system/modal"],
+				"tags": [
+					"system/modal"
+				],
 				"operationId": "submitModalAction",
 				"parameters": [
 					{
@@ -1668,7 +1777,9 @@
 		},
 		"/v2/offers": {
 			"get": {
-				"tags": ["commerce/offers"],
+				"tags": [
+					"commerce/offers"
+				],
 				"operationId": "getOffers",
 				"responses": {
 					"200": {
@@ -1686,7 +1797,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["commerce/offers"],
+				"tags": [
+					"commerce/offers"
+				],
 				"operationId": "createOffer",
 				"parameters": [
 					{
@@ -1715,7 +1828,9 @@
 		},
 		"/v2/offers/eligible": {
 			"get": {
-				"tags": ["commerce/offers"],
+				"tags": [
+					"commerce/offers"
+				],
 				"operationId": "getEligibleOffers",
 				"responses": {
 					"200": {
@@ -1735,7 +1850,9 @@
 		},
 		"/v4/flags/{id}": {
 			"get": {
-				"tags": ["safety/reports"],
+				"tags": [
+					"safety/reports"
+				],
 				"operationId": "getReportV4",
 				"parameters": [
 					{
@@ -1758,7 +1875,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/reports"],
+				"tags": [
+					"safety/reports"
+				],
 				"operationId": "submitReportV4",
 				"parameters": [
 					{
@@ -1790,7 +1909,9 @@
 		},
 		"/v3.1/flags/{id}": {
 			"get": {
-				"tags": ["safety/reports"],
+				"tags": [
+					"safety/reports"
+				],
 				"operationId": "getReportV31",
 				"parameters": [
 					{
@@ -1813,7 +1934,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["safety/reports"],
+				"tags": [
+					"safety/reports"
+				],
 				"operationId": "submitReportV31",
 				"parameters": [
 					{
@@ -1845,7 +1968,9 @@
 		},
 		"/v1/rewarded-ads/consumption": {
 			"put": {
-				"tags": ["commerce/rewarded-ads"],
+				"tags": [
+					"commerce/rewarded-ads"
+				],
 				"operationId": "updateRewardedAdConsumption",
 				"security": [
 					{
@@ -1860,7 +1985,12 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["source", "status", "type", "adId"],
+								"required": [
+									"source",
+									"status",
+									"type",
+									"adId"
+								],
 								"properties": {
 									"source": {
 										"type": "string",
@@ -1900,7 +2030,9 @@
 		},
 		"/v1/rewarded-ads/rewards/restriction": {
 			"put": {
-				"tags": ["commerce/rewarded-ads"],
+				"tags": [
+					"commerce/rewarded-ads"
+				],
 				"operationId": "updateRewardedAdRewardRestriction",
 				"security": [
 					{
@@ -1915,7 +2047,9 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["type"],
+								"required": [
+									"type"
+								],
 								"properties": {
 									"type": {
 										"description": "Reward to restrict.",
@@ -1939,7 +2073,9 @@
 		},
 		"/v1/rewarded-ads/rewards": {
 			"get": {
-				"tags": ["commerce/rewarded-ads"],
+				"tags": [
+					"commerce/rewarded-ads"
+				],
 				"operationId": "getRewardedAdRewards",
 				"security": [
 					{
@@ -1954,7 +2090,9 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
-									"required": ["rewards"],
+									"required": [
+										"rewards"
+									],
 									"properties": {
 										"rewards": {
 											"type": "array",
@@ -1973,7 +2111,9 @@
 		},
 		"/{version}/rewarded-chats": {
 			"get": {
-				"tags": ["commerce/rewarded-chats"],
+				"tags": [
+					"commerce/rewarded-chats"
+				],
 				"operationId": "getRewardedChats",
 				"parameters": [
 					{
@@ -1996,7 +2136,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["commerce/rewarded-chats"],
+				"tags": [
+					"commerce/rewarded-chats"
+				],
 				"operationId": "createRewardedChatAction",
 				"parameters": [
 					{
@@ -2013,7 +2155,9 @@
 		},
 		"/v3/rightnow/active-post": {
 			"get": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "getActiveRightNowPost",
 				"responses": {
 					"200": {
@@ -2033,7 +2177,9 @@
 		},
 		"/v3/rightnow/profiles/{profileId}": {
 			"get": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "getOtherUserRightNowPost",
 				"parameters": [
 					{
@@ -2058,7 +2204,9 @@
 		},
 		"/{version}/rightnow/posts/{postId}": {
 			"patch": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "updateRightNowPost",
 				"parameters": [
 					{
@@ -2098,7 +2246,9 @@
 		},
 		"/v4/rightnow/posts": {
 			"post": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "createRightNowPostV4",
 				"requestBody": {
 					"required": true,
@@ -2133,7 +2283,9 @@
 		},
 		"/v3/rightnow/posts": {
 			"post": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "createRightNowPostV3",
 				"requestBody": {
 					"required": true,
@@ -2168,7 +2320,9 @@
 		},
 		"/v1/rightnow/posts/{postId}/settings": {
 			"patch": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "updateRightNowPostSettings",
 				"parameters": [
 					{
@@ -2205,7 +2359,9 @@
 		},
 		"/v5/rightnow/feed": {
 			"get": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "getRightNowFeed",
 				"parameters": [
 					{
@@ -2262,7 +2418,9 @@
 		},
 		"/v1/media/upload": {
 			"post": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "uploadRightNowMedia",
 				"parameters": [
 					{
@@ -2323,7 +2481,9 @@
 		},
 		"/v1/rightnow/googleplay/sku": {
 			"get": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "getRightNowGooglePlaySku",
 				"responses": {
 					"200": {
@@ -2343,7 +2503,9 @@
 		},
 		"/v1/rightnow/requests": {
 			"post": {
-				"tags": ["right-now"],
+				"tags": [
+					"right-now"
+				],
 				"operationId": "createRightNowRequest",
 				"requestBody": {
 					"required": true,
@@ -2370,7 +2532,9 @@
 		},
 		"/v3/store/googleplay/products/store": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getStoreProductsStore",
 				"responses": {
 					"200": {
@@ -2390,7 +2554,9 @@
 		},
 		"/v1/consumables/attribution/tokens": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "submitConsumablesAttributionToken",
 				"requestBody": {
 					"required": true,
@@ -2425,7 +2591,9 @@
 		},
 		"/v1/store/googleplay/products/consumables": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getConsumableProducts",
 				"deprecated": true,
 				"responses": {
@@ -2446,7 +2614,9 @@
 		},
 		"/v1/shop/googleplay/products/explore": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getExploreShopProducts",
 				"responses": {
 					"200": {
@@ -2466,7 +2636,9 @@
 		},
 		"/v2/store/googleplay/products/{oneStopShopCategory}": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getProductsByOneStopShopCategory",
 				"parameters": [
 					{
@@ -2496,7 +2668,9 @@
 		},
 		"/v1/store/attribution/tokens": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "submitStoreAttributionToken",
 				"requestBody": {
 					"required": true,
@@ -2531,7 +2705,9 @@
 		},
 		"/v4/store/products/{productId}": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getStoreProductById",
 				"parameters": [
 					{
@@ -2561,7 +2737,9 @@
 		},
 		"/v1/shop/googleplay/products/profile_drawer": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getProfileDrawerShopProducts",
 				"responses": {
 					"200": {
@@ -2581,7 +2759,9 @@
 		},
 		"/v3.1/store/googleplay/purchases": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "submitGooglePlayPurchase",
 				"requestBody": {
 					"required": true,
@@ -2615,7 +2795,9 @@
 		},
 		"/v3.1/store/googleplay/purchases/restorations": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "restoreGooglePlayPurchases",
 				"requestBody": {
 					"required": true,
@@ -2651,7 +2833,9 @@
 		},
 		"/v1/store/googleplay/consumables/purchases": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "submitConsumablePurchaseToken",
 				"requestBody": {
 					"required": true,
@@ -2678,7 +2862,9 @@
 		},
 		"/v1/store/googleplay/subscriptions/purchases": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "submitSubscriptionPurchaseToken",
 				"requestBody": {
 					"required": true,
@@ -2705,7 +2891,9 @@
 		},
 		"/v1/store/googleplay/subscriptions/restorations": {
 			"post": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "restoreSubscriptions",
 				"requestBody": {
 					"required": true,
@@ -2740,7 +2928,9 @@
 		},
 		"/v3/me/subscriptions": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getSubscriptions",
 				"parameters": [
 					{
@@ -2776,7 +2966,9 @@
 		},
 		"/v1/toppicks/entitlements/messaging/{profileId}": {
 			"get": {
-				"tags": ["commerce/top-picks"],
+				"tags": [
+					"commerce/top-picks"
+				],
 				"operationId": "getTopPicksMessagingEntitlement",
 				"parameters": [
 					{
@@ -2799,7 +2991,9 @@
 				"x-wip": true
 			},
 			"post": {
-				"tags": ["commerce/top-picks"],
+				"tags": [
+					"commerce/top-picks"
+				],
 				"operationId": "createTopPicksMessagingEntitlement",
 				"parameters": [
 					{
@@ -2816,7 +3010,9 @@
 		},
 		"/v1/toppicks/passed/{passedProfileId}": {
 			"put": {
-				"tags": ["commerce/top-picks"],
+				"tags": [
+					"commerce/top-picks"
+				],
 				"operationId": "markTopPickPassed",
 				"parameters": [
 					{
@@ -2839,7 +3035,9 @@
 		},
 		"/v3/video-call": {
 			"get": {
-				"tags": ["videocalls"],
+				"tags": [
+					"videocalls"
+				],
 				"operationId": "getVideoCallInfo",
 				"responses": {
 					"200": {
@@ -2859,7 +3057,9 @@
 		},
 		"/v1/video-call": {
 			"post": {
-				"tags": ["videocalls"],
+				"tags": [
+					"videocalls"
+				],
 				"operationId": "createVideoCall",
 				"requestBody": {
 					"required": true,
@@ -2892,7 +3092,9 @@
 				"x-wip": true
 			},
 			"patch": {
-				"tags": ["videocalls"],
+				"tags": [
+					"videocalls"
+				],
 				"operationId": "renewVideoCall",
 				"responses": {
 					"200": {
@@ -2912,7 +3114,9 @@
 		},
 		"/v1/video-call/join": {
 			"patch": {
-				"tags": ["videocalls"],
+				"tags": [
+					"videocalls"
+				],
 				"operationId": "joinVideoCall",
 				"requestBody": {
 					"required": true,
@@ -2947,7 +3151,9 @@
 		},
 		"/v1/video-call/leave": {
 			"patch": {
-				"tags": ["videocalls"],
+				"tags": [
+					"videocalls"
+				],
 				"operationId": "leaveVideoCall",
 				"requestBody": {
 					"required": true,
@@ -2974,7 +3180,9 @@
 		},
 		"/v1/vip/passed/{passedProfileId}": {
 			"put": {
-				"tags": ["commerce/vip"],
+				"tags": [
+					"commerce/vip"
+				],
 				"operationId": "markVipProfilePassed",
 				"parameters": [
 					{
@@ -2997,7 +3205,9 @@
 		},
 		"/v1/vip-profiles": {
 			"get": {
-				"tags": ["commerce/vip"],
+				"tags": [
+					"commerce/vip"
+				],
 				"operationId": "getVipProfiles",
 				"responses": {
 					"200": {
@@ -3017,7 +3227,9 @@
 		},
 		"/v1/warnings": {
 			"put": {
-				"tags": ["safety/warnings"],
+				"tags": [
+					"safety/warnings"
+				],
 				"operationId": "ackWarnings",
 				"responses": {
 					"200": {
@@ -3029,7 +3241,9 @@
 		},
 		"/v2/warnings": {
 			"get": {
-				"tags": ["safety/warnings"],
+				"tags": [
+					"safety/warnings"
+				],
 				"operationId": "getWarnings",
 				"responses": {
 					"200": {
@@ -3049,7 +3263,9 @@
 		},
 		"/public/v1/public-features": {
 			"get": {
-				"tags": ["analytics/assignments"],
+				"tags": [
+					"analytics/assignments"
+				],
 				"operationId": "getPublicAssignments",
 				"responses": {
 					"200": {
@@ -3076,7 +3292,9 @@
 		},
 		"/v3/assignment": {
 			"get": {
-				"tags": ["analytics/assignments"],
+				"tags": [
+					"analytics/assignments"
+				],
 				"operationId": "getAssignments",
 				"security": [
 					{
@@ -3118,7 +3336,9 @@
 		},
 		"/v2/bulk-exposure": {
 			"post": {
-				"tags": ["analytics/trackers"],
+				"tags": [
+					"analytics/trackers"
+				],
 				"operationId": "submitBulkExposure",
 				"security": [
 					{
@@ -3131,7 +3351,9 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["exposures"],
+								"required": [
+									"exposures"
+								],
 								"properties": {
 									"exposures": {
 										"type": "array",
@@ -3162,7 +3384,9 @@
 		},
 		"/v1/age-verification/verify/document": {
 			"post": {
-				"tags": ["browse/age-verification"],
+				"tags": [
+					"browse/age-verification"
+				],
 				"operationId": "verifyAgeDocument",
 				"requestBody": {
 					"required": true,
@@ -3197,7 +3421,9 @@
 		},
 		"/v1/age-verification/session": {
 			"post": {
-				"tags": ["browse/age-verification"],
+				"tags": [
+					"browse/age-verification"
+				],
 				"operationId": "createAgeVerificationSession",
 				"summary": "Create age-verification session",
 				"description": "Starts the age-verification flow required when the session is age-restricted (JWT `restriction` = `AGE_RESTRICTED`, regions UK/BR/AU).",
@@ -3219,7 +3445,9 @@
 		},
 		"/v1/age-verification/verify/enrollment": {
 			"post": {
-				"tags": ["browse/age-verification"],
+				"tags": [
+					"browse/age-verification"
+				],
 				"operationId": "verifyAgeEnrollment",
 				"responses": {
 					"200": {
@@ -3239,7 +3467,9 @@
 		},
 		"/v1/age-verification/verify/liveness3d": {
 			"post": {
-				"tags": ["browse/age-verification"],
+				"tags": [
+					"browse/age-verification"
+				],
 				"operationId": "verifyAgeLiveness3d",
 				"requestBody": {
 					"required": true,
@@ -3274,7 +3504,9 @@
 		},
 		"/v1/age-verification/options": {
 			"get": {
-				"tags": ["browse/age-verification"],
+				"tags": [
+					"browse/age-verification"
+				],
 				"operationId": "getAgeVerificationOptions",
 				"responses": {
 					"200": {
@@ -3294,7 +3526,9 @@
 		},
 		"/v3.1/me/blocks": {
 			"get": {
-				"tags": ["browse/blocks"],
+				"tags": [
+					"browse/blocks"
+				],
 				"summary": "Get blocked users",
 				"operationId": "getBlockedUsers",
 				"security": [
@@ -3337,7 +3571,9 @@
 		},
 		"/v3/me/blocks/{profileId}": {
 			"post": {
-				"tags": ["browse/blocks"],
+				"tags": [
+					"browse/blocks"
+				],
 				"summary": "Block a user",
 				"operationId": "blockUser",
 				"security": [
@@ -3374,7 +3610,9 @@
 		},
 		"/v3/me/blocks/{targetProfileId}": {
 			"delete": {
-				"tags": ["browse/blocks"],
+				"tags": [
+					"browse/blocks"
+				],
 				"summary": "Unblock a user",
 				"operationId": "unblockUser",
 				"security": [
@@ -3403,7 +3641,9 @@
 		},
 		"/v3/me/blocks": {
 			"delete": {
-				"tags": ["browse/blocks"],
+				"tags": [
+					"browse/blocks"
+				],
 				"summary": "Unblock all users",
 				"operationId": "unblockAllUsers",
 				"security": [
@@ -3421,7 +3661,9 @@
 		},
 		"/v3/discover": {
 			"get": {
-				"tags": ["browse/discover"],
+				"tags": [
+					"browse/discover"
+				],
 				"operationId": "getDiscoverProfilesV3",
 				"parameters": [
 					{
@@ -3460,12 +3702,16 @@
 					}
 				},
 				"summary": "Get discover profiles",
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/discover](/grindr-api/browse/discover). Documented for older builds."
 			}
 		},
 		"/v2/discover": {
 			"get": {
-				"tags": ["browse/discover"],
+				"tags": [
+					"browse/discover"
+				],
 				"operationId": "getDiscoverProfilesV2",
 				"parameters": [
 					{
@@ -3491,12 +3737,16 @@
 				},
 				"summary": "Get discover profiles (legacy)",
 				"x-wip": true,
-				"x-legacy": true
+				"x-legacy": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/discover](/grindr-api/browse/discover). Documented for older builds."
 			}
 		},
 		"/v1/me/pass/{profileId}": {
 			"post": {
-				"tags": ["browse/discover"],
+				"tags": [
+					"browse/discover"
+				],
 				"operationId": "passDiscoverProfile",
 				"parameters": [
 					{
@@ -3514,7 +3764,9 @@
 		},
 		"/v1/entitlements": {
 			"get": {
-				"tags": ["browse/entitlements"],
+				"tags": [
+					"browse/entitlements"
+				],
 				"operationId": "getEntitlements",
 				"responses": {
 					"200": {
@@ -3538,7 +3790,9 @@
 		},
 		"/v4/cascade": {
 			"get": {
-				"tags": ["browse/grid"],
+				"tags": [
+					"browse/grid"
+				],
 				"operationId": "getCascadeV4",
 				"security": [
 					{
@@ -3647,12 +3901,16 @@
 					}
 				},
 				"summary": "Get Cascade",
-				"x-query-groups": ["CascadeQuery"]
+				"x-query-groups": [
+					"CascadeQuery"
+				]
 			}
 		},
 		"/v3/cascade": {
 			"get": {
-				"tags": ["browse/grid"],
+				"tags": [
+					"browse/grid"
+				],
 				"operationId": "getCascadeV3",
 				"security": [
 					{
@@ -3778,12 +4036,18 @@
 				},
 				"summary": "Get Cascade (legacy)",
 				"x-legacy": true,
-				"x-query-groups": ["CascadeQuery"]
+				"x-query-groups": [
+					"CascadeQuery"
+				],
+				"deprecated": true,
+				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/cascade](/grindr-api/browse/grid). Documented for older builds."
 			}
 		},
 		"/v7/search": {
 			"get": {
-				"tags": ["browse/grid"],
+				"tags": [
+					"browse/grid"
+				],
 				"operationId": "searchProfiles",
 				"security": [
 					{
@@ -3971,12 +4235,16 @@
 				},
 				"summary": "Search",
 				"description": "Results array appears to be capped to 600 per page. Use `searchAfterProfileId` or `searchAfterDistance` for pagination.",
-				"x-query-groups": ["GridQuery"]
+				"x-query-groups": [
+					"GridQuery"
+				]
 			}
 		},
 		"/v1/hides": {
 			"get": {
-				"tags": ["browse/hides"],
+				"tags": [
+					"browse/hides"
+				],
 				"operationId": "getHiddenUsers",
 				"security": [
 					{
@@ -4019,7 +4287,9 @@
 				"summary": "Get hidden users"
 			},
 			"delete": {
-				"tags": ["browse/hides"],
+				"tags": [
+					"browse/hides"
+				],
 				"operationId": "unhideAllUsers",
 				"security": [
 					{
@@ -4037,7 +4307,9 @@
 		},
 		"/v1/me/hides/{profileId}": {
 			"post": {
-				"tags": ["browse/hides"],
+				"tags": [
+					"browse/hides"
+				],
 				"operationId": "hideUser",
 				"security": [
 					{
@@ -4074,7 +4346,9 @@
 		},
 		"/v1/hides/{profileId}": {
 			"delete": {
-				"tags": ["browse/hides"],
+				"tags": [
+					"browse/hides"
+				],
 				"operationId": "unhideUser",
 				"security": [
 					{
@@ -4097,7 +4371,9 @@
 		},
 		"/v4/links/{key}": {
 			"get": {
-				"tags": ["browse/links"],
+				"tags": [
+					"browse/links"
+				],
 				"operationId": "resolveLinkKey",
 				"parameters": [
 					{
@@ -4133,7 +4409,9 @@
 		},
 		"/v3/places/search": {
 			"get": {
-				"tags": ["browse/location"],
+				"tags": [
+					"browse/location"
+				],
 				"operationId": "searchPlaces",
 				"security": [
 					{
@@ -4176,7 +4454,9 @@
 		},
 		"/v4/location": {
 			"put": {
-				"tags": ["browse/location"],
+				"tags": [
+					"browse/location"
+				],
 				"operationId": "updateLocation",
 				"security": [
 					{
@@ -4203,7 +4483,9 @@
 		},
 		"/v1/location/neighborhood/{geohash}": {
 			"get": {
-				"tags": ["browse/roam"],
+				"tags": [
+					"browse/roam"
+				],
 				"operationId": "getNeighborhoodByGeohash",
 				"parameters": [
 					{
@@ -4232,7 +4514,9 @@
 		},
 		"/v1/roam/location": {
 			"put": {
-				"tags": ["browse/roam"],
+				"tags": [
+					"browse/roam"
+				],
 				"operationId": "updateRoamLocation",
 				"requestBody": {
 					"required": true,
@@ -4259,7 +4543,9 @@
 		},
 		"/v1/roam": {
 			"get": {
-				"tags": ["browse/roam"],
+				"tags": [
+					"browse/roam"
+				],
 				"operationId": "getRoamSession",
 				"responses": {
 					"200": {
@@ -4279,7 +4565,9 @@
 		},
 		"/v1/roam/status/{location}": {
 			"put": {
-				"tags": ["browse/roam"],
+				"tags": [
+					"browse/roam"
+				],
 				"operationId": "updateRoamStatus",
 				"parameters": [
 					{
@@ -4301,7 +4589,9 @@
 		},
 		"/v1/roam/arrival/{days}": {
 			"put": {
-				"tags": ["browse/roam"],
+				"tags": [
+					"browse/roam"
+				],
 				"operationId": "updateRoamArrivalDays",
 				"parameters": [
 					{
@@ -4323,7 +4613,9 @@
 		},
 		"/v1/social-events": {
 			"get": {
-				"tags": ["browse/social-events"],
+				"tags": [
+					"browse/social-events"
+				],
 				"operationId": "getSocialEvents",
 				"security": [
 					{
@@ -4378,7 +4670,9 @@
 		},
 		"/v6/profiles/travel/{profileId}": {
 			"get": {
-				"tags": ["browse/travels"],
+				"tags": [
+					"browse/travels"
+				],
 				"operationId": "getTravelPlans",
 				"security": [
 					{
@@ -4415,7 +4709,9 @@
 		},
 		"/v6/profiles/travel": {
 			"post": {
-				"tags": ["browse/travels"],
+				"tags": [
+					"browse/travels"
+				],
 				"operationId": "createTravelPlan",
 				"security": [
 					{
@@ -4442,7 +4738,9 @@
 		},
 		"/v6/profiles/travel/update": {
 			"post": {
-				"tags": ["browse/travels"],
+				"tags": [
+					"browse/travels"
+				],
 				"operationId": "updateTravelPlan",
 				"security": [
 					{
@@ -4469,7 +4767,9 @@
 		},
 		"/v6/profiles/travel/{travelPlanId}": {
 			"delete": {
-				"tags": ["browse/travels"],
+				"tags": [
+					"browse/travels"
+				],
 				"operationId": "deleteTravelPlanById",
 				"security": [
 					{
@@ -4498,7 +4798,9 @@
 		},
 		"/v1/alist/profiles/{profileId}": {
 			"get": {
-				"tags": ["interest/alist"],
+				"tags": [
+					"interest/alist"
+				],
 				"operationId": "getAListProfile",
 				"parameters": [
 					{
@@ -4521,7 +4823,9 @@
 				"x-wip": true
 			},
 			"delete": {
-				"tags": ["interest/alist"],
+				"tags": [
+					"interest/alist"
+				],
 				"operationId": "deleteAListProfile",
 				"parameters": [
 					{
@@ -4538,7 +4842,9 @@
 		},
 		"/v1/alist/updates": {
 			"get": {
-				"tags": ["interest/alist"],
+				"tags": [
+					"interest/alist"
+				],
 				"operationId": "getAListUpdates",
 				"responses": {
 					"200": {
@@ -4558,7 +4864,9 @@
 		},
 		"/v1/alist/feedback/{conversationId}": {
 			"post": {
-				"tags": ["interest/alist"],
+				"tags": [
+					"interest/alist"
+				],
 				"operationId": "submitAListFeedback",
 				"parameters": [
 					{
@@ -4590,7 +4898,9 @@
 		},
 		"/v3/alist/profiles": {
 			"get": {
-				"tags": ["interest/alist"],
+				"tags": [
+					"interest/alist"
+				],
 				"operationId": "getAListProfiles",
 				"parameters": [
 					{
@@ -4624,7 +4934,9 @@
 		},
 		"/v2/taps/received": {
 			"get": {
-				"tags": ["interest/taps"],
+				"tags": [
+					"interest/taps"
+				],
 				"operationId": "getReceivedTaps",
 				"security": [
 					{
@@ -4656,7 +4968,9 @@
 		},
 		"/v2/taps/add": {
 			"post": {
-				"tags": ["interest/taps"],
+				"tags": [
+					"interest/taps"
+				],
 				"operationId": "sendTap",
 				"security": [
 					{
@@ -4669,7 +4983,10 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["recipientId", "tapType"],
+								"required": [
+									"recipientId",
+									"tapType"
+								],
 								"properties": {
 									"recipientId": {
 										"type": "integer",
@@ -4714,7 +5031,9 @@
 		},
 		"/v1/interactions/taps/sent": {
 			"get": {
-				"tags": ["interest/taps"],
+				"tags": [
+					"interest/taps"
+				],
 				"operationId": "getSentTaps",
 				"security": [
 					{
@@ -4769,7 +5088,9 @@
 		},
 		"/v6/views/eyeball": {
 			"get": {
-				"tags": ["interest/views"],
+				"tags": [
+					"interest/views"
+				],
 				"operationId": "getViewsCount",
 				"security": [
 					{
@@ -4793,7 +5114,9 @@
 		},
 		"/v7/views/list": {
 			"get": {
-				"tags": ["interest/views"],
+				"tags": [
+					"interest/views"
+				],
 				"operationId": "getViewersList",
 				"security": [
 					{
@@ -4817,7 +5140,9 @@
 		},
 		"/v4/views": {
 			"post": {
-				"tags": ["interest/views"],
+				"tags": [
+					"interest/views"
+				],
 				"operationId": "recordProfileViewsBatch",
 				"security": [
 					{
@@ -4863,7 +5188,9 @@
 		},
 		"/v4/views/{profileId}": {
 			"post": {
-				"tags": ["interest/views"],
+				"tags": [
+					"interest/views"
+				],
 				"operationId": "recordProfileViewV4",
 				"security": [
 					{
@@ -4886,7 +5213,9 @@
 		},
 		"/v5/views/{profileId}": {
 			"post": {
-				"tags": ["interest/views"],
+				"tags": [
+					"interest/views"
+				],
 				"operationId": "recordProfileViewV5",
 				"security": [
 					{
@@ -4932,7 +5261,9 @@
 		},
 		"/grindr/chat/gaymoji": {
 			"get": {
-				"tags": ["media/public-cdn-files"],
+				"tags": [
+					"media/public-cdn-files"
+				],
 				"operationId": "listGaymoji",
 				"servers": [
 					{
@@ -4956,7 +5287,9 @@
 		},
 		"/grindr/chat/gaymoji/{id}": {
 			"get": {
-				"tags": ["media/public-cdn-files"],
+				"tags": [
+					"media/public-cdn-files"
+				],
 				"operationId": "getGaymojiAsset",
 				"servers": [
 					{
@@ -4987,12 +5320,16 @@
 					}
 				},
 				"summary": "Get gaymoji asset",
-				"x-notes": ["ID must include file extension (e.g. `name.png`)."]
+				"x-notes": [
+					"ID must include file extension (e.g. `name.png`)."
+				]
 			}
 		},
 		"/images/profile/{size}/{mediaHash}": {
 			"get": {
-				"tags": ["media/public-cdn-files"],
+				"tags": [
+					"media/public-cdn-files"
+				],
 				"operationId": "getPublicProfileImage",
 				"description": "One side will always be the requested size and the other will be less than or equal to the requested size.\n\nAvailable sizes for `{size}` parameter:\n\n- `2048x2048` (might be unavailable)\n- `1024x1024`\n- `480x480`\n- `320x320`",
 				"servers": [
@@ -5007,7 +5344,12 @@
 						"required": true,
 						"schema": {
 							"type": "string",
-							"enum": ["2048x2048", "1024x1024", "480x480", "320x320"],
+							"enum": [
+								"2048x2048",
+								"1024x1024",
+								"480x480",
+								"320x320"
+							],
 							"description": "`2048x2048` might be unavailable."
 						}
 					},
@@ -5050,7 +5392,9 @@
 		},
 		"/images/thumb/{size}/{mediaHash}": {
 			"get": {
-				"tags": ["media/public-cdn-files"],
+				"tags": [
+					"media/public-cdn-files"
+				],
 				"operationId": "getPublicThumbnailImage",
 				"description": "Image will be cropped at center and both sides will be exactly the requested size.\n\nAvailable sizes for `{size}` parameter:\n- `480x480` (might be unavailable)\n- `320x320`\n- `75x75`",
 				"servers": [
@@ -5065,7 +5409,11 @@
 						"required": true,
 						"schema": {
 							"type": "string",
-							"enum": ["480x480", "320x320", "75x75"],
+							"enum": [
+								"480x480",
+								"320x320",
+								"75x75"
+							],
 							"description": "`480x480` might be unavailable."
 						}
 					},
@@ -5108,7 +5456,9 @@
 		},
 		"/{uploaderProfileId}/{mediaHash}": {
 			"get": {
-				"tags": ["media/signed-cdn-files"],
+				"tags": [
+					"media/signed-cdn-files"
+				],
 				"operationId": "getSignedChatMedia",
 				"servers": [
 					{
@@ -5175,7 +5525,9 @@
 		},
 		"/v1/albums": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getMyAlbums",
 				"security": [
 					{
@@ -5207,7 +5559,9 @@
 		},
 		"/v2/albums/{albumId}": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbum",
 				"security": [
 					{
@@ -5237,7 +5591,9 @@
 				"summary": "Get an album"
 			},
 			"put": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "renameAlbum",
 				"security": [
 					{
@@ -5276,7 +5632,9 @@
 		},
 		"/v1/albums/{albumId}/content/{contentId}/poster": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumMediaPoster",
 				"security": [
 					{
@@ -5318,7 +5676,9 @@
 		},
 		"/v3/albums/{albumId}/view": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "recordAlbumView",
 				"parameters": [
 					{
@@ -5338,7 +5698,9 @@
 		},
 		"/v1/albums/{albumId}/view/content/{contentId}": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "recordAlbumContentView",
 				"security": [
 					{
@@ -5376,7 +5738,9 @@
 		},
 		"/v2/albums/shares": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumShareInfo",
 				"security": [
 					{
@@ -5389,7 +5753,9 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["profileId"],
+								"required": [
+									"profileId"
+								],
 								"properties": {
 									"profileId": {
 										"type": "integer",
@@ -5417,7 +5783,9 @@
 		},
 		"/v2/albums/shares/{profileId}": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumsSharedByProfile",
 				"security": [
 					{
@@ -5446,7 +5814,9 @@
 		},
 		"/v2/albums": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "createAlbum",
 				"security": [
 					{
@@ -5489,7 +5859,9 @@
 		},
 		"/v1/albums/{albumId}": {
 			"delete": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "deleteAlbum",
 				"security": [
 					{
@@ -5514,7 +5886,9 @@
 		},
 		"/v1/albums/{albumId}/content": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "uploadAlbumContent",
 				"security": [
 					{
@@ -5556,7 +5930,9 @@
 						"multipart/form-data": {
 							"schema": {
 								"type": "object",
-								"required": ["content"],
+								"required": [
+									"content"
+								],
 								"properties": {
 									"content": {
 										"type": "string",
@@ -5595,7 +5971,9 @@
 		},
 		"/v1/albums/{albumId}/content/order": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "reorderAlbumContent",
 				"security": [
 					{
@@ -5637,7 +6015,9 @@
 		},
 		"/v1/albums/{albumId}/content/{contentId}": {
 			"delete": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "deleteAlbumContent",
 				"security": [
 					{
@@ -5663,7 +6043,9 @@
 		},
 		"/v1/albums/{albumId}/content/{contentId}/processing": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumContentProcessing",
 				"parameters": [
 					{
@@ -5696,7 +6078,9 @@
 		},
 		"/v1/pics/limited/status": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getLimitedPicsStatus",
 				"responses": {
 					"200": {
@@ -5724,7 +6108,9 @@
 		},
 		"/v4/pics/expiring": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "reportExpiringPicture",
 				"requestBody": {
 					"required": true,
@@ -5758,7 +6144,9 @@
 		},
 		"/v4/pics/expiring/status": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getExpiringPictureStatus",
 				"responses": {
 					"200": {
@@ -5778,7 +6166,9 @@
 		},
 		"/v4/videos/expiring/status": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getExpiringVideoStatus",
 				"responses": {
 					"200": {
@@ -5798,7 +6188,9 @@
 		},
 		"/v1/albums/{albumId}/shares": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumShares",
 				"security": [
 					{
@@ -5836,7 +6228,9 @@
 		},
 		"/v4/albums/{albumId}/shares": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "shareAlbum",
 				"security": [
 					{
@@ -5869,7 +6263,9 @@
 		},
 		"/v1/albums/{albumId}/unshares": {
 			"put": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "unshareAlbum",
 				"security": [
 					{
@@ -5901,7 +6297,9 @@
 		},
 		"/v1/albums/{albumId}/shares/remove": {
 			"put": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "removeAllAlbumShares",
 				"parameters": [
 					{
@@ -5923,7 +6321,9 @@
 		},
 		"/v1/albums/{albumId}/content/chat/list-by-id": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "listAlbumContentByChatIds",
 				"security": [
 					{
@@ -5981,7 +6381,9 @@
 		},
 		"/v1/albums/storage": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getAlbumStorageLimits",
 				"security": [
 					{
@@ -6006,7 +6408,9 @@
 		},
 		"/v1/albums/red-dot": {
 			"put": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "ackAlbumRedDot",
 				"responses": {
 					"200": {
@@ -6020,7 +6424,9 @@
 		},
 		"/v3/pressie-albums/feed": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getPressieAlbumsFeed",
 				"security": [
 					{
@@ -6072,7 +6478,9 @@
 		},
 		"/v3/pressie-albums/feed/paywall/": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getPressieAlbumsFeedPaywall",
 				"responses": {
 					"200": {
@@ -6091,7 +6499,9 @@
 		},
 		"/v3/pressie-albums/feed/{profileId}": {
 			"get": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "getPressieAlbumsFeedForProfile",
 				"parameters": [
 					{
@@ -6116,7 +6526,9 @@
 		},
 		"/v3/pressie-albums/feed/update/read": {
 			"post": {
-				"tags": ["messaging/albums"],
+				"tags": [
+					"messaging/albums"
+				],
 				"operationId": "updatePressieAlbumsFeedRead",
 				"responses": {
 					"200": {
@@ -6129,7 +6541,9 @@
 		},
 		"/v4/inbox": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "getConversations",
 				"security": [
 					{
@@ -6174,7 +6588,9 @@
 		},
 		"/v3/inbox": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "getConversationsV3Alias",
 				"security": [
 					{
@@ -6219,7 +6635,9 @@
 		},
 		"/v1/inbox/conversation": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "getConversationsById",
 				"x-notes": [
 					"Note: in this v1 endpoint, each `participants` item only includes `profileId`, `primaryMediaHash`, `lastOnline`, and `distanceMetres`. Fields `onlineUntil`, `position`, `isInAList`, and `hasDatingPotential` are absent."
@@ -6257,7 +6675,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}": {
 			"delete": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "deleteConversation",
 				"security": [
 					{
@@ -6281,7 +6701,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}/pin": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "pinConversation",
 				"security": [
 					{
@@ -6308,7 +6730,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}/unpin": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "unpinConversation",
 				"security": [
 					{
@@ -6332,7 +6756,9 @@
 		},
 		"/v1/push/conversation/{conversationId}/mute": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "muteConversation",
 				"security": [
 					{
@@ -6356,7 +6782,9 @@
 		},
 		"/v1/push/conversation/{conversationId}/unmute": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "unmuteConversation",
 				"security": [
 					{
@@ -6380,7 +6808,9 @@
 		},
 		"/v5/chat/media/shared/images/with-me/{conversationId}": {
 			"get": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "getSharedConversationMedia",
 				"security": [
 					{
@@ -6417,7 +6847,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}/message-by-id": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "refreshMessagesById",
 				"security": [
 					{
@@ -6473,7 +6905,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}/read/{messageId}": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "markMessagesAsRead",
 				"security": [
 					{
@@ -6499,7 +6933,9 @@
 		},
 		"/v1/chat/suggestions": {
 			"get": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "getChatSuggestions",
 				"security": [
 					{
@@ -6533,7 +6969,9 @@
 		},
 		"/v1/chat/summary/feedback": {
 			"post": {
-				"tags": ["messaging/conversations"],
+				"tags": [
+					"messaging/conversations"
+				],
 				"operationId": "submitChatSummaryFeedback",
 				"requestBody": {
 					"required": true,
@@ -6560,7 +6998,9 @@
 		},
 		"/v5/chat/conversation/{conversationId}/message": {
 			"get": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "getConversationMessages",
 				"security": [
 					{
@@ -6606,7 +7046,9 @@
 		},
 		"/v4/chat/conversation/{conversationId}/message/{messageId}": {
 			"get": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "getConversationMessage",
 				"security": [
 					{
@@ -6643,7 +7085,9 @@
 		},
 		"/v4/chat/message/send": {
 			"post": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "sendMessage",
 				"security": [
 					{
@@ -6684,7 +7128,9 @@
 		},
 		"/v4/chat/message/unsend": {
 			"post": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "unsendMessage",
 				"security": [
 					{
@@ -6716,7 +7162,9 @@
 		},
 		"/v4/chat/message/delete": {
 			"post": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "deleteMessage",
 				"security": [
 					{
@@ -6748,7 +7196,9 @@
 		},
 		"/v4/chatstatus/typing": {
 			"post": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "sendTypingIndicator",
 				"security": [
 					{
@@ -6780,7 +7230,9 @@
 		},
 		"/v4/chat/message/reaction": {
 			"post": {
-				"tags": ["messaging/messages"],
+				"tags": [
+					"messaging/messages"
+				],
 				"operationId": "reactToMessage",
 				"security": [
 					{
@@ -6812,7 +7264,9 @@
 		},
 		"/v5/chat/translate": {
 			"post": {
-				"tags": ["messaging/misc"],
+				"tags": [
+					"messaging/misc"
+				],
 				"operationId": "translateMessage",
 				"security": [
 					{
@@ -6855,7 +7309,9 @@
 		},
 		"/v5/recognition/chat": {
 			"post": {
-				"tags": ["messaging/misc"],
+				"tags": [
+					"messaging/misc"
+				],
 				"operationId": "submitChatRecognition",
 				"security": [
 					{
@@ -6874,7 +7330,9 @@
 		},
 		"/v1/wingman/feedback": {
 			"post": {
-				"tags": ["messaging/misc"],
+				"tags": [
+					"messaging/misc"
+				],
 				"operationId": "submitWingmanFeedback",
 				"security": [
 					{
@@ -6913,7 +7371,9 @@
 		},
 		"/v1/chat/phrases": {
 			"get": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "getSavedPhrases",
 				"security": [
 					{
@@ -6935,7 +7395,9 @@
 				"summary": "Get saved phrases"
 			},
 			"post": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "createSavedPhrase",
 				"security": [
 					{
@@ -6948,7 +7410,9 @@
 						"application/json": {
 							"schema": {
 								"type": "object",
-								"required": ["text"],
+								"required": [
+									"text"
+								],
 								"properties": {
 									"text": {
 										"type": "string"
@@ -6980,7 +7444,9 @@
 		},
 		"/v3/me/prefs": {
 			"get": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "getSavedPhrasesLegacy",
 				"security": [
 					{
@@ -7005,7 +7471,9 @@
 		},
 		"/v3/me/prefs/phrases": {
 			"post": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "createSavedPhraseLegacy",
 				"security": [
 					{
@@ -7051,7 +7519,9 @@
 		},
 		"/v3/me/prefs/phrases/{id}": {
 			"delete": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "deleteSavedPhrase",
 				"security": [
 					{
@@ -7078,7 +7548,9 @@
 		},
 		"/v4/phrases/frequency/{id}": {
 			"post": {
-				"tags": ["messaging/saved-phrases"],
+				"tags": [
+					"messaging/saved-phrases"
+				],
 				"operationId": "trackSavedPhraseUsageFrequency",
 				"security": [
 					{
@@ -7106,7 +7578,9 @@
 		},
 		"/v?/users/registration/email": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "createAccountEmail",
 				"summary": "Create account via email",
 				"x-wip": true,
@@ -7143,7 +7617,9 @@
 		},
 		"/v8/sessions/thirdparty": {
 			"post": {
-				"tags": ["authentication"],
+				"tags": [
+					"authentication"
+				],
 				"operationId": "loginThirdParty",
 				"summary": "Login via third party",
 				"x-wip": true,
@@ -7181,7 +7657,9 @@
 		},
 		"/v3/users/password-validation": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "validatePasswordComplexity",
 				"requestBody": {
 					"required": true,
@@ -7216,7 +7694,9 @@
 		},
 		"/v3/gcm-push-tokens": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "registerFcmPushToken",
 				"requestBody": {
 					"required": true,
@@ -7244,7 +7724,9 @@
 		},
 		"/v3/users/update-password": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "updatePassword",
 				"requestBody": {
 					"required": true,
@@ -7280,7 +7762,9 @@
 		},
 		"/v3/users/email": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "updateAccountEmail",
 				"requestBody": {
 					"required": true,
@@ -7315,7 +7799,9 @@
 		},
 		"/v4/sms/users/update-password": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "updatePasswordPhone",
 				"requestBody": {
 					"required": true,
@@ -7351,7 +7837,9 @@
 		},
 		"/v7/users/thirdparty": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "createThirdPartyAccount",
 				"requestBody": {
 					"required": true,
@@ -7388,7 +7876,9 @@
 		},
 		"/v3/users/forgot-password": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "forgotPassword",
 				"requestBody": {
 					"required": true,
@@ -7424,7 +7914,9 @@
 		},
 		"/v3/users/thirdparty/exchange": {
 			"post": {
-				"tags": ["authentication"],
+				"tags": [
+					"authentication"
+				],
 				"operationId": "exchangeGoogleAccessToken",
 				"summary": "Exchange Google auth code",
 				"x-wip": true,
@@ -7455,7 +7947,9 @@
 		},
 		"/v4/sms/sessions": {
 			"post": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "createPhoneSession",
 				"requestBody": {
 					"required": true,
@@ -7490,7 +7984,9 @@
 		},
 		"/v3/me/prefs/settings": {
 			"get": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "getAccountPreferences",
 				"security": [
 					{
@@ -7512,7 +8008,9 @@
 				"summary": "Get preferences"
 			},
 			"put": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "setAccountPreferences",
 				"security": [
 					{
@@ -7539,7 +8037,9 @@
 		},
 		"/v1/visiting/settings": {
 			"get": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "getVisitingSettings",
 				"security": [
 					{
@@ -7561,7 +8061,9 @@
 				"summary": "Get visiting settings"
 			},
 			"put": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "setVisitingSettings",
 				"security": [
 					{
@@ -7588,7 +8090,9 @@
 		},
 		"/v1/visiting/home": {
 			"get": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "getHomeLocation",
 				"security": [
 					{
@@ -7610,7 +8114,9 @@
 				"summary": "Get home location"
 			},
 			"put": {
-				"tags": ["settings/account"],
+				"tags": [
+					"settings/account"
+				],
 				"operationId": "setHomeLocation",
 				"security": [
 					{
@@ -7644,7 +8150,9 @@
 		},
 		"/v4/sms/verification/{profileId}/sendcode": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "sendSmsVerificationCode",
 				"parameters": [
 					{
@@ -7678,7 +8186,9 @@
 		},
 		"/v4/sms/verification/{profileId}/verifycode": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "verifySmsVerificationCode",
 				"parameters": [
 					{
@@ -7716,7 +8226,9 @@
 		},
 		"/v4/sms/users/update-password/sendcode": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "sendPasswordChangeSmsCode",
 				"requestBody": {
 					"required": true,
@@ -7738,7 +8250,9 @@
 		},
 		"/v4/sms/sendcode": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "sendLegacySmsCode",
 				"requestBody": {
 					"required": true,
@@ -7762,7 +8276,9 @@
 		},
 		"/v4/sms/verifycode": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "verifyLegacySmsCode",
 				"requestBody": {
 					"required": true,
@@ -7785,7 +8301,9 @@
 		},
 		"/v4/recognition/face": {
 			"post": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "submitFaceRecognition",
 				"responses": {
 					"200": {
@@ -7845,7 +8363,9 @@
 		},
 		"/v3/me/profile": {
 			"delete": {
-				"tags": ["settings/sms-verification"],
+				"tags": [
+					"settings/sms-verification"
+				],
 				"operationId": "deleteAccount",
 				"security": [
 					{
@@ -7863,7 +8383,9 @@
 		},
 		"/v4/spotify/favorites/{profileId}": {
 			"get": {
-				"tags": ["third-party-integrations/spotify"],
+				"tags": [
+					"third-party-integrations/spotify"
+				],
 				"operationId": "getSpotifyFavorites",
 				"parameters": [
 					{
@@ -7888,7 +8410,9 @@
 		},
 		"/v4/spotify/favorites": {
 			"post": {
-				"tags": ["third-party-integrations/spotify"],
+				"tags": [
+					"third-party-integrations/spotify"
+				],
 				"operationId": "postSpotifyFavorites",
 				"requestBody": {
 					"required": false,
@@ -7922,7 +8446,9 @@
 		},
 		"/v1/search": {
 			"get": {
-				"tags": ["third-party-integrations/spotify"],
+				"tags": [
+					"third-party-integrations/spotify"
+				],
 				"operationId": "searchSpotifyTracks",
 				"parameters": [
 					{
@@ -7958,7 +8484,9 @@
 		},
 		"/v1/tracks": {
 			"get": {
-				"tags": ["third-party-integrations/spotify"],
+				"tags": [
+					"third-party-integrations/spotify"
+				],
 				"operationId": "getSpotifyTracks",
 				"parameters": [
 					{
@@ -7987,7 +8515,9 @@
 		},
 		"/v1/me/player/recently-played": {
 			"get": {
-				"tags": ["third-party-integrations/spotify"],
+				"tags": [
+					"third-party-integrations/spotify"
+				],
 				"operationId": "getSpotifyRecentlyPlayed",
 				"responses": {
 					"200": {
@@ -8007,7 +8537,9 @@
 		},
 		"/v3/me/favorites/{profileId}": {
 			"post": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "addFavorite",
 				"security": [
 					{
@@ -8035,7 +8567,9 @@
 				"summary": "Add favorite"
 			},
 			"delete": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "removeFavorite",
 				"security": [
 					{
@@ -8065,7 +8599,9 @@
 		},
 		"/v1/favorites/notes": {
 			"get": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "getFavoriteNotes",
 				"security": [
 					{
@@ -8092,7 +8628,9 @@
 		},
 		"/v1/favorites/notes/{targetProfileId}": {
 			"get": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "getFavoriteNote",
 				"security": [
 					{
@@ -8125,7 +8663,9 @@
 				"summary": "Get note"
 			},
 			"put": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "putFavoriteNote",
 				"security": [
 					{
@@ -8165,7 +8705,9 @@
 				"description": "The `counterpartyId` parameter seems to be ignored; it's unknown what its purpose is."
 			},
 			"delete": {
-				"tags": ["users/favorites"],
+				"tags": [
+					"users/favorites"
+				],
 				"operationId": "deleteFavoriteNote",
 				"security": [
 					{
@@ -8194,7 +8736,9 @@
 		},
 		"/v1/tags": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfileTags",
 				"security": [
 					{
@@ -8221,7 +8765,9 @@
 		},
 		"/v7/profiles/{id}": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfileById",
 				"description": "Fetch a single profile by ID. When `id` is your own profile, the response carries no self-presence: both `onlineUntil` and `seen` are returned as `null`. Treat the authenticated user as online instead of rendering them as offline.",
 				"security": [
@@ -8267,7 +8813,9 @@
 		},
 		"/v3/profiles": {
 			"post": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfilesById",
 				"security": [
 					{
@@ -8320,7 +8868,9 @@
 		},
 		"/v3.1/me/profile": {
 			"put": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "replaceOwnProfile",
 				"security": [
 					{
@@ -8362,7 +8912,9 @@
 		},
 		"/v4/me/profile": {
 			"patch": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "patchOwnProfile",
 				"security": [
 					{
@@ -8393,7 +8945,9 @@
 		},
 		"/v4/profile-tags/suggestions": {
 			"put": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "suggestProfileTag",
 				"requestBody": {
 					"required": true,
@@ -8420,7 +8974,9 @@
 		},
 		"/v5/profile-tags/translations": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfileTagTranslations",
 				"parameters": [
 					{
@@ -8445,7 +9001,9 @@
 		},
 		"/v5/chat/media/upload": {
 			"post": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "uploadChatMedia",
 				"parameters": [
 					{
@@ -8503,7 +9061,9 @@
 		},
 		"/v4/media/upload": {
 			"post": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "uploadProfileMedia",
 				"security": [
 					{
@@ -8558,7 +9118,9 @@
 		},
 		"/v3/me/profile/images": {
 			"put": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "editProfilePhotos",
 				"security": [
 					{
@@ -8584,7 +9146,9 @@
 				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](/grindr-api/users/profiles#upload-media).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
 			},
 			"delete": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "deleteProfilePhotos",
 				"security": [
 					{
@@ -8613,7 +9177,9 @@
 		},
 		"/v3.1/me/profile/images": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getMyProfilePhotos",
 				"security": [
 					{
@@ -8645,7 +9211,9 @@
 		},
 		"/v4/profiles/reachable": {
 			"post": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "checkProfilesReachable",
 				"security": [
 					{
@@ -8700,7 +9268,9 @@
 		},
 		"/v1/profile-insights/{profileId}": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfileInsightsV1",
 				"parameters": [
 					{
@@ -8725,7 +9295,9 @@
 		},
 		"/v2/profile-insights/{profileId}": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getProfileInsightsV2",
 				"parameters": [
 					{
@@ -8750,7 +9322,9 @@
 		},
 		"/v1/pronouns": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getPronouns",
 				"x-notes": [
 					"Gender and pronouns are **managed fields** — profile fields that aren't hardcoded but pulled dynamically from the server."
@@ -8780,7 +9354,9 @@
 		},
 		"/public/v2/genders": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getGendersV2",
 				"responses": {
 					"200": {
@@ -8802,7 +9378,9 @@
 		},
 		"/public/v1/genders": {
 			"get": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "getGendersV1Alias",
 				"responses": {
 					"200": {
@@ -8825,7 +9403,9 @@
 		},
 		"/v4/genderpronoun/suggestions": {
 			"put": {
-				"tags": ["users/profiles"],
+				"tags": [
+					"users/profiles"
+				],
 				"operationId": "suggestGenderOrPronoun",
 				"security": [
 					{
@@ -8852,7 +9432,9 @@
 		},
 		"/v1/random-images/foryou": {
 			"get": {
-				"tags": ["woodwork/random-promotion-images"],
+				"tags": [
+					"woodwork/random-promotion-images"
+				],
 				"operationId": "getRandomForYouImages",
 				"security": [
 					{
@@ -8888,7 +9470,9 @@
 		},
 		"/v1/ws": {
 			"get": {
-				"tags": ["websocket"],
+				"tags": [
+					"websocket"
+				],
 				"operationId": "openWebSocketConnection",
 				"servers": [
 					{
@@ -8909,7 +9493,9 @@
 		},
 		"/v1/store/googleplay/products/profile_drawer": {
 			"get": {
-				"tags": ["commerce/storeapirest"],
+				"tags": [
+					"commerce/storeapirest"
+				],
 				"operationId": "getStoreProductsProfileDrawer",
 				"responses": {
 					"200": {
@@ -8929,7 +9515,9 @@
 		},
 		"/v1/reddot": {
 			"get": {
-				"tags": ["system/reddot"],
+				"tags": [
+					"system/reddot"
+				],
 				"operationId": "getRedDot",
 				"security": [
 					{
@@ -8953,7 +9541,9 @@
 		},
 		"/v1/reddot/{type}": {
 			"post": {
-				"tags": ["system/reddot"],
+				"tags": [
+					"system/reddot"
+				],
 				"operationId": "markRedDot",
 				"security": [
 					{
@@ -8976,6 +9566,261 @@
 					}
 				},
 				"x-wip": true
+			}
+		},
+		"/v1/verification/device-keys/challenge": {
+			"post": {
+				"tags": [
+					"media"
+				],
+				"operationId": "fetchDeviceKeyChallenge",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Fetch device-key challenge",
+				"description": "First step of device-key registration. Returns a one-time `challenge` to fold into the registration signature. See [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing).",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ChallengeResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/verification/device-keys": {
+			"post": {
+				"tags": [
+					"media"
+				],
+				"operationId": "registerDeviceKey",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Register device key",
+				"description": "Registers the session's P-256 public key after signing the challenge from [Fetch device-key challenge](/grindr-api/media#fetch-device-key-challenge). The returned `keyId` is then used to sign media uploads.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterKeyRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RegisterKeyResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v5/media/upload": {
+			"post": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "uploadProfileMediaSigned",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Upload media (signed)",
+				"description": "Signed successor of [Upload media (legacy)](/grindr-api/users/profiles#upload-media-legacy). The request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing). `thumbCoords` follows the same square-thumbnail rule as the legacy endpoint.",
+				"parameters": [
+					{
+						"name": "thumbCoords",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/RectFString"
+						}
+					},
+					{
+						"name": "takenOnGrindr",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"$ref": "#/components/parameters/DeviceKeyIdHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceSignatureHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceTimestampHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceNonceHeader"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UploadProfileImageResponse"
+								}
+							}
+						}
+					}
+				},
+				"x-errors": {
+					"4xx": "Signature rejected. Body is an `UploadSigningErrorResponse` whose `type` contains `timestamp_drift` (with `detail` = server time as ISO-8601; resync and retry) or `nonce_replayed` (retry with a fresh nonce)."
+				}
+			}
+		},
+		"/v6/chat/media/upload": {
+			"post": {
+				"tags": [
+					"messaging/drawer"
+				],
+				"operationId": "uploadChatMediaSigned",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Upload media (signed)",
+				"description": "Signed successor of the unsigned `POST /v5/chat/media/upload`. A correct `Content-Type` request header is required, and the request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing).",
+				"parameters": [
+					{
+						"name": "length",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					},
+					{
+						"name": "looping",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"name": "takenOnGrindr",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"$ref": "#/components/parameters/DeviceKeyIdHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceSignatureHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceTimestampHeader"
+					},
+					{
+						"$ref": "#/components/parameters/DeviceNonceHeader"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MediaUploadResponse"
+								}
+							}
+						}
+					}
+				},
+				"x-errors": {
+					"4xx": "Signature rejected; see `UploadSigningErrorResponse` (`timestamp_drift` / `nonce_replayed`)."
+				}
+			}
+		},
+		"/v4/discover": {
+			"get": {
+				"tags": [
+					"browse"
+				],
+				"operationId": "getDiscoverProfilesV4",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get discover profiles",
+				"description": "The sole discover endpoint as of app 26.10.0 (replaced `/v3/discover` and `/v2/discover`). Response body shape: `{ status, body: { items, metadata, storedPreferences, types } }` (`DiscoverFeedData`); the `profiles`/`UpsellProfileDto` array present through v3 was dropped. Full item/metadata modeling is pending.",
+				"parameters": [
+					{
+						"name": "geohash",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "previewedProfile",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						},
+						"description": "Single previewed profile id (v3 sent an array `previewedProfiles`)."
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Discover feed (`DiscoverFeedData`); see description for the body shape."
+					}
+				}
 			}
 		}
 	},
@@ -9289,6 +10134,42 @@
 				"schema": {
 					"type": "boolean"
 				}
+			},
+			"DeviceKeyIdHeader": {
+				"name": "X-Key-Id",
+				"in": "header",
+				"required": true,
+				"schema": {
+					"type": "string"
+				},
+				"description": "base64url (no padding) `SHA-256` of the device key SPKI — the `keyId` from [Register device key](/grindr-api/media#register-device-key)."
+			},
+			"DeviceSignatureHeader": {
+				"name": "X-Sig",
+				"in": "header",
+				"required": true,
+				"schema": {
+					"type": "string"
+				},
+				"description": "base64url (no padding) DER ECDSA-P256-SHA256 signature over the UTF-8 string `bodyHash|timestamp|userId|androidId|nonce`. See [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing)."
+			},
+			"DeviceTimestampHeader": {
+				"name": "X-Timestamp",
+				"in": "header",
+				"required": true,
+				"schema": {
+					"type": "string"
+				},
+				"description": "Signing time as Unix epoch milliseconds (decimal string); must equal the `timestamp` inside the signed string."
+			},
+			"DeviceNonceHeader": {
+				"name": "X-Nonce",
+				"in": "header",
+				"required": true,
+				"schema": {
+					"type": "string"
+				},
+				"description": "base64url (no padding) of 32 random bytes, unique per request; must equal the `nonce` inside the signed string."
 			}
 		},
 		"schemas": {
@@ -9327,17 +10208,29 @@
 			},
 			"RightNowStatus": {
 				"type": "string",
-				"enum": ["NOT_ACTIVE", "HOSTING", "NOT_HOSTING"],
+				"enum": [
+					"NOT_ACTIVE",
+					"HOSTING",
+					"NOT_HOSTING"
+				],
 				"x-render-on-tag": "right-now"
 			},
 			"RightNowShareLocation": {
 				"type": "string",
-				"enum": ["DISTANCE_AND_MAP", "DISTANCE_ONLY", "NONE"],
+				"enum": [
+					"DISTANCE_AND_MAP",
+					"DISTANCE_ONLY",
+					"NONE"
+				],
 				"x-render-on-tag": "right-now"
 			},
 			"ViewSourceEnum": {
 				"type": "string",
-				"enum": ["DISCOVER", "FOR_YOU", "UNKNOWN"],
+				"enum": [
+					"DISCOVER",
+					"FOR_YOU",
+					"UNKNOWN"
+				],
 				"description": "View source.",
 				"x-enum-labels": {
 					"DISCOVER": "DISCOVER",
@@ -9348,7 +10241,12 @@
 			},
 			"TapType": {
 				"type": "integer",
-				"enum": [0, 1, 2, 3],
+				"enum": [
+					0,
+					1,
+					2,
+					3
+				],
 				"description": "Tap ID.",
 				"x-enum-labels": {
 					"0": "FRIENDLY (\"hi\" or 🍪 based on client's rendering settings)",
@@ -9392,7 +10290,13 @@
 					}
 				},
 				"x-render-on-tag": "authentication",
-				"required": ["email", "password", "authToken", "token", "geohash"]
+				"required": [
+					"email",
+					"password",
+					"authToken",
+					"token",
+					"geohash"
+				]
 			},
 			"SessionCreateRequestV9": {
 				"description": "Request body for [Sign in via reCAPTCHA](#sign-in-via-recaptcha) (`POST /v9/sessions`). Identical to `SessionCreateRequest` plus one extra field, `captchaToken`. The client uses this shape only when the `recaptcha_first_party` [assignment](/grindr-api/analytics/assignments) is enabled for the device.",
@@ -9412,7 +10316,9 @@
 					}
 				],
 				"x-render-on-tag": "authentication",
-				"required": ["captchaToken"]
+				"required": [
+					"captchaToken"
+				]
 			},
 			"AccountBannedError": {
 				"type": "object",
@@ -9564,7 +10470,11 @@
 					}
 				},
 				"x-render-on-tag": "authentication",
-				"required": ["profileId", "sessionId", "authToken"]
+				"required": [
+					"profileId",
+					"sessionId",
+					"authToken"
+				]
 			},
 			"GoogleAccessTokenRequest": {
 				"type": "object",
@@ -9575,7 +10485,9 @@
 						"description": "Google OAuth 2.0 server auth code (`serverAuthCode` from the Google Sign-In result)."
 					}
 				},
-				"required": ["code"],
+				"required": [
+					"code"
+				],
 				"x-render-on-tag": "authentication"
 			},
 			"GoogleAccessTokenResponse": {
@@ -9600,7 +10512,12 @@
 						"description": "Access token lifetime in seconds."
 					}
 				},
-				"required": ["access_token", "token_type", "id_token", "expires_in"],
+				"required": [
+					"access_token",
+					"token_type",
+					"id_token",
+					"expires_in"
+				],
 				"x-render-on-tag": "authentication"
 			},
 			"ThirdPartyRequest": {
@@ -9609,7 +10526,10 @@
 				"properties": {
 					"thirdPartyVendor": {
 						"type": "integer",
-						"enum": [1, 2],
+						"enum": [
+							1,
+							2
+						],
 						"description": "`1` — Facebook, `2` — Google",
 						"x-enum-labels": {
 							"1": "Facebook",
@@ -9630,7 +10550,10 @@
 						]
 					}
 				},
-				"required": ["thirdPartyVendor", "thirdPartyToken"],
+				"required": [
+					"thirdPartyVendor",
+					"thirdPartyToken"
+				],
 				"x-render-on-tag": "authentication"
 			},
 			"ThirdPartySessionRequest": {
@@ -9655,7 +10578,10 @@
 						]
 					}
 				},
-				"required": ["thirdPartyUserId", "authToken"],
+				"required": [
+					"thirdPartyUserId",
+					"authToken"
+				],
 				"x-render-on-tag": "authentication"
 			},
 			"ThirdPartyAuthenticationResponse": {
@@ -9719,7 +10645,9 @@
 						]
 					}
 				},
-				"required": ["registered"],
+				"required": [
+					"registered"
+				],
 				"x-render-on-tag": "authentication"
 			},
 			"NotificationsAckRequest": {
@@ -9730,11 +10658,16 @@
 					},
 					"source": {
 						"type": "string",
-						"enum": ["WEBSOCKET", "PUSH"],
+						"enum": [
+							"WEBSOCKET",
+							"PUSH"
+						],
 						"description": "`\"WEBSOCKET\"` | `\"PUSH\"`, optional"
 					}
 				},
-				"required": ["notificationId"],
+				"required": [
+					"notificationId"
+				],
 				"x-render-on-tag": "system/notifications"
 			},
 			"Assignment": {
@@ -9759,7 +10692,12 @@
 					}
 				},
 				"x-render-on-tag": "analytics/assignments",
-				"required": ["key", "value", "payload", "type"]
+				"required": [
+					"key",
+					"value",
+					"payload",
+					"type"
+				]
 			},
 			"DrawerMedia": {
 				"type": "object",
@@ -9832,11 +10770,20 @@
 					}
 				},
 				"x-render-on-tag": "browse/location",
-				"required": ["name", "address", "lat", "lon", "placeId", "importance"]
+				"required": [
+					"name",
+					"address",
+					"lat",
+					"lon",
+					"placeId",
+					"importance"
+				]
 			},
 			"LocationUpdateRequest": {
 				"type": "object",
-				"required": ["geohash"],
+				"required": [
+					"geohash"
+				],
 				"properties": {
 					"geohash": {
 						"$ref": "#/components/schemas/Geohash"
@@ -9997,7 +10944,11 @@
 				},
 				"description": "Minimal masked profile.",
 				"x-render-on-tag": "users/profiles",
-				"required": ["distance", "profileImageMediaHash", "isFavorite"]
+				"required": [
+					"distance",
+					"profileImageMediaHash",
+					"isFavorite"
+				]
 			},
 			"ProfileMasked": {
 				"allOf": [
@@ -10039,7 +10990,11 @@
 				],
 				"description": "Masked profile (extra fields revealed).",
 				"x-render-on-tag": "users/profiles",
-				"required": ["lastViewed", "seen", "rightNow"]
+				"required": [
+					"lastViewed",
+					"seen",
+					"rightNow"
+				]
 			},
 			"ProfileMin": {
 				"type": "object",
@@ -10064,7 +11019,10 @@
 				},
 				"description": "Minimal profile fields.",
 				"x-render-on-tag": "users/profiles",
-				"required": ["profileId", "displayName"]
+				"required": [
+					"profileId",
+					"displayName"
+				]
 			},
 			"ProfileMedia": {
 				"type": "object",
@@ -10604,7 +11562,9 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["terms"]
+				"required": [
+					"terms"
+				]
 			},
 			"BannedTermsResponse": {
 				"type": "object",
@@ -10714,7 +11674,10 @@
 				"description": "Social network user reference.",
 				"x-render-on-tag": "users/profiles",
 				"x-display-name": "SocialNetwork",
-				"required": ["site", "userId"]
+				"required": [
+					"site",
+					"userId"
+				]
 			},
 			"ProfileTagLanguage": {
 				"type": "object",
@@ -10756,7 +11719,10 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["language", "categoryCollection"]
+				"required": [
+					"language",
+					"categoryCollection"
+				]
 			},
 			"ChatMediaUploadResponse": {
 				"type": "object",
@@ -10774,7 +11740,11 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["mediaId", "mediaHash", "url"]
+				"required": [
+					"mediaId",
+					"mediaHash",
+					"url"
+				]
 			},
 			"LegacyMediaUploadResponse": {
 				"type": "object",
@@ -10816,7 +11786,11 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["hash", "imageSizes", "mediaId"]
+				"required": [
+					"hash",
+					"imageSizes",
+					"mediaId"
+				]
 			},
 			"EditProfilePhotosRequest": {
 				"type": "object",
@@ -10835,11 +11809,16 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["primaryImageHash", "secondaryImageHashes"]
+				"required": [
+					"primaryImageHash",
+					"secondaryImageHashes"
+				]
 			},
 			"DeleteProfilePhotosRequest": {
 				"type": "object",
-				"required": ["media_hashes"],
+				"required": [
+					"media_hashes"
+				],
 				"properties": {
 					"media_hashes": {
 						"type": "array",
@@ -10866,7 +11845,11 @@
 				"description": "Profile media state.",
 				"x-wip": true,
 				"x-render-on-tag": "users/profiles",
-				"required": ["mediaHash", "type", "state"]
+				"required": [
+					"mediaHash",
+					"type",
+					"state"
+				]
 			},
 			"Pronoun": {
 				"type": "object",
@@ -10880,7 +11863,10 @@
 					}
 				},
 				"x-render-on-tag": "users/profiles",
-				"required": ["pronounId", "pronoun"]
+				"required": [
+					"pronounId",
+					"pronoun"
+				]
 			},
 			"Gender": {
 				"type": "object",
@@ -10942,11 +11928,17 @@
 			},
 			"GenderPronounSuggestionRequest": {
 				"type": "object",
-				"required": ["category", "suggestedValue"],
+				"required": [
+					"category",
+					"suggestedValue"
+				],
 				"properties": {
 					"category": {
 						"type": "string",
-						"enum": ["gender", "pronoun"],
+						"enum": [
+							"gender",
+							"pronoun"
+						],
 						"description": "string, either `gender` or `pronoun`"
 					},
 					"suggestedValue": {
@@ -10975,6 +11967,15 @@
 					},
 					"viewRightNowNsfw": {
 						"type": "boolean"
+					},
+					"mapLocationFuzzRadius": {
+						"type": "integer",
+						"nullable": true,
+						"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
+					},
+					"showOnMap": {
+						"type": "boolean",
+						"description": "Whether the profile is shown on the map."
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -11004,6 +12005,15 @@
 					},
 					"viewRightNowNsfw": {
 						"type": "boolean"
+					},
+					"mapLocationFuzzRadius": {
+						"type": "integer",
+						"nullable": true,
+						"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
+					},
+					"showOnMap": {
+						"type": "boolean",
+						"description": "Whether the profile is shown on the map."
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -11024,7 +12034,9 @@
 					}
 				},
 				"x-render-on-tag": "settings/account",
-				"required": ["setting"]
+				"required": [
+					"setting"
+				]
 			},
 			"HomeLocation": {
 				"type": "object",
@@ -11043,11 +12055,18 @@
 					}
 				},
 				"x-render-on-tag": "settings/account",
-				"required": ["name", "lat", "lon"]
+				"required": [
+					"name",
+					"lat",
+					"lon"
+				]
 			},
 			"HomeLocationMutation": {
 				"type": "object",
-				"required": ["lat", "lon"],
+				"required": [
+					"lat",
+					"lon"
+				],
 				"properties": {
 					"lat": {
 						"type": "number",
@@ -11062,7 +12081,10 @@
 			},
 			"SmsSendCodeRequest": {
 				"type": "object",
-				"required": ["country_code", "phone_number"],
+				"required": [
+					"country_code",
+					"phone_number"
+				],
 				"properties": {
 					"country_code": {
 						"type": "string"
@@ -11086,7 +12108,10 @@
 					}
 				},
 				"x-render-on-tag": "settings/sms-verification",
-				"required": ["code", "message"]
+				"required": [
+					"code",
+					"message"
+				]
 			},
 			"SmsVerifyCodeLegacyRequest": {
 				"type": "object",
@@ -11102,7 +12127,11 @@
 					}
 				},
 				"x-render-on-tag": "settings/sms-verification",
-				"required": ["country_code", "phone_number", "code"]
+				"required": [
+					"country_code",
+					"phone_number",
+					"code"
+				]
 			},
 			"FavoriteNote": {
 				"type": "object",
@@ -11117,7 +12146,10 @@
 					}
 				},
 				"x-render-on-tag": "users/favorites",
-				"required": ["notes", "phoneNumber"]
+				"required": [
+					"notes",
+					"phoneNumber"
+				]
 			},
 			"FavoriteNoteWithCounterparty": {
 				"allOf": [
@@ -11140,17 +12172,31 @@
 					}
 				},
 				"x-render-on-tag": "users/favorites",
-				"required": ["counterpartyId"]
+				"required": [
+					"counterpartyId"
+				]
 			},
 			"AlbumExpirationType": {
 				"oneOf": [
 					{
 						"type": "string",
-						"enum": ["INDEFINITE", "ONCE", "TEN_MINUTES", "ONE_HOUR", "ONE_DAY"]
+						"enum": [
+							"INDEFINITE",
+							"ONCE",
+							"TEN_MINUTES",
+							"ONE_HOUR",
+							"ONE_DAY"
+						]
 					},
 					{
 						"type": "integer",
-						"enum": [0, 1, 2, 3, 4]
+						"enum": [
+							0,
+							1,
+							2,
+							3,
+							4
+						]
 					}
 				],
 				"description": "Album expiration type.\n\nPreviously shared [albums in chat](/grindr-api/messaging/messages#albummessagebody) inherit new `expirationType` settings from newer sharings of the album.",
@@ -11219,7 +12265,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["albumName", "profileId", "albumViewable"]
+				"required": [
+					"albumName",
+					"profileId",
+					"albumViewable"
+				]
 			},
 			"AlbumDetails": {
 				"type": "object",
@@ -11239,7 +12289,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["sharedCount", "createdAt", "updatedAt"]
+				"required": [
+					"sharedCount",
+					"createdAt",
+					"updatedAt"
+				]
 			},
 			"AlbumExpiration": {
 				"type": "object",
@@ -11263,7 +12317,10 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["expiresAt", "expirationType"]
+				"required": [
+					"expiresAt",
+					"expirationType"
+				]
 			},
 			"AlbumContentMin": {
 				"type": "object",
@@ -11283,7 +12340,12 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["contentId", "contentType", "coverUrl", "statusId"]
+				"required": [
+					"contentId",
+					"contentType",
+					"coverUrl",
+					"statusId"
+				]
 			},
 			"AlbumContent": {
 				"allOf": [
@@ -11320,7 +12382,12 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["thumbUrl", "url", "processing", "rejectionId"]
+				"required": [
+					"thumbUrl",
+					"url",
+					"processing",
+					"rejectionId"
+				]
 			},
 			"MyAlbum": {
 				"allOf": [
@@ -11366,7 +12433,9 @@
 						"description": "see [Album name](/grindr-api/messaging/albums#album-name)"
 					}
 				},
-				"required": ["albumName"]
+				"required": [
+					"albumName"
+				]
 			},
 			"AlbumContentWithRemainingViews": {
 				"allOf": [
@@ -11445,7 +12514,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["profileId", "hasAlbum", "hasSharedWithMe"]
+				"required": [
+					"profileId",
+					"hasAlbum",
+					"hasSharedWithMe"
+				]
 			},
 			"AlbumsSharedByProfileResponse": {
 				"type": "object",
@@ -11489,7 +12562,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["albums"]
+				"required": [
+					"albums"
+				]
 			},
 			"AlbumNameRequest": {
 				"type": "object",
@@ -11503,7 +12578,9 @@
 				"x-render-on-tag": "messaging/albums",
 				"x-display-name": "Album name",
 				"description": "String, may be empty (`\"\"`) or `null`, non-string values are coerced into strings.\n\nMaximum length: 255 UTF-8 bytes, which is 255 characters for ASCII strings (1 ASCII character is encoded as 1 byte) but less if you include emojis or non-ascii characters (2+ bytes/one codepoint).",
-				"required": ["albumName"]
+				"required": [
+					"albumName"
+				]
 			},
 			"AlbumRenameResponse": {
 				"type": "object",
@@ -11517,7 +12594,10 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["albumId", "albumName"]
+				"required": [
+					"albumId",
+					"albumName"
+				]
 			},
 			"AlbumShareRequest": {
 				"type": "object",
@@ -11538,7 +12618,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["profiles"]
+				"required": [
+					"profiles"
+				]
 			},
 			"AlbumUnshareRequest": {
 				"type": "object",
@@ -11561,7 +12643,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["profiles"]
+				"required": [
+					"profiles"
+				]
 			},
 			"AlbumStorageLimits": {
 				"type": "object",
@@ -11797,7 +12881,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
-				"required": ["albumPaywallContent"]
+				"required": [
+					"albumPaywallContent"
+				]
 			},
 			"ConversationParticipant": {
 				"type": "object",
@@ -12049,7 +13135,10 @@
 				},
 				"description": "Conversation object.",
 				"x-render-on-tag": "messaging/conversations",
-				"required": ["type", "data"]
+				"required": [
+					"type",
+					"data"
+				]
 			},
 			"InboxFilterRequest": {
 				"type": "object",
@@ -12145,7 +13234,10 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["profileId", "reactionType"]
+				"required": [
+					"profileId",
+					"reactionType"
+				]
 			},
 			"MessageType": {
 				"type": "string",
@@ -12322,7 +13414,10 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["albumContentReply", "contentType"]
+				"required": [
+					"albumContentReply",
+					"contentType"
+				]
 			},
 			"AudioMessageBody": {
 				"type": "object",
@@ -12433,7 +13528,9 @@
 				],
 				"description": "Body for `\"PrivateVideo\"` message type. Extends [Video](#video).",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["viewCount"]
+				"required": [
+					"viewCount"
+				]
 			},
 			"GaymojiBody": {
 				"type": "object",
@@ -12444,7 +13541,9 @@
 				},
 				"description": "Body for `\"Gaymoji\"` message type.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["imageHash"]
+				"required": [
+					"imageHash"
+				]
 			},
 			"GiphyBody": {
 				"type": "object",
@@ -12585,7 +13684,10 @@
 				],
 				"description": "Body for `\"ExpiringImage\"` message type. Extends [Image](#image) but with `url` set to `null` and additional `viewsRemaining`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["url", "viewsRemaining"]
+				"required": [
+					"url",
+					"viewsRemaining"
+				]
 			},
 			"LocationMessageBody": {
 				"type": "object",
@@ -12599,7 +13701,10 @@
 				},
 				"description": "Body for `\"Location\"` message type.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["lat", "lon"]
+				"required": [
+					"lat",
+					"lon"
+				]
 			},
 			"ProfilePhotoReplyBody": {
 				"type": "object",
@@ -12613,7 +13718,10 @@
 				},
 				"description": "Body for `\"ProfilePhotoReply\"` message type. Unknown, WIP.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["imageHash", "photoContentReply"]
+				"required": [
+					"imageHash",
+					"photoContentReply"
+				]
 			},
 			"RetractMessageBody": {
 				"type": "object",
@@ -12624,7 +13732,9 @@
 				},
 				"description": "Body for `\"Retract\"` message type. Unknown, WIP.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["targetMessageId"]
+				"required": [
+					"targetMessageId"
+				]
 			},
 			"TextMessageBody": {
 				"type": "object",
@@ -12635,7 +13745,9 @@
 				},
 				"description": "Body for `\"Text\"` message type.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["text"]
+				"required": [
+					"text"
+				]
 			},
 			"VideoCallMessageBody": {
 				"type": "object",
@@ -12652,7 +13764,10 @@
 				},
 				"description": "Body for `\"VideoCall\"` message type. WIP. Only for \"status\" messages.",
 				"x-render-on-tag": "messaging/messages",
-				"required": ["result", "videoCallDuration"]
+				"required": [
+					"result",
+					"videoCallDuration"
+				]
 			},
 			"UnknownMessageBody": {
 				"type": "object",
@@ -12905,14 +14020,23 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["lastReadTimestamp", "messages", "metadata", "profile"]
+				"required": [
+					"lastReadTimestamp",
+					"messages",
+					"metadata",
+					"profile"
+				]
 			},
 			"MessageTarget": {
 				"type": "object",
 				"properties": {
 					"type": {
 						"type": "string",
-						"enum": ["Direct", "Group", "HumanWingman"],
+						"enum": [
+							"Direct",
+							"Group",
+							"HumanWingman"
+						],
 						"description": "`Direct`, `Group`, `HumanWingman`"
 					},
 					"targetId": {
@@ -12920,7 +14044,10 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["type", "targetId"]
+				"required": [
+					"type",
+					"targetId"
+				]
 			},
 			"SendMessageRequest": {
 				"type": "object",
@@ -12942,7 +14069,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["type", "target", "body"],
+				"required": [
+					"type",
+					"target",
+					"body"
+				],
 				"x-property-groups": [
 					{
 						"heading": "Additional body fields for websocket only:",
@@ -12957,7 +14088,10 @@
 			},
 			"MessageMutationRequest": {
 				"type": "object",
-				"required": ["conversationId", "messageId"],
+				"required": [
+					"conversationId",
+					"messageId"
+				],
 				"properties": {
 					"conversationId": {
 						"$ref": "#/components/schemas/ConversationId"
@@ -12977,12 +14111,18 @@
 					},
 					"status": {
 						"type": "string",
-						"enum": ["Typing", "Cleared"],
+						"enum": [
+							"Typing",
+							"Cleared"
+						],
 						"description": "either `\"Typing\"` or `\"Cleared\"`"
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["conversationId", "status"]
+				"required": [
+					"conversationId",
+					"status"
+				]
 			},
 			"MessageReactionRequest": {
 				"type": "object",
@@ -12999,7 +14139,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/messages",
-				"required": ["conversationId", "messageId", "reactionType"]
+				"required": [
+					"conversationId",
+					"messageId",
+					"reactionType"
+				]
 			},
 			"TranslateMessageRequest": {
 				"type": "object",
@@ -13016,7 +14160,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/misc",
-				"required": ["conversationId", "messageId", "targetLanguageCode"]
+				"required": [
+					"conversationId",
+					"messageId",
+					"targetLanguageCode"
+				]
 			},
 			"WingmanFeedbackRequest": {
 				"type": "object",
@@ -13045,7 +14193,13 @@
 					}
 				},
 				"x-render-on-tag": "messaging/misc",
-				"required": ["message_id", "prompt_id", "rating", "text", "timestamp"]
+				"required": [
+					"message_id",
+					"prompt_id",
+					"rating",
+					"text",
+					"timestamp"
+				]
 			},
 			"SavedPhrase": {
 				"type": "object",
@@ -13063,7 +14217,11 @@
 					}
 				},
 				"x-render-on-tag": "messaging/saved-phrases",
-				"required": ["id", "text", "type"]
+				"required": [
+					"id",
+					"text",
+					"type"
+				]
 			},
 			"SavedPhrasesResponse": {
 				"type": "object",
@@ -13076,7 +14234,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/saved-phrases",
-				"required": ["phrases"]
+				"required": [
+					"phrases"
+				]
 			},
 			"LegacyPrefsResponse": {
 				"type": "object",
@@ -13106,7 +14266,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/saved-phrases",
-				"required": ["phrases"]
+				"required": [
+					"phrases"
+				]
 			},
 			"TapProfile": {
 				"allOf": [
@@ -13190,7 +14352,10 @@
 					}
 				},
 				"x-render-on-tag": "interest/views",
-				"required": ["viewedCount", "mostRecent"]
+				"required": [
+					"viewedCount",
+					"mostRecent"
+				]
 			},
 			"ViewPreview": {
 				"allOf": [
@@ -13319,7 +14484,11 @@
 					}
 				},
 				"x-render-on-tag": "interest/views",
-				"required": ["totalViewers", "previews", "profiles"]
+				"required": [
+					"totalViewers",
+					"previews",
+					"profiles"
+				]
 			},
 			"CascadeItem": {
 				"type": "object",
@@ -13334,7 +14503,10 @@
 					}
 				},
 				"x-render-on-tag": "browse/grid",
-				"required": ["type", "data"]
+				"required": [
+					"type",
+					"data"
+				]
 			},
 			"CascadeResponse": {
 				"type": "object",
@@ -13444,7 +14616,9 @@
 								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
 							}
 						},
-						"required": ["bodyType"]
+						"required": [
+							"bodyType"
+						]
 					}
 				]
 			},
@@ -13474,7 +14648,9 @@
 						}
 					}
 				],
-				"required": ["upsellItemType"]
+				"required": [
+					"upsellItemType"
+				]
 			},
 			"AdvertV1": {
 				"type": "object",
@@ -13497,7 +14673,9 @@
 						}
 					}
 				],
-				"required": ["cascadePlacementName"]
+				"required": [
+					"cascadePlacementName"
+				]
 			},
 			"TopPicksV1": {
 				"type": "object",
@@ -13549,7 +14727,12 @@
 						}
 					}
 				],
-				"required": ["uuid", "headerName", "source", "items"]
+				"required": [
+					"uuid",
+					"headerName",
+					"source",
+					"items"
+				]
 			},
 			"BoostUpsellV1": {
 				"type": "object",
@@ -13628,7 +14811,11 @@
 						}
 					}
 				],
-				"required": ["available", "displayed", "total"]
+				"required": [
+					"available",
+					"displayed",
+					"total"
+				]
 			},
 			"HiddenProfileV1": {
 				"type": "object",
@@ -13661,7 +14848,9 @@
 								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
 							}
 						},
-						"required": ["bodyType"]
+						"required": [
+							"bodyType"
+						]
 					}
 				]
 			},
@@ -13696,7 +14885,9 @@
 								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
 							}
 						},
-						"required": ["bodyType"]
+						"required": [
+							"bodyType"
+						]
 					}
 				]
 			},
@@ -13717,7 +14908,10 @@
 				},
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "sponsored_profile_v1",
-				"required": ["cascadePlacementName", "alternativeProfile"]
+				"required": [
+					"cascadePlacementName",
+					"alternativeProfile"
+				]
 			},
 			"BrazeEventProfileV1": {
 				"type": "object",
@@ -13748,7 +14942,10 @@
 				},
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "braze_event_profile_v1",
-				"required": ["profileId", "eventName"]
+				"required": [
+					"profileId",
+					"eventName"
+				]
 			},
 			"FavsXtraUpsellV1": {
 				"type": "object",
@@ -13759,7 +14956,9 @@
 				},
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "favs_xtra_upsell_v1",
-				"required": ["available"]
+				"required": [
+					"available"
+				]
 			},
 			"FavsUnlimitedUpsellV1": {
 				"type": "object",
@@ -13789,7 +14988,9 @@
 				},
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "profile_hide_status",
-				"required": ["count"]
+				"required": [
+					"count"
+				]
 			},
 			"SearchProfileResult": {
 				"type": "object",
@@ -13948,7 +15149,12 @@
 					}
 				},
 				"x-render-on-tag": "browse/grid",
-				"required": ["profiles", "lastDistanceInKm", "lastProfileId", "inserts"]
+				"required": [
+					"profiles",
+					"lastDistanceInKm",
+					"lastProfileId",
+					"inserts"
+				]
 			},
 			"DiscoverResponse": {
 				"type": "object",
@@ -13973,7 +15179,10 @@
 								},
 								"type": {
 									"type": "string",
-									"enum": ["SAVED_PHRASE", "SMART_PHRASE"],
+									"enum": [
+										"SAVED_PHRASE",
+										"SMART_PHRASE"
+									],
 									"description": "`SAVED_PHRASE` | `SMART_PHRASE`"
 								}
 							}
@@ -13981,7 +15190,9 @@
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
-				"required": ["suggestions"]
+				"required": [
+					"suggestions"
+				]
 			},
 			"GaymojiManifest": {
 				"type": "object",
@@ -14035,7 +15246,11 @@
 				},
 				"x-render-on-tag": "media/public-cdn-files",
 				"x-exclude-from-markdown": true,
-				"required": ["lastUpdateTime", "gaymoji", "category"]
+				"required": [
+					"lastUpdateTime",
+					"gaymoji",
+					"category"
+				]
 			},
 			"GaymojiCategory": {
 				"type": "string",
@@ -14084,7 +15299,10 @@
 				},
 				"x-render-on-tag": "woodwork/random-promotion-images",
 				"x-exclude-from-markdown": true,
-				"required": ["images", "collection"]
+				"required": [
+					"images",
+					"collection"
+				]
 			},
 			"RedDotListResponse": {
 				"type": "object",
@@ -14255,7 +15473,9 @@
 			"MediaState": {
 				"type": "string",
 				"description": "Public media in Grindr undergo an automated moderation check before they appear on a profile. State can be either `null` for media uploaded privately ([chats](/grindr-api/messaging/albums#upload-media-to-an-album)) or one of the below for public-facing media.",
-				"enum": ["Pending"],
+				"enum": [
+					"Pending"
+				],
 				"x-render-on-tag": "media/signed-cdn-files",
 				"x-display-name": "MediaState",
 				"x-wip": true
@@ -14512,7 +15732,11 @@
 			},
 			"RewardedAdRewardStatus": {
 				"type": "string",
-				"enum": ["ELIGIBLE", "ACTIVE", "EXHAUSTED"],
+				"enum": [
+					"ELIGIBLE",
+					"ACTIVE",
+					"EXHAUSTED"
+				],
 				"description": "Current state of a rewarded ad reward for the requesting user.",
 				"x-enum-labels": {
 					"ELIGIBLE": "The user may watch an ad to activate this reward",
@@ -14524,14 +15748,21 @@
 			},
 			"RewardedAdInterval": {
 				"type": "string",
-				"enum": ["DAYS", "HOURS", "MINUTES"],
+				"enum": [
+					"DAYS",
+					"HOURS",
+					"MINUTES"
+				],
 				"description": "Unit of time that `duration` is measured in.",
 				"x-render-on-tag": "commerce/rewarded-ads",
 				"x-display-name": "Rewarded Ad Interval"
 			},
 			"RewardedAdConsumptionStatus": {
 				"type": "string",
-				"enum": ["STARTED", "COMPLETED"],
+				"enum": [
+					"STARTED",
+					"COMPLETED"
+				],
 				"description": "Lifecycle status reported while consuming a rewarded ad.",
 				"x-enum-labels": {
 					"STARTED": "The ad began playing",
@@ -14586,6 +15817,146 @@
 				},
 				"x-render-on-tag": "commerce/rewarded-ads",
 				"x-display-name": "Rewarded Ad Reward"
+			},
+			"ChallengeResponse": {
+				"type": "object",
+				"properties": {
+					"challenge": {
+						"type": "string",
+						"description": "Opaque challenge string to fold into the registration signature."
+					},
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "ISO-8601 instant after which the challenge is no longer accepted."
+					}
+				},
+				"required": [
+					"challenge",
+					"expiresAt"
+				],
+				"x-render-on-tag": "media"
+			},
+			"RegisterKeyRequest": {
+				"type": "object",
+				"properties": {
+					"publicKey": {
+						"type": "string",
+						"description": "base64url (no padding) of the device key SubjectPublicKeyInfo DER."
+					},
+					"keyId": {
+						"type": "string",
+						"description": "base64url (no padding) of `SHA-256(publicKey DER)`."
+					},
+					"registrationSignature": {
+						"type": "string",
+						"description": "base64url (no padding) DER ECDSA-P256-SHA256 signature over `userId|keyId|publicKey|androidId|challenge`."
+					}
+				},
+				"required": [
+					"publicKey",
+					"keyId",
+					"registrationSignature"
+				],
+				"x-render-on-tag": "media"
+			},
+			"RegisterKeyResponse": {
+				"type": "object",
+				"properties": {
+					"keyId": {
+						"type": "string",
+						"description": "The accepted `keyId`, echoed back."
+					}
+				},
+				"required": [
+					"keyId"
+				],
+				"x-render-on-tag": "media"
+			},
+			"UploadSigningErrorResponse": {
+				"type": "object",
+				"description": "Problem body returned when device-key signature verification fails.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"nullable": true,
+						"description": "Failure kind; contains `timestamp_drift` or `nonce_replayed`."
+					},
+					"detail": {
+						"type": "string",
+						"nullable": true,
+						"description": "For `timestamp_drift`, the server's current time as an ISO-8601 instant; resync the clock offset and retry."
+					}
+				},
+				"x-render-on-tag": "media"
+			},
+			"UploadProfileImageResponse": {
+				"type": "object",
+				"properties": {
+					"hash": {
+						"type": "string"
+					},
+					"imageSizes": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"mediaHash": {
+									"$ref": "#/components/schemas/MediaHash"
+								},
+								"fullUrl": {
+									"type": "string",
+									"format": "uri"
+								},
+								"state": {
+									"type": "string",
+									"nullable": true,
+									"description": "Moderation state; `null` until reviewed."
+								},
+								"thumbnail": {
+									"type": "boolean"
+								},
+								"size": {
+									"type": "integer",
+									"description": "Pixel size of the longest edge."
+								}
+							},
+							"required": [
+								"mediaHash",
+								"fullUrl",
+								"thumbnail",
+								"size"
+							]
+						}
+					}
+				},
+				"required": [
+					"hash",
+					"imageSizes"
+				],
+				"x-render-on-tag": "users/profiles"
+			},
+			"MediaUploadResponse": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"url": {
+						"type": "string",
+						"format": "uri"
+					},
+					"mediaHash": {
+						"$ref": "#/components/schemas/MediaHash"
+					}
+				},
+				"required": [
+					"mediaId",
+					"url",
+					"mediaHash"
+				],
+				"x-render-on-tag": "messaging/drawer"
 			}
 		}
 	},
@@ -14605,7 +15976,10 @@
 		},
 		{
 			"group": "users",
-			"items": ["users/profiles", "users/favorites"]
+			"items": [
+				"users/profiles",
+				"users/favorites"
+			]
 		},
 		{
 			"group": "browse",
@@ -14626,20 +16000,32 @@
 		"right-now",
 		{
 			"group": "interest",
-			"items": ["interest/views", "interest/taps", "interest/alist"]
+			"items": [
+				"interest/views",
+				"interest/taps",
+				"interest/alist"
+			]
 		},
 		{
 			"group": "media",
-			"items": ["media/public-cdn-files", "media/signed-cdn-files"]
+			"items": [
+				"media/public-cdn-files",
+				"media/signed-cdn-files"
+			]
 		},
 		"videocalls",
 		{
 			"group": "settings",
-			"items": ["settings/account", "settings/sms-verification"]
+			"items": [
+				"settings/account",
+				"settings/sms-verification"
+			]
 		},
 		{
 			"group": "third-party-integrations",
-			"items": ["third-party-integrations/spotify"]
+			"items": [
+				"third-party-integrations/spotify"
+			]
 		},
 		{
 			"group": "commerce",
@@ -14678,11 +16064,16 @@
 		},
 		{
 			"group": "analytics",
-			"items": ["analytics/assignments", "analytics/trackers"]
+			"items": [
+				"analytics/assignments",
+				"analytics/trackers"
+			]
 		},
 		{
 			"group": "woodwork",
-			"items": ["woodwork/random-promotion-images"]
+			"items": [
+				"woodwork/random-promotion-images"
+			]
 		}
 	],
 	"x-parameter-groups": {

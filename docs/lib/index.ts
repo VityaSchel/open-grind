@@ -23,10 +23,7 @@ export const grindrApiReferenceBrowse: DefaultTheme.SidebarItem[] = [
 	{ text: "Links, WIP", link: "/grindr-api/browse/links" },
 	{ text: "Travels", link: "/grindr-api/browse/travels" },
 	{ text: "Roam, WIP", link: "/grindr-api/browse/roam" },
-	{
-		text: "Age verification, WIP",
-		link: "/grindr-api/browse/age-verification",
-	},
+	{ text: "Age verification, WIP", link: "/grindr-api/browse/age-verification" },
 	{ text: "Blocks", link: "/grindr-api/browse/blocks" },
 	{ text: "Hides", link: "/grindr-api/browse/hides" },
 	{ text: "Discover, WIP", link: "/grindr-api/browse/discover" },
@@ -45,19 +42,12 @@ export const grindrApiReferenceMedia: DefaultTheme.SidebarItem[] = [
 
 export const grindrApiReferenceSettings: DefaultTheme.SidebarItem[] = [
 	{ text: "Account", link: "/grindr-api/settings/account" },
-	{
-		text: "SMS verification, WIP",
-		link: "/grindr-api/settings/sms-verification",
-	},
+	{ text: "SMS verification, WIP", link: "/grindr-api/settings/sms-verification" },
 ];
 
-export const grindrApiReferenceThirdPartyIntegrations: DefaultTheme.SidebarItem[] =
-	[
-		{
-			text: "Spotify, WIP",
-			link: "/grindr-api/third-party-integrations/spotify",
-		},
-	];
+export const grindrApiReferenceThirdPartyIntegrations: DefaultTheme.SidebarItem[] = [
+	{ text: "Spotify, WIP", link: "/grindr-api/third-party-integrations/spotify" },
+];
 
 export const grindrApiReferenceCommerce: DefaultTheme.SidebarItem[] = [
 	{ text: "StoreApiRest, WIP", link: "/grindr-api/commerce/storeapirest" },
@@ -73,10 +63,7 @@ export const grindrApiReferenceCommerce: DefaultTheme.SidebarItem[] = [
 export const grindrApiReferenceSafety: DefaultTheme.SidebarItem[] = [
 	{ text: "Reports, WIP", link: "/grindr-api/safety/reports" },
 	{ text: "Warnings, WIP", link: "/grindr-api/safety/warnings" },
-	{
-		text: "Legal agreements, WIP",
-		link: "/grindr-api/safety/legal-agreements",
-	},
+	{ text: "Legal agreements, WIP", link: "/grindr-api/safety/legal-agreements" },
 	{ text: "Access requests, WIP", link: "/grindr-api/safety/access-requests" },
 ];
 
@@ -97,18 +84,12 @@ export const grindrApiReferenceAnalytics: DefaultTheme.SidebarItem[] = [
 ];
 
 export const grindrApiReferenceWoodwork: DefaultTheme.SidebarItem[] = [
-	{
-		text: "Random promotion images",
-		link: "/grindr-api/woodwork/random-promotion-images",
-	},
+	{ text: "Random promotion images", link: "/grindr-api/woodwork/random-promotion-images" },
 ];
 
 export const grindrApiReferenceWebSocket: DefaultTheme.SidebarItem[] = [
 	{ text: "Events", link: "/grindr-api/websocket/events" },
-	{
-		text: "Notification Event",
-		link: "/grindr-api/websocket/notification-event",
-	},
+	{ text: "Notification Event", link: "/grindr-api/websocket/notification-event" },
 	{ text: "Commands", link: "/grindr-api/websocket/commands" },
 ];
 
@@ -117,87 +98,22 @@ export const grindrApiReference: DefaultTheme.SidebarItem[] = [
 	{ text: "Security headers", link: "/grindr-api/security-headers" },
 	{ text: "API Authorization", link: "/grindr-api/api-authorization" },
 	{ text: "Authentication", link: "/grindr-api/authentication" },
-	{
-		text: "Messaging",
-		link: "/grindr-api/messaging/",
-		collapsed: true,
-		items: grindrApiReferenceMessaging,
-	},
-	{
-		text: "Users",
-		link: "/grindr-api/users/",
-		collapsed: true,
-		items: grindrApiReferenceUsers,
-	},
-	{
-		text: "Browse",
-		link: "/grindr-api/browse/",
-		collapsed: true,
-		items: grindrApiReferenceBrowse,
-	},
+	{ text: "Messaging", link: "/grindr-api/messaging/", collapsed: true, items: grindrApiReferenceMessaging },
+	{ text: "Users", link: "/grindr-api/users/", collapsed: true, items: grindrApiReferenceUsers },
+	{ text: "Browse", link: "/grindr-api/browse/", collapsed: true, items: grindrApiReferenceBrowse },
 	{ text: "Right Now, WIP", link: "/grindr-api/right-now" },
-	{
-		text: "Interest",
-		link: "/grindr-api/interest/",
-		collapsed: true,
-		items: grindrApiReferenceInterest,
-	},
-	{
-		text: "Media",
-		link: "/grindr-api/media/",
-		collapsed: true,
-		items: grindrApiReferenceMedia,
-	},
+	{ text: "Interest", link: "/grindr-api/interest/", collapsed: true, items: grindrApiReferenceInterest },
+	{ text: "Media", link: "/grindr-api/media/", collapsed: true, items: grindrApiReferenceMedia },
 	{ text: "Videocalls, WIP", link: "/grindr-api/videocalls" },
-	{
-		text: "Settings",
-		link: "/grindr-api/settings/",
-		collapsed: true,
-		items: grindrApiReferenceSettings,
-	},
-	{
-		text: "Third party integrations, WIP",
-		link: "/grindr-api/third-party-integrations/",
-		collapsed: true,
-		items: grindrApiReferenceThirdPartyIntegrations,
-	},
-	{
-		text: "Commerce",
-		link: "/grindr-api/commerce/",
-		collapsed: true,
-		items: grindrApiReferenceCommerce,
-	},
-	{
-		text: "Safety",
-		link: "/grindr-api/safety/",
-		collapsed: true,
-		items: grindrApiReferenceSafety,
-	},
-	{
-		text: "System",
-		link: "/grindr-api/system/",
-		collapsed: true,
-		items: grindrApiReferenceSystem,
-	},
-	{
-		text: "Analytics",
-		link: "/grindr-api/analytics/",
-		collapsed: true,
-		items: grindrApiReferenceAnalytics,
-	},
-	{
-		text: "Woodwork",
-		link: "/grindr-api/woodwork/",
-		collapsed: true,
-		items: grindrApiReferenceWoodwork,
-	},
+	{ text: "Settings", link: "/grindr-api/settings/", collapsed: true, items: grindrApiReferenceSettings },
+	{ text: "Third party integrations, WIP", link: "/grindr-api/third-party-integrations/", collapsed: true, items: grindrApiReferenceThirdPartyIntegrations },
+	{ text: "Commerce", link: "/grindr-api/commerce/", collapsed: true, items: grindrApiReferenceCommerce },
+	{ text: "Safety", link: "/grindr-api/safety/", collapsed: true, items: grindrApiReferenceSafety },
+	{ text: "System", link: "/grindr-api/system/", collapsed: true, items: grindrApiReferenceSystem },
+	{ text: "Analytics", link: "/grindr-api/analytics/", collapsed: true, items: grindrApiReferenceAnalytics },
+	{ text: "Woodwork", link: "/grindr-api/woodwork/", collapsed: true, items: grindrApiReferenceWoodwork },
 	{ text: "Rate limits", link: "/grindr-api/rate-limits" },
-	{
-		text: "WebSocket",
-		link: "/grindr-api/websocket/",
-		collapsed: true,
-		items: grindrApiReferenceWebSocket,
-	},
+	{ text: "WebSocket", link: "/grindr-api/websocket/", collapsed: true, items: grindrApiReferenceWebSocket },
 	{ text: "Appendix", link: "/grindr-api/appendix" },
 	{ text: "Shared types", link: "/grindr-api/shared-types" },
 ];
