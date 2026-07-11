@@ -3,7 +3,7 @@ import z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error";
-import type { cascadeV3QuerySchema } from "$lib/model/browse/grid/cascade/query/v3";
+import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import {
 	getCachedProfile,
 	getGrid,
@@ -25,7 +25,7 @@ class GridState {
 	get errorMessage(): string | null {
 		return this.error?.message ?? null;
 	}
-	currentQuery: z.infer<typeof cascadeV3QuerySchema> | null = null;
+	currentQuery: z.infer<typeof cascadeV4QuerySchema> | null = null;
 	scrollY = 0;
 
 	#geohash: string | null = null;
@@ -209,7 +209,7 @@ class GridState {
 						tags: filters?.tags,
 					}),
 				fresh: filters?.isFresh || undefined,
-			} satisfies z.infer<typeof cascadeV3QuerySchema>;
+			} satisfies z.infer<typeof cascadeV4QuerySchema>;
 			const result = await getGrid(query);
 			if (token !== this.#fetchToken) return;
 			this.currentQuery = query;

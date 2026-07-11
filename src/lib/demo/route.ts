@@ -13,7 +13,7 @@ import {
 import {
 	buildFullProfile,
 	buildShortProfile,
-	demoCascadeV3,
+	demoCascadeV4,
 	demoGetProfiles,
 	demoMyUploadedPhotos,
 	demoSearchProfiles,
@@ -55,17 +55,8 @@ export function demoRoute(
 	const params = new URLSearchParams(queryString);
 	const segments = rawPath.split("/").filter(Boolean);
 
-	if (method === "GET" && rawPath === "/v3/cascade") {
-		return ok(demoCascadeV3(params));
-	}
 	if (method === "GET" && rawPath === "/v4/cascade") {
-		return ok({
-			items: [],
-			nextPage: null,
-			shuffled: false,
-			hiddenProfiles: null,
-			hiddenProfileInfo: null,
-		});
+		return ok(demoCascadeV4(params));
 	}
 	if (method === "GET" && rawPath === "/v7/search") {
 		return ok({ profiles: demoSearchProfiles(params) });

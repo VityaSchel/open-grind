@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import z from "zod";
 
 import { demoRoute } from "$lib/demo";
-import { cascadeV3ResponseSchema } from "$lib/model/browse/grid/cascade/response/v3";
+import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { searchProfileSchema } from "$lib/model/browse/grid/search";
 import { tapProfileSchema } from "$lib/model/interest/tap-profile";
 import {
@@ -36,7 +36,7 @@ const route = (path: string, method = "GET", body?: unknown) =>
 
 describe("demo route data matches the real schemas", () => {
 	const firstProfileId = (
-		items: z.infer<typeof cascadeV3ResponseSchema>["items"],
+		items: z.infer<typeof cascadeV4ResponseSchema>["items"],
 	): number => {
 		for (const item of items) {
 			if ("data" in item && "profileId" in item.data)
@@ -46,14 +46,14 @@ describe("demo route data matches the real schemas", () => {
 	};
 
 	it("cascade grid page validates and paginates", () => {
-		const page0 = cascadeV3ResponseSchema.parse(
-			route("/v3/cascade?nearbyGeoHash=u00"),
+		const page0 = cascadeV4ResponseSchema.parse(
+			route("/v4/cascade?nearbyGeoHash=u00"),
 		);
 		expect(page0.items.length).toBeGreaterThan(0);
 		expect(page0.nextPage).toBe(1);
 
-		const page1 = cascadeV3ResponseSchema.parse(
-			route("/v3/cascade?nearbyGeoHash=u00&pageNumber=1"),
+		const page1 = cascadeV4ResponseSchema.parse(
+			route("/v4/cascade?nearbyGeoHash=u00&pageNumber=1"),
 		);
 		expect(firstProfileId(page0.items)).not.toBe(firstProfileId(page1.items));
 	});

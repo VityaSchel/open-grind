@@ -1,9 +1,9 @@
 import type z from "zod";
 
 import type {
-	cascadeV3ResponseFullProfileV1Schema,
-	cascadeV3ResponsePartialProfileV1Schema,
-} from "$lib/model/browse/grid/cascade/response/v3";
+	cascadeV4ResponseFullProfileV1Schema,
+	cascadeV4ResponsePartialProfileV1Schema,
+} from "$lib/model/browse/grid/cascade/response/v4";
 import type {
 	Profile,
 	profileRightNowSchema,
@@ -112,9 +112,9 @@ export function buildFullProfile(seed: DemoSeed): Profile {
 	};
 }
 
-type CascadeFullItem = z.infer<typeof cascadeV3ResponseFullProfileV1Schema>;
+type CascadeFullItem = z.infer<typeof cascadeV4ResponseFullProfileV1Schema>;
 type CascadePartialItem = z.infer<
-	typeof cascadeV3ResponsePartialProfileV1Schema
+	typeof cascadeV4ResponsePartialProfileV1Schema
 >;
 
 function cascadeProfileData(seed: DemoSeed) {
@@ -128,33 +128,24 @@ function cascadeProfileData(seed: DemoSeed) {
 		unreadCount: seed.unread,
 		isVisiting: false,
 		isPopular: seed.favorite || seed.unread > 0,
-		lastOnline: lastOnlineOf(seed),
-		photoMediaHashes: photos.length > 0 ? photos : null,
-		lookingFor: seed.lookingFor,
-		...(seed.position !== null && { sexualPosition: seed.position }),
-		approximateDistance: seed.distanceM != null && seed.distanceM > 1000,
-		isFavorite: seed.favorite,
-		isBoosting: false,
-		hasChattedInLast24Hrs: seed.unread > 0,
-		hasUnviewedSpark: false,
-		isTeleporting: false,
-		isRoaming: false,
-		isRightNow: false,
-		hasUnreadThrob: false,
-		isBlockable: true,
-		isBoostingSomewhereElse: false,
-	} as const;
+		primaryImageUrl: photos[0]
+			? `https://cdns.grindr.com/images/profile/480x480/${photos[0]}`
+			: undefined,
+		favorite: seed.favorite,
+		viewed: false,
+		chatted: seed.unread > 0,
+		roaming: false,
+		age: seed.age ?? undefined,
+		heightCm: seed.heightCm ?? undefined,
+		weightGrams: seed.weightG ?? undefined,
+		bodyType: seed.body ?? undefined,
+	};
 }
 
 function cascadeFullItem(seed: DemoSeed): CascadeFullItem {
 	return {
 		type: "full_profile_v1",
-		data: {
-			...cascadeProfileData(seed),
-			"@type": "CascadeItemData$FullProfileV1",
-			tribes: seed.tribes,
-			socialNetworks: [],
-		},
+		data: cascadeProfileData(seed),
 	};
 }
 
@@ -163,7 +154,6 @@ function cascadePartialItem(seed: DemoSeed): CascadePartialItem {
 		type: "partial_profile_v1",
 		data: {
 			...cascadeProfileData(seed),
-			"@type": "CascadeItemData$PartialProfileV1",
 			upsellItemType: "FREE_PROFILE_LIMIT",
 		},
 	};
@@ -207,7 +197,7 @@ function filteredGridIds(params: URLSearchParams): number[] {
 	});
 }
 
-export function demoCascadeV3(params: URLSearchParams) {
+export function demoCascadeV4(params: URLSearchParams) {
 	const page = num(params.get("pageNumber")) ?? 0;
 	const ids = filteredGridIds(params);
 	const start = page * GRID_PAGE_SIZE;
