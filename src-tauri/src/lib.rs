@@ -10,6 +10,71 @@ use tauri::Manager;
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
+// Mirrors MIN_SUPPORTED_WEBVIEW_MAJOR in gen/android/app/build.gradle.kts and the
+// CSS feature floor in src/app.html (Tailwind v4: Chromium 111 / WebKitGTK 2.42 /
+// Safari 16.4). Keep in sync.
+#[cfg(target_os = "windows")]
+const MIN_CHROMIUM_MAJOR: u32 = 111;
+#[cfg(target_os = "linux")]
+const MIN_WEBKITGTK: (u32, u32) = (2, 42);
+
+const OG_PLATFORM: &str = if cfg!(target_os = "android") {
+    "android"
+} else if cfg!(target_os = "ios") {
+    "ios"
+} else if cfg!(target_os = "windows") {
+    "windows"
+} else if cfg!(target_os = "macos") {
+    "macos"
+} else if cfg!(target_os = "linux") {
+    "linux"
+} else {
+    "unknown"
+};
+
+fn og_platform_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    tauri::plugin::Builder::<R, ()>::new("og-platform")
+        .js_init_script(format!(r#"window.__OG_PLATFORM = "{OG_PLATFORM}";"#))
+        .build()
+}
+
+// macOS reports a WebKit build number that doesn't track Safari versions
+#[cfg(desktop)]
+fn outdated_webview_notice() -> Option<String> {
+    #[cfg(target_os = "windows")]
+    {
+        let version = tauri::webview_version().ok()?;
+        if version.split('.').next()?.parse::<u32>().ok()? < MIN_CHROMIUM_MAJOR {
+            return Some(format!(
+                "Open Grind needs Microsoft Edge WebView2 {MIN_CHROMIUM_MAJOR} or newer to \
+                 display correctly (found {version}).\n\nUpdate the WebView2 Runtime, then \
+                 restart the app."
+            ));
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let version = tauri::webview_version().ok()?;
+        let mut parts = version.split('.');
+        let major = parts.next()?.parse::<u32>().ok()?;
+        let minor = parts
+            .next()
+            .and_then(|p| p.parse::<u32>().ok())
+            .unwrap_or(0);
+        if (major, minor) < MIN_WEBKITGTK {
+            let (min_major, min_minor) = MIN_WEBKITGTK;
+            return Some(format!(
+                "Open Grind needs WebKitGTK {min_major}.{min_minor} or newer to display \
+                 correctly (found {version}).\n\nUpdate webkit2gtk / your distribution, \
+                 then restart the app."
+            ));
+        }
+    }
+
+    None
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(debug_assertions)]
@@ -24,6 +89,7 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_android_fs::init());
 
     builder
+        .plugin(og_platform_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
@@ -50,6 +116,16 @@ pub fn run() {
             api::client::rotate_api_params,
         ])
         .setup(|app| {
+            #[cfg(desktop)]
+            if let Some(message) = outdated_webview_notice() {
+                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                app.dialog()
+                    .message(message)
+                    .title("WebView may be too old")
+                    .kind(MessageDialogKind::Warning)
+                    .show(|_| {});
+            }
+
             #[cfg(all(target_os = "macos", not(feature = "keychain")))]
             storage::init_file_store(app.path().app_data_dir()?);
 

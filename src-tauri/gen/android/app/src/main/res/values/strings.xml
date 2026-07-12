@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Open Grind</string>
     <string name="main_activity_title">Open Grind</string>
+    <string name="webview_warning_title">Android WebView may be too old</string>
+    <string name="webview_warning_update">Update WebView</string>
+    <string name="webview_warning_continue">Continue anyway</string>
 </resources>

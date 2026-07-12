@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:paddingStart="24dp"
+	android:paddingEnd="24dp"
+	android:paddingTop="24dp"
+	android:paddingBottom="16dp">
+
+	<TextView
+		android:id="@+id/dialog_title"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/webview_warning_title"
+		android:textColor="@color/brand_on_surface"
+		android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+		android:textAllCaps="false"
+		android:letterSpacing="0" />
+
+	<TextView
+		android:id="@+id/dialog_message"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="12dp"
+		android:textColor="@color/brand_on_surface_variant"
+		android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+		android:lineSpacingMultiplier="1.2"
+		android:letterSpacing="0" />
+
+	<com.google.android.material.button.MaterialButton
+		android:id="@+id/button_update"
+		style="@style/Widget.OpenGrind.Dialog.Button.Filled"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="24dp"
+		android:text="@string/webview_warning_update" />
+
+	<com.google.android.material.button.MaterialButton
+		android:id="@+id/button_continue"
+		style="@style/Widget.OpenGrind.Dialog.Button.Text"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="4dp"
+		android:text="@string/webview_warning_continue" />
+</LinearLayout>

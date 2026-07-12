@@ -7,15 +7,95 @@
 	<style>
 		:root {
 			color-scheme: dark;
+			background-color: #1e1e1e;
 			--background: oklch(0.145 0 0);
 			background-color: var(--background);
 		}
+
+		#webview-too-old {
+			display: none;
+		}
+
+		.webview-unsupported #webview-too-old {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 2147483647;
+			overflow: auto;
+			background: #1e1e1e;
+			color: #eee;
+			text-align: center;
+			padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+			font-size: 16px;
+			font-family: system-ui, -apple-system, sans-serif;
+			line-height: 1.5;
+		}
+
+		#webview-too-old .wv-inner {
+			max-width: 32rem;
+			margin: 0;
+			padding: 1.5rem;
+		}
+
+		#webview-too-old h1 {
+			font-size: 1.4rem;
+		}
+
+		/* Show only the running platform's instruction; web/unknown shows all. */
+		.wv-plat {
+			display: none;
+		}
+
+		.plat-linux .wv-plat[data-platform="linux"],
+		.plat-macos .wv-plat[data-platform="macos"],
+		.plat-windows .wv-plat[data-platform="windows"],
+		.plat-android .wv-plat[data-platform="android"],
+		.plat-ios .wv-plat[data-platform="ios"],
+		.plat-web .wv-plat,
+		.plat-unknown .wv-plat {
+			display: block;
+		}
 	</style>
+	<script>
+		(function () {
+			try {
+				if (window.CSS && CSS.supports &&
+					CSS.supports("color", "color-mix(in srgb, red, blue)") &&
+					CSS.supports("container-type", "inline-size")) return;
+			} catch (e) { }
+			var root = document.documentElement;
+			root.classList.add("webview-unsupported");
+			root.classList.add("plat-" + (window.__OG_PLATFORM || "web"));
+		})();
+	</script>
 	%sveltekit.head%
 </head>
 
 <body data-sveltekit-preload-data="hover" class="dark">
 	<div style="display: contents">%sveltekit.body%</div>
+	<div id="webview-too-old">
+		<div class="wv-inner">
+			<h1>Your system WebView is too old</h1>
+			<p>Open Grind needs a newer browser engine to display correctly.</p>
+			<p class="wv-plat" data-platform="linux">Update <code>webkit2gtk</code> (2.42 or newer) via your
+				distribution.</p>
+			<p class="wv-plat" data-platform="macos">Update to macOS Ventura 13 or newer.</p>
+			<p class="wv-plat" data-platform="windows">Update the Microsoft Edge WebView2 Runtime.</p>
+			<p class="wv-plat" data-platform="android">Update Android System WebView from the Play Store.</p>
+			<p class="wv-plat" data-platform="ios">Update to a newer iOS version.</p>
+		</div>
+	</div>
+	<noscript>
+		<div
+			style="max-width: 32rem; margin: 2rem auto; padding: 0 1.5rem; color: #eee; font: 16px/1.5 system-ui, sans-serif">
+			Open Grind requires JavaScript to be enabled.
+		</div>
+	</noscript>
 </body>
 
 </html>
