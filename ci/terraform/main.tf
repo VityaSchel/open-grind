@@ -1,6 +1,6 @@
 locals {
   cloud_init = { for k, r in var.runners : k => join("\n", [
-    "#!/usr/bin/env bash",
+    "#!/bin/bash",
     "FORGEJO_URL='${var.forgejo_url}'",
     "RUNNER_UUID='${r.uuid}'",
     "RUNNER_TOKEN='${r.token}'",
