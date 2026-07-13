@@ -18,7 +18,7 @@ const MIN_CHROMIUM_MAJOR: u32 = 111;
 #[cfg(target_os = "linux")]
 const MIN_WEBKITGTK: (u32, u32) = (2, 42);
 
-const OG_PLATFORM: &str = if cfg!(target_os = "android") {
+const OPEN_GRIND_PLATFORM: &str = if cfg!(target_os = "android") {
     "android"
 } else if cfg!(target_os = "ios") {
     "ios"
@@ -32,9 +32,11 @@ const OG_PLATFORM: &str = if cfg!(target_os = "android") {
     "unknown"
 };
 
-fn og_platform_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
-    tauri::plugin::Builder::<R, ()>::new("og-platform")
-        .js_init_script(format!(r#"window.__OG_PLATFORM = "{OG_PLATFORM}";"#))
+fn open_grind_platform_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    tauri::plugin::Builder::<R, ()>::new("open-grind-platform")
+        .js_init_script(format!(
+            r#"window.__OPEN_GRIND_PLATFORM = "{OPEN_GRIND_PLATFORM}";"#
+        ))
         .build()
 }
 
@@ -89,7 +91,7 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_android_fs::init());
 
     builder
-        .plugin(og_platform_plugin())
+        .plugin(open_grind_platform_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())

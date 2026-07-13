@@ -1,0 +1,7 @@
+runner:
+  capacity: 1
+container:
+  privileged: false
+  valid_volumes: []
+  docker_host: "-"
+  network: ""

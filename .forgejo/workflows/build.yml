@@ -1,0 +1,91 @@
+name: build
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: open-grind-build
+
+jobs:
+  provision:
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 45
+    steps:
+      - name: Register runners and provision builders
+        env:
+          FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
+          VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
+        run: bash /opt/open-grind/provision.sh
+
+  build:
+    needs: provision
+    strategy:
+      fail-fast: false
+      matrix:
+        box: [a, b]
+    runs-on: ["open-grind-builder-${{ matrix.box }}"]
+    timeout-minutes: 150
+    steps:
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q FETCH_HEAD
+      - name: Build
+        run: |
+          docker compose build
+          docker compose run --rm build
+      - name: Collect APK
+        run: |
+          apk=(src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
+          [ ${#apk[@]} -eq 1 ]
+          mkdir -p out
+          cp "${apk[0]}" out/
+      - name: Upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned-${{ matrix.box }}
+          path: out/
+
+  verify:
+    needs: build
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 15
+    steps:
+      - name: Download builds
+        uses: https://code.forgejo.org/forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
+        with:
+          path: dl
+      - name: Compare
+        run: |
+          apks=(dl/*/*.apk)
+          [ ${#apks[@]} -eq 2 ]
+          sha256sum "${apks[@]}"
+          cmp "${apks[0]}" "${apks[1]}"
+          mkdir -p verified
+          cp "${apks[0]}" verified/
+          sha256sum "${apks[0]}" | cut -d' ' -f1 > verified/sha256.txt
+      - name: Publish verified artifact
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned
+          path: verified/
+
+  teardown:
+    needs: [provision, build, verify]
+    if: always()
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 20
+    steps:
+      - name: Delete builders
+        env:
+          FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+        run: bash /opt/open-grind/teardown.sh

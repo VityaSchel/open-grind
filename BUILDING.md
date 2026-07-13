@@ -6,7 +6,7 @@ To get started, choose one of the methods below (Docker, Nix or manual) and foll
 > Only Android release builds are tested as of June 23rd, 2026.
 
 - [Building Open Grind](#building-open-grind)
-  - [Build with Docker (easiest, Linux x86\_64 only)](#build-with-docker-easiest-linux-x86_64-only)
+  - [Build with Docker (easiest)](#build-with-docker-easiest)
     - [Clean-up Docker](#clean-up-docker)
   - [Build with Nix (builds everywhere)](#build-with-nix-builds-everywhere)
   - [Build manually (advanced)](#build-manually-advanced)
@@ -18,23 +18,25 @@ To get started, choose one of the methods below (Docker, Nix or manual) and foll
     - [Verifying Nix and flake.lock](#verifying-nix-and-flakelock)
     - [Verifying the Gradle wrapper jar](#verifying-the-gradle-wrapper-jar)
   - [Verifying a published release](#verifying-a-published-release)
+  - [Reproducible CI release (two independent builders)](#reproducible-ci-release-two-independent-builders)
   - [Reproducibility](#reproducibility)
     - [Refreshing the lock](#refreshing-the-lock)
     - [Cargo / JS hygiene](#cargo--js-hygiene)
 
-## Build with Docker (easiest, Linux x86_64 only)
+## Build with Docker (easiest)
 
 This method does not require installing Nix to your machine, but requires more disk space. It essentially automates [native Nix build method](#build-with-nix-builds-everywhere) for you with zero setup needed.
 
 > [!IMPORTANT]
-> **This requires an x86_64 host** — native Linux, or an x86_64 Linux CI runner / VM. The image is pinned to `linux/amd64` because the Android NDK ships only an x86_64 host cross-compiler (also the canonical reproducible target).
+> **The image is pinned to `linux/amd64`.** The Android NDK ships only an x86_64 host cross-compiler — also the canonical reproducible target — so the build always runs in an `x86_64-linux` environment. On a native x86_64 Linux host that runs directly; on Apple Silicon (arm64) macOS it runs under Docker Desktop's amd64 emulation (Rosetta or QEMU).
 >
-> **Does not work on Apple Silicon (arm64) Docker Desktop.** Realizing the toolchain there fails with `cannot set 32-bit personality: Invalid argument`: the Android SDK pulls in a 32-bit (`i686-linux`) dependency that Nix must build, and Docker Desktop's arm64 VM kernel has no 32-bit (aarch32) compat, so `personality(PER_LINUX32)` returns `EINVAL` — under both QEMU and Rosetta. No Docker/Nix setting fixes this. On macOS, use the [Nix](#build-with-nix-builds-everywhere) or [manual](#build-manually-advanced) build method instead.
+> **Apple Silicon works — the only caveat is memory.** Because the container evaluates as `x86_64-linux`, [flake.nix](./flake.nix) takes its i686-stripped `androidenv` path, so the toolchain realizes cleanly and the old `personality(PER_LINUX32)` failure no longer applies. The one requirement is RAM: the universal (4-ABI) release build OOMs at Docker Desktop's default ~8 GB, so raise the memory limit to **at least 12 GB** (Settings &rarr; Resources &rarr; Memory) before building. To sanity-check on less RAM, build a single ABI with `-e OPEN_GRIND_ANDROID_ABI=aarch64` — but that is not the universal release artifact. Since the container runs as `x86_64-linux`, an Apple Silicon Docker build reproduces the canonical release; a native `nix run .#build-android` on `aarch64-darwin` does **not** (different host toolchain).
 
 Prerequisites:
 
 - [Docker](https://docs.docker.com/get-started/get-docker/) with Compose installed
 - ~30 GB of free disk space (the ~12 GB toolchain plus build caches; the first run needs ~15 GB transient)
+- On Apple Silicon: **>=12 GB of memory** allocated to Docker Desktop (the universal build OOMs at the ~8 GB default)
 
 1. Install Docker on your host system and make sure to give it enough disk headroom (Settings &rarr; Resources &rarr; Disk): the toolchain is ~12 GB and its first realization needs ~15 GB of transient space.
 2. Build the thin image: `docker compose build`
@@ -74,7 +76,7 @@ Prerequisites (match the pinned versions where you can — see the [Reproducibil
 
 - **Rust** via [rustup](https://rustup.rs) — [rust-toolchain.toml](./rust-toolchain.toml) pins 1.95.0 and lists the Android targets, which rustup installs automatically the first time you build in the repo
 - **JDK 21** (e.g. [Temurin](https://adoptium.net), or Android Studio's bundled JDK) — 17+ will likely build but won't match a release
-- **Android SDK** via Android Studio's SDK Manager (or the command-line `sdkmanager`): SDK Platform 36, Build-Tools 35.0.0, NDK 27.0.12077973, CMake 3.22.1
+- **Android SDK** via Android Studio's SDK Manager (or the command-line `sdkmanager`): SDK Platform 36, Build-Tools 35.0.0, NDK 29.0.14206865, CMake 3.22.1
 - **[Bun](https://bun.sh)**
 
 1. Point Tauri at your SDK / NDK / JDK (paths shown for macOS; on Linux the SDK is usually `~/Android/Sdk`):
@@ -82,7 +84,7 @@ Prerequisites (match the pinned versions where you can — see the [Reproducibil
 ```bash
 export JAVA_HOME="$(/usr/libexec/java_home -v 21)"   # or your JDK 21 path
 export ANDROID_HOME="$HOME/Library/Android/sdk"
-export NDK_HOME="$ANDROID_HOME/ndk/27.0.12077973"
+export NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
 ```
 
 2. Build:
@@ -231,6 +233,10 @@ fi
 ```
 
 If steps 3 and 4 both succeed, the published APK was built from this commit and signed by Open Grind's governance key.
+
+## Reproducible CI release (two independent builders)
+
+Releases are built on two independently rented servers and signed only if both produce a byte-for-byte identical unsigned APK, so no single build machine has to be trusted. The signing key stays on the maintainer's machine.
 
 ## Reproducibility
 

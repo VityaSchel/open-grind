@@ -148,24 +148,26 @@
               ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
               cd "$ROOT"
 
-              GRADLE_PROPS="$ROOT/src-tauri/gen/android/gradle.properties"
               KEYSTORE_DEST="$ROOT/src-tauri/gen/android/keystore.properties"
 
-              GRADLE_PROPS_BAK="$(mktemp)"
-              cp "$GRADLE_PROPS" "$GRADLE_PROPS_BAK"
-              cleanup() {
-                cp "$GRADLE_PROPS_BAK" "$GRADLE_PROPS"
-                rm -f "$GRADLE_PROPS_BAK" "$KEYSTORE_DEST"
-              }
-              trap cleanup EXIT
-
-              # Point AGP at the SDK's patchelf'd aapt2 via a real project property;
-              # GRADLE_OPTS -D does not reach the Gradle daemon (nixpkgs#402297).
-              printf '\nandroid.aapt2FromMavenOverride=%s/aapt2\n' "${buildToolsBin}" >> "$GRADLE_PROPS"
+              # Point AGP at the SDK's patchelf'd aapt2. Inject the machine-specific
+              # /nix/store path through a dedicated Gradle user home rather than the
+              # tracked gradle.properties: an EXIT trap is not crash-safe, and a leftover
+              # store path must never reach git (it is wrong for every other machine). A
+              # GRADLE_USER_HOME gradle.properties overrides the project one and accepts
+              # the dotted key that -D/ORG_GRADLE_PROJECT_ env vars cannot express
+              # (-D also does not reach the Gradle daemon, nixpkgs#402297). Docker caches
+              # this dir via the open-grind-gradle volume (see docker-compose.yml).
+              export GRADLE_USER_HOME="''${OPEN_GRIND_GRADLE_USER_HOME:-$HOME/.gradle-opengrind}"
+              mkdir -p "$GRADLE_USER_HOME"
+              printf 'android.aapt2FromMavenOverride=%s/aapt2\n' "${buildToolsBin}" > "$GRADLE_USER_HOME/gradle.properties"
 
               # OPEN_GRIND_KEYSTORE_PROPERTIES -> keystore.properties for signingConfig.
+              # keystore.properties is gitignored; remove it on exit so the secret does
+              # not linger in the working tree.
               if [ -n "''${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then
                 cp "$OPEN_GRIND_KEYSTORE_PROPERTIES" "$KEYSTORE_DEST"
+                trap 'rm -f "$KEYSTORE_DEST"' EXIT
               fi
 
               TARGET="''${1:-apk}"
