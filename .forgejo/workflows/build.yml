@@ -38,8 +38,8 @@ jobs:
           git checkout -q FETCH_HEAD
       - name: Build
         run: |
-          docker compose build
-          docker compose run --rm build
+          docker compose --ansi never --progress plain build
+          docker compose --ansi never --progress plain run --rm -T build
       - name: Collect APK
         run: |
           apk=(src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)

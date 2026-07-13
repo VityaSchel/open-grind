@@ -1,0 +1,53 @@
+diff --git a/src/core/sync/create_manifest_data/index.js b/src/core/sync/create_manifest_data/index.js
+index b1502556fdc1abbb126c7cb258a4aec8d3a7e451..d7e3ab89027e8f17676bea4fa7e97cfe97871052 100644
+--- a/src/core/sync/create_manifest_data/index.js
++++ b/src/core/sync/create_manifest_data/index.js
+@@ -89,7 +89,7 @@ function create_matchers(config, cwd) {
+ 	/** @type {Record<string, string>} */
+ 	const matchers = {};
+ 	if (fs.existsSync(config.kit.files.params)) {
+-		for (const file of fs.readdirSync(config.kit.files.params)) {
++		for (const file of fs.readdirSync(config.kit.files.params).sort()) {
+ 			const ext = path.extname(file);
+ 			if (!config.kit.moduleExtensions.includes(ext)) continue;
+ 			const type = file.slice(0, -ext.length);
+@@ -222,7 +222,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
+ 
+ 			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
+ 			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
+-			const files = fs.readdirSync(dir).map((name) => ({
++			const files = fs.readdirSync(dir).sort().map((name) => ({
+ 				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+ 				name
+ 			}));
+diff --git a/src/utils/filesystem.js b/src/utils/filesystem.js
+index 07c04ba32f7b4ee33732f35a623dd64ef964ae6e..e98a4cdabdee8d8a2ff029ef5369fe5183d05173 100644
+--- a/src/utils/filesystem.js
++++ b/src/utils/filesystem.js
+@@ -53,7 +53,7 @@ export function copy(source, target, opts = {}) {
+ 		const stats = fs.statSync(from);
+ 
+ 		if (stats.isDirectory()) {
+-			fs.readdirSync(from).forEach((file) => {
++			fs.readdirSync(from).sort().forEach((file) => {
+ 				go(path.join(from, file), path.join(to, file));
+ 			});
+ 		} else {
+@@ -93,7 +93,7 @@ export function walk(cwd, dirs = false) {
+ 
+ 	/** @param {string} dir */
+ 	function walk_dir(dir) {
+-		const files = fs.readdirSync(path.join(cwd, dir));
++		const files = fs.readdirSync(path.join(cwd, dir)).sort();
+ 
+ 		for (const file of files) {
+ 			const joined = path.join(dir, file);
+@@ -185,7 +185,7 @@ export function resolve_entry(entry) {
+ 
+ 	if (fs.existsSync(dir)) {
+ 		const base = path.basename(entry);
+-		const files = fs.readdirSync(dir);
++		const files = fs.readdirSync(dir).sort();
+ 		const found = files.find((file) => {
+ 			return file.replace(/\.(js|ts)$/, '') === base && fs.statSync(path.join(dir, file)).isFile();
+ 		});
