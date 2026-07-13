@@ -9,7 +9,7 @@ concurrency:
 jobs:
   provision:
     runs-on: ["open-grind-orchestrator"]
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
       - name: Register runners and provision builders
         env:
@@ -28,7 +28,7 @@ jobs:
       matrix:
         box: [a, b]
     runs-on: ["open-grind-builder-${{ matrix.box }}"]
-    timeout-minutes: 150
+    timeout-minutes: 90
     steps:
       - name: Checkout
         run: |

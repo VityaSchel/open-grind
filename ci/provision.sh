@@ -10,8 +10,8 @@ verify_image_matches_ref "$here/manifest"
 export TF_VAR_cherry_api_token="$CHERRY_API_TOKEN" TF_VAR_vultr_api_key="$VULTR_API_KEY"
 export TF_VAR_forgejo_url="$FORGEJO_SERVER_URL" TF_VAR_cherry_project_id="$CHERRY_PROJECT_ID"
 export TF_VAR_cherry_ssh_key_ids="${CHERRY_SSH_KEY_IDS:-[]}" TF_VAR_vultr_ssh_key_ids="${VULTR_SSH_KEY_IDS:-[]}"
-export TF_VAR_cherry_plan="${OPEN_GRIND_CHERRY_PLAN:-amd-epyc-7443p}"
-export TF_VAR_vultr_plan="${OPEN_GRIND_VULTR_PLAN:-vbm-24c-256gb-amd}"
+export TF_VAR_cherry_plan="${OPEN_GRIND_CHERRY_PLAN:-G1-8-32gb-200nv-ded}"
+export TF_VAR_vultr_plan="${OPEN_GRIND_VULTR_PLAN:-vhp-8c-16gb-amd}"
 
 TF_VAR_cherry_region="$(pick_cherry_region "$TF_VAR_cherry_plan" \
 	"${OPEN_GRIND_CHERRY_REGIONS:-LT-Siauliai NL-Amsterdam US-Chicago SG-Singapore}")" \

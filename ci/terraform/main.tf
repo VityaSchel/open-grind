@@ -19,7 +19,7 @@ resource "cherryservers_server" "builder_a" {
   user_data   = base64encode(local.cloud_init["a"])
 }
 
-resource "vultr_bare_metal_server" "builder_b" {
+resource "vultr_instance" "builder_b" {
   plan             = var.vultr_plan
   region           = var.vultr_region
   os_id            = var.vultr_os_id

@@ -41,7 +41,7 @@ pick_vultr_region() {
 	local r
 	for r in $2; do
 		curl -fsSL -H "Authorization: Bearer $TF_VAR_vultr_api_key" \
-			"https://api.vultr.com/v2/regions/$r/availability?type=vbm" \
+			"https://api.vultr.com/v2/regions/$r/availability?type=${1%%-*}" \
 			| jq -e --arg p "$1" '.available_plans | index($p)' >/dev/null 2>&1 && { echo "$r"; return 0; }
 	done
 	return 1

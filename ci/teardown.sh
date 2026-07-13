@@ -8,14 +8,15 @@ cherry_ids() {
 		| jq -r '.[] | select(.hostname | startswith("open-grind-builder-")) | .id'
 }
 vultr_ids() {
-	curl -fsSL -H "Authorization: Bearer $VULTR_API_KEY" "https://api.vultr.com/v2/bare-metals" \
-		| jq -r '.bare_metals[]? | select(.label | startswith("open-grind-builder-")) | .id'
+	curl -fsSL -H "Authorization: Bearer $VULTR_API_KEY" "https://api.vultr.com/v2/instances" \
+		| jq -r '.instances[]? | select(.label | startswith("open-grind-builder-")) | .id'
 }
 
 if [ -n "${FORGEJO_TOKEN:-}" ]; then
 	runners="$(curl -fsSL -H "Authorization: token $FORGEJO_TOKEN" \
 		"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/actions/runners" \
-		| jq -r '(.runners // .)[]? | select(.name | startswith("open-grind-builder-")) | .id')"
+		| jq -r '(.runners? // .)[]? | select(.name | startswith("open-grind-builder-")) | .id')" \
+		|| runners=""
 	for id in $runners; do
 		echo "deleting runner record $id"
 		curl -fsS -X DELETE -H "Authorization: token $FORGEJO_TOKEN" \
@@ -35,7 +36,7 @@ for _ in 1 2 3 4 5; do
 	for id in $vultr; do
 		echo "deleting vultr server $id"
 		curl -fsS -X DELETE -H "Authorization: Bearer $VULTR_API_KEY" \
-			"https://api.vultr.com/v2/bare-metals/$id" || true
+			"https://api.vultr.com/v2/instances/$id" || true
 	done
 	sleep 60
 done
