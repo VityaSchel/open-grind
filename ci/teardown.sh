@@ -2,12 +2,13 @@
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 # : "${OPEN_GRIND_CHERRY_API_TOKEN:?}" "${OPEN_GRIND_VULTR_API_KEY:?}" "${OPEN_GRIND_CHERRY_PROJECT_ID:?}"
-: "${OPEN_GRIND_HETZNER_API_TOKEN:?}" "${OPEN_GRIND_DIGITALOCEAN_TOKEN:?}"
+: "${OPEN_GRIND_HETZNER_API_TOKEN:?}"
+# : "${OPEN_GRIND_DIGITALOCEAN_TOKEN:?}"
 # : "${OPEN_GRIND_SCALEWAY_SECRET_KEY:?}" "${OPEN_GRIND_SCALEWAY_PROJECT_ID:?}"
 
 # OPEN_GRIND_CHERRY_API_TOKEN="$(trim "$OPEN_GRIND_CHERRY_API_TOKEN")" ; OPEN_GRIND_VULTR_API_KEY="$(trim "$OPEN_GRIND_VULTR_API_KEY")" # with boxes a/b enabled
 OPEN_GRIND_HETZNER_API_TOKEN="$(trim "$OPEN_GRIND_HETZNER_API_TOKEN")"
-OPEN_GRIND_DIGITALOCEAN_TOKEN="$(trim "$OPEN_GRIND_DIGITALOCEAN_TOKEN")"
+# OPEN_GRIND_DIGITALOCEAN_TOKEN="$(trim "$OPEN_GRIND_DIGITALOCEAN_TOKEN")" # with box e enabled
 # OPEN_GRIND_SCALEWAY_SECRET_KEY="$(trim "$OPEN_GRIND_SCALEWAY_SECRET_KEY")" # with box d enabled
 # OPEN_GRIND_SCALEWAY_PROJECT_ID="$(trim "$OPEN_GRIND_SCALEWAY_PROJECT_ID")" # with box d enabled
 
@@ -71,7 +72,7 @@ for _ in 1 2 3 4 5; do
 	scaleway="" scaleway_vols="" # scaleway="$(scaleway_servers)" scaleway_vols="$(scaleway_volumes)" with box d enabled
 	hetzner="$(hetzner_ids)"
 	hetzner_ips="$(hetzner_ip_ids)"
-	digitalocean="$(digitalocean_ids)"
+	digitalocean="" # digitalocean="$(digitalocean_ids)" with box e enabled
 	[ -z "$cherry$vultr$hetzner$hetzner_ips$scaleway$scaleway_vols$digitalocean" ] && exit 0
 	for id in $cherry; do
 		echo "deleting cherry server $id"

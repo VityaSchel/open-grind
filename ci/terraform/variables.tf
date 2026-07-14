@@ -18,10 +18,10 @@ variable "hetzner_api_token" {
 #   type      = string
 #   sensitive = true
 # }
-variable "digitalocean_token" {
-  type      = string
-  sensitive = true
-}
+# variable "digitalocean_token" {
+#   type      = string
+#   sensitive = true
+# }
 
 variable "runners" {
   type = object({
@@ -29,7 +29,7 @@ variable "runners" {
     # b = object({ uuid = string, token = string })
     c = object({ uuid = string, token = string })
     # d = object({ uuid = string, token = string })
-    e = object({ uuid = string, token = string })
+    # e = object({ uuid = string, token = string })
   })
   sensitive = true
 }
@@ -82,13 +82,13 @@ variable "hetzner_ssh_key_ids" {
 #   default = 80
 # }
 
-variable "digitalocean_size" { type = string }
-variable "digitalocean_region" { type = string }
-variable "digitalocean_image" {
-  type    = string
-  default = "debian-12-x64"
-}
-variable "digitalocean_ssh_key_ids" {
-  type    = list(string)
-  default = []
-}
+# variable "digitalocean_size" { type = string }
+# variable "digitalocean_region" { type = string }
+# variable "digitalocean_image" {
+#   type    = string
+#   default = "debian-12-x64"
+# }
+# variable "digitalocean_ssh_key_ids" {
+#   type    = list(string)
+#   default = []
+# }

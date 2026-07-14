@@ -49,11 +49,11 @@ resource "hcloud_server" "builder_c" {
 #   user_data = { "cloud-init" = local.cloud_init["d"] }
 # }
 
-resource "digitalocean_droplet" "builder_e" {
-  name      = "open-grind-builder-e"
-  size      = var.digitalocean_size
-  region    = var.digitalocean_region
-  image     = var.digitalocean_image
-  ssh_keys  = var.digitalocean_ssh_key_ids
-  user_data = local.cloud_init["e"]
-}
+# resource "digitalocean_droplet" "builder_e" {
+#   name      = "open-grind-builder-e"
+#   size      = var.digitalocean_size
+#   region    = var.digitalocean_region
+#   image     = var.digitalocean_image
+#   ssh_keys  = var.digitalocean_ssh_key_ids
+#   user_data = local.cloud_init["e"]
+# }

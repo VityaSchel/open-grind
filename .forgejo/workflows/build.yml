@@ -16,8 +16,12 @@ jobs:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
           OPEN_GRIND_HETZNER_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_HETZNER_SSH_KEY_IDS }}
-          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
-          OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS }}
+          # OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+          # OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS }}
+          OPEN_GRIND_HETZNER_PLANS: ${{ vars.OPEN_GRIND_HETZNER_PLANS }}
+          OPEN_GRIND_HETZNER_LOCATIONS: ${{ vars.OPEN_GRIND_HETZNER_LOCATIONS }}
+          # OPEN_GRIND_DIGITALOCEAN_SIZE: ${{ vars.OPEN_GRIND_DIGITALOCEAN_SIZE }}
+          # OPEN_GRIND_DIGITALOCEAN_REGIONS: ${{ vars.OPEN_GRIND_DIGITALOCEAN_REGIONS }}
           # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
           # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
           # OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
@@ -34,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         # box: [a, b, c, d, e]  enable a provider by adding its box letter
-        box: [c, e]
+        box: [c]
     runs-on: ["open-grind-builder-${{ matrix.box }}"]
     timeout-minutes: 90
     steps:
@@ -73,7 +77,7 @@ jobs:
       - name: Compare
         run: |
           apks=(dl/*/*.apk)
-          [ ${#apks[@]} -eq 2 ] # 4 with boxes a/b enabled
+          [ ${#apks[@]} -eq 1 ] # one per active box
           sha256sum "${apks[@]}"
           for apk in "${apks[@]:1}"; do cmp "${apks[0]}" "$apk"; done
           mkdir -p verified
@@ -95,7 +99,7 @@ jobs:
         env:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+          # OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
           # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
           # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
           # OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}

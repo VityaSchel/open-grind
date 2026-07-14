@@ -6,4 +6,4 @@ provider "hcloud" { token = var.hetzner_api_token }
 #   secret_key = var.scaleway_secret_key
 #   project_id = var.scaleway_project_id
 # }
-provider "digitalocean" { token = var.digitalocean_token }
+# provider "digitalocean" { token = var.digitalocean_token }

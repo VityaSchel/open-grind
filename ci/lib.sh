@@ -27,7 +27,7 @@ forgejo_register_ephemeral() {
 register_runners() {
 	local box reg
 	TF_VAR_runners="{}"
-	for box in c e; do # a b c d e; enable a provider by adding its box letter
+	for box in c; do # a b c d e; enable a provider by adding its box letter
 		reg="$(forgejo_register_ephemeral "open-grind-builder-$box")"
 		TF_VAR_runners="$(jq -c --arg k "$box" --argjson r "$reg" \
 			'.[$k] = {uuid: $r.uuid, token: $r.token}' <<<"$TF_VAR_runners")"
