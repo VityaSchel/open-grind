@@ -18,7 +18,7 @@ To get started, choose one of the methods below (Docker, Nix or manual) and foll
     - [Verifying Nix and flake.lock](#verifying-nix-and-flakelock)
     - [Verifying the Gradle wrapper jar](#verifying-the-gradle-wrapper-jar)
   - [Verifying a published release](#verifying-a-published-release)
-  - [Reproducible CI release (two independent builders)](#reproducible-ci-release-two-independent-builders)
+  - [Reproducible CI release](#reproducible-ci-release)
   - [Reproducibility](#reproducibility)
     - [Refreshing the lock](#refreshing-the-lock)
     - [Cargo / JS hygiene](#cargo--js-hygiene)
@@ -189,6 +189,9 @@ Android's v2/v3 signing block lives in a dedicated region between the last zip e
 
 All tools below ship with the dev shell — `nix develop` and you're ready.
 
+> [!IMPORTANT]
+> The canonical release build reproduces only in an `x86_64-linux` build environment — a native x86_64 Linux host, or the [Docker method](#build-with-docker-easiest) on any machine (that is also how [CI builds](#reproducible-ci-release) releases). A native `nix run .#build-android` on Apple Silicon macOS produces a different, non-matching APK.
+
 ```bash
 nix develop
 
@@ -234,9 +237,9 @@ fi
 
 If steps 3 and 4 both succeed, the published APK was built from this commit and signed by Open Grind's governance key.
 
-## Reproducible CI release (two independent builders)
+## Reproducible CI release
 
-Releases are built on two independently rented servers and signed only if both produce a byte-for-byte identical unsigned APK, so no single build machine has to be trusted. The signing key stays on the maintainer's machine.
+See [ci/README.md](./ci/README.md).
 
 ## Reproducibility
 
