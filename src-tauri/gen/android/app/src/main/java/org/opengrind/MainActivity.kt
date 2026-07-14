@@ -60,6 +60,12 @@ class MainActivity : TauriActivity() {
 		@JavascriptInterface fun right() = insetsRight
 		@JavascriptInterface fun imeVisible() = imeVisibleState
 	}
+
+	inner class BackInterface {
+		@JavascriptInterface fun moveTaskToBack() {
+			runOnUiThread { this@MainActivity.moveTaskToBack(true) }
+		}
+	}
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		enableEdgeToEdge()
@@ -109,6 +115,7 @@ class MainActivity : TauriActivity() {
 		super.onWebViewCreate(webView)
 		webViewRef = webView
 		webView.addJavascriptInterface(InsetsInterface(), "__AndroidInsets")
+		webView.addJavascriptInterface(BackInterface(), "__AndroidBack")
 		maybeWarnAboutWebView()
 	}
 

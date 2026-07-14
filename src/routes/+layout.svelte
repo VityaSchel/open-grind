@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { page } from "$app/state";
-	import { IconContext } from "phosphor-svelte";
+	import { isTauri } from "@tauri-apps/api/core";
+	import { platform } from "@tauri-apps/plugin-os";
 	import "@fontsource-variable/ibm-plex-sans/wght.css";
 	import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
 
 	import "../layout.css";
+	import { page } from "$app/state";
+	import { IconContext } from "phosphor-svelte";
 	import { onMount } from "svelte";
 	import { Toaster } from "svelte-sonner";
 
@@ -12,6 +14,7 @@
 	import {
 		applyAndroidInsets,
 		applyBackGestureHandler,
+		registerAndroidBackButtonListener,
 	} from "$lib/platform/android-native-bridge";
 
 	onMount(() => {
@@ -33,6 +36,11 @@
 		}
 		applyAndroidInsets();
 		applyBackGestureHandler();
+		if (isTauri() && platform() === "android") {
+			void registerAndroidBackButtonListener().catch((error) => {
+				console.error("Failed to register back button listener", error);
+			});
+		}
 		void hydratePreferences().catch((error) => {
 			console.error("Failed to hydrate preferences", error);
 		});

@@ -1,3 +1,5 @@
+import { addPluginListener } from "@tauri-apps/api/core";
+
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 function readEnvInset(prop: string): number {
@@ -27,12 +29,26 @@ export function isSoftKeyboardVisible(): boolean | undefined {
 	return window.__AndroidInsets?.imeVisible?.();
 }
 
+function runBackGestureHandlers(): boolean {
+	const handlers = [...backGestureEventHandlers];
+	for (let index = handlers.length - 1; index >= 0; index--) {
+		if (handlers[index]() !== true) return true;
+	}
+	return false;
+}
+
 export function applyBackGestureHandler() {
-	window.__AndroidOnBackGesture = () => {
-		const handlers = [...backGestureEventHandlers];
-		for (let index = handlers.length - 1; index >= 0; index--) {
-			if (handlers[index]() !== true) return false;
-		}
-		return true;
-	};
+	window.__AndroidOnBackGesture = () => !runBackGestureHandlers();
+}
+
+export async function registerAndroidBackButtonListener() {
+	await addPluginListener(
+		"app",
+		"back-button",
+		({ canGoBack }: { canGoBack: boolean }) => {
+			if (runBackGestureHandlers()) return;
+			if (window.navigation?.canGoBack ?? canGoBack) history.back();
+			else window.__AndroidBack?.moveTaskToBack();
+		},
+	);
 }

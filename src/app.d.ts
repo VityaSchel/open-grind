@@ -18,6 +18,9 @@ declare global {
 			imeVisible?(): boolean;
 		};
 		__AndroidOnBackGesture?: () => boolean;
+		__AndroidBack?: {
+			moveTaskToBack(): void;
+		};
 	}
 }
 
