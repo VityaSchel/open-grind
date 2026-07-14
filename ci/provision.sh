@@ -7,6 +7,13 @@ source "$here/lib.sh"
 # : "${CHERRY_API_TOKEN:?}" "${VULTR_API_KEY:?}" "${CHERRY_PROJECT_ID:?}"
 : "${HETZNER_API_TOKEN:?}" "${SCALEWAY_ACCESS_KEY:?}" "${SCALEWAY_SECRET_KEY:?}" "${SCALEWAY_PROJECT_ID:?}"
 
+FORGEJO_TOKEN="$(trim "$FORGEJO_TOKEN")"
+# CHERRY_API_TOKEN="$(trim "$CHERRY_API_TOKEN")" ; VULTR_API_KEY="$(trim "$VULTR_API_KEY")" # with boxes a/b enabled
+HETZNER_API_TOKEN="$(trim "$HETZNER_API_TOKEN")"
+SCALEWAY_ACCESS_KEY="$(trim "$SCALEWAY_ACCESS_KEY")"
+SCALEWAY_SECRET_KEY="$(trim "$SCALEWAY_SECRET_KEY")"
+SCALEWAY_PROJECT_ID="$(trim "$SCALEWAY_PROJECT_ID")"
+
 verify_image_matches_ref "$here/manifest"
 
 # export TF_VAR_cherry_api_token="$CHERRY_API_TOKEN" TF_VAR_vultr_api_key="$VULTR_API_KEY"

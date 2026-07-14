@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 # : "${CHERRY_API_TOKEN:?}" "${VULTR_API_KEY:?}" "${CHERRY_PROJECT_ID:?}"
 : "${HETZNER_API_TOKEN:?}" "${SCALEWAY_SECRET_KEY:?}" "${SCALEWAY_PROJECT_ID:?}"
+
+# CHERRY_API_TOKEN="$(trim "$CHERRY_API_TOKEN")" ; VULTR_API_KEY="$(trim "$VULTR_API_KEY")" # with boxes a/b enabled
+HETZNER_API_TOKEN="$(trim "$HETZNER_API_TOKEN")"
+SCALEWAY_SECRET_KEY="$(trim "$SCALEWAY_SECRET_KEY")"
+SCALEWAY_PROJECT_ID="$(trim "$SCALEWAY_PROJECT_ID")"
 
 scaleway_zones="fr-par-1 fr-par-2 fr-par-3 nl-ams-1 nl-ams-2 nl-ams-3 pl-waw-1 pl-waw-2 pl-waw-3"
 
@@ -41,6 +47,7 @@ scaleway_volumes() {
 }
 
 if [ -n "${FORGEJO_TOKEN:-}" ]; then
+	FORGEJO_TOKEN="$(trim "$FORGEJO_TOKEN")"
 	runners="$(curl -fsSL -H "Authorization: token $FORGEJO_TOKEN" \
 		"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/actions/runners" \
 		| jq -r '(.runners? // .)[]? | select(.name | startswith("open-grind-builder-")) | .id')" \

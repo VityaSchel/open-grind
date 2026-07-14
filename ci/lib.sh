@@ -11,6 +11,13 @@ verify_image_matches_ref() {
 	done <"$1"
 }
 
+trim() {
+	local v="$1"
+	v="${v#"${v%%[![:space:]]*}"}"
+	v="${v%"${v##*[![:space:]]}"}"
+	printf '%s' "$v"
+}
+
 forgejo_register_ephemeral() {
 	curl -fsSL -X POST -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
 		-d "$(jq -nc --arg n "$1" '{name:$n,ephemeral:true}')" \
