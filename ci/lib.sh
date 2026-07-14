@@ -49,14 +49,16 @@ pick_vultr_region() {
 	return 1
 }
 
-pick_hetzner_location() {
-	local json loc
-	json="$(curl -fsSL -H "Authorization: Bearer $TF_VAR_hetzner_api_token" \
-		"https://api.hetzner.cloud/v1/server_types?name=$1")" || return 1
-	for loc in $2; do
-		jq -e --arg l "$loc" \
-			'.server_types[0].locations[] | select(.name==$l) | .available' <<<"$json" >/dev/null 2>&1 \
-			&& { echo "$loc"; return 0; }
+pick_hetzner() {
+	local plan json loc
+	for plan in $1; do
+		json="$(curl -fsSL -H "Authorization: Bearer $TF_VAR_hetzner_api_token" \
+			"https://api.hetzner.cloud/v1/server_types?name=$plan")" || return 1
+		for loc in $2; do
+			jq -e --arg l "$loc" \
+				'.server_types[0].locations[] | select(.name==$l) | .available' <<<"$json" >/dev/null 2>&1 \
+				&& { echo "$plan $loc"; return 0; }
+		done
 	done
 	return 1
 }

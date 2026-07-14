@@ -19,7 +19,6 @@ export TF_VAR_forgejo_url="$FORGEJO_SERVER_URL"
 export TF_VAR_hetzner_ssh_key_ids="${HETZNER_SSH_KEY_IDS:-[]}"
 # export TF_VAR_cherry_plan="${OPEN_GRIND_CHERRY_PLAN:-G1-8-32gb-200nv-ded}"
 # export TF_VAR_vultr_plan="${OPEN_GRIND_VULTR_PLAN:-vhp-8c-16gb-amd}"
-export TF_VAR_hetzner_plan="${OPEN_GRIND_HETZNER_PLAN:-cx43}"
 export TF_VAR_scaleway_plan="${OPEN_GRIND_SCALEWAY_PLAN:-PRO2-S}"
 
 # TF_VAR_cherry_region="$(pick_cherry_region "$TF_VAR_cherry_plan" \
@@ -34,11 +33,11 @@ export TF_VAR_scaleway_plan="${OPEN_GRIND_SCALEWAY_PLAN:-PRO2-S}"
 # export TF_VAR_vultr_region
 # echo "box b: vultr $TF_VAR_vultr_region"
 
-TF_VAR_hetzner_location="$(pick_hetzner_location "$TF_VAR_hetzner_plan" \
-	"${OPEN_GRIND_HETZNER_LOCATIONS:-fsn1 nbg1 hel1}")" \
-	|| { echo "no hetzner stock for $TF_VAR_hetzner_plan" >&2; exit 1; }
-export TF_VAR_hetzner_location
-echo "box c: hetzner $TF_VAR_hetzner_location"
+read -r TF_VAR_hetzner_plan TF_VAR_hetzner_location < <(pick_hetzner \
+	"${OPEN_GRIND_HETZNER_PLANS:-cx43 cpx42}" "${OPEN_GRIND_HETZNER_LOCATIONS:-fsn1 nbg1 hel1}") \
+	|| { echo "no hetzner stock for any of ${OPEN_GRIND_HETZNER_PLANS:-cx43 cpx42}" >&2; exit 1; }
+export TF_VAR_hetzner_plan TF_VAR_hetzner_location
+echo "box c: hetzner $TF_VAR_hetzner_plan $TF_VAR_hetzner_location"
 
 TF_VAR_scaleway_zone="$(pick_scaleway_zone "$TF_VAR_scaleway_plan" \
 	"${OPEN_GRIND_SCALEWAY_ZONES:-fr-par-1 fr-par-2 nl-ams-1 nl-ams-2 pl-waw-1 pl-waw-2}")" \
