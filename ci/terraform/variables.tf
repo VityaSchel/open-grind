@@ -10,11 +10,15 @@ variable "hetzner_api_token" {
   type      = string
   sensitive = true
 }
-variable "scaleway_access_key" {
-  type      = string
-  sensitive = true
-}
-variable "scaleway_secret_key" {
+# variable "scaleway_access_key" {
+#   type      = string
+#   sensitive = true
+# }
+# variable "scaleway_secret_key" {
+#   type      = string
+#   sensitive = true
+# }
+variable "digitalocean_token" {
   type      = string
   sensitive = true
 }
@@ -24,7 +28,8 @@ variable "runners" {
     # a = object({ uuid = string, token = string })
     # b = object({ uuid = string, token = string })
     c = object({ uuid = string, token = string })
-    d = object({ uuid = string, token = string })
+    # d = object({ uuid = string, token = string })
+    e = object({ uuid = string, token = string })
   })
   sensitive = true
 }
@@ -65,14 +70,25 @@ variable "hetzner_ssh_key_ids" {
   default = []
 }
 
-variable "scaleway_project_id" { type = string }
-variable "scaleway_plan" { type = string }
-variable "scaleway_zone" { type = string }
-variable "scaleway_image" {
+# variable "scaleway_project_id" { type = string }
+# variable "scaleway_plan" { type = string }
+# variable "scaleway_zone" { type = string }
+# variable "scaleway_image" {
+#   type    = string
+#   default = "debian_bookworm"
+# }
+# variable "scaleway_root_volume_gb" {
+#   type    = number
+#   default = 80
+# }
+
+variable "digitalocean_size" { type = string }
+variable "digitalocean_region" { type = string }
+variable "digitalocean_image" {
   type    = string
-  default = "debian_bookworm"
+  default = "debian-12-x64"
 }
-variable "scaleway_root_volume_gb" {
-  type    = number
-  default = 80
+variable "digitalocean_ssh_key_ids" {
+  type    = list(string)
+  default = []
 }

@@ -39,12 +39,21 @@ resource "hcloud_server" "builder_c" {
   user_data   = local.cloud_init["c"]
 }
 
-resource "scaleway_instance_server" "builder_d" {
-  name              = "open-grind-builder-d"
-  type              = var.scaleway_plan
-  zone              = var.scaleway_zone
-  image             = var.scaleway_image
-  enable_dynamic_ip = true
-  root_volume { size_in_gb = var.scaleway_root_volume_gb }
-  user_data = { "cloud-init" = local.cloud_init["d"] }
+# resource "scaleway_instance_server" "builder_d" {
+#   name              = "open-grind-builder-d"
+#   type              = var.scaleway_plan
+#   zone              = var.scaleway_zone
+#   image             = var.scaleway_image
+#   enable_dynamic_ip = true
+#   root_volume { size_in_gb = var.scaleway_root_volume_gb }
+#   user_data = { "cloud-init" = local.cloud_init["d"] }
+# }
+
+resource "digitalocean_droplet" "builder_e" {
+  name      = "open-grind-builder-e"
+  size      = var.digitalocean_size
+  region    = var.digitalocean_region
+  image     = var.digitalocean_image
+  ssh_keys  = var.digitalocean_ssh_key_ids
+  user_data = local.cloud_init["e"]
 }

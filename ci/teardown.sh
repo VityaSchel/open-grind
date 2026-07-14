@@ -2,12 +2,14 @@
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 # : "${OPEN_GRIND_CHERRY_API_TOKEN:?}" "${OPEN_GRIND_VULTR_API_KEY:?}" "${OPEN_GRIND_CHERRY_PROJECT_ID:?}"
-: "${OPEN_GRIND_HETZNER_API_TOKEN:?}" "${OPEN_GRIND_SCALEWAY_SECRET_KEY:?}" "${OPEN_GRIND_SCALEWAY_PROJECT_ID:?}"
+: "${OPEN_GRIND_HETZNER_API_TOKEN:?}" "${OPEN_GRIND_DIGITALOCEAN_TOKEN:?}"
+# : "${OPEN_GRIND_SCALEWAY_SECRET_KEY:?}" "${OPEN_GRIND_SCALEWAY_PROJECT_ID:?}"
 
 # OPEN_GRIND_CHERRY_API_TOKEN="$(trim "$OPEN_GRIND_CHERRY_API_TOKEN")" ; OPEN_GRIND_VULTR_API_KEY="$(trim "$OPEN_GRIND_VULTR_API_KEY")" # with boxes a/b enabled
 OPEN_GRIND_HETZNER_API_TOKEN="$(trim "$OPEN_GRIND_HETZNER_API_TOKEN")"
-OPEN_GRIND_SCALEWAY_SECRET_KEY="$(trim "$OPEN_GRIND_SCALEWAY_SECRET_KEY")"
-OPEN_GRIND_SCALEWAY_PROJECT_ID="$(trim "$OPEN_GRIND_SCALEWAY_PROJECT_ID")"
+OPEN_GRIND_DIGITALOCEAN_TOKEN="$(trim "$OPEN_GRIND_DIGITALOCEAN_TOKEN")"
+# OPEN_GRIND_SCALEWAY_SECRET_KEY="$(trim "$OPEN_GRIND_SCALEWAY_SECRET_KEY")" # with box d enabled
+# OPEN_GRIND_SCALEWAY_PROJECT_ID="$(trim "$OPEN_GRIND_SCALEWAY_PROJECT_ID")" # with box d enabled
 
 scaleway_zones="fr-par-1 fr-par-2 fr-par-3 nl-ams-1 nl-ams-2 nl-ams-3 pl-waw-1 pl-waw-2 pl-waw-3"
 
@@ -45,6 +47,11 @@ scaleway_volumes() {
 			| jq -r --arg z "$zone" '.volumes[]? | select(.status == "available") | "\($z) \(.id)"'
 	done
 }
+digitalocean_ids() {
+	curl -fsSL -H "Authorization: Bearer $OPEN_GRIND_DIGITALOCEAN_TOKEN" \
+		"https://api.digitalocean.com/v2/droplets?per_page=200" \
+		| jq -r '.droplets[]? | select(.name | startswith("open-grind-builder-")) | .id'
+}
 
 if [ -n "${OPEN_GRIND_FORGEJO_TOKEN:-}" ]; then
 	OPEN_GRIND_FORGEJO_TOKEN="$(trim "$OPEN_GRIND_FORGEJO_TOKEN")"
@@ -61,11 +68,11 @@ fi
 
 for _ in 1 2 3 4 5; do
 	cherry="" vultr="" # cherry="$(cherry_ids)" vultr="$(vultr_ids)" with boxes a/b enabled
+	scaleway="" scaleway_vols="" # scaleway="$(scaleway_servers)" scaleway_vols="$(scaleway_volumes)" with box d enabled
 	hetzner="$(hetzner_ids)"
 	hetzner_ips="$(hetzner_ip_ids)"
-	scaleway="$(scaleway_servers)"
-	scaleway_vols="$(scaleway_volumes)"
-	[ -z "$cherry$vultr$hetzner$hetzner_ips$scaleway$scaleway_vols" ] && exit 0
+	digitalocean="$(digitalocean_ids)"
+	[ -z "$cherry$vultr$hetzner$hetzner_ips$scaleway$scaleway_vols$digitalocean" ] && exit 0
 	for id in $cherry; do
 		echo "deleting cherry server $id"
 		curl -fsS -X DELETE -H "Authorization: Bearer $OPEN_GRIND_CHERRY_API_TOKEN" \
@@ -99,6 +106,11 @@ for _ in 1 2 3 4 5; do
 		curl -fsS -X DELETE -H "X-Auth-Token: $OPEN_GRIND_SCALEWAY_SECRET_KEY" \
 			"https://api.scaleway.com/block/v1/zones/$zone/volumes/$id" || true
 	done <<<"$scaleway_vols"
+	for id in $digitalocean; do
+		echo "deleting digitalocean droplet $id"
+		curl -fsS -X DELETE -H "Authorization: Bearer $OPEN_GRIND_DIGITALOCEAN_TOKEN" \
+			"https://api.digitalocean.com/v2/droplets/$id" || true
+	done
 	sleep 60
 done
 echo "builder resources still present after retries" >&2

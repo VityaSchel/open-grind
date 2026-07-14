@@ -27,7 +27,7 @@ forgejo_register_ephemeral() {
 register_runners() {
 	local box reg
 	TF_VAR_runners="{}"
-	for box in c d; do # a b c d with boxes a/b enabled
+	for box in c e; do # a b c d e; enable a provider by adding its box letter
 		reg="$(forgejo_register_ephemeral "open-grind-builder-$box")"
 		TF_VAR_runners="$(jq -c --arg k "$box" --argjson r "$reg" \
 			'.[$k] = {uuid: $r.uuid, token: $r.token}' <<<"$TF_VAR_runners")"
@@ -77,6 +77,18 @@ pick_scaleway_zone() {
 			"https://api.scaleway.com/instance/v1/zones/$zone/products/servers/availability?per_page=100" \
 			| jq -r --arg p "$1" '.servers[$p].availability // empty')" || continue
 		case "$avail" in available | scarce) echo "$zone"; return 0 ;; esac
+	done
+	return 1
+}
+
+pick_digitalocean_region() {
+	local json r
+	json="$(curl -fsSL -H "Authorization: Bearer $TF_VAR_digitalocean_token" \
+		"https://api.digitalocean.com/v2/sizes?per_page=200")" || return 1
+	for r in $2; do
+		jq -e --arg s "$1" --arg r "$r" \
+			'.sizes[] | select(.slug == $s and .available and (.regions | index($r)))' <<<"$json" >/dev/null 2>&1 \
+			&& { echo "$r"; return 0; }
 	done
 	return 1
 }

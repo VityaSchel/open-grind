@@ -13,6 +13,8 @@ ARG HCLOUD_VERSION=1.66.0
 ARG HCLOUD_COMMIT=f95ed41dcbfcf09f30609bdfe8aa587ba4e067e0
 ARG SCALEWAY_VERSION=2.78.0
 ARG SCALEWAY_COMMIT=8d1187118bf78cf728f8296ac63134e648e8ab68
+ARG DIGITALOCEAN_VERSION=2.95.0
+ARG DIGITALOCEAN_COMMIT=6bf2a8c136d894695712ba51d0831c9b524c2986
 ARG XNET_VERSION=v0.55.0
 
 RUN git init -q /src/terraform && cd /src/terraform \
@@ -51,6 +53,14 @@ RUN git init -q /src/scaleway && cd /src/scaleway \
 	&& test "$(git rev-parse "v$SCALEWAY_VERSION^{commit}")" = "$SCALEWAY_COMMIT" \
 	&& git checkout -q "v$SCALEWAY_VERSION" \
 	&& go build -o "/out/providers/registry.terraform.io/scaleway/scaleway/$SCALEWAY_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-scaleway_v$SCALEWAY_VERSION" .
+
+RUN git init -q /src/digitalocean && cd /src/digitalocean \
+	&& git remote add origin https://github.com/digitalocean/terraform-provider-digitalocean \
+	&& git fetch -q --depth 1 origin "refs/tags/v$DIGITALOCEAN_VERSION:refs/tags/v$DIGITALOCEAN_VERSION" \
+	&& test "$(git rev-parse "v$DIGITALOCEAN_VERSION^{commit}")" = "$DIGITALOCEAN_COMMIT" \
+	&& git checkout -q "v$DIGITALOCEAN_VERSION" \
+	&& go get golang.org/x/net@"$XNET_VERSION" && go mod tidy \
+	&& go build -o "/out/providers/registry.terraform.io/digitalocean/digitalocean/$DIGITALOCEAN_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-digitalocean_v$DIGITALOCEAN_VERSION" .
 
 COPY lib.sh provision.sh teardown.sh /src/ci/
 COPY orchestrator/terraformrc /src/ci/orchestrator/terraformrc

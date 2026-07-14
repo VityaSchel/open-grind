@@ -14,16 +14,18 @@ jobs:
       - name: Register runners and provision builders
         env:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
-          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          OPEN_GRIND_SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
-          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
-          OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
-          OPEN_GRIND_VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
           OPEN_GRIND_HETZNER_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_HETZNER_SSH_KEY_IDS }}
+          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+          OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS }}
+          # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          # OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
+          # OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          # OPEN_GRIND_VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
+          # OPEN_GRIND_SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
+          # OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          # OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
         run: bash /opt/open-grind/provision.sh
 
   build:
@@ -31,8 +33,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # box: [a, b, c, d]
-        box: [c, d]
+        # box: [a, b, c, d, e]  enable a provider by adding its box letter
+        box: [c, e]
     runs-on: ["open-grind-builder-${{ matrix.box }}"]
     timeout-minutes: 90
     steps:
@@ -92,10 +94,11 @@ jobs:
       - name: Delete builders
         env:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
-          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+          # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          # OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          # OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          # OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
         run: bash /opt/open-grind/teardown.sh
