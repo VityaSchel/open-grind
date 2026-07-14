@@ -25,7 +25,10 @@
 			}
 		],
 		"security": {
-			"csp": null
+			"csp": null,
+			"dangerousDisableAssetCspModification": [
+				"script-src"
+			]
 		}
 	},
 	"bundle": {
