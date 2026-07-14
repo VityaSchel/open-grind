@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T extends string | number">
 	import { Combobox } from "bits-ui";
 	import { CaretUpDownIcon, CheckIcon, XIcon } from "phosphor-svelte";
 
@@ -12,19 +12,24 @@
 		options,
 		resolveLabel,
 		exclude,
+		max,
 		searchPlaceholder = "Search...",
 	}: {
 		label: string;
 		hint?: string;
-		values: number[];
-		options: Option[];
-		resolveLabel?: (id: number) => string | undefined;
-		exclude?: (id: number) => number[];
+		values: T[];
+		options: Option<T>[];
+		resolveLabel?: (id: T) => string | undefined;
+		exclude?: (id: T) => T[];
+		max?: number;
 		searchPlaceholder?: string;
 	} = $props();
 
 	let searchValue = $state("");
 	let open = $state(false);
+	let keyboardNav = $state(false);
+
+	const navKeys = ["ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp"];
 
 	const filtered = $derived(
 		searchValue.trim() === ""
@@ -38,19 +43,32 @@
 		new Map(options.map((option) => [option.value, option.label])),
 	);
 
-	function labelFor(id: number) {
-		return resolveLabel?.(id) ?? optionLabels.get(id) ?? `#${id}`;
+	const valueByString = $derived(
+		new Map<string, T>(
+			[...options.map((option) => option.value), ...values].map((value) => [
+				String(value),
+				value,
+			]),
+		),
+	);
+
+	function labelFor(id: T) {
+		return (
+			resolveLabel?.(id) ??
+			optionLabels.get(id) ??
+			(typeof id === "number" ? `#${id}` : id)
+		);
 	}
 
 	const selectedChips = $derived(
 		values.map((id) => ({ id, label: labelFor(id) })),
 	);
 
-	function remove(id: number) {
+	function remove(id: T) {
 		values = values.filter((value) => value !== id);
 	}
 
-	function applySelection(newValue: number[]) {
+	function applySelection(newValue: T[]) {
 		const previous = new Set(values);
 		const added = newValue.filter((id) => !previous.has(id));
 		let result = newValue;
@@ -63,6 +81,7 @@
 				);
 			}
 		}
+		if (max !== undefined && added.length && result.length > max) return;
 		values = result;
 	}
 
@@ -95,16 +114,25 @@
 		type="multiple"
 		bind:value={
 			() => values.map(String),
-			(newValue: string[]) => applySelection(newValue.map(Number))
+			(newValue: string[]) =>
+				applySelection(
+					newValue.flatMap((value) => valueByString.get(value) ?? []),
+				)
 		}
 		bind:open
 		onOpenChange={(isOpen) => {
-			if (!isOpen) searchValue = "";
+			if (!isOpen) {
+				searchValue = "";
+				keyboardNav = false;
+			}
 		}}
 	>
 		<div class="relative">
 			<Combobox.Input
 				oninput={(event) => (searchValue = event.currentTarget.value)}
+				onkeydown={(event) => {
+					if (navKeys.includes(event.key)) keyboardNav = true;
+				}}
 				placeholder={searchPlaceholder}
 				class={inputClass}
 				aria-label={label}
@@ -120,6 +148,9 @@
 		<Combobox.Portal>
 			<Combobox.Content
 				sideOffset={4}
+				data-kb-nav={keyboardNav ? "" : undefined}
+				onpointerdown={() => (keyboardNav = false)}
+				onpointermove={() => (keyboardNav = false)}
 				class="bg-popover text-popover-foreground ring-foreground/5 dark:ring-foreground/10 z-50 max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl p-1.5 shadow-lg ring-1 outline-none"
 			>
 				<Combobox.Viewport>
@@ -127,7 +158,7 @@
 						<Combobox.Item
 							value={String(option.value)}
 							label={option.label}
-							class="data-highlighted:bg-accent data-highlighted:text-accent-foreground flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pl-3 pr-2 text-sm font-medium outline-hidden select-none"
+							class="can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pl-3 pr-2 text-sm font-medium outline-hidden select-none"
 						>
 							{#snippet children({ selected: isSelected })}
 								<span>{option.label}</span>

@@ -13,7 +13,6 @@ import {
 	profileShortSchema,
 	pronounSchema,
 } from "$lib/model/users/profiles";
-import { profileTagsResponseSchema } from "$lib/model/users/tags";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [
@@ -418,11 +417,5 @@ export async function getProfileUploadedPhotos() {
 				),
 			}),
 		),
-	);
-}
-
-export async function getProfileTags() {
-	return await fetchRest("/v1/tags").then((res) =>
-		res.jsonParsed(profileTagsResponseSchema),
 	);
 }

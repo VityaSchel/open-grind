@@ -36,6 +36,7 @@
 		tribes,
 		vaccines as vaccineLabels,
 	} from "$lib/model/users/profiles";
+	import type { ProfileTagsResponse } from "$lib/model/users/tags";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
 	import Field from "./fields/Field.svelte";
@@ -50,6 +51,7 @@
 		ageRange,
 		fieldLimits,
 		heightCmRange,
+		maxProfileTags,
 		optionsFromMap,
 		weightKgRange,
 	} from "./options";
@@ -59,11 +61,13 @@
 		profile,
 		genders,
 		pronouns,
+		tags,
 		ourProfileId,
 	}: {
 		profile: Profile;
 		genders: Gender[];
 		pronouns: Pronoun[];
+		tags: ProfileTagsResponse;
 		ourProfileId: number;
 	} = $props();
 
@@ -103,10 +107,29 @@
 	);
 	const resolvePronounLabel = (id: number) => pronounById.get(id)?.pronoun;
 
+	const tagTextByKey = untrack(() => {
+		const map = new Map<string, string>();
+		for (const language of tags) {
+			for (const category of language.categoryCollection) {
+				for (const tag of category.tags) {
+					if (!map.has(tag.key)) map.set(tag.key, tag.text);
+				}
+			}
+		}
+		return map;
+	});
+	const tagOptions = untrack(() =>
+		[...tagTextByKey]
+			.map(([key, text]) => ({ value: key, label: text }))
+			.sort((a, b) => a.label.localeCompare(b.label)),
+	);
+	const resolveTagLabel = (key: string) => tagTextByKey.get(key);
+
 	const initial = untrack(() => $state.snapshot(profile));
 
 	let displayName = $state(initial.displayName ?? "");
 	let aboutMe = $state(initial.aboutMe ?? "");
+	let profileTags = $state<string[]>([...initial.profileTags]);
 
 	let genderIds = $state<number[]>([...(initial.genders ?? [])]);
 	let pronounIds = $state<number[]>([...(initial.pronouns ?? [])]);
@@ -150,6 +173,7 @@
 		return {
 			displayName,
 			aboutMe,
+			profileTags: [...profileTags],
 			genderIds: [...genderIds],
 			pronounIds: [...pronounIds],
 			age,
@@ -215,7 +239,7 @@
 			},
 			approximateDistance: initial.approximateDistance,
 			showDistance: initial.showDistance,
-			profileTags: initial.profileTags,
+			profileTags,
 		} as ProfileUpdate;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
 		const removedHashes = savedForm.mediaHashes.filter(
@@ -263,6 +287,15 @@
 			bind:value={aboutMe}
 			maxLength={fieldLimits.aboutMe}
 			placeholder="Tell people who you are and what you're looking for (not what you're not looking for)"
+		/>
+		<ComboField
+			label="Tags"
+			bind:values={profileTags}
+			options={tagOptions}
+			resolveLabel={resolveTagLabel}
+			max={maxProfileTags}
+			searchPlaceholder="Search tags..."
+			hint="{profileTags.length}/{maxProfileTags} selected"
 		/>
 	</section>
 

@@ -3,6 +3,7 @@
 @import "shadcn-svelte/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant can-hover (@media (hover: hover) and (pointer: fine));
 
 :root {
 	--radius: 1rem;
