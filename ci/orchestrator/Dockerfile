@@ -59,6 +59,7 @@ RUN git init -q /src/digitalocean && cd /src/digitalocean \
 	&& git fetch -q --depth 1 origin "refs/tags/v$DIGITALOCEAN_VERSION:refs/tags/v$DIGITALOCEAN_VERSION" \
 	&& test "$(git rev-parse "v$DIGITALOCEAN_VERSION^{commit}")" = "$DIGITALOCEAN_COMMIT" \
 	&& git checkout -q "v$DIGITALOCEAN_VERSION" \
+	&& rm -rf vendor \
 	&& go get golang.org/x/net@"$XNET_VERSION" && go mod tidy \
 	&& go build -o "/out/providers/registry.terraform.io/digitalocean/digitalocean/$DIGITALOCEAN_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-digitalocean_v$DIGITALOCEAN_VERSION" .
 
