@@ -9,6 +9,10 @@ ARG CHERRY_VERSION=1.5.3
 ARG CHERRY_COMMIT=503d4434a6a2dbf56e7e0002aec5e54ae1db9e10
 ARG VULTR_VERSION=2.31.2
 ARG VULTR_COMMIT=88f0cba3cb39e9c8ef6dbb18ff23dfc6326fc81d
+ARG HCLOUD_VERSION=1.66.0
+ARG HCLOUD_COMMIT=f95ed41dcbfcf09f30609bdfe8aa587ba4e067e0
+ARG SCALEWAY_VERSION=2.78.0
+ARG SCALEWAY_COMMIT=8d1187118bf78cf728f8296ac63134e648e8ab68
 ARG XNET_VERSION=v0.55.0
 
 RUN git init -q /src/terraform && cd /src/terraform \
@@ -33,6 +37,20 @@ RUN git init -q /src/vultr && cd /src/vultr \
 	&& git checkout -q "v$VULTR_VERSION" \
 	&& go get golang.org/x/net@"$XNET_VERSION" && go mod tidy \
 	&& go build -o "/out/providers/registry.terraform.io/vultr/vultr/$VULTR_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-vultr_v$VULTR_VERSION" .
+
+RUN git init -q /src/hcloud && cd /src/hcloud \
+	&& git remote add origin https://github.com/hetznercloud/terraform-provider-hcloud \
+	&& git fetch -q --depth 1 origin "refs/tags/v$HCLOUD_VERSION:refs/tags/v$HCLOUD_VERSION" \
+	&& test "$(git rev-parse "v$HCLOUD_VERSION^{commit}")" = "$HCLOUD_COMMIT" \
+	&& git checkout -q "v$HCLOUD_VERSION" \
+	&& go build -o "/out/providers/registry.terraform.io/hetznercloud/hcloud/$HCLOUD_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-hcloud_v$HCLOUD_VERSION" .
+
+RUN git init -q /src/scaleway && cd /src/scaleway \
+	&& git remote add origin https://github.com/scaleway/terraform-provider-scaleway \
+	&& git fetch -q --depth 1 origin "refs/tags/v$SCALEWAY_VERSION:refs/tags/v$SCALEWAY_VERSION" \
+	&& test "$(git rev-parse "v$SCALEWAY_VERSION^{commit}")" = "$SCALEWAY_COMMIT" \
+	&& git checkout -q "v$SCALEWAY_VERSION" \
+	&& go build -o "/out/providers/registry.terraform.io/scaleway/scaleway/$SCALEWAY_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-scaleway_v$SCALEWAY_VERSION" .
 
 COPY lib.sh provision.sh teardown.sh /src/ci/
 COPY orchestrator/terraformrc /src/ci/orchestrator/terraformrc

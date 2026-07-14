@@ -3,27 +3,48 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$here/lib.sh"
 
-: "${FORGEJO_TOKEN:?}" "${CHERRY_API_TOKEN:?}" "${VULTR_API_KEY:?}" "${CHERRY_PROJECT_ID:?}"
+: "${FORGEJO_TOKEN:?}"
+# : "${CHERRY_API_TOKEN:?}" "${VULTR_API_KEY:?}" "${CHERRY_PROJECT_ID:?}"
+: "${HETZNER_API_TOKEN:?}" "${SCALEWAY_ACCESS_KEY:?}" "${SCALEWAY_SECRET_KEY:?}" "${SCALEWAY_PROJECT_ID:?}"
 
 verify_image_matches_ref "$here/manifest"
 
-export TF_VAR_cherry_api_token="$CHERRY_API_TOKEN" TF_VAR_vultr_api_key="$VULTR_API_KEY"
-export TF_VAR_forgejo_url="$FORGEJO_SERVER_URL" TF_VAR_cherry_project_id="$CHERRY_PROJECT_ID"
-export TF_VAR_cherry_ssh_key_ids="${CHERRY_SSH_KEY_IDS:-[]}" TF_VAR_vultr_ssh_key_ids="${VULTR_SSH_KEY_IDS:-[]}"
-export TF_VAR_cherry_plan="${OPEN_GRIND_CHERRY_PLAN:-G1-8-32gb-200nv-ded}"
-export TF_VAR_vultr_plan="${OPEN_GRIND_VULTR_PLAN:-vhp-8c-16gb-amd}"
+# export TF_VAR_cherry_api_token="$CHERRY_API_TOKEN" TF_VAR_vultr_api_key="$VULTR_API_KEY"
+export TF_VAR_hetzner_api_token="$HETZNER_API_TOKEN"
+export TF_VAR_scaleway_access_key="$SCALEWAY_ACCESS_KEY" TF_VAR_scaleway_secret_key="$SCALEWAY_SECRET_KEY"
+export TF_VAR_scaleway_project_id="$SCALEWAY_PROJECT_ID"
+export TF_VAR_forgejo_url="$FORGEJO_SERVER_URL"
+# export TF_VAR_cherry_project_id="$CHERRY_PROJECT_ID"
+# export TF_VAR_cherry_ssh_key_ids="${CHERRY_SSH_KEY_IDS:-[]}" TF_VAR_vultr_ssh_key_ids="${VULTR_SSH_KEY_IDS:-[]}"
+export TF_VAR_hetzner_ssh_key_ids="${HETZNER_SSH_KEY_IDS:-[]}"
+# export TF_VAR_cherry_plan="${OPEN_GRIND_CHERRY_PLAN:-G1-8-32gb-200nv-ded}"
+# export TF_VAR_vultr_plan="${OPEN_GRIND_VULTR_PLAN:-vhp-8c-16gb-amd}"
+export TF_VAR_hetzner_plan="${OPEN_GRIND_HETZNER_PLAN:-cx43}"
+export TF_VAR_scaleway_plan="${OPEN_GRIND_SCALEWAY_PLAN:-PRO2-S}"
 
-TF_VAR_cherry_region="$(pick_cherry_region "$TF_VAR_cherry_plan" \
-	"${OPEN_GRIND_CHERRY_REGIONS:-LT-Siauliai NL-Amsterdam US-Chicago SG-Singapore}")" \
-	|| { echo "no cherry stock for $TF_VAR_cherry_plan" >&2; exit 1; }
-export TF_VAR_cherry_region
-echo "box a: cherry $TF_VAR_cherry_region"
+# TF_VAR_cherry_region="$(pick_cherry_region "$TF_VAR_cherry_plan" \
+# 	"${OPEN_GRIND_CHERRY_REGIONS:-LT-Siauliai NL-Amsterdam US-Chicago SG-Singapore}")" \
+# 	|| { echo "no cherry stock for $TF_VAR_cherry_plan" >&2; exit 1; }
+# export TF_VAR_cherry_region
+# echo "box a: cherry $TF_VAR_cherry_region"
 
-TF_VAR_vultr_region="$(pick_vultr_region "$TF_VAR_vultr_plan" \
-	"${OPEN_GRIND_VULTR_REGIONS:-ams fra cdg waw mad ewr ord dfw sjc lax mia sgp}")" \
-	|| { echo "no vultr stock for $TF_VAR_vultr_plan" >&2; exit 1; }
-export TF_VAR_vultr_region
-echo "box b: vultr $TF_VAR_vultr_region"
+# TF_VAR_vultr_region="$(pick_vultr_region "$TF_VAR_vultr_plan" \
+# 	"${OPEN_GRIND_VULTR_REGIONS:-ams fra cdg waw mad ewr ord dfw sjc lax mia sgp}")" \
+# 	|| { echo "no vultr stock for $TF_VAR_vultr_plan" >&2; exit 1; }
+# export TF_VAR_vultr_region
+# echo "box b: vultr $TF_VAR_vultr_region"
+
+TF_VAR_hetzner_location="$(pick_hetzner_location "$TF_VAR_hetzner_plan" \
+	"${OPEN_GRIND_HETZNER_LOCATIONS:-fsn1 nbg1 hel1}")" \
+	|| { echo "no hetzner stock for $TF_VAR_hetzner_plan" >&2; exit 1; }
+export TF_VAR_hetzner_location
+echo "box c: hetzner $TF_VAR_hetzner_location"
+
+TF_VAR_scaleway_zone="$(pick_scaleway_zone "$TF_VAR_scaleway_plan" \
+	"${OPEN_GRIND_SCALEWAY_ZONES:-fr-par-1 fr-par-2 nl-ams-1 nl-ams-2 pl-waw-1 pl-waw-2}")" \
+	|| { echo "no scaleway stock for $TF_VAR_scaleway_plan" >&2; exit 1; }
+export TF_VAR_scaleway_zone
+echo "box d: scaleway $TF_VAR_scaleway_zone"
 
 register_runners
 
