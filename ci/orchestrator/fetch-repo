@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rm -rf repo
+curl -fsSL -H "Authorization: token $OPEN_GRIND_FORGEJO_TOKEN" \
+	"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/archive/$FORGEJO_SHA.tar.gz" | tar -xz
+mv "$(basename "$FORGEJO_REPOSITORY")" repo

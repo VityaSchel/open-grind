@@ -1,21 +1,20 @@
-verify_image_matches_ref() {
-	local sha path remote
-	while read -r sha path; do
-		remote="$(curl -fsSL -H "Authorization: token $OPEN_GRIND_FORGEJO_TOKEN" \
-			"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/contents/ci/$path?ref=$FORGEJO_REF_NAME" \
-			| jq -r .sha)" || remote=""
-		[ "$remote" = "$sha" ] || {
-			echo "orchestrator image is stale for ci/$path, rebuild and re-register it" >&2
-			return 1
-		}
-	done <"$1"
-}
-
 trim() {
 	local v="$1"
 	v="${v#"${v%%[![:space:]]*}"}"
 	v="${v%"${v##*[![:space:]]}"}"
 	printf '%s' "$v"
+}
+
+load_forgejo_variables() {
+	local json name value
+	json="$(curl -fsSL -H "Authorization: token $OPEN_GRIND_FORGEJO_TOKEN" \
+		"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/actions/variables?limit=50")" \
+		|| { echo "warning: could not read repo variables, using config.env defaults" >&2; return 0; }
+	while IFS== read -r name value; do
+		[[ "$name" == OPEN_GRIND_* ]] || continue
+		[ -z "${!name:-}" ] || continue
+		export "$name=$value"
+	done < <(jq -r '.[]? | "\(.name)=\(.data)"' <<<"$json")
 }
 
 forgejo_register_ephemeral() {
@@ -24,15 +23,10 @@ forgejo_register_ephemeral() {
 		"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/actions/runners"
 }
 
-register_runners() {
-	local box reg
-	TF_VAR_runners="{}"
-	for box in c; do # a b c d e; enable a provider by adding its box letter
-		reg="$(forgejo_register_ephemeral "open-grind-builder-$box")"
-		TF_VAR_runners="$(jq -c --arg k "$box" --argjson r "$reg" \
-			'.[$k] = {uuid: $r.uuid, token: $r.token}' <<<"$TF_VAR_runners")"
-	done
-	export TF_VAR_runners
+render_cloud_init() {
+	printf "#!/bin/bash\nFORGEJO_URL='%s'\nRUNNER_UUID='%s'\nRUNNER_TOKEN='%s'\nRUNNER_LABEL='open-grind-builder-%s'\n" \
+		"$FORGEJO_SERVER_URL" "$2" "$3" "$1"
+	cat "$here/builder.sh"
 }
 
 pick_cherry_region() {

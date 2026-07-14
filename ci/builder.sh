@@ -14,10 +14,11 @@ curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 apt-get install -y nodejs
 
 RUNNER_VERSION=12.13.0
+RUNNER_SHA256=810468d3861a7aa885996c76d0bb58a8b8107eacc875b4cb1978a9654cc8dab7
 install -d -m 0700 /etc/open-grind-ci
 curl -fsSL -o /usr/local/bin/forgejo-runner \
 	"https://code.forgejo.org/forgejo/runner/releases/download/v${RUNNER_VERSION}/forgejo-runner-${RUNNER_VERSION}-linux-amd64"
-echo "810468d3861a7aa885996c76d0bb58a8b8107eacc875b4cb1978a9654cc8dab7  /usr/local/bin/forgejo-runner" | sha256sum -c -
+echo "$RUNNER_SHA256  /usr/local/bin/forgejo-runner" | sha256sum -c -
 chmod +x /usr/local/bin/forgejo-runner
 
 umask 077

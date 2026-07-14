@@ -14,31 +14,34 @@ jobs:
       - name: Register runners and provision builders
         env:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          # box a
+          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
+          # box b
+          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          OPEN_GRIND_VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
+          # box c
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
           OPEN_GRIND_HETZNER_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_HETZNER_SSH_KEY_IDS }}
-          # OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
-          # OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS }}
-          OPEN_GRIND_HETZNER_PLANS: ${{ vars.OPEN_GRIND_HETZNER_PLANS }}
-          OPEN_GRIND_HETZNER_LOCATIONS: ${{ vars.OPEN_GRIND_HETZNER_LOCATIONS }}
-          # OPEN_GRIND_DIGITALOCEAN_SIZE: ${{ vars.OPEN_GRIND_DIGITALOCEAN_SIZE }}
-          # OPEN_GRIND_DIGITALOCEAN_REGIONS: ${{ vars.OPEN_GRIND_DIGITALOCEAN_REGIONS }}
-          # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
-          # OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
-          # OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
-          # OPEN_GRIND_VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
-          # OPEN_GRIND_SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
-          # OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          # OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-        run: bash /opt/open-grind/provision.sh
+          # box d
+          OPEN_GRIND_SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
+          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
+          # box e
+          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+          OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_SSH_KEY_IDS }}
+        run: |
+          fetch-repo
+          bash repo/ci/provision.sh
 
   build:
     needs: provision
     strategy:
       fail-fast: false
       matrix:
-        # box: [a, b, c, d, e]  enable a provider by adding its box letter
-        box: [c]
+        # must equal OPEN_GRIND_BOXES in ci/config.env
+        box: [a, b, c]
     runs-on: ["open-grind-builder-${{ matrix.box }}"]
     timeout-minutes: 90
     steps:
@@ -47,7 +50,7 @@ jobs:
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch --depth 1 origin "$FORGEJO_REF_NAME"
-          git checkout -q FETCH_HEAD
+          git checkout -q "$FORGEJO_SHA"
       - name: Build
         run: |
           docker compose --ansi never --progress plain build
@@ -75,19 +78,16 @@ jobs:
         with:
           path: dl
       - name: Compare
+        env:
+          OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
         run: |
-          apks=(dl/*/*.apk)
-          [ ${#apks[@]} -eq 1 ] # one per active box
-          sha256sum "${apks[@]}"
-          for apk in "${apks[@]:1}"; do cmp "${apks[0]}" "$apk"; done
-          mkdir -p verified
-          cp "${apks[0]}" verified/open-grind-unsigned.apk
+          fetch-repo
+          bash repo/ci/verify.sh dl verified
       - name: Publish verified artifact
-        uses: https://code.forgejo.org/actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
           name: open-grind-unsigned
           path: verified/open-grind-unsigned.apk
-          archive: false
 
   teardown:
     needs: [provision, build, verify]
@@ -98,11 +98,18 @@ jobs:
       - name: Delete builders
         env:
           OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          # box a
+          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          # box b
+          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          # box c
           OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          # OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
-          # OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          # OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
-          # OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
-          # OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          # OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-        run: bash /opt/open-grind/teardown.sh
+          # box d
+          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
+          # box e
+          OPEN_GRIND_DIGITALOCEAN_TOKEN: ${{ secrets.OPEN_GRIND_DIGITALOCEAN_TOKEN }}
+        run: |
+          fetch-repo
+          bash repo/ci/teardown.sh

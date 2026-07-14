@@ -63,14 +63,6 @@ RUN git init -q /src/digitalocean && cd /src/digitalocean \
 	&& go get golang.org/x/net@"$XNET_VERSION" && go mod tidy \
 	&& go build -o "/out/providers/registry.terraform.io/digitalocean/digitalocean/$DIGITALOCEAN_VERSION/$(go env GOOS)_$(go env GOARCH)/terraform-provider-digitalocean_v$DIGITALOCEAN_VERSION" .
 
-COPY lib.sh provision.sh teardown.sh /src/ci/
-COPY orchestrator/terraformrc /src/ci/orchestrator/terraformrc
-COPY terraform/*.tf terraform/builder.sh /src/ci/terraform/
-RUN cd /src/ci \
-	&& for f in lib.sh provision.sh teardown.sh orchestrator/terraformrc terraform/*; do \
-		printf '%s %s\n' "$(git hash-object "$f")" "$f"; \
-	done > /out/manifest
-
 FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 RUN apk upgrade --no-cache \
@@ -78,10 +70,12 @@ RUN apk upgrade --no-cache \
 
 COPY --from=build /out/bin/terraform /usr/local/bin/terraform
 COPY --from=build /out/providers /opt/open-grind/providers
-COPY --from=build /out/manifest /opt/open-grind/manifest
-COPY --from=build /src/ci/lib.sh /src/ci/provision.sh /src/ci/teardown.sh /opt/open-grind/
-COPY --from=build /src/ci/orchestrator/terraformrc /opt/open-grind/terraformrc
-COPY --from=build /src/ci/terraform/ /opt/open-grind/terraform/
+COPY --chmod=755 orchestrator/fetch-repo /usr/local/bin/fetch-repo
+COPY orchestrator/terraformrc /opt/open-grind/terraformrc
 
 ENV TF_CLI_CONFIG_FILE=/opt/open-grind/terraformrc CHECKPOINT_DISABLE=1
-RUN terraform -chdir=/opt/open-grind/terraform init -backend=false -input=false
+
+COPY terraform/boxes /tmp/mirror-check
+RUN for box in /tmp/mirror-check/*/; do \
+		terraform -chdir="$box" init -backend=false -input=false >/dev/null || exit 1; \
+	done && rm -rf /tmp/mirror-check
