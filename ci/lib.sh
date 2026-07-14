@@ -1,7 +1,7 @@
 verify_image_matches_ref() {
 	local sha path remote
 	while read -r sha path; do
-		remote="$(curl -fsSL -H "Authorization: token $FORGEJO_TOKEN" \
+		remote="$(curl -fsSL -H "Authorization: token $OPEN_GRIND_FORGEJO_TOKEN" \
 			"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/contents/ci/$path?ref=$FORGEJO_REF_NAME" \
 			| jq -r .sha)" || remote=""
 		[ "$remote" = "$sha" ] || {
@@ -19,7 +19,7 @@ trim() {
 }
 
 forgejo_register_ephemeral() {
-	curl -fsSL -X POST -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
+	curl -fsSL -X POST -H "Authorization: token $OPEN_GRIND_FORGEJO_TOKEN" -H "Content-Type: application/json" \
 		-d "$(jq -nc --arg n "$1" '{name:$n,ephemeral:true}')" \
 		"$FORGEJO_SERVER_URL/api/v1/repos/$FORGEJO_REPOSITORY/actions/runners"
 }

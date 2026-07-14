@@ -13,17 +13,17 @@ jobs:
     steps:
       - name: Register runners and provision builders
         env:
-          FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
-          CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
-          HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
-          SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-          CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
-          CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
-          VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
-          HETZNER_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_HETZNER_SSH_KEY_IDS }}
+          OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
+          OPEN_GRIND_SCALEWAY_ACCESS_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_ACCESS_KEY }}
+          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
+          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          OPEN_GRIND_CHERRY_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_CHERRY_SSH_KEY_IDS }}
+          OPEN_GRIND_VULTR_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_VULTR_SSH_KEY_IDS }}
+          OPEN_GRIND_HETZNER_SSH_KEY_IDS: ${{ secrets.OPEN_GRIND_HETZNER_SSH_KEY_IDS }}
         run: bash /opt/open-grind/provision.sh
 
   build:
@@ -91,11 +91,11 @@ jobs:
     steps:
       - name: Delete builders
         env:
-          FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
-          CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
-          VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
-          HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
-          SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
-          SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
-          CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
+          OPEN_GRIND_FORGEJO_TOKEN: ${{ secrets.OPEN_GRIND_FORGEJO_TOKEN }}
+          OPEN_GRIND_CHERRY_API_TOKEN: ${{ secrets.OPEN_GRIND_CHERRY_API_TOKEN }}
+          OPEN_GRIND_VULTR_API_KEY: ${{ secrets.OPEN_GRIND_VULTR_API_KEY }}
+          OPEN_GRIND_HETZNER_API_TOKEN: ${{ secrets.OPEN_GRIND_HETZNER_API_TOKEN }}
+          OPEN_GRIND_SCALEWAY_SECRET_KEY: ${{ secrets.OPEN_GRIND_SCALEWAY_SECRET_KEY }}
+          OPEN_GRIND_SCALEWAY_PROJECT_ID: ${{ secrets.OPEN_GRIND_SCALEWAY_PROJECT_ID }}
+          OPEN_GRIND_CHERRY_PROJECT_ID: ${{ secrets.OPEN_GRIND_CHERRY_PROJECT_ID }}
         run: bash /opt/open-grind/teardown.sh
