@@ -191,7 +191,7 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
-	<div class="relative">
+	<div class="relative" {...swipe?.handlers}>
 		{#if swipe}
 			<div
 				class={[
@@ -243,7 +243,6 @@
 				? `translateX(${swipe.deltaX}px)`
 				: undefined}
 			use:observeIntersection={{ handle: onVisible, once: true }}
-			{...swipe?.handlers}
 		>
 			{@render content()}
 		</div>
