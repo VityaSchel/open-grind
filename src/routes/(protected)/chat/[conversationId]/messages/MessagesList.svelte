@@ -55,6 +55,7 @@
 				revert?.();
 			}
 		}}
+		onReply={() => conversationState.setReplyTo(message)}
 		onReact={async (reactionType: number) => {
 			try {
 				await conversationState.reactTo({

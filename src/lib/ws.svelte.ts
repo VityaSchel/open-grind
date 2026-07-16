@@ -117,6 +117,67 @@ class WsState {
 		);
 	}
 
+	sendCommand<T>(
+		type: string,
+		payload: unknown,
+		responseSchema: z.ZodType<T>,
+		{ timeoutMs = 10000 }: { timeoutMs?: number } = {},
+	): Promise<T> {
+		const ref_id = crypto.randomUUID();
+		const safeName = `${type}.response`.replaceAll(".", "_");
+
+		return new Promise<T>((resolve, reject) => {
+			let unlisten: (() => void) | undefined;
+			let settled = false;
+			const settle = (run: () => void) => {
+				if (settled) return;
+				settled = true;
+				clearTimeout(timeout);
+				unlisten?.();
+				run();
+			};
+			const timeout = setTimeout(
+				() =>
+					settle(() =>
+						reject(new Error(`[ws] command timed out: ${type}`)),
+					),
+				timeoutMs,
+			);
+			const onError = (e: unknown) =>
+				settle(() =>
+					reject(e instanceof Error ? e : new Error(String(e))),
+				);
+
+			listen<{ ref: string; status: number; payload: unknown }>(
+				`grindr:${safeName}`,
+				(event) => {
+					if (event.payload.ref !== ref_id) return;
+					settle(() => {
+						if (event.payload.status >= 400) {
+							reject(
+								new Error(
+									`[ws] command failed: ${type} (${event.payload.status})`,
+								),
+							);
+							return;
+						}
+						const result = responseSchema.safeParse(
+							event.payload.payload,
+						);
+						if (result.success) resolve(result.data);
+						else reject(result.error);
+					});
+				},
+			)
+				.then((fn) => (settled ? fn() : (unlisten = fn)))
+				.catch(onError);
+
+			invoke("ws_send", { command: { type, ref_id, payload } }).catch(
+				onError,
+			);
+		});
+	}
+
 	on<T>(
 		eventType: string,
 		schema: z.ZodType<T>,

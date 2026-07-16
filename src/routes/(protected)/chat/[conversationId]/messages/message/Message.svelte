@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { tick } from "svelte";
+	import { ArrowBendUpLeftIcon } from "phosphor-svelte";
+	import { tick, untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import { scale } from "svelte/transition";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
+	import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { setMessageContext } from "./context";
@@ -31,6 +33,7 @@
 		onVisible,
 		onUnsend,
 		onCopyError,
+		onReply,
 	}: {
 		message: ApiResponseMessage;
 		isOut: boolean;
@@ -44,7 +47,14 @@
 		onVisible?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
+		onReply?: () => void;
 	} = $props();
+
+	const swipe = untrack(() =>
+		onReply
+			? new SwipeToReply(isOut ? "left" : "right", () => onReply?.())
+			: null,
+	);
 
 	const firstInStack = $derived(indexInStack === 0);
 	const lastInStack = $derived(indexInStack === stackLength - 1);
@@ -62,6 +72,10 @@
 		| { x: number; y: number; width: number; height: number } =
 		$state(false);
 	let messageElement: HTMLElement | null = $state(null);
+	const bubbleCenterY = $derived.by(() => {
+		const el = messageElement;
+		return el ? el.offsetTop + el.offsetHeight / 2 : null;
+	});
 
 	function setRef(el: HTMLElement | null) {
 		messageElement = el ?? null;
@@ -177,41 +191,62 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
-	<div
-		class={{
-			"pe-3 *:float-start *:me-auto": !isOut,
-			"ps-3 *:float-end *:ms-auto": isOut,
-		}}
-		role="button"
-		tabindex="0"
-		ondblclick={(event) => {
-			const selection = window.getSelection();
-			if (
-				selection &&
-				!selection.isCollapsed &&
-				messageElement?.contains(selection.anchorNode)
-			)
-				return;
-			if (!isOut && onReact) {
+	<div class="relative">
+		{#if swipe}
+			<div
+				class={[
+					"pointer-events-none absolute flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground",
+					{ "right-0": isOut, "left-0": !isOut },
+				]}
+				style:top={bubbleCenterY !== null
+					? `${bubbleCenterY}px`
+					: "50%"}
+				style:opacity={swipe.progress}
+				style:transform={`translateY(-50%) scale(${swipe.armed ? 1 : 0.6 + swipe.progress * 0.4})`}
+			>
+				<ArrowBendUpLeftIcon size={16} />
+			</div>
+		{/if}
+		<div
+			class={{
+				"pe-3 *:float-start *:me-auto": !isOut,
+				"ps-3 *:float-end *:ms-auto": isOut,
+			}}
+			role="button"
+			tabindex="0"
+			ondblclick={(event) => {
+				const selection = window.getSelection();
+				if (
+					selection &&
+					!selection.isCollapsed &&
+					messageElement?.contains(selection.anchorNode)
+				)
+					return;
+				if (!isOut && onReact) {
+					event.preventDefault();
+					onReact(1);
+					selection?.removeAllRanges();
+				}
+			}}
+			onkeydown={(event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					if (event.key === " ") event.preventDefault();
+					onContextMenu();
+				}
+			}}
+			oncontextmenu={(event) => {
 				event.preventDefault();
-				onReact(1);
-				selection?.removeAllRanges();
-			}
-		}}
-		onkeydown={(event) => {
-			if (event.key === "Enter" || event.key === " ") {
-				if (event.key === " ") event.preventDefault();
 				onContextMenu();
-			}
-		}}
-		oncontextmenu={(event) => {
-			event.preventDefault();
-			onContextMenu();
-		}}
-		style:visibility={contextMenuOpen ? "hidden" : undefined}
-		use:observeIntersection={{ handle: onVisible, once: true }}
-	>
-		{@render content()}
+			}}
+			style:visibility={contextMenuOpen ? "hidden" : undefined}
+			style:transform={swipe?.deltaX
+				? `translateX(${swipe.deltaX}px)`
+				: undefined}
+			use:observeIntersection={{ handle: onVisible, once: true }}
+			{...swipe?.handlers}
+		>
+			{@render content()}
+		</div>
 	</div>
 	{#if lastInStack}
 		<span
@@ -251,5 +286,6 @@
 		{onDelete}
 		{onUnsend}
 		{onCopyError}
+		{onReply}
 	/>
 {/if}

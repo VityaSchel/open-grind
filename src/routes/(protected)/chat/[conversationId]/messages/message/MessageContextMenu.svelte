@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import {
+		ArrowBendUpLeftIcon,
 		ArrowUUpLeftIcon,
 		CopyIcon,
 		FlagIcon,
@@ -21,6 +22,7 @@
 		onDelete,
 		onUnsend,
 		onCopyError,
+		onReply,
 		...props
 	}: ComponentProps<typeof ContextMenu> & {
 		textContent?: string;
@@ -28,6 +30,7 @@
 		onDelete?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
+		onReply?: () => void;
 	} = $props();
 </script>
 
@@ -56,6 +59,17 @@
 		<div
 			class="flex w-45 flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!"
 		>
+			{#if onReply}
+				<Button
+					variant="ghost"
+					onclick={() => {
+						onReply();
+						props.onClose();
+					}}
+				>
+					<ArrowBendUpLeftIcon /> Reply
+				</Button>
+			{/if}
 			{#if textContent !== undefined}
 				<Button
 					variant="ghost"

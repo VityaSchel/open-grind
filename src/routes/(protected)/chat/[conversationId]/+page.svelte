@@ -68,6 +68,8 @@
 		conversationId={conversationState.conversationId}
 		onSend={(draft: MessageDraft) => conversationState.send(draft)}
 		disabled={conversationState.loading || conversationState.error !== null}
+		replyTo={conversationState.replyTo}
+		onCancelReply={() => conversationState.clearReplyTo()}
 		bind:height={composerHeight}
 	/>
 </Card.Content>

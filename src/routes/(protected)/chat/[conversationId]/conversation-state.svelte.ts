@@ -47,6 +47,7 @@ export class ConversationState {
 	refreshing = $state(false);
 	error: Error | null = $state(null);
 	lastReadTimestamp: number | null = $state(null);
+	replyTo: ApiResponseMessage | null = $state(null);
 
 	readonly conversationId: string;
 	readonly ourProfileId: number;
@@ -327,9 +328,18 @@ export class ConversationState {
 		}
 	}
 
+	setReplyTo(message: ApiResponseMessage): void {
+		this.replyTo = message;
+	}
+
+	clearReplyTo(): void {
+		this.replyTo = null;
+	}
+
 	send(draft: MessageDraft): void {
 		if (!this.profile) return;
 		const tempId = `pending-${crypto.randomUUID()}`;
+		const replyToMessage = this.replyTo;
 		const optimistic: OptimisticMessage = {
 			...draft.optimistic,
 			messageId: tempId,
@@ -338,24 +348,33 @@ export class ConversationState {
 			timestamp: Date.now(),
 			unsent: false,
 			reactions: [],
+			replyToMessage,
 			status: "pending" as const,
 		};
+		this.replyTo = null;
 		this.messages = removeDuplicateMessages([optimistic, ...this.messages]);
 		this.#updatePreview(optimistic);
-		void this.#resolveMessage({ tempId, message: draft.outbound });
+		void this.#resolveMessage({
+			tempId,
+			message: draft.outbound,
+			replyToMessageId: replyToMessage?.messageId,
+		});
 	}
 
 	async #resolveMessage({
 		tempId,
 		message,
+		replyToMessageId,
 	}: {
 		tempId: string;
 		message: OutboundMessage;
+		replyToMessageId?: string;
 	}): Promise<void> {
 		try {
 			const sent = await sendMessage({
 				toUserId: this.profile!.profileId,
 				message,
+				replyToMessageId,
 			});
 			const msg = this.messages.find((m) => m.messageId === tempId);
 			if (msg) {
