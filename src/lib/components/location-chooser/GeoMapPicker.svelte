@@ -9,7 +9,12 @@
 	import { GpsFixIcon } from "phosphor-svelte";
 	import { ControlAttribution, Map, Marker, TileLayer } from "sveaflet";
 	import { toast } from "svelte-sonner";
-	import type { Map as LeafletMap, LeafletMouseEventHandlerFn } from "leaflet";
+	import type {
+		DragEndEvent,
+		Map as LeafletMap,
+		Marker as LeafletMarker,
+		LeafletMouseEventHandlerFn,
+	} from "leaflet";
 
 	import { getPlaces } from "$lib/api/browse/location";
 	import { showErrorToast } from "$lib/api/error";
@@ -32,6 +37,7 @@
 		if (map) {
 			const onMapClick: LeafletMouseEventHandlerFn = ({ latlng }) => {
 				pinPos = { lat: latlng.lat, lon: latlng.lng };
+				map?.panTo(latlng);
 			};
 			map.on("click", onMapClick);
 			return () => {
@@ -90,7 +96,7 @@
 	const gpsAvailable = $derived(["android", "ios"].includes(platform()));
 </script>
 
-<div class="w-[inherit] h-[inherit] relative">
+<div class="relative h-[inherit] w-[inherit]">
 	<Map
 		options={{
 			center: [40.42267869390329, -3.697633348267032],
@@ -114,6 +120,10 @@
 		{#if pinPos}
 			<Marker
 				latLng={[pinPos.lat, pinPos.lon]}
+				ondragend={(event: DragEndEvent) => {
+					const { lat, lng } = (event.target as LeafletMarker).getLatLng();
+					pinPos = { lat, lon: lng };
+				}}
 				options={{
 					draggable: true,
 					icon: divIcon({
@@ -128,7 +138,7 @@
 	</Map>
 	<div
 		class={[
-			"absolute bottom-4 w-full z-1010 p-2",
+			"absolute bottom-4 z-1010 w-full p-2",
 			{
 				"max-w-[calc(100%-2.5rem)]": gpsAvailable,
 			},
@@ -161,9 +171,9 @@
 		<!-- bottom-2 w-[calc(100%-8rem)]  -->
 	</div>
 	{#if showSearchResults}
-		<div class="size-full z-1000 top-0 left-0 absolute p-1">
+		<div class="absolute top-0 left-0 z-1000 size-full p-1">
 			<div
-				class="bg-popover-foreground backdrop-blur-xl w-full h-full rounded-md flex flex-col text-popover shadow-md px-1 py-3 overflow-auto gap-2"
+				class="flex h-full w-full flex-col gap-2 overflow-auto rounded-md bg-popover-foreground px-1 py-3 text-popover shadow-md backdrop-blur-xl"
 			>
 				{#await searchPlaces}
 					<Spinner class="m-auto size-8" />
@@ -171,7 +181,7 @@
 					{#if response}
 						{#each response.places.toSorted((a, b) => b.importance - a.importance) as place}
 							<Button
-								class="flex flex-col gap-0 items-start justify-start text-current cursor-pointer text-left h-auto"
+								class="flex h-auto cursor-pointer flex-col items-start justify-start gap-0 text-left text-current"
 								variant="link"
 								onclick={() => {
 									pinPos = { lat: place.lat, lon: place.lon };
@@ -179,11 +189,11 @@
 									showSearchResults = false;
 								}}
 							>
-								<span class="max-w-full block truncate line-clamp-1">
+								<span class="line-clamp-1 block max-w-full truncate">
 									{place.name}
 								</span>
 								<span
-									class="max-w-full block truncate line-clamp-1 text-sm text-popover/40"
+									class="line-clamp-1 block max-w-full truncate text-sm text-popover/40"
 								>
 									{place.address}
 								</span>
@@ -197,12 +207,12 @@
 		</div>
 	{/if}
 	{#if gpsAvailable}
-		<div class="absolute bottom-6 right-2 z-1010 rounded-full">
+		<div class="absolute right-2 bottom-6 z-1010 rounded-full">
 			<Button
 				size="icon-lg"
 				aria-label="Locate me"
 				variant="default"
-				class="cursor-pointer bg-white text-black hover:bg-neutral-100 shadow-sm"
+				class="cursor-pointer bg-white text-black shadow-sm hover:bg-neutral-100"
 				disabled={gpsRequestInProgress}
 				onclick={async () => {
 					if (map) {
