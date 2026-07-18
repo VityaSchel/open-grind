@@ -1,3 +1,4 @@
+import { page } from "$app/state";
 import z from "zod";
 
 import { showErrorToast } from "$lib/api/error";
@@ -10,6 +11,7 @@ import {
 } from "$lib/api/messaging/conversations";
 import { showIncomingMessageToast } from "$lib/components/incoming-message-toast/incoming-message-toast-manager";
 import { previewFromMessage } from "$lib/model/messaging/messages";
+import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -121,7 +123,16 @@ class ConversationsState {
 			await this.ensureLoaded(message.conversationId);
 			entry = this.#find(message.conversationId);
 		}
-		if (!isActive && isIncoming && entry && !entry.data.muted) {
+		const isInboxPageRoot = page.route.id === "/(protected)/chat";
+		const twoColLayout = !below("split").current;
+		const isConversationsListVisible = isInboxPageRoot || twoColLayout;
+		if (
+			isIncoming &&
+			!isActive &&
+			entry &&
+			!entry.data.muted &&
+			!isConversationsListVisible
+		) {
 			this.#showIncomingMessageToast({ message, conversation: entry });
 		}
 	}
