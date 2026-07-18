@@ -13,7 +13,7 @@
 <main class="screen-nav-host">
 	<div class="h-full w-full overflow-y-auto overscroll-none">
 		<div class="flex w-full p-4 pb-nav-clear">
-			<div class="max-w-120 w-full flex flex-col m-auto gap-3">
+			<div class="m-auto flex w-full max-w-120 flex-col gap-3 pb-16">
 				<ProfileLink id={data.ourProfileId} />
 				<span role="separator"></span>
 				<AccountSettingsLink />
@@ -22,7 +22,7 @@
 				<span role="separator"></span>
 				<Socials />
 				<span
-					class="font-mono text-xs text-muted-foreground break-all whitespace-pre-wrap py-2 px-4 select-text"
+					class="px-4 py-2 font-mono text-xs break-all whitespace-pre-wrap text-muted-foreground select-text"
 				>
 					{version}
 				</span>
