@@ -12,13 +12,15 @@
 			<a
 				href="#/"
 				{...props}
-				onclick={() =>
+				onclick={(event) => {
+					event.preventDefault();
 					toast(ToastUnimplemented, {
 						componentProps: {
 							feature: "Account settings",
 							issue: 47,
 						},
-					})}
+					});
+				}}
 			>
 				<Item.Content class="max-cramped:min-w-0">
 					<Item.Title class="inline-block max-w-full min-w-0 truncate">
