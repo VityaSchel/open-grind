@@ -37,9 +37,9 @@
 			<LocationChooser />
 		</main>
 	{:else}
-		<main class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
+		<main class="screen-nav-host">
 			<div
-				class="h-full w-full overflow-auto overscroll-contain"
+				class="pull-scroller"
 				bind:this={gridContainer}
 				onscroll={() => (gridState.scrollY = gridContainer?.scrollTop ?? 0)}
 			>
@@ -55,7 +55,6 @@
 					container={gridContainer}
 					updating={gridState.refreshing}
 					position="top"
-					containerClass="z-1"
 					onrefresh={() => void gridState.reload()}
 				/>
 			{/if}

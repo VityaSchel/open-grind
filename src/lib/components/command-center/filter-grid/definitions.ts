@@ -1,5 +1,8 @@
 import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
 import {
+	AGE_MAX,
+	AGE_MIN,
+	ageRangeLabel,
 	FilterAcceptNSFWPics,
 	FilterBodyType,
 	FilterHealthPractice,
@@ -33,10 +36,6 @@ import {
 	splitList,
 } from "./apply";
 import type { BooleanKey, Filter, ListKey, Render } from "./types";
-
-function ageText([min, max]: number[]): string {
-	return max === 102 ? `${min} years & over` : `${min} - ${max}`;
-}
 
 function rangeText(
 	[min, max]: number[],
@@ -160,11 +159,11 @@ export const filters: Filter[] = [
 	rangeFilter({
 		label: "age",
 		target: "age",
-		min: 18,
-		max: 102,
+		min: AGE_MIN,
+		max: AGE_MAX,
 		minKey: "ageMin",
 		maxKey: "ageMax",
-		render: (f) => ageText(f.age),
+		render: (f) => ageRangeLabel(f.age),
 	}),
 	rangeFilter({
 		label: "height",

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { Label } from "$lib/components/ui/label";
+	import { ageRangeLabel } from "../filters";
 	import FilterField from "../FilterField.svelte";
 	import AgeFilterSlider from "./AgeFilterSlider.svelte";
 
@@ -9,7 +10,7 @@
 		value = $bindable(),
 	}: { checked: boolean; value: number[] } = $props();
 
-	let label = $state("");
+	const label = $derived(ageRangeLabel(value));
 
 	const uid = $props.id();
 </script>
@@ -31,7 +32,6 @@
 					value = v;
 				}
 			}
-			bind:label
 		/>
 	</div>
 </div>

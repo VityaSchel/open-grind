@@ -293,10 +293,23 @@ a {
 @utility max-h-photo {
 	max-height: min(70vh, 500px);
 }
+
 /* 1px past full height keeps a scroll container technically scrollable, so
    a native rubber band (and with it pull-to-refresh) works on short content */
 @utility min-h-overscrollable {
 	min-height: calc(100% + 1px);
+}
+
+@utility screen-nav-host {
+	/* Scroller child needs pull-scroller */
+	/* Content inside needs pb-nav-clear */
+	@apply relative h-(--screen-nav) w-full;
+	margin-bottom: calc(var(--content-pb) * -1);
+}
+
+/* Pull-to-refresh containers */
+@utility pull-scroller {
+	@apply size-full overflow-auto overscroll-contain;
 }
 
 [data-sonner-toaster] {

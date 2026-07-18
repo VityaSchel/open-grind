@@ -16,8 +16,16 @@ export const filterIsOnlineSchema = z.boolean();
 export const filterIsRightNowSchema = z.boolean();
 export const filterIsFreshSchema = z.boolean();
 
+export const AGE_MIN = 18;
+export const AGE_MAX = 102;
+
+export const ageRangeLabel = ([from, to]: number[]) =>
+	to === AGE_MAX ? `${from} years & over` : `${from} - ${to}`;
+
 export const filterAgeEnabledSchema = z.boolean();
-export const filterAgeSchema = z.array(z.number().min(18).max(102)).length(2);
+export const filterAgeSchema = z
+	.array(z.number().min(AGE_MIN).max(AGE_MAX))
+	.length(2);
 
 export const filterGendersEnabledSchema = z.boolean().default(false);
 export const filterGendersSchema = z.array(
@@ -124,7 +132,7 @@ export const gridSearchFiltersSchema = z.object({
 	isRightNow: filterIsRightNowSchema.default(false),
 
 	ageEnabled: filterAgeEnabledSchema.default(false),
-	age: filterAgeSchema.default([18, 102]),
+	age: filterAgeSchema.default([AGE_MIN, AGE_MAX]),
 
 	genderEnabled: filterGendersEnabledSchema.default(false),
 	genders: filterGendersSchema.default([]),

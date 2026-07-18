@@ -180,7 +180,7 @@
 			bind:this={refreshControl}
 			{container}
 			updating={conversationState.refreshing}
-			containerClass="z-10 bottom-13"
+			containerClass="bottom-13"
 			position="bottom"
 			onrefresh={() => void conversationState.refresh()}
 		/>

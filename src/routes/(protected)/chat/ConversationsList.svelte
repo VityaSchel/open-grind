@@ -261,7 +261,6 @@
 		<DataRefreshControl
 			{container}
 			updating={conversations.refreshing}
-			containerClass="z-10"
 			position="top"
 			hintOffset={12}
 			onrefresh={() => void conversations.refresh()}

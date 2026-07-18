@@ -55,11 +55,8 @@
 	}
 </script>
 
-<div class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
-	<div
-		bind:this={container}
-		class="h-full w-full overflow-auto overscroll-contain"
-	>
+<div class="screen-nav-host">
+	<div bind:this={container} class="pull-scroller">
 		<div
 			class="mx-auto flex min-h-overscrollable w-full max-w-120 flex-col gap-1 px-4 pt-16 pb-nav-clear"
 		>

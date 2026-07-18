@@ -10,7 +10,7 @@
 	const { data }: import("./$types").PageProps = $props();
 </script>
 
-<main class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
+<main class="screen-nav-host">
 	<div class="h-full w-full overflow-y-auto overscroll-none">
 		<div class="flex w-full p-4 pb-nav-clear">
 			<div class="max-w-120 w-full flex flex-col m-auto gap-3">

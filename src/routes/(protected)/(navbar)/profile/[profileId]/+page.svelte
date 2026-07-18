@@ -309,7 +309,6 @@
 			container={profileContainer}
 			updating={refreshing}
 			position="top"
-			containerClass="z-10"
 			onrefresh={refresh}
 		/>
 	</div>

@@ -24,7 +24,9 @@ export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
 };
 
-export type ConversationProfile = Awaited<ReturnType<typeof getConversation>>["profile"];
+export type ConversationProfile = Awaited<
+	ReturnType<typeof getConversation>
+>["profile"];
 
 export class ConversationState {
 	messages: OptimisticMessage[] = $state([]);
@@ -112,13 +114,7 @@ export class ConversationState {
 					if (this.#destroyed) return;
 					if (event.payload.conversationId !== this.conversationId) return;
 					if (event.payload.profileId === this.ourProfileId) return;
-					if (
-						this.lastReadTimestamp === null ||
-						event.payload.timestamp > this.lastReadTimestamp
-					) {
-						this.lastReadTimestamp = event.payload.timestamp;
-						this.#syncCache();
-					}
+					if (this.#advanceLastRead(event.payload.timestamp)) this.#syncCache();
 				},
 			),
 			ws.on(
@@ -204,6 +200,8 @@ export class ConversationState {
 				fresh.push(msg);
 			}
 
+			this.#advanceLastRead(result.lastReadTimestamp);
+
 			if (fresh.length === 0 && dropped === 0 && updated === 0) {
 				this.#syncCache();
 				return;
@@ -211,7 +209,6 @@ export class ConversationState {
 
 			this.messages = removeDuplicateMessages(newValue);
 			this.#updatePreview(this.messages.at(0));
-			this.lastReadTimestamp = result.lastReadTimestamp;
 			this.#syncCache();
 
 			for (const m of fresh) {
@@ -222,6 +219,7 @@ export class ConversationState {
 				});
 			}
 		} catch (error) {
+			if (this.#destroyed) return;
 			console.error("Failed to reconcile messages", error);
 			if (error instanceof ApiError && error.response?.status === 403) {
 				this.error = error;
@@ -268,6 +266,8 @@ export class ConversationState {
 			const result = await getConversation({
 				conversationId: this.conversationId,
 			});
+			void this.#conversations.markRead(this.conversationId);
+			if (this.#destroyed) return;
 			this.messages = removeDuplicateMessages(
 				result.messages.map((m) => ({
 					...m,
@@ -277,10 +277,10 @@ export class ConversationState {
 			this.profile = result.profile;
 			this.pageKey = result.pageKey;
 			this.#updatePreview(this.messages.at(0));
-			void this.#conversations.markRead(this.conversationId);
-			this.lastReadTimestamp = result.lastReadTimestamp;
+			this.#advanceLastRead(result.lastReadTimestamp);
 			this.#syncCache();
 		} catch (err) {
+			if (this.#destroyed) return;
 			this.error = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			this.loading = false;
@@ -295,14 +295,16 @@ export class ConversationState {
 				conversationId: this.conversationId,
 				pageKey: this.pageKey,
 			});
+			if (this.#destroyed) return;
 			this.messages = removeDuplicateMessages([
 				...this.messages,
 				...result.messages.map((m) => ({ ...m, status: "sent" as const })),
 			]);
 			this.pageKey = result.pageKey;
-			this.lastReadTimestamp = result.lastReadTimestamp;
+			this.#advanceLastRead(result.lastReadTimestamp);
 			this.#syncCache();
 		} catch (error) {
+			if (this.#destroyed) return;
 			console.error(error);
 			if (error instanceof ApiError && error.response?.status === 403) {
 				this.error = error;
@@ -362,6 +364,14 @@ export class ConversationState {
 		}
 	}
 
+	#advanceLastRead(timestamp: number | null): boolean {
+		if (timestamp === null) return false;
+		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
+			return false;
+		this.lastReadTimestamp = timestamp;
+		return true;
+	}
+
 	#syncCache(): void {
 		if (!this.profile) return;
 		const cachedMessages: ApiResponseMessage[] = this.messages
@@ -374,7 +384,6 @@ export class ConversationState {
 			messages: cachedMessages,
 			profile: this.profile,
 			pageKey: this.pageKey,
-			cachedAt: Date.now(),
 			lastReadTimestamp: this.lastReadTimestamp,
 		});
 	}

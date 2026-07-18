@@ -1,6 +1,9 @@
 <script lang="ts">
 	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
-	import { defaultFilters } from "$lib/components/filters/filters";
+	import {
+		ageRangeLabel,
+		defaultFilters,
+	} from "$lib/components/filters/filters";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
@@ -35,7 +38,7 @@
 		}
 	});
 
-	let label = $state("");
+	const label = $derived(ageRangeLabel(value));
 </script>
 
 <Drawer.Root bind:open>
@@ -70,7 +73,6 @@
 						value = v;
 					}
 				}
-				bind:label
 			/>
 		</div>
 		<Drawer.Footer>

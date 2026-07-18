@@ -34,7 +34,6 @@ export type CachedConversation = {
 		showDistance: boolean;
 	};
 	pageKey: string | null;
-	cachedAt: number;
 	lastReadTimestamp: number | null;
 };
 

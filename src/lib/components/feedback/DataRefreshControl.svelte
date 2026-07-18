@@ -6,6 +6,7 @@
 	import type { ClassValue } from "svelte/elements";
 
 	import { Button } from "$lib/components/ui/button";
+	import { cn } from "$lib/util/utils";
 	import { MAX_SLINGSHOT_TENSION, slingshotTension } from "./refresh/disc-math";
 	import { attachOverscrollPull } from "./refresh/overscroll-adapter";
 	import { PullModel } from "./refresh/pull-model.svelte";
@@ -49,7 +50,6 @@
 	// Mouse pointer-only
 	let pointerOnly = $state(false);
 	let sawBand = false;
-	let touchSeen = false;
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
@@ -58,11 +58,9 @@
 	const busy = $derived((updating ?? false) || model.phase === "refreshing");
 
 	$effect(() => {
-		model.onTrigger = () => onrefresh?.();
-	});
-	$effect(() => {
 		model.setUpdating(updating ?? false);
 	});
+	model.onTrigger = () => onrefresh?.();
 	model.getBaseline = () => (revealed ? REST_HEIGHT_PX : 0);
 
 	type IndicatorType = "disc" | "hint" | "button";
@@ -154,12 +152,9 @@
 			);
 		}
 	});
-	const anchor = $derived(measuredOffset);
-
-	const scrollEl = $derived(container ?? null);
-	const scrollTop = () => scrollEl?.scrollTop ?? 0;
+	const scrollTop = () => container?.scrollTop ?? 0;
 	const maxScrollY = () =>
-		scrollEl ? scrollEl.scrollHeight - scrollEl.clientHeight : 0;
+		container ? container.scrollHeight - container.clientHeight : 0;
 	const scrollToY = (top: number, behavior: ScrollBehavior) => {
 		container?.scroll({ top, behavior });
 	};
@@ -169,7 +164,7 @@
 		position === "top" ? scrollTop() : maxScrollY() - scrollTop();
 
 	export function scrollToRest(behavior: ScrollBehavior = "instant") {
-		if (!scrollEl) return;
+		if (!container) return;
 		const top = position === "top" ? 0 : maxScrollY();
 		if (Math.abs(scrollTop() - top) >= 1) scrollToY(top, behavior);
 	}
@@ -220,12 +215,12 @@
 
 		let mouseProbe: ReturnType<typeof setTimeout> | undefined;
 		const onWheel = (event: WheelEvent) => {
-			if (touchSeen || sawBand || pointerOnly) return;
+			if (sawBand || pointerOnly) return;
 			const toward = position === "top" ? -event.deltaY : event.deltaY;
 			if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
 			clearTimeout(mouseProbe);
 			mouseProbe = setTimeout(() => {
-				if (!sawBand && !touchSeen) pointerOnly = true;
+				if (!sawBand) pointerOnly = true;
 			}, MOUSE_PROBE_MS);
 		};
 
@@ -266,7 +261,6 @@
 		if (!listenTarget) return;
 		const scrollRoot = () => container ?? null;
 		const noteTouch = () => {
-			touchSeen = true;
 			sawBand = true;
 			pointerOnly = false;
 			// Hide it so the next touch pull starts from zero. A baseline bigger
@@ -303,7 +297,7 @@
 	<div
 		data-refresh-phase={model.phase}
 		data-refresh-source={model.source}
-		class={[
+		class={cn(
 			"pointer-events-none z-10",
 			// hintOffset can push the hint past the band edge, so don't clip it
 			{ "overflow-clip": !hintShown },
@@ -313,9 +307,9 @@
 				"bottom-(--drc-anchor)": position === "bottom",
 			},
 			containerClass,
-		]}
+		)}
 		style="
-			--drc-anchor: {anchor}px;
+			--drc-anchor: {measuredOffset}px;
 			height: {overlayHeight}px;
 			opacity: {opacity};
 		"
