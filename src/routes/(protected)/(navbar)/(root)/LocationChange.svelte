@@ -41,13 +41,10 @@
 				}
 			: undefined;
 		geoMapPickerOpen = true;
+		if (pinPos) locationChooser.centerAt(pinPos);
 	}
 
 	let locationChooser: LocationChooser;
-
-	$effect(() => {
-		if (geoMapPickerOpen && pinPos) locationChooser.centerAt(pinPos);
-	});
 </script>
 
 <Button
