@@ -144,7 +144,9 @@ body {
 	--selection-bar-height: 4.75rem;
 	--content-pb: calc(var(--nav-height) + var(--safe-area-bottom));
 	--screen-safe: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-	--screen-scroll: calc(100dvh - var(--safe-area-top) - var(--content-pb));
+	/* Runs under the bottom navbar; pair with -mb-(--content-pb) and
+	   pb-nav-clear so content scrolls beneath the navbar's blur. */
+	--screen-nav: calc(100dvh - var(--safe-area-top));
 	text-rendering: geometricPrecision;
 	image-rendering: optimizeQuality;
 	shape-rendering: geometricPrecision;
