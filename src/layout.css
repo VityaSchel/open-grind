@@ -291,6 +291,10 @@ a {
 	max-height: min(70vh, 500px);
 }
 
+[data-sonner-toaster] {
+	font-family: var(--font-sans) !important;
+}
+
 .toast[data-styled="true"] {
 	background-color: var(--color-accent) !important;
 	color: var(--popover) !important;
