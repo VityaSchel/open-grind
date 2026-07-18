@@ -27,14 +27,11 @@
 		>
 			<Item.Media class="translate-y-none size-14 rounded-full bg-neutral-700">
 				{#await myProfilePhotos then photos}
-					{@const mainPhoto = photos[0]}
-					{#if mainPhoto}
-						<UserAvatar
-							mediaHash={mainPhoto?.mediaHash ?? null}
-							class="size-full *:rounded-full"
-							size="lg"
-						/>
-					{/if}
+					<UserAvatar
+						mediaHash={photos[0]?.mediaHash ?? null}
+						class="size-full *:rounded-full"
+						size="lg"
+					/>
 				{:catch}
 					<BrokenUserAvatar />
 				{/await}
