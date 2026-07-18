@@ -16,6 +16,7 @@
 		applyBackGestureHandler,
 		registerAndroidBackButtonListener,
 	} from "$lib/platform/android-native-bridge";
+	import { blockZoom } from "$lib/platform/block-zoom";
 
 	onMount(() => {
 		if (env.PUBLIC_TEST_INSETS) {
@@ -36,6 +37,7 @@
 		}
 		applyAndroidInsets();
 		applyBackGestureHandler();
+		const releaseZoomBlock = blockZoom();
 		if (isTauri() && platform() === "android") {
 			void registerAndroidBackButtonListener().catch((error) => {
 				console.error("Failed to register back button listener", error);
@@ -44,6 +46,7 @@
 		void hydratePreferences().catch((error) => {
 			console.error("Failed to hydrate preferences", error);
 		});
+		return releaseZoomBlock;
 	});
 
 	import { env } from "$env/dynamic/public";
