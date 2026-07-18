@@ -13,6 +13,19 @@
 	const geohash = $derived(getGeohashSnapshot());
 
 	let gridContainer: HTMLElement | null = $state(null);
+
+	let scrollRestored = false;
+	$effect(() => {
+		if (
+			!scrollRestored &&
+			gridContainer &&
+			!gridState.loading &&
+			gridState.error === null
+		) {
+			scrollRestored = true;
+			gridContainer.scrollTop = gridState.scrollY;
+		}
+	});
 </script>
 
 <svelte:head>

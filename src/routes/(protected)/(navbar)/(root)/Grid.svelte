@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { afterNavigate, beforeNavigate } from "$app/navigation";
-
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import { gridState } from "$lib/grid/grid-state.svelte";
@@ -32,25 +30,6 @@
 	export function refresh() {
 		gridState.refresh();
 	}
-
-	beforeNavigate(() => {
-		gridState.scrollY = window.scrollY;
-	});
-
-	afterNavigate((navigation) => {
-		if (navigation.type === "popstate") return;
-		if (!gridState.loading && gridState.error === null) {
-			window.scrollTo({ top: gridState.scrollY, behavior: "instant" });
-		}
-	});
-
-	let scrolled = $state(false);
-	$effect(() => {
-		if (!scrolled && !gridState.loading && gridState.errorMessage === null) {
-			scrolled = true;
-			window.scrollTo({ top: gridState.scrollY, behavior: "instant" });
-		}
-	});
 
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(

@@ -1,8 +1,14 @@
+<script module lang="ts">
+	let savedScrollY = 0;
+</script>
+
 <script lang="ts">
-	import { onDestroy, untrack } from "svelte";
+	import { beforeNavigate } from "$app/navigation";
+	import { onDestroy, tick, untrack } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
@@ -19,12 +25,26 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
+	beforeNavigate(() => {
+		if (container) savedScrollY = container.scrollTop;
+	});
+
+	let scrollRestored = false;
+	$effect(() => {
+		if (scrollRestored || !container || taps.loading || taps.error) return;
+		scrollRestored = true;
+		const el = container;
+		const target = savedScrollY;
+		// Restoring scroll against the empty skeleton frame would clamp the target to 0
+		if (target > 0) void tick().then(() => (el.scrollTop = target));
+	});
+
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) taps.loadMore();
 			},
-			{ rootMargin: "400px" },
+			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
 		);
 		observer.observe(node);
 		return {

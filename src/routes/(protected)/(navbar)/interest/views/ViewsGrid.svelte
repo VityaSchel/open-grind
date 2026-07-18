@@ -1,31 +1,45 @@
+<script module lang="ts">
+	let savedScrollY = 0;
+</script>
+
 <script lang="ts">
-	import { onDestroy, untrack } from "svelte";
+	import { beforeNavigate } from "$app/navigation";
+	import { onDestroy, tick, untrack } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";
 	import ViewedProfile from "./ViewedProfile.svelte";
 	import { ViewsState } from "./views-state.svelte";
 
-	let {
-		class: className,
-	}: {
-		class?: import("svelte/elements").ClassValue;
-	} = $props();
-
 	const views = untrack(() => new ViewsState());
 	onDestroy(() => views.destroy());
 
 	let container: HTMLDivElement | null = $state(null);
+
+	beforeNavigate(() => {
+		if (container) savedScrollY = container.scrollTop;
+	});
+
+	let scrollRestored = false;
+	$effect(() => {
+		if (scrollRestored || !container || views.loading || views.error) return;
+		scrollRestored = true;
+		const el = container;
+		const target = savedScrollY;
+		// Restoring scroll against the empty skeleton frame would clamp the target to 0
+		if (target > 0) void tick().then(() => (el.scrollTop = target));
+	});
 
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0].isIntersecting) views.loadMore();
 			},
-			{ rootMargin: "400px" },
+			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
 		);
 		observer.observe(node);
 		return {
@@ -36,46 +50,52 @@
 	}
 </script>
 
-<div
-	bind:this={container}
-	class={["@container/photo-grid flex flex-1 flex-col gap-3", className]}
->
-	{#if views.loading}
-		<div class="photo-grid">
-			{#each Array(24)}
-				<Skeleton class="aspect-square rounded-none" />
-			{/each}
+<div class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
+	<div
+		bind:this={container}
+		class="h-full w-full overflow-auto overscroll-contain"
+	>
+		<div
+			class="@container/photo-grid mx-auto flex min-h-overscrollable w-full max-w-120 flex-col gap-3 px-4 pt-16 pb-nav-clear"
+		>
+			{#if views.loading}
+				<div class="photo-grid">
+					{#each Array(24)}
+						<Skeleton class="aspect-square rounded-none" />
+					{/each}
+				</div>
+			{:else if views.error}
+				<div class="flex flex-1">
+					<ApiErrorDisplay
+						error={views.error}
+						onRetry={() => views.retry()}
+						class="m-auto"
+					/>
+				</div>
+			{:else if views.views.length === 0}
+				<EmptyViewsGrid />
+			{:else}
+				<div class="photo-grid">
+					{#each views.views as entry (entry.key)}
+						{#if entry.type === "profile"}
+							<ViewedProfile view={entry.profile} />
+						{:else}
+							<ViewedPreview preview={entry.preview} />
+						{/if}
+					{/each}
+				</div>
+				{#if views.hasMore}
+					<div class="h-0" use:observeSentinel></div>
+				{/if}
+			{/if}
 		</div>
-	{:else if views.error}
-		<div class="flex flex-1">
-			<ApiErrorDisplay
-				error={views.error}
-				onRetry={() => views.retry()}
-				class="m-auto"
-			/>
-		</div>
-	{:else if views.views.length === 0}
-		<EmptyViewsGrid />
-	{:else}
+	</div>
+	{#if !views.loading && !views.error}
 		<DataRefreshControl
 			{container}
-			windowScroll
 			updating={views.refreshing}
 			position="top"
-			class="mb-3"
-			onclick={() => void views.refresh()}
+			onrefresh={() => void views.refresh()}
 		/>
-		<div class="photo-grid">
-			{#each views.views as entry (entry.key)}
-				{#if entry.type === "profile"}
-					<ViewedProfile view={entry.profile} />
-				{:else}
-					<ViewedPreview preview={entry.preview} />
-				{/if}
-			{/each}
-		</div>
-		{#if views.hasMore}
-			<div class="h-0" use:observeSentinel></div>
-		{/if}
 	{/if}
 </div>
