@@ -88,7 +88,7 @@
 				<ol class="ms-5 list-decimal">
 					<li>
 						Install <Link
-							href="https://git.opengrind.org/open-grind/open-grind-google-oauth-android-app"
+							href="https://git.opengrind.org/open-grind/open-grind-google-oauth-android-app/releases#install"
 							class="font-medium text-primary underline underline-offset-2"
 						>
 							Open Grind companion app
