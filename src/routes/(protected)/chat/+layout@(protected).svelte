@@ -90,8 +90,8 @@
 				{@render children?.()}
 			</div>
 		{/if}
-	{:else}
-		<ConversationsList class="split:hidden" />
+	{:else if mobile.current}
+		<ConversationsList />
 	{/if}
 </main>
 {#if !mobile.current || page.route.id !== "/(protected)/chat/[conversationId]"}
