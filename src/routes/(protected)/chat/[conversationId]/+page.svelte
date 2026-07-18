@@ -60,7 +60,7 @@
 </script>
 
 <ChatNavBar />
-<Card.Content class="flex min-h-0 flex-1 flex-col p-0">
+<Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
 	<ConversationMessages />
 	<MessageComposer
 		onSend={(message: Message) => conversationState.send(message)}
