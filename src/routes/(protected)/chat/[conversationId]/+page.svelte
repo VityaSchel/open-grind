@@ -5,10 +5,13 @@
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import type { Message } from "$lib/model/messaging/messages";
-	import ChatNavBar from "./ChatNavBar.svelte";
-	import { ConversationState } from "./conversation-state.svelte";
+	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
+	import {
+		ConversationState,
+		setConversationState,
+	} from "./conversation-state.svelte";
 	import MessageComposer from "./message-composer/MessageComposer.svelte";
-	import MessagesList from "./MessagesList.svelte";
+	import ConversationMessages from "./messages/ConversationMessages.svelte";
 
 	let { data }: import("./$types").PageProps = $props();
 
@@ -52,11 +55,13 @@
 
 		return () => state.destroy();
 	});
+
+	setConversationState(() => conversationState);
 </script>
 
-<ChatNavBar {conversationState} />
-<Card.Content class="flex flex-col flex-1 pb-2 px-0 min-h-0">
-	<MessagesList {conversationState} />
+<ChatNavBar />
+<Card.Content class="flex min-h-0 flex-1 flex-col p-0">
+	<ConversationMessages />
 	<MessageComposer
 		onSend={(message: Message) => conversationState.send(message)}
 		disabled={conversationState.loading || conversationState.error !== null}

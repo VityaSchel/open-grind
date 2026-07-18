@@ -37,17 +37,19 @@
 </script>
 
 <form
-	class="relative mx-2 min-h-9.5 min-w-0 shrink-0"
+	class="absolute bottom-0 z-20 min-h-9.5 w-full min-w-0 shrink-0 px-2 pb-2"
 	onsubmit={(event) => {
 		event.preventDefault();
 		onSubmit().catch((error) => console.error(error));
 	}}
 >
-	<MessageTextInput bind:value={textContent} />
-	{#if textContent === ""}
-		<ComposerAttachments />
-		<ComposerVoiceMessage />
-	{:else}
-		<ComposerSubmitButton />
-	{/if}
+	<div class="relative h-full w-full rounded-full bg-popover">
+		<MessageTextInput bind:value={textContent} />
+		{#if textContent === ""}
+			<ComposerAttachments />
+			<ComposerVoiceMessage />
+		{:else}
+			<ComposerSubmitButton />
+		{/if}
+	</div>
 </form>

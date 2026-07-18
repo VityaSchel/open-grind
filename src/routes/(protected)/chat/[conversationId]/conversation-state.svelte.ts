@@ -1,3 +1,5 @@
+import { createContext } from "svelte";
+
 import { ApiError } from "$lib/api";
 import { showErrorToast } from "$lib/api/error";
 import { markConversationAsRead } from "$lib/api/messaging/conversations";
@@ -22,11 +24,11 @@ export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
 };
 
-type Profile = Awaited<ReturnType<typeof getConversation>>["profile"];
+export type ConversationProfile = Awaited<ReturnType<typeof getConversation>>["profile"];
 
 export class ConversationState {
 	messages: OptimisticMessage[] = $state([]);
-	profile: Profile | null = $state(null);
+	profile: ConversationProfile | null = $state(null);
 	pageKey: string | null = $state(null);
 	loading = $state(true);
 	loadingMore = $state(false);
@@ -519,3 +521,6 @@ function removeDuplicateMessages(
 		})
 		.toSorted((a, b) => b.timestamp - a.timestamp);
 }
+
+export const [getConversationState, setConversationState] =
+	createContext<() => ConversationState>();

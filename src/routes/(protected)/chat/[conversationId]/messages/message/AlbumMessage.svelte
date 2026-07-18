@@ -7,7 +7,7 @@
 	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/messaging/albums";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
-	import LockedMedia from "../LockedMedia.svelte";
+	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: AlbumMessage["body"] } = $props();

@@ -10,7 +10,7 @@
 		expiringImageMessageSchema,
 	} from "$lib/model/messaging/messages";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-	import LockedMedia from "../LockedMedia.svelte";
+	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let {
