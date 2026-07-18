@@ -1,4 +1,4 @@
-import { hashString } from "./random";
+import { hashString } from "$lib/util/random";
 
 export const demoBaseAvatarUrl =
 	"https://api.dicebear.com/10.x/lorelei/svg?beardProbability=7&rotate=0&hairVariant=variant01:1,variant02:1,variant03:1,variant04:1,variant05:1,variant06:1,variant07:1,variant08:1,variant09:1,variant10:0.5,variant11:1,variant12:1,variant17:0.5,variant18:0.5,variant20:1,variant22:1,variant25:1,variant27:1,variant28:1,variant29:0.5,variant31:0.5,variant32:0.5,variant33:0.5,variant34:1,variant35:0.5,variant36:1,variant37:0.5,variant39:1,variant43:1,variant44:1,variant47:1&eyesVariant=variant01,variant02,variant03,variant04,variant05,variant06,variant07,variant08,variant09,variant10,variant12,variant13,variant14,variant15,variant16,variant17,variant18,variant19,variant20,variant21,variant22,variant24";
