@@ -136,7 +136,7 @@
 			if (open) contextMenuUsed = true;
 		}}
 	>
-		<ContextMenu.Trigger>
+		<ContextMenu.Trigger class="rounded-2xl">
 			{@render row()}
 		</ContextMenu.Trigger>
 		{#if contextMenuUsed}
