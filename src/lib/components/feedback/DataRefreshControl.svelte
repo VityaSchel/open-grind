@@ -1,339 +1,388 @@
 <script lang="ts">
 	import { tick } from "svelte";
-	import { expoOut } from "svelte/easing";
+	import { cubicOut, expoOut } from "svelte/easing";
 	import { Tween } from "svelte/motion";
-	import { fade, type TransitionConfig } from "svelte/transition";
+	import { scale, type TransitionConfig } from "svelte/transition";
 	import type { ClassValue } from "svelte/elements";
 
 	import { Button } from "$lib/components/ui/button";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { MAX_SLINGSHOT_TENSION, slingshotTension } from "./refresh/disc-math";
+	import { attachOverscrollPull } from "./refresh/overscroll-adapter";
+	import { PullModel } from "./refresh/pull-model.svelte";
+	import RefreshDisc from "./refresh/RefreshDisc.svelte";
+	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
+	import { attachTouchPull } from "./refresh/touch-adapter";
 
 	let {
 		updating,
 		position,
 		container,
-		windowScroll = false,
-		offset = 0,
-		class: className,
+		hintOffset = 0,
 		containerClass,
-		onclick,
+		onrefresh,
 	}: {
 		updating?: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
-		windowScroll?: boolean;
-		offset?: number;
-		class: ClassValue;
+		hintOffset?: number;
 		containerClass?: ClassValue;
-		onclick?: () => void;
+		onrefresh?: () => void;
 	} = $props();
 
-	const buttonHeight = 32; // px
-	const concealSlack = 8; // px
-	const stickyScrolledOffset = 16; // px
-	const boundarySettleDelay = 50; // ms
-	const idleDelay = 200; // ms
-	const labelTransition: TransitionConfig = {
-		duration: 200,
-		easing: expoOut,
-	};
-	const revealTransition: TransitionConfig = {
+	const BUTTON_HEIGHT_PX = 32;
+	const REST_GAP_PX = 12;
+	const REST_HEIGHT_PX = BUTTON_HEIGHT_PX + REST_GAP_PX * 2;
+	const ARM_PX = 18;
+	const BAND_DETECT_PX = 2;
+	const BOUNDARY_SETTLE_MS = 50;
+	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
+	const REVEAL_TRANSITION: TransitionConfig = {
 		duration: 250,
 		easing: expoOut,
 	};
 
-	let mounted = $state(false);
-	let realHeight = $state(0);
-	let gap = $state(0);
+	const mounted = $derived(!!container);
 	let revealed = $state(false);
-	let scrolling = $state(false);
-	let scrolled = $state(false);
 	let distance = $state(Infinity);
 	let measuredOffset = $state(0);
 
-	let suppressRevealUntilIdle = false;
+	// Mouse pointer-only
+	let pointerOnly = $state(false);
+	let sawBand = false;
+	let touchSeen = false;
 
-	const progress = new Tween(0, revealTransition);
+	const reveal = new Tween(0, REVEAL_TRANSITION);
+	const model = new PullModel();
+	model.space = ARM_PX;
 
-	const space = $derived(realHeight + gap);
-	const distanceBeyondButton = $derived(distance - (revealed ? space : 0));
+	const busy = $derived((updating ?? false) || model.phase === "refreshing");
 
-	const effectiveOffset = $derived(windowScroll ? measuredOffset + offset : 0);
-	const verticalOffsetMax = $derived.by(() => {
-		let value = realHeight;
-		if (windowScroll) {
-			value += effectiveOffset;
-		} else if (container) {
-			const paddingStyle =
-				window.getComputedStyle(container)[
-					position === "top" ? "paddingTop" : "paddingBottom"
-				];
-			value += parseInt(paddingStyle, 10);
+	$effect(() => {
+		model.onTrigger = () => onrefresh?.();
+	});
+	$effect(() => {
+		model.setUpdating(updating ?? false);
+	});
+	model.getBaseline = () => (revealed ? REST_HEIGHT_PX : 0);
+
+	type IndicatorType = "disc" | "hint" | "button";
+	const activeFace = $derived.by((): IndicatorType | null => {
+		if (busy) return "disc";
+		if (model.gestureActive) return model.source === "touch" ? "disc" : "hint";
+		if (revealed) return "button";
+		return null;
+	});
+	let lingerFace: IndicatorType | null = $state(null);
+	$effect(() => {
+		if (activeFace) lingerFace = activeFace;
+	});
+
+	const DISC_SIZE = 40;
+	const DISC_SHADOW = 8;
+	const DISC_START = -(DISC_SIZE + DISC_SHADOW);
+	const DISC_REST = 10;
+	const DISC_TRAVEL = DISC_REST - DISC_START;
+	const DISC_WINDOW = DISC_REST + DISC_TRAVEL + DISC_SIZE + DISC_SHADOW;
+	const discTop = new Tween(DISC_START, { duration: 250, easing: cubicOut });
+	let discOutro = $state(false);
+
+	function discDragTop(displayPx: number): number {
+		const drag = Math.min(1, displayPx / ARM_PX);
+		const tension = slingshotTension(displayPx / ARM_PX);
+		return DISC_START + DISC_TRAVEL * (drag + tension / MAX_SLINGSHOT_TENSION);
+	}
+
+	const discShown = $derived.by(() => {
+		if (activeFace) return activeFace === "disc";
+		return (
+			lingerFace === "disc" &&
+			model.settledOutcome === "canceled" &&
+			discTop.current > DISC_START + 0.5
+		);
+	});
+	const hintShown = $derived.by(() => {
+		if (activeFace) return activeFace === "hint";
+		return (
+			lingerFace === "hint" &&
+			model.settledOutcome === "canceled" &&
+			reveal.current > 0
+		);
+	});
+	const buttonShown = $derived.by(() => {
+		if (activeFace) return activeFace === "button";
+		return lingerFace === "button" && reveal.current > 0;
+	});
+
+	const discSpinning = $derived(
+		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
+	);
+	let lastDragProgress = $state(0);
+	$effect(() => {
+		if (model.gestureActive && model.source === "touch")
+			lastDragProgress = model.displayPx / ARM_PX;
+	});
+	$effect(() => {
+		if (busy && model.settledFrom !== "touch") lastDragProgress = 0;
+	});
+	const discProgress = $derived(
+		model.gestureActive && model.source === "touch"
+			? model.displayPx / ARM_PX
+			: lastDragProgress,
+	);
+
+	$effect(() => {
+		if (model.gestureActive && model.source === "touch") {
+			void discTop.set(discDragTop(model.displayPx), { duration: 0 });
+		} else if (busy) {
+			void discTop.set(DISC_REST);
+		} else if (discShown) {
+			void discTop.set(DISC_START);
 		}
-		return -value;
 	});
-	const stickyMargin = $derived(
-		effectiveOffset + (scrolled ? stickyScrolledOffset : 0),
-	);
-	const verticalOffset = Tween.of(
-		() => (updating ? stickyMargin : verticalOffsetMax),
-		labelTransition,
-	);
 
-	const scrollEl = $derived.by(() => {
-		if (!windowScroll) return container;
-		if (typeof document === "undefined") return null;
-		return document.scrollingElement ?? document.documentElement;
+	const discVisible = $derived(discShown || discOutro);
+	const overlayHeight = $derived(discVisible ? DISC_WINDOW : reveal.current);
+	const opacity = $derived.by(() => {
+		if (discVisible) {
+			return 1;
+		} else if (hintShown) {
+			return Math.min(1, Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2));
+		} else {
+			return Math.min(
+				1,
+				Math.max(0, (reveal.current / REST_HEIGHT_PX) * 1.6 - 0.2),
+			);
+		}
 	});
+	const anchor = $derived(measuredOffset);
+
+	const scrollEl = $derived(container ?? null);
 	const scrollTop = () => scrollEl?.scrollTop ?? 0;
 	const maxScrollY = () =>
 		scrollEl ? scrollEl.scrollHeight - scrollEl.clientHeight : 0;
 	const scrollToY = (top: number, behavior: ScrollBehavior) => {
-		if (windowScroll) window.scroll({ top, behavior });
-		else container?.scroll({ top, behavior });
+		container?.scroll({ top, behavior });
 	};
-	const scrollByY = (delta: number) => {
-		if (scrollEl) scrollEl.scrollTop += delta;
-	};
-	const occupiedAt = (p: number) =>
-		Math.round(p * realHeight) + Math.round(-gap * (1 - p)) + gap;
+	const overscrollPx = () =>
+		position === "top" ? -scrollTop() : scrollTop() - maxScrollY();
+	const boundaryDistance = () =>
+		position === "top" ? scrollTop() : maxScrollY() - scrollTop();
 
 	export function scrollToRest(behavior: ScrollBehavior = "instant") {
 		if (!scrollEl) return;
-		const rest = occupiedAt(progress.current);
-		const top = position === "top" ? rest : maxScrollY() - rest;
-		if (Math.abs(scrollTop() - top) >= 1) suppressRevealUntilIdle = true;
-		scrollToY(top, behavior);
+		const top = position === "top" ? 0 : maxScrollY();
+		if (Math.abs(scrollTop() - top) >= 1) scrollToY(top, behavior);
 	}
 
-	// Reveal while updating; conceal once idle and scrolled clear of the button.
 	$effect(() => {
-		if (updating && !revealed) {
-			revealed = true;
-		} else if (
-			!updating &&
-			revealed &&
-			!scrolling &&
-			verticalOffset.current === verticalOffsetMax &&
-			distanceBeyondButton > concealSlack
-		) {
-			revealed = false;
+		if (model.gestureActive && model.source === "overscroll") {
+			void reveal.set(model.displayPx, { duration: 0 });
+		} else if (!model.gestureActive) {
+			void reveal.set(busy || revealed ? REST_HEIGHT_PX : 0);
 		}
 	});
 
-	$effect(() => {
-		if (revealed) {
-			void progress.set(1);
-		} else if (progress.current > 0) {
-			void progress.set(0, { duration: 0 });
-		}
-	});
+	const shouldRevealRestingButton = () =>
+		pointerOnly &&
+		!revealed &&
+		!busy &&
+		!model.gestureActive &&
+		distance < AT_BOUNDARY_PX;
 
-	// Keep the top-anchored scroll position stable as the control grows/shrinks.
-	let compensated = 0;
+	const shouldConcealRestingButton = () =>
+		revealed && !model.gestureActive && distance >= AT_BOUNDARY_PX;
 	$effect(() => {
-		const occupied = occupiedAt(progress.current);
-		const delta = occupied - compensated;
-		compensated = occupied;
-		if (delta === 0 || position !== "top") return;
-		scrollByY(delta);
-	});
-
-	// Initialize measurements and resting position once the container exists.
-	$effect(() => {
-		if (!container) {
-			mounted = false;
-			return;
-		}
-		mounted = true;
-		gap = parseInt(window.getComputedStyle(container).gap, 10) || 0;
-		const anchorEl = windowScroll
-			? scrollEl instanceof HTMLElement
-				? scrollEl
-				: null
-			: container;
-		const previousAnchor = anchorEl?.style.overflowAnchor ?? "";
-		if (anchorEl) anchorEl.style.overflowAnchor = "none";
-		if (!windowScroll) void tick().then(() => scrollToRest());
-		return () => {
-			if (anchorEl) anchorEl.style.overflowAnchor = previousAnchor;
-		};
+		if (shouldRevealRestingButton()) revealed = true;
 	});
 
 	$effect(() => {
-		if (!windowScroll || !container || position !== "top") return;
-		const el = container;
+		if (position !== "top" || !container) return;
 		const measure = () => {
 			const header = document.querySelector("[data-fixed-header]");
-			measuredOffset = header
-				? header.getBoundingClientRect().bottom
-				: el.getBoundingClientRect().top + scrollTop();
+			if (!header) {
+				measuredOffset = 0;
+				return;
+			}
+			const headerBottom = header.getBoundingClientRect().bottom;
+			measuredOffset = Math.max(
+				0,
+				headerBottom - container.getBoundingClientRect().top,
+			);
 		};
 		void tick().then(measure);
 		window.addEventListener("resize", measure);
 		return () => window.removeEventListener("resize", measure);
 	});
 
-	// Track scroll/wheel activity to reveal/conceal the control.
 	$effect(() => {
-		if (!container || !scrollEl) return;
-		const target: EventTarget = windowScroll ? window : container;
+		const target = container;
+		if (!target) return;
 
-		const updateDistance = () => {
-			distance = position === "top" ? scrollTop() : maxScrollY() - scrollTop();
-		};
-
-		let idleTimer: ReturnType<typeof setTimeout> | undefined;
-		const onIdle = () => {
-			scrolling = false;
-			suppressRevealUntilIdle = false;
-		};
-		const markActivity = () => {
-			scrolling = true;
-			clearTimeout(idleTimer);
-			idleTimer = setTimeout(onIdle, idleDelay);
-		};
-
-		let boundaryRevealTimer: ReturnType<typeof setTimeout> | undefined;
-		const cancelBoundaryReveal = () => {
-			clearTimeout(boundaryRevealTimer);
-			boundaryRevealTimer = undefined;
-		};
-		const armBoundaryReveal = () => {
-			cancelBoundaryReveal();
-			if (Math.abs(distance) >= 1 || revealed) return;
-			boundaryRevealTimer = setTimeout(() => {
-				boundaryRevealTimer = undefined;
-				if (Math.abs(distance) < 1 && !revealed) revealed = true;
-			}, boundarySettleDelay);
+		let mouseProbe: ReturnType<typeof setTimeout> | undefined;
+		const onWheel = (event: WheelEvent) => {
+			if (touchSeen || sawBand || pointerOnly) return;
+			const toward = position === "top" ? -event.deltaY : event.deltaY;
+			if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
+			clearTimeout(mouseProbe);
+			mouseProbe = setTimeout(() => {
+				if (!sawBand && !touchSeen) pointerOnly = true;
+			}, MOUSE_PROBE_MS);
 		};
 
 		const onScroll = () => {
-			scrolled =
-				position === "top" ? scrollTop() > 0 : scrollTop() < maxScrollY() - 1;
-			markActivity();
-			updateDistance();
-			if (revealed || suppressRevealUntilIdle) {
-				cancelBoundaryReveal();
-				return;
+			if (overscrollPx() > BAND_DETECT_PX) {
+				sawBand = true;
+				pointerOnly = false;
+				revealed = false;
 			}
-			if (Math.abs(distance) < 1) {
-				armBoundaryReveal();
-			} else {
-				cancelBoundaryReveal();
+			if (
+				!model.gestureActive &&
+				!busy &&
+				model.settledFrom === "overscroll" &&
+				model.settledOutcome === "canceled" &&
+				reveal.current > 0
+			) {
+				void reveal.set(Math.max(0, overscrollPx()), { duration: 0 });
 			}
-		};
-		const onScrollEnd = () => {
-			clearTimeout(idleTimer);
-			onIdle();
-			updateDistance();
-		};
-		const onWheel = (e: WheelEvent) => {
-			markActivity();
-			const towardBoundary = position === "top" ? e.deltaY < 0 : e.deltaY > 0;
-			if (towardBoundary) {
-				armBoundaryReveal();
-			} else {
-				cancelBoundaryReveal();
-			}
+			distance = boundaryDistance();
+			if (shouldRevealRestingButton()) revealed = true;
+			else if (shouldConcealRestingButton()) revealed = false;
 		};
 
-		const resizeObserver = new ResizeObserver(updateDistance);
-		const observe = () => {
-			resizeObserver.disconnect();
-			resizeObserver.observe(container);
-			for (const child of container.children) {
-				resizeObserver.observe(child);
-			}
-		};
-		observe();
-
-		const mutationObserver = new MutationObserver(() => {
-			observe();
-			updateDistance();
-		});
-		mutationObserver.observe(container, { childList: true });
-
-		target.addEventListener("scroll", onScroll);
-		target.addEventListener("scrollend", onScrollEnd);
+		target.addEventListener("scroll", onScroll, { passive: true });
 		target.addEventListener("wheel", onWheel as EventListener, {
 			passive: true,
 		});
+		distance = boundaryDistance();
 		return () => {
 			target.removeEventListener("scroll", onScroll);
-			target.removeEventListener("scrollend", onScrollEnd);
 			target.removeEventListener("wheel", onWheel as EventListener);
-			clearTimeout(idleTimer);
-			clearTimeout(boundaryRevealTimer);
-			resizeObserver.disconnect();
-			mutationObserver.disconnect();
+			clearTimeout(mouseProbe);
 		};
+	});
+
+	$effect(() => {
+		const listenTarget = container;
+		if (!listenTarget) return;
+		const scrollRoot = () => container ?? null;
+		const noteTouch = () => {
+			touchSeen = true;
+			sawBand = true;
+			pointerOnly = false;
+			// Hide it so the next touch pull starts from zero. A baseline bigger
+			// than space * OVERSHOOT freezes the drag.
+			revealed = false;
+		};
+		listenTarget.addEventListener("touchmove", noteTouch, { passive: true });
+		const detach = [
+			attachTouchPull(model, {
+				listenTarget,
+				scrollRoot,
+				boundaryDistance,
+				position,
+			}),
+			attachOverscrollPull(model, { listenTarget, overscrollPx }),
+		];
+		return () => {
+			listenTarget.removeEventListener("touchmove", noteTouch);
+			detach.forEach((cleanup) => cleanup());
+		};
+	});
+
+	$effect(() => {
+		if (model.phase !== "refreshing" || updating) return;
+		const timer = setTimeout(
+			() => model.finishRefresh(),
+			model.remainingRefreshMs(),
+		);
+		return () => clearTimeout(timer);
 	});
 </script>
 
 {#if mounted}
 	<div
+		data-refresh-phase={model.phase}
+		data-refresh-source={model.source}
 		class={[
-			"flex flex-col overflow-clip shrink-0 h-(--drc-height) opacity-(--drc-opacity) sticky",
-			{ "justify-end": position === "top" },
+			"pointer-events-none z-10",
+			// hintOffset can push the hint past the band edge, so don't clip it
+			{ "overflow-clip": !hintShown },
+			"absolute inset-x-0",
 			{
-				"mt-(--drc-margin)": position === "bottom",
-				"mb-(--drc-margin)": position === "top",
-
-				"top-(--drc-offset)": position === "top",
-				"bottom-(--drc-offset)": position === "bottom",
+				"top-(--drc-anchor)": position === "top",
+				"bottom-(--drc-anchor)": position === "bottom",
 			},
 			containerClass,
 		]}
 		style="
-			--drc-progress: {progress.current};
-			--drc-height: round(calc(var(--drc-progress) * {realHeight}px), 1px);
-			--drc-margin: round(calc({-gap}px * (1 - var(--drc-progress))), 1px);
-			--drc-opacity: max(0, calc(var(--drc-progress) * 3 - 2));
-
-			--drc-offset: {verticalOffset.current}px;
+			--drc-anchor: {anchor}px;
+			height: {overlayHeight}px;
+			opacity: {opacity};
 		"
 	>
-		{@render button()}
-	</div>
-{:else}
-	<div
-		class={["absolute flex invisible", containerClass]}
-		bind:offsetHeight={realHeight}
-	>
-		{@render button()}
+		{#if discShown}
+			<div
+				class={[
+					"absolute left-1/2",
+					{
+						"top-0": position === "top",
+						"bottom-0": position === "bottom",
+					},
+				]}
+				style="translate: -50% {position === 'top'
+					? discTop.current
+					: -discTop.current}px;"
+				out:scale={{ duration: 150, easing: cubicOut }}
+				onoutrostart={() => (discOutro = true)}
+				onoutroend={() => {
+					discOutro = false;
+					void discTop.set(DISC_START, { duration: 0 });
+				}}
+			>
+				<RefreshDisc progress={discProgress} spinning={discSpinning} />
+			</div>
+		{:else if hintShown}
+			<span
+				class={[
+					"absolute left-1/2 text-xs whitespace-nowrap text-muted-foreground",
+					{
+						"bottom-1": position === "top",
+						"top-1": position === "bottom",
+					},
+				]}
+				style="translate: -50% {position === 'top'
+					? hintOffset
+					: -hintOffset}px;"
+			>
+				{#if model.phase === "armed"}
+					Release to refresh
+				{:else}
+					Pull to refresh
+				{/if}
+			</span>
+		{:else if buttonShown}
+			<div
+				class={[
+					"absolute left-1/2 -translate-x-1/2",
+					{
+						"bottom-3": position === "top",
+						"top-3": position === "bottom",
+					},
+				]}
+			>
+				{@render button()}
+			</div>
+		{/if}
 	</div>
 {/if}
 
 {#snippet button()}
 	<Button
 		size="sm"
-		variant={updating ? "ghost" : "default"}
-		disabled={updating}
-		class={[
-			"relative self-center transition-colors duration-(--duration) w-25 h-(--height) backdrop-blur-2xl",
-			{ "disabled:opacity-100 bg-muted/50": updating },
-			className,
-		]}
-		style="
-			--duration: {labelTransition.duration}ms;
-			--height: {buttonHeight}px;
-		"
-		{onclick}
+		class="pointer-events-auto h-(--height) w-25 backdrop-blur-2xl"
+		style="--height: {BUTTON_HEIGHT_PX}px;"
+		onclick={() => model.clickTrigger()}
 	>
-		{#if updating}
-			<Skeleton class="size-full absolute bg-input" />
-			<span class="label" transition:fade={labelTransition}>Updating...</span>
-		{:else}
-			<span class="label" transition:fade={labelTransition}>Refresh</span>
-		{/if}
+		Refresh
 	</Button>
 {/snippet}
-
-<style lang="postcss">
-	@reference "$layout";
-
-	.label {
-		@apply absolute z-10 top-1/2 left-1/2 -translate-1/2;
-	}
-</style>

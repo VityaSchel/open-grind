@@ -24,27 +24,28 @@
 			<LocationChooser />
 		</main>
 	{:else}
-		<main
-			class="flex min-h-[calc(var(--screen-scroll)+3.5rem)] flex-col gap-4 p-4"
-		>
-			<TopBar />
+		<main class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
 			<div
-				class="@container/photo-grid flex flex-col"
+				class="h-full w-full overflow-auto overscroll-contain"
 				bind:this={gridContainer}
+				onscroll={() => (gridState.scrollY = gridContainer?.scrollTop ?? 0)}
 			>
-				{#if !gridState.loading && !gridState.error}
-					<DataRefreshControl
-						container={gridContainer}
-						windowScroll
-						updating={gridState.refreshing}
-						position="top"
-						class="mb-3"
-						containerClass="z-1"
-						onclick={() => void gridState.reload()}
-					/>
-				{/if}
-				<Grid {geohash} />
+				<div
+					class="@container/photo-grid flex min-h-overscrollable flex-col gap-4 px-4 pt-4 pb-nav-clear"
+				>
+					<TopBar />
+					<Grid {geohash} />
+				</div>
 			</div>
+			{#if !gridState.loading && !gridState.error}
+				<DataRefreshControl
+					container={gridContainer}
+					updating={gridState.refreshing}
+					position="top"
+					containerClass="z-1"
+					onrefresh={() => void gridState.reload()}
+				/>
+			{/if}
 		</main>
 	{/if}
 {/await}

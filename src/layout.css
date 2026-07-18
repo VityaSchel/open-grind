@@ -13,7 +13,6 @@
 	--card-foreground: oklch(0.985 0 0);
 	--popover: oklch(0.205 0 0);
 	--popover-foreground: oklch(0.985 0 0);
-	/* --primary: oklch(0.795 0.184 86.047); */
 	--primary: oklch(86.521% 0.17664 90.372);
 	--primary-foreground: oklch(0.421 0.095 57.708);
 	--secondary: oklch(0.274 0.006 286.033);
@@ -137,6 +136,8 @@
 :root,
 body {
 	min-height: 100dvh;
+	/* No app-level rubber-banding; scroll containers opt back in via
+	   overscroll-behavior: contain for pull-to-refresh. */
 	overscroll-behavior: none;
 	user-select: none;
 	-webkit-user-select: none;
@@ -291,6 +292,11 @@ a {
 }
 @utility max-h-photo {
 	max-height: min(70vh, 500px);
+}
+/* 1px past full height keeps a scroll container technically scrollable, so
+   a native rubber band (and with it pull-to-refresh) works on short content */
+@utility min-h-overscrollable {
+	min-height: calc(100% + 1px);
 }
 
 [data-sonner-toaster] {

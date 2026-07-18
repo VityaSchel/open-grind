@@ -2,6 +2,7 @@
 	import { afterNavigate, beforeNavigate } from "$app/navigation";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import type { GridProfile } from "$lib/grid/grid";
 	import EmptyGrid from "./EmptyGrid.svelte";
@@ -57,7 +58,7 @@
 				if (entries[0].isIntersecting)
 					gridState.loadMore().catch((error) => console.error(error));
 			},
-			{ rootMargin: "400px" },
+			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
 		);
 		observer.observe(node);
 		return {
@@ -77,7 +78,7 @@
 					observer.disconnect();
 				}
 			},
-			{ rootMargin: "200px" },
+			{ root: nearestScrollableAncestor(node), rootMargin: "200px" },
 		);
 		observer.observe(node);
 		return {

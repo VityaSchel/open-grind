@@ -35,11 +35,4 @@
 	{@render tab("/interest/views", "Views")}
 	{@render tab("/interest/taps", "Taps")}
 </ProgressiveBlur>
-<div class="flex w-full flex-1 p-4">
-	<main
-		class="mx-auto flex min-h-[calc(var(--screen-scroll)+1.5rem)] w-full flex-1 flex-col gap-3"
-	>
-		<div class="h-10"></div>
-		{@render children?.()}
-	</main>
-</div>
+{@render children?.()}

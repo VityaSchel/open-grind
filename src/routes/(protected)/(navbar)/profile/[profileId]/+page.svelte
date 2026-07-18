@@ -141,22 +141,13 @@
 		/>
 	</div>
 {:else}
-	<div
-		class="-mb-(--nav-height) h-screen-safe overflow-y-auto overscroll-contain"
-		bind:this={profileContainer}
-	>
-		<main
-			class="relative mx-auto min-h-[calc(var(--screen-safe)+3.5rem)] w-full max-w-200"
+	<div class="relative -mb-(--nav-height) h-screen-safe">
+		<div
+			class="h-full overflow-y-auto overscroll-contain"
+			bind:this={profileContainer}
 		>
-			<DataRefreshControl
-				container={profileContainer}
-				updating={refreshing}
-				position="top"
-				class="my-3"
-				containerClass="z-10"
-				onclick={refresh}
-			/>
-			{#if loading || !profile}
+			<main class="relative mx-auto min-h-overscrollable w-full max-w-200">
+				{#if loading || !profile}
 				<div class="flex max-w-full flex-col">
 					<Skeleton class="aspect-3/4 h-auto max-h-photo w-full rounded-none" />
 
@@ -312,6 +303,14 @@
 					}}
 				/>
 			{/if}
-		</main>
+			</main>
+		</div>
+		<DataRefreshControl
+			container={profileContainer}
+			updating={refreshing}
+			position="top"
+			containerClass="z-10"
+			onrefresh={refresh}
+		/>
 	</div>
 {/if}

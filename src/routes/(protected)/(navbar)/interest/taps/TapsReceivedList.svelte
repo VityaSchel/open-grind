@@ -10,10 +10,8 @@
 
 	let {
 		ourProfileId,
-		class: className,
 	}: {
 		ourProfileId: number;
-		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
 	const taps = untrack(() => new TapsState({ ourProfileId }));
@@ -37,38 +35,44 @@
 	}
 </script>
 
-<div
-	bind:this={container}
-	class={["flex min-w-list-rail flex-1 flex-col gap-1", className]}
->
-	{#if taps.loading}
-		{#each Array(8)}
-			<Skeleton class="h-24.5 w-full shrink-0" />
-		{/each}
-	{:else if taps.error}
-		<div class="flex flex-1">
-			<ApiErrorDisplay
-				error={taps.error}
-				onRetry={() => taps.retry()}
-				class="m-auto"
-			/>
+<div class="relative h-(--screen-nav) w-full -mb-(--content-pb)">
+	<div
+		bind:this={container}
+		class="h-full w-full overflow-auto overscroll-contain"
+	>
+		<div
+			class="mx-auto flex min-h-overscrollable w-full max-w-120 flex-col gap-1 px-4 pt-16 pb-nav-clear"
+		>
+			{#if taps.loading}
+				{#each Array(8)}
+					<Skeleton class="h-24.5 w-full shrink-0" />
+				{/each}
+			{:else if taps.error}
+				<div class="flex flex-1">
+					<ApiErrorDisplay
+						error={taps.error}
+						onRetry={() => taps.retry()}
+						class="m-auto"
+					/>
+				</div>
+			{:else}
+				{#each taps.taps as tap (tap.profileId)}
+					<TapReceivedProfile {tap} />
+				{:else}
+					<EmptyTapsList />
+				{/each}
+				{#if taps.hasMore}
+					<div class="h-0" use:observeSentinel></div>
+				{/if}
+			{/if}
 		</div>
-	{:else}
+	</div>
+	{#if !taps.loading && !taps.error}
 		<DataRefreshControl
 			{container}
-			windowScroll
 			updating={taps.refreshing}
 			position="top"
-			class="mb-3"
-			onclick={() => void taps.refresh()}
+			onrefresh={() => void taps.refresh()}
 		/>
-		{#each taps.taps as tap (tap.profileId)}
-			<TapReceivedProfile {tap} />
-		{:else}
-			<EmptyTapsList />
-		{/each}
-		{#if taps.hasMore}
-			<div class="h-0" use:observeSentinel></div>
-		{/if}
 	{/if}
 </div>
