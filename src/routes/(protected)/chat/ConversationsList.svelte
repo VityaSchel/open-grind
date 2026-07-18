@@ -63,7 +63,7 @@
 		if (!container) return;
 		const delta =
 			parseFloat(getComputedStyle(container).paddingTop) - paddingBefore;
-		if (delta !== 0 && (scrollBefore > 0 || delta < 0)) {
+		if (delta !== 0) {
 			container.scrollTop = Math.max(0, scrollBefore + delta);
 		}
 	}

@@ -2,6 +2,39 @@ import type { HTMLAttributes } from "svelte/elements";
 
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
+// One press fires once app-wide, a layout shift can land the native ~500ms contextmenu on a new element
+const REFIRE_GAP_MS = 500;
+// Lifting synthetic click can retarget the same way so suppress the next click anywhere
+const CLICK_SUPPRESS_MS = 700;
+
+let lastFiredAt = 0;
+let suppressClickUntil = 0;
+let clickSuppressorAttached = false;
+
+function fireOnce(onLongPress: () => void): void {
+	const now = Date.now();
+	if (now - lastFiredAt < REFIRE_GAP_MS) return;
+	lastFiredAt = now;
+	onLongPress();
+}
+
+function onGlobalClickCapture(event: MouseEvent): void {
+	if (suppressClickUntil === 0) return;
+	if (Date.now() > suppressClickUntil) {
+		suppressClickUntil = 0;
+		return;
+	}
+	suppressClickUntil = 0;
+	event.preventDefault();
+	event.stopPropagation();
+}
+
+function suppressNextClick(): void {
+	suppressClickUntil = Date.now() + CLICK_SUPPRESS_MS;
+	if (clickSuppressorAttached || typeof document === "undefined") return;
+	clickSuppressorAttached = true;
+	document.addEventListener("click", onGlobalClickCapture, { capture: true });
+}
 
 type LongPressHandlers = Pick<
 	HTMLAttributes<HTMLElement>,
@@ -10,16 +43,13 @@ type LongPressHandlers = Pick<
 	| "onpointerup"
 	| "onpointercancel"
 	| "oncontextmenu"
-	| "onclickcapture"
-	| "onkeydowncapture"
 >;
 
 export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let originX = 0;
 	let originY = 0;
-	let fired = false;
-	let suppressNextClick = false;
+	let pressConsumed = false;
 
 	const cancel = () => {
 		if (timer !== null) {
@@ -30,16 +60,15 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 
 	return {
 		onpointerdown(event) {
-			fired = false;
-			suppressNextClick = false;
+			pressConsumed = false;
 			cancel();
 			if (event.pointerType === "mouse") return;
 			originX = event.clientX;
 			originY = event.clientY;
 			timer = setTimeout(() => {
 				timer = null;
-				fired = true;
-				onLongPress();
+				pressConsumed = true;
+				fireOnce(onLongPress);
 			}, LONG_PRESS_DURATION_MS);
 		},
 		onpointermove(event) {
@@ -53,29 +82,18 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 		},
 		onpointerup(event) {
 			cancel();
-			if (fired && event.pointerType !== "mouse") {
-				suppressNextClick = true;
+			if (pressConsumed && event.pointerType !== "mouse") {
+				suppressNextClick();
 			}
 		},
 		onpointercancel: cancel,
 		oncontextmenu(event) {
 			event.preventDefault();
 			cancel();
-			if (!fired) {
-				fired = true;
-				onLongPress();
+			if (!pressConsumed) {
+				pressConsumed = true;
+				fireOnce(onLongPress);
 			}
-		},
-		onclickcapture(event) {
-			if (!suppressNextClick) return;
-			suppressNextClick = false;
-			fired = false;
-			event.preventDefault();
-			event.stopPropagation();
-		},
-		onkeydowncapture() {
-			suppressNextClick = false;
-			fired = false;
 		},
 	};
 }
