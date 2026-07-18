@@ -3,14 +3,11 @@
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 	import { toast } from "svelte-sonner";
-	import { expoOut, sineIn } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { addMediaToDrawer } from "$lib/api/messaging/chat-media";
 	import { type DrawerMedia, getDrawerMedia } from "$lib/api/messaging/drawer";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
-	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
@@ -20,13 +17,19 @@
 
 	let {
 		onClose,
+		onSelectionChange,
 	}: {
 		onClose: () => void;
+		onSelectionChange: (count: number) => void;
 	} = $props();
 
 	const composer = getMessageComposerContext();
-
 	const selected = new SelectionSet<number>(10);
+
+	function toggleSelected(id: number) {
+		selected.toggle(id);
+		onSelectionChange(selected.size);
+	}
 
 	let media = $state<DrawerMedia[] | null>(null);
 	let error = $state<unknown>(null);
@@ -74,10 +77,11 @@
 		return /([0-9a-f]{64}|[0-9a-f]{40})/i.exec(url)?.[1] ?? "";
 	}
 
-	function sendSelected() {
+	export function sendSelected() {
 		if (media === null) return;
 		const items = media.filter((item) => selected.has(item.id));
 		selected.clear();
+		onSelectionChange(0);
 		onClose();
 		for (const item of items) {
 			item.used = true;
@@ -97,102 +101,79 @@
 	}
 </script>
 
-<div class="relative flex min-h-0 flex-1 flex-col overflow-clip">
-	<div
-		class="@container/photo-grid flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-grid"
-	>
-		{#if error !== null}
-			<div class="flex flex-1">
-				<ApiErrorDisplay {error} onRetry={() => void load()} class="m-auto" />
-			</div>
-		{:else if media === null}
-			<div class="photo-grid">
-				{#each Array(12)}
-					<Skeleton class="aspect-square rounded-none" />
-				{/each}
-			</div>
-		{:else if media.length === 0 && uploadingCount === 0}
-			<Empty.Root>
-				<Empty.Header>
-					<Empty.Media variant="icon">
-						<ImageIcon weight="fill" />
-					</Empty.Media>
-					<Empty.Title>No media sent yet</Empty.Title>
-				</Empty.Header>
-				<Empty.Content>
-					<Button onclick={addPhoto}>
-						<PlusIcon weight="bold" />
-						Add photo
-					</Button>
-				</Empty.Content>
-			</Empty.Root>
-		{:else}
-			<div class={["photo-grid", selected.size > 0 && "pb-20"]}>
+<div class="@container/photo-grid flex flex-col rounded-grid">
+	{#if error !== null}
+		<div class="flex flex-1">
+			<ApiErrorDisplay {error} onRetry={() => void load()} class="m-auto" />
+		</div>
+	{:else if media === null}
+		<div class="photo-grid">
+			{#each Array(12)}
+				<Skeleton class="aspect-square rounded-none" />
+			{/each}
+		</div>
+	{:else if media.length === 0 && uploadingCount === 0}
+		<Empty.Root>
+			<Empty.Header>
+				<Empty.Media variant="icon">
+					<ImageIcon weight="fill" />
+				</Empty.Media>
+				<Empty.Title>No media sent yet</Empty.Title>
+			</Empty.Header>
+			<Empty.Content>
+				<Button onclick={addPhoto}>
+					<PlusIcon weight="bold" />
+					Add photo
+				</Button>
+			</Empty.Content>
+		</Empty.Root>
+	{:else}
+		<div class="photo-grid">
+			<button
+				type="button"
+				class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
+				aria-label="Add photo"
+				onclick={addPhoto}
+			>
+				<PlusIcon weight="bold" class="size-6" />
+				<span class="text-xs font-medium">Add photo</span>
+			</button>
+			{#each Array(uploadingCount)}
+				<Skeleton class="aspect-square rounded-none" />
+			{/each}
+			{#each media as item (item.id)}
+				{@const isSelected = selected.has(item.id)}
 				<button
 					type="button"
-					class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
-					aria-label="Add photo"
-					onclick={addPhoto}
+					class={[
+						"relative aspect-square",
+						{ "cursor-pointer": selected.canSelectMore || isSelected },
+					]}
+					aria-label={isSelected ? "Deselect media" : "Select media"}
+					aria-pressed={isSelected}
+					onclick={() => toggleSelected(item.id)}
 				>
-					<PlusIcon weight="bold" class="size-6" />
-					<span class="text-xs font-medium">Add photo</span>
+					<img
+						src={item.url}
+						alt=""
+						class="size-full rounded-[inherit] bg-card-foreground/10 object-cover"
+						draggable="false"
+					/>
+					{#if isSelected}
+						<div
+							class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-primary/50 outline-2 -outline-offset-2 outline-primary"
+						>
+							<SelectionCheck />
+						</div>
+					{:else if item.used}
+						<div
+							class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-black/50"
+						>
+							<span class="font-medium text-white">Sent</span>
+						</div>
+					{/if}
 				</button>
-				{#each Array(uploadingCount)}
-					<Skeleton class="aspect-square rounded-none" />
-				{/each}
-				{#each media as item (item.id)}
-					{@const isSelected = selected.has(item.id)}
-					<button
-						type="button"
-						class={[
-							"relative aspect-square",
-							{
-								"cursor-pointer": selected.canSelectMore || isSelected,
-							},
-						]}
-						aria-label={isSelected ? "Deselect media" : "Select media"}
-						aria-pressed={isSelected}
-						onclick={() => selected.toggle(item.id)}
-					>
-						<img
-							src={item.url}
-							alt=""
-							class="size-full rounded-[inherit] bg-card-foreground/10 object-cover"
-							draggable="false"
-						/>
-						{#if isSelected}
-							<div
-								class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-primary/50 outline-2 -outline-offset-2 outline-primary"
-							>
-								<SelectionCheck />
-							</div>
-						{:else if item.used}
-							<div
-								class="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-black/50"
-							>
-								<span class="font-medium text-white">Sent</span>
-							</div>
-						{/if}
-					</button>
-				{/each}
-			</div>
-		{/if}
-	</div>
-	{#if selected.size > 0}
-		<div
-			class="absolute inset-x-0 bottom-3 flex justify-center"
-			in:fly={{ duration: 600, y: 100, easing: expoOut }}
-			out:fly={{ duration: 400, y: 100, easing: sineIn }}
-		>
-			<Button size="lg" onclick={sendSelected} class="shadow-lg">
-				Send
-				<Badge
-					variant="secondary"
-					class="bg-primary-foreground/10 text-primary-foreground"
-				>
-					{selected.size}
-				</Badge>
-			</Button>
+			{/each}
 		</div>
 	{/if}
 </div>

@@ -2,11 +2,18 @@
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
+	import { expoOut, sineIn } from "svelte/easing";
+	import { fly } from "svelte/transition";
 
+	import { Badge } from "$lib/components/ui/badge";
+	import { Button } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
+	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
+
+	const FULLSIZE_TABS: Tab[] = ["media"];
 
 	let {
 		open = $bindable(),
@@ -14,93 +21,173 @@
 		open: boolean;
 	} = $props();
 
-	const snapPoints = [0.6, 1];
-	let activeSnapPoint = $state<number | string | null>(snapPoints[0]);
-	const expanded = $derived(activeSnapPoint === snapPoints[1]);
+	type Tab = "media" | "albums" | "location";
 
-	let drawerRef = $state<HTMLDivElement | null>(null);
-	let tabsRef = $state<HTMLElement | null>(null);
+	let selectedTab = $state("media");
 
-	const tabsOverhead = 54;
+	const isFullsizeTab = $derived(FULLSIZE_TABS.includes(selectedTab));
+
+	let sheet = $state<HTMLDivElement | null>(null);
+	let peek = $state<HTMLDivElement | null>(null);
+	let mediaTab = $state<ComposerMediaTab | null>(null);
+	let selectedCount = $state(0);
+
+	const settleQuietMs = 140;
+	let settleTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function settleToNearestSize() {
+		const el = sheet;
+		const range = peek?.offsetHeight ?? 0;
+		if (!el || el.scrollTop <= 0 || el.scrollTop >= range) return;
+		el.scrollTo({
+			top: el.scrollTop < range / 2 ? 0 : range,
+			behavior: "smooth",
+		});
+	}
+
+	function scheduleSettle() {
+		if (settleTimer !== null) clearTimeout(settleTimer);
+		settleTimer = setTimeout(() => {
+			settleTimer = null;
+			settleToNearestSize();
+		}, settleQuietMs);
+	}
 
 	$effect(() => {
-		const drawer = drawerRef;
-		const tabs = tabsRef;
-		if (!drawer || !tabs) return;
-		let drawerHeight = 0;
-		const observer = new MutationObserver(() => {
-			if (!drawer.classList.contains("vaul-dragging")) {
-				drawerHeight = 0;
-				tabs.style.height = "";
-				tabs.style.transition = "";
-				return;
-			}
-			const translate = /translate3d\(0(?:px)?,\s*(-?[\d.]+)px/.exec(
-				drawer.style.transform,
-			);
-			if (!translate) return;
-			if (drawerHeight === 0) drawerHeight = drawer.offsetHeight;
-			tabs.style.transition = "none";
-			tabs.style.height = `${Math.max(drawerHeight - parseFloat(translate[1]) - tabsOverhead, 0)}px`;
-		});
-		observer.observe(drawer, {
-			attributes: true,
-			attributeFilter: ["style", "class"],
-		});
-		return () => observer.disconnect();
+		if (!open) {
+			if (settleTimer !== null) clearTimeout(settleTimer);
+			settleTimer = null;
+			return;
+		}
+		const dismiss = () => {
+			open = false;
+			return false;
+		};
+		backGestureEventHandlers.add(dismiss);
+		return () => {
+			backGestureEventHandlers.delete(dismiss);
+		};
 	});
 </script>
 
-<Drawer.Root bind:open {snapPoints} fadeFromIndex={0} bind:activeSnapPoint>
+<Drawer.Root bind:open>
 	<Drawer.Content
-		bind:ref={drawerRef}
-		class="mx-auto h-full max-w-200"
-		preventOverflowTextSelection={false}
+		class={[
+			"mx-auto max-w-200 border-none bg-transparent p-0 shadow-none before:hidden",
+			{ "h-full": isFullsizeTab, "h-fit": !isFullsizeTab },
+		]}
+		handle={null}
+		onclick={(e) => {
+			if (
+				e.target instanceof HTMLDivElement &&
+				e.target.dataset.slot === "sheet-scroller"
+			) {
+				open = false;
+			}
+		}}
 	>
 		<Tabs.Root
-			bind:ref={tabsRef}
-			value="media"
-			class={[
-				"min-h-0 [transition:height_0.5s_cubic-bezier(0.32,0.72,0,1)]",
-				expanded
-					? "h-[calc(100%-1.375rem)]"
-					: "h-[calc(60dvh-3.375rem-var(--safe-area-top)-var(--safe-area-bottom))]",
-			]}
+			bind:value={selectedTab}
+			class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
 		>
-			<Tabs.Content value="media" class="mt-2 flex min-h-0 flex-col">
-				<ComposerMediaTab onClose={() => (open = false)} />
-			</Tabs.Content>
-			<Tabs.Content value="albums" class="flex min-h-0">
-				<ComposerUnimplementedTab label="Sharing albums" issue={33} />
-			</Tabs.Content>
-			<Tabs.Content value="location" class="flex min-h-0">
-				<ComposerUnimplementedTab label="Sharing location" issue={35} />
-			</Tabs.Content>
-			<Drawer.Footer class="items-center pt-1 pb-0">
+			<div
+				bind:this={sheet}
+				data-slot="sheet-scroller"
+				onscroll={scheduleSettle}
+				class={[
+					"overflow-x-hidden  overscroll-contain select-none",
+					{
+						"h-full overflow-y-auto": isFullsizeTab,
+						"h-fit": !isFullsizeTab,
+					},
+				]}
+			>
+				{#if isFullsizeTab}
+					<div
+						bind:this={peek}
+						data-slot="sheet-peek"
+						class="pointer-events-none h-2/5"
+					></div>
+				{/if}
+				<div
+					data-slot="sheet-panel"
+					class={[
+						" rounded-t-4xl border border-border bg-popover px-4 pb-20 shadow-xl",
+						{
+							"min-h-full": isFullsizeTab,
+						},
+					]}
+				>
+					<div
+						data-slot="drawer-handle"
+						class="mx-auto my-3 h-1.5 w-25 rounded-full bg-muted"
+					></div>
+					<Tabs.Content value="media">
+						<ComposerMediaTab
+							bind:this={mediaTab}
+							onSelectionChange={(count) => {
+								selectedCount = count;
+							}}
+							onClose={() => (open = false)}
+						/>
+					</Tabs.Content>
+					<Tabs.Content value="albums">
+						<ComposerUnimplementedTab label="Sharing albums" issue={33} />
+					</Tabs.Content>
+					<Tabs.Content value="location">
+						<ComposerUnimplementedTab label="Sharing location" issue={35} />
+					</Tabs.Content>
+				</div>
+			</div>
+
+			{#if selectedCount > 0}
+				<div
+					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center"
+					in:fly={{ duration: 600, y: 100, easing: expoOut }}
+					out:fly={{ duration: 400, y: 100, easing: sineIn }}
+				>
+					<Button
+						size="lg"
+						class="pointer-events-auto shadow-lg"
+						onclick={() => {
+							mediaTab?.sendSelected();
+						}}
+					>
+						Send
+						<Badge
+							variant="secondary"
+							class="bg-primary-foreground/10 text-primary-foreground"
+						>
+							{selectedCount}
+						</Badge>
+					</Button>
+				</div>
+			{/if}
+
+			<Drawer.Footer
+				class="absolute inset-x-0 bottom-0 items-center rounded-b-4xl pt-1 pb-2 select-none"
+			>
 				<Tabs.List>
-					<Tabs.Trigger
-						value="media"
-						class="h-auto flex-col gap-0.5 px-4 py-1.5"
-					>
-						<ImageIcon weight="fill" class="size-5" />
-						Media
-					</Tabs.Trigger>
-					<Tabs.Trigger
-						value="albums"
-						class="h-auto flex-col gap-0.5 px-4 py-1.5"
-					>
-						<FolderOpenIcon weight="fill" class="size-5" />
-						Albums
-					</Tabs.Trigger>
-					<Tabs.Trigger
-						value="location"
-						class="h-auto flex-col gap-0.5 px-4 py-1.5"
-					>
-						<NavigationArrowIcon weight="fill" class="size-5" />
-						Location
-					</Tabs.Trigger>
+					{@render tab("media")}
+					{@render tab("albums")}
+					{@render tab("location")}
 				</Tabs.List>
 			</Drawer.Footer>
 		</Tabs.Root>
 	</Drawer.Content>
 </Drawer.Root>
+
+{#snippet tab(tab: Tab)}
+	<Tabs.Trigger value={tab} class="h-auto flex-col gap-0.5 px-4 py-1.5">
+		{#if tab === "media"}
+			<ImageIcon weight="fill" class="size-5" />
+			Media
+		{:else if tab === "albums"}
+			<FolderOpenIcon weight="fill" class="size-5" />
+			Albums
+		{:else if tab === "location"}
+			<NavigationArrowIcon weight="fill" class="size-5" />
+			Location
+		{/if}
+	</Tabs.Trigger>
+{/snippet}

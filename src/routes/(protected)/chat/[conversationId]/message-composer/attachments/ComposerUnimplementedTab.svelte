@@ -13,7 +13,7 @@
 	} = $props();
 </script>
 
-<div class="flex flex-1 px-8">
+<div class="flex flex-1 py-16">
 	<Alert.Root class="m-auto w-full max-w-sm">
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>Unimplemented</Alert.Title>

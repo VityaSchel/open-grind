@@ -8,15 +8,24 @@
 	import DrawerPortal from "./drawer-portal.svelte";
 
 	let {
+		handle,
 		ref = $bindable(null),
 		class: className,
 		portalProps,
 		children,
 		...restProps
 	}: DrawerPrimitive.ContentProps & {
+		handle?: import("svelte").Snippet | null;
 		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DrawerPortal>>;
 	} = $props();
 </script>
+
+{#snippet handleDefault()}
+	<div
+		data-slot="drawer-handle"
+		class="mx-auto mt-4 hidden h-1.5 w-25 shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
+	></div>
+{/snippet}
 
 <DrawerPortal {...portalProps}>
 	<DrawerOverlay />
@@ -24,14 +33,16 @@
 		bind:ref
 		data-slot="drawer-content"
 		class={cn(
-			"before:bg-popover before:border-border relative flex h-auto flex-col bg-transparent p-4 text-sm before:absolute before:inset-2 before:-z-10 before:rounded-4xl before:border before:shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:mb-(--safe-area-bottom) data-[vaul-drawer-direction=bottom]:max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom))] data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[calc(100dvh-var(--safe-area-top))] data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm group/drawer-content fixed z-50",
+			"group/drawer-content fixed z-50 flex h-auto flex-col bg-transparent p-4 text-sm before:absolute before:inset-2 before:-z-10 before:rounded-4xl before:border before:border-border before:bg-popover before:shadow-xl data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:mb-(--safe-area-bottom) data-[vaul-drawer-direction=bottom]:max-h-[calc(100dvh-var(--safe-area-top)-var(--safe-area-bottom))] data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[calc(100dvh-var(--safe-area-top))] data-[vaul-drawer-direction=left]:sm:max-w-sm data-[vaul-drawer-direction=right]:sm:max-w-sm",
 			className,
 		)}
 		{...restProps}
 	>
-		<div
-			class="bg-muted mx-auto mt-4 hidden h-1.5 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block bg-muted mx-auto hidden shrink-0 group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
-		></div>
+		{#if handle === undefined}
+			{@render handleDefault()}
+		{:else}
+			{@render handle?.()}
+		{/if}
 		{@render children?.()}
 	</DrawerPrimitive.Content>
 </DrawerPortal>
