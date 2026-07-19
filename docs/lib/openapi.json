@@ -8624,6 +8624,44 @@
 					}
 				},
 				"summary": "Get all notes"
+			},
+			"put": {
+				"tags": [
+					"users/favorites"
+				],
+				"operationId": "replaceFavoriteNotes",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"notes"
+								],
+								"properties": {
+									"notes": {
+										"type": "array",
+										"items": {
+											"$ref": "#/components/schemas/FavoriteNoteRequest"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Replace notes list"
 			}
 		},
 		"/v1/favorites/notes/{targetProfileId}": {
@@ -9821,6 +9859,684 @@
 						"description": "Discover feed (`DiscoverFeedData`); see description for the body shape."
 					}
 				}
+			}
+		},
+		"/v1/boost/sessions/pause": {
+			"post": {
+				"tags": [
+					"commerce/boosting"
+				],
+				"operationId": "pauseBoostSession",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Pause boost session"
+			}
+		},
+		"/v1/boost/sessions/unpause": {
+			"post": {
+				"tags": [
+					"commerce/boosting"
+				],
+				"operationId": "unpauseBoostSession",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Unpause boost session"
+			}
+		},
+		"/v1/discover/preferences": {
+			"put": {
+				"tags": [
+					"browse/discover"
+				],
+				"operationId": "updateDiscoverPreferences",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"preferences"
+								],
+								"properties": {
+									"preferences": {
+										"type": "object",
+										"required": [
+											"lastOnline",
+											"maxDistance"
+										],
+										"properties": {
+											"lastOnline": {
+												"type": "integer"
+											},
+											"maxDistance": {
+												"type": "integer"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Update discover preferences"
+			}
+		},
+		"/v1/social-events/{socialEventId}": {
+			"get": {
+				"tags": [
+					"browse/social-events"
+				],
+				"operationId": "getSocialEvent",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "socialEventId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/SocialEvent"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get social event"
+			}
+		},
+		"/v1/social-events/{socialEventId}/attendees": {
+			"post": {
+				"tags": [
+					"browse/social-events"
+				],
+				"operationId": "joinSocialEvent",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "socialEventId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Attend social event"
+			},
+			"delete": {
+				"tags": [
+					"browse/social-events"
+				],
+				"operationId": "leaveSocialEvent",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "socialEventId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Unattend social event"
+			}
+		},
+		"/v1/alist/trigger-generation": {
+			"post": {
+				"tags": [
+					"interest/alist"
+				],
+				"operationId": "triggerAListGeneration",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Trigger A-list generation"
+			}
+		},
+		"/v3/pressie-albums/fresh-feed": {
+			"post": {
+				"tags": [
+					"messaging/albums"
+				],
+				"operationId": "getFreshPressieAlbumsFeed",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"isFavorite": {
+										"type": "boolean",
+										"description": "boolean, optional, only albums shared by [favorite](/grindr-api/users/favorites) users"
+									},
+									"isOnline": {
+										"type": "boolean",
+										"description": "boolean, optional, only albums shared by currently online users"
+									},
+									"onlyVideo": {
+										"type": "boolean",
+										"description": "boolean, optional, only albums with at least one video"
+									},
+									"blur": {
+										"type": "boolean",
+										"description": "boolean, optional, blur media urls in response"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PressieAlbumsFeedResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Gets fresh albums shared with us"
+			}
+		},
+		"/v5/flags/{id}": {
+			"post": {
+				"tags": [
+					"safety/reports"
+				],
+				"operationId": "submitReportV5",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/GenericIdPath"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "ReportProfileRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Submit profile report",
+				"x-wip": true,
+				"description": "Current version of profile report submission (supersedes `POST /v3.1/flags/{id}`)."
+			}
+		},
+		"/v1/flags/right-now/{postId}": {
+			"get": {
+				"tags": [
+					"safety/reports"
+				],
+				"operationId": "getRightNowPostReportForm",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "postId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "ReportRightNowPostResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Right Now post report form",
+				"x-wip": true
+			},
+			"post": {
+				"tags": [
+					"safety/reports"
+				],
+				"operationId": "submitRightNowPostReport",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "postId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "ReportRightNowPostRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Submit Right Now post report",
+				"x-wip": true
+			}
+		},
+		"/v1/rightnow/requests/inbox": {
+			"get": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "getReceivedRightNowRequests",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "RightNowGetReceivedRequestsResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get received Right Now requests",
+				"x-wip": true
+			}
+		},
+		"/v1/rightnow/requests/outbox": {
+			"get": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "getSentRightNowRequests",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "RightNowGetSentRequestsResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get sent Right Now requests",
+				"x-wip": true
+			}
+		},
+		"/v1/rightnow/requests/{requestId}": {
+			"put": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "updateRightNowRequest",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "requestId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer",
+							"format": "int64"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "UpdateRightNowRequestData"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Update Right Now request",
+				"x-wip": true
+			}
+		},
+		"/v8/users/thirdparty": {
+			"post": {
+				"tags": [
+					"settings/account"
+				],
+				"operationId": "createThirdPartyAccountV8",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "CreateThirdPartyAccountRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "ThirdPartyCreateAccountResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Create third party account (reCAPTCHA)",
+				"x-wip": true,
+				"description": "reCAPTCHA-enabled variant of [Create third party account](#create-third-party-account) (`POST /v7/users/thirdparty`), selected when the first-party reCAPTCHA [assignment](/grindr-api/analytics/assignments) is enabled. `POST /v8/dev/users/thirdparty` is used instead when a dummy captcha token is supplied. The body is `CreateThirdPartyAccountRequest` in all variants."
+			}
+		},
+		"/v1/shop/googleplay/products-with-details/{oneStopShopCategory}": {
+			"get": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "getProductsWithDetails",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "oneStopShopCategory",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "ProductsWithDetailsResponseDto"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get shop products with details",
+				"x-wip": true
+			}
+		},
+		"/v3/profile-insights/{profileId}": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getProfileInsightsV3",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/ProfileIdIntegerPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "ProfileInsightsResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get profile insights v3",
+				"x-wip": true
+			}
+		},
+		"/v3/profile-insights/me/settings": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getProfileInsightsSettings",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ProfileInsightsInferencesResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get own profile insight settings"
+			}
+		},
+		"/v3/vip-profiles": {
+			"get": {
+				"tags": [
+					"commerce/vip"
+				],
+				"operationId": "getVipProfilesV3",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VipProfilesResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get VIP profiles"
+			}
+		},
+		"/v2/health/placement": {
+			"get": {
+				"tags": [
+					"woodwork"
+				],
+				"operationId": "getWoodworkPlacement",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "type",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/WoodworkPlacementResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get Woodwork placement"
 			}
 		}
 	},
@@ -15957,6 +16673,186 @@
 					"mediaHash"
 				],
 				"x-render-on-tag": "messaging/drawer"
+			},
+			"VipProfilesResponse": {
+				"type": "object",
+				"properties": {
+					"vip-profiles": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/VipProfileResponse"
+						}
+					}
+				},
+				"required": [
+					"vip-profiles"
+				],
+				"x-render-on-tag": "commerce/vip"
+			},
+			"VipProfileResponse": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"onlineUntil": {
+						"nullable": true,
+						"description": "unix timestamp in milliseconds or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"age": {
+						"type": "integer",
+						"nullable": true
+					},
+					"distanceMeters": {
+						"type": "integer",
+						"nullable": true,
+						"description": "distance in meters or `null`"
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true
+					},
+					"photos": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/UndocumentedObject",
+							"x-original-type": "VipPhotoProfileResponse"
+						}
+					},
+					"sexualPosition": {
+						"type": "integer",
+						"nullable": true,
+						"description": "[Sexual position ID](/grindr-api/users/profiles#sexual-position-id) or `null`"
+					},
+					"favorite": {
+						"type": "boolean"
+					},
+					"approximateDistance": {
+						"type": "boolean"
+					},
+					"activity": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/UndocumentedObject"
+							}
+						],
+						"x-original-type": "VipProfileActivityEvents"
+					},
+					"tag": {
+						"type": "string",
+						"nullable": true
+					},
+					"recommendationSummary": {
+						"type": "string",
+						"nullable": true
+					},
+					"matchNotes": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					},
+					"iceBreakers": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					}
+				},
+				"required": [
+					"profileId",
+					"approximateDistance",
+					"activity"
+				],
+				"x-render-on-tag": "commerce/vip"
+			},
+			"WoodworkPlacementResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"imageUrl": {
+						"type": "string",
+						"format": "uri"
+					},
+					"redirectUrl": {
+						"type": "string",
+						"format": "uri"
+					},
+					"copy": {
+						"type": "string"
+					},
+					"isTrailingArrowVisible": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id",
+					"imageUrl",
+					"redirectUrl",
+					"copy",
+					"isTrailingArrowVisible"
+				],
+				"x-render-on-tag": "woodwork"
+			},
+			"ProfileInsightsStatus": {
+				"type": "string",
+				"enum": [
+					"UNLOCKED",
+					"HIDDEN",
+					"UPSELL_MAX",
+					"UPSELL_PREMIUM",
+					"OPT_OUT_SELF",
+					"OPT_OUT_TARGET",
+					"FREEMIUM"
+				],
+				"x-render-on-tag": "users/profiles"
+			},
+			"ProfileInsightsInferencesResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/ProfileInsightsStatus"
+					},
+					"settings": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/UndocumentedObject",
+							"x-original-type": "ProfileInsightsInference"
+						}
+					}
+				},
+				"x-render-on-tag": "users/profiles"
+			},
+			"FavoriteNoteRequest": {
+				"type": "object",
+				"properties": {
+					"counterpartyId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true,
+						"description": "profile ID or `null`"
+					},
+					"notes": {
+						"type": "string",
+						"nullable": true
+					},
+					"phoneNumber": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "users/favorites"
 			}
 		}
 	},
