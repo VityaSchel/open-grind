@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "2026-05-21"
+		"version": "2026-07-20"
 	},
 	"servers": [
 		{
@@ -5152,7 +5152,9 @@
 					}
 				},
 				"summary": "Record profile views (batch)",
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Not present in the official client as of app 26.10.0+** — the client records views one profile at a time via [POST /v5/views/{profileId}](/grindr-api/interest/views#record-profile-view-v2). This batch endpoint still works server-side but is documented for older/compat use. The `foundVia` field is only ever sent as `null` by observed clients."
 			}
 		},
 		"/v4/views/{profileId}": {
@@ -13695,6 +13697,15 @@
 					"photoContentReply": {
 						"nullable": true,
 						"description": "appears to be null"
+					},
+					"rightNowStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowAttributionStatus"
+							}
+						],
+						"nullable": true,
+						"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
@@ -15063,6 +15074,15 @@
 										"type": "integer"
 									}
 								}
+							},
+							"rightNowStatus": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowAttributionStatus"
+									}
+								],
+								"nullable": true,
+								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
 							}
 						}
 					}
@@ -15109,15 +15129,6 @@
 							},
 							"hasChatted": {
 								"type": "boolean"
-							},
-							"rightNowStatus": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/RightNowAttributionStatus"
-									}
-								],
-								"nullable": true,
-								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
 							}
 						}
 					}
