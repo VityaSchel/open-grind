@@ -522,7 +522,6 @@
 									"type": "object",
 									"properties": {
 										"acknowledgmentTime": {
-											"description": "unix timestamp in milliseconds",
 											"allOf": [
 												{
 													"$ref": "#/components/schemas/TimestampMs"
@@ -2379,18 +2378,10 @@
 						}
 					},
 					{
-						"name": "ageMin",
-						"in": "query",
-						"schema": {
-							"type": "integer"
-						}
+						"$ref": "#/components/parameters/CascadeAgeMinQuery"
 					},
 					{
-						"name": "ageMax",
-						"in": "query",
-						"schema": {
-							"type": "integer"
-						}
+						"$ref": "#/components/parameters/CascadeAgeMaxQuery"
 					},
 					{
 						"name": "sexualPositions",
@@ -3303,12 +3294,7 @@
 				],
 				"parameters": [
 					{
-						"name": "geohash",
-						"in": "query",
-						"schema": {
-							"$ref": "#/components/schemas/Geohash"
-						},
-						"required": true
+						"$ref": "#/components/parameters/GeohashQuery"
 					}
 				],
 				"responses": {
@@ -3622,13 +3608,7 @@
 				],
 				"parameters": [
 					{
-						"name": "targetProfileId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/TargetProfileIdPath"
 					}
 				],
 				"x-idempotent": true,
@@ -3667,12 +3647,7 @@
 				"operationId": "getDiscoverProfilesV3",
 				"parameters": [
 					{
-						"name": "geohash",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/Geohash"
-						}
+						"$ref": "#/components/parameters/GeohashQuery"
 					},
 					{
 						"name": "previewedProfiles",
@@ -3715,12 +3690,7 @@
 				"operationId": "getDiscoverProfilesV2",
 				"parameters": [
 					{
-						"name": "geohash",
-						"in": "query",
-						"schema": {
-							"$ref": "#/components/schemas/Geohash"
-						},
-						"required": true
+						"$ref": "#/components/parameters/GeohashQuery"
 					}
 				],
 				"responses": {
@@ -5059,7 +5029,6 @@
 												"$ref": "#/components/schemas/TapType"
 											},
 											"sentOn": {
-												"description": "unix timestamp in milliseconds",
 												"allOf": [
 													{
 														"$ref": "#/components/schemas/TimestampMs"
@@ -5235,17 +5204,17 @@
 								"type": "object",
 								"properties": {
 									"foundVia": {
-										"allOf": [
-											{
-												"$ref": "#/components/schemas/ViewSourceEnum"
-											}
-										],
-										"nullable": true
+										"type": "string",
+										"nullable": true,
+										"description": "Free-form discovery source string (not the `source` enum)."
 									},
 									"source": {
 										"$ref": "#/components/schemas/ViewSourceEnum"
 									}
-								}
+								},
+								"required": [
+									"source"
+								]
 							}
 						}
 					}
@@ -5298,12 +5267,7 @@
 				],
 				"parameters": [
 					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
+						"$ref": "#/components/parameters/GenericIdPath"
 					}
 				],
 				"responses": {
@@ -5354,12 +5318,7 @@
 						}
 					},
 					{
-						"name": "mediaHash",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/MediaHash"
-						}
+						"$ref": "#/components/parameters/MediaHashPath"
 					}
 				],
 				"responses": {
@@ -5418,12 +5377,7 @@
 						}
 					},
 					{
-						"name": "mediaHash",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/MediaHash"
-						}
+						"$ref": "#/components/parameters/MediaHashPath"
 					}
 				],
 				"responses": {
@@ -5475,12 +5429,7 @@
 						}
 					},
 					{
-						"name": "mediaHash",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/MediaHash"
-						}
+						"$ref": "#/components/parameters/MediaHashPath"
 					},
 					{
 						"name": "Expires",
@@ -7530,12 +7479,7 @@
 				],
 				"parameters": [
 					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
+						"$ref": "#/components/parameters/GenericIdPath"
 					}
 				],
 				"responses": {
@@ -7559,12 +7503,7 @@
 				],
 				"parameters": [
 					{
-						"name": "id",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
+						"$ref": "#/components/parameters/GenericIdPath"
 					}
 				],
 				"responses": {
@@ -8677,13 +8616,7 @@
 				],
 				"parameters": [
 					{
-						"name": "targetProfileId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/TargetProfileIdPath"
 					}
 				],
 				"responses": {
@@ -8712,13 +8645,7 @@
 				],
 				"parameters": [
 					{
-						"name": "targetProfileId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/TargetProfileIdPath"
 					}
 				],
 				"requestBody": {
@@ -8726,7 +8653,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/FavoriteNote"
+								"$ref": "#/components/schemas/FavoriteNoteRequest"
 							}
 						}
 					}
@@ -8754,13 +8681,7 @@
 				],
 				"parameters": [
 					{
-						"name": "targetProfileId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/TargetProfileIdPath"
 					}
 				],
 				"responses": {
@@ -9062,12 +8983,7 @@
 						"required": true
 					},
 					{
-						"name": "takenOnGrindr",
-						"in": "query",
-						"schema": {
-							"type": "boolean"
-						},
-						"required": true
+						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					}
 				],
 				"requestBody": {
@@ -9118,12 +9034,7 @@
 						"required": true
 					},
 					{
-						"name": "takenOnGrindr",
-						"in": "query",
-						"schema": {
-							"type": "boolean"
-						},
-						"required": true
+						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					}
 				],
 				"requestBody": {
@@ -9693,12 +9604,7 @@
 						}
 					},
 					{
-						"name": "takenOnGrindr",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "boolean"
-						}
+						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					},
 					{
 						"$ref": "#/components/parameters/DeviceKeyIdHeader"
@@ -9773,12 +9679,7 @@
 						}
 					},
 					{
-						"name": "takenOnGrindr",
-						"in": "query",
-						"required": true,
-						"schema": {
-							"type": "boolean"
-						}
+						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					},
 					{
 						"$ref": "#/components/parameters/DeviceKeyIdHeader"
@@ -9961,13 +9862,7 @@
 				],
 				"parameters": [
 					{
-						"name": "socialEventId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/SocialEventIdPath"
 					}
 				],
 				"responses": {
@@ -9998,13 +9893,7 @@
 				],
 				"parameters": [
 					{
-						"name": "socialEventId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/SocialEventIdPath"
 					}
 				],
 				"responses": {
@@ -10026,13 +9915,7 @@
 				],
 				"parameters": [
 					{
-						"name": "socialEventId",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "integer",
-							"format": "int64"
-						}
+						"$ref": "#/components/parameters/SocialEventIdPath"
 					}
 				],
 				"responses": {
@@ -10074,7 +9957,7 @@
 					}
 				],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
@@ -10398,7 +10281,19 @@
 						"in": "path",
 						"required": true,
 						"schema": {
-							"type": "string"
+							"type": "string",
+							"enum": [
+								"store",
+								"profile_drawer",
+								"explore",
+								"boost",
+								"tap",
+								"right_now",
+								"viewed_me",
+								"chat",
+								"store_in_profile",
+								"consumables"
+							]
 						}
 					}
 				],
@@ -10886,6 +10781,48 @@
 					"type": "string"
 				},
 				"description": "base64url (no padding) of 32 random bytes, unique per request; must equal the `nonce` inside the signed string."
+			},
+			"GeohashQuery": {
+				"in": "query",
+				"name": "geohash",
+				"required": true,
+				"schema": {
+					"$ref": "#/components/schemas/Geohash"
+				}
+			},
+			"TargetProfileIdPath": {
+				"in": "path",
+				"name": "targetProfileId",
+				"required": true,
+				"schema": {
+					"format": "int64",
+					"type": "integer"
+				}
+			},
+			"MediaHashPath": {
+				"in": "path",
+				"name": "mediaHash",
+				"required": true,
+				"schema": {
+					"$ref": "#/components/schemas/MediaHash"
+				}
+			},
+			"TakenOnGrindrQuery": {
+				"in": "query",
+				"name": "takenOnGrindr",
+				"required": true,
+				"schema": {
+					"type": "boolean"
+				}
+			},
+			"SocialEventIdPath": {
+				"in": "path",
+				"name": "socialEventId",
+				"required": true,
+				"schema": {
+					"format": "int64",
+					"type": "integer"
+				}
 			}
 		},
 		"schemas": {
@@ -10929,6 +10866,17 @@
 					"HOSTING",
 					"NOT_HOSTING"
 				],
+				"x-render-on-tag": "right-now"
+			},
+			"RightNowAttributionStatus": {
+				"type": "string",
+				"enum": [
+					"ACTIVE",
+					"HIDDEN",
+					"ACTIVE_WITH_BOOST",
+					"NONE"
+				],
+				"description": "Right Now attribution status. Sent as a plain string under key `rightNowStatus`; unrecognized/absent values are treated as NONE by the official client.",
 				"x-render-on-tag": "right-now"
 			},
 			"RightNowShareLocation": {
@@ -11433,7 +11381,6 @@
 						"description": "string"
 					},
 					"createdTs": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -11522,20 +11469,20 @@
 						"type": "string"
 					},
 					"startTime": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"endTime": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"eventType": {
 						"type": "string",
@@ -11543,10 +11490,12 @@
 					},
 					"eventImageUrl": {
 						"type": "string",
-						"format": "uri"
+						"format": "uri",
+						"nullable": true
 					},
 					"imageSource": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"region": {
 						"type": "string"
@@ -11579,14 +11528,10 @@
 					"socialEventId",
 					"name",
 					"location",
-					"startTime",
-					"endTime",
-					"eventType",
-					"eventImageUrl",
-					"imageSource",
 					"region",
-					"attendeesPreview",
 					"timezone",
+					"eventType",
+					"attendeesPreview",
 					"isAttending"
 				]
 			},
@@ -11606,7 +11551,6 @@
 						"$ref": "#/components/schemas/Geohash"
 					},
 					"startDate": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -11614,7 +11558,6 @@
 						]
 					},
 					"endDate": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -12348,6 +12291,20 @@
 					},
 					{
 						"$ref": "#/components/schemas/ProfileRightNow"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"rightNowStatus": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowAttributionStatus"
+									}
+								],
+								"nullable": true,
+								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
+							}
+						}
 					}
 				],
 				"x-render-on-tag": "users/profiles",
@@ -13545,22 +13502,23 @@
 						}
 					},
 					"experimentStatus": {
-						"type": "number"
+						"type": "integer",
+						"nullable": true
 					},
 					"nonEmptyPersonalAlbumCount": {
-						"type": "number"
+						"type": "integer"
 					},
 					"emptyAlbumId": {
-						"nullable": true
+						"nullable": true,
+						"type": "integer",
+						"format": "int64"
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
 				"required": [
 					"profileFeeds",
 					"sharedAlbums",
-					"experimentStatus",
-					"nonEmptyPersonalAlbumCount",
-					"emptyAlbumId"
+					"nonEmptyPersonalAlbumCount"
 				]
 			},
 			"PressieAlbumsPaywallResponse": {
@@ -13776,7 +13734,6 @@
 						}
 					},
 					"lastActivityTimestamp": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -14355,7 +14312,6 @@
 						"type": "string"
 					},
 					"expiresAt": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -14900,7 +14856,6 @@
 						"description": "feedback text"
 					},
 					"timestamp": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -15017,6 +14972,15 @@
 							},
 							"isViewable": {
 								"type": "boolean"
+							},
+							"rightNowStatus": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowAttributionStatus"
+									}
+								],
+								"nullable": true,
+								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
 							}
 						}
 					}
@@ -15057,7 +15021,6 @@
 								"$ref": "#/components/schemas/MediaHash"
 							},
 							"timestamp": {
-								"description": "unix timestamp in milliseconds",
 								"allOf": [
 									{
 										"$ref": "#/components/schemas/TimestampMs"
@@ -15146,6 +15109,15 @@
 							},
 							"hasChatted": {
 								"type": "boolean"
+							},
+							"rightNowStatus": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/RightNowAttributionStatus"
+									}
+								],
+								"nullable": true,
+								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
 							}
 						}
 					}
@@ -15294,7 +15266,6 @@
 											"type": "boolean"
 										},
 										"createdAt": {
-											"description": "unix timestamp in milliseconds",
 											"allOf": [
 												{
 													"$ref": "#/components/schemas/TimestampMs"
@@ -15914,7 +15885,6 @@
 				"type": "object",
 				"properties": {
 					"lastUpdateTime": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -16211,7 +16181,6 @@
 						"type": "integer"
 					},
 					"onlineUntil": {
-						"description": "unix timestamp in milliseconds",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -16245,7 +16214,6 @@
 						"heading": "Only for [v3/cascade](/grindr-api/browse/grid#get-cascade-legacy):",
 						"properties": {
 							"lastOnline": {
-								"description": "unix timestamp in milliseconds",
 								"allOf": [
 									{
 										"$ref": "#/components/schemas/TimestampMs"
@@ -16832,7 +16800,11 @@
 						}
 					}
 				},
-				"x-render-on-tag": "users/profiles"
+				"x-render-on-tag": "users/profiles",
+				"required": [
+					"status",
+					"settings"
+				]
 			},
 			"FavoriteNoteRequest": {
 				"type": "object",
