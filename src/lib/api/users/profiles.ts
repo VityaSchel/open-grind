@@ -5,6 +5,7 @@ import { registerAccountCache } from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
+import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {
 	genderSchema,
 	type Profile,
@@ -141,6 +142,7 @@ const getProfilesResponseSchema = z.object({
 		z.object({
 			...profileShortSchema.shape,
 			...profileRightNowSchema.shape,
+			rightNowStatus: rightNowAttributionStatusSchema.nullish().catch("NONE"),
 		}),
 	),
 });

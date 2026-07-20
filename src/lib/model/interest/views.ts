@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {
 	profileMaskedMinSchema,
 	profileMaskedSchema,
@@ -16,6 +17,7 @@ export const viewPreviewSchema = z.object({
 		totalCount: z.int().nonnegative(),
 		maxDisplayCount: z.int().nonnegative(),
 	}),
+	rightNowStatus: rightNowAttributionStatusSchema.nullish().catch("NONE"),
 });
 
 export type ViewPreview = z.infer<typeof viewPreviewSchema>;

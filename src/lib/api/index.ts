@@ -1,7 +1,6 @@
 import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
-import { toast } from "svelte-sonner";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
@@ -94,7 +93,20 @@ export async function callMethod<T extends keyof typeof methods>(
 	if (demoEnabled) {
 		return demoCallMethod(method) as z.infer<(typeof methods)[T]["response"]>;
 	}
-	return await invoke(method, args[0]);
+	try {
+		return await invoke(method, args[0]);
+	} catch (error) {
+		if (asAppError(error)?.kind === "RequestBlocked") {
+			markRequestBlocked();
+		}
+		throw error;
+	}
+}
+
+function markRequestBlocked(): void {
+	if (!requestBlockedAlertState.disable) {
+		requestBlockedAlertState.open = true;
+	}
 }
 
 export function asBanned(error: unknown): BanInfo | null {
@@ -114,6 +126,7 @@ export function asAppError(error: unknown) {
 				"Unauthorized",
 				"Banned",
 				"RateLimited",
+				"RequestBlocked",
 				"NotInitialized",
 			]),
 			message: z
@@ -169,20 +182,6 @@ function buildRestResponse(
 		json() {
 			const text = this.text();
 			const responseInfo = { status, body: text };
-			if (
-				status === 403 &&
-				text.includes("<title>Attention Required! | Cloudflare</title>") &&
-				text.includes("Sorry, you have been blocked")
-			) {
-				if (!requestBlockedAlertState.disable) {
-					requestBlockedAlertState.open = true;
-				}
-				throw new ApiError({
-					message: "Request blocked",
-					request: requestInfo,
-					response: responseInfo,
-				});
-			}
 			try {
 				return JSON.parse(text);
 			} catch (error) {
@@ -275,10 +274,18 @@ export async function fetchRest(
 	} catch (error) {
 		if (error instanceof ApiError) throw error;
 		const appError = asAppError(error);
-		if (appError) {
-			if (appError.kind === "Auth" && appError.message === "Not logged in") {
-				goto("/auth/sign-in").catch((error) => console.error(error));
-			}
+		if (appError?.kind === "RequestBlocked") {
+			markRequestBlocked();
+			throw new ApiError({
+				message: "Request blocked",
+				request: requestInfo,
+				response: { status: 403, body: "Blocked by Cloudflare" },
+				kind: "RequestBlocked",
+				cause: error,
+			});
+		}
+		if (appError?.kind === "Auth" && appError.message === "Not logged in") {
+			goto("/auth/sign-in").catch((error) => console.error(error));
 		}
 		throw new ApiError({
 			message:

@@ -5,6 +5,7 @@ export type ApiErrorKind =
 	| "Unauthorized"
 	| "Banned"
 	| "RateLimited"
+	| "RequestBlocked"
 	| "NotInitialized";
 
 export class ApiError extends Error {

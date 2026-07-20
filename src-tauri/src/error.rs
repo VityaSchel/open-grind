@@ -42,6 +42,7 @@ pub enum AppError {
     Unauthorized { code: i32, message: String },
     Banned(BanInfo),
     RateLimited,
+    RequestBlocked,
     NotInitialized,
 }
 
@@ -56,6 +57,7 @@ impl fmt::Display for AppError {
             }
             AppError::Banned(info) => write!(f, "Banned ({}): {}", info.kind, info.message),
             AppError::RateLimited => write!(f, "Rate limited"),
+            AppError::RequestBlocked => write!(f, "Request blocked by Cloudflare"),
             AppError::NotInitialized => write!(f, "GrindrClient not initialized"),
         }
     }
@@ -74,6 +76,7 @@ impl From<grindr::GrindrError> for AppError {
             }
             grindr::GrindrError::Banned(info) => AppError::Banned(info.into()),
             grindr::GrindrError::RateLimited => AppError::RateLimited,
+            grindr::GrindrError::Blocked => AppError::RequestBlocked,
             _ => AppError::Http(e.to_string()),
         }
     }
@@ -109,5 +112,13 @@ mod tests {
     fn simulated_rate_limit_maps_to_rate_limited() {
         let app = AppError::from(grindr::GrindrError::from_response(429, b"{}"));
         assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "RateLimited");
+    }
+
+    #[test]
+    fn cloudflare_block_maps_to_request_blocked() {
+        let block_page = br#"<html><head><title>Attention Required! | Cloudflare</title></head><body>Sorry, you have been blocked</body></html>"#;
+        let raw = grindr::GrindrError::from_response(403, block_page);
+        let app = AppError::from(raw);
+        assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "RequestBlocked");
     }
 }

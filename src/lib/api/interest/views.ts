@@ -18,11 +18,11 @@ export async function getViews() {
 }
 
 export async function recordProfileView({ profileId }: { profileId: number }) {
-	return await fetchRest("/v4/views", {
+	await fetchRest(`/v5/views/${profileId}`, {
 		method: "POST",
 		body: {
-			viewedProfileIds: [String(profileId)],
+			source: "UNKNOWN",
 			foundVia: null,
 		},
-	});
+	}).then((res) => res.assertOk());
 }
