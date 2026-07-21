@@ -13575,7 +13575,10 @@
 								"type": "integer"
 							},
 							"content": {
-								"$ref": "#/components/schemas/AlbumContent"
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/AlbumContent"
+								}
 							},
 							"isShareable": {
 								"type": "boolean"
