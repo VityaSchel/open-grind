@@ -93,6 +93,32 @@ async function waitForLoaded(state: ViewsState) {
 	await vi.waitFor(() => expect(state.loading).toBe(false));
 }
 
+function deferred<T>() {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((r) => {
+		resolve = r;
+	});
+	return { promise, resolve };
+}
+
+function viewEvent(profileId: number) {
+	return {
+		type: "viewed_me.v1.new_view_received",
+		notificationId: null,
+		ref: null,
+		payload: {
+			viewedCount: 1,
+			mostRecent: {
+				profileId,
+				photoHash: null,
+				timestamp: 1_710_000_000_000 + profileId,
+			},
+		},
+	};
+}
+
+type ViewsSnapshot = { profiles: ViewerProfile[]; previews: ViewPreview[] };
+
 beforeEach(() => {
 	getViewsMock.mockReset();
 	showErrorToastMock.mockReset();
@@ -203,6 +229,60 @@ describe("ViewsState", () => {
 		expect(showErrorToastMock).toHaveBeenCalledWith({
 			label: "Failed to refresh views",
 			error: expect.any(Error),
+		});
+	});
+
+	it("keeps a websocket view that lands while a reconcile fetch is in flight", async () => {
+		getViewsMock.mockResolvedValueOnce({
+			profiles: [profile(1)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		const gate = deferred<ViewsSnapshot>();
+		getViewsMock.mockReturnValueOnce(gate.promise);
+
+		const reconcilePromise = reconcileHandlers[0]?.();
+		emitView(viewEvent(5));
+		gate.resolve({ profiles: [profile(1), profile(2)], previews: [] });
+		await reconcilePromise;
+
+		expect(state.views[0]).toMatchObject({
+			type: "profile",
+			profile: { profileId: 5 },
+		});
+	});
+
+	it("does not double-count a mid-fetch view already in the snapshot", async () => {
+		getViewsMock.mockResolvedValueOnce({
+			profiles: [profile(1)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		const gate = deferred<ViewsSnapshot>();
+		getViewsMock.mockReturnValueOnce(gate.promise);
+
+		const reconcilePromise = reconcileHandlers[0]?.();
+		emitView(viewEvent(2));
+		gate.resolve({
+			profiles: [
+				profile(1),
+				profile(2, { viewedCount: { totalCount: 7, maxDisplayCount: 99 } }),
+			],
+			previews: [],
+		});
+		await reconcilePromise;
+
+		const twos = state.views.filter(
+			(v) => v.type === "profile" && v.profile.profileId === 2,
+		);
+		expect(twos).toHaveLength(1);
+		expect(twos[0]).toMatchObject({
+			type: "profile",
+			profile: { viewedCount: { totalCount: 7 } },
 		});
 	});
 

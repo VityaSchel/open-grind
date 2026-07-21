@@ -6,6 +6,7 @@ import { markConversationAsRead } from "$lib/api/messaging/conversations";
 import { reactToMessage, sendMessage } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import { previewFromMessage } from "$lib/model/messaging/messages";
+import { now } from "$lib/util/clock";
 import { reconciler } from "$lib/util/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -23,6 +24,9 @@ import { getConversation } from "./messages";
 export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
 };
+
+const READ_DEBOUNCE_MS = 500;
+const READ_MAX_WAIT_MS = 2000;
 
 export type ConversationProfile = Awaited<
 	ReturnType<typeof getConversation>
@@ -44,6 +48,7 @@ export class ConversationState {
 	#conversations: ConversationsState;
 	#readQueue: { messageId: string; timestamp: number }[] = [];
 	#readTimer: ReturnType<typeof setTimeout> | null = null;
+	#readDeadline: number | null = null;
 	#unsubscribeReconcile: () => void;
 
 	constructor({
@@ -82,7 +87,7 @@ export class ConversationState {
 				}
 
 				if (incoming.senderId === this.ourProfileId) {
-					const pending = this.messages.find((m) => m.status === "pending");
+					const pending = this.#matchPendingEcho(incoming);
 					if (pending) {
 						pending.status = "sent";
 						pending.messageId = incoming.messageId;
@@ -133,6 +138,9 @@ export class ConversationState {
 	#wsPromises: Promise<() => void>[] = [];
 
 	#destroyed = false;
+	get destroyed(): boolean {
+		return this.#destroyed;
+	}
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
@@ -142,7 +150,10 @@ export class ConversationState {
 		}
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();
+		// Flush reads observed just before navigating away instead of dropping the
+		// queued receipts (fire-and-forget; touches no reactive state).
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
+		if (this.#readQueue.length > 0) void this.#flushReadQueue();
 	}
 
 	async #reconcileMessages(): Promise<void> {
@@ -364,6 +375,27 @@ export class ConversationState {
 		}
 	}
 
+	// Resolve an own-message echo to the pending optimistic message it belongs to.
+	// `messages` is newest-first and the server echoes sends in order, so the
+	// oldest pending is the one being acknowledged. Prefer the oldest pending of a
+	// matching type (robust to echoes for different message kinds arriving out of
+	// order), falling back to the oldest pending of any type.
+	// Known limitation: two same-type sends whose echoes arrive out of order can
+	// still cross-assign — the API carries no client correlation id to echo back,
+	// so positional matching is the best available heuristic.
+	#matchPendingEcho(
+		incoming: ApiResponseMessage,
+	): OptimisticMessage | undefined {
+		let fallback: OptimisticMessage | undefined;
+		for (let i = this.messages.length - 1; i >= 0; i--) {
+			const candidate = this.messages[i];
+			if (candidate.status !== "pending") continue;
+			if (candidate.type === incoming.type) return candidate;
+			fallback ??= candidate;
+		}
+		return fallback;
+	}
+
 	#advanceLastRead(timestamp: number | null): boolean {
 		if (timestamp === null) return false;
 		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
@@ -440,16 +472,25 @@ export class ConversationState {
 		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
 			return;
 		this.#readQueue.push({ messageId, timestamp });
+		const current = now();
+		this.#readDeadline ??= current + READ_MAX_WAIT_MS;
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
+		// Debounce so bursts collapse into one request, but cap the wait so a
+		// continuous message stream can't starve the flush indefinitely.
+		const delay = Math.max(
+			0,
+			Math.min(READ_DEBOUNCE_MS, this.#readDeadline - current),
+		);
 		this.#readTimer = setTimeout(() => {
 			void this.#flushReadQueue();
-		}, 500);
+		}, delay);
 	}
 
 	async #flushReadQueue(): Promise<void> {
 		const queue = this.#readQueue;
 		this.#readQueue = [];
 		this.#readTimer = null;
+		this.#readDeadline = null;
 		if (queue.length === 0) return;
 		queue.sort((a, b) => a.timestamp - b.timestamp);
 		const highest = queue[queue.length - 1];

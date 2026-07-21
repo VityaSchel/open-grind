@@ -12,15 +12,19 @@
 	const conversationState = $derived(getConversationState()());
 
 	async function loadMore() {
-		if (
-			!container ||
-			conversationState.loadingMore ||
-			conversationState.pageKey === null
-		)
-			return;
+		const state = conversationState;
+		if (!container || state.loadingMore || state.pageKey === null) return;
 		const prevScrollHeight = container.scrollHeight;
-		await conversationState.loadMore();
+		await state.loadMore();
+		// The scroll container is shared across [conversationId] changes. If the
+		// user switched conversations mid-fetch, applying A's delta to B's height
+		// would jump the scroll position. The captured `state` is destroyed on
+		// switch (+page.svelte effect cleanup), so `state.destroyed` is reliable
+		// even when this component has unmounted and its `conversationState`
+		// derived has gone stale.
+		if (state.destroyed || conversationState !== state) return;
 		await tick();
+		if (state.destroyed || conversationState !== state) return;
 		container.scrollTop += container.scrollHeight - prevScrollHeight;
 	}
 
