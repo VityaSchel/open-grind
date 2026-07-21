@@ -59,6 +59,7 @@ class ConversationsState {
 	>();
 	#inFlightFetches = new Set<Promise<unknown>>();
 	#fetchEpoch = 0;
+	#syncLatestInFlight: Promise<void> | null = null;
 
 	constructor(ourProfileId: number) {
 		this.ourProfileId = ourProfileId;
@@ -139,9 +140,11 @@ class ConversationsState {
 	async #reconcile(): Promise<void> {
 		if (this.#destroyed || this.refreshing) return;
 		this.refreshing = true;
-		const fetchEpoch = ++this.#fetchEpoch;
 		try {
 			await this.initial.catch(() => {});
+			// Claim the epoch after initial resolves, or a still-loading initial
+			// #load sees a newer epoch and drops its own result.
+			const fetchEpoch = ++this.#fetchEpoch;
 
 			const activeId = this.#activeConversationId;
 			for (const id of [...this.#messageCache.keys()]) {
@@ -175,7 +178,7 @@ class ConversationsState {
 				}
 				if (oldestFetchedTs <= oldestLoadedTs) break;
 			}
-			// Continue lazy loading from wherever the refresh stopped.
+			if (this.#isStale(fetchEpoch)) return;
 			this.nextPage = reachedEnd ? null : page;
 
 			for (const incoming of fetched.values()) {
@@ -213,10 +216,20 @@ class ConversationsState {
 		}
 	}
 
-	async #syncLatest({ errorLabel }: { errorLabel: string }): Promise<void> {
-		const fetchEpoch = ++this.#fetchEpoch;
+	#syncLatest(args: { errorLabel: string }): Promise<void> {
+		this.#syncLatestInFlight ??= this.#runSyncLatest(args).finally(() => {
+			this.#syncLatestInFlight = null;
+		});
+		return this.#syncLatestInFlight;
+	}
+
+	async #runSyncLatest({ errorLabel }: { errorLabel: string }): Promise<void> {
+		// Read, don't claim: syncLatest never writes nextPage, so #load/#reconcile
+		// must not defer to it. It still guards its own write below.
+		const fetchEpoch = this.#fetchEpoch;
 		try {
 			const result = await getConversations(1);
+			if (this.#isStale(fetchEpoch)) return;
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
@@ -237,6 +250,7 @@ class ConversationsState {
 	async #load(page: number): Promise<void> {
 		const fetchEpoch = ++this.#fetchEpoch;
 		const result = await getConversations(page);
+		if (this.#isStale(fetchEpoch)) return;
 		const known = new Set(this.entries.map((e) => e.data.conversationId));
 		for (const entry of result.entries) {
 			const conversationId = entry.data.conversationId;
@@ -249,6 +263,10 @@ class ConversationsState {
 		}
 		this.nextPage = result.nextPage;
 		this.#sortEntries();
+	}
+
+	#isStale(fetchEpoch: number): boolean {
+		return fetchEpoch !== this.#fetchEpoch;
 	}
 
 	#trackFetch<T>(fetch: Promise<T>): Promise<T> {
@@ -378,8 +396,8 @@ class ConversationsState {
 	async markRead(conversationId: string) {
 		const entry = this.#find(conversationId);
 		if (entry) {
-			const unreadCount = entry.data.unreadCount;
-			if (unreadCount > 0) {
+			const clearedCount = entry.data.unreadCount;
+			if (clearedCount > 0) {
 				entry.data.unreadCount = 0;
 				try {
 					await markConversationAsRead({ conversationId });
@@ -389,7 +407,7 @@ class ConversationsState {
 						label: "Failed to mark conversation as read",
 						error,
 					});
-					entry.data.unreadCount = unreadCount;
+					entry.data.unreadCount += clearedCount;
 				}
 			}
 		}
