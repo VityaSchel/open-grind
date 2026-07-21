@@ -1,0 +1,8 @@
+Open Grind is the cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven unofficial client for Grindr queer social network.
+
+<ul><li><b>Unlocked grid</b>
+Unlimited profiles for free, ads removed from grid, all filters unlocked</li><li><b>Location spoofing</b>
+Native geolocation change with OpenStreetMap and location search built-in</li><li><b>Zero ads</b>
+No ads, first party, third party or self-promotion, no obstructive pop-ups</li><li><b>Privacy by default</b>
+No analytics, zero trackers, no data is collected by Open Grind developers</li><li><b>Security as foundation</b>
+Human code review, audit, supply chain security, end-to-end testing</li></ul>
