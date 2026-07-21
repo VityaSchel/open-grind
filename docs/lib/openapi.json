@@ -564,12 +564,14 @@
 										"sevenDayRevenue": {
 											"type": "number",
 											"format": "float",
-											"description": "unknown, WIP"
+											"nullable": true,
+											"description": "float, the user's revenue over the last 7 days (may be null)"
 										},
 										"thirtyDayRevenue": {
 											"type": "number",
 											"format": "float",
-											"description": "unknown, WIP"
+											"nullable": true,
+											"description": "float, the user's revenue over the last 30 days (may be null)"
 										}
 									}
 								}
@@ -3252,7 +3254,7 @@
 				"x-wip": true
 			}
 		},
-		"/public/v1/public-features": {
+		"/public/v1/assignments": {
 			"get": {
 				"tags": [
 					"analytics/assignments"
@@ -3545,6 +3547,14 @@
 													}
 												}
 											}
+										},
+										"blockedBy": {
+											"type": "array",
+											"nullable": true,
+											"items": {
+												"type": "string"
+											},
+											"description": "array of profile-id strings; may be `null`"
 										}
 									}
 								}
@@ -4601,7 +4611,7 @@
 						}
 					},
 					{
-						"name": "sort",
+						"name": "sortBy",
 						"in": "query",
 						"schema": {
 							"type": "string"
@@ -4664,7 +4674,22 @@
 										"travelPlans": {
 											"type": "array",
 											"items": {
-												"$ref": "#/components/schemas/TravelPlanMutation"
+												"allOf": [
+													{
+														"$ref": "#/components/schemas/TravelPlanMutation"
+													},
+													{
+														"type": "object",
+														"properties": {
+															"locationName": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"locationName"
+														]
+													}
+												]
 											}
 										}
 									}
@@ -5020,10 +5045,12 @@
 										"type": "object",
 										"properties": {
 											"senderId": {
-												"type": "integer"
+												"type": "integer",
+												"format": "int64"
 											},
 											"receiverId": {
-												"type": "integer"
+												"type": "integer",
+												"format": "int64"
 											},
 											"tapType": {
 												"$ref": "#/components/schemas/TapType"
@@ -5794,6 +5821,10 @@
 										"albumId": {
 											"type": "integer",
 											"format": "int64"
+										},
+										"albumName": {
+											"type": "string",
+											"nullable": true
 										}
 									}
 								}
@@ -5854,16 +5885,16 @@
 						"name": "width",
 						"in": "query",
 						"schema": {
-							"type": "number",
-							"description": "number, optional, doesn't affect the resulting image"
+							"type": "integer",
+							"description": "integer, optional, doesn't affect the resulting image"
 						}
 					},
 					{
 						"name": "height",
 						"in": "query",
 						"schema": {
-							"type": "number",
-							"description": "number, optional, doesn't affect the resulting image"
+							"type": "integer",
+							"description": "integer, optional, doesn't affect the resulting image"
 						}
 					},
 					{
@@ -6433,6 +6464,24 @@
 					"messaging/albums"
 				],
 				"operationId": "getPressieAlbumsFeedPaywall",
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"counterpartyId": {
+										"type": "integer",
+										"format": "int64",
+										"nullable": true,
+										"description": "profile ID or `null`"
+									}
+								}
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"content": {
@@ -7452,9 +7501,13 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"phraseId"
+									],
 									"properties": {
-										"phrase": {
-											"$ref": "#/components/schemas/SavedPhrase"
+										"phraseId": {
+											"type": "string",
+											"description": "string, uuid"
 										}
 									}
 								}
@@ -8137,15 +8190,11 @@
 					}
 				],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								]
+								"$ref": "#/components/schemas/SmsVerifyCodeLegacyRequest"
 							}
 						}
 					}
@@ -8626,7 +8675,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/FavoriteNote"
+									"$ref": "#/components/schemas/FavoriteNoteWithCounterparty"
 								}
 							}
 						},
@@ -9135,6 +9184,16 @@
 				"security": [
 					{
 						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "selected",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
 					}
 				],
 				"responses": {
@@ -10417,7 +10476,12 @@
 						"name": "type",
 						"in": "query",
 						"schema": {
-							"type": "string"
+							"type": "string",
+							"enum": [
+								"interestsTab",
+								"forYou"
+							],
+							"description": "Woodwork placement slot to fetch"
 						}
 					}
 				],
@@ -11345,6 +11409,7 @@
 					},
 					"value": {
 						"type": "string",
+						"nullable": true,
 						"description": "e.g. `\"off\"` or `\"on\"` or `\"Test\"`"
 					},
 					"payload": {
@@ -11986,6 +12051,14 @@
 							"aboutMe": {
 								"type": "string",
 								"nullable": true
+							},
+							"created": {
+								"type": "integer",
+								"format": "int64",
+								"description": "profile creation timestamp; unit (ms vs s) unverified"
+							},
+							"showUnlockReward": {
+								"type": "boolean"
 							},
 							"ethnicity": {
 								"allOf": [
@@ -13007,8 +13080,7 @@
 					"sortFilter",
 					"genderPlural",
 					"excludeOnProfileSelection",
-					"excludeOnFilterSelection",
-					"alsoClassifiedAs"
+					"excludeOnFilterSelection"
 				]
 			},
 			"GenderPronounSuggestionRequest": {
@@ -13075,47 +13147,53 @@
 			},
 			"AccountPreferencesUpdate": {
 				"type": "object",
+				"required": [
+					"settings"
+				],
 				"properties": {
-					"locationSearchOptOut": {
-						"type": "boolean"
-					},
-					"incognito": {
-						"type": "boolean"
-					},
-					"hideViewedMe": {
-						"type": "boolean"
-					},
-					"approximateDistance": {
-						"type": "boolean"
-					},
-					"viewRightNowNsfw": {
-						"type": "boolean"
-					},
-					"mapLocationFuzzRadius": {
-						"type": "integer",
-						"nullable": true,
-						"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
-					},
-					"showOnMap": {
-						"type": "boolean",
-						"description": "Whether the profile is shown on the map."
+					"settings": {
+						"type": "object",
+						"properties": {
+							"locationSearchOptOut": {
+								"type": "boolean"
+							},
+							"incognito": {
+								"type": "boolean"
+							},
+							"hideViewedMe": {
+								"type": "boolean"
+							},
+							"approximateDistance": {
+								"type": "boolean"
+							},
+							"viewRightNowNsfw": {
+								"type": "boolean"
+							},
+							"showOnMap": {
+								"type": "boolean",
+								"description": "Whether the profile is shown on the map."
+							},
+							"mapLocationFuzzRadius": {
+								"type": "integer",
+								"nullable": true,
+								"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
+							}
+						}
 					}
 				},
-				"x-render-on-tag": "settings/account",
-				"required": [
-					"locationSearchOptOut",
-					"incognito",
-					"hideViewedMe",
-					"approximateDistance",
-					"viewRightNowNsfw"
-				]
+				"x-render-on-tag": "settings/account"
 			},
 			"VisitingSettings": {
 				"type": "object",
 				"properties": {
 					"setting": {
 						"type": "string",
-						"description": "`\"AUTO\"`, WIP"
+						"enum": [
+							"OFF",
+							"ON",
+							"AUTO"
+						],
+						"description": "string, visiting-status mode: `OFF`, `ON`, or `AUTO`"
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -13132,11 +13210,11 @@
 					},
 					"lat": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					},
 					"lon": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -13155,11 +13233,11 @@
 				"properties": {
 					"lat": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					},
 					"lon": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					}
 				},
 				"x-render-on-tag": "settings/account"
@@ -13565,6 +13643,21 @@
 								"items": {
 									"$ref": "#/components/schemas/AlbumContentWithRemainingViews"
 								}
+							},
+							"isShareable": {
+								"type": "boolean"
+							},
+							"contentCount": {
+								"type": "object",
+								"nullable": true,
+								"properties": {
+									"imageCount": {
+										"type": "integer"
+									},
+									"videoCount": {
+										"type": "integer"
+									}
+								}
 							}
 						}
 					}
@@ -13581,7 +13674,8 @@
 					"sharedCount",
 					"createdAt",
 					"updatedAt",
-					"content"
+					"content",
+					"isShareable"
 				]
 			},
 			"AlbumShareInfo": {
@@ -13621,6 +13715,9 @@
 								{
 									"type": "object",
 									"properties": {
+										"profileId": {
+											"type": "integer"
+										},
 										"content": {
 											"allOf": [
 												{
@@ -13720,8 +13817,17 @@
 									"format": "int64"
 								},
 								"shareId": {
-									"type": "integer",
-									"description": "can be `0`"
+									"type": "string",
+									"description": "string, e.g. `\"0\"`"
+								},
+								"expiresAt": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/TimestampMs"
+										}
+									],
+									"nullable": true,
+									"description": "unix timestamp in milliseconds or `null`"
 								}
 							}
 						}
@@ -13754,7 +13860,7 @@
 					"maxViewableVideos": {
 						"type": "integer"
 					},
-					"maxContentSize": {
+					"maxContentSizeInBytes": {
 						"type": "integer",
 						"format": "int64",
 						"description": "long integer, size in bytes"
@@ -13788,7 +13894,7 @@
 					"maxShares",
 					"maxViewableAlbums",
 					"maxViewableVideos",
-					"maxContentSize",
+					"maxContentSizeInBytes",
 					"maxContentSizeHumanReadable",
 					"maxVideoLength",
 					"minVideoLength",
@@ -13869,14 +13975,14 @@
 										"albumVersion": {
 											"type": "integer"
 										},
-										"expiresat": {
+										"expiresAt": {
 											"allOf": [
 												{
 													"$ref": "#/components/schemas/TimestampMs"
 												}
 											],
 											"nullable": true,
-											"description": "unix timestamp in milliseconds; note: observed key spelling, may also appear as `expiresAt`"
+											"description": "unix timestamp in milliseconds or `null`"
 										},
 										"name": {
 											"type": "string",
@@ -13901,9 +14007,9 @@
 												"contentType": {
 													"type": "string"
 												},
-												"coverContent": {
+												"location": {
 													"type": "string",
-													"nullable": true
+													"description": "string, cover media location/URL"
 												},
 												"status": {
 													"type": "string"
@@ -14081,10 +14187,12 @@
 						"description": "appears to be null"
 					},
 					"lat": {
+						"type": "number",
 						"nullable": true,
 						"description": "appears to be null"
 					},
 					"lon": {
+						"type": "number",
 						"nullable": true,
 						"description": "appears to be null"
 					},
@@ -14102,6 +14210,8 @@
 						"description": "appears to be null"
 					},
 					"duration": {
+						"type": "integer",
+						"format": "int64",
 						"nullable": true,
 						"description": "appears to be null"
 					},
@@ -14170,7 +14280,13 @@
 						"type": "integer"
 					},
 					"preview": {
-						"$ref": "#/components/schemas/ConversationPreview"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ConversationPreview"
+							}
+						],
+						"nullable": true,
+						"description": "[Conversation preview](/grindr-api/messaging/conversations#conversationpreview) or `null` (e.g. a partial conversation with no message)"
 					},
 					"muted": {
 						"type": "boolean"
@@ -14307,7 +14423,8 @@
 					},
 					"nextPage": {
 						"type": "integer",
-						"description": "integer, e.g. `2`"
+						"nullable": true,
+						"description": "integer, e.g. `2`; `null` or absent on the last page"
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
@@ -14316,8 +14433,7 @@
 					"showsFreeHeaderLabel",
 					"totalFullConversations",
 					"totalPartialConversations",
-					"maxDisplayLockCount",
-					"nextPage"
+					"maxDisplayLockCount"
 				]
 			},
 			"MessageReaction": {
@@ -15001,7 +15117,12 @@
 					},
 					"replyToMessage": {
 						"nullable": true,
-						"description": "unknown or `null`"
+						"description": "object, see [Message](/grindr-api/messaging/messages#message), or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Message"
+							}
+						]
 					},
 					"dynamic": {
 						"type": "boolean",
@@ -15109,6 +15230,11 @@
 							},
 							"isInAList": {
 								"type": "boolean"
+							},
+							"summary": {
+								"type": "object",
+								"nullable": true,
+								"description": "object or `null`, Wingman AI conversation summary (`contactDetails` and `summaries` arrays)"
 							}
 						}
 					},
@@ -15181,6 +15307,11 @@
 					{
 						"heading": "Additional body fields for websocket only:",
 						"properties": {
+							"ref": {
+								"type": "string",
+								"nullable": true,
+								"description": "client-generated correlation reference; echoed back as `refValue`"
+							},
 							"replyToMessageId": {
 								"type": "string",
 								"nullable": true
@@ -15412,6 +15543,12 @@
 								],
 								"nullable": true,
 								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
+							},
+							"hasChatted": {
+								"type": "boolean"
+							},
+							"unreadMessageCount": {
+								"type": "integer"
 							}
 						}
 					}
@@ -15429,15 +15566,16 @@
 					"isBoosting",
 					"isMutual",
 					"rightNowType",
-					"isViewable"
+					"isViewable",
+					"hasChatted",
+					"unreadMessageCount"
 				]
 			},
 			"ViewsEyeballResponse": {
 				"type": "object",
 				"properties": {
 					"viewedCount": {
-						"type": "number",
-						"nullable": true
+						"type": "integer"
 					},
 					"mostRecent": {
 						"type": "object",
@@ -15599,6 +15737,55 @@
 						"type": "array",
 						"items": {
 							"$ref": "#/components/schemas/ViewerProfile"
+						}
+					},
+					"ttl": {
+						"type": "integer",
+						"format": "int64",
+						"description": "viewers-list time-to-live"
+					},
+					"lastDistanceInKm": {
+						"type": "string",
+						"nullable": true,
+						"description": "distance (km) of the last returned viewer, pagination cursor"
+					},
+					"lastProfileId": {
+						"type": "string",
+						"nullable": true,
+						"description": "profile ID of the last returned viewer, pagination cursor"
+					},
+					"upsells": {
+						"type": "object",
+						"nullable": true,
+						"description": "ad placement indices",
+						"properties": {
+							"mpuFree": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mpuXtra": {
+								"type": "integer",
+								"nullable": true
+							},
+							"boostUpsell": {
+								"type": "array",
+								"nullable": true,
+								"items": {
+									"type": "integer"
+								}
+							},
+							"mrecCascadeFirst": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mrecCascadeSecond": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mrecCascadeThird": {
+								"type": "integer",
+								"nullable": true
+							}
 						}
 					}
 				},
@@ -16282,8 +16469,7 @@
 				"required": [
 					"profiles",
 					"lastDistanceInKm",
-					"lastProfileId",
-					"inserts"
+					"lastProfileId"
 				]
 			},
 			"DiscoverResponse": {
@@ -16349,6 +16535,22 @@
 								},
 								"category": {
 									"$ref": "#/components/schemas/GaymojiCategory"
+								},
+								"tag": {
+									"type": "string",
+									"nullable": true
+								},
+								"href": {
+									"type": "string",
+									"nullable": true
+								},
+								"expiredTime": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/TimestampMs"
+										}
+									],
+									"description": "unix timestamp in milliseconds, may be `0`"
 								}
 							}
 						}
@@ -17181,6 +17383,7 @@
 				},
 				"required": [
 					"profileId",
+					"favorite",
 					"approximateDistance",
 					"activity"
 				],
