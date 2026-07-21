@@ -8843,7 +8843,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Profile"
+								"$ref": "#/components/schemas/ProfileFullUpdate"
 							}
 						}
 					}
@@ -8864,7 +8864,7 @@
 					}
 				},
 				"summary": "Update own profile (full)",
-				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
+				"description": "[ProfileFullUpdate](/grindr-api/users/profiles#profilefullupdate) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
 				"x-notes": [
 					"Because the profile is replaced fully, every editable field must be sent on each request, including fields not exposed in the edit UI such as `approximateDistance` and `profileTags`.",
 					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A clean update answers `200` with an empty body. If a moderated field contains banned terms the request fails with a `400` [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) naming the offending fields; the update is rejected **wholesale**, so none of the submitted fields — not even the clean ones — are persisted. Only a `200` should be treated as success."
@@ -10586,7 +10586,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Get genders](/grindr-api/users/profiles#get-genders)"
+					"description": "comma-separated list of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders) — a filter query param (CSV string), unlike the profile-write `genders` field which is an integer array"
 				}
 			},
 			"GridPageNumberQuery": {
@@ -11636,7 +11636,8 @@
 							},
 							"sexualPosition": {
 								"type": "integer",
-								"nullable": true
+								"nullable": true,
+								"description": "[Sexual position ID](/grindr-api/users/profiles#sexual-position-id) or `null`"
 							},
 							"foundVia": {
 								"allOf": [
@@ -12078,11 +12079,33 @@
 								}
 							},
 							"identity": {
-								"nullable": true
+								"type": "object",
+								"nullable": true,
+								"description": "Legacy self-identification container, superseded by the `pronouns` ID array. Read-only: it is returned on read but ignored by every profile-update endpoint (the official app never sends it).",
+								"x-original-type": "com.grindrapp.android.login.data.model.Identity",
+								"properties": {
+									"pronouns": {
+										"type": "object",
+										"nullable": true,
+										"properties": {
+											"pronounsDisplay": {
+												"type": "string",
+												"nullable": true,
+												"description": "free-text pronoun label shown next to the display name, e.g. `he/him`"
+											},
+											"pronounsCategory": {
+												"type": "integer",
+												"description": "pronoun category ID; value set is undocumented"
+											}
+										}
+									}
+								}
 							},
 							"hashtags": {
 								"type": "array",
-								"items": {}
+								"items": {
+									"type": "string"
+								}
 							},
 							"profileTags": {
 								"type": "array",
@@ -12124,7 +12147,12 @@
 								"type": "number",
 								"description": "number, may be absent"
 							},
-							"lastThrobTimestamp": {},
+							"lastThrobTimestamp": {
+								"type": "integer",
+								"format": "int64",
+								"nullable": true,
+								"description": "legacy timestamp, present in the API response but testing shows only `null`, units unverified"
+							},
 							"sexualHealth": {
 								"type": "array",
 								"items": {
@@ -12204,12 +12232,388 @@
 				]
 			},
 			"ProfilePatch": {
-				"allOf": [
-					{
-						"$ref": "#/components/schemas/Profile"
+				"type": "object",
+				"description": "Partial profile update body for `PATCH /v4/me/profile`. Every key is optional; only the keys present in the request are updated (omit a key to leave it unchanged, do not send `null` to clear, send an empty array or the field's cleared value). Structured fields only. `displayName` and `aboutMe` are accepted by the schema but silently ignored by this endpoint — write them using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full).",
+				"x-render-on-tag": "users/profiles",
+				"properties": {
+					"aboutMe": {
+						"type": "string",
+						"nullable": true,
+						"description": "Silently ignored by PATCH, write using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full)."
+					},
+					"nsfw": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/AcceptNsfwPics"
+							}
+						],
+						"nullable": true
+					},
+					"bodyType": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BodyType"
+							}
+						],
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true,
+						"description": "Silently ignored by PATCH, write using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full)."
+					},
+					"ethnicity": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Ethnicity"
+							}
+						],
+						"nullable": true
+					},
+					"genders": {
+						"type": "array",
+						"nullable": true,
+						"maxItems": 3,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders), max. length: 3. As of June 22, 2026, submitting gender ID `62` (\"Ask me\") in filters causes a `500 Internal Server Error`, no error for profile edit endpoint."
+					},
+					"height": {
+						"type": "number",
+						"nullable": true,
+						"description": "number in cm"
+					},
+					"hivStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/HivStatus"
+							}
+						],
+						"nullable": true
+					},
+					"lastTestedDate": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"lookingFor": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/LookingFor"
+						}
+					},
+					"meetAt": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/MeetAt"
+						}
+					},
+					"grindrTribes": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"profileTags": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						},
+						"description": "array of [Profile tags](/grindr-api/users/profiles#profile-tags)"
+					},
+					"pronouns": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of pronoun IDs, see [Get pronouns](/grindr-api/users/profiles#get-pronouns), max. length: 3."
+					},
+					"relationshipStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RelationshipStatus"
+							}
+						],
+						"nullable": true
+					},
+					"sexualHealth": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/SexualHealth"
+						}
+					},
+					"sexualPosition": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/SexualPositionId"
+							}
+						],
+						"nullable": true
+					},
+					"showAge": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showDistance": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showPosition": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showTribes": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"socialNetworks": {
+						"type": "object",
+						"nullable": true,
+						"description": "Each network carries only `{ userId }` on write (no `site`, unlike the read-side [SocialNetwork](/grindr-api/users/profiles#socialnetwork)). Any network key may be omitted.",
+						"properties": {
+							"twitter": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"facebook": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"instagram": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							}
+						}
+					},
+					"tribesImInto": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"vaccines": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Vaccine"
+						}
+					},
+					"weight": {
+						"type": "number",
+						"nullable": true,
+						"description": "number in grams"
 					}
-				],
-				"x-render-on-tag": "users/profiles"
+				}
+			},
+			"ProfileFullUpdate": {
+				"type": "object",
+				"description": "Full profile replacement body for `PUT /v3.1/me/profile`. Unlike [ProfilePatch](/grindr-api/users/profiles#profilepatch), this is a full replace: every editable field is sent on each request, and the enum scalars and `show*` flags are non-nullable. This is the only endpoint that persists `displayName` and `aboutMe`, both of which are moderated.",
+				"x-render-on-tag": "users/profiles",
+				"x-original-type": "com.grindrapp.android.model.UpdateProfileRequest",
+				"properties": {
+					"displayName": {
+						"type": "string",
+						"nullable": true,
+						"description": "moderated free-text; persisted here (unlike PATCH)"
+					},
+					"aboutMe": {
+						"type": "string",
+						"nullable": true,
+						"description": "moderated free-text; persisted here (unlike PATCH)"
+					},
+					"age": {
+						"type": "integer",
+						"description": "server-derived from birth date; echoed back on a full replace"
+					},
+					"showAge": {
+						"type": "boolean"
+					},
+					"showDistance": {
+						"type": "boolean"
+					},
+					"showPosition": {
+						"type": "boolean"
+					},
+					"showTribes": {
+						"type": "boolean"
+					},
+					"approximateDistance": {
+						"type": "boolean"
+					},
+					"nsfw": {
+						"$ref": "#/components/schemas/AcceptNsfwPics"
+					},
+					"bodyType": {
+						"$ref": "#/components/schemas/BodyType"
+					},
+					"ethnicity": {
+						"$ref": "#/components/schemas/Ethnicity"
+					},
+					"hivStatus": {
+						"$ref": "#/components/schemas/HivStatus"
+					},
+					"lastTestedDate": {
+						"$ref": "#/components/schemas/TimestampMs"
+					},
+					"relationshipStatus": {
+						"$ref": "#/components/schemas/RelationshipStatus"
+					},
+					"sexualPosition": {
+						"$ref": "#/components/schemas/SexualPositionId"
+					},
+					"height": {
+						"type": "number",
+						"description": "number in centimeters"
+					},
+					"weight": {
+						"type": "number",
+						"description": "number in grams"
+					},
+					"genders": {
+						"type": "array",
+						"nullable": true,
+						"maxItems": 3,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders), max. length: 3."
+					},
+					"pronouns": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of pronoun IDs, see [Get pronouns](/grindr-api/users/profiles#get-pronouns), max. length: 3."
+					},
+					"grindrTribes": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"tribesImInto": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"lookingFor": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/LookingFor"
+						}
+					},
+					"meetAt": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/MeetAt"
+						}
+					},
+					"vaccines": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Vaccine"
+						}
+					},
+					"sexualHealth": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/SexualHealth"
+						}
+					},
+					"profileTags": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						},
+						"description": "array of [Profile tags](/grindr-api/users/profiles#profile-tags)"
+					},
+					"socialNetworks": {
+						"type": "object",
+						"nullable": true,
+						"description": "Each network carries only `{ userId }` on write (no `site`, unlike the read-side [SocialNetwork](/grindr-api/users/profiles#socialnetwork)).",
+						"properties": {
+							"twitter": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"facebook": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"instagram": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							}
+						}
+					}
+				},
+				"required": [
+					"age",
+					"showAge",
+					"showDistance",
+					"showPosition",
+					"showTribes",
+					"approximateDistance",
+					"nsfw",
+					"bodyType",
+					"ethnicity",
+					"hivStatus",
+					"lastTestedDate",
+					"relationshipStatus",
+					"sexualPosition",
+					"height",
+					"weight"
+				]
 			},
 			"BannedTerms": {
 				"type": "object",
@@ -12343,6 +12747,12 @@
 						"description": "string, username"
 					},
 					"site": {
+						"type": "string",
+						"enum": [
+							"twitter",
+							"facebook",
+							"instagram"
+						],
 						"description": "e.g. `\"twitter\"` | `\"facebook\"` | `\"instagram\"`"
 					}
 				},
@@ -13401,6 +13811,11 @@
 						"nullable": true
 					},
 					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
 						"nullable": true
 					},
 					"distanceKm": {
@@ -14640,6 +15055,11 @@
 						"nullable": true
 					},
 					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
 						"nullable": true
 					},
 					"distance": {
@@ -15217,21 +15637,33 @@
 						}
 					},
 					"nextPage": {
-						"type": "integer"
+						"type": "integer",
+						"nullable": true
 					},
 					"shuffled": {
 						"type": "boolean"
 					},
-					"hiddenProfiles": {},
-					"hiddenProfileInfo": {}
+					"hiddenProfiles": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer",
+							"format": "int64"
+						},
+						"description": "profile IDs hidden from the cascade"
+					},
+					"hiddenProfilesInfo": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					}
 				},
 				"x-render-on-tag": "browse/grid",
 				"required": [
 					"items",
-					"nextPage",
-					"shuffled",
-					"hiddenProfiles",
-					"hiddenProfileInfo"
+					"shuffled"
 				]
 			},
 			"FullProfileV1": {
