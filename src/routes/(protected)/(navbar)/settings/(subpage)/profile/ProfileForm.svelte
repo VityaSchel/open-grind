@@ -282,170 +282,173 @@
 </script>
 
 <form class="flex flex-col gap-6" onsubmit={(event) => event.preventDefault()}>
-	<section class="flex flex-col gap-3">
-		<h2>Photos</h2>
-		<ProfilePicturesUpload bind:medias />
-	</section>
+	<fieldset disabled={saving} class="contents">
+		<section class="flex flex-col gap-3">
+			<h2>Photos</h2>
+			<ProfilePicturesUpload bind:medias />
+		</section>
 
-	<section class="flex flex-col gap-3">
-		<TextField
-			label="Display name"
-			bind:value={displayName}
-			maxLength={fieldLimits.displayName}
-			placeholder="Everyone will see this on the grid..."
-		/>
-		<MultilineField
-			label="About me"
-			bind:value={aboutMe}
-			maxLength={fieldLimits.aboutMe}
-			placeholder="Tell people who you are and what you're looking for (not what you're not looking for)"
-		/>
-		<ComboField
-			label="Tags"
-			bind:values={profileTags}
-			options={tagOptions}
-			resolveLabel={resolveTagLabel}
-			max={maxProfileTags}
-			searchPlaceholder="Search tags..."
-		/>
-	</section>
-
-	<section class="flex flex-col gap-3">
-		<h2>Identity</h2>
-		<ComboField
-			label="Gender"
-			bind:values={genderIds}
-			options={genderOptions}
-			resolveLabel={resolveGenderLabel}
-			exclude={genderExclusions}
-			max={maxProfileGenders}
-			searchPlaceholder="Search genders..."
-		/>
-		<ComboField
-			label="Pronouns"
-			bind:values={pronounIds}
-			options={pronounOptions}
-			resolveLabel={resolvePronounLabel}
-			max={maxProfilePronouns}
-			searchPlaceholder="Search pronouns..."
-		/>
-	</section>
-
-	<section class="flex flex-col gap-3">
-		<h2>Stats</h2>
-		<Field label="Age">
-			<WheelPicker
-				bind:value={age}
-				min={ageRange.min}
-				max={ageRange.max}
-				label="years"
+		<section class="flex flex-col gap-3">
+			<TextField
+				label="Display name"
+				bind:value={displayName}
+				maxLength={fieldLimits.displayName}
+				placeholder="Everyone will see this on the grid..."
 			/>
-		</Field>
-		<SwitchRow label="Show my age" bind:checked={showAge} />
-		<SelectField
-			label="Position"
-			bind:value={sexualPosition}
-			options={positionOptions}
-		/>
-		<SwitchRow label="Show my position" bind:checked={showPosition} />
-		<NumberField
-			label="Height"
-			bind:value={height}
-			min={heightCmRange.min}
-			max={heightCmRange.max}
-			unit="cm"
-			placeholder="—"
-		/>
-		<NumberField
-			label="Weight"
-			bind:value={weightKg}
-			min={weightKgRange.min}
-			max={weightKgRange.max}
-			step={0.5}
-			unit="kg"
-			placeholder="—"
-		/>
-		<SelectField
-			label="Body type"
-			bind:value={bodyType}
-			options={bodyTypeOptions}
-		/>
-		<SelectField
-			label="Ethnicity"
-			bind:value={ethnicity}
-			options={ethnicityOptions}
-		/>
-		<SelectField
-			label="Relationship status"
-			bind:value={relationshipStatus}
-			options={relationshipOptions}
-		/>
-	</section>
+			<MultilineField
+				label="About me"
+				bind:value={aboutMe}
+				maxLength={fieldLimits.aboutMe}
+				placeholder="Tell people who you are and what you're looking for (not what you're not looking for)"
+			/>
+			<ComboField
+				label="Tags"
+				bind:values={profileTags}
+				options={tagOptions}
+				resolveLabel={resolveTagLabel}
+				max={maxProfileTags}
+				searchPlaceholder="Search tags..."
+			/>
+		</section>
 
-	<section class="flex flex-col gap-3">
-		<h2>Preferences</h2>
-		<SwitchRow label="Show my tribes" bind:checked={showTribes} />
-		<MultiSelectField
-			label="My tribes"
-			bind:values={grindrTribes}
-			options={tribeOptions}
-		/>
-		<MultiSelectField
-			label="Tribes I'm into"
-			bind:values={tribesImInto}
-			options={tribeOptions}
-		/>
-		<MultiSelectField
-			label="Looking for"
-			bind:values={lookingFor}
-			options={lookingForOptions}
-		/>
-		<MultiSelectField
-			label="Meet at"
-			bind:values={meetAt}
-			options={meetAtOptions}
-		/>
-		<SelectField
-			label="Accept NSFW pics"
-			bind:value={nsfw}
-			options={nsfwOptions}
-		/>
-	</section>
+		<section class="flex flex-col gap-3">
+			<h2>Identity</h2>
+			<ComboField
+				label="Gender"
+				bind:values={genderIds}
+				options={genderOptions}
+				resolveLabel={resolveGenderLabel}
+				exclude={genderExclusions}
+				max={maxProfileGenders}
+				searchPlaceholder="Search genders..."
+			/>
+			<ComboField
+				label="Pronouns"
+				bind:values={pronounIds}
+				options={pronounOptions}
+				resolveLabel={resolvePronounLabel}
+				max={maxProfilePronouns}
+				searchPlaceholder="Search pronouns..."
+			/>
+		</section>
 
-	<section class="flex flex-col gap-3">
-		<h2>Health</h2>
-		<SelectField
-			label="HIV status"
-			bind:value={hivStatus}
-			options={hivOptions}
-		/>
-		<DateField label="Last tested" bind:value={lastTestedDate} />
-		<MultiSelectField
-			label="Sexual health practices"
-			bind:values={sexualHealth}
-			options={healthOptions}
-		/>
-		<MultiSelectField
-			label="Vaccines"
-			bind:values={vaccineIds}
-			options={vaccineOptions}
-		/>
-	</section>
+		<section class="flex flex-col gap-3">
+			<h2>Stats</h2>
+			<Field label="Age">
+				<WheelPicker
+					bind:value={age}
+					min={ageRange.min}
+					max={ageRange.max}
+					label="years"
+					disabled={saving}
+				/>
+			</Field>
+			<SwitchRow label="Show my age" bind:checked={showAge} />
+			<SelectField
+				label="Position"
+				bind:value={sexualPosition}
+				options={positionOptions}
+			/>
+			<SwitchRow label="Show my position" bind:checked={showPosition} />
+			<NumberField
+				label="Height"
+				bind:value={height}
+				min={heightCmRange.min}
+				max={heightCmRange.max}
+				unit="cm"
+				placeholder="—"
+			/>
+			<NumberField
+				label="Weight"
+				bind:value={weightKg}
+				min={weightKgRange.min}
+				max={weightKgRange.max}
+				step={0.5}
+				unit="kg"
+				placeholder="—"
+			/>
+			<SelectField
+				label="Body type"
+				bind:value={bodyType}
+				options={bodyTypeOptions}
+			/>
+			<SelectField
+				label="Ethnicity"
+				bind:value={ethnicity}
+				options={ethnicityOptions}
+			/>
+			<SelectField
+				label="Relationship status"
+				bind:value={relationshipStatus}
+				options={relationshipOptions}
+			/>
+		</section>
 
-	<section class="flex flex-col gap-3">
-		<h2>Social</h2>
-		<SocialField
-			label="Instagram"
-			bind:value={instagram}
-			icon={InstagramLogoIcon}
-		/>
-		<SocialField label="X" bind:value={twitter} icon={XLogoIcon} />
-		<SocialField
-			label="Facebook"
-			bind:value={facebook}
-			icon={FacebookLogoIcon}
-		/>
-	</section>
+		<section class="flex flex-col gap-3">
+			<h2>Preferences</h2>
+			<SwitchRow label="Show my tribes" bind:checked={showTribes} />
+			<MultiSelectField
+				label="My tribes"
+				bind:values={grindrTribes}
+				options={tribeOptions}
+			/>
+			<MultiSelectField
+				label="Tribes I'm into"
+				bind:values={tribesImInto}
+				options={tribeOptions}
+			/>
+			<MultiSelectField
+				label="Looking for"
+				bind:values={lookingFor}
+				options={lookingForOptions}
+			/>
+			<MultiSelectField
+				label="Meet at"
+				bind:values={meetAt}
+				options={meetAtOptions}
+			/>
+			<SelectField
+				label="Accept NSFW pics"
+				bind:value={nsfw}
+				options={nsfwOptions}
+			/>
+		</section>
+
+		<section class="flex flex-col gap-3">
+			<h2>Health</h2>
+			<SelectField
+				label="HIV status"
+				bind:value={hivStatus}
+				options={hivOptions}
+			/>
+			<DateField label="Last tested" bind:value={lastTestedDate} />
+			<MultiSelectField
+				label="Sexual health practices"
+				bind:values={sexualHealth}
+				options={healthOptions}
+			/>
+			<MultiSelectField
+				label="Vaccines"
+				bind:values={vaccineIds}
+				options={vaccineOptions}
+			/>
+		</section>
+
+		<section class="flex flex-col gap-3">
+			<h2>Social</h2>
+			<SocialField
+				label="Instagram"
+				bind:value={instagram}
+				icon={InstagramLogoIcon}
+			/>
+			<SocialField label="X" bind:value={twitter} icon={XLogoIcon} />
+			<SocialField
+				label="Facebook"
+				bind:value={facebook}
+				icon={FacebookLogoIcon}
+			/>
+		</section>
+	</fieldset>
 
 	{#if dirty}
 		<div
@@ -472,6 +475,6 @@
 	@reference "$layout";
 
 	h2 {
-		@apply ps-1 text-xl font-semibold tracking-tight truncate;
+		@apply truncate ps-1 text-xl font-semibold tracking-tight;
 	}
 </style>

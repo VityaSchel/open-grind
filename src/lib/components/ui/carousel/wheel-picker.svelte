@@ -11,6 +11,7 @@
 		max = 23,
 		loop = false,
 		label,
+		disabled = false,
 		class: className,
 	}: WithElementRef<{
 		value?: number;
@@ -18,6 +19,7 @@
 		max?: number;
 		loop?: boolean;
 		label?: string;
+		disabled?: boolean;
 		class?: string;
 	}> = $props();
 
@@ -49,6 +51,7 @@
 		containScroll: false,
 		watchSlides: false,
 		watchResize: false,
+		active: !disabled,
 		startIndex: clampIndex(value - min),
 	});
 
@@ -154,17 +157,19 @@
 	aria-valuemin={min}
 	aria-valuemax={max}
 	aria-label={label}
+	aria-disabled={disabled}
 	class={cn(
-		"relative mx-auto flex h-44 w-full touch-pan-x select-none items-center justify-center overflow-hidden",
+		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden select-none",
+		disabled && "pointer-events-none opacity-50",
 		className,
 	)}
 >
 	<div
-		class="h-8 w-full touch-pan-x overflow-visible overscroll-contain perspective-[1000px] [-webkit-tap-highlight-color:transparent]"
+		class="h-8 w-full touch-pan-x overflow-visible overscroll-contain [-webkit-tap-highlight-color:transparent] perspective-[1000px]"
 		use:emblaCarouselSvelte={{ options, plugins: [] }}
 		onemblaInit={onInit}
 	>
-		<div class="h-full w-full transform-3d will-change-transform">
+		<div class="h-full w-full will-change-transform transform-3d">
 			{#each items as item (item)}
 				<div
 					class="flex h-full w-full items-center justify-center text-center text-lg font-medium tabular-nums opacity-0 backface-hidden"
@@ -184,7 +189,7 @@
 
 	{#if label}
 		<span
-			class="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-y-1/2 translate-x-8 text-lg font-semibold text-muted-foreground"
+			class="pointer-events-none absolute top-1/2 left-1/2 z-10 translate-x-8 -translate-y-1/2 text-lg font-semibold text-muted-foreground"
 		>
 			{label}
 		</span>
