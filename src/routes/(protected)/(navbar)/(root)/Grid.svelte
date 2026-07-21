@@ -54,7 +54,6 @@
 					gridState
 						.resolveProfile(params.id)
 						.catch((error) => console.error(error));
-					observer.disconnect();
 				}
 			},
 			{ root: nearestScrollableAncestor(node), rootMargin: "200px" },
