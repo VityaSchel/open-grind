@@ -1,6 +1,7 @@
 import { registerAccountCache } from "$lib/api/account-caches";
 import { getCascadeV4 } from "$lib/api/browse/grid";
 import { getProfiles } from "$lib/api/users/profiles";
+import { now } from "$lib/util/clock";
 
 function primaryImageHashes(url: string | null | undefined): string[] | null {
 	const hash = url?.split("/").pop();
@@ -88,14 +89,14 @@ const profileCache = new Map<
 
 export function getCachedProfile(id: number): RenderedGridProfile | null {
 	const cached = profileCache.get(id);
-	if (!cached || Date.now() - cached.updatedAt >= PROFILE_CACHE_TTL_MS) {
+	if (!cached || now() - cached.updatedAt >= PROFILE_CACHE_TTL_MS) {
 		return null;
 	}
 	return cached.profile;
 }
 
 export function setCachedProfile(profile: RenderedGridProfile): void {
-	profileCache.set(profile.id, { profile, updatedAt: Date.now() });
+	profileCache.set(profile.id, { profile, updatedAt: now() });
 }
 
 registerAccountCache(() => profileCache.clear());
@@ -117,6 +118,6 @@ export async function resolveLazyProfile(
 		isVisiting: profile.isVisiting,
 		hasChattedInLast24Hrs:
 			resolved.lastChatTimestamp !== null &&
-			Date.now() - resolved.lastChatTimestamp < 24 * 60 * 60 * 1000,
+			now() - resolved.lastChatTimestamp < 24 * 60 * 60 * 1000,
 	};
 }

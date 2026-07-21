@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
 
@@ -18,6 +18,7 @@ import {
 	type ProfileUpdate,
 	updateOwnProfile,
 } from "$lib/api/users/profiles";
+import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 import type { Profile } from "$lib/model/users/profiles";
 
 const PROFILE_ID = 123;
@@ -106,6 +107,48 @@ beforeEach(() => {
 			throw new Error(`unexpected request: ${method} ${path}`);
 		},
 	);
+});
+
+afterEach(() => {
+	resetNowForTesting();
+});
+
+function countRequests(pathPrefix: string): number {
+	return fetchRestMock.mock.calls.filter(([path]: [string]) =>
+		path.startsWith(pathPrefix),
+	).length;
+}
+
+describe("cache TTL", () => {
+	it("serves getProfile from cache within the TTL and refetches after it", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
+
+		await getProfile(PROFILE_ID);
+		await getProfile(PROFILE_ID);
+		expect(countRequests("/v7/profiles/")).toBe(1);
+
+		clock += 59_999;
+		await getProfile(PROFILE_ID);
+		expect(countRequests("/v7/profiles/")).toBe(1);
+
+		clock += 1;
+		await getProfile(PROFILE_ID);
+		expect(countRequests("/v7/profiles/")).toBe(2);
+	});
+
+	it("serves getMyProfile from cache within the TTL and refetches after it", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
+
+		await getMyProfile();
+		await getMyProfile();
+		expect(countRequests("/v4/me/profile")).toBe(1);
+
+		clock += 60_000;
+		await getMyProfile();
+		expect(countRequests("/v4/me/profile")).toBe(2);
+	});
 });
 
 describe("applyProfileEdit", () => {

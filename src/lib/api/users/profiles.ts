@@ -14,6 +14,7 @@ import {
 	profileShortSchema,
 	pronounSchema,
 } from "$lib/model/users/profiles";
+import { now } from "$lib/util/clock";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [
@@ -101,7 +102,7 @@ const profilesInFlight = new Map<number, Promise<Profile>>();
 
 export async function getProfile(profileId: number): Promise<Profile> {
 	const cached = profilesCache.get(profileId);
-	if (cached && Date.now() - cached.updatedAt < 1000 * 60) {
+	if (cached && now() - cached.updatedAt < 1000 * 60) {
 		return cached.profile;
 	}
 	let request = profilesInFlight.get(profileId);
@@ -133,7 +134,7 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 			throw new ProfileUnavailableError();
 		}
 	}
-	profilesCache.set(profileId, { profile, updatedAt: Date.now() });
+	profilesCache.set(profileId, { profile, updatedAt: now() });
 	return profile;
 }
 
@@ -165,13 +166,13 @@ let myProfileCache: {
 } | null = null;
 
 export async function getMyProfile() {
-	if (myProfileCache && Date.now() - myProfileCache.updatedAt < 1000 * 60) {
+	if (myProfileCache && now() - myProfileCache.updatedAt < 1000 * 60) {
 		return myProfileCache.profile;
 	}
 	const profile = await fetchRest("/v4/me/profile").then(
 		(res) => res.jsonParsed(getProfilesResponseSchema).profiles[0],
 	);
-	myProfileCache = { profile, updatedAt: Date.now() };
+	myProfileCache = { profile, updatedAt: now() };
 	return profile;
 }
 
@@ -243,7 +244,7 @@ export function mergeProfileEditIntoCaches(
 	if (cached) {
 		profilesCache.set(cacheProfileId, {
 			profile: applyProfileEdit(cached.profile, patch),
-			updatedAt: Date.now(),
+			updatedAt: now(),
 		});
 	}
 	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
@@ -253,7 +254,7 @@ export function mergeProfileEditIntoCaches(
 		}
 		myProfileCache = {
 			profile: next as typeof myProfileCache.profile,
-			updatedAt: Date.now(),
+			updatedAt: now(),
 		};
 	}
 }
@@ -374,7 +375,7 @@ export async function deleteProfilePhotos(
 				...cached.profile,
 				medias: cached.profile.medias.filter((m) => !removed.has(m.mediaHash)),
 			},
-			updatedAt: Date.now(),
+			updatedAt: now(),
 		});
 	}
 	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
@@ -385,7 +386,7 @@ export async function deleteProfilePhotos(
 					(m) => !removed.has(m.mediaHash),
 				),
 			},
-			updatedAt: Date.now(),
+			updatedAt: now(),
 		};
 	}
 }
