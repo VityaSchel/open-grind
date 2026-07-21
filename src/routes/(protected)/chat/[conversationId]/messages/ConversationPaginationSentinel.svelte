@@ -16,12 +16,8 @@
 		if (!container || state.loadingMore || state.pageKey === null) return;
 		const prevScrollHeight = container.scrollHeight;
 		await state.loadMore();
-		// The scroll container is shared across [conversationId] changes. If the
-		// user switched conversations mid-fetch, applying A's delta to B's height
-		// would jump the scroll position. The captured `state` is destroyed on
-		// switch (+page.svelte effect cleanup), so `state.destroyed` is reliable
-		// even when this component has unmounted and its `conversationState`
-		// derived has gone stale.
+		// The scroll container is shared between conversations. If we switched
+		// mid-fetch the old state is destroyed, so skip its scroll adjust.
 		if (state.destroyed || conversationState !== state) return;
 		await tick();
 		if (state.destroyed || conversationState !== state) return;

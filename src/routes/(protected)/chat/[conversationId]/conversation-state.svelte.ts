@@ -150,8 +150,6 @@ export class ConversationState {
 		}
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();
-		// Flush reads observed just before navigating away instead of dropping the
-		// queued receipts (fire-and-forget; touches no reactive state).
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
 		if (this.#readQueue.length > 0) void this.#flushReadQueue();
 	}
@@ -375,14 +373,8 @@ export class ConversationState {
 		}
 	}
 
-	// Resolve an own-message echo to the pending optimistic message it belongs to.
-	// `messages` is newest-first and the server echoes sends in order, so the
-	// oldest pending is the one being acknowledged. Prefer the oldest pending of a
-	// matching type (robust to echoes for different message kinds arriving out of
-	// order), falling back to the oldest pending of any type.
-	// Known limitation: two same-type sends whose echoes arrive out of order can
-	// still cross-assign — the API carries no client correlation id to echo back,
-	// so positional matching is the best available heuristic.
+	// Echoes come back in send order, so match the oldest pending; prefer a
+	// same-type match when kinds arrive out of order.
 	#matchPendingEcho(
 		incoming: ApiResponseMessage,
 	): OptimisticMessage | undefined {
@@ -475,8 +467,6 @@ export class ConversationState {
 		const current = now();
 		this.#readDeadline ??= current + READ_MAX_WAIT_MS;
 		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
-		// Debounce so bursts collapse into one request, but cap the wait so a
-		// continuous message stream can't starve the flush indefinitely.
 		const delay = Math.max(
 			0,
 			Math.min(READ_DEBOUNCE_MS, this.#readDeadline - current),

@@ -144,7 +144,6 @@ describe("ConversationState read marker", () => {
 		await flush();
 		expect(state.lastReadTimestamp).toBe(1000);
 
-		// peer reads the newest message while a reconcile is about to run
 		readHandlers[0]?.({
 			payload: {
 				conversationId: CONVERSATION_ID,
@@ -154,7 +153,6 @@ describe("ConversationState read marker", () => {
 		});
 		expect(state.lastReadTimestamp).toBe(2000);
 
-		// reconcile returns the older watermark and no message deltas
 		await reconcileHandlers[0]?.();
 		await flush();
 
@@ -217,8 +215,6 @@ describe("ConversationState send echo matching", () => {
 		readHandlers.length = 0;
 		messageSentHandlers.length = 0;
 		reconcileHandlers.length = 0;
-		// Keep optimistic sends pending so the WS echo path (not the HTTP resolve)
-		// is what resolves them.
 		sendMessageMock.mockReturnValue(new Promise(() => {}));
 	});
 
@@ -236,13 +232,11 @@ describe("ConversationState send echo matching", () => {
 		state.send(outbound("Text", { text: "a" }));
 		state.send(outbound("Text", { text: "b" }));
 
-		// newest-first ordering: [b (pending), a (pending)]
 		const bodyText = (m: { body: unknown }) =>
 			(m.body as { text: string }).text;
 		expect(state.messages.map(bodyText)).toEqual(["b", "a"]);
 		expect(state.messages.every((m) => m.status === "pending")).toBe(true);
 
-		// echo for the first send (a) arrives first -> must resolve a, not b
 		emitMessageSent(echo("real-a", "Text", { text: "a" }));
 
 		const a = state.messages.find((m) => bodyText(m) === "a")!;
@@ -252,7 +246,6 @@ describe("ConversationState send echo matching", () => {
 		expect(b.status).toBe("pending");
 		expect(b.messageId).not.toBe("real-a");
 
-		// echo for the second send (b)
 		emitMessageSent(echo("real-b", "Text", { text: "b" }));
 		expect(b.messageId).toBe("real-b");
 		expect(b.status).toBe("sent");
@@ -269,9 +262,6 @@ describe("ConversationState send echo matching", () => {
 		const state = create();
 		await flush();
 
-		// Image is the OLDER send, Text the newer -> messages: [Text, Image].
-		// The image echo arrives first (out of order). Newest-first matching would
-		// mis-resolve the Text; only type-preference resolves the Image.
 		state.send(outbound("Image", { mediaId: 5 }));
 		state.send(outbound("Text", { text: "hello" }));
 
@@ -337,15 +327,11 @@ describe("ConversationState read receipts", () => {
 
 		vi.useFakeTimers();
 		try {
-			// a report every 400ms (< the 500ms debounce) would starve a plain
-			// debounce forever; the 2000ms max-wait must force a flush.
 			for (let i = 0; i < 6; i++) {
 				state.reportRead({ messageId: `m${i}`, timestamp: 1000 + i });
 				await vi.advanceTimersByTimeAsync(400);
 			}
 			expect(markConversationAsReadMock).toHaveBeenCalled();
-			// the first flush fired at the 2000ms deadline, carrying the newest
-			// message queued up to that point (m4, ts 1004)
 			expect(markConversationAsReadMock).toHaveBeenCalledWith({
 				conversationId: CONVERSATION_ID,
 				messageId: "m4",
