@@ -51,8 +51,11 @@
 		ageRange,
 		fieldLimits,
 		heightCmRange,
+		maxProfileGenders,
+		maxProfilePronouns,
 		maxProfileTags,
 		optionsFromMap,
+		primaryGenderOrder,
 		weightKgRange,
 	} from "./options";
 	import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
@@ -86,10 +89,19 @@
 	const genderById = untrack(
 		() => new Map(genders.map((gender) => [gender.genderId, gender])),
 	);
+	const primaryGenderRank = (id: number) => {
+		const index = primaryGenderOrder.indexOf(id);
+		return index === -1 ? Infinity : index;
+	};
 	const genderOptions = untrack(() =>
 		genders
-			.filter((gender) => gender.sortProfile != null)
-			.sort((a, b) => (a.sortProfile ?? 0) - (b.sortProfile ?? 0))
+			.filter((gender) => (gender.displayGroup ?? 0) > 0)
+			.sort(
+				(a, b) =>
+					primaryGenderRank(a.genderId) - primaryGenderRank(b.genderId) ||
+					(a.sortProfile ?? Infinity) - (b.sortProfile ?? Infinity) ||
+					a.genderId - b.genderId,
+			)
 			.map((gender) => ({ value: gender.genderId, label: gender.gender })),
 	);
 	const resolveGenderLabel = (id: number) => genderById.get(id)?.gender;
@@ -295,7 +307,6 @@
 			resolveLabel={resolveTagLabel}
 			max={maxProfileTags}
 			searchPlaceholder="Search tags..."
-			hint="{profileTags.length}/{maxProfileTags} selected"
 		/>
 	</section>
 
@@ -307,14 +318,15 @@
 			options={genderOptions}
 			resolveLabel={resolveGenderLabel}
 			exclude={genderExclusions}
+			max={maxProfileGenders}
 			searchPlaceholder="Search genders..."
-			hint="Type to search"
 		/>
 		<ComboField
 			label="Pronouns"
 			bind:values={pronounIds}
 			options={pronounOptions}
 			resolveLabel={resolvePronounLabel}
+			max={maxProfilePronouns}
 			searchPlaceholder="Search pronouns..."
 		/>
 	</section>

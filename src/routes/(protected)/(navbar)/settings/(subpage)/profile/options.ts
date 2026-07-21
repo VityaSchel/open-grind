@@ -16,6 +16,10 @@ export const fieldLimits = {
 } as const;
 
 export const maxProfileTags = 10;
+export const maxProfileGenders = 3;
+export const maxProfilePronouns = 3;
+
+export const primaryGenderOrder = [1, 4, 5, 2, 6, 7, 3];
 
 export const heightCmRange = { min: 120, max: 250 } as const;
 export const weightKgRange = { min: 30, max: 250 } as const;

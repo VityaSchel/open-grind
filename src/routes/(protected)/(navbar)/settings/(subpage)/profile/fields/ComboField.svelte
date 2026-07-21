@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends string | number">
 	import { Combobox } from "bits-ui";
 	import { CaretUpDownIcon, CheckIcon, XIcon } from "phosphor-svelte";
+	import { tick } from "svelte";
 
 	import type { Option } from "../options";
 	import Field from "./Field.svelte";
@@ -28,6 +29,7 @@
 	let searchValue = $state("");
 	let open = $state(false);
 	let keyboardNav = $state(false);
+	let inputEl = $state<HTMLInputElement | null>(null);
 
 	const navKeys = ["ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp"];
 
@@ -64,32 +66,52 @@
 		values.map((id) => ({ id, label: labelFor(id) })),
 	);
 
+	const selectedSet = $derived(new Set(values));
+	const atMax = $derived(max !== undefined && values.length >= max);
+
+	const excludedSet = $derived.by(() => {
+		const result = new Set<T>();
+		if (!exclude) return result;
+		for (const value of values) {
+			for (const id of exclude(value)) result.add(id);
+		}
+		return result;
+	});
+
+	function isDisabled(id: T) {
+		if (selectedSet.has(id)) return false;
+		return atMax || excludedSet.has(id);
+	}
+
+	const effectiveHint = $derived.by(() => {
+		if (max === undefined) return hint;
+		const count = `${values.length}/${max} selected`;
+		return atMax ? `${count} · remove one to add another` : count;
+	});
+
 	function remove(id: T) {
 		values = values.filter((value) => value !== id);
 	}
 
+	async function clearTypedQuery() {
+		searchValue = "";
+		await tick();
+		if (!inputEl || inputEl.value === "") return;
+		inputEl.value = "";
+		inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+	}
+
 	function applySelection(newValue: T[]) {
-		const previous = new Set(values);
-		const added = newValue.filter((id) => !previous.has(id));
-		let result = newValue;
-		for (const id of added) {
-			const excluded = exclude?.(id);
-			if (excluded?.length) {
-				const excludedSet = new Set(excluded);
-				result = result.filter(
-					(value) => value === id || !excludedSet.has(value),
-				);
-			}
-		}
-		if (max !== undefined && added.length && result.length > max) return;
-		values = result;
+		if (max !== undefined && newValue.length > max) return;
+		values = newValue;
+		searchValue = "";
 	}
 
 	const inputClass =
 		"bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 h-9 w-full rounded-3xl border border-transparent pl-3 pr-9 py-1 text-base transition-[color,box-shadow,background-color] focus-visible:ring-3 md:text-sm placeholder:text-muted-foreground min-w-0 outline-none";
 </script>
 
-<Field {label} {hint}>
+<Field {label} hint={effectiveHint}>
 	{#if selectedChips.length}
 		<div class="flex flex-wrap gap-1.5">
 			{#each selectedChips as chip (chip.id)}
@@ -122,14 +144,16 @@
 		bind:open
 		onOpenChange={(isOpen) => {
 			if (!isOpen) {
-				searchValue = "";
+				void clearTypedQuery();
 				keyboardNav = false;
 			}
 		}}
 	>
 		<div class="relative">
 			<Combobox.Input
+				bind:ref={inputEl}
 				oninput={(event) => (searchValue = event.currentTarget.value)}
+				onclick={() => (open = true)}
 				onkeydown={(event) => {
 					if (navKeys.includes(event.key)) keyboardNav = true;
 				}}
@@ -157,8 +181,9 @@
 					{#each filtered as option (option.value)}
 						<Combobox.Item
 							value={String(option.value)}
-							label={option.label}
-							class="can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pl-3 pr-2 text-sm font-medium outline-hidden select-none"
+							label=""
+							disabled={isDisabled(option.value)}
+							class="can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40 flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pl-3 pr-2 text-sm font-medium outline-hidden select-none"
 						>
 							{#snippet children({ selected: isSelected })}
 								<span>{option.label}</span>
