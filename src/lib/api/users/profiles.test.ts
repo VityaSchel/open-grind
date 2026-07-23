@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
+const { fetchRestMock } = vi.hoisted(() => ({
+	fetchRestMock: vi.fn<(path: string, options?: { method?: string }) => unknown>(),
+}));
 
 vi.mock("$lib/api", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api")>()),
@@ -114,7 +116,7 @@ afterEach(() => {
 });
 
 function countRequests(pathPrefix: string): number {
-	return fetchRestMock.mock.calls.filter(([path]: [string]) =>
+	return fetchRestMock.mock.calls.filter(([path]) =>
 		path.startsWith(pathPrefix),
 	).length;
 }
