@@ -52,8 +52,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import { ConversationState } from "./conversation-state.svelte";
 import type { Message } from "$lib/model/messaging/messages";
+import { ConversationState } from "./conversation-state.svelte";
 
 const CONVERSATION_ID = "1:2";
 const OUR_ID = 1;

@@ -10,6 +10,20 @@ import ts from "typescript-eslint";
 import svelteConfig from "./svelte.config.js";
 
 export default defineConfig(
+	{
+		ignores: [
+			"build/",
+			".svelte-kit/",
+			"src-tauri/",
+			"reverse/",
+			"docs/",
+			"contrib/",
+			"static/",
+			"scripts/",
+			"test-results/",
+			"playwright-report/",
+		],
+	},
 	js.configs.recommended,
 	...ts.configs.recommendedTypeChecked,
 	prettier,
@@ -58,6 +72,9 @@ export default defineConfig(
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-redundant-type-constituents": "off",
 		},
 	},
 	{

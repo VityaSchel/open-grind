@@ -1,9 +1,9 @@
+import type { PullModel } from "./pull-model.svelte";
 import {
 	AT_BOUNDARY_PX,
 	chainAllowsPull,
 	type PullPosition,
 } from "./scroll-chain";
-import type { PullModel } from "./pull-model.svelte";
 
 const SLOP_PX = 8;
 

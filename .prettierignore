@@ -1,2 +1,13 @@
 bun.lock
-/static/
+flake.lock
+node_modules
+/.claude
+/build
+/.svelte-kit
+/static
+/reverse
+/docs
+/contrib
+/src-tauri
+/test-results
+/playwright-report
