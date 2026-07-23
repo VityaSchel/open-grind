@@ -21,3 +21,4 @@ keystore.properties
 *.keystore
 
 .local
+/coverage

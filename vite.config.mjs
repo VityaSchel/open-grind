@@ -40,5 +40,10 @@ export default defineConfig(async () => ({
 		environment: "jsdom",
 		include: ["src/**/*.test.ts"],
 		setupFiles: ["src/test-setup.ts"],
+		coverage: {
+			provider: "v8",
+			reporter: ["text", "html"],
+			include: ["src/**/*.{ts,svelte}"],
+		},
 	},
 }));
