@@ -104,6 +104,18 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 
 </details>
 
+### Checks and tests
+
+Before opening a pull request, run the same checks CI runs:
+
+- `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
+- `bun run check` — `svelte-check` type checking.
+- `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
+
+End-to-end tests are a separate tier:
+
+- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
+
 ### Submitting your changes
 
 1. [Create an account](https://git.opengrind.org/user/sign_up) on git.opengrind.org
@@ -115,7 +127,7 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 7. Configure git to use your name to commit: `git config set user.name gitusername` — it's recommended to use your git.opengrind.org account's display name
 8. Configure git to sign commits: `git config set commit.gpgSign true` and tell it about your SSH/GPG key: `git config set user.signingKey '~/.ssh/<YOUR PUBLIC SSH KEY>'` (if you use SSH key to sign, also set `git config set gpg.format ssh`) — **all submitted commits must be signed by keys verified in your git.opengrind.org account.**
 9. Create a new branch from main: `git branch your-feature main` — use a descriptive unique name
-10. Make your changes, test them locally
+10. Make your changes; run `bun run lint`, `bun run check`, and `bun run test` locally
 11. Commit your changes
 12. Make sure the commit is signed: `git cat-file commit HEAD` — **you must see `gpgsig` in the result**
 13. Push your changes: `git push`
