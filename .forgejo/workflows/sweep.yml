@@ -1,7 +1,12 @@
 name: sweep
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: destroy state older than this many minutes; empty = box lifetime, 0 = everything (only when no runs are active)
+        type: string
+        default: ""
 
 concurrency:
   group: open-grind-sweep
@@ -13,6 +18,7 @@ jobs:
     steps:
       - name: Destroy boxes past their lifetime
         env:
+          SWEEP_MINUTES: ${{ inputs.minutes }}
           RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -11,6 +11,14 @@ import {
 const registration = process.env.RUNNER_REGISTRATION_TOKEN;
 if (!registration) throw new Error("RUNNER_REGISTRATION_TOKEN is not set");
 
+const sweepMinutes = process.env.SWEEP_MINUTES
+	? Number(process.env.SWEEP_MINUTES)
+	: BOX_LIFETIME_MINUTES;
+if (!Number.isFinite(sweepMinutes))
+	throw new Error(
+		`SWEEP_MINUTES is not a number: ${process.env.SWEEP_MINUTES}`,
+	);
+
 const state = new Bun.S3Client({
 	accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -26,7 +34,7 @@ interface Target {
 }
 
 async function agedTargets(): Promise<Target[]> {
-	const cutoff = Date.now() - BOX_LIFETIME_MINUTES * 60_000;
+	const cutoff = Date.now() - sweepMinutes * 60_000;
 	const objects = (await state.list())?.contents ?? [];
 	return objects
 		.filter(
@@ -105,7 +113,7 @@ async function deleteRunnerRecords(name: string): Promise<void> {
 }
 
 async function stillAged(key: string): Promise<boolean> {
-	const cutoff = Date.now() - BOX_LIFETIME_MINUTES * 60_000;
+	const cutoff = Date.now() - sweepMinutes * 60_000;
 	const objects = (await state.list({ prefix: key }))?.contents ?? [];
 	const object = objects.find((candidate) => candidate.key === key);
 	return (
