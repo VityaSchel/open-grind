@@ -7,6 +7,7 @@ on:
     inputs:
       pr:
         description: PR number to check
+        type: string
         required: true
 
 concurrency:
@@ -62,6 +63,8 @@ jobs:
           git checkout -q FETCH_HEAD
           [ -z "$EXPECTED_SHA" ] || [ "$(git rev-parse HEAD)" = "$EXPECTED_SHA" ] \
             || { echo "FATAL: PR head moved since approval (want $EXPECTED_SHA, got $(git rev-parse HEAD))"; exit 1; }
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
 
           export RUSTUP_TOOLCHAIN="$(cat /opt/rust/toolchain)"
           pinned="$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)"

@@ -15,15 +15,21 @@ import {
 
 const mode = process.argv[2];
 const checkName = process.env.TF_VAR_name;
+const requested = (process.env.BOXES ?? "").split(/\s+/).filter(Boolean);
+const unknown = requested.filter(
+	(provider) => !BUILDERS.some((box) => box.provider === provider),
+);
+if (mode === "build" && unknown.length > 0)
+	throw new Error(`unknown builders requested: ${unknown.join(" ")}`);
 const boxes: Box[] =
 	mode === "build"
-		? BUILDERS
+		? BUILDERS.filter((box) => requested.includes(box.provider))
 		: mode === "check" && checkName
 			? [{ ...CHECK, name: checkName }]
 			: [];
 if (boxes.length === 0) {
 	console.error(
-		"usage: provision.ts build | TF_VAR_name=<box> provision.ts check",
+		"usage: BOXES=<provider …> provision.ts build | TF_VAR_name=<box> provision.ts check",
 	);
 	process.exit(2);
 }

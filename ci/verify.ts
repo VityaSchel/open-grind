@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 import { join } from "node:path";
 
-import { BUILDERS } from "./config.ts";
-
 const [downloads, out] = process.argv.slice(2);
-if (!downloads || !out) {
-	console.error("usage: verify.ts <downloads dir> <output dir>");
+const expected = JSON.parse(process.env.BOXES ?? "[]") as string[];
+if (!downloads || !out || expected.length === 0) {
+	console.error(
+		"usage: BOXES=<json array> verify.ts <downloads dir> <output dir>",
+	);
 	process.exit(2);
 }
 
@@ -18,8 +19,8 @@ for await (const path of new Bun.Glob("open-grind-unsigned-*/*.apk").scan({
 apks.sort();
 
 const [first] = apks;
-if (!first || apks.length !== BUILDERS.length) {
-	console.error(`expected ${BUILDERS.length} APKs, got ${apks.length}`);
+if (!first || apks.length !== expected.length) {
+	console.error(`expected ${expected.length} APKs, got ${apks.length}`);
 	process.exit(1);
 }
 

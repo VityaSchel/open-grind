@@ -1,7 +1,20 @@
 name: build
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      cherry:
+        description: open-grind-builder-1-cherry
+        type: boolean
+        default: true
+      vultr:
+        description: open-grind-builder-2-vultr
+        type: boolean
+        default: true
+      hetzner:
+        description: open-grind-builder-3-hetzner
+        type: boolean
+        default: true
 
 concurrency:
   group: open-grind-build
@@ -16,6 +29,7 @@ jobs:
       - name: Provision builders
         id: provision
         env:
+          BOXES: ${{ inputs.cherry && 'cherry' || '' }} ${{ inputs.vultr && 'vultr' || '' }} ${{ inputs.hetzner && 'hetzner' || '' }}
           RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -46,6 +60,8 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
       - name: Build
         run: |
           docker compose --ansi never --progress plain build
@@ -67,6 +83,8 @@ jobs:
     needs: [provision, build]
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 10
+    env:
+      BOXES: ${{ needs.provision.outputs.boxes }}
     steps:
       - name: Download builds
         uses: https://code.forgejo.org/forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
