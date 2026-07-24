@@ -66,16 +66,26 @@ RUN git init -q /src/digitalocean && cd /src/digitalocean \
 FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 RUN apk upgrade --no-cache \
-	&& apk add --no-cache nodejs bash curl jq ca-certificates
+	&& apk add --no-cache nodejs bash curl ca-certificates libstdc++ unzip
+
+ARG BUN_VERSION=1.3.14
+ARG BUN_SHA256=14bd9aedeebf1dba67e8def9531c89bc989ecfdf1de42e5bfcaf1b8cd9294719
+RUN curl -fsSL -o /tmp/bun.zip "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64-musl.zip" \
+	&& echo "$BUN_SHA256  /tmp/bun.zip" | sha256sum -c - \
+	&& unzip -q /tmp/bun.zip -d /tmp \
+	&& install -m 0755 /tmp/bun-linux-x64-musl/bun /usr/local/bin/bun \
+	&& rm -rf /tmp/bun.zip /tmp/bun-linux-x64-musl
 
 COPY --from=build /out/bin/terraform /usr/local/bin/terraform
 COPY --from=build /out/providers /opt/open-grind/providers
-COPY --chmod=755 orchestrator/fetch-repo /usr/local/bin/fetch-repo
 COPY orchestrator/terraformrc /opt/open-grind/terraformrc
+
+COPY config.ts provision.ts teardown.ts verify.ts /opt/ci/
+COPY terraform /opt/ci/terraform
 
 ENV TF_CLI_CONFIG_FILE=/opt/open-grind/terraformrc CHECKPOINT_DISABLE=1
 
-COPY terraform/boxes /tmp/mirror-check
-RUN for box in /tmp/mirror-check/*/; do \
-		terraform -chdir="$box" init -backend=false -input=false >/dev/null || exit 1; \
+COPY terraform /tmp/mirror-check
+RUN for d in /tmp/mirror-check/*/; do \
+		terraform -chdir="$d" init -backend=false -input=false >/dev/null || exit 1; \
 	done && rm -rf /tmp/mirror-check

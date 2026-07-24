@@ -5,6 +5,14 @@ terraform {
       version = "2.78.0"
     }
   }
+  backend "s3" {
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_metadata_api_check     = true
+    skip_s3_checksum            = true
+    use_path_style              = true
+  }
 }
 
 variable "scaleway_access_key" {
@@ -16,15 +24,23 @@ variable "scaleway_secret_key" {
   sensitive = true
 }
 variable "scaleway_project_id" { type = string }
-variable "scaleway_plan" { type = string }
-variable "scaleway_zone" { type = string }
-variable "scaleway_image" {
+variable "name" { type = string }
+variable "plan" {
+  type    = string
+  default = ""
+}
+variable "location" {
+  type    = string
+  default = ""
+}
+variable "image" {
   type    = string
   default = "debian_bookworm"
 }
 variable "user_data" {
   type      = string
   sensitive = true
+  default   = ""
 }
 
 provider "scaleway" {
@@ -33,16 +49,12 @@ provider "scaleway" {
   project_id = var.scaleway_project_id
 }
 
-resource "scaleway_instance_server" "builder" {
-  name              = "open-grind-builder-d"
-  type              = var.scaleway_plan
-  zone              = var.scaleway_zone
-  image             = var.scaleway_image
+resource "scaleway_instance_server" "box" {
+  name              = var.name
+  type              = var.plan
+  zone              = var.location
+  image             = var.image
   enable_dynamic_ip = true
   root_volume { size_in_gb = 80 }
   user_data = { "cloud-init" = var.user_data }
-}
-
-output "ip" {
-  value = scaleway_instance_server.builder.public_ips[*].address
 }

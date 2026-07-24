@@ -11,5 +11,5 @@ server:
   connections:
     open-grind-orchestrator:
       url: https://git.opengrind.org/
-      uuid: b8f3742b-bff3-4c93-bbcb-6a5fcc8a97e9
-      token: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      uuid: 00000000-0000-0000-0000-000000000000
+      token: 0000000000000000000000000000000000000000
