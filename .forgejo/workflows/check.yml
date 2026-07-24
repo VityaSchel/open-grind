@@ -32,7 +32,7 @@ jobs:
 
   check:
     needs: provision
-    runs-on: ["open-grind-check-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}"]
+    runs-on: ["open-grind-check"]
     timeout-minutes: 45
     steps:
       - name: Check the pull request head in a credential-free environment

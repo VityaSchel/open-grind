@@ -34,6 +34,7 @@ export const BUILDERS: Box[] = [
 	},
 ];
 
+export const CHECK_LABEL = "open-grind-check";
 export const CHECK: Omit<Box, "name"> = {
 	provider: "hetzner",
 	plans: ["cx23", "cpx12"],

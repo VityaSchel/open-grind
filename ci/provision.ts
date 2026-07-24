@@ -6,6 +6,7 @@ import {
 	BOX_LIFETIME_MINUTES,
 	BUILDERS,
 	CHECK,
+	CHECK_LABEL,
 	FORGEJO,
 	REPO,
 	RUNNER_SHA256,
@@ -50,7 +51,7 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin n
 `;
 
 function cloudInit(
-	name: string,
+	label: string,
 	runner: { uuid: string; token: string },
 ): string {
 	const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
@@ -67,7 +68,7 @@ umask 077
 printf '%s' ${quote(runner.token)} > /etc/open-grind/runner-token
 systemd-run --collect --unit=open-grind-runner \\
 	/usr/local/bin/forgejo-runner one-job --url ${quote(FORGEJO)} --uuid ${quote(runner.uuid)} \\
-	--token-url file:///etc/open-grind/runner-token --label ${quote(`${name}:host`)} --wait
+	--token-url file:///etc/open-grind/runner-token --label ${quote(`${label}:host`)} --wait
 `;
 }
 
@@ -149,7 +150,10 @@ for (const box of boxes) {
 				TF_VAR_name: box.name,
 				TF_VAR_plan: plan,
 				TF_VAR_location: location,
-				TF_VAR_user_data: cloudInit(box.name, runner),
+				TF_VAR_user_data: cloudInit(
+					mode === "check" ? CHECK_LABEL : box.name,
+					runner,
+				),
 			};
 			if (await terraform(box, APPLY, attempt)) {
 				placed = `${plan} in ${location}`;
