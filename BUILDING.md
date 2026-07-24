@@ -239,7 +239,7 @@ If steps 3 and 4 both succeed, the published APK was built from this commit and 
 
 ## Reproducible CI release
 
-See [ci/README.md](./ci/README.md).
+See [ci/](./ci/).
 
 ## Reproducibility
 
