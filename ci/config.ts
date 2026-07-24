@@ -3,7 +3,7 @@ export const REPO = "open-grind/open-grind";
 export const RUNNER_VERSION = "12.13.2";
 export const RUNNER_SHA256 =
 	"2b4c3751fc2f9a60f753ef97414949de25587dfa2b921870b0cb6cb7c9bf7080";
-export const STATE_BUCKET = "open-grind-terraform";
+export const STATE_BUCKET = "open-grind-ci-state";
 export const BOX_LIFETIME_MINUTES = 90;
 
 export interface Box {
