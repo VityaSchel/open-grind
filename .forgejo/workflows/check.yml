@@ -34,7 +34,7 @@ jobs:
   check:
     needs: provision
     runs-on: ["open-grind-check"]
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Check the pull request head in a credential-free environment
         env:
@@ -49,6 +49,7 @@ jobs:
           CI_CACHE: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_TERM_PROGRESS_WHEN: never
+          NODE_OPTIONS: --max-old-space-size=6144
           CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
           CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
           CACHE_ACCESS_KEY: ${{ secrets.CACHE_RO_ACCESS_KEY }}
