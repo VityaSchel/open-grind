@@ -40,3 +40,12 @@ export const CHECK: Omit<Box, "name"> = {
 	plans: ["cx23", "cpx12"],
 	locations: ["fsn1", "nbg1", "hel1"],
 };
+
+export const WARM_LABEL = "open-grind-warm";
+export const WARM: Omit<Box, "name"> = {
+	provider: "hetzner",
+	plans: ["cx43", "cpx42"],
+	locations: CHECK.locations,
+};
+
+export const EPHEMERAL_PREFIXES = [`${CHECK_LABEL}-`, `${WARM_LABEL}-`];

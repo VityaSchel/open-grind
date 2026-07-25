@@ -1,17 +1,16 @@
-name: check
+name: warm
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+    paths:
+      - src-tauri/Cargo.lock
+      - rust-toolchain.toml
+      - .forgejo/workflows/warm.yml
   workflow_dispatch:
-    inputs:
-      pr:
-        description: PR number to check
-        type: string
-        required: true
 
 concurrency:
-  group: open-grind-check
+  group: open-grind-warm
   cancel-in-progress: false
 
 jobs:
@@ -19,9 +18,9 @@ jobs:
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 15
     steps:
-      - name: Provision the check box
+      - name: Provision the warm box
         env:
-          TF_VAR_name: open-grind-check-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
+          TF_VAR_name: open-grind-warm-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
           RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -29,36 +28,25 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
           TF_VAR_image: ${{ secrets.TF_VAR_CHECK_IMAGE }}
-        run: bun /opt/ci/provision.ts check
+        run: bun /opt/ci/provision.ts warm
 
-  check:
+  warm:
     needs: provision
-    runs-on: ["open-grind-check"]
-    timeout-minutes: 45
+    runs-on: ["open-grind-warm"]
+    timeout-minutes: 50
     steps:
-      - name: Check the pull request head in a credential-free environment
+      - name: Build the dependency graph from trusted code and publish the cache
         env:
-          GITHUB_TOKEN: ""
-          FORGEJO_TOKEN: ""
-          ACTIONS_RUNTIME_TOKEN: ""
-          ACTIONS_CACHE_URL: ""
-          ACTIONS_RESULTS_URL: ""
-          PR_NUMBER: ${{ forgejo.event.pull_request.number || inputs.pr }}
-          EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
           CI_WORKSPACE: /opt/open-grind-ci
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_HOME: .ci-cache/cargo
           CARGO_TERM_PROGRESS_WHEN: never
           CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
           CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
-          CACHE_ACCESS_KEY: ${{ secrets.CACHE_RO_ACCESS_KEY }}
-          CACHE_SECRET_KEY: ${{ secrets.CACHE_RO_SECRET_KEY }}
+          CACHE_ACCESS_KEY: ${{ secrets.CACHE_RW_ACCESS_KEY }}
+          CACHE_SECRET_KEY: ${{ secrets.CACHE_RW_SECRET_KEY }}
         run: |
           set -euo pipefail
-
-          leaked=$(env | grep -iE '(TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY)=.' \
-            | grep -vE '^CACHE_(ACCESS_KEY|SECRET_KEY)=' || true)
-          [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
 
           rm -rf "$CI_WORKSPACE"
           mkdir -p "$CI_WORKSPACE"
@@ -66,35 +54,30 @@ jobs:
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch -q --depth 1 origin "refs/pull/${PR_NUMBER}/head"
-          git checkout -q FETCH_HEAD
-          [ -z "$EXPECTED_SHA" ] || [ "$(git rev-parse HEAD)" = "$EXPECTED_SHA" ] \
-            || { echo "FATAL: PR head moved since approval (want $EXPECTED_SHA, got $(git rev-parse HEAD))"; exit 1; }
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive --quiet
 
           . ci/rust-env.sh
 
-          bun run ci/cache.ts restore
           bun install --frozen-lockfile
-          bun run lint
-          bun run check
-          bun run test:unit
           bun run test:rust
+          bun run ci/cache.ts save
 
   teardown:
-    needs: [provision, check]
+    needs: [provision, warm]
     if: always()
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 15
     steps:
-      - name: Destroy the check box
+      - name: Destroy the warm box
         env:
-          TF_VAR_name: open-grind-check-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
+          TF_VAR_name: open-grind-warm-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
           RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-        run: bun /opt/ci/teardown.ts check
+        run: bun /opt/ci/teardown.ts warm

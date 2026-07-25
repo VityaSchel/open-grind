@@ -12,11 +12,19 @@ import {
 	RUNNER_SHA256,
 	RUNNER_VERSION,
 	STATE_BUCKET,
+	WARM,
+	WARM_LABEL,
 } from "./config.ts";
+
+const SINGLE = {
+	check: { box: CHECK, label: CHECK_LABEL },
+	warm: { box: WARM, label: WARM_LABEL },
+};
 
 const mode = process.argv[2];
 const builder = mode === "build" || mode === "fdroid";
-const checkName = process.env.TF_VAR_name;
+const single = SINGLE[mode as keyof typeof SINGLE];
+const singleName = process.env.TF_VAR_name;
 const requested = (process.env.BOXES ?? "").split(/\s+/).filter(Boolean);
 const unknown = requested.filter(
 	(provider) => !BUILDERS.some((box) => box.provider === provider),
@@ -25,12 +33,12 @@ if (builder && unknown.length > 0)
 	throw new Error(`unknown builders requested: ${unknown.join(" ")}`);
 const boxes: Box[] = builder
 	? BUILDERS.filter((box) => requested.includes(box.provider))
-	: mode === "check" && checkName
-		? [{ ...CHECK, name: checkName }]
+	: single && singleName
+		? [{ ...single.box, name: singleName }]
 		: [];
 if (boxes.length === 0) {
 	console.error(
-		"usage: BOXES=<provider …> provision.ts build|fdroid | TF_VAR_name=<box> provision.ts check",
+		"usage: BOXES=<provider …> provision.ts build|fdroid | TF_VAR_name=<box> provision.ts check|warm",
 	);
 	process.exit(2);
 }
@@ -144,10 +152,7 @@ for (const box of boxes) {
 				TF_VAR_name: box.name,
 				TF_VAR_plan: plan,
 				TF_VAR_location: location,
-				TF_VAR_user_data: cloudInit(
-					mode === "check" ? CHECK_LABEL : box.name,
-					runner,
-				),
+				TF_VAR_user_data: cloudInit(single?.label ?? box.name, runner),
 			};
 			if (await terraform(box, APPLY, attempt)) {
 				placed = `${plan} in ${location}`;

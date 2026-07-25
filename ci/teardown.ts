@@ -3,9 +3,11 @@ import {
 	BOX_LIFETIME_MINUTES,
 	BUILDERS,
 	CHECK,
+	EPHEMERAL_PREFIXES,
 	FORGEJO,
 	REPO,
 	STATE_BUCKET,
+	WARM,
 } from "./config.ts";
 
 const registration = process.env.RUNNER_REGISTRATION_TOKEN;
@@ -50,22 +52,25 @@ async function agedTargets(): Promise<Target[]> {
 }
 
 const mode = process.argv[2];
-const checkName = process.env.TF_VAR_name;
+const singleName = process.env.TF_VAR_name;
+const single = mode === "check" ? CHECK : mode === "warm" ? WARM : undefined;
 const own: Target[] =
 	mode === "build"
 		? BUILDERS.map((box) => ({ provider: box.provider, name: box.name }))
-		: mode === "check" && checkName
-			? [{ provider: CHECK.provider, name: checkName }]
+		: single && singleName
+			? [{ provider: single.provider, name: singleName }]
 			: [];
 if (own.length === 0 && mode !== "sweep") {
 	console.error(
-		"usage: teardown.ts build | TF_VAR_name=<box> teardown.ts check | teardown.ts sweep",
+		"usage: teardown.ts build | TF_VAR_name=<box> teardown.ts check|warm | teardown.ts sweep",
 	);
 	process.exit(2);
 }
 const aged = (await agedTargets())
 	.filter(
-		(target) => mode !== "check" || target.name.startsWith("open-grind-check-"),
+		(target) =>
+			!single ||
+			EPHEMERAL_PREFIXES.some((prefix) => target.name.startsWith(prefix)),
 	)
 	.filter(
 		(target) =>

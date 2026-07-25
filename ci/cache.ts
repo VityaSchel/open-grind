@@ -7,7 +7,8 @@ import { pipeline } from "node:stream/promises";
 import { createZstdCompress, createZstdDecompress } from "node:zlib";
 
 const CACHED_PATHS = [".ci-cache/cargo", "src-tauri/target"];
-const LOCKFILE = "src-tauri/Cargo.lock";
+// Cargo refingerprints the restored tree so cache from a different lock rebuilds the delta rather than missing
+const KEY = "check-cargo.tar.zst";
 
 const { CACHE_ENDPOINT, CACHE_BUCKET, CACHE_ACCESS_KEY, CACHE_SECRET_KEY } =
 	process.env;
@@ -24,15 +25,6 @@ const bucket = new Bun.S3Client({
 	region: "auto",
 });
 
-async function cacheKey(): Promise<string> {
-	const lockfile = Bun.file(LOCKFILE);
-	if (!(await lockfile.exists())) throw new Error(`${LOCKFILE} not found`);
-	const digest = new Bun.CryptoHasher("sha256")
-		.update(await lockfile.bytes())
-		.digest("hex");
-	return `check-${digest.slice(0, 16)}.tar.zst`;
-}
-
 async function tar(args: string[]): Promise<void> {
 	const proc = Bun.spawn(["tar", ...args], {
 		stdout: "inherit",
@@ -42,10 +34,9 @@ async function tar(args: string[]): Promise<void> {
 }
 
 async function restore(): Promise<void> {
-	const key = await cacheKey();
-	const object = bucket.file(key);
+	const object = bucket.file(KEY);
 	if (!(await object.exists())) {
-		console.log(`cache miss: ${key}`);
+		console.log(`cache miss: ${KEY}`);
 		return;
 	}
 	const work = await mkdtemp(path.join(tmpdir(), "cache-"));
@@ -59,7 +50,7 @@ async function restore(): Promise<void> {
 			createWriteStream(archive),
 		);
 		await tar(["-xf", archive]);
-		console.log(`cache hit: ${key}`);
+		console.log(`cache hit: ${KEY}`);
 	} finally {
 		await rm(work, { recursive: true, force: true });
 	}
@@ -79,7 +70,6 @@ async function save(): Promise<void> {
 		console.log("nothing to cache");
 		return;
 	}
-	const key = await cacheKey();
 	const work = await mkdtemp(path.join(tmpdir(), "cache-"));
 	try {
 		const archive = path.join(work, "cache.tar");
@@ -90,8 +80,8 @@ async function save(): Promise<void> {
 			createZstdCompress(),
 			createWriteStream(compressed),
 		);
-		await bucket.file(key).write(Bun.file(compressed));
-		console.log(`cache saved: ${key}`);
+		await bucket.file(KEY).write(Bun.file(compressed));
+		console.log(`cache saved: ${KEY} (${present.join(", ")})`);
 	} finally {
 		await rm(work, { recursive: true, force: true });
 	}
