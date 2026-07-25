@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 const [downloads, out] = process.argv.slice(2);
 const expected = JSON.parse(process.env.BOXES ?? "[]") as string[];
@@ -39,4 +39,4 @@ if (new Set(digests).size !== 1) {
 	process.exit(1);
 }
 
-await Bun.write(join(out, "open-grind-unsigned.apk"), Bun.file(first));
+await Bun.write(join(out, basename(first)), Bun.file(first));

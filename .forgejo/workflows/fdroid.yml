@@ -1,0 +1,69 @@
+name: fdroid
+
+on:
+  workflow_dispatch: {}
+
+# Must share build.yml's group: both provision the same builder boxes and runner labels.
+concurrency:
+  group: open-grind-build
+
+jobs:
+  provision:
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 15
+    steps:
+      - name: Provision builder
+        env:
+          BOXES: hetzner
+          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
+        run: bun /opt/ci/provision.ts fdroid
+
+  fdroid:
+    needs: provision
+    runs-on: ["open-grind-builder-3-hetzner"]
+    # BOX_LIFETIME_MINUTES=90 hard-poweroff minus up to ~10 min of provisioning/pickup.
+    timeout-minutes: 70
+    steps:
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
+      - name: Build the F-Droid way, print hash
+        run: bun ci/fdroid/fdroid.ts
+      - name: Upload F-Droid-built APK
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-fdroid-unsigned
+          path: fdroid-out/
+
+  teardown:
+    needs: [provision, fdroid]
+    if: always()
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 15
+    steps:
+      - name: Destroy builders
+        env:
+          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          TF_VAR_cherry_token: ${{ secrets.TF_VAR_CHERRY_TOKEN }}
+          TF_VAR_cherry_project_id: ${{ secrets.TF_VAR_CHERRY_PROJECT_ID }}
+          TF_VAR_vultr_token: ${{ secrets.TF_VAR_VULTR_TOKEN }}
+          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
+          TF_VAR_scaleway_access_key: ${{ secrets.TF_VAR_SCALEWAY_ACCESS_KEY }}
+          TF_VAR_scaleway_secret_key: ${{ secrets.TF_VAR_SCALEWAY_SECRET_KEY }}
+          TF_VAR_scaleway_project_id: ${{ secrets.TF_VAR_SCALEWAY_PROJECT_ID }}
+          TF_VAR_digitalocean_token: ${{ secrets.TF_VAR_DIGITALOCEAN_TOKEN }}
+        run: bun /opt/ci/teardown.ts build

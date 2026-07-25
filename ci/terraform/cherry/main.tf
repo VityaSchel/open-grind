@@ -23,11 +23,11 @@ variable "cherry_project_id" { type = number }
 variable "name" { type = string }
 variable "plan" {
   type    = string
-  default = ""
+  default = "G1-8-32gb-200nv-ded"
 }
 variable "location" {
   type    = string
-  default = ""
+  default = "LT-Siauliai"
 }
 variable "image" {
   type    = string

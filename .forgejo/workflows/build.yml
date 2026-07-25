@@ -63,9 +63,7 @@ jobs:
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
       - name: Build
-        run: |
-          docker compose --ansi never --progress plain build
-          docker compose --ansi never --progress plain run --rm -T build
+        run: nix run .#build-android
       - name: Collect APK
         run: |
           apk=(src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)

@@ -41,7 +41,7 @@ Prerequisites:
 1. Install Docker on your host system and make sure to give it enough disk headroom (Settings &rarr; Resources &rarr; Disk): the toolchain is ~12 GB and its first realization needs ~15 GB of transient space.
 2. Build the thin image: `docker compose build`
 3. Build the apk: `docker compose run --rm build`
-4. Retrieve the apk from `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk` on your host system
+4. Retrieve the apk from `src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<version>-unsigned.apk` on your host system
 5. Follow [Signing](#signing) steps to make the build installable on your Android device
 
 ### Clean-up Docker
@@ -60,7 +60,7 @@ Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolcha
 
 1. Install and configure Nix on your host system
 2. Run `nix run .#build-android`
-3. Retrieve the apk: `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk` on your host system
+3. Retrieve the apk: `src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<version>-unsigned.apk` on your host system
 
 > [!NOTE]
 > First time you run `nix develop` or `nix run` in Open Grind's repository, Nix will download and setup about 3 GB environment, which might take some time, depending on your internet connection speed.
@@ -198,7 +198,7 @@ nix develop
 # 1. Reproduce the unsigned APK locally
 git checkout v<tag>
 nix run .#build-android
-LOCAL=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
+LOCAL=src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<tag>-unsigned.apk
 
 # 2. Fetch the published signed APK
 #    (https://git.opengrind.org/open-grind/open-grind/releases)

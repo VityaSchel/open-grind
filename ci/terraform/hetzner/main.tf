@@ -22,11 +22,11 @@ variable "hetzner_token" {
 variable "name" { type = string }
 variable "plan" {
   type    = string
-  default = ""
+  default = "cx43"
 }
 variable "location" {
   type    = string
-  default = ""
+  default = "fsn1"
 }
 variable "image" {
   type    = string

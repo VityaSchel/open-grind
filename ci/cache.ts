@@ -2,7 +2,7 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createZstdCompress, createZstdDecompress } from "node:zlib";
 
@@ -48,10 +48,10 @@ async function restore(): Promise<void> {
 		console.log(`cache miss: ${key}`);
 		return;
 	}
-	const work = await mkdtemp(join(tmpdir(), "cache-"));
+	const work = await mkdtemp(path.join(tmpdir(), "cache-"));
 	try {
-		const compressed = join(work, "cache.tar.zst");
-		const archive = join(work, "cache.tar");
+		const compressed = path.join(work, "cache.tar.zst");
+		const archive = path.join(work, "cache.tar");
 		await Bun.write(compressed, object);
 		await pipeline(
 			createReadStream(compressed),
@@ -80,10 +80,10 @@ async function save(): Promise<void> {
 		return;
 	}
 	const key = await cacheKey();
-	const work = await mkdtemp(join(tmpdir(), "cache-"));
+	const work = await mkdtemp(path.join(tmpdir(), "cache-"));
 	try {
-		const archive = join(work, "cache.tar");
-		const compressed = join(work, "cache.tar.zst");
+		const archive = path.join(work, "cache.tar");
+		const compressed = path.join(work, "cache.tar.zst");
 		await tar(["-cf", archive, ...present]);
 		await pipeline(
 			createReadStream(archive),
@@ -98,9 +98,11 @@ async function save(): Promise<void> {
 }
 
 const command = process.argv[2];
-if (command === "restore") await restore();
-else if (command === "save") await save();
-else {
+if (command === "restore") {
+	await restore();
+} else if (command === "save") {
+	await save();
+} else {
 	console.error("usage: cache.ts restore|save");
 	process.exit(2);
 }

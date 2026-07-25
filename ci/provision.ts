@@ -15,22 +15,22 @@ import {
 } from "./config.ts";
 
 const mode = process.argv[2];
+const builder = mode === "build" || mode === "fdroid";
 const checkName = process.env.TF_VAR_name;
 const requested = (process.env.BOXES ?? "").split(/\s+/).filter(Boolean);
 const unknown = requested.filter(
 	(provider) => !BUILDERS.some((box) => box.provider === provider),
 );
-if (mode === "build" && unknown.length > 0)
+if (builder && unknown.length > 0)
 	throw new Error(`unknown builders requested: ${unknown.join(" ")}`);
-const boxes: Box[] =
-	mode === "build"
-		? BUILDERS.filter((box) => requested.includes(box.provider))
-		: mode === "check" && checkName
-			? [{ ...CHECK, name: checkName }]
-			: [];
+const boxes: Box[] = builder
+	? BUILDERS.filter((box) => requested.includes(box.provider))
+	: mode === "check" && checkName
+		? [{ ...CHECK, name: checkName }]
+		: [];
 if (boxes.length === 0) {
 	console.error(
-		"usage: BOXES=<provider …> provision.ts build | TF_VAR_name=<box> provision.ts check",
+		"usage: BOXES=<provider …> provision.ts build|fdroid | TF_VAR_name=<box> provision.ts check",
 	);
 	process.exit(2);
 }
@@ -38,17 +38,11 @@ if (boxes.length === 0) {
 const registration = process.env.RUNNER_REGISTRATION_TOKEN;
 if (!registration) throw new Error("RUNNER_REGISTRATION_TOKEN is not set");
 
-const BUILDER_SETUP = `
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y ca-certificates curl git
-. /etc/os-release
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$ID $VERSION_CODENAME stable" > /etc/apt/sources.list.d/docker.list
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin nodejs
-`;
+const setup = builder
+	? await Bun.file(
+			`${import.meta.dir}/${mode === "fdroid" ? "fdroid/setup.sh" : "setup-build.sh"}`,
+		).text()
+	: "";
 
 function cloudInit(
 	label: string,
@@ -58,7 +52,7 @@ function cloudInit(
 	return `#!/bin/bash
 set -euo pipefail
 shutdown +${BOX_LIFETIME_MINUTES}
-${mode === "build" ? BUILDER_SETUP : ""}
+${setup}
 curl -fsSL -o /usr/local/bin/forgejo-runner \\
 	"https://code.forgejo.org/forgejo/runner/releases/download/v${RUNNER_VERSION}/forgejo-runner-${RUNNER_VERSION}-linux-amd64"
 echo "${RUNNER_SHA256}  /usr/local/bin/forgejo-runner" | sha256sum -c -

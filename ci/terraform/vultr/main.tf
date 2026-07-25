@@ -22,11 +22,11 @@ variable "vultr_token" {
 variable "name" { type = string }
 variable "plan" {
   type    = string
-  default = ""
+  default = "vhp-8c-16gb-amd"
 }
 variable "location" {
   type    = string
-  default = ""
+  default = "ams"
 }
 variable "image" {
   type    = number

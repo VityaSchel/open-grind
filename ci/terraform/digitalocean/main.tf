@@ -22,11 +22,11 @@ variable "digitalocean_token" {
 variable "name" { type = string }
 variable "plan" {
   type    = string
-  default = ""
+  default = "s-8vcpu-16gb"
 }
 variable "location" {
   type    = string
-  default = ""
+  default = "fra1"
 }
 variable "image" {
   type    = string
