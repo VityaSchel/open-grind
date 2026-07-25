@@ -1,7 +1,7 @@
 runner:
   capacity: 1
   labels:
-    - open-grind-orchestrator:docker://git.opengrind.org/open-grind/open-grind-orchestrator@sha256:c344bfffa64324230c6c25d389b3a2ecfd235cd9eefa2495275fb534b9f3245c
+    - open-grind-orchestrator:docker://git.opengrind.org/open-grind/open-grind-orchestrator@sha256:dc878071c23a956a488ef930efcfca97c7506f8d135d40f1ce9920023f29cadd
 container:
   privileged: false
   valid_volumes: []

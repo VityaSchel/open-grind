@@ -11,6 +11,7 @@ import {
 	REPO,
 	RUNNER_SHA256,
 	RUNNER_VERSION,
+	SSH_KEY,
 	STATE_BUCKET,
 	WARM,
 	WARM_LABEL,
@@ -152,6 +153,7 @@ for (const box of boxes) {
 				TF_VAR_name: box.name,
 				TF_VAR_plan: plan,
 				TF_VAR_location: location,
+				TF_VAR_ssh_key: SSH_KEY,
 				TF_VAR_user_data: cloudInit(single?.label ?? box.name, runner),
 			};
 			if (await terraform(box, APPLY, attempt)) {

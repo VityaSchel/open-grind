@@ -37,6 +37,10 @@ variable "user_data" {
   sensitive = true
   default   = ""
 }
+variable "ssh_key" {
+  type    = string
+  default = ""
+}
 
 provider "hcloud" { token = var.hetzner_token }
 
@@ -46,4 +50,5 @@ resource "hcloud_server" "box" {
   location    = var.location
   image       = var.image
   user_data   = var.user_data
+  ssh_keys    = var.ssh_key == "" ? [] : [var.ssh_key]
 }
