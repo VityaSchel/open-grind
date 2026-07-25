@@ -38,14 +38,14 @@ export const BUILDERS: Box[] = [
 export const CHECK_LABEL = "open-grind-check";
 export const CHECK: Omit<Box, "name"> = {
 	provider: "hetzner",
-	plans: ["cx23", "cpx12"],
+	plans: ["cx33", "cx43", "cpx22"],
 	locations: ["fsn1", "nbg1", "hel1"],
 };
 
 export const WARM_LABEL = "open-grind-warm";
 export const WARM: Omit<Box, "name"> = {
 	provider: "hetzner",
-	plans: ["cx43", "cpx42"],
+	plans: ["cx43", "cx53", "cpx42"],
 	locations: CHECK.locations,
 };
 
