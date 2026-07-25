@@ -80,7 +80,8 @@ COPY --from=build /out/bin/terraform /usr/local/bin/terraform
 COPY --from=build /out/providers /opt/open-grind/providers
 COPY orchestrator/terraformrc /opt/open-grind/terraformrc
 
-COPY config.ts provision.ts teardown.ts verify.ts /opt/ci/
+COPY config.ts provision.ts teardown.ts verify.ts setup-build.sh /opt/ci/
+COPY fdroid/setup.sh /opt/ci/fdroid/setup.sh
 COPY terraform /opt/ci/terraform
 
 ENV TF_CLI_CONFIG_FILE=/opt/open-grind/terraformrc CHECKPOINT_DISABLE=1

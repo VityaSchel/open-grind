@@ -18,6 +18,7 @@ on:
 
 concurrency:
   group: open-grind-build
+  cancel-in-progress: false
 
 jobs:
   provision:
@@ -63,9 +64,7 @@ jobs:
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
       - name: Build
-        run: |
-          docker compose --ansi never --progress plain build
-          docker compose --ansi never --progress plain run --rm -T build
+        run: nix run .#build-android
       - name: Collect APK
         run: |
           apk=(src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
@@ -96,7 +95,7 @@ jobs:
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
           name: open-grind-unsigned
-          path: verified/open-grind-unsigned.apk
+          path: verified/
 
   teardown:
     needs: [provision, build, verify]

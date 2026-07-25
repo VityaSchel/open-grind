@@ -10,6 +10,7 @@ on:
 
 concurrency:
   group: open-grind-sweep
+  cancel-in-progress: false
 
 jobs:
   sweep:

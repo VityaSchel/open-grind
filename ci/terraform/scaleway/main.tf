@@ -27,11 +27,11 @@ variable "scaleway_project_id" { type = string }
 variable "name" { type = string }
 variable "plan" {
   type    = string
-  default = ""
+  default = "PRO2-S"
 }
 variable "location" {
   type    = string
-  default = ""
+  default = "fr-par-1"
 }
 variable "image" {
   type    = string

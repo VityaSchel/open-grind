@@ -1,0 +1,51 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: The app is exclusively a client for Grindr's proprietary, closed API.
+  TetheredNet:
+    en-US: Depends on Grindr's servers, which cannot be self-hosted or replaced.
+Categories:
+  - Internet
+  - Social Network
+License: MIT
+AuthorName: Open Grind Governance
+WebSite: https://opengrind.org
+SourceCode: https://git.opengrind.org/open-grind/open-grind
+IssueTracker: https://git.opengrind.org/open-grind/open-grind/issues
+Changelog: https://git.opengrind.org/open-grind/open-grind/releases
+
+AutoName: Open Grind
+
+RepoType: git
+Repo: https://git.opengrind.org/open-grind/open-grind.git
+Binaries: https://git.opengrind.org/open-grind/open-grind/releases/download/v%v/open-grind-v%v.apk
+
+Builds:
+  - versionName: ${versionName}
+    versionCode: ${versionCode}
+    commit: ${commit}
+    timeout: 14400
+    sudo:
+      - apt-get update
+      - apt-get install -y nix-bin
+      - chown -R vagrant /nix
+    output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
+    prebuild:
+      - mkdir -p ~/.config/nix
+      - printf '%s\n' "experimental-features = nix-command flakes" "sandbox = false"
+        > ~/.config/nix/nix.conf
+    build:
+      - export NIX_REMOTE=
+      - nix run .#build-android -- apk
+
+AllowedAPKSigningKeys: 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
+
+MaintainerNotes: |-
+  Built with the project's Nix flake so F-Droid reproduces the published release binary,
+  the result of `nix run .#build-android` output. Committed gradle-wrapper.jar is
+  Gradle 8.14.5 jar (sha256 7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172).
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$
+UpdateCheckData: src-tauri/tauri.conf.json|"versionCode":\s*(\d+)|.|"version":\s*"([^"]+)"
+CurrentVersion: ${versionName}
+CurrentVersionCode: ${versionCode}
