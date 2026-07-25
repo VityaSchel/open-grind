@@ -15,7 +15,7 @@
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
-		"lint": "eslint .",
+		"lint": "svelte-kit sync && eslint .",
 		"preview": "vite preview",
 		"tauri": "tauri",
 		"vendor:tauri-codegen": "bun scripts/vendor-tauri-codegen.ts",

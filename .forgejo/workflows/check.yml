@@ -50,6 +50,7 @@ jobs:
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_TERM_PROGRESS_WHEN: never
           NODE_OPTIONS: --max-old-space-size=6144
+          ESLINT_PROGRESS: "1"
           CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
           CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
           CACHE_ACCESS_KEY: ${{ secrets.CACHE_RO_ACCESS_KEY }}
