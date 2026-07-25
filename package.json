@@ -18,6 +18,7 @@
 		"lint": "eslint .",
 		"preview": "vite preview",
 		"tauri": "tauri",
+		"vendor:tauri-codegen": "bun scripts/vendor-tauri-codegen.ts",
 		"test": "bun run test:unit && bun run test:rust",
 		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
 		"test:coverage": "svelte-kit sync && vitest run --coverage",

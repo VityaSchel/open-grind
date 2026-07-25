@@ -1,0 +1,43 @@
+--- a/src/embedded_assets.rs
++++ b/src/embedded_assets.rs
+@@ -390,8 +390,11 @@
+ 
+ impl ToTokens for EmbeddedAssets {
+   fn to_tokens(&self, tokens: &mut TokenStream) {
++    // PATCH(open-grind): sorted iteration for reproducible builds (readdir/HashMap order)
+     let mut assets = TokenStream::new();
+-    for (key, (input, output)) in &self.assets {
++    let mut sorted_assets: Vec<_> = self.assets.iter().collect();
++    sorted_assets.sort_by(|(a, _), (b, _)| AsRef::<str>::as_ref(a).cmp(b.as_ref()));
++    for (key, (input, output)) in sorted_assets {
+       let key: &str = key.as_ref();
+       let input = input.display().to_string();
+       let output = output.display().to_string();
+@@ -404,18 +407,24 @@
+     }
+ 
+     let mut global_hashes = TokenStream::new();
+-    for script_hash in &self.csp_hashes.scripts {
++    let mut script_hashes: Vec<_> = self.csp_hashes.scripts.iter().collect();
++    script_hashes.sort();
++    for script_hash in script_hashes {
+       let hash = script_hash.as_str();
+       global_hashes.append_all(quote!(CspHash::Script(#hash),));
+     }
+ 
+-    for style_hash in &self.csp_hashes.styles {
++    let mut style_hashes: Vec<_> = self.csp_hashes.styles.iter().collect();
++    style_hashes.sort();
++    for style_hash in style_hashes {
+       let hash = style_hash.as_str();
+       global_hashes.append_all(quote!(CspHash::Style(#hash),));
+     }
+ 
+     let mut html_hashes = TokenStream::new();
+-    for (path, hashes) in &self.csp_hashes.inline_scripts {
++    let mut sorted_inline_scripts: Vec<_> = self.csp_hashes.inline_scripts.iter().collect();
++    sorted_inline_scripts.sort_by_key(|(path, _)| path.as_str());
++    for (path, hashes) in sorted_inline_scripts {
+       let key = path.as_str();
+       let mut value = TokenStream::new();
+       for script_hash in hashes {
