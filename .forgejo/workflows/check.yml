@@ -46,8 +46,8 @@ jobs:
           PR_NUMBER: ${{ forgejo.event.pull_request.number || inputs.pr }}
           EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
           CI_WORKSPACE: /opt/open-grind-ci
+          CI_CACHE: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
-          CARGO_HOME: .ci-cache/cargo
           CARGO_TERM_PROGRESS_WHEN: never
           CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
           CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
@@ -60,9 +60,12 @@ jobs:
             | grep -vE '^CACHE_(ACCESS_KEY|SECRET_KEY)=' || true)
           [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
 
+          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)"; "$@"; }
+
           rm -rf "$CI_WORKSPACE"
-          mkdir -p "$CI_WORKSPACE"
+          mkdir -p "$CI_WORKSPACE" "$CI_CACHE"
           cd "$CI_WORKSPACE"
+          export CARGO_HOME="$CI_CACHE/cargo" CARGO_TARGET_DIR="$CI_CACHE/target"
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
@@ -75,12 +78,14 @@ jobs:
 
           . ci/rust-env.sh
 
-          bun run ci/cache.ts restore
-          bun install --frozen-lockfile
-          bun run lint
-          bun run check
-          bun run test:unit
-          bun run test:rust
+          step bun run ci/cache.ts restore
+          echo "cargo home: $(ls "$CARGO_HOME" 2>/dev/null | tr '\n' ' ')| free: $(df -h --output=avail "$CI_CACHE" | tail -1)"
+
+          step bun install --frozen-lockfile
+          step bun run lint
+          step bun run check
+          step bun run test:unit
+          step bun run test:rust
 
   teardown:
     needs: [provision, check]

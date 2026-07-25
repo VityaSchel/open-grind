@@ -38,8 +38,8 @@ jobs:
       - name: Build the dependency graph from trusted code and publish the cache
         env:
           CI_WORKSPACE: /opt/open-grind-ci
+          CI_CACHE: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
-          CARGO_HOME: .ci-cache/cargo
           CARGO_TERM_PROGRESS_WHEN: never
           CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
           CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
@@ -48,9 +48,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          rm -rf "$CI_WORKSPACE"
-          mkdir -p "$CI_WORKSPACE"
+          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)"; "$@"; }
+
+          rm -rf "$CI_WORKSPACE" "$CI_CACHE"
+          mkdir -p "$CI_WORKSPACE" "$CI_CACHE"
           cd "$CI_WORKSPACE"
+          export CARGO_HOME="$CI_CACHE/cargo" CARGO_TARGET_DIR="$CI_CACHE/target"
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
@@ -61,9 +64,9 @@ jobs:
 
           . ci/rust-env.sh
 
-          bun install --frozen-lockfile
-          bun run test:rust
-          bun run ci/cache.ts save
+          step bun install --frozen-lockfile
+          step bun run test:rust
+          step bun run ci/cache.ts save
 
   teardown:
     needs: [provision, warm]

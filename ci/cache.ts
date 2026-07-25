@@ -1,21 +1,33 @@
 #!/usr/bin/env bun
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createZstdCompress, createZstdDecompress } from "node:zlib";
 
-const CACHED_PATHS = [".ci-cache/cargo", "src-tauri/target"];
+const CACHED_PATHS = ["cargo", "target"];
 // Cargo refingerprints the restored tree so cache from a different lock rebuilds the delta rather than missing
 const KEY = "check-cargo.tar.zst";
 
-const { CACHE_ENDPOINT, CACHE_BUCKET, CACHE_ACCESS_KEY, CACHE_SECRET_KEY } =
-	process.env;
-if (!CACHE_ENDPOINT || !CACHE_BUCKET || !CACHE_ACCESS_KEY || !CACHE_SECRET_KEY)
+const {
+	CACHE_ENDPOINT,
+	CACHE_BUCKET,
+	CACHE_ACCESS_KEY,
+	CACHE_SECRET_KEY,
+	CI_CACHE,
+} = process.env;
+if (
+	!CACHE_ENDPOINT ||
+	!CACHE_BUCKET ||
+	!CACHE_ACCESS_KEY ||
+	!CACHE_SECRET_KEY ||
+	!CI_CACHE
+)
 	throw new Error(
-		"CACHE_ENDPOINT, CACHE_BUCKET, CACHE_ACCESS_KEY and CACHE_SECRET_KEY must be set",
+		"CACHE_ENDPOINT, CACHE_BUCKET, CACHE_ACCESS_KEY, CACHE_SECRET_KEY and CI_CACHE must be set",
 	);
+const root: string = CI_CACHE;
 
 const bucket = new Bun.S3Client({
 	accessKeyId: CACHE_ACCESS_KEY,
@@ -49,7 +61,8 @@ async function restore(): Promise<void> {
 			createZstdDecompress(),
 			createWriteStream(archive),
 		);
-		await tar(["-xf", archive]);
+		await mkdir(root, { recursive: true });
+		await tar(["-C", root, "-xf", archive]);
 		console.log(`cache hit: ${KEY}`);
 	} finally {
 		await rm(work, { recursive: true, force: true });
@@ -58,14 +71,14 @@ async function restore(): Promise<void> {
 
 async function save(): Promise<void> {
 	const present: string[] = [];
-	for (const path of CACHED_PATHS)
+	for (const entry of CACHED_PATHS)
 		if (
-			await stat(path).then(
+			await stat(path.join(root, entry)).then(
 				() => true,
 				() => false,
 			)
 		)
-			present.push(path);
+			present.push(entry);
 	if (present.length === 0) {
 		console.log("nothing to cache");
 		return;
@@ -74,7 +87,7 @@ async function save(): Promise<void> {
 	try {
 		const archive = path.join(work, "cache.tar");
 		const compressed = path.join(work, "cache.tar.zst");
-		await tar(["-cf", archive, ...present]);
+		await tar(["-C", root, "-cf", archive, ...present]);
 		await pipeline(
 			createReadStream(archive),
 			createZstdCompress(),
