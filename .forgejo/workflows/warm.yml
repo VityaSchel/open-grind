@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)"; "$@"; }
+          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)" >&2; "$@"; }
 
           rm -rf "$CI_WORKSPACE" "$CI_CACHE"
           mkdir -p "$CI_WORKSPACE" "$CI_CACHE"

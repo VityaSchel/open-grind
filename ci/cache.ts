@@ -37,6 +37,19 @@ const bucket = new Bun.S3Client({
 	region: "auto",
 });
 
+async function restored(): Promise<string[]> {
+	const found: string[] = [];
+	for (const entry of CACHED_PATHS)
+		if (
+			await stat(path.join(root, entry)).then(
+				() => true,
+				() => false,
+			)
+		)
+			found.push(entry);
+	return found;
+}
+
 async function tar(args: string[]): Promise<void> {
 	const proc = Bun.spawn(["tar", ...args], {
 		stdout: "inherit",
@@ -63,22 +76,19 @@ async function restore(): Promise<void> {
 		);
 		await mkdir(root, { recursive: true });
 		await tar(["-C", root, "-xf", archive]);
-		console.log(`cache hit: ${KEY}`);
+		const found = await restored();
+		if (found.length === 0)
+			throw new Error(
+				`${KEY} holds none of ${CACHED_PATHS.join(", ")} — it predates the cache layout, re-run the warm workflow to rewrite it`,
+			);
+		console.log(`cache hit: ${KEY} (${found.join(", ")})`);
 	} finally {
 		await rm(work, { recursive: true, force: true });
 	}
 }
 
 async function save(): Promise<void> {
-	const present: string[] = [];
-	for (const entry of CACHED_PATHS)
-		if (
-			await stat(path.join(root, entry)).then(
-				() => true,
-				() => false,
-			)
-		)
-			present.push(entry);
+	const present = await restored();
 	if (present.length === 0) {
 		console.log("nothing to cache");
 		return;
