@@ -12,6 +12,7 @@ on:
 
 concurrency:
   group: open-grind-check
+  cancel-in-progress: false
 
 jobs:
   provision:

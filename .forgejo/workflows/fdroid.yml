@@ -6,6 +6,7 @@ on:
 # Must share build.yml's group: both provision the same builder boxes and runner labels.
 concurrency:
   group: open-grind-build
+  cancel-in-progress: false
 
 jobs:
   provision:
