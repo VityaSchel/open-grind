@@ -3,8 +3,12 @@ source /etc/profile.d/bsenv.sh
 fdroidserver="${fdroidserver:-/opt/fdroidserver}"
 command -v fdroid >/dev/null || [ -x "$fdroidserver/fdroid" ] \
 	|| git clone --depth 1 https://gitlab.com/fdroid/fdroidserver.git "$fdroidserver"
-chown -R vagrant /repo "$fdroidserver"
 cd /repo
+mkdir -p build
+git clone --quiet "${repoUrl}" "build/${APPID}"
+git -C "build/${APPID}" checkout --quiet --detach "${commit}"
+printf 'git %s' "${repoUrl}" > "build/.fdroidvcs-${APPID}"
+chown -R vagrant /repo "$fdroidserver"
 for d in logs tmp unsigned "$home_vagrant/.android" "$home_vagrant/.gradle"; do
 	mkdir -p "$d"; chown -R vagrant "$d"
 done
