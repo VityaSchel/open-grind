@@ -57,13 +57,16 @@
 	});
 
 	setConversationState(() => conversationState);
+
+	let composerHeight = $state(0);
 </script>
 
 <ChatNavBar />
 <Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
-	<ConversationMessages />
+	<ConversationMessages {composerHeight} />
 	<MessageComposer
 		onSend={(message: Message) => conversationState.send(message)}
 		disabled={conversationState.loading || conversationState.error !== null}
+		bind:height={composerHeight}
 	/>
 </Card.Content>
