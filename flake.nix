@@ -150,6 +150,21 @@
 
               ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
               cd "$ROOT"
+              # rustc and clang see the symlink-resolved path, which is what must match.
+              ROOT="$(pwd -P)"
+
+              # F-Droid's buildserver fixes its checkout and HOME at /repo/build/<appid>
+              # and /home/vagrant, so ours can never match; remap both sides to literals
+              # instead. Lives here, not in build.yml, which F-Droid never reads.
+              CARGO_HOME="''${CARGO_HOME:-$HOME/.cargo}"
+              export CARGO_HOME
+              export RUSTFLAGS="''${RUSTFLAGS:-} --remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=$ROOT=/open-grind"
+              # rustc's remap misses C: BoringSSL bakes __FILE__ from boring-sys2's
+              # OUT_DIR. cc forwards these into the cmake crate's CMAKE_C_FLAGS, and
+              # neither var feeds cargo's unit hash, so boring-sys2-<hash> stays stable.
+              prefixMaps="-ffile-prefix-map=$CARGO_HOME=/cargo -ffile-prefix-map=$ROOT=/open-grind"
+              export CFLAGS="''${CFLAGS:-} $prefixMaps"
+              export CXXFLAGS="''${CXXFLAGS:-} $prefixMaps"
 
               KEYSTORE_DEST="$ROOT/src-tauri/gen/android/keystore.properties"
 
