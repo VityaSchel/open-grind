@@ -123,6 +123,24 @@ pub fn run() {
             api::client::rotate_api_params,
         ])
         .setup(|app| {
+            let user_agent = format!(
+                "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
+                app.package_info().version
+            );
+            let deferred: Vec<_> = app
+                .config()
+                .app
+                .windows
+                .iter()
+                .filter(|window| !window.create)
+                .cloned()
+                .collect();
+            for window in deferred {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
+                    .user_agent(&user_agent)
+                    .build()?;
+            }
+
             #[cfg(desktop)]
             if let Some(message) = outdated_webview_notice() {
                 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
