@@ -20,7 +20,7 @@ pub async fn rotate_api_params(
 
     let new_device = grindr::DeviceInfo::generate();
     if let Err(e) = DeviceStorage::save(&new_device) {
-        eprintln!("[client] could not persist rotated device info: {e}");
+        tracing::error!("[client] could not persist rotated device info: {e}");
     }
 
     let old_device = client.rotate_device(new_device).await?;

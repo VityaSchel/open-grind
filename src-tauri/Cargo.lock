@@ -3465,6 +3465,8 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-os",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "windows-native-keyring-store",
 ]
 

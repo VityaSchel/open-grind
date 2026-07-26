@@ -113,7 +113,7 @@ pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
 
     let new_device = grindr::DeviceInfo::generate();
     if let Err(e) = DeviceStorage::save(&new_device) {
-        eprintln!("[auth] could not persist rotated device info on sign out: {e}");
+        tracing::error!("[auth] could not persist rotated device info on sign out: {e}");
     }
     client.rotate_device(new_device).await?;
 

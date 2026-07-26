@@ -38,6 +38,8 @@ base64 = "0.22"
 keyring-core = "0.7.2"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-dialog = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "0.2.3", features = ["keychain", "protected"], optional = true }

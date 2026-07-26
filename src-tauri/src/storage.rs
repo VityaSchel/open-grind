@@ -194,8 +194,7 @@ pub struct AuthStorage;
 
 impl AuthStorage {
     fn entry() -> Result<keyring_core::Entry, AppError> {
-        keyring_core::Entry::new("open-grind", "session")
-            .map_err(|e| AppError::Auth(e.to_string()))
+        keyring_core::Entry::new("open-grind", "session").map_err(|e| AppError::Auth(e.to_string()))
     }
 
     pub fn get_session() -> Result<Option<grindr::Session>, AppError> {
@@ -226,9 +225,9 @@ impl AuthStorage {
         match Self::entry() {
             Ok(entry) => match entry.delete_credential() {
                 Ok(()) | Err(keyring_core::Error::NoEntry) => {}
-                Err(e) => eprintln!("[auth] failed to delete keyring session: {e}"),
+                Err(e) => tracing::warn!("[auth] failed to delete keyring session: {e}"),
             },
-            Err(e) => eprintln!("[auth] failed to open keyring entry for deletion: {e}"),
+            Err(e) => tracing::warn!("[auth] failed to open keyring entry for deletion: {e}"),
         }
     }
 }
@@ -262,7 +261,7 @@ impl SigningKeyStorage {
         if let Ok(entry) = Self::entry() {
             match entry.delete_credential() {
                 Ok(()) | Err(keyring_core::Error::NoEntry) => {}
-                Err(e) => eprintln!("[signing] failed to delete keyring key: {e}"),
+                Err(e) => tracing::warn!("[signing] failed to delete keyring key: {e}"),
             }
         }
     }
