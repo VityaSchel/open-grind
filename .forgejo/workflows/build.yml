@@ -48,6 +48,7 @@ jobs:
 
   build:
     needs: provision
+    if: ${{ needs.provision.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:

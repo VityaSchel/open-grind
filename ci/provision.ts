@@ -44,6 +44,12 @@ if (boxes.length === 0) {
 	process.exit(2);
 }
 
+if (mode === "build" && process.env.GITHUB_OUTPUT)
+	await appendFile(
+		process.env.GITHUB_OUTPUT,
+		`boxes=${JSON.stringify(boxes.map((box) => box.name))}\n`,
+	);
+
 const registration = process.env.RUNNER_REGISTRATION_TOKEN;
 if (!registration) throw new Error("RUNNER_REGISTRATION_TOKEN is not set");
 
@@ -171,9 +177,3 @@ for (const box of boxes) {
 }
 
 await Promise.all(placedRunners.map((runnerId) => waitOnline(runnerId)));
-
-if (mode === "build" && process.env.GITHUB_OUTPUT)
-	await appendFile(
-		process.env.GITHUB_OUTPUT,
-		`boxes=${JSON.stringify(boxes.map((box) => box.name))}\n`,
-	);

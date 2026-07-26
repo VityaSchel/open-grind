@@ -35,9 +35,30 @@ interface Target {
 	aged?: boolean;
 }
 
+async function allState(): Promise<{ key: string; lastModified?: string }[]> {
+	const objects: { key: string; lastModified?: string }[] = [];
+	let startAfter: string | undefined;
+	for (;;) {
+		const page = await state.list(startAfter ? { startAfter } : undefined);
+		const contents = page?.contents ?? [];
+		objects.push(...contents);
+		const last = contents.at(-1);
+		if (!page?.isTruncated || !last) return objects;
+		startAfter = last.key;
+	}
+}
+
 async function agedTargets(): Promise<Target[]> {
 	const cutoff = Date.now() - sweepMinutes * 60_000;
-	const objects = (await state.list())?.contents ?? [];
+	const objects = await allState();
+	const young = objects.filter(
+		(object) =>
+			object.lastModified && new Date(object.lastModified).getTime() >= cutoff,
+	);
+	if (young.length > 0)
+		console.log(
+			`skipping ${young.length} state(s) newer than ${sweepMinutes}m: ${young.map((object) => object.key).join(", ")}`,
+		);
 	return objects
 		.filter(
 			(object) =>
