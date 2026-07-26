@@ -48,61 +48,72 @@
 					backGestureEventHandlers.delete(onBackGesture);
 				});
 
-				function setScaledRadius(img: Element) {
-					if (!(img instanceof HTMLImageElement)) return;
+				// Radius is scaled by the zoom-wrap transform, so pre-divide it by that scale
+				// img placeholder does a second scale off a 250px box
+				const PLACEHOLDER_BASE_WIDTH = 250;
 
-					const radius = parseFloat(getComputedStyle(img).borderRadius);
+				function setThumbRadii() {
+					const slide = lightbox?.pswp?.currSlide;
+					const thumb = slide?.data.element?.querySelector("img");
+					if (!slide || !(thumb instanceof HTMLImageElement)) return;
 
-					const rect = img.getBoundingClientRect();
-					const thumbW = rect.width;
+					const thumbWidth = thumb.getBoundingClientRect().width;
+					const displayedWidth = slide.width * slide.zoomLevels.initial;
+					if (thumbWidth === 0 || displayedWidth === 0) return;
 
-					const pswpScale = Math.min(
-						window.innerWidth / img.naturalWidth,
-						window.innerHeight / img.naturalHeight,
-					);
-					const pswpDisplayW = img.naturalWidth * pswpScale;
+					const style = getComputedStyle(thumb);
+					const corners = [
+						style.borderTopLeftRadius,
+						style.borderTopRightRadius,
+						style.borderBottomRightRadius,
+						style.borderBottomLeftRadius,
+					].map(parseFloat);
 
-					const scaledRadius = radius * (pswpDisplayW / thumbW);
+					const scaled = (factor: number) =>
+						corners.map((corner) => `${corner * factor}px`).join(" ");
 
-					document.documentElement.style.setProperty(
+					const root = document.documentElement.style;
+					root.setProperty(
 						"--pswp-thumb-radius",
-						`${radius * 1.6}px`, // FIXME: no idea how this is calculated
+						scaled(displayedWidth / thumbWidth),
 					);
-					document.documentElement.style.setProperty(
-						"--pswp-border-radius",
-						`${scaledRadius}px`,
+					root.setProperty(
+						"--pswp-placeholder-radius",
+						scaled(PLACEHOLDER_BASE_WIDTH / thumbWidth),
 					);
 				}
 
-				lightbox.on("afterInit", () => {
-					gallery?.querySelectorAll(".item img").forEach(setScaledRadius);
-				});
-				lightbox.on("openingAnimationStart", () => {
+				function clearThumbRadii() {
+					document.documentElement.style.removeProperty("--pswp-thumb-radius");
+					document.documentElement.style.removeProperty(
+						"--pswp-placeholder-radius",
+					);
+				}
+
+				function hideThumbs() {
 					gallery?.querySelectorAll(".item").forEach((item) => {
 						if (item instanceof HTMLElement) {
 							item.style.visibility = "hidden";
 						}
 					});
+				}
+
+				lightbox.on("openingAnimationStart", () => {
+					setThumbRadii();
+					lightbox?.pswp?.element?.classList.add("pswp--radius-opening");
+					hideThumbs();
 				});
 				lightbox.on("openingAnimationEnd", () => {
-					document.documentElement.style.removeProperty("--pswp-border-radius");
+					lightbox?.pswp?.element?.classList.remove("pswp--radius-opening");
+					clearThumbRadii();
 				});
 
-				lightbox.on("close", () => {
-					gallery?.querySelectorAll(".item img").forEach(setScaledRadius);
-					lightbox?.pswp?.element?.classList.add("pswp--closing");
-				});
 				lightbox.on("closingAnimationStart", () => {
-					gallery?.querySelectorAll(".item").forEach((item) => {
-						if (item instanceof HTMLElement) {
-							item.style.visibility = "hidden";
-						}
-					});
+					setThumbRadii();
+					lightbox?.pswp?.element?.classList.add("pswp--radius-closing");
+					hideThumbs();
 				});
-				lightbox.on("closingAnimationEnd", () => {
-					document.documentElement.style.removeProperty("--pswp-border-radius");
-					lightbox?.pswp?.element?.classList.remove("pswp--closing");
-				});
+				lightbox.on("closingAnimationEnd", clearThumbRadii);
 
 				lightbox.on("destroy", () => {
 					gallery?.querySelectorAll(".item").forEach((item) => {
@@ -120,7 +131,7 @@
 </script>
 
 <div
-	class={["relative", { "w-2/5 min-w-35 max-w-60 ms-3": !media.clone }]}
+	class={["relative", { "ms-3 w-2/5 max-w-60 min-w-35": !media.clone }]}
 	bind:this={media.el}
 >
 	<a
@@ -128,7 +139,7 @@
 		data-pswp-width={message.width ?? undefined}
 		data-pswp-height={message.height ?? undefined}
 		aria-label="Open image"
-		class="block item"
+		class="item block"
 	>
 		<img
 			src={message.url}
@@ -147,20 +158,27 @@
 </div>
 
 <style>
-	:global(.pswp--open .pswp__img) {
+	:global(.pswp__img) {
+		--pswp-radius: var(--pswp-thumb-radius);
+	}
+	/* div placeholders are sized directly and keep --pswp-thumb-radius */
+	:global(img.pswp__img--placeholder) {
+		--pswp-radius: var(--pswp-placeholder-radius);
+	}
+
+	:global(.pswp--radius-opening .pswp__img) {
 		animation: pswp-radius-open var(--pswp-transition-duration)
 			var(--default-transition-timing-function, ease) forwards;
 	}
 
-	:global(.pswp--open.pswp--closing .pswp__img),
-	:global(.pswp__container--closing .pswp__img) {
+	:global(.pswp--radius-closing .pswp__img) {
 		animation: pswp-radius-close var(--pswp-transition-duration)
 			var(--default-transition-timing-function, ease) forwards;
 	}
 
 	@keyframes pswp-radius-open {
 		from {
-			border-radius: var(--pswp-thumb-radius);
+			border-radius: var(--pswp-radius);
 		}
 		to {
 			border-radius: 0px;
@@ -172,7 +190,7 @@
 			border-radius: 0px;
 		}
 		to {
-			border-radius: var(--pswp-border-radius);
+			border-radius: var(--pswp-radius);
 		}
 	}
 </style>
