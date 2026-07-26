@@ -33,6 +33,7 @@ export default defineConfig(
 			"reverse/",
 			"docs/",
 			"contrib/",
+			"coverage/",
 			"static/",
 			"scripts/",
 			"test-results/",
