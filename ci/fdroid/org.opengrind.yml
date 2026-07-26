@@ -27,7 +27,7 @@ Builds:
     sudo:
       - apt-get update
       - apt-get install -y nix-bin
-      - mkdir -p /nix
+      - mkdir -p /nix/var/nix
       - chown -R vagrant /nix
     output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
     prebuild:
