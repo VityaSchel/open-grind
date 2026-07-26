@@ -106,6 +106,7 @@
           toolchainInputs = [
             rustToolchain
             pkgs.bun
+            pkgs.nodejs_24
             jdk
             pkgs.gradle_8
             androidSdk
@@ -145,6 +146,7 @@
 
               ${envExports}
               export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
+              export NODE_OPTIONS="''${NODE_OPTIONS:---max-old-space-size=4096}"
 
               ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
               cd "$ROOT"
