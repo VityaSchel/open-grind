@@ -53,7 +53,7 @@ docker image rm open-grind-build   # removes the thin image
 
 ## Build with Nix (builds everywhere)
 
-Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolchain — Rust, the JDK, the Android SDK, the NDK, Gradle, and Bun — so any contributor on Linux or macOS can produce an identical build in an identical environment.
+Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolchain — Rust, the JDK, the Android SDK, the NDK, Gradle, Bun, and Node.js — so any contributor on Linux or macOS can produce an identical build in an identical environment.
 
 - [Nix](https://nixos.org/download) >= 2.18
 - ~30 GB of disk space
@@ -159,7 +159,7 @@ Before running any build or verification steps, you are trusting several compone
 
 ### Verifying Nix and flake.lock
 
-[flake.lock](./flake.lock) pins every flake input to an exact content hash: JDK, Android SDK, NDK, Rust, Bun.
+[flake.lock](./flake.lock) pins every flake input to an exact content hash: JDK, Android SDK, NDK, Rust, Bun, Node.js.
 
 1. Confirm the nixpkgs revision in flake.lock resolves to a commit on the official NixOS/nixpkgs repository:
 
@@ -258,6 +258,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 | Gradle distribution                     | `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.properties` |
 | Kotlin                                  | `src-tauri/gen/android/build.gradle.kts`                         |
 | Bun                                     | nixpkgs pin (via `flake.lock`)                                   |
+| Node.js (runs `vite build`)             | nixpkgs pin (via `flake.lock`)                                   |
 | Tauri CLI                               | `package.json` / `bun.lock`                                      |
 | JS deps                                 | `bun.lock`                                                       |
 | Cargo deps                              | `src-tauri/Cargo.lock`                                           |
