@@ -26,6 +26,9 @@ const recipe = (commit: string): string =>
 		.replaceAll("${versionCode}", versionCode.toString())
 		.replaceAll("${commit}", commit);
 
+const withoutReferenceBinary = (rendered: string): string =>
+	rendered.replace(/^Binaries:.*\n/m, "");
+
 if (process.argv[2] === "emit") {
 	const ref = process.argv[3] ?? `v${versionName}`;
 	const commit = await $`git rev-parse --verify "${ref}^{commit}"`
@@ -48,7 +51,10 @@ console.log(
 );
 
 const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
-await Bun.write(path.join(fdd, "metadata", `${APPID}.yml`), recipe(sha));
+await Bun.write(
+	path.join(fdd, "metadata", `${APPID}.yml`),
+	withoutReferenceBinary(recipe(sha)),
+);
 
 await $`docker pull ${IMAGE}`;
 console.log(
