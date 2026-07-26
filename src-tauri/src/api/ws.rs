@@ -1,5 +1,6 @@
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
+use tokio::sync::broadcast::error::RecvError;
 
 use crate::error::{AppError, BanInfo};
 use crate::state::AppState;
@@ -21,9 +22,18 @@ pub fn spawn_ws_task(app: AppHandle) {
                 c.clone()
             };
             let mut rx = client.ws_receiver();
-            while let Ok(event) = rx.recv().await {
-                let safe_type = event.event_type.replace('.', "_");
-                app.emit(&format!("grindr:{safe_type}"), &event.payload).ok();
+            loop {
+                match rx.recv().await {
+                    Ok(event) => {
+                        let safe_type = event.event_type.replace('.', "_");
+                        app.emit(&format!("grindr:{safe_type}"), &event.payload)
+                            .ok();
+                    }
+                    Err(RecvError::Lagged(skipped)) => {
+                        app.emit("ws:events-dropped", skipped).ok();
+                    }
+                    Err(RecvError::Closed) => break,
+                }
             }
         });
     }
@@ -56,7 +66,12 @@ pub fn spawn_ws_task(app: AppHandle) {
                 c.clone()
             };
             let mut rx = client.auth_event_receiver();
-            while let Ok(event) = rx.recv().await {
+            loop {
+                let event = match rx.recv().await {
+                    Ok(event) => event,
+                    Err(RecvError::Lagged(_)) => continue,
+                    Err(RecvError::Closed) => break,
+                };
                 match event {
                     grindr::AuthEvent::LoggedOut => {
                         app.emit(

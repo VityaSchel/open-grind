@@ -110,6 +110,12 @@ class WsState {
 		return listen<void>("ws:connected", () => handler());
 	}
 
+	onEventsDropped(handler: (skipped: number) => void): Promise<() => void> {
+		return listen<number>("ws:events-dropped", (event) => {
+			handler(event.payload);
+		});
+	}
+
 	send(type: string, payload: unknown): void {
 		const ref_id = crypto.randomUUID();
 		invoke("ws_send", { command: { type, ref_id, payload } }).catch(
