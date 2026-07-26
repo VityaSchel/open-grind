@@ -27,6 +27,7 @@ Builds:
     sudo:
       - apt-get update
       - apt-get install -y nix-bin
+      - mkdir -p /nix
       - chown -R vagrant /nix
     output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
     prebuild:
@@ -34,8 +35,7 @@ Builds:
       - printf '%s\n' "experimental-features = nix-command flakes" "sandbox = false"
         > ~/.config/nix/nix.conf
     build:
-      - git checkout -- src-tauri/gen/android/gradlew
-        src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
+      - git checkout -- src-tauri/gen/android/gradlew src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
       - export NIX_REMOTE=
       - nix run .#build-android -- apk
 
