@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DisplayName from "$lib/components/profile/DisplayName.svelte";
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
+	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Card from "$lib/components/ui/card";
@@ -25,13 +26,14 @@
 		<div class="flex min-w-0 flex-col">
 			<Card.Title
 				class={[
-					"min-w-0 truncate",
+					"flex min-w-0 items-center gap-1",
 					{
 						"text-muted-foreground": !profile.name,
 					},
 				]}
 			>
-				<DisplayName name={profile.name} />
+				<ProfileStatusIndicator onlineUntil={profile.onlineUntil} />
+				<DisplayName name={profile.name} class="truncate" />
 			</Card.Title>
 			{#if profile.distance === null}
 				<Card.Description class="truncate">Distance unknown</Card.Description>
