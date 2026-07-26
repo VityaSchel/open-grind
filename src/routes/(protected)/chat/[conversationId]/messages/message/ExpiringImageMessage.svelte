@@ -26,6 +26,7 @@
 	const media = new MessageMediaState();
 
 	const className: import("svelte/elements").ClassValue = $derived([
+		"relative",
 		{
 			"ms-3": !media.clone,
 			"size-full": media.clone,
@@ -147,7 +148,7 @@
 	</button>
 {:else}
 	<div
-		class={["h-12 w-50 relative", className, contentClass]}
+		class={["h-12 w-50", className, contentClass]}
 		bind:this={media.el}
 	>
 		<LockedMedia
