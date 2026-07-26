@@ -18,7 +18,7 @@
 
 <Textarea
 	placeholder="Say something..."
-	class="h-fit! max-h-31.5 min-h-9.5 shrink-0 rounded-[20px] py-2 pr-9 leading-5 placeholder-shown:truncate"
+	class="h-fit! max-h-31.5 min-h-9.5 shrink-0 rounded-composer py-2 pr-9 leading-5 placeholder-shown:truncate"
 	enterkeyhint={isMobile ? "enter" : "send"}
 	onkeydown={(
 		event: KeyboardEvent & {

@@ -43,7 +43,7 @@
 		onSubmit().catch((error) => console.error(error));
 	}}
 >
-	<div class="relative h-full w-full rounded-full bg-popover">
+	<div class="relative h-full w-full rounded-composer bg-popover">
 		<MessageTextInput bind:value={textContent} />
 		{#if textContent === ""}
 			<ComposerAttachments />
