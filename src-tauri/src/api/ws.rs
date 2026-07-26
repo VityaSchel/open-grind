@@ -69,6 +69,8 @@ pub fn spawn_ws_task(app: AppHandle) {
             loop {
                 let event = match rx.recv().await {
                     Ok(event) => event,
+                    // Terminal auth events clear the session before they are
+                    // sent, so nothing follows one and a lag can never evict it.
                     Err(RecvError::Lagged(_)) => continue,
                     Err(RecvError::Closed) => break,
                 };
