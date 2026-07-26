@@ -22,6 +22,9 @@ const SINGLE = {
 	warm: { box: WARM, label: WARM_LABEL },
 };
 
+// Builders install Nix from cloud-init, which routinely outruns 10 minutes.
+const ONLINE_TIMEOUT_MS = 15 * 60_000;
+
 const mode = process.argv[2];
 const builder = mode === "build" || mode === "fdroid";
 const single = SINGLE[mode as keyof typeof SINGLE];
@@ -104,18 +107,24 @@ async function registerRunner(
 	}>;
 }
 
-async function waitOnline(runnerId: number): Promise<void> {
-	for (let waited = 0; waited < 600_000; waited += 15_000) {
+async function waitOnline(runnerId: number, name: string): Promise<void> {
+	for (let waited = 0; waited < ONLINE_TIMEOUT_MS; waited += 15_000) {
 		await Bun.sleep(15_000);
 		const response = await fetch(
 			`${FORGEJO}/api/v1/repos/${REPO}/actions/runners/${runnerId}`,
 			{ headers: { Authorization: `token ${registration}` } },
 		);
-		if (!response.ok) continue;
-		const { status } = (await response.json()) as { status?: string };
+		const status = response.ok
+			? ((await response.json()) as { status?: string }).status
+			: `HTTP ${response.status}`;
+		console.log(
+			`${name}: runner ${status ?? "unknown"} after ${waited / 1000}s`,
+		);
 		if (status === "idle" || status === "active") return;
 	}
-	throw new Error("runner never came online");
+	throw new Error(
+		`${name}: runner never came online within ${ONLINE_TIMEOUT_MS / 60_000}m of cloud-init`,
+	);
 }
 
 async function terraform(
@@ -137,7 +146,7 @@ async function terraform(
 const APPLY = ["apply", "-auto-approve", "-input=false"];
 const DESTROY = ["destroy", "-auto-approve", "-input=false"];
 
-const placedRunners: number[] = [];
+const placedRunners: { id: number; name: string }[] = [];
 for (const box of boxes) {
 	const init = await terraform(box, [
 		"init",
@@ -151,20 +160,23 @@ for (const box of boxes) {
 	if (!(await terraform(box, DESTROY, { TF_VAR_name: box.name })))
 		throw new Error(`destroying leftover state of ${box.name} failed`);
 
+	// One registration per box, not per placement attempt: a rejected attempt
+	// never boots the box, so its runner record would just linger offline.
+	const runner = await registerRunner(box.name);
+	const userData = cloudInit(single?.label ?? box.name, runner);
 	let placed = "";
 	for (const plan of box.plans) {
 		for (const location of box.locations) {
-			const runner = await registerRunner(box.name);
 			const attempt = {
 				TF_VAR_name: box.name,
 				TF_VAR_plan: plan,
 				TF_VAR_location: location,
 				TF_VAR_ssh_key: SSH_KEY,
-				TF_VAR_user_data: cloudInit(single?.label ?? box.name, runner),
+				TF_VAR_user_data: userData,
 			};
 			if (await terraform(box, APPLY, attempt)) {
 				placed = `${plan} in ${location}`;
-				placedRunners.push(runner.id);
+				placedRunners.push({ id: runner.id, name: box.name });
 				break;
 			}
 			if (!(await terraform(box, DESTROY, attempt)))
@@ -176,4 +188,4 @@ for (const box of boxes) {
 	console.log(`${box.name}: ${placed}`);
 }
 
-await Promise.all(placedRunners.map((runnerId) => waitOnline(runnerId)));
+await Promise.all(placedRunners.map(({ id, name }) => waitOnline(id, name)));
