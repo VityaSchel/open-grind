@@ -82,7 +82,7 @@ chmod +x /usr/local/bin/forgejo-runner
 install -d -m 0700 /etc/open-grind
 umask 077
 printf '%s' ${quote(runner.token)} > /etc/open-grind/runner-token
-systemd-run --collect --unit=open-grind-runner \\
+systemd-run --collect --unit=open-grind-runner --setenv=HOME=/root \\
 	/usr/local/bin/forgejo-runner one-job --url ${quote(FORGEJO)} --uuid ${quote(runner.uuid)} \\
 	--token-url file:///etc/open-grind/runner-token --label ${quote(`${label}:host`)} --wait
 `;
