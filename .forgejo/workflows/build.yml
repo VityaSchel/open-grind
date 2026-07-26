@@ -21,14 +21,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 5
+    outputs:
+      boxes: ${{ steps.plan.outputs.boxes }}
+    steps:
+      - name: Resolve the builder set
+        id: plan
+        env:
+          BOXES: ${{ inputs.cherry && 'cherry' || '' }} ${{ inputs.vultr && 'vultr' || '' }} ${{ inputs.hetzner && 'hetzner' || '' }}
+        run: bun /opt/ci/provision.ts names
+
   provision:
+    needs: plan
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 30
-    outputs:
-      boxes: ${{ steps.provision.outputs.boxes }}
     steps:
       - name: Provision builders
-        id: provision
         env:
           BOXES: ${{ inputs.cherry && 'cherry' || '' }} ${{ inputs.vultr && 'vultr' || '' }} ${{ inputs.hetzner && 'hetzner' || '' }}
           RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
@@ -47,12 +57,12 @@ jobs:
         run: bun /opt/ci/provision.ts build
 
   build:
-    needs: provision
+    needs: [plan, provision]
     if: ${{ needs.provision.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
-        box: ${{ fromJson(needs.provision.outputs.boxes) }}
+        box: ${{ fromJson(needs.plan.outputs.boxes) }}
     runs-on: ["${{ matrix.box }}"]
     timeout-minutes: 45
     steps:
@@ -80,11 +90,11 @@ jobs:
           retention-days: 1
 
   verify:
-    needs: [provision, build]
+    needs: [plan, provision, build]
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 10
     env:
-      BOXES: ${{ needs.provision.outputs.boxes }}
+      BOXES: ${{ needs.plan.outputs.boxes }}
     steps:
       - name: Download builds
         uses: https://code.forgejo.org/forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
@@ -99,7 +109,7 @@ jobs:
           path: verified/
 
   teardown:
-    needs: [provision, build, verify]
+    needs: [plan, provision, build, verify]
     if: always()
     runs-on: ["open-grind-orchestrator"]
     timeout-minutes: 15

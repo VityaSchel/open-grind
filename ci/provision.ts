@@ -26,7 +26,7 @@ const SINGLE = {
 const ONLINE_TIMEOUT_MS = 15 * 60_000;
 
 const mode = process.argv[2];
-const builder = mode === "build" || mode === "fdroid";
+const builder = mode === "build" || mode === "fdroid" || mode === "names";
 const single = SINGLE[mode as keyof typeof SINGLE];
 const singleName = process.env.TF_VAR_name;
 const requested = (process.env.BOXES ?? "").split(/\s+/).filter(Boolean);
@@ -42,16 +42,19 @@ const boxes: Box[] = builder
 		: [];
 if (boxes.length === 0) {
 	console.error(
-		"usage: BOXES=<provider …> provision.ts build|fdroid | TF_VAR_name=<box> provision.ts check|warm",
+		"usage: BOXES=<provider …> provision.ts build|fdroid|names | TF_VAR_name=<box> provision.ts check|warm",
 	);
 	process.exit(2);
 }
 
-if (mode === "build" && process.env.GITHUB_OUTPUT)
+// Forgejo drops a failed job's outputs, so the matrix reads this from names.
+// Build still writes it too, or an older build.yml gets no matrix and leaks.
+if ((mode === "names" || mode === "build") && process.env.GITHUB_OUTPUT)
 	await appendFile(
 		process.env.GITHUB_OUTPUT,
 		`boxes=${JSON.stringify(boxes.map((box) => box.name))}\n`,
 	);
+if (mode === "names") process.exit(0);
 
 const registration = process.env.RUNNER_REGISTRATION_TOKEN;
 if (!registration) throw new Error("RUNNER_REGISTRATION_TOKEN is not set");
@@ -184,7 +187,10 @@ for (const box of boxes) {
 		}
 		if (placed) break;
 	}
-	if (!placed) throw new Error(`no ${box.provider} capacity for ${box.name}`);
+	if (!placed)
+		throw new Error(
+			`${box.name}: every ${box.provider} plan and location was rejected — see the provider errors above, which are not always about capacity`,
+		);
 	console.log(`${box.name}: ${placed}`);
 }
 
