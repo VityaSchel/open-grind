@@ -17,11 +17,17 @@ const recipeTemplate = await Bun.file(
 	path.join(root, "ci/fdroid/org.opengrind.yml"),
 ).text();
 
+const repoUrl = recipeTemplate.match(/^Repo:\s*(\S+)/m)?.[1];
+if (!repoUrl) throw new Error("recipe template has no Repo:");
+
 const recipe = (commit: string): string =>
 	recipeTemplate
 		.replaceAll("${versionName}", versionName)
 		.replaceAll("${versionCode}", versionCode.toString())
 		.replaceAll("${commit}", commit);
+
+const withoutReferenceBinary = (rendered: string): string =>
+	rendered.replace(/^Binaries:.*\n/m, "");
 
 if (process.argv[2] === "emit") {
 	const ref = process.argv[3] ?? `v${versionName}`;
@@ -45,7 +51,10 @@ console.log(
 );
 
 const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
-await Bun.write(path.join(fdd, "metadata", `${APPID}.yml`), recipe(sha));
+await Bun.write(
+	path.join(fdd, "metadata", `${APPID}.yml`),
+	withoutReferenceBinary(recipe(sha)),
+);
 
 await $`docker pull ${IMAGE}`;
 console.log(
@@ -57,7 +66,9 @@ const buildScript = await Bun.file(path.join(root, "ci/fdroid/build.sh"))
 	.then((s) =>
 		s
 			.replaceAll("${APPID}", APPID)
-			.replaceAll("${versionCode}", versionCode.toString()),
+			.replaceAll("${versionCode}", versionCode.toString())
+			.replaceAll("${commit}", sha)
+			.replaceAll("${repoUrl}", repoUrl),
 	);
 await $`docker run --rm -v ${fdd}:/repo ${IMAGE} bash -lc ${buildScript}`;
 
