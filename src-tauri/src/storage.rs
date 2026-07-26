@@ -1,4 +1,7 @@
-#[cfg(all(target_os = "macos", not(feature = "keychain")))]
+#[cfg(any(
+    target_os = "linux",
+    all(target_os = "macos", not(feature = "keychain"))
+))]
 mod file_store {
     use keyring_core::api::{CredentialApi, CredentialPersistence, CredentialStoreApi};
     use keyring_core::{Credential, CredentialStore, Entry, Error, Result};
@@ -249,45 +252,43 @@ mod file_store {
     }
 }
 
-#[cfg(all(target_os = "macos", not(feature = "keychain")))]
+#[cfg(any(
+    target_os = "linux",
+    all(target_os = "macos", not(feature = "keychain"))
+))]
 pub fn init_file_store(base: std::path::PathBuf) {
     file_store::init(base);
 }
 
 pub fn init_keyring() {
     #[cfg(target_os = "ios")]
-    {
-        let store = apple_native_keyring_store::protected::Store::new()
-            .expect("failed to init iOS keyring");
-        keyring_core::set_default_store(store);
+    match apple_native_keyring_store::protected::Store::new() {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => tracing::error!("[storage] could not init iOS keyring: {e}"),
     }
 
     #[cfg(target_os = "android")]
-    {
-        let store =
-            android_native_keyring_store::Store::new().expect("failed to init Android keyring");
-        keyring_core::set_default_store(store);
+    match android_native_keyring_store::Store::new() {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => tracing::error!("[storage] could not init Android keyring: {e}"),
     }
 
     #[cfg(all(target_os = "macos", feature = "keychain"))]
-    {
-        let store = apple_native_keyring_store::keychain::Store::new()
-            .expect("failed to init macOS keyring");
-        keyring_core::set_default_store(store);
+    match apple_native_keyring_store::keychain::Store::new() {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => tracing::error!("[storage] could not init macOS keyring: {e}"),
     }
 
     #[cfg(target_os = "windows")]
-    {
-        let store =
-            windows_native_keyring_store::Store::new().expect("failed to init Windows keyring");
-        keyring_core::set_default_store(store);
+    match windows_native_keyring_store::Store::new() {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => tracing::error!("[storage] could not init Windows keyring: {e}"),
     }
 
     #[cfg(target_os = "linux")]
-    {
-        let store =
-            linux_keyutils_keyring_store::Store::new().expect("failed to init Linux keyring");
-        keyring_core::set_default_store(store);
+    match zbus_secret_service_keyring_store::Store::new() {
+        Ok(store) => keyring_core::set_default_store(store),
+        Err(e) => tracing::warn!("[storage] no secret service, keeping file store: {e}"),
     }
 }
 

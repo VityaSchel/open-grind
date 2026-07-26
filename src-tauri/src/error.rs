@@ -82,12 +82,6 @@ impl From<grindr::GrindrError> for AppError {
     }
 }
 
-impl From<AppError> for String {
-    fn from(e: AppError) -> Self {
-        e.to_string()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
