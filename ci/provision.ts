@@ -72,6 +72,7 @@ function cloudInit(
 	const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 	return `#!/bin/bash
 set -euo pipefail
+export HOME=/root
 shutdown +${BOX_LIFETIME_MINUTES}
 ${setup}
 curl -fsSL -o /usr/local/bin/forgejo-runner \\
