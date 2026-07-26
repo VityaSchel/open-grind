@@ -35,26 +35,27 @@ tauri-plugin-clipboard-manager = "2"
 rmp-serde = "1.3.1"
 serde_bytes = "0.11"
 base64 = "0.22"
-keyring-core = "0.7.2"
+keyring-core = "1.0.0"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-dialog = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-apple-native-keyring-store = { version = "0.2.3", features = ["keychain", "protected"], optional = true }
+apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
 
 [target.'cfg(target_os = "ios")'.dependencies]
-apple-native-keyring-store = { version = "0.2.3", features = ["keychain", "protected"] }
+apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-native-keyring-store = "0.5.1"
+windows-native-keyring-store = "1.1.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-linux-keyutils-keyring-store = "0.2.1"
+# rt-tokio would make zbus block_on a nested runtime and panic inside our spawned tasks
+zbus-secret-service-keyring-store = { version = "1.0.0", features = ["rt-async-io-crypto-rust"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
-android-native-keyring-store = "0.5.0"
+android-native-keyring-store = "1.0.0"
 # Reads the EmbeddedSetup oauth_token cookie via android.webkit.CookieManager.
 jni = "0.21"
 tauri-plugin-android-fs = "=28.2.2"
