@@ -113,6 +113,7 @@
             pkgs.stdenv.cc
             pkgs.libclang.lib
             pkgs.gnused # gradlew's arg-parsing needs sed
+            pkgs.git # boring-sys2 patches BoringSSL with `git apply` on every build
           ]
           ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
             pkgs.libiconv
