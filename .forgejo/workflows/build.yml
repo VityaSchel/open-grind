@@ -65,9 +65,20 @@ jobs:
         box: ${{ fromJson(needs.plan.outputs.boxes) }}
     runs-on: ["${{ matrix.box }}"]
     timeout-minutes: 45
+    env:
+      BUILD_ROOT: /work
+      HOME: /root
+      CARGO_HOME: /root/.cargo
+      OPEN_GRIND_GRADLE_USER_HOME: /root/.gradle-opengrind
+      TZ: UTC
+      LC_ALL: C
     steps:
       - name: Checkout
         run: |
+          : "${BUILD_ROOT:?}"
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch --depth 1 origin "$FORGEJO_REF_NAME"
@@ -75,10 +86,11 @@ jobs:
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
       - name: Build
-        run: nix run .#build-android
+        run: cd "${BUILD_ROOT:?}" && nix run .#build-android
       - name: Collect APK
         run: |
-          apk=(src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
+          : "${BUILD_ROOT:?}"
+          apk=("$BUILD_ROOT"/src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
           [ ${#apk[@]} -eq 1 ]
           mkdir -p out
           cp "${apk[0]}" out/
