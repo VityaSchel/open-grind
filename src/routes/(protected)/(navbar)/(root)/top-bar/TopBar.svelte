@@ -25,5 +25,4 @@
 		<CommandCenterTrigger />
 	</div>
 </ProgressiveBlur>
-<div class="h-9"></div>
 <GridFilters bind:open={openFilters.all} />
