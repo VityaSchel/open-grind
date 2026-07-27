@@ -24,7 +24,8 @@
 		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
 		"test:coverage": "svelte-kit sync && vitest run --coverage",
 		"test:unit": "svelte-kit sync && vitest run",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"prepare": "husky"
 	},
 	"overrides": {
 		"cookie": "^0.7.0"
@@ -74,7 +75,9 @@
 		"eslint-plugin-perfectionist": "^5.9.0",
 		"eslint-plugin-svelte": "^3.17.1",
 		"globals": "^17.6.0",
+		"husky": "^9.1.7",
 		"jsdom": "^26.1.0",
+		"lint-staged": "^17.1.0",
 		"phosphor-svelte": "^3.1.0",
 		"prettier": "^3.8.3",
 		"prettier-plugin-rust": "^0.1.9",
