@@ -66,7 +66,7 @@ RUN git init -q /src/digitalocean && cd /src/digitalocean \
 FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 RUN apk upgrade --no-cache \
-	&& apk add --no-cache nodejs bash curl ca-certificates libstdc++ unzip
+	&& apk add --no-cache nodejs bash curl ca-certificates libstdc++ unzip gnupg
 
 ARG BUN_VERSION=1.3.14
 ARG BUN_SHA256=14bd9aedeebf1dba67e8def9531c89bc989ecfdf1de42e5bfcaf1b8cd9294719

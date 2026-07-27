@@ -1,0 +1,50 @@
+name: keys
+
+on:
+  push:
+    paths:
+      - KEYS.md
+      - KEYS.md.asc
+      - .forgejo/workflows/keys.yml
+  workflow_dispatch: {}
+
+concurrency:
+  group: open-grind-keys
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ["open-grind-orchestrator"]
+    timeout-minutes: 5
+    env:
+      FINGERPRINT: CB722EE967E4FCAD7C658FC69A1F7F5F592919D2
+      KEY_URL: https://opengrind.org/pgp
+    steps:
+      - name: Verify the KEYS.md signature
+        run: |
+          set -euo pipefail
+
+          workdir=$(mktemp -d)
+          export GNUPGHOME="$workdir/gnupg"
+          mkdir -p "$GNUPGHOME"
+          chmod 700 "$GNUPGHOME"
+
+          curl -fsSL --max-time 30 "$KEY_URL" -o "$workdir/key.asc"
+          gpg --batch --quiet --import "$workdir/key.asc"
+
+          got=$(gpg --batch --with-colons --fingerprint | awk -F: '$1=="fpr"{print $10; exit}')
+          if [ "$got" != "$FINGERPRINT" ]; then
+            echo "$KEY_URL serves $got, expected $FINGERPRINT"
+            exit 1
+          fi
+
+          raw="$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY/raw/commit/$FORGEJO_SHA"
+          curl -fsSL --max-time 30 "$raw/KEYS.md" -o "$workdir/KEYS.md"
+          curl -fsSL --max-time 30 "$raw/KEYS.md.asc" -o "$workdir/KEYS.md.asc"
+
+          if ! gpg --batch --verify "$workdir/KEYS.md.asc" "$workdir/KEYS.md"; then
+            echo
+            echo "KEYS.md does not match its signature. Re-sign it with:"
+            echo "  gpg --armor --detach-sign --output KEYS.md.asc KEYS.md"
+            exit 1
+          fi

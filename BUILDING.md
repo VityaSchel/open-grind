@@ -199,7 +199,7 @@ Compare against [Gradle's published checksums](https://gradle.org/release-checks
 
 ## Verifying a published release
 
-Open Grind's official APK is signed with a [governance-held JKS](./KEYS.md), but anyone can verify that the published binary was built from the source in this repository — no access to that key required.
+Published artifacts carry a detached [minisign](https://jedisct1.github.io/minisign/) signature. Anyone can also check that the published binary was built from the source in this repository, no key required.
 
 Android's v2/v3 signing block lives in a dedicated region between the last zip entry and the central directory; v1 (JAR) signatures live in `META-INF/*.SF`, `*.{RSA,EC,DSA}`, and modify `MANIFEST.MF`. Everything else — dex, native libs, resources, manifest, assets — is byte-identical between a signed and an unsigned build of the same source on the same toolchain.
 
@@ -216,20 +216,16 @@ git checkout v<tag>
 nix run .#build-android
 LOCAL=src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<tag>-unsigned.apk
 
-# 2. Fetch the published signed APK
+# 2. Fetch the published signed APK and its signature, side by side
 #    (https://git.opengrind.org/open-grind/open-grind/releases)
-PUBLISHED=/path/to/open-grind-v<tag>.apk
+PUBLISHED=/path/to/open-grind-v<tag>.apk   # minisign reads "$PUBLISHED.minisig"
 
-# 3. Confirm JKS certificate
-EXPECTED="2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c"
-ACTUAL=$(apksigner verify --print-certs "$PUBLISHED" \
-  | grep "Signer #1 certificate SHA-256 digest" \
-  | awk '{print $NF}')
-
-if [ "$ACTUAL" = "$EXPECTED" ]; then
-  echo "✓ APK certificate matches Open Grind's release JKS"
+# 3. Confirm the release signature
+#    Key and its provenance: KEYS.md
+if minisign -Vm "$PUBLISHED" -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+; then
+  echo "✓ signature valid and verified"
 else
-  echo "✗ APK: certificate fingerprint mismatch" >&2
+  echo "✗ signature invalid, do not install this APK" >&2
   exit 1
 fi
 
@@ -244,7 +240,7 @@ apk_content_hash() {
       done
 }
 if diff <(apk_content_hash "$LOCAL") <(apk_content_hash "$PUBLISHED"); then
-  echo "✓ APK hash checksum matches, local build reproduces the published APK exactly"
+  echo "✓ APK hash checksum matches"
 else
   echo "✗ APK hash checksum mismatch, local build does not match the published APK" >&2
   exit 1

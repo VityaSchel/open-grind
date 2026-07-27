@@ -113,23 +113,6 @@ Yes, it's been confirmed that it's been deleted. In recent weeks, the server was
 
 ### \> How to verify a certain build is safe and trusted?
 
-Use [Open Grind's PGP key](https://opengrind.org/pgp) to verify a release.
+Releases are signed with [minisign](https://jedisct1.github.io/minisign/) and ship a detached `.minisig`. The release key, and the governance PGP key that signs for it, are in [KEYS.md](https://git.opengrind.org/open-grind/open-grind/src/branch/main/KEYS.md).
 
-```
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-mDMEagOyrBYJKwYBBAHaRw8BAQdAyg0H1UG48kwMu/iOTcRHBsOSx8XOaH3dQprB
-vTp/U360OE9wZW4gR3JpbmQgR292ZXJuYW5jZSAoaHR0cHM6Ly9vcGVuZ3JpbmQu
-b3JnL2dvdmVybmFuY2UpiJMEExYKADsWIQTLci7pZ+T8rXxlj8aaH39fWSkZ0gUC
-agOyrAIbAQULCQgHAgIiAgYVCgkICwIEFgIDAQIeBwIXgAAKCRCaH39fWSkZ0gUU
-AP9fjzZCM1QnRaBoeaYW9ZsIqxLD1cNcRQTr1ZDxyrDfZAD8CpXHm6z40FflnYpH
-fPPsr3kmJDmYmWfBQopOV/ZkeAK4MwRqA7OuFgkrBgEEAdpHDwEBB0Bv7x60FRQP
-vNovgvpuyRpJBrRQ0S5v9aL1czIQOHh/7Ij1BBgWCgAmFiEEy3Iu6Wfk/K18ZY/G
-mh9/X1kpGdIFAmoDs64CGwIFCQHhM4AAgQkQmh9/X1kpGdJ2IAQZFgoAHRYhBDJ/
-VO0dIzjm07OTASL4OLBKFubeBQJqA7OuAAoJECL4OLBKFubectsBAKOs4M+zRpvc
-z0IwhuQbra4zenJiMUsC3dtdP9MMTV9aAQCAnU9dBM42IYdm9MTLy/2e1K4lIeV0
-L5btj2UQ3ZPmB15mAQDJNf08gI4nMXzsVH2rulMkYVW9RFaKy0INrWXvBmzexwEA
-n9ALznossxQtTWKrTg6+kwpmc/7ZVXzhGCXcHUAZWwo=
-=b377
------END PGP PUBLIC KEY BLOCK-----
-```
+You can also [reproduce the build](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md#verifying-a-published-release) to check it came from this source.
