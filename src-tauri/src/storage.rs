@@ -286,7 +286,7 @@ pub fn init_keyring() {
     }
 
     #[cfg(target_os = "linux")]
-    match zbus_secret_service_keyring_store::Store::new() {
+    match dbus_secret_service_keyring_store::Store::new() {
         Ok(store) => keyring_core::set_default_store(store),
         Err(e) => tracing::warn!("[storage] no secret service, keeping file store: {e}"),
     }

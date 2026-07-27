@@ -51,8 +51,10 @@ apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "prote
 windows-native-keyring-store = "1.1.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-# rt-tokio would make zbus block_on a nested runtime and panic inside our spawned tasks
-zbus-secret-service-keyring-store = { version = "1.0.0", features = ["rt-async-io-crypto-rust"] }
+# Synchronous by construction. zbus's blocking wrapper drives a nested tokio
+# runtime and panics inside our spawned tasks whenever zbus/tokio is enabled,
+# which any dependency can turn on for us.
+dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "1.0.0"

@@ -1105,6 +1105,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "dbus-secret-service"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "708b509edf7889e53d7efb0ffadd994cc6c2345ccb62f55cfd6b0682165e4fa6"
+dependencies = [
+ "aes",
+ "block-padding",
+ "cbc",
+ "dbus",
+ "fastrand",
+ "hkdf",
+ "num",
+ "once_cell",
+ "sha2",
+ "zeroize",
+]
+
+[[package]]
+name = "dbus-secret-service-keyring-store"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21d8f54da401bb5eb2a4d873ac4b359f4a599df2ca8634bb5b8c045e5ee78757"
+dependencies = [
+ "dbus-secret-service",
+ "keyring-core",
+]
+
+[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3527,11 +3555,12 @@ dependencies = [
 
 [[package]]
 name = "open-grind"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4-dev"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",
  "base64 0.22.1",
+ "dbus-secret-service-keyring-store",
  "grindr",
  "jni",
  "keyring-core",
@@ -3553,7 +3582,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "windows-native-keyring-store",
- "zbus-secret-service-keyring-store",
 ]
 
 [[package]]
@@ -4641,25 +4669,6 @@ dependencies = [
  "pkcs8",
  "subtle",
  "zeroize",
-]
-
-[[package]]
-name = "secret-service"
-version = "5.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a62d7f86047af0077255a29494136b9aaaf697c76ff70b8e49cded4e2623c14"
-dependencies = [
- "aes",
- "cbc",
- "futures-util",
- "generic-array",
- "getrandom 0.2.17",
- "hkdf",
- "num",
- "once_cell",
- "serde",
- "sha2",
- "zbus",
 ]
 
 [[package]]
@@ -7709,17 +7718,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "zbus-secret-service-keyring-store"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ccede190ba363386a24e8021c7f3848393976609ec9f5d1f8c6c09ef37075b4"
-dependencies = [
- "keyring-core",
- "secret-service",
- "zbus",
-]
-
-[[package]]
 name = "zbus_macros"
 version = "5.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7791,6 +7789,20 @@ name = "zeroize"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b97154e67e32c85465826e8bcc1c59429aaaf107c1e4a9e53c8d8ccd5eff88d0"
+dependencies = [
+ "zeroize_derive",
+]
+
+[[package]]
+name = "zeroize_derive"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c50655cbb0fe3fc43170059e702f1ce5e19b84cec58dc87b037a09935c2f328"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
 
 [[package]]
 name = "zerotrie"
