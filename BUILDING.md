@@ -10,6 +10,7 @@ To get started, choose one of the methods below (Docker, Nix or manual) and foll
     - [Clean-up Docker](#clean-up-docker)
   - [Build with Nix (builds everywhere)](#build-with-nix-builds-everywhere)
   - [Build manually (advanced)](#build-manually-advanced)
+  - [Credential storage](#credential-storage)
   - [Signing](#signing)
     - [Sign \& build with Docker](#sign--build-with-docker)
     - [Sign \& build with Nix](#sign--build-with-nix)
@@ -96,6 +97,22 @@ bun run tauri android build --apk
 
 3. Retrieve the apk from `src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk` on your host system
 4. Follow [Signing](#signing) to make the build installable on your Android device
+
+## Credential storage
+
+Open Grind keeps the session, device identity, and media signing key in the platform's own credential store: Keychain on iOS, Keystore on Android, Credential Manager on Windows, and the Secret Service (GNOME Keyring, KWallet, etc) over D-Bus on Linux.
+
+Two targets fall back to a file store: `credentials/` in the app data directory, each file `0600` inside a `0700` directory.
+
+- macOS, by default. Keychain entries are tied to the code-signing identity, so an unsigned build cannot read back what an earlier build wrote, which breaks local development ([`ac38b2c`](https://git.opengrind.org/open-grind/open-grind/commit/ac38b2c)).
+- Linux, only when no Secret Service is reachable, such as a headless box with no D-Bus session bus.
+
+> [!IMPORTANT]
+> A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain:
+>
+> ```bash
+> bun run tauri build --features keychain
+> ```
 
 ## Signing
 
