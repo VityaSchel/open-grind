@@ -4,7 +4,10 @@ import {
 	mediaHashPrivateSchema,
 	mediaHashPublicSchema,
 } from "$lib/model/media";
-import { albumExpirationSchema, albumPreviewSchema } from "$lib/model/messaging/albums";
+import {
+	albumExpirationSchema,
+	albumPreviewSchema,
+} from "$lib/model/messaging/albums";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 const messageBaseSchema = z.object({

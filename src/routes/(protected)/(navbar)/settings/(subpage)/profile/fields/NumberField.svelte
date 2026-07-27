@@ -81,7 +81,7 @@
 		/>
 		{#if unit}
 			<span
-				class="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm"
+				class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground"
 			>
 				{unit}
 			</span>

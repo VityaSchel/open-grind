@@ -23,7 +23,7 @@
 <div
 	role="button"
 	tabindex={0}
-	class="bg-popover border border-border rounded-2xl p-2 pe-3 flex items-center gap-2 h-14 w-full text-start"
+	class="flex h-14 w-full items-center gap-2 rounded-2xl border border-border bg-popover p-2 pe-3 text-start"
 	onpointerdown={(e) => {
 		const startPos = { x: e.clientX, y: e.clientY };
 		let jumpedOff = false;
@@ -51,19 +51,19 @@
 >
 	<UserAvatar
 		mediaHash={sender?.avatarMediaHash ?? null}
-		class="rounded-xl bg-neutral-700 *:rounded-xl size-10 shrink-0"
+		class="size-10 shrink-0 rounded-xl bg-neutral-700 *:rounded-xl"
 	/>
-	<div class="flex flex-col min-w-0">
+	<div class="flex min-w-0 flex-col">
 		{#if sender && sender.name}
-			<span class="font-medium truncate font-heading leading-snug text-sm">
+			<span class="truncate font-heading text-sm leading-snug font-medium">
 				{sender.name}
 			</span>
 		{:else}
-			<span class="font-normal tracking-tight italic text-muted-foreground">
+			<span class="font-normal tracking-tight text-muted-foreground italic">
 				Someone
 			</span>
 		{/if}
-		<p class="text-sm truncate">
+		<p class="truncate text-sm">
 			{previewLabel(previewFromMessage(message))}
 		</p>
 	</div>

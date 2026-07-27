@@ -23,7 +23,7 @@
 <svelte:head>
 	<title>{title}</title>
 </svelte:head>
-<main class="w-full min-h-dvh flex p-8">
+<main class="flex min-h-dvh w-full p-8">
 	{#if page.status === 404}
 		<NotFound />
 	{:else}

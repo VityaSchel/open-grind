@@ -20,7 +20,7 @@
 
 {#if self || online}
 	<div class="flex items-center gap-1.5 whitespace-nowrap">
-		<span class="bg-green-500 rounded-full size-2 inline-block ms-0.5 shrink-0">
+		<span class="ms-0.5 inline-block size-2 shrink-0 rounded-full bg-green-500">
 		</span>
 		Online now
 	</div>

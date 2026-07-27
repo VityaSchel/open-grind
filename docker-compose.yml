@@ -10,11 +10,11 @@ services:
     volumes:
       - .:/work
       - open-grind-nix:/nix
-      - open-grind-cargo-target:/work/src-tauri/target  # Rust build artifacts
-      - open-grind-node-modules:/work/node_modules      # bun dependencies
-      - open-grind-cargo-home:/root/.cargo              # crate registry, git deps
-      - open-grind-gradle:/root/.gradle-opengrind       # Gradle dist, caches (build-android's GRADLE_USER_HOME)
-      - open-grind-bun:/root/.bun                       # bun download cache
+      - open-grind-cargo-target:/work/src-tauri/target # Rust build artifacts
+      - open-grind-node-modules:/work/node_modules # bun dependencies
+      - open-grind-cargo-home:/root/.cargo # crate registry, git deps
+      - open-grind-gradle:/root/.gradle-opengrind # Gradle dist, caches (build-android's GRADLE_USER_HOME)
+      - open-grind-bun:/root/.bun # bun download cache
     command: ["nix", "run", ".#build-android"]
 
 volumes:

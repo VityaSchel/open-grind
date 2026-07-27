@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { PullModel } from "./pull-model.svelte";
 
-function makeModel({ space = 48, now = () => 0 }: { space?: number; now?: () => number } = {}) {
+function makeModel({
+	space = 48,
+	now = () => 0,
+}: { space?: number; now?: () => number } = {}) {
 	const model = new PullModel({ now });
 	model.space = space;
 	const onTrigger = vi.fn();

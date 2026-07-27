@@ -15,8 +15,8 @@
 	bind:ref
 	data-slot={dataSlot}
 	class={cn(
-		"bg-neutral-700 shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px",
-		"data-[orientation=vertical]:self-stretch mx-0.5",
+		"shrink-0 bg-neutral-700 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-px",
+		"mx-0.5 data-[orientation=vertical]:self-stretch",
 		className,
 	)}
 	{...restProps}

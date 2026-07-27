@@ -11,6 +11,6 @@
 	@reference "tailwindcss";
 
 	.field {
-		@apply flex items-center gap-3 w-full;
+		@apply flex w-full items-center gap-3;
 	}
 </style>

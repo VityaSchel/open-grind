@@ -15,7 +15,7 @@
 	data-slot="context-menu-trigger"
 	class={cn(
 		"cn-context-menu-trigger select-none in-data-context-menu-open:*:pointer-events-none",
-		className
+		className,
 	)}
 	{...restProps}
 />

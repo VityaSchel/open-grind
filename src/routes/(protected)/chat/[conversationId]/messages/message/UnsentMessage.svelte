@@ -13,7 +13,7 @@
 
 <div
 	class={[
-		"py-2 px-3 rounded-xl w-fit max-w-100 text-muted-foreground italic shrink-0 relative overflow-visible bg-muted select-text",
+		"relative w-fit max-w-100 shrink-0 overflow-visible rounded-xl bg-muted px-3 py-2 text-muted-foreground italic select-text",
 		{
 			"pointer-coarse:select-none": !clone,
 			"ms-3": !isOut && !clone,

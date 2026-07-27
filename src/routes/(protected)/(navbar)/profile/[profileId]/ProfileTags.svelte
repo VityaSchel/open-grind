@@ -9,7 +9,7 @@
 </script>
 
 {#if tags !== null && tags.length > 0}
-	<div class="flex items-center gap-1 mt-4 flex-wrap">
+	<div class="mt-4 flex flex-wrap items-center gap-1">
 		{#each tags as tag}
 			<Badge variant="secondary" class="font-normal">
 				{tag}

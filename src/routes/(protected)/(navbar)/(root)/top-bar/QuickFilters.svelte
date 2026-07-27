@@ -31,7 +31,7 @@
 	variant="secondary"
 	onclick={() => (openFilters.age = true)}
 	class={{
-		"bg-white hover:bg-neutral-200 text-popover": ageEnabled,
+		"bg-white text-popover hover:bg-neutral-200": ageEnabled,
 	}}
 >
 	Age
@@ -40,7 +40,7 @@
 	variant="secondary"
 	onclick={() => (openFilters.position = true)}
 	class={{
-		"bg-white hover:bg-neutral-200 text-popover": positionEnabled,
+		"bg-white text-popover hover:bg-neutral-200": positionEnabled,
 	}}
 >
 	Position

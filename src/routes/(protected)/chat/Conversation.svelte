@@ -75,11 +75,11 @@
 		avatar={{
 			mediaHash: participant.primaryMediaHash ?? null,
 			link: `/profile/${participant.profileId}`,
-			overlay: isSelected ? selectedOverlay : undefined
+			overlay: isSelected ? selectedOverlay : undefined,
 		}}
 		title={{
 			value: conversation.data.name,
-			badge: conversation.data.muted ? mutedBadge : undefined
+			badge: conversation.data.muted ? mutedBadge : undefined,
 		}}
 		onlineUntil={conversation.data.onlineUntil ?? participant.onlineUntil}
 		link="/chat/{conversationId}"

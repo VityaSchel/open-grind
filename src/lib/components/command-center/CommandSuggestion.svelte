@@ -15,7 +15,7 @@
 <CommandCenterSuggestion>
 	{@render icon()}
 	<span>
-		Start with <code class="bg-muted px-1 py-px rounded-xs font-mono">
+		Start with <code class="rounded-xs bg-muted px-1 py-px font-mono">
 			{prefix}
 		</code>
 		to {command}

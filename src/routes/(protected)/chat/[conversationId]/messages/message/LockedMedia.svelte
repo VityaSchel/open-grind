@@ -14,7 +14,7 @@
 
 <div
 	class={[
-		"size-full flex justify-center items-center bg-card-foreground/10 rounded-xl",
+		"flex size-full items-center justify-center rounded-xl bg-card-foreground/10",
 		className,
 	]}
 >

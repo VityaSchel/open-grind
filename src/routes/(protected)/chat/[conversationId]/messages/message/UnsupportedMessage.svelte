@@ -11,7 +11,7 @@
 </script>
 
 <div
-	class="bg-card text-muted-foreground/30 w-full rounded-lg p-2 max-w-full text-center text-sm"
+	class="w-full max-w-full rounded-lg bg-card p-2 text-center text-sm text-muted-foreground/30"
 	bind:this={el}
 >
 	Unsupported message type: {type}

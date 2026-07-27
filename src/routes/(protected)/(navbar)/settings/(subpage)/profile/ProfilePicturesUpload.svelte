@@ -27,7 +27,7 @@
 	{/each}
 	{#each Array.from({ length: emptySlots })}
 		<div
-			class="border-border text-muted-foreground/60 flex aspect-square items-center justify-center rounded-xl border border-dashed"
+			class="flex aspect-square items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground/60"
 			aria-hidden="true"
 		>
 			<!-- <PlusIcon class="size-6" /> -->

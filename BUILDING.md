@@ -180,7 +180,6 @@ shasum -a 256 src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
 
 Compare against [Gradle's published checksums](https://gradle.org/release-checksums/) for 8.14.5 (`7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172`).
 
-
 ## Verifying a published release
 
 Open Grind's official APK is signed with a [governance-held JKS](./KEYS.md), but anyone can verify that the published binary was built from the source in this repository — no access to that key required.

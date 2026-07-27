@@ -13,7 +13,7 @@
 </script>
 
 <span>
-	<WarningCircleIcon weight="fill" class="inline size-5 align-middle me-1" />
+	<WarningCircleIcon weight="fill" class="me-1 inline size-5 align-middle" />
 	TODO: {feature} not implemented yet, tracking in <Link
 		href="https://git.opengrind.org/open-grind/open-grind/issues/{issue}"
 	>

@@ -33,7 +33,7 @@
 		{#if reactionAvailable}
 			<span
 				class={[
-					"block w-45 mb-2 text-center text-foreground/50 text-shadow-sm",
+					"mb-2 block w-45 text-center text-foreground/50 text-shadow-sm",
 					{
 						"-mt-8": !placement.startsWith("bottom"),
 						"mt-1": placement.startsWith("bottom"),
@@ -110,6 +110,6 @@
 	@reference "$layout";
 
 	.buttons {
-		@apply bg-black/80 rounded-xl p-1 flex flex-col *:justify-start *:active:translate-y-0!;
+		@apply flex flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!;
 	}
 </style>

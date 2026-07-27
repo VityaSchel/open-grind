@@ -16,12 +16,12 @@
 </script>
 
 <Label
-	class="flex items-center space-x-2 hover:bg-muted rounded-xl border p-4 transition-all aria-disabled:opacity-60"
+	class="flex items-center space-x-2 rounded-xl border p-4 transition-all hover:bg-muted aria-disabled:opacity-60"
 	aria-disabled={disabled}
 >
 	<div class="grid gap-1.5 font-normal">
 		<p class="text-sm leading-none font-medium">{title}</p>
-		<p class="text-muted-foreground text-sm">
+		<p class="text-sm text-muted-foreground">
 			{description}
 		</p>
 	</div>

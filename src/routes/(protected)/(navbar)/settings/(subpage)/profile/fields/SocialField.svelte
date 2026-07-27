@@ -21,7 +21,7 @@
 	<div class="relative">
 		{#if Icon}
 			<span
-				class="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center"
+				class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground"
 			>
 				<Icon class="size-4" />
 			</span>

@@ -3,7 +3,10 @@ import z from "zod";
 import { tapTypeSchema } from "$lib/model/interest/taps";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import { unixTimestampMsSchema } from "$lib/model/types";
-import { profileMaskedMinSchema, profileMinSchema } from "$lib/model/users/profiles";
+import {
+	profileMaskedMinSchema,
+	profileMinSchema,
+} from "$lib/model/users/profiles";
 
 export const tapProfileSchema = z.object({
 	...profileMaskedMinSchema.shape,

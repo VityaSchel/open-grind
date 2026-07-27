@@ -46,7 +46,7 @@
 {#snippet endAdornment()}
 	{endLabel}
 {/snippet}
-<div class={["flex flex-col min-w-0 shrink-0", className]}>
+<div class={["flex min-w-0 shrink-0 flex-col", className]}>
 	<FilterBoolean
 		{id}
 		endAdornment={endLabel !== undefined ? endAdornment : undefined}
@@ -69,7 +69,7 @@
 	</FilterBoolean>
 	{#if expanded}
 		<div
-			class={["ps-6 pt-2 overflow-clip shrink-0", contentClass]}
+			class={["shrink-0 overflow-clip ps-6 pt-2", contentClass]}
 			transition:hide
 		>
 			{@render children?.()}

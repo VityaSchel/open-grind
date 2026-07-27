@@ -15,8 +15,8 @@
 	bind:this={ref}
 	data-slot="item-description"
 	class={cn(
-		"text-muted-foreground text-left text-sm [&>a:hover]:text-primary line-clamp-2 font-normal [&>a]:underline [&>a]:underline-offset-4",
-		className
+		"line-clamp-2 text-left text-sm font-normal text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+		className,
 	)}
 	{...restProps}
 >

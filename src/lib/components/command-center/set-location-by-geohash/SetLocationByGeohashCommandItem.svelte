@@ -44,7 +44,7 @@
 			<span class="w-2.25">{char}</span>
 		{/each}
 		{#each Array(12 - geohash.length)}
-			<span class="h-px w-2 ms-px bg-muted-foreground self-end"></span>
+			<span class="ms-px h-px w-2 self-end bg-muted-foreground"></span>
 		{/each}
 	{/if}
 </Command.Item>

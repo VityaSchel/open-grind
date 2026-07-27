@@ -129,10 +129,10 @@
 {#if message.viewsRemaining === null || message.viewsRemaining > 0}
 	<button
 		class={[
-			"px-4 py-3 flex items-center gap-2 font-medium w-50 text-start",
+			"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",
 			className,
 			contentClass,
-			"bg-input border border-border",
+			"border border-border bg-input",
 			{
 				"cursor-pointer": imageState.status === "idle",
 				"opacity-50": imageState.status === "loading",
@@ -147,12 +147,9 @@
 		{@render media.adornments?.()}
 	</button>
 {:else}
-	<div
-		class={["h-12 w-50", className, contentClass]}
-		bind:this={media.el}
-	>
+	<div class={["h-12 w-50", className, contentClass]} bind:this={media.el}>
 		<LockedMedia
-			class={[media.cornerClass, "font-medium text-neutral-600 gap-2"]}
+			class={[media.cornerClass, "gap-2 font-medium text-neutral-600"]}
 			size="sm"
 		>
 			Expired image

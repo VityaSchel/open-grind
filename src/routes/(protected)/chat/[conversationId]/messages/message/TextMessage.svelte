@@ -16,7 +16,7 @@
 
 <div
 	class={[
-		"py-2 px-3 rounded-xl w-fit max-w-100 text-black shrink-0 relative overflow-visible select-text",
+		"relative w-fit max-w-100 shrink-0 overflow-visible rounded-xl px-3 py-2 text-black select-text",
 		{
 			"pointer-coarse:select-none": !clone,
 			"bg-message-bubble-in": !isOut,

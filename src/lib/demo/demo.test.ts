@@ -240,14 +240,12 @@ describe("demo route data matches the real schemas", () => {
 
 		const after = inbox();
 		expect(
-			after.find(
-				(e) => e.data.conversationId === first.data.conversationId,
-			)?.data.pinned,
+			after.find((e) => e.data.conversationId === first.data.conversationId)
+				?.data.pinned,
 		).toBe(!first.data.pinned);
 		expect(
-			after.find(
-				(e) => e.data.conversationId === second.data.conversationId,
-			)?.data.muted,
+			after.find((e) => e.data.conversationId === second.data.conversationId)
+				?.data.muted,
 		).toBe(!second.data.muted);
 		expect(
 			after.some((e) => e.data.conversationId === third.data.conversationId),

@@ -36,11 +36,11 @@
 		onSelect={apply}
 	>
 		<FunnelIcon />
-		<div class="flex flex-col gap-2 min-w-0 flex-1">
+		<div class="flex min-w-0 flex-1 flex-col gap-2">
 			{#if result.parsed.length === 0}
 				<span>
 					Type a Grindr grid query, e.g.
-					<code class="bg-muted px-1 py-px rounded-xs font-mono text-sm">
+					<code class="rounded-xs bg-muted px-1 py-px font-mono text-sm">
 						online=true&age=18-99&tribes=2,12
 					</code>
 				</span>

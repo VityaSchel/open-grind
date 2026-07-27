@@ -3,7 +3,10 @@ import z from "zod";
 import { fetchRest } from "$lib/api";
 import { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
-import { searchProfileSchema, searchQuerySchema } from "$lib/model/browse/grid/search";
+import {
+	searchProfileSchema,
+	searchQuerySchema,
+} from "$lib/model/browse/grid/search";
 import { urlSearchParamsCodec } from "$lib/util/utils";
 
 export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {

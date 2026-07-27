@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CaretRightIcon from 'phosphor-svelte/lib/CaretRight';
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRight";
 	import type { WithoutChildren } from "bits-ui";
 
 	import { Button, type Props } from "$lib/components/ui/button/index.js";
@@ -24,17 +24,17 @@
 	aria-disabled={!emblaCtx.canScrollNext}
 	disabled={!emblaCtx.canScrollNext}
 	class={cn(
-		"rounded-full absolute touch-manipulation",
+		"absolute touch-manipulation rounded-full",
 		emblaCtx.orientation === "horizontal"
 			? "-end-12 top-1/2 -translate-y-1/2"
 			: "start-1/2 -bottom-12 -translate-x-1/2 rotate-90",
-		className
+		className,
 	)}
 	onclick={emblaCtx.scrollNext}
 	onkeydown={emblaCtx.handleKeyDown}
 	bind:ref
 	{...restProps}
 >
-	<CaretRightIcon  />
+	<CaretRightIcon />
 	<span class="sr-only">Next slide</span>
 </Button>

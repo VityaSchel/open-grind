@@ -23,7 +23,7 @@
 	});
 </script>
 
-<Item.Root variant="outline" class="p-4 gap-3">
+<Item.Root variant="outline" class="gap-3 p-4">
 	<Item.Content class="gap-1">
 		<Item.Title>Units</Item.Title>
 		<Item.Description>

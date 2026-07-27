@@ -70,7 +70,11 @@
 	</DropdownMenu.Item>
 {/snippet}
 <DropdownMenu.Root bind:open>
-	<DropdownMenu.Content class="min-w-0 w-13 rounded-2xl" align="center" {customAnchor}>
+	<DropdownMenu.Content
+		class="w-13 min-w-0 rounded-2xl"
+		align="center"
+		{customAnchor}
+	>
 		{@render tapOption(TapType.Friendly)}
 		{@render tapOption(TapType.Hot)}
 		{@render tapOption(TapType.Looking)}

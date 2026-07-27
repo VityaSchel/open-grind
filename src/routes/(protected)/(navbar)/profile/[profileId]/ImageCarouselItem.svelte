@@ -14,7 +14,7 @@
 </script>
 
 <a
-	class="item h-full w-full aspect-auto block relative max-h-[inherit] shrink-0"
+	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0"
 	data-cropped="true"
 	data-pswp-width={width}
 	data-pswp-height={height}
@@ -25,7 +25,7 @@
 	<img
 		src={thumb}
 		draggable="false"
-		class="w-full h-full absolute top-0 left-0 object-cover object-center bg-stone-700"
+		class="absolute top-0 left-0 h-full w-full bg-stone-700 object-cover object-center"
 		alt=""
 		onload={(event) => {
 			const img = event.currentTarget;

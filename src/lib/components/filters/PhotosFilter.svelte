@@ -15,14 +15,14 @@
 	} = $props();
 </script>
 
-<div class="flex flex-col gap-2 min-w-0">
+<div class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="photos" bind:checked>Photos</FilterBoolean>
 	<div class="ps-6">
 		<ToggleGroup.Root
 			type="multiple"
 			variant="outline"
 			spacing={2}
-			class="flex-wrap w-full gap-1"
+			class="w-full flex-wrap gap-1"
 			bind:value={
 				() => value,
 				(v: typeof value) => ((checked = v.length > 0), (value = v))

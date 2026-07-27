@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
-import { getCachedProfile, type RenderedGridProfile, setCachedProfile } from "./grid";
+import {
+	getCachedProfile,
+	type RenderedGridProfile,
+	setCachedProfile,
+} from "./grid";
 
 afterEach(() => {
 	resetNowForTesting();

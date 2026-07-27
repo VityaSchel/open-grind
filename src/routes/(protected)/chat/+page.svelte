@@ -2,8 +2,8 @@
 	import * as Card from "$lib/components/ui/card";
 </script>
 
-<Card.Content class="flex m-auto p-6">
-	<span class="text-muted text-xl text-center">
+<Card.Content class="m-auto flex p-6">
+	<span class="text-center text-xl text-muted">
 		Select a conversation to start chatting
 	</span>
 </Card.Content>

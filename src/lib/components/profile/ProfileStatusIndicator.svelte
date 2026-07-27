@@ -16,36 +16,36 @@
 	$effect(() => subscribeNow());
 
 	const online = $derived(onlineUntil != null && onlineUntil > getNow());
-    const title = $derived.by(() => {
-        if (online && isVisiting) {
-            return 'Online now. Visiting';
-        }
-        if (online) {
-            return 'Online now';
-        }
-        if (isVisiting) {
-            return 'Visiting';
-        }
-    });
+	const title = $derived.by(() => {
+		if (online && isVisiting) {
+			return "Online now. Visiting";
+		}
+		if (online) {
+			return "Online now";
+		}
+		if (isVisiting) {
+			return "Visiting";
+		}
+	});
 </script>
 
 {#if isVisiting || online}
-    <div
-        class={[
-            "flex shrink-0",
+	<div
+		class={[
+			"flex shrink-0",
 			{
 				"text-green-500": online,
-				"text-gray-400": !online
+				"text-gray-400": !online,
 			},
 			className,
 		]}
 		aria-label={title}
-		title={title}
-    >
-        {#if isVisiting}
-            <AirplaneTiltIcon weight="fill" class="size-3" />
+		{title}
+	>
+		{#if isVisiting}
+			<AirplaneTiltIcon weight="fill" class="size-3" />
 		{:else}
-			<span class="rounded-full bg-green-500 size-2"></span>
-        {/if}
-    </div> 
+			<span class="size-2 rounded-full bg-green-500"></span>
+		{/if}
+	</div>
 {/if}

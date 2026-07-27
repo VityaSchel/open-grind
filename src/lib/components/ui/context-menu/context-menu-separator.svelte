@@ -13,6 +13,6 @@
 <ContextMenuPrimitive.Separator
 	bind:ref
 	data-slot="context-menu-separator"
-	class={cn("bg-border/50 -mx-1.5 my-1.5 h-px", className)}
+	class={cn("-mx-1.5 my-1.5 h-px bg-border/50", className)}
 	{...restProps}
 />

@@ -12,7 +12,7 @@
 	const units = $derived(getUnitsSnapshot());
 </script>
 
-<div class="block space-y-3 w-full">
+<div class="block w-full space-y-3">
 	<FilterDropdown
 		id="height"
 		label="Height"

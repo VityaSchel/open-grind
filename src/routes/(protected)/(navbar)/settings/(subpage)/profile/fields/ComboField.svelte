@@ -116,14 +116,14 @@
 		<div class="flex flex-wrap gap-1.5">
 			{#each selectedChips as chip (chip.id)}
 				<span
-					class="bg-secondary text-secondary-foreground inline-flex items-center gap-1 rounded-full py-1 pl-3 pr-1.5 text-sm"
+					class="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pr-1.5 pl-3 text-sm text-secondary-foreground"
 				>
 					{chip.label}
 					<button
 						type="button"
 						onclick={() => remove(chip.id)}
 						aria-label="Remove {chip.label}"
-						class="hover:bg-foreground/10 -my-1 grid size-5 place-items-center rounded-full transition-colors"
+						class="-my-1 grid size-5 place-items-center rounded-full transition-colors hover:bg-foreground/10"
 					>
 						<XIcon class="size-3.5" />
 					</button>
@@ -162,7 +162,7 @@
 				aria-label={label}
 			/>
 			<Combobox.Trigger
-				class="text-muted-foreground absolute inset-y-0 right-0 grid w-9 place-items-center"
+				class="absolute inset-y-0 right-0 grid w-9 place-items-center text-muted-foreground"
 				aria-label="Toggle list"
 			>
 				<CaretUpDownIcon class="size-4 opacity-60" />
@@ -175,7 +175,7 @@
 				data-kb-nav={keyboardNav ? "" : undefined}
 				onpointerdown={() => (keyboardNav = false)}
 				onpointermove={() => (keyboardNav = false)}
-				class="bg-popover text-popover-foreground ring-foreground/5 dark:ring-foreground/10 z-50 max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl p-1.5 shadow-lg ring-1 outline-none"
+				class="z-50 max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none dark:ring-foreground/10"
 			>
 				<Combobox.Viewport>
 					{#each filtered as option (option.value)}
@@ -183,7 +183,7 @@
 							value={String(option.value)}
 							label=""
 							disabled={isDisabled(option.value)}
-							class="can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40 flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pl-3 pr-2 text-sm font-medium outline-hidden select-none"
+							class="flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pr-2 pl-3 text-sm font-medium outline-hidden select-none in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40 can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground"
 						>
 							{#snippet children({ selected: isSelected })}
 								<span>{option.label}</span>

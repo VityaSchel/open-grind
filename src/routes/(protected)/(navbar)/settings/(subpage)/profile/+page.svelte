@@ -43,7 +43,7 @@
 		ourProfileId={data.ourProfileId}
 	/>
 {:catch}
-	<p class="text-destructive px-1 py-8 text-center">
+	<p class="px-1 py-8 text-center text-destructive">
 		Failed to load your profile. Please try again.
 	</p>
 {/await}

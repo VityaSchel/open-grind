@@ -38,14 +38,18 @@ test.describe("screen insets", () => {
 	test("the conversation list clears the bottom inset", async ({ page }) => {
 		await installTauriShim(page);
 		await page.goto("/chat");
-		await page.locator('a[href^="/chat/1"]').first().waitFor({ timeout: 30_000 });
+		await page
+			.locator('a[href^="/chat/1"]')
+			.first()
+			.waitFor({ timeout: 30_000 });
 		const overflow = await page.evaluate(() => {
 			const doc = document.documentElement;
 			return doc.scrollHeight - window.innerHeight;
 		});
-		expect(overflow, "no page scroll is introduced by the insets").toBeLessThanOrEqual(
-			1,
-		);
+		expect(
+			overflow,
+			"no page scroll is introduced by the insets",
+		).toBeLessThanOrEqual(1);
 	});
 });
 
@@ -63,7 +67,10 @@ test.describe("zoom is disabled", () => {
 	test("ctrl+wheel is cancelled instead of zooming", async ({ page }) => {
 		await installTauriShim(page);
 		await page.goto("/chat");
-		await page.locator('a[href^="/chat/1"]').first().waitFor({ timeout: 30_000 });
+		await page
+			.locator('a[href^="/chat/1"]')
+			.first()
+			.waitFor({ timeout: 30_000 });
 		const prevented = await page.evaluate(() => {
 			const event = new WheelEvent("wheel", {
 				deltaY: -120,
@@ -82,7 +89,10 @@ test.describe("zoom is disabled", () => {
 	}) => {
 		await installTauriShim(page);
 		await page.goto("/chat");
-		await page.locator('a[href^="/chat/1"]').first().waitFor({ timeout: 30_000 });
+		await page
+			.locator('a[href^="/chat/1"]')
+			.first()
+			.waitFor({ timeout: 30_000 });
 		const results = await page.evaluate(() =>
 			["+", "-", "=", "0"].map((key) => {
 				const event = new KeyboardEvent("keydown", {

@@ -8,7 +8,7 @@
 
 {#if distance !== null}
 	<span class="flex items-center gap-1 whitespace-nowrap">
-		<NavigationArrowIcon weight="fill" class="rotate-y-180 shrink-0" />
+		<NavigationArrowIcon weight="fill" class="shrink-0 rotate-y-180" />
 		<DistanceFormatted {distance} />
 	</span>
 {/if}

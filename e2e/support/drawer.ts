@@ -19,7 +19,9 @@ export interface DrawerBox {
 export async function openAttachments(page: Page): Promise<void> {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	const paperclip = page.locator("div.absolute.right-7.bottom-0 button").first();
+	const paperclip = page
+		.locator("div.absolute.right-7.bottom-0 button")
+		.first();
 	await paperclip.waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
 	await paperclip.click();
@@ -37,7 +39,9 @@ export function drawerBox(page: Page): Promise<DrawerBox | null> {
 		const drawer = document.querySelector<HTMLElement>("[data-vaul-drawer]");
 		if (!drawer) return null;
 		const panel = drawer.querySelector<HTMLElement>("[data-slot=sheet-panel]");
-		const scroller = drawer.querySelector<HTMLElement>("[data-slot=sheet-scroller]");
+		const scroller = drawer.querySelector<HTMLElement>(
+			"[data-slot=sheet-scroller]",
+		);
 		const peek = drawer.querySelector<HTMLElement>("[data-slot=sheet-peek]");
 		const tabList = drawer.querySelector<HTMLElement>("[data-slot=tabs-list]");
 		const range = peek?.offsetHeight ?? 0;
@@ -93,7 +97,9 @@ export async function expandToFull(page: Page): Promise<void> {
 		.poll(async () => (await box(page)).top, { timeout: 5000 })
 		.toBeLessThanOrEqual(full + 4);
 	await page.evaluate(() => {
-		const scroller = document.querySelector<HTMLElement>("[data-slot=sheet-scroller]");
+		const scroller = document.querySelector<HTMLElement>(
+			"[data-slot=sheet-scroller]",
+		);
 		const peek = document.querySelector<HTMLElement>("[data-slot=sheet-peek]");
 		if (scroller && peek) scroller.scrollTop = peek.offsetHeight;
 	});

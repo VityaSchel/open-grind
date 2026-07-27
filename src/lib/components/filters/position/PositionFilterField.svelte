@@ -14,7 +14,7 @@
 	} = $props();
 </script>
 
-<div class="flex flex-col gap-2 min-w-0">
+<div class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="position" bind:checked>Position</FilterBoolean>
 	<div class="ps-6">
 		<PositionFilterToggle

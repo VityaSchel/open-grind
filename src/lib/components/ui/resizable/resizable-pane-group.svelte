@@ -19,7 +19,7 @@
 	data-slot="resizable-pane-group"
 	class={cn(
 		"cn-resizable-panel-group flex h-full w-full data-[direction=vertical]:flex-col",
-		className
+		className,
 	)}
 	{...restProps}
 />

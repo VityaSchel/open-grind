@@ -24,7 +24,7 @@
 	type="multiple"
 	variant="outline"
 	spacing={2}
-	class="flex-wrap w-full gap-1"
+	class="w-full flex-wrap gap-1"
 	bind:value={
 		() => value.map(String),
 		(v: string[]) => (value = filterPositionSchema.parse(v.map(Number)))

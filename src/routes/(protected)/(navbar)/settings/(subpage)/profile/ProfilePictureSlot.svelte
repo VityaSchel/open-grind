@@ -15,7 +15,7 @@
 	const src = $derived(profileMediaUrl(mediaHash, "thumb"));
 </script>
 
-<div class="bg-muted relative aspect-square overflow-hidden rounded-xl">
+<div class="relative aspect-square overflow-hidden rounded-xl bg-muted">
 	<img
 		{src}
 		alt=""
@@ -26,7 +26,7 @@
 	<Button
 		variant="destructive"
 		size="icon-sm"
-		class="bg-background/70 absolute right-1.5 top-1.5 rounded-full backdrop-blur"
+		class="absolute top-1.5 right-1.5 rounded-full bg-background/70 backdrop-blur"
 		onclick={() => onDelete()}
 		aria-label="Remove photo"
 	>

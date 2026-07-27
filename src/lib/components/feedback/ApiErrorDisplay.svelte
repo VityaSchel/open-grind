@@ -27,7 +27,7 @@
 </script>
 
 <div class={["flex flex-col items-center gap-2 p-4", className]}>
-	<p class="text-muted-foreground text-sm text-center">{message}</p>
+	<p class="text-center text-sm text-muted-foreground">{message}</p>
 	<div class="flex gap-2">
 		{#if onRetry && retryable}
 			<Button

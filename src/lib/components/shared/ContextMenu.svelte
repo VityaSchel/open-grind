@@ -78,7 +78,7 @@
 	}}
 />
 <dialog
-	class="fixed top-0 left-0 z-9999 size-full bg-transparent max-w-none max-h-none backdrop:bg-transparent backdrop:backdrop-blur-xl"
+	class="fixed top-0 left-0 z-9999 size-full max-h-none max-w-none bg-transparent backdrop:bg-transparent backdrop:backdrop-blur-xl"
 	bind:this={contextMenuDialog}
 	onmousedown={(event) => {
 		if (

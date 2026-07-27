@@ -6,7 +6,7 @@
 	import Link from "$lib/components/ui/link/Link.svelte";
 </script>
 
-<Alert.Root class="w-full max-w-sm m-auto">
+<Alert.Root class="m-auto w-full max-w-sm">
 	<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 	<Alert.Title>Unimplemented</Alert.Title>
 	<Alert.Description>
@@ -18,7 +18,7 @@
 		<Button
 			variant="link"
 			href="/auth/sign-in"
-			class="px-0 size-fit mbs-1 block"
+			class="mbs-1 block size-fit px-0"
 		>
 			Sign In
 		</Button>

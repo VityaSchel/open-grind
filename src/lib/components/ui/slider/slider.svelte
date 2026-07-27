@@ -22,8 +22,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 	data-slot="slider"
 	{orientation}
 	class={cn(
-		"data-vertical:min-h-40 relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col",
-		className
+		"relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
+		className,
 	)}
 	{...restProps}
 >
@@ -32,13 +32,13 @@ get along, so we shut typescript up by casting `value` to `never`.
 			data-slot="slider-track"
 			data-orientation={orientation}
 			class={cn(
-				"bg-input/90 rounded-full data-horizontal:h-2 data-horizontal:w-full data-vertical:h-full data-vertical:w-2 bg-muted relative grow overflow-hidden data-horizontal:w-full data-vertical:h-full"
+				"relative grow overflow-hidden rounded-full bg-input/90 bg-muted data-horizontal:h-2 data-horizontal:w-full data-horizontal:w-full data-vertical:h-full data-vertical:h-full data-vertical:w-2",
 			)}
 		>
 			<SliderPrimitive.Range
 				data-slot="slider-range"
 				class={cn(
-					"bg-primary absolute select-none data-horizontal:h-full data-vertical:w-full"
+					"absolute bg-primary select-none data-horizontal:h-full data-vertical:w-full",
 				)}
 			/>
 		</span>
@@ -46,7 +46,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 			<SliderPrimitive.Thumb
 				data-slot="slider-thumb"
 				index={thumb.index}
-				class="hover:ring-ring/30 focus-visible:ring-ring/30 h-4 w-6 rounded-full bg-white shadow-md ring-1 ring-black/10 transition-[color,box-shadow,background-color] not-dark:bg-clip-padding hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden data-vertical:h-6 data-vertical:w-4 block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
+				class="block h-4 w-6 shrink-0 rounded-full bg-white shadow-md ring-1 ring-black/10 transition-[color,box-shadow,background-color] select-none not-dark:bg-clip-padding hover:ring-4 hover:ring-ring/30 focus-visible:ring-4 focus-visible:ring-ring/30 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-vertical:h-6 data-vertical:w-4"
 			/>
 		{/each}
 	{/snippet}

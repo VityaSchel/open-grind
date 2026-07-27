@@ -49,4 +49,3 @@ body:
       options:
         - label: I have checked that this is a new issue that wasn't reported before.
           required: true
-

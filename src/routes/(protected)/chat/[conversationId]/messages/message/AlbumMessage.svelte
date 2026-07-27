@@ -4,7 +4,10 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { showErrorToast } from "$lib/api/error";
-	import { type AlbumContentResponse, getAlbumContent } from "$lib/api/messaging/albums";
+	import {
+		type AlbumContentResponse,
+		getAlbumContent,
+	} from "$lib/api/messaging/albums";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "./LockedMedia.svelte";
@@ -244,7 +247,7 @@
 			>
 				<ImageBrokenIcon
 					weight="fill"
-					class="aspect-square w-8 h-auto"
+					class="aspect-square h-auto w-8"
 					color="var(--color-neutral-600)"
 				/>
 			</div>

@@ -9,7 +9,6 @@ import {
 	snapTops,
 } from "./support/drawer";
 
-
 test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
 		page,

@@ -21,7 +21,7 @@
 			src={profileMediaUrl(mediaHash, "thumb")}
 			alt="Profile avatar"
 			class={[
-				"w-full h-full object-cover object-center bg-neutral-600",
+				"h-full w-full bg-neutral-600 object-cover object-center",
 				{
 					"blur-2xl": env.PUBLIC_ENABLE_BLUR_EFFECTS,
 				},
@@ -30,7 +30,7 @@
 			draggable="false"
 		/>
 	{:else}
-		<div class="bg-neutral-700 size-full flex items-center justify-center">
+		<div class="flex size-full items-center justify-center bg-neutral-700">
 			<UserIcon
 				weight="fill"
 				color="var(--color-stone-400)"

@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { fetchRestMock } = vi.hoisted(() => ({
-	fetchRestMock: vi.fn<(path: string, options?: { method?: string }) => unknown>(),
+	fetchRestMock:
+		vi.fn<(path: string, options?: { method?: string }) => unknown>(),
 }));
 
 vi.mock("$lib/api", async (importOriginal) => ({

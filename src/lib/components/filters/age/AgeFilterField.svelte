@@ -15,7 +15,7 @@
 	const uid = $props.id();
 </script>
 
-<div class="inline-block space-y-3 w-full">
+<div class="inline-block w-full space-y-3">
 	<FilterField>
 		<Checkbox id="filters-age-{uid}" bind:checked />
 		<Label for="filters-age-{uid}">Age</Label>

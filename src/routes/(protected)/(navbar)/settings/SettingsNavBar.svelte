@@ -25,18 +25,18 @@
 
 <ProgressiveBlur
 	direction="topToBottom"
-	class="w-full shrink-0 z-20 fixed top-0 left-0 h-[calc(4.75rem+var(--safe-area-top))]"
+	class="fixed top-0 left-0 z-20 h-[calc(4.75rem+var(--safe-area-top))] w-full shrink-0"
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
 >
 	<a
 		href={current.back}
-		class="flex items-center justify-center w-19 h-full shrink-0"
+		class="flex h-full w-19 shrink-0 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />
 	</a>
-	<span class="truncate min-w-0">
+	<span class="min-w-0 truncate">
 		{current.title}
 	</span>
 </ProgressiveBlur>

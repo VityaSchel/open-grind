@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-import { formatTimeRelativeCustom, urlSearchParamsCodec } from "$lib/util/utils";
+import {
+	formatTimeRelativeCustom,
+	urlSearchParamsCodec,
+} from "$lib/util/utils";
 
 afterEach(() => {
 	vi.useRealTimers();

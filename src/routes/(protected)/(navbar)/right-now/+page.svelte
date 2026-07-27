@@ -5,8 +5,8 @@
 	import Link from "$lib/components/ui/link/Link.svelte";
 </script>
 
-<div class="px-8 flex-1 flex">
-	<Alert.Root class="w-full max-w-sm m-auto">
+<div class="flex flex-1 px-8">
+	<Alert.Root class="m-auto w-full max-w-sm">
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>Unimplemented</Alert.Title>
 		<Alert.Description>

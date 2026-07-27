@@ -11,7 +11,6 @@ Thanks for considering contributing to Open Grind.
     - [Submitting your changes](#submitting-your-changes)
   - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
-
 ## Contribution guidelines
 
 AI-generated pull requests are not allowed. AI-assisted code is allowed. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
@@ -42,13 +41,15 @@ Projects reference:
    - [Rust](https://rustup.rs)
    - [Tauri CLI](https://tauri.app/start/prerequisites/)
 3. Install dependencies:
-    ```bash
-    bun ci
-    ```
+   ```bash
+   bun ci
+   ```
 4. Then start a dev server:
-    ```bash
-    bun dev
-    ```
+
+   ```bash
+   bun dev
+   ```
+
    - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
    - Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
 
@@ -79,7 +80,7 @@ const securityHeaders = {
 	"L-Device-Info":
 		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at login stage
-    // more info about these headers in docs: ./docs/content/grindr-api/security-headers.md
+	// more info about these headers in docs: ./docs/content/grindr-api/security-headers.md
 };
 
 const req = await fetch("https://grindr.mobi/v8/sessions", {
@@ -90,7 +91,8 @@ const req = await fetch("https://grindr.mobi/v8/sessions", {
 	},
 	body: JSON.stringify({
 		email: "yourmail@example.org",
-		password: "comment out this field after you log in once, use authToken to refresh session",
+		password:
+			"comment out this field after you log in once, use authToken to refresh session",
 		// authToken:
 		//	"just reuse any of previous authTokens, even expired",
 		token: null,
@@ -99,7 +101,6 @@ const req = await fetch("https://grindr.mobi/v8/sessions", {
 });
 
 process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
-
 ```
 
 </details>

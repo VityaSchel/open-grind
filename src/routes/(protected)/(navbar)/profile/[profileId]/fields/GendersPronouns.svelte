@@ -77,6 +77,6 @@
 <style lang="postcss">
 	@reference "$layout";
 	.load-fail {
-		@apply italic text-muted-foreground;
+		@apply text-muted-foreground italic;
 	}
 </style>
