@@ -18,6 +18,13 @@ pub struct GoogleOauthBridge {
 }
 
 #[cfg(not(target_os = "android"))]
+impl Default for GoogleOauthBridge {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(not(target_os = "android"))]
 impl GoogleOauthBridge {
     pub fn new() -> Self {
         Self {
