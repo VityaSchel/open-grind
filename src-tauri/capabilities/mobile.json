@@ -12,9 +12,6 @@
 		"geolocation:allow-check-permissions",
 		"geolocation:allow-request-permissions",
 		"geolocation:allow-get-current-position",
-		"geolocation:allow-watch-position",
-		"android-fs:allow-show-open-file-picker",
-		"android-fs:allow-read-file",
-		"android-fs:allow-get-mime-type"
+		"geolocation:allow-watch-position"
 	]
 }
