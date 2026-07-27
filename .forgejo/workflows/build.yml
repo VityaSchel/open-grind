@@ -85,6 +85,15 @@ jobs:
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
+      - name: Refuse a development version
+        run: |
+          cd "${BUILD_ROOT:?}"
+          version=$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p' src-tauri/tauri.conf.json | head -1)
+          echo "version: $version"
+          case "$version" in
+            "") echo "could not read version from src-tauri/tauri.conf.json"; exit 1 ;;
+            *-dev*) echo "refusing to build a development version; set the release version first"; exit 1 ;;
+          esac
       - name: Build
         run: cd "${BUILD_ROOT:?}" && nix run .#build-android
       - name: Collect APK
