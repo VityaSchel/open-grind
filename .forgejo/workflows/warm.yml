@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   provision:
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 15
     steps:
       - name: Provision the warm box
@@ -71,7 +71,7 @@ jobs:
   teardown:
     needs: [provision, warm]
     if: always()
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 15
     steps:
       - name: Destroy the warm box

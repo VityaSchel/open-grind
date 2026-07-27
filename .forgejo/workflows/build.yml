@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   plan:
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 5
     outputs:
       boxes: ${{ steps.plan.outputs.boxes }}
@@ -35,7 +35,7 @@ jobs:
 
   provision:
     needs: plan
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 30
     steps:
       - name: Provision builders
@@ -112,7 +112,7 @@ jobs:
 
   verify:
     needs: [plan, provision, build]
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 10
     env:
       BOXES: ${{ needs.plan.outputs.boxes }}
@@ -132,7 +132,7 @@ jobs:
   teardown:
     needs: [plan, provision, build, verify]
     if: always()
-    runs-on: ["open-grind-orchestrator"]
+    runs-on: ["open-grind-orchestrator-d9bc00520038"]
     timeout-minutes: 15
     steps:
       - name: Destroy builders
