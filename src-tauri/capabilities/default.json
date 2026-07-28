@@ -22,6 +22,11 @@
 				{
 					"path": "$APPDATA/preferences.data"
 				}
+			],
+			"deny": [
+				{
+					"path": "$APPDATA/credentials/**"
+				}
 			]
 		},
 		{
