@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { mediaUrlSchema } from "$lib/model/media";
 import { bodyTypeSchema } from "$lib/model/users/profiles";
 import {
 	cascadeResponseAdvertV1Schema,
@@ -24,7 +25,7 @@ import {
 
 const cascadeV4ResponseProfileSchema = z.object({
 	...cascadeResponseProfileSchema.shape,
-	primaryImageUrl: z.url().nullish(),
+	primaryImageUrl: mediaUrlSchema.nullish(),
 	favorite: z.boolean().optional(),
 	viewed: z.boolean().optional(),
 	chatted: z.boolean().optional(),

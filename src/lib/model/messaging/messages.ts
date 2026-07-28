@@ -3,6 +3,7 @@ import z from "zod";
 import {
 	mediaHashPrivateSchema,
 	mediaHashPublicSchema,
+	mediaUrlSchema,
 } from "$lib/model/media";
 import {
 	albumExpirationSchema,
@@ -38,7 +39,7 @@ export const albumMessageSchema = messageBaseSchema.safeExtend({
 	body: z.object({
 		...albumPreviewSchema.shape,
 		...albumExpirationSchema.shape,
-		coverUrl: z.url().nullable(),
+		coverUrl: mediaUrlSchema.nullable(),
 		ownerProfileId: z.int().nonnegative().nullable(),
 		isViewable: z.boolean(),
 		hasVideo: z.boolean(),
@@ -75,7 +76,7 @@ export const albumContentReactionMessageSchema = messageBaseSchema.safeExtend({
 		albumId: z.int().nonnegative(),
 		ownerProfileId: z.int().nonnegative().nullable(),
 		albumContentId: z.int().nonnegative(),
-		previewUrl: z.url().nullable(),
+		previewUrl: mediaUrlSchema.nullable(),
 		expiresAt: unixTimestampMsSchema.nullable(),
 		viewable: z.boolean(),
 	}),
@@ -103,7 +104,7 @@ export const audioMessageSchema = messageBaseSchema.safeExtend({
 	body: z.object({
 		mediaId: z.int().nonnegative(),
 		mediaHash: mediaHashPrivateSchema.nullable(),
-		url: z.url(),
+		url: mediaUrlSchema,
 		contentType: z.string().nullable(),
 		length: z.int().nonnegative().nullable(),
 		expiresAt: unixTimestampMsSchema.nullable(),
@@ -116,7 +117,7 @@ export const videoMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Video"),
 	body: z.object({
 		mediaId: z.int().nonnegative().nullable(),
-		url: z.url().nullable(),
+		url: mediaUrlSchema.nullable(),
 		fileCacheKey: z.string().optional(),
 		contentType: z.string().nullable(),
 		length: z.int().nonnegative(),
@@ -157,8 +158,8 @@ export const giphyMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Giphy"),
 	body: z.object({
 		id: z.string(),
-		urlPath: z.url(),
-		stillPath: z.url(),
+		urlPath: mediaUrlSchema,
+		stillPath: mediaUrlSchema,
 		previewPath: z.string(),
 		width: z.int().nonnegative(),
 		height: z.int().nonnegative(),
@@ -180,7 +181,7 @@ export const imageMessageSchema = imageBaseMessageSchema.safeExtend({
 	type: z.literal("Image"),
 	body: z.object({
 		...imageBaseMessageSchema.shape.body.shape,
-		url: z.url(),
+		url: mediaUrlSchema,
 		imageHash: z.union([mediaHashPrivateSchema, mediaHashPublicSchema]),
 		takenOnGrindr: z.boolean(),
 		createdAt: unixTimestampMsSchema.nullable(),
@@ -193,7 +194,7 @@ export const expiringImageMessageSchema = imageBaseMessageSchema.safeExtend({
 	type: z.literal("ExpiringImage"),
 	body: z.object({
 		...imageBaseMessageSchema.shape.body.shape,
-		url: z.url().nullable(),
+		url: mediaUrlSchema.nullable(),
 		viewsRemaining: z.int().nonnegative().nullable(),
 	}),
 });

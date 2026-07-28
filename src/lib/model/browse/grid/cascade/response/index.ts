@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { mediaUrlSchema } from "$lib/model/media";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const cascadeResponseProfileSchema = z.object({
@@ -55,7 +56,7 @@ export const cascadeExploreAggregationLocationItemSchema = z.object({
 			lat: z.number(),
 			lon: z.number(),
 		}),
-		profiles: z.array(z.object({ profileImageUrl: z.url() })),
+		profiles: z.array(z.object({ profileImageUrl: mediaUrlSchema })),
 	}),
 });
 
@@ -123,7 +124,7 @@ export const cascadeResponseBrazeEventProfileV1Schema = z.object({
 		profileId: z.int().nonnegative(),
 		onlineUntil: unixTimestampMsSchema.nullable().optional(),
 		displayName: z.string().nullable().optional(),
-		primaryImageUrl: z.url().nullable().optional(),
+		primaryImageUrl: mediaUrlSchema.nullable().optional(),
 		eventName: z.string(),
 	}),
 });

@@ -1,11 +1,12 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
+import { mediaUrlSchema } from "$lib/model/media";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 const drawerMediaSchema = z.object({
 	id: z.int(),
-	url: z.url(),
+	url: mediaUrlSchema,
 	contentType: z.string(),
 	createdTs: unixTimestampMsSchema,
 	used: z.boolean(),

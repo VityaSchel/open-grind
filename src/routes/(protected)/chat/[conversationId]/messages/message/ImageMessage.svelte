@@ -136,6 +136,7 @@
 >
 	<a
 		href={message.url}
+		rel="noreferrer"
 		data-pswp-width={message.width ?? undefined}
 		data-pswp-height={message.height ?? undefined}
 		aria-label="Open image"

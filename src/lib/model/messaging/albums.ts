@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { mediaUrlSchema } from "$lib/model/media";
 import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const albumPreviewSchema = z.object({
@@ -39,13 +40,13 @@ export const albumExpirationSchema = z.object({
 export const albumContentMin = z.object({
 	contentId: z.int(),
 	contentType: z.string(),
-	coverUrl: z.url().nullable(),
+	coverUrl: mediaUrlSchema.nullable(),
 	statusId: z.int(),
 });
 
 export const albumContentSchema = albumContentMin.extend({
-	thumbUrl: z.url(),
-	url: z.url().or(z.literal("")),
+	thumbUrl: mediaUrlSchema,
+	url: mediaUrlSchema.or(z.literal("")),
 	processing: z.boolean().nullable(),
 	rejectionId: z.unknown().nullable(),
 });

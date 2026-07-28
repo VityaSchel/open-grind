@@ -2,13 +2,14 @@ import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
 import { demoEnabled, demoUploadChatMedia } from "$lib/demo";
+import { mediaUrlSchema } from "$lib/model/media";
 import { type PickedMedia, readMediaBytes } from "$lib/platform/media-picker";
 import { toBase64 } from "$lib/util/base64";
 import { type DrawerMedia, saveMediaToDrawer } from "./drawer";
 
 const mediaUploadResponseSchema = z.object({
 	mediaId: z.int(),
-	url: z.url(),
+	url: mediaUrlSchema,
 	mediaHash: z.string(),
 });
 
