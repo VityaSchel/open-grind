@@ -21,81 +21,83 @@ const MIN_CHROMIUM_MAJOR: u32 = 111;
 const MIN_WEBKITGTK: (u32, u32) = (2, 42);
 
 const OPEN_GRIND_PLATFORM: &str = if cfg!(target_os = "android") {
-    "android"
+	"android"
 } else if cfg!(target_os = "ios") {
-    "ios"
+	"ios"
 } else if cfg!(target_os = "windows") {
-    "windows"
+	"windows"
 } else if cfg!(target_os = "macos") {
-    "macos"
+	"macos"
 } else if cfg!(target_os = "linux") {
-    "linux"
+	"linux"
 } else {
-    "unknown"
+	"unknown"
 };
 
-fn open_grind_platform_plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
-    tauri::plugin::Builder::<R, ()>::new("open-grind-platform")
-        .js_init_script(format!(
-            r#"window.__OPEN_GRIND_PLATFORM = "{OPEN_GRIND_PLATFORM}";"#
-        ))
-        .build()
+fn open_grind_platform_plugin<R: tauri::Runtime>(
+) -> tauri::plugin::TauriPlugin<R> {
+	tauri::plugin::Builder::<R, ()>::new("open-grind-platform")
+		.js_init_script(format!(
+			r#"window.__OPEN_GRIND_PLATFORM = "{OPEN_GRIND_PLATFORM}";"#
+		))
+		.build()
 }
 
 // macOS reports a WebKit build number that doesn't track Safari versions
 #[cfg(desktop)]
 fn outdated_webview_notice() -> Option<String> {
-    #[cfg(target_os = "windows")]
-    {
-        let version = tauri::webview_version().ok()?;
-        if version.split('.').next()?.parse::<u32>().ok()? < MIN_CHROMIUM_MAJOR {
-            return Some(format!(
+	#[cfg(target_os = "windows")]
+	{
+		let version = tauri::webview_version().ok()?;
+		if version.split('.').next()?.parse::<u32>().ok()? < MIN_CHROMIUM_MAJOR
+		{
+			return Some(format!(
                 "Open Grind needs Microsoft Edge WebView2 {MIN_CHROMIUM_MAJOR} or newer to \
                  display correctly (found {version}).\n\nUpdate the WebView2 Runtime, then \
                  restart the app."
             ));
-        }
-    }
+		}
+	}
 
-    #[cfg(target_os = "linux")]
-    {
-        let version = tauri::webview_version().ok()?;
-        let mut parts = version.split('.');
-        let major = parts.next()?.parse::<u32>().ok()?;
-        let minor = parts
-            .next()
-            .and_then(|p| p.parse::<u32>().ok())
-            .unwrap_or(0);
-        if (major, minor) < MIN_WEBKITGTK {
-            let (min_major, min_minor) = MIN_WEBKITGTK;
-            return Some(format!(
+	#[cfg(target_os = "linux")]
+	{
+		let version = tauri::webview_version().ok()?;
+		let mut parts = version.split('.');
+		let major = parts.next()?.parse::<u32>().ok()?;
+		let minor = parts
+			.next()
+			.and_then(|p| p.parse::<u32>().ok())
+			.unwrap_or(0);
+		if (major, minor) < MIN_WEBKITGTK {
+			let (min_major, min_minor) = MIN_WEBKITGTK;
+			return Some(format!(
                 "Open Grind needs WebKitGTK {min_major}.{min_minor} or newer to display \
                  correctly (found {version}).\n\nUpdate webkit2gtk / your distribution, \
                  then restart the app."
             ));
-        }
-    }
+		}
+	}
 
-    None
+	None
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    #[cfg(not(debug_assertions))]
-    logging::init();
+	#[cfg(not(debug_assertions))]
+	logging::init();
 
-    #[cfg(debug_assertions)]
-    let devtools = tauri_plugin_devtools::init();
+	#[cfg(debug_assertions)]
+	let devtools = tauri_plugin_devtools::init();
 
-    let builder = tauri::Builder::default();
+	let builder = tauri::Builder::default();
 
-    #[cfg(debug_assertions)]
-    let builder = builder.plugin(devtools);
+	#[cfg(debug_assertions)]
+	let builder = builder.plugin(devtools);
 
-    #[cfg(target_os = "android")]
-    let builder = builder.plugin(tauri_plugin_android_fs::init());
+	#[cfg(target_os = "android")]
+	let builder = builder.plugin(tauri_plugin_android_fs::init());
 
-    builder
+	builder
         .plugin(open_grind_platform_plugin())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())

@@ -9,9 +9,9 @@ use crate::state::AppState;
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaUploadResponse {
-    pub media_id: i64,
-    pub url: String,
-    pub media_hash: String,
+	pub media_id: i64,
+	pub url: String,
+	pub media_hash: String,
 }
 
 /// Uploads raw media bytes via the device-key-signed chat-media endpoint
@@ -20,25 +20,25 @@ pub struct MediaUploadResponse {
 /// `X-Timestamp`/`X-Nonce` headers on first use.
 #[tauri::command]
 pub async fn upload_chat_media(
-    state: tauri::State<'_, AppState>,
-    content_type: String,
-    taken_on_grindr: bool,
-    // Base64, because raw byte arrays over the Tauri IPC are unreliable.
-    // https://github.com/tauri-apps/tauri/issues/10573
-    data: String,
+	state: tauri::State<'_, AppState>,
+	content_type: String,
+	taken_on_grindr: bool,
+	// Base64, because raw byte arrays over the Tauri IPC are unreliable.
+	// https://github.com/tauri-apps/tauri/issues/10573
+	data: String,
 ) -> Result<MediaUploadResponse, AppError> {
-    let bytes = STANDARD
-        .decode(&data)
-        .map_err(|e| AppError::Http(format!("Failed to decode base64 media: {e}")))?;
+	let bytes = STANDARD.decode(&data).map_err(|e| {
+		AppError::Http(format!("Failed to decode base64 media: {e}"))
+	})?;
 
-    let response = state
-        .client()?
-        .upload_chat_media(bytes, &content_type, None, None, taken_on_grindr)
-        .await?;
+	let response = state
+		.client()?
+		.upload_chat_media(bytes, &content_type, None, None, taken_on_grindr)
+		.await?;
 
-    Ok(MediaUploadResponse {
-        media_id: response.media_id,
-        url: response.url,
-        media_hash: response.media_hash,
-    })
+	Ok(MediaUploadResponse {
+		media_id: response.media_id,
+		url: response.url,
+		media_hash: response.media_hash,
+	})
 }

@@ -14,70 +14,78 @@ use tokio::sync::oneshot;
 
 #[cfg(not(target_os = "android"))]
 pub struct GoogleOauthBridge {
-    pending: Mutex<Option<oneshot::Sender<Result<String, String>>>>,
+	pending: Mutex<Option<oneshot::Sender<Result<String, String>>>>,
 }
 
 #[cfg(not(target_os = "android"))]
 impl Default for GoogleOauthBridge {
-    fn default() -> Self {
-        Self::new()
-    }
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 #[cfg(not(target_os = "android"))]
 impl GoogleOauthBridge {
-    pub fn new() -> Self {
-        Self {
-            pending: Mutex::new(None),
-        }
-    }
+	pub fn new() -> Self {
+		Self {
+			pending: Mutex::new(None),
+		}
+	}
 
-    fn begin(&self) -> Result<oneshot::Receiver<Result<String, String>>, AppError> {
-        let mut pending = self.pending.lock().unwrap();
-        if pending.is_some() {
-            return Err(AppError::Auth("Google sign-in already in progress".into()));
-        }
-        let (tx, rx) = oneshot::channel();
-        *pending = Some(tx);
-        Ok(rx)
-    }
+	fn begin(
+		&self,
+	) -> Result<oneshot::Receiver<Result<String, String>>, AppError> {
+		let mut pending = self.pending.lock().unwrap();
+		if pending.is_some() {
+			return Err(AppError::Auth(
+				"Google sign-in already in progress".into(),
+			));
+		}
+		let (tx, rx) = oneshot::channel();
+		*pending = Some(tx);
+		Ok(rx)
+	}
 
-    fn fulfill(&self, result: Result<String, String>) {
-        if let Some(tx) = self.pending.lock().unwrap().take() {
-            let _ = tx.send(result);
-        }
-    }
+	fn fulfill(&self, result: Result<String, String>) {
+		if let Some(tx) = self.pending.lock().unwrap().take() {
+			let _ = tx.send(result);
+		}
+	}
 }
 
 /// Registers the Google OAuth plugin and its per-platform state. On Android it binds
 /// the native `GoogleOauthPlugin` (companion-app intent hand-off); on desktop it
 /// manages the [`GoogleOauthBridge`] used by the WebView flow in [`web`].
 pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
-    tauri::plugin::Builder::new("google-oauth")
-        .setup(|_app, _api| {
-            #[cfg(target_os = "android")]
-            {
-                let handle =
-                    _api.register_android_plugin("org.opengrind.googleoauth", "GoogleOauthPlugin")?;
-                _app.manage(android::AndroidGoogleOauth { handle });
-            }
-            #[cfg(not(target_os = "android"))]
-            {
-                _app.manage(Arc::new(GoogleOauthBridge::new()));
-            }
-            Ok(())
-        })
-        .build()
+	tauri::plugin::Builder::new("google-oauth")
+		.setup(|_app, _api| {
+			#[cfg(target_os = "android")]
+			{
+				let handle = _api.register_android_plugin(
+					"org.opengrind.googleoauth",
+					"GoogleOauthPlugin",
+				)?;
+				_app.manage(android::AndroidGoogleOauth { handle });
+			}
+			#[cfg(not(target_os = "android"))]
+			{
+				_app.manage(Arc::new(GoogleOauthBridge::new()));
+			}
+			Ok(())
+		})
+		.build()
 }
 
-pub async fn fetch_google_access_token(app: &AppHandle) -> Result<String, AppError> {
-    #[cfg(target_os = "android")]
-    {
-        return android::fetch_token(app).await;
-    }
-    #[cfg(not(target_os = "android"))]
-    {
-        let bridge = app.state::<Arc<GoogleOauthBridge>>().inner().clone();
-        web::fetch_access_token(app, bridge).await
-    }
+pub async fn fetch_google_access_token(
+	app: &AppHandle,
+) -> Result<String, AppError> {
+	#[cfg(target_os = "android")]
+	{
+		return android::fetch_token(app).await;
+	}
+	#[cfg(not(target_os = "android"))]
+	{
+		let bridge = app.state::<Arc<GoogleOauthBridge>>().inner().clone();
+		web::fetch_access_token(app, bridge).await
+	}
 }
