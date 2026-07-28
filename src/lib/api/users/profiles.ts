@@ -40,7 +40,7 @@ function isProbablyUnavailable(profile: Profile) {
 		"genders",
 		"pronouns",
 		"tapType",
-	];
+	] as const satisfies readonly (keyof Profile)[];
 	const falseFields = [
 		"showAge",
 		"showDistance",
@@ -48,7 +48,7 @@ function isProbablyUnavailable(profile: Profile) {
 		"isFavorite",
 		"isNew",
 		"tapped",
-	];
+	] as const satisfies readonly (keyof Profile)[];
 	const emptyArrayFields = [
 		"grindrTribes",
 		"lookingFor",
@@ -56,15 +56,14 @@ function isProbablyUnavailable(profile: Profile) {
 		"hashtags",
 		"profileTags",
 		"meetAt",
-	];
+	] as const satisfies readonly (keyof Profile)[];
 	const probablyBlocked =
-		nullFields.every((field) => profile[field as keyof Profile] === null) &&
-		falseFields.every((field) => profile[field as keyof Profile] === false) &&
-		emptyArrayFields.every(
-			(field) =>
-				Array.isArray(profile[field as keyof Profile]) &&
-				(profile[field as keyof Profile] as unknown[]).length === 0,
-		) &&
+		nullFields.every((field) => profile[field] === null) &&
+		falseFields.every((field) => profile[field] === false) &&
+		emptyArrayFields.every((field) => {
+			const value = profile[field];
+			return Array.isArray(value) && value.length === 0;
+		}) &&
 		profile.vaccines &&
 		profile.vaccines.length === 0 &&
 		Object.keys(profile.socialNetworks).length === 0 &&
