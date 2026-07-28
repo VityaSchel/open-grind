@@ -3,6 +3,7 @@ set -eu
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y ca-certificates curl git nodejs unzip
+# shellcheck disable=SC1091  # provided by the image
 . /etc/os-release
 install -m 0755 -d /etc/apt/keyrings
 curl -fsSL "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc

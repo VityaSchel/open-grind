@@ -229,7 +229,10 @@
           devShells.default = pkgs.mkShell (
             buildEnv
             // {
-              packages = toolchainInputs ++ [ pkgs.minisign ];
+              packages = toolchainInputs ++ [
+                pkgs.minisign
+                pkgs.shellcheck
+              ];
               shellHook = ''
                 # androidenv exposes only adb/sdkmanager; add build-tools + cmake.
                 export PATH="${buildToolsBin}:${cmakeBin}:$PATH"

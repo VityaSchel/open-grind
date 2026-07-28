@@ -5,6 +5,7 @@ export default {
 		"eslint --fix --no-warn-ignored",
 	],
 	"*.{json,md,yml,yaml,css,html}": "prettier --write",
+	"*.sh": "shellcheck",
 	"*.rs": (files) => [
 		// Not in rustfmt.toml: `cargo fmt` needs mod-following to reach the whole crate
 		`rustfmt --config skip_children=true ${files.map((f) => JSON.stringify(f)).join(" ")}`,
