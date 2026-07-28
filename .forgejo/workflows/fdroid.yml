@@ -10,7 +10,10 @@ concurrency:
 
 jobs:
   provision:
-    runs-on: ["open-grind-orchestrator-d9bc00520038"]
+    runs-on:
+      [
+        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
+      ]
     timeout-minutes: 30
     steps:
       - name: Provision builder
@@ -49,7 +52,10 @@ jobs:
   teardown:
     needs: [provision, fdroid]
     if: always()
-    runs-on: ["open-grind-orchestrator-d9bc00520038"]
+    runs-on:
+      [
+        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
+      ]
     timeout-minutes: 15
     steps:
       - name: Destroy builders

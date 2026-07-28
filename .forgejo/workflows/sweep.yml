@@ -14,7 +14,10 @@ concurrency:
 
 jobs:
   sweep:
-    runs-on: ["open-grind-orchestrator-d9bc00520038"]
+    runs-on:
+      [
+        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
+      ]
     timeout-minutes: 20
     steps:
       - name: Destroy boxes past their lifetime
