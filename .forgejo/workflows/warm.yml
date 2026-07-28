@@ -14,28 +14,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  provision:
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 15
-    steps:
-      - name: Provision the warm box
-        env:
-          TF_VAR_name: open-grind-warm-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-          TF_VAR_image: ${{ secrets.TF_VAR_CHECK_IMAGE }}
-        run: bun /opt/ci/provision.ts warm
-
   warm:
-    needs: provision
-    runs-on: ["open-grind-warm"]
+    runs-on: ["warm", "hetzner"]
     timeout-minutes: 50
     steps:
       - name: Build the dependency graph from trusted code and publish the cache
@@ -44,8 +24,8 @@ jobs:
           CI_CACHE: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_TERM_PROGRESS_WHEN: never
-          CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
-          CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
+          CACHE_ENDPOINT: ${{ vars.CACHE_ENDPOINT }}
+          CACHE_BUCKET: ${{ vars.CACHE_BUCKET }}
           CACHE_ACCESS_KEY: ${{ secrets.CACHE_RW_ACCESS_KEY }}
           CACHE_SECRET_KEY: ${{ secrets.CACHE_RW_SECRET_KEY }}
         run: |
@@ -70,23 +50,3 @@ jobs:
           step bun install --frozen-lockfile
           step bun run test:rust
           step bun run ci/cache.ts save
-
-  teardown:
-    needs: [provision, warm]
-    if: always()
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 15
-    steps:
-      - name: Destroy the warm box
-        env:
-          TF_VAR_name: open-grind-warm-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-        run: bun /opt/ci/teardown.ts warm

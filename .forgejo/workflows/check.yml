@@ -1,42 +1,16 @@
 name: check
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: PR number to check
-        type: string
-        required: true
 
 concurrency:
-  group: open-grind-check
-  cancel-in-progress: false
+  group: open-grind-check-${{ forgejo.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-  provision:
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 15
-    steps:
-      - name: Provision the check box
-        env:
-          TF_VAR_name: open-grind-check-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-          TF_VAR_image: ${{ secrets.TF_VAR_CHECK_IMAGE }}
-        run: bun /opt/ci/provision.ts check
-
   check:
-    needs: provision
-    runs-on: ["open-grind-check"]
+    runs-on: ["check", "hetzner"]
     timeout-minutes: 60
     steps:
       - name: Check the pull request head in a credential-free environment
@@ -46,7 +20,7 @@ jobs:
           ACTIONS_RUNTIME_TOKEN: ""
           ACTIONS_CACHE_URL: ""
           ACTIONS_RESULTS_URL: ""
-          PR_NUMBER: ${{ forgejo.event.pull_request.number || inputs.pr }}
+          PR_NUMBER: ${{ forgejo.event.pull_request.number }}
           EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
           CI_WORKSPACE: /opt/open-grind-ci
           CI_CACHE: /opt/open-grind-cache
@@ -54,10 +28,10 @@ jobs:
           CARGO_TERM_PROGRESS_WHEN: never
           NODE_OPTIONS: --max-old-space-size=6144
           ESLINT_PROGRESS: "1"
-          CACHE_ENDPOINT: ${{ secrets.CACHE_ENDPOINT }}
-          CACHE_BUCKET: ${{ secrets.CACHE_BUCKET }}
-          CACHE_ACCESS_KEY: ${{ secrets.CACHE_RO_ACCESS_KEY }}
-          CACHE_SECRET_KEY: ${{ secrets.CACHE_RO_SECRET_KEY }}
+          CACHE_ENDPOINT: ${{ vars.CACHE_ENDPOINT }}
+          CACHE_BUCKET: ${{ vars.CACHE_BUCKET }}
+          CACHE_ACCESS_KEY: ${{ vars.CACHE_RO_ACCESS_KEY }}
+          CACHE_SECRET_KEY: ${{ vars.CACHE_RO_SECRET_KEY }}
         run: |
           set -euo pipefail
 
@@ -94,23 +68,3 @@ jobs:
           step bun run check
           step bun run test:unit
           step bun run test:rust
-
-  teardown:
-    needs: [provision, check]
-    if: always()
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 15
-    steps:
-      - name: Destroy the check box
-        env:
-          TF_VAR_name: open-grind-check-${{ forgejo.run_id }}-${{ forgejo.run_attempt }}
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-        run: bun /opt/ci/teardown.ts check

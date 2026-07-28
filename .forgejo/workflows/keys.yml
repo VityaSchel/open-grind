@@ -15,11 +15,14 @@ concurrency:
 
 jobs:
   verify:
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 5
+    runs-on: ["verify", "hetzner"]
+    timeout-minutes: 10
     steps:
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
       - name: Verify the KEYS.md signature
-        run: bun /opt/ci/verify-keys.ts
+        run: bun ci/verify-keys.ts

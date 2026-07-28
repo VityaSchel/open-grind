@@ -3,73 +3,30 @@ name: build
 on:
   workflow_dispatch:
     inputs:
-      cherry:
-        description: open-grind-builder-1-cherry
-        type: boolean
-        default: true
-      vultr:
-        description: open-grind-builder-2-vultr
-        type: boolean
-        default: true
-      hetzner:
-        description: open-grind-builder-3-hetzner
-        type: boolean
-        default: true
+      providers:
+        description: builders to compare
+        type: choice
+        default: all
+        options: [all, cherry, vultr, hetzner]
 
 concurrency:
   group: open-grind-build
   cancel-in-progress: false
 
+env:
+  BOXES: >-
+    ${{ inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+    || format('["{0}"]', inputs.providers) }}
+
 jobs:
-  plan:
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 5
-    outputs:
-      boxes: ${{ steps.plan.outputs.boxes }}
-    steps:
-      - name: Resolve the builder set
-        id: plan
-        env:
-          BOXES: ${{ inputs.cherry && 'cherry' || '' }} ${{ inputs.vultr && 'vultr' || '' }} ${{ inputs.hetzner && 'hetzner' || '' }}
-        run: bun /opt/ci/provision.ts names
-
-  provision:
-    needs: plan
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 30
-    steps:
-      - name: Provision builders
-        env:
-          BOXES: ${{ inputs.cherry && 'cherry' || '' }} ${{ inputs.vultr && 'vultr' || '' }} ${{ inputs.hetzner && 'hetzner' || '' }}
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_cherry_token: ${{ secrets.TF_VAR_CHERRY_TOKEN }}
-          TF_VAR_cherry_project_id: ${{ secrets.TF_VAR_CHERRY_PROJECT_ID }}
-          TF_VAR_vultr_token: ${{ secrets.TF_VAR_VULTR_TOKEN }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-          TF_VAR_scaleway_access_key: ${{ secrets.TF_VAR_SCALEWAY_ACCESS_KEY }}
-          TF_VAR_scaleway_secret_key: ${{ secrets.TF_VAR_SCALEWAY_SECRET_KEY }}
-          TF_VAR_scaleway_project_id: ${{ secrets.TF_VAR_SCALEWAY_PROJECT_ID }}
-          TF_VAR_digitalocean_token: ${{ secrets.TF_VAR_DIGITALOCEAN_TOKEN }}
-        run: bun /opt/ci/provision.ts build
-
   build:
-    needs: [plan, provision]
-    if: ${{ needs.provision.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
-        box: ${{ fromJson(needs.plan.outputs.boxes) }}
-    runs-on: ["${{ matrix.box }}"]
+        provider: >-
+          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.providers)) }}
+    runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 45
     env:
       BUILD_ROOT: /work
@@ -112,54 +69,29 @@ jobs:
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
-          name: open-grind-unsigned-${{ matrix.box }}
+          name: open-grind-unsigned-${{ matrix.provider }}
           path: out/
           retention-days: 1
 
   verify:
-    needs: [plan, provision, build]
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
+    needs: build
+    runs-on: ["verify", "hetzner"]
     timeout-minutes: 10
-    env:
-      BOXES: ${{ needs.plan.outputs.boxes }}
     steps:
+      - name: Checkout
+        run: |
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
       - name: Download builds
         uses: https://code.forgejo.org/forgejo/download-artifact@d8d0a99033603453ad2255e58720b460a0555e1e # v4
         with:
           path: dl
       - name: Compare
-        run: bun /opt/ci/verify.ts dl verified
+        run: bun ci/verify.ts dl verified
       - name: Publish verified artifact
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
           name: open-grind-unsigned
           path: verified/
-
-  teardown:
-    needs: [plan, provision, build, verify]
-    if: always()
-    runs-on:
-      [
-        "open-grind-orchestrator-bf303cca9cfaf8c4cd5fbdc1a66428e7a35fda8e755286ba663e53374a47e062",
-      ]
-    timeout-minutes: 15
-    steps:
-      - name: Destroy builders
-        env:
-          RUNNER_REGISTRATION_TOKEN: ${{ secrets.RUNNER_REGISTRATION_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_ENDPOINT_URL_S3: ${{ secrets.AWS_ENDPOINT_URL_S3 }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          TF_VAR_cherry_token: ${{ secrets.TF_VAR_CHERRY_TOKEN }}
-          TF_VAR_cherry_project_id: ${{ secrets.TF_VAR_CHERRY_PROJECT_ID }}
-          TF_VAR_vultr_token: ${{ secrets.TF_VAR_VULTR_TOKEN }}
-          TF_VAR_hetzner_token: ${{ secrets.TF_VAR_HETZNER_TOKEN }}
-          TF_VAR_scaleway_access_key: ${{ secrets.TF_VAR_SCALEWAY_ACCESS_KEY }}
-          TF_VAR_scaleway_secret_key: ${{ secrets.TF_VAR_SCALEWAY_SECRET_KEY }}
-          TF_VAR_scaleway_project_id: ${{ secrets.TF_VAR_SCALEWAY_PROJECT_ID }}
-          TF_VAR_digitalocean_token: ${{ secrets.TF_VAR_DIGITALOCEAN_TOKEN }}
-        run: bun /opt/ci/teardown.ts build
