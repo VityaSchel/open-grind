@@ -31,12 +31,13 @@ const headersRs = fs.readFileSync(
 	path.join(path.dirname(grindrManifest), "src", "headers.rs"),
 	"utf-8",
 );
-const grindrApiVersion = headersRs.match(
-	/const APP_VERSION: &str = "([^"]+)";/,
-)[1];
-const grindrApiBuildNumber = headersRs.match(
-	/const BUILD_NUMBER: &str = "([^"]+)";/,
-)[1];
+function scrapeHeaderConst(name) {
+	const match = headersRs.match(new RegExp(`const ${name}: &str = "([^"]+)";`));
+	if (!match) throw new Error(`${name} not found in the grindr crate headers`);
+	return match[1];
+}
+const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
+const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
