@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { mediaUrlSchema } from "$lib/model/media";
 
-describe("remoteUrlSchema", () => {
+describe("mediaUrlSchema", () => {
 	it.each([
 		"javascript:alert(1)",
 		"JavaScript:alert(1)",
