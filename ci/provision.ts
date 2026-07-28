@@ -104,11 +104,29 @@ async function registerRunner(
 	);
 	if (!response.ok)
 		throw new Error(`registering runner ${name}: ${response.status}`);
-	return response.json() as Promise<{
+	const runner = (await response.json()) as {
 		id: number;
 		uuid: string;
 		token: string;
-	}>;
+	};
+	await assertEphemeral(runner.id, name);
+	return runner;
+}
+
+async function assertEphemeral(runnerId: number, name: string): Promise<void> {
+	const response = await fetch(
+		`${FORGEJO}/api/v1/repos/${REPO}/actions/runners/${runnerId}`,
+		{ headers: { Authorization: `token ${registration}` } },
+	);
+	if (!response.ok)
+		throw new Error(`reading back runner ${runnerId}: ${response.status}`);
+	const { ephemeral } = (await response.json()) as { ephemeral?: boolean };
+	if (ephemeral !== true)
+		throw new Error(
+			`${name}: runner ${runnerId} is not ephemeral. Untrusted code runs as root on this box and can read ` +
+				`its runner credential; only the ephemeral flag bars that credential from claiming another job. ` +
+				`Refusing to boot the box.`,
+		);
 }
 
 async function waitOnline(runnerId: number, name: string): Promise<void> {
