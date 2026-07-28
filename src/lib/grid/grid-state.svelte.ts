@@ -14,7 +14,7 @@ import {
 import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
 class GridState {
-	filters = new GridSearchFiltersState({ onRefresh: () => this.refresh() });
+	filters = new GridSearchFiltersState({ onRefresh: () => this.retry() });
 	items: GridProfile[] = $state([]);
 	nextPage: number | null = $state(0);
 	loadingMore = $state(false);
@@ -41,14 +41,14 @@ class GridState {
 		void this.#fetchProfiles(geohash);
 	}
 
-	refresh(): void {
+	retry(): void {
 		if (!this.#geohash) return;
 		this.#reset();
 		this.scrollY = 0;
 		void this.#fetchProfiles(this.#geohash);
 	}
 
-	async reload(): Promise<void> {
+	async refresh(): Promise<void> {
 		if (!this.#geohash || this.refreshing) return;
 		this.refreshing = true;
 		try {

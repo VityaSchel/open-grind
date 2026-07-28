@@ -27,10 +27,6 @@
 		gridState.load(geohash);
 	});
 
-	export function refresh() {
-		gridState.refresh();
-	}
-
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -76,7 +72,7 @@
 		<div class="col-span-full flex p-4">
 			<ApiErrorDisplay
 				error={gridState.error}
-				onRetry={() => gridState.refresh()}
+				onRetry={() => gridState.retry()}
 				class="m-auto"
 			/>
 		</div>
