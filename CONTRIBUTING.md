@@ -8,6 +8,7 @@ Thanks for considering contributing to Open Grind.
     - [Development environment](#development-environment)
     - [Project structure](#project-structure)
     - [Interacting with API](#interacting-with-api)
+    - [Checks and tests](#checks-and-tests)
     - [Submitting your changes](#submitting-your-changes)
   - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
@@ -116,6 +117,15 @@ Before opening a pull request, run the same checks CI runs:
 End-to-end tests are a separate tier:
 
 - `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
+
+`bun ci` also installs a pre-commit hook (husky + lint-staged) that runs over staged files only:
+
+- `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
+- `*.{json,md,yml,yaml,css,html}` — Prettier
+- `*.sh` — ShellCheck
+- `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
+
+[ShellCheck](https://www.shellcheck.net/) and [rustfmt](https://github.com/rust-lang/rustfmt) must be on `PATH`. `nix develop` provides both, along with the pinned Rust and Android toolchains.
 
 ### Submitting your changes
 
