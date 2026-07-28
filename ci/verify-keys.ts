@@ -27,9 +27,10 @@ async function gpg(args: string[], stdin?: Uint8Array) {
 		stdout: "pipe",
 		stderr: "pipe",
 	});
-	if (stdin) {
-		await proc.stdin.write(stdin);
-		await proc.stdin.end();
+	const sink = proc.stdin;
+	if (stdin && sink) {
+		await sink.write(stdin);
+		await sink.end();
 	}
 	const [out, err] = await Promise.all([
 		new Response(proc.stdout).text(),
