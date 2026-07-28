@@ -14,16 +14,15 @@
 	import { tabsListVariants } from "$lib/components/ui/tabs";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 
-	const myProfilePhotos = $derived(
-		getMyProfile().then((profile) => profile.medias),
-	);
+	const myProfile = getMyProfile();
+	const myProfilePhotos = myProfile.then((profile) => profile.medias);
 
 	let conversations = $state<ConversationsState | null>(null);
-	$effect(() => {
-		void getMyProfile().then((profile) => {
+	myProfile
+		.then((profile) => {
 			conversations = getOrCreateConversationsState(profile.profileId);
-		});
-	});
+		})
+		.catch(console.error);
 	const hasUnread = $derived(conversations?.hasUnread ?? false);
 </script>
 
