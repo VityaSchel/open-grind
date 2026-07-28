@@ -78,7 +78,10 @@
                         'autoPatchelfIgnoreMissingDeps = [ "*" ]; noAuditTmpdir = true;'
                   '';
                 })
-                { inherit (pkgs) lib; pkgs = pkgs; }
+                {
+                  inherit (pkgs) lib;
+                  pkgs = pkgs;
+                }
             else
               pkgs.androidenv;
 
@@ -226,7 +229,7 @@
           devShells.default = pkgs.mkShell (
             buildEnv
             // {
-              packages = toolchainInputs;
+              packages = toolchainInputs ++ [ pkgs.minisign ];
               shellHook = ''
                 # androidenv exposes only adb/sdkmanager; add build-tools + cmake.
                 export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
