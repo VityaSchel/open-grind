@@ -23,28 +23,28 @@ jobs:
           PR_NUMBER: ${{ forgejo.event.pull_request.number }}
           EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
           CI_WORKSPACE: /opt/open-grind-ci
-          CI_CACHE: /opt/open-grind-cache
+          CHECKS_CACHE_DIR: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_TERM_PROGRESS_WHEN: never
           NODE_OPTIONS: --max-old-space-size=6144
           ESLINT_PROGRESS: "1"
-          CACHE_ENDPOINT: ${{ vars.CACHE_ENDPOINT }}
-          CACHE_BUCKET: ${{ vars.CACHE_BUCKET }}
-          CACHE_ACCESS_KEY: ${{ vars.CACHE_RO_ACCESS_KEY }}
-          CACHE_SECRET_KEY: ${{ vars.CACHE_RO_SECRET_KEY }}
+          CHECKS_CACHE_S3_ENDPOINT: ${{ vars.CHECKS_CACHE_S3_ENDPOINT }}
+          CHECKS_CACHE_S3_BUCKET: ${{ vars.CHECKS_CACHE_S3_BUCKET }}
+          CHECKS_CACHE_S3_ACCESS_KEY: ${{ vars.CHECKS_CACHE_S3_RO_ACCESS_KEY }}
+          CHECKS_CACHE_S3_SECRET_KEY: ${{ vars.CHECKS_CACHE_S3_RO_SECRET_KEY }}
         run: |
           set -euo pipefail
 
           leaked=$(env | grep -iE '(TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY)=.' \
-            | grep -vE '^CACHE_(ACCESS_KEY|SECRET_KEY)=' || true)
+            | grep -vE '^CHECKS_CACHE_S3_(ACCESS_KEY|SECRET_KEY)=' || true)
           [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
 
           step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)" >&2; "$@"; }
 
           rm -rf "$CI_WORKSPACE"
-          mkdir -p "$CI_WORKSPACE" "$CI_CACHE"
+          mkdir -p "$CI_WORKSPACE" "$CHECKS_CACHE_DIR"
           cd "$CI_WORKSPACE"
-          export CARGO_HOME="$CI_CACHE/cargo" CARGO_TARGET_DIR="$CI_CACHE/target"
+          export CARGO_HOME="$CHECKS_CACHE_DIR/cargo" CARGO_TARGET_DIR="$CHECKS_CACHE_DIR/target"
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
@@ -58,7 +58,7 @@ jobs:
           . ci/rust-env.sh
 
           step bun run ci/cache.ts restore
-          echo "cargo home: $(ls "$CARGO_HOME" 2>/dev/null | tr '\n' ' ')| free: $(df -h --output=avail "$CI_CACHE" | tail -1)" >&2
+          echo "cargo home: $(ls "$CARGO_HOME" 2>/dev/null | tr '\n' ' ')| free: $(df -h --output=avail "$CHECKS_CACHE_DIR" | tail -1)" >&2
 
           step cargo metadata --manifest-path src-tauri/Cargo.toml --format-version 1 >/dev/null
 

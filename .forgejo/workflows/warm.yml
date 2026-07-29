@@ -21,22 +21,22 @@ jobs:
       - name: Build the dependency graph from trusted code and publish the cache
         env:
           CI_WORKSPACE: /opt/open-grind-ci
-          CI_CACHE: /opt/open-grind-cache
+          CHECKS_CACHE_DIR: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
           CARGO_TERM_PROGRESS_WHEN: never
-          CACHE_ENDPOINT: ${{ vars.CACHE_ENDPOINT }}
-          CACHE_BUCKET: ${{ vars.CACHE_BUCKET }}
-          CACHE_ACCESS_KEY: ${{ secrets.CACHE_RW_ACCESS_KEY }}
-          CACHE_SECRET_KEY: ${{ secrets.CACHE_RW_SECRET_KEY }}
+          CHECKS_CACHE_S3_ENDPOINT: ${{ vars.CHECKS_CACHE_S3_ENDPOINT }}
+          CHECKS_CACHE_S3_BUCKET: ${{ vars.CHECKS_CACHE_S3_BUCKET }}
+          CHECKS_CACHE_S3_ACCESS_KEY: ${{ secrets.CHECKS_CACHE_S3_RW_ACCESS_KEY }}
+          CHECKS_CACHE_S3_SECRET_KEY: ${{ secrets.CHECKS_CACHE_S3_RW_SECRET_KEY }}
         run: |
           set -euo pipefail
 
           step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)" >&2; "$@"; }
 
-          rm -rf "$CI_WORKSPACE" "$CI_CACHE"
-          mkdir -p "$CI_WORKSPACE" "$CI_CACHE"
+          rm -rf "$CI_WORKSPACE" "$CHECKS_CACHE_DIR"
+          mkdir -p "$CI_WORKSPACE" "$CHECKS_CACHE_DIR"
           cd "$CI_WORKSPACE"
-          export CARGO_HOME="$CI_CACHE/cargo" CARGO_TARGET_DIR="$CI_CACHE/target"
+          export CARGO_HOME="$CHECKS_CACHE_DIR/cargo" CARGO_TARGET_DIR="$CHECKS_CACHE_DIR/target"
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"

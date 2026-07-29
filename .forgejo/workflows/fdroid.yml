@@ -10,7 +10,6 @@ concurrency:
 jobs:
   fdroid:
     runs-on: ["fdroid", "hetzner"]
-    # BOX_LIFETIME_MINUTES=90 hard-poweroff minus up to ~10 min of provisioning/pickup.
     timeout-minutes: 70
     steps:
       - name: Checkout
