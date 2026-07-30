@@ -8,7 +8,7 @@
 
 ## Download
 
-- **[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases)** from the Releases page
+- **[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases#install)** from the Releases page
 
 Never install Open Grind from sources not listed above.
 

@@ -16,3 +16,30 @@
 	--vp-button-brand-hover-bg: #ffd500;
 	--vp-button-brand-active-bg: #ffe433;
 }
+
+
+@media (min-width: 600px) {
+	.hero-screenshots-2x3 {
+		display: none;
+	}
+}
+
+.hero-screenshots-3x2 {
+	display: none;
+}
+
+@media (min-width: 600px) and (not (min-width: 1024px)) {
+	.hero-screenshots-3x2 {
+		display: block;
+	}
+}
+
+.hero-screenshots-1x6 {
+	display: none;
+}
+
+@media (min-width: 1024px) {
+	.hero-screenshots-1x6 {
+		display: block;
+	}
+}
