@@ -259,6 +259,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 
 | Component                               | Where it's pinned                                                |
 | --------------------------------------- | ---------------------------------------------------------------- |
+| Docker base image (Docker build path)   | `Dockerfile` (`nixos/nix` pinned by `@sha256`)                   |
 | nixpkgs                                 | `flake.lock`                                                     |
 | Rust toolchain                          | `rust-toolchain.toml`                                            |
 | JDK                                     | `flake.nix` (`jdk21_headless`)                                   |
