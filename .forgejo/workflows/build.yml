@@ -36,6 +36,11 @@ jobs:
       TZ: UTC
       LC_ALL: C
     steps:
+      - name: Install checkout prerequisites
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          apt-get install -y ca-certificates git
       - name: Checkout
         run: |
           : "${BUILD_ROOT:?}"
@@ -57,6 +62,8 @@ jobs:
             "") echo "could not read version from src-tauri/tauri.conf.json"; exit 1 ;;
             *-dev*) echo "refusing to build a development version; set the release version first"; exit 1 ;;
           esac
+      - name: Set up the build environment
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
       - name: Build
         run: cd "${BUILD_ROOT:?}" && nix run .#build-android
       - name: Collect APK

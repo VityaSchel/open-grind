@@ -23,10 +23,15 @@ if (
 	!CHECKS_CACHE_S3_ACCESS_KEY ||
 	!CHECKS_CACHE_S3_SECRET_KEY ||
 	!CHECKS_CACHE_DIR
-)
-	throw new Error(
-		"CHECKS_CACHE_S3_ENDPOINT, CHECKS_CACHE_S3_BUCKET, CHECKS_CACHE_S3_ACCESS_KEY, CHECKS_CACHE_S3_SECRET_KEY and CHECKS_CACHE_DIR must be set",
-	);
+) {
+	const missing =
+		"CHECKS_CACHE_S3_ENDPOINT, CHECKS_CACHE_S3_BUCKET, CHECKS_CACHE_S3_ACCESS_KEY, CHECKS_CACHE_S3_SECRET_KEY and CHECKS_CACHE_DIR must be set";
+	if (process.argv[2] === "restore") {
+		console.warn(`cache restore skipped: ${missing}`);
+		process.exit(0);
+	}
+	throw new Error(missing);
+}
 const root: string = CHECKS_CACHE_DIR;
 
 const bucket = new Bun.S3Client({
