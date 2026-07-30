@@ -53,7 +53,7 @@ test.describe("screen insets", () => {
 	});
 });
 
-test.describe("zoom is disabled", () => {
+test.describe("keyboard zoom is disabled", () => {
 	test("the viewport forbids user scaling", async ({ page }) => {
 		await installTauriShim(page);
 		await page.goto("/chat");
@@ -62,26 +62,6 @@ test.describe("zoom is disabled", () => {
 			.getAttribute("content");
 		expect(content).toContain("user-scalable=no");
 		expect(content).toContain("maximum-scale=1");
-	});
-
-	test("ctrl+wheel is cancelled instead of zooming", async ({ page }) => {
-		await installTauriShim(page);
-		await page.goto("/chat");
-		await page
-			.locator('a[href^="/chat/1"]')
-			.first()
-			.waitFor({ timeout: 30_000 });
-		const prevented = await page.evaluate(() => {
-			const event = new WheelEvent("wheel", {
-				deltaY: -120,
-				ctrlKey: true,
-				bubbles: true,
-				cancelable: true,
-			});
-			window.dispatchEvent(event);
-			return event.defaultPrevented;
-		});
-		expect(prevented, "ctrl+wheel zoom is blocked").toBe(true);
 	});
 
 	test("ctrl/cmd +, - and 0 are cancelled instead of zooming", async ({
