@@ -8,6 +8,10 @@ on:
         type: choice
         default: all
         options: [all, cherry, vultr, hetzner]
+      allow_dev:
+        description: allow a -dev version (test build, never release the artifact)
+        type: boolean
+        default: false
 
 concurrency:
   group: open-grind-build
@@ -48,14 +52,25 @@ jobs:
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
-      - name: Refuse a development version
+      - name: Check the version
+        env:
+          ALLOW_DEV: ${{ inputs.allow_dev }}
         run: |
           cd "${BUILD_ROOT:?}"
           version=$(sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\(.*\)".*/\1/p' src-tauri/tauri.conf.json | head -1)
           echo "version: $version"
           case "$version" in
-            "") echo "could not read version from src-tauri/tauri.conf.json"; exit 1 ;;
-            *-dev*) echo "refusing to build a development version; set the release version first"; exit 1 ;;
+            "")
+              echo "could not read version from src-tauri/tauri.conf.json"
+              exit 1
+              ;;
+            *-dev*)
+              if [ "$ALLOW_DEV" != "true" ]; then
+                echo "refusing to build a development version; set the release version first, or re-run with allow_dev"
+                exit 1
+              fi
+              echo "building a development version on request; this artifact must never be released"
+              ;;
           esac
       - name: Set up the build environment
         run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
