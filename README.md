@@ -2,19 +2,19 @@
 
 [![Matrix space](https://img.shields.io/matrix/opengrind:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=matrix%20space)](https://matrix.to/#/#opengrind:opengrind.org) [![chat](https://img.shields.io/matrix/general:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=chat)](https://matrix.to/#/#general:opengrind.org) [![Announcements](https://img.shields.io/matrix/announcements:opengrind.org?server_fqdn=matrix.opengrind.org&fetchMode=summary&label=announcements)](https://matrix.to/#/#announcements:opengrind.org)
 
-Unofficial Grindr client. Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.
+**Unofficial Grindr client. Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven.**
 
-**[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases)** from releases.
+![Screenshots](./contrib/app-screenshots-1x6.avif)
+
+## Download
+
+- **[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases)** from the Releases page
+
+Never install Open Grind from sources not listed above.
 
 ## Security
 
-All releases are signed. Never install Open Grind from unofficial sources. Verify before installing.
-
-PGP Public Key: <https://opengrind.org/pgp> (`CB722EE967E4FCAD7C658FC69A1F7F5F592919D2`).
-
-Android releases are additionally signed with Java KeyStore with the following SHA-256 fingerprint: `28:05:FD:D8:F0:BA:DB:94:24:D3:24:4C:5E:5B:34:73:CE:F5:B8:79:8E:C1:11:73:82:E8:9E:DA:45:C3:65:8C`
-
-Signing keys and verification instructions are documented in [KEYS.md](KEYS.md), itself signed by the PGP key above (verify with `gpg --verify KEYS.md.asc KEYS.md`).
+All releases are signed. [Learn more](./KEYS.md) about releases signatures.
 
 Open Grind supports reproducible builds. Read more in [BUILDING.md](./BUILDING.md#verifying-a-published-release).
 
