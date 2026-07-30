@@ -5,7 +5,7 @@ next: false
 
 # [**Download Open Grind**](https://git.opengrind.org/open-grind/open-grind/releases#install)
 
-Never install Open Grind from unofficial sources. The only official source of Open Grind releases is https://git.opengrind.org/open-grind/open-grind/releases. All releases are signed. *For advanced users: verify [PGP](https://opengrind.org/pgp) signature before installing (optional).*
+Never install Open Grind from unofficial sources. The only official source of Open Grind releases is https://git.opengrind.org/open-grind/open-grind/releases. All releases are signed and reproducible.
 
 > [!Warning] 🚧&nbsp;&nbsp;Beta MVP version&nbsp;&nbsp;🚧
 > Open Grind is in active development. [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
