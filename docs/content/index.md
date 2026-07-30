@@ -29,9 +29,9 @@ features:
     details: Human code review, audit, supply chain security, end-to-end testing
 ---
 
-<img src="./app-screenshots-1x6.avif" class="hero-screenshots-1x6">
-<img src="./app-screenshots-3x2.avif" class="hero-screenshots-3x2">
-<img src="./app-screenshots-2x3.avif" class="hero-screenshots-2x3">
+<img src="/app-screenshots-1x6.avif" class="hero-screenshots-1x6">
+<img src="/app-screenshots-3x2.avif" class="hero-screenshots-3x2">
+<img src="/app-screenshots-2x3.avif" class="hero-screenshots-2x3">
 
 <hr />
 
