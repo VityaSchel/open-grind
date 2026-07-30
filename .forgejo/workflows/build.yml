@@ -36,11 +36,6 @@ jobs:
       TZ: UTC
       LC_ALL: C
     steps:
-      - name: Install checkout prerequisites
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -y
-          apt-get install -y ca-certificates git
       - name: Checkout
         run: |
           : "${BUILD_ROOT:?}"

@@ -12,11 +12,6 @@ jobs:
     runs-on: ["fdroid", "hetzner"]
     timeout-minutes: 70
     steps:
-      - name: Install checkout prerequisites
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -y
-          apt-get install -y ca-certificates git
       - name: Checkout
         run: |
           git init -q .
