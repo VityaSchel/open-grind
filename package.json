@@ -7,6 +7,7 @@
 	"scripts": {
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:ci": "bun install --cwd ci --frozen-lockfile && bun x tsc --noEmit -p ci/tsconfig.json",
 		"check:version": "bun scripts/check-version.ts",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"dev": "bun dev:desktop",

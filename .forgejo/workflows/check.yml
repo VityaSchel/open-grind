@@ -66,5 +66,6 @@ jobs:
           step bun run check:version
           step bun run lint
           step bun run check
+          step bun run check:ci
           step bun run test:unit
           step bun run test:rust
