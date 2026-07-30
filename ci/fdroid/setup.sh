@@ -2,11 +2,16 @@
 set -eu
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get install -y ca-certificates curl git nodejs unzip
+apt-get install -y ca-certificates curl git gnupg nodejs unzip
 # shellcheck disable=SC1091  # provided by the image
 . /etc/os-release
 install -m 0755 -d /etc/apt/keyrings
+DOCKER_GPG_FINGERPRINT=9DC858229FC7DD38854AE2D88D81803C0EBFCD88
 curl -fsSL "https://download.docker.com/linux/$ID/gpg" -o /etc/apt/keyrings/docker.asc
+gpg --show-keys --with-colons /etc/apt/keyrings/docker.asc \
+	| awk -F: '$1 == "fpr" { print $10 }' \
+	| grep -qx "$DOCKER_GPG_FINGERPRINT" \
+	|| { echo "docker signing key is not $DOCKER_GPG_FINGERPRINT" >&2; exit 1; }
 echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$ID $VERSION_CODENAME stable" > /etc/apt/sources.list.d/docker.list
 apt-get update -y
 apt-get install -y docker-ce docker-ce-cli containerd.io
