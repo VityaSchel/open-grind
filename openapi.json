@@ -564,12 +564,14 @@
 										"sevenDayRevenue": {
 											"type": "number",
 											"format": "float",
-											"description": "unknown, WIP"
+											"nullable": true,
+											"description": "float, the user's revenue over the last 7 days (may be null)"
 										},
 										"thirtyDayRevenue": {
 											"type": "number",
 											"format": "float",
-											"description": "unknown, WIP"
+											"nullable": true,
+											"description": "float, the user's revenue over the last 30 days (may be null)"
 										}
 									}
 								}
@@ -2361,50 +2363,26 @@
 				"tags": [
 					"right-now"
 				],
-				"operationId": "getRightNowFeed",
-				"parameters": [
+				"operationId": "getRightNowFeedV5",
+				"security": [
 					{
-						"name": "sort",
-						"in": "query",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"name": "hosting",
-						"in": "query",
-						"schema": {
-							"type": "boolean"
-						}
-					},
-					{
-						"$ref": "#/components/parameters/CascadeAgeMinQuery"
-					},
-					{
-						"$ref": "#/components/parameters/CascadeAgeMaxQuery"
-					},
-					{
-						"name": "sexualPositions",
-						"in": "query",
-						"schema": {
-							"type": "string"
-						}
+						"Grindr3Auth": []
 					}
 				],
+				"summary": "Get Right Now feed (v5)",
+				"description": "Feature-flag `v5` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
 				"responses": {
 					"200": {
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowGetFeedResponse"
+									"$ref": "#/components/schemas/RightNowFeedResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/media/upload": {
@@ -3252,7 +3230,7 @@
 				"x-wip": true
 			}
 		},
-		"/public/v1/public-features": {
+		"/public/v1/assignments": {
 			"get": {
 				"tags": [
 					"analytics/assignments"
@@ -3545,6 +3523,14 @@
 													}
 												}
 											}
+										},
+										"blockedBy": {
+											"type": "array",
+											"nullable": true,
+											"items": {
+												"type": "string"
+											},
+											"description": "array of profile-id strings; may be `null`"
 										}
 									}
 								}
@@ -4601,7 +4587,7 @@
 						}
 					},
 					{
-						"name": "sort",
+						"name": "sortBy",
 						"in": "query",
 						"schema": {
 							"type": "string"
@@ -4664,7 +4650,22 @@
 										"travelPlans": {
 											"type": "array",
 											"items": {
-												"$ref": "#/components/schemas/TravelPlanMutation"
+												"allOf": [
+													{
+														"$ref": "#/components/schemas/TravelPlanMutation"
+													},
+													{
+														"type": "object",
+														"properties": {
+															"locationName": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"locationName"
+														]
+													}
+												]
 											}
 										}
 									}
@@ -5020,10 +5021,12 @@
 										"type": "object",
 										"properties": {
 											"senderId": {
-												"type": "integer"
+												"type": "integer",
+												"format": "int64"
 											},
 											"receiverId": {
-												"type": "integer"
+												"type": "integer",
+												"format": "int64"
 											},
 											"tapType": {
 												"$ref": "#/components/schemas/TapType"
@@ -5794,6 +5797,10 @@
 										"albumId": {
 											"type": "integer",
 											"format": "int64"
+										},
+										"albumName": {
+											"type": "string",
+											"nullable": true
 										}
 									}
 								}
@@ -5854,16 +5861,16 @@
 						"name": "width",
 						"in": "query",
 						"schema": {
-							"type": "number",
-							"description": "number, optional, doesn't affect the resulting image"
+							"type": "integer",
+							"description": "integer, optional, doesn't affect the resulting image"
 						}
 					},
 					{
 						"name": "height",
 						"in": "query",
 						"schema": {
-							"type": "number",
-							"description": "number, optional, doesn't affect the resulting image"
+							"type": "integer",
+							"description": "integer, optional, doesn't affect the resulting image"
 						}
 					},
 					{
@@ -6433,6 +6440,24 @@
 					"messaging/albums"
 				],
 				"operationId": "getPressieAlbumsFeedPaywall",
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"counterpartyId": {
+										"type": "integer",
+										"format": "int64",
+										"nullable": true,
+										"description": "profile ID or `null`"
+									}
+								}
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"content": {
@@ -7452,9 +7477,13 @@
 							"application/json": {
 								"schema": {
 									"type": "object",
+									"required": [
+										"phraseId"
+									],
 									"properties": {
-										"phrase": {
-											"$ref": "#/components/schemas/SavedPhrase"
+										"phraseId": {
+											"type": "string",
+											"description": "string, uuid"
 										}
 									}
 								}
@@ -8137,15 +8166,11 @@
 					}
 				],
 				"requestBody": {
-					"required": false,
+					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								]
+								"$ref": "#/components/schemas/SmsVerifyCodeLegacyRequest"
 							}
 						}
 					}
@@ -8626,7 +8651,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/FavoriteNote"
+									"$ref": "#/components/schemas/FavoriteNoteWithCounterparty"
 								}
 							}
 						},
@@ -8843,7 +8868,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/Profile"
+								"$ref": "#/components/schemas/ProfileFullUpdate"
 							}
 						}
 					}
@@ -8864,7 +8889,7 @@
 					}
 				},
 				"summary": "Update own profile (full)",
-				"description": "[Profile](/grindr-api/users/profiles#profile) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
+				"description": "[ProfileFullUpdate](/grindr-api/users/profiles#profilefullupdate) object, fully replaces the current version. This is the only endpoint that persists the free-text fields `displayName` and `aboutMe`; the partial [Update own profile (partial)](/grindr-api/users/profiles#update-own-profile-partial) endpoint ignores them.",
 				"x-notes": [
 					"Because the profile is replaced fully, every editable field must be sent on each request, including fields not exposed in the edit UI such as `approximateDistance` and `profileTags`.",
 					"`displayName` and `aboutMe` (plus custom gender/pronoun display text) are run through banned-terms moderation. A clean update answers `200` with an empty body. If a moderated field contains banned terms the request fails with a `400` [BannedTermsResponse](/grindr-api/users/profiles#bannedtermsresponse) naming the offending fields; the update is rejected **wholesale**, so none of the submitted fields — not even the clean ones — are persisted. Only a `200` should be treated as success."
@@ -9135,6 +9160,16 @@
 				"security": [
 					{
 						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "selected",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
 					}
 				],
 				"responses": {
@@ -10417,7 +10452,12 @@
 						"name": "type",
 						"in": "query",
 						"schema": {
-							"type": "string"
+							"type": "string",
+							"enum": [
+								"interestsTab",
+								"forYou"
+							],
+							"description": "Woodwork placement slot to fetch"
 						}
 					}
 				],
@@ -10434,6 +10474,104 @@
 					}
 				},
 				"summary": "Get Woodwork placement"
+			}
+		},
+		"/v4/rightnow/feed": {
+			"get": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "getRightNowFeed",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Right Now feed",
+				"description": "Right Now feed of nearby posts. The path version is chosen by feature flag: `v4` is the default; `v5` and `v6` are currently identical and unused but supported by the API.",
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"DISTANCE",
+								"NEWEST"
+							],
+							"description": "sort order"
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean",
+							"description": "only posts from hosting profiles"
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RightNowFeedResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v6/rightnow/feed": {
+			"get": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "getRightNowFeedV6",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get Right Now feed (v6)",
+				"description": "Feature-flag `v6` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RightNowFeedResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
 			}
 		}
 	},
@@ -10586,7 +10724,7 @@
 				"in": "query",
 				"schema": {
 					"type": "string",
-					"description": "string, see [Get genders](/grindr-api/users/profiles#get-genders)"
+					"description": "comma-separated list of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders) — a filter query param (CSV string), unlike the profile-write `genders` field which is an integer array"
 				}
 			},
 			"GridPageNumberQuery": {
@@ -11345,6 +11483,7 @@
 					},
 					"value": {
 						"type": "string",
+						"nullable": true,
 						"description": "e.g. `\"off\"` or `\"on\"` or `\"Test\"`"
 					},
 					"payload": {
@@ -11636,7 +11775,8 @@
 							},
 							"sexualPosition": {
 								"type": "integer",
-								"nullable": true
+								"nullable": true,
+								"description": "[Sexual position ID](/grindr-api/users/profiles#sexual-position-id) or `null`"
 							},
 							"foundVia": {
 								"allOf": [
@@ -11986,6 +12126,14 @@
 								"type": "string",
 								"nullable": true
 							},
+							"created": {
+								"type": "integer",
+								"format": "int64",
+								"description": "profile creation timestamp; unit (ms vs s) unverified"
+							},
+							"showUnlockReward": {
+								"type": "boolean"
+							},
 							"ethnicity": {
 								"allOf": [
 									{
@@ -12078,11 +12226,33 @@
 								}
 							},
 							"identity": {
-								"nullable": true
+								"type": "object",
+								"nullable": true,
+								"description": "Legacy self-identification container, superseded by the `pronouns` ID array. Read-only: it is returned on read but ignored by every profile-update endpoint (the official app never sends it).",
+								"x-original-type": "com.grindrapp.android.login.data.model.Identity",
+								"properties": {
+									"pronouns": {
+										"type": "object",
+										"nullable": true,
+										"properties": {
+											"pronounsDisplay": {
+												"type": "string",
+												"nullable": true,
+												"description": "free-text pronoun label shown next to the display name, e.g. `he/him`"
+											},
+											"pronounsCategory": {
+												"type": "integer",
+												"description": "pronoun category ID; value set is undocumented"
+											}
+										}
+									}
+								}
 							},
 							"hashtags": {
 								"type": "array",
-								"items": {}
+								"items": {
+									"type": "string"
+								}
 							},
 							"profileTags": {
 								"type": "array",
@@ -12124,7 +12294,12 @@
 								"type": "number",
 								"description": "number, may be absent"
 							},
-							"lastThrobTimestamp": {},
+							"lastThrobTimestamp": {
+								"type": "integer",
+								"format": "int64",
+								"nullable": true,
+								"description": "legacy timestamp, present in the API response but testing shows only `null`, units unverified"
+							},
 							"sexualHealth": {
 								"type": "array",
 								"items": {
@@ -12204,12 +12379,388 @@
 				]
 			},
 			"ProfilePatch": {
-				"allOf": [
-					{
-						"$ref": "#/components/schemas/Profile"
+				"type": "object",
+				"description": "Partial profile update body for `PATCH /v4/me/profile`. Every key is optional; only the keys present in the request are updated (omit a key to leave it unchanged, do not send `null` to clear, send an empty array or the field's cleared value). Structured fields only. `displayName` and `aboutMe` are accepted by the schema but silently ignored by this endpoint — write them using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full).",
+				"x-render-on-tag": "users/profiles",
+				"properties": {
+					"aboutMe": {
+						"type": "string",
+						"nullable": true,
+						"description": "Silently ignored by PATCH, write using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full)."
+					},
+					"nsfw": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/AcceptNsfwPics"
+							}
+						],
+						"nullable": true
+					},
+					"bodyType": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/BodyType"
+							}
+						],
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true,
+						"description": "Silently ignored by PATCH, write using [Update own profile (full)](/grindr-api/users/profiles#update-own-profile-full)."
+					},
+					"ethnicity": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Ethnicity"
+							}
+						],
+						"nullable": true
+					},
+					"genders": {
+						"type": "array",
+						"nullable": true,
+						"maxItems": 3,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders), max. length: 3. As of June 22, 2026, submitting gender ID `62` (\"Ask me\") in filters causes a `500 Internal Server Error`, no error for profile edit endpoint."
+					},
+					"height": {
+						"type": "number",
+						"nullable": true,
+						"description": "number in cm"
+					},
+					"hivStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/HivStatus"
+							}
+						],
+						"nullable": true
+					},
+					"lastTestedDate": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"lookingFor": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/LookingFor"
+						}
+					},
+					"meetAt": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/MeetAt"
+						}
+					},
+					"grindrTribes": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"profileTags": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						},
+						"description": "array of [Profile tags](/grindr-api/users/profiles#profile-tags)"
+					},
+					"pronouns": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of pronoun IDs, see [Get pronouns](/grindr-api/users/profiles#get-pronouns), max. length: 3."
+					},
+					"relationshipStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RelationshipStatus"
+							}
+						],
+						"nullable": true
+					},
+					"sexualHealth": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/SexualHealth"
+						}
+					},
+					"sexualPosition": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/SexualPositionId"
+							}
+						],
+						"nullable": true
+					},
+					"showAge": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showDistance": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showPosition": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"showTribes": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"socialNetworks": {
+						"type": "object",
+						"nullable": true,
+						"description": "Each network carries only `{ userId }` on write (no `site`, unlike the read-side [SocialNetwork](/grindr-api/users/profiles#socialnetwork)). Any network key may be omitted.",
+						"properties": {
+							"twitter": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"facebook": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"instagram": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							}
+						}
+					},
+					"tribesImInto": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"vaccines": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Vaccine"
+						}
+					},
+					"weight": {
+						"type": "number",
+						"nullable": true,
+						"description": "number in grams"
 					}
-				],
-				"x-render-on-tag": "users/profiles"
+				}
+			},
+			"ProfileFullUpdate": {
+				"type": "object",
+				"description": "Full profile replacement body for `PUT /v3.1/me/profile`. Unlike [ProfilePatch](/grindr-api/users/profiles#profilepatch), this is a full replace: every editable field is sent on each request, and the enum scalars and `show*` flags are non-nullable. This is the only endpoint that persists `displayName` and `aboutMe`, both of which are moderated.",
+				"x-render-on-tag": "users/profiles",
+				"x-original-type": "com.grindrapp.android.model.UpdateProfileRequest",
+				"properties": {
+					"displayName": {
+						"type": "string",
+						"nullable": true,
+						"description": "moderated free-text; persisted here (unlike PATCH)"
+					},
+					"aboutMe": {
+						"type": "string",
+						"nullable": true,
+						"description": "moderated free-text; persisted here (unlike PATCH)"
+					},
+					"age": {
+						"type": "integer",
+						"description": "server-derived from birth date; echoed back on a full replace"
+					},
+					"showAge": {
+						"type": "boolean"
+					},
+					"showDistance": {
+						"type": "boolean"
+					},
+					"showPosition": {
+						"type": "boolean"
+					},
+					"showTribes": {
+						"type": "boolean"
+					},
+					"approximateDistance": {
+						"type": "boolean"
+					},
+					"nsfw": {
+						"$ref": "#/components/schemas/AcceptNsfwPics"
+					},
+					"bodyType": {
+						"$ref": "#/components/schemas/BodyType"
+					},
+					"ethnicity": {
+						"$ref": "#/components/schemas/Ethnicity"
+					},
+					"hivStatus": {
+						"$ref": "#/components/schemas/HivStatus"
+					},
+					"lastTestedDate": {
+						"$ref": "#/components/schemas/TimestampMs"
+					},
+					"relationshipStatus": {
+						"$ref": "#/components/schemas/RelationshipStatus"
+					},
+					"sexualPosition": {
+						"$ref": "#/components/schemas/SexualPositionId"
+					},
+					"height": {
+						"type": "number",
+						"description": "number in centimeters"
+					},
+					"weight": {
+						"type": "number",
+						"description": "number in grams"
+					},
+					"genders": {
+						"type": "array",
+						"nullable": true,
+						"maxItems": 3,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of gender IDs, see [Get genders](/grindr-api/users/profiles#get-genders), max. length: 3."
+					},
+					"pronouns": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer"
+						},
+						"description": "array of pronoun IDs, see [Get pronouns](/grindr-api/users/profiles#get-pronouns), max. length: 3."
+					},
+					"grindrTribes": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"tribesImInto": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Tribe"
+						}
+					},
+					"lookingFor": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/LookingFor"
+						}
+					},
+					"meetAt": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/MeetAt"
+						}
+					},
+					"vaccines": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Vaccine"
+						}
+					},
+					"sexualHealth": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/SexualHealth"
+						}
+					},
+					"profileTags": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						},
+						"description": "array of [Profile tags](/grindr-api/users/profiles#profile-tags)"
+					},
+					"socialNetworks": {
+						"type": "object",
+						"nullable": true,
+						"description": "Each network carries only `{ userId }` on write (no `site`, unlike the read-side [SocialNetwork](/grindr-api/users/profiles#socialnetwork)).",
+						"properties": {
+							"twitter": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"facebook": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							},
+							"instagram": {
+								"type": "object",
+								"properties": {
+									"userId": {
+										"type": "string",
+										"nullable": true
+									}
+								}
+							}
+						}
+					}
+				},
+				"required": [
+					"age",
+					"showAge",
+					"showDistance",
+					"showPosition",
+					"showTribes",
+					"approximateDistance",
+					"nsfw",
+					"bodyType",
+					"ethnicity",
+					"hivStatus",
+					"lastTestedDate",
+					"relationshipStatus",
+					"sexualPosition",
+					"height",
+					"weight"
+				]
 			},
 			"BannedTerms": {
 				"type": "object",
@@ -12343,6 +12894,12 @@
 						"description": "string, username"
 					},
 					"site": {
+						"type": "string",
+						"enum": [
+							"twitter",
+							"facebook",
+							"instagram"
+						],
 						"description": "e.g. `\"twitter\"` | `\"facebook\"` | `\"instagram\"`"
 					}
 				},
@@ -12597,8 +13154,7 @@
 					"sortFilter",
 					"genderPlural",
 					"excludeOnProfileSelection",
-					"excludeOnFilterSelection",
-					"alsoClassifiedAs"
+					"excludeOnFilterSelection"
 				]
 			},
 			"GenderPronounSuggestionRequest": {
@@ -12665,47 +13221,53 @@
 			},
 			"AccountPreferencesUpdate": {
 				"type": "object",
+				"required": [
+					"settings"
+				],
 				"properties": {
-					"locationSearchOptOut": {
-						"type": "boolean"
-					},
-					"incognito": {
-						"type": "boolean"
-					},
-					"hideViewedMe": {
-						"type": "boolean"
-					},
-					"approximateDistance": {
-						"type": "boolean"
-					},
-					"viewRightNowNsfw": {
-						"type": "boolean"
-					},
-					"mapLocationFuzzRadius": {
-						"type": "integer",
-						"nullable": true,
-						"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
-					},
-					"showOnMap": {
-						"type": "boolean",
-						"description": "Whether the profile is shown on the map."
+					"settings": {
+						"type": "object",
+						"properties": {
+							"locationSearchOptOut": {
+								"type": "boolean"
+							},
+							"incognito": {
+								"type": "boolean"
+							},
+							"hideViewedMe": {
+								"type": "boolean"
+							},
+							"approximateDistance": {
+								"type": "boolean"
+							},
+							"viewRightNowNsfw": {
+								"type": "boolean"
+							},
+							"showOnMap": {
+								"type": "boolean",
+								"description": "Whether the profile is shown on the map."
+							},
+							"mapLocationFuzzRadius": {
+								"type": "integer",
+								"nullable": true,
+								"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
+							}
+						}
 					}
 				},
-				"x-render-on-tag": "settings/account",
-				"required": [
-					"locationSearchOptOut",
-					"incognito",
-					"hideViewedMe",
-					"approximateDistance",
-					"viewRightNowNsfw"
-				]
+				"x-render-on-tag": "settings/account"
 			},
 			"VisitingSettings": {
 				"type": "object",
 				"properties": {
 					"setting": {
 						"type": "string",
-						"description": "`\"AUTO\"`, WIP"
+						"enum": [
+							"OFF",
+							"ON",
+							"AUTO"
+						],
+						"description": "string, visiting-status mode: `OFF`, `ON`, or `AUTO`"
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -12722,11 +13284,11 @@
 					},
 					"lat": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					},
 					"lon": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -12745,11 +13307,11 @@
 				"properties": {
 					"lat": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					},
 					"lon": {
 						"type": "number",
-						"format": "float"
+						"format": "double"
 					}
 				},
 				"x-render-on-tag": "settings/account"
@@ -13087,7 +13649,10 @@
 								"type": "integer"
 							},
 							"content": {
-								"$ref": "#/components/schemas/AlbumContent"
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/AlbumContent"
+								}
 							},
 							"isShareable": {
 								"type": "boolean"
@@ -13155,6 +13720,21 @@
 								"items": {
 									"$ref": "#/components/schemas/AlbumContentWithRemainingViews"
 								}
+							},
+							"isShareable": {
+								"type": "boolean"
+							},
+							"contentCount": {
+								"type": "object",
+								"nullable": true,
+								"properties": {
+									"imageCount": {
+										"type": "integer"
+									},
+									"videoCount": {
+										"type": "integer"
+									}
+								}
 							}
 						}
 					}
@@ -13171,7 +13751,8 @@
 					"sharedCount",
 					"createdAt",
 					"updatedAt",
-					"content"
+					"content",
+					"isShareable"
 				]
 			},
 			"AlbumShareInfo": {
@@ -13211,6 +13792,9 @@
 								{
 									"type": "object",
 									"properties": {
+										"profileId": {
+											"type": "integer"
+										},
 										"content": {
 											"allOf": [
 												{
@@ -13310,8 +13894,17 @@
 									"format": "int64"
 								},
 								"shareId": {
-									"type": "integer",
-									"description": "can be `0`"
+									"type": "string",
+									"description": "string, e.g. `\"0\"`"
+								},
+								"expiresAt": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/TimestampMs"
+										}
+									],
+									"nullable": true,
+									"description": "unix timestamp in milliseconds or `null`"
 								}
 							}
 						}
@@ -13344,7 +13937,7 @@
 					"maxViewableVideos": {
 						"type": "integer"
 					},
-					"maxContentSize": {
+					"maxContentSizeInBytes": {
 						"type": "integer",
 						"format": "int64",
 						"description": "long integer, size in bytes"
@@ -13378,7 +13971,7 @@
 					"maxShares",
 					"maxViewableAlbums",
 					"maxViewableVideos",
-					"maxContentSize",
+					"maxContentSizeInBytes",
 					"maxContentSizeHumanReadable",
 					"maxVideoLength",
 					"minVideoLength",
@@ -13401,6 +13994,11 @@
 						"nullable": true
 					},
 					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
 						"nullable": true
 					},
 					"distanceKm": {
@@ -13454,14 +14052,14 @@
 										"albumVersion": {
 											"type": "integer"
 										},
-										"expiresat": {
+										"expiresAt": {
 											"allOf": [
 												{
 													"$ref": "#/components/schemas/TimestampMs"
 												}
 											],
 											"nullable": true,
-											"description": "unix timestamp in milliseconds; note: observed key spelling, may also appear as `expiresAt`"
+											"description": "unix timestamp in milliseconds or `null`"
 										},
 										"name": {
 											"type": "string",
@@ -13486,9 +14084,9 @@
 												"contentType": {
 													"type": "string"
 												},
-												"coverContent": {
+												"location": {
 													"type": "string",
-													"nullable": true
+													"description": "string, cover media location/URL"
 												},
 												"status": {
 													"type": "string"
@@ -13666,10 +14264,12 @@
 						"description": "appears to be null"
 					},
 					"lat": {
+						"type": "number",
 						"nullable": true,
 						"description": "appears to be null"
 					},
 					"lon": {
+						"type": "number",
 						"nullable": true,
 						"description": "appears to be null"
 					},
@@ -13687,6 +14287,8 @@
 						"description": "appears to be null"
 					},
 					"duration": {
+						"type": "integer",
+						"format": "int64",
 						"nullable": true,
 						"description": "appears to be null"
 					},
@@ -13755,7 +14357,13 @@
 						"type": "integer"
 					},
 					"preview": {
-						"$ref": "#/components/schemas/ConversationPreview"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ConversationPreview"
+							}
+						],
+						"nullable": true,
+						"description": "[Conversation preview](/grindr-api/messaging/conversations#conversationpreview) or `null` (e.g. a partial conversation with no message)"
 					},
 					"muted": {
 						"type": "boolean"
@@ -13892,7 +14500,8 @@
 					},
 					"nextPage": {
 						"type": "integer",
-						"description": "integer, e.g. `2`"
+						"nullable": true,
+						"description": "integer, e.g. `2`; `null` or absent on the last page"
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
@@ -13901,8 +14510,7 @@
 					"showsFreeHeaderLabel",
 					"totalFullConversations",
 					"totalPartialConversations",
-					"maxDisplayLockCount",
-					"nextPage"
+					"maxDisplayLockCount"
 				]
 			},
 			"MessageReaction": {
@@ -14586,7 +15194,12 @@
 					},
 					"replyToMessage": {
 						"nullable": true,
-						"description": "unknown or `null`"
+						"description": "object, see [Message](/grindr-api/messaging/messages#message), or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Message"
+							}
+						]
 					},
 					"dynamic": {
 						"type": "boolean",
@@ -14640,6 +15253,11 @@
 						"nullable": true
 					},
 					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
 						"nullable": true
 					},
 					"distance": {
@@ -14689,6 +15307,11 @@
 							},
 							"isInAList": {
 								"type": "boolean"
+							},
+							"summary": {
+								"type": "object",
+								"nullable": true,
+								"description": "object or `null`, Wingman AI conversation summary (`contactDetails` and `summaries` arrays)"
 							}
 						}
 					},
@@ -14761,6 +15384,11 @@
 					{
 						"heading": "Additional body fields for websocket only:",
 						"properties": {
+							"ref": {
+								"type": "string",
+								"nullable": true,
+								"description": "client-generated correlation reference; echoed back as `refValue`"
+							},
 							"replyToMessageId": {
 								"type": "string",
 								"nullable": true
@@ -14992,6 +15620,12 @@
 								],
 								"nullable": true,
 								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
+							},
+							"hasChatted": {
+								"type": "boolean"
+							},
+							"unreadMessageCount": {
+								"type": "integer"
 							}
 						}
 					}
@@ -15009,15 +15643,16 @@
 					"isBoosting",
 					"isMutual",
 					"rightNowType",
-					"isViewable"
+					"isViewable",
+					"hasChatted",
+					"unreadMessageCount"
 				]
 			},
 			"ViewsEyeballResponse": {
 				"type": "object",
 				"properties": {
 					"viewedCount": {
-						"type": "number",
-						"nullable": true
+						"type": "integer"
 					},
 					"mostRecent": {
 						"type": "object",
@@ -15180,6 +15815,55 @@
 						"items": {
 							"$ref": "#/components/schemas/ViewerProfile"
 						}
+					},
+					"ttl": {
+						"type": "integer",
+						"format": "int64",
+						"description": "viewers-list time-to-live"
+					},
+					"lastDistanceInKm": {
+						"type": "string",
+						"nullable": true,
+						"description": "distance (km) of the last returned viewer, pagination cursor"
+					},
+					"lastProfileId": {
+						"type": "string",
+						"nullable": true,
+						"description": "profile ID of the last returned viewer, pagination cursor"
+					},
+					"upsells": {
+						"type": "object",
+						"nullable": true,
+						"description": "ad placement indices",
+						"properties": {
+							"mpuFree": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mpuXtra": {
+								"type": "integer",
+								"nullable": true
+							},
+							"boostUpsell": {
+								"type": "array",
+								"nullable": true,
+								"items": {
+									"type": "integer"
+								}
+							},
+							"mrecCascadeFirst": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mrecCascadeSecond": {
+								"type": "integer",
+								"nullable": true
+							},
+							"mrecCascadeThird": {
+								"type": "integer",
+								"nullable": true
+							}
+						}
 					}
 				},
 				"x-render-on-tag": "interest/views",
@@ -15217,21 +15901,33 @@
 						}
 					},
 					"nextPage": {
-						"type": "integer"
+						"type": "integer",
+						"nullable": true
 					},
 					"shuffled": {
 						"type": "boolean"
 					},
-					"hiddenProfiles": {},
-					"hiddenProfileInfo": {}
+					"hiddenProfiles": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "integer",
+							"format": "int64"
+						},
+						"description": "profile IDs hidden from the cascade"
+					},
+					"hiddenProfilesInfo": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					}
 				},
 				"x-render-on-tag": "browse/grid",
 				"required": [
 					"items",
-					"nextPage",
-					"shuffled",
-					"hiddenProfiles",
-					"hiddenProfileInfo"
+					"shuffled"
 				]
 			},
 			"FullProfileV1": {
@@ -15850,8 +16546,7 @@
 				"required": [
 					"profiles",
 					"lastDistanceInKm",
-					"lastProfileId",
-					"inserts"
+					"lastProfileId"
 				]
 			},
 			"DiscoverResponse": {
@@ -15917,6 +16612,22 @@
 								},
 								"category": {
 									"$ref": "#/components/schemas/GaymojiCategory"
+								},
+								"tag": {
+									"type": "string",
+									"nullable": true
+								},
+								"href": {
+									"type": "string",
+									"nullable": true
+								},
+								"expiredTime": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/TimestampMs"
+										}
+									],
+									"description": "unix timestamp in milliseconds, may be `0`"
 								}
 							}
 						}
@@ -16749,6 +17460,7 @@
 				},
 				"required": [
 					"profileId",
+					"favorite",
 					"approximateDistance",
 					"activity"
 				],
@@ -16836,6 +17548,384 @@
 					}
 				},
 				"x-render-on-tag": "users/favorites"
+			},
+			"RightNowFeedResponse": {
+				"type": "object",
+				"properties": {
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowFeedResponseItem"
+						}
+					},
+					"viewerCount": {
+						"type": "integer",
+						"description": "number of profiles currently viewing the feed area"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"RightNowFeedResponseItem": {
+				"type": "object",
+				"description": "A feed item, discriminated by `type`. Unrecognized `type` values are tolerated by the client (mapped to an unknown/ignored item), so new post kinds may appear.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"curated_post_v1",
+							"right_now_post_v3",
+							"locked_post_v1",
+							"discreet_right_now_post_v1",
+							"discreet_locked_post_v1",
+							"upsell_insert_v1"
+						]
+					},
+					"data": {
+						"type": "object"
+					}
+				},
+				"discriminator": {
+					"propertyName": "type",
+					"mapping": {
+						"curated_post_v1": "#/components/schemas/CuratedPost",
+						"right_now_post_v3": "#/components/schemas/RightNowPost",
+						"locked_post_v1": "#/components/schemas/LockedPost",
+						"discreet_right_now_post_v1": "#/components/schemas/DiscreetPost",
+						"discreet_locked_post_v1": "#/components/schemas/DiscreetLockedPost",
+						"upsell_insert_v1": "#/components/schemas/UpsellInsert"
+					}
+				},
+				"oneOf": [
+					{
+						"$ref": "#/components/schemas/CuratedPost"
+					},
+					{
+						"$ref": "#/components/schemas/RightNowPost"
+					},
+					{
+						"$ref": "#/components/schemas/LockedPost"
+					},
+					{
+						"$ref": "#/components/schemas/DiscreetPost"
+					},
+					{
+						"$ref": "#/components/schemas/DiscreetLockedPost"
+					},
+					{
+						"$ref": "#/components/schemas/UpsellInsert"
+					}
+				],
+				"x-render-on-tag": "right-now"
+			},
+			"CuratedPost": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"curated_post_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/CuratedPostData"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"RightNowPost": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"right_now_post_v3"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/PostData"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"LockedPost": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"locked_post_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/PostData"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"PostData": {
+				"type": "object",
+				"properties": {
+					"@type": {
+						"type": "string",
+						"description": "server post-data label, e.g. `RightNowFeedItemData$RightNowPostV3` or `$LockedPostV1`"
+					},
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"mediaHash": {
+						"type": "string",
+						"description": "may be absent"
+					},
+					"displayName": {
+						"type": "string",
+						"description": "may be absent"
+					},
+					"media": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowPostMediaItem"
+						}
+					},
+					"onlineUntil": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds; present on `right_now_post_v3`, absent on `locked_post_v1`; may be absent"
+					},
+					"text": {
+						"type": "string",
+						"description": "may be absent"
+					},
+					"distance": {
+						"type": "integer",
+						"description": "distance in meters; may be absent"
+					},
+					"mpuScore": {
+						"type": "number",
+						"format": "float",
+						"description": "may be absent"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"xtra_post_v1",
+							"unlimited_post_v1"
+						],
+						"description": "locked-post kind; present only on `locked_post_v1`; may be absent"
+					},
+					"hosting": {
+						"type": "boolean"
+					},
+					"posted": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds"
+					},
+					"expiration": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds"
+					},
+					"recentlyChatted": {
+						"type": "boolean"
+					},
+					"favorite": {
+						"type": "boolean"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"RightNowPostMediaItem": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"image_v1",
+							"album_v1"
+						]
+					},
+					"data": {
+						"type": "object",
+						"properties": {
+							"mediaId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"thumbnailUrl": {
+								"type": "string",
+								"format": "uri"
+							},
+							"fullImageUrl": {
+								"type": "string",
+								"format": "uri"
+							},
+							"contentType": {
+								"type": "string",
+								"description": "e.g. `image/jpeg`"
+							},
+							"state": {
+								"type": "string",
+								"description": "moderation state, e.g. `APPROVED`"
+							},
+							"reason": {
+								"type": "string",
+								"nullable": true,
+								"description": "moderation reason or `null`"
+							},
+							"isRejectAutomated": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"shouldBlur": {
+								"type": "boolean"
+							},
+							"isNsfw": {
+								"type": "boolean"
+							},
+							"source": {
+								"type": "string",
+								"description": "e.g. `RIGHT_NOW`"
+							}
+						}
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"CuratedPostData": {
+				"type": "object",
+				"properties": {
+					"@type": {
+						"type": "string",
+						"description": "e.g. `RightNowFeedItemData$CuratedPostV1`"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"tutorial_australia_v1",
+							"tutorial_hosting_v1",
+							"tutorial_dense_market_v1"
+						]
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"UpsellInsertData": {
+				"type": "object",
+				"properties": {
+					"@type": {
+						"type": "string",
+						"description": "e.g. `RightNowFeedItemData$UpsellInsertV1`"
+					},
+					"type": {
+						"type": "string",
+						"enum": [
+							"xtra_upsell_v1",
+							"unlimited_upsell_v1"
+						]
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"DiscreetPostData": {
+				"type": "object",
+				"properties": {
+					"@type": {
+						"type": "string",
+						"description": "server post-data label"
+					},
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"media": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowPostMediaItem"
+						}
+					},
+					"onlineUntil": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds; may be absent"
+					},
+					"text": {
+						"type": "string",
+						"description": "may be absent"
+					},
+					"distance": {
+						"type": "integer",
+						"description": "distance in meters; may be absent"
+					},
+					"hosting": {
+						"type": "boolean"
+					},
+					"posted": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds"
+					},
+					"expiration": {
+						"type": "integer",
+						"format": "int64",
+						"description": "unix timestamp in milliseconds"
+					},
+					"profileFields": {
+						"type": "object",
+						"description": "discreet profile fields; may be absent"
+					}
+				},
+				"x-render-on-tag": "right-now",
+				"description": "Discreet posts were not present in available captures; shape derived from the app model (`RightNowDiscreetPostResponse`)."
+			},
+			"DiscreetPost": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"discreet_right_now_post_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/DiscreetPostData"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"DiscreetLockedPost": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"discreet_locked_post_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/DiscreetPostData"
+					}
+				},
+				"x-render-on-tag": "right-now"
+			},
+			"UpsellInsert": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"upsell_insert_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/UpsellInsertData"
+					}
+				},
+				"x-render-on-tag": "right-now"
 			}
 		}
 	},
