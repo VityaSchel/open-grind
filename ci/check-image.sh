@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 set -euxo pipefail
+
+# export CI_SSH_KEY=~/.ssh/open-grind-ci
+# export IP=<box ip>
+# scp -o IdentitiesOnly=yes -i "$CI_SSH_KEY" ci/check-image.sh ci/snapshot-clean.sh "root@$IP:/tmp/"
+# ssh -o IdentitiesOnly=yes -i "$CI_SSH_KEY" "root@$IP"
+# > bash /tmp/check-image.sh
+# > export RUSTUP_HOME=/opt/rust/rustup
+# > bun --version && node --version && cargo --version && rustc --version
+# > cat /opt/rust/toolchain
+# > PLAYWRIGHT_BROWSERS_PATH=/opt/playwright ls /opt/playwright
+# > git --version && curl --version | head -1
+# > bash /tmp/snapshot-clean.sh; poweroff
+
 export DEBIAN_FRONTEND=noninteractive
 
 BUN_VERSION=1.3.14
@@ -52,7 +65,10 @@ for bin in /opt/bun/bin/bun /opt/bun/bin/bunx /opt/node/bin/node \
 done
 
 /opt/bun/bin/bunx "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chromium
-printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH" >> /etc/environment
+{
+	printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$PLAYWRIGHT_BROWSERS_PATH"
+	printf 'RUSTUP_HOME=%s\n' "$RUSTUP_HOME"
+} >> /etc/environment
 
 rm -f /tmp/rustup-init /tmp/bun.zip /tmp/node.tar.xz
 apt-get clean
