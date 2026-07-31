@@ -25,6 +25,7 @@ jobs:
           CI_WORKSPACE: /opt/open-grind-ci
           CHECKS_CACHE_DIR: /opt/open-grind-cache
           RUSTUP_HOME: /opt/rust/rustup
+          PLAYWRIGHT_BROWSERS_PATH: /opt/playwright
           CARGO_TERM_PROGRESS_WHEN: never
           NODE_OPTIONS: --max-old-space-size=6144
           ESLINT_PROGRESS: "1"
@@ -69,3 +70,4 @@ jobs:
           step bun run check:ci
           step bun run test:unit
           step bun run test:rust
+          step bun run test:e2e

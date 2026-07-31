@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+declare const process: { getuid?: () => number };
+
 const PORT = 5177;
+// chromium refuses to sandbox as root, and the CI runner executes steps as root
+const chromiumSandbox = process.getuid?.() !== 0;
 
 export default defineConfig({
 	testDir: "e2e",
@@ -16,6 +20,7 @@ export default defineConfig({
 		...devices["Desktop Chrome"],
 		viewport: { width: 420, height: 800 },
 		hasTouch: true,
+		launchOptions: { chromiumSandbox },
 	},
 	webServer: {
 		command: `bun run dev:web --port ${PORT} --strictPort`,
