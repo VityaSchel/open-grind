@@ -3561,6 +3561,7 @@ dependencies = [
  "apple-native-keyring-store",
  "base64 0.22.1",
  "dbus-secret-service-keyring-store",
+ "getrandom 0.3.4",
  "grindr",
  "jni",
  "keyring-core",

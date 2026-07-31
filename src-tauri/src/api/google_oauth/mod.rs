@@ -71,6 +71,8 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 			{
 				_app.manage(Arc::new(GoogleOauthBridge::new()));
 			}
+			#[cfg(target_os = "windows")]
+			web::sweep_oauth_data_dirs(_app);
 			Ok(())
 		})
 		.build()

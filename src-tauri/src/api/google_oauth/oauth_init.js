@@ -1,5 +1,8 @@
-(() => {
+(config) => {
 	"use strict";
+
+	const gis = window.__grindrGis;
+	const ui = window.__grindrOauthUi;
 
 	const HELPER_ORIGIN = "https://web.grindr.com";
 	const GOOGLE_ORIGIN = "https://accounts.google.com";
@@ -7,7 +10,9 @@
 
 	const reportToRust = (query) => {
 		try {
-			location.replace(`${RESULT_URL}?${query}`);
+			location.replace(
+				`${RESULT_URL}?nonce=${encodeURIComponent(config.nonce)}&${query}`,
+			);
 		} catch {}
 	};
 	const reportToken = (token) =>
@@ -131,7 +136,14 @@
 		}
 
 		try {
-			window.addEventListener("message", (event) => handle(event.data), true);
+			window.addEventListener(
+				"message",
+				(event) => {
+					if (event.origin !== GOOGLE_ORIGIN) return;
+					handle(event.data);
+				},
+				true,
+			);
 		} catch {}
 	};
 
@@ -176,8 +188,8 @@
 
 	const requestToken = async () => {
 		try {
-			window.__grindrOauthUi.setPhase("signing-in");
-			const token = await window.__grindrGis.requestAccessToken();
+			ui.setPhase("signing-in");
+			const token = await gis.requestAccessToken();
 			reportToken(token);
 		} catch (error) {
 			reportError(error?.message || error);
@@ -186,10 +198,9 @@
 
 	const injectStyles = () => {
 		try {
-			const css = window.__grindrOauthCss;
-			if (!css) return;
+			if (!config.css) return;
 			const style = document.createElement("style");
-			style.textContent = css;
+			style.textContent = config.css;
 			(document.head || document.documentElement).appendChild(style);
 		} catch {}
 	};
@@ -206,8 +217,8 @@
 				"<title>Sign in with Google</title></head><body></body>";
 		} catch {}
 		injectStyles();
-		window.__grindrOauthUi.mount();
-		window.__grindrOauthUi.setPhase("ready");
+		ui.mount();
+		ui.setPhase("ready");
 		const button = document.querySelector(".grindr-oauth-button");
 		button?.addEventListener("click", requestToken);
 	};
@@ -218,4 +229,4 @@
 	} else if (location.origin === HELPER_ORIGIN) {
 		startGoogleSignIn();
 	}
-})();
+}
