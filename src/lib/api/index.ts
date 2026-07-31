@@ -128,6 +128,7 @@ export function asAppError(error: unknown) {
 				"RateLimited",
 				"RequestBlocked",
 				"NotInitialized",
+				"SessionCleared",
 			]),
 			message: z
 				.string()

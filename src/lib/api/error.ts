@@ -48,6 +48,7 @@ export function showErrorToast({
 	error: unknown;
 	onRetry?: () => void;
 }) {
+	if (error instanceof ApiError && error.kind === "SessionCleared") return;
 	if (onRetry && error instanceof ApiError && error.retryable) {
 		toast.error(label, {
 			action: {

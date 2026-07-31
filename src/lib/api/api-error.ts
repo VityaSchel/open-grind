@@ -6,7 +6,8 @@ export type ApiErrorKind =
 	| "Banned"
 	| "RateLimited"
 	| "RequestBlocked"
-	| "NotInitialized";
+	| "NotInitialized"
+	| "SessionCleared";
 
 export class ApiError extends Error {
 	readonly request: {
