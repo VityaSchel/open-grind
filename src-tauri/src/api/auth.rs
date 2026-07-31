@@ -119,6 +119,7 @@ pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
 		tracing::error!(
 			"[auth] could not persist rotated device info on sign out: {e}"
 		);
+		DeviceStorage::delete();
 	}
 	client.rotate_device(new_device).await?;
 

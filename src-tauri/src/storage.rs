@@ -351,6 +351,20 @@ impl DeviceStorage {
 			.set_secret(&bytes)
 			.map_err(|e| AppError::Auth(e.to_string()))
 	}
+
+	pub fn delete() {
+		match Self::entry() {
+			Ok(entry) => match entry.delete_credential() {
+				Ok(()) | Err(keyring_core::Error::NoEntry) => {}
+				Err(e) => tracing::warn!(
+					"[auth] failed to delete keyring device info: {e}"
+				),
+			},
+			Err(e) => tracing::warn!(
+				"[auth] failed to open keyring entry for device deletion: {e}"
+			),
+		}
+	}
 }
 
 pub struct AuthStorage;
