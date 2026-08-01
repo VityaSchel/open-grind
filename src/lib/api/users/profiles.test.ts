@@ -32,7 +32,7 @@ function ok(data: unknown) {
 		assertOk() {},
 		json: () => data,
 		jsonParsed: () => data,
-		text: () => (data == null ? "" : JSON.stringify(data)),
+		text: () => (data ? JSON.stringify(data) : ""),
 	};
 }
 

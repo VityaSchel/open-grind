@@ -21,11 +21,14 @@ import {
 	expiringImageMessageSchema,
 	previewLabel,
 } from "$lib/model/messaging/messages";
+import { gendersSchema } from "$lib/model/users/genders";
 import {
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
 } from "$lib/model/users/profiles";
+import { pronounsSchema } from "$lib/model/users/pronouns";
+import { profileTagsResponseSchema } from "$lib/model/users/tags";
 
 const shortProfileSchema = z.object({
 	...profileShortSchema.shape,
@@ -210,9 +213,9 @@ describe("demo route data matches the real schemas", () => {
 	});
 
 	it("reference data validates and mutations are accepted no-ops", () => {
-		expect(Array.isArray(route("/public/v2/genders"))).toBe(true);
-		expect(Array.isArray(route("/v1/pronouns"))).toBe(true);
-		expect(Array.isArray(route("/v1/tags"))).toBe(true);
+		gendersSchema.parse(route("/public/v2/genders"));
+		pronounsSchema.parse(route("/v1/pronouns"));
+		profileTagsResponseSchema.parse(route("/v1/tags"));
 		expect(demoRoute("/v4/me/profile", "PATCH", { aboutMe: "x" }).status).toBe(
 			200,
 		);

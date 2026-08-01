@@ -11,12 +11,10 @@ import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {
-	genderSchema,
 	type Profile,
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
-	pronounSchema,
 } from "$lib/model/users/profiles";
 import { now } from "$lib/util/clock";
 
@@ -354,22 +352,6 @@ export async function deleteProfilePhotos(
 			updatedAt: now(),
 		});
 	}
-}
-
-const gendersResponseSchema = z.array(genderSchema);
-
-export async function getGenders() {
-	return await fetchRest("/public/v2/genders").then((res) =>
-		res.jsonParsed(gendersResponseSchema),
-	);
-}
-
-const pronounsResponseSchema = z.array(pronounSchema);
-
-export async function getPronouns() {
-	return await fetchRest("/v1/pronouns").then((res) =>
-		res.jsonParsed(pronounsResponseSchema),
-	);
 }
 
 export async function getProfileUploadedPhotos() {

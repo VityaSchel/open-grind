@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { getGenders, getProfile, getPronouns } from "$lib/api/users/profiles";
+	import { getGenders } from "$lib/api/users/genders";
+	import { getProfile } from "$lib/api/users/profiles";
+	import { getPronouns } from "$lib/api/users/pronouns";
 	import { getTags } from "$lib/api/users/tags";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import ProfileForm from "./ProfileForm.svelte";

@@ -53,11 +53,15 @@
 					(v: string[]) => ((checked = v.length > 0), (value = v.map(Number)))
 				}
 			>
-				{#each genders as { genderId, excludeOnFilterSelection, genderPlural, displayGroup } (genderId)}
-					{#if excludeOnFilterSelection === null || (!value.some( (v) => excludeOnFilterSelection.includes(v), ) && (expanded || displayGroup === 1))}
+				{#each genders as { genderId, gender, excludeOnFilterSelection: excludeList, genderPlural, displayGroup } (genderId)}
+					{@const render =
+						!excludeList ||
+						(!value.some((v) => excludeList.includes(v)) &&
+							(expanded || displayGroup === 1))}
+					{#if render}
 						<div transition:hide class="overflow-clip">
 							<ToggleGroup.Item value={String(genderId)}>
-								{genderPlural}
+								{genderPlural ?? gender}
 							</ToggleGroup.Item>
 						</div>
 					{/if}

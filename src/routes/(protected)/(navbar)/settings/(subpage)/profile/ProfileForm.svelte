@@ -24,18 +24,18 @@
 		acceptNSFWPics,
 		bodyTypes,
 		ethnicities,
-		type Gender,
 		healthPractices,
 		hivStatuses,
 		lookingFor as lookingForLabels,
 		meetAt as meetAtLabels,
 		type Profile,
-		type Pronoun,
 		relationshipStatuses,
 		sexualPositions,
 		tribes,
 		vaccines as vaccineLabels,
 	} from "$lib/model/users/profiles";
+	import type { Gender } from "$lib/model/users/genders";
+	import type { Pronoun } from "$lib/model/users/pronouns";
 	import type { ProfileTagsResponse } from "$lib/model/users/tags";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
