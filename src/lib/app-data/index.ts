@@ -4,6 +4,7 @@ import {
 	exists,
 	mkdir,
 	readFile,
+	remove,
 	rename,
 	writeFile,
 } from "@tauri-apps/plugin-fs";
@@ -16,6 +17,11 @@ export async function readAppDataFile(path: string) {
 	return await readFile(path, {
 		baseDir: BaseDirectory.AppData,
 	});
+}
+
+export async function removeAppDataFile(path: string) {
+	if (!(await existsAppDataFile(path))) return;
+	await remove(path, { baseDir: BaseDirectory.AppData });
 }
 
 export async function writeAppDataFileAtomic(

@@ -5,7 +5,12 @@ import z from "zod";
 import { gridSearchFiltersSchema } from "$lib/components/filters/filters";
 import { geohashSchema } from "$lib/model/geohash";
 import { type UnitSystem, unitSystemSchema } from "$lib/util/units";
-import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
+import {
+	existsAppDataFile,
+	readAppDataFile,
+	removeAppDataFile,
+	writeAppDataFileAtomic,
+} from ".";
 
 const preferencesSchema = z.object({
 	geohash: geohashSchema.nullable().default(null),
@@ -106,13 +111,22 @@ async function resetToDefaults(): Promise<void> {
 
 const accountPreferenceKeys = ["geohash", "gridSearchFilters"] as const;
 
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+	return a.length === b.length && a.every((byte, index) => byte === b[index]);
+}
+
 export async function clearAccountPreferences(): Promise<void> {
 	await enqueueWrite(async () => {
 		const kept: Partial<Preferences> = { ...(await getPreferences()) };
 		for (const key of accountPreferenceKeys) delete kept[key];
 		const preferences = preferencesSchema.parse(kept);
-		await writeAppDataFileAtomic("preferences.data", encode(preferences));
 		cache = preferences;
 		preferencesSnapshot = preferences;
+		const encoded = encode(preferences);
+		if (bytesEqual(encoded, encode(preferencesSchema.parse({})))) {
+			await removeAppDataFile("preferences.data");
+		} else {
+			await writeAppDataFileAtomic("preferences.data", encoded);
+		}
 	});
 }
