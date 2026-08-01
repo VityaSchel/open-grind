@@ -155,9 +155,10 @@
 					mainClass: `pswp--buttons-visible`,
 				});
 				lightbox.addFilter("numItems", () => album.content.length);
-				lightbox.addFilter("itemData", (_, index) => {
-					const { url, width, height } = album.content[index];
-					return { src: url, width, height };
+				lightbox.addFilter("itemData", (itemData, index) => {
+					const slide = album.content[index];
+					if (slide === undefined) return itemData;
+					return { src: slide.url, width: slide.width, height: slide.height };
 				});
 				lightbox.addFilter(
 					"useContentPlaceholder",
