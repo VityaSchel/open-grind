@@ -162,46 +162,42 @@ function buildRestResponse(
 	responseBody: Uint8Array,
 	requestInfo: RequestInfo,
 ) {
+	let decoded: string | undefined;
+	const text = () => (decoded ??= new TextDecoder().decode(responseBody));
 	return {
 		status,
 		bytes() {
 			return responseBody;
 		},
-		text() {
-			return new TextDecoder().decode(responseBody);
-		},
+		text,
 		assertOk() {
 			if (status >= 200 && status < 300) {
 				return;
 			}
-			const text = this.text();
 			throw new ApiError({
 				message: `API request failed with status ${status}`,
 				request: requestInfo,
-				response: { status, body: text },
+				response: { status, body: text() },
 			});
 		},
 		json() {
-			const text = this.text();
-			const responseInfo = { status, body: text };
 			try {
-				return JSON.parse(text);
+				return JSON.parse(text());
 			} catch (error) {
 				console.error("Failed to parse JSON response", {
 					path: requestInfo.path,
-					text,
+					text: text(),
 				});
 				throw new ApiError({
 					message: "Failed to parse API response",
 					request: requestInfo,
-					response: responseInfo,
+					response: { status, body: text() },
 					cause: error,
 				});
 			}
 		},
 		jsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
 			const data = this.json();
-			const bodyText = this.text();
 			try {
 				return parseApiResponse({
 					schema,
@@ -214,7 +210,7 @@ function buildRestResponse(
 				throw new ApiError({
 					message: schemaMismatchMessage(schema, error),
 					request: requestInfo,
-					response: { status, body: bodyText },
+					response: { status, body: text() },
 					cause: error,
 				});
 			}
