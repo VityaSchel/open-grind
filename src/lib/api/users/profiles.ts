@@ -1,7 +1,11 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
-import { registerAccountCache } from "$lib/api/account-caches";
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+	registerAccountCache,
+} from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { mediaHashPublicSchema } from "$lib/model/media";
@@ -118,6 +122,7 @@ const MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME = "3";
 const MAGIC_PROFILE_BLOCK_DISPLAY_NAME = "4";
 
 async function fetchProfile(profileId: number): Promise<Profile> {
+	const epoch = accountEpoch();
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
@@ -133,7 +138,9 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 			throw new ProfileUnavailableError();
 		}
 	}
-	profilesCache.set(profileId, { profile, updatedAt: now() });
+	if (isAccountEpochCurrent(epoch)) {
+		profilesCache.set(profileId, { profile, updatedAt: now() });
+	}
 	return profile;
 }
 
@@ -168,10 +175,13 @@ export async function getMyProfile() {
 	if (myProfileCache && now() - myProfileCache.updatedAt < 1000 * 60) {
 		return myProfileCache.profile;
 	}
+	const epoch = accountEpoch();
 	const profile = await fetchRest("/v4/me/profile").then(
 		(res) => res.jsonParsed(getProfilesResponseSchema).profiles[0],
 	);
-	myProfileCache = { profile, updatedAt: now() };
+	if (isAccountEpochCurrent(epoch)) {
+		myProfileCache = { profile, updatedAt: now() };
+	}
 	return profile;
 }
 

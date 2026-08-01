@@ -1,7 +1,11 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
-import { registerAccountCache } from "$lib/api/account-caches";
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+	registerAccountCache,
+} from "$lib/api/account-caches";
 import type { Profile } from "$lib/model/users/profiles";
 
 const getBlockedUsersResponseSchema = z.object({
@@ -18,8 +22,10 @@ let blockedUsersCache: {
 	updatedAt: number;
 } | null = null;
 
-registerAccountCache(() => {
-	blockedUsersCache = null;
+registerAccountCache({
+	reset: () => {
+		blockedUsersCache = null;
+	},
 });
 
 export async function getBlockedUsers() {
@@ -29,10 +35,13 @@ export async function getBlockedUsers() {
 	) {
 		return blockedUsersCache.blocking;
 	}
+	const epoch = accountEpoch();
 	const { blocking } = await fetchRest("/v3.1/me/blocks").then((res) =>
 		res.jsonParsed(getBlockedUsersResponseSchema),
 	);
-	blockedUsersCache = { blocking, updatedAt: Date.now() };
+	if (isAccountEpochCurrent(epoch)) {
+		blockedUsersCache = { blocking, updatedAt: Date.now() };
+	}
 	return blocking;
 }
 
