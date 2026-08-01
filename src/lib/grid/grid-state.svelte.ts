@@ -239,4 +239,4 @@ class GridState {
 
 export const gridState = new GridState();
 
-registerAccountCache(() => gridState.reset());
+registerAccountCache({ reset: () => gridState.reset() });

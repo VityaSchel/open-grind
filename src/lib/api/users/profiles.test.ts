@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import z from "zod";
 
 const { fetchRestMock } = vi.hoisted(() => ({
 	fetchRestMock:
@@ -34,6 +35,10 @@ function ok(data: unknown) {
 		jsonParsed: () => data,
 		text: () => (data == null ? "" : JSON.stringify(data)),
 	};
+}
+
+function okValidated(data: unknown) {
+	return { ...ok(data), jsonParsed: (schema: z.ZodType) => schema.parse(data) };
 }
 
 function okRaw(text: string, status = 200) {
@@ -150,6 +155,22 @@ describe("cache TTL", () => {
 
 		clock += 60_000;
 		await getMyProfile();
+		expect(countRequests("/v4/me/profile")).toBe(2);
+	});
+});
+
+describe("getMyProfile", () => {
+	it("rejects an empty profiles array instead of caching undefined", async () => {
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(okValidated({ profiles: [] })),
+		);
+
+		const error = await getMyProfile().catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(z.ZodError);
+		expect((error as z.ZodError).issues[0]?.code).toBe("too_small");
+
+		expect(await getMyProfile()).toEqual(shortProfile());
 		expect(countRequests("/v4/me/profile")).toBe(2);
 	});
 });

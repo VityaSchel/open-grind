@@ -99,7 +99,7 @@ export function setCachedProfile(profile: RenderedGridProfile): void {
 	profileCache.set(profile.id, { profile, updatedAt: now() });
 }
 
-registerAccountCache(() => profileCache.clear());
+registerAccountCache({ reset: () => profileCache.clear() });
 
 export async function resolveLazyProfile(
 	profile: LazyGridProfile,

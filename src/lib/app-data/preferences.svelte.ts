@@ -18,7 +18,6 @@ const preferencesSchema = z.object({
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
 	units: unitSystemSchema.default("metric"),
-	warnBeforeCopyingErrorDetails: z.boolean().default(true),
 });
 
 type Preferences = z.infer<typeof preferencesSchema>;

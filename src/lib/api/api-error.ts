@@ -45,17 +45,4 @@ export class ApiError extends Error {
 		}
 		return false;
 	}
-
-	copyableText(): string {
-		return JSON.stringify(
-			{
-				error: this.message,
-				kind: this.kind,
-				request: this.request,
-				response: this.response,
-			},
-			null,
-			2,
-		);
-	}
 }

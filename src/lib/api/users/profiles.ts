@@ -191,7 +191,7 @@ export function clearProfileCaches() {
 	profilesInFlight.clear();
 }
 
-registerAccountCache(clearProfileCaches);
+registerAccountCache({ reset: clearProfileCaches });
 
 export function invalidateProfile(profileId: number) {
 	profilesCache.delete(profileId);

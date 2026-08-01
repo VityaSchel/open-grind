@@ -6,6 +6,7 @@ import z from "zod";
 import { ApiError } from "$lib/api/api-error";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled, demoRoute } from "$lib/demo";
+import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 
 export const banInfoSchema = z.object({
@@ -211,10 +212,7 @@ function buildRestResponse(
 			} catch (error) {
 				if (error instanceof ApiError) throw error;
 				throw new ApiError({
-					message:
-						error instanceof Error
-							? error.message
-							: "API response validation failed",
+					message: schemaMismatchMessage(schema, error),
 					request: requestInfo,
 					response: { status, body: bodyText },
 					cause: error,
@@ -280,7 +278,7 @@ export async function fetchRest(
 			throw new ApiError({
 				message: "Request blocked",
 				request: requestInfo,
-				response: { status: 403, body: "Blocked by Cloudflare" },
+				response: null,
 				kind: "RequestBlocked",
 				cause: error,
 			});
@@ -314,12 +312,21 @@ export function parseApiResponse<TSchema extends z.ZodType>(options: {
 	console.error("API response schema validation failed", {
 		path: options.path,
 		method: options.method ?? "GET",
-		schema: options.schema.meta()?.title,
+		schema: schemaName(options.schema),
 		issues: parsed.error.issues,
 		response: options.data,
 	});
 
 	throw parsed.error;
+}
+
+function schemaMismatchMessage(schema: z.ZodType, error: unknown): string {
+	if (error instanceof z.ZodError) {
+		return `API response did not match ${schemaName(schema) ?? "the expected schema"}`;
+	}
+	return error instanceof Error
+		? error.message
+		: "API response validation failed";
 }
 
 export { ApiError };

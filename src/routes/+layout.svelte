@@ -53,6 +53,7 @@
 
 	import favicon from "$lib/assets/favicon.png";
 	import AccountStatusAlert from "$lib/components/feedback/AccountStatusAlert.svelte";
+	import CopyErrorConfirmAlert from "$lib/components/feedback/CopyErrorConfirmAlert.svelte";
 	import RequestBlockedAlert from "$lib/components/feedback/RequestBlockedAlert.svelte";
 	import SessionErrorAlert from "$lib/components/feedback/SessionErrorAlert.svelte";
 
@@ -111,3 +112,4 @@
 <RequestBlockedAlert />
 <SessionErrorAlert />
 <AccountStatusAlert />
+<CopyErrorConfirmAlert />

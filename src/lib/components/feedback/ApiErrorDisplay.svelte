@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ApiError } from "$lib/api/api-error";
-	import { copyError } from "$lib/api/error";
+	import { promptCopyError } from "$lib/api/error";
 	import { Button } from "$lib/components/ui/button";
 
 	let {
@@ -38,7 +38,11 @@
 				Retry
 			</Button>
 		{/if}
-		<Button variant={buttonVariant} size="sm" onclick={() => copyError(error)}>
+		<Button
+			variant={buttonVariant}
+			size="sm"
+			onclick={() => void promptCopyError(error).catch(() => {})}
+		>
 			Copy details
 		</Button>
 	</div>

@@ -23,8 +23,10 @@ export function getOrCreateConversationsState(
 	return cachedState;
 }
 
-registerAccountCache(() => {
-	void cachedState?.destroy();
-	cachedState = null;
-	cachedProfileId = null;
+registerAccountCache({
+	reset: () => {
+		void cachedState?.destroy();
+		cachedState = null;
+		cachedProfileId = null;
+	},
 });
