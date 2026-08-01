@@ -16,7 +16,7 @@ import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
 class GridState {
 	filters = new GridSearchFiltersState({ onRefresh: () => this.retry() });
-	items: GridProfile[] = $state([]);
+	items: GridProfile[] = $state.raw([]);
 	nextPage: number | null = $state(0);
 	loadingMore = $state(false);
 	loading = $state(false);
@@ -89,7 +89,7 @@ class GridState {
 				pageNumber: this.nextPage,
 			});
 			if (token !== this.#fetchToken) return;
-			this.items.push(...result.items);
+			this.items = [...this.items, ...result.items];
 			this.nextPage = result.nextPage;
 		} catch (error) {
 			console.error(error);
@@ -113,7 +113,7 @@ class GridState {
 			const cached = getCachedProfile(id);
 			if (cached) {
 				const idx = this.items.findIndex((i) => i.id === id);
-				if (idx !== -1) this.items[idx] = cached;
+				if (idx !== -1) this.items = this.items.with(idx, cached);
 				return;
 			}
 
@@ -123,9 +123,9 @@ class GridState {
 			if (idx === -1) return;
 			if (resolved) {
 				setCachedProfile(resolved);
-				this.items[idx] = resolved;
+				this.items = this.items.with(idx, resolved);
 			} else {
-				this.items.splice(idx, 1);
+				this.items = this.items.toSpliced(idx, 1);
 			}
 		} catch (error) {
 			console.error(id, error);
