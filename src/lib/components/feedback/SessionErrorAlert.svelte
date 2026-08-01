@@ -4,7 +4,7 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { callMethod } from "$lib/api";
+	import { asAppError, callMethod } from "$lib/api";
 	import { sessionErrorState } from "$lib/api/session-error-state.svelte";
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -60,8 +60,11 @@
 		try {
 			await callMethod("refresh_token");
 			sessionErrorState.open = false;
-		} catch {
-			//
+		} catch (error) {
+			if (asAppError(error)?.kind === "NotLoggedIn") {
+				toast.error("Your session expired — please sign in again");
+				await onSignOut();
+			}
 		} finally {
 			busy = false;
 		}
