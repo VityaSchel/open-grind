@@ -1,9 +1,9 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { platform } from "@tauri-apps/plugin-os";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 
 import { demoEnabled } from "$lib/demo";
+import { isAndroidPlatform } from "$lib/platform/os";
 
 type MediaFilter = {
 	name: string;
@@ -89,7 +89,7 @@ async function pick(
 		);
 	}
 
-	if (platform() === "android") {
+	if (isAndroidPlatform()) {
 		const uris = await AndroidFs.showOpenFilePicker({
 			pickerType: "Gallery",
 			mimeTypes: filter.mimeTypes,
@@ -112,7 +112,11 @@ async function pick(
 		? await open({ filters, multiple: true })
 		: await open({ filters, multiple: false });
 	const paths =
-		selection == null ? [] : Array.isArray(selection) ? selection : [selection];
+		selection === null
+			? []
+			: Array.isArray(selection)
+				? selection
+				: [selection];
 	return paths.map(
 		(path): PickedMedia => ({
 			source: "desktop",

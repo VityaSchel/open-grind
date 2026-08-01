@@ -1,12 +1,12 @@
 <script>
-	import { platform } from "@tauri-apps/plugin-os";
 	import { TerminalIcon } from "phosphor-svelte";
 
 	import { Button } from "$lib/components/ui/button";
 	import * as Kbd from "$lib/components/ui/kbd";
+	import { isMobilePlatform } from "$lib/platform/os";
 	import { commandCenterState } from "./command-center-state.svelte";
 
-	const isMobile = ["android", "ios"].includes(platform());
+	const isMobile = isMobilePlatform();
 </script>
 
 <Button

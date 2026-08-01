@@ -4,7 +4,6 @@
 		getCurrentPosition,
 		requestPermissions,
 	} from "@tauri-apps/plugin-geolocation";
-	import { platform } from "@tauri-apps/plugin-os";
 	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
@@ -16,10 +15,11 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { encodeGeohash } from "$lib/model/geohash";
+	import { isMobilePlatform } from "$lib/platform/os";
 
 	let geoMapPickerOpen = $state(false);
 
-	const geoApiSupported = $derived(["android", "ios"].includes(platform()));
+	const geoApiSupported = isMobilePlatform();
 	let disabled = $state(false);
 
 	async function handleDetectLocation() {

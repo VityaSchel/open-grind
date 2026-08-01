@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { isTauri } from "@tauri-apps/api/core";
-	import { platform } from "@tauri-apps/plugin-os";
 	import "@fontsource-variable/ibm-plex-sans/wght.css";
 	import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
 
@@ -17,6 +15,7 @@
 		registerAndroidBackButtonListener,
 	} from "$lib/platform/android-native-bridge";
 	import { blockZoom } from "$lib/platform/block-zoom";
+	import { isAndroidPlatform } from "$lib/platform/os";
 
 	onMount(() => {
 		if (env.PUBLIC_TEST_INSETS) {
@@ -38,7 +37,7 @@
 		applyAndroidInsets();
 		applyBackGestureHandler();
 		const releaseZoomBlock = blockZoom();
-		if (isTauri() && platform() === "android") {
+		if (isAndroidPlatform()) {
 			void registerAndroidBackButtonListener().catch((error) => {
 				console.error("Failed to register back button listener", error);
 			});

@@ -4,7 +4,6 @@
 		getCurrentPosition,
 		requestPermissions,
 	} from "@tauri-apps/plugin-geolocation";
-	import { platform } from "@tauri-apps/plugin-os";
 	import { divIcon } from "leaflet";
 	import { GpsFixIcon } from "phosphor-svelte";
 	import { ControlAttribution, Map, Marker, TileLayer } from "sveaflet";
@@ -24,6 +23,7 @@
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import { openExternalLink } from "$lib/platform/link-opener";
+	import { isMobilePlatform } from "$lib/platform/os";
 
 	let {
 		pinPos = $bindable(),
@@ -110,7 +110,7 @@
 		}
 	});
 
-	const gpsAvailable = $derived(["android", "ios"].includes(platform()));
+	const gpsAvailable = isMobilePlatform();
 </script>
 
 <div class="relative h-[inherit] w-[inherit]">
