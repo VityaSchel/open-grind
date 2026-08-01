@@ -21,6 +21,8 @@ import {
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
+const singleColumnLayout = below("split");
+
 type OptimisticFlagField = "pinned" | "muted";
 
 export type CachedConversation = {
@@ -124,7 +126,7 @@ class ConversationsState {
 			entry = this.#find(message.conversationId);
 		}
 		const isInboxPageRoot = page.route.id === "/(protected)/chat";
-		const twoColLayout = !below("split").current;
+		const twoColLayout = !singleColumnLayout.current;
 		const isConversationsListVisible = isInboxPageRoot || twoColLayout;
 		if (
 			isIncoming &&
