@@ -43,6 +43,19 @@ fn open_grind_platform_plugin<R: tauri::Runtime>(
 		.build()
 }
 
+fn is_app_url(url: &tauri::Url) -> bool {
+	let host = url.host_str();
+	match url.scheme() {
+		"tauri" => host == Some("localhost"),
+		"http" | "https" => {
+			host == Some("tauri.localhost")
+				|| (cfg!(debug_assertions)
+					&& matches!(host, Some("localhost") | Some("127.0.0.1")))
+		}
+		_ => false,
+	}
+}
+
 // macOS reports a WebKit build number that doesn't track Safari versions
 #[cfg(desktop)]
 fn outdated_webview_notice() -> Option<String> {
@@ -140,6 +153,7 @@ pub fn run() {
             for window in deferred {
                 tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
                     .user_agent(&user_agent)
+                    .on_navigation(is_app_url)
                     .build()?;
             }
 
@@ -236,4 +250,35 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	fn allows(url: &str) -> bool {
+		is_app_url(&tauri::Url::parse(url).unwrap())
+	}
+
+	#[test]
+	fn admits_the_bundled_asset_origins() {
+		assert!(allows("tauri://localhost/"));
+		assert!(allows("tauri://localhost/chat/1"));
+		assert!(allows("http://tauri.localhost/"));
+		assert!(allows("https://tauri.localhost/"));
+	}
+
+	#[test]
+	fn refuses_navigation_away_from_the_app() {
+		for url in [
+			"https://example.org/",
+			"tauri://example.org/",
+			"http://tauri.localhost.example.org/",
+			"file:///etc/passwd",
+			"javascript:alert(1)",
+			"data:text/html,<script>1</script>",
+		] {
+			assert!(!allows(url), "{url} must not load in the main webview");
+		}
+	}
 }
