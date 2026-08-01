@@ -1,26 +1,15 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-
+	import { showErrorToast } from "$lib/api/error";
 	import {
-		getPreferences,
-		getUnitsSnapshot,
+		getPreferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import type { UnitSystem } from "$lib/util/units";
 
-	let value = $state<UnitSystem>(getUnitsSnapshot());
-
-	onMount(() => {
-		void getPreferences()
-			.then(({ units }) => {
-				value = units;
-			})
-			.catch((error) => {
-				console.error("Failed to load preferences", error);
-			});
-	});
+	let pending = $state<UnitSystem | null>(null);
+	const value = $derived(pending ?? getPreferencesSnapshot().units);
 </script>
 
 <Item.Root variant="outline" class="gap-3 p-4">
@@ -38,9 +27,10 @@
 			() => value,
 			(next: string) => {
 				const units = (next || "metric") as UnitSystem;
-				value = units;
+				pending = units;
 				setPreferences({ units }).catch((error) => {
-					console.error("Failed to save preferences", error);
+					pending = null;
+					showErrorToast({ label: "Failed to save preferences", error });
 				});
 			}
 		}

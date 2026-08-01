@@ -1,4 +1,4 @@
-import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
+import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -43,7 +43,7 @@ function rangeText(
 	ceiling: number,
 	format: (value: number, units: UnitSystem) => string,
 ): string {
-	const units = getUnitsSnapshot();
+	const units = getPreferencesSnapshot().units;
 	return `${min === floor ? "No min" : format(min, units)} - ${
 		max === ceiling ? "No max" : format(max, units)
 	}`;

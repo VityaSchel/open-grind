@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { RulerIcon } from "phosphor-svelte";
 
-	import { getUnitsSnapshot } from "$lib/app-data/preferences.svelte";
+	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Separator } from "$lib/components/ui/separator";
 	import { type BodyTypeId, bodyTypes } from "$lib/model/users/profiles";
 	import { formatHeight, formatWeightGrams } from "$lib/util/units";
@@ -16,7 +16,7 @@
 		bodyType: BodyTypeId | null;
 	} = $props();
 
-	const units = $derived(getUnitsSnapshot());
+	const units = $derived(getPreferencesSnapshot().units);
 </script>
 
 {#if height !== null || weight !== null || bodyType !== null}

@@ -3,7 +3,7 @@
 
 	import { showErrorToast } from "$lib/api/error";
 	import {
-		getGeohashSnapshot,
+		getPreferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
@@ -33,7 +33,7 @@
 	}
 
 	function openPicker() {
-		const geohash = getGeohashSnapshot();
+		const geohash = getPreferencesSnapshot().geohash;
 		pinPos = geohash
 			? {
 					...decodeGeohash(geohash),
