@@ -40,3 +40,7 @@ export const searchProfileSchema = z.object({
 	distance: z.number().nullable(),
 	medias: z.array(z.object({ mediaHash: mediaHashPublicSchema })).nullable(),
 });
+
+export const searchResponseSchema = z.object({
+	profiles: z.array(searchProfileSchema),
+});
