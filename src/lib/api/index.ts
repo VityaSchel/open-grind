@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { goto } from "$app/navigation";
 import z from "zod";
 
-import { ApiError } from "$lib/api/api-error";
+import { ApiError, apiErrorKinds } from "$lib/api/api-error";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
@@ -120,17 +120,7 @@ export function asBanned(error: unknown): BanInfo | null {
 export function asAppError(error: unknown) {
 	const { data, success } = z
 		.object({
-			kind: z.enum([
-				"Http",
-				"Auth",
-				"Api",
-				"Unauthorized",
-				"Banned",
-				"RateLimited",
-				"RequestBlocked",
-				"NotInitialized",
-				"SessionCleared",
-			]),
+			kind: z.enum(apiErrorKinds),
 			message: z
 				.string()
 				.or(

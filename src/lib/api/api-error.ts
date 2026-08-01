@@ -1,13 +1,16 @@
-export type ApiErrorKind =
-	| "Http"
-	| "Auth"
-	| "Api"
-	| "Unauthorized"
-	| "Banned"
-	| "RateLimited"
-	| "RequestBlocked"
-	| "NotInitialized"
-	| "SessionCleared";
+export const apiErrorKinds = [
+	"Http",
+	"Auth",
+	"Api",
+	"Unauthorized",
+	"Banned",
+	"RateLimited",
+	"RequestBlocked",
+	"NotInitialized",
+	"SessionCleared",
+] as const;
+
+export type ApiErrorKind = (typeof apiErrorKinds)[number];
 
 export class ApiError extends Error {
 	readonly request: {
