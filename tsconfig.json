@@ -10,7 +10,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"types": ["@types/leaflet", "@types/lodash-es"]
+		"types": ["@types/leaflet"]
 	},
 	"include": [
 		".svelte-kit/ambient.d.ts",
