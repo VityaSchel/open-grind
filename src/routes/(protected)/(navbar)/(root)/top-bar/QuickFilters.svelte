@@ -24,7 +24,11 @@
 	const { ageEnabled, positionEnabled } = $derived(filters);
 </script>
 
-<Button variant="secondary" onclick={() => (openFilters.all = true)}>
+<Button
+	variant="secondary"
+	aria-label="All filters"
+	onclick={() => (openFilters.all = true)}
+>
 	<SlidersHorizontalIcon />
 </Button>
 <Button

@@ -24,6 +24,7 @@
 			width="1em"
 			height="1em"
 			viewBox="0 0 24 24"
+			aria-hidden="true"
 			class="shrink-0"
 		>
 			<!-- Icon from Lucide by Lucide Contributors - https://github.com/lucide-icons/lucide/blob/main/LICENSE -->

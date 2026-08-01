@@ -22,6 +22,7 @@
 	{#each medias as media, i (media.mediaHash + i)}
 		<ProfilePictureSlot
 			mediaHash={media.mediaHash}
+			position={i + 1}
 			onDelete={() => removePhoto(media.mediaHash)}
 		/>
 	{/each}

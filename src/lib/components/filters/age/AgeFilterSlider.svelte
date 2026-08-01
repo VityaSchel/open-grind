@@ -5,4 +5,11 @@
 	let { value = $bindable() }: { value: number[] } = $props();
 </script>
 
-<Slider type="multiple" bind:value min={AGE_MIN} max={AGE_MAX} step={1} />
+<Slider
+	type="multiple"
+	bind:value
+	min={AGE_MIN}
+	max={AGE_MAX}
+	step={1}
+	thumbLabels={["Minimum age", "Maximum age"]}
+/>

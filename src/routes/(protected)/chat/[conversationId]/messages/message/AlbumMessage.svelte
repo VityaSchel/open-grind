@@ -231,6 +231,7 @@
 				"opacity-50": albumState.status === "loading",
 			},
 		]}
+		aria-label="Open album"
 		onclick={openAlbum}
 		disabled={albumState.status !== "idle"}
 		bind:this={media.el}

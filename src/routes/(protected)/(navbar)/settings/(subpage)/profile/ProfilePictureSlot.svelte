@@ -6,9 +6,11 @@
 
 	let {
 		mediaHash,
+		position,
 		onDelete,
 	}: {
 		mediaHash: string;
+		position: number;
 		onDelete: () => void;
 	} = $props();
 
@@ -18,7 +20,7 @@
 <div class="relative aspect-square overflow-hidden rounded-xl bg-muted">
 	<img
 		{src}
-		alt=""
+		alt="Profile photo {position}"
 		class="size-full object-cover object-center"
 		loading="lazy"
 		draggable="false"
@@ -28,7 +30,7 @@
 		size="icon-sm"
 		class="absolute top-1.5 right-1.5 rounded-full bg-background/70 backdrop-blur"
 		onclick={() => onDelete()}
-		aria-label="Remove photo"
+		aria-label="Remove profile photo {position}"
 	>
 		<TrashIcon class="size-4" />
 	</Button>

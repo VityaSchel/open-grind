@@ -32,6 +32,7 @@
 >
 	<a
 		href={current.back}
+		aria-label="Back"
 		class="flex h-full w-19 shrink-0 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />

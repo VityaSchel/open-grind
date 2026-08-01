@@ -60,7 +60,7 @@
 			</div>
 			<Drawer.Title>Age</Drawer.Title>
 			<div class="flex flex-1 justify-end">
-				<Switch id="age-filter-enabled" bind:checked={enabled} />
+				<Switch aria-label="Filter by age" bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
 		<div class="mb-2 flex flex-col gap-1.5 px-4">

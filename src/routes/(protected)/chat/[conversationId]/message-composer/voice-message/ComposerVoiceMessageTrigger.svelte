@@ -10,6 +10,7 @@
 </script>
 
 <PrimaryComposerButton
+	aria-label="Record voice message"
 	onclick={() => {
 		toast(ToastUnimplemented, {
 			componentProps: {

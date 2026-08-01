@@ -86,6 +86,7 @@
 	{#if avatar.link}
 		<a
 			href={avatar.link}
+			aria-label="{title.value ?? 'Someone'}'s profile"
 			class="rounded-l-2xl @max-row:hidden"
 			tabindex={linkTabindex}
 		>
@@ -100,6 +101,7 @@
 		</a>
 		<a
 			href={link}
+			aria-label={title.value ?? "Someone"}
 			class="min-w-24 rounded-2xl @row:hidden"
 			tabindex={linkTabindex}
 		>

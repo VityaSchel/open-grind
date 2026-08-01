@@ -19,7 +19,7 @@
 	{#if mediaHash}
 		<img
 			src={profileMediaUrl(mediaHash, "thumb")}
-			alt="Profile avatar"
+			alt=""
 			class={[
 				"h-full w-full bg-neutral-600 object-cover object-center",
 				{

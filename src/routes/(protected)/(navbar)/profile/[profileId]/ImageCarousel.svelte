@@ -126,9 +126,14 @@
 					(item > 0 && item < medias.length - 1 ? indicatorStretch : 0);
 			}}
 		>
-			{#each medias as { mediaHash, createdAt }}
+			{#each medias as { mediaHash, createdAt }, index}
 				{@const src = profileMediaUrl(mediaHash, "full")}
-				<ImageCarouselItem {src} thumb={src} {createdAt} />
+				<ImageCarouselItem
+					{src}
+					thumb={src}
+					{createdAt}
+					label="Profile photo {index + 1} of {medias.length}"
+				/>
 			{/each}
 		</div>
 		<div

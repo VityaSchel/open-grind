@@ -9,6 +9,8 @@ const MULTILINE_TEXT =
 /** px between the newest message and the composer, from pb-[…+--spacing(1.5)] */
 const GAP_PX = 6;
 
+const MESSAGE = '[role="button"][tabindex="0"]';
+
 type Metrics = {
 	composerHeight: number;
 	paddingBottom: number;
@@ -22,24 +24,21 @@ type Metrics = {
 async function openConversation(page: Page) {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	await page
-		.locator('[aria-label="Message"]')
-		.first()
-		.waitFor({ timeout: 30_000 });
+	await page.locator(MESSAGE).first().waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
 }
 
 function measure(page: Page): Promise<Metrics> {
-	return page.evaluate(() => {
+	return page.evaluate((message) => {
 		const scroller = [...document.querySelectorAll<HTMLElement>("div")].find(
 			(el) =>
 				getComputedStyle(el).overflowY === "auto" &&
-				el.querySelector('[aria-label="Message"]') !== null,
+				el.querySelector(message) !== null,
 		);
 		if (!scroller) throw new Error("messages scroller not found");
 		const form = document.querySelector("form");
 		if (!form) throw new Error("composer form not found");
-		const messages = [...scroller.querySelectorAll('[aria-label="Message"]')];
+		const messages = [...scroller.querySelectorAll(message)];
 		const refresh = scroller.parentElement?.querySelector<HTMLElement>(
 			"[data-refresh-phase]",
 		);
@@ -57,19 +56,22 @@ function measure(page: Page): Promise<Metrics> {
 				? parseFloat(getComputedStyle(refresh).bottom)
 				: NaN,
 		};
-	});
+	}, MESSAGE);
 }
 
 const scrollTo = (page: Page, where: "floor" | "middle") =>
-	page.evaluate((target) => {
-		const scroller = [...document.querySelectorAll<HTMLElement>("div")].find(
-			(el) =>
-				getComputedStyle(el).overflowY === "auto" &&
-				el.querySelector('[aria-label="Message"]') !== null,
-		)!;
-		const max = scroller.scrollHeight - scroller.clientHeight;
-		scroller.scrollTop = target === "floor" ? max : Math.round(max / 2);
-	}, where);
+	page.evaluate(
+		({ target, message }) => {
+			const scroller = [...document.querySelectorAll<HTMLElement>("div")].find(
+				(el) =>
+					getComputedStyle(el).overflowY === "auto" &&
+					el.querySelector(message) !== null,
+			)!;
+			const max = scroller.scrollHeight - scroller.clientHeight;
+			scroller.scrollTop = target === "floor" ? max : Math.round(max / 2);
+		},
+		{ target: where, message: MESSAGE },
+	);
 
 test.describe("messages list clears the composer", () => {
 	test("bottom padding tracks the composer height", async ({ page }) => {

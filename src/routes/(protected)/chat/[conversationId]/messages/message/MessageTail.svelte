@@ -10,6 +10,7 @@
 	viewBox="0 0 11 20"
 	width="12"
 	height="22"
+	aria-hidden="true"
 	preserveAspectRatio="xMidYMax meet"
 	class={[
 		"absolute bottom-0",

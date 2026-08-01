@@ -34,6 +34,7 @@
 			min={40}
 			max={273}
 			step={1}
+			thumbLabels={["Minimum weight", "Maximum weight"]}
 		/>
 	</FilterDropdown>
 </div>

@@ -19,7 +19,7 @@
 
 <img
 	src={emojis[tapType]}
-	alt={`${tapTypes[tapType]} emoji`}
+	alt={`${tapTypes[tapType]} tap`}
 	width="24"
 	height="24"
 	class="shrink-0"

@@ -96,19 +96,19 @@
 	]}
 	style="height: var(--safe-area-bottom)"
 ></div>
-<Toaster
-	position="bottom-center"
-	offset={toastOffset}
-	mobileOffset={toastOffset}
-	toastOptions={{
-		class: "toast",
-	}}
-	expand
-/>
-<IconContext values={{}}>
+<IconContext values={{ "aria-hidden": true }}>
+	<Toaster
+		position="bottom-center"
+		offset={toastOffset}
+		mobileOffset={toastOffset}
+		toastOptions={{
+			class: "toast",
+		}}
+		expand
+	/>
 	{@render children?.()}
+	<RequestBlockedAlert />
+	<SessionErrorAlert />
+	<AccountStatusAlert />
+	<CopyErrorConfirmAlert />
 </IconContext>
-<RequestBlockedAlert />
-<SessionErrorAlert />
-<AccountStatusAlert />
-<CopyErrorConfirmAlert />

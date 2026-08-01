@@ -34,6 +34,10 @@
 		class?: import("svelte/elements").ClassValue;
 		overlay?: Snippet;
 	} = $props();
+
+	const hasVisibleText = $derived(
+		displayName !== null || age !== null || distance !== null,
+	);
 </script>
 
 {#snippet content()}
@@ -103,6 +107,7 @@
 {#if href !== null}
 	<a
 		{href}
+		aria-label={hasVisibleText ? undefined : "Profile"}
 		class={["relative flex aspect-square items-end overflow-hidden", className]}
 	>
 		{@render content()}

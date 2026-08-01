@@ -4,7 +4,7 @@
 	import TapIcon from "$lib/components/profile/TapIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { TapType } from "$lib/model/interest/taps";
+	import { TapType, tapTypes } from "$lib/model/interest/taps";
 
 	let {
 		profileId,
@@ -49,6 +49,9 @@
 <Button
 	size="icon-lg"
 	variant={sent ? "default" : "outline"}
+	aria-label={tapType === null
+		? `Send a ${tapTypes[defaultTapType]} tap`
+		: `${tapTypes[tapType]} tap sent`}
 	bind:ref={customAnchor}
 	oncontextmenu={(e) => {
 		e.preventDefault();
@@ -65,7 +68,11 @@
 	{/if}
 </Button>
 {#snippet tapOption(tapType: TapType)}
-	<DropdownMenu.Item class="w-10 px-2" onclick={() => send(tapType)}>
+	<DropdownMenu.Item
+		class="w-10 px-2"
+		aria-label="Send a {tapTypes[tapType]} tap"
+		onclick={() => send(tapType)}
+	>
 		<TapIcon {tapType} />
 	</DropdownMenu.Item>
 {/snippet}

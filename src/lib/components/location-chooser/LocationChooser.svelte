@@ -1,11 +1,12 @@
 <script lang="ts">
-	import GeoMapPicker from "$lib/components/location-chooser/GeoMapPicker.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Drawer from "$lib/components/ui/drawer/index";
+	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { encodeGeohash } from "$lib/model/geohash";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import { above } from "$lib/util/breakpoints.svelte";
+	import type GeoMapPickerComponent from "./GeoMapPicker.svelte";
 
 	let {
 		onSubmit,
@@ -32,7 +33,7 @@
 		void onSubmit(geohash);
 	}
 
-	let geoMapPicker: GeoMapPicker | null = $state(null);
+	let geoMapPicker: GeoMapPickerComponent | null = $state(null);
 
 	let pendingCenter: { lat: number; lon: number; zoom: number } | null =
 		$state(null);
@@ -73,6 +74,15 @@
 	});
 </script>
 
+{#snippet mapPicker()}
+	{#await import("./GeoMapPicker.svelte")}
+		<div class="flex h-full items-center justify-center">
+			<Spinner class="size-8" />
+		</div>
+	{:then { default: GeoMapPicker }}
+		<GeoMapPicker bind:pinPos bind:this={geoMapPicker} />
+	{/await}
+{/snippet}
 {#if isDesktop.current}
 	<Dialog.Root bind:open>
 		<Dialog.Content
@@ -83,7 +93,7 @@
 				class="h-full flex-1 touch-manipulation overflow-clip rounded-lg"
 				data-vaul-no-drag
 			>
-				<GeoMapPicker bind:pinPos bind:this={geoMapPicker} />
+				{@render mapPicker()}
 			</div>
 			<Dialog.Footer>
 				<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>
@@ -105,7 +115,7 @@
 				class="mt-4 mb-2 h-full touch-manipulation overflow-clip rounded-lg"
 				data-vaul-no-drag
 			>
-				<GeoMapPicker bind:pinPos bind:this={geoMapPicker} />
+				{@render mapPicker()}
 			</div>
 			<Drawer.Footer class="pt-2 pb-(--safe-area-bottom)">
 				<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>

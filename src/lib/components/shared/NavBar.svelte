@@ -75,6 +75,7 @@
 	</div>
 	<a
 		href="/settings"
+		aria-label="Me"
 		class={[
 			"flex size-14 shrink-0 rounded-full border bg-muted p-1",
 			{

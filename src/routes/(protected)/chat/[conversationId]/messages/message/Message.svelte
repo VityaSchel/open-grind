@@ -205,7 +205,6 @@
 		}}
 		role="button"
 		tabindex="0"
-		aria-label="Message"
 		ondblclick={(event) => {
 			const selection = window.getSelection();
 			if (

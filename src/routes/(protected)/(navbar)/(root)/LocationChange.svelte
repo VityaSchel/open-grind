@@ -53,6 +53,7 @@
 		"relative w-11 overflow-clip transition-none *:absolute *:top-1/2 *:left-1/2 *:flex *:-translate-1/2 *:items-center *:justify-center *:gap-1.5",
 		className,
 	]}
+	aria-label="Change location"
 	onclick={openPicker}
 >
 	<MapPinIcon weight="fill" />

@@ -60,7 +60,7 @@
 			</div>
 			<Drawer.Title>Positions</Drawer.Title>
 			<div class="flex flex-1 justify-end">
-				<Switch id="positions-filter-enabled" bind:checked={enabled} />
+				<Switch aria-label="Filter by position" bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
 		<div class="mb-2 flex flex-col gap-1.5 px-4">

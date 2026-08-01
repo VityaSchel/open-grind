@@ -139,7 +139,7 @@
 		rel="noreferrer"
 		data-pswp-width={message.width ?? undefined}
 		data-pswp-height={message.height ?? undefined}
-		aria-label="Open image"
+		aria-label="Photo"
 		class="item block"
 	>
 		<img

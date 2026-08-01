@@ -10,6 +10,7 @@
 
 <PrimaryComposerButton
 	type="submit"
+	aria-label="Send message"
 	{disabled}
 	onpointerdown={(event) => {
 		if (isSoftKeyboardVisible() !== false) event.preventDefault();
