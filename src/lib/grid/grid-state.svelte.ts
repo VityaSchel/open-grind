@@ -3,6 +3,7 @@ import z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error";
+import { reconciler } from "$lib/util/reconcile";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import {
 	getCachedProfile,
@@ -240,3 +241,4 @@ class GridState {
 export const gridState = new GridState();
 
 registerAccountCache({ reset: () => gridState.reset() });
+reconciler.subscribe(() => gridState.refresh());
