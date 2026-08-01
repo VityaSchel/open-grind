@@ -1,0 +1,142 @@
+import { invoke } from "@tauri-apps/api/core";
+import z from "zod";
+
+import { apiErrorKinds } from "$lib/api/api-error";
+import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+import { demoCallMethod, demoEnabled } from "$lib/demo";
+
+export const banInfoSchema = z.object({
+	kind: z.string(),
+	code: z.number(),
+	message: z.string(),
+	reason: z.string().nullish(),
+	subReason: z.string().nullish(),
+	automated: z.boolean().nullish(),
+});
+export type BanInfo = z.infer<typeof banInfoSchema>;
+
+export const restrictionSchema = z.object({
+	kind: z.enum(["ageVerification", "timedBan", "trustVendorRejected", "other"]),
+	region: z.string().nullish(),
+	reason: z.string().nullish(),
+});
+export type Restriction = z.infer<typeof restrictionSchema>;
+
+export const methods = {
+	login: {
+		request: z.object({
+			email: z.email(),
+			password: z.string().min(1),
+		}),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
+		}),
+	},
+	login_with_google: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
+		}),
+	},
+	google_sign_in: {
+		request: z.object({
+			token: z.string().min(1),
+		}),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
+		}),
+	},
+	auth_state: {
+		request: z.undefined(),
+		response: z.int().nonnegative().nullable(),
+	},
+	account_restriction: {
+		request: z.undefined(),
+		response: restrictionSchema.nullish(),
+	},
+	refresh_token: {
+		request: z.undefined(),
+		response: z.object({
+			profileId: z.coerce.number().int().nonnegative(),
+			restriction: restrictionSchema.nullish(),
+		}),
+	},
+	rotate_api_params: {
+		request: z.undefined(),
+		response: z.object({
+			"user-agent": z.string(),
+			"l-device-info": z.string(),
+		}),
+	},
+	logout: {
+		request: z.undefined(),
+		response: z.undefined(),
+	},
+	recaptcha_first_party_enabled: {
+		request: z.undefined(),
+		response: z.boolean(),
+	},
+} satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
+
+export async function callMethod<T extends keyof typeof methods>(
+	method: T,
+	...args: z.infer<(typeof methods)[T]["request"]> extends undefined
+		? []
+		: [data: z.infer<(typeof methods)[T]["request"]>]
+): Promise<z.infer<(typeof methods)[T]["response"]>> {
+	if (demoEnabled) {
+		return demoCallMethod(method) as z.infer<(typeof methods)[T]["response"]>;
+	}
+	try {
+		return await invoke(method, args[0]);
+	} catch (error) {
+		if (asAppError(error)?.kind === "RequestBlocked") {
+			markRequestBlocked();
+		}
+		throw error;
+	}
+}
+
+export function markRequestBlocked(): void {
+	if (!requestBlockedAlertState.disable) {
+		requestBlockedAlertState.open = true;
+	}
+}
+
+export function asBanned(error: unknown): BanInfo | null {
+	const parsed = z
+		.object({ kind: z.literal("Banned"), message: banInfoSchema })
+		.safeParse(error);
+	return parsed.success ? parsed.data.message : null;
+}
+
+export function asAppError(error: unknown) {
+	const { data, success } = z
+		.object({
+			kind: z.enum(apiErrorKinds),
+			message: z
+				.string()
+				.or(
+					z.object({
+						code: z.number(),
+						message: z.string(),
+					}),
+				)
+				.optional(),
+		})
+		.safeParse(error);
+	if (success) {
+		let prettyMessage: string;
+		if (typeof data.message === "string") {
+			prettyMessage = data.message;
+		} else if (data.message) {
+			prettyMessage = `Error ${data.message.code}: ${data.message.message}`;
+		} else {
+			prettyMessage = "An unknown error occurred";
+		}
+		return { ...data, prettyMessage };
+	}
+}
