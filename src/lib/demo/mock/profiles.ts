@@ -323,7 +323,12 @@ const featuredOverrides = new Map<number, Partial<DemoSeed>>([
 
 export function distanceForId(id: number): number {
 	const override = featuredOverrides.get(id);
-	if (override && override.distanceM != null) return override.distanceM;
+	if (
+		override &&
+		override.distanceM !== null &&
+		override.distanceM !== undefined
+	)
+		return override.distanceM;
 	return Math.floor(mulberry32(hashString(`dist:${id}`))() * 40000);
 }
 

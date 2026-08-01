@@ -353,7 +353,7 @@ export function demoConversationMessages(
 		name: seed?.name ?? null,
 		onlineUntil: seed ? onlineUntilOf(seed) : null,
 		profileId: conv?.withId ?? 0,
-		showDistance: seed?.distanceM != null,
+		showDistance: seed?.distanceM !== null && seed?.distanceM !== undefined,
 	};
 	if (!conv || pageKey !== undefined) {
 		return { lastReadTimestamp: null, messages: [], profile };
