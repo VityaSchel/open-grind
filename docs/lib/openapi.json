@@ -8897,6 +8897,44 @@
 			}
 		},
 		"/v4/me/profile": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getOwnProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"profiles": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/ProfileSummaryWithRightNow"
+											},
+											"minItems": 1,
+											"maxItems": 1
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get own profile",
+				"description": "Returns the authenticated user's own profile in the same single-element `profiles` envelope as [Get a profile by ID](/grindr-api/users/profiles#get-a-profile-by-id), without taking an ID.",
+				"x-notes": [
+					"The official Android app does not use this endpoint."
+				]
+			},
 			"patch": {
 				"tags": [
 					"users/profiles"
