@@ -1,11 +1,9 @@
 {
 	"$schema": "../gen/schemas/desktop-schema.json",
 	"identifier": "google-oauth",
-	"description": "Permissions for the Google OAuth helper window.",
+	"description": "The sign-in window renders an external origin and calls no Tauri API",
 	"windows": [
 		"google-oauth"
 	],
-	"permissions": [
-		"core:default"
-	]
+	"permissions": []
 }
