@@ -4,8 +4,8 @@ import { fetchRest } from "$lib/api";
 import { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import {
+	searchProfilesResponseSchema,
 	searchQuerySchema,
-	searchResponseSchema,
 } from "$lib/model/browse/grid/search";
 import { urlSearchParamsCodec } from "$lib/util/utils";
 
@@ -15,7 +15,7 @@ export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {
 			new URLSearchParams(
 				urlSearchParamsCodec(searchQuerySchema).encode(query),
 			).toString(),
-	).then((res) => res.jsonParsed(searchResponseSchema));
+	).then((res) => res.jsonParsed(searchProfilesResponseSchema));
 }
 
 export async function getCascadeV4(

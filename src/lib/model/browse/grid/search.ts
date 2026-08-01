@@ -41,6 +41,6 @@ export const searchProfileSchema = z.object({
 	medias: z.array(z.object({ mediaHash: mediaHashPublicSchema })).nullable(),
 });
 
-export const searchResponseSchema = z.object({
+export const searchProfilesResponseSchema = z.object({
 	profiles: z.array(searchProfileSchema),
 });
