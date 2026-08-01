@@ -1,3 +1,4 @@
+import { registerAccountCache } from "$lib/api/account-caches";
 import type { BanInfo, Restriction } from "$lib/api";
 
 export type AccountStatus =
@@ -8,6 +9,13 @@ export const accountStatusState = $state<{
 	open: boolean;
 	status: AccountStatus | null;
 }>({ open: false, status: null });
+
+registerAccountCache({
+	reset: () => {
+		accountStatusState.open = false;
+		accountStatusState.status = null;
+	},
+});
 
 export function showAccountRestriction(
 	restriction: Restriction | null | undefined,

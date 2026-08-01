@@ -13,16 +13,16 @@ export async function signOut(): Promise<void> {
 		console.error(error);
 	}
 
+	await goto("/auth/sign-in");
+
+	clearInboxMarkers();
+	clearAccountCaches();
+
 	try {
 		await clearAccountPreferences();
 	} catch (error) {
 		console.error(error);
 	}
-
-	clearInboxMarkers();
-	clearAccountCaches();
-
-	await goto("/auth/sign-in");
 }
 
 function clearInboxMarkers(): void {
