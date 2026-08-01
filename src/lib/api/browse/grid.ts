@@ -7,7 +7,7 @@ import {
 	searchProfilesResponseSchema,
 	searchQuerySchema,
 } from "$lib/model/browse/grid/search";
-import { urlSearchParamsCodec } from "$lib/util/utils";
+import { urlSearchParamsCodec } from "$lib/util/url-search-params";
 
 export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {
 	return await fetchRest(

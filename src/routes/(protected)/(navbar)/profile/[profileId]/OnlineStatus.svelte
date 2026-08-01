@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { formatDistanceStrict } from "date-fns";
 
-	import { getNow, subscribeNow } from "$lib/util/now.svelte";
+	import { getNow } from "$lib/util/now";
 
 	let {
 		onlineUntil,
@@ -12,8 +12,6 @@
 		seen: number | null;
 		self?: boolean;
 	} = $props();
-
-	$effect(() => subscribeNow());
 
 	const online = $derived(onlineUntil !== null && onlineUntil > getNow());
 </script>

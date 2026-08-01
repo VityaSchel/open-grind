@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AirplaneTiltIcon } from "phosphor-svelte";
 
-	import { getNow, subscribeNow } from "$lib/util/now.svelte";
+	import { getNow } from "$lib/util/now";
 
 	let {
 		onlineUntil,
@@ -13,9 +13,7 @@
 		class?: import("svelte/elements").ClassValue;
 	} = $props();
 
-	$effect(() => subscribeNow());
-
-	const online = $derived(onlineUntil != null && onlineUntil > getNow());
+	const online = $derived((onlineUntil ?? 0) > getNow());
 	const title = $derived.by(() => {
 		if (online && isVisiting) {
 			return "Online now. Visiting";

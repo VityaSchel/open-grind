@@ -1,14 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import {
-	formatTimeRelativeCustom,
-	urlSearchParamsCodec,
-} from "$lib/util/utils";
-
-afterEach(() => {
-	vi.useRealTimers();
-});
+import { urlSearchParamsCodec } from "$lib/util/url-search-params";
 
 describe("urlSearchParamsCodec", () => {
 	const codec = urlSearchParamsCodec(
@@ -67,24 +60,5 @@ describe("urlSearchParamsCodec", () => {
 		});
 
 		expect(params.toString()).toBe("active=false&count=0&ids=x%2Cy&ranks=");
-	});
-});
-
-describe("formatTimeRelativeCustom", () => {
-	it("formats recent and older timestamps relative to now", () => {
-		vi.setSystemTime(new Date("2026-06-10T12:00:00Z"));
-
-		expect(formatTimeRelativeCustom(Date.now() - 30_000)).toBe("Just now");
-		expect(formatTimeRelativeCustom(Date.now() - 2 * 60_000)).toBe("2 mins");
-		expect(formatTimeRelativeCustom(Date.now() - 2 * 60 * 60_000)).toBe(
-			"2 hrs",
-		);
-		expect(formatTimeRelativeCustom(Date.now() - 25 * 60 * 60_000)).toBe(
-			"Yesterday",
-		);
-	});
-
-	it("returns an empty label for negative timestamps", () => {
-		expect(formatTimeRelativeCustom(-1)).toBe("");
 	});
 });

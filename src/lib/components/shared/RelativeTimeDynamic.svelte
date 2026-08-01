@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { getNow, subscribeNow } from "$lib/util/now.svelte";
-	import { formatTimeRelativeCustom } from "$lib/util/utils";
+	import { formatTimeRelativeCustom } from "$lib/util/format-time";
+	import { getNow } from "$lib/util/now";
 
 	let {
 		date,
 	}: {
 		date: number;
 	} = $props();
-
-	$effect(() => subscribeNow());
 
 	const relativeTime = $derived.by(() => {
 		void getNow();
