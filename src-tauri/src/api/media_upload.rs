@@ -31,10 +31,11 @@ pub async fn upload_chat_media(
 		AppError::Http(format!("Failed to decode base64 media: {e}"))
 	})?;
 
-	let response = state
-		.client()?
+	let client = state.client()?;
+	let response = client
 		.upload_chat_media(bytes, &content_type, None, None, taken_on_grindr)
-		.await?;
+		.await
+		.map_err(|e| AppError::from_client_error(e, client))?;
 
 	Ok(MediaUploadResponse {
 		media_id: response.media_id,

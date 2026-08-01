@@ -1,10 +1,10 @@
 import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
-import { goto } from "$app/navigation";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
 import { asAppError, markRequestBlocked } from "$lib/api/methods";
+import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
@@ -133,8 +133,8 @@ export async function fetchRest(
 				cause: error,
 			});
 		}
-		if (appError?.kind === "Auth" && appError.message === "Not logged in") {
-			goto("/auth/sign-in").catch((error) => console.error(error));
+		if (appError?.kind === "NotLoggedIn") {
+			signOutIfSessionLost().catch((error) => console.error(error));
 		}
 		throw new ApiError({
 			message:

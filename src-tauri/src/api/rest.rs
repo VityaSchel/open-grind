@@ -51,10 +51,11 @@ pub async fn request(
 		None => None,
 	};
 
-	let raw = state
-		.client()?
+	let client = state.client()?;
+	let raw = client
 		.request_authenticated_raw(method, &payload.path, json_body)
-		.await?;
+		.await
+		.map_err(|e| AppError::from_client_error(e, client))?;
 
 	let response = RawResponse {
 		status: raw.status,

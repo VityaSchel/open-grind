@@ -36,6 +36,10 @@ describe("asAppError", () => {
 		});
 	});
 
+	it("recognizes the message-less kinds the backend serializes as a bare tag", () => {
+		expect(asAppError({ kind: "NotLoggedIn" })?.kind).toBe("NotLoggedIn");
+	});
+
 	it("ignores unknown errors", () => {
 		expect(asAppError(new Error("network failed"))).toBeUndefined();
 	});

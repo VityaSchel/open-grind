@@ -103,7 +103,11 @@ pub async fn google_sign_in(
 pub async fn refresh_token(
 	state: tauri::State<'_, AppState>,
 ) -> Result<LoginResult, AppError> {
-	let result = state.client()?.refresh_token().await?;
+	let client = state.client()?;
+	let result = client
+		.refresh_token()
+		.await
+		.map_err(|e| AppError::from_client_error(e, client))?;
 	Ok(LoginResult::from(result))
 }
 

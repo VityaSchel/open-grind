@@ -38,6 +38,7 @@ impl From<grindr::BanInfo> for BanInfo {
 pub enum AppError {
 	Http(String),
 	Auth(String),
+	NotLoggedIn,
 	Api { code: i32, message: String },
 	Unauthorized { code: i32, message: String },
 	Banned(BanInfo),
@@ -52,6 +53,7 @@ impl fmt::Display for AppError {
 		match self {
 			AppError::Http(msg) => write!(f, "HTTP error: {msg}"),
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
+			AppError::NotLoggedIn => write!(f, "Not logged in"),
 			AppError::Api { code, message } => {
 				write!(f, "API error {code}: {message}")
 			}
@@ -97,6 +99,19 @@ impl From<grindr::GrindrError> for AppError {
 	}
 }
 
+impl AppError {
+	pub fn from_client_error(
+		error: grindr::GrindrError,
+		client: &grindr::GrindrClient,
+	) -> Self {
+		let signed_in = client.session_receiver().borrow().is_some();
+		match AppError::from(error) {
+			AppError::Auth(_) if !signed_in => AppError::NotLoggedIn,
+			mapped => mapped,
+		}
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -115,6 +130,44 @@ mod tests {
 		assert_eq!(json["message"]["code"], 27);
 		assert_eq!(json["message"]["subReason"], "DRUG_SALES");
 		assert_eq!(json["message"]["automated"], true);
+	}
+
+	#[tokio::test]
+	async fn auth_failure_without_a_session_maps_to_not_logged_in() {
+		let client =
+			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
+				.unwrap();
+		let error = client.refresh_token().await.unwrap_err();
+
+		let app = AppError::from_client_error(error, &client);
+
+		assert!(matches!(app, AppError::NotLoggedIn));
+		assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "NotLoggedIn");
+	}
+
+	#[test]
+	fn auth_failure_with_a_session_stays_an_auth_error() {
+		let session: grindr::Session =
+			serde_json::from_value(serde_json::json!({
+				"email": "user@example.com",
+				"expires_at": 9_999_999_999u64,
+				"profile_id": "42",
+				"session_id": "session-token",
+				"auth_token": "auth-token",
+			}))
+			.unwrap();
+		let client = grindr::GrindrClient::new(
+			grindr::DeviceInfo::generate(),
+			Some(session),
+		)
+		.unwrap();
+
+		let app = AppError::from_client_error(
+			grindr::GrindrError::Auth("device key rejected".to_owned()),
+			&client,
+		);
+
+		assert!(matches!(app, AppError::Auth(_)));
 	}
 
 	#[test]

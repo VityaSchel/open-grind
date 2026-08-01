@@ -1,6 +1,7 @@
 export const apiErrorKinds = [
 	"Http",
 	"Auth",
+	"NotLoggedIn",
 	"Api",
 	"Unauthorized",
 	"Banned",

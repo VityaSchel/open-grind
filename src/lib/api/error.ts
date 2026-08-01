@@ -27,6 +27,10 @@ async function writeToClipboard(text: string): Promise<void> {
 	}
 }
 
+function isSessionGone({ kind }: ApiError): boolean {
+	return kind === "SessionCleared" || kind === "NotLoggedIn";
+}
+
 export function showErrorToast({
 	label = "An error occurred",
 	error,
@@ -36,7 +40,7 @@ export function showErrorToast({
 	error: unknown;
 	onRetry?: () => void;
 }) {
-	if (error instanceof ApiError && error.kind === "SessionCleared") return;
+	if (error instanceof ApiError && isSessionGone(error)) return;
 	if (onRetry && error instanceof ApiError && error.retryable) {
 		toast.error(label, {
 			action: {
