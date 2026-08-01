@@ -23,6 +23,7 @@
 	import { Input } from "$lib/components/ui/input";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { openExternalLink } from "$lib/platform/link-opener";
 
 	let {
 		pinPos = $bindable(),
@@ -31,6 +32,22 @@
 	} = $props();
 
 	let map: LeafletMap | undefined = $state();
+
+	$effect(() => {
+		const container = map?.getContainer();
+		if (!container) return;
+		const openExternally = (event: MouseEvent) => {
+			if (event.target instanceof HTMLElement) {
+				const href = event.target?.closest("a[href]")?.getAttribute("href");
+				if (href) {
+					event.preventDefault();
+					openExternalLink(href);
+				}
+			}
+		};
+		container.addEventListener("click", openExternally);
+		return () => container.removeEventListener("click", openExternally);
+	});
 	let gpsRequestInProgress = $state(false);
 
 	$effect(() => {

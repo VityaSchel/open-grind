@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { openExternalLink } from "$lib/platform/link-opener";
+
 	let {
 		onclick,
 		children,
@@ -13,16 +15,7 @@
 		onclick?.(event);
 		if (href) {
 			event.preventDefault();
-			const url = new URL(href);
-			if (["https:", "http:"].includes(url.protocol)) {
-				void import("@tauri-apps/plugin-opener").then(({ openUrl }) =>
-					openUrl(href),
-				);
-			} else {
-				console.error(
-					`Blocked navigation to URL with unsupported scheme: ${url.protocol}`,
-				);
-			}
+			openExternalLink(href);
 		}
 	}}
 	{...props}
