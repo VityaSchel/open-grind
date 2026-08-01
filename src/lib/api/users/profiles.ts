@@ -1,13 +1,9 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api";
-import {
-	accountEpoch,
-	isAccountEpochCurrent,
-	registerAccountCache,
-} from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
+import { FetchCache } from "$lib/api/cache";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {
@@ -16,7 +12,6 @@ import {
 	profileSchema,
 	profileShortSchema,
 } from "$lib/model/users/profiles";
-import { now } from "$lib/util/clock";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [
@@ -94,33 +89,10 @@ const profileResponseSchema = z.object({
 	profiles: z.array(profileSchema).length(1),
 });
 
-const profilesCache = new Map<
-	number,
-	{ profile: Profile; updatedAt: number }
->();
-
-const profilesInFlight = new Map<number, Promise<Profile>>();
-
-export async function getProfile(profileId: number): Promise<Profile> {
-	const cached = profilesCache.get(profileId);
-	if (cached && now() - cached.updatedAt < 1000 * 60) {
-		return cached.profile;
-	}
-	let request = profilesInFlight.get(profileId);
-	if (!request) {
-		request = fetchProfile(profileId).finally(() => {
-			profilesInFlight.delete(profileId);
-		});
-		profilesInFlight.set(profileId, request);
-	}
-	return request;
-}
-
 const MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME = "3";
 const MAGIC_PROFILE_BLOCK_DISPLAY_NAME = "4";
 
 async function fetchProfile(profileId: number): Promise<Profile> {
-	const epoch = accountEpoch();
 	const profile = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
@@ -136,10 +108,13 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 			throw new ProfileUnavailableError();
 		}
 	}
-	if (isAccountEpochCurrent(epoch)) {
-		profilesCache.set(profileId, { profile, updatedAt: now() });
-	}
 	return profile;
+}
+
+const profiles = new FetchCache(fetchProfile, { ttlMs: 60_000 });
+
+export function getProfile(profileId: number): Promise<Profile> {
+	return profiles.fetch(profileId);
 }
 
 const profileShortWithRightNowSchema = z.object({
@@ -165,14 +140,11 @@ export async function getProfiles(
 }
 
 export function clearProfileCaches() {
-	profilesCache.clear();
-	profilesInFlight.clear();
+	profiles.clear();
 }
 
-registerAccountCache({ reset: clearProfileCaches });
-
 export function invalidateProfile(profileId: number) {
-	profilesCache.delete(profileId);
+	profiles.delete(profileId);
 }
 
 export type ProfileEdit = Partial<
@@ -224,13 +196,9 @@ export function mergeProfileEditIntoCaches(
 	cacheProfileId: number,
 	patch: Partial<Profile>,
 ) {
-	const cached = profilesCache.get(cacheProfileId);
-	if (cached) {
-		profilesCache.set(cacheProfileId, {
-			profile: applyProfileEdit(cached.profile, patch),
-			updatedAt: now(),
-		});
-	}
+	profiles.update(cacheProfileId, (profile) =>
+		applyProfileEdit(profile, patch),
+	);
 }
 
 export async function patchOwnProfile(
@@ -342,16 +310,10 @@ export async function deleteProfilePhotos(
 	});
 	res.assertOk();
 	const removed = new Set(mediaHashes);
-	const cached = profilesCache.get(cacheProfileId);
-	if (cached) {
-		profilesCache.set(cacheProfileId, {
-			profile: {
-				...cached.profile,
-				medias: cached.profile.medias.filter((m) => !removed.has(m.mediaHash)),
-			},
-			updatedAt: now(),
-		});
-	}
+	profiles.update(cacheProfileId, (profile) => ({
+		...profile,
+		medias: profile.medias.filter((m) => !removed.has(m.mediaHash)),
+	}));
 }
 
 export async function getProfileUploadedPhotos() {

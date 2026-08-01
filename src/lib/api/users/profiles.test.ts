@@ -217,6 +217,18 @@ describe("updateOwnProfile", () => {
 		expect(cached.aboutMe).toBe("the one");
 	});
 
+	it("merges a moderated edit made after the cache entry expired", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
+		await getProfile(PROFILE_ID);
+
+		clock += 60_000;
+		await updateOwnProfile(PROFILE_ID, update({ displayName: "Neo" }));
+
+		expect((await getProfile(PROFILE_ID)).displayName).toBe("Neo");
+		expect(countRequests("/v7/profiles/")).toBe(1);
+	});
+
 	it("merges into the cache when the server answers with an empty body", async () => {
 		await getProfile(PROFILE_ID);
 		fetchRestMock.mockImplementationOnce(() => Promise.resolve(okRaw("")));
