@@ -42,6 +42,9 @@
 		"macOS": {
 			"signingIdentity": "tauri-dev"
 		},
+		"windows": {
+			"minimumWebview2Version": "111.0.1661.34"
+		},
 		"android": {
 			"autoIncrementVersionCode": false,
 			"minSdkVersion": 28,
