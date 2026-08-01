@@ -22,32 +22,28 @@ export const restrictionSchema = z.object({
 });
 export type Restriction = z.infer<typeof restrictionSchema>;
 
+const loginResultSchema = z.object({
+	profileId: z.coerce.number().int().nonnegative(),
+	restriction: restrictionSchema.nullish(),
+});
+
 export const methods = {
 	login: {
 		request: z.object({
 			email: z.email(),
 			password: z.string().min(1),
 		}),
-		response: z.object({
-			profileId: z.coerce.number().int().nonnegative(),
-			restriction: restrictionSchema.nullish(),
-		}),
+		response: loginResultSchema,
 	},
 	login_with_google: {
 		request: z.undefined(),
-		response: z.object({
-			profileId: z.coerce.number().int().nonnegative(),
-			restriction: restrictionSchema.nullish(),
-		}),
+		response: loginResultSchema,
 	},
 	google_sign_in: {
 		request: z.object({
 			token: z.string().min(1),
 		}),
-		response: z.object({
-			profileId: z.coerce.number().int().nonnegative(),
-			restriction: restrictionSchema.nullish(),
-		}),
+		response: loginResultSchema,
 	},
 	auth_state: {
 		request: z.undefined(),
@@ -59,10 +55,7 @@ export const methods = {
 	},
 	refresh_token: {
 		request: z.undefined(),
-		response: z.object({
-			profileId: z.coerce.number().int().nonnegative(),
-			restriction: restrictionSchema.nullish(),
-		}),
+		response: loginResultSchema,
 	},
 	rotate_api_params: {
 		request: z.undefined(),
@@ -73,7 +66,7 @@ export const methods = {
 	},
 	logout: {
 		request: z.undefined(),
-		response: z.undefined(),
+		response: z.null(),
 	},
 	recaptcha_first_party_enabled: {
 		request: z.undefined(),
@@ -87,11 +80,14 @@ export async function callMethod<T extends keyof typeof methods>(
 		? []
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<z.infer<(typeof methods)[T]["response"]>> {
+	type Result = z.infer<(typeof methods)[T]["response"]>;
 	if (demoEnabled) {
-		return demoCallMethod(method) as z.infer<(typeof methods)[T]["response"]>;
+		return methods[method].response.parse(demoCallMethod(method)) as Result;
 	}
 	try {
-		return await invoke(method, args[0]);
+		return methods[method].response.parse(
+			await invoke(method, args[0]),
+		) as Result;
 	} catch (error) {
 		if (asAppError(error)?.kind === "RequestBlocked") {
 			markRequestBlocked();

@@ -33,15 +33,16 @@ export function demoCallMethod(method: string): unknown {
 		case "auth_state":
 			return demoMeProfileId;
 		case "login":
+		case "login_with_google":
 		case "google_sign_in":
 		case "refresh_token":
-			return { profileId: demoMeProfileId };
+			return { profileId: demoMeProfileId, restriction: null };
 		case "rotate_api_params":
 			return { "user-agent": "demo", "l-device-info": "demo" };
 		case "recaptcha_first_party_enabled":
 			return false;
 		default:
-			return undefined;
+			return null;
 	}
 }
 

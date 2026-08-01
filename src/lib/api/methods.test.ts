@@ -1,11 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
 	asAppError,
 	asBanned,
 	banInfoSchema,
+	callMethod,
+	methods,
 	restrictionSchema,
 } from "$lib/api/methods";
+import { demoCallMethod } from "$lib/demo";
+
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
+
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 describe("asAppError", () => {
 	it("formats string messages from structured app errors", () => {
@@ -87,5 +94,45 @@ describe("simulated account-status responses", () => {
 		});
 		expect(info.kind).toBe("device");
 		expect(info.code).toBe(28);
+	});
+});
+
+describe("callMethod", () => {
+	it("returns the response parsed by the declared schema", async () => {
+		invokeMock.mockResolvedValueOnce({ profileId: "42", restriction: null });
+
+		await expect(
+			callMethod("login", { email: "a@b.co", password: "hunter2" }),
+		).resolves.toEqual({ profileId: 42, restriction: null });
+	});
+
+	it("resolves the unit response of a command that returns nothing", async () => {
+		invokeMock.mockResolvedValueOnce(null);
+
+		await expect(callMethod("logout")).resolves.toBeNull();
+	});
+
+	it("rejects a response that does not match the declared schema", async () => {
+		invokeMock.mockResolvedValueOnce({ profileId: "not a number" });
+
+		await expect(
+			callMethod("login", { email: "a@b.co", password: "hunter2" }),
+		).rejects.toThrow();
+	});
+
+	it("passes backend errors through untouched", async () => {
+		invokeMock.mockRejectedValueOnce({ kind: "Auth", message: "nope" });
+
+		await expect(callMethod("auth_state")).rejects.toEqual({
+			kind: "Auth",
+			message: "nope",
+		});
+	});
+});
+
+describe("demo command responses", () => {
+	it.each(Object.keys(methods))("%s matches its declared schema", (method) => {
+		const { response } = methods[method as keyof typeof methods];
+		expect(response.safeParse(demoCallMethod(method)).error).toBeUndefined();
 	});
 });
