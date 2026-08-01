@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { CaretRightIcon } from "phosphor-svelte";
 
-	import { getMyProfile } from "$lib/api/users/profiles";
+	import { getProfile } from "$lib/api/users/profiles";
 	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
 	import DisplayName from "$lib/components/profile/DisplayName.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
@@ -14,7 +14,7 @@
 		id: number;
 	} = $props();
 
-	const myProfile = $derived(getMyProfile());
+	const myProfile = $derived(getProfile(id));
 	const myProfilePhotos = $derived(myProfile.then((profile) => profile.medias));
 </script>
 

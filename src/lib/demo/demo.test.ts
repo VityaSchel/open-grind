@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import z from "zod";
 
 import { demoRoute } from "$lib/demo";
+import { demoMeProfileId } from "$lib/demo/config";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { searchProfileSchema } from "$lib/model/browse/grid/search";
 import { tapProfileSchema } from "$lib/model/interest/tap-profile";
@@ -71,9 +72,11 @@ describe("demo route data matches the real schemas", () => {
 		for (const profile of body.profiles) shortProfileSchema.parse(profile);
 	});
 
-	it("my profile + uploaded photos validate", () => {
-		const me = route("/v4/me/profile") as { profiles: unknown[] };
-		shortProfileSchema.parse(me.profiles[0]);
+	it("own profile + uploaded photos validate", () => {
+		const me = route(`/v7/profiles/${demoMeProfileId}`) as {
+			profiles: unknown[];
+		};
+		profileSchema.parse(me.profiles[0]);
 		z.object({
 			medias: z.array(
 				z.object({

@@ -95,5 +95,5 @@
 	{/if}
 </main>
 {#if !mobile.current || page.route.id !== "/(protected)/chat/[conversationId]"}
-	<NavBar />
+	<NavBar ourProfileId={data.ourProfileId} />
 {/if}

@@ -21,7 +21,7 @@ const gridError = () =>
 
 describe("errorReport of an ApiError", () => {
 	it("redacts location and filters and structures the response", () => {
-		expect(errorReport(gridError())).toEqual({
+		expect(errorReport(gridError(), { redact: true })).toEqual({
 			error:
 				"error sending request for url (https://grindr.mobi/v4/cascade?nearbyGeoHash=u4**********&rightNow={boolean})",
 			kind: "Http",
@@ -39,9 +39,9 @@ describe("errorReport of an ApiError", () => {
 	});
 
 	it("never emits a full-precision geohash", () => {
-		expect(JSON.stringify(errorReport(gridError()))).not.toContain(
-			"u4pruydqqvj8",
-		);
+		expect(
+			JSON.stringify(errorReport(gridError(), { redact: true })),
+		).not.toContain("u4pruydqqvj8");
 	});
 
 	it("redacts the request body", () => {
@@ -58,6 +58,7 @@ describe("errorReport of an ApiError", () => {
 					},
 				},
 			}),
+			{ redact: true },
 		) as { request: { body: unknown } };
 
 		expect(report.request.body).toEqual({
@@ -68,7 +69,7 @@ describe("errorReport of an ApiError", () => {
 	});
 
 	it("omits the body key entirely when the request had none", () => {
-		const report = errorReport(gridError()) as {
+		const report = errorReport(gridError(), { redact: true }) as {
 			request: Record<string, unknown>;
 		};
 		expect("body" in report.request).toBe(false);
@@ -81,13 +82,14 @@ describe("errorReport of an ApiError", () => {
 				request: { method: "GET", path: "/v4/me/profile" },
 				kind: "Auth",
 			}),
+			{ redact: true },
 		) as { response: unknown };
 		expect(report.response).toBeNull();
 	});
 
 	it("returns everything unredacted when redaction is skipped", () => {
 		const error = gridError();
-		expect(errorReport(error, { skipRedaction: true })).toEqual({
+		expect(errorReport(error, { redact: false })).toEqual({
 			error: error.message,
 			kind: "Http",
 			request: error.request,
@@ -114,7 +116,7 @@ describe("errorReport of a schema mismatch", () => {
 	};
 
 	it("lifts the issues out of the cause instead of nesting a JSON string", () => {
-		const report = errorReport(mismatch()) as {
+		const report = errorReport(mismatch(), { redact: true }) as {
 			error: string;
 			issues: { path: string; code: string; expected: string }[];
 			cause?: unknown;
@@ -139,7 +141,7 @@ describe("errorReport of a schema mismatch", () => {
 		]);
 		const parsed = schema.safeParse({ type: "Nope" });
 
-		const report = errorReport(parsed.error) as {
+		const report = errorReport(parsed.error, { redact: true }) as {
 			issues: { options: string[]; discriminator: string }[];
 		};
 
@@ -152,9 +154,9 @@ describe("errorReport of a schema mismatch", () => {
 			.object({ aboutMe: z.number() })
 			.safeParse({ aboutMe: "looking for fun" }, { reportInput: true });
 
-		expect(JSON.stringify(errorReport(parsed.error))).not.toContain(
-			"looking for fun",
-		);
+		expect(
+			JSON.stringify(errorReport(parsed.error, { redact: true })),
+		).not.toContain("looking for fun");
 	});
 });
 
@@ -165,7 +167,7 @@ describe("errorReport of a thrown Error", () => {
 		);
 		error.stack = `Error: ${error.message}\n    at load (http://tauri.localhost/_app/immutable/nodes/20.0gtofmUf.js:3:17903)`;
 
-		expect(errorReport(error)).toEqual({
+		expect(errorReport(error, { redact: true })).toEqual({
 			error: "Failed to load video: https://cdns.grindr.com/videos/{id}",
 			stack:
 				"Error: Failed to load video: https://cdns.grindr.com/videos/{id}\n" +
@@ -183,7 +185,9 @@ describe("errorReport of a thrown Error", () => {
 		});
 		wrapper.stack = "Error: Failed to fetch profiles";
 
-		const report = errorReport(wrapper) as { cause: { request: unknown } };
+		const report = errorReport(wrapper, { redact: true }) as {
+			cause: { request: unknown };
+		};
 
 		expect(report.cause).toMatchObject({
 			error: "API request failed with status 500",
@@ -200,20 +204,24 @@ describe("errorReport of a thrown Error", () => {
 		const second = new Error("second", { cause: first });
 		Object.defineProperty(first, "cause", { value: second });
 
-		expect(() => JSON.stringify(errorReport(second))).not.toThrow();
+		expect(() =>
+			JSON.stringify(errorReport(second, { redact: true })),
+		).not.toThrow();
 	});
 });
 
 describe("errorReport of a value that is not an Error", () => {
 	it("reads a backend error object instead of stringifying it to [object Object]", () => {
-		expect(errorReport({ kind: "Auth", message: "Not logged in" })).toEqual({
+		expect(
+			errorReport({ kind: "Auth", message: "Not logged in" }, { redact: true }),
+		).toEqual({
 			kind: "Auth",
 			message: "Not logged in",
 		});
 	});
 
 	it("wraps a primitive", () => {
-		expect(errorReport("something broke")).toEqual({
+		expect(errorReport("something broke", { redact: true })).toEqual({
 			error: "something broke",
 		});
 	});

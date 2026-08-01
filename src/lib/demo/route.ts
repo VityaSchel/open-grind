@@ -12,7 +12,6 @@ import {
 } from "./mock/conversations";
 import {
 	buildFullProfile,
-	buildShortProfile,
 	demoCascadeV4,
 	demoGetProfiles,
 	demoMyUploadedPhotos,
@@ -20,7 +19,7 @@ import {
 	num,
 } from "./mock/grid";
 import { demoReceivedTaps, demoViews } from "./mock/interest";
-import { meSeed, profileSeed } from "./mock/profiles";
+import { profileSeed } from "./mock/profiles";
 import { demoGenders, demoPronouns, demoTags } from "./mock/reference";
 
 type DemoResponse = { status: number; body: unknown };
@@ -69,9 +68,6 @@ export function demoRoute(
 		const ids =
 			(body as { targetProfileIds?: number[] })?.targetProfileIds ?? [];
 		return ok({ profiles: demoGetProfiles(ids) });
-	}
-	if (method === "GET" && rawPath === "/v4/me/profile") {
-		return ok({ profiles: [buildShortProfile(meSeed)] });
 	}
 	if (rawPath === "/v3.1/me/profile/images" && method === "GET") {
 		return ok(demoMyUploadedPhotos());

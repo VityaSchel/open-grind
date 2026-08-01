@@ -15,7 +15,6 @@ import {
 	applyProfileEdit,
 	clearProfileCaches,
 	deleteProfilePhotos,
-	getMyProfile,
 	getProfile,
 	patchOwnProfile,
 	ProfileModerationError,
@@ -83,14 +82,6 @@ function fullProfile() {
 	};
 }
 
-function shortProfile() {
-	return {
-		profileId: PROFILE_ID,
-		showDistance: false,
-		medias: [{ mediaHash: "a" }, { mediaHash: "b" }],
-	};
-}
-
 beforeEach(() => {
 	clearProfileCaches();
 	fetchRestMock.mockReset();
@@ -105,9 +96,6 @@ beforeEach(() => {
 			}
 			if (path === "/v3.1/me/profile" && method === "PUT") {
 				return Promise.resolve(ok({}));
-			}
-			if (path === "/v4/me/profile") {
-				return Promise.resolve(ok({ profiles: [shortProfile()] }));
 			}
 			if (path === "/v3/me/profile/images") {
 				return Promise.resolve(ok(null));
@@ -144,34 +132,21 @@ describe("cache TTL", () => {
 		await getProfile(PROFILE_ID);
 		expect(countRequests("/v7/profiles/")).toBe(2);
 	});
-
-	it("serves getMyProfile from cache within the TTL and refetches after it", async () => {
-		let clock = 1_000;
-		setNowForTesting(() => clock);
-
-		await getMyProfile();
-		await getMyProfile();
-		expect(countRequests("/v4/me/profile")).toBe(1);
-
-		clock += 60_000;
-		await getMyProfile();
-		expect(countRequests("/v4/me/profile")).toBe(2);
-	});
 });
 
-describe("getMyProfile", () => {
+describe("getProfile", () => {
 	it("rejects an empty profiles array instead of caching undefined", async () => {
 		fetchRestMock.mockImplementationOnce(() =>
 			Promise.resolve(okValidated({ profiles: [] })),
 		);
 
-		const error = await getMyProfile().catch((e: unknown) => e);
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
 
 		expect(error).toBeInstanceOf(z.ZodError);
 		expect((error as z.ZodError).issues[0]?.code).toBe("too_small");
 
-		expect(await getMyProfile()).toEqual(shortProfile());
-		expect(countRequests("/v4/me/profile")).toBe(2);
+		expect(await getProfile(PROFILE_ID)).toEqual(fullProfile());
+		expect(countRequests("/v7/profiles/")).toBe(2);
 	});
 });
 
@@ -312,14 +287,12 @@ describe("updateOwnProfile", () => {
 });
 
 describe("deleteProfilePhotos", () => {
-	it("removes the hash from both the full and short profile caches", async () => {
+	it("removes the hash from the cached profile", async () => {
 		await getProfile(PROFILE_ID);
-		await getMyProfile();
 
 		await deleteProfilePhotos(PROFILE_ID, ["a"]);
 
 		expect((await getProfile(PROFILE_ID)).medias).toEqual([{ mediaHash: "b" }]);
-		expect((await getMyProfile()).medias).toEqual([{ mediaHash: "b" }]);
 	});
 
 	it("does not send a request when there are no hashes to remove", async () => {

@@ -2,17 +2,19 @@
 	import { onMount } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error";
-	import { getMyProfile, patchOwnProfile } from "$lib/api/users/profiles";
+	import { getProfile, patchOwnProfile } from "$lib/api/users/profiles";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 
+	let { ourProfileId }: { ourProfileId: number } = $props();
+
 	let value = $state(false);
-	let profileId = $state<number | null>(null);
+	let loaded = $state(false);
 
 	onMount(() => {
-		getMyProfile()
+		getProfile(ourProfileId)
 			.then((profile) => {
 				value = profile.showDistance;
-				profileId = profile.profileId;
+				loaded = true;
 			})
 			.catch((e) => {
 				console.error("Failed to load profile", e);
@@ -23,14 +25,14 @@
 <SwitchField
 	title="Show my distance"
 	description="Reveal your approximate location to other users as distance, e.g. 1.2 km."
-	disabled={profileId === null}
+	disabled={!loaded}
 	bind:checked={
 		() => value,
 		(newValue: boolean) => {
-			if (profileId === null) return;
+			if (!loaded) return;
 			const previous = value;
 			value = newValue;
-			void patchOwnProfile(profileId, { showDistance: newValue }).catch(
+			void patchOwnProfile(ourProfileId, { showDistance: newValue }).catch(
 				(error) => {
 					value = previous;
 					showErrorToast({ label: "Failed to update setting", error });

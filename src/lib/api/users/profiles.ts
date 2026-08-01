@@ -144,14 +144,14 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 	return profile;
 }
 
+const profileShortWithRightNowSchema = z.object({
+	...profileShortSchema.shape,
+	...profileRightNowSchema.shape,
+	rightNowStatus: rightNowAttributionStatusSchema.nullish().catch("NONE"),
+});
+
 const getProfilesResponseSchema = z.object({
-	profiles: z.array(
-		z.object({
-			...profileShortSchema.shape,
-			...profileRightNowSchema.shape,
-			rightNowStatus: rightNowAttributionStatusSchema.nullish().catch("NONE"),
-		}),
-	),
+	profiles: z.array(profileShortWithRightNowSchema),
 });
 
 export async function getProfiles(
@@ -166,27 +166,7 @@ export async function getProfiles(
 	}).then((res) => res.jsonParsed(getProfilesResponseSchema).profiles);
 }
 
-let myProfileCache: {
-	profile: z.infer<typeof getProfilesResponseSchema>["profiles"][0];
-	updatedAt: number;
-} | null = null;
-
-export async function getMyProfile() {
-	if (myProfileCache && now() - myProfileCache.updatedAt < 1000 * 60) {
-		return myProfileCache.profile;
-	}
-	const epoch = accountEpoch();
-	const profile = await fetchRest("/v4/me/profile").then(
-		(res) => res.jsonParsed(getProfilesResponseSchema).profiles[0],
-	);
-	if (isAccountEpochCurrent(epoch)) {
-		myProfileCache = { profile, updatedAt: now() };
-	}
-	return profile;
-}
-
 export function clearProfileCaches() {
-	myProfileCache = null;
 	profilesCache.clear();
 	profilesInFlight.clear();
 }
@@ -195,9 +175,6 @@ registerAccountCache({ reset: clearProfileCaches });
 
 export function invalidateProfile(profileId: number) {
 	profilesCache.delete(profileId);
-	if (myProfileCache?.profile.profileId === profileId) {
-		myProfileCache = null;
-	}
 }
 
 export type ProfileEdit = Partial<
@@ -255,16 +232,6 @@ export function mergeProfileEditIntoCaches(
 			profile: applyProfileEdit(cached.profile, patch),
 			updatedAt: now(),
 		});
-	}
-	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
-		const next: Record<string, unknown> = { ...myProfileCache.profile };
-		for (const key of Object.keys(patch)) {
-			if (key in next) next[key] = patch[key as keyof Profile];
-		}
-		myProfileCache = {
-			profile: next as typeof myProfileCache.profile,
-			updatedAt: now(),
-		};
 	}
 }
 
@@ -386,17 +353,6 @@ export async function deleteProfilePhotos(
 			},
 			updatedAt: now(),
 		});
-	}
-	if (myProfileCache && myProfileCache.profile.profileId === cacheProfileId) {
-		myProfileCache = {
-			profile: {
-				...myProfileCache.profile,
-				medias: myProfileCache.profile.medias.filter(
-					(m) => !removed.has(m.mediaHash),
-				),
-			},
-			updatedAt: now(),
-		};
 	}
 }
 
