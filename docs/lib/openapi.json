@@ -13160,7 +13160,8 @@
 					},
 					"genderPlural": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "string, plural form of `gender`"
 					},
 					"excludeOnProfileSelection": {
 						"type": "array",
@@ -13180,19 +13181,15 @@
 						"type": "array",
 						"items": {
 							"type": "integer"
-						}
+						},
+						"description": "array of integers; not in the official app's model"
 					}
 				},
 				"x-render-on-tag": "users/profiles",
 				"required": [
 					"genderId",
 					"gender",
-					"displayGroup",
-					"sortProfile",
-					"sortFilter",
-					"genderPlural",
-					"excludeOnProfileSelection",
-					"excludeOnFilterSelection"
+					"displayGroup"
 				]
 			},
 			"GenderPronounSuggestionRequest": {
