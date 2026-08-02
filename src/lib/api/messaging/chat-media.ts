@@ -17,14 +17,14 @@ export type MediaUploadResponse = z.infer<typeof mediaUploadResponseSchema>;
 
 async function uploadChatMedia(
 	bytes: Uint8Array<ArrayBuffer>,
-	contentType: string,
+	options: { contentType: string; takenOnGrindr: boolean },
 ): Promise<MediaUploadResponse> {
 	if (demoEnabled) {
-		return demoUploadChatMedia(bytes, contentType);
+		return demoUploadChatMedia(bytes, options.contentType);
 	}
 	const response = await invoke("upload_chat_media", {
-		contentType,
-		takenOnGrindr: false,
+		contentType: options.contentType,
+		takenOnGrindr: options.takenOnGrindr,
 		data: toBase64(bytes),
 	});
 	return mediaUploadResponseSchema.parse(response);
@@ -33,9 +33,10 @@ async function uploadChatMedia(
 export async function addMediaToDrawer(
 	media: PickedMedia,
 ): Promise<DrawerMedia> {
+	const takenOnGrindr = false;
 	const bytes = await readMediaBytes(media);
 	const contentType = media.mimeType ?? "image/jpeg";
-	const uploaded = await uploadChatMedia(bytes, contentType);
+	const uploaded = await uploadChatMedia(bytes, { contentType, takenOnGrindr });
 	await saveMediaToDrawer(uploaded.mediaId);
 
 	return {
@@ -44,6 +45,6 @@ export async function addMediaToDrawer(
 		contentType,
 		createdTs: Date.now(),
 		used: false,
-		takenOnGrindr: false,
+		takenOnGrindr,
 	};
 }
