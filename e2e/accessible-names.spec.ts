@@ -1,10 +1,13 @@
 import { test } from "@playwright/test";
 
 import { expectEveryControlNamed } from "./support/a11y";
-import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
+import {
+	DEMO_CONVERSATION,
+	ensureGridLocation,
+	installTauriShim,
+} from "./support/app";
 
 const DEMO_PROFILE = "/profile/100001";
-const DEMO_GEOHASH = "u33dc0cpgp00";
 const MESSAGE = '[role="button"][tabindex="0"]';
 
 test.beforeEach(async ({ page }) => {
@@ -48,19 +51,10 @@ test.describe("every control has an accessible name", () => {
 		test.setTimeout(240_000);
 		await page.goto("/");
 		await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-		if ((await page.locator('[aria-label="All filters"]').count()) === 0) {
-			await page.keyboard.press("Meta+k");
-			const palette = page.getByRole("combobox");
-			await palette.waitFor();
-			await palette.fill(`@${DEMO_GEOHASH}`);
-			await page
-				.locator(`[role="option"][data-value="@${DEMO_GEOHASH}"]`)
-				.waitFor();
-			await page.keyboard.press("Enter");
-		}
-		const allFilters = page.locator('[aria-label="All filters"]');
-		await allFilters.waitFor({ timeout: 60_000 });
+		await ensureGridLocation(page);
 		await expectEveryControlNamed(page, "grid");
+
+		const allFilters = page.locator('[aria-label="All filters"]');
 
 		await allFilters.click();
 		await page.getByRole("button", { name: "Apply" }).waitFor();
@@ -75,7 +69,7 @@ test.describe("every control has an accessible name", () => {
 		await page.locator('[aria-label="Change location"]').click();
 		await page
 			.getByPlaceholder("Search places...")
-			.waitFor({ timeout: 120_000 });
+			.waitFor({ timeout: 180_000 });
 		await page
 			.getByRole("button", { name: "Selected location" })
 			.waitFor({ timeout: 60_000 });

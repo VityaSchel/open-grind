@@ -1,6 +1,22 @@
 import type { CDPSession, Page } from "@playwright/test";
 
 export const DEMO_CONVERSATION = "/chat/100001:123456000";
+export const DEMO_GEOHASH = "u33dc0cpgp00";
+
+export async function ensureGridLocation(page: Page): Promise<void> {
+	const allFilters = page.locator('[aria-label="All filters"]');
+	if ((await allFilters.count()) === 0) {
+		await page.keyboard.press("Meta+k");
+		const palette = page.getByRole("combobox");
+		await palette.waitFor();
+		await palette.fill(`@${DEMO_GEOHASH}`);
+		await page
+			.locator(`[role="option"][data-value="@${DEMO_GEOHASH}"]`)
+			.waitFor();
+		await page.keyboard.press("Enter");
+	}
+	await allFilters.waitFor({ timeout: 60_000 });
+}
 
 export async function installTauriShim(page: Page): Promise<void> {
 	await page.addInitScript(() => {
