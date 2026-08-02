@@ -68,6 +68,7 @@ jobs:
           step bun run lint
           step bun run check
           step bun run check:ci
+          step bun run check:scripts
           step bun run test:unit
           step bun run test:rust
           step bun run test:e2e
