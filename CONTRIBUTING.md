@@ -17,6 +17,7 @@ Thanks for considering contributing to Open Grind.
 AI-generated pull requests are not allowed. AI-assisted code is allowed. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 - Use American English spelling
+- Internationalization is out of scope for now (see [#106](https://git.opengrind.org/open-grind/open-grind/issues/106)), so keep interface strings inline in American English, no translation layer and no partial translations
 - Use [Phosphor Icons](https://phosphoricons.com) whenever possible
 
 ## Getting started
