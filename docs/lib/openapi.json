@@ -12,7 +12,14 @@
 			"url": "https://cdns.grindr.com"
 		},
 		{
-			"url": "https://d2wxe7lth7kp8g.cloudfront.net"
+			"url": "https://{distribution}.cloudfront.net",
+			"description": "Signed media. The distribution is not stable — read the host from the media object's `url`.",
+			"variables": {
+				"distribution": {
+					"default": "d3lyqctnm3b6pb",
+					"description": "CloudFront distribution serving signed media"
+				}
+			}
 		},
 		{
 			"url": "wss://grindr.mobi"
@@ -207,7 +214,7 @@
 		},
 		{
 			"name": "media/signed-cdn-files",
-			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://d2wxe7lth7kp8g.cloudfront.net/`\n\nAlthough it might change in the future, so it's best to pull the full URL from the `url` property on the media object itself."
+			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://{distribution}.cloudfront.net/`, always take the full URL from the `url` property on the media object itself."
 		},
 		{
 			"name": "messaging/albums",
@@ -5421,7 +5428,13 @@
 				"operationId": "getSignedChatMedia",
 				"servers": [
 					{
-						"url": "https://d2wxe7lth7kp8g.cloudfront.net"
+						"url": "https://{distribution}.cloudfront.net",
+						"variables": {
+							"distribution": {
+								"default": "d3lyqctnm3b6pb",
+								"description": "Changes over time."
+							}
+						}
 					}
 				],
 				"parameters": [
