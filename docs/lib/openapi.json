@@ -454,7 +454,7 @@
 					}
 				},
 				"summary": "Add media to drawer",
-				"description": "MediaId must be obtained through [uploading](/grindr-api/users/profiles#upload-media)."
+				"description": "MediaId must be obtained through [uploading](/grindr-api/messaging/drawer#upload-media)."
 			},
 			"delete": {
 				"tags": [
@@ -9026,9 +9026,14 @@
 		"/v5/chat/media/upload": {
 			"post": {
 				"tags": [
-					"users/profiles"
+					"messaging/drawer"
 				],
 				"operationId": "uploadChatMedia",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "length",
@@ -9036,16 +9041,14 @@
 						"schema": {
 							"type": "integer",
 							"format": "int64"
-						},
-						"required": true
+						}
 					},
 					{
 						"name": "looping",
 						"in": "query",
 						"schema": {
 							"type": "boolean"
-						},
-						"required": true
+						}
 					},
 					{
 						"$ref": "#/components/parameters/TakenOnGrindrQuery"
@@ -9067,7 +9070,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ChatMediaUploadResponse"
+									"$ref": "#/components/schemas/MediaUploadResponse"
 								}
 							}
 						},
@@ -9075,7 +9078,7 @@
 					}
 				},
 				"summary": "Upload media",
-				"description": "A correct `Content-Type` request header is required."
+				"description": "A correct `Content-Type` request header is required. `length` is sent for audio and video, `looping` only for video."
 			}
 		},
 		"/v4/media/upload": {
@@ -9157,7 +9160,7 @@
 					}
 				},
 				"summary": "Edit profile photos",
-				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](/grindr-api/users/profiles#upload-media).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
+				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media (legacy)](/grindr-api/users/profiles#upload-media-legacy).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
 			},
 			"delete": {
 				"tags": [
@@ -9734,12 +9737,11 @@
 					}
 				],
 				"summary": "Upload media (signed)",
-				"description": "Signed successor of the unsigned `POST /v5/chat/media/upload`. A correct `Content-Type` request header is required, and the request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing).",
+				"description": "Signed version of the unsigned [Upload media](/grindr-api/messaging/drawer#upload-media). A correct `Content-Type` request header is required, and the request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing). `length` and `looping` are never sent here. All media uploaded through this endpoint are marked as \"Taken on Grindr\" server-side.",
 				"parameters": [
 					{
 						"name": "length",
 						"in": "query",
-						"required": true,
 						"schema": {
 							"type": "integer",
 							"format": "int64"
@@ -9748,13 +9750,9 @@
 					{
 						"name": "looping",
 						"in": "query",
-						"required": true,
 						"schema": {
 							"type": "boolean"
 						}
-					},
-					{
-						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					},
 					{
 						"$ref": "#/components/parameters/DeviceKeyIdHeader"
@@ -10989,6 +10987,7 @@
 				"in": "query",
 				"name": "takenOnGrindr",
 				"required": true,
+				"description": "Media captured with the in-app camera. The official client uses a signed upload endpoint only when this is `true` and the `taken-on-grindr-signing-enabled` flag is on.",
 				"schema": {
 					"type": "boolean"
 				}
@@ -12992,28 +12991,6 @@
 				"required": [
 					"language",
 					"categoryCollection"
-				]
-			},
-			"ChatMediaUploadResponse": {
-				"type": "object",
-				"properties": {
-					"mediaId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"mediaHash": {
-						"$ref": "#/components/schemas/MediaHash"
-					},
-					"url": {
-						"type": "string",
-						"format": "uri"
-					}
-				},
-				"x-render-on-tag": "users/profiles",
-				"required": [
-					"mediaId",
-					"mediaHash",
-					"url"
 				]
 			},
 			"LegacyMediaUploadResponse": {

@@ -84,7 +84,7 @@ Starting with app version 26.10.0, the media-upload endpoints are protected by a
 - `POST /v5/media/upload` — profile images (signed successor of the unsigned `POST /v4/media/upload`, see [Upload media (signed)](/grindr-api/users/profiles#upload-media-signed))
 - `POST /v6/chat/media/upload` — chat / drawer media (signed successor of the unsigned `POST /v5/chat/media/upload`, see [Upload media (signed)](/grindr-api/messaging/drawer#upload-media-signed))
 
-The registration endpoints live under [Media](/grindr-api/media). The older unsigned upload versions still respond, so signing is only mandatory when calling these two newer paths.
+The registration endpoints live under [Media](/grindr-api/media). The unsigned versions still respond, and signing is not an upgrade of them: the official client signs only in-app camera captures, and media uploaded through a signed path stays marked as taken on Grindr.
 
 Every binary value in this scheme (`publicKey`, `keyId`, signatures, `nonce`, body hash) is **base64url without padding** — the URL-safe alphabet (`-` and `_`), no trailing `=`. Every signature is **`SHA256withECDSA`** (ECDSA on the NIST P-256 / secp256r1 curve with SHA-256), serialized as an **ASN.1 DER** sequence and then base64url-encoded.
 
