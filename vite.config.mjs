@@ -14,6 +14,8 @@ export default defineConfig(async () => ({
 			}
 		: undefined,
 
+	optimizeDeps: { include: ["leaflet", "sveaflet"] },
+
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
 	// 1. prevent Vite from obscuring rust errors
