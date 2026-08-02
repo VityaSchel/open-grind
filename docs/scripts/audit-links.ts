@@ -64,7 +64,7 @@ interface Broken {
 const broken: Broken[] = [];
 const linkRe = /\[([^\]]*)\]\((\/grindr-api\/[^)#\s]*)(#[^)\s]+)?\)/g;
 
-for (const f of walk(ROOT)) {
+for (const f of [...walk(ROOT), ...walk(GENERATED)]) {
 	const content = readFileSync(f, "utf8");
 	const fromPage = pageOf(f);
 	for (const m of content.matchAll(linkRe)) {
