@@ -275,6 +275,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 | Tauri CLI                               | `package.json` / `bun.lock`                                      |
 | JS deps                                 | `bun.lock`                                                       |
 | Cargo deps                              | `src-tauri/Cargo.lock`                                           |
+| Dependency patches                      | [patches/](./patches), [src-tauri/patches/](./src-tauri/patches) |
 
 The `opengrind.android.*` keys in `gradle.properties` are read by both Gradle and `flake.nix`. Bump them there once and both consumers pick up the new value.
 

@@ -1,5 +1,7 @@
 # Vendored cargo patches
 
+`tauri-codegen` generates embedded assets and CSP hashes in hash map order during build and cause non-determenism during build.
+
 `tauri-codegen/` is **generated**, do not edit it. Wipe and regenerate any time with:
 
 ```sh
