@@ -30,9 +30,8 @@ export function isSoftKeyboardVisible(): boolean | undefined {
 }
 
 function runBackGestureHandlers(): boolean {
-	const handlers = [...backGestureEventHandlers];
-	for (let index = handlers.length - 1; index >= 0; index--) {
-		if (handlers[index]() !== true) return true;
+	for (const handler of [...backGestureEventHandlers].reverse()) {
+		if (handler() !== true) return true;
 	}
 	return false;
 }

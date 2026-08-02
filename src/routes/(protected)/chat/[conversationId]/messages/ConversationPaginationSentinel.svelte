@@ -27,7 +27,7 @@
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(entry) => {
-				if (entry[0].isIntersecting) {
+				if (entry[0]?.isIntersecting) {
 					loadMore().catch((error) => console.error(error));
 				}
 			},

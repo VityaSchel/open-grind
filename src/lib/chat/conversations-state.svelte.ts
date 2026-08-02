@@ -389,7 +389,8 @@ class ConversationsState {
 			message,
 			sender: {
 				name: conversation.data.name,
-				avatarMediaHash: conversation.data.participants[0].primaryMediaHash,
+				avatarMediaHash:
+					conversation.data.participants[0]?.primaryMediaHash ?? null,
 			},
 			conversationId: conversation.data.conversationId,
 		});
@@ -429,9 +430,10 @@ class ConversationsState {
 		const results = await Promise.allSettled(items.map(request));
 		const failures: T[] = [];
 		let error: unknown = null;
-		results.forEach((result, index) => {
-			if (result.status !== "rejected") return;
-			failures.push(items[index]);
+		items.forEach((item, index) => {
+			const result = results[index];
+			if (result?.status !== "rejected") return;
+			failures.push(item);
 			error ??= result.reason;
 		});
 		if (failures.length === 0) return;

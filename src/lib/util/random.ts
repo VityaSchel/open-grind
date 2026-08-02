@@ -19,7 +19,9 @@ export function mulberry32(seed: number): () => number {
 export type Rng = () => number;
 
 export function pick<T>(rng: Rng, items: readonly T[]): T {
-	return items[Math.floor(rng() * items.length)];
+	const item = items[Math.floor(rng() * items.length)];
+	if (item === undefined) throw new RangeError("pick from an empty list");
+	return item;
 }
 
 export function chance(rng: Rng, probability: number): boolean {

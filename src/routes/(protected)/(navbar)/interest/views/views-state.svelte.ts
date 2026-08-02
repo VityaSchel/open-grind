@@ -64,9 +64,10 @@ export class ViewsState extends ReconcilingListState<
 		const index = this.#profiles.findIndex(
 			(v) => v.profileId === fresh.profileId,
 		);
+		const prev = this.#profiles[index];
 		let next = fresh;
-		if (index !== -1) {
-			const [prev] = this.#profiles.splice(index, 1);
+		if (prev) {
+			this.#profiles.splice(index, 1);
 			next = {
 				...prev,
 				...fresh,

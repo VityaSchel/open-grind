@@ -39,6 +39,9 @@ function measure(page: Page): Promise<Metrics> {
 		const form = document.querySelector("form");
 		if (!form) throw new Error("composer form not found");
 		const messages = [...scroller.querySelectorAll(message)];
+		const newest = messages.at(-1);
+		const middle = messages[Math.floor(messages.length / 2)];
+		if (!newest || !middle) throw new Error("no messages rendered");
 		const refresh = scroller.parentElement?.querySelector<HTMLElement>(
 			"[data-refresh-phase]",
 		);
@@ -48,10 +51,8 @@ function measure(page: Page): Promise<Metrics> {
 			scrollTop: scroller.scrollTop,
 			floorDistance:
 				scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop,
-			newestMessageBottom:
-				messages[messages.length - 1].getBoundingClientRect().bottom,
-			middleMessageTop:
-				messages[Math.floor(messages.length / 2)].getBoundingClientRect().top,
+			newestMessageBottom: newest.getBoundingClientRect().bottom,
+			middleMessageTop: middle.getBoundingClientRect().top,
 			refreshBottom: refresh
 				? parseFloat(getComputedStyle(refresh).bottom)
 				: NaN,

@@ -54,7 +54,7 @@ test.describe("attachments drawer", () => {
 			intermediate.length,
 			`expected the drawer to pass through intermediate positions, saw ${tops.join()}`,
 		).toBeGreaterThan(0);
-		expect(tops[tops.length - 1]).toBeLessThan(tops[0]);
+		expect(tops.at(-1)).toBeLessThan(tops[0] ?? 0);
 	});
 
 	test("released part way, it settles onto the nearest snap", async ({

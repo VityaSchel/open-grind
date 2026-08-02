@@ -124,10 +124,10 @@ describe("demo route data matches the real schemas", () => {
 				`/v5/chat/conversation/${id}/message?profile=true`,
 			) as { messages: unknown[]; lastReadTimestamp: number | null };
 			const messages = z.array(apiResponseMessageSchema).parse(body.messages);
-			expect(messages.length).toBeGreaterThan(0);
-			expect(messages[0].timestamp).toBeGreaterThanOrEqual(
-				messages[messages.length - 1].timestamp,
-			);
+			const [newest] = messages;
+			const oldest = messages.at(-1);
+			if (!newest || !oldest) throw new Error(`no messages in ${id}`);
+			expect(newest.timestamp).toBeGreaterThanOrEqual(oldest.timestamp);
 		}
 	});
 
@@ -233,6 +233,8 @@ describe("demo route data matches the real schemas", () => {
 			return z.array(fullConversationSchema).parse(body.entries);
 		};
 		const [first, second, third] = inbox();
+		if (!first || !second || !third)
+			throw new Error("the demo inbox has fewer than three conversations");
 
 		route(
 			`/v4/chat/conversation/${first.data.conversationId}/${first.data.pinned ? "unpin" : "pin"}`,

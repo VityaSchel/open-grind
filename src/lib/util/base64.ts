@@ -13,7 +13,6 @@ export function toBase64(bytes: Uint8Array): string {
 		return bytes.toBase64();
 	}
 	let bin = "";
-	for (let i = 0; i < bytes.byteLength; i++)
-		bin += String.fromCharCode(bytes[i]);
+	for (const byte of bytes) bin += String.fromCharCode(byte);
 	return btoa(bin);
 }

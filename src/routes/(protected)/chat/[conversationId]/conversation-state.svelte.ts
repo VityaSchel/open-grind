@@ -169,9 +169,7 @@ export class ConversationState {
 				result.messages.map((m) => [m.messageId, m] as const),
 			);
 			const oldestServerTs =
-				result.messages.length > 0
-					? result.messages[result.messages.length - 1].timestamp
-					: Number.POSITIVE_INFINITY;
+				result.messages.at(-1)?.timestamp ?? Number.POSITIVE_INFINITY;
 
 			const newValue: OptimisticMessage[] = [];
 			const seenLocalIds = new Set<string>();
@@ -381,7 +379,7 @@ export class ConversationState {
 		let fallback: OptimisticMessage | undefined;
 		for (let i = this.messages.length - 1; i >= 0; i--) {
 			const candidate = this.messages[i];
-			if (candidate.status !== "pending") continue;
+			if (candidate?.status !== "pending") continue;
 			if (candidate.type === incoming.type) return candidate;
 			fallback ??= candidate;
 		}
@@ -425,8 +423,9 @@ export class ConversationState {
 
 		let revert = () => {};
 		const index = this.messages.findIndex((m) => m.messageId === messageId);
-		if (index > -1) {
-			const [removed] = this.messages.splice(index, 1);
+		const removed = this.messages[index];
+		if (removed) {
+			this.messages.splice(index, 1);
 			if (isLatest) this.#updatePreview(this.messages.at(0));
 			this.#syncCache();
 			const revertDeleteMessage = () => {
@@ -481,9 +480,9 @@ export class ConversationState {
 		this.#readQueue = [];
 		this.#readTimer = null;
 		this.#readDeadline = null;
-		if (queue.length === 0) return;
 		queue.sort((a, b) => a.timestamp - b.timestamp);
-		const highest = queue[queue.length - 1];
+		const highest = queue.at(-1);
+		if (!highest) return;
 		const { revealMessageRead } = await getPreferences();
 		if (revealMessageRead) {
 			try {

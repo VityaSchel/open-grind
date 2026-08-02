@@ -142,17 +142,21 @@ describe("FetchCache", () => {
 	});
 
 	it("starts a new request for the next account instead of joining the previous one", async () => {
-		const pending = [deferred<string>(), deferred<string>()];
+		const first = deferred<string>();
+		const second = deferred<string>();
+		const pending = [first, second];
 		let calls = 0;
-		const cache = new FetchCache<string, string>(
-			() => pending[calls++].promise,
-		);
+		const cache = new FetchCache<string, string>(() => {
+			const next = pending[calls++];
+			if (!next) throw new Error("more fetches than deferred fixtures");
+			return next.promise;
+		});
 
 		const previous = cache.fetch("k");
 		clearAccountCaches();
 		const current = cache.fetch("k");
-		pending[0].resolve("previous account");
-		pending[1].resolve("current account");
+		first.resolve("previous account");
+		second.resolve("current account");
 
 		expect(await previous).toBe("previous account");
 		expect(await current).toBe("current account");
@@ -160,20 +164,19 @@ describe("FetchCache", () => {
 	});
 
 	it("keeps the pending request when one from the previous account settles", async () => {
-		const pending = [
-			deferred<string>(),
-			deferred<string>(),
-			deferred<string>(),
-		];
+		const first = deferred<string>();
+		const pending = [first, deferred<string>(), deferred<string>()];
 		let calls = 0;
-		const cache = new FetchCache<string, string>(
-			() => pending[calls++].promise,
-		);
+		const cache = new FetchCache<string, string>(() => {
+			const next = pending[calls++];
+			if (!next) throw new Error("more fetches than deferred fixtures");
+			return next.promise;
+		});
 
 		const previous = cache.fetch("k");
 		clearAccountCaches();
 		void cache.fetch("k");
-		pending[0].resolve("previous account");
+		first.resolve("previous account");
 		await previous;
 		void cache.fetch("k");
 

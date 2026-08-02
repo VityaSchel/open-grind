@@ -93,11 +93,12 @@ const MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME = "3";
 const MAGIC_PROFILE_BLOCK_DISPLAY_NAME = "4";
 
 async function fetchProfile(profileId: number): Promise<Profile> {
-	const profile = (
+	const [profile] = (
 		await fetchRest(`/v7/profiles/${profileId}`, {
 			method: "GET",
 		}).then((res) => res.jsonParsed(profileResponseSchema))
-	).profiles[0];
+	).profiles;
+	if (!profile) throw new ProfileUnavailableError();
 	if (isProbablyUnavailable(profile)) {
 		if (profile.displayName === MAGIC_PROFILE_BLOCK_DISPLAY_NAME) {
 			const blockedByUs = await getBlockedUsers().then((blocking) =>

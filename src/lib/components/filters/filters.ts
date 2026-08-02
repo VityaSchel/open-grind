@@ -66,14 +66,19 @@ export type FilterBodyTypeId =
 	(typeof FilterBodyType)[keyof typeof FilterBodyType];
 export const filterBodyTypeSchema = z.array(z.enum(FilterBodyType));
 
+export const HEIGHT_CM_MIN = 120;
+export const HEIGHT_CM_MAX = 242;
+export const WEIGHT_KG_MIN = 40;
+export const WEIGHT_KG_MAX = 273;
+
 export const filterHeightEnabledSchema = z.boolean();
 export const filterHeightSchema = z
-	.array(z.number().min(120).max(242))
+	.array(z.number().min(HEIGHT_CM_MIN).max(HEIGHT_CM_MAX))
 	.length(2);
 
 export const filterWeightEnabledSchema = z.boolean();
 export const filterWeightSchema = z
-	.array(z.number().min(40).max(273))
+	.array(z.number().min(WEIGHT_KG_MIN).max(WEIGHT_KG_MAX))
 	.length(2);
 
 export const filterRelationshipStatusEnabledSchema = z.boolean();
@@ -153,10 +158,10 @@ export const gridSearchFiltersSchema = z.object({
 	bodyTypes: filterBodyTypeSchema.default([]),
 
 	heightEnabled: filterHeightEnabledSchema.default(false),
-	height: filterHeightSchema.default([120, 242]),
+	height: filterHeightSchema.default([HEIGHT_CM_MIN, HEIGHT_CM_MAX]),
 
 	weightEnabled: filterWeightEnabledSchema.default(false),
-	weight: filterWeightSchema.default([40, 273]),
+	weight: filterWeightSchema.default([WEIGHT_KG_MIN, WEIGHT_KG_MAX]),
 
 	relationshipStatusesEnabled:
 		filterRelationshipStatusEnabledSchema.default(false),

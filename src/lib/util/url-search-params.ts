@@ -24,8 +24,8 @@ function stringRecordToValues<T extends z.ZodObject>(
 	const shape = schema.shape;
 	const result: Record<string, unknown> = {};
 	for (const [key, fieldSchema] of Object.entries(shape)) {
-		if (!(key in record)) continue;
 		const raw = record[key];
+		if (raw === undefined) continue;
 		const inner = unwrapSchema(fieldSchema as z.ZodType);
 		if (inner instanceof z.ZodNumber) result[key] = Number(raw);
 		else if (inner instanceof z.ZodBoolean)

@@ -64,8 +64,10 @@
 		totalRadius: number,
 	) {
 		const slide = api.slideNodes()[index];
+		const snap = api.scrollSnapList()[index];
+		if (!slide || snap === undefined) return;
 		const wheelLocation = api.scrollProgress() * totalRadius;
-		const positionDefault = api.scrollSnapList()[index] * totalRadius;
+		const positionDefault = snap * totalRadius;
 		const positionLoopStart = positionDefault + totalRadius;
 		const positionLoopEnd = positionDefault - totalRadius;
 

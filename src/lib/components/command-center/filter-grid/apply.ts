@@ -93,7 +93,7 @@ export function combinedRangeApply(
 	return (raw, draft) => {
 		const parts = raw.split("-").map((part) => part.trim());
 		if (parts.length !== 2) return err("Use min-max, e.g. 25-40");
-		const [minRaw, maxRaw] = parts;
+		const [minRaw = "", maxRaw = ""] = parts;
 		if (minRaw === "" && maxRaw === "") return err("No values");
 		for (const [bound, value] of [
 			[0, minRaw],

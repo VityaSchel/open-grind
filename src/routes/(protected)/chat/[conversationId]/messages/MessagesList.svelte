@@ -33,7 +33,7 @@
 		stackLength={message.stackLength}
 		dayStart={message.dayStart}
 		status={message.status}
-		isRead={isOut && message.messageId === messages[0].messageId
+		isRead={isOut && message.messageId === messages[0]?.messageId
 			? conversationState.lastReadTimestamp === message.timestamp
 			: null}
 		onVisible={!isOut

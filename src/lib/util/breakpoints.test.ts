@@ -8,7 +8,7 @@ function parseBreakpointTokens(css: string) {
 	for (const [, name, value] of css.matchAll(
 		/--breakpoint-([\w-]+):\s*([^;]+);/g,
 	)) {
-		tokens[name] = value.trim();
+		if (name && value) tokens[name] = value.trim();
 	}
 	return tokens;
 }

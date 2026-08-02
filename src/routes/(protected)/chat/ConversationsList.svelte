@@ -165,7 +165,7 @@
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(es) => {
-				if (es[0].isIntersecting)
+				if (es[0]?.isIntersecting)
 					conversations.loadMore().catch((error) => console.error(error));
 			},
 			{ rootMargin: "400px" },

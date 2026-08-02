@@ -30,7 +30,7 @@
 	function observeSentinel(node: HTMLElement) {
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (entries[0].isIntersecting)
+				if (entries[0]?.isIntersecting)
 					gridState.loadMore().catch((error) => console.error(error));
 			},
 			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
@@ -46,7 +46,7 @@
 	function observeLazy(node: HTMLElement, params: { id: number }) {
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (entries[0].isIntersecting) {
+				if (entries[0]?.isIntersecting) {
 					gridState
 						.resolveProfile(params.id)
 						.catch((error) => console.error(error));

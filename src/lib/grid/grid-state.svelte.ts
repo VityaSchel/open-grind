@@ -3,6 +3,7 @@ import z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error";
+import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/components/filters/filters";
 import { reconciler } from "$lib/util/reconcile";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import {
@@ -185,8 +186,8 @@ class GridState {
 					heightCmMax: filters?.height[1],
 				}),
 				...(filters?.weightEnabled && {
-					weightGramsMin: filters?.weight[0] * 1000,
-					weightGramsMax: filters?.weight[1] * 1000,
+					weightGramsMin: (filters?.weight[0] ?? WEIGHT_KG_MIN) * 1000,
+					weightGramsMax: (filters?.weight[1] ?? WEIGHT_KG_MAX) * 1000,
 				}),
 				...(filters?.relationshipStatusesEnabled && {
 					relationshipStatuses: filters?.relationshipStatuses,

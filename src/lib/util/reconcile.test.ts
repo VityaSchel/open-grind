@@ -32,6 +32,18 @@ async function freshReconciler() {
 	return reconciler;
 }
 
+function dropEvents(skipped: number) {
+	const [handler] = droppedHandlers;
+	if (!handler) throw new Error("nothing subscribed to ws:events-dropped");
+	handler(skipped);
+}
+
+function reconnect() {
+	const [handler] = connectedHandlers;
+	if (!handler) throw new Error("nothing subscribed to ws:connected");
+	handler();
+}
+
 describe("Reconciler resync after dropped websocket events", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
@@ -48,7 +60,7 @@ describe("Reconciler resync after dropped websocket events", () => {
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
 
-		droppedHandlers[0](3);
+		dropEvents(3);
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(handler).toHaveBeenCalledTimes(1);
@@ -59,12 +71,12 @@ describe("Reconciler resync after dropped websocket events", () => {
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
 
-		droppedHandlers[0](3);
+		dropEvents(3);
 		await vi.advanceTimersByTimeAsync(0);
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1200);
-		droppedHandlers[0](7);
+		dropEvents(7);
 		await vi.advanceTimersByTimeAsync(0);
 		expect(handler).toHaveBeenCalledTimes(1);
 
@@ -77,14 +89,14 @@ describe("Reconciler resync after dropped websocket events", () => {
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
 
-		droppedHandlers[0](3);
+		dropEvents(3);
 		await vi.advanceTimersByTimeAsync(0);
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1000);
-		droppedHandlers[0](256);
-		droppedHandlers[0](256);
-		droppedHandlers[0](256);
+		dropEvents(256);
+		dropEvents(256);
+		dropEvents(256);
 
 		await vi.advanceTimersByTimeAsync(2000);
 		expect(handler).toHaveBeenCalledTimes(2);
@@ -95,17 +107,17 @@ describe("Reconciler resync after dropped websocket events", () => {
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
 
-		droppedHandlers[0](3);
+		dropEvents(3);
 		await vi.advanceTimersByTimeAsync(0);
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1200);
-		droppedHandlers[0](7);
+		dropEvents(7);
 
 		// A reconnect reconcile lands after the drop, so it already covers it.
 		await vi.advanceTimersByTimeAsync(800);
-		connectedHandlers[0]();
-		connectedHandlers[0]();
+		reconnect();
+		reconnect();
 		await vi.advanceTimersByTimeAsync(0);
 		expect(handler).toHaveBeenCalledTimes(2);
 
