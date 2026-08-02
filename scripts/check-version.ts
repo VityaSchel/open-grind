@@ -2,7 +2,6 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const root = join(import.meta.dir, "..");
-const release = process.argv.includes("--release");
 
 const fail = (message: string): never => {
 	console.error(`\x1b[31merror\x1b[0m: ${message}`);
@@ -20,11 +19,16 @@ const config: {
 const configVersion = config.version;
 if (!configVersion) fail("no version found in src-tauri/tauri.conf.json");
 
-if (cargoVersion !== configVersion) {
+const packageVersion: string | undefined = JSON.parse(
+	readFileSync(join(root, "package.json"), "utf8"),
+).version;
+if (!packageVersion) fail("no version found in package.json");
+
+if (cargoVersion !== configVersion || packageVersion !== configVersion) {
 	fail(
-		`version mismatch: Cargo.toml is ${cargoVersion}, tauri.conf.json is ${configVersion}. ` +
-			`Tauri reads the version from tauri.conf.json, so drift here silently changes the ` +
-			`user agent and the update check.`,
+		`version mismatch: tauri.conf.json is ${configVersion}, Cargo.toml is ${cargoVersion}, ` +
+			`package.json is ${packageVersion}. Tauri reads the version from tauri.conf.json, so ` +
+			`drift here silently changes the user agent and the update check.`,
 	);
 }
 
@@ -42,20 +46,12 @@ if (!Number.isInteger(versionCode)) {
 const isDev =
 	prerelease.split(".").includes("dev") || prerelease.endsWith("-dev");
 
-if (release && isDev) {
-	fail(
-		`refusing to release ${configVersion}: strip the -dev prerelease and set the release ` +
-			`version first.`,
-	);
-}
-if (!release && !isDev) {
+if (!isDev) {
 	fail(
 		`${configVersion} has no -dev prerelease. After tagging a release, bump straight to the ` +
 			`next version with -dev (e.g. 0.1.0-beta.5-dev) so main never claims to be a published ` +
-			`release. Release builds run this with --release.`,
+			`release. Release builds set the release version and run with allow_dev off.`,
 	);
 }
 
-console.log(
-	`version ${configVersion} (versionCode ${versionCode}) ok for ${release ? "release" : "development"}`,
-);
+console.log(`version ${configVersion} (versionCode ${versionCode}) ok`);
