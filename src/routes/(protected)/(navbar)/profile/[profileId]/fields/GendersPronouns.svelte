@@ -5,8 +5,8 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import ProfileField from "./ProfileField.svelte";
 
-	let allGenders = $derived(getGenders());
-	let allPronouns = $derived(getPronouns());
+	const allGenders = $derived(getGenders());
+	const allPronouns = $derived(getPronouns());
 
 	let {
 		genders = null,

@@ -49,6 +49,7 @@ function profile(patch: Partial<Profile> = {}): Profile {
 		displayName: "Peer",
 		tapType: null,
 		tapped: false,
+		isFavorite: false,
 		...patch,
 	} as Profile;
 }
@@ -304,6 +305,19 @@ describe("ProfileState taps", () => {
 		expect(mergeProfileEditIntoCachesMock).toHaveBeenCalledExactlyOnceWith({
 			cacheProfileId: PROFILE_ID,
 			patch: { tapType: TapType.Hot, tapped: true },
+		});
+	});
+
+	it("keeps a favorite on the profile and in the profile cache", async () => {
+		const state = create();
+		await flush();
+
+		state.setFavorite(true);
+
+		expect(state.profile?.isFavorite).toBe(true);
+		expect(mergeProfileEditIntoCachesMock).toHaveBeenCalledExactlyOnceWith({
+			cacheProfileId: PROFILE_ID,
+			patch: { isFavorite: true },
 		});
 	});
 

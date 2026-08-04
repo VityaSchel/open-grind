@@ -155,6 +155,7 @@
 						ourProfileId={profileState.ourProfileId}
 						{profile}
 						onBlocked={() => profileState.markBlocked()}
+						onFavorite={(isFavorite) => profileState.setFavorite(isFavorite)}
 					/>
 					<div
 						class={[

@@ -79,6 +79,16 @@ export class ProfileState {
 		});
 	}
 
+	setFavorite(isFavorite: boolean): void {
+		const { profile } = this;
+		if (!profile) return;
+		profile.isFavorite = isFavorite;
+		mergeProfileEditIntoCaches({
+			cacheProfileId: profile.profileId,
+			patch: { isFavorite },
+		});
+	}
+
 	async #load({ refresh }: { refresh: boolean }): Promise<void> {
 		if (refresh) {
 			this.refreshing = true;

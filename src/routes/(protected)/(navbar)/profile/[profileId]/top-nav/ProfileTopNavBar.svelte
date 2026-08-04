@@ -7,10 +7,12 @@
 		ourProfileId,
 		profile,
 		onBlocked,
+		onFavorite,
 	}: {
 		ourProfileId: number;
 		profile: import("$lib/model/users/profiles").Profile;
 		onBlocked: () => void;
+		onFavorite: (isFavorite: boolean) => void;
 	} = $props();
 
 	const profileId = $derived(profile.profileId);
@@ -23,7 +25,11 @@
 	{#if isOurProfile}
 		<EditProfileButton />
 	{:else}
-		<FavoriteProfileToggle {profileId} isFavorite={profile.isFavorite} />
+		<FavoriteProfileToggle
+			{profileId}
+			isFavorite={profile.isFavorite}
+			{onFavorite}
+		/>
 		<ProfileActionsMenu {profileId} {onBlocked} />
 	{/if}
 </nav>

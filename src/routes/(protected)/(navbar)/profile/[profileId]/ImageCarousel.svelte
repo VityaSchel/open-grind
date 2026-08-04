@@ -135,7 +135,7 @@
 			{/each}
 			<span
 				class="absolute left-2 block w-2 rounded-full bg-neutral-300"
-				style="top: {indicatorY}px; height: {BULLET_SIZE}px"
+				style:top="{indicatorY}px"
 				style:height="{indicatorHeight}px"
 			></span>
 		</div>

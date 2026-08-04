@@ -69,6 +69,37 @@ test("reopening an interest tab keeps its list and scroll offset, with no skelet
 	expect(await skeletonsSeen(page)).toBe(0);
 });
 
+test("reopening a profile keeps a favorite it was just given", async ({
+	page,
+}) => {
+	test.setTimeout(300_000);
+	await installTauriShim(page);
+	await page.goto("/");
+	await page.locator("nav a").first().waitFor({ timeout: 180_000 });
+	await ensureGridLocation(page);
+
+	const tile = page.locator(PROFILE_LINK).first();
+	await tile.waitFor({ timeout: 60_000 });
+	const href = await tile.getAttribute("href");
+	await tile.click();
+	await expect(page).toHaveURL(/\/profile\/\d+$/);
+
+	const star = page.getByRole("switch");
+	await star.waitFor({ timeout: 60_000 });
+	const before = await star.getAttribute("aria-checked");
+	await star.click();
+	await expect(star).not.toHaveAttribute("aria-checked", before ?? "");
+	const after = await star.getAttribute("aria-checked");
+
+	await page.goBack();
+	await expect(page).toHaveURL(/localhost:\d+\/$/);
+	await page.locator(`a[href="${href}"]`).first().click();
+	await expect(page).toHaveURL(/\/profile\/\d+$/);
+	await star.waitFor({ timeout: 60_000 });
+
+	await expect(star).toHaveAttribute("aria-checked", after ?? "");
+});
+
 test("returning to the grid keeps its scroll offset", async ({ page }) => {
 	test.setTimeout(300_000);
 	await installTauriShim(page);

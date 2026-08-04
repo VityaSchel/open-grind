@@ -10,10 +10,12 @@
 
 	let {
 		profileId,
-		isFavorite = $bindable(),
+		isFavorite,
+		onFavorite,
 	}: {
 		profileId: number;
 		isFavorite: boolean;
+		onFavorite: (isFavorite: boolean) => void;
 	} = $props();
 
 	let submitting = $state(false);
@@ -28,10 +30,10 @@
 		try {
 			if (isFavorite) {
 				await removeFavoriteUser({ profileId });
-				isFavorite = false;
+				onFavorite(false);
 			} else {
 				await addFavoriteUser({ profileId });
-				isFavorite = true;
+				onFavorite(true);
 			}
 		} catch (error) {
 			console.error(error);
