@@ -143,4 +143,15 @@ impl SigningKeyStorage {
 			}
 		}
 	}
+
+	pub async fn restore(client: &grindr::GrindrClient) {
+		let Some(key) = Self::load().unwrap_or(None) else {
+			return;
+		};
+		if client.restore_signing_key(key).await {
+			return;
+		}
+		tracing::warn!("[signing] stored key was refused, deleting it");
+		Self::delete();
+	}
 }

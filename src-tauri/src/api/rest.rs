@@ -149,7 +149,7 @@ mod tests {
 		assert!(position(&bytes, b"status").is_some());
 		let body_key = position(&bytes, b"body").unwrap();
 		assert!(
-			matches!(bytes[body_key + 4], 0xc4 | 0xc5 | 0xc6),
+			matches!(bytes[body_key + 4], 0xc4..=0xc6),
 			"fetchRest parses body with z.instanceof(Uint8Array), which needs msgpack bin"
 		);
 

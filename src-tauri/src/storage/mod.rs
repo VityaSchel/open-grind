@@ -282,6 +282,25 @@ mod tests {
 	}
 
 	#[test]
+	fn a_signing_key_the_client_refuses_is_dropped_from_storage() {
+		with_file_store(|_| {
+			SigningKeyStorage::save(&signing_key()).unwrap();
+			let client = grindr::GrindrClient::new(
+				grindr::DeviceInfo::generate(),
+				Some(session("session-token")),
+			)
+			.unwrap();
+
+			tokio::runtime::Builder::new_current_thread()
+				.build()
+				.unwrap()
+				.block_on(SigningKeyStorage::restore(&client));
+
+			assert!(SigningKeyStorage::load().unwrap().is_none());
+		});
+	}
+
+	#[test]
 	fn deleting_the_signing_key_clears_it() {
 		with_file_store(|_| {
 			SigningKeyStorage::save(&signing_key()).unwrap();

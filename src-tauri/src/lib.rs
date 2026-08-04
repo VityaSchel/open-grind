@@ -205,13 +205,10 @@ pub fn run() {
             }
 
             {
-                let saved_key = SigningKeyStorage::load().unwrap_or(None);
                 let client = client.clone();
                 let mut key_rx = client.signing_key_receiver();
                 tauri::async_runtime::spawn(async move {
-                    if let Some(k) = saved_key {
-                        client.restore_signing_key(k).await;
-                    }
+                    SigningKeyStorage::restore(&client).await;
                     while key_rx.changed().await.is_ok() {
                         match key_rx.borrow().clone() {
                             Some(k) => {
