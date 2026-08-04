@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { StarIcon } from "phosphor-svelte";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		addFavoriteUser,
 		removeFavoriteUser,

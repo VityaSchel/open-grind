@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
+import { fetchRest } from "$lib/api/transport";
 
 const placesResponseSchema = z.object({
 	places: z.array(

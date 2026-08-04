@@ -1,6 +1,6 @@
 import { createContext } from "svelte";
 
-import { showErrorToast } from "$lib/api/error";
+import { showErrorToast } from "$lib/api/error-toast";
 import { markConversationAsRead } from "$lib/api/messaging/conversations";
 import {
 	ConversationUnavailableError,

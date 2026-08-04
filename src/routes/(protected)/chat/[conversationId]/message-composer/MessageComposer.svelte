@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import type { Message } from "$lib/model/messaging/messages";
 	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";

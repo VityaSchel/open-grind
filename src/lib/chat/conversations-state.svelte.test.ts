@@ -23,7 +23,7 @@ const {
 }));
 
 vi.mock("$app/state", () => ({ page: { route: { id: "/(protected)/chat" } } }));
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/messaging/conversations", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: markConversationAsReadMock,

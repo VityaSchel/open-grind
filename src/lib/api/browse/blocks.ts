@@ -1,7 +1,7 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
 import { cachedFetch } from "$lib/api/cache";
+import { fetchRest } from "$lib/api/transport";
 import type { Profile } from "$lib/model/users/profiles";
 
 const getBlockedUsersResponseSchema = z.object({

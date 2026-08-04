@@ -3,7 +3,7 @@
 	import { ProhibitIcon } from "phosphor-svelte";
 
 	import { unblockUser } from "$lib/api/browse/blocks";
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";

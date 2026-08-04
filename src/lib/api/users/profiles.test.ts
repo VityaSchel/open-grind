@@ -6,8 +6,8 @@ const { fetchRestMock } = vi.hoisted(() => ({
 		vi.fn<(path: string, options?: { method?: string }) => unknown>(),
 }));
 
-vi.mock("$lib/api", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api")>()),
+vi.mock("$lib/api/transport", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/transport")>()),
 	fetchRest: fetchRestMock,
 }));
 

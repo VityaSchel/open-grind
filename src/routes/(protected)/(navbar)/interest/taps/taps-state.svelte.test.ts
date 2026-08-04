@@ -21,7 +21,7 @@ const {
 	unlistenTapMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/taps", () => ({
 	getReceivedTaps: getReceivedTapsMock,
 }));

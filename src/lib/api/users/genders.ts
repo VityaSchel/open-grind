@@ -1,5 +1,5 @@
-import { fetchRest } from "$lib/api";
 import { cachedFetch } from "$lib/api/cache";
+import { fetchRest } from "$lib/api/transport";
 import { gendersSchema } from "$lib/model/users/genders";
 
 export const getGenders = cachedFetch(() =>

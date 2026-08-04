@@ -20,7 +20,7 @@ const {
 	showErrorToastMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () => Promise.resolve({ revealMessageRead: true }),
 }));
@@ -53,7 +53,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
-import { ApiError } from "$lib/api";
+import { ApiError } from "$lib/api/api-error";
 import { ConversationUnavailableError } from "$lib/api/messaging/messages";
 import type { Message } from "$lib/model/messaging/messages";
 import { ConversationState } from "./conversation-state.svelte";

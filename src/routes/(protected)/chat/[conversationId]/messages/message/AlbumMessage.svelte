@@ -3,7 +3,7 @@
 	import { ImagesIcon, VideoIcon } from "phosphor-svelte";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		type AlbumContentResponse,
 		getAlbumContent,

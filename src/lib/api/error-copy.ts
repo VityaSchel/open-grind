@@ -1,7 +1,6 @@
 import * as clipboard from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "svelte-sonner";
 
-import { ApiError } from "$lib/api/api-error";
 import { confirmCopyError } from "$lib/api/copy-error-confirm-state.svelte";
 import { errorReport, type RedactionOptions } from "$lib/api/error-report";
 
@@ -26,39 +25,4 @@ async function writeToClipboard(text: string): Promise<void> {
 		console.error(error);
 		toast.error("Couldn't copy to clipboard");
 	}
-}
-
-function isSessionGone({ kind }: ApiError): boolean {
-	return kind === "SessionCleared" || kind === "NotLoggedIn";
-}
-
-export function showErrorToast({
-	label = "An error occurred",
-	error,
-	onRetry,
-}: {
-	label?: string;
-	error: unknown;
-	onRetry?: () => void;
-}) {
-	if (error instanceof ApiError && isSessionGone(error)) return;
-	if (onRetry && error instanceof ApiError && error.retryable) {
-		toast.error(label, {
-			action: {
-				label: "Retry",
-				onClick: onRetry,
-			},
-			cancel: {
-				label: "Copy details",
-				onClick: () => void promptCopyError(error).catch(() => {}),
-			},
-		});
-		return;
-	}
-	toast.error(label, {
-		action: {
-			label: "Copy details",
-			onClick: () => void promptCopyError(error).catch(() => {}),
-		},
-	});
 }

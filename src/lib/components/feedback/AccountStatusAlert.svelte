@@ -3,11 +3,11 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import { banInfoSchema, callMethod } from "$lib/api";
 	import {
 		accountStatusState,
 		showAccountRestriction,
 	} from "$lib/api/account-status-state.svelte";
+	import { banInfoSchema, callMethod } from "$lib/api/methods";
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";

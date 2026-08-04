@@ -21,7 +21,7 @@ const {
 	viewHandlers: [] as ((event: unknown) => void)[],
 }));
 
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/views", () => ({ getViews: getViewsMock }));
 vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {

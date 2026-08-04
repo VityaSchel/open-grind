@@ -2,9 +2,9 @@
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 
-	import { asAppError, callMethod } from "$lib/api";
 	import { showAccountRestriction } from "$lib/api/account-status-state.svelte";
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
+	import { asAppError, callMethod } from "$lib/api/methods";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";

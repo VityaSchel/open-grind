@@ -16,7 +16,7 @@ vi.mock("$lib/app-data", () => ({
 	removeAppDataFile: () => Promise.resolve(),
 	writeAppDataFileAtomic: writeMock,
 }));
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
 import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";

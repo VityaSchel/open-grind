@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from "svelte-sonner";
 
-	import { callMethod } from "$lib/api";
+	import { callMethod } from "$lib/api/methods";
 	import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Checkbox } from "$lib/components/ui/checkbox";

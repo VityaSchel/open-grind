@@ -1,5 +1,5 @@
 import { registerAccountCache } from "$lib/api/account-caches";
-import type { BanInfo, Restriction } from "$lib/api";
+import type { BanInfo, Restriction } from "$lib/api/methods";
 
 export type AccountStatus =
 	| { kind: "banned"; info: BanInfo }

@@ -8,7 +8,10 @@ const { callMethodMock, connectedHandlers, droppedHandlers } = vi.hoisted(
 	}),
 );
 
-vi.mock("$lib/api", () => ({ callMethod: callMethodMock }));
+vi.mock("$lib/api/methods", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/methods")>()),
+	callMethod: callMethodMock,
+}));
 vi.mock("$lib/ws.svelte", () => ({
 	ws: {
 		onConnected(handler: () => void) {

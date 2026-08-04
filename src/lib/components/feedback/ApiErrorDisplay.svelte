@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ApiError } from "$lib/api/api-error";
-	import { promptCopyError } from "$lib/api/error";
+	import { promptCopyError } from "$lib/api/error-copy";
 	import { Button } from "$lib/components/ui/button";
 
 	let {

@@ -15,8 +15,8 @@ vi.mock("@tauri-apps/api/event", () => ({
 	listen: () => Promise.resolve(() => {}),
 }));
 vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
-vi.mock("$lib/api", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/api")>()),
+vi.mock("$lib/api/methods", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/methods")>()),
 	callMethod: callMethodMock,
 }));
 

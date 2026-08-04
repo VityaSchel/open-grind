@@ -4,7 +4,7 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { asAppError, callMethod } from "$lib/api";
+	import { asAppError, callMethod } from "$lib/api/methods";
 	import { sessionErrorState } from "$lib/api/session-error-state.svelte";
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";

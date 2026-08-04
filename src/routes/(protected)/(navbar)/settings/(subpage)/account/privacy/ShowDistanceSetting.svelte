@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import { getProfile, patchOwnProfile } from "$lib/api/users/profiles";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 

@@ -1,4 +1,4 @@
-import { callMethod } from "$lib/api";
+import { callMethod } from "$lib/api/methods";
 import { ws } from "$lib/ws.svelte";
 
 const THROTTLE_MS = 2000;

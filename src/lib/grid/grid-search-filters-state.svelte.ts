@@ -1,4 +1,4 @@
-import { showErrorToast } from "$lib/api/error";
+import { showErrorToast } from "$lib/api/error-toast";
 import {
 	getPreferences,
 	setPreferences,

@@ -3,7 +3,7 @@
 		copyErrorConfirmState,
 		settleCopyErrorConfirm,
 	} from "$lib/api/copy-error-confirm-state.svelte";
-	import { getErrorText } from "$lib/api/error";
+	import { getErrorText } from "$lib/api/error-copy";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import Label from "$lib/components/ui/label/label.svelte";

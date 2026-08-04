@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { FunnelIcon } from "phosphor-svelte";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Command from "$lib/components/ui/command";
 	import { gridState } from "$lib/grid/grid-state.svelte";

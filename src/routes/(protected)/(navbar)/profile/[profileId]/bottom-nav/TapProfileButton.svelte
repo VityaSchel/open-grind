@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import { sendTap } from "$lib/api/interest/taps";
 	import TapIcon from "$lib/components/profile/TapIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";

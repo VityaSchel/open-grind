@@ -1,4 +1,4 @@
-import { showErrorToast } from "$lib/api/error";
+import { showErrorToast } from "$lib/api/error-toast";
 import { reconciler } from "$lib/util/reconcile";
 
 export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {

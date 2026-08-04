@@ -15,7 +15,7 @@ vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 const { copyErrorConfirmState } =
 	await import("$lib/api/copy-error-confirm-state.svelte");
-const { promptCopyError } = await import("$lib/api/error");
+const { promptCopyError } = await import("$lib/api/error-copy");
 const CopyErrorConfirmAlert = (await import("./CopyErrorConfirmAlert.svelte"))
 	.default;
 

@@ -9,7 +9,7 @@
 	import { expoOut } from "svelte/easing";
 	import { fly } from "svelte/transition";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		deleteProfilePhotos,
 		ProfileModerationError,

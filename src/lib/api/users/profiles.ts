@@ -1,9 +1,9 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
 import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { FetchCache } from "$lib/api/cache";
+import { fetchRest } from "$lib/api/transport";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {

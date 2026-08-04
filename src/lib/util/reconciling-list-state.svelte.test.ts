@@ -14,7 +14,7 @@ const {
 	unsubscribeReconcileMock: vi.fn(),
 }));
 
-vi.mock("$lib/api/error", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {

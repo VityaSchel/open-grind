@@ -1,7 +1,7 @@
 import { page } from "$app/state";
 import z from "zod";
 
-import { showErrorToast } from "$lib/api/error";
+import { showErrorToast } from "$lib/api/error-toast";
 import {
 	deleteConversationForMe,
 	getConversations,

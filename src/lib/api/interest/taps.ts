@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
+import { fetchRest } from "$lib/api/transport";
 import { tapProfileSchema } from "$lib/model/interest/tap-profile";
 import { type TapType } from "$lib/model/interest/taps";
 import type { Profile } from "$lib/model/users/profiles";

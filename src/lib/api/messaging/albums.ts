@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
+import { fetchRest } from "$lib/api/transport";
 import {
 	albumContentSchema,
 	albumDetailsSchema,

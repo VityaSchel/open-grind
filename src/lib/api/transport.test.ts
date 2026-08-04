@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-import { parseApiResponse } from "$lib/api";
+import { parseApiResponse } from "$lib/api/transport";
 
 describe("parseApiResponse", () => {
 	it("returns schema-parsed response data", () => {

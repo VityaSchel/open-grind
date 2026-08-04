@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { fetchRest } from "$lib/api";
+import { fetchRest } from "$lib/api/transport";
 import { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import {

@@ -3,12 +3,12 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { asAppError, asBanned, callMethod } from "$lib/api";
 	import {
 		accountStatusState,
 		showAccountRestriction,
 	} from "$lib/api/account-status-state.svelte";
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
+	import { asAppError, asBanned, callMethod } from "$lib/api/methods";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";

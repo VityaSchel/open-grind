@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MapPinIcon } from "phosphor-svelte";
 
-	import { showErrorToast } from "$lib/api/error";
+	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		getPreferencesSnapshot,
 		setPreferences,

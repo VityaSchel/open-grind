@@ -178,15 +178,3 @@ function schemaMismatchMessage(schema: z.ZodType, error: unknown): string {
 		? error.message
 		: "API response validation failed";
 }
-
-export { ApiError };
-export {
-	asAppError,
-	asBanned,
-	banInfoSchema,
-	callMethod,
-	methods,
-	restrictionSchema,
-	type BanInfo,
-	type Restriction,
-} from "$lib/api/methods";
