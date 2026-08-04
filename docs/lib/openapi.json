@@ -7027,6 +7027,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"403": {
+						"description": "`{\"type\":\"urn:gr:err:unauthorized_action\",\"title\":\"Action not permitted\",\"status\":403}` when the conversation is no longer reachable — the other profile blocked you, or their account was deleted."
 					}
 				},
 				"summary": "Get messages in a conversation",

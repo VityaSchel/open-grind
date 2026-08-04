@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getConversationMock,
@@ -27,7 +27,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 vi.mock("$lib/api/messaging/conversations", () => ({
 	markConversationAsRead: markConversationAsReadMock,
 }));
-vi.mock("$lib/api/messaging/messages", () => ({
+vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
 	reactToMessage: vi.fn(),
 	sendMessage: sendMessageMock,
 }));
@@ -52,6 +53,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
+import { ApiError } from "$lib/api";
+import { ConversationUnavailableError } from "$lib/api/messaging/messages";
 import type { Message } from "$lib/model/messaging/messages";
 import { ConversationState } from "./conversation-state.svelte";
 
@@ -339,5 +342,106 @@ describe("ConversationState read receipts", () => {
 		} finally {
 			vi.useRealTimers();
 		}
+	});
+});
+
+describe("ConversationState error classification", () => {
+	const blocked = () =>
+		new ApiError({
+			message: "Request blocked",
+			request: { method: "GET", path: "/v5/chat/conversation/1:2/message" },
+			kind: "RequestBlocked",
+		});
+
+	const loaded = {
+		messages: [message("m1", 1000)],
+		profile,
+		pageKey: "m1",
+		lastReadTimestamp: null,
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		readHandlers.length = 0;
+		messageSentHandlers.length = 0;
+		reconcileHandlers.length = 0;
+		vi.spyOn(console, "error").mockImplementation(() => {});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("keeps the loaded messages when a refresh is blocked", async () => {
+		getConversationMock.mockResolvedValue(loaded);
+		const state = create();
+		await flush();
+
+		getConversationMock.mockRejectedValue(blocked());
+		await reconcileHandlers[0]?.();
+		await flush();
+
+		expect(state.error).toBeNull();
+		expect(state.messages).toHaveLength(1);
+		expect(showErrorToastMock).toHaveBeenCalledWith(
+			expect.objectContaining({ label: "Failed to refresh messages" }),
+		);
+	});
+
+	it("surfaces a refresh that finds the conversation gone", async () => {
+		getConversationMock.mockResolvedValue(loaded);
+		const state = create();
+		await flush();
+
+		getConversationMock.mockRejectedValue(
+			new ConversationUnavailableError(CONVERSATION_ID),
+		);
+		await reconcileHandlers[0]?.();
+		await flush();
+
+		expect(state.error).toBeInstanceOf(ConversationUnavailableError);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("keeps the loaded messages when pagination is blocked", async () => {
+		getConversationMock.mockResolvedValue(loaded);
+		const state = create();
+		await flush();
+
+		getConversationMock.mockRejectedValue(blocked());
+		await state.loadMore();
+
+		expect(state.error).toBeNull();
+		expect(state.messages).toHaveLength(1);
+		expect(showErrorToastMock).toHaveBeenCalledWith(
+			expect.objectContaining({ label: "Failed to load more messages" }),
+		);
+	});
+
+	it("surfaces pagination that finds the conversation gone", async () => {
+		getConversationMock.mockResolvedValue(loaded);
+		const state = create();
+		await flush();
+
+		getConversationMock.mockRejectedValue(
+			new ConversationUnavailableError(CONVERSATION_ID),
+		);
+		await state.loadMore();
+
+		expect(state.error).toBeInstanceOf(ConversationUnavailableError);
+	});
+
+	it("clears the error on retry", async () => {
+		getConversationMock.mockRejectedValue(blocked());
+		const state = create();
+		await flush();
+		expect(state.error).toBeInstanceOf(ApiError);
+
+		getConversationMock.mockResolvedValue(loaded);
+		state.retry();
+		await flush();
+
+		expect(state.error).toBeNull();
+		expect(state.messages).toHaveLength(1);
 	});
 });

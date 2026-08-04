@@ -1,9 +1,12 @@
 import { createContext } from "svelte";
 
-import { ApiError } from "$lib/api";
 import { showErrorToast } from "$lib/api/error";
 import { markConversationAsRead } from "$lib/api/messaging/conversations";
-import { reactToMessage, sendMessage } from "$lib/api/messaging/messages";
+import {
+	ConversationUnavailableError,
+	reactToMessage,
+	sendMessage,
+} from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import { previewFromMessage } from "$lib/model/messaging/messages";
 import { now } from "$lib/util/clock";
@@ -228,7 +231,7 @@ export class ConversationState {
 		} catch (error) {
 			if (this.#destroyed) return;
 			console.error("Failed to reconcile messages", error);
-			if (error instanceof ApiError && error.response?.status === 403) {
+			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {
 				showErrorToast({
@@ -251,6 +254,7 @@ export class ConversationState {
 	}
 
 	async #initialLoad(): Promise<void> {
+		this.error = null;
 		const cached = this.#conversations.getCachedConversation(
 			this.conversationId,
 		);
@@ -268,7 +272,6 @@ export class ConversationState {
 			return;
 		}
 		this.loading = true;
-		this.error = null;
 		try {
 			const result = await getConversation({
 				conversationId: this.conversationId,
@@ -313,7 +316,7 @@ export class ConversationState {
 		} catch (error) {
 			if (this.#destroyed) return;
 			console.error(error);
-			if (error instanceof ApiError && error.response?.status === 403) {
+			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {
 				showErrorToast({

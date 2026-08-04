@@ -17,13 +17,18 @@
 
 	const apiError = $derived(error instanceof ApiError ? error : null);
 	const retryable = $derived(apiError?.retryable ?? false);
-	const message = $derived(
-		!retryable
-			? "Something went wrong"
-			: apiError?.kind === "Http"
-				? "Couldn't reach the server"
-				: "The server ran into a problem",
-	);
+	const message = $derived.by(() => {
+		if (apiError?.kind === "RequestBlocked") {
+			return "Grindr is blocking your requests";
+		}
+		if (!retryable) {
+			return "Something went wrong";
+		}
+		if (apiError?.kind === "Http") {
+			return "Couldn't reach the server";
+		}
+		return "The server ran into a problem";
+	});
 </script>
 
 <div class={["flex flex-col items-center gap-2 p-4", className]}>

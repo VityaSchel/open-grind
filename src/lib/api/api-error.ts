@@ -42,6 +42,7 @@ export class ApiError extends Error {
 	get retryable(): boolean {
 		if (this.kind === "Http") return true;
 		if (this.kind === "Auth" || this.kind === "Unauthorized") return true;
+		if (this.kind === "RequestBlocked") return true;
 		if (this.response !== null) {
 			const { status } = this.response;
 			if (status >= 500) return true;
