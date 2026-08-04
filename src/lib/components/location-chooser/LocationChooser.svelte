@@ -28,7 +28,7 @@
 
 	function onSubmitPin() {
 		if (!pinPos) return;
-		const geohash = encodeGeohash(pinPos.lat, pinPos.lon);
+		const geohash = encodeGeohash({ lat: pinPos.lat, lon: pinPos.lon });
 		open = false;
 		void onSubmit(geohash);
 	}

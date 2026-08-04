@@ -63,7 +63,10 @@
 		}}
 		onReact={async (reactionType: number) => {
 			try {
-				await conversationState.reactTo(message.messageId, reactionType);
+				await conversationState.reactTo({
+					messageId: message.messageId,
+					reactionType,
+				});
 			} catch (error) {
 				console.error(error);
 				showErrorToast({

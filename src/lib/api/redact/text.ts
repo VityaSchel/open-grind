@@ -74,12 +74,18 @@ function redactQuery(query: string): string {
 			const separator = pair.indexOf("=");
 			if (separator === -1) return pair;
 			const name = pair.slice(0, separator);
-			return `${name}=${redactQueryValue(name, pair.slice(separator + 1))}`;
+			return `${name}=${redactQueryValue({ name, value: pair.slice(separator + 1) })}`;
 		})
 		.join("&");
 }
 
-function redactQueryValue(name: string, value: string): string {
+function redactQueryValue({
+	name,
+	value,
+}: {
+	name: string;
+	value: string;
+}): string {
 	if (verbatimQueryParams.has(name)) return value;
 	if (geohashQueryParams.has(name) && geohashCharacters.test(value)) {
 		return maskGeohash(value);
@@ -102,7 +108,13 @@ function decodeQueryValue(value: string): string {
 	}
 }
 
-export function redactStack(stack: string, message: string): string {
+export function redactStack({
+	stack,
+	message,
+}: {
+	stack: string;
+	message: string;
+}): string {
 	const headerEnd = stack.indexOf(message);
 	if (headerEnd === -1) return maskHomeDirectories(stack);
 	const bodyStart = headerEnd + message.length;

@@ -44,11 +44,17 @@
 	let contextMenuUsed = $state(false);
 
 	function togglePinned() {
-		void conversations.setPinned([conversationId], !conversation.data.pinned);
+		void conversations.setPinned({
+			conversationIds: [conversationId],
+			pinned: !conversation.data.pinned,
+		});
 	}
 
 	function toggleMuted() {
-		void conversations.setMuted([conversationId], !conversation.data.muted);
+		void conversations.setMuted({
+			conversationIds: [conversationId],
+			muted: !conversation.data.muted,
+		});
 	}
 
 	function toggleSelected() {

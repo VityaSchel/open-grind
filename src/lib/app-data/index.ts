@@ -24,10 +24,13 @@ export async function removeAppDataFile(path: string) {
 	await remove(path, { baseDir: BaseDirectory.AppData });
 }
 
-export async function writeAppDataFileAtomic(
-	path: string,
-	content: Uint8Array,
-) {
+export async function writeAppDataFileAtomic({
+	path,
+	content,
+}: {
+	path: string;
+	content: Uint8Array;
+}) {
 	await mkdir(await appDataDir(), {
 		recursive: true,
 	});

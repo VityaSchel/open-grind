@@ -75,7 +75,7 @@ export function attachTouchPull(
 			const root = scrollRoot();
 			if (
 				!root ||
-				!chainAllowsPull(startTarget, root, position) ||
+				!chainAllowsPull({ start: startTarget, root, position }) ||
 				!model.beginPull("touch")
 			) {
 				dead = true;

@@ -259,8 +259,11 @@
 		);
 		try {
 			await Promise.all([
-				updateOwnProfile(ourProfileId, body),
-				deleteProfilePhotos(ourProfileId, removedHashes),
+				updateOwnProfile({ cacheProfileId: ourProfileId, profile: body }),
+				deleteProfilePhotos({
+					cacheProfileId: ourProfileId,
+					mediaHashes: removedHashes,
+				}),
 			]);
 			savedForm = formSnapshot();
 			toast.success("Profile updated");

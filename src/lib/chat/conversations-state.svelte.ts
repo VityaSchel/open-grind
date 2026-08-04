@@ -184,9 +184,12 @@ class ConversationsState {
 			for (const incoming of fetched.values()) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					this.#mergeIncoming(existing, incoming);
+					this.#mergeIncoming({ existing, incoming });
 				} else if (
-					!this.#pendingDeletes.blocks(incoming.data.conversationId, fetchEpoch)
+					!this.#pendingDeletes.blocks({
+						conversationId: incoming.data.conversationId,
+						fetchEpoch,
+					})
 				) {
 					this.entries.push(incoming);
 				}
@@ -198,7 +201,8 @@ class ConversationsState {
 			for (const entry of [...this.entries]) {
 				const id = entry.data.conversationId;
 				if (fetched.has(id)) continue;
-				if (this.#pendingDeletes.blocks(id, fetchEpoch)) continue;
+				if (this.#pendingDeletes.blocks({ conversationId: id, fetchEpoch }))
+					continue;
 				if (entry.data.lastActivityTimestamp > windowFloor) {
 					this.remove(id);
 				}
@@ -233,9 +237,12 @@ class ConversationsState {
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					this.#mergeIncoming(existing, incoming);
+					this.#mergeIncoming({ existing, incoming });
 				} else if (
-					!this.#pendingDeletes.blocks(incoming.data.conversationId, fetchEpoch)
+					!this.#pendingDeletes.blocks({
+						conversationId: incoming.data.conversationId,
+						fetchEpoch,
+					})
 				) {
 					this.entries.unshift(incoming);
 				}
@@ -256,7 +263,7 @@ class ConversationsState {
 			const conversationId = entry.data.conversationId;
 			if (
 				!known.has(conversationId) &&
-				!this.#pendingDeletes.blocks(conversationId, fetchEpoch)
+				!this.#pendingDeletes.blocks({ conversationId, fetchEpoch })
 			) {
 				this.entries.push(entry);
 			}
@@ -445,7 +452,10 @@ class ConversationsState {
 		if (targets.length === 0) return;
 		for (const entry of targets) {
 			entry.data[field] = value;
-			this.#pendingFlags.mark(entry.data.conversationId, field);
+			this.#pendingFlags.mark({
+				conversationId: entry.data.conversationId,
+				field,
+			});
 		}
 		if (field === "pinned") this.#sortEntries();
 
@@ -460,12 +470,21 @@ class ConversationsState {
 			});
 		} finally {
 			for (const entry of targets) {
-				this.#pendingFlags.unmark(entry.data.conversationId, field);
+				this.#pendingFlags.unmark({
+					conversationId: entry.data.conversationId,
+					field,
+				});
 			}
 		}
 	}
 
-	setPinned(conversationIds: string[], pinned: boolean): Promise<void> {
+	setPinned({
+		conversationIds,
+		pinned,
+	}: {
+		conversationIds: string[];
+		pinned: boolean;
+	}): Promise<void> {
 		return this.#setFlag({
 			conversationIds,
 			field: "pinned",
@@ -478,7 +497,13 @@ class ConversationsState {
 		});
 	}
 
-	setMuted(conversationIds: string[], muted: boolean): Promise<void> {
+	setMuted({
+		conversationIds,
+		muted,
+	}: {
+		conversationIds: string[];
+		muted: boolean;
+	}): Promise<void> {
 		return this.#setFlag({
 			conversationIds,
 			field: "muted",
@@ -493,7 +518,10 @@ class ConversationsState {
 
 	#markServerDeleted(conversationId: string): void {
 		this.#pendingDeletes.mark(conversationId);
-		this.#pendingDeletes.settle(conversationId, this.#fetchEpoch);
+		this.#pendingDeletes.settle({
+			conversationId,
+			fetchEpoch: this.#fetchEpoch,
+		});
 		this.#releaseAfterInFlightFetches([conversationId]);
 	}
 
@@ -518,7 +546,10 @@ class ConversationsState {
 			});
 		} finally {
 			for (const id of conversationIds) {
-				this.#pendingDeletes.settle(id, this.#fetchEpoch);
+				this.#pendingDeletes.settle({
+					conversationId: id,
+					fetchEpoch: this.#fetchEpoch,
+				});
 			}
 			this.#releaseAfterInFlightFetches(conversationIds);
 		}
@@ -544,7 +575,13 @@ class ConversationsState {
 		return this.entries.find((e) => e.data.conversationId === conversationId);
 	}
 
-	#mergeIncoming(existing: Conversation, incoming: Conversation): void {
+	#mergeIncoming({
+		existing,
+		incoming,
+	}: {
+		existing: Conversation;
+		incoming: Conversation;
+	}): void {
 		const { unreadCount, ...data } = incoming.data;
 		for (const field of this.#pendingFlags.fields(
 			incoming.data.conversationId,
@@ -569,8 +606,14 @@ class ConversationsState {
 		return this.#messageCache.get(id);
 	}
 
-	setCachedConversation(id: string, data: CachedConversation): void {
-		this.#messageCache.set(id, data);
+	setCachedConversation({
+		conversationId,
+		data,
+	}: {
+		conversationId: string;
+		data: CachedConversation;
+	}): void {
+		this.#messageCache.set(conversationId, data);
 	}
 
 	invalidateConversation(id: string): void {

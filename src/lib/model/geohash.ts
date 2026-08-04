@@ -9,7 +9,13 @@ export const geohashSchema = z
 
 const BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 
-export function encodeGeohash(lat: number, lon: number): string {
+export function encodeGeohash({
+	lat,
+	lon,
+}: {
+	lat: number;
+	lon: number;
+}): string {
 	let latLo = -90,
 		latHi = 90;
 	let lonLo = -180,

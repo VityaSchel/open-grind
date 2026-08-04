@@ -136,7 +136,7 @@ describe("redactStack", () => {
 		const message = `Failed to load video: ${albumUrl}`;
 		const stack = `Error: ${message}\n    at load (http://tauri.localhost/assets/index-a1b2.js:1:2345)`;
 
-		const redacted = redactStack(stack, message);
+		const redacted = redactStack({ stack, message });
 		expect(redacted).not.toContain(albumUrl);
 		expect(redacted).toBe(
 			"Error: Failed to load video: https://cdns.grindr.com/videos/{id}\n" +
@@ -148,7 +148,7 @@ describe("redactStack", () => {
 		const stack =
 			"load@http://tauri.localhost/assets/index-a1b2.js:1:2345\n" +
 			"run@/Users/someone/dev/open-grind/src/lib/api/error.ts:24:5";
-		expect(redactStack(stack, "boom")).toBe(
+		expect(redactStack({ stack, message: "boom" })).toBe(
 			"load@http://tauri.localhost/assets/index-a1b2.js:1:2345\n" +
 				"run@/Users/<user>/dev/open-grind/src/lib/api/error.ts:24:5",
 		);
@@ -156,7 +156,7 @@ describe("redactStack", () => {
 
 	it("handles an error with no message", () => {
 		const stack = "Error\n    at run (/Users/someone/app.ts:1:1)";
-		expect(redactStack(stack, "")).toBe(
+		expect(redactStack({ stack, message: "" })).toBe(
 			"Error\n    at run (/Users/<user>/app.ts:1:1)",
 		);
 	});

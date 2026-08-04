@@ -36,7 +36,7 @@ const shortProfileSchema = z.object({
 });
 
 const route = (path: string, method = "GET", body?: unknown) =>
-	demoRoute(path, method, body).body;
+	demoRoute({ path, method, body }).body;
 
 describe("demo route data matches the real schemas", () => {
 	const firstProfileId = (
@@ -216,15 +216,27 @@ describe("demo route data matches the real schemas", () => {
 		gendersSchema.parse(route("/public/v2/genders"));
 		pronounsSchema.parse(route("/v1/pronouns"));
 		profileTagsResponseSchema.parse(route("/v1/tags"));
-		expect(demoRoute("/v4/me/profile", "PATCH", { aboutMe: "x" }).status).toBe(
-			200,
-		);
-		expect(demoRoute("/v3/me/blocks/100001", "POST", undefined).status).toBe(
-			200,
-		);
-		expect(demoRoute("/v3/me/favorites/100001", "POST", undefined).status).toBe(
-			200,
-		);
+		expect(
+			demoRoute({
+				path: "/v4/me/profile",
+				method: "PATCH",
+				body: { aboutMe: "x" },
+			}).status,
+		).toBe(200);
+		expect(
+			demoRoute({
+				path: "/v3/me/blocks/100001",
+				method: "POST",
+				body: undefined,
+			}).status,
+		).toBe(200);
+		expect(
+			demoRoute({
+				path: "/v3/me/favorites/100001",
+				method: "POST",
+				body: undefined,
+			}).status,
+		).toBe(200);
 	});
 
 	it("conversation pin/mute/delete mutations persist across inbox fetches", () => {

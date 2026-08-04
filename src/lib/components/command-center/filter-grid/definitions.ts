@@ -41,23 +41,32 @@ import {
 } from "./apply";
 import type { BooleanKey, Filter, ListKey, Render } from "./types";
 
-function rangeText(
-	floor: number,
-	ceiling: number,
-	[min = floor, max = ceiling]: number[],
-	format: (value: number, units: UnitSystem) => string,
-): string {
+function rangeText({
+	floor,
+	ceiling,
+	range: [min = floor, max = ceiling],
+	format,
+}: {
+	floor: number;
+	ceiling: number;
+	range: number[];
+	format: (value: number, units: UnitSystem) => string;
+}): string {
 	const units = getPreferencesSnapshot().units;
 	return `${min === floor ? "No min" : format(min, units)} - ${
 		max === ceiling ? "No max" : format(max, units)
 	}`;
 }
 
-function booleanFilter(
-	label: string,
-	keys: string[],
-	field: BooleanKey,
-): Filter {
+function booleanFilter({
+	label,
+	keys,
+	field,
+}: {
+	label: string;
+	keys: string[];
+	field: BooleanKey;
+}): Filter {
 	return {
 		label,
 		render: (filters) => (filters[field] ? "Yes" : "No"),
@@ -86,25 +95,47 @@ function rangeFilter(options: {
 		params: [
 			{
 				keys: [options.minKey],
-				apply: boundApply(target, 0, rawMin, rawMax, store),
+				apply: boundApply({
+					target,
+					bound: 0,
+					min: rawMin,
+					max: rawMax,
+					store,
+				}),
 			},
 			{
 				keys: [options.maxKey],
-				apply: boundApply(target, 1, rawMin, rawMax, store),
+				apply: boundApply({
+					target,
+					bound: 1,
+					min: rawMin,
+					max: rawMax,
+					store,
+				}),
 			},
-			{ keys: [options.label], apply: combinedRangeApply(target, min, max) },
+			{
+				keys: [options.label],
+				apply: combinedRangeApply({ target, min, max }),
+			},
 		],
 	};
 }
 
-function enumFilter(
-	label: string,
-	keys: string[],
-	target: ListKey,
-	enabled: BooleanKey,
-	enumObject: Record<string, number>,
-	labelMap: Record<number, string>,
-): Filter {
+function enumFilter({
+	label,
+	keys,
+	target,
+	enabled,
+	enumObject,
+	labelMap,
+}: {
+	label: string;
+	keys: string[];
+	target: ListKey;
+	enabled: BooleanKey;
+	enumObject: Record<string, number>;
+	labelMap: Record<number, string>;
+}): Filter {
 	const allowed = new Set(Object.values(enumObject));
 	const labels = allowed.has(-1)
 		? { ...labelMap, [-1]: "Not specified" }
@@ -118,12 +149,12 @@ function enumFilter(
 		params: [
 			{
 				keys,
-				apply: idListApply(
+				apply: idListApply({
 					target,
 					enabled,
-					(id) => allowed.has(id),
-					"Unknown value",
-				),
+					isValid: (id) => allowed.has(id),
+					invalidLabel: "Unknown value",
+				}),
 			},
 		],
 	};
@@ -136,15 +167,27 @@ const photoLabels: Record<GridSearchFilters["photos"][number], string> = {
 };
 
 export const filters: Filter[] = [
-	booleanFilter("online", ["onlineOnly", "online"], "isOnline"),
-	booleanFilter("favorites", ["favorites", "favorite", "fav"], "isFavorite"),
-	booleanFilter("right now", ["rightNow", "right-now", "rn"], "isRightNow"),
-	booleanFilter("fresh", ["fresh"], "isFresh"),
-	booleanFilter(
-		"not recently chatted",
-		["notRecentlyChatted", "haventChattedToday"],
-		"haventChattedTodayEnabled",
-	),
+	booleanFilter({
+		label: "online",
+		keys: ["onlineOnly", "online"],
+		field: "isOnline",
+	}),
+	booleanFilter({
+		label: "favorites",
+		keys: ["favorites", "favorite", "fav"],
+		field: "isFavorite",
+	}),
+	booleanFilter({
+		label: "right now",
+		keys: ["rightNow", "right-now", "rn"],
+		field: "isRightNow",
+	}),
+	booleanFilter({ label: "fresh", keys: ["fresh"], field: "isFresh" }),
+	booleanFilter({
+		label: "not recently chatted",
+		keys: ["notRecentlyChatted", "haventChattedToday"],
+		field: "haventChattedTodayEnabled",
+	}),
 	{
 		label: "photos",
 		render: (f) => f.photos.map((tag) => photoLabels[tag]).join(", "),
@@ -177,7 +220,12 @@ export const filters: Filter[] = [
 		minKey: "heightCmMin",
 		maxKey: "heightCmMax",
 		render: (f) =>
-			rangeText(HEIGHT_CM_MIN, HEIGHT_CM_MAX, f.height, formatHeight),
+			rangeText({
+				floor: HEIGHT_CM_MIN,
+				ceiling: HEIGHT_CM_MAX,
+				range: f.height,
+				format: formatHeight,
+			}),
 	}),
 	rangeFilter({
 		label: "weight",
@@ -190,72 +238,77 @@ export const filters: Filter[] = [
 		rawMax: WEIGHT_KG_MAX * 1000,
 		store: (grams) => grams / 1000,
 		render: (f) =>
-			rangeText(WEIGHT_KG_MIN, WEIGHT_KG_MAX, f.weight, formatWeightKg),
+			rangeText({
+				floor: WEIGHT_KG_MIN,
+				ceiling: WEIGHT_KG_MAX,
+				range: f.weight,
+				format: formatWeightKg,
+			}),
 	}),
-	enumFilter(
-		"position",
-		["sexualPositions", "positions", "position"],
-		"positions",
-		"positionEnabled",
-		FilterPosition,
-		sexualPositions,
-	),
-	enumFilter(
-		"tribes",
-		["tribes", "tribe"],
-		"tribes",
-		"tribesEnabled",
-		FilterTribe,
-		tribes,
-	),
-	enumFilter(
-		"body type",
-		["bodyTypes", "bodyType", "body"],
-		"bodyTypes",
-		"bodyTypesEnabled",
-		FilterBodyType,
-		bodyTypes,
-	),
-	enumFilter(
-		"relationship",
-		["relationshipStatuses", "relationshipStatus", "relationship"],
-		"relationshipStatuses",
-		"relationshipStatusesEnabled",
-		FilterRelationshipStatus,
-		relationshipStatuses,
-	),
-	enumFilter(
-		"nsfw",
-		["nsfwPics", "nsfw"],
-		"acceptNSFWPics",
-		"acceptNSFWPicsEnabled",
-		FilterAcceptNSFWPics,
-		acceptNSFWPics,
-	),
-	enumFilter(
-		"looking for",
-		["lookingFor", "looking"],
-		"lookingFor",
-		"lookingForEnabled",
-		FilterLookingFor,
-		lookingFor,
-	),
-	enumFilter(
-		"meet at",
-		["meetAt", "meet"],
-		"meetAt",
-		"meetAtEnabled",
-		FilterMeetAt,
-		meetAt,
-	),
-	enumFilter(
-		"health",
-		["sexualHealth", "health"],
-		"healthPractices",
-		"healthPracticesEnabled",
-		FilterHealthPractice,
-		healthPractices,
-	),
+	enumFilter({
+		label: "position",
+		keys: ["sexualPositions", "positions", "position"],
+		target: "positions",
+		enabled: "positionEnabled",
+		enumObject: FilterPosition,
+		labelMap: sexualPositions,
+	}),
+	enumFilter({
+		label: "tribes",
+		keys: ["tribes", "tribe"],
+		target: "tribes",
+		enabled: "tribesEnabled",
+		enumObject: FilterTribe,
+		labelMap: tribes,
+	}),
+	enumFilter({
+		label: "body type",
+		keys: ["bodyTypes", "bodyType", "body"],
+		target: "bodyTypes",
+		enabled: "bodyTypesEnabled",
+		enumObject: FilterBodyType,
+		labelMap: bodyTypes,
+	}),
+	enumFilter({
+		label: "relationship",
+		keys: ["relationshipStatuses", "relationshipStatus", "relationship"],
+		target: "relationshipStatuses",
+		enabled: "relationshipStatusesEnabled",
+		enumObject: FilterRelationshipStatus,
+		labelMap: relationshipStatuses,
+	}),
+	enumFilter({
+		label: "nsfw",
+		keys: ["nsfwPics", "nsfw"],
+		target: "acceptNSFWPics",
+		enabled: "acceptNSFWPicsEnabled",
+		enumObject: FilterAcceptNSFWPics,
+		labelMap: acceptNSFWPics,
+	}),
+	enumFilter({
+		label: "looking for",
+		keys: ["lookingFor", "looking"],
+		target: "lookingFor",
+		enabled: "lookingForEnabled",
+		enumObject: FilterLookingFor,
+		labelMap: lookingFor,
+	}),
+	enumFilter({
+		label: "meet at",
+		keys: ["meetAt", "meet"],
+		target: "meetAt",
+		enabled: "meetAtEnabled",
+		enumObject: FilterMeetAt,
+		labelMap: meetAt,
+	}),
+	enumFilter({
+		label: "health",
+		keys: ["sexualHealth", "health"],
+		target: "healthPractices",
+		enabled: "healthPracticesEnabled",
+		enumObject: FilterHealthPractice,
+		labelMap: healthPractices,
+	}),
 	{
 		label: "genders",
 		render: (f) =>
@@ -265,12 +318,12 @@ export const filters: Filter[] = [
 		params: [
 			{
 				keys: ["genders", "gender"],
-				apply: idListApply(
-					"genders",
-					"genderEnabled",
-					(id) => id === -1 || id >= 0,
-					"Invalid gender ID",
-				),
+				apply: idListApply({
+					target: "genders",
+					enabled: "genderEnabled",
+					isValid: (id) => id === -1 || id >= 0,
+					invalidLabel: "Invalid gender ID",
+				}),
 			},
 		],
 	},

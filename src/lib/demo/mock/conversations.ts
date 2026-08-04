@@ -140,7 +140,15 @@ const demoConversationSeeds: DemoConversation[] = [
 const MESSAGE_GAP = 7 * MINUTE;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
 
-function picsum(seed: string, width = 600, height = 800): string {
+function picsum({
+	seed,
+	width = 600,
+	height = 800,
+}: {
+	seed: string;
+	width?: number;
+	height?: number;
+}): string {
 	return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${width}/${height}`;
 }
 
@@ -160,17 +168,23 @@ const pinnedOverrides = new Map<string, boolean>();
 const mutedOverrides = new Map<string, boolean>();
 const deletedConversationIds = new Set<string>();
 
-export function demoSetConversationPinned(
-	conversationId: string,
-	pinned: boolean,
-): void {
+export function demoSetConversationPinned({
+	conversationId,
+	pinned,
+}: {
+	conversationId: string;
+	pinned: boolean;
+}): void {
 	pinnedOverrides.set(conversationId, pinned);
 }
 
-export function demoSetConversationMuted(
-	conversationId: string,
-	muted: boolean,
-): void {
+export function demoSetConversationMuted({
+	conversationId,
+	muted,
+}: {
+	conversationId: string;
+	muted: boolean;
+}): void {
 	mutedOverrides.set(conversationId, muted);
 }
 
@@ -182,12 +196,17 @@ function lastActivityOf(conv: DemoConversation): number {
 	return NOW - conv.lastActivityAgo * MINUTE;
 }
 
-function buildMessage(
-	conv: DemoConversation,
-	message: DemoMessage,
-	index: number,
-	timestamp: number,
-): ApiResponseMessage {
+function buildMessage({
+	conv,
+	message,
+	index,
+	timestamp,
+}: {
+	conv: DemoConversation;
+	message: DemoMessage;
+	index: number;
+	timestamp: number;
+}): ApiResponseMessage {
 	const conversationId = conversationIdFor(conv.withId);
 	const messageId = `${index}:demo-${conv.withId}-${index}`;
 	const senderId = message.fromMe ? demoMeProfileId : conv.withId;
@@ -219,7 +238,7 @@ function buildMessage(
 					mediaId: 910_000 + conv.withId + index,
 					width: 600,
 					height: 800,
-					url: picsum(`expiring-${conv.withId}-${index}`),
+					url: picsum({ seed: `expiring-${conv.withId}-${index}` }),
 					viewsRemaining: message.expired ? 0 : 1,
 				},
 				...base,
@@ -274,19 +293,19 @@ function buildMessage(
 }
 
 function albumCoverUrl(albumId: number): string {
-	return picsum(`album-${albumId}-cover`, 300, 400);
+	return picsum({ seed: `album-${albumId}-cover`, width: 300, height: 400 });
 }
 
 function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	const lastActivity = lastActivityOf(conv);
 	const count = conv.messages.length;
 	const ordered = conv.messages.map((message, i) =>
-		buildMessage(
+		buildMessage({
 			conv,
 			message,
-			i,
-			lastActivity - (count - 1 - i) * MESSAGE_GAP,
-		),
+			index: i,
+			timestamp: lastActivity - (count - 1 - i) * MESSAGE_GAP,
+		}),
 	);
 	return ordered.reverse();
 }
@@ -340,10 +359,13 @@ export function demoConversations(page: number): {
 	return { entries, nextPage: null };
 }
 
-export function demoConversationMessages(
-	conversationId: string,
-	pageKey?: string,
-) {
+export function demoConversationMessages({
+	conversationId,
+	pageKey,
+}: {
+	conversationId: string;
+	pageKey?: string;
+}) {
 	const conv = demoConversationById.get(conversationId);
 	const seed = conv ? profileSeed(conv.withId) : undefined;
 	const photos = conv ? photosOf(conv.withId) : [];
@@ -364,7 +386,13 @@ export function demoConversationMessages(
 	return { lastReadTimestamp, messages, profile };
 }
 
-export function demoSingleMessage(conversationId: string, messageId: string) {
+export function demoSingleMessage({
+	conversationId,
+	messageId,
+}: {
+	conversationId: string;
+	messageId: string;
+}) {
 	const conv = demoConversationById.get(conversationId);
 	const message = conv
 		? threadMessages(conv).find((entry) => entry.messageId === messageId)
@@ -375,14 +403,18 @@ export function demoSingleMessage(conversationId: string, messageId: string) {
 export function demoAlbumContent(albumId: number) {
 	const count = 3 + (albumId % 3);
 	const content = Array.from({ length: count }, (_, i) => {
-		const thumb = picsum(`album-${albumId}-${i}`, 300, 400);
+		const thumb = picsum({
+			seed: `album-${albumId}-${i}`,
+			width: 300,
+			height: 400,
+		});
 		return {
 			contentId: albumId * 100 + i,
 			contentType: "image/jpeg",
 			coverUrl: thumb,
 			statusId: 1,
 			thumbUrl: thumb,
-			url: picsum(`album-${albumId}-${i}`),
+			url: picsum({ seed: `album-${albumId}-${i}` }),
 			processing: false,
 			rejectionId: null,
 		};
@@ -457,10 +489,13 @@ type DemoDrawerMedia = {
 let uploadedDrawerMediaId = 920_000;
 const uploadedDrawerMedia: DemoDrawerMedia[] = [];
 
-export function demoUploadChatMedia(
-	bytes: Uint8Array<ArrayBuffer>,
-	contentType: string,
-): { mediaId: number; url: string; mediaHash: string } {
+export function demoUploadChatMedia({
+	bytes,
+	contentType,
+}: {
+	bytes: Uint8Array<ArrayBuffer>;
+	contentType: string;
+}): { mediaId: number; url: string; mediaHash: string } {
 	const item: DemoDrawerMedia = {
 		id: uploadedDrawerMediaId++,
 		url: URL.createObjectURL(new Blob([bytes], { type: contentType })),

@@ -11,11 +11,15 @@ import { fromBase64, toBase64 } from "$lib/util/base64";
 
 type RequestInfo = { method: string; path: string; body: unknown };
 
-function buildRestResponse(
-	status: number,
-	responseBody: Uint8Array,
-	requestInfo: RequestInfo,
-) {
+function buildRestResponse({
+	status,
+	responseBody,
+	requestInfo,
+}: {
+	status: number;
+	responseBody: Uint8Array;
+	requestInfo: RequestInfo;
+}) {
 	let decoded: string | undefined;
 	const text = () => (decoded ??= new TextDecoder().decode(responseBody));
 	return {
@@ -62,7 +66,7 @@ function buildRestResponse(
 			} catch (error) {
 				if (error instanceof ApiError) throw error;
 				throw new ApiError({
-					message: schemaMismatchMessage(schema, error),
+					message: schemaMismatchMessage({ schema, error }),
 					request: requestInfo,
 					response: { status, body: text() },
 					cause: error,
@@ -91,9 +95,9 @@ export async function fetchRest(
 		body: options.body,
 	};
 	if (demoEnabled) {
-		const { status, body } = demoRoute(path, method, options.body);
+		const { status, body } = demoRoute({ path, method, body: options.body });
 		const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
-		return buildRestResponse(status, responseBody, requestInfo);
+		return buildRestResponse({ status, responseBody, requestInfo });
 	}
 	try {
 		const payload = encode({
@@ -119,7 +123,7 @@ export async function fetchRest(
 		const { status, body: responseBody } = z
 			.object({ status: z.number(), body: z.instanceof(Uint8Array) })
 			.parse(decoded);
-		return buildRestResponse(status, responseBody, requestInfo);
+		return buildRestResponse({ status, responseBody, requestInfo });
 	} catch (error) {
 		if (error instanceof ApiError) throw error;
 		const appError = asAppError(error);
@@ -170,7 +174,13 @@ export function parseApiResponse<TSchema extends z.ZodType>(options: {
 	throw parsed.error;
 }
 
-function schemaMismatchMessage(schema: z.ZodType, error: unknown): string {
+function schemaMismatchMessage({
+	schema,
+	error,
+}: {
+	schema: z.ZodType;
+	error: unknown;
+}): string {
 	if (error instanceof z.ZodError) {
 		return `API response did not match ${schemaName(schema) ?? "the expected schema"}`;
 	}

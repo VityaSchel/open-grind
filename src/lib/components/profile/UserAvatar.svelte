@@ -19,7 +19,7 @@
 <div class={[className]}>
 	{#if mediaHash}
 		<MediaImage
-			src={profileMediaUrl(mediaHash, "thumb")}
+			src={profileMediaUrl({ mediaHash, size: "thumb" })}
 			class="h-full w-full"
 			imgClass={[
 				"bg-neutral-600",

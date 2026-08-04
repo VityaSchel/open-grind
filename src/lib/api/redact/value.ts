@@ -45,10 +45,18 @@ function summariseNonJson(text: string): unknown {
 }
 
 export function redactValue(value: unknown): unknown {
-	return walk(value, 0, new WeakSet());
+	return walk({ value, depth: 0, seen: new WeakSet() });
 }
 
-function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
+function walk({
+	value,
+	depth,
+	seen,
+}: {
+	value: unknown;
+	depth: number;
+	seen: WeakSet<object>;
+}): unknown {
 	if (value === null || value === undefined) return value;
 	if (typeof value !== "object") return maskLeaf(value);
 	if (seen.has(value)) return "<circular>";
@@ -56,13 +64,13 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
 
 	seen.add(value);
 	try {
-		if (Array.isArray(value)) return walkArray(value, depth, seen);
+		if (Array.isArray(value)) return walkArray({ value, depth, seen });
 		if (!isPlainObject(value))
 			return `<${value.constructor?.name ?? "object"}>`;
 		return Object.fromEntries(
 			Object.entries(value).map(([key, item]) => [
 				key,
-				walkEntry(key, item, depth, seen),
+				walkEntry({ key, value: item, depth, seen }),
 			]),
 		);
 	} finally {
@@ -70,33 +78,42 @@ function walk(value: unknown, depth: number, seen: WeakSet<object>): unknown {
 	}
 }
 
-function walkArray(
-	value: unknown[],
-	depth: number,
-	seen: WeakSet<object>,
-): unknown[] {
+function walkArray({
+	value,
+	depth,
+	seen,
+}: {
+	value: unknown[];
+	depth: number;
+	seen: WeakSet<object>;
+}): unknown[] {
 	const items: unknown[] = value
 		.slice(0, maxArrayItems)
-		.map((item) => walk(item, depth + 1, seen));
+		.map((item) => walk({ value: item, depth: depth + 1, seen }));
 	if (value.length > maxArrayItems) {
 		items.push(`<+${value.length - maxArrayItems} more>`);
 	}
 	return items;
 }
 
-function walkEntry(
-	key: string,
-	value: unknown,
-	depth: number,
-	seen: WeakSet<object>,
-): unknown {
+function walkEntry({
+	key,
+	value,
+	depth,
+	seen,
+}: {
+	key: string;
+	value: unknown;
+	depth: number;
+	seen: WeakSet<object>;
+}): unknown {
 	if (typeof value === "string") {
 		if (verbatimKeys.has(key)) return capText(value, maxKeptChars);
 		if (proseKeys.has(key)) return scrubText(capText(value, maxKeptChars));
 	} else if (verbatimKeys.has(key) && typeof value !== "object") {
 		return value;
 	}
-	return walk(value, depth + 1, seen);
+	return walk({ value, depth: depth + 1, seen });
 }
 
 function maskLeaf(value: unknown): string {

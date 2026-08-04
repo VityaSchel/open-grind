@@ -28,33 +28,42 @@ export function errorReport(
 	error: unknown,
 	options: RedactionOptions,
 ): unknown {
-	return describeError(error, options, 0);
+	return describeError({ error, options, depth: 0 });
 }
 
-function describeError(
-	error: unknown,
-	options: RedactionOptions,
-	depth: number,
-): unknown {
-	if (error instanceof ApiError) return describeApiError(error, options, depth);
+function describeError({
+	error,
+	options,
+	depth,
+}: {
+	error: unknown;
+	options: RedactionOptions;
+	depth: number;
+}): unknown {
+	if (error instanceof ApiError)
+		return describeApiError({ error, options, depth });
 	if (error instanceof z.ZodError) {
 		return {
 			error: "Schema validation failed",
 			issues: describeZodIssues(error),
 		};
 	}
-	if (error instanceof Error) return describeThrown(error, options, depth);
+	if (error instanceof Error) return describeThrown({ error, options, depth });
 	if (typeof error === "object" && error !== null) {
 		return options.redact ? redactValue(error) : error;
 	}
 	return { error: prose(String(error), options) };
 }
 
-function describeApiError(
-	error: ApiError,
-	options: RedactionOptions,
-	depth: number,
-): unknown {
+function describeApiError({
+	error,
+	options,
+	depth,
+}: {
+	error: ApiError;
+	options: RedactionOptions;
+	depth: number;
+}): unknown {
 	const { request, response } = error;
 	const { redact } = options;
 	return {
@@ -76,38 +85,50 @@ function describeApiError(
 							? redactResponseBody(response.body)
 							: readResponseBody(response.body),
 					},
-		...describeCause(error, options, depth),
+		...describeCause({ error, options, depth }),
 	};
 }
 
-function describeThrown(
-	error: Error,
-	options: RedactionOptions,
-	depth: number,
-): unknown {
+function describeThrown({
+	error,
+	options,
+	depth,
+}: {
+	error: Error;
+	options: RedactionOptions;
+	depth: number;
+}): unknown {
 	const { redact } = options;
 	return {
 		error: prose(error.message, options),
 		...(error.name !== "Error" && { name: error.name }),
 		...(error.stack !== undefined && {
-			stack: redact ? redactStack(error.stack, error.message) : error.stack,
+			stack: redact
+				? redactStack({ stack: error.stack, message: error.message })
+				: error.stack,
 		}),
-		...describeCause(error, options, depth),
+		...describeCause({ error, options, depth }),
 	};
 }
 
-function describeCause(
-	error: Error,
-	options: RedactionOptions,
-	depth: number,
-): Record<string, unknown> {
+function describeCause({
+	error,
+	options,
+	depth,
+}: {
+	error: Error;
+	options: RedactionOptions;
+	depth: number;
+}): Record<string, unknown> {
 	const { cause } = error;
 	if (cause instanceof z.ZodError) {
 		return { issues: describeZodIssues(cause) };
 	} else if (cause === null || cause === undefined || depth >= maxCauseDepth) {
 		return {};
 	} else {
-		return { cause: describeError(cause, options, depth + 1) };
+		return {
+			cause: describeError({ error: cause, options, depth: depth + 1 }),
+		};
 	}
 }
 

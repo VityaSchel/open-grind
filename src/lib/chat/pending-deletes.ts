@@ -14,7 +14,13 @@ export class PendingDeletes {
 		this.#tombstones.set(conversationId, tombstone);
 	}
 
-	settle(conversationId: string, fetchEpoch: number): void {
+	settle({
+		conversationId,
+		fetchEpoch,
+	}: {
+		conversationId: string;
+		fetchEpoch: number;
+	}): void {
 		const tombstone = this.#tombstones.get(conversationId);
 		if (tombstone === undefined) return;
 		tombstone.inFlight -= 1;
@@ -28,7 +34,13 @@ export class PendingDeletes {
 		if (tombstone.refs === 0) this.#tombstones.delete(conversationId);
 	}
 
-	blocks(conversationId: string, fetchEpoch: number): boolean {
+	blocks({
+		conversationId,
+		fetchEpoch,
+	}: {
+		conversationId: string;
+		fetchEpoch: number;
+	}): boolean {
 		const tombstone = this.#tombstones.get(conversationId);
 		if (tombstone === undefined) return false;
 		return tombstone.inFlight > 0 || fetchEpoch <= tombstone.lastSettledEpoch;

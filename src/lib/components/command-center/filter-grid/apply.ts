@@ -18,11 +18,15 @@ export function splitList(raw: string): string[] {
 		.filter((part) => part.length > 0);
 }
 
-function parseBounded(
-	raw: string,
-	min: number,
-	max: number,
-): { value: number } | { error: string } {
+function parseBounded({
+	raw,
+	min,
+	max,
+}: {
+	raw: string;
+	min: number;
+	max: number;
+}): { value: number } | { error: string } {
 	const value = Number(raw.trim());
 	if (!Number.isFinite(value)) return { error: "Not a number" };
 	if (value < min || value > max)
@@ -37,12 +41,17 @@ const rangeEnabled = {
 } as const;
 export type RangeTarget = keyof typeof rangeEnabled;
 
-function setBound(
-	draft: GridSearchFilters,
-	target: RangeTarget,
-	bound: 0 | 1,
-	value: number,
-): void {
+function setBound({
+	draft,
+	target,
+	bound,
+	value,
+}: {
+	draft: GridSearchFilters;
+	target: RangeTarget;
+	bound: 0 | 1;
+	value: number;
+}): void {
 	const next = [...draft[target]];
 	next[bound] = value;
 	draft[target] = next;
@@ -70,50 +79,70 @@ export function photoApply(tag: GridSearchFilters["photos"][number]): Apply {
 	};
 }
 
-export function boundApply(
-	target: RangeTarget,
-	bound: 0 | 1,
-	min: number,
-	max: number,
-	store?: (value: number) => number,
-): Apply {
+export function boundApply({
+	target,
+	bound,
+	min,
+	max,
+	store,
+}: {
+	target: RangeTarget;
+	bound: 0 | 1;
+	min: number;
+	max: number;
+	store?: (value: number) => number;
+}): Apply {
 	return (raw, draft) => {
-		const result = parseBounded(raw, min, max);
+		const result = parseBounded({ raw, min, max });
 		if ("error" in result) return err(result.error);
-		setBound(draft, target, bound, store ? store(result.value) : result.value);
+		setBound({
+			draft,
+			target,
+			bound,
+			value: store ? store(result.value) : result.value,
+		});
 		return ok;
 	};
 }
 
-export function combinedRangeApply(
-	target: RangeTarget,
-	min: number,
-	max: number,
-): Apply {
+export function combinedRangeApply({
+	target,
+	min,
+	max,
+}: {
+	target: RangeTarget;
+	min: number;
+	max: number;
+}): Apply {
 	return (raw, draft) => {
 		const parts = raw.split("-").map((part) => part.trim());
 		if (parts.length !== 2) return err("Use min-max, e.g. 25-40");
 		const [minRaw = "", maxRaw = ""] = parts;
 		if (minRaw === "" && maxRaw === "") return err("No values");
-		for (const [bound, value] of [
+		for (const [bound, raw] of [
 			[0, minRaw],
 			[1, maxRaw],
 		] as const) {
-			if (value === "") continue;
-			const result = parseBounded(value, min, max);
+			if (raw === "") continue;
+			const result = parseBounded({ raw, min, max });
 			if ("error" in result) return err(result.error);
-			setBound(draft, target, bound, result.value);
+			setBound({ draft, target, bound, value: result.value });
 		}
 		return ok;
 	};
 }
 
-export function idListApply(
-	target: ListKey,
-	enabled: BooleanKey,
-	isValid: (id: number) => boolean,
-	invalidLabel: string,
-): Apply {
+export function idListApply({
+	target,
+	enabled,
+	isValid,
+	invalidLabel,
+}: {
+	target: ListKey;
+	enabled: BooleanKey;
+	isValid: (id: number) => boolean;
+	invalidLabel: string;
+}): Apply {
 	return (raw, draft) => {
 		const parts = splitList(raw);
 		if (parts.length === 0) return err("No values");

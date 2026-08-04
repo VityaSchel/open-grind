@@ -98,7 +98,10 @@ export async function setPreferences(
 			...oldValues,
 			...newValues,
 		});
-		await writeAppDataFileAtomic("preferences.data", encode(preferences));
+		await writeAppDataFileAtomic({
+			path: "preferences.data",
+			content: encode(preferences),
+		});
 		publish(preferences);
 	});
 }
@@ -106,7 +109,10 @@ export async function setPreferences(
 async function resetToDefaults(): Promise<void> {
 	await enqueueWrite(async () => {
 		const preferences = preferencesSchema.parse({});
-		await writeAppDataFileAtomic("preferences.data", encode(preferences));
+		await writeAppDataFileAtomic({
+			path: "preferences.data",
+			content: encode(preferences),
+		});
 		publish(preferences);
 	});
 	window.location.reload();
@@ -128,7 +134,10 @@ export async function clearAccountPreferences(): Promise<void> {
 		if (bytesEqual(encoded, encode(preferencesSchema.parse({})))) {
 			await removeAppDataFile("preferences.data");
 		} else {
-			await writeAppDataFileAtomic("preferences.data", encoded);
+			await writeAppDataFileAtomic({
+				path: "preferences.data",
+				content: encoded,
+			});
 		}
 	});
 }

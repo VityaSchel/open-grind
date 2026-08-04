@@ -38,7 +38,7 @@
 						coords: { latitude, longitude },
 					} = await getCurrentPosition();
 
-					await submitGeohash(encodeGeohash(latitude, longitude));
+					await submitGeohash(encodeGeohash({ lat: latitude, lon: longitude }));
 				} catch (error) {
 					console.error(error);
 					showErrorToast({

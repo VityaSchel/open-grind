@@ -116,7 +116,7 @@
 			}}
 		>
 			{#each medias as { mediaHash, createdAt }, index}
-				{@const src = profileMediaUrl(mediaHash, "full")}
+				{@const src = profileMediaUrl({ mediaHash, size: "full" })}
 				<ImageCarouselItem
 					{src}
 					thumb={src}

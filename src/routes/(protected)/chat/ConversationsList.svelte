@@ -134,14 +134,14 @@
 		const conversationIds = selection.values();
 		const pinned = !allPinned;
 		exitSelection();
-		void conversations.setPinned(conversationIds, pinned);
+		void conversations.setPinned({ conversationIds, pinned });
 	}
 
 	function muteSelected() {
 		const conversationIds = selection.values();
 		const muted = !allMuted;
 		exitSelection();
-		void conversations.setMuted(conversationIds, muted);
+		void conversations.setMuted({ conversationIds, muted });
 	}
 
 	function requestDelete(conversationIds: string[]) {

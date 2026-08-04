@@ -32,12 +32,13 @@
 			if (!loaded) return;
 			const previous = value;
 			value = newValue;
-			void patchOwnProfile(ourProfileId, { showDistance: newValue }).catch(
-				(error) => {
-					value = previous;
-					showErrorToast({ label: "Failed to update setting", error });
-				},
-			);
+			void patchOwnProfile({
+				cacheProfileId: ourProfileId,
+				patch: { showDistance: newValue },
+			}).catch((error) => {
+				value = previous;
+				showErrorToast({ label: "Failed to update setting", error });
+			});
 		}
 	}
 />

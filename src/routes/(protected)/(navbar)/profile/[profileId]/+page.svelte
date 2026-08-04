@@ -49,7 +49,13 @@
 	let loadError = $state<Error | null>(null);
 	let refreshing = $state(false);
 
-	async function loadProfile(id: number, isRefresh: boolean) {
+	async function loadProfile({
+		id,
+		isRefresh,
+	}: {
+		id: number;
+		isRefresh: boolean;
+	}) {
 		if (isRefresh) {
 			refreshing = true;
 			invalidateProfile(id);
@@ -78,12 +84,12 @@
 	$effect(() => {
 		const id = profileId;
 		if (!Number.isFinite(id)) return;
-		void loadProfile(id, false);
+		void loadProfile({ id, isRefresh: false });
 	});
 
 	function refresh() {
 		if (refreshing || loading) return;
-		void loadProfile(profileId, true);
+		void loadProfile({ id: profileId, isRefresh: true });
 	}
 
 	const ourProfile = $derived(profileId === ourProfileId);
@@ -125,7 +131,7 @@
 	<div class="flex flex-1">
 		<BlockedProfile
 			blockedByUs={loadError.blockedByUs}
-			onRefresh={() => void loadProfile(profileId, false)}
+			onRefresh={() => void loadProfile({ id: profileId, isRefresh: false })}
 		/>
 	</div>
 {:else if loadError instanceof ProfileUnavailableError}
@@ -136,7 +142,7 @@
 	<div class="flex flex-1">
 		<ApiErrorDisplay
 			error={loadError}
-			onRetry={() => void loadProfile(profileId, false)}
+			onRetry={() => void loadProfile({ id: profileId, isRefresh: false })}
 			class="m-auto"
 		/>
 	</div>
@@ -300,9 +306,9 @@
 							const tapped = tapType !== null;
 							profile.tapType = tapType;
 							profile.tapped = tapped;
-							mergeProfileEditIntoCaches(profile.profileId, {
-								tapType,
-								tapped,
+							mergeProfileEditIntoCaches({
+								cacheProfileId: profile.profileId,
+								patch: { tapType, tapped },
 							});
 						}}
 					/>

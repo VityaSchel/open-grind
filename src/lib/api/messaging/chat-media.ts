@@ -20,7 +20,7 @@ async function uploadChatMedia(
 	options: { contentType: string; takenOnGrindr: boolean },
 ): Promise<MediaUploadResponse> {
 	if (demoEnabled) {
-		return demoUploadChatMedia(bytes, options.contentType);
+		return demoUploadChatMedia({ bytes, contentType: options.contentType });
 	}
 	const response = await invoke("upload_chat_media", {
 		contentType: options.contentType,

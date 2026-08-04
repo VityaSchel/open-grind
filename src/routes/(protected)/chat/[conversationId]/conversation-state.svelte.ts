@@ -405,11 +405,14 @@ export class ConversationState {
 				void _status;
 				return rest;
 			});
-		this.#conversations.setCachedConversation(this.conversationId, {
-			messages: cachedMessages,
-			profile: this.profile,
-			pageKey: this.pageKey,
-			lastReadTimestamp: this.lastReadTimestamp,
+		this.#conversations.setCachedConversation({
+			conversationId: this.conversationId,
+			data: {
+				messages: cachedMessages,
+				profile: this.profile,
+				pageKey: this.pageKey,
+				lastReadTimestamp: this.lastReadTimestamp,
+			},
 		});
 	}
 
@@ -503,7 +506,13 @@ export class ConversationState {
 		}
 	}
 
-	async reactTo(messageId: string, reactionType: number): Promise<void> {
+	async reactTo({
+		messageId,
+		reactionType,
+	}: {
+		messageId: string;
+		reactionType: number;
+	}): Promise<void> {
 		const msg = this.messages.find((m) => m.messageId === messageId);
 		if (!msg) return;
 		const optimistic = { reactionType, profileId: this.ourProfileId };

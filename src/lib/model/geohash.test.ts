@@ -21,7 +21,7 @@ describe("encodeGeohash and decodeGeohash", () => {
 	it("round-trips coordinates within the encoded error bounds", () => {
 		const lat = 42.6977;
 		const lon = 23.3219;
-		const hash = encodeGeohash(lat, lon);
+		const hash = encodeGeohash({ lat, lon });
 		const decoded = decodeGeohash(hash);
 
 		expect(hash).toHaveLength(12);

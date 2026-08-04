@@ -50,12 +50,12 @@ export type PickedMedia = { key: string; mimeType: string | null } & (
 );
 
 export async function pickMedia(kind: MediaKind): Promise<PickedMedia | null> {
-	const picked = await pick(kind, false);
+	const picked = await pick({ kind, multiple: false });
 	return picked[0] ?? null;
 }
 
 export function pickMultipleMedia(kind: MediaKind): Promise<PickedMedia[]> {
-	return pick(kind, true);
+	return pick({ kind, multiple: true });
 }
 
 export async function readMediaBytes(
@@ -71,14 +71,17 @@ export async function readMediaBytes(
 	}
 }
 
-async function pick(
-	kind: MediaKind,
-	multiple: boolean,
-): Promise<PickedMedia[]> {
+async function pick({
+	kind,
+	multiple,
+}: {
+	kind: MediaKind;
+	multiple: boolean;
+}): Promise<PickedMedia[]> {
 	const filter = filtersByKind[kind];
 
 	if (demoEnabled) {
-		const files = await pickWebFiles(filter, multiple);
+		const files = await pickWebFiles({ filter, multiple });
 		return files.map(
 			(file): PickedMedia => ({
 				source: "web",
@@ -132,7 +135,13 @@ function mimeTypeFromPath(path: string): string | null {
 	return mimeTypesByExtension[extension] ?? null;
 }
 
-function pickWebFiles(filter: MediaFilter, multiple: boolean): Promise<File[]> {
+function pickWebFiles({
+	filter,
+	multiple,
+}: {
+	filter: MediaFilter;
+	multiple: boolean;
+}): Promise<File[]> {
 	return new Promise((resolve) => {
 		const input = document.createElement("input");
 		input.type = "file";

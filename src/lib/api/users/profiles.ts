@@ -182,10 +182,13 @@ export type ProfileEdit = Partial<
 export type ProfileUpdate = ProfileEdit &
 	Pick<Profile, "approximateDistance" | "profileTags">;
 
-export function applyProfileEdit(
-	base: Profile,
-	patch: Partial<Profile>,
-): Profile {
+export function applyProfileEdit({
+	base,
+	patch,
+}: {
+	base: Profile;
+	patch: Partial<Profile>;
+}): Profile {
 	const merged = { ...base, ...patch };
 	if (patch.socialNetworks) {
 		merged.socialNetworks = { ...base.socialNetworks, ...patch.socialNetworks };
@@ -193,25 +196,31 @@ export function applyProfileEdit(
 	return merged;
 }
 
-export function mergeProfileEditIntoCaches(
-	cacheProfileId: number,
-	patch: Partial<Profile>,
-) {
+export function mergeProfileEditIntoCaches({
+	cacheProfileId,
+	patch,
+}: {
+	cacheProfileId: number;
+	patch: Partial<Profile>;
+}) {
 	profiles.update(cacheProfileId, (profile) =>
-		applyProfileEdit(profile, patch),
+		applyProfileEdit({ base: profile, patch }),
 	);
 }
 
-export async function patchOwnProfile(
-	cacheProfileId: number,
-	patch: ProfileEdit,
-) {
+export async function patchOwnProfile({
+	cacheProfileId,
+	patch,
+}: {
+	cacheProfileId: number;
+	patch: ProfileEdit;
+}) {
 	const res = await fetchRest("/v4/me/profile", {
 		method: "PATCH",
 		body: patch,
 	});
 	res.assertOk();
-	mergeProfileEditIntoCaches(cacheProfileId, patch);
+	mergeProfileEditIntoCaches({ cacheProfileId, patch });
 }
 
 const bannedTermsSchema = z
@@ -272,17 +281,20 @@ function readBannedTerms(body: string): ModeratedField[] | null {
 		.filter((entry) => entry.terms.length > 0);
 }
 
-export async function updateOwnProfile(
-	cacheProfileId: number,
-	profile: ProfileUpdate,
-) {
+export async function updateOwnProfile({
+	cacheProfileId,
+	profile,
+}: {
+	cacheProfileId: number;
+	profile: ProfileUpdate;
+}) {
 	const res = await fetchRest("/v3.1/me/profile", {
 		method: "PUT",
 		body: profile,
 	});
 
 	if (res.status === 200) {
-		mergeProfileEditIntoCaches(cacheProfileId, profile);
+		mergeProfileEditIntoCaches({ cacheProfileId, patch: profile });
 		return;
 	}
 
@@ -300,10 +312,13 @@ export async function updateOwnProfile(
 	});
 }
 
-export async function deleteProfilePhotos(
-	cacheProfileId: number,
-	mediaHashes: string[],
-) {
+export async function deleteProfilePhotos({
+	cacheProfileId,
+	mediaHashes,
+}: {
+	cacheProfileId: number;
+	mediaHashes: string[];
+}) {
 	if (mediaHashes.length === 0) return;
 	const res = await fetchRest("/v3/me/profile/images", {
 		method: "DELETE",

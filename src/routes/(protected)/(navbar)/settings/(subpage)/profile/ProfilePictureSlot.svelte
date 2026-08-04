@@ -15,7 +15,7 @@
 		onDelete: () => void;
 	} = $props();
 
-	const src = $derived(profileMediaUrl(mediaHash, "thumb"));
+	const src = $derived(profileMediaUrl({ mediaHash, size: "thumb" }));
 </script>
 
 <div class="relative aspect-square overflow-hidden rounded-xl bg-muted">

@@ -49,7 +49,7 @@ describe("chainAllowsPull", () => {
 		const leaf = document.createElement("span");
 		root.appendChild(leaf);
 		document.body.appendChild(root);
-		expect(chainAllowsPull(leaf, root, "top")).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
 		root.remove();
 	});
 
@@ -61,12 +61,16 @@ describe("chainAllowsPull", () => {
 		root.appendChild(nested);
 		document.body.appendChild(root);
 		makeScrollable(nested, { scrollTop: 50 });
-		expect(chainAllowsPull(leaf, root, "top")).toBe(false);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(false);
 		nested.scrollTop = 0;
-		expect(chainAllowsPull(leaf, root, "top")).toBe(true);
-		expect(chainAllowsPull(leaf, root, "bottom")).toBe(false);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "bottom" })).toBe(
+			false,
+		);
 		nested.scrollTop = 399;
-		expect(chainAllowsPull(leaf, root, "bottom")).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "bottom" })).toBe(
+			true,
+		);
 		root.remove();
 	});
 
@@ -74,7 +78,9 @@ describe("chainAllowsPull", () => {
 		const root = document.createElement("div");
 		const stranger = document.createElement("div");
 		document.body.append(root, stranger);
-		expect(chainAllowsPull(stranger, root, "top")).toBe(false);
+		expect(chainAllowsPull({ start: stranger, root, position: "top" })).toBe(
+			false,
+		);
 		root.remove();
 		stranger.remove();
 	});
@@ -85,18 +91,30 @@ describe("chainAllowsPull", () => {
 		root.appendChild(leaf);
 		document.body.appendChild(root);
 		makeScrollable(root);
-		expect(chainAllowsPull(leaf, root, "top")).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
 		root.style.overflowY = "hidden";
-		expect(chainAllowsPull(leaf, root, "top")).toBe(false);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(false);
 		root.remove();
 	});
 
 	it("refuses document pulls while the body is scroll-locked", () => {
 		const leaf = document.createElement("span");
 		document.body.appendChild(leaf);
-		expect(chainAllowsPull(leaf, document.documentElement, "top")).toBe(true);
+		expect(
+			chainAllowsPull({
+				start: leaf,
+				root: document.documentElement,
+				position: "top",
+			}),
+		).toBe(true);
 		document.body.style.overflow = "hidden";
-		expect(chainAllowsPull(leaf, document.documentElement, "top")).toBe(false);
+		expect(
+			chainAllowsPull({
+				start: leaf,
+				root: document.documentElement,
+				position: "top",
+			}),
+		).toBe(false);
 		document.body.style.overflow = "";
 		leaf.remove();
 	});

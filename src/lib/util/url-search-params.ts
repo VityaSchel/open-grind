@@ -2,10 +2,7 @@ import z from "zod";
 
 type StringRecord = Record<string, string>;
 
-function schemaToStringRecord<T extends z.ZodObject>(
-	schema: T,
-	data: z.output<T>,
-): StringRecord {
+function valuesToStringRecord(data: Record<string, unknown>): StringRecord {
 	const result: StringRecord = {};
 	for (const [key, value] of Object.entries(data)) {
 		if (value === undefined || value === null) continue;
@@ -17,10 +14,13 @@ function schemaToStringRecord<T extends z.ZodObject>(
 	return result;
 }
 
-function stringRecordToValues<T extends z.ZodObject>(
-	schema: T,
-	record: StringRecord,
-): Record<string, unknown> {
+function stringRecordToValues<T extends z.ZodObject>({
+	schema,
+	record,
+}: {
+	schema: T;
+	record: StringRecord;
+}): Record<string, unknown> {
 	const shape = schema.shape;
 	const result: Record<string, unknown> = {};
 	for (const [key, fieldSchema] of Object.entries(shape)) {
@@ -60,13 +60,11 @@ export function urlSearchParamsCodec<T extends z.ZodObject>(schema: T) {
 		decode(params: URLSearchParams) {
 			const record: StringRecord = {};
 			for (const [key, value] of params) record[key] = value;
-			const coerced = stringRecordToValues(schema, record);
+			const coerced = stringRecordToValues({ schema, record });
 			return coerced as z.input<T>;
 		},
 		encode(data: z.input<T>) {
-			return new URLSearchParams(
-				schemaToStringRecord(schema, data as z.output<T>),
-			);
+			return new URLSearchParams(valuesToStringRecord(data));
 		},
 	});
 }

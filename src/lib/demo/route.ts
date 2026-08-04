@@ -46,11 +46,15 @@ export function demoCallMethod(method: string): unknown {
 	}
 }
 
-export function demoRoute(
-	path: string,
-	method: string,
-	body: unknown,
-): DemoResponse {
+export function demoRoute({
+	path,
+	method,
+	body,
+}: {
+	path: string;
+	method: string;
+	body: unknown;
+}): DemoResponse {
 	const [rawPath = "", queryString = ""] = path.split("?");
 	const params = new URLSearchParams(queryString);
 	const segments = rawPath.split("/").filter(Boolean);
@@ -92,10 +96,10 @@ export function demoRoute(
 		rawPath.endsWith("/message")
 	) {
 		return ok(
-			demoConversationMessages(
+			demoConversationMessages({
 				conversationId,
-				params.get("pageKey") ?? undefined,
-			),
+				pageKey: params.get("pageKey") ?? undefined,
+			}),
 		);
 	}
 	if (
@@ -105,7 +109,7 @@ export function demoRoute(
 		segments[4] === "message" &&
 		segments.length === 6
 	) {
-		return ok(demoSingleMessage(conversationId, messageId));
+		return ok(demoSingleMessage({ conversationId, messageId }));
 	}
 	if (method === "GET" && segments[0] === "v2" && segments[1] === "albums") {
 		return ok(demoAlbumContent(Number(segments[2])));
@@ -121,7 +125,10 @@ export function demoRoute(
 		segments.length === 5 &&
 		(segments[4] === "pin" || segments[4] === "unpin")
 	) {
-		demoSetConversationPinned(conversationId, segments[4] === "pin");
+		demoSetConversationPinned({
+			conversationId,
+			pinned: segments[4] === "pin",
+		});
 		return ok({});
 	}
 	if (
@@ -132,7 +139,10 @@ export function demoRoute(
 		segments.length === 5 &&
 		(segments[4] === "mute" || segments[4] === "unmute")
 	) {
-		demoSetConversationMuted(conversationId, segments[4] === "mute");
+		demoSetConversationMuted({
+			conversationId,
+			muted: segments[4] === "mute",
+		});
 		return ok({});
 	}
 	if (

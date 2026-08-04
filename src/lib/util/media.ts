@@ -5,10 +5,13 @@ const CDN_VARIANTS = {
 	full: "profile/1024x1024",
 } as const;
 
-export function profileMediaUrl(
-	mediaHash: string,
-	size: keyof typeof CDN_VARIANTS,
-): string {
+export function profileMediaUrl({
+	mediaHash,
+	size,
+}: {
+	mediaHash: string;
+	size: keyof typeof CDN_VARIANTS;
+}): string {
 	if (demoEnabled) return demoMediaUrl(mediaHash);
 	return `https://cdns.grindr.com/images/${CDN_VARIANTS[size]}/${mediaHash}`;
 }

@@ -18,21 +18,35 @@ export function mulberry32(seed: number): () => number {
 
 export type Rng = () => number;
 
-export function pick<T>(rng: Rng, items: readonly T[]): T {
+export function pick<T>({ rng, items }: { rng: Rng; items: readonly T[] }): T {
 	const item = items[Math.floor(rng() * items.length)];
 	if (item === undefined) throw new RangeError("pick from an empty list");
 	return item;
 }
 
-export function chance(rng: Rng, probability: number): boolean {
+export function chance({
+	rng,
+	probability,
+}: {
+	rng: Rng;
+	probability: number;
+}): boolean {
 	return rng() < probability;
 }
 
-export function subset<T>(rng: Rng, items: readonly T[], max: number): T[] {
+export function subset<T>({
+	rng,
+	items,
+	max,
+}: {
+	rng: Rng;
+	items: readonly T[];
+	max: number;
+}): T[] {
 	const out: T[] = [];
 	for (const item of items) {
 		if (out.length >= max) break;
-		if (chance(rng, 0.4)) out.push(item);
+		if (chance({ rng, probability: 0.4 })) out.push(item);
 	}
 	return out;
 }
