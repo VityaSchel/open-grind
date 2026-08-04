@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ViewsGrid from "./ViewsGrid.svelte";
+
+	let { data }: import("./$types").PageProps = $props();
 </script>
 
-<ViewsGrid />
+<ViewsGrid ourProfileId={data.ourProfileId} />

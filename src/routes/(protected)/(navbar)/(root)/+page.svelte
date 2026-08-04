@@ -5,6 +5,7 @@
 	} from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import Grid from "./Grid.svelte";
 	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
@@ -14,18 +15,7 @@
 
 	let gridContainer: HTMLElement | null = $state(null);
 
-	let scrollRestored = false;
-	$effect(() => {
-		if (
-			!scrollRestored &&
-			gridContainer &&
-			!gridState.loading &&
-			gridState.error === null
-		) {
-			scrollRestored = true;
-			gridContainer.scrollTop = gridState.scrollY;
-		}
-	});
+	restoreScrollOnce(() => gridContainer, gridState);
 </script>
 
 <svelte:head>

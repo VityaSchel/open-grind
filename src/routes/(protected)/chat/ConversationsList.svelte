@@ -38,8 +38,8 @@
 
 	onMount(() => {
 		void conversations.initial.then(tick).then(() => {
-			if (container && conversations.listScrollY > 0) {
-				container.scrollTop = conversations.listScrollY;
+			if (container && conversations.scrollY > 0) {
+				container.scrollTop = conversations.scrollY;
 			}
 		});
 	});
@@ -204,7 +204,7 @@
 			selecting && "pt-(--selection-bar-height)",
 			className,
 		]}
-		onscroll={() => (conversations.listScrollY = container?.scrollTop ?? 0)}
+		onscroll={() => (conversations.scrollY = container?.scrollTop ?? 0)}
 	>
 		{#await conversations.initial}
 			{#each Array(8)}

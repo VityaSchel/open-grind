@@ -1,3 +1,4 @@
+import { accountScoped } from "$lib/api/account-caches";
 import { getViews } from "$lib/api/interest/views";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { viewedMeV1NewViewReceivedEventSchema, ws } from "$lib/ws.svelte";
@@ -112,3 +113,5 @@ export class ViewsState extends ReconcilingListState<
 		);
 	}
 }
+
+export const getViewsState = accountScoped(() => new ViewsState());

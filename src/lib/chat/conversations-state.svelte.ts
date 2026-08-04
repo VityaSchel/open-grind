@@ -46,7 +46,7 @@ class ConversationsState {
 	refreshing = $state(false);
 	inboxLastViewedAt = $state(0);
 	initial: Promise<void> = $state(Promise.resolve());
-	listScrollY = 0;
+	scrollY = 0;
 
 	readonly ourProfileId: number;
 	#activeConversationId: string | null = null;

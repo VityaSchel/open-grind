@@ -31,8 +31,9 @@ vi.mock("$lib/util/reconcile", () => ({
 		},
 	},
 }));
+import { clearAccountCaches } from "$lib/api/account-caches";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
-import { ViewsState } from "./views-state.svelte";
+import { getViewsState, ViewsState } from "./views-state.svelte";
 
 vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
@@ -120,6 +121,7 @@ function viewEvent(profileId: number) {
 type ViewsSnapshot = { profiles: ViewerProfile[]; previews: ViewPreview[] };
 
 beforeEach(() => {
+	clearAccountCaches();
 	getViewsMock.mockReset();
 	showErrorToastMock.mockReset();
 	unlistenViewMock.mockReset();
@@ -309,5 +311,27 @@ describe("ViewsState", () => {
 		expect(unsubscribeReconcileMock).toHaveBeenCalledOnce();
 		await vi.waitFor(() => expect(unlistenViewMock).toHaveBeenCalledOnce());
 		expect(state.views).toHaveLength(1);
+	});
+});
+
+describe("getViewsState", () => {
+	it("keeps one loaded state per account across revisits", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [profile(1)], previews: [] });
+
+		const state = getViewsState(99);
+		await waitForLoaded(state);
+		state.scrollY = 320;
+
+		const revisited = getViewsState(99);
+		revisited.load();
+
+		expect(revisited).toBe(state);
+		expect(revisited.scrollY).toBe(320);
+		expect(getViewsMock).toHaveBeenCalledTimes(1);
+
+		clearAccountCaches();
+
+		expect(getViewsState(99)).not.toBe(state);
+		expect(unsubscribeReconcileMock).toHaveBeenCalledOnce();
 	});
 });
