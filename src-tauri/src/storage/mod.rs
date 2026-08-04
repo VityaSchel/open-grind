@@ -168,6 +168,33 @@ mod tests {
 	}
 
 	#[test]
+	fn a_created_device_is_persisted_for_the_next_launch() {
+		with_file_store(|_| {
+			let created = DeviceStorage::load_or_create();
+
+			assert_eq!(
+				format!("{:?}", DeviceStorage::load_or_create()),
+				format!("{created:?}")
+			);
+		});
+	}
+
+	#[test]
+	fn a_device_that_cannot_be_decoded_is_replaced_rather_than_regenerated_forever(
+	) {
+		with_file_store(|_| {
+			entry("device-info").set_secret(b"not msgpack").unwrap();
+
+			let replacement = DeviceStorage::load_or_create();
+
+			assert_eq!(
+				format!("{:?}", DeviceStorage::load().unwrap().unwrap()),
+				format!("{replacement:?}")
+			);
+		});
+	}
+
+	#[test]
 	fn deleting_the_device_clears_it() {
 		with_file_store(|_| {
 			DeviceStorage::save(&grindr::DeviceInfo::generate()).unwrap();

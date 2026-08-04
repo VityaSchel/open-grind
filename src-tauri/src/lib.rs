@@ -175,20 +175,7 @@ pub fn run() {
 
             storage::init_keyring();
 
-            let device = match DeviceStorage::load() {
-                Ok(Some(d)) => d,
-                Ok(None) => {
-                    let d = grindr::DeviceInfo::generate();
-                    if let Err(e) = DeviceStorage::save(&d) {
-                        tracing::error!("[setup] could not persist device info: {e}");
-                    }
-                    d
-                }
-                Err(e) => {
-                    tracing::warn!("[setup] could not load device info, regenerating: {e}");
-                    grindr::DeviceInfo::generate()
-                }
-            };
+            let device = DeviceStorage::load_or_create();
 
             let session = match AuthStorage::get_session() {
                 Ok(s) => s,

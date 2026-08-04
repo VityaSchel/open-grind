@@ -29,6 +29,21 @@ impl DeviceStorage {
 			.map_err(|e| AppError::Auth(e.to_string()))
 	}
 
+	pub fn load_or_create() -> grindr::DeviceInfo {
+		match Self::load() {
+			Ok(Some(device)) => return device,
+			Ok(None) => {}
+			Err(e) => tracing::warn!(
+				"[setup] could not load device info, replacing it: {e}"
+			),
+		}
+		let device = grindr::DeviceInfo::generate();
+		if let Err(e) = Self::save(&device) {
+			tracing::error!("[setup] could not persist device info: {e}");
+		}
+		device
+	}
+
 	pub fn delete() {
 		match Self::entry() {
 			Ok(entry) => match entry.delete_credential() {
