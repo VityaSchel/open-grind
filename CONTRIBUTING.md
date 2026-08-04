@@ -9,8 +9,9 @@ Thanks for considering contributing to Open Grind.
     - [Project structure](#project-structure)
     - [Interacting with API](#interacting-with-api)
     - [Checks and tests](#checks-and-tests)
-    - [Submitting your changes](#submitting-your-changes)
-  - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
+    - [Where state lives](#where-state-lives)
+  - [Submitting your changes](#submitting-your-changes)
+    - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
 ## Contribution guidelines
 
@@ -128,7 +129,18 @@ End-to-end tests are a separate tier:
 
 [ShellCheck](https://www.shellcheck.net/) and [rustfmt](https://github.com/rust-lang/rustfmt) must be on `PATH`. `nix develop` provides both, along with the pinned Rust and Android toolchains.
 
-### Submitting your changes
+### Where state lives
+
+Pick the shortest lifetime that still holds the data long enough:
+
+- **Survives navigation and belongs to the signed-in account** — `accountScoped(create)` from [account-caches.ts](./src/lib/api/account-caches.ts). One instance per profile id, the previous one destroyed on account change. Conversations, taps and views use it.
+- **Survives navigation and is not per-account** — a module singleton that calls `registerAccountCache({ reset })` itself, like `gridState` and the API caches. Anything cached across screens must register a reset, or it leaks into the next account.
+- **Belongs to one route parameter** — a class the page constructs and destroys in an `$effect`, rebuilt when the parameter changes: `ConversationState`, `ProfileState`. Use it when reopening the screen should start over.
+- **Belongs to one mount** — plain `$state` in the component.
+
+Data that outlives the component goes in a state class, not in `<script module>`.
+
+## Submitting your changes
 
 1. [Create an account](https://git.opengrind.org/user/sign_up) on git.opengrind.org
 2. [Create an SSH key](https://docs.codeberg.org/security/ssh-key/) for authorization on your computer and add it to your SSH config
@@ -146,7 +158,7 @@ End-to-end tests are a separate tier:
 14. [Open a pull request](https://git.opengrind.org/open-grind/open-grind/pulls) in Pull requests page on git.opengrind.org
 15. Submit and mark for review once you're ready
 
-## Inclusion in GOVERNANCE.md
+### Inclusion in GOVERNANCE.md
 
 **Criteria:** Once you have at least 1 accepted PR with significant changes (a feature, a bug fix, a section of documentation), you can request inclusion into GOVERNANCE.md. AI-generated PRs don't count, unless you have proven significant work and understanding of the subject beyond the AI-generated content.
 
