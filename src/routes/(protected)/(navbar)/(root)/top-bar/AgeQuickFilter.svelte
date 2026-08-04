@@ -1,13 +1,13 @@
 <script lang="ts">
 	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
-	import {
-		ageRangeLabel,
-		defaultFilters,
-	} from "$lib/components/filters/filters";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import {
+		ageRangeLabel,
+		defaultFilters,
+	} from "$lib/model/browse/grid/filters";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {

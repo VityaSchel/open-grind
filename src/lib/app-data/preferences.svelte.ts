@@ -2,7 +2,7 @@ import { decode, encode } from "@msgpack/msgpack";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
-import { gridSearchFiltersSchema } from "$lib/components/filters/filters";
+import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
 import { unitSystemSchema } from "$lib/util/units";
 import {

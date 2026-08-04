@@ -6,7 +6,7 @@ import {
 import {
 	defaultFilters,
 	type GridSearchFilters,
-} from "$lib/components/filters/filters";
+} from "$lib/model/browse/grid/filters";
 import { deepEqual } from "$lib/util/deep-equal";
 
 export class GridSearchFiltersState {

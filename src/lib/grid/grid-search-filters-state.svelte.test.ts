@@ -10,8 +10,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	setPreferences: setPreferencesMock,
 }));
 
-import { defaultFilters } from "$lib/components/filters/filters";
 import { GridSearchFiltersState } from "$lib/grid/grid-search-filters-state.svelte";
+import { defaultFilters } from "$lib/model/browse/grid/filters";
 
 async function loadedState(onRefresh = vi.fn()) {
 	const state = new GridSearchFiltersState({ onRefresh });

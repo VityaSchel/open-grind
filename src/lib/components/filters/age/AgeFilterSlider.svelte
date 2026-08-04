@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Slider } from "$lib/components/ui/slider";
-	import { AGE_MAX, AGE_MIN } from "../filters";
+	import { AGE_MAX, AGE_MIN } from "$lib/model/browse/grid/filters";
 
 	let { value = $bindable() }: { value: number[] } = $props();
 </script>

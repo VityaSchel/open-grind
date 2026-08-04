@@ -13,7 +13,7 @@ import {
 	filterPositionSchema,
 	filterWeightSchema,
 	gridSearchFiltersSchema,
-} from "$lib/components/filters/filters";
+} from "$lib/model/browse/grid/filters";
 
 describe("grid search filter schemas", () => {
 	it("accepts the default filter state", () => {

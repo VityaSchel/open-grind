@@ -1,15 +1,15 @@
 <script lang="ts">
 	import type z from "zod";
 
-	import {
-		defaultFilters,
-		filterPositionSchema,
-	} from "$lib/components/filters/filters";
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import {
+		defaultFilters,
+		filterPositionSchema,
+	} from "$lib/model/browse/grid/filters";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {

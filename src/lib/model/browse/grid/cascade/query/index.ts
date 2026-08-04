@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { gridQuerySchema } from "$lib/model/browse/grid";
 import {
 	filterAcceptNSFWPicsSchema,
 	filterBodyTypeSchema,
@@ -10,8 +11,7 @@ import {
 	filterRelationshipStatusSchema,
 	filterTagsSchema,
 	filterTribesSchema,
-} from "$lib/components/filters/filters";
-import { gridQuerySchema } from "$lib/model/browse/grid";
+} from "$lib/model/browse/grid/filters";
 
 export const cascadeQuerySchema = z.object({
 	...gridQuerySchema.shape,

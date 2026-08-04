@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { SlidersHorizontalIcon } from "phosphor-svelte";
 
-	import { defaultFilters } from "$lib/components/filters/filters";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { defaultFilters } from "$lib/model/browse/grid/filters";
 	import AgeQuickFilter from "./AgeQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
 

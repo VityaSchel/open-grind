@@ -3,7 +3,7 @@
 	import type z from "zod";
 
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import type { filterPhotosSchema } from "$lib/components/filters/filters";
+	import type { filterPhotosSchema } from "$lib/model/browse/grid/filters";
 	import FilterBoolean from "./FilterBoolean.svelte";
 
 	let {

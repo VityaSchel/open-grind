@@ -16,7 +16,7 @@ import {
 	HEIGHT_CM_MIN,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
-} from "$lib/components/filters/filters";
+} from "$lib/model/browse/grid/filters";
 import {
 	acceptNSFWPics,
 	bodyTypes,

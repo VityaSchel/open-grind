@@ -5,10 +5,6 @@
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
 	import BodyTypeFilter from "$lib/components/filters/BodyTypeFilter.svelte";
 	import FilterBoolean from "$lib/components/filters/FilterBoolean.svelte";
-	import {
-		defaultFilters,
-		type GridSearchFilters,
-	} from "$lib/components/filters/filters";
 	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
 	import HealthPracticesFilter from "$lib/components/filters/HealthPracticesFilter.svelte";
 	import HeightFilter from "$lib/components/filters/HeightFilter.svelte";
@@ -23,6 +19,10 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import {
+		defaultFilters,
+		type GridSearchFilters,
+	} from "$lib/model/browse/grid/filters";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
 	let {

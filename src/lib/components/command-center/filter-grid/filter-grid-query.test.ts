@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultFilters } from "$lib/components/filters/filters";
+import { defaultFilters } from "$lib/model/browse/grid/filters";
 import { parseFilterGridQuery } from "./filter-grid-query";
 
 function parsedAt<T>(entries: readonly T[], index: number): T {

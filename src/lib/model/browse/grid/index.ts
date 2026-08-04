@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { filterGendersSchema } from "$lib/components/filters/filters";
+import { filterGendersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
 
 export const gridQuerySchema = z.object({

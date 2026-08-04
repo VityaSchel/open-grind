@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { gridQuerySchema } from "$lib/model/browse/grid";
 import {
 	filterAcceptNSFWPicsSchema,
 	filterBodyTypeSchema,
@@ -8,8 +9,7 @@ import {
 	filterPositionSchema,
 	filterRelationshipStatusSchema,
 	filterTribesSchema,
-} from "$lib/components/filters/filters";
-import { gridQuerySchema } from "$lib/model/browse/grid";
+} from "$lib/model/browse/grid/filters";
 import { mediaHashPublicSchema } from "$lib/model/media";
 
 export const searchQuerySchema = gridQuerySchema.extend({
