@@ -21,9 +21,10 @@ export async function promptCopyError(error: unknown): Promise<void> {
 async function writeToClipboard(text: string): Promise<void> {
 	try {
 		await clipboard.writeText(text);
-		toast.success("Copied to clipboard");
+		toast.success("Error details copied to clipboard");
 	} catch (error) {
 		console.error(error);
+		toast.error("Couldn't copy to clipboard");
 	}
 }
 
