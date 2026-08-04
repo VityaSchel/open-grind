@@ -1,4 +1,6 @@
 <script lang="ts">
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+
 	let {
 		src,
 		thumb,
@@ -13,6 +15,8 @@
 
 	let width: number | null = $state(null);
 	let height: number | null = $state(null);
+	let failedSrc: string | null = $state(null);
+	const failed = $derived(failedSrc === thumb);
 </script>
 
 <a
@@ -21,20 +25,20 @@
 	data-pswp-width={width}
 	data-pswp-height={height}
 	data-created-at={createdAt}
-	href={src}
+	href={failed ? undefined : src}
+	aria-disabled={failed ? "true" : undefined}
 	aria-label={label}
 >
-	<img
+	<MediaImage
 		src={thumb}
-		draggable="false"
-		class="absolute top-0 left-0 h-full w-full bg-stone-700 object-cover object-center"
-		alt=""
-		onload={(event) => {
-			const img = event.currentTarget;
-			if (img instanceof HTMLImageElement) {
-				width = img.naturalWidth;
-				height = img.naturalHeight;
-			}
+		class="absolute top-0 left-0 h-full w-full"
+		imgClass="bg-stone-700"
+		tone="photo"
+		size="xl"
+		bind:failedSrc
+		onload={(image) => {
+			width = image.naturalWidth;
+			height = image.naturalHeight;
 		}}
 	/>
 </a>

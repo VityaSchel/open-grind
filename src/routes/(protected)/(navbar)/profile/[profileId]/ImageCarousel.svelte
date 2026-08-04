@@ -5,8 +5,12 @@
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import { profileMediaUrl } from "$lib/util/media";
+	import {
+		applyPhotoSwipeBackGesture,
+		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeThumbDimensions,
+	} from "$lib/util/photoswipe";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 	let {
@@ -29,25 +33,13 @@
 				if (!gallery) return;
 				lightbox = new PhotoSwipeLightbox({
 					gallery,
-					children: ".item",
+					children: ".item[href]",
 					pswpModule: () => import("photoswipe"),
 					mainClass: `pswp--buttons-visible`,
 				});
-				lightbox.addFilter("itemData", (itemData) => {
-					const img = itemData.element?.querySelector("img");
-					if (img?.naturalWidth) {
-						itemData.width = img.naturalWidth;
-						itemData.height = img.naturalHeight;
-					}
-					return itemData;
-				});
-				const onBackGesture = () => {
-					lightbox?.pswp?.close();
-					return false;
-				};
-				lightbox.on("beforeOpen", () => {
-					backGestureEventHandlers.add(onBackGesture);
-				});
+				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeThumbDimensions(lightbox);
+				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("openingAnimationStart", () => {
 					gallery?.querySelectorAll(".item").forEach((item) => {
 						if (item instanceof HTMLElement) {
@@ -60,9 +52,6 @@
 						top: lightbox?.pswp?.currSlide?.data.element?.offsetTop ?? 0,
 						behavior: "instant",
 					});
-				});
-				lightbox.on("close", () => {
-					backGestureEventHandlers.delete(onBackGesture);
 				});
 				lightbox.on("destroy", () => {
 					gallery?.querySelectorAll(".item").forEach((item) => {

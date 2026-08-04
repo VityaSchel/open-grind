@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { TrashIcon } from "phosphor-svelte";
 
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { profileMediaUrl } from "$lib/util/media";
 
@@ -18,12 +19,13 @@
 </script>
 
 <div class="relative aspect-square overflow-hidden rounded-xl bg-muted">
-	<img
+	<MediaImage
 		{src}
 		alt="Profile photo {position}"
-		class="size-full object-cover object-center"
+		class="size-full"
+		tone="photo"
+		size="md"
 		loading="lazy"
-		draggable="false"
 	/>
 	<Button
 		variant="destructive"

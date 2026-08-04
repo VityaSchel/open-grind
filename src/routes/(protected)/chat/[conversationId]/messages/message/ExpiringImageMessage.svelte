@@ -9,7 +9,10 @@
 		type ExpiringImageMessage,
 		expiringImageMessageSchema,
 	} from "$lib/model/messaging/messages";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import {
+		applyPhotoSwipeBackGesture,
+		applyPhotoSwipeErrorUi,
+	} from "$lib/util/photoswipe";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
 
@@ -94,20 +97,12 @@
 					pswpModule: () => import("photoswipe"),
 					mainClass: `pswp--buttons-visible`,
 				});
+				applyPhotoSwipeErrorUi(lightbox);
 				lightbox.addFilter("numItems", () => 1);
 				lightbox.addFilter("itemData", () => {
 					return { src: image.url, width: 0, height: 0 };
 				});
-				const onBackGesture = () => {
-					lightbox?.pswp?.close();
-					return false;
-				};
-				lightbox.on("beforeOpen", () => {
-					backGestureEventHandlers.add(onBackGesture);
-				});
-				lightbox.on("close", () => {
-					backGestureEventHandlers.delete(onBackGesture);
-				});
+				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("closingAnimationEnd", () => {
 					imageState = { status: "idle" };
 				});

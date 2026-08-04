@@ -7,6 +7,7 @@
 	import { addMediaToDrawer } from "$lib/api/messaging/chat-media";
 	import { type DrawerMedia, getDrawerMedia } from "$lib/api/messaging/drawer";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
@@ -153,11 +154,10 @@
 					aria-pressed={isSelected}
 					onclick={() => toggleSelected(item.id)}
 				>
-					<img
+					<MediaImage
 						src={item.url}
-						alt=""
-						class="size-full rounded-[inherit] bg-card-foreground/10 object-cover"
-						draggable="false"
+						class="size-full rounded-[inherit]"
+						imgClass="bg-card-foreground/10"
 					/>
 					{#if isSelected}
 						<div

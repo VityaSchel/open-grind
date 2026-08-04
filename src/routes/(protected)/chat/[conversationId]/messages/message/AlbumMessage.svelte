@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { ImageBrokenIcon, ImagesIcon, VideoIcon } from "phosphor-svelte";
+	import { ImagesIcon, VideoIcon } from "phosphor-svelte";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import { showErrorToast } from "$lib/api/error";
@@ -8,7 +8,11 @@
 		type AlbumContentResponse,
 		getAlbumContent,
 	} from "$lib/api/messaging/albums";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import {
+		applyPhotoSwipeBackGesture,
+		applyPhotoSwipeErrorUi,
+	} from "$lib/util/photoswipe";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
@@ -98,7 +102,11 @@
 								img.src = slide.url ?? "";
 								try {
 									await new Promise<void>((resolve, reject) => {
-										if (img.complete) resolve();
+										if (img.complete) {
+											if (img.naturalWidth > 0) resolve();
+											else
+												reject(new Error(`Failed to load image: ${slide.url}`));
+										}
 										img.addEventListener("load", () => resolve(), {
 											once: true,
 										});
@@ -154,6 +162,7 @@
 					pswpModule: () => import("photoswipe"),
 					mainClass: `pswp--buttons-visible`,
 				});
+				applyPhotoSwipeErrorUi(lightbox);
 				lightbox.addFilter("numItems", () => album.content.length);
 				lightbox.addFilter("itemData", (itemData, index) => {
 					const slide = album.content[index];
@@ -167,16 +176,7 @@
 							? false
 							: usePlaceholder,
 				);
-				const onBackGesture = () => {
-					lightbox?.pswp?.close();
-					return false;
-				};
-				lightbox.on("beforeOpen", () => {
-					backGestureEventHandlers.add(onBackGesture);
-				});
-				lightbox.on("close", () => {
-					backGestureEventHandlers.delete(onBackGesture);
-				});
+				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("contentLoad", (event) => {
 					const { content } = event;
 					const slide = album.content[content.index];
@@ -236,24 +236,11 @@
 		disabled={albumState.status !== "idle"}
 		bind:this={media.el}
 	>
-		{#if message.coverUrl !== null}
-			<img
-				src={message.coverUrl}
-				alt=""
-				class="absolute top-0 left-0 h-full w-full rounded-[inherit] bg-card-foreground/10 object-cover"
-				draggable="false"
-			/>
-		{:else}
-			<div
-				class="flex size-full items-center justify-center rounded-[inherit] bg-card-foreground/20"
-			>
-				<ImageBrokenIcon
-					weight="fill"
-					class="aspect-square h-auto w-8"
-					color="var(--color-neutral-600)"
-				/>
-			</div>
-		{/if}
+		<MediaImage
+			src={message.coverUrl}
+			class="absolute top-0 left-0 h-full w-full rounded-[inherit]"
+			imgClass="bg-card-foreground/10"
+		/>
 		<div class={["@container absolute top-0 left-0 size-full", contentClass]}>
 			<div
 				class="absolute bottom-1/5 left-1/2 flex -translate-x-1/2 items-center gap-1 px-2 py-0.5 *:aspect-square *:w-[20cqw] *:rounded-full *:bg-card *:p-2"

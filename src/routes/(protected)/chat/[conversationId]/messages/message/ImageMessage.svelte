@@ -2,7 +2,12 @@
 	import "photoswipe/style.css";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import {
+		applyPhotoSwipeBackGesture,
+		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeThumbDimensions,
+	} from "$lib/util/photoswipe";
 	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
 
@@ -14,6 +19,9 @@
 
 	const media = new MessageMediaState();
 
+	let failedSrc: string | null = $state(null);
+	const failed = $derived(failedSrc === message.url);
+
 	$effect(() => {
 		const gallery = media.el;
 		if (!gallery) return;
@@ -22,31 +30,15 @@
 			.then(({ default: PhotoSwipeLightbox }) => {
 				lightbox = new PhotoSwipeLightbox({
 					gallery,
-					children: "a",
+					children: "a[href]",
 					pswpModule: () => import("photoswipe"),
 					mainClass: "pswp--buttons-visible",
 					showAnimationDuration: 500,
 					hideAnimationDuration: 500,
 				});
-				lightbox.addFilter("itemData", (itemData) => {
-					const img = itemData.element?.querySelector("img");
-					if (img?.naturalWidth) {
-						itemData.width = img.naturalWidth;
-						itemData.height = img.naturalHeight;
-					}
-					return itemData;
-				});
-
-				const onBackGesture = () => {
-					lightbox?.pswp?.close();
-					return false;
-				};
-				lightbox.on("beforeOpen", () => {
-					backGestureEventHandlers.add(onBackGesture);
-				});
-				lightbox.on("close", () => {
-					backGestureEventHandlers.delete(onBackGesture);
-				});
+				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeThumbDimensions(lightbox);
+				applyPhotoSwipeBackGesture(lightbox);
 
 				// Radius is scaled by the zoom-wrap transform, so pre-divide it by that scale
 				// img placeholder does a second scale off a 250px box
@@ -135,24 +127,22 @@
 	bind:this={media.el}
 >
 	<a
-		href={message.url}
+		href={failed ? undefined : message.url}
 		rel="noreferrer"
 		data-pswp-width={message.width ?? undefined}
 		data-pswp-height={message.height ?? undefined}
 		aria-label="Photo"
+		aria-disabled={failed ? "true" : undefined}
 		class="item block"
 	>
-		<img
+		<MediaImage
 			src={message.url}
-			alt=""
-			class={[
-				"w-full rounded-lg bg-card-foreground/10 object-cover",
-				media.cornerClass,
-			]}
-			style:aspect-ratio={message.width !== null && message.height !== null
+			class={["w-full rounded-lg", media.cornerClass]}
+			imgClass="bg-card-foreground/10"
+			aspectRatio={message.width !== null && message.height !== null
 				? `${message.width} / ${message.height}`
 				: undefined}
-			draggable="false"
+			bind:failedSrc
 		/>
 	</a>
 	{@render media.adornments?.()}
