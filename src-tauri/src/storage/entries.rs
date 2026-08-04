@@ -1,0 +1,131 @@
+use crate::error::AppError;
+
+pub struct DeviceStorage;
+
+impl DeviceStorage {
+	fn entry() -> Result<keyring_core::Entry, AppError> {
+		keyring_core::Entry::new("open-grind", "device-info")
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn load() -> Result<Option<grindr::DeviceInfo>, AppError> {
+		let entry = Self::entry()?;
+		let bytes = match entry.get_secret() {
+			Ok(b) => b,
+			Err(keyring_core::Error::NoEntry) => return Ok(None),
+			Err(e) => return Err(AppError::Auth(e.to_string())),
+		};
+		rmp_serde::from_slice::<grindr::DeviceInfo>(&bytes)
+			.map(Some)
+			.map_err(|e| AppError::Auth(format!("device decode failed: {e}")))
+	}
+
+	pub fn save(device: &grindr::DeviceInfo) -> Result<(), AppError> {
+		let bytes = rmp_serde::encode::to_vec(device).map_err(|e| {
+			AppError::Auth(format!("device encode failed: {e}"))
+		})?;
+		Self::entry()?
+			.set_secret(&bytes)
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn delete() {
+		match Self::entry() {
+			Ok(entry) => match entry.delete_credential() {
+				Ok(()) | Err(keyring_core::Error::NoEntry) => {}
+				Err(e) => tracing::warn!(
+					"[auth] failed to delete keyring device info: {e}"
+				),
+			},
+			Err(e) => tracing::warn!(
+				"[auth] failed to open keyring entry for device deletion: {e}"
+			),
+		}
+	}
+}
+
+pub struct AuthStorage;
+
+impl AuthStorage {
+	fn entry() -> Result<keyring_core::Entry, AppError> {
+		keyring_core::Entry::new("open-grind", "session")
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn get_session() -> Result<Option<grindr::Session>, AppError> {
+		let entry = Self::entry()?;
+		let bytes = match entry.get_secret() {
+			Ok(b) => b,
+			Err(keyring_core::Error::NoEntry) => return Ok(None),
+			Err(e) => return Err(AppError::Auth(e.to_string())),
+		};
+		match rmp_serde::from_slice::<grindr::Session>(&bytes) {
+			Ok(s) => Ok(Some(s)),
+			Err(_) => {
+				Self::delete_session();
+				Ok(None)
+			}
+		}
+	}
+
+	pub fn set_session(session: &grindr::Session) -> Result<(), AppError> {
+		let bytes = rmp_serde::encode::to_vec(session).map_err(|e| {
+			AppError::Auth(format!("session encode failed: {e}"))
+		})?;
+		Self::entry()?
+			.set_secret(&bytes)
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn delete_session() {
+		match Self::entry() {
+			Ok(entry) => match entry.delete_credential() {
+				Ok(()) | Err(keyring_core::Error::NoEntry) => {}
+				Err(e) => tracing::warn!(
+					"[auth] failed to delete keyring session: {e}"
+				),
+			},
+			Err(e) => tracing::warn!(
+				"[auth] failed to open keyring entry for deletion: {e}"
+			),
+		}
+	}
+}
+
+pub struct SigningKeyStorage;
+
+impl SigningKeyStorage {
+	fn entry() -> Result<keyring_core::Entry, AppError> {
+		keyring_core::Entry::new("open-grind", "device-signing-key")
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn load() -> Result<Option<grindr::DeviceSigningKey>, AppError> {
+		let bytes = match Self::entry()?.get_secret() {
+			Ok(b) => b,
+			Err(keyring_core::Error::NoEntry) => return Ok(None),
+			Err(e) => return Err(AppError::Auth(e.to_string())),
+		};
+		Ok(rmp_serde::from_slice::<grindr::DeviceSigningKey>(&bytes).ok())
+	}
+
+	pub fn save(key: &grindr::DeviceSigningKey) -> Result<(), AppError> {
+		let bytes = rmp_serde::encode::to_vec(key).map_err(|e| {
+			AppError::Auth(format!("signing key encode failed: {e}"))
+		})?;
+		Self::entry()?
+			.set_secret(&bytes)
+			.map_err(|e| AppError::Auth(e.to_string()))
+	}
+
+	pub fn delete() {
+		if let Ok(entry) = Self::entry() {
+			match entry.delete_credential() {
+				Ok(()) | Err(keyring_core::Error::NoEntry) => {}
+				Err(e) => tracing::warn!(
+					"[signing] failed to delete keyring key: {e}"
+				),
+			}
+		}
+	}
+}
