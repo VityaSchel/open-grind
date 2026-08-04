@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from "$app/state";
 	import { ProhibitIcon } from "phosphor-svelte";
 
 	import { unblockUser } from "$lib/api/browse/blocks";
@@ -8,12 +7,12 @@
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";
 
-	const profileId = $derived(Number(page.params.profileId));
-
 	let {
+		profileId,
 		blockedByUs,
 		onRefresh,
-	}: { blockedByUs: boolean; onRefresh: () => void } = $props();
+	}: { profileId: number; blockedByUs: boolean; onRefresh: () => void } =
+		$props();
 </script>
 
 <Empty.Root>

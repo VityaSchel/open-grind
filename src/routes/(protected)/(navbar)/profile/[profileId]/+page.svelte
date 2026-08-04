@@ -1,21 +1,15 @@
 <script lang="ts">
 	import { page } from "$app/state";
+	import { untrack } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import { recordProfileView } from "$lib/api/interest/views";
 	import {
 		BlockedProfileError,
-		getProfile,
-		invalidateProfile,
-		mergeProfileEditIntoCaches,
 		ProfileUnavailableError,
 	} from "$lib/api/users/profiles";
-	import { getPreferences } from "$lib/app-data/preferences.svelte";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import type { Profile } from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import BlockedProfile from "./BlockedProfile.svelte";
 	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
@@ -34,6 +28,7 @@
 	import Height from "./HeightWeightBodyType.svelte";
 	import ImageCarousel from "./ImageCarousel.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
+	import { ProfileState } from "./profile-state.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
 	import ProfileTopNavBar from "./top-nav/ProfileTopNavBar.svelte";
@@ -44,107 +39,53 @@
 	const profileId = $derived(Number(page.params.profileId));
 
 	let profileContainer = $state<HTMLElement | null>(null);
-	let profile = $state<Profile | null>(null);
-	let loading = $state(true);
-	let loadError = $state<Error | null>(null);
-	let refreshing = $state(false);
 
-	async function loadProfile({
-		id,
-		isRefresh,
-	}: {
-		id: number;
-		isRefresh: boolean;
-	}) {
-		if (isRefresh) {
-			refreshing = true;
-			invalidateProfile(id);
-		} else {
-			loading = true;
-			loadError = null;
-			profile = null;
-		}
-		try {
-			const result = await getProfile(id);
-			if (id !== profileId) return;
-			profile = result;
-			loadError = null;
-		} catch (error) {
-			if (id !== profileId) return;
-			loadError = error instanceof Error ? error : new Error(String(error));
-			profile = null;
-		} finally {
-			if (id === profileId) {
-				loading = false;
-				refreshing = false;
-			}
-		}
-	}
+	let profileState = $state(
+		untrack(() => new ProfileState({ profileId, ourProfileId })),
+	);
 
 	$effect(() => {
 		const id = profileId;
-		if (!Number.isFinite(id)) return;
-		void loadProfile({ id, isRefresh: false });
-	});
+		const ourId = ourProfileId;
 
-	function refresh() {
-		if (refreshing || loading) return;
-		void loadProfile({ id: profileId, isRefresh: true });
-	}
-
-	const ourProfile = $derived(profileId === ourProfileId);
-
-	$effect(() => {
-		const id = profileId;
-		if (!Number.isFinite(id) || ourProfile) return;
-		void (async () => {
-			try {
-				const { revealProfileViews } = await getPreferences();
-				if (!revealProfileViews) return;
-				await recordProfileView({ profileId: id });
-			} catch (error) {
-				console.error(error);
-				showErrorToast({
-					label: "Failed to record profile view preference or action",
-					error,
+		const state = untrack(() => {
+			if (
+				id !== profileState.profileId ||
+				ourId !== profileState.ourProfileId
+			) {
+				profileState = new ProfileState({
+					profileId: id,
+					ourProfileId: ourId,
 				});
 			}
-		})();
+			return profileState;
+		});
+
+		return () => state.destroy();
 	});
 
-	let optimisticBlockProfileId = $state<number | null>(null);
-	const optimisticallyBlocked = $derived(
-		optimisticBlockProfileId === profileId,
-	);
+	const profile = $derived(profileState.profile);
+	const error = $derived(profileState.error);
+	const ourProfile = $derived(profileState.isOurProfile);
 </script>
 
-{#if optimisticallyBlocked}
+{#if error}
 	<div class="flex flex-1">
-		<BlockedProfile
-			blockedByUs={true}
-			onRefresh={() => {
-				optimisticBlockProfileId = null;
-			}}
-		/>
-	</div>
-{:else if loadError instanceof BlockedProfileError}
-	<div class="flex flex-1">
-		<BlockedProfile
-			blockedByUs={loadError.blockedByUs}
-			onRefresh={() => void loadProfile({ id: profileId, isRefresh: false })}
-		/>
-	</div>
-{:else if loadError instanceof ProfileUnavailableError}
-	<div class="flex flex-1">
-		<NotFound />
-	</div>
-{:else if loadError}
-	<div class="flex flex-1">
-		<ApiErrorDisplay
-			error={loadError}
-			onRetry={() => void loadProfile({ id: profileId, isRefresh: false })}
-			class="m-auto"
-		/>
+		{#if error instanceof BlockedProfileError}
+			<BlockedProfile
+				profileId={profileState.profileId}
+				blockedByUs={error.blockedByUs}
+				onRefresh={() => profileState.markUnblocked()}
+			/>
+		{:else if error instanceof ProfileUnavailableError}
+			<NotFound />
+		{:else}
+			<ApiErrorDisplay
+				{error}
+				onRetry={() => profileState.retry()}
+				class="m-auto"
+			/>
+		{/if}
 	</div>
 {:else}
 	<div class="relative -mb-(--nav-height) h-screen-safe">
@@ -153,7 +94,7 @@
 			bind:this={profileContainer}
 		>
 			<main class="relative mx-auto min-h-overscrollable w-full max-w-200">
-				{#if loading || !profile}
+				{#if profileState.loading || !profile}
 					<div class="flex max-w-full flex-col">
 						<Skeleton
 							class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
@@ -211,11 +152,9 @@
 					} = profile}
 					<ImageCarousel {medias} />
 					<ProfileTopNavBar
-						{ourProfileId}
+						ourProfileId={profileState.ourProfileId}
 						{profile}
-						onBlocked={() => {
-							optimisticBlockProfileId = profileId;
-						}}
+						onBlocked={() => profileState.markBlocked()}
 					/>
 					<div
 						class={[
@@ -298,28 +237,19 @@
 						{/if}
 					</div>
 					<ProfileBottomNavBar
-						{ourProfileId}
-						{profileId}
+						ourProfileId={profileState.ourProfileId}
+						profileId={profile.profileId}
 						tapType={profile.tapType}
-						onTap={(tapType) => {
-							if (!profile) return;
-							const tapped = tapType !== null;
-							profile.tapType = tapType;
-							profile.tapped = tapped;
-							mergeProfileEditIntoCaches({
-								cacheProfileId: profile.profileId,
-								patch: { tapType, tapped },
-							});
-						}}
+						onTap={(tapType) => profileState.setTap(tapType)}
 					/>
 				{/if}
 			</main>
 		</div>
 		<DataRefreshControl
 			container={profileContainer}
-			updating={refreshing}
+			updating={profileState.refreshing}
 			position="top"
-			onrefresh={refresh}
+			onrefresh={() => profileState.refresh()}
 		/>
 	</div>
 {/if}
