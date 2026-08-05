@@ -64,13 +64,15 @@ class Reconciler {
 		const profileId = await callMethod("auth_state").catch(() => null);
 		if (profileId === null) return;
 
-		for (const handler of [...this.#handlers]) {
-			try {
-				await handler();
-			} catch (error) {
-				console.error("Reconcile handler failed", error);
-			}
-		}
+		await Promise.all(
+			[...this.#handlers].map(async (handler) => {
+				try {
+					await handler();
+				} catch (error) {
+					console.error("Reconcile handler failed", error);
+				}
+			}),
+		);
 	}
 }
 
