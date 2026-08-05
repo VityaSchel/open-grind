@@ -114,6 +114,7 @@ class MainActivity : TauriActivity() {
 	override fun onWebViewCreate(webView: WebView) {
 		super.onWebViewCreate(webView)
 		webViewRef = webView
+		webView.settings.setGeolocationEnabled(false)
 		webView.addJavascriptInterface(InsetsInterface(), "__AndroidInsets")
 		webView.addJavascriptInterface(BackInterface(), "__AndroidBack")
 		maybeWarnAboutWebView()
