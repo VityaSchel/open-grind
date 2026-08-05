@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { tick } from "svelte";
 	import { cubicOut, expoOut } from "svelte/easing";
 	import { Tween } from "svelte/motion";
 	import { scale, type TransitionConfig } from "svelte/transition";
@@ -8,10 +7,12 @@
 	import { Button } from "$lib/components/ui/button";
 	import { cn } from "$lib/util/utils";
 	import { MAX_SLINGSHOT_TENSION, slingshotTension } from "./refresh/disc-math";
+	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
 	import { attachOverscrollPull } from "./refresh/overscroll-adapter";
 	import { PullModel } from "./refresh/pull-model.svelte";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
+	import { scrollGeometry } from "./refresh/scroll-geometry";
 	import { attachTouchPull } from "./refresh/touch-adapter";
 
 	let {
@@ -45,10 +46,12 @@
 	const mounted = $derived(!!container);
 	let revealed = $state(false);
 	let distance = $state(Infinity);
-	let measuredOffset = $state(0);
+	const headerOffset = fixedHeaderOffset({
+		container: () => container,
+		enabled: () => position === "top",
+	});
 
-	// Mouse pointer-only
-	let pointerOnly = $state(false);
+	let onlyMouseSeen = $state(false);
 	let sawBand = false;
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
@@ -152,21 +155,14 @@
 			);
 		}
 	});
-	const scrollTop = () => container?.scrollTop ?? 0;
-	const maxScrollY = () =>
-		container ? container.scrollHeight - container.clientHeight : 0;
-	const scrollToY = (top: number, behavior: ScrollBehavior) => {
-		container?.scroll({ top, behavior });
-	};
-	const overscrollPx = () =>
-		position === "top" ? -scrollTop() : scrollTop() - maxScrollY();
-	const boundaryDistance = () =>
-		position === "top" ? scrollTop() : maxScrollY() - scrollTop();
+	const geometry = scrollGeometry({
+		container: () => container,
+		position: () => position,
+	});
+	const { overscrollPx, boundaryDistance } = geometry;
 
 	export function scrollToRest(behavior: ScrollBehavior = "instant") {
-		if (!container) return;
-		const top = position === "top" ? 0 : maxScrollY();
-		if (Math.abs(scrollTop() - top) >= 1) scrollToY(top, behavior);
+		geometry.scrollToRest(behavior);
 	}
 
 	$effect(() => {
@@ -178,7 +174,7 @@
 	});
 
 	const shouldRevealRestingButton = () =>
-		pointerOnly &&
+		onlyMouseSeen &&
 		!revealed &&
 		!busy &&
 		!model.gestureActive &&
@@ -191,43 +187,24 @@
 	});
 
 	$effect(() => {
-		if (position !== "top" || !container) return;
-		const measure = () => {
-			const header = document.querySelector("[data-fixed-header]");
-			if (!header) {
-				measuredOffset = 0;
-				return;
-			}
-			const headerBottom = header.getBoundingClientRect().bottom;
-			measuredOffset = Math.max(
-				0,
-				headerBottom - container.getBoundingClientRect().top,
-			);
-		};
-		void tick().then(measure);
-		window.addEventListener("resize", measure);
-		return () => window.removeEventListener("resize", measure);
-	});
-
-	$effect(() => {
 		const target = container;
 		if (!target) return;
 
 		let mouseProbe: ReturnType<typeof setTimeout> | undefined;
 		const onWheel = (event: WheelEvent) => {
-			if (sawBand || pointerOnly) return;
+			if (sawBand || onlyMouseSeen) return;
 			const toward = position === "top" ? -event.deltaY : event.deltaY;
 			if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
 			clearTimeout(mouseProbe);
 			mouseProbe = setTimeout(() => {
-				if (!sawBand) pointerOnly = true;
+				if (!sawBand) onlyMouseSeen = true;
 			}, MOUSE_PROBE_MS);
 		};
 
 		const onScroll = () => {
 			if (overscrollPx() > BAND_DETECT_PX) {
 				sawBand = true;
-				pointerOnly = false;
+				onlyMouseSeen = false;
 				revealed = false;
 			}
 			if (
@@ -262,7 +239,7 @@
 		const scrollRoot = () => container ?? null;
 		const noteTouch = () => {
 			sawBand = true;
-			pointerOnly = false;
+			onlyMouseSeen = false;
 			// Hide it so the next touch pull starts from zero. A baseline bigger
 			// than space * OVERSHOOT freezes the drag.
 			revealed = false;
@@ -308,7 +285,7 @@
 			},
 			containerClass,
 		)}
-		style:--drc-anchor="{measuredOffset}px"
+		style:--drc-anchor="{headerOffset.px}px"
 		style:height="{overlayHeight}px"
 		style:opacity
 	>
@@ -316,10 +293,7 @@
 			<div
 				class={[
 					"absolute left-1/2",
-					{
-						"top-0": position === "top",
-						"bottom-0": position === "bottom",
-					},
+					{ "top-0": position === "top", "bottom-0": position === "bottom" },
 				]}
 				style:translate="-50% {position === 'top'
 					? discTop.current
@@ -337,10 +311,7 @@
 			<span
 				class={[
 					"absolute left-1/2 text-xs whitespace-nowrap text-muted-foreground",
-					{
-						"bottom-1": position === "top",
-						"top-1": position === "bottom",
-					},
+					{ "bottom-1": position === "top", "top-1": position === "bottom" },
 				]}
 				style:translate="-50% {position === 'top' ? hintOffset : -hintOffset}px"
 			>
@@ -354,10 +325,7 @@
 			<div
 				class={[
 					"absolute left-1/2 -translate-x-1/2",
-					{
-						"bottom-3": position === "top",
-						"top-3": position === "bottom",
-					},
+					{ "bottom-3": position === "top", "top-3": position === "bottom" },
 				]}
 			>
 				{@render button()}
