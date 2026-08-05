@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { onMount, tick, untrack } from "svelte";
+	import { onMount, tick } from "svelte";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
@@ -28,10 +28,11 @@
 			0,
 		),
 	);
+	let lastMarkedActivity = 0;
 	$effect(() => {
-		// Fixes effect_update_depth_exceeded
-		void latestActivity;
-		untrack(() => conversations.markInboxViewed());
+		if (latestActivity === lastMarkedActivity) return;
+		lastMarkedActivity = latestActivity;
+		conversations.markInboxViewed();
 	});
 
 	let container: HTMLDivElement | null = $state(null);
@@ -44,11 +45,8 @@
 		});
 	});
 
-	let {
-		class: className,
-	}: {
-		class?: import("svelte/elements").ClassValue;
-	} = $props();
+	let { class: className }: { class?: import("svelte/elements").ClassValue } =
+		$props();
 
 	const selection = new SelectionSet<string>();
 	let selecting = $state(false);

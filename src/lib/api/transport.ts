@@ -11,6 +11,17 @@ import { fromBase64, toBase64 } from "$lib/util/base64";
 
 type RequestInfo = { method: string; path: string; body: unknown };
 
+// https://github.com/tauri-apps/tauri/issues/10573
+async function invokeWithBinaryPayload(
+	payload: Uint8Array,
+): Promise<Uint8Array> {
+	const res = await invoke("request", { payload: toBase64(payload) });
+	if (typeof res !== "string") {
+		throw new Error("Invalid response from backend");
+	}
+	return fromBase64(res);
+}
+
 function buildRestResponse({
 	status,
 	responseBody,
@@ -89,11 +100,7 @@ export async function fetchRest(
 	} = { method: "GET" },
 ) {
 	const method = options.method ?? "GET";
-	const requestInfo = {
-		method,
-		path,
-		body: options.body,
-	};
+	const requestInfo = { method, path, body: options.body };
 	if (demoEnabled) {
 		const { status, body } = demoRoute({ path, method, body: options.body });
 		const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
@@ -105,17 +112,7 @@ export async function fetchRest(
 			path,
 			body: options.body === undefined ? null : encode(options.body),
 		});
-		const packed = await invoke("request", {
-			// https://github.com/tauri-apps/tauri/issues/10573
-			payload: toBase64(payload),
-		}).then((res) => {
-			if (typeof res === "string") {
-				// https://github.com/tauri-apps/tauri/issues/10573
-				return fromBase64(res);
-			} else {
-				throw new Error("Invalid response from backend");
-			}
-		});
+		const packed = await invokeWithBinaryPayload(payload);
 		if (options.abortController?.signal.aborted) {
 			throw new Error("Request aborted");
 		}

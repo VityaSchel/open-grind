@@ -4,10 +4,7 @@
 	let {
 		progress = 0,
 		spinning = false,
-	}: {
-		progress?: number;
-		spinning?: boolean;
-	} = $props();
+	}: { progress?: number; spinning?: boolean } = $props();
 
 	const RADIUS = 7.5;
 	const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -23,9 +20,9 @@
 	const SPIN_INTRO_MIN_SWEEP = 0.05;
 
 	const drag = $derived(Math.min(1, Math.max(0, progress)));
-	// 5/3 is 1 / (1 - RING_START_DRAG), so ringProgress hits 1 when drag hits 1.
-	// Change one and you have to change the other.
-	const ringProgress = $derived((Math.max(drag - RING_START_DRAG, 0) * 5) / 3);
+	const ringProgress = $derived(
+		Math.max(drag - RING_START_DRAG, 0) / (1 - RING_START_DRAG),
+	);
 	const sweep = $derived(Math.min(MAX_ARC, ringProgress * MAX_ARC));
 	const arrowScale = $derived(Math.min(1, ringProgress));
 	const tension = $derived(slingshotTension(progress));
@@ -41,14 +38,15 @@
 			: RING_MIN_OPACITY + (1 - RING_MIN_OPACITY) * ringProgress,
 	);
 
-	// The spinning cycle picks up where the arrow was pointing
-	let spinFrom = $state({ rotation: 0, sweep: 0 });
+	let arrowAtSpinStart = $state({ rotation: 0, sweep: 0 });
 	$effect.pre(() => {
-		if (!spinning) spinFrom = { rotation, sweep };
+		if (!spinning) arrowAtSpinStart = { rotation, sweep };
 	});
-	const spinBase = $derived(spinFrom.rotation + spinFrom.sweep * 360);
-	const introArc = $derived(spinFrom.sweep * CIRCUMFERENCE);
-	const withIntro = $derived(spinFrom.sweep > SPIN_INTRO_MIN_SWEEP);
+	const spinBase = $derived(
+		arrowAtSpinStart.rotation + arrowAtSpinStart.sweep * 360,
+	);
+	const introArc = $derived(arrowAtSpinStart.sweep * CIRCUMFERENCE);
+	const withIntro = $derived(arrowAtSpinStart.sweep > SPIN_INTRO_MIN_SWEEP);
 </script>
 
 <div
