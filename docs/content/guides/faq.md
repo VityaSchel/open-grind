@@ -35,7 +35,7 @@ The only indirect counters are:
    - Number of registered users on git.opengrind.org (**IP addresses are not stored**)
    - Keep in mind these platforms do not collect or store any personally identifiable data about users
 
-**As of July 8, 2026, the estimated number of users is ~25000 based on the downloads counter.**
+**As of August, 2026, the estimated number of users is ~30000 based on the downloads counter.**
 
 ## Open Grind features
 
