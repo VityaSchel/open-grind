@@ -4,10 +4,10 @@ import { fetchRest } from "$lib/api/transport";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
-	messageSchema,
 } from "$lib/model/messaging/messages";
 import { unixTimestampMsSchema } from "$lib/model/types";
 import type { Conversation } from "$lib/model/messaging/conversations";
+import type { messageSchema } from "$lib/model/messaging/messages";
 
 const conversationMessagesSchema = z.object({
 	lastReadTimestamp: unixTimestampMsSchema.nullable(),

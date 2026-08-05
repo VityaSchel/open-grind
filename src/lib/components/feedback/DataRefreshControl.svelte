@@ -308,11 +308,9 @@
 			},
 			containerClass,
 		)}
-		style="
-			--drc-anchor: {measuredOffset}px;
-			height: {overlayHeight}px;
-			opacity: {opacity};
-		"
+		style:--drc-anchor="{measuredOffset}px"
+		style:height="{overlayHeight}px"
+		style:opacity
 	>
 		{#if discShown}
 			<div
@@ -323,9 +321,9 @@
 						"bottom-0": position === "bottom",
 					},
 				]}
-				style="translate: -50% {position === 'top'
+				style:translate="-50% {position === 'top'
 					? discTop.current
-					: -discTop.current}px;"
+					: -discTop.current}px"
 				out:scale={{ duration: 150, easing: cubicOut }}
 				onoutrostart={() => (discOutro = true)}
 				onoutroend={() => {
@@ -344,9 +342,7 @@
 						"top-1": position === "bottom",
 					},
 				]}
-				style="translate: -50% {position === 'top'
-					? hintOffset
-					: -hintOffset}px;"
+				style:translate="-50% {position === 'top' ? hintOffset : -hintOffset}px"
 			>
 				{#if model.phase === "armed"}
 					Release to refresh

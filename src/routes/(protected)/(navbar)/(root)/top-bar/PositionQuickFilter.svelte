@@ -6,11 +6,9 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import { Switch } from "$lib/components/ui/switch";
 	import { gridState } from "$lib/grid/grid-state.svelte";
-	import {
-		defaultFilters,
-		filterPositionSchema,
-	} from "$lib/model/browse/grid/filters";
+	import { defaultFilters } from "$lib/model/browse/grid/filters";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
 
 	let {
 		open = $bindable(),

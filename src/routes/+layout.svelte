@@ -84,7 +84,7 @@
 			"bg-red-900": env.PUBLIC_TEST_INSETS,
 		},
 	]}
-	style="height: var(--safe-area-top)"
+	style:height="var(--safe-area-top)"
 ></div>
 <div
 	class={[
@@ -94,7 +94,7 @@
 			"bg-red-900": env.PUBLIC_TEST_INSETS,
 		},
 	]}
-	style="height: var(--safe-area-bottom)"
+	style:height="var(--safe-area-bottom)"
 ></div>
 <IconContext values={{ "aria-hidden": true }}>
 	<Toaster

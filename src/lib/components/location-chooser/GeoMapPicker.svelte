@@ -65,8 +65,8 @@
 
 	let searchQuery = $state("");
 	let showSearchResults = $state(false);
-	let searchPlaces = $derived.by(async () => {
-		let query = searchQuery.trim();
+	const searchPlaces = $derived.by(async () => {
+		const query = searchQuery.trim();
 		if (!query) return;
 		const response = await getPlaces({ query });
 		return response;
@@ -186,7 +186,6 @@
 				}, 200);
 			}}
 		/>
-		<!-- bottom-2 w-[calc(100%-8rem)]  -->
 	</div>
 	{#if showSearchResults}
 		<div class="absolute top-0 left-0 z-1000 size-full p-1">

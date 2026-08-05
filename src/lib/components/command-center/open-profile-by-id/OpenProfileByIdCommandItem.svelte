@@ -14,7 +14,7 @@
 <Command.Item
 	value={profileId === null ? "#" : `#${profileId}`}
 	disabled={profileId === null}
-	class={profileId === null ? "text-muted-foreground" : undefined}
+	class={{ "text-muted-foreground": profileId === null }}
 	onSelect={() => {
 		void goto("/profile/" + profileId);
 		commandCenterClose();

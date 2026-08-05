@@ -61,8 +61,8 @@
 			<g transform="rotate({spinBase} 20 20)">
 				<g class="spin-group">
 					<circle
-						class={["spin-arc", withIntro && "with-intro"]}
-						style="--intro-arc: {introArc};"
+						class={["spin-arc", { "with-intro": withIntro }]}
+						style:--intro-arc={introArc}
 						cx="20"
 						cy="20"
 						r={RADIUS}

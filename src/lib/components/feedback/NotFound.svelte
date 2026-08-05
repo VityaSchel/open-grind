@@ -11,7 +11,7 @@
 	import * as Tooltip from "$lib/components/ui/tooltip";
 
 	let flip = $state(false);
-	let flipProgress = new Tween(0, { duration: 500 });
+	const flipProgress = new Tween(0, { duration: 500 });
 	let anchor: HTMLElement | null = $state(null);
 </script>
 

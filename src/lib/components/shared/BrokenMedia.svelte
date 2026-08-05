@@ -22,7 +22,10 @@
 	aria-label={label}
 	class={[
 		"flex items-center justify-center",
-		tone === "muted" ? "bg-card-foreground/20" : "bg-neutral-700",
+		{
+			"bg-card-foreground/20": tone === "muted",
+			"bg-neutral-700": tone !== "muted",
+		},
 		className,
 	]}
 	style:aspect-ratio={aspectRatio}

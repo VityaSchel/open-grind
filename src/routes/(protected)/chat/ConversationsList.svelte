@@ -201,7 +201,7 @@
 		bind:this={container}
 		class={[
 			"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain p-4 pb-0",
-			selecting && "pt-(--selection-bar-height)",
+			{ "pt-(--selection-bar-height)": selecting },
 			className,
 		]}
 		onscroll={() => (conversations.scrollY = container?.scrollTop ?? 0)}

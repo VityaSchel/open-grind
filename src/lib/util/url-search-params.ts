@@ -27,11 +27,13 @@ function stringRecordToValues<T extends z.ZodObject>({
 		const raw = record[key];
 		if (raw === undefined) continue;
 		const inner = unwrapSchema(fieldSchema as z.ZodType);
-		if (inner instanceof z.ZodNumber) result[key] = Number(raw);
-		else if (inner instanceof z.ZodBoolean)
+		if (inner instanceof z.ZodNumber) {
+			result[key] = Number(raw);
+		} else if (inner instanceof z.ZodBoolean) {
 			result[key] = raw === "true" || raw === "1";
-		else if (inner instanceof z.ZodBigInt) result[key] = BigInt(raw);
-		else if (inner instanceof z.ZodArray) {
+		} else if (inner instanceof z.ZodBigInt) {
+			result[key] = BigInt(raw);
+		} else if (inner instanceof z.ZodArray) {
 			const element = unwrapSchema(inner.element as z.ZodType);
 			result[key] =
 				raw === ""
@@ -43,7 +45,9 @@ function stringRecordToValues<T extends z.ZodObject>({
 							if (element instanceof z.ZodBigInt) return BigInt(value);
 							return value;
 						});
-		} else result[key] = raw;
+		} else {
+			result[key] = raw;
+		}
 	}
 	return result;
 }

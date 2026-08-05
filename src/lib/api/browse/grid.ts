@@ -1,4 +1,4 @@
-import z from "zod";
+import type z from "zod";
 
 import { fetchRest } from "$lib/api/transport";
 import { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";

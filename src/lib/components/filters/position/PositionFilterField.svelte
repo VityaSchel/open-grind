@@ -2,7 +2,7 @@
 	import type z from "zod";
 
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
-	import { filterPositionSchema } from "$lib/model/browse/grid/filters";
+	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
 	import FilterBoolean from "../FilterBoolean.svelte";
 
 	let {

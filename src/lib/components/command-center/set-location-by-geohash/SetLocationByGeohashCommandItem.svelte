@@ -30,7 +30,10 @@
 <Command.Item
 	value={geohash === null ? "@" : `@${geohash}`}
 	disabled={geohash === null || geohash.length !== 12}
-	class={geohash === null ? "text-muted-foreground" : "gap-0 font-mono"}
+	class={{
+		"text-muted-foreground": geohash === null,
+		"gap-0 font-mono": geohash !== null,
+	}}
 	onSelect={() => {
 		if (geohash === null || geohash.length !== 12) return;
 		void setLocation(geohash);

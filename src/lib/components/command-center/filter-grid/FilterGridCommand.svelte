@@ -32,7 +32,7 @@
 	<Command.Item
 		value={commandCenterState.query || "?"}
 		disabled={!canApply}
-		class={canApply ? undefined : "text-muted-foreground"}
+		class={{ "text-muted-foreground": !canApply }}
 		onSelect={apply}
 	>
 		<FunnelIcon />

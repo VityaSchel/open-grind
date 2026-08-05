@@ -54,7 +54,7 @@
 							: ""
 					} 
 				);`}
-			style="--pblur: {config.blur}px"
+			style:--pblur="{config.blur}px"
 		></div>
 	{/each}
 	<div class={["relative z-12", contentClass]}>
