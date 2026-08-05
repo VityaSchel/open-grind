@@ -12,7 +12,14 @@
 			"url": "https://cdns.grindr.com"
 		},
 		{
-			"url": "https://d2wxe7lth7kp8g.cloudfront.net"
+			"url": "https://{distribution}.cloudfront.net",
+			"description": "Signed media. The distribution is not stable — read the host from the media object's `url`.",
+			"variables": {
+				"distribution": {
+					"default": "d3lyqctnm3b6pb",
+					"description": "CloudFront distribution serving signed media"
+				}
+			}
 		},
 		{
 			"url": "wss://grindr.mobi"
@@ -207,7 +214,7 @@
 		},
 		{
 			"name": "media/signed-cdn-files",
-			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://d2wxe7lth7kp8g.cloudfront.net/`\n\nAlthough it might change in the future, so it's best to pull the full URL from the `url` property on the media object itself."
+			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://{distribution}.cloudfront.net/`, always take the full URL from the `url` property on the media object itself."
 		},
 		{
 			"name": "messaging/albums",
@@ -454,7 +461,7 @@
 					}
 				},
 				"summary": "Add media to drawer",
-				"description": "MediaId must be obtained through [uploading](/grindr-api/users/profiles#upload-media)."
+				"description": "MediaId must be obtained through [uploading](/grindr-api/messaging/drawer#upload-media)."
 			},
 			"delete": {
 				"tags": [
@@ -987,6 +994,11 @@
 				"tags": [
 					"messaging/gifs"
 				],
+				"servers": [
+					{
+						"url": "https://api.giphy.com"
+					}
+				],
 				"operationId": "getTrendingGifs",
 				"parameters": [
 					{
@@ -1023,6 +1035,11 @@
 			"get": {
 				"tags": [
 					"messaging/gifs"
+				],
+				"servers": [
+					{
+						"url": "https://api.giphy.com"
+					}
 				],
 				"operationId": "searchGifs",
 				"parameters": [
@@ -1534,7 +1551,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.13.0** — the client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one. Documented for older builds."
 			},
 			"post": {
 				"tags": [
@@ -1561,7 +1580,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.13.0** — the client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one. Documented for older builds."
 			}
 		},
 		"/v3/legal-agreements": {
@@ -5421,7 +5442,13 @@
 				"operationId": "getSignedChatMedia",
 				"servers": [
 					{
-						"url": "https://d2wxe7lth7kp8g.cloudfront.net"
+						"url": "https://{distribution}.cloudfront.net",
+						"variables": {
+							"distribution": {
+								"default": "d3lyqctnm3b6pb",
+								"description": "Changes over time."
+							}
+						}
 					}
 				],
 				"parameters": [
@@ -7014,6 +7041,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"403": {
+						"description": "`{\"type\":\"urn:gr:err:unauthorized_action\",\"title\":\"Action not permitted\",\"status\":403}` when the conversation is no longer reachable — the other profile blocked you, or their account was deleted."
 					}
 				},
 				"summary": "Get messages in a conversation",
@@ -8290,8 +8320,12 @@
 		"/api/token": {
 			"post": {
 				"tags": [
-					"settings/sms-verification",
 					"third-party-integrations/spotify"
+				],
+				"servers": [
+					{
+						"url": "https://accounts.spotify.com"
+					}
 				],
 				"operationId": "requestSpotifyToken",
 				"requestBody": {
@@ -8415,6 +8449,11 @@
 				"tags": [
 					"third-party-integrations/spotify"
 				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
+				],
 				"operationId": "searchSpotifyTracks",
 				"parameters": [
 					{
@@ -8453,6 +8492,11 @@
 				"tags": [
 					"third-party-integrations/spotify"
 				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
+				],
 				"operationId": "getSpotifyTracks",
 				"parameters": [
 					{
@@ -8483,6 +8527,11 @@
 			"get": {
 				"tags": [
 					"third-party-integrations/spotify"
+				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
 				],
 				"operationId": "getSpotifyRecentlyPlayed",
 				"responses": {
@@ -8897,6 +8946,44 @@
 			}
 		},
 		"/v4/me/profile": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getOwnProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"profiles": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/ProfileSummaryWithRightNow"
+											},
+											"minItems": 1,
+											"maxItems": 1
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get own profile",
+				"description": "Returns the authenticated user's own profile in the same single-element `profiles` envelope as [Get a profile by ID](/grindr-api/users/profiles#get-a-profile-by-id), without taking an ID.",
+				"x-notes": [
+					"The official Android app does not use this endpoint."
+				]
+			},
 			"patch": {
 				"tags": [
 					"users/profiles"
@@ -8988,9 +9075,14 @@
 		"/v5/chat/media/upload": {
 			"post": {
 				"tags": [
-					"users/profiles"
+					"messaging/drawer"
 				],
 				"operationId": "uploadChatMedia",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"name": "length",
@@ -8998,16 +9090,14 @@
 						"schema": {
 							"type": "integer",
 							"format": "int64"
-						},
-						"required": true
+						}
 					},
 					{
 						"name": "looping",
 						"in": "query",
 						"schema": {
 							"type": "boolean"
-						},
-						"required": true
+						}
 					},
 					{
 						"$ref": "#/components/parameters/TakenOnGrindrQuery"
@@ -9029,7 +9119,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ChatMediaUploadResponse"
+									"$ref": "#/components/schemas/MediaUploadResponse"
 								}
 							}
 						},
@@ -9037,7 +9127,7 @@
 					}
 				},
 				"summary": "Upload media",
-				"description": "A correct `Content-Type` request header is required."
+				"description": "A correct `Content-Type` request header is required. `length` is sent for audio and video, `looping` only for video."
 			}
 		},
 		"/v4/media/upload": {
@@ -9119,7 +9209,7 @@
 					}
 				},
 				"summary": "Edit profile photos",
-				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media](/grindr-api/users/profiles#upload-media).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
+				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media (legacy)](/grindr-api/users/profiles#upload-media-legacy).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
 			},
 			"delete": {
 				"tags": [
@@ -9696,12 +9786,11 @@
 					}
 				],
 				"summary": "Upload media (signed)",
-				"description": "Signed successor of the unsigned `POST /v5/chat/media/upload`. A correct `Content-Type` request header is required, and the request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing).",
+				"description": "Signed version of the unsigned [Upload media](/grindr-api/messaging/drawer#upload-media). A correct `Content-Type` request header is required, and the request must carry a valid device-key signature over the raw request body; see [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing). `length` and `looping` are never sent here. All media uploaded through this endpoint are marked as \"Taken on Grindr\" server-side.",
 				"parameters": [
 					{
 						"name": "length",
 						"in": "query",
-						"required": true,
 						"schema": {
 							"type": "integer",
 							"format": "int64"
@@ -9710,13 +9799,9 @@
 					{
 						"name": "looping",
 						"in": "query",
-						"required": true,
 						"schema": {
 							"type": "boolean"
 						}
-					},
-					{
-						"$ref": "#/components/parameters/TakenOnGrindrQuery"
 					},
 					{
 						"$ref": "#/components/parameters/DeviceKeyIdHeader"
@@ -10455,9 +10540,11 @@
 							"type": "string",
 							"enum": [
 								"interestsTab",
-								"forYou"
+								"forYou",
+								"rightNowFeed",
+								"rightNowMap"
 							],
-							"description": "Woodwork placement slot to fetch"
+							"description": "Woodwork placement slot to fetch: `interestsTab`, `forYou`, `rightNowFeed`, or `rightNowMap`"
 						}
 					}
 				],
@@ -10951,6 +11038,7 @@
 				"in": "query",
 				"name": "takenOnGrindr",
 				"required": true,
+				"description": "Media captured with the in-app camera. The official client uses a signed upload endpoint only when this is `true` and the `taken-on-grindr-signing-enabled` flag is on.",
 				"schema": {
 					"type": "boolean"
 				}
@@ -12956,28 +13044,6 @@
 					"categoryCollection"
 				]
 			},
-			"ChatMediaUploadResponse": {
-				"type": "object",
-				"properties": {
-					"mediaId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"mediaHash": {
-						"$ref": "#/components/schemas/MediaHash"
-					},
-					"url": {
-						"type": "string",
-						"format": "uri"
-					}
-				},
-				"x-render-on-tag": "users/profiles",
-				"required": [
-					"mediaId",
-					"mediaHash",
-					"url"
-				]
-			},
 			"LegacyMediaUploadResponse": {
 				"type": "object",
 				"properties": {
@@ -13122,7 +13188,8 @@
 					},
 					"genderPlural": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "string, plural form of `gender`"
 					},
 					"excludeOnProfileSelection": {
 						"type": "array",
@@ -13142,19 +13209,15 @@
 						"type": "array",
 						"items": {
 							"type": "integer"
-						}
+						},
+						"description": "array of integers; not in the official app's model"
 					}
 				},
 				"x-render-on-tag": "users/profiles",
 				"required": [
 					"genderId",
 					"gender",
-					"displayGroup",
-					"sortProfile",
-					"sortFilter",
-					"genderPlural",
-					"excludeOnProfileSelection",
-					"excludeOnFilterSelection"
+					"displayGroup"
 				]
 			},
 			"GenderPronounSuggestionRequest": {
@@ -17482,6 +17545,11 @@
 					},
 					"copy": {
 						"type": "string"
+					},
+					"subtitle": {
+						"type": "string",
+						"nullable": true,
+						"description": "secondary line under `copy`; may be absent"
 					},
 					"isTrailingArrowVisible": {
 						"type": "boolean"
