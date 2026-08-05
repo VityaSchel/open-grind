@@ -240,6 +240,10 @@
 			"x-wip": true
 		},
 		{
+			"name": "third-party-integrations/ketch",
+			"x-wip": true
+		},
+		{
 			"name": "third-party-integrations/spotify",
 			"x-wip": true
 		},
@@ -994,6 +998,11 @@
 				"tags": [
 					"messaging/gifs"
 				],
+				"servers": [
+					{
+						"url": "https://api.giphy.com"
+					}
+				],
 				"operationId": "getTrendingGifs",
 				"parameters": [
 					{
@@ -1030,6 +1039,11 @@
 			"get": {
 				"tags": [
 					"messaging/gifs"
+				],
+				"servers": [
+					{
+						"url": "https://api.giphy.com"
+					}
 				],
 				"operationId": "searchGifs",
 				"parameters": [
@@ -8310,8 +8324,12 @@
 		"/api/token": {
 			"post": {
 				"tags": [
-					"settings/sms-verification",
 					"third-party-integrations/spotify"
+				],
+				"servers": [
+					{
+						"url": "https://accounts.spotify.com"
+					}
 				],
 				"operationId": "requestSpotifyToken",
 				"requestBody": {
@@ -8345,6 +8363,50 @@
 				"x-notes": [
 					"Body is URL-encoded (grant_type=authorization_code&code=...&redirect_uri=... or grant_type=refresh_token&refresh_token=... or grant_type=client_credentials)."
 				]
+			}
+		},
+		"/web/v3/consent/grindr/get": {
+			"post": {
+				"tags": [
+					"third-party-integrations/ketch"
+				],
+				"servers": [
+					{
+						"url": "https://global.ketchcdn.com"
+					}
+				],
+				"operationId": "getKetchConsent",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "KetchConsentRequestDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject",
+									"x-original-type": "KetchConsentResponseDto"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get Ketch consent",
+				"x-wip": true,
+				"description": "Consent-management platform used by the official client. Served by Ketch, not Grindr. Documented only to record its existence; request and response shapes are not yet described."
 			}
 		},
 		"/v3/me/profile": {
@@ -8435,6 +8497,11 @@
 				"tags": [
 					"third-party-integrations/spotify"
 				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
+				],
 				"operationId": "searchSpotifyTracks",
 				"parameters": [
 					{
@@ -8473,6 +8540,11 @@
 				"tags": [
 					"third-party-integrations/spotify"
 				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
+				],
 				"operationId": "getSpotifyTracks",
 				"parameters": [
 					{
@@ -8503,6 +8575,11 @@
 			"get": {
 				"tags": [
 					"third-party-integrations/spotify"
+				],
+				"servers": [
+					{
+						"url": "https://api.spotify.com"
+					}
 				],
 				"operationId": "getSpotifyRecentlyPlayed",
 				"responses": {
@@ -18032,6 +18109,7 @@
 		{
 			"group": "third-party-integrations",
 			"items": [
+				"third-party-integrations/ketch",
 				"third-party-integrations/spotify"
 			]
 		},
