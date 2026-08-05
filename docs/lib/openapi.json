@@ -1541,7 +1541,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.13.0** — the client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one. Documented for older builds."
 			},
 			"post": {
 				"tags": [
@@ -1568,7 +1570,9 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "**Removed in app 26.13.0** — the client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one. Documented for older builds."
 			}
 		},
 		"/v3/legal-agreements": {
@@ -10507,9 +10511,11 @@
 							"type": "string",
 							"enum": [
 								"interestsTab",
-								"forYou"
+								"forYou",
+								"rightNowFeed",
+								"rightNowMap"
 							],
-							"description": "Woodwork placement slot to fetch"
+							"description": "Woodwork placement slot to fetch: `interestsTab`, `forYou`, `rightNowFeed`, or `rightNowMap`"
 						}
 					}
 				],
@@ -17510,6 +17516,11 @@
 					},
 					"copy": {
 						"type": "string"
+					},
+					"subtitle": {
+						"type": "string",
+						"nullable": true,
+						"description": "secondary line under `copy`; may be absent"
 					},
 					"isTrailingArrowVisible": {
 						"type": "boolean"
