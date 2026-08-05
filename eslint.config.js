@@ -49,6 +49,9 @@ export default defineConfig(
 			perfectionist,
 			progress,
 		},
+		linterOptions: {
+			reportUnusedDisableDirectives: "error",
+		},
 		languageOptions: {
 			globals: globals.node,
 			parserOptions: {
@@ -94,6 +97,18 @@ export default defineConfig(
 			"@typescript-eslint/no-unsafe-return": "off",
 			"@typescript-eslint/no-redundant-type-constituents": "off",
 			eqeqeq: ["error", "always"],
+			"@typescript-eslint/consistent-type-imports": [
+				"error",
+				{
+					prefer: "type-imports",
+					fixStyle: "separate-type-imports",
+					disallowTypeAnnotations: false,
+				},
+			],
+			"max-lines": [
+				"error",
+				{ max: 600, skipBlankLines: true, skipComments: true },
+			],
 		},
 	},
 	{
@@ -110,6 +125,41 @@ export default defineConfig(
 			"@typescript-eslint/require-array-sort-compare": [
 				"error",
 				{ ignoreStringArrays: true },
+			],
+			"svelte/prefer-style-directive": "error",
+			"svelte/no-useless-mustaches": "error",
+			"svelte/html-self-closing": "error",
+			"svelte/prefer-const": ["error", { excludedRunes: ["$props", "$state"] }],
+		},
+	},
+	{
+		files: ["**/*.svelte"],
+		rules: {
+			"svelte/max-lines-per-block": ["error", { script: 300, template: 300 }],
+		},
+	},
+	{
+		files: ["**/*.svelte"],
+		ignores: ["src/lib/components/ui/**"],
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				{
+					selector: `SvelteAttribute[key.name="class"] :matches(ArrayExpression, CallExpression[callee.name="cn"]) > :matches(LogicalExpression[operator="&&"], ConditionalExpression)`,
+					message: `Conditional classes go in the object: class={["base", { "cls": cond }]}`,
+				},
+				{
+					selector: `SvelteAttribute[key.name="class"][value.length=1] > SvelteMustacheTag > :matches(LogicalExpression[operator="&&"], ConditionalExpression)`,
+					message: `Use class={{ "cls": cond }} instead of a bare ternary or &&`,
+				},
+				{
+					selector: `SvelteStyleDirective LogicalExpression[operator="&&"]`,
+					message: `style:x={a && b} never clears the property when a is false — use a ? b : undefined`,
+				},
+				{
+					selector: `SvelteDirective[kind="Class"]`,
+					message: `Use the class attribute array/object form, not the class: directive`,
+				},
 			],
 		},
 	},
