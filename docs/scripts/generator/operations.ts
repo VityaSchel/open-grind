@@ -255,8 +255,9 @@ export function renderOperation(
 				lines.push(`Response type: \`${original}\` (undocumented).`, "");
 		}
 	}
-
-	lines.push("```", `${method.toUpperCase()} ${path}`, "```", "");
+	const overrideServer = op.servers?.[0]?.url.replace(/\/$/, "");
+	const target = overrideServer ? `${overrideServer}${path}` : path;
+	lines.push("```", `${method.toUpperCase()} ${target}`, "```", "");
 
 	const queryGroups = op["x-query-groups"] ?? [];
 	const allParams: Parameter[] = [];
