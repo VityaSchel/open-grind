@@ -2,7 +2,7 @@ import z from "zod";
 
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowStatusSchema } from "$lib/model/right-now";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 import { sexualPositionSchema } from "$lib/model/users/profiles";
 
 export const fullConversationSchema = z.object({
@@ -18,7 +18,7 @@ export const fullConversationSchema = z.object({
 					lastOnline: unixTimestampMsSchema.nullable(),
 					onlineUntil: unixTimestampMsSchema.nullable(),
 					distanceMetres: z.number().nullable(),
-					position: sexualPositionSchema.nullable(), // SexualPositionId
+					position: sexualPositionSchema.nullable(),
 					isInAList: z.boolean(),
 					hasDatingPotential: z.boolean(),
 				}),
@@ -32,7 +32,10 @@ export const fullConversationSchema = z.object({
 				text: z.string().nullable(),
 				albumId: z.number().nullable(),
 				imageHash: mediaHashPublicSchema.nullable(),
-				// lat, lon, duration, photoContentReply
+				lat: unmodeledSchema,
+				lon: unmodeledSchema,
+				duration: unmodeledSchema,
+				photoContentReply: unmodeledSchema,
 			})
 			.nullable(),
 		muted: z.boolean(),

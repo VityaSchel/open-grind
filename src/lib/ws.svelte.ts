@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { tapTypeSchema } from "$lib/model/interest/taps";
+import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import { unixTimestampMsSchema } from "$lib/model/types";
@@ -43,7 +43,7 @@ export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
 		timestamp: unixTimestampMsSchema,
 		senderId: z.number(),
 		recipientId: z.number(),
-		tapType: tapTypeSchema.or(z.literal(3).transform(() => null)).nullable(),
+		tapType: tapTypeOrNoneSchema.nullable(),
 		senderProfileImageHash: mediaHashPublicSchema.nullable(),
 		senderDisplayName: z.string().nullable(),
 		isMutual: z.boolean(),

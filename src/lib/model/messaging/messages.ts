@@ -9,7 +9,7 @@ import {
 	albumExpirationSchema,
 	albumPreviewSchema,
 } from "$lib/model/messaging/albums";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
 const messageBaseSchema = z.object({
 	type: z.string(),
@@ -28,10 +28,10 @@ export const apiResponseMessageOverlaySchema = z.object({
 			reactionType: z.int().nonnegative(),
 		}),
 	),
-	// replyToMessage: z.unknown().nullable(),
-	// dynamic: z.boolean(),
-	// chat1Type: z.string(),
-	// replyPreview: z.unknown().nullable(),
+	replyToMessage: unmodeledSchema,
+	dynamic: unmodeledSchema,
+	chat1Type: unmodeledSchema,
+	replyPreview: unmodeledSchema,
 });
 
 export const albumMessageSchema = messageBaseSchema.safeExtend({

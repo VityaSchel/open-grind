@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { tapTypeSchema } from "$lib/model/interest/taps";
+import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { viewSourceEnumSchema } from "$lib/model/interest/view-source";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import {
@@ -380,7 +380,7 @@ export const profileSchema = profileShortSchema
 		hashtags: z.array(z.unknown()),
 		profileTags: z.array(z.string()),
 		tapped: z.boolean(),
-		tapType: tapTypeSchema.or(z.literal(3).transform(() => null)).nullable(),
+		tapType: tapTypeOrNoneSchema.nullable(),
 		lastReceivedTapTimestamp: z.number().nullable(),
 		isTeleporting: z.boolean(),
 		isRoaming: z.boolean(),
