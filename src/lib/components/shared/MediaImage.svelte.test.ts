@@ -62,9 +62,7 @@ describe("MediaImage", () => {
 	});
 
 	it("re-arms when the source changes after a failure", async () => {
-		const { container, rerender } = render(MediaImage, {
-			props: { src: SRC },
-		});
+		const { container, rerender } = render(MediaImage, { props: { src: SRC } });
 
 		await fireEvent.error(container.querySelector("img")!);
 		expect(container.querySelector(BROKEN)).not.toBeNull();

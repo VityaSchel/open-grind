@@ -5,11 +5,7 @@
 		open = $bindable(false),
 		count,
 		onConfirm,
-	}: {
-		open?: boolean;
-		count: number;
-		onConfirm: () => void;
-	} = $props();
+	}: { open?: boolean; count: number; onConfirm: () => void } = $props();
 </script>
 
 <AlertDialog.Root bind:open>

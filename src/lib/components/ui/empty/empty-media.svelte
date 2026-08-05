@@ -9,9 +9,7 @@
 				icon: "flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground [&_svg:not([class*='size-'])]:size-5",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-		},
+		defaultVariants: { variant: "default" },
 	});
 
 	export type EmptyMediaVariant = VariantProps<

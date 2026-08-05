@@ -9,9 +9,7 @@
 				line: "cn-tabs-list-variant-line gap-1 bg-transparent",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-		},
+		defaultVariants: { variant: "default" },
 	});
 
 	export type TabsListVariant = VariantProps<
@@ -29,9 +27,7 @@
 		variant = "default",
 		class: className,
 		...restProps
-	}: TabsPrimitive.ListProps & {
-		variant?: TabsListVariant;
-	} = $props();
+	}: TabsPrimitive.ListProps & { variant?: TabsListVariant } = $props();
 </script>
 
 <TabsPrimitive.List

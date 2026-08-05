@@ -2,11 +2,7 @@
 	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
 	import type { ViewerProfile } from "$lib/model/interest/views";
 
-	let {
-		view,
-	}: {
-		view: ViewerProfile;
-	} = $props();
+	let { view }: { view: ViewerProfile } = $props();
 </script>
 
 <ProfileMiniCard

@@ -11,11 +11,7 @@
 	import ViewedProfile from "./ViewedProfile.svelte";
 	import { getViewsState } from "./views-state.svelte";
 
-	let {
-		ourProfileId,
-	}: {
-		ourProfileId: number;
-	} = $props();
+	let { ourProfileId }: { ourProfileId: number } = $props();
 
 	const views = untrack(() => {
 		const state = getViewsState(ourProfileId);

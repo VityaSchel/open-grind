@@ -6,10 +6,7 @@ import type { Profile } from "$lib/model/users/profiles";
 
 const getBlockedUsersResponseSchema = z.object({
 	blocking: z.array(
-		z.object({
-			profileId: z.number(),
-			blockedTime: z.number(),
-		}),
+		z.object({ profileId: z.number(), blockedTime: z.number() }),
 	),
 });
 
@@ -26,9 +23,9 @@ export async function blockUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v3/me/blocks/${profileId}`, {
-		method: "POST",
-	}).then((res) => res.assertOk());
+	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "POST" }).then(
+		(res) => res.assertOk(),
+	);
 }
 
 export async function unblockUser({
@@ -36,7 +33,7 @@ export async function unblockUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v3/me/blocks/${profileId}`, {
-		method: "DELETE",
-	}).then((res) => res.assertOk());
+	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "DELETE" }).then(
+		(res) => res.assertOk(),
+	);
 }

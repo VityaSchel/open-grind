@@ -19,10 +19,8 @@
 	let {
 		onClose,
 		onSelectionChange,
-	}: {
-		onClose: () => void;
-		onSelectionChange: (count: number) => void;
-	} = $props();
+	}: { onClose: () => void; onSelectionChange: (count: number) => void } =
+		$props();
 
 	const composer = getMessageComposerContext();
 	const selected = new SelectionSet<number>(10);

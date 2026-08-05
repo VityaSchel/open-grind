@@ -28,17 +28,11 @@
 			textContent = "";
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to send message",
-				error,
-			});
+			showErrorToast({ label: "Failed to send message", error });
 		}
 	}
 
-	setMessageComposerContext(() => ({
-		disabled,
-		sendMessage: onSend,
-	}));
+	setMessageComposerContext(() => ({ disabled, sendMessage: onSend }));
 </script>
 
 <form

@@ -15,11 +15,7 @@
 
 	const FULLSIZE_TABS: Tab[] = ["media"];
 
-	let {
-		open = $bindable(),
-	}: {
-		open: boolean;
-	} = $props();
+	let { open = $bindable() }: { open: boolean } = $props();
 
 	type Tab = "media" | "albums" | "location";
 
@@ -96,10 +92,7 @@
 				onscroll={scheduleSettle}
 				class={[
 					"overflow-x-hidden  overscroll-contain select-none",
-					{
-						"h-full overflow-y-auto": isFullsizeTab,
-						"h-fit": !isFullsizeTab,
-					},
+					{ "h-full overflow-y-auto": isFullsizeTab, "h-fit": !isFullsizeTab },
 				]}
 			>
 				{#if isFullsizeTab}
@@ -113,9 +106,7 @@
 					data-slot="sheet-panel"
 					class={[
 						" rounded-t-4xl border border-border bg-popover px-4 pb-20 shadow-xl",
-						{
-							"min-h-full": isFullsizeTab,
-						},
+						{ "min-h-full": isFullsizeTab },
 					]}
 				>
 					<div

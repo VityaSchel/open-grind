@@ -10,11 +10,7 @@
 	} from "$lib/model/browse/grid/filters";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
-	let {
-		open = $bindable(),
-	}: {
-		open: boolean;
-	} = $props();
+	let { open = $bindable() }: { open: boolean } = $props();
 
 	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
 	let { ageEnabled: enabled, age: value } = $derived(filters);
@@ -79,10 +75,7 @@
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}
 				onclick={() => {
-					gridState.filters.set({
-						ageEnabled: enabled,
-						age: value,
-					});
+					gridState.filters.set({ ageEnabled: enabled, age: value });
 					open = false;
 				}}
 			>

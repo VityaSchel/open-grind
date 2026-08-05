@@ -36,10 +36,7 @@ export const filterTagsEnabledSchema = z.boolean();
 export const filterTagsSchema = z.array(z.string());
 
 export const filterPositionEnabledSchema = z.boolean();
-export const FilterPosition = {
-	...SexualPosition,
-	NotSpecified: -1,
-} as const;
+export const FilterPosition = { ...SexualPosition, NotSpecified: -1 } as const;
 export type FilterPositionId =
 	(typeof FilterPosition)[keyof typeof FilterPosition];
 export const filterPositionSchema = z.array(z.enum(FilterPosition));
@@ -50,18 +47,12 @@ export const filterPhotosSchema = z.array(
 );
 
 export const filterTribesEnabledSchema = z.boolean();
-export const FilterTribe = {
-	...Tribe,
-	NotSpecified: -1,
-} as const;
+export const FilterTribe = { ...Tribe, NotSpecified: -1 } as const;
 export type FilterTribeId = (typeof FilterTribe)[keyof typeof FilterTribe];
 export const filterTribesSchema = z.array(z.enum(FilterTribe));
 
 export const filterBodyTypeEnabledSchema = z.boolean();
-export const FilterBodyType = {
-	...BodyType,
-	NotSpecified: -1,
-} as const;
+export const FilterBodyType = { ...BodyType, NotSpecified: -1 } as const;
 export type FilterBodyTypeId =
 	(typeof FilterBodyType)[keyof typeof FilterBodyType];
 export const filterBodyTypeSchema = z.array(z.enum(FilterBodyType));
@@ -102,19 +93,13 @@ export type FilterAcceptNSFWPicsId =
 export const filterAcceptNSFWPicsSchema = z.array(z.enum(FilterAcceptNSFWPics));
 
 export const filterLookingForEnabledSchema = z.boolean();
-export const FilterLookingFor = {
-	...LookingFor,
-	NotSpecified: -1,
-} as const;
+export const FilterLookingFor = { ...LookingFor, NotSpecified: -1 } as const;
 export type FilterLookingForId =
 	(typeof FilterLookingFor)[keyof typeof FilterLookingFor];
 export const filterLookingForSchema = z.array(z.enum(FilterLookingFor));
 
 export const filterMeetAtEnabledSchema = z.boolean();
-export const FilterMeetAt = {
-	...MeetAt,
-	NotSpecified: -1,
-} as const;
+export const FilterMeetAt = { ...MeetAt, NotSpecified: -1 } as const;
 export type FilterMeetAtId = (typeof FilterMeetAt)[keyof typeof FilterMeetAt];
 export const filterMeetAtSchema = z.array(z.enum(FilterMeetAt));
 

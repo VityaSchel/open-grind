@@ -8,11 +8,7 @@
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
-	let {
-		meetAt = null,
-	}: {
-		meetAt?: MeetAtId[] | null;
-	} = $props();
+	let { meetAt = null }: { meetAt?: MeetAtId[] | null } = $props();
 </script>
 
 {#if meetAt !== null && meetAt.length > 0}

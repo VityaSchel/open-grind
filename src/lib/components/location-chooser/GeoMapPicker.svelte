@@ -25,11 +25,8 @@
 	import { openExternalLink } from "$lib/platform/link-opener";
 	import { isMobilePlatform } from "$lib/platform/os";
 
-	let {
-		pinPos = $bindable(),
-	}: {
-		pinPos?: { lat: number; lon: number };
-	} = $props();
+	let { pinPos = $bindable() }: { pinPos?: { lat: number; lon: number } } =
+		$props();
 
 	let map: LeafletMap | undefined = $state();
 
@@ -157,9 +154,7 @@
 	<div
 		class={[
 			"absolute bottom-4 z-1010 w-full p-2",
-			{
-				"max-w-[calc(100%-2.5rem)]": gpsAvailable,
-			},
+			{ "max-w-[calc(100%-2.5rem)]": gpsAvailable },
 		]}
 	>
 		<Input

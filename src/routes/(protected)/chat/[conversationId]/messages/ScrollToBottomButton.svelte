@@ -10,10 +10,7 @@
 	let {
 		onclick,
 		seenTimestamp,
-	}: {
-		onclick: () => void;
-		seenTimestamp: number;
-	} = $props();
+	}: { onclick: () => void; seenTimestamp: number } = $props();
 
 	const conversationState = $derived(getConversationState()());
 

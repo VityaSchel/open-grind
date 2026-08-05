@@ -10,9 +10,7 @@
 
 	let {
 		healthPractices = null,
-	}: {
-		healthPractices?: HealthPracticeId[] | null;
-	} = $props();
+	}: { healthPractices?: HealthPracticeId[] | null } = $props();
 </script>
 
 {#if healthPractices !== null && healthPractices.length > 0}

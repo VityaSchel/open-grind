@@ -10,11 +10,7 @@
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
 
-	let {
-		open = $bindable(),
-	}: {
-		open: boolean;
-	} = $props();
+	let { open = $bindable() }: { open: boolean } = $props();
 
 	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
 	let { positionEnabled: enabled, positions: value } = $derived(filters);
@@ -76,10 +72,7 @@
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}
 				onclick={() => {
-					gridState.filters.set({
-						positionEnabled: enabled,
-						positions: value,
-					});
+					gridState.filters.set({ positionEnabled: enabled, positions: value });
 					open = false;
 				}}
 			>

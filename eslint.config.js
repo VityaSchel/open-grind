@@ -45,18 +45,11 @@ export default defineConfig(
 	prettier,
 	svelte.configs.prettier,
 	{
-		plugins: {
-			perfectionist,
-			progress,
-		},
-		linterOptions: {
-			reportUnusedDisableDirectives: "error",
-		},
+		plugins: { perfectionist, progress },
+		linterOptions: { reportUnusedDisableDirectives: "error" },
 		languageOptions: {
 			globals: globals.node,
-			parserOptions: {
-				projectService: true,
-			},
+			parserOptions: { projectService: true },
 		},
 		rules: {
 			"progress/file": "warn",
@@ -165,14 +158,8 @@ export default defineConfig(
 	},
 	{
 		files: ["src/routes/**/*.svelte"],
-		plugins: {
-			"better-tailwindcss": betterTailwindcss,
-		},
-		settings: {
-			"better-tailwindcss": {
-				entryPoint: "src/layout.css",
-			},
-		},
+		plugins: { "better-tailwindcss": betterTailwindcss },
+		settings: { "better-tailwindcss": { entryPoint: "src/layout.css" } },
 		rules: {
 			"better-tailwindcss/no-restricted-classes": [
 				"warn",

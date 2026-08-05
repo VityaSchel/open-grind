@@ -10,18 +10,8 @@ import {
 describe("messageSchema", () => {
 	it("accepts outgoing text messages", () => {
 		expect(
-			messageSchema.parse({
-				type: "Text",
-				body: {
-					text: "hello",
-				},
-			}),
-		).toEqual({
-			type: "Text",
-			body: {
-				text: "hello",
-			},
-		});
+			messageSchema.parse({ type: "Text", body: { text: "hello" } }),
+		).toEqual({ type: "Text", body: { text: "hello" } });
 	});
 
 	it("rejects private image messages with invalid media hashes", () => {
@@ -47,37 +37,23 @@ describe("apiResponseMessageSchema", () => {
 		expect(
 			apiResponseMessageSchema.parse({
 				type: "Text",
-				body: {
-					text: "hello",
-				},
+				body: { text: "hello" },
 				messageId: "msg-1",
 				conversationId: "conversation-1",
 				senderId: 42,
 				timestamp: 1_710_000_000_000,
 				unsent: false,
-				reactions: [
-					{
-						profileId: 99,
-						reactionType: 1,
-					},
-				],
+				reactions: [{ profileId: 99, reactionType: 1 }],
 			}),
 		).toEqual({
 			type: "Text",
-			body: {
-				text: "hello",
-			},
+			body: { text: "hello" },
 			messageId: "msg-1",
 			conversationId: "conversation-1",
 			senderId: 42,
 			timestamp: 1_710_000_000_000,
 			unsent: false,
-			reactions: [
-				{
-					profileId: 99,
-					reactionType: 1,
-				},
-			],
+			reactions: [{ profileId: 99, reactionType: 1 }],
 		});
 	});
 });
@@ -95,12 +71,7 @@ describe("previewFromMessage", () => {
 				unsent: false,
 				reactions: [],
 			}),
-		).toEqual({
-			type: "Text",
-			text: "hello",
-			albumId: null,
-			imageHash: null,
-		});
+		).toEqual({ type: "Text", text: "hello", albumId: null, imageHash: null });
 	});
 
 	it("extracts album previews without inventing text", () => {
@@ -125,12 +96,7 @@ describe("previewFromMessage", () => {
 				unsent: false,
 				reactions: [],
 			}),
-		).toEqual({
-			type: "Album",
-			text: null,
-			albumId: 7,
-			imageHash: null,
-		});
+		).toEqual({ type: "Album", text: null, albumId: 7, imageHash: null });
 	});
 
 	it.each(["ExpiringAlbum", "ExpiringAlbumV2"] as const)(

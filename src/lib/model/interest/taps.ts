@@ -1,10 +1,6 @@
 import z from "zod";
 
-export const TapType = {
-	Friendly: 0,
-	Hot: 1,
-	Looking: 2,
-} as const;
+export const TapType = { Friendly: 0, Hot: 1, Looking: 2 } as const;
 
 const TAP_TYPE_NONE = 3;
 

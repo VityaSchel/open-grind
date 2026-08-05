@@ -88,10 +88,7 @@ const securityHeaders = {
 
 const req = await fetch("https://grindr.mobi/v8/sessions", {
 	method: "POST",
-	headers: {
-		Accept: "application/json",
-		...securityHeaders,
-	},
+	headers: { Accept: "application/json", ...securityHeaders },
 	body: JSON.stringify({
 		email: "yourmail@example.org",
 		password:

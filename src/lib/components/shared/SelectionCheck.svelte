@@ -1,11 +1,8 @@
 <script lang="ts">
 	import CheckIcon from "phosphor-svelte/lib/CheckIcon";
 
-	let {
-		class: className,
-	}: {
-		class?: import("svelte/elements").ClassValue;
-	} = $props();
+	let { class: className }: { class?: import("svelte/elements").ClassValue } =
+		$props();
 </script>
 
 <div

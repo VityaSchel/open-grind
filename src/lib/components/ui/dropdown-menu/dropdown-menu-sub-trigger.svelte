@@ -10,9 +10,7 @@
 		inset,
 		children,
 		...restProps
-	}: DropdownMenuPrimitive.SubTriggerProps & {
-		inset?: boolean;
-	} = $props();
+	}: DropdownMenuPrimitive.SubTriggerProps & { inset?: boolean } = $props();
 </script>
 
 <DropdownMenuPrimitive.SubTrigger

@@ -238,11 +238,7 @@ export const healthPracticesSchema = z.enum(HealthPractice);
 
 export type HealthPracticeId = z.infer<typeof healthPracticesSchema>;
 
-export const Vaccine = {
-	COVID19: 1,
-	Monkeypox: 2,
-	Meningitis: 3,
-} as const;
+export const Vaccine = { COVID19: 1, Monkeypox: 2, Meningitis: 3 } as const;
 
 export const vaccines = {
 	[Vaccine.COVID19]: "COVID-19",
@@ -255,21 +251,9 @@ export const vaccinesSchema = z.enum(Vaccine);
 export type VaccineId = z.infer<typeof vaccinesSchema>;
 
 export const socialNetworksSchema = z.object({
-	twitter: z
-		.object({
-			userId: z.string().nullable(),
-		})
-		.optional(),
-	facebook: z
-		.object({
-			userId: z.string().nullable(),
-		})
-		.optional(),
-	instagram: z
-		.object({
-			userId: z.string().nullable(),
-		})
-		.optional(),
+	twitter: z.object({ userId: z.string().nullable() }).optional(),
+	facebook: z.object({ userId: z.string().nullable() }).optional(),
+	instagram: z.object({ userId: z.string().nullable() }).optional(),
 });
 
 export type SocialNetworks = z.infer<typeof socialNetworksSchema>;

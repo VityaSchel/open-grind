@@ -9,11 +9,7 @@
 		mediaHash,
 		position,
 		onDelete,
-	}: {
-		mediaHash: string;
-		position: number;
-		onDelete: () => void;
-	} = $props();
+	}: { mediaHash: string; position: number; onDelete: () => void } = $props();
 
 	const src = $derived(profileMediaUrl({ mediaHash, size: "thumb" }));
 </script>

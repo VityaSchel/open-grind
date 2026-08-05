@@ -11,11 +11,7 @@
 	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
 
-	let {
-		message,
-	}: {
-		message: ImageMessage["body"];
-	} = $props();
+	let { message }: { message: ImageMessage["body"] } = $props();
 
 	const media = new MessageMediaState();
 

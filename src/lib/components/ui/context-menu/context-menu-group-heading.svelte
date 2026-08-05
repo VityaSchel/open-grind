@@ -8,9 +8,7 @@
 		class: className,
 		inset,
 		...restProps
-	}: ContextMenuPrimitive.GroupHeadingProps & {
-		inset?: boolean;
-	} = $props();
+	}: ContextMenuPrimitive.GroupHeadingProps & { inset?: boolean } = $props();
 </script>
 
 <ContextMenuPrimitive.GroupHeading

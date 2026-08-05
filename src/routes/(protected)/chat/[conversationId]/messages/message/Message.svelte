@@ -56,12 +56,7 @@
 
 	let contextMenuOpen:
 		| false
-		| {
-				x: number;
-				y: number;
-				width: number;
-				height: number;
-		  } = $state(false);
+		| { x: number; y: number; width: number; height: number } = $state(false);
 	let messageElement: HTMLElement | null = $state(null);
 
 	function setRef(el: HTMLElement | null) {
@@ -142,10 +137,7 @@
 	<div
 		class={[
 			"absolute top-0 z-5 -translate-y-1/2",
-			{
-				"right-0 translate-x-1/2": !isOut,
-				"left-0 -translate-x-1/2": isOut,
-			},
+			{ "right-0 translate-x-1/2": !isOut, "left-0 -translate-x-1/2": isOut },
 		]}
 	>
 		{#if message.reactions.length > 0}
@@ -187,14 +179,7 @@
 	</MessageWrapper>
 {/snippet}
 
-<div
-	class={[
-		"relative z-1 flex flex-col gap-0.5",
-		{
-			"mt-3": firstInStack,
-		},
-	]}
->
+<div class={["relative z-1 flex flex-col gap-0.5", { "mt-3": firstInStack }]}>
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}

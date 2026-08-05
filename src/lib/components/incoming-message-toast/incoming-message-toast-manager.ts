@@ -20,11 +20,7 @@ export function showIncomingMessageToast({
 	conversationId: string;
 }): void {
 	toast.custom(IncomingMessageToast, {
-		componentProps: {
-			message,
-			sender,
-			conversationId,
-		},
+		componentProps: { message, sender, conversationId },
 		position: "top-center",
 		class: "incoming-message-toast rounded-2xl",
 		id: conversationId,

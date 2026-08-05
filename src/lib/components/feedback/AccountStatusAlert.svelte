@@ -21,10 +21,7 @@
 				description += ` (${status.info.reason})`;
 			}
 			description += ". You can't sign in until the ban is lifted.";
-			return {
-				title: "Your account is banned",
-				description,
-			};
+			return { title: "Your account is banned", description };
 		}
 		if (status?.kind === "restriction") {
 			if (status.restriction.kind === "ageVerification") {

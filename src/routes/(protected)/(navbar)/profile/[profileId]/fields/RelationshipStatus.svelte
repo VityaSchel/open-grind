@@ -9,9 +9,7 @@
 
 	let {
 		relationshipStatus,
-	}: {
-		relationshipStatus: RelationshipStatusId | null;
-	} = $props();
+	}: { relationshipStatus: RelationshipStatusId | null } = $props();
 </script>
 
 {#if relationshipStatus !== null}

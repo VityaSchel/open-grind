@@ -23,10 +23,7 @@
 			overlay?: import("svelte").Snippet;
 			link?: string;
 		};
-		title: {
-			value: string | null;
-			badge?: import("svelte").Snippet;
-		};
+		title: { value: string | null; badge?: import("svelte").Snippet };
 		onlineUntil?: number | null;
 		active?: boolean;
 		selected?: boolean;
@@ -57,9 +54,7 @@
 		<Item.Title
 			class={[
 				"flex w-auto min-w-0 items-center gap-1 truncate",
-				{
-					"text-muted-foreground": !title.value,
-				},
+				{ "text-muted-foreground": !title.value },
 			]}
 		>
 			{@render title.badge?.()}

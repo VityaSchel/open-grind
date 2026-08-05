@@ -84,9 +84,7 @@
 														cause: error,
 													}),
 												),
-											{
-												once: true,
-											},
+											{ once: true },
 										);
 									});
 									return {
@@ -118,9 +116,7 @@
 														cause: error,
 													}),
 												),
-											{
-												once: true,
-											},
+											{ once: true },
 										);
 									});
 									return {
@@ -141,10 +137,7 @@
 			albumState = { status: "open", album: loaded };
 		})().catch((error) => {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load album content",
-				error,
-			});
+			showErrorToast({ label: "Failed to load album content", error });
 			albumState = { status: "idle" };
 		});
 	});
@@ -207,10 +200,7 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				showErrorToast({
-					label: "Failed to open album",
-					error,
-				});
+				showErrorToast({ label: "Failed to open album", error });
 				albumState = { status: "idle" };
 			});
 		return () => {

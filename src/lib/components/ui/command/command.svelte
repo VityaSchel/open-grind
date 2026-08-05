@@ -11,9 +11,7 @@
 		value = $bindable(""),
 		class: className,
 		...restProps
-	}: CommandPrimitive.RootProps & {
-		api?: CommandRootApi | null;
-	} = $props();
+	}: CommandPrimitive.RootProps & { api?: CommandRootApi | null } = $props();
 </script>
 
 <CommandPrimitive.Root

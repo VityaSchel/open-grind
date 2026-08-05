@@ -6,12 +6,8 @@
 		thumb,
 		createdAt,
 		label,
-	}: {
-		src: string;
-		thumb: string;
-		createdAt: number | null;
-		label: string;
-	} = $props();
+	}: { src: string; thumb: string; createdAt: number | null; label: string } =
+		$props();
 
 	let width: number | null = $state(null);
 	let height: number | null = $state(null);

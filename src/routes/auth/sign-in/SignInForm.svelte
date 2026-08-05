@@ -39,10 +39,7 @@
 		event.preventDefault();
 		submitting = "password";
 		try {
-			const result = await callMethod("login", {
-				email,
-				password,
-			});
+			const result = await callMethod("login", { email, password });
 			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
 			void goto("/");

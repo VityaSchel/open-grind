@@ -10,13 +10,8 @@
 
 	let {
 		openFilters = $bindable(),
-	}: {
-		openFilters: {
-			all: boolean;
-			age: boolean;
-			position: boolean;
-		};
-	} = $props();
+	}: { openFilters: { all: boolean; age: boolean; position: boolean } } =
+		$props();
 
 	const TOGGLE_FILTER_KEYS = ["isOnline", "isRightNow", "isFresh"] as const;
 
@@ -34,18 +29,14 @@
 <Button
 	variant="secondary"
 	onclick={() => (openFilters.age = true)}
-	class={{
-		"bg-white text-popover hover:bg-neutral-200": ageEnabled,
-	}}
+	class={{ "bg-white text-popover hover:bg-neutral-200": ageEnabled }}
 >
 	Age
 </Button>
 <Button
 	variant="secondary"
 	onclick={() => (openFilters.position = true)}
-	class={{
-		"bg-white text-popover hover:bg-neutral-200": positionEnabled,
-	}}
+	class={{ "bg-white text-popover hover:bg-neutral-200": positionEnabled }}
 >
 	Position
 </Button>

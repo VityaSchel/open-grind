@@ -4,13 +4,7 @@
 	import * as Command from "$lib/components/ui/command";
 	import { commandCenterClose } from "../command-center-state.svelte";
 
-	let {
-		link,
-		value,
-	}: {
-		link: string;
-		value: string;
-	} = $props();
+	let { link, value }: { link: string; value: string } = $props();
 </script>
 
 <Command.Item

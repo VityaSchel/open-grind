@@ -8,11 +8,7 @@
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
-	let {
-		nsfwPics,
-	}: {
-		nsfwPics: AcceptNSFWPicsId | null;
-	} = $props();
+	let { nsfwPics }: { nsfwPics: AcceptNSFWPicsId | null } = $props();
 </script>
 
 {#if nsfwPics !== null}

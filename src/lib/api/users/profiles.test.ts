@@ -63,21 +63,14 @@ function httpError(status: number, body: unknown) {
 }
 
 function update(patch: Partial<ProfileUpdate> = {}): ProfileUpdate {
-	return {
-		approximateDistance: false,
-		profileTags: [],
-		...patch,
-	};
+	return { approximateDistance: false, profileTags: [], ...patch };
 }
 
 function fullProfile() {
 	return {
 		profileId: PROFILE_ID,
 		age: 25,
-		socialNetworks: {
-			twitter: { userId: "tw" },
-			facebook: { userId: "fb" },
-		},
+		socialNetworks: { twitter: { userId: "tw" }, facebook: { userId: "fb" } },
 		medias: [{ mediaHash: "a" }, { mediaHash: "b" }],
 	};
 }
@@ -154,18 +147,12 @@ describe("applyProfileEdit", () => {
 	it("deep-merges socialNetworks instead of replacing siblings", () => {
 		const base = {
 			age: 20,
-			socialNetworks: {
-				twitter: { userId: "tw" },
-				facebook: { userId: "fb" },
-			},
+			socialNetworks: { twitter: { userId: "tw" }, facebook: { userId: "fb" } },
 		} as unknown as Profile;
 
 		const merged = applyProfileEdit({
 			base,
-			patch: {
-				age: 21,
-				socialNetworks: { instagram: { userId: "ig" } },
-			},
+			patch: { age: 21, socialNetworks: { instagram: { userId: "ig" } } },
 		});
 
 		expect(merged.age).toBe(21);

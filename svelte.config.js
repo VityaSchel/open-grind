@@ -42,18 +42,10 @@ const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess(),
-	compilerOptions: {
-		experimental: {
-			async: true,
-		},
-	},
+	compilerOptions: { experimental: { async: true } },
 	kit: {
-		adapter: adapter({
-			fallback: "index.html",
-		}),
-		alias: {
-			$layout: "src/layout.css",
-		},
+		adapter: adapter({ fallback: "index.html" }),
+		alias: { $layout: "src/layout.css" },
 		version: {
 			name: `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`,
 		},

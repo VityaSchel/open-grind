@@ -23,9 +23,7 @@
 				{...props}
 				onclick={(event) => {
 					event.preventDefault();
-					toast(ToastUnimplemented, {
-						componentProps: unimplemented,
-					});
+					toast(ToastUnimplemented, { componentProps: unimplemented });
 				}}
 			>
 				<Item.Content class="max-cramped:min-w-0">
@@ -54,10 +52,7 @@
 	title: "Discreet app icon",
 	unimplemented: { feature: "Discreet app icon", issue: 97 },
 })}
-{@render item({
-	title: "PIN",
-	unimplemented: { feature: "PIN", issue: 50 },
-})}
+{@render item({ title: "PIN", unimplemented: { feature: "PIN", issue: 50 } })}
 
 <style lang="postcss">
 	@reference "$layout";

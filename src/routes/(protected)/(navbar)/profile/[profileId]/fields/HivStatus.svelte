@@ -3,11 +3,7 @@
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
-	let {
-		hivStatus,
-	}: {
-		hivStatus: HivStatusId | null;
-	} = $props();
+	let { hivStatus }: { hivStatus: HivStatusId | null } = $props();
 </script>
 
 {#if hivStatus !== null}

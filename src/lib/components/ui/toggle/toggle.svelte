@@ -15,10 +15,7 @@
 				lg: "h-10 min-w-10 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-			size: "default",
-		},
+		defaultVariants: { variant: "default", size: "default" },
 	});
 
 	export type ToggleVariant = VariantProps<typeof toggleVariants>["variant"];

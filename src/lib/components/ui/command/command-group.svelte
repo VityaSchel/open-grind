@@ -10,9 +10,7 @@
 		heading,
 		value,
 		...restProps
-	}: CommandPrimitive.GroupProps & {
-		heading?: string;
-	} = $props();
+	}: CommandPrimitive.GroupProps & { heading?: string } = $props();
 </script>
 
 <CommandPrimitive.Group

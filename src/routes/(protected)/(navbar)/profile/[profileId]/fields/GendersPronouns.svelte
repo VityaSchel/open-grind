@@ -11,10 +11,7 @@
 	let {
 		genders = null,
 		pronouns = null,
-	}: {
-		genders?: number[] | null;
-		pronouns?: number[] | null;
-	} = $props();
+	}: { genders?: number[] | null; pronouns?: number[] | null } = $props();
 </script>
 
 {#if (genders !== null && genders.length > 0) || (pronouns !== null && pronouns.length > 0)}

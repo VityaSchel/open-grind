@@ -13,10 +13,7 @@
 	aria-label="Record voice message"
 	onclick={() => {
 		toast(ToastUnimplemented, {
-			componentProps: {
-				feature: "Voice messages",
-				issue: 35,
-			},
+			componentProps: { feature: "Voice messages", issue: 35 },
 		});
 	}}
 	class="ps-0"

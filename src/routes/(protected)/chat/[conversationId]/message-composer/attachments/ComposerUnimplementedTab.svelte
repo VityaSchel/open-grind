@@ -4,13 +4,7 @@
 	import * as Alert from "$lib/components/ui/alert";
 	import Link from "$lib/components/ui/link/Link.svelte";
 
-	let {
-		label,
-		issue,
-	}: {
-		label: string;
-		issue: number;
-	} = $props();
+	let { label, issue }: { label: string; issue: number } = $props();
 </script>
 
 <div class="flex flex-1 py-16">

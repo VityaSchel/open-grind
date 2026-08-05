@@ -8,12 +8,8 @@
 		error,
 		hint,
 		children,
-	}: {
-		label: string;
-		error?: string;
-		hint?: string;
-		children: Snippet;
-	} = $props();
+	}: { label: string; error?: string; hint?: string; children: Snippet } =
+		$props();
 </script>
 
 <div class="flex flex-col gap-1.5">

@@ -15,10 +15,7 @@
 				onclick={(event) => {
 					event.preventDefault();
 					toast(ToastUnimplemented, {
-						componentProps: {
-							feature: "Account settings",
-							issue: 47,
-						},
+						componentProps: { feature: "Account settings", issue: 47 },
 					});
 				}}
 			>

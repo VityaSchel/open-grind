@@ -110,10 +110,7 @@ class GridState {
 			this.nextPage = result.nextPage;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load more profiles",
-				error,
-			});
+			showErrorToast({ label: "Failed to load more profiles", error });
 		} finally {
 			this.loadingMore = false;
 		}
@@ -146,10 +143,7 @@ class GridState {
 			}
 		} catch (error) {
 			console.error(id, error);
-			showErrorToast({
-				label: "Failed to load profile",
-				error,
-			});
+			showErrorToast({ label: "Failed to load profile", error });
 		} finally {
 			this.#resolvingIds.delete(id);
 		}
@@ -173,30 +167,18 @@ class GridState {
 					ageMin: filters?.age[0],
 					ageMax: filters?.age[1],
 				}),
-				...(filters?.genderEnabled && {
-					genders: filters?.genders,
-				}),
+				...(filters?.genderEnabled && { genders: filters?.genders }),
 				...(filters?.positionEnabled && {
 					sexualPositions: filters?.positions,
 				}),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-photos") && {
-						photoOnly: true,
-					}),
+					filters?.photos.includes("has-photos") && { photoOnly: true }),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-albums") && {
-						hasAlbum: true,
-					}),
+					filters?.photos.includes("has-albums") && { hasAlbum: true }),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-face-pics") && {
-						faceOnly: true,
-					}),
-				...(filters?.tribesEnabled && {
-					tribes: filters?.tribes,
-				}),
-				...(filters?.bodyTypesEnabled && {
-					bodyTypes: filters?.bodyTypes,
-				}),
+					filters?.photos.includes("has-face-pics") && { faceOnly: true }),
+				...(filters?.tribesEnabled && { tribes: filters?.tribes }),
+				...(filters?.bodyTypesEnabled && { bodyTypes: filters?.bodyTypes }),
 				...(filters?.heightEnabled && {
 					heightCmMin: filters?.height[0],
 					heightCmMax: filters?.height[1],
@@ -212,20 +194,13 @@ class GridState {
 					filters?.acceptNSFWPics !== undefined && {
 						nsfwPics: filters?.acceptNSFWPics,
 					}),
-				...(filters?.lookingForEnabled && {
-					lookingFor: filters?.lookingFor,
-				}),
-				...(filters?.meetAtEnabled && {
-					meetAt: filters?.meetAt,
-				}),
+				...(filters?.lookingForEnabled && { lookingFor: filters?.lookingFor }),
+				...(filters?.meetAtEnabled && { meetAt: filters?.meetAt }),
 				notRecentlyChatted: filters?.haventChattedTodayEnabled || undefined,
 				...(filters?.healthPracticesEnabled && {
 					sexualHealth: filters?.healthPractices,
 				}),
-				...(filters?.tagsEnabled &&
-					filters?.tags && {
-						tags: filters?.tags,
-					}),
+				...(filters?.tagsEnabled && filters?.tags && { tags: filters?.tags }),
 				fresh: filters?.isFresh || undefined,
 			} satisfies z.infer<typeof cascadeV4QuerySchema>;
 			const result = await getGrid(query);
@@ -240,10 +215,7 @@ class GridState {
 			if (token !== this.#fetchToken) return;
 			console.error(err);
 			if (opts?.silent) {
-				showErrorToast({
-					label: "Failed to refresh profiles",
-					error: err,
-				});
+				showErrorToast({ label: "Failed to refresh profiles", error: err });
 			} else {
 				this.error =
 					err instanceof Error

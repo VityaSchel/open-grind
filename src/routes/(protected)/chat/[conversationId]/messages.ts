@@ -15,13 +15,7 @@ export function getStackedMessages<T extends ApiResponseMessage>({
 }) {
 	const stackedMessages: (T & StackedMessage)[] = [];
 
-	let stack:
-		| {
-				time: number;
-				isOut: boolean;
-				messages: T[];
-		  }
-		| undefined;
+	let stack: { time: number; isOut: boolean; messages: T[] } | undefined;
 	const flush = () => {
 		if (stack) {
 			const stackMessages = stack.messages;
@@ -43,11 +37,7 @@ export function getStackedMessages<T extends ApiResponseMessage>({
 			stack.messages.push(message);
 		} else {
 			flush();
-			stack = {
-				time,
-				isOut,
-				messages: [message],
-			};
+			stack = { time, isOut, messages: [message] };
 		}
 	}
 	flush();
@@ -55,9 +45,7 @@ export function getStackedMessages<T extends ApiResponseMessage>({
 	return stackedMessages;
 }
 
-type GroupedMessage = ApiResponseMessage & {
-	dayStart?: number;
-};
+type GroupedMessage = ApiResponseMessage & { dayStart?: number };
 
 export function groupMessagesByDate<T extends ApiResponseMessage>({
 	messages,
@@ -69,10 +57,7 @@ export function groupMessagesByDate<T extends ApiResponseMessage>({
 		const dayStart = new Date(message.timestamp).setHours(0, 0, 0, 0);
 		if (dayStart !== dayStartGroup) {
 			dayStartGroup = dayStart;
-			return {
-				...message,
-				dayStart,
-			};
+			return { ...message, dayStart };
 		}
 		return message;
 	});
@@ -100,10 +85,7 @@ export async function getConversation({
 }) {
 	return await getConversationMessages({ conversationId, pageKey }).then(
 		(res) => {
-			return {
-				...res,
-				pageKey: res.messages.at(-1)?.messageId ?? null,
-			};
+			return { ...res, pageKey: res.messages.at(-1)?.messageId ?? null };
 		},
 	);
 }

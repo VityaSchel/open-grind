@@ -24,9 +24,7 @@
 	</div>
 {:else if seen !== null}
 	<span class="text-gray-500">
-		Online {formatDistanceStrict(seen, getNow(), {
-			addSuffix: true,
-		})}
+		Online {formatDistanceStrict(seen, getNow(), { addSuffix: true })}
 	</span>
 {:else}
 	<span class="text-gray-500">Offline</span>

@@ -3,11 +3,7 @@
 
 	import { getConversationState } from "../conversation-state.svelte";
 
-	let {
-		container,
-	}: {
-		container: HTMLElement;
-	} = $props();
+	let { container }: { container: HTMLElement } = $props();
 
 	const conversationState = $derived(getConversationState()());
 

@@ -5,11 +5,7 @@
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
-	let {
-		lastTestedDate,
-	}: {
-		lastTestedDate: number | null;
-	} = $props();
+	let { lastTestedDate }: { lastTestedDate: number | null } = $props();
 </script>
 
 {#if lastTestedDate !== null}

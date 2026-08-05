@@ -16,9 +16,7 @@ export const cascadeResponseProfileSchema = z.object({
 
 export const cascadeResponseFullProfileV1Schema = z.object({
 	type: z.literal("full_profile_v1"),
-	data: z.object({
-		...cascadeResponseProfileSchema.shape,
-	}),
+	data: z.object({ ...cascadeResponseProfileSchema.shape }),
 });
 
 export const cascadeResponsePartialProfileV1Schema = z.object({
@@ -90,9 +88,7 @@ export const cascadeResponseFavHeaderV1Schema = z.object({
 
 export const cascadeResponseAdvertV1Schema = z.object({
 	type: z.literal("advert_v1"),
-	data: z.object({
-		cascadePlacementName: z.string(),
-	}),
+	data: z.object({ cascadePlacementName: z.string() }),
 });
 
 export const cascadeResponseTopPicksV1Schema = z.object({
@@ -131,9 +127,7 @@ export const cascadeResponseBrazeEventProfileV1Schema = z.object({
 
 export const cascadeResponseFavsXtraUpsellV1Schema = z.object({
 	type: z.literal("favs_xtra_upsell_v1"),
-	data: z.object({
-		available: z.int().nonnegative(),
-	}),
+	data: z.object({ available: z.int().nonnegative() }),
 });
 
 export const cascadeResponseFavsUnlimitedUpsellV1Schema = z.object({

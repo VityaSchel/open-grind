@@ -2,10 +2,7 @@
 	let {
 		label,
 		children,
-	}: {
-		label: string;
-		children?: import("svelte").Snippet;
-	} = $props();
+	}: { label: string; children?: import("svelte").Snippet } = $props();
 </script>
 
 <div class="gap-1">

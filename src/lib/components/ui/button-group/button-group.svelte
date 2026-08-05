@@ -11,9 +11,7 @@
 					"flex-col [&>[data-slot]]:rounded-b-none [&>[data-slot]:not(:has(~[data-slot]))]:rounded-b-4xl! [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0",
 			},
 		},
-		defaultVariants: {
-			orientation: "horizontal",
-		},
+		defaultVariants: { orientation: "horizontal" },
 	});
 
 	export type ButtonGroupOrientation = VariantProps<

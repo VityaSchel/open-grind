@@ -11,10 +11,7 @@
 	let {
 		checked = $bindable(),
 		value = $bindable(),
-	}: {
-		checked: boolean;
-		value: number[];
-	} = $props();
+	}: { checked: boolean; value: number[] } = $props();
 
 	const genders = $derived(
 		getGenders().then((genders) =>

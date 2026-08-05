@@ -23,9 +23,7 @@
 			class="h-full w-full"
 			imgClass={[
 				"bg-neutral-600",
-				{
-					"blur-2xl": env.PUBLIC_ENABLE_BLUR_EFFECTS,
-				},
+				{ "blur-2xl": env.PUBLIC_ENABLE_BLUR_EFFECTS },
 			]}
 			tone="photo"
 			{size}

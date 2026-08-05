@@ -30,10 +30,7 @@
 
 	const className: import("svelte/elements").ClassValue = $derived([
 		"relative",
-		{
-			"ms-3": !media.clone,
-			"size-full": media.clone,
-		},
+		{ "ms-3": !media.clone, "size-full": media.clone },
 	]);
 
 	const contentClass: import("svelte/elements").ClassValue = $derived([
@@ -69,18 +66,10 @@
 				}).then((res) => expiringImageMessageSchema.parse(res.message));
 				if (image.url === null) throw new Error("Image URL is null");
 				cachedImage = { url: image.url };
-				imageState = {
-					status: "open",
-					image: {
-						url: image.url,
-					},
-				};
+				imageState = { status: "open", image: { url: image.url } };
 			} catch (error) {
 				console.error(error);
-				showErrorToast({
-					label: "Failed to load expiring image",
-					error,
-				});
+				showErrorToast({ label: "Failed to load expiring image", error });
 				imageState = { status: "idle" };
 			}
 		})();
@@ -111,10 +100,7 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				showErrorToast({
-					label: "Failed to open expiring image",
-					error,
-				});
+				showErrorToast({ label: "Failed to open expiring image", error });
 				imageState = { status: "idle" };
 			});
 		return () => lightbox?.destroy();

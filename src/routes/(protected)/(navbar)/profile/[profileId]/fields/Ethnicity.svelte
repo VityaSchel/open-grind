@@ -4,11 +4,7 @@
 	import { ethnicities, type EthnicityId } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 
-	let {
-		ethnicity,
-	}: {
-		ethnicity: EthnicityId | null;
-	} = $props();
+	let { ethnicity }: { ethnicity: EthnicityId | null } = $props();
 </script>
 
 {#if ethnicity !== null}

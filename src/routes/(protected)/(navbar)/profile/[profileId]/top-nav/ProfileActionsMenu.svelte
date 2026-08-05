@@ -13,13 +13,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 
-	let {
-		profileId,
-		onBlocked,
-	}: {
-		profileId: number;
-		onBlocked: () => void;
-	} = $props();
+	let { profileId, onBlocked }: { profileId: number; onBlocked: () => void } =
+		$props();
 
 	let submitting = $state(false);
 </script>
@@ -59,10 +54,7 @@
 		<DropdownMenu.Item
 			onSelect={() => {
 				toast(ToastUnimplemented, {
-					componentProps: {
-						feature: "Report profile",
-						issue: 41,
-					},
+					componentProps: { feature: "Report profile", issue: 41 },
 				});
 			}}
 		>

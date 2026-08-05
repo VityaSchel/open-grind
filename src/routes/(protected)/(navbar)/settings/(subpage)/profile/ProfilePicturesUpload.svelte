@@ -3,11 +3,7 @@
 
 	const MAX_PHOTOS = 6;
 
-	let {
-		medias = $bindable(),
-	}: {
-		medias: { mediaHash: string }[];
-	} = $props();
+	let { medias = $bindable() }: { medias: { mediaHash: string }[] } = $props();
 
 	const emptySlots = $derived(Math.max(0, MAX_PHOTOS - medias.length));
 

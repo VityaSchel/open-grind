@@ -14,9 +14,7 @@ const conversationsSchema = z.object({
 export async function getConversations(page: number = 1) {
 	const conversations = await fetchRest(
 		"/v4/inbox?" + new URLSearchParams({ page: String(page) }).toString(),
-		{
-			method: "POST",
-		},
+		{ method: "POST" },
 	).then((res) => res.jsonParsed(conversationsSchema));
 	return conversations;
 }
@@ -30,9 +28,7 @@ export async function markConversationAsRead({
 }) {
 	return await fetchRest(
 		`/v4/chat/conversation/${conversationId}/read/${messageId}`,
-		{
-			method: "POST",
-		},
+		{ method: "POST" },
 	).then((res) => res.assertOk());
 }
 
@@ -55,9 +51,7 @@ export async function setConversationPinned({
 }) {
 	return await fetchRest(
 		`/v4/chat/conversation/${conversationId}/${pinned ? "pin" : "unpin"}`,
-		{
-			method: "POST",
-		},
+		{ method: "POST" },
 	).then((res) => res.assertOk());
 }
 
@@ -70,8 +64,6 @@ export async function setConversationMuted({
 }) {
 	return await fetchRest(
 		`/v1/push/conversation/${conversationId}/${muted ? "mute" : "unmute"}`,
-		{
-			method: "POST",
-		},
+		{ method: "POST" },
 	).then((res) => res.assertOk());
 }

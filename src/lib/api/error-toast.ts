@@ -19,10 +19,7 @@ export function showErrorToast({
 	if (error instanceof ApiError && isSessionGone(error)) return;
 	if (onRetry && error instanceof ApiError && error.retryable) {
 		toast.error(label, {
-			action: {
-				label: "Retry",
-				onClick: onRetry,
-			},
+			action: { label: "Retry", onClick: onRetry },
 			cancel: {
 				label: "Copy details",
 				onClick: () => void promptCopyError(error).catch(() => {}),

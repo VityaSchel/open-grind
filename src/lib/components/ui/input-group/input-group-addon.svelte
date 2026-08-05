@@ -12,9 +12,7 @@
 					"order-last w-full justify-start px-3 pb-3 group-has-[>input]/input-group:pb-3.5 [.border-t]:pt-3.5",
 			},
 		},
-		defaultVariants: {
-			align: "inline-start",
-		},
+		defaultVariants: { align: "inline-start" },
 	});
 
 	export type InputGroupAddonAlign = VariantProps<

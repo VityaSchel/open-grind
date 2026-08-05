@@ -94,9 +94,9 @@ const MAGIC_PROFILE_BLOCK_DISPLAY_NAME = "4";
 
 async function fetchProfile(profileId: number): Promise<Profile> {
 	const [profile] = (
-		await fetchRest(`/v7/profiles/${profileId}`, {
-			method: "GET",
-		}).then((res) => res.jsonParsed(profileResponseSchema))
+		await fetchRest(`/v7/profiles/${profileId}`, { method: "GET" }).then(
+			(res) => res.jsonParsed(profileResponseSchema),
+		)
 	).profiles;
 	if (!profile) throw new ProfileUnavailableError();
 	if (isProbablyUnavailable(profile)) {
@@ -134,9 +134,7 @@ export async function getProfiles(
 	if (profileIds.length === 0) return [];
 	return await fetchRest("/v3/profiles", {
 		method: "POST",
-		body: {
-			targetProfileIds: profileIds,
-		},
+		body: { targetProfileIds: profileIds },
 	}).then((res) => res.jsonParsed(getProfilesResponseSchema).profiles);
 }
 

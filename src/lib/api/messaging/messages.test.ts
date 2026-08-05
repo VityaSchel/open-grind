@@ -254,10 +254,7 @@ describe("message API wrappers", () => {
 
 		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/delete", {
 			method: "POST",
-			body: {
-				conversationId: "conversation-1",
-				messageId: "msg-1",
-			},
+			body: { conversationId: "conversation-1", messageId: "msg-1" },
 		});
 	});
 
@@ -272,18 +269,12 @@ describe("message API wrappers", () => {
 		);
 
 		await expect(
-			unsendMessage({
-				conversationId: "conversation-1",
-				messageId: "msg-1",
-			}),
+			unsendMessage({ conversationId: "conversation-1", messageId: "msg-1" }),
 		).rejects.toThrow("Failed to unsend message");
 
 		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/unsend", {
 			method: "POST",
-			body: {
-				conversationId: "conversation-1",
-				messageId: "msg-1",
-			},
+			body: { conversationId: "conversation-1", messageId: "msg-1" },
 		});
 	});
 });

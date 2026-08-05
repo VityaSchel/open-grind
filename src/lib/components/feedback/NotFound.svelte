@@ -38,9 +38,7 @@
 			<div
 				class={[
 					"relative size-full rounded-full transition-transform duration-500 transform-3d *:absolute *:top-0 *:left-0 *:size-full *:backface-hidden",
-					{
-						"-rotate-y-180": flip,
-					},
+					{ "-rotate-y-180": flip },
 				]}
 			>
 				<Empty.Media variant="icon" class="mb-0">

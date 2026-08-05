@@ -10,11 +10,7 @@
 	import MessagesListSkeleton from "./MessagesListSkeleton.svelte";
 	import ScrollToBottomButton from "./ScrollToBottomButton.svelte";
 
-	let {
-		composerHeight,
-	}: {
-		composerHeight: number;
-	} = $props();
+	let { composerHeight }: { composerHeight: number } = $props();
 
 	const conversationState = $derived(getConversationState()());
 

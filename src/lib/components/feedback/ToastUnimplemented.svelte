@@ -3,13 +3,7 @@
 
 	import Link from "$lib/components/ui/link/Link.svelte";
 
-	let {
-		feature,
-		issue,
-	}: {
-		feature: string;
-		issue: number;
-	} = $props();
+	let { feature, issue }: { feature: string; issue: number } = $props();
 </script>
 
 <span>

@@ -1,9 +1,5 @@
 <script lang="ts">
-	let {
-		children,
-	}: {
-		children: import("svelte").Snippet;
-	} = $props();
+	let { children }: { children: import("svelte").Snippet } = $props();
 </script>
 
 <main

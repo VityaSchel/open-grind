@@ -8,11 +8,7 @@
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
-	let {
-		lookingFor,
-	}: {
-		lookingFor: LookingForId[] | null;
-	} = $props();
+	let { lookingFor }: { lookingFor: LookingForId[] | null } = $props();
 </script>
 
 {#if lookingFor !== null && lookingFor.length > 0}

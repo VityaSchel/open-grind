@@ -19,14 +19,8 @@
 		warning?: {
 			title: string;
 			description: string;
-			primary: {
-				label: string;
-				destination: string;
-			};
-			secondary: {
-				label: string;
-				destination: string;
-			};
+			primary: { label: string; destination: string };
+			secondary: { label: string; destination: string };
 		};
 	} = $props();
 

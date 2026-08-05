@@ -8,10 +8,8 @@
 	let {
 		value = $bindable(),
 		checked = $bindable(),
-	}: {
-		value: z.infer<typeof filterPositionSchema>;
-		checked: boolean;
-	} = $props();
+	}: { value: z.infer<typeof filterPositionSchema>; checked: boolean } =
+		$props();
 </script>
 
 <div class="flex min-w-0 flex-col gap-2">

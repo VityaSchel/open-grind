@@ -1,10 +1,6 @@
 import { tick } from "svelte";
 
-const commandCenterStateDefault = {
-	open: false,
-	query: "",
-	value: "",
-};
+const commandCenterStateDefault = { open: false, query: "", value: "" };
 
 export const commandCenterState = $state(commandCenterStateDefault);
 

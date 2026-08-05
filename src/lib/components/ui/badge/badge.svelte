@@ -17,9 +17,7 @@
 				link: "text-primary underline-offset-4 hover:underline",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-		},
+		defaultVariants: { variant: "default" },
 	});
 
 	export type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];

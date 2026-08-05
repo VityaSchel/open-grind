@@ -53,10 +53,7 @@
 				id !== profileState.profileId ||
 				ourId !== profileState.ourProfileId
 			) {
-				profileState = new ProfileState({
-					profileId: id,
-					ourProfileId: ourId,
-				});
+				profileState = new ProfileState({ profileId: id, ourProfileId: ourId });
 			}
 			return profileState;
 		});
@@ -103,10 +100,7 @@
 						<div
 							class={[
 								"flex max-w-full flex-col gap-3.5 p-4",
-								{
-									"pb-24": ourProfile,
-									"pb-40": !ourProfile,
-								},
+								{ "pb-24": ourProfile, "pb-40": !ourProfile },
 							]}
 						>
 							<Skeleton class="h-6 w-40 max-w-full" />
@@ -160,10 +154,7 @@
 					<div
 						class={[
 							"flex flex-col p-4",
-							{
-								"pb-24": ourProfile,
-								"pb-40": !ourProfile,
-							},
+							{ "pb-24": ourProfile, "pb-40": !ourProfile },
 						]}
 					>
 						<h1 class="text-2xl wrap-break-word">

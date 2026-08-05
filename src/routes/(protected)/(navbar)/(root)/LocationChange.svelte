@@ -10,11 +10,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import { decodeGeohash } from "$lib/model/geohash";
 
-	let {
-		class: className,
-	}: {
-		class?: import("svelte/elements").ClassValue;
-	} = $props();
+	let { class: className }: { class?: import("svelte/elements").ClassValue } =
+		$props();
 
 	let pinPos: { lat: number; lon: number; zoom: number } | undefined = $state();
 	let geoMapPickerOpen = $state(false);
@@ -25,21 +22,13 @@
 			geoMapPickerOpen = false;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to save location",
-				error,
-			});
+			showErrorToast({ label: "Failed to save location", error });
 		}
 	}
 
 	function openPicker() {
 		const geohash = getPreferencesSnapshot().geohash;
-		pinPos = geohash
-			? {
-					...decodeGeohash(geohash),
-					zoom: 17,
-				}
-			: undefined;
+		pinPos = geohash ? { ...decodeGeohash(geohash), zoom: 17 } : undefined;
 		geoMapPickerOpen = true;
 		if (pinPos) locationChooser.centerAt(pinPos);
 	}

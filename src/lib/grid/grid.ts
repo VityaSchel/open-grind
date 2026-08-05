@@ -73,11 +73,7 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 		}
 	}
 
-	return {
-		items,
-		nextPage: response.nextPage,
-		shuffled: response.shuffled,
-	};
+	return { items, nextPage: response.nextPage, shuffled: response.shuffled };
 }
 
 const profileCache = new TtlCache<number, RenderedGridProfile>({

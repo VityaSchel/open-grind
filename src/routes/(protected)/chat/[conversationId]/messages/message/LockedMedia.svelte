@@ -22,10 +22,7 @@
 		weight="fill"
 		class={[
 			"aspect-square h-auto",
-			{
-				"w-1/8": size === "sm",
-				"w-1/6": size === "md",
-			},
+			{ "w-1/8": size === "sm", "w-1/6": size === "md" },
 		]}
 		color="var(--color-neutral-600)"
 	/>

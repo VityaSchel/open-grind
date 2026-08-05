@@ -38,9 +38,7 @@
 		<div
 			class={[
 				"blur-filter absolute top-0 left-0 size-full",
-				{
-					"z-10": index === blurConfig.length - 1,
-				},
+				{ "z-10": index === blurConfig.length - 1 },
 			]}
 			style:mask={`linear-gradient(
 					${direction === "bottomToTop" ? "to bottom" : "to top"},

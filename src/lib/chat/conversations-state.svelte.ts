@@ -217,10 +217,7 @@ class ConversationsState {
 			this.#sortEntries();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to refresh conversations",
-				error,
-			});
+			showErrorToast({ label: "Failed to refresh conversations", error });
 		} finally {
 			this.refreshing = false;
 			this.#runRequestedRefresh();
@@ -315,10 +312,7 @@ class ConversationsState {
 			await this.#trackFetch(this.#load(this.nextPage));
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load more conversations",
-				error,
-			});
+			showErrorToast({ label: "Failed to load more conversations", error });
 		} finally {
 			this.loadingMore = false;
 		}
@@ -347,9 +341,7 @@ class ConversationsState {
 				}
 			};
 		}
-		return {
-			revert,
-		};
+		return { revert };
 	}
 
 	setActive(conversationId: string): void {

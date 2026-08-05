@@ -73,9 +73,7 @@
 					<Card.Root
 						class={[
 							"relative h-full gap-0 rounded-[27px] p-0 dark:ring-neutral-800",
-							{
-								"bg-card/20 ring-0": !isChatSelected,
-							},
+							{ "bg-card/20 ring-0": !isChatSelected },
 						]}
 					>
 						{@render children?.()}

@@ -92,10 +92,7 @@
 				variant="ghost"
 				onclick={() => {
 					toast(ToastUnimplemented, {
-						componentProps: {
-							feature: "Report message",
-							issue: 41,
-						},
+						componentProps: { feature: "Report message", issue: 41 },
 					});
 					props.onClose();
 				}}

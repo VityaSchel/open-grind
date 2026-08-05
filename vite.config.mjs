@@ -8,11 +8,7 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(async () => ({
 	plugins: [sveltekit(), tailwindcss()],
-	resolve: process.env.VITEST
-		? {
-				conditions: ["browser"],
-			}
-		: undefined,
+	resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
 
 	optimizeDeps: { include: ["leaflet", "sveaflet"] },
 
@@ -25,13 +21,7 @@ export default defineConfig(async () => ({
 		port: 1420,
 		strictPort: true,
 		host: host || false,
-		hmr: host
-			? {
-					protocol: "ws",
-					host,
-					port: 1421,
-				}
-			: undefined,
+		hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
 		watch: {
 			// 3. tell Vite to ignore watching `src-tauri`
 			ignored: ["**/src-tauri/**"],

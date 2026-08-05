@@ -41,10 +41,7 @@
 					await submitGeohash(encodeGeohash({ lat: latitude, lon: longitude }));
 				} catch (error) {
 					console.error(error);
-					showErrorToast({
-						label: "Failed to get current location",
-						error,
-					});
+					showErrorToast({ label: "Failed to get current location", error });
 				}
 			} else {
 				toast.error(
@@ -62,10 +59,7 @@
 			geoMapPickerOpen = false;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to save location",
-				error,
-			});
+			showErrorToast({ label: "Failed to save location", error });
 		}
 	}
 </script>

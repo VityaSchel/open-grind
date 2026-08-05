@@ -15,10 +15,7 @@
 				xs: "gap-2.5 px-3 py-2.5 in-data-[slot=dropdown-menu-content]:p-0",
 			},
 		},
-		defaultVariants: {
-			variant: "default",
-			size: "default",
-		},
+		defaultVariants: { variant: "default", size: "default" },
 	});
 
 	export type ItemSize = VariantProps<typeof itemVariants>["size"];

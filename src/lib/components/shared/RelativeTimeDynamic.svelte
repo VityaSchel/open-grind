@@ -2,11 +2,7 @@
 	import { formatTimeRelativeCustom } from "$lib/util/format-time";
 	import { getNow } from "$lib/util/now";
 
-	let {
-		date,
-	}: {
-		date: number;
-	} = $props();
+	let { date }: { date: number } = $props();
 
 	const relativeTime = $derived.by(() => {
 		void getNow();

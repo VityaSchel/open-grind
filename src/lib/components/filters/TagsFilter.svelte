@@ -10,10 +10,7 @@
 	let {
 		checked = $bindable(),
 		value = $bindable(),
-	}: {
-		checked: boolean;
-		value: string[];
-	} = $props();
+	}: { checked: boolean; value: string[] } = $props();
 
 	let searchQuery = $state("");
 	let expanded = $state(false);

@@ -37,11 +37,8 @@
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
 	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
-	let contextMenuListPosition: {
-		x: number;
-		y: number;
-		placement: Placement;
-	} = $state({ x: 0, y: 0, placement: "right-start" });
+	let contextMenuListPosition: { x: number; y: number; placement: Placement } =
+		$state({ x: 0, y: 0, placement: "right-start" });
 
 	$effect(() => {
 		if (!contextMenuTrigger || !contextMenuList) return;

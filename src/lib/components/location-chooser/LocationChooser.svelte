@@ -15,13 +15,7 @@
 	}: {
 		onSubmit: (geohash: string) => void;
 		open: boolean;
-		pinPos?:
-			| {
-					lat: number;
-					lon: number;
-					zoom: number;
-			  }
-			| undefined;
+		pinPos?: { lat: number; lon: number; zoom: number } | undefined;
 	} = $props();
 
 	const isDesktop = above("md");

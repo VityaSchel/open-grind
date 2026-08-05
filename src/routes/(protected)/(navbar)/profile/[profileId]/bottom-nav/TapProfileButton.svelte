@@ -25,16 +25,10 @@
 		sending = true;
 		try {
 			onTap(reaction);
-			await sendTap({
-				recipientId: profileId,
-				tapType: reaction,
-			});
+			await sendTap({ recipientId: profileId, tapType: reaction });
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to send tap",
-				error,
-			});
+			showErrorToast({ label: "Failed to send tap", error });
 			onTap(null);
 		} finally {
 			sending = false;

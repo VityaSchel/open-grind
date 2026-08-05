@@ -8,11 +8,7 @@
 	import * as Item from "$lib/components/ui/item";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 
-	let {
-		id,
-	}: {
-		id: number;
-	} = $props();
+	let { id }: { id: number } = $props();
 
 	const myProfile = $derived(getProfile(id));
 	const myProfilePhotos = $derived(myProfile.then((profile) => profile.medias));

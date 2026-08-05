@@ -149,9 +149,7 @@ describe("redactValue", () => {
 	});
 
 	it("caps a kept field that arrives unreasonably long", () => {
-		const redacted = redactValue({ type: "x".repeat(400) }) as {
-			type: string;
-		};
+		const redacted = redactValue({ type: "x".repeat(400) }) as { type: string };
 		expect(redacted.type).toBe(`${"x".repeat(300)}…<+100 chars>`);
 	});
 });

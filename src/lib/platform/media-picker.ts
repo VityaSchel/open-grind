@@ -5,11 +5,7 @@ import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 import { demoEnabled } from "$lib/demo";
 import { isAndroidPlatform } from "$lib/platform/os";
 
-type MediaFilter = {
-	name: string;
-	extensions: string[];
-	mimeTypes: string[];
-};
+type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 
 const mimeTypesByExtension: Record<string, string> = {
 	jpeg: "image/jpeg",

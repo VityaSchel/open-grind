@@ -9,11 +9,7 @@ import HeightWeightBodyType from "./HeightWeightBodyType.svelte";
 describe("HeightWeightBodyType", () => {
 	it("renders height, weight, and body type together", () => {
 		const { container } = render(HeightWeightBodyType, {
-			props: {
-				height: 180,
-				weight: 90_000,
-				bodyType: BodyType.Average,
-			},
+			props: { height: 180, weight: 90_000, bodyType: BodyType.Average },
 		});
 
 		expect(container.textContent).toContain("180 cm");
@@ -23,11 +19,7 @@ describe("HeightWeightBodyType", () => {
 
 	it("renders nothing when all values are missing", () => {
 		const { container } = render(HeightWeightBodyType, {
-			props: {
-				height: null,
-				weight: null,
-				bodyType: null,
-			},
+			props: { height: null, weight: null, bodyType: null },
 		});
 
 		expect(container.textContent).toBe("");

@@ -23,8 +23,5 @@
 	]}
 	{...props}
 >
-	{@render icon({
-		color: "var(--muted-foreground)",
-		class: "size-4.5",
-	})}
+	{@render icon({ color: "var(--muted-foreground)", class: "size-4.5" })}
 </Button>

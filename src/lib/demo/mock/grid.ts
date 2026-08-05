@@ -143,19 +143,13 @@ function cascadeProfileData(seed: DemoSeed) {
 }
 
 function cascadeFullItem(seed: DemoSeed): CascadeFullItem {
-	return {
-		type: "full_profile_v1",
-		data: cascadeProfileData(seed),
-	};
+	return { type: "full_profile_v1", data: cascadeProfileData(seed) };
 }
 
 function cascadePartialItem(seed: DemoSeed): CascadePartialItem {
 	return {
 		type: "partial_profile_v1",
-		data: {
-			...cascadeProfileData(seed),
-			upsellItemType: "FREE_PROFILE_LIMIT",
-		},
+		data: { ...cascadeProfileData(seed), upsellItemType: "FREE_PROFILE_LIMIT" },
 	};
 }
 

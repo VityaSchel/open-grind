@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { Badge } from "$lib/components/ui/badge";
 
-	let {
-		tags,
-	}: {
-		tags: string[] | null;
-	} = $props();
+	let { tags }: { tags: string[] | null } = $props();
 </script>
 
 {#if tags !== null && tags.length > 0}

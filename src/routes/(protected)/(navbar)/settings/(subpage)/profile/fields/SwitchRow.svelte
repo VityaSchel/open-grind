@@ -2,13 +2,8 @@
 	import { Label } from "$lib/components/ui/label";
 	import { Switch } from "$lib/components/ui/switch";
 
-	let {
-		label,
-		checked = $bindable(),
-	}: {
-		label: string;
-		checked: boolean;
-	} = $props();
+	let { label, checked = $bindable() }: { label: string; checked: boolean } =
+		$props();
 </script>
 
 <Label

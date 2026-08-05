@@ -11,9 +11,7 @@
 				"icon-sm": "size-8 p-0 has-[>svg]:p-0",
 			},
 		},
-		defaultVariants: {
-			size: "xs",
-		},
+		defaultVariants: { size: "xs" },
 	});
 
 	export type InputGroupButtonSize = VariantProps<

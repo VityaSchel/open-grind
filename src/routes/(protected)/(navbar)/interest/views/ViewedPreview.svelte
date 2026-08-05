@@ -7,11 +7,7 @@
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
 	import type { ViewPreview } from "$lib/model/interest/views";
 
-	let {
-		preview,
-	}: {
-		preview: ViewPreview;
-	} = $props();
+	let { preview }: { preview: ViewPreview } = $props();
 
 	const { totalCount, maxDisplayCount } = $derived(preview.viewedCount);
 	const viewedCountLabel = $derived(

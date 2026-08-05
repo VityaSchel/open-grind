@@ -9,11 +9,7 @@
 	import { type SocialNetworks } from "$lib/model/users/profiles";
 	import ProfileField from "./ProfileField.svelte";
 
-	let {
-		socials,
-	}: {
-		socials: SocialNetworks | null;
-	} = $props();
+	let { socials }: { socials: SocialNetworks | null } = $props();
 </script>
 
 {#if socials !== null}

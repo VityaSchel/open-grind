@@ -44,10 +44,7 @@ export class GridSearchFiltersState {
 			this.value = gridSearchFilters ?? defaultFilters;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to load filters",
-				error,
-			});
+			showErrorToast({ label: "Failed to load filters", error });
 		}
 	}
 
@@ -58,10 +55,7 @@ export class GridSearchFiltersState {
 			}
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to update filters",
-				error,
-			});
+			showErrorToast({ label: "Failed to update filters", error });
 		}
 	}
 }

@@ -22,9 +22,7 @@ export const chatV1MessageSentEventSchema = notificationEventSchema.safeExtend({
 export const chatV1ConversationDeleteEventSchema =
 	notificationEventSchema.safeExtend({
 		type: z.literal("chat.v1.conversation.delete"),
-		payload: z.object({
-			conversationIds: z.array(z.string()),
-		}),
+		payload: z.object({ conversationIds: z.array(z.string()) }),
 	});
 
 export const chatV1ConversationReadEventSchema =

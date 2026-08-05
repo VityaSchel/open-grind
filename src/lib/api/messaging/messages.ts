@@ -100,10 +100,7 @@ export async function sendMessage({
 		method: "POST",
 		body: {
 			type: message.type,
-			target: {
-				type: "Direct",
-				targetId: toUserId,
-			},
+			target: { type: "Direct", targetId: toUserId },
 			body: toOutboundBody(message),
 		},
 	}).then((res) => res.jsonParsed(apiResponseMessageSchema));
@@ -120,11 +117,7 @@ export async function reactToMessage({
 }) {
 	return await fetchRest("/v4/chat/message/reaction", {
 		method: "POST",
-		body: {
-			conversationId,
-			messageId,
-			reactionType,
-		},
+		body: { conversationId, messageId, reactionType },
 	});
 }
 
@@ -137,10 +130,7 @@ export async function deleteMessageForMe({
 }) {
 	return await fetchRest(`/v4/chat/message/delete`, {
 		method: "POST",
-		body: {
-			conversationId,
-			messageId,
-		},
+		body: { conversationId, messageId },
 	}).then((res) => res.assertOk());
 }
 
@@ -153,9 +143,6 @@ export async function unsendMessage({
 }) {
 	return await fetchRest(`/v4/chat/message/unsend`, {
 		method: "POST",
-		body: {
-			conversationId,
-			messageId,
-		},
+		body: { conversationId, messageId },
 	}).then((res) => res.assertOk());
 }

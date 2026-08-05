@@ -5,11 +5,8 @@
 		icon,
 		prefix,
 		command,
-	}: {
-		icon: import("svelte").Snippet;
-		prefix: string;
-		command: string;
-	} = $props();
+	}: { icon: import("svelte").Snippet; prefix: string; command: string } =
+		$props();
 </script>
 
 <CommandCenterSuggestion>

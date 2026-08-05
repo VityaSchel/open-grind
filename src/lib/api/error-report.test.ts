@@ -192,10 +192,7 @@ describe("errorReport of a thrown Error", () => {
 		expect(report.cause).toMatchObject({
 			error: "API request failed with status 500",
 			request: { method: "GET", path: "/v7/profiles/{id}" },
-			response: {
-				status: 500,
-				body: { code: 4, message: "Server error" },
-			},
+			response: { status: 500, body: { code: 4, message: "Server error" } },
 		});
 	});
 
@@ -214,10 +211,7 @@ describe("errorReport of a value that is not an Error", () => {
 	it("reads a backend error object instead of stringifying it to [object Object]", () => {
 		expect(
 			errorReport({ kind: "Auth", message: "Not logged in" }, { redact: true }),
-		).toEqual({
-			kind: "Auth",
-			message: "Not logged in",
-		});
+		).toEqual({ kind: "Auth", message: "Not logged in" });
 	});
 
 	it("wraps a primitive", () => {

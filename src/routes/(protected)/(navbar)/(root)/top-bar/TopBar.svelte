@@ -5,11 +5,7 @@
 	import LocationChange from "../LocationChange.svelte";
 	import QuickFilters from "./QuickFilters.svelte";
 
-	let openFilters = $state({
-		all: false,
-		age: false,
-		position: false,
-	});
+	let openFilters = $state({ all: false, age: false, position: false });
 </script>
 
 <ProgressiveBlur

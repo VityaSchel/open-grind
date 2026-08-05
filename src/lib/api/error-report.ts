@@ -13,9 +13,7 @@ import {
 	redactValue,
 } from "$lib/api/redact/value";
 
-export type RedactionOptions = {
-	redact: boolean;
-};
+export type RedactionOptions = { redact: boolean };
 
 const maxCauseDepth = 3;
 const maxIssues = 20;

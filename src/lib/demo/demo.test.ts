@@ -99,9 +99,7 @@ describe("demo route data matches the real schemas", () => {
 	});
 
 	it("conversations are sorted by last activity and previews are correct", () => {
-		const body = route("/v4/inbox?page=1", "POST") as {
-			entries: unknown[];
-		};
+		const body = route("/v4/inbox?page=1", "POST") as { entries: unknown[] };
 		const entries = z.array(fullConversationSchema).parse(body.entries);
 		const times = entries.map((e) => e.data.lastActivityTimestamp);
 		expect(times).toEqual([...times].sort((a, b) => b - a));

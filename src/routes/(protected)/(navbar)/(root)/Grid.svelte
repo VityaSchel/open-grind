@@ -6,11 +6,7 @@
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
 
-	let {
-		geohash,
-	}: {
-		geohash: string;
-	} = $props();
+	let { geohash }: { geohash: string } = $props();
 
 	const gridProfiles = $derived.by(() => {
 		const byId = new Map<number, GridProfile>();
