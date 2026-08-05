@@ -99,9 +99,6 @@
 				<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>
 					Save
 				</Button>
-				<!-- <Dialog.Close class={buttonVariants({ variant: "outline" })}>
-						Cancel
-					</Dialog.Close> -->
 			</Dialog.Footer>
 		</Dialog.Content>
 	</Dialog.Root>
@@ -121,9 +118,6 @@
 				<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>
 					Save
 				</Button>
-				<!-- <Drawer.Close class={buttonVariants({ variant: "outline" })}>
-						Cancel
-					</Drawer.Close> -->
 			</Drawer.Footer>
 		</Drawer.Content>
 	</Drawer.Root>

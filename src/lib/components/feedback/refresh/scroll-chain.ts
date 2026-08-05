@@ -23,11 +23,6 @@ function canScrollToward({
 		: el.scrollTop < el.scrollHeight - el.clientHeight - 1;
 }
 
-/**
- * The `root` to give an IntersectionObserver when the sentinel lives inside a
- * scroll container. Container hides the sentinel if you leave it out, so the
- * rootMargin preload never fires.
- */
 export function nearestScrollableAncestor(node: Element): Element | null {
 	let el = node.parentElement;
 	while (el) {
@@ -51,7 +46,6 @@ const viewportScrollLocked = () =>
 	isScrollLocked(document.documentElement) ||
 	(!!document.body && isScrollLocked(document.body));
 
-/** Copies how the browser chains scrolls. An open drawer locks the root. */
 export function chainAllowsPull({
 	start,
 	root,

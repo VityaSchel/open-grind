@@ -98,10 +98,5 @@
 			</Button>
 		</div>
 	</Empty.Content>
-	<!-- <Button variant="link" class="text-muted-foreground" size="sm">
-		<a href="#/">
-			Learn More <ArrowUpRightIcon class="inline" />
-		</a>
-	</Button> -->
 </Empty.Root>
 <LocationChooser onSubmit={submitGeohash} bind:open={geoMapPickerOpen} />

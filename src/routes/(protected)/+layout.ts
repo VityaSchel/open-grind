@@ -12,5 +12,4 @@ export const load: LayoutLoad = async () => {
 		redirect(303, "/auth/sign-in");
 	}
 	return { ourProfileId: profileId };
-	// TODO: consider typesafe context?
 };

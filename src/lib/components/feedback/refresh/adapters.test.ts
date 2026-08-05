@@ -290,8 +290,6 @@ describe("attachTouchPull", () => {
 		leaf.dispatchEvent(touchEvent("touchstart", { id: 0, y: 100 }));
 		leaf.dispatchEvent(touchEvent("touchmove", { id: 0, y: 200 }));
 		expect(model.gestureActive).toBe(true);
-		// The node under the finger gets removed mid-pull. Its touchend fires on
-		// that node instead of the container, so we never see the release.
 		const start2 = touchEvent("touchstart", { id: 7, y: 300 });
 		root.dispatchEvent(start2);
 		expect(model.gestureActive).toBe(false);

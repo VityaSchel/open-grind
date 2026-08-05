@@ -89,7 +89,6 @@
 		}
 	}}
 	onclose={() => onClose()}
-	// tabindex={-1}
 >
 	<div
 		bind:this={contextMenuTrigger}

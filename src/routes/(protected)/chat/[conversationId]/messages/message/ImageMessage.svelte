@@ -152,7 +152,6 @@
 	:global(.pswp__img) {
 		--pswp-radius: var(--pswp-thumb-radius);
 	}
-	/* div placeholders are sized directly and keep --pswp-thumb-radius */
 	:global(img.pswp__img--placeholder) {
 		--pswp-radius: var(--pswp-placeholder-radius);
 	}

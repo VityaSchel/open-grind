@@ -28,7 +28,6 @@
 					</Item.Title>
 				</Item.Content>
 				<Item.Actions class="min-w-0">
-					<!-- <Item.Description class="min-w-0">{value}</Item.Description> -->
 					<CaretRightIcon class="size-4 shrink-0" />
 				</Item.Actions>
 			</a>

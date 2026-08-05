@@ -16,7 +16,6 @@ export function restoreScrollOnce(
 		if (restored || !el || state.loading || state.error !== null) return;
 		restored = true;
 		const top = state.scrollY;
-		// Restoring against the empty skeleton frame would clamp the target to 0
 		if (top > 0) void tick().then(() => (el.scrollTop = top));
 	});
 }

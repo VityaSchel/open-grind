@@ -5,8 +5,8 @@ const ENGAGE_PX = 0.5;
 // Scroll events come in bursts, so one frame's speed on its own is unreliable.
 const MOMENTUM_VELOCITY_PX_PER_MS = 1.6;
 const VELOCITY_DECAY_PER_SAMPLE = 0.85;
-// Browsers skip scrollend for programmatic and zero-length scrolls, so a pause
-// is the only sign left that the gesture ended.
+// Browsers skip scrollend for programmatic and zero-length scrolls, so we watch
+// for a pause instead. https://github.com/w3c/csswg-drafts/issues/8218
 const RESTING_GAP_MS = 250;
 
 export interface OverscrollPullOptions {
@@ -15,10 +15,6 @@ export interface OverscrollPullOptions {
 	now?: () => number;
 }
 
-/**
- * Watches the browser's own overscroll. A negative `overscrollPx` means we are
- * still inside the content. `scrollend` fires when the fingers lift.
- */
 export function attachOverscrollPull(
 	model: PullModel,
 	{
