@@ -105,7 +105,7 @@ That's how items are returned from API, specifically the first ten are "open" an
 
 ### \> What version number works?
 
-As of July 2026, the confirmed working version for API is `26.9.1.163471`. If you don't know what that means, just use the latest Open Grind version.
+As of August 5th, 2026, the confirmed working version for API is `26.13.0.170510`. If you don't know what that means, just use the latest Open Grind version.
 
 ### \> Is GrindrPlus Discord server gone?
 

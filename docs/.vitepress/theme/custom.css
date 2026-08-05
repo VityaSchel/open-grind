@@ -43,3 +43,10 @@
 		display: block;
 	}
 }
+
+img.inline {
+	margin: 0;
+	display: inline-block;
+	vertical-align: middle;
+	translate: 0 calc((1ex - 1cap) / 2);
+}
