@@ -19,20 +19,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { WheelPicker } from "$lib/components/ui/carousel";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import {
-		acceptNSFWPics,
-		bodyTypes,
-		ethnicities,
-		healthPractices,
-		hivStatuses,
-		lookingFor as lookingForLabels,
-		meetAt as meetAtLabels,
-		type Profile,
-		relationshipStatuses,
-		sexualPositions,
-		tribes,
-		vaccines as vaccineLabels,
-	} from "$lib/model/users/profiles";
+	import { type Profile } from "$lib/model/users/profiles";
 	import { deepEqual } from "$lib/util/deep-equal";
 	import type { Gender } from "$lib/model/users/genders";
 	import type { Pronoun } from "$lib/model/users/pronouns";
@@ -49,13 +36,25 @@
 	import TextField from "./fields/TextField.svelte";
 	import {
 		ageRange,
+		bodyTypeOptions,
+		buildGenderOptions,
+		buildPronounOptions,
+		buildTagOptions,
+		ethnicityOptions,
 		fieldLimits,
+		healthOptions,
 		heightCmRange,
+		hivOptions,
+		lookingForOptions,
 		maxProfileGenders,
 		maxProfilePronouns,
 		maxProfileTags,
-		optionsFromMap,
-		primaryGenderOrder,
+		meetAtOptions,
+		nsfwOptions,
+		positionOptions,
+		relationshipOptions,
+		tribeOptions,
+		vaccineOptions,
 		weightKgRange,
 	} from "./options";
 	import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
@@ -74,68 +73,16 @@
 		ourProfileId: number;
 	} = $props();
 
-	const ethnicityOptions = optionsFromMap(ethnicities);
-	const relationshipOptions = optionsFromMap(relationshipStatuses);
-	const bodyTypeOptions = optionsFromMap(bodyTypes);
-	const hivOptions = optionsFromMap(hivStatuses);
-	const positionOptions = optionsFromMap(sexualPositions);
-	const nsfwOptions = optionsFromMap(acceptNSFWPics);
-	const lookingForOptions = optionsFromMap(lookingForLabels);
-	const tribeOptions = optionsFromMap(tribes);
-	const meetAtOptions = optionsFromMap(meetAtLabels);
-	const vaccineOptions = optionsFromMap(vaccineLabels);
-	const healthOptions = optionsFromMap(healthPractices);
-
-	const genderById = untrack(
-		() => new Map(genders.map((gender) => [gender.genderId, gender])),
+	const {
+		options: genderOptions,
+		resolveLabel: resolveGenderLabel,
+		exclusions: genderExclusions,
+	} = untrack(() => buildGenderOptions(genders));
+	const { options: pronounOptions, resolveLabel: resolvePronounLabel } =
+		untrack(() => buildPronounOptions(pronouns));
+	const { options: tagOptions, resolveLabel: resolveTagLabel } = untrack(() =>
+		buildTagOptions(tags),
 	);
-	const primaryGenderRank = (id: number) => {
-		const index = primaryGenderOrder.indexOf(id);
-		return index === -1 ? Infinity : index;
-	};
-	const genderOptions = untrack(() =>
-		genders
-			.filter((gender) => (gender.displayGroup ?? 0) > 0)
-			.sort(
-				(a, b) =>
-					primaryGenderRank(a.genderId) - primaryGenderRank(b.genderId) ||
-					(a.sortProfile ?? Infinity) - (b.sortProfile ?? Infinity) ||
-					a.genderId - b.genderId,
-			)
-			.map((gender) => ({ value: gender.genderId, label: gender.gender })),
-	);
-	const resolveGenderLabel = (id: number) => genderById.get(id)?.gender;
-	const genderExclusions = (id: number) =>
-		genderById.get(id)?.excludeOnProfileSelection ?? [];
-
-	const pronounById = untrack(
-		() => new Map(pronouns.map((pronoun) => [pronoun.pronounId, pronoun])),
-	);
-	const pronounOptions = untrack(() =>
-		pronouns.map((pronoun) => ({
-			value: pronoun.pronounId,
-			label: pronoun.pronoun,
-		})),
-	);
-	const resolvePronounLabel = (id: number) => pronounById.get(id)?.pronoun;
-
-	const tagTextByKey = untrack(() => {
-		const map = new Map<string, string>();
-		for (const language of tags) {
-			for (const category of language.categoryCollection) {
-				for (const tag of category.tags) {
-					if (!map.has(tag.key)) map.set(tag.key, tag.text);
-				}
-			}
-		}
-		return map;
-	});
-	const tagOptions = untrack(() =>
-		[...tagTextByKey]
-			.map(([key, text]) => ({ value: key, label: text }))
-			.sort((a, b) => a.label.localeCompare(b.label)),
-	);
-	const resolveTagLabel = (key: string) => tagTextByKey.get(key);
 
 	const initial = untrack(() => $state.snapshot(profile));
 
