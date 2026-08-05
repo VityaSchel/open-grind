@@ -1,5 +1,5 @@
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use grindr::{GrindrClient, GrindrError, Method};
+use grindr::GrindrClient;
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
@@ -36,24 +36,14 @@ async fn upload_unsigned_v5(
 	content_type: &str,
 ) -> Result<MediaUploadResponse, AppError> {
 	let response = client
-		.request_authenticated_bytes(
-			Method::POST,
-			"/v5/chat/media/upload?takenOnGrindr=false",
-			content_type,
-			bytes,
-		)
+		.upload_chat_media_unsigned(bytes, content_type)
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
 
-	if !(200..300).contains(&response.status) {
-		return Err(AppError::from_client_error(
-			GrindrError::from_response(response.status, &response.body),
-			client,
-		));
-	}
-
-	serde_json::from_slice(&response.body).map_err(|e| {
-		AppError::Http(format!("Failed to parse upload response: {e}"))
+	Ok(MediaUploadResponse {
+		media_id: response.media_id,
+		url: response.url,
+		media_hash: response.media_hash,
 	})
 }
 

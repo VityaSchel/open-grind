@@ -21,6 +21,9 @@
 		if (apiError?.kind === "RequestBlocked") {
 			return "Grindr is blocking your requests";
 		}
+		if (apiError?.kind === "NetworkBlocked") {
+			return "Something on your network blocked the request";
+		}
 		if (!retryable) {
 			return "Something went wrong";
 		}

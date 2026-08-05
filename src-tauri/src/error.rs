@@ -44,6 +44,7 @@ pub enum AppError {
 	Banned(BanInfo),
 	RateLimited,
 	RequestBlocked,
+	NetworkBlocked,
 	NotInitialized,
 	SessionCleared,
 }
@@ -66,6 +67,9 @@ impl fmt::Display for AppError {
 			AppError::RateLimited => write!(f, "Rate limited"),
 			AppError::RequestBlocked => {
 				write!(f, "Request blocked by Cloudflare")
+			}
+			AppError::NetworkBlocked => {
+				write!(f, "Request blocked before it reached Grindr")
 			}
 			AppError::SessionCleared => {
 				write!(f, "Signed out while the request was in flight")
@@ -92,7 +96,10 @@ impl From<grindr::GrindrError> for AppError {
 			}
 			grindr::GrindrError::Banned(info) => AppError::Banned(info.into()),
 			grindr::GrindrError::RateLimited => AppError::RateLimited,
-			grindr::GrindrError::Blocked => AppError::RequestBlocked,
+			grindr::GrindrError::Blocked(grindr::BlockKind::Cloudflare) => {
+				AppError::RequestBlocked
+			}
+			grindr::GrindrError::Blocked(_) => AppError::NetworkBlocked,
 			grindr::GrindrError::SessionCleared => AppError::SessionCleared,
 			_ => AppError::Http(e.to_string()),
 		}
@@ -185,6 +192,17 @@ mod tests {
 		assert_eq!(
 			serde_json::to_value(&app).unwrap()["kind"],
 			"RequestBlocked"
+		);
+	}
+
+	#[test]
+	fn a_non_cloudflare_block_maps_to_network_blocked() {
+		let proxy_page = br#"<html><body>Forbidden by your network administrator</body></html>"#;
+		let raw = grindr::GrindrError::from_response(403, proxy_page);
+		let app = AppError::from(raw);
+		assert_eq!(
+			serde_json::to_value(&app).unwrap()["kind"],
+			"NetworkBlocked"
 		);
 	}
 }

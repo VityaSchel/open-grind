@@ -7,6 +7,7 @@ export const apiErrorKinds = [
 	"Banned",
 	"RateLimited",
 	"RequestBlocked",
+	"NetworkBlocked",
 	"NotInitialized",
 	"SessionCleared",
 ] as const;
@@ -14,15 +15,8 @@ export const apiErrorKinds = [
 export type ApiErrorKind = (typeof apiErrorKinds)[number];
 
 export class ApiError extends Error {
-	readonly request: {
-		method: string;
-		path: string;
-		body?: unknown;
-	};
-	readonly response: {
-		status: number;
-		body: string;
-	} | null;
+	readonly request: { method: string; path: string; body?: unknown };
+	readonly response: { status: number; body: string } | null;
 	readonly kind: ApiErrorKind | null;
 
 	constructor(options: {
@@ -43,6 +37,7 @@ export class ApiError extends Error {
 		if (this.kind === "Http") return true;
 		if (this.kind === "Auth" || this.kind === "Unauthorized") return true;
 		if (this.kind === "RequestBlocked") return true;
+		if (this.kind === "NetworkBlocked") return true;
 		if (this.response !== null) {
 			const { status } = this.response;
 			if (status >= 500) return true;

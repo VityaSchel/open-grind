@@ -43,6 +43,16 @@ pub async fn request(
 ) -> Result<String, AppError> {
 	let payload = decode_request(&payload)?;
 
+	if grindr::requires_device_signature(&payload.path) {
+		return Err(AppError::Api {
+			code: 400,
+			message: format!(
+				"{} needs the signed upload command, not the REST bridge",
+				payload.path
+			),
+		});
+	}
+
 	let method = grindr::Method::from_str(&payload.method).map_err(|_| {
 		AppError::Api {
 			code: 400,
@@ -127,6 +137,19 @@ mod tests {
 
 		assert!(decode_request(&with_null).unwrap().body.is_none());
 		assert!(decode_request(&without_key).unwrap().body.is_none());
+	}
+
+	#[test]
+	fn the_signed_upload_paths_are_the_ones_the_rest_bridge_refuses() {
+		assert!(grindr::requires_device_signature("/v5/media/upload"));
+		assert!(grindr::requires_device_signature(
+			"/v6/chat/media/upload?takenOnGrindr=true"
+		));
+
+		assert!(!grindr::requires_device_signature(
+			"/v5/chat/media/upload?takenOnGrindr=false"
+		));
+		assert!(!grindr::requires_device_signature("/v7/profiles/1"));
 	}
 
 	#[test]
