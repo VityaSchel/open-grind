@@ -79,7 +79,7 @@ export type ChatV1ConversationReadEventPayload = z.infer<
 	typeof chatV1ConversationReadEventSchema
 >;
 
-export type WsStatus = "disconnected" | "connecting" | "connected" | "error";
+export type WsStatus = "disconnected" | "connected";
 
 class WsState {
 	status = $state<WsStatus>("disconnected");
@@ -92,10 +92,6 @@ class WsState {
 
 		listen<void>("ws:disconnected", () => {
 			this.status = "disconnected";
-		}).catch(console.error);
-
-		listen<string>("ws:ws_error", (event) => {
-			console.error("[ws] server error", event.payload);
 		}).catch(console.error);
 	}
 
