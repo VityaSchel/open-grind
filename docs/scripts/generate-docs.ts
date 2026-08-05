@@ -3,11 +3,9 @@ import { dirname } from "path";
 
 import { loadContext, SKIP_TAGS } from "./generator/context";
 import { renderSharedPage, renderTagPage } from "./generator/pages";
-import { renderSidebar } from "./generator/sidebar";
 import { tagFilePath } from "./generator/slugs";
 
 const OUT_DIR = "content/generated/grindr-api";
-const SIDEBAR_PATH = "lib/index.ts";
 
 function writeFile(path: string, content: string): void {
 	mkdirSync(dirname(path), { recursive: true });
@@ -31,5 +29,4 @@ for (const pageName of ctx.schemasByPage.keys()) {
 	written++;
 }
 
-writeFile(SIDEBAR_PATH, renderSidebar(ctx));
-console.log(`Generated ${written} markdown files + sidebar.`);
+console.log(`Generated ${written} markdown files.`);

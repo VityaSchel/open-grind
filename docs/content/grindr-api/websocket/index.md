@@ -1,7 +1,3 @@
-<script setup>
-import { grindrApiReferenceWebSocket as subpages } from '$lib'
-</script>
-
 # WebSocket
 
 WebSocket URL:
@@ -14,4 +10,4 @@ Only [Authorization](/grindr-api/api-authorization) and [User-Agent](/grindr-api
 
 Upon successful connection, a [`ws.connection.established`](#wsconnectionestablished) event is received by the client.
 
-<Subpages :items="subpages" />
+<Subpages />

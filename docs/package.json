@@ -12,7 +12,7 @@
 		"build": "bun run generate && vitepress build",
 		"cleanup": "bun run scripts/cleanup-openapi.ts",
 		"deploy": "bun run build && bun gh-pages -d .vitepress/dist",
-		"generate": "bun run scripts/generate-docs.ts && prettier --write lib/index.ts",
+		"generate": "bun run scripts/generate-docs.ts",
 		"preview": "vitepress preview",
 		"start": "bun run generate && vitepress dev",
 		"validate": "bun run scripts/validate-openapi.ts"

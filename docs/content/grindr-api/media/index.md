@@ -1,7 +1,3 @@
-<script setup>
-import { grindrApiReferenceMedia as subpages } from '$lib'
-</script>
-
 # Media
 
 Media files in Grindr are stored on cdns.grindr.com:443 hosted by Amazon CloudFront powered by AmazonS3. All CDN files are accessible without [authorization](/grindr-api/api-authorization) but some are protected with signed URLs. No [security headers](/grindr-api/security-headers) or `Authorization` need to be present in a request to CDN.
@@ -12,4 +8,4 @@ Media files are identified by either a 40-character (public files) or 64-charact
 
 There are two types of files stored on CDN.
 
-<Subpages :items="subpages" />
+<Subpages />
