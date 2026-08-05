@@ -9,7 +9,6 @@ import {
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import { previewFromMessage } from "$lib/model/messaging/messages";
-import { now } from "$lib/util/clock";
 import { reconciler } from "$lib/util/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,
@@ -22,14 +21,16 @@ import type {
 	ApiResponseMessage,
 	Message as MessageType,
 } from "$lib/model/messaging/messages";
+import {
+	matchPendingEcho,
+	mergeServerMessages,
+	type OptimisticMessage,
+	removeDuplicateMessages,
+} from "./merge-messages";
 import { getConversation } from "./messages";
+import { ReadReceiptQueue } from "./read-receipts";
 
-export type OptimisticMessage = ApiResponseMessage & {
-	status: "sent" | "pending" | "error";
-};
-
-const READ_DEBOUNCE_MS = 500;
-const READ_MAX_WAIT_MS = 2000;
+export type { OptimisticMessage };
 
 export type ConversationProfile = Awaited<
 	ReturnType<typeof getConversation>
@@ -49,9 +50,9 @@ export class ConversationState {
 	readonly ourProfileId: number;
 
 	#conversations: ConversationsState;
-	#readQueue: { messageId: string; timestamp: number }[] = [];
-	#readTimer: ReturnType<typeof setTimeout> | null = null;
-	#readDeadline: number | null = null;
+	#readReceipts = new ReadReceiptQueue({
+		markRead: (messageId) => this.#markRead(messageId),
+	});
 	#unsubscribeReconcile: () => void;
 
 	constructor({
@@ -90,7 +91,10 @@ export class ConversationState {
 				}
 
 				if (incoming.senderId === this.ourProfileId) {
-					const pending = this.#matchPendingEcho(incoming);
+					const pending = matchPendingEcho({
+						messages: this.messages,
+						incoming,
+					});
 					if (pending) {
 						pending.status = "sent";
 						pending.messageId = incoming.messageId;
@@ -154,8 +158,7 @@ export class ConversationState {
 		}
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();
-		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
-		if (this.#readQueue.length > 0) void this.#flushReadQueue();
+		this.#readReceipts.destroy();
 	}
 
 	async #reconcileMessages(): Promise<void> {
@@ -174,56 +177,19 @@ export class ConversationState {
 
 			this.profile = result.profile;
 
-			const serverById = new Map(
-				result.messages.map((m) => [m.messageId, m] as const),
-			);
-			const oldestServerTs =
-				result.messages.at(-1)?.timestamp ?? Number.POSITIVE_INFINITY;
-
-			const newValue: OptimisticMessage[] = [];
-			const seenLocalIds = new Set<string>();
-			let dropped = 0;
-			let updated = 0;
-			for (const local of this.messages) {
-				if (local.status !== "sent") {
-					newValue.push(local);
-					continue;
-				}
-				seenLocalIds.add(local.messageId);
-				const serverVersion = serverById.get(local.messageId);
-				if (serverVersion) {
-					newValue.push({ ...serverVersion, status: "sent" as const });
-					if (
-						serverVersion.unsent !== local.unsent ||
-						serverVersion.type !== local.type ||
-						JSON.stringify(serverVersion.reactions) !==
-							JSON.stringify(local.reactions)
-					) {
-						updated++;
-					}
-				} else if (local.timestamp < oldestServerTs) {
-					newValue.push(local);
-				} else {
-					dropped++;
-				}
-			}
-
-			const fresh: OptimisticMessage[] = [];
-			for (const sv of result.messages) {
-				if (seenLocalIds.has(sv.messageId)) continue;
-				const msg: OptimisticMessage = { ...sv, status: "sent" as const };
-				newValue.push(msg);
-				fresh.push(msg);
-			}
+			const { messages, fresh, changed } = mergeServerMessages({
+				local: this.messages,
+				server: result.messages,
+			});
 
 			this.#advanceLastRead(result.lastReadTimestamp);
 
-			if (fresh.length === 0 && dropped === 0 && updated === 0) {
+			if (!changed) {
 				this.#syncCache();
 				return;
 			}
 
-			this.messages = removeDuplicateMessages(newValue);
+			this.messages = messages;
 			this.#updatePreview(this.messages.at(0));
 			this.#syncCache();
 
@@ -240,10 +206,7 @@ export class ConversationState {
 			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {
-				showErrorToast({
-					label: "Failed to refresh messages",
-					error,
-				});
+				showErrorToast({ label: "Failed to refresh messages", error });
 			}
 		} finally {
 			this.refreshing = false;
@@ -292,10 +255,7 @@ export class ConversationState {
 			void this.#conversations.markRead(this.conversationId);
 			if (this.#destroyed) return;
 			this.messages = removeDuplicateMessages(
-				result.messages.map((m) => ({
-					...m,
-					status: "sent" as const,
-				})),
+				result.messages.map((m) => ({ ...m, status: "sent" as const })),
 			);
 			this.profile = result.profile;
 			this.pageKey = result.pageKey;
@@ -333,10 +293,7 @@ export class ConversationState {
 			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {
-				showErrorToast({
-					label: "Failed to load more messages",
-					error,
-				});
+				showErrorToast({ label: "Failed to load more messages", error });
 			}
 		} finally {
 			this.loadingMore = false;
@@ -386,21 +343,6 @@ export class ConversationState {
 			const latestSent = this.messages.find((m) => m.status === "sent");
 			this.#updatePreview(latestSent);
 		}
-	}
-
-	// Echoes come back in send order, so match the oldest pending; prefer a
-	// same-type match when kinds arrive out of order.
-	#matchPendingEcho(
-		incoming: ApiResponseMessage,
-	): OptimisticMessage | undefined {
-		let fallback: OptimisticMessage | undefined;
-		for (let i = this.messages.length - 1; i >= 0; i--) {
-			const candidate = this.messages[i];
-			if (candidate?.status !== "pending") continue;
-			if (candidate.type === incoming.type) return candidate;
-			fallback ??= candidate;
-		}
-		return fallback;
 	}
 
 	#advanceLastRead(timestamp: number | null): boolean {
@@ -468,9 +410,7 @@ export class ConversationState {
 			};
 		}
 
-		return {
-			revert,
-		};
+		return { revert };
 	}
 
 	reportRead({
@@ -482,41 +422,20 @@ export class ConversationState {
 	}): void {
 		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
 			return;
-		this.#readQueue.push({ messageId, timestamp });
-		const current = now();
-		this.#readDeadline ??= current + READ_MAX_WAIT_MS;
-		if (this.#readTimer !== null) clearTimeout(this.#readTimer);
-		const delay = Math.max(
-			0,
-			Math.min(READ_DEBOUNCE_MS, this.#readDeadline - current),
-		);
-		this.#readTimer = setTimeout(() => {
-			void this.#flushReadQueue();
-		}, delay);
+		this.#readReceipts.push({ messageId, timestamp });
 	}
 
-	async #flushReadQueue(): Promise<void> {
-		const queue = this.#readQueue;
-		this.#readQueue = [];
-		this.#readTimer = null;
-		this.#readDeadline = null;
-		queue.sort((a, b) => a.timestamp - b.timestamp);
-		const highest = queue.at(-1);
-		if (!highest) return;
+	async #markRead(messageId: string): Promise<void> {
 		const { revealMessageRead } = await getPreferences();
-		if (revealMessageRead) {
-			try {
-				await markConversationAsRead({
-					conversationId: this.conversationId,
-					messageId: highest.messageId,
-				});
-			} catch (error) {
-				console.error(error);
-				showErrorToast({
-					label: "Failed to mark conversation as read",
-					error,
-				});
-			}
+		if (!revealMessageRead) return;
+		try {
+			await markConversationAsRead({
+				conversationId: this.conversationId,
+				messageId,
+			});
+		} catch (error) {
+			console.error(error);
+			showErrorToast({ label: "Failed to mark conversation as read", error });
 		}
 	}
 
@@ -550,11 +469,7 @@ export class ConversationState {
 		const msg = this.messages.find((m) => m.messageId === messageId);
 		let revert: () => void = () => {};
 		if (msg) {
-			const original = {
-				unsent: msg.unsent,
-				type: msg.type,
-				body: msg.body,
-			};
+			const original = { unsent: msg.unsent, type: msg.type, body: msg.body };
 			msg.unsent = true;
 			msg.type = "Unsent";
 			msg.body = null;
@@ -568,23 +483,8 @@ export class ConversationState {
 				this.#updatePreview(msg);
 			};
 		}
-		return {
-			revert,
-		};
+		return { revert };
 	}
-}
-
-function removeDuplicateMessages(
-	messages: OptimisticMessage[],
-): OptimisticMessage[] {
-	const ids = new Set<string>();
-	return messages
-		.filter((m) => {
-			if (ids.has(m.messageId)) return false;
-			ids.add(m.messageId);
-			return true;
-		})
-		.toSorted((a, b) => b.timestamp - a.timestamp);
 }
 
 export const [getConversationState, setConversationState] =
