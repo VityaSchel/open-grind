@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { setPreferences } from "$lib/app-data/preferences.svelte";
@@ -9,9 +11,13 @@
 
 	let {
 		geohash,
-	}: {
-		geohash: string | null;
-	} = $props();
+		currentGeohash,
+	}: { geohash: string | null; currentGeohash: string | null } = $props();
+
+	const geohashToCopy = $derived(geohash === null ? currentGeohash : null);
+	const geohashToSet = $derived(
+		geohash !== null && geohash.length === 12 ? geohash : null,
+	);
 
 	async function setLocation(geohash: string) {
 		try {
@@ -19,28 +25,43 @@
 			await goto("/", { replaceState: page.url.pathname === "/" });
 		} catch (error) {
 			console.error(error);
-			showErrorToast({
-				label: "Failed to save location",
-				error,
-			});
+			showErrorToast({ label: "Failed to save location", error });
 		}
+	}
+
+	async function copyLocation(geohash: string) {
+		try {
+			await writeText(geohash);
+			toast.success("Location copied to clipboard");
+		} catch (error) {
+			console.error(error);
+			showErrorToast({ label: "Failed to copy location", error });
+		}
+	}
+
+	function select() {
+		if (geohashToCopy !== null) void copyLocation(geohashToCopy);
+		else if (geohashToSet !== null) void setLocation(geohashToSet);
+		else return;
+		commandCenterClose();
 	}
 </script>
 
 <Command.Item
-	value={geohash === null ? "@" : `@${geohash}`}
-	disabled={geohash === null || geohash.length !== 12}
+	value={geohashToCopy === null ? `@${geohash ?? ""}` : "@copy"}
+	disabled={geohashToCopy === null && geohashToSet === null}
 	class={{
-		"text-muted-foreground": geohash === null,
+		"text-muted-foreground": geohashToCopy === null && geohash === null,
 		"gap-0 font-mono": geohash !== null,
 	}}
-	onSelect={() => {
-		if (geohash === null || geohash.length !== 12) return;
-		void setLocation(geohash);
-		commandCenterClose();
-	}}
+	onSelect={select}
 >
-	{#if geohash === null}
+	{#if geohashToCopy !== null}
+		<span>
+			Copy currently selected location:
+			<span class="font-mono">{geohashToCopy}</span>
+		</span>
+	{:else if geohash === null}
 		Enter the 12-character geohash to set your location
 	{:else}
 		@{#each Array.from(geohash) as char}
