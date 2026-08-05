@@ -16,6 +16,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	#unlisten: Promise<() => void> | null = null;
 	#buffer: TItem[] | null = null;
 	#fetchToken = 0;
+	#refreshRequestedSinceFetchStart = false;
 
 	constructor({
 		pageSize,
@@ -56,7 +57,11 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	}
 
 	async refresh(): Promise<void> {
-		if (this.#destroyed || this.refreshing || this.loading) return;
+		if (this.#destroyed) return;
+		if (this.refreshing || this.loading) {
+			this.#refreshRequestedSinceFetchStart = true;
+			return;
+		}
 		this.refreshing = true;
 		try {
 			await this.#replaceFromServer();
@@ -65,6 +70,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			showErrorToast({ label: this.#refreshErrorLabel, error });
 		} finally {
 			this.refreshing = false;
+			this.#runRequestedRefresh();
 		}
 	}
 
@@ -90,12 +96,20 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			this.error = error instanceof Error ? error : new Error(String(error));
 		} finally {
 			this.loading = false;
+			this.#runRequestedRefresh();
 		}
+	}
+
+	#runRequestedRefresh(): void {
+		if (!this.#refreshRequestedSinceFetchStart) return;
+		this.#refreshRequestedSinceFetchStart = false;
+		void this.refresh();
 	}
 
 	async #replaceFromServer(): Promise<void> {
 		if (this.#destroyed) return;
 		const token = ++this.#fetchToken;
+		this.#refreshRequestedSinceFetchStart = false;
 		const buffer: TItem[] = [];
 		this.#buffer = buffer;
 		try {

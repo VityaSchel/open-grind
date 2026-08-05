@@ -141,6 +141,7 @@ export class ConversationState {
 	#wsPromises: Promise<() => void>[] = [];
 
 	#destroyed = false;
+	#refreshRequestedSinceFetchStart = false;
 	get destroyed(): boolean {
 		return this.#destroyed;
 	}
@@ -158,8 +159,13 @@ export class ConversationState {
 	}
 
 	async #reconcileMessages(): Promise<void> {
-		if (this.loading || this.#destroyed || this.refreshing) return;
+		if (this.#destroyed) return;
+		if (this.loading || this.refreshing) {
+			this.#refreshRequestedSinceFetchStart = true;
+			return;
+		}
 		this.refreshing = true;
+		this.#refreshRequestedSinceFetchStart = false;
 		try {
 			const result = await getConversation({
 				conversationId: this.conversationId,
@@ -241,7 +247,14 @@ export class ConversationState {
 			}
 		} finally {
 			this.refreshing = false;
+			this.#runRequestedRefresh();
 		}
+	}
+
+	#runRequestedRefresh(): void {
+		if (!this.#refreshRequestedSinceFetchStart) return;
+		this.#refreshRequestedSinceFetchStart = false;
+		void this.refresh();
 	}
 
 	refresh(): Promise<void> {
@@ -294,6 +307,7 @@ export class ConversationState {
 			this.error = err instanceof Error ? err : new Error(String(err));
 		} finally {
 			this.loading = false;
+			this.#runRequestedRefresh();
 		}
 	}
 

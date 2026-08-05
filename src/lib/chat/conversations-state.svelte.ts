@@ -52,6 +52,7 @@ class ConversationsState {
 	#pendingDeletes = new PendingDeletes();
 	#inFlightFetches = new Set<Promise<unknown>>();
 	#fetchEpoch = 0;
+	#refreshRequestedSinceFetchStart = false;
 	#syncLatestInFlight: Promise<void> | null = null;
 
 	constructor({
@@ -138,13 +139,18 @@ class ConversationsState {
 	}
 
 	async #reconcile(): Promise<void> {
-		if (this.#destroyed || this.refreshing) return;
+		if (this.#destroyed) return;
+		if (this.refreshing) {
+			this.#refreshRequestedSinceFetchStart = true;
+			return;
+		}
 		this.refreshing = true;
 		try {
 			await this.initial.catch(() => {});
 			// Claim the epoch after initial resolves, or a still-loading initial
 			// #load sees a newer epoch and drops its own result.
 			const fetchEpoch = ++this.#fetchEpoch;
+			this.#refreshRequestedSinceFetchStart = false;
 
 			const activeId = this.#activeConversationId;
 			for (const id of [...this.#messageCache.keys()]) {
@@ -217,7 +223,14 @@ class ConversationsState {
 			});
 		} finally {
 			this.refreshing = false;
+			this.#runRequestedRefresh();
 		}
+	}
+
+	#runRequestedRefresh(): void {
+		if (!this.#refreshRequestedSinceFetchStart) return;
+		this.#refreshRequestedSinceFetchStart = false;
+		void this.refresh();
 	}
 
 	#syncLatest(args: { errorLabel: string }): Promise<void> {

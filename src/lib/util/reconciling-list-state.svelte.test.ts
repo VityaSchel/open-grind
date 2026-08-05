@@ -126,7 +126,7 @@ describe("ReconcilingListState", () => {
 		expect(state.items).toEqual([item(5, 9)]);
 	});
 
-	it("skips a refresh while a load is in flight", async () => {
+	it("defers a refresh asked for during a load and runs it once after", async () => {
 		const gate = deferred<Item[]>();
 		fetchMock.mockReturnValueOnce(gate.promise);
 		const state = new TestList();
@@ -135,10 +135,64 @@ describe("ReconcilingListState", () => {
 
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 
+		fetchMock.mockResolvedValueOnce([item(2)]);
+		gate.resolve([item(1)]);
+		await waitForLoaded(state);
+		await vi.waitFor(() => expect(ids(state)).toEqual([2]));
+
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("defers a refresh asked for during another refresh", async () => {
+		fetchMock.mockResolvedValueOnce([item(1)]);
+		const state = new TestList();
+		await waitForLoaded(state);
+
+		const gate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(gate.promise);
+		const refreshing = reconcileHandlers[0]?.();
+		await reconcileHandlers[0]?.();
+
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+
+		fetchMock.mockResolvedValueOnce([item(3)]);
+		gate.resolve([item(2)]);
+		await refreshing;
+		await vi.waitFor(() => expect(ids(state)).toEqual([3]));
+
+		expect(fetchMock).toHaveBeenCalledTimes(3);
+	});
+
+	it("lets a fetch that starts after the request stand in for it", async () => {
+		const gate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(gate.promise);
+		const state = new TestList();
+
+		await reconcileHandlers[0]?.();
+
+		const retryGate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(retryGate.promise);
+		state.retry();
+
+		gate.resolve([item(1)]);
+		retryGate.resolve([item(2)]);
+		await waitForLoaded(state);
+		await vi.waitFor(() => expect(ids(state)).toEqual([2]));
+
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("drops a deferred refresh when the state is destroyed first", async () => {
+		const gate = deferred<Item[]>();
+		fetchMock.mockReturnValueOnce(gate.promise);
+		const state = new TestList();
+
+		await reconcileHandlers[0]?.();
+		state.destroy();
 		gate.resolve([item(1)]);
 		await waitForLoaded(state);
 
-		expect(ids(state)).toEqual([1]);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 
 	it("drops a refresh result that a retry started after it", async () => {

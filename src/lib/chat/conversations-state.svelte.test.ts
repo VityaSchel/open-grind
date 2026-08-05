@@ -322,6 +322,42 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 		expect(state.nextPage).toBe(2);
 	});
 
+	it("runs a reconcile asked for while another one is in flight", async () => {
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await state.initial;
+
+		const gate = deferred<{
+			entries: Conversation[];
+			nextPage: number | null;
+		}>();
+		getConversationsMock.mockReturnValueOnce(gate.promise);
+		const first = reconcileHandlers[0]?.();
+		await microtasks();
+		await reconcileHandlers[0]?.();
+
+		expect(getConversationsMock).toHaveBeenCalledTimes(2);
+
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("b:2", 3000)],
+			nextPage: null,
+		});
+		gate.resolve({ entries: [conversation("a:1", 1000)], nextPage: null });
+		await first;
+		await vi.waitFor(() =>
+			expect(getConversationsMock).toHaveBeenCalledTimes(3),
+		);
+		await vi.waitFor(() =>
+			expect(state.entries.map((e) => e.data.conversationId)).toEqual(["b:2"]),
+		);
+	});
+
 	it("discards a reconcile's stale writes when a loadMore supersedes it mid-paging", async () => {
 		getConversationsMock.mockResolvedValueOnce({
 			entries: [conversation("a:1", 1000)],
