@@ -32,6 +32,7 @@ vi.mock("$lib/util/reconcile", () => ({
 	},
 }));
 import { clearAccountCaches } from "$lib/api/account-caches";
+import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 import { getViewsState, ViewsState } from "./views-state.svelte";
 
@@ -285,6 +286,32 @@ describe("ViewsState", () => {
 		expect(twos[0]).toMatchObject({
 			type: "profile",
 			profile: { viewedCount: { totalCount: 7 } },
+		});
+	});
+
+	it("follows a favorite change made elsewhere, and stops after destroy", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [profile(1)], previews: [] });
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		mergeProfileEditIntoCaches({
+			cacheProfileId: 1,
+			patch: { isFavorite: true },
+		});
+		expect(state.views[0]).toMatchObject({
+			type: "profile",
+			profile: { isFavorite: true },
+		});
+
+		state.destroy();
+		mergeProfileEditIntoCaches({
+			cacheProfileId: 1,
+			patch: { isFavorite: false },
+		});
+
+		expect(state.views[0]).toMatchObject({
+			type: "profile",
+			profile: { isFavorite: true },
 		});
 	});
 

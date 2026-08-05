@@ -1,8 +1,9 @@
 import { untrack } from "svelte";
-import z from "zod";
+import type z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
+import { onProfileEdit } from "$lib/api/users/profiles";
 import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/model/browse/grid/filters";
 import { reconciler } from "$lib/util/reconcile";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
@@ -10,6 +11,7 @@ import {
 	getCachedProfile,
 	getGrid,
 	type GridProfile,
+	patchCachedProfile,
 	resolveLazyProfile,
 	setCachedProfile,
 } from "./grid";
@@ -33,6 +35,20 @@ class GridState {
 	#geohash: string | null = null;
 	#resolvingIds = new Set<number>();
 	#fetchToken = 0;
+
+	setFavorite({
+		profileId,
+		isFavorite,
+	}: {
+		profileId: number;
+		isFavorite: boolean;
+	}): void {
+		patchCachedProfile({ id: profileId, patch: { isFavorite } });
+		const index = this.items.findIndex((item) => item.id === profileId);
+		const item = this.items[index];
+		if (!item || item.type !== "rendered") return;
+		this.items = this.items.with(index, { ...item, isFavorite });
+	}
 
 	load(geohash: string): void {
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
@@ -243,3 +259,7 @@ export const gridState = new GridState();
 
 registerAccountCache({ reset: () => gridState.reset() });
 reconciler.subscribe(() => gridState.refresh());
+onProfileEdit(({ profileId, patch }) => {
+	if (patch.isFavorite === undefined) return;
+	gridState.setFavorite({ profileId, isFavorite: patch.isFavorite });
+});

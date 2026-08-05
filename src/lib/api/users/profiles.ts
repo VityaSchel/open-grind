@@ -196,6 +196,20 @@ export function applyProfileEdit({
 	return merged;
 }
 
+export type ProfileEditListener = (edit: {
+	profileId: number;
+	patch: Partial<Profile>;
+}) => void;
+
+const profileEditListeners = new Set<ProfileEditListener>();
+
+export function onProfileEdit(listener: ProfileEditListener): () => void {
+	profileEditListeners.add(listener);
+	return () => {
+		profileEditListeners.delete(listener);
+	};
+}
+
 export function mergeProfileEditIntoCaches({
 	cacheProfileId,
 	patch,
@@ -206,6 +220,9 @@ export function mergeProfileEditIntoCaches({
 	profiles.update(cacheProfileId, (profile) =>
 		applyProfileEdit({ base: profile, patch }),
 	);
+	for (const listener of profileEditListeners) {
+		listener({ profileId: cacheProfileId, patch });
+	}
 }
 
 export async function patchOwnProfile({

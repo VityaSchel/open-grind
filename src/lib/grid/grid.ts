@@ -92,6 +92,16 @@ export function setCachedProfile(profile: RenderedGridProfile): void {
 	profileCache.set(profile.id, profile);
 }
 
+export function patchCachedProfile({
+	id,
+	patch,
+}: {
+	id: number;
+	patch: Partial<RenderedGridProfile>;
+}): void {
+	profileCache.update(id, (profile) => ({ ...profile, ...patch }));
+}
+
 export async function resolveLazyProfile(
 	profile: LazyGridProfile,
 ): Promise<RenderedGridProfile | null> {

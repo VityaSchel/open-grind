@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getGridMock, reconcileHandlers } = vi.hoisted(() => ({
-	getGridMock: vi.fn(),
-	reconcileHandlers: [] as (() => unknown)[],
-}));
+const { getGridMock, patchCachedProfileMock, reconcileHandlers } = vi.hoisted(
+	() => ({
+		getGridMock: vi.fn(),
+		patchCachedProfileMock: vi.fn(),
+		reconcileHandlers: [] as (() => unknown)[],
+	}),
+);
 
 vi.mock("./grid", () => ({
 	getGrid: getGridMock,
 	getCachedProfile: () => undefined,
+	patchCachedProfile: patchCachedProfileMock,
 	resolveLazyProfile: vi.fn(),
 	setCachedProfile: vi.fn(),
 }));
@@ -24,6 +28,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	setPreferences: vi.fn(),
 }));
 
+import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
+import type { GridProfile } from "./grid";
 import { gridState } from "./grid-state.svelte";
 
 const page = (ids: number[]) => ({
@@ -71,5 +77,83 @@ describe("grid reconciliation", () => {
 		await reconcileHandlers[0]?.();
 
 		expect(getGridMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("grid favorites", () => {
+	const PROFILE_ID = 100001;
+
+	function rendered(isFavorite: boolean): GridProfile {
+		return {
+			type: "rendered",
+			id: PROFILE_ID,
+			displayName: "Ada",
+			distance: 100,
+			profilePhotosHashes: ["a"],
+			unread: 0,
+			onlineUntil: null,
+			isFavorite,
+			isVisiting: false,
+			hasChattedInLast24Hrs: false,
+		};
+	}
+
+	function edit(isFavorite: boolean, profileId = PROFILE_ID) {
+		mergeProfileEditIntoCaches({
+			cacheProfileId: profileId,
+			patch: { isFavorite },
+		});
+	}
+
+	beforeEach(() => {
+		patchCachedProfileMock.mockReset();
+	});
+
+	it("follows a favorite added and removed elsewhere, list and cache", () => {
+		gridState.items = [rendered(false)];
+
+		edit(true);
+
+		expect(gridState.items[0]).toMatchObject({ isFavorite: true });
+		expect(patchCachedProfileMock).toHaveBeenLastCalledWith({
+			id: PROFILE_ID,
+			patch: { isFavorite: true },
+		});
+
+		edit(false);
+
+		expect(gridState.items[0]).toMatchObject({ isFavorite: false });
+		expect(patchCachedProfileMock).toHaveBeenLastCalledWith({
+			id: PROFILE_ID,
+			patch: { isFavorite: false },
+		});
+	});
+
+	it("ignores an edit that carries no favorite", () => {
+		gridState.items = [rendered(false)];
+
+		mergeProfileEditIntoCaches({
+			cacheProfileId: PROFILE_ID,
+			patch: { displayName: "Renamed" },
+		});
+
+		expect(patchCachedProfileMock).not.toHaveBeenCalled();
+		expect(gridState.items[0]).toMatchObject({ isFavorite: false });
+	});
+
+	it("leaves an unresolved tile alone but still patches the cache", () => {
+		gridState.items = [
+			{ type: "lazy", id: PROFILE_ID, unread: 0, isVisiting: false },
+		];
+
+		edit(true);
+
+		expect(gridState.items[0]).toEqual({
+			type: "lazy",
+			id: PROFILE_ID,
+			unread: 0,
+			isVisiting: false,
+		});
+		expect(patchCachedProfileMock).toHaveBeenCalledOnce();
 	});
 });
