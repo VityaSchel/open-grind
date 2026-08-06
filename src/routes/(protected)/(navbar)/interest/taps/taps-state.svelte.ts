@@ -14,7 +14,10 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	#all: TapProfile[] = $state([]);
 
 	constructor({ ourProfileId }: { ourProfileId: number }) {
-		super({ pageSize: PAGE_SIZE, refreshErrorLabel: "Failed to refresh taps" });
+		super({
+			pageSize: PAGE_SIZE,
+			refreshErrorLabel: "Failed to refresh taps",
+		});
 		this.ourProfileId = ourProfileId;
 		this.start();
 	}
@@ -33,11 +36,14 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 
 	protected applySnapshot(snapshot: TapsSnapshot): Set<number> {
 		this.#all = snapshot.profiles;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- caller only reads .has() then drops it
 		return new Set(snapshot.profiles.map((tap) => tap.profileId));
 	}
 
 	protected applyUpsert(tap: TapProfile): void {
-		const existing = this.#all.findIndex((t) => t.profileId === tap.profileId);
+		const existing = this.#all.findIndex(
+			(t) => t.profileId === tap.profileId,
+		);
 		if (existing !== -1) this.#all.splice(existing, 1);
 		this.#all = [tap, ...this.#all];
 	}

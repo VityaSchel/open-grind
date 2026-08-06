@@ -13,7 +13,7 @@
 </script>
 
 {#if socials !== null}
-	{#each ["instagram", "twitter", "facebook"] as platform}
+	{#each ["instagram", "twitter", "facebook"] as platform (platform)}
 		{@const social = socials[platform as keyof SocialNetworks]}
 		{#if social}
 			<ProfileField>
@@ -29,7 +29,9 @@
 					</Link>
 				{:else if platform === "facebook"}
 					<FacebookLogoIcon class="shrink-0" />
-					<Link href="https://facebook.com/profile.php?id={social.userId}">
+					<Link
+						href="https://facebook.com/profile.php?id={social.userId}"
+					>
 						{social.userId}
 					</Link>
 				{/if}

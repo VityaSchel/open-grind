@@ -31,13 +31,22 @@
 	let keyboardNav = $state(false);
 	let inputEl = $state<HTMLInputElement | null>(null);
 
-	const navKeys = ["ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp"];
+	const navKeys = [
+		"ArrowDown",
+		"ArrowUp",
+		"Home",
+		"End",
+		"PageDown",
+		"PageUp",
+	];
 
 	const filtered = $derived(
 		searchValue.trim() === ""
 			? options
 			: options.filter((option) =>
-					option.label.toLowerCase().includes(searchValue.trim().toLowerCase()),
+					option.label
+						.toLowerCase()
+						.includes(searchValue.trim().toLowerCase()),
 				),
 	);
 
@@ -47,10 +56,9 @@
 
 	const valueByString = $derived(
 		new Map<string, T>(
-			[...options.map((option) => option.value), ...values].map((value) => [
-				String(value),
-				value,
-			]),
+			[...options.map((option) => option.value), ...values].map(
+				(value) => [String(value), value],
+			),
 		),
 	);
 
@@ -70,6 +78,7 @@
 	const atMax = $derived(max !== undefined && values.length >= max);
 
 	const excludedSet = $derived.by(() => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- filled inside this $derived, never mutated afterwards
 		const result = new Set<T>();
 		if (!exclude) return result;
 		for (const value of values) {

@@ -36,11 +36,16 @@
 			class="w-full flex-wrap gap-1"
 			bind:value={
 				() => value.map(String),
-				(v: string[]) => ((checked = v.length > 0), (value = v.map(convert)))
+				(v: string[]) => (
+					(checked = v.length > 0),
+					(value = v.map(convert))
+				)
 			}
 		>
-			{#each allItems as { value, label }}
-				<ToggleGroup.Item value={String(value)}>{label}</ToggleGroup.Item>
+			{#each allItems as { value, label } (value)}
+				<ToggleGroup.Item value={String(value)}
+					>{label}</ToggleGroup.Item
+				>
 			{/each}
 		</ToggleGroup.Root>
 	</FilterDropdown>

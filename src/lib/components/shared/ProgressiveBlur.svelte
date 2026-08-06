@@ -34,7 +34,7 @@
 
 <svelte:element this={tag} class={className} {...rest}>
 	<div class={["absolute top-0 left-0 z-11 size-full", bgClass]}></div>
-	{#each blurConfig as config, index}
+	{#each blurConfig as config, index (config.blur)}
 		<div
 			class={[
 				"blur-filter absolute top-0 left-0 size-full",

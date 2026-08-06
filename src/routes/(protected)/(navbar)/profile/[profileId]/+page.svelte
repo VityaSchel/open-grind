@@ -53,7 +53,10 @@
 				id !== profileState.profileId ||
 				ourId !== profileState.ourProfileId
 			) {
-				profileState = new ProfileState({ profileId: id, ourProfileId: ourId });
+				profileState = new ProfileState({
+					profileId: id,
+					ourProfileId: ourId,
+				});
 			}
 			return profileState;
 		});
@@ -90,7 +93,9 @@
 			class="h-full overflow-y-auto overscroll-contain"
 			bind:this={profileContainer}
 		>
-			<main class="relative mx-auto min-h-overscrollable w-full max-w-200">
+			<main
+				class="relative mx-auto min-h-overscrollable w-full max-w-200"
+			>
 				{#if profileState.loading || !profile}
 					<div class="flex max-w-full flex-col">
 						<Skeleton
@@ -107,7 +112,7 @@
 							<Skeleton class="h-3 w-30 max-w-full" />
 							<Skeleton class="mt-0.5 h-3 w-50 max-w-full" />
 							<div class="mt-2 flex flex-wrap gap-1">
-								{#each [10, 12, 18, 16, 15] as w}
+								{#each [10, 12, 18, 16, 15] as w, i (i)}
 									<Skeleton
 										class="h-4.5 w-(--w)"
 										--w="calc(var(--spacing) * {w})"
@@ -149,7 +154,8 @@
 						ourProfileId={profileState.ourProfileId}
 						{profile}
 						onBlocked={() => profileState.markBlocked()}
-						onFavorite={(isFavorite) => profileState.setFavorite(isFavorite)}
+						onFavorite={(isFavorite) =>
+							profileState.setFavorite(isFavorite)}
 					/>
 					<div
 						class={[
@@ -190,7 +196,8 @@
 						{/if}
 						{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
 							<div class="mt-4 flex flex-col gap-2">
-								<span class="text-sm text-muted-foreground uppercase"
+								<span
+									class="text-sm text-muted-foreground uppercase"
 									>Stats</span
 								>
 								<Genders {genders} {pronouns} />
@@ -201,7 +208,9 @@
 						{/if}
 						{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
 							<div class="mt-4 flex flex-col gap-2">
-								<span class="text-sm text-muted-foreground uppercase">
+								<span
+									class="text-sm text-muted-foreground uppercase"
+								>
 									Expectations
 								</span>
 								<LookingFor {lookingFor} />
@@ -211,17 +220,25 @@
 						{/if}
 						{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
 							<div class="mt-4 flex flex-col gap-2">
-								<span class="text-sm text-muted-foreground uppercase">
+								<span
+									class="text-sm text-muted-foreground uppercase"
+								>
 									Health
 								</span>
 								<HivStatus {hivStatus} />
-								<LastTested lastTestedDate={lastTestedDateValue} />
-								<HealthPractices healthPractices={sexualHealthValue} />
+								<LastTested
+									lastTestedDate={lastTestedDateValue}
+								/>
+								<HealthPractices
+									healthPractices={sexualHealthValue}
+								/>
 							</div>
 						{/if}
 						{#if socialNetworks && Object.keys(socialNetworks).length > 0}
 							<div class="mt-4 flex flex-col gap-2">
-								<span class="text-sm text-muted-foreground uppercase">
+								<span
+									class="text-sm text-muted-foreground uppercase"
+								>
 									Socials
 								</span>
 								<Socials socials={socialNetworks} />

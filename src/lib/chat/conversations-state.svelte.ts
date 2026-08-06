@@ -45,11 +45,13 @@ class ConversationsState {
 	#onIncomingMessage: IncomingMessageHandler;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- read only by getCachedConversation(), never from a template or $derived
 	#messageCache = new Map<string, CachedConversation>();
 	#unsubscribeReconcile: () => void;
 	#destroyed = false;
 	#pendingFlags = new PendingFlags<OptimisticFlagField>();
 	#pendingDeletes = new PendingDeletes();
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping for Promise.allSettled(), nothing renders from it
 	#inFlightFetches = new Set<Promise<unknown>>();
 	#fetchEpoch = 0;
 	#refreshRequestedSinceFetchStart = false;
@@ -72,10 +74,14 @@ class ConversationsState {
 		);
 
 		this.#wsPromises.push(
-			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
-				if (this.#destroyed) return;
-				void this.#handleMessageSent(event.payload);
-			}),
+			ws.on(
+				"chat.v1.message_sent",
+				chatV1MessageSentEventSchema,
+				(event) => {
+					if (this.#destroyed) return;
+					void this.#handleMessageSent(event.payload);
+				},
+			),
 			ws.on(
 				"chat.v1.conversation.delete",
 				chatV1ConversationDeleteEventSchema,
@@ -161,6 +167,7 @@ class ConversationsState {
 				(min, e) => Math.min(min, e.data.lastActivityTimestamp),
 				Number.POSITIVE_INFINITY,
 			);
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local scratch map, discarded before this call returns
 			const fetched = new Map<string, Conversation>();
 			let oldestFetchedTs = Number.POSITIVE_INFINITY;
 			let page: number | null = 1;
@@ -207,7 +214,12 @@ class ConversationsState {
 			for (const entry of [...this.entries]) {
 				const id = entry.data.conversationId;
 				if (fetched.has(id)) continue;
-				if (this.#pendingDeletes.blocks({ conversationId: id, fetchEpoch }))
+				if (
+					this.#pendingDeletes.blocks({
+						conversationId: id,
+						fetchEpoch,
+					})
+				)
 					continue;
 				if (entry.data.lastActivityTimestamp > windowFloor) {
 					this.remove(id);
@@ -237,7 +249,11 @@ class ConversationsState {
 		return this.#syncLatestInFlight;
 	}
 
-	async #runSyncLatest({ errorLabel }: { errorLabel: string }): Promise<void> {
+	async #runSyncLatest({
+		errorLabel,
+	}: {
+		errorLabel: string;
+	}): Promise<void> {
 		// Read, don't claim: syncLatest never writes nextPage, so #load/#reconcile
 		// must not defer to it. It still guards its own write below.
 		const fetchEpoch = this.#fetchEpoch;
@@ -268,6 +284,7 @@ class ConversationsState {
 		const fetchEpoch = ++this.#fetchEpoch;
 		const result = await getConversations(page);
 		if (this.#isStale(fetchEpoch)) return;
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local lookup, never mutated after construction
 		const known = new Set(this.entries.map((e) => e.data.conversationId));
 		for (const entry of result.entries) {
 			const conversationId = entry.data.conversationId;
@@ -312,7 +329,10 @@ class ConversationsState {
 			await this.#trackFetch(this.#load(this.nextPage));
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to load more conversations", error });
+			showErrorToast({
+				label: "Failed to load more conversations",
+				error,
+			});
 		} finally {
 			this.loadingMore = false;
 		}
@@ -337,7 +357,11 @@ class ConversationsState {
 			const [removed] = this.entries.splice(index, 1);
 			revert = () => {
 				if (removed && !this.#find(conversationId)) {
-					this.entries.splice(Math.min(index, this.entries.length), 0, removed);
+					this.entries.splice(
+						Math.min(index, this.entries.length),
+						0,
+						removed,
+					);
 				}
 			};
 		}
@@ -384,7 +408,8 @@ class ConversationsState {
 				.number()
 				.int()
 				.nonnegative()
-				.safeParse(localStorage.getItem(this.#inboxStorageKey())).data ?? 0
+				.safeParse(localStorage.getItem(this.#inboxStorageKey()))
+				.data ?? 0
 		);
 	}
 
@@ -577,7 +602,9 @@ class ConversationsState {
 	}
 
 	#find(conversationId: string): Conversation | undefined {
-		return this.entries.find((e) => e.data.conversationId === conversationId);
+		return this.entries.find(
+			(e) => e.data.conversationId === conversationId,
+		);
 	}
 
 	#mergeIncoming({

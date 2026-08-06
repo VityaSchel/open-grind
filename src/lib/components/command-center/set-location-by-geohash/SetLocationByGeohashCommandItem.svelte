@@ -64,7 +64,7 @@
 	{:else if geohash === null}
 		Enter the 12-character geohash to set your location
 	{:else}
-		@{#each Array.from(geohash) as char}
+		@{#each Array.from(geohash) as char, i (i)}
 			<span class="w-2.25">{char}</span>
 		{/each}
 		{#each Array(12 - geohash.length)}
