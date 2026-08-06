@@ -57,7 +57,10 @@
 						}),
 					})
 					.safeParse(appError).success;
-				if (invalidInputParameters || appError.kind === "Unauthorized") {
+				if (
+					invalidInputParameters ||
+					appError.kind === "Unauthorized"
+				) {
 					toast.error("Invalid email or password");
 					void maybeCheckRecaptcha();
 				} else {
@@ -102,6 +105,16 @@
 				appError?.kind === "Auth" &&
 				appError.message === "companion-unavailable"
 			) {
+				void goto("/auth/sign-in/google");
+				return;
+			}
+			if (
+				appError?.kind === "Auth" &&
+				appError.message === "companion-untrusted"
+			) {
+				toast.error(
+					"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
+				);
 				void goto("/auth/sign-in/google");
 				return;
 			}
@@ -172,7 +185,11 @@
 			</div>
 		</Card.Content>
 		<Card.Footer class="flex-col gap-2">
-			<Button type="submit" class="w-full" disabled={submitting !== false}>
+			<Button
+				type="submit"
+				class="w-full"
+				disabled={submitting !== false}
+			>
 				{#if submitting === "password"}
 					<Spinner />
 				{/if}

@@ -2,6 +2,7 @@ package org.opengrind.googleoauth
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
@@ -19,6 +20,13 @@ class GoogleOauthPlugin(private val activity: Activity) : Plugin(activity) {
             val intent = Intent(REQUEST_TOKEN_ACTION).setPackage(COMPANION_PACKAGE)
             if (intent.resolveActivity(activity.packageManager) == null) {
                 invoke.reject(ERROR_UNAVAILABLE)
+                return
+            }
+            if (
+                activity.packageManager.checkSignatures(activity.packageName, COMPANION_PACKAGE) !=
+                    PackageManager.SIGNATURE_MATCH
+            ) {
+                invoke.reject(ERROR_UNTRUSTED)
                 return
             }
             startActivityForResult(invoke, intent, "tokenResult")
@@ -48,6 +56,7 @@ class GoogleOauthPlugin(private val activity: Activity) : Plugin(activity) {
         const val EXTRA_TOKEN = "org.opengrind.google_oauth.extra.TOKEN"
 
         const val ERROR_UNAVAILABLE = "companion-unavailable"
+        const val ERROR_UNTRUSTED = "companion-untrusted"
         const val ERROR_CANCELLED = "cancelled"
         const val ERROR_NO_TOKEN = "no-token"
     }

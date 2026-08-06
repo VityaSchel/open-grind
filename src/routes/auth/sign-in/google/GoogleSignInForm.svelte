@@ -40,6 +40,16 @@
 			}
 			if (
 				appError?.kind === "Auth" &&
+				appError.message === "companion-untrusted"
+			) {
+				toast.error(
+					"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
+				);
+				manualInput = true;
+				return;
+			}
+			if (
+				appError?.kind === "Auth" &&
 				appError.message === "Sign-in canceled"
 			) {
 				return;
@@ -97,8 +107,13 @@
 					{#if !manualInput}
 						<li>On this screen, tap the "Retry" button</li>
 					{:else}
-						<li>Sign in with Google in the companion app and copy the token</li>
-						<li>Return to this screen, paste it and tap "Sign in"</li>
+						<li>
+							Sign in with Google in the companion app and copy
+							the token
+						</li>
+						<li>
+							Return to this screen, paste it and tap "Sign in"
+						</li>
 					{/if}
 				</ol>
 				{#if !manualInput}
