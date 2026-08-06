@@ -45,7 +45,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
 	ws: {
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
-			if (eventType === "chat.v1.conversation_read") readHandlers.push(handler);
+			if (eventType === "chat.v1.conversation_read")
+				readHandlers.push(handler);
 			if (eventType === "chat.v1.message_sent")
 				messageSentHandlers.push(handler);
 			return Promise.resolve(vi.fn());
@@ -349,7 +350,10 @@ describe("ConversationState error classification", () => {
 	const blocked = () =>
 		new ApiError({
 			message: "Request blocked",
-			request: { method: "GET", path: "/v5/chat/conversation/1:2/message" },
+			request: {
+				method: "GET",
+				path: "/v5/chat/conversation/1:2/message",
+			},
 			kind: "RequestBlocked",
 		});
 

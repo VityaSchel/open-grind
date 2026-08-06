@@ -73,7 +73,8 @@ export function photoApply(tag: GridSearchFilters["photos"][number]): Apply {
 		if (value === null) return err("Expected true or false");
 		if (value) {
 			draft.photosEnabled = true;
-			if (!draft.photos.includes(tag)) draft.photos = [...draft.photos, tag];
+			if (!draft.photos.includes(tag))
+				draft.photos = [...draft.photos, tag];
 		}
 		return ok;
 	};

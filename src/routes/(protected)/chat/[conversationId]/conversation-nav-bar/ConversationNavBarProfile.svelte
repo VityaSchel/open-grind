@@ -30,7 +30,9 @@
 				<DisplayName name={profile.name} class="truncate" />
 			</Card.Title>
 			{#if profile.distance === null}
-				<Card.Description class="truncate">Distance unknown</Card.Description>
+				<Card.Description class="truncate"
+					>Distance unknown</Card.Description
+				>
 			{:else}
 				<Card.Description class="truncate">
 					<DistanceFormatted distance={profile.distance} />

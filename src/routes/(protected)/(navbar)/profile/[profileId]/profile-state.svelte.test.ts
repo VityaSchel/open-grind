@@ -135,7 +135,9 @@ describe("ProfileState loading", () => {
 		const settleFirst = deferredProfile();
 		const state = create();
 
-		getProfileMock.mockResolvedValueOnce(profile({ displayName: "newest" }));
+		getProfileMock.mockResolvedValueOnce(
+			profile({ displayName: "newest" }),
+		);
 		state.retry();
 		await flush();
 
@@ -162,11 +164,15 @@ describe("ProfileState refresh", () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockResolvedValueOnce(profile({ displayName: "renamed" }));
+		getProfileMock.mockResolvedValueOnce(
+			profile({ displayName: "renamed" }),
+		);
 		state.refresh();
 		expect(state.refreshing).toBe(true);
 		expect(state.profile).toEqual(profile());
-		expect(invalidateProfileMock).toHaveBeenCalledExactlyOnceWith(PROFILE_ID);
+		expect(invalidateProfileMock).toHaveBeenCalledExactlyOnceWith(
+			PROFILE_ID,
+		);
 		await flush();
 
 		expect(state.refreshing).toBe(false);
@@ -205,7 +211,9 @@ describe("ProfileState refresh", () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockResolvedValueOnce(profile({ displayName: "refreshed" }));
+		getProfileMock.mockResolvedValueOnce(
+			profile({ displayName: "refreshed" }),
+		);
 		const settleReload = deferredProfile();
 		state.refresh();
 		state.retry();

@@ -32,8 +32,10 @@
 				background: #1e1e1e;
 				color: #eee;
 				text-align: center;
-				padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
-					env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+				padding: env(safe-area-inset-top, 0px)
+					env(safe-area-inset-right, 0px)
+					env(safe-area-inset-bottom, 0px)
+					env(safe-area-inset-left, 0px);
 				font-size: 16px;
 				font-family:
 					system-ui,
@@ -73,14 +75,19 @@
 					if (
 						window.CSS &&
 						CSS.supports &&
-						CSS.supports("color", "color-mix(in srgb, red, blue)") &&
+						CSS.supports(
+							"color",
+							"color-mix(in srgb, red, blue)",
+						) &&
 						CSS.supports("container-type", "inline-size")
 					)
 						return;
 				} catch (e) {}
 				var root = document.documentElement;
 				root.classList.add("webview-unsupported");
-				root.classList.add("plat-" + (window.__OPEN_GRIND_PLATFORM || "web"));
+				root.classList.add(
+					"plat-" + (window.__OPEN_GRIND_PLATFORM || "web"),
+				);
 			})();
 		</script>
 		%sveltekit.head%
@@ -91,9 +98,13 @@
 		<div id="webview-too-old">
 			<div class="wv-inner">
 				<h1>Your system WebView is too old</h1>
-				<p>Open Grind needs a newer browser engine to display correctly.</p>
+				<p>
+					Open Grind needs a newer browser engine to display
+					correctly.
+				</p>
 				<p class="wv-plat" data-platform="linux">
-					Update <code>webkit2gtk</code> (2.42 or newer) via your distribution.
+					Update <code>webkit2gtk</code> (2.42 or newer) via your
+					distribution.
 				</p>
 				<p class="wv-plat" data-platform="macos">
 					Update to macOS Ventura 13 or newer.

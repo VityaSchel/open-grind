@@ -2,7 +2,10 @@
 	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
-	import { HEIGHT_CM_MAX, HEIGHT_CM_MIN } from "$lib/model/browse/grid/filters";
+	import {
+		HEIGHT_CM_MAX,
+		HEIGHT_CM_MIN,
+	} from "$lib/model/browse/grid/filters";
 	import { formatHeight } from "$lib/util/units";
 
 	let {

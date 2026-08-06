@@ -139,7 +139,10 @@ export function demoRoute({
 		segments.length === 5 &&
 		(segments[4] === "mute" || segments[4] === "unmute")
 	) {
-		demoSetConversationMuted({ conversationId, muted: segments[4] === "mute" });
+		demoSetConversationMuted({
+			conversationId,
+			muted: segments[4] === "mute",
+		});
 		return ok({});
 	}
 	if (

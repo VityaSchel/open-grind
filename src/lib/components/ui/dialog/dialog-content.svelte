@@ -18,7 +18,9 @@
 		preventOverflowTextSelection = false,
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
-		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DialogPortal>>;
+		portalProps?: WithoutChildrenOrChild<
+			ComponentProps<typeof DialogPortal>
+		>;
 		children: Snippet;
 		showCloseButton?: boolean;
 	} = $props();

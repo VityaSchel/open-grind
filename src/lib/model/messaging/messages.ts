@@ -305,10 +305,16 @@ export type MessagePreview = {
 export function previewFromMessage(
 	message: ApiResponseMessage | undefined,
 ): MessagePreview {
-	if (!message) return { type: "", text: null, albumId: null, imageHash: null };
+	if (!message)
+		return { type: "", text: null, albumId: null, imageHash: null };
 	switch (message.type) {
 		case "Unsent":
-			return { type: "Unsent", text: null, albumId: null, imageHash: null };
+			return {
+				type: "Unsent",
+				text: null,
+				albumId: null,
+				imageHash: null,
+			};
 		case "Text":
 			return {
 				type: "Text",
@@ -334,7 +340,12 @@ export function previewFromMessage(
 			};
 		case "ExpiringImage":
 		default:
-			return { type: message.type, text: null, albumId: null, imageHash: null };
+			return {
+				type: message.type,
+				text: null,
+				albumId: null,
+				imageHash: null,
+			};
 	}
 }
 

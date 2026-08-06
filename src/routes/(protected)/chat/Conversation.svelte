@@ -97,13 +97,16 @@
 			<Item.Description
 				class={{
 					"font-medium text-white":
-						conversation.data.unreadCount > 0 && !conversation.data.muted,
+						conversation.data.unreadCount > 0 &&
+						!conversation.data.muted,
 				}}
 			>
 				{#if previewText !== null}
 					{previewText}
 				{:else}
-					<span class="preview-not-available"> Preview not available </span>
+					<span class="preview-not-available">
+						Preview not available
+					</span>
 				{/if}
 			</Item.Description>
 		{/snippet}
@@ -123,7 +126,9 @@
 				</span>
 				{#if conversation.data.unreadCount > 0}
 					<Badge
-						variant={conversation.data.muted ? "secondary" : "default"}
+						variant={conversation.data.muted
+							? "secondary"
+							: "default"}
 						class="px-[5.5px] @max-row:hidden"
 					>
 						{conversation.data.unreadCount}
@@ -166,7 +171,10 @@
 					{/if}
 				</ContextMenu.Item>
 				<ContextMenu.Separator />
-				<ContextMenu.Item variant="destructive" onSelect={onRequestDelete}>
+				<ContextMenu.Item
+					variant="destructive"
+					onSelect={onRequestDelete}
+				>
 					<TrashIcon class="size-5" />
 					Delete
 				</ContextMenu.Item>

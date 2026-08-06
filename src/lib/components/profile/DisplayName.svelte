@@ -9,5 +9,6 @@
 {#if name}
 	<span class={className}>{name}</span>
 {:else}
-	<span class={["font-normal tracking-tight italic", className]}>Someone</span>
+	<span class={["font-normal tracking-tight italic", className]}>Someone</span
+	>
 {/if}

@@ -42,7 +42,9 @@
 	function floorDistance() {
 		if (!container) return 0;
 		return (
-			container.scrollHeight - container.clientHeight - container.scrollTop
+			container.scrollHeight -
+			container.clientHeight -
+			container.scrollTop
 		);
 	}
 
@@ -54,7 +56,8 @@
 		atFloor = true;
 		if (behavior === "smooth") {
 			scrollingToRest = true;
-			if (scrollingToRestTimer !== null) clearTimeout(scrollingToRestTimer);
+			if (scrollingToRestTimer !== null)
+				clearTimeout(scrollingToRestTimer);
 			scrollingToRestTimer = setTimeout(endScrollingToRest, 1500);
 		}
 		refreshControl?.scrollToRest(behavior);
@@ -90,7 +93,9 @@
 		const el = container;
 		if (!el) return;
 		el.addEventListener("wheel", endScrollingToRest, { passive: true });
-		el.addEventListener("touchstart", endScrollingToRest, { passive: true });
+		el.addEventListener("touchstart", endScrollingToRest, {
+			passive: true,
+		});
 		return () => {
 			el.removeEventListener("wheel", endScrollingToRest);
 			el.removeEventListener("touchstart", endScrollingToRest);

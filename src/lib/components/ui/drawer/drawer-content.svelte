@@ -16,7 +16,9 @@
 		...restProps
 	}: DrawerPrimitive.ContentProps & {
 		handle?: import("svelte").Snippet | null;
-		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DrawerPortal>>;
+		portalProps?: WithoutChildrenOrChild<
+			ComponentProps<typeof DrawerPortal>
+		>;
 	} = $props();
 </script>
 

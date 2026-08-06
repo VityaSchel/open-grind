@@ -11,7 +11,9 @@ describe("UserAvatar", () => {
 	afterEach(cleanup);
 
 	it("shows the no-photo branch, not the broken fallback, for a null hash", () => {
-		const { container } = render(UserAvatar, { props: { mediaHash: null } });
+		const { container } = render(UserAvatar, {
+			props: { mediaHash: null },
+		});
 
 		expect(container.querySelector("img")).toBeNull();
 		expect(container.querySelector(BROKEN)).toBeNull();

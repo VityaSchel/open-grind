@@ -55,7 +55,11 @@ export function setEmblaContext(config: EmblaContext): EmblaContext {
 
 export function getEmblaContext(name = "This component") {
 	if (!hasContext(EMBLA_CAROUSEL_CONTEXT)) {
-		throw new Error(`${name} must be used within a <Carousel.Root> component`);
+		throw new Error(
+			`${name} must be used within a <Carousel.Root> component`,
+		);
 	}
-	return getContext<ReturnType<typeof setEmblaContext>>(EMBLA_CAROUSEL_CONTEXT);
+	return getContext<ReturnType<typeof setEmblaContext>>(
+		EMBLA_CAROUSEL_CONTEXT,
+	);
 }

@@ -32,8 +32,9 @@
 			<AlertDialog.Header>
 				<AlertDialog.Title>Copy error details?</AlertDialog.Title>
 				<AlertDialog.Description class="text-wrap">
-					<b>Be mindful of what you share on the internet!</b> The error might contain
-					your personal data. Only copy it unredacted if a developer asks you to.
+					<b>Be mindful of what you share on the internet!</b> The error
+					might contain your personal data. Only copy it unredacted if a
+					developer asks you to.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<div
@@ -43,8 +44,14 @@
 					for="airplane-mode"
 					class="flex-1 rounded-t-[inherit] pe-3 pt-3 pb-2"
 				>
-					<Switch id="airplane-mode" class="ms-3" bind:checked={redact} />
-					<span class="truncate">Redact sensitive info (recommended)</span>
+					<Switch
+						id="airplane-mode"
+						class="ms-3"
+						bind:checked={redact}
+					/>
+					<span class="truncate"
+						>Redact sensitive info (recommended)</span
+					>
 				</Label>
 				<div
 					class="max-h-[max(40dvh,160px)] min-h-0 w-full overflow-auto border border-border/30"

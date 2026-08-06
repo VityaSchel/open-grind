@@ -60,7 +60,9 @@
 		</a>
 		<a
 			href="/interest"
-			data-active={page.route.id?.startsWith("/(protected)/(navbar)/interest")}
+			data-active={page.route.id?.startsWith(
+				"/(protected)/(navbar)/interest",
+			)}
 		>
 			<FireIcon weight="fill" />
 			Interest
@@ -69,7 +71,9 @@
 			<ChatCircleIcon weight="fill" />
 			Inbox
 			{#if hasUnread}
-				<Badge class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0" />
+				<Badge
+					class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0"
+				/>
 			{/if}
 		</a>
 	</div>

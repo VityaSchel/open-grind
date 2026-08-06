@@ -307,7 +307,13 @@ const featuredOverrides = new Map<number, Partial<DemoSeed>>([
 	[100012, { name: "😎🔥💯", age: 29, photos: 1, bio: "", distanceM: 12 }],
 	[
 		100013,
-		{ name: "Alexander", photos: 5, bio: LOREM, distanceM: 13, favorite: true },
+		{
+			name: "Alexander",
+			photos: 5,
+			bio: LOREM,
+			distanceM: 13,
+			favorite: true,
+		},
 	],
 	[
 		100014,
@@ -389,7 +395,9 @@ function buildSeed(id: number): DemoSeed {
 		relationship: chance({ rng, probability: 0.4 })
 			? pick({ rng, items: RELATIONSHIPS })
 			: null,
-		hiv: chance({ rng, probability: 0.45 }) ? pick({ rng, items: HIV }) : null,
+		hiv: chance({ rng, probability: 0.45 })
+			? pick({ rng, items: HIV })
+			: null,
 		heightCm: chance({ rng, probability: 0.6 })
 			? 160 + Math.floor(rng() * 40)
 			: null,

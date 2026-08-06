@@ -44,7 +44,10 @@
 					toast.success("Profile ID copied to clipboard");
 				} catch (error) {
 					console.error(error);
-					showErrorToast({ label: "Failed to copy profile ID", error });
+					showErrorToast({
+						label: "Failed to copy profile ID",
+						error,
+					});
 				}
 			}}
 		>

@@ -16,8 +16,9 @@
 		filterPositionSchema,
 	} from "$lib/model/browse/grid/filters";
 
-	let { value = $bindable() }: { value: z.infer<typeof filterPositionSchema> } =
-		$props();
+	let {
+		value = $bindable(),
+	}: { value: z.infer<typeof filterPositionSchema> } = $props();
 </script>
 
 <ToggleGroup.Root

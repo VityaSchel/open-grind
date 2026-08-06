@@ -20,7 +20,9 @@
 				<SignOutIcon weight="fill" class="size-5" />
 			</Item.Media>
 			<Item.Content class="min-w-0">
-				<Item.Title class="inline-block w-full min-w-0 truncate text-left">
+				<Item.Title
+					class="inline-block w-full min-w-0 truncate text-left"
+				>
 					Sign Out
 				</Item.Title>
 			</Item.Content>
@@ -35,7 +37,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Sign out?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Are you sure you want to sign out? You can sign back in at any time.
+				Are you sure you want to sign out? You can sign back in at any
+				time.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

@@ -34,8 +34,14 @@
 					variant="outline"
 					class="h-auto min-h-9 w-full justify-between gap-2 py-1.5 text-left font-normal"
 				>
-					<span class={{ "text-muted-foreground": !selectedLabels.length }}>
-						{selectedLabels.length ? selectedLabels.join(", ") : placeholder}
+					<span
+						class={{
+							"text-muted-foreground": !selectedLabels.length,
+						}}
+					>
+						{selectedLabels.length
+							? selectedLabels.join(", ")
+							: placeholder}
 					</span>
 					<CaretUpDownIcon class="size-4 shrink-0 opacity-60" />
 				</Button>

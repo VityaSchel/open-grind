@@ -22,8 +22,7 @@ const gridError = () =>
 describe("errorReport of an ApiError", () => {
 	it("redacts location and filters and structures the response", () => {
 		expect(errorReport(gridError(), { redact: true })).toEqual({
-			error:
-				"error sending request for url (https://grindr.mobi/v4/cascade?nearbyGeoHash=u4**********&rightNow={boolean})",
+			error: "error sending request for url (https://grindr.mobi/v4/cascade?nearbyGeoHash=u4**********&rightNow={boolean})",
 			kind: "Http",
 			request: {
 				method: "GET",
@@ -32,7 +31,9 @@ describe("errorReport of an ApiError", () => {
 			response: {
 				status: 200,
 				body: {
-					items: [{ profileId: "<number>", distanceMeters: "<number>" }],
+					items: [
+						{ profileId: "<number>", distanceMeters: "<number>" },
+					],
 				},
 			},
 		});
@@ -122,7 +123,9 @@ describe("errorReport of a schema mismatch", () => {
 			cause?: unknown;
 		};
 
-		expect(report.error).toBe("API response did not match cascadeV4Response");
+		expect(report.error).toBe(
+			"API response did not match cascadeV4Response",
+		);
 		expect(report.issues).toEqual([
 			{
 				path: "items[0].profileId",
@@ -180,7 +183,10 @@ describe("errorReport of a thrown Error", () => {
 			cause: new ApiError({
 				message: "API request failed with status 500",
 				request: { method: "GET", path: "/v7/profiles/123456789" },
-				response: { status: 500, body: '{"code":4,"message":"Server error"}' },
+				response: {
+					status: 500,
+					body: '{"code":4,"message":"Server error"}',
+				},
 			}),
 		});
 		wrapper.stack = "Error: Failed to fetch profiles";
@@ -192,7 +198,10 @@ describe("errorReport of a thrown Error", () => {
 		expect(report.cause).toMatchObject({
 			error: "API request failed with status 500",
 			request: { method: "GET", path: "/v7/profiles/{id}" },
-			response: { status: 500, body: { code: 4, message: "Server error" } },
+			response: {
+				status: 500,
+				body: { code: 4, message: "Server error" },
+			},
 		});
 	});
 
@@ -210,7 +219,10 @@ describe("errorReport of a thrown Error", () => {
 describe("errorReport of a value that is not an Error", () => {
 	it("reads a backend error object instead of stringifying it to [object Object]", () => {
 		expect(
-			errorReport({ kind: "Auth", message: "Not logged in" }, { redact: true }),
+			errorReport(
+				{ kind: "Auth", message: "Not logged in" },
+				{ redact: true },
+			),
 		).toEqual({ kind: "Auth", message: "Not logged in" });
 	});
 

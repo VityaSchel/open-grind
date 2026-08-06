@@ -37,7 +37,10 @@ function ok(data: unknown) {
 }
 
 function okValidated(data: unknown) {
-	return { ...ok(data), jsonParsed: (schema: z.ZodType) => schema.parse(data) };
+	return {
+		...ok(data),
+		jsonParsed: (schema: z.ZodType) => schema.parse(data),
+	};
 }
 
 function okRaw(text: string, status = 200) {
@@ -70,7 +73,10 @@ function fullProfile() {
 	return {
 		profileId: PROFILE_ID,
 		age: 25,
-		socialNetworks: { twitter: { userId: "tw" }, facebook: { userId: "fb" } },
+		socialNetworks: {
+			twitter: { userId: "tw" },
+			facebook: { userId: "fb" },
+		},
 		medias: [{ mediaHash: "a" }, { mediaHash: "b" }],
 	};
 }
@@ -147,7 +153,10 @@ describe("applyProfileEdit", () => {
 	it("deep-merges socialNetworks instead of replacing siblings", () => {
 		const base = {
 			age: 20,
-			socialNetworks: { twitter: { userId: "tw" }, facebook: { userId: "fb" } },
+			socialNetworks: {
+				twitter: { userId: "tw" },
+				facebook: { userId: "fb" },
+			},
 		} as unknown as Profile;
 
 		const merged = applyProfileEdit({
@@ -266,7 +275,9 @@ describe("updateOwnProfile", () => {
 	it("hard-fails on a non-200 whose body is not a banned-terms error", async () => {
 		await getProfile(PROFILE_ID);
 		fetchRestMock.mockImplementationOnce(() =>
-			Promise.resolve(httpError(400, { type: "urn:gr:err:something_else" })),
+			Promise.resolve(
+				httpError(400, { type: "urn:gr:err:something_else" }),
+			),
 		);
 
 		await expect(
@@ -294,7 +305,9 @@ describe("updateOwnProfile", () => {
 
 	it("does not treat a non-200 success code as success", async () => {
 		await getProfile(PROFILE_ID);
-		fetchRestMock.mockImplementationOnce(() => Promise.resolve(okRaw("", 204)));
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(okRaw("", 204)),
+		);
 
 		await expect(
 			updateOwnProfile({
@@ -316,11 +329,16 @@ describe("deleteProfilePhotos", () => {
 			mediaHashes: ["a"],
 		});
 
-		expect((await getProfile(PROFILE_ID)).medias).toEqual([{ mediaHash: "b" }]);
+		expect((await getProfile(PROFILE_ID)).medias).toEqual([
+			{ mediaHash: "b" },
+		]);
 	});
 
 	it("does not send a request when there are no hashes to remove", async () => {
-		await deleteProfilePhotos({ cacheProfileId: PROFILE_ID, mediaHashes: [] });
+		await deleteProfilePhotos({
+			cacheProfileId: PROFILE_ID,
+			mediaHashes: [],
+		});
 
 		expect(fetchRestMock).not.toHaveBeenCalled();
 	});

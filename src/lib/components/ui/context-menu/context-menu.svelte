@@ -19,7 +19,9 @@
 		return () => {
 			openMenuCount--;
 			if (openMenuCount === 0) {
-				document.documentElement.removeAttribute("data-context-menu-open");
+				document.documentElement.removeAttribute(
+					"data-context-menu-open",
+				);
 			}
 		};
 	});

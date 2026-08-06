@@ -62,7 +62,10 @@ export async function getPreferences(): Promise<Preferences> {
 		.catch((error: unknown) => {
 			console.error(error);
 			toast.error("Failed to load preferences. Reset to defaults?", {
-				action: { label: "Reset", onClick: () => void resetToDefaults() },
+				action: {
+					label: "Reset",
+					onClick: () => void resetToDefaults(),
+				},
 				duration: 10000,
 				id: "load-preferences-error",
 			});
@@ -91,7 +94,10 @@ export async function setPreferences(
 ): Promise<void> {
 	await enqueueWrite(async () => {
 		const oldValues = await getPreferences();
-		const preferences = preferencesSchema.parse({ ...oldValues, ...newValues });
+		const preferences = preferencesSchema.parse({
+			...oldValues,
+			...newValues,
+		});
 		await writeAppDataFileAtomic({
 			path: "preferences.data",
 			content: encode(preferences),

@@ -35,14 +35,19 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	const items: GridProfile[] = [];
 
 	for (const item of response.items) {
-		if (item.type === "full_profile_v1" || item.type === "partial_profile_v1") {
+		if (
+			item.type === "full_profile_v1" ||
+			item.type === "partial_profile_v1"
+		) {
 			const profile = item.data;
 			items.push({
 				type: "rendered",
 				id: profile.profileId,
 				displayName: profile.displayName ?? null,
 				distance: profile.distanceMeters ?? null,
-				profilePhotosHashes: primaryImageHashes(profile.primaryImageUrl),
+				profilePhotosHashes: primaryImageHashes(
+					profile.primaryImageUrl,
+				),
 				unread: profile.unreadCount ?? null,
 				onlineUntil: profile.onlineUntil ?? null,
 				isFavorite: profile.favorite ?? false,

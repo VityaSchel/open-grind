@@ -8,7 +8,9 @@ describe("parseApiResponse", () => {
 		const parsed = parseApiResponse({
 			path: "/v8/sessions",
 			method: "POST",
-			schema: z.object({ profileId: z.coerce.number().int().nonnegative() }),
+			schema: z.object({
+				profileId: z.coerce.number().int().nonnegative(),
+			}),
 			data: { profileId: "123" },
 		});
 

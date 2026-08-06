@@ -32,7 +32,8 @@
 			<div
 				class="pull-scroller"
 				bind:this={gridContainer}
-				onscroll={() => (gridState.scrollY = gridContainer?.scrollTop ?? 0)}
+				onscroll={() =>
+					(gridState.scrollY = gridContainer?.scrollTop ?? 0)}
 			>
 				<div
 					class="@container/photo-grid flex min-h-overscrollable flex-col gap-4 px-4 pt-17 pb-nav-clear"

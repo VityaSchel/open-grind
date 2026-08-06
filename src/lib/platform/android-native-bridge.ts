@@ -19,7 +19,10 @@ export function applyAndroidInsets() {
 		if (cssInset !== 0) value = `env(safe-area-inset-${side}, 0px)`;
 		else if (nativeInset !== undefined) value = `${nativeInset}px`;
 		else value = "0px";
-		document.documentElement.style.setProperty(`--safe-area-${side}`, value);
+		document.documentElement.style.setProperty(
+			`--safe-area-${side}`,
+			value,
+		);
 	}
 
 	window.__reapplyInsets = applyAndroidInsets;

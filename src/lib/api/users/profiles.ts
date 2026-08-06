@@ -105,7 +105,9 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 				blocking.some((blocked) => blocked.profileId === profileId),
 			);
 			throw new BlockedProfileError({ blockedByUs });
-		} else if (profile.displayName === MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME) {
+		} else if (
+			profile.displayName === MAGIC_PROFILE_UNAVAILABLE_DISPLAY_NAME
+		) {
 			throw new ProfileUnavailableError();
 		}
 	}
@@ -189,7 +191,10 @@ export function applyProfileEdit({
 }): Profile {
 	const merged = { ...base, ...patch };
 	if (patch.socialNetworks) {
-		merged.socialNetworks = { ...base.socialNetworks, ...patch.socialNetworks };
+		merged.socialNetworks = {
+			...base.socialNetworks,
+			...patch.socialNetworks,
+		};
 	}
 	return merged;
 }

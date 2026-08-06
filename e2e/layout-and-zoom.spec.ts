@@ -16,9 +16,9 @@ test.describe("screen insets", () => {
 			const el = document.querySelector(
 				"div.absolute.right-7.bottom-0",
 			) as HTMLElement;
-			const inset = getComputedStyle(document.documentElement).getPropertyValue(
-				"--safe-area-bottom",
-			);
+			const inset = getComputedStyle(
+				document.documentElement,
+			).getPropertyValue("--safe-area-bottom");
 			return {
 				bottom: Math.round(el.getBoundingClientRect().bottom),
 				viewport: window.innerHeight,

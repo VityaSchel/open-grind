@@ -34,7 +34,9 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockResolvedValue({ profileId: 1, restriction: null });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 
 		expect(signOutMock).not.toHaveBeenCalled();
 		expect(sessionErrorState.open).toBe(false);
@@ -44,17 +46,24 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockRejectedValue({ kind: "NotLoggedIn" });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 
 		expect(signOutMock).toHaveBeenCalledOnce();
 		expect(sessionErrorState.open).toBe(false);
 	});
 
 	it("stays open when the refresh fails for another reason", async () => {
-		callMethodMock.mockRejectedValue({ kind: "Http", message: "timed out" });
+		callMethodMock.mockRejectedValue({
+			kind: "Http",
+			message: "timed out",
+		});
 		render(SessionErrorAlert);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 
 		expect(signOutMock).not.toHaveBeenCalled();
 		expect(sessionErrorState.open).toBe(true);

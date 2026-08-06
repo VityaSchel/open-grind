@@ -92,7 +92,10 @@
 				onscroll={scheduleSettle}
 				class={[
 					"overflow-x-hidden  overscroll-contain select-none",
-					{ "h-full overflow-y-auto": isFullsizeTab, "h-fit": !isFullsizeTab },
+					{
+						"h-full overflow-y-auto": isFullsizeTab,
+						"h-fit": !isFullsizeTab,
+					},
 				]}
 			>
 				{#if isFullsizeTab}
@@ -123,10 +126,16 @@
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="albums">
-						<ComposerUnimplementedTab label="Sharing albums" issue={33} />
+						<ComposerUnimplementedTab
+							label="Sharing albums"
+							issue={33}
+						/>
 					</Tabs.Content>
 					<Tabs.Content value="location">
-						<ComposerUnimplementedTab label="Sharing location" issue={35} />
+						<ComposerUnimplementedTab
+							label="Sharing location"
+							issue={35}
+						/>
 					</Tabs.Content>
 				</div>
 			</div>

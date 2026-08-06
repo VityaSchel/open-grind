@@ -20,7 +20,8 @@ export function fixedHeaderOffset({
 			}
 			px = Math.max(
 				0,
-				header.getBoundingClientRect().bottom - el.getBoundingClientRect().top,
+				header.getBoundingClientRect().bottom -
+					el.getBoundingClientRect().top,
 			);
 		};
 		void tick().then(measure);

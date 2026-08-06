@@ -25,8 +25,8 @@ export function writeWebAppDataFile({
 	path: string;
 	content: Uint8Array;
 }): void {
-	const binary = Array.from(content, (byte) => String.fromCharCode(byte)).join(
-		"",
-	);
+	const binary = Array.from(content, (byte) =>
+		String.fromCharCode(byte),
+	).join("");
 	localStorage.setItem(key(path), btoa(binary));
 }

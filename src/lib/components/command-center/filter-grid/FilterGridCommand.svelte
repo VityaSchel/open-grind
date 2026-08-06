@@ -13,7 +13,9 @@
 	import { parseFilterGridQuery } from "./filter-grid-query";
 
 	const result = $derived(parseFilterGridQuery(commandCenterState.query));
-	const canApply = $derived(result.validCount > 0 && result.invalidCount === 0);
+	const canApply = $derived(
+		result.validCount > 0 && result.invalidCount === 0,
+	);
 
 	async function apply() {
 		if (!canApply) return;
@@ -40,7 +42,9 @@
 			{#if result.parsed.length === 0}
 				<span>
 					Type a Grindr grid query, e.g.
-					<code class="rounded-xs bg-muted px-1 py-px font-mono text-sm">
+					<code
+						class="rounded-xs bg-muted px-1 py-px font-mono text-sm"
+					>
 						online=true&age=18-99&tribes=2,12
 					</code>
 				</span>

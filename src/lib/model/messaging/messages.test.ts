@@ -71,7 +71,12 @@ describe("previewFromMessage", () => {
 				unsent: false,
 				reactions: [],
 			}),
-		).toEqual({ type: "Text", text: "hello", albumId: null, imageHash: null });
+		).toEqual({
+			type: "Text",
+			text: "hello",
+			albumId: null,
+			imageHash: null,
+		});
 	});
 
 	it("extracts album previews without inventing text", () => {

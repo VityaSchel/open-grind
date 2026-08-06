@@ -102,8 +102,14 @@ export async function fetchRest(
 	const method = options.method ?? "GET";
 	const requestInfo = { method, path, body: options.body };
 	if (demoEnabled) {
-		const { status, body } = demoRoute({ path, method, body: options.body });
-		const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
+		const { status, body } = demoRoute({
+			path,
+			method,
+			body: options.body,
+		});
+		const responseBody = new TextEncoder().encode(
+			JSON.stringify(body ?? null),
+		);
 		return buildRestResponse({ status, responseBody, requestInfo });
 	}
 	try {

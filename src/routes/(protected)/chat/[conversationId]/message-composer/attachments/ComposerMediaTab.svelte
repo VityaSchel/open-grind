@@ -5,7 +5,10 @@
 	import { toast } from "svelte-sonner";
 
 	import { addMediaToDrawer } from "$lib/api/messaging/chat-media";
-	import { type DrawerMedia, getDrawerMedia } from "$lib/api/messaging/drawer";
+	import {
+		type DrawerMedia,
+		getDrawerMedia,
+	} from "$lib/api/messaging/drawer";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
@@ -62,7 +65,10 @@
 		for (const item of picked) {
 			try {
 				const added = await addMediaToDrawer(item);
-				media = [added, ...(media ?? []).filter(({ id }) => id !== added.id)];
+				media = [
+					added,
+					...(media ?? []).filter(({ id }) => id !== added.id),
+				];
 			} catch (err) {
 				console.error(err);
 				toast.error("Couldn't add photo");
@@ -103,7 +109,11 @@
 <div class="@container/photo-grid flex flex-col rounded-grid">
 	{#if error !== null}
 		<div class="flex flex-1">
-			<ApiErrorDisplay {error} onRetry={() => void load()} class="m-auto" />
+			<ApiErrorDisplay
+				{error}
+				onRetry={() => void load()}
+				class="m-auto"
+			/>
 		</div>
 	{:else if media === null}
 		<div class="photo-grid">
@@ -146,7 +156,10 @@
 					type="button"
 					class={[
 						"relative aspect-square",
-						{ "cursor-pointer": selected.canSelectMore || isSelected },
+						{
+							"cursor-pointer":
+								selected.canSelectMore || isSelected,
+						},
 					]}
 					aria-label={isSelected ? "Deselect media" : "Select media"}
 					aria-pressed={isSelected}

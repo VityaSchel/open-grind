@@ -318,7 +318,9 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 		await state.initial;
 		await reconcilePromise;
 
-		expect(state.entries.map((e) => e.data.conversationId)).toEqual(["a:1"]);
+		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+			"a:1",
+		]);
 		expect(state.nextPage).toBe(2);
 	});
 
@@ -354,7 +356,9 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			expect(getConversationsMock).toHaveBeenCalledTimes(3),
 		);
 		await vi.waitFor(() =>
-			expect(state.entries.map((e) => e.data.conversationId)).toEqual(["b:2"]),
+			expect(state.entries.map((e) => e.data.conversationId)).toEqual([
+				"b:2",
+			]),
 		);
 	});
 

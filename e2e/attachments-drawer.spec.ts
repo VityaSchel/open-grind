@@ -17,7 +17,9 @@ test.describe("attachments drawer", () => {
 		const { short } = await snapTops(page);
 		const b = await box(page);
 
-		expect(Math.abs(b.top - short), "opens at the short snap").toBeLessThan(8);
+		expect(Math.abs(b.top - short), "opens at the short snap").toBeLessThan(
+			8,
+		);
 		expect(b.gridScrollTop, "content starts at its top").toBe(0);
 	});
 
@@ -146,9 +148,10 @@ test.describe("attachments drawer", () => {
 		await touch.drag(page, { x: 210, y: 520 }, { x: 210, y: 220 });
 		await page.waitForTimeout(500);
 		const scrolled = await box(page);
-		expect(scrolled.gridScrollTop, "content actually scrolled").toBeGreaterThan(
-			0,
-		);
+		expect(
+			scrolled.gridScrollTop,
+			"content actually scrolled",
+		).toBeGreaterThan(0);
 
 		await touch.drag(page, { x: 210, y: 300 }, { x: 210, y: 560 });
 		await page.waitForTimeout(600);
@@ -249,9 +252,10 @@ test.describe("attachments drawer", () => {
 			}
 			return Math.round(drift);
 		});
-		expect(worst, "the tab bar never drifts from the bottom edge").toBeLessThan(
-			40,
-		);
+		expect(
+			worst,
+			"the tab bar never drifts from the bottom edge",
+		).toBeLessThan(40);
 	});
 
 	test("a drag does not select the item under the pointer; a tap does", async ({
@@ -261,7 +265,10 @@ test.describe("attachments drawer", () => {
 		const touch = await TrustedTouch.attach(page);
 		const tile = page.locator('button[aria-label="Select media"]').first();
 		const rect = (await tile.boundingBox())!;
-		const centre = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+		const centre = {
+			x: rect.x + rect.width / 2,
+			y: rect.y + rect.height / 2,
+		};
 
 		await touch.drag(page, centre, { x: centre.x, y: centre.y - 120 });
 		await page.waitForTimeout(1000);
@@ -270,7 +277,9 @@ test.describe("attachments drawer", () => {
 			"a drag must not select",
 		).toBe(0);
 
-		const stillTile = page.locator('button[aria-label="Select media"]').first();
+		const stillTile = page
+			.locator('button[aria-label="Select media"]')
+			.first();
 		const r2 = (await stillTile.boundingBox())!;
 		await touch.start(r2.x + r2.width / 2, r2.y + r2.height / 2);
 		await page.waitForTimeout(60);

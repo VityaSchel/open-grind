@@ -16,20 +16,25 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Grindr blocks your requests</AlertDialog.Title>
 			<AlertDialog.Description>
-				Cloudflare protecting the Grindr API is currently blocking your requests
-				because of suspicious activity. This is a <Link
+				Cloudflare protecting the Grindr API is currently blocking your
+				requests because of suspicious activity. This is a <Link
 					href="https://git.opengrind.org/open-grind/open-grind/issues/81"
 				>
 					known issue
 				</Link>.
-				<span class="font-semibold">If you use a VPN, try disabling it.</span>
+				<span class="font-semibold"
+					>If you use a VPN, try disabling it.</span
+				>
 				You can also rotate request parameters using the button below.
 				<div class="mt-4 flex items-center gap-3 text-left">
 					<Checkbox
 						id="disable-request-blocked-alert"
 						bind:checked={requestBlockedAlertState.disable}
 					/>
-					<Label for="disable-request-blocked-alert" class="leading-5">
+					<Label
+						for="disable-request-blocked-alert"
+						class="leading-5"
+					>
 						Don't show again in this session</Label
 					>
 				</div>
@@ -41,10 +46,12 @@
 				onclick={async () => {
 					submitting = true;
 					try {
-						const oldHeaders = await callMethod("rotate_api_params");
-						toast.success("Successfully rotated device parameters", {
-							id: "rotate-api-params-success",
-						});
+						const oldHeaders =
+							await callMethod("rotate_api_params");
+						toast.success(
+							"Successfully rotated device parameters",
+							{ id: "rotate-api-params-success" },
+						);
 						console.log("Rotated parameters from", oldHeaders);
 					} catch (error) {
 						console.error(error);

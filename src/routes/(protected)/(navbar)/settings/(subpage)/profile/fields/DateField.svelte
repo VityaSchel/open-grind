@@ -2,8 +2,10 @@
 	import { Input } from "$lib/components/ui/input";
 	import Field from "./Field.svelte";
 
-	let { label, value = $bindable() }: { label: string; value: number | null } =
-		$props();
+	let {
+		label,
+		value = $bindable(),
+	}: { label: string; value: number | null } = $props();
 
 	function toInput(ms: number | null) {
 		if (ms === null) return "";
@@ -28,7 +30,8 @@
 		type="date"
 		max={today}
 		bind:value={
-			() => toInput(value), (newValue: string) => (value = fromInput(newValue))
+			() => toInput(value),
+			(newValue: string) => (value = fromInput(newValue))
 		}
 	/>
 </Field>

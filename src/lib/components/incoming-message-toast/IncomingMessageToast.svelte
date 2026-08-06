@@ -55,11 +55,15 @@
 	/>
 	<div class="flex min-w-0 flex-col">
 		{#if sender && sender.name}
-			<span class="truncate font-heading text-sm leading-snug font-medium">
+			<span
+				class="truncate font-heading text-sm leading-snug font-medium"
+			>
 				{sender.name}
 			</span>
 		{:else}
-			<span class="font-normal tracking-tight text-muted-foreground italic">
+			<span
+				class="font-normal tracking-tight text-muted-foreground italic"
+			>
 				Someone
 			</span>
 		{/if}

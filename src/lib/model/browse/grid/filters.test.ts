@@ -32,14 +32,16 @@ describe("grid search filter schemas", () => {
 	});
 
 	it("accepts not-specified aliases for filters that expose them", () => {
-		expect(filterPositionSchema.parse([FilterPosition.NotSpecified])).toEqual([
-			FilterPosition.NotSpecified,
-		]);
+		expect(
+			filterPositionSchema.parse([FilterPosition.NotSpecified]),
+		).toEqual([FilterPosition.NotSpecified]);
 		expect(FilterBodyType.NotSpecified).toBe(-1);
 		expect(FilterLookingFor.NotSpecified).toBe(-1);
 		expect(FilterAcceptNSFWPics.NotSpecified).toBe(-1);
 		expect(
-			filterAcceptNSFWPicsSchema.parse([FilterAcceptNSFWPics.NotSpecified]),
+			filterAcceptNSFWPicsSchema.parse([
+				FilterAcceptNSFWPics.NotSpecified,
+			]),
 		).toEqual([FilterAcceptNSFWPics.NotSpecified]);
 	});
 

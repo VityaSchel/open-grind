@@ -92,7 +92,8 @@ describe("groupMessagesByDate", () => {
 				?.dayStart,
 		).toBe(localDayStart(olderSameDayTs));
 		expect(
-			messages.find((message) => message.messageId === "newest")?.dayStart,
+			messages.find((message) => message.messageId === "newest")
+				?.dayStart,
 		).toBe(undefined);
 		expect(
 			messages.find((message) => message.messageId === "previous-day")
@@ -110,9 +111,24 @@ describe("processMessages", () => {
 		const messages = processMessages({
 			ourProfileId: 7,
 			messages: [
-				{ ...baseMessage, messageId: "1", senderId: 7, timestamp: firstTs },
-				{ ...baseMessage, messageId: "2", senderId: 7, timestamp: secondTs },
-				{ ...baseMessage, messageId: "3", senderId: 9, timestamp: thirdTs },
+				{
+					...baseMessage,
+					messageId: "1",
+					senderId: 7,
+					timestamp: firstTs,
+				},
+				{
+					...baseMessage,
+					messageId: "2",
+					senderId: 7,
+					timestamp: secondTs,
+				},
+				{
+					...baseMessage,
+					messageId: "3",
+					senderId: 9,
+					timestamp: thirdTs,
+				},
 			],
 		});
 

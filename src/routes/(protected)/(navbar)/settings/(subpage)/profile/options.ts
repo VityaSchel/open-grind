@@ -66,14 +66,20 @@ export function buildGenderOptions(genders: Gender[]) {
 					(a.sortProfile ?? Infinity) - (b.sortProfile ?? Infinity) ||
 					a.genderId - b.genderId,
 			)
-			.map((gender) => ({ value: gender.genderId, label: gender.gender })),
+			.map((gender) => ({
+				value: gender.genderId,
+				label: gender.gender,
+			})),
 		resolveLabel: (id: number) => byId.get(id)?.gender,
-		exclusions: (id: number) => byId.get(id)?.excludeOnProfileSelection ?? [],
+		exclusions: (id: number) =>
+			byId.get(id)?.excludeOnProfileSelection ?? [],
 	};
 }
 
 export function buildPronounOptions(pronouns: Pronoun[]) {
-	const byId = new Map(pronouns.map((pronoun) => [pronoun.pronounId, pronoun]));
+	const byId = new Map(
+		pronouns.map((pronoun) => [pronoun.pronounId, pronoun]),
+	);
 	return {
 		options: pronouns.map((pronoun) => ({
 			value: pronoun.pronounId,

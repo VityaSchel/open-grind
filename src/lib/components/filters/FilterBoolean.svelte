@@ -20,7 +20,9 @@
 
 <FilterField>
 	<Checkbox id="filters-{id}-{uid}" bind:checked />
-	<Label for="filters-{id}-{uid}" class="min-h-5">{@render children?.()}</Label>
+	<Label for="filters-{id}-{uid}" class="min-h-5"
+		>{@render children?.()}</Label
+	>
 	{#if endAdornment}
 		<span class="ml-auto min-w-0 truncate">
 			{@render endAdornment()}

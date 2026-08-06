@@ -38,10 +38,15 @@
 						coords: { latitude, longitude },
 					} = await getCurrentPosition();
 
-					await submitGeohash(encodeGeohash({ lat: latitude, lon: longitude }));
+					await submitGeohash(
+						encodeGeohash({ lat: latitude, lon: longitude }),
+					);
 				} catch (error) {
 					console.error(error);
-					showErrorToast({ label: "Failed to get current location", error });
+					showErrorToast({
+						label: "Failed to get current location",
+						error,
+					});
 				}
 			} else {
 				toast.error(
@@ -78,7 +83,11 @@
 	<Empty.Content>
 		<div class="flex flex-wrap justify-center gap-2">
 			{#if geoApiSupported}
-				<Button variant="default" onclick={handleDetectLocation} {disabled}>
+				<Button
+					variant="default"
+					onclick={handleDetectLocation}
+					{disabled}
+				>
 					<GpsFixIcon color="currentColor" weight="fill" />
 					Use current location
 				</Button>

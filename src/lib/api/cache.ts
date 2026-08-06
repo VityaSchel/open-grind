@@ -67,7 +67,8 @@ export class FetchCache<K, V extends CachedValue> extends TtlCache<K, V> {
 				return value;
 			})
 			.finally(() => {
-				if (this.#inFlight.get(key) === request) this.#inFlight.delete(key);
+				if (this.#inFlight.get(key) === request)
+					this.#inFlight.delete(key);
 			});
 		this.#inFlight.set(key, request);
 		return await request;

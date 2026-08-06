@@ -31,7 +31,11 @@ export async function installTauriShim(page: Page): Promise<void> {
 
 		const files = new Map<string, Uint8Array>();
 
-		const invoke = (cmd: string, args?: unknown, opts?: unknown): unknown => {
+		const invoke = (
+			cmd: string,
+			args?: unknown,
+			opts?: unknown,
+		): unknown => {
 			const fs = (args ?? {}) as FsArgs;
 			const headers = ((opts ?? {}) as InvokeOptions).headers ?? {};
 
@@ -52,7 +56,10 @@ export async function installTauriShim(page: Page): Promise<void> {
 			}
 			if (cmd === "plugin:fs|write_file") {
 				const path = decodeURIComponent(headers.path ?? fs.path ?? "");
-				files.set(path, args instanceof Uint8Array ? args : new Uint8Array());
+				files.set(
+					path,
+					args instanceof Uint8Array ? args : new Uint8Array(),
+				);
 				return null;
 			}
 			return null;

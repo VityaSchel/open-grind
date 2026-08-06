@@ -7,7 +7,9 @@ describe("PendingDeletes", () => {
 		const deletes = new PendingDeletes();
 		deletes.mark("a:1");
 
-		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 7 })).toBe(true);
+		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 7 })).toBe(
+			true,
+		);
 	});
 
 	it("keeps blocking fetches that started at or before the settling epoch", () => {
@@ -15,7 +17,9 @@ describe("PendingDeletes", () => {
 		deletes.mark("a:1");
 		deletes.settle({ conversationId: "a:1", fetchEpoch: 3 });
 
-		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 3 })).toBe(true);
+		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 3 })).toBe(
+			true,
+		);
 		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 4 })).toBe(
 			false,
 		);
@@ -27,7 +31,9 @@ describe("PendingDeletes", () => {
 		deletes.mark("a:1");
 		deletes.settle({ conversationId: "a:1", fetchEpoch: 3 });
 
-		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 9 })).toBe(true);
+		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 9 })).toBe(
+			true,
+		);
 
 		deletes.settle({ conversationId: "a:1", fetchEpoch: 3 });
 
@@ -44,7 +50,9 @@ describe("PendingDeletes", () => {
 		deletes.settle({ conversationId: "a:1", fetchEpoch: 3 });
 		deletes.release("a:1");
 
-		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 3 })).toBe(true);
+		expect(deletes.blocks({ conversationId: "a:1", fetchEpoch: 3 })).toBe(
+			true,
+		);
 
 		deletes.release("a:1");
 

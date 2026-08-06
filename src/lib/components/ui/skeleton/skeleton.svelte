@@ -11,7 +11,9 @@
 		ref = $bindable(null),
 		class: className,
 		...restProps
-	}: WithoutChildren<WithElementRef<HTMLAttributes<HTMLDivElement>>> = $props();
+	}: WithoutChildren<
+		WithElementRef<HTMLAttributes<HTMLDivElement>>
+	> = $props();
 </script>
 
 <div

@@ -55,7 +55,10 @@
 		>
 			{#if isFavorite}
 				<div class="badge">
-					<StarIcon weight="fill" class="m-auto size-4/6 text-yellow-500" />
+					<StarIcon
+						weight="fill"
+						class="m-auto size-4/6 text-yellow-500"
+					/>
 				</div>
 			{/if}
 			{#if hadRecentChat}
@@ -74,16 +77,24 @@
 				variant="outline"
 				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 backdrop-blur-2xl"
 			>
-				<ProfileStatusIndicator {onlineUntil} {isVisiting} class="me-1" />
+				<ProfileStatusIndicator
+					{onlineUntil}
+					{isVisiting}
+					class="me-1"
+				/>
 
 				{#if displayName !== null}
-					<span class="block shrink truncate font-semibold">{displayName}</span>
+					<span class="block shrink truncate font-semibold"
+						>{displayName}</span
+					>
 				{/if}
 				{#if displayName !== null && age !== null}
 					,&nbsp;
 				{/if}
 				{#if age !== null}
-					<span class="line-clamp-1 block max-w-full shrink-0 truncate">
+					<span
+						class="line-clamp-1 block max-w-full shrink-0 truncate"
+					>
 						{age}
 					</span>
 				{/if}
@@ -108,13 +119,19 @@
 	<a
 		{href}
 		aria-label={hasVisibleText ? undefined : "Profile"}
-		class={["relative flex aspect-square items-end overflow-hidden", className]}
+		class={[
+			"relative flex aspect-square items-end overflow-hidden",
+			className,
+		]}
 	>
 		{@render content()}
 	</a>
 {:else}
 	<div
-		class={["relative flex aspect-square items-end overflow-hidden", className]}
+		class={[
+			"relative flex aspect-square items-end overflow-hidden",
+			className,
+		]}
 	>
 		{@render content()}
 	</div>

@@ -69,7 +69,10 @@
 				imageState = { status: "open", image: { url: image.url } };
 			} catch (error) {
 				console.error(error);
-				showErrorToast({ label: "Failed to load expiring image", error });
+				showErrorToast({
+					label: "Failed to load expiring image",
+					error,
+				});
 				imageState = { status: "idle" };
 			}
 		})();
@@ -100,7 +103,10 @@
 			})
 			.catch((error) => {
 				console.error(error);
-				showErrorToast({ label: "Failed to open expiring image", error });
+				showErrorToast({
+					label: "Failed to open expiring image",
+					error,
+				});
 				imageState = { status: "idle" };
 			});
 		return () => lightbox?.destroy();

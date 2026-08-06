@@ -138,7 +138,10 @@ describe("conversation API wrappers", () => {
 		fetchRestMock.mockResolvedValue(response(undefined, 403));
 
 		await expect(
-			setConversationPinned({ conversationId: "conversation-1", pinned: true }),
+			setConversationPinned({
+				conversationId: "conversation-1",
+				pinned: true,
+			}),
 		).rejects.toThrow("mock assertOk rejected status 403");
 	});
 
@@ -162,7 +165,10 @@ describe("conversation API wrappers", () => {
 		fetchRestMock.mockResolvedValue(response(undefined, 500));
 
 		await expect(
-			setConversationMuted({ conversationId: "conversation-1", muted: true }),
+			setConversationMuted({
+				conversationId: "conversation-1",
+				muted: true,
+			}),
 		).rejects.toThrow("mock assertOk rejected status 500");
 	});
 });

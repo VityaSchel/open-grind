@@ -15,7 +15,9 @@
 		portalProps,
 		...restProps
 	}: MenubarPrimitive.ContentProps & {
-		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof MenubarPortal>>;
+		portalProps?: WithoutChildrenOrChild<
+			ComponentProps<typeof MenubarPortal>
+		>;
 	} = $props();
 </script>
 

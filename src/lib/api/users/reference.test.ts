@@ -62,7 +62,9 @@ describe("gender reference data", () => {
 
 	it("accepts an entry with only the three keys the official client requires", () => {
 		expect(
-			gendersSchema.parse([{ genderId: 1, gender: "Man", displayGroup: 1 }]),
+			gendersSchema.parse([
+				{ genderId: 1, gender: "Man", displayGroup: 1 },
+			]),
 		).toHaveLength(1);
 	});
 });

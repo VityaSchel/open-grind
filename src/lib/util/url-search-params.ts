@@ -7,7 +7,8 @@ function valuesToStringRecord(data: Record<string, unknown>): StringRecord {
 	for (const [key, value] of Object.entries(data)) {
 		if (value === undefined || value === null) continue;
 		if (typeof value === "boolean") result[key] = value ? "true" : "false";
-		else if (Array.isArray(value)) result[key] = value.map(String).join(",");
+		else if (Array.isArray(value))
+			result[key] = value.map(String).join(",");
 		else if (typeof value === "number" || typeof value === "string")
 			result[key] = String(value);
 	}
@@ -39,10 +40,12 @@ function stringRecordToValues<T extends z.ZodObject>({
 				raw === ""
 					? []
 					: raw.split(",").map((value) => {
-							if (element instanceof z.ZodNumber) return Number(value);
+							if (element instanceof z.ZodNumber)
+								return Number(value);
 							if (element instanceof z.ZodBoolean)
 								return value === "true" || value === "1";
-							if (element instanceof z.ZodBigInt) return BigInt(value);
+							if (element instanceof z.ZodBigInt)
+								return BigInt(value);
 							return value;
 						});
 		} else {

@@ -16,7 +16,12 @@ export const banInfoSchema = z.object({
 export type BanInfo = z.infer<typeof banInfoSchema>;
 
 export const restrictionSchema = z.object({
-	kind: z.enum(["ageVerification", "timedBan", "trustVendorRejected", "other"]),
+	kind: z.enum([
+		"ageVerification",
+		"timedBan",
+		"trustVendorRejected",
+		"other",
+	]),
 	region: z.string().nullish(),
 	reason: z.string().nullish(),
 });

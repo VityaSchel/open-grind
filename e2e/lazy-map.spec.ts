@@ -18,6 +18,8 @@ test("leaflet is not loaded until the location picker opens", async ({
 	expect(leafletRequests).toEqual([]);
 
 	await page.getByRole("button", { name: "Pick manually" }).click();
-	await page.getByPlaceholder("Search places...").waitFor({ timeout: 180_000 });
+	await page
+		.getByPlaceholder("Search places...")
+		.waitFor({ timeout: 180_000 });
 	expect(leafletRequests.length).toBeGreaterThan(0);
 });

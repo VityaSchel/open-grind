@@ -60,7 +60,9 @@ export function redactPath(path: string): string {
 	const redactedPathname = pathname
 		.split("/")
 		.map((segment) =>
-			segment === "" || routeLiteral.test(segment) ? segment : idPlaceholder,
+			segment === "" || routeLiteral.test(segment)
+				? segment
+				: idPlaceholder,
 		)
 		.join("/");
 	if (queryStart === -1) return redactedPathname;

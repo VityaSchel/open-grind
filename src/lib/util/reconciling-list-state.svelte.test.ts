@@ -53,7 +53,9 @@ class TestList extends ReconcilingListState<Item, Item[]> {
 	}
 
 	protected applyUpsert(item: Item): void {
-		const index = this.items.findIndex((existing) => existing.id === item.id);
+		const index = this.items.findIndex(
+			(existing) => existing.id === item.id,
+		);
 		const previous = this.items[index];
 		if (previous) this.items.splice(index, 1);
 		this.items = [

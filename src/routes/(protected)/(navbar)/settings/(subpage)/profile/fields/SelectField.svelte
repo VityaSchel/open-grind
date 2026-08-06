@@ -51,7 +51,9 @@
 				}
 			>
 				{#if nullable}
-					<DropdownMenu.RadioItem value="">{clearLabel}</DropdownMenu.RadioItem>
+					<DropdownMenu.RadioItem value=""
+						>{clearLabel}</DropdownMenu.RadioItem
+					>
 				{/if}
 				{#each options as option (option.value)}
 					<DropdownMenu.RadioItem value={String(option.value)}>

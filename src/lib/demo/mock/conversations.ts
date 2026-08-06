@@ -317,7 +317,8 @@ export function demoConversations(page: number): {
 	if (page > 1) return { entries: [], nextPage: null };
 	const entries: Conversation[] = demoConversationSeeds
 		.filter(
-			(conv) => !deletedConversationIds.has(conversationIdFor(conv.withId)),
+			(conv) =>
+				!deletedConversationIds.has(conversationIdFor(conv.withId)),
 		)
 		.map((conv): Conversation => {
 			const conversationId = conversationIdFor(conv.withId);
@@ -354,7 +355,8 @@ export function demoConversations(page: number): {
 			};
 		})
 		.sort(
-			(a, b) => b.data.lastActivityTimestamp - a.data.lastActivityTimestamp,
+			(a, b) =>
+				b.data.lastActivityTimestamp - a.data.lastActivityTimestamp,
 		);
 	return { entries, nextPage: null };
 }

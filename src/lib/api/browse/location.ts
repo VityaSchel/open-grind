@@ -16,7 +16,8 @@ const placesResponseSchema = z.object({
 
 export async function getPlaces({ query }: { query: string }) {
 	const response = await fetchRest(
-		"/v3/places/search?" + new URLSearchParams({ placeName: query }).toString(),
+		"/v3/places/search?" +
+			new URLSearchParams({ placeName: query }).toString(),
 	).then((res) => res.jsonParsed(placesResponseSchema));
 	return response;
 }

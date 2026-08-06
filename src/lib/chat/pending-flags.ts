@@ -8,7 +8,8 @@ export class PendingFlags<Field extends string> {
 		conversationId: string;
 		field: Field;
 	}): void {
-		const counts = this.#counts.get(conversationId) ?? new Map<Field, number>();
+		const counts =
+			this.#counts.get(conversationId) ?? new Map<Field, number>();
 		counts.set(field, (counts.get(field) ?? 0) + 1);
 		this.#counts.set(conversationId, counts);
 	}

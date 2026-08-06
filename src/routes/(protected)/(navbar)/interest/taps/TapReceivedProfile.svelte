@@ -23,7 +23,9 @@
 		{/if}
 	{/snippet}
 	{#snippet actions()}
-		<Item.Actions class="flex min-w-6 flex-col items-end gap-1 @max-row:hidden">
+		<Item.Actions
+			class="flex min-w-6 flex-col items-end gap-1 @max-row:hidden"
+		>
 			<span
 				class="max-w-full truncate text-right font-medium text-muted-foreground"
 			>

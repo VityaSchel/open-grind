@@ -37,7 +37,8 @@ export class PullModel {
 	}
 
 	setUpdating(updating: boolean): void {
-		const startsFreshEpisode = updating && !this.busy && !this.gestureActive;
+		const startsFreshEpisode =
+			updating && !this.busy && !this.gestureActive;
 		if (startsFreshEpisode) this.#clearSettled();
 		this.updating = updating;
 	}
@@ -57,7 +58,8 @@ export class PullModel {
 		const pull = Math.max(0, rawPx);
 		if (preResisted) {
 			this.displayPx = pull;
-			this.phase = this.space > 0 && pull >= this.space ? "armed" : "pulling";
+			this.phase =
+				this.space > 0 && pull >= this.space ? "armed" : "pulling";
 			return;
 		}
 		const range = Math.max(0, this.space * OVERSHOOT - this.#baseline);
@@ -95,7 +97,10 @@ export class PullModel {
 	}
 
 	remainingRefreshMs(): number {
-		return Math.max(0, MIN_REFRESHING_MS - (this.#now() - this.#triggeredAt));
+		return Math.max(
+			0,
+			MIN_REFRESHING_MS - (this.#now() - this.#triggeredAt),
+		);
 	}
 
 	#fire(): void {

@@ -55,7 +55,9 @@
 
 	async function compensateScroll() {
 		if (!container) return;
-		const paddingBefore = parseFloat(getComputedStyle(container).paddingTop);
+		const paddingBefore = parseFloat(
+			getComputedStyle(container).paddingTop,
+		);
 		const scrollBefore = container.scrollTop;
 		await tick();
 		if (!container) return;
@@ -164,7 +166,9 @@
 		const observer = new IntersectionObserver(
 			(es) => {
 				if (es[0]?.isIntersecting)
-					conversations.loadMore().catch((error) => console.error(error));
+					conversations
+						.loadMore()
+						.catch((error) => console.error(error));
 			},
 			{ rootMargin: "400px" },
 		);
@@ -221,7 +225,8 @@
 							onEnterSelection={mobile.current
 								? () => enterSelection(conversationId)
 								: undefined}
-							onRequestDelete={() => requestDelete([conversationId])}
+							onRequestDelete={() =>
+								requestDelete([conversationId])}
 						/>
 					{:else}
 						<LazyConversation
@@ -230,7 +235,8 @@
 							onEnterSelection={mobile.current
 								? () => enterSelection(conversationId)
 								: undefined}
-							onRequestDelete={() => requestDelete([conversationId])}
+							onRequestDelete={() =>
+								requestDelete([conversationId])}
 						/>
 					{/if}
 				{:else}

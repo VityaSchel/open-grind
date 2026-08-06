@@ -30,7 +30,9 @@ async function openConversation(page: Page) {
 
 function measure(page: Page): Promise<Metrics> {
 	return page.evaluate((message) => {
-		const scroller = [...document.querySelectorAll<HTMLElement>("div")].find(
+		const scroller = [
+			...document.querySelectorAll<HTMLElement>("div"),
+		].find(
 			(el) =>
 				getComputedStyle(el).overflowY === "auto" &&
 				el.querySelector(message) !== null,
@@ -50,7 +52,9 @@ function measure(page: Page): Promise<Metrics> {
 			paddingBottom: parseFloat(getComputedStyle(scroller).paddingBottom),
 			scrollTop: scroller.scrollTop,
 			floorDistance:
-				scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop,
+				scroller.scrollHeight -
+				scroller.clientHeight -
+				scroller.scrollTop,
 			newestMessageBottom: newest.getBoundingClientRect().bottom,
 			middleMessageTop: middle.getBoundingClientRect().top,
 			refreshBottom: refresh
@@ -63,7 +67,9 @@ function measure(page: Page): Promise<Metrics> {
 const scrollTo = (page: Page, where: "floor" | "middle") =>
 	page.evaluate(
 		({ target, message }) => {
-			const scroller = [...document.querySelectorAll<HTMLElement>("div")].find(
+			const scroller = [
+				...document.querySelectorAll<HTMLElement>("div"),
+			].find(
 				(el) =>
 					getComputedStyle(el).overflowY === "auto" &&
 					el.querySelector(message) !== null,

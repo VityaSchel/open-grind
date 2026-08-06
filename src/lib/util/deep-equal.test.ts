@@ -61,10 +61,16 @@ describe("plain objects", () => {
 
 	it("recurses into values", () => {
 		expect(
-			deepEqual({ a: { b: [1, { c: null }] } }, { a: { b: [1, { c: null }] } }),
+			deepEqual(
+				{ a: { b: [1, { c: null }] } },
+				{ a: { b: [1, { c: null }] } },
+			),
 		).toBe(true);
 		expect(
-			deepEqual({ a: { b: [1, { c: null }] } }, { a: { b: [1, { c: 0 }] } }),
+			deepEqual(
+				{ a: { b: [1, { c: null }] } },
+				{ a: { b: [1, { c: 0 }] } },
+			),
 		).toBe(false);
 	});
 });

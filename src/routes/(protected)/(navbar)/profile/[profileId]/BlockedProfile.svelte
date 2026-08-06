@@ -37,7 +37,10 @@
 							onRefresh();
 						} catch (error) {
 							console.error(error);
-							showErrorToast({ label: "Failed to unblock user", error });
+							showErrorToast({
+								label: "Failed to unblock user",
+								error,
+							});
 						}
 					}}>Unblock</Button
 				>

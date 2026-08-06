@@ -8,7 +8,9 @@
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 
 	let pending = $state<boolean | null>(null);
-	const value = $derived(pending ?? getPreferencesSnapshot().revealMessageRead);
+	const value = $derived(
+		pending ?? getPreferencesSnapshot().revealMessageRead,
+	);
 </script>
 
 <SwitchField

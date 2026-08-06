@@ -9,7 +9,9 @@ describe("chainAllowsPull", () => {
 		const leaf = document.createElement("span");
 		root.appendChild(leaf);
 		document.body.appendChild(root);
-		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(
+			true,
+		);
 		root.remove();
 	});
 
@@ -21,9 +23,13 @@ describe("chainAllowsPull", () => {
 		root.appendChild(nested);
 		document.body.appendChild(root);
 		makeScrollable(nested, { scrollTop: 50 });
-		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(false);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(
+			false,
+		);
 		nested.scrollTop = 0;
-		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(
+			true,
+		);
 		expect(chainAllowsPull({ start: leaf, root, position: "bottom" })).toBe(
 			false,
 		);
@@ -38,9 +44,9 @@ describe("chainAllowsPull", () => {
 		const root = document.createElement("div");
 		const stranger = document.createElement("div");
 		document.body.append(root, stranger);
-		expect(chainAllowsPull({ start: stranger, root, position: "top" })).toBe(
-			false,
-		);
+		expect(
+			chainAllowsPull({ start: stranger, root, position: "top" }),
+		).toBe(false);
 		root.remove();
 		stranger.remove();
 	});
@@ -51,9 +57,13 @@ describe("chainAllowsPull", () => {
 		root.appendChild(leaf);
 		document.body.appendChild(root);
 		makeScrollable(root);
-		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(true);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(
+			true,
+		);
 		root.style.overflowY = "hidden";
-		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(false);
+		expect(chainAllowsPull({ start: leaf, root, position: "top" })).toBe(
+			false,
+		);
 		root.remove();
 	});
 

@@ -78,7 +78,10 @@
 						});
 					} catch (error) {
 						console.error(error);
-						showErrorToast({ label: "Failed to unsend message", error });
+						showErrorToast({
+							label: "Failed to unsend message",
+							error,
+						});
 						revert?.();
 					}
 				}

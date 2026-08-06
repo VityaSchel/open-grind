@@ -43,7 +43,10 @@ describe("ProfileStatusIndicator", () => {
 	});
 
 	it("is offline without an online timestamp", () => {
-		render(ProfileStatusIndicator, { onlineUntil: null, isVisiting: false });
+		render(ProfileStatusIndicator, {
+			onlineUntil: null,
+			isVisiting: false,
+		});
 
 		expect(screen.queryByTitle("Online now")).toBeNull();
 	});

@@ -22,7 +22,9 @@ function countSkeletonsFrom(page: Page) {
 				for (const node of record.addedNodes) {
 					if (!(node instanceof Element)) continue;
 					if (node.matches('[data-slot="skeleton"]')) seen.total += 1;
-					seen.total += node.querySelectorAll('[data-slot="skeleton"]').length;
+					seen.total += node.querySelectorAll(
+						'[data-slot="skeleton"]',
+					).length;
 				}
 			}
 		}).observe(document.body, { childList: true, subtree: true });

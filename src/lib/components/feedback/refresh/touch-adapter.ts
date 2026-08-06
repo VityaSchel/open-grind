@@ -60,7 +60,8 @@ export function attachTouchPull(
 		if (!touch) return;
 
 		if (!engaged && !dead) {
-			const nativeScrollOwnsGesture = boundaryDistance() >= AT_BOUNDARY_PX;
+			const nativeScrollOwnsGesture =
+				boundaryDistance() >= AT_BOUNDARY_PX;
 			if (nativeScrollOwnsGesture) {
 				anchorPullOrigin(touch);
 				return;
@@ -111,9 +112,11 @@ export function attachTouchPull(
 	};
 
 	const addGestureListeners = () => {
-		listenTarget.addEventListener("touchmove", onTouchMove as EventListener, {
-			passive: false,
-		});
+		listenTarget.addEventListener(
+			"touchmove",
+			onTouchMove as EventListener,
+			{ passive: false },
+		);
 		listenTarget.addEventListener("touchend", onTouchEnd as EventListener);
 		listenTarget.addEventListener(
 			"touchcancel",
@@ -123,8 +126,14 @@ export function attachTouchPull(
 	};
 
 	const removeGestureListeners = () => {
-		listenTarget.removeEventListener("touchmove", onTouchMove as EventListener);
-		listenTarget.removeEventListener("touchend", onTouchEnd as EventListener);
+		listenTarget.removeEventListener(
+			"touchmove",
+			onTouchMove as EventListener,
+		);
+		listenTarget.removeEventListener(
+			"touchend",
+			onTouchEnd as EventListener,
+		);
 		listenTarget.removeEventListener(
 			"touchcancel",
 			onTouchCancel as EventListener,

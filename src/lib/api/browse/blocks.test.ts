@@ -31,7 +31,9 @@ describe("getBlockedUsers", () => {
 		expect(await getBlockedUsers()).toEqual(blocking);
 		clock += 4_999;
 		await getBlockedUsers();
-		expect(fetchRestMock).toHaveBeenCalledExactlyOnceWith("/v3.1/me/blocks");
+		expect(fetchRestMock).toHaveBeenCalledExactlyOnceWith(
+			"/v3.1/me/blocks",
+		);
 
 		clock += 1;
 		await getBlockedUsers();

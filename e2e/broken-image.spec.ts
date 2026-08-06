@@ -21,7 +21,8 @@ test.describe("broken images", () => {
 		await expect
 			.poll(() =>
 				avatar.evaluate(
-					(img) => img instanceof HTMLImageElement && img.naturalWidth > 0,
+					(img) =>
+						img instanceof HTMLImageElement && img.naturalWidth > 0,
 				),
 			)
 			.toBe(true);
@@ -57,7 +58,10 @@ test.describe("broken images", () => {
 			}),
 		);
 		await page.goto("/interest/taps");
-		await page.locator(BROKEN).first().waitFor({ timeout: FIRST_LOAD_TIMEOUT });
+		await page
+			.locator(BROKEN)
+			.first()
+			.waitFor({ timeout: FIRST_LOAD_TIMEOUT });
 
 		await page.getByRole("link", { name: "Views" }).click();
 		await expect(page).toHaveURL(/\/interest\/views$/);
@@ -111,7 +115,9 @@ test.describe("broken images", () => {
 				photo
 					.locator("img")
 					.evaluate(
-						(img) => img instanceof HTMLImageElement && img.naturalWidth > 0,
+						(img) =>
+							img instanceof HTMLImageElement &&
+							img.naturalWidth > 0,
 					),
 			)
 			.toBe(true);
@@ -148,6 +154,8 @@ test.describe("broken images", () => {
 		);
 		await errorSlide.waitFor({ timeout: 60_000 });
 		await expect(errorSlide.locator("svg")).toBeVisible();
-		await expect(page.getByText("The image cannot be loaded")).toHaveCount(0);
+		await expect(page.getByText("The image cannot be loaded")).toHaveCount(
+			0,
+		);
 	});
 });

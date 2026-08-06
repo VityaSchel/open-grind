@@ -16,7 +16,9 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 describe("asAppError", () => {
 	it("formats string messages from structured app errors", () => {
-		expect(asAppError({ kind: "Auth", message: "Sign-in canceled" })).toEqual({
+		expect(
+			asAppError({ kind: "Auth", message: "Sign-in canceled" }),
+		).toEqual({
 			kind: "Auth",
 			message: "Sign-in canceled",
 			prettyMessage: "Sign-in canceled",
@@ -73,7 +75,10 @@ describe("simulated account-status responses", () => {
 
 	it("does not treat a non-ban error as banned", () => {
 		expect(
-			asBanned({ kind: "Unauthorized", message: { code: 401, message: "x" } }),
+			asBanned({
+				kind: "Unauthorized",
+				message: { code: 401, message: "x" },
+			}),
 		).toBeNull();
 	});
 
@@ -103,7 +108,10 @@ describe("simulated account-status responses", () => {
 
 describe("callMethod", () => {
 	it("returns the response parsed by the declared schema", async () => {
-		invokeMock.mockResolvedValueOnce({ profileId: "42", restriction: null });
+		invokeMock.mockResolvedValueOnce({
+			profileId: "42",
+			restriction: null,
+		});
 
 		await expect(
 			callMethod("login", { email: "a@b.co", password: "hunter2" }),
@@ -135,8 +143,13 @@ describe("callMethod", () => {
 });
 
 describe("demo command responses", () => {
-	it.each(Object.keys(methods))("%s matches its declared schema", (method) => {
-		const { response } = methods[method as keyof typeof methods];
-		expect(response.safeParse(demoCallMethod(method)).error).toBeUndefined();
-	});
+	it.each(Object.keys(methods))(
+		"%s matches its declared schema",
+		(method) => {
+			const { response } = methods[method as keyof typeof methods];
+			expect(
+				response.safeParse(demoCallMethod(method)).error,
+			).toBeUndefined();
+		},
+	);
 });

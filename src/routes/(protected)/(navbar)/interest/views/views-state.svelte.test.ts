@@ -135,7 +135,9 @@ beforeEach(() => {
 describe("ViewsState", () => {
 	it("loads profiles before previews and pages visible results", async () => {
 		getViewsMock.mockResolvedValue({
-			profiles: Array.from({ length: 24 }, (_, index) => profile(index + 1)),
+			profiles: Array.from({ length: 24 }, (_, index) =>
+				profile(index + 1),
+			),
 			previews: [preview()],
 		});
 
@@ -273,7 +275,9 @@ describe("ViewsState", () => {
 		gate.resolve({
 			profiles: [
 				profile(1),
-				profile(2, { viewedCount: { totalCount: 7, maxDisplayCount: 99 } }),
+				profile(2, {
+					viewedCount: { totalCount: 7, maxDisplayCount: 99 },
+				}),
 			],
 			previews: [],
 		});
@@ -290,7 +294,10 @@ describe("ViewsState", () => {
 	});
 
 	it("follows a favorite change made elsewhere, and stops after destroy", async () => {
-		getViewsMock.mockResolvedValue({ profiles: [profile(1)], previews: [] });
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
 		const state = new ViewsState();
 		await waitForLoaded(state);
 
@@ -316,7 +323,10 @@ describe("ViewsState", () => {
 	});
 
 	it("cleans up subscriptions on destroy", async () => {
-		getViewsMock.mockResolvedValue({ profiles: [profile(1)], previews: [] });
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
 		const state = new ViewsState();
 		await waitForLoaded(state);
 
@@ -343,7 +353,10 @@ describe("ViewsState", () => {
 
 describe("getViewsState", () => {
 	it("keeps one loaded state per account across revisits", async () => {
-		getViewsMock.mockResolvedValue({ profiles: [profile(1)], previews: [] });
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
 
 		const state = getViewsState(99);
 		await waitForLoaded(state);

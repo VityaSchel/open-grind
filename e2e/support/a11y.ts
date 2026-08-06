@@ -36,7 +36,9 @@ export async function expectEveryControlNamed(page: Page, where: string) {
 			if (node.ignored || !NAMED_ROLES.has(role)) continue;
 			if ((node.name?.value ?? "").trim() !== "") continue;
 			const { outerHTML } = await cdp
-				.send("DOM.getOuterHTML", { backendNodeId: node.backendDOMNodeId })
+				.send("DOM.getOuterHTML", {
+					backendNodeId: node.backendDOMNodeId,
+				})
 				.catch(() => ({ outerHTML: "<unavailable>" }));
 			unnamed.push(
 				`${role} ${outerHTML.replace(/class="[^"]*"/g, "class=…").slice(0, 300)}`,

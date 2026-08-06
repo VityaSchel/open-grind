@@ -72,7 +72,10 @@
 							<MagnifyingGlassIcon />
 						{/snippet}
 					</CommandSuggestion>
-					<CommandSuggestion prefix="@" command="set location by geohash">
+					<CommandSuggestion
+						prefix="@"
+						command="set location by geohash"
+					>
 						{#snippet icon()}
 							<MapPinIcon />
 						{/snippet}

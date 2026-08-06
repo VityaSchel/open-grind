@@ -17,7 +17,8 @@ export const getOrCreateConversationsState = accountScoped(
 					sender: {
 						name: conversation.data.name,
 						avatarMediaHash:
-							conversation.data.participants[0]?.primaryMediaHash ?? null,
+							conversation.data.participants[0]
+								?.primaryMediaHash ?? null,
 					},
 					conversationId: conversation.data.conversationId,
 				}),

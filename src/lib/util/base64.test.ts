@@ -6,7 +6,9 @@ describe("base64 helpers", () => {
 	it("round-trips arbitrary byte values", () => {
 		const bytes = new Uint8Array([0, 1, 2, 127, 128, 254, 255]);
 
-		expect(Array.from(fromBase64(toBase64(bytes)))).toEqual(Array.from(bytes));
+		expect(Array.from(fromBase64(toBase64(bytes)))).toEqual(
+			Array.from(bytes),
+		);
 	});
 
 	it("handles empty byte arrays", () => {

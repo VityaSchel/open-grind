@@ -114,7 +114,9 @@ describe("scrubText", () => {
 
 	it("masks home directories", () => {
 		expect(
-			scrubText("    at send (/Users/someone/dev/open-grind/src/app.ts:12:3)"),
+			scrubText(
+				"    at send (/Users/someone/dev/open-grind/src/app.ts:12:3)",
+			),
 		).toBe("    at send (/Users/<user>/dev/open-grind/src/app.ts:12:3)");
 		expect(scrubText("at send (C:\\Users\\someone\\app.ts:12:3)")).toBe(
 			"at send (C:\\Users\\<user>\\app.ts:12:3)",

@@ -6,7 +6,10 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { cn } from "$lib/util/utils";
-	import { MAX_SLINGSHOT_TENSION, slingshotTension } from "./refresh/disc-math";
+	import {
+		MAX_SLINGSHOT_TENSION,
+		slingshotTension,
+	} from "./refresh/disc-math";
 	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
 	import { attachOverscrollPull } from "./refresh/overscroll-adapter";
 	import { PullModel } from "./refresh/pull-model.svelte";
@@ -69,7 +72,8 @@
 	type IndicatorType = "disc" | "hint" | "button";
 	const activeFace = $derived.by((): IndicatorType | null => {
 		if (busy) return "disc";
-		if (model.gestureActive) return model.source === "touch" ? "disc" : "hint";
+		if (model.gestureActive)
+			return model.source === "touch" ? "disc" : "hint";
 		if (revealed) return "button";
 		return null;
 	});
@@ -90,7 +94,9 @@
 	function discDragTop(displayPx: number): number {
 		const drag = Math.min(1, displayPx / ARM_PX);
 		const tension = slingshotTension(displayPx / ARM_PX);
-		return DISC_START + DISC_TRAVEL * (drag + tension / MAX_SLINGSHOT_TENSION);
+		return (
+			DISC_START + DISC_TRAVEL * (drag + tension / MAX_SLINGSHOT_TENSION)
+		);
 	}
 
 	const discShown = $derived.by(() => {
@@ -147,7 +153,10 @@
 		if (discVisible) {
 			return 1;
 		} else if (hintShown) {
-			return Math.min(1, Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2));
+			return Math.min(
+				1,
+				Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2),
+			);
 		} else {
 			return Math.min(
 				1,
@@ -244,7 +253,9 @@
 			// than space * OVERSHOOT freezes the drag.
 			revealed = false;
 		};
-		listenTarget.addEventListener("touchmove", noteTouch, { passive: true });
+		listenTarget.addEventListener("touchmove", noteTouch, {
+			passive: true,
+		});
 		const detach = [
 			attachTouchPull(model, {
 				listenTarget,
@@ -293,7 +304,10 @@
 			<div
 				class={[
 					"absolute left-1/2",
-					{ "top-0": position === "top", "bottom-0": position === "bottom" },
+					{
+						"top-0": position === "top",
+						"bottom-0": position === "bottom",
+					},
 				]}
 				style:translate="-50% {position === 'top'
 					? discTop.current
@@ -311,9 +325,14 @@
 			<span
 				class={[
 					"absolute left-1/2 text-xs whitespace-nowrap text-muted-foreground",
-					{ "bottom-1": position === "top", "top-1": position === "bottom" },
+					{
+						"bottom-1": position === "top",
+						"top-1": position === "bottom",
+					},
 				]}
-				style:translate="-50% {position === 'top' ? hintOffset : -hintOffset}px"
+				style:translate="-50% {position === 'top'
+					? hintOffset
+					: -hintOffset}px"
 			>
 				{#if model.phase === "armed"}
 					Release to refresh
@@ -325,7 +344,10 @@
 			<div
 				class={[
 					"absolute left-1/2 -translate-x-1/2",
-					{ "bottom-3": position === "top", "top-3": position === "bottom" },
+					{
+						"bottom-3": position === "top",
+						"top-3": position === "bottom",
+					},
 				]}
 			>
 				{@render button()}

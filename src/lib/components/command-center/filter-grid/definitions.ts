@@ -192,7 +192,10 @@ export const filters: Filter[] = [
 		label: "photos",
 		render: (f) => f.photos.map((tag) => photoLabels[tag]).join(", "),
 		params: [
-			{ keys: ["photoOnly", "hasPhotos"], apply: photoApply("has-photos") },
+			{
+				keys: ["photoOnly", "hasPhotos"],
+				apply: photoApply("has-photos"),
+			},
 			{
 				keys: ["faceOnly", "facePics", "face"],
 				apply: photoApply("has-face-pics"),

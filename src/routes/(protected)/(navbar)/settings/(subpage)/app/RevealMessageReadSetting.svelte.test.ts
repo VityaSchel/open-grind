@@ -65,7 +65,9 @@ describe("RevealMessageReadSetting", () => {
 		writeMock.mockRejectedValue(new Error("disk full"));
 
 		await fireEvent.click(toggle());
-		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalledOnce());
+		await vi.waitFor(() =>
+			expect(showErrorToastMock).toHaveBeenCalledOnce(),
+		);
 
 		expect(toggle().getAttribute("aria-checked")).toBe("false");
 	});

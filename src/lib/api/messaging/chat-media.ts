@@ -36,7 +36,10 @@ export async function addMediaToDrawer(
 	const takenOnGrindr = false;
 	const bytes = await readMediaBytes(media);
 	const contentType = media.mimeType ?? "image/jpeg";
-	const uploaded = await uploadChatMedia(bytes, { contentType, takenOnGrindr });
+	const uploaded = await uploadChatMedia(bytes, {
+		contentType,
+		takenOnGrindr,
+	});
 	await saveMediaToDrawer(uploaded.mediaId);
 
 	return {

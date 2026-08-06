@@ -172,20 +172,30 @@ class GridState {
 					sexualPositions: filters?.positions,
 				}),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-photos") && { photoOnly: true }),
+					filters?.photos.includes("has-photos") && {
+						photoOnly: true,
+					}),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-albums") && { hasAlbum: true }),
+					filters?.photos.includes("has-albums") && {
+						hasAlbum: true,
+					}),
 				...(filters?.photosEnabled &&
-					filters?.photos.includes("has-face-pics") && { faceOnly: true }),
+					filters?.photos.includes("has-face-pics") && {
+						faceOnly: true,
+					}),
 				...(filters?.tribesEnabled && { tribes: filters?.tribes }),
-				...(filters?.bodyTypesEnabled && { bodyTypes: filters?.bodyTypes }),
+				...(filters?.bodyTypesEnabled && {
+					bodyTypes: filters?.bodyTypes,
+				}),
 				...(filters?.heightEnabled && {
 					heightCmMin: filters?.height[0],
 					heightCmMax: filters?.height[1],
 				}),
 				...(filters?.weightEnabled && {
-					weightGramsMin: (filters?.weight[0] ?? WEIGHT_KG_MIN) * 1000,
-					weightGramsMax: (filters?.weight[1] ?? WEIGHT_KG_MAX) * 1000,
+					weightGramsMin:
+						(filters?.weight[0] ?? WEIGHT_KG_MIN) * 1000,
+					weightGramsMax:
+						(filters?.weight[1] ?? WEIGHT_KG_MAX) * 1000,
 				}),
 				...(filters?.relationshipStatusesEnabled && {
 					relationshipStatuses: filters?.relationshipStatuses,
@@ -194,13 +204,17 @@ class GridState {
 					filters?.acceptNSFWPics !== undefined && {
 						nsfwPics: filters?.acceptNSFWPics,
 					}),
-				...(filters?.lookingForEnabled && { lookingFor: filters?.lookingFor }),
+				...(filters?.lookingForEnabled && {
+					lookingFor: filters?.lookingFor,
+				}),
 				...(filters?.meetAtEnabled && { meetAt: filters?.meetAt }),
-				notRecentlyChatted: filters?.haventChattedTodayEnabled || undefined,
+				notRecentlyChatted:
+					filters?.haventChattedTodayEnabled || undefined,
 				...(filters?.healthPracticesEnabled && {
 					sexualHealth: filters?.healthPractices,
 				}),
-				...(filters?.tagsEnabled && filters?.tags && { tags: filters?.tags }),
+				...(filters?.tagsEnabled &&
+					filters?.tags && { tags: filters?.tags }),
 				fresh: filters?.isFresh || undefined,
 			} satisfies z.infer<typeof cascadeV4QuerySchema>;
 			const result = await getGrid(query);
@@ -215,7 +229,10 @@ class GridState {
 			if (token !== this.#fetchToken) return;
 			console.error(err);
 			if (opts?.silent) {
-				showErrorToast({ label: "Failed to refresh profiles", error: err });
+				showErrorToast({
+					label: "Failed to refresh profiles",
+					error: err,
+				});
 			} else {
 				this.error =
 					err instanceof Error

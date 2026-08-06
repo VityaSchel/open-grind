@@ -46,7 +46,8 @@
 					if (!slide || !(thumb instanceof HTMLImageElement)) return;
 
 					const thumbWidth = thumb.getBoundingClientRect().width;
-					const displayedWidth = slide.width * slide.zoomLevels.initial;
+					const displayedWidth =
+						slide.width * slide.zoomLevels.initial;
 					if (thumbWidth === 0 || displayedWidth === 0) return;
 
 					const style = getComputedStyle(thumb);
@@ -58,7 +59,9 @@
 					].map(parseFloat);
 
 					const scaled = (factor: number) =>
-						corners.map((corner) => `${corner * factor}px`).join(" ");
+						corners
+							.map((corner) => `${corner * factor}px`)
+							.join(" ");
 
 					const root = document.documentElement.style;
 					root.setProperty(
@@ -72,7 +75,9 @@
 				}
 
 				function clearThumbRadii() {
-					document.documentElement.style.removeProperty("--pswp-thumb-radius");
+					document.documentElement.style.removeProperty(
+						"--pswp-thumb-radius",
+					);
 					document.documentElement.style.removeProperty(
 						"--pswp-placeholder-radius",
 					);
@@ -88,17 +93,23 @@
 
 				lightbox.on("openingAnimationStart", () => {
 					setThumbRadii();
-					lightbox?.pswp?.element?.classList.add("pswp--radius-opening");
+					lightbox?.pswp?.element?.classList.add(
+						"pswp--radius-opening",
+					);
 					hideThumbs();
 				});
 				lightbox.on("openingAnimationEnd", () => {
-					lightbox?.pswp?.element?.classList.remove("pswp--radius-opening");
+					lightbox?.pswp?.element?.classList.remove(
+						"pswp--radius-opening",
+					);
 					clearThumbRadii();
 				});
 
 				lightbox.on("closingAnimationStart", () => {
 					setThumbRadii();
-					lightbox?.pswp?.element?.classList.add("pswp--radius-closing");
+					lightbox?.pswp?.element?.classList.add(
+						"pswp--radius-closing",
+					);
 					hideThumbs();
 				});
 				lightbox.on("closingAnimationEnd", clearThumbRadii);

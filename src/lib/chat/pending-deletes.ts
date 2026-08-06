@@ -43,6 +43,8 @@ export class PendingDeletes {
 	}): boolean {
 		const tombstone = this.#tombstones.get(conversationId);
 		if (tombstone === undefined) return false;
-		return tombstone.inFlight > 0 || fetchEpoch <= tombstone.lastSettledEpoch;
+		return (
+			tombstone.inFlight > 0 || fetchEpoch <= tombstone.lastSettledEpoch
+		);
 	}
 }

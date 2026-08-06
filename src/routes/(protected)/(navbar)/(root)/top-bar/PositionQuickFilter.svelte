@@ -54,7 +54,10 @@
 			</div>
 			<Drawer.Title>Positions</Drawer.Title>
 			<div class="flex flex-1 justify-end">
-				<Switch aria-label="Filter by position" bind:checked={enabled} />
+				<Switch
+					aria-label="Filter by position"
+					bind:checked={enabled}
+				/>
 			</div>
 		</Drawer.Header>
 		<div class="mb-2 flex flex-col gap-1.5 px-4">
@@ -72,7 +75,10 @@
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}
 				onclick={() => {
-					gridState.filters.set({ positionEnabled: enabled, positions: value });
+					gridState.filters.set({
+						positionEnabled: enabled,
+						positions: value,
+					});
 					open = false;
 				}}
 			>

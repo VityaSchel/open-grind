@@ -10,7 +10,10 @@ async function openInbox(page: Page) {
 	await installTauriShim(page);
 	await installFakeOverscroll(page);
 	await page.goto("/chat");
-	await page.locator("a[href^='/chat/']").first().waitFor({ timeout: 120_000 });
+	await page
+		.locator("a[href^='/chat/']")
+		.first()
+		.waitFor({ timeout: 120_000 });
 	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
 	await page.waitForTimeout(600);
 }
@@ -61,7 +64,9 @@ async function driveInOneGesture<K extends string>(
 
 	const missing = keys.filter((key) => snapshots[key] === undefined);
 	if (missing.length > 0)
-		throw new Error(`the page returned no snapshot for ${missing.join(", ")}`);
+		throw new Error(
+			`the page returned no snapshot for ${missing.join(", ")}`,
+		);
 	return snapshots as Record<K, PullSnapshot>;
 }
 

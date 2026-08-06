@@ -45,7 +45,8 @@
 				{genders
 					.map(
 						(genderId) =>
-							allGenders.find((g) => g.genderId === genderId)?.gender,
+							allGenders.find((g) => g.genderId === genderId)
+								?.gender,
 					)
 					.join(", ")}
 			{:catch}
@@ -62,7 +63,8 @@
 				{pronouns
 					.map(
 						(pronounId) =>
-							allPronouns.find((p) => p.pronounId === pronounId)?.pronoun,
+							allPronouns.find((p) => p.pronounId === pronounId)
+								?.pronoun,
 					)
 					.join(", ")}
 			{:catch}

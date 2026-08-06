@@ -29,7 +29,8 @@
 		const observer = new ResizeObserver(() => {
 			if (!paneGroup) return;
 			// 117 == --spacing-list-rail
-			conversationsListCollapsedSizePercentage = 117 / paneGroup.offsetWidth;
+			conversationsListCollapsedSizePercentage =
+				117 / paneGroup.offsetWidth;
 			conversationsListMinWidthPercentage = 200 / paneGroup.offsetWidth;
 			pageContentMinWidthPercentage = 280 / paneGroup.offsetWidth;
 		});

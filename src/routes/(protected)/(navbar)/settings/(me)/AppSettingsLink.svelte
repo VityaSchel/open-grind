@@ -11,7 +11,9 @@
 				<GearIcon weight="fill" class="size-5" />
 			</Item.Media>
 			<Item.Content class="min-w-0">
-				<Item.Title class="inline-block w-full min-w-0 truncate text-left">
+				<Item.Title
+					class="inline-block w-full min-w-0 truncate text-left"
+				>
 					App Settings
 				</Item.Title>
 			</Item.Content>

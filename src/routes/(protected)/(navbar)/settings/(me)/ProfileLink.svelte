@@ -11,7 +11,9 @@
 	let { id }: { id: number } = $props();
 
 	const myProfile = $derived(getProfile(id));
-	const myProfilePhotos = $derived(myProfile.then((profile) => profile.medias));
+	const myProfilePhotos = $derived(
+		myProfile.then((profile) => profile.medias),
+	);
 </script>
 
 <Item.Root variant="outline">
@@ -21,7 +23,9 @@
 			{...props}
 			class={["rounded-full", props.class, "flex-nowrap!"]}
 		>
-			<Item.Media class="translate-y-none size-14 rounded-full bg-neutral-700">
+			<Item.Media
+				class="translate-y-none size-14 rounded-full bg-neutral-700"
+			>
 				{#await myProfilePhotos then photos}
 					<UserAvatar
 						mediaHash={photos[0]?.mediaHash ?? null}
@@ -33,7 +37,9 @@
 				{/await}
 			</Item.Media>
 			<Item.Content class="min-w-0">
-				<Item.Title class="inline-block w-full min-w-0 truncate text-left">
+				<Item.Title
+					class="inline-block w-full min-w-0 truncate text-left"
+				>
 					{#await myProfile}
 						<Skeleton class="my-0.5 h-3.75 w-32" />
 					{:then profile}

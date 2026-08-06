@@ -65,7 +65,9 @@ describe("parseFilterGridQuery", () => {
 			const result = parseFilterGridQuery(query);
 			expect(result.parsed).toHaveLength(1);
 			expect(parsedAt(result.parsed, 0).valid).toBe(false);
-			expect(parsedAt(result.parsed, 0).error).toBe("Use min-max, e.g. 25-40");
+			expect(parsedAt(result.parsed, 0).error).toBe(
+				"Use min-max, e.g. 25-40",
+			);
 		}
 		expect(parseFilterGridQuery("?age=").filters.ageEnabled).toBe(false);
 	});
@@ -79,7 +81,9 @@ describe("parseFilterGridQuery", () => {
 		const result = parseFilterGridQuery("?photoOnly=true&hasAlbum=true");
 		expect(result.parsed).toHaveLength(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("photos");
-		expect(parsedAt(result.parsed, 0).valueText).toBe("Has photos, Has albums");
+		expect(parsedAt(result.parsed, 0).valueText).toBe(
+			"Has photos, Has albums",
+		);
 		expect(result.filters.photos).toEqual(["has-photos", "has-albums"]);
 	});
 

@@ -206,7 +206,10 @@
 		);
 		try {
 			await Promise.all([
-				updateOwnProfile({ cacheProfileId: ourProfileId, profile: body }),
+				updateOwnProfile({
+					cacheProfileId: ourProfileId,
+					profile: body,
+				}),
 				deleteProfilePhotos({
 					cacheProfileId: ourProfileId,
 					mediaHashes: removedHashes,

@@ -39,7 +39,9 @@
 	<div class="flex gap-2">
 		{#if onRetry && retryable}
 			<Button
-				variant={buttonVariant === "outline" ? "default" : buttonVariant}
+				variant={buttonVariant === "outline"
+					? "default"
+					: buttonVariant}
 				size="sm"
 				onclick={onRetry}
 			>

@@ -71,22 +71,28 @@
 								video.src = slide.url ?? "";
 								video.load();
 								try {
-									await new Promise<void>((resolve, reject) => {
-										if (video.readyState >= 1) resolve();
-										video.addEventListener("loadedmetadata", () => resolve(), {
-											once: true,
-										});
-										video.addEventListener(
-											"error",
-											({ error }) =>
-												reject(
-													new Error(`Failed to load video: ${slide.url}`, {
-														cause: error,
-													}),
-												),
-											{ once: true },
-										);
-									});
+									await new Promise<void>(
+										(resolve, reject) => {
+											if (video.readyState >= 1)
+												resolve();
+											video.addEventListener(
+												"loadedmetadata",
+												() => resolve(),
+												{ once: true },
+											);
+											video.addEventListener(
+												"error",
+												({ error }) =>
+													reject(
+														new Error(
+															`Failed to load video: ${slide.url}`,
+															{ cause: error },
+														),
+													),
+												{ once: true },
+											);
+										},
+									);
 									return {
 										...slide,
 										width: video.videoWidth,
@@ -99,26 +105,36 @@
 								const img = document.createElement("img");
 								img.src = slide.url ?? "";
 								try {
-									await new Promise<void>((resolve, reject) => {
-										if (img.complete) {
-											if (img.naturalWidth > 0) resolve();
-											else
-												reject(new Error(`Failed to load image: ${slide.url}`));
-										}
-										img.addEventListener("load", () => resolve(), {
-											once: true,
-										});
-										img.addEventListener(
-											"error",
-											({ error }) =>
-												reject(
-													new Error(`Failed to load image: ${slide.url}`, {
-														cause: error,
-													}),
-												),
-											{ once: true },
-										);
-									});
+									await new Promise<void>(
+										(resolve, reject) => {
+											if (img.complete) {
+												if (img.naturalWidth > 0)
+													resolve();
+												else
+													reject(
+														new Error(
+															`Failed to load image: ${slide.url}`,
+														),
+													);
+											}
+											img.addEventListener(
+												"load",
+												() => resolve(),
+												{ once: true },
+											);
+											img.addEventListener(
+												"error",
+												({ error }) =>
+													reject(
+														new Error(
+															`Failed to load image: ${slide.url}`,
+															{ cause: error },
+														),
+													),
+												{ once: true },
+											);
+										},
+									);
 									return {
 										...slide,
 										src: img.src,
@@ -160,12 +176,18 @@
 				lightbox.addFilter("itemData", (itemData, index) => {
 					const slide = album.content[index];
 					if (slide === undefined) return itemData;
-					return { src: slide.url, width: slide.width, height: slide.height };
+					return {
+						src: slide.url,
+						width: slide.width,
+						height: slide.height,
+					};
 				});
 				lightbox.addFilter(
 					"useContentPlaceholder",
 					(usePlaceholder, content) =>
-						album.content[content.index]?.contentType.startsWith("video/")
+						album.content[content.index]?.contentType.startsWith(
+							"video/",
+						)
 							? false
 							: usePlaceholder,
 				);
@@ -178,7 +200,8 @@
 						content.element = document.createElement("div");
 						const video = document.createElement("video");
 						video.src = slide.url;
-						if (slide.coverUrl !== null) video.poster = slide.coverUrl;
+						if (slide.coverUrl !== null)
+							video.poster = slide.coverUrl;
 						video.controls = true;
 						video.playsInline = true;
 						video.className = "size-full object-contain";
@@ -187,8 +210,12 @@
 						if (video.readyState >= 3) {
 							content.onLoaded();
 						} else {
-							video.addEventListener("loadeddata", () => content.onLoaded());
-							video.addEventListener("error", () => content.onError());
+							video.addEventListener("loadeddata", () =>
+								content.onLoaded(),
+							);
+							video.addEventListener("error", () =>
+								content.onError(),
+							);
 						}
 					}
 				});
@@ -231,7 +258,9 @@
 			class="absolute top-0 left-0 h-full w-full rounded-[inherit]"
 			imgClass="bg-card-foreground/10"
 		/>
-		<div class={["@container absolute top-0 left-0 size-full", contentClass]}>
+		<div
+			class={["@container absolute top-0 left-0 size-full", contentClass]}
+		>
 			<div
 				class="absolute bottom-1/5 left-1/2 flex -translate-x-1/2 items-center gap-1 px-2 py-0.5 *:aspect-square *:w-[20cqw] *:rounded-full *:bg-card *:p-2"
 			>

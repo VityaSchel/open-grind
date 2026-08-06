@@ -34,7 +34,9 @@
 		onLongPress?: () => void;
 	} = $props();
 
-	const longPress = $derived(onLongPress ? longPressHandlers(onLongPress) : {});
+	const longPress = $derived(
+		onLongPress ? longPressHandlers(onLongPress) : {},
+	);
 	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
 </script>
 

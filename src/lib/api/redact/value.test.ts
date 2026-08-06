@@ -44,7 +44,10 @@ describe("redactValue", () => {
 					type: "full_profile_v1",
 					data: { profileId: "<number>", displayName: "<string:4>" },
 				},
-				{ type: "sponsored_profile_v1", data: { profileId: "<number>" } },
+				{
+					type: "sponsored_profile_v1",
+					data: { profileId: "<number>" },
+				},
 			],
 		});
 	});
@@ -149,7 +152,9 @@ describe("redactValue", () => {
 	});
 
 	it("caps a kept field that arrives unreasonably long", () => {
-		const redacted = redactValue({ type: "x".repeat(400) }) as { type: string };
+		const redacted = redactValue({ type: "x".repeat(400) }) as {
+			type: string;
+		};
 		expect(redacted.type).toBe(`${"x".repeat(300)}…<+100 chars>`);
 	});
 });
@@ -157,7 +162,9 @@ describe("redactValue", () => {
 describe("redactResponseBody", () => {
 	it("structures a JSON body instead of nesting it as a string", () => {
 		expect(
-			redactResponseBody('{"items":[{"profileId":123,"distanceMeters":41}]}'),
+			redactResponseBody(
+				'{"items":[{"profileId":123,"distanceMeters":41}]}',
+			),
 		).toEqual({
 			items: [{ profileId: "<number>", distanceMeters: "<number>" }],
 		});

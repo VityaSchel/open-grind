@@ -116,7 +116,9 @@ describe("set location by geohash command", () => {
 		await openWith("@");
 
 		await fireEvent.click(option("@copy")!);
-		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalledOnce());
+		await vi.waitFor(() =>
+			expect(showErrorToastMock).toHaveBeenCalledOnce(),
+		);
 
 		expect(toastMock.success).not.toHaveBeenCalled();
 		expect(writeMock).not.toHaveBeenCalled();

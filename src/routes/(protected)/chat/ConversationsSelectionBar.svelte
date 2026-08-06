@@ -88,7 +88,10 @@
 					<Button
 						size="icon-lg"
 						variant="secondary"
-						class={[className, "size-12 max-selection-bar-compact:size-10"]}
+						class={[
+							className,
+							"size-12 max-selection-bar-compact:size-10",
+						]}
 						aria-label="Selection actions"
 						{...props}
 					>

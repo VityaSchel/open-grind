@@ -189,7 +189,9 @@ describe("attachTouchPull", () => {
 	});
 
 	it("pulls upward for bottom position", () => {
-		const { model, onTrigger, leaf, detach } = setup({ position: "bottom" });
+		const { model, onTrigger, leaf, detach } = setup({
+			position: "bottom",
+		});
 		leaf.dispatchEvent(touchEvent("touchstart", { y: 300 }));
 		leaf.dispatchEvent(touchEvent("touchmove", { y: 140 }));
 		expect(model.phase).toBe("armed");

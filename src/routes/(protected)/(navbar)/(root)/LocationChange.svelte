@@ -13,7 +13,8 @@
 	let { class: className }: { class?: import("svelte/elements").ClassValue } =
 		$props();
 
-	let pinPos: { lat: number; lon: number; zoom: number } | undefined = $state();
+	let pinPos: { lat: number; lon: number; zoom: number } | undefined =
+		$state();
 	let geoMapPickerOpen = $state(false);
 
 	async function onSubmit(geohash: string) {

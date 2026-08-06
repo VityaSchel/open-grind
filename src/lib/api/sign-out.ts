@@ -28,6 +28,7 @@ export async function signOut(): Promise<void> {
 function clearInboxMarkers(): void {
 	if (typeof localStorage === "undefined") return;
 	for (const key of Object.keys(localStorage)) {
-		if (key.startsWith(INBOX_LAST_VIEWED_PREFIX)) localStorage.removeItem(key);
+		if (key.startsWith(INBOX_LAST_VIEWED_PREFIX))
+			localStorage.removeItem(key);
 	}
 }

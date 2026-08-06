@@ -99,7 +99,8 @@
 		const totalRadius = slideCount * WHEEL_ITEM_RADIUS;
 		const rotationOffset = loop ? 0 : WHEEL_ITEM_RADIUS;
 		const wheelRotation =
-			(slideCount * WHEEL_ITEM_RADIUS - rotationOffset) * api.scrollProgress();
+			(slideCount * WHEEL_ITEM_RADIUS - rotationOffset) *
+			api.scrollProgress();
 
 		api.containerNode().style.transform = `translateZ(${WHEEL_RADIUS}px) rotateX(${wheelRotation}deg)`;
 
@@ -125,7 +126,8 @@
 		api.on("pointerUp", () => {
 			const { scrollTo, target, location } = api.internalEngine();
 			const displacement = target.get() - location.get();
-			const factor = Math.abs(displacement) < WHEEL_ITEM_SIZE / 2.5 ? 10 : 0.1;
+			const factor =
+				Math.abs(displacement) < WHEEL_ITEM_SIZE / 2.5 ? 10 : 0.1;
 			scrollTo.distance(displacement * factor, true);
 		});
 

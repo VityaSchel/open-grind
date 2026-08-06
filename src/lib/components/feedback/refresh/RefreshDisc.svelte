@@ -91,10 +91,12 @@
 					<g transform="rotate({sweep * 360} 20 20)">
 						<polygon
 							fill="currentColor"
-							points="{20 + RADIUS - ARROW_HALF_WIDTH * arrowScale},20 {20 +
+							points="{20 +
+								RADIUS -
+								ARROW_HALF_WIDTH * arrowScale},20 {20 +
 								RADIUS +
-								ARROW_HALF_WIDTH * arrowScale},20 {20 + RADIUS},{20 +
-								ARROW_HEIGHT * arrowScale}"
+								ARROW_HALF_WIDTH * arrowScale},20 {20 +
+								RADIUS},{20 + ARROW_HEIGHT * arrowScale}"
 						/>
 					</g>
 				{/if}

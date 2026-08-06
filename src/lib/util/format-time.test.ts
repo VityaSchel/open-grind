@@ -11,7 +11,9 @@ describe("formatTimeRelativeCustom", () => {
 		vi.setSystemTime(new Date("2026-06-10T12:00:00Z"));
 
 		expect(formatTimeRelativeCustom(Date.now() - 30_000)).toBe("Just now");
-		expect(formatTimeRelativeCustom(Date.now() - 2 * 60_000)).toBe("2 mins");
+		expect(formatTimeRelativeCustom(Date.now() - 2 * 60_000)).toBe(
+			"2 mins",
+		);
 		expect(formatTimeRelativeCustom(Date.now() - 2 * 60 * 60_000)).toBe(
 			"2 hrs",
 		);

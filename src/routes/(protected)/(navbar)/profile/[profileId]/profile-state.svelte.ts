@@ -114,7 +114,8 @@ export class ProfileState {
 				showErrorToast({ label: "Failed to refresh profile", error });
 				return;
 			}
-			this.error = error instanceof Error ? error : new Error(String(error));
+			this.error =
+				error instanceof Error ? error : new Error(String(error));
 			this.profile = null;
 		} finally {
 			if (!this.#superseded(token)) {

@@ -47,7 +47,8 @@
 
 	async function copyError() {
 		try {
-			const clipboard = await import("@tauri-apps/plugin-clipboard-manager");
+			const clipboard =
+				await import("@tauri-apps/plugin-clipboard-manager");
 			await clipboard.writeText(sessionErrorState.message);
 			toast.success("Error copied to clipboard");
 		} catch (error) {
@@ -89,9 +90,9 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Can't connect to Grindr</AlertDialog.Title>
 			<AlertDialog.Description>
-				We couldn't reach Grindr to refresh your session. Check your internet
-				connection and try again. If this keeps happening, copy the error and
-				report it.
+				We couldn't reach Grindr to refresh your session. Check your
+				internet connection and try again. If this keeps happening, copy
+				the error and report it.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

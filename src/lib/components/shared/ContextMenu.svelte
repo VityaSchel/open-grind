@@ -16,7 +16,12 @@
 		selectable = false,
 		children,
 	}: {
-		contextMenuOpen: { x: number; y: number; width: number; height: number };
+		contextMenuOpen: {
+			x: number;
+			y: number;
+			width: number;
+			height: number;
+		};
 		style: string;
 		onClose: () => void;
 		isOut?: boolean;
@@ -37,8 +42,11 @@
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
 	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
-	let contextMenuListPosition: { x: number; y: number; placement: Placement } =
-		$state({ x: 0, y: 0, placement: "right-start" });
+	let contextMenuListPosition: {
+		x: number;
+		y: number;
+		placement: Placement;
+	} = $state({ x: 0, y: 0, placement: "right-start" });
 
 	$effect(() => {
 		if (!contextMenuTrigger || !contextMenuList) return;
@@ -61,7 +69,9 @@
 		if (contextMenuDialog instanceof HTMLDialogElement) {
 			contextMenuDialog.showModal();
 			contextMenuDialog
-				.querySelector<HTMLElement>("[data-slot='context-menu-trigger']")
+				.querySelector<HTMLElement>(
+					"[data-slot='context-menu-trigger']",
+				)
 				?.focus();
 		}
 	});

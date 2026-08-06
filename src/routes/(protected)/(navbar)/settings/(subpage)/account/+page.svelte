@@ -15,12 +15,17 @@
 				onclick={(event) => {
 					event.preventDefault();
 					toast(ToastUnimplemented, {
-						componentProps: { feature: "Account settings", issue: 47 },
+						componentProps: {
+							feature: "Account settings",
+							issue: 47,
+						},
 					});
 				}}
 			>
 				<Item.Content class="max-cramped:min-w-0">
-					<Item.Title class="inline-block max-w-full min-w-0 truncate">
+					<Item.Title
+						class="inline-block max-w-full min-w-0 truncate"
+					>
 						{title}
 					</Item.Title>
 				</Item.Content>
@@ -36,7 +41,9 @@
 		{#snippet child({ props })}
 			<a {href} {...props}>
 				<Item.Content class="max-cramped:min-w-0">
-					<Item.Title class="inline-block max-w-full min-w-0 truncate">
+					<Item.Title
+						class="inline-block max-w-full min-w-0 truncate"
+					>
 						{title}
 					</Item.Title>
 				</Item.Content>

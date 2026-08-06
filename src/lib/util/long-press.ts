@@ -74,7 +74,8 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 		onpointermove(event) {
 			if (timer === null) return;
 			if (
-				Math.abs(event.clientX - originX) > LONG_PRESS_MOVE_TOLERANCE_PX ||
+				Math.abs(event.clientX - originX) >
+					LONG_PRESS_MOVE_TOLERANCE_PX ||
 				Math.abs(event.clientY - originY) > LONG_PRESS_MOVE_TOLERANCE_PX
 			) {
 				cancel();

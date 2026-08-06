@@ -62,7 +62,8 @@ export function chainAllowsPull({
 	let el = start instanceof Element ? start : null;
 	if (el === root) return true;
 	while (el && el !== root) {
-		if (isScrollableY(el) && canScrollToward({ el, position })) return false;
+		if (isScrollableY(el) && canScrollToward({ el, position }))
+			return false;
 		el = el.parentElement;
 	}
 	return el === root || (rootIsDocument && el === null);

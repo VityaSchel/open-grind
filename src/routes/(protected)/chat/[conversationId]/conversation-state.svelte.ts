@@ -76,57 +76,68 @@ export class ConversationState {
 		);
 
 		this.#wsPromises.push(
-			ws.on("chat.v1.message_sent", chatV1MessageSentEventSchema, (event) => {
-				if (this.#destroyed) return;
-				const incoming = event.payload;
-				if (incoming.conversationId !== this.conversationId) return;
+			ws.on(
+				"chat.v1.message_sent",
+				chatV1MessageSentEventSchema,
+				(event) => {
+					if (this.#destroyed) return;
+					const incoming = event.payload;
+					if (incoming.conversationId !== this.conversationId) return;
 
-				const existing = this.messages.find(
-					(m) => m.messageId === incoming.messageId,
-				);
-				if (existing) {
-					Object.assign(existing, incoming, { status: "sent" as const });
-					this.#syncCache();
-					return;
-				}
-
-				if (incoming.senderId === this.ourProfileId) {
-					const pending = matchPendingEcho({
-						messages: this.messages,
-						incoming,
-					});
-					if (pending) {
-						pending.status = "sent";
-						pending.messageId = incoming.messageId;
+					const existing = this.messages.find(
+						(m) => m.messageId === incoming.messageId,
+					);
+					if (existing) {
+						Object.assign(existing, incoming, {
+							status: "sent" as const,
+						});
 						this.#syncCache();
 						return;
 					}
-				}
 
-				const newestTimestamp = this.messages.reduce(
-					(max, m) => Math.max(max, m.timestamp),
-					Number.NEGATIVE_INFINITY,
-				);
-				if (incoming.timestamp < newestTimestamp) return;
+					if (incoming.senderId === this.ourProfileId) {
+						const pending = matchPendingEcho({
+							messages: this.messages,
+							incoming,
+						});
+						if (pending) {
+							pending.status = "sent";
+							pending.messageId = incoming.messageId;
+							this.#syncCache();
+							return;
+						}
+					}
 
-				const msg: OptimisticMessage = { ...incoming, status: "sent" };
-				this.messages = [msg, ...this.messages];
-				this.#syncCache();
-				if (msg.senderId !== this.ourProfileId) {
-					void this.reportRead({
-						messageId: msg.messageId,
-						timestamp: msg.timestamp,
-					});
-				}
-			}),
+					const newestTimestamp = this.messages.reduce(
+						(max, m) => Math.max(max, m.timestamp),
+						Number.NEGATIVE_INFINITY,
+					);
+					if (incoming.timestamp < newestTimestamp) return;
+
+					const msg: OptimisticMessage = {
+						...incoming,
+						status: "sent",
+					};
+					this.messages = [msg, ...this.messages];
+					this.#syncCache();
+					if (msg.senderId !== this.ourProfileId) {
+						void this.reportRead({
+							messageId: msg.messageId,
+							timestamp: msg.timestamp,
+						});
+					}
+				},
+			),
 			ws.on(
 				"chat.v1.conversation_read",
 				chatV1ConversationReadEventSchema,
 				(event) => {
 					if (this.#destroyed) return;
-					if (event.payload.conversationId !== this.conversationId) return;
+					if (event.payload.conversationId !== this.conversationId)
+						return;
 					if (event.payload.profileId === this.ourProfileId) return;
-					if (this.#advanceLastRead(event.payload.timestamp)) this.#syncCache();
+					if (this.#advanceLastRead(event.payload.timestamp))
+						this.#syncCache();
 				},
 			),
 			ws.on(
@@ -134,7 +145,11 @@ export class ConversationState {
 				chatV1ConversationDeleteEventSchema,
 				(event) => {
 					if (this.#destroyed) return;
-					if (!event.payload.conversationIds.includes(this.conversationId))
+					if (
+						!event.payload.conversationIds.includes(
+							this.conversationId,
+						)
+					)
 						return;
 					void this.#reconcileMessages();
 				},
@@ -282,7 +297,10 @@ export class ConversationState {
 			if (this.#destroyed) return;
 			this.messages = removeDuplicateMessages([
 				...this.messages,
-				...result.messages.map((m) => ({ ...m, status: "sent" as const })),
+				...result.messages.map((m) => ({
+					...m,
+					status: "sent" as const,
+				})),
 			]);
 			this.pageKey = result.pageKey;
 			this.#advanceLastRead(result.lastReadTimestamp);
@@ -293,7 +311,10 @@ export class ConversationState {
 			if (error instanceof ConversationUnavailableError) {
 				this.error = error;
 			} else {
-				showErrorToast({ label: "Failed to load more messages", error });
+				showErrorToast({
+					label: "Failed to load more messages",
+					error,
+				});
 			}
 		} finally {
 			this.loadingMore = false;
@@ -347,7 +368,10 @@ export class ConversationState {
 
 	#advanceLastRead(timestamp: number | null): boolean {
 		if (timestamp === null) return false;
-		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
+		if (
+			this.lastReadTimestamp !== null &&
+			timestamp <= this.lastReadTimestamp
+		)
 			return false;
 		this.lastReadTimestamp = timestamp;
 		return true;
@@ -399,9 +423,8 @@ export class ConversationState {
 			const isOnly = this.messages.length === 0;
 			let revertDeleteConversation = () => {};
 			if (isOnly) {
-				({ revert: revertDeleteConversation } = this.#conversations.remove(
-					this.conversationId,
-				));
+				({ revert: revertDeleteConversation } =
+					this.#conversations.remove(this.conversationId));
 			}
 
 			revert = () => {
@@ -420,7 +443,10 @@ export class ConversationState {
 		messageId: string;
 		timestamp: number;
 	}): void {
-		if (this.lastReadTimestamp !== null && timestamp <= this.lastReadTimestamp)
+		if (
+			this.lastReadTimestamp !== null &&
+			timestamp <= this.lastReadTimestamp
+		)
 			return;
 		this.#readReceipts.push({ messageId, timestamp });
 	}
@@ -435,7 +461,10 @@ export class ConversationState {
 			});
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to mark conversation as read", error });
+			showErrorToast({
+				label: "Failed to mark conversation as read",
+				error,
+			});
 		}
 	}
 
@@ -469,7 +498,11 @@ export class ConversationState {
 		const msg = this.messages.find((m) => m.messageId === messageId);
 		let revert: () => void = () => {};
 		if (msg) {
-			const original = { unsent: msg.unsent, type: msg.type, body: msg.body };
+			const original = {
+				unsent: msg.unsent,
+				type: msg.type,
+				body: msg.body,
+			};
 			msg.unsent = true;
 			msg.type = "Unsent";
 			msg.body = null;

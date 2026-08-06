@@ -33,7 +33,9 @@
 					<ExclamationMarkIcon />
 				</Empty.Media>
 				<Empty.Title>Unexpected Error</Empty.Title>
-				<Empty.Description>An unexpected error has occurred.</Empty.Description>
+				<Empty.Description
+					>An unexpected error has occurred.</Empty.Description
+				>
 			</Empty.Header>
 			<Empty.Content>
 				<div class="flex gap-2">
@@ -48,7 +50,8 @@
 						variant="outline"
 						onclick={() => {
 							writeText(
-								page.error?.message || "No error message available",
+								page.error?.message ||
+									"No error message available",
 							).catch((error) => console.error(error));
 							toast.success("Error message copied to clipboard");
 						}}
@@ -58,7 +61,9 @@
 				</div>
 			</Empty.Content>
 			<Button variant="link" class="text-muted-foreground" size="sm">
-				<Link href="https://git.opengrind.org/open-grind/open-grind/issues">
+				<Link
+					href="https://git.opengrind.org/open-grind/open-grind/issues"
+				>
 					Report an issue <ArrowUpRightIcon class="inline" />
 				</Link>
 			</Button>

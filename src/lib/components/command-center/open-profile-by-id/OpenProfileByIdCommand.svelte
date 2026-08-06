@@ -10,7 +10,8 @@
 	const profileId = $derived.by(() => {
 		if (!queryHasValue) return null;
 		return (
-			z.coerce.number().int().nonnegative().safeParse(queryNumeric).data ?? null
+			z.coerce.number().int().nonnegative().safeParse(queryNumeric)
+				.data ?? null
 		);
 	});
 </script>

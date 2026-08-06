@@ -9,7 +9,8 @@
 	let {
 		checked = $bindable(),
 		value = $bindable(),
-	}: { checked: boolean; value: z.infer<typeof filterPhotosSchema> } = $props();
+	}: { checked: boolean; value: z.infer<typeof filterPhotosSchema> } =
+		$props();
 </script>
 
 <div class="flex min-w-0 flex-col gap-2">
