@@ -3,15 +3,15 @@
 Thanks for considering contributing to Open Grind.
 
 - [Contributing to Open Grind](#contributing-to-open-grind)
-  - [Contribution guidelines](#contribution-guidelines)
-  - [Getting started](#getting-started)
-    - [Development environment](#development-environment)
-    - [Project structure](#project-structure)
-    - [Interacting with API](#interacting-with-api)
-    - [Checks and tests](#checks-and-tests)
-    - [Where state lives](#where-state-lives)
-  - [Submitting your changes](#submitting-your-changes)
-    - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
+    - [Contribution guidelines](#contribution-guidelines)
+    - [Getting started](#getting-started)
+        - [Development environment](#development-environment)
+        - [Project structure](#project-structure)
+        - [Interacting with API](#interacting-with-api)
+        - [Checks and tests](#checks-and-tests)
+        - [Where state lives](#where-state-lives)
+    - [Submitting your changes](#submitting-your-changes)
+        - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
 ## Contribution guidelines
 
@@ -40,21 +40,21 @@ Projects reference:
 
 1. Clone repository with submodules: `git clone --recurse-submodules ssh://git@git.opengrind.org/open-grind/open-grind.git`
 2. Install prerequisites:
-   - [Bun](https://bun.sh)
-   - [Rust](https://rustup.rs)
-   - [Tauri CLI](https://tauri.app/start/prerequisites/)
+    - [Bun](https://bun.sh)
+    - [Rust](https://rustup.rs)
+    - [Tauri CLI](https://tauri.app/start/prerequisites/)
 3. Install dependencies:
-   ```bash
-   bun ci
-   ```
+    ```bash
+    bun ci
+    ```
 4. Then start a dev server:
 
-   ```bash
-   bun dev
-   ```
+    ```bash
+    bun dev
+    ```
 
-   - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
-   - Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
+    - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
+    - Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
 
 ### Project structure
 
@@ -79,7 +79,8 @@ const securityHeaders = {
 	"Accept-Language": "en-US",
 	requireRealDeviceInfo: "true",
 	"L-Time-Zone": "Europe/Madrid",
-	"User-Agent": "grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google",
+	"User-Agent":
+		"grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google",
 	"L-Device-Info":
 		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at login stage
@@ -117,7 +118,7 @@ End-to-end tests are a separate tier:
 
 - `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
 
-`bun ci` also installs a pre-commit hook (husky + lint-staged) that runs over staged files only:
+`bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml)) that runs over staged files only:
 
 - `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
 - `*.{json,md,yml,yaml,css,html}` — Prettier

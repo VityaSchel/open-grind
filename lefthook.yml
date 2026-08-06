@@ -1,0 +1,8 @@
+extends:
+  - node_modules/@opengrind/config/lefthook.yml
+
+pre-commit:
+  commands:
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --manifest-path src-tauri/Cargo.toml --lib --all-targets

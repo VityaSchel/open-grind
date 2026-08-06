@@ -66,6 +66,8 @@ jobs:
           step bun install --frozen-lockfile
           step bun run check:version
           step bun run lint
+          step bunx prettier --check .
+          step bun run check:config
           step bun run check
           step bun run check:ci
           step bun run check:scripts
