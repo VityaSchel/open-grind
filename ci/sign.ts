@@ -7,7 +7,9 @@ import path from "path";
 const input = process.argv[2];
 if (!input) {
 	console.error("usage: sign.ts <unsigned.apk> [out.apk]");
-	console.error("  OPEN_GRIND_MINISIGN_KEY overrides ~/.minisign/minisign.key");
+	console.error(
+		"  OPEN_GRIND_MINISIGN_KEY overrides ~/.minisign/minisign.key",
+	);
 	process.exit(2);
 }
 const stem = /^(open-grind-v.+)-unsigned\.apk$/.exec(path.basename(input))?.[1];

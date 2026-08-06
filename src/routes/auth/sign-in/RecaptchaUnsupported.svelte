@@ -10,8 +10,8 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Captcha verification required</AlertDialog.Title>
 			<AlertDialog.Description>
-				Grindr requires captcha verification for your device or account, which
-				Open Grind does not currently support. <Link
+				Grindr requires captcha verification for your device or account,
+				which Open Grind does not currently support. <Link
 					href="https://git.opengrind.org/open-grind/open-grind/issues/129"
 				>
 					Follow for updates on issue #129

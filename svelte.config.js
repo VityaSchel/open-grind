@@ -11,7 +11,10 @@ import { fileURLToPath } from "url";
 
 const projectVersion = JSON.parse(
 	fs.readFileSync(
-		path.join(path.dirname(fileURLToPath(import.meta.url)), "./package.json"),
+		path.join(
+			path.dirname(fileURLToPath(import.meta.url)),
+			"./package.json",
+		),
 		"utf-8",
 	),
 ).version;
@@ -32,8 +35,11 @@ const headersRs = fs.readFileSync(
 	"utf-8",
 );
 function scrapeHeaderConst(name) {
-	const match = headersRs.match(new RegExp(`const ${name}: &str = "([^"]+)";`));
-	if (!match) throw new Error(`${name} not found in the grindr crate headers`);
+	const match = headersRs.match(
+		new RegExp(`const ${name}: &str = "([^"]+)";`),
+	);
+	if (!match)
+		throw new Error(`${name} not found in the grindr crate headers`);
 	return match[1];
 }
 const grindrApiVersion = scrapeHeaderConst("APP_VERSION");

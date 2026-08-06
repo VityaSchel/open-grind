@@ -3,11 +3,11 @@
 Open Grind is governed and owned by everyone who ever contributed to it.
 
 - [Governance of Open Grind](#governance-of-open-grind)
-  - [Community Rules](#community-rules)
-  - [Maintainers](#maintainers)
-  - [Contributors](#contributors)
-  - [Communication Channels](#communication-channels)
-    - [Discussion Venues](#discussion-venues)
+    - [Community Rules](#community-rules)
+    - [Maintainers](#maintainers)
+    - [Contributors](#contributors)
+    - [Communication Channels](#communication-channels)
+        - [Discussion Venues](#discussion-venues)
 
 ## Community Rules
 

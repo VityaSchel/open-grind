@@ -14,7 +14,8 @@ function parseArgs(argv: string[]) {
 	const opts: Record<string, string> = {};
 	for (let i = 0; i < argv.length; i++) {
 		const a = argv[i];
-		if (a !== undefined && a.startsWith("--")) opts[a.slice(2)] = argv[++i]!;
+		if (a !== undefined && a.startsWith("--"))
+			opts[a.slice(2)] = argv[++i]!;
 		else positional.push(a);
 	}
 	return { positional, opts };
@@ -85,13 +86,15 @@ function pathFromShape({
 		lines.push(
 			`${indent}android:fillColor="${mono ?? withOpacity(fill, attr(tag, "fill-opacity")!)}"`,
 		);
-	if (fillRule === "evenodd") lines.push(`${indent}android:fillType="evenOdd"`);
+	if (fillRule === "evenodd")
+		lines.push(`${indent}android:fillType="evenOdd"`);
 	if (stroke) {
 		lines.push(
 			`${indent}android:strokeColor="${mono ?? withOpacity(stroke, attr(tag, "stroke-opacity")!)}"`,
 		);
 		lines.push(`${indent}android:strokeWidth="${strokeWidth ?? "1"}"`);
-		if (strokeCap) lines.push(`${indent}android:strokeLineCap="${strokeCap}"`);
+		if (strokeCap)
+			lines.push(`${indent}android:strokeLineCap="${strokeCap}"`);
 		if (strokeJoin)
 			lines.push(`${indent}android:strokeLineJoin="${strokeJoin}"`);
 	}
