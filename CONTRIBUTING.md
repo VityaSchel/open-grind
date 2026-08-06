@@ -112,6 +112,7 @@ Before opening a pull request, run the same checks CI runs:
 
 - `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
 - `bun run check` — `svelte-check` type checking.
+- `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
 - `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
 
 End-to-end tests are a separate tier:

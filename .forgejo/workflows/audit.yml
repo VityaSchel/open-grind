@@ -1,0 +1,68 @@
+name: audit
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  pull_request:
+    paths:
+      - deny.toml
+      - package.json
+      - bun.lock
+      - src-tauri/Cargo.toml
+      - src-tauri/Cargo.lock
+      - "*/package.json"
+      - "*/bun.lock"
+      - .forgejo/workflows/audit.yml
+  workflow_dispatch:
+
+concurrency:
+  group: open-grind-audit-${{ forgejo.event.pull_request.number || forgejo.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ["check", "hetzner"]
+    timeout-minutes: 30
+    steps:
+      - name: Check dependencies for advisories, licenses and unknown sources
+        env:
+          GITHUB_TOKEN: ""
+          FORGEJO_TOKEN: ""
+          ACTIONS_RUNTIME_TOKEN: ""
+          CI_WORKSPACE: /opt/open-grind-audit
+          RUSTUP_HOME: /opt/rust/rustup
+          CARGO_TERM_PROGRESS_WHEN: never
+          PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+          CARGO_DENY_VERSION: "0.20.2"
+          CARGO_DENY_SHA256: 9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f
+        run: |
+          set -euo pipefail
+
+          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)" >&2; "$@"; }
+
+          rm -rf "$CI_WORKSPACE"
+          mkdir -p "$CI_WORKSPACE"
+          cd "$CI_WORKSPACE"
+
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          if [ -n "${PR_NUMBER:-}" ]; then
+            git fetch -q --depth 1 origin "refs/pull/${PR_NUMBER}/head"
+            git checkout -q FETCH_HEAD
+          else
+            git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
+            git checkout -q FETCH_HEAD
+          fi
+
+          . ci/rust-env.sh
+
+          curl -fsSL -o /tmp/cargo-deny.tar.gz \
+            "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}/cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          echo "${CARGO_DENY_SHA256}  /tmp/cargo-deny.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/cargo-deny.tar.gz -C /tmp
+          install -m 0755 \
+            "/tmp/cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl/cargo-deny" \
+            /usr/local/bin/cargo-deny
+
+          step bun install --frozen-lockfile
+          step bun run check:deps
