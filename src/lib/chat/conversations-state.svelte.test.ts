@@ -146,6 +146,56 @@ beforeEach(() => {
 	messageSentHandlers.length = 0;
 });
 
+async function settled(state: ConversationsState) {
+	await vi.waitFor(() => expect(state.loading).toBe(false));
+}
+
+describe("ConversationsState initial load", () => {
+	it("reports a failed first load and clears it on retry", async () => {
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage: vi.fn(),
+		});
+		await settled(state);
+
+		expect(state.error).toEqual(new Error("offline"));
+		expect(state.entries).toHaveLength(0);
+
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		state.retry();
+		expect(state.loading).toBe(true);
+		await settled(state);
+
+		expect(state.error).toBeNull();
+		expect(state.entries).toHaveLength(1);
+	});
+
+	it("puts a rolled-back pin back in its original place", async () => {
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("a:1", 2000), conversation("b:2", 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage: vi.fn(),
+		});
+		await settled(state);
+		const order = () =>
+			state.entries.map((entry) => entry.data.conversationId);
+		expect(order()).toEqual(["a:1", "b:2"]);
+
+		setConversationPinnedMock.mockRejectedValueOnce(new Error("nope"));
+		await state.setPinned({ conversationIds: ["b:2"], pinned: true });
+
+		expect(entryFor(state, "b:2").data.pinned).toBe(false);
+		expect(order()).toEqual(["a:1", "b:2"]);
+	});
+});
+
 describe("ConversationsState incoming-message handler (P6.3)", () => {
 	async function stateAwayFromTheInbox(
 		overrides: Partial<Conversation["data"]> = {},
@@ -160,7 +210,7 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 		return state;
 	}
 
@@ -204,7 +254,7 @@ describe("ConversationsState #syncLatest single-flight (P1.8)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 		getConversationsMock.mockClear();
 
 		const gate = deferred<{
@@ -227,7 +277,7 @@ describe("ConversationsState #syncLatest single-flight (P1.8)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 		getConversationsMock.mockClear();
 
 		await state.ensureLoaded("a:1");
@@ -247,7 +297,7 @@ describe("ConversationsState markRead rollback (P1.9)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 
 		const gate = deferred<void>();
 		markConversationAsReadMock.mockReturnValueOnce(gate.promise);
@@ -275,7 +325,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 		expect(state.nextPage).toBe(2);
 
 		const loadGate = deferred<{
@@ -315,7 +365,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 
 		getConversationsMock.mockRejectedValueOnce(new Error("network"));
 		initGate.resolve({ entries: [conversation("a:1", 1000)], nextPage: 2 });
-		await state.initial;
+		await settled(state);
 		await reconcilePromise;
 
 		expect(state.entries.map((e) => e.data.conversationId)).toEqual([
@@ -333,7 +383,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 
 		const gate = deferred<{
 			entries: Conversation[];
@@ -371,7 +421,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage,
 		});
-		await state.initial;
+		await settled(state);
 		expect(state.nextPage).toBe(2);
 
 		const reconcileGate = deferred<{

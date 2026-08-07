@@ -1,5 +1,4 @@
 import { page } from "$app/state";
-import z from "zod";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import {
@@ -9,6 +8,11 @@ import {
 	setConversationMuted,
 	setConversationPinned,
 } from "$lib/api/messaging/conversations";
+import {
+	loadInboxLastViewed,
+	saveInboxLastViewed,
+} from "$lib/chat/inbox-last-viewed";
+import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
@@ -38,8 +42,11 @@ class ConversationsState {
 	loadingMore = $state(false);
 	refreshing = $state(false);
 	inboxLastViewedAt = $state(0);
-	initial: Promise<void> = $state(Promise.resolve());
+	loading = $state(true);
+	error: Error | null = $state(null);
 	scrollY = 0;
+
+	#initialLoad: Promise<unknown> = Promise.resolve();
 
 	readonly ourProfileId: number;
 	#onIncomingMessage: IncomingMessageHandler;
@@ -66,8 +73,8 @@ class ConversationsState {
 	}) {
 		this.ourProfileId = ourProfileId;
 		this.#onIncomingMessage = onIncomingMessage;
-		this.inboxLastViewedAt = this.#loadInboxLastViewed();
-		this.initial = this.#trackFetch(this.#load(1));
+		this.inboxLastViewedAt = loadInboxLastViewed(ourProfileId);
+		void this.#hardLoad();
 
 		this.#unsubscribeReconcile = reconciler.subscribe(() =>
 			this.#trackFetch(this.#reconcile()),
@@ -296,7 +303,7 @@ class ConversationsState {
 	}
 
 	async #claimEpochAfterInitial(): Promise<number> {
-		await this.initial.catch(() => {});
+		await this.#initialLoad.catch(() => {});
 		return ++this.#fetchEpoch;
 	}
 
@@ -320,7 +327,22 @@ class ConversationsState {
 		if (this.#destroyed) return;
 		this.entries = [];
 		this.nextPage = null;
-		this.initial = this.#trackFetch(this.#load(1));
+		void this.#hardLoad();
+	}
+
+	async #hardLoad(): Promise<void> {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.#initialLoad = this.#trackFetch(this.#load(1));
+			await this.#initialLoad;
+		} catch (error) {
+			if (this.#destroyed) return;
+			this.error =
+				error instanceof Error ? error : new Error(String(error));
+		} finally {
+			this.loading = false;
+		}
 	}
 
 	async loadMore(): Promise<void> {
@@ -393,25 +415,7 @@ class ConversationsState {
 		const now = Date.now();
 		if (now <= this.inboxLastViewedAt) return;
 		this.inboxLastViewedAt = now;
-		if (typeof localStorage !== "undefined") {
-			localStorage.setItem(this.#inboxStorageKey(), String(now));
-		}
-	}
-
-	#inboxStorageKey(): string {
-		return `chat:inbox-last-viewed:${this.ourProfileId}`;
-	}
-
-	#loadInboxLastViewed(): number {
-		if (typeof localStorage === "undefined") return 0;
-		return (
-			z.coerce
-				.number()
-				.int()
-				.nonnegative()
-				.safeParse(localStorage.getItem(this.#inboxStorageKey()))
-				.data ?? 0
-		);
+		saveInboxLastViewed({ profileId: this.ourProfileId, at: now });
 	}
 
 	async markRead(conversationId: string) {
@@ -432,33 +436,6 @@ class ConversationsState {
 				}
 			}
 		}
-	}
-
-	async #requestWithRollback<T>({
-		items,
-		request,
-		rollback,
-		errorLabel,
-	}: {
-		items: T[];
-		request: (item: T) => Promise<unknown>;
-		rollback: (item: T) => void;
-		errorLabel: string;
-	}): Promise<void> {
-		const results = await Promise.allSettled(items.map(request));
-		const failures: T[] = [];
-		let error: unknown = null;
-		items.forEach((item, index) => {
-			const result = results[index];
-			if (result?.status !== "rejected") return;
-			failures.push(item);
-			error ??= result.reason;
-		});
-		if (failures.length === 0) return;
-		for (const item of failures.toReversed()) rollback(item);
-		this.#sortEntries();
-		console.error(error);
-		showErrorToast({ label: errorLabel, error });
 	}
 
 	async #setFlag({
@@ -491,7 +468,7 @@ class ConversationsState {
 		if (field === "pinned") this.#sortEntries();
 
 		try {
-			await this.#requestWithRollback({
+			const rolledBack = await applyOptimisticBatch({
 				items: targets,
 				request: (entry) => request(entry.data.conversationId),
 				rollback: (entry) => {
@@ -499,6 +476,7 @@ class ConversationsState {
 				},
 				errorLabel,
 			});
+			if (rolledBack) this.#sortEntries();
 		} finally {
 			for (const entry of targets) {
 				this.#pendingFlags.unmark({
@@ -565,7 +543,7 @@ class ConversationsState {
 	async deleteConversations(conversationIds: string[]): Promise<void> {
 		for (const id of conversationIds) this.#pendingDeletes.mark(id);
 		try {
-			await this.#requestWithRollback({
+			const rolledBack = await applyOptimisticBatch({
 				items: conversationIds.map((conversationId) => ({
 					conversationId,
 					revert: this.remove(conversationId).revert,
@@ -575,6 +553,7 @@ class ConversationsState {
 				rollback: ({ revert }) => revert(),
 				errorLabel: "Failed to delete conversation",
 			});
+			if (rolledBack) this.#sortEntries();
 		} finally {
 			for (const id of conversationIds) {
 				this.#pendingDeletes.settle({
