@@ -12,9 +12,18 @@ async function abortImages(page: Page, host: string) {
 	await page.route(host, (route) => route.abort());
 }
 
+const IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="#666"/></svg>`;
+
+async function serveImages(page: Page, host: string) {
+	await page.route(host, (route) =>
+		route.fulfill({ contentType: "image/svg+xml", body: IMAGE }),
+	);
+}
+
 test.describe("broken images", () => {
 	test("loaded avatars never show the placeholder", async ({ page }) => {
 		await installTauriShim(page);
+		await serveImages(page, AVATAR_HOST);
 		await page.goto("/interest/taps");
 		const avatar = page.locator('a[href^="/profile/"] img').first();
 		await avatar.waitFor({ timeout: FIRST_LOAD_TIMEOUT });
@@ -95,6 +104,8 @@ test.describe("broken images", () => {
 
 	test("loaded photos still open their lightboxes", async ({ page }) => {
 		await installTauriShim(page);
+		await serveImages(page, AVATAR_HOST);
+		await serveImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/interest/taps");
 		const profileLink = page.locator('a[href^="/profile/"]').first();
 		await profileLink.waitFor({ timeout: FIRST_LOAD_TIMEOUT });
