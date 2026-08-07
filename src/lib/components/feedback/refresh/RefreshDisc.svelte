@@ -61,6 +61,7 @@
 					<circle
 						class={["spin-arc", { "with-intro": withIntro }]}
 						style:--intro-arc={introArc}
+						style:--circumference={CIRCUMFERENCE}
 						cx="20"
 						cy="20"
 						r={RADIUS}
@@ -119,8 +120,7 @@
 		transition: opacity 200ms ease-out;
 	}
 
-	/* CircularProgressDrawable: arc grows from ~0 to 0.8 turns,
-	   dash values scaled to circumference 2*pi*7.5. */
+	/* Dash values are Android's CircularProgressDrawable scaled to r 7.5. */
 	.spin-group {
 		transform-origin: 20px 20px;
 		animation: disc-rotate 1568ms linear infinite;
@@ -143,11 +143,13 @@
 	@keyframes disc-spin-intro {
 		from {
 			stroke-dasharray: var(--intro-arc) 150;
-			stroke-dashoffset: calc((var(--intro-arc) - 47.124) * 1px);
+			stroke-dashoffset: calc(
+				(var(--intro-arc) - var(--circumference)) * 1px
+			);
 		}
 		to {
 			stroke-dasharray: 0.5 150;
-			stroke-dashoffset: calc((0.5 - 47.124) * 1px);
+			stroke-dashoffset: calc((0.5 - var(--circumference)) * 1px);
 		}
 	}
 	@keyframes disc-dash {

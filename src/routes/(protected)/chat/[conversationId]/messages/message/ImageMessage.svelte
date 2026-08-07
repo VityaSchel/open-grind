@@ -36,9 +36,7 @@
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
 
-				// Radius is scaled by the zoom-wrap transform, so pre-divide it by that scale
-				// img placeholder does a second scale off a 250px box
-				const PLACEHOLDER_BASE_WIDTH = 250;
+				const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
 
 				function setThumbRadii() {
 					const slide = lightbox?.pswp?.currSlide;
@@ -58,19 +56,21 @@
 						style.borderBottomLeftRadius,
 					].map(parseFloat);
 
-					const scaled = (factor: number) =>
+					const radiiUndoingScale = (scale: number) =>
 						corners
-							.map((corner) => `${corner * factor}px`)
+							.map((corner) => `${corner / scale}px`)
 							.join(" ");
 
 					const root = document.documentElement.style;
 					root.setProperty(
 						"--pswp-thumb-radius",
-						scaled(displayedWidth / thumbWidth),
+						radiiUndoingScale(thumbWidth / displayedWidth),
 					);
 					root.setProperty(
 						"--pswp-placeholder-radius",
-						scaled(PLACEHOLDER_BASE_WIDTH / thumbWidth),
+						radiiUndoingScale(
+							thumbWidth / PHOTOSWIPE_PLACEHOLDER_WIDTH_PX,
+						),
 					);
 				}
 

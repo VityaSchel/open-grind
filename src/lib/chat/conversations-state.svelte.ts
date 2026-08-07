@@ -9,7 +9,7 @@ import {
 	setConversationMuted,
 	setConversationPinned,
 } from "$lib/api/messaging/conversations";
-import { previewFromMessage } from "$lib/model/messaging/messages";
+import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
 import {
@@ -152,10 +152,7 @@ class ConversationsState {
 		}
 		this.refreshing = true;
 		try {
-			await this.initial.catch(() => {});
-			// Claim the epoch after initial resolves, or a still-loading initial
-			// #load sees a newer epoch and drops its own result.
-			const fetchEpoch = ++this.#fetchEpoch;
+			const fetchEpoch = await this.#claimEpochAfterInitial();
 			this.#refreshRequestedSinceFetchStart = false;
 
 			const activeId = this.#activeConversationId;
@@ -254,8 +251,7 @@ class ConversationsState {
 	}: {
 		errorLabel: string;
 	}): Promise<void> {
-		// Read, don't claim: syncLatest never writes nextPage, so #load/#reconcile
-		// must not defer to it. It still guards its own write below.
+		// Claiming would make an in-flight #load drop the nextPage it fetched.
 		const fetchEpoch = this.#fetchEpoch;
 		try {
 			const result = await getConversations(1);
@@ -297,6 +293,11 @@ class ConversationsState {
 		}
 		this.nextPage = result.nextPage;
 		this.#sortEntries();
+	}
+
+	async #claimEpochAfterInitial(): Promise<number> {
+		await this.initial.catch(() => {});
+		return ++this.#fetchEpoch;
 	}
 
 	#isStale(fetchEpoch: number): boolean {

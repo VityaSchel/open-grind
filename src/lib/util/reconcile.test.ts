@@ -25,13 +25,14 @@ vi.mock("$lib/ws.svelte", () => ({
 	},
 }));
 
+const flushMockSubscriptions = () => vi.advanceTimersByTimeAsync(0);
+
 async function freshReconciler() {
 	connectedHandlers.length = 0;
 	droppedHandlers.length = 0;
 	vi.resetModules();
 	const { reconciler } = await import("./reconcile");
-	// The constructor subscribes through promise-returning mocks.
-	await vi.advanceTimersByTimeAsync(0);
+	await flushMockSubscriptions();
 	return reconciler;
 }
 
@@ -64,7 +65,7 @@ describe("Reconciler resync after dropped websocket events", () => {
 		reconciler.subscribe(handler);
 
 		dropEvents(3);
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 
 		expect(handler).toHaveBeenCalledTimes(1);
 	});
@@ -75,12 +76,12 @@ describe("Reconciler resync after dropped websocket events", () => {
 		reconciler.subscribe(handler);
 
 		dropEvents(3);
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1200);
 		dropEvents(7);
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(800);
@@ -93,7 +94,7 @@ describe("Reconciler resync after dropped websocket events", () => {
 		reconciler.subscribe(handler);
 
 		dropEvents(3);
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1000);
@@ -105,23 +106,22 @@ describe("Reconciler resync after dropped websocket events", () => {
 		expect(handler).toHaveBeenCalledTimes(2);
 	});
 
-	it("skips the pending resync when another trigger reconciles after the drop", async () => {
+	it("skips the pending resync when a reconnect reconcile lands after the drop and already covers it", async () => {
 		const reconciler = await freshReconciler();
 		const handler = vi.fn();
 		reconciler.subscribe(handler);
 
 		dropEvents(3);
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(1);
 
 		await vi.advanceTimersByTimeAsync(1200);
 		dropEvents(7);
 
-		// A reconnect reconcile lands after the drop, so it already covers it.
 		await vi.advanceTimersByTimeAsync(800);
 		reconnect();
 		reconnect();
-		await vi.advanceTimersByTimeAsync(0);
+		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(2);
 
 		await vi.advanceTimersByTimeAsync(2000);

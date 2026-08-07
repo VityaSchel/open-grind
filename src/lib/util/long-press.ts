@@ -2,9 +2,8 @@ import type { HTMLAttributes } from "svelte/elements";
 
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
-// One press fires once app-wide, a layout shift can land the native ~500ms contextmenu on a new element
-const REFIRE_GAP_MS = 500;
-// Lifting synthetic click can retarget the same way so suppress the next click anywhere
+// A layout shift can land the contextmenu or the click on another element.
+const NATIVE_CONTEXTMENU_DELAY_MS = 500;
 const CLICK_SUPPRESS_MS = 700;
 
 let lastFiredAt = 0;
@@ -13,7 +12,7 @@ let clickSuppressorAttached = false;
 
 function fireOnce(onLongPress: () => void): void {
 	const now = Date.now();
-	if (now - lastFiredAt < REFIRE_GAP_MS) return;
+	if (now - lastFiredAt < NATIVE_CONTEXTMENU_DELAY_MS) return;
 	lastFiredAt = now;
 	onLongPress();
 }

@@ -11,13 +11,13 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 	fetchRest: fetchRestMock,
 }));
 
+import { ProfileModerationError } from "$lib/api/users/profile-moderation";
 import {
 	applyProfileEdit,
 	clearProfileCaches,
 	deleteProfilePhotos,
 	getProfile,
 	patchOwnProfile,
-	ProfileModerationError,
 	type ProfileUpdate,
 	updateOwnProfile,
 } from "$lib/api/users/profiles";

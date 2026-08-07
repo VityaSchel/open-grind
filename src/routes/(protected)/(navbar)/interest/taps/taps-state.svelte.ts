@@ -34,7 +34,9 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		return getReceivedTaps();
 	}
 
-	protected applySnapshot(snapshot: TapsSnapshot): Set<number> {
+	protected applySnapshotReturningCoveredKeys(
+		snapshot: TapsSnapshot,
+	): Set<number> {
 		this.#all = snapshot.profiles;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- caller only reads .has() then drops it
 		return new Set(snapshot.profiles.map((tap) => tap.profileId));

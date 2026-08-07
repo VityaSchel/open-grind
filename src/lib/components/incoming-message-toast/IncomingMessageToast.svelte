@@ -4,10 +4,10 @@
 
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import {
-		type ApiResponseMessage,
 		previewFromMessage,
 		previewLabel,
-	} from "$lib/model/messaging/messages";
+	} from "$lib/model/messaging/message-preview";
+	import { type ApiResponseMessage } from "$lib/model/messaging/messages";
 
 	let {
 		conversationId,

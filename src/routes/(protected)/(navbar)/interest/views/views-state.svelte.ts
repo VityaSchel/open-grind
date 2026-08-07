@@ -75,7 +75,9 @@ export class ViewsState extends ReconcilingListState<
 		return getViews();
 	}
 
-	protected applySnapshot(snapshot: ViewsSnapshot): Set<number> {
+	protected applySnapshotReturningCoveredKeys(
+		snapshot: ViewsSnapshot,
+	): Set<number> {
 		this.#profiles = snapshot.profiles;
 		this.#previews = snapshot.previews;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- caller only reads .has() then drops it

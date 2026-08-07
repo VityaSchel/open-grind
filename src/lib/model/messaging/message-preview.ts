@@ -1,0 +1,63 @@
+import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+
+export type MessagePreview = {
+	type: string;
+	text: string | null;
+	albumId: number | null;
+	imageHash: string | null;
+};
+
+export function previewFromMessage(
+	message: ApiResponseMessage | undefined,
+): MessagePreview {
+	if (!message)
+		return { type: "", text: null, albumId: null, imageHash: null };
+	switch (message.type) {
+		case "Unsent":
+			return {
+				type: "Unsent",
+				text: null,
+				albumId: null,
+				imageHash: null,
+			};
+		case "Text":
+			return {
+				type: "Text",
+				text: message.body.text,
+				albumId: null,
+				imageHash: null,
+			};
+		case "Image":
+			return {
+				type: "Image",
+				text: null,
+				albumId: null,
+				imageHash: message.body.imageHash,
+			};
+		case "Album":
+		case "ExpiringAlbum":
+		case "ExpiringAlbumV2":
+			return {
+				type: message.type,
+				text: null,
+				albumId: message.body.albumId,
+				imageHash: null,
+			};
+		case "ExpiringImage":
+		default:
+			return {
+				type: message.type,
+				text: null,
+				albumId: null,
+				imageHash: null,
+			};
+	}
+}
+
+export function previewLabel(preview: MessagePreview | null): string | null {
+	if (preview === null) return null;
+	if (preview.text !== null) return preview.text;
+	if (preview.albumId !== null) return "Album";
+	if (preview.imageHash !== null || preview.type === "Image") return "Photo";
+	return null;
+}

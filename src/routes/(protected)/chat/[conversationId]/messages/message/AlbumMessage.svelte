@@ -10,6 +10,11 @@
 	} from "$lib/api/messaging/albums";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import {
+		measureImage,
+		measureVideo,
+		type MediaDimensions,
+	} from "$lib/util/media-dimensions";
+	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
 	} from "$lib/util/photoswipe";
@@ -36,10 +41,7 @@
 	]);
 
 	type LoadedAlbum = AlbumContentResponse & {
-		content: (AlbumContentResponse["content"][number] & {
-			width: number;
-			height: number;
-		})[];
+		content: (AlbumContentResponse["content"][number] & MediaDimensions)[];
 	};
 
 	type AlbumState =
@@ -61,94 +63,18 @@
 	$effect(() => {
 		if (albumState.status !== "loading") return;
 		(async () => {
-			const loaded = await getAlbumContent(message.albumId).then(
-				async (res) => ({
-					...res,
-					content: await Promise.all(
-						res.content.map(async (slide) => {
-							if (slide.contentType.startsWith("video/")) {
-								const video = document.createElement("video");
-								video.src = slide.url ?? "";
-								video.load();
-								try {
-									await new Promise<void>(
-										(resolve, reject) => {
-											if (video.readyState >= 1)
-												resolve();
-											video.addEventListener(
-												"loadedmetadata",
-												() => resolve(),
-												{ once: true },
-											);
-											video.addEventListener(
-												"error",
-												({ error }) =>
-													reject(
-														new Error(
-															`Failed to load video: ${slide.url}`,
-															{ cause: error },
-														),
-													),
-												{ once: true },
-											);
-										},
-									);
-									return {
-										...slide,
-										width: video.videoWidth,
-										height: video.videoHeight,
-									};
-								} finally {
-									video.remove();
-								}
-							} else {
-								const img = document.createElement("img");
-								img.src = slide.url ?? "";
-								try {
-									await new Promise<void>(
-										(resolve, reject) => {
-											if (img.complete) {
-												if (img.naturalWidth > 0)
-													resolve();
-												else
-													reject(
-														new Error(
-															`Failed to load image: ${slide.url}`,
-														),
-													);
-											}
-											img.addEventListener(
-												"load",
-												() => resolve(),
-												{ once: true },
-											);
-											img.addEventListener(
-												"error",
-												({ error }) =>
-													reject(
-														new Error(
-															`Failed to load image: ${slide.url}`,
-															{ cause: error },
-														),
-													),
-												{ once: true },
-											);
-										},
-									);
-									return {
-										...slide,
-										src: img.src,
-										width: img.naturalWidth,
-										height: img.naturalHeight,
-									};
-								} finally {
-									img.remove();
-								}
-							}
-						}),
-					),
-				}),
-			);
+			const album = await getAlbumContent(message.albumId);
+			const loaded = {
+				...album,
+				content: await Promise.all(
+					album.content.map(async (slide) => ({
+						...slide,
+						...(slide.contentType.startsWith("video/")
+							? await measureVideo(slide.url)
+							: await measureImage(slide.url)),
+					})),
+				),
+			};
 			cachedAlbum = loaded;
 			albumState = { status: "open", album: loaded };
 		})().catch((error) => {

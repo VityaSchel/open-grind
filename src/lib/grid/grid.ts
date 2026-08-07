@@ -30,6 +30,19 @@ export type LazyGridProfile = {
 
 export type GridProfile = RenderedGridProfile | LazyGridProfile;
 
+function lazyProfile(profile: {
+	profileId: number;
+	unreadCount: number;
+	isVisiting: boolean;
+}): LazyGridProfile {
+	return {
+		type: "lazy",
+		id: profile.profileId,
+		unread: profile.unreadCount,
+		isVisiting: profile.isVisiting,
+	};
+}
+
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	const response = await getCascadeV4(query);
 	const items: GridProfile[] = [];
@@ -58,23 +71,9 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 			item.type === "hidden_profile_v1" ||
 			item.type === "smart_boost_profile_v1"
 		) {
-			// Seems like a dead branch for now
-			const profile = item.data;
-			items.push({
-				type: "lazy",
-				id: profile.profileId,
-				unread: profile.unreadCount ?? null,
-				isVisiting: profile.isVisiting,
-			});
+			items.push(lazyProfile(item.data));
 		} else if (item.type === "sponsored_profile_v1") {
-			// Seems like a dead branch for now
-			const profile = item.data.alternativeProfile;
-			items.push({
-				type: "lazy",
-				id: profile.profileId,
-				unread: profile.unreadCount ?? null,
-				isVisiting: profile.isVisiting,
-			});
+			items.push(lazyProfile(item.data.alternativeProfile));
 		}
 	}
 

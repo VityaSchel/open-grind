@@ -205,11 +205,10 @@ describe("attachOverscrollPull", () => {
 		detach();
 	});
 
-	it("does not treat post-release spring-back as a new pull", () => {
+	it("does not treat spring-back after Safari's lift-time scrollend as a new pull", () => {
 		const { model, onTrigger, scroll, scrollEnd, detach } = setup();
 		scroll(10, { finger: true });
 		scroll(NON_ARMING_PX, { finger: true });
-		// Safari fires scrollend when you lift, before the band springs back.
 		scrollEnd();
 		expect(model.phase).toBe("idle");
 		scroll(14);

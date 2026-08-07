@@ -47,7 +47,7 @@ class TestList extends ReconcilingListState<Item, Item[]> {
 		return fetchMock() as Promise<Item[]>;
 	}
 
-	protected applySnapshot(snapshot: Item[]): Set<number> {
+	protected applySnapshotReturningCoveredKeys(snapshot: Item[]): Set<number> {
 		this.items = snapshot;
 		return new Set(snapshot.map((item) => item.id));
 	}

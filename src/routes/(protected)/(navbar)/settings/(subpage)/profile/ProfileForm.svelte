@@ -10,9 +10,9 @@
 	import { fly } from "svelte/transition";
 
 	import { showErrorToast } from "$lib/api/error-toast";
+	import { ProfileModerationError } from "$lib/api/users/profile-moderation";
 	import {
 		deleteProfilePhotos,
-		ProfileModerationError,
 		type ProfileUpdate,
 		updateOwnProfile,
 	} from "$lib/api/users/profiles";

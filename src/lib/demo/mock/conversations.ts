@@ -1,7 +1,5 @@
-import {
-	type ApiResponseMessage,
-	previewFromMessage,
-} from "$lib/model/messaging/messages";
+import { previewFromMessage } from "$lib/model/messaging/message-preview";
+import { type ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";

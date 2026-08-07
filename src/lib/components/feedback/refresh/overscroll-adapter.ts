@@ -2,8 +2,8 @@ import type { PullModel } from "./pull-model.svelte";
 import { AT_BOUNDARY_PX } from "./scroll-chain";
 
 const ENGAGE_PX = 0.5;
-// Scroll events come in bursts, so one frame's speed on its own is unreliable.
 const MOMENTUM_VELOCITY_PX_PER_MS = 1.6;
+// Scroll events come in bursts, so one frame's speed on its own is unreliable.
 const VELOCITY_DECAY_PER_SAMPLE = 0.85;
 // Browsers skip scrollend for programmatic and zero-length scrolls, so we watch
 // for a pause instead. https://github.com/w3c/csswg-drafts/issues/8218

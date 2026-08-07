@@ -15,7 +15,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Item from "$lib/components/ui/item";
-	import { previewLabel } from "$lib/model/messaging/messages";
+	import { previewLabel } from "$lib/model/messaging/message-preview";
 	import type { Conversation } from "$lib/model/messaging/conversations";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
 

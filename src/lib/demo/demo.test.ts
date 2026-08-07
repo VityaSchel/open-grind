@@ -16,10 +16,10 @@ import {
 	albumMinSchema,
 } from "$lib/model/messaging/albums";
 import { fullConversationSchema } from "$lib/model/messaging/conversations";
+import { previewLabel } from "$lib/model/messaging/message-preview";
 import {
 	apiResponseMessageSchema,
 	expiringImageMessageSchema,
-	previewLabel,
 } from "$lib/model/messaging/messages";
 import { gendersSchema } from "$lib/model/users/genders";
 import {

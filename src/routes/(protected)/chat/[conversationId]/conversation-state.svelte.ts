@@ -8,7 +8,7 @@ import {
 	sendMessage,
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { previewFromMessage } from "$lib/model/messaging/messages";
+import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { reconciler } from "$lib/util/reconcile";
 import {
 	chatV1ConversationDeleteEventSchema,

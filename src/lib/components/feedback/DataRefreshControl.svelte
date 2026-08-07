@@ -47,7 +47,7 @@
 	};
 
 	const mounted = $derived(!!container);
-	let revealed = $state(false);
+	let restingButtonShown = $state(false);
 	let distance = $state(Infinity);
 	const headerOffset = fixedHeaderOffset({
 		container: () => container,
@@ -67,14 +67,14 @@
 		model.setUpdating(updating ?? false);
 	});
 	model.onTrigger = () => onrefresh?.();
-	model.getBaseline = () => (revealed ? REST_HEIGHT_PX : 0);
+	model.getBaseline = () => (restingButtonShown ? REST_HEIGHT_PX : 0);
 
 	type IndicatorType = "disc" | "hint" | "button";
 	const activeFace = $derived.by((): IndicatorType | null => {
 		if (busy) return "disc";
 		if (model.gestureActive)
 			return model.source === "touch" ? "disc" : "hint";
-		if (revealed) return "button";
+		if (restingButtonShown) return "button";
 		return null;
 	});
 	let lingerFace: IndicatorType | null = $state(null);
@@ -115,6 +115,7 @@
 			reveal.current > 0
 		);
 	});
+	const hintMayOverflowBand = $derived(hintShown);
 	const buttonShown = $derived.by(() => {
 		if (activeFace) return activeFace === "button";
 		return lingerFace === "button" && reveal.current > 0;
@@ -178,21 +179,23 @@
 		if (model.gestureActive && model.source === "overscroll") {
 			void reveal.set(model.displayPx, { duration: 0 });
 		} else if (!model.gestureActive) {
-			void reveal.set(busy || revealed ? REST_HEIGHT_PX : 0);
+			void reveal.set(busy || restingButtonShown ? REST_HEIGHT_PX : 0);
 		}
 	});
 
 	const shouldRevealRestingButton = () =>
 		onlyMouseSeen &&
-		!revealed &&
+		!restingButtonShown &&
 		!busy &&
 		!model.gestureActive &&
 		distance < AT_BOUNDARY_PX;
 
 	const shouldConcealRestingButton = () =>
-		revealed && !model.gestureActive && distance >= AT_BOUNDARY_PX;
+		restingButtonShown &&
+		!model.gestureActive &&
+		distance >= AT_BOUNDARY_PX;
 	$effect(() => {
-		if (shouldRevealRestingButton()) revealed = true;
+		if (shouldRevealRestingButton()) restingButtonShown = true;
 	});
 
 	$effect(() => {
@@ -214,7 +217,7 @@
 			if (overscrollPx() > BAND_DETECT_PX) {
 				sawBand = true;
 				onlyMouseSeen = false;
-				revealed = false;
+				restingButtonShown = false;
 			}
 			if (
 				!model.gestureActive &&
@@ -226,8 +229,8 @@
 				void reveal.set(Math.max(0, overscrollPx()), { duration: 0 });
 			}
 			distance = boundaryDistance();
-			if (shouldRevealRestingButton()) revealed = true;
-			else if (shouldConcealRestingButton()) revealed = false;
+			if (shouldRevealRestingButton()) restingButtonShown = true;
+			else if (shouldConcealRestingButton()) restingButtonShown = false;
 		};
 
 		target.addEventListener("scroll", onScroll, { passive: true });
@@ -246,12 +249,12 @@
 		const listenTarget = container;
 		if (!listenTarget) return;
 		const scrollRoot = () => container ?? null;
+		// Without this the touch drag freezes: PullModel resists across
+		// space * OVERSHOOT minus the baseline, leaving no range to move through.
 		const noteTouch = () => {
 			sawBand = true;
 			onlyMouseSeen = false;
-			// Hide it so the next touch pull starts from zero. A baseline bigger
-			// than space * OVERSHOOT freezes the drag.
-			revealed = false;
+			restingButtonShown = false;
 		};
 		listenTarget.addEventListener("touchmove", noteTouch, {
 			passive: true,
@@ -287,8 +290,7 @@
 		data-refresh-source={model.source}
 		class={cn(
 			"pointer-events-none z-10",
-			// hintOffset can push the hint past the band edge, so don't clip it
-			{ "overflow-clip": !hintShown },
+			{ "overflow-clip": !hintMayOverflowBand },
 			"absolute inset-x-0",
 			{
 				"top-(--drc-anchor)": position === "top",
