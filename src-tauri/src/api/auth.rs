@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use crate::error::AppError;
+use crate::media::MediaProxy;
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
@@ -112,12 +113,16 @@ pub async fn refresh_token(
 }
 
 #[tauri::command]
-pub async fn logout(state: tauri::State<'_, AppState>) -> Result<(), AppError> {
+pub async fn logout(
+	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
+) -> Result<(), AppError> {
 	let client = state.client()?;
 
 	client.logout().await;
 	AuthStorage::delete_session();
 	SigningKeyStorage::delete();
+	media.forget_everything().await;
 
 	let new_device = grindr::DeviceInfo::generate();
 	if let Err(e) = DeviceStorage::save(&new_device) {

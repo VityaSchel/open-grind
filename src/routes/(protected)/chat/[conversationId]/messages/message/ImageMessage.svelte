@@ -3,6 +3,7 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
@@ -14,9 +15,10 @@
 	let { message }: { message: ImageMessage["body"] } = $props();
 
 	const media = new MessageMediaState();
+	const src = $derived(proxyMediaUrl(message.url));
 
 	let failedSrc: string | null = $state(null);
-	const failed = $derived(failedSrc === message.url);
+	const failed = $derived(failedSrc === src);
 
 	$effect(() => {
 		const gallery = media.el;
@@ -134,7 +136,7 @@
 	bind:this={media.el}
 >
 	<a
-		href={failed ? undefined : message.url}
+		href={failed ? undefined : src}
 		rel="noreferrer"
 		data-pswp-width={message.width ?? undefined}
 		data-pswp-height={message.height ?? undefined}
@@ -143,7 +145,7 @@
 		class="item block"
 	>
 		<MediaImage
-			src={message.url}
+			{src}
 			class={["w-full rounded-lg", media.cornerClass]}
 			imgClass="bg-card-foreground/10"
 			aspectRatio={message.width !== null && message.height !== null

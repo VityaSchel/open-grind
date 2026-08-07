@@ -2,6 +2,7 @@ pub mod api;
 mod error;
 #[cfg_attr(debug_assertions, allow(dead_code))]
 mod logging;
+pub mod media;
 mod state;
 mod storage;
 
@@ -122,6 +123,8 @@ pub fn run() {
         .manage(AppState {
             client: OnceLock::new(),
         })
+        .manage(media::MediaProxy::default())
+        .register_asynchronous_uri_scheme_protocol(media::SCHEME, media::handle)
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
             api::auth::login_with_google,
@@ -261,6 +264,8 @@ mod tests {
 			"file:///etc/passwd",
 			"javascript:alert(1)",
 			"data:text/html,<script>1</script>",
+			"ogmedia://localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"http://ogmedia.localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
 		] {
 			assert!(!allows(url), "{url} must not load in the main webview");
 		}

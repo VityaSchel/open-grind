@@ -16,3 +16,10 @@ export function toBase64(bytes: Uint8Array): string {
 	for (const byte of bytes) bin += String.fromCharCode(byte);
 	return btoa(bin);
 }
+
+export function toBase64Url(bytes: Uint8Array): string {
+	return toBase64(bytes)
+		.replaceAll("+", "-")
+		.replaceAll("/", "_")
+		.replaceAll("=", "");
+}

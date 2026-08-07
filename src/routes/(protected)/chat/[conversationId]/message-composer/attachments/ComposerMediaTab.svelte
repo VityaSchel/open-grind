@@ -16,6 +16,7 @@
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
+	import { proxyMediaUrl } from "$lib/util/media";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
@@ -166,7 +167,7 @@
 					onclick={() => toggleSelected(item.id)}
 				>
 					<MediaImage
-						src={item.url}
+						src={proxyMediaUrl(item.url)}
 						class="size-full rounded-[inherit]"
 						imgClass="bg-card-foreground/10"
 					/>

@@ -76,6 +76,8 @@ export async function installTauriShim(page: Page): Promise<void> {
 				exe_extension: "",
 			},
 			__TAURI_INTERNALS__: {
+				convertFileSrc: (filePath: string, protocol = "asset") =>
+					`${protocol}://localhost/${encodeURIComponent(filePath)}`,
 				transformCallback: () => Math.floor(Math.random() * 1e9),
 				metadata: {
 					currentWindow: { label: "main" },

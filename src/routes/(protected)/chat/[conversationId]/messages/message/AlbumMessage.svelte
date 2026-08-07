@@ -9,6 +9,7 @@
 		getAlbumContent,
 	} from "$lib/api/messaging/albums";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		measureImage,
 		measureVideo,
@@ -67,12 +68,20 @@
 			const loaded = {
 				...album,
 				content: await Promise.all(
-					album.content.map(async (slide) => ({
-						...slide,
-						...(slide.contentType.startsWith("video/")
-							? await measureVideo(slide.url)
-							: await measureImage(slide.url)),
-					})),
+					album.content.map(async (slide) => {
+						const isVideo = slide.contentType.startsWith("video/");
+						const url = proxyMediaUrl(slide.url, {
+							as: isVideo ? "video" : "image",
+						});
+						return {
+							...slide,
+							url,
+							coverUrl: proxyMediaUrl(slide.coverUrl),
+							...(isVideo
+								? await measureVideo(url)
+								: await measureImage(url)),
+						};
+					}),
 				),
 			};
 			cachedAlbum = loaded;
@@ -180,7 +189,7 @@
 		bind:this={media.el}
 	>
 		<MediaImage
-			src={message.coverUrl}
+			src={proxyMediaUrl(message.coverUrl)}
 			class="absolute top-0 left-0 h-full w-full rounded-[inherit]"
 			imgClass="bg-card-foreground/10"
 		/>

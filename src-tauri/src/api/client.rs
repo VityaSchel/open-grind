@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use crate::error::AppError;
+use crate::media::MediaProxy;
 use crate::state::AppState;
 use crate::storage::DeviceStorage;
 
@@ -15,6 +16,7 @@ pub struct RotateResult {
 #[tauri::command]
 pub async fn rotate_api_params(
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 ) -> Result<RotateResult, AppError> {
 	let client = state.client()?;
 
@@ -24,6 +26,7 @@ pub async fn rotate_api_params(
 	}
 
 	let old_device = client.rotate_device(new_device).await?;
+	media.forget_everything().await;
 
 	Ok(RotateResult {
 		user_agent: grindr::build_user_agent(&old_device, "Free"),

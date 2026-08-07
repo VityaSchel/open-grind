@@ -159,6 +159,48 @@ mod tests {
 	}
 
 	#[test]
+	fn a_device_stored_before_build_id_existed_still_loads() {
+		#[derive(serde::Serialize)]
+		struct DeviceBeforeBuildId {
+			device_type: u8,
+			device_id: &'static str,
+			os: &'static str,
+			screen_resolution: &'static str,
+			total_ram: &'static str,
+			advertising_id: &'static str,
+			device_model: &'static str,
+			manufacturer: &'static str,
+			timezone: &'static str,
+			locale: &'static str,
+			accept_language: &'static str,
+		}
+
+		with_file_store(|_| {
+			let stored = rmp_serde::encode::to_vec(&DeviceBeforeBuildId {
+				device_type: 2,
+				device_id: "0123456789abcdef",
+				os: "Android 14",
+				screen_resolution: "2400x1080",
+				total_ram: "8026152960",
+				advertising_id: "ad-id",
+				device_model: "Pixel 8",
+				manufacturer: "Google",
+				timezone: "Europe/Madrid",
+				locale: "en_US",
+				accept_language: "en-US",
+			})
+			.unwrap();
+			entry("device-info").set_secret(&stored).unwrap();
+
+			let loaded = DeviceStorage::load().unwrap().unwrap();
+
+			assert_eq!(loaded.device_id, "0123456789abcdef");
+			assert_eq!(loaded.device_model, "Pixel 8");
+			assert!(loaded.build_id.is_empty());
+		});
+	}
+
+	#[test]
 	fn a_device_that_cannot_be_decoded_is_reported_as_an_error() {
 		with_file_store(|_| {
 			entry("device-info").set_secret(b"not msgpack").unwrap();

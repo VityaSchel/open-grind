@@ -9,6 +9,7 @@
 		type ExpiringImageMessage,
 		expiringImageMessageSchema,
 	} from "$lib/model/messaging/messages";
+	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
@@ -65,8 +66,8 @@
 					messageId,
 				}).then((res) => expiringImageMessageSchema.parse(res.message));
 				if (image.url === null) throw new Error("Image URL is null");
-				cachedImage = { url: image.url };
-				imageState = { status: "open", image: { url: image.url } };
+				cachedImage = { url: proxyMediaUrl(image.url) };
+				imageState = { status: "open", image: cachedImage };
 			} catch (error) {
 				console.error(error);
 				showErrorToast({

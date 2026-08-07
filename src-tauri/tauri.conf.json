@@ -26,7 +26,7 @@
 			}
 		],
 		"security": {
-			"csp": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'self' 'unsafe-inline'; img-src 'self' data: https://cdns.grindr.com https://*.cloudfront.net https://tile.openstreetmap.org https://*.giphy.com; media-src 'self' https://cdns.grindr.com https://*.cloudfront.net https://*.giphy.com; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; form-action 'self'"
+			"csp": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'self' 'unsafe-inline'; img-src 'self' data: ogmedia: http://ogmedia.localhost https://tile.openstreetmap.org; media-src 'self' ogmedia: http://ogmedia.localhost; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; form-action 'self'"
 		}
 	},
 	"bundle": {
