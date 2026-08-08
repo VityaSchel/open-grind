@@ -46,13 +46,11 @@
 				onclick={async () => {
 					submitting = true;
 					try {
-						const oldHeaders =
-							await callMethod("rotate_api_params");
+						await callMethod("rotate_api_params");
 						toast.success(
 							"Successfully rotated device parameters",
 							{ id: "rotate-api-params-success" },
 						);
-						console.log("Rotated parameters from", oldHeaders);
 					} catch (error) {
 						console.error(error);
 					} finally {

@@ -170,10 +170,6 @@ a {
 	pointer-events: none !important;
 }
 
-*[data-tauri-drag-region] {
-	background: red;
-}
-
 .profile-card-distance {
 	@apply text-2xs font-medium tracking-tight text-white/85;
 	text-shadow:

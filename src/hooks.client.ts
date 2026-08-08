@@ -8,5 +8,4 @@ export const init: ClientInit = () => {
 
 export const handleError: HandleClientError = ({ error, event }) => {
 	console.error("Error during request to", event.url.pathname, ":", error);
-	console.log(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 };

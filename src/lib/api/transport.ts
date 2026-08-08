@@ -84,10 +84,6 @@ function buildRestResponse({
 				});
 			}
 		},
-		debugJsonParsed<TSchema extends z.ZodType>(schema: TSchema) {
-			console.log(this.json());
-			return this.jsonParsed(schema);
-		},
 	};
 }
 

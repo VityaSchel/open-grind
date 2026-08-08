@@ -85,7 +85,6 @@ class WsState {
 	constructor() {
 		listen<void>("ws:connected", () => {
 			this.status = "connected";
-			console.log("[ws] connected");
 		}).catch(console.error);
 
 		listen<void>("ws:disconnected", () => {
@@ -94,7 +93,6 @@ class WsState {
 	}
 
 	connect(): void {
-		console.log("[ws] connecting...");
 		invoke("ws_connect").catch((e: unknown) => {
 			console.error("[ws] connect failed", e);
 		});
