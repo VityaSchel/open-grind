@@ -1,4 +1,5 @@
 pub mod api;
+mod appearance;
 mod error;
 #[cfg_attr(debug_assertions, allow(dead_code))]
 mod logging;
@@ -154,10 +155,12 @@ pub fn run() {
                 .cloned()
                 .collect();
             for window in deferred {
-                tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
-                    .user_agent(&user_agent)
-                    .on_navigation(is_app_url)
-                    .build()?;
+                let window =
+                    tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
+                        .user_agent(&user_agent)
+                        .on_navigation(is_app_url)
+                        .build()?;
+                appearance::unlock_visual_effects(&window);
             }
 
             #[cfg(desktop)]

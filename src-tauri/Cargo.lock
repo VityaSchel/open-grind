@@ -3565,6 +3565,7 @@ dependencies = [
  "grindr",
  "jni",
  "keyring-core",
+ "objc2",
  "rmp-serde",
  "serde",
  "serde_bytes",
