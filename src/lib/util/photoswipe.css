@@ -1,0 +1,18 @@
+/*
+ * Fixes PhotoSwipe off-centered spinner
+ */
+
+.pswp .pswp__preloader .pswp__icn {
+	animation: none;
+}
+
+.pswp .pswp__preloader .pswp__icn > * {
+	transform-box: view-box;
+	transform-origin: center;
+	animation: pswp-clockwise 600ms linear infinite;
+}
+
+.pswp__preloader--active .pswp__icn-shadow {
+	stroke: none;
+	filter: drop-shadow(1px 1px 2.5px rgba(79, 79, 79, 0.75));
+}
