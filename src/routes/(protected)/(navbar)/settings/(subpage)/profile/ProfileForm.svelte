@@ -167,6 +167,7 @@
 	async function save() {
 		if (saving || aboutMeOverLimit || !dirty) return;
 		saving = true;
+		const sent = formSnapshot();
 		const body = {
 			displayName: displayName.trim() || null,
 			aboutMe: aboutMe.trim() || null,
@@ -215,7 +216,7 @@
 					mediaHashes: removedHashes,
 				}),
 			]);
-			savedForm = formSnapshot();
+			savedForm = sent;
 			toast.success("Profile updated");
 		} catch (error) {
 			if (error instanceof ProfileModerationError) {
