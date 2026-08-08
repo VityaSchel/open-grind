@@ -15,16 +15,9 @@ pub enum FetchError {
 	Upstream(GrindrError),
 }
 
-/// Mirrors grindr's ceiling error text, its only signal for an oversized body.
-fn ceiling_message() -> String {
-	format!("media body exceeds {MAX_MEDIA_BYTES} bytes")
-}
-
 fn classify(error: GrindrError) -> FetchError {
 	match error {
-		GrindrError::Http(message) if message == ceiling_message() => {
-			FetchError::Oversized
-		}
+		GrindrError::MediaTooLarge { .. } => FetchError::Oversized,
 		error => FetchError::Upstream(error),
 	}
 }
@@ -72,7 +65,9 @@ fn refusal_detail(error: FetchError) -> Result<String, StatusCode> {
 		FetchError::Upstream(GrindrError::InvalidRequest(_)) => {
 			Err(StatusCode::BAD_REQUEST)
 		}
-		FetchError::Oversized => Ok(ceiling_message()),
+		FetchError::Oversized => {
+			Ok(format!("media body exceeds {MAX_MEDIA_BYTES} bytes"))
+		}
 		FetchError::Upstream(error) => Ok(without_url(error.to_string())),
 	}
 }
@@ -132,9 +127,11 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn only_the_exact_ceiling_text_marks_a_file_oversized() {
+	fn only_the_ceiling_error_itself_marks_a_file_oversized() {
 		assert!(matches!(
-			classify(GrindrError::Http(ceiling_message())),
+			classify(GrindrError::MediaTooLarge {
+				max_bytes: MAX_MEDIA_BYTES
+			}),
 			FetchError::Oversized
 		));
 		assert!(matches!(
@@ -142,7 +139,9 @@ mod tests {
 			FetchError::Upstream(_)
 		));
 		assert!(matches!(
-			classify(GrindrError::InvalidRequest(ceiling_message())),
+			classify(GrindrError::Http(format!(
+				"media body exceeds {MAX_MEDIA_BYTES} bytes"
+			))),
 			FetchError::Upstream(_)
 		));
 	}
