@@ -3,8 +3,7 @@ import { goto } from "$app/navigation";
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { callMethod } from "$lib/api/methods";
 import { clearAccountPreferences } from "$lib/app-data/preferences.svelte";
-
-const INBOX_LAST_VIEWED_PREFIX = "chat:inbox-last-viewed:";
+import { INBOX_LAST_VIEWED_PREFIX } from "$lib/chat/inbox-last-viewed";
 
 export async function signOut(): Promise<void> {
 	try {

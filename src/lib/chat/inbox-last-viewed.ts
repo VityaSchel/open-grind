@@ -2,8 +2,10 @@ import z from "zod";
 
 const timestamp = z.coerce.number().int().nonnegative();
 
+export const INBOX_LAST_VIEWED_PREFIX = "chat:inbox-last-viewed:";
+
 function key(profileId: number): string {
-	return `chat:inbox-last-viewed:${profileId}`;
+	return `${INBOX_LAST_VIEWED_PREFIX}${profileId}`;
 }
 
 export function loadInboxLastViewed(profileId: number): number {
