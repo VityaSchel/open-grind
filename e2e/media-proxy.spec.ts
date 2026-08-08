@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { ensureGridLocation, installTauriShim } from "./support/app";
+import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const PROXIED = '[src^="ogmedia:"], [src*="ogmedia.localhost"]';
 const IMAGE_CONVERSATION = "/chat/100006:123456000";
@@ -9,6 +10,8 @@ const FIRST_LOAD_TIMEOUT = 120_000;
 async function runDemoInsideTauri(page: Page) {
 	await installTauriShim(page);
 	await page.addInitScript(() => Object.assign(window, { isTauri: true }));
+	await serveImages(page, AVATAR_HOST);
+	await serveImages(page, CHAT_MEDIA_HOST);
 }
 
 async function expectTauriDetected(page: Page) {

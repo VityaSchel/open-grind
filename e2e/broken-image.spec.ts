@@ -1,24 +1,16 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
+import {
+	abortImages,
+	AVATAR_HOST,
+	CHAT_MEDIA_HOST,
+	serveImages,
+} from "./support/media";
 
 const BROKEN = '[data-slot="broken-media"]';
-const AVATAR_HOST = "**/api.dicebear.com/**";
-const CHAT_MEDIA_HOST = "**/picsum.photos/**";
 const IMAGE_CONVERSATION = "/chat/100006:123456000";
 const FIRST_LOAD_TIMEOUT = 120_000;
-
-async function abortImages(page: Page, host: string) {
-	await page.route(host, (route) => route.abort());
-}
-
-const IMAGE = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="600" height="800" fill="#666"/></svg>`;
-
-async function serveImages(page: Page, host: string) {
-	await page.route(host, (route) =>
-		route.fulfill({ contentType: "image/svg+xml", body: IMAGE }),
-	);
-}
 
 test.describe("broken images", () => {
 	test("loaded avatars never show the placeholder", async ({ page }) => {
