@@ -21,7 +21,7 @@ impl DeviceStorage {
 	}
 
 	pub fn save(device: &grindr::DeviceInfo) -> Result<(), AppError> {
-		let bytes = rmp_serde::encode::to_vec(device).map_err(|e| {
+		let bytes = rmp_serde::encode::to_vec_named(device).map_err(|e| {
 			AppError::Auth(format!("device encode failed: {e}"))
 		})?;
 		Self::entry()?
@@ -84,7 +84,7 @@ impl AuthStorage {
 	}
 
 	pub fn set_session(session: &grindr::Session) -> Result<(), AppError> {
-		let bytes = rmp_serde::encode::to_vec(session).map_err(|e| {
+		let bytes = rmp_serde::encode::to_vec_named(session).map_err(|e| {
 			AppError::Auth(format!("session encode failed: {e}"))
 		})?;
 		Self::entry()?
@@ -125,7 +125,7 @@ impl SigningKeyStorage {
 	}
 
 	pub fn save(key: &grindr::DeviceSigningKey) -> Result<(), AppError> {
-		let bytes = rmp_serde::encode::to_vec(key).map_err(|e| {
+		let bytes = rmp_serde::encode::to_vec_named(key).map_err(|e| {
 			AppError::Auth(format!("signing key encode failed: {e}"))
 		})?;
 		Self::entry()?

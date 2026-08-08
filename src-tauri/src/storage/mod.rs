@@ -201,6 +201,26 @@ mod tests {
 	}
 
 	#[test]
+	fn every_secret_is_stored_as_a_named_map_not_a_positional_array() {
+		with_file_store(|_| {
+			DeviceStorage::save(&grindr::DeviceInfo::generate()).unwrap();
+			AuthStorage::set_session(&session("s1")).unwrap();
+			SigningKeyStorage::save(&signing_key()).unwrap();
+
+			for name in ["device-info", "session", "device-signing-key"] {
+				let stored = entry(name).get_secret().unwrap();
+				let decoded: serde_json::Value =
+					rmp_serde::from_slice(&stored).unwrap();
+
+				assert!(
+					decoded.is_object(),
+					"{name} is a positional array, not a named map"
+				);
+			}
+		});
+	}
+
+	#[test]
 	fn a_device_that_cannot_be_decoded_is_reported_as_an_error() {
 		with_file_store(|_| {
 			entry("device-info").set_secret(b"not msgpack").unwrap();
