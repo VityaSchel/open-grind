@@ -12,27 +12,28 @@ jobs:
   check:
     runs-on: ["check", "hetzner"]
     timeout-minutes: 60
+    env:
+      GITHUB_TOKEN: ""
+      FORGEJO_TOKEN: ""
+      ACTIONS_RUNTIME_TOKEN: ""
+      ACTIONS_CACHE_URL: ""
+      ACTIONS_RESULTS_URL: ""
+      PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+      EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
+      CI_WORKSPACE: /opt/open-grind-ci
+      CHECKS_CACHE_DIR: /opt/open-grind-cache
+      CARGO_HOME: /opt/open-grind-cache/cargo
+      CARGO_TARGET_DIR: /opt/open-grind-cache/target
+      RUSTUP_HOME: /opt/rust/rustup
+      PLAYWRIGHT_BROWSERS_PATH: /opt/playwright
+      CARGO_TERM_PROGRESS_WHEN: never
+      NODE_OPTIONS: --max-old-space-size=6144
+      CHECKS_CACHE_S3_ENDPOINT: ${{ vars.CHECKS_CACHE_S3_ENDPOINT }}
+      CHECKS_CACHE_S3_BUCKET: ${{ vars.CHECKS_CACHE_S3_BUCKET }}
+      CHECKS_CACHE_S3_ACCESS_KEY: ${{ vars.CHECKS_CACHE_S3_RO_ACCESS_KEY }}
+      CHECKS_CACHE_S3_SECRET_KEY: ${{ vars.CHECKS_CACHE_S3_RO_SECRET_KEY }}
     steps:
-      - name: Check the pull request head in a credential-free environment
-        env:
-          GITHUB_TOKEN: ""
-          FORGEJO_TOKEN: ""
-          ACTIONS_RUNTIME_TOKEN: ""
-          ACTIONS_CACHE_URL: ""
-          ACTIONS_RESULTS_URL: ""
-          PR_NUMBER: ${{ forgejo.event.pull_request.number }}
-          EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
-          CI_WORKSPACE: /opt/open-grind-ci
-          CHECKS_CACHE_DIR: /opt/open-grind-cache
-          RUSTUP_HOME: /opt/rust/rustup
-          PLAYWRIGHT_BROWSERS_PATH: /opt/playwright
-          CARGO_TERM_PROGRESS_WHEN: never
-          NODE_OPTIONS: --max-old-space-size=6144
-          ESLINT_PROGRESS: "1"
-          CHECKS_CACHE_S3_ENDPOINT: ${{ vars.CHECKS_CACHE_S3_ENDPOINT }}
-          CHECKS_CACHE_S3_BUCKET: ${{ vars.CHECKS_CACHE_S3_BUCKET }}
-          CHECKS_CACHE_S3_ACCESS_KEY: ${{ vars.CHECKS_CACHE_S3_RO_ACCESS_KEY }}
-          CHECKS_CACHE_S3_SECRET_KEY: ${{ vars.CHECKS_CACHE_S3_RO_SECRET_KEY }}
+      - name: Verify CI environment
         run: |
           set -euo pipefail
 
@@ -40,12 +41,14 @@ jobs:
             | grep -vE '^CHECKS_CACHE_S3_(ACCESS_KEY|SECRET_KEY)=' || true)
           [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
 
-          step() { printf '\n==> %s [%s]\n' "$*" "$(date -u +%T)" >&2; "$@"; }
+      - name: Check out PR
+        run: |
+          set -euo pipefail
 
+          : "${CI_WORKSPACE:?}"
           rm -rf "$CI_WORKSPACE"
           mkdir -p "$CI_WORKSPACE" "$CHECKS_CACHE_DIR"
           cd "$CI_WORKSPACE"
-          export CARGO_HOME="$CHECKS_CACHE_DIR/cargo" CARGO_TARGET_DIR="$CHECKS_CACHE_DIR/target"
 
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
@@ -56,21 +59,56 @@ jobs:
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive --quiet
 
+      - name: Load CI cache
+        run: |
+          set -euo pipefail
+
+          cd "$CI_WORKSPACE"
+          bun run ci/cache.ts restore
+          echo "cargo home: $(ls "$CARGO_HOME" 2>/dev/null | tr '\n' ' ')| free: $(df -h --output=avail "$CHECKS_CACHE_DIR" | tail -1)"
+
+      - name: Install Rust dependencies
+        run: |
+          set -euo pipefail
+
+          cd "$CI_WORKSPACE"
           . ci/rust-env.sh
+          cargo metadata --quiet --manifest-path src-tauri/Cargo.toml --format-version 1 >/dev/null
 
-          step bun run ci/cache.ts restore
-          echo "cargo home: $(ls "$CARGO_HOME" 2>/dev/null | tr '\n' ' ')| free: $(df -h --output=avail "$CHECKS_CACHE_DIR" | tail -1)" >&2
+      - name: Install JS dependencies
+        run: cd "$CI_WORKSPACE" && bun install --frozen-lockfile --no-summary
 
-          step cargo metadata --manifest-path src-tauri/Cargo.toml --format-version 1 >/dev/null
+      - name: Check the version
+        run: cd "$CI_WORKSPACE" && bun run check:version
 
-          step bun install --frozen-lockfile
-          step bun run check:version
-          step bun run lint
-          step bunx prettier --check .
-          step bun run check:config
-          step bun run check
-          step bun run check:ci
-          step bun run check:scripts
-          step bun run test:unit
-          step bun run test:rust
-          step bun run test:e2e
+      - name: Lint
+        run: cd "$CI_WORKSPACE" && bun ci/lint.ts
+
+      - name: Formatting
+        run: cd "$CI_WORKSPACE" && bunx prettier --check .
+
+      - name: Shared config
+        run: cd "$CI_WORKSPACE" && bun run check:config
+
+      - name: Svelte types
+        run: cd "$CI_WORKSPACE" && bun run check
+
+      - name: CI scripts
+        run: cd "$CI_WORKSPACE" && bun run check:ci
+
+      - name: Repository scripts
+        run: cd "$CI_WORKSPACE" && bun run check:scripts
+
+      - name: Unit tests
+        run: cd "$CI_WORKSPACE" && bun run test:unit
+
+      - name: Rust tests
+        run: |
+          set -euo pipefail
+
+          cd "$CI_WORKSPACE"
+          . ci/rust-env.sh
+          bun run test:rust
+
+      - name: End-to-end tests
+        run: cd "$CI_WORKSPACE" && bun run test:e2e
