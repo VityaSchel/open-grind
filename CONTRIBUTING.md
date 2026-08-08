@@ -10,6 +10,7 @@ Thanks for considering contributing to Open Grind.
         - [Interacting with API](#interacting-with-api)
         - [Checks and tests](#checks-and-tests)
         - [Where state lives](#where-state-lives)
+        - [Function parameters](#function-parameters)
     - [Submitting your changes](#submitting-your-changes)
         - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
@@ -138,6 +139,15 @@ Pick the shortest lifetime that still holds the data long enough:
 - **Belongs to one mount** — plain `$state` in the component.
 
 Data that outlives the component goes in a state class, not in `<script module>`.
+
+### Function parameters
+
+Use named arguments in functions, except when:
+
+- a subject followed by options — `fetchRest(path, { method })`
+- order carries no meaning — `deepEqual(a, b)`
+- the call reads as prose — `formatHeight(180, "cm")`
+- the name already names its only argument — `getProfileById(profileId)`
 
 ## Submitting your changes
 
