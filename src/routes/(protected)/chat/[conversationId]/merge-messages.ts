@@ -82,6 +82,12 @@ export function mergeServerMessages({
 	};
 }
 
+/**
+ * Walks oldest-first because the server echoes sends in order, preferring a
+ * type match. Two same-type sends whose echoes arrive out of order can still
+ * cross-assign: the API echoes no client correlation id, so position is the
+ * only signal there is.
+ */
 export function matchPendingEcho({
 	messages,
 	incoming,
