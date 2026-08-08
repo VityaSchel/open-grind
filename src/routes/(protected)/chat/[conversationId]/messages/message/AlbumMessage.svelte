@@ -18,6 +18,7 @@
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeVideo,
 	} from "$lib/util/photoswipe";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "./LockedMedia.svelte";
@@ -117,42 +118,11 @@
 						height: slide.height,
 					};
 				});
-				lightbox.addFilter(
-					"useContentPlaceholder",
-					(usePlaceholder, content) =>
-						album.content[content.index]?.contentType.startsWith(
-							"video/",
-						)
-							? false
-							: usePlaceholder,
-				);
 				applyPhotoSwipeBackGesture(lightbox);
-				lightbox.on("contentLoad", (event) => {
-					const { content } = event;
-					const slide = album.content[content.index];
-					if (slide?.contentType.startsWith("video/")) {
-						event.preventDefault();
-						content.element = document.createElement("div");
-						const video = document.createElement("video");
-						video.src = slide.url;
-						if (slide.coverUrl !== null)
-							video.poster = slide.coverUrl;
-						video.controls = true;
-						video.playsInline = true;
-						video.className = "size-full object-contain";
-						content.element.appendChild(video);
-						content.state = "loading";
-						if (video.readyState >= 3) {
-							content.onLoaded();
-						} else {
-							video.addEventListener("loadeddata", () =>
-								content.onLoaded(),
-							);
-							video.addEventListener("error", () =>
-								content.onError(),
-							);
-						}
-					}
+				applyPhotoSwipeVideo(lightbox, (index) => {
+					const slide = album.content[index];
+					if (!slide?.contentType.startsWith("video/")) return null;
+					return { src: slide.url, poster: slide.coverUrl };
 				});
 				lightbox.on("closingAnimationEnd", () => {
 					albumState = { status: "idle" };
