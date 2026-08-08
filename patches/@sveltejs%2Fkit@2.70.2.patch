@@ -1,5 +1,5 @@
 diff --git a/src/core/sync/create_manifest_data/index.js b/src/core/sync/create_manifest_data/index.js
-index b1502556fdc1abbb126c7cb258a4aec8d3a7e451..d7e3ab89027e8f17676bea4fa7e97cfe97871052 100644
+index 6e97903682f448a9c95a01527530bd0bdb545174..a6e977f0a8694a6f7d8f09a8e4cb7d1786679808 100644
 --- a/src/core/sync/create_manifest_data/index.js
 +++ b/src/core/sync/create_manifest_data/index.js
 @@ -89,7 +89,7 @@ function create_matchers(config, cwd) {
