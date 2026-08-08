@@ -53,17 +53,41 @@ pub async fn fetch<R: Runtime>(
 		.map_err(classify)
 }
 
-pub fn refusal(error: FetchError, url: &str) -> Response<Vec<u8>> {
-	let error = match error {
-		FetchError::Busy => return refused(StatusCode::SERVICE_UNAVAILABLE),
-		FetchError::Upstream(GrindrError::InvalidRequest(_)) => {
-			return refused(StatusCode::BAD_REQUEST)
-		}
-		FetchError::Oversized => ceiling_message(),
-		FetchError::Upstream(error) => error.to_string(),
+fn without_url(mut message: String) -> String {
+	const MARKER: &str = " for url (";
+	let Some(start) = message.find(MARKER) else {
+		return message;
 	};
-	tracing::warn!("[media] fetch failed for {}: {error}", host_of(url));
-	refused(StatusCode::BAD_GATEWAY)
+	let rest = start + MARKER.len();
+	match message[rest..].find(')') {
+		Some(end) => message.replace_range(start..rest + end + 1, ""),
+		None => message.truncate(start),
+	}
+	message
+}
+
+fn refusal_detail(error: FetchError) -> Result<String, StatusCode> {
+	match error {
+		FetchError::Busy => Err(StatusCode::SERVICE_UNAVAILABLE),
+		FetchError::Upstream(GrindrError::InvalidRequest(_)) => {
+			Err(StatusCode::BAD_REQUEST)
+		}
+		FetchError::Oversized => Ok(ceiling_message()),
+		FetchError::Upstream(error) => Ok(without_url(error.to_string())),
+	}
+}
+
+pub fn refusal(error: FetchError, url: &str) -> Response<Vec<u8>> {
+	match refusal_detail(error) {
+		Err(status) => refused(status),
+		Ok(detail) => {
+			tracing::warn!(
+				"[media] fetch failed for {}: {detail}",
+				host_of(url)
+			);
+			refused(StatusCode::BAD_GATEWAY)
+		}
+	}
 }
 
 pub fn deliver_upstream(
@@ -121,6 +145,43 @@ mod tests {
 			classify(GrindrError::InvalidRequest(ceiling_message())),
 			FetchError::Upstream(_)
 		));
+	}
+
+	#[test]
+	fn a_signed_url_never_survives_into_the_log_line() {
+		let signed = "https://d3.cloudfront.net/a.mp4?Expires=1&Signature=SECRET&Key-Pair-Id=K1";
+
+		assert_eq!(
+			without_url(format!(
+				"error sending request for url ({signed}): connection reset"
+			)),
+			"error sending request: connection reset"
+		);
+		assert_eq!(
+			without_url(format!("operation timed out for url ({signed})")),
+			"operation timed out"
+		);
+		assert_eq!(
+			without_url(format!("truncated for url ({signed}")),
+			"truncated"
+		);
+		assert_eq!(
+			without_url("connection reset by peer".to_owned()),
+			"connection reset by peer"
+		);
+	}
+
+	#[test]
+	fn what_gets_logged_never_carries_the_signed_query() {
+		let signed = "https://d3.cloudfront.net/a.mp4?Signature=SECRET";
+
+		let detail = refusal_detail(FetchError::Upstream(GrindrError::Http(
+			format!("error sending request for url ({signed}): reset"),
+		)))
+		.expect("an upstream failure is logged");
+
+		assert_eq!(detail, "HTTP error: error sending request: reset");
+		assert!(!detail.contains("SECRET"));
 	}
 
 	#[test]
