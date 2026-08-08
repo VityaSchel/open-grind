@@ -11,3 +11,4 @@ node_modules
 /src-tauri
 /test-results
 /playwright-report
+/coverage
