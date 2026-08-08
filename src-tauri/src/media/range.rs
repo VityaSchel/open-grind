@@ -134,6 +134,19 @@ mod tests {
 	}
 
 	#[test]
+	fn every_answer_advertises_ranges_or_players_refuse_to_seek() {
+		for range in [None, Some("bytes=0-3"), Some("bytes=99-")] {
+			let response = deliver_ranged(&media(b"1234567890"), range, false);
+
+			assert_eq!(
+				header_str(&response, header::ACCEPT_RANGES),
+				Some("bytes"),
+				"{range:?}"
+			);
+		}
+	}
+
+	#[test]
 	fn an_open_ended_range_runs_to_the_last_byte() {
 		let response = ranged("bytes=4-");
 
