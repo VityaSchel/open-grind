@@ -1,11 +1,8 @@
+import { hasScrollableOverflowY } from "$lib/util/scroll";
+
 export type PullPosition = "top" | "bottom";
 
 export const AT_BOUNDARY_PX = 1;
-
-function hasScrollableOverflowY(el: Element): boolean {
-	const { overflowY } = getComputedStyle(el);
-	return overflowY === "auto" || overflowY === "scroll";
-}
 
 function isScrollableY(el: Element): boolean {
 	return hasScrollableOverflowY(el) && el.scrollHeight > el.clientHeight + 1;
@@ -21,15 +18,6 @@ function canScrollToward({
 	return position === "top"
 		? el.scrollTop > 0
 		: el.scrollTop < el.scrollHeight - el.clientHeight - 1;
-}
-
-export function nearestScrollableAncestor(node: Element): Element | null {
-	let el = node.parentElement;
-	while (el) {
-		if (hasScrollableOverflowY(el)) return el;
-		el = el.parentElement;
-	}
-	return null;
 }
 
 function isScrollLocked(el: Element): boolean {

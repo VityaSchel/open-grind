@@ -9,6 +9,7 @@
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
+	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
@@ -156,24 +157,6 @@
 		if (conversationIds.length === 0) return;
 		void conversations.deleteConversations(conversationIds);
 	}
-
-	function observeSentinel(node: HTMLElement) {
-		const observer = new IntersectionObserver(
-			(es) => {
-				if (es[0]?.isIntersecting)
-					conversations
-						.loadMore()
-						.catch((error) => console.error(error));
-			},
-			{ rootMargin: "400px" },
-		);
-		observer.observe(node);
-		return {
-			destroy() {
-				observer.disconnect();
-			},
-		};
-	}
 </script>
 
 {#if selecting}
@@ -251,7 +234,17 @@
 					{/each}
 				{/if}
 				{#if conversations.nextPage !== null}
-					<div class="h-0" use:observeSentinel></div>
+					<div
+						class="h-0"
+						use:observeIntersection={{
+							handle: () => {
+								conversations
+									.loadMore()
+									.catch((error) => console.error(error));
+							},
+							rootMargin: "400px",
+						}}
+					></div>
 				{/if}
 			</div>
 		{/if}

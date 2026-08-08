@@ -3,8 +3,8 @@
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
-	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";
@@ -22,21 +22,6 @@
 	let container: HTMLDivElement | null = $state(null);
 
 	restoreScrollOnce(() => container, views);
-
-	function observeSentinel(node: HTMLElement) {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting) views.loadMore();
-			},
-			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
-		);
-		observer.observe(node);
-		return {
-			destroy() {
-				observer.disconnect();
-			},
-		};
-	}
 </script>
 
 <div class="screen-nav-host">
@@ -75,7 +60,14 @@
 					{/each}
 				</div>
 				{#if views.hasMore}
-					<div class="h-0" use:observeSentinel></div>
+					<div
+						class="h-0"
+						use:observeIntersection={{
+							handle: () => views.loadMore(),
+							root: "scroller",
+							rootMargin: "400px",
+						}}
+					></div>
 				{/if}
 			{/if}
 		</div>

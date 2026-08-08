@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import { nearestScrollableAncestor } from "$lib/components/feedback/refresh/scroll-chain";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { observeIntersection } from "$lib/util/observe-intersection";
 	import type { GridProfile } from "$lib/grid/grid";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
@@ -26,41 +26,6 @@
 	$effect.pre(() => {
 		gridState.load(geohash);
 	});
-
-	function observeSentinel(node: HTMLElement) {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting)
-					gridState.loadMore().catch((error) => console.error(error));
-			},
-			{ root: nearestScrollableAncestor(node), rootMargin: "400px" },
-		);
-		observer.observe(node);
-		return {
-			destroy() {
-				observer.disconnect();
-			},
-		};
-	}
-
-	function observeLazy(node: HTMLElement, params: { id: number }) {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0]?.isIntersecting) {
-					gridState
-						.resolveProfile(params.id)
-						.catch((error) => console.error(error));
-				}
-			},
-			{ root: nearestScrollableAncestor(node), rootMargin: "200px" },
-		);
-		observer.observe(node);
-		return {
-			destroy() {
-				observer.disconnect();
-			},
-		};
-	}
 </script>
 
 <div class="photo-grid relative">
@@ -95,7 +60,15 @@
 			{:else}
 				<div
 					class="aspect-square animate-pulse bg-stone-700"
-					use:observeLazy={{ id: item.id }}
+					use:observeIntersection={{
+						handle: () => {
+							gridState
+								.resolveProfile(item.id)
+								.catch((error) => console.error(error));
+						},
+						root: "scroller",
+						rootMargin: "200px",
+					}}
 				></div>
 			{/if}
 		{:else}
@@ -109,7 +82,15 @@
 		{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
 			<div
 				class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
-				use:observeSentinel
+				use:observeIntersection={{
+					handle: () => {
+						gridState
+							.loadMore()
+							.catch((error) => console.error(error));
+					},
+					root: "scroller",
+					rootMargin: "400px",
+				}}
 			></div>
 		{/if}
 	{/if}
