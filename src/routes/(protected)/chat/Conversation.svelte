@@ -104,7 +104,9 @@
 				{#if previewText !== null}
 					{previewText}
 				{:else}
-					<span class="preview-not-available">
+					<span
+						class="font-normal tracking-tight text-muted-foreground italic"
+					>
 						Preview not available
 					</span>
 				{/if}
@@ -182,10 +184,3 @@
 		{/if}
 	</ContextMenu.Root>
 {/if}
-
-<style lang="postcss">
-	@reference "$layout";
-	.preview-not-available {
-		@apply font-normal tracking-tight text-muted-foreground italic;
-	}
-</style>
