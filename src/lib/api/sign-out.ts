@@ -3,7 +3,8 @@ import { goto } from "$app/navigation";
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { callMethod } from "$lib/api/methods";
 import { clearAccountPreferences } from "$lib/app-data/preferences.svelte";
-import { INBOX_LAST_VIEWED_PREFIX } from "$lib/chat/inbox-last-viewed";
+import { inboxLastViewed } from "$lib/chat/inbox-last-viewed";
+import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 
 export async function signOut(): Promise<void> {
 	try {
@@ -14,20 +15,13 @@ export async function signOut(): Promise<void> {
 
 	await goto("/auth/sign-in");
 
-	clearInboxMarkers();
+	for (const marker of [inboxLastViewed, tapsLastViewed])
+		marker.clearStored();
 	clearAccountCaches();
 
 	try {
 		await clearAccountPreferences();
 	} catch (error) {
 		console.error(error);
-	}
-}
-
-function clearInboxMarkers(): void {
-	if (typeof localStorage === "undefined") return;
-	for (const key of Object.keys(localStorage)) {
-		if (key.startsWith(INBOX_LAST_VIEWED_PREFIX))
-			localStorage.removeItem(key);
 	}
 }

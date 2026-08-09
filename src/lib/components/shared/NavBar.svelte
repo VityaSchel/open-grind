@@ -13,6 +13,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { tabsListVariants } from "$lib/components/ui/tabs";
+	import { getTapsState } from "$lib/interest/taps-state.svelte";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 
@@ -24,6 +25,9 @@
 		getOrCreateConversationsState(ourProfileId),
 	);
 	const hasUnread = $derived(conversations.hasUnread);
+
+	const taps = untrack(() => getTapsState(ourProfileId));
+	const hasUnseenTaps = $derived(taps.hasUnseen);
 </script>
 
 <ProgressiveBlur
@@ -66,6 +70,11 @@
 		>
 			<FireIcon weight="fill" />
 			Interest
+			{#if hasUnseenTaps}
+				<Badge
+					class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0"
+				/>
+			{/if}
 		</a>
 		<a href="/chat" data-active={page.route.id === "/(protected)/chat"}>
 			<ChatCircleIcon weight="fill" />

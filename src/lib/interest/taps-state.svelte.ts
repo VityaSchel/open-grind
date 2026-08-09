@@ -1,5 +1,6 @@
 import { accountScoped } from "$lib/api/account-caches";
 import { getReceivedTaps } from "$lib/api/interest/taps";
+import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
 import type { TapProfile } from "$lib/model/interest/tap-profile";
@@ -12,6 +13,10 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	readonly ourProfileId: number;
 
 	#all: TapProfile[] = $state([]);
+	#lastViewedAt = $state(0);
+	#newestTapAt = $derived(
+		this.#all.reduce((newest, tap) => Math.max(newest, tap.timestamp), 0),
+	);
 
 	constructor({ ourProfileId }: { ourProfileId: number }) {
 		super({
@@ -19,11 +24,29 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 			refreshErrorLabel: "Failed to refresh taps",
 		});
 		this.ourProfileId = ourProfileId;
+		this.#lastViewedAt = tapsLastViewed.load(ourProfileId);
 		this.start();
 	}
 
 	get taps(): TapProfile[] {
 		return this.#all.slice(0, this.visibleCount);
+	}
+
+	get newestTapAt(): number {
+		return this.#newestTapAt;
+	}
+
+	get hasUnseen(): boolean {
+		return this.#newestTapAt > this.#lastViewedAt;
+	}
+
+	markViewed(): void {
+		if (this.#newestTapAt <= this.#lastViewedAt) return;
+		this.#lastViewedAt = this.#newestTapAt;
+		tapsLastViewed.save({
+			profileId: this.ourProfileId,
+			at: this.#lastViewedAt,
+		});
 	}
 
 	protected get length(): number {

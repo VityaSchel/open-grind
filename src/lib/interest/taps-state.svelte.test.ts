@@ -114,6 +114,7 @@ function tapEvent(senderId: number, recipientId: number) {
 
 beforeEach(() => {
 	clearAccountCaches();
+	localStorage.clear();
 	getReceivedTapsMock.mockReset();
 	showErrorToastMock.mockReset();
 	unsubscribeReconcileMock.mockReset();
@@ -270,6 +271,60 @@ describe("TapsState", () => {
 		expect(unsubscribeReconcileMock).toHaveBeenCalledOnce();
 		await vi.waitFor(() => expect(unlistenTapMock).toHaveBeenCalledOnce());
 		expect(state.taps).toEqual([tap(2)]);
+	});
+});
+
+describe("TapsState unseen marker", () => {
+	it("flags received taps as unseen until the list is viewed", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1), tap(2)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+
+		expect(state.newestTapAt).toBe(tap(2).timestamp);
+		expect(state.hasUnseen).toBe(true);
+
+		state.markViewed();
+
+		expect(state.hasUnseen).toBe(false);
+	});
+
+	it("stays cleared for a tap older than the stored marker", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const viewed = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(viewed);
+		viewed.markViewed();
+
+		const restarted = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(restarted);
+
+		expect(restarted.hasUnseen).toBe(false);
+	});
+
+	it("keeps the marker scoped to the signed in account", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const ours = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(ours);
+		ours.markViewed();
+
+		const otherAccount = new TapsState({ ourProfileId: 7 });
+		await waitForLoaded(otherAccount);
+
+		expect(otherAccount.hasUnseen).toBe(true);
+	});
+
+	it("raises the marker again only for a newer tap addressed to us", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+		state.markViewed();
+
+		emitTap(tapEvent(5, 7));
+
+		expect(state.hasUnseen).toBe(false);
+
+		emitTap(tapEvent(5, 99));
+
+		expect(state.hasUnseen).toBe(true);
 	});
 });
 
