@@ -29,6 +29,7 @@
 	import ImageCarousel from "./ImageCarousel.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import { ProfileState } from "./profile-state.svelte";
+	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
 	import ProfileTopNavBar from "./top-nav/ProfileTopNavBar.svelte";
@@ -195,36 +196,22 @@
 							<AboutMe>{aboutMe}</AboutMe>
 						{/if}
 						{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
-							<div class="mt-4 flex flex-col gap-2">
-								<span
-									class="text-sm text-muted-foreground uppercase"
-									>Stats</span
-								>
+							<ProfileSection title="Stats">
 								<Genders {genders} {pronouns} />
 								<Tribes tribes={grindrTribes} />
 								<Ethnicity {ethnicity} />
 								<RelationshipStatus {relationshipStatus} />
-							</div>
+							</ProfileSection>
 						{/if}
 						{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
-							<div class="mt-4 flex flex-col gap-2">
-								<span
-									class="text-sm text-muted-foreground uppercase"
-								>
-									Expectations
-								</span>
+							<ProfileSection title="Expectations">
 								<LookingFor {lookingFor} />
 								<MeetAt {meetAt} />
 								<NSFWPics nsfwPics={nsfw} />
-							</div>
+							</ProfileSection>
 						{/if}
 						{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
-							<div class="mt-4 flex flex-col gap-2">
-								<span
-									class="text-sm text-muted-foreground uppercase"
-								>
-									Health
-								</span>
+							<ProfileSection title="Health">
 								<HivStatus {hivStatus} />
 								<LastTested
 									lastTestedDate={lastTestedDateValue}
@@ -232,17 +219,12 @@
 								<HealthPractices
 									healthPractices={sexualHealthValue}
 								/>
-							</div>
+							</ProfileSection>
 						{/if}
 						{#if socialNetworks && Object.keys(socialNetworks).length > 0}
-							<div class="mt-4 flex flex-col gap-2">
-								<span
-									class="text-sm text-muted-foreground uppercase"
-								>
-									Socials
-								</span>
+							<ProfileSection title="Socials">
 								<Socials socials={socialNetworks} />
-							</div>
+							</ProfileSection>
 						{/if}
 					</div>
 					<ProfileBottomNavBar
