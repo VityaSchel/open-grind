@@ -15,8 +15,8 @@
 	class={[
 		"absolute bottom-0",
 		{
-			"right-full translate-x-[0.5px]": !isOut,
-			"left-full translate-x-[-0.5px] -scale-x-100": isOut,
+			"right-full translate-x-hairline": !isOut,
+			"left-full -translate-x-hairline -scale-x-100": isOut,
 		},
 		className,
 	]}

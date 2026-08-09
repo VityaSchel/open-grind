@@ -109,6 +109,13 @@
 	--radius-grid: 17px;
 
 	--radius-composer: 19px;
+
+	--radius-chat-panel: 27px;
+
+	--spacing-count-badge: 5.5px;
+
+	/* overlap that seams an SVG message tail onto its bubble */
+	--spacing-hairline: 0.5px;
 }
 
 /* .photo-grid column-count thresholds, queried against the nearest

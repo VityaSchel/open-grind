@@ -80,7 +80,7 @@
 				<div class="h-full flex-1 self-stretch p-4 ps-1 pb-nav-clear">
 					<Card.Root
 						class={[
-							"relative h-full gap-0 rounded-[27px] p-0 dark:ring-neutral-800",
+							"relative h-full gap-0 rounded-chat-panel p-0 dark:ring-neutral-800",
 							{ "bg-card/20 ring-0": !isChatSelected },
 						]}
 					>
