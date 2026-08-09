@@ -16027,7 +16027,7 @@
 						},
 						"description": "profile IDs hidden from the cascade"
 					},
-					"hiddenProfilesInfo": {
+					"hiddenProfileInfo": {
 						"type": "array",
 						"nullable": true,
 						"items": {
@@ -16118,12 +16118,13 @@
 							},
 							"bodyType": {
 								"type": "integer",
-								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
+								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type), optional"
+							},
+							"sexualPosition": {
+								"type": "integer",
+								"description": "integer, see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id), optional"
 							}
-						},
-						"required": [
-							"bodyType"
-						]
+						}
 					}
 				]
 			},
@@ -16350,12 +16351,13 @@
 							},
 							"bodyType": {
 								"type": "integer",
-								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
+								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type), optional"
+							},
+							"sexualPosition": {
+								"type": "integer",
+								"description": "integer, see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id), optional"
 							}
-						},
-						"required": [
-							"bodyType"
-						]
+						}
 					}
 				]
 			},
@@ -16387,12 +16389,13 @@
 							},
 							"bodyType": {
 								"type": "integer",
-								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type)"
+								"description": "integer, see [Body type](/grindr-api/users/profiles#body-type), optional"
+							},
+							"sexualPosition": {
+								"type": "integer",
+								"description": "integer, see [Sexual position ID](/grindr-api/users/profiles#sexual-position-id), optional"
 							}
-						},
-						"required": [
-							"bodyType"
-						]
+						}
 					}
 				]
 			},
@@ -17021,11 +17024,19 @@
 						]
 					},
 					"displayName": {
-						"type": "string"
+						"type": "string",
+						"description": "string, may be absent"
 					},
 					"distanceMeters": {
 						"type": "integer",
 						"description": "integer, may be absent"
+					},
+					"lastOnline": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
 					},
 					"rightNow": {
 						"$ref": "#/components/schemas/RightNowStatus"
@@ -17046,13 +17057,6 @@
 					{
 						"heading": "Only for [v3/cascade](/grindr-api/browse/grid#get-cascade-legacy):",
 						"properties": {
-							"lastOnline": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/TimestampMs"
-									}
-								]
-							},
 							"photoMediaHashes": {
 								"type": "array",
 								"items": {
@@ -17107,7 +17111,6 @@
 							}
 						},
 						"required": [
-							"lastOnline",
 							"photoMediaHashes",
 							"lookingFor",
 							"approximateDistance",
@@ -17147,7 +17150,7 @@
 				"required": [
 					"profileId",
 					"onlineUntil",
-					"displayName",
+					"lastOnline",
 					"rightNow",
 					"unreadCount",
 					"isVisiting",

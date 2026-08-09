@@ -1,7 +1,10 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "$lib/model/media";
-import { bodyTypeSchema } from "$lib/model/users/profiles";
+import {
+	bodyTypeSchema,
+	sexualPositionSchema,
+} from "$lib/model/users/profiles";
 import {
 	cascadeResponseAdvertV1Schema,
 	cascadeResponseBoostUpsellV1Schema,
@@ -41,6 +44,7 @@ export const cascadeV4ResponseFullProfileV1Schema = z.object({
 		heightCm: z.number().nonnegative().optional(),
 		weightGrams: z.number().nonnegative().optional(),
 		bodyType: bodyTypeSchema.nullish(),
+		sexualPosition: sexualPositionSchema.nullish(),
 	}),
 });
 

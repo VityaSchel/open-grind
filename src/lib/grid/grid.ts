@@ -1,7 +1,14 @@
+import type z from "zod";
+
 import { getCascadeV4 } from "$lib/api/browse/grid";
 import { TtlCache } from "$lib/api/cache";
 import { getProfiles } from "$lib/api/users/profiles";
 import { now } from "$lib/util/clock";
+import type { cascadeV4ResponseFullProfileV1Schema } from "$lib/model/browse/grid/cascade/response/v4";
+
+type CascadeProfileData = z.infer<
+	typeof cascadeV4ResponseFullProfileV1Schema
+>["data"];
 
 function primaryImageHashes(url: string | null | undefined): string[] | null {
 	const hash = url?.split("/").pop();
@@ -43,6 +50,27 @@ function lazyProfile(profile: {
 	};
 }
 
+// v4 sends `favorite`/`chatted` on every profile item; their absence marks a
+// base-shaped payload, which carries no photo to render from either.
+function gridProfile(profile: CascadeProfileData): GridProfile {
+	const { favorite, chatted } = profile;
+	if (favorite === undefined || chatted === undefined) {
+		return lazyProfile(profile);
+	}
+	return {
+		type: "rendered",
+		id: profile.profileId,
+		displayName: profile.displayName ?? null,
+		distance: profile.distanceMeters ?? null,
+		profilePhotosHashes: primaryImageHashes(profile.primaryImageUrl),
+		unread: profile.unreadCount ?? null,
+		onlineUntil: profile.onlineUntil ?? null,
+		isFavorite: favorite,
+		isVisiting: profile.isVisiting,
+		hasChattedInLast24Hrs: chatted,
+	};
+}
+
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	const response = await getCascadeV4(query);
 	const items: GridProfile[] = [];
@@ -50,30 +78,13 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	for (const item of response.items) {
 		if (
 			item.type === "full_profile_v1" ||
-			item.type === "partial_profile_v1"
-		) {
-			const profile = item.data;
-			items.push({
-				type: "rendered",
-				id: profile.profileId,
-				displayName: profile.displayName ?? null,
-				distance: profile.distanceMeters ?? null,
-				profilePhotosHashes: primaryImageHashes(
-					profile.primaryImageUrl,
-				),
-				unread: profile.unreadCount ?? null,
-				onlineUntil: profile.onlineUntil ?? null,
-				isFavorite: profile.favorite ?? false,
-				isVisiting: profile.isVisiting,
-				hasChattedInLast24Hrs: profile.chatted ?? false,
-			});
-		} else if (
+			item.type === "partial_profile_v1" ||
 			item.type === "hidden_profile_v1" ||
 			item.type === "smart_boost_profile_v1"
 		) {
-			items.push(lazyProfile(item.data));
+			items.push(gridProfile(item.data));
 		} else if (item.type === "sponsored_profile_v1") {
-			items.push(lazyProfile(item.data.alternativeProfile));
+			items.push(gridProfile(item.data.alternativeProfile));
 		}
 	}
 

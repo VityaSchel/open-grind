@@ -124,6 +124,7 @@ function cascadeProfileData(seed: DemoSeed) {
 		onlineUntil: onlineUntilOf(seed),
 		displayName: seed.name,
 		distanceMeters: seed.distanceM ?? undefined,
+		lastOnline: lastOnlineOf(seed),
 		rightNow: "NOT_ACTIVE",
 		unreadCount: seed.unread,
 		isVisiting: false,
