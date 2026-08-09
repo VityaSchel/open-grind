@@ -23,8 +23,12 @@
 	let {
 		onClose,
 		onSelectionChange,
-	}: { onClose: () => void; onSelectionChange: (count: number) => void } =
-		$props();
+		expiring = $bindable(),
+	}: {
+		onClose: () => void;
+		onSelectionChange: (count: number) => void;
+		expiring: boolean;
+	} = $props();
 
 	const composer = getMessageComposerContext();
 	const selected = new SelectionSet<number>(10);
@@ -86,23 +90,27 @@
 	export function sendSelected() {
 		if (media === null) return;
 		const items = media.filter((item) => selected.has(item.id));
+		const sendAsExpiring = expiring;
 		selected.clear();
 		onSelectionChange(0);
+		expiring = false;
 		onClose();
 		for (const item of items) {
 			item.used = true;
-			void composer().sendMessage({
-				type: "Image",
-				body: {
-					mediaId: item.id,
-					width: null,
-					height: null,
-					url: item.url,
-					imageHash: imageHashFromUrl(item.url),
-					takenOnGrindr: item.takenOnGrindr,
-					createdAt: item.createdTs,
-				},
-			});
+			const body = {
+				mediaId: item.id,
+				width: null,
+				height: null,
+				url: item.url,
+				imageHash: imageHashFromUrl(item.url),
+				takenOnGrindr: item.takenOnGrindr,
+				createdAt: item.createdTs,
+			};
+			void composer().sendMessage(
+				sendAsExpiring
+					? { type: "ExpiringImage", body: { ...body, viewsRemaining: null } }
+					: { type: "Image", body },
+			);
 		}
 	}
 </script>

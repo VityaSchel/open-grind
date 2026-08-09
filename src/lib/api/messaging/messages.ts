@@ -83,7 +83,7 @@ export async function getSingleMessage({
 }
 
 function toOutboundBody(message: z.infer<typeof messageSchema>): unknown {
-	if (message.type === "Image") {
+	if (message.type === "Image" || message.type === "ExpiringImage") {
 		return { mediaId: message.body.mediaId };
 	}
 	return message.body;

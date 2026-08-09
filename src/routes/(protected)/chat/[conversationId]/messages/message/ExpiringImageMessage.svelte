@@ -44,7 +44,8 @@
 	type ImageState =
 		| { status: "idle" }
 		| { status: "loading" }
-		| { status: "open"; image: LoadedImage };
+		| { status: "open"; image: LoadedImage }
+		| { status: "expired" };
 
 	let imageState = $state<ImageState>({ status: "idle" });
 	let cachedImage: LoadedImage | null = null;
@@ -65,7 +66,10 @@
 					conversationId,
 					messageId,
 				}).then((res) => expiringImageMessageSchema.parse(res.message));
-				if (image.url === null) throw new Error("Image URL is null");
+				if (image.url === null) {
+					imageState = { status: "expired" };
+					return;
+				}
 				cachedImage = { url: proxyMediaUrl(image.url) };
 				imageState = { status: "open", image: cachedImage };
 			} catch (error) {
@@ -114,7 +118,7 @@
 	});
 </script>
 
-{#if message.viewsRemaining === null || message.viewsRemaining > 0}
+{#if imageState.status !== "expired" && message.viewed !== true && (message.viewsRemaining === null || message.viewsRemaining > 0)}
 	<button
 		class={[
 			"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",

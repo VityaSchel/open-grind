@@ -217,6 +217,40 @@ describe("message API wrappers", () => {
 		});
 	});
 
+	it("sends expiring image messages by media reference only", async () => {
+		const expiringImageBody = {
+			mediaId: 910_002,
+			width: null,
+			height: null,
+			url: "https://cdns.grindr.com/images/chat/b".padEnd(100, "c"),
+			imageHash: "b".repeat(64),
+			takenOnGrindr: false,
+			createdAt: 1_710_000_000_000,
+			viewsRemaining: null,
+		};
+		const responseMessage = apiMessage({
+			type: "ExpiringImage",
+			body: expiringImageBody,
+		});
+		fetchRestMock.mockResolvedValue(response({ data: responseMessage }));
+
+		await expect(
+			sendMessage({
+				toUserId: 99,
+				message: { type: "ExpiringImage", body: expiringImageBody },
+			}),
+		).resolves.toEqual(responseMessage);
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/send", {
+			method: "POST",
+			body: {
+				type: "ExpiringImage",
+				target: { type: "Direct", targetId: 99 },
+				body: { mediaId: 910_002 },
+			},
+		});
+	});
+
 	it("posts reactions without parsing a response body", async () => {
 		const res = response();
 		fetchRestMock.mockResolvedValue(res);

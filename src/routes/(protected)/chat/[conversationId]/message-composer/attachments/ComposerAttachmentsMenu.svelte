@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ClockClockwiseIcon } from "phosphor-svelte";
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
@@ -27,6 +28,7 @@
 	let peek = $state<HTMLDivElement | null>(null);
 	let mediaTab = $state<ComposerMediaTab | null>(null);
 	let selectedCount = $state(0);
+	let expiring = $state(false);
 
 	const settleQuietMs = 140;
 	let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -119,6 +121,7 @@
 					<Tabs.Content value="media">
 						<ComposerMediaTab
 							bind:this={mediaTab}
+							bind:expiring
 							onSelectionChange={(count) => {
 								selectedCount = count;
 							}}
@@ -142,10 +145,29 @@
 
 			{#if selectedCount > 0}
 				<div
-					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center"
+					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center gap-2"
 					in:fly={{ duration: 600, y: 100, easing: expoOut }}
 					out:fly={{ duration: 400, y: 100, easing: sineIn }}
 				>
+					<Button
+						type="button"
+						size="icon-lg"
+						variant="secondary"
+						class={[
+							"pointer-events-auto shadow-lg",
+							{
+								"bg-primary text-primary-foreground hover:bg-primary/80":
+									expiring,
+							},
+						]}
+						aria-pressed={expiring}
+						aria-label={expiring
+							? "Sending as expiring photo, tap to disable"
+							: "Send as expiring photo"}
+						onclick={() => (expiring = !expiring)}
+					>
+						<ClockClockwiseIcon weight={expiring ? "fill" : "regular"} />
+					</Button>
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"
