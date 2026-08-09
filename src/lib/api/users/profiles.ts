@@ -8,6 +8,10 @@ import {
 	ProfileModerationError,
 	readBannedTerms,
 } from "$lib/api/users/profile-moderation";
+import {
+	markProfileUnviewable,
+	onProfileViewabilityChange,
+} from "$lib/api/users/profile-viewability";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import {
@@ -89,6 +93,13 @@ export class ProfileUnavailableError extends Error {
 	}
 }
 
+export function isUnviewableProfileError(error: unknown): boolean {
+	return (
+		error instanceof BlockedProfileError ||
+		error instanceof ProfileUnavailableError
+	);
+}
+
 const profileResponseSchema = z.object({
 	profiles: z.array(profileSchema).length(1),
 });
@@ -121,7 +132,10 @@ async function fetchProfile(profileId: number): Promise<Profile> {
 const profiles = new FetchCache(fetchProfile, { ttlMs: 60_000 });
 
 export function getProfile(profileId: number): Promise<Profile> {
-	return profiles.fetch(profileId);
+	return profiles.fetch(profileId).catch((error: unknown) => {
+		if (isUnviewableProfileError(error)) markProfileUnviewable(profileId);
+		throw error;
+	});
 }
 
 const profileShortWithRightNowSchema = z.object({
@@ -151,6 +165,8 @@ export function clearProfileCaches() {
 export function invalidateProfile(profileId: number) {
 	profiles.delete(profileId);
 }
+
+onProfileViewabilityChange(({ profileId }) => invalidateProfile(profileId));
 
 export type ProfileEdit = Partial<
 	Pick<

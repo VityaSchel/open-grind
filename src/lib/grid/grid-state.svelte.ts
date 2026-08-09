@@ -3,6 +3,7 @@ import type z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
+import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
 import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/model/browse/grid/filters";
 import { reconciler } from "$lib/util/reconcile";
@@ -48,6 +49,12 @@ class GridState {
 		const item = this.items[index];
 		if (!item || item.type !== "rendered") return;
 		this.items = this.items.with(index, { ...item, isFavorite });
+	}
+
+	removeProfile(profileId: number): void {
+		const index = this.items.findIndex((item) => item.id === profileId);
+		if (index === -1) return;
+		this.items = this.items.toSpliced(index, 1);
 	}
 
 	load(geohash: string): void {
@@ -251,4 +258,8 @@ reconciler.subscribe(() => gridState.refresh());
 onProfileEdit(({ profileId, patch }) => {
 	if (patch.isFavorite === undefined) return;
 	gridState.setFavorite({ profileId, isFavorite: patch.isFavorite });
+});
+onProfileViewabilityChange(({ profileId, viewable }) => {
+	if (viewable) void gridState.refresh();
+	else gridState.removeProfile(profileId);
 });

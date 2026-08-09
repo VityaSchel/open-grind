@@ -28,6 +28,11 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	setPreferences: vi.fn(),
 }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
+import {
+	markProfileUnviewable,
+	markProfileViewable,
+} from "$lib/api/users/profile-viewability";
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import type { GridProfile } from "./grid";
 import { gridState } from "./grid-state.svelte";
@@ -43,6 +48,7 @@ async function settle() {
 }
 
 beforeEach(async () => {
+	clearAccountCaches();
 	getGridMock.mockReset();
 	getGridMock.mockResolvedValue(page([1]));
 	gridState.reset();
@@ -77,6 +83,40 @@ describe("grid reconciliation", () => {
 		await reconcileHandlers[0]?.();
 
 		expect(getGridMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("grid blocking", () => {
+	it("removes a tile whose profile became unviewable", () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+			{ type: "lazy", id: 2, unread: 0, isVisiting: false },
+		];
+
+		markProfileUnviewable(1);
+
+		expect(gridState.items.map((item) => item.id)).toEqual([2]);
+	});
+
+	it("refetches the grid when a profile is unblocked", async () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+		];
+
+		markProfileViewable(1);
+		await settle();
+
+		expect(gridState.items.map((item) => item.id)).toEqual([2]);
+	});
+
+	it("leaves the grid alone for a profile it does not hold", () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+		];
+
+		markProfileUnviewable(3);
+
+		expect(gridState.items.map((item) => item.id)).toEqual([1]);
 	});
 });
 

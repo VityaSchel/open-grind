@@ -4,6 +4,7 @@ import {
 	BlockedProfileError,
 	getProfile,
 	invalidateProfile,
+	isUnviewableProfileError,
 	mergeProfileEditIntoCaches,
 	ProfileUnavailableError,
 } from "$lib/api/users/profiles";
@@ -106,10 +107,7 @@ export class ProfileState {
 			this.error = null;
 		} catch (error) {
 			if (this.#superseded(token)) return;
-			const unviewable =
-				error instanceof BlockedProfileError ||
-				error instanceof ProfileUnavailableError;
-			if (refresh && !unviewable) {
+			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({ label: "Failed to refresh profile", error });
 				return;

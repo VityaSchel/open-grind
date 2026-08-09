@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getViewsMock,
+	markBlockedProfilesUnviewableMock,
 	reconcileHandlers,
 	showErrorToastMock,
 	subscriptions,
@@ -10,6 +11,7 @@ const {
 	viewHandlers,
 } = vi.hoisted(() => ({
 	getViewsMock: vi.fn(),
+	markBlockedProfilesUnviewableMock: vi.fn(() => Promise.resolve()),
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	showErrorToastMock: vi.fn(),
 	subscriptions: [] as {
@@ -23,6 +25,10 @@ const {
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/views", () => ({ getViews: getViewsMock }));
+vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
+	markBlockedProfilesUnviewable: markBlockedProfilesUnviewableMock,
+}));
 vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {
 		subscribe(handler: () => void | Promise<void>) {
@@ -32,6 +38,10 @@ vi.mock("$lib/util/reconcile", () => ({
 	},
 }));
 import { clearAccountCaches } from "$lib/api/account-caches";
+import {
+	markProfileUnviewable,
+	markProfileViewable,
+} from "$lib/api/users/profile-viewability";
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 import { getViewsState, ViewsState } from "./views-state.svelte";
@@ -124,6 +134,7 @@ type ViewsSnapshot = { profiles: ViewerProfile[]; previews: ViewPreview[] };
 beforeEach(() => {
 	clearAccountCaches();
 	getViewsMock.mockReset();
+	markBlockedProfilesUnviewableMock.mockClear();
 	showErrorToastMock.mockReset();
 	unlistenViewMock.mockReset();
 	unsubscribeReconcileMock.mockReset();
@@ -322,6 +333,80 @@ describe("ViewsState", () => {
 		});
 	});
 
+	it("drops a viewer who turned out to be unviewable, and keeps it dropped", async () => {
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1), profile(2)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		markProfileUnviewable(1);
+
+		expect(state.views.map((entry) => entry.key)).toEqual(["profile:2"]);
+
+		emitView(viewEvent(1));
+
+		expect(state.views.map((entry) => entry.key)).toEqual(["profile:2"]);
+
+		await reconcileHandlers[0]?.();
+
+		expect(state.views.map((entry) => entry.key)).toEqual(["profile:2"]);
+	});
+
+	it("catches up on blocks made before this session on every load", async () => {
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		expect(markBlockedProfilesUnviewableMock).toHaveBeenCalledOnce();
+
+		await reconcileHandlers[0]?.();
+
+		expect(markBlockedProfilesUnviewableMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("brings a viewer back when they are unblocked", async () => {
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		markProfileUnviewable(1);
+
+		expect(state.views).toEqual([]);
+
+		markProfileViewable(1);
+		await vi.waitFor(() =>
+			expect(state.views.map((entry) => entry.key)).toEqual([
+				"profile:1",
+			]),
+		);
+	});
+
+	it("drops a viewer marked while a reconcile fetch is in flight", async () => {
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		const pending = deferred<ViewsSnapshot>();
+		getViewsMock.mockReturnValueOnce(pending.promise);
+		const reconciled = reconcileHandlers[0]?.();
+		markProfileUnviewable(1);
+		pending.resolve({ profiles: [profile(1)], previews: [] });
+		await reconciled;
+
+		expect(state.views).toEqual([]);
+	});
+
 	it("cleans up subscriptions on destroy", async () => {
 		getViewsMock.mockResolvedValue({
 			profiles: [profile(1)],
@@ -344,6 +429,8 @@ describe("ViewsState", () => {
 				},
 			},
 		});
+
+		markProfileUnviewable(1);
 
 		expect(unsubscribeReconcileMock).toHaveBeenCalledOnce();
 		await vi.waitFor(() => expect(unlistenViewMock).toHaveBeenCalledOnce());

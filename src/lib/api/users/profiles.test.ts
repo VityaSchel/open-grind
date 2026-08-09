@@ -11,13 +11,20 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 	fetchRest: fetchRestMock,
 }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import { ProfileModerationError } from "$lib/api/users/profile-moderation";
 import {
+	isProfileViewable,
+	markProfileUnviewable,
+} from "$lib/api/users/profile-viewability";
+import {
 	applyProfileEdit,
+	BlockedProfileError,
 	clearProfileCaches,
 	deleteProfilePhotos,
 	getProfile,
 	patchOwnProfile,
+	ProfileUnavailableError,
 	type ProfileUpdate,
 	updateOwnProfile,
 } from "$lib/api/users/profiles";
@@ -81,7 +88,57 @@ function fullProfile() {
 	};
 }
 
+function maskedProfile(displayName: string) {
+	const emptied = Object.fromEntries(
+		[
+			"aboutMe",
+			"age",
+			"ethnicity",
+			"relationshipStatus",
+			"bodyType",
+			"sexualPosition",
+			"hivStatus",
+			"lastTestedDate",
+			"height",
+			"weight",
+			"seen",
+			"onlineUntil",
+			"distance",
+			"profileImageMediaHash",
+			"identity",
+			"lastChatTimestamp",
+			"lastViewed",
+			"nsfw",
+			"lastUpdatedTime",
+			"genders",
+			"pronouns",
+			"tapType",
+			"lastReceivedTapTimestamp",
+		].map((field) => [field, null]),
+	);
+	return {
+		...emptied,
+		profileId: PROFILE_ID,
+		displayName,
+		showAge: false,
+		showDistance: false,
+		approximateDistance: false,
+		isFavorite: false,
+		isNew: false,
+		tapped: false,
+		grindrTribes: [],
+		lookingFor: [],
+		medias: [],
+		hashtags: [],
+		profileTags: [],
+		meetAt: [],
+		vaccines: [],
+		socialNetworks: {},
+	};
+}
+
 beforeEach(() => {
+	clearAccountCaches();
 	clearProfileCaches();
 	fetchRestMock.mockReset();
 	fetchRestMock.mockImplementation(
@@ -89,6 +146,9 @@ beforeEach(() => {
 			const method = opts?.method ?? "GET";
 			if (path.startsWith("/v7/profiles/")) {
 				return Promise.resolve(ok({ profiles: [fullProfile()] }));
+			}
+			if (path === "/v3.1/me/blocks") {
+				return Promise.resolve(ok({ blocking: [] }));
 			}
 			if (path === "/v4/me/profile" && method === "PATCH") {
 				return Promise.resolve(ok(null));
@@ -134,6 +194,49 @@ describe("cache TTL", () => {
 });
 
 describe("getProfile", () => {
+	function respondWith(profile: unknown) {
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.resolve(ok(profile)),
+		);
+	}
+
+	it("marks a profile that blocked us as unviewable", async () => {
+		respondWith({ profiles: [maskedProfile("4")] });
+
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(BlockedProfileError);
+		expect((error as BlockedProfileError).blockedByUs).toBe(false);
+		expect(isProfileViewable(PROFILE_ID)).toBe(false);
+	});
+
+	it("marks an unavailable profile as unviewable", async () => {
+		respondWith({ profiles: [maskedProfile("3")] });
+
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(ProfileUnavailableError);
+		expect(isProfileViewable(PROFILE_ID)).toBe(false);
+	});
+
+	it("keeps a profile viewable when the request itself fails", async () => {
+		fetchRestMock.mockImplementationOnce(() =>
+			Promise.reject(new Error("offline")),
+		);
+
+		await expect(getProfile(PROFILE_ID)).rejects.toThrow("offline");
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+	});
+
+	it("drops the cached profile once it becomes unviewable", async () => {
+		await getProfile(PROFILE_ID);
+
+		markProfileUnviewable(PROFILE_ID);
+		await getProfile(PROFILE_ID);
+
+		expect(countRequests("/v7/profiles/")).toBe(2);
+	});
+
 	it("rejects an empty profiles array instead of caching undefined", async () => {
 		fetchRestMock.mockImplementationOnce(() =>
 			Promise.resolve(okValidated({ profiles: [] })),

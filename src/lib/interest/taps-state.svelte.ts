@@ -1,5 +1,10 @@
 import { accountScoped } from "$lib/api/account-caches";
+import { markBlockedProfilesUnviewable } from "$lib/api/browse/blocks";
 import { getReceivedTaps } from "$lib/api/interest/taps";
+import {
+	isProfileViewable,
+	onProfileViewabilityChange,
+} from "$lib/api/users/profile-viewability";
 import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
@@ -16,6 +21,15 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	#lastViewedAt = $state(0);
 	#newestTapAt = $derived(
 		this.#all.reduce((newest, tap) => Math.max(newest, tap.timestamp), 0),
+	);
+	#unsubscribeViewability = onProfileViewabilityChange(
+		({ profileId, viewable }) => {
+			if (viewable) {
+				void this.refresh();
+				return;
+			}
+			this.#all = this.#all.filter((tap) => tap.profileId !== profileId);
+		},
 	);
 
 	constructor({ ourProfileId }: { ourProfileId: number }) {
@@ -54,18 +68,22 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}
 
 	protected fetch(): Promise<TapsSnapshot> {
+		void markBlockedProfilesUnviewable().catch(console.error);
 		return getReceivedTaps();
 	}
 
 	protected applySnapshotReturningCoveredKeys(
 		snapshot: TapsSnapshot,
 	): Set<number> {
-		this.#all = snapshot.profiles;
+		this.#all = snapshot.profiles.filter((tap) =>
+			isProfileViewable(tap.profileId),
+		);
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- caller only reads .has() then drops it
 		return new Set(snapshot.profiles.map((tap) => tap.profileId));
 	}
 
 	protected applyUpsert(tap: TapProfile): void {
+		if (!isProfileViewable(tap.profileId)) return;
 		const existing = this.#all.findIndex(
 			(t) => t.profileId === tap.profileId,
 		);
@@ -75,6 +93,11 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 
 	protected keyOf(tap: TapProfile): number {
 		return tap.profileId;
+	}
+
+	override destroy(): void {
+		this.#unsubscribeViewability();
+		super.destroy();
 	}
 
 	protected subscribeEvents(): Promise<() => void> {

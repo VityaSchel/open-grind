@@ -1,7 +1,11 @@
 import z from "zod";
 
-import { cachedFetch } from "$lib/api/cache";
+import { FetchCache } from "$lib/api/cache";
 import { fetchRest } from "$lib/api/transport";
+import {
+	markProfileUnviewable,
+	markProfileViewable,
+} from "$lib/api/users/profile-viewability";
 import type { Profile } from "$lib/model/users/profiles";
 
 const getBlockedUsersResponseSchema = z.object({
@@ -10,13 +14,24 @@ const getBlockedUsersResponseSchema = z.object({
 	),
 });
 
-export const getBlockedUsers = cachedFetch(
+type BlockedUsers = z.infer<typeof getBlockedUsersResponseSchema>["blocking"];
+
+const blockedUsers = new FetchCache<null, BlockedUsers>(
 	() =>
 		fetchRest("/v3.1/me/blocks").then(
 			(res) => res.jsonParsed(getBlockedUsersResponseSchema).blocking,
 		),
 	{ ttlMs: 5_000 },
 );
+
+export function getBlockedUsers(): Promise<BlockedUsers> {
+	return blockedUsers.fetch(null);
+}
+
+export async function markBlockedProfilesUnviewable(): Promise<void> {
+	for (const { profileId } of await getBlockedUsers())
+		markProfileUnviewable(profileId);
+}
 
 export async function blockUser({
 	profileId,
@@ -26,6 +41,8 @@ export async function blockUser({
 	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "POST" }).then(
 		(res) => res.assertOk(),
 	);
+	blockedUsers.clear();
+	markProfileUnviewable(profileId);
 }
 
 export async function unblockUser({
@@ -36,4 +53,6 @@ export async function unblockUser({
 	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "DELETE" }).then(
 		(res) => res.assertOk(),
 	);
+	blockedUsers.clear();
+	markProfileViewable(profileId);
 }
