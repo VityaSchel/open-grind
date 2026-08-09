@@ -30,12 +30,8 @@ async function openConversation(page: Page) {
 
 function measure(page: Page): Promise<Metrics> {
 	return page.evaluate((message) => {
-		const scroller = [
-			...document.querySelectorAll<HTMLElement>("div"),
-		].find(
-			(el) =>
-				getComputedStyle(el).overflowY === "auto" &&
-				el.querySelector(message) !== null,
+		const scroller = document.querySelector<HTMLElement>(
+			'[data-slot="messages-scroller"]',
 		);
 		if (!scroller) throw new Error("messages scroller not found");
 		const form = document.querySelector("form");
@@ -65,20 +61,13 @@ function measure(page: Page): Promise<Metrics> {
 }
 
 const scrollTo = (page: Page, where: "floor" | "middle") =>
-	page.evaluate(
-		({ target, message }) => {
-			const scroller = [
-				...document.querySelectorAll<HTMLElement>("div"),
-			].find(
-				(el) =>
-					getComputedStyle(el).overflowY === "auto" &&
-					el.querySelector(message) !== null,
-			)!;
-			const max = scroller.scrollHeight - scroller.clientHeight;
-			scroller.scrollTop = target === "floor" ? max : Math.round(max / 2);
-		},
-		{ target: where, message: MESSAGE },
-	);
+	page.evaluate((target) => {
+		const scroller = document.querySelector<HTMLElement>(
+			'[data-slot="messages-scroller"]',
+		)!;
+		const max = scroller.scrollHeight - scroller.clientHeight;
+		scroller.scrollTop = target === "floor" ? max : Math.round(max / 2);
+	}, where);
 
 test.describe("messages list clears the composer", () => {
 	test("bottom padding tracks the composer height", async ({ page }) => {

@@ -32,7 +32,9 @@ function player() {
 	const { container } = render(VideoPlayer, {
 		props: { src: SRC, poster: null },
 	});
-	const surface = container.querySelector<HTMLElement>("div.relative")!;
+	const surface = container.querySelector<HTMLElement>(
+		'[data-slot="video-surface"]',
+	)!;
 	const video = container.querySelector<HTMLVideoElement>("video")!;
 	const controls = () => container.querySelector<HTMLElement>(CONTROLS);
 	return { container, surface, video, controls };

@@ -19,9 +19,7 @@ export interface DrawerBox {
 export async function openAttachments(page: Page): Promise<void> {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	const paperclip = page
-		.locator("div.absolute.right-7.bottom-0 button")
-		.first();
+	const paperclip = page.getByRole("button", { name: "Add attachment" });
 	await paperclip.waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
 	await paperclip.click();

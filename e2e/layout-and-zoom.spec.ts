@@ -8,13 +8,15 @@ test.describe("screen insets", () => {
 	test("the message composer clears the bottom inset", async ({ page }) => {
 		await installTauriShim(page);
 		await page.goto(DEMO_CONVERSATION);
-		const composer = page.locator("div.absolute.right-7.bottom-0").first();
+		const composer = page.locator(
+			'[data-slot="composer-attachments-trigger"]',
+		);
 		await composer.waitFor({ timeout: 30_000 });
 		await page.waitForTimeout(600);
 
 		const measured = await page.evaluate(() => {
 			const el = document.querySelector(
-				"div.absolute.right-7.bottom-0",
+				'[data-slot="composer-attachments-trigger"]',
 			) as HTMLElement;
 			const inset = getComputedStyle(
 				document.documentElement,
