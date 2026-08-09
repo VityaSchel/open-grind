@@ -19,6 +19,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 
 	#all: TapProfile[] = $state([]);
 	#lastViewedAt = $state(0);
+	#tappedSinceViewed = $state(false);
 	#newestTapAt = $derived(
 		this.#all.reduce((newest, tap) => Math.max(newest, tap.timestamp), 0),
 	);
@@ -46,15 +47,14 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		return this.#all.slice(0, this.visibleCount);
 	}
 
-	get newestTapAt(): number {
-		return this.#newestTapAt;
-	}
-
 	get hasUnseen(): boolean {
-		return this.#newestTapAt > this.#lastViewedAt;
+		return (
+			this.#tappedSinceViewed || this.#newestTapAt > this.#lastViewedAt
+		);
 	}
 
 	markViewed(): void {
+		this.#tappedSinceViewed = false;
 		if (this.#newestTapAt <= this.#lastViewedAt) return;
 		this.#lastViewedAt = this.#newestTapAt;
 		tapsLastViewed.save({
@@ -89,6 +89,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		);
 		if (existing !== -1) this.#all.splice(existing, 1);
 		this.#all = [tap, ...this.#all];
+		this.#tappedSinceViewed = true;
 	}
 
 	protected keyOf(tap: TapProfile): number {

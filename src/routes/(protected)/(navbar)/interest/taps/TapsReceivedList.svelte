@@ -18,11 +18,8 @@
 		return state;
 	});
 
-	let lastMarkedTapAt = 0;
 	$effect(() => {
-		if (taps.newestTapAt === lastMarkedTapAt) return;
-		lastMarkedTapAt = taps.newestTapAt;
-		taps.markViewed();
+		if (taps.hasUnseen) taps.markViewed();
 	});
 
 	let container: HTMLDivElement | null = $state(null);

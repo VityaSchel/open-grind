@@ -1,3 +1,4 @@
+import { flushSync } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -352,7 +353,6 @@ describe("TapsState unseen marker", () => {
 		const state = new TapsState({ ourProfileId: 99 });
 		await waitForLoaded(state);
 
-		expect(state.newestTapAt).toBe(tap(2).timestamp);
 		expect(state.hasUnseen).toBe(true);
 
 		state.markViewed();
@@ -382,6 +382,73 @@ describe("TapsState unseen marker", () => {
 		await waitForLoaded(otherAccount);
 
 		expect(otherAccount.hasUnseen).toBe(true);
+	});
+
+	it("raises the marker for a live tap whose timestamp is not the newest", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+		state.markViewed();
+
+		emitTap({
+			type: "tap.v1.tap_sent",
+			notificationId: null,
+			ref: null,
+			payload: {
+				timestamp: 1_710_000_000,
+				senderId: 5,
+				recipientId: 99,
+				tapType: 0,
+				senderProfileImageHash: null,
+				senderDisplayName: "Profile 5",
+				isMutual: false,
+			},
+		});
+
+		expect(state.taps.map((entry) => entry.profileId)).toEqual([5, 1]);
+		expect(state.hasUnseen).toBe(true);
+	});
+
+	it("dismisses a live tap that lands while the list is open", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+
+		const stop = $effect.root(() => {
+			$effect(() => {
+				if (state.hasUnseen) state.markViewed();
+			});
+		});
+		flushSync();
+
+		expect(state.hasUnseen).toBe(false);
+
+		emitTap(tapEvent(5, 99));
+		flushSync();
+		stop();
+
+		expect(state.hasUnseen).toBe(false);
+	});
+
+	it("pushes a live tap to a reactive reader without a refetch", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+		state.markViewed();
+
+		const seen: boolean[] = [];
+		const stop = $effect.root(() => {
+			$effect(() => {
+				seen.push(state.hasUnseen);
+			});
+		});
+		flushSync();
+
+		emitTap(tapEvent(5, 99));
+		flushSync();
+		stop();
+
+		expect(seen).toEqual([false, true]);
 	});
 
 	it("raises the marker again only for a newer tap addressed to us", async () => {
