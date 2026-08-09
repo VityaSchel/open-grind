@@ -187,9 +187,19 @@ a {
 	.photo-grid {
 		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid @grid3/photo-grid:grid-cols-3 @grid4/photo-grid:grid-cols-4 @grid5/photo-grid:grid-cols-5 @grid6/photo-grid:grid-cols-6 @grid7/photo-grid:grid-cols-7;
 
+		--grid-radius-top: var(--radius-grid);
+		--grid-radius-bottom: var(--radius-grid);
+
 		> :first-child {
-			border-top-left-radius: var(--radius-grid);
+			border-top-left-radius: var(--grid-radius-top);
 		}
+	}
+
+	.photo-grid[data-rows-above] {
+		--grid-radius-top: 0px;
+	}
+	.photo-grid[data-rows-below] {
+		--grid-radius-bottom: 0px;
 	}
 
 	/* Round the grid's corner cells so per-cell overlays and outlines follow
@@ -198,78 +208,78 @@ a {
 	@container photo-grid (width < theme(--container-grid3)) {
 		.photo-grid {
 			> :nth-child(2) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(2n + 1):nth-last-child(-n + 2) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(2n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid3)) and (width < theme(--container-grid4)) {
 		.photo-grid {
 			> :nth-child(3) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(3n + 1):nth-last-child(-n + 3) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(3n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid4)) and (width < theme(--container-grid5)) {
 		.photo-grid {
 			> :nth-child(4) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(4n + 1):nth-last-child(-n + 4) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(4n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid5)) and (width < theme(--container-grid6)) {
 		.photo-grid {
 			> :nth-child(5) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(5n + 1):nth-last-child(-n + 5) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(5n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid6)) and (width < theme(--container-grid7)) {
 		.photo-grid {
 			> :nth-child(6) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(6n + 1):nth-last-child(-n + 6) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(6n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid7)) {
 		.photo-grid {
 			> :nth-child(7) {
-				border-top-right-radius: var(--radius-grid);
+				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(7n + 1):nth-last-child(-n + 7) {
-				border-bottom-left-radius: var(--radius-grid);
+				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
 			> :nth-child(7n):last-child {
-				border-bottom-right-radius: var(--radius-grid);
+				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}
