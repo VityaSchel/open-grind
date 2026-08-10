@@ -76,7 +76,7 @@
 			<g
 				transform="rotate({rotation} 20 20)"
 				opacity={ringOpacity}
-				class="drag-ring"
+				class="transition-opacity duration-200 ease-out"
 			>
 				<circle
 					cx="20"
@@ -114,10 +114,6 @@
 		box-shadow:
 			0 1.75px 3.5px rgb(0 0 0 / 0.12),
 			0 1px 4px rgb(0 0 0 / 0.24);
-	}
-
-	.drag-ring {
-		transition: opacity 200ms ease-out;
 	}
 
 	/* Dash values are Android's CircularProgressDrawable scaled to r 7.5. */

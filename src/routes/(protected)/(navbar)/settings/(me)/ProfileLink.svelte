@@ -45,7 +45,9 @@
 					{:then profile}
 						<DisplayName name={profile.displayName} />
 					{:catch}
-						<span class="load-fail">Failed to load name</span>
+						<span class="text-muted-foreground italic">
+							Failed to load name
+						</span>
 					{/await}
 				</Item.Title>
 				<Item.Description class="inline-block truncate">
@@ -58,11 +60,3 @@
 		</a>
 	{/snippet}
 </Item.Root>
-
-<style lang="postcss">
-	@reference "$layout";
-
-	.load-fail {
-		@apply text-muted-foreground italic;
-	}
-</style>
