@@ -11,6 +11,7 @@ Thanks for considering contributing to Open Grind.
         - [Checks and tests](#checks-and-tests)
         - [Where state lives](#where-state-lives)
         - [Function parameters](#function-parameters)
+        - [Test selectors](#test-selectors)
     - [Submitting your changes](#submitting-your-changes)
         - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
@@ -148,6 +149,14 @@ Use named arguments in functions, except when:
 - order carries no meaning — `deepEqual(a, b)`
 - the call reads as prose — `formatHeight(180, "cm")`
 - the name already names its only argument — `getProfileById(profileId)`
+
+### Test selectors
+
+Query interactive elements by role and accessible name — `getByRole("button", { name: "Add attachment" })`. [accessible-names.spec.ts](./e2e/accessible-names.spec.ts) already fails the build when a control has no name, so the handle is guaranteed to exist.
+
+When the element is not interactive — a scroller, a measured wrapper, a state-bearing part — give it `data-slot="<component>-<part>"` and select that. It is the same attribute the `ui/` primitives emit, so tests read one vocabulary.
+
+Never select on Tailwind utility classes, tag shape, or computed style: `div.absolute.right-7.bottom-0` turns a padding tweak into a broken test, and scanning every `<div>` for `overflowY === "auto"` silently finds a different element once a second scroller appears. Library-owned classes are not utility classes — PhotoSwipe's `.pswp` and the `.item[href]` it is configured with are API contracts and stay.
 
 ## Submitting your changes
 

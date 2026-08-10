@@ -3,14 +3,6 @@
 		$props();
 </script>
 
-<div class="field">
+<div class="flex w-full items-center gap-3">
 	{@render children?.()}
 </div>
-
-<style lang="postcss">
-	@reference "tailwindcss";
-
-	.field {
-		@apply flex w-full items-center gap-3;
-	}
-</style>

@@ -25,10 +25,8 @@ async function driveInOneGesture<K extends string>(
 ): Promise<Record<K, PullSnapshot>> {
 	const snapshots: Partial<Record<K, PullSnapshot>> =
 		await page.evaluate(`(async () => {
-		const scroller = [...document.querySelectorAll("div")].find(
-			(el) =>
-				getComputedStyle(el).overflowY === "auto" &&
-				el.querySelector('a[href^="/chat/"]'),
+		const scroller = document.querySelector(
+			'[data-slot="conversations-scroller"]',
 		);
 		if (!scroller) throw new Error("conversations scroller not found");
 		const overlay = document.querySelector("[data-refresh-phase]");

@@ -179,6 +179,7 @@
 <div class="relative flex h-full w-full min-w-list-rail flex-col">
 	<div
 		bind:this={container}
+		data-slot="conversations-scroller"
 		class={[
 			"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain p-4 pb-0",
 			{ "pt-(--selection-bar-height)": selecting },

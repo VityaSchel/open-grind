@@ -129,7 +129,7 @@
 						variant={conversation.data.muted
 							? "secondary"
 							: "default"}
-						class="px-[5.5px] @max-row:hidden"
+						class="px-count-badge @max-row:hidden"
 					>
 						{conversation.data.unreadCount}
 					</Badge>

@@ -1,8 +1,8 @@
 <script lang="ts" generics="T extends string | number">
-	import { Combobox } from "bits-ui";
-	import { CaretUpDownIcon, CheckIcon, XIcon } from "phosphor-svelte";
+	import { XIcon } from "phosphor-svelte";
 	import { tick } from "svelte";
 
+	import * as Combobox from "$lib/components/ui/combobox";
 	import type { Option } from "../options";
 	import Field from "./Field.svelte";
 
@@ -28,17 +28,7 @@
 
 	let searchValue = $state("");
 	let open = $state(false);
-	let keyboardNav = $state(false);
 	let inputEl = $state<HTMLInputElement | null>(null);
-
-	const navKeys = [
-		"ArrowDown",
-		"ArrowUp",
-		"Home",
-		"End",
-		"PageDown",
-		"PageUp",
-	];
 
 	const filtered = $derived(
 		searchValue.trim() === ""
@@ -115,9 +105,6 @@
 		values = newValue;
 		searchValue = "";
 	}
-
-	const inputClass =
-		"bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 h-9 w-full rounded-3xl border border-transparent pl-3 pr-9 py-1 text-base transition-[color,box-shadow,background-color] focus-visible:ring-3 md:text-sm placeholder:text-muted-foreground min-w-0 outline-none";
 </script>
 
 <Field {label} hint={effectiveHint}>
@@ -152,10 +139,7 @@
 		}
 		bind:open
 		onOpenChange={(isOpen) => {
-			if (!isOpen) {
-				void clearTypedQuery();
-				keyboardNav = false;
-			}
+			if (!isOpen) void clearTypedQuery();
 		}}
 	>
 		<div class="relative">
@@ -163,51 +147,23 @@
 				bind:ref={inputEl}
 				oninput={(event) => (searchValue = event.currentTarget.value)}
 				onclick={() => (open = true)}
-				onkeydown={(event) => {
-					if (navKeys.includes(event.key)) keyboardNav = true;
-				}}
 				placeholder={searchPlaceholder}
-				class={inputClass}
 				aria-label={label}
 			/>
-			<Combobox.Trigger
-				class="absolute inset-y-0 right-0 grid w-9 place-items-center text-muted-foreground"
-				aria-label="Toggle list"
-			>
-				<CaretUpDownIcon class="size-4 opacity-60" />
-			</Combobox.Trigger>
+			<Combobox.Trigger aria-label="Toggle list" />
 		</div>
 
-		<Combobox.Portal>
-			<Combobox.Content
-				sideOffset={4}
-				data-kb-nav={keyboardNav ? "" : undefined}
-				onpointerdown={() => (keyboardNav = false)}
-				onpointermove={() => (keyboardNav = false)}
-				class="z-50 max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none dark:ring-foreground/10"
-			>
-				<Combobox.Viewport>
-					{#each filtered as option (option.value)}
-						<Combobox.Item
-							value={String(option.value)}
-							label=""
-							disabled={isDisabled(option.value)}
-							class="flex cursor-default items-center justify-between gap-2 rounded-2xl py-2 pr-2 pl-3 text-sm font-medium outline-hidden select-none in-data-kb-nav:data-highlighted:bg-accent in-data-kb-nav:data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-40 can-hover:data-highlighted:bg-accent can-hover:data-highlighted:text-accent-foreground"
-						>
-							{#snippet children({ selected: isSelected })}
-								<span>{option.label}</span>
-								{#if isSelected}
-									<CheckIcon class="size-4 shrink-0" />
-								{/if}
-							{/snippet}
-						</Combobox.Item>
-					{:else}
-						<div class="text-muted-foreground px-3 py-2 text-sm">
-							No matches
-						</div>
-					{/each}
-				</Combobox.Viewport>
-			</Combobox.Content>
-		</Combobox.Portal>
+		<Combobox.Content>
+			{#each filtered as option (option.value)}
+				<Combobox.Item
+					value={String(option.value)}
+					disabled={isDisabled(option.value)}
+				>
+					{option.label}
+				</Combobox.Item>
+			{:else}
+				<Combobox.Empty>No matches</Combobox.Empty>
+			{/each}
+		</Combobox.Content>
 	</Combobox.Root>
 </Field>

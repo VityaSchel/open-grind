@@ -38,7 +38,7 @@
 	</Button>
 	{#if unreadCount > 0}
 		<Badge
-			class="pointer-events-none absolute -top-1.5 -right-1.5 min-w-5 px-[5.5px]"
+			class="pointer-events-none absolute -top-1.5 -right-1.5 min-w-5 px-count-badge"
 		>
 			{unreadCount}
 		</Badge>

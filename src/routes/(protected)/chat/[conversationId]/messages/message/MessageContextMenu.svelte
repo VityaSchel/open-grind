@@ -50,7 +50,9 @@
 				/>
 			</span>
 		{/if}
-		<div class="buttons w-45">
+		<div
+			class="flex w-45 flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!"
+		>
 			{#if textContent !== undefined}
 				<Button
 					variant="ghost"
@@ -105,11 +107,3 @@
 		</div>
 	{/snippet}
 </ContextMenu>
-
-<style lang="postcss">
-	@reference "$layout";
-
-	.buttons {
-		@apply flex flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!;
-	}
-</style>
