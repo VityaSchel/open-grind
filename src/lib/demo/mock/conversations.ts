@@ -249,7 +249,7 @@ function buildMessage({
 				expiresAt: message.expiring ? timestamp + DAY : null,
 				expirationType: (message.expiring
 					? "ONCE"
-					: "INDEFINITE") satisfies AlbumExpirationType,
+					: "INDEFINITE") as AlbumExpirationType,
 				coverUrl:
 					message.coverUrl === null
 						? null
