@@ -92,15 +92,18 @@
 		for (const item of items) {
 			item.used = true;
 			void composer().sendMessage({
-				type: "Image",
-				body: {
-					mediaId: item.id,
-					width: null,
-					height: null,
-					url: item.url,
-					imageHash: imageHashFromUrl(item.url),
-					takenOnGrindr: item.takenOnGrindr,
-					createdAt: item.createdTs,
+				outbound: { type: "Image", body: { mediaId: item.id } },
+				optimistic: {
+					type: "Image",
+					body: {
+						mediaId: item.id,
+						width: null,
+						height: null,
+						url: item.url,
+						imageHash: imageHashFromUrl(item.url),
+						takenOnGrindr: item.takenOnGrindr,
+						createdAt: item.createdTs,
+					},
 				},
 			});
 		}

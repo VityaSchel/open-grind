@@ -187,6 +187,9 @@ export const expiringImageMessageSchema = imageBaseMessageSchema.safeExtend({
 		...imageBaseMessageSchema.shape.body.shape,
 		url: mediaUrlSchema.nullable(),
 		viewsRemaining: z.int().nonnegative().nullable(),
+		duration: z.int().optional(),
+		expiresAt: unixTimestampMsSchema.nullable().optional(),
+		viewed: z.boolean().nullable().optional(),
 	}),
 });
 
@@ -294,3 +297,70 @@ export const apiResponseMessageSchema = z
 
 export type Message = z.infer<typeof messageSchema>;
 export type ApiResponseMessage = z.infer<typeof apiResponseMessageSchema>;
+
+const mediaIdSchema = z.int().nonnegative();
+
+export const outboundMessageSchema = z.discriminatedUnion("type", [
+	z.object({ type: z.literal("Text"), body: textMessageSchema.shape.body }),
+	z.object({
+		type: z.literal("Location"),
+		body: locationMessageSchema.shape.body,
+	}),
+	z.object({
+		type: z.literal("Gaymoji"),
+		body: gaymojiMessageSchema.shape.body,
+	}),
+	z.object({ type: z.literal("Giphy"), body: giphyMessageSchema.shape.body }),
+	z.object({
+		type: z.literal("ProfilePhotoReply"),
+		body: profilePhotoReplyMessageSchema.shape.body,
+	}),
+	z.object({
+		type: z.literal("Image"),
+		body: z.object({ mediaId: mediaIdSchema }),
+	}),
+	z.object({
+		type: z.literal("ExpiringImage"),
+		body: z.object({ mediaId: mediaIdSchema, expiring: z.literal(true) }),
+	}),
+	z.object({
+		type: z.literal("Audio"),
+		body: z.object({ mediaId: mediaIdSchema }),
+	}),
+	z.object({
+		type: z.literal("Video"),
+		body: z.object({
+			mediaId: mediaIdSchema,
+			looping: z.boolean(),
+			maxViews: z.int().nonnegative(),
+		}),
+	}),
+	z.object({
+		type: z.literal("AlbumContentReaction"),
+		body: z.object({
+			albumId: z.int().nonnegative(),
+			albumContentId: z.int().nonnegative(),
+		}),
+	}),
+	z.object({
+		type: z.literal("AlbumContentReply"),
+		body: z.object({
+			albumId: z.int().nonnegative(),
+			albumContentId: z.int().nonnegative(),
+			albumContentReply: z.string(),
+		}),
+	}),
+]);
+
+export type OutboundMessage = z.infer<typeof outboundMessageSchema>;
+
+export type MessageDraft = { outbound: OutboundMessage; optimistic: Message };
+
+type SharedShapeMessage = Extract<
+	Message,
+	{ type: "Text" | "Location" | "Gaymoji" | "Giphy" | "ProfilePhotoReply" }
+>;
+
+export function draftFromMessage(message: SharedShapeMessage): MessageDraft {
+	return { outbound: message, optimistic: message };
+}

@@ -7,7 +7,7 @@ import {
 } from "$lib/model/messaging/messages";
 import { unixTimestampMsSchema } from "$lib/model/types";
 import type { Conversation } from "$lib/model/messaging/conversations";
-import type { messageSchema } from "$lib/model/messaging/messages";
+import type { OutboundMessage } from "$lib/model/messaging/messages";
 
 const conversationMessagesSchema = z.object({
 	lastReadTimestamp: unixTimestampMsSchema.nullable(),
@@ -82,26 +82,19 @@ export async function getSingleMessage({
 	return message;
 }
 
-function toOutboundBody(message: z.infer<typeof messageSchema>): unknown {
-	if (message.type === "Image") {
-		return { mediaId: message.body.mediaId };
-	}
-	return message.body;
-}
-
 export async function sendMessage({
 	toUserId,
 	message,
 }: {
 	toUserId: number;
-	message: z.infer<typeof messageSchema>;
+	message: OutboundMessage;
 }) {
 	return await fetchRest("/v4/chat/message/send", {
 		method: "POST",
 		body: {
 			type: message.type,
 			target: { type: "Direct", targetId: toUserId },
-			body: toOutboundBody(message),
+			body: message.body,
 		},
 	}).then((res) => res.jsonParsed(apiResponseMessageSchema));
 }

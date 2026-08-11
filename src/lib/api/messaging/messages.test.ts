@@ -203,7 +203,7 @@ describe("message API wrappers", () => {
 		await expect(
 			sendMessage({
 				toUserId: 99,
-				message: { type: "Image", body: imageBody },
+				message: { type: "Image", body: { mediaId: 910_001 } },
 			}),
 		).resolves.toEqual(responseMessage);
 
@@ -213,6 +213,40 @@ describe("message API wrappers", () => {
 				type: "Image",
 				target: { type: "Direct", targetId: 99 },
 				body: { mediaId: 910_001 },
+			},
+		});
+	});
+
+	it("sends expiring images as a media reference plus the expiring flag", async () => {
+		const responseMessage = apiMessage({
+			type: "ExpiringImage",
+			body: {
+				mediaId: 910_002,
+				width: null,
+				height: null,
+				url: null,
+				viewsRemaining: 1,
+				duration: 10_000,
+			},
+		});
+		fetchRestMock.mockResolvedValue(response({ data: responseMessage }));
+
+		await expect(
+			sendMessage({
+				toUserId: 99,
+				message: {
+					type: "ExpiringImage",
+					body: { mediaId: 910_002, expiring: true },
+				},
+			}),
+		).resolves.toEqual(responseMessage);
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/send", {
+			method: "POST",
+			body: {
+				type: "ExpiringImage",
+				target: { type: "Direct", targetId: 99 },
+				body: { mediaId: 910_002, expiring: true },
 			},
 		});
 	});

@@ -56,7 +56,11 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import { ApiError } from "$lib/api/api-error";
 import { ConversationUnavailableError } from "$lib/api/messaging/messages";
-import type { Message } from "$lib/model/messaging/messages";
+import type {
+	Message,
+	MessageDraft,
+	OutboundMessage,
+} from "$lib/model/messaging/messages";
 import { ConversationState } from "./conversation-state.svelte";
 
 const CONVERSATION_ID = "1:2";
@@ -110,8 +114,12 @@ function emitMessageSent(payload: unknown) {
 	messageSentHandlers[0]?.({ payload });
 }
 
-function outbound(type: string, body: unknown): Message {
-	return { type, body } as unknown as Message;
+function outbound(type: string, body: unknown): MessageDraft {
+	const message = { type, body } as unknown as Message;
+	return {
+		outbound: message as unknown as OutboundMessage,
+		optimistic: message,
+	};
 }
 
 function echo(messageId: string, type: string, body: unknown) {

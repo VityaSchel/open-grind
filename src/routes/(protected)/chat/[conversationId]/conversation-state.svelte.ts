@@ -19,7 +19,8 @@ import {
 import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 import type {
 	ApiResponseMessage,
-	Message as MessageType,
+	MessageDraft,
+	OutboundMessage,
 } from "$lib/model/messaging/messages";
 import {
 	matchPendingEcho,
@@ -321,11 +322,11 @@ export class ConversationState {
 		}
 	}
 
-	send(message: MessageType): void {
+	send(draft: MessageDraft): void {
 		if (!this.profile) return;
 		const tempId = `pending-${crypto.randomUUID()}`;
 		const optimistic: OptimisticMessage = {
-			...message,
+			...draft.optimistic,
 			messageId: tempId,
 			conversationId: this.conversationId,
 			senderId: this.ourProfileId,
@@ -336,7 +337,7 @@ export class ConversationState {
 		};
 		this.messages = removeDuplicateMessages([optimistic, ...this.messages]);
 		this.#updatePreview(optimistic);
-		void this.#resolveMessage({ tempId, message });
+		void this.#resolveMessage({ tempId, message: draft.outbound });
 	}
 
 	async #resolveMessage({
@@ -344,7 +345,7 @@ export class ConversationState {
 		message,
 	}: {
 		tempId: string;
-		message: MessageType;
+		message: OutboundMessage;
 	}): Promise<void> {
 		try {
 			const { messageId } = await sendMessage({

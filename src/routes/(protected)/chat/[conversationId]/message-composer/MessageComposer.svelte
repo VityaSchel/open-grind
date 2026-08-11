@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error-toast";
-	import type { Message } from "$lib/model/messaging/messages";
+	import { draftFromMessage } from "$lib/model/messaging/messages";
+	import type { MessageDraft } from "$lib/model/messaging/messages";
 	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
 	import { setMessageComposerContext } from "./message-composer-context.svelte";
@@ -12,7 +13,7 @@
 		disabled,
 		height = $bindable(0),
 	}: {
-		onSend: (params: Message) => void | Promise<void>;
+		onSend: (draft: MessageDraft) => void | Promise<void>;
 		disabled: boolean;
 		height?: number;
 	} = $props();
@@ -24,7 +25,7 @@
 		const text = textContent.trim();
 		if (text === "") return;
 		try {
-			await onSend({ type: "Text", body: { text } });
+			await onSend(draftFromMessage({ type: "Text", body: { text } }));
 			textContent = "";
 		} catch (error) {
 			console.error(error);
