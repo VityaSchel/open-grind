@@ -189,16 +189,20 @@ a {
 		scrollbar-width: thin;
 	}
 
-	/* Requires an ancestor with @container/photo-grid — column counts follow
-	   that container's width, not the viewport. */
+	/* Requires an ancestor with @container/photo-grid — columns follow that container's width, not the viewport.
+	   Only cells may be direct children because corner rules apply based on position. */
 	.photo-grid {
-		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid @grid3/photo-grid:grid-cols-3 @grid4/photo-grid:grid-cols-4 @grid5/photo-grid:grid-cols-5 @grid6/photo-grid:grid-cols-6 @grid7/photo-grid:grid-cols-7;
+		@apply mx-auto grid w-full max-w-400 flex-1 grid-cols-2 content-start gap-0.5 overflow-clip rounded-grid;
 
 		--grid-radius-top: var(--radius-grid);
 		--grid-radius-bottom: var(--radius-grid);
+		--photo-grid-aspect: 1 / 1;
 
 		> :first-child {
 			border-top-left-radius: var(--grid-radius-top);
+		}
+		> :last-child {
+			border-bottom-right-radius: var(--grid-radius-bottom);
 		}
 	}
 
@@ -209,84 +213,83 @@ a {
 		--grid-radius-bottom: 0px;
 	}
 
-	/* Round the grid's corner cells so per-cell overlays and outlines follow
-	   the container's clip radius. Column counts must match the grid-cols-*
-	   thresholds on .photo-grid above. */
+	/* Each band repeats its column count four times: grid-cols-N and three N's in the selectors.
+	   e2e/photo-grid-corners.spec.ts asserts the resolved count and all four corners in every band */
 	@container photo-grid (width < theme(--container-grid3)) {
 		.photo-grid {
-			> :nth-child(2) {
+			@apply grid-cols-2;
+
+			> :nth-child(2),
+			> :last-child:nth-child(-n + 2) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(2n + 1):nth-last-child(-n + 2) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
-			> :nth-child(2n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
-			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid3)) and (width < theme(--container-grid4)) {
 		.photo-grid {
-			> :nth-child(3) {
+			@apply grid-cols-3;
+
+			> :nth-child(3),
+			> :last-child:nth-child(-n + 3) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(3n + 1):nth-last-child(-n + 3) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
-			> :nth-child(3n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
-			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid4)) and (width < theme(--container-grid5)) {
 		.photo-grid {
-			> :nth-child(4) {
+			@apply grid-cols-4;
+
+			> :nth-child(4),
+			> :last-child:nth-child(-n + 4) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(4n + 1):nth-last-child(-n + 4) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
-			> :nth-child(4n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
-			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid5)) and (width < theme(--container-grid6)) {
 		.photo-grid {
-			> :nth-child(5) {
+			@apply grid-cols-5;
+
+			> :nth-child(5),
+			> :last-child:nth-child(-n + 5) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(5n + 1):nth-last-child(-n + 5) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
-			> :nth-child(5n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
-			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid6)) and (width < theme(--container-grid7)) {
 		.photo-grid {
-			> :nth-child(6) {
+			@apply grid-cols-6;
+
+			> :nth-child(6),
+			> :last-child:nth-child(-n + 6) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(6n + 1):nth-last-child(-n + 6) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
 			}
-			> :nth-child(6n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
-			}
 		}
 	}
 	@container photo-grid (width >= theme(--container-grid7)) {
 		.photo-grid {
-			> :nth-child(7) {
+			@apply grid-cols-7;
+
+			> :nth-child(7),
+			> :last-child:nth-child(-n + 7) {
 				border-top-right-radius: var(--grid-radius-top);
 			}
 			> :nth-child(7n + 1):nth-last-child(-n + 7) {
 				border-bottom-left-radius: var(--grid-radius-bottom);
-			}
-			> :nth-child(7n):last-child {
-				border-bottom-right-radius: var(--grid-radius-bottom);
 			}
 		}
 	}

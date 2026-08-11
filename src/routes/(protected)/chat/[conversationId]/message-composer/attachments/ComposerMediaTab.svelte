@@ -122,7 +122,7 @@
 	{:else if media === null}
 		<div class="photo-grid">
 			{#each Array(12)}
-				<Skeleton class="aspect-square rounded-none" />
+				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
 			{/each}
 		</div>
 	{:else if media.length === 0 && uploadingCount === 0}
@@ -144,7 +144,7 @@
 		<div class="photo-grid">
 			<button
 				type="button"
-				class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
+				class="flex aspect-(--photo-grid-aspect) cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
 				aria-label="Add photo"
 				onclick={addPhoto}
 			>
@@ -152,14 +152,14 @@
 				<span class="text-xs font-medium">Add photo</span>
 			</button>
 			{#each Array(uploadingCount)}
-				<Skeleton class="aspect-square rounded-none" />
+				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
 			{/each}
 			{#each media as item (item.id)}
 				{@const isSelected = selected.has(item.id)}
 				<button
 					type="button"
 					class={[
-						"relative aspect-square",
+						"relative aspect-(--photo-grid-aspect)",
 						{
 							"cursor-pointer":
 								selected.canSelectMore || isSelected,
