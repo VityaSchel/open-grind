@@ -12,6 +12,7 @@ const {
 	singleColumn,
 	reconcileHandlers,
 	messageSentHandlers,
+	conversationDeleteHandlers,
 } = vi.hoisted(() => ({
 	getConversationsMock: vi.fn(),
 	markConversationAsReadMock: vi.fn(() => Promise.resolve()),
@@ -24,6 +25,7 @@ const {
 	singleColumn: { current: false },
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	messageSentHandlers: [] as ((event: unknown) => void)[],
+	conversationDeleteHandlers: [] as ((event: unknown) => void)[],
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
@@ -50,6 +52,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			if (eventType === "chat.v1.message_sent")
 				messageSentHandlers.push(handler);
+			if (eventType === "chat.v1.conversation.delete")
+				conversationDeleteHandlers.push(handler);
 			return Promise.resolve(vi.fn());
 		},
 	},
@@ -144,6 +148,7 @@ beforeEach(() => {
 	singleColumn.current = false;
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
+	conversationDeleteHandlers.length = 0;
 });
 
 async function settled(state: ConversationsState) {
@@ -681,5 +686,57 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 		await reconcilePromise;
 
 		expect(state.nextPage).toBe(5);
+	});
+});
+
+describe("ConversationsState drafts", () => {
+	async function stateWithDraft(conversationId: string) {
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation(conversationId, 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await settled(state);
+		state.drafts.save({ conversationId, text: "see you at 8" });
+		return state;
+	}
+
+	it("drops the draft of a conversation the user deleted", async () => {
+		const state = await stateWithDraft("a:1");
+
+		await state.deleteConversations(["a:1"]);
+
+		expect(state.drafts.get("a:1")).toBe("");
+	});
+
+	it("keeps the draft when the delete is rolled back", async () => {
+		const state = await stateWithDraft("a:1");
+
+		deleteConversationForMeMock.mockRejectedValueOnce(new Error("offline"));
+		await state.deleteConversations(["a:1"]);
+
+		expect(state.entries).toHaveLength(1);
+		expect(state.drafts.get("a:1")).toBe("see you at 8");
+	});
+
+	it("drops the draft of a conversation deleted elsewhere", async () => {
+		const state = await stateWithDraft("a:1");
+
+		conversationDeleteHandlers[0]?.({
+			payload: { conversationIds: ["a:1"] },
+		});
+
+		expect(state.drafts.get("a:1")).toBe("");
+	});
+
+	it("forgets every draft once the account goes away", async () => {
+		const state = await stateWithDraft("a:1");
+
+		await state.destroy();
+
+		expect(state.drafts.get("a:1")).toBe("");
 	});
 });

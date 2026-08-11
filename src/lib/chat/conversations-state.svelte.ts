@@ -21,6 +21,7 @@ import {
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { CachedConversation } from "./cached-conversation";
+import { Drafts } from "./drafts.svelte";
 import { PendingDeletes } from "./pending-deletes";
 import { PendingFlags } from "./pending-flags";
 import { SeenMessages } from "./seen-messages";
@@ -48,6 +49,7 @@ class ConversationsState {
 	#initialLoad: Promise<unknown> = Promise.resolve();
 
 	readonly ourProfileId: number;
+	readonly drafts = new Drafts();
 	#onIncomingMessage: IncomingMessageHandler;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
@@ -106,6 +108,7 @@ class ConversationsState {
 
 	async destroy(): Promise<void> {
 		this.#destroyed = true;
+		this.drafts.destroy();
 		this.#unsubscribeReconcile();
 		const unlisteners = await Promise.all(this.#wsPromises);
 		for (const unlisten of unlisteners) unlisten();
@@ -549,6 +552,7 @@ class ConversationsState {
 	}
 
 	#markServerDeleted(conversationId: string): void {
+		this.drafts.discard(conversationId);
 		this.#pendingDeletes.mark(conversationId);
 		this.#pendingDeletes.settle({
 			conversationId,
@@ -577,6 +581,7 @@ class ConversationsState {
 				errorLabel: "Failed to delete conversation",
 			});
 			if (rolledBack) this.#sortEntries();
+			else for (const id of conversationIds) this.drafts.discard(id);
 		} finally {
 			for (const id of conversationIds) {
 				this.#pendingDeletes.settle({
