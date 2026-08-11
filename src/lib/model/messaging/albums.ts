@@ -52,3 +52,29 @@ export const albumContentSchema = albumContentMin.extend({
 	processing: z.boolean().nullable(),
 	rejectionId: z.unknown().nullable(),
 });
+
+export const myAlbumSchema = albumDetailsSchema.extend({
+	albumId: z.int(),
+	albumName: z.string().nullable(),
+	profileId: z.int(),
+	version: z.int(),
+	content: z.array(albumContentSchema),
+	isShareable: z.boolean(),
+});
+
+export type MyAlbum = z.infer<typeof myAlbumSchema>;
+
+export const myAlbumsResponseSchema = z.object({
+	albums: z.array(myAlbumSchema),
+});
+
+export const albumShareRequestSchema = z.object({
+	profiles: z.array(
+		z.object({
+			profileId: z.int(),
+			expirationType: albumExpirationTypeSchema,
+		}),
+	),
+});
+
+export type AlbumShareRequest = z.infer<typeof albumShareRequestSchema>;

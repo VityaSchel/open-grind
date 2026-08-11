@@ -5,6 +5,9 @@ import { DEMO_CONVERSATION, installTauriShim } from "./app";
 export const DRAWER = "[data-vaul-drawer]";
 const PANEL = "[data-slot=sheet-panel]";
 
+export const ALBUM_TILE = '[data-slot="album-tile"]';
+export const SELECTED_ALBUM_TILE = `${ALBUM_TILE}[aria-pressed="true"]`;
+
 export interface DrawerBox {
 	top: number;
 	sheetScrollTop: number;

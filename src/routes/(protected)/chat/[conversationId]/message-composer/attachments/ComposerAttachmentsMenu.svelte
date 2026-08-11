@@ -10,23 +10,31 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 
-	const FULLSIZE_TABS: Tab[] = ["media"];
+	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
 	type Tab = "media" | "albums" | "location";
+	type SelectionTab = { sendSelected: () => void };
 
-	let selectedTab = $state("media");
+	let selectedTab = $state<Tab>("media");
 
 	const isFullsizeTab = $derived(FULLSIZE_TABS.includes(selectedTab));
 
 	let sheet = $state<HTMLDivElement | null>(null);
 	let peek = $state<HTMLDivElement | null>(null);
-	let mediaTab = $state<ComposerMediaTab | null>(null);
-	let selectedCount = $state(0);
+	let tabs = $state<Partial<Record<Tab, SelectionTab | null>>>({});
+	let counts = $state<Partial<Record<Tab, number>>>({});
+
+	const selectedCount = $derived(counts[selectedTab] ?? 0);
+
+	function sendSelected() {
+		tabs[selectedTab]?.sendSelected();
+	}
 
 	const settleQuietMs = 140;
 	let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -53,6 +61,7 @@
 		if (!open) {
 			if (settleTimer !== null) clearTimeout(settleTimer);
 			settleTimer = null;
+			counts = {};
 			return;
 		}
 		const dismiss = () => {
@@ -118,17 +127,18 @@
 					></div>
 					<Tabs.Content value="media">
 						<ComposerMediaTab
-							bind:this={mediaTab}
-							onSelectionChange={(count) => {
-								selectedCount = count;
-							}}
+							bind:this={tabs.media}
+							onSelectionChange={(count) =>
+								(counts.media = count)}
 							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="albums">
-						<ComposerUnimplementedTab
-							label="Sharing albums"
-							issue={33}
+						<ComposerAlbumsTab
+							bind:this={tabs.albums}
+							onSelectionChange={(count) =>
+								(counts.albums = count)}
+							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="location">
@@ -149,9 +159,7 @@
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"
-						onclick={() => {
-							mediaTab?.sendSelected();
-						}}
+						onclick={sendSelected}
 					>
 						Send
 						<Badge

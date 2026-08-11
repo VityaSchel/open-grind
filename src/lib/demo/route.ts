@@ -1,3 +1,4 @@
+import { albumShareRequestSchema } from "$lib/model/messaging/albums";
 import { demoMeProfileId } from "./config";
 import {
 	demoAlbumContent,
@@ -5,9 +6,11 @@ import {
 	demoConversations,
 	demoDeleteConversation,
 	demoDrawerMedia,
+	demoMyAlbums,
 	demoSentMessage,
 	demoSetConversationMuted,
 	demoSetConversationPinned,
+	demoShareAlbum,
 	demoSingleMessage,
 } from "./mock/conversations";
 import {
@@ -110,6 +113,23 @@ export function demoRoute({
 		segments.length === 6
 	) {
 		return ok(demoSingleMessage({ conversationId, messageId }));
+	}
+	if (method === "GET" && rawPath === "/v1/albums") {
+		return ok(demoMyAlbums());
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v4" &&
+		segments[1] === "albums" &&
+		segments[3] === "shares" &&
+		segments.length === 4
+	) {
+		const { profiles } = albumShareRequestSchema.parse(body);
+		demoShareAlbum({
+			albumId: Number(segments[2]),
+			profileIds: profiles.map((profile) => profile.profileId),
+		});
+		return ok({});
 	}
 	if (method === "GET" && segments[0] === "v2" && segments[1] === "albums") {
 		return ok(demoAlbumContent(Number(segments[2])));
