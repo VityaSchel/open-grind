@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 import {
 	ALBUM_TILE,
 	DRAWER,
@@ -10,6 +11,7 @@ import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { expectNoToast } from "./support/toast";
 
 const MEDIA_TILE = 'button[aria-label="Select media"]';
+const OTHER_CONVERSATION = "/chat/100009:123456000";
 
 test.describe("composer albums tab", () => {
 	test("each tab arms Send from its own selection", async ({ page }) => {
@@ -41,6 +43,36 @@ test.describe("composer albums tab", () => {
 		await expect(page.locator(DRAWER)).toBeHidden();
 
 		await expectNoToast(page, "Couldn't share album");
+	});
+
+	test("a conversation change closes the armed drawer", async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await serveImages(page, CHAT_MEDIA_HOST);
+		await installTauriShim(page);
+
+		await page.goto(DEMO_CONVERSATION);
+		await page.waitForTimeout(2500);
+		await page.locator(`a[href='${OTHER_CONVERSATION}']`).first().click();
+		await page.waitForTimeout(2000);
+		expect(page.url()).toContain(OTHER_CONVERSATION);
+
+		await page.getByRole("button", { name: "Add attachment" }).click();
+		await page.locator(DRAWER).waitFor({ timeout: 10_000 });
+		await page.getByRole("tab", { name: "Albums" }).click();
+		const tiles = page.locator(ALBUM_TILE);
+		await expect(tiles.first()).toBeVisible({ timeout: 30_000 });
+		await tiles.first().click();
+
+		const send = page.getByRole("button", { name: /^Send/ });
+		await expect(send).toBeVisible();
+
+		await page.goBack();
+		await expect(page).toHaveURL(new RegExp(`${DEMO_CONVERSATION}$`));
+		await expect(
+			page.locator(DRAWER),
+			"a selection armed for the previous conversation must not survive",
+		).toBeHidden();
+		await expect(send).toBeHidden();
 	});
 
 	test("closing the drawer forgets the selection it was armed with", async ({

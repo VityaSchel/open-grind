@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from "$app/state";
+
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import type { MessageDraft } from "$lib/model/messaging/messages";
@@ -53,7 +55,9 @@
 	<div class="relative h-full w-full rounded-composer bg-popover">
 		<MessageTextInput bind:value={textContent} />
 		{#if textContent === ""}
-			<ComposerAttachments />
+			{#key page.params.conversationId}
+				<ComposerAttachments />
+			{/key}
 			<ComposerVoiceMessage />
 		{:else}
 			<ComposerSubmitButton />
