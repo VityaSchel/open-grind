@@ -12,12 +12,16 @@ jobs:
   check:
     runs-on: ["check", "hetzner"]
     timeout-minutes: 60
+    defaults:
+      run:
+        shell: >-
+          /usr/bin/env
+          -u GITHUB_TOKEN -u FORGEJO_TOKEN
+          -u ACTIONS_RUNTIME_TOKEN
+          -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL
+          -u ACTIONS_CACHE_URL -u ACTIONS_RUNTIME_URL -u ACTIONS_RESULTS_URL
+          bash --noprofile --norc -e -o pipefail {0}
     env:
-      GITHUB_TOKEN: ""
-      FORGEJO_TOKEN: ""
-      ACTIONS_RUNTIME_TOKEN: ""
-      ACTIONS_CACHE_URL: ""
-      ACTIONS_RESULTS_URL: ""
       PR_NUMBER: ${{ forgejo.event.pull_request.number }}
       EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
       CI_WORKSPACE: /opt/open-grind-ci
