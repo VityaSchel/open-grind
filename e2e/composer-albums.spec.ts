@@ -4,13 +4,13 @@ import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 import {
 	ALBUM_TILE,
 	DRAWER,
+	MEDIA_TILE,
 	openAttachments,
 	SELECTED_ALBUM_TILE,
 } from "./support/drawer";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { expectNoToast } from "./support/toast";
 
-const MEDIA_TILE = 'button[aria-label="Select media"]';
 const OTHER_CONVERSATION = "/chat/100009:123456000";
 
 test.describe("composer albums tab", () => {

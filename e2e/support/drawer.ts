@@ -5,7 +5,10 @@ import { DEMO_CONVERSATION, installTauriShim } from "./app";
 export const DRAWER = "[data-vaul-drawer]";
 const PANEL = "[data-slot=sheet-panel]";
 
+export const MEDIA_TILE = '[data-slot="media-tile"]';
 export const ALBUM_TILE = '[data-slot="album-tile"]';
+export const SELECTED_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="true"]`;
+export const SELECTABLE_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="false"]`;
 export const SELECTED_ALBUM_TILE = `${ALBUM_TILE}[aria-pressed="true"]`;
 
 export interface DrawerBox {

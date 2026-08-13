@@ -17,7 +17,7 @@ test("the @ command copies the current location and still sets a new one", async
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);
 
-	await page.keyboard.press("Meta+k");
+	await page.keyboard.press("ControlOrMeta+k");
 	const palette = page.getByRole("combobox");
 	await palette.waitFor();
 
@@ -42,7 +42,7 @@ test("the @ command copies the current location and still sets a new one", async
 	).toBeVisible();
 
 	// copying is not a mutation: the location is still the one we copied
-	await page.keyboard.press("Meta+k");
+	await page.keyboard.press("ControlOrMeta+k");
 	await palette.waitFor();
 	await palette.fill("@");
 	await expect(page.locator(OPTION)).toHaveText([

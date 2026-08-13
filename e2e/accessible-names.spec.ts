@@ -6,6 +6,7 @@ import {
 	ensureGridLocation,
 	installTauriShim,
 } from "./support/app";
+import { ALBUM_TILE } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
 const MESSAGE = '[role="button"][tabindex="0"]';
@@ -23,6 +24,10 @@ test.describe("every control has an accessible name", () => {
 		await page.locator('[aria-label="Add attachment"]').click();
 		await page.locator('[aria-label="Add photo"]').waitFor();
 		await expectEveryControlNamed(page, "attachments drawer");
+
+		await page.getByRole("tab", { name: "Albums" }).click();
+		await page.locator(ALBUM_TILE).first().waitFor({ timeout: 30_000 });
+		await expectEveryControlNamed(page, "albums tab");
 		await page.keyboard.press("Escape");
 
 		await page.getByRole("textbox").fill("hi");
