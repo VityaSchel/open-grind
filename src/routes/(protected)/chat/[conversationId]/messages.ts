@@ -1,10 +1,7 @@
 import { getConversationMessages } from "$lib/api/messaging/messages";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
-type StackedMessage = ApiResponseMessage & {
-	indexInStack: number;
-	stackLength: number;
-};
+type StackedMessage = { indexInStack: number; stackLength: number };
 
 export function getStackedMessages<T extends ApiResponseMessage>({
 	messages,
@@ -45,7 +42,7 @@ export function getStackedMessages<T extends ApiResponseMessage>({
 	return stackedMessages;
 }
 
-type GroupedMessage = ApiResponseMessage & { dayStart?: number };
+type GroupedMessage = { dayStart?: number };
 
 export function groupMessagesByDate<T extends ApiResponseMessage>({
 	messages,

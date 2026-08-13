@@ -14662,6 +14662,7 @@
 					"ProfileLink",
 					"ProfilePhotoReply",
 					"Retract",
+					"RightNowRequest",
 					"Text",
 					"Unknown",
 					"NonExpiringVideo",
@@ -15157,6 +15158,72 @@
 					"targetMessageId"
 				]
 			},
+			"RightNowRequestMedia": {
+				"type": "object",
+				"properties": {
+					"mediaHash": {
+						"type": "string"
+					},
+					"isNsfw": {
+						"type": "boolean"
+					}
+				},
+				"description": "Element of `medias` in [RightNowRequestBody](#rightnowrequestbody). Unrelated to [RightNowMedia](#rightnowmedia), which is the Right Now feed object.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaHash",
+					"isNsfw"
+				]
+			},
+			"RightNowRequestBody": {
+				"type": "object",
+				"properties": {
+					"requestId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"requestCreatedAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"requestUpdatedAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"postStatus": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`. Opaque: the chat body carries it as a plain string, and nothing compares it against the Right Now post statuses (`AWAITING_PAYMENT`, `AWAITING_MODERATION`, `ACTIVE`, `EXPIRED`, `HIDDEN`), so reusing those values is a suspicion rather than a fact."
+					},
+					"postId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true
+					},
+					"medias": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowRequestMedia"
+						}
+					}
+				},
+				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"requestId",
+					"requestCreatedAt",
+					"requestUpdatedAt",
+					"postStatus",
+					"postId",
+					"medias"
+				]
+			},
 			"TextMessageBody": {
 				"type": "object",
 				"properties": {
@@ -15193,7 +15260,7 @@
 			"UnknownMessageBody": {
 				"type": "object",
 				"additionalProperties": true,
-				"description": "Empty type.",
+				"description": "Empty type.\n\nThe official client renders both unrecognized message types and retracted messages as a locally generated \"system message\" row. `SystemMessage` is therefore a client-side UI concept and never a wire value — it has no message type constant, no body type and no adapter.",
 				"x-render-on-tag": "messaging/messages"
 			},
 			"MessageBody": {
@@ -15236,6 +15303,9 @@
 					},
 					{
 						"$ref": "#/components/schemas/RetractMessageBody"
+					},
+					{
+						"$ref": "#/components/schemas/RightNowRequestBody"
 					},
 					{
 						"$ref": "#/components/schemas/TextMessageBody"

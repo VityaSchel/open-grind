@@ -99,16 +99,24 @@ function conversationsStub() {
 	};
 }
 
-function create() {
+function create(conversations = conversationsStub()) {
 	return new ConversationState({
 		conversationId: CONVERSATION_ID,
 		ourProfileId: OUR_ID,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		conversations: conversationsStub() as any,
+		conversations: conversations as any,
 	});
 }
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+
+function deferred<T>() {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((res) => {
+		resolve = res;
+	});
+	return { promise, resolve };
+}
 
 function emitMessageSent(payload: unknown) {
 	messageSentHandlers[0]?.({ payload });
@@ -290,6 +298,127 @@ describe("ConversationState send echo matching", () => {
 		emitMessageSent(echo("real-text", "Text", { text: "hello" }));
 		expect(text().messageId).toBe("real-text");
 		expect(text().status).toBe("sent");
+	});
+});
+
+describe("ConversationState send timestamp", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		readHandlers.length = 0;
+		messageSentHandlers.length = 0;
+		reconcileHandlers.length = 0;
+		getConversationMock.mockResolvedValue({
+			messages: [],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+	});
+
+	it("re-anchors the inbox row on the server timestamp of a sent message", async () => {
+		sendMessageMock.mockResolvedValue({
+			...echo("real-a", "Text", { text: "a" }),
+			timestamp: 9000,
+		});
+		const conversations = conversationsStub();
+		const state = create(conversations);
+		await flush();
+
+		state.send(outbound("Text", { text: "a" }));
+		const optimisticTimestamp = state.messages[0]!.timestamp;
+		await flush();
+
+		expect(optimisticTimestamp).not.toBe(9000);
+		expect(state.messages[0]!.messageId).toBe("real-a");
+		expect(state.messages[0]!.timestamp).toBe(9000);
+		expect(conversations.updatePreview).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				conversationId: CONVERSATION_ID,
+				timestamp: 9000,
+			}),
+		);
+	});
+
+	it("adopts the server timestamp when the echo beats the send response", async () => {
+		const gate = deferred<{ messageId: string; timestamp: number }>();
+		sendMessageMock.mockImplementation(() => gate.promise);
+		const conversations = conversationsStub();
+		const state = create(conversations);
+		await flush();
+
+		state.send(outbound("Text", { text: "a" }));
+		const optimisticTimestamp = state.messages[0]!.timestamp;
+		emitMessageSent(echo("real-a", "Text", { text: "a" }));
+
+		expect(optimisticTimestamp).not.toBe(5000);
+		expect(state.messages[0]!.messageId).toBe("real-a");
+		expect(state.messages[0]!.timestamp).toBe(5000);
+		expect(conversations.updatePreview).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				conversationId: CONVERSATION_ID,
+				timestamp: 5000,
+			}),
+		);
+
+		gate.resolve({ messageId: "real-a", timestamp: 5000 });
+		await flush();
+
+		expect(state.messages[0]!.timestamp).toBe(5000);
+	});
+
+	it("keeps a peer reply that follows an echo-first send", async () => {
+		sendMessageMock.mockImplementation(() => deferred().promise);
+		const state = create();
+		await flush();
+
+		state.send(outbound("Text", { text: "a" }));
+		emitMessageSent(echo("real-a", "Text", { text: "a" }));
+		emitMessageSent({
+			...echo("peer-1", "Text", { text: "hi" }),
+			senderId: PEER_ID,
+			timestamp: 6000,
+		});
+
+		expect(state.messages.map((m) => m.messageId)).toEqual([
+			"peer-1",
+			"real-a",
+		]);
+	});
+
+	it("keeps messages newest-first when a send resolves later than the next one", async () => {
+		const gate = deferred<{ messageId: string; timestamp: number }>();
+		const responses = [gate.promise, deferred().promise];
+		sendMessageMock.mockImplementation(() => responses.shift());
+		const state = create();
+		await flush();
+
+		state.send(outbound("Text", { text: "a" }));
+		state.send(outbound("Text", { text: "b" }));
+		const clientTimestamp = state.messages[0]!.timestamp;
+
+		gate.resolve({
+			messageId: "real-a",
+			timestamp: clientTimestamp + 60_000,
+		});
+		await flush();
+
+		const timestamps = state.messages.map((m) => m.timestamp);
+		expect(state.messages[0]!.messageId).toBe("real-a");
+		expect(timestamps).toEqual([...timestamps].sort((a, b) => b - a));
+	});
+
+	it("keeps the client timestamp when a send fails", async () => {
+		sendMessageMock.mockRejectedValue(new Error("offline"));
+		const conversations = conversationsStub();
+		const state = create(conversations);
+		await flush();
+
+		state.send(outbound("Text", { text: "a" }));
+		const optimisticTimestamp = state.messages[0]!.timestamp;
+		await flush();
+
+		expect(state.messages[0]!.status).toBe("error");
+		expect(state.messages[0]!.timestamp).toBe(optimisticTimestamp);
 	});
 });
 

@@ -23,6 +23,8 @@ import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { CachedConversation } from "./cached-conversation";
 import { PendingDeletes } from "./pending-deletes";
 import { PendingFlags } from "./pending-flags";
+import { SeenMessages } from "./seen-messages";
+import { UnreadWhileMissing } from "./unread-while-missing";
 
 const singleColumnLayout = below("split");
 
@@ -55,11 +57,13 @@ class ConversationsState {
 	#destroyed = false;
 	#pendingFlags = new PendingFlags<OptimisticFlagField>();
 	#pendingDeletes = new PendingDeletes();
+	#seenMessages = new SeenMessages();
+	#unreadWhileMissing = new UnreadWhileMissing();
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping for Promise.allSettled(), nothing renders from it
 	#inFlightFetches = new Set<Promise<unknown>>();
 	#fetchEpoch = 0;
 	#refreshRequestedSinceFetchStart = false;
-	#syncLatestInFlight: Promise<void> | null = null;
+	#syncLatestInFlight: Promise<boolean> | null = null;
 
 	constructor({
 		ourProfileId,
@@ -109,37 +113,47 @@ class ConversationsState {
 	}
 
 	async #handleMessageSent(message: ApiResponseMessage): Promise<void> {
-		const isActive = message.conversationId === this.#activeConversationId;
+		const conversationId = message.conversationId;
 		const isIncoming = message.senderId !== this.ourProfileId;
-		let entry = this.#find(message.conversationId);
+		let entry = this.#find(conversationId);
 
-		if (entry && message.timestamp <= entry.data.lastActivityTimestamp) {
-			if (!isActive) this.invalidateConversation(message.conversationId);
+		if (this.#seenMessages.has(message.messageId)) {
+			if (!this.#isActive(conversationId))
+				this.invalidateConversation(conversationId);
 			return;
 		}
+		this.#seenMessages.mark(message.messageId);
 
 		if (entry) {
-			if (!isActive && isIncoming) {
-				entry.data.unreadCount += 1;
+			const isActive = this.#isActive(conversationId);
+			if (!isActive && isIncoming) entry.data.unreadCount += 1;
+			if (!isActive) this.invalidateConversation(conversationId);
+			if (message.timestamp > entry.data.lastActivityTimestamp) {
+				this.updatePreview({
+					conversationId,
+					preview: previewFromMessage(message),
+					timestamp: message.timestamp,
+				});
 			}
-			if (!isActive) {
-				this.invalidateConversation(message.conversationId);
-			}
-			this.updatePreview({
-				conversationId: message.conversationId,
-				preview: previewFromMessage(message),
-				timestamp: message.timestamp,
-			});
 		} else {
-			await this.ensureLoaded(message.conversationId);
-			entry = this.#find(message.conversationId);
+			if (isIncoming) this.#unreadWhileMissing.add(conversationId);
+			entry = await this.#loadMissing(conversationId);
+			if (!entry) {
+				if (isIncoming) this.#unreadWhileMissing.drop(conversationId);
+				this.#seenMessages.unmark(message.messageId);
+				return;
+			}
+			const arrived = this.#unreadWhileMissing.take(conversationId);
+			const { data } = entry;
+			if (!this.#isActive(conversationId))
+				data.unreadCount = Math.max(data.unreadCount, arrived);
 		}
 		const isInboxPageRoot = page.route.id === "/(protected)/chat";
 		const twoColLayout = !singleColumnLayout.current;
 		const isConversationsListVisible = isInboxPageRoot || twoColLayout;
 		if (
 			isIncoming &&
-			!isActive &&
+			!this.#isActive(conversationId) &&
 			entry &&
 			!entry.data.muted &&
 			!isConversationsListVisible
@@ -243,7 +257,7 @@ class ConversationsState {
 		void this.refresh();
 	}
 
-	#syncLatest(args: { errorLabel: string }): Promise<void> {
+	#syncLatest(args: { errorLabel: string }): Promise<boolean> {
 		this.#syncLatestInFlight ??= this.#runSyncLatest(args).finally(() => {
 			this.#syncLatestInFlight = null;
 		});
@@ -254,12 +268,12 @@ class ConversationsState {
 		errorLabel,
 	}: {
 		errorLabel: string;
-	}): Promise<void> {
+	}): Promise<boolean> {
 		// Claiming would make an in-flight #load drop the nextPage it fetched.
 		const fetchEpoch = this.#fetchEpoch;
 		try {
 			const result = await getConversations(1);
-			if (this.#isStale(fetchEpoch)) return;
+			if (this.#isStale(fetchEpoch)) return true;
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
@@ -274,9 +288,11 @@ class ConversationsState {
 				}
 			}
 			this.#sortEntries();
+			return true;
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: errorLabel, error });
+			return false;
 		}
 	}
 
@@ -358,13 +374,23 @@ class ConversationsState {
 		}
 	}
 
-	async ensureLoaded(conversationId: string): Promise<void> {
-		if (this.#find(conversationId)) return;
-		await this.#trackFetch(
-			this.#syncLatest({
-				errorLabel: "Failed to sync conversation into sidebar",
-			}),
-		);
+	async ensureLoaded(conversationId: string): Promise<boolean> {
+		if (this.#find(conversationId)) return true;
+		const errorLabel = "Failed to sync conversation into sidebar";
+		return this.#trackFetch(this.#syncLatest({ errorLabel }));
+	}
+
+	async #loadMissing(id: string): Promise<Conversation | undefined> {
+		const joinedRunningSync = this.#syncLatestInFlight !== null;
+		const syncSucceeded = await this.ensureLoaded(id);
+		const joinedSyncWasTooEarly =
+			joinedRunningSync && syncSucceeded && !this.#find(id);
+		if (joinedSyncWasTooEarly) await this.ensureLoaded(id);
+		return this.#find(id);
+	}
+
+	#isActive(conversationId: string): boolean {
+		return conversationId === this.#activeConversationId;
 	}
 
 	remove(conversationId: string) {

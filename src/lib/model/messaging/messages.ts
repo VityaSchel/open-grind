@@ -235,6 +235,27 @@ export const retractMessageSchema = messageBaseSchema.safeExtend({
 
 export type RetractMessage = z.infer<typeof retractMessageSchema>;
 
+export const rightNowRequestMediaSchema = z.object({
+	mediaHash: z.string(),
+	isNsfw: z.boolean(),
+});
+
+export const rightNowRequestMessageSchema = messageBaseSchema.safeExtend({
+	type: z.literal("RightNowRequest"),
+	body: z.object({
+		requestId: z.int().nonnegative(),
+		requestCreatedAt: unixTimestampMsSchema,
+		requestUpdatedAt: unixTimestampMsSchema,
+		postStatus: z.string().nullable(),
+		postId: z.int().nonnegative().nullable(),
+		medias: z.array(rightNowRequestMediaSchema),
+	}),
+});
+
+export type RightNowRequestMessage = z.infer<
+	typeof rightNowRequestMessageSchema
+>;
+
 export const textMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Text"),
 	body: z.object({ text: z.string() }),
@@ -273,6 +294,7 @@ export const messageSchema = z.discriminatedUnion("type", [
 	profileLinkMessageSchema,
 	profilePhotoReplyMessageSchema,
 	retractMessageSchema,
+	rightNowRequestMessageSchema,
 	textMessageSchema,
 	unknownMessageSchema,
 	nonExpiringVideoMessageSchema,
@@ -291,9 +313,36 @@ export const unsentMessageSchema = z.intersection(
 
 export type UnsentMessage = z.infer<typeof unsentMessageSchema>;
 
+const modeledMessageTypes = new Set<string>(
+	messageSchema.options.map((option) => option.shape.type.value),
+);
+const typesAlreadyReportedAsDrifted = new Set<string>();
+
+function warnOnceIfModeledTypeDriftedFromSpec(type: string): void {
+	const isDrift = modeledMessageTypes.has(type);
+	if (!isDrift || typesAlreadyReportedAsDrifted.has(type)) return;
+	typesAlreadyReportedAsDrifted.add(type);
+	console.warn(
+		`[messages] "${type}" no longer matches the body documented in docs/lib/openapi.json and is rendering as Unknown`,
+	);
+}
+
+export const unrecognizedMessageSchema = z
+	.intersection(
+		messageBaseSchema.safeExtend({ type: z.string(), body: z.unknown() }),
+		apiResponseMessageOverlaySchema,
+	)
+	.transform(({ type, ...message }) => {
+		warnOnceIfModeledTypeDriftedFromSpec(type);
+		return { ...message, type: "Unknown" as const, unrecognizedType: type };
+	});
+
+export type UnrecognizedMessage = z.infer<typeof unrecognizedMessageSchema>;
+
 export const apiResponseMessageSchema = z
 	.intersection(messageSchema, apiResponseMessageOverlaySchema)
-	.or(unsentMessageSchema);
+	.or(unsentMessageSchema)
+	.or(unrecognizedMessageSchema);
 
 export type Message = z.infer<typeof messageSchema>;
 export type ApiResponseMessage = z.infer<typeof apiResponseMessageSchema>;
