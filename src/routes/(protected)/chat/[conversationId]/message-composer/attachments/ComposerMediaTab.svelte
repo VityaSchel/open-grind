@@ -154,10 +154,11 @@
 			{#each Array(uploadingCount)}
 				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
 			{/each}
-			{#each media as item (item.id)}
+			{#each media as item, index (item.id)}
 				{@const isSelected = selected.has(item.id)}
 				<button
 					type="button"
+					data-slot="media-tile"
 					class={[
 						"relative aspect-(--photo-grid-aspect)",
 						{
@@ -165,12 +166,12 @@
 								selected.canSelectMore || isSelected,
 						},
 					]}
-					aria-label={isSelected ? "Deselect media" : "Select media"}
 					aria-pressed={isSelected}
 					onclick={() => toggleSelected(item.id)}
 				>
 					<MediaImage
 						src={proxyMediaUrl(item.url)}
+						alt="Photo {index + 1}"
 						class="size-full rounded-[inherit]"
 						imgClass="bg-card-foreground/10"
 					/>
@@ -191,4 +192,9 @@
 			{/each}
 		</div>
 	{/if}
+	<div role="status" class="sr-only">
+		{selected.size === selected.max
+			? `Maximum ${selected.max} selected`
+			: ""}
+	</div>
 </div>

@@ -106,6 +106,9 @@
 			{/each}
 		{/if}
 	</div>
+	<div role="status" class="sr-only">
+		{gridState.loadingMore ? "Loading more profiles" : ""}
+	</div>
 	{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
 		<div
 			class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
