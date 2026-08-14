@@ -23,7 +23,7 @@
 	let {
 		onClose,
 		onSelectionChange,
-		expiring = $bindable(),
+		expiring,
 	}: {
 		onClose: () => void;
 		onSelectionChange: (count: number) => void;
@@ -92,8 +92,6 @@
 		const items = media.filter((item) => selected.has(item.id));
 		const sendAsExpiring = expiring;
 		selected.clear();
-		onSelectionChange(0);
-		expiring = false;
 		onClose();
 		for (const item of items) {
 			item.used = true;
@@ -102,14 +100,19 @@
 				width: null,
 				height: null,
 				url: item.url,
-				imageHash: imageHashFromUrl(item.url),
-				takenOnGrindr: item.takenOnGrindr,
-				createdAt: item.createdTs,
 			};
 			void composer().sendMessage(
 				sendAsExpiring
-					? { type: "ExpiringImage", body: { ...body, viewsRemaining: null } }
-					: { type: "Image", body },
+					? { type: "ExpiringImage", body }
+					: {
+							type: "Image",
+							body: {
+								...body,
+								imageHash: imageHashFromUrl(item.url),
+								takenOnGrindr: item.takenOnGrindr,
+								createdAt: item.createdTs,
+							},
+						},
 			);
 		}
 	}
