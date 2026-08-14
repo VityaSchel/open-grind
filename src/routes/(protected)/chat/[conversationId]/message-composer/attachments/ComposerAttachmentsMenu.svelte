@@ -1,8 +1,8 @@
 <script lang="ts">
-	import ClockClockwiseIcon from "phosphor-svelte/lib/ClockClockwiseIcon";
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
+	import TimerIcon from "phosphor-svelte/lib/TimerIcon";
 	import { expoOut, sineIn } from "svelte/easing";
 	import { fly } from "svelte/transition";
 
@@ -10,6 +10,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
+	import { Toggle } from "$lib/components/ui/toggle";
 	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
@@ -85,6 +86,7 @@
 				open = false;
 			}
 		}}
+		preventOverflowTextSelection={false}
 	>
 		<Tabs.Root
 			bind:value={selectedTab}
@@ -151,18 +153,30 @@
 					in:fly={{ duration: 600, y: 100, easing: expoOut }}
 					out:fly={{ duration: 400, y: 100, easing: sineIn }}
 				>
-					<Button
-						size="icon-lg"
-						variant={expiring ? "default" : "secondary"}
-						class="pointer-events-auto shadow-lg"
-						aria-pressed={expiring}
-						aria-label="Send as expiring photo"
-						onclick={() => (expiring = !expiring)}
+					<Toggle
+						aria-label="Set photo as expiring after 10 seconds"
+						size="lg"
+						class={[
+							"pointer-events-auto",
+							{
+								"bg-muted hover:bg-muted/80": !expiring,
+								"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
+									expiring,
+							},
+						]}
+						variant="default"
+						bind:pressed={expiring}
 					>
-						<ClockClockwiseIcon
+						<TimerIcon
 							weight={expiring ? "fill" : "regular"}
+							class="size-5"
 						/>
-					</Button>
+						{#if expiring}
+							10s
+						{:else}
+							Off
+						{/if}
+					</Toggle>
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"
