@@ -100,6 +100,7 @@
 					"wrap-anywhere",
 					{
 						"font-medium text-white":
+							draft === "" &&
 							conversation.data.unreadCount > 0 &&
 							!conversation.data.muted,
 					},

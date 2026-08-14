@@ -27,6 +27,7 @@ let drafts: Drafts;
 
 function conversation(
 	preview: ConversationType["data"]["preview"],
+	unreadCount = 0,
 ): ConversationType {
 	return {
 		type: "full_conversation_v1",
@@ -46,7 +47,7 @@ function conversation(
 				},
 			],
 			lastActivityTimestamp: 1_000_000,
-			unreadCount: 0,
+			unreadCount,
 			preview,
 			muted: false,
 			pinned: false,
@@ -71,13 +72,20 @@ function textPreview(text: string): ConversationType["data"]["preview"] {
 	};
 }
 
-function renderRow(preview: ConversationType["data"]["preview"]) {
+function renderRow(
+	preview: ConversationType["data"]["preview"],
+	unreadCount = 0,
+) {
 	return render(Conversation, {
 		props: {
-			conversation: conversation(preview),
+			conversation: conversation(preview, unreadCount),
 			onEnterSelection: () => {},
 		},
 	});
+}
+
+function descriptionClass(container: HTMLElement): string {
+	return container.querySelector(DESCRIPTION)?.className ?? "";
 }
 
 function previewLine(container: HTMLElement): string {
@@ -149,6 +157,24 @@ describe("Conversation preview line", () => {
 		drafts.save({ conversationId: CONVERSATION_ID, text: "" });
 		await tick();
 		expect(previewLine(container)).toBe("hello there");
+	});
+
+	it("emphasizes an unread message but never the user's own draft", () => {
+		const { container: unread } = renderRow(
+			textPreview("can't make it"),
+			1,
+		);
+
+		expect(descriptionClass(unread)).toContain("text-white");
+		cleanup();
+
+		drafts.save({ conversationId: CONVERSATION_ID, text: "see you at" });
+		const { container: drafted } = renderRow(
+			textPreview("can't make it"),
+			1,
+		);
+
+		expect(descriptionClass(drafted)).not.toContain("text-white");
 	});
 
 	it("ignores a draft belonging to another conversation", () => {
