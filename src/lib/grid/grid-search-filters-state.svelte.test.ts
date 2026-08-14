@@ -13,10 +13,10 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 import { GridSearchFiltersState } from "$lib/grid/grid-search-filters-state.svelte";
 import { defaultFilters } from "$lib/model/browse/grid/filters";
 
-async function loadedState(onRefresh = vi.fn()) {
-	const state = new GridSearchFiltersState({ onRefresh });
+async function loadedState(onQueryChange = vi.fn()) {
+	const state = new GridSearchFiltersState({ onQueryChange });
 	await state.ready;
-	return { state, onRefresh };
+	return { state, onQueryChange };
 }
 
 beforeEach(() => {
@@ -29,29 +29,29 @@ beforeEach(() => {
 
 describe("set", () => {
 	it("ignores a patch that changes nothing", async () => {
-		const { state, onRefresh } = await loadedState();
+		const { state, onQueryChange } = await loadedState();
 
 		state.set({ genders: [1, 2] });
 
-		expect(onRefresh).not.toHaveBeenCalled();
+		expect(onQueryChange).not.toHaveBeenCalled();
 		expect(setPreferencesMock).not.toHaveBeenCalled();
 	});
 
 	it("applies a patch that changes a nested list", async () => {
-		const { state, onRefresh } = await loadedState();
+		const { state, onQueryChange } = await loadedState();
 
 		state.set({ genders: [2, 1] });
 
 		expect(state.value?.genders).toEqual([2, 1]);
-		expect(onRefresh).toHaveBeenCalledOnce();
+		expect(onQueryChange).toHaveBeenCalledOnce();
 		expect(setPreferencesMock).toHaveBeenCalledOnce();
 	});
 
 	it("applies a patch that changes a scalar", async () => {
-		const { state, onRefresh } = await loadedState();
+		const { state, onQueryChange } = await loadedState();
 
 		state.set({ isFavorite: !defaultFilters.isFavorite });
 
-		expect(onRefresh).toHaveBeenCalledOnce();
+		expect(onQueryChange).toHaveBeenCalledOnce();
 	});
 });
