@@ -306,7 +306,9 @@ test.describe("attachments drawer", () => {
 		await page.locator('button[aria-label="Select media"]').first().click();
 		const toggle = page
 			.locator(DRAWER)
-			.getByRole("button", { name: "Send as expiring photo" });
+			.getByRole("button", {
+				name: "Set photo as expiring after 10 seconds",
+			});
 		await expect(toggle).toHaveAttribute("aria-pressed", "false");
 		await toggle.click();
 		await expect(toggle).toHaveAttribute("aria-pressed", "true");
@@ -330,7 +332,9 @@ test.describe("attachments drawer", () => {
 		await expect(send).toHaveCount(1);
 		await page
 			.locator(DRAWER)
-			.getByRole("button", { name: "Send as expiring photo" })
+			.getByRole("button", {
+				name: "Set photo as expiring after 10 seconds",
+			})
 			.click();
 
 		await page.keyboard.press("Escape");
