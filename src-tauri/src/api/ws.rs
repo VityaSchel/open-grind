@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::broadcast::error::RecvError;
+use tokio::sync::mpsc::error::TrySendError;
 
 use crate::api::session_recovery::{
 	report_refresh_failure, SessionErrorPayload,
@@ -132,10 +133,71 @@ pub async fn ws_send(
 	state: tauri::State<'_, AppState>,
 	command: grindr::WsCommand,
 ) -> Result<(), AppError> {
-	state
-		.client()?
-		.ws_sender()
-		.send(command)
-		.await
-		.map_err(|_| AppError::Http("WS not connected".to_owned()))
+	let client = state.client()?;
+
+	// The channel only errors once its receiver is gone, so without this gate a
+	// command sent while the socket is down buffers, reports success, and lands
+	// on the next reconnect.
+	let connected = matches!(
+		*client.connection_state().borrow(),
+		grindr::WsConnectionState::Connected
+	);
+	if !connected {
+		return Err(AppError::Http("WS not connected".to_owned()));
+	}
+
+	// `try_send` keeps a backed-up buffer from parking the command until the
+	// caller times out.
+	client.ws_sender().try_send(command).map_err(|e| match e {
+		TrySendError::Full(_) => {
+			AppError::Http("WS send buffer full".to_owned())
+		}
+		TrySendError::Closed(_) => {
+			AppError::Http("WS not connected".to_owned())
+		}
+	})
+}
+
+#[cfg(test)]
+mod tests {
+	use std::sync::OnceLock;
+
+	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
+
+	use super::*;
+
+	fn app_with_a_disconnected_client() -> tauri::App<MockRuntime> {
+		let client =
+			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
+				.expect("client");
+		let state = AppState {
+			client: OnceLock::new(),
+		};
+		assert!(state.client.set(client).is_ok());
+
+		mock_builder()
+			.manage(state)
+			.build(mock_context(noop_assets()))
+			.expect("mock app")
+	}
+
+	#[tokio::test]
+	async fn a_command_sent_while_disconnected_fails_without_queueing() {
+		let app = app_with_a_disconnected_client();
+		let sender = app.state::<AppState>().client().unwrap().ws_sender();
+		let free_before = sender.capacity();
+
+		let result = ws_send(
+			app.state::<AppState>(),
+			grindr::WsCommand {
+				r#type: "chat.v1.message.send".to_owned(),
+				ref_id: "ref-1".to_owned(),
+				payload: serde_json::json!({}),
+			},
+		)
+		.await;
+
+		assert!(matches!(result, Err(AppError::Http(_))));
+		assert_eq!(sender.capacity(), free_before);
+	}
 }
