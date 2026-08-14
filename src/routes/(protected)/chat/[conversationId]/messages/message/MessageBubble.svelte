@@ -1,21 +1,22 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import { getMessageContext, getMessageMetaContext } from "./context";
+	import {
+		getMessageContext,
+		getMessageMetaContext,
+		messageRef,
+	} from "./context";
 	import MessageTail from "./MessageTail.svelte";
 
 	let { tone, children }: { tone: "sent" | "unsent"; children: Snippet } =
 		$props();
 
 	const { lastInStack, isOut } = $derived(getMessageContext()());
-	const { clone, setRef, adornments } = $derived(getMessageMetaContext()());
+	const { clone, adornments } = $derived(getMessageMetaContext()());
+
+	const ref = messageRef();
 
 	const sent = $derived(tone === "sent");
-
-	let el: HTMLDivElement | null = $state(null);
-	$effect(() => {
-		setRef(el ?? null);
-	});
 </script>
 
 <div
@@ -33,7 +34,7 @@
 			"bg-muted text-muted-foreground italic": !sent,
 		},
 	]}
-	bind:this={el}
+	{@attach ref}
 >
 	{#if lastInStack}
 		<MessageTail

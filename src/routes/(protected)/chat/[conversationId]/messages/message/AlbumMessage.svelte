@@ -156,7 +156,7 @@
 		aria-label="Open album"
 		onclick={openAlbum}
 		disabled={albumState.status !== "idle"}
-		bind:this={media.el}
+		{@attach media.attach}
 	>
 		<MediaImage
 			src={proxyMediaUrl(message.coverUrl)}
@@ -194,7 +194,7 @@
 		{@render media.adornments?.()}
 	</button>
 {:else}
-	<div class={[className, contentClass]} bind:this={media.el}>
+	<div class={[className, contentClass]} {@attach media.attach}>
 		<LockedMedia class={media.cornerClass} />
 		{@render media.adornments?.()}
 	</div>
