@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	import type { QuotedMessage } from "$lib/model/messaging/messages";
 	import {
@@ -28,6 +29,10 @@
 	let frame: HTMLElement | null = $state(null);
 	let content: HTMLElement | null = $state(null);
 
+	const attachFrame: Attachment<HTMLElement> = (node) => {
+		frame = node;
+	};
+
 	setMessageMetaContext(() => ({
 		clone,
 		setRef: (el: HTMLElement | null) => {
@@ -42,7 +47,10 @@
 	});
 </script>
 
-<div bind:this={frame} class={["flex w-full flex-col", { "items-end": isOut }]}>
+<div
+	{@attach attachFrame}
+	class={["flex w-full flex-col", { "items-end": isOut }]}
+>
 	{#if quoted}
 		<MessageQuote {quoted} />
 	{/if}
