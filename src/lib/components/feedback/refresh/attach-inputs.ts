@@ -1,5 +1,6 @@
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
+import type { RestingButtonModel } from "./resting-button.svelte";
 import { AT_BOUNDARY_PX } from "./scroll-chain";
 import { attachTouchPull } from "./touch-adapter";
 
@@ -7,18 +8,13 @@ const BAND_DETECT_PX = 2;
 
 export type PullInputsOptions = {
 	model: PullModel;
+	restingButton: RestingButtonModel;
 	position: "top" | "bottom";
 	boundaryDistance: () => number;
 	overscrollPx: () => number;
 	busy: () => boolean;
-	mouseProbeMs: number;
 	revealPx: () => number;
 	setRevealPx: (px: number) => void;
-	sawBand: () => boolean;
-	setSawBand: (seen: boolean) => void;
-	onlyMouseSeen: () => boolean;
-	setOnlyMouseSeen: (only: boolean) => void;
-	setRestingButtonShown: (shown: boolean) => void;
 	setDistance: (px: number) => void;
 	shouldReveal: () => boolean;
 	shouldConceal: () => boolean;
@@ -28,33 +24,20 @@ export function attachPullInputs(
 	target: HTMLElement,
 	{
 		model,
+		restingButton,
 		position,
 		boundaryDistance,
 		overscrollPx,
 		busy,
-		mouseProbeMs,
 		revealPx,
 		setRevealPx,
-		sawBand,
-		setSawBand,
-		onlyMouseSeen,
-		setOnlyMouseSeen,
-		setRestingButtonShown,
 		setDistance,
 		shouldReveal,
 		shouldConceal,
 	}: PullInputsOptions,
 ): () => void {
-	const leaveBoundary = () => {
-		setSawBand(true);
-		setOnlyMouseSeen(false);
-		setRestingButtonShown(false);
-	};
-
-	let mouseProbe: ReturnType<typeof setTimeout> | undefined;
-
 	const onScroll = () => {
-		if (overscrollPx() > BAND_DETECT_PX) leaveBoundary();
+		if (overscrollPx() > BAND_DETECT_PX) restingButton.leaveBoundary();
 		if (
 			!model.gestureActive &&
 			!busy() &&
@@ -65,23 +48,19 @@ export function attachPullInputs(
 			setRevealPx(Math.max(0, overscrollPx()));
 		}
 		setDistance(boundaryDistance());
-		if (shouldReveal()) setRestingButtonShown(true);
-		else if (shouldConceal()) setRestingButtonShown(false);
+		if (shouldReveal()) restingButton.shown = true;
+		else if (shouldConceal()) restingButton.shown = false;
 	};
 
 	const onWheel = (event: WheelEvent) => {
-		if (sawBand() || onlyMouseSeen()) return;
 		const toward = position === "top" ? -event.deltaY : event.deltaY;
 		if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
-		clearTimeout(mouseProbe);
-		mouseProbe = setTimeout(() => {
-			if (!sawBand()) setOnlyMouseSeen(true);
-		}, mouseProbeMs);
+		restingButton.probePointer();
 	};
 
 	// Without this the touch drag freezes: PullModel resists across
 	// space * OVERSHOOT minus the baseline, leaving no range to move through.
-	const noteTouch = () => leaveBoundary();
+	const noteTouch = () => restingButton.leaveBoundary();
 
 	target.addEventListener("scroll", onScroll, { passive: true });
 	target.addEventListener("wheel", onWheel as EventListener, {
@@ -105,7 +84,6 @@ export function attachPullInputs(
 		target.removeEventListener("scroll", onScroll);
 		target.removeEventListener("wheel", onWheel as EventListener);
 		target.removeEventListener("touchmove", noteTouch);
-		clearTimeout(mouseProbe);
 		detach.forEach((cleanup) => cleanup());
 	};
 }

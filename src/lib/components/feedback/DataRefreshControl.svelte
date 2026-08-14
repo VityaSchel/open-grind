@@ -14,6 +14,7 @@
 	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
 	import { PullModel } from "./refresh/pull-model.svelte";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
+	import { RestingButtonModel } from "./refresh/resting-button.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
 	import { scrollGeometry } from "./refresh/scroll-geometry";
 
@@ -45,15 +46,13 @@
 	};
 
 	const mounted = $derived(!!container);
-	let restingButtonShown = $state(false);
 	let distance = $state(Infinity);
 	const headerOffset = fixedHeaderOffset({
 		container: () => container,
 		enabled: () => position === "top",
 	});
 
-	let onlyMouseSeen = $state(false);
-	let sawBand = false;
+	const restingButton = new RestingButtonModel({ probeMs: MOUSE_PROBE_MS });
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
@@ -65,14 +64,14 @@
 		model.setUpdating(updating ?? false);
 	});
 	model.onTrigger = () => onrefresh?.();
-	model.getBaseline = () => (restingButtonShown ? REST_HEIGHT_PX : 0);
+	model.getBaseline = () => (restingButton.shown ? REST_HEIGHT_PX : 0);
 
 	type IndicatorType = "disc" | "hint" | "button";
 	const activeFace = $derived.by((): IndicatorType | null => {
 		if (busy) return "disc";
 		if (model.gestureActive)
 			return model.source === "touch" ? "disc" : "hint";
-		if (restingButtonShown) return "button";
+		if (restingButton.shown) return "button";
 		return null;
 	});
 	let lingerFace: IndicatorType | null = $state(null);
@@ -177,42 +176,39 @@
 		if (model.gestureActive && model.source === "overscroll") {
 			void reveal.set(model.displayPx, { duration: 0 });
 		} else if (!model.gestureActive) {
-			void reveal.set(busy || restingButtonShown ? REST_HEIGHT_PX : 0);
+			void reveal.set(busy || restingButton.shown ? REST_HEIGHT_PX : 0);
 		}
 	});
 
 	const shouldRevealRestingButton = () =>
-		onlyMouseSeen &&
-		!restingButtonShown &&
+		restingButton.pointerOnly &&
+		!restingButton.shown &&
 		!busy &&
 		!model.gestureActive &&
 		distance < AT_BOUNDARY_PX;
 
 	const shouldConcealRestingButton = () =>
-		restingButtonShown &&
+		restingButton.shown &&
 		!model.gestureActive &&
 		distance >= AT_BOUNDARY_PX;
 	$effect(() => {
-		if (shouldRevealRestingButton()) restingButtonShown = true;
+		if (shouldRevealRestingButton()) restingButton.shown = true;
 	});
+
+	$effect(() => () => restingButton.destroy());
 
 	$effect(() => {
 		const target = container;
 		if (!target) return;
 		return attachPullInputs(target, {
 			model,
+			restingButton,
 			position,
 			boundaryDistance,
 			overscrollPx,
 			busy: () => busy,
-			mouseProbeMs: MOUSE_PROBE_MS,
 			revealPx: () => reveal.current,
 			setRevealPx: (px) => void reveal.set(px, { duration: 0 }),
-			sawBand: () => sawBand,
-			setSawBand: (seen) => (sawBand = seen),
-			onlyMouseSeen: () => onlyMouseSeen,
-			setOnlyMouseSeen: (only) => (onlyMouseSeen = only),
-			setRestingButtonShown: (shown) => (restingButtonShown = shown),
 			setDistance: (px) => (distance = px),
 			shouldReveal: shouldRevealRestingButton,
 			shouldConceal: shouldConcealRestingButton,
