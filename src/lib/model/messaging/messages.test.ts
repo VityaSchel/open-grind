@@ -29,53 +29,7 @@ describe("messageSchema", () => {
 		expect(result.success).toBe(false);
 	});
 
-	it("parses expiring image messages with full image fields", () => {
-		const body = {
-			mediaId: 5001,
-			width: 640,
-			height: 480,
-			url: "https://cdns.grindr.com/images/chat/expiring.jpg",
-			imageHash: "a".repeat(64),
-			takenOnGrindr: true,
-			createdAt: 1_710_000_000_000,
-			viewsRemaining: 1,
-		};
-
-		expect(
-			messageSchema.parse({
-				type: "ExpiringImage",
-				body,
-			}),
-		).toEqual({
-			type: "ExpiringImage",
-			body,
-		});
-	});
-
-	it("accepts expiring image messages with null url and viewsRemaining", () => {
-		const body = {
-			mediaId: 5002,
-			width: null,
-			height: null,
-			url: null,
-			imageHash: "b".repeat(64),
-			takenOnGrindr: false,
-			createdAt: null,
-			viewsRemaining: null,
-		};
-
-		expect(
-			messageSchema.parse({
-				type: "ExpiringImage",
-				body,
-			}),
-		).toEqual({
-			type: "ExpiringImage",
-			body,
-		});
-	});
-
-	it("parses real-world expiring image messages without imageHash/takenOnGrindr/createdAt", () => {
+	it("parses expiring image messages as the server sends them", () => {
 		const body = {
 			mediaId: 2_351_384_549,
 			url: "https://cdns.grindr.com/images/chat/expiring.jpg",
@@ -87,14 +41,61 @@ describe("messageSchema", () => {
 			viewed: false,
 		};
 
+		expect(messageSchema.parse({ type: "ExpiringImage", body })).toEqual({
+			type: "ExpiringImage",
+			body,
+		});
+	});
+
+	it("accepts spent expiring image messages with a null url", () => {
+		const body = {
+			mediaId: 5002,
+			width: null,
+			height: null,
+			url: null,
+			duration: 10_000,
+			viewsRemaining: 0,
+			expiresAt: null,
+			viewed: true,
+		};
+
+		expect(messageSchema.parse({ type: "ExpiringImage", body })).toEqual({
+			type: "ExpiringImage",
+			body,
+		});
+	});
+
+	it("accepts expiring image messages without the view tracking fields", () => {
+		const body = {
+			mediaId: 5003,
+			width: null,
+			height: null,
+			url: "https://cdns.grindr.com/images/chat/expiring.jpg",
+		};
+
+		expect(messageSchema.parse({ type: "ExpiringImage", body })).toEqual({
+			type: "ExpiringImage",
+			body,
+		});
+	});
+
+	it("drops regular image fields the server never sends for expiring images", () => {
 		expect(
 			messageSchema.parse({
 				type: "ExpiringImage",
-				body,
+				body: {
+					mediaId: 5004,
+					width: null,
+					height: null,
+					url: null,
+					imageHash: "a".repeat(64),
+					takenOnGrindr: true,
+					createdAt: 1_710_000_000_000,
+				},
 			}),
 		).toEqual({
 			type: "ExpiringImage",
-			body,
+			body: { mediaId: 5004, width: null, height: null, url: null },
 		});
 	});
 });

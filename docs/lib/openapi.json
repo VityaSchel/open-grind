@@ -15066,30 +15066,46 @@
 				]
 			},
 			"ExpiringImageBody": {
-				"allOf": [
-					{
-						"$ref": "#/components/schemas/ImageMessageBody"
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "number"
 					},
-					{
-						"type": "object",
-						"properties": {
-							"url": {
-								"type": "string",
-								"nullable": true
-							},
-							"viewsRemaining": {
-								"type": "number",
-								"nullable": true
+					"url": {
+						"type": "string",
+						"nullable": true
+					},
+					"width": {
+						"type": "integer",
+						"nullable": true
+					},
+					"height": {
+						"type": "integer",
+						"nullable": true
+					},
+					"duration": {
+						"type": "integer",
+						"description": "integer, milliseconds the recipient may keep the image open"
+					},
+					"viewsRemaining": {
+						"type": "integer",
+						"nullable": true
+					},
+					"expiresAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
 							}
-						}
+						],
+						"nullable": true
+					},
+					"viewed": {
+						"type": "boolean",
+						"nullable": true
 					}
-				],
-				"description": "Body for `\"ExpiringImage\"` message type. Extends [Image](#image) but with `url` set to `null` and additional `viewsRemaining`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.",
-				"x-render-on-tag": "messaging/messages",
-				"required": [
-					"url",
-					"viewsRemaining"
-				]
+				},
+				"description": "Body for `\"ExpiringImage\"` message type. Unlike [Image](#image), it carries no `imageHash`, `takenOnGrindr` or `createdAt`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.\n\nTo send one, the request body is `{ \"mediaId\": …, \"expiring\": true }`; the server fills in the rest.",
+				"x-render-on-tag": "messaging/messages"
 			},
 			"LocationMessageBody": {
 				"type": "object",

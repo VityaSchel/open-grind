@@ -181,18 +181,13 @@ export const imageMessageSchema = imageBaseMessageSchema.safeExtend({
 
 export type ImageMessage = z.infer<typeof imageMessageSchema>;
 
-export const expiringImageMessageSchema = imageBaseMessageSchema.extend({
+export const expiringImageMessageSchema = imageBaseMessageSchema.safeExtend({
 	type: z.literal("ExpiringImage"),
 	body: z.object({
 		...imageBaseMessageSchema.shape.body.shape,
 		url: mediaUrlSchema.nullable(),
-		imageHash: z
-			.union([mediaHashPrivateSchema, mediaHashPublicSchema])
-			.optional(),
-		takenOnGrindr: z.boolean().optional(),
-		createdAt: unixTimestampMsSchema.nullable().optional(),
-		viewsRemaining: z.int().nonnegative().nullable(),
 		duration: z.int().nonnegative().optional(),
+		viewsRemaining: z.int().nonnegative().nullable().optional(),
 		expiresAt: unixTimestampMsSchema.nullable().optional(),
 		viewed: z.boolean().optional(),
 	}),
