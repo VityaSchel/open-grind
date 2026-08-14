@@ -6,17 +6,16 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { cn } from "$lib/util/utils";
+	import { attachPullInputs } from "./refresh/attach-inputs";
 	import {
 		MAX_SLINGSHOT_TENSION,
 		slingshotTension,
 	} from "./refresh/disc-math";
 	import { fixedHeaderOffset } from "./refresh/fixed-header-offset.svelte";
-	import { attachOverscrollPull } from "./refresh/overscroll-adapter";
 	import { PullModel } from "./refresh/pull-model.svelte";
 	import RefreshDisc from "./refresh/RefreshDisc.svelte";
 	import { AT_BOUNDARY_PX } from "./refresh/scroll-chain";
 	import { scrollGeometry } from "./refresh/scroll-geometry";
-	import { attachTouchPull } from "./refresh/touch-adapter";
 
 	let {
 		updating,
@@ -38,7 +37,6 @@
 	const REST_GAP_PX = 12;
 	const REST_HEIGHT_PX = BUTTON_HEIGHT_PX + REST_GAP_PX * 2;
 	const ARM_PX = 18;
-	const BAND_DETECT_PX = 2;
 	const BOUNDARY_SETTLE_MS = 50;
 	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
 	const REVEAL_TRANSITION: TransitionConfig = {
@@ -201,77 +199,24 @@
 	$effect(() => {
 		const target = container;
 		if (!target) return;
-
-		let mouseProbe: ReturnType<typeof setTimeout> | undefined;
-		const onWheel = (event: WheelEvent) => {
-			if (sawBand || onlyMouseSeen) return;
-			const toward = position === "top" ? -event.deltaY : event.deltaY;
-			if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
-			clearTimeout(mouseProbe);
-			mouseProbe = setTimeout(() => {
-				if (!sawBand) onlyMouseSeen = true;
-			}, MOUSE_PROBE_MS);
-		};
-
-		const onScroll = () => {
-			if (overscrollPx() > BAND_DETECT_PX) {
-				sawBand = true;
-				onlyMouseSeen = false;
-				restingButtonShown = false;
-			}
-			if (
-				!model.gestureActive &&
-				!busy &&
-				model.settledFrom === "overscroll" &&
-				model.settledOutcome === "canceled" &&
-				reveal.current > 0
-			) {
-				void reveal.set(Math.max(0, overscrollPx()), { duration: 0 });
-			}
-			distance = boundaryDistance();
-			if (shouldRevealRestingButton()) restingButtonShown = true;
-			else if (shouldConcealRestingButton()) restingButtonShown = false;
-		};
-
-		target.addEventListener("scroll", onScroll, { passive: true });
-		target.addEventListener("wheel", onWheel as EventListener, {
-			passive: true,
+		return attachPullInputs(target, {
+			model,
+			position,
+			boundaryDistance,
+			overscrollPx,
+			busy: () => busy,
+			mouseProbeMs: MOUSE_PROBE_MS,
+			revealPx: () => reveal.current,
+			setRevealPx: (px) => void reveal.set(px, { duration: 0 }),
+			sawBand: () => sawBand,
+			setSawBand: (seen) => (sawBand = seen),
+			onlyMouseSeen: () => onlyMouseSeen,
+			setOnlyMouseSeen: (only) => (onlyMouseSeen = only),
+			setRestingButtonShown: (shown) => (restingButtonShown = shown),
+			setDistance: (px) => (distance = px),
+			shouldReveal: shouldRevealRestingButton,
+			shouldConceal: shouldConcealRestingButton,
 		});
-		distance = boundaryDistance();
-		return () => {
-			target.removeEventListener("scroll", onScroll);
-			target.removeEventListener("wheel", onWheel as EventListener);
-			clearTimeout(mouseProbe);
-		};
-	});
-
-	$effect(() => {
-		const listenTarget = container;
-		if (!listenTarget) return;
-		const scrollRoot = () => container ?? null;
-		// Without this the touch drag freezes: PullModel resists across
-		// space * OVERSHOOT minus the baseline, leaving no range to move through.
-		const noteTouch = () => {
-			sawBand = true;
-			onlyMouseSeen = false;
-			restingButtonShown = false;
-		};
-		listenTarget.addEventListener("touchmove", noteTouch, {
-			passive: true,
-		});
-		const detach = [
-			attachTouchPull(model, {
-				listenTarget,
-				scrollRoot,
-				boundaryDistance,
-				position,
-			}),
-			attachOverscrollPull(model, { listenTarget, overscrollPx }),
-		];
-		return () => {
-			listenTarget.removeEventListener("touchmove", noteTouch);
-			detach.forEach((cleanup) => cleanup());
-		};
 	});
 
 	$effect(() => {
