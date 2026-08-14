@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { page } from "$app/state";
+	import { tick, untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
+	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import type { MessageDraft } from "$lib/model/messaging/messages";
 	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
@@ -11,16 +12,20 @@
 	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
 
 	let {
+		conversationId,
 		onSend,
 		disabled,
 		height = $bindable(0),
 	}: {
+		conversationId: string;
 		onSend: (draft: MessageDraft) => void | Promise<void>;
 		disabled: boolean;
 		height?: number;
 	} = $props();
 
-	let textContent = $state("");
+	const { drafts } = getConversations();
+
+	let textContent = $state(untrack(() => drafts.get(conversationId)));
 	let form: HTMLFormElement | null = $state(null);
 
 	async function onSubmit() {
@@ -29,6 +34,7 @@
 		try {
 			await onSend(draftFromMessage({ type: "Text", body: { text } }));
 			textContent = "";
+			drafts.discard(conversationId);
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Failed to send message", error });
@@ -38,6 +44,25 @@
 	function remeasureBeforeResizeObserverCatchesUp() {
 		if (form) height = form.clientHeight;
 	}
+
+	$effect(() => {
+		const openedConversationId = conversationId;
+		untrack(() => {
+			const stored = drafts.open(openedConversationId);
+			if (textContent === stored) return;
+			textContent = stored;
+			void tick().then(remeasureBeforeResizeObserverCatchesUp);
+		});
+		return () =>
+			drafts.save({
+				conversationId: openedConversationId,
+				text: textContent,
+			});
+	});
+
+	$effect(() => {
+		drafts.autosave({ conversationId, text: textContent });
+	});
 
 	setMessageComposerContext(() => ({ disabled, sendMessage: onSend }));
 </script>
@@ -55,7 +80,7 @@
 	<div class="relative h-full w-full rounded-composer bg-popover">
 		<MessageTextInput bind:value={textContent} />
 		{#if textContent === ""}
-			{#key page.params.conversationId}
+			{#key conversationId}
 				<ComposerAttachments />
 			{/key}
 			<ComposerVoiceMessage />

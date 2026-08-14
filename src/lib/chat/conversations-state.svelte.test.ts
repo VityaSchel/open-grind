@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	getConversationsMock,
 	markConversationAsReadMock,
-	deleteConversationForMeMock,
 	setConversationPinnedMock,
 	setConversationMutedMock,
 	showErrorToastMock,
@@ -12,10 +11,10 @@ const {
 	singleColumn,
 	reconcileHandlers,
 	messageSentHandlers,
+	conversationDeleteHandlers,
 } = vi.hoisted(() => ({
 	getConversationsMock: vi.fn(),
 	markConversationAsReadMock: vi.fn(() => Promise.resolve()),
-	deleteConversationForMeMock: vi.fn(() => Promise.resolve()),
 	setConversationPinnedMock: vi.fn(() => Promise.resolve()),
 	setConversationMutedMock: vi.fn(() => Promise.resolve()),
 	showErrorToastMock: vi.fn(),
@@ -24,6 +23,7 @@ const {
 	singleColumn: { current: false },
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	messageSentHandlers: [] as ((event: unknown) => void)[],
+	conversationDeleteHandlers: [] as ((event: unknown) => void)[],
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
@@ -31,7 +31,7 @@ vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/messaging/conversations", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: markConversationAsReadMock,
-	deleteConversationForMe: deleteConversationForMeMock,
+	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: setConversationPinnedMock,
 	setConversationMuted: setConversationMutedMock,
 }));
@@ -50,6 +50,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			if (eventType === "chat.v1.message_sent")
 				messageSentHandlers.push(handler);
+			if (eventType === "chat.v1.conversation.delete")
+				conversationDeleteHandlers.push(handler);
 			return Promise.resolve(vi.fn());
 		},
 	},
@@ -57,86 +59,20 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { ConversationsState } from "./conversations-state.svelte";
-
-const OUR_ID = 1;
-const PEER_ID = 2;
-
-function deferred<T>() {
-	let resolve!: (value: T) => void;
-	let reject!: (reason?: unknown) => void;
-	const promise = new Promise<T>((res, rej) => {
-		resolve = res;
-		reject = rej;
-	});
-	return { promise, resolve, reject };
-}
-
-function conversation(
-	conversationId: string,
-	lastActivityTimestamp: number,
-	overrides: Partial<Conversation["data"]> = {},
-): Conversation {
-	return {
-		type: "full_conversation_v1",
-		data: {
-			conversationId,
-			name: `Conversation ${conversationId}`,
-			participants: [
-				{
-					profileId: PEER_ID,
-					primaryMediaHash: null,
-					lastOnline: null,
-					onlineUntil: null,
-					distanceMetres: null,
-					position: null,
-					isInAList: false,
-					hasDatingPotential: false,
-				},
-			],
-			lastActivityTimestamp,
-			unreadCount: 0,
-			preview: null,
-			muted: false,
-			pinned: false,
-			favorite: false,
-			rightNow: "none",
-			onlineUntil: null,
-			hasUnreadThrob: false,
-			...overrides,
-		},
-	} as unknown as Conversation;
-}
-
-function incomingMessage(
-	conversationId: string,
-	timestamp: number,
-	senderId: number,
-) {
-	return {
-		messageId: `m-${conversationId}-${timestamp}`,
-		conversationId,
-		senderId,
-		timestamp,
-		unsent: false,
-		reactions: [],
-		type: "Text",
-		body: { text: "hi" },
-	};
-}
+import {
+	conversation,
+	deferred,
+	entryFor,
+	incomingMessage,
+	microtasks,
+	OUR_ID,
+	PEER_ID,
+	settled,
+} from "./conversations-test-helpers";
 
 function emitMessageSent(payload: unknown) {
 	messageSentHandlers[0]?.({ payload });
 }
-
-function entryFor(state: ConversationsState, conversationId: string) {
-	const entry = state.entries.find(
-		(e) => e.data.conversationId === conversationId,
-	);
-	if (!entry) throw new Error(`no entry for ${conversationId}`);
-	return entry;
-}
-
-const microtasks = () => new Promise((r) => setTimeout(r, 0));
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -144,11 +80,8 @@ beforeEach(() => {
 	singleColumn.current = false;
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
+	conversationDeleteHandlers.length = 0;
 });
-
-async function settled(state: ConversationsState) {
-	await vi.waitFor(() => expect(state.loading).toBe(false));
-}
 
 describe("ConversationsState initial load", () => {
 	it("reports a failed first load and clears it on retry", async () => {

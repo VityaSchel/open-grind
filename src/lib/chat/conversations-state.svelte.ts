@@ -21,6 +21,9 @@ import {
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { CachedConversation } from "./cached-conversation";
+import { fetchConversationWindow } from "./conversation-window";
+import { Drafts } from "./drafts.svelte";
+import { FetchEpochs } from "./fetch-epochs";
 import { PendingDeletes } from "./pending-deletes";
 import { PendingFlags } from "./pending-flags";
 import { SeenMessages } from "./seen-messages";
@@ -48,6 +51,7 @@ class ConversationsState {
 	#initialLoad: Promise<unknown> = Promise.resolve();
 
 	readonly ourProfileId: number;
+	readonly drafts = new Drafts();
 	#onIncomingMessage: IncomingMessageHandler;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
@@ -59,9 +63,7 @@ class ConversationsState {
 	#pendingDeletes = new PendingDeletes();
 	#seenMessages = new SeenMessages();
 	#unreadWhileMissing = new UnreadWhileMissing();
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- bookkeeping for Promise.allSettled(), nothing renders from it
-	#inFlightFetches = new Set<Promise<unknown>>();
-	#fetchEpoch = 0;
+	#fetches = new FetchEpochs();
 	#refreshRequestedSinceFetchStart = false;
 	#syncLatestInFlight: Promise<boolean> | null = null;
 
@@ -78,7 +80,7 @@ class ConversationsState {
 		void this.#hardLoad();
 
 		this.#unsubscribeReconcile = reconciler.subscribe(() =>
-			this.#trackFetch(this.#reconcile()),
+			this.#fetches.track(this.#reconcile()),
 		);
 
 		this.#wsPromises.push(
@@ -106,6 +108,7 @@ class ConversationsState {
 
 	async destroy(): Promise<void> {
 		this.#destroyed = true;
+		this.drafts.destroy();
 		this.#unsubscribeReconcile();
 		const unlisteners = await Promise.all(this.#wsPromises);
 		for (const unlisten of unlisteners) unlisten();
@@ -182,32 +185,10 @@ class ConversationsState {
 				(min, e) => Math.min(min, e.data.lastActivityTimestamp),
 				Number.POSITIVE_INFINITY,
 			);
-			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local scratch map, discarded before this call returns
-			const fetched = new Map<string, Conversation>();
-			let oldestFetchedTs = Number.POSITIVE_INFINITY;
-			let page: number | null = 1;
-			let reachedEnd = false;
-			for (let guard = 0; page !== null && guard < 100; guard++) {
-				const currentPage: number = page;
-				const result = await getConversations(currentPage);
-				for (const entry of result.entries) {
-					if (!fetched.has(entry.data.conversationId)) {
-						fetched.set(entry.data.conversationId, entry);
-					}
-					oldestFetchedTs = Math.min(
-						oldestFetchedTs,
-						entry.data.lastActivityTimestamp,
-					);
-				}
-				page = result.nextPage;
-				if (page === null) {
-					reachedEnd = true;
-					break;
-				}
-				if (oldestFetchedTs <= oldestLoadedTs) break;
-			}
-			if (this.#isStale(fetchEpoch)) return;
-			this.nextPage = reachedEnd ? null : page;
+			const { fetched, oldestFetchedTs, reachedEnd, nextPage } =
+				await fetchConversationWindow({ oldestLoadedTs });
+			if (this.#fetches.isStale(fetchEpoch)) return;
+			this.nextPage = reachedEnd ? null : nextPage;
 
 			for (const incoming of fetched.values()) {
 				const existing = this.#find(incoming.data.conversationId);
@@ -270,10 +251,10 @@ class ConversationsState {
 		errorLabel: string;
 	}): Promise<boolean> {
 		// Claiming would make an in-flight #load drop the nextPage it fetched.
-		const fetchEpoch = this.#fetchEpoch;
+		const fetchEpoch = this.#fetches.current;
 		try {
 			const result = await getConversations(1);
-			if (this.#isStale(fetchEpoch)) return true;
+			if (this.#fetches.isStale(fetchEpoch)) return true;
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
@@ -297,9 +278,9 @@ class ConversationsState {
 	}
 
 	async #load(page: number): Promise<void> {
-		const fetchEpoch = ++this.#fetchEpoch;
+		const fetchEpoch = this.#fetches.claim();
 		const result = await getConversations(page);
-		if (this.#isStale(fetchEpoch)) return;
+		if (this.#fetches.isStale(fetchEpoch)) return;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local lookup, never mutated after construction
 		const known = new Set(this.entries.map((e) => e.data.conversationId));
 		for (const entry of result.entries) {
@@ -317,23 +298,11 @@ class ConversationsState {
 
 	async #claimEpochAfterInitial(): Promise<number> {
 		await this.#initialLoad.catch(() => {});
-		return ++this.#fetchEpoch;
-	}
-
-	#isStale(fetchEpoch: number): boolean {
-		return fetchEpoch !== this.#fetchEpoch;
-	}
-
-	#trackFetch<T>(fetch: Promise<T>): Promise<T> {
-		this.#inFlightFetches.add(fetch);
-		void fetch
-			.catch(() => {})
-			.finally(() => this.#inFlightFetches.delete(fetch));
-		return fetch;
+		return this.#fetches.claim();
 	}
 
 	refresh(): Promise<void> {
-		return this.#trackFetch(this.#reconcile());
+		return this.#fetches.track(this.#reconcile());
 	}
 
 	retry(): void {
@@ -347,7 +316,7 @@ class ConversationsState {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.#initialLoad = this.#trackFetch(this.#load(1));
+			this.#initialLoad = this.#fetches.track(this.#load(1));
 			await this.#initialLoad;
 		} catch (error) {
 			if (this.#destroyed) return;
@@ -362,7 +331,7 @@ class ConversationsState {
 		if (this.loadingMore || this.nextPage === null) return;
 		this.loadingMore = true;
 		try {
-			await this.#trackFetch(this.#load(this.nextPage));
+			await this.#fetches.track(this.#load(this.nextPage));
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
@@ -377,7 +346,7 @@ class ConversationsState {
 	async ensureLoaded(conversationId: string): Promise<boolean> {
 		if (this.#find(conversationId)) return true;
 		const errorLabel = "Failed to sync conversation into sidebar";
-		return this.#trackFetch(this.#syncLatest({ errorLabel }));
+		return this.#fetches.track(this.#syncLatest({ errorLabel }));
 	}
 
 	async #loadMissing(id: string): Promise<Conversation | undefined> {
@@ -549,16 +518,17 @@ class ConversationsState {
 	}
 
 	#markServerDeleted(conversationId: string): void {
+		this.drafts.forget(conversationId);
 		this.#pendingDeletes.mark(conversationId);
 		this.#pendingDeletes.settle({
 			conversationId,
-			fetchEpoch: this.#fetchEpoch,
+			fetchEpoch: this.#fetches.current,
 		});
 		this.#releaseAfterInFlightFetches([conversationId]);
 	}
 
 	#releaseAfterInFlightFetches(conversationIds: string[]): void {
-		void Promise.allSettled([...this.#inFlightFetches]).then(() => {
+		this.#fetches.afterInFlight(() => {
 			for (const id of conversationIds) this.#pendingDeletes.release(id);
 		});
 	}
@@ -571,8 +541,10 @@ class ConversationsState {
 					conversationId,
 					revert: this.remove(conversationId).revert,
 				})),
-				request: ({ conversationId }) =>
-					deleteConversationForMe({ conversationId }),
+				request: async ({ conversationId }) => {
+					await deleteConversationForMe({ conversationId });
+					this.drafts.forget(conversationId);
+				},
 				rollback: ({ revert }) => revert(),
 				errorLabel: "Failed to delete conversation",
 			});
@@ -581,7 +553,7 @@ class ConversationsState {
 			for (const id of conversationIds) {
 				this.#pendingDeletes.settle({
 					conversationId: id,
-					fetchEpoch: this.#fetchEpoch,
+					fetchEpoch: this.#fetches.current,
 				});
 			}
 			this.#releaseAfterInFlightFetches(conversationIds);

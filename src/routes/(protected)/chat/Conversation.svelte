@@ -37,6 +37,7 @@
 	const participant = $derived(conversation.data.participants[0]);
 	const previewText = $derived(previewLabel(preview));
 	const conversationId = $derived(conversation.data.conversationId);
+	const draft = $derived(conversations.drafts.get(conversationId));
 
 	const active = $derived(page.params.conversationId === conversationId);
 	const isSelected = $derived(selection?.has(conversationId) ?? false);
@@ -95,16 +96,27 @@
 	>
 		{#snippet description()}
 			<Item.Description
-				class={{
-					"font-medium text-white":
-						conversation.data.unreadCount > 0 &&
-						!conversation.data.muted,
-				}}
+				class={[
+					"wrap-anywhere",
+					{
+						"font-medium text-white":
+							draft === "" &&
+							conversation.data.unreadCount > 0 &&
+							!conversation.data.muted,
+					},
+				]}
 			>
-				{#if previewText !== null}
+				{#if draft !== ""}
+					<span
+						data-slot="conversation-draft-prefix"
+						class="font-bold text-primary">Draft:&nbsp;</span
+					>{draft}
+				{:else if previewText !== null}
 					{previewText}
 				{:else}
-					<span class="preview-not-available">
+					<span
+						class="font-normal tracking-tight text-muted-foreground italic"
+					>
 						Preview not available
 					</span>
 				{/if}
@@ -182,10 +194,3 @@
 		{/if}
 	</ContextMenu.Root>
 {/if}
-
-<style lang="postcss">
-	@reference "$layout";
-	.preview-not-available {
-		@apply font-normal tracking-tight text-muted-foreground italic;
-	}
-</style>

@@ -65,6 +65,7 @@
 <Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
 	<ConversationMessages {composerHeight} />
 	<MessageComposer
+		conversationId={conversationState.conversationId}
 		onSend={(draft: MessageDraft) => conversationState.send(draft)}
 		disabled={conversationState.loading || conversationState.error !== null}
 		bind:height={composerHeight}
