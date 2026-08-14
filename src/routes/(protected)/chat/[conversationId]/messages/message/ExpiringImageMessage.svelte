@@ -128,14 +128,14 @@
 		]}
 		onclick={openImage}
 		disabled={imageState.status !== "idle"}
-		bind:this={media.el}
+		{@attach media.attach}
 	>
 		<ImagesIcon size={24} weight="fill" />
 		<span>View expiring image</span>
 		{@render media.adornments?.()}
 	</button>
 {:else}
-	<div class={["h-12 w-50", className, contentClass]} bind:this={media.el}>
+	<div class={["h-12 w-50", className, contentClass]} {@attach media.attach}>
 		<LockedMedia
 			class={[media.cornerClass, "gap-2 font-medium text-neutral-600"]}
 			size="sm"

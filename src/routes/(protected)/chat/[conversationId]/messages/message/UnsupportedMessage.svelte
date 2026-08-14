@@ -1,18 +1,14 @@
 <script lang="ts">
-	import { getMessageMetaContext } from "./context";
+	import { messageRef } from "./context";
 
 	let { type }: { type: string } = $props();
 
-	const { setRef } = $derived(getMessageMetaContext()());
-	let el: HTMLDivElement | null = $state(null);
-	$effect(() => {
-		setRef(el ?? null);
-	});
+	const ref = messageRef();
 </script>
 
 <div
 	class="w-full max-w-full rounded-lg bg-card p-2 text-center text-sm text-muted-foreground/30"
-	bind:this={el}
+	{@attach ref}
 >
 	Unsupported message type: {type}
 </div>

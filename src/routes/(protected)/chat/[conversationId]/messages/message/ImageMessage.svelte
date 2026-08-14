@@ -133,7 +133,7 @@
 
 <div
 	class={["relative", { "ms-3 w-2/5 max-w-60 min-w-35": !media.clone }]}
-	bind:this={media.el}
+	{@attach media.attach}
 >
 	<a
 		href={failed ? undefined : src}
