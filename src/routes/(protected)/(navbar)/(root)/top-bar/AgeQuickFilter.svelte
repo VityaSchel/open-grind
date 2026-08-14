@@ -8,7 +8,7 @@
 		ageRangeLabel,
 		defaultFilters,
 	} from "$lib/model/browse/grid/filters";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
@@ -21,17 +21,11 @@
 		}
 	});
 
-	$effect(() => {
-		if (open) {
-			const onBackGesture = () => {
-				open = false;
-				return false;
-			};
-			backGestureEventHandlers.add(onBackGesture);
-			return () => {
-				backGestureEventHandlers.delete(onBackGesture);
-			};
-		}
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
 	});
 
 	const label = $derived(ageRangeLabel(value));

@@ -4,7 +4,7 @@
 	import * as Drawer from "$lib/components/ui/drawer/index";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { encodeGeohash } from "$lib/model/geohash";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { above } from "$lib/util/breakpoints.svelte";
 	import type GeoMapPickerComponent from "./GeoMapPicker.svelte";
 
@@ -54,17 +54,11 @@
 		}
 	});
 
-	$effect(() => {
-		if (open) {
-			const onBackGesture = () => {
-				open = false;
-				return false;
-			};
-			backGestureEventHandlers.add(onBackGesture);
-			return () => {
-				backGestureEventHandlers.delete(onBackGesture);
-			};
-		}
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
 	});
 </script>
 

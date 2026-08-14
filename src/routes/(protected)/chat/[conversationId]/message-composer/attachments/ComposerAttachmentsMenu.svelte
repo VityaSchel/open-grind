@@ -9,7 +9,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
@@ -58,20 +58,17 @@
 	}
 
 	$effect(() => {
-		if (!open) {
-			if (settleTimer !== null) clearTimeout(settleTimer);
-			settleTimer = null;
-			counts = {};
-			return;
-		}
-		const dismiss = () => {
+		if (open) return;
+		if (settleTimer !== null) clearTimeout(settleTimer);
+		settleTimer = null;
+		counts = {};
+	});
+
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
 			open = false;
-			return false;
-		};
-		backGestureEventHandlers.add(dismiss);
-		return () => {
-			backGestureEventHandlers.delete(dismiss);
-		};
+		},
 	});
 </script>
 

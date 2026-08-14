@@ -21,7 +21,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { openExternalLink } from "$lib/platform/link-opener";
 	import { isMobilePlatform } from "$lib/platform/os";
 
@@ -99,17 +99,11 @@
 		}
 	});
 
-	$effect(() => {
-		if (showSearchResults) {
-			const onBackGesture = () => {
-				showSearchResults = false;
-				return false;
-			};
-			backGestureEventHandlers.add(onBackGesture);
-			return () => {
-				backGestureEventHandlers.delete(onBackGesture);
-			};
-		}
+	dismissOnBackGesture({
+		active: () => showSearchResults,
+		dismiss: () => {
+			showSearchResults = false;
+		},
 	});
 
 	const gpsAvailable = isMobilePlatform();
