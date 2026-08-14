@@ -114,6 +114,9 @@
 
 	--spacing-count-badge: 5.5px;
 
+	/* elbow that joins a quoted reply to the message replying to it */
+	--radius-quote-connector: 8px;
+
 	/* overlap that seams an SVG message tail onto its bubble */
 	--spacing-hairline: 0.5px;
 }

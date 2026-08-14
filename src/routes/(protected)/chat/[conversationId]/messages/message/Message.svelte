@@ -8,7 +8,7 @@
 	import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
-	import { setMessageContext } from "./context";
+	import { type MessageRefs, setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";
 	import ImageMessage from "./ImageMessage.svelte";
 	import MessageContextMenu from "./MessageContextMenu.svelte";
@@ -71,14 +71,12 @@
 		| false
 		| { x: number; y: number; width: number; height: number } =
 		$state(false);
+	let frameElement: HTMLElement | null = $state(null);
 	let messageElement: HTMLElement | null = $state(null);
-	const bubbleCenterY = $derived.by(() => {
-		const el = messageElement;
-		return el ? el.offsetTop + el.offsetHeight / 2 : null;
-	});
 
-	function setRef(el: HTMLElement | null) {
-		messageElement = el ?? null;
+	function setRefs({ frame, content }: MessageRefs) {
+		frameElement = frame;
+		messageElement = content;
 	}
 	let inheritedStyles = $state("");
 
@@ -112,17 +110,20 @@
 	];
 
 	function onContextMenu() {
-		if (!messageElement) return;
-		const rect = messageElement.getBoundingClientRect();
+		if (!messageElement || !frameElement) return;
+		// The clone renders the quote too, so it is the frame that decides how
+		// tall the lifted box is, while the bubble still decides where it sits.
+		const contentRect = messageElement.getBoundingClientRect();
+		const frameRect = frameElement.getBoundingClientRect();
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = {
-			x: rect.x,
-			y: rect.y,
-			width: rect.width,
-			height: rect.height,
+			x: contentRect.x,
+			y: frameRect.y,
+			width: contentRect.width,
+			height: frameRect.height,
 		};
 		tick()
 			.then(() => contextMenu?.showModal())
@@ -161,7 +162,12 @@
 {/snippet}
 
 {#snippet content(clone?: boolean)}
-	<MessageWrapper {clone} {setRef} {adornments}>
+	<MessageWrapper
+		{clone}
+		{setRefs}
+		{adornments}
+		quoted={message.replyToMessage}
+	>
 		{#if message.type === "Text"}
 			<TextMessage message={message.body} />
 		{:else if message.type === "Image"}
@@ -191,16 +197,13 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
-	<div class="relative" {...swipe?.handlers}>
+	<div class="relative flex flex-col" {...swipe?.handlers}>
 		{#if swipe}
 			<div
 				class={[
-					"pointer-events-none absolute flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground",
+					"pointer-events-none absolute top-1/2 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground",
 					{ "right-0": isOut, "left-0": !isOut },
 				]}
-				style:top={bubbleCenterY !== null
-					? `${bubbleCenterY}px`
-					: "50%"}
 				style:opacity={swipe.progress}
 				style:transform={`translateY(-50%) scale(${swipe.armed ? 1 : 0.6 + swipe.progress * 0.4})`}
 			>
