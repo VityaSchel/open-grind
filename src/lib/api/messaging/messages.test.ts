@@ -217,15 +217,12 @@ describe("message API wrappers", () => {
 		});
 	});
 
-	it("sends expiring image messages by media reference only", async () => {
+	it("sends expiring image messages by media reference and expiry flag", async () => {
 		const expiringImageBody = {
 			mediaId: 910_002,
 			width: null,
 			height: null,
 			url: "https://cdns.grindr.com/images/chat/b".padEnd(100, "c"),
-			imageHash: "b".repeat(64),
-			takenOnGrindr: false,
-			createdAt: 1_710_000_000_000,
 			viewsRemaining: null,
 		};
 		const responseMessage = apiMessage({
@@ -246,7 +243,7 @@ describe("message API wrappers", () => {
 			body: {
 				type: "ExpiringImage",
 				target: { type: "Direct", targetId: 99 },
-				body: { mediaId: 910_002 },
+				body: { mediaId: 910_002, expiring: true },
 			},
 		});
 	});
