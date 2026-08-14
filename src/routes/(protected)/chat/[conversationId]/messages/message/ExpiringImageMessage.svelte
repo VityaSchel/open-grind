@@ -21,10 +21,12 @@
 		conversationId,
 		messageId,
 		message,
+		isOut,
 	}: {
 		conversationId: string;
 		messageId: string;
 		message: ExpiringImageMessage["body"];
+		isOut: boolean;
 	} = $props();
 
 	const media = new MessageMediaState();
@@ -39,23 +41,38 @@
 		media.cornerClass,
 	]);
 
-	type LoadedImage = { url: string };
+	const bubbleClass: import("svelte/elements").ClassValue = $derived([
+		"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",
+		className,
+		contentClass,
+		"border border-border bg-input",
+	]);
 
 	type ImageState =
 		| { status: "idle" }
 		| { status: "loading" }
-		| { status: "open"; image: LoadedImage }
+		| { status: "open"; url: string }
 		| { status: "expired" };
 
 	let imageState = $state<ImageState>({ status: "idle" });
-	let cachedImage: LoadedImage | null = null;
+	let cachedUrl: string | null = null;
+
+	const ownUrl = $derived(
+		isOut && message.url !== null ? proxyMediaUrl(message.url) : null,
+	);
+
+	const viewable = $derived(
+		isOut
+			? ownUrl !== null
+			: imageState.status !== "expired" &&
+					message.viewed !== true &&
+					message.viewsRemaining !== 0,
+	);
 
 	function openImage() {
-		if (cachedImage) {
-			imageState = { status: "open", image: cachedImage };
-		} else {
-			imageState = { status: "loading" };
-		}
+		const url = cachedUrl ?? ownUrl;
+		imageState =
+			url === null ? { status: "loading" } : { status: "open", url };
 	}
 
 	$effect(() => {
@@ -70,8 +87,8 @@
 					imageState = { status: "expired" };
 					return;
 				}
-				cachedImage = { url: proxyMediaUrl(image.url) };
-				imageState = { status: "open", image: cachedImage };
+				cachedUrl = proxyMediaUrl(image.url);
+				imageState = { status: "open", url: cachedUrl };
 			} catch (error) {
 				console.error(error);
 				showErrorToast({
@@ -85,7 +102,7 @@
 
 	$effect(() => {
 		if (imageState.status !== "open") return;
-		const { image } = imageState;
+		const { url } = imageState;
 		let lightbox: PhotoSwipeLightbox | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
@@ -97,7 +114,7 @@
 				applyPhotoSwipeErrorUi(lightbox);
 				lightbox.addFilter("numItems", () => 1);
 				lightbox.addFilter("itemData", () => {
-					return { src: image.url, width: 0, height: 0 };
+					return { src: url, width: 0, height: 0 };
 				});
 				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("closingAnimationEnd", () => {
@@ -118,13 +135,16 @@
 	});
 </script>
 
-{#if imageState.status !== "expired" && message.viewed !== true && (message.viewsRemaining === null || message.viewsRemaining > 0)}
+{#snippet bubbleContent(label: string)}
+	<ImagesIcon size={24} weight="fill" />
+	<span>{label}</span>
+	{@render media.adornments?.()}
+{/snippet}
+
+{#if viewable}
 	<button
 		class={[
-			"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",
-			className,
-			contentClass,
-			"border border-border bg-input",
+			bubbleClass,
 			{
 				"cursor-pointer": imageState.status === "idle",
 				"opacity-50": imageState.status === "loading",
@@ -134,10 +154,12 @@
 		disabled={imageState.status !== "idle"}
 		bind:this={media.el}
 	>
-		<ImagesIcon size={24} weight="fill" />
-		<span>View expiring image</span>
-		{@render media.adornments?.()}
+		{@render bubbleContent("View expiring image")}
 	</button>
+{:else if isOut}
+	<div class={[bubbleClass, "text-muted-foreground"]} bind:this={media.el}>
+		{@render bubbleContent("Expiring photo")}
+	</div>
 {:else}
 	<div class={["h-12 w-50", className, contentClass]} bind:this={media.el}>
 		<LockedMedia

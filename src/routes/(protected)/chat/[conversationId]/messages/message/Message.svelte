@@ -155,6 +155,7 @@
 				message={message.body}
 				conversationId={message.conversationId}
 				messageId={message.messageId}
+				{isOut}
 			/>
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
