@@ -121,6 +121,27 @@ describe("MessageComposer drafts", () => {
 		expect(drafts.get(A)).toBe("");
 	});
 
+	it("takes drafts again for a conversation reopened after it was forgotten", async () => {
+		drafts.forget(A);
+		const { textarea, unmount } = renderComposer();
+
+		await type(textarea, "hi again");
+		unmount();
+
+		expect(drafts.get(A)).toBe("hi again");
+	});
+
+	it("takes drafts again after switching to a forgotten conversation", async () => {
+		drafts.forget(B);
+		const { textarea, rerender, unmount } = renderComposer();
+
+		await rerender({ conversationId: B });
+		await type(textarea, "for b");
+		unmount();
+
+		expect(drafts.get(B)).toBe("for b");
+	});
+
 	it("drops the draft once the message is sent", async () => {
 		drafts.save({ conversationId: A, text: "old" });
 		const { textarea } = renderComposer();

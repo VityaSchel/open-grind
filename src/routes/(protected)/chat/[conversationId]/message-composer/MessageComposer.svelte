@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from "$app/state";
 	import { tick, untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
@@ -49,8 +48,9 @@
 	$effect(() => {
 		const openedConversationId = conversationId;
 		untrack(() => {
-			if (textContent === drafts.get(openedConversationId)) return;
-			textContent = drafts.get(openedConversationId);
+			const stored = drafts.open(openedConversationId);
+			if (textContent === stored) return;
+			textContent = stored;
 			void tick().then(remeasureBeforeResizeObserverCatchesUp);
 		});
 		return () =>
@@ -80,7 +80,7 @@
 	<div class="relative h-full w-full rounded-composer bg-popover">
 		<MessageTextInput bind:value={textContent} />
 		{#if textContent === ""}
-			{#key page.params.conversationId}
+			{#key conversationId}
 				<ComposerAttachments />
 			{/key}
 			<ComposerVoiceMessage />

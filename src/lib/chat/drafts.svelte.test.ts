@@ -30,12 +30,14 @@ describe("Drafts", () => {
 		expect(drafts.get(A)).toBe("hi");
 	});
 
-	it("autosaves the latest text once for a burst of typing", () => {
+	it("commits on a fixed interval measured from the first pending keystroke", () => {
 		const drafts = new Drafts();
 		for (const text of ["h", "he", "hey"]) {
 			drafts.autosave({ conversationId: A, text });
 			vi.advanceTimersByTime(AUTOSAVE_INTERVAL_MS / 2);
 		}
+
+		expect(drafts.get(A)).toBe("he");
 
 		vi.advanceTimersByTime(AUTOSAVE_INTERVAL_MS);
 		expect(drafts.get(A)).toBe("hey");
@@ -130,6 +132,57 @@ describe("Drafts", () => {
 		drafts.discard(A);
 
 		expect(drafts.get(B)).toBe("for b");
+	});
+
+	it("drops a forgotten conversation's draft", () => {
+		const drafts = new Drafts();
+		drafts.save({ conversationId: A, text: "hi" });
+		drafts.forget(A);
+
+		expect(drafts.get(A)).toBe("");
+	});
+
+	it("refuses a write from a composer still open on a forgotten conversation", () => {
+		const drafts = new Drafts();
+		drafts.forget(A);
+		drafts.save({ conversationId: A, text: "typed before it went away" });
+
+		expect(drafts.get(A)).toBe("");
+	});
+
+	it("refuses a pending autosave for a conversation forgotten meanwhile", () => {
+		const drafts = new Drafts();
+		drafts.autosave({ conversationId: A, text: "hi" });
+		drafts.forget(A);
+
+		vi.advanceTimersByTime(AUTOSAVE_INTERVAL_MS);
+		expect(drafts.get(A)).toBe("");
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("takes drafts again once the conversation is opened anew", () => {
+		const drafts = new Drafts();
+		drafts.forget(A);
+
+		expect(drafts.open(A)).toBe("");
+		drafts.save({ conversationId: A, text: "hi again" });
+
+		expect(drafts.get(A)).toBe("hi again");
+	});
+
+	it("hands the stored draft to the composer that opens it", () => {
+		const drafts = new Drafts();
+		drafts.save({ conversationId: A, text: "see you at" });
+
+		expect(drafts.open(A)).toBe("see you at");
+	});
+
+	it("refuses a write from a composer that outlived destroy", () => {
+		const drafts = new Drafts();
+		drafts.destroy();
+		drafts.save({ conversationId: A, text: "typed on the way out" });
+
+		expect(drafts.get(A)).toBe("");
 	});
 
 	it("forgets every draft on destroy", () => {

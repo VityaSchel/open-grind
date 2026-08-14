@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	getConversationsMock,
 	markConversationAsReadMock,
-	deleteConversationForMeMock,
 	setConversationPinnedMock,
 	setConversationMutedMock,
 	showErrorToastMock,
@@ -16,7 +15,6 @@ const {
 } = vi.hoisted(() => ({
 	getConversationsMock: vi.fn(),
 	markConversationAsReadMock: vi.fn(() => Promise.resolve()),
-	deleteConversationForMeMock: vi.fn(() => Promise.resolve()),
 	setConversationPinnedMock: vi.fn(() => Promise.resolve()),
 	setConversationMutedMock: vi.fn(() => Promise.resolve()),
 	showErrorToastMock: vi.fn(),
@@ -33,7 +31,7 @@ vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/messaging/conversations", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: markConversationAsReadMock,
-	deleteConversationForMe: deleteConversationForMeMock,
+	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: setConversationPinnedMock,
 	setConversationMuted: setConversationMutedMock,
 }));
@@ -61,86 +59,20 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { ConversationsState } from "./conversations-state.svelte";
-
-const OUR_ID = 1;
-const PEER_ID = 2;
-
-function deferred<T>() {
-	let resolve!: (value: T) => void;
-	let reject!: (reason?: unknown) => void;
-	const promise = new Promise<T>((res, rej) => {
-		resolve = res;
-		reject = rej;
-	});
-	return { promise, resolve, reject };
-}
-
-function conversation(
-	conversationId: string,
-	lastActivityTimestamp: number,
-	overrides: Partial<Conversation["data"]> = {},
-): Conversation {
-	return {
-		type: "full_conversation_v1",
-		data: {
-			conversationId,
-			name: `Conversation ${conversationId}`,
-			participants: [
-				{
-					profileId: PEER_ID,
-					primaryMediaHash: null,
-					lastOnline: null,
-					onlineUntil: null,
-					distanceMetres: null,
-					position: null,
-					isInAList: false,
-					hasDatingPotential: false,
-				},
-			],
-			lastActivityTimestamp,
-			unreadCount: 0,
-			preview: null,
-			muted: false,
-			pinned: false,
-			favorite: false,
-			rightNow: "none",
-			onlineUntil: null,
-			hasUnreadThrob: false,
-			...overrides,
-		},
-	} as unknown as Conversation;
-}
-
-function incomingMessage(
-	conversationId: string,
-	timestamp: number,
-	senderId: number,
-) {
-	return {
-		messageId: `m-${conversationId}-${timestamp}`,
-		conversationId,
-		senderId,
-		timestamp,
-		unsent: false,
-		reactions: [],
-		type: "Text",
-		body: { text: "hi" },
-	};
-}
+import {
+	conversation,
+	deferred,
+	entryFor,
+	incomingMessage,
+	microtasks,
+	OUR_ID,
+	PEER_ID,
+	settled,
+} from "./conversations-test-helpers";
 
 function emitMessageSent(payload: unknown) {
 	messageSentHandlers[0]?.({ payload });
 }
-
-function entryFor(state: ConversationsState, conversationId: string) {
-	const entry = state.entries.find(
-		(e) => e.data.conversationId === conversationId,
-	);
-	if (!entry) throw new Error(`no entry for ${conversationId}`);
-	return entry;
-}
-
-const microtasks = () => new Promise((r) => setTimeout(r, 0));
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -150,10 +82,6 @@ beforeEach(() => {
 	messageSentHandlers.length = 0;
 	conversationDeleteHandlers.length = 0;
 });
-
-async function settled(state: ConversationsState) {
-	await vi.waitFor(() => expect(state.loading).toBe(false));
-}
 
 describe("ConversationsState initial load", () => {
 	it("reports a failed first load and clears it on retry", async () => {
@@ -686,57 +614,5 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 		await reconcilePromise;
 
 		expect(state.nextPage).toBe(5);
-	});
-});
-
-describe("ConversationsState drafts", () => {
-	async function stateWithDraft(conversationId: string) {
-		getConversationsMock.mockResolvedValue({
-			entries: [conversation(conversationId, 1000)],
-			nextPage: null,
-		});
-		const state = new ConversationsState({
-			ourProfileId: OUR_ID,
-			onIncomingMessage,
-		});
-		await settled(state);
-		state.drafts.save({ conversationId, text: "see you at 8" });
-		return state;
-	}
-
-	it("drops the draft of a conversation the user deleted", async () => {
-		const state = await stateWithDraft("a:1");
-
-		await state.deleteConversations(["a:1"]);
-
-		expect(state.drafts.get("a:1")).toBe("");
-	});
-
-	it("keeps the draft when the delete is rolled back", async () => {
-		const state = await stateWithDraft("a:1");
-
-		deleteConversationForMeMock.mockRejectedValueOnce(new Error("offline"));
-		await state.deleteConversations(["a:1"]);
-
-		expect(state.entries).toHaveLength(1);
-		expect(state.drafts.get("a:1")).toBe("see you at 8");
-	});
-
-	it("drops the draft of a conversation deleted elsewhere", async () => {
-		const state = await stateWithDraft("a:1");
-
-		conversationDeleteHandlers[0]?.({
-			payload: { conversationIds: ["a:1"] },
-		});
-
-		expect(state.drafts.get("a:1")).toBe("");
-	});
-
-	it("forgets every draft once the account goes away", async () => {
-		const state = await stateWithDraft("a:1");
-
-		await state.destroy();
-
-		expect(state.drafts.get("a:1")).toBe("");
 	});
 });
