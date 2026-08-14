@@ -3,7 +3,7 @@
 	import { tick } from "svelte";
 
 	import * as Combobox from "$lib/components/ui/combobox";
-	import type { Option } from "../options";
+	import type { Option } from "$lib/util/options";
 	import Field from "./Field.svelte";
 
 	let {

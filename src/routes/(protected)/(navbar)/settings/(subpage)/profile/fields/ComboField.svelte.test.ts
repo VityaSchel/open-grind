@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
-import type { Option } from "../options";
+import type { Option } from "$lib/util/options";
 import ComboField from "./ComboField.svelte";
 
 const OPTIONS: Option<number>[] = [
