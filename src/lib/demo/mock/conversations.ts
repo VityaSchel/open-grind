@@ -432,16 +432,25 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 		type?: string;
 		target?: { targetId?: number };
 		body?: unknown;
+		replyToMessageId?: string;
 	};
 	const targetId = sent.target?.targetId ?? 0;
 	const timestamp = NOW;
+	const conversationId = conversationIdFor(targetId);
 	const overlay = {
 		messageId: `${timestamp}:demo-sent-${targetId}-${demoSentCounter++}`,
-		conversationId: conversationIdFor(targetId),
+		conversationId,
 		senderId: demoMeProfileId,
 		timestamp,
 		unsent: false,
 		reactions: [],
+		replyToMessage:
+			sent.replyToMessageId === undefined
+				? null
+				: demoSingleMessage({
+						conversationId,
+						messageId: sent.replyToMessageId,
+					}).message,
 	};
 	const mediaId =
 		sent.body && typeof sent.body === "object"

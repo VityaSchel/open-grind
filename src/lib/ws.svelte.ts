@@ -2,6 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
+import { ApiError } from "$lib/api/api-error";
+import { asAppError } from "$lib/api/methods";
 import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
@@ -12,6 +14,12 @@ export const notificationEventSchema = z.object({
 	notificationId: z.string().nullable(),
 	ref: z.string().nullable(),
 	payload: z.unknown(),
+});
+
+// The server answers a command on `<type>.response`, echoing our `ref` and
+// carrying an HTTP-shaped status the official client also treats as nullable.
+export const commandResponseEventSchema = notificationEventSchema.safeExtend({
+	status: z.int().nullish(),
 });
 
 export const chatV1MessageSentEventSchema = notificationEventSchema.safeExtend({
@@ -109,22 +117,25 @@ class WsState {
 	}
 
 	send(type: string, payload: unknown): void {
-		const ref_id = crypto.randomUUID();
-		invoke("ws_send", { command: { type, ref_id, payload } }).catch(
-			(e: unknown) => {
-				console.error("[ws] send failed", type, e);
-			},
-		);
+		invoke("ws_send", {
+			command: { type, ref_id: crypto.randomUUID(), payload },
+		}).catch((e: unknown) => {
+			console.error("[ws] send failed", type, e);
+		});
 	}
 
-	sendCommand<T>(
-		type: string,
-		payload: unknown,
-		responseSchema: z.ZodType<T>,
-		{ timeoutMs = 10000 }: { timeoutMs?: number } = {},
-	): Promise<T> {
+	sendCommand<T>({
+		type,
+		payload,
+		responseSchema,
+		timeoutMs = 10_000,
+	}: {
+		type: string;
+		payload: unknown;
+		responseSchema: z.ZodType<T>;
+		timeoutMs?: number;
+	}): Promise<T> {
 		const ref_id = crypto.randomUUID();
-		const safeName = `${type}.response`.replaceAll(".", "_");
 
 		return new Promise<T>((resolve, reject) => {
 			let unlisten: (() => void) | undefined;
@@ -139,41 +150,79 @@ class WsState {
 			const timeout = setTimeout(
 				() =>
 					settle(() =>
-						reject(new Error(`[ws] command timed out: ${type}`)),
+						reject(
+							new ApiError({
+								message: `websocket command ${type} timed out`,
+								request: { method: "WS", path: type },
+							}),
+						),
 					),
 				timeoutMs,
 			);
-			const onError = (e: unknown) =>
+
+			const request = { method: "WS", path: type, body: payload };
+			const failed = (error: unknown) =>
 				settle(() =>
-					reject(e instanceof Error ? e : new Error(String(e))),
+					reject(
+						error instanceof ApiError
+							? error
+							: new ApiError({
+									message:
+										asAppError(error)?.prettyMessage ??
+										(error instanceof Error
+											? error.message
+											: String(error)),
+									request,
+									kind: asAppError(error)?.kind ?? null,
+									cause: error,
+								}),
+					),
 				);
 
-			listen<{ ref: string; status: number; payload: unknown }>(
-				`grindr:${safeName}`,
-				(event) => {
-					if (event.payload.ref !== ref_id) return;
+			this.on(
+				`${type}.response`,
+				commandResponseEventSchema,
+				(response) => {
+					if (response.ref !== ref_id) return;
 					settle(() => {
-						if (event.payload.status >= 400) {
+						const status = response.status ?? 0;
+						if (status >= 400) {
 							reject(
-								new Error(
-									`[ws] command failed: ${type} (${event.payload.status})`,
-								),
+								new ApiError({
+									message: `websocket command ${type} failed`,
+									request,
+									response: { status, body: "" },
+								}),
 							);
 							return;
 						}
 						const result = responseSchema.safeParse(
-							event.payload.payload,
+							response.payload,
 						);
-						if (result.success) resolve(result.data);
-						else reject(result.error);
+						if (result.success) {
+							resolve(result.data);
+							return;
+						}
+						console.error(
+							`[ws] unexpected ${type} response payload:`,
+							result.error,
+							response.payload,
+						);
+						reject(
+							new ApiError({
+								message: `websocket command ${type} returned an unexpected payload`,
+								request,
+								cause: result.error,
+							}),
+						);
 					});
 				},
 			)
 				.then((fn) => (settled ? fn() : (unlisten = fn)))
-				.catch(onError);
+				.catch(failed);
 
 			invoke("ws_send", { command: { type, ref_id, payload } }).catch(
-				onError,
+				failed,
 			);
 		});
 	}
