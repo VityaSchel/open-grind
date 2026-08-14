@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from "svelte";
+
 	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
@@ -12,12 +14,12 @@
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
-	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	let filters = $state(gridState.filters.snapshot());
 	let { ageEnabled: enabled, age: value } = $derived(filters);
 
 	$effect(() => {
 		if (open) {
-			filters = { ...(gridState.filters.value ?? defaultFilters) };
+			filters = untrack(() => gridState.filters.snapshot());
 		}
 	});
 

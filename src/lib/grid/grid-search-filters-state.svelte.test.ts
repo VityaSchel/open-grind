@@ -27,6 +27,23 @@ beforeEach(() => {
 	});
 });
 
+describe("snapshot", () => {
+	it("falls back to the defaults before the stored filters load", () => {
+		const state = new GridSearchFiltersState({ onQueryChange: vi.fn() });
+
+		expect(state.snapshot()).toEqual(defaultFilters);
+	});
+
+	it("detaches the copy from the stored filters", async () => {
+		const { state } = await loadedState();
+
+		const snapshot = state.snapshot();
+		state.set({ genders: [3] });
+
+		expect(snapshot.genders).toEqual([1, 2]);
+	});
+});
+
 describe("set", () => {
 	it("ignores a patch that changes nothing", async () => {
 		const { state, onQueryChange } = await loadedState();

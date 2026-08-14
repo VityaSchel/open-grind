@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import type z from "zod";
 
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
@@ -12,12 +13,12 @@
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
-	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	let filters = $state(gridState.filters.snapshot());
 	let { positionEnabled: enabled, positions: value } = $derived(filters);
 
 	$effect(() => {
 		if (open) {
-			filters = { ...(gridState.filters.value ?? defaultFilters) };
+			filters = untrack(() => gridState.filters.snapshot());
 		}
 	});
 

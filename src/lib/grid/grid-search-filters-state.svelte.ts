@@ -19,6 +19,10 @@ export class GridSearchFiltersState {
 		this.ready = this.#load();
 	}
 
+	snapshot(): GridSearchFilters {
+		return { ...(this.value ?? defaultFilters) };
+	}
+
 	set(gridSearchFilters: Partial<GridSearchFilters>) {
 		const oldValue = this.value;
 		const newValue = Object.assign({}, oldValue, gridSearchFilters);
