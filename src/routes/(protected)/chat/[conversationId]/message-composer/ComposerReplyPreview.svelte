@@ -3,7 +3,7 @@
 
 	import {
 		previewFromMessage,
-		previewLabel,
+		quoteLabel,
 	} from "$lib/model/messaging/message-preview";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
@@ -12,7 +12,7 @@
 		onCancel,
 	}: { message: ApiResponseMessage; onCancel?: () => void } = $props();
 
-	const label = $derived(previewLabel(previewFromMessage(message)));
+	const label = $derived(quoteLabel(previewFromMessage(message)));
 </script>
 
 <div class="flex items-center gap-2 rounded-xl bg-muted py-1.5 pr-1.5 pl-2.5">

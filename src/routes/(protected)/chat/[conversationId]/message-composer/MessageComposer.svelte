@@ -4,6 +4,7 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import type {
 		ApiResponseMessage,
 		MessageDraft,
@@ -24,7 +25,7 @@
 		height = $bindable(0),
 	}: {
 		conversationId: string;
-		onSend: (draft: MessageDraft) => void | Promise<void>;
+		onSend: (drafts: MessageDraft[]) => void | Promise<void>;
 		disabled: boolean;
 		replyTo?: ApiResponseMessage | null;
 		onCancelReply?: () => void;
@@ -35,12 +36,13 @@
 
 	let textContent = $state(untrack(() => drafts.get(conversationId)));
 	let form: HTMLFormElement | null = $state(null);
+	let textInput: HTMLTextAreaElement | null = $state(null);
 
 	async function onSubmit() {
 		const text = textContent.trim();
 		if (text === "") return;
 		try {
-			await onSend(draftFromMessage({ type: "Text", body: { text } }));
+			await onSend([draftFromMessage({ type: "Text", body: { text } })]);
 			textContent = "";
 			drafts.discard(conversationId);
 		} catch (error) {
@@ -72,7 +74,18 @@
 		drafts.autosave({ conversationId, text: textContent });
 	});
 
-	setMessageComposerContext(() => ({ disabled, sendMessage: onSend }));
+	// Arming a reply should hand the user straight back to the composer, which
+	// on touch is also what raises the keyboard.
+	$effect(() => {
+		if (replyTo) textInput?.focus();
+	});
+
+	dismissOnBackGesture({
+		active: () => replyTo !== null && replyTo !== undefined,
+		dismiss: () => onCancelReply?.(),
+	});
+
+	setMessageComposerContext(() => ({ disabled, sendMessages: onSend }));
 </script>
 
 <form
@@ -89,7 +102,11 @@
 		<ComposerReplyPreview message={replyTo} onCancel={onCancelReply} />
 	{/if}
 	<div class="relative h-full w-full rounded-composer bg-popover">
-		<MessageTextInput bind:value={textContent} />
+		<MessageTextInput
+			bind:value={textContent}
+			bind:ref={textInput}
+			onEscape={onCancelReply}
+		/>
 		{#if textContent === ""}
 			{#key conversationId}
 				<ComposerAttachments />

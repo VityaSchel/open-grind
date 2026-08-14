@@ -1,6 +1,5 @@
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::mpsc::error::TrySendError;
 
 use crate::api::session_recovery::{
 	report_refresh_failure, SessionErrorPayload,
@@ -135,27 +134,20 @@ pub async fn ws_send(
 ) -> Result<(), AppError> {
 	let client = state.client()?;
 
-	// The channel only errors once its receiver is gone, so without this gate a
-	// command sent while the socket is down buffers, reports success, and lands
-	// on the next reconnect.
-	let connected = matches!(
-		*client.connection_state().borrow(),
-		grindr::WsConnectionState::Connected
-	);
-	if !connected {
+	// The ws task holds the command receiver while it backs off, so a send only
+	// errors once the client is gone: without this gate a command sent while
+	// the socket is down buffers and lands on the next reconnect.
+	if *client.connection_state().borrow()
+		!= grindr::WsConnectionState::Connected
+	{
 		return Err(AppError::Http("WS not connected".to_owned()));
 	}
 
-	// `try_send` keeps a backed-up buffer from parking the command until the
-	// caller times out.
-	client.ws_sender().try_send(command).map_err(|e| match e {
-		TrySendError::Full(_) => {
-			AppError::Http("WS send buffer full".to_owned())
-		}
-		TrySendError::Closed(_) => {
-			AppError::Http("WS not connected".to_owned())
-		}
-	})
+	// `try_send`, so a backed-up buffer fails instead of parking the caller.
+	client
+		.ws_sender()
+		.try_send(command)
+		.map_err(|e| AppError::Http(format!("WS send failed: {e}")))
 }
 
 #[cfg(test)]

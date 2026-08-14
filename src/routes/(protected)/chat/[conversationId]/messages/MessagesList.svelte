@@ -55,7 +55,9 @@
 				revert?.();
 			}
 		}}
-		onReply={() => conversationState.setReplyTo(message)}
+		onReply={message.status === "sent" && !message.unsent
+			? () => conversationState.setReplyTo(message)
+			: undefined}
 		onReact={async (reactionType: number) => {
 			try {
 				await conversationState.reactTo({

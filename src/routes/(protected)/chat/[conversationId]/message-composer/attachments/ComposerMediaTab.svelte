@@ -102,16 +102,16 @@
 		const sendAsExpiring = expiring;
 		selected.clear();
 		onClose();
-		for (const item of items) {
-			item.used = true;
-			const mediaBody = {
-				mediaId: item.id,
-				width: null,
-				height: null,
-				url: item.url,
-			};
-			void composer().sendMessage(
-				sendAsExpiring
+		for (const item of items) item.used = true;
+		void composer().sendMessages(
+			items.map((item) => {
+				const mediaBody = {
+					mediaId: item.id,
+					width: null,
+					height: null,
+					url: item.url,
+				};
+				return sendAsExpiring
 					? {
 							outbound: {
 								type: "ExpiringImage",
@@ -136,9 +136,9 @@
 									createdAt: item.createdTs,
 								},
 							},
-						},
-			);
-		}
+						};
+			}),
+		);
 	}
 </script>
 

@@ -3,7 +3,15 @@
 	import { isMobilePlatform } from "$lib/platform/os";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
-	let { value = $bindable() }: { value: string } = $props();
+	let {
+		value = $bindable(),
+		ref = $bindable(null),
+		onEscape,
+	}: {
+		value: string;
+		ref?: HTMLTextAreaElement | null;
+		onEscape?: () => void;
+	} = $props();
 
 	const isMobile = isMobilePlatform();
 
@@ -19,11 +27,17 @@
 			currentTarget: EventTarget & HTMLTextAreaElement;
 		},
 	) => {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			onEscape?.();
+			return;
+		}
 		if (!isMobile && event.key === "Enter" && !event.shiftKey) {
 			event.preventDefault();
 			event.currentTarget.form?.requestSubmit();
 		}
 	}}
 	bind:value
+	bind:ref
 	{disabled}
 />

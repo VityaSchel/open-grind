@@ -4,6 +4,9 @@ const AUTOSAVE_INTERVAL_MS = 1_000;
 
 export class Drafts {
 	#texts = new SvelteMap<string, string>();
+	// Kept apart from the text: save() deletes a draft whose text is empty, and
+	// the composer's unmount cleanup calls exactly that.
+	#replyTargets = new SvelteMap<string, string>();
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- gates writes from open composers, never read from a template or $derived
 	#forgotten = new Set<string>();
 	#editing: { conversationId: string; text: string } | null = null;
@@ -35,6 +38,7 @@ export class Drafts {
 
 	discard(conversationId: string): void {
 		this.save({ conversationId, text: "" });
+		this.clearReplyTo(conversationId);
 	}
 
 	forget(conversationId: string): void {
@@ -42,6 +46,26 @@ export class Drafts {
 			this.#stopAutosave();
 		this.#forgotten.add(conversationId);
 		this.#texts.delete(conversationId);
+		this.#replyTargets.delete(conversationId);
+	}
+
+	replyTo(conversationId: string): string | null {
+		return this.#replyTargets.get(conversationId) ?? null;
+	}
+
+	setReplyTo({
+		conversationId,
+		messageId,
+	}: {
+		conversationId: string;
+		messageId: string;
+	}): void {
+		if (this.#destroyed || this.#forgotten.has(conversationId)) return;
+		this.#replyTargets.set(conversationId, messageId);
+	}
+
+	clearReplyTo(conversationId: string): void {
+		this.#replyTargets.delete(conversationId);
 	}
 
 	autosave({
@@ -66,6 +90,7 @@ export class Drafts {
 		this.#destroyed = true;
 		this.#stopAutosave();
 		this.#texts.clear();
+		this.#replyTargets.clear();
 		this.#forgotten.clear();
 	}
 
