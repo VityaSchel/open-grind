@@ -307,11 +307,15 @@ export async function deleteProfilePhotos({
 		body: { media_hashes: mediaHashes },
 	});
 	res.assertOk();
+	const cached = profiles.get(cacheProfileId);
+	if (!cached) return;
 	const removed = new Set(mediaHashes);
-	profiles.update(cacheProfileId, (profile) => ({
-		...profile,
-		medias: profile.medias.filter((m) => !removed.has(m.mediaHash)),
-	}));
+	mergeProfileEditIntoCaches({
+		cacheProfileId,
+		patch: {
+			medias: cached.medias.filter((m) => !removed.has(m.mediaHash)),
+		},
+	});
 }
 
 export async function getProfileUploadedPhotos() {
