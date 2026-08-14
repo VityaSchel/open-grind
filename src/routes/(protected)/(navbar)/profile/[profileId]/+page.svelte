@@ -1,5 +1,14 @@
 <script lang="ts">
 	import { page } from "$app/state";
+	import {
+		CameraIcon,
+		EyesIcon,
+		GlobeStandIcon,
+		HeartbeatIcon,
+		HouseIcon,
+		UsersIcon,
+		UsersThreeIcon,
+	} from "phosphor-svelte";
 	import { untrack } from "svelte";
 
 	import {
@@ -10,21 +19,25 @@
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import {
+		acceptNSFWPics,
+		ethnicities,
+		healthPractices,
+		hivStatuses,
+		lookingFor as lookingForLabels,
+		meetAt as meetAtLabels,
+		relationshipStatuses,
+		tribes,
+	} from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import BlockedProfile from "./BlockedProfile.svelte";
 	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
 	import Distance from "./Distance.svelte";
-	import Ethnicity from "./fields/Ethnicity.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";
-	import HealthPractices from "./fields/HealthPractices.svelte";
-	import HivStatus from "./fields/HivStatus.svelte";
+	import HivStatusIcon from "./fields/HivStatusIcon.svelte";
 	import LastTested from "./fields/LastTested.svelte";
-	import LookingFor from "./fields/LookingFor.svelte";
-	import MeetAt from "./fields/MeetAt.svelte";
-	import NSFWPics from "./fields/NSFWPics.svelte";
-	import RelationshipStatus from "./fields/RelationshipStatus.svelte";
+	import LookupField from "./fields/LookupField.svelte";
 	import Socials from "./fields/Socials.svelte";
-	import Tribes from "./fields/Tribes.svelte";
 	import Height from "./HeightWeightBodyType.svelte";
 	import ImageCarousel from "./ImageCarousel.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
@@ -198,26 +211,62 @@
 						{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
 							<ProfileSection title="Stats">
 								<Genders {genders} {pronouns} />
-								<Tribes tribes={grindrTribes} />
-								<Ethnicity {ethnicity} />
-								<RelationshipStatus {relationshipStatus} />
+								<LookupField
+									icon={UsersThreeIcon}
+									value={grindrTribes}
+									options={tribes}
+								/>
+								<LookupField
+									icon={GlobeStandIcon}
+									value={ethnicity}
+									options={ethnicities}
+								/>
+								<LookupField
+									icon={UsersIcon}
+									value={relationshipStatus}
+									options={relationshipStatuses}
+								/>
 							</ProfileSection>
 						{/if}
 						{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
 							<ProfileSection title="Expectations">
-								<LookingFor {lookingFor} />
-								<MeetAt {meetAt} />
-								<NSFWPics nsfwPics={nsfw} />
+								<LookupField
+									icon={EyesIcon}
+									weight="fill"
+									label="Looking For"
+									value={lookingFor}
+									options={lookingForLabels}
+								/>
+								<LookupField
+									icon={HouseIcon}
+									label="Meet At"
+									value={meetAt}
+									options={meetAtLabels}
+								/>
+								<LookupField
+									icon={CameraIcon}
+									label="NSFW Pics?"
+									value={nsfw}
+									options={acceptNSFWPics}
+								/>
 							</ProfileSection>
 						{/if}
 						{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
 							<ProfileSection title="Health">
-								<HivStatus {hivStatus} />
+								<LookupField
+									icon={HivStatusIcon}
+									label="HIV Status"
+									value={hivStatus}
+									options={hivStatuses}
+								/>
 								<LastTested
 									lastTestedDate={lastTestedDateValue}
 								/>
-								<HealthPractices
-									healthPractices={sexualHealthValue}
+								<LookupField
+									icon={HeartbeatIcon}
+									label="Health Practices"
+									value={sexualHealthValue}
+									options={healthPractices}
 								/>
 							</ProfileSection>
 						{/if}
