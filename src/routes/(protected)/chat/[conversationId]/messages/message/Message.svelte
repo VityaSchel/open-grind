@@ -52,7 +52,10 @@
 
 	const swipe = untrack(() =>
 		onReply
-			? new SwipeToReply(isOut ? "left" : "right", () => onReply?.())
+			? new SwipeToReply({
+					direction: isOut ? "left" : "right",
+					onReply: () => onReply?.(),
+				})
 			: null,
 	);
 
@@ -197,7 +200,10 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
-	<div class="relative flex flex-col" {...swipe?.handlers}>
+	<div
+		class={["relative flex flex-col", { "touch-pan-y": swipe !== null }]}
+		{...swipe?.handlers}
+	>
 		{#if swipe}
 			<div
 				class={[
