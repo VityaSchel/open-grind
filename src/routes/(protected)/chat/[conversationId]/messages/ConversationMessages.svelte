@@ -145,6 +145,20 @@
 		lastFirstId = firstId;
 	}
 
+	let floorDistanceBeforeComposerResize = 0;
+
+	$effect.pre(measureFloorBeforeComposerResize);
+
+	// Measured before the padding changes: growing padding never moves
+	// scrollTop while shrinking padding self-clamps, so only the distance the
+	// reader was resting at survives both directions.
+	function measureFloorBeforeComposerResize(): void {
+		void composerHeight;
+		untrack(() => {
+			floorDistanceBeforeComposerResize = floorDistance();
+		});
+	}
+
 	$effect(keepFloorOnComposerResize);
 
 	function keepFloorOnComposerResize(): void {
@@ -153,7 +167,10 @@
 		if (!el) return;
 		untrack(() => {
 			if (!atFloor) return;
-			el.scrollTop = el.scrollHeight;
+			el.scrollTop =
+				el.scrollHeight -
+				el.clientHeight -
+				floorDistanceBeforeComposerResize;
 		});
 	}
 </script>
