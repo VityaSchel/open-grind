@@ -21,8 +21,13 @@ vi.mock("$lib/chat/conversations-context.svelte", () => ({
 // jsdom run has no business providing
 vi.mock("$lib/ws.svelte", () => ({
 	ws: {
+		status: "connected",
+		connect: () => {},
 		on: () => Promise.resolve(() => {}),
 		onConnected: () => Promise.resolve(() => {}),
+		onEventsDropped: () => Promise.resolve(() => {}),
+		send: () => {},
+		sendCommand: () => Promise.resolve(undefined),
 	},
 }));
 

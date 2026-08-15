@@ -16,3 +16,23 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 			dispatchEvent: () => false,
 		}) as MediaQueryList;
 }
+
+// jsdom has no Web Animations either, and svelte/transition drives every
+// transition through element.animate.
+if (typeof Element !== "undefined" && !Element.prototype.animate) {
+	Element.prototype.animate = () =>
+		({
+			cancel: () => {},
+			finish: () => {},
+			pause: () => {},
+			play: () => {},
+			reverse: () => {},
+			addEventListener: () => {},
+			removeEventListener: () => {},
+			currentTime: 0,
+			playState: "finished",
+			effect: null,
+			finished: Promise.resolve(),
+			onfinish: null,
+		}) as unknown as Animation;
+}
