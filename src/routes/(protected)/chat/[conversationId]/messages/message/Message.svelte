@@ -134,6 +134,10 @@
 	}
 
 	let contextMenu: HTMLDialogElement | null = $state(null);
+
+	// A dblclick carries no pointerType of its own, and only the pointer can
+	// tell a double tap (react) from a double click (reply).
+	let lastPointerType = "";
 </script>
 
 {#snippet adornments()}
@@ -238,6 +242,7 @@
 				]}
 				role="button"
 				tabindex="0"
+				onpointerdown={(event) => (lastPointerType = event.pointerType)}
 				ondblclick={(event) => {
 					const selection = window.getSelection();
 					if (
@@ -246,9 +251,17 @@
 						messageElement?.contains(selection.anchorNode)
 					)
 						return;
-					if (!isOut && onReact) {
+					if (lastPointerType === "touch") {
+						if (!isOut && onReact) {
+							event.preventDefault();
+							onReact(1);
+							selection?.removeAllRanges();
+						}
+						return;
+					}
+					if (onReply) {
 						event.preventDefault();
-						onReact(1);
+						onReply();
 						selection?.removeAllRanges();
 					}
 				}}
@@ -308,10 +321,13 @@
 		onClose={() => (contextMenuOpen = false)}
 		style={inheritedStyles}
 		textContent={message.type === "Text" ? message.body.text : undefined}
-		reactionAvailable={message.reactions.length === 0 && !isOut}
+		reactionAvailable={message.reactions.length === 0 &&
+			!isOut &&
+			!message.unsent}
 		{onDelete}
 		{onUnsend}
 		{onCopyError}
 		{onReply}
+		{onReact}
 	/>
 {/if}

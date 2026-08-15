@@ -10,6 +10,10 @@ const AXIS_LOCK_SLOP_PX = 8;
 // A mouse tick lands as one or two large jumps where trackpad fingers stream
 // dozens of small deltas, so a gesture this short is not a swipe.
 const RAIL_MIN_WHEEL_STEPS = 3;
+// Trackpad gestures accelerate from small deltas; only a mouse opens with a
+// jump this large. Classified at the first event so a hard flick's later
+// large deltas stay welcome.
+const RAIL_MOUSE_NOTCH_PX = 50;
 // Wheel events further apart than this belong to separate gestures; without
 // the window, steps left over from an abandoned wiggle would let a lone mouse
 // tick commit.
@@ -46,7 +50,10 @@ export class SwipeToReply {
 	#railReturning = false;
 	readonly #railHasScrollEnd: boolean;
 	#railWheelSteps = 0;
-	#railLastWheelAt = 0;
+	// the first wheel ever seen must classify as a gesture start
+	#railLastWheelAt = Number.NEGATIVE_INFINITY;
+	#railGestureIsMouse = false;
+	#railSettling = false;
 	#railFallback: ReturnType<typeof setTimeout> | undefined;
 
 	constructor({
@@ -79,8 +86,9 @@ export class SwipeToReply {
 
 	// A trackpad drag rides the row's own scroller: a real scroll position
 	// holds still while resting fingers emit nothing, and scrollend fires on
-	// finger lift, not during a pause. Nothing here calls preventDefault, so
-	// unconsumed wheels reach the conversation's pull-to-refresh untouched.
+	// finger lift, not during a pause. Only a mouse's sideways jump is ever
+	// cancelled, so every wheel that vertical scrolling or pull-to-refresh
+	// may need passes through untouched.
 	readonly attachRail: Attachment<HTMLElement> = (node) => {
 		this.#rail = node;
 		this.#railRest = this.#dragSign === 1 ? MAX_DRAG_PX : 0;
@@ -90,7 +98,9 @@ export class SwipeToReply {
 		const onWheel = (event: WheelEvent) => this.#onRailWheel(event);
 		node.addEventListener("scroll", onScroll, { passive: true });
 		node.addEventListener("scrollend", onScrollEnd, { passive: true });
-		node.addEventListener("wheel", onWheel, { passive: true });
+		// non-passive so a mouse's sideways jump can be cancelled before it
+		// scrolls the rail; vertical-dominant wheels are never cancelled
+		node.addEventListener("wheel", onWheel, { passive: false });
 		return () => {
 			node.removeEventListener("scroll", onScroll);
 			node.removeEventListener("scrollend", onScrollEnd);
@@ -106,7 +116,7 @@ export class SwipeToReply {
 		if (!rail) return;
 		const drag = (rail.scrollLeft - this.#railRest) * -this.#dragSign;
 		this.#railDrag = Math.max(drag, 0);
-		if (!this.#railReturning)
+		if (!this.#railReturning && !this.#railSettling)
 			this.armed = this.#railDrag > TRIGGER_DISTANCE_PX;
 		if (!this.#railHasScrollEnd) {
 			clearTimeout(this.#railFallback);
@@ -118,14 +128,26 @@ export class SwipeToReply {
 	}
 
 	#onRailWheel(event: WheelEvent): void {
+		const pixelMode = event.deltaMode === WheelEvent.DOM_DELTA_PIXEL;
+		const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+		const at = this.#now();
+		if (at - this.#railLastWheelAt > RAIL_WHEEL_CHAIN_MS) {
+			this.#railWheelSteps = 0;
+			this.#railSettling = false;
+			this.#railGestureIsMouse =
+				!pixelMode ||
+				(horizontal && Math.abs(event.deltaX) >= RAIL_MOUSE_NOTCH_PX);
+		}
+		this.#railLastWheelAt = at;
+		// A released gesture's momentum keeps streaming wheels; letting them
+		// through would re-drag the row it just returned, over and over.
+		if (this.#railGestureIsMouse || this.#railSettling) {
+			if (horizontal && event.cancelable) event.preventDefault();
+			return;
+		}
 		// A user grabbing the row back mid-return owns it again.
 		this.#railReturning = false;
-		if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) return;
-		if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
-		const at = this.#now();
-		if (at - this.#railLastWheelAt > RAIL_WHEEL_CHAIN_MS)
-			this.#railWheelSteps = 0;
-		this.#railLastWheelAt = at;
+		if (!pixelMode || !horizontal) return;
 		this.#railWheelSteps += 1;
 	}
 
@@ -133,12 +155,17 @@ export class SwipeToReply {
 		clearTimeout(this.#railFallback);
 		const commit =
 			!this.#railReturning &&
+			!this.#railSettling &&
 			this.#railDrag > TRIGGER_DISTANCE_PX &&
 			this.#railWheelSteps >= RAIL_MIN_WHEEL_STEPS;
 		this.#railWheelSteps = 0;
 		this.armed = false;
-		if (this.#railDrag > 0) this.#returnRail();
-		else this.#railReturning = false;
+		if (this.#railDrag > 0) {
+			this.#railSettling = true;
+			this.#returnRail();
+		} else {
+			this.#railReturning = false;
+		}
 		if (commit) this.#onReply();
 	}
 

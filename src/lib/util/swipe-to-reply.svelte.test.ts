@@ -153,26 +153,48 @@ function railHarness({
 		},
 		// Fingers stream small wheel deltas while the row's scroller follows;
 		// the wheel's delta points the way the content scrolls, which is
-		// scrollLeft's own direction.
+		// scrollLeft's own direction. The deltas alternate fat and thin the
+		// way real fingers jitter, so a swipe never reads as a momentum tail.
 		swipeBy(px: number, { steps = 6, deltaY = 0, stepMs = 16 } = {}) {
 			const sign = direction === "right" ? 1 : -1;
 			const target = Math.max(
 				0,
 				Math.min(MAX_DRAG_PX, rest - (this.dragPx() + px) * sign),
 			);
-			const perStep = (target - rail.scrollLeft) / steps;
+			let remaining = target - rail.scrollLeft;
 			for (let step = 0; step < steps; step++) {
+				const even = (remaining / (steps - step)) * 1.25;
+				const delta =
+					step === steps - 1
+						? remaining
+						: even * (step % 2 === 0 ? 1 : 0.6);
 				this.advance(stepMs);
 				rail.dispatchEvent(
 					new WheelEvent("wheel", {
-						deltaX: perStep,
+						deltaX: delta,
 						deltaY: deltaY / steps,
 						deltaMode: 0,
 						cancelable: true,
 					}),
 				);
-				rail.scrollLeft += perStep;
+				rail.scrollLeft += delta;
+				remaining -= delta;
 				rail.dispatchEvent(new Event("scroll"));
+			}
+		},
+		// a flick's tail: fingers already gone, magnitudes only ever decaying
+		momentumTail({ events = 8, startPx = 40 } = {}) {
+			const sign = direction === "right" ? -1 : 1;
+			for (let index = 0; index < events; index++) {
+				this.advance(16);
+				rail.dispatchEvent(
+					new WheelEvent("wheel", {
+						deltaX: startPx * 0.8 ** index * sign,
+						deltaY: 0,
+						deltaMode: 0,
+						cancelable: true,
+					}),
+				);
 			}
 		},
 		dragPx() {
@@ -244,15 +266,118 @@ describe("SwipeToReply on a trackpad", () => {
 	it("does not reply when an armed drag eases back before the lift", () => {
 		const h = railHarness();
 
-		h.swipeBy(MAX_DRAG_PX);
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
 		expect(h.swipe.armed).toBe(true);
-		h.swipeBy(-(MAX_DRAG_PX - 20));
+		h.swipeBy(-(TRIGGER_DISTANCE_PX - 20));
 		h.lift();
 
 		expect(h.onReply).not.toHaveBeenCalled();
 	});
 
-	it("never cancels a wheel, so scrolling and pull-to-refresh stay native", () => {
+	it("stays pinned at full stretch until the fingers release", () => {
+		const h = railHarness();
+
+		h.swipeBy(MAX_DRAG_PX);
+
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.swipe.armed).toBe(true);
+
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("commits nothing before the release, momentum tail or not", () => {
+		const h = railHarness();
+
+		h.swipeBy(MAX_DRAG_PX);
+		h.momentumTail();
+
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.swipe.armed).toBe(true);
+
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("evaluates a full there-and-back sweep exactly once, at its release", () => {
+		const h = railHarness();
+
+		h.swipeBy(MAX_DRAG_PX);
+		h.swipeBy(-MAX_DRAG_PX);
+
+		expect(h.onReply).not.toHaveBeenCalled();
+
+		h.lift();
+
+		// back at rest by its own hand: nothing to commit, nothing to repeat
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.rail.scrollLeft).toBe(h.rest);
+	});
+
+	it("keeps a jittering hold at full stretch from reading as a lift", () => {
+		const h = railHarness();
+
+		h.swipeBy(MAX_DRAG_PX);
+		for (let index = 0; index < 12; index++) {
+			h.advance(16);
+			h.rail.dispatchEvent(
+				new WheelEvent("wheel", {
+					deltaX: index % 2 === 0 ? -9 : -3,
+					deltaY: 0,
+					deltaMode: 0,
+				}),
+			);
+		}
+
+		expect(h.onReply).not.toHaveBeenCalled();
+
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("swallows the momentum that outlives a committing release", () => {
+		const h = railHarness();
+
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		h.lift();
+		expect(h.onReply).toHaveBeenCalledOnce();
+
+		h.advance(16);
+		const tail = new WheelEvent("wheel", {
+			deltaX: -20,
+			deltaY: 0,
+			deltaMode: 0,
+			cancelable: true,
+		});
+		h.rail.dispatchEvent(tail);
+
+		expect(tail.defaultPrevented).toBe(true);
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("swallows momentum even when the release commits nothing", () => {
+		const h = railHarness();
+
+		h.swipeBy(TRIGGER_DISTANCE_PX - 24);
+		h.lift();
+
+		h.advance(16);
+		const tail = new WheelEvent("wheel", {
+			deltaX: -20,
+			deltaY: 0,
+			deltaMode: 0,
+			cancelable: true,
+		});
+		h.rail.dispatchEvent(tail);
+
+		expect(tail.defaultPrevented).toBe(true);
+		expect(h.onReply).not.toHaveBeenCalled();
+	});
+
+	it("never cancels a wheel that vertical scrolling may need", () => {
 		const h = railHarness();
 
 		const vertical = new WheelEvent("wheel", {
@@ -261,27 +386,47 @@ describe("SwipeToReply on a trackpad", () => {
 			deltaMode: 0,
 			cancelable: true,
 		});
-		const horizontal = new WheelEvent("wheel", {
+		const heave = new WheelEvent("wheel", {
+			deltaX: -30,
+			deltaY: -200,
+			deltaMode: 0,
+			cancelable: true,
+		});
+		const fingers = new WheelEvent("wheel", {
 			deltaX: -40,
 			deltaY: 0,
 			deltaMode: 0,
 			cancelable: true,
 		});
 		h.rail.dispatchEvent(vertical);
-		h.rail.dispatchEvent(horizontal);
+		h.rail.dispatchEvent(heave);
+		h.rail.dispatchEvent(fingers);
 
 		expect(vertical.defaultPrevented).toBe(false);
-		expect(horizontal.defaultPrevented).toBe(false);
+		expect(heave.defaultPrevented).toBe(false);
+		expect(fingers.defaultPrevented).toBe(false);
 	});
 
-	it("does not reply from a lone mouse jump, however far it scrolls", () => {
+	it("suppresses a mouse's sideways jump before it can move the row", () => {
 		const h = railHarness();
 
-		h.swipeBy(MAX_DRAG_PX, { steps: 1 });
+		const jump = new WheelEvent("wheel", {
+			deltaX: -160,
+			deltaY: 0,
+			deltaMode: 0,
+			cancelable: true,
+		});
+		h.rail.dispatchEvent(jump);
+
+		expect(jump.defaultPrevented).toBe(true);
+		expect(h.rail.scrollLeft).toBe(h.rest);
+
+		// even an engine that scrolled it anyway must not see a reply
+		h.rail.scrollLeft = h.rest - MAX_DRAG_PX * (h.rest === 0 ? -1 : 1);
+		h.rail.dispatchEvent(new Event("scroll"));
 		h.lift();
 
 		expect(h.onReply).not.toHaveBeenCalled();
-		expect(h.rail.scrollLeft).toBe(h.rest);
 	});
 
 	it("forgets wheel steps once the chain window lapses", () => {
@@ -319,6 +464,7 @@ describe("SwipeToReply on a trackpad", () => {
 
 		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
 		h.lift();
+		h.advance(RAIL_WHEEL_CHAIN_MS + 1);
 		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
 		h.lift();
 

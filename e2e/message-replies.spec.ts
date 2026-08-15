@@ -95,7 +95,7 @@ test("a trackpad drag past the trigger replies on lift", async ({ page }) => {
 	await expect(page.getByLabel("Cancel reply")).toBeVisible();
 });
 
-test("a lone sideways jump, the mouse signature, does not reply", async ({
+test("a lone sideways jump, the mouse signature, never moves the row", async ({
 	page,
 }) => {
 	await openConversation(page);
@@ -105,13 +105,33 @@ test("a lone sideways jump, the mouse signature, does not reply", async ({
 
 	await page.mouse.wheel(-160, 0);
 
-	await expect
-		.poll(async () => rail.evaluate((el) => el.scrollLeft))
-		.not.toBe(rest);
-	await expect
-		.poll(async () => rail.evaluate((el) => el.scrollLeft))
-		.toBe(rest);
+	await page.waitForTimeout(400);
+	expect(await rail.evaluate((el) => el.scrollLeft)).toBe(rest);
 	await expect(page.getByLabel("Cancel reply")).toHaveCount(0);
+});
+
+test("a double click replies, on their message and on ours alike", async ({
+	page,
+}) => {
+	await openConversation(page);
+
+	// beside the bubble, where a double click cannot select a word instead
+	const incoming = page.locator(INCOMING_ROW).last();
+	const inBox = await incoming.boundingBox();
+	if (!inBox) throw new Error("the incoming row has no box");
+	await incoming.dblclick({
+		position: { x: inBox.width - 24, y: inBox.height / 2 },
+	});
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+	await page.getByLabel("Cancel reply").click();
+
+	await page.getByRole("textbox").fill("mine to answer");
+	await page.getByRole("textbox").press("Enter");
+	const own = page.locator(MESSAGE_ROW).filter({ hasText: "mine to answer" });
+	await expect(own).toBeVisible();
+
+	await own.dblclick({ position: { x: 24, y: 12 } });
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
 });
 
 test("a scroll that starts leaning sideways still reaches the conversation", async ({
@@ -141,4 +161,8 @@ test("an unsent message offers no reply", async ({ page }) => {
 
 	await expect(page.getByRole("button", { name: "Report" })).toBeVisible();
 	await expect(page.getByRole("button", { name: "Reply" })).toHaveCount(0);
+	await expect(
+		page.getByRole("button", { name: "React with fire" }),
+	).toHaveCount(0);
+	await expect(page.getByText("Double tap to")).toBeHidden();
 });
