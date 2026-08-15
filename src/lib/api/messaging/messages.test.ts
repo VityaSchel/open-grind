@@ -203,7 +203,7 @@ describe("message API wrappers", () => {
 		await expect(
 			sendMessage({
 				toUserId: 99,
-				message: { type: "Image", body: imageBody },
+				message: { type: "Image", body: { mediaId: 910_001 } },
 			}),
 		).resolves.toEqual(responseMessage);
 
@@ -217,24 +217,27 @@ describe("message API wrappers", () => {
 		});
 	});
 
-	it("sends expiring image messages by media reference and expiry flag", async () => {
-		const expiringImageBody = {
-			mediaId: 910_002,
-			width: null,
-			height: null,
-			url: "https://cdns.grindr.com/images/chat/b".padEnd(100, "c"),
-			viewsRemaining: null,
-		};
+	it("sends expiring images as a media reference plus the expiring flag", async () => {
 		const responseMessage = apiMessage({
 			type: "ExpiringImage",
-			body: expiringImageBody,
+			body: {
+				mediaId: 910_002,
+				width: null,
+				height: null,
+				url: null,
+				viewsRemaining: 1,
+				duration: 10_000,
+			},
 		});
 		fetchRestMock.mockResolvedValue(response({ data: responseMessage }));
 
 		await expect(
 			sendMessage({
 				toUserId: 99,
-				message: { type: "ExpiringImage", body: expiringImageBody },
+				message: {
+					type: "ExpiringImage",
+					body: { mediaId: 910_002, expiring: true },
+				},
 			}),
 		).resolves.toEqual(responseMessage);
 

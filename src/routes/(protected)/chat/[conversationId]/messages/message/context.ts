@@ -1,5 +1,6 @@
 import { createContext } from "svelte";
 import type { Snippet } from "svelte";
+import type { Attachment } from "svelte/attachments";
 
 export const [getMessageContext, setMessageContext] =
 	createContext<
@@ -20,3 +21,10 @@ export const [getMessageMetaContext, setMessageMetaContext] =
 			adornments?: Snippet;
 		}
 	>();
+
+export function messageRef(): Attachment<HTMLElement> {
+	const meta = getMessageMetaContext();
+	return (node) => {
+		meta().setRef(node);
+	};
+}

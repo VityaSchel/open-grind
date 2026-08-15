@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	getConversationsMock,
 	markConversationAsReadMock,
-	deleteConversationForMeMock,
 	setConversationPinnedMock,
 	setConversationMutedMock,
 	showErrorToastMock,
@@ -12,10 +11,10 @@ const {
 	singleColumn,
 	reconcileHandlers,
 	messageSentHandlers,
+	conversationDeleteHandlers,
 } = vi.hoisted(() => ({
 	getConversationsMock: vi.fn(),
 	markConversationAsReadMock: vi.fn(() => Promise.resolve()),
-	deleteConversationForMeMock: vi.fn(() => Promise.resolve()),
 	setConversationPinnedMock: vi.fn(() => Promise.resolve()),
 	setConversationMutedMock: vi.fn(() => Promise.resolve()),
 	showErrorToastMock: vi.fn(),
@@ -24,6 +23,7 @@ const {
 	singleColumn: { current: false },
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
 	messageSentHandlers: [] as ((event: unknown) => void)[],
+	conversationDeleteHandlers: [] as ((event: unknown) => void)[],
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
@@ -31,7 +31,7 @@ vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/messaging/conversations", () => ({
 	getConversations: getConversationsMock,
 	markConversationAsRead: markConversationAsReadMock,
-	deleteConversationForMe: deleteConversationForMeMock,
+	deleteConversationForMe: vi.fn(() => Promise.resolve()),
 	setConversationPinned: setConversationPinnedMock,
 	setConversationMuted: setConversationMutedMock,
 }));
@@ -50,6 +50,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 		on(eventType: string, _schema: unknown, handler: (e: unknown) => void) {
 			if (eventType === "chat.v1.message_sent")
 				messageSentHandlers.push(handler);
+			if (eventType === "chat.v1.conversation.delete")
+				conversationDeleteHandlers.push(handler);
 			return Promise.resolve(vi.fn());
 		},
 	},
@@ -57,86 +59,20 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { ConversationsState } from "./conversations-state.svelte";
-
-const OUR_ID = 1;
-const PEER_ID = 2;
-
-function deferred<T>() {
-	let resolve!: (value: T) => void;
-	let reject!: (reason?: unknown) => void;
-	const promise = new Promise<T>((res, rej) => {
-		resolve = res;
-		reject = rej;
-	});
-	return { promise, resolve, reject };
-}
-
-function conversation(
-	conversationId: string,
-	lastActivityTimestamp: number,
-	overrides: Partial<Conversation["data"]> = {},
-): Conversation {
-	return {
-		type: "full_conversation_v1",
-		data: {
-			conversationId,
-			name: `Conversation ${conversationId}`,
-			participants: [
-				{
-					profileId: PEER_ID,
-					primaryMediaHash: null,
-					lastOnline: null,
-					onlineUntil: null,
-					distanceMetres: null,
-					position: null,
-					isInAList: false,
-					hasDatingPotential: false,
-				},
-			],
-			lastActivityTimestamp,
-			unreadCount: 0,
-			preview: null,
-			muted: false,
-			pinned: false,
-			favorite: false,
-			rightNow: "none",
-			onlineUntil: null,
-			hasUnreadThrob: false,
-			...overrides,
-		},
-	} as unknown as Conversation;
-}
-
-function incomingMessage(
-	conversationId: string,
-	timestamp: number,
-	senderId: number,
-) {
-	return {
-		messageId: `m-${conversationId}-${timestamp}`,
-		conversationId,
-		senderId,
-		timestamp,
-		unsent: false,
-		reactions: [],
-		type: "Text",
-		body: { text: "hi" },
-	};
-}
+import {
+	conversation,
+	deferred,
+	entryFor,
+	incomingMessage,
+	microtasks,
+	OUR_ID,
+	PEER_ID,
+	settled,
+} from "./conversations-test-helpers";
 
 function emitMessageSent(payload: unknown) {
 	messageSentHandlers[0]?.({ payload });
 }
-
-function entryFor(state: ConversationsState, conversationId: string) {
-	const entry = state.entries.find(
-		(e) => e.data.conversationId === conversationId,
-	);
-	if (!entry) throw new Error(`no entry for ${conversationId}`);
-	return entry;
-}
-
-const microtasks = () => new Promise((r) => setTimeout(r, 0));
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -144,11 +80,8 @@ beforeEach(() => {
 	singleColumn.current = false;
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
+	conversationDeleteHandlers.length = 0;
 });
-
-async function settled(state: ConversationsState) {
-	await vi.waitFor(() => expect(state.loading).toBe(false));
-}
 
 describe("ConversationsState initial load", () => {
 	it("reports a failed first load and clears it on retry", async () => {
@@ -244,6 +177,241 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 
 		expect(onIncomingMessage).not.toHaveBeenCalled();
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
+	});
+});
+
+describe("ConversationsState unread accounting", () => {
+	async function inboxWith(entries: Conversation[]) {
+		getConversationsMock.mockResolvedValue({ entries, nextPage: null });
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await settled(state);
+		return state;
+	}
+
+	it("counts a reply the row's clock has already passed", async () => {
+		const state = await inboxWith([conversation("a:1", 5000)]);
+
+		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		await microtasks();
+
+		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
+	});
+
+	it("leaves the newer preview alone when an out-of-order message arrives", async () => {
+		const state = await inboxWith([conversation("a:1", 5000)]);
+
+		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		await microtasks();
+
+		const entry = entryFor(state, "a:1");
+		expect(entry.data.unreadCount).toBe(1);
+		expect(entry.data.lastActivityTimestamp).toBe(5000);
+		expect(entry.data.preview).toBeNull();
+	});
+
+	it("counts two messages sharing a millisecond separately", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+
+		emitMessageSent({
+			...incomingMessage("a:1", 2000, PEER_ID),
+			messageId: "m-first",
+		});
+		emitMessageSent({
+			...incomingMessage("a:1", 2000, PEER_ID),
+			messageId: "m-second",
+		});
+		await microtasks();
+
+		expect(entryFor(state, "a:1").data.unreadCount).toBe(2);
+	});
+
+	it("counts a repeated delivery of the same message once", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		const message = incomingMessage("a:1", 2000, PEER_ID);
+
+		emitMessageSent(message);
+		emitMessageSent(message);
+		await microtasks();
+
+		const entry = entryFor(state, "a:1");
+		expect(entry.data.unreadCount).toBe(1);
+		expect(entry.data.lastActivityTimestamp).toBe(2000);
+	});
+
+	it("ignores our own message when counting unread", async () => {
+		const state = await inboxWith([conversation("a:1", 5000)]);
+
+		emitMessageSent(incomingMessage("a:1", 2000, OUR_ID));
+		await microtasks();
+
+		expect(entryFor(state, "a:1").data.unreadCount).toBe(0);
+	});
+
+	it("badges a conversation the inbox had not loaded yet", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+
+		await vi.waitFor(() =>
+			expect(entryFor(state, "b:2").data.unreadCount).toBe(1),
+		);
+	});
+
+	it("counts every arrival that lands while the conversation is missing", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		const gate = deferred<{
+			entries: Conversation[];
+			nextPage: number | null;
+		}>();
+		getConversationsMock.mockReturnValueOnce(gate.promise);
+
+		for (const timestamp of [3000, 3001, 3002]) {
+			emitMessageSent(incomingMessage("b:2", timestamp, PEER_ID));
+		}
+		await microtasks();
+		gate.resolve({
+			entries: [conversation("b:2", 3002), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+
+		await vi.waitFor(() =>
+			expect(entryFor(state, "b:2").data.unreadCount).toBe(3),
+		);
+	});
+
+	it("badges a conversation the sync it joined was too early to return", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		const stale = deferred<{
+			entries: Conversation[];
+			nextPage: number | null;
+		}>();
+		getConversationsMock.mockReturnValueOnce(stale.promise);
+		const joined = state.ensureLoaded("c:3");
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		stale.resolve({ entries: [conversation("a:1", 1000)], nextPage: null });
+		await joined;
+
+		await vi.waitFor(() =>
+			expect(entryFor(state, "b:2").data.unreadCount).toBe(1),
+		);
+	});
+
+	it("counts a message again when the sync that would have placed it failed", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		const message = incomingMessage("b:2", 3000, PEER_ID);
+
+		emitMessageSent(message);
+		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		emitMessageSent(message);
+
+		await vi.waitFor(() =>
+			expect(entryFor(state, "b:2").data.unreadCount).toBe(1),
+		);
+		vi.restoreAllMocks();
+	});
+
+	it("surfaces one toast and one fetch when the sync keeps failing", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		getConversationsMock.mockClear();
+		getConversationsMock.mockRejectedValue(new Error("offline"));
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+		await microtasks();
+
+		expect(showErrorToastMock).toHaveBeenCalledOnce();
+		expect(getConversationsMock).toHaveBeenCalledOnce();
+		expect(state.entries).toHaveLength(1);
+		getConversationsMock.mockReset();
+		vi.restoreAllMocks();
+	});
+
+	it("syncs twice, quietly, when the first sync was one it joined", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		const stale = deferred<{
+			entries: Conversation[];
+			nextPage: number | null;
+		}>();
+		getConversationsMock.mockClear();
+		getConversationsMock.mockReturnValueOnce(stale.promise);
+		const joined = state.ensureLoaded("c:3");
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		stale.resolve({ entries: [conversation("a:1", 1000)], nextPage: null });
+		await joined;
+		await vi.waitFor(() => expect(state.entries).toHaveLength(2));
+		await microtasks();
+
+		expect(entryFor(state, "b:2").data.unreadCount).toBe(1);
+		expect(getConversationsMock).toHaveBeenCalledTimes(2);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("leaves no badge on a conversation opened while its sync was in flight", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		currentPage.route.id = "/(protected)/(navbar)";
+		singleColumn.current = true;
+		const gate = deferred<{
+			entries: Conversation[];
+			nextPage: number | null;
+		}>();
+		getConversationsMock.mockReturnValueOnce(gate.promise);
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		state.setActive("b:2");
+		gate.resolve({
+			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
+			nextPage: null,
+		});
+
+		await vi.waitFor(() => expect(state.entries).toHaveLength(2));
+		await microtasks();
+
+		expect(entryFor(state, "b:2").data.unreadCount).toBe(0);
+		expect(onIncomingMessage).not.toHaveBeenCalled();
+	});
+
+	it("keeps the server count for a conversation the inbox had not loaded yet", async () => {
+		const state = await inboxWith([conversation("a:1", 1000)]);
+		getConversationsMock.mockResolvedValue({
+			entries: [
+				conversation("b:2", 3000, { unreadCount: 4 }),
+				conversation("a:1", 1000),
+			],
+			nextPage: null,
+		});
+
+		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+
+		await vi.waitFor(() =>
+			expect(entryFor(state, "b:2").data.unreadCount).toBe(4),
+		);
 	});
 });
 

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from "svelte";
+
 	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
@@ -8,30 +10,24 @@
 		ageRangeLabel,
 		defaultFilters,
 	} from "$lib/model/browse/grid/filters";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
-	let filters = $derived({ ...(gridState.filters.value ?? defaultFilters) });
+	let filters = $state(gridState.filters.snapshot());
 	let { ageEnabled: enabled, age: value } = $derived(filters);
 
 	$effect(() => {
 		if (open) {
-			filters = { ...(gridState.filters.value ?? defaultFilters) };
+			filters = untrack(() => gridState.filters.snapshot());
 		}
 	});
 
-	$effect(() => {
-		if (open) {
-			const onBackGesture = () => {
-				open = false;
-				return false;
-			};
-			backGestureEventHandlers.add(onBackGesture);
-			return () => {
-				backGestureEventHandlers.delete(onBackGesture);
-			};
-		}
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
 	});
 
 	const label = $derived(ageRangeLabel(value));

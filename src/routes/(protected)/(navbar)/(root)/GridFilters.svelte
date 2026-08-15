@@ -1,57 +1,38 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import AcceptNSFWPicsFilter from "$lib/components/filters/AcceptNSFWPicsFilter.svelte";
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
-	import BodyTypeFilter from "$lib/components/filters/BodyTypeFilter.svelte";
 	import FilterBoolean from "$lib/components/filters/FilterBoolean.svelte";
 	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
-	import HealthPracticesFilter from "$lib/components/filters/HealthPracticesFilter.svelte";
 	import HeightFilter from "$lib/components/filters/HeightFilter.svelte";
-	import LookingForFilter from "$lib/components/filters/LookingForFilter.svelte";
-	import MeetAtFilter from "$lib/components/filters/MeetAtFilter.svelte";
+	import { optionFilters } from "$lib/components/filters/option-filters";
+	import OptionFilter from "$lib/components/filters/OptionFilter.svelte";
 	import PhotosFilter from "$lib/components/filters/PhotosFilter.svelte";
 	import PositionFilter from "$lib/components/filters/position/PositionFilterField.svelte";
-	import RelationshipStatusFilter from "$lib/components/filters/RelationshipStatusFilter.svelte";
 	import TagsFilter from "$lib/components/filters/TagsFilter.svelte";
-	import TribesFilter from "$lib/components/filters/TribesFilter.svelte";
 	import WeightFilter from "$lib/components/filters/WeightFilter.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { gridState } from "$lib/grid/grid-state.svelte";
-	import {
-		defaultFilters,
-		type GridSearchFilters,
-	} from "$lib/model/browse/grid/filters";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
-	function snapshotFilters(): GridSearchFilters {
-		return { ...(gridState.filters.value ?? defaultFilters) };
-	}
-
-	let filters = $state(snapshotFilters());
+	let filters = $state(gridState.filters.snapshot());
 
 	$effect(() => {
 		if (open) {
-			filters = untrack(snapshotFilters);
+			filters = untrack(() => gridState.filters.snapshot());
 		}
 	});
 
 	let contentScroll = $state(0);
 
-	$effect(() => {
-		if (open) {
-			const onBackGesture = () => {
-				open = false;
-				return false;
-			};
-			backGestureEventHandlers.add(onBackGesture);
-			return () => {
-				backGestureEventHandlers.delete(onBackGesture);
-			};
-		}
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
 	});
 </script>
 
@@ -83,11 +64,13 @@
 	<TagsFilter bind:checked={filters.tagsEnabled} bind:value={filters.tags} />
 {/snippet}
 {#snippet col3()}
-	<TribesFilter
+	<OptionFilter
+		filter={optionFilters.tribes}
 		bind:checked={filters.tribesEnabled}
 		bind:value={filters.tribes}
 	/>
-	<BodyTypeFilter
+	<OptionFilter
+		filter={optionFilters.bodyTypes}
 		bind:checked={filters.bodyTypesEnabled}
 		bind:value={filters.bodyTypes}
 	/>
@@ -99,19 +82,23 @@
 		bind:checked={filters.weightEnabled}
 		bind:value={filters.weight}
 	/>
-	<RelationshipStatusFilter
+	<OptionFilter
+		filter={optionFilters.relationshipStatuses}
 		bind:checked={filters.relationshipStatusesEnabled}
 		bind:value={filters.relationshipStatuses}
 	/>
-	<AcceptNSFWPicsFilter
+	<OptionFilter
+		filter={optionFilters.acceptNSFWPics}
 		bind:checked={filters.acceptNSFWPicsEnabled}
 		bind:value={filters.acceptNSFWPics}
 	/>
-	<LookingForFilter
+	<OptionFilter
+		filter={optionFilters.lookingFor}
 		bind:checked={filters.lookingForEnabled}
 		bind:value={filters.lookingFor}
 	/>
-	<MeetAtFilter
+	<OptionFilter
+		filter={optionFilters.meetAt}
 		bind:checked={filters.meetAtEnabled}
 		bind:value={filters.meetAt}
 	/>
@@ -121,7 +108,8 @@
 	>
 		Haven't chatted today
 	</FilterBoolean>
-	<HealthPracticesFilter
+	<OptionFilter
+		filter={optionFilters.healthPractices}
 		bind:checked={filters.healthPracticesEnabled}
 		bind:value={filters.healthPractices}
 	/>

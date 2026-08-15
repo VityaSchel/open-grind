@@ -30,7 +30,7 @@
       "devDependencies": {
         "@fontsource-variable/ibm-plex-sans": "^5.2.8",
         "@internationalized/date": "^3.12.1",
-        "@opengrind/config": "^1.3.0",
+        "@opengrind/config": "^1.3.1",
         "@playwright/test": "^1.61.1",
         "@sveltejs/adapter-static": "^3.0.10",
         "@sveltejs/kit": "^2.70.2",
@@ -68,7 +68,7 @@
   "overrides": {
     "brace-expansion": "^5.0.9",
     "cookie": "^0.7.0",
-    "nanoid": "^3.3.17",
+    "nanoid": "^3.3.18",
     "postcss": "^8.5.24",
     "valibot": "^1.4.2",
     "vite": "^6.4.3",
@@ -244,7 +244,7 @@
 
     "@msgpack/msgpack": ["@msgpack/msgpack@3.1.3", "", {}, "sha512-47XIizs9XZXvuJgoaJUIE2lFoID8ugvc0jzSHP+Ptfk8nTbnR8g788wv48N03Kx0UkAv559HWRQ3yzOgzlRNUA=="],
 
-    "@opengrind/config": ["@opengrind/config@1.3.0", "https://git.opengrind.org/api/packages/open-grind/npm/%40opengrind%2Fconfig/-/1.3.0/config-1.3.0.tgz", { "dependencies": { "@eslint/js": "10.0.1", "eslint-config-prettier": "10.1.8", "eslint-plugin-better-tailwindcss": "4.6.0", "eslint-plugin-perfectionist": "5.9.0", "eslint-plugin-svelte": "3.17.1", "globals": "17.6.0", "prettier-plugin-svelte": "3.5.1", "prettier-plugin-tailwindcss": "0.8.0", "typescript-eslint": "8.59.2" }, "peerDependencies": { "eslint": ">=9", "prettier": ">=3.5" }, "bin": { "opengrind-config": "bin/opengrind-config.js" } }, "sha512-IGtHw9W2c1YBeh+QlH6Rf3PzfcamtlD72ZlMqGqzceIxOSzx+kfyEod0gp/ZJQkg5/XS1PqhhG41DjBBDvSD8Q=="],
+    "@opengrind/config": ["@opengrind/config@1.3.1", "https://git.opengrind.org/api/packages/open-grind/npm/%40opengrind%2Fconfig/-/1.3.1/config-1.3.1.tgz", { "dependencies": { "@eslint/js": "10.0.1", "eslint-config-prettier": "10.1.8", "eslint-plugin-better-tailwindcss": "4.6.0", "eslint-plugin-perfectionist": "5.9.0", "eslint-plugin-svelte": "3.17.1", "globals": "17.6.0", "prettier-plugin-svelte": "3.5.1", "prettier-plugin-tailwindcss": "0.8.0", "typescript-eslint": "8.59.2" }, "peerDependencies": { "eslint": ">=9", "prettier": ">=3.5" }, "bin": { "opengrind-config": "bin/opengrind-config.js" } }, "sha512-/qg8+Fqx76XGk6bB0dXIoaZH4Sp+gJ4dyudiPEUTI1p8uFq4M93WbcXjv4PCBJa6QyPddAsN48RdKFgTtUpCLQ=="],
 
     "@pkgr/core": ["@pkgr/core@0.3.6", "", {}, "sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA=="],
 
@@ -744,7 +744,7 @@
 
     "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
-    "nanoid": ["nanoid@3.3.17", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-xQLf0A3HOMlgHq0n247/LRuAOYmB7dXJ/DvAxGvsSBij45XtBSmQycu+F8ODbHwns/XyFZagyL1+J0Offw1E0g=="],
+    "nanoid": ["nanoid@3.3.18", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w=="],
 
     "natural-compare": ["natural-compare@1.4.0", "", {}, "sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw=="],
 

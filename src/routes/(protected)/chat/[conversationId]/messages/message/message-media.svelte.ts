@@ -1,3 +1,4 @@
+import type { Attachment } from "svelte/attachments";
 import type { ClassValue } from "svelte/elements";
 
 import { getMessageContext, getMessageMetaContext } from "./context";
@@ -28,9 +29,13 @@ export class MessageMediaState {
 		};
 	}
 
-	constructor() {
-		$effect(() => {
-			this.#meta.setRef(this.el ?? null);
-		});
-	}
+	readonly attach: Attachment<HTMLElement> = (node) => {
+		this.el = node;
+		this.#meta.setRef(node);
+		return () => {
+			if (this.el !== node) return;
+			this.el = null;
+			this.#meta.setRef(null);
+		};
+	};
 }

@@ -253,7 +253,7 @@ function buildMessage({
 				expiresAt: message.expiring ? timestamp + DAY : null,
 				expirationType: (message.expiring
 					? "ONCE"
-					: "INDEFINITE") satisfies AlbumExpirationType,
+					: "INDEFINITE") as AlbumExpirationType,
 				coverUrl:
 					message.coverUrl === null
 						? null
@@ -433,6 +433,49 @@ export function demoAlbumContent(albumId: number) {
 		createdAt: localDateTime(NOW - 3 * DAY),
 		updatedAt: localDateTime(NOW - DAY),
 		content,
+	};
+}
+
+const demoAlbumSeeds = [
+	{ albumName: "Weekend trip" },
+	{ albumName: "Gym progress", hasVideo: true },
+	{ albumName: null, isShareable: false },
+	{ albumName: "Studio" },
+];
+
+const albumShares = new Map<number, Set<number>>();
+
+export function demoShareAlbum({
+	albumId,
+	profileIds,
+}: {
+	albumId: number;
+	profileIds: number[];
+}): void {
+	const shared = albumShares.get(albumId) ?? new Set<number>();
+	for (const profileId of profileIds) shared.add(profileId);
+	albumShares.set(albumId, shared);
+}
+
+export function demoMyAlbums() {
+	return {
+		albums: demoAlbumSeeds.map((seed, i) => {
+			const albumId = 900 + i;
+			const album = demoAlbumContent(albumId);
+			return {
+				...album,
+				albumName: seed.albumName,
+				version: 1,
+				isShareable: seed.isShareable ?? true,
+				sharedCount:
+					album.sharedCount + (albumShares.get(albumId)?.size ?? 0),
+				content: album.content.map((item, j) =>
+					seed.hasVideo && j === 0
+						? { ...item, contentType: "video/mp4" }
+						: item,
+				),
+			};
+		}),
 	};
 }
 

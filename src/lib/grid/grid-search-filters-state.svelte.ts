@@ -11,12 +11,16 @@ import { deepEqual } from "$lib/util/deep-equal";
 
 export class GridSearchFiltersState {
 	value: GridSearchFilters | null = $state(null);
-	onRefresh: () => void;
+	onQueryChange: () => void;
 	ready: Promise<void>;
 
-	constructor({ onRefresh }: { onRefresh: () => void }) {
-		this.onRefresh = onRefresh;
+	constructor({ onQueryChange }: { onQueryChange: () => void }) {
+		this.onQueryChange = onQueryChange;
 		this.ready = this.#load();
+	}
+
+	snapshot(): GridSearchFilters {
+		return { ...(this.value ?? defaultFilters) };
 	}
 
 	set(gridSearchFilters: Partial<GridSearchFilters>) {
@@ -25,7 +29,7 @@ export class GridSearchFiltersState {
 		if (!deepEqual(oldValue, newValue)) {
 			this.value = newValue;
 			void this.#save();
-			this.onRefresh();
+			this.onQueryChange();
 		}
 	}
 

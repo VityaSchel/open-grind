@@ -27,8 +27,10 @@
 			>
 				{#if preview.isSecretAdmirer}
 					<HeartIcon weight="fill" class="size-4.5 text-rose-400" />
+					<span class="sr-only">Secret admirer</span>
 				{:else}
 					<LockSimpleIcon weight="fill" class="size-4.5" />
+					<span class="sr-only">Hidden viewer</span>
 				{/if}
 			</div>
 		</div>
@@ -47,7 +49,7 @@
 						title="{totalCount} views"
 					>
 						<EyeIcon weight="bold" class="size-3" />
-						{viewedCountLabel}
+						{viewedCountLabel}<span class="sr-only">views</span>
 					</span>
 				{/if}
 			</div>

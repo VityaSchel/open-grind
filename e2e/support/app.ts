@@ -6,7 +6,8 @@ export const DEMO_GEOHASH = "u33dc0cpgp00";
 export async function ensureGridLocation(page: Page): Promise<void> {
 	const allFilters = page.locator('[aria-label="All filters"]');
 	if ((await allFilters.count()) === 0) {
-		await page.keyboard.press("Meta+k");
+		// tinykeys reads navigator.platform, so the CI runner wants Control
+		await page.keyboard.press("ControlOrMeta+k");
 		const palette = page.getByRole("combobox");
 		await palette.waitFor();
 		await palette.fill(`@${DEMO_GEOHASH}`);

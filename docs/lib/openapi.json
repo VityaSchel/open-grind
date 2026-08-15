@@ -14662,6 +14662,7 @@
 					"ProfileLink",
 					"ProfilePhotoReply",
 					"Retract",
+					"RightNowRequest",
 					"Text",
 					"Unknown",
 					"NonExpiringVideo",
@@ -15073,7 +15074,8 @@
 					},
 					"url": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "string or `null`, single-use signed CDN URL — replaced with `null` once the image has been consumed"
 					},
 					"width": {
 						"type": "integer",
@@ -15085,11 +15087,13 @@
 					},
 					"duration": {
 						"type": "integer",
-						"description": "integer, milliseconds the recipient may keep the image open"
+						"format": "int64",
+						"description": "integer, how long the recipient's client shows the image once opened, in **milliseconds** — observed to be `10000` (10 seconds). Chosen by the server, a sender cannot set it (see [SendExpiringImageBody](#sendexpiringimagebody)); `-1` is a sentinel meaning *already expired*, and the official app treats any value below `100` the same way"
 					},
 					"viewsRemaining": {
 						"type": "integer",
-						"nullable": true
+						"nullable": true,
+						"description": "integer or `null`, remaining views — starts at `1`, as an expiring photo is allowed exactly one view. The image is viewable while this is greater than `0`; chosen by the server, like `duration`"
 					},
 					"expiresAt": {
 						"allOf": [
@@ -15104,7 +15108,7 @@
 						"nullable": true
 					}
 				},
-				"description": "Body for `\"ExpiringImage\"` message type. Unlike [Image](#image), it carries no `imageHash`, `takenOnGrindr` or `createdAt`.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.\n\nTo send one, the request body is `{ \"mediaId\": …, \"expiring\": true }`; the server fills in the rest.",
+				"description": "Body for `\"ExpiringImage\"` message type. Unlike [ImageMessageBody](#imagemessagebody) this carries no `imageHash`, `takenOnGrindr` or `createdAt`, and adds the expiry fields below.\n\nTo get a single-use expiring image URL, you need to call [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation). After one call, the `url` in the message body will be replaced with `null` and the image will no longer be viewable.\n\nBoth the viewing time (`duration`) and the view budget (`viewsRemaining`) are assigned server-side — in practice 10 seconds and a single view. A sender only chooses *whether* an image expires.",
 				"x-render-on-tag": "messaging/messages"
 			},
 			"LocationMessageBody": {
@@ -15154,6 +15158,72 @@
 					"targetMessageId"
 				]
 			},
+			"RightNowRequestMedia": {
+				"type": "object",
+				"properties": {
+					"mediaHash": {
+						"type": "string"
+					},
+					"isNsfw": {
+						"type": "boolean"
+					}
+				},
+				"description": "Element of `medias` in [RightNowRequestBody](#rightnowrequestbody). Unrelated to [RightNowMedia](#rightnowmedia), which is the Right Now feed object.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaHash",
+					"isNsfw"
+				]
+			},
+			"RightNowRequestBody": {
+				"type": "object",
+				"properties": {
+					"requestId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"requestCreatedAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"requestUpdatedAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"postStatus": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`. Opaque: the chat body carries it as a plain string, and nothing compares it against the Right Now post statuses (`AWAITING_PAYMENT`, `AWAITING_MODERATION`, `ACTIVE`, `EXPIRED`, `HIDDEN`), so reusing those values is a suspicion rather than a fact."
+					},
+					"postId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true
+					},
+					"medias": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RightNowRequestMedia"
+						}
+					}
+				},
+				"description": "Body for `\"RightNowRequest\"` message type. Receive-only — there is no send payload for it.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"requestId",
+					"requestCreatedAt",
+					"requestUpdatedAt",
+					"postStatus",
+					"postId",
+					"medias"
+				]
+			},
 			"TextMessageBody": {
 				"type": "object",
 				"properties": {
@@ -15190,7 +15260,7 @@
 			"UnknownMessageBody": {
 				"type": "object",
 				"additionalProperties": true,
-				"description": "Empty type.",
+				"description": "Empty type.\n\nThe official client renders both unrecognized message types and retracted messages as a locally generated \"system message\" row. `SystemMessage` is therefore a client-side UI concept and never a wire value — it has no message type constant, no body type and no adapter.",
 				"x-render-on-tag": "messaging/messages"
 			},
 			"MessageBody": {
@@ -15223,9 +15293,6 @@
 						"$ref": "#/components/schemas/ImageMessageBody"
 					},
 					{
-						"$ref": "#/components/schemas/ChatImageBody"
-					},
-					{
 						"$ref": "#/components/schemas/ExpiringImageBody"
 					},
 					{
@@ -15236,6 +15303,9 @@
 					},
 					{
 						"$ref": "#/components/schemas/RetractMessageBody"
+					},
+					{
+						"$ref": "#/components/schemas/RightNowRequestBody"
 					},
 					{
 						"$ref": "#/components/schemas/TextMessageBody"
@@ -15482,6 +15552,148 @@
 					"targetId"
 				]
 			},
+			"SendImageBody": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "number"
+					}
+				},
+				"description": "Request body for sending an `\"Image\"` message. `mediaId` is the only field sent — the rest of [ImageMessageBody](#imagemessagebody) (`url`, `imageHash`, `width`, `height`, `takenOnGrindr`, `createdAt`) is filled in server-side and appears only on the message you receive back.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaId"
+				]
+			},
+			"SendExpiringImageBody": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "number"
+					},
+					"expiring": {
+						"type": "boolean",
+						"description": "boolean, always `true` in the official app — setting it is what makes the image expiring"
+					}
+				},
+				"description": "Request body for sending an `\"ExpiringImage\"` message.\n\nA sender chooses only *whether* the image expires. The viewing time (`duration`) and the view budget (`viewsRemaining`) seen on [ExpiringImageBody](#expiringimagebody) are assigned by the server and cannot be set here — the recipient gets 10 seconds and a single view.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaId",
+					"expiring"
+				]
+			},
+			"SendAudioBody": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "number"
+					}
+				},
+				"description": "Request body for sending an `\"Audio\"` message. `url`, `contentType`, `length` and `expiresAt` of [AudioMessageBody](#audiomessagebody) are server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaId"
+				]
+			},
+			"SendVideoBody": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "number"
+					},
+					"looping": {
+						"type": "boolean"
+					},
+					"maxViews": {
+						"type": "integer"
+					}
+				},
+				"description": "Request body for sending a `\"Video\"` message. Unlike the other media types the sender does control playback here — `looping` and `maxViews` are chosen client-side. Everything else on [VideoMessageBody](#videomessagebody) is server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"mediaId",
+					"looping",
+					"maxViews"
+				]
+			},
+			"SendAlbumContentReactionBody": {
+				"type": "object",
+				"properties": {
+					"albumId": {
+						"type": "integer"
+					},
+					"albumContentId": {
+						"type": "integer"
+					}
+				},
+				"description": "Request body for sending an `\"AlbumContentReaction\"` message. `ownerProfileId`, `previewUrl`, `expiresAt` and `viewable` of [AlbumContentReactionBody](#albumcontentreactionbody) are server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"albumId",
+					"albumContentId"
+				]
+			},
+			"SendAlbumContentReplyBody": {
+				"type": "object",
+				"properties": {
+					"albumId": {
+						"type": "integer"
+					},
+					"albumContentId": {
+						"type": "integer"
+					},
+					"albumContentReply": {
+						"type": "string"
+					}
+				},
+				"description": "Request body for sending an `\"AlbumContentReply\"` message. `contentType`, `ownerProfileId`, `previewUrl`, `expiresAt` and `viewable` of [AlbumContentReplyBody](#albumcontentreplybody) are server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"albumId",
+					"albumContentId",
+					"albumContentReply"
+				]
+			},
+			"SendMessageBody": {
+				"oneOf": [
+					{
+						"$ref": "#/components/schemas/TextMessageBody"
+					},
+					{
+						"$ref": "#/components/schemas/LocationMessageBody"
+					},
+					{
+						"$ref": "#/components/schemas/GaymojiBody"
+					},
+					{
+						"$ref": "#/components/schemas/GiphyBody"
+					},
+					{
+						"$ref": "#/components/schemas/ProfilePhotoReplyBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendImageBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendExpiringImageBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendAudioBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendVideoBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendAlbumContentReactionBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendAlbumContentReplyBody"
+					}
+				],
+				"description": "What you may put in `body` when sending a message. This is **not** the same shape you get back: server-owned fields (signed `url`s, hashes, dimensions, timestamps, expiry counters) exist only on [Message contents](#message-contents).\n\nFive types send exactly what they receive — `Text`, `Location`, `Gaymoji`, `Giphy`, `ProfilePhotoReply` — and are reused as-is below. The media and album-reaction types send a strict subset.\n\nTypes absent from this list are receive-only: `Album`/`ExpiringAlbum` are shared through [Share an album](/grindr-api/messaging/albums), and `Retract`, `VideoCall`, `PrivateVideo`, `Generative`, `ProfileLink`, `NonExpiringVideo`, `Unknown` arrive as server notifications.",
+				"x-render-on-tag": "messaging/messages"
+			},
 			"SendMessageRequest": {
 				"type": "object",
 				"properties": {
@@ -15493,10 +15705,10 @@
 					},
 					"body": {
 						"nullable": true,
-						"description": "object with [Message contents](/grindr-api/messaging/messages#message-contents) or `null`",
+						"description": "object with [what you may send](#sendmessagebody) or `null`",
 						"allOf": [
 							{
-								"$ref": "#/components/schemas/MessageBody"
+								"$ref": "#/components/schemas/SendMessageBody"
 							}
 						]
 					}

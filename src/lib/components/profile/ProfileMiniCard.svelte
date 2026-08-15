@@ -59,6 +59,7 @@
 						weight="fill"
 						class="m-auto size-4/6 text-yellow-500"
 					/>
+					<span class="sr-only">Favorite</span>
 				</div>
 			{/if}
 			{#if hadRecentChat}
@@ -67,6 +68,7 @@
 						weight="fill"
 						class="m-auto size-3/5 -translate-y-px text-sky-400"
 					/>
+					<span class="sr-only">Chatted recently</span>
 				</div>
 			{/if}
 		</div>
@@ -108,6 +110,7 @@
 					{:else}
 						{unread}
 					{/if}
+					<span class="sr-only">unread messages</span>
 				</span>
 			{/if}
 		</div>

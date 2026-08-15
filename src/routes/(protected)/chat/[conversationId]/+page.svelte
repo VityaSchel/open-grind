@@ -4,7 +4,7 @@
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import * as Card from "$lib/components/ui/card";
-	import type { Message } from "$lib/model/messaging/messages";
+	import type { MessageDraft } from "$lib/model/messaging/messages";
 	import ChatNavBar from "./conversation-nav-bar/ConversationNavBar.svelte";
 	import {
 		ConversationState,
@@ -65,7 +65,8 @@
 <Card.Content class="relative flex min-h-0 flex-1 flex-col p-0">
 	<ConversationMessages {composerHeight} />
 	<MessageComposer
-		onSend={(message: Message) => conversationState.send(message)}
+		conversationId={conversationState.conversationId}
+		onSend={(draft: MessageDraft) => conversationState.send(draft)}
 		disabled={conversationState.loading || conversationState.error !== null}
 		bind:height={composerHeight}
 	/>

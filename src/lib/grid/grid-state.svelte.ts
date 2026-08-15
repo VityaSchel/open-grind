@@ -19,7 +19,7 @@ import {
 import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
 
 class GridState {
-	filters = new GridSearchFiltersState({ onRefresh: () => this.retry() });
+	filters = new GridSearchFiltersState({ onQueryChange: () => this.retry() });
 	items: GridProfile[] = $state.raw([]);
 	nextPage: number | null = $state(0);
 	loadingMore = $state(false);

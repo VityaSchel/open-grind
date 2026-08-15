@@ -34,7 +34,6 @@
 			{ "text-green-500": online, "text-gray-400": !online },
 			className,
 		]}
-		aria-label={title}
 		{title}
 	>
 		{#if isVisiting}
@@ -42,5 +41,6 @@
 		{:else}
 			<span class="size-2 rounded-full bg-green-500"></span>
 		{/if}
+		<span class="sr-only">{title}</span>
 	</div>
 {/if}

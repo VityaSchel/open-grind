@@ -48,31 +48,43 @@
 		"border border-border bg-input",
 	]);
 
+	type LoadedImage = {
+		url: string;
+		width: number | null;
+		height: number | null;
+	};
+
 	type ImageState =
 		| { status: "idle" }
 		| { status: "loading" }
-		| { status: "open"; url: string }
+		| { status: "open"; image: LoadedImage }
 		| { status: "expired" };
 
 	let imageState = $state<ImageState>({ status: "idle" });
-	let cachedUrl: string | null = null;
+	let cachedImage: LoadedImage | null = null;
 
-	const ownUrl = $derived(
-		isOut && message.url !== null ? proxyMediaUrl(message.url) : null,
+	const ownImage: LoadedImage | null = $derived(
+		isOut && message.url !== null
+			? {
+					url: proxyMediaUrl(message.url),
+					width: message.width,
+					height: message.height,
+				}
+			: null,
 	);
 
 	const viewable = $derived(
 		isOut
-			? ownUrl !== null
+			? ownImage !== null
 			: imageState.status !== "expired" &&
 					message.viewed !== true &&
 					message.viewsRemaining !== 0,
 	);
 
 	function openImage() {
-		const url = cachedUrl ?? ownUrl;
+		const image = cachedImage ?? ownImage;
 		imageState =
-			url === null ? { status: "loading" } : { status: "open", url };
+			image === null ? { status: "loading" } : { status: "open", image };
 	}
 
 	$effect(() => {
@@ -87,8 +99,12 @@
 					imageState = { status: "expired" };
 					return;
 				}
-				cachedUrl = proxyMediaUrl(image.url);
-				imageState = { status: "open", url: cachedUrl };
+				cachedImage = {
+					url: proxyMediaUrl(image.url),
+					width: image.width,
+					height: image.height,
+				};
+				imageState = { status: "open", image: cachedImage };
 			} catch (error) {
 				console.error(error);
 				showErrorToast({
@@ -102,7 +118,8 @@
 
 	$effect(() => {
 		if (imageState.status !== "open") return;
-		const { url } = imageState;
+		const { image } = imageState;
+		const hasDimensions = image.width !== null && image.height !== null;
 		let lightbox: PhotoSwipeLightbox | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
@@ -113,9 +130,15 @@
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				lightbox.addFilter("numItems", () => 1);
-				lightbox.addFilter("itemData", () => {
-					return { src: url, width: 0, height: 0 };
-				});
+				lightbox.addFilter("itemData", () => ({
+					src: image.url,
+					width: image.width ?? 0,
+					height: image.height ?? 0,
+				}));
+				lightbox.addFilter(
+					"useContentPlaceholder",
+					(usePlaceholder) => usePlaceholder && hasDimensions,
+				);
 				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("closingAnimationEnd", () => {
 					imageState = { status: "idle" };
@@ -152,16 +175,16 @@
 		]}
 		onclick={openImage}
 		disabled={imageState.status !== "idle"}
-		bind:this={media.el}
+		{@attach media.attach}
 	>
 		{@render bubbleContent("View expiring image")}
 	</button>
 {:else if isOut}
-	<div class={[bubbleClass, "text-muted-foreground"]} bind:this={media.el}>
+	<div class={[bubbleClass, "text-muted-foreground"]} {@attach media.attach}>
 		{@render bubbleContent("Expiring photo")}
 	</div>
 {:else}
-	<div class={["h-12 w-50", className, contentClass]} bind:this={media.el}>
+	<div class={["h-12 w-50", className, contentClass]} {@attach media.attach}>
 		<LockedMedia
 			class={[media.cornerClass, "gap-2 font-medium text-neutral-600"]}
 			size="sm"

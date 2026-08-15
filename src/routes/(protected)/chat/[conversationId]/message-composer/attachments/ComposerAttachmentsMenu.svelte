@@ -11,25 +11,33 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 
-	const FULLSIZE_TABS: Tab[] = ["media"];
+	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
 	type Tab = "media" | "albums" | "location";
+	type SelectionTab = { sendSelected: () => void };
 
-	let selectedTab = $state("media");
+	let selectedTab = $state<Tab>("media");
 
 	const isFullsizeTab = $derived(FULLSIZE_TABS.includes(selectedTab));
 
 	let sheet = $state<HTMLDivElement | null>(null);
 	let peek = $state<HTMLDivElement | null>(null);
-	let mediaTab = $state<ComposerMediaTab | null>(null);
-	let selectedCount = $state(0);
+	let tabs = $state<Partial<Record<Tab, SelectionTab | null>>>({});
+	let counts = $state<Partial<Record<Tab, number>>>({});
 	let expiring = $state(false);
+
+	const selectedCount = $derived(counts[selectedTab] ?? 0);
+
+	function sendSelected() {
+		tabs[selectedTab]?.sendSelected();
+	}
 
 	const settleQuietMs = 140;
 	let settleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -53,21 +61,18 @@
 	}
 
 	$effect(() => {
-		if (!open) {
-			if (settleTimer !== null) clearTimeout(settleTimer);
-			settleTimer = null;
-			selectedCount = 0;
-			expiring = false;
-			return;
-		}
-		const dismiss = () => {
+		if (open) return;
+		if (settleTimer !== null) clearTimeout(settleTimer);
+		settleTimer = null;
+		counts = {};
+		expiring = false;
+	});
+
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
 			open = false;
-			return false;
-		};
-		backGestureEventHandlers.add(dismiss);
-		return () => {
-			backGestureEventHandlers.delete(dismiss);
-		};
+		},
 	});
 </script>
 
@@ -124,18 +129,19 @@
 					></div>
 					<Tabs.Content value="media">
 						<ComposerMediaTab
-							bind:this={mediaTab}
+							bind:this={tabs.media}
 							{expiring}
-							onSelectionChange={(count) => {
-								selectedCount = count;
-							}}
+							onSelectionChange={(count) =>
+								(counts.media = count)}
 							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="albums">
-						<ComposerUnimplementedTab
-							label="Sharing albums"
-							issue={33}
+						<ComposerAlbumsTab
+							bind:this={tabs.albums}
+							onSelectionChange={(count) =>
+								(counts.albums = count)}
+							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="location">
@@ -153,36 +159,36 @@
 					in:fly={{ duration: 600, y: 100, easing: expoOut }}
 					out:fly={{ duration: 400, y: 100, easing: sineIn }}
 				>
-					<Toggle
-						aria-label="Set photo as expiring after 10 seconds"
-						size="lg"
-						class={[
-							"pointer-events-auto",
-							{
-								"bg-muted hover:bg-muted/80": !expiring,
-								"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
-									expiring,
-							},
-						]}
-						variant="default"
-						bind:pressed={expiring}
-					>
-						<TimerIcon
-							weight={expiring ? "fill" : "regular"}
-							class="size-5"
-						/>
-						{#if expiring}
-							10s
-						{:else}
-							Off
-						{/if}
-					</Toggle>
+					{#if selectedTab === "media"}
+						<Toggle
+							aria-label="Set photo as expiring after 10 seconds"
+							size="lg"
+							class={[
+								"pointer-events-auto",
+								{
+									"bg-muted hover:bg-muted/80": !expiring,
+									"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
+										expiring,
+								},
+							]}
+							variant="default"
+							bind:pressed={expiring}
+						>
+							<TimerIcon
+								weight={expiring ? "fill" : "regular"}
+								class="size-5"
+							/>
+							{#if expiring}
+								10s
+							{:else}
+								Off
+							{/if}
+						</Toggle>
+					{/if}
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"
-						onclick={() => {
-							mediaTab?.sendSelected();
-						}}
+						onclick={sendSelected}
 					>
 						Send
 						<Badge

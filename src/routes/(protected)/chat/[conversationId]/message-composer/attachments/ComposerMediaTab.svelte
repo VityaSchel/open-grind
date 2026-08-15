@@ -95,7 +95,7 @@
 		onClose();
 		for (const item of items) {
 			item.used = true;
-			const body = {
+			const mediaBody = {
 				mediaId: item.id,
 				width: null,
 				height: null,
@@ -103,14 +103,29 @@
 			};
 			void composer().sendMessage(
 				sendAsExpiring
-					? { type: "ExpiringImage", body }
+					? {
+							outbound: {
+								type: "ExpiringImage",
+								body: { mediaId: item.id, expiring: true },
+							},
+							optimistic: {
+								type: "ExpiringImage",
+								body: mediaBody,
+							},
+						}
 					: {
-							type: "Image",
-							body: {
-								...body,
-								imageHash: imageHashFromUrl(item.url),
-								takenOnGrindr: item.takenOnGrindr,
-								createdAt: item.createdTs,
+							outbound: {
+								type: "Image",
+								body: { mediaId: item.id },
+							},
+							optimistic: {
+								type: "Image",
+								body: {
+									...mediaBody,
+									imageHash: imageHashFromUrl(item.url),
+									takenOnGrindr: item.takenOnGrindr,
+									createdAt: item.createdTs,
+								},
 							},
 						},
 			);
@@ -130,7 +145,7 @@
 	{:else if media === null}
 		<div class="photo-grid">
 			{#each Array(12)}
-				<Skeleton class="aspect-square rounded-none" />
+				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
 			{/each}
 		</div>
 	{:else if media.length === 0 && uploadingCount === 0}
@@ -152,7 +167,7 @@
 		<div class="photo-grid">
 			<button
 				type="button"
-				class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
+				class="flex aspect-(--photo-grid-aspect) cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
 				aria-label="Add photo"
 				onclick={addPhoto}
 			>
@@ -160,25 +175,26 @@
 				<span class="text-xs font-medium">Add photo</span>
 			</button>
 			{#each Array(uploadingCount)}
-				<Skeleton class="aspect-square rounded-none" />
+				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
 			{/each}
-			{#each media as item (item.id)}
+			{#each media as item, index (item.id)}
 				{@const isSelected = selected.has(item.id)}
 				<button
 					type="button"
+					data-slot="media-tile"
 					class={[
-						"relative aspect-square",
+						"relative aspect-(--photo-grid-aspect)",
 						{
 							"cursor-pointer":
 								selected.canSelectMore || isSelected,
 						},
 					]}
-					aria-label={isSelected ? "Deselect media" : "Select media"}
 					aria-pressed={isSelected}
 					onclick={() => toggleSelected(item.id)}
 				>
 					<MediaImage
 						src={proxyMediaUrl(item.url)}
+						alt="Photo {index + 1}"
 						class="size-full rounded-[inherit]"
 						imgClass="bg-card-foreground/10"
 					/>
@@ -199,4 +215,9 @@
 			{/each}
 		</div>
 	{/if}
+	<div role="status" class="sr-only">
+		{selected.size === selected.max
+			? `Maximum ${selected.max} selected`
+			: ""}
+	</div>
 </div>

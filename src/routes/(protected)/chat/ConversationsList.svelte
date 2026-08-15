@@ -7,7 +7,7 @@
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
-	import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
@@ -110,20 +110,12 @@
 		}
 	});
 
-	$effect(() => {
-		if (!selecting && !deleteDialogOpen) return;
-		const onBackGesture = () => {
-			if (deleteDialogOpen) {
-				deleteDialogOpen = false;
-			} else {
-				exitSelection();
-			}
-			return false;
-		};
-		backGestureEventHandlers.add(onBackGesture);
-		return () => {
-			backGestureEventHandlers.delete(onBackGesture);
-		};
+	dismissOnBackGesture({ active: () => selecting, dismiss: exitSelection });
+	dismissOnBackGesture({
+		active: () => deleteDialogOpen,
+		dismiss: () => {
+			deleteDialogOpen = false;
+		},
 	});
 
 	function pinSelected() {

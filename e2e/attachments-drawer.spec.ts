@@ -6,6 +6,8 @@ import {
 	DRAWER,
 	expandToFull,
 	openAttachments,
+	SELECTABLE_MEDIA_TILE,
+	SELECTED_MEDIA_TILE,
 	snapTops,
 } from "./support/drawer";
 
@@ -265,7 +267,7 @@ test.describe("attachments drawer", () => {
 	}) => {
 		await openAttachments(page);
 		const touch = await TrustedTouch.attach(page);
-		const tile = page.locator('button[aria-label="Select media"]').first();
+		const tile = page.locator(SELECTABLE_MEDIA_TILE).first();
 		const rect = (await tile.boundingBox())!;
 		const centre = {
 			x: rect.x + rect.width / 2,
@@ -275,20 +277,18 @@ test.describe("attachments drawer", () => {
 		await touch.drag(page, centre, { x: centre.x, y: centre.y - 120 });
 		await page.waitForTimeout(1000);
 		expect(
-			await page.locator('button[aria-label="Deselect media"]').count(),
+			await page.locator(SELECTED_MEDIA_TILE).count(),
 			"a drag must not select",
 		).toBe(0);
 
-		const stillTile = page
-			.locator('button[aria-label="Select media"]')
-			.first();
+		const stillTile = page.locator(SELECTABLE_MEDIA_TILE).first();
 		const r2 = (await stillTile.boundingBox())!;
 		await touch.start(r2.x + r2.width / 2, r2.y + r2.height / 2);
 		await page.waitForTimeout(60);
 		await touch.end();
 		await page.waitForTimeout(400);
 		expect(
-			await page.locator('button[aria-label="Deselect media"]').count(),
+			await page.locator(SELECTED_MEDIA_TILE).count(),
 			"a still tap must select",
 		).toBe(1);
 	});
@@ -368,7 +368,7 @@ test.describe("attachments drawer", () => {
 	}) => {
 		await openAttachments(page);
 		const touch = await TrustedTouch.attach(page);
-		const tile = page.locator('button[aria-label="Select media"]').first();
+		const tile = page.locator(SELECTABLE_MEDIA_TILE).first();
 		const rect = (await tile.boundingBox())!;
 		await touch.drag(
 			page,
@@ -379,7 +379,7 @@ test.describe("attachments drawer", () => {
 		await page.waitForTimeout(900);
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		expect(
-			await page.locator('button[aria-label="Deselect media"]').count(),
+			await page.locator(SELECTED_MEDIA_TILE).count(),
 			"closing by dragging a tile must not select it",
 		).toBe(0);
 	});

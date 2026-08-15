@@ -22,11 +22,9 @@
 	let atFloor = $state(true);
 	let seenTimestamp = $state(0);
 
-	$effect(() => {
-		markReadMessagesEffect();
-	});
+	$effect(markLatestMessagesSeen);
 
-	function markReadMessagesEffect(): void {
+	function markLatestMessagesSeen(): void {
 		if (!atFloor) return;
 		const latest = conversationState.messages.reduce(
 			(max, m) => Math.max(max, m.timestamp),
@@ -85,11 +83,9 @@
 		atFloor = floorDistance() <= FLOOR_SLOP_PX;
 	}
 
-	$effect(() => {
-		return addInputEventsEffect();
-	});
+	$effect(stopSmoothScrollOnGesture);
 
-	function addInputEventsEffect() {
+	function stopSmoothScrollOnGesture() {
 		const el = container;
 		if (!el) return;
 		el.addEventListener("wheel", endScrollingToRest, { passive: true });
@@ -105,11 +101,9 @@
 	let scrollDone = false;
 	let lastFirstId = "";
 
-	$effect(() => {
-		onConversationChangeEffect();
-	});
+	$effect(resetForNewConversation);
 
-	function onConversationChangeEffect(): void {
+	function resetForNewConversation(): void {
 		void conversationState.conversationId;
 		untrack(() => {
 			scrollDone = false;
@@ -120,22 +114,18 @@
 		});
 	}
 
-	$effect(() => {
-		onConversationLoadedEffect();
-	});
+	$effect(scrollToRestWhenLoaded);
 
-	function onConversationLoadedEffect(): void {
+	function scrollToRestWhenLoaded(): void {
 		if (!conversationState.loading && !scrollDone && container) {
 			scrollDone = true;
 			void scrollToRest("instant");
 		}
 	}
 
-	$effect(() => {
-		onNewMessageEffect();
-	});
+	$effect(followNewMessages);
 
-	function onNewMessageEffect(): void {
+	function followNewMessages(): void {
 		const firstMessage = conversationState.messages.at(0);
 		const firstId = firstMessage?.messageId ?? "";
 		if (
@@ -155,11 +145,9 @@
 		lastFirstId = firstId;
 	}
 
-	$effect(() => {
-		onComposerResizeEffect();
-	});
+	$effect(keepFloorOnComposerResize);
 
-	function onComposerResizeEffect(): void {
+	function keepFloorOnComposerResize(): void {
 		void composerHeight;
 		const el = container;
 		if (!el) return;

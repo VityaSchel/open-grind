@@ -164,7 +164,11 @@
 		{:else if message.type === "Unsent"}
 			<UnsentMessage />
 		{:else}
-			<UnsupportedMessage type={message.type} />
+			<UnsupportedMessage
+				type={"unrecognizedType" in message
+					? message.unrecognizedType
+					: message.type}
+			/>
 		{/if}
 	</MessageWrapper>
 {/snippet}

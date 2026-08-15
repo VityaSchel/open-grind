@@ -20,7 +20,8 @@ import {
 import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 import type {
 	ApiResponseMessage,
-	Message as MessageType,
+	MessageDraft,
+	OutboundMessage,
 } from "$lib/model/messaging/messages";
 import {
 	matchPendingEcho,
@@ -89,9 +90,11 @@ export class ConversationState {
 						(m) => m.messageId === incoming.messageId,
 					);
 					if (existing) {
+						const moved = existing.timestamp !== incoming.timestamp;
 						Object.assign(existing, incoming, {
 							status: "sent" as const,
 						});
+						if (moved) this.#resortNewestFirst();
 						this.#syncCache();
 						return;
 					}
@@ -102,9 +105,11 @@ export class ConversationState {
 							incoming,
 						});
 						if (pending) {
-							pending.status = "sent";
-							pending.messageId = incoming.messageId;
-							this.#syncCache();
+							this.#adoptServerVersion({
+								message: pending,
+								serverMessageId: incoming.messageId,
+								serverTimestamp: incoming.timestamp,
+							});
 							return;
 						}
 					}
@@ -322,11 +327,11 @@ export class ConversationState {
 		}
 	}
 
-	send(message: MessageType): void {
+	send(draft: MessageDraft): void {
 		if (!this.profile) return;
 		const tempId = `pending-${crypto.randomUUID()}`;
 		const optimistic: OptimisticMessage = {
-			...message,
+			...draft.optimistic,
 			messageId: tempId,
 			conversationId: this.conversationId,
 			senderId: this.ourProfileId,
@@ -337,7 +342,7 @@ export class ConversationState {
 		};
 		this.messages = removeDuplicateMessages([optimistic, ...this.messages]);
 		this.#updatePreview(optimistic);
-		void this.#resolveMessage({ tempId, message });
+		void this.#resolveMessage({ tempId, message: draft.outbound });
 	}
 
 	async #resolveMessage({
@@ -345,19 +350,23 @@ export class ConversationState {
 		message,
 	}: {
 		tempId: string;
-		message: MessageType;
+		message: OutboundMessage;
 	}): Promise<void> {
 		try {
-			const { messageId } = await sendMessage({
+			const sent = await sendMessage({
 				toUserId: this.profile!.profileId,
 				message,
 			});
 			const msg = this.messages.find((m) => m.messageId === tempId);
 			if (msg) {
-				msg.status = "sent";
-				msg.messageId = messageId;
+				this.#adoptServerVersion({
+					message: msg,
+					serverMessageId: sent.messageId,
+					serverTimestamp: sent.timestamp,
+				});
+			} else {
+				this.#syncCache();
 			}
-			this.#syncCache();
 			void this.#conversations.ensureLoaded(this.conversationId);
 		} catch (error) {
 			const urn = errorUrn(error);
@@ -373,6 +382,33 @@ export class ConversationState {
 			const latestSent = this.messages.find((m) => m.status === "sent");
 			this.#updatePreview(latestSent);
 		}
+	}
+
+	#adoptServerVersion({
+		message,
+		serverMessageId,
+		serverTimestamp,
+	}: {
+		message: OptimisticMessage;
+		serverMessageId: string;
+		serverTimestamp: number;
+	}): void {
+		const wasNewestBeforeAdopting =
+			this.messages.at(0)?.messageId === message.messageId;
+		message.status = "sent";
+		message.messageId = serverMessageId;
+		message.timestamp = serverTimestamp;
+		this.#resortNewestFirst();
+		const newest = this.messages.at(0);
+		const isNewestAfterAdopting = newest?.messageId === serverMessageId;
+		if (wasNewestBeforeAdopting || isNewestAfterAdopting) {
+			this.#updatePreview(newest);
+		}
+		this.#syncCache();
+	}
+
+	#resortNewestFirst(): void {
+		this.messages = removeDuplicateMessages(this.messages);
 	}
 
 	#advanceLastRead(timestamp: number | null): boolean {
