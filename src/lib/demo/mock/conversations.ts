@@ -2,7 +2,7 @@ import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { type ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
-import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
+import { DAY, demoMeProfileId, HOUR, MINUTE, NOW, SECOND } from "../config";
 import { hashFromSeed } from "./avatars";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
@@ -151,6 +151,7 @@ const demoConversationSeeds: DemoConversation[] = [
 const MESSAGE_GAP = 7 * MINUTE;
 const MESSAGES_PER_PAGE = 8;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
+const EXPIRING_IMAGE_DURATION_MS = 10 * SECOND;
 
 function picsum({
 	seed,
@@ -251,7 +252,10 @@ function buildMessage({
 					width: 600,
 					height: 800,
 					url: picsum({ seed: `expiring-${conv.withId}-${index}` }),
+					duration: EXPIRING_IMAGE_DURATION_MS,
 					viewsRemaining: message.expired ? 0 : 1,
+					expiresAt: timestamp + DAY,
+					viewed: message.expired,
 				},
 				...base,
 				unsent: false,
@@ -518,16 +522,39 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 		unsent: false,
 		reactions: [],
 	};
-	if (sent.type === "Image" && sent.body && typeof sent.body === "object") {
-		const { mediaId } = sent.body as { mediaId: number };
+	const mediaId =
+		sent.body && typeof sent.body === "object"
+			? (sent.body as { mediaId?: number }).mediaId
+			: undefined;
+	if (
+		mediaId !== undefined &&
+		(sent.type === "Image" || sent.type === "ExpiringImage")
+	) {
 		const item = demoDrawerMedia().find((media) => media.id === mediaId);
+		const url = item?.url ?? DEMO_IMAGE_URL;
+		if (sent.type === "ExpiringImage") {
+			return {
+				type: "ExpiringImage",
+				body: {
+					mediaId,
+					width: null,
+					height: null,
+					url,
+					duration: EXPIRING_IMAGE_DURATION_MS,
+					viewsRemaining: 1,
+					expiresAt: timestamp + DAY,
+					viewed: false,
+				},
+				...overlay,
+			};
+		}
 		return {
 			type: "Image",
 			body: {
 				mediaId,
 				width: null,
 				height: null,
-				url: item?.url ?? DEMO_IMAGE_URL,
+				url,
 				imageHash: hashFromSeed(`drawer-${mediaId}`),
 				takenOnGrindr: item?.takenOnGrindr ?? false,
 				createdAt: item?.createdTs ?? timestamp,

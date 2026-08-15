@@ -258,6 +258,22 @@ describe("demo route data matches the real schemas", () => {
 		apiResponseMessageSchema.parse(body);
 	});
 
+	it("sending media echoes it back under the type it was sent as", () => {
+		const send = (type: string, body: unknown) =>
+			apiResponseMessageSchema.parse(
+				route("/v4/chat/message/send", "POST", {
+					type,
+					target: { type: "Direct", targetId: 100001 },
+					body,
+				}),
+			);
+
+		expect(send("Image", { mediaId: 800_001 }).type).toBe("Image");
+		expect(
+			send("ExpiringImage", { mediaId: 800_001, expiring: true }).type,
+		).toBe("ExpiringImage");
+	});
+
 	it("taps and views validate", () => {
 		const taps = route("/v2/taps/received") as { profiles: unknown[] };
 		for (const tap of taps.profiles) tapProfileSchema.parse(tap);

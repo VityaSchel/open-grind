@@ -11,6 +11,8 @@ import {
 	snapTops,
 } from "./support/drawer";
 
+const MESSAGE = '[role="button"][tabindex="0"]';
+
 test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
 		page,
@@ -289,6 +291,60 @@ test.describe("attachments drawer", () => {
 			await page.locator(SELECTED_MEDIA_TILE).count(),
 			"a still tap must select",
 		).toBe(1);
+	});
+
+	test("the expiring toggle sends the selection as an expiring photo", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		await page.locator(MESSAGE).first().waitFor({ timeout: 30_000 });
+		const bubbles = page
+			.locator("button")
+			.filter({ hasText: "View expiring image" });
+		const before = await bubbles.count();
+
+		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
+		const toggle = page
+			.locator(DRAWER)
+			.getByRole("button", {
+				name: "Set photo as expiring after 10 seconds",
+			});
+		await expect(toggle).toHaveAttribute("aria-pressed", "false");
+		await toggle.click();
+		await expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+		await page
+			.locator(DRAWER)
+			.getByRole("button", { name: /^Send \d+$/ })
+			.click();
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+		await expect(bubbles).toHaveCount(before + 1);
+	});
+
+	test("the expiring toggle and the selection reset when the drawer reopens", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
+		const send = page
+			.locator(DRAWER)
+			.getByRole("button", { name: /^Send \d+$/ });
+		await expect(send).toHaveCount(1);
+		await page
+			.locator(DRAWER)
+			.getByRole("button", {
+				name: "Set photo as expiring after 10 seconds",
+			})
+			.click();
+
+		await page.keyboard.press("Escape");
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+		await page.getByRole("button", { name: "Add attachment" }).click();
+		await page.locator(DRAWER).waitFor({ timeout: 10_000 });
+		await page.waitForTimeout(900);
+
+		await expect(send).toHaveCount(0);
+		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(0);
 	});
 
 	test("closes by dragging well past the short size", async ({ page }) => {

@@ -84,4 +84,31 @@ describe("previewFromMessage", () => {
 			expect(previewLabel(preview)).toBe("Album");
 		},
 	);
+
+	it("labels expiring images apart from regular photos", () => {
+		const preview = previewFromMessage({
+			type: "ExpiringImage",
+			body: {
+				mediaId: 11,
+				width: null,
+				height: null,
+				url: null,
+				viewsRemaining: 1,
+			},
+			messageId: "msg-4",
+			conversationId: "conversation-1",
+			senderId: 42,
+			timestamp: 1_710_000_000_000,
+			unsent: false,
+			reactions: [],
+		});
+
+		expect(preview).toEqual({
+			type: "ExpiringImage",
+			text: null,
+			albumId: null,
+			imageHash: null,
+		});
+		expect(previewLabel(preview)).toBe("Expiring photo");
+	});
 });

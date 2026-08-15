@@ -6,8 +6,5 @@
 
 <div
 	class="aspect-square animate-pulse bg-stone-700"
-	use:observeIntersection={{
-		handle: onVisible,
-		rootMargin: "200px",
-	}}
+	use:observeIntersection={{ handle: onVisible, rootMargin: "200px" }}
 ></div>

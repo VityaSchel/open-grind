@@ -21,10 +21,12 @@
 		conversationId,
 		messageId,
 		message,
+		isOut,
 	}: {
 		conversationId: string;
 		messageId: string;
 		message: ExpiringImageMessage["body"];
+		isOut: boolean;
 	} = $props();
 
 	const media = new MessageMediaState();
@@ -39,6 +41,13 @@
 		media.cornerClass,
 	]);
 
+	const bubbleClass: import("svelte/elements").ClassValue = $derived([
+		"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",
+		className,
+		contentClass,
+		"border border-border bg-input",
+	]);
+
 	type LoadedImage = {
 		url: string;
 		width: number | null;
@@ -48,17 +57,34 @@
 	type ImageState =
 		| { status: "idle" }
 		| { status: "loading" }
-		| { status: "open"; image: LoadedImage };
+		| { status: "open"; image: LoadedImage }
+		| { status: "expired" };
 
 	let imageState = $state<ImageState>({ status: "idle" });
 	let cachedImage: LoadedImage | null = null;
 
+	const ownImage: LoadedImage | null = $derived(
+		isOut && message.url !== null
+			? {
+					url: proxyMediaUrl(message.url),
+					width: message.width,
+					height: message.height,
+				}
+			: null,
+	);
+
+	const viewable = $derived(
+		isOut
+			? ownImage !== null
+			: imageState.status !== "expired" &&
+					message.viewed !== true &&
+					message.viewsRemaining !== 0,
+	);
+
 	function openImage() {
-		if (cachedImage) {
-			imageState = { status: "open", image: cachedImage };
-		} else {
-			imageState = { status: "loading" };
-		}
+		const image = cachedImage ?? ownImage;
+		imageState =
+			image === null ? { status: "loading" } : { status: "open", image };
 	}
 
 	$effect(() => {
@@ -69,7 +95,10 @@
 					conversationId,
 					messageId,
 				}).then((res) => expiringImageMessageSchema.parse(res.message));
-				if (image.url === null) throw new Error("Image URL is null");
+				if (image.url === null) {
+					imageState = { status: "expired" };
+					return;
+				}
 				cachedImage = {
 					url: proxyMediaUrl(image.url),
 					width: image.width,
@@ -129,13 +158,16 @@
 	});
 </script>
 
-{#if message.viewsRemaining === null || message.viewsRemaining > 0}
+{#snippet bubbleContent(label: string)}
+	<ImagesIcon size={24} weight="fill" />
+	<span>{label}</span>
+	{@render media.adornments?.()}
+{/snippet}
+
+{#if viewable}
 	<button
 		class={[
-			"flex w-50 items-center gap-2 px-4 py-3 text-start font-medium",
-			className,
-			contentClass,
-			"border border-border bg-input",
+			bubbleClass,
 			{
 				"cursor-pointer": imageState.status === "idle",
 				"opacity-50": imageState.status === "loading",
@@ -145,10 +177,12 @@
 		disabled={imageState.status !== "idle"}
 		{@attach media.attach}
 	>
-		<ImagesIcon size={24} weight="fill" />
-		<span>View expiring image</span>
-		{@render media.adornments?.()}
+		{@render bubbleContent("View expiring image")}
 	</button>
+{:else if isOut}
+	<div class={[bubbleClass, "text-muted-foreground"]} {@attach media.attach}>
+		{@render bubbleContent("Expiring photo")}
+	</div>
 {:else}
 	<div class={["h-12 w-50", className, contentClass]} {@attach media.attach}>
 		<LockedMedia

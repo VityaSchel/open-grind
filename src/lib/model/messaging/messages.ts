@@ -186,7 +186,7 @@ export const expiringImageMessageSchema = imageBaseMessageSchema.safeExtend({
 	body: z.object({
 		...imageBaseMessageSchema.shape.body.shape,
 		url: mediaUrlSchema.nullable(),
-		viewsRemaining: z.int().nonnegative().nullable(),
+		viewsRemaining: z.int().nonnegative().nullable().optional(),
 		duration: z.int().optional(),
 		expiresAt: unixTimestampMsSchema.nullable().optional(),
 		viewed: z.boolean().nullable().optional(),

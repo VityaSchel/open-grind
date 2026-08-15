@@ -58,6 +58,7 @@ export function previewLabel(preview: MessagePreview | null): string | null {
 	if (preview === null) return null;
 	if (preview.text !== null) return preview.text;
 	if (preview.albumId !== null) return "Album";
+	if (preview.type === "ExpiringImage") return "Expiring photo";
 	if (preview.imageHash !== null || preview.type === "Image") return "Photo";
 	return null;
 }

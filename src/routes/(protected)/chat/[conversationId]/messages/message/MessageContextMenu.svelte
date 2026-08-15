@@ -5,6 +5,7 @@
 		CopyIcon,
 		FlagIcon,
 		TrashIcon,
+		WarningCircleIcon,
 	} from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 	import type { ComponentProps } from "svelte";
@@ -19,12 +20,14 @@
 		reactionAvailable,
 		onDelete,
 		onUnsend,
+		onCopyError,
 		...props
 	}: ComponentProps<typeof ContextMenu> & {
 		textContent?: string;
 		reactionAvailable?: boolean;
 		onDelete?: () => void;
 		onUnsend?: () => void;
+		onCopyError?: () => void;
 	} = $props();
 </script>
 
@@ -66,6 +69,17 @@
 					}}
 				>
 					<CopyIcon /> Copy message
+				</Button>
+			{/if}
+			{#if onCopyError}
+				<Button
+					variant="ghost"
+					onclick={() => {
+						onCopyError();
+						props.onClose();
+					}}
+				>
+					<WarningCircleIcon /> Copy error
 				</Button>
 			{/if}
 			<Button

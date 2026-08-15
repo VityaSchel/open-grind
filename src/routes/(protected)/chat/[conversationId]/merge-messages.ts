@@ -2,6 +2,7 @@ import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
 export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
+	sendError?: unknown;
 };
 
 export function removeDuplicateMessages(

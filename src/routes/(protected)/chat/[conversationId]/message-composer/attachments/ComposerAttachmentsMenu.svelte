@@ -2,6 +2,7 @@
 	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
+	import TimerIcon from "phosphor-svelte/lib/TimerIcon";
 	import { expoOut, sineIn } from "svelte/easing";
 	import { fly } from "svelte/transition";
 
@@ -9,6 +10,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
+	import { Toggle } from "$lib/components/ui/toggle";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 	import ComposerMediaTab from "./ComposerMediaTab.svelte";
@@ -29,6 +31,7 @@
 	let peek = $state<HTMLDivElement | null>(null);
 	let tabs = $state<Partial<Record<Tab, SelectionTab | null>>>({});
 	let counts = $state<Partial<Record<Tab, number>>>({});
+	let expiring = $state(false);
 
 	const selectedCount = $derived(counts[selectedTab] ?? 0);
 
@@ -62,6 +65,7 @@
 		if (settleTimer !== null) clearTimeout(settleTimer);
 		settleTimer = null;
 		counts = {};
+		expiring = false;
 	});
 
 	dismissOnBackGesture({
@@ -87,6 +91,7 @@
 				open = false;
 			}
 		}}
+		preventOverflowTextSelection={false}
 	>
 		<Tabs.Root
 			bind:value={selectedTab}
@@ -125,6 +130,7 @@
 					<Tabs.Content value="media">
 						<ComposerMediaTab
 							bind:this={tabs.media}
+							{expiring}
 							onSelectionChange={(count) =>
 								(counts.media = count)}
 							onClose={() => (open = false)}
@@ -149,10 +155,36 @@
 
 			{#if selectedCount > 0}
 				<div
-					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center"
+					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center gap-2"
 					in:fly={{ duration: 600, y: 100, easing: expoOut }}
 					out:fly={{ duration: 400, y: 100, easing: sineIn }}
 				>
+					{#if selectedTab === "media"}
+						<Toggle
+							aria-label="Set photo as expiring after 10 seconds"
+							size="lg"
+							class={[
+								"pointer-events-auto",
+								{
+									"bg-muted hover:bg-muted/80": !expiring,
+									"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
+										expiring,
+								},
+							]}
+							variant="default"
+							bind:pressed={expiring}
+						>
+							<TimerIcon
+								weight={expiring ? "fill" : "regular"}
+								class="size-5"
+							/>
+							{#if expiring}
+								10s
+							{:else}
+								Off
+							{/if}
+						</Toggle>
+					{/if}
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"

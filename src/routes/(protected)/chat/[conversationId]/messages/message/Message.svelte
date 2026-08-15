@@ -30,6 +30,7 @@
 		onDelete,
 		onVisible,
 		onUnsend,
+		onCopyError,
 	}: {
 		message: ApiResponseMessage;
 		isOut: boolean;
@@ -42,6 +43,7 @@
 		onDelete?: () => void;
 		onVisible?: () => void;
 		onUnsend?: () => void;
+		onCopyError?: () => void;
 	} = $props();
 
 	const firstInStack = $derived(indexInStack === 0);
@@ -155,6 +157,7 @@
 				message={message.body}
 				conversationId={message.conversationId}
 				messageId={message.messageId}
+				{isOut}
 			/>
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
@@ -247,5 +250,6 @@
 		reactionAvailable={message.reactions.length === 0 && !isOut}
 		{onDelete}
 		{onUnsend}
+		{onCopyError}
 	/>
 {/if}

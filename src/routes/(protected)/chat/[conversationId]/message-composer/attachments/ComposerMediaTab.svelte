@@ -23,8 +23,12 @@
 	let {
 		onClose,
 		onSelectionChange,
-	}: { onClose: () => void; onSelectionChange: (count: number) => void } =
-		$props();
+		expiring,
+	}: {
+		onClose: () => void;
+		onSelectionChange: (count: number) => void;
+		expiring: boolean;
+	} = $props();
 
 	const composer = getMessageComposerContext();
 	const selected = new SelectionSet<number>(10);
@@ -86,26 +90,45 @@
 	export function sendSelected() {
 		if (media === null) return;
 		const items = media.filter((item) => selected.has(item.id));
+		const sendAsExpiring = expiring;
 		selected.clear();
-		onSelectionChange(0);
 		onClose();
 		for (const item of items) {
 			item.used = true;
-			void composer().sendMessage({
-				outbound: { type: "Image", body: { mediaId: item.id } },
-				optimistic: {
-					type: "Image",
-					body: {
-						mediaId: item.id,
-						width: null,
-						height: null,
-						url: item.url,
-						imageHash: imageHashFromUrl(item.url),
-						takenOnGrindr: item.takenOnGrindr,
-						createdAt: item.createdTs,
-					},
-				},
-			});
+			const mediaBody = {
+				mediaId: item.id,
+				width: null,
+				height: null,
+				url: item.url,
+			};
+			void composer().sendMessage(
+				sendAsExpiring
+					? {
+							outbound: {
+								type: "ExpiringImage",
+								body: { mediaId: item.id, expiring: true },
+							},
+							optimistic: {
+								type: "ExpiringImage",
+								body: mediaBody,
+							},
+						}
+					: {
+							outbound: {
+								type: "Image",
+								body: { mediaId: item.id },
+							},
+							optimistic: {
+								type: "Image",
+								body: {
+									...mediaBody,
+									imageHash: imageHashFromUrl(item.url),
+									takenOnGrindr: item.takenOnGrindr,
+									createdAt: item.createdTs,
+								},
+							},
+						},
+			);
 		}
 	}
 </script>

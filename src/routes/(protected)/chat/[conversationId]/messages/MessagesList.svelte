@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { promptCopyError } from "$lib/api/error-copy";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		deleteMessageForMe,
@@ -85,6 +86,9 @@
 						revert?.();
 					}
 				}
+			: undefined}
+		onCopyError={message.status === "error"
+			? () => void promptCopyError(message.sendError).catch(() => {})
 			: undefined}
 	/>
 {/each}

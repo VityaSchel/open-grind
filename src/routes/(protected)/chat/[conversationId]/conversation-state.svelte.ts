@@ -1,6 +1,7 @@
 import { createContext } from "svelte";
 
 import { showErrorToast } from "$lib/api/error-toast";
+import { errorUrn } from "$lib/api/error-urn";
 import { markConversationAsRead } from "$lib/api/messaging/conversations";
 import {
 	ConversationUnavailableError,
@@ -367,9 +368,17 @@ export class ConversationState {
 				this.#syncCache();
 			}
 			void this.#conversations.ensureLoaded(this.conversationId);
-		} catch {
+		} catch (error) {
+			const urn = errorUrn(error);
+			console.error(
+				`Failed to send message${urn === null ? "" : ` (${urn})`}`,
+				error,
+			);
 			const msg = this.messages.find((m) => m.messageId === tempId);
-			if (msg) msg.status = "error";
+			if (msg) {
+				msg.status = "error";
+				msg.sendError = error;
+			}
 			const latestSent = this.messages.find((m) => m.status === "sent");
 			this.#updatePreview(latestSent);
 		}

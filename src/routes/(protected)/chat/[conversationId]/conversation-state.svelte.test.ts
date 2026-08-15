@@ -301,6 +301,49 @@ describe("ConversationState send echo matching", () => {
 	});
 });
 
+describe("ConversationState send failures", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		readHandlers.length = 0;
+		messageSentHandlers.length = 0;
+		reconcileHandlers.length = 0;
+	});
+
+	it("keeps the rejected send's error on the message so it can be copied", async () => {
+		getConversationMock.mockResolvedValue({
+			messages: [],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		const rejection = new ApiError({
+			message: "API request failed with status 403",
+			request: { method: "POST", path: "/v4/chat/message/send" },
+			response: {
+				status: 403,
+				body: JSON.stringify({
+					type: "urn:gr:err:unauthorized_action",
+				}),
+			},
+		});
+		sendMessageMock.mockRejectedValue(rejection);
+		const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+		const state = create();
+		await flush();
+		state.send(outbound("Text", { text: "a" }));
+		await flush();
+
+		expect(state.messages[0]?.status).toBe("error");
+		expect(state.messages[0]?.sendError).toBe(rejection);
+		expect(logged).toHaveBeenCalledWith(
+			"Failed to send message (urn:gr:err:unauthorized_action)",
+			rejection,
+		);
+		logged.mockRestore();
+	});
+});
+
 describe("ConversationState send timestamp", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
