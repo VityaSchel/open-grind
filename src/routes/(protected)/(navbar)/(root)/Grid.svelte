@@ -113,10 +113,7 @@
 		<div
 			class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
 			use:observeIntersection={{
-				handle: () => {
-					gridState.loadMore().catch((error) => console.error(error));
-				},
-				root: "scroller",
+				handle: () => gridState.loadMore(),
 				rootMargin: "400px",
 			}}
 		></div>

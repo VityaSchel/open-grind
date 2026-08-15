@@ -133,9 +133,23 @@ const demoConversationSeeds: DemoConversation[] = [
 			{ fromMe: false, text: "🐻 lorem ipsum", reactions: 2 },
 		],
 	},
+
+	{
+		withId: 100333,
+		unread: 0,
+		pinned: false,
+		favorite: false,
+		muted: false,
+		lastActivityAgo: 45,
+		messages: Array.from({ length: 80 }, (_, i) => ({
+			fromMe: i % 3 === 0,
+			text: `Backlog message ${i + 1}`,
+		})),
+	},
 ];
 
 const MESSAGE_GAP = 7 * MINUTE;
+const MESSAGES_PER_PAGE = 8;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
 
 function picsum({
@@ -377,13 +391,24 @@ export function demoConversationMessages({
 		profileId: conv?.withId ?? 0,
 		showDistance: seed?.distanceM !== null && seed?.distanceM !== undefined,
 	};
-	if (!conv || pageKey !== undefined) {
-		return { lastReadTimestamp: null, messages: [], profile };
+	if (!conv) return { lastReadTimestamp: null, messages: [], profile };
+	const thread = threadMessages(conv);
+	if (pageKey === undefined) {
+		const lastReadTimestamp =
+			conv.unread > 0 ? (thread[conv.unread]?.timestamp ?? null) : NOW;
+		return {
+			lastReadTimestamp,
+			messages: thread.slice(0, MESSAGES_PER_PAGE),
+			profile,
+		};
 	}
-	const messages = threadMessages(conv);
-	const lastReadTimestamp =
-		conv.unread > 0 ? (messages[conv.unread]?.timestamp ?? null) : NOW;
-	return { lastReadTimestamp, messages, profile };
+	const after = thread.findIndex((message) => message.messageId === pageKey);
+	if (after === -1) return { lastReadTimestamp: null, messages: [], profile };
+	return {
+		lastReadTimestamp: null,
+		messages: thread.slice(after + 1, after + 1 + MESSAGES_PER_PAGE),
+		profile,
+	};
 }
 
 export function demoSingleMessage({

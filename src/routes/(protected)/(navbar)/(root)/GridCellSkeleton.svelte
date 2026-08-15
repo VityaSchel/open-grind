@@ -8,7 +8,6 @@
 	class="aspect-square animate-pulse bg-stone-700"
 	use:observeIntersection={{
 		handle: onVisible,
-		root: "scroller",
 		rootMargin: "200px",
 	}}
 ></div>
