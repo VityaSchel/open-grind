@@ -303,7 +303,7 @@ test.describe("attachments drawer", () => {
 			.filter({ hasText: "View expiring image" });
 		const before = await bubbles.count();
 
-		await page.locator('button[aria-label="Select media"]').first().click();
+		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
 		const toggle = page
 			.locator(DRAWER)
 			.getByRole("button", {
@@ -325,7 +325,7 @@ test.describe("attachments drawer", () => {
 		page,
 	}) => {
 		await openAttachments(page);
-		await page.locator('button[aria-label="Select media"]').first().click();
+		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
 		const send = page
 			.locator(DRAWER)
 			.getByRole("button", { name: /^Send \d+$/ });
@@ -344,9 +344,7 @@ test.describe("attachments drawer", () => {
 		await page.waitForTimeout(900);
 
 		await expect(send).toHaveCount(0);
-		await expect(
-			page.locator('button[aria-label="Deselect media"]'),
-		).toHaveCount(0);
+		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(0);
 	});
 
 	test("closes by dragging well past the short size", async ({ page }) => {
