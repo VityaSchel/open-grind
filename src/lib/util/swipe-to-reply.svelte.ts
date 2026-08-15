@@ -6,10 +6,12 @@ const MAX_DRAG_PX = 92;
 // Below this the gesture has not committed to an axis yet, so a vertical
 // scroll can still claim it.
 const AXIS_LOCK_SLOP_PX = 8;
-// A trackpad swipe has no release, so a quiet gap is what ends it. Momentum
-// keeps arriving after the fingers lift and every wheel restarts the clock, so
-// one flick's tail can never open a second gesture.
-const WHEEL_REST_MS = 150;
+// A trackpad reports far more travel than the fingers cover, so borrowing the
+// touch threshold fires after a flick a fraction of the size.
+const WHEEL_TRIGGER_PX = 180;
+// Fingers resting still on a trackpad emit nothing, and the platform exposes no
+// phase to tell a pause from a lift, so the gesture has to outlast a pause.
+const WHEEL_REST_MS = 500;
 // A mouse tick arrives as one large jump, in the same pixel mode a trackpad
 // uses, while fingers stream many small ones.
 const WHEEL_NOTCH_PX = 50;
@@ -146,9 +148,9 @@ export class SwipeToReply {
 		this.#wheelDistance = Math.max(
 			Math.min(
 				this.#wheelDistance - event.deltaX * this.#dragSign,
-				MAX_DRAG_PX,
+				WHEEL_TRIGGER_PX * 2,
 			),
-			-MAX_DRAG_PX,
+			-WHEEL_TRIGGER_PX,
 		);
 		this.#wheelCross += event.deltaY;
 
@@ -162,12 +164,15 @@ export class SwipeToReply {
 		}
 
 		this.#consumeWheel(event);
-		const magnitude = Math.min(
-			Math.max(this.#wheelDistance, 0),
+		const magnitude = Math.max(this.#wheelDistance, 0);
+		// Mapped onto the touch gesture's travel so the affordance fills at the
+		// same rate against a threshold that is nearly three times as long.
+		const shown = Math.min(
+			(magnitude * TRIGGER_DISTANCE_PX) / WHEEL_TRIGGER_PX,
 			MAX_DRAG_PX,
 		);
-		void this.#offset.set(magnitude * this.#dragSign, { instant: true });
-		if (magnitude <= TRIGGER_DISTANCE_PX) return;
+		void this.#offset.set(shown * this.#dragSign, { instant: true });
+		if (magnitude <= WHEEL_TRIGGER_PX) return;
 		if (this.#wheelSteps < WHEEL_MIN_STEPS) return;
 
 		// Nothing releases a wheel, so crossing the trigger is the commit and

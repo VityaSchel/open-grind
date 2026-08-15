@@ -186,4 +186,50 @@ test.describe("a composer resize is undone exactly when it is reversed", () => {
 			1,
 		);
 	});
+
+	// the settle-position cases above cannot see a mid-animation lurch, which is
+	// the whole risk of animating a box the scroller's padding is derived from
+	test("the view holds still while the reply bar animates", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		const sample = async () => {
+			const seen: number[] = [];
+			const heights: number[] = [];
+			for (let frame = 0; frame < 14; frame++) {
+				const view = await readView(page);
+				seen.push(view.newestMessageBottom);
+				heights.push(view.composerHeight);
+				await page.waitForTimeout(15);
+			}
+			const steps = seen
+				.slice(1)
+				.map((value, index) => Math.abs(value - seen[index]!));
+			return {
+				travelled: Math.max(...seen) - Math.min(...seen),
+				biggestStep: Math.max(...steps),
+				animated: Math.max(...heights) - Math.min(...heights),
+			};
+		};
+
+		await page
+			.locator(MESSAGE)
+			.filter({ hasText: REPLIABLE })
+			.dispatchEvent("contextmenu");
+		await page.getByRole("button", { name: "Reply" }).click();
+		const opening = await sample();
+		expect(opening.animated, "the bar really animates").toBeGreaterThan(8);
+		expect(
+			opening.biggestStep,
+			"the list eases up rather than lurching",
+		).toBeLessThan(opening.travelled);
+
+		await page.getByLabel("Cancel reply").click();
+		const closing = await sample();
+		expect(closing.animated, "the bar really animates").toBeGreaterThan(8);
+		expect(
+			closing.biggestStep,
+			"the list eases down rather than lurching",
+		).toBeLessThan(closing.travelled);
+	});
 });

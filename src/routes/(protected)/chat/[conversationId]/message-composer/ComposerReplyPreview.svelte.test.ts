@@ -17,6 +17,15 @@ vi.mock("$lib/chat/conversations-context.svelte", () => ({
 	getConversations: () => conversations,
 }));
 
+// the module builds a WsState on import, which reaches for a Tauri host that a
+// jsdom run has no business providing
+vi.mock("$lib/ws.svelte", () => ({
+	ws: {
+		on: () => Promise.resolve(() => {}),
+		onConnected: () => Promise.resolve(() => {}),
+	},
+}));
+
 vi.stubGlobal(
 	"ResizeObserver",
 	class {

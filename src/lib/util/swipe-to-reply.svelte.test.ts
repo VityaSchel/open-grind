@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 
 const TRIGGER_DISTANCE_PX = 64;
-const WHEEL_REST_MS = 150;
+const WHEEL_TRIGGER_PX = 180;
+const WHEEL_REST_MS = 500;
 
 function pointer(overrides: Partial<PointerEvent> = {}) {
 	return {
@@ -173,9 +174,7 @@ describe("SwipeToReply on a trackpad", () => {
 	it("replies once a two-finger flick accumulates past the trigger", () => {
 		const { swipe, onReply } = swipeToReply();
 
-		const { prevented } = flick(swipe, {
-			travel: TRIGGER_DISTANCE_PX + 32,
-		});
+		const { prevented } = flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
 
 		expect(onReply).toHaveBeenCalledOnce();
 		expect(prevented).toBeGreaterThan(0);
@@ -184,12 +183,12 @@ describe("SwipeToReply on a trackpad", () => {
 	it("forgets a flick that stopped short once the gesture rests", () => {
 		const { swipe, onReply } = swipeToReply();
 
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX - 16, steps: 4 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 4 });
 		expect(onReply).not.toHaveBeenCalled();
 		expect(swipe.armed).toBe(false);
 
 		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX - 16, steps: 4 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 4 });
 
 		expect(onReply).not.toHaveBeenCalled();
 	});
@@ -198,7 +197,7 @@ describe("SwipeToReply on a trackpad", () => {
 		const { swipe, onReply } = swipeToReply();
 
 		const { prevented } = flick(swipe, {
-			travel: TRIGGER_DISTANCE_PX + 32,
+			travel: WHEEL_TRIGGER_PX + 40,
 			cross: 240,
 		});
 
@@ -209,7 +208,7 @@ describe("SwipeToReply on a trackpad", () => {
 	it("replies once for a long flick, momentum and all", () => {
 		const { swipe, onReply } = swipeToReply();
 
-		flick(swipe, { travel: 400, steps: 40 });
+		flick(swipe, { travel: 900, steps: 40 });
 
 		expect(onReply).toHaveBeenCalledOnce();
 	});
@@ -217,12 +216,12 @@ describe("SwipeToReply on a trackpad", () => {
 	it("replies a second time only after the gesture rests", () => {
 		const { swipe, onReply } = swipeToReply();
 
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
 		expect(onReply).toHaveBeenCalledOnce();
 
 		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
 
 		expect(onReply).toHaveBeenCalledTimes(2);
 	});
@@ -259,12 +258,47 @@ describe("SwipeToReply on a trackpad", () => {
 		const onReply = vi.fn();
 		const swipe = new SwipeToReply({ direction: "left", onReply });
 
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
 		expect(onReply).not.toHaveBeenCalled();
 
 		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: -(TRIGGER_DISTANCE_PX + 32) });
+		flick(swipe, { travel: -(WHEEL_TRIGGER_PX + 40) });
 
 		expect(onReply).toHaveBeenCalledOnce();
+	});
+
+	it("holds a half-finished flick through a pause, fingers still down", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 6 });
+		const held = swipe.deltaX;
+		expect(held).toBeGreaterThan(0);
+
+		// a trackpad emits nothing while the fingers rest, and nothing in the
+		// platform tells that apart from a lift
+		vi.advanceTimersByTime(WHEEL_REST_MS - 100);
+		expect(swipe.deltaX).toBe(held);
+
+		flick(swipe, { travel: 80, steps: 4 });
+		expect(onReply).toHaveBeenCalledOnce();
+	});
+
+	it("gives up on a flick abandoned for good", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 6 });
+		vi.advanceTimersByTime(WHEEL_REST_MS + 1);
+
+		expect(onReply).not.toHaveBeenCalled();
+		flick(swipe, { travel: 80, steps: 4 });
+		expect(onReply).not.toHaveBeenCalled();
+	});
+
+	it("needs a far longer flick than a finger drag does", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32, steps: 6 });
+
+		expect(onReply).not.toHaveBeenCalled();
 	});
 });
