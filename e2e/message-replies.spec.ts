@@ -1,10 +1,13 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { installTauriShim, trackpadSwipe } from "./support/app";
 
 const CONVERSATION = "/chat/100001:123456000";
 const WITH_AN_UNSENT_MESSAGE = "/chat/100009:123456000";
 const MESSAGE_ROW = '[role="button"][tabindex="0"]';
+// only an incoming row pads its end, and only incoming rows swipe rightward
+const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
+const SCROLLER = '[data-slot="messages-scroller"]';
 const QUOTE = '[data-slot="message-quote"]';
 const REPLIABLE = "consectetur adipiscing elit";
 
@@ -65,6 +68,66 @@ test("cancelling a reply leaves the message unquoted", async ({ page }) => {
 
 	await expect(page.getByText("just a message")).toBeVisible();
 	await expect(page.locator(QUOTE)).toHaveCount(quotesBefore);
+});
+
+async function hoverIncomingMessage(
+	page: Page,
+): Promise<{ row: Locator; center: { x: number; y: number } }> {
+	const row = page.locator(INCOMING_ROW).last();
+	await row.scrollIntoViewIfNeeded();
+	const box = await row.boundingBox();
+	if (!box) throw new Error("the incoming row has no box");
+	const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	await page.mouse.move(center.x, center.y);
+	return { row, center };
+}
+
+function railOf(row: Locator) {
+	return row.locator("xpath=..");
+}
+
+test("a trackpad drag past the trigger replies on lift", async ({ page }) => {
+	await openConversation(page);
+	const { center } = await hoverIncomingMessage(page);
+
+	await trackpadSwipe(page, center, { xDistance: 80 });
+
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+});
+
+test("a lone sideways jump, the mouse signature, does not reply", async ({
+	page,
+}) => {
+	await openConversation(page);
+	const { row } = await hoverIncomingMessage(page);
+	const rail = railOf(row);
+	const rest = await rail.evaluate((el) => el.scrollLeft);
+
+	await page.mouse.wheel(-160, 0);
+
+	await expect
+		.poll(async () => rail.evaluate((el) => el.scrollLeft))
+		.not.toBe(rest);
+	await expect
+		.poll(async () => rail.evaluate((el) => el.scrollLeft))
+		.toBe(rest);
+	await expect(page.getByLabel("Cancel reply")).toHaveCount(0);
+});
+
+test("a scroll that starts leaning sideways still reaches the conversation", async ({
+	page,
+}) => {
+	await openConversation(page);
+	await hoverIncomingMessage(page);
+	const scroller = page.locator(SCROLLER);
+	const from = await scroller.evaluate((el) => el.scrollTop);
+
+	for (let step = 0; step < 3; step++) await page.mouse.wheel(-12, 4);
+	for (let step = 0; step < 2; step++) await page.mouse.wheel(0, -300);
+
+	await expect
+		.poll(async () => scroller.evaluate((el) => el.scrollTop))
+		.toBeLessThan(from);
 });
 
 test("an unsent message offers no reply", async ({ page }) => {

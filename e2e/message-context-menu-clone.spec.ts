@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { installEventInjection, installTauriShim } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const CONVERSATION = "/chat/100001:123456000";
@@ -11,56 +11,6 @@ const MESSAGE_ROW = '[role="button"][tabindex="0"]';
 const ALBUM = '[aria-label="Open album"]';
 const PHOTO = 'a[aria-label="Photo"]';
 const QUOTE = '[data-slot="message-quote"]';
-
-declare global {
-	interface Window {
-		__emitTauriEvent?: (event: string, payload: unknown) => void;
-	}
-}
-
-type TauriInternals = {
-	transformCallback: (callback: unknown) => number;
-	invoke: (cmd: string, args?: unknown, opts?: unknown) => Promise<unknown>;
-};
-
-// The demo seeds nothing we sent that carries media or a quote, so we deliver
-// those over the same websocket event the conversation already listens for.
-async function installEventInjection(page: Page): Promise<void> {
-	await page.addInitScript(() => {
-		const internals = (
-			window as unknown as { __TAURI_INTERNALS__: TauriInternals }
-		).__TAURI_INTERNALS__;
-		const handlers = new Map<number, (event: unknown) => void>();
-		const listenersByEvent = new Map<string, number[]>();
-		let nextHandlerId = 1;
-
-		internals.transformCallback = (callback: unknown) => {
-			const id = nextHandlerId++;
-			handlers.set(id, callback as (event: unknown) => void);
-			return id;
-		};
-
-		const passThrough = internals.invoke;
-		internals.invoke = (cmd: string, args?: unknown, opts?: unknown) => {
-			if (cmd !== "plugin:event|listen")
-				return passThrough(cmd, args, opts);
-			const { event, handler } = (args ?? {}) as {
-				event: string;
-				handler: number;
-			};
-			listenersByEvent.set(event, [
-				...(listenersByEvent.get(event) ?? []),
-				handler,
-			]);
-			return Promise.resolve(handler);
-		};
-
-		window.__emitTauriEvent = (event: string, payload: unknown) => {
-			for (const id of listenersByEvent.get(event) ?? [])
-				handlers.get(id)?.({ event, id, payload });
-		};
-	});
-}
 
 async function openConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);

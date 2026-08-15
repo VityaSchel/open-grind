@@ -17,6 +17,23 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 		}) as MediaQueryList;
 }
 
+// jsdom has no Element.scrollTo; carrying the assignment over lets scroll
+// code observe its own writes.
+if (typeof Element !== "undefined" && !Element.prototype.scrollTo) {
+	Element.prototype.scrollTo = function (
+		options?: ScrollToOptions | number,
+		y?: number,
+	) {
+		if (typeof options === "number") {
+			this.scrollLeft = options;
+			if (y !== undefined) this.scrollTop = y;
+			return;
+		}
+		if (options?.left !== undefined) this.scrollLeft = options.left;
+		if (options?.top !== undefined) this.scrollTop = options.top;
+	};
+}
+
 // jsdom has no Web Animations either, and svelte/transition drives every
 // transition through element.animate.
 if (typeof Element !== "undefined" && !Element.prototype.animate) {

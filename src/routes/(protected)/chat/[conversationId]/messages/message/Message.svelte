@@ -5,7 +5,7 @@
 	import { scale } from "svelte/transition";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
-	import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
+	import { MAX_DRAG_PX, SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { type MessageRefs, setMessageContext } from "./context";
@@ -200,8 +200,13 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
+	<!-- The visibility observer roots itself at the nearest scrolling
+	     ancestor, so it has to sit outside the rail: inside, the row fills
+	     that box and would report itself seen without ever being scrolled to. -->
 	<div
+		data-slot="message"
 		class={["relative flex flex-col", { "touch-pan-y": swipe !== null }]}
+		use:observeIntersection={{ handle: onVisible, once: true }}
 		{...swipe?.handlers}
 	>
 		{#if swipe}
@@ -217,43 +222,56 @@
 			</div>
 		{/if}
 		<div
-			class={{
-				"pe-3 *:float-start *:me-auto": !isOut,
-				"ps-3 *:float-end *:ms-auto": isOut,
-			}}
-			role="button"
-			tabindex="0"
-			ondblclick={(event) => {
-				const selection = window.getSelection();
-				if (
-					selection &&
-					!selection.isCollapsed &&
-					messageElement?.contains(selection.anchorNode)
-				)
-					return;
-				if (!isOut && onReact) {
-					event.preventDefault();
-					onReact(1);
-					selection?.removeAllRanges();
-				}
-			}}
-			onkeydown={(event) => {
-				if (event.key === "Enter" || event.key === " ") {
-					if (event.key === " ") event.preventDefault();
-					onContextMenu();
-				}
-			}}
-			oncontextmenu={(event) => {
-				event.preventDefault();
-				onContextMenu();
-			}}
-			style:visibility={contextMenuOpen ? "hidden" : undefined}
-			style:transform={swipe?.deltaX
-				? `translateX(${swipe.deltaX}px)`
-				: undefined}
-			use:observeIntersection={{ handle: onVisible, once: true }}
+			{@attach swipe ? swipe.attachRail : undefined}
+			class="-my-3 flex touch-pan-y overflow-x-auto overscroll-x-none py-3 [scrollbar-width:none]"
 		>
-			{@render content()}
+			{#if swipe && !isOut}
+				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
+			{/if}
+			<div
+				class={[
+					"min-w-full shrink-0",
+					{
+						"pe-3 *:float-start *:me-auto": !isOut,
+						"ps-3 *:float-end *:ms-auto": isOut,
+					},
+				]}
+				role="button"
+				tabindex="0"
+				ondblclick={(event) => {
+					const selection = window.getSelection();
+					if (
+						selection &&
+						!selection.isCollapsed &&
+						messageElement?.contains(selection.anchorNode)
+					)
+						return;
+					if (!isOut && onReact) {
+						event.preventDefault();
+						onReact(1);
+						selection?.removeAllRanges();
+					}
+				}}
+				onkeydown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						if (event.key === " ") event.preventDefault();
+						onContextMenu();
+					}
+				}}
+				oncontextmenu={(event) => {
+					event.preventDefault();
+					onContextMenu();
+				}}
+				style:visibility={contextMenuOpen ? "hidden" : undefined}
+				style:transform={swipe?.deltaX
+					? `translateX(${swipe.deltaX}px)`
+					: undefined}
+			>
+				{@render content()}
+			</div>
+			{#if swipe && isOut}
+				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
+			{/if}
 		</div>
 	</div>
 	{#if lastInStack}

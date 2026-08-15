@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
 
-import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
+import { describe, expect, it, vi } from "vitest";
+
+import { MAX_DRAG_PX, SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 
 const TRIGGER_DISTANCE_PX = 64;
-const WHEEL_TRIGGER_PX = 180;
-const WHEEL_REST_MS = 500;
+const RAIL_WHEEL_CHAIN_MS = 300;
+const RAIL_RELEASE_FALLBACK_MS = 250;
 
 function pointer(overrides: Partial<PointerEvent> = {}) {
 	return {
@@ -123,182 +125,250 @@ describe("SwipeToReply", () => {
 	});
 });
 
-function wheelHandler(swipe: SwipeToReply) {
-	const { onwheel } = swipe.handlers as {
-		onwheel?: (event: WheelEvent) => void;
+function railHarness({
+	direction = "right",
+	scrollEndSupported = true,
+}: { direction?: "left" | "right"; scrollEndSupported?: boolean } = {}) {
+	const onReply = vi.fn();
+	let time = 0;
+	const swipe = new SwipeToReply({
+		direction,
+		onReply,
+		now: () => time,
+		scrollEndSupported,
+	});
+	const rail = document.createElement("div");
+	const rest = direction === "right" ? MAX_DRAG_PX : 0;
+	const cleanup = swipe.attachRail(rail);
+	return {
+		swipe,
+		onReply,
+		rail,
+		rest,
+		detach: () => {
+			if (typeof cleanup === "function") cleanup();
+		},
+		advance: (ms: number) => {
+			time += ms;
+		},
+		// Fingers stream small wheel deltas while the row's scroller follows;
+		// the wheel's delta points the way the content scrolls, which is
+		// scrollLeft's own direction.
+		swipeBy(px: number, { steps = 6, deltaY = 0, stepMs = 16 } = {}) {
+			const sign = direction === "right" ? 1 : -1;
+			const target = Math.max(
+				0,
+				Math.min(MAX_DRAG_PX, rest - (this.dragPx() + px) * sign),
+			);
+			const perStep = (target - rail.scrollLeft) / steps;
+			for (let step = 0; step < steps; step++) {
+				this.advance(stepMs);
+				rail.dispatchEvent(
+					new WheelEvent("wheel", {
+						deltaX: perStep,
+						deltaY: deltaY / steps,
+						deltaMode: 0,
+						cancelable: true,
+					}),
+				);
+				rail.scrollLeft += perStep;
+				rail.dispatchEvent(new Event("scroll"));
+			}
+		},
+		dragPx() {
+			const sign = direction === "right" ? 1 : -1;
+			return (rest - rail.scrollLeft) * sign;
+		},
+		lift() {
+			rail.dispatchEvent(new Event("scrollend"));
+		},
 	};
-	if (!onwheel) throw new Error("SwipeToReply exposes no onwheel handler");
-	return onwheel;
-}
-
-// Positive travel is the fingers moving right; a wheel reports the opposite,
-// because its delta points the way the content scrolls.
-function flick(
-	swipe: SwipeToReply,
-	{
-		travel,
-		cross = 0,
-		steps = 8,
-		deltaMode = 0,
-	}: { travel: number; cross?: number; steps?: number; deltaMode?: number },
-): { prevented: number } {
-	const onwheel = wheelHandler(swipe);
-	const preventDefault = vi.fn();
-	for (let step = 0; step < steps; step++)
-		onwheel({
-			deltaX: -travel / steps,
-			deltaY: cross / steps,
-			deltaZ: 0,
-			deltaMode,
-			cancelable: true,
-			preventDefault,
-		} as unknown as WheelEvent);
-	return { prevented: preventDefault.mock.calls.length };
 }
 
 describe("SwipeToReply on a trackpad", () => {
-	beforeEach(() => {
+	it("rests the row against its spacer so there is room to drag", () => {
+		const incoming = railHarness({ direction: "right" });
+		const outgoing = railHarness({ direction: "left" });
+
+		expect(incoming.rail.scrollLeft).toBe(MAX_DRAG_PX);
+		expect(outgoing.rail.scrollLeft).toBe(0);
+	});
+
+	it("replies when a drag past the trigger is lifted", () => {
+		const h = railHarness();
+
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		expect(h.swipe.armed).toBe(true);
+		expect(h.swipe.progress).toBe(1);
+		expect(h.onReply).not.toHaveBeenCalled();
+
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("holds a paused drag for as long as the fingers stay down", () => {
 		vi.useFakeTimers();
+		try {
+			const h = railHarness();
+
+			h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+			const held = h.swipe.progress;
+
+			// resting fingers emit nothing, and only the lift may release
+			h.advance(600_000);
+			vi.advanceTimersByTime(600_000);
+
+			expect(h.swipe.progress).toBe(held);
+			expect(h.swipe.armed).toBe(true);
+			expect(h.onReply).not.toHaveBeenCalled();
+
+			h.lift();
+			expect(h.onReply).toHaveBeenCalledOnce();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
-	afterEach(() => {
-		vi.useRealTimers();
+	it("returns to rest without replying when lifted short of the trigger", () => {
+		const h = railHarness();
+
+		h.swipeBy(TRIGGER_DISTANCE_PX - 24);
+		h.lift();
+
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.rail.scrollLeft).toBe(h.rest);
+		expect(h.swipe.armed).toBe(false);
 	});
 
-	it("takes horizontal wheel gestures at all", () => {
-		const { swipe } = swipeToReply();
+	it("does not reply when an armed drag eases back before the lift", () => {
+		const h = railHarness();
 
-		expect(() => wheelHandler(swipe)).not.toThrow();
+		h.swipeBy(MAX_DRAG_PX);
+		expect(h.swipe.armed).toBe(true);
+		h.swipeBy(-(MAX_DRAG_PX - 20));
+		h.lift();
+
+		expect(h.onReply).not.toHaveBeenCalled();
 	});
 
-	it("replies once a two-finger flick accumulates past the trigger", () => {
-		const { swipe, onReply } = swipeToReply();
+	it("never cancels a wheel, so scrolling and pull-to-refresh stay native", () => {
+		const h = railHarness();
 
-		const { prevented } = flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
-
-		expect(onReply).toHaveBeenCalledOnce();
-		expect(prevented).toBeGreaterThan(0);
-	});
-
-	it("forgets a flick that stopped short once the gesture rests", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 4 });
-		expect(onReply).not.toHaveBeenCalled();
-		expect(swipe.armed).toBe(false);
-
-		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 4 });
-
-		expect(onReply).not.toHaveBeenCalled();
-	});
-
-	it("leaves a vertical-dominant wheel to the scroller", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		const { prevented } = flick(swipe, {
-			travel: WHEEL_TRIGGER_PX + 40,
-			cross: 240,
+		const vertical = new WheelEvent("wheel", {
+			deltaX: -2,
+			deltaY: 120,
+			deltaMode: 0,
+			cancelable: true,
 		});
-
-		expect(onReply).not.toHaveBeenCalled();
-		expect(prevented).toBe(0);
-	});
-
-	it("replies once for a long flick, momentum and all", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		flick(swipe, { travel: 900, steps: 40 });
-
-		expect(onReply).toHaveBeenCalledOnce();
-	});
-
-	it("replies a second time only after the gesture rests", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
-		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
-		expect(onReply).toHaveBeenCalledOnce();
-
-		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
-
-		expect(onReply).toHaveBeenCalledTimes(2);
-	});
-
-	it("ignores a mouse wheel, which Chromium also reports in pixels", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		const tick = flick(swipe, { travel: 100, steps: 1 });
-
-		expect(onReply).not.toHaveBeenCalled();
-		expect(tick.prevented).toBe(0);
-
-		vi.advanceTimersByTime(WHEEL_REST_MS);
-		const burst = flick(swipe, { travel: 300, steps: 3 });
-
-		expect(onReply).not.toHaveBeenCalled();
-		expect(burst.prevented).toBe(0);
-	});
-
-	it("ignores a line-mode wheel, whose one tick would jump the trigger", () => {
-		const { swipe, onReply } = swipeToReply();
-
-		const { prevented } = flick(swipe, {
-			travel: 300,
-			steps: 3,
-			deltaMode: 1,
+		const horizontal = new WheelEvent("wheel", {
+			deltaX: -40,
+			deltaY: 0,
+			deltaMode: 0,
+			cancelable: true,
 		});
+		h.rail.dispatchEvent(vertical);
+		h.rail.dispatchEvent(horizontal);
 
-		expect(onReply).not.toHaveBeenCalled();
-		expect(prevented).toBe(0);
+		expect(vertical.defaultPrevented).toBe(false);
+		expect(horizontal.defaultPrevented).toBe(false);
 	});
 
-	it("takes the mirrored flick for an outgoing message", () => {
-		const onReply = vi.fn();
-		const swipe = new SwipeToReply({ direction: "left", onReply });
+	it("does not reply from a lone mouse jump, however far it scrolls", () => {
+		const h = railHarness();
 
-		flick(swipe, { travel: WHEEL_TRIGGER_PX + 40 });
-		expect(onReply).not.toHaveBeenCalled();
+		h.swipeBy(MAX_DRAG_PX, { steps: 1 });
+		h.lift();
 
-		vi.advanceTimersByTime(WHEEL_REST_MS);
-		flick(swipe, { travel: -(WHEEL_TRIGGER_PX + 40) });
-
-		expect(onReply).toHaveBeenCalledOnce();
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.rail.scrollLeft).toBe(h.rest);
 	});
 
-	it("holds a half-finished flick through a pause, fingers still down", () => {
-		const { swipe, onReply } = swipeToReply();
+	it("forgets wheel steps once the chain window lapses", () => {
+		const h = railHarness();
 
-		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 6 });
-		const held = swipe.deltaX;
-		expect(held).toBeGreaterThan(0);
+		h.swipeBy(8, { steps: 2 });
+		h.advance(RAIL_WHEEL_CHAIN_MS + 1);
+		h.swipeBy(MAX_DRAG_PX, { steps: 1 });
+		h.lift();
 
-		// a trackpad emits nothing while the fingers rest, and nothing in the
-		// platform tells that apart from a lift
-		vi.advanceTimersByTime(WHEEL_REST_MS - 100);
-		expect(swipe.deltaX).toBe(held);
-
-		flick(swipe, { travel: 80, steps: 4 });
-		expect(onReply).toHaveBeenCalledOnce();
+		expect(h.onReply).not.toHaveBeenCalled();
 	});
 
-	it("gives up on a flick abandoned for good", () => {
-		const { swipe, onReply } = swipeToReply();
+	it("does not let vertical wheels vouch for a mouse jump", () => {
+		const h = railHarness();
 
-		flick(swipe, { travel: WHEEL_TRIGGER_PX - 40, steps: 6 });
-		vi.advanceTimersByTime(WHEEL_REST_MS + 1);
+		for (let step = 0; step < 5; step++) {
+			h.advance(16);
+			h.rail.dispatchEvent(
+				new WheelEvent("wheel", {
+					deltaX: 0,
+					deltaY: -40,
+					deltaMode: 0,
+				}),
+			);
+		}
+		h.swipeBy(MAX_DRAG_PX, { steps: 2 });
+		h.lift();
 
-		expect(onReply).not.toHaveBeenCalled();
-		flick(swipe, { travel: 80, steps: 4 });
-		expect(onReply).not.toHaveBeenCalled();
+		expect(h.onReply).not.toHaveBeenCalled();
 	});
 
-	it("needs a far longer flick than a finger drag does", () => {
-		const { swipe, onReply } = swipeToReply();
+	it("replies again on the next distinct gesture", () => {
+		const h = railHarness();
 
-		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32, steps: 6 });
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		h.lift();
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		h.lift();
 
-		expect(onReply).not.toHaveBeenCalled();
+		expect(h.onReply).toHaveBeenCalledTimes(2);
+	});
+
+	it("takes the mirrored drag for an outgoing message", () => {
+		const h = railHarness({ direction: "left" });
+
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		expect(h.rail.scrollLeft).toBeGreaterThan(TRIGGER_DISTANCE_PX);
+		h.lift();
+
+		expect(h.onReply).toHaveBeenCalledOnce();
+	});
+
+	it("falls back to a quiet gap where scrollend does not exist", () => {
+		vi.useFakeTimers();
+		try {
+			const h = railHarness({ scrollEndSupported: false });
+
+			h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+			expect(h.onReply).not.toHaveBeenCalled();
+
+			vi.advanceTimersByTime(RAIL_RELEASE_FALLBACK_MS);
+
+			expect(h.onReply).toHaveBeenCalledOnce();
+			expect(h.rail.scrollLeft).toBe(h.rest);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("cancels, never commits, a held wheel drag that a touch interrupts", () => {
+		const h = railHarness();
+
+		h.swipeBy(TRIGGER_DISTANCE_PX + 16);
+		h.swipe.handlers.onpointerdown?.(pointer() as never);
+
+		expect(h.onReply).not.toHaveBeenCalled();
+		expect(h.rail.scrollLeft).toBe(h.rest);
+	});
+
+	it("stops listening once detached", () => {
+		const h = railHarness();
+
+		h.detach();
+		h.swipeBy(MAX_DRAG_PX);
+		h.lift();
+
+		expect(h.onReply).not.toHaveBeenCalled();
 	});
 });
