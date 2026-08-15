@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
 
 const TRIGGER_DISTANCE_PX = 64;
+const WHEEL_REST_MS = 150;
 
 function pointer(overrides: Partial<PointerEvent> = {}) {
 	return {
@@ -116,6 +117,153 @@ describe("SwipeToReply", () => {
 			pointer({ clientX: -(TRIGGER_DISTANCE_PX + 20) }) as never,
 		);
 		swipe.handlers.onpointerup?.(pointer() as never);
+
+		expect(onReply).toHaveBeenCalledOnce();
+	});
+});
+
+function wheelHandler(swipe: SwipeToReply) {
+	const { onwheel } = swipe.handlers as {
+		onwheel?: (event: WheelEvent) => void;
+	};
+	if (!onwheel) throw new Error("SwipeToReply exposes no onwheel handler");
+	return onwheel;
+}
+
+// Positive travel is the fingers moving right; a wheel reports the opposite,
+// because its delta points the way the content scrolls.
+function flick(
+	swipe: SwipeToReply,
+	{
+		travel,
+		cross = 0,
+		steps = 8,
+		deltaMode = 0,
+	}: { travel: number; cross?: number; steps?: number; deltaMode?: number },
+): { prevented: number } {
+	const onwheel = wheelHandler(swipe);
+	const preventDefault = vi.fn();
+	for (let step = 0; step < steps; step++)
+		onwheel({
+			deltaX: -travel / steps,
+			deltaY: cross / steps,
+			deltaZ: 0,
+			deltaMode,
+			cancelable: true,
+			preventDefault,
+		} as unknown as WheelEvent);
+	return { prevented: preventDefault.mock.calls.length };
+}
+
+describe("SwipeToReply on a trackpad", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("takes horizontal wheel gestures at all", () => {
+		const { swipe } = swipeToReply();
+
+		expect(() => wheelHandler(swipe)).not.toThrow();
+	});
+
+	it("replies once a two-finger flick accumulates past the trigger", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		const { prevented } = flick(swipe, {
+			travel: TRIGGER_DISTANCE_PX + 32,
+		});
+
+		expect(onReply).toHaveBeenCalledOnce();
+		expect(prevented).toBeGreaterThan(0);
+	});
+
+	it("forgets a flick that stopped short once the gesture rests", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX - 16, steps: 4 });
+		expect(onReply).not.toHaveBeenCalled();
+		expect(swipe.armed).toBe(false);
+
+		vi.advanceTimersByTime(WHEEL_REST_MS);
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX - 16, steps: 4 });
+
+		expect(onReply).not.toHaveBeenCalled();
+	});
+
+	it("leaves a vertical-dominant wheel to the scroller", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		const { prevented } = flick(swipe, {
+			travel: TRIGGER_DISTANCE_PX + 32,
+			cross: 240,
+		});
+
+		expect(onReply).not.toHaveBeenCalled();
+		expect(prevented).toBe(0);
+	});
+
+	it("replies once for a long flick, momentum and all", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: 400, steps: 40 });
+
+		expect(onReply).toHaveBeenCalledOnce();
+	});
+
+	it("replies a second time only after the gesture rests", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		expect(onReply).toHaveBeenCalledOnce();
+
+		vi.advanceTimersByTime(WHEEL_REST_MS);
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+
+		expect(onReply).toHaveBeenCalledTimes(2);
+	});
+
+	it("ignores a mouse wheel, which Chromium also reports in pixels", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		const tick = flick(swipe, { travel: 100, steps: 1 });
+
+		expect(onReply).not.toHaveBeenCalled();
+		expect(tick.prevented).toBe(0);
+
+		vi.advanceTimersByTime(WHEEL_REST_MS);
+		const burst = flick(swipe, { travel: 300, steps: 3 });
+
+		expect(onReply).not.toHaveBeenCalled();
+		expect(burst.prevented).toBe(0);
+	});
+
+	it("ignores a line-mode wheel, whose one tick would jump the trigger", () => {
+		const { swipe, onReply } = swipeToReply();
+
+		const { prevented } = flick(swipe, {
+			travel: 300,
+			steps: 3,
+			deltaMode: 1,
+		});
+
+		expect(onReply).not.toHaveBeenCalled();
+		expect(prevented).toBe(0);
+	});
+
+	it("takes the mirrored flick for an outgoing message", () => {
+		const onReply = vi.fn();
+		const swipe = new SwipeToReply({ direction: "left", onReply });
+
+		flick(swipe, { travel: TRIGGER_DISTANCE_PX + 32 });
+		expect(onReply).not.toHaveBeenCalled();
+
+		vi.advanceTimersByTime(WHEEL_REST_MS);
+		flick(swipe, { travel: -(TRIGGER_DISTANCE_PX + 32) });
 
 		expect(onReply).toHaveBeenCalledOnce();
 	});
