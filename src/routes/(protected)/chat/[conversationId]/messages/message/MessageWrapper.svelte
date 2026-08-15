@@ -54,7 +54,5 @@
 	{#if quoted}
 		<MessageQuote {quoted} />
 	{/if}
-	<div class="relative">
-		{@render children()}
-	</div>
+	{@render children()}
 </div>
