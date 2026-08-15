@@ -230,11 +230,7 @@
 					<div
 						class="h-0"
 						use:observeIntersection={{
-							handle: () => {
-								conversations
-									.loadMore()
-									.catch((error) => console.error(error));
-							},
+							handle: () => conversations.loadMore(),
 							rootMargin: "400px",
 						}}
 					></div>

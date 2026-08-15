@@ -59,7 +59,6 @@
 						class="h-0"
 						use:observeIntersection={{
 							handle: () => taps.loadMore(),
-							root: "scroller",
 							rootMargin: "400px",
 						}}
 					></div>

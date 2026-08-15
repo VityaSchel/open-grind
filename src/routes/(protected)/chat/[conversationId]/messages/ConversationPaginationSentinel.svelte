@@ -25,11 +25,6 @@
 {#if conversationState.pageKey !== null}
 	<div
 		class="h-0"
-		use:observeIntersection={{
-			handle: () => {
-				loadMore().catch((error) => console.error(error));
-			},
-			rootMargin: "400px",
-		}}
+		use:observeIntersection={{ handle: loadMore, rootMargin: "400px" }}
 	></div>
 {/if}
