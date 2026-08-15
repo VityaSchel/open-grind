@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { tick, untrack } from "svelte";
+	import { SvelteSet } from "svelte/reactivity";
 
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
@@ -20,20 +21,22 @@
 	const FLOOR_SLOP_PX = 16;
 
 	let atFloor = $state(true);
-	let seenTimestamp = $state(0);
+	// Seen-ness is tracked by message identity, never by comparing timestamps:
+	// merges adopt server timestamps for messages already on screen, and a
+	// watermark would re-count them as new.
+	const seenMessageIds = new SvelteSet<string>();
 
-	$effect(markLatestMessagesSeen);
+	$effect(markMessagesSeenAtFloor);
 
-	function markLatestMessagesSeen(): void {
+	function markMessagesSeenAtFloor(): void {
 		if (!atFloor) return;
-		const latest = conversationState.messages.reduce(
-			(max, m) => Math.max(max, m.timestamp),
-			0,
-		);
+		// the conversation-switch clear() must retrigger this refill, in
+		// whichever order the two effects run
+		void seenMessageIds.size;
+		const messages = conversationState.messages;
 		untrack(() => {
-			if (latest > seenTimestamp) {
-				seenTimestamp = latest;
-			}
+			for (const message of messages)
+				seenMessageIds.add(message.messageId);
 		});
 	}
 
@@ -109,7 +112,7 @@
 			scrollDone = false;
 			lastFirstId = "";
 			atFloor = true;
-			seenTimestamp = 0;
+			seenMessageIds.clear();
 			endScrollingToRest();
 		});
 	}
@@ -201,7 +204,7 @@
 					<Spinner class="mt-25 shrink-0 self-center" />
 				{/if}
 				<ConversationPaginationSentinel {container} />
-				<MessagesList bind:seenTimestamp />
+				<MessagesList {seenMessageIds} />
 			</div>
 		{/if}
 	</div>
@@ -217,7 +220,7 @@
 		/>
 		{#if !atFloor}
 			<ScrollToBottomButton
-				{seenTimestamp}
+				{seenMessageIds}
 				onclick={() => void scrollToRest("smooth")}
 			/>
 		{/if}
