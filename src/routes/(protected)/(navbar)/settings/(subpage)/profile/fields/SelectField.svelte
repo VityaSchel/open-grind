@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T extends number">
 	import { CaretUpDownIcon } from "phosphor-svelte";
 
 	import { Button } from "$lib/components/ui/button";
@@ -15,8 +15,8 @@
 		nullable = true,
 	}: {
 		label: string;
-		value: number | null;
-		options: Option[];
+		value: T | null;
+		options: Option<T>[];
 		placeholder?: string;
 		clearLabel?: string;
 		nullable?: boolean;
@@ -47,7 +47,11 @@
 			<DropdownMenu.RadioGroup
 				bind:value={
 					() => (value === null ? "" : String(value)),
-					(next) => (value = next === "" ? null : Number(next))
+					(next) =>
+						(value =
+							options.find(
+								(option) => String(option.value) === next,
+							)?.value ?? null)
 				}
 			>
 				{#if nullable}

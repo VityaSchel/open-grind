@@ -19,7 +19,20 @@
 	import { Button } from "$lib/components/ui/button";
 	import { WheelPicker } from "$lib/components/ui/carousel";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import { type Profile } from "$lib/model/users/profiles";
+	import {
+		type AcceptNSFWPicsId,
+		type BodyTypeId,
+		type EthnicityId,
+		type HealthPracticeId,
+		type HivStatusId,
+		type LookingForId,
+		type MeetAtId,
+		type Profile,
+		type RelationshipStatusId,
+		type SexualPositionId,
+		type TribeId,
+		type VaccineId,
+	} from "$lib/model/users/profiles";
 	import { deepEqual } from "$lib/util/deep-equal";
 	import type { Gender } from "$lib/model/users/genders";
 	import type { Pronoun } from "$lib/model/users/pronouns";
@@ -95,27 +108,31 @@
 
 	let age = $state(initial.age ?? ageRange.min);
 	let showAge = $state(initial.showAge);
-	let sexualPosition = $state<number | null>(initial.sexualPosition ?? null);
+	let sexualPosition = $state<SexualPositionId | null>(
+		initial.sexualPosition ?? null,
+	);
 	let showPosition = $state(initial.showPosition);
 	let height = $state<number | null>(initial.height);
 	let weightKg = $state<number | null>(
 		initial.weight === null ? null : Math.round(initial.weight / 100) / 10,
 	);
-	let bodyType = $state<number | null>(initial.bodyType);
-	let ethnicity = $state<number | null>(initial.ethnicity);
-	let relationshipStatus = $state<number | null>(initial.relationshipStatus);
+	let bodyType = $state<BodyTypeId | null>(initial.bodyType);
+	let ethnicity = $state<EthnicityId | null>(initial.ethnicity);
+	let relationshipStatus = $state<RelationshipStatusId | null>(
+		initial.relationshipStatus,
+	);
 
 	let showTribes = $state(initial.showTribes);
-	let grindrTribes = $state<number[]>([...initial.grindrTribes]);
-	let tribesImInto = $state<number[]>([...(initial.tribesImInto ?? [])]);
-	let lookingFor = $state<number[]>([...initial.lookingFor]);
-	let meetAt = $state<number[]>([...(initial.meetAt ?? [])]);
-	let nsfw = $state<number | null>(initial.nsfw);
+	let grindrTribes = $state<TribeId[]>([...initial.grindrTribes]);
+	let tribesImInto = $state<TribeId[]>([...(initial.tribesImInto ?? [])]);
+	let lookingFor = $state<LookingForId[]>([...initial.lookingFor]);
+	let meetAt = $state<MeetAtId[]>([...(initial.meetAt ?? [])]);
+	let nsfw = $state<AcceptNSFWPicsId | null>(initial.nsfw);
 
-	let hivStatus = $state<number | null>(initial.hivStatus);
+	let hivStatus = $state<HivStatusId | null>(initial.hivStatus);
 	let lastTestedDate = $state<number | null>(initial.lastTestedDate);
-	let sexualHealth = $state<number[]>([...initial.sexualHealth]);
-	let vaccineIds = $state<number[]>([...(initial.vaccines ?? [])]);
+	let sexualHealth = $state<HealthPracticeId[]>([...initial.sexualHealth]);
+	let vaccineIds = $state<VaccineId[]>([...(initial.vaccines ?? [])]);
 
 	let instagram = $state(initial.socialNetworks.instagram?.userId ?? null);
 	let twitter = $state(initial.socialNetworks.twitter?.userId ?? null);
@@ -200,7 +217,7 @@
 			approximateDistance: initial.approximateDistance,
 			showDistance: initial.showDistance,
 			profileTags,
-		} as ProfileUpdate;
+		} satisfies ProfileUpdate;
 		const currentHashes = new Set(medias.map((media) => media.mediaHash));
 		const removedHashes = savedForm.mediaHashes.filter(
 			(hash) => !currentHashes.has(hash),
