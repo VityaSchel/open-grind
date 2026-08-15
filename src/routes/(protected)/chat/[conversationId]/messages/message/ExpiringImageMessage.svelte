@@ -39,7 +39,11 @@
 		media.cornerClass,
 	]);
 
-	type LoadedImage = { url: string };
+	type LoadedImage = {
+		url: string;
+		width: number | null;
+		height: number | null;
+	};
 
 	type ImageState =
 		| { status: "idle" }
@@ -66,7 +70,11 @@
 					messageId,
 				}).then((res) => expiringImageMessageSchema.parse(res.message));
 				if (image.url === null) throw new Error("Image URL is null");
-				cachedImage = { url: proxyMediaUrl(image.url) };
+				cachedImage = {
+					url: proxyMediaUrl(image.url),
+					width: image.width,
+					height: image.height,
+				};
 				imageState = { status: "open", image: cachedImage };
 			} catch (error) {
 				console.error(error);
@@ -82,6 +90,7 @@
 	$effect(() => {
 		if (imageState.status !== "open") return;
 		const { image } = imageState;
+		const hasDimensions = image.width !== null && image.height !== null;
 		let lightbox: PhotoSwipeLightbox | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
@@ -92,9 +101,15 @@
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				lightbox.addFilter("numItems", () => 1);
-				lightbox.addFilter("itemData", () => {
-					return { src: image.url, width: 0, height: 0 };
-				});
+				lightbox.addFilter("itemData", () => ({
+					src: image.url,
+					width: image.width ?? 0,
+					height: image.height ?? 0,
+				}));
+				lightbox.addFilter(
+					"useContentPlaceholder",
+					(usePlaceholder) => usePlaceholder && hasDimensions,
+				);
 				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("closingAnimationEnd", () => {
 					imageState = { status: "idle" };
