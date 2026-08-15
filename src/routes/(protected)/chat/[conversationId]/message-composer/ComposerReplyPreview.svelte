@@ -16,7 +16,9 @@
 	const label = $derived(quoteLabel(previewFromMessage(message)));
 </script>
 
-<div class="flex items-center gap-2 rounded-xl bg-popover py-1.5 pr-1.5 pl-2.5">
+<div
+	class="flex items-center gap-2 rounded-xl border border-border bg-popover py-1.5 pr-1.5 pl-2.5"
+>
 	<ArrowBendUpLeftIcon class="shrink-0 text-muted-foreground" size={16} />
 	<span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">
 		{label}

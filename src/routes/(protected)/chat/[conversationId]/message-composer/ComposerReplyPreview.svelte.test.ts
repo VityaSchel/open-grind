@@ -99,6 +99,16 @@ describe("ComposerReplyPreview", () => {
 		expect(surfaceOf(pill)).toBe(surfaceOf(input));
 	});
 
+	// Measured: the fill alone is 1.104 against the page and 1.000 against the
+	// composer input, so the edge is the only thing separating the two.
+	it("draws an edge, since its fill matches what sits behind it", () => {
+		const { pill } = renderComposerReplying();
+
+		expect(classesOf(pill)).toEqual(
+			expect.arrayContaining(["border", "border-border"]),
+		);
+	});
+
 	it("builds the close control from the shared Button", () => {
 		const { close } = renderPreview();
 
