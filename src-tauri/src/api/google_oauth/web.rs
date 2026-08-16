@@ -59,6 +59,13 @@ fn is_result_url(url: &Url) -> bool {
 	url.host_str() == Some(HELPER_HOST) && url.path() == RESULT_PATH
 }
 
+fn without_query(url: &Url) -> String {
+	let mut url = url.clone();
+	url.set_query(None);
+	url.set_fragment(None);
+	url.into()
+}
+
 fn result_from_query(url: &Url, nonce: &str) -> Option<Result<String, String>> {
 	let mut nonce_matched = false;
 	let mut result = None;
@@ -112,11 +119,11 @@ async fn run_flow(
 				if !is_allowed_target(url) {
 					tracing::warn!(
 						"[oauth] refused navigation to {}",
-						url.as_str()
+						without_query(url)
 					);
 					return false;
 				}
-				tracing::debug!("[oauth] navigating to {}", url.as_str());
+				tracing::debug!("[oauth] navigating to {}", without_query(url));
 				if !is_result_url(url) {
 					return true;
 				}
@@ -263,6 +270,17 @@ mod tests {
 		let script = init_script("s3cret");
 		assert!(script.contains("\"nonce\":\"s3cret\""));
 		assert!(!script.contains("window.__grindrOauthCss"));
+	}
+
+	#[test]
+	fn a_logged_url_keeps_no_token_or_nonce() {
+		let logged = without_query(
+			&Url::parse(
+				"https://web.grindr.com/__open_grind_oauth__?nonce=abc&token=t0ken#frag",
+			)
+			.unwrap(),
+		);
+		assert_eq!(logged, "https://web.grindr.com/__open_grind_oauth__");
 	}
 
 	#[test]
