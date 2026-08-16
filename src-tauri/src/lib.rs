@@ -4,6 +4,7 @@ mod error;
 #[cfg_attr(debug_assertions, allow(dead_code))]
 mod logging;
 pub mod media;
+mod photo;
 mod state;
 mod storage;
 
@@ -110,7 +111,9 @@ pub fn run() {
 	let builder = builder.plugin(devtools);
 
 	#[cfg(target_os = "android")]
-	let builder = builder.plugin(tauri_plugin_android_fs::init());
+	let builder = builder
+		.plugin(tauri_plugin_android_fs::init())
+		.plugin(photo::plugin());
 
 	builder
         .plugin(open_grind_platform_plugin())

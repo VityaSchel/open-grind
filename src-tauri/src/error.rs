@@ -38,6 +38,7 @@ impl From<grindr::BanInfo> for BanInfo {
 pub enum AppError {
 	Http(String),
 	Auth(String),
+	Media(String),
 	NotLoggedIn,
 	Api { code: i32, message: String },
 	Unauthorized { code: i32, message: String },
@@ -54,6 +55,7 @@ impl fmt::Display for AppError {
 		match self {
 			AppError::Http(msg) => write!(f, "HTTP error: {msg}"),
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
+			AppError::Media(msg) => write!(f, "Media error: {msg}"),
 			AppError::NotLoggedIn => write!(f, "Not logged in"),
 			AppError::Api { code, message } => {
 				write!(f, "API error {code}: {message}")

@@ -3,6 +3,7 @@ use grindr::GrindrClient;
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
+use crate::photo::{self, Photo};
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -15,11 +16,10 @@ pub struct MediaUploadResponse {
 
 async fn upload_signed_v6(
 	client: &GrindrClient,
-	bytes: Vec<u8>,
-	content_type: &str,
+	photo: Photo,
 ) -> Result<MediaUploadResponse, AppError> {
 	let response = client
-		.upload_chat_media(bytes, content_type, None, None, true)
+		.upload_chat_media(photo.bytes, &photo.content_type, None, None, true)
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
 
@@ -32,11 +32,10 @@ async fn upload_signed_v6(
 
 async fn upload_unsigned_v5(
 	client: &GrindrClient,
-	bytes: Vec<u8>,
-	content_type: &str,
+	photo: Photo,
 ) -> Result<MediaUploadResponse, AppError> {
 	let response = client
-		.upload_chat_media_unsigned(bytes, content_type)
+		.upload_chat_media_unsigned(photo.bytes, &photo.content_type)
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
 
@@ -51,6 +50,7 @@ async fn upload_unsigned_v5(
 /// so only in-app captures may take the signed endpoint.
 #[tauri::command]
 pub async fn upload_chat_media(
+	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
 	content_type: String,
 	taken_on_grindr: bool,
@@ -61,11 +61,12 @@ pub async fn upload_chat_media(
 	let bytes = STANDARD.decode(&data).map_err(|e| {
 		AppError::Http(format!("Failed to decode base64 media: {e}"))
 	})?;
+	let photo = photo::normalize(&app, bytes, content_type).await?;
 
 	let client = state.client()?;
 	if taken_on_grindr {
-		upload_signed_v6(client, bytes, &content_type).await
+		upload_signed_v6(client, photo).await
 	} else {
-		upload_unsigned_v5(client, bytes, &content_type).await
+		upload_unsigned_v5(client, photo).await
 	}
 }

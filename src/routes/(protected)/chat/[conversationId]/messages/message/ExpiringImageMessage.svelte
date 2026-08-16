@@ -11,6 +11,10 @@
 	} from "$lib/model/messaging/messages";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import {
+		measureImage,
+		type MediaDimensions,
+	} from "$lib/util/media-dimensions";
+	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
 	} from "$lib/util/photoswipe";
@@ -48,11 +52,7 @@
 		"border border-border bg-input",
 	]);
 
-	type LoadedImage = {
-		url: string;
-		width: number | null;
-		height: number | null;
-	};
+	type LoadedImage = { url: string; size: MediaDimensions | null };
 
 	type ImageState =
 		| { status: "idle" }
@@ -63,47 +63,48 @@
 	let imageState = $state<ImageState>({ status: "idle" });
 	let cachedImage: LoadedImage | null = null;
 
-	const ownImage: LoadedImage | null = $derived(
-		isOut && message.url !== null
-			? {
-					url: proxyMediaUrl(message.url),
-					width: message.width,
-					height: message.height,
-				}
-			: null,
+	const ownUrl = $derived(
+		isOut && message.url !== null ? proxyMediaUrl(message.url) : null,
 	);
 
-	const viewable = $derived(
-		isOut
-			? ownImage !== null
-			: imageState.status !== "expired" &&
-					message.viewed !== true &&
-					message.viewsRemaining !== 0,
-	);
+	const viewable = $derived.by(() => {
+		if (isOut) {
+			return ownUrl !== null;
+		} else {
+			return (
+				imageState.status !== "expired" &&
+				message.viewed !== true &&
+				message.viewsRemaining !== 0
+			);
+		}
+	});
 
 	function openImage() {
-		const image = cachedImage ?? ownImage;
 		imageState =
-			image === null ? { status: "loading" } : { status: "open", image };
+			cachedImage === null
+				? { status: "loading" }
+				: { status: "open", image: cachedImage };
+	}
+
+	async function fetchImageUrl(): Promise<string | null> {
+		const { body: image } = await getSingleMessage({
+			conversationId,
+			messageId,
+		}).then((res) => expiringImageMessageSchema.parse(res.message));
+		return image.url === null ? null : proxyMediaUrl(image.url);
 	}
 
 	$effect(() => {
 		if (imageState.status !== "loading") return;
 		void (async () => {
 			try {
-				const { body: image } = await getSingleMessage({
-					conversationId,
-					messageId,
-				}).then((res) => expiringImageMessageSchema.parse(res.message));
-				if (image.url === null) {
+				const url = ownUrl ?? (await fetchImageUrl());
+				if (url === null) {
 					imageState = { status: "expired" };
 					return;
 				}
-				cachedImage = {
-					url: proxyMediaUrl(image.url),
-					width: image.width,
-					height: image.height,
-				};
+				const size = await measureImage(url).catch(() => null);
+				cachedImage = { url, size };
 				imageState = { status: "open", image: cachedImage };
 			} catch (error) {
 				console.error(error);
@@ -119,7 +120,6 @@
 	$effect(() => {
 		if (imageState.status !== "open") return;
 		const { image } = imageState;
-		const hasDimensions = image.width !== null && image.height !== null;
 		let lightbox: PhotoSwipeLightbox | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
@@ -132,12 +132,12 @@
 				lightbox.addFilter("numItems", () => 1);
 				lightbox.addFilter("itemData", () => ({
 					src: image.url,
-					width: image.width ?? 0,
-					height: image.height ?? 0,
+					width: image.size?.width ?? 0,
+					height: image.size?.height ?? 0,
 				}));
 				lightbox.addFilter(
 					"useContentPlaceholder",
-					(usePlaceholder) => usePlaceholder && hasDimensions,
+					(usePlaceholder) => usePlaceholder && image.size !== null,
 				);
 				applyPhotoSwipeBackGesture(lightbox);
 				lightbox.on("closingAnimationEnd", () => {

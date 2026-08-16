@@ -10,6 +10,7 @@
 		applyPhotoSwipeThumbDimensions,
 	} from "$lib/util/photoswipe";
 	import type { ImageMessage } from "$lib/model/messaging/messages";
+	import type { MediaDimensions } from "$lib/util/media-dimensions";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: ImageMessage["body"] } = $props();
@@ -19,6 +20,16 @@
 
 	let failedSrc: string | null = $state(null);
 	const failed = $derived(failedSrc === src);
+
+	let measured = $state<({ src: string } & MediaDimensions) | null>(null);
+	const size = $derived(
+		measured !== null && measured.src === src ? measured : message,
+	);
+	const aspectRatio = $derived(
+		size.width === null || size.height === null
+			? undefined
+			: `${size.width} / ${size.height}`,
+	);
 
 	$effect(() => {
 		const gallery = media.el;
@@ -138,8 +149,8 @@
 	<a
 		href={failed ? undefined : src}
 		rel="noreferrer"
-		data-pswp-width={message.width ?? undefined}
-		data-pswp-height={message.height ?? undefined}
+		data-pswp-width={size.width ?? undefined}
+		data-pswp-height={size.height ?? undefined}
 		aria-label="Photo"
 		aria-disabled={failed ? "true" : undefined}
 		class="item block"
@@ -148,9 +159,10 @@
 			{src}
 			class={["w-full rounded-lg", media.cornerClass]}
 			imgClass="bg-card-foreground/10"
-			aspectRatio={message.width !== null && message.height !== null
-				? `${message.width} / ${message.height}`
-				: undefined}
+			{aspectRatio}
+			onload={({ naturalWidth, naturalHeight }) => {
+				measured = { src, width: naturalWidth, height: naturalHeight };
+			}}
 			bind:failedSrc
 		/>
 	</a>
