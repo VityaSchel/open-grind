@@ -23,6 +23,8 @@ const MIN_CHROMIUM_MAJOR: u32 = 111;
 #[cfg(target_os = "linux")]
 const MIN_WEBKITGTK: (u32, u32) = (2, 42);
 
+const MAIN_WINDOW_LABEL: &str = "main";
+
 const OPEN_GRIND_PLATFORM: &str = if cfg!(target_os = "android") {
 	"android"
 } else if cfg!(target_os = "ios") {
@@ -97,6 +99,20 @@ fn outdated_webview_notice() -> Option<String> {
 	None
 }
 
+// Tauri exits only once every window is gone, and sign-in opens a second one.
+#[cfg(desktop)]
+fn quit_when_closed(window: &tauri::WebviewWindow) {
+	if window.label() != MAIN_WINDOW_LABEL {
+		return;
+	}
+	let app = window.app_handle().clone();
+	window.on_window_event(move |event| {
+		if matches!(event, tauri::WindowEvent::Destroyed) {
+			app.exit(0);
+		}
+	});
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 	#[cfg(not(debug_assertions))]
@@ -167,6 +183,8 @@ pub fn run() {
                         .on_navigation(is_app_url)
                         .build()?;
                 appearance::unlock_visual_effects(&window);
+                #[cfg(desktop)]
+                quit_when_closed(&window);
             }
 
             #[cfg(desktop)]
