@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { installTauriShim, trackpadSwipe } from "./support/app";
+import { installTauriShim, trackpadSwipe, TrustedTouch } from "./support/app";
 
 const CONVERSATION = "/chat/100001:123456000";
 const WITH_AN_UNSENT_MESSAGE = "/chat/100009:123456000";
@@ -151,6 +151,46 @@ test("a scroll that starts leaning sideways still reaches the conversation", asy
 	await expect
 		.poll(async () => scroller.evaluate((el) => el.scrollTop))
 		.toBeLessThan(from);
+});
+
+// real touches only: synthetic PointerEvents skip the implicit capture that
+// once cancelled every touch drag
+test("a touch drag past the trigger replies on lift", async ({ page }) => {
+	await openConversation(page, { platform: "android" });
+	const row = page.locator(INCOMING_ROW).last();
+	await row.scrollIntoViewIfNeeded();
+	const box = (await row.boundingBox())!;
+	const touch = await TrustedTouch.attach(page);
+
+	await touch.drag(
+		page,
+		{ x: box.x + 60, y: box.y + box.height / 2 },
+		{ x: box.x + 200, y: box.y + box.height / 2 },
+		{ steps: 14, holdMs: 16 },
+	);
+
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+});
+
+test("a vertical touch drag scrolls instead of replying", async ({ page }) => {
+	await openConversation(page, { platform: "android" });
+	const scroller = page.locator(SCROLLER);
+	const row = page.locator(INCOMING_ROW).last();
+	await row.scrollIntoViewIfNeeded();
+	const box = (await row.boundingBox())!;
+	const from = await scroller.evaluate((el) => el.scrollTop);
+	const touch = await TrustedTouch.attach(page);
+
+	await touch.drag(
+		page,
+		{ x: box.x + box.width / 2, y: box.y + 10 },
+		{ x: box.x + box.width / 2, y: box.y + 180 },
+		{ steps: 14, holdMs: 16 },
+	);
+	await page.waitForTimeout(400);
+
+	expect(await scroller.evaluate((el) => el.scrollTop)).not.toBe(from);
+	await expect(page.getByLabel("Cancel reply")).toHaveCount(0);
 });
 
 test("an unsent message offers no reply", async ({ page }) => {
