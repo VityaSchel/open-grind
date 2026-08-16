@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-	<cloud-backup />
-	<device-transfer />
+	<cloud-backup disableIfNoEncryptionCapabilities="true">
+		<include domain="file" path="nothing-is-backed-up" />
+	</cloud-backup>
+	<device-transfer>
+		<include domain="file" path="nothing-is-transferred" />
+	</device-transfer>
+	<cross-platform-transfer platform="ios">
+		<include domain="file" path="nothing-is-transferred" />
+	</cross-platform-transfer>
 </data-extraction-rules>
