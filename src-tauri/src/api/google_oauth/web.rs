@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use base64::Engine;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
+use tokio::sync::oneshot;
 
 use crate::error::AppError;
 
@@ -77,15 +78,22 @@ pub async fn fetch_access_token(
 	bridge: Arc<GoogleOauthBridge>,
 ) -> Result<String, AppError> {
 	let rx = bridge.begin()?;
+	run_flow(app, &bridge, rx).await.inspect_err(|_| {
+		bridge.abort();
+	})
+}
 
+async fn run_flow(
+	app: &AppHandle,
+	bridge: &Arc<GoogleOauthBridge>,
+	rx: oneshot::Receiver<Result<String, String>>,
+) -> Result<String, AppError> {
 	if let Some(existing) = app.get_webview_window(WINDOW_LABEL) {
 		let _ = existing.close();
 	}
 
-	let url = Url::parse(HELPER_URL).map_err(|e| {
-		bridge.fulfill(Err(format!("invalid helper URL: {e}")));
-		AppError::Http(format!("invalid helper URL: {e}"))
-	})?;
+	let url = Url::parse(HELPER_URL)
+		.map_err(|e| AppError::Http(format!("invalid helper URL: {e}")))?;
 
 	let nonce = new_nonce();
 	let bridge_for_nav = bridge.clone();
@@ -126,7 +134,6 @@ pub async fn fetch_access_token(
 	}
 
 	let window = builder.build().map_err(|e| {
-		bridge.fulfill(Err(format!("failed to open sign-in window: {e}")));
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
