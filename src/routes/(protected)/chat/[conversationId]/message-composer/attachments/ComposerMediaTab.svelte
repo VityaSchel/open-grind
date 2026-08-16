@@ -9,6 +9,7 @@
 		type DrawerMedia,
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
+	import { asAppError } from "$lib/api/methods";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
@@ -76,7 +77,15 @@
 				];
 			} catch (err) {
 				console.error(err);
-				toast.error("Couldn't add photo");
+				const rejected = asAppError(err);
+				if (
+					rejected?.kind === "Media" &&
+					typeof rejected.message === "string"
+				) {
+					toast.error(rejected.message);
+				} else {
+					toast.error("Couldn't add photo");
+				}
 			} finally {
 				uploadingCount--;
 			}
