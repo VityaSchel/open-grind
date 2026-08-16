@@ -176,9 +176,10 @@ pub fn run() {
             api::client::rotate_api_params,
             api::session_recovery::set_app_active,
             api::session_recovery::session_health,
+            scroll_phase::scroll_gesture_capture,
         ])
         .setup(|app| {
-            scroll_phase::install_scroll_phase_probe(app.handle());
+            scroll_phase::install_scroll_gesture_bridge(app.handle());
             let user_agent = format!(
                 "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
                 app.package_info().version

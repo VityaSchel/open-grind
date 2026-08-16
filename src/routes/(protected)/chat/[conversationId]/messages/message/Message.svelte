@@ -5,7 +5,11 @@
 	import { scale } from "svelte/transition";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
-	import { MAX_DRAG_PX, SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
+	import {
+		MAX_DRAG_PX,
+		SwipeToReply,
+		wheelInputMode,
+	} from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { type MessageRefs, setMessageContext } from "./context";
@@ -138,6 +142,8 @@
 	// A dblclick carries no pointerType of its own, and only the pointer can
 	// tell a double tap (react) from a double click (reply).
 	let lastPointerType = "";
+
+	const railWheel = wheelInputMode() === "rail";
 </script>
 
 {#snippet adornments()}
@@ -227,9 +233,15 @@
 		{/if}
 		<div
 			{@attach swipe ? swipe.attachRail : undefined}
-			class="-my-3 flex touch-pan-y overflow-x-auto overscroll-x-none py-3 [scrollbar-width:none]"
+			class={[
+				"-my-3 flex touch-pan-y py-3",
+				{
+					"overflow-x-auto overscroll-x-none [scrollbar-width:none]":
+						railWheel,
+				},
+			]}
 		>
-			{#if swipe && !isOut}
+			{#if swipe && railWheel && !isOut}
 				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
 			{/if}
 			<div
@@ -282,7 +294,7 @@
 			>
 				{@render content()}
 			</div>
-			{#if swipe && isOut}
+			{#if swipe && railWheel && isOut}
 				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
 			{/if}
 		</div>

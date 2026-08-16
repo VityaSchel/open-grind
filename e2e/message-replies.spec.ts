@@ -11,8 +11,11 @@ const SCROLLER = '[data-slot="messages-scroller"]';
 const QUOTE = '[data-slot="message-quote"]';
 const REPLIABLE = "consectetur adipiscing elit";
 
-async function openConversation(page: Page, path = CONVERSATION) {
-	await installTauriShim(page);
+async function openConversation(
+	page: Page,
+	{ path = CONVERSATION, platform = "macos" } = {},
+) {
+	await installTauriShim(page, { platform });
 	await page.goto(path);
 	await page.locator(MESSAGE_ROW).first().waitFor();
 }
@@ -87,7 +90,7 @@ function railOf(row: Locator) {
 }
 
 test("a trackpad drag past the trigger replies on lift", async ({ page }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "linux" });
 	const { center } = await hoverIncomingMessage(page);
 
 	await trackpadSwipe(page, center, { xDistance: 80 });
@@ -98,7 +101,7 @@ test("a trackpad drag past the trigger replies on lift", async ({ page }) => {
 test("a lone sideways jump, the mouse signature, never moves the row", async ({
 	page,
 }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "linux" });
 	const { row } = await hoverIncomingMessage(page);
 	const rail = railOf(row);
 	const rest = await rail.evaluate((el) => el.scrollLeft);
@@ -137,7 +140,7 @@ test("a double click replies, on their message and on ours alike", async ({
 test("a scroll that starts leaning sideways still reaches the conversation", async ({
 	page,
 }) => {
-	await openConversation(page);
+	await openConversation(page, { platform: "linux" });
 	await hoverIncomingMessage(page);
 	const scroller = page.locator(SCROLLER);
 	const from = await scroller.evaluate((el) => el.scrollTop);
@@ -151,7 +154,7 @@ test("a scroll that starts leaning sideways still reaches the conversation", asy
 });
 
 test("an unsent message offers no reply", async ({ page }) => {
-	await openConversation(page, WITH_AN_UNSENT_MESSAGE);
+	await openConversation(page, { path: WITH_AN_UNSENT_MESSAGE });
 
 	const unsent = page
 		.locator(MESSAGE_ROW)

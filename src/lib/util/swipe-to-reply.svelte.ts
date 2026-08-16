@@ -1,6 +1,13 @@
+import { isTauri } from "@tauri-apps/api/core";
+import { platform } from "@tauri-apps/plugin-os";
 import { Spring } from "svelte/motion";
 import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
+
+import {
+	scrollGesture,
+	type ScrollGestureState,
+} from "$lib/platform/scroll-gesture";
 
 const TRIGGER_DISTANCE_PX = 64;
 export const MAX_DRAG_PX = 92;
@@ -32,6 +39,16 @@ type SwipeHandlers = Pick<
 	| "onlostpointercapture"
 >;
 
+export type WheelInputMode = "rail" | "bridge";
+
+// macOS mirrors every scroll event's gesture phase from AppKit, so raw wheel
+// deltas gated on finger contact replace the native scroller — which also
+// stops the rail from latching vertical wheel gestures away from the
+// conversation's own overscroll. Everywhere else the rail stays.
+export function wheelInputMode(): WheelInputMode {
+	return isTauri() && platform() === "macos" ? "bridge" : "rail";
+}
+
 export class SwipeToReply {
 	readonly #offset = new Spring(0, { stiffness: 0.4, damping: 0.75 });
 	armed = $state(false);
@@ -56,22 +73,35 @@ export class SwipeToReply {
 	#railSettling = false;
 	#railFallback: ReturnType<typeof setTimeout> | undefined;
 
+	readonly #wheelMode: WheelInputMode;
+	readonly #gesture: ScrollGestureState;
+	#bridgeToward = 0;
+	#bridgeCross = 0;
+	#bridgeAxis: "undecided" | "reply" | "scroll" = "undecided";
+	#bridgeDrag = 0;
+
 	constructor({
 		direction,
 		onReply,
 		now = () => performance.now(),
 		scrollEndSupported = typeof window !== "undefined" &&
 			"onscrollend" in window,
+		wheelMode = wheelInputMode(),
+		gesture = scrollGesture,
 	}: {
 		direction: "left" | "right";
 		onReply: () => void;
 		now?: () => number;
 		scrollEndSupported?: boolean;
+		wheelMode?: WheelInputMode;
+		gesture?: ScrollGestureState;
 	}) {
 		this.#dragSign = direction === "right" ? 1 : -1;
 		this.#onReply = onReply;
 		this.#now = now;
 		this.#railHasScrollEnd = scrollEndSupported;
+		this.#wheelMode = wheelMode;
+		this.#gesture = gesture;
 	}
 
 	readonly handlers: SwipeHandlers = {
@@ -90,6 +120,7 @@ export class SwipeToReply {
 	// cancelled, so every wheel that vertical scrolling or pull-to-refresh
 	// may need passes through untouched.
 	readonly attachRail: Attachment<HTMLElement> = (node) => {
+		if (this.#wheelMode === "bridge") return this.#attachBridge(node);
 		this.#rail = node;
 		this.#railRest = this.#dragSign === 1 ? MAX_DRAG_PX : 0;
 		node.scrollLeft = this.#railRest;
@@ -174,6 +205,88 @@ export class SwipeToReply {
 		this.#rail?.scrollTo({ left: this.#railRest, behavior: "smooth" });
 	}
 
+	// Nothing scrolls natively here, and nothing scrolls twice: each gesture
+	// locks to ONE axis at its first decisive travel. A reply-locked gesture
+	// has the monitor swallow the rest of the gesture at the source — no
+	// cancelled wheels, no compositor fights — and tracks the drag in
+	// AppKit's own scrollingDelta units — natural scroll speed, where DOM
+	// deltas run hotter — while a scroll-locked gesture never touches the
+	// row. Momentum and mice carry no finger phase and can never drag, and
+	// the release evaluates the instant the fingers leave. Every listener is
+	// passive and nothing is ever cancelled: WebKit hands wheels to
+	// non-passive regions synchronously and degrades a gesture that starts
+	// over or drifts into one, which froze the overscroll band mid-pull.
+	#attachBridge(node: HTMLElement): () => void {
+		const onWheel = (event: WheelEvent) => this.#onBridgeWheel(event);
+		node.addEventListener("wheel", onWheel, { passive: true });
+		const offRelease = this.#gesture.onRelease(() =>
+			this.#onBridgeRelease(),
+		);
+		const offDelta = this.#gesture.onDelta((dx, dy) =>
+			this.#onBridgeDelta(dx, dy),
+		);
+		return () => {
+			node.removeEventListener("wheel", onWheel);
+			offRelease();
+			offDelta();
+			this.#resetBridge();
+		};
+	}
+
+	#onBridgeWheel(event: WheelEvent): void {
+		if (!this.#gesture.fingersDown) return;
+		if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) return;
+		if (this.#bridgeAxis === "undecided") {
+			this.#bridgeToward += -event.deltaX * this.#dragSign;
+			this.#bridgeCross += Math.abs(event.deltaY);
+			// One decision, by dominance, the moment either axis clears the
+			// slop. Racing separate thresholds instead let a vertical push
+			// with a little sideways drift lock the reply and eat the scroll.
+			// A perfect diagonal is a reply, by earlier decision.
+			if (
+				Math.max(this.#bridgeToward, this.#bridgeCross) >
+				AXIS_LOCK_SLOP_PX
+			) {
+				this.#bridgeAxis =
+					this.#bridgeToward >= this.#bridgeCross
+						? "reply"
+						: "scroll";
+				if (this.#bridgeAxis === "reply") this.#gesture.capture(true);
+			}
+		}
+	}
+
+	#onBridgeDelta(dx: number, dy: number): void {
+		void dy;
+		if (this.#bridgeAxis !== "reply") return;
+		this.#bridgeDrag = Math.min(
+			Math.max(this.#bridgeDrag + dx * this.#dragSign, 0),
+			MAX_DRAG_PX,
+		);
+		void this.#offset.set(this.#bridgeDrag * this.#dragSign, {
+			instant: true,
+		});
+		this.armed = this.#bridgeDrag > TRIGGER_DISTANCE_PX;
+	}
+
+	#onBridgeRelease(): void {
+		const commit =
+			this.#bridgeAxis === "reply" &&
+			this.#bridgeDrag > TRIGGER_DISTANCE_PX;
+		this.#resetBridge();
+		if (commit) this.#onReply();
+	}
+
+	#resetBridge(): void {
+		this.#bridgeToward = 0;
+		this.#bridgeCross = 0;
+		this.#bridgeAxis = "undecided";
+		this.#bridgeDrag = 0;
+		this.armed = false;
+		this.#gesture.capture(false);
+		void this.#offset.set(0);
+	}
+
 	#onDown(event: PointerEvent): void {
 		if (event.pointerType !== "touch") return;
 		// a touch interrupting a held wheel drag cancels it, never commits it
@@ -181,6 +294,7 @@ export class SwipeToReply {
 			this.#railWheelSteps = 0;
 			this.#onRailRelease();
 		}
+		if (this.#bridgeDrag > 0) this.#resetBridge();
 		this.#pointerId = event.pointerId;
 		this.#startClientX = event.clientX;
 		this.#startClientY = event.clientY;

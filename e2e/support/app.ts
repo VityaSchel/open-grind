@@ -69,8 +69,13 @@ export async function ensureGridLocation(page: Page): Promise<void> {
 	await allFilters.waitFor({ timeout: 60_000 });
 }
 
-export async function installTauriShim(page: Page): Promise<void> {
-	await page.addInitScript(() => {
+// The platform decides which wheel path the app takes: "macos" (the
+// default) runs the gesture-phase bridge, anything else the scroller rail.
+export async function installTauriShim(
+	page: Page,
+	{ platform = "macos" } = {},
+): Promise<void> {
+	await page.addInitScript((platformName: string) => {
 		interface FsArgs {
 			path?: string;
 			oldPath?: string;
@@ -117,12 +122,15 @@ export async function installTauriShim(page: Page): Promise<void> {
 		};
 
 		Object.assign(window, {
+			// the real runtime defines this; isTauri() reads it, and the
+			// wheel-input mode hangs off isTauri()
+			isTauri: true,
 			__TAURI_OS_PLUGIN_INTERNALS__: {
 				eol: "\n",
-				platform: "macos",
+				platform: platformName,
 				version: "15.0",
 				family: "unix",
-				os_type: "macos",
+				os_type: platformName,
 				arch: "aarch64",
 				exe_extension: "",
 			},
@@ -138,7 +146,7 @@ export async function installTauriShim(page: Page): Promise<void> {
 					Promise.resolve(invoke(cmd, args, opts)),
 			},
 		});
-	});
+	}, platform);
 }
 
 export class TrustedTouch {
