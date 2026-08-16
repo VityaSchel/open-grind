@@ -20,12 +20,12 @@ class Reconciler {
 				return;
 			}
 			void this.#trigger();
-		}).catch(console.error);
+		}).catch((error) => console.error(error));
 
 		ws.onEventsDropped((skipped) => {
 			console.warn(`[ws] resyncing after ${skipped} dropped events`);
 			this.#scheduleResync();
-		}).catch(console.error);
+		}).catch((error) => console.error(error));
 
 		if (typeof document !== "undefined") {
 			document.addEventListener("visibilitychange", () => {

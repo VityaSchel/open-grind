@@ -175,7 +175,9 @@ export class ConversationState {
 		this.#destroyed = true;
 		this.#conversations.clearActive(this.conversationId);
 		for (const promise of this.#wsPromises) {
-			promise.then((unlisten) => unlisten()).catch(console.error);
+			promise
+				.then((unlisten) => unlisten())
+				.catch((error) => console.error(error));
 		}
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();

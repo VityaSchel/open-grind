@@ -6,9 +6,11 @@ import { defineConfig } from "vitest/config";
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig(async ({ command }) => ({
 	plugins: [sveltekit(), tailwindcss()],
 	resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
+
+	esbuild: { drop: command === "build" ? ["console", "debugger"] : [] },
 
 	optimizeDeps: { include: ["leaflet", "sveaflet"] },
 

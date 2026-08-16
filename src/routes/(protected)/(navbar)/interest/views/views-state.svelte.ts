@@ -88,7 +88,9 @@ export class ViewsState extends ReconcilingListState<
 	}
 
 	protected fetch(): Promise<ViewsSnapshot> {
-		void markBlockedProfilesUnviewable().catch(console.error);
+		void markBlockedProfilesUnviewable().catch((error) =>
+			console.error(error),
+		);
 		return getViews();
 	}
 

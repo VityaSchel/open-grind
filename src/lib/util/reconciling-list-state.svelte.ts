@@ -77,7 +77,9 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
 		this.#unsubscribeReconcile?.();
-		this.#unlisten?.then((unlisten) => unlisten()).catch(console.error);
+		this.#unlisten
+			?.then((unlisten) => unlisten())
+			.catch((error) => console.error(error));
 	}
 
 	protected upsert(item: TItem): void {

@@ -73,7 +73,9 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}
 
 	protected fetch(): Promise<TapsSnapshot> {
-		void markBlockedProfilesUnviewable().catch(console.error);
+		void markBlockedProfilesUnviewable().catch((error) =>
+			console.error(error),
+		);
 		return getReceivedTaps();
 	}
 
