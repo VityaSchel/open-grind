@@ -1,0 +1,6 @@
+- Introduce random rotatable device profiles to reduce the client's fingerprint
+- Fix build number that wasn't correlated to version which also helped with resisting Cloudflare blocks (#81)
+- Fix stale messages cache issue in chats
+- Refetch messages and conversations on websocket reconnection (e.g. when app goes to foreground after being inactive or network fails)
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-alpha.2

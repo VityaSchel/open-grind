@@ -1,0 +1,11 @@
+- Sign in with Google
+- Message attachments, media sending
+- Command center: open profile by ID, quick grid filters query, quick go to page
+- "Not specified" & "No response" grid filters options
+- Correct online dot in self profile display
+- Drawers (e.g. quick filters) max width limit fix
+- Grids with few items max height stretch fix
+- Active tab color in interest page contrast fix
+- Double scrolling container on app navbar fixed
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.2

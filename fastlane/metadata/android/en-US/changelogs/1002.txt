@@ -1,0 +1,7 @@
+- Replace randomized languages in headers with `en_US` to fix issues with pronouns and genders locale
+- Render unsent messages
+- Add "unsend message" action
+- Render expiring images
+- Unify all avatars call sites into a single component, fixing blank profile picture settings link
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-alpha.3

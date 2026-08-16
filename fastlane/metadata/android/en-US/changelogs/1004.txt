@@ -1,0 +1,8 @@
+- Added "favorite" toggle button in profile page
+- Corrected travel plan schema
+- Corrected `tapType` schema
+- Token rotation errors are now handled (could fix the 401 Internal Error issue)
+- Corrected `ExpirationType` schema
+- Fixed "Read" status on messages
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-alpha.5

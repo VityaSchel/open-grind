@@ -1,0 +1,10 @@
+- Favorite, recent-chat profiles mark
+- Empty grid placeholder
+- Badge, performance for "Inbox" tab
+- Error alert, "Copy details" button
+- Session file security, delete keyring entry on logout
+- Improve prefs read/write internals
+- Handle Rust panics, corrupted prefs file, profile load errors
+- Fix: `Error 8: The client version is deprecated`, Cloudflare blocking requests, "Has Face Pics", weight filter, "Browse" tap scroll reset
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-alpha.4

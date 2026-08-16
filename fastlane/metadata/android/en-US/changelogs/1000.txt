@@ -1,0 +1,16 @@
+- All filters except for tags
+- Grid, conversations, messages infinite scroll
+- OpenStreetMaps & GPS location chooser
+- Profile photos carousel, lightbox with gestures
+- Profile fields
+- Inbox page
+- Unread messages indicator
+- Conversations cache, scroll position restore
+- Text messages
+- Receiving image messages and albums
+- Context menu for a message, "Delete for me"
+- Messages reactions
+- Sign out
+- WebSocket support
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-alpha.1

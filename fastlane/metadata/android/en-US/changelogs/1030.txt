@@ -1,0 +1,14 @@
+- Pin, mute, delete chats
+- Quick tp/warp to saved location via command center
+- Native-look PTR, new attachments drawer
+- Visiting indicator
+- Profile tags editing
+- Handle Android's "back" gesture
+- Scroll position restore
+- Device parameters rotation on log out
+- Cross-account settings leak fix
+- Keep virtual keyboard open on message send
+- Account restrictions, unsupported WebView version warn
+- Improved Grid loading speed
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.3

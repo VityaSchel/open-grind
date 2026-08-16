@@ -1,0 +1,18 @@
+- Taps ("hi", 🔥, 😈)
+- Interest page (taps, views)
+- Profile editing
+- Refresh page button
+- New messages toast
+- Online dot
+- Tags search
+- Block profile
+- Imperial units
+- "Reveal views" privacy setting
+- Improved message gestures
+- Profile blocked, unavailable conversation screens
+- Skeleton loading
+- Session tokens refreshed automatically
+- Fix stale profile cache, message menu position, schema errors
+- Other visual changes
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.1
