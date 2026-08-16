@@ -13,6 +13,8 @@
 		onRefresh,
 	}: { profileId: number; blockedByUs: boolean; onRefresh: () => void } =
 		$props();
+
+	let submitting = $state(false);
 </script>
 
 <Empty.Root>
@@ -31,7 +33,10 @@
 			{#if blockedByUs}
 				<Button
 					variant="secondary"
+					disabled={submitting}
 					onclick={async () => {
+						if (submitting) return;
+						submitting = true;
 						try {
 							await unblockUser({ profileId });
 							onRefresh();
@@ -41,6 +46,8 @@
 								label: "Failed to unblock user",
 								error,
 							});
+						} finally {
+							submitting = false;
 						}
 					}}>Unblock</Button
 				>

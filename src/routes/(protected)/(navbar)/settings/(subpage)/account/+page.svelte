@@ -57,6 +57,9 @@
 {@render linkItem({ title: "Privacy", href: "/settings/account/privacy" })}
 {@render item({ title: "Email" })}
 {@render item({ title: "Password" })}
-{@render item({ title: "Blocked users" })}
-{@render item({ title: "Hidden users" })}
+{@render linkItem({
+	title: "Blocked users",
+	href: "/settings/account/blocked",
+})}
+{@render linkItem({ title: "Hidden users", href: "/settings/account/hidden" })}
 {@render item({ title: "Delete account" })}

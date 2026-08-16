@@ -18,6 +18,7 @@ import {
 	MINUTE,
 	NOW,
 } from "../config";
+import { demoProfileResolves } from "./blocks";
 import { demoFavoriteOf } from "./favorites";
 import {
 	type DemoSeed,
@@ -110,6 +111,50 @@ export function buildFullProfile(seed: DemoSeed): Profile {
 		showVipBadge: false,
 		rightNowShareLocation: null,
 		rightNowMedias: [],
+	};
+}
+
+export function buildMaskedProfile(seed: DemoSeed): Profile {
+	return {
+		...buildFullProfile(seed),
+		displayName: "4",
+		aboutMe: null,
+		age: null,
+		ethnicity: null,
+		relationshipStatus: null,
+		bodyType: null,
+		sexualPosition: null,
+		hivStatus: null,
+		lastTestedDate: null,
+		height: null,
+		weight: null,
+		seen: null,
+		onlineUntil: null,
+		distance: null,
+		profileImageMediaHash: null,
+		identity: null,
+		lastChatTimestamp: null,
+		lastViewed: null,
+		nsfw: null,
+		lastUpdatedTime: null,
+		genders: null,
+		pronouns: null,
+		tapType: null,
+		showAge: false,
+		showDistance: false,
+		approximateDistance: false,
+		isFavorite: false,
+		isNew: false,
+		tapped: false,
+		grindrTribes: [],
+		lookingFor: [],
+		medias: [],
+		hashtags: [],
+		profileTags: [],
+		meetAt: [],
+		vaccines: [],
+		socialNetworks: {},
+		lastReceivedTapTimestamp: null,
 	};
 }
 
@@ -221,7 +266,9 @@ export function demoCascadeV4(params: URLSearchParams) {
 }
 
 export function demoGetProfiles(profileIds: number[]): DemoShortProfile[] {
-	return profileIds.map((id) => buildShortProfile(profileSeed(id)));
+	return profileIds
+		.filter(demoProfileResolves)
+		.map((id) => buildShortProfile(profileSeed(id)));
 }
 
 export function demoSearchProfiles(params: URLSearchParams) {

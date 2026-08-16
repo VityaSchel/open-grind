@@ -235,4 +235,28 @@ describe("cachedFetch", () => {
 		await get();
 		expect(calls).toBe(2);
 	});
+
+	it("does not let a request that spans clear() repopulate the cache", async () => {
+		const { promise, resolve } = Promise.withResolvers<string[]>();
+		const cache = new FetchCache<null, string[]>(() => promise);
+
+		const inFlight = cache.fetch(null);
+		cache.clear();
+		resolve(["stale"]);
+		await inFlight;
+
+		expect(cache.get(null)).toBeNull();
+	});
+
+	it("does not let a request that spans delete() repopulate the cache", async () => {
+		const { promise, resolve } = Promise.withResolvers<string[]>();
+		const cache = new FetchCache<null, string[]>(() => promise);
+
+		const inFlight = cache.fetch(null);
+		cache.delete(null);
+		resolve(["stale"]);
+		await inFlight;
+
+		expect(cache.get(null)).toBeNull();
+	});
 });

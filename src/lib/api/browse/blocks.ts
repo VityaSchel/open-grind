@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { createRecentlyLifted } from "$lib/api/browse/recently-lifted";
 import { FetchCache } from "$lib/api/cache";
 import { fetchRest } from "$lib/api/transport";
 import {
@@ -24,13 +25,17 @@ const blockedUsers = new FetchCache<null, BlockedUsers>(
 	{ ttlMs: 5_000 },
 );
 
+const recentlyUnblocked = createRecentlyLifted();
+
 export function getBlockedUsers(): Promise<BlockedUsers> {
 	return blockedUsers.fetch(null);
 }
 
 export async function markBlockedProfilesUnviewable(): Promise<void> {
-	for (const { profileId } of await getBlockedUsers())
+	for (const { profileId } of await getBlockedUsers()) {
+		if (recentlyUnblocked.has(profileId)) continue;
 		markProfileUnviewable(profileId);
+	}
 }
 
 export async function blockUser({
@@ -53,6 +58,9 @@ export async function unblockUser({
 	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "DELETE" }).then(
 		(res) => res.assertOk(),
 	);
-	blockedUsers.clear();
+	recentlyUnblocked.remember(profileId);
+	blockedUsers.update(null, (blocking) =>
+		blocking.filter((blocked) => blocked.profileId !== profileId),
+	);
 	markProfileViewable(profileId);
 }

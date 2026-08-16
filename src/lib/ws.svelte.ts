@@ -11,8 +11,8 @@ import { unixTimestampMsSchema } from "$lib/model/types";
 
 export const notificationEventSchema = z.object({
 	type: z.string(),
-	notificationId: z.string().nullable(),
-	ref: z.string().nullable(),
+	notificationId: z.string().nullish(),
+	ref: z.string().nullish(),
 	payload: z.unknown(),
 });
 

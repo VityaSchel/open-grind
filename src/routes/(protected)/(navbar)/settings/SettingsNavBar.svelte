@@ -11,6 +11,14 @@
 			title: "Privacy",
 			back: "/settings/account",
 		},
+		[`${base}/account/blocked`]: {
+			title: "Blocked Users",
+			back: "/settings/account",
+		},
+		[`${base}/account/hidden`]: {
+			title: "Hidden Users",
+			back: "/settings/account",
+		},
 		[`${base}/app`]: { title: "App Settings", back: "/settings" },
 		[`${base}/profile`]: { title: "Edit Profile", back: "/settings" },
 	};

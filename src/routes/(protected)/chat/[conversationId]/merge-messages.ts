@@ -41,6 +41,7 @@ export function mergeServerMessages({
 	changed: boolean;
 } {
 	const serverById = new Map(server.map((m) => [m.messageId, m] as const));
+	const serverPageIsEmpty = server.length === 0;
 	const oldestServerTs = server.at(-1)?.timestamp ?? Number.POSITIVE_INFINITY;
 
 	const merged: OptimisticMessage[] = [];
@@ -58,7 +59,7 @@ export function mergeServerMessages({
 		if (serverVersion) {
 			merged.push({ ...serverVersion, status: "sent" as const });
 			if (!sameServerVersion(serverVersion, message)) updated++;
-		} else if (message.timestamp < oldestServerTs) {
+		} else if (!serverPageIsEmpty && message.timestamp < oldestServerTs) {
 			merged.push(message);
 		} else {
 			dropped++;

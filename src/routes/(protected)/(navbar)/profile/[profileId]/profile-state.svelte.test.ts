@@ -249,7 +249,7 @@ describe("ProfileState blocking", () => {
 		expect(state.error).toBeInstanceOf(BlockedProfileError);
 		expect((state.error as BlockedProfileError).blockedByUs).toBe(true);
 
-		state.markUnblocked();
+		state.markViewable();
 		await flush();
 
 		expect(state.error).toBeNull();
@@ -265,7 +265,7 @@ describe("ProfileState blocking", () => {
 		await flush();
 		expect(state.profile).toBeNull();
 
-		state.markUnblocked();
+		state.markViewable();
 		await flush();
 
 		expect(state.error).toBeNull();

@@ -23,6 +23,7 @@ import {
 	clearProfileCaches,
 	deleteProfilePhotos,
 	getProfile,
+	HiddenProfileError,
 	onProfileEdit,
 	patchOwnProfile,
 	ProfileUnavailableError,
@@ -138,9 +139,14 @@ function maskedProfile(displayName: string) {
 	};
 }
 
+let blockedIds: { profileId: number }[] = [];
+let hiddenIds: { profileId: number }[] = [];
+
 beforeEach(() => {
 	clearAccountCaches();
 	clearProfileCaches();
+	blockedIds = [];
+	hiddenIds = [];
 	fetchRestMock.mockReset();
 	fetchRestMock.mockImplementation(
 		(path: string, opts?: { method?: string }) => {
@@ -149,7 +155,10 @@ beforeEach(() => {
 				return Promise.resolve(ok({ profiles: [fullProfile()] }));
 			}
 			if (path === "/v3.1/me/blocks") {
-				return Promise.resolve(ok({ blocking: [] }));
+				return Promise.resolve(ok({ blocking: blockedIds }));
+			}
+			if (path === "/v1/hides") {
+				return Promise.resolve(ok({ hides: hiddenIds }));
 			}
 			if (path === "/v4/me/profile" && method === "PATCH") {
 				return Promise.resolve(ok(null));
@@ -209,6 +218,36 @@ describe("getProfile", () => {
 		expect(error).toBeInstanceOf(BlockedProfileError);
 		expect((error as BlockedProfileError).blockedByUs).toBe(false);
 		expect(isProfileViewable(PROFILE_ID)).toBe(false);
+	});
+
+	it("reports a profile we blocked as blocked by us", async () => {
+		blockedIds = [{ profileId: PROFILE_ID }];
+		respondWith({ profiles: [maskedProfile("4")] });
+
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(BlockedProfileError);
+		expect((error as BlockedProfileError).blockedByUs).toBe(true);
+	});
+
+	it("tells a profile we hid apart from one that blocked us", async () => {
+		hiddenIds = [{ profileId: PROFILE_ID }];
+		respondWith({ profiles: [maskedProfile("4")] });
+
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(HiddenProfileError);
+		expect(isProfileViewable(PROFILE_ID)).toBe(false);
+	});
+
+	it("prefers the block over the hide when we did both", async () => {
+		blockedIds = [{ profileId: PROFILE_ID }];
+		hiddenIds = [{ profileId: PROFILE_ID }];
+		respondWith({ profiles: [maskedProfile("4")] });
+
+		const error = await getProfile(PROFILE_ID).catch((e: unknown) => e);
+
+		expect(error).toBeInstanceOf(BlockedProfileError);
 	});
 
 	it("marks an unavailable profile as unviewable", async () => {

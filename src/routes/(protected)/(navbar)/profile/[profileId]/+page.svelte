@@ -4,12 +4,14 @@
 
 	import {
 		BlockedProfileError,
+		HiddenProfileError,
 		ProfileUnavailableError,
 	} from "$lib/api/users/profiles";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import BlockedProfile from "./BlockedProfile.svelte";
+	import HiddenProfile from "./HiddenProfile.svelte";
 	import { ProfileState } from "./profile-state.svelte";
 	import ProfileBody from "./ProfileBody.svelte";
 
@@ -53,7 +55,12 @@
 			<BlockedProfile
 				profileId={profileState.profileId}
 				blockedByUs={error.blockedByUs}
-				onRefresh={() => profileState.markUnblocked()}
+				onRefresh={() => profileState.markViewable()}
+			/>
+		{:else if error instanceof HiddenProfileError}
+			<HiddenProfile
+				profileId={profileState.profileId}
+				onRefresh={() => profileState.markViewable()}
 			/>
 		{:else if error instanceof ProfileUnavailableError}
 			<NotFound />

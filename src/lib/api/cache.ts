@@ -12,6 +12,7 @@ type CachedValue = NonNullable<unknown>;
 export class TtlCache<K, V extends CachedValue> {
 	#entries = new Map<K, { value: V; storedAt: number }>();
 	#ttlMs: number;
+	protected generation = 0;
 
 	constructor({ ttlMs = Number.POSITIVE_INFINITY }: CacheOptions = {}) {
 		this.#ttlMs = ttlMs;
@@ -39,9 +40,11 @@ export class TtlCache<K, V extends CachedValue> {
 
 	delete(key: K): void {
 		this.#entries.delete(key);
+		this.generation += 1;
 	}
 
 	clear(): void {
+		this.generation += 1;
 		this.#entries.clear();
 	}
 }
@@ -61,9 +64,14 @@ export class FetchCache<K, V extends CachedValue> extends TtlCache<K, V> {
 		const pending = this.#inFlight.get(key);
 		if (pending) return pending;
 		const epoch = accountEpoch();
+		const generation = this.generation;
 		const request: Promise<V> = this.#fetch(key)
 			.then((value) => {
-				if (isAccountEpochCurrent(epoch)) this.set(key, value);
+				if (
+					isAccountEpochCurrent(epoch) &&
+					generation === this.generation
+				)
+					this.set(key, value);
 				return value;
 			})
 			.finally(() => {
@@ -72,6 +80,11 @@ export class FetchCache<K, V extends CachedValue> extends TtlCache<K, V> {
 			});
 		this.#inFlight.set(key, request);
 		return await request;
+	}
+
+	override delete(key: K): void {
+		super.delete(key);
+		this.#inFlight.delete(key);
 	}
 
 	override clear(): void {

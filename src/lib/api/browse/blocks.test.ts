@@ -102,11 +102,14 @@ describe("unblockUser", () => {
 	});
 
 	it("does not let a stale blocking list hide the profile again", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
 		respondWithBlocking([{ profileId: PROFILE_ID }]);
 		await markBlockedProfilesUnviewable();
 
 		await unblockUser({ profileId: PROFILE_ID });
-		respondWithBlocking([]);
+		// past the list cache TTL, so the lagging server list is refetched
+		clock += 6_000;
 		await markBlockedProfilesUnviewable();
 
 		expect(isProfileViewable(PROFILE_ID)).toBe(true);

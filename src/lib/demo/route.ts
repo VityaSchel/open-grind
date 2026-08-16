@@ -1,6 +1,7 @@
 import { albumShareRequestSchema } from "$lib/model/messaging/albums";
 import { demoMeProfileId } from "./config";
 import { demoAlbumContent, demoMyAlbums, demoShareAlbum } from "./mock/albums";
+import { demoBlockedUsers, demoSetBlocked } from "./mock/blocks";
 import {
 	demoConversationMessages,
 	demoConversations,
@@ -14,12 +15,18 @@ import {
 import { demoSetFavorite } from "./mock/favorites";
 import {
 	buildFullProfile,
+	buildMaskedProfile,
 	demoCascadeV4,
 	demoGetProfiles,
 	demoMyUploadedPhotos,
 	demoSearchProfiles,
 	num,
 } from "./mock/grid";
+import {
+	demoHiddenUsers,
+	demoProfileHidden,
+	demoSetHidden,
+} from "./mock/hides";
 import { demoReceivedTaps, demoViews } from "./mock/interest";
 import { profileSeed } from "./mock/profiles";
 import { demoGenders, demoPronouns, demoTags } from "./mock/reference";
@@ -73,7 +80,14 @@ export function demoRoute({
 	}
 	if (method === "GET" && rawPath.startsWith("/v7/profiles/")) {
 		const id = Number(segments.at(-1));
-		return ok({ profiles: [buildFullProfile(profileSeed(id))] });
+		const seed = profileSeed(id);
+		return ok({
+			profiles: [
+				demoProfileHidden(id)
+					? buildMaskedProfile(seed)
+					: buildFullProfile(seed),
+			],
+		});
 	}
 	if (method === "POST" && rawPath === "/v3/profiles") {
 		const ids =
@@ -90,7 +104,42 @@ export function demoRoute({
 		return ok({ profiles: demoReceivedTaps() });
 	if (rawPath === "/v2/taps/add") return ok({ isMutual: false });
 	if (rawPath === "/v7/views/list") return ok(demoViews());
-	if (rawPath === "/v3.1/me/blocks") return ok({ blocking: [] });
+	if (rawPath === "/v3.1/me/blocks")
+		return ok({ blocking: demoBlockedUsers() });
+	if (
+		(method === "POST" || method === "DELETE") &&
+		segments[0] === "v3" &&
+		segments[1] === "me" &&
+		segments[2] === "blocks" &&
+		segments.length === 4
+	) {
+		demoSetBlocked({
+			profileId: Number(segments[3]),
+			blocked: method === "POST",
+		});
+		return ok(method === "POST" ? { updateTime: 0 } : {});
+	}
+	if (method === "GET" && rawPath === "/v1/hides")
+		return ok({ hides: demoHiddenUsers() });
+	if (
+		method === "POST" &&
+		segments[0] === "v1" &&
+		segments[1] === "me" &&
+		segments[2] === "hides" &&
+		segments.length === 4
+	) {
+		demoSetHidden({ profileId: Number(segments[3]), hidden: true });
+		return ok({});
+	}
+	if (
+		method === "DELETE" &&
+		segments[0] === "v1" &&
+		segments[1] === "hides" &&
+		segments.length === 3
+	) {
+		demoSetHidden({ profileId: Number(segments[2]), hidden: false });
+		return ok({});
+	}
 	if (
 		segments.length === 4 &&
 		segments[0] === "v3" &&

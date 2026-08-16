@@ -2,18 +2,24 @@
 	import {
 		CopyIcon,
 		DotsThreeIcon,
+		EyeSlashIcon,
 		FlagIcon,
 		ProhibitIcon,
 	} from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 
 	import { blockUser } from "$lib/api/browse/blocks";
+	import { hideUser } from "$lib/api/browse/hides";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 
-	let { profileId, onBlocked }: { profileId: number; onBlocked: () => void } =
+	let {
+		profileId,
+		onBlocked,
+		onHidden,
+	}: { profileId: number; onBlocked: () => void; onHidden: () => void } =
 		$props();
 
 	let submitting = $state(false);
@@ -63,6 +69,20 @@
 		>
 			<FlagIcon class="size-5" />
 			Report profile
+		</DropdownMenu.Item>
+		<DropdownMenu.Item
+			onSelect={async () => {
+				try {
+					await hideUser({ profileId });
+					onHidden();
+				} catch (error) {
+					console.error(error);
+					showErrorToast({ label: "Failed to hide user", error });
+				}
+			}}
+		>
+			<EyeSlashIcon class="size-5" />
+			Hide profile
 		</DropdownMenu.Item>
 		<DropdownMenu.Item
 			onSelect={async () => {

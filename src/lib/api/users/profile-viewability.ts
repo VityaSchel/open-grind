@@ -12,7 +12,7 @@ const listeners = new Set<ProfileViewabilityListener>();
 registerAccountCache({ reset: () => unviewableProfileIds.clear() });
 
 function notify(change: ProfileViewabilityChange): void {
-	for (const listener of listeners) listener(change);
+	for (const listener of [...listeners]) listener(change);
 }
 
 export function isProfileViewable(profileId: number): boolean {

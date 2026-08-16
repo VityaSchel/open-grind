@@ -404,6 +404,7 @@ export class ConversationState {
 				message,
 				replyToMessageId,
 			});
+			if (this.#destroyed) return;
 			const msg = this.messages.find((m) => m.messageId === tempId);
 			if (msg) {
 				this.#adoptServerVersion({
@@ -581,7 +582,7 @@ export class ConversationState {
 		} catch (err) {
 			const idx = msg.reactions.findIndex((r) => r === optimistic);
 			if (idx !== -1) msg.reactions.splice(idx, 1);
-			this.#syncCache();
+			if (!this.#destroyed) this.#syncCache();
 			throw err;
 		}
 	}

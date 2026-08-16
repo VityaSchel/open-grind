@@ -1,5 +1,6 @@
 import { accountScoped } from "$lib/api/account-caches";
 import { markBlockedProfilesUnviewable } from "$lib/api/browse/blocks";
+import { markHiddenProfilesUnviewable } from "$lib/api/browse/hides";
 import { getReceivedTaps } from "$lib/api/interest/taps";
 import {
 	isProfileViewable,
@@ -74,6 +75,9 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 
 	protected fetch(): Promise<TapsSnapshot> {
 		void markBlockedProfilesUnviewable().catch((error) =>
+			console.error(error),
+		);
+		void markHiddenProfilesUnviewable().catch((error) =>
 			console.error(error),
 		);
 		return getReceivedTaps();

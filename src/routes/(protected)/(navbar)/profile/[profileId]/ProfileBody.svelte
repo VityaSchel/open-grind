@@ -99,6 +99,7 @@
 		ourProfileId={profileState.ourProfileId}
 		{profile}
 		onBlocked={() => profileState.markBlocked()}
+		onHidden={() => profileState.markHidden()}
 		onFavorite={(isFavorite) => profileState.setFavorite(isFavorite)}
 	/>
 	<div

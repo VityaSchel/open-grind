@@ -3,6 +3,7 @@ import { recordProfileView } from "$lib/api/interest/views";
 import {
 	BlockedProfileError,
 	getProfile,
+	HiddenProfileError,
 	invalidateProfile,
 	isUnviewableProfileError,
 	mergeProfileEditIntoCaches,
@@ -63,7 +64,11 @@ export class ProfileState {
 		this.error = new BlockedProfileError({ blockedByUs: true });
 	}
 
-	markUnblocked(): void {
+	markHidden(): void {
+		this.error = new HiddenProfileError();
+	}
+
+	markViewable(): void {
 		this.error = null;
 		if (!this.profile) this.retry();
 	}
