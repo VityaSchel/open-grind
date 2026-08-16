@@ -48,8 +48,7 @@ getrandom = "0.3"
 keyring-core = "1.0.0"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-dialog = "2"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = { version = "0.1", features = ["release_max_level_off"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }

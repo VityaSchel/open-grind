@@ -1,8 +1,6 @@
 pub mod api;
 mod appearance;
 mod error;
-#[cfg_attr(debug_assertions, allow(dead_code))]
-mod logging;
 pub mod media;
 mod photo;
 mod state;
@@ -115,9 +113,6 @@ fn quit_when_closed(window: &tauri::WebviewWindow) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-	#[cfg(not(debug_assertions))]
-	logging::init();
-
 	#[cfg(debug_assertions)]
 	let devtools = tauri_plugin_devtools::init();
 
@@ -282,6 +277,16 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn release_builds_discard_every_tracing_event() {
+		let expected = if cfg!(debug_assertions) {
+			tracing::level_filters::LevelFilter::TRACE
+		} else {
+			tracing::level_filters::LevelFilter::OFF
+		};
+		assert_eq!(tracing::level_filters::STATIC_MAX_LEVEL, expected);
+	}
 
 	fn allows(url: &str) -> bool {
 		is_app_url(&tauri::Url::parse(url).unwrap())
