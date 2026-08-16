@@ -43,6 +43,8 @@ export function demoCallMethod(method: string): unknown {
 			return { "user-agent": "demo", "l-device-info": "demo" };
 		case "recaptcha_first_party_enabled":
 			return false;
+		case "session_health":
+			return { signedIn: true, expiresAt: null, stale: false };
 		default:
 			return null;
 	}

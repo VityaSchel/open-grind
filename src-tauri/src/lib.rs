@@ -128,6 +128,7 @@ pub fn run() {
             client: OnceLock::new(),
         })
         .manage(media::MediaProxy::default())
+        .manage(api::session_recovery::SessionRecovery::default())
         .register_asynchronous_uri_scheme_protocol(media::SCHEME, media::handle)
         .invoke_handler(tauri::generate_handler![
             api::auth::login,
@@ -143,6 +144,8 @@ pub fn run() {
             api::ws::ws_connect,
             api::ws::ws_send,
             api::client::rotate_api_params,
+            api::session_recovery::set_app_active,
+            api::session_recovery::session_health,
         ])
         .setup(|app| {
             let user_agent = format!(

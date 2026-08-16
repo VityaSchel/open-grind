@@ -1,3 +1,4 @@
+import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 import { callMethod } from "$lib/api/methods";
 import { ws } from "$lib/ws.svelte";
 
@@ -34,7 +35,7 @@ class Reconciler {
 				}
 				if (!this.#wasHidden) return;
 				this.#wasHidden = false;
-				void this.#trigger();
+				void appLifecycle.activate().then(() => this.#trigger());
 			});
 		}
 	}

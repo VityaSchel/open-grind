@@ -63,6 +63,18 @@ export const methods = {
 		request: z.undefined(),
 		response: z.boolean(),
 	},
+	session_health: {
+		request: z.undefined(),
+		response: z.object({
+			signedIn: z.boolean(),
+			expiresAt: z.int().nonnegative().nullable(),
+			stale: z.boolean(),
+		}),
+	},
+	set_app_active: {
+		request: z.object({ active: z.boolean() }),
+		response: z.null(),
+	},
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 export async function callMethod<T extends keyof typeof methods>(

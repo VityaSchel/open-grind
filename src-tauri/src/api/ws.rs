@@ -1,16 +1,11 @@
-use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::broadcast::error::RecvError;
 
+use crate::api::session_recovery::{
+	report_refresh_failure, SessionErrorPayload,
+};
 use crate::error::{AppError, BanInfo};
 use crate::state::AppState;
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SessionErrorPayload {
-	message: String,
-	unauthorized: bool,
-}
 
 pub fn spawn_ws_task(app: AppHandle) {
 	{
@@ -84,19 +79,24 @@ pub fn spawn_ws_task(app: AppHandle) {
 							SessionErrorPayload {
 								message: "Session expired".to_owned(),
 								unauthorized: true,
+								kind: "Unauthorized".to_owned(),
+								attempts: 0,
+								transient: false,
 							},
 						)
 						.ok();
 					}
-					grindr::AuthEvent::RefreshFailed { message } => {
-						app.emit(
-							"auth:session-error",
-							SessionErrorPayload {
-								message,
-								unauthorized: false,
-							},
-						)
-						.ok();
+					grindr::AuthEvent::RefreshFailed {
+						message, kind, ..
+					} => {
+						report_refresh_failure(
+							&app,
+							message,
+							kind.is_transient(),
+						);
+					}
+					grindr::AuthEvent::RefreshRecovered => {
+						app.emit("auth:session-ok", ()).ok();
 					}
 					grindr::AuthEvent::Banned(info) => {
 						app.emit("auth:banned", BanInfo::from(info)).ok();
