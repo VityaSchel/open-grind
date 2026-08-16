@@ -55,6 +55,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
 # Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs.
 objc2 = "0.6"
+# Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs.
+block2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "block2", "objc2-core-foundation"] }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }

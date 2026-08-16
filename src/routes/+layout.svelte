@@ -16,8 +16,10 @@
 	} from "$lib/platform/android-native-bridge";
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { isAndroidPlatform } from "$lib/platform/os";
+	import { installScrollPhaseProbe } from "$lib/platform/scroll-phase-probe";
 
 	onMount(() => {
+		if (import.meta.env.DEV) installScrollPhaseProbe();
 		if (env.PUBLIC_TEST_INSETS) {
 			window.__AndroidInsets = {
 				top() {

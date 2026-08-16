@@ -5,6 +5,7 @@ mod error;
 mod logging;
 pub mod media;
 mod photo;
+mod scroll_phase;
 mod state;
 mod storage;
 
@@ -177,6 +178,7 @@ pub fn run() {
             api::session_recovery::session_health,
         ])
         .setup(|app| {
+            scroll_phase::install_scroll_phase_probe(app.handle());
             let user_agent = format!(
                 "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
                 app.package_info().version
