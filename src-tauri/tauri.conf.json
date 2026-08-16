@@ -31,7 +31,7 @@
 	},
 	"bundle": {
 		"active": true,
-		"targets": "all",
+		"targets": ["deb", "nsis", "app", "dmg"],
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -39,11 +39,37 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
+		"publisher": "Open Grind Governance",
+		"homepage": "https://opengrind.org",
+		"copyright": "Copyright (c) 2026-present Open Grind Governance",
+		"licenseFile": "../LICENSE",
+		"category": "SocialNetworking",
+		"shortDescription": "Unofficial FLOSS Grindr client",
+		"longDescription": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven Grindr client",
+		"linux": {
+			"deb": {
+				"depends": [
+					"libwebkit2gtk-4.1-0",
+					"libgtk-3-0",
+					"libsoup-3.0-0",
+					"librsvg2-2"
+				],
+				"recommends": [
+					"libayatana-appindicator3-1",
+					"gstreamer1.0-plugins-good",
+					"gstreamer1.0-plugins-bad",
+					"gstreamer1.0-libav"
+				]
+			}
+		},
 		"macOS": {
 			"signingIdentity": "tauri-dev"
 		},
 		"windows": {
-			"minimumWebview2Version": "111.0.1661.34"
+			"minimumWebview2Version": "111.0.1661.34",
+			"nsis": {
+				"installMode": "currentUser"
+			}
 		},
 		"android": {
 			"autoIncrementVersionCode": false,
