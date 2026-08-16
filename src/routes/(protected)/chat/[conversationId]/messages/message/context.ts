@@ -13,6 +13,11 @@ export const [getMessageContext, setMessageContext] =
 		}
 	>();
 
+export type MessageRefs = {
+	frame: HTMLElement | null;
+	content: HTMLElement | null;
+};
+
 export const [getMessageMetaContext, setMessageMetaContext] =
 	createContext<
 		() => {

@@ -4,7 +4,7 @@
 	"version": "0.1.0-beta.4-dev",
 	"identifier": "org.opengrind",
 	"build": {
-		"beforeDevCommand": "bun run dev:web",
+		"beforeDevCommand": "bunx vite dev",
 		"devUrl": "http://localhost:1420",
 		"beforeBuildCommand": "bun run build",
 		"frontendDist": "../build"

@@ -13,7 +13,7 @@ import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
 const messageBaseSchema = z.object({ type: z.string(), body: z.unknown() });
 
-export const apiResponseMessageOverlaySchema = z.object({
+const messageOverlayBaseSchema = z.object({
 	messageId: z.string(),
 	conversationId: z.string(),
 	senderId: z.int().nonnegative(),
@@ -25,7 +25,6 @@ export const apiResponseMessageOverlaySchema = z.object({
 			reactionType: z.int().nonnegative(),
 		}),
 	),
-	replyToMessage: unmodeledSchema,
 	dynamic: unmodeledSchema,
 	chat1Type: unmodeledSchema,
 	replyPreview: unmodeledSchema,
@@ -302,17 +301,6 @@ export const messageSchema = z.discriminatedUnion("type", [
 	videoMessageSchema,
 ]);
 
-export const unsentMessageSchema = z.intersection(
-	messageBaseSchema.safeExtend({
-		type: z.string().transform((): "Unsent" => "Unsent"),
-		unsent: z.literal(true),
-		body: z.null(),
-	}),
-	apiResponseMessageOverlaySchema,
-);
-
-export type UnsentMessage = z.infer<typeof unsentMessageSchema>;
-
 const modeledMessageTypes = new Set<string>(
 	messageSchema.options.map((option) => option.shape.type.value),
 );
@@ -327,22 +315,88 @@ function warnOnceIfModeledTypeDriftedFromSpec(type: string): void {
 	);
 }
 
-export const unrecognizedMessageSchema = z
-	.intersection(
-		messageBaseSchema.safeExtend({ type: z.string(), body: z.unknown() }),
-		apiResponseMessageOverlaySchema,
-	)
-	.transform(({ type, ...message }) => {
-		warnOnceIfModeledTypeDriftedFromSpec(type);
-		return { ...message, type: "Unknown" as const, unrecognizedType: type };
+function messageBranchesWithOverlay<Overlay extends z.ZodObject>({
+	overlay,
+}: {
+	overlay: Overlay;
+}) {
+	const unsent = z.intersection(
+		messageBaseSchema.safeExtend({
+			type: z.string().transform((): "Unsent" => "Unsent"),
+			unsent: z.literal(true),
+			body: z.null(),
+		}),
+		overlay,
+	);
+	const unrecognized = z
+		.intersection(
+			messageBaseSchema.safeExtend({
+				type: z.string(),
+				body: z.unknown(),
+			}),
+			overlay,
+		)
+		.transform(({ type, ...message }) => {
+			warnOnceIfModeledTypeDriftedFromSpec(type);
+			return {
+				...message,
+				type: "Unknown" as const,
+				unrecognizedType: type,
+			};
+		});
+	return {
+		unsent,
+		unrecognized,
+		all: z.intersection(messageSchema, overlay).or(unsent).or(unrecognized),
+	};
+}
+
+// One level deep by design: a recursive quote makes parse cost grow with
+// nesting depth. The relaxed fields are the ones a trimmed quote omits.
+const quotedMessageOverlaySchema = messageOverlayBaseSchema
+	.partial({
+		conversationId: true,
+		timestamp: true,
+		unsent: true,
+		reactions: true,
+	})
+	.safeExtend({ replyToMessage: unmodeledSchema });
+
+export const quotedMessageSchema = messageBranchesWithOverlay({
+	overlay: quotedMessageOverlaySchema,
+}).all;
+
+export type QuotedMessage = z.infer<typeof quotedMessageSchema>;
+
+let unmodelableQuoteReported = false;
+
+export const apiResponseMessageOverlaySchema =
+	messageOverlayBaseSchema.safeExtend({
+		// A quote we cannot model must never cost us the message carrying it.
+		replyToMessage: quotedMessageSchema.nullish().catch(({ error }) => {
+			if (!unmodelableQuoteReported) {
+				unmodelableQuoteReported = true;
+				console.warn(
+					"[messages] a quoted reply did not match the modeled shape and was dropped",
+					error,
+				);
+			}
+			return null;
+		}),
 	});
 
+const apiResponseMessageBranches = messageBranchesWithOverlay({
+	overlay: apiResponseMessageOverlaySchema,
+});
+
+export const unsentMessageSchema = apiResponseMessageBranches.unsent;
+export type UnsentMessage = z.infer<typeof unsentMessageSchema>;
+
+export const unrecognizedMessageSchema =
+	apiResponseMessageBranches.unrecognized;
 export type UnrecognizedMessage = z.infer<typeof unrecognizedMessageSchema>;
 
-export const apiResponseMessageSchema = z
-	.intersection(messageSchema, apiResponseMessageOverlaySchema)
-	.or(unsentMessageSchema)
-	.or(unrecognizedMessageSchema);
+export const apiResponseMessageSchema = apiResponseMessageBranches.all;
 
 export type Message = z.infer<typeof messageSchema>;
 export type ApiResponseMessage = z.infer<typeof apiResponseMessageSchema>;

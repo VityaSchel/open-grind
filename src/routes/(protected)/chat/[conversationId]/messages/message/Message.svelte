@@ -1,12 +1,18 @@
 <script lang="ts">
-	import { tick } from "svelte";
+	import { ArrowBendUpLeftIcon } from "phosphor-svelte";
+	import { tick, untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import { scale } from "svelte/transition";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
+	import {
+		MAX_DRAG_PX,
+		SwipeToReply,
+		wheelInputMode,
+	} from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 	import AlbumMessage from "./AlbumMessage.svelte";
-	import { setMessageContext } from "./context";
+	import { type MessageRefs, setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";
 	import ImageMessage from "./ImageMessage.svelte";
 	import MessageContextMenu from "./MessageContextMenu.svelte";
@@ -31,6 +37,7 @@
 		onVisible,
 		onUnsend,
 		onCopyError,
+		onReply,
 	}: {
 		message: ApiResponseMessage;
 		isOut: boolean;
@@ -44,7 +51,17 @@
 		onVisible?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
+		onReply?: () => void;
 	} = $props();
+
+	const swipe = untrack(() =>
+		onReply
+			? new SwipeToReply({
+					direction: isOut ? "left" : "right",
+					onReply: () => onReply?.(),
+				})
+			: null,
+	);
 
 	const firstInStack = $derived(indexInStack === 0);
 	const lastInStack = $derived(indexInStack === stackLength - 1);
@@ -61,10 +78,12 @@
 		| false
 		| { x: number; y: number; width: number; height: number } =
 		$state(false);
+	let frameElement: HTMLElement | null = $state(null);
 	let messageElement: HTMLElement | null = $state(null);
 
-	function setRef(el: HTMLElement | null) {
-		messageElement = el ?? null;
+	function setRefs({ frame, content }: MessageRefs) {
+		frameElement = frame;
+		messageElement = content;
 	}
 	let inheritedStyles = $state("");
 
@@ -98,17 +117,20 @@
 	];
 
 	function onContextMenu() {
-		if (!messageElement) return;
-		const rect = messageElement.getBoundingClientRect();
+		if (!messageElement || !frameElement) return;
+		// The clone renders the quote too, so it is the frame that decides how
+		// tall the lifted box is, while the bubble still decides where it sits.
+		const contentRect = messageElement.getBoundingClientRect();
+		const frameRect = frameElement.getBoundingClientRect();
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = {
-			x: rect.x,
-			y: rect.y,
-			width: rect.width,
-			height: rect.height,
+			x: contentRect.x,
+			y: frameRect.y,
+			width: contentRect.width,
+			height: frameRect.height,
 		};
 		tick()
 			.then(() => contextMenu?.showModal())
@@ -116,6 +138,12 @@
 	}
 
 	let contextMenu: HTMLDialogElement | null = $state(null);
+
+	// A dblclick carries no pointerType of its own, and only the pointer can
+	// tell a double tap (react) from a double click (reply).
+	let lastPointerType = "";
+
+	const railWheel = wheelInputMode() === "rail";
 </script>
 
 {#snippet adornments()}
@@ -147,7 +175,12 @@
 {/snippet}
 
 {#snippet content(clone?: boolean)}
-	<MessageWrapper {clone} {setRef} {adornments}>
+	<MessageWrapper
+		{clone}
+		{setRefs}
+		{adornments}
+		quoted={message.replyToMessage}
+	>
 		{#if message.type === "Text"}
 			<TextMessage message={message.body} />
 		{:else if message.type === "Image"}
@@ -177,41 +210,94 @@
 	{#if firstInStack && dayStart !== undefined}
 		<MessageDateGroup {dayStart} />
 	{/if}
+	<!-- The visibility observer roots itself at the nearest scrolling
+	     ancestor, so it has to sit outside the rail: inside, the row fills
+	     that box and would report itself seen without ever being scrolled to. -->
 	<div
-		class={{
-			"pe-3 *:float-start *:me-auto": !isOut,
-			"ps-3 *:float-end *:ms-auto": isOut,
-		}}
-		role="button"
-		tabindex="0"
-		ondblclick={(event) => {
-			const selection = window.getSelection();
-			if (
-				selection &&
-				!selection.isCollapsed &&
-				messageElement?.contains(selection.anchorNode)
-			)
-				return;
-			if (!isOut && onReact) {
-				event.preventDefault();
-				onReact(1);
-				selection?.removeAllRanges();
-			}
-		}}
-		onkeydown={(event) => {
-			if (event.key === "Enter" || event.key === " ") {
-				if (event.key === " ") event.preventDefault();
-				onContextMenu();
-			}
-		}}
-		oncontextmenu={(event) => {
-			event.preventDefault();
-			onContextMenu();
-		}}
-		style:visibility={contextMenuOpen ? "hidden" : undefined}
+		data-slot="message"
+		class={["relative flex flex-col", { "touch-pan-y": swipe !== null }]}
 		use:observeIntersection={{ handle: onVisible, once: true }}
+		{...swipe?.handlers}
 	>
-		{@render content()}
+		{#if swipe}
+			<div
+				class={[
+					"pointer-events-none absolute top-1/2 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground",
+					{ "right-0": isOut, "left-0": !isOut },
+				]}
+				style:opacity={swipe.progress}
+				style:transform={`translateY(-50%) scale(${swipe.armed ? 1 : 0.6 + swipe.progress * 0.4})`}
+			>
+				<ArrowBendUpLeftIcon size={16} />
+			</div>
+		{/if}
+		<div
+			{@attach swipe ? swipe.attachRail : undefined}
+			class={[
+				"-my-3 flex touch-pan-y py-3",
+				{
+					"overflow-x-auto overscroll-x-none [scrollbar-width:none]":
+						railWheel,
+				},
+			]}
+		>
+			{#if swipe && railWheel && !isOut}
+				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
+			{/if}
+			<div
+				class={[
+					"min-w-full shrink-0",
+					{
+						"pe-3 *:float-start *:me-auto": !isOut,
+						"ps-3 *:float-end *:ms-auto": isOut,
+					},
+				]}
+				role="button"
+				tabindex="0"
+				onpointerdown={(event) => (lastPointerType = event.pointerType)}
+				ondblclick={(event) => {
+					const selection = window.getSelection();
+					if (
+						selection &&
+						!selection.isCollapsed &&
+						messageElement?.contains(selection.anchorNode)
+					)
+						return;
+					if (lastPointerType === "touch") {
+						if (!isOut && onReact) {
+							event.preventDefault();
+							onReact(1);
+							selection?.removeAllRanges();
+						}
+						return;
+					}
+					if (onReply) {
+						event.preventDefault();
+						onReply();
+						selection?.removeAllRanges();
+					}
+				}}
+				onkeydown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						if (event.key === " ") event.preventDefault();
+						onContextMenu();
+					}
+				}}
+				oncontextmenu={(event) => {
+					event.preventDefault();
+					onContextMenu();
+				}}
+				style:visibility={contextMenuOpen ? "hidden" : undefined}
+				style:transform={swipe?.deltaX
+					? `translateX(${swipe.deltaX}px)`
+					: undefined}
+			>
+				{@render content()}
+			</div>
+			{#if swipe && railWheel && isOut}
+				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
+			{/if}
+		</div>
 	</div>
 	{#if lastInStack}
 		<span
@@ -247,9 +333,13 @@
 		onClose={() => (contextMenuOpen = false)}
 		style={inheritedStyles}
 		textContent={message.type === "Text" ? message.body.text : undefined}
-		reactionAvailable={message.reactions.length === 0 && !isOut}
+		reactionAvailable={message.reactions.length === 0 &&
+			!isOut &&
+			!message.unsent}
 		{onDelete}
 		{onUnsend}
 		{onCopyError}
+		{onReply}
+		{onReact}
 	/>
 {/if}

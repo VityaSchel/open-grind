@@ -2,11 +2,13 @@ import z from "zod";
 
 import { errorUrnFromBody } from "$lib/api/error-urn";
 import { fetchRest } from "$lib/api/transport";
+import { demoEnabled, demoSentMessage } from "$lib/demo";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
 } from "$lib/model/messaging/messages";
 import { unixTimestampMsSchema } from "$lib/model/types";
+import { ws } from "$lib/ws.svelte";
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { OutboundMessage } from "$lib/model/messaging/messages";
 
@@ -75,17 +77,31 @@ export async function getSingleMessage({
 export async function sendMessage({
 	toUserId,
 	message,
+	replyToMessageId,
 }: {
 	toUserId: number;
 	message: OutboundMessage;
+	replyToMessageId?: string;
 }) {
+	const body = {
+		type: message.type,
+		target: { type: "Direct", targetId: toUserId },
+		body: message.body,
+		...(replyToMessageId !== undefined ? { replyToMessageId } : {}),
+	};
+	// The HTTP endpoint 400s when `replyToMessageId` is set — it's only
+	// accepted by the websocket command variant of this same request.
+	if (replyToMessageId !== undefined) {
+		if (demoEnabled) return demoSentMessage(body);
+		return await ws.sendCommand({
+			type: "chat.v1.message.send",
+			payload: body,
+			responseSchema: apiResponseMessageSchema,
+		});
+	}
 	return await fetchRest("/v4/chat/message/send", {
 		method: "POST",
-		body: {
-			type: message.type,
-			target: { type: "Direct", targetId: toUserId },
-			body: message.body,
-		},
+		body,
 	}).then((res) => res.jsonParsed(apiResponseMessageSchema));
 }
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import {
+		ArrowBendUpLeftIcon,
 		ArrowUUpLeftIcon,
 		CopyIcon,
 		FlagIcon,
@@ -21,6 +22,8 @@
 		onDelete,
 		onUnsend,
 		onCopyError,
+		onReply,
+		onReact,
 		...props
 	}: ComponentProps<typeof ContextMenu> & {
 		textContent?: string;
@@ -28,15 +31,19 @@
 		onDelete?: () => void;
 		onUnsend?: () => void;
 		onCopyError?: () => void;
+		onReply?: () => void;
+		onReact?: (reactionId: number) => void;
 	} = $props();
 </script>
 
 <ContextMenu {...props}>
 	{#snippet children(placement)}
 		{#if reactionAvailable}
+			<!-- a cursor cannot double-tap, so it gets the reaction itself
+			     where a touchscreen gets the hint -->
 			<span
 				class={[
-					"mb-2 block w-45 text-center text-foreground/50 text-shadow-sm",
+					"mb-2 block w-45 text-center text-foreground/50 text-shadow-sm can-hover:hidden",
 					{
 						"-mt-8": !placement.startsWith("bottom"),
 						"mt-1": placement.startsWith("bottom"),
@@ -52,10 +59,45 @@
 					draggable="false"
 				/>
 			</span>
+			<Button
+				variant="ghost"
+				size="icon-lg"
+				aria-label="React with fire"
+				class={[
+					"mb-2 hidden self-start rounded-full bg-black/80 can-hover:inline-flex",
+					{
+						"-mt-8": !placement.startsWith("bottom"),
+						"mt-1": placement.startsWith("bottom"),
+					},
+				]}
+				onclick={() => {
+					onReact?.(1);
+					props.onClose();
+				}}
+			>
+				<img
+					src={fireEmoji}
+					alt=""
+					width="20"
+					height="20"
+					draggable="false"
+				/>
+			</Button>
 		{/if}
 		<div
 			class="flex w-45 flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!"
 		>
+			{#if onReply}
+				<Button
+					variant="ghost"
+					onclick={() => {
+						onReply();
+						props.onClose();
+					}}
+				>
+					<ArrowBendUpLeftIcon /> Reply
+				</Button>
+			{/if}
 			{#if textContent !== undefined}
 				<Button
 					variant="ghost"

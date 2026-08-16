@@ -56,6 +56,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import { ApiError } from "$lib/api/api-error";
 import { ConversationUnavailableError } from "$lib/api/messaging/messages";
+import { Drafts } from "$lib/chat/drafts.svelte";
 import type {
 	Message,
 	MessageDraft,
@@ -96,6 +97,8 @@ function conversationsStub() {
 		updatePreview: vi.fn(),
 		markRead: markReadMock,
 		ensureLoaded: vi.fn(),
+		remove: vi.fn(() => ({ revert: vi.fn() })),
+		drafts: new Drafts(),
 	};
 }
 
@@ -249,8 +252,8 @@ describe("ConversationState send echo matching", () => {
 		const state = create();
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
-		state.send(outbound("Text", { text: "b" }));
+		state.send([outbound("Text", { text: "a" })]);
+		state.send([outbound("Text", { text: "b" })]);
 
 		const bodyText = (m: { body: unknown }) =>
 			(m.body as { text: string }).text;
@@ -282,8 +285,8 @@ describe("ConversationState send echo matching", () => {
 		const state = create();
 		await flush();
 
-		state.send(outbound("Image", { mediaId: 5 }));
-		state.send(outbound("Text", { text: "hello" }));
+		state.send([outbound("Image", { mediaId: 5 })]);
+		state.send([outbound("Text", { text: "hello" })]);
 
 		const text = () => state.messages.find((m) => m.type === "Text")!;
 		const image = () => state.messages.find((m) => m.type === "Image")!;
@@ -331,7 +334,7 @@ describe("ConversationState send failures", () => {
 
 		const state = create();
 		await flush();
-		state.send(outbound("Text", { text: "a" }));
+		state.send([outbound("Text", { text: "a" })]);
 		await flush();
 
 		expect(state.messages[0]?.status).toBe("error");
@@ -367,7 +370,7 @@ describe("ConversationState send timestamp", () => {
 		const state = create(conversations);
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
+		state.send([outbound("Text", { text: "a" })]);
 		const optimisticTimestamp = state.messages[0]!.timestamp;
 		await flush();
 
@@ -389,7 +392,7 @@ describe("ConversationState send timestamp", () => {
 		const state = create(conversations);
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
+		state.send([outbound("Text", { text: "a" })]);
 		const optimisticTimestamp = state.messages[0]!.timestamp;
 		emitMessageSent(echo("real-a", "Text", { text: "a" }));
 
@@ -414,7 +417,7 @@ describe("ConversationState send timestamp", () => {
 		const state = create();
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
+		state.send([outbound("Text", { text: "a" })]);
 		emitMessageSent(echo("real-a", "Text", { text: "a" }));
 		emitMessageSent({
 			...echo("peer-1", "Text", { text: "hi" }),
@@ -435,8 +438,8 @@ describe("ConversationState send timestamp", () => {
 		const state = create();
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
-		state.send(outbound("Text", { text: "b" }));
+		state.send([outbound("Text", { text: "a" })]);
+		state.send([outbound("Text", { text: "b" })]);
 		const clientTimestamp = state.messages[0]!.timestamp;
 
 		gate.resolve({
@@ -456,7 +459,7 @@ describe("ConversationState send timestamp", () => {
 		const state = create(conversations);
 		await flush();
 
-		state.send(outbound("Text", { text: "a" }));
+		state.send([outbound("Text", { text: "a" })]);
 		const optimisticTimestamp = state.messages[0]!.timestamp;
 		await flush();
 

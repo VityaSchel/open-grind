@@ -1,11 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
+const { fetchRestMock, sendCommandMock } = vi.hoisted(() => ({
+	fetchRestMock: vi.fn(),
+	sendCommandMock: vi.fn(),
+}));
 
 vi.mock("$lib/api/transport", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/transport")>()),
 	fetchRest: fetchRestMock,
 }));
+
+vi.mock("$lib/ws.svelte", () => ({ ws: { sendCommand: sendCommandMock } }));
 
 import {
 	ConversationUnavailableError,
@@ -185,6 +190,33 @@ describe("message API wrappers", () => {
 				body: { text: "hello" },
 			},
 		});
+		expect(sendCommandMock).not.toHaveBeenCalled();
+	});
+
+	it("sends a reply over the websocket, which is the only transport that takes one", async () => {
+		const message = apiMessage({ messageId: "msg-reply" });
+		sendCommandMock.mockResolvedValue(message);
+
+		await expect(
+			sendMessage({
+				toUserId: 99,
+				message: { type: "Text", body: { text: "hello" } },
+				replyToMessageId: "msg-quoted",
+			}),
+		).resolves.toEqual(message);
+
+		expect(fetchRestMock).not.toHaveBeenCalled();
+		expect(sendCommandMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				type: "chat.v1.message.send",
+				payload: {
+					type: "Text",
+					target: { type: "Direct", targetId: 99 },
+					body: { text: "hello" },
+					replyToMessageId: "msg-quoted",
+				},
+			}),
+		);
 	});
 
 	it("sends image messages by media reference only", async () => {

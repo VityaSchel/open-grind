@@ -53,6 +53,10 @@ export function attachPullInputs(
 	};
 
 	const onWheel = (event: WheelEvent) => {
+		// A sideways-dominant wheel is not an attempt to pull; the swipe
+		// gesture cancels such wheels, and probing on their vertical crumbs
+		// would misread the trackpad as a mouse.
+		if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 		const toward = position === "top" ? -event.deltaY : event.deltaY;
 		if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
 		restingButton.probePointer();

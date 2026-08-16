@@ -132,10 +132,64 @@ pub async fn ws_send(
 	state: tauri::State<'_, AppState>,
 	command: grindr::WsCommand,
 ) -> Result<(), AppError> {
-	state
-		.client()?
+	let client = state.client()?;
+
+	// The ws task holds the command receiver while it backs off, so a send only
+	// errors once the client is gone: without this gate a command sent while
+	// the socket is down buffers and lands on the next reconnect.
+	if *client.connection_state().borrow()
+		!= grindr::WsConnectionState::Connected
+	{
+		return Err(AppError::Http("WS not connected".to_owned()));
+	}
+
+	// `try_send`, so a backed-up buffer fails instead of parking the caller.
+	client
 		.ws_sender()
-		.send(command)
-		.await
-		.map_err(|_| AppError::Http("WS not connected".to_owned()))
+		.try_send(command)
+		.map_err(|e| AppError::Http(format!("WS send failed: {e}")))
+}
+
+#[cfg(test)]
+mod tests {
+	use std::sync::OnceLock;
+
+	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
+
+	use super::*;
+
+	fn app_with_a_disconnected_client() -> tauri::App<MockRuntime> {
+		let client =
+			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
+				.expect("client");
+		let state = AppState {
+			client: OnceLock::new(),
+		};
+		assert!(state.client.set(client).is_ok());
+
+		mock_builder()
+			.manage(state)
+			.build(mock_context(noop_assets()))
+			.expect("mock app")
+	}
+
+	#[tokio::test]
+	async fn a_command_sent_while_disconnected_fails_without_queueing() {
+		let app = app_with_a_disconnected_client();
+		let sender = app.state::<AppState>().client().unwrap().ws_sender();
+		let free_before = sender.capacity();
+
+		let result = ws_send(
+			app.state::<AppState>(),
+			grindr::WsCommand {
+				r#type: "chat.v1.message.send".to_owned(),
+				ref_id: "ref-1".to_owned(),
+				payload: serde_json::json!({}),
+			},
+		)
+		.await;
+
+		assert!(matches!(result, Err(AppError::Http(_))));
+		assert_eq!(sender.capacity(), free_before);
+	}
 }

@@ -47,6 +47,18 @@ export class ConversationState {
 	refreshing = $state(false);
 	error: Error | null = $state(null);
 	lastReadTimestamp: number | null = $state(null);
+	// Resolved from the stored id on every read, so unsending, deleting or
+	// failing to load the target drops the quote with no clearing code.
+	readonly replyTo: ApiResponseMessage | null = $derived.by(() => {
+		const messageId = this.#conversations.drafts.replyTo(
+			this.conversationId,
+		);
+		if (messageId === null) return null;
+		const target = this.messages.find(
+			(message) => message.messageId === messageId,
+		);
+		return target && !target.unsent ? target : null;
+	});
 
 	readonly conversationId: string;
 	readonly ourProfileId: number;
@@ -329,8 +341,33 @@ export class ConversationState {
 		}
 	}
 
-	send(draft: MessageDraft): void {
+	setReplyTo(message: ApiResponseMessage): void {
+		this.#conversations.drafts.setReplyTo({
+			conversationId: this.conversationId,
+			messageId: message.messageId,
+		});
+	}
+
+	clearReplyTo(): void {
+		this.#conversations.drafts.clearReplyTo(this.conversationId);
+	}
+
+	// One call per batch: the target is read once and cleared once, so every
+	// message of a multi-photo reply quotes it, not just the first.
+	send(drafts: MessageDraft[]): void {
 		if (!this.profile) return;
+		const replyToMessage = this.replyTo;
+		for (const draft of drafts) this.#sendOne({ draft, replyToMessage });
+		if (replyToMessage) this.clearReplyTo();
+	}
+
+	#sendOne({
+		draft,
+		replyToMessage,
+	}: {
+		draft: MessageDraft;
+		replyToMessage: ApiResponseMessage | null;
+	}): void {
 		const tempId = `pending-${crypto.randomUUID()}`;
 		const optimistic: OptimisticMessage = {
 			...draft.optimistic,
@@ -340,24 +377,32 @@ export class ConversationState {
 			timestamp: Date.now(),
 			unsent: false,
 			reactions: [],
+			replyToMessage,
 			status: "pending" as const,
 		};
 		this.messages = removeDuplicateMessages([optimistic, ...this.messages]);
 		this.#updatePreview(optimistic);
-		void this.#resolveMessage({ tempId, message: draft.outbound });
+		void this.#resolveMessage({
+			tempId,
+			message: draft.outbound,
+			replyToMessageId: replyToMessage?.messageId,
+		});
 	}
 
 	async #resolveMessage({
 		tempId,
 		message,
+		replyToMessageId,
 	}: {
 		tempId: string;
 		message: OutboundMessage;
+		replyToMessageId?: string;
 	}): Promise<void> {
 		try {
 			const sent = await sendMessage({
 				toUserId: this.profile!.profileId,
 				message,
+				replyToMessageId,
 			});
 			const msg = this.messages.find((m) => m.messageId === tempId);
 			if (msg) {

@@ -24,7 +24,7 @@ export default defineConfig({
 		launchOptions: { chromiumSandbox },
 	},
 	webServer: {
-		command: `bun run dev:web --port ${PORT} --strictPort`,
+		command: `bunx vite dev --port ${PORT} --strictPort`,
 		port: PORT,
 		reuseExistingServer: true,
 		timeout: 120_000,

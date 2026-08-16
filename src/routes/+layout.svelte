@@ -16,8 +16,10 @@
 	} from "$lib/platform/android-native-bridge";
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { isAndroidPlatform } from "$lib/platform/os";
+	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
 
 	onMount(() => {
+		installScrollGestureBridge();
 		if (env.PUBLIC_TEST_INSETS) {
 			window.__AndroidInsets = {
 				top() {

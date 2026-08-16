@@ -9,7 +9,7 @@
 	import { processMessages } from "../messages";
 	import Message from "./message/Message.svelte";
 
-	let { seenTimestamp = $bindable() }: { seenTimestamp: number } = $props();
+	let { seenMessageIds }: { seenMessageIds: Set<string> } = $props();
 
 	const conversationState = $derived(getConversationState()());
 
@@ -35,9 +35,7 @@
 			: null}
 		onVisible={!isOut
 			? () => {
-					if (message.timestamp > seenTimestamp) {
-						seenTimestamp = message.timestamp;
-					}
+					seenMessageIds.add(message.messageId);
 					conversationState.reportRead(message);
 				}
 			: undefined}
@@ -55,6 +53,11 @@
 				revert?.();
 			}
 		}}
+		onReply={message.status !== "pending" &&
+		message.status !== "error" &&
+		!message.unsent
+			? () => conversationState.setReplyTo(message)
+			: undefined}
 		onReact={async (reactionType: number) => {
 			try {
 				await conversationState.reactTo({

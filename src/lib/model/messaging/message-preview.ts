@@ -1,4 +1,7 @@
-import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+import type {
+	ApiResponseMessage,
+	QuotedMessage,
+} from "$lib/model/messaging/messages";
 
 export type MessagePreview = {
 	type: string;
@@ -8,7 +11,7 @@ export type MessagePreview = {
 };
 
 export function previewFromMessage(
-	message: ApiResponseMessage | undefined,
+	message: ApiResponseMessage | QuotedMessage | undefined,
 ): MessagePreview {
 	if (!message)
 		return { type: "", text: null, albumId: null, imageHash: null };
@@ -61,4 +64,29 @@ export function previewLabel(preview: MessagePreview | null): string | null {
 	if (preview.type === "ExpiringImage") return "Expiring photo";
 	if (preview.imageHash !== null || preview.type === "Image") return "Photo";
 	return null;
+}
+
+const QUOTE_LABELS: Record<string, string> = {
+	Unsent: "Unsent message",
+	Audio: "Voice message",
+	Video: "Video",
+	PrivateVideo: "Video",
+	NonExpiringVideo: "Video",
+	VideoCall: "Video call",
+	Gaymoji: "Gaymoji",
+	Giphy: "GIF",
+	Location: "Location",
+	ProfileLink: "Profile",
+	ProfilePhotoReply: "Photo",
+	AlbumContentReaction: "Album",
+	AlbumContentReply: "Album",
+	RightNowRequest: "Right Now",
+};
+
+// Unlike previewLabel, a quote always needs something to render — the inbox
+// and the toast deliberately render its null, a quote pill cannot.
+export function quoteLabel(preview: MessagePreview): string {
+	const label = previewLabel(preview);
+	if (label !== null && label.trim() !== "") return label;
+	return QUOTE_LABELS[preview.type] ?? "Message";
 }

@@ -3,6 +3,56 @@ import type { CDPSession, Page } from "@playwright/test";
 export const DEMO_CONVERSATION = "/chat/100001:123456000";
 export const DEMO_GEOHASH = "u33dc0cpgp00";
 
+declare global {
+	interface Window {
+		__emitTauriEvent?: (event: string, payload: unknown) => void;
+	}
+}
+
+type TauriInternals = {
+	transformCallback: (callback: unknown) => number;
+	invoke: (cmd: string, args?: unknown, opts?: unknown) => Promise<unknown>;
+};
+
+// The demo websocket seeds nothing after load, so tests deliver late events
+// over the same Tauri event channel the app already listens on.
+export async function installEventInjection(page: Page): Promise<void> {
+	await page.addInitScript(() => {
+		const internals = (
+			window as unknown as { __TAURI_INTERNALS__: TauriInternals }
+		).__TAURI_INTERNALS__;
+		const handlers = new Map<number, (event: unknown) => void>();
+		const listenersByEvent = new Map<string, number[]>();
+		let nextHandlerId = 1;
+
+		internals.transformCallback = (callback: unknown) => {
+			const id = nextHandlerId++;
+			handlers.set(id, callback as (event: unknown) => void);
+			return id;
+		};
+
+		const passThrough = internals.invoke;
+		internals.invoke = (cmd: string, args?: unknown, opts?: unknown) => {
+			if (cmd !== "plugin:event|listen")
+				return passThrough(cmd, args, opts);
+			const { event, handler } = (args ?? {}) as {
+				event: string;
+				handler: number;
+			};
+			listenersByEvent.set(event, [
+				...(listenersByEvent.get(event) ?? []),
+				handler,
+			]);
+			return Promise.resolve(handler);
+		};
+
+		window.__emitTauriEvent = (event: string, payload: unknown) => {
+			for (const id of listenersByEvent.get(event) ?? [])
+				handlers.get(id)?.({ event, id, payload });
+		};
+	});
+}
+
 export async function ensureGridLocation(page: Page): Promise<void> {
 	const allFilters = page.locator('[aria-label="All filters"]');
 	if ((await allFilters.count()) === 0) {
@@ -19,8 +69,13 @@ export async function ensureGridLocation(page: Page): Promise<void> {
 	await allFilters.waitFor({ timeout: 60_000 });
 }
 
-export async function installTauriShim(page: Page): Promise<void> {
-	await page.addInitScript(() => {
+// The platform decides which wheel path the app takes: "macos" (the
+// default) runs the gesture-phase bridge, anything else the scroller rail.
+export async function installTauriShim(
+	page: Page,
+	{ platform = "macos" } = {},
+): Promise<void> {
+	await page.addInitScript((platformName: string) => {
 		interface FsArgs {
 			path?: string;
 			oldPath?: string;
@@ -67,12 +122,15 @@ export async function installTauriShim(page: Page): Promise<void> {
 		};
 
 		Object.assign(window, {
+			// the real runtime defines this; isTauri() reads it, and the
+			// wheel-input mode hangs off isTauri()
+			isTauri: true,
 			__TAURI_OS_PLUGIN_INTERNALS__: {
 				eol: "\n",
-				platform: "macos",
+				platform: platformName,
 				version: "15.0",
 				family: "unix",
-				os_type: "macos",
+				os_type: platformName,
 				arch: "aarch64",
 				exe_extension: "",
 			},
@@ -88,7 +146,7 @@ export async function installTauriShim(page: Page): Promise<void> {
 					Promise.resolve(invoke(cmd, args, opts)),
 			},
 		});
-	});
+	}, platform);
 }
 
 export class TrustedTouch {
@@ -133,6 +191,26 @@ export class TrustedTouch {
 		}
 		if (release) await this.end();
 	}
+}
+
+// One continuous gesture stream with a single lift, the shape a real trackpad
+// sends; discrete mouse.wheel calls each carry their own instant scrollend.
+export async function trackpadSwipe(
+	page: Page,
+	at: { x: number; y: number },
+	{ xDistance = 0, yDistance = 0, speed = 400 } = {},
+) {
+	const cdp = await page.context().newCDPSession(page);
+	await cdp.send("Input.synthesizeScrollGesture", {
+		x: at.x,
+		y: at.y,
+		xDistance,
+		yDistance,
+		speed,
+		preventFling: true,
+		gestureSourceType: "mouse",
+	} as never);
+	await cdp.detach();
 }
 
 export async function wheel(

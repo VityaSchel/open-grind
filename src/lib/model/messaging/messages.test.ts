@@ -5,6 +5,19 @@ import {
 	messageSchema,
 } from "$lib/model/messaging/messages";
 
+function incoming(messageId: string) {
+	return {
+		type: "Text",
+		body: { text: "hello" },
+		messageId,
+		conversationId: "conversation-1",
+		senderId: 42,
+		timestamp: 1_710_000_000_000,
+		unsent: false,
+		reactions: [],
+	};
+}
+
 async function freshApiResponseMessageSchema() {
 	vi.resetModules();
 	const messages = await import("$lib/model/messaging/messages");
@@ -217,6 +230,92 @@ describe("apiResponseMessageSchema", () => {
 		expect(result).toHaveProperty("unrecognizedType", "Image");
 		expect(warn).toHaveBeenCalledOnce();
 		warn.mockRestore();
+	});
+
+	it("keeps a quoted reply on the message that replies to it", () => {
+		const result = apiResponseMessageSchema.parse({
+			...incoming("msg-7"),
+			replyToMessage: { ...incoming("msg-quoted"), senderId: 7 },
+		});
+
+		expect(result.replyToMessage).toMatchObject({
+			type: "Text",
+			messageId: "msg-quoted",
+			senderId: 7,
+		});
+	});
+
+	it("accepts a quote the server trimmed down to its identifying fields", () => {
+		const result = apiResponseMessageSchema.parse({
+			...incoming("msg-8"),
+			replyToMessage: {
+				type: "Text",
+				body: { text: "hello" },
+				messageId: "msg-quoted",
+				senderId: 7,
+			},
+		});
+
+		expect(result.replyToMessage).toMatchObject({
+			messageId: "msg-quoted",
+		});
+	});
+
+	it.each([
+		["null", null],
+		["absent", undefined],
+	])("accepts a %s quote", (_label, replyToMessage) => {
+		const payload = incoming("msg-9");
+		if (replyToMessage !== undefined) {
+			Object.assign(payload, { replyToMessage });
+		}
+
+		expect(apiResponseMessageSchema.safeParse(payload).success).toBe(true);
+	});
+
+	it("drops a quote it cannot model rather than losing the message", async () => {
+		const schema = await freshApiResponseMessageSchema();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = schema.parse({
+			...incoming("msg-10"),
+			replyToMessage: { nonsense: true },
+		});
+
+		expect(result.messageId).toBe("msg-10");
+		expect(result.replyToMessage).toBeNull();
+		expect(warn).toHaveBeenCalledOnce();
+		warn.mockRestore();
+	});
+
+	it("does not recurse into a quote's own quote", () => {
+		const result = apiResponseMessageSchema.parse({
+			...incoming("msg-11"),
+			replyToMessage: {
+				...incoming("msg-quoted"),
+				replyToMessage: { hopelessly: "unmodelable" },
+			},
+		});
+
+		expect(result.replyToMessage).toMatchObject({
+			messageId: "msg-quoted",
+		});
+	});
+
+	it("does not pay for depth when a deeply nested quote chain fails", () => {
+		let replyToMessage: Record<string, unknown> = { unmodelable: true };
+		for (let depth = 0; depth < 400; depth++) {
+			replyToMessage = { ...incoming(`deep-${depth}`), replyToMessage };
+		}
+
+		const started = performance.now();
+		const result = apiResponseMessageSchema.safeParse({
+			...incoming("msg-12"),
+			replyToMessage,
+		});
+
+		expect(result.success).toBe(true);
+		expect(performance.now() - started).toBeLessThan(1000);
 	});
 
 	it("models a Right Now request message", () => {
