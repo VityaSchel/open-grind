@@ -65,14 +65,35 @@ beforeEach(() => {
 });
 
 describe("conversation API wrappers", () => {
-	it("loads paged conversations through the inbox endpoint", async () => {
+	it("loads paged conversations through the inbox endpoint without a body", async () => {
 		const data = { entries: [conversation()], nextPage: 2 };
 		fetchRestMock.mockResolvedValue(response(data));
 
-		await expect(getConversations(3)).resolves.toEqual(data);
+		await expect(getConversations({ page: 3 })).resolves.toEqual(data);
 
 		expect(fetchRestMock).toHaveBeenCalledWith("/v4/inbox?page=3", {
 			method: "POST",
+		});
+	});
+
+	it("sends the full filter body when filters are given", async () => {
+		const data = { entries: [], nextPage: null };
+		fetchRestMock.mockResolvedValue(response(data));
+		const filters = {
+			unreadOnly: false,
+			chemistryOnly: false,
+			favoritesOnly: true,
+			rightNowOnly: false,
+			onlineNowOnly: false,
+			distanceMeters: null,
+			positions: [],
+		};
+
+		await expect(getConversations({ filters })).resolves.toEqual(data);
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v4/inbox?page=1", {
+			method: "POST",
+			body: filters,
 		});
 	});
 

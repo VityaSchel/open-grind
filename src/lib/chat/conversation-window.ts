@@ -1,12 +1,17 @@
-import { getConversations } from "$lib/api/messaging/conversations";
+import {
+	getConversations,
+	type InboxFilterRequest,
+} from "$lib/api/messaging/conversations";
 import type { Conversation } from "$lib/model/messaging/conversations";
 
 const MAX_PAGES = 100;
 
 export async function fetchConversationWindow({
 	oldestLoadedTs,
+	filters = null,
 }: {
 	oldestLoadedTs: number;
+	filters?: InboxFilterRequest | null;
 }): Promise<{
 	fetched: Map<string, Conversation>;
 	oldestFetchedTs: number;
@@ -19,7 +24,7 @@ export async function fetchConversationWindow({
 	let reachedEnd = false;
 	for (let guard = 0; page !== null && guard < MAX_PAGES; guard++) {
 		const currentPage: number = page;
-		const result = await getConversations(currentPage);
+		const result = await getConversations({ page: currentPage, filters });
 		for (const entry of result.entries) {
 			if (!fetched.has(entry.data.conversationId)) {
 				fetched.set(entry.data.conversationId, entry);

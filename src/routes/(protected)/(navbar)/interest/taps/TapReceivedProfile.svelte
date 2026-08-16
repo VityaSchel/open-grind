@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
+	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";
 	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
 	import TapIcon from "$lib/components/profile/TapIcon.svelte";
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
@@ -9,9 +10,16 @@
 	let { tap }: { tap: TapProfile } = $props();
 </script>
 
+{#snippet favorite()}
+	<FavoriteStar />
+{/snippet}
+
 <ProfileItem
 	avatar={{ mediaHash: tap.profileImageMediaHash }}
-	title={{ value: tap.displayName }}
+	title={{
+		value: tap.displayName,
+		badge: tap.isFavorite ? favorite : undefined,
+	}}
 	onlineUntil={tap.onlineUntil}
 	link="/profile/{tap.profileId}"
 >

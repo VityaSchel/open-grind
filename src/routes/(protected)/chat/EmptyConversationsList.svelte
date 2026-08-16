@@ -1,17 +1,28 @@
 <script lang="ts">
-	import { ChatCircleSlashIcon } from "phosphor-svelte";
+	import { ChatCircleSlashIcon, FunnelIcon } from "phosphor-svelte";
 
 	import * as Empty from "$lib/components/ui/empty";
+
+	let { filtered = false }: { filtered?: boolean } = $props();
+
+	const Icon = $derived(filtered ? FunnelIcon : ChatCircleSlashIcon);
 </script>
 
 <Empty.Root>
 	<Empty.Header>
 		<Empty.Media variant="icon">
-			<ChatCircleSlashIcon weight="fill" />
+			<Icon weight="fill" />
 		</Empty.Media>
-		<Empty.Title>No Conversations Yet</Empty.Title>
-		<Empty.Description>
-			Browse <a href="/">Grid</a> to find people to chat with.
-		</Empty.Description>
+		{#if filtered}
+			<Empty.Title>No Results</Empty.Title>
+			<Empty.Description>
+				No conversations match these filters.
+			</Empty.Description>
+		{:else}
+			<Empty.Title>No Conversations Yet</Empty.Title>
+			<Empty.Description>
+				Browse <a href="/">Grid</a> to find people to chat with.
+			</Empty.Description>
+		{/if}
 	</Empty.Header>
 </Empty.Root>

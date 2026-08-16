@@ -4,6 +4,7 @@ import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
 import { hashFromSeed } from "./avatars";
+import { demoFavoriteOf } from "./favorites";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 type DemoMessage = { fromMe: boolean; reactions?: number } & (
@@ -37,7 +38,7 @@ const demoConversationSeeds: DemoConversation[] = [
 		unread: 2,
 		pinned: false,
 		favorite: true,
-		muted: false,
+		muted: true,
 		lastActivityAgo: 4,
 		messages: [
 			{ fromMe: false, text: "Hey! Lorem ipsum dolor sit amet." },
@@ -308,15 +309,23 @@ function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	return ordered.reverse();
 }
 
-export function demoConversations(page: number): {
-	entries: Conversation[];
-	nextPage: number | null;
-} {
+export function demoConversations({
+	page,
+	favoritesOnly = false,
+}: {
+	page: number;
+	favoritesOnly?: boolean;
+}): { entries: Conversation[]; nextPage: number | null } {
 	if (page > 1) return { entries: [], nextPage: null };
 	const entries: Conversation[] = demoConversationSeeds
 		.filter(
 			(conv) =>
 				!deletedConversationIds.has(conversationIdFor(conv.withId)),
+		)
+		.filter(
+			(conv) =>
+				!favoritesOnly ||
+				demoFavoriteOf({ profileId: conv.withId, seed: conv.favorite }),
 		)
 		.map((conv): Conversation => {
 			const conversationId = conversationIdFor(conv.withId);
@@ -336,7 +345,10 @@ export function demoConversations(page: number): {
 							onlineUntil: onlineUntilOf(seed),
 							distanceMetres: seed.distanceM,
 							position: seed.position,
-							isInAList: seed.favorite,
+							isInAList: demoFavoriteOf({
+								profileId: conv.withId,
+								seed: conv.favorite,
+							}),
 							hasDatingPotential: false,
 						},
 					],
@@ -345,7 +357,10 @@ export function demoConversations(page: number): {
 					preview: previewFromMessage(latest),
 					muted: mutedOverrides.get(conversationId) ?? conv.muted,
 					pinned: pinnedOverrides.get(conversationId) ?? conv.pinned,
-					favorite: conv.favorite,
+					favorite: demoFavoriteOf({
+						profileId: conv.withId,
+						seed: conv.favorite,
+					}),
 					rightNow: "NOT_ACTIVE",
 					onlineUntil: onlineUntilOf(seed),
 					hasUnreadThrob: false,
