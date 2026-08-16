@@ -3,10 +3,12 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import * as Kbd from "$lib/components/ui/kbd";
+	import { modifierKeyLabel } from "$lib/platform/keybindings";
 	import { isMobilePlatform } from "$lib/platform/os";
 	import { commandCenterState } from "./command-center-state.svelte";
 
 	const isMobile = isMobilePlatform();
+	const modifierKey = modifierKeyLabel();
 </script>
 
 <Button
@@ -16,6 +18,6 @@
 >
 	<TerminalIcon />
 	{#if !isMobile}
-		<Kbd.Root>&#8984; + K</Kbd.Root>
+		<Kbd.Root>{modifierKey} + K</Kbd.Root>
 	{/if}
 </Button>

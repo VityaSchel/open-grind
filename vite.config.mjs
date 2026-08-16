@@ -32,6 +32,9 @@ export default defineConfig(async () => ({
 		environment: "jsdom",
 		include: ["src/**/*.test.ts"],
 		setupFiles: ["src/test-setup.ts"],
+		// tinykeys caches navigator.platform at load, so vi.resetModules() cannot
+		// re-resolve `$mod` unless tinykeys goes through the module runner too.
+		server: { deps: { inline: ["tinykeys"] } },
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "html"],
