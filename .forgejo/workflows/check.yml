@@ -85,6 +85,9 @@ jobs:
       - name: Check the version
         run: cd "$CI_WORKSPACE" && bun run check:version
 
+      - name: Check the Android backup rules
+        run: cd "$CI_WORKSPACE" && bun run check:backup-rules
+
       - name: Lint
         run: cd "$CI_WORKSPACE" && bun ci/lint.ts
 
