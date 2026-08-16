@@ -123,6 +123,19 @@ pub fn run() {
 
 	let builder = tauri::Builder::default();
 
+	// Plugins run in registration order and this one must be first:
+	// https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/single-instance
+	#[cfg(desktop)]
+	let builder = builder.plugin(tauri_plugin_single_instance::init(
+		|app, _args, _cwd| {
+			if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+				let _ = window.unminimize();
+				let _ = window.show();
+				let _ = window.set_focus();
+			}
+		},
+	));
+
 	#[cfg(debug_assertions)]
 	let builder = builder.plugin(devtools);
 
