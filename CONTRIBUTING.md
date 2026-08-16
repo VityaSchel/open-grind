@@ -8,11 +8,14 @@ Thanks for considering contributing to Open Grind.
         - [Development environment](#development-environment)
         - [Project structure](#project-structure)
         - [Interacting with API](#interacting-with-api)
-        - [Checks and tests](#checks-and-tests)
+    - [Architecture](#architecture)
         - [Where state lives](#where-state-lives)
         - [Function parameters](#function-parameters)
         - [Test selectors](#test-selectors)
+        - [Versioning](#versioning)
     - [Submitting your changes](#submitting-your-changes)
+        - [Checks and tests](#checks-and-tests)
+        - [Sending your changes as a PR](#sending-your-changes-as-a-pr)
         - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
 
 ## Contribution guidelines
@@ -108,27 +111,7 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 
 </details>
 
-### Checks and tests
-
-Before opening a pull request, run the same checks CI runs:
-
-- `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
-- `bun run check` — `svelte-check` type checking.
-- `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
-- `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
-
-End-to-end tests are a separate tier:
-
-- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
-
-`bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml)) that runs over staged files only:
-
-- `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
-- `*.{json,md,yml,yaml,css,html}` — Prettier
-- `*.sh` — ShellCheck
-- `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
-
-[ShellCheck](https://www.shellcheck.net/) and [rustfmt](https://github.com/rust-lang/rustfmt) must be on `PATH`. `nix develop` provides both, along with the pinned Rust and Android toolchains.
+## Architecture
 
 ### Where state lives
 
@@ -158,7 +141,63 @@ When the element is not interactive — a scroller, a measured wrapper, a state-
 
 Never select on Tailwind utility classes, tag shape, or computed style: `div.absolute.right-7.bottom-0` turns a padding tweak into a broken test, and scanning every `<div>` for `overflowY === "auto"` silently finds a different element once a second scroller appears. Library-owned classes are not utility classes — PhotoSwipe's `.pswp` and the `.item[href]` it is configured with are API contracts and stay.
 
+### Versioning
+
+Open Grind adopts semver and uses it for canonical version names, i.e. `vMAJOR.MINOR.PATCH` with optional `-TAG` or `-TAG.X` semver metadata (where `MAJOR`, `MINOR`, `PATCH` and `X` are non-negative integers), e.g. `v0.1.0`, `v1.0.0-rc` or `v1.2.3-beta.1`.
+
+Android version code is calculated using `major * 1000000 + minor * 1000 + patch`, but for pre-mvp (v0.1.0) this convention is broken:
+
+```
+v0.1.0-alpha.1 = 1000
+v0.1.0-alpha.2 = 1001
+v0.1.0-alpha.3 = 1002
+v0.1.0-alpha.4 = 1003
+v0.1.0-alpha.5 = 1004
+v0.1.0-beta.1  = 1010 (due to error, the actual release is 1004)
+v0.1.0-beta.2  = 1020 (due to error, the actual release is 1010)
+v0.1.0-beta.3  = 1030 (due to error, the actual release is 1020)
+v0.1.0-beta.4  = 1040 (error fixed, actual release jumps from 1020 to 1040)
+v0.1.0-beta.5  = 1050
+```
+
+Post-mvp versioning:
+
+```
+v0.2.0      =    2000
+v0.2.1      =    2001
+v0.3.0-rc.1 =    3000
+v0.3.0      =    3000
+v0.123.0    =  123000
+v1.0.0      = 1000000
+v1.1.0      = 1001000
+v1.123.0    = 1123000
+```
+
 ## Submitting your changes
+
+### Checks and tests
+
+Before opening a pull request, run the same checks CI runs:
+
+- `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
+- `bun run check` — `svelte-check` type checking.
+- `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
+- `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
+
+End-to-end tests are a separate tier:
+
+- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
+
+`bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml)) that runs over staged files only:
+
+- `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
+- `*.{json,md,yml,yaml,css,html}` — Prettier
+- `*.sh` — ShellCheck
+- `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
+
+[ShellCheck](https://www.shellcheck.net/) and [rustfmt](https://github.com/rust-lang/rustfmt) must be on `PATH`. `nix develop` provides both, along with the pinned Rust and Android toolchains.
+
+### Sending your changes as a PR
 
 1. [Create an account](https://git.opengrind.org/user/sign_up) on git.opengrind.org
 2. [Create an SSH key](https://docs.codeberg.org/security/ssh-key/) for authorization on your computer and add it to your SSH config
