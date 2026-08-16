@@ -14,6 +14,18 @@ const demoGradients = [
 
 const demoMediaSeeds = new Map<string, string>();
 
+export function picsum({
+	seed,
+	width = 600,
+	height = 800,
+}: {
+	seed: string;
+	width?: number;
+	height?: number;
+}): string {
+	return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${width}/${height}`;
+}
+
 export function hashFromSeed(seed: string): string {
 	let state = hashString(seed);
 	let out = "";

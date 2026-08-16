@@ -8,7 +8,7 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 }));
 
 import { getMyAlbums, shareAlbum } from "$lib/api/messaging/albums";
-import { demoMyAlbums } from "$lib/demo/mock/conversations";
+import { demoMyAlbums } from "$lib/demo/mock/albums";
 
 const assertOk = vi.fn();
 const jsonParsed = vi.fn();

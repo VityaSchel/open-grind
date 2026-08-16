@@ -275,7 +275,6 @@ const featuredOverrides = new Map<number, Partial<DemoSeed>>([
 			photos: 1,
 			bio: "👀 just here to chat",
 			distanceM: 6,
-			favorite: true,
 			unread: 5,
 		},
 	],
@@ -327,6 +326,8 @@ const featuredOverrides = new Map<number, Partial<DemoSeed>>([
 	],
 	[100015, { name: "Leo", age: 21, photos: 0, bio: "🍆🍑💦", distanceM: 15 }],
 	[100016, { name: "liam", photos: 3, bio: LOREM, distanceM: 16 }],
+	[100250, { favorite: false }],
+	[100777, { favorite: false }],
 ]);
 
 export function distanceForId(id: number): number {

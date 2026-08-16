@@ -45,6 +45,7 @@ import {
 	markProfileUnviewable,
 	markProfileViewable,
 } from "$lib/api/users/profile-viewability";
+import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import type { TapProfile } from "$lib/model/interest/tap-profile";
 import { getTapsState, TapsState } from "./taps-state.svelte";
 
@@ -153,6 +154,46 @@ describe("TapsState", () => {
 
 		expect(state.taps).toHaveLength(21);
 		expect(state.hasMore).toBe(false);
+	});
+
+	it("stars a tap when its profile is favorited elsewhere", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+		expect(state.taps[0]?.isFavorite).toBe(false);
+
+		mergeProfileEditIntoCaches({
+			cacheProfileId: 1,
+			patch: { isFavorite: true },
+		});
+
+		expect(state.taps[0]?.isFavorite).toBe(true);
+	});
+
+	it("stops following profile edits once destroyed", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+		state.destroy();
+
+		mergeProfileEditIntoCaches({
+			cacheProfileId: 1,
+			patch: { isFavorite: true },
+		});
+
+		expect(state.taps[0]?.isFavorite).toBe(false);
+	});
+
+	it("keeps a known star when the same profile taps again", async () => {
+		getReceivedTapsMock.mockResolvedValue({
+			profiles: [tap(1, { isFavorite: true })],
+		});
+		const state = new TapsState({ ourProfileId: 99 });
+		await waitForLoaded(state);
+
+		emitTap(tapEvent(1, 99));
+
+		expect(state.taps[0]?.isFavorite).toBe(true);
 	});
 
 	it("records initial load errors and retries", async () => {

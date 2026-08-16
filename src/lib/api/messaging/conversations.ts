@@ -11,10 +11,23 @@ const conversationsSchema = z.object({
 	nextPage: z.number().nullable(),
 });
 
-export async function getConversations(page: number = 1) {
+export type InboxFilterRequest = {
+	unreadOnly: boolean;
+	chemistryOnly: boolean;
+	favoritesOnly: boolean;
+	rightNowOnly: boolean;
+	onlineNowOnly: boolean;
+	distanceMeters: number | null;
+	positions: number[];
+};
+
+export async function getConversations({
+	page = 1,
+	filters = null,
+}: { page?: number; filters?: InboxFilterRequest | null } = {}) {
 	const conversations = await fetchRest(
 		"/v4/inbox?" + new URLSearchParams({ page: String(page) }).toString(),
-		{ method: "POST" },
+		{ method: "POST", ...(filters ? { body: filters } : {}) },
 	).then((res) => res.jsonParsed(conversationsSchema));
 	return conversations;
 }

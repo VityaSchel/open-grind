@@ -14,6 +14,7 @@
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 	import Conversation from "./Conversation.svelte";
+	import ConversationsFilters from "./ConversationsFilters.svelte";
 	import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 	import DeleteConversationsDialog from "./DeleteConversationsDialog.svelte";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
@@ -23,18 +24,10 @@
 
 	const conversations: ConversationsState = getConversations();
 	const mobile = below("split");
+	const visibleEntries = $derived(conversations.visibleEntries);
 
-	const latestActivity = $derived(
-		conversations.entries.reduce(
-			(max, entry) => Math.max(max, entry.data.lastActivityTimestamp),
-			0,
-		),
-	);
-	let lastMarkedActivity = 0;
 	$effect(() => {
-		if (latestActivity === lastMarkedActivity) return;
-		lastMarkedActivity = latestActivity;
-		conversations.markInboxViewed();
+		conversations.noteVisibleActivity();
 	});
 
 	let container: HTMLDivElement | null = $state(null);
@@ -168,83 +161,98 @@
 	onConfirm={() => void confirmDelete()}
 />
 
-<div class="relative flex h-full w-full min-w-list-rail flex-col">
-	<div
-		bind:this={container}
-		data-slot="conversations-scroller"
-		class={[
-			"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain p-4 pb-0",
-			{ "pt-(--selection-bar-height)": selecting },
-			className,
-		]}
-		onscroll={() => (conversations.scrollY = container?.scrollTop ?? 0)}
-	>
-		{#if conversations.loading}
-			{#each Array(8)}
-				<Skeleton class="h-24.5 w-full shrink-0" />
-			{/each}
-		{:else if conversations.error}
-			<div class="flex flex-1">
-				<ApiErrorDisplay
-					error={conversations.error}
-					onRetry={() => conversations.retry()}
-					class="m-auto"
-				/>
-			</div>
-		{:else}
-			<div
-				class="flex min-h-overscrollable shrink-0 flex-col gap-1 pb-nav-clear"
-			>
-				{#each conversations.entries as conversation, i (conversation.data.conversationId)}
-					{@const conversationId = conversation.data.conversationId}
-					{#if i < EAGER_COUNT}
-						<Conversation
-							{conversation}
-							selection={selecting ? selection : null}
-							onEnterSelection={mobile.current
-								? () => enterSelection(conversationId)
-								: undefined}
-							onRequestDelete={() =>
-								requestDelete([conversationId])}
-						/>
-					{:else}
-						<LazyConversation
-							{conversation}
-							selection={selecting ? selection : null}
-							onEnterSelection={mobile.current
-								? () => enterSelection(conversationId)
-								: undefined}
-							onRequestDelete={() =>
-								requestDelete([conversationId])}
+<div class="flex h-full w-full min-w-list-rail flex-col">
+	<div class="relative flex min-h-0 flex-1 flex-col">
+		<div
+			bind:this={container}
+			data-slot="conversations-scroller"
+			class={[
+				"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain px-4",
+				{
+					"pt-15": !selecting,
+					"pt-(--selection-bar-height)": selecting,
+				},
+				className,
+			]}
+			onscroll={() => (conversations.scrollY = container?.scrollTop ?? 0)}
+		>
+			{#if conversations.loading}
+				{#each Array(8)}
+					<Skeleton class="h-24.5 w-full shrink-0" />
+				{/each}
+			{:else if conversations.error}
+				<div class="flex flex-1">
+					<ApiErrorDisplay
+						error={conversations.error}
+						onRetry={() => conversations.retry()}
+						class="m-auto"
+					/>
+				</div>
+			{:else}
+				<div
+					class="flex min-h-overscrollable shrink-0 flex-col gap-1 pb-nav-clear"
+				>
+					{#each visibleEntries as conversation, i (conversation.data.conversationId)}
+						{@const conversationId =
+							conversation.data.conversationId}
+						{#if i < EAGER_COUNT}
+							<Conversation
+								{conversation}
+								selection={selecting ? selection : null}
+								onEnterSelection={mobile.current
+									? () => enterSelection(conversationId)
+									: undefined}
+								onRequestDelete={() =>
+									requestDelete([conversationId])}
+							/>
+						{:else}
+							<LazyConversation
+								{conversation}
+								selection={selecting ? selection : null}
+								onEnterSelection={mobile.current
+									? () => enterSelection(conversationId)
+									: undefined}
+								onRequestDelete={() =>
+									requestDelete([conversationId])}
+							/>
+						{/if}
+					{/each}
+					{#if visibleEntries.length === 0 && conversations.nextPage === null}
+						<EmptyConversationsList
+							filtered={conversations.filters.active.length > 0}
 						/>
 					{/if}
-				{:else}
-					<EmptyConversationsList />
-				{/each}
-				{#if conversations.loadingMore}
-					{#each Array(6)}
-						<Skeleton class="h-24.5 w-full shrink-0" />
-					{/each}
-				{/if}
-				{#if conversations.nextPage !== null}
-					<div
-						class="h-0"
-						use:observeIntersection={{
-							handle: () => conversations.loadMore(),
-							rootMargin: "400px",
-						}}
-					></div>
-				{/if}
-			</div>
+					{#if conversations.loadingMore}
+						{#each Array(6)}
+							<Skeleton class="h-24.5 w-full shrink-0" />
+						{/each}
+					{/if}
+					{#if conversations.nextPage !== null}
+						{#key conversations.nextPage}
+							<div
+								class="h-0"
+								use:observeIntersection={{
+									handle: () => conversations.loadMore(),
+									rootMargin: "400px",
+								}}
+							></div>
+						{/key}
+					{/if}
+				</div>
+			{/if}
+		</div>
+		{#if !conversations.loading && !conversations.error}
+			<DataRefreshControl
+				{container}
+				updating={conversations.refreshing}
+				position="top"
+				onrefresh={() => void conversations.refresh()}
+			/>
 		{/if}
-	</div>
-	{#if !conversations.loading && !conversations.error}
-		<DataRefreshControl
-			{container}
-			updating={conversations.refreshing}
-			position="top"
-			hintOffset={12}
-			onrefresh={() => void conversations.refresh()}
+		<ConversationsFilters
+			filters={conversations.filters}
+			onchange={(active) => conversations.setFilters(active)}
+			inert={selecting}
 		/>
-	{/if}
+	</div>
 </div>

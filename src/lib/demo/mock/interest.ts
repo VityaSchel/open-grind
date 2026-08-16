@@ -1,4 +1,5 @@
 import { HOUR, MINUTE, NOW } from "../config";
+import { demoFavoriteOf } from "./favorites";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 const TAP_TYPES = [0, 1, 2] as const;
@@ -19,7 +20,7 @@ export function demoReceivedTaps() {
 		return {
 			distance: seed.distanceM ?? null,
 			profileImageMediaHash: photos[0] ?? null,
-			isFavorite: seed.favorite,
+			isFavorite: demoFavoriteOf({ profileId: id, seed: seed.favorite }),
 			profileId: id,
 			displayName: seed.name,
 			onlineUntil: onlineUntilOf(seed),
@@ -41,7 +42,7 @@ export function demoViews() {
 		return {
 			profileImageMediaHash: photos[0] ?? null,
 			distance: seed.distanceM ?? null,
-			isFavorite: seed.favorite,
+			isFavorite: demoFavoriteOf({ profileId: id, seed: seed.favorite }),
 			lastViewed: NOW - (i + 1) * 41 * MINUTE,
 			isSecretAdmirer: false,
 			viewedCount: { totalCount: 1 + (i % 4), maxDisplayCount: 99 },

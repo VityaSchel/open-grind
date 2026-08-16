@@ -1,18 +1,17 @@
 import { albumShareRequestSchema } from "$lib/model/messaging/albums";
 import { demoMeProfileId } from "./config";
+import { demoAlbumContent, demoMyAlbums, demoShareAlbum } from "./mock/albums";
 import {
-	demoAlbumContent,
 	demoConversationMessages,
 	demoConversations,
 	demoDeleteConversation,
 	demoDrawerMedia,
-	demoMyAlbums,
 	demoSentMessage,
 	demoSetConversationMuted,
 	demoSetConversationPinned,
-	demoShareAlbum,
 	demoSingleMessage,
 } from "./mock/conversations";
+import { demoSetFavorite } from "./mock/favorites";
 import {
 	buildFullProfile,
 	demoCascadeV4,
@@ -90,8 +89,27 @@ export function demoRoute({
 	if (rawPath === "/v2/taps/add") return ok({ isMutual: false });
 	if (rawPath === "/v7/views/list") return ok(demoViews());
 	if (rawPath === "/v3.1/me/blocks") return ok({ blocking: [] });
+	if (
+		segments.length === 4 &&
+		segments[0] === "v3" &&
+		segments[1] === "me" &&
+		segments[2] === "favorites" &&
+		(method === "POST" || method === "DELETE")
+	) {
+		demoSetFavorite({
+			profileId: Number(segments[3]),
+			favorite: method === "POST",
+		});
+		return ok({});
+	}
 	if (method === "POST" && rawPath === "/v4/inbox") {
-		return ok(demoConversations(num(params.get("page")) ?? 1));
+		const filters = body as { favoritesOnly?: boolean } | undefined;
+		return ok(
+			demoConversations({
+				page: num(params.get("page")) ?? 1,
+				favoritesOnly: filters?.favoritesOnly ?? false,
+			}),
+		);
 	}
 	if (
 		method === "GET" &&

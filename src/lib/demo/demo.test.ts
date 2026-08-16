@@ -354,4 +354,70 @@ describe("demo route data matches the real schemas", () => {
 			),
 		).toBe(false);
 	});
+
+	it("favorite mutations persist across inbox and profile fetches", () => {
+		const inbox = () => {
+			const body = route("/v4/inbox?page=1", "POST") as {
+				entries: unknown[];
+			};
+			return z.array(fullConversationSchema).parse(body.entries);
+		};
+		const starred = inbox().find((entry) => entry.data.favorite);
+		if (!starred)
+			throw new Error("the demo inbox has no favorited conversation");
+		const profileId = starred.data.participants[0]?.profileId;
+		if (!profileId)
+			throw new Error("the favorited conversation has no participant");
+
+		route(`/v3/me/favorites/${profileId}`, "DELETE");
+
+		const conversationAfter = inbox().find(
+			(entry) =>
+				entry.data.conversationId === starred.data.conversationId,
+		);
+		expect(conversationAfter?.data.favorite).toBe(false);
+		const profileAfter = route(`/v7/profiles/${profileId}`, "GET") as {
+			profiles: { isFavorite: boolean }[];
+		};
+		expect(profileAfter.profiles[0]?.isFavorite).toBe(false);
+
+		route(`/v3/me/favorites/${profileId}`, "POST");
+		expect(
+			inbox().find(
+				(entry) =>
+					entry.data.conversationId === starred.data.conversationId,
+			)?.data.favorite,
+		).toBe(true);
+	});
+
+	it("keeps every conversation peer's profile favorite in agreement with its row", () => {
+		const body = route("/v4/inbox?page=1", "POST") as {
+			entries: unknown[];
+		};
+		const entries = z.array(fullConversationSchema).parse(body.entries);
+		expect(entries.length).toBeGreaterThan(0);
+
+		for (const entry of entries) {
+			const profileId = entry.data.participants[0]?.profileId;
+			const profile = (
+				route(`/v7/profiles/${profileId}`, "GET") as {
+					profiles: { isFavorite: boolean }[];
+				}
+			).profiles[0];
+			expect(
+				profile?.isFavorite,
+				`profile ${profileId} vs its conversation row`,
+			).toBe(entry.data.favorite);
+		}
+	});
+
+	it("filters the inbox server-side when the body asks for favorites only", () => {
+		const body = route("/v4/inbox?page=1", "POST", {
+			favoritesOnly: true,
+		}) as { entries: unknown[] };
+		const entries = z.array(fullConversationSchema).parse(body.entries);
+
+		expect(entries.length).toBeGreaterThan(0);
+		expect(entries.every((entry) => entry.data.favorite)).toBe(true);
+	});
 });

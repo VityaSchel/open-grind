@@ -5,6 +5,7 @@ import {
 	isProfileViewable,
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
+import { onProfileEdit } from "$lib/api/users/profiles";
 import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
@@ -32,6 +33,10 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 			this.#all = this.#all.filter((tap) => tap.profileId !== profileId);
 		},
 	);
+	#unsubscribeProfileEdits = onProfileEdit(({ profileId, patch }) => {
+		if (patch.isFavorite === undefined) return;
+		this.setFavorite({ profileId, isFavorite: patch.isFavorite });
+	});
 
 	constructor({ ourProfileId }: { ourProfileId: number }) {
 		super({
@@ -87,8 +92,12 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		const existing = this.#all.findIndex(
 			(t) => t.profileId === tap.profileId,
 		);
+		const known = existing === -1 ? undefined : this.#all[existing];
 		if (existing !== -1) this.#all.splice(existing, 1);
-		this.#all = [tap, ...this.#all];
+		this.#all = [
+			{ ...tap, isFavorite: tap.isFavorite || !!known?.isFavorite },
+			...this.#all,
+		];
 		this.#tappedSinceViewed = true;
 	}
 
@@ -96,8 +105,22 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		return tap.profileId;
 	}
 
+	setFavorite({
+		profileId,
+		isFavorite,
+	}: {
+		profileId: number;
+		isFavorite: boolean;
+	}): void {
+		const index = this.#all.findIndex((tap) => tap.profileId === profileId);
+		const tap = this.#all[index];
+		if (!tap) return;
+		this.#all = this.#all.with(index, { ...tap, isFavorite });
+	}
+
 	override destroy(): void {
 		this.#unsubscribeViewability();
+		this.#unsubscribeProfileEdits();
 		super.destroy();
 	}
 

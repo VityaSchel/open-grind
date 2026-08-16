@@ -9,6 +9,7 @@
 	} from "phosphor-svelte";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
+	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";
 	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
 	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
@@ -63,11 +64,16 @@
 	}
 </script>
 
-{#snippet mutedBadge()}
-	<BellSimpleSlashIcon
-		weight="fill"
-		class="size-4 shrink-0 text-muted-foreground"
-	/>
+{#snippet titleBadges()}
+	{#if conversation.data.favorite}
+		<FavoriteStar />
+	{/if}
+	{#if conversation.data.muted}
+		<BellSimpleSlashIcon
+			weight="fill"
+			class="size-4 shrink-0 text-muted-foreground"
+		/>
+	{/if}
 {/snippet}
 
 {#snippet selectedOverlay()}
@@ -84,10 +90,7 @@
 			link: participant ? `/profile/${participant.profileId}` : undefined,
 			overlay: isSelected ? selectedOverlay : undefined,
 		}}
-		title={{
-			value: conversation.data.name,
-			badge: conversation.data.muted ? mutedBadge : undefined,
-		}}
+		title={{ value: conversation.data.name, badge: titleBadges }}
 		onlineUntil={conversation.data.onlineUntil ?? participant?.onlineUntil}
 		link="/chat/{conversationId}"
 		selected={isSelected}

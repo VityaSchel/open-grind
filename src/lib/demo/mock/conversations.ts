@@ -3,7 +3,9 @@ import { type ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
 import { DAY, demoMeProfileId, HOUR, MINUTE, NOW, SECOND } from "../config";
-import { hashFromSeed } from "./avatars";
+import { albumCoverUrl } from "./albums";
+import { hashFromSeed, picsum } from "./avatars";
+import { demoFavoriteOf } from "./favorites";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 type DemoMessage = { fromMe: boolean; reactions?: number } & (
@@ -37,7 +39,7 @@ const demoConversationSeeds: DemoConversation[] = [
 		unread: 2,
 		pinned: false,
 		favorite: true,
-		muted: false,
+		muted: true,
 		lastActivityAgo: 4,
 		messages: [
 			{ fromMe: false, text: "Hey! Lorem ipsum dolor sit amet." },
@@ -152,22 +154,6 @@ const MESSAGE_GAP = 7 * MINUTE;
 const MESSAGES_PER_PAGE = 8;
 const DEMO_IMAGE_URL = "https://picsum.photos/seed/opengrind-demo/600/800";
 const EXPIRING_IMAGE_DURATION_MS = 10 * SECOND;
-
-function picsum({
-	seed,
-	width = 600,
-	height = 800,
-}: {
-	seed: string;
-	width?: number;
-	height?: number;
-}): string {
-	return `https://picsum.photos/seed/${encodeURIComponent(seed)}/${width}/${height}`;
-}
-
-function localDateTime(timestamp: number): string {
-	return new Date(timestamp).toISOString().slice(0, 19);
-}
 
 export function conversationIdFor(withId: number): string {
 	return `${Math.min(demoMeProfileId, withId)}:${Math.max(demoMeProfileId, withId)}`;
@@ -308,10 +294,6 @@ function buildMessage({
 	}
 }
 
-function albumCoverUrl(albumId: number): string {
-	return picsum({ seed: `album-${albumId}-cover`, width: 300, height: 400 });
-}
-
 function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	const lastActivity = lastActivityOf(conv);
 	const count = conv.messages.length;
@@ -326,15 +308,23 @@ function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	return ordered.reverse();
 }
 
-export function demoConversations(page: number): {
-	entries: Conversation[];
-	nextPage: number | null;
-} {
+export function demoConversations({
+	page,
+	favoritesOnly = false,
+}: {
+	page: number;
+	favoritesOnly?: boolean;
+}): { entries: Conversation[]; nextPage: number | null } {
 	if (page > 1) return { entries: [], nextPage: null };
 	const entries: Conversation[] = demoConversationSeeds
 		.filter(
 			(conv) =>
 				!deletedConversationIds.has(conversationIdFor(conv.withId)),
+		)
+		.filter(
+			(conv) =>
+				!favoritesOnly ||
+				demoFavoriteOf({ profileId: conv.withId, seed: conv.favorite }),
 		)
 		.map((conv): Conversation => {
 			const conversationId = conversationIdFor(conv.withId);
@@ -354,7 +344,10 @@ export function demoConversations(page: number): {
 							onlineUntil: onlineUntilOf(seed),
 							distanceMetres: seed.distanceM,
 							position: seed.position,
-							isInAList: seed.favorite,
+							isInAList: demoFavoriteOf({
+								profileId: conv.withId,
+								seed: conv.favorite,
+							}),
 							hasDatingPotential: false,
 						},
 					],
@@ -363,7 +356,10 @@ export function demoConversations(page: number): {
 					preview: previewFromMessage(latest),
 					muted: mutedOverrides.get(conversationId) ?? conv.muted,
 					pinned: pinnedOverrides.get(conversationId) ?? conv.pinned,
-					favorite: conv.favorite,
+					favorite: demoFavoriteOf({
+						profileId: conv.withId,
+						seed: conv.favorite,
+					}),
 					rightNow: "NOT_ACTIVE",
 					onlineUntil: onlineUntilOf(seed),
 					hasUnreadThrob: false,
@@ -427,81 +423,6 @@ export function demoSingleMessage({
 		? threadMessages(conv).find((entry) => entry.messageId === messageId)
 		: undefined;
 	return { message: message ?? null };
-}
-
-export function demoAlbumContent(albumId: number) {
-	const count = 3 + (albumId % 3);
-	const content = Array.from({ length: count }, (_, i) => {
-		const thumb = picsum({
-			seed: `album-${albumId}-${i}`,
-			width: 300,
-			height: 400,
-		});
-		return {
-			contentId: albumId * 100 + i,
-			contentType: "image/jpeg",
-			coverUrl: thumb,
-			statusId: 1,
-			thumbUrl: thumb,
-			url: picsum({ seed: `album-${albumId}-${i}` }),
-			processing: false,
-			rejectionId: null,
-		};
-	});
-	return {
-		albumId,
-		hasUnseenContent: false,
-		albumName: null,
-		profileId: demoMeProfileId,
-		albumViewable: true,
-		sharedCount: 1,
-		createdAt: localDateTime(NOW - 3 * DAY),
-		updatedAt: localDateTime(NOW - DAY),
-		content,
-	};
-}
-
-const demoAlbumSeeds = [
-	{ albumName: "Weekend trip" },
-	{ albumName: "Gym progress", hasVideo: true },
-	{ albumName: null, isShareable: false },
-	{ albumName: "Studio" },
-];
-
-const albumShares = new Map<number, Set<number>>();
-
-export function demoShareAlbum({
-	albumId,
-	profileIds,
-}: {
-	albumId: number;
-	profileIds: number[];
-}): void {
-	const shared = albumShares.get(albumId) ?? new Set<number>();
-	for (const profileId of profileIds) shared.add(profileId);
-	albumShares.set(albumId, shared);
-}
-
-export function demoMyAlbums() {
-	return {
-		albums: demoAlbumSeeds.map((seed, i) => {
-			const albumId = 900 + i;
-			const album = demoAlbumContent(albumId);
-			return {
-				...album,
-				albumName: seed.albumName,
-				version: 1,
-				isShareable: seed.isShareable ?? true,
-				sharedCount:
-					album.sharedCount + (albumShares.get(albumId)?.size ?? 0),
-				content: album.content.map((item, j) =>
-					seed.hasVideo && j === 0
-						? { ...item, contentType: "video/mp4" }
-						: item,
-				),
-			};
-		}),
-	};
 }
 
 let demoSentCounter = 0;

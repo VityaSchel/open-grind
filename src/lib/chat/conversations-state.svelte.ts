@@ -8,7 +8,8 @@ import {
 	setConversationMuted,
 	setConversationPinned,
 } from "$lib/api/messaging/conversations";
-import { inboxLastViewed } from "$lib/chat/inbox-last-viewed";
+import { onProfileEdit } from "$lib/api/users/profiles";
+import { InboxViewedMarker } from "$lib/chat/inbox-last-viewed.svelte";
 import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
@@ -21,6 +22,12 @@ import {
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { CachedConversation } from "./cached-conversation";
+import {
+	applyFavoriteEdit,
+	type ConversationFilterKey,
+	ConversationFilters,
+	inboxFilterRequest,
+} from "./conversation-filters.svelte";
 import { fetchConversationWindow } from "./conversation-window";
 import { Drafts } from "./drafts.svelte";
 import { FetchEpochs } from "./fetch-epochs";
@@ -43,7 +50,6 @@ class ConversationsState {
 	nextPage = $state<number | null>(null);
 	loadingMore = $state(false);
 	refreshing = $state(false);
-	inboxLastViewedAt = $state(0);
 	loading = $state(true);
 	error: Error | null = $state(null);
 	scrollY = 0;
@@ -52,6 +58,8 @@ class ConversationsState {
 
 	readonly ourProfileId: number;
 	readonly drafts = new Drafts();
+	readonly filters = new ConversationFilters();
+	readonly inboxViewed: InboxViewedMarker;
 	#onIncomingMessage: IncomingMessageHandler;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
@@ -66,6 +74,14 @@ class ConversationsState {
 	#fetches = new FetchEpochs();
 	#refreshRequestedSinceFetchStart = false;
 	#syncLatestInFlight: Promise<boolean> | null = null;
+	#unsubscribeProfileEdits = onProfileEdit(({ profileId, patch }) => {
+		if (patch.isFavorite === undefined) return;
+		applyFavoriteEdit({
+			entries: this.entries,
+			profileId,
+			isFavorite: patch.isFavorite,
+		});
+	});
 
 	constructor({
 		ourProfileId,
@@ -76,7 +92,7 @@ class ConversationsState {
 	}) {
 		this.ourProfileId = ourProfileId;
 		this.#onIncomingMessage = onIncomingMessage;
-		this.inboxLastViewedAt = inboxLastViewed.load(ourProfileId);
+		this.inboxViewed = new InboxViewedMarker({ profileId: ourProfileId });
 		void this.#hardLoad();
 
 		this.#unsubscribeReconcile = reconciler.subscribe(() =>
@@ -110,9 +126,19 @@ class ConversationsState {
 		this.#destroyed = true;
 		this.drafts.destroy();
 		this.#unsubscribeReconcile();
+		this.#unsubscribeProfileEdits();
 		const unlisteners = await Promise.all(this.#wsPromises);
 		for (const unlisten of unlisteners) unlisten();
 		this.#wsPromises = [];
+	}
+
+	get visibleEntries(): Conversation[] {
+		if (this.filters.active.length === 0) return this.entries;
+		return this.entries.filter((entry) => this.filters.matches(entry));
+	}
+
+	setFilters(active: ConversationFilterKey[]): void {
+		if (this.filters.set(active)) this.retry();
 	}
 
 	async #handleMessageSent(message: ApiResponseMessage): Promise<void> {
@@ -186,7 +212,10 @@ class ConversationsState {
 				Number.POSITIVE_INFINITY,
 			);
 			const { fetched, oldestFetchedTs, reachedEnd, nextPage } =
-				await fetchConversationWindow({ oldestLoadedTs });
+				await fetchConversationWindow({
+					oldestLoadedTs,
+					filters: inboxFilterRequest(this.filters.active),
+				});
 			if (this.#fetches.isStale(fetchEpoch)) return;
 			this.nextPage = reachedEnd ? null : nextPage;
 
@@ -210,6 +239,7 @@ class ConversationsState {
 			for (const entry of [...this.entries]) {
 				const id = entry.data.conversationId;
 				if (fetched.has(id)) continue;
+				if (!this.filters.matches(entry)) continue;
 				if (
 					this.#pendingDeletes.blocks({
 						conversationId: id,
@@ -253,7 +283,7 @@ class ConversationsState {
 		// Claiming would make an in-flight #load drop the nextPage it fetched.
 		const fetchEpoch = this.#fetches.current;
 		try {
-			const result = await getConversations(1);
+			const result = await getConversations({ page: 1 });
 			if (this.#fetches.isStale(fetchEpoch)) return true;
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
@@ -279,7 +309,10 @@ class ConversationsState {
 
 	async #load(page: number): Promise<void> {
 		const fetchEpoch = this.#fetches.claim();
-		const result = await getConversations(page);
+		const result = await getConversations({
+			page,
+			filters: inboxFilterRequest(this.filters.active),
+		});
 		if (this.#fetches.isStale(fetchEpoch)) return;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local lookup, never mutated after construction
 		const known = new Set(this.entries.map((e) => e.data.conversationId));
@@ -315,15 +348,16 @@ class ConversationsState {
 	async #hardLoad(): Promise<void> {
 		this.loading = true;
 		this.error = null;
+		this.#initialLoad = this.#fetches.track(this.#load(1));
+		const fetchEpoch = this.#fetches.current;
 		try {
-			this.#initialLoad = this.#fetches.track(this.#load(1));
 			await this.#initialLoad;
 		} catch (error) {
-			if (this.#destroyed) return;
+			if (this.#destroyed || this.#fetches.isStale(fetchEpoch)) return;
 			this.error =
 				error instanceof Error ? error : new Error(String(error));
 		} finally {
-			this.loading = false;
+			if (!this.#fetches.isStale(fetchEpoch)) this.loading = false;
 		}
 	}
 
@@ -395,19 +429,11 @@ class ConversationsState {
 	}
 
 	get hasUnread(): boolean {
-		return this.entries.some(
-			(entry) =>
-				entry.data.unreadCount > 0 &&
-				!entry.data.muted &&
-				entry.data.lastActivityTimestamp > this.inboxLastViewedAt,
-		);
+		return this.inboxViewed.hasUnreadAmong(this.entries);
 	}
 
-	markInboxViewed(): void {
-		const now = Date.now();
-		if (now <= this.inboxLastViewedAt) return;
-		this.inboxLastViewedAt = now;
-		inboxLastViewed.save({ profileId: this.ourProfileId, at: now });
+	noteVisibleActivity(): void {
+		this.inboxViewed.noteVisibleActivity(this.visibleEntries);
 	}
 
 	async markRead(conversationId: string) {
