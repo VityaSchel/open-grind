@@ -16,7 +16,6 @@
 		"dev": "bun dev:desktop",
 		"dev:android": "bash scripts/dev-android.sh",
 		"dev:desktop": "tauri dev",
-		"dev:web": "vite dev",
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
