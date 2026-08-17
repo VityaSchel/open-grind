@@ -52,6 +52,7 @@ describe("sessionRecovery", () => {
 		toastErrorMock.mockReset();
 		toastDismissMock.mockReset();
 		requestBlockedAlertState.open = false;
+		requestBlockedAlertState.kind = "cloudflare";
 		sessionRecovery.recover();
 		setVisibility("visible");
 	});
@@ -90,6 +91,19 @@ describe("sessionRecovery", () => {
 
 		expect(requestBlockedAlertState.open).toBe(true);
 		expect(sessionErrorState.open).toBe(false);
+	});
+
+	it("tells the alert which side of the wire did the blocking", async () => {
+		report({ kind: "NetworkBlocked" });
+		await settle();
+
+		expect(requestBlockedAlertState.open).toBe(true);
+		expect(requestBlockedAlertState.kind).toBe("network");
+
+		report({ kind: "RequestBlocked" });
+		await settle();
+
+		expect(requestBlockedAlertState.kind).toBe("cloudflare");
 	});
 
 	it("shows nothing while the app is backgrounded, then promotes on resume", async () => {
@@ -149,6 +163,20 @@ describe("sessionRecovery", () => {
 		await settle();
 
 		expect(requestBlockedAlertState.open).toBe(false);
+		requestBlockedAlertState.disable = false;
+	});
+
+	it("still reports a block the user opted out of seeing as an alert", async () => {
+		requestBlockedAlertState.disable = true;
+
+		report({ kind: "NetworkBlocked" });
+		await settle();
+
+		expect(toastErrorMock).toHaveBeenCalledWith(
+			"connection reset",
+			expect.anything(),
+		);
+		expect(sessionErrorState.open).toBe(false);
 		requestBlockedAlertState.disable = false;
 	});
 

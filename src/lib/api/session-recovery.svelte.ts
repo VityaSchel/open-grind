@@ -1,6 +1,10 @@
 import { toast } from "svelte-sonner";
 
-import { callMethod, markRequestBlocked } from "$lib/api/methods";
+import {
+	blockedKindOf,
+	callMethod,
+	markRequestBlocked,
+} from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import {
 	clearSessionError,
@@ -80,11 +84,14 @@ class SessionRecovery {
 	}
 
 	#show(report: SessionErrorReport): void {
-		if (
-			report.kind === "RequestBlocked" ||
-			report.kind === "NetworkBlocked"
-		) {
-			markRequestBlocked();
+		const blocked = blockedKindOf(report.kind);
+		if (blocked !== undefined) {
+			if (!markRequestBlocked({ kind: blocked })) {
+				toast.error(report.message, {
+					id: TRANSPORT_TOAST_ID,
+					duration: Number.POSITIVE_INFINITY,
+				});
+			}
 			return;
 		}
 

@@ -22,7 +22,7 @@
 			return "Grindr is blocking your requests";
 		}
 		if (apiError?.kind === "NetworkBlocked") {
-			return "Something on your network blocked the request";
+			return "Something blocked the request before it reached Grindr";
 		}
 		if (!retryable) {
 			return "Something went wrong";

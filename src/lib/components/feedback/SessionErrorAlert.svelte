@@ -4,7 +4,14 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import { asAppError, callMethod } from "$lib/api/methods";
+	import {
+		asAppError,
+		blockedKindOf,
+		callMethod,
+		markRequestBlocked,
+		summarizeServerMessage,
+	} from "$lib/api/methods";
+	import { capText } from "$lib/api/redact/text";
 	import {
 		clearSessionError,
 		sessionErrorState,
@@ -104,12 +111,23 @@
 		}
 	});
 
-	const detail = $derived(
+	const maxShownMessageChars = 300;
+
+	const attemptsSuffix = $derived(
 		sessionErrorState.attempts > 0
-			? `${sessionErrorState.message} (after ${sessionErrorState.attempts} ${
+			? ` (after ${sessionErrorState.attempts} ${
 					sessionErrorState.attempts === 1 ? "attempt" : "attempts"
 				})`
-			: sessionErrorState.message,
+			: "",
+	);
+
+	const detail = $derived(sessionErrorState.message + attemptsSuffix);
+
+	const shownDetail = $derived(
+		capText(
+			summarizeServerMessage(sessionErrorState.message),
+			maxShownMessageChars,
+		) + attemptsSuffix,
 	);
 
 	async function copyError() {
@@ -129,14 +147,17 @@
 			await callMethod("refresh_token");
 			clearSessionError();
 		} catch (error) {
-			if (asAppError(error)?.kind === "NotLoggedIn") {
+			const appError = asAppError(error);
+			const blockedKind = blockedKindOf(appError?.kind);
+			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
+				return;
+			}
+			if (appError?.kind === "NotLoggedIn") {
 				toast.error("Your session expired — please sign in again");
 				await onSignOut();
 				return;
 			}
-			toast.error(
-				asAppError(error)?.prettyMessage ?? "Still can't connect",
-			);
+			toast.error(appError?.prettyMessage ?? "Still can't connect");
 		} finally {
 			busy = false;
 		}
@@ -167,7 +188,7 @@
 			<p
 				class="rounded-md bg-muted px-3 py-2 font-mono text-xs wrap-break-word text-muted-foreground"
 			>
-				{detail}
+				{shownDetail}
 			</p>
 		{/if}
 		<AlertDialog.Footer>

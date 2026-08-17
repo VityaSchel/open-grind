@@ -3,7 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
-import { asAppError, markRequestBlocked } from "$lib/api/methods";
+import {
+	asAppError,
+	blockedKindOf,
+	markRequestBlocked,
+} from "$lib/api/methods";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
@@ -126,15 +130,21 @@ export async function fetchRest(
 	} catch (error) {
 		if (error instanceof ApiError) throw error;
 		const appError = asAppError(error);
-		if (appError?.kind === "RequestBlocked") {
-			markRequestBlocked();
-			throw new ApiError({
-				message: "Request blocked",
-				request: requestInfo,
-				response: null,
-				kind: "RequestBlocked",
-				cause: error,
-			});
+		if (appError !== undefined) {
+			const blocked = blockedKindOf(appError.kind);
+			if (blocked !== undefined) {
+				markRequestBlocked({ kind: blocked });
+				throw new ApiError({
+					message:
+						blocked === "network"
+							? "Request blocked before it reached Grindr"
+							: "Request blocked by Grindr",
+					request: requestInfo,
+					response: null,
+					kind: appError.kind,
+					cause: error,
+				});
+			}
 		}
 		if (appError?.kind === "NotLoggedIn") {
 			signOutIfSessionLost().catch((error) => console.error(error));

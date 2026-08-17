@@ -1,9 +1,25 @@
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { apiErrorKinds } from "$lib/api/api-error";
-import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+import { type ApiErrorKind, apiErrorKinds } from "$lib/api/api-error";
+import { capText } from "$lib/api/redact/text";
+import { summariseNonJson } from "$lib/api/redact/value";
+import {
+	requestBlockedAlertState,
+	type RequestBlockKind,
+} from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled } from "$lib/demo";
+
+const maxPrettyMessageChars = 200;
+
+const unknownErrorMessage = "An unknown error occurred";
+
+const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
+	RequestBlocked: "Grindr is blocking your requests",
+	NetworkBlocked: "Something blocked the request before it reached Grindr",
+	RateLimited: "Grindr is rate limiting us",
+	NotLoggedIn: "You're signed out",
+};
 
 export const banInfoSchema = z.object({
 	kind: z.string(),
@@ -92,17 +108,31 @@ export async function callMethod<T extends keyof typeof methods>(
 			await invoke(method, args[0]),
 		) as Result;
 	} catch (error) {
-		if (asAppError(error)?.kind === "RequestBlocked") {
-			markRequestBlocked();
+		const kind = blockedKindOf(asAppError(error)?.kind);
+		if (kind !== undefined) {
+			markRequestBlocked({ kind });
 		}
 		throw error;
 	}
 }
 
-export function markRequestBlocked(): void {
-	if (!requestBlockedAlertState.disable) {
-		requestBlockedAlertState.open = true;
-	}
+export function markRequestBlocked({
+	kind,
+}: {
+	kind: RequestBlockKind;
+}): boolean {
+	if (requestBlockedAlertState.disable) return false;
+	requestBlockedAlertState.open = true;
+	requestBlockedAlertState.kind = kind;
+	return true;
+}
+
+export function blockedKindOf(
+	kind: ApiErrorKind | undefined,
+): RequestBlockKind | undefined {
+	if (kind === "RequestBlocked") return "cloudflare";
+	if (kind === "NetworkBlocked") return "network";
+	return undefined;
 }
 
 export function asBanned(error: unknown): BanInfo | null {
@@ -125,12 +155,24 @@ export function asAppError(error: unknown) {
 	if (success) {
 		let prettyMessage: string;
 		if (typeof data.message === "string") {
-			prettyMessage = data.message;
+			prettyMessage = summarizeServerMessage(data.message);
 		} else if (data.message) {
-			prettyMessage = `Error ${data.message.code}: ${data.message.message}`;
+			const { code, message } = data.message;
+			prettyMessage = `Error ${code}: ${summarizeServerMessage(message)}`;
 		} else {
-			prettyMessage = "An unknown error occurred";
+			prettyMessage =
+				messagelessMessages[data.kind] ?? unknownErrorMessage;
 		}
 		return { ...data, prettyMessage };
 	}
+}
+
+export function summarizeServerMessage(message: string): string {
+	const summary = summariseNonJson(message);
+	if (summary.nonJson !== "html") {
+		return capText(message, maxPrettyMessageChars);
+	}
+	return summary.title === undefined
+		? "The server returned a web page instead of data"
+		: `The server returned a web page: "${summary.title}"`;
 }

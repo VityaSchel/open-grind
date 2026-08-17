@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { sessionErrorState } from "$lib/api/session-error-state.svelte";
 import { sessionRecovery } from "$lib/api/session-recovery.svelte";
 import SessionErrorAlert from "./SessionErrorAlert.svelte";
@@ -15,6 +16,7 @@ const {
 	toastErrorMock,
 	toastSuccessMock,
 	toastDismissMock,
+	writeTextMock,
 } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
 	signOutMock: vi.fn(),
@@ -23,6 +25,7 @@ const {
 	toastErrorMock: vi.fn(),
 	toastSuccessMock: vi.fn(),
 	toastDismissMock: vi.fn(),
+	writeTextMock: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({
@@ -40,6 +43,9 @@ vi.mock("$lib/ws.svelte", () => ({
 	},
 }));
 vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
+vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
+	writeText: writeTextMock,
+}));
 vi.mock("$lib/api/methods", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/methods")>()),
 	callMethod: callMethodMock,
@@ -65,6 +71,7 @@ describe("SessionErrorAlert", () => {
 			.mockResolvedValue({ signedIn: true, expiresAt: 0, stale: true });
 		signOutMock.mockReset().mockResolvedValue(undefined);
 		toastErrorMock.mockReset();
+		writeTextMock.mockReset().mockResolvedValue(undefined);
 		tauriListeners.clear();
 		wsConnectedHandlers.length = 0;
 		sessionRecovery.recover();
@@ -74,9 +81,15 @@ describe("SessionErrorAlert", () => {
 		});
 		sessionErrorState.open = true;
 		sessionErrorState.message = "connection reset";
+		requestBlockedAlertState.open = false;
+		requestBlockedAlertState.disable = false;
 	});
 
-	afterEach(cleanup);
+	afterEach(() => {
+		cleanup();
+		requestBlockedAlertState.open = false;
+		requestBlockedAlertState.disable = false;
+	});
 
 	it("takes the dialog back down when the session recovers on its own", () => {
 		render(SessionErrorAlert);
@@ -194,6 +207,83 @@ describe("SessionErrorAlert", () => {
 
 		expect(signOutMock).toHaveBeenCalledOnce();
 		expect(sessionErrorState.open).toBe(false);
+	});
+
+	it("shows a bounded excerpt of a huge error but copies all of it", async () => {
+		sessionErrorState.message = "x".repeat(400);
+		render(SessionErrorAlert);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Copy error" }),
+		);
+
+		expect(
+			screen.getByText(`${"x".repeat(200)}…<+200 chars>`),
+		).toBeTruthy();
+		await vi.waitFor(() => {
+			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(400));
+		});
+	});
+
+	it("keeps the attempt count visible on a huge error", async () => {
+		sessionErrorState.open = false;
+		render(SessionErrorAlert);
+
+		emit("auth:session-error", {
+			message: "x".repeat(400),
+			unauthorized: false,
+			kind: "Api",
+			attempts: 3,
+			transient: true,
+		});
+		await settle();
+
+		expect(
+			screen.getByText(
+				`${"x".repeat(200)}…<+200 chars> (after 3 attempts)`,
+			),
+		).toBeTruthy();
+	});
+
+	it("summarizes a web page the refresh got instead of data", () => {
+		sessionErrorState.message =
+			"<!DOCTYPE html><html><head><title>Attention Required! | Cloudflare</title></head><body>Ray ID</body></html>";
+		render(SessionErrorAlert);
+
+		expect(
+			screen.getByText(
+				'The server returned a web page: "Attention Required! | Cloudflare"',
+			),
+		).toBeTruthy();
+		expect(screen.queryByText(/Ray ID/)).toBeNull();
+	});
+
+	it("leaves a blocked retry to the request-blocked dialog", async () => {
+		callMethodMock.mockRejectedValue({ kind: "RequestBlocked" });
+		render(SessionErrorAlert);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
+
+		expect(requestBlockedAlertState.open).toBe(true);
+		expect(toastErrorMock).not.toHaveBeenCalled();
+		expect(sessionErrorState.open).toBe(true);
+	});
+
+	it("toasts a blocked retry once the dialog is muted for the session", async () => {
+		requestBlockedAlertState.disable = true;
+		callMethodMock.mockRejectedValue({ kind: "RequestBlocked" });
+		render(SessionErrorAlert);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
+
+		expect(requestBlockedAlertState.open).toBe(false);
+		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+			"Grindr is blocking your requests",
+		);
 	});
 
 	it("stays open when the refresh fails for another reason", async () => {

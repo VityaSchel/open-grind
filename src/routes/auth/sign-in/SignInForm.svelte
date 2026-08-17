@@ -8,7 +8,13 @@
 		showAccountRestriction,
 	} from "$lib/api/account-status-state.svelte";
 	import { showErrorToast } from "$lib/api/error-toast";
-	import { asAppError, asBanned, callMethod } from "$lib/api/methods";
+	import {
+		asAppError,
+		asBanned,
+		blockedKindOf,
+		callMethod,
+		markRequestBlocked,
+	} from "$lib/api/methods";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
@@ -45,8 +51,12 @@
 			void goto("/");
 		} catch (error) {
 			console.error(error);
-			if (handleAccountBlock(error)) return;
 			const appError = asAppError(error);
+			const blockedKind = blockedKindOf(appError?.kind);
+			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
+				return;
+			}
+			if (handleAccountBlock(error)) return;
 			if (appError) {
 				const invalidInputParameters = z
 					.object({
@@ -100,7 +110,12 @@
 			clearProfileCaches();
 			void goto("/");
 		} catch (error) {
+			console.error(error);
 			const appError = asAppError(error);
+			const blockedKind = blockedKindOf(appError?.kind);
+			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
+				return;
+			}
 			if (
 				appError?.kind === "Auth" &&
 				appError.message === "companion-unavailable"
@@ -125,7 +140,6 @@
 				return;
 			}
 			if (handleAccountBlock(error)) return;
-			console.error(error);
 			if (appError) {
 				toast.error(appError.prettyMessage);
 			} else {
