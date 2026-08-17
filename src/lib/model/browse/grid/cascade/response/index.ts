@@ -8,7 +8,7 @@ export const cascadeResponseProfileSchema = z.object({
 	onlineUntil: unixTimestampMsSchema.nullable(),
 	displayName: z.string().nullable().optional(),
 	distanceMeters: z.int().nonnegative().optional(),
-	lastOnline: unixTimestampMsSchema.nullable(),
+	lastOnline: unixTimestampMsSchema.nullable().optional(),
 	rightNow: z.string(),
 	unreadCount: z.int().nonnegative(),
 	isVisiting: z.boolean(),

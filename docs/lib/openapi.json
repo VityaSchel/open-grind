@@ -17264,7 +17264,8 @@
 							{
 								"$ref": "#/components/schemas/TimestampMs"
 							}
-						]
+						],
+						"description": "unix timestamp in milliseconds, may be absent"
 					},
 					"rightNow": {
 						"$ref": "#/components/schemas/RightNowStatus"
@@ -17378,7 +17379,6 @@
 				"required": [
 					"profileId",
 					"onlineUntil",
-					"lastOnline",
 					"rightNow",
 					"unreadCount",
 					"isVisiting",
