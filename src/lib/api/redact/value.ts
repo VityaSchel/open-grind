@@ -23,6 +23,10 @@ export function parseJson(
 	}
 }
 
+export type NonJsonSummary =
+	| { nonJson: "html"; length: number; title?: string }
+	| { nonJson: "text"; length: number };
+
 export function redactResponseBody(text: string): unknown {
 	const parsed = parseJson(text);
 	return parsed.ok ? redactValue(parsed.value) : summariseNonJson(text);
@@ -33,15 +37,26 @@ export function readResponseBody(text: string): unknown {
 	return parsed.ok ? parsed.value : text;
 }
 
-function summariseNonJson(text: string): unknown {
-	const title = documentTitle(text.slice(0, maxParseChars));
+export function summariseNonJson(text: string): NonJsonSummary {
+	const head = text.slice(0, maxParseChars);
+	if (!looksLikeMarkup(head)) {
+		return { nonJson: "text", length: text.length };
+	}
+	const title = documentTitle(head);
 	return {
-		nonJson: text.trimStart().startsWith("<") ? "html" : "text",
+		nonJson: "html",
 		length: text.length,
 		...(title !== undefined && {
 			title: scrubText(capText(title, maxTitleChars)),
 		}),
 	};
+}
+
+function looksLikeMarkup(text: string): boolean {
+	const trimmed = text.trimStart();
+	if (trimmed.startsWith("<")) return true;
+	const lowered = trimmed.toLowerCase();
+	return lowered.includes("<html") || lowered.includes("<!doctype");
 }
 
 export function redactValue(value: unknown): unknown {

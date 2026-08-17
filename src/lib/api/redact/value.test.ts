@@ -4,6 +4,7 @@ import {
 	readResponseBody,
 	redactResponseBody,
 	redactValue,
+	summariseNonJson,
 } from "$lib/api/redact/value";
 
 describe("redactValue", () => {
@@ -199,6 +200,50 @@ describe("redactResponseBody", () => {
 
 		expect({}).not.toHaveProperty("polluted");
 		expect(redacted).toEqual({ type: "Text" });
+	});
+});
+
+describe("summariseNonJson", () => {
+	it("bounds a title so a caller can put it in a sentence", () => {
+		const title = "Blocked ".repeat(30);
+
+		expect(
+			summariseNonJson(
+				`<html><head><title>${title}</title></head></html>`,
+			),
+		).toMatchObject({
+			nonJson: "html",
+			title: `${title.slice(0, 100)}…<+139 chars>`,
+		});
+	});
+
+	it("reports no title when the page carries none", () => {
+		expect(summariseNonJson("<html><body>blocked</body></html>")).toEqual({
+			nonJson: "html",
+			length: 33,
+		});
+	});
+
+	it.each([
+		"upstream proxy error: <!DOCTYPE html><html>…</html>",
+		"error reading the response\n<html><body>blocked</body></html>",
+	])("calls markup behind a prefix a page anyway: %s", (body) => {
+		expect(summariseNonJson(body).nonJson).toBe("html");
+	});
+
+	it("still calls prose that only mentions a tag plain text", () => {
+		expect(summariseNonJson("expected <title> in the body").nonJson).toBe(
+			"text",
+		);
+	});
+
+	it("never titles a plain-text body", () => {
+		const body = "prose quoting <title>Blocked</title> is not a page";
+
+		expect(summariseNonJson(body)).toEqual({
+			nonJson: "text",
+			length: body.length,
+		});
 	});
 });
 
