@@ -41,17 +41,17 @@
 				class="flex max-w-full min-w-0 flex-col overflow-clip rounded-[22px] bg-muted"
 			>
 				<Label
-					for="airplane-mode"
+					for="redact-sensitive-info"
 					class="flex-1 rounded-t-[inherit] pe-3 pt-3 pb-2"
 				>
 					<Switch
-						id="airplane-mode"
+						id="redact-sensitive-info"
 						class="ms-3"
 						bind:checked={redact}
 					/>
-					<span class="truncate"
-						>Redact sensitive info (recommended)</span
-					>
+					<span class="truncate">
+						Redact sensitive info (recommended)
+					</span>
 				</Label>
 				<div
 					class="max-h-[max(40dvh,160px)] min-h-0 w-full overflow-auto border border-border/30"
