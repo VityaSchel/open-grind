@@ -41,32 +41,52 @@ test("the inbox star filter narrows the list to favorites and back", async ({
 	await expect.poll(() => listedConversations(page)).toEqual(unfiltered);
 });
 
-test("unstarring the last favorite leaves the filtered list on the generic empty state", async ({
+test("unstarring the last favorite leaves the filter with no results", async ({
 	page,
 }) => {
 	await installTauriShim(page);
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
-	await page.getByRole("button", { name: "Favorites only" }).click();
-	await expect
-		.poll(() => listedConversations(page))
-		.toEqual([DEMO_CONVERSATION]);
-
 	await page.locator(`a[href="${DEMO_CONVERSATION}"]`).first().click();
-	await page.locator('a[href^="/profile/"]').first().click();
+	await page.locator('a[href="/profile/100001"]').first().click();
 	await page.getByRole("switch", { name: "Remove from favorites" }).click();
 	await expect(
 		page.getByRole("switch", { name: "Add to favorites" }),
 	).toBeVisible();
 
-	await page.locator('a[href="/chat"]').first().click();
+	await page.locator('nav a[href="/chat"]').first().click();
+	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
+	await page.getByRole("button", { name: "Favorites only" }).click();
 
 	await expect(page.getByText("No Results")).toBeVisible();
 	await expect(
 		page.getByText("No conversations match these filters."),
 	).toBeVisible();
 	expect(await listedConversations(page)).toEqual([]);
+});
+
+test("leaving the chat section clears the filter", async ({ page }) => {
+	await installTauriShim(page);
+	await page.goto("/chat");
+	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
+
+	const star = page.getByRole("button", { name: "Favorites only" });
+	await star.click();
+	await expect(star).toHaveAttribute("aria-pressed", "true");
+
+	await page.locator('nav a[href="/"]').first().click();
+	await page.waitForURL("/");
+	await page.locator('nav a[href="/chat"]').first().click();
+	await page.waitForURL("/chat");
+	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
+
+	await expect(
+		page.getByRole("button", { name: "Favorites only" }),
+	).toHaveAttribute("aria-pressed", "false");
+	await expect
+		.poll(async () => (await listedConversations(page)).length)
+		.toBeGreaterThan(1);
 });
 
 test("the filter is session-only and its bar stays pinned while scrolling", async ({

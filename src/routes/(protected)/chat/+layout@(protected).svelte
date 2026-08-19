@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { untrack } from "svelte";
+	import { onDestroy, untrack } from "svelte";
 
 	import {
 		getOrCreateConversationsState,
@@ -18,6 +18,7 @@
 		getOrCreateConversationsState(data.ourProfileId),
 	);
 	setConversations(conversations);
+	onDestroy(() => conversations.setFilters([]));
 
 	const CONVERSATIONS_LIST_MIN_WIDTH_PX = 200;
 	const PAGE_CONTENT_MIN_WIDTH_PX = 280;
