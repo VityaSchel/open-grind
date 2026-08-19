@@ -96,9 +96,6 @@ async function loadedInbox() {
 	return state;
 }
 
-const visible = (state: ConversationsState) =>
-	state.visibleEntries.map((entry) => entry.data.conversationId);
-
 const loaded = (state: ConversationsState) =>
 	state.entries.map((entry) => entry.data.conversationId);
 
@@ -142,6 +139,7 @@ function serveFilterAwareInbox() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	localStorage.clear();
 	reconcileHandlers.length = 0;
 	conversationDeleteHandlers.length = 0;
 });
@@ -154,7 +152,7 @@ describe("inbox favorites filter", () => {
 			onIncomingMessage: vi.fn(),
 		});
 		await settled(state);
-		expect(visible(state)).toEqual(["a:1", "b:2"]);
+		expect(loaded(state)).toEqual(["a:1", "b:2"]);
 
 		state.setFilters(["favorites"]);
 		await settled(state);
@@ -164,7 +162,6 @@ describe("inbox favorites filter", () => {
 			filters: FAVORITES_BODY,
 		});
 		expect(loaded(state)).toEqual(["a:1"]);
-		expect(visible(state)).toEqual(["a:1"]);
 
 		state.setFilters([]);
 		await settled(state);
@@ -173,10 +170,10 @@ describe("inbox favorites filter", () => {
 			page: 1,
 			filters: null,
 		});
-		expect(visible(state)).toEqual(["a:1", "b:2"]);
+		expect(loaded(state)).toEqual(["a:1", "b:2"]);
 	});
 
-	it("recovers WS strays with an unfiltered fetch while a filter is active", async () => {
+	it("keeps a non-matching conversation out of a filtered list", async () => {
 		serveFilterAwareInbox();
 		const state = new ConversationsState({
 			ourProfileId: OUR_ID,
@@ -190,15 +187,15 @@ describe("inbox favorites filter", () => {
 
 		await state.ensureLoaded("b:2");
 
-		expect(getConversationsMock).toHaveBeenCalledWith({ page: 1 });
-		expect(loaded(state)).toContain("b:2");
-		expect(visible(state)).toEqual(["a:1"]);
+		expect(getConversationsMock).toHaveBeenCalledWith({
+			page: 1,
+			filters: FAVORITES_BODY,
+		});
+		expect(loaded(state)).toEqual(["a:1"]);
 	});
 
-	it("adds a conversation to the filtered view when its profile is starred", async () => {
+	it("updates a row's star without changing list membership", async () => {
 		const state = await loadedInbox();
-		state.filters.active = ["favorites"];
-		expect(visible(state)).toEqual(["a:1"]);
 
 		mergeProfileEditIntoCaches({
 			cacheProfileId: PLAIN_PEER,
@@ -206,12 +203,18 @@ describe("inbox favorites filter", () => {
 		});
 
 		expect(entryFor(state, "b:2").data.favorite).toBe(true);
-		expect(visible(state)).toEqual(["a:1", "b:2"]);
+		expect(loaded(state)).toEqual(["a:1", "b:2"]);
 	});
 
-	it("drops a conversation from the filtered view when its profile is unstarred", async () => {
-		const state = await loadedInbox();
-		state.filters.active = ["favorites"];
+	it("keeps an unstarred conversation in place while the filter is on", async () => {
+		serveFilterAwareInbox();
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage: vi.fn(),
+		});
+		await settled(state);
+		state.setFilters(["favorites"]);
+		await settled(state);
 
 		mergeProfileEditIntoCaches({
 			cacheProfileId: STARRED_PEER,
@@ -219,7 +222,7 @@ describe("inbox favorites filter", () => {
 		});
 
 		expect(entryFor(state, "a:1").data.favorite).toBe(false);
-		expect(visible(state)).toEqual([]);
+		expect(loaded(state)).toEqual(["a:1"]);
 	});
 
 	it("ignores profile edits that do not touch the favorite flag", async () => {
@@ -233,7 +236,7 @@ describe("inbox favorites filter", () => {
 		expect(entryFor(state, "a:1").data.favorite).toBe(true);
 	});
 
-	it("keeps unfiltered strays through a filtered reconcile", async () => {
+	it("prunes a conversation a filtered reconcile no longer returns", async () => {
 		serveFilterAwareInbox();
 		const state = new ConversationsState({
 			ourProfileId: OUR_ID,
@@ -242,15 +245,12 @@ describe("inbox favorites filter", () => {
 		await settled(state);
 		state.setFilters(["favorites"]);
 		await settled(state);
-		await state.ensureLoaded("b:2");
-		expect(loaded(state)).toContain("b:2");
-		expect(state.hasUnread).toBe(true);
+		expect(loaded(state)).toEqual(["a:1"]);
 
+		getConversationsMock.mockResolvedValue({ entries: [], nextPage: null });
 		await reconcileHandlers[0]?.();
 
-		expect(loaded(state)).toContain("b:2");
-		expect(state.hasUnread).toBe(true);
-		expect(visible(state)).toEqual(["a:1"]);
+		expect(loaded(state)).toEqual([]);
 	});
 
 	it("ignores a superseded load's failure after a filter toggle", async () => {
@@ -271,13 +271,13 @@ describe("inbox favorites filter", () => {
 		});
 		state.setFilters(["favorites"]);
 		await settled(state);
-		expect(visible(state)).toEqual(["a:1"]);
+		expect(loaded(state)).toEqual(["a:1"]);
 
 		first.reject(new Error("network down"));
 		await microtasks();
 
 		expect(state.error).toBeNull();
-		expect(visible(state)).toEqual(["a:1"]);
+		expect(loaded(state)).toEqual(["a:1"]);
 	});
 
 	it("keeps loading until the current filter's load settles", async () => {
@@ -315,7 +315,7 @@ describe("inbox favorites filter", () => {
 			nextPage: null,
 		});
 		await settled(state);
-		expect(visible(state)).toEqual(["a:1"]);
+		expect(loaded(state)).toEqual(["a:1"]);
 	});
 
 	it("pages the filtered set with the filter body", async () => {
@@ -337,7 +337,7 @@ describe("inbox favorites filter", () => {
 		await settled(state);
 		expect(state.nextPage).toBe(2);
 
-		await state.loadMore();
+		await state.paging.run();
 
 		expect(getConversationsMock).toHaveBeenLastCalledWith({
 			page: 2,
@@ -345,78 +345,27 @@ describe("inbox favorites filter", () => {
 		});
 	});
 
-	it("marks the inbox viewed for the settled visible list", async () => {
+	it("marks the inbox viewed at the newest loaded activity", async () => {
 		const state = await loadedInbox();
-		const marked = vi.spyOn(state.inboxViewed, "markViewed");
 
-		state.noteVisibleActivity();
+		state.noteListViewed();
 
-		expect(marked).toHaveBeenCalledTimes(1);
+		expect(state.inboxViewed.lastViewedAt).toBe(2000);
 	});
 
-	it("keeps hidden activity unacknowledged until the filter reveals it", async () => {
-		getConversationsMock.mockResolvedValue({
-			entries: [
-				conversation("fav:1", 1000, {
-					favorite: true,
-					participants: [participant(STARRED_PEER)],
-				}),
-				conversation("plain:2", 2000, {
-					participants: [participant(PLAIN_PEER)],
-				}),
-			],
-			nextPage: null,
-		});
-		const state = new ConversationsState({
-			ourProfileId: OUR_ID,
-			onIncomingMessage: vi.fn(),
-		});
-		await settled(state);
-		const marked = vi.spyOn(state.inboxViewed, "markViewed");
-		state.noteVisibleActivity();
-		expect(marked).toHaveBeenCalledTimes(1);
+	it("holds the mark when the list shrinks, and advances on new activity", async () => {
+		const state = await loadedInbox();
+		state.noteListViewed();
+		expect(state.inboxViewed.lastViewedAt).toBe(2000);
 
-		state.filters.active = ["favorites"];
-		state.noteVisibleActivity();
-		expect(marked).toHaveBeenCalledTimes(1);
+		state.remove("a:1");
+		state.noteListViewed();
+		expect(state.inboxViewed.lastViewedAt).toBe(2000);
 
-		entryFor(state, "plain:2").data.lastActivityTimestamp = 3000;
-		state.noteVisibleActivity();
-		expect(marked).toHaveBeenCalledTimes(1);
+		entryFor(state, "b:2").data.lastActivityTimestamp = 2500;
+		state.noteListViewed();
 
-		state.filters.active = [];
-		state.noteVisibleActivity();
-		expect(marked).toHaveBeenCalledTimes(2);
-	});
-
-	it("acknowledges visible activity even below the previously marked maximum", async () => {
-		getConversationsMock.mockResolvedValue({
-			entries: [
-				conversation("fav:1", 1000, {
-					favorite: true,
-					participants: [participant(STARRED_PEER)],
-				}),
-				conversation("plain:2", 2000, {
-					participants: [participant(PLAIN_PEER)],
-				}),
-			],
-			nextPage: null,
-		});
-		const state = new ConversationsState({
-			ourProfileId: OUR_ID,
-			onIncomingMessage: vi.fn(),
-		});
-		await settled(state);
-		const marked = vi.spyOn(state.inboxViewed, "markViewed");
-		state.noteVisibleActivity();
-		state.filters.active = ["favorites"];
-		state.noteVisibleActivity();
-		expect(marked).toHaveBeenCalledTimes(1);
-
-		entryFor(state, "fav:1").data.lastActivityTimestamp = 1500;
-		state.noteVisibleActivity();
-
-		expect(marked).toHaveBeenCalledTimes(2);
+		expect(state.inboxViewed.lastViewedAt).toBe(2500);
 	});
 
 	it("stops following profile edits once destroyed", async () => {

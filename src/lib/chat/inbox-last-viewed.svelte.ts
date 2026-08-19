@@ -6,18 +6,16 @@ export const inboxLastViewed = lastViewedMarker("chat:inbox-last-viewed:");
 export class InboxViewedMarker {
 	lastViewedAt = $state(0);
 	#profileId: number;
-	#lastMarkedVisibleActivity = 0;
 
 	constructor({ profileId }: { profileId: number }) {
 		this.#profileId = profileId;
 		this.lastViewedAt = inboxLastViewed.load(profileId);
 	}
 
-	markViewed(): void {
-		const now = Date.now();
-		if (now <= this.lastViewedAt) return;
-		this.lastViewedAt = now;
-		inboxLastViewed.save({ profileId: this.#profileId, at: now });
+	#markViewed(at: number): void {
+		if (at <= this.lastViewedAt) return;
+		this.lastViewedAt = at;
+		inboxLastViewed.save({ profileId: this.#profileId, at });
 	}
 
 	hasUnreadAmong(entries: Conversation[]): boolean {
@@ -29,14 +27,13 @@ export class InboxViewedMarker {
 		);
 	}
 
-	noteVisibleActivity(visible: Conversation[]): void {
-		const latest = visible.reduce(
-			(max, entry) => Math.max(max, entry.data.lastActivityTimestamp),
-			0,
+	noteListViewed(entries: Conversation[]): void {
+		this.#markViewed(
+			entries.reduce(
+				(newest, entry) =>
+					Math.max(newest, entry.data.lastActivityTimestamp),
+				0,
+			),
 		);
-		if (latest === this.#lastMarkedVisibleActivity) return;
-		const increased = latest > this.#lastMarkedVisibleActivity;
-		this.#lastMarkedVisibleActivity = latest;
-		if (increased) this.markViewed();
 	}
 }

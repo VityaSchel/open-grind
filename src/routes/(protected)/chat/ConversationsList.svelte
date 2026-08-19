@@ -9,25 +9,23 @@
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
-	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 	import Conversation from "./Conversation.svelte";
 	import ConversationsFilters from "./ConversationsFilters.svelte";
+	import ConversationsPagingTail from "./ConversationsPagingTail.svelte";
 	import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 	import DeleteConversationsDialog from "./DeleteConversationsDialog.svelte";
-	import EmptyConversationsList from "./EmptyConversationsList.svelte";
 	import LazyConversation from "./LazyConversation.svelte";
 
 	const EAGER_COUNT = 10;
 
 	const conversations: ConversationsState = getConversations();
 	const mobile = below("split");
-	const visibleEntries = $derived(conversations.visibleEntries);
 
 	$effect(() => {
-		conversations.noteVisibleActivity();
+		conversations.noteListViewed();
 	});
 
 	let container: HTMLDivElement | null = $state(null);
@@ -192,7 +190,7 @@
 				<div
 					class="flex min-h-overscrollable shrink-0 flex-col gap-1 pb-nav-clear"
 				>
-					{#each visibleEntries as conversation, i (conversation.data.conversationId)}
+					{#each conversations.entries as conversation, i (conversation.data.conversationId)}
 						{@const conversationId =
 							conversation.data.conversationId}
 						{#if i < EAGER_COUNT}
@@ -217,27 +215,12 @@
 							/>
 						{/if}
 					{/each}
-					{#if visibleEntries.length === 0 && conversations.nextPage === null}
-						<EmptyConversationsList
-							filtered={conversations.filters.active.length > 0}
-						/>
-					{/if}
-					{#if conversations.loadingMore}
-						{#each Array(6)}
-							<Skeleton class="h-24.5 w-full shrink-0" />
-						{/each}
-					{/if}
-					{#if conversations.nextPage !== null}
-						{#key conversations.nextPage}
-							<div
-								class="h-0"
-								use:observeIntersection={{
-									handle: () => conversations.loadMore(),
-									rootMargin: "400px",
-								}}
-							></div>
-						{/key}
-					{/if}
+					<ConversationsPagingTail
+						paging={conversations.paging}
+						hasMore={conversations.nextPage !== null}
+						listEmpty={conversations.entries.length === 0}
+						filtered={conversations.filters.active.length > 0}
+					/>
 				</div>
 			{/if}
 		</div>

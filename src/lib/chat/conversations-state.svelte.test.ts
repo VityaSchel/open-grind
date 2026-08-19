@@ -76,6 +76,7 @@ function emitMessageSent(payload: unknown) {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	localStorage.clear();
 	currentPage.route.id = "/(protected)/chat";
 	singleColumn.current = false;
 	reconcileHandlers.length = 0;
@@ -190,6 +191,20 @@ describe("ConversationsState unread accounting", () => {
 		await settled(state);
 		return state;
 	}
+
+	it("keeps the dot lit for a message arriving after the list was viewed", async () => {
+		const state = await inboxWith([
+			conversation("a:1", 2000, { unreadCount: 1 }),
+		]);
+		state.noteListViewed();
+		expect(state.hasUnread).toBe(false);
+
+		emitMessageSent(incomingMessage("a:1", 2500, PEER_ID));
+		await microtasks();
+
+		expect(entryFor(state, "a:1").data.unreadCount).toBe(2);
+		expect(state.hasUnread).toBe(true);
+	});
 
 	it("counts a reply the row's clock has already passed", async () => {
 		const state = await inboxWith([conversation("a:1", 5000)]);
@@ -501,7 +516,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			nextPage: number | null;
 		}>();
 		getConversationsMock.mockReturnValueOnce(loadGate.promise);
-		const loadPromise = state.loadMore();
+		const loadPromise = state.paging.run();
 
 		getConversationsMock.mockResolvedValueOnce({
 			entries: [conversation("a:1", 1000)],
@@ -604,7 +619,7 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 			entries: [conversation("b:2", 500)],
 			nextPage: 5,
 		});
-		await state.loadMore();
+		await state.paging.run();
 		expect(state.nextPage).toBe(5);
 
 		reconcileGate.resolve({
@@ -614,5 +629,77 @@ describe("ConversationsState epoch guards (P1.7)", () => {
 		await reconcilePromise;
 
 		expect(state.nextPage).toBe(5);
+	});
+});
+
+describe("ConversationsState paging failures", () => {
+	async function inboxWithASecondPage() {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		getConversationsMock.mockResolvedValueOnce({
+			entries: [conversation("a:1", 1000)],
+			nextPage: 2,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage: vi.fn(),
+		});
+		await settled(state);
+		return state;
+	}
+
+	it("surfaces a failed follow-up page in state, not a vanishing toast", async () => {
+		const state = await inboxWithASecondPage();
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+
+		await state.paging.run();
+
+		expect(state.paging.failure).toEqual(new Error("offline"));
+		expect(state.paging.running).toBe(false);
+		expect(showErrorToastMock).not.toHaveBeenCalledWith(
+			expect.objectContaining({
+				label: "Failed to load more conversations",
+			}),
+		);
+	});
+
+	it("keeps a displayed paging failure through a failed refresh", async () => {
+		const state = await inboxWithASecondPage();
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		await state.paging.run();
+		const wedged = state.paging.armToken;
+		expect(state.paging.failure).not.toBeNull();
+
+		getConversationsMock.mockRejectedValueOnce(new Error("still offline"));
+		await reconcileHandlers[0]?.();
+
+		expect(state.paging.failure).not.toBeNull();
+		expect(state.paging.armToken).toBe(wedged);
+	});
+
+	it("re-arms after a failed refresh when nothing is on display", async () => {
+		const state = await inboxWithASecondPage();
+		const before = state.paging.armToken;
+
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		await reconcileHandlers[0]?.();
+
+		expect(state.paging.armToken).not.toBe(before);
+	});
+
+	it("re-arms paging once a refresh finishes", async () => {
+		const state = await inboxWithASecondPage();
+		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
+		await state.paging.run();
+		const wedged = state.paging.armToken;
+		expect(state.paging.failure).not.toBeNull();
+
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("a:1", 1000)],
+			nextPage: null,
+		});
+		await reconcileHandlers[0]?.();
+
+		expect(state.paging.failure).toBeNull();
+		expect(state.paging.armToken).not.toBe(wedged);
 	});
 });

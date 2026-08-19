@@ -5,11 +5,6 @@ export const CONVERSATION_FILTER_KEYS = ["favorites"] as const;
 
 export type ConversationFilterKey = (typeof CONVERSATION_FILTER_KEYS)[number];
 
-const matchers: Record<
-	ConversationFilterKey,
-	(conversation: Conversation) => boolean
-> = { favorites: (conversation) => conversation.data.favorite };
-
 export function inboxFilterRequest(
 	active: ConversationFilterKey[],
 ): InboxFilterRequest | null {
@@ -27,10 +22,6 @@ export function inboxFilterRequest(
 
 export class ConversationFilters {
 	active = $state<ConversationFilterKey[]>([]);
-
-	matches(conversation: Conversation): boolean {
-		return this.active.every((key) => matchers[key](conversation));
-	}
 
 	set(active: ConversationFilterKey[]): boolean {
 		const unchanged =
