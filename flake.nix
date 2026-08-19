@@ -56,7 +56,7 @@
             windows = import ./nix/windows.nix { inherit pkgs lib common; };
           }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
-            macos = import ./nix/darwin.nix { inherit pkgs lib common; };
+            macos = import ./nix/macos.nix { inherit pkgs lib common; };
           };
 
           renamed = f: lib.mapAttrs' (n: t: lib.nameValuePair "build-${n}" (f t)) targets;
