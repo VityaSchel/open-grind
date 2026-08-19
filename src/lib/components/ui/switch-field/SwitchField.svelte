@@ -9,7 +9,7 @@
 		disabled = false,
 	}: {
 		title: string;
-		description: string;
+		description?: string;
 		checked: boolean;
 		disabled?: boolean;
 	} = $props();
@@ -21,9 +21,11 @@
 >
 	<div class="grid gap-1.5 font-normal">
 		<p class="text-sm leading-none font-medium">{title}</p>
-		<p class="text-sm text-muted-foreground">
-			{description}
-		</p>
+		{#if description !== undefined}
+			<p class="text-sm text-muted-foreground">
+				{description}
+			</p>
+		{/if}
 	</div>
 	<Switch bind:checked {disabled} />
 </Label>
