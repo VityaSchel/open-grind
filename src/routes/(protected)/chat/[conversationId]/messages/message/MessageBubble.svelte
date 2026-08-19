@@ -20,6 +20,7 @@
 </script>
 
 <div
+	data-slot="message-bubble"
 	class={[
 		"relative w-fit max-w-100 shrink-0 overflow-visible rounded-xl px-3 py-2 select-text",
 		{
