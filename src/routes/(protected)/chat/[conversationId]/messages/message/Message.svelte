@@ -246,7 +246,7 @@
 			{/if}
 			<div
 				class={[
-					"min-w-full shrink-0",
+					"w-full shrink-0",
 					{
 						"pe-3 *:float-start *:me-auto": !isOut,
 						"ps-3 *:float-end *:ms-auto": isOut,
