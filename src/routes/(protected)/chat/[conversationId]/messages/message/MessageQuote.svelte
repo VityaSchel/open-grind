@@ -35,8 +35,8 @@
 		]}
 	></div>
 	<span
-		class="mx-1 min-w-0 truncate rounded-xl bg-muted px-3 py-1.5 text-sm text-muted-foreground"
+		class="mx-1 min-w-0 rounded-xl bg-muted px-3 py-1.5 text-sm text-muted-foreground"
 	>
-		{label}
+		<span class="line-clamp-1">{label}</span>
 	</span>
 </div>

@@ -122,14 +122,18 @@
 		// tall the lifted box is, while the bubble still decides where it sits.
 		const contentRect = messageElement.getBoundingClientRect();
 		const frameRect = frameElement.getBoundingClientRect();
+		const quoteRect = frameElement
+			.querySelector('[data-slot="message-quote"]')
+			?.getBoundingClientRect();
+		const liftedWidth = Math.max(contentRect.width, quoteRect?.width ?? 0);
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = {
-			x: contentRect.x,
+			x: isOut ? contentRect.right - liftedWidth : contentRect.x,
 			y: frameRect.y,
-			width: contentRect.width,
+			width: liftedWidth,
 			height: frameRect.height,
 		};
 		tick()
