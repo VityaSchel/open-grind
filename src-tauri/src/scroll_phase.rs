@@ -27,6 +27,7 @@ pub fn install_scroll_gesture_bridge<R: tauri::Runtime>(
 	let _ = app;
 }
 
+#[cfg(any(target_os = "macos", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GestureState {
 	Idle,
@@ -37,6 +38,7 @@ pub enum GestureState {
 /// Collapses a scroll event's phase pair into the gesture state, and the
 /// transition to announce. "released" rather than "idle" marks the instant
 /// the fingers leave while the gesture may still coast.
+#[cfg(any(target_os = "macos", test))]
 pub fn classify(
 	phase: u64,
 	momentum: u64,
