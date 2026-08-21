@@ -29,6 +29,7 @@
 		"test:coverage": "svelte-kit sync && vitest run --coverage",
 		"test:unit": "svelte-kit sync && vitest run",
 		"test:e2e": "playwright test",
+		"dev:updater-server": "bun scripts/updater-release-server.ts",
 		"test:android": "cd src-tauri/gen/android && ./gradlew :app:testUniversalReleaseUnitTest",
 		"test:android-logic": "src-tauri/gen/android/gradlew -p src-tauri/android-logic test"
 	},
