@@ -14,6 +14,7 @@ import {
 
 const preferencesSchema = z.object({
 	geohash: geohashSchema.nullable().default(null),
+	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
