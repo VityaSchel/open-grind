@@ -116,7 +116,7 @@ fn quit_when_closed(window: &tauri::WebviewWindow) {
 pub fn run() {
 	api::update::enforce_home();
 
-	#[cfg(debug_assertions)]
+	#[cfg(feature = "devtools")]
 	let devtools = tauri_plugin_devtools::init();
 
 	let builder = tauri::Builder::default();
@@ -134,7 +134,7 @@ pub fn run() {
 		},
 	));
 
-	#[cfg(debug_assertions)]
+	#[cfg(feature = "devtools")]
 	let builder = builder.plugin(devtools);
 
 	#[cfg(target_os = "android")]

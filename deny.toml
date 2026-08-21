@@ -1,5 +1,7 @@
 [graph]
 all-features = true
+# Enabled only by the `devtools` feature, which no release build turns on.
+exclude = ["tauri-plugin-devtools"]
 targets = [
 	"aarch64-linux-android",
 	"armv7-linux-androideabi",
