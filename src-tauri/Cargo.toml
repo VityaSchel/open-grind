@@ -21,12 +21,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
 keychain = ["dep:apple-native-keyring-store"]
+# Pulls tonic/hyper/h2; kept out of release builds entirely.
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
+tokio = { version = "1", features = ["net", "io-util", "rt-multi-thread"] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
@@ -37,6 +39,10 @@ grindr = "0.14.0"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp", "tiff"] }
 moxcms = "0.8"
 tokio = { version = "1", features = ["sync", "time", "rt", "macros"] }
+wreq = { version = "5.3", default-features = false }
+ed25519-dalek = { version = "2", default-features = false, features = ["alloc"] }
+blake2 = { version = "0.10", default-features = false }
+semver = "1"
 tauri-plugin-fs = "2"
 tauri-plugin-geolocation = "2"
 tauri-plugin-os = "2"
@@ -57,6 +63,7 @@ objc2 = "0.6"
 # Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs.
 block2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "block2", "objc2-core-foundation"] }
+rfd = "0.16"
 
 [target.'cfg(target_os = "ios")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }
