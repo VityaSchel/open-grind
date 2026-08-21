@@ -114,6 +114,8 @@ fn quit_when_closed(window: &tauri::WebviewWindow) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+	api::update::enforce_home();
+
 	#[cfg(debug_assertions)]
 	let devtools = tauri_plugin_devtools::init();
 
@@ -149,6 +151,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(api::google_oauth::plugin())
+        .plugin(api::update::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -172,6 +175,18 @@ pub fn run() {
             api::session_recovery::set_app_active,
             api::session_recovery::session_health,
             scroll_phase::scroll_gesture_capture,
+            api::update::commands::update_capability,
+            api::update::commands::update_settings,
+            api::update::commands::update_set_auto_check,
+            api::update::commands::update_check,
+            api::update::commands::update_download,
+            api::update::commands::update_cancel_download,
+            api::update::commands::update_progress,
+            api::update::commands::update_readiness,
+            api::update::commands::update_install,
+            api::update::commands::update_take_install_outcome,
+            api::update::commands::update_open_install_permission_settings,
+            api::update::commands::update_discard,
         ])
         .setup(|app| {
             scroll_phase::install_scroll_gesture_bridge(app.handle());
