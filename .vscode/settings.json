@@ -10,6 +10,7 @@
 	"editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
 	"editor.indentSize": "tabSize",
 	"editor.detectIndentation": false,
+	"files.insertFinalNewline": true,
 	"json.schemaDownload.trustedDomains": {
 		"https://schema.tauri.app/config/2": true
 	},
@@ -20,7 +21,7 @@
 		}
 	],
 	"[markdown]": {
-		"editor.indentSize": 2,
+		"editor.tabSize": 4,
 		"editor.detectIndentation": false,
 		"editor.insertSpaces": true
 	},

@@ -1,6 +1,0 @@
-{
-	"name": "open-grind-ci",
-	"devDependencies": {
-		"@types/bun": "^1.3.14"
-	}
-}

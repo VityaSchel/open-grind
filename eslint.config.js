@@ -15,6 +15,8 @@ export default defineConfig(
 			"contrib/",
 			"static/",
 			"scripts/",
+			"ci/",
+			"e2e/updater/",
 		],
 	}),
 );
