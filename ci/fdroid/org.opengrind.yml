@@ -17,7 +17,7 @@ AutoName: Open Grind
 
 RepoType: git
 Repo: https://git.opengrind.org/open-grind/open-grind.git
-Binaries: https://git.opengrind.org/open-grind/open-grind/releases/download/v%v/open-grind-v%v.apk
+Binaries: https://git.opengrind.org/open-grind/open-grind/releases/download/v%v/open-grind-v%v-android.apk
 
 Builds:
   - versionName: ${versionName}

@@ -159,7 +159,7 @@ let
         src="$reldir/app-universal-release$sfx.apk"
         version="$(sed -n 's/^tauri\.android\.versionName=//p' \
           "$ROOT/src-tauri/gen/android/app/tauri.properties")"
-        apk="$reldir/open-grind-v$version$sfx.apk"
+        apk="$reldir/open-grind-v$version-android$sfx.apk"
         if [ -f "$src" ]; then
           mv -f "$src" "$apk"
           printf 'Produced: %s (%s)\n' "$apk" "$(du -h "$apk" | cut -f1)"
