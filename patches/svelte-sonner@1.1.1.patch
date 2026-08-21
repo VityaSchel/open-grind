@@ -1,0 +1,71 @@
+diff --git a/node_modules/svelte-sonner/.bun-tag-459496c04ace1515 b/.bun-tag-459496c04ace1515
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/Toast.svelte b/dist/Toast.svelte
+index a7f08aded437b9f34cbf3878043fe5426c1cd050..fd1fbef3b2deec5ac95ec25a86c995435b4be3f8 100644
+--- a/dist/Toast.svelte
++++ b/dist/Toast.svelte
+@@ -70,13 +70,14 @@ const dismissible = $derived(toast.dismissible !== undefined
+ const toastClass = $derived(toast.class || '');
+ const toastDescriptionClass = $derived(toast.descriptionClass || '');
+ // height index is used to calculate the offset as it gets updated before the toast array, which means we can calculate the new layout faster.
+-const heightIndex = $derived(toastState.heights.findIndex((height) => height.toastId === toast.id) ||
++const positionHeights = $derived(toastState.heights.filter((height) => height.position === position));
++const heightIndex = $derived(positionHeights.findIndex((height) => height.toastId === toast.id) ||
+     0);
+ const closeButton = $derived(toast.closeButton ?? closeButtonFromToaster);
+ const duration = $derived(toast.duration ?? durationFromToaster ?? TOAST_LIFETIME);
+ let pointerStart = null;
+ const coords = $derived(position.split('-'));
+-const toastsHeightBefore = $derived(toastState.heights.reduce((prev, curr, reducerIndex) => {
++const toastsHeightBefore = $derived(positionHeights.reduce((prev, curr, reducerIndex) => {
+     if (reducerIndex >= heightIndex)
+         return prev;
+     return prev + curr.height;
+@@ -118,7 +119,7 @@ $effect(() => {
+         finalHeight = offsetHeight;
+     }
+     initialHeight = finalHeight;
+-    toastState.setHeight({ toastId: toast.id, height: finalHeight });
++    toastState.setHeight({ toastId: toast.id, height: finalHeight, position });
+ });
+ function deleteToast() {
+     removed = true;
+@@ -175,7 +176,7 @@ onMount(() => {
+     mounted = true;
+     const height = toastRef?.getBoundingClientRect().height;
+     initialHeight = height;
+-    toastState.setHeight({ toastId: toast.id, height });
++    toastState.setHeight({ toastId: toast.id, height, position });
+     return () => {
+         toastState.removeHeight(toast.id);
+     };
+@@ -195,7 +196,7 @@ const handlePointerDown = (event) => {
+     const target = event.target;
+     // ensure we maintain correct pointer capture even when going outside of the toast (e.g. when swiping)
+     target.setPointerCapture(event.pointerId);
+-    if (target.tagName === 'BUTTON')
++    if (target.tagName === 'BUTTON' || !dismissible)
+         return;
+     swiping = true;
+     pointerStart = { x: event.clientX, y: event.clientY };
+@@ -373,6 +374,7 @@ const icon = $derived.by(() => {
+ 	onpointermove={handlePointerMove}
+ 	onpointerup={handlePointerUp}
+ 	onpointerdown={handlePointerDown}
++	onpointercancel={handleDragEnd}
+ 	ondragend={handleDragEnd}
+ >
+ 	{#if closeButton && !toast.component && toastType !== 'loading' && closeIcon !== null}
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index ac2ebd014d034d91b66dfae0d0ca977594d9ba57..7466aa5c02102c8bb868deb6a432be124dfc888a 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -74,6 +74,7 @@ export type Position = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+ export type HeightT = {
+     height: number;
+     toastId: number | string;
++    position: Position;
+ };
+ export type Theme = 'light' | 'dark';
+ export type ToastToDismiss = {

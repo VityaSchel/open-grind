@@ -64,6 +64,7 @@
   },
   "patchedDependencies": {
     "vaul-svelte@1.0.0-next.7": "patches/vaul-svelte@1.0.0-next.7.patch",
+    "svelte-sonner@1.1.1": "patches/svelte-sonner@1.1.1.patch",
     "@sveltejs/kit@2.70.2": "patches/@sveltejs%2Fkit@2.70.2.patch",
   },
   "overrides": {
