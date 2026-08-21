@@ -3,6 +3,7 @@ pub mod dev;
 pub mod error;
 pub mod install;
 pub mod release;
+pub mod storage;
 pub mod verify;
 
 pub use error::UpdateError;
