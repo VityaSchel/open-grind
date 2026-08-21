@@ -28,6 +28,8 @@ val keystorePropertiesFile = rootProject.file("keystore.properties")
 val hasKeystore = keystorePropertiesFile.exists()
 
 android {
+	sourceSets["main"].java.srcDir("../../../android-logic/src/main/kotlin")
+
     compileSdk = prop("opengrind.android.compileSdk").toInt()
     buildToolsVersion = prop("opengrind.android.buildTools")
     ndkVersion = prop("opengrind.android.ndk")
@@ -99,6 +101,14 @@ android {
 tasks.whenTaskAdded {
     if (name.contains("ArtProfile") || name == "buildKotlinToolingMetadata") {
         enabled = false
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("failed")
+        exceptionFormat =
+            org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
 

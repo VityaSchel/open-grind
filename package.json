@@ -28,7 +28,9 @@
 		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
 		"test:coverage": "svelte-kit sync && vitest run --coverage",
 		"test:unit": "svelte-kit sync && vitest run",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:android": "cd src-tauri/gen/android && ./gradlew :app:testUniversalReleaseUnitTest",
+		"test:android-logic": "src-tauri/gen/android/gradlew -p src-tauri/android-logic test"
 	},
 	"overrides": {
 		"brace-expansion": "^5.0.9",

@@ -83,3 +83,57 @@ pub use platform::{
 	open_install_permission_settings, sweep_replaced, take_outcome,
 	watch_install,
 };
+
+#[cfg(test)]
+mod pins {
+	const KEYS: &str = include_str!("../../../../../KEYS.md");
+	const GATE: &str = include_str!(
+		"../../../../android-logic/src/main/kotlin/org/opengrind/update/InstallGate.kt"
+	);
+	const MANIFEST: &str = include_str!(
+		"../../../../gen/android/app/src/main/AndroidManifest.xml"
+	);
+
+	fn hex64(line: &str) -> bool {
+		line.len() == 64 && line.chars().all(|c| c.is_ascii_hexdigit())
+	}
+
+	#[test]
+	fn the_kotlin_signer_pin_matches_the_published_jks_fingerprint() {
+		let published = KEYS
+			.lines()
+			.skip_while(|line| !line.contains("Android JKS"))
+			.map(str::trim)
+			.find(|line| hex64(line))
+			.expect("KEYS.md publishes no Android JKS fingerprint");
+		let start = GATE
+			.find("RELEASE_CERT_SHA256")
+			.expect("pin in InstallGate");
+		let literal = GATE[start..]
+			.split('"')
+			.nth(1)
+			.expect("pin holds a string literal");
+
+		assert!(
+			literal.eq_ignore_ascii_case(published),
+			"pin drifted from KEYS.md"
+		);
+		assert!(
+			literal.chars().all(|c| !c.is_ascii_lowercase()),
+			"soleSignerOf emits uppercase hex and the comparison is case-sensitive"
+		);
+	}
+
+	#[test]
+	fn the_update_components_stay_unexported() {
+		for component in ["InstallResultReceiver", "TransferService"] {
+			let at = MANIFEST.find(component).expect(component);
+			let element = &MANIFEST
+				[at..MANIFEST[at..].find('>').map(|i| at + i).unwrap()];
+			assert!(
+				element.contains("android:exported=\"false\""),
+				"{component} must not be exported"
+			);
+		}
+	}
+}
