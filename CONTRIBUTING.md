@@ -187,6 +187,17 @@ Before opening a pull request, run the same checks CI runs:
 End-to-end tests are a separate tier:
 
 - `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
+- `bun run test:android` — JUnit tests for the Android sources. Needs the Android SDK and the Gradle files that `bun run tauri android build` generates, which is why it stays out of `bun run test`.
+
+Local updater testing:
+
+```sh
+bun run dev:updater-server   # generates a dev minisign key, signs a payload, prints two exports
+export OPEN_GRIND_UPDATE_ORIGIN=http://127.0.0.1:8787/
+export OPEN_GRIND_UPDATE_KEY=<printed key>
+```
+
+Both variables are read only under `debug_assertions` ([dev.rs](./src-tauri/src/api/update/dev.rs)). Run `adb reverse tcp:8787 tcp:8787` to tunnel to an Android device. On Android the debug build instead reads the same two assignments from `/data/local/tmp/open-grind-update.env` on the device — `e2e/updater/run.ts android` pushes it automatically, or `adb push` it when testing by hand. `cargo test --lib -- --ignored live_` runs the end-to-end check, download and signature tests against it.
 
 `bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml)) that runs over staged files only:
 

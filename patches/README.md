@@ -15,3 +15,7 @@ See [sveltejs/kit#15313](https://github.com/sveltejs/kit/issues/15313). [#16074]
 Drawers bounced back into view during the close animation. A `pointerout` that ended a drag while the pointer was still captured and a `swipeAmount` of `0` read as absent.
 
 See ([huntabyte/vaul-svelte#138](https://github.com/huntabyte/vaul-svelte/issues/138)).
+
+## `svelte-sonner`
+
+A toast stacked itself behind every other toast on screen, not just the ones sharing its position, so a `bottom-center` toast pushed a `top-center` toast down by its own height plus the gap. `heights` is one global array and `HeightT` carries no position, so `toastsHeightBefore` summed across positions; upstream React sonner filters that list by position. The patch records the position with each measured height and filters on it.

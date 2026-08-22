@@ -1,6 +1,0 @@
-{
-	"name": "open-grind-scripts",
-	"devDependencies": {
-		"@types/bun": "^1.3.14"
-	}
-}

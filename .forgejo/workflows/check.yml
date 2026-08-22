@@ -100,11 +100,8 @@ jobs:
       - name: Svelte types
         run: cd "$CI_WORKSPACE" && bun run check
 
-      - name: CI scripts
-        run: cd "$CI_WORKSPACE" && bun run check:ci
-
-      - name: Repository scripts
-        run: cd "$CI_WORKSPACE" && bun run check:scripts
+      - name: Repository tooling
+        run: cd "$CI_WORKSPACE" && bun run check:tools
 
       - name: Unit tests
         run: cd "$CI_WORKSPACE" && bun run test:unit

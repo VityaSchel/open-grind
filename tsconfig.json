@@ -25,7 +25,8 @@
 		"tests/**/*.js",
 		"tests/**/*.ts",
 		"tests/**/*.svelte",
-		"e2e/**/*.ts",
+		"e2e/*.ts",
+		"e2e/support/**/*.ts",
 		"playwright.config.ts"
 	]
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias

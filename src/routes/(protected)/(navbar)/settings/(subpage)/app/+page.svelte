@@ -4,6 +4,8 @@
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";
+	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
+	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
 	import UnitsSetting from "./UnitsSetting.svelte";
@@ -57,6 +59,10 @@
 	unimplemented: { feature: "Discreet app icon", issue: 97 },
 })}
 {@render item({ title: "PIN", unimplemented: { feature: "PIN", issue: 50 } })}
+{#if updatesSelfManaged()}
+	<h2>Updates</h2>
+	<AutomaticUpdatesSetting />
+{/if}
 
 <style lang="postcss">
 	@reference "$layout";

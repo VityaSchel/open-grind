@@ -31,7 +31,7 @@ jobs:
           ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
           || format('["{0}"]', inputs.providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
-    timeout-minutes: 45
+    timeout-minutes: 55
     env:
       BUILD_ROOT: /work
       HOME: /root
@@ -67,6 +67,16 @@ jobs:
           [ ${#apk[@]} -eq 1 ]
           mkdir -p out
           cp "${apk[0]}" out/
+      - name: Android unit tests
+        run: |
+          cd "${BUILD_ROOT:?}"
+          GRADLE_USER_HOME="${OPEN_GRIND_GRADLE_USER_HOME:?}" \
+            nix develop --command bun run test:android
+      - name: Android logic unit tests
+        run: |
+          cd "${BUILD_ROOT:?}"
+          GRADLE_USER_HOME="${OPEN_GRIND_GRADLE_USER_HOME:?}" \
+            nix develop --command bun run test:android-logic
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
