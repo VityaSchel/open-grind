@@ -7,6 +7,7 @@ const {
 	showErrorToastMock,
 	resolveGeohashMock,
 	setPreferencesMock,
+	storedPreferences,
 } = vi.hoisted(() => ({
 	getGridMock: vi.fn(),
 	patchCachedProfileMock: vi.fn(),
@@ -14,6 +15,7 @@ const {
 	resolveGeohashMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
+	storedPreferences: { geohash: null as string | null },
 }));
 
 vi.mock("./grid", () => ({
@@ -33,6 +35,7 @@ vi.mock("$lib/util/reconcile", () => ({
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () => Promise.resolve({}),
+	getPreferencesSnapshot: () => storedPreferences,
 	setPreferences: setPreferencesMock,
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
@@ -48,7 +51,7 @@ import {
 } from "$lib/api/users/profile-viewability";
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import type { GridProfile } from "./grid";
-import { gridState, startGridHeartbeat } from "./grid-state.svelte";
+import { gridState } from "./grid-state.svelte";
 
 const page = (ids: number[]) => ({
 	items: ids.map((id) => ({ id, type: "lazy" })),
@@ -62,6 +65,8 @@ async function settle() {
 
 beforeEach(async () => {
 	clearAccountCaches();
+	storedPreferences.geohash = null;
+	gridState.viewActive = false;
 	resolveGeohashMock.mockReset();
 	resolveGeohashMock.mockImplementation((geohash: string) =>
 		Promise.resolve(geohash),
@@ -290,16 +295,49 @@ describe("live location", () => {
 		expect(setPreferencesMock).not.toHaveBeenCalled();
 	});
 
-	it("marks only heartbeat refreshes as background for the resolver", async () => {
+	it("samples with the interactive max age for a manual refresh", async () => {
 		resolveGeohashMock.mockClear();
+
 		await gridState.refresh();
+
 		expect(resolveGeohashMock).toHaveBeenLastCalledWith("9q8yyk8ytpxr", {
 			background: false,
 		});
+	});
+
+	it("samples with the background max age while the grid is on screen", async () => {
+		resolveGeohashMock.mockClear();
+		gridState.viewActive = true;
 
 		await gridState.refresh({ background: true });
+
 		expect(resolveGeohashMock).toHaveBeenLastCalledWith("9q8yyk8ytpxr", {
 			background: true,
+		});
+	});
+
+	it("never touches GPS for a background refresh away from the grid", async () => {
+		resolveGeohashMock.mockClear();
+
+		await gridState.refresh({ background: true });
+
+		expect(resolveGeohashMock).not.toHaveBeenCalled();
+		expect(getGridMock.mock.calls[0]?.[0]).toMatchObject({
+			nearbyGeoHash: "9q8yyk8ytpxr",
+		});
+	});
+
+	it("beats from the stored location when the grid was never opened", async () => {
+		gridState.reset();
+		storedPreferences.geohash = "u33dc0cpn3hy";
+		resolveGeohashMock.mockClear();
+
+		await gridState.refresh({ background: true });
+
+		expect(resolveGeohashMock).not.toHaveBeenCalled();
+		expect(getGridMock).toHaveBeenCalledOnce();
+		expect(getGridMock.mock.calls[0]?.[0]).toMatchObject({
+			nearbyGeoHash: "u33dc0cpn3hy",
 		});
 	});
 });
@@ -384,26 +422,5 @@ describe("fetch races", () => {
 
 		await gridState.refresh();
 		expect(showErrorToastMock).toHaveBeenCalledTimes(1);
-	});
-});
-
-describe("startGridHeartbeat", () => {
-	it("refreshes the grid, and the location with it, every seven minutes", async () => {
-		vi.useFakeTimers();
-		resolveGeohashMock.mockClear();
-		try {
-			const stop = startGridHeartbeat();
-			expect(getGridMock).not.toHaveBeenCalled();
-
-			await vi.advanceTimersByTimeAsync(7 * 60 * 1000);
-			expect(resolveGeohashMock).toHaveBeenCalledTimes(1);
-			expect(getGridMock).toHaveBeenCalledTimes(1);
-
-			stop();
-			await vi.advanceTimersByTimeAsync(7 * 60 * 1000);
-			expect(getGridMock).toHaveBeenCalledTimes(1);
-		} finally {
-			vi.useRealTimers();
-		}
 	});
 });

@@ -19,6 +19,7 @@ const preferencesSchema = z.object({
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
+	stayOnline: z.boolean().default(true),
 	units: unitSystemSchema.default("metric"),
 });
 

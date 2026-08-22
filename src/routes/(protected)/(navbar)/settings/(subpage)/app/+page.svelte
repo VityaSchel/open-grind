@@ -8,6 +8,7 @@
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
+	import StayOnlineSetting from "./StayOnlineSetting.svelte";
 	import UnitsSetting from "./UnitsSetting.svelte";
 </script>
 
@@ -51,6 +52,7 @@
 	unimplemented: { feature: "Notifications", issue: 45 },
 })}
 <h2>Privacy</h2>
+<StayOnlineSetting />
 <RevealMessageReadSetting />
 <RevealProfileViewSetting />
 <h2>Security</h2>

@@ -3882,6 +3882,7 @@
 					}
 				},
 				"summary": "Get Cascade",
+				"description": "Fetching the cascade also marks our profile online by always instantly setting `onlineUntil` to current time + exactly 600 s.",
 				"x-query-groups": [
 					"CascadeQuery"
 				]
@@ -4459,7 +4460,8 @@
 						"description": "Empty."
 					}
 				},
-				"summary": "Update location"
+				"summary": "Update location",
+				"description": "Moves the requesting profile to `geohash`. The new position is live immediately. Does not update online status or `onlineUntil`."
 			}
 		},
 		"/v1/location/neighborhood/{geohash}": {
