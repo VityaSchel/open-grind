@@ -1,0 +1,8 @@
+.env
+out/
+node_modules/
+*.pcap
+*.jsonl
+*.apk
+*.xapk
+*.apkm

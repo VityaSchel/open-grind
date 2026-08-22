@@ -1,0 +1,17 @@
+{
+	"name": "@opengrind/fingerprint-capture",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"self-test": "bun src/analyze.ts --self-test",
+		"analyze": "bun src/analyze.ts",
+		"avd": "bun src/avd.ts",
+		"install-apk": "bun src/install.ts",
+		"drive": "bun src/drive.ts",
+		"capture": "bun src/capture.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"typescript": "^5"
+	}
+}
