@@ -14,4 +14,4 @@ if [ -n "${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then
   trap 'rm -f "$KEYSTORE_DEST"' EXIT
 fi
 
-exec bun run tauri android dev "$@"
+exec bun run tauri android dev --features devtools "$@"

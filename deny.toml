@@ -18,6 +18,7 @@ unmaintained = "workspace"
 ignore = [
 	{ id = "RUSTSEC-2026-0194", reason = "quick-xml, via plist <- tauri: parses our own bundled Info.plist on macOS, never attacker input, and does not reach the Android APK. Re-check when tauri bumps plist." },
 	{ id = "RUSTSEC-2026-0195", reason = "quick-xml, same dependency path and same reasoning as RUSTSEC-2026-0194." },
+	{ id = "RUSTSEC-2026-0258", reason = "h2 0.3, via hyper 0.14 <- tonic <- devtools-core <- tauri-plugin-devtools, which is behind the optional `devtools` feature that only the dev scripts enable: `cargo tree -i h2@0.3.27` finds nothing without it. Reached only by this graph being audited with all-features. Re-check when tauri-plugin-devtools bumps tonic, and drop this line if the plugin ever goes." },
 ]
 
 [licenses]

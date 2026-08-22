@@ -17,7 +17,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"dev": "bun dev:desktop",
 		"dev:android": "bash scripts/dev-android.sh",
-		"dev:desktop": "tauri dev",
+		"dev:desktop": "tauri dev --features devtools",
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
