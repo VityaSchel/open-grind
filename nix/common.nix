@@ -91,6 +91,24 @@ rec {
     program = lib.getExe package;
   };
 
+  toolsShell = pkgs.mkShell (
+    baseEnv
+    // {
+      packages =
+        cargoInputs
+        ++ frontendInputs
+        ++ [
+          pkgs.shellcheck
+          pkgs.minisign
+        ];
+      shellHook = ''
+        echo "Open Grind: shared tooling shell (no platform SDK)."
+        echo "  Rust:      $(rustc --version)"
+        echo "  Platforms: nix develop .#{android,linux,macos,windows-x64,windows-arm64}"
+      '';
+    }
+  );
+
   webShell = pkgs.mkShell {
     packages = frontendInputs ++ [
       pkgs.git

@@ -22,7 +22,9 @@ if (!output) {
 }
 for (const binary of ["apksigner", "zipalign", "minisign"]) {
 	if (!Bun.which(binary)) {
-		console.error(`${binary} not found, run inside 'nix develop'`);
+		console.error(
+			`${binary} not found, run inside 'nix develop .#android'`,
+		);
 		process.exit(1);
 	}
 }

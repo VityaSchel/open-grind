@@ -71,12 +71,12 @@ jobs:
         run: |
           cd "${BUILD_ROOT:?}"
           GRADLE_USER_HOME="${OPEN_GRIND_GRADLE_USER_HOME:?}" \
-            nix develop --command bun run test:android
+            nix develop .#android --command bun run test:android
       - name: Android logic unit tests
         run: |
           cd "${BUILD_ROOT:?}"
           GRADLE_USER_HOME="${OPEN_GRIND_GRADLE_USER_HOME:?}" \
-            nix develop --command bun run test:android-logic
+            nix develop .#android --command bun run test:android-logic
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:

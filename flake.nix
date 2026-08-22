@@ -51,9 +51,14 @@
           }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
             linux = import ./nix/linux.nix { inherit pkgs lib common; };
-          }
-          // lib.optionalAttrs (system == "x86_64-linux") {
-            windows = import ./nix/windows.nix { inherit pkgs lib common; };
+            windows-x64 = import ./nix/windows.nix {
+              inherit pkgs lib common;
+              arch = "x86_64";
+            };
+            windows-arm64 = import ./nix/windows.nix {
+              inherit pkgs lib common;
+              arch = "aarch64";
+            };
           }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
             macos = import ./nix/macos.nix { inherit pkgs lib common; };
@@ -62,16 +67,12 @@
           renamed = f: lib.mapAttrs' (n: t: lib.nameValuePair "build-${n}" (f t)) targets;
         in
         {
-          packages = renamed (t: t.package) // {
-            default = targets.android.package;
-          };
+          packages = renamed (t: t.package);
 
-          apps = renamed (t: common.mkApp t.package) // {
-            default = common.mkApp targets.android.package;
-          };
+          apps = renamed (t: common.mkApp t.package);
 
           devShells = lib.mapAttrs (_: t: t.devShell) targets // {
-            default = targets.android.devShell;
+            default = common.toolsShell;
             web = common.webShell;
           };
 
