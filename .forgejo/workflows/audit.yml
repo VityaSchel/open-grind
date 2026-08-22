@@ -66,3 +66,7 @@ jobs:
 
           step bun install --frozen-lockfile
           step bun run check:deps
+
+          # A [patch.crates-io] entry that stops matching is only a warning, so
+          # cargo would quietly build the unpatched crate and still exit 0.
+          step sh -c '! grep -q "\[\[patch.unused\]\]" src-tauri/Cargo.lock'
