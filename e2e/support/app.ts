@@ -53,8 +53,10 @@ export async function installEventInjection(page: Page): Promise<void> {
 	});
 }
 
+export const GRID_READY_SELECTOR = '[aria-label="All filters"]';
+
 export async function ensureGridLocation(page: Page): Promise<void> {
-	const allFilters = page.locator('[aria-label="All filters"]');
+	const allFilters = page.locator(GRID_READY_SELECTOR);
 	if ((await allFilters.count()) === 0) {
 		// tinykeys reads navigator.platform, so the CI runner wants Control
 		await page.keyboard.press("ControlOrMeta+k");
