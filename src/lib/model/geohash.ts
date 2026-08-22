@@ -91,3 +91,16 @@ export function decodeGeohash(hash: string): {
 		lonErr: (lonHi - lonLo) / 2,
 	};
 }
+
+const COARSE_STEPS_PER_DEGREE = 1000;
+
+function toCoarseGrid(degrees: number): number {
+	return (
+		Math.round(degrees * COARSE_STEPS_PER_DEGREE) / COARSE_STEPS_PER_DEGREE
+	);
+}
+
+export function coarsenGeohash(hash: string): string {
+	const { lat, lon } = decodeGeohash(hash);
+	return encodeGeohash({ lat: toCoarseGrid(lat), lon: toCoarseGrid(lon) });
+}

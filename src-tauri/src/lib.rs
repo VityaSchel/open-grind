@@ -1,4 +1,5 @@
 pub mod api;
+mod app_settings;
 mod appearance;
 mod error;
 pub mod media;
@@ -153,6 +154,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(api::google_oauth::plugin())
         .plugin(api::update::plugin())
+        .plugin(app_settings::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -188,6 +190,7 @@ pub fn run() {
             api::update::commands::update_take_install_outcome,
             api::update::commands::update_open_install_permission_settings,
             api::update::commands::update_discard,
+            app_settings::open_app_settings,
         ])
         .setup(|app| {
             scroll_phase::install_scroll_gesture_bridge(app.handle());

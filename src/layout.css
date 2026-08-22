@@ -338,6 +338,8 @@ a {
 
 [data-sonner-toaster] {
 	font-family: var(--font-sans) !important;
+	/* bits-ui modal dialogs set body { pointer-events: none }; toasts must stay tappable */
+	pointer-events: auto;
 }
 
 .toast[data-styled="true"] {

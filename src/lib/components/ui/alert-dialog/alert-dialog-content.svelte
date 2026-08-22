@@ -2,6 +2,7 @@
 	import { AlertDialog as AlertDialogPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
 
+	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
 	import {
 		cn,
 		type WithoutChild,
@@ -16,6 +17,7 @@
 		size = "default",
 		portalProps,
 		preventOverflowTextSelection = false,
+		onInteractOutside,
 		...restProps
 	}: WithoutChild<AlertDialogPrimitive.ContentProps> & {
 		size?: "default" | "sm";
@@ -36,6 +38,7 @@
 			className,
 		)}
 		{preventOverflowTextSelection}
+		onInteractOutside={exemptToastsFromDismissal(onInteractOutside)}
 		{...restProps}
 	/>
 </AlertDialogPortal>

@@ -5,6 +5,7 @@
 	import type { ComponentProps } from "svelte";
 
 	import { Button } from "$lib/components/ui/button/index.js";
+	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
 	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 	import DialogPortal from "./dialog-portal.svelte";
 	import * as Dialog from "./index.js";
@@ -16,6 +17,7 @@
 		children,
 		showCloseButton = true,
 		preventOverflowTextSelection = false,
+		onInteractOutside,
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
 		portalProps?: WithoutChildrenOrChild<
@@ -36,6 +38,7 @@
 			className,
 		)}
 		{preventOverflowTextSelection}
+		onInteractOutside={exemptToastsFromDismissal(onInteractOutside)}
 		{...restProps}
 	>
 		{@render children?.()}

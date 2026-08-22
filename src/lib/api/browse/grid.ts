@@ -7,6 +7,7 @@ import {
 	searchProfilesResponseSchema,
 	searchQuerySchema,
 } from "$lib/model/browse/grid/search";
+import { coarsenGeohash } from "$lib/model/geohash";
 import { urlSearchParamsCodec } from "$lib/util/url-search-params";
 
 export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {
@@ -21,10 +22,17 @@ export async function searchProfiles(query: z.infer<typeof searchQuerySchema>) {
 export async function getCascadeV4(
 	query: z.infer<typeof cascadeV4QuerySchema>,
 ) {
+	const coarse = {
+		...query,
+		nearbyGeoHash: coarsenGeohash(query.nearbyGeoHash),
+		...(query.exploreGeoHash && {
+			exploreGeoHash: coarsenGeohash(query.exploreGeoHash),
+		}),
+	};
 	return await fetchRest(
 		"/v4/cascade?" +
 			new URLSearchParams(
-				urlSearchParamsCodec(cascadeV4QuerySchema).encode(query),
+				urlSearchParamsCodec(cascadeV4QuerySchema).encode(coarse),
 			).toString(),
 	).then((res) => res.jsonParsed(cascadeV4ResponseSchema));
 }

@@ -5,6 +5,11 @@ import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
 import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
+import { setPreferences } from "$lib/app-data/preferences.svelte";
+import {
+	autoLocation,
+	BACKGROUND_FIX_MAX_AGE_MS,
+} from "$lib/location/auto-location";
 import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/model/browse/grid/filters";
 import { reconciler } from "$lib/util/reconcile";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
@@ -34,6 +39,7 @@ class GridState {
 	scrollY = 0;
 
 	#geohash: string | null = null;
+	#retargeted: string | null = null;
 	#resolvingIds = new Set<number>();
 	#fetchToken = 0;
 
@@ -58,6 +64,7 @@ class GridState {
 	}
 
 	load(geohash: string): void {
+		if (untrack(() => this.#retargeted === geohash)) return;
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
 			return;
 		this.#geohash = geohash;
@@ -73,11 +80,14 @@ class GridState {
 		void this.#fetchProfiles(this.#geohash);
 	}
 
-	async refresh(): Promise<void> {
+	async refresh({ background = false } = {}): Promise<void> {
 		if (!this.#geohash || this.refreshing) return;
 		this.refreshing = true;
 		try {
-			await this.#fetchProfiles(this.#geohash, { silent: true });
+			await this.#fetchProfiles(this.#geohash, {
+				silent: true,
+				background,
+			});
 		} finally {
 			this.refreshing = false;
 		}
@@ -100,6 +110,7 @@ class GridState {
 		this.refreshing = false;
 		this.scrollY = 0;
 		this.#geohash = null;
+		this.#retargeted = null;
 		this.filters.reset();
 	}
 
@@ -107,12 +118,14 @@ class GridState {
 		if (this.loadingMore || !this.nextPage || !this.currentQuery) return;
 		this.loadingMore = true;
 		const token = this.#fetchToken;
+		const query = this.currentQuery;
 		try {
 			const result = await getGrid({
-				...this.currentQuery,
+				...query,
 				pageNumber: this.nextPage,
 			});
-			if (token !== this.#fetchToken) return;
+			if (token !== this.#fetchToken || query !== this.currentQuery)
+				return;
 			this.items = [...this.items, ...result.items];
 			this.nextPage = result.nextPage;
 		} catch (error) {
@@ -156,13 +169,37 @@ class GridState {
 		}
 	}
 
+	async #withLiveLocation(
+		geohash: string,
+		token: number,
+		background: boolean,
+	): Promise<string> {
+		const resolved = await autoLocation.resolveGeohash(geohash, {
+			background,
+		});
+		if (token !== this.#fetchToken || resolved === geohash) return geohash;
+		this.#geohash = resolved;
+		this.#retargeted = resolved;
+		setPreferences({ geohash: resolved }).catch((error: unknown) =>
+			console.error(error),
+		);
+		return resolved;
+	}
+
 	async #fetchProfiles(
 		geohash: string,
-		opts?: { silent?: boolean },
+		opts?: { silent?: boolean; background?: boolean },
 	): Promise<void> {
 		const token = ++this.#fetchToken;
+		this.#retargeted = null;
 		try {
 			await this.filters.ready;
+			if (token !== this.#fetchToken) return;
+			geohash = await this.#withLiveLocation(
+				geohash,
+				token,
+				opts?.background ?? false,
+			);
 			if (token !== this.#fetchToken) return;
 			const filters = this.filters.value;
 			const query = {
@@ -235,23 +272,37 @@ class GridState {
 		} catch (err) {
 			if (token !== this.#fetchToken) return;
 			console.error(err);
+			this.loading = false;
+			if (opts?.background) return;
 			if (opts?.silent) {
 				showErrorToast({
 					label: "Failed to refresh profiles",
 					error: err,
 				});
-			} else {
-				this.error =
-					err instanceof Error
-						? err
-						: new Error("Failed to fetch profiles", { cause: err });
+				return;
 			}
-			this.loading = false;
+			this.error =
+				err instanceof Error
+					? err
+					: new Error("Failed to fetch profiles", { cause: err });
 		}
 	}
 }
 
+const FIX_STALENESS_MARGIN_MS = 60 * 1000;
+const GRID_REFRESH_INTERVAL_MS =
+	BACKGROUND_FIX_MAX_AGE_MS + FIX_STALENESS_MARGIN_MS;
+
 export const gridState = new GridState();
+
+export function startGridHeartbeat(): () => void {
+	const timer = setInterval(() => {
+		if (!document.hidden) void gridState.refresh({ background: true });
+	}, GRID_REFRESH_INTERVAL_MS);
+	return () => clearInterval(timer);
+}
+
+if (typeof document !== "undefined") startGridHeartbeat();
 
 registerAccountCache({ reset: () => gridState.reset() });
 reconciler.subscribe(() => gridState.refresh());

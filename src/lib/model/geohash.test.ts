@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	coarsenGeohash,
 	decodeGeohash,
 	encodeGeohash,
 	geohashSchema,
@@ -36,5 +37,45 @@ describe("encodeGeohash and decodeGeohash", () => {
 		expect(() => decodeGeohash("u2fkb88pbpbi")).toThrow(
 			"Invalid geohash char: i",
 		);
+	});
+});
+
+describe("coarsenGeohash", () => {
+	it("keeps the value on a ~110m grid, matching the official app", () => {
+		const exact = encodeGeohash({ lat: 52.5200123, lon: 13.4050456 });
+		const coarse = coarsenGeohash(exact);
+
+		expect(coarse).toHaveLength(12);
+		expect(geohashSchema.safeParse(coarse).success).toBe(true);
+		expect(coarse).not.toBe(exact);
+
+		const decoded = decodeGeohash(coarse);
+		expect(decoded.lat).toBeCloseTo(52.52, 6);
+		expect(decoded.lon).toBeCloseTo(13.405, 6);
+	});
+
+	it("collapses fixes that share a rounded cell to one value", () => {
+		const a = coarsenGeohash(
+			encodeGeohash({ lat: 52.52001, lon: 13.40501 }),
+		);
+		const b = coarsenGeohash(
+			encodeGeohash({ lat: 52.52048, lon: 13.40549 }),
+		);
+		expect(a).toBe(b);
+	});
+
+	it("is idempotent", () => {
+		const once = coarsenGeohash(
+			encodeGeohash({ lat: 42.6977, lon: 23.3219 }),
+		);
+		expect(coarsenGeohash(once)).toBe(once);
+	});
+
+	it("handles southern and western hemispheres", () => {
+		const decoded = decodeGeohash(
+			coarsenGeohash(encodeGeohash({ lat: -33.86881, lon: -151.20929 })),
+		);
+		expect(decoded.lat).toBeCloseTo(-33.869, 6);
+		expect(decoded.lon).toBeCloseTo(-151.209, 6);
 	});
 });
