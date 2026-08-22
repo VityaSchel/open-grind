@@ -1,9 +1,4 @@
 <script lang="ts">
-	import {
-		checkPermissions,
-		getCurrentPosition,
-		requestPermissions,
-	} from "@tauri-apps/plugin-geolocation";
 	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
@@ -11,9 +6,12 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { setPreferences } from "$lib/app-data/preferences.svelte";
+	import AutoLocationToast from "$lib/components/feedback/AutoLocationToast.svelte";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
+	import { reportLocationFailure } from "$lib/location/location-feedback";
+	import { locationRequest } from "$lib/location/location-request.svelte";
 	import { encodeGeohash } from "$lib/model/geohash";
 	import { isMobilePlatform } from "$lib/platform/os";
 
@@ -25,42 +23,35 @@
 	async function handleDetectLocation() {
 		disabled = true;
 		try {
-			let permissions = await checkPermissions();
-			if (
-				permissions.location === "prompt" ||
-				permissions.location === "prompt-with-rationale"
-			) {
-				permissions = await requestPermissions(["location"]);
-			}
-			if (permissions.location === "granted") {
-				try {
-					const {
-						coords: { latitude, longitude },
-					} = await getCurrentPosition();
-
-					await submitGeohash(
-						encodeGeohash({ lat: latitude, lon: longitude }),
-					);
-				} catch (error) {
-					console.error(error);
-					showErrorToast({
-						label: "Failed to get current location",
-						error,
-					});
-				}
-			} else {
-				toast.error(
-					"Location permission denied. Change this in your system settings to use this button.",
-				);
-			}
+			const outcome = await locationRequest.run();
+			if (outcome.status === "ok")
+				await useDetectedLocation(outcome.coords);
+			else reportLocationFailure(outcome);
 		} finally {
 			disabled = false;
 		}
 	}
 
-	async function submitGeohash(geohash: string) {
+	async function useDetectedLocation(coords: { lat: number; lon: number }) {
 		try {
-			await setPreferences({ geohash });
+			await setPreferences({
+				geohash: encodeGeohash(coords),
+				autoUpdateLocation: true,
+			});
+		} catch (error) {
+			console.error(error);
+			showErrorToast({ label: "Failed to save location", error });
+			return;
+		}
+		toast(AutoLocationToast);
+	}
+
+	async function onSubmit(submission: {
+		geohash: string;
+		autoUpdateLocation: boolean;
+	}) {
+		try {
+			await setPreferences(submission);
 			geoMapPickerOpen = false;
 		} catch (error) {
 			console.error(error);
@@ -102,4 +93,4 @@
 		</div>
 	</Empty.Content>
 </Empty.Root>
-<LocationChooser onSubmit={submitGeohash} bind:open={geoMapPickerOpen} />
+<LocationChooser {onSubmit} bind:open={geoMapPickerOpen} />
