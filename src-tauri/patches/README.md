@@ -21,7 +21,10 @@ The HTTP/2 stack under `wreq`. Cloudflare sees every frame we send, so these hun
 | `hpack/encoder.rs`                        | Huffman-code a literal only when strictly shorter.                                                                                                                                          |
 | `client.rs`                               | Flush after the initial SETTINGS so it lands in its own TLS record.                                                                                                                         |
 | `proto/connection.rs`, `proto/go_away.rs` | Close without sending GOAWAY, both on idle pooled connections and after the peer's own.                                                                                                     |
+| `proto/streams/recv.rs`                   | [RUSTSEC-2026-0258](https://rustsec.org/advisories/RUSTSEC-2026-0258): drop empty DATA frames that do not end the stream.                                                                   |
 | `lib.rs`                                  | Allow `mismatched_lifetime_syntaxes`, since a path dependency gets no `--cap-lints allow`.                                                                                                  |
+
+`http2` is a fork of `h2` under a different name, so advisories against `h2` never match it. **Re-check them by hand when bumping.**
 
 The rest will not be upstreamed: the flush was [declined](https://github.com/0x676e67/http2/issues/68), and `mod hpack` is private, so the HPACK hunks are unreachable from a dependent crate.
 

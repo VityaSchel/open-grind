@@ -128,3 +128,21 @@ index d52252c..28c2528 100644
      pub fn go_away_from_user(&mut self, f: frame::GoAway) {
          self.is_user_initiated = true;
          self.go_away_now(f);
+diff --git a/src/proto/streams/recv.rs b/src/proto/streams/recv.rs
+index cddbc74..cbfc030 100644
+--- a/src/proto/streams/recv.rs
++++ b/src/proto/streams/recv.rs
+@@ -674,6 +674,13 @@ impl Recv {
+         // Track the data as in-flight
+         stream.in_flight_recv_data += sz;
+ 
++        // An empty DATA frame without END_STREAM has no effect on the HTTP
++        // message, so there is no event to pass to the user. Queueing one lets a
++        // peer grow the buffer without bound (RUSTSEC-2026-0258).
++        if frame.payload().is_empty() && !frame.is_end_stream() {
++            return Ok(());
++        }
++
+         let event = Event::Data(frame.into_payload());
+ 
+         // Push the frame onto the recv buffer
