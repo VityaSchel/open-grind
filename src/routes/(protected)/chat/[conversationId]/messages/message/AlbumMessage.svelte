@@ -19,6 +19,7 @@
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
 		applyPhotoSwipeVideo,
+		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
 	import type { AlbumMessage } from "$lib/model/messaging/messages";
 	import LockedMedia from "./LockedMedia.svelte";
@@ -108,6 +109,7 @@
 					mainClass: `pswp--buttons-visible`,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeViewportSync(lightbox);
 				lightbox.addFilter("numItems", () => album.content.length);
 				lightbox.addFilter("itemData", (itemData, index) => {
 					const slide = album.content[index];

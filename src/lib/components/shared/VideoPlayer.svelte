@@ -96,7 +96,7 @@
 		<div
 			data-pswp-interactive
 			transition:fade={{ duration: 150, easing: sineOut }}
-			class="absolute inset-x-4 bottom-4 flex items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
+			class="absolute right-[calc(1rem+var(--safe-area-right))] bottom-[calc(1rem+var(--safe-area-bottom))] left-[calc(1rem+var(--safe-area-left))] flex items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
 		>
 			<Button
 				variant="outline"

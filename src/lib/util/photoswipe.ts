@@ -16,6 +16,14 @@ export function applyPhotoSwipeErrorUi(lightbox: PhotoSwipeLightbox): void {
 	});
 }
 
+export function applyPhotoSwipeViewportSync(
+	lightbox: PhotoSwipeLightbox,
+): void {
+	lightbox.on("openingAnimationEnd", () => {
+		lightbox.pswp?.updateSize(true);
+	});
+}
+
 export function applyPhotoSwipeBackGesture(lightbox: PhotoSwipeLightbox): void {
 	const onBackGesture = () => {
 		lightbox.pswp?.close();

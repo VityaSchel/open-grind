@@ -8,6 +8,7 @@
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
 		applyPhotoSwipeThumbDimensions,
+		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
 	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import type { MediaDimensions } from "$lib/util/media-dimensions";
@@ -47,6 +48,7 @@
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
+				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
 
 				const PHOTOSWIPE_PLACEHOLDER_WIDTH_PX = 250;
