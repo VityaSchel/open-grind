@@ -7,8 +7,23 @@ Diffs against crates pulled from crates.io. Their sources are not committed.
 Edit the tree and write the diff back with:
 
 ```sh
-bun run patch-deps -- --diff tauri-codegen
+bun run patch-deps -- --diff http2
 ```
+
+## http2
+
+The HTTP/2 stack under `wreq`. Cloudflare sees every frame we send, so these hunks make them match okhttp.
+
+| File                                      | Change                                                                                                                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hpack/header.rs`                         | Index `authorization`, as `Hpack.Writer` does, instead of re-sending the whole session token per request. This keeps it in the dynamic table for the connection's lifetime (RFC 7541 §7.1). |
+| `hpack/header.rs`                         | Emit pseudo-headers other than `:authority` unindexed. `:protocol` is excluded: `index_static` has no entry for it and `Table::index` asserts one exists.                                   |
+| `hpack/encoder.rs`                        | Huffman-code a literal only when strictly shorter.                                                                                                                                          |
+| `client.rs`                               | Flush after the initial SETTINGS so it lands in its own TLS record.                                                                                                                         |
+| `proto/connection.rs`, `proto/go_away.rs` | Close without sending GOAWAY, both on idle pooled connections and after the peer's own.                                                                                                     |
+| `lib.rs`                                  | Allow `mismatched_lifetime_syntaxes`, since a path dependency gets no `--cap-lints allow`.                                                                                                  |
+
+The rest will not be upstreamed: the flush was [declined](https://github.com/0x676e67/http2/issues/68), and `mod hpack` is private, so the HPACK hunks are unreachable from a dependent crate.
 
 ## tauri-codegen
 

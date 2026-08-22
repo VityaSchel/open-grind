@@ -2,6 +2,12 @@ import { $ } from "bun";
 
 const CRATES = [
 	{
+		name: "http2",
+		version: "0.4.21",
+		sha256: "a6e23815f8ec982e1452e1d0fda921ec20a9187fb610ad003c90cc5abd65b2c4",
+		keep: ["Cargo.toml", "LICENSE", "src"],
+	},
+	{
 		name: "tauri-codegen",
 		version: "2.6.1",
 		sha256: "6bd11644962add2549a60b7e7c6800f17d7020156e02f516021d8103e80cc528",

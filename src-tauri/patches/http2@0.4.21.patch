@@ -1,0 +1,130 @@
+diff --git a/src/client.rs b/src/client.rs
+index 3ff7ed7..46f3124 100644
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -1383,6 +1383,10 @@ where
+             .buffer((builder.settings.clone()).into())
+             .expect("invalid SETTINGS frame");
+ 
++        std::future::poll_fn(|cx| codec.flush(cx))
++            .await
++            .map_err(crate::Error::from_io)?;
++
+         let inner = proto::Connection::new(
+             codec,
+             proto::Config {
+diff --git a/src/hpack/encoder.rs b/src/hpack/encoder.rs
+index c46819c..63edfc5 100644
+--- a/src/hpack/encoder.rs
++++ b/src/hpack/encoder.rs
+@@ -225,6 +225,13 @@ fn encode_str(val: &[u8], dst: &mut BytesMut) {
+ 
+         let huff_len = position(dst) - (idx + 1);
+ 
++        if huff_len >= val.len() {
++            dst.truncate(idx);
++            encode_int(val.len(), 7, 0, dst);
++            dst.put_slice(val);
++            return;
++        }
++
+         if encode_int_one_byte(huff_len, 7) {
+             // Write the string head
+             dst[idx] = 0x80 | huff_len as u8;
+diff --git a/src/hpack/header.rs b/src/hpack/header.rs
+index 0b5d1fd..d96e0ea 100644
+--- a/src/hpack/header.rs
++++ b/src/hpack/header.rs
+@@ -193,7 +193,6 @@ impl Header {
+             Header::Field { ref name, .. } => matches!(
+                 *name,
+                 header::AGE
+-                    | header::AUTHORIZATION
+                     | header::CONTENT_LENGTH
+                     | header::ETAG
+                     | header::IF_MODIFIED_SINCE
+@@ -202,8 +201,10 @@ impl Header {
+                     | header::COOKIE
+                     | header::SET_COOKIE
+             ),
+-            Header::Path(..) => true,
+-            _ => false,
++            Header::Authority(..) | Header::Protocol(..) => false,
++            Header::Method(..) | Header::Scheme(..) | Header::Path(..) | Header::Status(..) => {
++                true
++            }
+         }
+     }
+ }
+diff --git a/src/lib.rs b/src/lib.rs
+index e403117..f89cf20 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -85,6 +85,7 @@
+     clippy::undocumented_unsafe_blocks
+ )]
+ #![allow(clippy::type_complexity, clippy::manual_range_contains)]
++#![allow(unknown_lints, mismatched_lifetime_syntaxes)]
+ #![cfg_attr(test, deny(warnings))]
+ 
+ mod tracing;
+diff --git a/src/proto/connection.rs b/src/proto/connection.rs
+index 9135e55..1f96874 100644
+--- a/src/proto/connection.rs
++++ b/src/proto/connection.rs
+@@ -248,7 +248,8 @@ where
+         // If we poll() and realize that there are no streams or references
+         // then we can close the connection by transitioning to GOAWAY
+         if !self.inner.streams.has_streams_or_other_references() {
+-            self.inner.as_dyn().go_away_now(Reason::NO_ERROR);
++            let last_processed_id = self.inner.streams.as_dyn().last_processed_id();
++            self.inner.go_away.close_silently(last_processed_id);
+         }
+     }
+ 
+@@ -292,7 +293,9 @@ where
+                                 || self.inner.go_away.should_close_on_idle())
+                                 && !self.inner.streams.has_streams()
+                             {
+-                                self.inner.as_dyn().go_away_now(Reason::NO_ERROR);
++                                let last_processed_id =
++                                    self.inner.streams.as_dyn().last_processed_id();
++                                self.inner.go_away.close_silently(last_processed_id);
+                                 continue;
+                             }
+ 
+@@ -408,12 +411,6 @@ where
+         self.go_away.go_away(frame);
+     }
+ 
+-    fn go_away_now(&mut self, e: Reason) {
+-        let last_processed_id = self.streams.last_processed_id();
+-        let frame = frame::GoAway::new(last_processed_id, e);
+-        self.go_away.go_away_now(frame);
+-    }
+-
+     fn go_away_now_data(&mut self, e: Reason, data: Bytes) {
+         let last_processed_id = self.streams.last_processed_id();
+         let frame = frame::GoAway::with_debug_data(last_processed_id, e, data);
+diff --git a/src/proto/go_away.rs b/src/proto/go_away.rs
+index d52252c..28c2528 100644
+--- a/src/proto/go_away.rs
++++ b/src/proto/go_away.rs
+@@ -80,6 +80,17 @@ impl GoAway {
+         self.go_away(f);
+     }
+ 
++    /// Enter the closing state without queueing a GOAWAY frame.
++    pub fn close_silently(&mut self, last_processed_id: StreamId) {
++        self.close_now = true;
++        if self.going_away.is_none() {
++            self.going_away = Some(GoingAway {
++                last_processed_id,
++                reason: Reason::NO_ERROR,
++            });
++        }
++    }
++
+     pub fn go_away_from_user(&mut self, f: frame::GoAway) {
+         self.is_user_initiated = true;
+         self.go_away_now(f);

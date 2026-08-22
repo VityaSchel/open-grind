@@ -2331,8 +2331,6 @@ checksum = "add0ab9360ddbd88cfeb3bd9574a1d85cfdfa14db10b3e21d3700dbc4328758f"
 [[package]]
 name = "http2"
 version = "0.4.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6e23815f8ec982e1452e1d0fda921ec20a9187fb610ad003c90cc5abd65b2c4"
 dependencies = [
  "atomic-waker",
  "bytes",
