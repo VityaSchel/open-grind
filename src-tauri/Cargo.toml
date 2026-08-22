@@ -84,4 +84,4 @@ strip = "symbols"
 
 # See https://github.com/tauri-apps/tauri/pull/15777
 [patch.crates-io]
-tauri-codegen = { path = "patches/tauri-codegen" }
+tauri-codegen = { path = ".patched/tauri-codegen" }

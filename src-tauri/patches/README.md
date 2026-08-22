@@ -1,13 +1,17 @@
-# Vendored cargo patches
+# Dependency patches
 
-`tauri-codegen` generates embedded assets and CSP hashes in hash map order during build and cause non-determenism during build.
+Diffs against crates pulled from crates.io. Their sources are not committed.
 
-`tauri-codegen/` is **generated**, do not edit it. Wipe and regenerate any time with:
+`bun run patch-deps` downloads each `.crate`, checks it against the sha256 in [`scripts/patch-deps.ts`](../../scripts/patch-deps.ts), applies the diff, and writes `src-tauri/.patched/<name>`, which `[patch.crates-io]` points at and git ignores. It runs from `postinstall` and from `reproPreamble` in [`nix/common.nix`](../../nix/common.nix), which every release build and the F-Droid recipe use. Re-runs compare a stamp and skip the network.
+
+Edit the tree and write the diff back with:
 
 ```sh
-bun vendor:tauri-codegen
+bun run patch-deps -- --diff tauri-codegen
 ```
 
-To change the patch, edit the `.patch` file and regenerate.
+## tauri-codegen
 
-- Remove `tauri-codegen` once https://github.com/tauri-apps/tauri/pull/15777 is merged
+Embedded assets and CSP hashes are emitted in hash-map and `readdir` order. The patch sorts both.
+
+**Delete when `tauri-codegen > 2.6.3` publishes** — [tauri#15777](https://github.com/tauri-apps/tauri/pull/15777) is merged and supersedes it.

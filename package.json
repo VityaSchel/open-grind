@@ -5,7 +5,8 @@
 	"author": "Open Grind Governance (https://opengrind.org/governance)",
 	"type": "module",
 	"scripts": {
-		"build": "vite build",
+		"postinstall": "bun run patch-deps",
+		"build": "bun run patch-deps && vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:ci": "bun install --cwd ci --frozen-lockfile && bun x tsc --noEmit -p ci/tsconfig.json",
 		"check:scripts": "bun install --cwd scripts --frozen-lockfile && bun x tsc --noEmit -p scripts/tsconfig.json",
@@ -24,9 +25,9 @@
 		"preview": "vite preview",
 		"sync-config": "opengrind-config sync",
 		"tauri": "tauri",
-		"vendor:tauri-codegen": "bun scripts/vendor-tauri-codegen.ts",
+		"patch-deps": "bun scripts/patch-deps.ts",
 		"test": "bun run test:unit && bun run test:rust",
-		"test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
+		"test:rust": "bun run patch-deps && cargo test --manifest-path src-tauri/Cargo.toml --lib",
 		"test:coverage": "svelte-kit sync && vitest run --coverage",
 		"test:unit": "svelte-kit sync && vitest run",
 		"test:e2e": "playwright test"

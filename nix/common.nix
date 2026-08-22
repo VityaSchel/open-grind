@@ -51,6 +51,10 @@ rec {
     prefixMaps="-ffile-prefix-map=$CARGO_HOME=/cargo -ffile-prefix-map=$ROOT=/open-grind"
     export CFLAGS="''${CFLAGS:-} $prefixMaps"
     export CXXFLAGS="''${CXXFLAGS:-} $prefixMaps"
+
+    # [patch.crates-io] resolves before any cargo command, so the patched
+    # sources have to exist by now. Re-runs are a stamp comparison.
+    bun run --cwd "$ROOT" patch-deps
   '';
 
   # Hoisting these into reproPreamble would change an Android build that three
