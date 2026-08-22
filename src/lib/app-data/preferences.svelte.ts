@@ -13,6 +13,7 @@ import {
 } from ".";
 
 const preferencesSchema = z.object({
+	autoUpdateLocation: z.boolean().default(false),
 	geohash: geohashSchema.nullable().default(null),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	revealMessageRead: z.boolean().default(false),
@@ -118,7 +119,11 @@ async function resetToDefaults(): Promise<void> {
 	window.location.reload();
 }
 
-const accountPreferenceKeys = ["geohash", "gridSearchFilters"] as const;
+const accountPreferenceKeys = [
+	"autoUpdateLocation",
+	"geohash",
+	"gridSearchFilters",
+] as const;
 
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 	return a.length === b.length && a.every((byte, index) => byte === b[index]);
