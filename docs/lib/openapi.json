@@ -5134,7 +5134,8 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get viewers list"
+				"summary": "Get viewers list",
+				"description": "Returns an empty list while [account preferences](/grindr-api/settings/account#get-preferences) have `hideViewedMe` set. Views are not recorded either, so the list stays empty for the period the setting was on."
 			}
 		},
 		"/v4/views": {
@@ -13304,7 +13305,8 @@
 						"type": "boolean"
 					},
 					"hideViewedMe": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "Hides the Viewed Me list. While set, [`GET /v7/views/list`](/grindr-api/interest/views#get-viewers-list) returns nothing and no new views are recorded."
 					},
 					"approximateDistance": {
 						"type": "boolean"

@@ -1,18 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+	getAccountPreferencesMock,
 	getViewsMock,
 	markBlockedProfilesUnviewableMock,
 	reconcileHandlers,
+	setAccountPreferencesMock,
 	showErrorToastMock,
 	subscriptions,
 	unlistenViewMock,
 	unsubscribeReconcileMock,
 	viewHandlers,
 } = vi.hoisted(() => ({
+	getAccountPreferencesMock: vi.fn(),
 	getViewsMock: vi.fn(),
 	markBlockedProfilesUnviewableMock: vi.fn(() => Promise.resolve()),
 	reconcileHandlers: [] as (() => void | Promise<void>)[],
+	setAccountPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	subscriptions: [] as {
 		eventType: string;
@@ -25,6 +29,10 @@ const {
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/views", () => ({ getViews: getViewsMock }));
+vi.mock("$lib/api/settings/account", () => ({
+	getAccountPreferences: getAccountPreferencesMock,
+	setAccountPreferences: setAccountPreferencesMock,
+}));
 vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
 	markBlockedProfilesUnviewable: markBlockedProfilesUnviewableMock,
@@ -133,6 +141,10 @@ type ViewsSnapshot = { profiles: ViewerProfile[]; previews: ViewPreview[] };
 
 beforeEach(() => {
 	clearAccountCaches();
+	getAccountPreferencesMock.mockReset();
+	getAccountPreferencesMock.mockResolvedValue({ hideViewedMe: false });
+	setAccountPreferencesMock.mockReset();
+	setAccountPreferencesMock.mockResolvedValue(undefined);
 	getViewsMock.mockReset();
 	markBlockedProfilesUnviewableMock.mockClear();
 	showErrorToastMock.mockReset();
@@ -460,5 +472,128 @@ describe("getViewsState", () => {
 
 		expect(getViewsState(99)).not.toBe(state);
 		expect(unsubscribeReconcileMock).toHaveBeenCalledOnce();
+	});
+});
+
+describe("ViewsState viewed-me tracking", () => {
+	it("asks about the setting only when the list comes back empty", async () => {
+		getViewsMock.mockResolvedValue({
+			profiles: [profile(1)],
+			previews: [],
+		});
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		expect(getAccountPreferencesMock).not.toHaveBeenCalled();
+		expect(state.viewedMeHidden).toBe(false);
+	});
+
+	it("explains an empty list that the setting is hiding", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [], previews: [] });
+		getAccountPreferencesMock.mockResolvedValue({ hideViewedMe: true });
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		expect(state.views).toEqual([]);
+		expect(state.viewedMeHidden).toBe(true);
+	});
+
+	it("stays loading until the setting answer arrives", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [], previews: [] });
+		const gate = deferred<{ hideViewedMe: boolean }>();
+		getAccountPreferencesMock.mockReturnValueOnce(gate.promise);
+
+		const state = new ViewsState();
+		await vi.waitFor(() =>
+			expect(getAccountPreferencesMock).toHaveBeenCalledOnce(),
+		);
+
+		expect(state.loading).toBe(true);
+
+		gate.resolve({ hideViewedMe: true });
+		await waitForLoaded(state);
+
+		expect(state.viewedMeHidden).toBe(true);
+	});
+
+	it("keeps the last known answer when the setting request fails", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [], previews: [] });
+		getAccountPreferencesMock
+			.mockResolvedValueOnce({ hideViewedMe: true })
+			.mockRejectedValueOnce(new Error("offline"));
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		expect(state.viewedMeHidden).toBe(true);
+
+		await reconcileHandlers[0]?.();
+
+		expect(state.viewedMeHidden).toBe(true);
+	});
+
+	it("turns the setting on and shows the refetched viewers", async () => {
+		getViewsMock
+			.mockResolvedValueOnce({ profiles: [], previews: [] })
+			.mockResolvedValueOnce({ profiles: [profile(1)], previews: [] });
+		getAccountPreferencesMock.mockResolvedValue({ hideViewedMe: true });
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+		await state.enableViewedMeTracking();
+
+		expect(setAccountPreferencesMock).toHaveBeenCalledWith({
+			hideViewedMe: false,
+		});
+		expect(state.viewedMeHidden).toBe(false);
+		expect(state.views.map((entry) => entry.key)).toEqual(["profile:1"]);
+		expect(state.enablingViewedMe).toBe(false);
+	});
+
+	it("stays busy from the setting write until the refetch lands", async () => {
+		getViewsMock.mockResolvedValueOnce({ profiles: [], previews: [] });
+		getAccountPreferencesMock.mockResolvedValue({ hideViewedMe: true });
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+
+		const written = deferred<void>();
+		setAccountPreferencesMock.mockReturnValueOnce(written.promise);
+		const refetched = deferred<ViewsSnapshot>();
+		getViewsMock.mockReturnValueOnce(refetched.promise);
+
+		const enabling = state.enableViewedMeTracking();
+
+		expect(state.enablingViewedMe).toBe(true);
+
+		written.resolve();
+		await vi.waitFor(() => expect(getViewsMock).toHaveBeenCalledTimes(2));
+
+		expect(state.enablingViewedMe).toBe(true);
+
+		refetched.resolve({ profiles: [profile(1)], previews: [] });
+		await enabling;
+
+		expect(state.enablingViewedMe).toBe(false);
+	});
+
+	it("reports a failed write and keeps the placeholder", async () => {
+		getViewsMock.mockResolvedValue({ profiles: [], previews: [] });
+		getAccountPreferencesMock.mockResolvedValue({ hideViewedMe: true });
+		setAccountPreferencesMock.mockRejectedValueOnce(new Error("rejected"));
+
+		const state = new ViewsState();
+		await waitForLoaded(state);
+		await state.enableViewedMeTracking();
+
+		expect(getViewsMock).toHaveBeenCalledOnce();
+		expect(state.viewedMeHidden).toBe(true);
+		expect(state.enablingViewedMe).toBe(false);
+		expect(showErrorToastMock).toHaveBeenCalledWith({
+			label: "Failed to turn on the Viewed Me List",
+			error: expect.any(Error),
+		});
 	});
 });

@@ -1,7 +1,12 @@
 import { accountScoped } from "$lib/api/account-caches";
 import { markBlockedProfilesUnviewable } from "$lib/api/browse/blocks";
 import { markHiddenProfilesUnviewable } from "$lib/api/browse/hides";
+import { showErrorToast } from "$lib/api/error-toast";
 import { getViews } from "$lib/api/interest/views";
+import {
+	getAccountPreferences,
+	setAccountPreferences,
+} from "$lib/api/settings/account";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
@@ -13,7 +18,11 @@ import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
 
 const PAGE_SIZE = 24;
 
-type ViewsSnapshot = { profiles: ViewerProfile[]; previews: ViewPreview[] };
+type ViewsSnapshot = {
+	profiles: ViewerProfile[];
+	previews: ViewPreview[];
+	viewedMeHidden: boolean;
+};
 
 export type ViewGridEntry =
 	| { type: "profile"; key: string; profile: ViewerProfile }
@@ -23,8 +32,11 @@ export class ViewsState extends ReconcilingListState<
 	ViewerProfile,
 	ViewsSnapshot
 > {
+	enablingViewedMe = $state(false);
+
 	#profiles: ViewerProfile[] = $state([]);
 	#previews: ViewPreview[] = $state([]);
+	#viewedMeHidden = $state(false);
 	#unsubscribeProfileEdits = onProfileEdit(({ profileId, patch }) => {
 		if (patch.isFavorite === undefined) return;
 		this.setFavorite({ profileId, isFavorite: patch.isFavorite });
@@ -64,6 +76,27 @@ export class ViewsState extends ReconcilingListState<
 		this.#profiles = this.#profiles.with(index, { ...profile, isFavorite });
 	}
 
+	get viewedMeHidden(): boolean {
+		return this.#viewedMeHidden;
+	}
+
+	async enableViewedMeTracking(): Promise<void> {
+		if (this.enablingViewedMe) return;
+		this.enablingViewedMe = true;
+		try {
+			await setAccountPreferences({ hideViewedMe: false });
+			await this.refresh();
+		} catch (error) {
+			console.error(error);
+			showErrorToast({
+				label: "Failed to turn on the Viewed Me List",
+				error,
+			});
+		} finally {
+			this.enablingViewedMe = false;
+		}
+	}
+
 	get views(): ViewGridEntry[] {
 		const entries: ViewGridEntry[] = [
 			...this.#profiles.map(
@@ -88,14 +121,28 @@ export class ViewsState extends ReconcilingListState<
 		return this.#profiles.length + this.#previews.length;
 	}
 
-	protected fetch(): Promise<ViewsSnapshot> {
+	protected async fetch(): Promise<ViewsSnapshot> {
 		void markBlockedProfilesUnviewable().catch((error) =>
 			console.error(error),
 		);
 		void markHiddenProfilesUnviewable().catch((error) =>
 			console.error(error),
 		);
-		return getViews();
+		const views = await getViews();
+		const listed = views.profiles.length + views.previews.length;
+		return {
+			...views,
+			viewedMeHidden: listed > 0 ? false : await this.#readHideViewedMe(),
+		};
+	}
+
+	async #readHideViewedMe(): Promise<boolean> {
+		try {
+			return (await getAccountPreferences()).hideViewedMe;
+		} catch (error) {
+			console.error(error);
+			return this.#viewedMeHidden;
+		}
 	}
 
 	protected applySnapshotReturningCoveredKeys(
@@ -105,6 +152,7 @@ export class ViewsState extends ReconcilingListState<
 			isProfileViewable(view.profileId),
 		);
 		this.#previews = snapshot.previews;
+		this.#viewedMeHidden = snapshot.viewedMeHidden;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- caller only reads .has() then drops it
 		return new Set(snapshot.profiles.map((profile) => profile.profileId));
 	}

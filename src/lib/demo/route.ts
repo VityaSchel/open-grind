@@ -1,4 +1,5 @@
 import { albumShareRequestSchema } from "$lib/model/messaging/albums";
+import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
 import { demoMeProfileId } from "./config";
 import { demoAlbumContent, demoMyAlbums, demoShareAlbum } from "./mock/albums";
 import { demoBlockedUsers, demoSetBlocked } from "./mock/blocks";
@@ -30,6 +31,10 @@ import {
 import { demoReceivedTaps, demoViews } from "./mock/interest";
 import { profileSeed } from "./mock/profiles";
 import { demoGenders, demoPronouns, demoTags } from "./mock/reference";
+import {
+	demoAccountPreferences,
+	demoSetAccountPreferences,
+} from "./mock/settings";
 
 type DemoResponse = { status: number; body: unknown };
 
@@ -249,6 +254,15 @@ export function demoRoute({
 	}
 	if (method === "GET" && rawPath === "/v3/places/search") {
 		return ok({ places: [] });
+	}
+	if (rawPath === "/v3/me/prefs/settings") {
+		if (method === "PUT") {
+			demoSetAccountPreferences(
+				accountPreferencesUpdateSchema.parse(body).settings,
+			);
+			return ok({});
+		}
+		return ok(demoAccountPreferences());
 	}
 
 	return ok({});
