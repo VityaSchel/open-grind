@@ -5,6 +5,8 @@ const {
 	invalidateProfileMock,
 	mergeProfileEditIntoCachesMock,
 	recordProfileViewMock,
+	getFavoriteNoteMock,
+	invalidateFavoriteNoteMock,
 	getPreferencesMock,
 	showErrorToastMock,
 } = vi.hoisted(() => ({
@@ -12,6 +14,8 @@ const {
 	invalidateProfileMock: vi.fn(),
 	mergeProfileEditIntoCachesMock: vi.fn(),
 	recordProfileViewMock: vi.fn(() => Promise.resolve()),
+	getFavoriteNoteMock: vi.fn(),
+	invalidateFavoriteNoteMock: vi.fn(),
 	getPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 }));
@@ -19,6 +23,10 @@ const {
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/interest/views", () => ({
 	recordProfileView: recordProfileViewMock,
+}));
+vi.mock("$lib/api/users/favorites", () => ({
+	getFavoriteNote: getFavoriteNoteMock,
+	invalidateFavoriteNote: invalidateFavoriteNoteMock,
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: getPreferencesMock,
@@ -71,6 +79,7 @@ function deferredProfile() {
 beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(profile());
+	getFavoriteNoteMock.mockResolvedValue({ notes: "", phoneNumber: "" });
 	getPreferencesMock.mockResolvedValue({ revealProfileViews: false });
 });
 
@@ -341,6 +350,73 @@ describe("ProfileState taps", () => {
 		expect(mergeProfileEditIntoCachesMock).toHaveBeenLastCalledWith({
 			cacheProfileId: PROFILE_ID,
 			patch: { tapType: null, tapped: false },
+		});
+	});
+});
+
+describe("ProfileState favorite notes", () => {
+	it("does not fetch a note for a profile that is not a favorite", async () => {
+		create();
+		await flush();
+
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+
+	it("fetches the note when the profile is a favorite", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		getFavoriteNoteMock.mockResolvedValue({
+			notes: "met at the bar",
+			phoneNumber: "555",
+		});
+		const state = create();
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledWith({
+			profileId: PROFILE_ID,
+		});
+		expect(state.note).toEqual({
+			notes: "met at the bar",
+			phoneNumber: "555",
+		});
+	});
+
+	it("keeps the profile rendered when the note request fails", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		getFavoriteNoteMock.mockRejectedValue(new Error("boom"));
+		const state = create();
+		await flush();
+
+		expect(state.profile?.profileId).toBe(PROFILE_ID);
+		expect(state.error).toBeNull();
+		expect(state.note).toBeNull();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("drops the note when the profile stops being a favorite", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		getFavoriteNoteMock.mockResolvedValue({
+			notes: "keep",
+			phoneNumber: "",
+		});
+		const state = create();
+		await flush();
+		expect(state.note).not.toBeNull();
+
+		state.setFavorite(false);
+
+		expect(state.note).toBeNull();
+	});
+
+	it("fetches the note when a profile becomes a favorite", async () => {
+		const state = create();
+		await flush();
+		getFavoriteNoteMock.mockResolvedValue({ notes: "", phoneNumber: "" });
+
+		state.setFavorite(true);
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledWith({
+			profileId: PROFILE_ID,
 		});
 	});
 });

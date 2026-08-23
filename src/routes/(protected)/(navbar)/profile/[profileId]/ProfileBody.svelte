@@ -23,6 +23,7 @@
 	import AboutMe from "./AboutMe.svelte";
 	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
 	import Distance from "./Distance.svelte";
+	import FavoriteNoteButton from "./favorite-note/FavoriteNoteButton.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";
 	import HivStatusIcon from "./fields/HivStatusIcon.svelte";
 	import LastTested from "./fields/LastTested.svelte";
@@ -95,6 +96,13 @@
 		medias,
 	} = profile}
 	<ImageCarousel {medias} />
+	{#if !ourProfile && profile.isFavorite && profileState.note}
+		<FavoriteNoteButton
+			profileId={profile.profileId}
+			note={profileState.note}
+			onSave={(note) => profileState.setNote(note)}
+		/>
+	{/if}
 	<ProfileTopNavBar
 		ourProfileId={profileState.ourProfileId}
 		{profile}

@@ -1,10 +1,10 @@
 <script lang="ts" generics="T extends number">
 	import { CaretUpDownIcon } from "phosphor-svelte";
 
+	import Field from "$lib/components/fields/Field.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import type { Option } from "$lib/util/options";
-	import Field from "./Field.svelte";
 
 	let {
 		label,

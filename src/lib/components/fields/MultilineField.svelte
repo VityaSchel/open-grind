@@ -8,7 +8,7 @@
 		maxLength,
 		placeholder,
 	}: {
-		label: string;
+		label?: string;
 		value: string;
 		maxLength: number;
 		placeholder?: string;
@@ -19,12 +19,11 @@
 </script>
 
 <div class="flex flex-col gap-1.5">
-	<Label class="px-1">{label}</Label>
+	{#if label !== undefined}
+		<Label class="px-1">{label}</Label>
+	{/if}
 	<Textarea bind:value {placeholder} aria-invalid={over} class="min-h-24" />
-	<div class="flex justify-between gap-2 px-1 text-xs">
-		<span class={{ "text-destructive": over, invisible: !over }}>
-			Too long, please shorten
-		</span>
+	<div class="flex justify-end gap-2 px-1 text-xs">
 		<span
 			class={[
 				"tabular-nums",

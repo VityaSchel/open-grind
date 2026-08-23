@@ -16,6 +16,9 @@
 		type ProfileUpdate,
 		updateOwnProfile,
 	} from "$lib/api/users/profiles";
+	import Field from "$lib/components/fields/Field.svelte";
+	import MultilineField from "$lib/components/fields/MultilineField.svelte";
+	import TextField from "$lib/components/fields/TextField.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { WheelPicker } from "$lib/components/ui/carousel";
 	import { Spinner } from "$lib/components/ui/spinner";
@@ -26,14 +29,11 @@
 	import type { ProfileTagsResponse } from "$lib/model/users/tags";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
-	import Field from "./fields/Field.svelte";
-	import MultilineField from "./fields/MultilineField.svelte";
 	import MultiSelectField from "./fields/MultiSelectField.svelte";
 	import NumberField from "./fields/NumberField.svelte";
 	import SelectField from "./fields/SelectField.svelte";
 	import SocialField from "./fields/SocialField.svelte";
 	import SwitchRow from "./fields/SwitchRow.svelte";
-	import TextField from "./fields/TextField.svelte";
 	import {
 		ageRange,
 		bodyTypeOptions,

@@ -1,5 +1,6 @@
 import { albumShareRequestSchema } from "$lib/model/messaging/albums";
 import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
+import type { FavoriteNote } from "$lib/model/users/favorites";
 import { demoMeProfileId } from "./config";
 import { demoAlbumContent, demoMyAlbums, demoShareAlbum } from "./mock/albums";
 import { demoBlockedUsers, demoSetBlocked } from "./mock/blocks";
@@ -13,7 +14,13 @@ import {
 	demoSetConversationPinned,
 	demoSingleMessage,
 } from "./mock/conversations";
-import { demoSetFavorite } from "./mock/favorites";
+import {
+	demoDeleteFavoriteNote,
+	demoFavoriteNoteOf,
+	demoFavoriteNotes,
+	demoSetFavorite,
+	demoSetFavoriteNote,
+} from "./mock/favorites";
 import {
 	buildFullProfile,
 	buildMaskedProfile,
@@ -157,6 +164,31 @@ export function demoRoute({
 			favorite: method === "POST",
 		});
 		return ok({});
+	}
+	if (method === "GET" && rawPath === "/v1/favorites/notes")
+		return ok(demoFavoriteNotes());
+	if (
+		segments.length === 4 &&
+		segments[0] === "v1" &&
+		segments[1] === "favorites" &&
+		segments[2] === "notes"
+	) {
+		const profileId = Number(segments[3]);
+		if (method === "GET")
+			return ok({
+				counterpartyId: profileId,
+				...demoFavoriteNoteOf({ profileId }),
+			});
+		if (method === "PUT") {
+			const { notes = "", phoneNumber = "" } = (body ??
+				{}) as Partial<FavoriteNote>;
+			demoSetFavoriteNote({ profileId, note: { notes, phoneNumber } });
+			return { status: 204, body: null };
+		}
+		if (method === "DELETE") {
+			demoDeleteFavoriteNote({ profileId });
+			return ok({});
+		}
 	}
 	if (method === "POST" && rawPath === "/v4/inbox") {
 		const filters = body as { favoritesOnly?: boolean } | undefined;

@@ -2,9 +2,9 @@
 	import { XIcon } from "phosphor-svelte";
 	import { tick } from "svelte";
 
+	import Field from "$lib/components/fields/Field.svelte";
 	import * as Combobox from "$lib/components/ui/combobox";
 	import type { Option } from "$lib/util/options";
-	import Field from "./Field.svelte";
 
 	let {
 		label,

@@ -1,6 +1,10 @@
 import { showErrorToast } from "$lib/api/error-toast";
 import { recordProfileView } from "$lib/api/interest/views";
 import {
+	getFavoriteNote,
+	invalidateFavoriteNote,
+} from "$lib/api/users/favorites";
+import {
 	BlockedProfileError,
 	getProfile,
 	HiddenProfileError,
@@ -11,10 +15,12 @@ import {
 } from "$lib/api/users/profiles";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import type { TapType } from "$lib/model/interest/taps";
+import type { FavoriteNote } from "$lib/model/users/favorites";
 import type { Profile } from "$lib/model/users/profiles";
 
 export class ProfileState {
 	profile: Profile | null = $state(null);
+	note: FavoriteNote | null = $state(null);
 	loading = $state(true);
 	refreshing = $state(false);
 	error: Error | null = $state(null);
@@ -93,16 +99,24 @@ export class ProfileState {
 			cacheProfileId: profile.profileId,
 			patch: { isFavorite },
 		});
+		if (!isFavorite) this.note = null;
+		else if (!this.note) void this.#loadNote();
+	}
+
+	setNote(note: FavoriteNote): void {
+		this.note = note;
 	}
 
 	async #load({ refresh }: { refresh: boolean }): Promise<void> {
 		if (refresh) {
 			this.refreshing = true;
 			invalidateProfile(this.profileId);
+			invalidateFavoriteNote({ profileId: this.profileId });
 		} else {
 			this.loading = true;
 			this.error = null;
 			this.profile = null;
+			this.note = null;
 		}
 		const token = ++this.#fetchToken;
 		try {
@@ -110,6 +124,7 @@ export class ProfileState {
 			if (this.#superseded(token)) return;
 			this.profile = profile;
 			this.error = null;
+			if (profile.isFavorite) void this.#loadNote();
 		} catch (error) {
 			if (this.#superseded(token)) return;
 			if (refresh && !isUnviewableProfileError(error)) {
@@ -125,6 +140,17 @@ export class ProfileState {
 				this.loading = false;
 				this.refreshing = false;
 			}
+		}
+	}
+
+	async #loadNote(): Promise<void> {
+		const token = this.#fetchToken;
+		try {
+			const note = await getFavoriteNote({ profileId: this.profileId });
+			if (this.#superseded(token)) return;
+			this.note = note;
+		} catch (error) {
+			console.error(error);
 		}
 	}
 
