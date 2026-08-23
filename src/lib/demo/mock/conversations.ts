@@ -57,6 +57,7 @@ const demoConversationSeeds: DemoConversation[] = [
 				coverUrl: null,
 				unseen: true,
 			},
+			{ fromMe: true, kind: "album", albumId: 901 },
 		],
 	},
 	{

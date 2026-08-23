@@ -14,6 +14,7 @@ import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { expectNoToast } from "./support/toast";
 
 const OTHER_CONVERSATION = "/chat/100009:123456000";
+const LOCKED_ALBUM_MESSAGE = '[data-slot="locked-album"]';
 
 test.describe("composer albums tab", () => {
 	test("each tab arms its own action from its own selection", async ({
@@ -76,18 +77,31 @@ test.describe("composer albums tab", () => {
 		).toHaveAccessibleName(/^Unshare\s*2$/);
 
 		await unshare.click();
-		await expect(page.locator(DRAWER)).toBeHidden();
+		await expect(
+			page.locator(DRAWER),
+			"unsharing keeps the drawer open to show the result",
+		).toBeVisible();
+		await expect(unshare).toBeHidden();
 		await expectNoToast(page, "Couldn't unshare album");
-
-		await page.getByRole("button", { name: "Add attachment" }).click();
-		await expect(page.locator(DRAWER)).toBeVisible();
-		await page.getByRole("tab", { name: "Albums" }).click();
-		await expect(page.locator(ALBUM_TILE).first()).toBeVisible({
-			timeout: 30_000,
-		});
 		await expect(
 			page.locator(SHARED_ALBUM_TILE),
 			"an unshared album loses its badge",
+		).toHaveCount(0);
+		await expect(
+			page.locator(ALBUM_TILE).first(),
+			"tiles unlock once the requests settle",
+		).toBeEnabled();
+		await expect(
+			page.locator(LOCKED_ALBUM_MESSAGE),
+			"the album we sent earlier in this chat locks",
+		).toHaveCount(1);
+
+		await page.locator(UNSHARED_ALBUM_TILE).nth(1).click();
+		await page.getByRole("button", { name: /^Share/ }).click();
+		await expect(page.locator(DRAWER)).toBeHidden();
+		await expect(
+			page.locator(LOCKED_ALBUM_MESSAGE),
+			"sharing it again unlocks the sent album",
 		).toHaveCount(0);
 	});
 

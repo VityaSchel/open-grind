@@ -18,6 +18,7 @@ vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ profile: { profileId: PEER } }),
 }));
 
+import { albumShares } from "$lib/chat/album-shares.svelte";
 import { demoMyAlbums } from "$lib/demo/mock/albums";
 import type { TabSelection } from "../tabs";
 import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
@@ -71,6 +72,7 @@ async function settle() {
 }
 
 beforeEach(() => {
+	albumShares.clear();
 	selections = [];
 	onClose.mockReset();
 	toastError.mockReset();
@@ -144,7 +146,13 @@ describe("composer albums tab", () => {
 		expect(tile(SHARED_ALBUM).disabled).toBe(false);
 	});
 
-	it("submits an unshare selection to the unshare endpoint", async () => {
+	it("locks every tile while an unshare is in flight and keeps the drawer open", async () => {
+		let finish!: () => void;
+		api.unshareAlbum.mockReturnValue(
+			new Promise<void>((resolve) => {
+				finish = resolve;
+			}),
+		);
 		const component = await mount();
 		await settle();
 
@@ -158,8 +166,19 @@ describe("composer albums tab", () => {
 			profileIds: [PEER],
 		});
 		expect(api.shareAlbum).not.toHaveBeenCalled();
-		expect(onClose).toHaveBeenCalledOnce();
+		expect(onClose).not.toHaveBeenCalled();
 		expect(armed()).toEqual({ count: 0, label: "Share" });
+		for (const albumId of [UNSHARED_ALBUM, SHARED_ALBUM, LOCKED_ALBUM]) {
+			expect(tile(albumId).disabled).toBe(true);
+			expect(tile(albumId).className).toContain("opacity-50");
+		}
+
+		finish();
+		await tick();
+		await tick();
+		expect(tile(UNSHARED_ALBUM).disabled).toBe(false);
+		expect(tile(SHARED_ALBUM).disabled).toBe(false);
+		expect(tile(UNSHARED_ALBUM).className).not.toContain("opacity-50");
 		expect(isBadgedShared(SHARED_ALBUM)).toBe(false);
 	});
 
@@ -178,7 +197,7 @@ describe("composer albums tab", () => {
 		expect(api.unshareAlbum).not.toHaveBeenCalled();
 	});
 
-	it("restores the badge and toasts when an unshare fails", async () => {
+	it("rolls back the badge, the lock and the selection when an unshare fails", async () => {
 		api.unshareAlbum.mockRejectedValue(new Error("403"));
 		const component = await mount();
 		await settle();
@@ -191,5 +210,8 @@ describe("composer albums tab", () => {
 
 		expect(isBadgedShared(SHARED_ALBUM)).toBe(true);
 		expect(toastError).toHaveBeenCalledWith("Couldn't unshare album");
+		expect(tile(SHARED_ALBUM).disabled).toBe(false);
+		expect(tile(SHARED_ALBUM).getAttribute("aria-pressed")).toBe("true");
+		expect(armed()).toEqual({ count: 1, label: "Unshare" });
 	});
 });

@@ -2,6 +2,8 @@
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import LockSimpleIcon from "phosphor-svelte/lib/LockSimpleIcon";
 	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
+	import { expoOut } from "svelte/easing";
+	import { fade } from "svelte/transition";
 
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
@@ -60,13 +62,18 @@
 		</Badge>
 	</div>
 	{#if shared}
-		<Badge
-			data-slot="album-shared-badge"
-			variant="outline"
-			class="absolute top-3/4 left-1/2 z-1 -translate-x-1/2 -translate-y-1/2 border-white/10 bg-popover/40 backdrop-blur-2xl"
+		<div
+			class="absolute top-3/4 left-1/2 z-1 -translate-x-1/2 -translate-y-1/2"
+			transition:fade={{ duration: 400, easing: expoOut }}
 		>
-			Shared
-		</Badge>
+			<Badge
+				data-slot="album-shared-badge"
+				variant="outline"
+				class="border-white/10 bg-muted/80"
+			>
+				Shared
+			</Badge>
+		</div>
 	{/if}
 	<div
 		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:rounded-full *:border *:border-white/10 *:bg-popover/40 *:backdrop-blur-2xl"

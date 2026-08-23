@@ -35,10 +35,10 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollTo) {
 }
 
 // jsdom has no Web Animations either, and svelte/transition drives every
-// transition through element.animate.
+// transition through element.animate, completing it from `onfinish`.
 if (typeof Element !== "undefined" && !Element.prototype.animate) {
-	Element.prototype.animate = () =>
-		({
+	Element.prototype.animate = () => {
+		const animation = {
 			cancel: () => {},
 			finish: () => {},
 			pause: () => {},
@@ -50,6 +50,9 @@ if (typeof Element !== "undefined" && !Element.prototype.animate) {
 			playState: "finished",
 			effect: null,
 			finished: Promise.resolve(),
-			onfinish: null,
-		}) as unknown as Animation;
+			onfinish: null as (() => void) | null,
+		};
+		queueMicrotask(() => animation.onfinish?.());
+		return animation as unknown as Animation;
+	};
 }

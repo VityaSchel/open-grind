@@ -3,13 +3,14 @@
 	import { toast } from "svelte-sonner";
 
 	import { getMyAlbums } from "$lib/api/messaging/albums";
+	import { albumShares } from "$lib/chat/album-shares.svelte";
 	import * as Empty from "$lib/components/ui/empty";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
 	import { getConversationState } from "../../../conversation-state.svelte";
 	import SelectionGridTab from "../SelectionGridTab.svelte";
 	import type { TabSelection } from "../tabs";
-	import { AlbumShares } from "./album-shares.svelte";
+	import { AlbumShareActions } from "./album-share-actions.svelte";
 	import AlbumTile from "./AlbumTile.svelte";
 
 	let {
@@ -23,14 +24,24 @@
 	const conversationState = $derived(getConversationState()());
 	const profileId = $derived(conversationState.profile?.profileId ?? null);
 	const selected = new SelectionSet<number>(10);
-	const shares = new AlbumShares();
+	const shareActions = new AlbumShareActions();
 
 	let albums = $state<MyAlbum[] | null>(null);
 	let error = $state<unknown>(null);
+	let pendingUnshares = $state(0);
+
+	const locked = $derived(pendingUnshares > 0);
+
+	function isShared(albumId: number): boolean {
+		return (
+			profileId !== null &&
+			albumShares.isSharedWith({ albumId, profileId }) === true
+		);
+	}
 
 	const firstSelected = $derived(selected.values()[0]);
 	const mode = $derived.by(() => {
-		if (firstSelected !== undefined && shares.has(firstSelected))
+		if (firstSelected !== undefined && isShared(firstSelected))
 			return "unsharing";
 		else return "sharing";
 	});
@@ -44,7 +55,7 @@
 	});
 
 	function isCompatible(albumId: number): boolean {
-		const isAlbumShared = shares.has(albumId);
+		const isAlbumShared = isShared(albumId);
 		return (
 			firstSelected === undefined ||
 			isAlbumShared === (mode === "unsharing")
@@ -65,10 +76,9 @@
 	void load();
 
 	$effect(() => {
-		if (albums === null || profileId === null) return;
-		void shares.load({
+		if (albums === null) return;
+		void shareActions.load({
 			albumIds: albums.map((album) => album.albumId),
-			profileId,
 		});
 	});
 
@@ -77,25 +87,55 @@
 		onSelectionChange({ count: selected.size, label });
 	}
 
+	function share({
+		albumId,
+		profileId,
+	}: {
+		albumId: number;
+		profileId: number;
+	}) {
+		shareActions
+			.update({ albumId, profileId, shared: true })
+			.catch((err: unknown) => {
+				console.error(err);
+				toast.error("Couldn't share album");
+			});
+	}
+
+	async function unshare({
+		albumId,
+		profileId,
+	}: {
+		albumId: number;
+		profileId: number;
+	}) {
+		pendingUnshares++;
+		try {
+			await shareActions.update({ albumId, profileId, shared: false });
+		} catch (err) {
+			console.error(err);
+			toast.error("Couldn't unshare album");
+			selected.add(albumId);
+			onSelectionChange({ count: selected.size, label });
+		} finally {
+			pendingUnshares--;
+		}
+	}
+
 	export function submitSelection() {
 		if (albums === null || profileId === null) return;
-		const sharing = mode === "sharing";
+		const target = profileId;
 		const albumIds = selected.values();
+		const submitted = mode;
 		selected.clear();
 		onSelectionChange({ count: 0, label });
-		onClose();
-		for (const albumId of albumIds) {
-			shares
-				.update({ albumId, profileId, shared: sharing })
-				.catch((err: unknown) => {
-					console.error(err);
-					toast.error(
-						sharing
-							? "Couldn't share album"
-							: "Couldn't unshare album",
-					);
-				});
+		if (submitted === "unsharing") {
+			for (const albumId of albumIds)
+				void unshare({ albumId, profileId: target });
+			return;
 		}
+		onClose();
+		for (const albumId of albumIds) share({ albumId, profileId: target });
 	}
 </script>
 
@@ -128,12 +168,13 @@
 		{@const isSelectable =
 			album.isShareable &&
 			!isIncompatible &&
-			shares.isResolved(album.albumId)}
+			!locked &&
+			shareActions.isResolved(album.albumId)}
 		<AlbumTile
 			{album}
 			selected={isSelected}
-			shared={shares.has(album.albumId)}
-			dimmed={isIncompatible}
+			shared={isShared(album.albumId)}
+			dimmed={isIncompatible || locked}
 			disabled={!isSelectable}
 			clickable={isSelectable && (selected.canSelectMore || isSelected)}
 			onclick={() => toggleSelected(album.albumId)}
