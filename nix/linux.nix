@@ -20,9 +20,12 @@ let
     xorg.libX11
   ];
 
+  # pkg-config follows .pc Requires transitively, so search the whole closure.
+  gtkDevClosure = lib.closePropagation (map lib.getDev gtkStack);
+
   pkgConfigPath = lib.concatStringsSep ":" (
-    map (p: "${lib.getDev p}/lib/pkgconfig") gtkStack
-    ++ map (p: "${lib.getDev p}/share/pkgconfig") gtkStack
+    map (p: "${lib.getDev p}/lib/pkgconfig") gtkDevClosure
+    ++ map (p: "${lib.getDev p}/share/pkgconfig") gtkDevClosure
   );
 
   schemas = pkgs.gsettings-desktop-schemas;
@@ -62,6 +65,10 @@ in
       out="$ROOT/src-tauri/target/${triple}/release"
       echo
       echo "glibc floor: $(objdump -T "$out/open-grind" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1)"
+      if readelf -ld "$out/open-grind" | grep -q "/nix/store"; then
+        echo "WARNING: NOT SHIPPABLE - the ELF interpreter or RUNPATH points into" >&2
+        echo "/nix/store, so this binary only starts where a Nix store exists." >&2
+      fi
       find "$out/bundle" -maxdepth 2 -type f \( -name '*.deb' -o -name '*.rpm' \) -print
     '';
   };
