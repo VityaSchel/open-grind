@@ -2,6 +2,7 @@
 	import { ChatIcon, StarIcon } from "phosphor-svelte";
 	import type { Snippet } from "svelte";
 
+	import DisplayName from "$lib/components/profile/DisplayName.svelte";
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
 	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
@@ -17,6 +18,7 @@
 		isFavorite = false,
 		isVisiting = false,
 		hadRecentChat = false,
+		anonymous = false,
 		href = null,
 		class: className,
 		overlay,
@@ -30,14 +32,11 @@
 		isFavorite?: boolean;
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
+		anonymous?: boolean;
 		href?: string | null;
 		class?: import("svelte/elements").ClassValue;
 		overlay?: Snippet;
 	} = $props();
-
-	const hasVisibleText = $derived(
-		displayName !== null || age !== null || distance !== null,
-	);
 </script>
 
 {#snippet content()}
@@ -73,7 +72,7 @@
 			{/if}
 		</div>
 	{/if}
-	{#if displayName !== null || age !== null}
+	{#if !anonymous}
 		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
 			<Badge
 				variant="outline"
@@ -85,16 +84,16 @@
 					class="me-1"
 				/>
 
-				{#if displayName !== null}
-					<span class="block shrink truncate font-semibold"
-						>{displayName}</span
-					>
-				{/if}
-				{#if displayName !== null && age !== null}
-					,&nbsp;
-				{/if}
+				<span
+					class={[
+						"block shrink truncate font-semibold",
+						{ "text-foreground/50": !displayName },
+					]}
+				>
+					<DisplayName name={displayName} />
+				</span>
 				{#if age !== null}
-					<span
+					,&nbsp;<span
 						class="line-clamp-1 block max-w-full shrink-0 truncate"
 					>
 						{age}
@@ -121,7 +120,7 @@
 {#if href !== null}
 	<a
 		{href}
-		aria-label={hasVisibleText ? undefined : "Profile"}
+		aria-label={anonymous ? "Profile" : undefined}
 		class={[
 			"relative flex aspect-square items-end overflow-hidden",
 			className,

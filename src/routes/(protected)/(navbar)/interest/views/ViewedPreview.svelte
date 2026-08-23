@@ -16,6 +16,7 @@
 </script>
 
 <ProfileMiniCard
+	anonymous
 	mediaHash={preview.profileImageMediaHash}
 	distance={preview.distance}
 	isFavorite={preview.isFavorite}
