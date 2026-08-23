@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Command as CommandPrimitive } from "bits-ui";
-	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlass";
+	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
 
 	import * as InputGroup from "$lib/components/ui/input-group/index.js";
 	import { cn } from "$lib/util/utils.js";

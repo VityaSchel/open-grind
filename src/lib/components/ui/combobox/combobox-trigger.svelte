@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Combobox as ComboboxPrimitive } from "bits-ui";
-	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDown";
+	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDownIcon";
 
 	import { cn } from "$lib/util/utils.js";
 

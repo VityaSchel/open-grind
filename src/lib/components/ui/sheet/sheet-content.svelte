@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import { Dialog as SheetPrimitive } from "bits-ui";
-	import XIcon from "phosphor-svelte/lib/X";
+	import XIcon from "phosphor-svelte/lib/XIcon";
 	import type { Snippet } from "svelte";
 	import type { ComponentProps } from "svelte";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CaretLeftIcon from "phosphor-svelte/lib/CaretLeft";
+	import CaretLeftIcon from "phosphor-svelte/lib/CaretLeftIcon";
 	import type { WithoutChildren } from "bits-ui";
 
 	import { Button, type Props } from "$lib/components/ui/button/index.js";

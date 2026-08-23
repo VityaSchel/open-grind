@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Menubar as MenubarPrimitive } from "bits-ui";
-	import CaretRightIcon from "phosphor-svelte/lib/CaretRight";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
 	import { cn, type WithoutChild } from "$lib/util/utils.js";
 

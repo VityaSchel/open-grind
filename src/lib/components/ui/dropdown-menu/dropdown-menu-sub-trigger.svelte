@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import CaretRightIcon from "phosphor-svelte/lib/CaretRight";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
 	import { cn } from "$lib/util/utils.js";
 
