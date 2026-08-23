@@ -1,3 +1,4 @@
+import Body from "./drawer-body.svelte";
 import Close from "./drawer-close.svelte";
 import Content from "./drawer-content.svelte";
 import Description from "./drawer-description.svelte";
@@ -14,6 +15,7 @@ export {
 	Root,
 	NestedRoot,
 	Content,
+	Body,
 	Description,
 	Overlay,
 	Footer,
@@ -27,6 +29,7 @@ export {
 	Root as Drawer,
 	NestedRoot as DrawerNestedRoot,
 	Content as DrawerContent,
+	Body as DrawerBody,
 	Description as DrawerDescription,
 	Overlay as DrawerOverlay,
 	Footer as DrawerFooter,

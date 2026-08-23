@@ -6,18 +6,15 @@
 		preferencesLoaded,
 	} from "$lib/app-data/preferences.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Dialog from "$lib/components/ui/dialog";
-	import * as Drawer from "$lib/components/ui/drawer/index";
 	import { Label } from "$lib/components/ui/label";
+	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { Switch } from "$lib/components/ui/switch";
 	import { autoLocation } from "$lib/location/auto-location";
 	import { reportLocationFailure } from "$lib/location/location-feedback";
 	import { locationRequest } from "$lib/location/location-request.svelte";
 	import { encodeGeohash } from "$lib/model/geohash";
-	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { isMobilePlatform } from "$lib/platform/os";
-	import { above } from "$lib/util/breakpoints.svelte";
 	import { PIN_ZOOM } from "./constants";
 	import type GeoMapPickerComponent from "./GeoMapPicker.svelte";
 
@@ -34,7 +31,6 @@
 		pinPos?: { lat: number; lon: number; zoom: number } | undefined;
 	} = $props();
 
-	const isDesktop = above("md");
 	const gpsAvailable = isMobilePlatform();
 
 	let pendingAutoUpdate = $state<boolean | null>(null);
@@ -108,13 +104,6 @@
 			pendingCenter = null;
 		}
 	});
-
-	dismissOnBackGesture({
-		active: () => open,
-		dismiss: () => {
-			open = false;
-		},
-	});
 </script>
 
 {#snippet mapPicker()}
@@ -148,46 +137,39 @@
 		<span class="truncate py-1">Update automatically using GPS</span>
 	</Label>
 {/snippet}
-{#if isDesktop.current}
-	<Dialog.Root bind:open>
-		<Dialog.Content
-			class="flex h-[calc(var(--screen-safe)-4rem)] flex-col sm:max-w-200"
-			showCloseButton={false}
+<ResponsiveDialog.Root bind:open>
+	{#snippet children({ desktop })}
+		<ResponsiveDialog.Content
+			class="flex flex-col"
+			dialogClass="h-[calc(var(--screen-safe)-4rem)] sm:max-w-200"
+			drawerClass="mt-0! mb-(--safe-area-bottom) h-full!"
 		>
+			<ResponsiveDialog.Header class="sr-only">
+				<ResponsiveDialog.Title>Choose location</ResponsiveDialog.Title>
+				<ResponsiveDialog.Description>
+					Drag the map to place the pin where you want to browse from.
+				</ResponsiveDialog.Description>
+			</ResponsiveDialog.Header>
 			<div
-				class="h-full flex-1 touch-manipulation overflow-clip rounded-lg"
+				class={[
+					"h-full touch-manipulation overflow-clip rounded-lg",
+					{ "flex-1": desktop, "mt-4 mb-2": !desktop },
+				]}
 				data-vaul-no-drag
 			>
 				{@render mapPicker()}
 			</div>
-			<Dialog.Footer class={{ "sm:justify-between": gpsAvailable }}>
-				{#if gpsAvailable}
-					{@render trackGpsAutomaticallySwitcher({ class: "-ms-3" })}
-				{/if}
-				{@render saveButton()}
-			</Dialog.Footer>
-		</Dialog.Content>
-	</Dialog.Root>
-{:else}
-	<Drawer.Root bind:open>
-		<Drawer.Content
-			preventOverflowTextSelection={false}
-			class="mt-0! mb-(--safe-area-bottom) h-full!"
-		>
-			<div
-				class="mt-4 mb-2 h-full touch-manipulation overflow-clip rounded-lg"
-				data-vaul-no-drag
+			<ResponsiveDialog.Footer
+				dialogClass={{ "sm:justify-between": gpsAvailable }}
+				drawerClass="pt-2"
 			>
-				{@render mapPicker()}
-			</div>
-			<Drawer.Footer class="pt-2">
 				{#if gpsAvailable}
 					{@render trackGpsAutomaticallySwitcher({
-						class: "-ms-2.75",
+						class: desktop ? "-ms-3" : "-ms-2.75",
 					})}
 				{/if}
 				{@render saveButton()}
-			</Drawer.Footer>
-		</Drawer.Content>
-	</Drawer.Root>
-{/if}
+			</ResponsiveDialog.Footer>
+		</ResponsiveDialog.Content>
+	{/snippet}
+</ResponsiveDialog.Root>

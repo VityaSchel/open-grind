@@ -9,7 +9,7 @@
 		ref = $bindable(null),
 		class: className,
 		children,
-		showCloseButton = false,
+		showCloseButton,
 		...restProps
 	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
 		showCloseButton?: boolean;
@@ -20,7 +20,7 @@
 	bind:this={ref}
 	data-slot="dialog-footer"
 	class={cn(
-		"flex flex-col-reverse gap-2 gap-2 sm:flex-row sm:justify-end",
+		"flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
 		className,
 	)}
 	{...restProps}

@@ -117,8 +117,6 @@
 <Sheet.Root bind:open>
 	<Sheet.Content
 		side="bottom"
-		showCloseButton={false}
-		preventOverflowTextSelection={false}
 		class="mt-(--safe-area-top) mb-(--safe-area-bottom) max-h-screen-safe"
 	>
 		<Sheet.Header

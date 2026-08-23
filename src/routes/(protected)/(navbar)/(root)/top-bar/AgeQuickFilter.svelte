@@ -34,10 +34,7 @@
 </script>
 
 <Drawer.Root bind:open>
-	<Drawer.Content
-		preventOverflowTextSelection={false}
-		class="mx-auto max-w-160"
-	>
+	<Drawer.Content class="mx-auto max-w-160">
 		<Drawer.Header class="flex flex-row items-center justify-between">
 			<div class="flex flex-1 justify-start">
 				<Button
@@ -55,7 +52,7 @@
 				<Switch aria-label="Filter by age" bind:checked={enabled} />
 			</div>
 		</Drawer.Header>
-		<div class="mb-2 flex flex-col gap-1.5 px-4">
+		<Drawer.Body class="mb-2 flex flex-col gap-1.5 px-4">
 			<div class="mb-2 w-full text-center">{label}</div>
 			<AgeFilterSlider
 				bind:value={
@@ -66,7 +63,7 @@
 					}
 				}
 			/>
-		</div>
+		</Drawer.Body>
 		<Drawer.Footer>
 			<Drawer.Close
 				class={buttonVariants({ variant: "default" })}

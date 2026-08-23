@@ -79,7 +79,6 @@
 	{/snippet}
 	<Dialog.Root bind:open={warningOpen}>
 		<Dialog.Content
-			showCloseButton={false}
 			class="flex flex-col max-settings-dialog:max-w-[calc(100%-1rem)] max-settings-dialog:text-center"
 		>
 			<Dialog.Header class="max-w-full">

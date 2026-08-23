@@ -91,7 +91,6 @@
 				open = false;
 			}
 		}}
-		preventOverflowTextSelection={false}
 	>
 		<Tabs.Root
 			bind:value={selectedTab}

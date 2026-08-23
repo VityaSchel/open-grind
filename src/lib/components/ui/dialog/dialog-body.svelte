@@ -13,8 +13,8 @@
 
 <div
 	bind:this={ref}
-	data-slot="drawer-footer"
-	class={cn("mt-auto flex shrink-0 flex-col gap-2 p-4", className)}
+	data-slot="dialog-body"
+	class={cn("min-h-0 overflow-y-auto overscroll-contain", className)}
 	{...restProps}
 >
 	{@render children?.()}

@@ -15,7 +15,7 @@
 		value = $bindable(""),
 		title = "Command Palette",
 		description = "Search for a command to run...",
-		showCloseButton = false,
+		showCloseButton,
 		portalProps,
 		children,
 		class: className,
@@ -38,7 +38,7 @@
 	</Dialog.Header>
 	<Dialog.Content
 		class={cn(
-			"top-1/3 translate-y-0 overflow-hidden rounded-4xl! p-0 p-0",
+			"top-1/3 translate-y-0 overflow-hidden rounded-4xl! p-0",
 			className,
 		)}
 		{showCloseButton}
