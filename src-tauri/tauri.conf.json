@@ -49,15 +49,12 @@
 		"linux": {
 			"deb": {
 				"depends": [
-					"libwebkit2gtk-4.1-0",
-					"libgtk-3-0",
 					"libsoup-3.0-0",
 					"librsvg2-2"
 				],
 				"recommends": [
 					"libayatana-appindicator3-1",
 					"gstreamer1.0-plugins-good",
-					"gstreamer1.0-plugins-bad",
 					"gstreamer1.0-libav"
 				]
 			}
