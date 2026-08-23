@@ -7,6 +7,8 @@ import {
 	type AlbumExpirationType,
 	albumMinSchema,
 	type AlbumShareRequest,
+	albumSharesResponseSchema,
+	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
 } from "$lib/model/messaging/albums";
 
@@ -52,5 +54,29 @@ export async function shareAlbum({
 				expirationType,
 			})),
 		} satisfies AlbumShareRequest,
+	}).then((res) => res.assertOk());
+}
+
+export async function getAlbumShares(albumId: number) {
+	return await fetchRest(`/v1/albums/${albumId}/shares`).then((res) =>
+		res.jsonParsed(albumSharesResponseSchema),
+	);
+}
+
+export async function unshareAlbum({
+	albumId,
+	profileIds,
+}: {
+	albumId: number;
+	profileIds: number[];
+}) {
+	await fetchRest(`/v1/albums/${albumId}/unshares`, {
+		method: "PUT",
+		body: {
+			profiles: profileIds.map((profileId) => ({
+				profileId,
+				shareId: crypto.randomUUID(),
+			})),
+		} satisfies AlbumUnshareRequest,
 	}).then((res) => res.assertOk());
 }

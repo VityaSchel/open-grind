@@ -1,8 +1,17 @@
-import { albumShareRequestSchema } from "$lib/model/messaging/albums";
+import {
+	albumShareRequestSchema,
+	albumUnshareRequestSchema,
+} from "$lib/model/messaging/albums";
 import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import { demoMeProfileId } from "./config";
-import { demoAlbumContent, demoMyAlbums, demoShareAlbum } from "./mock/albums";
+import {
+	demoAlbumContent,
+	demoAlbumShares,
+	demoMyAlbums,
+	demoShareAlbum,
+	demoUnshareAlbum,
+} from "./mock/albums";
 import { demoBlockedUsers, demoSetBlocked } from "./mock/blocks";
 import {
 	demoConversationMessages,
@@ -232,6 +241,29 @@ export function demoRoute({
 	) {
 		const { profiles } = albumShareRequestSchema.parse(body);
 		demoShareAlbum({
+			albumId: Number(segments[2]),
+			profileIds: profiles.map((profile) => profile.profileId),
+		});
+		return ok({});
+	}
+	if (
+		method === "GET" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments[3] === "shares" &&
+		segments.length === 4
+	) {
+		return ok({ profileIds: demoAlbumShares(Number(segments[2])) });
+	}
+	if (
+		method === "PUT" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments[3] === "unshares" &&
+		segments.length === 4
+	) {
+		const { profiles } = albumUnshareRequestSchema.parse(body);
+		demoUnshareAlbum({
 			albumId: Number(segments[2]),
 			profileIds: profiles.map((profile) => profile.profileId),
 		});

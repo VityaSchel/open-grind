@@ -78,3 +78,18 @@ export const albumShareRequestSchema = z.object({
 });
 
 export type AlbumShareRequest = z.infer<typeof albumShareRequestSchema>;
+
+export const albumSharesResponseSchema = z.object({
+	profileIds: z.array(z.int()),
+});
+
+export const albumUnshareRequestProfileItemSchema = z.object({
+	profileId: z.int(),
+	shareId: z.string(),
+});
+
+export const albumUnshareRequestSchema = z.object({
+	profiles: z.array(albumUnshareRequestProfileItemSchema),
+});
+
+export type AlbumUnshareRequest = z.infer<typeof albumUnshareRequestSchema>;

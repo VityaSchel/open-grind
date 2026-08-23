@@ -14,6 +14,7 @@ import {
 	albumContentSchema,
 	albumDetailsSchema,
 	albumMinSchema,
+	albumSharesResponseSchema,
 	myAlbumsResponseSchema,
 } from "$lib/model/messaging/albums";
 import { fullConversationSchema } from "$lib/model/messaging/conversations";
@@ -217,6 +218,7 @@ describe("demo route data matches the real schemas", () => {
 				.parse(route("/v1/albums"))
 				.albums.find((album) => album.albumId === id)!.sharedCount;
 		const before = sharedCountOf(albumId);
+		const neighborBefore = sharedCountOf(albumId + 1);
 
 		expect(
 			demoRoute({
@@ -229,7 +231,40 @@ describe("demo route data matches the real schemas", () => {
 		).toBe(200);
 
 		expect(sharedCountOf(albumId)).toBe(before + 1);
-		expect(sharedCountOf(albumId + 1)).toBe(before);
+		expect(sharedCountOf(albumId + 1)).toBe(neighborBefore);
+	});
+
+	it("lists the profiles an album is shared with, then forgets an unshare", () => {
+		const albumId = 902;
+		const sharesOf = (id: number) =>
+			albumSharesResponseSchema.parse(route(`/v1/albums/${id}/shares`))
+				.profileIds;
+
+		expect(sharesOf(albumId)).not.toContain(7);
+
+		route(`/v4/albums/${albumId}/shares`, "POST", {
+			profiles: [{ profileId: 7, expirationType: "INDEFINITE" }],
+		});
+		expect(sharesOf(albumId)).toContain(7);
+
+		expect(
+			demoRoute({
+				path: `/v1/albums/${albumId}/unshares`,
+				method: "PUT",
+				body: { profiles: [{ profileId: 7, shareId: "share-1" }] },
+			}).status,
+		).toBe(200);
+		expect(sharesOf(albumId)).not.toContain(7);
+	});
+
+	it("rejects an album unshare whose body is not the documented shape", () => {
+		expect(() =>
+			demoRoute({
+				path: "/v1/albums/900/unshares",
+				method: "PUT",
+				body: { profileIds: [1] },
+			}),
+		).toThrow();
 	});
 
 	it("rejects an album share whose body is not the documented shape", () => {

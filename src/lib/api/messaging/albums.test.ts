@@ -7,8 +7,14 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 	fetchRest: fetchRestMock,
 }));
 
-import { getMyAlbums, shareAlbum } from "$lib/api/messaging/albums";
-import { demoMyAlbums } from "$lib/demo/mock/albums";
+import {
+	getAlbumShares,
+	getMyAlbums,
+	shareAlbum,
+	unshareAlbum,
+} from "$lib/api/messaging/albums";
+import { demoAlbumShares, demoMyAlbums } from "$lib/demo/mock/albums";
+import type { AlbumUnshareRequest } from "$lib/model/messaging/albums";
 
 const assertOk = vi.fn();
 const jsonParsed = vi.fn();
@@ -57,6 +63,55 @@ describe("albums API wrappers", () => {
 		await expect(
 			shareAlbum({ albumId: 900, profileIds: [11] }),
 		).rejects.toThrow("403");
+	});
+
+	it("unshares an album from every listed profile and asserts the status", async () => {
+		await unshareAlbum({ albumId: 900, profileIds: [11, 22] });
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums/900/unshares", {
+			method: "PUT",
+			body: {
+				profiles: [
+					{ profileId: 11, shareId: expect.any(String) },
+					{ profileId: 22, shareId: expect.any(String) },
+				],
+			},
+		});
+		expect(assertOk).toHaveBeenCalledOnce();
+	});
+
+	it("gives every unshared profile its own share id", async () => {
+		await unshareAlbum({ albumId: 900, profileIds: [11, 22] });
+
+		const [, options] = fetchRestMock.mock.calls[0] as [
+			string,
+			{ body: AlbumUnshareRequest },
+		];
+		const [first, second] = options.body.profiles;
+		expect(first?.shareId).not.toBe(second?.shareId);
+	});
+
+	it("propagates a failed unshare instead of reporting success", async () => {
+		assertOk.mockImplementation(() => {
+			throw new Error("403");
+		});
+
+		await expect(
+			unshareAlbum({ albumId: 900, profileIds: [11] }),
+		).rejects.toThrow("403");
+	});
+
+	it("reads the profiles an album is shared with", async () => {
+		jsonParsed.mockImplementation(
+			(schema: { parse: (v: unknown) => unknown }) =>
+				schema.parse({ profileIds: demoAlbumShares(901) }),
+		);
+
+		const { profileIds } = await getAlbumShares(901);
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums/901/shares");
+		expect(profileIds).toEqual(demoAlbumShares(901));
+		expect(profileIds.length).toBeGreaterThan(0);
 	});
 
 	it("parses my albums off the documented response shape", async () => {

@@ -7,6 +7,8 @@ import {
 	MEDIA_TILE,
 	openAttachments,
 	SELECTED_ALBUM_TILE,
+	SHARED_ALBUM_TILE,
+	UNSHARED_ALBUM_TILE,
 } from "./support/drawer";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { expectNoToast } from "./support/toast";
@@ -14,35 +16,117 @@ import { expectNoToast } from "./support/toast";
 const OTHER_CONVERSATION = "/chat/100009:123456000";
 
 test.describe("composer albums tab", () => {
-	test("each tab arms Send from its own selection", async ({ page }) => {
+	test("each tab arms its own action from its own selection", async ({
+		page,
+	}) => {
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await openAttachments(page);
 
 		await page.getByRole("tab", { name: "Albums" }).click();
-		const tiles = page.locator(ALBUM_TILE);
-		await expect(tiles.first()).toBeVisible({ timeout: 30_000 });
+		await expect(page.locator(SHARED_ALBUM_TILE)).toHaveCount(2, {
+			timeout: 30_000,
+		});
 		await expect(
 			page.locator(`${ALBUM_TILE}[disabled]`),
 			"a non-shareable album cannot be picked",
 		).toHaveCount(1);
 
-		const send = page.getByRole("button", { name: /^Send/ });
-		await tiles.first().click();
-		await expect(send).toBeVisible();
+		const share = page.getByRole("button", { name: /^Share/ });
+		await page.locator(UNSHARED_ALBUM_TILE).first().click();
+		await expect(share, "albums are shared, not sent").toBeVisible();
+		await expect(page.getByRole("button", { name: /^Send/ })).toBeHidden();
 
 		await page.getByRole("tab", { name: "Media" }).click();
 		await expect(
-			send,
-			"an album selection must not arm Send on the media tab",
+			share,
+			"an album selection must not arm the media tab",
 		).toBeHidden();
 
 		await page.getByRole("tab", { name: "Albums" }).click();
-		await expect(send).toBeVisible();
+		await expect(share).toBeVisible();
 
-		await send.click();
+		await share.click();
 		await expect(page.locator(DRAWER)).toBeHidden();
 
 		await expectNoToast(page, "Couldn't share album");
+	});
+
+	test("already shared albums are badged and unshare instead", async ({
+		page,
+	}) => {
+		await serveImages(page, CHAT_MEDIA_HOST);
+		await openAttachments(page);
+
+		await page.getByRole("tab", { name: "Albums" }).click();
+		const shared = page.locator(SHARED_ALBUM_TILE);
+		await expect(
+			shared,
+			"the demo shares two albums with this conversation",
+		).toHaveCount(2, { timeout: 30_000 });
+
+		const unshare = page.getByRole("button", { name: /^Unshare/ });
+		await shared.first().click();
+		await expect(unshare).toBeVisible();
+		await expect(page.getByRole("button", { name: /^Share/ })).toBeHidden();
+
+		await shared.nth(1).click();
+		await expect(
+			unshare,
+			"both shared albums unshare in one action",
+		).toHaveAccessibleName(/^Unshare\s*2$/);
+
+		await unshare.click();
+		await expect(page.locator(DRAWER)).toBeHidden();
+		await expectNoToast(page, "Couldn't unshare album");
+
+		await page.getByRole("button", { name: "Add attachment" }).click();
+		await expect(page.locator(DRAWER)).toBeVisible();
+		await page.getByRole("tab", { name: "Albums" }).click();
+		await expect(page.locator(ALBUM_TILE).first()).toBeVisible({
+			timeout: 30_000,
+		});
+		await expect(
+			page.locator(SHARED_ALBUM_TILE),
+			"an unshared album loses its badge",
+		).toHaveCount(0);
+	});
+
+	test("a selection cannot mix shared and unshared albums", async ({
+		page,
+	}) => {
+		await serveImages(page, CHAT_MEDIA_HOST);
+		await openAttachments(page);
+
+		await page.getByRole("tab", { name: "Albums" }).click();
+		const shared = page.locator(SHARED_ALBUM_TILE);
+		const unshared = page.locator(UNSHARED_ALBUM_TILE);
+		await expect(shared).toHaveCount(2, { timeout: 30_000 });
+		await expect(unshared.first()).toBeEnabled();
+
+		await unshared.first().click();
+		await expect(
+			shared.first(),
+			"a shared album cannot join a share selection",
+		).toBeDisabled();
+		await expect(shared.first()).toHaveCSS("opacity", "0.5");
+
+		await unshared.first().click();
+		await expect(
+			shared.first(),
+			"clearing the selection unlocks both kinds again",
+		).toBeEnabled();
+		await expect(shared.first()).toHaveCSS("opacity", "1");
+
+		await shared.first().click();
+		await expect(
+			unshared.first(),
+			"an unshared album cannot join an unshare selection",
+		).toBeDisabled();
+		await expect(unshared.first()).toHaveCSS("opacity", "0.5");
+		await expect(
+			page.locator(SELECTED_ALBUM_TILE),
+			"and the incompatible tiles stay unselected",
+		).toHaveCount(1);
 	});
 
 	test("a conversation change closes the armed drawer", async ({ page }) => {
@@ -63,8 +147,8 @@ test.describe("composer albums tab", () => {
 		await expect(tiles.first()).toBeVisible({ timeout: 30_000 });
 		await tiles.first().click();
 
-		const send = page.getByRole("button", { name: /^Send/ });
-		await expect(send).toBeVisible();
+		const share = page.getByRole("button", { name: /^Share|^Unshare/ });
+		await expect(share).toBeVisible();
 
 		await page.goBack();
 		await expect(page).toHaveURL(new RegExp(`${DEMO_CONVERSATION}$`));
@@ -72,7 +156,7 @@ test.describe("composer albums tab", () => {
 			page.locator(DRAWER),
 			"a selection armed for the previous conversation must not survive",
 		).toBeHidden();
-		await expect(send).toBeHidden();
+		await expect(share).toBeHidden();
 	});
 
 	test("closing the drawer forgets the selection it was armed with", async ({
@@ -85,9 +169,9 @@ test.describe("composer albums tab", () => {
 		const tiles = page.locator(ALBUM_TILE);
 		await expect(tiles.first()).toBeVisible({ timeout: 30_000 });
 
-		const send = page.getByRole("button", { name: /^Send/ });
+		const share = page.getByRole("button", { name: /^Share|^Unshare/ });
 		await tiles.first().click();
-		await expect(send).toBeVisible();
+		await expect(share).toBeVisible();
 
 		await page.keyboard.press("Escape");
 		await expect(page.locator(DRAWER)).toBeHidden();
@@ -100,8 +184,8 @@ test.describe("composer albums tab", () => {
 			"the reopened tab starts with nothing selected",
 		).toHaveCount(0);
 		await expect(
-			send,
-			"so Send must not still be armed from the closed drawer",
+			share,
+			"so the action must not still be armed from the closed drawer",
 		).toBeHidden();
 	});
 

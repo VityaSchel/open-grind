@@ -12,16 +12,14 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
-	import ComposerMediaTab from "./ComposerMediaTab.svelte";
+	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
+	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
+	import type { SelectionTab, Tab, TabSelection } from "./tabs";
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
 	let { open = $bindable() }: { open: boolean } = $props();
-
-	type Tab = "media" | "albums" | "location";
-	type SelectionTab = { sendSelected: () => void };
 
 	let selectedTab = $state<Tab>("media");
 
@@ -30,13 +28,13 @@
 	let sheet = $state<HTMLDivElement | null>(null);
 	let peek = $state<HTMLDivElement | null>(null);
 	let tabs = $state<Partial<Record<Tab, SelectionTab | null>>>({});
-	let counts = $state<Partial<Record<Tab, number>>>({});
+	let selections = $state<Partial<Record<Tab, TabSelection>>>({});
 	let expiring = $state(false);
 
-	const selectedCount = $derived(counts[selectedTab] ?? 0);
+	const selection = $derived(selections[selectedTab]);
 
-	function sendSelected() {
-		tabs[selectedTab]?.sendSelected();
+	function submitSelection() {
+		tabs[selectedTab]?.submitSelection();
 	}
 
 	const settleQuietMs = 140;
@@ -64,7 +62,7 @@
 		if (open) return;
 		if (settleTimer !== null) clearTimeout(settleTimer);
 		settleTimer = null;
-		counts = {};
+		selections = {};
 		expiring = false;
 	});
 
@@ -130,16 +128,16 @@
 						<ComposerMediaTab
 							bind:this={tabs.media}
 							{expiring}
-							onSelectionChange={(count) =>
-								(counts.media = count)}
+							onSelectionChange={(mediaSelection) =>
+								(selections.media = mediaSelection)}
 							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
 					<Tabs.Content value="albums">
 						<ComposerAlbumsTab
 							bind:this={tabs.albums}
-							onSelectionChange={(count) =>
-								(counts.albums = count)}
+							onSelectionChange={(albumSelection) =>
+								(selections.albums = albumSelection)}
 							onClose={() => (open = false)}
 						/>
 					</Tabs.Content>
@@ -152,7 +150,7 @@
 				</div>
 			</div>
 
-			{#if selectedCount > 0}
+			{#if selection !== undefined && selection.count > 0}
 				<div
 					class="pointer-events-none absolute inset-x-0 bottom-18 flex justify-center gap-2"
 					in:fly={{ duration: 600, y: 100, easing: expoOut }}
@@ -187,14 +185,14 @@
 					<Button
 						size="lg"
 						class="pointer-events-auto shadow-lg"
-						onclick={sendSelected}
+						onclick={submitSelection}
 					>
-						Send
+						{selection.label}
 						<Badge
 							variant="secondary"
 							class="bg-primary-foreground/10 text-primary-foreground"
 						>
-							{selectedCount}
+							{selection.count}
 						</Badge>
 					</Button>
 				</div>

@@ -13979,15 +13979,7 @@
 					"profiles": {
 						"type": "array",
 						"items": {
-							"type": "object",
-							"properties": {
-								"expirationType": {
-									"$ref": "#/components/schemas/AlbumExpirationType"
-								},
-								"profileId": {
-									"type": "integer"
-								}
-							}
+							"$ref": "#/components/schemas/AlbumShareRequestProfileItem"
 						}
 					}
 				},
@@ -14002,32 +13994,41 @@
 					"profiles": {
 						"type": "array",
 						"items": {
-							"type": "object",
-							"properties": {
-								"profileId": {
-									"type": "integer",
-									"format": "int64"
-								},
-								"shareId": {
-									"type": "string",
-									"description": "string, e.g. `\"0\"`"
-								},
-								"expiresAt": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/TimestampMs"
-										}
-									],
-									"nullable": true,
-									"description": "unix timestamp in milliseconds or `null`"
-								}
-							}
+							"$ref": "#/components/schemas/AlbumUnshareRequestProfileItem"
 						}
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
 				"required": [
 					"profiles"
+				]
+			},
+			"AlbumShareRequestProfileItem": {
+				"type": "object",
+				"properties": {
+					"expirationType": {
+						"$ref": "#/components/schemas/AlbumExpirationType"
+					},
+					"profileId": {
+						"type": "integer"
+					}
+				}
+			},
+			"AlbumUnshareRequestProfileItem": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"shareId": {
+						"type": "string",
+						"description": "string, not validated, the official client sends a random UUID v4"
+					}
+				},
+				"required": [
+					"profileId",
+					"shareId"
 				]
 			},
 			"AlbumStorageLimits": {

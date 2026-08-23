@@ -10,6 +10,8 @@ export const ALBUM_TILE = '[data-slot="album-tile"]';
 export const SELECTED_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="true"]`;
 export const SELECTABLE_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="false"]`;
 export const SELECTED_ALBUM_TILE = `${ALBUM_TILE}[aria-pressed="true"]`;
+export const SHARED_ALBUM_TILE = `${ALBUM_TILE}:has([data-slot="album-shared-badge"])`;
+export const UNSHARED_ALBUM_TILE = `${ALBUM_TILE}:not(:has([data-slot="album-shared-badge"])):not(:has([data-slot="album-locked"]))`;
 
 export interface DrawerBox {
 	top: number;

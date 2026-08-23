@@ -41,14 +41,23 @@ export function demoAlbumContent(albumId: number) {
 	};
 }
 
+const FIRST_ALBUM_ID = 900;
+const demoSharedWithProfileId = 100001;
+
 const demoAlbumSeeds = [
 	{ albumName: "Weekend trip" },
-	{ albumName: "Gym progress", hasVideo: true },
+	{ albumName: "Gym progress", hasVideo: true, shared: true },
 	{ albumName: null, isShareable: false },
-	{ albumName: "Studio" },
+	{ albumName: "Studio", shared: true },
 ];
 
-const albumShares = new Map<number, Set<number>>();
+const albumShares = new Map<number, Set<number>>(
+	demoAlbumSeeds.flatMap((seed, i) =>
+		seed.shared
+			? [[FIRST_ALBUM_ID + i, new Set([demoSharedWithProfileId])]]
+			: [],
+	),
+);
 
 export function demoShareAlbum({
 	albumId,
@@ -62,10 +71,26 @@ export function demoShareAlbum({
 	albumShares.set(albumId, shared);
 }
 
+export function demoUnshareAlbum({
+	albumId,
+	profileIds,
+}: {
+	albumId: number;
+	profileIds: number[];
+}): void {
+	const shared = albumShares.get(albumId);
+	if (shared === undefined) return;
+	for (const profileId of profileIds) shared.delete(profileId);
+}
+
+export function demoAlbumShares(albumId: number): number[] {
+	return [...(albumShares.get(albumId) ?? [])];
+}
+
 export function demoMyAlbums() {
 	return {
 		albums: demoAlbumSeeds.map((seed, i) => {
-			const albumId = 900 + i;
+			const albumId = FIRST_ALBUM_ID + i;
 			const album = demoAlbumContent(albumId);
 			return {
 				...album,
