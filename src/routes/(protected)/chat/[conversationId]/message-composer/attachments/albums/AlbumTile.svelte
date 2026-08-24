@@ -81,7 +81,11 @@
 		<div class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />
 			{album.content.length}<span class="sr-only">
-				{album.content.length === 1 ? "item" : "items"}
+				{#if album.content.length === 1}
+					item
+				{:else}
+					items
+				{/if}
 			</span>
 		</div>
 		{#if hasVideo}
