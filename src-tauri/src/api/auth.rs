@@ -120,7 +120,7 @@ pub async fn logout(
 	let client = state.client()?;
 
 	client.logout().await;
-	AuthStorage::delete_session();
+	AuthStorage::delete_credentials();
 	SigningKeyStorage::delete();
 	media.forget_everything().await;
 
@@ -158,7 +158,7 @@ pub async fn auth_state(
 		.session_receiver()
 		.borrow()
 		.as_ref()
-		.and_then(|s| s.profile_id.parse::<u64>().ok()))
+		.and_then(|s| s.credentials.profile_id.as_ref()?.parse::<u64>().ok()))
 }
 
 #[tauri::command]
@@ -172,7 +172,7 @@ pub async fn account_restriction(
 		.session_receiver()
 		.borrow()
 		.as_ref()
-		.and_then(|s| s.restriction.clone())
+		.and_then(|s| s.token.as_ref()?.restriction.clone())
 		.map(Restriction::from))
 }
 

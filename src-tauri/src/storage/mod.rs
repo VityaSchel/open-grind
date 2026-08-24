@@ -86,15 +86,14 @@ mod tests {
 		keyring_core::Entry::new("open-grind", user).unwrap()
 	}
 
-	fn session(session_id: &str) -> grindr::Session {
-		serde_json::from_value(serde_json::json!({
-			"email": "user@example.com",
-			"expires_at": 9_999_999_999u64,
-			"profile_id": "42",
-			"session_id": session_id,
-			"auth_token": "auth-token",
-		}))
-		.unwrap()
+	fn credentials(auth_token: &str) -> grindr::Credentials {
+		grindr::Credentials {
+			email: "user@example.com".to_owned(),
+			profile_id: Some("42".to_owned()),
+			auth_token: auth_token.to_owned(),
+			kind: grindr::SessionKind::Email,
+			third_party_user_id: None,
+		}
 	}
 
 	fn signing_key() -> grindr::DeviceSigningKey {
@@ -109,7 +108,7 @@ mod tests {
 	fn the_installed_store_backs_every_keyring_entry() {
 		with_file_store(|base| {
 			DeviceStorage::save(&grindr::DeviceInfo::generate()).unwrap();
-			AuthStorage::set_session(&session("session-token")).unwrap();
+			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
 			SigningKeyStorage::save(&signing_key()).unwrap();
 
 			let mut written: Vec<_> =
@@ -141,7 +140,7 @@ mod tests {
 	fn nothing_is_stored_before_anything_is_saved() {
 		with_file_store(|_| {
 			assert!(DeviceStorage::load().unwrap().is_none());
-			assert!(AuthStorage::get_session().unwrap().is_none());
+			assert!(AuthStorage::get_credentials().unwrap().is_none());
 			assert!(SigningKeyStorage::load().unwrap().is_none());
 		});
 	}
@@ -204,7 +203,7 @@ mod tests {
 	fn every_secret_is_stored_as_a_named_map_not_a_positional_array() {
 		with_file_store(|_| {
 			DeviceStorage::save(&grindr::DeviceInfo::generate()).unwrap();
-			AuthStorage::set_session(&session("s1")).unwrap();
+			AuthStorage::set_credentials(&credentials("tok-1")).unwrap();
 			SigningKeyStorage::save(&signing_key()).unwrap();
 
 			for name in ["device-info", "session", "device-signing-key"] {
@@ -268,27 +267,22 @@ mod tests {
 	}
 
 	#[test]
-	fn a_session_survives_a_save_and_load() {
+	fn credentials_survive_a_save_and_load() {
 		with_file_store(|_| {
-			let saved = session("session-token");
+			let saved = credentials("auth-token");
 
-			AuthStorage::set_session(&saved).unwrap();
+			AuthStorage::set_credentials(&saved).unwrap();
 
-			let loaded = AuthStorage::get_session().unwrap().unwrap();
-			assert_eq!(loaded.session_id, saved.session_id);
-			assert_eq!(loaded.auth_token, saved.auth_token);
-			assert_eq!(loaded.email, saved.email);
-			assert_eq!(loaded.profile_id, saved.profile_id);
-			assert_eq!(loaded.expires_at, saved.expires_at);
+			assert_eq!(AuthStorage::get_credentials().unwrap().unwrap(), saved);
 		});
 	}
 
 	#[test]
-	fn a_session_that_cannot_be_decoded_is_discarded_rather_than_kept() {
+	fn credentials_that_cannot_be_decoded_are_discarded_rather_than_kept() {
 		with_file_store(|_| {
 			entry("session").set_secret(b"not msgpack").unwrap();
 
-			assert!(AuthStorage::get_session().unwrap().is_none());
+			assert!(AuthStorage::get_credentials().unwrap().is_none());
 			assert!(matches!(
 				entry("session").get_secret(),
 				Err(keyring_core::Error::NoEntry)
@@ -297,13 +291,64 @@ mod tests {
 	}
 
 	#[test]
-	fn setting_a_session_replaces_the_previous_one() {
+	fn a_login_stored_before_credentials_existed_still_loads() {
 		with_file_store(|_| {
-			AuthStorage::set_session(&session("first")).unwrap();
-			AuthStorage::set_session(&session("second")).unwrap();
+			let legacy = serde_json::json!({
+				"email": "user@example.com",
+				"expires_at": 9_999_999_999u64,
+				"profile_id": "42",
+				"session_id": "e".repeat(3056),
+				"auth_token": "auth-token",
+				"kind": "Google",
+				"third_party_user_id": "tp-1",
+				"restriction": {
+					"AgeVerification": {
+						"region": "GB",
+						"reason": "age_verification_required",
+					},
+				},
+			});
+			entry("session")
+				.set_secret(&rmp_serde::encode::to_vec_named(&legacy).unwrap())
+				.unwrap();
+
+			let loaded = AuthStorage::get_credentials().unwrap().unwrap();
+			assert_eq!(loaded.email, "user@example.com");
+			assert_eq!(loaded.profile_id.as_deref(), Some("42"));
+			assert_eq!(loaded.auth_token, "auth-token");
+			assert_eq!(loaded.kind, grindr::SessionKind::Google);
+			assert_eq!(loaded.third_party_user_id.as_deref(), Some("tp-1"));
+		});
+	}
+
+	#[test]
+	fn stored_credentials_stay_far_under_the_windows_blob_cap() {
+		const CRED_MAX_CREDENTIAL_BLOB_SIZE: usize = 2560;
+
+		let worst_case = grindr::Credentials {
+			email: "a-fairly-long-address@example.com".to_owned(),
+			profile_id: Some("1234567890123".to_owned()),
+			auth_token: "t".repeat(512),
+			kind: grindr::SessionKind::Google,
+			third_party_user_id: Some("x".repeat(128)),
+		};
+
+		let encoded = rmp_serde::encode::to_vec_named(&worst_case).unwrap();
+		assert!(
+			encoded.len() < CRED_MAX_CREDENTIAL_BLOB_SIZE,
+			"credentials encode to {} bytes",
+			encoded.len()
+		);
+	}
+
+	#[test]
+	fn setting_credentials_replaces_the_previous_ones() {
+		with_file_store(|_| {
+			AuthStorage::set_credentials(&credentials("first")).unwrap();
+			AuthStorage::set_credentials(&credentials("second")).unwrap();
 
 			assert_eq!(
-				AuthStorage::get_session().unwrap().unwrap().session_id,
+				AuthStorage::get_credentials().unwrap().unwrap().auth_token,
 				"second"
 			);
 		});
@@ -312,11 +357,11 @@ mod tests {
 	#[test]
 	fn deleting_the_session_clears_it() {
 		with_file_store(|_| {
-			AuthStorage::set_session(&session("session-token")).unwrap();
+			AuthStorage::set_credentials(&credentials("auth-token")).unwrap();
 
-			AuthStorage::delete_session();
+			AuthStorage::delete_credentials();
 
-			assert!(AuthStorage::get_session().unwrap().is_none());
+			assert!(AuthStorage::get_credentials().unwrap().is_none());
 		});
 	}
 
@@ -349,7 +394,10 @@ mod tests {
 			SigningKeyStorage::save(&signing_key()).unwrap();
 			let client = grindr::GrindrClient::new(
 				grindr::DeviceInfo::generate(),
-				Some(session("session-token")),
+				Some(grindr::Session {
+					credentials: credentials("auth-token"),
+					token: None,
+				}),
 			)
 			.unwrap();
 
@@ -379,11 +427,13 @@ mod tests {
 		keyring_core::unset_default_store();
 
 		assert!(DeviceStorage::load().is_err());
-		assert!(AuthStorage::get_session().is_err());
+		assert!(AuthStorage::get_credentials().is_err());
 		assert!(SigningKeyStorage::load().is_err());
-		assert!(AuthStorage::set_session(&session("session-token")).is_err());
+		assert!(
+			AuthStorage::set_credentials(&credentials("auth-token")).is_err()
+		);
 		DeviceStorage::delete();
-		AuthStorage::delete_session();
+		AuthStorage::delete_credentials();
 		SigningKeyStorage::delete();
 	}
 }

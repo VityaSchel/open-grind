@@ -7,7 +7,11 @@
 		accountStatusState,
 		showAccountRestriction,
 	} from "$lib/api/account-status-state.svelte";
-	import { banInfoSchema, callMethod } from "$lib/api/methods";
+	import {
+		banInfoSchema,
+		callMethod,
+		restrictionSchema,
+	} from "$lib/api/methods";
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
@@ -41,18 +45,26 @@
 	});
 
 	onMount(() => {
-		const unlisten = listen("auth:banned", (event) => {
+		const unlistenBanned = listen("auth:banned", (event) => {
 			const parsed = banInfoSchema.safeParse(event.payload);
 			if (!parsed.success) return;
 			accountStatusState.status = { kind: "banned", info: parsed.data };
 			accountStatusState.open = true;
+		});
+		const unlistenRestriction = listen("auth:restriction", (event) => {
+			const parsed = restrictionSchema.safeParse(event.payload);
+			if (!parsed.success) return;
+			showAccountRestriction(parsed.data);
 		});
 
 		void callMethod("account_restriction")
 			.then(showAccountRestriction)
 			.catch(() => {});
 
-		return () => void unlisten.then((fn) => fn());
+		return () => {
+			void unlistenBanned.then((fn) => fn());
+			void unlistenRestriction.then((fn) => fn());
+		};
 	});
 
 	let busy = $state(false);

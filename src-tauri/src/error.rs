@@ -156,15 +156,20 @@ mod tests {
 
 	#[test]
 	fn auth_failure_with_a_session_stays_an_auth_error() {
-		let session: grindr::Session =
-			serde_json::from_value(serde_json::json!({
-				"email": "user@example.com",
-				"expires_at": 9_999_999_999u64,
-				"profile_id": "42",
-				"session_id": "session-token",
-				"auth_token": "auth-token",
-			}))
-			.unwrap();
+		let session = grindr::Session {
+			credentials: grindr::Credentials {
+				email: "user@example.com".to_owned(),
+				profile_id: Some("42".to_owned()),
+				auth_token: "auth-token".to_owned(),
+				kind: grindr::SessionKind::Email,
+				third_party_user_id: None,
+			},
+			token: Some(grindr::SessionToken {
+				session_id: "session-token".to_owned(),
+				expires_at: 9_999_999_999,
+				restriction: None,
+			}),
+		};
 		let client = grindr::GrindrClient::new(
 			grindr::DeviceInfo::generate(),
 			Some(session),

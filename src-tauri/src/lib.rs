@@ -237,29 +237,65 @@ pub fn run() {
 
             let device = DeviceStorage::load_or_create();
 
-            let session = match AuthStorage::get_session() {
-                Ok(s) => s,
+            let credentials = match AuthStorage::get_credentials() {
+                Ok(c) => c,
                 Err(e) => {
-                    tracing::warn!("[setup] could not load session: {e}");
+                    tracing::warn!("[setup] could not load credentials: {e}");
                     None
                 }
             };
 
-            let client =
-                grindr::GrindrClient::new(device, session).expect("failed to build GrindrClient");
+            let resumed = credentials.clone().map(|credentials| grindr::Session {
+                credentials,
+                token: None,
+            });
+            let client = grindr::GrindrClient::new(device, resumed)
+                .expect("failed to build GrindrClient");
 
             {
                 let mut session_rx = client.session_receiver();
+                let mut stored = credentials;
+                let mut restriction = None;
+                let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
                     while session_rx.changed().await.is_ok() {
-                        match session_rx.borrow().as_ref() {
-                            Some(s) => {
-                                if let Err(e) = AuthStorage::set_session(s) {
+                        let (next, next_restriction) = {
+                            let session = session_rx.borrow();
+                            (
+                                session
+                                    .as_ref()
+                                    .map(|session| session.credentials.clone()),
+                                session.as_ref().and_then(|session| {
+                                    session.token.as_ref()?.restriction.clone()
+                                }),
+                            )
+                        };
+
+                        if next_restriction != restriction {
+                            if let Some(r) = &next_restriction {
+                                use tauri::Emitter;
+                                handle
+                                    .emit(
+                                        "auth:restriction",
+                                        api::auth::Restriction::from(r.clone()),
+                                    )
+                                    .ok();
+                            }
+                            restriction = next_restriction;
+                        }
+
+                        if next == stored {
+                            continue;
+                        }
+                        match &next {
+                            Some(c) => {
+                                if let Err(e) = AuthStorage::set_credentials(c) {
                                     tracing::error!("[session] persist failed: {e}");
                                 }
                             }
-                            None => AuthStorage::delete_session(),
+                            None => AuthStorage::delete_credentials(),
                         }
+                        stored = next;
                     }
                 });
             }

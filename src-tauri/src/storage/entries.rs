@@ -67,32 +67,35 @@ impl AuthStorage {
 			.map_err(|e| AppError::Auth(e.to_string()))
 	}
 
-	pub fn get_session() -> Result<Option<grindr::Session>, AppError> {
+	pub fn get_credentials() -> Result<Option<grindr::Credentials>, AppError> {
 		let entry = Self::entry()?;
 		let bytes = match entry.get_secret() {
 			Ok(b) => b,
 			Err(keyring_core::Error::NoEntry) => return Ok(None),
 			Err(e) => return Err(AppError::Auth(e.to_string())),
 		};
-		match rmp_serde::from_slice::<grindr::Session>(&bytes) {
-			Ok(s) => Ok(Some(s)),
+		match rmp_serde::from_slice::<grindr::Credentials>(&bytes) {
+			Ok(c) => Ok(Some(c)),
 			Err(_) => {
-				Self::delete_session();
+				Self::delete_credentials();
 				Ok(None)
 			}
 		}
 	}
 
-	pub fn set_session(session: &grindr::Session) -> Result<(), AppError> {
-		let bytes = rmp_serde::encode::to_vec_named(session).map_err(|e| {
-			AppError::Auth(format!("session encode failed: {e}"))
-		})?;
+	pub fn set_credentials(
+		credentials: &grindr::Credentials,
+	) -> Result<(), AppError> {
+		let bytes =
+			rmp_serde::encode::to_vec_named(credentials).map_err(|e| {
+				AppError::Auth(format!("credentials encode failed: {e}"))
+			})?;
 		Self::entry()?
 			.set_secret(&bytes)
 			.map_err(|e| AppError::Auth(e.to_string()))
 	}
 
-	pub fn delete_session() {
+	pub fn delete_credentials() {
 		match Self::entry() {
 			Ok(entry) => match entry.delete_credential() {
 				Ok(()) | Err(keyring_core::Error::NoEntry) => {}

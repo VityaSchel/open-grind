@@ -48,11 +48,16 @@ fn error_kind(error: &AppError) -> String {
 
 fn health_of(session: Option<&grindr::Session>) -> SessionHealth {
 	match session {
-		Some(session) => SessionHealth {
-			signed_in: true,
-			expires_at: Some(session.expires_at),
-			stale: session.expires_at < now_unix() + REFRESH_BUFFER_SECS,
-		},
+		Some(session) => {
+			let expires_at =
+				session.token.as_ref().map(|token| token.expires_at);
+			SessionHealth {
+				signed_in: true,
+				expires_at,
+				stale: expires_at
+					.is_none_or(|at| at < now_unix() + REFRESH_BUFFER_SECS),
+			}
+		}
 		None => SessionHealth::default(),
 	}
 }
@@ -206,8 +211,25 @@ mod tests {
 	use super::*;
 
 	fn session_expiring_at(expires_at: u64) -> grindr::Session {
-		let mut session = grindr::Session::from_auth_token("a@b.c", "tok");
-		session.expires_at = expires_at;
+		grindr::Session {
+			credentials: grindr::Credentials {
+				email: "a@b.c".to_owned(),
+				profile_id: Some("42".to_owned()),
+				auth_token: "tok".to_owned(),
+				kind: grindr::SessionKind::Email,
+				third_party_user_id: None,
+			},
+			token: Some(grindr::SessionToken {
+				session_id: "sid".to_owned(),
+				expires_at,
+				restriction: None,
+			}),
+		}
+	}
+
+	fn session_awaiting_its_first_token() -> grindr::Session {
+		let mut session = session_expiring_at(0);
+		session.token = None;
 		session
 	}
 
@@ -221,6 +243,11 @@ mod tests {
 		assert!(expiring.stale, "inside the 60s buffer counts as stale");
 
 		assert!(health_of(Some(&session_expiring_at(0))).stale);
+
+		let resumed = health_of(Some(&session_awaiting_its_first_token()));
+		assert!(resumed.signed_in);
+		assert!(resumed.stale, "no token yet means a refresh is owed");
+		assert!(resumed.expires_at.is_none());
 	}
 
 	#[test]
