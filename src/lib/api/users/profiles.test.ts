@@ -23,6 +23,7 @@ import {
 	clearProfileCaches,
 	deleteProfilePhotos,
 	getProfile,
+	getProfiles,
 	HiddenProfileError,
 	onProfileEdit,
 	patchOwnProfile,
@@ -200,6 +201,37 @@ describe("cache TTL", () => {
 		clock += 1;
 		await getProfile(PROFILE_ID);
 		expect(countRequests("/v7/profiles/")).toBe(2);
+	});
+});
+
+describe("getProfiles", () => {
+	beforeEach(() => {
+		fetchRestMock.mockImplementation(() =>
+			Promise.resolve(okValidated({ profiles: [] })),
+		);
+	});
+
+	it("splits ids into parallel 30-id requests like the official client", async () => {
+		await getProfiles(Array.from({ length: 65 }, (_, index) => index + 1));
+
+		expect(fetchRestMock).toHaveBeenCalledTimes(3);
+		const bodies = fetchRestMock.mock.calls.map(
+			(call) =>
+				(call[1] as { body: { targetProfileIds: number[] } }).body
+					.targetProfileIds.length,
+		);
+		expect(bodies).toEqual([30, 30, 5]);
+	});
+
+	it("sends a single request for 30 ids or fewer", async () => {
+		await getProfiles(Array.from({ length: 30 }, (_, index) => index + 1));
+
+		expect(fetchRestMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("skips the network entirely for an empty id list", async () => {
+		await expect(getProfiles([])).resolves.toEqual([]);
+		expect(fetchRestMock).not.toHaveBeenCalled();
 	});
 });
 

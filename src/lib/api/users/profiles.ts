@@ -162,7 +162,7 @@ const getProfilesResponseSchema = z.object({
 	profiles: z.array(profileShortWithRightNowSchema),
 });
 
-const GET_PROFILES_MAX_IDS = 150;
+const GET_PROFILES_CHUNK_IDS = 30;
 
 async function fetchProfilesBatch(
 	targetProfileIds: number[],
@@ -181,9 +181,9 @@ export async function getProfiles(
 	for (
 		let start = 0;
 		start < profileIds.length;
-		start += GET_PROFILES_MAX_IDS
+		start += GET_PROFILES_CHUNK_IDS
 	)
-		batches.push(profileIds.slice(start, start + GET_PROFILES_MAX_IDS));
+		batches.push(profileIds.slice(start, start + GET_PROFILES_CHUNK_IDS));
 	return (await Promise.all(batches.map(fetchProfilesBatch))).flat();
 }
 
