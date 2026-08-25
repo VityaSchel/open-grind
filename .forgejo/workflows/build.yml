@@ -84,8 +84,59 @@ jobs:
           path: out/
           retention-days: 1
 
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: >-
+          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.providers)) }}
+    runs-on: ["build", "${{ matrix.provider }}"]
+    timeout-minutes: 45
+    env:
+      BUILD_ROOT: /work-linux
+      TZ: UTC
+      LC_ALL: C
+    steps:
+      - name: Checkout
+        run: |
+          : "${BUILD_ROOT:?}"
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cd "$BUILD_ROOT"
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
+      - name: Check the version
+        env:
+          ALLOW_DEV: ${{ inputs.allow_dev }}
+        run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
+      - name: Set up the build environment
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+      - name: Build
+        run: |
+          cd "${BUILD_ROOT:?}"
+          podman build -t open-grind-linux ci/linux
+          podman run --rm -v "$BUILD_ROOT:/work" open-grind-linux sh ci/linux/build.sh
+      - name: Collect .deb
+        run: |
+          : "${BUILD_ROOT:?}"
+          deb=("$BUILD_ROOT"/src-tauri/target/release/bundle/deb/*.deb)
+          [ ${#deb[@]} -eq 1 ]
+          mkdir -p out
+          cp "${deb[0]}" out/
+      - name: Upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned-linux-${{ matrix.provider }}
+          path: out/
+          retention-days: 1
+
   verify:
-    needs: build
+    needs: [build, build-linux]
     runs-on: ["verify", "hetzner"]
     timeout-minutes: 10
     steps:

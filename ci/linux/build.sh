@@ -25,6 +25,28 @@ bun run tauri build --bundles deb
 out="/work/src-tauri/target/release"
 bin="$out/open-grind"
 
+# tauri-bundler walks directories unsorted and stamps wall-clock mtimes into
+# both tars and the ar header, so the .deb never reproduces as built:
+# https://github.com/tauri-apps/tauri/issues/13612
+set -- "$out"/bundle/deb/*.deb
+[ "$#" -eq 1 ] || { echo "FATAL: expected one .deb, found $#" >&2; exit 1; }
+bundled=$1
+work=$(mktemp -d)
+dpkg-deb --raw-extract "$bundled" "$work/root"
+LC_ALL=C sort -k2 -o "$work/root/DEBIAN/md5sums" "$work/root/DEBIAN/md5sums"
+find "$work/root" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
+# tauri-bundler sums directory entry sizes into Installed-Size, and those are
+# filesystem-specific; policy defines it from file sizes plus 1 KiB per directory:
+# https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-installed-size
+files_kib=$(cd "$work/root" && find . -path ./DEBIAN -prune -o -type f -printf '%s\n' | awk '{ s += int(($1 + 1023) / 1024) } END { print s + 0 }')
+dirs=$(cd "$work/root" && find . -path ./DEBIAN -prune -o -type d -print | wc -l)
+sed -i "s/^Installed-Size: .*/Installed-Size: $((files_kib + dirs))/" "$work/root/DEBIAN/control"
+version=$(sed -n 's/^[[:space:]]*"version": "\([^"]*\)".*/\1/p' src-tauri/tauri.conf.json | head -1)
+case "$(uname -m)" in aarch64) arch=arm64 ;; *) arch=$(uname -m) ;; esac
+deb="$out/bundle/deb/open-grind-v$version-linux-$arch.deb"
+dpkg-deb --root-owner-group -Zgzip -z9 --uniform-compression -b "$work/root" "$deb"
+rm -rf "$work" "$bundled"
+
 interp=$(readelf -l "$bin" | sed -n 's/.*interpreter: \(.*\)]/\1/p')
 case "$interp" in
 	/lib/*|/lib64/*) ;;
