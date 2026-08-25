@@ -51,6 +51,8 @@
           }
           // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
             linux = import ./nix/linux.nix { inherit pkgs lib common; };
+          }
+          // {
             windows-x64 = import ./nix/windows.nix {
               inherit pkgs lib common;
               arch = "x86_64";
