@@ -3,7 +3,7 @@
 Pick your platform, then a method within it. Everything below the platform sections applies to both.
 
 > [!NOTE]
-> Only Android release builds are tested as of June 23rd, 2026.
+> Android, macOS, Linux, Windows release builds are supported as of August 2026.
 
 - [Building Open Grind](#building-open-grind)
     - [Android](#android)
@@ -17,17 +17,18 @@ Pick your platform, then a method within it. Everything below the platform secti
             - [Sign \& build manually](#sign--build-manually)
         - [Verifying a published Android release](#verifying-a-published-android-release)
     - [macOS](#macos)
-        - [Build and package](#build-and-package)
         - [Signing and notarization](#signing-and-notarization)
         - [Verifying a published macOS release](#verifying-a-published-macos-release)
+    - [Linux](#linux)
+        - [Build the release .deb](#build-the-release-deb)
+        - [Develop with Nix](#develop-with-nix)
+        - [Verifying a published Linux release](#verifying-a-published-linux-release)
+        - [Rejected Linux formats](#rejected-linux-formats)
+    - [Windows](#windows)
+        - [Verifying a published Windows release](#verifying-a-published-windows-release)
+        - [Signing Windows builds](#signing-windows-builds)
     - [Credential storage](#credential-storage)
-    - [Trusting the build environment](#trusting-the-build-environment)
-        - [Verifying Nix and flake.lock](#verifying-nix-and-flakelock)
-        - [Verifying the Gradle wrapper jar](#verifying-the-gradle-wrapper-jar)
-    - [Reproducible CI release](#reproducible-ci-release)
     - [Reproducibility](#reproducibility)
-        - [Refreshing the lock](#refreshing-the-lock)
-        - [Cargo / JS hygiene](#cargo--js-hygiene)
 
 ## Android
 
@@ -170,7 +171,7 @@ Android's v2/v3 signing block lives in a dedicated region between the last zip e
 All tools below ship with the dev shell — `nix develop` and you're ready.
 
 > [!IMPORTANT]
-> The canonical release build reproduces only in an `x86_64-linux` build environment — a native x86_64 Linux host, or the [Docker method](#build-with-docker-easiest) on any machine (that is also how [CI builds](#reproducible-ci-release) releases). A native `nix run .#build-android` on Apple Silicon macOS produces a different, non-matching APK.
+> The canonical release build reproduces only in an `x86_64-linux` build environment — a native x86_64 Linux host, or the [Docker method](#build-with-docker-easiest) on any machine (that is also how [CI builds](./REPRODUCIBILITY.md#canonical-builders) releases). A native `nix run .#build-android` on Apple Silicon macOS produces a different, non-matching APK.
 
 ```bash
 nix develop
@@ -215,28 +216,20 @@ If steps 3 and 4 both succeed, the published APK was built from this commit and 
 
 ## macOS
 
-There is no Docker path here: containers on Linux cannot run Darwin binaries, and Apple's licence restricts macOS virtualization to Apple hardware, so a macOS build needs a Mac. Nix still pins most of the toolchain, so build from inside the dev shell.
-
-### Build and package
+A macOS build needs a Mac. Nix still pins most of the toolchain, so build from inside the dev shell.
 
 ```bash
 nix develop
 bun run package:macos
 ```
 
-This builds the app, signs it, and writes a zip to `src-tauri/target/release/artifacts/`. That zip is the only macOS artifact — it is what people download and what the in-app updater installs.
-
-The build always enables the `keychain` feature, so a packaged artifact is shaped like a release whoever builds it, which is what makes verification symmetric. Ad-hoc builds therefore cannot read back credentials an earlier build wrote; use `bun run tauri dev` for day-to-day work.
-
-A release build refuses to run from anywhere but `/Applications` or `~/Applications`, since replacing itself in place is only possible from there. It shows a native dialog and quits before any window is created.
-
-Build inside the dev shell if you care about reproducing: two clean release builds there produce a byte-identical binary, measured on `aarch64-darwin`. Debug builds do not reproduce — their symbol and debug tables differ between runs — which is why `package:macos` defaults to `--release`.
+This builds the app, signs it, and writes a reproducible zip to `src-tauri/target/release/artifacts/`. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce, `package:macos` defaults to `--release`.
 
 ### Signing and notarization
 
-| variable               | default | effect                                                         |
+| Variable               | Default | Description                                                    |
 | ---------------------- | ------- | -------------------------------------------------------------- |
-| `MACOS_SIGN_IDENTITY`  | `-`     | `-` is ad-hoc: runs on your machine, not distributable         |
+| `MACOS_SIGN_IDENTITY`  | `-`     | `-` is ad-hoc                                                  |
 | `MACOS_NOTARY_PROFILE` | unset   | `notarytool` keychain profile; when set, notarizes and staples |
 
 `src-tauri/entitlements.plist` is passed to `codesign` when it exists.
@@ -254,7 +247,7 @@ MACOS_NOTARY_PROFILE=open-grind \
 
 ### Verifying a published macOS release
 
-Signing embeds a secure timestamp and stapling adds a notarization ticket, so a distributed app is never byte-identical to a local build. Putting both through the same sign-then-strip cycle cancels that out and leaves the rest comparable:
+Signing embeds a secure timestamp and stapling adds a notarization ticket, so strip signature from both artifacts:
 
 ```bash
 nix develop
@@ -264,6 +257,92 @@ bun run verify:macos /path/to/open-grind-v<tag>-macos-arm64.zip
 ```
 
 It exits non-zero and prints the differing files when they do not match.
+
+## Linux
+
+The release `.deb` is built in a pinned Debian 12 container ([ci/linux/](./ci/linux)) so the binary links against Debian 12's system libraries. The glibc floor is 2.34, which covers Debian 12+ and Ubuntu 22.04+. The Nix shell is for development only — its glibc is newer than any shipping distribution.
+
+### Build the release .deb
+
+Needs Podman or Docker.
+
+```bash
+podman build -t open-grind-linux ci/linux
+podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
+```
+
+The result is `src-tauri/target/release/bundle/deb/open-grind-v<version>-linux-<arch>.deb`. The script repacks what `tauri build` produced with `dpkg-deb` under `SOURCE_DATE_EPOCH`, because tauri-bundler writes wall-clock mtimes and unsorted entries ([tauri#13612](https://github.com/tauri-apps/tauri/issues/13612)).
+
+Runtime notes:
+
+- Video needs GStreamer: `gstreamer1.0-plugins-good` for MP4 and `gstreamer1.0-libav` for H.264, both declared as `Recommends`. Fedora strips patent-encumbered codecs from its own packages.
+- Without a Secret Service (a headless box, or no D-Bus session) the login is kept in a plain file under the app data directory and the app says so on launch.
+- Location is not available through the geolocation plugin on Linux. Set it from the command palette by geohash.
+
+### Develop with Nix
+
+```bash
+nix develop .#linux
+bun run tauri dev
+```
+
+`nix run .#build-linux` builds a `.deb` too, but against Nix's glibc, so it does not install on a normal distribution. Use the container for anything that leaves your machine.
+
+### Verifying a published Linux release
+
+```bash
+git checkout v<tag>
+podman build -t open-grind-linux ci/linux
+podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
+minisign -Vm /path/to/open-grind-v<tag>-linux-x86_64.deb -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+
+sha256sum src-tauri/target/release/bundle/deb/*.deb /path/to/open-grind-v<tag>-linux-x86_64.deb
+```
+
+Both hashes match. There is no in-file signature to strip: the `.deb` is signed only by its detached `.minisig`.
+
+### Rejected Linux formats
+
+- `.rpm` — tauri-bundler passes the version through unsanitised and RPM's `Version` cannot contain `-`, so every prerelease is rejected; there is no `rpm.version` override
+- AppImage — tauri-bundler downloads linuxdeploy and its plugins from unpinned branches at bundle time, and the default bundle breaks on Mesa 25+ ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665))
+- Bundled codecs — The app uses the system WebKitGTK, which decodes through the system GStreamer; shipping codecs would only duplicate what `Recommends` already installs |
+
+## Windows
+
+Windows is cross-compiled from Linux with [cargo-xwin](https://github.com/rust-cross/cargo-xwin). Two clean Linux builds of one commit write a reproducible exe and NSIS installer.
+
+```bash
+# x86_64:
+nix develop .#windows-x64
+cargo xwin check --manifest-path src-tauri/Cargo.toml --lib --target x86_64-pc-windows-msvc
+
+# arm64:
+nix develop .#windows-arm64
+cargo xwin check --manifest-path src-tauri/Cargo.toml --lib --target arm64-pc-windows-msvc
+```
+
+Nix runs the full `tauri build --bundles nsis`. On first use cargo-xwin downloads Microsoft's CRT and Windows SDK (about 1 GB) into `~/.cache/cargo-xwin`.
+
+### Verifying a published Windows release
+
+```bash
+git checkout v<tag>
+
+# x86_64:
+nix run .#build-windows-x64
+minisign -Vm /path/to/open-grind-v<tag>-windows-x86_64.exe -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+
+sha256sum src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe /path/to/open-grind-v<tag>-windows-x86_64.exe
+
+# arm64:
+nix run .#build-windows-arm64
+minisign -Vm /path/to/open-grind-v<tag>-windows-arm64.exe -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+
+sha256sum src-tauri/target/arm64-pc-windows-msvc/release/bundle/nsis/*.exe /path/to/open-grind-v<tag>-windows-arm64.exe
+```
+
+Both hashes match. Nothing is embedded in the installer beyond its detached `.minisig`.
+
+### Signing Windows builds
+
+Windows builds ship unsigned with a detached `.minisig`.
 
 ## Credential storage
 
@@ -277,79 +356,6 @@ Two targets fall back to a file store: `credentials/` in the app data directory,
 > [!IMPORTANT]
 > A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain. [`bun run package:macos`](#build-and-package) does both.
 
-## Trusting the build environment
-
-Before running any build or verification steps, you are trusting several components. This section explains what each is, where it comes from, and how to independently verify it.
-
-### Verifying Nix and flake.lock
-
-[flake.lock](./flake.lock) pins every flake input to an exact content hash: JDK, Android SDK, NDK, Rust, Bun, Node.js.
-
-1. Confirm the nixpkgs revision in flake.lock resolves to a commit on the official NixOS/nixpkgs repository:
-
-```bash
-grep -A3 '"nixpkgs"' flake.lock # note the "rev" value
-# verify it exists at https://github.com/NixOS/nixpkgs/commit/<rev>
-```
-
-2. Also read [flake.nix](./flake.nix) itself to verify build steps
-
-### Verifying the Gradle wrapper jar
-
-The wrapper jar at `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar` is committed and pinned to Gradle 8.14.5.
-
-```bash
-shasum -a 256 src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
-```
-
-Compare against [Gradle's published checksums](https://gradle.org/release-checksums/) for 8.14.5 (`7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172`).
-
-## Reproducible CI release
-
-See [ci/](./ci/).
-
 ## Reproducibility
 
-Every input that affects the output bytes is pinned in exactly one place:
-
-| Component                               | Where it's pinned                                                |
-| --------------------------------------- | ---------------------------------------------------------------- |
-| Docker base image (Docker build path)   | `Dockerfile` (`nixos/nix` pinned by `@sha256`)                   |
-| nixpkgs                                 | `flake.lock`                                                     |
-| Rust toolchain                          | `rust-toolchain.toml`                                            |
-| macOS C toolchain (clang, cc, ld)       | `flake.lock` (nixpkgs clang wrapper, only inside `nix develop`)  |
-| JDK                                     | `flake.nix` (`jdk21_headless`)                                   |
-| Android compileSdk / minSdk / targetSdk | `src-tauri/gen/android/gradle.properties`                        |
-| Android build-tools                     | `src-tauri/gen/android/gradle.properties`                        |
-| Android NDK                             | `src-tauri/gen/android/gradle.properties`                        |
-| Android CMake                           | `src-tauri/gen/android/gradle.properties`                        |
-| Android Gradle Plugin                   | `src-tauri/gen/android/build.gradle.kts`                         |
-| Gradle distribution                     | `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.properties` |
-| Kotlin                                  | `src-tauri/gen/android/build.gradle.kts`                         |
-| Bun                                     | nixpkgs pin (via `flake.lock`)                                   |
-| Node.js (runs `vite build`)             | nixpkgs pin (via `flake.lock`)                                   |
-| Tauri CLI                               | `package.json` / `bun.lock`                                      |
-| JS deps                                 | `bun.lock`                                                       |
-| Cargo deps                              | `src-tauri/Cargo.lock`                                           |
-| Dependency patches                      | [patches/](./patches), [src-tauri/patches/](./src-tauri/patches) |
-
-The `opengrind.android.*` keys in `gradle.properties` are read by both Gradle and `flake.nix`. Bump them there once and both consumers pick up the new value.
-
-`codesign`, `ditto` and `plutil` come from macOS itself and cannot be pinned by Nix. None of them affect the compiled code: `ditto` only packs the archive, and the signature is removed on both sides by [`verify:macos`](#verifying-a-published-macos-release) before comparing.
-
-### Refreshing the lock
-
-```bash
-nix flake update
-```
-
-### Cargo / JS hygiene
-
-`src-tauri/Cargo.lock` and `bun.lock` are reproducibility pins. Use lockfile-respecting commands for day-to-day work:
-
-```bash
-cargo build
-bun ci
-```
-
-Never run `cargo update` or `bun update` without intentionally bumping dependencies and reviewing the diff.
+What is pinned, which builds reproduce, and how CI proves it: [REPRODUCIBILITY.md](./REPRODUCIBILITY.md).

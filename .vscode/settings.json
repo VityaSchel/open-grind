@@ -23,7 +23,8 @@
 	"[markdown]": {
 		"editor.tabSize": 4,
 		"editor.detectIndentation": false,
-		"editor.insertSpaces": true
+		"editor.insertSpaces": true,
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
 	"[xml]": { "editor.defaultFormatter": "redhat.vscode-xml" },
 	"files.associations": { "layout.css": "tailwindcss" },
