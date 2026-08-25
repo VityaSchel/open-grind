@@ -66,6 +66,10 @@ export const methods = {
 		request: z.undefined(),
 		response: restrictionSchema.nullish(),
 	},
+	storage_backend: {
+		request: z.undefined(),
+		response: z.enum(["keyring", "file", "unavailable"]),
+	},
 	refresh_token: { request: z.undefined(), response: loginResultSchema },
 	rotate_api_params: {
 		request: z.undefined(),

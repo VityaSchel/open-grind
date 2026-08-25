@@ -73,6 +73,8 @@ export function demoCallMethod(method: string): unknown {
 			return false;
 		case "session_health":
 			return { signedIn: true, expiresAt: null, stale: false };
+		case "storage_backend":
+			return "keyring";
 		default:
 			return null;
 	}

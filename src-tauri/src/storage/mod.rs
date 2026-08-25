@@ -15,44 +15,101 @@ pub fn init_file_store(base: std::path::PathBuf) {
 	file_store::init(base);
 }
 
-pub fn init_keyring() {
-	#[cfg(target_os = "ios")]
-	match apple_native_keyring_store::protected::Store::new() {
-		Ok(store) => keyring_core::set_default_store(store),
-		Err(e) => tracing::error!("[storage] could not init iOS keyring: {e}"),
-	}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum StorageBackend {
+	Keyring,
+	File,
+	Unavailable,
+}
 
-	#[cfg(target_os = "android")]
-	match android_native_keyring_store::Store::new() {
-		Ok(store) => keyring_core::set_default_store(store),
-		Err(e) => {
-			tracing::error!("[storage] could not init Android keyring: {e}")
+const HAS_FILE_STORE: bool = cfg!(any(
+	target_os = "linux",
+	all(target_os = "macos", not(feature = "keychain"))
+));
+
+pub fn init_keyring() -> StorageBackend {
+	let backend = match install_platform_store() {
+		Ok(()) => StorageBackend::Keyring,
+		Err(e) if HAS_FILE_STORE => {
+			tracing::warn!(
+				"[storage] no platform keyring, keeping file store: {e}"
+			);
+			StorageBackend::File
 		}
-	}
-
-	#[cfg(all(target_os = "macos", feature = "keychain"))]
-	match apple_native_keyring_store::keychain::Store::new() {
-		Ok(store) => keyring_core::set_default_store(store),
 		Err(e) => {
-			tracing::error!("[storage] could not init macOS keyring: {e}")
+			tracing::error!("[storage] no platform keyring: {e}");
+			StorageBackend::Unavailable
 		}
+	};
+	if backend != StorageBackend::Unavailable && !round_trips() {
+		tracing::error!("[storage] the credential store failed a round trip");
+		return StorageBackend::Unavailable;
 	}
+	backend
+}
 
-	#[cfg(target_os = "windows")]
-	match windows_native_keyring_store::Store::new() {
-		Ok(store) => keyring_core::set_default_store(store),
-		Err(e) => {
-			tracing::error!("[storage] could not init Windows keyring: {e}")
-		}
-	}
+#[cfg(target_os = "ios")]
+fn install_platform_store() -> Result<(), String> {
+	let store = apple_native_keyring_store::protected::Store::new()
+		.map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
+}
 
-	#[cfg(target_os = "linux")]
-	match dbus_secret_service_keyring_store::Store::new() {
-		Ok(store) => keyring_core::set_default_store(store),
-		Err(e) => tracing::warn!(
-			"[storage] no secret service, keeping file store: {e}"
-		),
-	}
+#[cfg(target_os = "android")]
+fn install_platform_store() -> Result<(), String> {
+	let store = android_native_keyring_store::Store::new()
+		.map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
+}
+
+#[cfg(all(target_os = "macos", feature = "keychain"))]
+fn install_platform_store() -> Result<(), String> {
+	let store = apple_native_keyring_store::keychain::Store::new()
+		.map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
+}
+
+#[cfg(all(target_os = "macos", not(feature = "keychain")))]
+fn install_platform_store() -> Result<(), String> {
+	Err("built without the keychain feature".to_owned())
+}
+
+#[cfg(target_os = "windows")]
+fn install_platform_store() -> Result<(), String> {
+	let store = windows_native_keyring_store::Store::new()
+		.map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn install_platform_store() -> Result<(), String> {
+	let store = dbus_secret_service_keyring_store::Store::new()
+		.map_err(|e| e.to_string())?;
+	keyring_core::set_default_store(store);
+	Ok(())
+}
+
+#[tauri::command]
+pub fn storage_backend(
+	backend: tauri::State<'_, StorageBackend>,
+) -> StorageBackend {
+	*backend
+}
+
+fn round_trips() -> bool {
+	let Ok(entry) = keyring_core::Entry::new("open-grind", "startup-probe")
+	else {
+		return false;
+	};
+	let ok = entry.set_secret(b"ok").is_ok()
+		&& entry.get_secret().is_ok_and(|secret| secret == b"ok");
+	let _ = entry.delete_credential();
+	ok
 }
 
 #[cfg(all(
@@ -129,11 +186,31 @@ mod tests {
 	#[test]
 	fn init_keyring_leaves_a_usable_store_behind() {
 		with_file_store(|_| {
-			init_keyring();
+			let backend = init_keyring();
 
+			assert_ne!(backend, StorageBackend::Unavailable);
 			assert!(keyring_core::get_default_store().is_some());
 			assert!(keyring_core::Entry::new("open-grind", "session").is_ok());
 		});
+	}
+
+	#[test]
+	fn the_probe_leaves_nothing_behind() {
+		with_file_store(|_| {
+			assert!(round_trips());
+			assert!(matches!(
+				entry("startup-probe").get_secret(),
+				Err(keyring_core::Error::NoEntry)
+			));
+		});
+	}
+
+	#[test]
+	fn a_store_that_cannot_round_trip_reads_as_unavailable() {
+		let _guard = lock();
+		keyring_core::unset_default_store();
+
+		assert!(!round_trips());
 	}
 
 	#[test]
