@@ -231,7 +231,7 @@ pub fn run() {
                 target_os = "linux",
                 all(target_os = "macos", not(feature = "keychain"))
             ))]
-            storage::init_file_store(app.path().app_data_dir()?);
+            storage::init_file_store(app.path().app_local_data_dir()?);
 
             storage::init_keyring();
 

@@ -1,5 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { appDataDir } from "@tauri-apps/api/path";
+import { appLocalDataDir } from "@tauri-apps/api/path";
 import {
 	BaseDirectory,
 	exists,
@@ -19,18 +19,18 @@ import {
 
 export async function existsAppDataFile(path: string) {
 	if (!isTauri()) return existsWebAppDataFile(path);
-	return await exists(path, { baseDir: BaseDirectory.AppData });
+	return await exists(path, { baseDir: BaseDirectory.AppLocalData });
 }
 
 export async function readAppDataFile(path: string) {
 	if (!isTauri()) return readWebAppDataFile(path);
-	return await readFile(path, { baseDir: BaseDirectory.AppData });
+	return await readFile(path, { baseDir: BaseDirectory.AppLocalData });
 }
 
 export async function removeAppDataFile(path: string) {
 	if (!isTauri()) return removeWebAppDataFile(path);
 	if (!(await existsAppDataFile(path))) return;
-	await remove(path, { baseDir: BaseDirectory.AppData });
+	await remove(path, { baseDir: BaseDirectory.AppLocalData });
 }
 
 export async function writeAppDataFileAtomic({
@@ -41,11 +41,11 @@ export async function writeAppDataFileAtomic({
 	content: Uint8Array;
 }) {
 	if (!isTauri()) return writeWebAppDataFile({ path, content });
-	await mkdir(await appDataDir(), { recursive: true });
+	await mkdir(await appLocalDataDir(), { recursive: true });
 	const tempPath = `${path}.tmp`;
-	await writeFile(tempPath, content, { baseDir: BaseDirectory.AppData });
+	await writeFile(tempPath, content, { baseDir: BaseDirectory.AppLocalData });
 	await rename(tempPath, path, {
-		oldPathBaseDir: BaseDirectory.AppData,
-		newPathBaseDir: BaseDirectory.AppData,
+		oldPathBaseDir: BaseDirectory.AppLocalData,
+		newPathBaseDir: BaseDirectory.AppLocalData,
 	});
 }

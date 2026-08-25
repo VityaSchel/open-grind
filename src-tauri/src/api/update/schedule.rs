@@ -56,7 +56,7 @@ fn next_due_from(now: u64) -> u64 {
 fn path(app: &AppHandle) -> Result<PathBuf, UpdateError> {
 	let dir = app
 		.path()
-		.app_data_dir()
+		.app_local_data_dir()
 		.map_err(|e| UpdateError::Storage(e.to_string()))?;
 	fs::create_dir_all(&dir)?;
 	Ok(dir.join(LEDGER_FILE))

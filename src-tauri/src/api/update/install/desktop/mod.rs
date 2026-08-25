@@ -120,7 +120,7 @@ pub fn enclosing_bundle(exe: &Path) -> Option<PathBuf> {
 fn marker(app: &AppHandle) -> Result<PathBuf, UpdateError> {
 	let dir = app
 		.path()
-		.app_data_dir()
+		.app_local_data_dir()
 		.map_err(|e| UpdateError::Storage(e.to_string()))?;
 	fs::create_dir_all(&dir)?;
 	Ok(dir.join(INSTALLED_MARKER))

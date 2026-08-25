@@ -12,7 +12,7 @@
 			"identifier": "fs:allow-exists",
 			"allow": [
 				{
-					"path": "$APPDATA/preferences.data"
+					"path": "$APPLOCALDATA/preferences.data"
 				}
 			]
 		},
@@ -20,12 +20,12 @@
 			"identifier": "fs:allow-read-file",
 			"allow": [
 				{
-					"path": "$APPDATA/preferences.data"
+					"path": "$APPLOCALDATA/preferences.data"
 				}
 			],
 			"deny": [
 				{
-					"path": "$APPDATA/credentials/**"
+					"path": "$APPLOCALDATA/credentials/**"
 				}
 			]
 		},
@@ -33,10 +33,10 @@
 			"identifier": "fs:allow-write-file",
 			"allow": [
 				{
-					"path": "$APPDATA/preferences.data"
+					"path": "$APPLOCALDATA/preferences.data"
 				},
 				{
-					"path": "$APPDATA/preferences.data.tmp"
+					"path": "$APPLOCALDATA/preferences.data.tmp"
 				}
 			]
 		},
@@ -44,10 +44,18 @@
 			"identifier": "fs:allow-rename",
 			"allow": [
 				{
-					"path": "$APPDATA/preferences.data"
+					"path": "$APPLOCALDATA/preferences.data"
 				},
 				{
-					"path": "$APPDATA/preferences.data.tmp"
+					"path": "$APPLOCALDATA/preferences.data.tmp"
+				}
+			]
+		},
+		{
+			"identifier": "fs:allow-remove",
+			"allow": [
+				{
+					"path": "$APPLOCALDATA/preferences.data"
 				}
 			]
 		},
@@ -55,7 +63,7 @@
 			"identifier": "fs:allow-mkdir",
 			"allow": [
 				{
-					"path": "$APPDATA"
+					"path": "$APPLOCALDATA"
 				}
 			]
 		},
