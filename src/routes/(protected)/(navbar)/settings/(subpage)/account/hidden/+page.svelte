@@ -22,6 +22,7 @@
 {/snippet}
 
 <ProfileList
+	eager
 	loadIds={async () =>
 		(await getHiddenUsers()).map(({ profileId }) => profileId)}
 	setOn={({ profileId, on }) =>
