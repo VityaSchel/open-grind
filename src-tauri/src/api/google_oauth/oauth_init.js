@@ -227,6 +227,17 @@
 	if (location.origin === GOOGLE_ORIGIN) {
 		captureTokenFromGoogleRelay();
 	} else if (location.origin === HELPER_ORIGIN) {
-		startGoogleSignIn();
+		if (document.documentElement) {
+			startGoogleSignIn();
+		} else {
+			// WebView2 runs this before the document is parsed, WebKit after
+			// <html> exists: https://learn.microsoft.com/en-us/microsoft-edge/webview2/reference/win32/icorewebview2#addscripttoexecuteondocumentcreated
+			const observer = new MutationObserver(() => {
+				if (!document.documentElement) return;
+				observer.disconnect();
+				startGoogleSignIn();
+			});
+			observer.observe(document, { childList: true });
+		}
 	}
 }

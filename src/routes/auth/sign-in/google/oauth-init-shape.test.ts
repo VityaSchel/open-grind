@@ -25,6 +25,27 @@ describe("google oauth init script", () => {
 		expect((init as (config: unknown) => void).length).toBe(1);
 	});
 
+	it("waits for the document element before mounting the overlay", async () => {
+		const html = document.documentElement;
+		// eslint-disable-next-line @typescript-eslint/no-implied-eval
+		const run = new Function(
+			"location",
+			buildScript({ css: "body{}", nonce: "abc123" }),
+		);
+		document.removeChild(html);
+		try {
+			run({ origin: "https://web.grindr.com" });
+			expect(document.documentElement).toBeNull();
+			document.appendChild(html);
+			await new Promise((resolve) => setTimeout(resolve));
+			expect(html.classList.contains("grindr-oauth-active")).toBe(true);
+		} finally {
+			if (!document.documentElement) document.appendChild(html);
+			html.classList.remove("grindr-oauth-active");
+			html.querySelector(".grindr-oauth-overlay")?.remove();
+		}
+	});
+
 	it("never reads the nonce or stylesheet off window", () => {
 		const source = read(INIT);
 		expect(source).not.toContain("window.__grindrOauthCss");
