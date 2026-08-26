@@ -425,6 +425,7 @@ a {
 	}
 	.glass-media-controls-subdued {
 		backdrop-filter: blur(24px);
+		background-color: rgba(0, 0, 0, 0.2);
 		box-shadow:
 			inset 3px 1px 5px rgba(255, 255, 255, 0.05),
 			inset 2px -1px 3px rgba(255, 255, 255, 0.2),
