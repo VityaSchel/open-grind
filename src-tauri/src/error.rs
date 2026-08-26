@@ -37,6 +37,7 @@ impl From<grindr::BanInfo> for BanInfo {
 #[serde(tag = "kind", content = "message")]
 pub enum AppError {
 	Http(String),
+	Connect(String),
 	Auth(String),
 	Media(String),
 	NotLoggedIn,
@@ -54,6 +55,7 @@ impl fmt::Display for AppError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			AppError::Http(msg) => write!(f, "HTTP error: {msg}"),
+			AppError::Connect(msg) => write!(f, "Could not connect: {msg}"),
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
 			AppError::Media(msg) => write!(f, "Media error: {msg}"),
 			AppError::NotLoggedIn => write!(f, "Not logged in"),
@@ -89,6 +91,7 @@ impl From<grindr::GrindrError> for AppError {
 	fn from(e: grindr::GrindrError) -> Self {
 		match e {
 			grindr::GrindrError::Http(msg) => AppError::Http(msg),
+			grindr::GrindrError::Connect(msg) => AppError::Connect(msg),
 			grindr::GrindrError::Auth(msg) => AppError::Auth(msg),
 			grindr::GrindrError::Api { code, message } => {
 				AppError::Api { code, message }
@@ -139,6 +142,15 @@ mod tests {
 		assert_eq!(json["message"]["code"], 27);
 		assert_eq!(json["message"]["subReason"], "DRUG_SALES");
 		assert_eq!(json["message"]["automated"], true);
+	}
+
+	#[test]
+	fn connection_failures_keep_their_own_kind() {
+		let app =
+			AppError::from(grindr::GrindrError::Connect("refused".into()));
+		let json = serde_json::to_value(&app).unwrap();
+		assert_eq!(json["kind"], "Connect");
+		assert_eq!(json["message"], "refused");
 	}
 
 	#[tokio::test]

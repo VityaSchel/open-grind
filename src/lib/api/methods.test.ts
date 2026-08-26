@@ -29,6 +29,18 @@ function asBackendMessage(body: string): string {
 }
 
 describe("asAppError", () => {
+	it("replaces transport detail of a connection failure with plain copy", () => {
+		const appError = asAppError({
+			kind: "Connect",
+			message:
+				"error sending request for url (https://grindr.mobi/v4/cascade): client error (Connect)",
+		});
+		expect(appError?.prettyMessage).toBe(
+			"Couldn't connect to Grindr. Check your internet connection and try again.",
+		);
+		expect(appError?.message).toContain("client error (Connect)");
+	});
+
 	it("formats string messages from structured app errors", () => {
 		expect(
 			asAppError({ kind: "Auth", message: "Sign-in canceled" }),
