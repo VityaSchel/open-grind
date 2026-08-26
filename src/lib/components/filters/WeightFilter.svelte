@@ -26,7 +26,7 @@
 		endLabel={`${min === WEIGHT_KG_MIN ? "No min" : formatWeightKg(min, units)} - ${
 			max === WEIGHT_KG_MAX ? "No max" : formatWeightKg(max, units)
 		}`}
-		contentClass="ps-7 h-5"
+		contentClass="ps-7 h-6"
 	>
 		<Slider
 			type="multiple"

@@ -26,7 +26,7 @@
 		endLabel={`${min === HEIGHT_CM_MIN ? "No min" : formatHeight(min, units)} - ${
 			max === HEIGHT_CM_MAX ? "No max" : formatHeight(max, units)
 		}`}
-		contentClass="ps-7 h-5"
+		contentClass="ps-7 h-6"
 	>
 		<Slider
 			type="multiple"
