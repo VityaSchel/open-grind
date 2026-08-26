@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use semver::Version;
@@ -79,8 +80,12 @@ pub(super) fn write_durably(
 	bytes: &[u8],
 ) -> Result<(), UpdateError> {
 	let temp = path.with_extension("json.tmp");
-	fs::write(&temp, bytes)?;
-	fs::File::open(&temp)?.sync_data()?;
+	// FlushFileBuffers refuses read-only handles:
+	// https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-flushfilebuffers
+	let mut file = fs::File::create(&temp)?;
+	file.write_all(bytes)?;
+	file.sync_data()?;
+	drop(file);
 	fs::rename(&temp, path)?;
 	Ok(())
 }
@@ -247,6 +252,15 @@ mod tests {
 			assert!(stage(Path::new("/tmp"), tag).is_err());
 		}
 		assert!(tag_is_safe("v0.1.0-beta.3"));
+	}
+
+	#[test]
+	fn write_durably_replaces_the_file_and_leaves_no_temp_behind() {
+		let path = temp_root().join("ledger.json");
+		write_durably(&path, b"first").unwrap();
+		write_durably(&path, b"second").unwrap();
+		assert_eq!(fs::read(&path).unwrap(), b"second");
+		assert!(!path.with_extension("json.tmp").exists());
 	}
 
 	#[test]
