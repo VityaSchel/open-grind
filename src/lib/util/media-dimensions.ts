@@ -50,6 +50,8 @@ export async function measureVideo(url: string): Promise<MediaDimensions> {
 		});
 		return { width: video.videoWidth, height: video.videoHeight };
 	} finally {
+		video.removeAttribute("src");
+		video.load();
 		video.remove();
 	}
 }

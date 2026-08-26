@@ -86,17 +86,21 @@
 				...album,
 				content: await Promise.all(
 					album.content.map(async (slide) => {
-						const isVideo = slide.contentType.startsWith("video/");
-						const url = proxyMediaUrl(slide.url, {
-							as: isVideo ? "video" : "image",
-						});
+						const kind = slide.contentType.startsWith("video/")
+							? "video"
+							: "image";
+						const url = proxyMediaUrl(slide.url, { as: kind });
+						const coverUrl = proxyMediaUrl(slide.coverUrl);
+						const measurable = { video: coverUrl, image: url }[
+							kind
+						];
 						return {
 							...slide,
 							url,
-							coverUrl: proxyMediaUrl(slide.coverUrl),
-							...(isVideo
+							coverUrl,
+							...(measurable === null
 								? await measureVideo(url)
-								: await measureImage(url)),
+								: await measureImage(measurable)),
 						};
 					}),
 				),

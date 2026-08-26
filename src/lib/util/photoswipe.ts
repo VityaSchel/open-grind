@@ -82,10 +82,16 @@ export function applyPhotoSwipeVideo(
 					...video,
 					onready: () => content.onLoaded(),
 					onfail: () => content.onError(),
-					autoplay: true,
 				},
 			}),
 		);
+	});
+
+	lightbox.on("contentActivate", ({ content }) => {
+		content.element
+			?.querySelector("video")
+			?.play()
+			.catch(() => {});
 	});
 
 	lightbox.on("contentDeactivate", ({ content }) => {
