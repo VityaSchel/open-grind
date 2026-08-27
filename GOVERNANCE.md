@@ -18,18 +18,21 @@ Community guidelines are defined in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md). 
 | Username                                                                  | Links                                                                                                                                                                                                                                |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [@hloth](https://git.opengrind.org/hloth) — **decision making authority** | [Donate](https://hloth.dev/donate)<br />Contact (secure E2EE, preferred): [@hloth:hloth.dev in Matrix](https://matrix.to/#/@hloth:hloth.dev)<br />Contact (urgent, less secure): [admin@opengrind.org](mailto://admin@opengrind.org) |
-|                                                                           |                                                                                                                                                                                                                                      |
 
 ## Contributors
 
 Listed in order of their contributions' value[^1]:
 
-| Username                                                     | Links |
-| ------------------------------------------------------------ | ----- |
-| [@SCX (aka Martin Georgiev)](https://git.opengrind.org/SCX)  |       |
-| [@imaoreo (aka kezza2k7)](https://git.opengrind.org/imaoreo) |       |
-| [@sealad886](https://git.opengrind.org/sealad886)            |       |
-| [@Meowl_Lover](https://git.opengrind.org/Meowl_Lover)        |       |
+| Username                                                        | Links |
+| --------------------------------------------------------------- | ----- |
+| [@SCX (aka Martin Georgiev)](https://git.opengrind.org/SCX)     |       |
+| [@KinkyMonk](https://git.opengrind.org/KinkyMonk)               |       |
+| [@imaoreo (aka kezza2k7)](https://git.opengrind.org/imaoreo)    |       |
+| [@sealad886](https://git.opengrind.org/sealad886)               |       |
+| [@Meowl_Lover](https://git.opengrind.org/Meowl_Lover)           |       |
+| [@desumax](https://git.opengrind.org/desumax)                   |       |
+| [@TheFantasticLoki](https://git.opengrind.org/TheFantasticLoki) |       |
+| [@cbcouxgsi](https://git.opengrind.org/cbcouxgsi)               |       |
 
 ## Communication Channels
 
