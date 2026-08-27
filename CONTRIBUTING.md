@@ -8,6 +8,7 @@ Thanks for considering contributing to Open Grind.
         - [Development environment](#development-environment)
         - [Project structure](#project-structure)
         - [Interacting with API](#interacting-with-api)
+        - [Develop with Nix](#develop-with-nix)
     - [Architecture](#architecture)
         - [Where state lives](#where-state-lives)
         - [Function parameters](#function-parameters)
@@ -17,6 +18,7 @@ Thanks for considering contributing to Open Grind.
         - [Checks and tests](#checks-and-tests)
         - [Sending your changes as a PR](#sending-your-changes-as-a-pr)
         - [Inclusion in GOVERNANCE.md](#inclusion-in-governancemd)
+    - [Reproducibility](#reproducibility)
 
 ## Contribution guidelines
 
@@ -110,6 +112,22 @@ process.stdout.write("Grindr3 " + (await req.json().then((t) => t.sessionId)));
 ```
 
 </details>
+
+### Develop with Nix
+
+Linux:
+
+```bash
+nix develop .#linux
+bun run tauri dev
+```
+
+Other platforms:
+
+```bash
+nix develop
+bun run tauri dev
+```
 
 ## Architecture
 
@@ -233,3 +251,22 @@ Both variables are read only under `debug_assertions` ([dev.rs](./src-tauri/src/
 **Action:** Please write a message to [#dev:opengrind.org](https://element.hloth.dev/#/room/#dev:opengrind.org) Matrix chat room requesting inclusion into GOVERNANCE.md. Once accepted, your git.opengrind.org username appears in the list, usually the position is determined by the amount of code you have contributed.
 
 **Links:** You need to add a donation link after that to GOVERNANCE.md yourself by opening a PR, the commit must be signed with the same key and identity you have used for commits in your previous PRs.
+
+## Reproducibility
+
+Consult [docs/content/reproducibility.md](./docs/content/reproducibility.md) for full details on how to reproduce builds and verify them.
+
+Refreshing the lock:
+
+```bash
+nix flake update
+```
+
+`src-tauri/Cargo.lock` and `bun.lock` are reproducibility pins. Use lockfile-respecting commands for day-to-day work:
+
+```bash
+cargo build
+bun ci
+```
+
+Never run `cargo update` or `bun update` without intentionally bumping dependencies and reviewing the diff.
