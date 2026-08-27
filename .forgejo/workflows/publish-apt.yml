@@ -1,0 +1,65 @@
+name: publish-apt
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish
+        required: true
+
+concurrency:
+  group: open-grind-publish-apt
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ["verify", "hetzner"]
+    timeout-minutes: 20
+    env:
+      TAG: ${{ forgejo.event.inputs.tag || forgejo.event.release.tag_name }}
+      API: ${{ forgejo.server_url }}/api/v1/repos/${{ forgejo.repository }}
+      REGISTRY: ${{ forgejo.server_url }}/api/packages/open-grind/debian
+      PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
+    steps:
+      - name: Check the token
+        run: |
+          test -n "$PACKAGES_TOKEN" || {
+            echo "PACKAGES_TOKEN is unset; create a token with write:package scope" >&2
+            exit 1
+          }
+      - name: Fetch the release
+        run: |
+          curl -fsSL "$API/releases/tags/$TAG" -o release.json
+          jq -r '.prerelease' release.json > prerelease
+          jq -r '.assets[].browser_download_url' release.json > assets
+          grep -E '\.deb$' assets > debs || {
+            echo "release $TAG publishes no .deb" >&2
+            exit 1
+          }
+      - name: Download and verify
+        run: |
+          key=$(curl -fsSL "$API/raw/KEYS.md" \
+            | tr -d '\r' | awk '/^RW/ && length($0) == 56 { print; exit }')
+          test -n "$key" || { echo "KEYS.md publishes no minisign key" >&2; exit 1; }
+          while read -r url; do
+            deb=$(basename "$url")
+            curl -fsSL "$url" -o "$deb"
+            curl -fsSL "$url.minisig" -o "$deb.minisig"
+            minisign -Vm "$deb" -P "$key"
+          done < debs
+      - name: Upload to the Debian registry
+        run: |
+          case "$(cat prerelease)" in
+            true) suite=beta ;;
+            *) suite=stable ;;
+          esac
+          while read -r url; do
+            deb=$(basename "$url")
+            curl -fsS --fail-with-body \
+              -H "Authorization: token $PACKAGES_TOKEN" \
+              --upload-file "$deb" \
+              "$REGISTRY/pool/$suite/main/upload"
+            echo "published $deb to $suite/main"
+          done < debs
