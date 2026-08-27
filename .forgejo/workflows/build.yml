@@ -4,10 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       providers:
-        description: builders to compare
+        description: x86_64 builders to compare
         type: choice
         default: all
         options: [all, cherry, vultr, hetzner]
+      arm_providers:
+        description: arm64 builders to compare
+        type: choice
+        default: all
+        options: [all, hetzner, scaleway, gcore]
       allow_dev:
         description: allow a -dev version (test build, never release the artifact)
         type: boolean
@@ -21,6 +26,9 @@ env:
   BOXES: >-
     ${{ inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
     || format('["{0}"]', inputs.providers) }}
+  ARM_BOXES: >-
+    ${{ inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
+    || format('["{0}"]', inputs.arm_providers) }}
 
 jobs:
   build:
@@ -135,8 +143,109 @@ jobs:
           path: out/
           retention-days: 1
 
+  build-linux-arm64:
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: >-
+          ${{ fromJson(inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
+          || format('["{0}"]', inputs.arm_providers)) }}
+    runs-on: ["build-arm64", "${{ matrix.provider }}"]
+    timeout-minutes: 60
+    env:
+      BUILD_ROOT: /work-linux
+      TZ: UTC
+      LC_ALL: C
+    steps:
+      - name: Checkout
+        run: |
+          : "${BUILD_ROOT:?}"
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cd "$BUILD_ROOT"
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
+      - name: Check the version
+        env:
+          ALLOW_DEV: ${{ inputs.allow_dev }}
+        run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
+      - name: Set up the build environment
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+      - name: Build
+        run: |
+          cd "${BUILD_ROOT:?}"
+          podman build -t open-grind-linux ci/linux
+          podman run --rm -v "$BUILD_ROOT:/work" open-grind-linux sh ci/linux/build.sh
+      - name: Collect .deb
+        run: |
+          : "${BUILD_ROOT:?}"
+          deb=("$BUILD_ROOT"/src-tauri/target/release/bundle/deb/*.deb)
+          [ ${#deb[@]} -eq 1 ]
+          mkdir -p out
+          cp "${deb[0]}" out/
+      - name: Upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned-linux-arm64-${{ matrix.provider }}
+          path: out/
+          retention-days: 1
+
+  build-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: >-
+          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.providers)) }}
+    runs-on: ["build", "${{ matrix.provider }}"]
+    timeout-minutes: 90
+    env:
+      BUILD_ROOT: /work-windows
+      HOME: /root
+      CARGO_HOME: /root/.cargo
+      TZ: UTC
+      LC_ALL: C
+    steps:
+      - name: Checkout
+        run: |
+          : "${BUILD_ROOT:?}"
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cd "$BUILD_ROOT"
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
+      - name: Check the version
+        env:
+          ALLOW_DEV: ${{ inputs.allow_dev }}
+        run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
+      - name: Set up the build environment
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+      - name: Build
+        run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh
+      - name: Collect installers
+        run: |
+          : "${BUILD_ROOT:?}"
+          exe=("$BUILD_ROOT"/src-tauri/target/*-pc-windows-msvc/release/bundle/nsis/open-grind-v*.exe)
+          [ ${#exe[@]} -eq 2 ]
+          mkdir -p out
+          cp "${exe[@]}" out/
+      - name: Upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned-windows-${{ matrix.provider }}
+          path: out/
+          retention-days: 1
+
   verify:
-    needs: [build, build-linux]
+    needs: [build, build-linux, build-linux-arm64, build-windows]
     runs-on: ["verify", "hetzner"]
     timeout-minutes: 10
     steps:

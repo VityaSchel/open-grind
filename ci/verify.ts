@@ -1,33 +1,55 @@
 #!/usr/bin/env bun
-import { basename, extname, join } from "node:path";
+import { join } from "node:path";
 
 const [downloads, out] = process.argv.slice(2);
-const expected = JSON.parse(process.env.BOXES ?? "[]") as string[];
-if (!downloads || !out || expected.length === 0) {
+
+// Longest prefix first: an arm64 upload directory also starts with the generic one.
+const FLEETS = [
+	{
+		prefix: "open-grind-unsigned-linux-arm64-",
+		boxes: JSON.parse(process.env.ARM_BOXES ?? "[]") as string[],
+	},
+	{
+		prefix: "open-grind-unsigned-",
+		boxes: JSON.parse(process.env.BOXES ?? "[]") as string[],
+	},
+];
+
+if (!downloads || !out || FLEETS.some(({ boxes }) => boxes.length === 0)) {
 	console.error(
-		"usage: BOXES=<json array> verify.ts <downloads dir> <output dir>",
+		"usage: BOXES=<json array> ARM_BOXES=<json array> verify.ts <downloads dir> <output dir>",
 	);
 	process.exit(2);
 }
 
-const byKind = new Map<string, string[]>();
-for await (const path of new Bun.Glob("open-grind-unsigned-*/*.{apk,deb}").scan(
-	{ cwd: downloads, absolute: true },
-)) {
-	const kind = extname(path);
-	byKind.set(kind, [...(byKind.get(kind) ?? []), path]);
+const byName = new Map<string, { paths: string[]; expected: number }>();
+for await (const entry of new Bun.Glob(
+	"open-grind-unsigned-*/*.{apk,deb,exe}",
+).scan({ cwd: downloads })) {
+	const [dir = "", name = ""] = entry.split("/");
+	const fleet = FLEETS.find(({ prefix }) => dir.startsWith(prefix));
+	if (!fleet) {
+		console.error(`no fleet owns ${dir}`);
+		process.exit(1);
+	}
+	const group = byName.get(name) ?? {
+		paths: [],
+		expected: fleet.boxes.length,
+	};
+	group.paths.push(join(downloads, entry));
+	byName.set(name, group);
 }
-if (byKind.size === 0) {
+if (byName.size === 0) {
 	console.error(`no artifacts under ${downloads}`);
 	process.exit(1);
 }
 
-for (const [kind, paths] of byKind) {
+for (const [name, { paths, expected }] of byName) {
 	paths.sort();
 	const [first] = paths;
-	if (!first || paths.length !== expected.length) {
+	if (!first || paths.length !== expected) {
 		console.error(
-			`expected ${expected.length} ${kind} files, got ${paths.length}`,
+			`expected ${expected} copies of ${name}, got ${paths.length}`,
 		);
 		process.exit(1);
 	}
@@ -43,9 +65,9 @@ for (const [kind, paths] of byKind) {
 	);
 
 	if (new Set(digests).size !== 1) {
-		console.error(`${kind} files are not byte-identical`);
+		console.error(`copies of ${name} are not byte-identical`);
 		process.exit(1);
 	}
 
-	await Bun.write(join(out, basename(first)), Bun.file(first));
+	await Bun.write(join(out, name), Bun.file(first));
 }
