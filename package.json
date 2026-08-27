@@ -21,7 +21,6 @@
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
 		"package:macos": "bun scripts/package-macos.ts",
-		"verify:macos": "bun scripts/verify-macos.ts",
 		"lint": "svelte-kit sync && eslint --concurrency=2 .",
 		"preview": "vite preview",
 		"sync-config": "opengrind-config sync",
