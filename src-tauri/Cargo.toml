@@ -91,6 +91,5 @@ strip = "symbols"
 
 # See https://github.com/tauri-apps/tauri/pull/15777
 [patch.crates-io]
-grindr = { path = "../../grindr.rs" }
 tauri-codegen = { path = ".patched/tauri-codegen" }
 http2 = { path = ".patched/http2" }
