@@ -254,7 +254,7 @@ Both variables are read only under `debug_assertions` ([dev.rs](./src-tauri/src/
 
 ## Reproducibility
 
-Consult [docs/content/reproducibility.md](./docs/content/reproducibility.md) for full details on how to reproduce builds and verify them.
+Consult [REPRODUCIBILITY.md](./REPRODUCIBILITY.md) for full details on how to reproduce builds and verify them.
 
 Refreshing the lock:
 

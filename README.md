@@ -16,7 +16,7 @@ Never install Open Grind from sources not listed above.
 
 All releases are signed. [Learn more](./KEYS.md) about releases signatures.
 
-Open Grind supports reproducible builds. Read more in [REPRODUCIBILITY.md](./REPRODUCIBILITY.md#verifying-a-published-release).
+Open Grind supports reproducible builds. Read more in [REPRODUCIBILITY.md](./REPRODUCIBILITY.md).
 
 ## Development
 

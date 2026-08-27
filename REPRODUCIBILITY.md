@@ -1,6 +1,6 @@
 # Open Grind Reproducibility
 
-Reproducibility verifies that a released artifact was built from a given source code snapshot. This is stronger than a simple artifact signature check, because it means you trust the code rather than whoever built it. Reproducibility verification requires [building](./BUILDING.md) the artifact in a deterministic way with pinned toolchain on a canonical OS and CPU arch. This means, you must pull ~30 GB of environment, allocate ~12 GB of RAM and run the build which takes up to 4 hours. If you trust Open Grind developers, simply [verify the signature](./BUILDING.md#verifying-minisign-signature) instead.
+Reproducibility verifies that a released artifact was built from a given source code snapshot. This is stronger than a simple artifact signature check, because it means you trust the code rather than whoever built it. Reproducibility verification requires [building](./BUILDING.md) the artifact in a deterministic way with pinned toolchain on a canonical OS and CPU arch. This means, you must pull ~30 GB of environment, allocate ~12 GB of RAM and run the build which takes up to 4 hours. If you trust Open Grind developers, simply [verify the signature](./BUILDING.md#verify-minisign-signature) instead.
 
 - [Open Grind Reproducibility](#open-grind-reproducibility)
     - [Trusting the build environment](#trusting-the-build-environment)

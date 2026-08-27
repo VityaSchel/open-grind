@@ -29,7 +29,7 @@ Pick your platform, then a method within it. Everything below the platform secti
 
 ### Build apk with Nix in Docker (easiest)
 
-This method does not require installing Nix to your machine, but requires more disk space. It essentially automates [native Nix build method](#build-with-nix-builds-everywhere) for you with zero setup needed.
+This method does not require installing Nix to your machine, but requires more disk space. It essentially automates [native Nix build method](#build-apk-with-nix-only-faster) for you with zero setup needed.
 
 > [!IMPORTANT]
 > **The image is pinned to `linux/amd64`.** The Android NDK ships only an x86_64 host cross-compiler — also the canonical reproducible target — so the build always runs in an `x86_64-linux` environment.
@@ -46,7 +46,7 @@ Prerequisites:
 2. Build the thin image: `docker compose build`
 3. Build the apk: `docker compose run --rm build`
 4. Retrieve the apk from `src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<version>-android-unsigned.apk` on your host system
-5. Follow [Signing](#signing) steps to make the build installable on your Android device
+5. Follow [Sign Android build](#sign-android-build) steps to make the build installable on your Android device
 
 To clean-up Docker after that:
 
@@ -133,7 +133,7 @@ bun /path/to/open-grind/ci/sign.ts /path/to/open-grind.apk /out/path/to/open-gri
 
 ### Verify Android release
 
-- [Verify minisign signature](#verifying-minisign-signature) to prove the APK was built by Open Grind developers
+- [Verify minisign signature](#verify-minisign-signature) to prove the APK was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#android) to prove the APK was built from the open source code
 
 ## Linux
@@ -169,7 +169,7 @@ Linux builds ship unsigned.
 
 ### Verify Linux release
 
-- [Verify minisign signature](#verifying-minisign-signature) to prove the .deb was built by Open Grind developers
+- [Verify minisign signature](#verify-minisign-signature) to prove the .deb was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#linux) to prove the .deb was built from the open source code
 
 ## Windows
@@ -196,7 +196,7 @@ Windows builds ship unsigned.
 
 ### Verify Windows release
 
-- [Verify minisign signature](#verifying-minisign-signature) to prove the .exe was built by Open Grind developers
+- [Verify minisign signature](#verify-minisign-signature) to prove the .exe was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#windows) to prove the .exe was built from the open source code
 
 ## macOS
@@ -234,7 +234,7 @@ MACOS_NOTARY_PROFILE=open-grind \
 
 ### Verify macOS release
 
-- [Verify minisign signature](#verifying-minisign-signature) to prove the .zip was built by Open Grind developers
+- [Verify minisign signature](#verify-minisign-signature) to prove the .zip was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#macos) to prove the .app was built from the open source code
 
 ## Credential storage
@@ -247,7 +247,7 @@ Two targets fall back to a file store: `credentials/` in the app data directory,
 - Linux, only when no Secret Service is reachable, such as a headless box with no D-Bus session bus.
 
 > [!IMPORTANT]
-> A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain. [`bun run package:macos`](#build-and-package) does both.
+> A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain. [`bun run package:macos`](#build-macos-app) does both.
 
 ## Reproducibility
 

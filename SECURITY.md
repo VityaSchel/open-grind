@@ -27,7 +27,7 @@ In scope:
 - Exposure of session tokens, device identity, or the media signing key, which Open Grind keeps in the platform credential store ([BUILDING.md](./BUILDING.md#credential-storage))
 - Exposure of messages, private albums, or a user's real location to another user, another app on the device, a network observer, or someone with the unlocked device in hand
 - Anything that sends user data to a third party: Open Grind ships no analytics and no trackers, and a regression there is a security bug, not a feature
-- Supply chain — signing keys, CI, dependency pinning, and anything that breaks the reproducibility of a published release ([REPRODUCIBILITY.md](./REPRODUCIBILITY.md#verifying-a-published-release), [KEYS.md](./KEYS.md)). Dependencies are checked by `bun run check:deps` — `cargo deny` for Rust advisories, licenses and unknown sources, `bun audit` for every JavaScript workspace — weekly and on every manifest change; `deny.toml` records the few advisories that are ignored and why
+- Supply chain — signing keys, CI, dependency pinning, and anything that breaks the reproducibility of a published release ([REPRODUCIBILITY.md](./REPRODUCIBILITY.md), [KEYS.md](./KEYS.md)). Dependencies are checked by `bun run check:deps` — `cargo deny` for Rust advisories, licenses and unknown sources, `bun audit` for every JavaScript workspace — weekly and on every manifest change; `deny.toml` records the few advisories that are ignored and why
 - The project's own infrastructure: git.opengrind.org, opengrind.org, and the Matrix homeserver
 
 Out of scope:
