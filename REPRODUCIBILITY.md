@@ -131,19 +131,27 @@ fi
     | macOS   | Untested | **Reproducible[^3]** |
     | Windows | Untested | Untested             |
 
-The container builds for the host architecture, so verify the `x86_64` `.deb` on an x86_64 host and the `arm64` one on arm64.
+The container builds for the host architecture, so verify the `x86_64` `.deb` on an x86_64 host and the `arm64` one on arm64. The `.deb` ships unsigned next to a detached `.minisig`, so nothing inside it varies between builds and the whole file must match byte for byte.
 
 ```bash
 # 1. Reproduce the app locally
 git checkout v<tag>
 podman build -t open-grind-linux ci/linux
 podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
-sha256sum src-tauri/target/release/bundle/deb/*.deb /path/to/open-grind-v<tag>-linux-<arch>.deb
+LOCAL="$(find src-tauri/target/release/bundle/deb -name '*.deb')"
 
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
 PUBLISHED=/path/to/open-grind-v<tag>-linux-<arch>.deb
 
-# 3. Compare...
+# 3. Confirm the content reproduces
+sha256sum "$LOCAL" "$PUBLISHED"
+
+if cmp -s "$LOCAL" "$PUBLISHED"; then
+  echo "✓ .deb matches"
+else
+  echo "✗ .deb mismatch, local build does not match the published package" >&2
+  exit 1
+fi
 ```
 
 [^2]: Different host toolchains, even within Nix environment. Builds are only reproducible with full Docker amd64 emulation.
@@ -152,7 +160,7 @@ PUBLISHED=/path/to/open-grind-v<tag>-linux-<arch>.deb
 
 ## Windows
 
-- **Canonical builder:** x86_64 Linux, `nix run .#build-windows-x64`
+- **Canonical builder:** x86_64 Linux for both architectures, `nix run .#build-windows-x64` / `.#build-windows-arm64`
 - **Official releases:** Multiple providers in `build.yml`
 - Cross-compilation table for x86_64 builds:
 
@@ -164,11 +172,13 @@ PUBLISHED=/path/to/open-grind-v<tag>-linux-<arch>.deb
 
 - Cross-compilation table for arm64 builds:
 
-    |         | x86_64   | arm64                    |
-    | ------- | -------- | ------------------------ |
-    | Linux   | Untested | _Canonical_              |
-    | macOS   | Untested | **NOT reproducible[^5]** |
-    | Windows | Untested | Untested                 |
+    |         | x86_64      | arm64                    |
+    | ------- | ----------- | ------------------------ |
+    | Linux   | _Canonical_ | Untested                 |
+    | macOS   | Untested    | **NOT reproducible[^5]** |
+    | Windows | Untested    | Untested                 |
+
+The NSIS installer ships unsigned next to a detached `.minisig`, so nothing inside it varies between builds and the whole file must match byte for byte. Build the one architecture you are verifying: `nix run` leaves tauri's own file name, and only CI renames it to the released asset name.
 
 ```bash
 # 1. Reproduce the app locally
@@ -176,16 +186,24 @@ git checkout v<tag>
 
 # x86_64:
 nix run .#build-windows-x64
-sha256sum src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe /path/to/open-grind-v<tag>-windows-x86_64.exe
+LOCAL="$(find src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis -name '*.exe')"
 
 # arm64:
 nix run .#build-windows-arm64
-sha256sum src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe /path/to/open-grind-v<tag>-windows-arm64.exe
+LOCAL="$(find src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis -name '*.exe')"
 
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
-PUBLISHED=/path/to/open-grind-v<tag>-windows-<arch>.zip
+PUBLISHED=/path/to/open-grind-v<tag>-windows-<arch>.exe
 
-# 3. Compare...
+# 3. Confirm the content reproduces
+sha256sum "$LOCAL" "$PUBLISHED"
+
+if cmp -s "$LOCAL" "$PUBLISHED"; then
+  echo "✓ installer matches"
+else
+  echo "✗ installer mismatch, local build does not match the published installer" >&2
+  exit 1
+fi
 ```
 
 [^4]: Different host toolchains, even within Nix environment. Builds are only reproducible with full Docker amd64 emulation.
