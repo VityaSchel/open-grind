@@ -18,7 +18,7 @@ in
       done
 
       bun ci
-      bun run tauri build --features keychain --bundles app,dmg
+      bun run tauri build --features keychain --bundles app
     '';
   };
 

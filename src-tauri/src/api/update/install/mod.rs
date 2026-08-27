@@ -67,7 +67,7 @@ pub fn release_asset_suffix() -> Option<String> {
 	};
 	match std::env::consts::OS {
 		"android" => Some("-android.apk".to_owned()),
-		"macos" => Some(format!("-macos-{arch}.zip")),
+		"macos" => Some("-macos.zip".to_owned()),
 		"windows" => Some(format!("-windows-{arch}.exe")),
 		_ => None,
 	}

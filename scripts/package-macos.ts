@@ -1,6 +1,7 @@
 import { $ } from "bun";
 
 import { hostAssetSuffix } from "./lib/asset-suffix";
+import { MACOS_TARGET, macosBundle } from "./lib/macos-bundle";
 import { only } from "./lib/only";
 
 const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
@@ -8,7 +9,7 @@ const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
 	"",
 );
 const profile = Bun.argv.includes("--debug") ? "debug" : "release";
-const bundles = `${root}/src-tauri/target/${profile}/bundle`;
+const bundles = macosBundle(root, profile);
 const out = `${root}/src-tauri/target/${profile}/artifacts`;
 const entitlements = `${root}/src-tauri/entitlements.plist`;
 
@@ -25,14 +26,14 @@ if (notaryProfile && adHoc) {
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
 const zip = `${out}/open-grind-v${version}${hostAssetSuffix()}`;
 
-await $`bun run tauri build ${profile === "debug" ? ["--debug"] : []} --features keychain --bundles app`.cwd(
+await $`bun run tauri build ${profile === "debug" ? ["--debug"] : []} --features keychain --target ${MACOS_TARGET} --bundles app`.cwd(
 	root,
 );
 
 await $`rm -rf ${out}`;
 await $`mkdir -p ${out}`;
 
-const app = await only("*.app", `${bundles}/macos`);
+const app = await only("*.app", bundles);
 const timestamped = adHoc ? [] : ["--timestamp"];
 const entitled = (await Bun.file(entitlements).exists())
 	? ["--entitlements", entitlements]
