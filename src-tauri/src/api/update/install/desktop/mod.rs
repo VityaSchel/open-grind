@@ -1,7 +1,9 @@
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 mod binary;
 #[cfg(target_os = "macos")]
 mod bundle;
+#[cfg(target_os = "windows")]
+mod installer;
 #[cfg(target_os = "macos")]
 mod location;
 
@@ -47,11 +49,13 @@ pub async fn install(
 ) -> Result<(), UpdateError> {
 	#[cfg(target_os = "macos")]
 	bundle::install(payload)?;
-	#[cfg(not(target_os = "macos"))]
+	#[cfg(target_os = "windows")]
+	installer::install(payload)?;
+	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 	binary::install(payload)?;
 
 	if let Ok(marker) = marker(app) {
-		let _ = fs::write(marker, []);
+		let _ = fs::write(marker, app.package_info().version.to_string());
 	}
 
 	#[cfg(target_os = "macos")]
@@ -60,7 +64,12 @@ pub async fn install(
 		app.exit(0);
 		Ok(())
 	}
-	#[cfg(not(target_os = "macos"))]
+	// The installer kills this process, replaces it and relaunches it itself.
+	#[cfg(target_os = "windows")]
+	{
+		Ok(())
+	}
+	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 	app.restart()
 }
 
@@ -80,7 +89,7 @@ pub fn open_install_permission_settings(
 }
 
 pub fn sweep_replaced() {
-	#[cfg(not(target_os = "macos"))]
+	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 	binary::sweep_replaced();
 }
 
@@ -91,13 +100,25 @@ pub fn enforce_home() {
 
 pub fn take_outcome(app: &AppHandle) -> Option<Outcome> {
 	let marker = marker(app).ok()?;
+	let replaced = fs::read_to_string(&marker).unwrap_or_default();
 	fs::remove_file(marker).ok()?;
-	Some(Outcome {
-		succeeded: true,
+	Some(outcome_of(
+		replaced.trim(),
+		&app.package_info().version.to_string(),
+	))
+}
+
+// The installer runs after this process is gone, so the only evidence it worked
+// is that the version it was asked to replace is no longer the one running.
+fn outcome_of(replaced: &str, current: &str) -> Outcome {
+	let succeeded = replaced != current;
+	Outcome {
+		succeeded,
 		canceled: false,
 		code: None,
-		message: None,
-	})
+		message: (!succeeded)
+			.then(|| format!("still running {current} after the install")),
+	}
 }
 
 fn installable() -> bool {
@@ -152,6 +173,13 @@ mod tests {
 			Path::new("/Applications/Open Grind.app")
 		);
 		assert!(enclosing_bundle(Path::new("/usr/local/bin/og")).is_none());
+	}
+
+	#[test]
+	fn an_unchanged_version_after_the_install_is_a_failure() {
+		assert!(outcome_of("0.1.0", "0.2.0").succeeded);
+		assert!(!outcome_of("0.2.0", "0.2.0").succeeded);
+		assert!(outcome_of("", "0.2.0").succeeded);
 	}
 
 	#[test]
