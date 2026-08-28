@@ -114,7 +114,7 @@ jobs:
           ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
           || format('["{0}"]', inputs.providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
-    timeout-minutes: 45
+    timeout-minutes: 30
     env:
       BUILD_ROOT: /work-linux
       TZ: UTC
@@ -168,7 +168,7 @@ jobs:
           ${{ fromJson(inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
           || format('["{0}"]', inputs.arm_providers)) }}
     runs-on: ["build-arm64", "${{ matrix.provider }}"]
-    timeout-minutes: 60
+    timeout-minutes: 40
     env:
       BUILD_ROOT: /work-linux
       TZ: UTC
@@ -222,7 +222,7 @@ jobs:
           ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
           || format('["{0}"]', inputs.providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
-    timeout-minutes: 60
+    timeout-minutes: 25
     env:
       BUILD_ROOT: /work-windows
       HOME: /root
@@ -275,7 +275,7 @@ jobs:
           ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
           || format('["{0}"]', inputs.providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
-    timeout-minutes: 60
+    timeout-minutes: 25
     env:
       BUILD_ROOT: /work-windows
       HOME: /root
