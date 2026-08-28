@@ -56,13 +56,13 @@ Every input that affects the output bytes is pinned in exactly one place:
 
 - **Canonical builder:** Linux x86_64; `nix run .#build-android`
 - **Official releases:** multiple providers in `build.yml` CI and F-Droid
-- Cross-compilation table:
+- Cross-compilation table **for Android builds**:
 
-    |         | x86_64      | arm64                    |
-    | ------- | ----------- | ------------------------ |
-    | Linux   | _Canonical_ | Untested                 |
-    | macOS   | Untested    | **NOT reproducible[^1]** |
-    | Windows | Untested    | Untested                 |
+    |            | On x86_64   | On arm64                 |
+    | ---------- | ----------- | ------------------------ |
+    | On Linux   | _Canonical_ | Untested                 |
+    | On macOS   | Untested    | **NOT reproducible[^1]** |
+    | On Windows | Untested    | Untested                 |
 
 - Pinned inputs:
 
@@ -115,21 +115,21 @@ fi
 
 - **Canonical builder:** x86_64 Linux for x86_64 builds, arm64 Linux for arm64 builds; Debian 12 container; Docker/Podman
 - **Official releases:** Multiple providers in `build.yml`, [ci/linux](ci/linux)
-- Cross-compilation table for x86_64 builds:
+- Cross-compilation table **for Linux x86_64 builds**:
 
-    |         | x86_64      | arm64                    |
-    | ------- | ----------- | ------------------------ |
-    | Linux   | _Canonical_ | Untested                 |
-    | macOS   | Untested    | **NOT reproducible[^2]** |
-    | Windows | Untested    | Untested                 |
+    |            | On x86_64   | On arm64                 |
+    | ---------- | ----------- | ------------------------ |
+    | On Linux   | _Canonical_ | Untested                 |
+    | On macOS   | Untested    | **NOT reproducible[^2]** |
+    | On Windows | Untested    | Untested                 |
 
-- Cross-compilation table for arm64 builds:
+- Cross-compilation table **for Linux arm64 builds**:
 
-    |         | x86_64   | arm64                |
-    | ------- | -------- | -------------------- |
-    | Linux   | Untested | _Canonical_          |
-    | macOS   | Untested | **Reproducible[^3]** |
-    | Windows | Untested | Untested             |
+    |            | On x86_64 | On arm64             |
+    | ---------- | --------- | -------------------- |
+    | On Linux   | Untested  | _Canonical_          |
+    | On macOS   | Untested  | **Reproducible[^3]** |
+    | On Windows | Untested  | Untested             |
 
 The container builds for the host architecture, so verify the `x86_64` `.deb` on an x86_64 host and the `arm64` one on arm64. The `.deb` ships unsigned next to a detached `.minisig`, so nothing inside it varies between builds and the whole file must match byte for byte.
 
@@ -162,21 +162,21 @@ fi
 
 - **Canonical builder:** x86_64 Linux for both architectures, `nix run .#build-windows-x64` / `.#build-windows-arm64`
 - **Official releases:** Multiple providers in `build.yml`
-- Cross-compilation table for x86_64 builds:
+- Cross-compilation table **for Windows x86_64 builds**:
 
-    |         | x86_64      | arm64                    |
-    | ------- | ----------- | ------------------------ |
-    | Linux   | _Canonical_ | Untested                 |
-    | macOS   | Untested    | **NOT reproducible[^4]** |
-    | Windows | Untested    | Untested                 |
+    |            | On x86_64   | On arm64                 |
+    | ---------- | ----------- | ------------------------ |
+    | On Linux   | _Canonical_ | Untested                 |
+    | On macOS   | Untested    | **NOT reproducible[^4]** |
+    | On Windows | Untested    | Untested                 |
 
-- Cross-compilation table for arm64 builds:
+- Cross-compilation table **for Windows arm64 builds**:
 
-    |         | x86_64      | arm64                    |
-    | ------- | ----------- | ------------------------ |
-    | Linux   | _Canonical_ | Untested                 |
-    | macOS   | Untested    | **NOT reproducible[^5]** |
-    | Windows | Untested    | Untested                 |
+    |            | On x86_64   | On arm64                 |
+    | ---------- | ----------- | ------------------------ |
+    | On Linux   | _Canonical_ | Untested                 |
+    | On macOS   | Untested    | **NOT reproducible[^5]** |
+    | On Windows | Untested    | Untested                 |
 
 - Pinned inputs:
 
@@ -220,11 +220,11 @@ fi
 
 - **Canonical builder:** macOS on Apple Silicon
 - **Official releases:** Built locally, not attested
-- Cross-compilation table:
+- Cross-compilation table **for macOS builds**:
 
-    |       | x86_64   | arm64       |
-    | ----- | -------- | ----------- |
-    | macOS | Untested | _Canonical_ |
+    |          | On x86_64 | on arm64    |
+    | -------- | --------- | ----------- |
+    | On macOS | Untested  | _Canonical_ |
 
 - Pinned inputs:
 
