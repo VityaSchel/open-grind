@@ -13,6 +13,12 @@ on:
         type: choice
         default: all
         options: [all, hetzner, scaleway, gcore, none]
+      artifacts:
+        description: >-
+          artifacts to build: all, or a comma-separated subset of
+          android, linux-x86_64, linux-arm64, windows-x86_64, windows-arm64
+        type: string
+        default: all
       allow_dev:
         description: allow a -dev version (test build, never release the artifact)
         type: boolean
@@ -34,7 +40,9 @@ env:
 
 jobs:
   build:
-    if: inputs.providers != 'none'
+    if: >-
+      inputs.providers != 'none'
+      && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'android'))
     strategy:
       fail-fast: false
       matrix:
@@ -96,7 +104,9 @@ jobs:
           retention-days: 1
 
   build-linux:
-    if: inputs.providers != 'none'
+    if: >-
+      inputs.providers != 'none'
+      && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-x86_64'))
     strategy:
       fail-fast: false
       matrix:
@@ -148,7 +158,9 @@ jobs:
           retention-days: 1
 
   build-linux-arm64:
-    if: inputs.arm_providers != 'none'
+    if: >-
+      inputs.arm_providers != 'none'
+      && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-arm64'))
     strategy:
       fail-fast: false
       matrix:
@@ -199,8 +211,10 @@ jobs:
           path: out/
           retention-days: 1
 
-  build-windows:
-    if: inputs.providers != 'none'
+  build-windows-x64:
+    if: >-
+      inputs.providers != 'none'
+      && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-x86_64'))
     strategy:
       fail-fast: false
       matrix:
@@ -208,7 +222,7 @@ jobs:
           ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
           || format('["{0}"]', inputs.providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
-    timeout-minutes: 90
+    timeout-minutes: 60
     env:
       BUILD_ROOT: /work-windows
       HOME: /root
@@ -235,29 +249,90 @@ jobs:
       - name: Set up the build environment
         run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
       - name: Build
-        run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh x64
       - name: Collect installers
         run: |
           : "${BUILD_ROOT:?}"
-          exe=("$BUILD_ROOT"/src-tauri/target/*-pc-windows-msvc/release/bundle/nsis/open-grind-v*.exe)
-          [ ${#exe[@]} -eq 2 ]
+          exe=("$BUILD_ROOT"/src-tauri/target/*-pc-windows-msvc/release/bundle/nsis/open-grind-v*-x86_64.exe)
+          [ ${#exe[@]} -eq 1 ]
           mkdir -p out
           cp "${exe[@]}" out/
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
-          name: open-grind-unsigned-windows-${{ matrix.provider }}
+          name: open-grind-unsigned-windows-x86_64-${{ matrix.provider }}
+          path: out/
+          retention-days: 1
+
+  build-windows-arm64:
+    if: >-
+      inputs.providers != 'none'
+      && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-arm64'))
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: >-
+          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.providers)) }}
+    runs-on: ["build", "${{ matrix.provider }}"]
+    timeout-minutes: 60
+    env:
+      BUILD_ROOT: /work-windows
+      HOME: /root
+      CARGO_HOME: /root/.cargo
+      TZ: UTC
+      LC_ALL: C
+    steps:
+      - name: Checkout
+        run: |
+          : "${BUILD_ROOT:?}"
+          rm -rf "$BUILD_ROOT"
+          mkdir -p "$BUILD_ROOT"
+          cd "$BUILD_ROOT"
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git checkout -q "$FORGEJO_SHA"
+          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
+            submodule update --init --recursive
+      - name: Check the version
+        env:
+          ALLOW_DEV: ${{ inputs.allow_dev }}
+        run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
+      - name: Set up the build environment
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+      - name: Build
+        run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh arm64
+      - name: Collect installers
+        run: |
+          : "${BUILD_ROOT:?}"
+          exe=("$BUILD_ROOT"/src-tauri/target/*-pc-windows-msvc/release/bundle/nsis/open-grind-v*-arm64.exe)
+          [ ${#exe[@]} -eq 1 ]
+          mkdir -p out
+          cp "${exe[@]}" out/
+      - name: Upload
+        uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
+        with:
+          name: open-grind-unsigned-windows-arm64-${{ matrix.provider }}
           path: out/
           retention-days: 1
 
   verify:
-    needs: [build, build-linux, build-linux-arm64, build-windows]
+    needs:
+      [
+        build,
+        build-linux,
+        build-linux-arm64,
+        build-windows-x64,
+        build-windows-arm64,
+      ]
     if: >-
       !cancelled()
       && needs.build.result != 'failure'
       && needs.build-linux.result != 'failure'
       && needs.build-linux-arm64.result != 'failure'
-      && needs.build-windows.result != 'failure'
+      && needs.build-windows-x64.result != 'failure'
+      && needs.build-windows-arm64.result != 'failure'
     runs-on: ["verify", "hetzner"]
     timeout-minutes: 10
     steps:
