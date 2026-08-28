@@ -23,6 +23,14 @@ jobs:
       REGISTRY: ${{ forgejo.server_url }}/api/packages/open-grind/debian
       PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
     steps:
+      - name: Install the verification tools
+        run: |
+          if command -v jq >/dev/null && command -v minisign >/dev/null; then
+            exit 0
+          fi
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          apt-get install -y --no-install-recommends jq minisign
       - name: Check the token
         run: |
           test -n "$PACKAGES_TOKEN" || {

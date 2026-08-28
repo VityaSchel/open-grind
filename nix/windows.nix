@@ -68,6 +68,8 @@ let
     # embed-resource classifies $RC by its banner; the bintools wrapper's
     # windres prints neither the GNU nor the LLVM one.
     RC = "llvm-rc";
+    XWIN_CRT_VERSION = "14.44.17.14";
+    XWIN_SDK_VERSION = "10.0.26100";
   };
 in
 {

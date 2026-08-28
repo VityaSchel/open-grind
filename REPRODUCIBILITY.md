@@ -178,6 +178,12 @@ fi
     | macOS   | Untested    | **NOT reproducible[^5]** |
     | Windows | Untested    | Untested                 |
 
+- Pinned inputs:
+
+    | Component                          | Where it's pinned                                            |
+    | ---------------------------------- | ------------------------------------------------------------ |
+    | MSVC CRT and Windows SDK (Windows) | `XWIN_CRT_VERSION` / `XWIN_SDK_VERSION` in `nix/windows.nix` |
+
 The NSIS installer ships unsigned next to a detached `.minisig`, so nothing inside it varies between builds and the whole file must match byte for byte. Build the one architecture you are verifying: `nix run` leaves tauri's own file name, and only CI renames it to the released asset name.
 
 ```bash
