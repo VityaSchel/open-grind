@@ -35,7 +35,7 @@ env:
     || format('["{0}"]', inputs.providers)) }}
   ARM_BOXES: >-
     ${{ inputs.arm_providers == 'none' && '[]'
-    || (inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
+    || (inputs.arm_providers == 'all' && '["scaleway","gcore"]'
     || format('["{0}"]', inputs.arm_providers)) }}
 
 jobs:
@@ -165,7 +165,7 @@ jobs:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
+          ${{ fromJson(inputs.arm_providers == 'all' && '["scaleway","gcore"]'
           || format('["{0}"]', inputs.arm_providers)) }}
     runs-on: ["build-arm64", "${{ matrix.provider }}"]
     timeout-minutes: 40

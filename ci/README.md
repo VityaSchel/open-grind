@@ -1,17 +1,17 @@
 # CI
 
-Self-hosted Forgejo runners on rented ephemeral VMs. Release builds run the same commit on several providers and are published only when every provider produced the same bytes.
+Self-hosted Forgejo runners on rented ephemeral VMs.
 
 ## Workflows
 
-| Workflow     | Trigger              | Description                                                                                                                                                                                                                                                                                         |
-| ------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build.yml`  | manual               | Builds the Android APK (`nix run .#build-android`), the x86_64 and arm64 Linux `.deb` ([linux/](./linux)) and each Windows installer ([windows/](./windows)) on several providers, compares the results (`verify.ts`). One job per artifact; the dispatch picks which artifacts and which providers |
-| `check.yml`  | pull request         | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                                                                                                                                                                                  |
-| `fdroid.yml` | manual               | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                                                                                                                                                                                           |
-| `audit.yml`  | weekly, pull request | `cargo deny` and `bun audit`                                                                                                                                                                                                                                                                        |
-| `keys.yml`   | push                 | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                                                                                                                                                                                      |
-| `warm.yml`   | push                 | Keeps the check workflow caches warm                                                                                                                                                                                                                                                                |
+| Workflow     | Trigger              | Description                                                                                                                            |
+| ------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `build.yml`  | manual               | Builds the universal Android APK, the x86_64 and arm64 Linux deb and Windows installers on several providers, verifies reproducibility |
+| `check.yml`  | pull request         | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                     |
+| `fdroid.yml` | manual               | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                              |
+| `audit.yml`  | weekly, pull request | `cargo deny` and `bun audit`                                                                                                           |
+| `keys.yml`   | push                 | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                         |
+| `warm.yml`   | push                 | Keeps the check workflow caches warm                                                                                                   |
 
 ## Scripts
 
