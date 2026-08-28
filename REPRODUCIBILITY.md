@@ -2,6 +2,8 @@
 
 Reproducibility verifies that a released artifact was built from a given source code snapshot. This is stronger than a simple artifact signature check, because it means you trust the code rather than whoever built it. Reproducibility verification requires [building](./BUILDING.md) the artifact in a deterministic way with pinned toolchain on a canonical OS and CPU arch. This means, you must pull ~30 GB of environment, allocate ~12 GB of RAM and run the build which takes up to 4 hours. If you trust Open Grind developers, simply [verify the signature](./BUILDING.md#verify-minisign-signature) instead.
 
+Every recipe below needs a checkout with submodules — `git clone --recurse-submodules`, or `git submodule update --init` after switching tags. `src-tauri/vendor/grindr-google-oauth-webextension` is compiled into the binary; without it the build fails in `include_str!`.
+
 - [Open Grind Reproducibility](#open-grind-reproducibility)
     - [Trusting the build environment](#trusting-the-build-environment)
         - [Verifying Nix and flake.lock](#verifying-nix-and-flakelock)
@@ -228,9 +230,12 @@ fi
 
 - Pinned inputs:
 
-    | Component                         | Where it's pinned                                               |
-    | --------------------------------- | --------------------------------------------------------------- |
-    | macOS C toolchain (clang, cc, ld) | `flake.lock` (nixpkgs clang wrapper, only inside `nix develop`) |
+    | Component                         | Where it's pinned                                          |
+    | --------------------------------- | ---------------------------------------------------------- |
+    | macOS C toolchain (clang, cc, ld) | `flake.lock` (nixpkgs clang wrapper)                       |
+    | macOS SDK                         | `flake.lock` (nixpkgs `apple-sdk`, exported as `SDKROOT`)  |
+    | `plutil` (Info.plist)             | `flake.lock` (nixpkgs `xcbuild`)                           |
+    | Checkout path and `CARGO_HOME`    | remapped to `/open-grind` and `/cargo` by `nix/common.nix` |
 
 `codesign`, `ditto` and `plutil` come from macOS itself and cannot be pinned by Nix. None of them affect the compiled code: `ditto` only packs the archive, and the signature is removed on both sides before comparing.
 
@@ -239,13 +244,11 @@ A signature embeds a secure timestamp and stapling adds a notarization ticket, a
 ```bash
 # 1. Reproduce the app locally
 git checkout v<tag>
-nix develop
-bun run package:macos
+nix run .#build-macos
 LOCAL="src-tauri/target/universal-apple-darwin/release/bundle/macos/Open Grind.app"
 
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
 PUBLISHED=/path/to/open-grind-v<tag>-macos.zip
-
 WORK=$(mktemp -d)
 ditto -x -k "$PUBLISHED" "$WORK/published"
 APP="$(find "$WORK/published" -maxdepth 1 -name '*.app')"

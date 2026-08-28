@@ -201,16 +201,15 @@ Windows builds ship unsigned.
 
 ## macOS
 
-A macOS build needs a Mac. Nix still pins most of the toolchain, so build from inside the dev shell.
+A macOS build needs a Mac. Nix pins the toolchain and remaps the build paths the compilers would otherwise bake into the binary, so the release build runs through the flake.
 
 ### Build macOS app
 
 ```bash
-nix develop
-bun run package:macos
+nix run .#build-macos
 ```
 
-This builds a universal app, signs it, and writes a reproducible zip to `src-tauri/target/release/artifacts/`. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce, `package:macos` defaults to `--release`.
+This builds a universal app, signs it, and writes a reproducible zip to `src-tauri/target/release/artifacts/`. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
 
 ### Sign and notarize macOS build
 
@@ -229,7 +228,7 @@ xcrun notarytool store-credentials open-grind \
 
 MACOS_SIGN_IDENTITY="Developer ID Application: Name (TEAMID)" \
 MACOS_NOTARY_PROFILE=open-grind \
-  bun run package:macos
+  nix run .#build-macos
 ```
 
 ### Verify macOS release
@@ -247,7 +246,7 @@ Two targets fall back to a file store: `credentials/` in the app data directory,
 - Linux, only when no Secret Service is reachable, such as a headless box with no D-Bus session bus.
 
 > [!IMPORTANT]
-> A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain. [`bun run package:macos`](#build-macos-app) does both.
+> A macOS build that is distributed must be code-signed and built with the `keychain` feature, which swaps the file store for the Keychain. [`nix run .#build-macos`](#build-macos-app) does both.
 
 ## Reproducibility
 

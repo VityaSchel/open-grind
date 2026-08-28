@@ -23,6 +23,14 @@ if (notaryProfile && adHoc) {
 	);
 }
 
+const epoch = Bun.env.SOURCE_DATE_EPOCH;
+if (!epoch) {
+	throw new Error("SOURCE_DATE_EPOCH is unset, run `nix run .#build-macos`");
+}
+const stamp = new Date(Number(epoch) * 1000)
+	.toISOString()
+	.replace(".000Z", "Z");
+
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
 const zip = `${out}/open-grind-v${version}${hostAssetSuffix()}`;
 
@@ -42,7 +50,10 @@ const entitled = (await Bun.file(entitlements).exists())
 await $`codesign --force --deep --sign ${identity} --options runtime ${timestamped} ${entitled} ${app}`;
 await $`codesign --verify --strict ${app}`;
 
-const archive = () => $`ditto -c -k --keepParent ${app} ${zip}`;
+const archive = async () => {
+	await $`find ${app} -depth -exec touch -h -d ${stamp} '{}' +`;
+	await $`ditto -c -k --keepParent ${app} ${zip}`;
+};
 
 if (notaryProfile) {
 	await archive();

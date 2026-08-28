@@ -20,7 +20,7 @@
 		"docs": "bun run --cwd docs start",
 		"format": "prettier --write .",
 		"gen:icons": "bash scripts/gen-icons.sh",
-		"package:macos": "bun scripts/package-macos.ts",
+		"package:macos": "nix run .#build-macos --",
 		"lint": "svelte-kit sync && eslint --concurrency=2 .",
 		"preview": "vite preview",
 		"sync-config": "opengrind-config sync",
