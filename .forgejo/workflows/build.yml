@@ -67,7 +67,7 @@ jobs:
           cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
@@ -76,7 +76,7 @@ jobs:
           ALLOW_DEV: ${{ inputs.allow_dev }}
         run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
       - name: Set up the build environment
-        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh nix
       - name: Build
         run: cd "${BUILD_ROOT:?}" && nix run .#build-android
       - name: Collect APK
@@ -128,7 +128,7 @@ jobs:
           cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
@@ -137,7 +137,7 @@ jobs:
           ALLOW_DEV: ${{ inputs.allow_dev }}
         run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
       - name: Set up the build environment
-        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh podman
       - name: Build
         run: |
           cd "${BUILD_ROOT:?}"
@@ -182,7 +182,7 @@ jobs:
           cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
@@ -191,7 +191,7 @@ jobs:
           ALLOW_DEV: ${{ inputs.allow_dev }}
         run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
       - name: Set up the build environment
-        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh podman
       - name: Build
         run: |
           cd "${BUILD_ROOT:?}"
@@ -238,7 +238,7 @@ jobs:
           cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
@@ -247,7 +247,7 @@ jobs:
           ALLOW_DEV: ${{ inputs.allow_dev }}
         run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
       - name: Set up the build environment
-        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh nix
       - name: Build
         run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh x64
       - name: Collect installers
@@ -291,7 +291,7 @@ jobs:
           cd "$BUILD_ROOT"
           git init -q .
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
-          git fetch --depth 1 origin "$FORGEJO_REF_NAME"
+          git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
           git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
             submodule update --init --recursive
@@ -300,7 +300,7 @@ jobs:
           ALLOW_DEV: ${{ inputs.allow_dev }}
         run: cd "${BUILD_ROOT:?}" && sh ci/check-release-version.sh
       - name: Set up the build environment
-        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh
+        run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh nix
       - name: Build
         run: cd "${BUILD_ROOT:?}" && sh ci/windows/build.sh arm64
       - name: Collect installers

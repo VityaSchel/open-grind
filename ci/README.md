@@ -17,7 +17,7 @@ Self-hosted Forgejo runners on rented ephemeral VMs. Release builds run the same
 
 | Script                     | Used by                                                                      |
 | -------------------------- | ---------------------------------------------------------------------------- |
-| `setup-build.sh`           | Build boxes. Android and Windows: Nix; Linux: Podman                         |
+| `setup-build.sh`           | Build boxes, `podman` or `nix`; a job installs only what it runs             |
 | `check-release-version.sh` | Refuse to build a `-dev` version unless the run allows it                    |
 | `linux/build.sh`           | Build, repack and name the `.deb` inside the Linux image                     |
 | `windows/build.sh`         | Cross-build and name one installer, `x64` or `arm64`                         |

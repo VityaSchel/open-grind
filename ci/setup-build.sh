@@ -1,8 +1,21 @@
 #!/bin/sh
 set -eu
+
+tool=${1:-}
+case "$tool" in
+podman | nix) ;;
+*) echo "usage: setup-build.sh <podman|nix>" >&2; exit 2 ;;
+esac
+
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y ca-certificates curl git nodejs xz-utils podman
+apt-get -qq update
+apt-get -qq install -y ca-certificates curl git nodejs xz-utils
+
+if [ "$tool" = podman ]; then
+	apt-get -qq install -y podman
+	exit 0
+fi
+
 NIX_VERSION=2.26.3
 NIX_SHA256_X86_64=d378a057253fb98f05c3e7c431c1852cca6afae3376f5853a9fcb7ae423a05ad
 NIX_SHA256_AARCH64=8e52a0ff91b14a3fd7e5bdf5abe263c732b8655ecc67d7730844bb90e2203416
