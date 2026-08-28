@@ -15,7 +15,7 @@ const FLEETS = [
 	},
 ];
 
-if (!downloads || !out || FLEETS.some(({ boxes }) => boxes.length === 0)) {
+if (!downloads || !out || FLEETS.every(({ boxes }) => boxes.length === 0)) {
 	console.error(
 		"usage: BOXES=<json array> ARM_BOXES=<json array> verify.ts <downloads dir> <output dir>",
 	);

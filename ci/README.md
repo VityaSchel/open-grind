@@ -15,13 +15,13 @@ Self-hosted Forgejo runners on rented ephemeral VMs. Release builds run the same
 
 ## Scripts
 
-| Script                     | Used by                                                   |
-| -------------------------- | --------------------------------------------------------- |
-| `setup-build.sh`           | Build boxes. Android and Windows: Nix; Linux: Podman      |
-| `check-release-version.sh` | Refuse to build a `-dev` version unless the run allows it |
-| `linux/build.sh`           | Build, repack and name the `.deb` inside the Linux image  |
-| `windows/build.sh`         | Cross-build and name the x86_64 and arm64 installers      |
-| `verify.ts`                | Every artifact, one copy per box in `BOXES`/`ARM_BOXES`   |
-| `sign.ts`                  | Sign. APK: apksigner and minisign; the rest: minisign     |
-| `cache.ts`, `rust-env.sh`  | Check runner caches                                       |
-| `check-image.sh`           | The check runner image                                    |
+| Script                     | Used by                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `setup-build.sh`           | Build boxes. Android and Windows: Nix; Linux: Podman                         |
+| `check-release-version.sh` | Refuse to build a `-dev` version unless the run allows it                    |
+| `linux/build.sh`           | Build, repack and name the `.deb` inside the Linux image                     |
+| `windows/build.sh`         | Cross-build and name the x86_64 and arm64 installers                         |
+| `verify.ts`                | Every artifact, one copy per box in `BOXES`/`ARM_BOXES`; either may be empty |
+| `sign.ts`                  | Sign. APK: apksigner and minisign; the rest: minisign                        |
+| `cache.ts`, `rust-env.sh`  | Check runner caches                                                          |
+| `check-image.sh`           | The check runner image                                                       |

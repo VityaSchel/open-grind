@@ -7,12 +7,12 @@ on:
         description: x86_64 builders to compare
         type: choice
         default: all
-        options: [all, cherry, vultr, hetzner]
+        options: [all, cherry, vultr, hetzner, none]
       arm_providers:
         description: arm64 builders to compare
         type: choice
         default: all
-        options: [all, hetzner, scaleway, gcore]
+        options: [all, hetzner, scaleway, gcore, none]
       allow_dev:
         description: allow a -dev version (test build, never release the artifact)
         type: boolean
@@ -24,14 +24,17 @@ concurrency:
 
 env:
   BOXES: >-
-    ${{ inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-    || format('["{0}"]', inputs.providers) }}
+    ${{ inputs.providers == 'none' && '[]'
+    || (inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
+    || format('["{0}"]', inputs.providers)) }}
   ARM_BOXES: >-
-    ${{ inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
-    || format('["{0}"]', inputs.arm_providers) }}
+    ${{ inputs.arm_providers == 'none' && '[]'
+    || (inputs.arm_providers == 'all' && '["hetzner","scaleway","gcore"]'
+    || format('["{0}"]', inputs.arm_providers)) }}
 
 jobs:
   build:
+    if: inputs.providers != 'none'
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +96,7 @@ jobs:
           retention-days: 1
 
   build-linux:
+    if: inputs.providers != 'none'
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +148,7 @@ jobs:
           retention-days: 1
 
   build-linux-arm64:
+    if: inputs.arm_providers != 'none'
     strategy:
       fail-fast: false
       matrix:
@@ -195,6 +200,7 @@ jobs:
           retention-days: 1
 
   build-windows:
+    if: inputs.providers != 'none'
     strategy:
       fail-fast: false
       matrix:
@@ -246,6 +252,12 @@ jobs:
 
   verify:
     needs: [build, build-linux, build-linux-arm64, build-windows]
+    if: >-
+      !cancelled()
+      && needs.build.result != 'failure'
+      && needs.build-linux.result != 'failure'
+      && needs.build-linux-arm64.result != 'failure'
+      && needs.build-windows.result != 'failure'
     runs-on: ["verify", "hetzner"]
     timeout-minutes: 10
     steps:
