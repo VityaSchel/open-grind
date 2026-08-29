@@ -34,6 +34,24 @@ const stamp = new Date(Number(epoch) * 1000)
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
 const zip = `${out}/open-grind-v${version}${hostAssetSuffix()}`;
 
+const SYSTEM_DYLIBS = ["libiconv.2.dylib"];
+
+async function useSystemDylibs(binary: string): Promise<void> {
+	const linked = await $`otool -L ${binary}`.text();
+	const fromStore = [
+		...new Set(linked.match(/\/nix\/store\/\S+\.dylib/g) ?? []),
+	];
+	for (const ref of fromStore) {
+		const name = ref.split("/").pop()!;
+		if (!SYSTEM_DYLIBS.includes(name)) {
+			throw new Error(
+				`${name} is linked from the Nix store and has no system counterpart, so the app would not launch off this machine`,
+			);
+		}
+		await $`install_name_tool -change ${ref} /usr/lib/${name} ${binary}`.quiet();
+	}
+}
+
 await $`bun run tauri build ${profile === "debug" ? ["--debug"] : []} --features keychain --target ${MACOS_TARGET} --bundles app`.cwd(
 	root,
 );
@@ -42,6 +60,8 @@ await $`rm -rf ${out}`;
 await $`mkdir -p ${out}`;
 
 const app = await only("*.app", bundles);
+await useSystemDylibs(`${app}/Contents/MacOS/open-grind`);
+
 const timestamped = adHoc ? [] : ["--timestamp"];
 const entitled = (await Bun.file(entitlements).exists())
 	? ["--entitlements", entitlements]

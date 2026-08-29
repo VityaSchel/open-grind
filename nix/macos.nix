@@ -7,7 +7,13 @@ let
   sdk = pkgs.apple-sdk;
 
   toolchainInputs =
-    common.cargoInputs ++ common.frontendInputs ++ common.nativeCcInputs ++ [ pkgs.xcbuild ];
+    common.cargoInputs
+    ++ common.frontendInputs
+    ++ common.nativeCcInputs
+    ++ [
+      pkgs.xcbuild
+      pkgs.cctools
+    ];
 
   env = {
     SDKROOT = toString sdk.sdkroot;
