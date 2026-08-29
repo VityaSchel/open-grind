@@ -237,9 +237,9 @@ fi
     | `plutil` (Info.plist)             | `flake.lock` (nixpkgs `xcbuild`)                           |
     | Checkout path and `CARGO_HOME`    | remapped to `/open-grind` and `/cargo` by `nix/common.nix` |
 
-`codesign`, `ditto` and `plutil` come from macOS itself and cannot be pinned by Nix. None of them affect the compiled code: `ditto` only packs the archive, and the signature is removed on both sides before comparing.
+`codesign` and `ditto` come from macOS itself and cannot be pinned by Nix. Neither affects the compiled code: `ditto` only packs the archive, and the signature is removed from both sides before comparing.
 
-A signature embeds a secure timestamp and stapling adds a notarization ticket, and removing a signature does not restore the pre-signing bytes, so both sides are brought to the same state instead: sign ad-hoc, remove that signature, delete the signature directory. Everything else (code, resources, `Info.plist`) is byte-identical between two builds of the same source on the same toolchain. Stripping also hides the hardened runtime and the entitlements, so step 4 checks those first.
+A signature cannot be reproduced without its key, and removing one does not restore the pre-signing bytes, so both sides are brought to the same state instead: re-sign ad-hoc, remove that signature, delete the signature directory. That normalization is signing identity-independent. Stripping also hides the hardened runtime and the entitlements, so step 3 checks those first.
 
 ```bash
 # 1. Reproduce the app locally

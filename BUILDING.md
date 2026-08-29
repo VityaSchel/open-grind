@@ -209,7 +209,7 @@ A macOS build needs a Mac. Nix pins the toolchain and remaps the build paths the
 nix run .#build-macos
 ```
 
-This builds a universal app, signs it, and writes a reproducible zip to `src-tauri/target/release/artifacts/`. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
+This builds a universal app, signs it, and writes the release zip to `src-tauri/target/release/artifacts/`. The signature is not reproducible without the key, so [reproducing a release](./REPRODUCIBILITY.md#macos) strips it from both sides. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
 
 ### Sign and notarize macOS build
 
