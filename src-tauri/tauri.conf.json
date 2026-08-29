@@ -62,7 +62,8 @@
 		"windows": {
 			"minimumWebview2Version": "111.0.1661.34",
 			"nsis": {
-				"installMode": "currentUser"
+				"installMode": "currentUser",
+				"installerHooks": "installer-hooks.nsh"
 			}
 		},
 		"android": {

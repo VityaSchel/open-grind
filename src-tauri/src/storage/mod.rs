@@ -127,6 +127,9 @@ mod tests {
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
+	const PERSISTED_ENTRIES: [&str; 3] =
+		["device-info", "device-signing-key", "session"];
+
 	fn lock() -> std::sync::MutexGuard<'static, ()> {
 		DEFAULT_STORE.lock().unwrap_or_else(|e| e.into_inner())
 	}
@@ -176,11 +179,19 @@ mod tests {
 					})
 					.collect();
 			written.sort();
-			assert_eq!(
-				written,
-				["device-info", "device-signing-key", "session"]
-			);
+			assert_eq!(written, PERSISTED_ENTRIES);
 		});
+	}
+
+	#[test]
+	fn the_windows_uninstaller_clears_every_keyring_entry() {
+		let hooks = include_str!("../../installer-hooks.nsh");
+		for name in PERSISTED_ENTRIES {
+			assert!(
+				hooks.contains(&format!("\"{name}.open-grind\"")),
+				"installer-hooks.nsh leaves {name} in Credential Manager"
+			);
+		}
 	}
 
 	#[test]
