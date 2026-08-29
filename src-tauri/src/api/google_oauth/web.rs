@@ -12,6 +12,11 @@ const HELPER_URL: &str = "https://web.grindr.com/";
 const HELPER_HOST: &str = "web.grindr.com";
 const WINDOW_LABEL: &str = "google-oauth";
 
+#[cfg(desktop)]
+const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
+#[cfg(mobile)]
+const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
+
 const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
      AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
@@ -103,6 +108,7 @@ async fn run_flow(
 		.map_err(|e| AppError::Http(format!("invalid helper URL: {e}")))?;
 
 	let nonce = new_nonce();
+	let (window_width, window_height) = WINDOW_INNER_SIZE;
 	let bridge_for_nav = bridge.clone();
 	let nonce_for_nav = nonce.clone();
 
@@ -110,7 +116,7 @@ async fn run_flow(
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
 			.title("Sign in with Google")
-			.inner_size(500.0, 720.0)
+			.inner_size(window_width, window_height)
 			.user_agent(USER_AGENT)
 			.initialization_script(init_script(&nonce))
 			.incognito(true)
