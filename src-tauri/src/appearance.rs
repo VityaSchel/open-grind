@@ -3,8 +3,14 @@
 pub fn unlock_visual_effects<R: tauri::Runtime>(
 	window: &tauri::WebviewWindow<R>,
 ) {
-	#[cfg(target_os = "macos")]
+	#[cfg(all(target_os = "macos", feature = "private-api"))]
 	{
+		use tauri::Manager;
+
+		if !window.config().app.macos_private_api {
+			return;
+		}
+
 		let dispatched = window.with_webview(|webview| {
 			if !macos::enable_system_appearance(webview.inner()) {
 				tracing::warn!(
@@ -18,11 +24,11 @@ pub fn unlock_visual_effects<R: tauri::Runtime>(
 		}
 	}
 
-	#[cfg(not(target_os = "macos"))]
+	#[cfg(not(all(target_os = "macos", feature = "private-api")))]
 	let _ = window;
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "private-api"))]
 mod macos {
 	use std::ffi::c_void;
 

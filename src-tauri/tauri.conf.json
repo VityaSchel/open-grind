@@ -10,6 +10,7 @@
 		"frontendDist": "../build"
 	},
 	"app": {
+		"macOSPrivateApi": true,
 		"windows": [
 			{
 				"label": "main",
@@ -21,7 +22,7 @@
 				"theme": "Dark",
 				"create": false,
 				"titleBarStyle": "Visible",
-				"backgroundColor": "#1e1e1e",
+				"backgroundColor": "#0a0a0a",
 				"generalAutofillEnabled": false
 			}
 		],

@@ -19,6 +19,7 @@ Pick your platform, then a method within it. Everything below the platform secti
         - [Verify Windows release](#verify-windows-release)
     - [macOS](#macos)
         - [Build macOS app](#build-macos-app)
+        - [Build for the App Store](#build-for-the-app-store)
         - [Sign and notarize macOS build](#sign-and-notarize-macos-build)
         - [Verify macOS release](#verify-macos-release)
     - [Credential storage](#credential-storage)
@@ -210,6 +211,14 @@ nix run .#build-macos
 ```
 
 This builds a universal app, signs it, and writes the release zip to `src-tauri/target/release/artifacts/`. The signature is not reproducible without the key, so [reproducing a release](./REPRODUCIBILITY.md#macos) strips it from both sides. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
+
+### Build for the App Store
+
+```bash
+nix run .#build-macos -- --app-store
+```
+
+The default build uses two private macOS APIs: WebKit's `_setUseSystemAppearance:` for `-apple-visual-effect`, and `drawsBackground`.
 
 ### Sign and notarize macOS build
 
