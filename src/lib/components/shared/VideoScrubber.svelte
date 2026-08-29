@@ -81,7 +81,7 @@
 	aria-valuemax={duration}
 	aria-valuenow={currentTime}
 	aria-valuetext={formatMediaDuration(currentTime)}
-	class="relative flex h-8 grow cursor-pointer touch-none items-center outline-hidden [--thumb-width:1.5rem]"
+	class="relative flex h-8 min-w-16 grow cursor-pointer touch-none items-center outline-hidden [--thumb-width:1.5rem]"
 	onpointerdown={grab}
 	onpointermove={(event) => scrubbing && seekToPointer(event)}
 	onpointerup={release}

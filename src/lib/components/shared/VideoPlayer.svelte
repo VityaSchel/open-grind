@@ -91,48 +91,52 @@
 	></video>
 	{#if controlsVisible}
 		<div
-			data-pswp-interactive
-			transition:fade={{ duration: 150, easing: sineOut }}
-			class="absolute right-[calc(1rem+var(--safe-area-right))] bottom-[calc(1rem+var(--safe-area-bottom))] left-[calc(1rem+var(--safe-area-left))] flex items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
+			class="absolute right-[calc(1rem+var(--safe-area-right))] bottom-[calc(1rem+var(--safe-area-bottom))] left-[calc(1rem+var(--safe-area-left))] flex justify-center"
 		>
-			<Button
-				variant="outline"
-				size="icon-lg"
-				aria-label={paused ? "Play" : "Pause"}
-				class="shrink-0 cursor-pointer glass-media-controls"
-				onclick={() => (paused = !paused)}
+			<div
+				data-pswp-interactive
+				transition:fade={{ duration: 150, easing: sineOut }}
+				class="flex grow items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
 			>
-				{#if paused}
-					<PlayIcon size={22} weight="fill" />
-				{:else}
-					<PauseIcon size={22} weight="fill" />
-				{/if}
-			</Button>
-			<span class="shrink-0 text-[13px] tracking-tight tabular-nums">
-				{formatMediaDuration(currentTime)}
-			</span>
-			<VideoScrubber
-				{currentTime}
-				{duration}
-				{buffered}
-				onseek={(time) => (currentTime = time)}
-			/>
-			<span class="shrink-0 text-[13px] tracking-tight tabular-nums">
-				{formatMediaDuration(duration)}
-			</span>
-			<Button
-				variant="outline"
-				size="icon-lg"
-				aria-label={muted ? "Unmute" : "Mute"}
-				class="shrink-0 cursor-pointer glass-media-controls"
-				onclick={() => (muted = !muted)}
-			>
-				{#if muted}
-					<SpeakerSimpleSlashIcon size={22} weight="fill" />
-				{:else}
-					<SpeakerSimpleHighIcon size={22} weight="fill" />
-				{/if}
-			</Button>
+				<Button
+					variant="outline"
+					size="icon-lg"
+					aria-label={paused ? "Play" : "Pause"}
+					class="shrink-0 cursor-pointer glass-media-controls"
+					onclick={() => (paused = !paused)}
+				>
+					{#if paused}
+						<PlayIcon size={22} weight="fill" />
+					{:else}
+						<PauseIcon size={22} weight="fill" />
+					{/if}
+				</Button>
+				<span class="shrink-0 text-[13px] tracking-tight tabular-nums">
+					{formatMediaDuration(currentTime)}
+				</span>
+				<VideoScrubber
+					{currentTime}
+					{duration}
+					{buffered}
+					onseek={(time) => (currentTime = time)}
+				/>
+				<span class="shrink-0 text-[13px] tracking-tight tabular-nums">
+					{formatMediaDuration(duration)}
+				</span>
+				<Button
+					variant="outline"
+					size="icon-lg"
+					aria-label={muted ? "Unmute" : "Mute"}
+					class="shrink-0 cursor-pointer glass-media-controls"
+					onclick={() => (muted = !muted)}
+				>
+					{#if muted}
+						<SpeakerSimpleSlashIcon size={22} weight="fill" />
+					{:else}
+						<SpeakerSimpleHighIcon size={22} weight="fill" />
+					{/if}
+				</Button>
+			</div>
 		</div>
 	{/if}
 </div>
