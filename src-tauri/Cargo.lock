@@ -2184,9 +2184,9 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.16.0+26.14.0.173396"
+version = "0.17.0+26.15.0.173835"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47ece1f13a0639154d8236b34195b59334cb0c936647c683e4944b3528c413d6"
+checksum = "254e021b984068e14583e9588f9ab0bf2d538775c24118edbbcd9c0091d77df4"
 dependencies = [
  "base64 0.22.1",
  "bytes",
