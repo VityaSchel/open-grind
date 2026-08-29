@@ -10,6 +10,7 @@
 		callMethod,
 		markRequestBlocked,
 	} from "$lib/api/methods";
+	import { noticeStorageBackend } from "$lib/api/storage-notice";
 	import { clearProfileCaches } from "$lib/api/users/profiles";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
@@ -31,6 +32,7 @@
 			const result = await callMethod("login_with_google");
 			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
+			void noticeStorageBackend();
 			void goto("/");
 		} catch (error) {
 			console.error(error);
@@ -85,6 +87,7 @@
 			});
 			if (showAccountRestriction(result.restriction)) return;
 			clearProfileCaches();
+			void noticeStorageBackend();
 			void goto("/");
 		} catch (error) {
 			console.error(error);
