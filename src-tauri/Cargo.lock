@@ -2184,9 +2184,9 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.17.0+26.15.0.173835"
+version = "0.17.1+26.15.0.173835"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "254e021b984068e14583e9588f9ab0bf2d538775c24118edbbcd9c0091d77df4"
+checksum = "bd3f9896c8fc3650953c48af233bf84e8c23ec9d8da5034acf9cc8e2a7644120"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -7731,9 +7731,9 @@ dependencies = [
 
 [[package]]
 name = "wreq"
-version = "5.3.0"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "137ed11c4c418fb3dc41db7323ebc49aa9b6fe6a24ce152e6b2de9d6fadd9c8f"
+checksum = "b1248467bcb6aafde3dae847973df892e656ed376c014d11743fd437efac6560"
 dependencies = [
  "antidote",
  "arc-swap",
