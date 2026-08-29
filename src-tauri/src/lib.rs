@@ -1,6 +1,7 @@
 pub mod api;
 mod app_settings;
 mod appearance;
+mod context_menu;
 mod error;
 pub mod media;
 mod photo;
@@ -214,6 +215,7 @@ pub fn run() {
                         .on_navigation(is_app_url)
                         .build()?;
                 appearance::unlock_visual_effects(&window);
+                context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]
                 quit_when_closed(&window);
             }

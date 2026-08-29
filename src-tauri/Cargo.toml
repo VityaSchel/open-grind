@@ -10,8 +10,6 @@ readme = "../README.md"
 publish = false
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
@@ -58,9 +56,9 @@ tracing = { version = "0.1", features = ["release_max_level_off"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
-# Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs.
+# Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs
 objc2 = "0.6"
-# Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs.
+# Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs
 block2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "block2", "objc2-core-foundation"] }
 rfd = "0.16"
@@ -70,16 +68,16 @@ apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "prote
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-native-keyring-store = "1.1.0"
+webview2-com = "0.38"
+windows = { version = "0.61", features = ["Win32_System_Com"] }
+windows-core = "0.61"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-# Synchronous by construction. zbus's blocking wrapper drives a nested tokio
-# runtime and panics inside our spawned tasks whenever zbus/tokio is enabled,
-# which any dependency can turn on for us.
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "1.0.0"
-# Reads the EmbeddedSetup oauth_token cookie via android.webkit.CookieManager.
+# Reads the EmbeddedSetup oauth_token cookie via android.webkit.CookieManager
 jni = "0.21"
 tauri-plugin-android-fs = "=28.2.2"
 
