@@ -99,7 +99,7 @@
 				data-slot="sheet-scroller"
 				onscroll={scheduleSettle}
 				class={[
-					"overflow-x-hidden  overscroll-contain select-none",
+					"no-scrollbar overflow-x-hidden overscroll-contain select-none",
 					{
 						"h-full overflow-y-auto": isFullsizeTab,
 						"h-fit": !isFullsizeTab,

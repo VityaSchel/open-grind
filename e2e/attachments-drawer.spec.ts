@@ -381,4 +381,42 @@ test.describe("attachments drawer", () => {
 			"closing by dragging a tile must not select it",
 		).toBe(0);
 	});
+
+	test("the sheet scroller has scroll to give but paints no scrollbar", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		await expandToFull(page);
+		const scroller = await page.evaluate(() => {
+			const el = document.querySelector<HTMLElement>(
+				"[data-slot=sheet-scroller]",
+			)!;
+			const panel = document.querySelector<HTMLElement>(
+				"[data-slot=sheet-panel]",
+			)!;
+			panel.style.minHeight = "";
+			const style = getComputedStyle(el);
+			return {
+				overflowY: style.overflowY,
+				scrollbarWidth: style.scrollbarWidth,
+				range: el.scrollHeight - el.clientHeight,
+				gutter: el.offsetWidth - el.clientWidth,
+			};
+		});
+
+		expect(scroller.overflowY, "the sheet is still a native scroller").toBe(
+			"auto",
+		);
+		expect(
+			scroller.range,
+			"the peek always overflows, so a classic scrollbar would always paint",
+		).toBeGreaterThan(0);
+		expect(scroller.scrollbarWidth, "so the scrollbar is suppressed").toBe(
+			"none",
+		);
+		expect(
+			scroller.gutter,
+			"and no classic scrollbar reserves width inside the sheet",
+		).toBe(0);
+	});
 });
