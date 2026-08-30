@@ -39,12 +39,14 @@ jobs:
           fi
       - name: Check the token
         run: |
+          echo "==> check-token"
           test -n "$PACKAGES_TOKEN" || {
             echo "PACKAGES_TOKEN is unset; create a token with write:package scope" >&2
             exit 1
           }
       - name: Fetch the release
         run: |
+          echo "==> fetch-release"
           curl -fsSL "$API/releases/tags/$TAG" -o release.json
           jq -r '.prerelease' release.json > prerelease
           jq -r '.assets[].browser_download_url' release.json > assets
@@ -54,8 +56,9 @@ jobs:
           }
       - name: Download and verify
         run: |
-          key=$(curl -fsSL "$API/raw/KEYS.md" \
-            | tr -d '\r' | awk '/^RW/ && length($0) == 56 { print; exit }')
+          echo "==> download-verify"
+          curl -fsSL "$API/raw/KEYS.md" -o KEYS.md
+          key=$(awk '{ sub(/\r$/, "") } /^RW/ && length($0) == 56 { print; exit }' KEYS.md)
           test -n "$key" || { echo "KEYS.md publishes no minisign key" >&2; exit 1; }
           while read -r url; do
             deb=$(basename "$url")
@@ -65,6 +68,7 @@ jobs:
           done < debs
       - name: Upload to the Debian registry
         run: |
+          echo "==> upload"
           case "$(cat prerelease)" in
             true) suite=beta ;;
             *) suite=stable ;;
