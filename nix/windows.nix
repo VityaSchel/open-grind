@@ -81,7 +81,7 @@ in
       export XWIN_CACHE_DIR="''${XWIN_CACHE_DIR:-$HOME/.cache/cargo-xwin}"
       # No PDB: under /Brepro lld hashes the PDB into the CodeView GUID, and the
       # PDB records rustc's random response-file path.
-      export RUSTFLAGS="''${RUSTFLAGS:-} -Clink-arg=/Brepro -Clink-arg=/DEBUG:NONE"
+      export RUSTFLAGS="''${RUSTFLAGS:-} -Clink-arg=/Brepro -Clink-arg=/DEBUG:NONE -Clink-arg=/threads:1"
       # clang-cl ignores GCC-style flags; /clang: forwards them to the driver:
       # https://clang.llvm.org/docs/UsersManual.html#the-clang-option
       export CFLAGS="''${CFLAGS//-ffile-prefix-map=//clang:-ffile-prefix-map=}"

@@ -13,6 +13,7 @@ version=$(sed -n 's/^[[:space:]]*"version": "\([^"]*\)".*/\1/p' src-tauri/tauri.
 [ -n "$version" ] || { echo "FATAL: no version in src-tauri/tauri.conf.json" >&2; exit 1; }
 nsis="src-tauri/target/$triple/release/bundle/nsis"
 
+echo "builder: $(nproc) cores, $(awk '/MemTotal/{printf "%.0f GiB", $2/1048576}' /proc/meminfo)"
 nix run ".#build-windows-$label"
 
 set -- "$nsis"/*-setup.exe
