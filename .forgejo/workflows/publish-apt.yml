@@ -75,7 +75,7 @@ jobs:
           esac
           while read -r url; do
             deb=$(basename "$url")
-            curl -fsS --fail-with-body \
+            curl -sS --fail-with-body \
               -H "Authorization: token $PACKAGES_TOKEN" \
               --upload-file "$deb" \
               "$REGISTRY/pool/$suite/main/upload"
