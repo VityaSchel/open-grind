@@ -99,14 +99,27 @@ async function signApk(input: string, output: string) {
 	const aligned = path.join(tmpdir(), `open-grind-${process.pid}.apk`);
 	try {
 		await $`zipalign -p -f 4 ${input} ${aligned}`;
-		await $`
-			apksigner sign \
-				--ks ${untilde(store)} \
-				--ks-key-alias ${alias} \
-				--ks-pass "pass:${password}" \
-				--key-pass "pass:${password}" \
-				--out ${output} ${aligned}
-		`;
+		const signed = Bun.spawnSync(
+			[
+				"apksigner",
+				"sign",
+				"--ks",
+				untilde(store),
+				"--ks-key-alias",
+				alias,
+				"--ks-pass",
+				`pass:${password}`,
+				"--key-pass",
+				`pass:${password}`,
+				"--out",
+				output,
+				aligned,
+			],
+			{ stdio: ["inherit", "inherit", "inherit"] },
+		);
+		if (signed.exitCode !== 0) {
+			throw new Error(`apksigner exited ${signed.exitCode}`);
+		}
 		const verify = await $`apksigner verify --print-certs ${output}`.text();
 		const fingerprint = verify
 			.split("\n")
