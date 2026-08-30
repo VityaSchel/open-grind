@@ -30,8 +30,13 @@ jobs:
             exit 0
           fi
           export DEBIAN_FRONTEND=noninteractive
-          apt-get -qq update
-          apt-get -qq install -y --no-install-recommends jq minisign
+          apt-get -qq update </dev/null >/tmp/apt.log 2>&1 || true
+          apt-get -qq install -y --no-install-recommends jq minisign \
+            </dev/null >>/tmp/apt.log 2>&1 || true
+          if ! command -v jq >/dev/null || ! command -v minisign >/dev/null; then
+            cat /tmp/apt.log >&2
+            exit 1
+          fi
       - name: Check the token
         run: |
           test -n "$PACKAGES_TOKEN" || {
