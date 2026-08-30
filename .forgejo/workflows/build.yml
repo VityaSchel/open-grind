@@ -3,12 +3,12 @@ name: build
 on:
   workflow_dispatch:
     inputs:
-      providers:
+      x86_64_providers:
         description: x86_64 builders to compare
         type: choice
         default: all
         options: [all, cherry, vultr, hetzner, none]
-      arm_providers:
+      arm64_providers:
         description: arm64 builders to compare
         type: choice
         default: all
@@ -30,25 +30,25 @@ concurrency:
 
 env:
   BOXES: >-
-    ${{ inputs.providers == 'none' && '[]'
-    || (inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-    || format('["{0}"]', inputs.providers)) }}
+    ${{ inputs.x86_64_providers == 'none' && '[]'
+    || (inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+    || format('["{0}"]', inputs.x86_64_providers)) }}
   ARM_BOXES: >-
-    ${{ inputs.arm_providers == 'none' && '[]'
-    || (inputs.arm_providers == 'all' && '["scaleway","gcore"]'
-    || format('["{0}"]', inputs.arm_providers)) }}
+    ${{ inputs.arm64_providers == 'none' && '[]'
+    || (inputs.arm64_providers == 'all' && '["scaleway","gcore"]'
+    || format('["{0}"]', inputs.arm64_providers)) }}
 
 jobs:
   build-android:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'android'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 55
     env:
@@ -105,14 +105,14 @@ jobs:
 
   build-linux:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-x86_64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 30
     env:
@@ -159,14 +159,14 @@ jobs:
 
   build-linux-arm64:
     if: >-
-      inputs.arm_providers != 'none'
+      inputs.arm64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-arm64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.arm_providers == 'all' && '["scaleway","gcore"]'
-          || format('["{0}"]', inputs.arm_providers)) }}
+          ${{ fromJson(inputs.arm64_providers == 'all' && '["scaleway","gcore"]'
+          || format('["{0}"]', inputs.arm64_providers)) }}
     runs-on: ["build-arm64", "${{ matrix.provider }}"]
     timeout-minutes: 40
     env:
@@ -213,14 +213,14 @@ jobs:
 
   build-windows-x64:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-x86_64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 25
     env:
@@ -266,14 +266,14 @@ jobs:
 
   build-windows-arm64:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-arm64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 25
     env:
