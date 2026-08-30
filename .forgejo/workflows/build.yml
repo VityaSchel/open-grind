@@ -39,7 +39,7 @@ env:
     || format('["{0}"]', inputs.arm_providers)) }}
 
 jobs:
-  build:
+  build-android:
     if: >-
       inputs.providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'android'))
@@ -99,7 +99,7 @@ jobs:
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
-          name: open-grind-unsigned-${{ matrix.provider }}
+          name: open-grind-unsigned-android-${{ matrix.provider }}
           path: out/
           retention-days: 1
 
@@ -320,7 +320,7 @@ jobs:
   verify:
     needs:
       [
-        build,
+        build-android,
         build-linux,
         build-linux-arm64,
         build-windows-x64,
@@ -328,7 +328,7 @@ jobs:
       ]
     if: >-
       !cancelled()
-      && needs.build.result != 'failure'
+      && needs.build-android.result != 'failure'
       && needs.build-linux.result != 'failure'
       && needs.build-linux-arm64.result != 'failure'
       && needs.build-windows-x64.result != 'failure'
