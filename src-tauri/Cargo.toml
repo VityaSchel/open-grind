@@ -1,6 +1,6 @@
 [package]
 name = "open-grind"
-version = "0.1.0-beta.4-dev"
+version = "0.1.0-beta.4"
 description = "FLOSS Grindr client"
 authors = ["Open Grind Governance (https://opengrind.org/governance)"]
 homepage = "https://opengrind.org"
