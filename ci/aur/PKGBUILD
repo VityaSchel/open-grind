@@ -1,0 +1,77 @@
+# Maintainer: Open Grind Governance <https://opengrind.org/governance>
+
+pkgname=open-grind-bin
+_pkgname=open-grind
+_ver=0.1.0-beta.4
+# pacman reads '-' as the pkgver/pkgrel separator, so it cannot stay.
+# Dropping it sorts 0.1.0beta.4 below 0.1.0. An underscore sorts it
+# above, which would need an epoch to undo. Checked with pacman's vercmp.
+pkgver="${_ver/-/}"
+pkgrel=1
+_tag="v$_ver"
+pkgdesc='Unofficial FLOSS Grindr client'
+arch=('x86_64' 'aarch64')
+url='https://opengrind.org'
+license=('MIT')
+provides=("$_pkgname=$pkgver")
+conflicts=("$_pkgname")
+options=('!strip')
+
+makedepends=('minisign')
+
+depends=(
+	at-spi2-core
+	cairo
+	gdk-pixbuf2
+	glib2
+	glibc
+	gtk3
+	hicolor-icon-theme
+	libgcc
+	libsoup3
+	libstdc++
+	pango
+	webkit2gtk-4.1
+)
+
+optdepends=(
+	'gst-plugins-good: audio and video playback in chat and albums'
+	'gst-libav: additional H.264/AAC media decoding'
+	'xdg-utils: opening links and files in external applications'
+)
+
+_releases="https://git.opengrind.org/open-grind/open-grind/releases/download/$_tag"
+
+# Upstream names its assets the Debian way, so aarch64 pulls "-arm64".
+source=("$pkgname-$pkgver-LICENSE::https://git.opengrind.org/open-grind/open-grind/raw/tag/$_tag/LICENSE")
+source_x86_64=(
+	"$pkgname-$pkgver-x86_64.deb::$_releases/$_pkgname-$_tag-linux-x86_64.deb"
+	"$pkgname-$pkgver-x86_64.deb.minisig::$_releases/$_pkgname-$_tag-linux-x86_64.deb.minisig"
+)
+source_aarch64=(
+	"$pkgname-$pkgver-aarch64.deb::$_releases/$_pkgname-$_tag-linux-arm64.deb"
+	"$pkgname-$pkgver-aarch64.deb.minisig::$_releases/$_pkgname-$_tag-linux-arm64.deb.minisig"
+)
+
+# TODO: replace the .deb sums with real ones once the release exists (updpkgsums).
+sha256sums=('SKIP')
+sha256sums_x86_64=('SKIP' 'SKIP')
+sha256sums_aarch64=('SKIP' 'SKIP')
+
+# Published in the project's KEYS.md.
+_minisign_key='RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+'
+
+verify() {
+	# makepkg runs this from $startdir, but downloads go to $SRCDEST, and
+	# those are the same place only when SRCDEST is unset.
+	local deb="$pkgname-$pkgver-$CARCH.deb"
+	[[ -f $deb ]] || deb="$SRCDEST/$deb"
+	minisign -V -P "$_minisign_key" -m "$deb" -x "$deb.minisig"
+}
+
+package() {
+	# makepkg's bsdtar already unpacked the .deb, so the payload is what is left.
+	bsdtar -xf data.tar.gz -C "$pkgdir"
+	install -Dm644 "$pkgname-$pkgver-LICENSE" \
+		"$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
