@@ -1,0 +1,15 @@
+- Sending albums & expiring photos added
+- Geolocation & grid auto-updater added
+- Message replies added
+- Drafts for messages added
+- Favorite profiles filter & notes added
+- Hiding profiles added
+- New video player
+- In-app version updater added
+- Stay online while using the app
+- Uploads normalization & metadata stripping
+- Geolocation is now coarsened
+- "Taken on Grindr" on all uploads fixed
+- Genders & pronouns missing fixed
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.4
