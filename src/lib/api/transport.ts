@@ -8,6 +8,7 @@ import {
 	blockedKindOf,
 	markRequestBlocked,
 } from "$lib/api/methods";
+import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
@@ -81,7 +82,11 @@ function buildRestResponse({
 			} catch (error) {
 				if (error instanceof ApiError) throw error;
 				throw new ApiError({
-					message: schemaMismatchMessage({ schema, error }),
+					message: schemaMismatchMessage({
+						schema,
+						error,
+						request: requestInfo,
+					}),
 					request: requestInfo,
 					response: { status, body: text() },
 					cause: error,
@@ -183,15 +188,25 @@ export function parseApiResponse<TSchema extends z.ZodType>(options: {
 	throw parsed.error;
 }
 
-function schemaMismatchMessage({
+function endpointOf(path: string): string {
+	const redacted = redactPath(path);
+	return redacted.split("?")[0] ?? redacted;
+}
+
+export function schemaMismatchMessage({
 	schema,
 	error,
+	request,
 }: {
 	schema: z.ZodType;
 	error: unknown;
+	request: RequestInfo;
 }): string {
 	if (error instanceof z.ZodError) {
-		return `API response did not match ${schemaName(schema) ?? "the expected schema"}`;
+		const subject =
+			schemaName(schema) ??
+			`the schema for ${request.method} ${endpointOf(request.path)}`;
+		return `API response did not match ${subject}`;
 	}
 	return error instanceof Error
 		? error.message
