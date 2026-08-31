@@ -131,24 +131,28 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	}
 
 	protected subscribeEvents(): Promise<() => void> {
-		return ws.on("tap.v1.tap_sent", tapV1TapSentEventSchema, (event) => {
-			const tap = event.payload;
-			if (tap.recipientId !== this.ourProfileId) return;
-			this.upsert({
-				distance: null,
-				profileImageMediaHash: tap.senderProfileImageHash,
-				isFavorite: false,
-				profileId: tap.senderId,
-				displayName: tap.senderDisplayName,
-				timestamp: tap.timestamp,
-				tapType: tap.tapType,
-				lastOnline: tap.timestamp,
-				isBoosting: false,
-				isMutual: tap.isMutual,
-				rightNowType: "",
-				isViewable: true,
-			});
-		});
+		return ws.on(
+			["tap.v1.tap_sent", "tap.v2.tap_sent"],
+			tapV1TapSentEventSchema,
+			(event) => {
+				const tap = event.payload;
+				if (tap.recipientId !== this.ourProfileId) return;
+				this.upsert({
+					distance: null,
+					profileImageMediaHash: tap.senderProfileImageHash,
+					isFavorite: false,
+					profileId: tap.senderId,
+					displayName: tap.senderDisplayName,
+					timestamp: tap.timestamp,
+					tapType: tap.tapType,
+					lastOnline: tap.timestamp,
+					isBoosting: false,
+					isMutual: tap.isMutual,
+					rightNowType: "",
+					isViewable: true,
+				});
+			},
+		);
 	}
 }
 

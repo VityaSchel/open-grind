@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getProfileMock,
-	invalidateProfileMock,
+	refreshProfileMock,
 	mergeProfileEditIntoCachesMock,
 	recordProfileViewMock,
 	getFavoriteNoteMock,
@@ -11,7 +11,7 @@ const {
 	showErrorToastMock,
 } = vi.hoisted(() => ({
 	getProfileMock: vi.fn(),
-	invalidateProfileMock: vi.fn(),
+	refreshProfileMock: vi.fn(),
 	mergeProfileEditIntoCachesMock: vi.fn(),
 	recordProfileViewMock: vi.fn(() => Promise.resolve()),
 	getFavoriteNoteMock: vi.fn(),
@@ -34,7 +34,7 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
 	getProfile: getProfileMock,
-	invalidateProfile: invalidateProfileMock,
+	refreshProfile: refreshProfileMock,
 	mergeProfileEditIntoCaches: mergeProfileEditIntoCachesMock,
 }));
 
@@ -169,30 +169,40 @@ describe("ProfileState loading", () => {
 });
 
 describe("ProfileState refresh", () => {
-	it("drops the cached profile and replaces it with the fetched one", async () => {
+	it("refetches past the cache and replaces the profile on screen", async () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockResolvedValueOnce(
+		refreshProfileMock.mockResolvedValueOnce(
 			profile({ displayName: "renamed" }),
 		);
 		state.refresh();
 		expect(state.refreshing).toBe(true);
 		expect(state.profile).toEqual(profile());
-		expect(invalidateProfileMock).toHaveBeenCalledExactlyOnceWith(
-			PROFILE_ID,
-		);
+		expect(refreshProfileMock).toHaveBeenCalledExactlyOnceWith(PROFILE_ID);
 		await flush();
 
 		expect(state.refreshing).toBe(false);
 		expect(state.profile?.displayName).toBe("renamed");
 	});
 
+	it("never evicts the cached profile before the refresh has succeeded", async () => {
+		const state = create();
+		await flush();
+
+		refreshProfileMock.mockRejectedValueOnce(new Error("offline"));
+		state.refresh();
+		await flush();
+
+		expect(state.profile).toEqual(profile());
+		expect(state.error).toBeNull();
+	});
+
 	it("keeps the profile on screen and toasts when a refresh fails", async () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockRejectedValueOnce(new Error("offline"));
+		refreshProfileMock.mockRejectedValueOnce(new Error("offline"));
 		state.refresh();
 		await flush();
 
@@ -205,7 +215,7 @@ describe("ProfileState refresh", () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockRejectedValueOnce(
+		refreshProfileMock.mockRejectedValueOnce(
 			new BlockedProfileError({ blockedByUs: false }),
 		);
 		state.refresh();
@@ -220,7 +230,7 @@ describe("ProfileState refresh", () => {
 		const state = create();
 		await flush();
 
-		getProfileMock.mockResolvedValueOnce(
+		refreshProfileMock.mockResolvedValueOnce(
 			profile({ displayName: "refreshed" }),
 		);
 		const settleReload = deferredProfile();
@@ -242,7 +252,7 @@ describe("ProfileState refresh", () => {
 
 		state.refresh();
 
-		expect(invalidateProfileMock).not.toHaveBeenCalled();
+		expect(refreshProfileMock).not.toHaveBeenCalled();
 		expect(getProfileMock).toHaveBeenCalledOnce();
 		await flush();
 	});

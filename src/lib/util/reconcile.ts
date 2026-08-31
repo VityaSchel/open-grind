@@ -27,6 +27,11 @@ class Reconciler {
 			this.#scheduleResync();
 		}).catch((error) => console.error(error));
 
+		ws.onEventRejected((eventType) => {
+			console.warn(`[ws] resyncing after rejecting a ${eventType} event`);
+			this.#scheduleResync();
+		});
+
 		if (typeof document !== "undefined") {
 			document.addEventListener("visibilitychange", () => {
 				if (document.visibilityState === "hidden") {

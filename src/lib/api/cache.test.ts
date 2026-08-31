@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { cachedFetch, FetchCache, TtlCache } from "$lib/api/cache";
@@ -258,5 +258,43 @@ describe("cachedFetch", () => {
 		await inFlight;
 
 		expect(cache.get(null)).toBeNull();
+	});
+});
+
+describe("FetchCache.refetch", () => {
+	it("keeps the cached value when the refetch fails", async () => {
+		const fetch = vi
+			.fn<(key: number) => Promise<{ id: number }>>()
+			.mockResolvedValueOnce({ id: 1 })
+			.mockRejectedValueOnce(new Error("offline"));
+		const cache = new FetchCache(fetch, { ttlMs: 60_000 });
+
+		expect(await cache.fetch(7)).toEqual({ id: 1 });
+		await expect(cache.refetch(7)).rejects.toThrow("offline");
+
+		expect(cache.get(7)).toEqual({ id: 1 });
+	});
+
+	it("replaces the cached value when the refetch succeeds", async () => {
+		const fetch = vi
+			.fn<(key: number) => Promise<{ id: number }>>()
+			.mockResolvedValueOnce({ id: 1 })
+			.mockResolvedValueOnce({ id: 2 });
+		const cache = new FetchCache(fetch, { ttlMs: 60_000 });
+
+		await cache.fetch(7);
+		expect(await cache.refetch(7)).toEqual({ id: 2 });
+		expect(cache.get(7)).toEqual({ id: 2 });
+	});
+
+	it("dedupes concurrent refetches of the same key", async () => {
+		const fetch = vi
+			.fn<(key: number) => Promise<{ id: number }>>()
+			.mockResolvedValue({ id: 1 });
+		const cache = new FetchCache(fetch, { ttlMs: 60_000 });
+
+		await Promise.all([cache.refetch(7), cache.refetch(7)]);
+
+		expect(fetch).toHaveBeenCalledOnce();
 	});
 });

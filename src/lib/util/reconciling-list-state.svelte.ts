@@ -66,7 +66,11 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			await this.#replaceFromServer();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: this.#refreshErrorLabel, error });
+			showErrorToast({
+				label: this.#refreshErrorLabel,
+				error,
+				onRetry: () => void this.refresh(),
+			});
 		} finally {
 			this.refreshing = false;
 			this.#runRequestedRefresh();

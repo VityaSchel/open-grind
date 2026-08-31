@@ -40,7 +40,7 @@
 						<Skeleton class="aspect-square rounded-none" />
 					{/each}
 				</div>
-			{:else if views.error}
+			{:else if views.error && views.views.length === 0}
 				<div class="flex flex-1">
 					<ApiErrorDisplay
 						error={views.error}

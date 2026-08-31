@@ -195,6 +195,13 @@ export function clearProfileCaches() {
 	profiles.clear();
 }
 
+export function refreshProfile(profileId: number): Promise<Profile> {
+	return profiles.refetch(profileId).catch((error: unknown) => {
+		if (isUnviewableProfileError(error)) markProfileUnviewable(profileId);
+		throw error;
+	});
+}
+
 export function invalidateProfile(profileId: number) {
 	profiles.delete(profileId);
 }

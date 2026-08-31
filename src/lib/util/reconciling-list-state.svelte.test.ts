@@ -251,6 +251,7 @@ describe("ReconcilingListState", () => {
 		expect(showErrorToastMock).toHaveBeenCalledWith({
 			label: "Failed to refresh",
 			error: expect.any(Error),
+			onRetry: expect.any(Function),
 		});
 		expect(state.error).toBeNull();
 		expect(ids(state)).toEqual([1]);

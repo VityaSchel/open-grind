@@ -204,11 +204,6 @@ class ConversationsState {
 			const fetchEpoch = await this.#claimEpochAfterInitial();
 			this.#refreshRequestedSinceFetchStart = false;
 
-			const activeId = this.#activeConversationId;
-			for (const id of [...this.#messageCache.keys()]) {
-				if (id !== activeId) this.#messageCache.delete(id);
-			}
-
 			const oldestLoadedTs = this.entries.reduce(
 				(min, e) => Math.min(min, e.data.lastActivityTimestamp),
 				Number.POSITIVE_INFINITY,
@@ -220,6 +215,11 @@ class ConversationsState {
 				});
 			if (this.#fetches.isStale(fetchEpoch)) return;
 			this.nextPage = reachedEnd ? null : nextPage;
+
+			const activeId = this.#activeConversationId;
+			for (const id of [...this.#messageCache.keys()]) {
+				if (id !== activeId) this.#messageCache.delete(id);
+			}
 
 			for (const incoming of fetched.values()) {
 				const existing = this.#find(incoming.data.conversationId);
@@ -254,10 +254,15 @@ class ConversationsState {
 			}
 
 			this.#sortEntries();
+			this.error = null;
 			reconciled = true;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to refresh conversations", error });
+			showErrorToast({
+				label: "Failed to refresh conversations",
+				error,
+				onRetry: () => void this.refresh(),
+			});
 		} finally {
 			this.refreshing = false;
 			if (reconciled || this.paging.failure === null) this.paging.rearm();
@@ -305,6 +310,7 @@ class ConversationsState {
 				}
 			}
 			this.#sortEntries();
+			this.error = null;
 			return true;
 		} catch (error) {
 			console.error(error);

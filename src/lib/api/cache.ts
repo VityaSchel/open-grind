@@ -61,6 +61,10 @@ export class FetchCache<K, V extends CachedValue> extends TtlCache<K, V> {
 	async fetch(key: K): Promise<V> {
 		const cached = this.get(key);
 		if (cached !== null) return cached;
+		return await this.refetch(key);
+	}
+
+	async refetch(key: K): Promise<V> {
 		const pending = this.#inFlight.get(key);
 		if (pending) return pending;
 		const epoch = accountEpoch();

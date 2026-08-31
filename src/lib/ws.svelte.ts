@@ -45,7 +45,7 @@ export const chatV1ConversationReadEventSchema =
 	});
 
 export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
-	type: z.literal("tap.v1.tap_sent"),
+	type: z.literal(["tap.v1.tap_sent", "tap.v2.tap_sent"]),
 	payload: z.object({
 		timestamp: unixTimestampMsSchema,
 		senderId: z.number(),
@@ -93,6 +93,7 @@ export type WsStatus = "disconnected" | "connected";
 
 class WsState {
 	status = $state<WsStatus>("disconnected");
+	#rejectedHandlers = new Set<(eventType: string) => void>();
 
 	constructor() {
 		listen<void>("ws:connected", () => {
@@ -231,24 +232,43 @@ class WsState {
 		});
 	}
 
+	onEventRejected(handler: (eventType: string) => void): () => void {
+		this.#rejectedHandlers.add(handler);
+		return () => this.#rejectedHandlers.delete(handler);
+	}
+
 	on<T>(
-		eventType: string,
+		eventType: string | string[],
 		schema: z.ZodType<T>,
 		handler: (payload: T) => void,
 	): Promise<() => void> {
-		const safeName = eventType.replaceAll(".", "_");
-		return listen<unknown>(`grindr:${safeName}`, (event) => {
-			const result = schema.safeParse(event.payload);
-			if (result.success) {
-				handler(result.data);
-			} else {
-				console.error(
-					`[ws] unexpected payload for ${eventType}:`,
-					result.error,
-					event.payload,
-				);
-			}
-		});
+		const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
+		return Promise.all(
+			eventTypes.map((type) =>
+				listen<unknown>(
+					`grindr:${type.replaceAll(".", "_")}`,
+					(event) => {
+						const result = schema.safeParse(event.payload);
+						if (result.success) {
+							handler(result.data);
+							return;
+						}
+						console.error(
+							`[ws] unexpected payload for ${type}:`,
+							result.error,
+							event.payload,
+						);
+						for (const rejected of this.#rejectedHandlers)
+							rejected(type);
+					},
+				),
+			),
+		).then(
+			(unlisteners) => () =>
+				unlisteners.forEach((unlisten) => {
+					unlisten();
+				}),
+		);
 	}
 }
 
