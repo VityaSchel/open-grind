@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.14.0 (2026-08-20)"
+		"version": "26.15.0 (2026-08-28)"
 	},
 	"servers": [
 		{
@@ -3381,6 +3381,8 @@
 					"browse/age-verification"
 				],
 				"operationId": "verifyAgeDocument",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.15.0. The FaceTec document/enrollment/liveness steps were consolidated into [Verify age](/grindr-api/browse/age-verification#verify-age) (`POST /v2/age-verification/verify`).",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -3442,6 +3444,8 @@
 					"browse/age-verification"
 				],
 				"operationId": "verifyAgeEnrollment",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.15.0. The FaceTec document/enrollment/liveness steps were consolidated into [Verify age](/grindr-api/browse/age-verification#verify-age) (`POST /v2/age-verification/verify`).",
 				"responses": {
 					"200": {
 						"content": {
@@ -3464,6 +3468,8 @@
 					"browse/age-verification"
 				],
 				"operationId": "verifyAgeLiveness3d",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.15.0. The FaceTec document/enrollment/liveness steps were consolidated into [Verify age](/grindr-api/browse/age-verification#verify-age) (`POST /v2/age-verification/verify`).",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -9970,6 +9976,128 @@
 				"x-wip": true
 			}
 		},
+		"/v2/media/upload": {
+			"post": {
+				"tags": [
+					"right-now"
+				],
+				"operationId": "uploadRightNowMediaV2",
+				"summary": "Upload Right Now media (v2)",
+				"description": "Uploads an uncropped photo with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Used when the `right-now-media-upload-v2` server flag is on.",
+				"parameters": [
+					{
+						"name": "crop_top",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "crop_bottom",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "crop_left",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "crop_right",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "img_1_top",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "img_1_bottom",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "img_1_left",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "img_1_right",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "rotate",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						},
+						"description": "0, 90, 180 or 270"
+					},
+					{
+						"name": "flip_vertical",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/octet-stream": {
+							"schema": {
+								"type": "string",
+								"format": "binary"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/UndocumentedObject"
+										}
+									],
+									"x-original-type": "RightNowMediaUploadResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
 		"/v5/media/upload": {
 			"post": {
 				"tags": [
@@ -13528,6 +13656,14 @@
 					},
 					"state": {
 						"type": "integer"
+					},
+					"takenOnGrindr": {
+						"type": "boolean"
+					},
+					"createdAt": {
+						"type": "integer",
+						"format": "int64",
+						"description": "epoch ms"
 					}
 				},
 				"description": "Profile media state.",
