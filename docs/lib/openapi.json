@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "2026-07-20"
+		"version": "26.12.0 (2026-07-28)"
 	},
 	"servers": [
 		{
@@ -3513,6 +3513,47 @@
 				"x-wip": true
 			}
 		},
+		"/v2/age-verification/verify": {
+			"post": {
+				"tags": [
+					"browse/age-verification"
+				],
+				"operationId": "verifyAge",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "AgeVerificationProcessRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/UndocumentedObject"
+										}
+									],
+									"x-original-type": "AgeVerificationProcessResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
 		"/v3.1/me/blocks": {
 			"get": {
 				"tags": [
@@ -6977,35 +7018,6 @@
 				"summary": "AI chat suggestions"
 			}
 		},
-		"/v1/chat/summary/feedback": {
-			"post": {
-				"tags": [
-					"messaging/conversations"
-				],
-				"operationId": "submitChatSummaryFeedback",
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								]
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"description": "OK"
-					}
-				},
-				"summary": "Chat AI summary feedback",
-				"x-wip": true
-			}
-		},
 		"/v5/chat/conversation/{conversationId}/message": {
 			"get": {
 				"tags": [
@@ -7338,47 +7350,6 @@
 				},
 				"summary": "OCR recognition in chat",
 				"description": "Appears to be a submitting endpoint rather than a retrieving one.",
-				"x-wip": true
-			}
-		},
-		"/v1/wingman/feedback": {
-			"post": {
-				"tags": [
-					"messaging/misc"
-				],
-				"operationId": "submitWingmanFeedback",
-				"security": [
-					{
-						"Grindr3Auth": []
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/WingmanFeedbackRequest"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"additionalProperties": false
-								}
-							}
-						},
-						"description": "Empty object (`{}`)."
-					},
-					"400": {
-						"description": "bad request"
-					}
-				},
-				"summary": "Rate an AI message suggestion",
 				"x-wip": true
 			}
 		},
@@ -15819,40 +15790,6 @@
 					"conversationId",
 					"messageId",
 					"targetLanguageCode"
-				]
-			},
-			"WingmanFeedbackRequest": {
-				"type": "object",
-				"properties": {
-					"message_id": {
-						"type": "string"
-					},
-					"prompt_id": {
-						"type": "string"
-					},
-					"rating": {
-						"type": "number",
-						"description": "e.g. `1`"
-					},
-					"text": {
-						"type": "string",
-						"description": "feedback text"
-					},
-					"timestamp": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/TimestampMs"
-							}
-						]
-					}
-				},
-				"x-render-on-tag": "messaging/misc",
-				"required": [
-					"message_id",
-					"prompt_id",
-					"rating",
-					"text",
-					"timestamp"
 				]
 			},
 			"SavedPhrase": {
