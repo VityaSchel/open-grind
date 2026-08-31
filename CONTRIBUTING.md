@@ -45,7 +45,7 @@ Projects reference:
 
 ### Development environment
 
-1. Clone repository with submodules: `git clone --recurse-submodules ssh://git@git.opengrind.org/open-grind/open-grind.git`
+1. Clone repository with submodules: `git clone --recurse-submodules https://git.opengrind.org/open-grind/open-grind.git`
 2. Install prerequisites:
     - [Bun](https://bun.sh)
     - [Rust](https://rustup.rs)

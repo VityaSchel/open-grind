@@ -69,8 +69,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -130,8 +129,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -184,8 +182,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -240,8 +237,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -293,8 +289,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
