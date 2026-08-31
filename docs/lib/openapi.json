@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.15.0 (2026-08-28)"
+		"version": "26.15.1 (2026-08-30)"
 	},
 	"servers": [
 		{
@@ -3792,6 +3792,38 @@
 				},
 				"summary": "Post a pass",
 				"x-wip": true
+			}
+		},
+		"/v1/rightnow/entitlements/posts": {
+			"get": {
+				"tags": [
+					"browse/entitlements"
+				],
+				"operationId": "getRightNowPostEntitlements",
+				"summary": "Get Right Now post entitlements",
+				"description": "Post-specific Right Now entitlement. The client calls this instead of [Get entitlements](/grindr-api/browse/entitlements#get-entitlements) when the `right-now-entitlement-endpoint-enabled` flag is on.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "string",
+											"description": "entitlement type"
+										},
+										"count": {
+											"type": "integer",
+											"description": "remaining Right Now posts"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
 			}
 		},
 		"/v1/entitlements": {
