@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.13.0 (2026-08-05)"
+		"version": "26.14.0 (2026-08-20)"
 	},
 	"servers": [
 		{
@@ -110,6 +110,10 @@
 		},
 		{
 			"name": "commerce/offers",
+			"x-wip": true
+		},
+		{
+			"name": "safety/appeals",
 			"x-wip": true
 		},
 		{
@@ -1557,7 +1561,7 @@
 				},
 				"x-wip": true,
 				"deprecated": true,
-				"description": "**Removed in app 26.13.0** — the client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one. Documented for older builds."
+				"description": "Removed in the official Android client v26.13.0. The client no longer fetches a Right Now consent agreement, and creating a Right Now post no longer requires accepting one."
 			},
 			"post": {
 				"tags": [
@@ -1586,7 +1590,7 @@
 				},
 				"x-wip": true,
 				"deprecated": true,
-				"description": "**Removed in app 26.13.0** — the client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one. Documented for older builds."
+				"description": "Removed in the official Android client v26.13.0. The client no longer accepts a Right Now consent agreement, and creating a Right Now post no longer requires one."
 			}
 		},
 		"/v3/legal-agreements": {
@@ -3731,7 +3735,7 @@
 				"summary": "Get discover profiles",
 				"x-wip": true,
 				"deprecated": true,
-				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/discover](/grindr-api/browse/discover). Documented for older builds."
+				"description": "Removed in the official Android client v26.10.0. The client now uses [GET /v4/discover](/grindr-api/browse/discover)."
 			}
 		},
 		"/v2/discover": {
@@ -3761,7 +3765,7 @@
 				"x-wip": true,
 				"x-legacy": true,
 				"deprecated": true,
-				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/discover](/grindr-api/browse/discover). Documented for older builds."
+				"description": "Removed in the official Android client v26.10.0. The client now uses [GET /v4/discover](/grindr-api/browse/discover)."
 			}
 		},
 		"/v1/me/pass/{profileId}": {
@@ -4063,7 +4067,7 @@
 					"CascadeQuery"
 				],
 				"deprecated": true,
-				"description": "**Removed in app 26.10.0** — the client now uses [GET /v4/cascade](/grindr-api/browse/grid). Documented for older builds."
+				"description": "Removed in the official Android client v26.10.0. The client now uses [GET /v4/cascade](/grindr-api/browse/grid)."
 			}
 		},
 		"/v7/search": {
@@ -5226,7 +5230,7 @@
 				"summary": "Record profile views (batch)",
 				"x-wip": true,
 				"deprecated": true,
-				"description": "**Not present in the official client as of app 26.10.0+** — the client records views one profile at a time via [POST /v5/views/{profileId}](/grindr-api/interest/views#record-profile-view-v2). This batch endpoint still works server-side but is documented for older/compat use. The `foundVia` field is only ever sent as `null` by observed clients."
+				"description": "Removed in the official Android client v26.10.0. The client records views one profile at a time via [POST /v5/views/{profileId}](/grindr-api/interest/views#record-profile-view-v2). The `foundVia` field is only ever sent as `null` by observed clients."
 			}
 		},
 		"/v4/views/{profileId}": {
@@ -8729,7 +8733,9 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get note"
+				"summary": "Get note",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.14.0."
 			},
 			"put": {
 				"tags": [
@@ -9730,6 +9736,240 @@
 				}
 			}
 		},
+		"/v2/verification/device-keys": {
+			"post": {
+				"tags": [
+					"media"
+				],
+				"operationId": "registerDeviceKeyV2",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Register device key (reCAPTCHA)",
+				"description": "Like [Register device key](/grindr-api/media#register-device-key) but with a reCAPTCHA Enterprise token in the `X-Grindr-Captcha-Token` header, chosen over v1 endpoint when the `recaptcha_device_key_registration` server flag is on.",
+				"parameters": [
+					{
+						"name": "X-Grindr-Captcha-Token",
+						"in": "header",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "reCAPTCHA Enterprise token, action `device_key_registration`."
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterKeyRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/RegisterKeyResponse"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/v1/decision-appeal": {
+			"post": {
+				"tags": [
+					"safety/appeals"
+				],
+				"operationId": "createDecisionAppeal",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Submit ban appeal",
+				"description": "Appeals a moderation decision (ban). `countryCode` added in app 26.14.0.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TrustVendorDecisionAppealRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TrustVendorDecisionAppealResponse"
+								}
+							}
+						}
+					}
+				},
+				"x-wip": true
+			},
+			"get": {
+				"tags": [
+					"safety/appeals"
+				],
+				"operationId": "getLatestDecisionAppeal",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get latest ban appeal",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/UndocumentedObject"
+										}
+									],
+									"x-original-type": "TrustVendorAppealResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
+		"/v2/decision-appeal": {
+			"post": {
+				"tags": [
+					"safety/appeals"
+				],
+				"operationId": "createDecisionAppealV2",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Submit ban appeal (reCAPTCHA)",
+				"description": "Like [Submit ban appeal](/grindr-api/safety/appeals#submit-ban-appeal) but with a reCAPTCHA Enterprise `captchaToken`, chosen when `recaptcha_sift_appeal` server flag is set.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TrustVendorDecisionAppealRequestV2"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TrustVendorDecisionAppealResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TrustVendorErrorResponse"
+								}
+							}
+						},
+						"description": "Appeal rejected (e.g. bad captcha token)."
+					}
+				},
+				"x-wip": true
+			}
+		},
+		"/v4/me/muted-profiles": {
+			"get": {
+				"tags": [
+					"messaging/conversations"
+				],
+				"operationId": "getMutedProfiles",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get muted profiles",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.14.0.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"profileIds": {
+											"type": "array",
+											"items": {
+												"type": "integer",
+												"format": "int64"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/store-and-profile": {
+			"get": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "getStoreAndProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get store-and-profile sections",
+				"description": "Server store and profile-drawer sections (cards, callouts, rows). DTOs have localization-key fields (`titleId`, `subtitleId`, `bulletIds`, `ctaTextId`, `subtitleArgs`), fallback to the literal `title`/`subtitle`/`bullets`/`ctaText`.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/UndocumentedObject"
+										}
+									],
+									"x-original-type": "StoreAndProfileResponseDto"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
 		"/v5/media/upload": {
 			"post": {
 				"tags": [
@@ -9859,6 +10099,16 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MediaUploadProblemResponse"
+								}
+							}
+						},
+						"description": "Media rejected by moderation."
 					}
 				},
 				"x-errors": {
@@ -10489,6 +10739,124 @@
 				},
 				"summary": "Get profile insights v3",
 				"x-wip": true
+			}
+		},
+		"/v3/profile-insights/opt-outs": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getProfileInsightOptOuts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get profile-insight opt-out status",
+				"description": "Per-insight opt-out state; `sectionTitles` is for deleted or pending insights without content.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+								"type": "object",
+								"properties": {
+									"insights": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"insightKey": {
+													"type": "string"
+												},
+												"isOptedOut": {
+													"type": "boolean"
+												},
+												"hasData": {
+													"type": "boolean"
+												},
+												"sectionTitles": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"key": {
+																"type": "string",
+																"description": "translation key"
+															},
+															"default": {
+																"type": "string",
+																"description": "fallback label when `key` is unknown"
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
+			}
+		},
+		"/v1/profile-insights/opt-outs": {
+			"put": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "createProfileInsightOptOuts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Opt out of profile insights",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProfileInsightOptOutsRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "deleteProfileInsightOptOuts",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Undo profile-insight opt-outs",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProfileInsightOptOutsRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				}
 			}
 		},
 		"/v3/profile-insights/me/settings": {
@@ -16163,7 +16531,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -16491,6 +16859,103 @@
 					"available",
 					"displayed",
 					"total"
+				]
+			},
+			"RightNowCarouselV1": {
+				"type": "object",
+				"description": "Right Now carousel of nearby profiles with an active Right Now post.",
+				"properties": {
+					"items": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+							"profileId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"onlineUntil": {
+								"type": "integer",
+								"format": "int64",
+								"nullable": true
+							},
+							"displayName": {
+								"type": "string",
+								"nullable": true
+							},
+							"primaryImageUrl": {
+								"type": "string",
+								"nullable": true
+							},
+							"favorite": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"chatted": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"rightNow": {
+								"type": "string",
+								"nullable": true
+							},
+							"unreadCount": {
+								"type": "integer",
+								"nullable": true
+							},
+							"viewed": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"roaming": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"isVisiting": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"isPopular": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"distanceMeters": {
+								"type": "number",
+								"nullable": true
+							},
+							"isRewarded": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"fuzzedLat": {
+								"type": "number",
+								"nullable": true
+							},
+							"fuzzedLon": {
+								"type": "number",
+								"nullable": true
+							},
+							"rightNowPin": {
+								"type": "object",
+								"nullable": true,
+								"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
+							},
+							"rightNowPost": {
+								"type": "object",
+								"nullable": true,
+								"description": "the active post: `id`, `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`, `expirationTimestamp`"
+							}
+							},
+							"required": [
+								"profileId"
+							]
+						}
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "right_now_carousel_v1",
+				"required": [
+					"items"
 				]
 			},
 			"HiddenProfileV1": {
@@ -17778,6 +18243,94 @@
 				],
 				"x-render-on-tag": "commerce/vip"
 			},
+			"TrustVendorDecisionAppealRequest": {
+				"type": "object",
+				"properties": {
+					"userEmail": {
+						"type": "string"
+					},
+					"userDevice": {
+						"type": "string"
+					},
+					"userLocation": {
+						"type": "string"
+					},
+					"countryCode": {
+						"type": "string",
+						"description": "ISO 3166-1 alpha-2; added in app 26.14.0"
+					},
+					"userVpn": {
+						"type": "boolean"
+					},
+					"errorDescription": {
+						"type": "string"
+					}
+				},
+				"x-render-on-tag": "safety/appeals"
+			},
+			"TrustVendorDecisionAppealRequestV2": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/TrustVendorDecisionAppealRequest"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"captchaToken": {
+								"type": "string",
+								"description": "reCAPTCHA Enterprise token, action `decision_appeal`"
+							}
+						}
+					}
+				],
+				"x-render-on-tag": "safety/appeals"
+			},
+			"TrustVendorDecisionAppealResponse": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"result": {
+						"type": "string"
+					}
+				},
+				"x-render-on-tag": "safety/appeals"
+			},
+			"TrustVendorErrorResponse": {
+				"type": "object",
+				"properties": {
+					"code": {
+						"type": "integer"
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"x-render-on-tag": "safety/appeals"
+			},
+			"MediaUploadProblemResponse": {
+				"type": "object",
+				"description": "RFC-7807 problem body returned on a `422` when uploaded media is blocked by moderation.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "error URN — `urn:gr:err:banned_image` or `urn:gr:err:banned_video`"
+					},
+					"title": {
+						"type": "string"
+					},
+					"status": {
+						"type": "integer",
+						"description": "`422`"
+					},
+					"traceId": {
+						"type": "string"
+					}
+				},
+				"x-render-on-tag": "media"
+			},
 			"WoodworkPlacementResponse": {
 				"type": "object",
 				"properties": {
@@ -17812,6 +18365,33 @@
 					"isTrailingArrowVisible"
 				],
 				"x-render-on-tag": "woodwork"
+			},
+			"ProfileInsightOptOutsRequest": {
+				"type": "object",
+				"properties": {
+					"optOuts": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"insight": {
+									"type": "string"
+								},
+								"insightValue": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"insight",
+								"insightValue"
+							]
+						}
+					}
+				},
+				"required": [
+					"optOuts"
+				],
+				"x-render-on-tag": "users/profiles"
 			},
 			"ProfileInsightsStatus": {
 				"type": "string",
@@ -18333,6 +18913,7 @@
 				"safety/reports",
 				"safety/warnings",
 				"safety/legal-agreements",
+				"safety/appeals",
 				"safety/access-requests"
 			]
 		},
