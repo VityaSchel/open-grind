@@ -7,13 +7,14 @@ import { asAppError } from "$lib/api/methods";
 import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { knownValueOrNull } from "$lib/model/tolerance";
+import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
 export const notificationEventSchema = z.object({
 	type: z.string(),
 	notificationId: z.string().nullish(),
 	ref: z.string().nullish(),
-	payload: z.unknown(),
+	payload: unmodeledSchema,
 });
 
 // The server answers a command on `<type>.response`, echoing our `ref` and
@@ -49,7 +50,10 @@ export const tapV1TapSentEventSchema = notificationEventSchema.safeExtend({
 		timestamp: unixTimestampMsSchema,
 		senderId: z.number(),
 		recipientId: z.number(),
-		tapType: tapTypeOrNoneSchema.nullable(),
+		tapType: knownValueOrNull({
+			value: tapTypeOrNoneSchema,
+			label: "tap event tapType",
+		}),
 		senderProfileImageHash: mediaHashPublicSchema.nullable(),
 		senderDisplayName: z.string().nullable(),
 		isMutual: z.boolean(),

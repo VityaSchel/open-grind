@@ -13,7 +13,7 @@
 	import {
 		acceptNSFWPics,
 		ethnicities,
-		healthPractices,
+		healthPracticeLabels,
 		hivStatuses,
 		lookingFor as lookingForLabels,
 		meetAt as meetAtLabels,
@@ -203,7 +203,7 @@
 					icon={HeartbeatIcon}
 					label="Health Practices"
 					value={sexualHealthValue}
-					options={healthPractices}
+					options={healthPracticeLabels}
 				/>
 			</ProfileSection>
 		{/if}

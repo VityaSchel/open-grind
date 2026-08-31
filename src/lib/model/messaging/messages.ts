@@ -9,22 +9,26 @@ import {
 	albumExpirationSchema,
 	albumPreviewSchema,
 } from "$lib/model/messaging/albums";
+import { serverDefault } from "$lib/model/tolerance";
 import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
-const messageBaseSchema = z.object({ type: z.string(), body: z.unknown() });
+const messageBaseSchema = z.object({ type: z.string(), body: unmodeledSchema });
 
 const messageOverlayBaseSchema = z.object({
 	messageId: z.string(),
 	conversationId: z.string(),
 	senderId: z.int().nonnegative(),
 	timestamp: unixTimestampMsSchema,
-	unsent: z.boolean(),
-	reactions: z.array(
-		z.object({
-			profileId: z.int().nonnegative(),
-			reactionType: z.int().nonnegative(),
-		}),
-	),
+	unsent: serverDefault({ value: z.boolean(), fallback: false }),
+	reactions: serverDefault({
+		value: z.array(
+			z.object({
+				profileId: z.int().nonnegative(),
+				reactionType: z.int().nonnegative(),
+			}),
+		),
+		fallback: [],
+	}),
 	dynamic: unmodeledSchema,
 	chat1Type: unmodeledSchema,
 	replyPreview: unmodeledSchema,
@@ -123,7 +127,7 @@ export type VideoMessage = z.infer<typeof videoMessageSchema>;
 
 export const nonExpiringVideoMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("NonExpiringVideo"),
-	body: z.unknown(),
+	body: unmodeledSchema,
 });
 
 export type NonExpiringVideoMessage = z.infer<
@@ -139,7 +143,7 @@ export type GaymojiMessage = z.infer<typeof gaymojiMessageSchema>;
 
 export const generativeMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Generative"),
-	body: z.unknown(),
+	body: unmodeledSchema,
 });
 
 export type GenerativeMessage = z.infer<typeof generativeMessageSchema>;
@@ -213,7 +217,7 @@ export type PrivateVideoMessage = z.infer<typeof privateVideoMessageSchema>;
 
 export const profileLinkMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("ProfileLink"),
-	body: z.unknown(),
+	body: unmodeledSchema,
 });
 
 export type ProfileLinkMessage = z.infer<typeof profileLinkMessageSchema>;
@@ -264,14 +268,14 @@ export type TextMessage = z.infer<typeof textMessageSchema>;
 
 export const unknownMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("Unknown"),
-	body: z.unknown(),
+	body: unmodeledSchema,
 });
 
 export type UnknownMessage = z.infer<typeof unknownMessageSchema>;
 
 export const videoCallMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("VideoCall"),
-	body: z.unknown(),
+	body: unmodeledSchema,
 });
 
 export type VideoCallMessage = z.infer<typeof videoCallMessageSchema>;
@@ -332,7 +336,7 @@ function messageBranchesWithOverlay<Overlay extends z.ZodObject>({
 		.intersection(
 			messageBaseSchema.safeExtend({
 				type: z.string(),
-				body: z.unknown(),
+				body: unmodeledSchema,
 			}),
 			overlay,
 		)

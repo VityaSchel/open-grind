@@ -2,6 +2,7 @@ import z from "zod";
 
 import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
+import { knownValueOrNull } from "$lib/model/tolerance";
 import { unixTimestampMsSchema } from "$lib/model/types";
 import {
 	profileMaskedMinSchema,
@@ -12,7 +13,10 @@ export const tapProfileSchema = z.object({
 	...profileMaskedMinSchema.shape,
 	...profileMinSchema.shape,
 	timestamp: unixTimestampMsSchema,
-	tapType: tapTypeOrNoneSchema,
+	tapType: knownValueOrNull({
+		value: tapTypeOrNoneSchema,
+		label: "tap tapType",
+	}),
 	lastOnline: unixTimestampMsSchema.nullable(),
 	isBoosting: z.boolean(),
 	isMutual: z.boolean(),

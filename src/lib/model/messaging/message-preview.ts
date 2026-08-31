@@ -5,9 +5,9 @@ import type {
 
 export type MessagePreview = {
 	type: string;
-	text: string | null;
-	albumId: number | null;
-	imageHash: string | null;
+	text?: string | null;
+	albumId?: number | null;
+	imageHash?: string | null;
 };
 
 export function previewFromMessage(
@@ -57,12 +57,17 @@ export function previewFromMessage(
 	}
 }
 
-export function previewLabel(preview: MessagePreview | null): string | null {
-	if (preview === null) return null;
-	if (preview.text !== null) return preview.text;
-	if (preview.albumId !== null) return "Album";
+export function previewLabel(
+	preview: MessagePreview | null | undefined,
+): string | null {
+	if (preview === null || preview === undefined) return null;
+	const text = preview.text ?? null;
+	if (text !== null) return text;
+	if ((preview.albumId ?? null) !== null) return "Album";
 	if (preview.type === "ExpiringImage") return "Expiring photo";
-	if (preview.imageHash !== null || preview.type === "Image") return "Photo";
+	if ((preview.imageHash ?? null) !== null || preview.type === "Image") {
+		return "Photo";
+	}
 	return null;
 }
 

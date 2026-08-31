@@ -8,6 +8,7 @@ import { Tribe, tribes } from "$lib/model/users/profiles";
 import LookupField from "./LookupField.svelte";
 
 const icon = UsersThreeIcon;
+const unknownToUs = 9_999;
 
 describe("LookupField", () => {
 	it("looks up a scalar value", () => {
@@ -38,6 +39,30 @@ describe("LookupField", () => {
 
 		expect(container.textContent).toContain("Tribes");
 		expect(container.textContent).toContain("Bear");
+	});
+
+	it("lists only the ids it can resolve to a label", () => {
+		const { container } = render(LookupField, {
+			props: {
+				icon,
+				value: [Tribe.Bear, unknownToUs, Tribe.Daddy],
+				options: tribes,
+			},
+		});
+
+		expect(container.textContent).toContain("Bear, Daddy");
+		expect(container.textContent).not.toContain("undefined");
+	});
+
+	it.each([
+		["a scalar", unknownToUs],
+		["a list", [unknownToUs]],
+	])("renders nothing when %s resolves to no label", (_, value) => {
+		const { container } = render(LookupField, {
+			props: { icon, value, options: tribes },
+		});
+
+		expect(container.textContent).toBe("");
 	});
 
 	it.each([

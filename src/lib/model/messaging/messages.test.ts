@@ -318,6 +318,30 @@ describe("apiResponseMessageSchema", () => {
 		expect(performance.now() - started).toBeLessThan(1000);
 	});
 
+	it.each(["reactions", "unsent"])(
+		"defaults %s when the server omits it",
+		(field) => {
+			const incomplete: Record<string, unknown> = incoming("msg-14");
+			delete incomplete[field];
+
+			const result = apiResponseMessageSchema.parse(incomplete);
+
+			expect(result.type).toBe("Text");
+			expect(result.reactions).toEqual([]);
+			expect(result.unsent).toBe(false);
+		},
+	);
+
+	it("renders a message whose body key is absent as Unknown", () => {
+		const withoutBody: Record<string, unknown> = incoming("msg-13");
+		delete withoutBody.body;
+
+		const result = apiResponseMessageSchema.parse(withoutBody);
+
+		expect(result.type).toBe("Unknown");
+		expect(result).toHaveProperty("unrecognizedType", "Text");
+	});
+
 	it("models a Right Now request message", () => {
 		const result = apiResponseMessageSchema.parse({
 			type: "RightNowRequest",

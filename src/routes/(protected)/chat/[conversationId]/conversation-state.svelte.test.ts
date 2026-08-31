@@ -255,7 +255,7 @@ describe("ConversationState send echo matching", () => {
 		state.send([outbound("Text", { text: "a" })]);
 		state.send([outbound("Text", { text: "b" })]);
 
-		const bodyText = (m: { body: unknown }) =>
+		const bodyText = (m: { body?: unknown }) =>
 			(m.body as { text: string }).text;
 		expect(state.messages.map(bodyText)).toEqual(["b", "a"]);
 		expect(state.messages.every((m) => m.status === "pending")).toBe(true);

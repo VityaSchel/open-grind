@@ -3,7 +3,8 @@
 
 	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Separator } from "$lib/components/ui/separator";
-	import { type BodyTypeId, bodyTypes } from "$lib/model/users/profiles";
+	import { bodyTypes } from "$lib/model/users/profiles";
+	import { labelFromMap } from "$lib/util/options";
 	import { formatHeight, formatWeightGrams } from "$lib/util/units";
 
 	let {
@@ -13,13 +14,18 @@
 	}: {
 		height: number | null;
 		weight: number | null;
-		bodyType: BodyTypeId | null;
+		bodyType: number | null;
 	} = $props();
 
 	const units = $derived(getPreferencesSnapshot().units);
+	const bodyTypeLabel = $derived(
+		bodyType === null
+			? undefined
+			: labelFromMap({ labels: bodyTypes, id: bodyType }),
+	);
 </script>
 
-{#if height !== null || weight !== null || bodyType !== null}
+{#if height !== null || weight !== null || bodyTypeLabel !== undefined}
 	<span class="flex items-center gap-1 leading-3 whitespace-nowrap">
 		<RulerIcon class="shrink-0 rotate-y-180" />
 		{#if height !== null}
@@ -31,11 +37,11 @@
 		{#if weight !== null}
 			{formatWeightGrams(weight, units)}
 		{/if}
-		{#if (height !== null || weight !== null) && bodyType !== null}
+		{#if (height !== null || weight !== null) && bodyTypeLabel !== undefined}
 			<Separator orientation="vertical" />
 		{/if}
-		{#if bodyType !== null}
-			{bodyTypes[bodyType]}
+		{#if bodyTypeLabel !== undefined}
+			{bodyTypeLabel}
 		{/if}
 	</span>
 {/if}

@@ -7,6 +7,12 @@ import {
 	rightNowShareLocationSchema,
 	rightNowStatusSchema,
 } from "$lib/model/right-now";
+import {
+	knownValueOr,
+	knownValueOrNull,
+	serverDefault,
+} from "$lib/model/tolerance";
+import { unmodeledSchema } from "$lib/model/types";
 
 export const SexualPosition = {
 	Top: 1,
@@ -234,6 +240,14 @@ export const healthPractices = {
 	[HealthPractice.PreferToDiscuss]: "Prefer to discuss",
 } as const;
 
+export const UnsettableHealthPractice = { Sober: 6, DrugFree: 7 } as const;
+
+export const healthPracticeLabels = {
+	...healthPractices,
+	[UnsettableHealthPractice.Sober]: "Sober",
+	[UnsettableHealthPractice.DrugFree]: "Drug-Free",
+} as const;
+
 export const healthPracticesSchema = z.enum(HealthPractice);
 
 export type HealthPracticeId = z.infer<typeof healthPracticesSchema>;
@@ -280,68 +294,81 @@ export const travelPlanSchema = z.object({
 export type TravelPlan = z.infer<typeof travelPlanSchema>;
 
 export const profileMaskedMinSchema = z.object({
-	distance: z.number().nonnegative().nullable(),
-	profileImageMediaHash: mediaHashPublicSchema.nullable(),
-	isFavorite: z.boolean(),
+	distance: z.number().nonnegative().nullable().default(null),
+	profileImageMediaHash: mediaHashPublicSchema.nullable().default(null),
+	isFavorite: serverDefault({ value: z.boolean(), fallback: false }),
 });
 
 export const profileMaskedSchema = profileMaskedMinSchema.extend({
-	lastViewed: z.number().nullable(),
-	seen: z.int().nonnegative().nullable(),
-	rightNow: rightNowStatusSchema,
-	sexualPosition: sexualPositionSchema.nullable().optional(),
-	foundVia: viewSourceEnumSchema.nullable().optional(),
+	lastViewed: z.number().nullable().default(null),
+	seen: z.int().nonnegative().nullable().default(null),
+	rightNow: knownValueOr({
+		value: rightNowStatusSchema,
+		fallback: "NOT_ACTIVE",
+		label: "profile rightNow",
+	}),
+	sexualPosition: z.int().nullable().optional(),
+	foundVia: knownValueOrNull({
+		value: viewSourceEnumSchema,
+		label: "profile foundVia",
+	}).optional(),
 });
 
 export const profileMinSchema = z.object({
 	profileId: z.coerce.number().int().nonnegative(),
-	displayName: z.string().nullable(),
+	displayName: z.string().nullable().default(null),
 	onlineUntil: z.number().nullable().optional(),
 });
 
 export const profileShortSchema = profileMaskedSchema
 	.extend(profileMinSchema.shape)
 	.extend({
-		age: z.int().nonnegative().nullable(),
-		showAge: z.boolean(),
-		showDistance: z.boolean(),
-		approximateDistance: z.boolean(),
-		lastChatTimestamp: z.number().nullable(),
-		isNew: z.boolean(),
-		lastUpdatedTime: z.number().nonnegative().nullable(),
-		medias: z.array(
-			z.object({
-				mediaHash: mediaHashPublicSchema,
-				type: z.int().nonnegative(),
-				state: z.int().nonnegative(),
-				reason: z.string().nullable(),
-				takenOnGrindr: z.boolean().nullable(),
-				createdAt: z.number().nonnegative().nullable(),
-			}),
-		),
+		age: z.int().nonnegative().nullable().default(null),
+		showAge: serverDefault({ value: z.boolean(), fallback: false }),
+		showDistance: serverDefault({ value: z.boolean(), fallback: false }),
+		approximateDistance: serverDefault({
+			value: z.boolean(),
+			fallback: false,
+		}),
+		lastChatTimestamp: z.number().nullable().default(null),
+		isNew: serverDefault({ value: z.boolean(), fallback: false }),
+		lastUpdatedTime: z.number().nonnegative().nullable().default(null),
+		medias: serverDefault({
+			value: z.array(
+				z.object({
+					mediaHash: mediaHashPublicSchema,
+					type: z.int().nonnegative(),
+					state: z.int().nonnegative(),
+					reason: z.string().nullable(),
+					takenOnGrindr: z.boolean().nullable(),
+					createdAt: z.number().nonnegative().nullable(),
+				}),
+			),
+			fallback: [],
+		}),
 	});
 
 export const profileFieldsSchema = z.object({
-	meetAt: z.array(meetAtSchema).optional(),
-	vaccines: z.array(vaccinesSchema).optional(),
+	meetAt: z.array(z.int()).optional(),
+	vaccines: z.array(z.int()).optional(),
 	genders: z.array(z.int().nonnegative()).nullable().optional(),
 	pronouns: z.array(z.int().nonnegative()).nullable().optional(),
 });
 
 export const profileRightNowSchema = z.object({
-	rightNowText: z.string().nullable(),
-	rightNowPosted: z.number().nullable(),
-	rightNowDistance: z.number().nullable(),
-	rightNowThumbnailUrl: z.string().nullable(),
-	rightNowFullImageUrl: z.string().nullable(),
+	rightNowText: z.string().nullable().default(null),
+	rightNowPosted: z.number().nullable().default(null),
+	rightNowDistance: z.number().nullable().default(null),
+	rightNowThumbnailUrl: z.string().nullable().default(null),
+	rightNowFullImageUrl: z.string().nullable().default(null),
 });
 
 export const profileExtraFields = z.object({
-	nsfw: acceptNSFWPicsSchema.nullable(),
-	verifiedInstagramId: z.string().nullable(),
-	isBlockable: z.boolean().nullable(),
-	showTribes: z.boolean(),
-	showPosition: z.boolean(),
+	nsfw: z.int().nullable().default(null),
+	verifiedInstagramId: z.string().nullable().default(null),
+	isBlockable: z.boolean().nullable().default(null),
+	showTribes: serverDefault({ value: z.boolean(), fallback: false }),
+	showPosition: serverDefault({ value: z.boolean(), fallback: false }),
 });
 
 export const profileSchema = profileShortSchema
@@ -349,36 +376,54 @@ export const profileSchema = profileShortSchema
 	.extend(profileRightNowSchema.shape)
 	.extend(profileExtraFields.shape)
 	.extend({
-		aboutMe: z.string().nullable(),
-		ethnicity: ethnicitySchema.nullable(),
-		relationshipStatus: relationshipStatusSchema.nullable(),
-		grindrTribes: z.array(tribeSchema),
-		lookingFor: z.array(lookingForSchema),
-		bodyType: bodyTypeSchema.nullable(),
-		hivStatus: hivStatusSchema.nullable(),
-		lastTestedDate: z.number().nullable(),
-		height: z.number().nullable(),
-		weight: z.number().nullable(),
-		socialNetworks: socialNetworksSchema,
-		identity: z.unknown().nullable(),
-		hashtags: z.array(z.unknown()),
-		profileTags: z.array(z.string()),
-		tapped: z.boolean(),
-		tapType: tapTypeOrNoneSchema.nullable(),
-		lastReceivedTapTimestamp: z.number().nullable(),
-		isTeleporting: z.boolean(),
-		isRoaming: z.boolean(),
-		arrivalDays: z.number().nullable(),
-		unreadCount: z.number(),
-		lastThrobTimestamp: z.unknown(),
-		sexualHealth: z.array(healthPracticesSchema),
-		isVisiting: z.boolean(),
-		travelPlans: z.array(travelPlanSchema),
-		isInAList: z.boolean(),
-		tribesImInto: z.array(tribeSchema).nullable(),
-		showVipBadge: z.boolean(),
-		rightNowShareLocation: rightNowShareLocationSchema.nullable(),
-		rightNowMedias: z.array(rightNowMediaSchema),
+		aboutMe: z.string().nullable().default(null),
+		ethnicity: z.int().nullable().default(null),
+		relationshipStatus: z.int().nullable().default(null),
+		grindrTribes: serverDefault({ value: z.array(z.int()), fallback: [] }),
+		lookingFor: serverDefault({ value: z.array(z.int()), fallback: [] }),
+		bodyType: z.int().nullable().default(null),
+		hivStatus: z.int().nullable().default(null),
+		lastTestedDate: z.number().nullable().default(null),
+		height: z.number().nullable().default(null),
+		weight: z.number().nullable().default(null),
+		socialNetworks: serverDefault({
+			value: socialNetworksSchema,
+			fallback: {},
+		}),
+		identity: unmodeledSchema,
+		hashtags: unmodeledSchema,
+		profileTags: serverDefault({
+			value: z.array(z.string()),
+			fallback: [],
+		}),
+		tapped: serverDefault({ value: z.boolean(), fallback: false }),
+		tapType: knownValueOrNull({
+			value: tapTypeOrNoneSchema,
+			label: "profile tapType",
+		}),
+		lastReceivedTapTimestamp: z.number().nullable().default(null),
+		isTeleporting: serverDefault({ value: z.boolean(), fallback: false }),
+		isRoaming: serverDefault({ value: z.boolean(), fallback: false }),
+		arrivalDays: z.number().nullable().default(null),
+		unreadCount: serverDefault({ value: z.number(), fallback: 0 }),
+		lastThrobTimestamp: unmodeledSchema,
+		sexualHealth: serverDefault({ value: z.array(z.int()), fallback: [] }),
+		isVisiting: serverDefault({ value: z.boolean(), fallback: false }),
+		travelPlans: serverDefault({
+			value: z.array(travelPlanSchema),
+			fallback: [],
+		}),
+		isInAList: serverDefault({ value: z.boolean(), fallback: false }),
+		tribesImInto: z.array(z.int()).nullable().default(null),
+		showVipBadge: serverDefault({ value: z.boolean(), fallback: false }),
+		rightNowShareLocation: knownValueOrNull({
+			value: rightNowShareLocationSchema,
+			label: "profile rightNowShareLocation",
+		}),
+		rightNowMedias: serverDefault({
+			value: z.array(rightNowMediaSchema),
+			fallback: [],
+		}),
 	});
 
 export type Profile = z.infer<typeof profileSchema>;

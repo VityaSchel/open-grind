@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "$lib/model/media";
+import { arrayOfKnownVariants, knownValueOrNull } from "$lib/model/tolerance";
 import {
 	bodyTypeSchema,
 	sexualPositionSchema,
@@ -44,8 +45,14 @@ export const cascadeV4ResponseFullProfileV1Schema = z.object({
 		age: z.int().nonnegative().optional(),
 		heightCm: z.number().nonnegative().optional(),
 		weightGrams: z.number().nonnegative().optional(),
-		bodyType: bodyTypeSchema.nullish(),
-		sexualPosition: sexualPositionSchema.nullish(),
+		bodyType: knownValueOrNull({
+			value: bodyTypeSchema,
+			label: "cascade bodyType",
+		}).optional(),
+		sexualPosition: knownValueOrNull({
+			value: sexualPositionSchema,
+			label: "cascade sexualPosition",
+		}).optional(),
 	}),
 });
 
@@ -155,5 +162,8 @@ export const cascadeV4ResponseItemSchema = z.discriminatedUnion("type", [
 
 export const cascadeV4ResponseSchema = z.object({
 	...cascadeResponseSchema.shape,
-	items: z.array(cascadeV4ResponseItemSchema),
+	items: arrayOfKnownVariants({
+		variants: cascadeV4ResponseItemSchema,
+		label: "cascade",
+	}),
 });

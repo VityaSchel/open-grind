@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { arrayOfParsableEntries } from "$lib/model/tolerance";
+
 export const genderIdSchema = z.int().nonnegative();
 
 export const genderSchema = z.object({
@@ -15,4 +17,7 @@ export const genderSchema = z.object({
 });
 export type Gender = z.infer<typeof genderSchema>;
 
-export const gendersSchema = z.array(genderSchema);
+export const gendersSchema = arrayOfParsableEntries({
+	entries: genderSchema,
+	label: "genders",
+});
