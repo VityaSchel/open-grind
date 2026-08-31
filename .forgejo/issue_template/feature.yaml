@@ -12,9 +12,13 @@ body:
         Before suggesting a feature, please [search](https://git.opengrind.org/open-grind/open-grind/issues) existing issues!
         There is a good chance it has already been suggested and being worked on. If that's the case, please give the existing issue a 👍 or add a comment instead of creating a new one.
 
-        Known feature requests:
-        - [Send albums](https://git.opengrind.org/open-grind/open-grind/issues/33)
-        - [Swipe left-right through profiles](https://git.opengrind.org/open-grind/open-grind/issues/111)
+        **Known feature requests:**
+        - [Uploading to albums](https://git.opengrind.org/open-grind/open-grind/issues/33)
+        - [Deleting albums](https://git.opengrind.org/open-grind/open-grind/issues/33)
+        - [Send expiring albums](https://git.opengrind.org/open-grind/open-grind/issues/339)
+        - [Incognito mode](https://git.opengrind.org/open-grind/open-grind/issues/247)
+        - [Login with Facebook](https://git.opengrind.org/open-grind/open-grind/issues/321)
+        - [Swiping left-right through profiles, next profile swipe](https://git.opengrind.org/open-grind/open-grind/issues/111)
   - type: textarea
     id: description
     attributes:
