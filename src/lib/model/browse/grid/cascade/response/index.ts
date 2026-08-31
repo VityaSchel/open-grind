@@ -151,6 +151,15 @@ export const cascadeResponseProfileHideStatusSchema = z.object({
 	count: z.int().nonnegative(),
 });
 
+export const cascadeResponseRewardedProfilesEntryPointV1Schema = z.object({
+	type: z.literal("rewarded_profiles_entry_point_v1"),
+	data: z.object({
+		previewImageUrls: z.array(mediaUrlSchema),
+		remainingRewards: z.int().nonnegative(),
+		profilesPerRedemption: z.int().nonnegative(),
+	}),
+});
+
 export const cascadeResponseSchema = z.object({
 	items: z.array(z.unknown()),
 	nextPage: z.int().nonnegative().nullable(),

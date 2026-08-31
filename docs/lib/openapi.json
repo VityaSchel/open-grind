@@ -16226,7 +16226,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [fav_header_v1](/grindr-api/browse/grid#fav_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [fav_header_v1](/grindr-api/browse/grid#fav_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -16731,6 +16731,34 @@
 				"x-display-name": "profile_hide_status",
 				"required": [
 					"count"
+				]
+			},
+			"RewardedProfilesEntryPointV1": {
+				"type": "object",
+				"description": "Entry point card offering to unlock profiles by watching a rewarded ad, see [Rewarded Ad Type](/grindr-api/commerce/rewarded-ads#rewarded-ad-type) `CASCADE_PROFILES_UNLOCK`. Rendered full width rather than as a grid tile.",
+				"properties": {
+					"previewImageUrls": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "array of strings, URLs of the profile images that would be unlocked, see [Media -> Public CDN files -> Profile Images](/grindr-api/media/public-cdn-files#profile-images)"
+					},
+					"remainingRewards": {
+						"type": "integer",
+						"description": "how many times the reward can still be redeemed"
+					},
+					"profilesPerRedemption": {
+						"type": "integer",
+						"description": "how many profiles a single redemption unlocks"
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "rewarded_profiles_entry_point_v1",
+				"required": [
+					"previewImageUrls",
+					"remainingRewards",
+					"profilesPerRedemption"
 				]
 			},
 			"SearchProfileResult": {

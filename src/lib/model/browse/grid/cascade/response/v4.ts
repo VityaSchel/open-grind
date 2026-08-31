@@ -19,6 +19,7 @@ import {
 	cascadeResponsePartialProfileV1Schema,
 	cascadeResponseProfileHideStatusSchema,
 	cascadeResponseProfileSchema,
+	cascadeResponseRewardedProfilesEntryPointV1Schema,
 	cascadeResponseSchema,
 	cascadeResponseSponsoredProfileV1Schema,
 	cascadeResponseTopPicksV1Schema,
@@ -126,6 +127,10 @@ export const cascadeV4ResponseProfileHideStatusSchema = z.object({
 	...cascadeResponseProfileHideStatusSchema.shape,
 });
 
+export const cascadeV4ResponseRewardedProfilesEntryPointV1Schema = z.object({
+	...cascadeResponseRewardedProfilesEntryPointV1Schema.shape,
+});
+
 export const cascadeV4ResponseItemSchema = z.discriminatedUnion("type", [
 	cascadeV4ResponseFullProfileV1Schema,
 	cascadeV4ResponsePartialProfileV1Schema,
@@ -145,6 +150,7 @@ export const cascadeV4ResponseItemSchema = z.discriminatedUnion("type", [
 	cascadeV4ResponseFavoritesHeaderNoFreeResultsV1Schema,
 	cascadeV4ResponseFavoritesHeaderNoXtraResultsV1Schema,
 	cascadeV4ResponseProfileHideStatusSchema,
+	cascadeV4ResponseRewardedProfilesEntryPointV1Schema,
 ]);
 
 export const cascadeV4ResponseSchema = z.object({

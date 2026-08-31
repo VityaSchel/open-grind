@@ -20,6 +20,19 @@ const profileWithoutLastOnline = {
 
 const profile = { ...profileWithoutLastOnline, lastOnline: 1_710_000_000_000 };
 
+const rewardedProfilesEntryPoint = {
+	type: "rewarded_profiles_entry_point_v1",
+	data: {
+		previewImageUrls: Array.from(
+			{ length: 9 },
+			(_, index) =>
+				`https://cdns.grindr.com/images/profile/480x480/abc${index}`,
+		),
+		remainingRewards: 3,
+		profilesPerRedemption: 9,
+	},
+};
+
 const response = (items: unknown[]) => ({
 	items,
 	nextPage: null,
@@ -58,5 +71,21 @@ describe("cascadeV4ResponseSchema", () => {
 				]),
 			).success,
 		).toBe(false);
+	});
+
+	it("accepts a rewarded profiles entry point item", () => {
+		const parsed = cascadeV4ResponseSchema.parse(
+			response([
+				{ type: "full_profile_v1", data: profile },
+				rewardedProfilesEntryPoint,
+				{ type: "xtra_mpu_v1", data: {} },
+			]),
+		);
+
+		expect(parsed.items.map((item) => item.type)).toEqual([
+			"full_profile_v1",
+			"rewarded_profiles_entry_point_v1",
+			"xtra_mpu_v1",
+		]);
 	});
 });
