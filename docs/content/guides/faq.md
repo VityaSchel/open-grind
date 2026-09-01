@@ -87,7 +87,7 @@ It's not possible to run Open Grind in a web browser. There's a **[Grindr Web Un
 
 Yes, it's built-in. You must explicitly choose a location before you can use Open Grind. On mobile platforms you can also auto-update your location in real time using your device's GPS.
 
-See [Location spoofing](http://localhost:5173/guides/features/location-spoofing-teleport)
+See [Location spoofing](/guides/features/location-spoofing-teleport)
 
 :::
 
