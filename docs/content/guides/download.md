@@ -19,7 +19,7 @@ Never download Open Grind from unofficial sources. The only official source of O
 ## Android
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-android.apk" size="medium">Download for Android (apk)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-android.apk" size="medium">Download for Android (apk)</VPButton>
 </div>
 
 Install using your system's APK installer. Optionally, enable auto updates.
@@ -27,8 +27,8 @@ Install using your system's APK installer. Optionally, enable auto updates.
 ## Windows
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
 </div>
 
 Launch the installer and follow the steps. Optionally, enable auto updates. To uninstall, use the bundled uninstall.exe. Check "delete app data" to delete the session and preferences.
@@ -36,8 +36,8 @@ Launch the installer and follow the steps. Optionally, enable auto updates. To u
 ## Linux
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
 </div>
 
 The deb files are only supported by Debian-based distros (Ubuntu, Linux Mint, etc). For other Linux distributions, please [build manually](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md). Open Grind currently does not ship AppImage because of reproducibility issues.
@@ -70,7 +70,7 @@ Use `Suites: beta` to track prereleases. To remove the repository, delete both f
 ## macOS
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4/open-grind-v0.1.0-beta.4-macos.zip" size="medium">Download for macOS (universal)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-macos.zip" size="medium">Download for macOS (universal)</VPButton>
 </div>
 
 Extract Open&nbsp;Grind.app from zip archive and move to Applications folder. To uninstall, move the app from Applications to Trash.

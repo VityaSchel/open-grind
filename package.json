@@ -1,6 +1,6 @@
 {
 	"name": "open-grind",
-	"version": "0.1.0-beta.4",
+	"version": "0.1.0-beta.4.1-dev",
 	"license": "MIT",
 	"author": "Open Grind Governance (https://opengrind.org/governance)",
 	"type": "module",

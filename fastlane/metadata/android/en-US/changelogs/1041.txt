@@ -1,0 +1,4 @@
+- Grid schema validation errors fixed
+- Image loading speed fixed
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.4.1
