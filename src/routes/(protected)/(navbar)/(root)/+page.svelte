@@ -46,7 +46,8 @@
 					container={gridContainer}
 					updating={gridState.refreshing}
 					position="top"
-					onrefresh={() => void gridState.refresh()}
+					onrefresh={() =>
+						void gridState.refresh({ keepLoadedPages: false })}
 				/>
 			{/if}
 		</main>
