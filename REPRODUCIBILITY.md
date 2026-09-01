@@ -81,32 +81,31 @@ Every input that affects the output bytes is pinned in exactly one place:
 
 The `opengrind.android.*` keys in `gradle.properties` are read by both Gradle and `flake.nix`. Bump them there once and both consumers pick up the new value.
 
-v1 (JAR) signatures (`META-INF/*.SF`, `*.{RSA,EC,DSA}`, `MANIFEST.MF`) and v2/v3 signing block (last zip entry and the central directory) are not reproducible. Everything else (dex, native libs, resources, manifest, assets) is byte-identical between a signed and an unsigned build of the same source on the same toolchain.
+v1 (JAR) signatures (`META-INF/*.SF`, `*.{RSA,EC,DSA}`, `MANIFEST.MF`) and v2/v3 signing block (last zip entry and the central directory) are not reproducible. [apksigcopier](https://github.com/obfusk/apksigcopier) copies the v1 files (`META-INF/MANIFEST.MF`, `*.SF`, `*.{RSA,EC,DSA}`) and the v2/v3 signing block from the published APK onto the freshly built unsigned one. Everything else (dex, native libs, resources, manifest, assets) is byte-identical between a signed and an unsigned build of the same source on the same toolchain.
+
+Needs `apksigcopier` and `apksigner`, both on `PATH` in `nix develop .#android`.
 
 ```bash
 # 1. Reproduce the unsigned APK locally
 git checkout v<tag>
 nix run .#build-android
-LOCAL=src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v<tag>-android-unsigned.apk
+LOCAL="$(find src-tauri/gen/android/app/build/outputs/apk/universal/release -name '*-unsigned.apk')"
 
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
 PUBLISHED=/path/to/open-grind-v<tag>-android.apk
+RELEASE_CERT=2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c # KEYS.md
 
 # 3. Confirm the content reproduces
-apk_content_hash() {
-  unzip -Z1 "$1" \
-    | grep -vE '^META-INF/(MANIFEST\.MF|[^/]+\.(SF|RSA|EC|DSA))$' \
-    | while IFS= read -r entry; do
-        printf '%s  %s\n' \
-          "$(unzip -p "$1" "$entry" | sha256sum | cut -c1-64)" \
-          "$entry"
-      done
-}
+SIGCOPIED="$(mktemp -d)/$(basename "$PUBLISHED")"
+trap 'rm -rf "$(dirname "$SIGCOPIED")"' EXIT
 
-if diff <(apk_content_hash "$LOCAL") <(apk_content_hash "$PUBLISHED"); then
-  echo "✓ APK hash checksum matches"
+if [ -s "$LOCAL" ] && [ -s "$PUBLISHED" ] &&
+  apksigcopier copy "$PUBLISHED" "$LOCAL" "$SIGCOPIED" &&
+  cmp "$SIGCOPIED" "$PUBLISHED" &&
+  apksigner verify --print-certs "$PUBLISHED" | grep -qi "$RELEASE_CERT"; then
+  echo "✓ the published APK is this build, signed with the release key"
 else
-  echo "✗ APK hash checksum mismatch, local build does not match the published APK" >&2
+  echo "✗ APK does not reproduce, or is not signed with the release key" >&2
   exit 1
 fi
 ```
