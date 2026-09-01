@@ -632,3 +632,56 @@ describe("ConversationState error classification", () => {
 		expect(state.messages).toHaveLength(1);
 	});
 });
+
+describe("ConversationState unsend preview", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		reconcileHandlers.length = 0;
+	});
+
+	async function withTwoMessages(
+		conversations: ReturnType<typeof conversationsStub>,
+	) {
+		getConversationMock.mockResolvedValue({
+			messages: [message("m2", 2000), message("m1", 1000)],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		const state = create(conversations);
+		await flush();
+		conversations.updatePreview.mockClear();
+		return state;
+	}
+
+	it("rewrites the inbox row when the newest message is unsent, and puts it back", async () => {
+		const conversations = conversationsStub();
+		const state = await withTwoMessages(conversations);
+
+		const { revert } = state.markMessageAsUnsent("m2");
+
+		expect(conversations.updatePreview).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ type: "Unsent" }),
+			timestamp: 2000,
+		});
+
+		revert();
+
+		expect(conversations.updatePreview).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ type: "Text", text: "m2" }),
+			timestamp: 2000,
+		});
+	});
+
+	it("leaves the inbox row alone when an older message is unsent", async () => {
+		const conversations = conversationsStub();
+		const state = await withTwoMessages(conversations);
+
+		const { revert } = state.markMessageAsUnsent("m1");
+		revert();
+
+		expect(conversations.updatePreview).not.toHaveBeenCalled();
+	});
+});
