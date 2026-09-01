@@ -50,3 +50,17 @@ img.inline {
 	vertical-align: middle;
 	translate: 0 calc((1ex - 1cap) / 2);
 }
+
+.VPFeatures .item .VPFeature {
+	border-radius: 19px;
+}
+
+.vp-doc a.VPButton {
+	text-decoration: none;
+}
+
+.vpbuttons-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}

@@ -1,6 +1,7 @@
 ---
 prev: false
 next: false
+title: 'Sign in with Google'
 ---
 
 # Sign in with Google in Open Grind

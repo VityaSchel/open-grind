@@ -1,0 +1,276 @@
+diff --git a/dist/client/theme-default/components/VPButton.vue b/dist/client/theme-default/components/VPButton.vue
+index d0a5de7094259e4f77b838f3c0d7ed59b5af6424..6a24c130e33964dc46c8d93e517bc68c44e1a955 100644
+--- a/dist/client/theme-default/components/VPButton.vue
++++ b/dist/client/theme-default/components/VPButton.vue
+@@ -1,13 +1,17 @@
+ <script setup lang="ts">
++import type { DefaultTheme } from 'vitepress/theme'
+ import { computed } from 'vue'
+ import { normalizeLink } from '../support/utils'
+ import { EXTERNAL_URL_RE } from '../../shared'
++import VPImage from './VPImage.vue'
+ 
+ interface Props {
+   tag?: string
+   size?: 'medium' | 'big'
+   theme?: 'brand' | 'alt' | 'sponsor'
+   text?: string
++  icon?: DefaultTheme.FeatureIcon
++  badge?: string
+   href?: string
+   target?: string;
+   rel?: string;
+@@ -17,6 +21,8 @@ const props = withDefaults(defineProps<Props>(), {
+   theme: 'brand'
+ })
+ 
++const iconSize = computed(() => (props.size === 'big' ? '20' : '18'))
++
+ const isExternal = computed(
+   () => props.href && EXTERNAL_URL_RE.test(props.href)
+ )
+@@ -30,12 +36,27 @@ const component = computed(() => {
+   <component
+     :is="component"
+     class="VPButton"
+-    :class="[size, theme]"
++    :class="[size, theme, { 'has-icon': icon, 'has-badge': badge }]"
+     :href="href ? normalizeLink(href) : undefined"
+     :target="props.target ?? (isExternal ? '_blank' : undefined)"
+     :rel="props.rel ?? (isExternal ? 'noreferrer' : undefined)"
+   >
+-    <slot>{{ text }}</slot>
++    <slot>
++      <template v-if="icon || badge">
++        <VPImage
++          v-if="typeof icon === 'object'"
++          class="icon-image"
++          :image="icon"
++          :alt="icon.alt"
++          :width="icon.width || iconSize"
++          :height="icon.height || iconSize"
++        />
++        <span v-else-if="icon" class="icon" v-html="icon"></span>
++        <span class="text">{{ text }}</span>
++        <span v-if="badge" class="badge">{{ badge }}</span>
++      </template>
++      <template v-else>{{ text }}</template>
++    </slot>
+   </component>
+ </template>
+ 
+@@ -49,6 +70,62 @@ const component = computed(() => {
+   transition: color 0.25s, border-color 0.25s, background-color 0.25s;
+ }
+ 
++.VPButton.has-icon,
++.VPButton.has-badge {
++  display: inline-flex;
++  justify-content: center;
++  align-items: center;
++  gap: 8px;
++}
++
++.VPButton.has-badge {
++  gap: 9px;
++}
++
++.VPButton .icon {
++  display: flex;
++  flex-shrink: 0;
++  align-items: center;
++  justify-content: center;
++  font-size: 1.25em;
++  line-height: 1;
++}
++
++.VPButton .icon :deep(svg) {
++  width: 1em;
++  height: 1em;
++}
++
++.VPButton :deep(.icon-image) {
++  flex-shrink: 0;
++  object-fit: contain;
++}
++
++.VPButton .badge {
++  flex-shrink: 0;
++  border-radius: 999px;
++  padding: 0 7px;
++  line-height: 20px;
++  font-size: 12px;
++  font-weight: 600;
++  background-color: color-mix(in srgb, currentColor 10%, transparent);
++}
++
++.VPButton.big .badge {
++  line-height: 22px;
++  font-size: 13px;
++}
++
++.VPButton.has-badge.medium {
++  padding-right: 9px;
++  padding-left: 17px;
++}
++
++.VPButton.has-badge.big {
++  padding-right: 12px;
++  padding-left: 17px;
++}
++
+ .VPButton:active {
+   transition: color 0.1s, border-color 0.1s, background-color 0.1s;
+ }
+diff --git a/dist/client/theme-default/components/VPHero.vue b/dist/client/theme-default/components/VPHero.vue
+index adb4db47fa83630c514fecc24b88c8aa21b33d97..2a1638efdd24be87718b5411601c538571bd963b 100644
+--- a/dist/client/theme-default/components/VPHero.vue
++++ b/dist/client/theme-default/components/VPHero.vue
+@@ -5,15 +5,23 @@ import { layoutInfoInjectionKey } from '../composables/layout'
+ import VPButton from './VPButton.vue'
+ import VPImage from './VPImage.vue'
+ 
++export interface HeroActionPlatform {
++  icon: DefaultTheme.FeatureIcon
++  label: string
++}
++
+ export interface HeroAction {
+   theme?: 'brand' | 'alt'
+   text: string
++  icon?: DefaultTheme.FeatureIcon
++  badge?: string
++  platforms?: HeroActionPlatform[]
+   link: string
+   target?: string
+   rel?: string
+ }
+ 
+-defineProps<{
++const props = defineProps<{
+   name?: string
+   text?: string
+   tagline?: string
+@@ -21,6 +29,10 @@ defineProps<{
+   actions?: HeroAction[]
+ }>()
+ 
++const hasPlatforms = computed(() =>
++  props.actions?.some((action) => action.platforms?.length)
++)
++
+ const { heroImageSlotExists } = inject(
+   layoutInfoInjectionKey,
+   { heroImageSlotExists: computed(() => false) }
+@@ -28,7 +40,13 @@ const { heroImageSlotExists } = inject(
+ </script>
+ 
+ <template>
+-  <div class="VPHero" :class="{ 'has-image': image || heroImageSlotExists }">
++  <div
++    class="VPHero"
++    :class="{
++      'has-image': image || heroImageSlotExists,
++      'has-platforms': hasPlatforms
++    }"
++  >
+     <div class="container">
+       <div class="main">
+         <slot name="home-hero-info-before" />
+@@ -49,10 +67,31 @@ const { heroImageSlotExists } = inject(
+               size="medium"
+               :theme="action.theme"
+               :text="action.text"
++              :icon="action.icon"
++              :badge="action.badge"
+               :href="action.link"
+               :target="action.target"
+               :rel="action.rel"
+             />
++            <ul v-if="action.platforms" class="platforms">
++              <li
++                v-for="platform in action.platforms"
++                :key="platform.label"
++                class="platform"
++                :title="platform.label"
++              >
++                <VPImage
++                  v-if="typeof platform.icon === 'object'"
++                  class="platform-image"
++                  :image="platform.icon"
++                  :alt="platform.label"
++                  :width="platform.icon.width || 16"
++                  :height="platform.icon.height || 16"
++                />
++                <span v-else class="platform-icon" v-html="platform.icon"></span>
++                <span class="visually-hidden">{{ platform.label }}</span>
++              </li>
++            </ul>
+           </div>
+         </div>
+         <slot name="home-hero-actions-after" />
+@@ -72,14 +111,26 @@ const { heroImageSlotExists } = inject(
+ 
+ <style scoped>
+ .VPHero {
++  /* .platforms padding-top + .platform font-size */
++  --vp-hero-platforms-height: 28px;
+   margin-top: calc((var(--vp-nav-height) + var(--vp-layout-top-height, 0px)) * -1);
+   padding: calc(var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 48px) 24px 48px;
+ }
+ 
++@media (min-width: 600px) {
++  .VPHero.has-platforms {
++    padding-bottom: calc(48px - var(--vp-hero-platforms-height));
++  }
++}
++
+ @media (min-width: 640px) {
+   .VPHero {
+     padding: calc(var(--vp-nav-height) + var(--vp-layout-top-height, 0px) + 80px) 48px 64px;
+   }
++
++  .VPHero.has-platforms {
++    padding-bottom: calc(64px - var(--vp-hero-platforms-height));
++  }
+ }
+ 
+ @media (min-width: 960px) {
+@@ -251,6 +302,37 @@ const { heroImageSlotExists } = inject(
+   padding: 6px;
+ }
+ 
++.platforms {
++  display: none;
++  justify-content: center;
++  align-items: center;
++  gap: 12px;
++  padding-top: 12px;
++  color: var(--vp-c-text-3);
++}
++
++.platform {
++  display: flex;
++  font-size: 16px;
++  line-height: 1;
++}
++
++@media (min-width: 600px) {
++  .platforms {
++    display: flex;
++  }
++}
++
++.platform-icon {
++  display: flex;
++}
++
++.platform :deep(svg) {
++  width: 1em;
++  height: 1em;
++}
++
++
+ .image {
+   order: 1;
+   margin: -76px -24px -48px;
