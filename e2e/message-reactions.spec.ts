@@ -71,6 +71,7 @@ test("a touchscreen keeps the double-tap hint instead of the button", async ({
 test("a double tap still reacts on a touchscreen", async ({ page }) => {
 	await openConversation(page);
 	const bubble = reactable(page);
+	await bubble.scrollIntoViewIfNeeded();
 	const box = await bubble.boundingBox();
 	if (!box) throw new Error("the reactable row has no box");
 
