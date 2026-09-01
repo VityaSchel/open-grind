@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
 import MediaImage from "./MediaImage.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
@@ -14,8 +16,42 @@ function loadedImage(img: HTMLImageElement, naturalWidth: number) {
 	return fireEvent.load(img);
 }
 
+class FakeIntersectionObserver {
+	static latest: FakeIntersectionObserver | null = null;
+	#callback: IntersectionObserverCallback;
+	#node: Element | null = null;
+
+	constructor(callback: IntersectionObserverCallback) {
+		this.#callback = callback;
+		FakeIntersectionObserver.latest = this;
+	}
+
+	observe(node: Element) {
+		this.#node = node;
+	}
+
+	enter() {
+		this.#callback(
+			[
+				{
+					isIntersecting: true,
+					target: this.#node,
+				} as unknown as IntersectionObserverEntry,
+			],
+			this as unknown as IntersectionObserver,
+		);
+	}
+
+	unobserve() {}
+	disconnect() {}
+}
+
 describe("MediaImage", () => {
-	afterEach(cleanup);
+	afterEach(() => {
+		cleanup();
+		vi.unstubAllGlobals();
+		FakeIntersectionObserver.latest = null;
+	});
 
 	it("renders only the image while the source is pending", () => {
 		const { container } = render(MediaImage, { props: { src: SRC } });
@@ -77,6 +113,43 @@ describe("MediaImage", () => {
 
 		expect(container.querySelector("img")?.src).toBe(OTHER_SRC);
 		expect(container.querySelector(BROKEN)).toBeNull();
+	});
+
+	it("holds a lazy source back until the image comes into view", async () => {
+		vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+		const { container } = render(MediaImage, {
+			props: { src: SRC, loading: "lazy" as const },
+		});
+
+		expect(container.querySelector("img")?.getAttribute("src")).toBe(
+			TRANSPARENT_PIXEL,
+		);
+
+		FakeIntersectionObserver.latest?.enter();
+		await tick();
+
+		expect(container.querySelector("img")?.src).toBe(SRC);
+	});
+
+	it("ignores the placeholder's own load rather than reporting it as the photo", async () => {
+		vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+		const onload = vi.fn();
+		const { container } = render(MediaImage, {
+			props: { src: SRC, loading: "lazy" as const, onload },
+		});
+
+		await loadedImage(container.querySelector("img")!, 1);
+
+		expect(onload).not.toHaveBeenCalled();
+		expect(container.querySelector(BROKEN)).toBeNull();
+	});
+
+	it("requests an eager source straight away", () => {
+		const { container } = render(MediaImage, {
+			props: { src: SRC, loading: "eager" as const },
+		});
+
+		expect(container.querySelector("img")?.src).toBe(SRC);
 	});
 
 	it("carries a non-empty alt onto the fallback as its accessible name", async () => {
