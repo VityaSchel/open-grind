@@ -1,0 +1,117 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 0988872..aa12f07 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -415,6 +415,9 @@ default-features = false
+ [target.'cfg(target_vendor = "apple")'.dependencies.url]
+ version = "2.5"
+ 
++[lints.rust]
++warnings = { level = "allow", priority = -1 }
++
+ [lints.rust.unexpected_cfgs]
+ level = "warn"
+ priority = 0
+diff --git a/src/android/binding.rs b/src/android/binding.rs
+index 031cd09..af6559c 100644
+--- a/src/android/binding.rs
++++ b/src/android/binding.rs
+@@ -99,7 +99,12 @@ fn handle_request(
+   let webview_id = env.get_string(&webview_id)?;
+   let webview_id = webview_id.to_str().ok().unwrap_or_default();
+ 
+-  if let Some(handler) = REQUEST_HANDLER.lock().unwrap().get(webview_id) {
++  let handler = REQUEST_HANDLER
++    .lock()
++    .unwrap()
++    .get(webview_id)
++    .map(|handler| handler.handler.clone());
++  if let Some(handler) = handler {
+     #[cfg(feature = "tracing")]
+     let span =
+       tracing::info_span!(parent: None, "wry::custom_protocol::handle", uri = tracing::field::Empty).entered();
+@@ -162,7 +167,7 @@ fn handle_request(
+     let response = {
+       #[cfg(feature = "tracing")]
+       let _span = tracing::info_span!("wry::custom_protocol::call_handler").entered();
+-      (handler.handler)(
++      (handler)(
+         webview_id,
+         final_request,
+         is_document_start_script_enabled != 0,
+diff --git a/src/android/mod.rs b/src/android/mod.rs
+index 8f44c70..3b64104 100644
+--- a/src/android/mod.rs
++++ b/src/android/mod.rs
+@@ -21,7 +21,7 @@ use raw_window_handle::HasWindowHandle;
+ use std::{
+   borrow::Cow,
+   collections::HashMap,
+-  sync::{mpsc::channel, Mutex},
++  sync::{mpsc::channel, Arc, Mutex},
+   time::Duration,
+ };
+ 
+@@ -70,7 +70,7 @@ macro_rules! define_static_handlers {
+ 
+ define_static_handlers! {
+   IPC = UnsafeIpc { handler: Box<dyn Fn(Request<String>)> };
+-  REQUEST_HANDLER = UnsafeRequestHandler { handler:  Box<dyn Fn(&str, Request<Vec<u8>>, bool) -> Option<HttpResponse<Cow<'static, [u8]>>>> };
++  REQUEST_HANDLER = UnsafeRequestHandler { handler:  Arc<dyn Fn(&str, Request<Vec<u8>>, bool) -> Option<HttpResponse<Cow<'static, [u8]>>> + Send + Sync> };
+   TITLE_CHANGE_HANDLER = UnsafeTitleHandler { handler: Box<dyn Fn(String)> };
+   URL_LOADING_OVERRIDE = UnsafeUrlLoadingOverride { handler: Box<dyn Fn(String) -> bool> };
+   ON_LOAD_HANDLER = UnsafeOnPageLoadHandler { handler: Box<dyn Fn(PageLoadEvent, String)> };
+@@ -247,7 +247,7 @@ impl InnerWebView {
+       .unwrap()
+       .insert(
+         id.clone(),
+-        UnsafeRequestHandler::new(Box::new(
++        UnsafeRequestHandler::new(Arc::new(
+           move |webview_id: &str, mut request, is_document_start_script_enabled| {
+             let uri = request.uri().to_string();
+             if let Some((custom_protocol, custom_protocol_handler)) =
+diff --git a/src/lib.rs b/src/lib.rs
+index 38fbc9e..a372e8d 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -644,7 +644,7 @@ struct WebViewAttributes<'a> {
+   ///   locate your files in those directories. For more information, see [Loading in-app content](https://developer.android.com/guide/webapps/load-local-content) page.
+   /// - iOS: To get the path of your assets, you can call [`CFBundle::resources_path`](https://docs.rs/core-foundation/latest/core_foundation/bundle/struct.CFBundle.html#method.resources_path). So url like `wry://assets/index.html` could get the html file in assets directory.
+   pub custom_protocols:
+-    HashMap<String, Box<dyn Fn(WebViewId, Request<Vec<u8>>, RequestAsyncResponder)>>,
++    HashMap<String, Box<dyn Fn(WebViewId, Request<Vec<u8>>, RequestAsyncResponder) + Send + Sync>>,
+ 
+   /// The IPC handler to receive the message from Javascript on webview
+   /// using `window.ipc.postMessage("insert_message_here")` to host Rust code.
+@@ -1037,7 +1037,7 @@ impl<'a> WebViewBuilder<'a> {
+   #[cfg(feature = "protocol")]
+   pub fn with_custom_protocol<F>(mut self, name: String, handler: F) -> Self
+   where
+-    F: Fn(WebViewId, Request<Vec<u8>>) -> Response<Cow<'static, [u8]>> + 'static,
++    F: Fn(WebViewId, Request<Vec<u8>>) -> Response<Cow<'static, [u8]>> + Send + Sync + 'static,
+   {
+     #[cfg(any(
+       target_os = "linux",
+@@ -1102,7 +1102,7 @@ impl<'a> WebViewBuilder<'a> {
+   #[cfg(feature = "protocol")]
+   pub fn with_asynchronous_custom_protocol<F>(mut self, name: String, handler: F) -> Self
+   where
+-    F: Fn(WebViewId, Request<Vec<u8>>, RequestAsyncResponder) + 'static,
++    F: Fn(WebViewId, Request<Vec<u8>>, RequestAsyncResponder) + Send + Sync + 'static,
+   {
+     #[cfg(any(
+       target_os = "linux",
+diff --git a/src/wkwebview/mod.rs b/src/wkwebview/mod.rs
+index 6856349..b492a14 100644
+--- a/src/wkwebview/mod.rs
++++ b/src/wkwebview/mod.rs
+@@ -109,7 +109,8 @@ static COUNTER: Counter = Counter::new();
+ static WEBVIEW_STATE: Lazy<RwLock<HashMap<String, WebViewState>>> = Lazy::new(Default::default);
+ 
+ struct WebViewState {
+-  pub protocol_ptrs: Vec<Rc<dyn Fn(crate::WebViewId, Request<Vec<u8>>, RequestAsyncResponder)>>,
++  pub protocol_ptrs:
++    Vec<Rc<dyn Fn(crate::WebViewId, Request<Vec<u8>>, RequestAsyncResponder) + Send + Sync>>,
+ }
+ 
+ unsafe impl Send for WebViewState {}
