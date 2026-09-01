@@ -4,8 +4,8 @@ use grindr::Bytes;
 
 const MAX_ENTRY_BYTES: usize = super::MAX_MEDIA_BYTES;
 const LARGE_ENTRY_BYTES: usize = 128 * 1024;
-const SMALL_BUDGET_BYTES: usize = 48 * 1024 * 1024;
-const LARGE_BUDGET_BYTES: usize = MAX_ENTRY_BYTES;
+const SMALL_BUDGET_BYTES: usize = 32 * 1024 * 1024;
+const LARGE_BUDGET_BYTES: usize = 2 * MAX_ENTRY_BYTES;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Class {
@@ -235,6 +235,19 @@ mod tests {
 				"thumb{index} was evicted by full-size media"
 			);
 		}
+	}
+
+	#[test]
+	fn a_second_full_size_entry_does_not_evict_the_one_in_use() {
+		let mut cache = cache_of(&[("video", MAX_ENTRY_BYTES)]);
+
+		cache.put("photo", media(MAX_ENTRY_BYTES));
+
+		assert!(
+			cache.get("video").is_some(),
+			"a video being played must survive one more full-size fetch"
+		);
+		assert!(cache.get("photo").is_some());
 	}
 
 	#[test]

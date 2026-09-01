@@ -4,8 +4,7 @@ mod range;
 mod response;
 mod target;
 mod upstream;
-
-use std::collections::HashSet;
+mod windowed;
 
 use tauri::http::{header, Method, Request, Response, StatusCode};
 use tauri::{
@@ -17,8 +16,12 @@ use cache::{cache_key, CachedMedia, MediaCache};
 use flight::Flights;
 use range::deliver_ranged;
 use response::{deliverable_status, refused, Freshness};
-use target::{decode_target, Target};
-use upstream::{deliver_upstream, fetch, refusal, serve_windowed, FetchError};
+use target::{decode_target, host_of, Target};
+use upstream::{
+	deliver_upstream, detail_of, fetch, refusal, serve_windowed, windowable,
+	FetchError,
+};
+use windowed::Windowed;
 
 pub const SCHEME: &str = "ogmedia";
 
@@ -27,7 +30,7 @@ const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
 
 pub struct MediaProxy {
 	cache: Mutex<MediaCache>,
-	oversized: Mutex<HashSet<String>>,
+	windowed: Mutex<Windowed>,
 	flights: Flights,
 	fetches: Semaphore,
 }
@@ -36,7 +39,7 @@ impl Default for MediaProxy {
 	fn default() -> Self {
 		Self {
 			cache: Mutex::default(),
-			oversized: Mutex::default(),
+			windowed: Mutex::default(),
 			flights: Flights::default(),
 			fetches: Semaphore::new(OFFICIAL_APP_REQUESTS_PER_HOST),
 		}
@@ -50,7 +53,7 @@ impl MediaProxy {
 
 	pub async fn forget_everything(&self) {
 		self.cache.lock().await.clear();
-		self.oversized.lock().await.clear();
+		self.windowed.lock().await.clear();
 		self.flights.clear().await;
 	}
 }
@@ -97,7 +100,7 @@ async fn serve<R: Runtime>(
 	if let Some(hit) = proxy.cached(&key).await {
 		return deliver_ranged(&hit, range, is_head, freshness);
 	}
-	if proxy.oversized.lock().await.contains(&key) {
+	if proxy.windowed.lock().await.contains(&key) {
 		return serve_windowed(app, &url, fetcher, range, is_head).await;
 	}
 
@@ -105,15 +108,26 @@ async fn serve<R: Runtime>(
 	if let Some(hit) = proxy.cached(&key).await {
 		return deliver_ranged(&hit, range, is_head, freshness);
 	}
-	if proxy.oversized.lock().await.contains(&key) {
+	if proxy.windowed.lock().await.contains(&key) {
 		drop(flight);
 		return serve_windowed(app, &url, fetcher, range, is_head).await;
 	}
 
 	let fetched = match fetch(app, &url, fetcher, None).await {
 		Ok(fetched) => fetched,
-		Err(FetchError::Oversized) => {
-			proxy.oversized.lock().await.insert(key);
+		Err(error) if windowable(&error, fetcher) => {
+			tracing::warn!(
+				"[media] {} falls back to windowed: {}",
+				host_of(&url),
+				detail_of(&error)
+			);
+			let mut windowed = proxy.windowed.lock().await;
+			if matches!(error, FetchError::Oversized) {
+				windowed.always(key);
+			} else {
+				windowed.for_now(key);
+			}
+			drop(windowed);
 			drop(flight);
 			return serve_windowed(app, &url, fetcher, range, is_head).await;
 		}
@@ -302,13 +316,13 @@ mod tests {
 		let app = app_without_a_client();
 		let proxy = app.state::<MediaProxy>();
 		cache(&app, PHOTO, b"webpbytes").await;
-		proxy.oversized.lock().await.insert(PHOTO.to_owned());
+		proxy.windowed.lock().await.always(PHOTO.to_owned());
 		drop(proxy.flights.acquire(PHOTO).await);
 
 		proxy.forget_everything().await;
 
 		assert!(proxy.cache.lock().await.get(PHOTO).is_none());
-		assert!(proxy.oversized.lock().await.is_empty());
+		assert!(proxy.windowed.lock().await.is_empty());
 		assert!(proxy.flights.is_empty().await);
 	}
 

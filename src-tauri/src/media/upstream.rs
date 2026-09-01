@@ -17,6 +17,25 @@ pub enum FetchError {
 	Upstream(GrindrError),
 }
 
+pub fn windowable(error: &FetchError, fetcher: MediaFetcher) -> bool {
+	let body_will_never_fit = matches!(error, FetchError::Oversized);
+	let deadline_ran_out =
+		matches!(error, FetchError::Upstream(GrindrError::Http(_)));
+	let plays_from_windows = fetcher == MediaFetcher::MediaPlayer;
+
+	body_will_never_fit || (deadline_ran_out && plays_from_windows)
+}
+
+pub fn detail_of(error: &FetchError) -> String {
+	match error {
+		FetchError::Busy => "no client".to_owned(),
+		FetchError::Oversized => {
+			format!("media body exceeds {MAX_MEDIA_BYTES} bytes")
+		}
+		FetchError::Upstream(error) => without_url(error.to_string()),
+	}
+}
+
 fn classify(error: GrindrError) -> FetchError {
 	match error {
 		GrindrError::MediaTooLarge { .. } => FetchError::Oversized,
@@ -127,6 +146,49 @@ pub async fn serve_windowed<R: Runtime>(
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn only_a_video_whose_deadline_ran_out_is_worth_windowing() {
+		let timed_out = FetchError::Upstream(GrindrError::Http(
+			"operation timed out".to_owned(),
+		));
+
+		assert!(windowable(&timed_out, MediaFetcher::MediaPlayer));
+		assert!(!windowable(&timed_out, MediaFetcher::ImageLoader));
+	}
+
+	#[test]
+	fn a_body_over_the_ceiling_is_windowed_whatever_asked_for_it() {
+		for fetcher in [MediaFetcher::MediaPlayer, MediaFetcher::ImageLoader] {
+			assert!(windowable(&FetchError::Oversized, fetcher));
+		}
+	}
+
+	#[test]
+	fn a_failure_no_smaller_request_could_survive_is_never_windowed() {
+		let hopeless = [
+			FetchError::Busy,
+			FetchError::Upstream(GrindrError::Connect("offline".to_owned())),
+			FetchError::Upstream(GrindrError::SessionCleared),
+			FetchError::Upstream(GrindrError::InvalidRequest(
+				"bad url".to_owned(),
+			)),
+		];
+
+		for error in hopeless {
+			assert!(!windowable(&error, MediaFetcher::MediaPlayer));
+		}
+	}
+
+	#[test]
+	fn a_fallback_detail_never_carries_the_signed_query() {
+		let detail = detail_of(&FetchError::Upstream(GrindrError::Http(
+			"error sending request for url (https://d3.cloudfront.net/a.mp4?Signature=SECRET): reset"
+				.to_owned(),
+		)));
+
+		assert!(!detail.contains("SECRET"), "{detail}");
+	}
 
 	#[test]
 	fn only_the_ceiling_error_itself_marks_a_file_oversized() {
