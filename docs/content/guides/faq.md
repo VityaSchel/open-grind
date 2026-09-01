@@ -37,7 +37,7 @@ The only indirect counters are:
 
 Open Grind has opt-in auto-updater that sends an anonymous request to git.opengrind.org, but these requests are not logged or stored. If you installed the app from F-Droid, Obtainium, Aurora Store or Google Play, the auto-updater is disabled entirely and this does not apply to you. The first-run screen presents this choice with the checkbox pre-checked, nothing is sent until you confirm, and you can change it any time in Settings → App.
 
-**As of August, 2026, the estimated number of users is ~50 000 based on the downloads counter.**
+**As of September, 2026, the estimated number of users is ~60 000 based on the downloads counter.**
 
 ## Open Grind features
 
@@ -107,7 +107,7 @@ That's how items are returned from API, specifically the first ten are "open" an
 
 ### \> What version number works?
 
-As of August 5th, 2026, the confirmed working version for API is `26.13.0.170510`. If you don't know what that means, just use the latest Open Grind version.
+As of September 1st, 2026, the confirmed working version for API is `26.15.1.174557`. If you don't know what that means, just use the latest Open Grind version.
 
 ### \> Is GrindrPlus Discord server gone?
 
