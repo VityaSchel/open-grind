@@ -5,7 +5,9 @@ use tauri::{AppHandle, Manager, Runtime};
 use crate::state::AppState;
 
 use super::cache::CachedMedia;
-use super::response::{bounded_range, deliver, deliverable_status, refused};
+use super::response::{
+	bounded_range, deliver, deliverable_status, refused, Freshness,
+};
 use super::target::host_of;
 use super::{MediaProxy, MAX_MEDIA_BYTES};
 
@@ -96,7 +98,7 @@ pub fn deliver_upstream(
 		content_type: fetched.content_type,
 		body: fetched.body,
 	};
-	let mut response = deliver(&media, status, is_head);
+	let mut response = deliver(&media, status, is_head, Freshness::Uncacheable);
 	for (name, value) in [
 		(header::CONTENT_RANGE, fetched.content_range),
 		(header::ACCEPT_RANGES, fetched.accept_ranges),
