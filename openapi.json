@@ -7218,6 +7218,16 @@
 					"200": {
 						"description": "Empty."
 					},
+					"402": {
+						"description": "Returns for free-tier users. Unsending is gated server-side behind a paid subscription. The body is a [TieredFeatureProblemResponse](/grindr-api/messaging/messages#tieredfeatureproblemresponse) with `featureValue` = `UnsentMessage`.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TieredFeatureProblemResponse"
+								}
+							}
+						}
+					},
 					"500": {
 						"description": "Internal Error if conversation or message was not found or if it wasn't sent by you"
 					}
@@ -16261,6 +16271,39 @@
 					"messageId": {
 						"type": "string",
 						"description": "string, must be sent by you"
+					}
+				},
+				"x-render-on-tag": "messaging/messages"
+			},
+			"TieredFeatureProblemResponse": {
+				"type": "object",
+				"description": "RFC-7807 problem body returned on a `402` when the requested feature is not part of the account's subscription tier.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "error URN — `urn:gr:err:tiered_feature`"
+					},
+					"title": {
+						"type": "string"
+					},
+					"status": {
+						"type": "integer",
+						"description": "`402`"
+					},
+					"traceId": {
+						"type": "string"
+					},
+					"detail": {
+						"type": "string",
+						"description": "the principal and the feature"
+					},
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"featureValue": {
+						"type": "string",
+						"description": "e.g. `UnsentMessage` for [Unsend a message](/grindr-api/messaging/messages#unsend-a-message)"
 					}
 				},
 				"x-render-on-tag": "messaging/messages"
