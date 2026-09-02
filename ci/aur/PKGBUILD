@@ -2,7 +2,7 @@
 
 pkgname=open-grind-bin
 _pkgname=open-grind
-_ver=0.1.0-beta.4
+_ver=0.1.0-beta.4.1
 # pacman reads '-' as the pkgver/pkgrel separator, so it cannot stay.
 # Dropping it sorts 0.1.0beta.4 below 0.1.0. An underscore sorts it
 # above, which would need an epoch to undo. Checked with pacman's vercmp.
