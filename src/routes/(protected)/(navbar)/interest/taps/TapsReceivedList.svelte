@@ -66,7 +66,7 @@
 			{/if}
 		</div>
 	</div>
-	{#if !taps.loading && !taps.error}
+	{#if !taps.loading && (taps.taps.length > 0 || !taps.error)}
 		<DataRefreshControl
 			{container}
 			updating={taps.refreshing}

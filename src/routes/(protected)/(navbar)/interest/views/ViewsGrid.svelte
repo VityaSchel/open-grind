@@ -77,7 +77,7 @@
 			{/if}
 		</div>
 	</div>
-	{#if !views.loading && !views.error}
+	{#if !views.loading && (views.views.length > 0 || !views.error)}
 		<DataRefreshControl
 			{container}
 			updating={views.refreshing}
