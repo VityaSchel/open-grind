@@ -327,6 +327,7 @@ jobs:
       ]
     if: >-
       !cancelled()
+      && (inputs.x86_64_providers == 'all' || inputs.arm64_providers == 'all')
       && needs.build-android.result != 'failure'
       && needs.build-linux.result != 'failure'
       && needs.build-linux-arm64.result != 'failure'
