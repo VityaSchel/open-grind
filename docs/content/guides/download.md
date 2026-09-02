@@ -35,16 +35,20 @@ Launch the installer and follow the steps. Optionally, enable auto updates. To u
 
 ## Linux
 
+For Linux distributions that aren't supported, please [build manually](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md). Open Grind does not ship an AppImage yet, for two reasons: Tauri's AppImage bundler uses tooling from rolling versions at build time, so the result is not reproducible, and the bundle it produces fails to start on systems with Mesa 25 or newer, which includes current Arch and Fedora ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665)).
+
+### deb (Debian, Ubuntu, Linux Mint, other Debian-based)
+
 <div class="vpbuttons-row">
     <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
     <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
 </div>
 
-The deb files are only supported by Debian-based distros (Ubuntu, Linux Mint, etc). For other Linux distributions, please [build manually](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md). Open Grind currently does not ship AppImage because of reproducibility issues.
+deb releases do not have in-app auto-updater.
 
-Linux releases do not have in-app auto-updater. To uninstall, manually clear all secrets from your Secret Service, then run `apt purge`.
+To uninstall, manually clear all secrets from your Secret Service, then run `apt purge`.
 
-### Track updates with apt
+#### Track updates with apt
 
 Debian, Ubuntu and derivatives can install Open Grind from the project's own repository, so `apt` handles updates:
 
@@ -55,17 +59,23 @@ curl -fsSL https://git.opengrind.org/api/packages/open-grind/debian/repository.k
 sudo tee /etc/apt/sources.list.d/opengrind.sources > /dev/null <<'EOF'
 Types: deb
 URIs: https://git.opengrind.org/api/packages/open-grind/debian
-Suites: stable
+Suites: beta
 Components: main
 Signed-By: /etc/apt/keyrings/opengrind.asc
 EOF
 sudo apt update && sudo apt install open-grind
 ```
 
-Use `Suites: beta` to track prereleases. To remove the repository, delete both files.
+Open Grind is still in beta, so every release so far is published to the `beta` suite. Once stable, use `Suites: stable` to track those instead. To remove the repository, delete both files.
 
 > [!Note] Trust
 > The repository index is signed by a key held on the server. The release artifacts and their `.minisig` signatures stay the canonical, reproducible download — the repository only exists so updates arrive through your package manager.
+
+### Arch Linux
+
+As of September 1st, 2026, AUR has disabled account registration and new package publishing, so it's not possible to install Open Grind from AUR right now.
+
+The PKGBUILD for Arch Linux can be found in [ci/aur/PKGBUILD](https://git.opengrind.org/open-grind/open-grind/src/branch/main/ci/aur/PKGBUILD).
 
 ## macOS
 
