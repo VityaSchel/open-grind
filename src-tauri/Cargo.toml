@@ -93,3 +93,4 @@ strip = "symbols"
 wry = { path = ".patched/wry" }
 tauri-codegen = { path = ".patched/tauri-codegen" }
 http2 = { path = ".patched/http2" }
+tauri-plugin-geolocation = { path = ".patched/tauri-plugin-geolocation" }

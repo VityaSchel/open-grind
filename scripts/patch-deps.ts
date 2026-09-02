@@ -20,6 +20,22 @@ const CRATES = [
 		],
 	},
 	{
+		name: "tauri-plugin-geolocation",
+		version: "2.3.2",
+		sha256: "0366e51823ad001ff1a47f116cd34ddfea3d94ebeb2309caf42e290dec27e0a6",
+		keep: [
+			"Cargo.toml",
+			"LICENSE_APACHE-2.0",
+			"LICENSE_MIT",
+			"android",
+			"api-iife.js",
+			"build.rs",
+			"ios",
+			"permissions",
+			"src",
+		],
+	},
+	{
 		name: "tauri-codegen",
 		version: "2.6.1",
 		sha256: "6bd11644962add2549a60b7e7c6800f17d7020156e02f516021d8103e80cc528",

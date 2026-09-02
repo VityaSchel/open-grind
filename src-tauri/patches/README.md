@@ -46,3 +46,17 @@ Backport of [wry 0.56.0](https://github.com/tauri-apps/wry/releases/tag/wry-v0.5
 Embedded assets and CSP hashes are emitted in hash-map and `readdir` order. The patch sorts both.
 
 **Delete when `tauri-codegen > 2.6.3` publishes** — [tauri#15777](https://github.com/tauri-apps/tauri/pull/15777) is merged and supersedes it.
+
+## tauri-plugin-geolocation
+
+`play-services-location` put four proprietary Play Services AARs into the APK, and the plugin returned no fix at all without Play Services.
+
+| File                                   | Change                                                                                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `android/build.gradle.kts`             | Drop the `play-services-location` dependency.                                                                                                  |
+| `android/src/main/java/Geolocation.kt` | Reimplement on the platform `LocationManager` via `androidx.core.location`, which back-compats it to `minSdk` 28. GPS and network providers.   |
+| `android/src/main/java/Geolocation.kt` | Fix `getLastLocation`, which kept the oldest fix within `maximumAge` instead of the freshest.                                                  |
+
+Accuracy and time to first fix are worse where Play Services exists, since the platform API does no sensor fusion.
+
+**Delete when upstream drops `play-services-location`.** [plugins-workspace#3377](https://github.com/tauri-apps/plugins-workspace/pull/3377) does not: it keeps the dependency and the GMS-first path, and needs API 31.

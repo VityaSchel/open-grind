@@ -1,0 +1,264 @@
+diff --git a/android/build.gradle.kts b/android/build.gradle.kts
+index 5bc7b38..ab81dd8 100644
+--- a/android/build.gradle.kts
++++ b/android/build.gradle.kts
+@@ -37,7 +37,6 @@ dependencies {
+     implementation("androidx.core:core-ktx:1.9.0")
+     implementation("androidx.appcompat:appcompat:1.6.0")
+     implementation("com.google.android.material:material:1.7.0")
+-    implementation("com.google.android.gms:play-services-location:21.3.0")
+     testImplementation("junit:junit:4.13.2")
+     androidTestImplementation("androidx.test.ext:junit:1.1.5")
+     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+diff --git a/android/src/main/java/Geolocation.kt b/android/src/main/java/Geolocation.kt
+index 444711a..034d372 100644
+--- a/android/src/main/java/Geolocation.kt
++++ b/android/src/main/java/Geolocation.kt
+@@ -8,134 +8,160 @@ import android.annotation.SuppressLint
+ import android.content.Context
+ import android.location.Location
+ import android.location.LocationManager
++import android.os.Build
+ import android.os.SystemClock
++import androidx.core.content.ContextCompat
++import androidx.core.location.LocationListenerCompat
+ import androidx.core.location.LocationManagerCompat
++import androidx.core.location.LocationRequestCompat
+ import app.tauri.Logger
+-import com.google.android.gms.common.ConnectionResult
+-import com.google.android.gms.common.GoogleApiAvailability
+-import com.google.android.gms.location.FusedLocationProviderClient
+-import com.google.android.gms.location.LocationCallback
+-import com.google.android.gms.location.LocationRequest
+-import com.google.android.gms.location.LocationResult
+-import com.google.android.gms.location.LocationServices
+-import com.google.android.gms.location.Priority
+-
+ 
++// PATCH(open-grind): this file used com.google.android.gms.location (FusedLocationProviderClient)
++// and refused to produce a fix at all when Google Play Services was absent. It now uses the AOSP
++// platform LocationManager through androidx.core.location, which back-compats getCurrentLocation
++// and requestLocationUpdates below API 30. No behaviour depends on Google Play Services.
+ public class Geolocation(private val context: Context) {
+-    private var fusedLocationClient: FusedLocationProviderClient? = null
+-    private var locationCallback: LocationCallback? = null
++    private var locationListener: LocationListenerCompat? = null
+ 
++    private val locationManager: LocationManager
++        get() = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+ 
+     fun isLocationServicesEnabled(): Boolean {
+-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+-        return LocationManagerCompat.isLocationEnabled(lm)
++        return LocationManagerCompat.isLocationEnabled(locationManager)
+     }
+ 
+-    @SuppressWarnings("MissingPermission")
++    private fun availableProviders(enableHighAccuracy: Boolean): List<String> {
++        val lm = locationManager
++        val preferred = buildList {
++            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
++                add(LocationManager.FUSED_PROVIDER)
++            }
++            if (enableHighAccuracy) {
++                add(LocationManager.GPS_PROVIDER)
++                add(LocationManager.NETWORK_PROVIDER)
++            } else {
++                add(LocationManager.NETWORK_PROVIDER)
++                add(LocationManager.GPS_PROVIDER)
++            }
++        }
++
++        return preferred.filter { provider ->
++            try {
++                LocationManagerCompat.hasProvider(lm, provider) && lm.isProviderEnabled(provider)
++            } catch (_: Exception) {
++                Logger.error("isProviderEnabled failed for $provider")
++                false
++            }
++        }
++    }
++
++    @SuppressLint("MissingPermission")
+     fun sendLocation(enableHighAccuracy: Boolean, successCallback: (location: Location) -> Unit, errorCallback: (error: String) -> Unit) {
+-        val resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+-        if (resultCode == ConnectionResult.SUCCESS) {
+-            val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
++        if (!isLocationServicesEnabled()) {
++            errorCallback("Location disabled.")
++            return
++        }
+ 
+-            if (this.isLocationServicesEnabled()) {
+-                var networkEnabled = false
++        val providers = availableProviders(enableHighAccuracy)
++        if (providers.isEmpty()) {
++            errorCallback("Location unavailable.")
++            return
++        }
+ 
+-                try {
+-                    networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+-                } catch (_: Exception) {
+-                    Logger.error("isProviderEnabled failed")
+-                }
++        sendLocationFrom(providers, 0, successCallback, errorCallback)
++    }
+ 
+-                val lowPrio = if (networkEnabled) Priority.PRIORITY_BALANCED_POWER_ACCURACY else Priority.PRIORITY_LOW_POWER
+-                val prio = if (enableHighAccuracy) Priority.PRIORITY_HIGH_ACCURACY else lowPrio
+-
+-                Logger.error(prio.toString())
+-
+-                LocationServices
+-                    .getFusedLocationProviderClient(context)
+-                    .getCurrentLocation(prio, null)
+-                    .addOnFailureListener { e -> e.message?.let { errorCallback(it) } }
+-                    .addOnSuccessListener { location ->
+-                        if (location == null) {
+-                            errorCallback("Location unavailable.")
+-                        } else {
+-                            successCallback(location)
+-                        }
+-                    }
+-            } else {
+-                errorCallback("Location disabled.")
++    // getCurrentLocation yields null when a provider times out, so try the next one first.
++    @SuppressLint("MissingPermission")
++    private fun sendLocationFrom(providers: List<String>, index: Int, successCallback: (location: Location) -> Unit, errorCallback: (error: String) -> Unit) {
++        if (index >= providers.size) {
++            errorCallback("Location unavailable.")
++            return
++        }
++
++        try {
++            LocationManagerCompat.getCurrentLocation(
++                locationManager,
++                providers[index],
++                null,
++                ContextCompat.getMainExecutor(context)
++            ) { location ->
++                if (location == null) {
++                    sendLocationFrom(providers, index + 1, successCallback, errorCallback)
++                } else {
++                    successCallback(location)
++                }
+             }
+-        } else {
+-            errorCallback("Google Play Services unavailable.")
++        } catch (e: Exception) {
++            Logger.error("getCurrentLocation failed for ${providers[index]}: ${e.message}")
++            sendLocationFrom(providers, index + 1, successCallback, errorCallback)
+         }
+     }
+ 
+     @SuppressLint("MissingPermission")
+     fun requestLocationUpdates(enableHighAccuracy: Boolean, timeout: Long, successCallback: (location: Location) -> Unit, errorCallback: (error: String) -> Unit) {
+-        val resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+-        if (resultCode == ConnectionResult.SUCCESS) {
+-            clearLocationUpdates()
+-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
++        clearLocationUpdates()
+ 
+-            val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
++        if (!isLocationServicesEnabled()) {
++            errorCallback("Location disabled.")
++            return
++        }
+ 
+-            if (this.isLocationServicesEnabled()) {
+-                var networkEnabled = false
++        val provider = availableProviders(enableHighAccuracy).firstOrNull()
++        if (provider == null) {
++            errorCallback("Location unavailable.")
++            return
++        }
+ 
+-                try {
+-                    networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+-                } catch (_: Exception) {
+-                    Logger.error("isProviderEnabled failed")
+-                }
++        val quality = if (enableHighAccuracy) {
++            LocationRequestCompat.QUALITY_HIGH_ACCURACY
++        } else {
++            LocationRequestCompat.QUALITY_BALANCED_POWER_ACCURACY
++        }
+ 
+-                val lowPrio = if (networkEnabled) Priority.PRIORITY_BALANCED_POWER_ACCURACY else Priority.PRIORITY_LOW_POWER
+-                val prio = if (enableHighAccuracy) Priority.PRIORITY_HIGH_ACCURACY else lowPrio
+-
+-                val locationRequest = LocationRequest.Builder(timeout)
+-                    .setMaxUpdateDelayMillis(timeout)
+-                    .setMinUpdateIntervalMillis(timeout)
+-                    .setPriority(prio)
+-                    .build()
+-
+-                locationCallback =
+-                    object : LocationCallback() {
+-                        override fun onLocationResult(locationResult: LocationResult) {
+-                            val lastLocation = locationResult.lastLocation
+-                            if (lastLocation == null) {
+-                                errorCallback("Location unavailable.")
+-                            } else {
+-                                successCallback(lastLocation)
+-                            }
+-                        }
+-                    }
+-
+-                fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback!!, null)
+-            } else {
+-                errorCallback("Location disabled.")
++        val locationRequest = LocationRequestCompat.Builder(timeout)
++            .setMaxUpdateDelayMillis(timeout)
++            .setMinUpdateIntervalMillis(timeout)
++            .setQuality(quality)
++            .build()
++
++        val listener = object : LocationListenerCompat {
++            override fun onLocationChanged(location: Location) {
++                successCallback(location)
+             }
+-        } else {
+-            errorCallback("Google Play Services not available.")
+         }
++
++        locationListener = listener
++        LocationManagerCompat.requestLocationUpdates(
++            locationManager,
++            provider,
++            locationRequest,
++            ContextCompat.getMainExecutor(context),
++            listener
++        )
+     }
+ 
+     fun clearLocationUpdates() {
+-        if (locationCallback != null) {
+-            fusedLocationClient?.removeLocationUpdates(locationCallback!!)
+-            locationCallback = null
++        locationListener?.let { listener ->
++            LocationManagerCompat.removeUpdates(locationManager, listener)
++            locationListener = null
+         }
+     }
+ 
+     @SuppressLint("MissingPermission")
+     fun getLastLocation(maximumAge: Long): Location? {
+         var lastLoc: Location? = null
+-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
++        val lm = locationManager
+ 
+         for (provider in lm.allProviders) {
+             val tmpLoc = lm.getLastKnownLocation(provider)
+             if (tmpLoc != null) {
+                 val locationAge = SystemClock.elapsedRealtimeNanos() - tmpLoc.elapsedRealtimeNanos
+                 val maxAgeNano = maximumAge * 1000000L
+-                if (locationAge <= maxAgeNano && (lastLoc == null || lastLoc.elapsedRealtimeNanos > tmpLoc.elapsedRealtimeNanos)) {
++                // PATCH(open-grind): upstream compares `>`, which keeps the OLDEST fix within
++                // maximumAge instead of the freshest. This path is now the first thing tried for
++                // every position request, so the comparison matters.
++                if (locationAge <= maxAgeNano && (lastLoc == null || lastLoc.elapsedRealtimeNanos < tmpLoc.elapsedRealtimeNanos)) {
+                     lastLoc = tmpLoc
+                 }
+             }
