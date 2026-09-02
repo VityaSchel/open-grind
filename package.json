@@ -41,6 +41,7 @@
 		"cookie": "^0.7.0",
 		"nanoid": "^3.3.18",
 		"postcss": "^8.5.24",
+		"postcss-selector-parser": "^7.1.3",
 		"valibot": "^1.4.2",
 		"vite": "^6.4.3"
 	},
