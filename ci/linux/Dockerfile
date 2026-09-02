@@ -1,4 +1,3 @@
-# Canonical Linux release builder: links against Debian 12's system libraries.
 FROM debian@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241
 
 # A snapshot older than the base image fails apt with "held broken packages".
@@ -10,7 +9,7 @@ RUN echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/$
 RUN apt-get -qq -o Acquire::Check-Valid-Until=false update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends \
 	build-essential clang libclang-dev pkg-config cmake ninja-build perl git ca-certificates curl xz-utils \
 	libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev librsvg2-dev libssl-dev \
-	binutils file \
+	binutils file squashfs-tools \
 	&& rm -rf /var/lib/apt/lists/*
 
 ARG RUST_VERSION=1.95.0
@@ -33,5 +32,15 @@ RUN A=$(uname -m); case "$A" in aarch64) B=aarch64;; x86_64) B=x64;; esac \
 	&& apt-get -qq -o Acquire::Check-Valid-Until=false update && apt-get -qq install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/* \
 	&& unzip -q /tmp/bun.zip -d /opt && mv /opt/bun-linux-* /opt/bun && rm /tmp/bun.zip
 ENV PATH=/opt/bun:$PATH
+
+ARG APPIMAGE_RUNTIME_TAG=20251108
+RUN A=$(uname -m); case "$A" in \
+		x86_64) S=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d ;; \
+		aarch64) S=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444 ;; \
+		*) echo "no pinned AppImage runtime for $A" >&2; exit 1 ;; \
+	esac \
+	&& curl -fsSL "https://github.com/AppImage/type2-runtime/releases/download/${APPIMAGE_RUNTIME_TAG}/runtime-${A}" -o /opt/appimage-runtime \
+	&& echo "$S  /opt/appimage-runtime" | sha256sum -c - \
+	&& chmod 0644 /opt/appimage-runtime
 
 WORKDIR /work

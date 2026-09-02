@@ -134,27 +134,29 @@ fi
     | On macOS   | Untested  | **Reproducible[^4]** |
     | On Windows | Untested  | Untested             |
 
-The container builds for the host architecture, so verify the `x86_64` `.deb` on an x86_64 host and the `arm64` one on arm64. The `.deb` ships unsigned next to a detached `.minisig`, so nothing inside it varies between builds and the whole file must match byte for byte.
-
 ```bash
 # 1. Reproduce the app locally
 git checkout v<tag>
 podman build -t open-grind-linux ci/linux
 podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
-LOCAL="$(find src-tauri/target/release/bundle/deb -name '*.deb')"
 
-# 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
-PUBLISHED=/path/to/open-grind-v<tag>-linux-<arch>.deb
+# 2. Fetch both into one directory from https://git.opengrind.org/open-grind/open-grind/releases
+PUBLISHED=/path/to/published
 
 # 3. Confirm the content reproduces
-sha256sum "$LOCAL" "$PUBLISHED"
-
-if cmp -s "$LOCAL" "$PUBLISHED"; then
-  echo "✓ .deb matches"
-else
-  echo "✗ .deb mismatch, local build does not match the published package" >&2
-  exit 1
-fi
+for LOCAL in \
+  src-tauri/target/release/bundle/deb/*.deb \
+  src-tauri/target/release/bundle/appimage/*.AppImage
+do
+  name="$(basename "$LOCAL")"
+  sha256sum "$LOCAL" "$PUBLISHED/$name"
+  if cmp -s "$LOCAL" "$PUBLISHED/$name"; then
+    echo "✓ $name matches"
+  else
+    echo "✗ $name mismatch, local build does not match the published artifact" >&2
+    exit 1
+  fi
+done
 ```
 
 [^3]: Different host toolchains, even within Nix environment. Builds are only reproducible with full Docker amd64 emulation.

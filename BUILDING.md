@@ -10,7 +10,7 @@ Pick your platform, then a method within it. Everything below the platform secti
         - [Sign Android build](#sign-android-build)
         - [Verify Android release](#verify-android-release)
     - [Linux](#linux)
-        - [Build Linux deb](#build-linux-deb)
+        - [Build Linux deb, AppImage (Docker/Podman)](#build-linux-deb-appimage-dockerpodman)
         - [Sign Linux build](#sign-linux-build)
         - [Verify Linux release](#verify-linux-release)
     - [Windows](#windows)
@@ -139,30 +139,25 @@ bun /path/to/open-grind/ci/sign.ts /path/to/open-grind.apk /out/path/to/open-gri
 
 ## Linux
 
-The release `.deb` is built in a pinned Debian 12 container ([ci/linux/](./ci/linux)) so the binary links against Debian 12's system libraries. The glibc floor is 2.34, which covers Debian 12+ and Ubuntu 22.04+. The Nix shell is for development only — its glibc is newer than any shipping distribution. `nix run .#build-linux` builds a `.deb` too, but against Nix's glibc, so it does not install on a normal distribution. Use the container for anything that leaves your machine.
-
-Other Linux formats:
-
 - `.rpm` — tauri-bundler passes the version through unsanitised and RPM's `Version` cannot contain `-`, so every prerelease is rejected; there is no `rpm.version` override
-- AppImage — tauri-bundler downloads linuxdeploy and its plugins from unpinned branches at bundle time, and the default bundle breaks on Mesa 25+ ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665))
-- Bundled codecs — The app uses the system WebKitGTK, which decodes through the system GStreamer; shipping codecs would only duplicate what `Recommends` already installs
 
-### Build Linux deb
+### Build Linux deb, AppImage (Docker/Podman)
 
-Needs Podman or Docker.
+Built in a pinned Debian 12 container ([ci/linux/](./ci/linux)), linked against Debian 12's system libraries. The glibc floor is 2.34, (Debian 12+, Ubuntu 22.04+).
 
 ```bash
 podman build -t open-grind-linux ci/linux
 podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
 ```
 
-The result is `src-tauri/target/release/bundle/deb/open-grind-v<version>-linux-<arch>.deb`. The script repacks what `tauri build` produced with `dpkg-deb` under `SOURCE_DATE_EPOCH`, because tauri-bundler writes wall-clock mtimes and unsorted entries ([tauri#13612](https://github.com/tauri-apps/tauri/issues/13612)).
+The result is `src-tauri/target/release/bundle/deb/open-grind-v<version>-linux-<arch>.deb` and `src-tauri/target/release/bundle/appimage/open-grind-v<version>-linux-<arch>.AppImage`.
 
-Runtime notes:
+The script repacks what `tauri build` generated with `dpkg-deb` under `SOURCE_DATE_EPOCH`, because tauri-bundler writes clock mtimes and unsorted entries ([tauri#13612](https://github.com/tauri-apps/tauri/issues/13612)).
 
-- Video needs GStreamer: `gstreamer1.0-plugins-good` for MP4 and `gstreamer1.0-libav` for H.264, both declared as `Recommends`. Fedora strips patent-encumbered codecs from its own packages.
-- Without a Secret Service (a headless box, or no D-Bus session) the login is kept in a plain file under the app data directory and the app says so on launch.
-- Location is not available through the geolocation plugin on Linux. Set it from the command palette by geohash.
+AppImage is generated from `.deb`. The script writes the AppDir, runs `mksquashfs` under `SOURCE_DATE_EPOCH` and prepends the runtime pinned by `APPIMAGE_RUNTIME_TAG` in [ci/linux/Dockerfile](./ci/linux/Dockerfile).
+
+- Don't use Nix shell for releases, its glibc is newer than any shipping distribution.
+- Don't use `tauri build --bundles appimage`, it runs linuxdeploy, which downloads tooling at build time and over-bundles until the result fails to start against Mesa 25+ ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665)).
 
 ### Sign Linux build
 
@@ -170,8 +165,8 @@ Linux builds ship unsigned.
 
 ### Verify Linux release
 
-- [Verify minisign signature](#verify-minisign-signature) to prove the .deb was built by Open Grind developers
-- [Reproduce the release](./REPRODUCIBILITY.md#linux) to prove the .deb was built from the open source code
+- [Verify minisign signature](#verify-minisign-signature) to prove the .deb and .AppImage were built by Open Grind developers
+- [Reproduce the release](./REPRODUCIBILITY.md#linux) to prove they were built from the open source code
 
 ## Windows
 
@@ -273,7 +268,7 @@ PUBLISHED=/path/to/file
 if minisign -Vm "$PUBLISHED" -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+; then
   echo "✓ signature valid and verified"
 else
-  echo "✗ signature invalid, do not install this APK" >&2
+  echo "✗ signature invalid, do not install this" >&2
   exit 1
 fi
 ```

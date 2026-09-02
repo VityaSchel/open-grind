@@ -35,7 +35,10 @@ Launch the installer and follow the steps. Optionally, enable auto updates. To u
 
 ## Linux
 
-For Linux distributions that aren't supported, please [build manually](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md). Open Grind does not ship an AppImage yet, for two reasons: Tauri's AppImage bundler uses tooling from rolling versions at build time, so the result is not reproducible, and the bundle it produces fails to start on systems with Mesa 25 or newer, which includes current Arch and Fedora ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665)).
+Notes:
+
+- GPS is not available through the geolocation plugin on Linux
+- Without a Secret Service the login is kept in a plain file under the app data directory
 
 ### deb (Debian, Ubuntu, Linux Mint, other Debian-based)
 
@@ -76,6 +79,20 @@ Open Grind is still in beta, so every release so far is published to the `beta` 
 As of September 1st, 2026, AUR has disabled account registration and new package publishing, so it's not possible to install Open Grind from AUR right now.
 
 The PKGBUILD for Arch Linux can be found in [ci/aur/PKGBUILD](https://git.opengrind.org/open-grind/open-grind/src/branch/main/ci/aur/PKGBUILD).
+
+### AppImage
+
+Requirements:
+
+- WebKitGTK >= 4.1
+  - Debian/Ubuntu: `libwebkit2gtk-4.1-0`
+  - Arch Linux: `webkit2gtk-4.1`
+  - Fedora: `webkit2gtk4.1`
+  - openSUSE: `libwebkit2gtk-4_1-0`
+- GStreamer for playing videos
+  - Debian/Ubuntu: `gstreamer1.0-plugins-good` for MP4 and `gstreamer1.0-libav` for H.264
+
+Add the executable bit to AppImage before launching. GNOME Files: Properties &rarr; Permissions &rarr; "Executable as Program".
 
 ## macOS
 

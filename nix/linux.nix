@@ -55,7 +55,7 @@ in
     runtimeInputs = toolchainInputs;
     inherit env;
     text = ''
-      # appimage at default settings over-bundles and dies on Mesa 25+ distros:
+      # tauri's appimage bundler dies on Mesa 25+ distros, ours is in ci/linux/build.sh:
       # https://github.com/tauri-apps/tauri/issues/15665
       BUNDLES="''${OPEN_GRIND_LINUX_BUNDLES:-deb}"
 

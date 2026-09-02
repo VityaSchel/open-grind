@@ -141,13 +141,15 @@ jobs:
           cd "${BUILD_ROOT:?}"
           podman build -t open-grind-linux ci/linux
           podman run --rm -v "$BUILD_ROOT:/work" open-grind-linux sh ci/linux/build.sh
-      - name: Collect .deb
+      - name: Collect .deb and .AppImage
         run: |
           : "${BUILD_ROOT:?}"
           deb=("$BUILD_ROOT"/src-tauri/target/release/bundle/deb/*.deb)
+          appimage=("$BUILD_ROOT"/src-tauri/target/release/bundle/appimage/*.AppImage)
           [ ${#deb[@]} -eq 1 ]
+          [ ${#appimage[@]} -eq 1 ]
           mkdir -p out
-          cp "${deb[0]}" out/
+          cp "${deb[0]}" "${appimage[0]}" out/
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
@@ -194,13 +196,15 @@ jobs:
           cd "${BUILD_ROOT:?}"
           podman build -t open-grind-linux ci/linux
           podman run --rm -v "$BUILD_ROOT:/work" open-grind-linux sh ci/linux/build.sh
-      - name: Collect .deb
+      - name: Collect .deb and .AppImage
         run: |
           : "${BUILD_ROOT:?}"
           deb=("$BUILD_ROOT"/src-tauri/target/release/bundle/deb/*.deb)
+          appimage=("$BUILD_ROOT"/src-tauri/target/release/bundle/appimage/*.AppImage)
           [ ${#deb[@]} -eq 1 ]
+          [ ${#appimage[@]} -eq 1 ]
           mkdir -p out
-          cp "${deb[0]}" out/
+          cp "${deb[0]}" "${appimage[0]}" out/
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
