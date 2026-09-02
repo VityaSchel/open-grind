@@ -50,7 +50,7 @@ MaintainerNotes: |-
   recipe must reproduce is built with that same pinned Gradle (distributionSha256Sum
   6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854).
 
-AutoUpdateMode: Version v%v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$
 UpdateCheckData: src-tauri/tauri.conf.json|"versionCode":\s*(\d+)|.|"version":\s*"([^"]+)"
 CurrentVersion: ${versionName}
