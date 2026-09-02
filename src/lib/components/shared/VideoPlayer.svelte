@@ -23,33 +23,50 @@
 		src: string;
 		poster: string | null;
 		onready?: () => void;
-		onfail?: (detail: string) => void;
+		onfail?: (failure: { undecodable: boolean; detail: string }) => void;
 	} = $props();
 
 	let element = $state<HTMLVideoElement | null>(null);
 	let retriedSrc: string | null = null;
 	let startedAt = now();
 
+	function elapsedSeconds(): string {
+		return ((now() - startedAt) / 1000).toFixed(1);
+	}
+
 	function describeFailure(error: MediaError | null): string {
-		const elapsed = ((now() - startedAt) / 1000).toFixed(1);
-		if (error === null) return `unknown media error after ${elapsed}s`;
+		if (error === null)
+			return `unknown media error after ${elapsedSeconds()}s`;
 		const message = error.message === "" ? "" : `: ${error.message}`;
-		return `MediaError ${error.code} after ${elapsed}s${message}`;
+		return `MediaError ${error.code} after ${elapsedSeconds()}s${message}`;
 	}
 
 	function failed() {
 		const video = element;
-		const detail = describeFailure(video?.error ?? null);
+		const error = video?.error ?? null;
+		const undecodable =
+			error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED;
 		const untouched =
 			video !== null &&
 			video.readyState === HTMLMediaElement.HAVE_NOTHING;
-		if (untouched && retriedSrc !== src) {
+		if (!undecodable && untouched && retriedSrc !== src) {
 			retriedSrc = src;
 			startedAt = now();
 			video?.load();
 			return;
 		}
-		onfail?.(detail);
+		onfail?.({ undecodable, detail: describeFailure(error) });
+	}
+
+	function loaded() {
+		if (element !== null && element.videoWidth === 0) {
+			onfail?.({
+				undecodable: true,
+				detail: `no decodable video track after ${elapsedSeconds()}s`,
+			});
+			return;
+		}
+		onready?.();
 	}
 
 	let paused = $state(true);
@@ -114,7 +131,7 @@
 		playsinline
 		preload="metadata"
 		class="size-full object-contain"
-		onloadeddata={onready}
+		onloadeddata={loaded}
 		onerror={failed}
 	></video>
 	{#if controlsVisible}
