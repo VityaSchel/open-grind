@@ -20,8 +20,8 @@ options=('!strip')
 makedepends=('minisign')
 
 depends=(
-	at-spi2-core
 	cairo
+	dbus
 	gdk-pixbuf2
 	glib2
 	glibc
@@ -29,7 +29,6 @@ depends=(
 	hicolor-icon-theme
 	libgcc
 	libsoup3
-	libstdc++
 	pango
 	webkit2gtk-4.1
 )
@@ -53,10 +52,11 @@ source_aarch64=(
 	"$pkgname-$pkgver-aarch64.deb.minisig::$_releases/$_pkgname-$_tag-linux-arm64.deb.minisig"
 )
 
-# TODO: replace the .deb sums with real ones once the release exists (updpkgsums).
-sha256sums=('SKIP')
-sha256sums_x86_64=('SKIP' 'SKIP')
-sha256sums_aarch64=('SKIP' 'SKIP')
+sha256sums=('18b347191b86bde3646ab8c21910f01fda8d3d2caca5ebc8fe402a62f3425f5e')
+sha256sums_x86_64=('c6e7245f96cb4bde3869438f36629592cc9cd82413017e5097191562e25c0d61'
+                   'f4a6c06299daeafd1baca652335f6ed008f7249528c7a8cbc9297faec0347aa7')
+sha256sums_aarch64=('2747d5c9c48a760b107ef41df2394c8667b4009ccba640b7a2936a765fd9335a'
+                    '8278db4c03e07574829f5cccd1b22bc51dd92640edeb7dde38902fc1d1297daa')
 
 # Published in the project's KEYS.md.
 _minisign_key='RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+'
