@@ -18,4 +18,4 @@ export GRADLE_USER_HOME="$home_vagrant/.gradle"
 sudo --preserve-env --user vagrant \
 	env PATH="$fdroidserver:$PATH" PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
 	PYTHONUNBUFFERED=true HOME="$home_vagrant" GRADLE_USER_HOME="$GRADLE_USER_HOME" \
-	fdroid build --verbose --test --refresh-scanner --on-server --no-tarball "${APPID}:${versionCode}"
+	fdroid build --verbose --test --refresh-scanner --scan-binary --on-server --no-tarball "${APPID}:${versionCode}"
