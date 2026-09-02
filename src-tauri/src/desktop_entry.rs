@@ -168,34 +168,26 @@ pub fn desktop_entry_dismiss(app: AppHandle) -> Result<(), DesktopEntryError> {
 mod tests {
 	use super::*;
 
-	const ENTRY: &str = "[Desktop Entry]\nType=Application\nName=Open Grind\nExec=open-grind %U\nIcon=open-grind\nCategories=Network;";
+	/// Verbatim from the published v0.1.0-beta.4.1 .deb.
+	const ENTRY: &str = "[Desktop Entry]\nCategories=Network;\nComment=Unofficial FLOSS Grindr client\nExec=open-grind\nStartupWMClass=open-grind\nIcon=open-grind\nName=Open Grind\nTerminal=false\nType=Application";
 
 	#[test]
-	fn exec_points_at_the_appimage_and_keeps_the_field_codes() {
+	fn exec_points_at_the_appimage_rather_than_a_binary_on_the_path() {
 		let rewritten =
 			rewrite_entry(ENTRY, Path::new("/home/a/Apps/Open Grind.AppImage"));
 
 		assert!(
-			rewritten.contains("Exec=\"/home/a/Apps/Open Grind.AppImage\" %U")
+			rewritten.contains("Exec=\"/home/a/Apps/Open Grind.AppImage\"\n")
 		);
 		assert!(!rewritten.contains("Exec=open-grind"));
 	}
 
 	#[test]
-	fn wm_class_is_added_so_wayland_can_match_the_window() {
-		let rewritten = rewrite_entry(ENTRY, Path::new("/a.AppImage"));
+	fn field_codes_survive_an_entry_that_carries_them() {
+		let rewritten =
+			rewrite_entry("Exec=open-grind %U", Path::new("/a.AppImage"));
 
-		assert!(rewritten.contains("StartupWMClass=open-grind"));
-	}
-
-	#[test]
-	fn an_existing_wm_class_is_left_alone() {
-		let source = format!("{ENTRY}\nStartupWMClass=something-else");
-
-		let rewritten = rewrite_entry(&source, Path::new("/a.AppImage"));
-
-		assert_eq!(rewritten.matches("StartupWMClass=").count(), 1);
-		assert!(rewritten.contains("StartupWMClass=something-else"));
+		assert!(rewritten.contains("Exec=\"/a.AppImage\" %U"));
 	}
 
 	#[test]
@@ -207,6 +199,21 @@ mod tests {
 	}
 
 	#[test]
+	fn wm_class_is_added_when_the_entry_lacks_one() {
+		let rewritten =
+			rewrite_entry("[Desktop Entry]\nExec=x", Path::new("/a.AppImage"));
+
+		assert!(rewritten.contains("StartupWMClass=open-grind"));
+	}
+
+	#[test]
+	fn the_wm_class_the_deb_already_ships_is_not_duplicated() {
+		let rewritten = rewrite_entry(ENTRY, Path::new("/a.AppImage"));
+
+		assert_eq!(rewritten.matches("StartupWMClass=").count(), 1);
+	}
+
+	#[test]
 	fn the_rest_of_the_entry_survives_untouched() {
 		let rewritten = rewrite_entry(ENTRY, Path::new("/a.AppImage"));
 
@@ -214,5 +221,6 @@ mod tests {
 		assert!(rewritten.contains("Name=Open Grind"));
 		assert!(rewritten.contains("Icon=open-grind"));
 		assert!(rewritten.contains("Categories=Network;"));
+		assert!(rewritten.contains("Terminal=false"));
 	}
 }
