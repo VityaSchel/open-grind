@@ -8,6 +8,18 @@ const CRATES = [
 		keep: ["Cargo.toml", "LICENSE", "src"],
 	},
 	{
+		name: "wry",
+		version: "0.55.1",
+		sha256: "186f9871daa55fd9c016578b810d149de58367113db7fb72b462d2323ce19514",
+		keep: [
+			"Cargo.toml",
+			"LICENSE-APACHE",
+			"LICENSE-MIT",
+			"build.rs",
+			"src",
+		],
+	},
+	{
 		name: "tauri-codegen",
 		version: "2.6.1",
 		sha256: "6bd11644962add2549a60b7e7c6800f17d7020156e02f516021d8103e80cc528",

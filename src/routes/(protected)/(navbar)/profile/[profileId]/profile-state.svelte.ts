@@ -8,10 +8,10 @@ import {
 	BlockedProfileError,
 	getProfile,
 	HiddenProfileError,
-	invalidateProfile,
 	isUnviewableProfileError,
 	mergeProfileEditIntoCaches,
 	ProfileUnavailableError,
+	refreshProfile,
 } from "$lib/api/users/profiles";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import type { TapType } from "$lib/model/interest/taps";
@@ -110,7 +110,6 @@ export class ProfileState {
 	async #load({ refresh }: { refresh: boolean }): Promise<void> {
 		if (refresh) {
 			this.refreshing = true;
-			invalidateProfile(this.profileId);
 			invalidateFavoriteNote({ profileId: this.profileId });
 		} else {
 			this.loading = true;
@@ -120,7 +119,9 @@ export class ProfileState {
 		}
 		const token = ++this.#fetchToken;
 		try {
-			const profile = await getProfile(this.profileId);
+			const profile = refresh
+				? await refreshProfile(this.profileId)
+				: await getProfile(this.profileId);
 			if (this.#superseded(token)) return;
 			this.profile = profile;
 			this.error = null;
@@ -129,7 +130,11 @@ export class ProfileState {
 			if (this.#superseded(token)) return;
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
-				showErrorToast({ label: "Failed to refresh profile", error });
+				showErrorToast({
+					label: "Failed to refresh profile",
+					error,
+					onRetry: () => void this.refresh(),
+				});
 				return;
 			}
 			this.error =

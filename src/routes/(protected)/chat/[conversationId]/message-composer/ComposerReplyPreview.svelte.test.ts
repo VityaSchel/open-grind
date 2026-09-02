@@ -26,6 +26,7 @@ vi.mock("$lib/ws.svelte", () => ({
 		on: () => Promise.resolve(() => {}),
 		onConnected: () => Promise.resolve(() => {}),
 		onEventsDropped: () => Promise.resolve(() => {}),
+		onEventRejected: () => () => {},
 		send: () => {},
 		sendCommand: () => Promise.resolve(undefined),
 	},

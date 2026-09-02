@@ -23,7 +23,11 @@
 	>
 		<ArrowLeftIcon size={32} />
 	</a>
-	{#if conversationState.loading || conversationState.profile === null}
+	{#if conversationState.profile !== null}
+		<ConversationNavBarProfile profile={conversationState.profile} />
+	{:else if conversationState.error}
+		<span class="flex-1">Failed to load conversation</span>
+	{:else}
 		<div class="flex flex-1 items-center gap-3 py-4 ps-0">
 			<Skeleton class="size-avatar rounded-full" />
 			<div class="flex flex-col gap-2">
@@ -31,9 +35,5 @@
 				<Skeleton class="h-3 w-12 rounded-md" />
 			</div>
 		</div>
-	{:else if conversationState.error}
-		<span class="flex-1">Failed to load conversation</span>
-	{:else}
-		<ConversationNavBarProfile profile={conversationState.profile} />
 	{/if}
 </ProgressiveBlur>

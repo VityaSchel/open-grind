@@ -1,0 +1,7 @@
+- Grid schema validation errors fixed
+- Unknown server values no longer break screens
+- Image loading speed fixed
+- Album videos playback on slow connection speeds fixed
+- Explain unsending messages error
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.4.1

@@ -208,7 +208,7 @@
 			</div>
 		{/if}
 	</div>
-	{#if !conversationState.loading && !conversationState.error}
+	{#if !conversationState.loading && (conversationState.messages.length > 0 || !conversationState.error)}
 		<DataRefreshControl
 			bind:this={refreshControl}
 			{container}

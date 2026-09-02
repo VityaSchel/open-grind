@@ -4,7 +4,7 @@
 	import Field from "$lib/components/fields/Field.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import type { Option } from "$lib/util/options";
+	import { type Option, selectionKeepingUnlisted } from "$lib/util/options";
 
 	let {
 		label,
@@ -54,11 +54,11 @@
 				bind:value={
 					() => values.map(String),
 					(newValue: string[]) => {
-						values = options
-							.filter((option) =>
-								newValue.includes(String(option.value)),
-							)
-							.map((option) => option.value);
+						values = selectionKeepingUnlisted({
+							values,
+							selectedKeys: newValue,
+							options,
+						});
 					}
 				}
 			>

@@ -4,8 +4,7 @@ mod range;
 mod response;
 mod target;
 mod upstream;
-
-use std::collections::HashSet;
+mod windowed;
 
 use tauri::http::{header, Method, Request, Response, StatusCode};
 use tauri::{
@@ -16,9 +15,13 @@ use tokio::sync::{Mutex, Semaphore};
 use cache::{cache_key, CachedMedia, MediaCache};
 use flight::Flights;
 use range::deliver_ranged;
-use response::{deliverable_status, refused};
-use target::{decode_target, Target};
-use upstream::{deliver_upstream, fetch, refusal, serve_windowed, FetchError};
+use response::{deliverable_status, refused, Freshness};
+use target::{decode_target, host_of, Target};
+use upstream::{
+	deliver_upstream, detail_of, fetch, refusal, serve_windowed, windowable,
+	FetchError,
+};
+use windowed::Windowed;
 
 pub const SCHEME: &str = "ogmedia";
 
@@ -27,7 +30,7 @@ const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
 
 pub struct MediaProxy {
 	cache: Mutex<MediaCache>,
-	oversized: Mutex<HashSet<String>>,
+	windowed: Mutex<Windowed>,
 	flights: Flights,
 	fetches: Semaphore,
 }
@@ -36,7 +39,7 @@ impl Default for MediaProxy {
 	fn default() -> Self {
 		Self {
 			cache: Mutex::default(),
-			oversized: Mutex::default(),
+			windowed: Mutex::default(),
 			flights: Flights::default(),
 			fetches: Semaphore::new(OFFICIAL_APP_REQUESTS_PER_HOST),
 		}
@@ -44,9 +47,14 @@ impl Default for MediaProxy {
 }
 
 impl MediaProxy {
+	async fn cached(&self, key: &str) -> Option<CachedMedia> {
+		self.cache.lock().await.get(key)
+	}
+
 	pub async fn forget_everything(&self) {
 		self.cache.lock().await.clear();
-		self.oversized.lock().await.clear();
+		self.windowed.lock().await.clear();
+		self.flights.clear().await;
 	}
 }
 
@@ -85,29 +93,41 @@ async fn serve<R: Runtime>(
 		return refused(StatusCode::BAD_REQUEST);
 	};
 	let range = range.as_deref();
+	let freshness = Freshness::of(&url);
 	let key = cache_key(&url).to_owned();
 	let proxy = app.state::<MediaProxy>();
 
-	if let Some(hit) = proxy.cache.lock().await.get(&key) {
-		return deliver_ranged(&hit, range, is_head);
+	if let Some(hit) = proxy.cached(&key).await {
+		return deliver_ranged(&hit, range, is_head, freshness);
 	}
-	if proxy.oversized.lock().await.contains(&key) {
+	if proxy.windowed.lock().await.contains(&key) {
 		return serve_windowed(app, &url, fetcher, range, is_head).await;
 	}
 
 	let flight = proxy.flights.acquire(&key).await;
-	if let Some(hit) = proxy.cache.lock().await.get(&key) {
-		return deliver_ranged(&hit, range, is_head);
+	if let Some(hit) = proxy.cached(&key).await {
+		return deliver_ranged(&hit, range, is_head, freshness);
 	}
-	if proxy.oversized.lock().await.contains(&key) {
+	if proxy.windowed.lock().await.contains(&key) {
 		drop(flight);
 		return serve_windowed(app, &url, fetcher, range, is_head).await;
 	}
 
 	let fetched = match fetch(app, &url, fetcher, None).await {
 		Ok(fetched) => fetched,
-		Err(FetchError::Oversized) => {
-			proxy.oversized.lock().await.insert(key);
+		Err(error) if windowable(&error, fetcher) => {
+			tracing::warn!(
+				"[media] {} falls back to windowed: {}",
+				host_of(&url),
+				detail_of(&error)
+			);
+			let mut windowed = proxy.windowed.lock().await;
+			if matches!(error, FetchError::Oversized) {
+				windowed.always(key);
+			} else {
+				windowed.for_now(key);
+			}
+			drop(windowed);
 			drop(flight);
 			return serve_windowed(app, &url, fetcher, range, is_head).await;
 		}
@@ -120,7 +140,7 @@ async fn serve<R: Runtime>(
 			body: fetched.body,
 		};
 		proxy.cache.lock().await.put(&key, media.clone());
-		return deliver_ranged(&media, range, is_head);
+		return deliver_ranged(&media, range, is_head, freshness);
 	}
 	deliver_upstream(fetched, is_head)
 }
@@ -180,6 +200,25 @@ mod tests {
 		assert_eq!(
 			response.headers().get(header::CONTENT_TYPE).unwrap(),
 			"image/webp"
+		);
+		assert_eq!(
+			response.headers().get(header::CACHE_CONTROL).unwrap(),
+			"private, max-age=604800, immutable"
+		);
+	}
+
+	#[tokio::test]
+	async fn a_signed_body_is_never_left_in_the_webview_store() {
+		let signed = "https://d3.cloudfront.net/a.jpg?Expires=1&Signature=OLD";
+		let app = app_without_a_client();
+		cache(&app, signed, b"jpegbytes").await;
+
+		let response = serve(app.handle(), image(signed), None, false).await;
+
+		assert_eq!(response.status(), StatusCode::OK);
+		assert_eq!(
+			response.headers().get(header::CACHE_CONTROL).unwrap(),
+			"no-store"
 		);
 	}
 
@@ -273,14 +312,18 @@ mod tests {
 	}
 
 	#[tokio::test]
-	async fn forgetting_everything_clears_the_oversized_marks_too() {
+	async fn forgetting_everything_leaves_no_trace_of_what_was_fetched() {
 		let app = app_without_a_client();
 		let proxy = app.state::<MediaProxy>();
-		proxy.oversized.lock().await.insert(PHOTO.to_owned());
+		cache(&app, PHOTO, b"webpbytes").await;
+		proxy.windowed.lock().await.always(PHOTO.to_owned());
+		drop(proxy.flights.acquire(PHOTO).await);
 
 		proxy.forget_everything().await;
 
-		assert!(proxy.oversized.lock().await.is_empty());
+		assert!(proxy.cache.lock().await.get(PHOTO).is_none());
+		assert!(proxy.windowed.lock().await.is_empty());
+		assert!(proxy.flights.is_empty().await);
 	}
 
 	#[tokio::test]

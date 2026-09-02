@@ -116,6 +116,83 @@ describe("errorReport of a schema mismatch", () => {
 		});
 	};
 
+	const lateMismatch = () => {
+		const schema = z.object({
+			items: z.array(z.object({ type: z.literal("known") })),
+		});
+		const items = Array.from({ length: 120 }, (_item, index) => ({
+			type: index === 87 ? "brand_new" : "known",
+		}));
+		const body = JSON.stringify({ items });
+		return new ApiError({
+			message: "API response did not match cascadeV4Response",
+			request: { method: "GET", path: "/v4/cascade" },
+			response: { status: 200, body },
+			cause: schema.safeParse(JSON.parse(body)).error,
+		});
+	};
+
+	it("names the value that violated a closed set", () => {
+		const schema = z.object({
+			profiles: z.array(
+				z.object({ sexualHealth: z.array(z.enum({ A: 1, B: 2 })) }),
+			),
+		});
+		const body = { profiles: [{ sexualHealth: [1, 6] }] };
+		const error = new ApiError({
+			message:
+				"API response did not match the schema for GET /v7/profiles/{id}",
+			request: { method: "GET", path: "/v7/profiles/1" },
+			response: { status: 200, body: JSON.stringify(body) },
+			cause: schema.safeParse(body).error,
+		});
+
+		const report = errorReport(error, { redact: true }) as {
+			issues: { path: string; received?: unknown }[];
+		};
+
+		expect(report.issues[0]).toMatchObject({
+			path: "profiles[0].sexualHealth[1]",
+			received: 6,
+		});
+	});
+
+	it("keeps masking the value for issues that are not closed-set violations", () => {
+		const schema = z.object({ aboutMe: z.number() });
+		const body = { aboutMe: "something personal" };
+		const error = new ApiError({
+			message:
+				"API response did not match the schema for GET /v7/profiles/{id}",
+			request: { method: "GET", path: "/v7/profiles/1" },
+			response: { status: 200, body: JSON.stringify(body) },
+			cause: schema.safeParse(body).error,
+		});
+
+		const report = errorReport(error, { redact: true }) as {
+			issues: { path: string; received?: unknown }[];
+		};
+
+		expect(report.issues[0]).toMatchObject({
+			path: "aboutMe",
+			received: "<string:18>",
+		});
+	});
+
+	it("keeps the array entry an issue blames, past the head window", () => {
+		const report = errorReport(lateMismatch(), { redact: true }) as {
+			response: { body: { items: unknown[] } };
+		};
+		const { items } = report.response.body;
+
+		expect(items).toHaveLength(13);
+		expect(items.slice(0, 10)).toEqual(
+			Array.from({ length: 10 }, () => ({ type: "known" })),
+		);
+		expect(items[10]).toBe("<+77 more>");
+		expect(items[11]).toEqual({ type: "brand_new" });
+		expect(items[12]).toBe("<+32 more>");
+	});
+
 	it("lifts the issues out of the cause instead of nesting a JSON string", () => {
 		const report = errorReport(mismatch(), { redact: true }) as {
 			error: string;
@@ -129,6 +206,7 @@ describe("errorReport of a schema mismatch", () => {
 		expect(report.issues).toEqual([
 			{
 				path: "items[0].profileId",
+				received: "<string:2>",
 				code: "invalid_type",
 				expected: "number",
 				message: "Invalid input: expected number, received string",

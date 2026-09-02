@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitepress";
 
+import { icons } from "./icons";
+
 import { loadContext } from "../scripts/generator/context";
 import type { StaticSidebarPages } from "../scripts/generator/sidebar";
 import { buildSidebar } from "../scripts/generator/sidebar";
@@ -48,7 +50,12 @@ export default defineConfig({
 
 	title: "Open Grind",
 	description: "Open Grind project documentation and Grindr API reference",
-	head: [["link", { rel: "icon", href: "/logo.svg" }]],
+	head: [
+		["link", { rel: "icon", type: "image/png", href: "/favicon-96x96.png", sizes: "96x96" }],
+		["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+		["link", { rel: "shortcut icon", href: "/favicon.ico" }],
+		["link", { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" }],
+	],
 
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
@@ -134,5 +141,10 @@ export default defineConfig({
 			copyright:
 				'Licensed under the <a href="https://opengrind.org/license">MIT</a> License.',
 		},
+	},
+
+	vite: {
+		plugins: [icons()],
+		esbuild: { legalComments: "inline" },
 	},
 });

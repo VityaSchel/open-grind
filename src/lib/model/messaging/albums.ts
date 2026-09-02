@@ -1,7 +1,8 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "$lib/model/media";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { knownValueOrNull } from "$lib/model/tolerance";
+import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
 export const albumPreviewSchema = z.object({
 	albumId: z.int(),
@@ -36,7 +37,10 @@ export type AlbumExpirationType = z.infer<typeof albumExpirationTypeSchema>;
 
 export const albumExpirationSchema = z.object({
 	expiresAt: unixTimestampMsSchema.nullable(),
-	expirationType: albumExpirationTypeSchema.optional().nullable(),
+	expirationType: knownValueOrNull({
+		value: albumExpirationTypeSchema,
+		label: "album expirationType",
+	}).optional(),
 });
 
 export const albumContentMin = z.object({
@@ -50,7 +54,7 @@ export const albumContentSchema = albumContentMin.extend({
 	thumbUrl: mediaUrlSchema,
 	url: mediaUrlSchema.or(z.literal("")),
 	processing: z.boolean().nullable(),
-	rejectionId: z.unknown().nullable(),
+	rejectionId: unmodeledSchema,
 });
 
 export const myAlbumSchema = albumDetailsSchema.extend({

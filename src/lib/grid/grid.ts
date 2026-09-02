@@ -39,14 +39,14 @@ export type GridProfile = RenderedGridProfile | LazyGridProfile;
 
 function lazyProfile(profile: {
 	profileId: number;
-	unreadCount: number;
-	isVisiting: boolean;
+	unreadCount?: number | null;
+	isVisiting?: boolean | null;
 }): LazyGridProfile {
 	return {
 		type: "lazy",
 		id: profile.profileId,
-		unread: profile.unreadCount,
-		isVisiting: profile.isVisiting,
+		unread: profile.unreadCount ?? null,
+		isVisiting: profile.isVisiting ?? false,
 	};
 }
 
@@ -66,7 +66,7 @@ function gridProfile(profile: CascadeProfileData): GridProfile {
 		unread: profile.unreadCount ?? null,
 		onlineUntil: profile.onlineUntil ?? null,
 		isFavorite: favorite,
-		isVisiting: profile.isVisiting,
+		isVisiting: profile.isVisiting ?? false,
 		hasChattedInLast24Hrs: chatted,
 	};
 }

@@ -288,6 +288,7 @@ class GridState {
 				showErrorToast({
 					label: "Failed to refresh profiles",
 					error: err,
+					onRetry: () => void this.refresh(),
 				});
 				return;
 			}

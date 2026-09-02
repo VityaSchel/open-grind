@@ -1,6 +1,6 @@
 {
 	"name": "open-grind",
-	"version": "0.1.0-beta.4",
+	"version": "0.1.0-beta.4.1",
 	"license": "MIT",
 	"author": "Open Grind Governance (https://opengrind.org/governance)",
 	"type": "module",
@@ -11,6 +11,7 @@
 		"check:tools": "bun x tsc --noEmit -p tsconfig.tools.json",
 		"check:config": "opengrind-config check",
 		"check:deps": "cargo deny --manifest-path src-tauri/Cargo.toml check && bun audit && bun audit --cwd docs",
+		"bump": "bun scripts/bump-version.ts",
 		"check:version": "bun scripts/check-version.ts",
 		"check:backup-rules": "bun scripts/check-backup-rules.ts",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

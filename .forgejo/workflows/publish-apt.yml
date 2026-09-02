@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ["verify", "hetzner"]
+    runs-on: ["publish", "hetzner"]
     timeout-minutes: 20
     env:
       TAG: ${{ forgejo.event.inputs.tag || forgejo.event.release.tag_name }}
@@ -30,16 +30,23 @@ jobs:
             exit 0
           fi
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update -y
-          apt-get install -y --no-install-recommends jq minisign
+          apt-get -qq update </dev/null >/tmp/apt.log 2>&1 || true
+          apt-get -qq install -y --no-install-recommends jq minisign \
+            </dev/null >>/tmp/apt.log 2>&1 || true
+          if ! command -v jq >/dev/null || ! command -v minisign >/dev/null; then
+            cat /tmp/apt.log >&2
+            exit 1
+          fi
       - name: Check the token
         run: |
+          echo "==> check-token"
           test -n "$PACKAGES_TOKEN" || {
             echo "PACKAGES_TOKEN is unset; create a token with write:package scope" >&2
             exit 1
           }
       - name: Fetch the release
         run: |
+          echo "==> fetch-release"
           curl -fsSL "$API/releases/tags/$TAG" -o release.json
           jq -r '.prerelease' release.json > prerelease
           jq -r '.assets[].browser_download_url' release.json > assets
@@ -49,8 +56,9 @@ jobs:
           }
       - name: Download and verify
         run: |
-          key=$(curl -fsSL "$API/raw/KEYS.md" \
-            | tr -d '\r' | awk '/^RW/ && length($0) == 56 { print; exit }')
+          echo "==> download-verify"
+          curl -fsSL "$API/raw/KEYS.md" -o KEYS.md
+          key=$(awk '{ sub(/\r$/, "") } /^RW/ && length($0) == 56 { print; exit }' KEYS.md)
           test -n "$key" || { echo "KEYS.md publishes no minisign key" >&2; exit 1; }
           while read -r url; do
             deb=$(basename "$url")
@@ -60,13 +68,14 @@ jobs:
           done < debs
       - name: Upload to the Debian registry
         run: |
+          echo "==> upload"
           case "$(cat prerelease)" in
             true) suite=beta ;;
             *) suite=stable ;;
           esac
           while read -r url; do
             deb=$(basename "$url")
-            curl -fsS --fail-with-body \
+            curl -sS --fail-with-body \
               -H "Authorization: token $PACKAGES_TOKEN" \
               --upload-file "$deb" \
               "$REGISTRY/pool/$suite/main/upload"

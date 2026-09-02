@@ -1,12 +1,10 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
-import fs from "fs/promises";
-import { tmpdir } from "os";
 import path from "path";
 
 const TOOLING = {
 	apk: {
-		binaries: ["apksigner", "zipalign", "minisign"],
+		binaries: ["apksigner", "minisign"],
 		shell: "nix develop .#android",
 		rewrites: true,
 	},
@@ -96,29 +94,37 @@ async function signApk(input: string, output: string) {
 		);
 	}
 
-	const aligned = path.join(tmpdir(), `open-grind-${process.pid}.apk`);
-	try {
-		await $`zipalign -p -f 4 ${input} ${aligned}`;
-		await $`
-			apksigner sign \
-				--ks ${untilde(store)} \
-				--ks-key-alias ${alias} \
-				--ks-pass "pass:${password}" \
-				--key-pass "pass:${password}" \
-				--out ${output} ${aligned}
-		`;
-		const verify = await $`apksigner verify --print-certs ${output}`.text();
-		const fingerprint = verify
-			.split("\n")
-			.find((line) => line.includes("SHA-256"));
-		if (!fingerprint) {
-			throw new Error("no certificate fingerprint in verify output");
-		}
-		console.log(fingerprint);
-		console.log(`signed: ${output}`);
-	} finally {
-		await fs.rm(aligned, { force: true });
+	const signed = Bun.spawnSync(
+		[
+			"apksigner",
+			"sign",
+			"--alignment-preserved",
+			"--ks",
+			untilde(store),
+			"--ks-key-alias",
+			alias,
+			"--ks-pass",
+			`pass:${password}`,
+			"--key-pass",
+			`pass:${password}`,
+			"--out",
+			output,
+			input,
+		],
+		{ stdio: ["inherit", "inherit", "inherit"] },
+	);
+	if (signed.exitCode !== 0) {
+		throw new Error(`apksigner exited ${signed.exitCode}`);
 	}
+	const verify = await $`apksigner verify --print-certs ${output}`.text();
+	const fingerprint = verify
+		.split("\n")
+		.find((line) => line.includes("SHA-256"));
+	if (!fingerprint) {
+		throw new Error("no certificate fingerprint in verify output");
+	}
+	console.log(fingerprint);
+	console.log(`signed: ${output}`);
 }
 
 async function minisign(file: string) {

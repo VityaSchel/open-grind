@@ -64,6 +64,29 @@ beforeEach(() => {
 	fetchRestMock.mockReset();
 });
 
+describe("inbox tolerance", () => {
+	it("drops an entry type it has never seen instead of failing the page", async () => {
+		fetchRestMock.mockResolvedValue({
+			jsonParsed: (schema: { parse: (value: unknown) => unknown }) =>
+				schema.parse({
+					entries: [
+						conversation("keep-1"),
+						{ type: "group_conversation_v1", data: {} },
+						conversation("keep-2"),
+					],
+					nextPage: null,
+				}),
+		});
+
+		const { entries } = await getConversations({});
+
+		expect(entries.map((entry) => entry.data.conversationId)).toEqual([
+			"keep-1",
+			"keep-2",
+		]);
+	});
+});
+
 describe("conversation API wrappers", () => {
 	it("loads paged conversations through the inbox endpoint without a body", async () => {
 		const data = { entries: [conversation()], nextPage: 2 };

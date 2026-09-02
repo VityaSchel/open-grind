@@ -4,6 +4,7 @@ import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
+	commandResponseEventSchema,
 } from "./ws.svelte";
 
 const deleteEvent = {
@@ -51,6 +52,16 @@ describe("websocket event envelopes", () => {
 					type: "Text",
 					body: { text: "hi" },
 				},
+			}).success,
+		).toBe(true);
+	});
+
+	it("accepts a command response that carries no payload", () => {
+		expect(
+			commandResponseEventSchema.safeParse({
+				type: "chat.v1.message.send.response",
+				ref: "r-1",
+				status: 200,
 			}).success,
 		).toBe(true);
 	});

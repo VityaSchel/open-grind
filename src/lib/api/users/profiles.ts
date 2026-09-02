@@ -15,6 +15,7 @@ import {
 } from "$lib/api/users/profile-viewability";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
+import { arrayOfParsableEntries } from "$lib/model/tolerance";
 import {
 	type Profile,
 	profileRightNowSchema,
@@ -159,7 +160,10 @@ const profileShortWithRightNowSchema = z.object({
 });
 
 const getProfilesResponseSchema = z.object({
-	profiles: z.array(profileShortWithRightNowSchema),
+	profiles: arrayOfParsableEntries({
+		entries: profileShortWithRightNowSchema,
+		label: "resolved profiles",
+	}),
 });
 
 const GET_PROFILES_CHUNK_IDS = 30;
@@ -189,6 +193,13 @@ export async function getProfiles(
 
 export function clearProfileCaches() {
 	profiles.clear();
+}
+
+export function refreshProfile(profileId: number): Promise<Profile> {
+	return profiles.refetch(profileId).catch((error: unknown) => {
+		if (isUnviewableProfileError(error)) markProfileUnviewable(profileId);
+		throw error;
+	});
 }
 
 export function invalidateProfile(profileId: number) {

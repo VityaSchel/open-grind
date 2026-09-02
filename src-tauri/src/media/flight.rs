@@ -15,6 +15,15 @@ impl Flights {
 		};
 		lock.lock_owned().await
 	}
+
+	pub async fn clear(&self) {
+		self.0.lock().await.clear();
+	}
+
+	#[cfg(test)]
+	pub async fn is_empty(&self) -> bool {
+		self.0.lock().await.is_empty()
+	}
 }
 
 #[cfg(test)]
@@ -50,6 +59,17 @@ mod tests {
 		tokio::time::timeout(Duration::from_secs(5), flights.acquire("b"))
 			.await
 			.expect("an unrelated key must not wait");
+	}
+
+	#[tokio::test]
+	async fn clearing_drops_every_key_a_sign_out_must_forget() {
+		let flights = Flights::default();
+		drop(flights.acquire("a").await);
+		let _held = flights.acquire("b").await;
+
+		flights.clear().await;
+
+		assert!(flights.is_empty().await);
 	}
 
 	#[tokio::test]

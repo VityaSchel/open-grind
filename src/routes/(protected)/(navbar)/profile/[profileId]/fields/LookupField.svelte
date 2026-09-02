@@ -21,11 +21,11 @@
 
 	const text = $derived.by(() => {
 		if (value === null || value === undefined) return null;
-		if (Array.isArray(value)) {
-			if (value.length === 0) return null;
-			return value.map((entry) => options[entry]).join(", ");
-		}
-		return options[value];
+		if (!Array.isArray(value)) return options[value] ?? null;
+		const labels = value
+			.map((entry) => options[entry])
+			.filter((label) => label !== undefined);
+		return labels.length === 0 ? null : labels.join(", ");
 	});
 </script>
 

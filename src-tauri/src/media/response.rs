@@ -4,6 +4,32 @@ use super::cache::CachedMedia;
 
 const RANGE_WINDOW_BYTES: u64 = 2 * 1024 * 1024;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Freshness {
+	Immutable,
+	Uncacheable,
+}
+
+impl Freshness {
+	pub fn of(url: &str) -> Self {
+		let content_addressed = url
+			.starts_with("https://cdns.grindr.com/images/")
+			&& !url.contains('?');
+		if content_addressed {
+			Self::Immutable
+		} else {
+			Self::Uncacheable
+		}
+	}
+
+	fn directive(self) -> &'static str {
+		match self {
+			Self::Immutable => "private, max-age=604800, immutable",
+			Self::Uncacheable => "no-store",
+		}
+	}
+}
+
 /// wry hands the WebView nothing at all for a 3xx or a status outside
 /// 100..=599, and Android then falls through to a real network load of the
 /// ogmedia url, which resolves nowhere.
@@ -51,7 +77,7 @@ pub fn bounded_range(range: &str) -> String {
 pub fn refused(status: StatusCode) -> Response<Vec<u8>> {
 	Response::builder()
 		.status(status)
-		.header(header::CACHE_CONTROL, "no-store")
+		.header(header::CACHE_CONTROL, Freshness::Uncacheable.directive())
 		.body(Vec::new())
 		.unwrap_or_default()
 }
@@ -60,6 +86,7 @@ pub fn deliver(
 	media: &CachedMedia,
 	status: StatusCode,
 	is_head: bool,
+	freshness: Freshness,
 ) -> Response<Vec<u8>> {
 	Response::builder()
 		.status(status)
@@ -71,7 +98,7 @@ pub fn deliver(
 				.unwrap_or("application/octet-stream"),
 		)
 		.header(header::CONTENT_LENGTH, media.body.len())
-		.header(header::CACHE_CONTROL, "no-store")
+		.header(header::CACHE_CONTROL, freshness.directive())
 		.body(if is_head {
 			Vec::new()
 		} else {
@@ -144,8 +171,53 @@ mod tests {
 	}
 
 	#[test]
+	fn only_a_content_addressed_cdn_path_may_be_kept_by_the_webview() {
+		assert_eq!(
+			Freshness::of("https://cdns.grindr.com/images/thumb/320x320/abc"),
+			Freshness::Immutable
+		);
+		for url in [
+			"https://d3lyqctnm3b6pb.cloudfront.net/a.jpg?Expires=1&Signature=x",
+			"https://d3lyqctnm3b6pb.cloudfront.net/a.jpg",
+			"https://cdns.grindr.com/images/thumb/320x320/abc?v=2",
+			"https://cdns.grindr.com/other/abc",
+		] {
+			assert_eq!(Freshness::of(url), Freshness::Uncacheable, "{url}");
+		}
+	}
+
+	#[test]
+	fn an_immutable_body_is_the_only_one_the_webview_is_told_to_keep() {
+		let cacheable =
+			deliver(&media(None), StatusCode::OK, false, Freshness::Immutable);
+		assert_eq!(
+			cacheable.headers().get(header::CACHE_CONTROL).unwrap(),
+			"private, max-age=604800, immutable"
+		);
+
+		let uncacheable = deliver(
+			&media(None),
+			StatusCode::OK,
+			false,
+			Freshness::Uncacheable,
+		);
+		assert_eq!(
+			uncacheable.headers().get(header::CACHE_CONTROL).unwrap(),
+			"no-store"
+		);
+		assert_eq!(
+			refused(StatusCode::BAD_GATEWAY)
+				.headers()
+				.get(header::CACHE_CONTROL)
+				.unwrap(),
+			"no-store"
+		);
+	}
+
+	#[test]
 	fn delivering_sizes_the_body_itself_rather_than_trusting_the_cdn() {
-		let response = deliver(&media(None), StatusCode::OK, false);
+		let response =
+			deliver(&media(None), StatusCode::OK, false, Freshness::Immutable);
 
 		assert_eq!(
 			response.headers().get(header::CONTENT_LENGTH).unwrap(),
@@ -160,7 +232,12 @@ mod tests {
 
 	#[test]
 	fn a_head_keeps_the_headers_and_drops_the_bytes() {
-		let response = deliver(&media(Some("video/mp4")), StatusCode::OK, true);
+		let response = deliver(
+			&media(Some("video/mp4")),
+			StatusCode::OK,
+			true,
+			Freshness::Uncacheable,
+		);
 
 		assert!(response.body().is_empty());
 		assert_eq!(

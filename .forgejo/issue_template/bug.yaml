@@ -12,14 +12,11 @@ body:
         Before reporting a bug, please [search](https://git.opengrind.org/open-grind/open-grind/issues) existing issues!
         There is a good chance it has already been reported and being worked on. If that's the case, please give the existing issue a 👍 or add a comment instead of creating a new one.
 
-        Known issues:
-        - ["API error 4: Invalid input parameters"](https://git.opengrind.org/open-grind/open-grind/issues/198)
-        - ["Can't connect to Grindr"](https://git.opengrind.org/open-grind/open-grind/issues/198)
-        - ["Incorrect password" error when trying to log in](https://git.opengrind.org/open-grind/open-grind/issues/83)
-        - ["Version deprecated" error](https://git.opengrind.org/open-grind/open-grind/issues/119)
+        **Known issues:**
         - [Cloudflare blocking requests](https://git.opengrind.org/open-grind/open-grind/issues/81)
+        - ["Can't connect to Grindr"](https://git.opengrind.org/open-grind/open-grind/issues/198)
 
-        **Do NOT put "Something went wrong" in the title**, instead copy details, **redact them manually** and describe what happened.
+        **Do NOT put "Something went wrong" in the title**, instead paste redacted error details and describe what happened.
   - type: textarea
     id: what-happened
     attributes:
@@ -39,7 +36,7 @@ body:
     attributes:
       label: Version of Open Grind
       description: You can find this in the app's settings. Put "N/A" only if version is not applicable.
-      placeholder: e.g. v0.1.0-beta.4
+      placeholder: e.g. v0.1.0-beta.4.1
   - type: checkboxes
     id: existing-issues-searcehd
     visible: [form]

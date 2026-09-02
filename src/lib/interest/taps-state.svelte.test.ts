@@ -53,12 +53,15 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/ws.svelte")>()),
 	ws: {
 		on(
-			eventType: string,
+			eventType: string | string[],
 			schema: { parse(payload: unknown): unknown },
 			handler: (event: unknown) => void,
 		) {
-			if (eventType === "tap.v1.tap_sent") {
-				subscriptions.push({ eventType, schema });
+			const eventTypes = Array.isArray(eventType)
+				? eventType
+				: [eventType];
+			if (eventTypes.includes("tap.v1.tap_sent")) {
+				subscriptions.push({ eventType: eventTypes[0]!, schema });
 				tapHandlers.push(handler);
 			}
 			return Promise.resolve(unlistenTapMock);

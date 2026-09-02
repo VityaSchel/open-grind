@@ -2,8 +2,33 @@ use std::collections::HashMap;
 
 use grindr::Bytes;
 
-const MAX_TOTAL_BYTES: usize = 64 * 1024 * 1024;
 const MAX_ENTRY_BYTES: usize = super::MAX_MEDIA_BYTES;
+const LARGE_ENTRY_BYTES: usize = 128 * 1024;
+const SMALL_BUDGET_BYTES: usize = 32 * 1024 * 1024;
+const LARGE_BUDGET_BYTES: usize = 2 * MAX_ENTRY_BYTES;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Class {
+	Small = 0,
+	Large = 1,
+}
+
+impl Class {
+	fn of(len: usize) -> Self {
+		if len > LARGE_ENTRY_BYTES {
+			Self::Large
+		} else {
+			Self::Small
+		}
+	}
+
+	fn budget(self) -> usize {
+		match self {
+			Self::Small => SMALL_BUDGET_BYTES,
+			Self::Large => LARGE_BUDGET_BYTES,
+		}
+	}
+}
 
 #[derive(Clone)]
 pub struct CachedMedia {
@@ -16,10 +41,16 @@ struct Entry {
 	media: CachedMedia,
 }
 
+impl Entry {
+	fn class(&self) -> Class {
+		Class::of(self.media.body.len())
+	}
+}
+
 #[derive(Default)]
 pub struct MediaCache {
 	entries: HashMap<String, Entry>,
-	bytes: usize,
+	bytes: [usize; 2],
 	clock: u64,
 }
 
@@ -50,7 +81,8 @@ impl MediaCache {
 		}
 		self.clock += 1;
 		self.remove(key);
-		self.bytes += media.body.len();
+		let class = Class::of(media.body.len());
+		self.bytes[class as usize] += media.body.len();
 		self.entries.insert(
 			key.to_owned(),
 			Entry {
@@ -58,10 +90,20 @@ impl MediaCache {
 				media,
 			},
 		);
-		while self.bytes > MAX_TOTAL_BYTES {
+		self.evict(class);
+	}
+
+	pub fn clear(&mut self) {
+		self.entries.clear();
+		self.bytes = [0; 2];
+	}
+
+	fn evict(&mut self, class: Class) {
+		while self.bytes[class as usize] > class.budget() {
 			let Some(oldest) = self
 				.entries
 				.iter()
+				.filter(|(_, entry)| entry.class() == class)
 				.min_by_key(|(_, entry)| entry.last_used)
 				.map(|(key, _)| key.clone())
 			else {
@@ -71,14 +113,9 @@ impl MediaCache {
 		}
 	}
 
-	pub fn clear(&mut self) {
-		self.entries.clear();
-		self.bytes = 0;
-	}
-
 	fn remove(&mut self, key: &str) {
 		if let Some(entry) = self.entries.remove(key) {
-			self.bytes -= entry.media.body.len();
+			self.bytes[entry.class() as usize] -= entry.media.body.len();
 		}
 	}
 }
@@ -135,7 +172,7 @@ mod tests {
 	fn re_storing_a_key_does_not_double_count_its_bytes() {
 		let cache = cache_of(&[("a", 1024), ("a", 1024)]);
 
-		assert_eq!(cache.bytes, 1024);
+		assert_eq!(cache.bytes, [1024, 0]);
 		assert_eq!(cache.entries.len(), 1);
 	}
 
@@ -144,35 +181,83 @@ mod tests {
 		let mut cache = cache_of(&[("big", MAX_ENTRY_BYTES + 1)]);
 
 		assert!(cache.get("big").is_none());
-		assert_eq!(cache.bytes, 0);
+		assert_eq!(cache.bytes, [0, 0]);
+	}
+
+	#[test]
+	fn a_thumbnail_sized_entry_stays_out_of_the_large_budget() {
+		let cache = cache_of(&[
+			("thumb", LARGE_ENTRY_BYTES),
+			("photo", LARGE_ENTRY_BYTES + 1),
+		]);
+
+		assert_eq!(cache.bytes, [LARGE_ENTRY_BYTES, LARGE_ENTRY_BYTES + 1]);
 	}
 
 	#[test]
 	fn the_least_recently_used_entry_is_evicted_first() {
-		let mut cache =
-			cache_of(&[("a", MAX_ENTRY_BYTES), ("b", MAX_ENTRY_BYTES)]);
-		while cache.bytes + MAX_ENTRY_BYTES <= MAX_TOTAL_BYTES {
-			cache.put(
-				&format!("filler{}", cache.entries.len()),
-				media(MAX_ENTRY_BYTES),
+		let entry = 4 * 1024 * 1024;
+		let fits = Class::Large.budget() / entry;
+		let mut cache = MediaCache::default();
+		for index in 0..fits {
+			cache.put(&format!("photo{index}"), media(entry));
+		}
+		cache.get("photo0").expect("photo0 is still cached");
+
+		cache.put("last", media(entry));
+
+		assert!(cache.bytes[Class::Large as usize] <= Class::Large.budget());
+		assert!(
+			cache.get("photo0").is_some(),
+			"photo0 was used more recently than photo1"
+		);
+		assert!(cache.get("photo1").is_none());
+	}
+
+	#[test]
+	fn large_media_never_evicts_the_thumbnail_working_set() {
+		let thumb = 32 * 1024;
+		let photo = LARGE_ENTRY_BYTES + 1;
+		let mut cache = MediaCache::default();
+		for index in 0..100 {
+			cache.put(&format!("thumb{index}"), media(thumb));
+		}
+
+		for index in 0..(Class::Large.budget() / photo + 2) {
+			cache.put(&format!("photo{index}"), media(photo));
+		}
+
+		assert!(cache.bytes[Class::Large as usize] <= Class::Large.budget());
+		assert_eq!(cache.bytes[Class::Small as usize], 100 * thumb);
+		for index in 0..100 {
+			assert!(
+				cache.get(&format!("thumb{index}")).is_some(),
+				"thumb{index} was evicted by full-size media"
 			);
 		}
-		cache.get("a").expect("a is still cached");
+	}
 
-		cache.put("last", media(MAX_ENTRY_BYTES));
+	#[test]
+	fn a_second_full_size_entry_does_not_evict_the_one_in_use() {
+		let mut cache = cache_of(&[("video", MAX_ENTRY_BYTES)]);
 
-		assert!(cache.bytes <= MAX_TOTAL_BYTES);
-		assert!(cache.get("a").is_some(), "a was used more recently than b");
-		assert!(cache.get("b").is_none());
+		cache.put("photo", media(MAX_ENTRY_BYTES));
+
+		assert!(
+			cache.get("video").is_some(),
+			"a video being played must survive one more full-size fetch"
+		);
+		assert!(cache.get("photo").is_some());
 	}
 
 	#[test]
 	fn clearing_drops_every_entry_and_its_bytes() {
-		let mut cache = cache_of(&[("a", 1024), ("b", 2048)]);
+		let mut cache = cache_of(&[("a", 1024), ("b", LARGE_ENTRY_BYTES + 1)]);
 
 		cache.clear();
 
 		assert!(cache.get("a").is_none());
-		assert_eq!(cache.bytes, 0);
+		assert!(cache.get("b").is_none());
+		assert_eq!(cache.bytes, [0, 0]);
 	}
 }

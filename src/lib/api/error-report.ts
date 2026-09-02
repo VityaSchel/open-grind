@@ -11,6 +11,7 @@ import {
 	readResponseBody,
 	redactResponseBody,
 	redactValue,
+	valuePathKey,
 } from "$lib/api/redact/value";
 
 export type RedactionOptions = { redact: boolean };
@@ -19,6 +20,9 @@ const maxCauseDepth = 3;
 const maxIssues = 20;
 const maxIssueListItems = 12;
 const maxMessageChars = 2000;
+const maxReceivedChars = 100;
+
+const issueCodesRevealingTheValue = new Set(["invalid_value"]);
 
 const droppedIssueFields = new Set(["continue", "errors", "input", "inst"]);
 
@@ -43,7 +47,7 @@ function describeError({
 	if (error instanceof z.ZodError) {
 		return {
 			error: "Schema validation failed",
-			issues: describeZodIssues(error),
+			issues: describeZodIssues({ error, options }),
 		};
 	}
 	if (error instanceof Error)
@@ -65,6 +69,8 @@ function describeApiError({
 }): unknown {
 	const { request, response } = error;
 	const { redact } = options;
+	const body =
+		response === null ? undefined : readResponseBody(response.body);
 	return {
 		error: prose(error.message, { redact }),
 		...(error.kind !== null && { kind: error.kind }),
@@ -81,11 +87,25 @@ function describeApiError({
 				: {
 						status: response.status,
 						body: redact
-							? redactResponseBody(response.body)
+							? redactResponseBody(response.body, {
+									keptEntries: entriesBlamedByIssues(error),
+								})
 							: readResponseBody(response.body),
 					},
-		...describeCause({ error, options, depth }),
+		...describeCause({ error, options, depth, body }),
 	};
+}
+
+function entriesBlamedByIssues(error: Error): ReadonlySet<string> {
+	const blamed = new Set<string>();
+	if (!(error.cause instanceof z.ZodError)) return blamed;
+	for (const issue of error.cause.issues) {
+		issue.path.forEach((segment, index) => {
+			if (typeof segment !== "number") return;
+			blamed.add(valuePathKey(issue.path.slice(0, index + 1)));
+		});
+	}
+	return blamed;
 }
 
 function describeThrown({
@@ -114,14 +134,16 @@ function describeCause({
 	error,
 	options,
 	depth,
+	body,
 }: {
 	error: Error;
 	options: RedactionOptions;
 	depth: number;
+	body?: unknown;
 }): Record<string, unknown> {
 	const { cause } = error;
 	if (cause instanceof z.ZodError) {
-		return { issues: describeZodIssues(cause) };
+		return { issues: describeZodIssues({ error: cause, options, body }) };
 	} else if (
 		cause === null ||
 		cause === undefined ||
@@ -143,25 +165,77 @@ function prose(value: string, { redact }: RedactionOptions): string {
 	}
 }
 
-function describeZodIssues(error: z.ZodError): unknown[] {
+function describeZodIssues({
+	error,
+	options,
+	body,
+}: {
+	error: z.ZodError;
+	options: RedactionOptions;
+	body?: unknown;
+}): unknown[] {
 	const { issues } = error;
 	const described: unknown[] = issues
 		.slice(0, maxIssues)
-		.map(describeZodIssue);
+		.map((issue) => describeZodIssue({ issue, options, body }));
 	if (issues.length > maxIssues) {
 		described.push(`<+${issues.length - maxIssues} more>`);
 	}
 	return described;
 }
 
-function describeZodIssue(issue: z.core.$ZodIssue): unknown {
+function describeZodIssue({
+	issue,
+	options,
+	body,
+}: {
+	issue: z.core.$ZodIssue;
+	options: RedactionOptions;
+	body?: unknown;
+}): unknown {
 	const fields: Record<string, unknown> = { ...issue };
+	const received = describeReceived({ issue, options, body });
 	return Object.fromEntries([
 		["path", formatZodIssuePath(issue.path)],
+		...(received === undefined ? [] : [["received", received]]),
 		...Object.entries(fields)
 			.filter(([key]) => key !== "path" && !droppedIssueFields.has(key))
 			.map(([key, value]) => [key, capList(value)]),
 	]);
+}
+
+function valueAtPath({
+	value,
+	path,
+}: {
+	value: unknown;
+	path: readonly PropertyKey[];
+}): unknown {
+	let current = value;
+	for (const segment of path) {
+		if (current === null || typeof current !== "object") return undefined;
+		current = (current as Record<PropertyKey, unknown>)[segment];
+	}
+	return current;
+}
+
+function describeReceived({
+	issue,
+	options,
+	body,
+}: {
+	issue: z.core.$ZodIssue;
+	options: RedactionOptions;
+	body?: unknown;
+}): unknown {
+	if (body === undefined) return undefined;
+	const value = valueAtPath({ value: body, path: issue.path });
+	if (value === undefined) return undefined;
+	if (!options.redact) return value;
+	if (!issueCodesRevealingTheValue.has(issue.code)) return redactValue(value);
+	if (typeof value === "string") return capText(value, maxReceivedChars);
+	if (typeof value === "object") return redactValue(value);
+	return value;
 }
 
 function formatZodIssuePath(path: readonly PropertyKey[]): string {

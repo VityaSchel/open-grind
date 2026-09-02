@@ -28,6 +28,19 @@ The HTTP/2 stack under `wreq`. Cloudflare sees every frame we send, so these hun
 
 The rest will not be upstreamed: the flush was [declined](https://github.com/0x676e67/http2/issues/68), and `mod hpack` is private, so the HPACK hunks are unreachable from a dependent crate.
 
+## wry
+
+On Android the custom-protocol handler runs while the process-global `REQUEST_HANDLER` mutex is held, and it blocks there for up to 30s waiting on the responder, so every media fetch and asset load is serialised.
+
+| File                         | Change                                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `android/binding.rs`         | Clone the handler out of the map and drop the guard before calling it.                                                   |
+| `android/mod.rs`             | Store it as `Arc<dyn Fn ... + Send + Sync>` so it can be cloned.                                                         |
+| `lib.rs`, `wkwebview/mod.rs` | `Send + Sync` on `custom_protocols`, both `with_*_custom_protocol` bounds and `protocol_ptrs`, which the clone requires. |
+| `Cargo.toml`                 | Allow warnings, since a path dependency gets no `--cap-lints allow`.                                                     |
+
+Backport of [wry 0.56.0](https://github.com/tauri-apps/wry/releases/tag/wry-v0.56.0). **Delete when a `tauri-runtime-wry` requiring `wry >= 0.56` is published**.
+
 ## tauri-codegen
 
 Embedded assets and CSP hashes are emitted in hash-map and `readdir` order. The patch sorts both.

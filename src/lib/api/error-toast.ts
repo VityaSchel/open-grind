@@ -17,7 +17,7 @@ export function showErrorToast({
 	onRetry?: () => void;
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
-	if (onRetry && error instanceof ApiError && error.retryable) {
+	if (onRetry) {
 		toast.error(label, {
 			action: { label: "Retry", onClick: onRetry },
 			cancel: {

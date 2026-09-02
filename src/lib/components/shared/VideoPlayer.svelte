@@ -10,6 +10,7 @@
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
 	import { Button } from "$lib/components/ui/button";
+	import { now } from "$lib/util/clock";
 	import { formatMediaDuration } from "$lib/util/format-time";
 	import VideoScrubber from "./VideoScrubber.svelte";
 
@@ -22,8 +23,34 @@
 		src: string;
 		poster: string | null;
 		onready?: () => void;
-		onfail?: () => void;
+		onfail?: (detail: string) => void;
 	} = $props();
+
+	let element = $state<HTMLVideoElement | null>(null);
+	let retriedSrc: string | null = null;
+	let startedAt = now();
+
+	function describeFailure(error: MediaError | null): string {
+		const elapsed = ((now() - startedAt) / 1000).toFixed(1);
+		if (error === null) return `unknown media error after ${elapsed}s`;
+		const message = error.message === "" ? "" : `: ${error.message}`;
+		return `MediaError ${error.code} after ${elapsed}s${message}`;
+	}
+
+	function failed() {
+		const video = element;
+		const detail = describeFailure(video?.error ?? null);
+		const untouched =
+			video !== null &&
+			video.readyState === HTMLMediaElement.HAVE_NOTHING;
+		if (untouched && retriedSrc !== src) {
+			retriedSrc = src;
+			startedAt = now();
+			video?.load();
+			return;
+		}
+		onfail?.(detail);
+	}
 
 	let paused = $state(true);
 	let muted = $state(true);
@@ -75,6 +102,7 @@
 >
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
+		bind:this={element}
 		onpointerdown={toggle}
 		bind:paused
 		bind:muted
@@ -87,7 +115,7 @@
 		preload="metadata"
 		class="size-full object-contain"
 		onloadeddata={onready}
-		onerror={onfail}
+		onerror={failed}
 	></video>
 	{#if controlsVisible}
 		<div

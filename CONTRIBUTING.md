@@ -45,7 +45,7 @@ Projects reference:
 
 ### Development environment
 
-1. Clone repository with submodules: `git clone --recurse-submodules ssh://git@git.opengrind.org/open-grind/open-grind.git`
+1. Clone repository with submodules: `git clone --recurse-submodules https://git.opengrind.org/open-grind/open-grind.git`
 2. Install prerequisites:
     - [Bun](https://bun.sh)
     - [Rust](https://rustup.rs)
@@ -166,16 +166,17 @@ Open Grind adopts semver and uses it for canonical version names, i.e. `vMAJOR.M
 Android version code is calculated using `major * 1000000 + minor * 1000 + patch`, but for pre-mvp (v0.1.0) this convention is broken:
 
 ```
-v0.1.0-alpha.1 = 1000
-v0.1.0-alpha.2 = 1001
-v0.1.0-alpha.3 = 1002
-v0.1.0-alpha.4 = 1003
-v0.1.0-alpha.5 = 1004
-v0.1.0-beta.1  = 1010 (due to error, the actual release is 1004)
-v0.1.0-beta.2  = 1020 (due to error, the actual release is 1010)
-v0.1.0-beta.3  = 1030 (due to error, the actual release is 1020)
-v0.1.0-beta.4  = 1040 (error fixed, actual release jumps from 1020 to 1040)
-v0.1.0-beta.5  = 1050
+v0.1.0-alpha.1  = 1000
+v0.1.0-alpha.2  = 1001
+v0.1.0-alpha.3  = 1002
+v0.1.0-alpha.4  = 1003
+v0.1.0-alpha.5  = 1004
+v0.1.0-beta.1   = 1010 (due to error, the actual release is 1004)
+v0.1.0-beta.2   = 1020 (due to error, the actual release is 1010)
+v0.1.0-beta.3   = 1030 (due to error, the actual release is 1020)
+v0.1.0-beta.4   = 1040 (error fixed, actual release jumps from 1020 to 1040)
+v0.1.0-beta.4.1 = 1041
+v0.1.0-beta.5   = 1050
 ```
 
 Post-mvp versioning:

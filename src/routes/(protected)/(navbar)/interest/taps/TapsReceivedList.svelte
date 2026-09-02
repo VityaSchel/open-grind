@@ -40,7 +40,7 @@
 				{#each Array(8)}
 					<Skeleton class="h-24.5 w-full shrink-0" />
 				{/each}
-			{:else if taps.error}
+			{:else if taps.error && taps.taps.length === 0}
 				<div class="flex flex-1">
 					<ApiErrorDisplay
 						error={taps.error}
@@ -66,7 +66,7 @@
 			{/if}
 		</div>
 	</div>
-	{#if !taps.loading && !taps.error}
+	{#if !taps.loading && (taps.taps.length > 0 || !taps.error)}
 		<DataRefreshControl
 			{container}
 			updating={taps.refreshing}

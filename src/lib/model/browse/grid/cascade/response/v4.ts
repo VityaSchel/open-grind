@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "$lib/model/media";
+import { arrayOfKnownVariants, knownValueOrNull } from "$lib/model/tolerance";
 import {
 	bodyTypeSchema,
 	sexualPositionSchema,
@@ -19,6 +20,7 @@ import {
 	cascadeResponsePartialProfileV1Schema,
 	cascadeResponseProfileHideStatusSchema,
 	cascadeResponseProfileSchema,
+	cascadeResponseRewardedProfilesEntryPointV1Schema,
 	cascadeResponseSchema,
 	cascadeResponseSponsoredProfileV1Schema,
 	cascadeResponseTopPicksV1Schema,
@@ -43,8 +45,14 @@ export const cascadeV4ResponseFullProfileV1Schema = z.object({
 		age: z.int().nonnegative().optional(),
 		heightCm: z.number().nonnegative().optional(),
 		weightGrams: z.number().nonnegative().optional(),
-		bodyType: bodyTypeSchema.nullish(),
-		sexualPosition: sexualPositionSchema.nullish(),
+		bodyType: knownValueOrNull({
+			value: bodyTypeSchema,
+			label: "cascade bodyType",
+		}).optional(),
+		sexualPosition: knownValueOrNull({
+			value: sexualPositionSchema,
+			label: "cascade sexualPosition",
+		}).optional(),
 	}),
 });
 
@@ -126,6 +134,10 @@ export const cascadeV4ResponseProfileHideStatusSchema = z.object({
 	...cascadeResponseProfileHideStatusSchema.shape,
 });
 
+export const cascadeV4ResponseRewardedProfilesEntryPointV1Schema = z.object({
+	...cascadeResponseRewardedProfilesEntryPointV1Schema.shape,
+});
+
 export const cascadeV4ResponseItemSchema = z.discriminatedUnion("type", [
 	cascadeV4ResponseFullProfileV1Schema,
 	cascadeV4ResponsePartialProfileV1Schema,
@@ -145,9 +157,13 @@ export const cascadeV4ResponseItemSchema = z.discriminatedUnion("type", [
 	cascadeV4ResponseFavoritesHeaderNoFreeResultsV1Schema,
 	cascadeV4ResponseFavoritesHeaderNoXtraResultsV1Schema,
 	cascadeV4ResponseProfileHideStatusSchema,
+	cascadeV4ResponseRewardedProfilesEntryPointV1Schema,
 ]);
 
 export const cascadeV4ResponseSchema = z.object({
 	...cascadeResponseSchema.shape,
-	items: z.array(cascadeV4ResponseItemSchema),
+	items: arrayOfKnownVariants({
+		variants: cascadeV4ResponseItemSchema,
+		label: "cascade",
+	}),
 });

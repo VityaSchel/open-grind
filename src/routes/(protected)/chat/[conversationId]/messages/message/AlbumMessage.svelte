@@ -10,6 +10,7 @@
 	} from "$lib/api/messaging/albums";
 	import { albumShares } from "$lib/chat/album-shares.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { now } from "$lib/util/clock";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		measureImage,
@@ -26,6 +27,8 @@
 	import { getConversationState } from "../../conversation-state.svelte";
 	import LockedMedia from "./LockedMedia.svelte";
 	import { MessageMediaState } from "./message-media.svelte";
+
+	const ALBUM_MEMO_TTL_MS = 10 * 60 * 1000;
 
 	let { message }: { message: AlbumMessage["body"] } = $props();
 
@@ -69,9 +72,11 @@
 
 	let albumState = $state<AlbumState>({ status: "idle" });
 	let cachedAlbum: LoadedAlbum | null = null;
+	let cachedAt = 0;
 
 	function openAlbum() {
-		if (cachedAlbum) {
+		const fresh = now() - cachedAt < ALBUM_MEMO_TTL_MS;
+		if (cachedAlbum !== null && fresh) {
 			albumState = { status: "open", album: cachedAlbum };
 		} else {
 			albumState = { status: "loading" };
@@ -106,6 +111,7 @@
 				),
 			};
 			cachedAlbum = loaded;
+			cachedAt = now();
 			albumState = { status: "open", album: loaded };
 		})().catch((error) => {
 			console.error(error);

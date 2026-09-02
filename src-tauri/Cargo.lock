@@ -2184,9 +2184,9 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.17.1+26.15.0.173835"
+version = "0.18.0+26.15.1.174557"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd3f9896c8fc3650953c48af233bf84e8c23ec9d8da5034acf9cc8e2a7644120"
+checksum = "50043c74309843bf2230f7fb5e35d801281d858fb3290a0bbecf54ead7287aea"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -3703,7 +3703,7 @@ dependencies = [
 
 [[package]]
 name = "open-grind"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.4.1"
 dependencies = [
  "android-native-keyring-store",
  "apple-native-keyring-store",
@@ -7781,8 +7781,6 @@ checksum = "9edde0db4769d2dc68579893f2306b26c6ecfbe0ef499b013d731b7b9247e0b9"
 [[package]]
 name = "wry"
 version = "0.55.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "186f9871daa55fd9c016578b810d149de58367113db7fb72b462d2323ce19514"
 dependencies = [
  "base64 0.22.1",
  "block2",

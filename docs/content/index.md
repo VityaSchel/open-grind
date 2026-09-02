@@ -2,36 +2,56 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
+titleTemplate: ':title — free & open source Grindr client'
+
 hero:
   name: "Open Grind"
   text: "Unofficial Grindr client"
-  tagline: Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven
+  tagline: Free, open source client with no ads, no trackers and no paywalls, driven by the community
   actions:
     - theme: brand
       text: Download
+      icon: '<span class="vp-icon i-download"></span>'
+      badge: 67k
       link: /guides/download
+      platforms:
+        - { label: Android, icon: '<span class="vp-icon i-android"></span>' }
+        - { label: Windows, icon: '<span class="vp-icon i-windows"></span>' }
+        - { label: Linux, icon: '<span class="vp-icon i-linux"></span>' }
+        - { label: macOS, icon: '<span class="vp-icon i-apple"></span>' }
+    - theme: alt
+      text: Join the Matrix chat
+      icon: '<span class="vp-icon i-chat"></span>'
+      link: https://matrix.to/#/#opengrind:opengrind.org
     - theme: alt
       text: Source code
+      icon: '<span class="vp-icon i-forgejo"></span>'
       link: https://git.opengrind.org/open-grind/open-grind
 
 features:
   - title: Unlocked grid
-    details: Unlimited profiles for free, ads removed from grid, all filters unlocked
+    icon: '<span class="vp-icon i-grid"></span>'
+    details: Unlimited profiles for free, ads removed from grid and chats, all filters and features unlocked
     link: /guides/features/unlimited-profiles
   - title: Location spoofing
-    details: Native geolocation change with OpenStreetMap and location search built-in
+    icon: '<span class="vp-icon i-teleport"></span>'
+    details: Set your location anywhere in the world for free and you'll appear in the grid there
     link: /guides/features/location-spoofing-teleport
   - title: Zero ads
-    details: No ads, first party, third party or self-promotion, no obstructive pop-ups
+    icon: '<span class="vp-icon i-no-ads"></span>'
+    details: No ads, no promotions, no banners, no donation prompts, no premium features, no bloat
     link: /guides/features/no-ads
   - title: All platforms
-    details: Android, iOS<sup>1</sup>, Windows<sup>1</sup>, macOS, Linux<sup>1</sup> client with native features supported
+    icon: '<span class="vp-icon i-platforms"></span>'
+    details: Download for free on Android, Windows, Linux, macOS, from F-Droid, apt or directly
     link: /guides/download
-  - title: Privacy by default
-    details: No analytics, zero trackers, no data is collected by Open Grind developers
+  - title: Privacy built-in
+    icon: '<span class="vp-icon i-privacy"></span>'
+    details: No analytics, no trackers, no data collected, 100% transparent logs and governance
     link: /guides/features/privacy
   - title: Security as foundation
-    details: Human code review, audit, supply chain security, end-to-end testing
+    icon: '<span class="vp-icon i-security"></span>'
+    details: Reproducible builds, human code audit, supply chain security, end-to-end testing
     link: https://git.opengrind.org/open-grind/open-grind/src/branch/main/SECURITY.md#security-policy
 ---
 
@@ -40,5 +60,3 @@ features:
 <img src="/app-screenshots-2x3.avif" class="hero-screenshots-2x3">
 
 <hr />
-
-<sup>1</sup> Technical platform support, no testing/stable build yet.

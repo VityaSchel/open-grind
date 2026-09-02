@@ -1,6 +1,7 @@
 import path from "path";
 import tauriConfJson from "../src-tauri/tauri.conf.json";
 import packageJson from "../package.json";
+import { parseVersion } from "./lib/semver";
 
 const cargo = await Bun.file(
 	path.join(__dirname, "../src-tauri/Cargo.toml"),
@@ -21,11 +22,9 @@ if (cargoVersion !== configVersion || packageVersion !== configVersion) {
 	);
 }
 
-const semver =
-	/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
-const parsed = semver.exec(configVersion!);
+const parsed = parseVersion(configVersion);
 if (!parsed) throw new Error(`${configVersion} is not a valid semver version`);
-const prerelease = parsed![4] ?? "";
+const { prerelease } = parsed;
 
 const versionCode = tauriConfJson.bundle?.android?.versionCode;
 if (!Number.isInteger(versionCode)) {

@@ -1,18 +1,19 @@
 import z from "zod";
 
 import { mediaUrlSchema } from "$lib/model/media";
-import { unixTimestampMsSchema } from "$lib/model/types";
+import { arrayOfKnownVariants } from "$lib/model/tolerance";
+import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 
 export const cascadeResponseProfileSchema = z.object({
 	profileId: z.int().nonnegative(),
-	onlineUntil: unixTimestampMsSchema.nullable(),
-	displayName: z.string().nullable().optional(),
-	distanceMeters: z.int().nonnegative().optional(),
-	lastOnline: unixTimestampMsSchema.nullable().optional(),
-	rightNow: z.string(),
-	unreadCount: z.int().nonnegative(),
-	isVisiting: z.boolean(),
-	isPopular: z.boolean(),
+	onlineUntil: unixTimestampMsSchema.nullish(),
+	displayName: z.string().nullish(),
+	distanceMeters: z.number().nonnegative().nullish(),
+	lastOnline: unixTimestampMsSchema.nullish(),
+	rightNow: z.string().nullish(),
+	unreadCount: z.int().nonnegative().nullish(),
+	isVisiting: z.boolean().nullish(),
+	isPopular: z.boolean().nullish(),
 });
 
 export const cascadeResponseFullProfileV1Schema = z.object({
@@ -24,7 +25,7 @@ export const cascadeResponsePartialProfileV1Schema = z.object({
 	type: z.literal("partial_profile_v1"),
 	data: z.object({
 		...cascadeResponseProfileSchema.shape,
-		upsellItemType: z.string(),
+		upsellItemType: z.string().nullish(),
 	}),
 });
 
@@ -63,18 +64,24 @@ export const cascadeExploreAggregationCtaItemSchema = z.object({
 	"@type": z.literal("ExploreAggregationItem$Cta"),
 });
 
+export const cascadeExploreAggregationItemSchema = z.discriminatedUnion(
+	"@type",
+	[
+		cascadeExploreAggregationLocationItemSchema,
+		cascadeExploreAggregationCtaItemSchema,
+	],
+);
+
 export const cascadeResponseExploreAggregationV1Schema = z.object({
 	type: z.literal("explore_aggregation_v1"),
 	data: z.object({
 		uuid: z.string(),
 		headerName: z.string(),
 		source: z.string(),
-		items: z.array(
-			z.discriminatedUnion("@type", [
-				cascadeExploreAggregationLocationItemSchema,
-				cascadeExploreAggregationCtaItemSchema,
-			]),
-		),
+		items: arrayOfKnownVariants({
+			variants: cascadeExploreAggregationItemSchema,
+			label: "explore aggregation",
+		}),
 	}),
 });
 
@@ -151,10 +158,19 @@ export const cascadeResponseProfileHideStatusSchema = z.object({
 	count: z.int().nonnegative(),
 });
 
+export const cascadeResponseRewardedProfilesEntryPointV1Schema = z.object({
+	type: z.literal("rewarded_profiles_entry_point_v1"),
+	data: z.object({
+		previewImageUrls: z.array(mediaUrlSchema),
+		remainingRewards: z.int().nonnegative(),
+		profilesPerRedemption: z.int().nonnegative(),
+	}),
+});
+
 export const cascadeResponseSchema = z.object({
 	items: z.array(z.unknown()),
 	nextPage: z.int().nonnegative().nullable(),
 	shuffled: z.boolean(),
-	hiddenProfiles: z.unknown(),
-	hiddenProfileInfo: z.unknown(),
+	hiddenProfiles: unmodeledSchema,
+	hiddenProfileInfo: unmodeledSchema,
 });

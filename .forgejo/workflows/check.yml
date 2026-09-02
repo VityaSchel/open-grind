@@ -60,8 +60,7 @@ jobs:
           git checkout -q FETCH_HEAD
           [ -z "$EXPECTED_SHA" ] || [ "$(git rev-parse HEAD)" = "$EXPECTED_SHA" ] \
             || { echo "FATAL: PR head moved since approval (want $EXPECTED_SHA, got $(git rev-parse HEAD))"; exit 1; }
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive --quiet
+          git submodule update --init --recursive --quiet
 
       - name: Load CI cache
         run: |

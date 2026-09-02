@@ -3,11 +3,15 @@ import z from "zod";
 import { fetchRest } from "$lib/api/transport";
 import {
 	type Conversation,
-	fullConversationSchema,
+	conversationEntrySchema,
 } from "$lib/model/messaging/conversations";
+import { arrayOfKnownVariants } from "$lib/model/tolerance";
 
 const conversationsSchema = z.object({
-	entries: z.array(fullConversationSchema),
+	entries: arrayOfKnownVariants({
+		variants: conversationEntrySchema,
+		label: "inbox",
+	}),
 	nextPage: z.number().nullable(),
 });
 

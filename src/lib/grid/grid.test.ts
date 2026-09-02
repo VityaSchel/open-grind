@@ -153,6 +153,14 @@ describe("getGrid", () => {
 		const { items } = await cascade([
 			{ type: "advert_v1", data: {} },
 			{ type: "top_picks_v1", data: {} },
+			{
+				type: "rewarded_profiles_entry_point_v1",
+				data: {
+					previewImageUrls: [],
+					remainingRewards: 3,
+					profilesPerRedemption: 9,
+				},
+			},
 		]);
 
 		expect(items).toEqual([]);

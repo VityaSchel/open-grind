@@ -177,6 +177,7 @@ in
     buildEnv
     // {
       packages = toolchainInputs ++ [
+        pkgs.apksigcopier
         pkgs.minisign
         pkgs.shellcheck
       ];

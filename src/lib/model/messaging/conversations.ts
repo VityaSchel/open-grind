@@ -2,6 +2,11 @@ import z from "zod";
 
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowStatusSchema } from "$lib/model/right-now";
+import {
+	knownValueOr,
+	knownValueOrNull,
+	serverDefault,
+} from "$lib/model/tolerance";
 import { unixTimestampMsSchema, unmodeledSchema } from "$lib/model/types";
 import { sexualPositionSchema } from "$lib/model/users/profiles";
 
@@ -10,41 +15,56 @@ export const fullConversationSchema = z.object({
 	data: z.object({
 		conversationId: z.string(),
 		name: z.string(),
-		participants: z
-			.array(
-				z.object({
-					profileId: z.number(),
-					primaryMediaHash: mediaHashPublicSchema.nullable(),
-					lastOnline: unixTimestampMsSchema.nullable(),
-					onlineUntil: unixTimestampMsSchema.nullable(),
-					distanceMetres: z.number().nullable(),
-					position: sexualPositionSchema.nullable(),
-					isInAList: z.boolean(),
-					hasDatingPotential: z.boolean(),
+		participants: z.array(
+			z.object({
+				profileId: z.number(),
+				primaryMediaHash: mediaHashPublicSchema.nullish(),
+				lastOnline: unixTimestampMsSchema.nullish(),
+				onlineUntil: unixTimestampMsSchema.nullish(),
+				distanceMetres: z.number().nullish(),
+				position: knownValueOrNull({
+					value: sexualPositionSchema,
+					label: "conversation position",
 				}),
-			)
-			.length(1),
+				isInAList: serverDefault({
+					value: z.boolean(),
+					fallback: false,
+				}),
+				hasDatingPotential: serverDefault({
+					value: z.boolean(),
+					fallback: false,
+				}),
+			}),
+		),
 		lastActivityTimestamp: unixTimestampMsSchema,
 		unreadCount: z.number(),
 		preview: z
 			.object({
 				type: z.string(),
-				text: z.string().nullable(),
-				albumId: z.number().nullable(),
-				imageHash: mediaHashPublicSchema.nullable(),
+				text: z.string().nullish(),
+				albumId: z.number().nullish(),
+				imageHash: mediaHashPublicSchema.nullish(),
 				lat: unmodeledSchema,
 				lon: unmodeledSchema,
 				duration: unmodeledSchema,
 				photoContentReply: unmodeledSchema,
 			})
-			.nullable(),
-		muted: z.boolean(),
-		pinned: z.boolean(),
-		favorite: z.boolean(),
-		rightNow: rightNowStatusSchema,
-		onlineUntil: z.number().nullable(),
-		hasUnreadThrob: z.boolean(),
+			.nullish(),
+		muted: serverDefault({ value: z.boolean(), fallback: false }),
+		pinned: serverDefault({ value: z.boolean(), fallback: false }),
+		favorite: serverDefault({ value: z.boolean(), fallback: false }),
+		rightNow: knownValueOr({
+			value: rightNowStatusSchema,
+			fallback: "NOT_ACTIVE",
+			label: "conversation rightNow",
+		}),
+		onlineUntil: z.number().nullish(),
+		hasUnreadThrob: serverDefault({ value: z.boolean(), fallback: false }),
 	}),
 });
 
-export type Conversation = z.infer<typeof fullConversationSchema>;
+export const conversationEntrySchema = z.discriminatedUnion("type", [
+	fullConversationSchema,
+]);
+
+export type Conversation = z.infer<typeof conversationEntrySchema>;

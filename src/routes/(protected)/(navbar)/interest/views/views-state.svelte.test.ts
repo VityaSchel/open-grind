@@ -257,6 +257,7 @@ describe("ViewsState", () => {
 		expect(showErrorToastMock).toHaveBeenCalledWith({
 			label: "Failed to refresh views",
 			error: expect.any(Error),
+			onRetry: expect.any(Function),
 		});
 	});
 

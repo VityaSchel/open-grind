@@ -62,3 +62,4 @@ echo
 echo "interpreter: $interp"
 echo "glibc floor: $(objdump -T "$bin" | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1)"
 find "$out/bundle/deb" -maxdepth 1 -name '*.deb' -print
+sha256sum "$deb"

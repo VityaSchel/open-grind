@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
-import { errorUrn, errorUrnFromBody } from "$lib/api/error-urn";
+import {
+	errorUrn,
+	errorUrnFromBody,
+	tieredFeature,
+	tieredFeatureFromBody,
+} from "$lib/api/error-urn";
 
 const request = { method: "POST", path: "/v4/chat/message/send" };
 
@@ -47,6 +52,62 @@ describe("errorUrn", () => {
 		expect(errorUrn(new Error("offline"))).toBeNull();
 		expect(
 			errorUrn(new ApiError({ message: "no response", request })),
+		).toBeNull();
+	});
+});
+
+describe("tieredFeatureFromBody", () => {
+	it("reads the gated feature out of a paywall body", () => {
+		expect(
+			tieredFeatureFromBody(
+				JSON.stringify({
+					type: "urn:gr:err:tiered_feature",
+					title: "Feature not available with current subscription",
+					status: 402,
+					featureValue: "UnsentMessage",
+				}),
+			),
+		).toBe("UnsentMessage");
+	});
+
+	it("ignores errors that are not feature gates", () => {
+		expect(
+			tieredFeatureFromBody(
+				JSON.stringify({ type: "urn:gr:err:unauthorized_action" }),
+			),
+		).toBeNull();
+		expect(
+			tieredFeatureFromBody(
+				JSON.stringify({ type: "urn:gr:err:tiered_feature" }),
+			),
+		).toBeNull();
+		expect(
+			tieredFeatureFromBody("<html>Attention Required!</html>"),
+		).toBeNull();
+	});
+});
+
+describe("tieredFeature", () => {
+	it("reads the gated feature from an API error response", () => {
+		const error = new ApiError({
+			message: "API request failed with status 402",
+			request,
+			response: {
+				status: 402,
+				body: JSON.stringify({
+					type: "urn:gr:err:tiered_feature",
+					featureValue: "UnsentMessage",
+				}),
+			},
+		});
+
+		expect(tieredFeature(error)).toBe("UnsentMessage");
+	});
+
+	it("has no gated feature for errors without a response", () => {
+		expect(tieredFeature(new Error("offline"))).toBeNull();
+		expect(
+			tieredFeature(new ApiError({ message: "no response", request })),
 		).toBeNull();
 	});
 });

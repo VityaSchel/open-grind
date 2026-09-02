@@ -1,14 +1,105 @@
 ---
 prev: false
 next: false
+title: 'Download Open Grind'
+titleTemplate: ':title — free & open source Grindr client'
 ---
 
-# [**Download Open Grind**](https://git.opengrind.org/open-grind/open-grind/releases#install)
+<script setup>
+    import { VPButton } from 'vitepress/theme';
+</script>
 
-Never install Open Grind from unofficial sources. The only official source of Open Grind releases is https://git.opengrind.org/open-grind/open-grind/releases. All releases are signed and reproducible.
+# Download Open Grind
 
-> [!Warning] 🚧&nbsp;&nbsp;Beta MVP version&nbsp;&nbsp;🚧
-> Open Grind is in active development. [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
+Never download Open Grind from unofficial sources. The only official source of Open Grind releases is https://git.opengrind.org/open-grind/open-grind/releases. All releases are signed and reproducible.
 
-> [!Important] <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSIxNiIgZmlsbD0iI2ZmZiIvPjxwYXRoIGQ9Ik0yNi41NiAxNi4yNWMwLS43OC0uMDctMS41My0uMi0yLjI1SDE2djQuMjZoNS45MmMtLjI2IDEuMzctMS4wNCAyLjUzLTIuMjEgMy4zMXYyLjc3aDMuNTdjMi4wOC0xLjkyIDMuMjgtNC43NCAzLjI4LTguMDkiIGZpbGw9IiM0Mjg1ZjQiLz48cGF0aCBkPSJNMTYgMjdjMi45NyAwIDUuNDYtLjk4IDcuMjgtMi42NmwtMy41Ny0yLjc3Yy0uOTguNjYtMi4yMyAxLjA2LTMuNzEgMS4wNi0yLjg2IDAtNS4yOS0xLjkzLTYuMTYtNC41M0g2LjE4djIuODRDNy45OSAyNC41MyAxMS43IDI3IDE2IDI3IiBmaWxsPSIjMzRhODUzIi8+PHBhdGggZD0iTTkuODQgMTguMDljLS4yMi0uNjYtLjM1LTEuMzYtLjM1LTIuMDlzLjEzLTEuNDMuMzUtMi4wOXYtMi44NEg2LjE4QzUuNDMgMTIuNTUgNSAxNC4yMiA1IDE2cy40MyAzLjQ1IDEuMTggNC45M2wyLjg1LTIuMjJ6IiBmaWxsPSIjZmJiYzA1Ii8+PHBhdGggZD0iTTE2IDkuMzhjMS42MiAwIDMuMDYuNTYgNC4yMSAxLjY0bDMuMTUtMy4xNUMyMS40NSA2LjA5IDE4Ljk3IDUgMTYgNWMtNC4zIDAtOC4wMSAyLjQ3LTkuODIgNi4wN2wzLjY2IDIuODRjLjg3LTIuNiAzLjMtNC41MyA2LjE2LTQuNTMiIGZpbGw9IiNlYTQzMzUiLz48L3N2Zz4=" width="16" height="16" style="margin-block-end: 2px; margin-inline-end: 2px;" class="inline"></img> Sign in with Google
-> If you use **Sign in with Google**, [read this page](/guides/sign-in-with-google).
+> [!Warning] 🚧&nbsp;&nbsp;Open Grind is in active development.&nbsp;&nbsp;🚧
+> [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
+
+## Android
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-android.apk" size="medium">Download for Android (apk)</VPButton>
+</div>
+
+Install using your system's APK installer. Optionally, enable auto updates.
+
+## Windows
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
+</div>
+
+Launch the installer and follow the steps. Optionally, enable auto updates. To uninstall, use the bundled uninstall.exe. Check "delete app data" to delete the session and preferences.
+
+## Linux
+
+For Linux distributions that aren't supported, please [build manually](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md). Open Grind does not ship an AppImage yet, for two reasons: Tauri's AppImage bundler uses tooling from rolling versions at build time, so the result is not reproducible, and the bundle it produces fails to start on systems with Mesa 25 or newer, which includes current Arch and Fedora ([tauri#15665](https://github.com/tauri-apps/tauri/issues/15665)).
+
+### deb (Debian, Ubuntu, Linux Mint, other Debian-based)
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
+</div>
+
+deb releases do not have in-app auto-updater.
+
+To uninstall, manually clear all secrets from your Secret Service, then run `apt purge`.
+
+#### Track updates with apt
+
+Debian, Ubuntu and derivatives can install Open Grind from the project's own repository, so `apt` handles updates:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://git.opengrind.org/api/packages/open-grind/debian/repository.key \
+	| sudo tee /etc/apt/keyrings/opengrind.asc > /dev/null
+sudo tee /etc/apt/sources.list.d/opengrind.sources > /dev/null <<'EOF'
+Types: deb
+URIs: https://git.opengrind.org/api/packages/open-grind/debian
+Suites: beta
+Components: main
+Signed-By: /etc/apt/keyrings/opengrind.asc
+EOF
+sudo apt update && sudo apt install open-grind
+```
+
+Open Grind is still in beta, so every release so far is published to the `beta` suite. Once stable, use `Suites: stable` to track those instead. To remove the repository, delete both files.
+
+> [!Note] Trust
+> The repository index is signed by a key held on the server. The release artifacts and their `.minisig` signatures stay the canonical, reproducible download — the repository only exists so updates arrive through your package manager.
+
+### Arch Linux
+
+As of September 1st, 2026, AUR has disabled account registration and new package publishing, so it's not possible to install Open Grind from AUR right now.
+
+The PKGBUILD for Arch Linux can be found in [ci/aur/PKGBUILD](https://git.opengrind.org/open-grind/open-grind/src/branch/main/ci/aur/PKGBUILD).
+
+## macOS
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-macos.zip" size="medium">Download for macOS (universal)</VPButton>
+</div>
+
+Extract Open&nbsp;Grind.app from zip archive and move to Applications folder. To uninstall, move the app from Applications to Trash.
+
+::: info If you get "Apple could not verify “Open Grind” is free of malware that may harm your Mac or compromise your privacy.",
+
+1. Open System Settings
+2. Go to "Privacy & Security"
+3. Scroll to "“Open Grind” was blocked to protect your Mac."
+
+![System Settings](assets/guides/download/macos-quarantine-system-settings.png)
+
+4. Click "Open Anyway"
+5. In the "Open “Open Grind”?" dialog click "Open Anyway"
+6. Enter administrator password or Touch ID
+:::
+
+
+## iOS
+
+**iOS is currently not supported.** Open Grind iOS builds are likely to be released in Fall 2026 with the upcoming publishing in the third party app stores.
+

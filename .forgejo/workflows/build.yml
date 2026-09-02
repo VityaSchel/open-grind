@@ -3,12 +3,12 @@ name: build
 on:
   workflow_dispatch:
     inputs:
-      providers:
+      x86_64_providers:
         description: x86_64 builders to compare
         type: choice
         default: all
         options: [all, cherry, vultr, hetzner, none]
-      arm_providers:
+      arm64_providers:
         description: arm64 builders to compare
         type: choice
         default: all
@@ -30,25 +30,25 @@ concurrency:
 
 env:
   BOXES: >-
-    ${{ inputs.providers == 'none' && '[]'
-    || (inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-    || format('["{0}"]', inputs.providers)) }}
+    ${{ inputs.x86_64_providers == 'none' && '[]'
+    || (inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+    || format('["{0}"]', inputs.x86_64_providers)) }}
   ARM_BOXES: >-
-    ${{ inputs.arm_providers == 'none' && '[]'
-    || (inputs.arm_providers == 'all' && '["scaleway","gcore"]'
-    || format('["{0}"]', inputs.arm_providers)) }}
+    ${{ inputs.arm64_providers == 'none' && '[]'
+    || (inputs.arm64_providers == 'all' && '["scaleway","gcore"]'
+    || format('["{0}"]', inputs.arm64_providers)) }}
 
 jobs:
-  build:
+  build-android:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'android'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 55
     env:
@@ -69,8 +69,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -99,20 +98,20 @@ jobs:
       - name: Upload
         uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # v4
         with:
-          name: open-grind-unsigned-${{ matrix.provider }}
+          name: open-grind-unsigned-android-${{ matrix.provider }}
           path: out/
           retention-days: 1
 
   build-linux:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-x86_64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 30
     env:
@@ -130,8 +129,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -159,14 +157,14 @@ jobs:
 
   build-linux-arm64:
     if: >-
-      inputs.arm_providers != 'none'
+      inputs.arm64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'linux-arm64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.arm_providers == 'all' && '["scaleway","gcore"]'
-          || format('["{0}"]', inputs.arm_providers)) }}
+          ${{ fromJson(inputs.arm64_providers == 'all' && '["scaleway","gcore"]'
+          || format('["{0}"]', inputs.arm64_providers)) }}
     runs-on: ["build-arm64", "${{ matrix.provider }}"]
     timeout-minutes: 40
     env:
@@ -184,8 +182,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -213,14 +210,14 @@ jobs:
 
   build-windows-x64:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-x86_64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 25
     env:
@@ -240,8 +237,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -266,14 +262,14 @@ jobs:
 
   build-windows-arm64:
     if: >-
-      inputs.providers != 'none'
+      inputs.x86_64_providers != 'none'
       && (inputs.artifacts == 'all' || contains(inputs.artifacts, 'windows-arm64'))
     strategy:
       fail-fast: false
       matrix:
         provider: >-
-          ${{ fromJson(inputs.providers == 'all' && '["cherry","vultr","hetzner"]'
-          || format('["{0}"]', inputs.providers)) }}
+          ${{ fromJson(inputs.x86_64_providers == 'all' && '["cherry","vultr","hetzner"]'
+          || format('["{0}"]', inputs.x86_64_providers)) }}
     runs-on: ["build", "${{ matrix.provider }}"]
     timeout-minutes: 25
     env:
@@ -293,8 +289,7 @@ jobs:
           git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
           git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
           git checkout -q "$FORGEJO_SHA"
-          git -c url."$FORGEJO_SERVER_URL/".insteadOf="ssh://git@git.opengrind.org/" \
-            submodule update --init --recursive
+          git submodule update --init --recursive
       - name: Check the version
         env:
           ALLOW_DEV: ${{ inputs.allow_dev }}
@@ -320,7 +315,7 @@ jobs:
   verify:
     needs:
       [
-        build,
+        build-android,
         build-linux,
         build-linux-arm64,
         build-windows-x64,
@@ -328,7 +323,7 @@ jobs:
       ]
     if: >-
       !cancelled()
-      && needs.build.result != 'failure'
+      && needs.build-android.result != 'failure'
       && needs.build-linux.result != 'failure'
       && needs.build-linux-arm64.result != 'failure'
       && needs.build-windows-x64.result != 'failure'

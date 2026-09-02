@@ -27,9 +27,14 @@ export type NonJsonSummary =
 	| { nonJson: "html"; length: number; title?: string }
 	| { nonJson: "text"; length: number };
 
-export function redactResponseBody(text: string): unknown {
+export function redactResponseBody(
+	text: string,
+	options: RedactionWindow = {},
+): unknown {
 	const parsed = parseJson(text);
-	return parsed.ok ? redactValue(parsed.value) : summariseNonJson(text);
+	return parsed.ok
+		? redactValue(parsed.value, options)
+		: summariseNonJson(text);
 }
 
 export function readResponseBody(text: string): unknown {
@@ -59,18 +64,39 @@ function looksLikeMarkup(text: string): boolean {
 	return lowered.includes("<html") || lowered.includes("<!doctype");
 }
 
-export function redactValue(value: unknown): unknown {
-	return walk({ value, depth: 0, seen: new WeakSet() });
+export type RedactionWindow = { keptEntries?: ReadonlySet<string> };
+
+export function valuePathKey(path: readonly PropertyKey[]): string {
+	return path.map(String).join(".");
+}
+
+const noKeptEntries: ReadonlySet<string> = new Set();
+
+export function redactValue(
+	value: unknown,
+	{ keptEntries = noKeptEntries }: RedactionWindow = {},
+): unknown {
+	return walk({
+		value,
+		depth: 0,
+		seen: new WeakSet(),
+		path: [],
+		keptEntries,
+	});
 }
 
 function walk({
 	value,
 	depth,
 	seen,
+	path,
+	keptEntries,
 }: {
 	value: unknown;
 	depth: number;
 	seen: WeakSet<object>;
+	path: PropertyKey[];
+	keptEntries: ReadonlySet<string>;
 }): unknown {
 	if (value === null || value === undefined) return value;
 	if (typeof value !== "object") return maskLeaf(value);
@@ -79,13 +105,14 @@ function walk({
 
 	seen.add(value);
 	try {
-		if (Array.isArray(value)) return walkArray({ value, depth, seen });
+		if (Array.isArray(value))
+			return walkArray({ value, depth, seen, path, keptEntries });
 		if (!isPlainObject(value))
 			return `<${value.constructor?.name ?? "object"}>`;
 		return Object.fromEntries(
 			Object.entries(value).map(([key, item]) => [
 				key,
-				walkEntry({ key, value: item, depth, seen }),
+				walkEntry({ key, value: item, depth, seen, path, keptEntries }),
 			]),
 		);
 	} finally {
@@ -97,16 +124,39 @@ function walkArray({
 	value,
 	depth,
 	seen,
+	path,
+	keptEntries,
 }: {
 	value: unknown[];
 	depth: number;
 	seen: WeakSet<object>;
+	path: PropertyKey[];
+	keptEntries: ReadonlySet<string>;
 }): unknown[] {
-	const items: unknown[] = value
-		.slice(0, maxArrayItems)
-		.map((item) => walk({ value: item, depth: depth + 1, seen }));
-	if (value.length > maxArrayItems) {
-		items.push(`<+${value.length - maxArrayItems} more>`);
+	const kept = new Set<number>(
+		value.slice(0, maxArrayItems).map((_item, index) => index),
+	);
+	value.forEach((_item, index) => {
+		if (keptEntries.has(valuePathKey([...path, index]))) kept.add(index);
+	});
+
+	const items: unknown[] = [];
+	let cursor = 0;
+	for (const index of [...kept].sort((a, b) => a - b)) {
+		if (index > cursor) items.push(`<+${index - cursor} more>`);
+		items.push(
+			walk({
+				value: value[index],
+				depth: depth + 1,
+				seen,
+				path: [...path, index],
+				keptEntries,
+			}),
+		);
+		cursor = index + 1;
+	}
+	if (cursor < value.length) {
+		items.push(`<+${value.length - cursor} more>`);
 	}
 	return items;
 }
@@ -116,11 +166,15 @@ function walkEntry({
 	value,
 	depth,
 	seen,
+	path,
+	keptEntries,
 }: {
 	key: string;
 	value: unknown;
 	depth: number;
 	seen: WeakSet<object>;
+	path: PropertyKey[];
+	keptEntries: ReadonlySet<string>;
 }): unknown {
 	if (typeof value === "string") {
 		if (verbatimKeys.has(key)) return capText(value, maxKeptChars);
@@ -128,7 +182,13 @@ function walkEntry({
 	} else if (verbatimKeys.has(key) && typeof value !== "object") {
 		return value;
 	}
-	return walk({ value, depth: depth + 1, seen });
+	return walk({
+		value,
+		depth: depth + 1,
+		seen,
+		path: [...path, key],
+		keptEntries,
+	});
 }
 
 function maskLeaf(value: unknown): string {
