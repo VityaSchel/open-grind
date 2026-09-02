@@ -194,7 +194,7 @@
 			{#key conversationState.conversationId}
 				<MessagesListSkeleton />
 			{/key}
-		{:else if conversationState.error && conversationState.messages.length === 0}
+		{:else if conversationState.error}
 			<ConversationError />
 		{:else}
 			<div
