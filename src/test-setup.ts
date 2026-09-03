@@ -56,3 +56,18 @@ if (typeof Element !== "undefined" && !Element.prototype.animate) {
 		return animation as unknown as Animation;
 	};
 }
+
+// jsdom's Blob has no arrayBuffer either, and media reading goes through it.
+if (typeof Blob !== "undefined" && !Blob.prototype.arrayBuffer) {
+	Blob.prototype.arrayBuffer = function () {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(reader.result as ArrayBuffer);
+			reader.onerror = () =>
+				reject(
+					new Error(reader.error?.message ?? "Failed to read blob"),
+				);
+			reader.readAsArrayBuffer(this);
+		});
+	};
+}
