@@ -1,0 +1,102 @@
+name: credits
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - src/**
+      - scripts/credits/**
+      - scripts/gen-credits.ts
+      - package.json
+      - bun.lock
+      - patches/**
+      - scripts/patch-deps.ts
+      - svelte.config.js
+      - vite.config.mjs
+      - src-tauri/Cargo.toml
+      - src-tauri/Cargo.lock
+      - src-tauri/patches/**
+      - src-tauri/about.toml
+      - src-tauri/about.hbs
+      - .forgejo/workflows/credits.yml
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: open-grind-credits-${{ forgejo.event.pull_request.number || forgejo.ref }}
+  cancel-in-progress: true
+
+jobs:
+  credits:
+    runs-on: ["audit", "hetzner"]
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: >-
+          /usr/bin/env
+          -u GITHUB_TOKEN -u FORGEJO_TOKEN
+          -u ACTIONS_RUNTIME_TOKEN
+          -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL
+          -u ACTIONS_CACHE_URL -u ACTIONS_RUNTIME_URL -u ACTIONS_RESULTS_URL
+          bash --noprofile --norc -e -o pipefail {0}
+    env:
+      PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+      EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
+      CI_WORKSPACE: /opt/open-grind-credits
+      RUSTUP_HOME: /opt/rust/rustup
+      CARGO_TERM_PROGRESS_WHEN: never
+      NODE_OPTIONS: --max-old-space-size=6144
+      CARGO_ABOUT_VERSION: "0.9.2"
+      CARGO_ABOUT_SHA256: 9099a59e820c38a68b9d65f300662a567d56562f9a10f6aa4c7e86c17c2566af
+    steps:
+      - name: Verify CI environment
+        run: |
+          set -euo pipefail
+
+          leaked=$(env | grep -iE '(TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY)=.' || true)
+          [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
+
+      - name: Check out
+        run: |
+          set -euo pipefail
+
+          : "${CI_WORKSPACE:?}"
+          rm -rf "$CI_WORKSPACE"
+          mkdir -p "$CI_WORKSPACE"
+          cd "$CI_WORKSPACE"
+
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          if [ -n "${PR_NUMBER:-}" ]; then
+            git fetch -q --depth 1 origin "refs/pull/${PR_NUMBER}/head"
+          else
+            git fetch -q --depth 1 origin "$FORGEJO_REF_NAME"
+          fi
+          git checkout -q FETCH_HEAD
+          [ -z "${EXPECTED_SHA:-}" ] || [ "$(git rev-parse HEAD)" = "$EXPECTED_SHA" ] \
+            || { echo "FATAL: PR head moved since approval (want $EXPECTED_SHA, got $(git rev-parse HEAD))"; exit 1; }
+          git submodule update --init --recursive --quiet
+
+      - name: Install cargo-about
+        run: |
+          set -euo pipefail
+
+          curl -fsSL -o /tmp/cargo-about.tar.gz \
+            "https://github.com/EmbarkStudios/cargo-about/releases/download/${CARGO_ABOUT_VERSION}/cargo-about-${CARGO_ABOUT_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          echo "${CARGO_ABOUT_SHA256}  /tmp/cargo-about.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/cargo-about.tar.gz -C /tmp
+          install -m 0755 \
+            "/tmp/cargo-about-${CARGO_ABOUT_VERSION}-x86_64-unknown-linux-musl/cargo-about" \
+            /usr/local/bin/cargo-about
+
+      - name: Install JS dependencies
+        run: cd "$CI_WORKSPACE" && bun install --frozen-lockfile --no-summary
+
+      - name: Regenerate the credits and compare
+        run: |
+          set -euo pipefail
+
+          cd "$CI_WORKSPACE"
+          . ci/rust-env.sh
+          bun run check:credits

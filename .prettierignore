@@ -13,3 +13,4 @@ node_modules
 /playwright-report
 /coverage
 KEYS.md
+/src/lib/credits/generated.json

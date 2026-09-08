@@ -20,6 +20,10 @@
 			back: "/settings/account",
 		},
 		[`${base}/app`]: { title: "App Settings", back: "/settings" },
+		[`${base}/app/credits`]: {
+			title: "Credits & Licenses",
+			back: "/settings/app",
+		},
 		[`${base}/profile`]: { title: "Edit Profile", back: "/settings" },
 	};
 

@@ -87,6 +87,9 @@ jobs:
       - name: Check the Android backup rules
         run: cd "$CI_WORKSPACE" && bun run check:backup-rules
 
+      - name: Check the credits against the lockfiles
+        run: cd "$CI_WORKSPACE" && bun run check:credits-sync
+
       - name: Lint
         run: cd "$CI_WORKSPACE" && bun ci/lint.ts
 

@@ -1,0 +1,212 @@
+accepted = [
+	"MIT",
+	"MIT-0",
+	"0BSD",
+	"ISC",
+	"BSD-2-Clause",
+	"BSD-3-Clause",
+	"BSL-1.0",
+	"CC0-1.0",
+	"Zlib",
+	"Unlicense",
+	"Unicode-3.0",
+	"CDLA-Permissive-2.0",
+	"MPL-2.0",
+	"Apache-2.0",
+	"Apache-2.0 WITH LLVM-exception",
+]
+
+targets = [
+	"aarch64-linux-android",
+	"armv7-linux-androideabi",
+	"i686-linux-android",
+	"x86_64-linux-android",
+	"x86_64-unknown-linux-gnu",
+	"aarch64-unknown-linux-gnu",
+	"aarch64-apple-darwin",
+	"x86_64-apple-darwin",
+	"x86_64-pc-windows-msvc",
+	"aarch64-pc-windows-msvc",
+]
+
+workarounds = [
+	"chrono",
+	"cocoa",
+	"gtk",
+	"linux-raw-sys",
+	"prost",
+	"rustix",
+	"tonic",
+	"unicode-ident",
+]
+
+[private]
+ignore = true
+
+# Statically links vendored BoringSSL (OpenSSL + SSLeay + ISC); metadata covers only the wrapper.
+[boring-sys2]
+accepted = ["OpenSSL"]
+
+[boring-sys2.clarify]
+license = "MIT AND OpenSSL AND ISC"
+
+[[boring-sys2.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "ad2e7bdef7c00b92eaf4f657a472c7d3f8b36aac3cdc270e65bb0c287eec0d4e"
+
+[[boring-sys2.clarify.files]]
+path = "deps/boringssl/LICENSE"
+license = "OpenSSL"
+checksum = "a78d37138db9a43843736b2973284b61af19cd5384cf3c752e922171b0d4fc56"
+
+[[boring-sys2.clarify.files]]
+path = "deps/boringssl/LICENSE"
+license = "ISC"
+checksum = "a78d37138db9a43843736b2973284b61af19cd5384cf3c752e922171b0d4fc56"
+
+# build.rs compiles vendored zstd (BSD-3-Clause OR GPL-2.0, we take BSD) into the binary.
+[zstd-sys.clarify]
+license = "(MIT OR Apache-2.0) AND BSD-3-Clause"
+
+[[zstd-sys.clarify.files]]
+path = "LICENSE.Apache-2.0"
+license = "Apache-2.0"
+checksum = "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+
+[[zstd-sys.clarify.files]]
+path = "LICENSE.Mit"
+license = "MIT"
+checksum = "129e8edef29e9abcd2ebabe252f4ef1b1289cdca356bf0040284a2fbccfb96c8"
+
+[[zstd-sys.clarify.files]]
+path = "zstd/LICENSE"
+license = "BSD-3-Clause"
+checksum = "7055266497633c9025b777c78eb7235af13922117480ed5c674677adc381c9d8"
+
+# Compiles in Unicode Character Database tables that carry their own agreement.
+[regex-syntax]
+accepted = ["Unicode-DFS-2016"]
+
+[regex-syntax.clarify]
+license = "(MIT OR Apache-2.0) AND Unicode-DFS-2016"
+
+[[regex-syntax.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+
+[[regex-syntax.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+
+[[regex-syntax.clarify.files]]
+path = "src/unicode_tables/LICENSE-UNICODE"
+license = "Unicode-DFS-2016"
+checksum = "74db5baf44a41b1000312c673544b3374e4198af5605c7f9080a402cec42cfa3"
+
+# Third-party notices under the crate's own license id; cargo-about keeps one file per id.
+[uds_windows.clarify]
+license = "MIT"
+
+[[uds_windows.clarify.files]]
+path = "LICENSE"
+license = "MIT"
+checksum = "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0"
+
+[[uds_windows.clarify.files]]
+path = "THIRDPARTYNOTICES"
+license = "MIT"
+checksum = "943312cc53d8eb84176f7b2a62568bf4fa0d9cf9d66713d7b0cafae0b2086f40"
+
+[atomic-waker.clarify]
+license = "Apache-2.0 OR MIT"
+
+[[atomic-waker.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+
+[[atomic-waker.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+
+[[atomic-waker.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "Apache-2.0"
+checksum = "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+
+[[atomic-waker.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "MIT"
+checksum = "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+
+[futures-lite.clarify]
+license = "Apache-2.0 OR MIT"
+
+[[futures-lite.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+
+[[futures-lite.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+
+[[futures-lite.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "Apache-2.0"
+checksum = "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+
+[[futures-lite.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "MIT"
+checksum = "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5"
+
+[parking.clarify]
+license = "Apache-2.0 OR MIT"
+
+[[parking.clarify.files]]
+path = "LICENSE-APACHE"
+license = "Apache-2.0"
+checksum = "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+
+[[parking.clarify.files]]
+path = "LICENSE-MIT"
+license = "MIT"
+checksum = "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+
+[[parking.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "Apache-2.0"
+checksum = "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419"
+
+[[parking.clarify.files]]
+path = "LICENSE-THIRD-PARTY"
+license = "MIT"
+checksum = "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419"
+
+# Shipped notices that score below cargo-about's match threshold and fell back to the template.
+[curve25519-dalek.clarify]
+license = "BSD-3-Clause"
+
+[[curve25519-dalek.clarify.files]]
+path = "LICENSE"
+license = "BSD-3-Clause"
+checksum = "cca0bd3c4fcdba74145ef9d49c62337e2c9fbf9368288f11d0547f1b0273219f"
+
+[dpi.clarify]
+license = "Apache-2.0 AND MIT"
+
+[[dpi.clarify.files]]
+path = "LICENSE"
+license = "Apache-2.0"
+checksum = "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a"
+
+[[dpi.clarify.files]]
+path = "LICENSE-LIBM-MIT"
+license = "MIT"
+checksum = "9eff396a99bafd208e7126602420d6864f6066c08b84485a5b032320a9c01997"

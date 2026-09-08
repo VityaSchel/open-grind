@@ -85,6 +85,10 @@ jobs:
           [ ${#apk[@]} -eq 1 ]
           mkdir -p out
           cp "${apk[0]}" out/
+      - name: Check the Android credits
+        run: |
+          cd "${BUILD_ROOT:?}"
+          nix develop .#android --command bun run check:credits-android
       - name: Android unit tests
         run: |
           cd "${BUILD_ROOT:?}"

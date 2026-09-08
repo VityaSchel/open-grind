@@ -65,6 +65,21 @@
 	<h2>Updates</h2>
 	<AutomaticUpdatesSetting />
 {/if}
+<h2>About</h2>
+<Item.Root variant="outline">
+	{#snippet child({ props })}
+		<a href="/settings/app/credits" {...props}>
+			<Item.Content class="max-cramped:min-w-0">
+				<Item.Title class="inline-block max-w-full min-w-0 truncate">
+					Credits &amp; Licenses
+				</Item.Title>
+			</Item.Content>
+			<Item.Actions class="min-w-0">
+				<CaretRightIcon class="size-4 shrink-0" />
+			</Item.Actions>
+		</a>
+	{/snippet}
+</Item.Root>
 
 <style lang="postcss">
 	@reference "$layout";

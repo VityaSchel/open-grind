@@ -1,0 +1,24 @@
+{
+	"crates": [
+		{{#each crates}}{{#unless @first}},{{/unless}}{
+			"name": {{{json package.name}}},
+			"version": {{{json package.version}}},
+			"license": {{{json license}}},
+			"repository": {{{json package.repository}}}
+		}
+		{{/each}}
+	],
+	"licenses": [
+		{{#each licenses}}{{#unless @first}},{{/unless}}{
+			"id": {{{json id}}},
+			"text": {{{json text}}},
+			"usedBy": [
+				{{#each used_by}}{{#unless @first}},{{/unless}}{
+					"name": {{{json crate.name}}}
+				}
+				{{/each}}
+			]
+		}
+		{{/each}}
+	]
+}
