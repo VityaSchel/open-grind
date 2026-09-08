@@ -98,6 +98,27 @@ describe("SignInForm", () => {
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 
+	it.each(["Google", "Facebook"])(
+		"names the official app when %s sign-in hits an unregistered account",
+		async (vendor) => {
+			callMethodMock.mockRejectedValue({
+				kind: "Auth",
+				message: "account not registered",
+			});
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+			);
+			await settle();
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"Account not registered in Grindr. Register first using the official Grindr app",
+			);
+			expect(gotoMock).not.toHaveBeenCalled();
+		},
+	);
+
 	it("falls back to a toast when a muted block kills Google sign-in", async () => {
 		requestBlockedAlertState.disable = true;
 		callMethodMock.mockRejectedValue({ kind: "NetworkBlocked" });

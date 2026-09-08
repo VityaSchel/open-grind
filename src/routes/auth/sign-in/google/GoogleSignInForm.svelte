@@ -1,17 +1,8 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 
-	import { showAccountRestriction } from "$lib/api/account-status-state.svelte";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import {
-		asAppError,
-		blockedKindOf,
-		callMethod,
-		markRequestBlocked,
-	} from "$lib/api/methods";
-	import { noticeStorageBackend } from "$lib/api/storage-notice";
-	import { clearProfileCaches } from "$lib/api/users/profiles";
+	import { callMethod } from "$lib/api/methods";
+	import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Label } from "$lib/components/ui/label";
@@ -29,48 +20,27 @@
 		if (retrying) return;
 		retrying = true;
 		try {
-			const result = await callMethod("login_with_google");
-			if (showAccountRestriction(result.restriction)) return;
-			clearProfileCaches();
-			void noticeStorageBackend();
-			void goto("/");
+			finishSignIn(await callMethod("login_with_google"));
 		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			const blockedKind = blockedKindOf(appError?.kind);
-			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "companion-unavailable"
-			) {
-				toast.error(
-					'Couldn\'t find the Open Grind Google OAuth app on your device. Install it first, then tap "Retry". Alternatively, try pasting the OAuth token manually.',
-				);
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "companion-untrusted"
-			) {
-				toast.error(
-					"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
-				);
-				manualInput = true;
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "Sign-in canceled"
-			) {
-				return;
-			}
-			if (appError) {
-				toast.error(appError.prettyMessage);
-			} else {
-				showErrorToast({ error });
-			}
+			reportSignInFailure({
+				error,
+				onAuthFailure: (message) => {
+					if (message === "companion-unavailable") {
+						toast.error(
+							'Couldn\'t find the Open Grind Google OAuth app on your device. Install it first, then tap "Retry". Alternatively, try pasting the OAuth token manually.',
+						);
+						return true;
+					}
+					if (message === "companion-untrusted") {
+						toast.error(
+							"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
+						);
+						manualInput = true;
+						return true;
+					}
+					return false;
+				},
+			});
 		} finally {
 			retrying = false;
 		}
@@ -82,25 +52,11 @@
 		event.preventDefault();
 		try {
 			submitting = true;
-			const result = await callMethod("google_sign_in", {
-				token: token.trim(),
-			});
-			if (showAccountRestriction(result.restriction)) return;
-			clearProfileCaches();
-			void noticeStorageBackend();
-			void goto("/");
+			finishSignIn(
+				await callMethod("google_sign_in", { token: token.trim() }),
+			);
 		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			const blockedKind = blockedKindOf(appError?.kind);
-			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
-				return;
-			}
-			if (appError) {
-				toast.error(appError.prettyMessage);
-			} else {
-				showErrorToast({ error });
-			}
+			reportSignInFailure({ error });
 		} finally {
 			submitting = false;
 		}

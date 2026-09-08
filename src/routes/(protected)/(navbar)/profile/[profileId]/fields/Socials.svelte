@@ -1,9 +1,7 @@
 <script lang="ts">
-	import {
-		FacebookLogoIcon,
-		InstagramLogoIcon,
-		XLogoIcon,
-	} from "phosphor-svelte";
+	import SiFacebook from "@icons-pack/svelte-simple-icons/icons/SiFacebook";
+	import SiInstagram from "@icons-pack/svelte-simple-icons/icons/SiInstagram";
+	import SiX from "@icons-pack/svelte-simple-icons/icons/SiX";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
 	import { type SocialNetworks } from "$lib/model/users/profiles";
@@ -18,17 +16,17 @@
 		{#if social}
 			<ProfileField>
 				{#if platform === "instagram"}
-					<InstagramLogoIcon class="shrink-0" />
+					<SiInstagram class="size-3.5 shrink-0" aria-hidden="true" />
 					<Link href="https://instagram.com/{social.userId}">
 						{social.userId}
 					</Link>
 				{:else if platform === "twitter"}
-					<XLogoIcon class="shrink-0" />
+					<SiX class="size-3.5 shrink-0" aria-hidden="true" />
 					<Link href="https://x.com/{social.userId}">
 						{social.userId}
 					</Link>
 				{:else if platform === "facebook"}
-					<FacebookLogoIcon class="shrink-0" />
+					<SiFacebook class="size-3.5 shrink-0" aria-hidden="true" />
 					<Link
 						href="https://facebook.com/profile.php?id={social.userId}"
 					>

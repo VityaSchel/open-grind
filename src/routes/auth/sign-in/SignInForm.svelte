@@ -1,22 +1,12 @@
 <script lang="ts">
+	import SiFacebook from "@icons-pack/svelte-simple-icons/icons/SiFacebook";
+	import SiGoogle from "@icons-pack/svelte-simple-icons/icons/SiGoogle";
 	import { goto } from "$app/navigation";
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
-	import {
-		accountStatusState,
-		showAccountRestriction,
-	} from "$lib/api/account-status-state.svelte";
-	import { showErrorToast } from "$lib/api/error-toast";
-	import {
-		asAppError,
-		asBanned,
-		blockedKindOf,
-		callMethod,
-		markRequestBlocked,
-	} from "$lib/api/methods";
-	import { noticeStorageBackend } from "$lib/api/storage-notice";
-	import { clearProfileCaches } from "$lib/api/users/profiles";
+	import { callMethod } from "$lib/api/methods";
+	import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Input } from "$lib/components/ui/input";
@@ -24,63 +14,78 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import RecaptchaUnsupported from "./RecaptchaUnsupported.svelte";
 
+	type OauthProvider = "google" | "facebook";
+
+	const oauthProviders: Record<
+		OauthProvider,
+		{
+			method: "login_with_google" | "login_with_facebook";
+			label: string;
+			failures: Record<string, () => void>;
+		}
+	> = {
+		google: {
+			method: "login_with_google",
+			label: "Google",
+			failures: {
+				"companion-unavailable": () =>
+					void goto("/auth/sign-in/google"),
+				"companion-untrusted": () => {
+					toast.error(
+						"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
+					);
+					void goto("/auth/sign-in/google");
+				},
+			},
+		},
+		facebook: {
+			method: "login_with_facebook",
+			label: "Facebook",
+			failures: {
+				"facebook-dialog-error": () =>
+					toast.error(
+						"Facebook didn't grant access. Try again, or sign in with your email and password.",
+					),
+				"facebook-handoff-refused": () =>
+					toast.error(
+						"Facebook tried to open its own app, which Open Grind can't use. Sign in with your email and password instead.",
+					),
+			},
+		},
+	};
+
 	let email = $state("");
 	let password = $state("");
-	let submitting: false | "password" | "google" = $state(false);
+	let submitting: false | "password" | OauthProvider = $state(false);
 
-	function handleAccountBlock(error: unknown): boolean {
-		const ban = asBanned(error);
-		if (ban) {
-			accountStatusState.status = { kind: "banned", info: ban };
-			accountStatusState.open = true;
-			return true;
-		}
-		if (asAppError(error)?.kind === "RateLimited") {
-			toast.error("Too many attempts. Please try again later.");
-			return true;
-		}
-		return false;
-	}
+	const invalidCredentialsSchema = z.object({
+		kind: z.literal("Api"),
+		message: z.object({
+			code: z.literal(4),
+			message: z.literal("Invalid input parameters"),
+		}),
+	});
 
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
 		submitting = "password";
 		try {
-			const result = await callMethod("login", { email, password });
-			if (showAccountRestriction(result.restriction)) return;
-			clearProfileCaches();
-			void noticeStorageBackend();
-			void goto("/");
+			finishSignIn(await callMethod("login", { email, password }));
 		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			const blockedKind = blockedKindOf(appError?.kind);
-			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
-				return;
-			}
-			if (handleAccountBlock(error)) return;
-			if (appError) {
-				const invalidInputParameters = z
-					.object({
-						kind: z.literal("Api"),
-						message: z.object({
-							code: z.literal(4),
-							message: z.literal("Invalid input parameters"),
-						}),
-					})
-					.safeParse(appError).success;
-				if (
-					invalidInputParameters ||
-					appError.kind === "Unauthorized"
-				) {
+			reportSignInFailure({
+				error,
+				onFailure: (appError) => {
+					if (
+						appError.kind !== "Unauthorized" &&
+						!invalidCredentialsSchema.safeParse(appError).success
+					) {
+						return false;
+					}
 					toast.error("Invalid email or password");
 					void maybeCheckRecaptcha();
-				} else {
-					toast.error(appError.prettyMessage);
-				}
-			} else {
-				showErrorToast({ error });
-			}
+					return true;
+				},
+			});
 		} finally {
 			submitting = false;
 		}
@@ -103,51 +108,22 @@
 		}
 	}
 
-	async function signInWithGoogle() {
+	async function signInWith(provider: OauthProvider) {
 		if (submitting) return;
-		submitting = "google";
+		submitting = provider;
+		const { method, label, failures } = oauthProviders[provider];
 		try {
-			const result = await callMethod("login_with_google");
-			if (showAccountRestriction(result.restriction)) return;
-			clearProfileCaches();
-			void noticeStorageBackend();
-			void goto("/");
+			finishSignIn(await callMethod(method));
 		} catch (error) {
-			console.error(error);
-			const appError = asAppError(error);
-			const blockedKind = blockedKindOf(appError?.kind);
-			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "companion-unavailable"
-			) {
-				void goto("/auth/sign-in/google");
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "companion-untrusted"
-			) {
-				toast.error(
-					"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
-				);
-				void goto("/auth/sign-in/google");
-				return;
-			}
-			if (
-				appError?.kind === "Auth" &&
-				appError.message === "Sign-in canceled"
-			) {
-				return;
-			}
-			if (handleAccountBlock(error)) return;
-			if (appError) {
-				toast.error(appError.prettyMessage);
-			} else {
-				toast.error("Google sign-in failed");
-			}
+			reportSignInFailure({
+				error,
+				label: `${label} sign-in failed`,
+				onAuthFailure: (message) => {
+					const handle = failures[message];
+					handle?.();
+					return handle !== undefined;
+				},
+			});
 		} finally {
 			submitting = false;
 		}
@@ -217,12 +193,28 @@
 				variant="outline"
 				class="w-full"
 				disabled={submitting !== false}
-				onclick={signInWithGoogle}
+				onclick={() => signInWith("google")}
 			>
 				{#if submitting === "google"}
 					<Spinner />
+				{:else}
+					<SiGoogle class="size-4" aria-hidden="true" />
 				{/if}
 				Sign in with Google
+			</Button>
+			<Button
+				type="button"
+				variant="outline"
+				class="w-full"
+				disabled={submitting !== false}
+				onclick={() => signInWith("facebook")}
+			>
+				{#if submitting === "facebook"}
+					<Spinner />
+				{:else}
+					<SiFacebook class="size-4" aria-hidden="true" />
+				{/if}
+				Sign in with Facebook
 			</Button>
 		</Card.Footer>
 	</Card.Root>
