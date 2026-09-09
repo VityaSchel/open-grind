@@ -4,19 +4,19 @@ export const highlights: Highlight[] = [
 	{
 		ref: { ecosystem: "npm", id: "svelte" },
 		name: "Svelte",
-		blurb: "Thanks to {name} for the awesome UI building framework we use to build Open Grind!",
+		blurb: "Thanks to {name} for the awesome UI building framework!",
 		url: "https://svelte.dev",
 	},
 	{
 		ref: { ecosystem: "npm", id: "@sveltejs/kit" },
 		name: "SvelteKit",
-		blurb: "Thanks to {name} for the awesome frontend framework we use to build Open Grind!",
+		blurb: "Thanks to {name} for the awesome frontend framework!",
 		url: "https://svelte.dev/docs/kit",
 	},
 	{
 		ref: { ecosystem: "rust", id: "tauri" },
 		name: "Tauri",
-		blurb: "Thanks to {name} for the cross-platform framework we use to package Open Grind to all OSs!",
+		blurb: "Thanks to {name} for the cross-platform framework!",
 		url: "https://tauri.app",
 	},
 	{
@@ -34,13 +34,13 @@ export const highlights: Highlight[] = [
 	{
 		ref: { ecosystem: "npm", id: "svelte-sonner" },
 		name: "svelte-sonner",
-		blurb: "Thanks to {name} for porting the awesome Sonner component rendering toasts!",
+		blurb: "Thanks to {name} for the awesome toasts component!",
 		url: "https://svelte-sonner.vercel.app",
 	},
 	{
 		ref: { ecosystem: "npm", id: "tailwindcss" },
 		name: "Tailwind CSS",
-		blurb: "Thanks to {name} for the framework that allows us to rapidly style interfaces!",
+		blurb: "Thanks to {name} for the framework to rapidly style UIs!",
 		url: "https://tailwindcss.com",
 	},
 	{
@@ -52,7 +52,7 @@ export const highlights: Highlight[] = [
 	{
 		ref: { ecosystem: "npm", id: "shadcn-svelte" },
 		name: "shadcn-svelte",
-		blurb: "Thanks to {name} for re-building the awesome shadcn/ui package with UI components!",
+		blurb: "Thanks to {name} for re-building the awesome shadcn/ui!",
 		url: "https://shadcn-svelte.com",
 	},
 	{
@@ -64,7 +64,7 @@ export const highlights: Highlight[] = [
 	{
 		ref: { ecosystem: "npm", id: "embla-carousel-svelte" },
 		name: "embla-carousel-svelte",
-		blurb: "Thanks to {name} for porting the awesome Embla Carousel image carousel library!",
+		blurb: "Thanks to {name} for the awesome image carousel library!",
 		url: "https://www.embla-carousel.com",
 	},
 	{
