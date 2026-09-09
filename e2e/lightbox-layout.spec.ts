@@ -1,12 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
-import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const ALBUM_TRIGGER = 'button[aria-label="Open album"]';
 const LIGHTBOX = ".pswp";
 const SLIDE_IMAGE = ".pswp__img";
+const TOP_BAR = ".pswp__top-bar";
 const CLOSE_BUTTON = ".pswp__button--close";
+const NEXT_BUTTON = ".pswp__button--arrow--next";
+const CAROUSEL = ".carousel";
+const CAROUSEL_ITEM = `${CAROUSEL} .item[href]`;
 const PROFILE_LINK = 'a[href="/profile/100001"]';
 
 const WIDTH = 420;
@@ -18,6 +22,7 @@ type Rect = { top: number; height: number };
 
 async function enterConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);
+	await serveImages(page, AVATAR_HOST);
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(ALBUM_TRIGGER).first().waitFor({ timeout: 60_000 });
@@ -26,6 +31,24 @@ async function enterConversation(page: Page): Promise<void> {
 async function openAlbum(page: Page): Promise<void> {
 	await page.locator(ALBUM_TRIGGER).first().click();
 	await page.locator(LIGHTBOX).waitFor({ timeout: 30_000 });
+}
+
+async function openProfileCarousel(page: Page): Promise<void> {
+	await page.locator(PROFILE_LINK).first().click();
+	await page.locator(CAROUSEL).waitFor({ timeout: 30_000 });
+	await page.locator(CAROUSEL_ITEM).first().click();
+	await page.locator(LIGHTBOX).waitFor({ timeout: 30_000 });
+}
+
+function topInset(page: Page): Promise<number> {
+	return page.evaluate(
+		() =>
+			parseFloat(
+				getComputedStyle(document.documentElement).getPropertyValue(
+					"--safe-area-top",
+				),
+			) || 0,
+	);
 }
 
 function slideRect(page: Page): Promise<Rect | null> {
@@ -41,33 +64,19 @@ test.describe("lightbox layout", () => {
 		await enterConversation(page);
 		await openAlbum(page);
 
-		const measured = await page.evaluate(
-			({ bar, close }) => ({
-				inset:
-					parseFloat(
-						getComputedStyle(
-							document.documentElement,
-						).getPropertyValue("--safe-area-top"),
-					) || 0,
-				barTop:
-					document.querySelector(bar)?.getBoundingClientRect().top ??
-					null,
-				closeTop:
-					document.querySelector(close)?.getBoundingClientRect()
-						.top ?? null,
-			}),
-			{ bar: ".pswp__top-bar", close: CLOSE_BUTTON },
-		);
+		const inset = await topInset(page);
+		const bar = await page.locator(TOP_BAR).boundingBox();
+		const close = await page.locator(CLOSE_BUTTON).boundingBox();
 
-		expect(measured.inset, "test insets are active").toBeGreaterThan(0);
+		expect(inset, "test insets are active").toBeGreaterThan(0);
+		expect(bar?.y, "the top bar starts below the status bar").toBeCloseTo(
+			inset,
+			0,
+		);
 		expect(
-			measured.barTop,
-			"the top bar starts below the status bar",
-		).toBeCloseTo(measured.inset, 0);
-		expect(
-			measured.closeTop,
+			close?.y,
 			"the close button starts below the status bar",
-		).toBeCloseTo(measured.inset, 0);
+		).toBeCloseTo(inset, 0);
 	});
 
 	test("the chrome clears a side cutout", async ({ page }) => {
@@ -135,7 +144,7 @@ test.describe("lightbox layout", () => {
 	}) => {
 		await enterConversation(page);
 		await page.locator(PROFILE_LINK).first().click();
-		await page.locator(".carousel").waitFor({ timeout: 30_000 });
+		await page.locator(CAROUSEL).waitFor({ timeout: 30_000 });
 		await page.goBack();
 		await page.locator(ALBUM_TRIGGER).first().waitFor({ timeout: 30_000 });
 
@@ -144,5 +153,37 @@ test.describe("lightbox layout", () => {
 			page.locator(CLOSE_BUTTON),
 			"the profile lightbox hides its buttons, the chat one must not",
 		).toBeVisible();
+	});
+
+	test("the profile carousel keeps its close button inside the top bar", async ({
+		page,
+	}) => {
+		await enterConversation(page);
+		await openProfileCarousel(page);
+
+		await expect(
+			page.locator(CLOSE_BUTTON),
+			"the carousel keeps a way out",
+		).toBeVisible();
+		await expect(
+			page.locator(NEXT_BUTTON),
+			"the rest of the chrome stays hidden",
+		).toBeHidden();
+
+		const inset = await topInset(page);
+		const bar = await page.locator(TOP_BAR).boundingBox();
+		const close = await page.locator(CLOSE_BUTTON).boundingBox();
+		if (bar === null || close === null)
+			throw new Error("the lightbox chrome is not laid out");
+
+		expect(inset, "test insets are active").toBeGreaterThan(0);
+		expect(
+			close.y,
+			"the button does not re-apply the inset the bar already carries",
+		).toBeGreaterThanOrEqual(bar.y);
+		expect(
+			close.y + close.height,
+			"the button stays inside the bar instead of floating over the photo",
+		).toBeLessThanOrEqual(bar.y + bar.height);
 	});
 });

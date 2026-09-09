@@ -171,8 +171,14 @@
 		display: none;
 	}
 	:global {
-		.pswp--profile-carousel .pswp__button {
+		.pswp--profile-carousel .pswp__button:not(.pswp__button--close) {
 			display: none;
+		}
+		.pswp--profile-carousel .pswp__button--close {
+			@apply mr-3 size-11 self-center rounded-full bg-black/55 opacity-100 backdrop-filter-(--bd-veil) focus:bg-black/55 active:bg-black/55 can-hover:hover:bg-black/75;
+		}
+		.pswp--profile-carousel .pswp__button--close .pswp__icn {
+			@apply inset-0 m-auto;
 		}
 		.pswp--profile-carousel .pswp__created-at-label {
 			text-shadow: 1px 1px 3px var(--pswp-icon-color-secondary);
