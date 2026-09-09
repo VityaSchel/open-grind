@@ -24,7 +24,7 @@
 	{#snippet overlay()}
 		<div class="absolute inset-0 flex items-center justify-center">
 			<div
-				class="flex size-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm"
+				class="flex size-9 items-center justify-center rounded-full bg-black/35 scrim text-white backdrop-filter-(--bd-veil)"
 			>
 				{#if preview.isSecretAdmirer}
 					<HeartIcon weight="fill" class="size-4.5 text-rose-400" />

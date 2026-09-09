@@ -32,7 +32,7 @@
 </script>
 
 <div
-	class="absolute right-3 bottom-[calc(var(--composer-height)+--spacing(3))] z-2 rounded-4xl backdrop-blur-2xl dark:bg-background/60"
+	class="absolute right-3 bottom-[calc(var(--composer-height)+--spacing(3))] z-2 rounded-4xl scrim backdrop-filter-(--bd-chip) dark:bg-background/60"
 	transition:fly={{ y: 48, opacity: 0, duration: 200, easing: sineOut }}
 >
 	<Button

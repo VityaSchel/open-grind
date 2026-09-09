@@ -392,9 +392,7 @@ a {
 }
 
 @theme {
-	--apple-system-glass-material-normal: -apple-system-glass-material;
 	--apple-system-glass-material-clear: -apple-system-glass-material-clear;
-	--apple-system-glass-material-subdued: -apple-system-glass-material-subdued;
 	--apple-system-glass-material-media-controls: -apple-system-glass-material-media-controls;
 	--apple-system-glass-material-media-controls-subdued: -apple-system-glass-material-media-controls-subdued;
 }
@@ -403,32 +401,291 @@ a {
 	-apple-visual-effect: --value(--apple-system-glass-material-*);
 }
 
+@utility scrim {
+	background-image: var(--scrim);
+}
+
+/* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
+:root {
+	--bd-lens: blur(1px);
+	--bd-veil: blur(8px);
+	--bd-rail: blur(16px);
+	--bd-panel: blur(24px);
+	--bd-chip: blur(40px);
+	--glass-controls-bg: rgba(0, 0, 0, 0.4);
+	--glass-controls-subdued-bg: rgba(0, 0, 0, 0.2);
+	--scrim: none;
+}
+
+:root[data-backdrop-blur="min"] {
+	--bd-rail: blur(12px);
+	--bd-panel: blur(16px);
+	--bd-chip: blur(24px);
+}
+
+:root[data-backdrop-blur="off"] {
+	--bd-lens: none;
+	--bd-veil: none;
+	--bd-rail: none;
+	--bd-panel: none;
+	--bd-chip: none;
+	--apple-system-glass-material-clear: none;
+	--apple-system-glass-material-media-controls: none;
+	--apple-system-glass-material-media-controls-subdued: none;
+	--glass-controls-bg: rgba(0, 0, 0, 0.62);
+	--glass-controls-subdued-bg: rgba(0, 0, 0, 0.42);
+	--scrim: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
+}
+
+.pblur[data-pblur-direction="bottomToTop"] {
+	--pblur-dir: to bottom;
+}
+
+.pblur[data-pblur-direction="topToBottom"] {
+	--pblur-dir: to top;
+}
+
+.pblur-layer,
+.pblur-scrim {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.pblur-scrim {
+	display: none;
+	z-index: 10;
+}
+
+.pblur-layer {
+	display: block;
+	backdrop-filter: var(--pblur-blur);
+	mask-image: linear-gradient(var(--pblur-dir), var(--pblur-stops));
+}
+
+.pblur-layer[data-pblur-layer="0"] {
+	--pblur-blur: blur(1px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 1) 30%,
+		rgba(0, 0, 0, 0) 40%;
+}
+.pblur-layer[data-pblur-layer="1"] {
+	--pblur-blur: blur(2px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 40%,
+		rgba(0, 0, 0, 0) 50%;
+}
+.pblur-layer[data-pblur-layer="2"] {
+	--pblur-blur: blur(4px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 50%,
+		rgba(0, 0, 0, 0) 60%;
+}
+.pblur-layer[data-pblur-layer="3"] {
+	--pblur-blur: blur(8px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 1) 40%, rgba(0, 0, 0, 1) 60%,
+		rgba(0, 0, 0, 0) 70%;
+}
+.pblur-layer[data-pblur-layer="4"] {
+	--pblur-blur: blur(12px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 1) 50%, rgba(0, 0, 0, 1) 70%,
+		rgba(0, 0, 0, 0) 80%;
+}
+.pblur-layer[data-pblur-layer="5"] {
+	--pblur-blur: blur(16px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 1) 80%,
+		rgba(0, 0, 0, 0) 90%;
+}
+.pblur-layer[data-pblur-layer="6"] {
+	--pblur-blur: blur(24px);
+	--pblur-stops:
+		rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 1) 90%,
+		rgba(0, 0, 0, 0) 100%;
+}
+.pblur-layer[data-pblur-layer="7"] {
+	--pblur-blur: blur(32px);
+	--pblur-stops: rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 1) 80%;
+}
+.pblur-layer[data-pblur-layer="8"] {
+	--pblur-blur: blur(64px);
+	--pblur-stops: rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 1) 100%;
+	z-index: 10;
+}
+
+:root[data-backdrop-blur="medium"] .pblur-layer {
+	display: none;
+}
+:root[data-backdrop-blur="medium"] .pblur-layer[data-pblur-layer="0"] {
+	display: block;
+	--pblur-blur: blur(1px);
+	--pblur-stops: rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%;
+}
+:root[data-backdrop-blur="medium"] .pblur-layer[data-pblur-layer="1"] {
+	display: block;
+	--pblur-blur: blur(4px);
+	--pblur-stops: rgba(0, 0, 0, 0) 10%, rgba(0, 0, 0, 1) 25%;
+}
+:root[data-backdrop-blur="medium"] .pblur-layer[data-pblur-layer="2"] {
+	display: block;
+	--pblur-blur: blur(10px);
+	--pblur-stops: rgba(0, 0, 0, 0) 20%, rgba(0, 0, 0, 1) 40%;
+}
+:root[data-backdrop-blur="medium"] .pblur-layer[data-pblur-layer="3"] {
+	display: block;
+	--pblur-blur: blur(28px);
+	--pblur-stops: rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 1) 65%;
+}
+:root[data-backdrop-blur="medium"] .pblur-layer[data-pblur-layer="4"] {
+	display: block;
+	--pblur-blur: blur(64px);
+	--pblur-stops: rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 1) 100%;
+	z-index: 10;
+}
+
+:root[data-backdrop-blur="min"] .pblur-layer {
+	display: none;
+}
+:root[data-backdrop-blur="min"] .pblur-layer[data-pblur-layer="0"] {
+	display: block;
+	--pblur-blur: blur(32px);
+	mask-image: none;
+	z-index: 10;
+}
+:root[data-backdrop-blur="min"] .pblur-bg {
+	background-image: none;
+}
+:root[data-backdrop-blur="min"] .pblur-scrim {
+	display: block;
+	background-color: rgba(0, 0, 0, 0.55);
+}
+:root[data-backdrop-blur="min"]
+	.pblur[data-pblur-direction="bottomToTop"]
+	.pblur-scrim {
+	border-top: 1px solid var(--border);
+}
+:root[data-backdrop-blur="min"]
+	.pblur[data-pblur-direction="topToBottom"]
+	.pblur-scrim {
+	border-bottom: 1px solid var(--border);
+}
+
+:root[data-backdrop-blur="off"] .pblur-layer {
+	display: none;
+}
+:root[data-backdrop-blur="off"] .pblur-bg {
+	mask-image: linear-gradient(
+		var(--pblur-dir),
+		rgba(0, 0, 0, 0) 0%,
+		rgba(0, 0, 0, 0.061) 7%,
+		rgba(0, 0, 0, 0.216) 14%,
+		rgba(0, 0, 0, 0.425) 20%,
+		rgba(0, 0, 0, 0.648) 27%,
+		rgba(0, 0, 0, 0.844) 34%,
+		rgba(0, 0, 0, 0.972) 40%,
+		rgba(0, 0, 0, 1) 45%,
+		rgba(0, 0, 0, 1) 100%
+	);
+}
+:root[data-backdrop-blur="off"] .pblur-scrim {
+	display: block;
+	background-image: linear-gradient(
+		var(--pblur-dir),
+		rgba(0, 0, 0, 0) 0%,
+		rgba(0, 0, 0, 0.041) 15%,
+		rgba(0, 0, 0, 0.147) 30%,
+		rgba(0, 0, 0, 0.289) 45%,
+		rgba(0, 0, 0, 0.441) 60%,
+		rgba(0, 0, 0, 0.574) 75%,
+		rgba(0, 0, 0, 0.661) 90%,
+		rgba(0, 0, 0, 0.68) 100%
+	);
+}
+
+.menu-scrim::backdrop {
+	background-color: transparent;
+	backdrop-filter: blur(24px);
+}
+:root[data-backdrop-blur="min"] .menu-scrim::backdrop {
+	backdrop-filter: blur(16px);
+}
+:root[data-backdrop-blur="off"] .menu-scrim::backdrop {
+	background-color: rgba(0, 0, 0, 0.62);
+	backdrop-filter: none;
+}
+
 @supports not (-apple-visual-effect: -apple-system-glass-material) {
-	.glass-normal {
-		backdrop-filter: blur(6px);
-	}
 	.glass-clear {
-		backdrop-filter: blur(1px);
+		backdrop-filter: var(--bd-lens);
 		border: 0.5px solid rgba(255, 255, 255, 0.75);
 		box-shadow:
 			inset 0 0 0px rgba(255, 255, 255, 0.2),
 			inset 4px 0 5px 2px rgba(255, 255, 255, 0.8),
 			inset -3px 0 5px 0px rgba(255, 255, 255, 0.6);
 	}
-	.glass-subdued {
-		backdrop-filter: blur(8px);
-		background-color: rgba(0, 0, 0, 0.2);
-	}
 	.glass-media-controls {
-		backdrop-filter: blur(8px);
-		background-color: rgba(0, 0, 0, 0.4);
+		backdrop-filter: var(--bd-veil);
+		background-color: var(--glass-controls-bg);
 	}
 	.glass-media-controls-subdued {
-		backdrop-filter: blur(24px);
-		background-color: rgba(0, 0, 0, 0.2);
+		backdrop-filter: var(--bd-panel);
+		background-color: var(--glass-controls-subdued-bg);
 		box-shadow:
 			inset 3px 1px 5px rgba(255, 255, 255, 0.05),
 			inset 2px -1px 3px rgba(255, 255, 255, 0.2),
 			inset 1px 1px 5px rgba(0, 0, 0, 0.2);
+	}
+}
+
+@supports not (
+	(-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))
+) {
+	:root:root {
+		--bd-lens: none;
+		--bd-veil: none;
+		--bd-rail: none;
+		--bd-panel: none;
+		--bd-chip: none;
+		--glass-controls-bg: rgba(0, 0, 0, 0.62);
+		--glass-controls-subdued-bg: rgba(0, 0, 0, 0.42);
+		--scrim: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
+	}
+	:root:root .pblur-layer {
+		display: none;
+	}
+	:root:root .pblur-bg {
+		mask-image: linear-gradient(
+			var(--pblur-dir),
+			rgba(0, 0, 0, 0) 0%,
+			rgba(0, 0, 0, 0.061) 7%,
+			rgba(0, 0, 0, 0.216) 14%,
+			rgba(0, 0, 0, 0.425) 20%,
+			rgba(0, 0, 0, 0.648) 27%,
+			rgba(0, 0, 0, 0.844) 34%,
+			rgba(0, 0, 0, 0.972) 40%,
+			rgba(0, 0, 0, 1) 45%,
+			rgba(0, 0, 0, 1) 100%
+		);
+	}
+	:root:root .pblur-scrim {
+		display: block;
+		background-image: linear-gradient(
+			var(--pblur-dir),
+			rgba(0, 0, 0, 0) 0%,
+			rgba(0, 0, 0, 0.041) 15%,
+			rgba(0, 0, 0, 0.147) 30%,
+			rgba(0, 0, 0, 0.289) 45%,
+			rgba(0, 0, 0, 0.441) 60%,
+			rgba(0, 0, 0, 0.574) 75%,
+			rgba(0, 0, 0, 0.661) 90%,
+			rgba(0, 0, 0, 0.68) 100%
+		);
+	}
+	:root:root .menu-scrim::backdrop {
+		background-color: rgba(0, 0, 0, 0.62);
 	}
 }

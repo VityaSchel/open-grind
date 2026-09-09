@@ -23,7 +23,7 @@
 		class="fixed bottom-[calc(0.5rem+var(--safe-area-bottom)+var(--nav-height))] left-1/2 w-90.5 max-w-full -translate-x-1/2 px-2"
 	>
 		<nav
-			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl backdrop-blur-lg"
+			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl backdrop-filter-(--bd-rail)"
 		>
 			<OpenConversationButton {profileId} {ourProfileId} />
 			<TapProfileButton {profileId} {tapType} {onTap} />

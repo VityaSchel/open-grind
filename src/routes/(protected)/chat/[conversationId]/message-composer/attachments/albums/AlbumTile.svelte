@@ -54,7 +54,7 @@
 	<div class="z-1 flex w-full items-center p-1.5">
 		<Badge
 			variant="outline"
-			class="min-w-0 bg-popover/20 backdrop-blur-2xl"
+			class="min-w-0 bg-popover/20 scrim backdrop-filter-(--bd-chip)"
 		>
 			<span class="truncate font-semibold">
 				{album.albumName || "Untitled album"}
@@ -76,7 +76,7 @@
 		</div>
 	{/if}
 	<div
-		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:rounded-full *:border *:border-white/10 *:bg-popover/40 *:backdrop-blur-2xl"
+		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:rounded-full *:border *:border-white/10 *:bg-popover/40 *:scrim *:backdrop-filter-(--bd-chip)"
 	>
 		<div class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />

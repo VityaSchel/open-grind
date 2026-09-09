@@ -90,6 +90,25 @@
 				);
 			})();
 		</script>
+		<script>
+			(function () {
+				try {
+					var stored = localStorage.getItem(
+						"open-grind:backdrop-blur",
+					);
+					if (
+						stored === "max" ||
+						stored === "medium" ||
+						stored === "min" ||
+						stored === "off"
+					)
+						document.documentElement.setAttribute(
+							"data-backdrop-blur",
+							stored,
+						);
+				} catch (e) {}
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 

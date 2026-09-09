@@ -26,7 +26,7 @@
 	<Button
 		variant="destructive"
 		size="icon-sm"
-		class="absolute top-1.5 right-1.5 rounded-full bg-background/70 backdrop-blur"
+		class="absolute top-1.5 right-1.5 rounded-full bg-background/70 scrim backdrop-filter-(--bd-veil)"
 		onclick={() => onDelete()}
 		aria-label="Remove profile photo {position}"
 	>

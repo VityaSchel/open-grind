@@ -3,6 +3,7 @@
 	import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
 
 	import "../layout.css";
+	import { beforeNavigate } from "$app/navigation";
 	import { page } from "$app/state";
 	import { IconContext } from "phosphor-svelte";
 	import { onMount } from "svelte";
@@ -13,6 +14,8 @@
 		hydratePreferences,
 		preferencesLoaded,
 	} from "$lib/app-data/preferences.svelte";
+	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
+	import { applyBackdropBlurQuality } from "$lib/blur/quality.svelte";
 	import {
 		applyAndroidInsets,
 		applyBackGestureHandler,
@@ -71,6 +74,12 @@
 	const onboarded = $derived(
 		preferencesLoaded() && getPreferencesSnapshot().onboardingComplete,
 	);
+
+	beforeNavigate(() => abortBackdropBlurTrialGesture());
+
+	$effect(() => {
+		applyBackdropBlurQuality();
+	});
 
 	$effect(() => {
 		if (!onboarded) return;

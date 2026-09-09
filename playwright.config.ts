@@ -28,6 +28,10 @@ export default defineConfig({
 		port: PORT,
 		reuseExistingServer: true,
 		timeout: 120_000,
-		env: { PUBLIC_ENABLE_DEMO: "1", PUBLIC_TEST_INSETS: "1" },
+		env: {
+			PUBLIC_ENABLE_DEMO: "1",
+			PUBLIC_TEST_INSETS: "1",
+			PUBLIC_BACKDROP_BLUR: "max",
+		},
 	},
 });

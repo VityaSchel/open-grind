@@ -63,7 +63,7 @@
 {#if showResults}
 	<div class="absolute top-0 left-0 z-1000 size-full p-1">
 		<div
-			class="flex h-full w-full flex-col gap-2 overflow-auto rounded-md bg-popover-foreground px-1 py-3 text-popover shadow-md backdrop-blur-xl"
+			class="flex h-full w-full flex-col gap-2 overflow-auto rounded-md bg-popover-foreground px-1 py-3 text-popover shadow-md backdrop-filter-(--bd-panel)"
 		>
 			{#await places}
 				<Spinner class="m-auto size-8" />

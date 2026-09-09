@@ -76,7 +76,7 @@
 		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
 			<Badge
 				variant="outline"
-				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 backdrop-blur-2xl"
+				class="max-w-full min-w-0 shrink gap-0 bg-popover/20 scrim backdrop-filter-(--bd-chip)"
 			>
 				<ProfileStatusIndicator
 					{onlineUntil}
@@ -143,6 +143,6 @@
 	@reference "$layout";
 
 	.badge {
-		@apply flex aspect-square h-auto w-full rounded-full border border-white/10 bg-popover/40 backdrop-blur-2xl;
+		@apply flex aspect-square h-auto w-full rounded-full border border-white/10 bg-popover/40 scrim backdrop-filter-(--bd-chip);
 	}
 </style>

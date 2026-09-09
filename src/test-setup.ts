@@ -71,3 +71,22 @@ if (typeof Blob !== "undefined" && !Blob.prototype.arrayBuffer) {
 		});
 	};
 }
+
+// jsdom has no CSS.supports, and the backdrop-filter feature test reads it.
+if (typeof globalThis.CSS === "undefined") {
+	globalThis.CSS = {
+		supports: () => true,
+		escape: (value: string) => value,
+	} as unknown as typeof CSS;
+} else if (typeof globalThis.CSS.supports !== "function") {
+	globalThis.CSS.supports = () => true;
+}
+
+// jsdom has no ResizeObserver, and bits-ui measures every slider track with it.
+if (typeof globalThis.ResizeObserver === "undefined") {
+	globalThis.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
+}

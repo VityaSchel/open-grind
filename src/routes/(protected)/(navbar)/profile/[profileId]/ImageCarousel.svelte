@@ -140,7 +140,7 @@
 			{/each}
 		</div>
 		<div
-			class="absolute top-1/2 right-2 flex -translate-y-1/2 flex-col rounded-full bg-background/30 p-2 backdrop-blur-sm"
+			class="absolute top-1/2 right-2 flex -translate-y-1/2 flex-col rounded-full bg-background/30 scrim p-2 backdrop-filter-(--bd-veil)"
 			style:gap="{GAP}px"
 			style:padding="{PADDING_VERTICAL}px {PADDING_HORIZONTAL}px"
 		>

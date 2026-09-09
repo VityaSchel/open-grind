@@ -6,6 +6,7 @@
 	import * as Item from "$lib/components/ui/item";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
+	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
 	import StayOnlineSetting from "./StayOnlineSetting.svelte";
@@ -47,6 +48,7 @@
 {/snippet}
 <h2>Display</h2>
 <UnitsSetting />
+<BackdropBlurSetting />
 {@render item({
 	title: "Notifications",
 	unimplemented: { feature: "Notifications", issue: 45 },

@@ -302,7 +302,7 @@
 {#snippet button()}
 	<Button
 		size="sm"
-		class="pointer-events-auto h-(--height) w-25 backdrop-blur-2xl"
+		class="pointer-events-auto h-(--height) w-25 backdrop-filter-(--bd-chip)"
 		style="--height: {BUTTON_HEIGHT_PX}px;"
 		onclick={() => model.clickTrigger()}
 	>

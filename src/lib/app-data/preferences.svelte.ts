@@ -2,6 +2,8 @@ import { decode, encode } from "@msgpack/msgpack";
 import { toast } from "svelte-sonner";
 import z from "zod";
 
+import { backdropBlurCalibrationSchema } from "$lib/blur/calibration/decide";
+import { backdropBlurQualitySchema } from "$lib/blur/quality";
 import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
 import { unitSystemSchema } from "$lib/util/units";
@@ -14,6 +16,14 @@ import {
 
 const preferencesSchema = z.object({
 	autoUpdateLocation: z.boolean().default(false),
+	backdropBlurCalibration: backdropBlurCalibrationSchema
+		.nullable()
+		.default(null)
+		.catch(null),
+	backdropBlurQuality: backdropBlurQualitySchema
+		.nullable()
+		.default(null)
+		.catch(null),
 	geohash: geohashSchema.nullable().default(null),
 	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
