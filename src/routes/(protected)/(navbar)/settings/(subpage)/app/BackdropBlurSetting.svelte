@@ -10,18 +10,17 @@
 		BACKDROP_BLUR_QUALITY_LABELS,
 		BACKDROP_BLUR_QUALITY_ORDER,
 		type BackdropBlurQuality,
-		backdropFilterSupported,
 		UNCALIBRATED_BACKDROP_BLUR_QUALITY,
 	} from "$lib/blur/quality";
 	import {
+		backdropBlurRenderable,
 		backdropBlurTrialPending,
 		settledBackdropBlurQuality,
 	} from "$lib/blur/quality.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Slider } from "$lib/components/ui/slider";
 
-	const supported = backdropFilterSupported();
-
+	const supported = $derived(backdropBlurRenderable());
 	let pending = $state<BackdropBlurQuality | null>(null);
 	const chosen = $derived(
 		pending ?? getPreferencesSnapshot().backdropBlurQuality,
@@ -80,9 +79,11 @@
 		</Item.Description>
 	{:else if automatic}
 		<Item.Description class="w-full">
-			{trialPending
-				? "Being chosen automatically as you scroll."
-				: "Chosen automatically for this device."}
+			{#if trialPending}
+				Being chosen automatically as you scroll.
+			{:else}
+				Chosen automatically for this device.
+			{/if}
 		</Item.Description>
 	{/if}
 </Item.Root>

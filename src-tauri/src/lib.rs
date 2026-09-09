@@ -197,6 +197,7 @@ pub fn run() {
             api::update::commands::update_open_install_permission_settings,
             api::update::commands::update_discard,
             app_settings::open_app_settings,
+            appearance::backdrop_filter_renders,
         ])
         .setup(|app| {
             scroll_phase::install_scroll_gesture_bridge(app.handle());

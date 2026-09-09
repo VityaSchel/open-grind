@@ -6,6 +6,7 @@ import {
 	backdropBlurTrialArm,
 	syncBackdropBlurTrial,
 } from "./calibration/trial.svelte";
+import { backdropCompositingRenders } from "./compositing.svelte";
 import {
 	BACKDROP_BLUR_MIRROR_KEY,
 	BACKDROP_BLUR_ROOT_ATTRIBUTE,
@@ -14,6 +15,10 @@ import {
 	configuredBackdropBlurQuality,
 	UNCALIBRATED_BACKDROP_BLUR_QUALITY,
 } from "./quality";
+
+export function backdropBlurRenderable(): boolean {
+	return backdropFilterSupported() && backdropCompositingRenders();
+}
 
 function chosenBackdropBlurQuality(): BackdropBlurQuality | null {
 	const preferences = getPreferencesSnapshot();
@@ -25,16 +30,16 @@ function chosenBackdropBlurQuality(): BackdropBlurQuality | null {
 }
 
 export function backdropBlurTrialPending(): boolean {
-	return backdropFilterSupported() && chosenBackdropBlurQuality() === null;
+	return backdropBlurRenderable() && chosenBackdropBlurQuality() === null;
 }
 
 export function settledBackdropBlurQuality(): BackdropBlurQuality {
-	if (!backdropFilterSupported()) return "off";
+	if (!backdropBlurRenderable()) return "off";
 	return chosenBackdropBlurQuality() ?? UNCALIBRATED_BACKDROP_BLUR_QUALITY;
 }
 
 export function effectiveBackdropBlurQuality(): BackdropBlurQuality {
-	if (!backdropFilterSupported()) return "off";
+	if (!backdropBlurRenderable()) return "off";
 	return (
 		chosenBackdropBlurQuality() ??
 		backdropBlurTrialArm() ??

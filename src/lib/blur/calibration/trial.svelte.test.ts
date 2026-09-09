@@ -22,6 +22,7 @@ import {
 } from "$lib/app-data/preferences.svelte";
 import {
 	ARM_TRAVEL_PX,
+	MEDIUM_MIN_PAIRS,
 	MIN_GESTURE_FRAMES,
 	MIN_GESTURE_TRAVEL_PX,
 	REFERENCE_PERIOD_MS,
@@ -172,7 +173,7 @@ describe("backdrop blur scroll trial", () => {
 		await setPreferences({
 			backdropBlurCalibration: {
 				quality: null,
-				samples: Array.from({ length: 8 }, () => [
+				samples: Array.from({ length: MEDIUM_MIN_PAIRS }, () => [
 					20,
 					REFERENCE_PERIOD_MS,
 				]),

@@ -14,7 +14,7 @@ export const PAIR_MAX_AGE_MS = 30_000;
 
 export const SMOOTH_MIN_PAIRS = 6;
 export const SMOOTH_MAX_DROP = 0.05;
-export const MEDIUM_MIN_PAIRS = 8;
+export const MEDIUM_MIN_PAIRS = 5;
 export const MEDIUM_MIN_GAIN = 0.08;
 export const MEDIUM_MIN_WIN_RATE = 0.75;
 export const MAX_PAIRS = 24;

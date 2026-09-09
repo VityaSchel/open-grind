@@ -8,6 +8,15 @@ const { readMock, writeMock } = vi.hoisted(() => ({
 	writeMock: vi.fn(),
 }));
 
+const { compositingMock } = vi.hoisted(() => ({
+	compositingMock: vi.fn(() => true),
+}));
+
+vi.mock("./compositing.svelte", () => ({
+	backdropCompositingRenders: compositingMock,
+	hydrateBackdropCompositing: () => Promise.resolve(),
+}));
+
 vi.mock("$lib/app-data", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
@@ -16,7 +25,7 @@ vi.mock("$lib/app-data", () => ({
 }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
-import { REFERENCE_PERIOD_MS } from "./calibration/constants";
+import { MEDIUM_MIN_PAIRS, REFERENCE_PERIOD_MS } from "./calibration/constants";
 import {
 	backdropBlurTrialArm,
 	syncBackdropBlurTrial,
@@ -30,6 +39,7 @@ import {
 } from "./quality";
 import {
 	applyBackdropBlurQuality,
+	backdropBlurTrialPending,
 	effectiveBackdropBlurQuality,
 } from "./quality.svelte";
 
@@ -41,6 +51,7 @@ beforeEach(async () => {
 	vi.restoreAllMocks();
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);
+	compositingMock.mockReturnValue(true);
 	document.documentElement.removeAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE);
 	syncBackdropBlurTrial({ needed: false });
 	await setPreferences({
@@ -70,6 +81,21 @@ describe("effectiveBackdropBlurQuality", () => {
 			backdropBlurCalibration: { quality: "medium", samples: [] },
 		});
 		expect(effectiveBackdropBlurQuality()).toBe("medium");
+	});
+
+	it("falls to off when the compositor cannot execute the blur, whatever the engine claims", async () => {
+		withBackdropSupport(true);
+		compositingMock.mockReturnValue(false);
+		await setPreferences({ backdropBlurQuality: "max" });
+		expect(effectiveBackdropBlurQuality()).toBe("off");
+	});
+
+	it("runs no trial on a compositor that cannot execute the blur", () => {
+		withBackdropSupport(true);
+		compositingMock.mockReturnValue(false);
+		expect(backdropBlurTrialPending()).toBe(false);
+		compositingMock.mockReturnValue(true);
+		expect(backdropBlurTrialPending()).toBe(true);
 	});
 
 	it("prefers an explicit choice over the device calibration", async () => {
@@ -108,7 +134,7 @@ describe("applyBackdropBlurQuality", () => {
 		await setPreferences({
 			backdropBlurCalibration: {
 				quality: null,
-				samples: Array.from({ length: 8 }, () => [
+				samples: Array.from({ length: MEDIUM_MIN_PAIRS }, () => [
 					20,
 					REFERENCE_PERIOD_MS,
 				]),

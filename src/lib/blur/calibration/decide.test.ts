@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
 	MAX_PAIRS,
+	MEDIUM_MIN_GAIN,
 	MEDIUM_MIN_PAIRS,
 	REFERENCE_PERIOD_MS,
+	SMOOTH_MAX_DROP,
 	SMOOTH_MIN_PAIRS,
 } from "./constants";
 import {
@@ -46,6 +48,22 @@ describe("decideTrial", () => {
 	it("keeps full blur when nothing was ever demonstrated", () => {
 		const noisy = fill([17.5, 17.4], MAX_PAIRS);
 		expect(decideTrial(noisy)).toBe("max");
+	});
+
+	it("cannot demote a device the smooth rule would keep, at any pair count", () => {
+		expect(MEDIUM_MIN_GAIN).toBeGreaterThan(SMOOTH_MAX_DROP);
+		for (let pairs = MEDIUM_MIN_PAIRS; pairs <= MAX_PAIRS; pairs += 1) {
+			const barelySmooth: TrialSample = [
+				REFERENCE_PERIOD_MS / (1 - SMOOTH_MAX_DROP),
+				REFERENCE_PERIOD_MS,
+			];
+			expect(decideTrial(fill(barelySmooth, pairs))).not.toBe("medium");
+		}
+	});
+
+	it("reaches a verdict before the pair budget runs out", () => {
+		expect(MEDIUM_MIN_PAIRS).toBeLessThan(SMOOTH_MIN_PAIRS);
+		expect(SMOOTH_MIN_PAIRS).toBeLessThan(MAX_PAIRS);
 	});
 
 	it("never treats a 120 Hz panel as a failure", () => {

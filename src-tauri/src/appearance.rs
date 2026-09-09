@@ -1,4 +1,49 @@
 //! Unlocks WebKit's `-apple-visual-effect` in the app's webviews. No-op off macOS.
+//! Also reports whether the webview's compositor can execute `backdrop-filter`.
+
+#[cfg(target_os = "linux")]
+const COMPOSITING_OFF_VARS: [&str; 2] = [
+	"WEBKIT_DISABLE_COMPOSITING_MODE",
+	"WEBKIT_DISABLE_DMABUF_RENDERER",
+];
+
+#[cfg(target_os = "linux")]
+fn disabled_by_environment(read: impl Fn(&str) -> Option<String>) -> bool {
+	COMPOSITING_OFF_VARS
+		.iter()
+		.filter_map(|name| read(name))
+		.any(|value| !matches!(value.as_str(), "" | "0"))
+}
+
+#[tauri::command]
+pub fn backdrop_filter_renders() -> bool {
+	#[cfg(target_os = "linux")]
+	{
+		!disabled_by_environment(|name| std::env::var(name).ok())
+	}
+
+	#[cfg(not(target_os = "linux"))]
+	true
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod compositing_tests {
+	#[test]
+	fn reads_every_variable_that_turns_compositing_off() {
+		for name in super::COMPOSITING_OFF_VARS {
+			assert!(super::disabled_by_environment(|queried| {
+				(queried == name).then(|| "1".to_owned())
+			}));
+		}
+	}
+
+	#[test]
+	fn ignores_an_unset_empty_or_zero_value() {
+		assert!(!super::disabled_by_environment(|_| None));
+		assert!(!super::disabled_by_environment(|_| Some(String::new())));
+		assert!(!super::disabled_by_environment(|_| Some("0".to_owned())));
+	}
+}
 
 pub fn unlock_visual_effects<R: tauri::Runtime>(
 	window: &tauri::WebviewWindow<R>,
