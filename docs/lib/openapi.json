@@ -39,8 +39,7 @@
 			"name": "analytics"
 		},
 		{
-			"name": "media",
-			"description": "Media uploads (profile photos and chat media) are protected by a per-session device key. Register a P-256 key with the endpoints below, then sign each upload as described in [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing)."
+			"name": "media"
 		},
 		{
 			"name": "interest"
@@ -213,6 +212,10 @@
 			"name": "interest/views"
 		},
 		{
+			"name": "media/device-keys",
+			"description": "Media uploads (profile photos and chat media) are protected by a per-session device key. Register a P-256 key with the endpoints below, then sign each upload as described in [Security headers -> Device-key upload signing](/grindr-api/security-headers#device-key-upload-signing)."
+		},
+		{
 			"name": "media/public-cdn-files",
 			"description": "CDN files that are public are accessible directly using their hash, e.g. profile images.\n\nBase URL: `https://cdns.grindr.com`"
 		},
@@ -263,6 +266,10 @@
 		{
 			"name": "system/reddot",
 			"x-wip": true
+		},
+		{
+			"name": "woodwork/placement",
+			"description": "[Woodwork](https://www.woodwork.com/) is a service by Grindr."
 		},
 		{
 			"name": "woodwork/random-promotion-images",
@@ -9723,7 +9730,7 @@
 		"/v1/verification/device-keys/challenge": {
 			"post": {
 				"tags": [
-					"media"
+					"media/device-keys"
 				],
 				"operationId": "fetchDeviceKeyChallenge",
 				"security": [
@@ -9750,7 +9757,7 @@
 		"/v1/verification/device-keys": {
 			"post": {
 				"tags": [
-					"media"
+					"media/device-keys"
 				],
 				"operationId": "registerDeviceKey",
 				"security": [
@@ -9759,7 +9766,7 @@
 					}
 				],
 				"summary": "Register device key",
-				"description": "Registers the session's P-256 public key after signing the challenge from [Fetch device-key challenge](/grindr-api/media#fetch-device-key-challenge). The returned `keyId` is then used to sign media uploads.",
+				"description": "Registers the session's P-256 public key after signing the challenge from [Fetch device-key challenge](/grindr-api/media/device-keys#fetch-device-key-challenge). The returned `keyId` is then used to sign media uploads.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -9787,7 +9794,7 @@
 		"/v2/verification/device-keys": {
 			"post": {
 				"tags": [
-					"media"
+					"media/device-keys"
 				],
 				"operationId": "registerDeviceKeyV2",
 				"security": [
@@ -9796,7 +9803,7 @@
 					}
 				],
 				"summary": "Register device key (reCAPTCHA)",
-				"description": "Like [Register device key](/grindr-api/media#register-device-key) but with a reCAPTCHA Enterprise token in the `X-Grindr-Captcha-Token` header, chosen over v1 endpoint when the `recaptcha_device_key_registration` server flag is on.",
+				"description": "Like [Register device key](/grindr-api/media/device-keys#register-device-key) but with a reCAPTCHA Enterprise token in the `X-Grindr-Captcha-Token` header, chosen over v1 endpoint when the `recaptcha_device_key_registration` server flag is on.",
 				"parameters": [
 					{
 						"name": "X-Grindr-Captcha-Token",
@@ -10289,7 +10296,7 @@
 		"/v4/discover": {
 			"get": {
 				"tags": [
-					"browse"
+					"browse/discover"
 				],
 				"operationId": "getDiscoverProfilesV4",
 				"security": [
@@ -11084,7 +11091,7 @@
 		"/v2/health/placement": {
 			"get": {
 				"tags": [
-					"woodwork"
+					"woodwork/placement"
 				],
 				"operationId": "getWoodworkPlacement",
 				"security": [
@@ -11540,7 +11547,7 @@
 				"schema": {
 					"type": "string"
 				},
-				"description": "base64url (no padding) `SHA-256` of the device key SPKI — the `keyId` from [Register device key](/grindr-api/media#register-device-key)."
+				"description": "base64url (no padding) `SHA-256` of the device key SPKI — the `keyId` from [Register device key](/grindr-api/media/device-keys#register-device-key)."
 			},
 			"DeviceSignatureHeader": {
 				"name": "X-Sig",
@@ -18229,7 +18236,7 @@
 					"challenge",
 					"expiresAt"
 				],
-				"x-render-on-tag": "media"
+				"x-render-on-tag": "media/device-keys"
 			},
 			"RegisterKeyRequest": {
 				"type": "object",
@@ -18252,7 +18259,7 @@
 					"keyId",
 					"registrationSignature"
 				],
-				"x-render-on-tag": "media"
+				"x-render-on-tag": "media/device-keys"
 			},
 			"RegisterKeyResponse": {
 				"type": "object",
@@ -18265,7 +18272,7 @@
 				"required": [
 					"keyId"
 				],
-				"x-render-on-tag": "media"
+				"x-render-on-tag": "media/device-keys"
 			},
 			"UploadSigningErrorResponse": {
 				"type": "object",
@@ -18282,7 +18289,7 @@
 						"description": "For `timestamp_drift`, the server's current time as an ISO-8601 instant; resync the clock offset and retry."
 					}
 				},
-				"x-render-on-tag": "media"
+				"x-render-on-tag": "media/device-keys"
 			},
 			"UploadProfileImageResponse": {
 				"type": "object",
@@ -18540,7 +18547,7 @@
 						"type": "string"
 					}
 				},
-				"x-render-on-tag": "media"
+				"x-render-on-tag": "messaging/drawer"
 			},
 			"WoodworkPlacementResponse": {
 				"type": "object",
@@ -18575,7 +18582,7 @@
 					"copy",
 					"isTrailingArrowVisible"
 				],
-				"x-render-on-tag": "woodwork"
+				"x-render-on-tag": "woodwork/placement"
 			},
 			"ProfileInsightOptOutsRequest": {
 				"type": "object",
@@ -19086,6 +19093,7 @@
 		{
 			"group": "media",
 			"items": [
+				"media/device-keys",
 				"media/public-cdn-files",
 				"media/signed-cdn-files"
 			]
@@ -19151,6 +19159,7 @@
 		{
 			"group": "woodwork",
 			"items": [
+				"woodwork/placement",
 				"woodwork/random-promotion-images"
 			]
 		}

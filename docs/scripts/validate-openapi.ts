@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 
+import { SKIP_TAGS } from "./generator/context";
 import type { OpenApiDoc } from "./generator/types";
 import { HTTP_METHODS } from "./generator/types";
 
@@ -70,6 +71,35 @@ for (const [p, item] of Object.entries(doc.paths)) {
 					`${m.toUpperCase()} ${p}: path template {${name}} has no matching path parameter`,
 				);
 			}
+		}
+	}
+}
+
+{
+	const leafTags = new Set<string>();
+	const groupTags = new Set<string>();
+	for (const entry of doc["x-sidebar-order"] ?? []) {
+		if (typeof entry === "string") leafTags.add(entry);
+		else {
+			groupTags.add(entry.group);
+			for (const tag of entry.items) leafTags.add(tag);
+		}
+	}
+	const declared = new Set(doc.tags.map((t) => t.name));
+	for (const tag of [...leafTags, ...groupTags]) {
+		if (!declared.has(tag)) {
+			err(`x-sidebar-order lists "${tag}", which is not declared in tags[]`);
+		}
+	}
+	for (const [p, item] of Object.entries(doc.paths)) {
+		for (const m of HTTP_METHODS) {
+			const op = item[m];
+			if (!op) continue;
+			const tags = op.tags ?? [];
+			if (tags.some((t) => leafTags.has(t) || SKIP_TAGS.has(t))) continue;
+			err(
+				`${m.toUpperCase()} ${p}: tagged ${JSON.stringify(tags)}, none of which is a leaf in x-sidebar-order — it lands on the group's overview page instead of getting a page of its own`,
+			);
 		}
 	}
 }
