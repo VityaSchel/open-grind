@@ -6,18 +6,35 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { Label } from "$lib/components/ui/label";
+	import {
+		desktopEntryAvailable,
+		desktopEntryInstalled,
+		setDesktopEntryInstalled,
+	} from "$lib/platform/desktop-entry.svelte";
 	import { setAutomaticUpdateChecks } from "$lib/updates";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import icon from "../../../contrib/logo/open-grind.svg";
 
 	let checkAutomatically = $state(true);
+	let addToAppsMenu = $state(true);
 	let starting = $state(false);
+
+	const offerAppsMenu = () =>
+		desktopEntryAvailable() && !desktopEntryInstalled();
 
 	async function start() {
 		starting = true;
 		try {
 			if (updatesSelfManaged()) {
 				await setAutomaticUpdateChecks(checkAutomatically);
+			}
+			if (addToAppsMenu && offerAppsMenu()) {
+				await setDesktopEntryInstalled(true).catch((error: unknown) =>
+					showErrorToast({
+						label: "Couldn't add Open Grind to your apps",
+						error,
+					}),
+				);
 			}
 			await setPreferences({ onboardingComplete: true });
 			await goto("/");
@@ -58,6 +75,12 @@
 			<Label class="flex items-center rounded-xl p-2 pb-3">
 				<Checkbox bind:checked={checkAutomatically} />
 				Check updates automatically
+			</Label>
+		{/if}
+		{#if offerAppsMenu()}
+			<Label class="flex items-center rounded-xl p-2 pb-3">
+				<Checkbox bind:checked={addToAppsMenu} />
+				Add Open Grind to your apps menu
 			</Label>
 		{/if}
 		<Button

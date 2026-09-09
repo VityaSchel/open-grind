@@ -3,46 +3,18 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use serde::Serialize;
 
-const SCHEMA: u32 = 1;
-const LEDGER_FILE: &str = "desktop-entry.json";
 const ENTRY_FILE: &str = "open-grind.desktop";
 const WM_CLASS: &str = "open-grind";
 
 #[derive(Debug, Serialize)]
 pub struct DesktopEntryError(String);
 
-macro_rules! from_error {
-	($($error:ty),+) => {$(
-		impl From<$error> for DesktopEntryError {
-			fn from(error: $error) -> Self {
-				Self(error.to_string())
-			}
-		}
-	)+};
-}
-from_error!(std::io::Error, serde_json::Error, tauri::Error);
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-struct Ledger {
-	schema: u32,
-	dismissed: bool,
-}
-
-fn ledger_path(app: &AppHandle) -> Result<PathBuf, DesktopEntryError> {
-	let dir = app.path().app_local_data_dir()?;
-	fs::create_dir_all(&dir)?;
-	Ok(dir.join(LEDGER_FILE))
-}
-
-fn dismissed(app: &AppHandle) -> bool {
-	ledger_path(app)
-		.ok()
-		.and_then(|path| fs::read(path).ok())
-		.and_then(|raw| serde_json::from_slice::<Ledger>(&raw).ok())
-		.is_some_and(|ledger| ledger.schema == SCHEMA && ledger.dismissed)
+impl From<std::io::Error> for DesktopEntryError {
+	fn from(error: std::io::Error) -> Self {
+		Self(error.to_string())
+	}
 }
 
 fn appimage() -> Option<PathBuf> {
@@ -63,6 +35,30 @@ fn data_home() -> Option<PathBuf> {
 		})
 }
 
+fn integration_suppressed() -> bool {
+	if std::env::var_os("DESKTOPINTEGRATION").is_some_and(|v| !v.is_empty()) {
+		return true;
+	}
+	let markers = [
+		data_home().map(|d| d.join("appimagekit/no_desktopintegration")),
+		Some(PathBuf::from(
+			"/usr/share/appimagekit/no_desktopintegration",
+		)),
+		Some(PathBuf::from("/etc/appimagekit/no_desktopintegration")),
+	];
+	markers.into_iter().flatten().any(|marker| marker.exists())
+		|| appimaged_running()
+}
+
+fn appimaged_running() -> bool {
+	fs::read_dir("/proc").is_ok_and(|entries| {
+		entries.filter_map(Result::ok).any(|entry| {
+			fs::read_to_string(entry.path().join("comm"))
+				.is_ok_and(|comm| comm.trim() == "appimaged")
+		})
+	})
+}
+
 fn entry_path() -> Option<PathBuf> {
 	data_home().map(|data| data.join("applications").join(ENTRY_FILE))
 }
@@ -73,6 +69,14 @@ fn bundled_entry(appdir: &Path) -> Option<PathBuf> {
 		.filter_map(Result::ok)
 		.map(|entry| entry.path())
 		.find(|path| path.extension().is_some_and(|ext| ext == "desktop"))
+}
+
+fn icon_name(entry: &str) -> Option<&str> {
+	entry
+		.lines()
+		.find_map(|line| line.strip_prefix("Icon="))
+		.map(str::trim)
+		.filter(|name| !name.is_empty())
 }
 
 fn rewrite_exec(line: &str, appimage: &Path) -> String {
@@ -122,16 +126,23 @@ fn copy_icons(appdir: &Path, data: &Path) -> Result<(), DesktopEntryError> {
 	Ok(())
 }
 
-#[tauri::command]
-pub fn desktop_entry_offer(app: AppHandle) -> bool {
-	let Some(entry) = entry_path() else {
-		return false;
-	};
-	appimage().is_some() && !entry.exists() && !dismissed(&app)
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DesktopEntryState {
+	pub available: bool,
+	pub installed: bool,
 }
 
 #[tauri::command]
-pub fn desktop_entry_install(_app: AppHandle) -> Result<(), DesktopEntryError> {
+pub fn desktop_entry_state() -> DesktopEntryState {
+	DesktopEntryState {
+		available: appimage().is_some() && !integration_suppressed(),
+		installed: entry_path().is_some_and(|entry| entry.exists()),
+	}
+}
+
+#[tauri::command]
+pub fn desktop_entry_install() -> Result<(), DesktopEntryError> {
 	let appimage = appimage()
 		.ok_or_else(|| DesktopEntryError("not an AppImage".into()))?;
 	let appdir =
@@ -155,12 +166,34 @@ pub fn desktop_entry_install(_app: AppHandle) -> Result<(), DesktopEntryError> {
 }
 
 #[tauri::command]
-pub fn desktop_entry_dismiss(app: AppHandle) -> Result<(), DesktopEntryError> {
-	let ledger = Ledger {
-		schema: SCHEMA,
-		dismissed: true,
+pub fn desktop_entry_remove() -> Result<(), DesktopEntryError> {
+	let entry =
+		entry_path().ok_or_else(|| DesktopEntryError("no data home".into()))?;
+	let installed = fs::read_to_string(&entry).unwrap_or_default();
+	if let (Some(icon), Some(data)) = (icon_name(&installed), data_home()) {
+		remove_icons(&data, icon)?;
+	}
+	match fs::remove_file(&entry) {
+		Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+			Err(error.into())
+		}
+		_ => Ok(()),
+	}
+}
+
+fn remove_icons(data: &Path, icon: &str) -> Result<(), DesktopEntryError> {
+	let hicolor = data.join("icons/hicolor");
+	let Ok(sizes) = fs::read_dir(&hicolor) else {
+		return Ok(());
 	};
-	fs::write(ledger_path(&app)?, serde_json::to_vec(&ledger)?)?;
+	for size in sizes.filter_map(Result::ok) {
+		let file = size.path().join("apps").join(format!("{icon}.png"));
+		if let Err(error) = fs::remove_file(&file) {
+			if error.kind() != std::io::ErrorKind::NotFound {
+				return Err(error.into());
+			}
+		}
+	}
 	Ok(())
 }
 
@@ -211,6 +244,17 @@ mod tests {
 		let rewritten = rewrite_entry(ENTRY, Path::new("/a.AppImage"));
 
 		assert_eq!(rewritten.matches("StartupWMClass=").count(), 1);
+	}
+
+	#[test]
+	fn the_icon_to_clean_up_comes_from_the_entry_being_removed() {
+		assert_eq!(icon_name(ENTRY), Some("open-grind"));
+	}
+
+	#[test]
+	fn an_entry_without_an_icon_leaves_icons_alone() {
+		assert_eq!(icon_name("[Desktop Entry]\nExec=x"), None);
+		assert_eq!(icon_name("[Desktop Entry]\nIcon=  "), None);
 	}
 
 	#[test]

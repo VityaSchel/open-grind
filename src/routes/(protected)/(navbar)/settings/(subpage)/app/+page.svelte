@@ -4,7 +4,9 @@
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";
+	import { desktopEntryAvailable } from "$lib/platform/desktop-entry.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
+	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
@@ -49,6 +51,9 @@
 <h2>Display</h2>
 <UnitsSetting />
 <BackdropBlurSetting />
+{#if desktopEntryAvailable()}
+	<AppsMenuEntrySetting />
+{/if}
 {@render item({
 	title: "Notifications",
 	unimplemented: { feature: "Notifications", issue: 45 },
