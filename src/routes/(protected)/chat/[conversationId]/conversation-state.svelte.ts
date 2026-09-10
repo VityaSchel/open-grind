@@ -1,4 +1,5 @@
 import { createContext } from "svelte";
+import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import { errorUrn } from "$lib/api/error-urn";
@@ -427,6 +428,15 @@ export class ConversationState {
 				`Failed to send message${urn === null ? "" : ` (${urn})`}`,
 				error,
 			);
+			if (
+				message.type === "ExpiringImage" &&
+				urn === "urn:gr:err:entitlement_limit"
+			) {
+				toast.error(
+					"Daily expiring photo limit reached, sending more now requires Grindr subscription",
+					{ id: "expiring-photo-limit" },
+				);
+			}
 			const msg = this.messages.find((m) => m.messageId === tempId);
 			if (msg) {
 				msg.status = "error";

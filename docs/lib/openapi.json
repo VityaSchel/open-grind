@@ -7191,6 +7191,16 @@
 							}
 						},
 						"description": "Created"
+					},
+					"402": {
+						"description": "Returns for free-tier users. Sending expiring photos is capped per day; a paid subscription lifts the cap. The body is an [EntitlementLimitProblemResponse](/grindr-api/messaging/messages#entitlementlimitproblemresponse).",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EntitlementLimitProblemResponse"
+								}
+							}
+						}
 					}
 				},
 				"summary": "Send a message to a conversation",
@@ -16278,6 +16288,28 @@
 					"messageId": {
 						"type": "string",
 						"description": "string, must be sent by you"
+					}
+				},
+				"x-render-on-tag": "messaging/messages"
+			},
+			"EntitlementLimitProblemResponse": {
+				"type": "object",
+				"description": "RFC-7807 problem body returned on a `402` when the account has used up an allowance that a paid subscription lifts.",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "error URN — `urn:gr:err:entitlement_limit`"
+					},
+					"title": {
+						"type": "string",
+						"description": "`User has reached their entitlement limits`"
+					},
+					"status": {
+						"type": "integer",
+						"description": "`402`"
+					},
+					"traceId": {
+						"type": "string"
 					}
 				},
 				"x-render-on-tag": "messaging/messages"

@@ -97,6 +97,27 @@ describe("ws.sendCommand", () => {
 		});
 	});
 
+	it("keeps an error frame's payload as the response body", async () => {
+		const pending = sendCommand();
+		await vi.waitFor(() => expect(invokeMock).toHaveBeenCalled());
+		const problem = { type: "urn:gr:err:entitlement_limit", status: 402 };
+		await emitResponse(frame({ status: 402, payload: problem }));
+
+		await expect(pending).rejects.toMatchObject({
+			response: { status: 402, body: JSON.stringify(problem) },
+		});
+	});
+
+	it("leaves the body empty when an error frame carries no payload", async () => {
+		const pending = sendCommand();
+		await vi.waitFor(() => expect(invokeMock).toHaveBeenCalled());
+		await emitResponse(frame({ status: 500, payload: null }));
+
+		await expect(pending).rejects.toMatchObject({
+			response: { status: 500, body: "" },
+		});
+	});
+
 	it("ignores a response meant for a different command", async () => {
 		const pending = sendCommand();
 		await vi.waitFor(() => expect(invokeMock).toHaveBeenCalled());
