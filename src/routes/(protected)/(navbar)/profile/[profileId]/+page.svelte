@@ -10,6 +10,7 @@
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
+	import BackButton from "./BackButton.svelte";
 	import BlockedProfile from "./BlockedProfile.svelte";
 	import HiddenProfile from "./HiddenProfile.svelte";
 	import { ProfileState } from "./profile-state.svelte";
@@ -49,6 +50,7 @@
 	const error = $derived(profileState.error);
 </script>
 
+<BackButton />
 {#if error}
 	<div class="flex flex-1">
 		{#if error instanceof BlockedProfileError}
@@ -76,6 +78,7 @@
 	<div class="relative -mb-(--nav-height) h-screen-safe">
 		<div
 			class="h-full overflow-y-auto overscroll-contain"
+			data-slot="profile-scroller"
 			bind:this={profileContainer}
 		>
 			<main
