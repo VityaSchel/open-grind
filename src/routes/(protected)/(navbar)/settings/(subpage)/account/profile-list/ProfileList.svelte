@@ -3,6 +3,7 @@
 	import { onDestroy } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
 	import * as Empty from "$lib/components/ui/empty";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { nearestScrollableAncestor } from "$lib/util/scroll";
@@ -125,4 +126,5 @@
 			{/if}
 		</div>
 	{/if}
+	<ScrollToTopButton container={scroller} class="fixed bottom-nav-clear" />
 </div>

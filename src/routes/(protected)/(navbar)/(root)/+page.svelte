@@ -4,6 +4,7 @@
 		hydratePreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import Grid from "./Grid.svelte";
@@ -50,6 +51,10 @@
 						void gridState.refresh({ keepLoadedPages: false })}
 				/>
 			{/if}
+			<ScrollToTopButton
+				container={gridContainer}
+				class="bottom-nav-clear"
+			/>
 		</main>
 	{/if}
 {/await}

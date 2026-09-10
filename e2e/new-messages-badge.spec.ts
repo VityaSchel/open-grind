@@ -1,6 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installEventInjection, installTauriShim } from "./support/app";
+import {
+	flownIn,
+	installEventInjection,
+	installTauriShim,
+} from "./support/app";
 
 const CONVERSATION = "/chat/100001:123456000";
 const CONVERSATION_ID = "100001:123456000";
@@ -82,6 +86,38 @@ test("a message is judged visible against the conversation, not a box of its own
 			`a message is measured against ${rootTag} instead of the conversation scroller`,
 		).toBe(true);
 	}
+});
+
+test("the scroll-down button rides above the composer at the list's trailing edge", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto(CONVERSATION);
+	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
+
+	await scrollAwayFromFloor(page);
+	await flownIn(page, SCROLL_DOWN);
+
+	const placement = await page.evaluate(
+		({ button, scroller }) => {
+			const glass = document.querySelector(button)?.parentElement;
+			const list = document.querySelector(scroller);
+			const composer = document.querySelector("form");
+			if (!glass || !list || !composer)
+				throw new Error("scroll-down button, list or composer missing");
+			const control = glass.getBoundingClientRect();
+			return {
+				gapAboveComposer:
+					composer.getBoundingClientRect().top - control.bottom,
+				gapFromTrailingEdge:
+					list.getBoundingClientRect().right - control.right,
+			};
+		},
+		{ button: SCROLL_DOWN, scroller: SCROLLER },
+	);
+
+	expect(placement.gapAboveComposer).toBeCloseTo(12, 0);
+	expect(placement.gapFromTrailingEdge).toBeCloseTo(12, 0);
 });
 
 test("a message arriving while scrolled away badges the scroll-down button until the floor is revisited", async ({

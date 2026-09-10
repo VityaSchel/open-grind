@@ -304,6 +304,9 @@ a {
 }
 
 /* Safe-area / inset layout vocabulary — see --nav-height / --screen-* tokens above */
+:root {
+	--nav-clear: calc(0.75rem + var(--nav-height) + var(--bar-content-gap));
+}
 @utility h-screen-safe {
 	height: var(--screen-safe);
 }
@@ -321,6 +324,9 @@ a {
 }
 @utility pt-header-clear-* {
 	padding-top: calc(--spacing(--value(integer)) + var(--bar-content-gap));
+}
+@utility bottom-nav-clear {
+	bottom: calc(var(--nav-clear) + var(--safe-area-bottom));
 }
 @utility max-h-photo {
 	max-height: min(70vh, 500px);

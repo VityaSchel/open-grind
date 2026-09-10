@@ -72,6 +72,20 @@ export async function captureOpenedUrls(page: Page) {
 	return () => page.evaluate(() => window.__openedUrls);
 }
 
+export function flownIn(page: Page, button: string): Promise<unknown> {
+	return page.evaluate(
+		(selector) =>
+			Promise.all(
+				(
+					document
+						.querySelector(selector)
+						?.parentElement?.getAnimations() ?? []
+				).map((animation) => animation.finished.catch(() => undefined)),
+			),
+		button,
+	);
+}
+
 export const GRID_READY_SELECTOR = '[aria-label="All filters"]';
 
 export async function ensureGridLocation(page: Page): Promise<void> {

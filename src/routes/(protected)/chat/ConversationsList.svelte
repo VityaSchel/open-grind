@@ -6,6 +6,7 @@
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
@@ -233,6 +234,7 @@
 				onrefresh={() => void conversations.refresh()}
 			/>
 		{/if}
+		<ScrollToTopButton {container} class="bottom-(--nav-clear)" />
 		<ConversationsFilters
 			filters={conversations.filters}
 			onchange={(active) => conversations.setFilters(active)}
