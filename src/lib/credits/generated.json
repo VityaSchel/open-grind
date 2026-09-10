@@ -1314,7 +1314,7 @@
 			"name": "svelte",
 			"ecosystem": "npm",
 			"versions": [
-				"5.56.3"
+				"5.57.0"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/sveltejs/svelte",
