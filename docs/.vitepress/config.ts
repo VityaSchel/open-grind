@@ -83,6 +83,10 @@ export default defineConfig({
 							text: "Sign in with Google",
 							link: "/guides/sign-in-with-google",
 						},
+						{
+							text: "Sign in with Facebook",
+							link: "/guides/sign-in-with-facebook",
+						},
 						{ text: "FAQ", link: "/guides/faq" },
 					],
 				},

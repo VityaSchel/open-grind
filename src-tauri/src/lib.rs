@@ -155,6 +155,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(api::google_oauth::plugin())
+        .plugin(api::facebook_oauth::plugin())
         .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
         .manage(AppState {
@@ -167,6 +168,7 @@ pub fn run() {
             api::auth::login,
             api::auth::login_with_google,
             api::auth::google_sign_in,
+            api::auth::login_with_facebook,
             api::auth::refresh_token,
             api::auth::logout,
             api::auth::auth_state,

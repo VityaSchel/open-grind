@@ -1,7 +1,9 @@
 pub mod auth;
 pub mod client;
+pub mod facebook_oauth;
 pub mod google_oauth;
 pub mod media_upload;
+pub mod oauth;
 pub mod rest;
 pub mod session_recovery;
 pub mod update;

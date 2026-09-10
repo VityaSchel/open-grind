@@ -62,6 +62,10 @@ export const methods = {
 		request: z.object({ token: z.string().min(1) }),
 		response: loginResultSchema,
 	},
+	login_with_facebook: {
+		request: z.undefined(),
+		response: loginResultSchema,
+	},
 	auth_state: {
 		request: z.undefined(),
 		response: z.int().nonnegative().nullable(),

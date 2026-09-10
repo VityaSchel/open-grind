@@ -37,6 +37,13 @@
 			</intent-filter>
 		</activity>
 
+		<activity
+			android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+			android:label="@string/main_activity_title"
+			android:name=".FacebookOauthActivity"
+			android:exported="false"
+			android:excludeFromRecents="true" />
+
 		<service
 			android:name="org.opengrind.update.TransferService"
 			android:exported="false"

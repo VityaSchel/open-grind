@@ -2,6 +2,7 @@ use tauri::plugin::mobile::PluginInvokeError;
 use tauri::plugin::PluginHandle;
 use tauri::{AppHandle, Manager, Wry};
 
+use crate::api::oauth::CANCELED;
 use crate::error::AppError;
 
 /// Handle to the `GoogleOauthPlugin` registered on the Android side, stored in Tauri
@@ -39,7 +40,7 @@ fn map_plugin_error(error: PluginInvokeError) -> AppError {
 				return AppError::Auth("companion-untrusted".into());
 			}
 			Some("cancelled") => {
-				return AppError::Auth("Sign-in canceled".into())
+				return AppError::Auth(CANCELED.into());
 			}
 			_ => {}
 		}

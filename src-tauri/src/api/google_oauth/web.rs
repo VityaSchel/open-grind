@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use base64::Engine;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
+use crate::api::oauth::{new_nonce, without_secrets, CANCELED};
 use crate::error::AppError;
 
 use super::GoogleOauthBridge;
@@ -22,8 +22,8 @@ const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
 
-/// A host allowlist cancels the third-party frames Google's sign-in loads
-/// Nonce and exact result URL keep a foreign origin from token
+/// The nonce and the exact result URL are what keep a foreign origin from
+/// delivering a token; this only stops the two schemes a page must never reach.
 const REFUSED_SCHEMES: [&str; 2] = ["file", "javascript"];
 
 const OAUTH_UI_CSS: &str = include_str!(concat!(
@@ -45,12 +45,6 @@ const PRELUDE: &str = concat!(
 
 const OAUTH_INIT: &str = include_str!("oauth_init.js");
 
-fn new_nonce() -> String {
-	let mut bytes = [0u8; 32];
-	getrandom::fill(&mut bytes).expect("system randomness unavailable");
-	base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
-}
-
 fn init_script(nonce: &str) -> String {
 	let config = serde_json::json!({ "css": OAUTH_UI_CSS, "nonce": nonce });
 	format!("{PRELUDE}\n({OAUTH_INIT})({config});")
@@ -62,13 +56,6 @@ fn is_allowed_target(url: &Url) -> bool {
 
 fn is_result_url(url: &Url) -> bool {
 	url.host_str() == Some(HELPER_HOST) && url.path() == RESULT_PATH
-}
-
-fn without_query(url: &Url) -> String {
-	let mut url = url.clone();
-	url.set_query(None);
-	url.set_fragment(None);
-	url.into()
 }
 
 fn result_from_query(url: &Url, nonce: &str) -> Option<Result<String, String>> {
@@ -125,11 +112,14 @@ async fn run_flow(
 				if !is_allowed_target(url) {
 					tracing::warn!(
 						"[oauth] refused navigation to {}",
-						without_query(url)
+						without_secrets(url)
 					);
 					return false;
 				}
-				tracing::debug!("[oauth] navigating to {}", without_query(url));
+				tracing::debug!(
+					"[oauth] navigating to {}",
+					without_secrets(url)
+				);
 				if !is_result_url(url) {
 					return true;
 				}
@@ -143,7 +133,8 @@ async fn run_flow(
 	// https://docs.rs/wry/latest/src/wry/lib.rs.html#1440-1443
 	#[cfg(target_os = "windows")]
 	{
-		builder = builder.data_directory(oauth_data_dir(app, &nonce)?);
+		builder = builder
+			.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
 	}
 
 	let window = builder.build().map_err(|e| {
@@ -153,7 +144,7 @@ async fn run_flow(
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {
 		if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
-			bridge_for_close.fulfill(Err("Sign-in canceled".to_string()));
+			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
 		}
 	});
 
@@ -165,42 +156,6 @@ async fn run_flow(
 	let _ = window.close();
 
 	result.map_err(AppError::Auth)
-}
-
-#[cfg(target_os = "windows")]
-fn oauth_data_dir(
-	app: &AppHandle,
-	nonce: &str,
-) -> Result<std::path::PathBuf, AppError> {
-	let root = app
-		.path()
-		.app_local_data_dir()
-		.map_err(|e| AppError::Http(format!("no local data dir: {e}")))?;
-	let name: String = nonce
-		.chars()
-		.filter(char::is_ascii_alphanumeric)
-		.take(16)
-		.collect();
-	Ok(root.join(OAUTH_DATA_SUBDIR).join(name))
-}
-
-#[cfg(target_os = "windows")]
-const OAUTH_DATA_SUBDIR: &str = "oauth-webview";
-
-/// WebView2 locks the folder while the window lives, so sweep at next launch.
-#[cfg(target_os = "windows")]
-pub fn sweep_oauth_data_dirs(app: &AppHandle) {
-	let Ok(root) = app.path().app_local_data_dir() else {
-		return;
-	};
-	let Ok(entries) = std::fs::read_dir(root.join(OAUTH_DATA_SUBDIR)) else {
-		return;
-	};
-	for entry in entries.flatten() {
-		if let Err(e) = std::fs::remove_dir_all(entry.path()) {
-			tracing::warn!("could not remove stale sign-in profile: {e}");
-		}
-	}
 }
 
 #[cfg(test)]
@@ -280,7 +235,7 @@ mod tests {
 
 	#[test]
 	fn a_logged_url_keeps_no_token_or_nonce() {
-		let logged = without_query(
+		let logged = without_secrets(
 			&Url::parse(
 				"https://web.grindr.com/__open_grind_oauth__?nonce=abc&token=t0ken#frag",
 			)

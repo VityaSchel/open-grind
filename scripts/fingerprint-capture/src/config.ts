@@ -71,7 +71,7 @@ export async function emulatorRemoteIps(pids: string[]): Promise<Set<string>> {
 	for (const pid of pids) {
 		const out = await $`lsof -nP -iTCP -a -p ${pid}`.nothrow().text();
 		for (const m of out.matchAll(/->(\d+\.\d+\.\d+\.\d+):\d+/g))
-			ips.add(m[1]);
+			ips.add(m[1]!);
 	}
 	return ips;
 }

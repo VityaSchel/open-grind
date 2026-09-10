@@ -65,6 +65,7 @@ export function demoCallMethod(method: string): unknown {
 		case "login":
 		case "login_with_google":
 		case "google_sign_in":
+		case "login_with_facebook":
 		case "refresh_token":
 			return { profileId: demoMeProfileId, restriction: null };
 		case "rotate_api_params":

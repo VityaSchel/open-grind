@@ -4,7 +4,6 @@ import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 
 const MESSAGE = '[role="button"][tabindex="0"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
-const REPLIABLE = "consectetur adipiscing elit";
 const LONG_DRAFT =
 	"one two three four five six seven eight nine ten eleven twelve thirteen " +
 	"fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone";
@@ -95,12 +94,9 @@ const growers: Grower[] = [
 	{
 		what: "arming a reply",
 		grow: async (page) => {
-			// dispatched rather than clicked: a real click lets playwright
-			// scroll the row into view, moving what is being measured
-			await page
-				.locator(MESSAGE)
-				.filter({ hasText: REPLIABLE })
-				.dispatchEvent("contextmenu");
+			// the newest row is the only one on screen at the floor, and
+			// dispatching stops playwright scrolling what we measure
+			await page.locator(MESSAGE).last().dispatchEvent("contextmenu");
 			await page.getByRole("button", { name: "Reply" }).click();
 			await page.getByLabel("Cancel reply").waitFor();
 		},
@@ -212,10 +208,7 @@ test.describe("a composer resize is undone exactly when it is reversed", () => {
 			};
 		};
 
-		await page
-			.locator(MESSAGE)
-			.filter({ hasText: REPLIABLE })
-			.dispatchEvent("contextmenu");
+		await page.locator(MESSAGE).last().dispatchEvent("contextmenu");
 		await page.getByRole("button", { name: "Reply" }).click();
 		const opening = await sample();
 		expect(opening.animated, "the bar really animates").toBeGreaterThan(8);

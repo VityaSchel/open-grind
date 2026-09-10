@@ -119,7 +119,7 @@ See https://opengrind.org/guides/sign-in-with-google
 
 ::: details How to sign in with Facebook?
 
-Currently not possible. Follow [#88](https://git.opengrind.org/open-grind/open-grind/issues/88) for updates.
+See https://opengrind.org/guides/sign-in-with-facebook
 
 :::
 
