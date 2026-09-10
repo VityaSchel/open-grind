@@ -22,7 +22,7 @@ export interface Connection {
 	clientHello: ClientHello | null;
 }
 
-const u16 = (b: Uint8Array, o: number) => (b[o] << 8) | b[o + 1];
+const u16 = (b: Uint8Array, o: number) => (b[o]! << 8) | b[o + 1]!;
 const ipv4 = (b: Uint8Array, o: number) =>
 	`${b[o]}.${b[o + 1]}.${b[o + 2]}.${b[o + 3]}`;
 const ipv6 = (b: Uint8Array, o: number) =>
@@ -44,24 +44,24 @@ function stripLinkLayer(
 		}
 		return [et, l3];
 	}
-	if (lt === 101) return [b[off] >> 4 === 6 ? 0x86dd : 0x0800, off];
+	if (lt === 101) return [b[off]! >> 4 === 6 ? 0x86dd : 0x0800, off];
 	if (lt === 113) return [u16(b, off + 14), off + 16];
 	if (lt === 276) return [u16(b, off), off + 20];
 	// DLT_NULL / DLT_LOOP (utun/loopback): 4-byte address family, AF_INET==2.
 	if (lt === 0) {
 		const af =
-			b[off] |
-			(b[off + 1] << 8) |
-			(b[off + 2] << 16) |
-			(b[off + 3] << 24);
+			b[off]! |
+			(b[off + 1]! << 8) |
+			(b[off + 2]! << 16) |
+			(b[off + 3]! << 24);
 		return [af === 2 ? 0x0800 : 0x86dd, off + 4];
 	}
 	if (lt === 108) {
 		const af =
-			(b[off] << 24) |
-			(b[off + 1] << 16) |
-			(b[off + 2] << 8) |
-			b[off + 3];
+			(b[off]! << 24) |
+			(b[off + 1]! << 16) |
+			(b[off + 2]! << 8) |
+			b[off + 3]!;
 		return [af === 2 ? 0x0800 : 0x86dd, off + 4];
 	}
 	return null;
@@ -82,13 +82,13 @@ function parseSegment(
 	let proto: number, srcIp: string, dstIp: string, l4: number;
 	if (et === 0x0800) {
 		if (l3 + 20 > end) return null;
-		proto = buf[l3 + 9];
+		proto = buf[l3 + 9]!;
 		srcIp = ipv4(buf, l3 + 12);
 		dstIp = ipv4(buf, l3 + 16);
-		l4 = l3 + (buf[l3] & 0x0f) * 4;
+		l4 = l3 + (buf[l3]! & 0x0f) * 4;
 	} else if (et === 0x86dd) {
 		if (l3 + 40 > end) return null;
-		proto = buf[l3 + 6];
+		proto = buf[l3 + 6]!;
 		srcIp = ipv6(buf, l3 + 8);
 		dstIp = ipv6(buf, l3 + 24);
 		l4 = l3 + 40;
@@ -96,12 +96,12 @@ function parseSegment(
 
 	if (proto !== 6 || l4 + 20 > end) return null;
 	const seq =
-		(buf[l4 + 4] * 0x1000000 +
-			(buf[l4 + 5] << 16) +
-			(buf[l4 + 6] << 8) +
-			buf[l4 + 7]) >>>
+		(buf[l4 + 4]! * 0x1000000 +
+			(buf[l4 + 5]! << 16) +
+			(buf[l4 + 6]! << 8) +
+			buf[l4 + 7]!) >>>
 		0;
-	const payStart = l4 + ((buf[l4 + 12] >> 4) & 0x0f) * 4;
+	const payStart = l4 + ((buf[l4 + 12]! >> 4) & 0x0f) * 4;
 	return {
 		tsMicros,
 		srcIp,
@@ -160,14 +160,14 @@ export function parseClientHello(data: Uint8Array): ClientHello | null {
 	};
 
 	let p = 6 + 32; // handshake header + version + random
-	p += 1 + rec[p]; // session id
+	p += 1 + rec[p]!; // session id
 	if (p + 2 > rec.length) return null;
 	const csLen = u16(rec, p);
 	p += 2;
 	for (let i = 0; i + 1 < csLen; i += 2)
 		ch.cipherSuites.push(u16(rec, p + i));
 	p += csLen;
-	p += 1 + rec[p]; // compression
+	p += 1 + rec[p]!; // compression
 	if (p + 2 > rec.length) return ch;
 
 	const extEnd = Math.min(rec.length, p + 2 + u16(rec, p));
@@ -187,19 +187,21 @@ export function parseClientHello(data: Uint8Array): ClientHello | null {
 			for (let i = 0; i + 1 < u16(body, 0); i += 2)
 				ch.supportedGroups.push(u16(body, 2 + i));
 		} else if (type === 0x000b) {
-			for (let i = 0; i < body[0]; i++)
-				ch.ecPointFormats.push(body[1 + i]);
+			for (let i = 0; i < body[0]!; i++)
+				ch.ecPointFormats.push(body[1 + i]!);
 		} else if (type === 0x000d) {
 			for (let i = 0; i + 1 < u16(body, 0); i += 2)
 				ch.sigAlgs.push(u16(body, 2 + i));
 		} else if (type === 0x0010) {
 			let q = 2;
 			while (q < body.length) {
-				ch.alpn.push(dec.decode(body.subarray(q + 1, q + 1 + body[q])));
-				q += 1 + body[q];
+				ch.alpn.push(
+					dec.decode(body.subarray(q + 1, q + 1 + body[q]!)),
+				);
+				q += 1 + body[q]!;
 			}
 		} else if (type === 0x002b) {
-			for (let i = 0; i + 1 < body[0]; i += 2)
+			for (let i = 0; i + 1 < body[0]!; i += 2)
 				ch.supportedVersions.push(u16(body, 1 + i));
 		}
 	}
@@ -261,7 +263,7 @@ export function buildConnections(segs: Segment[]): Connection[] {
 	for (const fsegs of flows.values()) {
 		const ch = parseClientHello(stitchClientHead(fsegs));
 		if (!ch) continue;
-		const s0 = fsegs[0];
+		const s0 = fsegs[0]!;
 		const c = conns.get(key(s0.srcIp, s0.srcPort, s0.dstIp, s0.dstPort));
 		if (c && !c.clientHello) c.clientHello = ch;
 	}

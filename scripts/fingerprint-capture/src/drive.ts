@@ -57,7 +57,7 @@ async function tapMatch(re: RegExp): Promise<boolean> {
 			continue;
 		const b = node.match(/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/);
 		if (!b) continue;
-		await tap((+b[1] + +b[3]) / 2, (+b[2] + +b[4]) / 2);
+		await tap((+b[1]! + +b[3]!) / 2, (+b[2]! + +b[4]!) / 2);
 		return true;
 	}
 	return false;
