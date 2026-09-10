@@ -9,6 +9,7 @@
 	import NavBar from "$lib/components/shared/NavBar.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import * as Resizable from "$lib/components/ui/resizable";
+	import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
 	import { below } from "$lib/util/breakpoints.svelte";
 	import ConversationsList from "./ConversationsList.svelte";
 
@@ -18,7 +19,7 @@
 		getOrCreateConversationsState(data.ourProfileId),
 	);
 	setConversations(conversations);
-	onDestroy(() => conversations.setFilters([]));
+	onDestroy(() => conversations.setFilters(defaultConversationFilters));
 
 	const CONVERSATIONS_LIST_MIN_WIDTH_PX = 200;
 	const PAGE_CONTENT_MIN_WIDTH_PX = 280;

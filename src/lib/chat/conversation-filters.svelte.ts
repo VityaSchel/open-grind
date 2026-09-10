@@ -1,34 +1,41 @@
+import {
+	type ConversationFilterValues,
+	defaultConversationFilters,
+} from "$lib/model/messaging/conversation-filters";
+import { deepEqual } from "$lib/util/deep-equal";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { Conversation } from "$lib/model/messaging/conversations";
 
-export const CONVERSATION_FILTER_KEYS = ["favorites"] as const;
-
-export type ConversationFilterKey = (typeof CONVERSATION_FILTER_KEYS)[number];
-
 export function inboxFilterRequest(
-	active: ConversationFilterKey[],
+	values: ConversationFilterValues,
 ): InboxFilterRequest | null {
-	if (active.length === 0) return null;
+	if (deepEqual(values, defaultConversationFilters)) return null;
 	return {
-		unreadOnly: false,
+		unreadOnly: values.unread,
 		chemistryOnly: false,
-		favoritesOnly: active.includes("favorites"),
-		rightNowOnly: false,
-		onlineNowOnly: false,
-		distanceMeters: null,
-		positions: [],
+		favoritesOnly: values.favorites,
+		rightNowOnly: values.rightNow,
+		onlineNowOnly: values.online,
+		distanceMeters: values.distanceMetres,
+		positions: [...values.positions],
 	};
 }
 
 export class ConversationFilters {
-	active = $state<ConversationFilterKey[]>([]);
+	value = $state<ConversationFilterValues>({ ...defaultConversationFilters });
 
-	set(active: ConversationFilterKey[]): boolean {
-		const unchanged =
-			active.length === this.active.length &&
-			active.every((key) => this.active.includes(key));
-		if (unchanged) return false;
-		this.active = active;
+	get request(): InboxFilterRequest | null {
+		return inboxFilterRequest(this.value);
+	}
+
+	get filtered(): boolean {
+		return this.request !== null;
+	}
+
+	set(values: Partial<ConversationFilterValues>): boolean {
+		const merged = { ...this.value, ...values };
+		if (deepEqual(this.value, merged)) return false;
+		this.value = merged;
 		return true;
 	}
 }

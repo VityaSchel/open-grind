@@ -52,6 +52,20 @@ export function conversation(
 	} as unknown as Conversation;
 }
 
+export function partialConversation(entry: Conversation): Conversation {
+	return {
+		type: "partial_conversation_v1",
+		data: {
+			...entry.data,
+			muted: false,
+			pinned: false,
+			favorite: false,
+			rightNow: "NOT_ACTIVE",
+			hasUnreadThrob: false,
+		},
+	};
+}
+
 export function incomingMessage(
 	conversationId: string,
 	timestamp: number,

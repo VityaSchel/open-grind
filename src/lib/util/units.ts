@@ -5,7 +5,8 @@ export const unitSystemSchema = z.enum(["metric", "imperial"]);
 export type UnitSystem = z.infer<typeof unitSystemSchema>;
 
 const FEET_PER_METRE = 3.28084;
-const METRES_PER_MILE = 1609.344;
+export const METRES_PER_MILE = 1609.344;
+export const METRES_PER_KILOMETRE = 1000;
 const INCHES_PER_CM = 0.3937007874;
 const POUNDS_PER_KG = 2.2046226218;
 
@@ -20,10 +21,10 @@ export function formatDistance(
 		return `${(distanceMetres / METRES_PER_MILE).toFixed(1)} mi`;
 	}
 
-	if (distanceMetres < 1000) {
+	if (distanceMetres < METRES_PER_KILOMETRE) {
 		return `${Math.round(distanceMetres)} m`;
 	}
-	return `${(distanceMetres / 1000).toFixed(1)} km`;
+	return `${(distanceMetres / METRES_PER_KILOMETRE).toFixed(1)} km`;
 }
 
 export function formatHeight(heightCm: number, units: UnitSystem): string {

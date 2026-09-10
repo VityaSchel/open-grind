@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { SlidersHorizontalIcon } from "phosphor-svelte";
 
+	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { gridState } from "$lib/grid/grid-state.svelte";
@@ -26,20 +27,15 @@
 >
 	<SlidersHorizontalIcon />
 </Button>
-<Button
-	variant="secondary"
-	onclick={() => (openFilters.age = true)}
-	class={{ "bg-white text-popover hover:bg-neutral-200": ageEnabled }}
->
+<QuickFilterButton active={ageEnabled} onclick={() => (openFilters.age = true)}>
 	Age
-</Button>
-<Button
-	variant="secondary"
+</QuickFilterButton>
+<QuickFilterButton
+	active={positionEnabled}
 	onclick={() => (openFilters.position = true)}
-	class={{ "bg-white text-popover hover:bg-neutral-200": positionEnabled }}
 >
 	Position
-</Button>
+</QuickFilterButton>
 <ToggleGroup.Root
 	type="multiple"
 	variant="default"

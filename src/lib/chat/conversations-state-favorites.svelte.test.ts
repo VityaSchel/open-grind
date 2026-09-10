@@ -44,6 +44,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 }));
 
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
+import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -154,7 +155,7 @@ describe("inbox favorites filter", () => {
 		await settled(state);
 		expect(loaded(state)).toEqual(["a:1", "b:2"]);
 
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 
 		expect(getConversationsMock).toHaveBeenLastCalledWith({
@@ -163,7 +164,7 @@ describe("inbox favorites filter", () => {
 		});
 		expect(loaded(state)).toEqual(["a:1"]);
 
-		state.setFilters([]);
+		state.setFilters(defaultConversationFilters);
 		await settled(state);
 
 		expect(getConversationsMock).toHaveBeenLastCalledWith({
@@ -180,7 +181,7 @@ describe("inbox favorites filter", () => {
 			onIncomingMessage: vi.fn(),
 		});
 		await settled(state);
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 		expect(loaded(state)).toEqual(["a:1"]);
 		getConversationsMock.mockClear();
@@ -213,7 +214,7 @@ describe("inbox favorites filter", () => {
 			onIncomingMessage: vi.fn(),
 		});
 		await settled(state);
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 
 		mergeProfileEditIntoCaches({
@@ -243,7 +244,7 @@ describe("inbox favorites filter", () => {
 			onIncomingMessage: vi.fn(),
 		});
 		await settled(state);
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 		expect(loaded(state)).toEqual(["a:1"]);
 
@@ -269,7 +270,7 @@ describe("inbox favorites filter", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage: vi.fn(),
 		});
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 		expect(loaded(state)).toEqual(["a:1"]);
 
@@ -290,7 +291,7 @@ describe("inbox favorites filter", () => {
 			ourProfileId: OUR_ID,
 			onIncomingMessage: vi.fn(),
 		});
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 
 		first.resolve({
 			entries: [
@@ -333,7 +334,7 @@ describe("inbox favorites filter", () => {
 			onIncomingMessage: vi.fn(),
 		});
 		await settled(state);
-		state.setFilters(["favorites"]);
+		state.setFilters({ favorites: true });
 		await settled(state);
 		expect(state.nextPage).toBe(2);
 

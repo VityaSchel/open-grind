@@ -14,10 +14,10 @@
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 	import Conversation from "./Conversation.svelte";
-	import ConversationsFilters from "./ConversationsFilters.svelte";
 	import ConversationsPagingTail from "./ConversationsPagingTail.svelte";
 	import ConversationsSelectionBar from "./ConversationsSelectionBar.svelte";
 	import DeleteConversationsDialog from "./DeleteConversationsDialog.svelte";
+	import ConversationsFilters from "./filters/ConversationsFilters.svelte";
 	import LazyConversation from "./LazyConversation.svelte";
 
 	const EAGER_COUNT = 10;
@@ -221,7 +221,7 @@
 						paging={conversations.paging}
 						hasMore={conversations.nextPage !== null}
 						listEmpty={conversations.entries.length === 0}
-						filtered={conversations.filters.active.length > 0}
+						filtered={conversations.filters.filtered}
 					/>
 				</div>
 			{/if}
@@ -237,7 +237,7 @@
 		<ScrollToTopButton {container} class="bottom-(--nav-clear)" />
 		<ConversationsFilters
 			filters={conversations.filters}
-			onchange={(active) => conversations.setFilters(active)}
+			onchange={(values) => conversations.setFilters(values)}
 			inert={selecting}
 		/>
 	</div>

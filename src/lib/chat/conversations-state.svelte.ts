@@ -9,8 +9,14 @@ import {
 	setConversationPinned,
 } from "$lib/api/messaging/conversations";
 import { onProfileEdit } from "$lib/api/users/profiles";
+import { RememberedConversationFlags } from "$lib/chat/conversation-flags";
+import { sortConversations } from "$lib/chat/conversation-order";
 import { InboxViewedMarker } from "$lib/chat/inbox-last-viewed.svelte";
 import { InboxPaging } from "$lib/chat/inbox-paging.svelte";
+import {
+	type ConversationFlagField,
+	mergeConversation,
+} from "$lib/chat/merge-conversation";
 import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
@@ -20,14 +26,13 @@ import {
 	chatV1MessageSentEventSchema,
 	ws,
 } from "$lib/ws.svelte";
+import type { ConversationFilterValues } from "$lib/model/messaging/conversation-filters";
 import type { Conversation } from "$lib/model/messaging/conversations";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import type { CachedConversation } from "./cached-conversation";
 import {
 	applyFavoriteEdit,
-	type ConversationFilterKey,
 	ConversationFilters,
-	inboxFilterRequest,
 } from "./conversation-filters.svelte";
 import { fetchConversationWindow } from "./conversation-window";
 import { Drafts } from "./drafts.svelte";
@@ -38,8 +43,6 @@ import { SeenMessages } from "./seen-messages";
 import { UnreadWhileMissing } from "./unread-while-missing";
 
 const singleColumnLayout = below("split");
-
-type OptimisticFlagField = "pinned" | "muted";
 
 export type IncomingMessageHandler = (incoming: {
 	message: ApiResponseMessage;
@@ -68,7 +71,8 @@ class ConversationsState {
 	#messageCache = new Map<string, CachedConversation>();
 	#unsubscribeReconcile: () => void;
 	#destroyed = false;
-	#pendingFlags = new PendingFlags<OptimisticFlagField>();
+	#pendingFlags = new PendingFlags<ConversationFlagField>();
+	#rememberedFlags = new RememberedConversationFlags();
 	#pendingDeletes = new PendingDeletes();
 	#seenMessages = new SeenMessages();
 	#unreadWhileMissing = new UnreadWhileMissing();
@@ -138,8 +142,8 @@ class ConversationsState {
 		this.#wsPromises = [];
 	}
 
-	setFilters(active: ConversationFilterKey[]): void {
-		if (this.filters.set(active)) this.retry();
+	setFilters(values: Partial<ConversationFilterValues>): void {
+		if (this.filters.set(values)) this.retry();
 	}
 
 	async #handleMessageSent(message: ApiResponseMessage): Promise<void> {
@@ -211,7 +215,7 @@ class ConversationsState {
 			const { fetched, oldestFetchedTs, reachedEnd, nextPage } =
 				await fetchConversationWindow({
 					oldestLoadedTs,
-					filters: inboxFilterRequest(this.filters.active),
+					filters: this.filters.request,
 				});
 			if (this.#fetches.isStale(fetchEpoch)) return;
 			this.nextPage = reachedEnd ? null : nextPage;
@@ -293,7 +297,7 @@ class ConversationsState {
 		try {
 			const result = await getConversations({
 				page: 1,
-				filters: inboxFilterRequest(this.filters.active),
+				filters: this.filters.request,
 			});
 			if (this.#fetches.isStale(fetchEpoch)) return true;
 			for (const incoming of result.entries) {
@@ -323,7 +327,7 @@ class ConversationsState {
 		const fetchEpoch = this.#fetches.claim();
 		const result = await getConversations({
 			page,
-			filters: inboxFilterRequest(this.filters.active),
+			filters: this.filters.request,
 		});
 		if (this.#fetches.isStale(fetchEpoch)) return;
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local lookup, never mutated after construction
@@ -461,7 +465,7 @@ class ConversationsState {
 		errorLabel,
 	}: {
 		conversationIds: string[];
-		field: OptimisticFlagField;
+		field: ConversationFlagField;
 		value: boolean;
 		request: (conversationId: string) => Promise<unknown>;
 		errorLabel: string;
@@ -612,23 +616,19 @@ class ConversationsState {
 		existing: Conversation;
 		incoming: Conversation;
 	}): void {
-		const { unreadCount, ...data } = incoming.data;
-		for (const field of this.#pendingFlags.fields(
-			incoming.data.conversationId,
-		)) {
-			data[field] = existing.data[field];
-		}
-		Object.assign(existing.data, data);
-		if (incoming.data.conversationId !== this.#activeConversationId) {
-			existing.data.unreadCount = unreadCount;
-		}
+		mergeConversation({
+			existing,
+			incoming,
+			pendingFlags: this.#pendingFlags.fields(
+				incoming.data.conversationId,
+			),
+			keepUnreadCount: this.#isActive(incoming.data.conversationId),
+		});
 	}
 
 	#sortEntries(): void {
-		this.entries = this.entries.toSorted(
-			(a, b) =>
-				Number(b.data.pinned) - Number(a.data.pinned) ||
-				b.data.lastActivityTimestamp - a.data.lastActivityTimestamp,
+		this.entries = sortConversations(
+			this.#rememberedFlags.applyTo(this.entries),
 		);
 	}
 

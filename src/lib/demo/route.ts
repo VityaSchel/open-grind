@@ -3,6 +3,7 @@ import {
 	albumUnshareRequestSchema,
 } from "$lib/model/messaging/albums";
 import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
+import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import { demoMeProfileId } from "./config";
 import {
@@ -203,11 +204,10 @@ export function demoRoute({
 		}
 	}
 	if (method === "POST" && rawPath === "/v4/inbox") {
-		const filters = body as { favoritesOnly?: boolean } | undefined;
 		return ok(
 			demoConversations({
 				page: num(params.get("page")) ?? 1,
-				favoritesOnly: filters?.favoritesOnly ?? false,
+				filters: (body as Partial<InboxFilterRequest>) ?? {},
 			}),
 		);
 	}
