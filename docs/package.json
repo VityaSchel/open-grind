@@ -23,6 +23,7 @@
 		"@iconify/types": "^2.0.0",
 		"@iconify/utils": "^3.1.4",
 		"@types/bun": "latest",
+		"@types/markdown-it-footnote": "^3.0.4",
 		"gh-pages": "^6.3.0",
 		"prettier": "^3.8.4",
 		"vitepress": "^2.0.0-alpha.17"
@@ -38,5 +39,8 @@
 	},
 	"patchedDependencies": {
 		"vitepress@2.0.0-alpha.17": "patches/vitepress@2.0.0-alpha.17.patch"
+	},
+	"dependencies": {
+		"markdown-it-footnote": "^4.0.0"
 	}
 }

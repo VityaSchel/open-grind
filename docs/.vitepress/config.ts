@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitepress";
+import footnote from "markdown-it-footnote";
 
 import { icons } from "./icons";
 
@@ -88,6 +89,7 @@ export default defineConfig({
 							link: "/guides/sign-in-with-facebook",
 						},
 						{ text: "FAQ", link: "/guides/faq" },
+						{ text: "Grindr API bypasses", link: "/guides/bypasses" },
 					],
 				},
 				{
@@ -153,4 +155,10 @@ export default defineConfig({
 		plugins: [icons()],
 		esbuild: { legalComments: "inline" },
 	},
+
+	markdown: {
+		config: (md) => {
+			md.use(footnote)
+		}
+	}
 });
