@@ -185,6 +185,24 @@ describe("SessionErrorAlert", () => {
 		expect(toastErrorMock).toHaveBeenCalled();
 	});
 
+	it("raises a dialog for a refresh Grindr itself refused", async () => {
+		sessionErrorState.open = false;
+		render(SessionErrorAlert);
+
+		emit("auth:session-error", {
+			message: "Could not refresh the session",
+			unauthorized: false,
+			kind: "SessionStale",
+			attempts: 3,
+			transient: true,
+		});
+		await settle();
+
+		expect(sessionErrorState.open).toBe(true);
+		expect(screen.getByText("Grindr refused your session")).toBeTruthy();
+		expect(toastErrorMock).not.toHaveBeenCalled();
+	});
+
 	it("closes on a refresh that succeeds", async () => {
 		callMethodMock.mockResolvedValue({ profileId: 1, restriction: null });
 		render(SessionErrorAlert);

@@ -76,6 +76,7 @@ describe("asAppError", () => {
 		],
 		["RateLimited", "Grindr is rate limiting us"],
 		["NotLoggedIn", "You're signed out"],
+		["SessionStale", "Couldn't refresh your session"],
 	])("says what %s means without a message to quote", (kind, expected) => {
 		expect(asAppError({ kind })?.prettyMessage).toBe(expected);
 	});

@@ -7,6 +7,7 @@ export type SessionErrorKind =
 	| "NetworkBlocked"
 	| "Unauthorized"
 	| "Auth"
+	| "SessionStale"
 	| "Api"
 	| "Banned"
 	| "NotLoggedIn";

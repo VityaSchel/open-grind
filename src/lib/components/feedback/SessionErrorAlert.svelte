@@ -34,6 +34,7 @@
 				"NetworkBlocked",
 				"Unauthorized",
 				"Auth",
+				"SessionStale",
 				"Api",
 				"Banned",
 				"NotLoggedIn",
@@ -97,6 +98,7 @@
 				};
 			case "Api":
 			case "Auth":
+			case "SessionStale":
 				return {
 					title: "Grindr refused your session",
 					description:

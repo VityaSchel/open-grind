@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ApiError } from "$lib/api/api-error";
+	import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
 	import { promptCopyError } from "$lib/api/error-copy";
 	import { Button } from "$lib/components/ui/button";
 
@@ -15,23 +15,24 @@
 		buttonVariant?: import("$lib/components/ui/button").ButtonVariant;
 	} = $props();
 
+	const kindMessages: Partial<Record<ApiErrorKind, string>> = {
+		RequestBlocked: "Grindr is blocking your requests",
+		NetworkBlocked:
+			"Something blocked the request before it reached Grindr",
+		Connect: "Couldn't connect to Grindr",
+		Http: "Couldn't reach the server",
+		SessionStale: "Couldn't refresh your session",
+	};
+
 	const apiError = $derived(error instanceof ApiError ? error : null);
 	const retryable = $derived(apiError?.retryable ?? false);
-	const message = $derived.by(() => {
-		if (apiError?.kind === "RequestBlocked") {
-			return "Grindr is blocking your requests";
-		}
-		if (apiError?.kind === "NetworkBlocked") {
-			return "Something blocked the request before it reached Grindr";
-		}
-		if (!retryable) {
-			return "Something went wrong";
-		}
-		if (apiError?.kind === "Http") {
-			return "Couldn't reach the server";
-		}
-		return "The server ran into a problem";
-	});
+	const kindMessage = $derived(
+		apiError?.kind ? kindMessages[apiError.kind] : undefined,
+	);
+	const fallbackMessage = $derived(
+		retryable ? "The server ran into a problem" : "Something went wrong",
+	);
+	const message = $derived(kindMessage ?? fallbackMessage);
 </script>
 
 <div class={["flex flex-col items-center gap-2 p-4", className]}>

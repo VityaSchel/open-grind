@@ -4,6 +4,7 @@ export const apiErrorKinds = [
 	"Auth",
 	"Media",
 	"NotLoggedIn",
+	"SessionStale",
 	"Api",
 	"Unauthorized",
 	"Banned",
@@ -38,6 +39,7 @@ export class ApiError extends Error {
 	get retryable(): boolean {
 		if (this.kind === "Http" || this.kind === "Connect") return true;
 		if (this.kind === "Auth" || this.kind === "Unauthorized") return true;
+		if (this.kind === "SessionStale") return true;
 		if (this.kind === "RequestBlocked") return true;
 		if (this.kind === "NetworkBlocked") return true;
 		if (this.response !== null) {

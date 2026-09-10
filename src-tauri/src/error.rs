@@ -41,6 +41,7 @@ pub enum AppError {
 	Auth(String),
 	Media(String),
 	NotLoggedIn,
+	SessionStale,
 	Api { code: i32, message: String },
 	Unauthorized { code: i32, message: String },
 	Banned(BanInfo),
@@ -59,6 +60,9 @@ impl fmt::Display for AppError {
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
 			AppError::Media(msg) => write!(f, "Media error: {msg}"),
 			AppError::NotLoggedIn => write!(f, "Not logged in"),
+			AppError::SessionStale => {
+				write!(f, "Could not refresh the session")
+			}
 			AppError::Api { code, message } => {
 				write!(f, "API error {code}: {message}")
 			}
@@ -111,15 +115,35 @@ impl From<grindr::GrindrError> for AppError {
 	}
 }
 
+enum SessionState {
+	SignedOut,
+	AwaitingFirstToken,
+	Authorized,
+}
+
+fn session_state(client: &grindr::GrindrClient) -> SessionState {
+	match client.session_receiver().borrow().as_ref() {
+		None => SessionState::SignedOut,
+		Some(session) if session.token.is_none() => {
+			SessionState::AwaitingFirstToken
+		}
+		Some(_) => SessionState::Authorized,
+	}
+}
+
 impl AppError {
 	pub fn from_client_error(
 		error: grindr::GrindrError,
 		client: &grindr::GrindrClient,
 	) -> Self {
-		let signed_in = client.session_receiver().borrow().is_some();
-		match AppError::from(error) {
-			AppError::Auth(_) if !signed_in => AppError::NotLoggedIn,
-			mapped => mapped,
+		match (AppError::from(error), session_state(client)) {
+			(AppError::Auth(_), SessionState::SignedOut) => {
+				AppError::NotLoggedIn
+			}
+			(AppError::Auth(_), SessionState::AwaitingFirstToken) => {
+				AppError::SessionStale
+			}
+			(mapped, _) => mapped,
 		}
 	}
 }
@@ -166,27 +190,32 @@ mod tests {
 		assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "NotLoggedIn");
 	}
 
+	fn signed_in_client(
+		token: Option<grindr::SessionToken>,
+	) -> grindr::GrindrClient {
+		grindr::GrindrClient::new(
+			grindr::DeviceInfo::generate(),
+			Some(grindr::Session {
+				credentials: grindr::Credentials {
+					email: "user@example.com".to_owned(),
+					profile_id: Some("42".to_owned()),
+					auth_token: "auth-token".to_owned(),
+					kind: grindr::SessionKind::Email,
+					third_party_user_id: None,
+				},
+				token,
+			}),
+		)
+		.unwrap()
+	}
+
 	#[test]
 	fn auth_failure_with_a_session_stays_an_auth_error() {
-		let session = grindr::Session {
-			credentials: grindr::Credentials {
-				email: "user@example.com".to_owned(),
-				profile_id: Some("42".to_owned()),
-				auth_token: "auth-token".to_owned(),
-				kind: grindr::SessionKind::Email,
-				third_party_user_id: None,
-			},
-			token: Some(grindr::SessionToken {
-				session_id: "session-token".to_owned(),
-				expires_at: 9_999_999_999,
-				restriction: None,
-			}),
-		};
-		let client = grindr::GrindrClient::new(
-			grindr::DeviceInfo::generate(),
-			Some(session),
-		)
-		.unwrap();
+		let client = signed_in_client(Some(grindr::SessionToken {
+			session_id: "session-token".to_owned(),
+			expires_at: 9_999_999_999,
+			restriction: None,
+		}));
 
 		let app = AppError::from_client_error(
 			grindr::GrindrError::Auth("device key rejected".to_owned()),
@@ -194,6 +223,19 @@ mod tests {
 		);
 
 		assert!(matches!(app, AppError::Auth(_)));
+	}
+
+	#[test]
+	fn auth_failure_before_the_first_token_is_a_stale_session() {
+		let client = signed_in_client(None);
+
+		let app = AppError::from_client_error(
+			grindr::GrindrError::Auth("not logged in".to_owned()),
+			&client,
+		);
+
+		assert!(matches!(app, AppError::SessionStale));
+		assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "SessionStale");
 	}
 
 	#[test]
