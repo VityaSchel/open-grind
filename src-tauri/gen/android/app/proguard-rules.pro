@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Reached only from wry over JNI, so R8 cannot see the call and strips it
+-keep class org.opengrind.RustWebView {
+  void clearAllBrowsingData();
+}
