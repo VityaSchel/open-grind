@@ -64,8 +64,8 @@ export default defineConfig({
 
 		nav: [
 			{ text: "Home", link: "/" },
-			{ text: "FAQ", link: "https://opengrind.org/guides/faq" },
-			{ text: "Guides", link: "https://opengrind.org/guides/features/unlimited-profiles" },
+			{ text: "FAQ", link: "/guides/faq" },
+			{ text: "Guides", link: "/guides/features/unlimited-profiles" },
 			{ text: "Grindr API", link: "/grindr-api" },
 		],
 
