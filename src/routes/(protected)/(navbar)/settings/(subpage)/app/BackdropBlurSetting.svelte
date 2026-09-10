@@ -31,6 +31,13 @@
 	const position = $derived(BACKDROP_BLUR_QUALITY_ORDER.indexOf(quality));
 	const automatic = $derived(supported && chosen === null);
 
+	const lastStep = BACKDROP_BLUR_QUALITY_ORDER.length - 1;
+
+	function stepCenter(step: number) {
+		const travel = `(100% - var(--slider-thumb-size))`;
+		return `calc(var(--slider-thumb-size) / 2 + ${step} * ${travel} / ${lastStep})`;
+	}
+
 	function choose(next: number) {
 		const backdropBlurQuality =
 			BACKDROP_BLUR_QUALITY_ORDER[next] ??
@@ -54,20 +61,25 @@
 		type="single"
 		class="w-full"
 		min={0}
-		max={BACKDROP_BLUR_QUALITY_ORDER.length - 1}
+		max={lastStep}
 		step={1}
 		disabled={!preferencesLoaded() || !supported}
 		thumbLabels={["Background blur"]}
 		thumbValueTexts={[BACKDROP_BLUR_QUALITY_LABELS[quality]]}
 		bind:value={() => position, choose}
 	/>
-	<div aria-hidden="true" class="flex w-full justify-between text-xs">
-		{#each BACKDROP_BLUR_QUALITY_ORDER as option (option)}
+	<div aria-hidden="true" class="relative h-4 w-full text-xs">
+		{#each BACKDROP_BLUR_QUALITY_ORDER as option, step (option)}
 			<span
-				class={{
-					"font-medium text-foreground": option === quality,
-					"text-muted-foreground": option !== quality,
-				}}
+				data-slot="blur-step-label"
+				class={[
+					"absolute -translate-x-1/2 whitespace-nowrap",
+					{
+						"font-medium text-foreground": option === quality,
+						"text-muted-foreground": option !== quality,
+					},
+				]}
+				style:left={stepCenter(step)}
 			>
 				{BACKDROP_BLUR_QUALITY_LABELS[option]}
 			</span>

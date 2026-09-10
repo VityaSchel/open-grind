@@ -89,6 +89,25 @@ function blockEnd(css: string): number {
 
 const BLUR_ONSET_PERCENT = 10;
 
+const DIRECTIONS = ["bottomToTop", "topToBottom"] as const;
+
+function minRule(selector: string) {
+	const parts = selector
+		.split(/\s+/)
+		.map((part) => part.replace(/[.[\]"]/g, (c) => "\\" + c))
+		.join("\\s+");
+	const rule = new RegExp(
+		`:root\\[data-backdrop-blur="min"\\]\\s+${parts} \\{([^}]*)\\}`,
+	);
+	return rule.exec(layout)?.[1] ?? "";
+}
+
+function minPlane(direction: (typeof DIRECTIONS)[number]) {
+	return minRule(
+		`.pblur[data-pblur-direction="${direction}"] .pblur-layer[data-pblur-layer="0"]`,
+	);
+}
+
 describe("progressive blur layer map", () => {
 	it("keeps max identical to the table shipped before the setting existed", () => {
 		expect(layerTable("max")).toEqual([
@@ -142,12 +161,41 @@ describe("progressive blur layer map", () => {
 		]);
 	});
 
-	it("collapses to a single unmasked plane at min", () => {
+	it("collapses to a single plane at min", () => {
 		expect(layerTable("min")).toEqual([
 			{ index: 0, blur: 32, stops: undefined },
 		]);
-		expect(layout).toContain(
-			':root[data-backdrop-blur="min"] .pblur-layer[data-pblur-layer="0"] {\n\tdisplay: block;\n\t--pblur-blur: blur(32px);\n\tmask-image: none;',
+	});
+
+	it("overhangs min's plane past the edge content scrolls in from, since a backdrop-filter synthesizes every sample beyond its own box", () => {
+		expect(minPlane("bottomToTop")).toContain(
+			"top: calc(-1 * var(--pblur-overhang))",
+		);
+		expect(minPlane("topToBottom")).not.toContain("top:");
+		for (const direction of DIRECTIONS) {
+			expect(minPlane(direction)).toContain(
+				"height: calc(100% + var(--pblur-overhang))",
+			);
+		}
+	});
+
+	it("hard-stops min's mask at the overhang, so the band itself stays fully opaque", () => {
+		for (const direction of DIRECTIONS) {
+			const stops = [
+				...minPlane(direction).matchAll(
+					/(transparent|black) (var\(--pblur-overhang\))/g,
+				),
+			].map(([, color, position]) => `${color}@${position}`);
+			expect(stops).toEqual([
+				"transparent@var(--pblur-overhang)",
+				"black@var(--pblur-overhang)",
+			]);
+		}
+	});
+
+	it("keeps min's overhang out of hit testing, since it covers content above the band", () => {
+		expect(minRule('.pblur-layer[data-pblur-layer="0"]')).toContain(
+			"pointer-events: none",
 		);
 	});
 
@@ -263,6 +311,29 @@ describe("backdrop token map", () => {
 		for (const token of tokens) {
 			expect(fallback).toContain(`--bd-${token}: none;`);
 		}
+	});
+
+	it("gives every fixed bar the same clearance from page content, so only the mode decides it", () => {
+		const utility =
+			/@utility (pt-header-clear-\*|pb-nav-clear) \{([^}]*)\}/g;
+		const bodies = [...layout.matchAll(utility)].map(([, name, body]) => [
+			name,
+			body ?? "",
+		]);
+		expect(new Set(bodies.map(([name]) => name))).toEqual(
+			new Set(["pb-nav-clear", "pt-header-clear-*"]),
+		);
+		for (const [name, body] of bodies) {
+			expect(body, name).toContain("var(--bar-content-gap)");
+		}
+	});
+
+	it("declares the clearance on the same element the mode attribute lands on, or body would shadow it", () => {
+		expect(tokenBlock(null)).toContain("--bar-content-gap: 0px");
+		expect(tokenBlock("min")).toContain("--bar-content-gap: 0.75rem");
+		const body = /^body \{\n([\s\S]*?)^\}/m.exec(layout)?.[1] ?? "";
+		expect(body).not.toBe("");
+		expect(body).not.toContain("--bar-content-gap");
 	});
 
 	it("turns every token off at off", () => {

@@ -64,9 +64,7 @@ let installed = false;
 export function installScrollGestureBridge(): void {
 	if (installed) return;
 	installed = true;
-	void listen<ScrollGestureEvent>("scroll:gesture", ({ payload }) => {
-		if (import.meta.env.DEV && payload.state !== undefined)
-			console.log(`[scroll-gesture] ${payload.state}`);
-		scrollGesture.ingest(payload);
-	}).catch(console.error);
+	void listen<ScrollGestureEvent>("scroll:gesture", ({ payload }) =>
+		scrollGesture.ingest(payload),
+	).catch(console.error);
 }

@@ -3,7 +3,9 @@ import { expect, type Page, test } from "@playwright/test";
 import { installTauriShim } from "./support/app";
 
 const PINNED_QUALITY = "max";
-const FIRST_ROUTE_COMPILE_MS = 30_000;
+const FIRST_ROUTE_COMPILE_MS = 120_000;
+
+test.describe.configure({ timeout: 240_000 });
 
 async function openWithBlurReady(page: Page, route: string) {
 	await installTauriShim(page);
@@ -64,10 +66,24 @@ test("one root attribute drives every progressive blur mode", async ({
 	await setQuality(page, "min");
 	expect(await visibleLayerBlurs(page)).toEqual(["blur(32px)"]);
 	const plane = page.locator(".pblur").first();
-	await expect(plane.locator(".pblur-layer[data-pblur-layer='0']")).toHaveCSS(
-		"mask-image",
-		"none",
-	);
+	const overhang = await plane.evaluate((band) => {
+		const layer = band.querySelector<HTMLElement>(
+			'.pblur-layer[data-pblur-layer="0"]',
+		)!;
+		const bandBox = band.getBoundingClientRect();
+		const layerBox = layer.getBoundingClientRect();
+		const inner =
+			band.getAttribute("data-pblur-direction") === "bottomToTop"
+				? { grown: bandBox.top - layerBox.top, probe: layerBox.top + 8 }
+				: {
+						grown: layerBox.bottom - bandBox.bottom,
+						probe: layerBox.bottom - 8,
+					};
+		const hit = document.elementFromPoint(layerBox.left + 8, inner.probe);
+		return { grown: Math.round(inner.grown), swallowsInput: hit === layer };
+	});
+	expect(overhang.grown).toBeGreaterThan(0);
+	expect(overhang.swallowsInput).toBe(false);
 	await expect(plane.locator(".pblur-bg")).toHaveCSS(
 		"background-image",
 		"none",
@@ -121,4 +137,32 @@ test("the settings slider restyles the app without a reload", async ({
 		"medium",
 	);
 	expect(await visibleLayerBlurs(page)).toHaveLength(5);
+});
+
+test("every step label sits on its own thumb position", async ({ page }) => {
+	await openWithBlurReady(page, "/settings/app");
+
+	const slider = page.getByRole("slider", { name: "Background blur" });
+	const lastStep = Number(await slider.getAttribute("aria-valuemax"));
+	await slider.focus();
+	for (let step = 0; step < lastStep; step += 1)
+		await page.keyboard.press("ArrowLeft");
+
+	const centerOf = (selector: string) =>
+		page.evaluate((target) => {
+			const root = document
+				.querySelector('[data-slot="slider"]')!
+				.getBoundingClientRect();
+			const box = document.querySelector(target)!.getBoundingClientRect();
+			return Math.round(box.left + box.width / 2 - root.left);
+		}, selector);
+
+	for (let step = 0; step <= lastStep; step += 1) {
+		const thumb = await centerOf('[data-slot="slider-thumb"]');
+		const label = await centerOf(
+			`[data-slot="blur-step-label"]:nth-child(${step + 1})`,
+		);
+		expect(label, `label ${step} against its thumb`).toBe(thumb);
+		if (step < lastStep) await page.keyboard.press("ArrowRight");
+	}
 });

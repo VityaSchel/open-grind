@@ -56,6 +56,33 @@ describe("the desktop entry state", () => {
 		expect(desktopEntryAvailable()).toBe(false);
 	});
 
+	it("survives a platform that answers nothing, so the settings page still renders", async () => {
+		for (const answer of [null, undefined, "yes", 0]) {
+			vi.resetModules();
+			tauri.invoke.mockResolvedValue(answer);
+			const { hydrateDesktopEntryState, desktopEntryAvailable } =
+				await import("./desktop-entry.svelte");
+
+			await hydrateDesktopEntryState();
+
+			expect(desktopEntryAvailable()).toBe(false);
+		}
+	});
+
+	it("treats a half-filled answer as a missing capability", async () => {
+		tauri.invoke.mockResolvedValue({ installed: true });
+		const {
+			hydrateDesktopEntryState,
+			desktopEntryAvailable,
+			desktopEntryInstalled,
+		} = await import("./desktop-entry.svelte");
+
+		await hydrateDesktopEntryState();
+
+		expect(desktopEntryAvailable()).toBe(false);
+		expect(desktopEntryInstalled()).toBe(true);
+	});
+
 	it("probes once, not on every navigation", async () => {
 		backendReports(true, false);
 		const { hydrateDesktopEntryState } =

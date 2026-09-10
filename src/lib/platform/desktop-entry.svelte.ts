@@ -7,9 +7,15 @@ const unavailable: State = { available: false, installed: false };
 let state = $state<State>(unavailable);
 let hydrated = false;
 
+function toState(value: unknown): State {
+	if (typeof value !== "object" || value === null) return unavailable;
+	const { available, installed } = value as Partial<State>;
+	return { available: available === true, installed: installed === true };
+}
+
 async function read(): Promise<State> {
 	if (!isTauri()) return unavailable;
-	return invoke<State>("desktop_entry_state").catch(() => unavailable);
+	return toState(await invoke("desktop_entry_state").catch(() => null));
 }
 
 export async function hydrateDesktopEntryState(): Promise<void> {

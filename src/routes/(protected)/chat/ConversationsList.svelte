@@ -167,8 +167,9 @@
 			class={[
 				"flex min-h-0 flex-1 flex-col gap-1 overflow-auto overscroll-contain px-4",
 				{
-					"pt-15": !selecting,
-					"pt-(--selection-bar-height)": selecting,
+					"pt-header-clear-15": !selecting,
+					"pt-[calc(var(--selection-bar-height)+var(--bar-content-gap))]":
+						selecting,
 				},
 				className,
 			]}

@@ -159,6 +159,7 @@ body {
 	user-select: none;
 	-webkit-user-select: none;
 	--nav-height: 4rem;
+	--slider-thumb-size: 1.5rem;
 	--selection-bar-height: 4.75rem;
 	--content-pb: calc(var(--nav-height) + var(--safe-area-bottom));
 	--screen-safe: calc(
@@ -316,7 +317,10 @@ a {
 	padding-bottom: calc(0.5rem + var(--safe-area-bottom));
 }
 @utility pb-nav-clear {
-	padding-bottom: calc(0.5rem + var(--content-pb));
+	padding-bottom: calc(0.5rem + var(--content-pb) + var(--bar-content-gap));
+}
+@utility pt-header-clear-* {
+	padding-top: calc(--spacing(--value(integer)) + var(--bar-content-gap));
 }
 @utility max-h-photo {
 	max-height: min(70vh, 500px);
@@ -407,6 +411,7 @@ a {
 
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
 :root {
+	--bar-content-gap: 0px;
 	--bd-lens: blur(1px);
 	--bd-veil: blur(8px);
 	--bd-rail: blur(16px);
@@ -421,6 +426,7 @@ a {
 	--bd-rail: blur(12px);
 	--bd-panel: blur(16px);
 	--bd-chip: blur(24px);
+	--bar-content-gap: 0.75rem;
 }
 
 :root[data-backdrop-blur="off"] {
@@ -553,8 +559,31 @@ a {
 :root[data-backdrop-blur="min"] .pblur-layer[data-pblur-layer="0"] {
 	display: block;
 	--pblur-blur: blur(32px);
-	mask-image: none;
+	--pblur-overhang: 4rem;
+	pointer-events: none;
 	z-index: 10;
+}
+
+:root[data-backdrop-blur="min"]
+	.pblur[data-pblur-direction="bottomToTop"]
+	.pblur-layer[data-pblur-layer="0"] {
+	top: calc(-1 * var(--pblur-overhang));
+	height: calc(100% + var(--pblur-overhang));
+	mask-image: linear-gradient(
+		to bottom,
+		transparent var(--pblur-overhang),
+		black var(--pblur-overhang)
+	);
+}
+:root[data-backdrop-blur="min"]
+	.pblur[data-pblur-direction="topToBottom"]
+	.pblur-layer[data-pblur-layer="0"] {
+	height: calc(100% + var(--pblur-overhang));
+	mask-image: linear-gradient(
+		to top,
+		transparent var(--pblur-overhang),
+		black var(--pblur-overhang)
+	);
 }
 :root[data-backdrop-blur="min"] .pblur-bg {
 	background-image: none;
