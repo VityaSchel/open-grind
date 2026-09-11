@@ -31,6 +31,7 @@
 	import Socials from "./fields/Socials.svelte";
 	import Height from "./HeightWeightBodyType.svelte";
 	import ImageCarousel from "./ImageCarousel.svelte";
+	import NewBadge from "./NewBadge.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import type { ProfileState } from "./profile-state.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
@@ -75,6 +76,7 @@
 		onlineUntil,
 		seen,
 		distance,
+		isNew,
 		sexualPosition,
 		height,
 		weight,
@@ -127,13 +129,17 @@
 				</span>{/if}{#if age !== null}, {age}
 			{/if}
 		</h1>
-		<div class="mt-1 flex items-center gap-3 text-sm">
+		<div
+			data-slot="profile-status-row"
+			class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+		>
 			<OnlineStatus
 				onlineUntil={onlineUntil ?? null}
 				{seen}
 				self={ourProfile}
 			/>
 			<Distance {distance} />
+			<NewBadge {isNew} />
 		</div>
 		{#if sexualPosition !== null || height !== null || weight !== null || bodyType !== null}
 			<div class="mt-2 flex items-center gap-3 text-sm">
