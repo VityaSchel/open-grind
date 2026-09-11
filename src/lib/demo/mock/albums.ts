@@ -21,7 +21,51 @@ export function albumCoverUrl(albumId: number): string {
 	return picsum({ seed: `album-${albumId}-cover`, width: 300, height: 400 });
 }
 
-const ALBUMS_WITH_VIDEO = new Set([5001, 5004]);
+const FIRST_ALBUM_ID = 900;
+const demoSharedWithProfileId = 100001;
+
+const demoAlbumSeeds = [
+	{ albumName: "Weekend trip", sharedWith: [] as number[] },
+	{
+		albumName: "Gym progress",
+		hasVideo: true,
+		sharedWith: [demoSharedWithProfileId],
+	},
+	{ albumName: null, isShareable: false, sharedWith: [] as number[] },
+	{
+		albumName: "Studio",
+		sharedWith: [
+			demoSharedWithProfileId,
+			...Array.from({ length: 12 }, (_, index) => 100901 + index),
+		],
+	},
+];
+
+const albumNames = new Map<number, string | null>(
+	demoAlbumSeeds.map((seed, index) => [
+		FIRST_ALBUM_ID + index,
+		seed.albumName,
+	]),
+);
+
+const albumShares = new Map<number, Set<number>>(
+	demoAlbumSeeds.map((seed, index) => [
+		FIRST_ALBUM_ID + index,
+		new Set(seed.sharedWith),
+	]),
+);
+
+const deletedContentIds = new Set<number>();
+const deletedAlbumIds = new Set<number>();
+const contentOrder = new Map<number, number[]>();
+
+const videoSlotByAlbum = new Map<number, "first" | "last">([
+	[5001, "last"],
+	[5004, "last"],
+	...demoAlbumSeeds.flatMap<[number, "first"]>((seed, index) =>
+		seed.hasVideo ? [[FIRST_ALBUM_ID + index, "first"]] : [],
+	),
+]);
 
 export function demoAlbumContent(albumId: number) {
 	const count = 3 + (albumId % 3);
@@ -31,7 +75,11 @@ export function demoAlbumContent(albumId: number) {
 			width: 300,
 			height: 400,
 		});
-		const video = ALBUMS_WITH_VIDEO.has(albumId) && i === count - 1;
+		const videoSlot = videoSlotByAlbum.get(albumId);
+		const video =
+			videoSlot === "first"
+				? i === 0
+				: videoSlot === "last" && i === count - 1;
 		return {
 			contentId: albumId * 100 + i,
 			contentType: video ? "video/mp4" : "image/jpeg",
@@ -42,37 +90,61 @@ export function demoAlbumContent(albumId: number) {
 			processing: false,
 			rejectionId: null,
 		};
-	});
+	}).filter(({ contentId }) => !deletedContentIds.has(contentId));
+	const order = contentOrder.get(albumId);
+	if (order !== undefined) {
+		const position = new Map(order.map((id, index) => [id, index]));
+		content.sort(
+			(a, b) =>
+				(position.get(a.contentId) ?? order.length) -
+				(position.get(b.contentId) ?? order.length),
+		);
+	}
 	return {
 		albumId,
 		hasUnseenContent: false,
-		albumName: null,
+		albumName: albumNames.get(albumId) ?? null,
 		profileId: demoMeProfileId,
 		albumViewable: true,
-		sharedCount: 1,
+		sharedCount: albumShares.get(albumId)?.size ?? 0,
 		createdAt: localDateTime(NOW - 3 * DAY),
 		updatedAt: localDateTime(NOW - DAY),
 		content,
 	};
 }
 
-const FIRST_ALBUM_ID = 900;
-const demoSharedWithProfileId = 100001;
+export function demoRenameAlbum({
+	albumId,
+	albumName,
+}: {
+	albumId: number;
+	albumName: string | null;
+}): { albumId: number; albumName: string | null } {
+	albumNames.set(albumId, albumName);
+	return { albumId, albumName };
+}
 
-const demoAlbumSeeds = [
-	{ albumName: "Weekend trip" },
-	{ albumName: "Gym progress", hasVideo: true, shared: true },
-	{ albumName: null, isShareable: false },
-	{ albumName: "Studio", shared: true },
-];
+export function demoDeleteAlbumContent(contentId: number): void {
+	deletedContentIds.add(contentId);
+}
 
-const albumShares = new Map<number, Set<number>>(
-	demoAlbumSeeds.flatMap((seed, i) =>
-		seed.shared
-			? [[FIRST_ALBUM_ID + i, new Set([demoSharedWithProfileId])]]
-			: [],
-	),
-);
+export function demoReorderAlbumContent({
+	albumId,
+	contentIds,
+}: {
+	albumId: number;
+	contentIds: number[];
+}): void {
+	contentOrder.set(albumId, contentIds);
+}
+
+export function demoDeleteAlbum(albumId: number): void {
+	deletedAlbumIds.add(albumId);
+}
+
+export function demoAlbumExists(albumId: number): boolean {
+	return !deletedAlbumIds.has(albumId);
+}
 
 export function demoShareAlbum({
 	albumId,
@@ -104,21 +176,13 @@ export function demoAlbumShares(albumId: number): number[] {
 
 export function demoMyAlbums() {
 	return {
-		albums: demoAlbumSeeds.map((seed, i) => {
+		albums: demoAlbumSeeds.flatMap((seed, i) => {
 			const albumId = FIRST_ALBUM_ID + i;
-			const album = demoAlbumContent(albumId);
+			if (!demoAlbumExists(albumId)) return [];
 			return {
-				...album,
-				albumName: seed.albumName,
+				...demoAlbumContent(albumId),
 				version: 1,
 				isShareable: seed.isShareable ?? true,
-				sharedCount:
-					album.sharedCount + (albumShares.get(albumId)?.size ?? 0),
-				content: album.content.map((item, j) =>
-					seed.hasVideo && j === 0
-						? { ...item, contentType: "video/mp4" }
-						: item,
-				),
 			};
 		}),
 	};

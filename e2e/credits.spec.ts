@@ -14,8 +14,7 @@ const HEADINGS = [
 ];
 
 const rows = (page: Page) => page.locator('[data-slot="credit-row"]');
-const scroller = (page: Page) =>
-	page.locator('[data-slot="settings-scroller"]');
+const scroller = (page: Page) => page.locator('[data-slot="subpage-scroller"]');
 const scrollTop = (page: Page) =>
 	scroller(page).evaluate((el) => Math.round(el.scrollTop));
 

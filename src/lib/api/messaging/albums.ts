@@ -2,10 +2,13 @@ import z from "zod";
 
 import { fetchRest } from "$lib/api/transport";
 import {
+	type AlbumContentOrderRequest,
 	albumContentSchema,
 	albumDetailsSchema,
 	type AlbumExpirationType,
 	albumMinSchema,
+	type AlbumNameRequest,
+	albumNameResponseSchema,
 	type AlbumShareRequest,
 	albumSharesResponseSchema,
 	type AlbumUnshareRequest,
@@ -78,5 +81,58 @@ export async function unshareAlbum({
 				shareId: crypto.randomUUID(),
 			})),
 		} satisfies AlbumUnshareRequest,
+	}).then((res) => res.assertOk());
+}
+
+export async function createAlbum({
+	albumName = null,
+}: { albumName?: string | null } = {}) {
+	return await fetchRest("/v2/albums", {
+		method: "POST",
+		body: { albumName } satisfies AlbumNameRequest,
+	}).then((res) => res.jsonParsed(albumNameResponseSchema));
+}
+
+export async function renameAlbum({
+	albumId,
+	albumName,
+}: {
+	albumId: number;
+	albumName: string | null;
+}) {
+	return await fetchRest(`/v2/albums/${albumId}`, {
+		method: "PUT",
+		body: { albumName } satisfies AlbumNameRequest,
+	}).then((res) => res.jsonParsed(albumNameResponseSchema));
+}
+
+export async function deleteAlbum({ albumId }: { albumId: number }) {
+	await fetchRest(`/v1/albums/${albumId}`, { method: "DELETE" }).then((res) =>
+		res.assertOk(),
+	);
+}
+
+export async function deleteAlbumContent({
+	albumId,
+	contentId,
+}: {
+	albumId: number;
+	contentId: number;
+}) {
+	await fetchRest(`/v1/albums/${albumId}/content/${contentId}`, {
+		method: "DELETE",
+	}).then((res) => res.assertOk());
+}
+
+export async function reorderAlbumContent({
+	albumId,
+	contentIds,
+}: {
+	albumId: number;
+	contentIds: number[];
+}) {
+	await fetchRest(`/v1/albums/${albumId}/content/order`, {
+		method: "POST",
+		body: { contentIds } satisfies AlbumContentOrderRequest,
 	}).then((res) => res.assertOk());
 }

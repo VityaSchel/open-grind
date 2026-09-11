@@ -1,4 +1,6 @@
 import {
+	albumContentOrderRequestSchema,
+	albumNameRequestSchema,
 	albumShareRequestSchema,
 	albumUnshareRequestSchema,
 } from "$lib/model/messaging/albums";
@@ -13,8 +15,13 @@ import type { FavoriteNote } from "$lib/model/users/favorites";
 import { demoMeProfileId } from "./config";
 import {
 	demoAlbumContent,
+	demoAlbumExists,
 	demoAlbumShares,
+	demoDeleteAlbum,
+	demoDeleteAlbumContent,
 	demoMyAlbums,
+	demoRenameAlbum,
+	demoReorderAlbumContent,
 	demoShareAlbum,
 	demoUnshareAlbum,
 } from "./mock/albums";
@@ -285,8 +292,52 @@ export function demoRoute({
 		});
 		return ok({});
 	}
+	if (
+		method === "PUT" &&
+		segments[0] === "v2" &&
+		segments[1] === "albums" &&
+		segments.length === 3
+	) {
+		const { albumName } = albumNameRequestSchema.parse(body);
+		return ok(demoRenameAlbum({ albumId: Number(segments[2]), albumName }));
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments[3] === "content" &&
+		segments[4] === "order" &&
+		segments.length === 5
+	) {
+		const { contentIds } = albumContentOrderRequestSchema.parse(body);
+		demoReorderAlbumContent({ albumId: Number(segments[2]), contentIds });
+		return ok({});
+	}
+	if (
+		method === "DELETE" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments[3] === "content" &&
+		segments.length === 5
+	) {
+		demoDeleteAlbumContent(Number(segments[4]));
+		return ok({});
+	}
+	if (
+		method === "DELETE" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments.length === 3
+	) {
+		const albumId = Number(segments[2]);
+		if (!demoAlbumExists(albumId)) return { status: 403, body: null };
+		demoDeleteAlbum(albumId);
+		return ok({});
+	}
 	if (method === "GET" && segments[0] === "v2" && segments[1] === "albums") {
-		return ok(demoAlbumContent(Number(segments[2])));
+		const albumId = Number(segments[2]);
+		if (!demoAlbumExists(albumId)) return { status: 403, body: null };
+		return ok(demoAlbumContent(albumId));
 	}
 	if (method === "POST" && rawPath === "/v4/chat/message/send") {
 		return ok(demoSentMessage(body));

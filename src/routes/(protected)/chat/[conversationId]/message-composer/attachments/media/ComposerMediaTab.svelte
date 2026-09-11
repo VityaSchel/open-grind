@@ -10,13 +10,13 @@
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
 	import { asAppError } from "$lib/api/methods";
+	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
-	import SelectionGridTab from "../SelectionGridTab.svelte";
 	import type { TabSelection } from "../tabs";
 	import { mediaMessageDraft } from "./media-messages";
 	import MediaTile from "./MediaTile.svelte";
@@ -107,7 +107,7 @@
 	}
 </script>
 
-<SelectionGridTab
+<MediaGrid
 	items={media}
 	key={(item) => item.id}
 	empty={media?.length === 0 && uploadingCount === 0}
@@ -156,4 +156,4 @@
 			onclick={() => toggleSelected(item.id)}
 		/>
 	{/snippet}
-</SelectionGridTab>
+</MediaGrid>

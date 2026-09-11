@@ -10,41 +10,44 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
+	import {
+		albumDisplayName,
+		albumItemCountLabel,
+		isVideoContent,
+	} from "./album";
 
 	let {
 		album,
-		selected,
-		shared,
-		dimmed,
-		disabled,
-		clickable,
+		href,
+		selected = false,
+		shared = false,
+		shareLocked = false,
+		dimmed = false,
+		disabled = false,
+		clickable = true,
 		onclick,
 	}: {
 		album: MyAlbum;
-		selected: boolean;
-		shared: boolean;
-		dimmed: boolean;
-		disabled: boolean;
-		clickable: boolean;
-		onclick: () => void;
+		href?: string;
+		selected?: boolean;
+		shared?: boolean;
+		shareLocked?: boolean;
+		dimmed?: boolean;
+		disabled?: boolean;
+		clickable?: boolean;
+		onclick?: () => void;
 	} = $props();
 
 	const hasVideo = $derived(
-		album.content.some((item) => item.contentType.startsWith("video/")),
+		album.content.some((item) => isVideoContent(item.contentType)),
 	);
-</script>
-
-<button
-	type="button"
-	data-slot="album-tile"
-	class={[
+	const tileClass: import("svelte/elements").ClassValue = $derived([
 		"relative isolate flex aspect-(--photo-grid-aspect) items-end overflow-hidden transition-opacity",
 		{ "cursor-pointer": clickable, "opacity-50": dimmed },
-	]}
-	aria-pressed={selected}
-	{disabled}
-	{onclick}
->
+	]);
+</script>
+
+{#snippet body()}
 	<MediaImage
 		src={proxyMediaUrl(album.content[0]?.thumbUrl)}
 		loading="lazy"
@@ -57,7 +60,7 @@
 			class="min-w-0 bg-popover/20 scrim backdrop-filter-(--bd-chip)"
 		>
 			<span class="truncate font-semibold">
-				{album.albumName || "Untitled album"}
+				{albumDisplayName(album.albumName)}
 			</span>
 		</Badge>
 	</div>
@@ -80,12 +83,9 @@
 	>
 		<div class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />
-			{album.content.length}<span class="sr-only">
-				{#if album.content.length === 1}
-					item
-				{:else}
-					items
-				{/if}
+			<span aria-hidden="true">{album.content.length}</span>
+			<span class="sr-only">
+				{albumItemCountLabel(album.content.length)}
 			</span>
 		</div>
 		{#if hasVideo}
@@ -97,7 +97,7 @@
 	</div>
 	{#if selected}
 		<SelectionOverlay class="z-2" />
-	{:else if !album.isShareable}
+	{:else if shareLocked}
 		<div
 			data-slot="album-locked"
 			class="absolute inset-0 z-2 flex items-center justify-center rounded-[inherit] bg-black/60 text-white"
@@ -106,4 +106,21 @@
 			<span class="sr-only">can't be shared</span>
 		</div>
 	{/if}
-</button>
+{/snippet}
+
+{#if href === undefined}
+	<button
+		type="button"
+		data-slot="album-tile"
+		class={tileClass}
+		aria-pressed={selected}
+		{disabled}
+		{onclick}
+	>
+		{@render body()}
+	</button>
+{:else}
+	<a {href} data-slot="album-tile" class={tileClass}>
+		{@render body()}
+	</a>
+{/if}

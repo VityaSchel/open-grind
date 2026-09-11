@@ -24,9 +24,9 @@
 		error: unknown;
 		onRetry: () => void;
 		skeletons: number;
-		selected: SelectionSet<unknown>;
+		selected?: SelectionSet<unknown>;
 		gridClass?: import("svelte/elements").ClassValue;
-		emptyState: Snippet;
+		emptyState?: Snippet;
 		leading?: Snippet;
 		tile: Snippet<[T, number]>;
 	} = $props();
@@ -44,7 +44,7 @@
 			{/each}
 		</div>
 	{:else if empty}
-		{@render emptyState()}
+		{@render emptyState?.()}
 	{:else}
 		<div class={["photo-grid", gridClass]}>
 			{@render leading?.()}
@@ -53,9 +53,11 @@
 			{/each}
 		</div>
 	{/if}
-	<div role="status" class="sr-only">
-		{selected.size === selected.max
-			? `Maximum ${selected.max} selected`
-			: ""}
-	</div>
+	{#if selected}
+		<div role="status" class="sr-only">
+			{selected.size === selected.max
+				? `Maximum ${selected.max} selected`
+				: ""}
+		</div>
+	{/if}
 </div>

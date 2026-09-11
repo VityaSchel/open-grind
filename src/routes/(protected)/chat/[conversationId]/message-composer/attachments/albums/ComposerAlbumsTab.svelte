@@ -4,14 +4,14 @@
 
 	import { getMyAlbums } from "$lib/api/messaging/albums";
 	import { albumShares } from "$lib/chat/album-shares.svelte";
+	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
+	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import * as Empty from "$lib/components/ui/empty";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
 	import { getConversationState } from "../../../conversation-state.svelte";
-	import SelectionGridTab from "../SelectionGridTab.svelte";
 	import type { TabSelection } from "../tabs";
 	import { AlbumShareActions } from "./album-share-actions.svelte";
-	import AlbumTile from "./AlbumTile.svelte";
 
 	let {
 		onClose,
@@ -139,7 +139,7 @@
 	}
 </script>
 
-<SelectionGridTab
+<MediaGrid
 	items={albums}
 	key={(album) => album.albumId}
 	empty={albums?.length === 0}
@@ -174,10 +174,11 @@
 			{album}
 			selected={isSelected}
 			shared={isShared(album.albumId)}
+			shareLocked={!album.isShareable}
 			dimmed={isIncompatible || locked}
 			disabled={!isSelectable}
 			clickable={isSelectable && (selected.canSelectMore || isSelected)}
 			onclick={() => toggleSelected(album.albumId)}
 		/>
 	{/snippet}
-</SelectionGridTab>
+</MediaGrid>

@@ -57,6 +57,8 @@ export const albumContentSchema = albumContentMin.extend({
 	rejectionId: unmodeledSchema,
 });
 
+export type AlbumContent = z.infer<typeof albumContentSchema>;
+
 export const myAlbumSchema = albumDetailsSchema.extend({
 	albumId: z.int(),
 	albumName: z.string().nullable(),
@@ -97,3 +99,22 @@ export const albumUnshareRequestSchema = z.object({
 });
 
 export type AlbumUnshareRequest = z.infer<typeof albumUnshareRequestSchema>;
+
+export const albumNameRequestSchema = z.object({
+	albumName: z.string().max(255).nullable(),
+});
+
+export type AlbumNameRequest = z.infer<typeof albumNameRequestSchema>;
+
+export const albumNameResponseSchema = z.object({
+	albumId: z.int(),
+	albumName: z.string().nullable(),
+});
+
+export const albumContentOrderRequestSchema = z.object({
+	contentIds: z.array(z.int()),
+});
+
+export type AlbumContentOrderRequest = z.infer<
+	typeof albumContentOrderRequestSchema
+>;

@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { SHARED_ALBUM_ID } from "./support/albums";
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
@@ -25,24 +26,28 @@ const profileActionBar = (page: Page) =>
 const saveButton = (page: Page) =>
 	page.getByRole("button", { name: "Save changes" });
 
-async function makeDirty(page: Page): Promise<void> {
-	const displayName = page.getByRole("textbox", { name: "Display name" });
-	await displayName.waitFor({ timeout: 60_000 });
-	const saveBarShown = page.evaluate(
-		() =>
-			new Promise<void>((shown) =>
-				document.addEventListener("introend", () => shown(), {
-					capture: true,
-					once: true,
-				}),
-			),
-	);
-	await displayName.fill("Renamed in a test");
+const profileDisplayName = (page: Page) =>
+	page.getByRole("textbox", { name: "Display name" });
+
+async function makeDirty(field: Locator): Promise<void> {
+	await field.waitFor({ timeout: 60_000 });
+	const saveBarShown = field
+		.page()
+		.evaluate(
+			() =>
+				new Promise<void>((shown) =>
+					document.addEventListener("introend", () => shown(), {
+						capture: true,
+						once: true,
+					}),
+				),
+		);
+	await field.fill("Renamed in a test");
 	await saveBarShown;
 }
 
 async function scrollSettingsToEnd(page: Page): Promise<void> {
-	await page.locator('[data-slot="settings-scroller"]').evaluate(
+	await page.locator('[data-slot="subpage-scroller"]').evaluate(
 		(scroller) =>
 			new Promise((settled) => {
 				scroller.scrollTop = scroller.scrollHeight;
@@ -136,7 +141,7 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 		page,
 	}) => {
 		await page.goto("/settings/profile");
-		await makeDirty(page);
+		await makeDirty(profileDisplayName(page));
 		const save = saveButton(page);
 		await expectToastGapAbove(save);
 
@@ -146,13 +151,19 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 		expect(unstuck?.y).toBeLessThan(stuck?.y ?? 0);
 		await expectToastGapAbove(save);
 	});
+
+	test("while editing an album", async ({ page }) => {
+		await page.goto(`/albums/${SHARED_ALBUM_ID}`);
+		await makeDirty(page.getByRole("textbox", { name: "Album name" }));
+		await expectToastGapAbove(saveButton(page));
+	});
 });
 
 test("the save confirmation stays put while the save bar flies away", async ({
 	page,
 }) => {
 	await page.goto("/settings/profile");
-	await makeDirty(page);
+	await makeDirty(profileDisplayName(page));
 	await scrollSettingsToEnd(page);
 	const scrolledMidFlight = page.evaluate(async () => {
 		const nextFrame = () =>
@@ -166,7 +177,7 @@ test("the save confirmation stays put while the save bar flies away", async ({
 		);
 		await nextFrame();
 		document
-			.querySelector('[data-slot="settings-scroller"]')
+			.querySelector('[data-slot="subpage-scroller"]')
 			?.dispatchEvent(new Event("scroll"));
 		await nextFrame();
 		const toaster = document.querySelector(

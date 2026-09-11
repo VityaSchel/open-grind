@@ -10,7 +10,7 @@
 		getBlockedUsers,
 		unblockUser,
 	} from "$lib/api/browse/blocks";
-	import ProfileList from "../profile-list/ProfileList.svelte";
+	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
 </script>
 
 <svelte:head>

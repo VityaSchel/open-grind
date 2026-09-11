@@ -13,22 +13,24 @@
 	import { ProfileListState } from "./profile-list-state.svelte";
 	import ProfileListRow from "./ProfileListRow.svelte";
 
-	const LOADING_SKELETONS = 6;
-
 	let {
 		loadIds,
 		empty,
 		scroll,
 		eager = false,
+		skeletons = 6,
 		icon,
+		emptyIcon,
+		control,
 		label,
 		errorLabel,
 		setOn,
 	}: {
 		loadIds: () => Promise<number[]>;
 		empty: { title: string; description: string };
-		scroll: { scrollY: number };
+		scroll?: { scrollY: number };
 		eager?: boolean;
+		skeletons?: number;
 	} & ProfileListToggle = $props();
 
 	const list = new ProfileListState(() => ({
@@ -59,12 +61,12 @@
 			return list.error;
 		},
 		get scrollY() {
-			return scroll.scrollY;
+			return scroll?.scrollY ?? 0;
 		},
 	});
 
 	beforeNavigate(() => {
-		if (scroller) scroll.scrollY = scroller.scrollTop;
+		if (scroll && scroller) scroll.scrollY = scroller.scrollTop;
 	});
 
 	onDestroy(() => list.dispose());
@@ -88,7 +90,11 @@
 			<Empty.Root class="m-auto">
 				<Empty.Header>
 					<Empty.Media variant="icon">
-						{@render icon(true)}
+						{#if emptyIcon}
+							{@render emptyIcon()}
+						{:else}
+							{@render icon(true)}
+						{/if}
 					</Empty.Media>
 					<Empty.Title>{empty.title}</Empty.Title>
 					<Empty.Description>{empty.description}</Empty.Description>
@@ -103,7 +109,7 @@
 			style:padding-bottom="{view.paddingBottomPx}px"
 		>
 			{#if list.loading}
-				{#each Array(LOADING_SKELETONS)}
+				{#each Array(skeletons)}
 					<Skeleton />
 				{/each}
 			{:else}
@@ -116,6 +122,7 @@
 							{profileId}
 							{profile}
 							{icon}
+							{control}
 							{label}
 							on={list.isOn(profileId)}
 							submitting={list.isSubmitting(profileId)}
