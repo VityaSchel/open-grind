@@ -5,8 +5,8 @@ export const DEMO_GEOHASH = "u33dc0cpgp00";
 
 declare global {
 	interface Window {
+		__capturedInvokes?: Record<string, unknown[]>;
 		__emitTauriEvent?: (event: string, payload: unknown) => void;
-		__openedUrls?: string[];
 	}
 }
 
@@ -54,22 +54,33 @@ export async function installEventInjection(page: Page): Promise<void> {
 	});
 }
 
+export async function captureInvokes(page: Page, command: string) {
+	await page.evaluate((watched) => {
+		if (!window.__capturedInvokes) {
+			const captured: Record<string, unknown[]> = {};
+			window.__capturedInvokes = captured;
+			const internals = (
+				window as unknown as { __TAURI_INTERNALS__: TauriInternals }
+			).__TAURI_INTERNALS__;
+			const passThrough = internals.invoke;
+			internals.invoke = (cmd, args, opts) => {
+				captured[cmd]?.push(args ?? null);
+				return passThrough(cmd, args, opts);
+			};
+		}
+		window.__capturedInvokes[watched] = [];
+	}, command);
+	return () =>
+		page.evaluate(
+			(watched) => window.__capturedInvokes?.[watched] ?? [],
+			command,
+		);
+}
+
 export async function captureOpenedUrls(page: Page) {
-	await page.evaluate(() => {
-		const internals = (
-			window as unknown as { __TAURI_INTERNALS__: TauriInternals }
-		).__TAURI_INTERNALS__;
-		const passThrough = internals.invoke;
-		const opened: string[] = [];
-		window.__openedUrls = opened;
-		internals.invoke = (cmd, args, opts) => {
-			if (cmd === "plugin:opener|open_url") {
-				opened.push((args as { url: string }).url);
-			}
-			return passThrough(cmd, args, opts);
-		};
-	});
-	return () => page.evaluate(() => window.__openedUrls);
+	const opened = await captureInvokes(page, "plugin:opener|open_url");
+	return async () =>
+		(await opened()).map((args) => (args as { url: string }).url);
 }
 
 export function flownIn(page: Page, button: string): Promise<unknown> {

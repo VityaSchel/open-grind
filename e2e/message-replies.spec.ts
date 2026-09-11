@@ -1,6 +1,11 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { installTauriShim, trackpadSwipe, TrustedTouch } from "./support/app";
+import {
+	captureInvokes,
+	installTauriShim,
+	trackpadSwipe,
+	TrustedTouch,
+} from "./support/app";
 
 const CONVERSATION = "/chat/100001:123456000";
 const WITH_AN_UNSENT_MESSAGE = "/chat/100009:123456000";
@@ -155,21 +160,50 @@ test("a scroll that starts leaning sideways still reaches the conversation", asy
 
 // real touches only: synthetic PointerEvents skip the implicit capture that
 // once cancelled every touch drag
-test("a touch drag past the trigger replies on lift", async ({ page }) => {
-	await openConversation(page, { platform: "android" });
+async function swipeIncoming(page: Page, distancePx: number) {
 	const row = page.locator(INCOMING_ROW).last();
 	await row.scrollIntoViewIfNeeded();
 	const box = (await row.boundingBox())!;
+	const y = box.y + box.height / 2;
 	const touch = await TrustedTouch.attach(page);
-
 	await touch.drag(
 		page,
-		{ x: box.x + 60, y: box.y + box.height / 2 },
-		{ x: box.x + 200, y: box.y + box.height / 2 },
+		{ x: box.x + 60, y },
+		{ x: box.x + 60 + distancePx, y },
 		{ steps: 14, holdMs: 16 },
 	);
+}
+
+test("a touch drag past the trigger replies on lift", async ({ page }) => {
+	await openConversation(page, { platform: "android" });
+
+	await swipeIncoming(page, 140);
 
 	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+});
+
+test("a touch drag taps the actuator as it passes the trigger, once", async ({
+	page,
+}) => {
+	await openConversation(page, { platform: "android" });
+	const taps = await captureInvokes(page, "haptic_threshold_reached");
+
+	await swipeIncoming(page, 140);
+
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+	expect(await taps()).toHaveLength(1);
+});
+
+test("a touch drag that stops short of the trigger taps nothing", async ({
+	page,
+}) => {
+	await openConversation(page, { platform: "android" });
+	const taps = await captureInvokes(page, "haptic_threshold_reached");
+
+	await swipeIncoming(page, 40);
+
+	await expect(page.getByLabel("Cancel reply")).toHaveCount(0);
+	expect(await taps()).toHaveLength(0);
 });
 
 test("a vertical touch drag scrolls instead of replying", async ({ page }) => {

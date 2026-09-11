@@ -227,7 +227,7 @@
 			<div
 				class={[
 					"pointer-events-none absolute top-1/2 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground",
-					{ "right-0": isOut, "left-0": !isOut },
+					{ "right-3": isOut, "left-3": !isOut },
 				]}
 				style:opacity={swipe.progress}
 				style:transform={`translateY(-50%) scale(${swipe.armed ? 1 : 0.6 + swipe.progress * 0.4})`}

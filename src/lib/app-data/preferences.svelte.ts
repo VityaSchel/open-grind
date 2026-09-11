@@ -25,6 +25,7 @@ const preferencesSchema = z.object({
 		.default(null)
 		.catch(null),
 	geohash: geohashSchema.nullable().default(null),
+	hapticFeedback: z.boolean().default(true),
 	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	revealMessageRead: z.boolean().default(false),

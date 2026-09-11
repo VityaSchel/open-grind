@@ -4,6 +4,7 @@ mod appearance;
 mod context_menu;
 mod desktop_entry;
 mod error;
+mod haptics;
 pub mod media;
 mod photo;
 mod scroll_phase;
@@ -182,6 +183,7 @@ pub fn run() {
             api::client::rotate_api_params,
             api::session_recovery::set_app_active,
             api::session_recovery::session_health,
+            haptics::haptic_threshold_reached,
             scroll_phase::scroll_gesture_capture,
             desktop_entry::desktop_entry_state,
             desktop_entry::desktop_entry_install,

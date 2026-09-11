@@ -4,11 +4,13 @@
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";
+	import { hapticsAvailable } from "$lib/haptics";
 	import { desktopEntryAvailable } from "$lib/platform/desktop-entry.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
+	import HapticFeedbackSetting from "./HapticFeedbackSetting.svelte";
 	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
 	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
 	import StayOnlineSetting from "./StayOnlineSetting.svelte";
@@ -51,6 +53,9 @@
 <h2>Display</h2>
 <UnitsSetting />
 <BackdropBlurSetting />
+{#if hapticsAvailable()}
+	<HapticFeedbackSetting />
+{/if}
 {#if desktopEntryAvailable()}
 	<AppsMenuEntrySetting />
 {/if}

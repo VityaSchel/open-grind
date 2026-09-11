@@ -1,9 +1,9 @@
-import { isTauri } from "@tauri-apps/api/core";
-import { platform } from "@tauri-apps/plugin-os";
 import { Spring } from "svelte/motion";
 import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
+import { hapticThresholdReached } from "$lib/haptics";
+import { isMacosPlatform } from "$lib/platform/os";
 import {
 	scrollGesture,
 	type ScrollGestureState,
@@ -46,15 +46,17 @@ export type WheelInputMode = "rail" | "bridge";
 // stops the rail from latching vertical wheel gestures away from the
 // conversation's own overscroll. Everywhere else the rail stays.
 export function wheelInputMode(): WheelInputMode {
-	return isTauri() && platform() === "macos" ? "bridge" : "rail";
+	return isMacosPlatform() ? "bridge" : "rail";
 }
 
 export class SwipeToReply {
 	readonly #offset = new Spring(0, { stiffness: 0.4, damping: 0.75 });
 	armed = $state(false);
+	#armAnnounced = false;
 
 	readonly #dragSign: 1 | -1;
 	readonly #onReply: () => void;
+	readonly #onArm: () => void;
 	readonly #now: () => number;
 	#pointerId: number | null = null;
 	#startClientX = 0;
@@ -83,6 +85,7 @@ export class SwipeToReply {
 	constructor({
 		direction,
 		onReply,
+		onArm = hapticThresholdReached,
 		now = () => performance.now(),
 		scrollEndSupported = typeof window !== "undefined" &&
 			"onscrollend" in window,
@@ -91,6 +94,7 @@ export class SwipeToReply {
 	}: {
 		direction: "left" | "right";
 		onReply: () => void;
+		onArm?: () => void;
 		now?: () => number;
 		scrollEndSupported?: boolean;
 		wheelMode?: WheelInputMode;
@@ -98,10 +102,26 @@ export class SwipeToReply {
 	}) {
 		this.#dragSign = direction === "right" ? 1 : -1;
 		this.#onReply = onReply;
+		this.#onArm = onArm;
 		this.#now = now;
 		this.#railHasScrollEnd = scrollEndSupported;
 		this.#wheelMode = wheelMode;
 		this.#gesture = gesture;
+	}
+
+	#setArmed(drag: number): void {
+		const armed = drag > TRIGGER_DISTANCE_PX;
+		if (drag === 0) this.#armAnnounced = false;
+		else if (armed && !this.#armAnnounced) {
+			this.#armAnnounced = true;
+			this.#onArm();
+		}
+		this.armed = armed;
+	}
+
+	#disarm(): void {
+		this.#armAnnounced = false;
+		this.armed = false;
 	}
 
 	readonly handlers: SwipeHandlers = {
@@ -148,7 +168,7 @@ export class SwipeToReply {
 		const drag = (rail.scrollLeft - this.#railRest) * -this.#dragSign;
 		this.#railDrag = Math.max(drag, 0);
 		if (!this.#railReturning && !this.#railSettling)
-			this.armed = this.#railDrag > TRIGGER_DISTANCE_PX;
+			this.#setArmed(this.#railDrag);
 		if (!this.#railHasScrollEnd) {
 			clearTimeout(this.#railFallback);
 			this.#railFallback = setTimeout(
@@ -190,7 +210,7 @@ export class SwipeToReply {
 			this.#railDrag > TRIGGER_DISTANCE_PX &&
 			this.#railWheelSteps >= RAIL_MIN_WHEEL_STEPS;
 		this.#railWheelSteps = 0;
-		this.armed = false;
+		this.#disarm();
 		if (this.#railDrag > 0) {
 			this.#railSettling = true;
 			this.#returnRail();
@@ -266,7 +286,7 @@ export class SwipeToReply {
 		void this.#offset.set(this.#bridgeDrag * this.#dragSign, {
 			instant: true,
 		});
-		this.armed = this.#bridgeDrag > TRIGGER_DISTANCE_PX;
+		this.#setArmed(this.#bridgeDrag);
 	}
 
 	#onBridgeRelease(): void {
@@ -282,7 +302,7 @@ export class SwipeToReply {
 		this.#bridgeCross = 0;
 		this.#bridgeAxis = "undecided";
 		this.#bridgeDrag = 0;
-		this.armed = false;
+		this.#disarm();
 		this.#gesture.capture(false);
 		void this.#offset.set(0);
 	}
@@ -325,7 +345,7 @@ export class SwipeToReply {
 			MAX_DRAG_PX,
 		);
 		void this.#offset.set(magnitude * this.#dragSign, { instant: true });
-		this.armed = magnitude > TRIGGER_DISTANCE_PX;
+		this.#setArmed(magnitude);
 	}
 
 	#onUp(event: PointerEvent): void {
@@ -343,7 +363,7 @@ export class SwipeToReply {
 	#release(): void {
 		this.#pointerId = null;
 		this.#axis = "undecided";
-		this.armed = false;
+		this.#disarm();
 		void this.#offset.set(0);
 	}
 
