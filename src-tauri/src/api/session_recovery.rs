@@ -27,9 +27,18 @@ pub struct SessionErrorPayload {
 	pub transient: bool,
 }
 
-#[derive(Default)]
 pub struct SessionRecovery {
 	running: AtomicBool,
+	pub foreground: AtomicBool,
+}
+
+impl Default for SessionRecovery {
+	fn default() -> Self {
+		Self {
+			running: AtomicBool::new(false),
+			foreground: AtomicBool::new(true),
+		}
+	}
 }
 
 fn now_unix() -> u64 {
@@ -176,8 +185,10 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 #[tauri::command]
 pub async fn set_app_active(
 	state: tauri::State<'_, AppState>,
+	recovery: tauri::State<'_, SessionRecovery>,
 	active: bool,
 ) -> Result<(), AppError> {
+	recovery.foreground.store(active, Ordering::SeqCst);
 	let client = state.client()?;
 	let resuming = active && !client.is_active();
 	client.set_active(active);

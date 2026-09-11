@@ -1,5 +1,4 @@
 import { createContext } from "svelte";
-import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import { errorUrn } from "$lib/api/error-urn";
@@ -10,6 +9,7 @@ import {
 	sendMessage,
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
+import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { reconciler } from "$lib/util/reconcile";
 import {
@@ -38,6 +38,12 @@ export type { OptimisticMessage };
 export type ConversationProfile = Awaited<
 	ReturnType<typeof getConversation>
 >["profile"];
+
+type MessageDelivery = {
+	tempId: string;
+	message: OutboundMessage;
+	replyToMessageId?: string;
+};
 
 export class ConversationState {
 	messages: OptimisticMessage[] = $state([]);
@@ -388,22 +394,48 @@ export class ConversationState {
 		};
 		this.messages = removeDuplicateMessages([optimistic, ...this.messages]);
 		this.#updatePreview(optimistic);
-		void this.#resolveMessage({
+		void this.#deliverMessage({
 			tempId,
 			message: draft.outbound,
 			replyToMessageId: replyToMessage?.messageId,
 		});
 	}
 
-	async #resolveMessage({
+	async #deliverMessage(delivery: MessageDelivery): Promise<void> {
+		try {
+			await this.#attemptSend(delivery);
+		} catch (error) {
+			const urn = errorUrn(error);
+			console.error(
+				`Failed to send message${urn === null ? "" : ` (${urn})`}`,
+				error,
+			);
+			if (
+				!this.#destroyed &&
+				delivery.message.type === "ExpiringImage" &&
+				urn === "urn:gr:err:entitlement_limit"
+			) {
+				offerEntitlementBypass({
+					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+					retry: () => this.#attemptSend(delivery),
+				});
+			}
+		}
+	}
+
+	async #attemptSend({
 		tempId,
 		message,
 		replyToMessageId,
-	}: {
-		tempId: string;
-		message: OutboundMessage;
-		replyToMessageId?: string;
-	}): Promise<void> {
+	}: MessageDelivery): Promise<void> {
+		if (this.#destroyed) return;
+		const findOptimistic = () =>
+			this.messages.find((m) => m.messageId === tempId);
+		const sending = findOptimistic();
+		if (sending) {
+			sending.status = "pending";
+			sending.sendError = undefined;
+		}
 		try {
 			const sent = await sendMessage({
 				toUserId: this.profile!.profileId,
@@ -411,7 +443,7 @@ export class ConversationState {
 				replyToMessageId,
 			});
 			if (this.#destroyed) return;
-			const msg = this.messages.find((m) => m.messageId === tempId);
+			const msg = findOptimistic();
 			if (msg) {
 				this.#adoptServerVersion({
 					message: msg,
@@ -423,27 +455,14 @@ export class ConversationState {
 			}
 			void this.#conversations.ensureLoaded(this.conversationId);
 		} catch (error) {
-			const urn = errorUrn(error);
-			console.error(
-				`Failed to send message${urn === null ? "" : ` (${urn})`}`,
-				error,
-			);
-			if (
-				message.type === "ExpiringImage" &&
-				urn === "urn:gr:err:entitlement_limit"
-			) {
-				toast.error(
-					"Daily expiring photo limit reached, sending more now requires Grindr subscription",
-					{ id: "expiring-photo-limit" },
-				);
-			}
-			const msg = this.messages.find((m) => m.messageId === tempId);
+			const msg = findOptimistic();
 			if (msg) {
 				msg.status = "error";
 				msg.sendError = error;
 			}
 			const latestSent = this.messages.find((m) => m.status === "sent");
-			this.#updatePreview(latestSent);
+			if (!this.#destroyed) this.#updatePreview(latestSent);
+			throw error;
 		}
 	}
 

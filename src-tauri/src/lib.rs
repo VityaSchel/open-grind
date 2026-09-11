@@ -179,6 +179,7 @@ pub fn run() {
             api::rest::request,
             api::media_upload::upload_chat_media,
             api::ws::ws_connect,
+            api::ws::ws_reconnect,
             api::ws::ws_send,
             api::client::rotate_api_params,
             api::session_recovery::set_app_active,

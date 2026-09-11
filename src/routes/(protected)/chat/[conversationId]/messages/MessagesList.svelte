@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { toast } from "svelte-sonner";
-
 	import { promptCopyError } from "$lib/api/error-copy";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { tieredFeature } from "$lib/api/error-urn";
@@ -8,8 +6,11 @@
 		deleteMessageForMe,
 		unsendMessage,
 	} from "$lib/api/messaging/messages";
-	import { openExternalLink } from "$lib/platform/link-opener";
-	import { getConversationState } from "../conversation-state.svelte";
+	import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+	import {
+		type ConversationState,
+		getConversationState,
+	} from "../conversation-state.svelte";
 	import { processMessages } from "../messages";
 	import Message from "./message/Message.svelte";
 
@@ -24,21 +25,40 @@
 		}),
 	);
 
-	function reportUnsendFailure(error: unknown) {
-		if (tieredFeature(error) === "UnsentMessage") {
-			toast.error("Unsend feature now requires Grindr subscription", {
-				id: "unsend-paywall",
-				action: {
-					label: "Learn more",
-					onClick: () =>
-						openExternalLink(
-							"https://git.opengrind.org/open-grind/open-grind/issues/319#issuecomment-2453",
-						),
-				},
+	async function unsend({
+		state,
+		messageId,
+	}: {
+		state: ConversationState;
+		messageId: string;
+	}) {
+		const { revert } = state.markMessageAsUnsent(messageId);
+		try {
+			await unsendMessage({
+				conversationId: state.conversationId,
+				messageId,
 			});
-			return;
+		} catch (error) {
+			revert();
+			throw error;
 		}
-		showErrorToast({ label: "Failed to unsend message", error });
+	}
+
+	async function requestUnsend(messageId: string) {
+		const state = conversationState;
+		try {
+			await unsend({ state, messageId });
+		} catch (error) {
+			console.error(error);
+			if (tieredFeature(error) === "UnsentMessage") {
+				offerEntitlementBypass({
+					reason: "Unsending a message requires a Grindr subscription.",
+					retry: () => unsend({ state, messageId }),
+				});
+				return;
+			}
+			showErrorToast({ label: "Failed to unsend message", error });
+		}
 	}
 </script>
 
@@ -91,22 +111,7 @@
 			}
 		}}
 		onUnsend={isOut && !message.unsent
-			? async () => {
-					let revert: (() => void) | undefined;
-					try {
-						({ revert } = conversationState.markMessageAsUnsent(
-							message.messageId,
-						));
-						await unsendMessage({
-							conversationId: conversationState.conversationId,
-							messageId: message.messageId,
-						});
-					} catch (error) {
-						console.error(error);
-						reportUnsendFailure(error);
-						revert?.();
-					}
-				}
+			? () => void requestUnsend(message.messageId)
 			: undefined}
 		onCopyError={message.status === "error"
 			? () => void promptCopyError(message.sendError).catch(() => {})

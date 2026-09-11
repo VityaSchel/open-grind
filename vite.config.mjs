@@ -1,5 +1,7 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
+import { realpathSync } from "node:fs";
+import { searchForWorkspaceRoot } from "vite";
 import { defineConfig } from "vitest/config";
 
 // @ts-expect-error process is a nodejs global
@@ -27,6 +29,12 @@ export default defineConfig(async ({ command }) => ({
 		watch: {
 			// 3. tell Vite to ignore watching `src-tauri`
 			ignored: ["**/src-tauri/**"],
+		},
+		fs: {
+			allow: [
+				searchForWorkspaceRoot(process.cwd()),
+				realpathSync("node_modules"),
+			],
 		},
 	},
 

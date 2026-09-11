@@ -9,6 +9,7 @@ import {
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled } from "$lib/demo";
+import { geohashSchema } from "$lib/model/geohash";
 
 const maxPrettyMessageChars = 200;
 
@@ -78,7 +79,10 @@ export const methods = {
 		request: z.undefined(),
 		response: z.enum(["keyring", "file", "unavailable"]),
 	},
-	refresh_token: { request: z.undefined(), response: loginResultSchema },
+	refresh_token: {
+		request: z.object({ geohash: geohashSchema.optional() }).optional(),
+		response: loginResultSchema,
+	},
 	rotate_api_params: {
 		request: z.undefined(),
 		response: z.object({
@@ -107,8 +111,8 @@ export const methods = {
 
 export async function callMethod<T extends keyof typeof methods>(
 	method: T,
-	...args: z.infer<(typeof methods)[T]["request"]> extends undefined
-		? []
+	...args: undefined extends z.infer<(typeof methods)[T]["request"]>
+		? [data?: z.infer<(typeof methods)[T]["request"]>]
 		: [data: z.infer<(typeof methods)[T]["request"]>]
 ): Promise<z.infer<(typeof methods)[T]["response"]>> {
 	type Result = z.infer<(typeof methods)[T]["response"]>;

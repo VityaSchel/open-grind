@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { fetchRest } from "$lib/api/transport";
+import { coarsenGeohash } from "$lib/model/geohash";
 
 const placesResponseSchema = z.object({
 	places: z.array(
@@ -13,6 +14,13 @@ const placesResponseSchema = z.object({
 		}),
 	),
 });
+
+export async function updateLocation({ geohash }: { geohash: string }) {
+	return await fetchRest("/v4/location", {
+		method: "PUT",
+		body: { geohash: coarsenGeohash(geohash) },
+	}).then((res) => res.assertOk());
+}
 
 export async function getPlaces({ query }: { query: string }) {
 	const response = await fetchRest(

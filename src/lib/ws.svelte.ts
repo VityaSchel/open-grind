@@ -117,6 +117,12 @@ class WsState {
 		});
 	}
 
+	async reconnect(): Promise<void> {
+		await invoke("ws_reconnect").catch((e: unknown) => {
+			console.error("[ws] reconnect failed", e);
+		});
+	}
+
 	onConnected(handler: () => void): Promise<() => void> {
 		return listen<void>("ws:connected", () => handler());
 	}

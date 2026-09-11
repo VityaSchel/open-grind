@@ -1,8 +1,12 @@
+use std::sync::atomic::Ordering;
+use std::time::Duration;
+
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::broadcast::error::RecvError;
+use tokio::time::timeout;
 
 use crate::api::session_recovery::{
-	report_refresh_failure, SessionErrorPayload,
+	report_refresh_failure, SessionErrorPayload, SessionRecovery,
 };
 use crate::error::{AppError, BanInfo};
 use crate::state::AppState;
@@ -127,6 +131,43 @@ pub async fn ws_connect(
 	Ok(())
 }
 
+const RECONNECT_STEP_TIMEOUT: Duration = Duration::from_secs(3);
+
+#[tauri::command]
+pub async fn ws_reconnect(
+	state: tauri::State<'_, AppState>,
+	recovery: tauri::State<'_, SessionRecovery>,
+) -> Result<(), AppError> {
+	let client = state.client()?;
+	let mut states = client.connection_state();
+	if *states.borrow_and_update() != grindr::WsConnectionState::Connected {
+		return Ok(());
+	}
+
+	client.set_active(false);
+	let stopped = timeout(
+		RECONNECT_STEP_TIMEOUT,
+		states.wait_for(|state| {
+			*state == grindr::WsConnectionState::Disconnected
+		}),
+	)
+	.await
+	.is_ok();
+
+	client.set_active(recovery.foreground.load(Ordering::SeqCst));
+	if !stopped {
+		return Err(AppError::Http("WS did not go down in time".to_owned()));
+	}
+
+	let _ = timeout(
+		RECONNECT_STEP_TIMEOUT,
+		states.wait_for(|state| *state == grindr::WsConnectionState::Connected),
+	)
+	.await;
+
+	Ok(())
+}
+
 #[tauri::command]
 pub async fn ws_send(
 	state: tauri::State<'_, AppState>,
@@ -169,8 +210,30 @@ mod tests {
 
 		mock_builder()
 			.manage(state)
+			.manage(SessionRecovery::default())
 			.build(mock_context(noop_assets()))
 			.expect("mock app")
+	}
+
+	#[tokio::test]
+	async fn reconnecting_a_downed_socket_touches_neither_flag_nor_transport() {
+		let app = app_with_a_disconnected_client();
+		let client = app.state::<AppState>().client().unwrap().clone();
+		let before = client.current_device().await.device_id;
+		client.set_active(false);
+		app.state::<SessionRecovery>()
+			.foreground
+			.store(true, Ordering::SeqCst);
+
+		ws_reconnect(app.state::<AppState>(), app.state::<SessionRecovery>())
+			.await
+			.unwrap();
+
+		assert!(
+			!client.is_active(),
+			"an early return must not resume a client the app deactivated"
+		);
+		assert_eq!(client.current_device().await.device_id, before);
 	}
 
 	#[tokio::test]

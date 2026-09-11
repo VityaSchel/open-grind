@@ -114,10 +114,11 @@ pub async fn login_with_facebook(
 #[tauri::command]
 pub async fn refresh_token(
 	state: tauri::State<'_, AppState>,
+	geohash: Option<String>,
 ) -> Result<LoginResult, AppError> {
 	let client = state.client()?;
 	let result = client
-		.refresh_token()
+		.refresh_token_with_geohash(geohash.as_deref())
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
 	Ok(LoginResult::from(result))
