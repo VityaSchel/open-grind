@@ -70,7 +70,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 
     | Component                               | Where it's pinned                                                |
     | --------------------------------------- | ---------------------------------------------------------------- |
-    | JDK                                     | `flake.nix` (`jdk21_headless`)                                   |
+    | JDK                                     | `nix/android.nix` (`jdk21_headless`)                             |
     | Android compileSdk / minSdk / targetSdk | `src-tauri/gen/android/gradle.properties`                        |
     | Android build-tools                     | `src-tauri/gen/android/gradle.properties`                        |
     | Android NDK                             | `src-tauri/gen/android/gradle.properties`                        |

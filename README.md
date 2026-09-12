@@ -8,19 +8,22 @@
 
 ## Download
 
-- **[Download Open Grind](https://git.opengrind.org/open-grind/open-grind/releases#install)** from the Releases page
+- **[Download Open Grind](https://opengrind.org/download)** from the official website
+- **[Source releases page](https://git.opengrind.org/open-grind/open-grind/releases)** at git.opengrind.org/open-grind/open-grind
 
 Never install Open Grind from sources not listed above.
 
 ## Security
 
-All releases are signed. [Learn more](./KEYS.md) about releases signatures.
+All releases are signed. Learn more in [KEYS.md](./KEYS.md).
 
-Open Grind supports reproducible builds. Read more in [REPRODUCIBILITY.md](./REPRODUCIBILITY.md).
+Open Grind supports reproducible builds. Learn more in [REPRODUCIBILITY.md](./REPRODUCIBILITY.md).
 
 ## Development
 
 Interested in contributing to the project? Head to [CONTRIBUTING.md](./CONTRIBUTING.md) to get started. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+To build Open Grind yourself, follow [BUILDING.md](./BUILDING.md).
 
 ## Problems, bugs, feature requests?
 

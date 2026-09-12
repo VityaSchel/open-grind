@@ -20,6 +20,7 @@
 			"url": "./docs/lib/openapi-3.0.schema.json"
 		}
 	],
+	"markdown.extension.toc.updateOnSave": false,
 	"[markdown]": {
 		"editor.tabSize": 4,
 		"editor.detectIndentation": false,

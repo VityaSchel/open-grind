@@ -20,20 +20,33 @@ function pageOf(filePath: string): string {
 		.replace(/\.md$/, "");
 }
 
+const rControl = /[\u0000-\u001f]/g;
+const rSpecial = /[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"\u201c\u201d\u2018\u2019<>,.?/]+/g;
+const rCombining = /[\u0300-\u036F]/g;
+
 function slugify(text: string): string {
 	return text
-		.toLowerCase()
-		.replace(/[^\w\s-]/g, "")
-		.replace(/\s+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "");
+		.normalize("NFKD")
+		.replace(rCombining, "")
+		.replace(rControl, "")
+		.replace(rSpecial, "-")
+		.replace(/-{2,}/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.replace(/^(\d)/, "_$1")
+		.toLowerCase();
 }
 
 function collectAnchors(filePath: string): Set<string> {
 	const content = readFileSync(filePath, "utf8");
 	const anchors = new Set<string>([""]);
 	for (const m of content.matchAll(/^#{1,6}\s+(.+?)\s*$/gm)) {
-		anchors.add(slugify(m[1] ?? ""));
+		const heading = m[1] ?? "";
+		const explicit = /\{#([^}\s]+)\}\s*$/.exec(heading);
+		anchors.add(
+			explicit
+				? explicit[1]!
+				: slugify(heading.replace(/`/g, "").replace(/\*\*|__/g, "")),
+		);
 	}
 	return anchors;
 }

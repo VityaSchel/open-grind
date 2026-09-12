@@ -50,11 +50,7 @@ Releases are signed with [minisign](https://jedisct1.github.io/minisign/) key:
 RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+
 ```
 
-Each artifact ships a detached `.minisig` next to it:
-
-```bash
-minisign -Vm open-grind.apk -P RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+
-```
+Each artifact ships a detached `.minisig` next to it — see [Verify minisign signature](./BUILDING.md#verify-minisign-signature).
 
 ## Platforms signing
 

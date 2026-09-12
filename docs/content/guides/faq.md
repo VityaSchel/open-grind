@@ -176,6 +176,6 @@ Yes, it's been confirmed that it's been deleted. In its last weeks, the server w
 
 Releases are signed with [minisign](https://jedisct1.github.io/minisign/) and ship a detached `.minisig`. The release signing key, and the governance PGP key that certifies it, can be found in [KEYS.md](https://git.opengrind.org/open-grind/open-grind/src/branch/main/KEYS.md).
 
-You can also [reproduce the build](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md#verify-android-release) to verify it came from this source.
+You can also [reproduce the build](https://git.opengrind.org/open-grind/open-grind/src/branch/main/REPRODUCIBILITY.md) to verify it came from this source.
 
 :::
