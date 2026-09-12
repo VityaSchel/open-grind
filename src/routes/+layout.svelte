@@ -9,6 +9,7 @@
 	import { onMount } from "svelte";
 	import { Toaster } from "svelte-sonner";
 
+	import { startGoogleHandbackWatch } from "$lib/api/google-handback";
 	import {
 		getPreferencesSnapshot,
 		hydratePreferences,
@@ -69,6 +70,7 @@
 	import AccountStatusAlert from "$lib/components/feedback/AccountStatusAlert.svelte";
 	import CopyErrorConfirmAlert from "$lib/components/feedback/CopyErrorConfirmAlert.svelte";
 	import EntitlementBypassAlert from "$lib/components/feedback/EntitlementBypassAlert.svelte";
+	import GoogleHandbackConfirmAlert from "$lib/components/feedback/GoogleHandbackConfirmAlert.svelte";
 	import RequestBlockedAlert from "$lib/components/feedback/RequestBlockedAlert.svelte";
 	import SessionErrorAlert from "$lib/components/feedback/SessionErrorAlert.svelte";
 	import faviconSvg from "../../contrib/logo/open-grind.svg";
@@ -89,6 +91,14 @@
 		if (!onboarded) return;
 		if (!updatesSelfManaged()) return;
 		void startUpdateWatch();
+	});
+
+	$effect(() => {
+		if (!onboarded) return;
+		const watch = startGoogleHandbackWatch();
+		return () => {
+			void watch.then((stop) => stop());
+		};
 	});
 
 	const hasBottomNavBar = $derived(
@@ -139,5 +149,6 @@
 	<SessionErrorAlert />
 	<AccountStatusAlert />
 	<CopyErrorConfirmAlert />
+	<GoogleHandbackConfirmAlert />
 	<EntitlementBypassAlert />
 </IconContext>

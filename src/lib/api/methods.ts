@@ -48,7 +48,7 @@ export const restrictionSchema = z.object({
 });
 export type Restriction = z.infer<typeof restrictionSchema>;
 
-const loginResultSchema = z.object({
+export const loginResultSchema = z.object({
 	profileId: z.coerce.number().int().nonnegative(),
 	restriction: restrictionSchema.nullish(),
 });

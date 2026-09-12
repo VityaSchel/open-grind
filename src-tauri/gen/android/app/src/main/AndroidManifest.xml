@@ -4,6 +4,10 @@
 
 	<uses-permission android:name="org.opengrind.google_oauth.permission.REQUEST_TOKEN" />
 
+	<permission
+		android:name="org.opengrind.permission.RECEIVE_GOOGLE_TOKEN"
+		android:protectionLevel="signature" />
+
 	<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -43,6 +47,15 @@
 			android:name=".FacebookOauthActivity"
 			android:exported="false"
 			android:excludeFromRecents="true" />
+
+		<activity
+			android:name=".TokenHandoffActivity"
+			android:exported="true"
+			android:permission="org.opengrind.permission.RECEIVE_GOOGLE_TOKEN"
+			android:excludeFromRecents="true"
+			android:persistableMode="persistNever"
+			android:taskAffinity=""
+			android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
 		<service
 			android:name="org.opengrind.update.TransferService"

@@ -101,6 +101,33 @@ pub async fn google_sign_in(
 }
 
 #[tauri::command]
+pub fn backend_ready(state: tauri::State<'_, AppState>) -> bool {
+	state.client().is_ok()
+}
+
+#[tauri::command]
+pub fn google_handback_pending(app: tauri::AppHandle) -> bool {
+	super::google_oauth::handback_pending(&app)
+}
+
+#[tauri::command]
+pub async fn take_google_handback(
+	app: tauri::AppHandle,
+	state: tauri::State<'_, AppState>,
+) -> Result<Option<LoginResult>, AppError> {
+	let Some(token) = super::google_oauth::take_handback(&app) else {
+		return Ok(None);
+	};
+	let result = state.client()?.google_sign_in(&token).await?;
+	Ok(Some(LoginResult::from(result)))
+}
+
+#[tauri::command]
+pub fn discard_google_handback(app: tauri::AppHandle) {
+	super::google_oauth::discard_handback(&app);
+}
+
+#[tauri::command]
 pub async fn login_with_facebook(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,

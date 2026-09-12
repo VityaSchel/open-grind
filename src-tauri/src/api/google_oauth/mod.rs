@@ -32,6 +32,7 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 					"GoogleOauthPlugin",
 				)?;
 				_app.manage(android::AndroidGoogleOauth { handle });
+				watch_handback(_app);
 			}
 			#[cfg(not(target_os = "android"))]
 			{
@@ -55,5 +56,59 @@ pub async fn fetch_google_access_token(
 	{
 		let bridge = app.state::<Arc<GoogleOauthBridge>>().inner().clone();
 		web::fetch_access_token(app, bridge).await
+	}
+}
+
+pub const HANDBACK_EVENT: &str = "google-oauth:handback";
+
+#[cfg(target_os = "android")]
+fn watch_handback(app: &AppHandle) {
+	use tauri::Emitter;
+
+	let sink = app.clone();
+	let channel = tauri::ipc::Channel::new(move |body| {
+		let signal: android::HandoffSignal = body.deserialize()?;
+		if signal.pending {
+			let _ = sink.emit(HANDBACK_EVENT, ());
+		}
+		Ok(())
+	});
+	if let Err(error) = android::watch_handoff(app, channel) {
+		tracing::warn!("[google-oauth] handback events unavailable: {error}");
+	}
+}
+
+pub fn handback_pending(app: &AppHandle) -> bool {
+	#[cfg(target_os = "android")]
+	{
+		android::handoff_pending(app)
+	}
+	#[cfg(not(target_os = "android"))]
+	{
+		let _ = app;
+		false
+	}
+}
+
+pub fn take_handback(app: &AppHandle) -> Option<String> {
+	#[cfg(target_os = "android")]
+	{
+		android::take_handoff(app)
+	}
+	#[cfg(not(target_os = "android"))]
+	{
+		let _ = app;
+		None
+	}
+}
+
+pub fn discard_handback(app: &AppHandle) {
+	#[cfg(target_os = "android")]
+	{
+		android::discard_handoff(app);
+	}
+	#[cfg(not(target_os = "android"))]
+	{
+		let _ = app;
 	}
 }

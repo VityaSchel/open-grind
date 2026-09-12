@@ -30,7 +30,7 @@ Due to platform limitations enforced by Google, it's not possible to log in via 
 
 1. Launch **Open Grind Google OAuth** app from your Android launcher or home
 2. Tap the "Sign in with Google" button, then follow the instructions to sign in
-3. After that, you should land on a page with the token, starting with `ya29.` — tap it and copy
+3. You land on a page with your token masked. Tap "Copy token"
 4. Go to Open Grind sign in with Google screen and tap "paste the OAuth token manually"
 5. Paste the copied token and tap "Sign in"
 
@@ -39,7 +39,7 @@ Due to platform limitations enforced by Google, it's not possible to log in via 
 1. Install the [**Grindr Google OAuth WebExtension**](https://git.opengrind.org/open-grind/grindr-google-oauth-webextension#install) in your browser
 2. In the extensions list in the browser toolbar, click on the **extension's icon**
 3. A new page should open with the "Sign in with Google" button — tap it, then follow the instructions to sign in
-4. After that, you should land on a page with the token, starting with `ya29.` — tap it and copy
+4. You land on a page with your token masked. Tap "Copy token"
 5. Go to Open Grind sign in with Google screen and tap "paste the OAuth token manually"
 6. Paste the copied token and tap "Sign in"
 
@@ -85,7 +85,7 @@ No, Tauri's [wry](https://github.com/tauri-apps/wry) only works with system's We
 
 #### How do we solve all these issues?
 
-To solve these Google OAuth issues, we've built the [Grindr Google OAuth WebExtension](https://git.opengrind.org/open-grind/grindr-google-oauth-webextension). It's a browser extension (Firefox, any Firefox-based browser such as Librewolf, Firefox for Android, Google Chrome, Chromium, any Chromium-based browser such as Brave) that launches web.grindr.com (to satisfy the launch page's origin requirement), replaces document with a simple "Sign in with Google" button, then intercepts the response token from Google OAuth page before it hits Grindr Web's API and either prints it or passes to GeckoView for programmatic intent.
+To solve these Google OAuth issues, we've built the [Grindr Google OAuth WebExtension](https://git.opengrind.org/open-grind/grindr-google-oauth-webextension). It's a browser extension (Firefox, any Firefox-based browser such as Librewolf, Firefox for Android, Google Chrome, Chromium, any Chromium-based browser such as Brave) that launches web.grindr.com (to satisfy the launch page's origin requirement), replaces document with a simple "Sign in with Google" button, then intercepts the response token from Google OAuth page before it hits Grindr Web's API and either shows it masked on a local page for copying, or passes it to GeckoView for programmatic intent.
 
 #### So why build an app if it's an extension?
 
