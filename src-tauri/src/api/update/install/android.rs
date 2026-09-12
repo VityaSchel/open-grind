@@ -105,7 +105,7 @@ pub fn hold_process<R: tauri::Runtime>(app: &AppHandle<R>, active: bool) {
 		"endTransfer"
 	};
 	if let Err(e) = handle.run_mobile_plugin::<serde_json::Value>(command, ()) {
-		eprintln!("[update] {command} failed: {e}");
+		tracing::warn!("[update] {command} failed: {e}");
 	}
 }
 

@@ -1,5 +1,8 @@
+#[cfg(not(target_os = "android"))]
 use std::fs;
-use std::path::{Path, PathBuf};
+#[cfg(not(target_os = "android"))]
+use std::path::Path;
+use std::path::PathBuf;
 
 pub fn path() -> Option<PathBuf> {
 	std::env::var_os("APPIMAGE")
@@ -7,11 +10,13 @@ pub fn path() -> Option<PathBuf> {
 		.filter(|path| path.is_absolute() && path.is_file())
 }
 
+#[cfg(not(target_os = "android"))]
 pub fn replaceable() -> Option<PathBuf> {
 	let path = path()?;
 	accepts_new_files(path.parent()?).then_some(path)
 }
 
+#[cfg(not(target_os = "android"))]
 fn accepts_new_files(dir: &Path) -> bool {
 	let probe = dir.join(format!(".open-grind-{}.probe", std::process::id()));
 	let accepted = fs::File::create(&probe).is_ok();
