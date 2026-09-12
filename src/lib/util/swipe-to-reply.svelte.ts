@@ -225,19 +225,10 @@ export class SwipeToReply {
 		this.#rail?.scrollTo({ left: this.#railRest, behavior: "smooth" });
 	}
 
-	// Nothing scrolls natively here, and nothing scrolls twice: each gesture
-	// locks to ONE axis at its first decisive travel. A reply-locked gesture
-	// has the monitor swallow the rest of the gesture at the source — no
-	// cancelled wheels, no compositor fights — and tracks the drag in
-	// AppKit's own scrollingDelta units — natural scroll speed, where DOM
-	// deltas run hotter — while a scroll-locked gesture never touches the
-	// row. Momentum and mice carry no finger phase and can never drag, and
-	// the release evaluates the instant the fingers leave. Every listener is
-	// passive and nothing is ever cancelled: WebKit hands wheels to
-	// non-passive regions synchronously and degrades a gesture that starts
-	// over or drifts into one, which froze the overscroll band mid-pull.
 	#attachBridge(node: HTMLElement): () => void {
 		const onWheel = (event: WheelEvent) => this.#onBridgeWheel(event);
+		// passive: WebKit degrades a gesture that starts over or drifts into a
+		// non-passive region, which froze the overscroll band mid-pull
 		node.addEventListener("wheel", onWheel, { passive: true });
 		const offRelease = this.#gesture.onRelease(() =>
 			this.#onBridgeRelease(),

@@ -1,6 +1,3 @@
-//! Unlocks WebKit's `-apple-visual-effect` in the app's webviews. No-op off macOS.
-//! Also reports whether the webview's compositor can execute `backdrop-filter`.
-
 #[cfg(target_os = "linux")]
 const COMPOSITING_OFF_VARS: [&str; 2] = [
 	"WEBKIT_DISABLE_COMPOSITING_MODE",

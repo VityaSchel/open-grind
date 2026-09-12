@@ -95,13 +95,14 @@
 		return () => lightbox?.destroy();
 	});
 
-	const GAP = 4; //px
-	const PADDING_VERTICAL = 8; //px
-	const PADDING_HORIZONTAL = PADDING_VERTICAL;
-	const BULLET_SIZE = 8; //px
+	const GAP_PX = 4;
+	const PADDING_VERTICAL_PX = 8;
+	const PADDING_HORIZONTAL_PX = PADDING_VERTICAL_PX;
+	const BULLET_SIZE_PX = 8;
+	const BULLET_PITCH_PX = BULLET_SIZE_PX + GAP_PX;
 
-	let indicatorY = $state(PADDING_VERTICAL);
-	let indicatorHeight = $state(BULLET_SIZE);
+	let indicatorY = $state(PADDING_VERTICAL_PX);
+	let indicatorHeight = $state(BULLET_SIZE_PX);
 </script>
 
 <div class="relative aspect-3/4 h-auto max-h-photo w-full">
@@ -120,10 +121,10 @@
 					(item < medias.length - 1
 						? Math.max(0, (frac - 0.5) * 2)
 						: frac);
-				indicatorY = PADDING_VERTICAL + tipYp * (BULLET_SIZE + GAP);
-				const indicatorStretch = stretch * (BULLET_SIZE * 2 + GAP + 4);
+				indicatorY = PADDING_VERTICAL_PX + tipYp * BULLET_PITCH_PX;
+				const indicatorStretch = stretch * 2 * BULLET_PITCH_PX;
 				indicatorHeight =
-					BULLET_SIZE +
+					BULLET_SIZE_PX +
 					(item > 0 && item < medias.length - 1
 						? indicatorStretch
 						: 0);
@@ -141,8 +142,8 @@
 		</div>
 		<div
 			class="absolute top-1/2 right-2 flex -translate-y-1/2 flex-col rounded-full bg-background/30 scrim p-2 backdrop-filter-(--bd-veil)"
-			style:gap="{GAP}px"
-			style:padding="{PADDING_VERTICAL}px {PADDING_HORIZONTAL}px"
+			style:gap="{GAP_PX}px"
+			style:padding="{PADDING_VERTICAL_PX}px {PADDING_HORIZONTAL_PX}px"
 		>
 			{#each medias, i (i)}
 				<span class="block size-2 rounded-full bg-neutral-200/40"

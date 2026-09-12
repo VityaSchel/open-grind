@@ -129,8 +129,6 @@ async fn run_flow(
 				false
 			});
 
-	// `incognito` silently no-ops on WebView2 older than 101.0.1210.39
-	// https://docs.rs/wry/latest/src/wry/lib.rs.html#1440-1443
 	#[cfg(target_os = "windows")]
 	{
 		builder = builder

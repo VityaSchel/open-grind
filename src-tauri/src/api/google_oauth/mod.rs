@@ -19,9 +19,6 @@ impl OauthProvider for Google {
 
 pub type GoogleOauthBridge = OauthBridge<Google>;
 
-/// Registers the Google OAuth plugin and its per-platform state. On Android it binds
-/// the native `GoogleOauthPlugin` (companion-app intent hand-off); on desktop it
-/// manages the [`GoogleOauthBridge`] used by the WebView flow in [`web`].
 pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 	tauri::plugin::Builder::new("google-oauth")
 		.setup(|_app, _api| {
@@ -50,7 +47,7 @@ pub async fn fetch_google_access_token(
 ) -> Result<String, AppError> {
 	#[cfg(target_os = "android")]
 	{
-		return android::fetch_token(app).await;
+		return android::fetch_companion_token(app).await;
 	}
 	#[cfg(not(target_os = "android"))]
 	{
