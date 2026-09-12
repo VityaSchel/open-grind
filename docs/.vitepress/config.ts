@@ -88,6 +88,10 @@ export default defineConfig({
 							text: "Sign in with Facebook",
 							link: "/guides/sign-in-with-facebook",
 						},
+						{
+							text: "Video codecs on Linux",
+							link: "/guides/codecs",
+						},
 						{ text: "FAQ", link: "/guides/faq" },
 						{ text: "Grindr API bypasses", link: "/guides/bypasses" },
 					],
