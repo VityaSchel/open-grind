@@ -63,6 +63,7 @@ import {
 	conversation,
 	deferred,
 	entryFor,
+	fromPeer,
 	incomingMessage,
 	microtasks,
 	OUR_ID,
@@ -150,7 +151,7 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 
 	it("hands an incoming message to the handler with its conversation", async () => {
 		const state = await stateAwayFromTheInbox();
-		const message = incomingMessage("a:1", 2000, PEER_ID);
+		const message = fromPeer("a:1", 2000);
 
 		emitMessageSent(message);
 
@@ -163,7 +164,7 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 	it("stays silent for a muted conversation", async () => {
 		await stateAwayFromTheInbox({ muted: true });
 
-		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2000));
 
 		expect(onIncomingMessage).not.toHaveBeenCalled();
 	});
@@ -173,7 +174,7 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 		currentPage.route.id = "/(protected)/chat";
 		onIncomingMessage.mockClear();
 
-		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2000));
 		await microtasks();
 
 		expect(onIncomingMessage).not.toHaveBeenCalled();
@@ -199,7 +200,7 @@ describe("ConversationsState unread accounting", () => {
 		state.noteListViewed();
 		expect(state.hasUnread).toBe(false);
 
-		emitMessageSent(incomingMessage("a:1", 2500, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2500));
 		await microtasks();
 
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(2);
@@ -209,7 +210,7 @@ describe("ConversationsState unread accounting", () => {
 	it("counts a reply the row's clock has already passed", async () => {
 		const state = await inboxWith([conversation("a:1", 5000)]);
 
-		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2000));
 		await microtasks();
 
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
@@ -218,7 +219,7 @@ describe("ConversationsState unread accounting", () => {
 	it("leaves the newer preview alone when an out-of-order message arrives", async () => {
 		const state = await inboxWith([conversation("a:1", 5000)]);
 
-		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2000));
 		await microtasks();
 
 		const entry = entryFor(state, "a:1");
@@ -230,14 +231,8 @@ describe("ConversationsState unread accounting", () => {
 	it("counts two messages sharing a millisecond separately", async () => {
 		const state = await inboxWith([conversation("a:1", 1000)]);
 
-		emitMessageSent({
-			...incomingMessage("a:1", 2000, PEER_ID),
-			messageId: "m-first",
-		});
-		emitMessageSent({
-			...incomingMessage("a:1", 2000, PEER_ID),
-			messageId: "m-second",
-		});
+		emitMessageSent({ ...fromPeer("a:1", 2000), messageId: "m-first" });
+		emitMessageSent({ ...fromPeer("a:1", 2000), messageId: "m-second" });
 		await microtasks();
 
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(2);
@@ -245,7 +240,7 @@ describe("ConversationsState unread accounting", () => {
 
 	it("counts a repeated delivery of the same message once", async () => {
 		const state = await inboxWith([conversation("a:1", 1000)]);
-		const message = incomingMessage("a:1", 2000, PEER_ID);
+		const message = fromPeer("a:1", 2000);
 
 		emitMessageSent(message);
 		emitMessageSent(message);
@@ -259,7 +254,9 @@ describe("ConversationsState unread accounting", () => {
 	it("ignores our own message when counting unread", async () => {
 		const state = await inboxWith([conversation("a:1", 5000)]);
 
-		emitMessageSent(incomingMessage("a:1", 2000, OUR_ID));
+		emitMessageSent(
+			incomingMessage("a:1", { timestamp: 2000, senderId: OUR_ID }),
+		);
 		await microtasks();
 
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(0);
@@ -272,7 +269,7 @@ describe("ConversationsState unread accounting", () => {
 			nextPage: null,
 		});
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 
 		await vi.waitFor(() =>
 			expect(entryFor(state, "b:2").data.unreadCount).toBe(1),
@@ -288,7 +285,9 @@ describe("ConversationsState unread accounting", () => {
 		getConversationsMock.mockReturnValueOnce(gate.promise);
 
 		for (const timestamp of [3000, 3001, 3002]) {
-			emitMessageSent(incomingMessage("b:2", timestamp, PEER_ID));
+			emitMessageSent(
+				incomingMessage("b:2", { timestamp, senderId: PEER_ID }),
+			);
 		}
 		await microtasks();
 		gate.resolve({
@@ -310,7 +309,7 @@ describe("ConversationsState unread accounting", () => {
 		getConversationsMock.mockReturnValueOnce(stale.promise);
 		const joined = state.ensureLoaded("c:3");
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 
 		getConversationsMock.mockResolvedValue({
 			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
@@ -328,7 +327,7 @@ describe("ConversationsState unread accounting", () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		const state = await inboxWith([conversation("a:1", 1000)]);
 		getConversationsMock.mockRejectedValueOnce(new Error("offline"));
-		const message = incomingMessage("b:2", 3000, PEER_ID);
+		const message = fromPeer("b:2", 3000);
 
 		emitMessageSent(message);
 		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
@@ -351,7 +350,7 @@ describe("ConversationsState unread accounting", () => {
 		getConversationsMock.mockClear();
 		getConversationsMock.mockRejectedValue(new Error("offline"));
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
 		await microtasks();
 
@@ -372,7 +371,7 @@ describe("ConversationsState unread accounting", () => {
 		getConversationsMock.mockReturnValueOnce(stale.promise);
 		const joined = state.ensureLoaded("c:3");
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 
 		getConversationsMock.mockResolvedValue({
 			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
@@ -398,7 +397,7 @@ describe("ConversationsState unread accounting", () => {
 		}>();
 		getConversationsMock.mockReturnValueOnce(gate.promise);
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 		state.setActive("b:2");
 		gate.resolve({
 			entries: [conversation("b:2", 3000), conversation("a:1", 1000)],
@@ -422,7 +421,7 @@ describe("ConversationsState unread accounting", () => {
 			nextPage: null,
 		});
 
-		emitMessageSent(incomingMessage("b:2", 3000, PEER_ID));
+		emitMessageSent(fromPeer("b:2", 3000));
 
 		await vi.waitFor(() =>
 			expect(entryFor(state, "b:2").data.unreadCount).toBe(4),
@@ -488,7 +487,7 @@ describe("ConversationsState markRead rollback (P1.9)", () => {
 		const markPromise = state.markRead("a:1");
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(0);
 
-		emitMessageSent(incomingMessage("a:1", 2000, PEER_ID));
+		emitMessageSent(fromPeer("a:1", 2000));
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
 
 		gate.reject(new Error("mark-read failed"));

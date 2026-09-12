@@ -34,11 +34,15 @@ const lockedVersions = (source: string, pattern: RegExp) => {
 	return locked;
 };
 
-const checkAgainstLockfile = (
-	ecosystem: string,
-	lockfile: string,
-	pattern: RegExp,
-) => {
+const checkAgainstLockfile = ({
+	ecosystem,
+	lockfile,
+	pattern,
+}: {
+	ecosystem: string;
+	lockfile: string;
+	pattern: RegExp;
+}) => {
 	const locked = lockedVersions(read(lockfile), pattern);
 	for (const entry of credits.entries.filter(
 		(it) => it.ecosystem === ecosystem,
@@ -53,17 +57,17 @@ const checkAgainstLockfile = (
 	}
 };
 
-checkAgainstLockfile(
-	"rust",
-	"src-tauri/Cargo.lock",
-	/^\[\[package\]\]\nname = "([^"]+)"\nversion = "([^"]+)"/gm,
-);
+checkAgainstLockfile({
+	ecosystem: "rust",
+	lockfile: "src-tauri/Cargo.lock",
+	pattern: /^\[\[package\]\]\nname = "([^"]+)"\nversion = "([^"]+)"/gm,
+});
 
-checkAgainstLockfile(
-	"npm",
-	"bun.lock",
-	/\["((?:@[^"@/]+\/)?[^"@/][^"@]*)@([^"]+)"/g,
-);
+checkAgainstLockfile({
+	ecosystem: "npm",
+	lockfile: "bun.lock",
+	pattern: /\["((?:@[^"@/]+\/)?[^"@/][^"@]*)@([^"]+)"/g,
+});
 
 const credited = new Set(
 	credits.entries.map((entry) => `${entry.ecosystem}:${entry.id}`),

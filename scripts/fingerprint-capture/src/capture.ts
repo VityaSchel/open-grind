@@ -68,11 +68,8 @@ if (!bytes.length)
 	);
 
 C.log(`isolated ${emuIps.size} emulator remote IPs`);
-const { lines, tcpSegments, flows443 } = analyze(
-	bytes,
-	emuIps.size ? emuIps : undefined,
-);
-console.error(summarize(lines, tcpSegments, flows443));
-const jsonl = lines.map((l) => JSON.stringify(l)).join("\n");
+const parsed = analyze(bytes, emuIps.size ? emuIps : undefined);
+console.error(summarize(parsed));
+const jsonl = parsed.lines.map((l) => JSON.stringify(l)).join("\n");
 await Bun.write(pcap.replace(/\.pcap$/, ".jsonl"), jsonl + "\n");
 console.log(jsonl);

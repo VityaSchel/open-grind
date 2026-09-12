@@ -67,15 +67,21 @@ function stripLinkLayer(
 	return null;
 }
 
-function parseSegment(
-	lt: number,
-	buf: Uint8Array,
-	off: number,
-	inclLen: number,
-	tsMicros: number,
-): Segment | null {
+function parseSegment({
+	linkType,
+	buf,
+	off,
+	inclLen,
+	tsMicros,
+}: {
+	linkType: number;
+	buf: Uint8Array;
+	off: number;
+	inclLen: number;
+	tsMicros: number;
+}): Segment | null {
 	const end = off + inclLen;
-	const link = stripLinkLayer(lt, buf, off);
+	const link = stripLinkLayer(linkType, buf, off);
 	if (!link) return null;
 	const [et, l3] = link;
 
@@ -134,7 +140,13 @@ export function readPcap(buf: Uint8Array): Segment[] {
 			u32(off) * 1_000_000 + (nano ? u32(off + 4) / 1000 : u32(off + 4));
 		off += 16;
 		if (off + inclLen > buf.length) break;
-		const seg = parseSegment(lt, buf, off, inclLen, ts);
+		const seg = parseSegment({
+			linkType: lt,
+			buf,
+			off,
+			inclLen,
+			tsMicros: ts,
+		});
 		if (seg) segs.push(seg);
 		off += inclLen;
 	}

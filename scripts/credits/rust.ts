@@ -87,14 +87,17 @@ const runCargoAbout = async (): Promise<AboutOutput> => {
 	return result.json() as AboutOutput;
 };
 
-const assertPinnedNoticesPresent = (
-	ids: Map<string, Set<string>>,
-	texts: Map<string, Set<string>>,
-) => {
+const assertPinnedNoticesPresent = ({
+	ids,
+	hashes,
+}: {
+	ids: Map<string, Set<string>>;
+	hashes: Map<string, Set<string>>;
+}) => {
 	for (const [name, pinned] of Object.entries(pinnedByClarifyStanza)) {
 		const lost = [
 			...pinned.ids.filter((id) => !ids.get(name)?.has(id)),
-			...pinned.texts.filter((hash) => !texts.get(name)?.has(hash)),
+			...pinned.texts.filter((hash) => !hashes.get(name)?.has(hash)),
 		];
 		if (lost.length > 0) {
 			throw new Error(
@@ -121,7 +124,7 @@ export const collectRustCredits = async (): Promise<CreditsChunk> => {
 			addTo(idsByCrate, name, license.id);
 		}
 	}
-	assertPinnedNoticesPresent(idsByCrate, hashesByCrate);
+	assertPinnedNoticesPresent({ ids: idsByCrate, hashes: hashesByCrate });
 
 	const entries = [...Map.groupBy(about.crates, (krate) => krate.name)].map(
 		([name, unsorted]): CreditEntry => {

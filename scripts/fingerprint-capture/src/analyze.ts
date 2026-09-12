@@ -60,11 +60,11 @@ export function analyze(bytes: Uint8Array, onlyIps?: Set<string>) {
 	return { lines, tcpSegments: segs.length, flows443 };
 }
 
-export function summarize(
-	lines: Line[],
-	tcpSegments: number,
-	flows443: number,
-): string {
+export function summarize({
+	lines,
+	tcpSegments,
+	flows443,
+}: ReturnType<typeof analyze>): string {
 	if (!lines.length)
 		return `# no TLS connections. tcp-segments=${tcpSegments} dst:443-flows=${flows443}\n# ${flows443 ? "443 flows exist but no ClientHello parsed — widen the window" : "no HTTPS-over-TCP — check network/dwell, or hosts used QUIC (FORCE_TCP=1)"}`;
 	const byHost = new Map<string, Set<string>>();
@@ -97,10 +97,7 @@ if (import.meta.main) {
 		console.error("usage: bun src/analyze.ts <capture.pcap> [--json]");
 		process.exit(2);
 	}
-	const { lines, tcpSegments, flows443 } = analyze(
-		await Bun.file(path).bytes(),
-	);
-	if (!args.includes("--json"))
-		console.error(summarize(lines, tcpSegments, flows443));
-	for (const l of lines) console.log(JSON.stringify(l));
+	const parsed = analyze(await Bun.file(path).bytes());
+	if (!args.includes("--json")) console.error(summarize(parsed));
+	for (const l of parsed.lines) console.log(JSON.stringify(l));
 }

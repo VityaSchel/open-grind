@@ -35,23 +35,41 @@ pub enum GestureState {
 	Momentum,
 }
 
+#[cfg(any(target_os = "macos", test))]
+pub const BEGAN: u64 = 1;
+#[cfg(any(target_os = "macos", test))]
+pub const STATIONARY: u64 = 2;
+#[cfg(any(target_os = "macos", test))]
+pub const CHANGED: u64 = 4;
+#[cfg(any(target_os = "macos", test))]
+pub const ENDED: u64 = 8;
+#[cfg(any(target_os = "macos", test))]
+pub const CANCELLED: u64 = 16;
+#[cfg(any(target_os = "macos", test))]
+pub const MAY_BEGIN: u64 = 32;
+
+#[cfg(any(target_os = "macos", test))]
+pub struct Phases {
+	pub phase: u64,
+	pub momentum: u64,
+}
+
 /// Collapses a scroll event's phase pair into the gesture state, and the
 /// transition to announce. "released" rather than "idle" marks the instant
 /// the fingers leave while the gesture may still coast.
 #[cfg(any(target_os = "macos", test))]
 pub fn classify(
-	phase: u64,
-	momentum: u64,
+	Phases { phase, momentum }: Phases,
 	previous: GestureState,
 ) -> (GestureState, Option<&'static str>) {
-	const ACTIVE: u64 = 1 | 2 | 4 | 32; // began | stationary | changed | may-begin
-	const OVER: u64 = 8 | 16; // ended | cancelled
+	const ACTIVE: u64 = BEGAN | STATIONARY | CHANGED | MAY_BEGIN;
+	const OVER: u64 = ENDED | CANCELLED;
 
 	let next = if phase & ACTIVE != 0 {
 		GestureState::Fingers
 	} else if phase & OVER != 0 {
 		GestureState::Idle
-	} else if momentum & (1 | 4) != 0 {
+	} else if momentum & (BEGAN | CHANGED) != 0 {
 		GestureState::Momentum
 	} else {
 		GestureState::Idle
@@ -84,7 +102,7 @@ mod macos {
 	use serde::Serialize;
 	use tauri::Emitter;
 
-	use super::{classify, GestureState};
+	use super::{classify, GestureState, Phases};
 
 	#[derive(Debug, Clone, Serialize)]
 	#[serde(rename_all = "camelCase")]
@@ -114,8 +132,10 @@ mod macos {
 				let e = unsafe { event.as_ref() };
 				let (next, announce) = STATE.with(|state| {
 					let pair = classify(
-						e.phase().0 as u64,
-						e.momentumPhase().0 as u64,
+						Phases {
+							phase: e.phase().0 as u64,
+							momentum: e.momentumPhase().0 as u64,
+						},
 						state.get(),
 					);
 					state.set(pair.0);
@@ -158,59 +178,116 @@ mod macos {
 
 #[cfg(test)]
 mod tests {
-	use super::{classify, GestureState};
+	use super::{classify, GestureState, Phases, BEGAN, CHANGED, ENDED};
 
-	const BEGAN: u64 = 1;
-	const CHANGED: u64 = 4;
-	const ENDED: u64 = 8;
 	const NONE: u64 = 0;
 
 	#[test]
 	fn a_finger_gesture_announces_each_transition_once() {
-		let (state, announce) = classify(BEGAN, NONE, GestureState::Idle);
+		let (state, announce) = classify(
+			Phases {
+				phase: BEGAN,
+				momentum: NONE,
+			},
+			GestureState::Idle,
+		);
 		assert_eq!(state, GestureState::Fingers);
 		assert_eq!(announce, Some("fingers"));
 
-		let (state, announce) = classify(CHANGED, NONE, state);
+		let (state, announce) = classify(
+			Phases {
+				phase: CHANGED,
+				momentum: NONE,
+			},
+			state,
+		);
 		assert_eq!(state, GestureState::Fingers);
 		assert_eq!(announce, None);
 
-		let (state, announce) = classify(ENDED, NONE, state);
+		let (state, announce) = classify(
+			Phases {
+				phase: ENDED,
+				momentum: NONE,
+			},
+			state,
+		);
 		assert_eq!(state, GestureState::Idle);
 		assert_eq!(announce, Some("released"));
 	}
 
 	#[test]
 	fn a_momentum_tail_is_bracketed_by_momentum_and_idle() {
-		let (state, announce) = classify(NONE, BEGAN, GestureState::Idle);
+		let (state, announce) = classify(
+			Phases {
+				phase: NONE,
+				momentum: BEGAN,
+			},
+			GestureState::Idle,
+		);
 		assert_eq!(state, GestureState::Momentum);
 		assert_eq!(announce, Some("momentum"));
 
-		let (state, announce) = classify(NONE, CHANGED, state);
+		let (state, announce) = classify(
+			Phases {
+				phase: NONE,
+				momentum: CHANGED,
+			},
+			state,
+		);
 		assert_eq!(announce, None);
 
-		let (state, announce) = classify(NONE, ENDED, state);
+		let (state, announce) = classify(
+			Phases {
+				phase: NONE,
+				momentum: ENDED,
+			},
+			state,
+		);
 		assert_eq!(state, GestureState::Idle);
 		assert_eq!(announce, Some("idle"));
 	}
 
 	#[test]
 	fn a_mouse_wheel_with_no_phases_announces_nothing() {
-		let (state, announce) = classify(NONE, NONE, GestureState::Idle);
+		let (state, announce) = classify(
+			Phases {
+				phase: NONE,
+				momentum: NONE,
+			},
+			GestureState::Idle,
+		);
 		assert_eq!(state, GestureState::Idle);
 		assert_eq!(announce, None);
 	}
 
 	#[test]
 	fn a_lift_straight_into_momentum_still_reports_the_release() {
-		let (state, announce) = classify(CHANGED, NONE, GestureState::Idle);
+		let (state, announce) = classify(
+			Phases {
+				phase: CHANGED,
+				momentum: NONE,
+			},
+			GestureState::Idle,
+		);
 		assert_eq!(state, GestureState::Fingers);
 		assert_eq!(announce, Some("fingers"));
 
-		let (state, announce) = classify(ENDED, NONE, state);
+		let (state, announce) = classify(
+			Phases {
+				phase: ENDED,
+				momentum: NONE,
+			},
+			state,
+		);
 		assert_eq!(announce, Some("released"));
 
-		let (_, announce) = classify(NONE, BEGAN, state);
+		let (_, announce) = classify(
+			Phases {
+				phase: NONE,
+				momentum: BEGAN,
+			},
+			state,
+		);
 		assert_eq!(announce, Some("momentum"));
 	}
 }
