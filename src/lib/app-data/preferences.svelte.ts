@@ -36,6 +36,12 @@ const preferencesSchema = z.object({
 
 type Preferences = z.infer<typeof preferencesSchema>;
 
+export type BooleanPreference = {
+	[Key in keyof Preferences]-?: Preferences[Key] extends boolean
+		? Key
+		: never;
+}[keyof Preferences];
+
 let writeQueue: Promise<unknown> = Promise.resolve();
 let snapshot = $state<Preferences>(preferencesSchema.parse({}));
 let loaded = $state(false);

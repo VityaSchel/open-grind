@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { encode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,50 +18,72 @@ vi.mock("$lib/app-data", () => ({
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
-import { setPreferences } from "$lib/app-data/preferences.svelte";
-import HapticFeedbackSetting from "./HapticFeedbackSetting.svelte";
+import {
+	type BooleanPreference,
+	setPreferences,
+} from "$lib/app-data/preferences.svelte";
+import PreferenceSwitchSetting from "./PreferenceSwitchSetting.svelte";
 
 function toggle() {
 	return screen.getByRole("switch");
 }
 
-async function storedPreference(hapticFeedback: boolean) {
-	await setPreferences({ hapticFeedback });
-	writeMock.mockClear();
-	readMock.mockClear();
+function lastWritten(): Record<string, unknown> {
+	const { content } = writeMock.mock.lastCall?.[0] as { content: Uint8Array };
+	return decode(content) as Record<string, unknown>;
 }
 
-beforeEach(async () => {
-	readMock.mockReset().mockResolvedValue(encode({}));
-	writeMock.mockReset().mockResolvedValue(undefined);
-	showErrorToastMock.mockReset();
-	await storedPreference(true);
-});
+describe.each<BooleanPreference>([
+	"hapticFeedback",
+	"stayOnline",
+	"revealMessageRead",
+	"revealProfileViews",
+])("PreferenceSwitchSetting for %s", (preference) => {
+	async function storedPreference(value: boolean) {
+		await setPreferences({ [preference]: value });
+		writeMock.mockClear();
+		readMock.mockClear();
+	}
 
-afterEach(cleanup);
+	function renderSetting() {
+		render(PreferenceSwitchSetting, {
+			preference,
+			title: "Title",
+			description: "Description",
+		});
+	}
 
-describe("HapticFeedbackSetting", () => {
+	beforeEach(async () => {
+		readMock.mockReset().mockResolvedValue(encode({}));
+		writeMock.mockReset().mockResolvedValue(undefined);
+		showErrorToastMock.mockReset();
+		await storedPreference(true);
+	});
+
+	afterEach(cleanup);
+
 	it("renders the stored preference without loading it itself", async () => {
 		await storedPreference(false);
 
-		render(HapticFeedbackSetting);
+		renderSetting();
 
 		expect(toggle().getAttribute("aria-checked")).toBe("false");
 		expect(toggle().hasAttribute("disabled")).toBe(false);
 		expect(readMock).not.toHaveBeenCalled();
 	});
 
-	it("keeps the new value when the write succeeds", async () => {
-		render(HapticFeedbackSetting);
+	it("writes its own preference and keeps the new value", async () => {
+		renderSetting();
 
 		await fireEvent.click(toggle());
 
 		expect(writeMock).toHaveBeenCalledOnce();
+		expect(lastWritten()[preference]).toBe(false);
 		expect(toggle().getAttribute("aria-checked")).toBe("false");
 	});
 
 	it("rolls back to the stored preference when the write fails", async () => {
-		render(HapticFeedbackSetting);
+		renderSetting();
 		writeMock.mockRejectedValue(new Error("disk full"));
 
 		await fireEvent.click(toggle());

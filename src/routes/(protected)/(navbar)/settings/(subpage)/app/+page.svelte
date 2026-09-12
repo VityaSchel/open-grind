@@ -13,10 +13,7 @@
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
-	import HapticFeedbackSetting from "./HapticFeedbackSetting.svelte";
-	import RevealMessageReadSetting from "./RevealMessageReadSetting.svelte";
-	import RevealProfileViewSetting from "./RevealProfileViewSetting.svelte";
-	import StayOnlineSetting from "./StayOnlineSetting.svelte";
+	import PreferenceSwitchSetting from "./PreferenceSwitchSetting.svelte";
 	import UnitsSetting from "./UnitsSetting.svelte";
 </script>
 
@@ -57,7 +54,11 @@
 <UnitsSetting />
 <BackdropBlurSetting />
 {#if hapticsAvailable()}
-	<HapticFeedbackSetting />
+	<PreferenceSwitchSetting
+		preference="hapticFeedback"
+		title="Haptic feedback"
+		description="Play a short tap when a swipe has gone far enough to reply."
+	/>
 {/if}
 {#if desktopEntryAvailable()}
 	<AppsMenuEntrySetting />
@@ -67,9 +68,21 @@
 	unimplemented: { feature: "Notifications", issue: 45 },
 })}
 <h2>Privacy</h2>
-<StayOnlineSetting />
-<RevealMessageReadSetting />
-<RevealProfileViewSetting />
+<PreferenceSwitchSetting
+	preference="stayOnline"
+	title="Stay online while the app is open"
+	description="Refresh your online status in the background automatically, while the app is open."
+/>
+<PreferenceSwitchSetting
+	preference="revealMessageRead"
+	title="Reveal message read status"
+	description="Let others know when you've read their messages. Your read receipts remain unaffected."
+/>
+<PreferenceSwitchSetting
+	preference="revealProfileViews"
+	title="Reveal profile views"
+	description="Let others know when you've viewed their profile. Your profile view history remains unaffected."
+/>
 <h2>Security</h2>
 {@render item({
 	title: "Discreet app icon",
