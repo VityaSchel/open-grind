@@ -15555,20 +15555,119 @@
 			},
 			"Conversation": {
 				"type": "object",
+				"description": "An inbox entry, discriminated by `type`. The `onlineNowOnly`, `distanceMeters` and `positions` [filters](#inboxfilterrequest) are paid: only the first `totalFullConversations` matches come back full, the rest as `partial_conversation_v1`. The unfiltered inbox returns the same conversations in full.",
 				"properties": {
 					"type": {
 						"type": "string",
-						"description": "e.g. `\"full_conversation_v1\"`"
+						"enum": [
+							"full_conversation_v1",
+							"partial_conversation_v1"
+						]
+					},
+					"data": {
+						"type": "object"
+					}
+				},
+				"discriminator": {
+					"propertyName": "type",
+					"mapping": {
+						"full_conversation_v1": "#/components/schemas/FullConversation",
+						"partial_conversation_v1": "#/components/schemas/PartialConversation"
+					}
+				},
+				"oneOf": [
+					{
+						"$ref": "#/components/schemas/FullConversation"
+					},
+					{
+						"$ref": "#/components/schemas/PartialConversation"
+					}
+				],
+				"x-render-on-tag": "messaging/conversations"
+			},
+			"FullConversation": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"full_conversation_v1"
+						]
 					},
 					"data": {
 						"$ref": "#/components/schemas/ConversationData"
 					}
 				},
-				"description": "Conversation object.",
 				"x-render-on-tag": "messaging/conversations",
 				"required": [
 					"type",
 					"data"
+				]
+			},
+			"PartialConversation": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"enum": [
+							"partial_conversation_v1"
+						]
+					},
+					"data": {
+						"$ref": "#/components/schemas/PartialConversationData"
+					}
+				},
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"type",
+					"data"
+				]
+			},
+			"PartialConversationData": {
+				"type": "object",
+				"description": "[Conversation data](#conversationdata) as a partial entry carries it. Fields `muted`, `pinned`, `favorite`, `context`, `onlineUntil`, `translatable`, `rightNow` and `hasUnreadThrob` are absent.",
+				"properties": {
+					"conversationId": {
+						"$ref": "#/components/schemas/ConversationId"
+					},
+					"name": {
+						"type": "string",
+						"description": "string, profile name, may be an empty string, e.g. `\"\"`"
+					},
+					"participants": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ConversationParticipant"
+						}
+					},
+					"lastActivityTimestamp": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"unreadCount": {
+						"type": "integer"
+					},
+					"preview": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ConversationPreview"
+							}
+						],
+						"nullable": true,
+						"description": "[Conversation preview](/grindr-api/messaging/conversations#conversationpreview) or `null`"
+					}
+				},
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"conversationId",
+					"name",
+					"participants",
+					"lastActivityTimestamp",
+					"unreadCount",
+					"preview"
 				]
 			},
 			"InboxFilterRequest": {
