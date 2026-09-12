@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { RulerIcon } from "phosphor-svelte";
 
-	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Separator } from "$lib/components/ui/separator";
 	import { bodyTypes } from "$lib/model/users/profiles";
 	import { labelFromMap } from "$lib/util/options";
@@ -17,7 +17,7 @@
 		bodyType: number | null;
 	} = $props();
 
-	const units = $derived(getPreferencesSnapshot().units);
+	const units = $derived(preferencesSnapshot().units);
 	const bodyTypeLabel = $derived(
 		bodyType === null
 			? undefined

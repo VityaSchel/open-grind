@@ -28,7 +28,7 @@ export function applyAndroidInsets() {
 	window.__reapplyInsets = applyAndroidInsets;
 }
 
-export function isSoftKeyboardVisible(): boolean | undefined {
+export function softKeyboardVisibility(): boolean | undefined {
 	return window.__AndroidInsets?.imeVisible?.();
 }
 

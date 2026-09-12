@@ -1,7 +1,7 @@
 import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 import {
-	getPreferencesSnapshot,
 	preferencesLoaded,
+	preferencesSnapshot,
 } from "$lib/app-data/preferences.svelte";
 import { gridState } from "$lib/grid/grid-state.svelte";
 import { now } from "$lib/util/clock";
@@ -17,7 +17,7 @@ export async function beatOnlinePresence(): Promise<void> {
 	if (typeof document !== "undefined" && document.hidden) return;
 	if (!appLifecycle.active) return;
 	if (!preferencesLoaded()) return;
-	if (!getPreferencesSnapshot().stayOnline && !gridState.viewActive) return;
+	if (!preferencesSnapshot().stayOnline && !gridState.viewActive) return;
 	const refreshedAt = onlineRefreshedAt();
 	if (refreshedAt !== null && now() - refreshedAt < ONLINE_REFRESH_AFTER_MS)
 		return;

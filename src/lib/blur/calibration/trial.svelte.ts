@@ -1,5 +1,5 @@
 import {
-	getPreferencesSnapshot,
+	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import {
@@ -330,7 +330,7 @@ function listen(): void {
 
 function start(): void {
 	running = true;
-	samples = getPreferencesSnapshot().backdropBlurCalibration?.samples ?? [];
+	samples = preferencesSnapshot().backdropBlurCalibration?.samples ?? [];
 	const quality = decideTrial(samples);
 	if (quality !== null) {
 		commitVerdict(quality);

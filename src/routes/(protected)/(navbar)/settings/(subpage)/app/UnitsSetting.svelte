@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
-		getPreferencesSnapshot,
+		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import * as Item from "$lib/components/ui/item";
@@ -9,7 +9,7 @@
 	import type { UnitSystem } from "$lib/util/units";
 
 	let pending = $state<UnitSystem | null>(null);
-	const value = $derived(pending ?? getPreferencesSnapshot().units);
+	const value = $derived(pending ?? preferencesSnapshot().units);
 </script>
 
 <Item.Root variant="outline" class="gap-3 p-4">

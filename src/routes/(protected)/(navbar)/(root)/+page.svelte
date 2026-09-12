@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {
-		getPreferencesSnapshot,
 		hydratePreferences,
+		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
@@ -12,7 +12,7 @@
 	import TopBar from "./top-bar/TopBar.svelte";
 
 	const preferencesHydrated = hydratePreferences();
-	const geohash = $derived(getPreferencesSnapshot().geohash);
+	const geohash = $derived(preferencesSnapshot().geohash);
 
 	let gridContainer: HTMLElement | null = $state(null);
 

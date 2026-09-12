@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Slider } from "$lib/components/ui/slider";
 	import { MAX_DISTANCE_STEPS, maxDistanceLabel } from "./distance-steps";
 
 	let { value = $bindable() }: { value: number } = $props();
 
-	const units = $derived(getPreferencesSnapshot().units);
+	const units = $derived(preferencesSnapshot().units);
 	const index = $derived(MAX_DISTANCE_STEPS.indexOf(value));
 </script>
 

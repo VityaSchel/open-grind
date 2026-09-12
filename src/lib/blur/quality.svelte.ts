@@ -1,6 +1,6 @@
 import {
-	getPreferencesSnapshot,
 	preferencesLoaded,
+	preferencesSnapshot,
 } from "$lib/app-data/preferences.svelte";
 import {
 	backdropBlurTrialArm,
@@ -21,7 +21,7 @@ export function backdropBlurRenderable(): boolean {
 }
 
 function chosenBackdropBlurQuality(): BackdropBlurQuality | null {
-	const preferences = getPreferencesSnapshot();
+	const preferences = preferencesSnapshot();
 	return (
 		preferences.backdropBlurQuality ??
 		preferences.backdropBlurCalibration?.quality ??

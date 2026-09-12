@@ -8,7 +8,7 @@ import {
 import { updateLocation } from "$lib/api/browse/location";
 import { showErrorToast } from "$lib/api/error-toast";
 import { callMethod } from "$lib/api/methods";
-import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 import { ws } from "$lib/ws.svelte";
 import { randomHondurasGeohash } from "./honduras";
 
@@ -143,7 +143,7 @@ async function startBypass({ home }: { home: string }): Promise<void> {
 }
 
 export async function runEntitlementBypass(): Promise<void> {
-	const home = getPreferencesSnapshot().geohash;
+	const home = preferencesSnapshot().geohash;
 	if (home === null) {
 		dismissEntitlementBypass();
 		toast.error("Set your location before using this bypass", {

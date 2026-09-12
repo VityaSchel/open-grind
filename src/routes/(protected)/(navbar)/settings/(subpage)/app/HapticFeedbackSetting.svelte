@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
-		getPreferencesSnapshot,
 		preferencesLoaded,
+		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 
 	let pending = $state<boolean | null>(null);
-	const value = $derived(pending ?? getPreferencesSnapshot().hapticFeedback);
+	const value = $derived(pending ?? preferencesSnapshot().hapticFeedback);
 </script>
 
 <SwitchField

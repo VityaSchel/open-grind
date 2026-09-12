@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import {
 		closestMaxDistanceStep,
 		DEFAULT_MAX_DISTANCE_STEP,
@@ -21,7 +21,7 @@
 		onapply: (distanceMetres: number | null) => void;
 	} = $props();
 
-	const units = $derived(getPreferencesSnapshot().units);
+	const units = $derived(preferencesSnapshot().units);
 
 	let enabled = $state(false);
 	let step = $state(DEFAULT_MAX_DISTANCE_STEP);

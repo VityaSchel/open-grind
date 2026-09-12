@@ -2,8 +2,8 @@
 	import { untrack } from "svelte";
 
 	import {
-		getPreferencesSnapshot,
 		preferencesLoaded,
+		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Label } from "$lib/components/ui/label";
@@ -35,7 +35,7 @@
 
 	let pendingAutoUpdate = $state<boolean | null>(null);
 	const autoUpdateLocation = $derived(
-		pendingAutoUpdate ?? getPreferencesSnapshot().autoUpdateLocation,
+		pendingAutoUpdate ?? preferencesSnapshot().autoUpdateLocation,
 	);
 
 	async function setAutoUpdateLocation(enabled: boolean) {

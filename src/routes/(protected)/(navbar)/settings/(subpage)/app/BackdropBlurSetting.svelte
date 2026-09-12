@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
-		getPreferencesSnapshot,
 		preferencesLoaded,
+		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import {
@@ -23,7 +23,7 @@
 	const supported = $derived(backdropBlurRenderable());
 	let pending = $state<BackdropBlurQuality | null>(null);
 	const chosen = $derived(
-		pending ?? getPreferencesSnapshot().backdropBlurQuality,
+		pending ?? preferencesSnapshot().backdropBlurQuality,
 	);
 	const effective = $derived(settledBackdropBlurQuality());
 	const trialPending = $derived(backdropBlurTrialPending());

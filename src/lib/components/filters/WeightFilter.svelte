@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getPreferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
 	import {
@@ -13,7 +13,7 @@
 		value = $bindable(),
 	}: { checked: boolean; value: number[] } = $props();
 
-	const units = $derived(getPreferencesSnapshot().units);
+	const units = $derived(preferencesSnapshot().units);
 	const min = $derived(value[0] ?? WEIGHT_KG_MIN);
 	const max = $derived(value[1] ?? WEIGHT_KG_MAX);
 </script>

@@ -91,7 +91,7 @@ export async function getPreferences(): Promise<Preferences> {
 	return structuredClone(await hydrating);
 }
 
-export function getPreferencesSnapshot(): Preferences {
+export function preferencesSnapshot(): Preferences {
 	return snapshot;
 }
 

@@ -35,7 +35,7 @@ vi.mock("$lib/util/reconcile", () => ({
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () => Promise.resolve({}),
-	getPreferencesSnapshot: () => storedPreferences,
+	preferencesSnapshot: () => storedPreferences,
 	setPreferences: setPreferencesMock,
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));

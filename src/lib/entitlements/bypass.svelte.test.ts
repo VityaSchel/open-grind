@@ -31,7 +31,7 @@ vi.mock("$lib/api/browse/location", () => ({
 	updateLocation: updateLocationMock,
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	getPreferencesSnapshot: preferencesMock,
+	preferencesSnapshot: preferencesMock,
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";

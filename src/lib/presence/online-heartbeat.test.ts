@@ -12,7 +12,7 @@ const { appLifecycle, gridState, preferences, refreshMock } = vi.hoisted(() => {
 
 vi.mock("$lib/api/app-lifecycle.svelte", () => ({ appLifecycle }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	getPreferencesSnapshot: () => ({ stayOnline: preferences.stayOnline }),
+	preferencesSnapshot: () => ({ stayOnline: preferences.stayOnline }),
 	preferencesLoaded: () => preferences.loaded,
 }));
 vi.mock("$lib/grid/grid-state.svelte", () => ({ gridState }));

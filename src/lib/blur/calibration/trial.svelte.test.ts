@@ -16,8 +16,8 @@ vi.mock("$lib/app-data", () => ({
 }));
 
 import {
-	getPreferencesSnapshot,
 	hydratePreferences,
+	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import {
@@ -153,7 +153,7 @@ describe("backdrop blur scroll trial", () => {
 		scrollOneGesture(20);
 		expect(backdropBlurTrialArm()).toBe("medium");
 		await vi.waitFor(() => {
-			const stored = getPreferencesSnapshot().backdropBlurCalibration;
+			const stored = preferencesSnapshot().backdropBlurCalibration;
 			expect(stored?.samples).toHaveLength(1);
 			expect(stored?.quality).toBeNull();
 		});

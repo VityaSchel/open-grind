@@ -11,9 +11,9 @@
 
 	import { startGoogleHandbackWatch } from "$lib/api/google-handback";
 	import {
-		getPreferencesSnapshot,
 		hydratePreferences,
 		preferencesLoaded,
+		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
 	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
 	import { hydrateBackdropCompositing } from "$lib/blur/compositing.svelte";
@@ -78,7 +78,7 @@
 	let { children }: { children?: import("svelte").Snippet } = $props();
 
 	const onboarded = $derived(
-		preferencesLoaded() && getPreferencesSnapshot().onboardingComplete,
+		preferencesLoaded() && preferencesSnapshot().onboardingComplete,
 	);
 
 	beforeNavigate(() => abortBackdropBlurTrialGesture());

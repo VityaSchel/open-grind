@@ -7,7 +7,7 @@ import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 
 const {
 	abortStaleMock,
-	getPreferencesSnapshotMock,
+	preferencesSnapshotMock,
 	isMobilePlatformMock,
 	permissionToastMock,
 	reportFailureMock,
@@ -16,7 +16,7 @@ const {
 	showErrorToastMock,
 } = vi.hoisted(() => ({
 	abortStaleMock: vi.fn(),
-	getPreferencesSnapshotMock: vi.fn(),
+	preferencesSnapshotMock: vi.fn(),
 	isMobilePlatformMock: vi.fn(),
 	permissionToastMock: vi.fn(),
 	reportFailureMock: vi.fn(),
@@ -36,7 +36,7 @@ const locationRequestMock = vi.hoisted(() => ({
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	getPreferencesSnapshot: getPreferencesSnapshotMock,
+	preferencesSnapshot: preferencesSnapshotMock,
 	setPreferences: setPreferencesMock,
 }));
 vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
@@ -70,7 +70,7 @@ describe("autoLocation.resolveGeohash", () => {
 	beforeEach(() => {
 		setNowForTesting(() => 0);
 		isMobilePlatformMock.mockReturnValue(true);
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: CURRENT,
 		});
@@ -104,7 +104,7 @@ describe("autoLocation.resolveGeohash", () => {
 	});
 
 	it("keeps the current geohash while the setting is off", async () => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: CURRENT,
 		});
@@ -149,7 +149,7 @@ describe("autoLocation.resolveGeohash", () => {
 		});
 
 		it("does nothing while the setting is off", async () => {
-			getPreferencesSnapshotMock.mockReturnValue({
+			preferencesSnapshotMock.mockReturnValue({
 				autoUpdateLocation: false,
 				geohash: CURRENT,
 			});

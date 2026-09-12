@@ -1,6 +1,6 @@
 import { showErrorToast } from "$lib/api/error-toast";
 import {
-	getPreferencesSnapshot,
+	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import { decodeGeohash, encodeGeohash } from "$lib/model/geohash";
@@ -84,7 +84,7 @@ class AutoLocation {
 
 	#canSample(): boolean {
 		if (!isMobilePlatform()) return false;
-		if (!getPreferencesSnapshot().autoUpdateLocation) return false;
+		if (!preferencesSnapshot().autoUpdateLocation) return false;
 		if (locationRequest.pending) return false;
 		return !(typeof document !== "undefined" && document.hidden);
 	}

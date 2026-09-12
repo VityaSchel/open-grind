@@ -3,7 +3,7 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
-		getPreferencesSnapshot,
+		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import { PIN_ZOOM } from "$lib/components/location-chooser/constants";
@@ -32,7 +32,7 @@
 	}
 
 	function openPicker() {
-		const geohash = getPreferencesSnapshot().geohash;
+		const geohash = preferencesSnapshot().geohash;
 		pinPos = geohash
 			? { ...decodeGeohash(geohash), zoom: PIN_ZOOM }
 			: undefined;
@@ -43,7 +43,7 @@
 	let locationChooser: LocationChooser;
 
 	const autoUpdateLocation = $derived(
-		getPreferencesSnapshot().autoUpdateLocation,
+		preferencesSnapshot().autoUpdateLocation,
 	);
 </script>
 

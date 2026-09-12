@@ -6,7 +6,7 @@ import { showErrorToast } from "$lib/api/error-toast";
 import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
 import {
-	getPreferencesSnapshot,
+	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import { autoLocation } from "$lib/location/auto-location";
@@ -86,7 +86,7 @@ class GridState {
 		background = false,
 		keepLoadedPages = true,
 	} = {}): Promise<void> {
-		const geohash = this.#geohash ?? getPreferencesSnapshot().geohash;
+		const geohash = this.#geohash ?? preferencesSnapshot().geohash;
 		if (!geohash || this.refreshing) return;
 		this.#geohash = geohash;
 		this.refreshing = true;

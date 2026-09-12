@@ -7,7 +7,7 @@ import { encodeGeohash } from "$lib/model/geohash";
 
 const {
 	abortMock,
-	getPreferencesSnapshotMock,
+	preferencesSnapshotMock,
 	reportFailureMock,
 	runMock,
 	setPreferencesMock,
@@ -16,7 +16,7 @@ const {
 	refreshStaleFixMock,
 } = vi.hoisted(() => ({
 	abortMock: vi.fn(),
-	getPreferencesSnapshotMock: vi.fn(),
+	preferencesSnapshotMock: vi.fn(),
 	reportFailureMock: vi.fn(),
 	runMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
@@ -26,7 +26,7 @@ const {
 }));
 
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	getPreferencesSnapshot: getPreferencesSnapshotMock,
+	preferencesSnapshot: preferencesSnapshotMock,
 	preferencesLoaded: () => true,
 	setPreferences: setPreferencesMock,
 }));
@@ -93,7 +93,7 @@ const saveButton = () => screen.getByRole("button", { name: "Save" });
 
 describe("LocationChooser", () => {
 	beforeEach(() => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: null,
 		});
@@ -267,7 +267,7 @@ describe("LocationChooser", () => {
 	});
 
 	it("starts from the stored setting", () => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: null,
 		});
@@ -276,7 +276,7 @@ describe("LocationChooser", () => {
 	});
 
 	it("commits turning tracking off", async () => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: null,
 		});
@@ -294,7 +294,7 @@ describe("LocationChooser", () => {
 
 describe("LocationChooser GPS feedback", () => {
 	beforeEach(() => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: null,
 		});
@@ -325,7 +325,7 @@ describe("LocationChooser GPS feedback", () => {
 	});
 
 	it("ignores grid-resolved fixes while the pin is manual", async () => {
-		getPreferencesSnapshotMock.mockReturnValue({
+		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: null,
 		});
