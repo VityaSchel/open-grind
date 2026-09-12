@@ -10,6 +10,19 @@ const unsupportedCopy: Record<Unsupported["reason"], string> = {
 	locationNotWritable: "Open Grind can't install the update in its directory",
 };
 
+const userCanFix: Record<Unsupported["reason"], boolean> = {
+	externallyManaged: false,
+	foreignSigner: false,
+	undetermined: true,
+	noReleaseArtifacts: false,
+	sandboxed: false,
+	locationNotWritable: true,
+};
+
+export function unsupportedIsFixable(detail: Unsupported): boolean {
+	return userCanFix[detail.reason];
+}
+
 const copy: Record<Exclude<UpdateError["kind"], "unsupported">, string> = {
 	network: "Couldn't reach the release server",
 	server: "The release server refused the request",
@@ -30,10 +43,14 @@ const copy: Record<Exclude<UpdateError["kind"], "unsupported">, string> = {
 	autoChecksDisabled: "Automatic update checks are turned off",
 };
 
+export function unsupportedText(detail: Unsupported): string {
+	return unsupportedCopy[detail.reason];
+}
+
 export function updateErrorText(error: unknown, fallback: string): string {
 	const known = asUpdateError(error);
 	if (!known) return fallback;
 	return known.kind === "unsupported"
-		? unsupportedCopy[known.detail.reason]
+		? unsupportedText(known.detail)
 		: copy[known.kind];
 }

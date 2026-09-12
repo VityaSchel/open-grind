@@ -4,13 +4,16 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 	import { getUpdateSettings, setAutomaticUpdateChecks } from "$lib/updates";
+	import { updatesUnsupportedReason } from "$lib/updates/capability.svelte";
 	import { checkForUpdateNow } from "$lib/updates/updates-manager";
 
 	let stored = $state<boolean | null>(null);
 	let pending = $state<boolean | null>(null);
 	const value = $derived(pending ?? stored ?? false);
+	const reason = $derived(updatesUnsupportedReason());
 
 	onMount(() => {
+		if (reason !== null) return;
 		getUpdateSettings()
 			.then((settings) => {
 				stored = settings.autoCheck;
@@ -26,8 +29,9 @@
 
 <SwitchField
 	title="Check updates automatically"
-	description="Periodically request updates from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed."
-	disabled={stored === null}
+	description={reason ??
+		"Periodically request updates from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed."}
+	disabled={reason !== null || stored === null}
 	bind:checked={
 		() => value,
 		(newValue: boolean) => {

@@ -1,4 +1,5 @@
-import { getUpdateCapability } from "./index";
+import { unsupportedIsFixable, unsupportedText } from "./error-copy";
+import { getUpdateCapability, updatesAvailableHere } from "./index";
 import type { Capability } from "./types";
 
 const undetermined = {
@@ -21,4 +22,12 @@ export async function hydrateUpdateCapability(): Promise<void> {
 
 export function updatesSelfManaged(): boolean {
 	return capability?.state === "supported";
+}
+
+export function updatesUnsupportedReason(): string | null {
+	if (!updatesAvailableHere() || capability?.state !== "unsupported") {
+		return null;
+	}
+	if (!unsupportedIsFixable(capability.detail)) return null;
+	return unsupportedText(capability.detail);
 }
