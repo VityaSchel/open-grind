@@ -7,6 +7,7 @@ const unsupportedCopy: Record<Unsupported["reason"], string> = {
 	undetermined: "Open Grind can't tell whether it may update itself",
 	noReleaseArtifacts: "No release is published for this platform",
 	sandboxed: "The sandbox this app runs in manages its own updates",
+	locationNotWritable: "Open Grind can't install the update in its directory",
 };
 
 const copy: Record<Exclude<UpdateError["kind"], "unsupported">, string> = {

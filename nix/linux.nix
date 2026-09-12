@@ -57,7 +57,7 @@ in
     text = ''
       # tauri's appimage bundler dies on Mesa 25+ distros, ours is in ci/linux/build.sh:
       # https://github.com/tauri-apps/tauri/issues/15665
-      BUNDLES="''${OPEN_GRIND_LINUX_BUNDLES:-deb}"
+      BUNDLES="''${OPEN_GRIND_LINUX_BUNDLES:?name the bundles to build, e.g. deb}"
 
       bun ci
       bun run tauri build --target ${triple} --bundles "$BUNDLES"
@@ -69,7 +69,7 @@ in
         echo "WARNING: NOT SHIPPABLE - the ELF interpreter or RUNPATH points into" >&2
         echo "/nix/store, so this binary only starts where a Nix store exists." >&2
       fi
-      find "$out/bundle" -maxdepth 2 -type f \( -name '*.deb' -o -name '*.rpm' \) -print
+      find "$out/bundle" -maxdepth 2 -type f \( -name '*.deb' -o -name '*.AppImage' \) -print
     '';
   };
 

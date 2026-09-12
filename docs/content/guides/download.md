@@ -19,7 +19,7 @@ Never download Open Grind from unofficial sources. The only official source of O
 ## Android
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-android.apk" size="medium">Download for Android (apk)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium">Download for Android (apk)</VPButton>
 </div>
 
 Install using your system's APK installer. Optionally, enable auto updates.
@@ -27,11 +27,14 @@ Install using your system's APK installer. Optionally, enable auto updates.
 ## Windows
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
 </div>
 
-Launch the installer and follow the steps. Optionally, enable auto updates. To uninstall, use the bundled uninstall.exe. Check "delete app data" to delete the session and preferences.
+Launch the installer and follow the steps.
+
+- **To install updates**, enable the auto-updater.
+- **To uninstall**, use the bundled uninstall.exe. Check "delete app data" to delete the session and preferences.
 
 ## Linux
 
@@ -40,18 +43,49 @@ Notes:
 - GPS is not available through the geolocation plugin on Linux
 - Without a Secret Service the login is kept in a plain file under the app data directory
 
+### AppImage (any distribution)
+
+The AppImage runs on any distribution that has WebKitGTK 4.1.
+
+Install WebKitGTK 4.1:
+
+| Distribution   | Package               |
+| -------------- | --------------------- |
+| Debian, Ubuntu | `libwebkit2gtk-4.1-0` |
+| Arch Linux     | `webkit2gtk-4.1`      |
+| Fedora         | `webkit2gtk4.1`       |
+| openSUSE       | `libwebkit2gtk-4_1-0` |
+
+<div class="vpbuttons-row">
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.AppImage" size="medium">Download for Linux x86_64 (AppImage)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.AppImage" size="medium">Download for Linux arm64 (AppImage)</VPButton>
+</div>
+
+Make the AppImage executable and run it:
+
+```sh
+chmod +x open-grind-*.AppImage
+./open-grind-*.AppImage
+```
+
+In GNOME Files, the same thing is Properties &rarr; Permissions &rarr; "Executable as Program".
+
+- **To play videos**, install a H.264 decoder. See [Install video codecs on Linux](/guides/codecs).
+- **To add a desktop entry**, click App Settings &rarr; Display &rarr; "Show in apps menu".
+- **To install updates**, enable the auto-updater.
+- **To uninstall**, clear Open Grind's secrets from your Secret Service, then delete the AppImage.
+
 ### deb (Debian, Ubuntu, Linux Mint, other Debian-based)
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
 </div>
 
-deb releases do not have in-app auto-updater.
+- **To install updates**, set up [apt](#apt-repository). Auto-updater is not available for deb releases.
+- **To uninstall**, manually clear all secrets from your Secret Service, then run `apt purge`.
 
-To uninstall, manually clear all secrets from your Secret Service, then run `apt purge`.
-
-#### Track updates with apt
+#### apt repository
 
 Debian, Ubuntu and derivatives can install Open Grind from the project's own repository, so `apt` handles updates:
 
@@ -80,27 +114,13 @@ As of September 1st, 2026, AUR has disabled account registration and new package
 
 The PKGBUILD for Arch Linux can be found in [ci/aur/PKGBUILD](https://git.opengrind.org/open-grind/open-grind/src/branch/main/ci/aur/PKGBUILD).
 
-### AppImage
-
-Requirements:
-
-- WebKitGTK >= 4.1
-  - Debian/Ubuntu: `libwebkit2gtk-4.1-0`
-  - Arch Linux: `webkit2gtk-4.1`
-  - Fedora: `webkit2gtk4.1`
-  - openSUSE: `libwebkit2gtk-4_1-0`
-- GStreamer for playing videos
-  - Debian/Ubuntu: `gstreamer1.0-plugins-good` for MP4 and `gstreamer1.0-libav` for H.264
-
-Add the executable bit to AppImage before launching. GNOME Files: Properties &rarr; Permissions &rarr; "Executable as Program".
-
 ## macOS
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.4.1/open-grind-v0.1.0-beta.4.1-macos.zip" size="medium">Download for macOS (universal)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-macos.zip" size="medium">Download for macOS (universal)</VPButton>
 </div>
 
-Extract Open&nbsp;Grind.app from zip archive and move to Applications folder. To uninstall, move the app from Applications to Trash.
+Extract Open&nbsp;Grind.app from zip archive and move to Applications folder.
 
 ::: info If you get "Apple could not verify “Open Grind” is free of malware that may harm your Mac or compromise your privacy.",
 
@@ -115,6 +135,8 @@ Extract Open&nbsp;Grind.app from zip archive and move to Applications folder. To
 6. Enter administrator password or Touch ID
 :::
 
+- **To install updates**, enable the auto-updater.
+- **To uninstall**, move the app from Applications to Trash.
 
 ## iOS
 

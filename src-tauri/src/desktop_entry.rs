@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
+use crate::appimage;
+
 const ENTRY_FILE: &str = "open-grind.desktop";
 const WM_CLASS: &str = "open-grind";
 
@@ -15,10 +17,6 @@ impl From<std::io::Error> for DesktopEntryError {
 	fn from(error: std::io::Error) -> Self {
 		Self(error.to_string())
 	}
-}
-
-fn appimage() -> Option<PathBuf> {
-	std::env::var_os("APPIMAGE").map(PathBuf::from)
 }
 
 fn appdir() -> Option<PathBuf> {
@@ -136,14 +134,14 @@ pub struct DesktopEntryState {
 #[tauri::command]
 pub fn desktop_entry_state() -> DesktopEntryState {
 	DesktopEntryState {
-		available: appimage().is_some() && !integration_suppressed(),
+		available: appimage::path().is_some() && !integration_suppressed(),
 		installed: entry_path().is_some_and(|entry| entry.exists()),
 	}
 }
 
 #[tauri::command]
 pub fn desktop_entry_install() -> Result<(), DesktopEntryError> {
-	let appimage = appimage()
+	let appimage = appimage::path()
 		.ok_or_else(|| DesktopEntryError("not an AppImage".into()))?;
 	let appdir =
 		appdir().ok_or_else(|| DesktopEntryError("no APPDIR".into()))?;

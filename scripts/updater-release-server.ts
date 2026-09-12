@@ -1,6 +1,6 @@
 import { startServer, type Payload } from "../e2e/updater/lib/server";
 
-import { hostAssetSuffix } from "./lib/asset-suffix";
+import { ARTIFACTS, assetSuffix, isArtifact } from "./lib/asset-suffix";
 
 const root = Bun.fileURLToPath(new URL("..", import.meta.url)).replace(
 	/\/$/,
@@ -26,12 +26,27 @@ if (bundle && !(await Bun.file(`${bundle}/Contents/Info.plist`).exists())) {
 	throw new Error(`${bundle} is not an app bundle`);
 }
 
+function servedSuffix(): string {
+	const literal = Bun.env.SUFFIX;
+	if (literal) return literal;
+	const artifact = Bun.env.ARTIFACT;
+	if (!artifact) {
+		throw new Error(
+			`name the artifact to serve: ARTIFACT=${ARTIFACTS.join("|")}, or SUFFIX=<literal>`,
+		);
+	}
+	if (!isArtifact(artifact)) {
+		throw new Error(`ARTIFACT must be one of ${ARTIFACTS.join(", ")}`);
+	}
+	return assetSuffix(artifact);
+}
+
 const harness = await startServer({
 	payload: source(),
 	tag,
 	home: `${root}/.updater-dev`,
 	port,
-	suffix: Bun.env.SUFFIX ?? hostAssetSuffix(),
+	suffix: servedSuffix(),
 	uuid: "dev-payload-uuid",
 	rate,
 	prerelease: true,

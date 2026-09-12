@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-import { hostAssetSuffix } from "./lib/asset-suffix";
+import { assetSuffix } from "./lib/asset-suffix";
 import { MACOS_TARGET, macosBundle } from "./lib/macos-bundle";
 import { only } from "./lib/only";
 
@@ -39,7 +39,7 @@ const stamp = new Date(Number(epoch) * 1000)
 const { version } = await Bun.file(`${root}/src-tauri/tauri.conf.json`).json();
 const zip = appStore
 	? `${out}/open-grind-v${version}-macos-appstore.zip`
-	: `${out}/open-grind-v${version}${hostAssetSuffix()}`;
+	: `${out}/open-grind-v${version}${assetSuffix("zip")}`;
 
 const SYSTEM_DYLIBS = ["libiconv.2.dylib"];
 

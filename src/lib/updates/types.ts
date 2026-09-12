@@ -15,6 +15,10 @@ const unsupportedSchema = z.discriminatedUnion("reason", [
 		reason: z.literal("sandboxed"),
 		detail: z.object({ runtime: z.string() }),
 	}),
+	z.object({
+		reason: z.literal("locationNotWritable"),
+		detail: z.object({ path: z.string() }),
+	}),
 ]);
 export type Unsupported = z.infer<typeof unsupportedSchema>;
 

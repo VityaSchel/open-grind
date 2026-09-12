@@ -1,3 +1,5 @@
+import { assetSuffix } from "../../../scripts/lib/asset-suffix";
+
 const here = Bun.fileURLToPath(new URL(".", import.meta.url)).replace(
 	/\/$/,
 	"",
@@ -29,7 +31,7 @@ export function cachedBundle(version: string): string {
 }
 
 export const androidPackage = "org.opengrind";
-export const androidSuffix = "-android.apk";
+export const androidSuffix = assetSuffix("apk");
 export const androidAbi = Bun.env.ABI ?? "aarch64";
 export const oldCode = Number(Bun.env.OLD_CODE ?? 1030);
 export const newCode = Number(Bun.env.NEW_CODE ?? 1031);

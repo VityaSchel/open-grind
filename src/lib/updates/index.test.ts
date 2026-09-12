@@ -122,6 +122,26 @@ describe("capability and readiness", () => {
 		});
 	});
 
+	it("parses an AppImage sitting where it cannot replace itself", async () => {
+		invokeMock.mockResolvedValue({
+			state: "unsupported",
+			detail: {
+				reason: "locationNotWritable",
+				detail: { path: "/opt/open-grind.AppImage" },
+			},
+		});
+
+		const capability = await getUpdateCapability();
+
+		expect(capability).toEqual({
+			state: "unsupported",
+			detail: {
+				reason: "locationNotWritable",
+				detail: { path: "/opt/open-grind.AppImage" },
+			},
+		});
+	});
+
 	it("parses a staged update that is ready to install", async () => {
 		invokeMock.mockResolvedValue({
 			state: "ready",

@@ -1,15 +1,40 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use crate::api::update::error::UpdateError;
+use crate::appimage;
 
 pub fn install(payload: &Path) -> Result<(), UpdateError> {
-	swap(&std::env::current_exe()?, payload)
+	swap(&replaceable_file()?, payload)
 }
 
 pub fn sweep_replaced() {
-	if let Ok(current) = std::env::current_exe() {
+	if let Ok(current) = replaceable_file() {
 		let _ = fs::remove_file(sibling(&current, ".old"));
+	}
+}
+
+pub fn relaunch_after_exit() {
+	let Some(target) = appimage::path() else {
+		return;
+	};
+	let _ = Command::new("/bin/sh")
+		.arg("-c")
+		.arg(
+			"while kill -0 \"$1\" 2>/dev/null; do sleep 0.1; done; exec \"$2\"",
+		)
+		.arg("open-grind-relaunch")
+		.arg(std::process::id().to_string())
+		.arg(target)
+		.spawn();
+}
+
+// current_exe is inside the AppImage's read-only mount, which goes away with it.
+fn replaceable_file() -> Result<PathBuf, UpdateError> {
+	match appimage::path() {
+		Some(target) => Ok(target),
+		None => Ok(std::env::current_exe()?),
 	}
 }
 

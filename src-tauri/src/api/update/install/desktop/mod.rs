@@ -27,7 +27,14 @@ pub fn reason() -> Unsupported {
 			runtime: runtime.to_owned(),
 		};
 	}
-	Unsupported::NoReleaseArtifacts { target: target() }
+	match crate::appimage::path() {
+		Some(path) if crate::appimage::replaceable().is_none() => {
+			Unsupported::LocationNotWritable {
+				path: path.display().to_string(),
+			}
+		}
+		_ => Unsupported::NoReleaseArtifacts { target: target() },
+	}
 }
 
 pub fn capability(_app: &AppHandle) -> Capability {
@@ -70,7 +77,13 @@ pub async fn install(
 		Ok(())
 	}
 	#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-	app.restart()
+	if crate::appimage::path().is_some() {
+		binary::relaunch_after_exit();
+		app.exit(0);
+		Ok(())
+	} else {
+		app.restart()
+	}
 }
 
 pub fn hold_process<R: tauri::Runtime>(_app: &AppHandle<R>, _active: bool) {}
@@ -128,6 +141,7 @@ fn installable() -> bool {
 			.ok()
 			.and_then(|exe| enclosing_bundle(&exe))
 			.is_some(),
+		"linux" => crate::appimage::replaceable().is_some(),
 		_ => false,
 	}
 }
@@ -189,7 +203,9 @@ mod tests {
 			return;
 		}
 		assert!(
-			suffix.ends_with(".exe") || suffix.ends_with(".zip"),
+			suffix.ends_with(".exe")
+				|| suffix.ends_with(".zip")
+				|| suffix.ends_with(".AppImage"),
 			"{suffix} cannot be applied by any desktop installer"
 		);
 	}

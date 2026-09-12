@@ -1,6 +1,7 @@
 pub mod api;
 mod app_settings;
 mod appearance;
+mod appimage;
 mod context_menu;
 mod desktop_entry;
 mod error;

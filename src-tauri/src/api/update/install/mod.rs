@@ -22,6 +22,7 @@ pub enum Unsupported {
 	Undetermined,
 	NoReleaseArtifacts { target: String },
 	Sandboxed { runtime: String },
+	LocationNotWritable { path: String },
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -60,17 +61,26 @@ pub struct Outcome {
 	pub message: Option<String>,
 }
 
-pub fn release_asset_suffix() -> Option<String> {
-	let arch = match std::env::consts::ARCH {
+fn suffix_for(os: &str, arch: &str) -> Option<String> {
+	let arch = match arch {
 		"aarch64" => "arm64",
 		other => other,
 	};
-	match std::env::consts::OS {
+	match os {
 		"android" => Some("-android.apk".to_owned()),
 		"macos" => Some("-macos.zip".to_owned()),
 		"windows" => Some(format!("-windows-{arch}.exe")),
+		"linux" => Some(format!("-linux-{arch}.AppImage")),
 		_ => None,
 	}
+}
+
+pub fn release_asset_suffix() -> Option<String> {
+	let os = std::env::consts::OS;
+	if os == "linux" && crate::appimage::path().is_none() {
+		return None;
+	}
+	suffix_for(os, std::env::consts::ARCH)
 }
 
 #[cfg(target_os = "android")]
@@ -86,7 +96,10 @@ pub use platform::{
 
 #[cfg(test)]
 mod pins {
+	use super::suffix_for;
+
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
+	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
 	const GATE: &str = include_str!(
 		"../../../../android-logic/src/main/kotlin/org/opengrind/update/InstallGate.kt"
 	);
@@ -121,6 +134,35 @@ mod pins {
 		assert!(
 			literal.chars().all(|c| !c.is_ascii_lowercase()),
 			"soleSignerOf emits uppercase hex and the comparison is case-sensitive"
+		);
+	}
+
+	#[test]
+	fn the_linux_suffix_matches_the_appimage_name_the_build_writes() {
+		assert_eq!(
+			suffix_for("linux", "x86_64").unwrap(),
+			"-linux-x86_64.AppImage"
+		);
+		assert_eq!(
+			suffix_for("linux", "aarch64").unwrap(),
+			"-linux-arm64.AppImage"
+		);
+		assert!(
+			LINUX_BUILD.contains("-linux-$arch.AppImage"),
+			"build.sh no longer writes the name the updater asks for"
+		);
+		assert!(
+			LINUX_BUILD.contains("aarch64) arch=arm64"),
+			"build.sh no longer maps aarch64 to arm64"
+		);
+	}
+
+	#[cfg(target_os = "linux")]
+	#[test]
+	fn a_linux_install_that_is_not_an_appimage_is_offered_nothing() {
+		assert!(
+			super::release_asset_suffix().is_none(),
+			"a .deb install must leave updates to the package manager"
 		);
 	}
 

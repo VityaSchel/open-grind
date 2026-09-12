@@ -15,6 +15,7 @@ import {
 	repo,
 	runningApp,
 } from "../lib/config";
+import { assetSuffix } from "../../../scripts/lib/asset-suffix";
 import { startServer, type Harness } from "../lib/server";
 import { harnessOptions } from "../run";
 
@@ -30,6 +31,7 @@ async function serve(): Promise<Harness> {
 		...harnessOptions,
 		payload: { bundle: cachedBundle(newVersion) },
 		tag: `v${newVersion}`,
+		suffix: assetSuffix("zip"),
 	});
 	await setLaunchEnv({ origin: harness.origin, key: harness.publicKey });
 
