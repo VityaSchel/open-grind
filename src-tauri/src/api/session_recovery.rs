@@ -48,13 +48,6 @@ fn now_unix() -> u64 {
 		.unwrap_or(0)
 }
 
-fn error_kind(error: &AppError) -> String {
-	serde_json::to_value(error)
-		.ok()
-		.and_then(|value| value["kind"].as_str().map(str::to_owned))
-		.unwrap_or_else(|| "Http".to_owned())
-}
-
 fn health_of(session: Option<&grindr::Session>) -> SessionHealth {
 	match session {
 		Some(session) => {
@@ -160,7 +153,7 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 					return Outcome::Failed(SessionErrorPayload {
 						message: mapped.to_string(),
 						unauthorized: true,
-						kind: error_kind(&mapped),
+						kind: mapped.kind().to_owned(),
 						attempts,
 						transient: false,
 					});
@@ -174,7 +167,7 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 		Some(error) => Outcome::Failed(SessionErrorPayload {
 			message: error.to_string(),
 			unauthorized: false,
-			kind: error_kind(&error),
+			kind: error.kind().to_owned(),
 			attempts,
 			transient: true,
 		}),
@@ -294,19 +287,5 @@ mod tests {
 		assert_eq!(json["kind"], "Http");
 		assert_eq!(json["attempts"], 3);
 		assert_eq!(json["transient"], true);
-	}
-
-	#[test]
-	fn error_kind_matches_the_serde_tag_used_by_api_errors() {
-		assert_eq!(error_kind(&AppError::RateLimited), "RateLimited");
-		assert_eq!(error_kind(&AppError::RequestBlocked), "RequestBlocked");
-		assert_eq!(error_kind(&AppError::Http("x".to_owned())), "Http");
-		assert_eq!(
-			error_kind(&AppError::Unauthorized {
-				code: 401,
-				message: "no".to_owned()
-			}),
-			"Unauthorized"
-		);
 	}
 }

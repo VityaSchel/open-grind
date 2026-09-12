@@ -4,8 +4,7 @@ pub struct DeviceStorage;
 
 impl DeviceStorage {
 	fn entry() -> Result<keyring_core::Entry, AppError> {
-		keyring_core::Entry::new("open-grind", "device-info")
-			.map_err(|e| AppError::Auth(e.to_string()))
+		super::entry("device-info")
 	}
 
 	pub fn load() -> Result<Option<grindr::DeviceInfo>, AppError> {
@@ -63,8 +62,7 @@ pub struct AuthStorage;
 
 impl AuthStorage {
 	fn entry() -> Result<keyring_core::Entry, AppError> {
-		keyring_core::Entry::new("open-grind", "session")
-			.map_err(|e| AppError::Auth(e.to_string()))
+		super::entry("session")
 	}
 
 	pub fn get_credentials() -> Result<Option<grindr::Credentials>, AppError> {
@@ -114,8 +112,7 @@ pub struct SigningKeyStorage;
 
 impl SigningKeyStorage {
 	fn entry() -> Result<keyring_core::Entry, AppError> {
-		keyring_core::Entry::new("open-grind", "device-signing-key")
-			.map_err(|e| AppError::Auth(e.to_string()))
+		super::entry("device-signing-key")
 	}
 
 	pub fn load() -> Result<Option<grindr::DeviceSigningKey>, AppError> {

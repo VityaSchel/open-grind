@@ -10,6 +10,9 @@ use crate::error::AppError;
 /// Matched verbatim by the frontend, which stays silent for it.
 pub const CANCELED: &str = "Sign-in canceled";
 
+pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
+pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
+
 pub trait OauthProvider: Send + Sync + 'static {
 	const NAME: &'static str;
 }
@@ -126,6 +129,25 @@ mod tests {
 
 	fn bridge() -> OauthBridge<TestProvider> {
 		OauthBridge::new()
+	}
+
+	#[test]
+	fn companion_markers_match_the_android_plugin_and_the_frontend() {
+		let plugin = include_str!(
+			"../../gen/android/app/src/main/java/org/opengrind/googleoauth/GoogleOauthPlugin.kt"
+		);
+		let frontend = include_str!("../../../src/lib/api/sign-in.ts");
+		for (kotlin, typescript, marker) in [
+			(
+				"ERROR_UNAVAILABLE",
+				"companionUnavailable",
+				COMPANION_UNAVAILABLE,
+			),
+			("ERROR_UNTRUSTED", "companionUntrusted", COMPANION_UNTRUSTED),
+		] {
+			assert!(plugin.contains(&format!("{kotlin} = \"{marker}\"")));
+			assert!(frontend.contains(&format!("{typescript} = \"{marker}\"")));
+		}
 	}
 
 	#[test]

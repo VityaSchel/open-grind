@@ -18,6 +18,11 @@ import { clearProfileCaches } from "$lib/api/users/profiles";
 
 type AppErrorView = NonNullable<ReturnType<typeof asAppError>>;
 
+export const companionUnavailable = "companion-unavailable";
+export const companionUntrusted = "companion-untrusted";
+export const untrustedCompanionMessage =
+	"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.";
+
 export function finishSignIn(result: {
 	restriction?: Restriction | null;
 }): void {

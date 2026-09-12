@@ -79,6 +79,18 @@ try {
 				"  gpg --armor --detach-sign --output KEYS.md.asc KEYS.md",
 		);
 	}
+	const published = (await Bun.file(join(home, "KEYS.md")).text())
+		.split("\n")
+		.find((line) => line.trim().startsWith("| Master"))
+		?.split("|")[2]
+		?.replaceAll(/[\s`]/g, "")
+		.toUpperCase();
+	if (published !== GOVERNANCE_FINGERPRINT) {
+		fail(
+			`KEYS.md publishes ${published ?? "no master fingerprint"}, expected ${GOVERNANCE_FINGERPRINT}`,
+		);
+	}
+
 	console.log(verified.err.trim());
 } finally {
 	rmSync(home, { recursive: true, force: true });

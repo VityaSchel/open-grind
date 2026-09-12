@@ -1,16 +1,20 @@
 import { registerAccountCache } from "$lib/api/account-caches";
+import type { ApiErrorKind } from "$lib/api/api-error";
 
-export type SessionErrorKind =
-	| "Http"
-	| "RateLimited"
-	| "RequestBlocked"
-	| "NetworkBlocked"
-	| "Unauthorized"
-	| "Auth"
-	| "SessionStale"
-	| "Api"
-	| "Banned"
-	| "NotLoggedIn";
+export const sessionErrorKinds = [
+	"Http",
+	"RateLimited",
+	"RequestBlocked",
+	"NetworkBlocked",
+	"Unauthorized",
+	"Auth",
+	"SessionStale",
+	"Api",
+	"Banned",
+	"NotLoggedIn",
+] as const satisfies readonly ApiErrorKind[];
+
+export type SessionErrorKind = (typeof sessionErrorKinds)[number];
 
 export const sessionErrorState = $state<{
 	open: boolean;

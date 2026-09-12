@@ -52,6 +52,27 @@ pub enum AppError {
 	SessionCleared,
 }
 
+impl AppError {
+	pub fn kind(&self) -> &'static str {
+		match self {
+			AppError::Http(_) => "Http",
+			AppError::Connect(_) => "Connect",
+			AppError::Auth(_) => "Auth",
+			AppError::Media(_) => "Media",
+			AppError::NotLoggedIn => "NotLoggedIn",
+			AppError::SessionStale => "SessionStale",
+			AppError::Api { .. } => "Api",
+			AppError::Unauthorized { .. } => "Unauthorized",
+			AppError::Banned(_) => "Banned",
+			AppError::RateLimited => "RateLimited",
+			AppError::RequestBlocked => "RequestBlocked",
+			AppError::NetworkBlocked => "NetworkBlocked",
+			AppError::NotInitialized => "NotInitialized",
+			AppError::SessionCleared => "SessionCleared",
+		}
+	}
+}
+
 impl fmt::Display for AppError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
@@ -151,6 +172,46 @@ impl AppError {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn every_kind_matches_its_serde_tag() {
+		let ban = BanInfo {
+			kind: "profile".to_owned(),
+			code: 27,
+			message: String::new(),
+			reason: None,
+			sub_reason: None,
+			automated: None,
+		};
+		let errors = [
+			AppError::Http(String::new()),
+			AppError::Connect(String::new()),
+			AppError::Auth(String::new()),
+			AppError::Media(String::new()),
+			AppError::NotLoggedIn,
+			AppError::SessionStale,
+			AppError::Api {
+				code: 0,
+				message: String::new(),
+			},
+			AppError::Unauthorized {
+				code: 0,
+				message: String::new(),
+			},
+			AppError::Banned(ban),
+			AppError::RateLimited,
+			AppError::RequestBlocked,
+			AppError::NetworkBlocked,
+			AppError::NotInitialized,
+			AppError::SessionCleared,
+		];
+		for error in errors {
+			assert_eq!(
+				serde_json::to_value(&error).unwrap()["kind"],
+				error.kind()
+			);
+		}
+	}
 
 	#[test]
 	fn simulated_ban_response_maps_to_banned_app_error() {

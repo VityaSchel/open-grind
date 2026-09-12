@@ -1,7 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { type ApiErrorKind, apiErrorKinds } from "$lib/api/api-error";
+import {
+	type ApiErrorKind,
+	apiErrorKinds,
+	blockedAndStaleMessages,
+} from "$lib/api/api-error";
 import { capText } from "$lib/api/redact/text";
 import { summariseNonJson } from "$lib/api/redact/value";
 import {
@@ -19,11 +23,9 @@ const connectionFailedMessage =
 	"Couldn't connect to Grindr. Check your internet connection and try again.";
 
 const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
-	RequestBlocked: "Grindr is blocking your requests",
-	NetworkBlocked: "Something blocked the request before it reached Grindr",
+	...blockedAndStaleMessages,
 	RateLimited: "Grindr is rate limiting us",
 	NotLoggedIn: "You're signed out",
-	SessionStale: "Couldn't refresh your session",
 };
 
 export const banInfoSchema = z.object({

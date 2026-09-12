@@ -41,7 +41,8 @@ find "$work/root" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 files_kib=$(cd "$work/root" && find . -path ./DEBIAN -prune -o -type f -printf '%s\n' | awk '{ s += int(($1 + 1023) / 1024) } END { print s + 0 }')
 dirs=$(cd "$work/root" && find . -path ./DEBIAN -prune -o -type d -print | wc -l)
 sed -i "s/^Installed-Size: .*/Installed-Size: $((files_kib + dirs))/" "$work/root/DEBIAN/control"
-version=$(sed -n 's/^[[:space:]]*"version": "\([^"]*\)".*/\1/p' src-tauri/tauri.conf.json | head -1)
+. ci/version.sh
+version=$(json_version src-tauri/tauri.conf.json)
 case "$(uname -m)" in aarch64) arch=arm64 ;; *) arch=$(uname -m) ;; esac
 deb="$out/bundle/deb/open-grind-v$version-linux-$arch.deb"
 dpkg-deb --root-owner-group -Zgzip -z9 --uniform-compression -b "$work/root" "$deb"

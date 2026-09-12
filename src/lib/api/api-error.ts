@@ -50,3 +50,9 @@ export class ApiError extends Error {
 		return false;
 	}
 }
+
+export const blockedAndStaleMessages = {
+	RequestBlocked: "Grindr is blocking your requests",
+	NetworkBlocked: "Something blocked the request before it reached Grindr",
+	SessionStale: "Couldn't refresh your session",
+} as const satisfies Partial<Record<ApiErrorKind, string>>;

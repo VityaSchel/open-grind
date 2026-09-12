@@ -2,7 +2,13 @@
 	import { toast } from "svelte-sonner";
 
 	import { callMethod } from "$lib/api/methods";
-	import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
+	import {
+		companionUnavailable,
+		companionUntrusted,
+		finishSignIn,
+		reportSignInFailure,
+		untrustedCompanionMessage,
+	} from "$lib/api/sign-in";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Label } from "$lib/components/ui/label";
@@ -25,16 +31,14 @@
 			reportSignInFailure({
 				error,
 				onAuthFailure: (message) => {
-					if (message === "companion-unavailable") {
+					if (message === companionUnavailable) {
 						toast.error(
 							'Couldn\'t find the Open Grind Google OAuth app on your device. Install it first, then tap "Retry". Alternatively, try pasting the OAuth token manually.',
 						);
 						return true;
 					}
-					if (message === "companion-untrusted") {
-						toast.error(
-							"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
-						);
+					if (message === companionUntrusted) {
+						toast.error(untrustedCompanionMessage);
 						manualInput = true;
 						return true;
 					}

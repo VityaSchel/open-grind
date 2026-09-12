@@ -1,8 +1,7 @@
 #!/bin/sh
 set -eu
 
-json_version() { sed -n 's/^[[:space:]]*"version": "\([^"]*\)".*/\1/p' "$1" | head -1; }
-toml_version() { sed -n 's/^version = "\([^"]*\)".*/\1/p' "$1" | head -1; }
+. ci/version.sh
 
 tauri=$(json_version src-tauri/tauri.conf.json)
 package=$(json_version package.json)

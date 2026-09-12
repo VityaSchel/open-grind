@@ -6,7 +6,13 @@
 	import z from "zod";
 
 	import { callMethod } from "$lib/api/methods";
-	import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
+	import {
+		companionUnavailable,
+		companionUntrusted,
+		finishSignIn,
+		reportSignInFailure,
+		untrustedCompanionMessage,
+	} from "$lib/api/sign-in";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Input } from "$lib/components/ui/input";
@@ -28,12 +34,9 @@
 			method: "login_with_google",
 			label: "Google",
 			failures: {
-				"companion-unavailable": () =>
-					void goto("/auth/sign-in/google"),
-				"companion-untrusted": () => {
-					toast.error(
-						"An app using the companion's name is installed but isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
-					);
+				[companionUnavailable]: () => void goto("/auth/sign-in/google"),
+				[companionUntrusted]: () => {
+					toast.error(untrustedCompanionMessage);
 					void goto("/auth/sign-in/google");
 				},
 			},

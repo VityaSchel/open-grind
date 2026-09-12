@@ -1,3 +1,5 @@
+use crate::error::AppError;
+
 mod entries;
 #[cfg(any(
 	target_os = "linux",
@@ -6,6 +8,13 @@ mod entries;
 mod file_store;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
+
+const SERVICE: &str = "open-grind";
+
+pub(crate) fn entry(name: &str) -> Result<keyring_core::Entry, AppError> {
+	keyring_core::Entry::new(SERVICE, name)
+		.map_err(|e| AppError::Auth(e.to_string()))
+}
 
 #[cfg(any(
 	target_os = "linux",
@@ -102,8 +111,7 @@ pub fn storage_backend(
 }
 
 fn round_trips() -> bool {
-	let Ok(entry) = keyring_core::Entry::new("open-grind", "startup-probe")
-	else {
+	let Ok(entry) = entry("startup-probe") else {
 		return false;
 	};
 	let ok = entry.set_secret(b"ok").is_ok()

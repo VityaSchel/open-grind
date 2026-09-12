@@ -19,9 +19,6 @@ use tauri::Manager;
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
-// Mirrors MIN_SUPPORTED_WEBVIEW_MAJOR in gen/android/app/build.gradle.kts and the
-// CSS feature floor in src/app.html (Tailwind v4: Chromium 111 / WebKitGTK 2.42 /
-// Safari 16.4). Keep in sync.
 #[cfg(target_os = "windows")]
 const MIN_CHROMIUM_MAJOR: u32 = 111;
 #[cfg(target_os = "linux")]
@@ -390,5 +387,51 @@ mod tests {
 		] {
 			assert!(!allows(url), "{url} must not load in the main webview");
 		}
+	}
+}
+
+#[cfg(test)]
+mod webview_floor_pins {
+	const THIS: &str = include_str!("lib.rs");
+	const TAURI_CONF: &str = include_str!("../tauri.conf.json");
+	const GRADLE: &str = include_str!("../gen/android/app/build.gradle.kts");
+	const APP_HTML: &str = include_str!("../../src/app.html");
+
+	fn numbers_after<'a>(
+		haystack: &'a str,
+		marker: &str,
+	) -> impl Iterator<Item = u32> + 'a {
+		let at = haystack.find(marker).expect(marker) + marker.len();
+		haystack[at..]
+			.split(|c: char| !c.is_ascii_digit())
+			.filter(|run| !run.is_empty())
+			.map(|run| run.parse().unwrap())
+	}
+
+	#[test]
+	fn every_webview_floor_names_the_same_chromium_major() {
+		let rust =
+			numbers_after(THIS, "const MIN_CHROMIUM_MAJOR: u32 =").next();
+		assert_eq!(
+			rust,
+			numbers_after(TAURI_CONF, "\"minimumWebview2Version\":").next()
+		);
+		assert_eq!(
+			rust,
+			numbers_after(GRADLE, "MIN_SUPPORTED_WEBVIEW_MAJOR\",").next()
+		);
+	}
+
+	#[test]
+	fn the_unsupported_page_names_the_webkitgtk_floor() {
+		let rust: Vec<u32> =
+			numbers_after(THIS, "const MIN_WEBKITGTK: (u32, u32) =")
+				.take(2)
+				.collect();
+		let page: Vec<u32> =
+			numbers_after(APP_HTML, "<code>webkit2gtk</code> (")
+				.take(2)
+				.collect();
+		assert_eq!(rust, page);
 	}
 }

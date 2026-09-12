@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
+	import {
+		ApiError,
+		type ApiErrorKind,
+		blockedAndStaleMessages,
+	} from "$lib/api/api-error";
 	import { promptCopyError } from "$lib/api/error-copy";
 	import { Button } from "$lib/components/ui/button";
 
@@ -16,12 +20,9 @@
 	} = $props();
 
 	const kindMessages: Partial<Record<ApiErrorKind, string>> = {
-		RequestBlocked: "Grindr is blocking your requests",
-		NetworkBlocked:
-			"Something blocked the request before it reached Grindr",
+		...blockedAndStaleMessages,
 		Connect: "Couldn't connect to Grindr",
 		Http: "Couldn't reach the server",
-		SessionStale: "Couldn't refresh your session",
 	};
 
 	const apiError = $derived(error instanceof ApiError ? error : null);
