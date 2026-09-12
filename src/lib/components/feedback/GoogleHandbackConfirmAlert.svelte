@@ -20,14 +20,14 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Switch Google account?</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				The companion app signed you in to Google. Using it here signs
-				you out of your current account.
+				You have signed in to another Google account using the companion
+				app.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Stay signed in</AlertDialog.Cancel>
+			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 			<Button onclick={() => settleGoogleHandbackConfirm(true)}>
-				Switch account
+				Continue
 			</Button>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
