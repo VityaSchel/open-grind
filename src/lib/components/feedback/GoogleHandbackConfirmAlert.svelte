@@ -1,22 +1,29 @@
 <script lang="ts">
 	import {
-		googleHandbackConfirmState,
-		settleGoogleHandbackConfirm,
-	} from "$lib/api/google-handback-confirm-state.svelte";
+		answerAccountSwitch,
+		googleHandbackState,
+	} from "$lib/api/google-handback-state.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { Spinner } from "$lib/components/ui/spinner";
+
+	const switching = $derived(
+		googleHandbackState.phase === "switchingAccount",
+	);
+	const open = $derived(
+		switching || googleHandbackState.phase === "confirmingSwitch",
+	);
 </script>
 
 <AlertDialog.Root
-	bind:open={googleHandbackConfirmState.open}
-	onOpenChange={(open) => {
-		if (!open) settleGoogleHandbackConfirm(false);
-	}}
+	bind:open={
+		() => open,
+		(next) => {
+			if (!next) answerAccountSwitch(false);
+		}
+	}
 >
-	<AlertDialog.Content
-		class="max-sm:max-w-[calc(100%-2rem)]!"
-		interactOutsideBehavior="close"
-	>
+	<AlertDialog.Content interactOutsideBehavior="close">
 		<AlertDialog.Header>
 			<AlertDialog.Title>Switch Google account?</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
@@ -25,10 +32,15 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<Button onclick={() => settleGoogleHandbackConfirm(true)}>
-				Continue
-			</Button>
+			<fieldset disabled={switching} class="contents">
+				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<Button onclick={() => answerAccountSwitch(true)}>
+					{#if switching}
+						<Spinner />
+					{/if}
+					Continue
+				</Button>
+			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

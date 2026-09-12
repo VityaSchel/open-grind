@@ -3,7 +3,10 @@ import { listen } from "@tauri-apps/api/event";
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
 
-import { confirmGoogleHandback } from "$lib/api/google-handback-confirm-state.svelte";
+import {
+	confirmAccountSwitch,
+	googleHandbackState,
+} from "$lib/api/google-handback-state.svelte";
 import { callMethod, loginResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { clearAccountState } from "$lib/api/sign-out";
@@ -63,12 +66,13 @@ async function consume(): Promise<void> {
 
 	let replacingAccount = false;
 	if (await mayHaveSession()) {
-		if (!(await confirmGoogleHandback())) {
+		if (!(await confirmAccountSwitch())) {
 			await discard();
 			return;
 		}
 		replacingAccount = true;
 	} else {
+		googleHandbackState.phase = "signingIn";
 		await goto("/auth/sign-in/google");
 	}
 
@@ -84,6 +88,8 @@ async function consume(): Promise<void> {
 	} catch (error) {
 		reportSignInFailure({ error, label: "Sign in with Google" });
 		if (!replacingAccount) await goto("/auth/sign-in/google");
+	} finally {
+		googleHandbackState.phase = "idle";
 	}
 }
 
