@@ -1,3 +1,4 @@
+import type { AlbumStorageLimits } from "$lib/model/messaging/albums";
 import { DAY, demoMeProfileId, NOW } from "../config";
 import { picsum, unsplash } from "./avatars";
 
@@ -7,6 +8,21 @@ function localDateTime(timestamp: number): string {
 
 export const albumProcessingPlaceholderUrl =
 	"https://d3w4wp6rol9nvz.cloudfront.net/https://d1weu1y74qn7ma.cloudfront.net/albums-video-loading.mp4";
+
+export const demoAlbumStorageLimits = {
+	subscriptionType: "FreeAlbums",
+	maxAlbums: 5,
+	maxContentItemsPerAlbum: 10,
+	maxShares: 5000,
+	maxViewableAlbums: 5,
+	maxViewableVideos: 1,
+	maxContentSize: 125829120,
+	maxContentSizeHumanReadable: "120.00 MB",
+	maxVideoLength: 15000,
+	minVideoLength: 1,
+	maxShareableAlbums: 1,
+	maxVideosPerAlbum: 1,
+} satisfies AlbumStorageLimits;
 
 const UNSPLASH_COVER_BLUR = 30;
 const UNSPLASH_ALBUM_COVERS = new Map([[5004, "1645973342475-e9fcd3fc0d39"]]);
@@ -58,6 +74,7 @@ const albumShares = new Map<number, Set<number>>(
 	]),
 );
 
+const createdAlbumIds: number[] = [];
 const deletedContentIds = new Set<number>();
 const deletedAlbumIds = new Set<number>();
 const contentOrder = new Map<number, number[]>();
@@ -71,7 +88,7 @@ const videoSlotByAlbum = new Map<number, "first" | "last">([
 ]);
 
 export function demoAlbumContent(albumId: number) {
-	const count = 3 + (albumId % 3);
+	const count = createdAlbumIds.includes(albumId) ? 0 : 3 + (albumId % 3);
 	const content = Array.from({ length: count }, (_, i) => {
 		const thumb = picsum({
 			seed: `album-${albumId}-${i}`,
@@ -114,6 +131,33 @@ export function demoAlbumContent(albumId: number) {
 		updatedAt: localDateTime(NOW - DAY),
 		content,
 	};
+}
+
+export function demoCreateAlbum({
+	albumName,
+}: {
+	albumName: string | null;
+}): { albumId: number; albumName: string | null } | null {
+	if (demoMyAlbums().albums.length >= demoAlbumStorageLimits.maxAlbums)
+		return null;
+	const albumId =
+		FIRST_ALBUM_ID + demoAlbumSeeds.length + createdAlbumIds.length;
+	createdAlbumIds.push(albumId);
+	albumNames.set(albumId, albumName);
+	return { albumId, albumName };
+}
+
+export function demoAlbumContentProcessing({
+	albumId,
+	contentId,
+}: {
+	albumId: number;
+	contentId: number;
+}): { processing: boolean } | null {
+	const item = demoAlbumContent(albumId).content.find(
+		(candidate) => candidate.contentId === contentId,
+	);
+	return item === undefined ? null : { processing: item.processing };
 }
 
 export function demoRenameAlbum({
@@ -177,16 +221,32 @@ export function demoAlbumShares(albumId: number): number[] {
 	return [...(albumShares.get(albumId) ?? [])];
 }
 
+function demoContentHash(contentId: number): string {
+	return contentId.toString(16).padStart(64, "0");
+}
+
 export function demoMyAlbums() {
+	const albums = [
+		...demoAlbumSeeds.map((seed, index) => ({
+			albumId: FIRST_ALBUM_ID + index,
+			isShareable: seed.isShareable ?? true,
+		})),
+		...createdAlbumIds.map((albumId) => ({ albumId, isShareable: true })),
+	];
 	return {
-		albums: demoAlbumSeeds.flatMap((seed, i) => {
-			const albumId = FIRST_ALBUM_ID + i;
-			if (!demoAlbumExists(albumId)) return [];
-			return {
-				...demoAlbumContent(albumId),
-				version: 1,
-				isShareable: seed.isShareable ?? true,
-			};
-		}),
+		albums: albums
+			.filter(({ albumId }) => demoAlbumExists(albumId))
+			.map(({ albumId, isShareable }) => {
+				const album = demoAlbumContent(albumId);
+				return {
+					...album,
+					content: album.content.map((item) => ({
+						...item,
+						contentHash: demoContentHash(item.contentId),
+					})),
+					version: 1,
+					isShareable,
+				};
+			}),
 	};
 }

@@ -8,6 +8,7 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 }));
 
 import {
+	getAlbumContentProcessing,
 	getAlbumShares,
 	getAlbumStorageLimits,
 	getMyAlbums,
@@ -125,6 +126,33 @@ describe("albums API wrappers", () => {
 
 		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums");
 		expect(albums.length).toBeGreaterThan(0);
+	});
+
+	it("reads whether an uploaded album item is still processing", async () => {
+		jsonParsed.mockImplementation(
+			(schema: { parse: (v: unknown) => unknown }) =>
+				schema.parse({ processing: true }),
+		);
+
+		const { processing } = await getAlbumContentProcessing({
+			albumId: 900,
+			contentId: 90001,
+		});
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			"/v1/albums/900/content/90001/processing",
+		);
+		expect(processing).toBe(true);
+	});
+
+	it("rejects a processing status without the processing flag", async () => {
+		jsonParsed.mockImplementation(
+			(schema: { parse: (v: unknown) => unknown }) => schema.parse({}),
+		);
+
+		await expect(
+			getAlbumContentProcessing({ albumId: 900, contentId: 90001 }),
+		).rejects.toThrow();
 	});
 
 	it("parses the storage limits a free account receives", async () => {

@@ -3,6 +3,7 @@ import z from "zod";
 import { fetchRest } from "$lib/api/transport";
 import {
 	type AlbumContentOrderRequest,
+	albumContentProcessingResponseSchema,
 	albumContentSchema,
 	albumDetailsSchema,
 	type AlbumExpirationType,
@@ -45,6 +46,18 @@ export async function getAlbumStorageLimits() {
 	return await fetchRest("/v1/albums/storage").then((res) =>
 		res.jsonParsed(albumStorageLimitsSchema),
 	);
+}
+
+export async function getAlbumContentProcessing({
+	albumId,
+	contentId,
+}: {
+	albumId: number;
+	contentId: number;
+}) {
+	return await fetchRest(
+		`/v1/albums/${albumId}/content/${contentId}/processing`,
+	).then((res) => res.jsonParsed(albumContentProcessingResponseSchema));
 }
 
 export async function shareAlbum({

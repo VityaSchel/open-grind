@@ -59,12 +59,16 @@ export const albumContentSchema = albumContentMin.extend({
 
 export type AlbumContent = z.infer<typeof albumContentSchema>;
 
+export const albumContentWithHashSchema = albumContentSchema.extend({
+	contentHash: z.string().optional(),
+});
+
 export const myAlbumSchema = albumDetailsSchema.extend({
 	albumId: z.int(),
 	albumName: z.string().nullable(),
 	profileId: z.int(),
 	version: z.int(),
-	content: z.array(albumContentSchema),
+	content: z.array(albumContentWithHashSchema),
 	isShareable: z.boolean(),
 });
 
@@ -135,3 +139,12 @@ export const albumStorageLimitsSchema = z.object({
 });
 
 export type AlbumStorageLimits = z.infer<typeof albumStorageLimitsSchema>;
+
+export const albumContentUploadResponseSchema = z.object({
+	contentId: z.int(),
+	contentUrl: z.string().nullable(),
+});
+
+export const albumContentProcessingResponseSchema = z.object({
+	processing: z.boolean(),
+});

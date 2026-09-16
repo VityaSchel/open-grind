@@ -6027,7 +6027,7 @@
 						"description": "OK"
 					},
 					"402": {
-						"description": "Payment required if you reached [limit](/grindr-api/messaging/albums#get-album-limits) for number of created albums"
+						"description": "The account already has `maxAlbums` albums, see [Get album limits](/grindr-api/messaging/albums#get-album-limits)."
 					}
 				},
 				"summary": "Create an album"
@@ -6080,7 +6080,7 @@
 						"in": "query",
 						"schema": {
 							"type": "integer",
-							"description": "integer, optional, doesn't affect the resulting image"
+							"description": "integer, not validated and doesn't affect the stored media, videos get `400` without it"
 						}
 					},
 					{
@@ -6088,7 +6088,7 @@
 						"in": "query",
 						"schema": {
 							"type": "integer",
-							"description": "integer, optional, doesn't affect the resulting image"
+							"description": "integer, not validated and doesn't affect the stored media, videos get `400` without it"
 						}
 					},
 					{
@@ -6096,7 +6096,7 @@
 						"in": "query",
 						"schema": {
 							"type": "boolean",
-							"description": "boolean, optional, unknown how it affects the resulting image, WIP"
+							"description": "boolean, effect unknown, WIP"
 						}
 					}
 				],
@@ -6124,25 +6124,27 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"type": "object",
-									"properties": {
-										"contentId": {
-											"type": "integer",
-											"format": "int64"
-										},
-										"contentUrl": {
-											"type": "string",
-											"nullable": true
-										}
-									}
+									"$ref": "#/components/schemas/AlbumContentUploadResponse"
 								}
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "A video was uploaded without `width` or `height`."
+					},
+					"402": {
+						"description": "The album already holds `maxContentItemsPerAlbum` photos, or the upload is a video and the album already holds `maxVideosPerAlbum` videos, see [Get album limits](/grindr-api/messaging/albums#get-album-limits). The check runs before photo de-duplication, so a duplicate photo gets `402` too. A video that is still processing does not count toward `maxVideosPerAlbum`. Empty body."
+					},
+					"413": {
+						"description": "The whole `multipart/form-data` request body is larger than `maxContentSize`, see [Get album limits](/grindr-api/messaging/albums#get-album-limits). Empty body."
 					}
 				},
 				"summary": "Upload media to an album",
-				"description": "Repeated requests with the same file (its contents) are skipped and a cached result from the first upload request is returned."
+				"description": "New media is added at the start of the album's `content`. Uploading a photo byte-identical to one already in the album adds nothing and returns the existing `contentId`.",
+				"x-notes": [
+					"A newly uploaded video is transcoded before it is ready: until then its album item has `statusId` `3` and `processing` `true`, see [Get album media processing status](/grindr-api/messaging/albums#get-album-media-processing-status). Video bytes the server has already transcoded come back ready (`statusId` `1`) immediately. A video the transcoder cannot handle keeps `processing` `true` indefinitely."
+				]
 			}
 		},
 		"/v1/albums/{albumId}/content/order": {
@@ -6184,6 +6186,9 @@
 				"responses": {
 					"200": {
 						"description": "OK"
+					},
+					"400": {
+						"description": "`contentIds` doesn't list every media file in the album."
 					}
 				},
 				"summary": "Reorder media in an album"
@@ -6211,10 +6216,13 @@
 				"responses": {
 					"200": {
 						"description": "Empty"
+					},
+					"400": {
+						"description": "The media is still processing (`processing` is `true`). Empty body."
 					}
 				},
 				"summary": "Delete media from an album",
-				"description": "Technically, this does not delete the media from CDN. All signed URLs will continue to work until expired. Uploading the same file will result in it being assigned the same `contentId`."
+				"description": "Technically, this does not delete the media from CDN. All signed URLs will continue to work until expired. Uploading the same photo again assigns it the same `contentId`, uploading the same video again assigns a new one."
 			}
 		},
 		"/v1/albums/{albumId}/content/{contentId}/processing": {
@@ -6223,6 +6231,11 @@
 					"messaging/albums"
 				],
 				"operationId": "getAlbumContentProcessing",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"parameters": [
 					{
 						"$ref": "#/components/parameters/AlbumIdPath"
@@ -6236,20 +6249,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"type": "object",
-									"properties": {
-										"processing": {
-											"type": "boolean"
-										}
-									}
+									"$ref": "#/components/schemas/AlbumContentProcessingResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"summary": "Albums content processing",
-				"x-wip": true
+				"summary": "Get album media processing status"
 			}
 		},
 		"/v1/pics/limited/status": {
@@ -15095,7 +15102,7 @@
 							"content": {
 								"type": "array",
 								"items": {
-									"$ref": "#/components/schemas/AlbumContent"
+									"$ref": "#/components/schemas/AlbumContentWithHash"
 								}
 							},
 							"isShareable": {
@@ -15119,6 +15126,33 @@
 				},
 				"required": [
 					"albumName"
+				]
+			},
+			"AlbumContentWithHash": {
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/AlbumContent"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"contentHash": {
+								"type": "string",
+								"description": "string, lowercase hex SHA-256 of the uploaded bytes"
+							}
+						}
+					}
+				],
+				"x-render-on-tag": "messaging/albums",
+				"required": [
+					"contentId",
+					"contentType",
+					"coverUrl",
+					"statusId",
+					"thumbUrl",
+					"url",
+					"processing",
+					"rejectionId"
 				]
 			},
 			"AlbumContentWithRemainingViews": {
@@ -15360,6 +15394,38 @@
 					"shareId"
 				]
 			},
+			"AlbumContentUploadResponse": {
+				"type": "object",
+				"properties": {
+					"contentId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"contentUrl": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, `null` for photo and video uploads"
+					}
+				},
+				"x-render-on-tag": "messaging/albums",
+				"required": [
+					"contentId",
+					"contentUrl"
+				]
+			},
+			"AlbumContentProcessingResponse": {
+				"type": "object",
+				"properties": {
+					"processing": {
+						"type": "boolean",
+						"description": "boolean, `true` while a video is being transcoded, always `false` for photos"
+					}
+				},
+				"x-render-on-tag": "messaging/albums",
+				"required": [
+					"processing"
+				]
+			},
 			"AlbumStorageLimits": {
 				"type": "object",
 				"properties": {
@@ -15371,7 +15437,8 @@
 						"type": "integer"
 					},
 					"maxContentItemsPerAlbum": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, photos per album, videos don't count"
 					},
 					"maxShares": {
 						"type": "integer"
@@ -15385,7 +15452,7 @@
 					"maxContentSize": {
 						"type": "integer",
 						"format": "int64",
-						"description": "long integer, size in bytes"
+						"description": "long integer, size in bytes of the whole upload request body"
 					},
 					"maxContentSizeHumanReadable": {
 						"type": "string",
@@ -15394,7 +15461,7 @@
 					"maxVideoLength": {
 						"type": "integer",
 						"format": "int64",
-						"description": "long integer, length in milliseconds (1/1000th of a second)"
+						"description": "long integer, length in milliseconds (1/1000th of a second), not enforced by the server"
 					},
 					"minVideoLength": {
 						"type": "integer",
