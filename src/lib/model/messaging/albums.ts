@@ -118,3 +118,20 @@ export const albumContentOrderRequestSchema = z.object({
 export type AlbumContentOrderRequest = z.infer<
 	typeof albumContentOrderRequestSchema
 >;
+
+export const albumStorageLimitsSchema = z.object({
+	subscriptionType: z.string(),
+	maxAlbums: z.int(),
+	maxContentItemsPerAlbum: z.int(),
+	maxShares: z.int(),
+	maxViewableAlbums: z.int(),
+	maxViewableVideos: z.int(),
+	maxContentSize: z.int(),
+	maxContentSizeHumanReadable: z.string(),
+	maxVideoLength: z.int(),
+	minVideoLength: z.int(),
+	maxShareableAlbums: z.int(),
+	maxVideosPerAlbum: z.int(),
+});
+
+export type AlbumStorageLimits = z.infer<typeof albumStorageLimitsSchema>;

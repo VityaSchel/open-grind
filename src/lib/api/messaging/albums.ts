@@ -11,6 +11,7 @@ import {
 	albumNameResponseSchema,
 	type AlbumShareRequest,
 	albumSharesResponseSchema,
+	albumStorageLimitsSchema,
 	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
 } from "$lib/model/messaging/albums";
@@ -37,6 +38,12 @@ export type AlbumContentResponse = Awaited<ReturnType<typeof getAlbumContent>>;
 export async function getMyAlbums() {
 	return await fetchRest("/v1/albums").then((res) =>
 		res.jsonParsed(myAlbumsResponseSchema),
+	);
+}
+
+export async function getAlbumStorageLimits() {
+	return await fetchRest("/v1/albums/storage").then((res) =>
+		res.jsonParsed(albumStorageLimitsSchema),
 	);
 }
 

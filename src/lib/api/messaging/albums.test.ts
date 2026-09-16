@@ -9,6 +9,7 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 
 import {
 	getAlbumShares,
+	getAlbumStorageLimits,
 	getMyAlbums,
 	shareAlbum,
 	unshareAlbum,
@@ -124,5 +125,31 @@ describe("albums API wrappers", () => {
 
 		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums");
 		expect(albums.length).toBeGreaterThan(0);
+	});
+
+	it("parses the storage limits a free account receives", async () => {
+		jsonParsed.mockImplementation(
+			(schema: { parse: (v: unknown) => unknown }) =>
+				schema.parse({
+					maxAlbums: 1,
+					maxContentItemsPerAlbum: 10,
+					maxContentSize: 125829120,
+					maxContentSizeHumanReadable: "120.00 MB",
+					maxShareableAlbums: 1,
+					maxShares: 5000,
+					maxVideoLength: 15000,
+					maxVideosPerAlbum: 1,
+					maxViewableAlbums: 5,
+					maxViewableVideos: 1,
+					minVideoLength: 1,
+					subscriptionType: "FreeAlbums",
+				}),
+		);
+
+		const limits = await getAlbumStorageLimits();
+
+		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums/storage");
+		expect(limits.maxContentSize).toBe(120 * 1024 * 1024);
+		expect(limits.maxVideoLength).toBe(15000);
 	});
 });
