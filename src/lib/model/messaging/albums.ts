@@ -53,7 +53,7 @@ export const albumContentMin = z.object({
 export const albumContentSchema = albumContentMin.extend({
 	thumbUrl: mediaUrlSchema,
 	url: mediaUrlSchema.or(z.literal("")),
-	processing: z.boolean().nullable(),
+	processing: z.boolean(),
 	rejectionId: unmodeledSchema,
 });
 

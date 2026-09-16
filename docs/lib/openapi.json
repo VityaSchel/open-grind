@@ -15013,7 +15013,8 @@
 						"$ref": "#/components/schemas/AlbumCoverUrl"
 					},
 					"statusId": {
-						"description": "unknown integer, WIP"
+						"type": "integer",
+						"description": "integer, `1` ready, `3` processing, other values unknown"
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
@@ -15053,6 +15054,9 @@
 					},
 					"url": {
 						"description": "string, original file, see [Media -> Signed CDN files](/grindr-api/media/signed-cdn-files), may be `\"\"` if `remainingViews` is 0"
+					},
+					"processing": {
+						"description": "boolean, `true` while the server transcodes an uploaded video; `statusId` is then `3`, and `coverUrl`, `thumbUrl` and `url` all equal the placeholder `https://d3w4wp6rol9nvz.cloudfront.net/https://d1weu1y74qn7ma.cloudfront.net/albums-video-loading.mp4`"
 					},
 					"rejectionId": {
 						"description": "unknown or `null`"

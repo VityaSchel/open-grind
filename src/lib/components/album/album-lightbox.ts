@@ -1,4 +1,8 @@
-import { registerAccountCache } from "$lib/api/account-caches";
+import {
+	accountEpoch,
+	isAccountEpochCurrent,
+	registerAccountCache,
+} from "$lib/api/account-caches";
 import {
 	type AlbumContentResponse,
 	getAlbumContent,
@@ -24,11 +28,17 @@ export type AlbumSlide = AlbumContentResponse["content"][number] &
 const SLIDES_TTL_MS = 10 * 60 * 1000;
 
 const slidesByAlbum = new Map<number, { slides: AlbumSlide[]; at: number }>();
+const forgetCountByAlbum = new Map<number, number>();
 
 registerAccountCache({ reset: () => slidesByAlbum.clear() });
 
+function forgetCountOf(albumId: number): number {
+	return forgetCountByAlbum.get(albumId) ?? 0;
+}
+
 export function forgetAlbumSlides(albumId: number): void {
 	slidesByAlbum.delete(albumId);
+	forgetCountByAlbum.set(albumId, forgetCountOf(albumId) + 1);
 }
 
 export async function loadAlbumSlides(albumId: number): Promise<AlbumSlide[]> {
@@ -36,9 +46,12 @@ export async function loadAlbumSlides(albumId: number): Promise<AlbumSlide[]> {
 	if (cached !== undefined && now() - cached.at < SLIDES_TTL_MS) {
 		return cached.slides;
 	}
+	const epoch = accountEpoch();
+	const forgetCount = forgetCountOf(albumId);
 	const album = await getAlbumContent(albumId);
+	const ready = album.content.filter((item) => !item.processing);
 	const slides = await Promise.all(
-		album.content.map(async (slide) => {
+		ready.map(async (slide) => {
 			const kind = isVideoContent(slide.contentType) ? "video" : "image";
 			const url = proxyMediaUrl(slide.url, { as: kind });
 			const coverUrl = proxyMediaUrl(slide.coverUrl);
@@ -53,7 +66,11 @@ export async function loadAlbumSlides(albumId: number): Promise<AlbumSlide[]> {
 			};
 		}),
 	);
-	slidesByAlbum.set(albumId, { slides, at: now() });
+	const forgottenMeanwhile =
+		!isAccountEpochCurrent(epoch) || forgetCountOf(albumId) !== forgetCount;
+	if (!forgottenMeanwhile && ready.length === album.content.length) {
+		slidesByAlbum.set(albumId, { slides, at: now() });
+	}
 	return slides;
 }
 

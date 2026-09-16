@@ -5,6 +5,9 @@ function localDateTime(timestamp: number): string {
 	return new Date(timestamp).toISOString().slice(0, 19);
 }
 
+export const albumProcessingPlaceholderUrl =
+	"https://d3w4wp6rol9nvz.cloudfront.net/https://d1weu1y74qn7ma.cloudfront.net/albums-video-loading.mp4";
+
 const UNSPLASH_COVER_BLUR = 30;
 const UNSPLASH_ALBUM_COVERS = new Map([[5004, "1645973342475-e9fcd3fc0d39"]]);
 

@@ -11,9 +11,10 @@
 	import { proxyMediaUrl } from "$lib/util/media";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
 	import {
+		albumCoverContent,
 		albumDisplayName,
 		albumItemCountLabel,
-		isVideoContent,
+		readyAlbumMedia,
 	} from "./album";
 
 	let {
@@ -38,9 +39,7 @@
 		onclick?: () => void;
 	} = $props();
 
-	const hasVideo = $derived(
-		album.content.some((item) => isVideoContent(item.contentType)),
-	);
+	const readyMedia = $derived(readyAlbumMedia(album.content));
 	const tileClass: import("svelte/elements").ClassValue = $derived([
 		"relative isolate flex aspect-(--photo-grid-aspect) items-end overflow-hidden transition-opacity",
 		{ "cursor-pointer": clickable, "opacity-50": dimmed },
@@ -49,7 +48,7 @@
 
 {#snippet body()}
 	<MediaImage
-		src={proxyMediaUrl(album.content[0]?.thumbUrl)}
+		src={proxyMediaUrl(albumCoverContent(album.content)?.thumbUrl)}
 		loading="lazy"
 		class="absolute inset-0 size-full rounded-[inherit]"
 		imgClass="bg-card-foreground/10"
@@ -81,15 +80,15 @@
 	<div
 		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:rounded-full *:border *:border-white/10 *:bg-popover/40 *:scrim *:backdrop-filter-(--bd-chip)"
 	>
-		<div class="px-1.5">
+		<div data-slot="album-count-badge" class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />
-			<span aria-hidden="true">{album.content.length}</span>
+			<span aria-hidden="true">{readyMedia.count}</span>
 			<span class="sr-only">
-				{albumItemCountLabel(album.content.length)}
+				{albumItemCountLabel(readyMedia.count)}
 			</span>
 		</div>
-		{#if hasVideo}
-			<div>
+		{#if readyMedia.hasVideo}
+			<div data-slot="album-video-badge">
 				<VideoIcon weight="fill" class="size-3.5" />
 				<span class="sr-only">contains video</span>
 			</div>

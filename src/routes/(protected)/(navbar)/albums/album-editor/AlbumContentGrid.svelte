@@ -32,10 +32,13 @@
 			return {
 				key: String(item.contentId),
 				src: proxyMediaUrl(item.thumbUrl),
-				alt: `Album ${label}`,
+				alt: item.processing
+					? `Album ${label}, processing`
+					: `Album ${label}`,
 				deleteLabel: `Remove album ${label}`,
 				undoLabel: `Keep album ${label}`,
 				video,
+				pending: item.processing,
 				onDelete: () => onToggleRemoved(item.contentId),
 			};
 		}),

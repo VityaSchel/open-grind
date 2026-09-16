@@ -53,7 +53,10 @@
 		loadAlbumSlides(albumId)
 			.then((slides) => {
 				if (controller.signal.aborted) return;
-				state = { status: "open", slides };
+				state =
+					slides.length === 0
+						? { status: "idle" }
+						: { status: "open", slides };
 			})
 			.catch((error: unknown) => {
 				if (controller.signal.aborted) return;
@@ -111,7 +114,7 @@
 			class="absolute bottom-1/5 left-1/2 flex -translate-x-1/2 items-center gap-1 px-2 py-0.5 *:aspect-square *:w-[24cqw] *:rounded-full *:bg-card *:p-[6cqw]"
 		>
 			{#if hasPhoto}
-				<div>
+				<div data-slot="album-preview-photo-badge">
 					<ImagesIcon
 						width="100%"
 						height="auto"
@@ -121,7 +124,7 @@
 				</div>
 			{/if}
 			{#if hasVideo}
-				<div>
+				<div data-slot="album-preview-video-badge">
 					<VideoIcon
 						width="100%"
 						height="auto"

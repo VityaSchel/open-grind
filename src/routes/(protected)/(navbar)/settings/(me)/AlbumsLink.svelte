@@ -2,6 +2,7 @@
 	import { CaretRightIcon, FolderOpenIcon } from "phosphor-svelte";
 
 	import { getMyAlbums } from "$lib/api/messaging/albums";
+	import { albumCoverContent } from "$lib/components/album/album";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Skeleton } from "$lib/components/ui/skeleton";
@@ -10,7 +11,8 @@
 	const cover = getMyAlbums()
 		.then(
 			({ albums }) =>
-				albums.flatMap((album) => album.content).at(0)?.thumbUrl,
+				albumCoverContent(albums.flatMap((album) => album.content))
+					?.thumbUrl,
 		)
 		.catch((error: unknown) => {
 			console.error(error);

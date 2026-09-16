@@ -2,8 +2,9 @@
 	import { CaretRightIcon } from "phosphor-svelte";
 
 	import {
+		albumCoverContent,
 		albumItemCountLabel,
-		isVideoContent,
+		readyAlbumMedia,
 	} from "$lib/components/album/album";
 	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
 	import { Badge } from "$lib/components/ui/badge";
@@ -29,16 +30,12 @@
 
 	const hintId = $props.id();
 	const itemCountLabel = $derived(albumItemCountLabel(content.length));
-	const hasVideo = $derived(
-		content.some((item) => isVideoContent(item.contentType)),
-	);
-	const hasPhoto = $derived(
-		content.some((item) => !isVideoContent(item.contentType)),
-	);
+	const cover = $derived(albumCoverContent(content));
+	const readyMedia = $derived(readyAlbumMedia(content));
 </script>
 
 <div class="mx-auto w-32 max-w-full">
-	{#if content.length === 0}
+	{#if cover === undefined}
 		<div
 			data-slot="album-preview-empty"
 			class="aspect-3/4 w-full rounded-xl bg-card-foreground/10"
@@ -46,9 +43,9 @@
 	{:else}
 		<AlbumPreview
 			{albumId}
-			coverUrl={content[0]?.thumbUrl ?? null}
-			{hasPhoto}
-			{hasVideo}
+			coverUrl={cover.thumbUrl}
+			hasPhoto={readyMedia.hasPhoto}
+			hasVideo={readyMedia.hasVideo}
 			label="Preview album"
 			class="aspect-3/4 w-full"
 			contentClass="rounded-xl"

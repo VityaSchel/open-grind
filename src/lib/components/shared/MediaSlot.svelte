@@ -15,6 +15,7 @@
 		undoLabel,
 		removed = false,
 		video = false,
+		pending = false,
 		held = false,
 		onDelete,
 	}: {
@@ -24,6 +25,7 @@
 		undoLabel?: string;
 		removed?: boolean;
 		video?: boolean;
+		pending?: boolean;
 		held?: boolean;
 		onDelete: () => void;
 	} = $props();
@@ -32,8 +34,9 @@
 <div
 	data-slot="media-slot"
 	class={[
-		"relative aspect-square overflow-hidden rounded-xl bg-muted transition-[box-shadow,scale]",
+		"relative aspect-square overflow-hidden rounded-xl transition-[box-shadow,scale]",
 		{
+			"bg-muted": !pending,
 			"scale-105 shadow-xl ring-2 ring-ring": held,
 			"ring-2 ring-destructive": removed && !held,
 		},
@@ -42,6 +45,7 @@
 	<MediaImage
 		{src}
 		{alt}
+		{pending}
 		class={["size-full transition-opacity", { "opacity-40": removed }]}
 		tone="photo"
 		size="md"

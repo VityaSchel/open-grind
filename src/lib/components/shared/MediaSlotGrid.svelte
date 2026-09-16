@@ -6,6 +6,7 @@
 		deleteLabel: string;
 		undoLabel?: string;
 		video?: boolean;
+		pending?: boolean;
 		onDelete: () => void;
 	};
 </script>
@@ -74,6 +75,7 @@
 				removed={removed?.has(slot.key)}
 				undoLabel={slot.undoLabel}
 				video={slot.video}
+				pending={slot.pending}
 				{held}
 				onDelete={slot.onDelete}
 			/>

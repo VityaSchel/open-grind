@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Skeleton } from "$lib/components/ui/skeleton";
 	import {
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
@@ -15,6 +16,7 @@
 		tone = "muted",
 		size = "sm",
 		loading,
+		pending = false,
 		failedSrc = $bindable(null),
 		onload,
 	}: {
@@ -27,6 +29,7 @@
 		tone?: "muted" | "photo";
 		size?: "xs" | "sm" | "md" | "lg" | "xl";
 		loading?: "eager" | "lazy";
+		pending?: boolean;
 		failedSrc?: string | null;
 		onload?: (image: HTMLImageElement) => void;
 	} = $props();
@@ -35,7 +38,14 @@
 	const deferred = $derived(loading === "lazy" && !armed);
 </script>
 
-{#if src !== null && failedSrc !== src}
+{#if pending}
+	<Skeleton
+		data-slot="media-image-pending"
+		role={alt === "" ? undefined : "img"}
+		aria-label={alt === "" ? undefined : alt}
+		class={["rounded-none", className]}
+	/>
+{:else if src !== null && failedSrc !== src}
 	<img
 		src={deferred ? TRANSPARENT_PIXEL : src}
 		{alt}
