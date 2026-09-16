@@ -1,0 +1,1 @@
+import{_ as r,o,c as a,ak as i}from"./chunks/framework.CYL5YPWS.js";const y=JSON.parse('{"title":"Privacy Policy","description":"","frontmatter":{},"headers":[],"relativePath":"privacy.md","filePath":"privacy.md"}'),t={name:"privacy.md"};function n(s,e,c,l,d,p){return o(),a("div",null,[...e[0]||(e[0]=[i("",11)])])}const g=r(t,[["render",n]]);export{y as __pageData,g as default};
