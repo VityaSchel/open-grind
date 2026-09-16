@@ -91,7 +91,7 @@
 		<Button
 			size="lg"
 			class="h-12 w-full text-base"
-			disabled={draft.saving}
+			disabled={!draft.canSave}
 			onclick={save}
 		>
 			{#if draft.saving}

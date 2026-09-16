@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { deleteMock, renameMock, reorderMock, forgetMock } = vi.hoisted(() => ({
-	deleteMock: vi.fn(),
-	renameMock: vi.fn(),
-	reorderMock: vi.fn(),
-	forgetMock: vi.fn(),
-}));
+const { deleteMock, albumMock, renameMock, reorderMock, forgetMock } =
+	vi.hoisted(() => ({
+		deleteMock: vi.fn(),
+		albumMock: vi.fn(),
+		renameMock: vi.fn(),
+		reorderMock: vi.fn(),
+		forgetMock: vi.fn(),
+	}));
 
 vi.mock("$lib/api/messaging/albums", () => ({
 	deleteAlbumContent: deleteMock,
+	getAlbumContent: albumMock,
 	renameAlbum: renameMock,
 	reorderAlbumContent: reorderMock,
 }));
@@ -57,6 +60,7 @@ const ids = (draft: AlbumDraft) => draft.content.map((one) => one.contentId);
 
 beforeEach(() => {
 	deleteMock.mockReset().mockResolvedValue(undefined);
+	albumMock.mockReset();
 	renameMock.mockReset().mockResolvedValue(undefined);
 	reorderMock.mockReset().mockResolvedValue(undefined);
 	forgetMock.mockReset();
@@ -150,5 +154,242 @@ describe("AlbumDraft", () => {
 			"the later drag is still unsaved, so the bar must stay",
 		).toBe(true);
 		expect(ids(draft)).toEqual([3, 2, 1]);
+	});
+
+	it("lands an uploaded item first without making the draft dirty", () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.land(item(4));
+		expect(ids(draft)).toEqual([4, 1, 2, 3]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("unmarks a pending removal when the same item lands again", () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		draft.land(item(2));
+		expect(ids(draft), "no second copy of the item").toEqual([1, 2, 3]);
+		expect(draft.removed).toEqual([]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("keeps an unsaved drag and saves it with the landed item", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.move({ from: 0, to: 2 });
+		draft.land(item(4));
+		expect(draft.dirty).toBe(true);
+
+		await draft.save();
+		expect(reorderMock).toHaveBeenCalledWith({
+			albumId: ALBUM_ID,
+			contentIds: [4, 2, 3, 1],
+		});
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("replaces a landed item with its refreshed version in place", () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.land({ ...item(4), statusId: 3, processing: true });
+		draft.replace(item(4));
+		expect(ids(draft)).toEqual([4, 1, 2, 3]);
+		expect(draft.content[0]?.processing).toBe(false);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("does not add an item through replace", () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.replace(item(4));
+		expect(ids(draft)).toEqual([1, 2, 3]);
+	});
+
+	it("forgets an item from content, saved content and removals", () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		draft.forget(2);
+		expect(ids(draft)).toEqual([1, 3]);
+		expect(draft.removed).toEqual([]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("keeps an item that landed while the reorder was in flight", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.move({ from: 0, to: 2 });
+		const slow = deferred<void>();
+		reorderMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.land(item(4));
+		slow.resolve();
+		await saving;
+
+		expect(ids(draft)).toEqual([4, 2, 3, 1]);
+		expect(draft.dirty, "the landed item is already saved").toBe(false);
+	});
+
+	it("includes an item that landed during a delete in the reorder", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		draft.move({ from: 0, to: 2 });
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.land(item(4));
+		slow.resolve();
+		await saving;
+
+		expect(reorderMock).toHaveBeenCalledWith({
+			albumId: ALBUM_ID,
+			contentIds: [4, 3, 1],
+		});
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("does not reorder when an item lands during a delete of an unmoved album", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.land(item(4));
+		slow.resolve();
+		await saving;
+
+		expect(reorderMock).not.toHaveBeenCalled();
+		expect(ids(draft)).toEqual([4, 1, 3]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("does not delete an item unmarked by a landing during the delete loop", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(1);
+		draft.toggleRemoved(2);
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.land(item(2));
+		slow.resolve();
+		await saving;
+
+		expect(deleteMock).toHaveBeenCalledTimes(1);
+		expect(deleteMock).toHaveBeenCalledWith({
+			albumId: ALBUM_ID,
+			contentId: 1,
+		});
+		expect(ids(draft)).toEqual([2, 3]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("keeps an item that landed again during its own delete while the server still lists it", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+		albumMock.mockResolvedValueOnce({
+			albumId: ALBUM_ID,
+			content: [2, 1, 3].map(item),
+		});
+
+		const saving = draft.save();
+		draft.land(item(2));
+		slow.resolve();
+		await saving;
+
+		expect(albumMock).toHaveBeenCalledWith(ALBUM_ID);
+		expect(ids(draft)).toEqual([1, 2, 3]);
+		expect(draft.removed).toEqual([]);
+	});
+
+	it("forgets an item that landed again during its own delete once the server no longer lists it", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(2);
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+		albumMock.mockResolvedValueOnce({
+			albumId: ALBUM_ID,
+			content: [1, 3].map(item),
+		});
+
+		const saving = draft.save();
+		draft.land(item(2));
+		slow.resolve();
+		await saving;
+
+		expect(ids(draft)).toEqual([1, 3]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("does not delete an item forgotten during the delete loop", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.toggleRemoved(1);
+		draft.toggleRemoved(2);
+		const slow = deferred<void>();
+		deleteMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.forget(2);
+		slow.resolve();
+		await saving;
+
+		expect(deleteMock).toHaveBeenCalledTimes(1);
+		expect(ids(draft)).toEqual([3]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("stays clean when an item is forgotten while the reorder is in flight", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.move({ from: 0, to: 2 });
+		const slow = deferred<void>();
+		reorderMock.mockReturnValueOnce(slow.promise);
+
+		const saving = draft.save();
+		draft.forget(3);
+		slow.resolve();
+		await saving;
+
+		expect(ids(draft)).toEqual([2, 1]);
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("retries a refused reorder with every id including a landed item", async () => {
+		const draft = draftOf([1, 2, 3]);
+		draft.move({ from: 0, to: 2 });
+		const refused = deferred<void>();
+		reorderMock.mockReturnValueOnce(refused.promise);
+
+		const saving = draft.save();
+		draft.land(item(4));
+		refused.reject(new Error("400"));
+		await expect(saving).rejects.toThrow("400");
+		expect(draft.dirty, "the drag is still unsaved").toBe(true);
+
+		await draft.save();
+		expect(reorderMock).toHaveBeenLastCalledWith({
+			albumId: ALBUM_ID,
+			contentIds: [4, 2, 3, 1],
+		});
+		expect(draft.dirty).toBe(false);
+	});
+
+	it("does not save while uploads into the album are pending", async () => {
+		let uploading = true;
+		const draft = new AlbumDraft({
+			albumId: ALBUM_ID,
+			albumName: "Studio",
+			updatedAt: "2026-09-01T10:00:00",
+			content: [1, 2, 3].map(item),
+			uploadsPending: () => uploading,
+		});
+		draft.move({ from: 0, to: 2 });
+		expect(draft.canSave).toBe(false);
+
+		await draft.save();
+		expect(reorderMock).not.toHaveBeenCalled();
+
+		uploading = false;
+		expect(draft.canSave).toBe(true);
+		await draft.save();
+		expect(reorderMock).toHaveBeenCalledOnce();
 	});
 });

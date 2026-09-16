@@ -2,6 +2,7 @@ import { format } from "date-fns";
 
 import {
 	deleteAlbumContent,
+	getAlbumContent,
 	renameAlbum,
 	reorderAlbumContent,
 } from "$lib/api/messaging/albums";
@@ -10,10 +11,14 @@ import { now } from "$lib/util/clock";
 import { moveItem } from "$lib/util/reorder";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 
-function sameOrder(left: AlbumContent[], right: AlbumContent[]): boolean {
+function idsOf(content: AlbumContent[]): number[] {
+	return content.map((item) => item.contentId);
+}
+
+function sameOrder(left: number[], right: number[]): boolean {
 	return (
 		left.length === right.length &&
-		left.every((item, index) => item.contentId === right[index]?.contentId)
+		left.every((contentId, index) => contentId === right[index])
 	);
 }
 
@@ -21,7 +26,8 @@ export class AlbumDraft {
 	readonly albumId: number;
 
 	#savedName = $state("");
-	#savedContent: AlbumContent[] = $state([]);
+	#savedOrder = $state<number[]>([]);
+	#uploadsPending: () => boolean;
 
 	name = $state("");
 	updatedAt = $state("");
@@ -34,16 +40,19 @@ export class AlbumDraft {
 		albumName,
 		updatedAt,
 		content,
+		uploadsPending = () => false,
 	}: {
 		albumId: number;
 		albumName: string | null;
 		updatedAt: string;
 		content: AlbumContent[];
+		uploadsPending?: () => boolean;
 	}) {
 		this.albumId = albumId;
 		this.updatedAt = updatedAt;
 		this.#savedName = albumName ?? "";
-		this.#savedContent = content;
+		this.#savedOrder = idsOf(content);
+		this.#uploadsPending = uploadsPending;
 		this.name = this.#savedName;
 		this.content = content;
 	}
@@ -58,8 +67,12 @@ export class AlbumDraft {
 		return (
 			this.name !== this.#savedName ||
 			this.removed.length > 0 ||
-			!sameOrder(this.content, this.#savedContent)
+			!sameOrder(idsOf(this.content), this.#savedOrder)
 		);
+	}
+
+	get canSave(): boolean {
+		return this.dirty && !this.saving && !this.#uploadsPending();
 	}
 
 	isRemoved(contentId: number): boolean {
@@ -76,27 +89,61 @@ export class AlbumDraft {
 		this.content = moveItem({ items: this.content, ...positions });
 	}
 
+	land(item: AlbumContent): void {
+		const { contentId } = item;
+		if (this.content.some((present) => present.contentId === contentId)) {
+			this.removed = this.removed.filter((id) => id !== contentId);
+			return;
+		}
+		this.content = [item, ...this.content];
+		this.#savedOrder = [contentId, ...this.#savedOrder];
+	}
+
+	replace(item: AlbumContent): void {
+		this.content = this.content.map((present) =>
+			present.contentId === item.contentId ? item : present,
+		);
+	}
+
+	forget(contentId: number): void {
+		this.content = this.content.filter(
+			(item) => item.contentId !== contentId,
+		);
+		this.#savedOrder = this.#savedOrder.filter((id) => id !== contentId);
+		this.removed = this.removed.filter((id) => id !== contentId);
+	}
+
+	async #listedByServer(contentId: number): Promise<boolean> {
+		const { content } = await getAlbumContent(this.albumId);
+		return content.some((item) => item.contentId === contentId);
+	}
+
 	async save(): Promise<void> {
-		if (this.saving || !this.dirty) return;
+		if (!this.canSave) return;
 		this.saving = true;
 		try {
 			const { albumId } = this;
 			for (const contentId of [...this.removed]) {
+				if (!this.isRemoved(contentId)) continue;
 				await deleteAlbumContent({ albumId, contentId });
-				const survives = (item: AlbumContent) =>
-					item.contentId !== contentId;
-				this.#savedContent = this.#savedContent.filter(survives);
-				this.content = this.content.filter(survives);
-				this.removed = this.removed.filter((id) => id !== contentId);
+				if (
+					this.isRemoved(contentId) ||
+					!(await this.#listedByServer(contentId))
+				) {
+					this.forget(contentId);
+				}
 				forgetAlbumSlides(albumId);
 			}
-			const ordered = [...this.content];
-			if (!sameOrder(ordered, this.#savedContent)) {
-				await reorderAlbumContent({
-					albumId,
-					contentIds: ordered.map((item) => item.contentId),
-				});
-				this.#savedContent = ordered;
+			const contentIds = idsOf(this.content);
+			if (!sameOrder(contentIds, this.#savedOrder)) {
+				await reorderAlbumContent({ albumId, contentIds });
+				const landedMeanwhile = this.#savedOrder.filter(
+					(id) => !contentIds.includes(id),
+				);
+				const stillListed = contentIds.filter((id) =>
+					this.#savedOrder.includes(id),
+				);
+				this.#savedOrder = [...landedMeanwhile, ...stillListed];
 				forgetAlbumSlides(albumId);
 			}
 			const named = this.name;
