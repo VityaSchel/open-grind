@@ -62,7 +62,8 @@ describe("album editor header", () => {
 		]);
 		const empty = previewAreaOf([]);
 
-		expect(empty).toContain('data-slot="album-preview-empty"');
+		expect(empty).toContain('data-slot="empty-media"');
+		expect(empty).not.toContain('data-slot="broken-media"');
 		expect(processing).toBe(empty);
 	});
 
@@ -73,7 +74,7 @@ describe("album editor header", () => {
 		]);
 
 		expect(area).toContain('data-slot="album-preview"');
-		expect(area).not.toContain('data-slot="album-preview-empty"');
+		expect(area).not.toContain('data-slot="empty-media"');
 	});
 
 	it("badges the preview only with kinds that are ready to show", () => {

@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
 
 	let {
@@ -40,7 +40,11 @@
 	{:else if items === null}
 		<div class={["photo-grid", gridClass]}>
 			{#each Array(skeletons)}
-				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
+				<MediaImage
+					src={null}
+					pending
+					class="aspect-(--photo-grid-aspect)"
+				/>
 			{/each}
 		</div>
 	{:else if empty}

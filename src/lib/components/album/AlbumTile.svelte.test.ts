@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
@@ -28,6 +28,7 @@ function stillProcessing(item: MyAlbum["content"][number]) {
 	};
 }
 
+const BROKEN = '[data-slot="broken-media"]';
 const COUNT_BADGE = '[data-slot="album-count-badge"]';
 const VIDEO_BADGE = '[data-slot="album-video-badge"]';
 
@@ -62,8 +63,30 @@ describe("album tile", () => {
 		});
 		const emptyCover = coverOf({ ...album, content: [] });
 
-		expect(emptyCover?.getAttribute("data-slot")).toBe("broken-media");
+		expect(emptyCover?.getAttribute("data-slot")).toBe("empty-media");
 		expect(processingCover?.outerHTML).toBe(emptyCover?.outerHTML);
+	});
+
+	it("never shows the broken image icon for an album with nothing ready", () => {
+		const album = demoAlbum();
+		const empty = tileOf({ ...album, content: [] });
+		const processing = tileOf({
+			...album,
+			content: album.content.map(stillProcessing),
+		});
+
+		expect(empty.querySelector(BROKEN)).toBeNull();
+		expect(processing.querySelector(BROKEN)).toBeNull();
+	});
+
+	it("shows the broken image icon when a ready cover fails to load", async () => {
+		const tile = tileOf(demoAlbum());
+		const cover = tile.querySelector("img");
+		if (cover === null) throw new Error("no cover image");
+
+		await fireEvent.error(cover);
+
+		expect(tile.querySelector(BROKEN)).not.toBeNull();
 	});
 
 	it("shows a cover image once any item is ready", () => {

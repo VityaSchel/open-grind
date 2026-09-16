@@ -8,6 +8,7 @@ import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
 import MediaImage from "./MediaImage.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
+const EMPTY = '[data-slot="empty-media"]';
 const PENDING = '[data-slot="media-image-pending"]';
 const SRC = "https://cdns.grindr.com/images/thumb/320x320/a";
 const OTHER_SRC = "https://cdns.grindr.com/images/thumb/320x320/b";
@@ -95,11 +96,35 @@ describe("MediaImage", () => {
 		expect(onload).toHaveBeenCalledOnce();
 	});
 
-	it("renders the fallback without an image element for a null source", () => {
-		const { container } = render(MediaImage, { props: { src: null } });
+	it("renders a plain tile without the broken icon for a null source", () => {
+		const { container } = render(MediaImage, {
+			props: { src: null, class: "size-full" },
+		});
 
+		const empty = container.querySelector(EMPTY);
 		expect(container.querySelector("img")).toBeNull();
-		expect(container.querySelector(BROKEN)).not.toBeNull();
+		expect(container.querySelector(BROKEN)).toBeNull();
+		expect(empty?.querySelector("svg")).toBeNull();
+		expect(empty?.classList.contains("size-full")).toBe(true);
+	});
+
+	it("gives a null source the pending skeleton's tile without the pulse", () => {
+		const { container } = render(MediaImage, {
+			props: { src: null, pending: true, class: "size-full" },
+		});
+		const pending = container.querySelector(PENDING);
+		const pendingClasses = [...(pending?.classList ?? [])];
+		cleanup();
+		const empty = render(MediaImage, {
+			props: { src: null, class: "size-full" },
+		}).container.querySelector(EMPTY);
+		const emptyClasses = [...(empty?.classList ?? [])];
+
+		expect(pendingClasses).toContain("animate-pulse");
+		expect(emptyClasses).toContain("animate-none");
+		expect(emptyClasses.filter((name) => name !== "animate-none")).toEqual(
+			pendingClasses.filter((name) => name !== "animate-pulse"),
+		);
 	});
 
 	it("re-arms when the source changes after a failure", async () => {

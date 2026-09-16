@@ -94,6 +94,17 @@ test.describe("broken images", () => {
 		await expect(page.locator(".pswp")).toHaveCount(0);
 	});
 
+	test("a failing album cover shows the placeholder", async ({ page }) => {
+		await installTauriShim(page);
+		await abortImages(page, CHAT_MEDIA_HOST);
+		await page.goto("/albums");
+
+		await page
+			.locator(`[data-slot="album-tile"] ${BROKEN}`)
+			.first()
+			.waitFor({ timeout: FIRST_LOAD_TIMEOUT });
+	});
+
 	test("loaded photos still open their lightboxes", async ({ page }) => {
 		await installTauriShim(page);
 		await serveImages(page, AVATAR_HOST);

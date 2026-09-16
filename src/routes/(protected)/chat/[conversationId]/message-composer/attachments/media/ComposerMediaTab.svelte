@@ -11,9 +11,9 @@
 	} from "$lib/api/messaging/drawer";
 	import { asAppError } from "$lib/api/methods";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
-	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
@@ -143,7 +143,11 @@
 			<span class="text-xs font-medium">Add photo</span>
 		</button>
 		{#each Array(uploadingCount)}
-			<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
+			<MediaImage
+				src={null}
+				pending
+				class="aspect-(--photo-grid-aspect)"
+			/>
 		{/each}
 	{/snippet}
 	{#snippet tile(item, index)}

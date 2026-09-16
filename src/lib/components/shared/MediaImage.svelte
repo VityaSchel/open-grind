@@ -38,14 +38,14 @@
 	const deferred = $derived(loading === "lazy" && !armed);
 </script>
 
-{#if pending}
+{#if pending || src === null}
 	<Skeleton
-		data-slot="media-image-pending"
+		data-slot={pending ? "media-image-pending" : "empty-media"}
 		role={alt === "" ? undefined : "img"}
 		aria-label={alt === "" ? undefined : alt}
-		class={["rounded-none", className]}
+		class={["rounded-none", { "animate-none": !pending }, className]}
 	/>
-{:else if src !== null && failedSrc !== src}
+{:else if failedSrc !== src}
 	<img
 		src={deferred ? TRANSPARENT_PIXEL : src}
 		{alt}

@@ -7,6 +7,7 @@
 		readyAlbumMedia,
 	} from "$lib/components/album/album";
 	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
@@ -36,10 +37,7 @@
 
 <div class="mx-auto w-32 max-w-full">
 	{#if cover === undefined}
-		<div
-			data-slot="album-preview-empty"
-			class="aspect-3/4 w-full rounded-xl bg-card-foreground/10"
-		></div>
+		<MediaImage src={null} class="aspect-3/4 w-full rounded-xl" />
 	{:else}
 		<AlbumPreview
 			{albumId}
