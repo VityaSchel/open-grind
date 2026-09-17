@@ -2,7 +2,11 @@ import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
-import { mediaFileDescriptor, type NativeMedia } from "$lib/api/media-file";
+import {
+	mediaFileDescriptor,
+	type MediaFileInspection,
+	type NativeMedia,
+} from "$lib/api/media-file";
 import { asAppError } from "$lib/api/methods";
 import {
 	decodeRestResponse,
@@ -174,21 +178,30 @@ const uploadOutcomeSchema = z.object({
 	bodySize: z.int().nonnegative(),
 });
 
+function albumContentQuery(inspection: MediaFileInspection): string {
+	if (inspection.kind !== "video") return "";
+	const { width, height } = inspection;
+	if (width === undefined || height === undefined) return "";
+	return `&width=${width}&height=${height}`;
+}
+
 export async function uploadAlbumContent({
 	albumId,
 	media,
+	inspection,
 	limits,
 	profileId,
 }: {
 	albumId: number;
 	media: NativeMedia;
+	inspection: MediaFileInspection;
 	limits: Pick<AlbumStorageLimits, "maxContentSize">;
 	profileId: number;
 }): Promise<{ contentId: number; sha256: string }> {
 	if (demoEnabled) {
-		return demoUploadAlbumContent({ albumId });
+		return demoUploadAlbumContent({ albumId, kind: inspection.kind });
 	}
-	const path = `/v1/albums/${albumId}/content?isFresh=false`;
+	const path = `/v1/albums/${albumId}/content?isFresh=false${albumContentQuery(inspection)}`;
 	const requestInfo = { method: "POST", path };
 	try {
 		const outcome = uploadOutcomeSchema.parse(
@@ -200,7 +213,10 @@ export async function uploadAlbumContent({
 					part: {
 						name: "content",
 						filename: "",
-						contentType: "image/jpeg",
+						contentType:
+							inspection.kind === "video"
+								? "video/mp4"
+								: "image/jpeg",
 					},
 				},
 				maxBodySize: limits.maxContentSize,

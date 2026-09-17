@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{self, Read, Seek, SeekFrom};
 use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
 use grindr::{Bytes, Session};
 use serde::{Deserialize, Serialize};
@@ -13,10 +14,10 @@ use crate::photo;
 use crate::state::AppState;
 use crate::upload::form::{FormPart, Framing};
 use crate::upload::picked::{inspect, MediaKind, PickedFile};
+use crate::upload::stream::{taken, ContentDigest, FileBody, FILE_CHANGED};
 
 const MAX_PHOTO_BYTES: u64 = 64 * 1024 * 1024;
 
-pub const VIDEO_UNSUPPORTED: &str = "Videos can't be uploaded yet";
 pub const NOT_MEDIA: &str = "That file is not a photo or a video";
 pub const PHOTO_TOO_LARGE: &str = "Photos over 64 MB can't be uploaded";
 
@@ -73,20 +74,59 @@ pub fn prepare_body(
 }
 
 pub fn sha256_hex(bytes: &[u8]) -> String {
-	let digest = Sha256::digest(bytes);
-	let mut hex = String::with_capacity(digest.len() * 2);
-	for byte in digest {
+	hex(&Sha256::digest(bytes))
+}
+
+pub fn hex(bytes: &[u8]) -> String {
+	let mut hex = String::with_capacity(bytes.len() * 2);
+	for byte in bytes {
 		hex.push_str(&format!("{byte:02x}"));
 	}
 	hex
 }
 
-fn read_photo(mut file: File) -> Result<Vec<u8>, AppError> {
+#[derive(Debug)]
+enum Source {
+	Photo { bytes: Vec<u8> },
+	Video { size: u64 },
+}
+
+enum Payload<R: Runtime> {
+	Whole(Bytes),
+	Streamed(FileBody<R>),
+}
+
+enum ContentHash {
+	Known(String),
+	Pending(ContentDigest),
+}
+
+impl ContentHash {
+	fn resolve(self) -> Result<String, AppError> {
+		match self {
+			ContentHash::Known(hex) => Ok(hex),
+			ContentHash::Pending(digest) => taken(&digest)
+				.map(|digest| hex(&digest))
+				.ok_or_else(|| AppError::Media(FILE_CHANGED.to_owned())),
+		}
+	}
+}
+
+struct Outgoing<R: Runtime> {
+	content_type: String,
+	payload: Payload<R>,
+	body_size: u64,
+	sha256: ContentHash,
+}
+
+fn read_source(mut file: File) -> Result<Source, AppError> {
 	let inspection = inspect(&mut file).map_err(media_error)?;
 	match inspection.kind {
 		MediaKind::Photo => {}
 		MediaKind::Video => {
-			return Err(AppError::Media(VIDEO_UNSUPPORTED.to_owned()))
+			return Ok(Source::Video {
+				size: inspection.size,
+			})
 		}
 		MediaKind::Unsupported => {
 			return Err(AppError::Media(NOT_MEDIA.to_owned()))
@@ -105,7 +145,7 @@ fn read_photo(mut file: File) -> Result<Vec<u8>, AppError> {
 	if bytes.len() as u64 > MAX_PHOTO_BYTES {
 		return Err(AppError::Media(PHOTO_TOO_LARGE.to_owned()));
 	}
-	Ok(bytes)
+	Ok(Source::Photo { bytes })
 }
 
 fn media_error(error: io::Error) -> AppError {
@@ -121,9 +161,9 @@ fn profile_of(session: &Option<Session>) -> Option<&str> {
 async fn open_and_read<R: Runtime>(
 	app: tauri::AppHandle<R>,
 	file: PickedFile,
-) -> Result<Vec<u8>, AppError> {
+) -> Result<Source, AppError> {
 	tokio::task::spawn_blocking(move || {
-		read_photo(file.open(&app).map_err(media_error)?)
+		read_source(file.open(&app).map_err(media_error)?)
 	})
 	.await
 	.map_err(|error| AppError::Media(error.to_string()))?
@@ -147,28 +187,71 @@ pub async fn upload_media_file(
 	})?;
 	let _one_at_a_time = state.upload.lock().await;
 
-	let bytes = open_and_read(app.clone(), file).await?;
-	let photo =
-		photo::normalize(&app, bytes, request.part.content_type.clone())
+	let source = open_and_read(app.clone(), file.clone()).await?;
+	let outgoing = match source {
+		Source::Photo { bytes } => {
+			let photo = photo::normalize(
+				&app,
+				bytes,
+				request.part.content_type.clone(),
+			)
 			.await?;
-	let prepared = prepare_body(
-		&FormPart {
-			name: &request.part.name,
-			filename: &request.part.filename,
-			content_type: &photo.content_type,
-		},
-		Bytes::from(photo.bytes),
-		max_body_size,
-	)?;
+			let prepared = prepare_body(
+				&FormPart {
+					name: &request.part.name,
+					filename: &request.part.filename,
+					content_type: &photo.content_type,
+				},
+				Bytes::from(photo.bytes),
+				max_body_size,
+			)?;
+			Outgoing {
+				content_type: prepared.content_type,
+				payload: Payload::Whole(prepared.body),
+				body_size: prepared.body_size,
+				sha256: ContentHash::Known(prepared.sha256),
+			}
+		}
+		Source::Video { size } => {
+			let framing = Framing::new(&FormPart {
+				name: &request.part.name,
+				filename: &request.part.filename,
+				content_type: &request.part.content_type,
+			});
+			let body_size = framing.size(size);
+			if body_size > max_body_size {
+				return Err(AppError::ContentTooLarge);
+			}
+			let digest: ContentDigest = Arc::new(Mutex::new(None));
+			Outgoing {
+				content_type: framing.content_type.clone(),
+				payload: Payload::Streamed(FileBody {
+					app: app.clone(),
+					file,
+					framing,
+					content_len: size,
+					digest: Arc::clone(&digest),
+				}),
+				body_size,
+				sha256: ContentHash::Pending(digest),
+			}
+		}
+	};
 
 	let mut sessions = client.session_receiver();
 	if profile_of(&sessions.borrow()) != Some(profile_id.as_str()) {
 		return Err(AppError::SessionCleared);
 	}
-	let send = client
-		.request(method, &request.path)
-		.bytes(&prepared.content_type, prepared.body)
-		.send();
+	let request_builder = client.request(method, &request.path);
+	let send = match outgoing.payload {
+		Payload::Whole(body) => {
+			request_builder.bytes(&outgoing.content_type, body)
+		}
+		Payload::Streamed(source) => {
+			request_builder.stream(&outgoing.content_type, source)
+		}
+	}
+	.send();
 	let raw = tokio::select! {
 		biased;
 		_ = sessions.wait_for(|session| profile_of(session) != Some(profile_id.as_str())) => {
@@ -182,8 +265,8 @@ pub async fn upload_media_file(
 			status: raw.status,
 			body: raw.body,
 		})?,
-		sha256: prepared.sha256,
-		body_size: prepared.body_size,
+		sha256: outgoing.sha256.resolve()?,
+		body_size: outgoing.body_size,
 	})
 }
 
@@ -254,30 +337,47 @@ mod tests {
 		bytes.resize(500, 7);
 		let path = temp_file("photo.jpg", &bytes);
 
-		let read = read_photo(File::open(&path).expect("open")).expect("read");
+		let read = read_source(File::open(&path).expect("open")).expect("read");
 
-		assert_eq!(read, bytes);
+		assert!(matches!(read, Source::Photo { bytes: read } if read == bytes));
 		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
-	fn a_video_and_a_stray_file_are_refused_as_media_errors() {
-		let video = temp_file("clip.mp4", b"\0\0\0\x18ftypmp42\0\0\0\0");
+	fn a_video_is_left_on_disk_with_only_its_size_read() {
+		let mut bytes = b"\0\0\0\x18ftypmp42\0\0\0\0".to_vec();
+		bytes.resize(4096, 9);
+		let path = temp_file("clip.mp4", &bytes);
+
+		let read = read_source(File::open(&path).expect("open")).expect("read");
+
+		assert!(matches!(read, Source::Video { size } if size == 4096));
+		std::fs::remove_file(path).ok();
+	}
+
+	#[test]
+	fn a_stray_file_is_refused_as_a_media_error() {
 		let stray = temp_file("notes.txt", b"hello");
 
-		let video_error =
-			read_photo(File::open(&video).expect("open")).expect_err("video");
 		let stray_error =
-			read_photo(File::open(&stray).expect("open")).expect_err("stray");
+			read_source(File::open(&stray).expect("open")).expect_err("stray");
 
-		assert!(
-			matches!(video_error, AppError::Media(message) if message == VIDEO_UNSUPPORTED)
-		);
 		assert!(
 			matches!(stray_error, AppError::Media(message) if message == NOT_MEDIA)
 		);
-		std::fs::remove_file(video).ok();
 		std::fs::remove_file(stray).ok();
+	}
+
+	#[test]
+	fn a_pending_hash_that_was_never_filled_in_is_a_media_error() {
+		let pending = ContentHash::Pending(Arc::new(Mutex::new(None)));
+		let filled =
+			ContentHash::Pending(Arc::new(Mutex::new(Some([7u8; 32]))));
+
+		assert!(
+			matches!(pending.resolve(), Err(AppError::Media(message)) if message == FILE_CHANGED)
+		);
+		assert_eq!(filled.resolve().expect("hash"), "07".repeat(32));
 	}
 
 	#[test]

@@ -1,3 +1,4 @@
+import type { MediaFileKind } from "$lib/api/media-file";
 import type { AlbumStorageLimits } from "$lib/model/messaging/albums";
 import { DAY, demoMeProfileId, NOW } from "../config";
 import { picsum, unsplash } from "./avatars";
@@ -78,8 +79,11 @@ const createdAlbumIds: number[] = [];
 const deletedContentIds = new Set<number>();
 const deletedAlbumIds = new Set<number>();
 const contentOrder = new Map<number, number[]>();
-const uploadedContent = new Map<number, number[]>();
+type UploadedContent = { slot: number; video: boolean; processing: boolean };
+
+const uploadedContent = new Map<number, UploadedContent[]>();
 const FIRST_UPLOADED_SLOT = 50;
+const DEMO_PROCESSING_MS = 3000;
 
 const videoSlotByAlbum = new Map<number, "first" | "last">([
 	[5001, "last"],
@@ -93,10 +97,12 @@ function demoPhotoItem({
 	albumId,
 	slot,
 	video,
+	processing = false,
 }: {
 	albumId: number;
 	slot: number;
 	video: boolean;
+	processing?: boolean;
 }) {
 	const thumb = picsum({
 		seed: `album-${albumId}-${slot}`,
@@ -106,11 +112,13 @@ function demoPhotoItem({
 	return {
 		contentId: albumId * 100 + slot,
 		contentType: video ? "video/mp4" : "image/jpeg",
-		coverUrl: thumb,
-		statusId: 1,
-		thumbUrl: thumb,
-		url: picsum({ seed: `album-${albumId}-${slot}` }),
-		processing: false,
+		coverUrl: processing ? albumProcessingPlaceholderUrl : thumb,
+		statusId: processing ? 3 : 1,
+		thumbUrl: processing ? albumProcessingPlaceholderUrl : thumb,
+		url: processing
+			? albumProcessingPlaceholderUrl
+			: picsum({ seed: `album-${albumId}-${slot}` }),
+		processing,
 		rejectionId: null,
 	};
 }
@@ -128,8 +136,8 @@ export function demoAlbumContent(albumId: number) {
 					: videoSlot === "last" && i === count - 1,
 		}),
 	);
-	const uploaded = (uploadedContent.get(albumId) ?? []).map((slot) =>
-		demoPhotoItem({ albumId, slot, video: false }),
+	const uploaded = (uploadedContent.get(albumId) ?? []).map((item) =>
+		demoPhotoItem({ albumId, ...item }),
 	);
 	const content = [...uploaded, ...seeded].filter(
 		({ contentId }) => !deletedContentIds.has(contentId),
@@ -248,14 +256,27 @@ function demoContentHash(contentId: number): string {
 	return contentId.toString(16).padStart(64, "0");
 }
 
-export function demoUploadAlbumContent({ albumId }: { albumId: number }): {
-	contentId: number;
-	sha256: string;
-} {
-	const slots = uploadedContent.get(albumId) ?? [];
-	const slot = FIRST_UPLOADED_SLOT + slots.length;
-	uploadedContent.set(albumId, [slot, ...slots]);
-	const contentId = albumId * 100 + slot;
+export function demoUploadAlbumContent({
+	albumId,
+	kind,
+}: {
+	albumId: number;
+	kind: MediaFileKind;
+}): { contentId: number; sha256: string } {
+	const uploaded = uploadedContent.get(albumId) ?? [];
+	const video = kind === "video";
+	const item: UploadedContent = {
+		slot: FIRST_UPLOADED_SLOT + uploaded.length,
+		video,
+		processing: video,
+	};
+	uploadedContent.set(albumId, [item, ...uploaded]);
+	if (video) {
+		setTimeout(() => {
+			item.processing = false;
+		}, DEMO_PROCESSING_MS);
+	}
+	const contentId = albumId * 100 + item.slot;
 	return { contentId, sha256: demoContentHash(contentId) };
 }
 

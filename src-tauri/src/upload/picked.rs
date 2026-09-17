@@ -8,6 +8,7 @@ use tauri_plugin_fs::FsExt;
 
 use crate::error::AppError;
 use crate::photo::source;
+use crate::video::probe;
 
 const SNIFF_LEN: usize = 64;
 const BOX_TYPE: &[u8] = b"ftyp";
@@ -107,6 +108,10 @@ pub fn sniff(head: &[u8]) -> MediaKind {
 pub struct Inspection {
 	pub kind: MediaKind,
 	pub size: u64,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub width: Option<u32>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub height: Option<u32>,
 }
 
 pub fn inspect(file: &mut File) -> io::Result<Inspection> {
@@ -120,9 +125,16 @@ pub fn inspect(file: &mut File) -> io::Result<Inspection> {
 		}
 		filled += read;
 	}
+	let kind = sniff(&head[..filled]);
+	let probed = match kind {
+		MediaKind::Video => probe::probe(file).ok().flatten(),
+		_ => None,
+	};
 	Ok(Inspection {
-		kind: sniff(&head[..filled]),
+		kind,
 		size,
+		width: probed.map(|probed| probed.width),
+		height: probed.map(|probed| probed.height),
 	})
 }
 
@@ -191,9 +203,30 @@ mod tests {
 			inspection,
 			Inspection {
 				kind: MediaKind::Video,
-				size: 200
+				size: 200,
+				width: None,
+				height: None
 			}
 		);
+		std::fs::remove_file(path).ok();
+	}
+
+	#[test]
+	fn a_real_clip_inspects_with_the_dimensions_it_will_be_uploaded_with() {
+		let app = app();
+		let path = temp_file(
+			"real.mp4",
+			include_bytes!("../video/fixtures/quicktime.mov"),
+		);
+		app.fs_scope().allow_file(&path).expect("allow");
+		let picked = PickedFile::Desktop { path: path.clone() };
+
+		let inspection = inspect(&mut picked.open(app.handle()).expect("open"))
+			.expect("inspect");
+
+		assert_eq!(inspection.kind, MediaKind::Video);
+		assert_eq!(inspection.width, Some(32));
+		assert_eq!(inspection.height, Some(24));
 		std::fs::remove_file(path).ok();
 	}
 
@@ -211,7 +244,9 @@ mod tests {
 			inspection,
 			Inspection {
 				kind: MediaKind::Photo,
-				size: 8
+				size: 8,
+				width: None,
+				height: None
 			}
 		);
 		std::fs::remove_file(path).ok();

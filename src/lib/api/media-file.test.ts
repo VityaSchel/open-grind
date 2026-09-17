@@ -60,6 +60,40 @@ describe("inspectMediaFile", () => {
 		});
 	});
 
+	it("keeps the dimensions the backend probed out of a video", async () => {
+		invokeMock.mockResolvedValue({
+			kind: "video",
+			size: 4096,
+			width: 1080,
+			height: 1920,
+		});
+		const media = {
+			source: "desktop",
+			key: "desk-3",
+			mimeType: "video/mp4",
+			path: "/tmp/clip.mp4",
+		} satisfies PickedMedia;
+
+		await expect(inspectMediaFile(media)).resolves.toEqual({
+			kind: "video",
+			size: 4096,
+			width: 1080,
+			height: 1920,
+		});
+	});
+
+	it("rejects dimensions that are not whole positive numbers", async () => {
+		invokeMock.mockResolvedValue({ kind: "video", size: 1, width: 0 });
+		const media = {
+			source: "desktop",
+			key: "desk-4",
+			mimeType: "video/mp4",
+			path: "/tmp/zero.mp4",
+		} satisfies PickedMedia;
+
+		await expect(inspectMediaFile(media)).rejects.toThrow();
+	});
+
 	it("sends the Android URI descriptor to the backend", async () => {
 		invokeMock.mockResolvedValue({ kind: "video", size: 1 });
 		const media = {

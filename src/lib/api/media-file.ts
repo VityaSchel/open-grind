@@ -11,6 +11,8 @@ export type MediaFileKind = z.infer<typeof mediaFileKindSchema>;
 export const mediaFileInspectionSchema = z.object({
 	kind: mediaFileKindSchema,
 	size: z.int().nonnegative(),
+	width: z.int().positive().optional(),
+	height: z.int().positive().optional(),
 });
 
 export type MediaFileInspection = z.infer<typeof mediaFileInspectionSchema>;

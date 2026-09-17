@@ -27,7 +27,9 @@ import {
 	uploadAlbumContent,
 } from "$lib/api/messaging/albums";
 import {
+	albumProcessingPlaceholderUrl,
 	demoAlbumContent,
+	demoAlbumContentProcessing,
 	demoAlbumShares,
 	demoMyAlbums,
 	demoUploadAlbumContent,
@@ -213,6 +215,21 @@ const pickedPhoto = {
 	path: "/tmp/photo.png",
 } satisfies PickedMedia;
 
+const pickedVideo = {
+	source: "desktop",
+	key: "album-video-1",
+	mimeType: "video/quicktime",
+	path: "/tmp/clip.mov",
+} satisfies PickedMedia;
+
+const photoInspection = { kind: "photo", size: 4096 } as const;
+const videoInspection = {
+	kind: "video",
+	size: 8_000_000,
+	width: 1080,
+	height: 1920,
+} as const;
+
 const uploadSha =
 	"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
@@ -239,6 +256,7 @@ describe("album content upload", () => {
 		const uploaded = await uploadAlbumContent({
 			albumId: 900,
 			media: pickedPhoto,
+			inspection: photoInspection,
 			limits: uploadLimits,
 			profileId: 123456,
 		});
@@ -260,6 +278,63 @@ describe("album content upload", () => {
 		expect(uploaded).toEqual({ contentId: 90007, sha256: uploadSha });
 	});
 
+	it("sends a video as mp4 with the dimensions the server needs", async () => {
+		invokeMock.mockResolvedValue({
+			response: encodedUploadResponse({
+				contentId: 90008,
+				contentUrl: null,
+			}),
+			sha256: uploadSha,
+			bodySize: 8_000_400,
+		});
+
+		await uploadAlbumContent({
+			albumId: 900,
+			media: pickedVideo,
+			inspection: videoInspection,
+			limits: uploadLimits,
+			profileId: 123456,
+		});
+
+		expect(invokeMock).toHaveBeenCalledWith("upload_media_file", {
+			file: { source: "desktop", path: "/tmp/clip.mov" },
+			request: {
+				method: "POST",
+				path: "/v1/albums/900/content?isFresh=false&width=1080&height=1920",
+				part: {
+					name: "content",
+					filename: "",
+					contentType: "video/mp4",
+				},
+			},
+			maxBodySize: 125829120,
+			profileId: "123456",
+		});
+	});
+
+	it("leaves the dimensions off a video it could not probe", async () => {
+		invokeMock.mockResolvedValue({
+			response: encodedUploadResponse({
+				contentId: 90009,
+				contentUrl: null,
+			}),
+			sha256: uploadSha,
+			bodySize: 8_000_400,
+		});
+
+		await uploadAlbumContent({
+			albumId: 900,
+			media: pickedVideo,
+			inspection: { kind: "video", size: 8_000_000 },
+			limits: uploadLimits,
+			profileId: 123456,
+		});
+
+		expect(invokeMock.mock.calls[0]?.[1]).toMatchObject({
+			request: { path: "/v1/albums/900/content?isFresh=false" },
+		});
+	});
+
 	it("rejects a response that is not an upload result", async () => {
 		invokeMock.mockResolvedValue({
 			response: encodedUploadResponse({ contentUrl: null }),
@@ -271,6 +346,7 @@ describe("album content upload", () => {
 			uploadAlbumContent({
 				albumId: 900,
 				media: pickedPhoto,
+				inspection: photoInspection,
 				limits: uploadLimits,
 				profileId: 123456,
 			}),
@@ -283,6 +359,7 @@ describe("album content upload", () => {
 		const error: unknown = await uploadAlbumContent({
 			albumId: 900,
 			media: pickedPhoto,
+			inspection: photoInspection,
 			limits: uploadLimits,
 			profileId: 123456,
 		}).catch((error: unknown) => error);
@@ -309,7 +386,10 @@ describe("album content upload", () => {
 	it("prepends an uploaded photo to the demo album", () => {
 		const before = demoAlbumContent(5002).content;
 
-		const { contentId } = demoUploadAlbumContent({ albumId: 5002 });
+		const { contentId } = demoUploadAlbumContent({
+			albumId: 5002,
+			kind: "photo",
+		});
 		const after = demoAlbumContent(5002).content;
 
 		expect(after).toHaveLength(before.length + 1);
@@ -318,5 +398,40 @@ describe("album content upload", () => {
 			contentType: "image/jpeg",
 			processing: false,
 		});
+	});
+
+	it("prepends an uploaded demo video that finishes processing", () => {
+		vi.useFakeTimers();
+		try {
+			const { contentId } = demoUploadAlbumContent({
+				albumId: 5003,
+				kind: "video",
+			});
+
+			expect(demoAlbumContent(5003).content[0]).toMatchObject({
+				contentId,
+				contentType: "video/mp4",
+				processing: true,
+				statusId: 3,
+				url: albumProcessingPlaceholderUrl,
+			});
+			expect(
+				demoAlbumContentProcessing({ albumId: 5003, contentId }),
+			).toEqual({ processing: true });
+
+			vi.advanceTimersByTime(3000);
+
+			expect(demoAlbumContent(5003).content[0]).toMatchObject({
+				contentId,
+				contentType: "video/mp4",
+				processing: false,
+				statusId: 1,
+			});
+			expect(
+				demoAlbumContentProcessing({ albumId: 5003, contentId }),
+			).toEqual({ processing: false });
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

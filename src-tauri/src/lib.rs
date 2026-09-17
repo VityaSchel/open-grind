@@ -12,6 +12,7 @@ mod scroll_phase;
 mod state;
 mod storage;
 pub mod upload;
+pub mod video;
 
 use tauri::Manager;
 
