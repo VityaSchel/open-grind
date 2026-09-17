@@ -1,22 +1,40 @@
+import { encode } from "@msgpack/msgpack";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchRestMock } = vi.hoisted(() => ({ fetchRestMock: vi.fn() }));
+const { fetchRestMock, invokeMock } = vi.hoisted(() => ({
+	fetchRestMock: vi.fn(),
+	invokeMock: vi.fn(),
+}));
 
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	invoke: invokeMock,
+}));
 vi.mock("$lib/api/transport", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/transport")>()),
 	fetchRest: fetchRestMock,
 }));
 
+import { ApiError } from "$lib/api/api-error";
 import {
+	albumMediaErrorMessage,
 	getAlbumContentProcessing,
 	getAlbumShares,
 	getAlbumStorageLimits,
 	getMyAlbums,
 	shareAlbum,
 	unshareAlbum,
+	uploadAlbumContent,
 } from "$lib/api/messaging/albums";
-import { demoAlbumShares, demoMyAlbums } from "$lib/demo/mock/albums";
+import {
+	demoAlbumContent,
+	demoAlbumShares,
+	demoMyAlbums,
+	demoUploadAlbumContent,
+} from "$lib/demo/mock/albums";
+import { toBase64 } from "$lib/util/base64";
 import type { AlbumUnshareRequest } from "$lib/model/messaging/albums";
+import type { PickedMedia } from "$lib/platform/media-picker";
 
 const assertOk = vi.fn();
 const jsonParsed = vi.fn();
@@ -25,6 +43,7 @@ beforeEach(() => {
 	assertOk.mockReset();
 	jsonParsed.mockReset();
 	fetchRestMock.mockReset();
+	invokeMock.mockReset();
 	fetchRestMock.mockResolvedValue({ assertOk, jsonParsed });
 });
 
@@ -179,5 +198,125 @@ describe("albums API wrappers", () => {
 		expect(fetchRestMock).toHaveBeenCalledWith("/v1/albums/storage");
 		expect(limits.maxContentSize).toBe(120 * 1024 * 1024);
 		expect(limits.maxVideoLength).toBe(15000);
+	});
+});
+
+const uploadLimits = {
+	maxContentSize: 125829120,
+	maxContentSizeHumanReadable: "120.00 MB",
+};
+
+const pickedPhoto = {
+	source: "desktop",
+	key: "album-photo-1",
+	mimeType: "image/png",
+	path: "/tmp/photo.png",
+} satisfies PickedMedia;
+
+const uploadSha =
+	"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+
+function encodedUploadResponse(body: unknown) {
+	return toBase64(
+		encode({
+			status: 200,
+			body: new TextEncoder().encode(JSON.stringify(body)),
+		}),
+	);
+}
+
+describe("album content upload", () => {
+	it("invokes the upload command with the part the server expects", async () => {
+		invokeMock.mockResolvedValue({
+			response: encodedUploadResponse({
+				contentId: 90007,
+				contentUrl: null,
+			}),
+			sha256: uploadSha,
+			bodySize: 4321,
+		});
+
+		const uploaded = await uploadAlbumContent({
+			albumId: 900,
+			media: pickedPhoto,
+			limits: uploadLimits,
+			profileId: 123456,
+		});
+
+		expect(invokeMock).toHaveBeenCalledWith("upload_media_file", {
+			file: { source: "desktop", path: "/tmp/photo.png" },
+			request: {
+				method: "POST",
+				path: "/v1/albums/900/content?isFresh=false",
+				part: {
+					name: "content",
+					filename: "",
+					contentType: "image/jpeg",
+				},
+			},
+			maxBodySize: 125829120,
+			profileId: "123456",
+		});
+		expect(uploaded).toEqual({ contentId: 90007, sha256: uploadSha });
+	});
+
+	it("rejects a response that is not an upload result", async () => {
+		invokeMock.mockResolvedValue({
+			response: encodedUploadResponse({ contentUrl: null }),
+			sha256: uploadSha,
+			bodySize: 4321,
+		});
+
+		await expect(
+			uploadAlbumContent({
+				albumId: 900,
+				media: pickedPhoto,
+				limits: uploadLimits,
+				profileId: 123456,
+			}),
+		).rejects.toThrow();
+	});
+
+	it("carries the too-large refusal through as an ApiError kind", async () => {
+		invokeMock.mockRejectedValue({ kind: "ContentTooLarge" });
+
+		const error: unknown = await uploadAlbumContent({
+			albumId: 900,
+			media: pickedPhoto,
+			limits: uploadLimits,
+			profileId: 123456,
+		}).catch((error: unknown) => error);
+
+		expect(error).toBeInstanceOf(ApiError);
+		expect((error as ApiError).kind).toBe("ContentTooLarge");
+		expect(albumMediaErrorMessage({ error, limits: uploadLimits })).toBe(
+			"Larger than the 120.00 MB limit",
+		);
+	});
+
+	it("leaves every other failure without album-specific copy", () => {
+		const error = new ApiError({
+			message: "Something else",
+			request: { method: "POST", path: "/v1/albums/900/content" },
+			kind: "Api",
+		});
+
+		expect(
+			albumMediaErrorMessage({ error, limits: uploadLimits }),
+		).toBeNull();
+	});
+
+	it("prepends an uploaded photo to the demo album", () => {
+		const before = demoAlbumContent(5002).content;
+
+		const { contentId } = demoUploadAlbumContent({ albumId: 5002 });
+		const after = demoAlbumContent(5002).content;
+
+		expect(after).toHaveLength(before.length + 1);
+		expect(after[0]).toMatchObject({
+			contentId,
+			contentType: "image/jpeg",
+			processing: false,
+		});
 	});
 });

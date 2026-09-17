@@ -78,6 +78,8 @@ const createdAlbumIds: number[] = [];
 const deletedContentIds = new Set<number>();
 const deletedAlbumIds = new Set<number>();
 const contentOrder = new Map<number, number[]>();
+const uploadedContent = new Map<number, number[]>();
+const FIRST_UPLOADED_SLOT = 50;
 
 const videoSlotByAlbum = new Map<number, "first" | "last">([
 	[5001, "last"],
@@ -87,30 +89,51 @@ const videoSlotByAlbum = new Map<number, "first" | "last">([
 	),
 ]);
 
+function demoPhotoItem({
+	albumId,
+	slot,
+	video,
+}: {
+	albumId: number;
+	slot: number;
+	video: boolean;
+}) {
+	const thumb = picsum({
+		seed: `album-${albumId}-${slot}`,
+		width: 300,
+		height: 400,
+	});
+	return {
+		contentId: albumId * 100 + slot,
+		contentType: video ? "video/mp4" : "image/jpeg",
+		coverUrl: thumb,
+		statusId: 1,
+		thumbUrl: thumb,
+		url: picsum({ seed: `album-${albumId}-${slot}` }),
+		processing: false,
+		rejectionId: null,
+	};
+}
+
 export function demoAlbumContent(albumId: number) {
 	const count = createdAlbumIds.includes(albumId) ? 0 : 3 + (albumId % 3);
-	const content = Array.from({ length: count }, (_, i) => {
-		const thumb = picsum({
-			seed: `album-${albumId}-${i}`,
-			width: 300,
-			height: 400,
-		});
-		const videoSlot = videoSlotByAlbum.get(albumId);
-		const video =
-			videoSlot === "first"
-				? i === 0
-				: videoSlot === "last" && i === count - 1;
-		return {
-			contentId: albumId * 100 + i,
-			contentType: video ? "video/mp4" : "image/jpeg",
-			coverUrl: thumb,
-			statusId: 1,
-			thumbUrl: thumb,
-			url: picsum({ seed: `album-${albumId}-${i}` }),
-			processing: false,
-			rejectionId: null,
-		};
-	}).filter(({ contentId }) => !deletedContentIds.has(contentId));
+	const videoSlot = videoSlotByAlbum.get(albumId);
+	const seeded = Array.from({ length: count }, (_, i) =>
+		demoPhotoItem({
+			albumId,
+			slot: i,
+			video:
+				videoSlot === "first"
+					? i === 0
+					: videoSlot === "last" && i === count - 1,
+		}),
+	);
+	const uploaded = (uploadedContent.get(albumId) ?? []).map((slot) =>
+		demoPhotoItem({ albumId, slot, video: false }),
+	);
+	const content = [...uploaded, ...seeded].filter(
+		({ contentId }) => !deletedContentIds.has(contentId),
+	);
 	const order = contentOrder.get(albumId);
 	if (order !== undefined) {
 		const position = new Map(order.map((id, index) => [id, index]));
@@ -223,6 +246,17 @@ export function demoAlbumShares(albumId: number): number[] {
 
 function demoContentHash(contentId: number): string {
 	return contentId.toString(16).padStart(64, "0");
+}
+
+export function demoUploadAlbumContent({ albumId }: { albumId: number }): {
+	contentId: number;
+	sha256: string;
+} {
+	const slots = uploadedContent.get(albumId) ?? [];
+	const slot = FIRST_UPLOADED_SLOT + slots.length;
+	uploadedContent.set(albumId, [slot, ...slots]);
+	const contentId = albumId * 100 + slot;
+	return { contentId, sha256: demoContentHash(contentId) };
 }
 
 export function demoMyAlbums() {

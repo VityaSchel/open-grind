@@ -1,10 +1,20 @@
+import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { fetchRest } from "$lib/api/transport";
+import { ApiError } from "$lib/api/api-error";
+import { mediaFileDescriptor, type NativeMedia } from "$lib/api/media-file";
+import { asAppError } from "$lib/api/methods";
+import {
+	decodeRestResponse,
+	fetchRest,
+	restInvokeError,
+} from "$lib/api/transport";
+import { demoEnabled, demoUploadAlbumContent } from "$lib/demo";
 import {
 	type AlbumContentOrderRequest,
 	albumContentProcessingResponseSchema,
 	albumContentSchema,
+	albumContentUploadResponseSchema,
 	albumDetailsSchema,
 	type AlbumExpirationType,
 	albumMinSchema,
@@ -12,6 +22,7 @@ import {
 	albumNameResponseSchema,
 	type AlbumShareRequest,
 	albumSharesResponseSchema,
+	type AlbumStorageLimits,
 	albumStorageLimitsSchema,
 	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
@@ -155,4 +166,68 @@ export async function reorderAlbumContent({
 		method: "POST",
 		body: { contentIds } satisfies AlbumContentOrderRequest,
 	}).then((res) => res.assertOk());
+}
+
+const uploadOutcomeSchema = z.object({
+	response: z.string(),
+	sha256: z.string().regex(/^[0-9a-f]{64}$/),
+	bodySize: z.int().nonnegative(),
+});
+
+export async function uploadAlbumContent({
+	albumId,
+	media,
+	limits,
+	profileId,
+}: {
+	albumId: number;
+	media: NativeMedia;
+	limits: Pick<AlbumStorageLimits, "maxContentSize">;
+	profileId: number;
+}): Promise<{ contentId: number; sha256: string }> {
+	if (demoEnabled) {
+		return demoUploadAlbumContent({ albumId });
+	}
+	const path = `/v1/albums/${albumId}/content?isFresh=false`;
+	const requestInfo = { method: "POST", path };
+	try {
+		const outcome = uploadOutcomeSchema.parse(
+			await invoke("upload_media_file", {
+				file: mediaFileDescriptor(media),
+				request: {
+					method: "POST",
+					path,
+					part: {
+						name: "content",
+						filename: "",
+						contentType: "image/jpeg",
+					},
+				},
+				maxBodySize: limits.maxContentSize,
+				profileId: String(profileId),
+			}),
+		);
+		const { contentId } = decodeRestResponse({
+			encoded: outcome.response,
+			requestInfo,
+		}).jsonParsed(albumContentUploadResponseSchema);
+		return { contentId, sha256: outcome.sha256 };
+	} catch (error) {
+		throw restInvokeError({ error, requestInfo });
+	}
+}
+
+export function albumMediaErrorMessage({
+	error,
+	limits,
+}: {
+	error: unknown;
+	limits: Pick<AlbumStorageLimits, "maxContentSizeHumanReadable">;
+}): string | null {
+	const kind =
+		error instanceof ApiError ? error.kind : asAppError(error)?.kind;
+	if (kind === "ContentTooLarge") {
+		return `Larger than the ${limits.maxContentSizeHumanReadable} limit`;
+	}
+	return null;
 }

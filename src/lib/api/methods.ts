@@ -26,6 +26,7 @@ const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
 	...blockedAndStaleMessages,
 	RateLimited: "Grindr is rate limiting us",
 	NotLoggedIn: "You're signed out",
+	ContentTooLarge: "Larger than the upload limit",
 };
 
 export const banInfoSchema = z.object({

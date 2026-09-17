@@ -11,8 +11,7 @@ mod photo;
 mod scroll_phase;
 mod state;
 mod storage;
-
-use std::sync::OnceLock;
+pub mod upload;
 
 use tauri::Manager;
 
@@ -158,9 +157,7 @@ pub fn run() {
         .plugin(api::facebook_oauth::plugin())
         .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
-        .manage(AppState {
-            client: OnceLock::new(),
-        })
+        .manage(AppState::default())
         .manage(media::MediaProxy::default())
         .manage(api::session_recovery::SessionRecovery::default())
         .register_asynchronous_uri_scheme_protocol(media::SCHEME, media::handle)
@@ -182,6 +179,8 @@ pub fn run() {
             storage::storage_backend,
             api::rest::request,
             api::media_upload::upload_media,
+            upload::picked::inspect_media_file,
+            upload::content::upload_media_file,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
             api::ws::ws_send,

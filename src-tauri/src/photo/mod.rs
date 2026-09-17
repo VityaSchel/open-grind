@@ -1,6 +1,6 @@
 mod encode;
 mod heif;
-mod source;
+pub(crate) mod source;
 
 use tauri::{AppHandle, Runtime};
 
