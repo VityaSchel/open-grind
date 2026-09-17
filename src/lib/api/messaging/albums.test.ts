@@ -327,6 +327,28 @@ describe("album content upload", () => {
 		});
 	});
 
+	it("reports the server's refusal when the hash never arrived", async () => {
+		invokeMock.mockResolvedValue({
+			response: toBase64(encode({ status: 413, body: new Uint8Array() })),
+			sha256: null,
+			bodySize: 8_000_400,
+		});
+		const onHashed = vi.fn();
+
+		const error: unknown = await uploadAlbumContent({
+			albumId: 900,
+			media: pickedVideo,
+			inspection: videoInspection,
+			limits: uploadLimits,
+			profileId: 123456,
+			onHashed,
+		}).catch((error: unknown) => error);
+
+		expect(error).toBeInstanceOf(ApiError);
+		expect((error as ApiError).response?.status).toBe(413);
+		expect(onHashed).not.toHaveBeenCalled();
+	});
+
 	it("rejects a response that is not an upload result", async () => {
 		invokeMock.mockResolvedValue({
 			response: encodedUploadResponse({ contentUrl: null }),
@@ -358,6 +380,18 @@ describe("album content upload", () => {
 
 		expect(error).toBeInstanceOf(ApiError);
 		expect((error as ApiError).kind).toBe("ContentTooLarge");
+		expect(albumMediaErrorMessage({ error, limits: uploadLimits })).toBe(
+			"Larger than the 120.00 MB limit",
+		);
+	});
+
+	it("reads a 413 refusal as the body being too large", () => {
+		const error = new ApiError({
+			message: "HTTP 413",
+			request: { method: "POST", path: "/v1/albums/900/content" },
+			response: { status: 413, body: "" },
+		});
+
 		expect(albumMediaErrorMessage({ error, limits: uploadLimits })).toBe(
 			"Larger than the 120.00 MB limit",
 		);

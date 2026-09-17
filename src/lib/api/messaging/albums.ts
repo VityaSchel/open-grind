@@ -5,7 +5,6 @@ import { ApiError } from "$lib/api/api-error";
 import {
 	mediaFileDescriptor,
 	type MediaFileInspection,
-	type NativeMedia,
 } from "$lib/api/media-file";
 import { asAppError } from "$lib/api/methods";
 import {
@@ -31,6 +30,7 @@ import {
 	type AlbumUnshareRequest,
 	myAlbumsResponseSchema,
 } from "$lib/model/messaging/albums";
+import type { PickedMedia } from "$lib/platform/media-picker";
 
 const albumResponseSchema = z.object({
 	...albumMinSchema.shape,
@@ -194,15 +194,25 @@ export async function uploadAlbumContent({
 	inspection,
 	limits,
 	profileId,
+	onHashed,
 }: {
 	albumId: number;
-	media: NativeMedia;
+	media: PickedMedia;
 	inspection: MediaFileInspection;
 	limits: Pick<AlbumStorageLimits, "maxContentSize">;
 	profileId: number;
+	onHashed?: (sha256: string) => void;
 }): Promise<{ contentId: number; sha256: string | null }> {
 	if (demoEnabled) {
-		return demoUploadAlbumContent({ albumId, kind: inspection.kind });
+		const uploaded = demoUploadAlbumContent({
+			albumId,
+			kind: inspection.kind,
+		});
+		onHashed?.(uploaded.sha256);
+		return uploaded;
+	}
+	if (media.source === "web") {
+		throw new Error("A file picked in the browser has no native path");
 	}
 	const path = `/v1/albums/${albumId}/content?${albumContentQuery(inspection)}isFresh=false`;
 	const requestInfo = { method: "POST", path };
@@ -219,6 +229,7 @@ export async function uploadAlbumContent({
 				profileId: String(profileId),
 			}),
 		);
+		if (outcome.sha256 !== null) onHashed?.(outcome.sha256);
 		const { contentId } = decodeRestResponse({
 			encoded: outcome.response,
 			requestInfo,
@@ -238,7 +249,9 @@ export function albumMediaErrorMessage({
 }): string | null {
 	const kind =
 		error instanceof ApiError ? error.kind : asAppError(error)?.kind;
-	if (kind === "ContentTooLarge") {
+	const status =
+		error instanceof ApiError ? (error.response?.status ?? null) : null;
+	if (kind === "ContentTooLarge" || status === 413) {
 		return `Larger than the ${limits.maxContentSizeHumanReadable} limit`;
 	}
 	return null;
