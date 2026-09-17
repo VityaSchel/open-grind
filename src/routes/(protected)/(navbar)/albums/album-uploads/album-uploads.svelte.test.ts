@@ -138,7 +138,7 @@ describe("album uploads", () => {
 			content: [],
 		});
 
-		expect(counts).toEqual({ accepted: 4, dropped: 2 });
+		expect(counts).toEqual({ accepted: 4, dropped: 2, full: 2 });
 		expect(uploads.pending(ALBUM_ID)).toEqual([
 			{ key: "e", kind: "video" },
 			{ key: "a", kind: "photo" },
@@ -163,7 +163,7 @@ describe("album uploads", () => {
 			],
 		});
 
-		expect(counts).toEqual({ accepted: 0, dropped: 2 });
+		expect(counts).toEqual({ accepted: 0, dropped: 2, full: 2 });
 		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
 	});
 
@@ -178,7 +178,7 @@ describe("album uploads", () => {
 			content: [],
 		});
 
-		expect(counts).toEqual({ accepted: 0, dropped: 1 });
+		expect(counts).toEqual({ accepted: 0, dropped: 1, full: 0 });
 		expect(toastError).toHaveBeenCalledWith(
 			"That file isn't a photo or video",
 		);

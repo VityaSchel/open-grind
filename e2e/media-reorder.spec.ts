@@ -3,11 +3,55 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	back,
 	MEDIA_SLOT_CELL as CELL,
+	openAlbum,
 	openSharedAlbum,
 	SHARED_ALBUM,
+	TWO_ROW_ALBUM,
 } from "./support/albums";
 import { installTauriShim, TrustedTouch } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+
+async function revealGrid(page: Page) {
+	await page
+		.locator(CELL)
+		.last()
+		.evaluate((cell) => cell.scrollIntoView({ block: "center" }));
+	await page.waitForTimeout(300);
+}
+
+async function openAlbumGrid(page: Page) {
+	await openSharedAlbum(page);
+	await revealGrid(page);
+}
+
+async function openTwoRowAlbumGrid(page: Page) {
+	await openAlbum(page, TWO_ROW_ALBUM);
+	await revealGrid(page);
+}
+
+async function holdAndDrag({
+	page,
+	touch,
+	from,
+	to,
+}: {
+	page: Page;
+	touch: TrustedTouch;
+	from: { x: number; y: number };
+	to: { x: number; y: number };
+}) {
+	await touch.start(from.x, from.y);
+	await page.waitForTimeout(500);
+	for (let step = 1; step <= 12; step++) {
+		await touch.move(
+			from.x + ((to.x - from.x) * step) / 12,
+			from.y + ((to.y - from.y) * step) / 12,
+		);
+		await page.waitForTimeout(20);
+	}
+	await touch.end();
+	await page.waitForTimeout(600);
+}
 
 function mediaOrder(page: Page) {
 	return page
@@ -24,10 +68,10 @@ async function centerOf(page: Page, index: number) {
 }
 
 test.describe("media reorder", () => {
-	test("a touch drag needs a hold, then carries the tile to a new slot", async ({
+	test("a touch drag needs a hold, then carries the tile along its row", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openAlbumGrid(page);
 		const before = await mediaOrder(page);
 		expect(before.length).toBe(3);
 
@@ -42,28 +86,44 @@ test.describe("media reorder", () => {
 			"moving straight away is a scroll, however long it lasts",
 		).toEqual(before);
 
-		await touch.start(first.x, first.y);
-		await page.waitForTimeout(500);
-		for (let step = 1; step <= 12; step++) {
-			await touch.move(
-				first.x + ((third.x - first.x) * step) / 12,
-				first.y + ((third.y - first.y) * step) / 12,
-			);
-			await page.waitForTimeout(20);
-		}
-		await touch.end();
-		await page.waitForTimeout(600);
+		await revealGrid(page);
+		const held = await centerOf(page, 0);
+		const target = await centerOf(page, 1);
+		await holdAndDrag({ page, touch, from: held, to: target });
 
 		const after = await mediaOrder(page);
-		expect(after, "the held tile landed last").toEqual([
+		expect(after, "the held tile landed one slot along").toEqual([
 			before[1],
-			before[2],
 			before[0],
+			before[2],
+		]);
+	});
+
+	test("a held tile travels by touch into the row below", async ({
+		page,
+	}) => {
+		await openTwoRowAlbumGrid(page);
+		const before = await mediaOrder(page);
+		expect(before.length).toBe(5);
+
+		const held = await centerOf(page, 1);
+		const target = await centerOf(page, 4);
+		expect(target.y, "the target sits a row down").toBeGreaterThan(held.y);
+
+		const touch = await TrustedTouch.attach(page);
+		await holdAndDrag({ page, touch, from: held, to: target });
+
+		expect(await mediaOrder(page), "the tile crossed the row").toEqual([
+			before[0],
+			before[2],
+			before[3],
+			before[4],
+			before[1],
 		]);
 	});
 
 	test("the new order is what the album reloads with", async ({ page }) => {
-		await openSharedAlbum(page);
+		await openAlbumGrid(page);
 		const before = await mediaOrder(page);
 
 		const third = await centerOf(page, 2);
@@ -95,7 +155,7 @@ test.describe("media reorder", () => {
 	test("a drag that ends where it began changes nothing", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openAlbumGrid(page);
 		const before = await mediaOrder(page);
 
 		const first = await centerOf(page, 0);
@@ -116,7 +176,7 @@ test.describe("media reorder", () => {
 	test("the tile controls still work right after a drag", async ({
 		page,
 	}) => {
-		await openSharedAlbum(page);
+		await openAlbumGrid(page);
 
 		const first = await centerOf(page, 0);
 		const second = await centerOf(page, 1);
@@ -136,7 +196,7 @@ test.describe("media reorder", () => {
 	});
 
 	test("a tile can be carried to the last slot", async ({ page }) => {
-		await openSharedAlbum(page);
+		await openAlbumGrid(page);
 		const before = await mediaOrder(page);
 
 		const first = await centerOf(page, 0);

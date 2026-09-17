@@ -21,13 +21,13 @@
 	}: {
 		src: string | null;
 		alt: string;
-		deleteLabel: string;
+		deleteLabel?: string;
 		undoLabel?: string;
 		removed?: boolean;
 		video?: boolean;
 		pending?: boolean;
 		held?: boolean;
-		onDelete: () => void;
+		onDelete?: () => void;
 	} = $props();
 </script>
 
@@ -60,17 +60,19 @@
 			<VideoIcon weight="fill" class="size-3.5" />
 		</div>
 	{/if}
-	<Button
-		variant={removed ? "secondary" : "destructive"}
-		size="icon-sm"
-		class="absolute top-1.5 right-1.5 rounded-full bg-background/70 scrim backdrop-filter-(--bd-veil)"
-		onclick={onDelete}
-		aria-label={removed ? (undoLabel ?? deleteLabel) : deleteLabel}
-	>
-		{#if removed}
-			<ArrowCounterClockwiseIcon class="size-4" />
-		{:else}
-			<TrashIcon class="size-4" />
-		{/if}
-	</Button>
+	{#if onDelete !== undefined}
+		<Button
+			variant={removed ? "secondary" : "destructive"}
+			size="icon-sm"
+			class="absolute top-1.5 right-1.5 rounded-full bg-background/70 scrim backdrop-filter-(--bd-veil)"
+			onclick={onDelete}
+			aria-label={removed ? (undoLabel ?? deleteLabel) : deleteLabel}
+		>
+			{#if removed}
+				<ArrowCounterClockwiseIcon class="size-4" />
+			{:else}
+				<TrashIcon class="size-4" />
+			{/if}
+		</Button>
+	{/if}
 </div>

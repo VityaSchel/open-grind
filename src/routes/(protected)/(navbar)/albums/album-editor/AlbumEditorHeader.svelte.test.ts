@@ -77,6 +77,33 @@ describe("album editor header", () => {
 		expect(area).not.toContain('data-slot="empty-media"');
 	});
 
+	it("counts photos and videos against their own limits once known", () => {
+		const props = {
+			albumId: 900,
+			albumName: "Studio",
+			content: [
+				item({
+					contentId: 1,
+					processing: false,
+					contentType: "image/jpeg",
+				}),
+				item({ contentId: 2, processing: false }),
+			],
+			sharedCount: 0,
+			updatedLabel: "Sep 1",
+			onOpenShares: () => {},
+		};
+
+		const unknown = render(AlbumEditorHeader, { props });
+		expect(unknown.getByText("2 items")).toBeTruthy();
+		cleanup();
+
+		const known = render(AlbumEditorHeader, {
+			props: { ...props, maxPhotos: 10, maxVideos: 1 },
+		});
+		expect(known.getByText("1/10 photos, 1/1 videos")).toBeTruthy();
+	});
+
 	it("badges the preview only with kinds that are ready to show", () => {
 		const area = previewAreaOf([
 			item({ contentId: 1, processing: true, contentType: "video/mp4" }),

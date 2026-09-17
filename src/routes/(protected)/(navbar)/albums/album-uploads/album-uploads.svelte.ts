@@ -12,6 +12,7 @@ import {
 	albumMediaErrorMessage,
 	getAlbumContent,
 	getAlbumContentProcessing,
+	getAlbumStorageLimits,
 	getMyAlbums,
 	uploadAlbumContent,
 } from "$lib/api/messaging/albums";
@@ -127,9 +128,29 @@ export class AlbumUploads {
 	#drafts = new SvelteMap<number, UploadLanding>();
 	#landed = new SvelteMap<number, SvelteSet<number>>();
 	#watching = new SvelteSet<string>();
+	#limits = $state<UploadLimits | null>(null);
+	#limitsRequest: Promise<UploadLimits> | null = null;
 	#profileId: number | null = null;
 	#running = false;
 	#generation = 0;
+
+	get limits(): UploadLimits | null {
+		return this.#limits;
+	}
+
+	async storageLimits(): Promise<UploadLimits> {
+		const cached = this.#limits;
+		if (cached !== null) return cached;
+		const generation = this.#generation;
+		this.#limitsRequest ??= getAlbumStorageLimits();
+		try {
+			const limits = await this.#limitsRequest;
+			if (generation === this.#generation) this.#limits = limits;
+			return limits;
+		} finally {
+			this.#limitsRequest = null;
+		}
+	}
 
 	pending(albumId: number): PendingUpload[] {
 		return this.#queue
@@ -166,6 +187,8 @@ export class AlbumUploads {
 		this.#drafts.clear();
 		this.#landed.clear();
 		this.#watching.clear();
+		this.#limits = null;
+		this.#limitsRequest = null;
 		this.#profileId = null;
 		this.#generation += 1;
 	}
@@ -180,9 +203,11 @@ export class AlbumUploads {
 		picked: PickedMedia[];
 		limits: UploadLimits;
 		content: AlbumContent[];
-	}): Promise<{ accepted: number; dropped: number }> {
+	}): Promise<{ accepted: number; dropped: number; full: number }> {
 		const profileId = await currentProfileId();
-		if (profileId === null) return { accepted: 0, dropped: picked.length };
+		if (profileId === null) {
+			return { accepted: 0, dropped: picked.length, full: 0 };
+		}
 		if (this.#profileId !== null && this.#profileId !== profileId) {
 			this.clear();
 		}
@@ -191,6 +216,7 @@ export class AlbumUploads {
 		for (const item of content) known.add(item.contentId);
 
 		let dropped = 0;
+		let full = 0;
 		const inspected: QueuedUpload[] = [];
 		for (const media of picked) {
 			const inspection = await inspectMediaFile(media).catch(() => null);
@@ -223,12 +249,14 @@ export class AlbumUploads {
 			if (entry.kind === "video") {
 				if (videos >= limits.maxVideosPerAlbum) {
 					dropped += 1;
+					full += 1;
 					continue;
 				}
 				videos += 1;
 			} else {
 				if (photos >= limits.maxContentItemsPerAlbum) {
 					dropped += 1;
+					full += 1;
 					continue;
 				}
 				photos += 1;
@@ -238,7 +266,7 @@ export class AlbumUploads {
 
 		this.#queue = [...this.#queue, ...accepted];
 		void this.#run();
-		return { accepted: accepted.length, dropped };
+		return { accepted: accepted.length, dropped, full };
 	}
 
 	#pendingOfKind({

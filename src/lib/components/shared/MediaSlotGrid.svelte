@@ -3,15 +3,17 @@
 		key: string;
 		src: string | null;
 		alt: string;
-		deleteLabel: string;
+		deleteLabel?: string;
 		undoLabel?: string;
 		video?: boolean;
 		pending?: boolean;
-		onDelete: () => void;
+		onDelete?: () => void;
 	};
 </script>
 
 <script lang="ts">
+	import type { Snippet } from "svelte";
+
 	import { GridReorder } from "$lib/util/grid-reorder.svelte";
 	import MediaSlot from "./MediaSlot.svelte";
 
@@ -20,12 +22,14 @@
 		minSlots = 0,
 		removed,
 		disabled = false,
+		leading,
 		onReorder,
 	}: {
 		slots: MediaSlotItem[];
 		minSlots?: number;
 		removed?: ReadonlySet<string>;
 		disabled?: boolean;
+		leading?: Snippet;
 		onReorder: (move: { from: number; to: number }) => void;
 	} = $props();
 
@@ -41,6 +45,9 @@
 </script>
 
 <div data-slot="media-slot-grid" role="list" class="grid grid-cols-3 gap-2">
+	{#if leading}
+		<div role="listitem">{@render leading()}</div>
+	{/if}
 	{#each slots as slot, index (slot.key)}
 		{@const held = reorder.from === index}
 		<div

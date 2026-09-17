@@ -4,6 +4,7 @@
 	import {
 		albumCoverContent,
 		albumItemCountLabel,
+		isVideoContent,
 		readyAlbumMedia,
 	} from "$lib/components/album/album";
 	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
@@ -17,6 +18,8 @@
 		albumId,
 		albumName = $bindable(),
 		content,
+		maxPhotos = null,
+		maxVideos = null,
 		sharedCount,
 		updatedLabel,
 		onOpenShares,
@@ -24,13 +27,22 @@
 		albumId: number;
 		albumName: string;
 		content: AlbumContent[];
+		maxPhotos?: number | null;
+		maxVideos?: number | null;
 		sharedCount: number;
 		updatedLabel: string;
 		onOpenShares: () => void;
 	} = $props();
 
 	const hintId = $props.id();
-	const itemCountLabel = $derived(albumItemCountLabel(content.length));
+	const videoCount = $derived(
+		content.filter((item) => isVideoContent(item.contentType)).length,
+	);
+	const itemCountLabel = $derived(
+		maxPhotos === null || maxVideos === null
+			? albumItemCountLabel(content.length)
+			: `${content.length - videoCount}/${maxPhotos} photos, ${videoCount}/${maxVideos} videos`,
+	);
 	const cover = $derived(albumCoverContent(content));
 	const readyMedia = $derived(readyAlbumMedia(content));
 </script>

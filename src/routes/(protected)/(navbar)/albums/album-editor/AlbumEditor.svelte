@@ -24,6 +24,7 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
+	import { uploads } from "../album-uploads/album-uploads.svelte";
 	import { AlbumDraft } from "./album-draft.svelte";
 	import AlbumContentGrid from "./AlbumContentGrid.svelte";
 	import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
@@ -34,7 +35,10 @@
 	let { album }: { album: EditableAlbum } = $props();
 
 	const initial = untrack(() => album);
-	const draft = new AlbumDraft(initial);
+	const draft = new AlbumDraft({
+		...initial,
+		uploadsPending: () => uploads.hasPending(initial.albumId),
+	});
 	const shares = new AlbumSharedWith({
 		albumId: initial.albumId,
 		sharedCount: initial.sharedCount,
@@ -42,7 +46,19 @@
 
 	let sharesOpen = $state(false);
 
+	const pending = $derived(uploads.pending(draft.albumId));
+
 	setSubpageActions(menu);
+
+	void uploads
+		.storageLimits()
+		.catch((error: unknown) => console.error(error));
+
+	$effect(() => {
+		const { albumId } = draft;
+		uploads.attachDraft({ albumId, draft });
+		return () => uploads.detachDraft({ albumId, draft });
+	});
 
 	function save() {
 		draft
@@ -64,14 +80,19 @@
 		albumId={draft.albumId}
 		bind:albumName={draft.name}
 		content={draft.remaining}
+		maxPhotos={uploads.limits?.maxContentItemsPerAlbum ?? null}
+		maxVideos={uploads.limits?.maxVideosPerAlbum ?? null}
 		sharedCount={shares.count}
 		updatedLabel={albumUpdatedLabel(draft.updatedAt)}
 		onOpenShares={() => (sharesOpen = true)}
 	/>
 	<AlbumContentGrid
+		albumId={draft.albumId}
 		content={draft.content}
+		{pending}
 		removed={draft.removed}
 		saving={draft.saving}
+		maxPhotos={uploads.limits?.maxContentItemsPerAlbum ?? null}
 		onToggleRemoved={(contentId) => draft.toggleRemoved(contentId)}
 		onReorder={(positions) => draft.move(positions)}
 	/>
