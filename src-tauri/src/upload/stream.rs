@@ -8,6 +8,7 @@ use tauri::{AppHandle, Runtime};
 
 use crate::upload::form::Framing;
 use crate::upload::picked::PickedFile;
+use crate::video::strip::{Patch, PatchedReader};
 
 pub const FILE_CHANGED: &str = "That file changed while it was uploading";
 
@@ -18,6 +19,7 @@ pub struct FileBody<R: Runtime> {
 	pub file: PickedFile,
 	pub framing: Framing,
 	pub content_len: u64,
+	pub patches: Arc<[Patch]>,
 	pub digest: ContentDigest,
 }
 
@@ -30,7 +32,10 @@ impl<R: Runtime> BodySource for FileBody<R> {
 		let file = self.file.open(&self.app)?;
 		store(&self.digest, None);
 		let content = HashingReader {
-			inner: file.take(self.content_len),
+			inner: PatchedReader::new(
+				file.take(self.content_len),
+				Arc::clone(&self.patches),
+			),
 			hasher: Sha256::new(),
 			read: 0,
 			expected: self.content_len,
@@ -45,7 +50,7 @@ impl<R: Runtime> BodySource for FileBody<R> {
 }
 
 struct HashingReader {
-	inner: Take<File>,
+	inner: PatchedReader<Take<File>>,
 	hasher: Sha256,
 	read: u64,
 	expected: u64,
@@ -94,6 +99,8 @@ mod tests {
 	use super::*;
 	use crate::upload::content::{hex, sha256_hex};
 	use crate::upload::form::FormPart;
+	use crate::video::boxes::Span;
+	use crate::video::strip::Fill;
 
 	const CONTENT: &[u8] = b"a tiny clip pretending to be an mp4";
 
@@ -112,6 +119,15 @@ mod tests {
 		path: &PathBuf,
 		content_len: u64,
 	) -> FileBody<MockRuntime> {
+		patched_body(app, path, content_len, Vec::new())
+	}
+
+	fn patched_body(
+		app: &tauri::App<MockRuntime>,
+		path: &PathBuf,
+		content_len: u64,
+		patches: Vec<Patch>,
+	) -> FileBody<MockRuntime> {
 		app.fs_scope().allow_file(path).expect("allow");
 		FileBody {
 			app: app.handle().clone(),
@@ -122,6 +138,7 @@ mod tests {
 				content_type: "video/mp4",
 			}),
 			content_len,
+			patches: Arc::from(patches),
 			digest: Arc::new(Mutex::new(None)),
 		}
 	}
@@ -153,6 +170,42 @@ mod tests {
 			CONTENT
 		);
 		assert!(framed.ends_with(&source.framing.tail));
+		std::fs::remove_file(path).ok();
+	}
+
+	#[test]
+	fn a_strip_plan_changes_the_bytes_that_are_sent_and_hashed() {
+		let app = app();
+		let path = temp_file("stripped.mp4", CONTENT);
+		let source = patched_body(
+			&app,
+			&path,
+			CONTENT.len() as u64,
+			vec![Patch {
+				span: Span { start: 2, end: 6 },
+				fill: Fill::Zeros,
+			}],
+		);
+		let mut stripped = CONTENT.to_vec();
+		stripped[2..6].fill(0);
+
+		let mut framed = Vec::new();
+		source
+			.open()
+			.expect("open")
+			.read_to_end(&mut framed)
+			.expect("read");
+
+		assert_eq!(
+			&framed[source.framing.head.len()
+				..source.framing.head.len() + CONTENT.len()],
+			stripped
+		);
+		assert_eq!(framed.len() as u64, source.size());
+		assert_eq!(
+			taken(&source.digest).map(|digest| hex(&digest)),
+			Some(sha256_hex(&stripped))
+		);
 		std::fs::remove_file(path).ok();
 	}
 

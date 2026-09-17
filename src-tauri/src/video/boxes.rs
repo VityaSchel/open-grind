@@ -19,12 +19,18 @@ impl Span {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Located {
 	pub box_type: [u8; 4],
+	pub start: u64,
+	pub header_len: u64,
 	pub body: Span,
 }
 
 impl Located {
 	pub fn is(&self, box_type: &[u8; 4]) -> bool {
 		&self.box_type == box_type
+	}
+
+	pub fn payload_start(&self) -> u64 {
+		self.start + self.header_len
 	}
 }
 
@@ -37,45 +43,123 @@ pub fn read_at<R: Read + Seek>(
 	reader.read_exact(buf)
 }
 
+pub fn header<R: Read + Seek>(
+	reader: &mut R,
+	within: Span,
+) -> io::Result<Option<Located>> {
+	let Some(raw) = raw_header(reader, within)? else {
+		return Ok(None);
+	};
+	if raw.total > within.size() {
+		return Ok(None);
+	}
+	Ok(Some(located(reader, within.start, raw)?))
+}
+
 pub fn children<R: Read + Seek>(
 	reader: &mut R,
 	within: Span,
 ) -> io::Result<Vec<Located>> {
 	let mut found = Vec::new();
+	walk(reader, within, |child| {
+		found.push(child);
+		true
+	})?;
+	Ok(found)
+}
+
+fn walk<R: Read + Seek>(
+	reader: &mut R,
+	within: Span,
+	mut visit: impl FnMut(Located) -> bool,
+) -> io::Result<()> {
 	let mut at = within.start;
-	while at + HEADER_LEN <= within.end {
-		let mut header = [0u8; HEADER_LEN as usize];
-		read_at(reader, at, &mut header)?;
-		let box_type = four(&header[4..]);
-		let declared = u32::from_be_bytes(four(&header[..4])) as u64;
-		let (mut header_len, total) = match declared {
-			0 => (HEADER_LEN, within.end - at),
-			1 => {
-				let mut large = [0u8; LARGE_SIZE_LEN as usize];
-				read_at(reader, at + HEADER_LEN, &mut large)?;
-				(HEADER_LEN + LARGE_SIZE_LEN, u64::from_be_bytes(large))
-			}
-			size => (HEADER_LEN, size),
+	while at < within.end {
+		let Some(raw) = raw_header(
+			reader,
+			Span {
+				start: at,
+				end: within.end,
+			},
+		)?
+		else {
+			break;
 		};
-		if total < header_len {
+		let available = within.end - at;
+		let raw = raw.clamped(available);
+		if !visit(located(reader, at, raw)?) {
 			break;
 		}
-		if &box_type == b"meta"
-			&& has_version_and_flags(reader, at + header_len)?
-		{
-			header_len += FULL_BOX_LEN;
-		}
-		let end = (at + total).min(within.end);
-		found.push(Located {
-			box_type,
-			body: Span {
-				start: (at + header_len).min(end),
-				end,
-			},
-		});
-		at += total;
+		at += raw.total;
 	}
-	Ok(found)
+	Ok(())
+}
+
+#[derive(Debug, Clone, Copy)]
+struct RawHeader {
+	box_type: [u8; 4],
+	header_len: u64,
+	total: u64,
+}
+
+impl RawHeader {
+	fn clamped(self, available: u64) -> Self {
+		Self {
+			total: self.total.min(available),
+			..self
+		}
+	}
+}
+
+fn raw_header<R: Read + Seek>(
+	reader: &mut R,
+	within: Span,
+) -> io::Result<Option<RawHeader>> {
+	if within.size() < HEADER_LEN {
+		return Ok(None);
+	}
+	let mut header = [0u8; HEADER_LEN as usize];
+	read_at(reader, within.start, &mut header)?;
+	let box_type = four(&header[4..]);
+	let declared = u32::from_be_bytes(four(&header[..4])) as u64;
+	let (header_len, total) = match declared {
+		0 => (HEADER_LEN, within.size()),
+		1 => {
+			let mut large = [0u8; LARGE_SIZE_LEN as usize];
+			read_at(reader, within.start + HEADER_LEN, &mut large)?;
+			(HEADER_LEN + LARGE_SIZE_LEN, u64::from_be_bytes(large))
+		}
+		size => (HEADER_LEN, size),
+	};
+	if total < header_len {
+		return Ok(None);
+	}
+	Ok(Some(RawHeader {
+		box_type,
+		header_len,
+		total,
+	}))
+}
+
+fn located<R: Read + Seek>(
+	reader: &mut R,
+	at: u64,
+	raw: RawHeader,
+) -> io::Result<Located> {
+	let end = at + raw.total;
+	let mut body_start = at + raw.header_len;
+	if &raw.box_type == b"meta" && has_version_and_flags(reader, body_start)? {
+		body_start += FULL_BOX_LEN;
+	}
+	Ok(Located {
+		box_type: raw.box_type,
+		start: at,
+		header_len: raw.header_len,
+		body: Span {
+			start: body_start.min(end),
+			end,
+		},
+	})
 }
 
 pub fn find<R: Read + Seek>(
@@ -83,9 +167,15 @@ pub fn find<R: Read + Seek>(
 	within: Span,
 	box_type: &[u8; 4],
 ) -> io::Result<Option<Located>> {
-	Ok(children(reader, within)?
-		.into_iter()
-		.find(|child| child.is(box_type)))
+	let mut found = None;
+	walk(reader, within, |child| {
+		if !child.is(box_type) {
+			return true;
+		}
+		found = Some(child);
+		false
+	})?;
+	Ok(found)
 }
 
 pub fn find_path<R: Read + Seek>(
@@ -250,6 +340,44 @@ mod tests {
 	}
 
 	#[test]
+	fn a_largesize_that_overflows_the_cursor_stops_the_walk() {
+		let mut bytes = boxed(b"ftyp", b"isom");
+		bytes.extend_from_slice(&1u32.to_be_bytes());
+		bytes.extend_from_slice(b"mdat");
+		bytes.extend_from_slice(&u64::MAX.to_be_bytes());
+		bytes.extend_from_slice(&[0u8; 32]);
+		let span = whole(&bytes);
+
+		let found = children(&mut Cursor::new(&bytes), span).expect("children");
+
+		assert_eq!(
+			found.iter().map(|child| child.box_type).collect::<Vec<_>>(),
+			vec![*b"ftyp", *b"mdat"]
+		);
+		assert_eq!(found[1].body.end, bytes.len() as u64);
+	}
+
+	#[test]
+	fn find_stops_at_the_first_match_instead_of_walking_on() {
+		let mut bytes = boxed(b"moov", b"first");
+		for _ in 0..1000 {
+			bytes.extend(boxed(b"free", b"padding"));
+		}
+		let span = whole(&bytes);
+		let mut reader = CountingReader {
+			inner: Cursor::new(bytes.clone()),
+			reads: 0,
+		};
+
+		let found = find(&mut reader, span, b"moov")
+			.expect("walk")
+			.expect("moov");
+
+		assert_eq!(found.body.size(), 5);
+		assert!(reader.reads < 4, "read {} headers", reader.reads);
+	}
+
+	#[test]
 	fn find_path_descends_through_containers() {
 		let stbl = boxed(b"stbl", &boxed(b"stsd", b"entries"));
 		let minf = boxed(b"minf", &stbl);
@@ -270,5 +398,23 @@ mod tests {
 		assert_eq!(found.box_type, *b"stsd");
 		assert_eq!(found.body.size(), 7);
 		assert!(missing.is_none());
+	}
+
+	struct CountingReader {
+		inner: Cursor<Vec<u8>>,
+		reads: usize,
+	}
+
+	impl Read for CountingReader {
+		fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+			self.reads += 1;
+			self.inner.read(buf)
+		}
+	}
+
+	impl Seek for CountingReader {
+		fn seek(&mut self, to: SeekFrom) -> io::Result<u64> {
+			self.inner.seek(to)
+		}
 	}
 }

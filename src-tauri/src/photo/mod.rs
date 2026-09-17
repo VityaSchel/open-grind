@@ -8,7 +8,7 @@ use crate::error::AppError;
 
 use source::Format;
 
-const JPEG: &str = "image/jpeg";
+pub const JPEG: &str = "image/jpeg";
 const DAMAGED: &str = "Unreadable or damaged photo";
 
 #[cfg(target_os = "android")]

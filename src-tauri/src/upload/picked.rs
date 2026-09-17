@@ -12,6 +12,8 @@ use crate::video::probe;
 
 const SNIFF_LEN: usize = 64;
 const BOX_TYPE: &[u8] = b"ftyp";
+const VIDEO_BRANDS: [&[u8]; 5] = [b"qt  ", b"avc1", b"M4V ", b"f4v ", b"mmp4"];
+const VIDEO_BRAND_PREFIXES: [&[u8]; 3] = [b"iso", b"mp4", b"3g"];
 const CONTENT_SCHEME: &str = "content://";
 
 pub const OUTSIDE_SCOPE: &str =
@@ -97,11 +99,21 @@ pub enum MediaKind {
 pub fn sniff(head: &[u8]) -> MediaKind {
 	if source::sniff(head).is_some() {
 		MediaKind::Photo
-	} else if head.get(4..8) == Some(BOX_TYPE) {
+	} else if head.get(4..8) == Some(BOX_TYPE) && has_video_brand(head) {
 		MediaKind::Video
 	} else {
 		MediaKind::Unsupported
 	}
+}
+
+fn has_video_brand(head: &[u8]) -> bool {
+	let Some(brand) = head.get(8..12) else {
+		return false;
+	};
+	VIDEO_BRANDS.contains(&brand)
+		|| VIDEO_BRAND_PREFIXES
+			.iter()
+			.any(|prefix| brand.starts_with(prefix))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -125,10 +137,15 @@ pub fn inspect(file: &mut File) -> io::Result<Inspection> {
 		}
 		filled += read;
 	}
-	let kind = sniff(&head[..filled]);
-	let probed = match kind {
+	let sniffed = sniff(&head[..filled]);
+	let probed = match sniffed {
 		MediaKind::Video => probe::probe(file).ok().flatten(),
 		_ => None,
+	};
+	let kind = if sniffed == MediaKind::Video && probed.is_none() {
+		MediaKind::Unsupported
+	} else {
+		sniffed
 	};
 	Ok(Inspection {
 		kind,
@@ -188,7 +205,7 @@ mod tests {
 	}
 
 	#[test]
-	fn a_desktop_path_the_picker_allowed_opens_and_inspects() {
+	fn a_video_brand_without_a_readable_visual_track_is_unsupported() {
 		let app = app();
 		let mut bytes = b"\0\0\0\x18ftypmp42".to_vec();
 		bytes.resize(200, 0);
@@ -202,7 +219,7 @@ mod tests {
 		assert_eq!(
 			inspection,
 			Inspection {
-				kind: MediaKind::Video,
+				kind: MediaKind::Unsupported,
 				size: 200,
 				width: None,
 				height: None
@@ -316,6 +333,14 @@ mod tests {
 		assert_eq!(sniff(b"\0\0\0\x18ftypmp42\0\0\0\0"), MediaKind::Video);
 		assert_eq!(sniff(b"\0\0\0\x14ftypqt  \0\0\0\0"), MediaKind::Video);
 		assert_eq!(sniff(b"\0\0\0\x18ftypisom"), MediaKind::Video);
+		assert_eq!(
+			sniff(b"\0\0\0\x18ftypM4A \0\0\0\0"),
+			MediaKind::Unsupported
+		);
+		assert_eq!(
+			sniff(b"\0\0\0\x18ftypavif\0\0\0\0"),
+			MediaKind::Unsupported
+		);
 		assert_eq!(sniff(b"\x1aE\xdf\xa3webm"), MediaKind::Unsupported);
 		assert_eq!(sniff(b"ftyp"), MediaKind::Unsupported);
 		assert_eq!(sniff(b""), MediaKind::Unsupported);

@@ -174,7 +174,10 @@ export async function reorderAlbumContent({
 
 const uploadOutcomeSchema = z.object({
 	response: z.string(),
-	sha256: z.string().regex(/^[0-9a-f]{64}$/),
+	sha256: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/)
+		.nullable(),
 	bodySize: z.int().nonnegative(),
 });
 
@@ -182,7 +185,7 @@ function albumContentQuery(inspection: MediaFileInspection): string {
 	if (inspection.kind !== "video") return "";
 	const { width, height } = inspection;
 	if (width === undefined || height === undefined) return "";
-	return `&width=${width}&height=${height}`;
+	return `width=${width}&height=${height}&`;
 }
 
 export async function uploadAlbumContent({
@@ -197,11 +200,11 @@ export async function uploadAlbumContent({
 	inspection: MediaFileInspection;
 	limits: Pick<AlbumStorageLimits, "maxContentSize">;
 	profileId: number;
-}): Promise<{ contentId: number; sha256: string }> {
+}): Promise<{ contentId: number; sha256: string | null }> {
 	if (demoEnabled) {
 		return demoUploadAlbumContent({ albumId, kind: inspection.kind });
 	}
-	const path = `/v1/albums/${albumId}/content?isFresh=false${albumContentQuery(inspection)}`;
+	const path = `/v1/albums/${albumId}/content?${albumContentQuery(inspection)}isFresh=false`;
 	const requestInfo = { method: "POST", path };
 	try {
 		const outcome = uploadOutcomeSchema.parse(
@@ -210,14 +213,7 @@ export async function uploadAlbumContent({
 				request: {
 					method: "POST",
 					path,
-					part: {
-						name: "content",
-						filename: "",
-						contentType:
-							inspection.kind === "video"
-								? "video/mp4"
-								: "image/jpeg",
-					},
+					part: { name: "content", filename: "" },
 				},
 				maxBodySize: limits.maxContentSize,
 				profileId: String(profileId),

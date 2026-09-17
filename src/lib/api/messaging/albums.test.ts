@@ -266,11 +266,7 @@ describe("album content upload", () => {
 			request: {
 				method: "POST",
 				path: "/v1/albums/900/content?isFresh=false",
-				part: {
-					name: "content",
-					filename: "",
-					contentType: "image/jpeg",
-				},
+				part: { name: "content", filename: "" },
 			},
 			maxBodySize: 125829120,
 			profileId: "123456",
@@ -300,12 +296,8 @@ describe("album content upload", () => {
 			file: { source: "desktop", path: "/tmp/clip.mov" },
 			request: {
 				method: "POST",
-				path: "/v1/albums/900/content?isFresh=false&width=1080&height=1920",
-				part: {
-					name: "content",
-					filename: "",
-					contentType: "video/mp4",
-				},
+				path: "/v1/albums/900/content?width=1080&height=1920&isFresh=false",
+				part: { name: "content", filename: "" },
 			},
 			maxBodySize: 125829120,
 			profileId: "123456",
