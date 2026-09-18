@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 
+import { ApiError } from "$lib/api/api-error";
 import {
 	deleteAlbumContent,
 	getAlbumContent,
@@ -21,6 +22,8 @@ function sameOrder(left: number[], right: number[]): boolean {
 		left.every((contentId, index) => contentId === right[index])
 	);
 }
+
+export class StillProcessingError extends Error {}
 
 export class AlbumDraft {
 	readonly albumId: number;
@@ -123,9 +126,19 @@ export class AlbumDraft {
 		this.saving = true;
 		try {
 			const { albumId } = this;
+			let refusedWhileProcessing = false;
+			let landed = false;
 			for (const contentId of [...this.removed]) {
 				if (!this.isRemoved(contentId)) continue;
-				await deleteAlbumContent({ albumId, contentId });
+				try {
+					await deleteAlbumContent({ albumId, contentId });
+				} catch (error) {
+					if (!this.#isProcessingRefusal({ error, contentId }))
+						throw error;
+					refusedWhileProcessing = true;
+					continue;
+				}
+				landed = true;
 				if (
 					this.isRemoved(contentId) ||
 					!(await this.#listedByServer(contentId))
@@ -145,15 +158,34 @@ export class AlbumDraft {
 				);
 				this.#savedOrder = [...landedMeanwhile, ...stillListed];
 				forgetAlbumSlides(albumId);
+				landed = true;
 			}
 			const named = this.name;
 			if (named !== this.#savedName) {
 				await renameAlbum({ albumId, albumName: named || null });
 				this.#savedName = named;
+				landed = true;
 			}
-			this.updatedAt = format(now(), "yyyy-MM-dd'T'HH:mm:ss");
+			if (landed) this.updatedAt = format(now(), "yyyy-MM-dd'T'HH:mm:ss");
+			if (refusedWhileProcessing) throw new StillProcessingError();
 		} finally {
 			this.saving = false;
 		}
+	}
+
+	#isProcessingRefusal({
+		error,
+		contentId,
+	}: {
+		error: unknown;
+		contentId: number;
+	}): boolean {
+		return (
+			error instanceof ApiError &&
+			error.response?.status === 400 &&
+			this.content.some(
+				(item) => item.contentId === contentId && item.processing,
+			)
+		);
 	}
 }

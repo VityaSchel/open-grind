@@ -19,8 +19,9 @@ vi.mock("$lib/components/album/album-lightbox", () => ({
 	forgetAlbumSlides: forgetMock,
 }));
 
+import { ApiError } from "$lib/api/api-error";
 import type { AlbumContent } from "$lib/model/messaging/albums";
-import { AlbumDraft } from "./album-draft.svelte";
+import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
 
 const ALBUM_ID = 903;
 
@@ -66,7 +67,68 @@ beforeEach(() => {
 	forgetMock.mockReset();
 });
 
+function refusal(status: number): ApiError {
+	return new ApiError({
+		message: `HTTP ${status}`,
+		request: { method: "DELETE", path: "/v1/albums/903/content/2" },
+		response: { status, body: "" },
+	});
+}
+
 describe("AlbumDraft", () => {
+	it("keeps a processing video marked when the server refuses to delete it yet", async () => {
+		const draft = new AlbumDraft({
+			albumId: ALBUM_ID,
+			albumName: "Studio",
+			updatedAt: "2026-09-01T10:00:00",
+			content: [item(1), { ...item(2), processing: true }, item(3)],
+		});
+		draft.toggleRemoved(1);
+		draft.toggleRemoved(2);
+		draft.name = "Darkroom";
+		deleteMock.mockImplementation(({ contentId }: { contentId: number }) =>
+			contentId === 2 ? Promise.reject(refusal(400)) : Promise.resolve(),
+		);
+
+		await expect(draft.save()).rejects.toBeInstanceOf(StillProcessingError);
+
+		expect(
+			ids(draft),
+			"the deletable item is gone, the processing one stays",
+		).toEqual([2, 3]);
+		expect(draft.isRemoved(2)).toBe(true);
+		expect(
+			renameMock,
+			"the rest of the save still lands",
+		).toHaveBeenCalledOnce();
+		expect(draft.updatedAt).not.toBe("2026-09-01T10:00:00");
+		expect(draft.dirty, "the refused removal is still pending").toBe(true);
+	});
+
+	it("reports nothing as updated when the only change was refused", async () => {
+		const draft = new AlbumDraft({
+			albumId: ALBUM_ID,
+			albumName: "Studio",
+			updatedAt: "2026-09-01T10:00:00",
+			content: [{ ...item(2), processing: true }],
+		});
+		draft.toggleRemoved(2);
+		deleteMock.mockRejectedValue(refusal(400));
+
+		await expect(draft.save()).rejects.toBeInstanceOf(StillProcessingError);
+
+		expect(draft.updatedAt).toBe("2026-09-01T10:00:00");
+	});
+
+	it("fails the save on a 400 for an item that is not processing", async () => {
+		const draft = draftOf([1, 2]);
+		draft.toggleRemoved(2);
+		const error = refusal(400);
+		deleteMock.mockRejectedValue(error);
+
+		await expect(draft.save()).rejects.toBe(error);
+	});
+
 	it("stays clean until something actually changes", () => {
 		const draft = draftOf([1, 2, 3]);
 		expect(draft.dirty).toBe(false);

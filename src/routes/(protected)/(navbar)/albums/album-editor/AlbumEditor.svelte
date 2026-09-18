@@ -25,7 +25,7 @@
 	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 	import { uploads } from "../album-uploads/album-uploads.svelte";
-	import { AlbumDraft } from "./album-draft.svelte";
+	import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
 	import AlbumContentGrid from "./AlbumContentGrid.svelte";
 	import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
 	import AlbumMenu from "./AlbumMenu.svelte";
@@ -66,6 +66,12 @@
 			.then(() => toast.success("Album updated"))
 			.catch((error: unknown) => {
 				console.error(error);
+				if (error instanceof StillProcessingError) {
+					toast.error(
+						"This video is still processing. Try removing it again in a moment",
+					);
+					return;
+				}
 				showErrorToast({ label: "Couldn't save album changes", error });
 			});
 	}
