@@ -1,3 +1,5 @@
+import { mount } from "svelte";
+
 import {
 	accountEpoch,
 	isAccountEpochCurrent,
@@ -16,16 +18,19 @@ import {
 } from "$lib/util/media-dimensions";
 import {
 	applyPhotoSwipeBackGesture,
+	applyPhotoSwipeComponent,
 	applyPhotoSwipeErrorUi,
 	applyPhotoSwipeVideo,
 	applyPhotoSwipeViewportSync,
 } from "$lib/util/photoswipe";
-import { isVideoContent } from "./album";
+import { hasNoPlaysLeft, isVideoContent } from "./album";
+import NoPlaysLeftSlide from "./NoPlaysLeftSlide.svelte";
 
 export type AlbumSlide = AlbumContentResponse["content"][number] &
 	MediaDimensions;
 
 const SLIDES_TTL_MS = 10 * 60 * 1000;
+const UNMEASURED: MediaDimensions = { width: 1080, height: 1080 };
 
 const slidesByAlbum = new Map<number, { slides: AlbumSlide[]; at: number }>();
 const forgetCountByAlbum = new Map<number, number>();
@@ -54,16 +59,17 @@ export async function loadAlbumSlides(albumId: number): Promise<AlbumSlide[]> {
 		ready.map(async (slide) => {
 			const kind = isVideoContent(slide.contentType) ? "video" : "image";
 			const url = proxyMediaUrl(slide.url, { as: kind });
-			const coverUrl = proxyMediaUrl(slide.coverUrl);
+			const cover = proxyMediaUrl(slide.coverUrl);
+			const coverUrl = hasNoPlaysLeft(slide)
+				? (cover ?? proxyMediaUrl(slide.thumbUrl))
+				: cover;
 			const measurable = { video: coverUrl, image: url }[kind];
-			return {
-				...slide,
-				url,
-				coverUrl,
-				...(measurable === null
-					? await measureVideo(url)
-					: await measureImage(measurable)),
-			};
+			const size = await (
+				measurable === null
+					? measureVideo(url)
+					: measureImage(measurable)
+			).catch(() => UNMEASURED);
+			return { ...slide, url, coverUrl, ...size };
 		}),
 	);
 	const forgottenMeanwhile =
@@ -101,10 +107,29 @@ export async function openAlbumLightbox({
 	applyPhotoSwipeBackGesture(lightbox);
 	applyPhotoSwipeVideo(lightbox, (index) => {
 		const slide = slides[index];
-		if (slide === undefined || !isVideoContent(slide.contentType))
+		if (
+			slide === undefined ||
+			!isVideoContent(slide.contentType) ||
+			hasNoPlaysLeft(slide)
+		)
 			return null;
 		return { src: slide.url, poster: slide.coverUrl };
 	});
+	applyPhotoSwipeComponent(
+		lightbox,
+		(index) => {
+			const slide = slides[index];
+			return slide !== undefined && hasNoPlaysLeft(slide) ? slide : null;
+		},
+		(target, slide, content) => {
+			const locked = mount(NoPlaysLeftSlide, {
+				target,
+				props: { still: slide.coverUrl },
+			});
+			content.onLoaded();
+			return locked;
+		},
+	);
 	lightbox.on("closingAnimationEnd", onClosed);
 	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
 	lightbox.init();

@@ -7,6 +7,12 @@ export function isVideoContent(contentType: string): boolean {
 	return contentType.startsWith("video/");
 }
 
+export function hasNoPlaysLeft(
+	item: Pick<AlbumContent, "contentType" | "url">,
+): boolean {
+	return isVideoContent(item.contentType) && item.url === "";
+}
+
 export function albumCoverContent<
 	Item extends Pick<AlbumContent, "processing">,
 >(content: readonly Item[]): Item | undefined {

@@ -6,6 +6,7 @@ import {
 	albumDisplayName,
 	albumItemCountLabel,
 	albumUpdatedLabel,
+	hasNoPlaysLeft,
 	isVideoContent,
 	readyAlbumMedia,
 } from "./album";
@@ -47,6 +48,26 @@ describe("isVideoContent", () => {
 	it("splits video from image content types", () => {
 		expect(isVideoContent("video/mp4")).toBe(true);
 		expect(isVideoContent("image/jpeg")).toBe(false);
+	});
+});
+
+describe("hasNoPlaysLeft", () => {
+	it("is a video the server sent without a url", () => {
+		expect(hasNoPlaysLeft({ contentType: "video/mp4", url: "" })).toBe(
+			true,
+		);
+	});
+
+	it("is never a video with a url or a photo", () => {
+		expect(
+			hasNoPlaysLeft({
+				contentType: "video/mp4",
+				url: "https://a.invalid",
+			}),
+		).toBe(false);
+		expect(hasNoPlaysLeft({ contentType: "image/jpeg", url: "" })).toBe(
+			false,
+		);
 	});
 });
 

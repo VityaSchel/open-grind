@@ -79,6 +79,41 @@ describe("loadAlbumSlides", () => {
 		expect(measured).not.toContain(albumProcessingPlaceholderUrl);
 	});
 
+	it("opens an album whose video has no plays left by measuring its thumbnail", async () => {
+		const playedOut = {
+			...readyItem({ contentId: 2, contentType: "video/mp4" }),
+			coverUrl: null,
+			url: "",
+		};
+		serveAlbum([
+			readyItem({ contentId: 1, contentType: "image/jpeg" }),
+			playedOut,
+		]);
+
+		const slides = await loadAlbumSlides(ALBUM_ID);
+
+		expect(slides.map((slide) => slide.contentId)).toEqual([1, 2]);
+		expect(dimensions.measureVideo).not.toHaveBeenCalled();
+		expect(dimensions.measureImage).toHaveBeenCalledWith(
+			playedOut.thumbUrl,
+		);
+	});
+
+	it("opens the album even when one item cannot be measured", async () => {
+		serveAlbum([
+			readyItem({ contentId: 1, contentType: "image/jpeg" }),
+			readyItem({ contentId: 2, contentType: "image/jpeg" }),
+		]);
+		dimensions.measureImage.mockRejectedValueOnce(new Error("gone"));
+
+		const slides = await loadAlbumSlides(ALBUM_ID);
+
+		expect(slides).toHaveLength(2);
+		expect(
+			slides.every((slide) => slide.width > 0 && slide.height > 0),
+		).toBe(true);
+	});
+
 	it("refetches an album that had processing items instead of caching the partial slides", async () => {
 		serveAlbum([
 			readyItem({ contentId: 1, contentType: "image/jpeg" }),

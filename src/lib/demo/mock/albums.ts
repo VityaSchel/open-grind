@@ -85,6 +85,8 @@ const uploadedContent = new Map<number, UploadedContent[]>();
 const FIRST_UPLOADED_SLOT = 50;
 const DEMO_PROCESSING_MS = 3000;
 
+const playedOutAlbumIds = new Set([5004]);
+
 const videoSlotByAlbum = new Map<number, "first" | "last">([
 	[5001, "last"],
 	[5004, "last"],
@@ -104,6 +106,8 @@ function demoPhotoItem({
 	video: boolean;
 	processing?: boolean;
 }) {
+	const playedOut = video && playedOutAlbumIds.has(albumId);
+	const media = playedOut ? "" : picsum({ seed: `album-${albumId}-${slot}` });
 	const thumb = picsum({
 		seed: `album-${albumId}-${slot}`,
 		width: 300,
@@ -115,9 +119,7 @@ function demoPhotoItem({
 		coverUrl: processing ? albumProcessingPlaceholderUrl : thumb,
 		statusId: processing ? 3 : 1,
 		thumbUrl: processing ? albumProcessingPlaceholderUrl : thumb,
-		url: processing
-			? albumProcessingPlaceholderUrl
-			: picsum({ seed: `album-${albumId}-${slot}` }),
+		url: processing ? albumProcessingPlaceholderUrl : media,
 		processing,
 		rejectionId: null,
 	};
