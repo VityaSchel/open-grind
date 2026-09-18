@@ -7,11 +7,11 @@
 		isVideoContent,
 		readyAlbumMedia,
 	} from "$lib/components/album/album";
+	import AlbumNameField from "$lib/components/album/AlbumNameField.svelte";
 	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 
 	let {
@@ -34,7 +34,6 @@
 		onOpenShares: () => void;
 	} = $props();
 
-	const hintId = $props.id();
 	const videoCount = $derived(
 		content.filter((item) => isVideoContent(item.contentType)).length,
 	);
@@ -62,18 +61,7 @@
 		/>
 	{/if}
 </div>
-<div class="flex flex-col gap-1.5">
-	<Input
-		bind:value={albumName}
-		placeholder="Album Name"
-		aria-label="Album name"
-		aria-describedby={hintId}
-		maxlength={255}
-	/>
-	<p id={hintId} class="px-1 text-xs text-muted-foreground">
-		Only you see the album name
-	</p>
-</div>
+<AlbumNameField bind:value={albumName} />
 <Button
 	variant="ghost"
 	class="mt-1 h-11 w-full justify-between"

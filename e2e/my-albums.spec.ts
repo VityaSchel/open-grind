@@ -45,8 +45,15 @@ test.describe("my albums", () => {
 		).toBeVisible();
 		await expect(
 			page.getByRole("textbox", { name: "Album name" }),
-			"nothing is editable until the album exists",
-		).toBeDisabled();
+			"the name is typed before the first photo creates the album",
+		).toBeEnabled();
+		await expect(
+			page.getByRole("button", { name: "Add photos or videos" }),
+			"the first photo is added from the empty state",
+		).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Album menu" }),
+		).toHaveCount(0);
 	});
 
 	test("an album opens on its own name, date and item count", async ({
@@ -62,7 +69,7 @@ test.describe("my albums", () => {
 		await expect(
 			page.getByRole("textbox", { name: "Album name" }),
 		).toHaveValue("Studio", { timeout: 30_000 });
-		await expect(page.getByText("3 items")).toBeVisible();
+		await expect(page.getByText("3/10 photos, 0/1 videos")).toBeVisible();
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 	});
 
@@ -133,7 +140,7 @@ test.describe("my albums", () => {
 			name: /^Remove album photo in slot 1$/,
 		});
 		await mark.click();
-		await expect(page.getByText("2 items")).toBeVisible();
+		await expect(page.getByText("2/10 photos, 0/1 videos")).toBeVisible();
 		await expect(
 			page.locator(MEDIA_SLOT),
 			"the tile stays, marked rather than gone",
@@ -144,7 +151,7 @@ test.describe("my albums", () => {
 			name: /^Keep album photo in slot 1$/,
 		});
 		await undo.click();
-		await expect(page.getByText("3 items")).toBeVisible();
+		await expect(page.getByText("3/10 photos, 0/1 videos")).toBeVisible();
 		await expect(save, "undoing everything disarms save").toBeHidden();
 
 		await mark.click();

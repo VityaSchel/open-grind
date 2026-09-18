@@ -1,6 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { MEDIA_SLOT, openSharedAlbum } from "./support/albums";
+import {
+	albumTileNamed,
+	back,
+	MEDIA_SLOT,
+	openAlbums,
+	openSharedAlbum,
+} from "./support/albums";
 
 const PENDING_TILE = `${MEDIA_SLOT} [data-slot="media-image-pending"]`;
 
@@ -93,7 +99,7 @@ test.describe("album uploads", () => {
 	}) => {
 		await openSharedAlbum(page);
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
-		await expect(page.getByText("3 items")).toBeVisible();
+		await expect(page.getByText("3/10 photos, 0/1 videos")).toBeVisible();
 
 		const trace = await traceUploads(page);
 		await addMedia(page, [photoFile("one.png"), photoFile("two.png")]);
@@ -178,11 +184,38 @@ test.describe("album uploads", () => {
 		await addMedia(page, [videoFile("one.mp4"), videoFile("two.mp4")]);
 
 		await expect(
-			page.getByText("1 left out, the album is full"),
+			page.getByText(
+				"You can have 1 video in your album. Remove one to add another.",
+			),
 		).toBeVisible({ timeout: 30_000 });
 		await expect(
 			page.locator(MEDIA_SLOT),
 			"only the video that fits was uploaded",
 		).toHaveCount(4);
+	});
+
+	test("a new album is created by its first photo", async ({ page }) => {
+		await openAlbums(page);
+		await page.getByRole("link", { name: "Add album" }).click();
+		await expect(page).toHaveURL(/\/albums\/new$/);
+		await page.getByRole("textbox", { name: "Album name" }).fill("Rooftop");
+
+		await addMedia(page, [photoFile("one.png")]);
+
+		await expect(page).toHaveURL(/\/albums\/\d+$/, { timeout: 30_000 });
+		await expect(
+			page.getByRole("textbox", { name: "Album name" }),
+			"the typed name travels to the created album",
+		).toHaveValue("Rooftop");
+		await expect(page.locator(MEDIA_SLOT)).toHaveCount(1, {
+			timeout: 30_000,
+		});
+		await expect(page.getByText("1/10 photos, 0/1 videos")).toBeVisible();
+
+		await back(page);
+		await expect(
+			page.locator(albumTileNamed("Rooftop")),
+			"the new album shows on My Albums",
+		).toBeVisible();
 	});
 });

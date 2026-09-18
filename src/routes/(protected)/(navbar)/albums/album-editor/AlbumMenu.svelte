@@ -9,7 +9,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 
-	let { albumId }: { albumId: number } = $props();
+	let { albumId, saving = false }: { albumId: number; saving?: boolean } =
+		$props();
 
 	let confirming = $state(false);
 	let deleting = $state(false);
@@ -38,7 +39,7 @@
 				size="icon-lg"
 				class="size-12"
 				aria-label="Album menu"
-				disabled={deleting}
+				disabled={deleting || saving}
 			>
 				<DotsThreeVerticalIcon class="size-6" />
 			</Button>

@@ -72,7 +72,7 @@
 </script>
 
 {#snippet menu()}
-	<AlbumMenu albumId={draft.albumId} />
+	<AlbumMenu albumId={draft.albumId} saving={draft.saving} />
 {/snippet}
 
 <fieldset disabled={draft.saving} class="contents">

@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "$lib/api/api-error";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import type { PickedMedia } from "$lib/platform/media-picker";
-import { AlbumUploads, type UploadLimits } from "./album-uploads.svelte";
+import {
+	AlbumUploads,
+	type InspectedPick,
+	inspectPicks,
+	type UploadLimits,
+} from "./album-uploads.svelte";
 
 const { toastError, toastSuccess } = vi.hoisted(() => ({
 	toastError: vi.fn(),
@@ -51,14 +56,24 @@ const ALBUM_ID = 4;
 const OUR_PROFILE_ID = 11;
 
 const limits: UploadLimits = {
+	maxAlbums: 5,
 	maxContentSize: 125_829_120,
 	maxContentSizeHumanReadable: "120 MB",
 	maxContentItemsPerAlbum: 3,
 	maxVideosPerAlbum: 1,
 };
 
-function pick(key: string, mimeType: string): PickedMedia {
+function media(key: string, mimeType: string): PickedMedia {
 	return { key, mimeType, source: "desktop", path: `/tmp/${key}` };
+}
+
+function pick(key: string, mimeType: string): InspectedPick {
+	const kind = mimeType.startsWith("video/") ? "video" : "photo";
+	return {
+		media: media(key, mimeType),
+		kind,
+		inspection: { kind, size: 1024 },
+	};
 }
 
 function albumItem(contentId: number, contentHash?: string): AlbumContent {
@@ -126,7 +141,7 @@ describe("album uploads", () => {
 
 		const counts = await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [
+			inspected: [
 				pick("a", "image/jpeg"),
 				pick("b", "image/jpeg"),
 				pick("c", "image/jpeg"),
@@ -138,7 +153,11 @@ describe("album uploads", () => {
 			content: [],
 		});
 
-		expect(counts).toEqual({ accepted: 4, dropped: 2, full: 2 });
+		expect(counts).toEqual({
+			accepted: 4,
+			leftOutFull: 1,
+			leftOutVideoSlot: 1,
+		});
 		expect(uploads.pending(ALBUM_ID)).toEqual([
 			{ key: "e", kind: "video" },
 			{ key: "a", kind: "photo" },
@@ -153,7 +172,7 @@ describe("album uploads", () => {
 
 		const counts = await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg"), pick("b", "video/mp4")],
+			inspected: [pick("a", "image/jpeg"), pick("b", "video/mp4")],
 			limits,
 			content: [
 				albumItem(1),
@@ -163,26 +182,73 @@ describe("album uploads", () => {
 			],
 		});
 
-		expect(counts).toEqual({ accepted: 0, dropped: 2, full: 2 });
+		expect(counts).toEqual({
+			accepted: 0,
+			leftOutFull: 2,
+			leftOutVideoSlot: 0,
+		});
 		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
 	});
 
-	it("refuses a file that is neither a photo nor a video", async () => {
+	it("leaves a video out of an album already full of photos", async () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
 		const uploads = new AlbumUploads();
 
 		const counts = await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "application/pdf")],
+			inspected: [pick("a", "video/mp4")],
 			limits,
-			content: [],
+			content: [albumItem(1), albumItem(2), albumItem(3)],
 		});
 
-		expect(counts).toEqual({ accepted: 0, dropped: 1, full: 0 });
+		expect(counts).toEqual({
+			accepted: 0,
+			leftOutFull: 1,
+			leftOutVideoSlot: 0,
+		});
+		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
+	});
+
+	it("keeps the free video slot open while the album has photo room", async () => {
+		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
+		const uploads = new AlbumUploads();
+
+		const counts = await uploads.enqueue({
+			albumId: ALBUM_ID,
+			inspected: [pick("a", "video/mp4"), pick("b", "video/mp4")],
+			limits,
+			content: [albumItem(1), albumItem(2)],
+		});
+
+		expect(counts).toEqual({
+			accepted: 1,
+			leftOutFull: 0,
+			leftOutVideoSlot: 1,
+		});
+		expect(uploads.pending(ALBUM_ID)).toEqual([
+			{ key: "a", kind: "video" },
+		]);
+	});
+
+	it("refuses a file that is neither a photo nor a video", async () => {
+		const inspected = await inspectPicks([
+			media("a", "application/pdf"),
+			media("b", "image/jpeg"),
+		]);
+
+		expect(inspected).toEqual([pick("b", "image/jpeg")]);
 		expect(toastError).toHaveBeenCalledWith(
 			"That file isn't a photo or video",
 		);
-		expect(uploadAlbumContent).not.toHaveBeenCalled();
+	});
+
+	it("refuses a file it cannot inspect at all", async () => {
+		vi.mocked(inspectMediaFile).mockRejectedValue(new Error("gone"));
+
+		expect(await inspectPicks([media("a", "image/jpeg")])).toEqual([]);
+		expect(toastError).toHaveBeenCalledWith(
+			"That file isn't a photo or video",
+		);
 	});
 
 	it("hands a landed item to the open draft", async () => {
@@ -197,7 +263,7 @@ describe("album uploads", () => {
 
 		await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg")],
+			inspected: [pick("a", "image/jpeg")],
 			limits,
 			content: [],
 		});
@@ -300,7 +366,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "image/jpeg")],
+				inspected: [pick("a", "image/jpeg")],
 				limits,
 				content: [],
 			});
@@ -351,7 +417,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "video/mp4")],
+				inspected: [pick("a", "video/mp4")],
 				limits,
 				content: [],
 			});
@@ -371,7 +437,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "image/jpeg")],
+				inspected: [pick("a", "image/jpeg")],
 				limits,
 				content: [],
 			});
@@ -393,7 +459,7 @@ describe("album uploads", () => {
 
 		await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
+			inspected: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
 			limits,
 			content: [],
 		});
@@ -430,7 +496,7 @@ describe("album uploads", () => {
 
 		await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg")],
+			inspected: [pick("a", "image/jpeg")],
 			limits,
 			content: [],
 		});
@@ -446,7 +512,7 @@ describe("album uploads", () => {
 
 		await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg")],
+			inspected: [pick("a", "image/jpeg")],
 			limits,
 			content: [],
 		});
@@ -469,7 +535,7 @@ describe("album uploads", () => {
 
 		await uploads.enqueue({
 			albumId: ALBUM_ID,
-			picked: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
+			inspected: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
 			limits,
 			content: [],
 		});
@@ -499,7 +565,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "video/mp4")],
+				inspected: [pick("a", "video/mp4")],
 				limits,
 				content: [],
 			});
@@ -568,7 +634,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "video/mp4")],
+				inspected: [pick("a", "video/mp4")],
 				limits,
 				content: [],
 			});
@@ -601,7 +667,7 @@ describe("album uploads", () => {
 		try {
 			await uploads.enqueue({
 				albumId: ALBUM_ID,
-				picked: [pick("a", "video/mp4")],
+				inspected: [pick("a", "video/mp4")],
 				limits,
 				content: [],
 			});

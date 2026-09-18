@@ -35,8 +35,15 @@ export type UploadLanding = {
 	forget: (contentId: number) => void;
 };
 
+export type InspectedPick = {
+	media: PickedMedia;
+	kind: UploadKind;
+	inspection: MediaFileInspection;
+};
+
 export type UploadLimits = Pick<
 	AlbumStorageLimits,
+	| "maxAlbums"
 	| "maxContentSize"
 	| "maxContentSizeHumanReadable"
 	| "maxContentItemsPerAlbum"
@@ -63,6 +70,21 @@ const PROCESSING_ATTEMPTS = 120;
 const UNSUPPORTED_MESSAGE = "That file isn't a photo or video";
 
 const LOST_READ_MESSAGE = "Added. Reopen the album to see it";
+
+export async function inspectPicks(
+	picked: PickedMedia[],
+): Promise<InspectedPick[]> {
+	const inspected: InspectedPick[] = [];
+	for (const media of picked) {
+		const inspection = await inspectMediaFile(media).catch(() => null);
+		if (inspection === null || inspection.kind === "unsupported") {
+			toast.error(UNSUPPORTED_MESSAGE);
+			continue;
+		}
+		inspected.push({ media, kind: inspection.kind, inspection });
+	}
+	return inspected;
+}
 
 function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -195,19 +217,22 @@ export class AlbumUploads {
 
 	async enqueue({
 		albumId,
-		picked,
+		inspected,
 		limits,
 		content,
 	}: {
 		albumId: number;
-		picked: PickedMedia[];
+		inspected: InspectedPick[];
 		limits: UploadLimits;
 		content: AlbumContent[];
-	}): Promise<{ accepted: number; dropped: number; full: number }> {
+	}): Promise<{
+		accepted: number;
+		leftOutFull: number;
+		leftOutVideoSlot: number;
+	}> {
 		const profileId = await currentProfileId();
-		if (profileId === null) {
-			return { accepted: 0, dropped: picked.length, full: 0 };
-		}
+		if (profileId === null)
+			return { accepted: 0, leftOutFull: 0, leftOutVideoSlot: 0 };
 		if (this.#profileId !== null && this.#profileId !== profileId) {
 			this.clear();
 		}
@@ -215,25 +240,18 @@ export class AlbumUploads {
 		const known = this.#landedIds(albumId);
 		for (const item of content) known.add(item.contentId);
 
-		let dropped = 0;
-		let full = 0;
-		const inspected: QueuedUpload[] = [];
-		for (const media of picked) {
-			const inspection = await inspectMediaFile(media).catch(() => null);
-			if (inspection === null || inspection.kind === "unsupported") {
-				dropped += 1;
-				toast.error(UNSUPPORTED_MESSAGE);
-				continue;
-			}
-			inspected.push({
+		let leftOutFull = 0;
+		let leftOutVideoSlot = 0;
+		const queueable: QueuedUpload[] = inspected.map(
+			({ media, kind, inspection }) => ({
 				albumId,
 				key: media.key,
-				kind: inspection.kind,
+				kind,
 				media,
 				inspection,
 				limits,
-			});
-		}
+			}),
+		);
 
 		let photos =
 			content.filter((item) => !isVideoContent(item.contentType)).length +
@@ -243,30 +261,26 @@ export class AlbumUploads {
 			this.#pendingOfKind({ albumId, kind: "video" });
 		const accepted: QueuedUpload[] = [];
 		for (const entry of [
-			...inspected.filter(({ kind }) => kind === "video"),
-			...inspected.filter(({ kind }) => kind === "photo"),
+			...queueable.filter(({ kind }) => kind === "video"),
+			...queueable.filter(({ kind }) => kind === "photo"),
 		]) {
+			if (photos >= limits.maxContentItemsPerAlbum) {
+				leftOutFull += 1;
+				continue;
+			}
 			if (entry.kind === "video") {
 				if (videos >= limits.maxVideosPerAlbum) {
-					dropped += 1;
-					full += 1;
+					leftOutVideoSlot += 1;
 					continue;
 				}
 				videos += 1;
-			} else {
-				if (photos >= limits.maxContentItemsPerAlbum) {
-					dropped += 1;
-					full += 1;
-					continue;
-				}
-				photos += 1;
-			}
+			} else photos += 1;
 			accepted.push(entry);
 		}
 
 		this.#queue = [...this.#queue, ...accepted];
 		void this.#run();
-		return { accepted: accepted.length, dropped, full };
+		return { accepted: accepted.length, leftOutFull, leftOutVideoSlot };
 	}
 
 	#pendingOfKind({
