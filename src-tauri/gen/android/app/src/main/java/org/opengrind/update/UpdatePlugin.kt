@@ -33,8 +33,9 @@ internal class PackageArgs {
 
 @InvokeArg
 internal class TransferArgs {
-	lateinit var packageName: String
-	lateinit var kind: String
+	var packageName: String? = null
+	var kind: String? = null
+	var purpose: String? = null
 }
 
 @InvokeArg
@@ -189,8 +190,21 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 
 	@Command
 	fun beginTransfer(invoke: Invoke) {
+		val title = transferTitle(invoke)
+		runCatching { TransferService.start(context = activity, title = title) }
+		invoke.resolve()
+	}
+
+	@Command
+	fun endTransfer(invoke: Invoke) {
+		val title = transferTitle(invoke)
+		runCatching { TransferService.stop(context = activity, title = title) }
+		invoke.resolve()
+	}
+
+	private fun transferTitle(invoke: Invoke): TransferTitle {
 		val args = runCatching { invoke.parseArgs(TransferArgs::class.java) }.getOrNull()
-		val title = TransferTitle.of(
+		return TransferTitle.of(
 			updatesThisApp = args == null || args.packageName == activity.packageName,
 			addon = when (args?.packageName) {
 				GOOGLE_OAUTH -> TransferTitle.Addon.GoogleOauth
@@ -198,15 +212,8 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 				else -> null
 			},
 			kind = args?.kind,
+			purpose = args?.purpose,
 		)
-		runCatching { TransferService.start(context = activity, title = title) }
-		invoke.resolve()
-	}
-
-	@Command
-	fun endTransfer(invoke: Invoke) {
-		runCatching { TransferService.stop(activity) }
-		invoke.resolve()
 	}
 
 	private companion object {

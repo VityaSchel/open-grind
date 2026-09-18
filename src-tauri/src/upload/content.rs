@@ -11,6 +11,7 @@ use sha2::{Digest, Sha256};
 use tauri::Runtime;
 
 use crate::api::rest::{encode_response, RawResponse};
+use crate::api::update::TransferHold;
 use crate::error::AppError;
 use crate::photo;
 use crate::state::AppState;
@@ -237,6 +238,7 @@ pub async fn upload_media_file(
 		}
 	})?;
 	let _one_at_a_time = state.upload.lock().await;
+	let _background = TransferHold::media_upload(&app);
 
 	let source = open_and_read(app.clone(), file.clone()).await?;
 	let outgoing = match source {

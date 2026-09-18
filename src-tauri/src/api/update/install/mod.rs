@@ -6,9 +6,58 @@ pub use android::AndroidUpdater;
 mod desktop;
 
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Runtime};
 
-use super::baseline::Baseline;
-use super::component::Component;
+use super::baseline::{Baseline, InstallKind};
+use super::component::{self, Component};
+use super::release::Candidate;
+
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+const MEDIA_UPLOAD: &str = "mediaUpload";
+
+#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[derive(Debug, Clone, Copy)]
+enum TransferPurpose {
+	Update {
+		package_name: &'static str,
+		kind: InstallKind,
+	},
+	MediaUpload,
+}
+
+pub struct TransferHold<'a, R: Runtime> {
+	app: &'a AppHandle<R>,
+	purpose: TransferPurpose,
+}
+
+impl<'a, R: Runtime> TransferHold<'a, R> {
+	pub fn update(app: &'a AppHandle<R>, candidate: &Candidate) -> Self {
+		let package_name = component::by_key(&candidate.component)
+			.map_or(component::SELF_PACKAGE, Component::install_target);
+		Self::begin(
+			app,
+			TransferPurpose::Update {
+				package_name,
+				kind: candidate.kind,
+			},
+		)
+	}
+
+	pub fn media_upload(app: &'a AppHandle<R>) -> Self {
+		Self::begin(app, TransferPurpose::MediaUpload)
+	}
+
+	fn begin(app: &'a AppHandle<R>, purpose: TransferPurpose) -> Self {
+		platform::begin_transfer(app, purpose);
+		Self { app, purpose }
+	}
+}
+
+impl<R: Runtime> Drop for TransferHold<'_, R> {
+	fn drop(&mut self) {
+		platform::end_transfer(self.app, self.purpose);
+	}
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(
@@ -129,9 +178,8 @@ use android as platform;
 use desktop as platform;
 
 pub use platform::{
-	begin_transfer, end_transfer, enforce_home, install, install_pending,
-	open_install_permission_settings, sweep_replaced, take_outcome,
-	watch_install,
+	enforce_home, install, install_pending, open_install_permission_settings,
+	sweep_replaced, take_outcome, watch_install,
 };
 
 #[cfg(test)]
@@ -181,6 +229,14 @@ mod pins {
 
 	const TOKEN_HANDOFF: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/TokenHandoffActivity.kt"
+	);
+
+	const TRANSFER_TITLE: &str = include_str!(
+		"../../../../android-logic/src/main/kotlin/org/opengrind/update/TransferTitle.kt"
+	);
+
+	const TRANSFER_SERVICE: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/update/TransferService.kt"
 	);
 
 	const ADDON_GATE: &str = include_str!(
@@ -1258,5 +1314,23 @@ mod pins {
 				"the Play overlay keeps the updater's <{tag}> {name}"
 			);
 		}
+	}
+
+	#[test]
+	fn a_media_upload_holds_the_transfer_service_under_its_own_title() {
+		assert_eq!(
+			kotlin_constant(TRANSFER_TITLE, "TransferTitle.kt", "MEDIA_UPLOAD"),
+			super::MEDIA_UPLOAD,
+			"the upload purpose the bridge sends is not the one TransferTitle reads"
+		);
+		let service = squashed(TRANSFER_SERVICE);
+		assert!(
+			service.contains(
+				"funstart(context:Context,title:TransferTitle,){holds.begin(title)context.startForegroundService("
+			) && service.contains(
+				"funstop(context:Context,title:TransferTitle,){valshowing=holds.end(title)if(showing==null){context.stopService("
+			),
+			"TransferService no longer restarts on every hold and stops only when the last one ends"
+		);
 	}
 }

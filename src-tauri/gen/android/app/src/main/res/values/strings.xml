@@ -4,10 +4,11 @@
 	<string name="webview_warning_title">Android WebView may be too old</string>
 	<string name="webview_warning_update">Update WebView</string>
 	<string name="webview_warning_continue">Continue anyway</string>
-	<string name="update_channel_name">Downloads</string>
+	<string name="transfer_channel_name">Transfers</string>
 	<string name="update_transfer_title">Downloading update</string>
 	<string name="google_oauth_install_transfer_title">Downloading the Google OAuth app</string>
 	<string name="google_oauth_update_transfer_title">Downloading the Google OAuth app update</string>
 	<string name="recaptcha_install_transfer_title">Downloading the reCAPTCHA helper</string>
 	<string name="recaptcha_update_transfer_title">Downloading the reCAPTCHA helper update</string>
+	<string name="media_upload_transfer_title">Uploading media</string>
 </resources>
