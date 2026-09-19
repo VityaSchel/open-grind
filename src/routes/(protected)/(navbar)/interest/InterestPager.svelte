@@ -87,3 +87,9 @@
 		{/if}
 	</div>
 </div>
+
+<style>
+	[data-slot="interest-pager"] {
+		scroll-timeline: --interest-pager x;
+	}
+</style>
