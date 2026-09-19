@@ -20,11 +20,11 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Install the FCM service?</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				Instant notifications need the Open Grind FCM service, a small
-				separate app that receives them from Google and hands them to
-				Open Grind. It contains Google's proprietary Firebase library,
-				which is why it is not part of Open Grind itself. Open Grind
-				verifies its signature before installing it.
+				Fast mode needs the Open Grind FCM service, a small separate app
+				that receives notifications from Google and hands them to Open
+				Grind. It contains Google's proprietary Firebase library, which
+				is why it is not part of Open Grind itself. Open Grind verifies
+				its signature before installing it.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

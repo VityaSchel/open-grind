@@ -11,7 +11,13 @@ class PushPollService : JobService() {
 	private val abandoned = AtomicBoolean(false)
 
 	override fun onStartJob(params: JobParameters): Boolean {
-		if (PushSettings.mode(this) != PushMode.Slow || appIsInForeground()) return false
+		if (
+			PushSettings.mode(this) != PushMode.Slow ||
+			!PushSettings.notificationsEnabled(this) ||
+			appIsInForeground()
+		) {
+			return false
+		}
 		abandoned.set(false)
 		Thread({ sweep(params) }, "opengrind-push-poll").start()
 		return true

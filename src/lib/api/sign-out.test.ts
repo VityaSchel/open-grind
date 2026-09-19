@@ -14,6 +14,7 @@ const { goto, callMethod, caches, preferences, markers, push } = vi.hoisted(
 		push: {
 			currentMode: vi.fn(() => Promise.resolve("slow")),
 			deletePushToken: vi.fn(() => Promise.resolve()),
+			setNotificationsEnabled: vi.fn(() => Promise.resolve()),
 		},
 	}),
 );
@@ -74,6 +75,14 @@ describe("signing out", () => {
 		await module.signOut();
 
 		expect(release).toHaveBeenCalledOnce();
+	});
+
+	it("stops notifications for this account even in slow mode", async () => {
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
 	});
 
 	it("drops the firebase token only where push was turned on", async () => {

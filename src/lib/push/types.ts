@@ -18,6 +18,22 @@ export type PushCategory = z.infer<typeof pushCategorySchema>;
 
 export type PushCategoryName = PushCategory["category"];
 
+export const NOTIFICATION_PERMISSION_STATES = [
+	"granted",
+	"denied",
+	"prompt",
+	"prompt-with-rationale",
+] as const;
+
+export const notificationPermissionSchema = z.object({
+	granted: z.boolean(),
+	state: z.enum(NOTIFICATION_PERMISSION_STATES).catch("denied"),
+});
+
+export type NotificationPermission = z.infer<
+	typeof notificationPermissionSchema
+>;
+
 export const pushTokenSchema = z.object({
 	token: z.string().min(1),
 	vendorProvidedIdentifier: z.string().min(1),

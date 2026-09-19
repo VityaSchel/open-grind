@@ -36,6 +36,42 @@ pub struct PushCategory {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum NotificationPermissionState {
+	Granted,
+	Denied,
+	Prompt,
+	PromptWithRationale,
+}
+
+impl NotificationPermissionState {
+	pub fn wire(self) -> &'static str {
+		match self {
+			Self::Granted => "granted",
+			Self::Denied => "denied",
+			Self::Prompt => "prompt",
+			Self::PromptWithRationale => "prompt-with-rationale",
+		}
+	}
+
+	pub fn of(wire: &str) -> Self {
+		match wire {
+			"granted" => Self::Granted,
+			"prompt" => Self::Prompt,
+			"prompt-with-rationale" => Self::PromptWithRationale,
+			_ => Self::Denied,
+		}
+	}
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationPermission {
+	pub granted: bool,
+	pub state: NotificationPermissionState,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PushMode {
 	Slow,
@@ -91,6 +127,28 @@ pub async fn push_delete_token(app: AppHandle) -> Result<(), AppError> {
 }
 
 #[tauri::command]
+pub async fn push_notifications_enabled(
+	app: AppHandle,
+) -> Result<bool, AppError> {
+	Ok(backend::notifications_enabled(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_set_notifications_enabled(
+	app: AppHandle,
+	enabled: bool,
+) -> Result<(), AppError> {
+	Ok(backend::set_notifications_enabled(&app, enabled).await?)
+}
+
+#[tauri::command]
+pub async fn push_open_notification_settings(
+	app: AppHandle,
+) -> Result<(), AppError> {
+	Ok(backend::open_notification_settings(&app).await?)
+}
+
+#[tauri::command]
 pub async fn push_mode(app: AppHandle) -> Result<PushMode, AppError> {
 	Ok(backend::mode(&app).await?)
 }
@@ -128,17 +186,17 @@ pub async fn push_open_category_settings(
 }
 
 #[tauri::command]
-pub async fn push_notifications_permitted(
+pub async fn push_notification_permission(
 	app: AppHandle,
-) -> Result<bool, AppError> {
-	Ok(backend::notifications_permitted(&app).await?)
+) -> Result<NotificationPermission, AppError> {
+	Ok(backend::notification_permission(&app).await?)
 }
 
 #[tauri::command]
-pub async fn push_request_notifications(
+pub async fn push_request_notification_permission(
 	app: AppHandle,
-) -> Result<bool, AppError> {
-	Ok(backend::request_notifications(&app).await?)
+) -> Result<NotificationPermission, AppError> {
+	Ok(backend::request_notification_permission(&app).await?)
 }
 
 #[tauri::command]
@@ -225,6 +283,30 @@ mod tests {
 	fn a_mode_open_grind_does_not_know_falls_back_to_the_safe_one() {
 		for wire in ["", "off", "FAST", "instant"] {
 			assert_eq!(PushMode::of(wire), PushMode::Slow);
+		}
+	}
+
+	#[test]
+	fn every_permission_state_survives_the_trip_to_the_frontend_and_back() {
+		for state in [
+			NotificationPermissionState::Granted,
+			NotificationPermissionState::Denied,
+			NotificationPermissionState::Prompt,
+			NotificationPermissionState::PromptWithRationale,
+		] {
+			let wire = serde_json::to_value(state).unwrap();
+			assert_eq!(wire, serde_json::json!(state.wire()));
+			assert_eq!(NotificationPermissionState::of(state.wire()), state);
+		}
+	}
+
+	#[test]
+	fn a_permission_state_android_invents_later_counts_as_denied() {
+		for wire in ["", "GRANTED", "ask", "prompt_with_rationale"] {
+			assert_eq!(
+				NotificationPermissionState::of(wire),
+				NotificationPermissionState::Denied
+			);
 		}
 	}
 

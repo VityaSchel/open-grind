@@ -1,6 +1,9 @@
 use tauri::AppHandle;
 
-use super::{PushCategory, PushError, PushMode, PushSignal};
+use super::{
+	NotificationPermission, NotificationPermissionState, PushCategory,
+	PushError, PushMode, PushSignal,
+};
 
 const UNSUPPORTED: PushError = PushError::UnsupportedPlatform;
 
@@ -13,6 +16,25 @@ pub async fn token(_app: &AppHandle) -> Result<String, PushError> {
 }
 
 pub async fn delete_token(_app: &AppHandle) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn notifications_enabled(
+	_app: &AppHandle,
+) -> Result<bool, PushError> {
+	Ok(false)
+}
+
+pub async fn set_notifications_enabled(
+	_app: &AppHandle,
+	_enabled: bool,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn open_notification_settings(
+	_app: &AppHandle,
+) -> Result<(), PushError> {
 	Err(UNSUPPORTED)
 }
 
@@ -48,15 +70,18 @@ pub async fn open_category_settings(
 	Err(UNSUPPORTED)
 }
 
-pub async fn notifications_permitted(
+pub async fn notification_permission(
 	_app: &AppHandle,
-) -> Result<bool, PushError> {
-	Ok(false)
+) -> Result<NotificationPermission, PushError> {
+	Ok(NotificationPermission {
+		granted: false,
+		state: NotificationPermissionState::Denied,
+	})
 }
 
-pub async fn request_notifications(
+pub async fn request_notification_permission(
 	_app: &AppHandle,
-) -> Result<bool, PushError> {
+) -> Result<NotificationPermission, PushError> {
 	Err(UNSUPPORTED)
 }
 

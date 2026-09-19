@@ -1,21 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { PushErrorReason, PushToken } from "./types";
+import type {
+	NotificationPermission,
+	PushErrorReason,
+	PushToken,
+} from "./types";
 
 const push = vi.hoisted(() => ({
 	addonReady: vi.fn<() => Promise<void>>(),
 	deletePushToken: vi.fn<() => Promise<void>>(),
 	currentMode: vi.fn<() => Promise<"slow" | "fast">>(),
 	mintPushToken: vi.fn<() => Promise<PushToken>>(),
-	notificationsPermitted: vi.fn<() => Promise<boolean>>(),
+	notificationPermission: vi.fn<() => Promise<NotificationPermission>>(),
+	openNotificationSettings: vi.fn<() => Promise<void>>(),
 	pushAvailableHere: vi.fn(() => true),
 	pushErrorReason: vi.fn<() => PushErrorReason | null>(() => "failed"),
-	requestNotifications: vi.fn<() => Promise<boolean>>(),
+	requestNotificationPermission:
+		vi.fn<() => Promise<NotificationPermission>>(),
 	setMode: vi.fn<(mode: "slow" | "fast") => Promise<void>>(),
-	pushCategories: vi.fn<() => Promise<unknown[]>>(),
-	setPushCategory:
-		vi.fn<(category: string, enabled: boolean) => Promise<void>>(),
-	openPushCategorySettings: vi.fn<(category: string) => Promise<void>>(),
+	setNotificationsEnabled: vi.fn<(enabled: boolean) => Promise<void>>(),
 }));
 const updates = vi.hoisted(() => ({
 	getInstalledVersion: vi.fn<() => Promise<string | null>>(),
@@ -27,16 +30,26 @@ const addon = vi.hoisted(() => ({
 const account = vi.hoisted(() => ({
 	registerPushToken: vi.fn<(token: PushToken) => Promise<void>>(),
 	unregisterPushToken: vi.fn<(token: string) => Promise<void>>(),
-	getPushSettings:
-		vi.fn<() => Promise<{ tapPushNotification?: boolean | null }>>(),
-	setPushSettings:
-		vi.fn<(settings: { tapPushNotification?: boolean }) => Promise<void>>(),
 }));
+const preferences = vi.hoisted(() => {
+	const stored = { notificationsEnabled: false };
+	return {
+		stored,
+		getPreferences: vi.fn(() => Promise.resolve({ ...stored })),
+		preferencesSnapshot: vi.fn(() => stored),
+		preferencesLoaded: vi.fn(() => true),
+		setPreferences: vi.fn((next: { notificationsEnabled?: boolean }) => {
+			Object.assign(stored, next);
+			return Promise.resolve();
+		}),
+	};
+});
 
 vi.mock("./index", () => push);
 vi.mock("$lib/updates", () => updates);
 vi.mock("$lib/updates/addon.svelte", () => addon);
 vi.mock("$lib/api/settings/account", () => account);
+vi.mock("$lib/app-data/preferences.svelte", () => preferences);
 
 const order: string[] = [];
 
@@ -57,6 +70,10 @@ function recordOrder(): void {
 		order.push("delete");
 		return Promise.resolve();
 	});
+	push.setNotificationsEnabled.mockImplementation((enabled) => {
+		order.push(enabled ? "arm" : "disarm");
+		return Promise.resolve();
+	});
 }
 
 const token: PushToken = {
@@ -64,28 +81,136 @@ const token: PushToken = {
 	vendorProvidedIdentifier: "fid",
 };
 
+const granted: NotificationPermission = { granted: true, state: "granted" };
+
 async function freshModule() {
 	vi.resetModules();
 	return await import("./notifications.svelte");
 }
 
+async function switchedOn() {
+	const module = await freshModule();
+	await module.toggleNotifications(true);
+	vi.clearAllMocks();
+	order.length = 0;
+	return module;
+}
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	order.length = 0;
+	preferences.stored.notificationsEnabled = false;
 	push.addonReady.mockResolvedValue(undefined);
 	push.deletePushToken.mockResolvedValue(undefined);
 	push.currentMode.mockResolvedValue("slow");
 	push.mintPushToken.mockResolvedValue(token);
-	push.notificationsPermitted.mockResolvedValue(true);
-	push.requestNotifications.mockResolvedValue(true);
+	push.notificationPermission.mockResolvedValue(granted);
+	push.openNotificationSettings.mockResolvedValue(undefined);
+	push.requestNotificationPermission.mockResolvedValue(granted);
 	push.setMode.mockResolvedValue(undefined);
+	push.setNotificationsEnabled.mockResolvedValue(undefined);
 	updates.getInstalledVersion.mockResolvedValue("1.0.0");
 	account.registerPushToken.mockResolvedValue(undefined);
-	account.getPushSettings.mockResolvedValue({});
-	account.setPushSettings.mockResolvedValue(undefined);
-	push.pushCategories.mockResolvedValue([]);
-	push.setPushCategory.mockResolvedValue(undefined);
 	account.unregisterPushToken.mockResolvedValue(undefined);
+});
+
+describe("the notifications master switch", () => {
+	it("asks Android for permission before it turns anything on", async () => {
+		const module = await freshModule();
+
+		await module.toggleNotifications(true);
+
+		expect(push.requestNotificationPermission).toHaveBeenCalled();
+		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(true);
+		expect(module.notificationSettings.enabled).toBe(true);
+	});
+
+	it("stays off when the user denies the permission", async () => {
+		push.requestNotificationPermission.mockResolvedValue({
+			granted: false,
+			state: "prompt-with-rationale",
+		});
+		const module = await freshModule();
+
+		await module.toggleNotifications(true);
+
+		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
+		expect(push.openNotificationSettings).not.toHaveBeenCalled();
+		expect(module.notificationSettings.enabled).toBe(false);
+	});
+
+	it("sends a permanently blocked user to system settings instead of a dead switch", async () => {
+		push.requestNotificationPermission.mockResolvedValue({
+			granted: false,
+			state: "denied",
+		});
+		const module = await freshModule();
+
+		await module.toggleNotifications(true);
+
+		expect(push.openNotificationSettings).toHaveBeenCalled();
+		expect(module.notificationSettings.enabled).toBe(false);
+	});
+
+	it("registers the device again when notifications return in fast mode", async () => {
+		push.currentMode.mockResolvedValue("fast");
+		const module = await freshModule();
+		await module.loadNotificationSettings();
+
+		await module.toggleNotifications(true);
+
+		expect(account.registerPushToken).toHaveBeenCalledWith(token);
+	});
+
+	it("leaves a slow-mode account alone rather than minting a token it cannot use", async () => {
+		const module = await freshModule();
+
+		await module.toggleNotifications(true);
+
+		expect(push.mintPushToken).not.toHaveBeenCalled();
+	});
+
+	it("stops rendering before it asks Grindr to forget the token", async () => {
+		push.currentMode.mockResolvedValue("fast");
+		const module = await switchedOn();
+		recordOrder();
+
+		await module.toggleNotifications(false);
+
+		expect(order).toEqual(["disarm", "unregister", "delete"]);
+		expect(module.notificationSettings.enabled).toBe(false);
+	});
+
+	it("leaves the delivery mode alone when notifications are turned off", async () => {
+		push.currentMode.mockResolvedValue("fast");
+		const module = await switchedOn();
+
+		await module.toggleNotifications(false);
+
+		expect(push.setMode).not.toHaveBeenCalled();
+	});
+
+	it("turns the stored setting off when Android revoked the permission", async () => {
+		const module = await switchedOn();
+		push.notificationPermission.mockResolvedValue({
+			granted: false,
+			state: "denied",
+		});
+
+		await module.loadNotificationSettings();
+
+		expect(module.notificationSettings.enabled).toBe(false);
+		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
+		expect(push.openNotificationSettings).not.toHaveBeenCalled();
+	});
+
+	it("does not turn notifications back on when the permission is granted again", async () => {
+		const module = await freshModule();
+		await module.loadNotificationSettings();
+
+		expect(module.notificationSettings.enabled).toBe(false);
+		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
+	});
 });
 
 describe("choosing a notification mode", () => {
@@ -132,17 +257,6 @@ describe("choosing a notification mode", () => {
 		expect(module.notificationSettings.problem).toContain("microG");
 	});
 
-	it("stays slow when Android blocks notifications", async () => {
-		push.requestNotifications.mockResolvedValue(false);
-		const module = await freshModule();
-
-		await module.selectNotificationMode("fast");
-
-		expect(push.mintPushToken).not.toHaveBeenCalled();
-		expect(module.notificationSettings.mode).toBe("slow");
-		expect(module.notificationSettings.problem).toContain("Android");
-	});
-
 	it("asks before downloading the add-on instead of installing it silently", async () => {
 		updates.getInstalledVersion.mockResolvedValue(null);
 		const module = await freshModule();
@@ -183,6 +297,7 @@ describe("choosing a notification mode", () => {
 		push.currentMode.mockResolvedValue("fast");
 		const module = await freshModule();
 		await module.loadNotificationSettings();
+		order.length = 0;
 
 		await module.selectNotificationMode("slow");
 
@@ -264,70 +379,5 @@ describe("choosing a notification mode", () => {
 		expect(module.notificationSettings.manualInstall).toBe(true);
 		expect(module.notificationSettings.problem).toBeNull();
 		expect(module.notificationSettings.mode).toBe("slow");
-	});
-});
-
-describe("notification categories", () => {
-	const categories = [
-		{ category: "messages", enabled: true, systemBlocked: false },
-		{ category: "taps", enabled: true, systemBlocked: false },
-	];
-
-	it("adopts the account's tap setting so the background poll obeys it too", async () => {
-		push.pushCategories.mockResolvedValue(
-			categories.map((entry) => ({ ...entry })),
-		);
-		account.getPushSettings.mockResolvedValue({
-			tapPushNotification: false,
-		});
-		const module = await freshModule();
-
-		await module.loadNotificationCategories();
-
-		expect(push.setPushCategory).toHaveBeenCalledWith("taps", false);
-		expect(
-			module.notificationCategories.list.find(
-				(entry) => entry.category === "taps",
-			)?.enabled,
-		).toBe(false);
-	});
-
-	it("leaves the device alone when the account has no opinion on taps", async () => {
-		push.pushCategories.mockResolvedValue(
-			categories.map((entry) => ({ ...entry })),
-		);
-		account.getPushSettings.mockResolvedValue({
-			tapPushNotification: null,
-		});
-		const module = await freshModule();
-
-		await module.loadNotificationCategories();
-
-		expect(push.setPushCategory).not.toHaveBeenCalled();
-	});
-
-	it("writes a tap change back to the account, since taps are shared", async () => {
-		push.pushCategories.mockResolvedValue(
-			categories.map((entry) => ({ ...entry })),
-		);
-		const module = await freshModule();
-
-		await module.toggleNotificationCategory("taps", false);
-
-		expect(push.setPushCategory).toHaveBeenCalledWith("taps", false);
-		expect(account.setPushSettings).toHaveBeenCalledWith({
-			tapPushNotification: false,
-		});
-	});
-
-	it("keeps messages off the account, which has no message setting", async () => {
-		push.pushCategories.mockResolvedValue(
-			categories.map((entry) => ({ ...entry })),
-		);
-		const module = await freshModule();
-
-		await module.toggleNotificationCategory("messages", false);
-
-		expect(account.setPushSettings).not.toHaveBeenCalled();
 	});
 });

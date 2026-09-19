@@ -29,6 +29,11 @@ internal class ModeArgs {
 }
 
 @InvokeArg
+internal class EnabledArgs {
+	var enabled: Boolean = false
+}
+
+@InvokeArg
 internal class CategoryArgs {
 	lateinit var category: String
 	var enabled: Boolean = true
@@ -76,6 +81,35 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 				else -> invoke.reject(ERROR_UNAVAILABLE)
 			}
 		}.send()
+	}
+
+	@Command
+	fun notificationsEnabled(invoke: Invoke) {
+		invoke.resolve(
+			JSObject().apply {
+				put("enabled", PushSettings.notificationsEnabled(activity))
+			},
+		)
+	}
+
+	@Command
+	fun setNotificationsEnabled(invoke: Invoke) {
+		val enabled = invoke.parseArgs(EnabledArgs::class.java).enabled
+		PushSettings.setNotificationsEnabled(activity, enabled)
+		if (enabled) {
+			PushNotifier.createChannels(activity)
+		} else {
+			PushNotifier.cancelAll(activity)
+			PushSettings.setWatermark(activity, 0L)
+		}
+		PushSchedule.follow(activity, PushSettings.mode(activity))
+		invoke.resolve()
+	}
+
+	@Command
+	fun openNotificationSettings(invoke: Invoke) {
+		PushNotifier.openAppNotificationSettings(activity)
+		invoke.resolve()
 	}
 
 	@Command
@@ -149,8 +183,12 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 
 	@PermissionCallback
 	fun resolvePermission(invoke: Invoke) {
+		val granted = PushNotifier.notificationsPermitted(activity)
 		invoke.resolve(
-			JSObject().apply { put("granted", PushNotifier.notificationsPermitted(activity)) },
+			JSObject().apply {
+				put("granted", granted)
+				put("state", if (granted) STATE_GRANTED else deniedState())
+			},
 		)
 	}
 
@@ -163,6 +201,12 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	@Command
 	fun takeDeeplink(invoke: Invoke) {
 		invoke.resolve(JSObject().apply { put("deeplink", PushEvents.takeDeeplink()) })
+	}
+
+	private fun deniedState(): String {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return STATE_DENIED
+		val state = getPermissionState(NOTIFICATION_ALIAS)?.toString()
+		return if (state == null || state == STATE_GRANTED) STATE_DENIED else state
 	}
 
 	private fun offerDeeplink(intent: Intent?) {
@@ -183,6 +227,9 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 
 	internal companion object {
 		const val NOTIFICATION_ALIAS = "postNotification"
+
+		const val STATE_GRANTED = "granted"
+		const val STATE_DENIED = "denied"
 
 		const val ADDON_PACKAGE = "org.opengrind.fcm"
 

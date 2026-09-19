@@ -11,7 +11,7 @@ object PushSchedule {
 
 	fun follow(context: Context, mode: PushMode) {
 		val scheduler = context.getSystemService(JobScheduler::class.java)
-		if (mode != PushMode.Slow) {
+		if (mode != PushMode.Slow || !PushSettings.notificationsEnabled(context)) {
 			scheduler.cancel(JOB_ID)
 			return
 		}

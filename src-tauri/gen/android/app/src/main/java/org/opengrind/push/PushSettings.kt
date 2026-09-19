@@ -5,6 +5,7 @@ import android.content.Context
 object PushSettings {
 	private const val PREFERENCES = "org.opengrind.push"
 	private const val MODE = "mode"
+	private const val ENABLED = "notifications_enabled"
 	private const val NONCE = "addon_nonce"
 	private const val WATERMARK = "poll_watermark"
 	private const val CATEGORY = "category_"
@@ -14,6 +15,13 @@ object PushSettings {
 
 	fun setMode(context: Context, mode: PushMode) {
 		preferences(context).edit().putString(MODE, mode.wire).commit()
+	}
+
+	fun notificationsEnabled(context: Context): Boolean =
+		preferences(context).getBoolean(ENABLED, false)
+
+	fun setNotificationsEnabled(context: Context, enabled: Boolean) {
+		preferences(context).edit().putBoolean(ENABLED, enabled).commit()
 	}
 
 	fun nonce(context: Context): String? = preferences(context).getString(NONCE, null)

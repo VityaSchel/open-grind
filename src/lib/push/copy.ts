@@ -3,9 +3,7 @@ import type { PushErrorReason } from "./types";
 
 const ADDON = ADDON_NAME[FCM_COMPONENT];
 
-const failures: Record<PushErrorReason | "notificationsBlocked", string> = {
-	notificationsBlocked:
-		"Android is blocking notifications for Open Grind. Allow them in system settings, then try again.",
+const failures: Record<PushErrorReason, string> = {
 	unsupportedPlatform: `Fast notifications need the Android ${ADDON}`,
 	addonUnavailable: `Open Grind couldn't reach the ${ADDON}`,
 	addonDisabled: `The ${ADDON} is disabled. Enable it in Android's app settings, then try again.`,
@@ -21,8 +19,6 @@ const failures: Record<PushErrorReason | "notificationsBlocked", string> = {
 	failed: "Couldn't turn on fast notifications",
 };
 
-export function enableFailureText(
-	reason: PushErrorReason | "notificationsBlocked" | null,
-): string {
+export function enableFailureText(reason: PushErrorReason | null): string {
 	return failures[reason ?? "failed"];
 }

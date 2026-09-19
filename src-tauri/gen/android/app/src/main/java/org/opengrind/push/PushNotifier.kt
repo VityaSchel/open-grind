@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.service.notification.StatusBarNotification
@@ -56,14 +57,11 @@ object PushNotifier {
 		val channel = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
 			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
 			.putExtra(Settings.EXTRA_CHANNEL_ID, channelOf(kind))
-		val app = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-		for (intent in listOf(channel, app)) {
-			runCatching {
-				context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-				return
-			}
-		}
+		start(context, listOf(channel) + appNotificationIntents(context))
+	}
+
+	fun openAppNotificationSettings(context: Context) {
+		start(context, appNotificationIntents(context))
 	}
 
 	fun createChannels(context: Context) {
@@ -90,6 +88,7 @@ object PushNotifier {
 	}
 
 	private fun notify(context: Context, decision: PushDecision.Notify) {
+		if (!PushSettings.notificationsEnabled(context)) return
 		if (!notificationsPermitted(context)) return
 		if (!PushSettings.categoryEnabled(context, decision.kind)) return
 		createChannels(context)
@@ -121,6 +120,24 @@ object PushNotifier {
 			intent,
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
 		)
+	}
+
+	private fun appNotificationIntents(context: Context): List<Intent> = listOf(
+		Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+		Intent(
+			Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+			Uri.fromParts("package", context.packageName, null),
+		),
+	)
+
+	private fun start(context: Context, intents: List<Intent>) {
+		for (intent in intents) {
+			runCatching {
+				context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+				return
+			}
+		}
 	}
 
 	private fun dismiss(context: Context, matches: (StatusBarNotification) -> Boolean) {

@@ -1,8 +1,9 @@
+import { registerPushToken } from "$lib/api/settings/account";
 import {
-	getPushSettings,
-	registerPushToken,
-	setPushSettings,
-} from "$lib/api/settings/account";
+	getPreferences,
+	preferencesSnapshot,
+	setPreferences,
+} from "$lib/app-data/preferences.svelte";
 import { getInstalledVersion } from "$lib/updates";
 import { addonFlow, addonInstallerAvailable } from "$lib/updates/addon.svelte";
 import { FCM_COMPONENT } from "$lib/updates/components";
@@ -12,17 +13,16 @@ import {
 	currentMode,
 	deletePushToken,
 	mintPushToken,
-	notificationsPermitted,
-	openPushCategorySettings,
+	notificationPermission,
+	openNotificationSettings,
 	pushAvailableHere,
-	pushCategories,
 	pushErrorReason,
-	requestNotifications,
+	requestNotificationPermission,
 	setMode,
-	setPushCategory,
+	setNotificationsEnabled,
 } from "./index";
 import { forgetPushRegistration } from "./teardown";
-import type { NotificationMode, PushCategory, PushCategoryName } from "./types";
+import type { NotificationMode } from "./types";
 
 type Phase = "idle" | "installing" | "working";
 
@@ -32,20 +32,28 @@ const state = $state<{
 	problem: string | null;
 	addonRequested: boolean;
 	manualInstall: boolean;
+	permissionPending: boolean;
 }>({
 	mode: "slow",
 	phase: "idle",
 	problem: null,
 	addonRequested: false,
 	manualInstall: false,
+	permissionPending: false,
 });
 
 export const notificationSettings = {
+	get enabled(): boolean {
+		return preferencesSnapshot().notificationsEnabled;
+	},
 	get mode(): NotificationMode {
 		return state.mode;
 	},
 	get phase(): Phase {
 		return state.phase;
+	},
+	get permissionPending(): boolean {
+		return state.permissionPending;
 	},
 	get problem(): string | null {
 		return state.problem;
@@ -62,49 +70,37 @@ export function addonInstallableHere(): boolean {
 	return addonInstallerAvailable();
 }
 
-export const notificationCategories = $state<{ list: PushCategory[] }>({
-	list: [],
-});
-
-export async function loadNotificationCategories(): Promise<void> {
-	if (!pushAvailableHere()) return;
-	const [device, account] = await Promise.all([
-		pushCategories().catch(() => []),
-		getPushSettings().catch(() => null),
-	]);
-	const taps = device.find((entry) => entry.category === "taps");
-	const wanted = account?.tapPushNotification;
-	if (taps && typeof wanted === "boolean" && taps.enabled !== wanted) {
-		await setPushCategory("taps", wanted).catch(() => {});
-		taps.enabled = wanted;
-	}
-	notificationCategories.list = device;
-}
-
-export async function toggleNotificationCategory(
-	category: PushCategoryName,
-	enabled: boolean,
-): Promise<void> {
-	await setPushCategory(category, enabled);
-	if (category === "taps")
-		await setPushSettings({ tapPushNotification: enabled });
-	await loadNotificationCategories();
-}
-
-export async function showCategoryInSystemSettings(
-	category: PushCategoryName,
-): Promise<void> {
-	await openPushCategorySettings(category);
-}
-
 export async function loadNotificationSettings(): Promise<void> {
 	if (!pushAvailableHere()) return;
+	if (state.phase !== "idle" || state.permissionPending) return;
 	state.mode = await currentMode().catch(() => "slow");
-	if (
-		state.mode === "fast" &&
-		!(await notificationsPermitted().catch(() => true))
-	) {
-		state.problem = enableFailureText("notificationsBlocked");
+	const stored =
+		(await getPreferences().catch(() => null))?.notificationsEnabled ===
+		true;
+	const granted = (await notificationPermission().catch(() => null))?.granted;
+	const enabled = stored && granted === true;
+	if (enabled !== stored)
+		await setPreferences({ notificationsEnabled: enabled }).catch(() => {});
+	await setNotificationsEnabled(enabled).catch(() => {});
+}
+
+export async function toggleNotifications(enabled: boolean): Promise<void> {
+	if (state.phase !== "idle" || state.permissionPending) return;
+	state.problem = null;
+	if (!enabled) {
+		await turnNotificationsOff();
+		return;
+	}
+	state.permissionPending = true;
+	try {
+		const permission = await requestNotificationPermission();
+		if (permission.granted) await turnNotificationsOn();
+		else if (permission.state === "denied")
+			await openNotificationSettings();
+	} catch (error) {
+		state.problem = enableFailureText(pushErrorReason(error));
+	} finally {
+		state.permissionPending = false;
 	}
 }
 
@@ -145,14 +141,29 @@ export async function pushAddonInstalled(): Promise<void> {
 	await enableFastMode();
 }
 
+async function turnNotificationsOn(): Promise<void> {
+	await setNotificationsEnabled(true);
+	await setPreferences({ notificationsEnabled: true });
+	if (state.mode === "fast") await registerPushToken(await mintPushToken());
+}
+
+async function turnNotificationsOff(): Promise<void> {
+	state.phase = "working";
+	try {
+		await setNotificationsEnabled(false);
+		await setPreferences({ notificationsEnabled: false });
+	} catch (error) {
+		state.problem = enableFailureText(pushErrorReason(error));
+	}
+	await forgetPushRegistration().catch(() => {});
+	await deletePushToken().catch(() => {});
+	state.phase = "idle";
+}
+
 async function enableFastMode(): Promise<void> {
 	state.phase = "working";
 	try {
 		await addonReady();
-		if (!(await requestNotifications())) {
-			state.problem = enableFailureText("notificationsBlocked");
-			return;
-		}
 		await registerPushToken(await mintPushToken());
 		await setMode("fast");
 		state.mode = "fast";

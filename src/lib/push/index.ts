@@ -5,6 +5,8 @@ import { isAndroidPlatform } from "$lib/platform/os";
 import {
 	type NotificationMode,
 	notificationModeSchema,
+	type NotificationPermission,
+	notificationPermissionSchema,
 	type PushCategory,
 	type PushCategoryName,
 	pushCategorySchema,
@@ -40,6 +42,18 @@ export async function deletePushToken(): Promise<void> {
 	await invoke("push_delete_token");
 }
 
+export async function notificationsEnabled(): Promise<boolean> {
+	return (await invoke<boolean>("push_notifications_enabled")) === true;
+}
+
+export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+	await invoke("push_set_notifications_enabled", { enabled });
+}
+
+export async function openNotificationSettings(): Promise<void> {
+	await invoke("push_open_notification_settings");
+}
+
 export async function currentMode(): Promise<NotificationMode> {
 	return notificationModeSchema.parse(await invoke("push_mode"));
 }
@@ -65,12 +79,16 @@ export async function openPushCategorySettings(
 	await invoke("push_open_category_settings", { category });
 }
 
-export async function notificationsPermitted(): Promise<boolean> {
-	return (await invoke<boolean>("push_notifications_permitted")) === true;
+export async function notificationPermission(): Promise<NotificationPermission> {
+	return notificationPermissionSchema.parse(
+		await invoke("push_notification_permission"),
+	);
 }
 
-export async function requestNotifications(): Promise<boolean> {
-	return (await invoke<boolean>("push_request_notifications")) === true;
+export async function requestNotificationPermission(): Promise<NotificationPermission> {
+	return notificationPermissionSchema.parse(
+		await invoke("push_request_notification_permission"),
+	);
 }
 
 export async function takePushDeeplink(): Promise<string | null> {

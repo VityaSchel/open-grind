@@ -7,7 +7,8 @@
 		notificationCategories,
 		showCategoryInSystemSettings,
 		toggleNotificationCategory,
-	} from "$lib/push/notifications.svelte";
+	} from "$lib/push/categories.svelte";
+	import { notificationSettings } from "$lib/push/notifications.svelte";
 	import type { PushCategoryName } from "$lib/push/types";
 
 	const CATEGORIES: Record<
@@ -49,7 +50,9 @@
 		description={systemBlocked
 			? "Android is blocking this category. Turn it back on in system settings."
 			: CATEGORIES[category].description}
-		disabled={systemBlocked || CATEGORIES[category].readOnly === true}
+		disabled={!notificationSettings.enabled ||
+			systemBlocked ||
+			CATEGORIES[category].readOnly === true}
 		bind:checked={
 			() => enabled && !systemBlocked,
 			(next: boolean) => change(category, next)

@@ -20,6 +20,7 @@ const teardown = vi.hoisted(() => ({
 const push = vi.hoisted(() => ({
 	currentMode: vi.fn<() => Promise<"slow" | "fast">>(),
 	mintPushToken: vi.fn<() => Promise<PushToken>>(),
+	notificationsEnabled: vi.fn<() => Promise<boolean>>(),
 	pushAvailableHere: vi.fn(() => true),
 	pushErrorReason: vi.fn<(error: unknown) => PushErrorReason | null>(),
 	setMode: vi.fn<(mode: "slow" | "fast") => Promise<void>>(),
@@ -48,6 +49,7 @@ beforeEach(() => {
 	push.pushAvailableHere.mockReturnValue(true);
 	push.currentMode.mockResolvedValue("fast");
 	push.mintPushToken.mockResolvedValue(token);
+	push.notificationsEnabled.mockResolvedValue(true);
 	push.takePushDeeplink.mockResolvedValue(null);
 	push.watchPush.mockResolvedValue(undefined);
 	push.setMode.mockResolvedValue(undefined);
@@ -65,6 +67,15 @@ describe("watching push", () => {
 
 		expect(push.watchPush).not.toHaveBeenCalled();
 		expect(signOut.onSignOut).not.toHaveBeenCalled();
+	});
+
+	it("does not re-register a device whose owner turned notifications off", async () => {
+		push.notificationsEnabled.mockResolvedValue(false);
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(account.registerPushToken).not.toHaveBeenCalled();
 	});
 
 	it("hands sign-out the release that drops the registration", async () => {

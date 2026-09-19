@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Item from "$lib/components/ui/item";
 	import { itemVariants } from "$lib/components/ui/item";
@@ -7,7 +6,6 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { isPlayBuild } from "$lib/platform/store";
 	import {
-		loadNotificationSettings,
 		notificationSettings,
 		pushAddonInstalled,
 		selectNotificationMode,
@@ -49,10 +47,6 @@
 	const busy = $derived(notificationSettings.phase === "working");
 
 	$effect(() => {
-		if (appLifecycle.active) void loadNotificationSettings();
-	});
-
-	$effect(() => {
 		void installs;
 		void pushAddonInstalled();
 	});
@@ -60,7 +54,7 @@
 
 <RadioGroup.Root
 	aria-labelledby="delivery-heading"
-	disabled={busy}
+	disabled={busy || !notificationSettings.enabled}
 	class="overflow-hidden rounded-2xl border border-border"
 	bind:value={
 		() => notificationSettings.mode,

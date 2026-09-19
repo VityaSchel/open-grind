@@ -6,6 +6,7 @@ import { routeForDeeplink } from "./deeplink";
 import {
 	currentMode,
 	mintPushToken,
+	notificationsEnabled,
 	pushAvailableHere,
 	pushErrorReason,
 	setMode,
@@ -32,6 +33,7 @@ async function openPendingDeeplink(): Promise<void> {
 }
 
 async function syncPushToken(): Promise<void> {
+	if (!(await notificationsEnabled().catch(() => false))) return;
 	if ((await currentMode().catch(() => "slow")) !== "fast") return;
 	try {
 		await registerPushToken(await mintPushToken());

@@ -281,6 +281,10 @@ mod pins {
 		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushNotifier.kt"
 	);
 
+	const PUSH_POLL_SERVICE: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPollService.kt"
+	);
+
 	const PUSH_CATEGORIES_KT: &str = include_str!(
 		"../../../../android-logic/src/main/kotlin/org/opengrind/push/PushCategories.kt"
 	);
@@ -1464,6 +1468,55 @@ mod pins {
 			notify.contains(guard),
 			"the category guard left notify(); in apply() it would also swallow the clear and unsend dismissals"
 		);
+	}
+
+	#[test]
+	fn the_master_switch_suppresses_only_new_notifications_never_dismissals() {
+		let notifier = squashed(PUSH_NOTIFIER_KT);
+		let guard = "if(!PushSettings.notificationsEnabled(context))return";
+		assert!(
+			notifier.contains(guard),
+			"PushNotifier no longer consults the master notification switch"
+		);
+		let notify = notifier
+			.split_once("privatefunnotify(")
+			.expect("PushNotifier declares no notify()")
+			.1;
+		assert!(
+			notify.contains(guard),
+			"the master guard left notify(); in apply() it would also swallow the clear and unsend dismissals"
+		);
+	}
+
+	#[test]
+	fn the_background_poll_never_runs_while_notifications_are_off() {
+		assert!(
+			squashed(PUSH_SCHEDULE)
+				.contains("!PushSettings.notificationsEnabled(context)"),
+			"PushSchedule would arm the poll job with notifications off"
+		);
+		assert!(
+			squashed(PUSH_POLL_SERVICE)
+				.contains("!PushSettings.notificationsEnabled(this)"),
+			"a persisted poll job would sweep after a reboot with notifications off"
+		);
+	}
+
+	#[test]
+	fn the_master_switch_is_not_gated_behind_the_fcm_addon() {
+		let plugin = squashed(PUSH_PLUGIN);
+		for command in ["notificationsEnabled", "setNotificationsEnabled"] {
+			let body = plugin
+				.split_once(&format!("fun{command}("))
+				.unwrap_or_else(|| panic!("PushPlugin declares no {command}"))
+				.1
+				.split_once("@Command")
+				.map_or_else(|| plugin.clone(), |(body, _)| body.to_owned());
+			assert!(
+				!body.contains("gated("),
+				"{command} is behind the add-on gate, so slow mode could never turn notifications on or off"
+			);
+		}
 	}
 
 	#[test]

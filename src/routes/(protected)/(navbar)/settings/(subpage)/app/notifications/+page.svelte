@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { currentPlatform } from "$lib/platform/os";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
+	import NotificationMasterSetting from "./NotificationMasterSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";
 
 	const platform = currentPlatform();
 </script>
 
 {#if platform === "android"}
+	<NotificationMasterSetting />
 	<h2 id="delivery-heading">Delivery</h2>
 	<NotificationModeSetting />
 	<h2>Categories</h2>

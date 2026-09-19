@@ -3,7 +3,10 @@ use tauri::plugin::mobile::PluginInvokeError;
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
-use super::{PushError, PushMode, PushSignal};
+use super::{
+	NotificationPermission, NotificationPermissionState, PushError, PushMode,
+	PushSignal,
+};
 
 struct AndroidPush {
 	handle: PluginHandle<Wry>,
@@ -38,8 +41,20 @@ struct TokenResponse {
 }
 
 #[derive(Deserialize)]
-struct GrantResponse {
+struct PermissionResponse {
 	granted: bool,
+	state: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EnabledRequest {
+	enabled: bool,
+}
+
+#[derive(Deserialize)]
+struct EnabledResponse {
+	enabled: bool,
 }
 
 #[derive(Deserialize)]
@@ -78,6 +93,33 @@ pub async fn token(app: &AppHandle) -> Result<String, PushError> {
 
 pub async fn delete_token(app: &AppHandle) -> Result<(), PushError> {
 	call::<serde_json::Value>(app, "deleteToken", ())
+		.await
+		.map(drop)
+}
+
+pub async fn notifications_enabled(app: &AppHandle) -> Result<bool, PushError> {
+	call::<EnabledResponse>(app, "notificationsEnabled", ())
+		.await
+		.map(|response| response.enabled)
+}
+
+pub async fn set_notifications_enabled(
+	app: &AppHandle,
+	enabled: bool,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(
+		app,
+		"setNotificationsEnabled",
+		EnabledRequest { enabled },
+	)
+	.await
+	.map(drop)
+}
+
+pub async fn open_notification_settings(
+	app: &AppHandle,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(app, "openNotificationSettings", ())
 		.await
 		.map(drop)
 }
@@ -135,18 +177,28 @@ pub async fn open_category_settings(
 	.map(drop)
 }
 
-pub async fn notifications_permitted(
+pub async fn notification_permission(
 	app: &AppHandle,
-) -> Result<bool, PushError> {
-	call::<GrantResponse>(app, "notificationPermission", ())
-		.await
-		.map(|response| response.granted)
+) -> Result<NotificationPermission, PushError> {
+	permission(app, "notificationPermission").await
 }
 
-pub async fn request_notifications(app: &AppHandle) -> Result<bool, PushError> {
-	call::<GrantResponse>(app, "requestNotificationPermission", ())
+pub async fn request_notification_permission(
+	app: &AppHandle,
+) -> Result<NotificationPermission, PushError> {
+	permission(app, "requestNotificationPermission").await
+}
+
+async fn permission(
+	app: &AppHandle,
+	command: &str,
+) -> Result<NotificationPermission, PushError> {
+	call::<PermissionResponse>(app, command, ())
 		.await
-		.map(|response| response.granted)
+		.map(|response| NotificationPermission {
+			granted: response.granted,
+			state: NotificationPermissionState::of(&response.state),
+		})
 }
 
 pub async fn take_deeplink(
