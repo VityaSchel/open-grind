@@ -25,6 +25,7 @@ import {
 	getProfile,
 	getProfiles,
 	HiddenProfileError,
+	isProfileCached,
 	onProfileEdit,
 	patchOwnProfile,
 	ProfileUnavailableError,
@@ -201,6 +202,19 @@ describe("cache TTL", () => {
 		clock += 1;
 		await getProfile(PROFILE_ID);
 		expect(countRequests("/v7/profiles/")).toBe(2);
+	});
+
+	it("reports a profile as cached only until the TTL elapses", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
+		expect(isProfileCached(PROFILE_ID)).toBe(false);
+
+		await getProfile(PROFILE_ID);
+		clock += 59_999;
+		expect(isProfileCached(PROFILE_ID)).toBe(true);
+
+		clock += 1;
+		expect(isProfileCached(PROFILE_ID)).toBe(false);
 	});
 });
 
