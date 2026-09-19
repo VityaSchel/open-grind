@@ -20,10 +20,12 @@ export type RenderedGridProfile = {
 	type: "rendered";
 	id: number;
 	displayName: string | null;
+	age: number | null | undefined;
 	distance: number | null;
 	profilePhotosHashes: string[] | null;
 	unread: number | null;
 	onlineUntil: number | null;
+	seen: number | null;
 	isFavorite: boolean;
 	isVisiting: boolean;
 	hasChattedInLast24Hrs: boolean;
@@ -53,7 +55,13 @@ function lazyProfile(profile: {
 
 // v4 sends `favorite`/`chatted` on every profile item; their absence marks a
 // base-shaped payload, which carries no photo to render from either.
-function gridProfile(profile: CascadeProfileData): GridProfile {
+function gridProfile({
+	profile,
+	carriesAge,
+}: {
+	profile: CascadeProfileData;
+	carriesAge: boolean;
+}): GridProfile {
 	const { favorite, chatted } = profile;
 	if (favorite === undefined || chatted === undefined) {
 		return lazyProfile(profile);
@@ -62,10 +70,12 @@ function gridProfile(profile: CascadeProfileData): GridProfile {
 		type: "rendered",
 		id: profile.profileId,
 		displayName: profile.displayName ?? null,
+		age: carriesAge ? (profile.age ?? null) : undefined,
 		distance: profile.distanceMeters ?? null,
 		profilePhotosHashes: primaryImageHashes(profile.primaryImageUrl),
 		unread: profile.unreadCount ?? null,
 		onlineUntil: profile.onlineUntil ?? null,
+		seen: profile.lastOnline ?? null,
 		isFavorite: favorite,
 		isVisiting: profile.isVisiting ?? false,
 		hasChattedInLast24Hrs: chatted,
@@ -83,9 +93,19 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 			item.type === "partial_profile_v1" ||
 			item.type === "smart_boost_profile_v1"
 		) {
-			items.push(gridProfile(item.data));
+			items.push(
+				gridProfile({
+					profile: item.data,
+					carriesAge: item.type !== "partial_profile_v1",
+				}),
+			);
 		} else if (item.type === "sponsored_profile_v1") {
-			items.push(gridProfile(item.data.alternativeProfile));
+			items.push(
+				gridProfile({
+					profile: item.data.alternativeProfile,
+					carriesAge: true,
+				}),
+			);
 		}
 	}
 
@@ -123,10 +143,12 @@ export async function resolveLazyProfile(
 		type: "rendered",
 		id: resolved.profileId,
 		displayName: resolved.displayName ?? null,
+		age: resolved.age,
 		distance: resolved.distance ?? null,
 		profilePhotosHashes: resolved.medias?.map((m) => m.mediaHash) ?? null,
 		unread: profile.unread,
 		onlineUntil: resolved.onlineUntil ?? null,
+		seen: resolved.seen,
 		isFavorite: resolved.isFavorite,
 		isVisiting: profile.isVisiting,
 		hasChattedInLast24Hrs:

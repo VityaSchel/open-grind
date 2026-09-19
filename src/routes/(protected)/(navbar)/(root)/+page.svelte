@@ -5,6 +5,7 @@
 	} from "$lib/app-data/preferences.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
+	import { revealedGridScrollTop } from "$lib/grid/grid-reveal";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import Grid from "./Grid.svelte";
@@ -16,7 +17,19 @@
 
 	let gridContainer: HTMLElement | null = $state(null);
 
-	restoreScrollOnce({ container: () => gridContainer, state: gridState });
+	restoreScrollOnce({
+		container: () => gridContainer,
+		state: gridState,
+		resolveTop: ({ scroller, savedTop }) => {
+			const revealId = gridState.consumeReveal();
+			if (revealId === null) return savedTop;
+			return revealedGridScrollTop({
+				scroller,
+				savedTop,
+				index: gridState.indexInProfiles(revealId),
+			});
+		},
+	});
 </script>
 
 <svelte:head>
@@ -37,6 +50,7 @@
 					(gridState.scrollY = gridContainer?.scrollTop ?? 0)}
 			>
 				<div
+					data-slot="grid-content"
 					class="@container/photo-grid flex min-h-overscrollable flex-col gap-4 px-4 pt-header-clear-17 pb-nav-clear"
 				>
 					<Grid {geohash} />

@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCascadeV4Mock, awaitEntitlementGrantMock } = vi.hoisted(() => ({
-	getCascadeV4Mock: vi.fn(),
-	awaitEntitlementGrantMock: vi.fn(),
-}));
+const { getCascadeV4Mock, awaitEntitlementGrantMock, getProfilesMock } =
+	vi.hoisted(() => ({
+		getCascadeV4Mock: vi.fn(),
+		awaitEntitlementGrantMock: vi.fn(),
+		getProfilesMock: vi.fn(),
+	}));
 
 vi.mock("$lib/api/browse/grid", () => ({ getCascadeV4: getCascadeV4Mock }));
+vi.mock("$lib/api/users/profiles", () => ({ getProfiles: getProfilesMock }));
 vi.mock("$lib/entitlements/bypass.svelte", () => ({
 	awaitEntitlementGrant: awaitEntitlementGrantMock,
 }));
@@ -14,39 +17,25 @@ import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 import {
 	getCachedProfile,
 	getGrid,
-	type RenderedGridProfile,
+	resolveLazyProfile,
 	setCachedProfile,
 } from "./grid";
+import { rendered } from "./grid-test-helpers";
 
 afterEach(() => {
 	resetNowForTesting();
 });
-
-function rendered(id: number): RenderedGridProfile {
-	return {
-		type: "rendered",
-		id,
-		displayName: "Ada",
-		distance: 100,
-		profilePhotosHashes: ["a"],
-		unread: 0,
-		onlineUntil: null,
-		isFavorite: false,
-		isVisiting: false,
-		hasChattedInLast24Hrs: false,
-	};
-}
 
 describe("grid profile cache TTL", () => {
 	it("returns a cached profile within the TTL and drops it after", () => {
 		let clock = 1_000;
 		setNowForTesting(() => clock);
 
-		setCachedProfile(rendered(1));
-		expect(getCachedProfile(1)).toEqual(rendered(1));
+		setCachedProfile(rendered({ id: 1 }));
+		expect(getCachedProfile(1)).toEqual(rendered({ id: 1 }));
 
 		clock += 59_999;
-		expect(getCachedProfile(1)).toEqual(rendered(1));
+		expect(getCachedProfile(1)).toEqual(rendered({ id: 1 }));
 
 		clock += 1;
 		expect(getCachedProfile(1)).toBeNull();
@@ -57,11 +46,15 @@ describe("grid profile cache TTL", () => {
 	});
 });
 
+const LAST_ONLINE = 1_757_000_000_000;
+
 const v4Profile = (id: number) => ({
 	profileId: id,
 	displayName: "Ada",
+	age: 27,
 	distanceMeters: 100,
 	onlineUntil: null,
+	lastOnline: LAST_ONLINE,
 	unreadCount: 0,
 	isVisiting: false,
 	primaryImageUrl: "https://cdns.grindr.com/images/profile/480x480/abc",
@@ -113,26 +106,53 @@ describe("getGrid", () => {
 	});
 
 	it.each([
-		"full_profile_v1",
-		"partial_profile_v1",
-		"smart_boost_profile_v1",
-	])("renders a v4 %s without resolving it", async (type) => {
-		const { items } = await cascade([{ type, data: v4Profile(1) }]);
+		{ type: "full_profile_v1", age: 27 },
+		{ type: "partial_profile_v1", age: undefined },
+		{ type: "smart_boost_profile_v1", age: 27 },
+	])(
+		"renders a v4 $type without resolving it, with age $age",
+		async ({ type, age }) => {
+			const { items } = await cascade([{ type, data: v4Profile(1) }]);
 
-		expect(items).toEqual([
+			expect(items).toEqual([
+				{
+					type: "rendered",
+					id: 1,
+					displayName: "Ada",
+					age,
+					distance: 100,
+					profilePhotosHashes: ["abc"],
+					unread: 0,
+					onlineUntil: null,
+					seen: LAST_ONLINE,
+					isFavorite: true,
+					isVisiting: false,
+					hasChattedInLast24Hrs: true,
+				},
+			]);
+		},
+	);
+
+	it("marks a full row that sends no age as showing none, not unknown", async () => {
+		const { items } = await cascade([
 			{
-				type: "rendered",
-				id: 1,
-				displayName: "Ada",
-				distance: 100,
-				profilePhotosHashes: ["abc"],
-				unread: 0,
-				onlineUntil: null,
-				isFavorite: true,
-				isVisiting: false,
-				hasChattedInLast24Hrs: true,
+				type: "full_profile_v1",
+				data: { ...v4Profile(4), age: undefined },
 			},
 		]);
+
+		expect(items).toMatchObject([{ id: 4, age: null }]);
+	});
+
+	it("leaves last seen empty when the cascade sends none", async () => {
+		const { items } = await cascade([
+			{
+				type: "full_profile_v1",
+				data: { ...v4Profile(6), lastOnline: undefined },
+			},
+		]);
+
+		expect(items).toMatchObject([{ id: 6, seen: null }]);
 	});
 
 	it("renders a sponsored placement from its alternative profile", async () => {
@@ -146,7 +166,9 @@ describe("getGrid", () => {
 			},
 		]);
 
-		expect(items).toMatchObject([{ type: "rendered", id: 2 }]);
+		expect(items).toMatchObject([
+			{ type: "rendered", id: 2, age: 27, seen: LAST_ONLINE },
+		]);
 	});
 
 	it("keeps a photo-less v4 profile renderable rather than resolving it", async () => {
@@ -201,5 +223,46 @@ describe("getGrid", () => {
 		]);
 
 		expect(items).toEqual([]);
+	});
+});
+
+describe("resolveLazyProfile", () => {
+	it("maps the resolved profile, age and last seen included", async () => {
+		getProfilesMock.mockResolvedValue([
+			{
+				profileId: 11,
+				displayName: "Bo",
+				age: 31,
+				distance: 250,
+				medias: [{ mediaHash: "first" }, { mediaHash: "second" }],
+				onlineUntil: null,
+				seen: LAST_ONLINE,
+				isFavorite: true,
+				lastChatTimestamp: null,
+			},
+		]);
+
+		const profile = await resolveLazyProfile({
+			type: "lazy",
+			id: 11,
+			unread: 3,
+			isVisiting: true,
+		});
+
+		expect(getProfilesMock).toHaveBeenCalledExactlyOnceWith([11]);
+		expect(profile).toEqual({
+			type: "rendered",
+			id: 11,
+			displayName: "Bo",
+			age: 31,
+			distance: 250,
+			profilePhotosHashes: ["first", "second"],
+			unread: 3,
+			onlineUntil: null,
+			seen: LAST_ONLINE,
+			isFavorite: true,
+			isVisiting: true,
+			hasChattedInLast24Hrs: false,
+		});
 	});
 });
