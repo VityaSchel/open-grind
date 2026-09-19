@@ -3,7 +3,6 @@
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { virtualGrid } from "$lib/util/virtual-grid.svelte";
-	import type { GridProfile } from "$lib/grid/grid";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridCellSkeleton from "./GridCellSkeleton.svelte";
 	import GridProfileMiniCard from "./GridProfileMiniCard.svelte";
@@ -14,35 +13,21 @@
 
 	let gridElement: HTMLElement | null = $state(null);
 
-	const gridProfiles = $derived.by(() => {
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- built and spread inside this $derived, never mutated afterwards
-		const byId = new Map<number, GridProfile>();
-		for (const item of gridState.items) {
-			const existing = byId.get(item.id);
-			if (
-				!existing ||
-				(existing.type === "lazy" && item.type === "rendered")
-			) {
-				byId.set(item.id, item);
-			}
-		}
-		return [...byId.values()];
-	});
-
 	const pendingSkeletons = $derived(
 		gridState.loadingMore ? PAGE_SKELETONS : 0,
 	);
 	const view = virtualGrid({
 		grid: () => gridElement,
-		count: () => gridProfiles.length + pendingSkeletons,
+		count: () => gridState.profiles.length + pendingSkeletons,
 	});
 	const visibleProfiles = $derived(
-		gridProfiles.slice(view.startIndex, view.endIndex),
+		gridState.profiles.slice(view.startIndex, view.endIndex),
 	);
 	const visibleSkeletons = $derived(
 		Math.max(
 			0,
-			view.endIndex - Math.max(view.startIndex, gridProfiles.length),
+			view.endIndex -
+				Math.max(view.startIndex, gridState.profiles.length),
 		),
 	);
 
@@ -61,17 +46,18 @@
 <div class="relative flex flex-1 flex-col">
 	<div
 		bind:this={gridElement}
+		data-slot="grid-cells"
 		class="photo-grid"
 		style:padding-top="{view.paddingTopPx}px"
 		style:padding-bottom="{view.paddingBottomPx}px"
 		data-rows-above={view.hasRowsAbove || undefined}
 		data-rows-below={view.hasRowsBelow || undefined}
 	>
-		{#if gridState.loading && gridProfiles.length === 0}
+		{#if gridState.loading && gridState.profiles.length === 0}
 			{#each Array.from({ length: PAGE_SKELETONS })}
 				<GridCellSkeleton />
 			{/each}
-		{:else if gridState.error && gridProfiles.length === 0}
+		{:else if gridState.error && gridState.profiles.length === 0}
 			<div class="col-span-full flex p-4">
 				<ApiErrorDisplay
 					error={gridState.error}
@@ -80,7 +66,7 @@
 				/>
 			</div>
 		{:else}
-			{#if gridProfiles.length === 0}
+			{#if gridState.profiles.length === 0}
 				<EmptyGrid />
 			{/if}
 			{#each visibleProfiles as item (item.id)}

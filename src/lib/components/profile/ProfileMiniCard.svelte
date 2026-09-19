@@ -20,6 +20,7 @@
 		hadRecentChat = false,
 		anonymous = false,
 		href = null,
+		onclick,
 		class: className,
 		overlay,
 	}: {
@@ -34,6 +35,7 @@
 		hadRecentChat?: boolean;
 		anonymous?: boolean;
 		href?: string | null;
+		onclick?: (event: MouseEvent) => void;
 		class?: import("svelte/elements").ClassValue;
 		overlay?: Snippet;
 	} = $props();
@@ -120,6 +122,7 @@
 {#if href !== null}
 	<a
 		{href}
+		{onclick}
 		aria-label={anonymous ? "Profile" : undefined}
 		class={[
 			"relative flex aspect-square items-end overflow-hidden",

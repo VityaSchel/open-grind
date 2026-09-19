@@ -56,3 +56,32 @@ export function gridWindow({
 		hasRowsBelow: lastRow < rows,
 	};
 }
+
+export function revealRowScrollTop({
+	savedTop,
+	rowTopPx,
+	rowHeightPx,
+	viewportPx,
+	insetTopPx,
+	insetBottomPx,
+	maxScrollTop,
+}: {
+	savedTop: number;
+	rowTopPx: number;
+	rowHeightPx: number;
+	viewportPx: number;
+	insetTopPx: number;
+	insetBottomPx: number;
+	maxScrollTop: number;
+}): number {
+	const bandTopPx = savedTop + insetTopPx;
+	const bandBottomPx = savedTop + viewportPx - insetBottomPx;
+	if (rowTopPx >= bandTopPx && rowTopPx + rowHeightPx <= bandBottomPx) {
+		return savedTop;
+	}
+
+	const bandHeightPx = viewportPx - insetTopPx - insetBottomPx;
+	const centeredTop =
+		rowTopPx + rowHeightPx / 2 - insetTopPx - bandHeightPx / 2;
+	return Math.max(0, Math.min(centeredTop, maxScrollTop));
+}
