@@ -401,6 +401,63 @@ a {
 	}
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.incoming-message-toast[data-sonner-toast] {
+		--fly-out: translateY(0);
+		transition: opacity 180ms ease-out !important;
+	}
+
+	.incoming-message-toast[data-sonner-toast][data-mounted="false"],
+	.incoming-message-toast[data-sonner-toast][data-removed="true"] {
+		opacity: 0 !important;
+		transition: opacity 180ms ease-in !important;
+	}
+
+	.incoming-message-toast[data-sonner-toast][data-swipe-out="true"][data-swipe-direction="up"] {
+		animation: none !important;
+	}
+
+	[class*="animate-in"],
+	[class*="animate-out"] {
+		--tw-enter-translate-x: 0;
+		--tw-enter-translate-y: 0;
+		--tw-enter-scale: 1;
+		--tw-enter-rotate: 0;
+		--tw-exit-translate-x: 0;
+		--tw-exit-translate-y: 0;
+		--tw-exit-scale: 1;
+		--tw-exit-rotate: 0;
+	}
+
+	[data-vaul-drawer] {
+		transition-duration: 0s !important;
+	}
+
+	[data-vaul-drawer][data-vaul-snap-points="false"]:not(
+			[data-vaul-animate="false"]
+		) {
+		animation-name: reduced-motion-fade-in !important;
+	}
+
+	[data-vaul-drawer][data-vaul-snap-points="false"][data-state="closed"]:not(
+			[data-vaul-animate="false"]
+		) {
+		animation-name: reduced-motion-fade-out !important;
+	}
+}
+
+@keyframes reduced-motion-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes reduced-motion-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+
 @theme {
 	--apple-system-glass-material-clear: -apple-system-glass-material-clear;
 	--apple-system-glass-material-media-controls: -apple-system-glass-material-media-controls;

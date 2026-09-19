@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { sineOut } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { Button } from "$lib/components/ui/button";
+	import { fly } from "$lib/util/reduced-motion";
 
 	let {
 		label,

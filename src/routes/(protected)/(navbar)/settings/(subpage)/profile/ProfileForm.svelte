@@ -7,7 +7,6 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { expoOut } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { ProfileModerationError } from "$lib/api/users/profile-moderation";
@@ -25,6 +24,7 @@
 	import { type Profile } from "$lib/model/users/profiles";
 	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import { deepEqual } from "$lib/util/deep-equal";
+	import { fly } from "$lib/util/reduced-motion";
 	import type { Gender } from "$lib/model/users/genders";
 	import type { Pronoun } from "$lib/model/users/pronouns";
 	import type { ProfileTagsResponse } from "$lib/model/users/tags";

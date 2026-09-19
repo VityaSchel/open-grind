@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
 
+	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
 	import { cn } from "$lib/util/utils";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
@@ -59,7 +60,7 @@
 		clearTimeout(glideTimer);
 		glideTimer = setTimeout(settle, GLIDE_TIMEOUT_MS);
 		el.scrollTop = Math.min(el.scrollTop, el.clientHeight);
-		el.scroll({ top: 0, behavior: "smooth" });
+		el.scroll({ top: 0, behavior: preferredScrollBehavior() });
 	}
 </script>
 

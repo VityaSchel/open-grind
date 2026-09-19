@@ -4,7 +4,6 @@
 	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 	import TimerIcon from "phosphor-svelte/lib/TimerIcon";
 	import { expoOut, sineIn } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
@@ -12,6 +11,7 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { fly, preferredScrollBehavior } from "$lib/util/reduced-motion";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
@@ -46,7 +46,7 @@
 		if (!el || el.scrollTop <= 0 || el.scrollTop >= range) return;
 		el.scrollTo({
 			top: el.scrollTop < range / 2 ? 0 : range,
-			behavior: "smooth",
+			behavior: preferredScrollBehavior(),
 		});
 	}
 

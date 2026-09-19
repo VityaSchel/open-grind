@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { ArrowBendUpLeftIcon, XIcon } from "phosphor-svelte";
 	import { expoOut } from "svelte/easing";
-	import { slide } from "svelte/transition";
 
 	import { Button } from "$lib/components/ui/button";
 	import {
 		previewFromMessage,
 		quoteLabel,
 	} from "$lib/model/messaging/message-preview";
+	import { slide } from "$lib/util/reduced-motion";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
 	let {
