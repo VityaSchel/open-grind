@@ -6,6 +6,12 @@ Open Grind delivers notifications two ways. Choose one in **Settings → App →
 
 **Instant** delivers each message as it arrives. It needs the Open Grind FCM service add-on, and Google Play services or microG on your device.
 
+## Categories
+
+Each kind of notification has its own switch under **Settings → App → Notifications**. Turning one off stops Open Grind showing it, in both delivery modes.
+
+Android keeps its own switch per category, in **Android Settings → Apps → Open Grind → Notifications**. Android's wins: if you turn a category off there, Open Grind cannot turn it back on, and the in-app switch shows it as blocked with a link to the system screen.
+
 ## Installing the FCM service
 
 Open Grind offers to install the add-on when you choose Instant. Some builds can't install other apps — Google Play builds, and builds you or someone else signed. Install it yourself instead:
