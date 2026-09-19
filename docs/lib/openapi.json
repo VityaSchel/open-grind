@@ -7972,28 +7972,29 @@
 					"settings/account"
 				],
 				"operationId": "registerFcmPushToken",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
-								],
-								"x-original-type": "FcmPushRequest"
+								"$ref": "#/components/schemas/PushTokenRequest"
 							}
 						}
 					}
 				},
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Empty"
 					}
 				},
-				"summary": "Register FCM push token",
-				"x-wip": true
+				"summary": "Register push token",
+				"description": "Binds an FCM registration token to the signed-in profile so the server can deliver [push notifications](/grindr-api/push-notifications). Re-registering the same token is idempotent.",
+				"x-idempotent": true
 			}
 		},
 		"/v3/push-tokens/{token}": {
@@ -8015,17 +8016,17 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "The FCM registration token to deregister."
+						"description": "The full registration token, exactly as registered."
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "OK"
+						"description": "Empty"
 					}
 				},
-				"summary": "Delete FCM push token",
-				"description": "Deregisters an FCM push token.",
-				"x-wip": true
+				"summary": "Unregister push token",
+				"description": "Stops delivery to one registration token. Note the path is `push-tokens`, not the `gcm-push-tokens` used to register.",
+				"x-idempotent": true
 			}
 		},
 		"/v5/push-settings": {
@@ -11779,34 +11780,35 @@
 						"content": {
 							"application/json": {
 								"schema": {
-								"type": "object",
-								"properties": {
-									"insights": {
-										"type": "array",
-										"items": {
-											"type": "object",
-											"properties": {
-												"insightKey": {
-													"type": "string"
-												},
-												"isOptedOut": {
-													"type": "boolean"
-												},
-												"hasData": {
-													"type": "boolean"
-												},
-												"sectionTitles": {
-													"type": "array",
-													"items": {
-														"type": "object",
-														"properties": {
-															"key": {
-																"type": "string",
-																"description": "translation key"
-															},
-															"default": {
-																"type": "string",
-																"description": "fallback label when `key` is unknown"
+									"type": "object",
+									"properties": {
+										"insights": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"insightKey": {
+														"type": "string"
+													},
+													"isOptedOut": {
+														"type": "boolean"
+													},
+													"hasData": {
+														"type": "boolean"
+													},
+													"sectionTitles": {
+														"type": "array",
+														"items": {
+															"type": "object",
+															"properties": {
+																"key": {
+																	"type": "string",
+																	"description": "translation key"
+																},
+																"default": {
+																	"type": "string",
+																	"description": "fallback label when `key` is unknown"
+																}
 															}
 														}
 													}
@@ -11814,7 +11816,6 @@
 											}
 										}
 									}
-								}
 								}
 							}
 						},
@@ -18848,81 +18849,81 @@
 						"items": {
 							"type": "object",
 							"properties": {
-							"profileId": {
-								"type": "integer",
-								"format": "int64"
-							},
-							"onlineUntil": {
-								"type": "integer",
-								"format": "int64",
-								"nullable": true
-							},
-							"displayName": {
-								"type": "string",
-								"nullable": true
-							},
-							"primaryImageUrl": {
-								"type": "string",
-								"nullable": true
-							},
-							"favorite": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"chatted": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"rightNow": {
-								"type": "string",
-								"nullable": true
-							},
-							"unreadCount": {
-								"type": "integer",
-								"nullable": true
-							},
-							"viewed": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"roaming": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"isVisiting": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"isPopular": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"distanceMeters": {
-								"type": "number",
-								"nullable": true
-							},
-							"isRewarded": {
-								"type": "boolean",
-								"nullable": true
-							},
-							"fuzzedLat": {
-								"type": "number",
-								"nullable": true
-							},
-							"fuzzedLon": {
-								"type": "number",
-								"nullable": true
-							},
-							"rightNowPin": {
-								"type": "object",
-								"nullable": true,
-								"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
-							},
-							"rightNowPost": {
-								"type": "object",
-								"nullable": true,
-								"description": "the active post: `id`, `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`, `expirationTimestamp`"
-							}
+								"profileId": {
+									"type": "integer",
+									"format": "int64"
+								},
+								"onlineUntil": {
+									"type": "integer",
+									"format": "int64",
+									"nullable": true
+								},
+								"displayName": {
+									"type": "string",
+									"nullable": true
+								},
+								"primaryImageUrl": {
+									"type": "string",
+									"nullable": true
+								},
+								"favorite": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"chatted": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"rightNow": {
+									"type": "string",
+									"nullable": true
+								},
+								"unreadCount": {
+									"type": "integer",
+									"nullable": true
+								},
+								"viewed": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"roaming": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"isVisiting": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"isPopular": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"distanceMeters": {
+									"type": "number",
+									"nullable": true
+								},
+								"isRewarded": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"fuzzedLat": {
+									"type": "number",
+									"nullable": true
+								},
+								"fuzzedLon": {
+									"type": "number",
+									"nullable": true
+								},
+								"rightNowPin": {
+									"type": "object",
+									"nullable": true,
+									"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
+								},
+								"rightNowPost": {
+									"type": "object",
+									"nullable": true,
+									"description": "the active post: `id`, `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`, `expirationTimestamp`"
+								}
 							},
 							"required": [
 								"profileId"
@@ -20970,6 +20971,24 @@
 					}
 				},
 				"x-render-on-tag": "right-now"
+			},
+			"PushTokenRequest": {
+				"type": "object",
+				"required": [
+					"vendorProvidedIdentifier",
+					"token"
+				],
+				"properties": {
+					"vendorProvidedIdentifier": {
+						"type": "string",
+						"description": "The Firebase installation ID, which is the part of `token` before the first `:`."
+					},
+					"token": {
+						"type": "string",
+						"description": "FCM registration token, shaped `<installationId>:APA91b…`."
+					}
+				},
+				"x-render-on-tag": "settings/account"
 			}
 		}
 	},
