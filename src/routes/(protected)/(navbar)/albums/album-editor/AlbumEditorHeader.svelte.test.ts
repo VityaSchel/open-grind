@@ -47,7 +47,7 @@ function previewAreaOf(content: AlbumContent[]): string {
 			onOpenShares: () => {},
 		},
 	});
-	const area = container.firstElementChild;
+	const area = container.querySelector('[data-slot="album-header-preview"]');
 	if (area === null) throw new Error("no preview area");
 	return area.outerHTML;
 }

@@ -13,6 +13,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
+	import AlbumHeaderLayout from "./AlbumHeaderLayout.svelte";
 
 	let {
 		albumId,
@@ -46,36 +47,38 @@
 	const readyMedia = $derived(readyAlbumMedia(content));
 </script>
 
-<div class="mx-auto w-32 max-w-full">
-	{#if cover === undefined}
-		<MediaImage src={null} class="aspect-3/4 w-full rounded-xl" />
-	{:else}
-		<AlbumPreview
-			{albumId}
-			coverUrl={cover.thumbUrl}
-			hasPhoto={readyMedia.hasPhoto}
-			hasVideo={readyMedia.hasVideo}
-			label="Preview album"
-			class="aspect-3/4 w-full"
-			contentClass="rounded-xl"
-		/>
-	{/if}
-</div>
-<AlbumNameField bind:value={albumName} />
-<Button
-	variant="ghost"
-	class="mt-1 h-11 w-full justify-between"
-	onclick={onOpenShares}
->
-	<span class="truncate">Shared with</span>
-	<span class="flex items-center gap-1.5">
-		<Badge variant="secondary">{sharedCount}</Badge>
-		<CaretRightIcon class="size-4" />
-	</span>
-</Button>
-<div
-	class="flex items-baseline justify-between gap-2 px-1 text-xs text-muted-foreground"
->
-	<span class="truncate">Updated {updatedLabel}</span>
-	<span class="shrink-0">{itemCountLabel}</span>
-</div>
+<AlbumHeaderLayout>
+	{#snippet preview()}
+		{#if cover === undefined}
+			<MediaImage src={null} class="aspect-3/4 w-full rounded-xl" />
+		{:else}
+			<AlbumPreview
+				{albumId}
+				coverUrl={cover.thumbUrl}
+				hasPhoto={readyMedia.hasPhoto}
+				hasVideo={readyMedia.hasVideo}
+				label="Preview album"
+				class="aspect-3/4 w-full"
+				contentClass="rounded-xl"
+			/>
+		{/if}
+	{/snippet}
+	<AlbumNameField bind:value={albumName} />
+	<Button
+		variant="ghost"
+		class="mt-1 h-11 w-full justify-between"
+		onclick={onOpenShares}
+	>
+		<span class="truncate">Shared with</span>
+		<span class="flex items-center gap-1.5">
+			<Badge variant="secondary">{sharedCount}</Badge>
+			<CaretRightIcon class="size-4" />
+		</span>
+	</Button>
+	<div
+		class="flex items-baseline justify-between gap-2 px-1 text-xs text-muted-foreground"
+	>
+		<span class="truncate">Updated {updatedLabel}</span>
+		<span class="shrink-0">{itemCountLabel}</span>
+	</div>
+</AlbumHeaderLayout>

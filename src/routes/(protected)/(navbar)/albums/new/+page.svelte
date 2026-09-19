@@ -3,8 +3,10 @@
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 
 	import AlbumNameField from "$lib/components/album/AlbumNameField.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
+	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 	import { createAlbumFromMedia } from "./create-album-media";
 
 	let albumName = $state("");
@@ -27,16 +29,12 @@
 	<title>New album</title>
 </svelte:head>
 
-<div class="flex gap-4">
-	<div
-		class="aspect-3/4 w-30 shrink-0 rounded-xl bg-card-foreground/10"
-	></div>
-	<AlbumNameField
-		bind:value={albumName}
-		disabled={creating}
-		class="min-w-0 flex-1"
-	/>
-</div>
+<AlbumHeaderLayout>
+	{#snippet preview()}
+		<MediaImage src={null} class="aspect-3/4 w-full rounded-xl" />
+	{/snippet}
+	<AlbumNameField bind:value={albumName} disabled={creating} />
+</AlbumHeaderLayout>
 <Empty.Root>
 	<Empty.Header>
 		<Empty.Media variant="icon">
