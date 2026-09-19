@@ -148,7 +148,9 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 		const stuck = await save.boundingBox();
 		await scrollSettingsToEnd(page);
 		const unstuck = await save.boundingBox();
-		expect(unstuck?.y).toBeLessThan(stuck?.y ?? 0);
+		expect(
+			Math.abs((unstuck?.y ?? 0) - (stuck?.y ?? 0)),
+		).toBeLessThanOrEqual(1);
 		await expectToastGapAbove(save);
 	});
 

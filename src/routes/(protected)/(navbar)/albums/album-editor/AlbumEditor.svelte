@@ -11,18 +11,14 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { expoOut } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		albumItemCountLabel,
 		albumUpdatedLabel,
 	} from "$lib/components/album/album";
+	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
 	import { setSubpageActions } from "$lib/components/shared/subpage-actions.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Spinner } from "$lib/components/ui/spinner";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 	import { uploads } from "../album-uploads/album-uploads.svelte";
 	import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
@@ -109,23 +105,10 @@
 		: ""}
 </div>
 {#if draft.dirty}
-	<div class="h-16" aria-hidden="true"></div>
-	<div
-		class="sticky bottom-(--content-pb) z-10 -mx-4 px-4 py-3"
-		transition:fly={{ y: 80, duration: 300, easing: expoOut }}
-		{@attach bottomChrome}
-	>
-		<Button
-			size="lg"
-			class="h-12 w-full text-base"
-			disabled={!draft.canSave}
-			onclick={save}
-		>
-			{#if draft.saving}
-				<Spinner class="size-5" />
-			{/if}
-			Save changes
-		</Button>
-	</div>
+	<SaveChangesBar
+		saving={draft.saving}
+		disabled={!draft.canSave}
+		onclick={save}
+	/>
 {/if}
 <SharedWithDialog bind:open={sharesOpen} {shares} />
