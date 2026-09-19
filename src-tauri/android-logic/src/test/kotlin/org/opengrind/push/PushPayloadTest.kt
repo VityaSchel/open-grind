@@ -181,4 +181,16 @@ class PushPayloadTest {
 		assertEquals(now, (decide(message() - "timestamp") as PushDecision.Notify).timestamp)
 		assertEquals(now, (decide(message("timestamp" to "soon")) as PushDecision.Notify).timestamp)
 	}
+
+	@Test
+	fun `a push we cannot route is ignored even when it arrives on a channel we render`() {
+		val decision = decide(
+			message(
+				"action" to "grindr://favorite-profile?profileID=852120758",
+				"channel" to "id_grindr_notifications_channel_individual_v2",
+				"body" to "Viktor is online",
+			),
+		)
+		assertEquals(PushDecision.Ignore, decision)
+	}
 }

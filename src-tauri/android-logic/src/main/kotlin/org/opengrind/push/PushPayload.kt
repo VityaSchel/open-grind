@@ -35,6 +35,7 @@ object PushPayload {
 	private const val DEEPLINK_PREFIX = "grindr://"
 	private const val CLEAR_DEEPLINK = "grindr://clear"
 	private const val UNSEND_DEEPLINK = "grindr://unsend"
+	private const val FAVORITE_DEEPLINK = "grindr://favorite-profile"
 
 	private const val CHATS_CHANNEL = "id_grindr_notifications_channel_individual_v2"
 	private const val TAPS_CHANNEL = "id_grindr_notifications_channel_tap_v2"
@@ -93,10 +94,15 @@ object PushPayload {
 			?.let { runCatching { URLDecoder.decode(it, "UTF-8") }.getOrDefault(it) }
 			?.takeIf(String::isNotEmpty)
 
-	private fun kindOf(target: String, channel: String?): PushKind? = when {
-		target == CONVERSATION_DEEPLINK || channel == CHATS_CHANNEL -> PushKind.Message
-		target == TAPS_DEEPLINK || channel == TAPS_CHANNEL -> PushKind.Tap
-		else -> null
+	private fun kindOf(target: String, channel: String?): PushKind? = when (target) {
+		CONVERSATION_DEEPLINK -> PushKind.Message
+		TAPS_DEEPLINK -> PushKind.Tap
+		FAVORITE_DEEPLINK -> null
+		else -> when (channel) {
+			CHATS_CHANNEL -> PushKind.Message
+			TAPS_CHANNEL -> PushKind.Tap
+			else -> null
+		}
 	}
 
 	private fun dismissSender(action: String): PushDecision {
