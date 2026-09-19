@@ -32,7 +32,11 @@
 					<Skeleton class="size-full rounded-full" />
 				{:then thumbUrl}
 					{#if thumbUrl === undefined}
-						<FolderOpenIcon weight="fill" class="size-5" />
+						<span
+							class="flex size-full items-center justify-center rounded-full bg-card-foreground/15 text-muted-foreground"
+						>
+							<FolderOpenIcon weight="fill" class="size-5" />
+						</span>
 					{:else}
 						<MediaImage
 							src={proxyMediaUrl(thumbUrl)}
