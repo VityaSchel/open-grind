@@ -6,6 +6,7 @@
 		type WithElementRef,
 		type WithoutChildren,
 	} from "$lib/util/utils.js";
+	import { fieldSizingFallback } from "./field-sizing-fallback.svelte";
 
 	let {
 		ref = $bindable(null),
@@ -25,4 +26,5 @@
 	)}
 	bind:value
 	{...restProps}
+	{@attach fieldSizingFallback(() => value)}
 ></textarea>
