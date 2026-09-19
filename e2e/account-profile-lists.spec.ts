@@ -71,7 +71,7 @@ test("the blocked list comes back to where it was scrolled", async ({
 	page,
 }) => {
 	await page.goto(BLOCKED_LIST);
-	const scroller = page.locator(".overflow-y-auto").first();
+	const scroller = page.locator('[data-slot="settings-scroller"]');
 	await page.getByRole("switch").first().waitFor({ timeout: 60_000 });
 
 	await scroller.evaluate((node) => node.scrollTo({ top: 400 }));
