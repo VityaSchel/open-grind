@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import {
 	ALBUM_TILE,
@@ -11,6 +11,53 @@ import {
 } from "./support/albums";
 import { installTauriShim } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+
+declare global {
+	interface Window {
+		__addAlbumRendered?: boolean;
+	}
+}
+
+const ADD_ALBUM = 'a[href="/albums/new"]';
+
+const TINY_PNG =
+	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+async function createAlbum(page: Page, name: string): Promise<void> {
+	await page.getByRole("link", { name: "Add album" }).click();
+	await page.getByRole("textbox", { name: "Album name" }).fill(name);
+	const chooser = page.waitForEvent("filechooser");
+	await page.getByRole("button", { name: "Add photos or videos" }).click();
+	await (
+		await chooser
+	).setFiles({
+		name: "one.png",
+		mimeType: "image/png",
+		buffer: Buffer.from(TINY_PNG, "base64"),
+	});
+	await expect(page).toHaveURL(/\/albums\/\d+$/, { timeout: 30_000 });
+	await expect(page.locator(MEDIA_SLOT)).toHaveCount(1, { timeout: 30_000 });
+}
+
+async function watchAddAlbum(page: Page): Promise<() => Promise<boolean>> {
+	await page.evaluate((selector) => {
+		window.__addAlbumRendered = false;
+		new MutationObserver((records) => {
+			const added = records.flatMap((record) => [...record.addedNodes]);
+			if (
+				added.some(
+					(node) =>
+						node instanceof Element &&
+						(node.matches(selector) ||
+							node.querySelector(selector) !== null),
+				)
+			) {
+				window.__addAlbumRendered = true;
+			}
+		}).observe(document.body, { subtree: true, childList: true });
+	}, ADD_ALBUM);
+	return () => page.evaluate(() => window.__addAlbumRendered === true);
+}
 
 test.describe("my albums", () => {
 	test("settings reaches the grid, which reaches one album and the new one", async ({
@@ -185,5 +232,36 @@ test.describe("my albums", () => {
 		await expect(
 			page.getByRole("textbox", { name: "Album name" }),
 		).toHaveValue("Studio");
+	});
+
+	test("the add cell leaves the grid once the albums reach the cap", async ({
+		page,
+	}) => {
+		await openAlbums(page);
+		const below = await page.locator(ALBUM_TILE).count();
+		await expect(
+			page.getByRole("link", { name: "Add album" }),
+			"one album short of the cap, the add cell still leads",
+		).toBeVisible();
+
+		await createAlbum(page, "Rooftop");
+		const addAlbumRendered = await watchAddAlbum(page);
+		await back(page);
+
+		await expect(page.locator(albumTileNamed("Rooftop"))).toBeVisible({
+			timeout: 30_000,
+		});
+		await expect(
+			page.locator(ALBUM_TILE),
+			"every album still shows at the cap",
+		).toHaveCount(below + 1);
+		await expect(
+			page.getByRole("link", { name: "Add album" }),
+			"no room for another album, so no add cell",
+		).toHaveCount(0);
+		expect(
+			await addAlbumRendered(),
+			"the add cell never rendered while the grid loaded",
+		).toBe(false);
 	});
 });
