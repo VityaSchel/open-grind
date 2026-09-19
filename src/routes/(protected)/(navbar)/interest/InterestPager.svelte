@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
+	import { afterNavigate, goto } from "$app/navigation";
 	import { navigating, page } from "$app/state";
 	import { untrack } from "svelte";
 
@@ -60,6 +60,13 @@
 		const restedHere = pane === restedPane;
 		restedPane = null;
 		if (!restedHere) untrack(() => snap.place(pane, { animated: true }));
+	});
+
+	afterNavigate(() => {
+		const ownReplaceDropped = restedPane !== null && restedPane !== routed;
+		if (!ownReplaceDropped) return;
+		restedPane = null;
+		snap.place(routed, { animated: true });
 	});
 </script>
 

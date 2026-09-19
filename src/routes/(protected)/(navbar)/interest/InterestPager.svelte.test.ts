@@ -12,15 +12,16 @@ const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
 const REPLACE = { replaceState: true, noScroll: true };
 
-const { goto, navigating } = vi.hoisted(() => ({
+const { goto, afterNavigate, navigating } = vi.hoisted(() => ({
 	goto: vi.fn(),
+	afterNavigate: vi.fn<(callback: () => void) => void>(),
 	navigating: {
 		type: null as NavigationType | null,
 		to: null as { url: URL } | null,
 	},
 }));
 
-vi.mock("$app/navigation", () => ({ goto }));
+vi.mock("$app/navigation", () => ({ goto, afterNavigate }));
 vi.mock("$app/state", async () => {
 	const { SvelteURL } = await import("svelte/reactivity");
 	return { navigating, page: { url: new SvelteURL("https://app.test/") } };
@@ -49,6 +50,13 @@ function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 	layout.node.scrollLeft = scrollLeft;
 	layout.measure(WIDTH);
 	return layout;
+}
+
+function navigated() {
+	navigating.type = null;
+	navigating.to = null;
+	for (const [callback] of afterNavigate.mock.calls) callback();
+	flushSync();
 }
 
 function route(pathname: ResolvedPathname) {
@@ -80,6 +88,7 @@ describe("InterestPager", () => {
 		cleanup();
 		vi.unstubAllGlobals();
 		goto.mockReset();
+		afterNavigate.mockReset();
 	});
 
 	it("opens on the routed tab without replacing the URL", () => {
@@ -223,6 +232,21 @@ describe("InterestPager", () => {
 			left: 0,
 			behavior: "smooth",
 		});
+	});
+
+	it("follows a tab tap that cut its own replace short, and no later rest undoes it", () => {
+		const pager = mountPager();
+
+		pager.scroll(0);
+		loading(TAPS);
+		navigated();
+
+		expect(pager.scrollTo).toHaveBeenLastCalledWith({
+			left: WIDTH,
+			behavior: "smooth",
+		});
+		pager.scroll(WIDTH);
+		expect(goto).toHaveBeenCalledExactlyOnceWith(VIEWS, REPLACE);
 	});
 
 	it("still glides to a tab picked outside the pager after its own rest", () => {
