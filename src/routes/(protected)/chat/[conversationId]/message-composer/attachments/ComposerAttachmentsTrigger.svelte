@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { PaperclipIcon } from "phosphor-svelte";
 	import { expoOut } from "svelte/easing";
-	import { scale } from "svelte/transition";
 
+	import { scale } from "$lib/util/reduced-motion";
 	import ComposerButton from "../ComposerButton.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 

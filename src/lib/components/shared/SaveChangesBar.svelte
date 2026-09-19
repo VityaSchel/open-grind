@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { expoOut } from "svelte/easing";
-	import { fly } from "svelte/transition";
 
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
+	import { fly } from "$lib/util/reduced-motion";
 
 	let {
 		saving,

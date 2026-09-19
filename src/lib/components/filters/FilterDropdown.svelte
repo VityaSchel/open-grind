@@ -4,6 +4,7 @@
 	import { expoOut } from "svelte/easing";
 	import type { TransitionConfig } from "svelte/transition";
 
+	import { instantWhenReducedMotion } from "$lib/util/reduced-motion";
 	import FilterBoolean from "./FilterBoolean.svelte";
 
 	let {
@@ -32,15 +33,17 @@
 		}
 	});
 
-	const hide = (node: HTMLDivElement): TransitionConfig => {
-		const height = node.scrollHeight;
-		return {
-			duration: 400,
-			css: (t: number, u: number) =>
-				`height: calc(${t} * ${height}px); opacity: ${t}; margin-top: calc(${u} * -8px)`,
-			easing: expoOut,
-		};
-	};
+	const hide = instantWhenReducedMotion(
+		(node: HTMLDivElement): TransitionConfig => {
+			const height = node.scrollHeight;
+			return {
+				duration: 400,
+				css: (t: number, u: number) =>
+					`height: calc(${t} * ${height}px); opacity: ${t}; margin-top: calc(${u} * -8px)`,
+				easing: expoOut,
+			};
+		},
+	);
 </script>
 
 {#snippet endAdornment()}
@@ -64,7 +67,10 @@
 	>
 		{label}
 		<CaretDownIcon
-			class={["transition-transform", { "-rotate-180": expanded }]}
+			class={[
+				"transition-transform motion-reduce:transition-none",
+				{ "-rotate-180": expanded },
+			]}
 		/>
 	</FilterBoolean>
 	{#if expanded}

@@ -18,7 +18,7 @@
 <Empty.Root>
 	<Empty.Header>
 		<div
-			class="no-touch-callout size-10 cursor-help rounded-full transition-transform select-none perspective-near hover:scale-105"
+			class="no-touch-callout size-10 cursor-help rounded-full transition-transform select-none perspective-near hover:scale-105 motion-reduce:transition-none"
 			onpointerdown={() => {
 				flip = true;
 				flipProgress.target = 1;
@@ -37,7 +37,7 @@
 		>
 			<div
 				class={[
-					"relative size-full rounded-full transition-transform duration-500 transform-3d *:absolute *:top-0 *:left-0 *:size-full *:backface-hidden",
+					"relative size-full rounded-full transition-transform duration-500 transform-3d *:absolute *:top-0 *:left-0 *:size-full *:backface-hidden motion-reduce:transition-none",
 					{ "-rotate-y-180": flip },
 				]}
 			>

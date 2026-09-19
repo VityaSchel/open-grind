@@ -67,6 +67,33 @@ describe("SwipeToReply on a trackpad", () => {
 		expect(h.swipe.armed).toBe(false);
 	});
 
+	it("glides the row home after the lift", () => {
+		const h = railHarness();
+		const scrollTo = vi.spyOn(h.rail, "scrollTo");
+
+		h.swipeBy(TRIGGER_DISTANCE_PX - 24);
+		h.lift();
+
+		expect(scrollTo).toHaveBeenCalledWith({
+			left: h.rest,
+			behavior: "smooth",
+		});
+	});
+
+	it("jumps the row home under reduced motion", () => {
+		const h = railHarness({ reducedMotion: true });
+		const scrollTo = vi.spyOn(h.rail, "scrollTo");
+
+		h.swipeBy(TRIGGER_DISTANCE_PX - 24);
+		h.lift();
+
+		expect(scrollTo).toHaveBeenCalledWith({
+			left: h.rest,
+			behavior: "instant",
+		});
+		expect(h.rail.scrollLeft).toBe(h.rest);
+	});
+
 	it("does not reply when an armed drag eases back before the lift", () => {
 		const h = railHarness();
 
