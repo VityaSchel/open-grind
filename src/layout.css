@@ -486,6 +486,7 @@ a {
 .pblur-layer {
 	display: block;
 	backdrop-filter: var(--pblur-blur);
+	-webkit-mask-image: linear-gradient(var(--pblur-dir), var(--pblur-stops));
 	mask-image: linear-gradient(var(--pblur-dir), var(--pblur-stops));
 }
 
@@ -587,6 +588,11 @@ a {
 	.pblur-layer[data-pblur-layer="0"] {
 	top: calc(-1 * var(--pblur-overhang));
 	height: calc(100% + var(--pblur-overhang));
+	-webkit-mask-image: linear-gradient(
+		to bottom,
+		transparent var(--pblur-overhang),
+		black var(--pblur-overhang)
+	);
 	mask-image: linear-gradient(
 		to bottom,
 		transparent var(--pblur-overhang),
@@ -597,6 +603,11 @@ a {
 	.pblur[data-pblur-direction="topToBottom"]
 	.pblur-layer[data-pblur-layer="0"] {
 	height: calc(100% + var(--pblur-overhang));
+	-webkit-mask-image: linear-gradient(
+		to top,
+		transparent var(--pblur-overhang),
+		black var(--pblur-overhang)
+	);
 	mask-image: linear-gradient(
 		to top,
 		transparent var(--pblur-overhang),
@@ -625,6 +636,18 @@ a {
 	display: none;
 }
 :root[data-backdrop-blur="off"] .pblur-bg {
+	-webkit-mask-image: linear-gradient(
+		var(--pblur-dir),
+		rgba(0, 0, 0, 0) 0%,
+		rgba(0, 0, 0, 0.061) 7%,
+		rgba(0, 0, 0, 0.216) 14%,
+		rgba(0, 0, 0, 0.425) 20%,
+		rgba(0, 0, 0, 0.648) 27%,
+		rgba(0, 0, 0, 0.844) 34%,
+		rgba(0, 0, 0, 0.972) 40%,
+		rgba(0, 0, 0, 1) 45%,
+		rgba(0, 0, 0, 1) 100%
+	);
 	mask-image: linear-gradient(
 		var(--pblur-dir),
 		rgba(0, 0, 0, 0) 0%,
@@ -705,6 +728,18 @@ a {
 		display: none;
 	}
 	:root:root .pblur-bg {
+		-webkit-mask-image: linear-gradient(
+			var(--pblur-dir),
+			rgba(0, 0, 0, 0) 0%,
+			rgba(0, 0, 0, 0.061) 7%,
+			rgba(0, 0, 0, 0.216) 14%,
+			rgba(0, 0, 0, 0.425) 20%,
+			rgba(0, 0, 0, 0.648) 27%,
+			rgba(0, 0, 0, 0.844) 34%,
+			rgba(0, 0, 0, 0.972) 40%,
+			rgba(0, 0, 0, 1) 45%,
+			rgba(0, 0, 0, 1) 100%
+		);
 		mask-image: linear-gradient(
 			var(--pblur-dir),
 			rgba(0, 0, 0, 0) 0%,
