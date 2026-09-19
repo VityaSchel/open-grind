@@ -51,15 +51,18 @@
 		root ? (nearestScrollableAncestor(root) as HTMLElement | null) : null,
 	);
 
-	restoreScrollOnce(() => scroller, {
-		get loading() {
-			return list.loading;
-		},
-		get error() {
-			return list.error;
-		},
-		get scrollY() {
-			return scroll.scrollY;
+	restoreScrollOnce({
+		container: () => scroller,
+		state: {
+			get loading() {
+				return list.loading;
+			},
+			get error() {
+				return list.error;
+			},
+			get scrollY() {
+				return scroll.scrollY;
+			},
 		},
 	});
 

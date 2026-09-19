@@ -16,7 +16,7 @@
 
 	let gridContainer: HTMLElement | null = $state(null);
 
-	restoreScrollOnce(() => gridContainer, gridState);
+	restoreScrollOnce({ container: () => gridContainer, state: gridState });
 </script>
 
 <svelte:head>

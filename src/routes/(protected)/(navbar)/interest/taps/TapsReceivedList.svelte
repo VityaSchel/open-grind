@@ -25,7 +25,7 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
-	restoreScrollOnce(() => container, taps);
+	restoreScrollOnce({ container: () => container, state: taps });
 </script>
 
 <div class="screen-nav-host">
