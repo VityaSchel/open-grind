@@ -151,3 +151,40 @@ test("a vertical finger drag scrolls the list and does not page", async ({
 	).toBeGreaterThan(0);
 	await expect(page).toHaveURL(new RegExp(`${TAPS}$`));
 });
+
+test("the chip behind the tabs follows the pager wherever it is", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto(TAPS);
+	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
+	const chip = page.locator('[data-slot="interest-tab-chip"]');
+	const box = async (locator: ReturnType<Page["locator"]>) =>
+		(await locator.boundingBox())!;
+	const views = await box(page.getByRole("link", { name: "Views" }));
+	const taps = await box(page.getByRole("link", { name: "Taps" }));
+
+	await expect.poll(async () => (await box(chip)).x).toBeCloseTo(taps.x, 0);
+	expect((await box(chip)).width).toBeCloseTo(taps.width, 0);
+
+	const pager = page.locator(PAGER);
+	const width = await pager.evaluate((el) => el.clientWidth);
+	const touch = await swipeAcross(page, {
+		distancePx: Math.round(width * 0.65),
+		release: false,
+	});
+	const chipOffTrack = async () => {
+		const progress = await pager.evaluate(
+			(el) => el.scrollLeft / el.clientWidth,
+		);
+		expect(progress).toBeGreaterThan(0.2);
+		expect(progress).toBeLessThan(0.8);
+		const expected = views.x + (taps.x - views.x) * progress;
+		return Math.abs((await box(chip)).x - expected);
+	};
+	await expect.poll(chipOffTrack).toBeLessThan(1);
+
+	await touch.end();
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect.poll(async () => (await box(chip)).x).toBeCloseTo(views.x, 0);
+});
