@@ -234,11 +234,10 @@ describe("choosing a notification mode", () => {
 		expect(push.setMode).not.toHaveBeenCalled();
 	});
 
-	it("offers fast mode wherever push works, even where we cannot install the add-on", async () => {
+	it("reports that a build cannot install the add-on itself", async () => {
 		addon.addonInstallerAvailable.mockReturnValue(false);
 		const module = await freshModule();
 
-		expect(module.fastModeOffered()).toBe(true);
 		expect(module.addonInstallableHere()).toBe(false);
 	});
 

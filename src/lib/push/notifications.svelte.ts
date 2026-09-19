@@ -51,10 +51,6 @@ export const notificationSettings = {
 	},
 };
 
-export function fastModeOffered(): boolean {
-	return pushAvailableHere();
-}
-
 export function addonInstallableHere(): boolean {
 	return addonInstallerAvailable();
 }

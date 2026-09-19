@@ -7,9 +7,10 @@ import Header from "./item-header.svelte";
 import Media from "./item-media.svelte";
 import Separator from "./item-separator.svelte";
 import Title from "./item-title.svelte";
-import Root from "./item.svelte";
+import Root, { itemVariants } from "./item.svelte";
 
 export {
+	itemVariants,
 	Root,
 	Group,
 	Separator,

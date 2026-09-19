@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+	currentPlatform,
 	isAndroidPlatform,
 	isLinuxPlatform,
 	isMacosPlatform,
@@ -80,5 +81,18 @@ describe("isMacosPlatform", () => {
 
 		runningOn("ios");
 		expect(isMacosPlatform()).toBe(false);
+	});
+});
+
+describe("currentPlatform", () => {
+	it("reports web outside Tauri instead of reading the missing os plugin", () => {
+		expect(currentPlatform()).toBe("web");
+	});
+
+	it("reports the host platform inside Tauri", () => {
+		runningOn("android");
+		expect(currentPlatform()).toBe("android");
+		runningOn("macos");
+		expect(currentPlatform()).toBe("macos");
 	});
 });

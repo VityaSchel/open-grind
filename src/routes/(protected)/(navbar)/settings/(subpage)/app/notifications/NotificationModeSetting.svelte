@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	import SelectionCheck from "$lib/components/shared/SelectionCheck.svelte";
+	import { Badge } from "$lib/components/ui/badge";
 	import * as Item from "$lib/components/ui/item";
+	import { itemVariants } from "$lib/components/ui/item";
+	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { isPlayBuild } from "$lib/platform/store";
 	import {
@@ -13,10 +15,9 @@
 	} from "$lib/push/notifications.svelte";
 	import { addonActivityOf } from "$lib/updates/addon.svelte";
 	import { FCM_COMPONENT } from "$lib/updates/components";
+	import { cn } from "$lib/util/utils";
 	import type { NotificationMode } from "$lib/push/types";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
-
-	const { fastOffered }: { fastOffered: boolean } = $props();
 
 	const ADDON_RELEASES =
 		"https://git.opengrind.org/open-grind/fcm-service/releases";
@@ -28,18 +29,20 @@
 		mode: NotificationMode;
 		title: string;
 		description: string;
+		recommended?: boolean;
 	}[] = [
 		{
-			mode: "slow",
-			title: "Battery friendly",
+			mode: "fast",
+			title: "Fast mode",
 			description:
-				"Open Grind checks for new messages by itself, without Google services. Android decides when it may run: about every 15 minutes while you use the app, but hours later once you stop, so notifications can be very late.",
+				"Use Google's Firebase proprietary service to receive push notifications instantly",
+			recommended: true,
 		},
 		{
-			mode: "fast",
-			title: "Instant",
+			mode: "slow",
+			title: "Slow mode",
 			description:
-				"Messages arrive the moment they are sent, through the Open Grind FCM service add-on. Needs Google Play services or microG on this device.",
+				"Poll for new notifications periodically in the background using Android's native scheduler",
 		},
 	];
 
@@ -54,42 +57,71 @@
 	});
 </script>
 
-{#each modes as { mode, title, description } (mode)}
-	{@const selected = notificationSettings.mode === mode}
-	{@const offered = mode === "slow" || fastOffered}
-	<Item.Root variant="outline">
-		{#snippet child({ props })}
-			<button
-				type="button"
-				disabled={busy || !offered}
-				aria-pressed={selected}
-				onclick={() => void selectNotificationMode(mode)}
-				{...props}
-			>
+<RadioGroup.Root
+	aria-labelledby="delivery-heading"
+	disabled={busy}
+	class="overflow-hidden rounded-2xl border border-border"
+	bind:value={
+		() => notificationSettings.mode,
+		(next) => void selectNotificationMode(next as NotificationMode)
+	}
+>
+	{#each modes as { mode, title, description, recommended } (mode)}
+		<RadioGroup.Item
+			value={mode}
+			class={cn(
+				itemVariants(),
+				"items-start rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
+			)}
+		>
+			{#snippet children({ checked })}
 				<Item.Content>
-					<Item.Title>{title}</Item.Title>
-					<Item.Description class="text-wrap">
+					<Item.Title>
+						{title}
+						{#if recommended}
+							<Badge
+								variant="secondary"
+								class="font-normal text-primary"
+							>
+								Recommended
+							</Badge>
+						{/if}
+					</Item.Title>
+					<Item.Description class="line-clamp-none text-wrap">
 						{description}
 					</Item.Description>
 				</Item.Content>
-				<Item.Actions>
-					{#if busy && !selected}
+				<Item.Actions class="self-start pt-0.5">
+					{#if busy && !checked}
 						<Spinner />
-					{:else if selected}
-						<SelectionCheck />
+					{:else}
+						<span
+							class={[
+								"flex size-5 items-center justify-center rounded-full border-2",
+								{
+									"border-primary": checked,
+									"border-muted-foreground/70": !checked,
+								},
+							]}
+						>
+							{#if checked}
+								<span class="size-2.5 rounded-full bg-primary"
+								></span>
+							{/if}
+						</span>
 					{/if}
 				</Item.Actions>
-			</button>
-		{/snippet}
-	</Item.Root>
-{/each}
+			{/snippet}
+		</RadioGroup.Item>
+	{/each}
+</RadioGroup.Root>
 {#if notificationSettings.manualInstall}
 	<p class="manual">
 		This build can't install add-ons. <a
 			href={addonHref}
 			target="_blank"
 			rel="noreferrer">Install the FCM service</a
-		> yourself, then choose Instant again.
+		> yourself, then choose Fast mode again.
 	</p>
 {/if}
 {#if notificationSettings.problem}
