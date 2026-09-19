@@ -76,10 +76,13 @@
 {#if desktopEntryAvailable()}
 	<AppsMenuEntrySetting />
 {/if}
-{@render item({
-	title: "Notifications",
-	unimplemented: { feature: "Notifications", issue: 45 },
-})}
+<Item.Root variant="outline">
+	{#snippet child({ props })}
+		<a href="/settings/app/notifications" {...props}>
+			{@render rowContent({ title: "Notifications" })}
+		</a>
+	{/snippet}
+</Item.Root>
 <h2>Privacy</h2>
 <PreferenceSwitchSetting
 	preference="stayOnline"
