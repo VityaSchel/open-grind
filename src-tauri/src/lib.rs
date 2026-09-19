@@ -9,15 +9,16 @@ mod haptics;
 mod hex;
 pub mod media;
 mod photo;
+pub mod push_poll;
 mod scroll_phase;
-mod state;
+pub mod state;
 mod storage;
 mod upload;
 mod video;
 
-use std::sync::OnceLock;
-
 use tauri::Manager;
+
+use std::sync::OnceLock;
 
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
@@ -147,7 +148,8 @@ pub fn run() {
 	let builder = builder
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
-		.plugin(api::recaptcha::plugin());
+		.plugin(api::recaptcha::plugin())
+		.plugin(api::push::plugin());
 
 	builder
         .plugin(open_grind_platform_plugin())
@@ -182,6 +184,15 @@ pub fn run() {
             api::auth::account_restriction,
             api::auth::recaptcha_first_party_enabled,
             api::recaptcha::mint_recaptcha_token,
+            api::push::push_addon_ready,
+            api::push::push_token,
+            api::push::push_delete_token,
+            api::push::push_mode,
+            api::push::push_set_mode,
+            api::push::push_notifications_permitted,
+            api::push::push_request_notifications,
+            api::push::push_take_deeplink,
+            api::push::push_watch,
             storage::storage_backend,
             api::rest::request,
             upload::bytes::upload_media,
@@ -273,8 +284,10 @@ pub fn run() {
                 credentials,
                 token: None,
             });
-            let client = grindr::GrindrClient::new(device, resumed)
-                .expect("failed to build GrindrClient");
+            let client = state::share(|| {
+                grindr::GrindrClient::new(device, resumed)
+                    .expect("failed to build GrindrClient")
+            });
 
             {
                 let mut session_rx = client.session_receiver();
