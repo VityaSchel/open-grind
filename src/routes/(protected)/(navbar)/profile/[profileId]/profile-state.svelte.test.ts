@@ -9,6 +9,7 @@ const {
 	invalidateFavoriteNoteMock,
 	getPreferencesMock,
 	showErrorToastMock,
+	isProfileCachedMock,
 } = vi.hoisted(() => ({
 	getProfileMock: vi.fn(),
 	refreshProfileMock: vi.fn(),
@@ -18,6 +19,7 @@ const {
 	invalidateFavoriteNoteMock: vi.fn(),
 	getPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
+	isProfileCachedMock: vi.fn<(profileId: number) => boolean>(),
 }));
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
@@ -36,10 +38,12 @@ vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 	getProfile: getProfileMock,
 	refreshProfile: refreshProfileMock,
 	mergeProfileEditIntoCaches: mergeProfileEditIntoCachesMock,
+	isProfileCached: isProfileCachedMock,
 }));
 
 import {
 	BlockedProfileError,
+	HiddenProfileError,
 	ProfileUnavailableError,
 } from "$lib/api/users/profiles";
 import { TapType } from "$lib/model/interest/taps";
@@ -80,7 +84,6 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(profile());
 	getFavoriteNoteMock.mockResolvedValue({ notes: "", phoneNumber: "" });
-	getPreferencesMock.mockResolvedValue({ revealProfileViews: false });
 });
 
 describe("ProfileState loading", () => {
@@ -96,6 +99,53 @@ describe("ProfileState loading", () => {
 		expect(state.error).toBeNull();
 	});
 
+	it("starts from a profile fetched earlier without requesting it again", async () => {
+		const fetched = profile({ displayName: "fetched earlier" });
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: { profile: fetched, note: null },
+		});
+
+		expect(state.loading).toBe(false);
+		expect(state.profile).toEqual(fetched);
+
+		await flush();
+
+		expect(getProfileMock).not.toHaveBeenCalled();
+	});
+
+	it("fetches the note of a profile fetched earlier once it becomes active", async () => {
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: { profile: profile({ isFavorite: true }), note: null },
+		});
+
+		state.activate();
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(getProfileMock).not.toHaveBeenCalled();
+	});
+
+	it("keeps a note fetched earlier without requesting it again", async () => {
+		const note = { notes: "met at the bar", phoneNumber: "" };
+		const state = new ProfileState({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+			fetched: { profile: profile({ isFavorite: true }), note },
+		});
+
+		state.activate();
+		await flush();
+
+		expect(state.note).toEqual(note);
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+
 	it("reports a non-numeric profile id as unavailable without fetching", async () => {
 		const state = create({ profileId: Number("nobody") });
 
@@ -105,7 +155,6 @@ describe("ProfileState loading", () => {
 		await flush();
 
 		expect(getProfileMock).not.toHaveBeenCalled();
-		expect(recordProfileViewMock).not.toHaveBeenCalled();
 	});
 
 	it("surfaces a failed first load and recovers on retry", async () => {
@@ -293,30 +342,86 @@ describe("ProfileState blocking", () => {
 });
 
 describe("ProfileState view recording", () => {
-	it("records a view when the preference is on", async () => {
+	it("records no view on construction, even with the preference on", async () => {
 		getPreferencesMock.mockResolvedValue({ revealProfileViews: true });
 		create();
 		await flush();
 
-		expect(recordProfileViewMock).toHaveBeenCalledExactlyOnceWith({
-			profileId: PROFILE_ID,
-		});
-	});
-
-	it("records nothing when the preference is off", async () => {
-		create();
-		await flush();
-
+		expect(getProfileMock).toHaveBeenCalledOnce();
 		expect(recordProfileViewMock).not.toHaveBeenCalled();
 	});
+});
 
-	it("records nothing on our own profile", async () => {
-		getPreferencesMock.mockResolvedValue({ revealProfileViews: true });
-		const state = create({ profileId: OUR_ID });
+describe("ProfileState revalidation", () => {
+	it("retries a transient error", async () => {
+		getProfileMock.mockRejectedValueOnce(new Error("offline"));
+		const state = create();
 		await flush();
 
-		expect(state.isOurProfile).toBe(true);
-		expect(recordProfileViewMock).not.toHaveBeenCalled();
+		state.revalidate();
+		expect(state.loading).toBe(true);
+		await flush();
+
+		expect(getProfileMock).toHaveBeenCalledTimes(2);
+		expect(state.error).toBeNull();
+		expect(state.profile).toEqual(profile());
+	});
+
+	it("keeps a hidden profile hidden without refetching, however stale", async () => {
+		isProfileCachedMock.mockReturnValue(false);
+		const state = create();
+		await flush();
+		state.markHidden();
+
+		state.revalidate();
+		await flush();
+
+		expect(getProfileMock).toHaveBeenCalledOnce();
+		expect(refreshProfileMock).not.toHaveBeenCalled();
+		expect(state.error).toBeInstanceOf(HiddenProfileError);
+	});
+
+	it("refreshes a just-shown profile once its cache entry has expired, without clearing it", async () => {
+		isProfileCachedMock.mockImplementation((id) => id !== PROFILE_ID);
+		const state = create();
+		await flush();
+
+		refreshProfileMock.mockResolvedValueOnce(
+			profile({ displayName: "renamed" }),
+		);
+		state.revalidate();
+
+		expect(state.refreshing).toBe(true);
+		expect(state.profile).toEqual(profile());
+		await flush();
+
+		expect(refreshProfileMock).toHaveBeenCalledExactlyOnceWith(PROFILE_ID);
+		expect(state.profile?.displayName).toBe("renamed");
+	});
+
+	it("leaves a profile alone while the cache still holds it", async () => {
+		isProfileCachedMock.mockImplementation((id) => id === PROFILE_ID);
+		const state = create();
+		await flush();
+
+		state.revalidate();
+		await flush();
+
+		expect(refreshProfileMock).not.toHaveBeenCalled();
+		expect(getProfileMock).toHaveBeenCalledOnce();
+	});
+
+	it("does not start a reload while a request is in flight", async () => {
+		getProfileMock.mockRejectedValueOnce(new Error("offline"));
+		const state = create();
+		await flush();
+		refreshProfileMock.mockReturnValueOnce(new Promise(() => {}));
+		state.refresh();
+
+		state.revalidate();
+
+		expect(getProfileMock).toHaveBeenCalledOnce();
+		expect(state.error).toEqual(new Error("offline"));
 	});
 });
 
@@ -366,22 +471,23 @@ describe("ProfileState taps", () => {
 
 describe("ProfileState favorite notes", () => {
 	it("does not fetch a note for a profile that is not a favorite", async () => {
-		create();
+		create().activate();
 		await flush();
 
 		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
 	});
 
-	it("fetches the note when the profile is a favorite", async () => {
+	it("fetches the note when the active profile is a favorite", async () => {
 		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
 		getFavoriteNoteMock.mockResolvedValue({
 			notes: "met at the bar",
 			phoneNumber: "555",
 		});
 		const state = create();
+		state.activate();
 		await flush();
 
-		expect(getFavoriteNoteMock).toHaveBeenCalledWith({
+		expect(getFavoriteNoteMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
 		expect(state.note).toEqual({
@@ -390,12 +496,100 @@ describe("ProfileState favorite notes", () => {
 		});
 	});
 
+	it("does not fetch the note of a favorite that is not active", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		const state = create();
+		await flush();
+
+		expect(state.profile?.isFavorite).toBe(true);
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+		expect(state.note).toBeNull();
+	});
+
+	it("fetches the note once when a loaded favorite becomes active", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		const state = create();
+		await flush();
+
+		state.activate();
+		state.activate();
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(state.note).toEqual({ notes: "", phoneNumber: "" });
+	});
+
+	it("does not fetch the note of a favorite that loads after it stops being active", async () => {
+		const settle = deferredProfile();
+		const state = create();
+		state.activate();
+		state.deactivate();
+
+		settle(profile({ isFavorite: true }));
+		await flush();
+
+		expect(state.profile?.isFavorite).toBe(true);
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+
+	it("does not refetch a loaded note when the favorite becomes active again", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		const state = create();
+		state.activate();
+		await flush();
+
+		state.deactivate();
+		state.activate();
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledOnce();
+		expect(state.note).toEqual({ notes: "", phoneNumber: "" });
+	});
+
+	it("does not fetch a note when a deactivated profile becomes a favorite", async () => {
+		const state = create();
+		state.activate();
+		await flush();
+		state.deactivate();
+
+		state.setFavorite(true);
+		await flush();
+
+		expect(state.profile?.isFavorite).toBe(true);
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+	});
+
+	it("refetches the note with the profile only while active", async () => {
+		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		refreshProfileMock.mockResolvedValue(profile({ isFavorite: true }));
+		const inactive = create();
+		await flush();
+
+		inactive.refresh();
+		await flush();
+
+		expect(refreshProfileMock).toHaveBeenCalledOnce();
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
+
+		const active = create();
+		active.activate();
+		await flush();
+		active.refresh();
+		await flush();
+
+		expect(getFavoriteNoteMock).toHaveBeenCalledTimes(2);
+	});
+
 	it("keeps the profile rendered when the note request fails", async () => {
 		getProfileMock.mockResolvedValue(profile({ isFavorite: true }));
 		getFavoriteNoteMock.mockRejectedValue(new Error("boom"));
 		const state = create();
+		state.activate();
 		await flush();
 
+		expect(getFavoriteNoteMock).toHaveBeenCalledOnce();
 		expect(state.profile?.profileId).toBe(PROFILE_ID);
 		expect(state.error).toBeNull();
 		expect(state.note).toBeNull();
@@ -409,6 +603,7 @@ describe("ProfileState favorite notes", () => {
 			phoneNumber: "",
 		});
 		const state = create();
+		state.activate();
 		await flush();
 		expect(state.note).not.toBeNull();
 
@@ -417,16 +612,27 @@ describe("ProfileState favorite notes", () => {
 		expect(state.note).toBeNull();
 	});
 
-	it("fetches the note when a profile becomes a favorite", async () => {
+	it("fetches the note when the active profile becomes a favorite", async () => {
 		const state = create();
+		state.activate();
 		await flush();
-		getFavoriteNoteMock.mockResolvedValue({ notes: "", phoneNumber: "" });
 
 		state.setFavorite(true);
 		await flush();
 
-		expect(getFavoriteNoteMock).toHaveBeenCalledWith({
+		expect(getFavoriteNoteMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
+	});
+
+	it("does not fetch a note when an inactive profile becomes a favorite", async () => {
+		const state = create();
+		await flush();
+
+		state.setFavorite(true);
+		await flush();
+
+		expect(state.profile?.isFavorite).toBe(true);
+		expect(getFavoriteNoteMock).not.toHaveBeenCalled();
 	});
 });

@@ -1,22 +1,27 @@
 <script lang="ts">
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { Spinner } from "$lib/components/ui/spinner";
 
 	let {
 		src,
-		thumb,
+		eager,
 		createdAt,
 		label,
-	}: { src: string; thumb: string; createdAt: number | null; label: string } =
-		$props();
+	}: {
+		src: string;
+		eager: boolean;
+		createdAt: number | null;
+		label: string;
+	} = $props();
 
 	let width: number | null = $state(null);
 	let height: number | null = $state(null);
 	let failedSrc: string | null = $state(null);
-	const failed = $derived(failedSrc === thumb);
+	const failed = $derived(failedSrc === src);
 </script>
 
 <a
-	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0"
+	class="item relative block aspect-auto h-full max-h-[inherit] w-full shrink-0 bg-stone-700"
 	data-cropped="true"
 	data-pswp-width={width}
 	data-pswp-height={height}
@@ -25,18 +30,25 @@
 	aria-disabled={failed ? "true" : undefined}
 	aria-label={label}
 >
-	<MediaImage
-		src={thumb}
-		class="absolute top-0 left-0 h-full w-full"
-		imgClass="bg-stone-700"
-		tone="photo"
-		size="xl"
-		bind:failedSrc
-		onload={(image) => {
-			width = image.naturalWidth;
-			height = image.naturalHeight;
-		}}
-	/>
+	{#if eager}
+		<MediaImage
+			{src}
+			class="absolute top-0 left-0 h-full w-full"
+			imgClass="bg-stone-700"
+			tone="photo"
+			size="xl"
+			bind:failedSrc
+			onload={(image) => {
+				width = image.naturalWidth;
+				height = image.naturalHeight;
+			}}
+		/>
+	{/if}
+	{#if width === null && !failed}
+		<Spinner
+			class="pointer-events-none absolute inset-0 m-auto size-8 text-stone-400"
+		/>
+	{/if}
 </a>
 
 <style lang="postcss">

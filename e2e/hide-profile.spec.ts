@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { ensureGridLocation, installTauriShim } from "./support/app";
+import { activeProfilePane } from "./support/profile-pager";
 
 const GRID_CARD = '.photo-grid a[href^="/profile/"]';
 
@@ -24,7 +25,7 @@ test("hiding a profile takes it off the grid and offers an undo", async ({
 	test.setTimeout(240_000);
 	const href = await openFirstGridProfile(page);
 
-	await page.getByLabel("Profile menu").click();
+	await activeProfilePane(page).getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Hide profile" }).click();
 
 	await expect(page.getByText("You hid this profile.")).toBeVisible();
@@ -42,12 +43,16 @@ test("unhiding from the profile brings the profile back", async ({ page }) => {
 	test.setTimeout(240_000);
 	await openFirstGridProfile(page);
 
-	await page.getByLabel("Profile menu").click();
+	await activeProfilePane(page).getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Hide profile" }).click();
 	await expect(page.getByText("You hid this profile.")).toBeVisible();
 
-	await page.getByRole("button", { name: "Unhide" }).click();
+	await activeProfilePane(page)
+		.getByRole("button", { name: "Unhide" })
+		.click();
 
 	await expect(page.getByText("You hid this profile.")).toHaveCount(0);
-	await expect(page.getByLabel("Profile menu")).toBeVisible();
+	await expect(
+		activeProfilePane(page).getByLabel("Profile menu"),
+	).toBeVisible();
 });

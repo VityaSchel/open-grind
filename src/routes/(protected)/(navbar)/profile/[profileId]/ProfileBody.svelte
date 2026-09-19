@@ -9,7 +9,6 @@
 		UsersThreeIcon,
 	} from "phosphor-svelte";
 
-	import { Skeleton } from "$lib/components/ui/skeleton";
 	import {
 		acceptNSFWPics,
 		ethnicities,
@@ -21,7 +20,6 @@
 		tribes,
 	} from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
-	import ProfileBottomNavBar from "./bottom-nav/ProfileBottomNavBar.svelte";
 	import Distance from "./Distance.svelte";
 	import FavoriteNoteButton from "./favorite-note/FavoriteNoteButton.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";
@@ -30,10 +28,10 @@
 	import LookupField from "./fields/LookupField.svelte";
 	import Socials from "./fields/Socials.svelte";
 	import Height from "./HeightWeightBodyType.svelte";
-	import ImageCarousel from "./ImageCarousel.svelte";
 	import NewBadge from "./NewBadge.svelte";
 	import OnlineStatus from "./OnlineStatus.svelte";
 	import type { ProfileState } from "./profile-state.svelte";
+	import ProfileHeading from "./ProfileHeading.svelte";
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
@@ -45,31 +43,7 @@
 	const ourProfile = $derived(profileState.isOurProfile);
 </script>
 
-{#if profileState.loading || !profile}
-	<div class="flex max-w-full flex-col">
-		<Skeleton class="aspect-3/4 h-auto max-h-photo w-full rounded-none" />
-
-		<div
-			class={[
-				"flex max-w-full flex-col gap-3.5 p-4",
-				{ "pb-24": ourProfile, "pb-40": !ourProfile },
-			]}
-		>
-			<Skeleton class="h-6 w-40 max-w-full" />
-			<Skeleton class="h-3 w-30 max-w-full" />
-			<Skeleton class="mt-0.5 h-3 w-50 max-w-full" />
-			<div class="mt-2 flex flex-wrap gap-1">
-				{#each [10, 12, 18, 16, 15] as w, i (i)}
-					<Skeleton
-						class="h-4.5 w-(--w)"
-						--w="calc(var(--spacing) * {w})"
-					/>
-				{/each}
-			</div>
-			<Skeleton class="mt-2.25 h-27 w-full rounded-4xl" />
-		</div>
-	</div>
-{:else}
+{#if profile}
 	{@const {
 		displayName,
 		age,
@@ -95,9 +69,7 @@
 		lastTestedDate: lastTestedDateValue,
 		sexualHealth: sexualHealthValue,
 		socialNetworks,
-		medias,
 	} = profile}
-	<ImageCarousel {medias} />
 	{#if !ourProfile && profile.isFavorite && profileState.note}
 		<FavoriteNoteButton
 			profileId={profile.profileId}
@@ -118,17 +90,7 @@
 			{ "pb-24": ourProfile, "pb-40": !ourProfile },
 		]}
 	>
-		<h1 class="text-2xl wrap-break-word">
-			{#if displayName !== null}
-				<span class="font-semibold">
-					{displayName}
-				</span>{:else}<span
-					class="font-normal tracking-tight text-muted-foreground italic"
-				>
-					Someone
-				</span>{/if}{#if age !== null}, {age}
-			{/if}
-		</h1>
+		<ProfileHeading {displayName} {age} />
 		<div
 			data-slot="profile-status-row"
 			class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
@@ -219,10 +181,4 @@
 			</ProfileSection>
 		{/if}
 	</div>
-	<ProfileBottomNavBar
-		ourProfileId={profileState.ourProfileId}
-		profileId={profile.profileId}
-		tapType={profile.tapType}
-		onTap={(tapType) => profileState.setTap(tapType)}
-	/>
 {/if}

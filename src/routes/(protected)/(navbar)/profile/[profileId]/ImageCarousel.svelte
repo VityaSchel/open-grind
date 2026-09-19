@@ -9,6 +9,7 @@
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
@@ -26,12 +27,22 @@
 
 	let gallery: HTMLDivElement | null = $state(null);
 
+	const PHOTOS_LOADED_AHEAD = 2;
+	const SUBPIXEL_SNAP_PX = 1;
+	let reach = $state(PHOTOS_LOADED_AHEAD);
+
+	function raiseReach(index: number) {
+		if (index > reach) reach = index;
+	}
+
 	$effect(() => {
 		if (!gallery) return;
+		let disposed = false;
 		let lightbox: PhotoSwipeLightbox | undefined;
+		let stopOpenTracking: (() => void) | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
-				if (!gallery) return;
+				if (disposed || !gallery) return;
 				lightbox = new PhotoSwipeLightbox({
 					gallery,
 					children: ".item[href]",
@@ -42,6 +53,10 @@
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
+				stopOpenTracking = applyPhotoSwipeOpenTracking(lightbox);
+				lightbox.on("beforeOpen", () => {
+					raiseReach(medias.length - 1);
+				});
 				lightbox.on("openingAnimationStart", () => {
 					gallery?.querySelectorAll(".item").forEach((item) => {
 						if (item instanceof HTMLElement) {
@@ -92,7 +107,11 @@
 				lightbox.init();
 			})
 			.catch((error) => console.error(error));
-		return () => lightbox?.destroy();
+		return () => {
+			disposed = true;
+			lightbox?.destroy();
+			stopOpenTracking?.();
+		};
 	});
 
 	const GAP_PX = 4;
@@ -112,7 +131,8 @@
 			bind:this={gallery}
 			onscroll={() => {
 				if (!gallery) return;
-				const item = gallery.scrollTop / gallery.clientHeight;
+				const photoHeight = gallery.getBoundingClientRect().height;
+				const item = gallery.scrollTop / photoHeight;
 				const frac = item % 1;
 				const stretch = Math.min(frac, 1 - frac);
 				const index = Math.floor(item);
@@ -128,13 +148,17 @@
 					(item > 0 && item < medias.length - 1
 						? indicatorStretch
 						: 0);
+				const lastVisible = Math.ceil(
+					(gallery.scrollTop - SUBPIXEL_SNAP_PX) / photoHeight,
+				);
+				raiseReach(lastVisible + PHOTOS_LOADED_AHEAD);
 			}}
 		>
 			{#each medias as { mediaHash, createdAt }, index (mediaHash + index)}
 				{@const src = profileMediaUrl({ mediaHash, size: "full" })}
 				<ImageCarouselItem
 					{src}
-					thumb={src}
+					eager={index <= reach}
 					{createdAt}
 					label="Profile photo {index + 1} of {medias.length}"
 				/>
