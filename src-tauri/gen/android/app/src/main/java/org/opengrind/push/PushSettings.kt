@@ -7,6 +7,7 @@ object PushSettings {
 	private const val MODE = "mode"
 	private const val NONCE = "addon_nonce"
 	private const val WATERMARK = "poll_watermark"
+	private const val CATEGORY = "category_"
 
 	fun mode(context: Context): PushMode =
 		PushMode.of(preferences(context).getString(MODE, null))
@@ -25,6 +26,16 @@ object PushSettings {
 
 	fun setWatermark(context: Context, watermark: Long) {
 		preferences(context).edit().putLong(WATERMARK, watermark).commit()
+	}
+
+	fun categoryEnabled(context: Context, kind: PushKind): Boolean =
+		preferences(context).getBoolean(CATEGORY + PushCategories.wireOf(kind), true)
+
+	fun setCategoryEnabled(context: Context, kind: PushKind, enabled: Boolean) {
+		preferences(context)
+			.edit()
+			.putBoolean(CATEGORY + PushCategories.wireOf(kind), enabled)
+			.commit()
 	}
 
 	private fun preferences(context: Context) =

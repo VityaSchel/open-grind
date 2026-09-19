@@ -6,6 +6,18 @@ export const notificationModeSchema = z.enum(NOTIFICATION_MODES);
 
 export type NotificationMode = z.infer<typeof notificationModeSchema>;
 
+export const PUSH_CATEGORIES = ["messages", "taps"] as const;
+
+export const pushCategorySchema = z.object({
+	category: z.enum(PUSH_CATEGORIES),
+	enabled: z.boolean(),
+	systemBlocked: z.boolean(),
+});
+
+export type PushCategory = z.infer<typeof pushCategorySchema>;
+
+export type PushCategoryName = PushCategory["category"];
+
 export const pushTokenSchema = z.object({
 	token: z.string().min(1),
 	vendorProvidedIdentifier: z.string().min(1),

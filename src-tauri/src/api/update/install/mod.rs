@@ -277,6 +277,14 @@ mod pins {
 		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushSchedule.kt"
 	);
 
+	const PUSH_NOTIFIER_KT: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushNotifier.kt"
+	);
+
+	const PUSH_CATEGORIES_KT: &str = include_str!(
+		"../../../../android-logic/src/main/kotlin/org/opengrind/push/PushCategories.kt"
+	);
+
 	const PUSH_TYPES_TS: &str =
 		include_str!("../../../../../src/lib/push/types.ts");
 
@@ -1420,6 +1428,42 @@ mod pins {
 				"types.ts no longer offers the {wire} mode"
 			);
 		}
+	}
+
+	#[test]
+	fn every_notification_category_is_spelled_the_same_in_both_languages() {
+		let kotlin = squashed(PUSH_CATEGORIES_KT);
+		let wires: Vec<&str> = kotlin
+			.split("->\"")
+			.skip(1)
+			.filter_map(|rest| rest.split('"').next())
+			.collect();
+		assert!(!wires.is_empty(), "PushCategories.kt names no categories");
+		for wire in wires {
+			assert!(
+				squashed(PUSH_TYPES_TS).contains(&format!("\"{wire}\"")),
+				"types.ts no longer offers the {wire} category"
+			);
+		}
+	}
+
+	#[test]
+	fn a_muted_category_suppresses_only_new_notifications_never_dismissals() {
+		let notifier = squashed(PUSH_NOTIFIER_KT);
+		let guard =
+			"if(!PushSettings.categoryEnabled(context,decision.kind))return";
+		assert!(
+			notifier.contains(guard),
+			"PushNotifier no longer consults the category preference"
+		);
+		let notify = notifier
+			.split_once("privatefunnotify(")
+			.expect("PushNotifier declares no notify()")
+			.1;
+		assert!(
+			notify.contains(guard),
+			"the category guard left notify(); in apply() it would also swallow the clear and unsend dismissals"
+		);
 	}
 
 	#[test]

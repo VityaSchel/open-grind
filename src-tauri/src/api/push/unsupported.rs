@@ -1,6 +1,6 @@
 use tauri::AppHandle;
 
-use super::{PushError, PushMode, PushSignal};
+use super::{PushCategory, PushError, PushMode, PushSignal};
 
 const UNSUPPORTED: PushError = PushError::UnsupportedPlatform;
 
@@ -23,6 +23,27 @@ pub async fn mode(_app: &AppHandle) -> Result<PushMode, PushError> {
 pub async fn set_mode(
 	_app: &AppHandle,
 	_mode: PushMode,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn categories(
+	_app: &AppHandle,
+) -> Result<Vec<PushCategory>, PushError> {
+	Ok(Vec::new())
+}
+
+pub async fn set_category(
+	_app: &AppHandle,
+	_category: String,
+	_enabled: bool,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn open_category_settings(
+	_app: &AppHandle,
+	_category: String,
 ) -> Result<(), PushError> {
 	Err(UNSUPPORTED)
 }

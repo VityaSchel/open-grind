@@ -27,6 +27,14 @@ pub struct PushToken {
 	pub vendor_provided_identifier: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PushCategory {
+	pub category: String,
+	pub enabled: bool,
+	pub system_blocked: bool,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PushMode {
@@ -93,6 +101,30 @@ pub async fn push_set_mode(
 	mode: PushMode,
 ) -> Result<(), AppError> {
 	Ok(backend::set_mode(&app, mode).await?)
+}
+
+#[tauri::command]
+pub async fn push_categories(
+	app: AppHandle,
+) -> Result<Vec<PushCategory>, AppError> {
+	Ok(backend::categories(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_set_category(
+	app: AppHandle,
+	category: String,
+	enabled: bool,
+) -> Result<(), AppError> {
+	Ok(backend::set_category(&app, category, enabled).await?)
+}
+
+#[tauri::command]
+pub async fn push_open_category_settings(
+	app: AppHandle,
+	category: String,
+) -> Result<(), AppError> {
+	Ok(backend::open_category_settings(&app, category).await?)
 }
 
 #[tauri::command]

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { currentPlatform } from "$lib/platform/os";
+	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";
 
 	const platform = currentPlatform();
@@ -8,6 +9,8 @@
 {#if platform === "android"}
 	<h2 id="delivery-heading">Delivery</h2>
 	<NotificationModeSetting />
+	<h2>Categories</h2>
+	<NotificationCategoriesSetting />
 {:else}
 	<p>Notifications aren't supported on this platform yet.</p>
 {/if}

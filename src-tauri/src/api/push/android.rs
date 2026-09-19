@@ -47,6 +47,18 @@ struct ModeResponse {
 	mode: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CategoryRequest {
+	category: String,
+	enabled: bool,
+}
+
+#[derive(Deserialize)]
+struct CategoriesResponse {
+	categories: Vec<super::PushCategory>,
+}
+
 #[derive(Deserialize)]
 struct DeeplinkResponse {
 	deeplink: Option<String>,
@@ -83,6 +95,44 @@ pub async fn set_mode(
 	call::<serde_json::Value>(app, "setMode", ModeRequest { mode: mode.wire() })
 		.await
 		.map(drop)
+}
+
+pub async fn categories(
+	app: &AppHandle,
+) -> Result<Vec<super::PushCategory>, PushError> {
+	call::<CategoriesResponse>(app, "categories", ())
+		.await
+		.map(|response| response.categories)
+}
+
+pub async fn set_category(
+	app: &AppHandle,
+	category: String,
+	enabled: bool,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(
+		app,
+		"setCategory",
+		CategoryRequest { category, enabled },
+	)
+	.await
+	.map(drop)
+}
+
+pub async fn open_category_settings(
+	app: &AppHandle,
+	category: String,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(
+		app,
+		"openCategorySettings",
+		CategoryRequest {
+			category,
+			enabled: true,
+		},
+	)
+	.await
+	.map(drop)
 }
 
 pub async fn notifications_permitted(

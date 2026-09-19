@@ -5,6 +5,9 @@ import { isAndroidPlatform } from "$lib/platform/os";
 import {
 	type NotificationMode,
 	notificationModeSchema,
+	type PushCategory,
+	type PushCategoryName,
+	pushCategorySchema,
 	type PushErrorReason,
 	pushErrorSchema,
 	type PushSignal,
@@ -43,6 +46,23 @@ export async function currentMode(): Promise<NotificationMode> {
 
 export async function setMode(mode: NotificationMode): Promise<void> {
 	await invoke("push_set_mode", { mode });
+}
+
+export async function pushCategories(): Promise<PushCategory[]> {
+	return pushCategorySchema.array().parse(await invoke("push_categories"));
+}
+
+export async function setPushCategory(
+	category: PushCategoryName,
+	enabled: boolean,
+): Promise<void> {
+	await invoke("push_set_category", { category, enabled });
+}
+
+export async function openPushCategorySettings(
+	category: PushCategoryName,
+): Promise<void> {
+	await invoke("push_open_category_settings", { category });
 }
 
 export async function notificationsPermitted(): Promise<boolean> {

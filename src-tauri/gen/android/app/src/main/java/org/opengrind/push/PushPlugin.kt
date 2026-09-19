@@ -12,6 +12,7 @@ import app.tauri.annotation.PermissionCallback
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Channel
 import app.tauri.plugin.Invoke
+import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import org.opengrind.addon.AddonGate
@@ -25,6 +26,12 @@ internal class WatchArgs {
 @InvokeArg
 internal class ModeArgs {
 	lateinit var mode: String
+}
+
+@InvokeArg
+internal class CategoryArgs {
+	lateinit var category: String
+	var enabled: Boolean = true
 }
 
 @TauriPlugin(
@@ -83,6 +90,46 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 		PushNotifier.createChannels(activity)
 		if (mode != PushMode.Fast) PushNotifier.cancelAll(activity)
 		PushSchedule.follow(activity, mode)
+		invoke.resolve()
+	}
+
+	@Command
+	fun categories(invoke: Invoke) {
+		PushNotifier.createChannels(activity)
+		val entries = PushKind.entries.map { kind ->
+			JSObject().apply {
+				put("category", PushCategories.wireOf(kind))
+				put("enabled", PushSettings.categoryEnabled(activity, kind))
+				put("systemBlocked", PushNotifier.channelBlocked(activity, kind))
+			}
+		}
+		invoke.resolve(JSObject().apply { put("categories", JSArray(entries)) })
+	}
+
+	@Command
+	fun setCategory(invoke: Invoke) {
+		val args = invoke.parseArgs(CategoryArgs::class.java)
+		val kind = PushCategories.kindOf(args.category)
+		if (kind == null) {
+			invoke.reject("unknown category")
+			return
+		}
+		PushSettings.setCategoryEnabled(activity, kind, args.enabled)
+		if (!args.enabled) PushNotifier.cancelCategory(activity, kind)
+		invoke.resolve()
+	}
+
+	@Command
+	fun openCategorySettings(invoke: Invoke) {
+		val kind = PushCategories.kindOf(
+			invoke.parseArgs(CategoryArgs::class.java).category,
+		)
+		if (kind == null) {
+			invoke.reject("unknown category")
+			return
+		}
+		PushNotifier.createChannels(activity)
+		PushNotifier.openChannelSettings(activity, kind)
 		invoke.resolve()
 	}
 

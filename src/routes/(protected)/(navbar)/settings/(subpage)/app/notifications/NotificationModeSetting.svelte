@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-
+	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import * as Item from "$lib/components/ui/item";
 	import { itemVariants } from "$lib/components/ui/item";
@@ -49,7 +48,9 @@
 	const installs = $derived(addonActivityOf(FCM_COMPONENT).installs);
 	const busy = $derived(notificationSettings.phase === "working");
 
-	onMount(() => void loadNotificationSettings());
+	$effect(() => {
+		if (appLifecycle.active) void loadNotificationSettings();
+	});
 
 	$effect(() => {
 		void installs;

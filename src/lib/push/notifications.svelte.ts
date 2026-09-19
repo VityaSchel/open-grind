@@ -9,13 +9,16 @@ import {
 	deletePushToken,
 	mintPushToken,
 	notificationsPermitted,
+	openPushCategorySettings,
 	pushAvailableHere,
+	pushCategories,
 	pushErrorReason,
 	requestNotifications,
 	setMode,
+	setPushCategory,
 } from "./index";
 import { forgetPushRegistration } from "./teardown";
-import type { NotificationMode } from "./types";
+import type { NotificationMode, PushCategory, PushCategoryName } from "./types";
 
 type Phase = "idle" | "installing" | "working";
 
@@ -53,6 +56,29 @@ export const notificationSettings = {
 
 export function addonInstallableHere(): boolean {
 	return addonInstallerAvailable();
+}
+
+export const notificationCategories = $state<{ list: PushCategory[] }>({
+	list: [],
+});
+
+export async function loadNotificationCategories(): Promise<void> {
+	if (!pushAvailableHere()) return;
+	notificationCategories.list = await pushCategories().catch(() => []);
+}
+
+export async function toggleNotificationCategory(
+	category: PushCategoryName,
+	enabled: boolean,
+): Promise<void> {
+	await setPushCategory(category, enabled);
+	await loadNotificationCategories();
+}
+
+export async function showCategoryInSystemSettings(
+	category: PushCategoryName,
+): Promise<void> {
+	await openPushCategorySettings(category);
 }
 
 export async function loadNotificationSettings(): Promise<void> {

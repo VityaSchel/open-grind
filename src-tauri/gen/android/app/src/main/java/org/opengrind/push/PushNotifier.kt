@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -39,6 +40,32 @@ object PushNotifier {
 	fun notificationsPermitted(context: Context): Boolean =
 		NotificationManagerCompat.from(context).areNotificationsEnabled()
 
+	fun channelBlocked(context: Context, kind: PushKind): Boolean {
+		val channel = NotificationManagerCompat.from(context)
+			.getNotificationChannelCompat(channelOf(kind))
+		return channel != null &&
+			channel.importance == NotificationManagerCompat.IMPORTANCE_NONE
+	}
+
+	fun cancelCategory(context: Context, kind: PushKind) {
+		val channel = channelOf(kind)
+		dismiss(context) { it.tag == channel }
+	}
+
+	fun openChannelSettings(context: Context, kind: PushKind) {
+		val channel = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+			.putExtra(Settings.EXTRA_CHANNEL_ID, channelOf(kind))
+		val app = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+		for (intent in listOf(channel, app)) {
+			runCatching {
+				context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+				return
+			}
+		}
+	}
+
 	fun createChannels(context: Context) {
 		val manager = context.getSystemService(NotificationManager::class.java)
 		manager.createNotificationChannel(
@@ -57,13 +84,14 @@ object PushNotifier {
 		)
 	}
 
-	private fun channelOf(kind: PushKind) = when (kind) {
+	fun channelOf(kind: PushKind) = when (kind) {
 		PushKind.Message -> MESSAGES_CHANNEL
 		PushKind.Tap -> TAPS_CHANNEL
 	}
 
 	private fun notify(context: Context, decision: PushDecision.Notify) {
 		if (!notificationsPermitted(context)) return
+		if (!PushSettings.categoryEnabled(context, decision.kind)) return
 		createChannels(context)
 		val channel = channelOf(decision.kind)
 		val notification = NotificationCompat.Builder(context, channel)
