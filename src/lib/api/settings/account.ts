@@ -3,6 +3,8 @@ import {
 	type AccountPreferences,
 	type AccountPreferencesPatch,
 	accountPreferencesSchema,
+	type PushSettings,
+	pushSettingsSchema,
 } from "$lib/model/settings/account";
 
 export async function getAccountPreferences(): Promise<AccountPreferences> {
@@ -15,6 +17,19 @@ export async function setAccountPreferences(settings: AccountPreferencesPatch) {
 	await fetchRest("/v3/me/prefs/settings", {
 		method: "PUT",
 		body: { settings },
+	}).then((res) => res.assertOk());
+}
+
+export async function getPushSettings(): Promise<PushSettings> {
+	return await fetchRest("/v5/push-settings").then((res) =>
+		res.jsonParsed(pushSettingsSchema),
+	);
+}
+
+export async function setPushSettings(settings: PushSettings) {
+	await fetchRest("/v5/push-settings", {
+		method: "PUT",
+		body: settings,
 	}).then((res) => res.assertOk());
 }
 

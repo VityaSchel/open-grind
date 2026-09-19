@@ -10,15 +10,20 @@
 	} from "$lib/push/notifications.svelte";
 	import type { PushCategoryName } from "$lib/push/types";
 
-	const LABELS: Record<
+	const CATEGORIES: Record<
 		PushCategoryName,
-		{ title: string; description: string }
+		{ title: string; description: string; readOnly?: boolean }
 	> = {
 		messages: {
 			title: "Messages",
-			description: "Someone sends you a chat message",
+			description:
+				"Someone sends you a chat message. Always on — turn these off in Android settings.",
+			readOnly: true,
 		},
-		taps: { title: "Taps", description: "Someone taps you" },
+		taps: {
+			title: "Taps",
+			description: "Someone taps you. Shared with your Grindr account.",
+		},
 	};
 
 	$effect(() => {
@@ -40,11 +45,11 @@
 
 {#each notificationCategories.list as { category, enabled, systemBlocked } (category)}
 	<SwitchField
-		title={LABELS[category].title}
+		title={CATEGORIES[category].title}
 		description={systemBlocked
 			? "Android is blocking this category. Turn it back on in system settings."
-			: LABELS[category].description}
-		disabled={systemBlocked}
+			: CATEGORIES[category].description}
+		disabled={systemBlocked || CATEGORIES[category].readOnly === true}
 		bind:checked={
 			() => enabled && !systemBlocked,
 			(next: boolean) => change(category, next)

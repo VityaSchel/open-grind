@@ -1,4 +1,8 @@
-import { registerPushToken } from "$lib/api/settings/account";
+import {
+	getPushSettings,
+	registerPushToken,
+	setPushSettings,
+} from "$lib/api/settings/account";
 import { getInstalledVersion } from "$lib/updates";
 import { addonFlow, addonInstallerAvailable } from "$lib/updates/addon.svelte";
 import { FCM_COMPONENT } from "$lib/updates/components";
@@ -64,7 +68,17 @@ export const notificationCategories = $state<{ list: PushCategory[] }>({
 
 export async function loadNotificationCategories(): Promise<void> {
 	if (!pushAvailableHere()) return;
-	notificationCategories.list = await pushCategories().catch(() => []);
+	const [device, account] = await Promise.all([
+		pushCategories().catch(() => []),
+		getPushSettings().catch(() => null),
+	]);
+	const taps = device.find((entry) => entry.category === "taps");
+	const wanted = account?.tapPushNotification;
+	if (taps && typeof wanted === "boolean" && taps.enabled !== wanted) {
+		await setPushCategory("taps", wanted).catch(() => {});
+		taps.enabled = wanted;
+	}
+	notificationCategories.list = device;
 }
 
 export async function toggleNotificationCategory(
@@ -72,6 +86,8 @@ export async function toggleNotificationCategory(
 	enabled: boolean,
 ): Promise<void> {
 	await setPushCategory(category, enabled);
+	if (category === "taps")
+		await setPushSettings({ tapPushNotification: enabled });
 	await loadNotificationCategories();
 }
 

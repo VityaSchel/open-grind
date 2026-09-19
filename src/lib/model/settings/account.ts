@@ -28,3 +28,10 @@ export const accountPreferencesUpdateSchema = z.object({
 export type AccountPreferencesUpdate = z.infer<
 	typeof accountPreferencesUpdateSchema
 >;
+
+export const pushSettingsSchema = z.object({
+	favoritePushNotification: z.boolean().nullish(),
+	tapPushNotification: z.boolean().nullish(),
+});
+
+export type PushSettings = z.infer<typeof pushSettingsSchema>;

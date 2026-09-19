@@ -12,6 +12,10 @@ const push = vi.hoisted(() => ({
 	pushErrorReason: vi.fn<() => PushErrorReason | null>(() => "failed"),
 	requestNotifications: vi.fn<() => Promise<boolean>>(),
 	setMode: vi.fn<(mode: "slow" | "fast") => Promise<void>>(),
+	pushCategories: vi.fn<() => Promise<unknown[]>>(),
+	setPushCategory:
+		vi.fn<(category: string, enabled: boolean) => Promise<void>>(),
+	openPushCategorySettings: vi.fn<(category: string) => Promise<void>>(),
 }));
 const updates = vi.hoisted(() => ({
 	getInstalledVersion: vi.fn<() => Promise<string | null>>(),
@@ -23,6 +27,10 @@ const addon = vi.hoisted(() => ({
 const account = vi.hoisted(() => ({
 	registerPushToken: vi.fn<(token: PushToken) => Promise<void>>(),
 	unregisterPushToken: vi.fn<(token: string) => Promise<void>>(),
+	getPushSettings:
+		vi.fn<() => Promise<{ tapPushNotification?: boolean | null }>>(),
+	setPushSettings:
+		vi.fn<(settings: { tapPushNotification?: boolean }) => Promise<void>>(),
 }));
 
 vi.mock("./index", () => push);
@@ -73,6 +81,10 @@ beforeEach(() => {
 	push.setMode.mockResolvedValue(undefined);
 	updates.getInstalledVersion.mockResolvedValue("1.0.0");
 	account.registerPushToken.mockResolvedValue(undefined);
+	account.getPushSettings.mockResolvedValue({});
+	account.setPushSettings.mockResolvedValue(undefined);
+	push.pushCategories.mockResolvedValue([]);
+	push.setPushCategory.mockResolvedValue(undefined);
 	account.unregisterPushToken.mockResolvedValue(undefined);
 });
 
@@ -252,5 +264,70 @@ describe("choosing a notification mode", () => {
 		expect(module.notificationSettings.manualInstall).toBe(true);
 		expect(module.notificationSettings.problem).toBeNull();
 		expect(module.notificationSettings.mode).toBe("slow");
+	});
+});
+
+describe("notification categories", () => {
+	const categories = [
+		{ category: "messages", enabled: true, systemBlocked: false },
+		{ category: "taps", enabled: true, systemBlocked: false },
+	];
+
+	it("adopts the account's tap setting so the background poll obeys it too", async () => {
+		push.pushCategories.mockResolvedValue(
+			categories.map((entry) => ({ ...entry })),
+		);
+		account.getPushSettings.mockResolvedValue({
+			tapPushNotification: false,
+		});
+		const module = await freshModule();
+
+		await module.loadNotificationCategories();
+
+		expect(push.setPushCategory).toHaveBeenCalledWith("taps", false);
+		expect(
+			module.notificationCategories.list.find(
+				(entry) => entry.category === "taps",
+			)?.enabled,
+		).toBe(false);
+	});
+
+	it("leaves the device alone when the account has no opinion on taps", async () => {
+		push.pushCategories.mockResolvedValue(
+			categories.map((entry) => ({ ...entry })),
+		);
+		account.getPushSettings.mockResolvedValue({
+			tapPushNotification: null,
+		});
+		const module = await freshModule();
+
+		await module.loadNotificationCategories();
+
+		expect(push.setPushCategory).not.toHaveBeenCalled();
+	});
+
+	it("writes a tap change back to the account, since taps are shared", async () => {
+		push.pushCategories.mockResolvedValue(
+			categories.map((entry) => ({ ...entry })),
+		);
+		const module = await freshModule();
+
+		await module.toggleNotificationCategory("taps", false);
+
+		expect(push.setPushCategory).toHaveBeenCalledWith("taps", false);
+		expect(account.setPushSettings).toHaveBeenCalledWith({
+			tapPushNotification: false,
+		});
+	});
+
+	it("keeps messages off the account, which has no message setting", async () => {
+		push.pushCategories.mockResolvedValue(
+			categories.map((entry) => ({ ...entry })),
+		);
+		const module = await freshModule();
+
+		await module.toggleNotificationCategory("messages", false);
+
+		expect(account.setPushSettings).not.toHaveBeenCalled();
 	});
 });
