@@ -1,17 +1,31 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
+	import InterestPager from "./InterestPager.svelte";
+	import { INTEREST_TABS } from "./tabs";
 
-	let { children }: { children?: import("svelte").Snippet } = $props();
+	let { data }: import("./$types").LayoutProps = $props();
 </script>
 
 {#snippet tab(href: string, label: string)}
 	{@const active = page.url.pathname === href}
 	<Button
 		{href}
+		onclick={(event: MouseEvent) => {
+			if (
+				event.metaKey ||
+				event.ctrlKey ||
+				event.shiftKey ||
+				event.altKey
+			)
+				return;
+			event.preventDefault();
+			void goto(href, { replaceState: true, noScroll: true });
+		}}
 		class={[
 			toggleVariants({ variant: "default" }),
 			"text-muted-foreground",
@@ -32,7 +46,8 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
 >
-	{@render tab("/interest/views", "Views")}
-	{@render tab("/interest/taps", "Taps")}
+	{#each INTEREST_TABS as { href, label } (href)}
+		{@render tab(href, label)}
+	{/each}
 </ProgressiveBlur>
-{@render children?.()}
+<InterestPager ourProfileId={data.ourProfileId} />

@@ -11,7 +11,10 @@
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
 
-	let { ourProfileId }: { ourProfileId: number } = $props();
+	let {
+		ourProfileId,
+		active = true,
+	}: { ourProfileId: number; active?: boolean } = $props();
 
 	const taps = untrack(() => {
 		const state = getTapsState(ourProfileId);
@@ -20,7 +23,7 @@
 	});
 
 	$effect(() => {
-		if (taps.hasUnseen) taps.markViewed();
+		if (active && taps.hasUnseen) taps.markViewed();
 	});
 
 	let container: HTMLDivElement | null = $state(null);
@@ -31,7 +34,7 @@
 <div class="screen-nav-host">
 	<div
 		bind:this={container}
-		class="pull-scroller"
+		class="pull-scroller overscroll-x-auto"
 		onscroll={() => (taps.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
