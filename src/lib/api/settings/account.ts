@@ -17,3 +17,19 @@ export async function setAccountPreferences(settings: AccountPreferencesPatch) {
 		body: { settings },
 	}).then((res) => res.assertOk());
 }
+
+export async function registerPushToken(registration: {
+	vendorProvidedIdentifier: string;
+	token: string;
+}) {
+	await fetchRest("/v3/gcm-push-tokens", {
+		method: "POST",
+		body: registration,
+	}).then((res) => res.assertOk());
+}
+
+export async function unregisterPushToken(token: string) {
+	await fetchRest(`/v3/push-tokens/${encodeURIComponent(token)}`, {
+		method: "DELETE",
+	}).then((res) => res.assertOk());
+}

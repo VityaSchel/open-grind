@@ -25,6 +25,7 @@
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { isAndroidPlatform } from "$lib/platform/os";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
+	import { startPushWatch } from "$lib/push/watch";
 	import { startAddonUpdateWatch } from "$lib/updates/addon.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import { startUpdateWatch } from "$lib/updates/updates-manager";
@@ -94,6 +95,11 @@
 			? startUpdateWatch()
 			: Promise.resolve();
 		void appUpdates.finally(() => startAddonUpdateWatch());
+	});
+
+	$effect(() => {
+		if (!onboarded) return;
+		void startPushWatch();
 	});
 
 	$effect(() => {
