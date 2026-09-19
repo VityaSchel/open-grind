@@ -2,6 +2,7 @@
 	import { page } from "$app/state";
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
+	import BackLink from "$lib/components/navigation/BackLink.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 
 	const base = "/(protected)/(navbar)/settings/(subpage)";
@@ -42,13 +43,12 @@
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
 >
-	<a
+	<BackLink
 		href={current.back}
-		aria-label="Back"
 		class="flex h-full w-19 shrink-0 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />
-	</a>
+	</BackLink>
 	<span class="min-w-0 truncate">
 		{current.title}
 	</span>

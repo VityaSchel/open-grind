@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
+	import BackLink from "$lib/components/navigation/BackLink.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { getConversationState } from "../conversation-state.svelte";
@@ -16,13 +17,13 @@
 	contentClass="flex items-center h-full"
 	tag="nav"
 >
-	<a
+	<BackLink
 		href="/chat"
-		aria-label="Back to chats"
+		label="Back to chats"
 		class="flex h-full w-19 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />
-	</a>
+	</BackLink>
 	{#if conversationState.profile !== null}
 		<ConversationNavBarProfile profile={conversationState.profile} />
 	{:else if conversationState.error}
