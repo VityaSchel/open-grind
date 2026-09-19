@@ -25,6 +25,7 @@ const RELEASES: Record<ComponentKey, string> = {
 		"https://git.opengrind.org/open-grind/google-oauth-app/releases/tag",
 	recaptcha:
 		"https://git.opengrind.org/open-grind/recaptcha-helper/releases/tag",
+	fcm: "https://git.opengrind.org/open-grind/fcm-service/releases/tag",
 };
 const INSTALLED_TOAST = "update-installed";
 const CHECK_RESULT_TOAST = "update-check-result";
@@ -122,8 +123,8 @@ export function showAddonInstalled({
 	tag: string | null;
 	kind: InstallKind;
 }): void {
-	const name = ADDON_NAME[component];
-	const done = kind === "install" ? `${name} installed` : `${name} updated`;
+	const addon = ADDON_NAME[component];
+	const done = kind === "install" ? `${addon} installed` : `${addon} updated`;
 	toast.custom(ToastCard, {
 		...PLACEMENT,
 		id: `${INSTALLED_TOAST}:${component}`,

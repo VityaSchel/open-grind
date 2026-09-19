@@ -62,10 +62,12 @@ describe("the up-to-date toast", () => {
 	it("names the add-on that is up to date", () => {
 		toastPresenter("recaptcha").upToDate();
 		toastPresenter("google-oauth").upToDate();
+		toastPresenter("fcm").upToDate();
 
 		expect(toasts.showUpToDate.mock.calls).toStrictEqual([
 			["The reCAPTCHA helper is up to date"],
 			["The Google OAuth app is up to date"],
+			["The FCM service is up to date"],
 		]);
 	});
 

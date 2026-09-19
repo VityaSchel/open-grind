@@ -3,9 +3,8 @@ import z from "zod";
 import {
 	ADDON_NAME,
 	APP_COMPONENT,
+	COMPONENT_KEYS,
 	type ComponentKey,
-	GOOGLE_OAUTH_COMPONENT,
-	RECAPTCHA_COMPONENT,
 } from "./components";
 import {
 	asUpdateError,
@@ -40,6 +39,7 @@ export function unsupportedIsFixable(detail: Unsupported): boolean {
 }
 
 type KnownKind = Exclude<UpdateError["kind"], "unsupported">;
+type AddonText = (addon: string) => string;
 
 const copy: Record<KnownKind, string> = {
 	network: "Couldn't reach the release server",
@@ -63,56 +63,44 @@ const copy: Record<KnownKind, string> = {
 	busy: "Another download is already running",
 };
 
-function addonUnsupportedCopy(
-	name: string,
-): Partial<Record<Unsupported["reason"], string>> {
-	return {
-		externallyManaged: `The store that installed the ${name} manages its updates`,
-		foreignSigner: `This copy of Open Grind isn't signed by Open Grind, so it can't install the ${name}`,
-		foreignTarget: `The installed ${name} isn't signed by Open Grind. Uninstall it to install the official one.`,
-		noReleaseArtifacts: `The ${name} isn't published for this device`,
-		undetermined: `Open Grind can't tell whether it may install the ${name}`,
+const addonUnsupportedCopy: Partial<Record<Unsupported["reason"], AddonText>> =
+	{
+		externallyManaged: (addon) =>
+			`The store that installed the ${addon} manages its updates`,
+		foreignSigner: (addon) =>
+			`This copy of Open Grind isn't signed by Open Grind, so it can't install the ${addon}`,
+		foreignTarget: (addon) =>
+			`The installed ${addon} isn't signed by Open Grind. Uninstall it to install the official one.`,
+		noReleaseArtifacts: (addon) =>
+			`The ${addon} isn't published for this device`,
+		undetermined: (addon) =>
+			`Open Grind can't tell whether it may install the ${addon}`,
 	};
-}
 
-function addonCopy(name: string): Partial<Record<KnownKind, string>> {
-	return {
-		unsigned: `Failed to verify the ${name}`,
-		signature: `Failed to verify the ${name}`,
-		storage: `Couldn't save the ${name} download`,
-		install: `Couldn't install the ${name}`,
-	};
-}
-
-function addonUpdateCopy(name: string): Partial<Record<KnownKind, string>> {
-	return { install: `Couldn't update the ${name}` };
-}
-
-const busyCopy: Record<ComponentKey, string> = {
-	[APP_COMPONENT]: "Wait for the Open Grind update to finish downloading",
-	[GOOGLE_OAUTH_COMPONENT]:
-		"Wait for the Google OAuth app to finish downloading",
-	[RECAPTCHA_COMPONENT]:
-		"Wait for the reCAPTCHA helper to finish downloading",
+const addonCopy: Partial<Record<KnownKind, AddonText>> = {
+	unsigned: (addon) => `Failed to verify the ${addon}`,
+	signature: (addon) => `Failed to verify the ${addon}`,
+	storage: (addon) => `Couldn't save the ${addon} download`,
+	install: (addon) => `Couldn't install the ${addon}`,
 };
 
-const busyDetailSchema = z.object({
-	component: z.enum([
-		APP_COMPONENT,
-		GOOGLE_OAUTH_COMPONENT,
-		RECAPTCHA_COMPONENT,
-	]),
-});
+const addonUpdateCopy: Partial<Record<KnownKind, AddonText>> = {
+	install: (addon) => `Couldn't update the ${addon}`,
+};
+
+const addonNoStorageCopy: Record<Release["kind"], AddonText> = {
+	install: (addon) => `Not enough storage to install the ${addon}`,
+	update: (addon) => `Not enough storage to update the ${addon}`,
+};
+
+const busyDetailSchema = z.object({ component: z.enum(COMPONENT_KEYS) });
 
 const PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE = -4;
 
-const APP_NO_STORAGE = "Not enough storage to install the update";
-
-function addonNoStorageCopy(name: string): Record<Release["kind"], string> {
-	return {
-		install: `Not enough storage to install the ${name}`,
-		update: `Not enough storage to update the ${name}`,
-	};
+function busyText(component: ComponentKey): string {
+	return component === APP_COMPONENT
+		? "Wait for the Open Grind update to finish downloading"
+		: `Wait for the ${ADDON_NAME[component]} to finish downloading`;
 }
 
 export function unsupportedText(
@@ -122,7 +110,7 @@ export function unsupportedText(
 	const addonText =
 		component === APP_COMPONENT
 			? undefined
-			: addonUnsupportedCopy(ADDON_NAME[component])[reason];
+			: addonUnsupportedCopy[reason]?.(ADDON_NAME[component]);
 	return addonText ?? unsupportedCopy[reason];
 }
 
@@ -131,9 +119,9 @@ export function noReleaseText({
 }: {
 	component: ComponentKey;
 }): string {
-	return component === APP_COMPONENT
-		? "No Open Grind release is published yet"
-		: `No ${ADDON_NAME[component]} release is published yet`;
+	const subject =
+		component === APP_COMPONENT ? "Open Grind" : ADDON_NAME[component];
+	return `No ${subject} release is published yet`;
 }
 
 export function updateErrorText(
@@ -151,13 +139,13 @@ export function updateErrorText(
 	}
 	if (known.kind === "busy") {
 		const running = busyDetailSchema.safeParse(known.detail);
-		return running.success ? busyCopy[running.data.component] : copy.busy;
+		return running.success ? busyText(running.data.component) : copy.busy;
 	}
 	if (component === APP_COMPONENT) return copy[known.kind];
-	const name = ADDON_NAME[component];
+	const addon = ADDON_NAME[component];
 	const updateText =
-		kind === "update" ? addonUpdateCopy(name)[known.kind] : undefined;
-	return updateText ?? addonCopy(name)[known.kind] ?? copy[known.kind];
+		kind === "update" ? addonUpdateCopy[known.kind]?.(addon) : undefined;
+	return updateText ?? addonCopy[known.kind]?.(addon) ?? copy[known.kind];
 }
 
 export function installFailedText({
@@ -171,8 +159,8 @@ export function installFailedText({
 }): string {
 	if (code === PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE) {
 		return component === APP_COMPONENT
-			? APP_NO_STORAGE
-			: addonNoStorageCopy(ADDON_NAME[component])[kind];
+			? "Not enough storage to install the update"
+			: addonNoStorageCopy[kind](ADDON_NAME[component]);
 	}
 	return updateErrorText(
 		{ kind: "install" },
@@ -188,6 +176,8 @@ export function problemBody({
 	title: string;
 }): string | undefined {
 	if (component === APP_COMPONENT) return undefined;
-	const name = ADDON_NAME[component];
-	return title.toLowerCase().includes(name.toLowerCase()) ? undefined : name;
+	const addon = ADDON_NAME[component];
+	return title.toLowerCase().includes(addon.toLowerCase())
+		? undefined
+		: addon;
 }

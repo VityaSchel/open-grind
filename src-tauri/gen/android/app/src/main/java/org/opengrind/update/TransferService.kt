@@ -13,9 +13,9 @@ import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import org.opengrind.R
+import org.opengrind.addon.AddonNames
 
 // Prevent Android from freezing the process and dropping its sockets
-// POST_NOTIFICATIONS is not requested, so on API 33+ the notification below stays hidden
 class TransferService : Service() {
 	private var wakeLock: PowerManager.WakeLock? = null
 
@@ -30,7 +30,13 @@ class TransferService : Service() {
 			ServiceCompat.startForeground(
 				this,
 				NOTIFICATION_ID,
-				notification(this, TransferTitle.named(intent?.getStringExtra(EXTRA_TITLE))),
+				notification(
+					this,
+					Transfer(
+						title = TransferTitle.named(intent?.getStringExtra(EXTRA_TITLE)),
+						addonPackage = intent?.getStringExtra(EXTRA_ADDON_PACKAGE),
+					),
+				),
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 					ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 				} else {
@@ -69,6 +75,7 @@ class TransferService : Service() {
 
 	companion object {
 		private const val EXTRA_TITLE = "org.opengrind.update.extra.TRANSFER_TITLE"
+		private const val EXTRA_ADDON_PACKAGE = "org.opengrind.update.extra.ADDON_PACKAGE"
 		private const val CHANNEL_ID = "org.opengrind.update.transfer"
 		private const val NOTIFICATION_ID = 4711
 		private const val WAKE_LOCK_TAG = "opengrind:update"
@@ -77,19 +84,21 @@ class TransferService : Service() {
 
 		fun start(
 			context: Context,
-			title: TransferTitle,
+			transfer: Transfer,
 		) {
-			holds.begin(title)
+			holds.begin(transfer)
 			context.startForegroundService(
-				Intent(context, TransferService::class.java).putExtra(EXTRA_TITLE, title.name),
+				Intent(context, TransferService::class.java)
+					.putExtra(EXTRA_TITLE, transfer.title.name)
+					.putExtra(EXTRA_ADDON_PACKAGE, transfer.addonPackage),
 			)
 		}
 
 		fun stop(
 			context: Context,
-			title: TransferTitle,
+			transfer: Transfer,
 		) {
-			val showing = holds.end(title)
+			val showing = holds.end(transfer)
 			if (showing == null) {
 				context.stopService(Intent(context, TransferService::class.java))
 				return
@@ -101,7 +110,7 @@ class TransferService : Service() {
 
 		private fun notification(
 			context: Context,
-			title: TransferTitle,
+			transfer: Transfer,
 		): Notification {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 				val channel = NotificationChannel(
@@ -112,9 +121,9 @@ class TransferService : Service() {
 				context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 			}
 			return NotificationCompat.Builder(context, CHANNEL_ID)
-				.setContentTitle(context.getString(titleText(title)))
+				.setContentTitle(titleText(context, transfer))
 				.setSmallIcon(
-					if (title == TransferTitle.MediaUpload) {
+					if (transfer.title == TransferTitle.MediaUpload) {
 						android.R.drawable.stat_sys_upload
 					} else {
 						android.R.drawable.stat_sys_download
@@ -127,14 +136,17 @@ class TransferService : Service() {
 				.build()
 		}
 
-		private fun titleText(title: TransferTitle): Int =
-			when (title) {
-				TransferTitle.AppUpdate -> R.string.update_transfer_title
-				TransferTitle.GoogleOauthInstall -> R.string.google_oauth_install_transfer_title
-				TransferTitle.GoogleOauthUpdate -> R.string.google_oauth_update_transfer_title
-				TransferTitle.RecaptchaInstall -> R.string.recaptcha_install_transfer_title
-				TransferTitle.RecaptchaUpdate -> R.string.recaptcha_update_transfer_title
-				TransferTitle.MediaUpload -> R.string.media_upload_transfer_title
+		private fun titleText(
+			context: Context,
+			transfer: Transfer,
+		): String {
+			val addon = context.getString(AddonNames.resourceOf(transfer.addonPackage))
+			return when (transfer.title) {
+				TransferTitle.AppUpdate -> context.getString(R.string.update_transfer_title)
+				TransferTitle.AddonInstall -> context.getString(R.string.addon_install_transfer_title, addon)
+				TransferTitle.AddonUpdate -> context.getString(R.string.addon_update_transfer_title, addon)
+				TransferTitle.MediaUpload -> context.getString(R.string.media_upload_transfer_title)
 			}
+		}
 	}
 }

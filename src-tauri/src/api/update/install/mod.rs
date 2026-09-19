@@ -1326,9 +1326,9 @@ mod pins {
 		let service = squashed(TRANSFER_SERVICE);
 		assert!(
 			service.contains(
-				"funstart(context:Context,title:TransferTitle,){holds.begin(title)context.startForegroundService("
+				"funstart(context:Context,transfer:Transfer,){holds.begin(transfer)context.startForegroundService("
 			) && service.contains(
-				"funstop(context:Context,title:TransferTitle,){valshowing=holds.end(title)if(showing==null){context.stopService("
+				"funstop(context:Context,transfer:Transfer,){valshowing=holds.end(transfer)if(showing==null){context.stopService("
 			),
 			"TransferService no longer restarts on every hold and stops only when the last one ends"
 		);

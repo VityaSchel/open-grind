@@ -141,7 +141,7 @@ describe("the reCAPTCHA helper's update flow", () => {
 		vi.useRealTimers();
 	});
 
-	it("is watched alongside the Google OAuth app", async () => {
+	it("is watched alongside every other add-on", async () => {
 		vi.useFakeTimers();
 		await probedCapability(releaseSigned);
 		const { startAddonUpdateWatch } = await import("./addon.svelte");
@@ -151,10 +151,10 @@ describe("the reCAPTCHA helper's update flow", () => {
 		const checked = api.checkForUpdate.mock.calls.map(
 			([{ component }]) => component,
 		);
-		expect(checked).toHaveLength(2);
 		expect(checked).toEqual(
-			expect.arrayContaining(["google-oauth", "recaptcha"]),
+			expect.arrayContaining(["google-oauth", "recaptcha", "fcm"]),
 		);
+		expect(checked).toHaveLength(3);
 	});
 
 	it("offers its update without touching the sign-in screen's activity", async () => {

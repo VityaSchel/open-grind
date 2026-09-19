@@ -6,11 +6,17 @@ import android.content.pm.PackageManager
 import android.os.Build
 
 object AddonLaunchCheck {
-	fun decide(context: Context, request: Intent, addonPackage: String): AddonGate.Verdict {
+	fun decide(context: Context, request: Intent, addonPackage: String): AddonGate.Verdict =
+		verdict(context, addonPackage, request.resolveActivity(context.packageManager) != null)
+
+	fun decideService(context: Context, request: Intent, addonPackage: String): AddonGate.Verdict =
+		verdict(context, addonPackage, context.packageManager.resolveService(request, 0) != null)
+
+	private fun verdict(context: Context, addonPackage: String, resolves: Boolean): AddonGate.Verdict {
 		val packageManager = context.packageManager
 		return AddonGate.decide(
 			addonPackage = addonPackage,
-			resolves = request.resolveActivity(packageManager) != null,
+			resolves = resolves,
 			presence = presenceOf(packageManager, addonPackage),
 			certificates = packageManager.signingCertificates(),
 		)

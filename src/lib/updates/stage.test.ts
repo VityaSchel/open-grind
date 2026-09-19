@@ -126,3 +126,18 @@ describe("the reCAPTCHA helper's stage toast title", () => {
 		).toBe("Downloading the reCAPTCHA helper…");
 	});
 });
+
+describe("the FCM service's stage toast title", () => {
+	it("names the service, not another add-on", () => {
+		expect(
+			stageTitle({
+				component: "fcm",
+				kind: "install",
+				stage: "installing",
+			}),
+		).toBe("Installing the FCM service…");
+		expect(
+			stageTitle({ component: "fcm", kind: "update", stage: "ready" }),
+		).toBe("FCM service update is downloaded");
+	});
+});

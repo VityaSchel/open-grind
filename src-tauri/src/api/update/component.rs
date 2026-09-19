@@ -66,7 +66,16 @@ pub static RECAPTCHA: Component = Component {
 	target: Target::Package("org.opengrind.recaptcha"),
 };
 
-pub static ALL: &[&Component] = &[&APP, &GOOGLE_OAUTH, &RECAPTCHA];
+pub static FCM: Component = Component {
+	key: "fcm",
+	index_path:
+		"api/v1/repos/open-grind/fcm-service/releases?limit=3&draft=false",
+	asset_stem: "open-grind-fcm-service",
+	asset_suffix: universal_asset_suffix,
+	target: Target::Package("org.opengrind.fcm"),
+};
+
+pub static ALL: &[&Component] = &[&APP, &GOOGLE_OAUTH, &RECAPTCHA, &FCM];
 
 fn abi_asset_suffix() -> Option<String> {
 	abi_token(std::env::consts::OS, std::env::consts::ARCH).map(str::to_owned)

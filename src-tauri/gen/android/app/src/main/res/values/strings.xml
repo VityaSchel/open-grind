@@ -6,9 +6,13 @@
 	<string name="webview_warning_continue">Continue anyway</string>
 	<string name="transfer_channel_name">Transfers</string>
 	<string name="update_transfer_title">Downloading update</string>
-	<string name="google_oauth_install_transfer_title">Downloading the Google OAuth app</string>
-	<string name="google_oauth_update_transfer_title">Downloading the Google OAuth app update</string>
-	<string name="recaptcha_install_transfer_title">Downloading the reCAPTCHA helper</string>
-	<string name="recaptcha_update_transfer_title">Downloading the reCAPTCHA helper update</string>
+	<string name="addon_install_transfer_title">Downloading the %1$s</string>
+	<string name="addon_update_transfer_title">Downloading the %1$s update</string>
+	<string name="addon_name_google_oauth">Google OAuth app</string>
+	<string name="addon_name_recaptcha">reCAPTCHA helper</string>
+	<string name="addon_name_fcm">FCM service</string>
+	<string name="addon_name_generic">add-on</string>
 	<string name="media_upload_transfer_title">Uploading media</string>
+	<string name="push_channel_messages">Messages</string>
+	<string name="push_channel_taps">Received taps</string>
 </resources>

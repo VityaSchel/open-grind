@@ -12,6 +12,10 @@ import {
 } from "./toasts";
 
 export function toastPresenter(component: ComponentKey): StagePresenter {
+	const subject =
+		component === APP_COMPONENT
+			? "Open Grind"
+			: `The ${ADDON_NAME[component]}`;
 	return {
 		show: (stage) => showStage({ component, ...stage }),
 		dismiss: () => dismissStage(component),
@@ -22,11 +26,6 @@ export function toastPresenter(component: ComponentKey): StagePresenter {
 			if (component === APP_COMPONENT) void showInstalled();
 			else showAddonInstalled({ component, tag, kind });
 		},
-		upToDate: () =>
-			showUpToDate(
-				component === APP_COMPONENT
-					? "Open Grind is up to date"
-					: `The ${ADDON_NAME[component]} is up to date`,
-			),
+		upToDate: () => showUpToDate(`${subject} is up to date`),
 	};
 }
