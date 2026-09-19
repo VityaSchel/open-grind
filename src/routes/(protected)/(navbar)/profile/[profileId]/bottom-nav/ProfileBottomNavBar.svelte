@@ -28,7 +28,7 @@
 		{@attach !inert && bottomChrome}
 	>
 		<nav
-			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl backdrop-filter-(--bd-rail)"
+			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl"
 		>
 			<OpenConversationButton {profileId} {ourProfileId} />
 			<TapProfileButton {profileId} {tapType} {onTap} />
