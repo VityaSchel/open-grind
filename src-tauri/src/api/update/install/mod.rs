@@ -252,6 +252,42 @@ mod pins {
 	const MINT_TOKEN_PERMISSION: &str =
 		"org.opengrind.recaptcha.permission.MINT_TOKEN";
 
+	const PUSH_PLUGIN: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPlugin.kt"
+	);
+
+	const PUSH_CONTRACT: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushContract.kt"
+	);
+
+	const PUSH_BRIDGE: &str = include_str!("../../push/android.rs");
+
+	const PUSH_POLL: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPoll.kt"
+	);
+
+	const PUSH_POLL_BRIDGE: &str =
+		include_str!("../../../push_poll/android.rs");
+
+	const PUSH_MODE_KT: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushMode.kt"
+	);
+
+	const PUSH_SCHEDULE: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushSchedule.kt"
+	);
+
+	const PUSH_TYPES_TS: &str =
+		include_str!("../../../../../src/lib/push/types.ts");
+
+	const ADDON_NAMES: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/addon/AddonNames.kt"
+	);
+
+	const ANDROID_STRINGS: &str = include_str!(
+		"../../../../gen/android/app/src/main/res/values/strings.xml"
+	);
+
 	const SIGNING_CERTIFICATES: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/addon/PackageSigningCertificates.kt"
 	);
@@ -875,49 +911,53 @@ mod pins {
 		RECAPTCHA_PAIR.assert_requests_carry_the_parsed_fields(&["mintToken"]);
 	}
 
-	#[test]
-	fn the_frontend_component_table_matches_the_rust_one() {
-		use super::super::component;
-
+	fn components_ts_constant(name: &str) -> String {
 		let source = squashed(COMPONENTS_TS);
-		let constant = |name: &str| {
-			let declaration = format!("exportconst{name}=\"");
-			let start = source.find(&declaration).unwrap_or_else(|| {
-				panic!("components.ts no longer declares {name} as a string")
-			}) + declaration.len();
-			source[start..]
-				.split('"')
-				.next()
-				.unwrap_or_default()
-				.to_owned()
-		};
-		let table_start = source
-			.find("COMPONENT_PACKAGE={")
-			.expect("components.ts no longer declares COMPONENT_PACKAGE")
-			+ "COMPONENT_PACKAGE={".len();
-		let table = &source[table_start..];
-		let table =
-			&table[..table.find('}').expect("COMPONENT_PACKAGE is not closed")];
+		let declaration = format!("exportconst{name}=\"");
+		let start = source.find(&declaration).unwrap_or_else(|| {
+			panic!("components.ts no longer declares {name} as a string")
+		}) + declaration.len();
+		source[start..]
+			.split('"')
+			.next()
+			.unwrap_or_default()
+			.to_owned()
+	}
 
-		let mut declared: Vec<(String, String)> = table
+	fn components_ts_table(name: &str) -> Vec<(String, String)> {
+		let source = squashed(COMPONENTS_TS);
+		let opening = format!("{name}={{");
+		let start = source.find(&opening).unwrap_or_else(|| {
+			panic!("components.ts no longer declares {name}")
+		}) + opening.len();
+		let table = &source[start..];
+		let table = &table[..table
+			.find('}')
+			.unwrap_or_else(|| panic!("{name} is not closed"))];
+		let mut entries: Vec<(String, String)> = table
 			.split(',')
 			.filter(|entry| !entry.is_empty())
 			.map(|entry| {
-				let (key, package) =
-					entry.split_once(':').unwrap_or_else(|| {
-						panic!("COMPONENT_PACKAGE entry {entry} is not key: package")
-					});
+				let (key, value) = entry.split_once(':').unwrap_or_else(|| {
+					panic!("{name} entry {entry} is not key: value")
+				});
 				let key = match key
 					.strip_prefix('[')
-					.and_then(|name| name.strip_suffix(']'))
+					.and_then(|constant| constant.strip_suffix(']'))
 				{
-					Some(name) => constant(name),
+					Some(constant) => components_ts_constant(constant),
 					None => key.trim_matches(['"', '\'']).to_owned(),
 				};
-				(key, package.trim_matches(['"', '\'']).to_owned())
+				(key, value.trim_matches(['"', '\'']).to_owned())
 			})
 			.collect();
-		declared.sort();
+		entries.sort();
+		entries
+	}
+
+	#[test]
+	fn the_frontend_component_table_matches_the_rust_one() {
+		use super::super::component;
 
 		let mut expected: Vec<(String, String)> = component::ALL
 			.iter()
@@ -931,9 +971,49 @@ mod pins {
 		expected.sort();
 
 		assert_eq!(
-			declared, expected,
+			components_ts_table("COMPONENT_PACKAGE"),
+			expected,
 			"install outcomes are routed by COMPONENT_PACKAGE, so it must name every component's install target"
 		);
+	}
+
+	#[test]
+	fn every_addon_is_named_the_same_in_the_app_and_in_its_download_notification(
+	) {
+		use super::super::component;
+
+		let names = components_ts_table("ADDON_NAME");
+		let mut addons: Vec<&str> = component::ALL
+			.iter()
+			.filter(|component| !component.is_self())
+			.map(|component| component.key)
+			.collect();
+		addons.sort_unstable();
+		assert_eq!(
+			names
+				.iter()
+				.map(|(key, _)| key.as_str())
+				.collect::<Vec<_>>(),
+			addons,
+			"ADDON_NAME must name every add-on the component table knows"
+		);
+
+		for (key, name) in names {
+			let resource = format!("addon_name_{}", key.replace('-', "_"));
+			assert!(
+				squashed(ANDROID_STRINGS).contains(&squashed(&format!(
+					"<string name=\"{resource}\">{name}</string>"
+				))),
+				"strings.xml {resource} does not match ADDON_NAME, so the download notification names the add-on differently from the rest of the app"
+			);
+			let package = component::by_key(&key).unwrap().install_target();
+			assert!(
+				squashed(ADDON_NAMES).contains(&squashed(&format!(
+					"\"{package}\"->R.string.{resource}"
+				))),
+				"AddonNames.kt does not map {package} to {resource}"
+			);
+		}
 	}
 
 	#[test]
@@ -1031,15 +1111,27 @@ mod pins {
 			.is_some(),
 			"AddonGate.kt no longer pins the add-on signer to InstallGate.RELEASE_CERT_SHA256"
 		);
-		for (file, plugin, package) in [
-			("GoogleOauthPlugin.kt", SIGN_IN_PLUGIN, "COMPANION_PACKAGE"),
-			("RecaptchaPlugin.kt", RECAPTCHA_PLUGIN, "ADDON_PACKAGE"),
+		for (file, plugin, call) in [
+			(
+				"GoogleOauthPlugin.kt",
+				SIGN_IN_PLUGIN,
+				"AddonLaunchCheck.decide(activity, intent, COMPANION_PACKAGE)",
+			),
+			(
+				"RecaptchaPlugin.kt",
+				RECAPTCHA_PLUGIN,
+				"AddonLaunchCheck.decide(activity, intent, ADDON_PACKAGE)",
+			),
+			(
+				"PushPlugin.kt",
+				PUSH_PLUGIN,
+				"AddonLaunchCheck.decideService(activity, intent, ADDON_PACKAGE)",
+			),
 		] {
 			assert!(
-				squashed(plugin).contains(&squashed(&format!(
-					"when (AddonLaunchCheck.decide(activity, intent, {package}))"
-				))),
-				"{file} no longer checks {package} through AddonLaunchCheck before sending it the request"
+				squashed(plugin)
+					.contains(&squashed(&format!("when ({call})"))),
+				"{file} no longer checks its add-on through AddonLaunchCheck before sending it the request"
 			);
 		}
 	}
@@ -1054,6 +1146,7 @@ mod pins {
 		for (file, plugin) in [
 			("GoogleOauthPlugin.kt", SIGN_IN_PLUGIN),
 			("RecaptchaPlugin.kt", RECAPTCHA_PLUGIN),
+			("PushPlugin.kt", PUSH_PLUGIN),
 		] {
 			let plugin = squashed(plugin);
 			assert!(
@@ -1185,6 +1278,148 @@ mod pins {
 			)) && spaced_match(RECAPTCHA_PLUGIN, "class RecaptchaPlugin(").is_some(),
 			"recaptcha/android.rs registers a plugin class that {file} does not declare"
 		);
+	}
+
+	#[test]
+	fn the_fcm_push_bridge_matches_the_addon_contract() {
+		use super::super::component;
+
+		let file = "PushPlugin.kt";
+		let addon = component::FCM.install_target();
+		assert_eq!(
+			kotlin_constant(PUSH_PLUGIN, file, "ADDON_PACKAGE"),
+			addon,
+			"{file} ADDON_PACKAGE drifted from the component table"
+		);
+		assert!(
+			MANIFEST.contains(
+				"<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />"
+			),
+			"without POST_NOTIFICATIONS every push notification is dropped on Android 13 and newer"
+		);
+
+		let contract = "PushContract.kt";
+		for (constant, published) in [
+			("ADDON_PACKAGE", "org.opengrind.fcm"),
+			("ACTION_BIND", "org.opengrind.fcm.action.BIND"),
+			("EXTRA_NONCE", "org.opengrind.fcm.extra.NONCE"),
+			("ACTION_MESSAGE", "org.opengrind.fcm.action.MESSAGE"),
+			("ACTION_NEW_TOKEN", "org.opengrind.fcm.action.NEW_TOKEN"),
+			("EXTRA_DATA", "org.opengrind.fcm.extra.DATA"),
+			("EXTRA_SENT_TIME", "org.opengrind.fcm.extra.SENT_TIME"),
+			("EXTRA_TOKEN", "org.opengrind.fcm.extra.TOKEN"),
+			("EXTRA_ERROR", "org.opengrind.fcm.extra.ERROR"),
+			("EXTRA_ERROR_DETAIL", "org.opengrind.fcm.extra.ERROR_DETAIL"),
+		] {
+			assert_eq!(
+				kotlin_constant(PUSH_CONTRACT, contract, constant),
+				published,
+				"{contract} {constant} drifted from the add-on's published contract"
+			);
+		}
+
+		for constant in ["ACTION_MESSAGE", "ACTION_NEW_TOKEN"] {
+			let action = kotlin_constant(PUSH_CONTRACT, contract, constant);
+			assert!(
+				MANIFEST
+					.contains(&format!("<action android:name=\"{action}\" />")),
+				"PushReceiver has no intent filter for {action}, so the add-on's broadcast is dropped"
+			);
+		}
+
+		let package = PUSH_PLUGIN
+			.lines()
+			.find_map(|line| line.strip_prefix("package "))
+			.expect("PushPlugin.kt declares no package")
+			.trim();
+		assert!(
+			squashed(PUSH_BRIDGE).contains(&format!(
+				"register_android_plugin(\"{package}\",\"PushPlugin\""
+			)) && spaced_match(PUSH_PLUGIN, "class PushPlugin(").is_some(),
+			"push/android.rs registers a plugin class that {file} does not declare"
+		);
+	}
+
+	#[test]
+	fn the_background_poll_is_reachable_from_the_job_that_runs_it() {
+		let package = PUSH_POLL
+			.lines()
+			.find_map(|line| line.strip_prefix("package "))
+			.expect("PushPoll.kt declares no package")
+			.trim();
+		assert!(
+			spaced_match(PUSH_POLL, "external fun nativePoll(").is_some(),
+			"PushPoll.kt no longer declares the native method the poll job calls"
+		);
+		let symbol =
+			format!("Java_{}_PushPoll_nativePoll", package.replace('.', "_"));
+		assert!(
+			PUSH_POLL_BRIDGE.contains(&symbol),
+			"push_poll/android.rs exports no {symbol}, so the poll job would die with UnsatisfiedLinkError"
+		);
+		assert!(
+			squashed(PUSH_POLL)
+				.contains("System.loadLibrary(\"open_grind_lib\")"),
+			"PushPoll.kt no longer loads the library that defines nativePoll"
+		);
+
+		assert!(
+			MANIFEST.contains(
+				"android:name=\"org.opengrind.push.PushPollService\""
+			) && MANIFEST.contains(
+				"android:permission=\"android.permission.BIND_JOB_SERVICE\""
+			),
+			"a JobService Android cannot bind never polls"
+		);
+		assert!(
+			!squashed(PUSH_SCHEDULE).contains("setPersisted(true)")
+				|| MANIFEST.contains(
+					"<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />"
+				),
+			"setPersisted(true) throws without RECEIVE_BOOT_COMPLETED"
+		);
+		assert!(
+			!squashed(PUSH_SCHEDULE).contains("setRequiredNetworkType(")
+				|| MANIFEST.contains(
+					"<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />"
+				),
+			"a connectivity constraint throws SecurityException on Android 14 without ACCESS_NETWORK_STATE"
+		);
+
+		let envelope = serde_json::to_value(crate::push_poll::Poll::default())
+			.expect("a Poll serializes");
+		for key in envelope
+			.as_object()
+			.expect("a Poll is a JSON object")
+			.keys()
+		{
+			assert!(
+				squashed(PUSH_POLL).contains(&format!("\"{key}\"")),
+				"PushPoll.kt never reads {key}, so every poll would decode to nothing"
+			);
+		}
+	}
+
+	#[test]
+	fn every_notification_mode_is_spelled_the_same_in_all_three_languages() {
+		use crate::api::push::PushMode;
+
+		for mode in [PushMode::Slow, PushMode::Fast] {
+			let wire = mode.wire();
+			let kotlin = format!("{}(\"{wire}\")", {
+				let mut name = wire.to_owned();
+				name[..1].make_ascii_uppercase();
+				name
+			});
+			assert!(
+				squashed(PUSH_MODE_KT).contains(&squashed(&kotlin)),
+				"PushMode.kt has no entry {kotlin}"
+			);
+			assert!(
+				squashed(PUSH_TYPES_TS).contains(&format!("\"{wire}\"")),
+				"types.ts no longer offers the {wire} mode"
+			);
+		}
 	}
 
 	#[test]
