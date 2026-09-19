@@ -6,16 +6,34 @@ export type ScrollableListState = {
 	scrollY: number;
 };
 
-export function restoreScrollOnce(
-	container: () => HTMLElement | null,
-	state: ScrollableListState,
-): void {
+export function restoreScrollOnce({
+	container,
+	state,
+	resolveTop,
+}: {
+	container: () => HTMLElement | null;
+	state: ScrollableListState;
+	resolveTop?: (restore: {
+		scroller: HTMLElement;
+		savedTop: number;
+	}) => number;
+}): void {
 	let restored = false;
 	$effect(() => {
 		const el = container();
 		if (restored || !el || state.loading || state.error !== null) return;
 		restored = true;
-		const top = state.scrollY;
-		if (top > 0) void tick().then(() => (el.scrollTop = top));
+		const savedTop = state.scrollY;
+		let pending = true;
+		void tick().then(() => {
+			if (!pending) return;
+			pending = false;
+			const top = resolveTop?.({ scroller: el, savedTop }) ?? savedTop;
+			if (top > 0) el.scrollTop = top;
+		});
+		return () => {
+			if (pending) restored = false;
+			pending = false;
+		};
 	});
 }

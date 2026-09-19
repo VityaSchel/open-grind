@@ -31,7 +31,7 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
-	restoreScrollOnce(() => container, conversations);
+	restoreScrollOnce({ container: () => container, state: conversations });
 
 	let { class: className }: { class?: import("svelte/elements").ClassValue } =
 		$props();
