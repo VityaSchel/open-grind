@@ -1,0 +1,22 @@
+package org.opengrind.push
+
+object PushContract {
+	const val ADDON_PACKAGE = "org.opengrind.fcm"
+
+	const val ACTION_BIND = "org.opengrind.fcm.action.BIND"
+	const val ACTION_MESSAGE = "org.opengrind.fcm.action.MESSAGE"
+	const val ACTION_NEW_TOKEN = "org.opengrind.fcm.action.NEW_TOKEN"
+
+	const val EXTRA_DATA = "org.opengrind.fcm.extra.DATA"
+	const val EXTRA_NONCE = "org.opengrind.fcm.extra.NONCE"
+	const val EXTRA_SENT_TIME = "org.opengrind.fcm.extra.SENT_TIME"
+	const val EXTRA_ERROR = "org.opengrind.fcm.extra.ERROR"
+	const val EXTRA_ERROR_DETAIL = "org.opengrind.fcm.extra.ERROR_DETAIL"
+	const val EXTRA_TOKEN = "org.opengrind.fcm.extra.TOKEN"
+
+	const val MSG_GET_TOKEN = 1
+	const val MSG_DELETE_TOKEN = 2
+	const val MSG_TOKEN = 101
+	const val MSG_DELETED = 102
+	const val MSG_ERROR = 103
+}

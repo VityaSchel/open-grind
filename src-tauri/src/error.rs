@@ -2,6 +2,7 @@ use std::fmt;
 
 use serde::Serialize;
 
+use crate::api::push::PushError;
 use crate::api::recaptcha::RecaptchaError;
 
 #[derive(Debug, Clone, Serialize)]
@@ -54,6 +55,7 @@ pub enum AppError {
 	SessionCleared,
 	ContentTooLarge,
 	Recaptcha(RecaptchaError),
+	Push(PushError),
 }
 
 impl AppError {
@@ -75,6 +77,7 @@ impl AppError {
 			AppError::SessionCleared => "SessionCleared",
 			AppError::ContentTooLarge => "ContentTooLarge",
 			AppError::Recaptcha(_) => "Recaptcha",
+			AppError::Push(_) => "Push",
 		}
 	}
 }
@@ -116,6 +119,7 @@ impl fmt::Display for AppError {
 				write!(f, "Larger than the upload limit")
 			}
 			AppError::Recaptcha(error) => write!(f, "reCAPTCHA error: {error}"),
+			AppError::Push(error) => write!(f, "push error: {error}"),
 		}
 	}
 }

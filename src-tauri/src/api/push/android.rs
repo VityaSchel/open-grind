@@ -1,0 +1,152 @@
+use serde::{Deserialize, Serialize};
+use tauri::plugin::mobile::PluginInvokeError;
+use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
+use tauri::{AppHandle, Manager, Wry};
+
+use super::{PushError, PushMode, PushSignal};
+
+struct AndroidPush {
+	handle: PluginHandle<Wry>,
+}
+
+pub fn plugin() -> TauriPlugin<Wry> {
+	Builder::new("push")
+		.setup(|app, api| {
+			let handle = api
+				.register_android_plugin("org.opengrind.push", "PushPlugin")?;
+			app.manage(AndroidPush { handle });
+			Ok(())
+		})
+		.build()
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModeRequest {
+	mode: &'static str,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WatchRequest {
+	on_event: tauri::ipc::Channel<PushSignal>,
+}
+
+#[derive(Deserialize)]
+struct TokenResponse {
+	token: String,
+}
+
+#[derive(Deserialize)]
+struct GrantResponse {
+	granted: bool,
+}
+
+#[derive(Deserialize)]
+struct ModeResponse {
+	mode: String,
+}
+
+#[derive(Deserialize)]
+struct DeeplinkResponse {
+	deeplink: Option<String>,
+}
+
+pub async fn addon_ready(app: &AppHandle) -> Result<(), PushError> {
+	call::<serde_json::Value>(app, "addonReady", ())
+		.await
+		.map(drop)
+}
+
+pub async fn token(app: &AppHandle) -> Result<String, PushError> {
+	call::<TokenResponse>(app, "token", ())
+		.await
+		.map(|response| response.token)
+}
+
+pub async fn delete_token(app: &AppHandle) -> Result<(), PushError> {
+	call::<serde_json::Value>(app, "deleteToken", ())
+		.await
+		.map(drop)
+}
+
+pub async fn mode(app: &AppHandle) -> Result<PushMode, PushError> {
+	call::<ModeResponse>(app, "mode", ())
+		.await
+		.map(|response| PushMode::of(&response.mode))
+}
+
+pub async fn set_mode(
+	app: &AppHandle,
+	mode: PushMode,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(app, "setMode", ModeRequest { mode: mode.wire() })
+		.await
+		.map(drop)
+}
+
+pub async fn notifications_permitted(
+	app: &AppHandle,
+) -> Result<bool, PushError> {
+	call::<GrantResponse>(app, "notificationPermission", ())
+		.await
+		.map(|response| response.granted)
+}
+
+pub async fn request_notifications(app: &AppHandle) -> Result<bool, PushError> {
+	call::<GrantResponse>(app, "requestNotificationPermission", ())
+		.await
+		.map(|response| response.granted)
+}
+
+pub async fn take_deeplink(
+	app: &AppHandle,
+) -> Result<Option<String>, PushError> {
+	call::<DeeplinkResponse>(app, "takeDeeplink", ())
+		.await
+		.map(|response| response.deeplink)
+}
+
+pub fn watch(
+	app: &AppHandle,
+	on_event: tauri::ipc::Channel<PushSignal>,
+) -> Result<(), PushError> {
+	handle(app)?
+		.run_mobile_plugin::<serde_json::Value>(
+			"watchPush",
+			WatchRequest { on_event },
+		)
+		.map(drop)
+		.map_err(rejection)
+}
+
+async fn call<T: serde::de::DeserializeOwned>(
+	app: &AppHandle,
+	command: &str,
+	payload: impl Serialize,
+) -> Result<T, PushError> {
+	handle(app)?
+		.run_mobile_plugin_async(command, payload)
+		.await
+		.map_err(rejection)
+}
+
+fn handle(app: &AppHandle) -> Result<PluginHandle<Wry>, PushError> {
+	Ok(app
+		.try_state::<AndroidPush>()
+		.ok_or(PushError::Failed)?
+		.handle
+		.clone())
+}
+
+fn rejection(error: PluginInvokeError) -> PushError {
+	match error {
+		PluginInvokeError::InvokeRejected(response) => {
+			PushError::from_rejection(
+				response.message.as_deref(),
+				response.code.as_deref(),
+			)
+		}
+		_ => PushError::Failed,
+	}
+}
