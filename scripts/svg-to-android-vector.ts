@@ -5,6 +5,8 @@
 //   --height <dp>   intrinsic height (default: SVG height, rounded)
 //   --scale  <s>    wrap all shapes in a <group> scaled by <s> about the
 //                   viewport centre
+//   --translate-x <t> shift the <group> by <t> viewport units after scaling
+//   --translate-y <t> shift the <group> by <t> viewport units after scaling
 //   --mono <color>  force every fill/stroke to <color>
 
 import { readFileSync, writeFileSync } from "fs";
@@ -107,7 +109,7 @@ function main() {
 	const [input, output] = positional;
 	if (!input || !output) {
 		console.error(
-			"usage: bun scripts/svg-to-android-vector.ts <in.svg> <out.xml> [--width dp] [--height dp] [--scale s] [--mono #color]",
+			"usage: bun scripts/svg-to-android-vector.ts <in.svg> <out.xml> [--width dp] [--height dp] [--scale s] [--translate-x t] [--translate-y t] [--mono #color]",
 		);
 		process.exit(2);
 	}
@@ -150,7 +152,10 @@ function main() {
 			`unsupported element <${unsupported[1]}>; this converter only handles flat <path>/<rect>`,
 		);
 
-	const grouped = opts.scale !== undefined;
+	const grouped =
+		opts.scale !== undefined ||
+		opts["translate-x"] !== undefined ||
+		opts["translate-y"] !== undefined;
 	const matches = [...body.matchAll(/<(path|rect)\b[^>]*?\/?>/g)];
 	if (matches.length === 0) throw new Error("no <path>/<rect> shapes found");
 	const shapes = matches.map((m) =>
@@ -164,17 +169,24 @@ function main() {
 
 	let inner = shapes.join("\n");
 	if (grouped) {
-		const s = parseFloat(opts.scale!);
-		const cx = +(vbW / 2).toFixed(4);
-		const cy = +(vbH / 2).toFixed(4);
+		const attributes = [
+			`android:scaleX="${parseFloat(opts.scale ?? "1")}"`,
+			`android:scaleY="${parseFloat(opts.scale ?? "1")}"`,
+			`android:pivotX="${+(vbW / 2).toFixed(4)}"`,
+			`android:pivotY="${+(vbH / 2).toFixed(4)}"`,
+		];
+		if (opts["translate-x"] !== undefined)
+			attributes.push(
+				`android:translateX="${parseFloat(opts["translate-x"])}"`,
+			);
+		if (opts["translate-y"] !== undefined)
+			attributes.push(
+				`android:translateY="${parseFloat(opts["translate-y"])}"`,
+			);
 		inner =
 			`    <group\n` +
-			`        android:scaleX="${s}"\n` +
-			`        android:scaleY="${s}"\n` +
-			`        android:pivotX="${cx}"\n` +
-			`        android:pivotY="${cy}">\n` +
-			`${inner}\n` +
-			`    </group>`;
+			attributes.map((attribute) => `        ${attribute}`).join("\n") +
+			`>\n${inner}\n    </group>`;
 	}
 
 	const xml =

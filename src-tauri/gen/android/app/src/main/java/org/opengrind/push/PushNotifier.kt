@@ -95,7 +95,7 @@ object PushNotifier {
 		createChannels(context)
 		val channel = channelOf(decision.kind)
 		val notification = NotificationCompat.Builder(context, channel)
-			.setSmallIcon(R.drawable.ic_launcher_monochrome)
+			.setSmallIcon(R.drawable.ic_notification)
 			.setContentTitle(decision.title)
 			.setContentText(decision.body)
 			.setStyle(NotificationCompat.BigTextStyle().bigText(decision.body))
