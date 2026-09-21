@@ -3,6 +3,7 @@
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 
 	import { isVideoContent } from "$lib/components/album/album";
+	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
@@ -117,16 +118,10 @@
 {/if}
 
 {#snippet leading()}
-	<button
-		type="button"
-		data-slot="add-media-tile"
-		class="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-xl bg-card-foreground/5 px-2 text-center text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+	<AddTile
+		label="Add photos or videos"
+		class="aspect-square w-full rounded-xl"
 		disabled={saving || adding || full}
 		onclick={() => void add()}
-	>
-		<PlusIcon weight="bold" class="size-6" />
-		<span class="text-xs font-medium text-balance"
-			>Add photos or videos</span
-		>
-	</button>
+	/>
 {/snippet}

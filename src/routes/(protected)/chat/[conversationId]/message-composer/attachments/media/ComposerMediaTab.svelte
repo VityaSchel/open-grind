@@ -10,6 +10,7 @@
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
 	import { asAppError } from "$lib/api/methods";
+	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -133,15 +134,11 @@
 		</Empty.Root>
 	{/snippet}
 	{#snippet leading()}
-		<button
-			type="button"
-			class="flex aspect-(--photo-grid-aspect) cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
-			aria-label="Add photo"
+		<AddTile
+			label="Add photo"
+			class="aspect-(--photo-grid-aspect)"
 			onclick={addPhoto}
-		>
-			<PlusIcon weight="bold" class="size-6" />
-			<span class="text-xs font-medium">Add photo</span>
-		</button>
+		/>
 		{#each Array(uploadingCount)}
 			<MediaImage
 				src={null}

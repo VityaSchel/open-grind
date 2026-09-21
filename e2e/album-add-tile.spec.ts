@@ -2,7 +2,7 @@ import { expect, type Locator, test } from "@playwright/test";
 
 import { MEDIA_SLOT, openAlbum, TWO_ROW_ALBUM } from "./support/albums";
 
-const ADD_TILE = '[data-slot="add-media-tile"]';
+const ADD_TILE = '[data-slot="add-tile"]';
 
 async function box(locator: Locator) {
 	const measured = await locator.boundingBox();

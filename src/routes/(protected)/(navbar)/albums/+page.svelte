@@ -1,8 +1,7 @@
 <script lang="ts">
-	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
-
 	import { getMyAlbums } from "$lib/api/messaging/albums";
 	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
+	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
 	import { uploads } from "./album-uploads/album-uploads.svelte";
@@ -58,13 +57,11 @@
 >
 	{#snippet leading()}
 		{#if !atAlbumCap}
-			<a
+			<AddTile
 				href="/albums/new"
-				class="flex aspect-(--photo-grid-aspect) cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
-			>
-				<PlusIcon weight="bold" class="size-6" />
-				<span class="text-xs font-medium">Add album</span>
-			</a>
+				label="Add album"
+				class="aspect-(--photo-grid-aspect)"
+			/>
 		{/if}
 	{/snippet}
 	{#snippet tile(album)}

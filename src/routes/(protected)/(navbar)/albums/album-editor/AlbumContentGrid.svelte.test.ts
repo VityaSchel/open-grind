@@ -198,7 +198,7 @@ describe("album content grid", () => {
 		});
 
 		expect(
-			container.querySelector('[data-slot="add-media-tile"]'),
+			container.querySelector('[data-slot="add-tile"]'),
 		).toHaveProperty("disabled", true);
 		expect(
 			render(AlbumContentGrid, {
@@ -212,7 +212,7 @@ describe("album content grid", () => {
 					onToggleRemoved: () => {},
 					onReorder: () => {},
 				},
-			}).container.querySelector('[data-slot="add-media-tile"]'),
+			}).container.querySelector('[data-slot="add-tile"]'),
 			"unknown limits leave adding open",
 		).toHaveProperty("disabled", false);
 	});
