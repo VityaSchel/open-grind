@@ -13,6 +13,7 @@ use tauri::Runtime;
 use crate::api::rest::{encode_response, RawResponse};
 use crate::api::update::TransferHold;
 use crate::error::AppError;
+use crate::hex::hex;
 use crate::photo;
 use crate::state::AppState;
 use crate::upload::form::{FormPart, Framing};
@@ -95,14 +96,6 @@ pub fn prepare_body(
 
 pub fn sha256_hex(bytes: &[u8]) -> String {
 	hex(&Sha256::digest(bytes))
-}
-
-pub fn hex(bytes: &[u8]) -> String {
-	let mut hex = String::with_capacity(bytes.len() * 2);
-	for byte in bytes {
-		hex.push_str(&format!("{byte:02x}"));
-	}
-	hex
 }
 
 #[derive(Debug)]

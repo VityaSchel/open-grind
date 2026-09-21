@@ -97,7 +97,8 @@ mod tests {
 	use tauri_plugin_fs::FsExt;
 
 	use super::*;
-	use crate::upload::content::{hex, sha256_hex};
+	use crate::hex::hex;
+	use crate::upload::content::sha256_hex;
 	use crate::upload::form::FormPart;
 	use crate::video::boxes::Span;
 	use crate::video::strip::Fill;

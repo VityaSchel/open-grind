@@ -9,6 +9,7 @@ use blake2::{Blake2b512, Digest};
 use ed25519_dalek::{Signature, VerifyingKey};
 
 use super::error::UpdateError;
+use crate::hex::hex;
 
 const RELEASE_KEY: &str =
 	"RWReleaseOpenGrindurRQcmR+NovOaU5IEU3LM5l6TcXJvOGYw2m4O+";
@@ -141,10 +142,6 @@ fn verify_with(
 		return Err(reject("signature was made for a different file"));
 	}
 	Ok(hex(digest))
-}
-
-fn hex(bytes: &[u8]) -> String {
-	bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 #[cfg(test)]

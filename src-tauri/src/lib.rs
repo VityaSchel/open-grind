@@ -6,6 +6,7 @@ mod context_menu;
 mod desktop_entry;
 mod error;
 mod haptics;
+mod hex;
 pub mod media;
 mod photo;
 mod scroll_phase;
