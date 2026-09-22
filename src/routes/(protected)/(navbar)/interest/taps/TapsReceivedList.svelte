@@ -11,10 +11,8 @@
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
 
-	let {
-		ourProfileId,
-		active = true,
-	}: { ourProfileId: number; active?: boolean } = $props();
+	let { ourProfileId, active }: { ourProfileId: number; active: boolean } =
+		$props();
 
 	const taps = untrack(() => {
 		const state = getTapsState(ourProfileId);

@@ -33,7 +33,7 @@
 	} = $props();
 
 	const composer = getMessageComposerContext();
-	const conversation = getConversationState();
+	const conversationState = $derived(getConversationState()());
 	const selected = new SelectionSet<number>(10);
 
 	let media = $state<DrawerMedia[] | null>(null);
@@ -44,7 +44,7 @@
 		media = null;
 		error = null;
 		try {
-			media = await getDrawerMedia(conversation().conversationId);
+			media = await getDrawerMedia(conversationState.conversationId);
 		} catch (err) {
 			console.error(err);
 			error = err;

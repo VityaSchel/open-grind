@@ -9,13 +9,15 @@ const PROFILE_LINK = 'a[href^="/profile/"]';
 
 test.describe.configure({ timeout: 300_000 });
 
-test("the pager starts on the routed tab and mounts only that list", async ({
-	page,
-}) => {
+test.beforeEach(async ({ page }) => {
 	await installTauriShim(page);
 	await page.goto(TAPS);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
+});
 
+test("the pager starts on the routed tab and mounts only that list", async ({
+	page,
+}) => {
 	const pager = page.locator(PAGER);
 	const geometry = await pager.evaluate((el) => ({
 		scrollLeft: el.scrollLeft,
@@ -37,13 +39,9 @@ test("the pager starts on the routed tab and mounts only that list", async ({
 	);
 });
 
-test("a horizontal drag pages to the other tab and updates the URL", async ({
+test("a scroll that lands on Views switches the tab and updates the URL without pushing history", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
-
 	const pager = page.locator(PAGER);
 	const before = await pager.evaluate((el) => el.scrollLeft);
 	const depth = await page.evaluate(() => history.length);
@@ -81,9 +79,6 @@ async function swipeAcross(
 test("a finger drag inside the list pages to the other tab", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
 	const pager = page.locator(PAGER);
 	const width = await pager.evaluate((el) => el.clientWidth);
 
@@ -96,9 +91,6 @@ test("a finger drag inside the list pages to the other tab", async ({
 test("a finger held on the other tab keeps the URL until it lifts", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
 	const pager = page.locator(PAGER);
 	const width = await pager.evaluate((el) => el.clientWidth);
 
@@ -125,9 +117,6 @@ test("a finger held on the other tab keeps the URL until it lifts", async ({
 test("a vertical finger drag scrolls the list and does not page", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
 	const pager = page.locator(PAGER);
 	const scroller = page.locator(`${PAGER} .pull-scroller`).first();
 	const width = await pager.evaluate((el) => el.clientWidth);
@@ -155,9 +144,6 @@ test("a vertical finger drag scrolls the list and does not page", async ({
 test("the chip behind the tabs follows the pager wherever it is", async ({
 	page,
 }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
 	const chip = page.locator('[data-slot="interest-tab-chip"]');
 	const box = async (locator: ReturnType<Page["locator"]>) =>
 		(await locator.boundingBox())!;

@@ -4,7 +4,7 @@ import { ensureGridLocation, installTauriShim } from "./support/app";
 
 const PROFILE_LINK = 'a[href^="/profile/"]';
 const TAPS_PANE = '[data-slot="interest-pane-taps"]';
-const VIEWS_GRID = ".photo-grid";
+const GRID_CONTENT = '[data-slot="grid-content"]';
 const SCROLLER = ".pull-scroller";
 const SCROLL_TARGET = 400;
 const RESTORE_TIMEOUT = 60_000;
@@ -40,7 +40,7 @@ function skeletonsSeen(page: Page) {
 	);
 }
 
-test("reopening an interest tab keeps its list and scroll offset, with no skeleton", async ({
+test("reopening Interest keeps the taps list and its scroll offset, with no skeleton", async ({
 	page,
 }) => {
 	test.setTimeout(300_000);
@@ -53,23 +53,23 @@ test("reopening an interest tab keeps its list and scroll offset, with no skelet
 	await taps.evaluate((el, top) => el.scrollTo({ top }), SCROLL_TARGET);
 	await expect.poll(offsetOfTaps).toBe(SCROLL_TARGET);
 
-	await page.getByRole("link", { name: "Views" }).click();
-	await expect(page).toHaveURL(/\/interest\/views$/);
-	await page.locator(VIEWS_GRID).waitFor({ timeout: 60_000 });
+	await page.getByRole("link", { name: "Browse" }).click();
+	await expect(page).toHaveURL(/localhost:\d+\/$/);
+	await ensureGridLocation(page);
+	await page
+		.locator(GRID_CONTENT)
+		.locator(PROFILE_LINK)
+		.first()
+		.waitFor({ timeout: 60_000 });
 
 	await countSkeletonsFrom(page);
 
-	await page.getByRole("link", { name: "Taps" }).click();
+	await page.getByRole("link", { name: "Interest" }).click();
 	await expect(page).toHaveURL(/\/interest\/taps$/);
 	await expect(page.locator(PROFILE_LINK).first()).toBeVisible();
 	await expect
 		.poll(offsetOfTaps, { timeout: RESTORE_TIMEOUT })
 		.toBe(SCROLL_TARGET);
-	expect(await skeletonsSeen(page)).toBe(0);
-
-	await page.getByRole("link", { name: "Views" }).click();
-	await expect(page).toHaveURL(/\/interest\/views$/);
-	await expect(page.locator(VIEWS_GRID)).toBeVisible();
 	expect(await skeletonsSeen(page)).toBe(0);
 });
 

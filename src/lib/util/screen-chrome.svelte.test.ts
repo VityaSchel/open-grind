@@ -1,5 +1,6 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Attachment } from "svelte/attachments";
 
 import {
 	bottomChrome,
@@ -10,6 +11,12 @@ import {
 } from "./screen-chrome.svelte";
 
 const VIEWPORT_HEIGHT = 800;
+
+const teardowns: (() => void)[] = [];
+
+function detachAfterEach(teardown: ReturnType<Attachment<HTMLElement>>) {
+	if (teardown) teardowns.push(teardown);
+}
 
 function bar({ top, height }: { top: number; height: number }) {
 	const element = document.createElement("nav");
@@ -33,21 +40,20 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	for (const teardown of teardowns.splice(0)) teardown();
 	vi.unstubAllGlobals();
 	document.body.replaceChildren();
 });
 
 describe("screen chrome clearance", () => {
 	it("clears a top bar down to its bottom edge and a bottom bar up to its top edge", () => {
-		const detachTop = topChrome(bar({ top: 0, height: 76 }));
-		const detachBottom = bottomChrome(bar({ top: 736, height: 64 }));
+		detachAfterEach(topChrome(bar({ top: 0, height: 76 })));
+		detachAfterEach(bottomChrome(bar({ top: 736, height: 64 })));
 		remeasureScreenChrome();
 		flushSync();
 
 		expect(topChromeClearance()).toBe(76);
 		expect(bottomChromeClearance()).toBe(64);
-		detachTop?.();
-		detachBottom?.();
 	});
 
 	it("keeps counting a bar in an inert pane that is still on screen", () => {
@@ -56,12 +62,11 @@ describe("screen chrome clearance", () => {
 		document.body.append(pane);
 		const navBar = bar({ top: 736, height: 64 });
 		pane.append(navBar);
-		const detach = bottomChrome(navBar);
+		detachAfterEach(bottomChrome(navBar));
 		remeasureScreenChrome();
 		flushSync();
 
 		expect(bottomChromeClearance()).toBe(64);
-		detach?.();
 	});
 
 	it("ignores a bar inside a leaving pane until the pane stays", () => {
@@ -70,7 +75,7 @@ describe("screen chrome clearance", () => {
 		document.body.append(pane);
 		const navBar = bar({ top: 736, height: 64 });
 		pane.append(navBar);
-		const detach = bottomChrome(navBar);
+		detachAfterEach(bottomChrome(navBar));
 		remeasureScreenChrome();
 		flushSync();
 		expect(bottomChromeClearance()).toBe(0);
@@ -79,7 +84,6 @@ describe("screen chrome clearance", () => {
 		remeasureScreenChrome();
 		flushSync();
 		expect(bottomChromeClearance()).toBe(64);
-		detach?.();
 	});
 
 	it("ignores a bar under a hidden pane until the pane shows again", () => {
@@ -88,7 +92,7 @@ describe("screen chrome clearance", () => {
 		document.body.append(pane);
 		const navBar = bar({ top: 0, height: 76 });
 		pane.append(navBar);
-		const detach = topChrome(navBar);
+		detachAfterEach(topChrome(navBar));
 		remeasureScreenChrome();
 		flushSync();
 		expect(topChromeClearance()).toBe(0);
@@ -97,6 +101,5 @@ describe("screen chrome clearance", () => {
 		remeasureScreenChrome();
 		flushSync();
 		expect(topChromeClearance()).toBe(76);
-		detach?.();
 	});
 });

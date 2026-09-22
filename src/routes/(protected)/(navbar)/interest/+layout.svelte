@@ -8,16 +8,11 @@
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import InterestPager from "./InterestPager.svelte";
-	import { INTEREST_TABS } from "./tabs";
+	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 
 	let { data }: import("./$types").LayoutProps = $props();
 
-	const routedTab = $derived(
-		Math.max(
-			0,
-			INTEREST_TABS.findIndex(({ href }) => href === page.url.pathname),
-		),
-	);
+	const routedTab = $derived(interestTabIndex(page.url.pathname));
 </script>
 
 {#snippet tab(href: string, label: string)}

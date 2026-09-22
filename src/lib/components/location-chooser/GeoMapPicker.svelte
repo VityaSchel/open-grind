@@ -42,6 +42,9 @@
 	const fix = $derived(locationRequest.lastFix);
 	const showAccuracy = $derived(locked && fix !== null && !locating);
 	const accuracyOwnsCamera = $derived(locked && fix !== null);
+	const cameraAnimation = $derived(
+		prefersReducedMotion.current ? { animate: false } : {},
+	);
 
 	const interactions = [
 		"dragging",
@@ -55,9 +58,6 @@
 
 	let map: LeafletMap | undefined = $state();
 
-	function cameraAnimation(): { animate?: false } {
-		return prefersReducedMotion.current ? { animate: false } : {};
-	}
 	let pendingCenter: { lat: number; lon: number; zoom: number } | undefined =
 		$state();
 
@@ -71,7 +71,7 @@
 		zoom: number;
 	}) {
 		if (accuracyOwnsCamera) return;
-		if (map) map.setView([lat, lon], zoom, cameraAnimation());
+		if (map) map.setView([lat, lon], zoom, cameraAnimation);
 		else pendingCenter = { lat, lon, zoom };
 	}
 
@@ -85,7 +85,7 @@
 		zoom: number;
 	}) {
 		pinPos = { lat, lon };
-		map?.setView([lat, lon], zoom, cameraAnimation());
+		map?.setView([lat, lon], zoom, cameraAnimation);
 	}
 
 	$effect(() => {
@@ -104,7 +104,7 @@
 				map.setView(
 					[pendingCenter.lat, pendingCenter.lon],
 					pendingCenter.zoom,
-					cameraAnimation(),
+					cameraAnimation,
 				);
 			}
 			pendingCenter = undefined;
@@ -144,7 +144,7 @@
 		if (!map || locked) return;
 		const onMapClick: LeafletMouseEventHandlerFn = ({ latlng }) => {
 			pinPos = { lat: latlng.lat, lon: latlng.lng };
-			map?.panTo(latlng, cameraAnimation());
+			map?.panTo(latlng, cameraAnimation);
 		};
 		map.on("click", onMapClick);
 		return () => {

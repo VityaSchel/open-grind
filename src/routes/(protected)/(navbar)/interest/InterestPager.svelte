@@ -5,7 +5,7 @@
 
 	import { navigationPending } from "$lib/util/history";
 	import { SnapPager } from "$lib/util/snap-pager";
-	import { INTEREST_TABS } from "./tabs";
+	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 	import TapsReceivedList from "./taps/TapsReceivedList.svelte";
 	import ViewsGrid from "./views/ViewsGrid.svelte";
 
@@ -16,7 +16,7 @@
 	let mounted = $state([false, false]);
 	let restedPane: number | null = null;
 
-	const routed = $derived(Math.max(0, TABS.indexOf(page.url.pathname)));
+	const routed = $derived(interestTabIndex(page.url.pathname));
 
 	const snap = new SnapPager({
 		count: () => TABS.length,

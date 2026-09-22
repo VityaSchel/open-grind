@@ -14,7 +14,7 @@ export type LoadedEntry = {
 
 export type HighlightCard = Highlight & { entry?: LoadedEntry };
 
-export type CreditGroup = { title: string; entries: LoadedEntry[] };
+type CreditGroup = { title: string; entries: LoadedEntry[] };
 
 export type Credits = { cards: HighlightCard[]; groups: CreditGroup[] };
 

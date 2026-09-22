@@ -3,7 +3,13 @@ import type { Attachment } from "svelte/attachments";
 
 type Edge = "top" | "bottom";
 
-function contentClearance(edge: Edge, element: HTMLElement): number {
+function contentClearance({
+	edge,
+	element,
+}: {
+	edge: Edge;
+	element: HTMLElement;
+}): number {
 	const box = element.getBoundingClientRect();
 	const style = getComputedStyle(element);
 	return edge === "top"
@@ -22,7 +28,7 @@ function edgeChrome(edge: Edge) {
 			getComputedStyle(element).visibility === "hidden";
 		clearances.set(
 			element,
-			offScreen ? 0 : contentClearance(edge, element),
+			offScreen ? 0 : contentClearance({ edge, element }),
 		);
 	};
 

@@ -2,10 +2,10 @@
 	import { ArrowSquareOutIcon } from "phosphor-svelte";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
-	import { FrameCounter } from "$lib/util/frame-counter.svelte";
 	import type { Credits } from "$lib/credits";
 	import CreditCard from "./CreditCard.svelte";
 	import CreditRow from "./CreditRow.svelte";
+	import { FrameCounter } from "./frame-counter.svelte";
 
 	let { cards, groups }: Credits = $props();
 

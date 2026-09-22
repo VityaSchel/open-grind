@@ -31,7 +31,7 @@ describe("SwipeToReply", () => {
 		expect(onReply).not.toHaveBeenCalled();
 	});
 
-	it("springs the row back after a release", () => {
+	it("eases the row back instead of jumping on release", () => {
 		const { swipe } = swipeToReply();
 
 		drag(swipe, { x: 40 });
