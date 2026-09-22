@@ -29,7 +29,7 @@
 		"check:credits-sync": "bun scripts/check-credits-sync.ts",
 		"check:credits-android": "bun scripts/check-android-credits.ts",
 		"package:macos": "nix run .#build-macos --",
-		"lint": "svelte-kit sync && NODE_OPTIONS=--max-old-space-size=6144 eslint --concurrency=off .",
+		"lint": "svelte-kit sync && eslint --concurrency=2 .",
 		"preview": "vite preview",
 		"sync-config": "opengrind-config sync",
 		"tauri": "tauri",

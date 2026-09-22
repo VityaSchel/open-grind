@@ -2,9 +2,12 @@
 
 const HEARTBEAT_MS = 15_000;
 const PROGRESS_LINE = /^ {2}lint /;
+const CRASH_LINE =
+	/JavaScript heap out of memory|ERR_WORKER_OUT_OF_MEMORY|FATAL ERROR/;
 
 const started = performance.now();
 let linted = 0;
+let crashed = false;
 
 function elapsed(): string {
 	const seconds = Math.round((performance.now() - started) / 1000);
@@ -30,6 +33,7 @@ for await (const chunk of eslint.stderr) {
 		if (PROGRESS_LINE.test(line)) {
 			linted++;
 		} else {
+			crashed ||= CRASH_LINE.test(line);
 			process.stderr.write(`${line}\n`);
 		}
 	}
@@ -38,4 +42,10 @@ clearInterval(heartbeat);
 if (tail) process.stderr.write(`${tail}\n`);
 process.stderr.write(`  linted ${linted} files in ${elapsed()}\n`);
 
-process.exitCode = await eslint.exited;
+const exitCode = await eslint.exited;
+if (exitCode === 0 && (crashed || linted === 0)) {
+	process.stderr.write(
+		`  lint reported success after linting ${linted} files, treating that as a failure\n`,
+	);
+}
+process.exitCode = exitCode || (crashed || linted === 0 ? 1 : 0);
