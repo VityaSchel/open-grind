@@ -59,6 +59,7 @@ A direct text message carries its text **in plaintext** with `translateBody` set
 - `grindr://right-now-inbox` — Right Now inbox
 - `grindr://fresh-albums?albumIds=<id,…>&albumProfileId=<profileId>` — album updates
 - `grindr://boost?action=<action>&source=<source>` — Boost results
+- `grindr://favorite-profile?profileID=<profileId>` — a favorite came online; the parameter is also spelled `profileId`
 
 Two actions are **cancel-only** and must never be rendered:
 
@@ -105,3 +106,22 @@ The legacy shape dispatches on `notificationType` instead of an action:
 ## Acknowledging
 
 [Acknowledge notifications](/grindr-api/system/notifications) reports a notification as seen with `source` `PUSH`, or `WEBSOCKET` when the same notification arrived over the socket instead.
+
+## Polling instead of push
+
+A client without FCM can rebuild chat and tap notifications from two REST calls:
+
+- [Get conversations](/grindr-api/messaging/conversations#get-conversations), `POST /v4/inbox?page=<n>` — the next page exists while the response carries `nextPage`. Each `entries[].data` carries `conversationId`, `name`, `lastActivityTimestamp`, `unreadCount`, `muted`, `participants[].profileId` and a `preview` of the last message with `messageId`, `senderId`, `type` and `text`
+- [Get received taps](/grindr-api/interest/taps#get-received-taps), `GET /v2/taps/received` — each `profiles[]` entry carries `profileId`, `displayName` and `timestamp`
+
+`profileId` and `senderId` can arrive as a number or a numeric string. The peer of a conversation is the first participant that isn't the signed-in profile.
+
+`preview` holds only the last message, so several messages sent between two calls show up as one. When `preview.senderId` is the signed-in profile, the last message is the user's own and the unread messages are older than the preview; their content isn't in the response.
+
+`unreadCount` 0 is the only sign that a conversation was read elsewhere. The inbox has no unsend signal.
+
+Each case maps to a V2 payload:
+
+- An unread conversation — `action` `grindr://conversation?id=<conversationId>&senderId=<peer>`, `title` `name`, `body` `preview.text`. A preview without text maps to the `CHAT_*_NOTIFICATION_BODY` [text key](#text-keys) for its `preview.type`, e.g. `Image` to `CHAT_IMAGE_NOTIFICATION_BODY` and `Giphy` to `CHAT_GIF_NOTIFICATION_BODY`
+- A conversation read elsewhere — Grindr has no chat-scoped withdrawal: `grindr://clear?profileIds=<peer>` also withdraws that profile's tap notifications. Open Grind's poll emits its own `grindr://clear?conversationId=<conversationId>` instead, which the official client does not understand
+- A received tap — `action` `grindr://taps-inbox`, `title` `displayName`, `body` `TAP_NOTIFICATION_BODY`
