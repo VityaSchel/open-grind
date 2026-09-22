@@ -1,31 +1,36 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-import { attachSystemBackGesture, type SystemBackTarget } from "./system-back";
+import {
+	attachSystemBackGesture,
+	type SwipeBackStack,
+} from "./system-back-gesture";
 
-function makeTarget() {
+function makeStack() {
 	let tracking = false;
 	const calls = { begin: 0, commit: 0, cancel: 0 };
 
-	const target: SystemBackTarget = {
-		begin: () => {
+	const stack: SwipeBackStack = {
+		get tracking() {
+			return tracking;
+		},
+		beginSwipeBack: () => {
 			calls.begin += 1;
 			tracking = true;
 			return true;
 		},
-		track: () => {},
-		commit: () => {
+		trackSwipeBack: () => {},
+		commitSwipeBack: () => {
 			calls.commit += 1;
 			tracking = false;
 		},
-		cancel: () => {
+		cancelSwipeBack: () => {
 			calls.cancel += 1;
 			tracking = false;
 		},
-		tracking: () => tracking,
 	};
 
-	return { target, calls, isTracking: () => tracking };
+	return { stack, calls };
 }
 
 afterEach(() => {
@@ -34,8 +39,8 @@ afterEach(() => {
 
 describe("attachSystemBackGesture", () => {
 	it("starts a swipe when nothing else owns the back gesture", () => {
-		const { target, calls } = makeTarget();
-		const detach = attachSystemBackGesture(target);
+		const { stack, calls } = makeStack();
+		const detach = attachSystemBackGesture(stack);
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
 		expect(calls.begin).toBe(1);
@@ -44,13 +49,13 @@ describe("attachSystemBackGesture", () => {
 	});
 
 	it("refuses to start while an overlay owns the back gesture", () => {
-		const { target, calls, isTracking } = makeTarget();
-		const detach = attachSystemBackGesture(target);
+		const { stack, calls } = makeStack();
+		const detach = attachSystemBackGesture(stack);
 		backGestureEventHandlers.add(() => false);
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
 		expect(calls.begin, "the swipe must not arm").toBe(0);
-		expect(isTracking(), "tracking would never be turned off again").toBe(
+		expect(stack.tracking, "tracking would never be turned off again").toBe(
 			false,
 		);
 
@@ -58,8 +63,8 @@ describe("attachSystemBackGesture", () => {
 	});
 
 	it("starts again once the overlay is gone", () => {
-		const { target, calls } = makeTarget();
-		const detach = attachSystemBackGesture(target);
+		const { stack, calls } = makeStack();
+		const detach = attachSystemBackGesture(stack);
 		const overlay = () => false;
 		backGestureEventHandlers.add(overlay);
 		window.__AndroidOnBackGestureStart?.();
@@ -72,10 +77,10 @@ describe("attachSystemBackGesture", () => {
 	});
 
 	it("keeps the gesture of a host that attached before the old one detached", () => {
-		const old = makeTarget();
-		const detachOld = attachSystemBackGesture(old.target);
-		const current = makeTarget();
-		const detachCurrent = attachSystemBackGesture(current.target);
+		const old = makeStack();
+		const detachOld = attachSystemBackGesture(old.stack);
+		const current = makeStack();
+		const detachCurrent = attachSystemBackGesture(current.stack);
 
 		detachOld();
 

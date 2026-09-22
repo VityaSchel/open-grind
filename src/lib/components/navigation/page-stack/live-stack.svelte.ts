@@ -1,8 +1,9 @@
 import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "@sveltejs/kit";
 
-import { CANCEL_EASING, COMMIT_EASING, settleDuration } from "./motion";
-import type { FrameAnimation, StackSurface } from "./surface";
+import { CANCEL_EASING, COMMIT_EASING } from "./motion";
+import { StackSettle } from "./settle";
+import type { StackSurface } from "./surface";
 
 const BACK_WATCHDOG_MS = 1000;
 
@@ -11,7 +12,7 @@ export class LiveStack {
 	moving = $state(false);
 	tracking = $state(false);
 
-	readonly #surface: StackSurface;
+	readonly #settle: StackSettle;
 	readonly #top: () => string | null;
 	readonly #keyOf: (target: NavigationTarget) => string | null;
 	readonly #inScope: (pathname: string) => boolean;
@@ -22,8 +23,6 @@ export class LiveStack {
 
 	#generation = 0;
 	#backOwed = false;
-	#progress = 0;
-	#settling: FrameAnimation | null = null;
 	#awaitingBack = false;
 	#watchdog: ReturnType<typeof setTimeout> | undefined;
 
@@ -46,7 +45,7 @@ export class LiveStack {
 		keyboardVisible: () => boolean;
 		keyboardHidden: () => Promise<void>;
 	}) {
-		this.#surface = surface;
+		this.#settle = new StackSettle({ surface, reducedMotion });
 		this.#top = top;
 		this.#keyOf = keyOf;
 		this.#inScope = inScope;
@@ -54,7 +53,7 @@ export class LiveStack {
 		this.#backLandsOnBase = backLandsOnBase;
 		this.#keyboardVisible = keyboardVisible;
 		this.#keyboardHidden = keyboardHidden;
-		this.#progress = top() === null ? 1 : 0;
+		this.#settle.progress = top() === null ? 1 : 0;
 	}
 
 	get covered(): boolean {
@@ -66,7 +65,7 @@ export class LiveStack {
 	}
 
 	applyFrame(): void {
-		this.#surface.apply(this.#progress);
+		this.#settle.apply();
 	}
 
 	async navigate(navigation: OnNavigate): Promise<(() => void) | void> {
@@ -77,7 +76,7 @@ export class LiveStack {
 		this.tracking = false;
 		this.#backOwed = false;
 		this.#clearWatchdog();
-		this.#stopSettling();
+		this.#settle.stop();
 
 		const fromKey = this.#keyOf(from);
 		const toKey = this.#keyOf(to);
@@ -102,7 +101,7 @@ export class LiveStack {
 		if (!opens) this.leaving = fromKey;
 		else if (this.leaving !== toKey) {
 			this.leaving = null;
-			this.#progress = 1;
+			this.#settle.progress = 1;
 		}
 		this.moving = true;
 		const waitForKeyboard = closes && this.#keyboardVisible();
@@ -112,29 +111,22 @@ export class LiveStack {
 
 		return () => {
 			if (generation !== this.#generation) return;
-			const ready = opens
-				? new Promise((resolve) => requestAnimationFrame(resolve))
-				: waitForKeyboard
-					? this.#keyboardHidden()
-					: Promise.resolve();
-			void ready.then(() => {
+			void this.#beforeSettle({ opens, waitForKeyboard }).then(() => {
 				if (generation !== this.#generation) return;
-				void this.#settleTo({
-					target: opens ? 0 : 1,
-					easing: COMMIT_EASING,
-				}).then((settled) => {
-					if (settled && generation === this.#generation)
-						this.#rest(toKey);
-				});
+				void this.#settle
+					.settleTo({ target: opens ? 0 : 1, easing: COMMIT_EASING })
+					.then((settled) => {
+						if (settled && generation === this.#generation)
+							this.#rest(toKey);
+					});
 			});
 		};
 	}
 
 	beginSwipeBack(): boolean {
 		if (this.#backOwed) {
-			this.#stopSettling();
-			this.#progress = 1;
-			this.applyFrame();
+			this.#settle.stop();
+			this.#settle.track(1);
 			this.#payBack();
 			return false;
 		}
@@ -147,8 +139,8 @@ export class LiveStack {
 		)
 			return false;
 
-		this.#stopSettling();
-		this.#progress = 0;
+		this.#settle.stop();
+		this.#settle.progress = 0;
 		this.tracking = true;
 		void tick().then(() => this.applyFrame());
 		return true;
@@ -156,8 +148,7 @@ export class LiveStack {
 
 	trackSwipeBack(progress: number): void {
 		if (!this.tracking) return;
-		this.#progress = Math.min(1, Math.max(0, progress));
-		this.applyFrame();
+		this.#settle.track(progress);
 	}
 
 	commitSwipeBack(): void {
@@ -166,16 +157,16 @@ export class LiveStack {
 		this.moving = true;
 		this.#backOwed = true;
 		const generation = this.#generation;
-		void this.#settleTo({ target: 1, easing: COMMIT_EASING }).then(
-			(settled) => {
+		void this.#settle
+			.settleTo({ target: 1, easing: COMMIT_EASING })
+			.then((settled) => {
 				if (
 					settled &&
 					generation === this.#generation &&
 					this.#backOwed
 				)
 					this.#payBack();
-			},
-		);
+			});
 	}
 
 	cancelSwipeBack(): void {
@@ -188,7 +179,7 @@ export class LiveStack {
 	dispose(): void {
 		this.#generation++;
 		this.#backOwed = false;
-		this.#stopSettling();
+		this.#settle.stop();
 		this.#clearWatchdog();
 		this.#awaitingBack = false;
 		this.tracking = false;
@@ -213,41 +204,25 @@ export class LiveStack {
 
 	#returnToCovered(): void {
 		const generation = this.#generation;
-		void this.#settleTo({ target: 0, easing: CANCEL_EASING }).then(
-			(settled) => {
+		void this.#settle
+			.settleTo({ target: 0, easing: CANCEL_EASING })
+			.then((settled) => {
 				if (settled && generation === this.#generation)
 					this.moving = false;
-			},
-		);
+			});
 	}
 
-	async #settleTo({
-		target,
-		easing,
+	#beforeSettle({
+		opens,
+		waitForKeyboard,
 	}: {
-		target: number;
-		easing: string;
-	}): Promise<boolean> {
-		this.#stopSettling();
-		const animation = this.#surface.animate({
-			from: this.#progress,
-			to: target,
-			duration: this.#reducedMotion()
-				? 0
-				: settleDuration(this.#progress, target),
-			easing,
-		});
-		this.#settling = animation;
-		if (!(await animation.completed)) return false;
-		this.#settling = null;
-		this.#progress = target;
-		return true;
-	}
-
-	#stopSettling(): void {
-		const progress = this.#settling?.cancel();
-		this.#settling = null;
-		if (progress !== undefined) this.#progress = progress;
+		opens: boolean;
+		waitForKeyboard: boolean;
+	}): Promise<unknown> {
+		if (opens)
+			return new Promise((resolve) => requestAnimationFrame(resolve));
+		if (waitForKeyboard) return this.#keyboardHidden();
+		return Promise.resolve();
 	}
 
 	#clearWatchdog(): void {
@@ -259,7 +234,7 @@ export class LiveStack {
 		this.leaving = null;
 		this.moving = false;
 		this.tracking = false;
-		this.#progress = top === null ? 1 : 0;
+		this.#settle.progress = top === null ? 1 : 0;
 		this.applyFrame();
 	}
 }

@@ -42,11 +42,6 @@
 	);
 
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
-
-	dismissOnBackGesture({
-		active: () => true,
-		dismiss: () => contextMenuDialog?.close(),
-	});
 	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
 	let contextMenuListPosition: {
@@ -54,6 +49,11 @@
 		y: number;
 		placement: Placement;
 	} = $state({ x: 0, y: 0, placement: "right-start" });
+
+	dismissOnBackGesture({
+		active: () => true,
+		dismiss: () => contextMenuDialog?.close(),
+	});
 
 	$effect(() => {
 		if (!contextMenuTrigger || !contextMenuList) return;

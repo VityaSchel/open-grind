@@ -5,12 +5,16 @@
 	import type { NavigationTarget } from "@sveltejs/kit";
 	import type { Attachment } from "svelte/attachments";
 
-	import { softKeyboardVisibility } from "$lib/platform/android-native-bridge";
+	import {
+		softKeyboardHidden,
+		softKeyboardVisibility,
+	} from "$lib/platform/android-native-bridge";
+	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
 	import { previousEntryPathname } from "$lib/util/history";
 	import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 	import { LiveStack } from "./page-stack/live-stack.svelte";
+	import { STACK_Z } from "./page-stack/motion";
 	import { paneSurface } from "./page-stack/surface";
-	import { attachSystemBackGesture } from "./page-stack/system-back";
 
 	let {
 		top,
@@ -26,9 +30,6 @@
 		sheet: Snippet<[string, { leaving: boolean }]>;
 	} = $props();
 
-	const BASE_Z = "10";
-	const DIM_Z = "11";
-	const SHEET_Z = "12";
 	const KEYBOARD_SETTLE_MS = 150;
 
 	let basePane: HTMLElement | null = $state(null);
@@ -48,15 +49,7 @@
 		backLandsOnBase: () => previousEntryPathname() === basePath,
 		keyboardVisible: () => softKeyboardVisibility() === true,
 		keyboardHidden: () =>
-			new Promise((resolve) => {
-				const done = () => {
-					window.removeEventListener("resize", done);
-					clearTimeout(timeout);
-					resolve();
-				};
-				const timeout = setTimeout(done, KEYBOARD_SETTLE_MS);
-				window.addEventListener("resize", done);
-			}),
+			softKeyboardHidden({ settleMs: KEYBOARD_SETTLE_MS }),
 	});
 
 	let baseMounted = $state(!stack.covered);
@@ -80,15 +73,7 @@
 
 	onNavigate((navigation) => stack.navigate(navigation));
 
-	$effect(() =>
-		attachSystemBackGesture({
-			begin: () => stack.beginSwipeBack(),
-			track: (progress) => stack.trackSwipeBack(progress),
-			commit: () => stack.commitSwipeBack(),
-			cancel: () => stack.cancelSwipeBack(),
-			tracking: () => stack.tracking,
-		}),
-	);
+	$effect(() => attachSystemBackGesture(stack));
 
 	$effect(() => {
 		void stack.covered;
@@ -103,7 +88,7 @@
 	bind:this={basePane}
 	data-slot="live-stack-base"
 	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
-	style:z-index={BASE_Z}
+	style:z-index={STACK_Z.back}
 	style:visibility={stack.covered ? "hidden" : null}
 	inert={stack.sheet !== null}
 >
@@ -116,7 +101,7 @@
 		bind:this={dim}
 		data-slot="live-stack-dim"
 		class="pointer-events-none fixed inset-0 bg-black opacity-0"
-		style:z-index={DIM_Z}
+		style:z-index={STACK_Z.dim}
 	></div>
 {/if}
 {#if stack.sheet !== null}
@@ -125,7 +110,7 @@
 			{@attach placePane}
 			data-slot="live-stack-sheet"
 			class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
-			style:z-index={SHEET_Z}
+			style:z-index={STACK_Z.front}
 			inert={stack.leaving !== null}
 			data-leaving={stack.leaving !== null || undefined}
 		>

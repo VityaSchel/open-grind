@@ -34,6 +34,22 @@ export function softKeyboardVisibility(): boolean | undefined {
 	return window.__AndroidInsets?.imeVisible?.();
 }
 
+export function softKeyboardHidden({
+	settleMs,
+}: {
+	settleMs: number;
+}): Promise<void> {
+	return new Promise((resolve) => {
+		const done = () => {
+			window.removeEventListener("resize", done);
+			clearTimeout(timeout);
+			resolve();
+		};
+		const timeout = setTimeout(done, settleMs);
+		window.addEventListener("resize", done);
+	});
+}
+
 function runBackGestureHandlers(): boolean {
 	for (const handler of [...backGestureEventHandlers].reverse()) {
 		if (handler() !== true) return true;

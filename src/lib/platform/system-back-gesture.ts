@@ -1,14 +1,14 @@
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 
-export type SystemBackTarget = {
-	begin: () => boolean;
-	track: (progress: number) => void;
-	commit: () => void;
-	cancel: () => void;
-	tracking: () => boolean;
+export type SwipeBackStack = {
+	readonly tracking: boolean;
+	beginSwipeBack(): boolean;
+	trackSwipeBack(progress: number): void;
+	commitSwipeBack(): void;
+	cancelSwipeBack(): void;
 };
 
-export function attachSystemBackGesture(target: SystemBackTarget): () => void {
+export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 	let frame: number | undefined;
 
 	const stopReading = () => {
@@ -17,19 +17,19 @@ export function attachSystemBackGesture(target: SystemBackTarget): () => void {
 	};
 
 	const readProgress = () => {
-		if (!target.tracking()) {
+		if (!stack.tracking) {
 			stopReading();
 			return;
 		}
 		const progress = window.__AndroidBack?.gestureProgress();
-		if (progress !== undefined) target.track(progress);
+		if (progress !== undefined) stack.trackSwipeBack(progress);
 		frame = requestAnimationFrame(readProgress);
 	};
 
 	const commitInFlight = () => {
-		if (!target.tracking()) return true;
+		if (!stack.tracking) return true;
 		stopReading();
-		target.commit();
+		stack.commitSwipeBack();
 		return false;
 	};
 
@@ -37,13 +37,13 @@ export function attachSystemBackGesture(target: SystemBackTarget): () => void {
 		[...backGestureEventHandlers].at(-1) === commitInFlight;
 
 	const start = () => {
-		if (!ownsTheGesture() || !target.begin()) return false;
+		if (!ownsTheGesture() || !stack.beginSwipeBack()) return false;
 		frame = requestAnimationFrame(readProgress);
 		return true;
 	};
 	const cancel = () => {
 		stopReading();
-		target.cancel();
+		stack.cancelSwipeBack();
 	};
 	window.__AndroidOnBackGestureStart = start;
 	window.__AndroidOnBackGestureCancel = cancel;

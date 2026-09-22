@@ -1,10 +1,11 @@
-export const BACK_PARALLAX_PERCENT = 33;
-export const DIM_OPACITY = 0.1;
+const BACK_PARALLAX_PERCENT = 33;
+const DIM_OPACITY = 0.1;
 export const SETTLE_MS = 540;
 export const COMMIT_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
 export const CANCEL_EASING = "cubic-bezier(1, 0, 0.68, 0.28)";
+export const STACK_Z = { back: "10", dim: "11", front: "12" } as const;
 
-export type PaneFrame = { front: string; back: string; dim: number };
+type PaneFrame = { front: string; back: string; dim: number };
 
 export function paneFrame({
 	progress,

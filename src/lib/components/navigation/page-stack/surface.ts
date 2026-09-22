@@ -1,6 +1,6 @@
 import { paneFrame } from "./motion";
 
-export type PaneElements = {
+type PaneElements = {
 	front: HTMLElement | null;
 	back: HTMLElement | null;
 	dim: HTMLElement | null;

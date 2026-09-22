@@ -7,7 +7,6 @@
 	let {
 		href,
 		label = "Back",
-		class: className,
 		children,
 		...rest
 	}: Omit<HTMLAnchorAttributes, "href" | "onclick"> & {
@@ -26,7 +25,6 @@
 	{...rest}
 	{href}
 	aria-label={label}
-	class={className}
 	onclick={(event) => {
 		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
 			return;
