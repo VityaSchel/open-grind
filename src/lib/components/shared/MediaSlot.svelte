@@ -64,7 +64,7 @@
 		<Button
 			variant={removed ? "secondary" : "destructive"}
 			size="icon-sm"
-			class="absolute top-1.5 right-1.5 rounded-full bg-background/70 scrim backdrop-filter-(--bd-veil)"
+			class="absolute top-1.5 right-1.5 rounded-full bg-background/80 scrim backdrop-filter-(--bd-veil) hover:bg-background dark:bg-background/80 dark:hover:bg-background"
 			onclick={onDelete}
 			aria-label={removed ? (undoLabel ?? deleteLabel) : deleteLabel}
 		>
