@@ -24,20 +24,19 @@
 	let {
 		profileState,
 		position,
-		role,
+		active,
 		row,
 		heroHash,
 	}: {
 		profileState: ProfileState;
 		position: number;
-		role: "active" | "neighbor";
+		active: boolean;
 		row: RenderedGridProfile | null;
 		heroHash: string | null;
 	} = $props();
 
 	let scroller = $state<HTMLElement | null>(null);
 
-	const active = $derived(role === "active");
 	const profile = $derived(profileState.profile);
 	const error = $derived(profileState.error);
 	const ourProfile = $derived(profileState.isOurProfile);
@@ -154,7 +153,7 @@
 				ourProfileId={profileState.ourProfileId}
 				profileId={profile.profileId}
 				tapType={profile.tapType}
-				inert={!active}
+				{active}
 				onTap={(tapType) => profileState.setTap(tapType)}
 			/>
 		{/if}

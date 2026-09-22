@@ -25,10 +25,10 @@
 		}[];
 	} = $props();
 
-	let gallery: HTMLDivElement | null = $state(null);
-
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
+
+	let gallery: HTMLDivElement | null = $state(null);
 	let reach = $state(PHOTOS_LOADED_AHEAD);
 
 	function raiseReach(index: number) {

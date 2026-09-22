@@ -4,34 +4,24 @@ const {
 	getProfileMock,
 	refreshProfileMock,
 	mergeProfileEditIntoCachesMock,
-	recordProfileViewMock,
 	getFavoriteNoteMock,
 	invalidateFavoriteNoteMock,
-	getPreferencesMock,
 	showErrorToastMock,
 	isProfileCachedMock,
 } = vi.hoisted(() => ({
 	getProfileMock: vi.fn(),
 	refreshProfileMock: vi.fn(),
 	mergeProfileEditIntoCachesMock: vi.fn(),
-	recordProfileViewMock: vi.fn(() => Promise.resolve()),
 	getFavoriteNoteMock: vi.fn(),
 	invalidateFavoriteNoteMock: vi.fn(),
-	getPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	isProfileCachedMock: vi.fn<(profileId: number) => boolean>(),
 }));
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/interest/views", () => ({
-	recordProfileView: recordProfileViewMock,
-}));
 vi.mock("$lib/api/users/favorites", () => ({
 	getFavoriteNote: getFavoriteNoteMock,
 	invalidateFavoriteNote: invalidateFavoriteNoteMock,
-}));
-vi.mock("$lib/app-data/preferences.svelte", () => ({
-	getPreferences: getPreferencesMock,
 }));
 vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
@@ -338,17 +328,6 @@ describe("ProfileState blocking", () => {
 
 		expect(state.error).toBeNull();
 		expect(state.profile).toEqual(profile());
-	});
-});
-
-describe("ProfileState view recording", () => {
-	it("records no view on construction, even with the preference on", async () => {
-		getPreferencesMock.mockResolvedValue({ revealProfileViews: true });
-		create();
-		await flush();
-
-		expect(getProfileMock).toHaveBeenCalledOnce();
-		expect(recordProfileViewMock).not.toHaveBeenCalled();
 	});
 });
 

@@ -8,13 +8,13 @@
 		ourProfileId,
 		profileId,
 		tapType,
-		inert,
+		active,
 		onTap,
 	}: {
 		ourProfileId: number;
 		profileId: number;
 		tapType: TapType | null;
-		inert: boolean;
+		active: boolean;
 		onTap: (tapType: TapType | null) => void;
 	} = $props();
 
@@ -23,9 +23,9 @@
 
 {#if !isOurProfile}
 	<div
-		{inert}
+		inert={!active}
 		class="absolute bottom-[calc(0.5rem+var(--nav-height))] left-1/2 w-90.5 max-w-full -translate-x-1/2 px-2"
-		{@attach !inert && bottomChrome}
+		{@attach active && bottomChrome}
 	>
 		<nav
 			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl"

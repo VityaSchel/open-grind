@@ -9,9 +9,9 @@
 	import TapsReceivedList from "./taps/TapsReceivedList.svelte";
 	import ViewsGrid from "./views/ViewsGrid.svelte";
 
-	const TABS = INTEREST_TABS.map((tab) => tab.href);
-
 	let { ourProfileId }: { ourProfileId: number } = $props();
+
+	const TABS = INTEREST_TABS.map((tab) => tab.href);
 
 	let mounted = $state([false, false]);
 	let restedPane: number | null = null;
@@ -20,6 +20,10 @@
 
 	const snap = new SnapPager({
 		count: () => TABS.length,
+		onVisible: ({ first, last }) => {
+			for (let pane = first; pane <= last; pane += 1)
+				mounted[pane] = true;
+		},
 		onRest: (pane) => {
 			const landed = TABS[pane];
 			const pending = navigating.to?.url.pathname;
@@ -39,17 +43,6 @@
 			void goto(landed, { replaceState: true, noScroll: true });
 		},
 	});
-
-	function mountVisiblePanes(el: HTMLElement) {
-		const width = el.clientWidth;
-		if (width <= 0) return;
-		for (const [index] of TABS.entries()) {
-			const visible =
-				Math.min((index + 1) * width, el.scrollLeft + width) -
-				Math.max(index * width, el.scrollLeft);
-			if (visible > 0) mounted[index] = true;
-		}
-	}
 
 	$effect(() => {
 		mounted[routed] = true;
@@ -73,7 +66,6 @@
 <div
 	data-slot="interest-pager"
 	class="no-scrollbar flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
-	onscroll={(event) => mountVisiblePanes(event.currentTarget)}
 	{@attach snap.attach}
 >
 	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">

@@ -15,13 +15,15 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: getPreferencesMock,
 }));
 
-import { recordProfileVisit } from "./record-visit";
+import { clearAccountCaches } from "$lib/api/account-caches";
+import { forgetProfileVisits, recordProfileVisit } from "./record-visit";
 
 const PROFILE_ID = 100001;
 const OUR_ID = 42;
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	forgetProfileVisits();
 	recordProfileViewMock.mockResolvedValue(undefined);
 	getPreferencesMock.mockResolvedValue({ revealProfileViews: true });
 });
@@ -96,5 +98,49 @@ describe("recordProfileVisit", () => {
 			label: "Failed to record profile view preference or action",
 			error: failure,
 		});
+	});
+
+	it("records a profile once however often it is visited", async () => {
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+
+		expect(recordProfileViewMock).toHaveBeenCalledOnce();
+		expect(getPreferencesMock).toHaveBeenCalledOnce();
+	});
+
+	it("records a profile again once its visits are forgotten", async () => {
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+
+		forgetProfileVisits();
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+
+		expect(recordProfileViewMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("forgets its visits on sign-out", async () => {
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+
+		clearAccountCaches();
+		await recordProfileVisit({
+			profileId: PROFILE_ID,
+			ourProfileId: OUR_ID,
+		});
+
+		expect(recordProfileViewMock).toHaveBeenCalledTimes(2);
 	});
 });

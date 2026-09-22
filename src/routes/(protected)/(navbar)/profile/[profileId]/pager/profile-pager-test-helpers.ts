@@ -5,9 +5,9 @@ import type { GridProfile, RenderedGridProfile } from "$lib/grid/grid";
 import type { Profile } from "$lib/model/users/profiles";
 import type { ProfileState } from "../profile-state.svelte";
 import {
-	ProfilePagerModel,
 	type ProfilePagerSource,
-} from "./profile-pager.svelte";
+	ProfilePagerState,
+} from "./profile-pager-state.svelte";
 
 export const OUR_ID = 9999;
 
@@ -94,7 +94,7 @@ export function gridSource({
 	return source;
 }
 
-const openedPagers: ProfilePagerModel[] = [];
+const openedPagers: ProfilePagerState[] = [];
 
 export function openPager({
 	source,
@@ -106,8 +106,8 @@ export function openPager({
 	profileId: number;
 	origin?: "browse" | null;
 	historyTraversal?: boolean;
-}): ProfilePagerModel {
-	const pager = new ProfilePagerModel({
+}): ProfilePagerState {
+	const pager = new ProfilePagerState({
 		source,
 		profileId,
 		ourProfileId: OUR_ID,
@@ -122,14 +122,14 @@ export function destroyOpenedPagers(): void {
 	for (const pager of openedPagers.splice(0)) pager.destroy();
 }
 
-export const mountedPositions = (pager: ProfilePagerModel) =>
+export const mountedPositions = (pager: ProfilePagerState) =>
 	pager.mounted.map(({ position }) => position);
 
 export function stateOf({
 	pager,
 	profileId,
 }: {
-	pager: ProfilePagerModel;
+	pager: ProfilePagerState;
 	profileId: number;
 }): ProfileState | undefined {
 	return pager.mounted.find((mounted) => mounted.profileId === profileId)

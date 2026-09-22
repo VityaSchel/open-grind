@@ -35,13 +35,13 @@ export class SnapPager {
 
 	constructor({
 		count,
-		onVisible = () => {},
+		onVisible,
 		onRest,
 		fingerPhase = isMacosPlatform() ? scrollGesture : null,
 		reducedMotion = () => prefersReducedMotion.current,
 	}: {
 		count: () => number;
-		onVisible?: (positions: VisiblePositions) => void;
+		onVisible: (positions: VisiblePositions) => void;
 		onRest: (position: number) => void;
 		fingerPhase?: ScrollGestureState | null;
 		reducedMotion?: () => boolean;
@@ -132,8 +132,7 @@ export class SnapPager {
 	}
 
 	settleNow(): void {
-		if (this.#width <= 0 || this.#held() || !this.#widthMatchesLayout())
-			return;
+		if (!this.#canSnap()) return;
 		const position = this.#nearestPosition();
 		if (!this.#aligned(position)) return;
 		if (this.#stepTarget !== null && position !== this.#stepTarget) return;
@@ -177,6 +176,10 @@ export class SnapPager {
 
 	#held(): boolean {
 		return this.#fingers > 0 || this.#fingerPhase?.fingersDown === true;
+	}
+
+	#canSnap(): boolean {
+		return this.#width > 0 && !this.#held() && this.#widthMatchesLayout();
 	}
 
 	#report(position: number): void {
@@ -232,12 +235,7 @@ export class SnapPager {
 
 	readonly #checkRelease = (): void => {
 		this.#releaseWatch = null;
-		if (
-			this.#held() ||
-			this.#stepTarget !== null ||
-			!this.#widthMatchesLayout()
-		)
-			return;
+		if (!this.#canSnap() || this.#stepTarget !== null) return;
 		const position = this.#nearestPosition();
 		if (this.#aligned(position)) return;
 		this.#stillFrames += 1;
@@ -249,13 +247,7 @@ export class SnapPager {
 	};
 
 	#snapStranded(): void {
-		if (
-			this.#width <= 0 ||
-			this.#held() ||
-			this.#stepTarget !== null ||
-			!this.#widthMatchesLayout()
-		)
-			return;
+		if (!this.#canSnap() || this.#stepTarget !== null) return;
 		const position = this.#nearestPosition();
 		if (!this.#aligned(position))
 			this.#scrollToPosition(position, { animated: true });

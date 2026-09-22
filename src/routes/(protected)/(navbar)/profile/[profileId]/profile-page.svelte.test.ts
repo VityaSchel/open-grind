@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "@sveltejs/kit";
 
-import { WIDTH } from "$lib/util/snap-pager-test-helpers";
+import { fakePagerLayout, WIDTH } from "$lib/util/snap-pager-test-helpers";
 import type { Profile } from "$lib/model/users/profiles";
 import ProfilePage from "./+page.svelte";
 import {
@@ -93,8 +93,6 @@ const COMMIT = {
 	state: { profileOrigin: "browse" },
 };
 
-const resizeCallbacks = new Map<Element, ResizeObserverCallback>();
-
 async function openProfile({
 	gridIds,
 	profileId,
@@ -110,28 +108,24 @@ async function openProfile({
 	page.url = new URL(`https://app.test/profile/${profileId}`);
 	window.history.replaceState(null, "", `/profile/${profileId}`);
 
-	const { container } = render(ProfilePage, {
-		props: {
-			params: { profileId: String(profileId) },
-			data: { ourProfileId: OUR_ID },
+	const layout = fakePagerLayout({
+		mount: () => {
+			const { container } = render(ProfilePage, {
+				props: {
+					params: { profileId: String(profileId) },
+					data: { ourProfileId: OUR_ID },
+				},
+			});
+			const pager = container.querySelector<HTMLElement>(
+				'[data-slot="profile-pager"]',
+			);
+			if (!pager) throw new Error("profile pager not mounted");
+			return pager;
 		},
 	});
-	const host = container.querySelector<HTMLElement>(
-		'[data-slot="profile-pager"]',
-	);
-	if (!host) throw new Error("profile pager not mounted");
-	Object.defineProperty(host, "clientWidth", {
-		get: () => Math.round(WIDTH),
-	});
-	resizeCallbacks.get(host)?.(
-		[
-			{
-				contentBoxSize: [{ inlineSize: WIDTH, blockSize: 800 }],
-			} as unknown as ResizeObserverEntry,
-		],
-		{} as ResizeObserver,
-	);
+	layout.measure(WIDTH);
 	await flush();
+	const host = layout.node;
 
 	return {
 		host,
@@ -147,8 +141,7 @@ async function openProfile({
 				active: !section.hasAttribute("aria-hidden"),
 			})),
 		scroll: async (left: number) => {
-			host.scrollLeft = left;
-			host.dispatchEvent(new Event("scroll"));
+			layout.scroll(left);
 			await flush();
 		},
 	};
@@ -163,21 +156,6 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	navigating.type = null;
 	navigating.to = null;
-	resizeCallbacks.clear();
-	vi.stubGlobal(
-		"ResizeObserver",
-		class {
-			readonly #callback: ResizeObserverCallback;
-			constructor(callback: ResizeObserverCallback) {
-				this.#callback = callback;
-			}
-			observe(target: Element) {
-				resizeCallbacks.set(target, this.#callback);
-			}
-			unobserve() {}
-			disconnect() {}
-		},
-	);
 	getProfileMock.mockImplementation((profileId: number) =>
 		Promise.resolve(
 			fullProfile({

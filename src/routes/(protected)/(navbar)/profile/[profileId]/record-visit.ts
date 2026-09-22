@@ -1,6 +1,15 @@
+import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
 import { recordProfileView } from "$lib/api/interest/views";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
+
+const visitedProfileIds = new Set<number>();
+
+registerAccountCache({ reset: forgetProfileVisits });
+
+export function forgetProfileVisits(): void {
+	visitedProfileIds.clear();
+}
 
 export async function recordProfileVisit({
 	profileId,
@@ -9,6 +18,8 @@ export async function recordProfileVisit({
 	profileId: number;
 	ourProfileId: number;
 }): Promise<void> {
+	if (visitedProfileIds.has(profileId)) return;
+	visitedProfileIds.add(profileId);
 	if (!Number.isFinite(profileId) || profileId === ourProfileId) return;
 	try {
 		const { revealProfileViews } = await getPreferences();

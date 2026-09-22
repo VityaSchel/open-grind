@@ -1,15 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getProfileMock, recordProfileVisitMock } = vi.hoisted(() => ({
-	getProfileMock: vi.fn<(profileId: number) => Promise<Profile>>(),
-	recordProfileVisitMock:
-		vi.fn<
-			(visit: {
-				profileId: number;
-				ourProfileId: number;
-			}) => Promise<void>
-		>(),
-}));
+const { getProfileMock, recordProfileVisitMock, forgetProfileVisitsMock } =
+	vi.hoisted(() => ({
+		getProfileMock: vi.fn<(profileId: number) => Promise<Profile>>(),
+		recordProfileVisitMock:
+			vi.fn<
+				(visit: {
+					profileId: number;
+					ourProfileId: number;
+				}) => Promise<void>
+			>(),
+		forgetProfileVisitsMock: vi.fn<() => void>(),
+	}));
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
 vi.mock("$lib/api/users/favorites", () => ({
@@ -24,6 +26,7 @@ vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 }));
 vi.mock("../record-visit", () => ({
 	recordProfileVisit: recordProfileVisitMock,
+	forgetProfileVisits: forgetProfileVisitsMock,
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
@@ -60,7 +63,7 @@ beforeEach(() => {
 
 afterEach(destroyOpenedPagers);
 
-describe("ProfilePagerModel track", () => {
+describe("ProfilePagerState track", () => {
 	it("opens a Browse entry at its place in the grid order, without our own profile", () => {
 		const pager = openPager({
 			source: gridSource({ ids: [1, 2, OUR_ID, 3, 4] }),
@@ -132,7 +135,7 @@ describe("ProfilePagerModel track", () => {
 	});
 });
 
-describe("ProfilePagerModel navigation", () => {
+describe("ProfilePagerState navigation", () => {
 	it("ignores a commit to the active position or past the track", () => {
 		const source = gridSource({ ids: range(1, 5) });
 		const pager = openPager({ source, profileId: 3 });
@@ -234,7 +237,7 @@ describe("ProfilePagerModel navigation", () => {
 	});
 });
 
-describe("ProfilePagerModel views", () => {
+describe("ProfilePagerState views", () => {
 	it("records the entry once and nothing for mounted neighbors", async () => {
 		const pager = openPager({
 			source: gridSource({ ids: range(1, 10) }),
@@ -251,7 +254,7 @@ describe("ProfilePagerModel views", () => {
 		});
 	});
 
-	it("records each profile the pager lands on once", () => {
+	it("records every profile the pager lands on", () => {
 		const pager = openPager({
 			source: gridSource({ ids: range(1, 10) }),
 			profileId: 6,
@@ -262,45 +265,44 @@ describe("ProfilePagerModel views", () => {
 		pager.commit({ position: 6 });
 		pager.commit({ position: 7 });
 
-		expect(recordedIds()).toEqual([6, 7, 8]);
+		expect(recordedIds()).toEqual([6, 7, 6, 7, 8]);
 	});
 
-	it("records again on a fresh entry", () => {
-		const source = gridSource({ ids: range(1, 10) });
-		openPager({ source, profileId: 6 }).commit({ position: 6 });
+	it("forgets the recorded visits before recording a fresh entry", () => {
+		const pager = openPager({
+			source: gridSource({ ids: range(1, 10) }),
+			profileId: 6,
+		});
+		pager.commit({ position: 6 });
+		vi.clearAllMocks();
 
-		openPager({ source, profileId: 7 });
+		pager.reset({
+			profileId: 7,
+			ourProfileId: OUR_ID,
+			origin: "browse",
+			historyTraversal: false,
+		});
 
-		expect(recordedIds()).toEqual([6, 7, 7]);
+		expect(forgetProfileVisitsMock).toHaveBeenCalledOnce();
+		expect(forgetProfileVisitsMock).toHaveBeenCalledBefore(
+			recordProfileVisitMock,
+		);
+		expect(recordedIds()).toEqual([7]);
 	});
 
-	it("does not record again when history returns to the pager", () => {
-		const source = gridSource({ ids: range(1, 10) });
-		openPager({ source, profileId: 6 }).commit({ position: 6 });
-
-		const returned = openPager({
-			source,
+	it("keeps the recorded visits when history returns to the pager", () => {
+		openPager({
+			source: gridSource({ ids: range(1, 10) }),
 			profileId: 7,
 			historyTraversal: true,
 		});
-		returned.commit({ position: 5 });
-		returned.commit({ position: 7 });
 
-		expect(recordedIds()).toEqual([6, 7, 8]);
-	});
-
-	it("forgets the recorded profiles on sign-out", () => {
-		const source = gridSource({ ids: range(1, 10) });
-		openPager({ source, profileId: 6 });
-
-		clearAccountCaches();
-		openPager({ source, profileId: 6, historyTraversal: true });
-
-		expect(recordedIds()).toEqual([6, 6]);
+		expect(forgetProfileVisitsMock).not.toHaveBeenCalled();
+		expect(recordedIds()).toEqual([7]);
 	});
 });
 
-describe("ProfilePagerModel grid rows", () => {
+describe("ProfilePagerState grid rows", () => {
 	it("prefers the live grid row and falls back to the one seen at entry", () => {
 		const source = gridSource({ ids: range(1, 5) });
 		const pager = openPager({ source, profileId: 3 });
@@ -389,7 +391,7 @@ describe("ProfilePagerModel grid rows", () => {
 	});
 });
 
-describe("ProfilePagerModel grid growth", () => {
+describe("ProfilePagerState grid growth", () => {
 	it("appends new grid profiles that follow the last profile still listed", () => {
 		const source = gridSource({ ids: range(1, 5) });
 		const pager = openPager({ source, profileId: 3 });

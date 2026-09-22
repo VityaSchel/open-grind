@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -32,14 +38,14 @@ vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
 
 import { ApiError } from "$lib/api/api-error";
 import { HiddenProfileError } from "$lib/api/users/profiles";
+import { rendered } from "$lib/grid/grid-test-helpers";
 import type { RenderedGridProfile } from "$lib/grid/grid";
 import type { Profile } from "$lib/model/users/profiles";
 import { ProfileState } from "../profile-state.svelte";
-import { fullProfile } from "./profile-pager-test-helpers";
+import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import ProfilePane from "./ProfilePane.svelte";
 
 const PROFILE_ID = 100001;
-const OUR_ID = 42;
 const ROW_HASH = "rowphoto";
 const SECOND_HASH = "secondphoto";
 
@@ -50,22 +56,12 @@ const LOADED = {
 	mediaHashes: [ROW_HASH, SECOND_HASH],
 };
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
 function gridRow(): RenderedGridProfile {
 	return {
-		type: "rendered",
-		id: PROFILE_ID,
+		...rendered({ id: PROFILE_ID }),
 		displayName: "Peer",
 		age: 27,
-		distance: null,
 		profilePhotosHashes: [ROW_HASH],
-		unread: null,
-		onlineUntil: null,
-		seen: null,
-		isFavorite: false,
-		isVisiting: false,
-		hasChattedInLast24Hrs: false,
 	};
 }
 
@@ -79,11 +75,11 @@ function serviceUnavailable(): ApiError {
 }
 
 function renderPane({
-	role,
+	active,
 	row,
 	position = 0,
 }: {
-	role: "active" | "neighbor";
+	active: boolean;
 	row: RenderedGridProfile | null;
 	position?: number;
 }) {
@@ -95,7 +91,7 @@ function renderPane({
 		props: {
 			profileState,
 			position,
-			role,
+			active,
 			row,
 			heroHash: row?.profilePhotosHashes?.[0] ?? null,
 		},
@@ -106,9 +102,12 @@ function renderPane({
 	return { profileState, section };
 }
 
+function headingElement(section: HTMLElement): HTMLElement | null {
+	return within(section).queryByRole("heading", { level: 1, hidden: true });
+}
+
 function heading(section: HTMLElement): string | undefined {
-	return section
-		.querySelector("h1")
+	return headingElement(section)
 		?.textContent.replace(/\s+/g, " ")
 		.replace(" ,", ",")
 		.trim();
@@ -137,7 +136,7 @@ describe("ProfilePane failures", () => {
 	it("keeps a neighbor's row photo and heading behind a retry control when its load fails", async () => {
 		getProfileMock.mockRejectedValue(serviceUnavailable());
 		const { profileState, section } = renderPane({
-			role: "neighbor",
+			active: false,
 			row: gridRow(),
 		});
 		await flush();
@@ -155,7 +154,7 @@ describe("ProfilePane failures", () => {
 
 	it("loads the profile again from the retry control", async () => {
 		getProfileMock.mockRejectedValueOnce(serviceUnavailable());
-		const { section } = renderPane({ role: "active", row: gridRow() });
+		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
 		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
@@ -168,22 +167,22 @@ describe("ProfilePane failures", () => {
 
 	it("shows the full error screen for a failed load with no grid row", async () => {
 		getProfileMock.mockRejectedValue(serviceUnavailable());
-		const { section } = renderPane({ role: "active", row: null });
+		const { section } = renderPane({ active: true, row: null });
 		await flush();
 
 		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
-		expect(section.querySelector("h1")).toBeNull();
+		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
 	});
 
 	it("shows the hidden screen instead of the row photo for a hidden profile", async () => {
 		getProfileMock.mockRejectedValue(new HiddenProfileError());
-		const { section } = renderPane({ role: "active", row: gridRow() });
+		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
 		expect(screen.getByText("You hid this profile.")).not.toBeNull();
 		expect(section.querySelector("img")).toBeNull();
-		expect(section.querySelector("h1")).toBeNull();
+		expect(headingElement(section)).toBeNull();
 	});
 });
 
@@ -195,7 +194,7 @@ describe("ProfilePane loading", () => {
 				settle = resolve;
 			}),
 		);
-		const { section } = renderPane({ role: "neighbor", row: gridRow() });
+		const { section } = renderPane({ active: false, row: gridRow() });
 		await tick();
 		const rowPhoto = section.querySelector(".carousel img");
 		expect(rowPhoto?.getAttribute("src")).toBe(
@@ -216,7 +215,7 @@ describe("ProfilePane loading", () => {
 
 	it("previews the row without the loaded profile's status slots", async () => {
 		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
-		const { section } = renderPane({ role: "active", row: gridRow() });
+		const { section } = renderPane({ active: true, row: gridRow() });
 		await tick();
 
 		expect(
@@ -231,11 +230,11 @@ describe("ProfilePane loading", () => {
 
 	it("shows a skeleton with no photo for a loading pane with no row", async () => {
 		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
-		const { section } = renderPane({ role: "active", row: null });
+		const { section } = renderPane({ active: true, row: null });
 		await tick();
 
 		const photoSlot = section.querySelector("main")!.firstElementChild!;
-		expect(section.querySelector("h1")).toBeNull();
+		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
 		expect(photoSlot.getAttribute("data-slot")).toBe("skeleton");
 		expect(
@@ -249,7 +248,7 @@ describe("ProfilePane loading", () => {
 describe("ProfilePane roles", () => {
 	it("keeps a neighbor's error screen out of input", async () => {
 		getProfileMock.mockRejectedValue(new HiddenProfileError());
-		const { section } = renderPane({ role: "neighbor", row: null });
+		const { section } = renderPane({ active: false, row: null });
 		await flush();
 
 		const unhide = screen.getByRole("button", {
@@ -263,7 +262,7 @@ describe("ProfilePane roles", () => {
 
 	it("keeps a neighbor out of assistive tech and input while its scroller stays scrollable", async () => {
 		const { section } = renderPane({
-			role: "neighbor",
+			active: false,
 			row: gridRow(),
 			position: 3,
 		});
@@ -284,7 +283,7 @@ describe("ProfilePane roles", () => {
 	});
 
 	it("gives the active pane the scroller slot, live controls and the refresh control", async () => {
-		const { section } = renderPane({ role: "active", row: gridRow() });
+		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
 		const scroller = section.querySelector("main")!.parentElement!;

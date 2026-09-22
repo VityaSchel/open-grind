@@ -33,7 +33,7 @@ describe("SnapPager rests on an aligned pager", () => {
 		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(2);
 	});
 
-	it("leaves an unaligned pager where it is, even after the lift", () => {
+	it("does not snap an unaligned pager at the moment of the lift", () => {
 		const h = harness();
 
 		h.touch("touchstart");
@@ -321,8 +321,8 @@ describe("SnapPager over the macOS finger-phase bridge", () => {
 	});
 });
 
-describe("SnapPager keeps no clock", () => {
-	it("schedules no timer or frame for any input that lands on a profile", () => {
+describe("SnapPager schedules nothing for input that lands on a profile", () => {
+	it("across touches, wheels, trackpad phases, steps, placements and resizes", () => {
 		vi.useFakeTimers();
 		const mac = macosGesture();
 		const h = harness({ fingerPhase: mac.gesture });

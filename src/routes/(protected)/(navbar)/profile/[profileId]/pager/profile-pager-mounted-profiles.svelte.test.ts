@@ -25,6 +25,7 @@ vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 }));
 vi.mock("../record-visit", () => ({
 	recordProfileVisit: vi.fn(() => Promise.resolve()),
+	forgetProfileVisits: vi.fn(),
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
@@ -61,7 +62,7 @@ beforeEach(() => {
 
 afterEach(destroyOpenedPagers);
 
-describe("ProfilePagerModel mounted profiles", () => {
+describe("ProfilePagerState mounted profiles", () => {
 	it("mounts a full profile state for the entry and one profile on each side", () => {
 		const pager = openPager({
 			source: gridSource({ ids: range(1, 10) }),
@@ -115,8 +116,7 @@ describe("ProfilePagerModel mounted profiles", () => {
 		pager.setVisiblePositions({ first: 9, last: 9 });
 
 		expect(mountedPositions(pager)).toEqual([2, 8, 9]);
-		expect(pager.role(2)).toBe("active");
-		expect(pager.role(8)).toBe("neighbor");
+		expect(pager.activePosition).toBe(2);
 
 		destroy.mockClear();
 		pager.commit({ position: 9 });
@@ -284,7 +284,7 @@ describe("ProfilePagerModel mounted profiles", () => {
 	});
 });
 
-describe("ProfilePagerModel active profile", () => {
+describe("ProfilePagerState active profile", () => {
 	it("lands on a mounted neighbor without a new state and revalidates it once", async () => {
 		const pager = openPager({
 			source: gridSource({ ids: range(1, 20) }),
@@ -298,8 +298,7 @@ describe("ProfilePagerModel active profile", () => {
 		expect(pager.commit({ position: 6 })).toBe(7);
 
 		expect(pager.activeId).toBe(7);
-		expect(pager.role(6)).toBe("active");
-		expect(pager.role(5)).toBe("neighbor");
+		expect(pager.activePosition).toBe(6);
 		expect(stateOf({ pager, profileId: 7 })).toBe(neighbor);
 		expect(fetchCount(7)).toBe(1);
 		expect(refreshProfileMock).toHaveBeenCalledExactlyOnceWith(7);

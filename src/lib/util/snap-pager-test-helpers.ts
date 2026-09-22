@@ -14,15 +14,18 @@ export function fakePagerLayout({
 	mount: () => HTMLElement;
 	touchTarget?: EventTarget;
 }) {
-	let resize: ResizeCallback | null = null;
+	const resizeCallbacks = new Map<Element, ResizeCallback>();
 	const disconnect = vi.fn();
 	vi.stubGlobal(
 		"ResizeObserver",
 		class {
+			readonly #callback: ResizeCallback;
 			constructor(callback: ResizeCallback) {
-				resize = callback;
+				this.#callback = callback;
 			}
-			observe() {}
+			observe(target: Element) {
+				resizeCallbacks.set(target, this.#callback);
+			}
 			unobserve() {}
 			disconnect = disconnect;
 		},
@@ -63,7 +66,7 @@ export function fakePagerLayout({
 		disconnect,
 		measure: (width: number) => {
 			layoutWidth = width;
-			resize?.([
+			resizeCallbacks.get(node)?.([
 				{
 					contentBoxSize: [{ inlineSize: width, blockSize: 800 }],
 				} as unknown as ResizeObserverEntry,

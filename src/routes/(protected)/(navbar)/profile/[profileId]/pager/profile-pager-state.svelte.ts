@@ -1,15 +1,15 @@
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
-import { registerAccountCache } from "$lib/api/account-caches";
 import {
 	isProfileViewable,
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
-import { browseOrder } from "$lib/grid/grid-profiles";
 import type { RenderedGridProfile } from "$lib/grid/grid";
 import type { gridState } from "$lib/grid/grid-state.svelte";
+import type { VisiblePositions } from "$lib/util/snap-pager";
 import { type FetchedProfile, ProfileState } from "../profile-state.svelte";
-import { recordProfileVisit } from "../record-visit";
+import { forgetProfileVisits, recordProfileVisit } from "../record-visit";
+import { browseOrder } from "./browse-order";
 
 const TRACK_REACH = 100;
 const TRACK_END_MARGIN = 5;
@@ -31,21 +31,15 @@ export type ProfilePagerEntry = {
 	origin: "browse" | null;
 };
 
-export type ProfilePagerReset = ProfilePagerEntry & {
-	historyTraversal: boolean;
-};
+type ProfilePagerReset = ProfilePagerEntry & { historyTraversal: boolean };
 
-export type MountedProfile = {
+type MountedProfile = {
 	position: number;
 	profileId: number;
 	state: ProfileState;
 };
 
-const viewedProfileIds = new SvelteSet<number>();
-
-registerAccountCache({ reset: () => viewedProfileIds.clear() });
-
-export class ProfilePagerModel {
+export class ProfilePagerState {
 	#order: number[] = $state.raw([]);
 	#trackStart = $state(0);
 	#trackEnd = $state(0);
@@ -115,7 +109,7 @@ export class ProfilePagerModel {
 		this.#fetched.clear();
 		this.#issued.clear();
 		this.#withdrawn.clear();
-		if (!historyTraversal) viewedProfileIds.clear();
+		if (!historyTraversal) forgetProfileVisits();
 
 		const { order, rows, entryIndex } = browseOrder({
 			profiles: origin === "browse" ? this.#source.profiles : [],
@@ -136,7 +130,7 @@ export class ProfilePagerModel {
 
 		this.#syncStates();
 		this.#states.get(this.#activePosition)?.activate();
-		this.#visit(profileId);
+		void recordProfileVisit({ profileId, ourProfileId });
 		if (!historyTraversal) this.#source.revealProfileId = null;
 		this.#loadAhead();
 		this.#generation += 1;
@@ -152,10 +146,6 @@ export class ProfilePagerModel {
 		return origin !== "browse" || !this.#issued.has(profileId);
 	}
 
-	role(position: number): "active" | "neighbor" {
-		return position === this.#activePosition ? "active" : "neighbor";
-	}
-
 	row(profileId: number): RenderedGridProfile | null {
 		const entered = this.#rows.get(profileId);
 		if (!entered) return null;
@@ -168,13 +158,7 @@ export class ProfilePagerModel {
 		return this.row(profileId)?.profilePhotosHashes?.[0] ?? null;
 	}
 
-	setVisiblePositions({
-		first,
-		last,
-	}: {
-		first: number;
-		last: number;
-	}): void {
+	setVisiblePositions({ first, last }: VisiblePositions): void {
 		if (first === this.#visibleFirst && last === this.#visibleLast) return;
 		this.#visibleFirst = first;
 		this.#visibleLast = last;
@@ -194,7 +178,10 @@ export class ProfilePagerModel {
 		landed?.revalidate();
 		landed?.activate();
 		this.#issued.add(profileId);
-		this.#visit(profileId);
+		void recordProfileVisit({
+			profileId,
+			ourProfileId: this.#ourProfileId,
+		});
 		this.#source.revealProfileId = profileId;
 		this.#loadAhead();
 		return profileId;
@@ -277,15 +264,6 @@ export class ProfilePagerModel {
 	#withdrawUnviewable(profileIds: readonly number[]): void {
 		for (const profileId of profileIds)
 			if (!isProfileViewable(profileId)) this.#withdrawn.add(profileId);
-	}
-
-	#visit(profileId: number): void {
-		if (viewedProfileIds.has(profileId)) return;
-		viewedProfileIds.add(profileId);
-		void recordProfileVisit({
-			profileId,
-			ourProfileId: this.#ourProfileId,
-		});
 	}
 
 	#loadAhead(): void {

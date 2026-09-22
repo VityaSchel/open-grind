@@ -2,9 +2,9 @@ import { cleanup, render } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { revealedGridScrollTop } from "$lib/grid/grid-reveal";
 import type { GridProfile } from "$lib/grid/grid";
 import GridPage from "./+page.svelte";
+import { revealedGridScrollTop } from "./grid-reveal";
 
 const REVEALED_ID = 8;
 const REVEALED_INDEX = 61;

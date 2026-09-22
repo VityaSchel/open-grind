@@ -6,17 +6,17 @@
 
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { navigationPending } from "$lib/util/history";
-	import { arrowKeyAction } from "$lib/util/keyboard-paging";
 	import {
 		isPhotoSwipeBusy,
 		onPhotoSwipeIdle,
 		onPhotoSwipeOpening,
 	} from "$lib/util/photoswipe";
 	import { SnapPager } from "$lib/util/snap-pager";
+	import { arrowKeyAction } from "./keyboard-paging";
 	import {
 		type ProfilePagerEntry,
-		ProfilePagerModel,
-	} from "./profile-pager.svelte";
+		ProfilePagerState,
+	} from "./profile-pager-state.svelte";
 	import ProfilePane from "./ProfilePane.svelte";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
@@ -29,7 +29,7 @@
 
 	const pager = untrack(
 		() =>
-			new ProfilePagerModel({
+			new ProfilePagerState({
 				source: gridState,
 				...entry,
 				historyTraversal: navigating.type === "popstate",
@@ -86,7 +86,13 @@
 		untrack(() => pager.absorbGridGrowth());
 	});
 
-	function stepByKey(event: KeyboardEvent, offset: number) {
+	function stepByKey({
+		event,
+		offset,
+	}: {
+		event: KeyboardEvent;
+		offset: number;
+	}) {
 		const action = arrowKeyAction({
 			event,
 			lightboxBusy: isPhotoSwipeBusy(),
@@ -98,8 +104,8 @@
 
 	onMount(() =>
 		tinykeys(window, {
-			ArrowLeft: (event) => stepByKey(event, -1),
-			ArrowRight: (event) => stepByKey(event, 1),
+			ArrowLeft: (event) => stepByKey({ event, offset: -1 }),
+			ArrowRight: (event) => stepByKey({ event, offset: 1 }),
 		}),
 	);
 
@@ -130,7 +136,7 @@
 		<ProfilePane
 			profileState={state}
 			{position}
-			role={pager.role(position)}
+			active={position === pager.activePosition}
 			row={pager.row(profileId)}
 			heroHash={pager.heroHash(profileId)}
 		/>
