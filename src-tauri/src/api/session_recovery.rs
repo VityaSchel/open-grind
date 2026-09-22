@@ -143,7 +143,7 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 		}
 
 		attempts += 1;
-		match client.refresh_token().await {
+		match client.refresh_session().await {
 			Ok(_) => return Outcome::Quiet,
 			Err(error) => {
 				let mapped = AppError::from_client_error(error, client);

@@ -255,7 +255,7 @@ mod tests {
 		let client =
 			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
 				.unwrap();
-		let error = client.refresh_token().await.unwrap_err();
+		let error = client.refresh_session().await.unwrap_err();
 
 		let app = AppError::from_client_error(error, &client);
 

@@ -77,7 +77,7 @@ pub fn spawn_ws_task(app: AppHandle) {
 					Err(RecvError::Closed) => break,
 				};
 				match event {
-					grindr::AuthEvent::LoggedOut => {
+					grindr::AuthEvent::SignedOut => {
 						app.emit(
 							"auth:session-error",
 							SessionErrorPayload {

@@ -12,8 +12,8 @@ pub struct SignInResult {
 	pub restriction: Option<Restriction>,
 }
 
-impl From<grindr::LoginResult> for SignInResult {
-	fn from(r: grindr::LoginResult) -> Self {
+impl From<grindr::SignInResult> for SignInResult {
+	fn from(r: grindr::SignInResult) -> Self {
 		Self {
 			profile_id: r.profile_id,
 			restriction: r.restriction.map(Restriction::from),
@@ -76,7 +76,10 @@ pub async fn sign_in_with_email(
 	email: String,
 	password: String,
 ) -> Result<SignInResult, AppError> {
-	let result = state.client()?.login(&email, &password).await?;
+	let result = state
+		.client()?
+		.sign_in_with_email(&email, &password)
+		.await?;
 	Ok(SignInResult::from(result))
 }
 
@@ -87,7 +90,7 @@ pub async fn sign_in_with_google(
 ) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::google_oauth::fetch_google_access_token(&app).await?;
-	let result = state.client()?.google_sign_in(&access_token).await?;
+	let result = state.client()?.sign_in_with_google(&access_token).await?;
 	Ok(SignInResult::from(result))
 }
 
@@ -96,7 +99,7 @@ pub async fn sign_in_with_google_token(
 	state: tauri::State<'_, AppState>,
 	token: String,
 ) -> Result<SignInResult, AppError> {
-	let result = state.client()?.google_sign_in(&token).await?;
+	let result = state.client()?.sign_in_with_google(&token).await?;
 	Ok(SignInResult::from(result))
 }
 
@@ -118,7 +121,7 @@ pub async fn sign_in_with_google_handoff(
 	let Some(token) = super::google_oauth::take_handoff(&app) else {
 		return Ok(None);
 	};
-	let result = state.client()?.google_sign_in(&token).await?;
+	let result = state.client()?.sign_in_with_google(&token).await?;
 	Ok(Some(SignInResult::from(result)))
 }
 
@@ -134,7 +137,7 @@ pub async fn sign_in_with_facebook(
 ) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::facebook_oauth::fetch_facebook_access_token(&app).await?;
-	let result = state.client()?.facebook_sign_in(&access_token).await?;
+	let result = state.client()?.sign_in_with_facebook(&access_token).await?;
 	Ok(SignInResult::from(result))
 }
 
@@ -145,7 +148,7 @@ pub async fn refresh_session(
 ) -> Result<SignInResult, AppError> {
 	let client = state.client()?;
 	let result = client
-		.refresh_token_with_geohash(geohash.as_deref())
+		.refresh_session_at_geohash(geohash.as_deref())
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
 	Ok(SignInResult::from(result))
@@ -159,7 +162,7 @@ pub async fn sign_out(
 ) -> Result<(), AppError> {
 	let client = state.client()?;
 
-	client.logout().await;
+	client.sign_out().await;
 	AuthStorage::delete_credentials();
 	SigningKeyStorage::delete();
 	media.forget_everything().await;
