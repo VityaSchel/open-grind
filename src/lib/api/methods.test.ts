@@ -331,7 +331,7 @@ describe("callMethod", () => {
 	it("passes backend errors through untouched", async () => {
 		invokeMock.mockRejectedValueOnce({ kind: "Auth", message: "nope" });
 
-		await expect(callMethod("auth_state")).rejects.toEqual({
+		await expect(callMethod("current_session")).rejects.toEqual({
 			kind: "Auth",
 			message: "nope",
 		});
@@ -346,7 +346,7 @@ describe("callMethod", () => {
 			},
 		});
 
-		await expect(callMethod("auth_state")).rejects.toBeDefined();
+		await expect(callMethod("current_session")).rejects.toBeDefined();
 
 		expect(requestBlockedAlertState.open).toBe(true);
 		expect(requestBlockedAlertState.kind).toBe("cloudflare");
@@ -355,7 +355,7 @@ describe("callMethod", () => {
 	it("raises the same alert when the local network refuses it", async () => {
 		invokeMock.mockRejectedValueOnce({ kind: "NetworkBlocked" });
 
-		await expect(callMethod("auth_state")).rejects.toBeDefined();
+		await expect(callMethod("current_session")).rejects.toBeDefined();
 
 		expect(requestBlockedAlertState.open).toBe(true);
 		expect(requestBlockedAlertState.kind).toBe("network");
@@ -364,7 +364,7 @@ describe("callMethod", () => {
 	it("leaves the alert down for an error that is not a block", async () => {
 		invokeMock.mockRejectedValueOnce({ kind: "Auth", message: "nope" });
 
-		await expect(callMethod("auth_state")).rejects.toBeDefined();
+		await expect(callMethod("current_session")).rejects.toBeDefined();
 
 		expect(requestBlockedAlertState.open).toBe(false);
 	});

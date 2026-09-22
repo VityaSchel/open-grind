@@ -15,13 +15,20 @@ vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
 describe("signOutIfSessionLost", () => {
 	beforeEach(() => {
 		page.route.id = "/(protected)/chat";
-		callMethodMock.mockReset().mockResolvedValue(null);
+		callMethodMock
+			.mockReset()
+			.mockResolvedValue({
+				profileId: null,
+				expiresAt: null,
+				stale: false,
+			});
 		signOutMock.mockReset().mockResolvedValue(undefined);
 	});
 
 	it("signs out when the app is open and the backend has no session", async () => {
 		await signOutIfSessionLost();
 
+		expect(callMethodMock).toHaveBeenCalledWith("current_session");
 		expect(signOutMock).toHaveBeenCalledOnce();
 	});
 
@@ -35,7 +42,11 @@ describe("signOutIfSessionLost", () => {
 	});
 
 	it("keeps the session when the backend still has one", async () => {
-		callMethodMock.mockResolvedValue(123);
+		callMethodMock.mockResolvedValue({
+			profileId: 123,
+			expiresAt: null,
+			stale: false,
+		});
 
 		await signOutIfSessionLost();
 

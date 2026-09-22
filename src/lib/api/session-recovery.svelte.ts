@@ -72,9 +72,9 @@ class SessionRecovery {
 			return;
 		}
 
-		const health = await callMethod("session_health").catch(() => null);
+		const session = await callMethod("current_session").catch(() => null);
 		if (this.#pending !== pending) return;
-		if (health !== null && !health.stale) {
+		if (session !== null && !session.stale) {
 			this.#pending = null;
 			return;
 		}

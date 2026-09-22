@@ -82,8 +82,6 @@ function ok(body: unknown): DemoResponse {
 
 export function demoCallMethod(method: string): unknown {
 	switch (method) {
-		case "auth_state":
-			return demoMeProfileId;
 		case "sign_in_with_email":
 		case "sign_in_with_google":
 		case "sign_in_with_google_token":
@@ -96,8 +94,12 @@ export function demoCallMethod(method: string): unknown {
 			return false;
 		case "mint_recaptcha_token":
 			return "demo-recaptcha-token";
-		case "session_health":
-			return { signedIn: true, expiresAt: null, stale: false };
+		case "current_session":
+			return {
+				profileId: demoMeProfileId,
+				expiresAt: null,
+				stale: false,
+			};
 		case "storage_backend":
 			return "keyring";
 		default:

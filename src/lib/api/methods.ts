@@ -74,10 +74,6 @@ export const methods = {
 		request: z.undefined(),
 		response: signInResultSchema,
 	},
-	auth_state: {
-		request: z.undefined(),
-		response: z.int().nonnegative().nullable(),
-	},
 	account_restriction: {
 		request: z.undefined(),
 		response: restrictionSchema.nullish(),
@@ -115,10 +111,10 @@ export const methods = {
 		}),
 		response: z.string().min(1),
 	},
-	session_health: {
+	current_session: {
 		request: z.undefined(),
 		response: z.object({
-			signedIn: z.boolean(),
+			profileId: z.int().nonnegative().nullable(),
 			expiresAt: z.int().nonnegative().nullable(),
 			stale: z.boolean(),
 		}),

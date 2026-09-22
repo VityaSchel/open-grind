@@ -48,7 +48,7 @@ describe("sessionRecovery", () => {
 	beforeEach(() => {
 		callMethodMock
 			.mockReset()
-			.mockResolvedValue({ signedIn: true, expiresAt: 0, stale: true });
+			.mockResolvedValue({ profileId: 1, expiresAt: 0, stale: true });
 		toastErrorMock.mockReset();
 		toastDismissMock.mockReset();
 		requestBlockedAlertState.open = false;
@@ -120,7 +120,7 @@ describe("sessionRecovery", () => {
 
 	it("drops a failure another caller already repaired", async () => {
 		callMethodMock.mockResolvedValue({
-			signedIn: true,
+			profileId: 1,
 			expiresAt: 9_999_999_999,
 			stale: false,
 		});
@@ -145,7 +145,7 @@ describe("sessionRecovery", () => {
 
 	it("never defers a permanent failure behind the staleness filter", () => {
 		callMethodMock.mockResolvedValue({
-			signedIn: true,
+			profileId: 1,
 			expiresAt: 9_999_999_999,
 			stale: false,
 		});

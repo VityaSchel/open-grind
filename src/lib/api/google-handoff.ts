@@ -3,11 +3,12 @@ import { listen } from "@tauri-apps/api/event";
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
 
+import { signedInProfileId } from "$lib/api/current-session";
 import {
 	confirmAccountSwitch,
 	googleHandoffState,
 } from "$lib/api/google-handoff-state.svelte";
-import { callMethod, signInResultSchema } from "$lib/api/methods";
+import { signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { clearAccountState } from "$lib/api/sign-out";
 import { isAndroidPlatform } from "$lib/platform/os";
@@ -57,7 +58,7 @@ async function backendAnswers(): Promise<boolean> {
 
 async function mayHaveSession(): Promise<boolean> {
 	if (!(await backendAnswers())) return true;
-	return (await callMethod("auth_state")) !== null;
+	return (await signedInProfileId()) !== null;
 }
 
 async function consume(): Promise<void> {

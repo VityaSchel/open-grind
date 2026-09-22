@@ -189,20 +189,6 @@ pub async fn recaptcha_first_party_enabled(
 }
 
 #[tauri::command]
-pub async fn auth_state(
-	state: tauri::State<'_, AppState>,
-) -> Result<Option<u64>, AppError> {
-	let Ok(client) = state.client() else {
-		return Ok(None);
-	};
-	Ok(client
-		.session_receiver()
-		.borrow()
-		.as_ref()
-		.and_then(|s| s.credentials.profile_id.as_ref()?.parse::<u64>().ok()))
-}
-
-#[tauri::command]
 pub async fn account_restriction(
 	state: tauri::State<'_, AppState>,
 ) -> Result<Option<Restriction>, AppError> {

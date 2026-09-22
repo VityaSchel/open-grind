@@ -48,24 +48,28 @@ fn now_unix() -> u64 {
 		.unwrap_or(0)
 }
 
-fn health_of(session: Option<&grindr::Session>) -> SessionHealth {
+fn session_of(session: Option<&grindr::Session>) -> CurrentSession {
 	match session {
 		Some(session) => {
 			let expires_at =
 				session.token.as_ref().map(|token| token.expires_at);
-			SessionHealth {
-				signed_in: true,
+			CurrentSession {
+				profile_id: session
+					.credentials
+					.profile_id
+					.as_ref()
+					.and_then(|id| id.parse().ok()),
 				expires_at,
 				stale: expires_at
 					.is_none_or(|at| at < now_unix() + REFRESH_BUFFER_SECS),
 			}
 		}
-		None => SessionHealth::default(),
+		None => CurrentSession::default(),
 	}
 }
 
 fn still_stale(client: &grindr::GrindrClient) -> bool {
-	health_of(client.session_receiver().borrow().as_ref()).stale
+	session_of(client.session_receiver().borrow().as_ref()).stale
 }
 
 pub fn report_refresh_failure(
@@ -192,20 +196,20 @@ pub async fn set_app_active(
 }
 
 #[tauri::command]
-pub async fn session_health(
+pub async fn current_session(
 	state: tauri::State<'_, AppState>,
-) -> Result<SessionHealth, AppError> {
+) -> Result<CurrentSession, AppError> {
 	let Ok(client) = state.client() else {
-		return Ok(SessionHealth::default());
+		return Ok(CurrentSession::default());
 	};
-	let health = health_of(client.session_receiver().borrow().as_ref());
-	Ok(health)
+	let session = session_of(client.session_receiver().borrow().as_ref());
+	Ok(session)
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SessionHealth {
-	pub signed_in: bool,
+pub struct CurrentSession {
+	pub profile_id: Option<u64>,
 	pub expires_at: Option<u64>,
 	pub stale: bool,
 }
@@ -239,37 +243,47 @@ mod tests {
 
 	#[test]
 	fn a_session_inside_the_refresh_buffer_reads_as_stale() {
-		let fresh = health_of(Some(&session_expiring_at(now_unix() + 3600)));
-		assert!(fresh.signed_in);
+		let fresh = session_of(Some(&session_expiring_at(now_unix() + 3600)));
+		assert_eq!(fresh.profile_id, Some(42));
 		assert!(!fresh.stale);
 
-		let expiring = health_of(Some(&session_expiring_at(now_unix() + 30)));
+		let expiring = session_of(Some(&session_expiring_at(now_unix() + 30)));
 		assert!(expiring.stale, "inside the 60s buffer counts as stale");
 
-		assert!(health_of(Some(&session_expiring_at(0))).stale);
+		assert!(session_of(Some(&session_expiring_at(0))).stale);
 
-		let resumed = health_of(Some(&session_awaiting_its_first_token()));
-		assert!(resumed.signed_in);
+		let resumed = session_of(Some(&session_awaiting_its_first_token()));
+		assert_eq!(resumed.profile_id, Some(42));
 		assert!(resumed.stale, "no token yet means a refresh is owed");
 		assert!(resumed.expires_at.is_none());
 	}
 
 	#[test]
-	fn no_session_is_neither_signed_in_nor_stale() {
-		let health = health_of(None);
-		assert!(!health.signed_in);
-		assert!(!health.stale, "a signed-out app owes no refresh");
-		assert!(health.expires_at.is_none());
+	fn no_session_has_no_profile_and_owes_no_refresh() {
+		let session = session_of(None);
+		assert!(session.profile_id.is_none());
+		assert!(!session.stale, "a signed-out app owes no refresh");
+		assert!(session.expires_at.is_none());
 	}
 
 	#[test]
-	fn health_serializes_in_the_shape_the_frontend_parses() {
+	fn an_unparseable_profile_id_reads_as_signed_out() {
+		let mut stored = session_expiring_at(now_unix() + 3600);
+		stored.credentials.profile_id = Some("not-a-number".to_owned());
+		assert!(session_of(Some(&stored)).profile_id.is_none());
+	}
+
+	#[test]
+	fn the_session_serializes_in_the_shape_the_frontend_parses() {
 		let json =
-			serde_json::to_value(health_of(Some(&session_expiring_at(42))))
+			serde_json::to_value(session_of(Some(&session_expiring_at(42))))
 				.unwrap();
-		assert_eq!(json["signedIn"], true);
+		assert_eq!(json["profileId"], 42);
 		assert_eq!(json["expiresAt"], 42);
 		assert_eq!(json["stale"], true);
+
+		let signed_out = serde_json::to_value(session_of(None)).unwrap();
+		assert!(signed_out["profileId"].is_null());
 	}
 
 	#[test]
