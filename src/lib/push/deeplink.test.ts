@@ -15,6 +15,25 @@ describe("routing a Grindr push deeplink", () => {
 		expect(routeForDeeplink("grindr://taps-inbox")).toBe("/interest/taps");
 	});
 
+	it("matches the target the way the notification side does", () => {
+		expect(routeForDeeplink("grindr://conversation/?id=1%3A2")).toBe(
+			"/chat/1%3A2",
+		);
+		expect(routeForDeeplink("GRINDR://Conversation//?id=1%3A2")).toBe(
+			"/chat/1%3A2",
+		);
+		expect(routeForDeeplink("grindr://taps-inbox/")).toBe("/interest/taps");
+		expect(routeForDeeplink("grindr://Taps-Inbox//")).toBe(
+			"/interest/taps",
+		);
+		expect(routeForDeeplink("grindr://taps-inbox/?senderId=1")).toBe(
+			"/interest/taps",
+		);
+		expect(routeForDeeplink("grindr://conversation?id=a?b")).toBe(
+			"/chat/a%3Fb",
+		);
+	});
+
 	it("ignores a conversation deeplink with no conversation", () => {
 		expect(routeForDeeplink("grindr://conversation")).toBeNull();
 		expect(routeForDeeplink("grindr://conversation?senderId=1")).toBeNull();

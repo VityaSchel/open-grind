@@ -5,9 +5,10 @@
 	import "../layout.css";
 	import { beforeNavigate } from "$app/navigation";
 	import { IconContext } from "phosphor-svelte";
-	import { onMount } from "svelte";
+	import { onMount, untrack } from "svelte";
 	import { Toaster } from "svelte-sonner";
 
+	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 	import { startGoogleHandoffWatch } from "$lib/api/google-handoff";
 	import {
 		hydratePreferences,
@@ -25,6 +26,7 @@
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { isAndroidPlatform } from "$lib/platform/os";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
+	import { reconcileNotifications } from "$lib/push/notifications.svelte";
 	import { startPushWatch } from "$lib/push/watch";
 	import { startAddonUpdateWatch } from "$lib/updates/addon.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
@@ -99,7 +101,16 @@
 
 	$effect(() => {
 		if (!onboarded) return;
-		void startPushWatch();
+		untrack(() => {
+			void startPushWatch().catch((error: unknown) => {
+				console.error("Failed to watch push notifications", error);
+			});
+		});
+	});
+
+	$effect(() => {
+		if (!onboarded || !appLifecycle.active) return;
+		untrack(() => void reconcileNotifications());
 	});
 
 	$effect(() => {

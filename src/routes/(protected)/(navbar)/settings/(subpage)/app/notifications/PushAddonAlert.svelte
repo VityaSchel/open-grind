@@ -1,35 +1,48 @@
 <script lang="ts">
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { Button } from "$lib/components/ui/button";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import {
-		dismissAddonRequest,
-		installPushAddon,
-		notificationSettings,
-	} from "$lib/push/notifications.svelte";
+		continueToAddon,
+		dismissAddonDialog,
+	} from "$lib/push/delivery.svelte";
+	import { notificationSettings } from "$lib/push/notification-state.svelte";
+	import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
+
+	const ADDON = ADDON_NAME[FCM_COMPONENT];
+
+	dismissOnBackGesture({
+		active: () => notificationSettings.addonDialog !== null,
+		dismiss: dismissAddonDialog,
+	});
 </script>
 
 <AlertDialog.Root
 	bind:open={
-		() => notificationSettings.addonRequested,
+		() => notificationSettings.addonDialog !== null,
 		(next) => {
-			if (!next) dismissAddonRequest();
+			if (!next) dismissAddonDialog();
 		}
 	}
 >
 	<AlertDialog.Content interactOutsideBehavior="close">
 		<AlertDialog.Header>
-			<AlertDialog.Title>Install the FCM service?</AlertDialog.Title>
+			<AlertDialog.Title
+				>Install push notifications add-on</AlertDialog.Title
+			>
 			<AlertDialog.Description class="text-wrap">
-				Fast mode needs the Open Grind FCM service, a small separate app
-				that receives notifications from Google and hands them to Open
-				Grind. It contains Google's proprietary Firebase library, which
-				is why it is not part of Open Grind itself. Open Grind verifies
-				its signature before installing it.
+				To enable the fast mode, download and install {ADDON} add-on for Open
+				Grind. It includes Google's proprietary Firebase library and needs
+				Google Play services or microG, so it's not installed by default.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Not now</AlertDialog.Cancel>
-			<Button onclick={() => void installPushAddon()}>Install</Button>
+			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Action
+				size="lg"
+				onclick={() => void continueToAddon()}
+			>
+				Continue
+			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

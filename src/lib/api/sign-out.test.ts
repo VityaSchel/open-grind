@@ -12,7 +12,8 @@ const { goto, callMethod, caches, preferences, markers, push } = vi.hoisted(
 		},
 		markers: { clearStored: vi.fn() },
 		push: {
-			currentMode: vi.fn(() => Promise.resolve("slow")),
+			pushAvailableHere: vi.fn(() => true),
+			fcmServiceInstalled: vi.fn(() => Promise.resolve(false)),
 			deletePushToken: vi.fn(() => Promise.resolve()),
 			setNotificationsEnabled: vi.fn(() => Promise.resolve()),
 		},
@@ -37,10 +38,17 @@ async function freshModule() {
 beforeEach(() => {
 	vi.clearAllMocks();
 	order.length = 0;
+	push.pushAvailableHere.mockReturnValue(true);
+	push.fcmServiceInstalled.mockResolvedValue(false);
 	callMethod.mockImplementation(() => {
 		order.push("sign_out");
 		return Promise.resolve(null);
 	});
+	push.deletePushToken.mockImplementation(() => {
+		order.push("delete");
+		return Promise.resolve();
+	});
+	vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 describe("signing out", () => {
@@ -66,6 +74,41 @@ describe("signing out", () => {
 		expect(goto).toHaveBeenCalledWith("/auth/sign-in");
 	});
 
+	it("signs out anyway when a release throws before it returns a promise", async () => {
+		const module = await freshModule();
+		module.onSignOut(() => {
+			throw new Error("sync");
+		});
+
+		await module.signOut();
+
+		expect(callMethod).toHaveBeenCalledWith("sign_out");
+	});
+
+	it("forgets the registration before it deletes the firebase token", async () => {
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+		module.onSignOut(() => {
+			order.push("forget");
+			return Promise.resolve();
+		});
+
+		await module.signOut();
+
+		expect(order).toEqual(["forget", "sign_out", "delete"]);
+	});
+
+	it("clears the account even when every push call fails", async () => {
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		push.setNotificationsEnabled.mockRejectedValueOnce(new Error("ipc"));
+		push.deletePushToken.mockRejectedValueOnce(new Error("ipc"));
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
+	});
+
 	it("runs every release once, however often it was registered", async () => {
 		const module = await freshModule();
 		const release = vi.fn(() => Promise.resolve());
@@ -85,14 +128,28 @@ describe("signing out", () => {
 		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(false);
 	});
 
-	it("drops the firebase token only where push was turned on", async () => {
+	it("drops the firebase token wherever the add-on is installed, in either mode", async () => {
 		const module = await freshModule();
 
 		await module.clearAccountState();
 		expect(push.deletePushToken).not.toHaveBeenCalled();
 
-		push.currentMode.mockResolvedValue("fast");
+		push.fcmServiceInstalled.mockResolvedValue(true);
 		await module.clearAccountState();
 		expect(push.deletePushToken).toHaveBeenCalled();
+	});
+
+	it("makes no push calls where push is unavailable", async () => {
+		push.pushAvailableHere.mockReturnValue(false);
+		push.fcmServiceInstalled.mockResolvedValue(true);
+		const module = await freshModule();
+
+		await module.clearAccountState();
+
+		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
+		expect(push.fcmServiceInstalled).not.toHaveBeenCalled();
+		expect(push.deletePushToken).not.toHaveBeenCalled();
+		expect(console.error).not.toHaveBeenCalled();
+		expect(preferences.clearAccountPreferences).toHaveBeenCalled();
 	});
 });

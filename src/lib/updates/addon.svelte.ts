@@ -13,9 +13,15 @@ import { toastPresenter } from "./toast-presenter";
 
 type Activity = { stage: UpdateStage | null; installs: number };
 
-export type AddonActivity = Readonly<Activity>;
+type AddonActivity = Readonly<Activity>;
 
-type AddonRuntime = { flow: UpdateFlow; activity: AddonActivity };
+type InstallListener = () => Promise<void>;
+
+type AddonRuntime = {
+	flow: UpdateFlow;
+	activity: AddonActivity;
+	installListeners: Set<InstallListener>;
+};
 
 export function addonInstallerAvailable(): boolean {
 	return (
@@ -25,20 +31,25 @@ export function addonInstallerAvailable(): boolean {
 	);
 }
 
-export async function addonPublishedHere(
-	component: AddonKey = GOOGLE_OAUTH_COMPONENT,
-): Promise<boolean> {
-	const readiness = await getUpdateReadiness(component).catch(() => null);
+export async function addonPublishedHere(): Promise<boolean> {
+	const readiness = await getUpdateReadiness(GOOGLE_OAUTH_COMPONENT).catch(
+		() => null,
+	);
 	return !(
 		readiness?.state === "unsupported" &&
 		readiness.detail.reason === "noReleaseArtifacts"
 	);
 }
 
-function observed(
-	presenter: StagePresenter,
-	activity: Activity,
-): StagePresenter {
+function observed({
+	presenter,
+	activity,
+	installListeners,
+}: {
+	presenter: StagePresenter;
+	activity: Activity;
+	installListeners: ReadonlySet<InstallListener>;
+}): StagePresenter {
 	let showing = 0;
 	return {
 		...presenter,
@@ -61,6 +72,11 @@ function observed(
 		installed: (args) => {
 			activity.installs++;
 			presenter.installed(args);
+			for (const listener of installListeners) {
+				listener().catch((error: unknown) => {
+					console.error("Failed to follow an add-on install", error);
+				});
+			}
 		},
 	};
 }
@@ -72,10 +88,15 @@ function runtimeOf(component: AddonKey): AddonRuntime {
 	if (existing) return existing;
 
 	const activity = $state<Activity>({ stage: null, installs: 0 });
+	const installListeners = new Set<InstallListener>();
 	const runtime = {
 		flow: new UpdateFlow({
 			component,
-			presenter: observed(toastPresenter(component), activity),
+			presenter: observed({
+				presenter: toastPresenter(component),
+				activity,
+				installListeners,
+			}),
 		}),
 		activity: {
 			get stage() {
@@ -85,6 +106,7 @@ function runtimeOf(component: AddonKey): AddonRuntime {
 				return activity.installs;
 			},
 		},
+		installListeners,
 	};
 	runtimes[component] = runtime;
 	return runtime;
@@ -94,12 +116,20 @@ export function addonFlow(component: AddonKey): UpdateFlow {
 	return runtimeOf(component).flow;
 }
 
-export function addonActivityOf(component: AddonKey): AddonActivity {
-	return runtimeOf(component).activity;
+export function onAddonInstalled({
+	component,
+	listener,
+}: {
+	component: AddonKey;
+	listener: InstallListener;
+}): void {
+	runtimeOf(component).installListeners.add(listener);
 }
 
 export const addonUpdates = addonFlow(GOOGLE_OAUTH_COMPONENT);
-export const addonActivity = addonActivityOf(GOOGLE_OAUTH_COMPONENT);
+export const addonActivity: AddonActivity = runtimeOf(
+	GOOGLE_OAUTH_COMPONENT,
+).activity;
 export const recaptchaUpdates = addonFlow(RECAPTCHA_COMPONENT);
 
 export const addonFlows: readonly UpdateFlow[] = ADDON_KEYS.map(addonFlow);

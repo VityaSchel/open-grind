@@ -2,6 +2,8 @@ import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
 
 import { asAppError } from "$lib/api/methods";
 import { isAndroidPlatform } from "$lib/platform/os";
+import { getInstalledVersion } from "$lib/updates";
+import { FCM_COMPONENT } from "$lib/updates/components";
 import {
 	type NotificationMode,
 	notificationModeSchema,
@@ -62,14 +64,27 @@ export async function setMode(mode: NotificationMode): Promise<void> {
 	await invoke("push_set_mode", { mode });
 }
 
+export async function inFastMode(): Promise<boolean> {
+	return (await currentMode().catch(() => "slow")) === "fast";
+}
+
+export async function fcmServiceInstalled(): Promise<boolean> {
+	return (
+		(await getInstalledVersion(FCM_COMPONENT).catch(() => null)) !== null
+	);
+}
+
 export async function pushCategories(): Promise<PushCategory[]> {
 	return pushCategorySchema.array().parse(await invoke("push_categories"));
 }
 
-export async function setPushCategory(
-	category: PushCategoryName,
-	enabled: boolean,
-): Promise<void> {
+export async function setPushCategory({
+	category,
+	enabled,
+}: {
+	category: PushCategoryName;
+	enabled: boolean;
+}): Promise<void> {
 	await invoke("push_set_category", { category, enabled });
 }
 

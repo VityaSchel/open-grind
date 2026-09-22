@@ -1,15 +1,11 @@
 import z from "zod";
 
-export const NOTIFICATION_MODES = ["slow", "fast"] as const;
-
-export const notificationModeSchema = z.enum(NOTIFICATION_MODES);
+export const notificationModeSchema = z.enum(["slow", "fast"]);
 
 export type NotificationMode = z.infer<typeof notificationModeSchema>;
 
-export const PUSH_CATEGORIES = ["messages", "taps"] as const;
-
 export const pushCategorySchema = z.object({
-	category: z.enum(PUSH_CATEGORIES),
+	category: z.enum(["messages", "taps"]),
 	enabled: z.boolean(),
 	systemBlocked: z.boolean(),
 });
@@ -18,16 +14,11 @@ export type PushCategory = z.infer<typeof pushCategorySchema>;
 
 export type PushCategoryName = PushCategory["category"];
 
-export const NOTIFICATION_PERMISSION_STATES = [
-	"granted",
-	"denied",
-	"prompt",
-	"prompt-with-rationale",
-] as const;
-
 export const notificationPermissionSchema = z.object({
 	granted: z.boolean(),
-	state: z.enum(NOTIFICATION_PERMISSION_STATES).catch("denied"),
+	state: z
+		.enum(["granted", "denied", "prompt", "prompt-with-rationale"])
+		.catch("denied"),
 });
 
 export type NotificationPermission = z.infer<

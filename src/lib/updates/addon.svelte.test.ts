@@ -87,7 +87,28 @@ describe("the add-on activity the sign-in screen observes", () => {
 		expect(toasts.showAddonInstalled).toHaveBeenCalledOnce();
 	});
 
-	it("does not count an install the user cancelled", async () => {
+	it("tells each install listener once about a finished install, never a canceled one", async () => {
+		const { addonUpdates, onAddonInstalled } =
+			await import("./addon.svelte");
+		const listener = vi.fn(() => Promise.resolve());
+		onAddonInstalled({ component: "google-oauth", listener });
+		onAddonInstalled({ component: "google-oauth", listener });
+		readiness["google-oauth"] = ready("install");
+
+		await addonUpdates.installNow();
+		emitOutcome(
+			outcomeOf("google-oauth", { succeeded: false, canceled: true }),
+		);
+		await settled();
+		expect(listener).not.toHaveBeenCalled();
+
+		await addonUpdates.installNow();
+		emitOutcome(outcomeOf("google-oauth"));
+		await settled();
+		expect(listener).toHaveBeenCalledOnce();
+	});
+
+	it("does not count an install the user canceled", async () => {
 		const { addonActivity, addonUpdates } = await import("./addon.svelte");
 		readiness["google-oauth"] = ready("install");
 

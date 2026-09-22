@@ -6,8 +6,9 @@ import { clearAccountPreferences } from "$lib/app-data/preferences.svelte";
 import { inboxLastViewed } from "$lib/chat/inbox-last-viewed.svelte";
 import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 import {
-	currentMode,
 	deletePushToken,
+	fcmServiceInstalled,
+	pushAvailableHere,
 	setNotificationsEnabled,
 } from "$lib/push";
 
@@ -19,9 +20,11 @@ export function onSignOut(release: () => Promise<void>): void {
 
 export async function signOut(): Promise<void> {
 	for (const release of releases) {
-		await release().catch((error: unknown) => {
+		try {
+			await release();
+		} catch (error) {
 			console.error("Failed to release a signed-in resource", error);
-		});
+		}
 	}
 
 	try {
@@ -39,14 +42,19 @@ export async function clearAccountState(): Promise<void> {
 		marker.clearStored();
 	clearAccountCaches();
 
-	await setNotificationsEnabled(false).catch((error: unknown) => {
-		console.error("Failed to stop notifications for this account", error);
-	});
-
-	if ((await currentMode().catch(() => "slow")) === "fast") {
-		await deletePushToken().catch((error: unknown) => {
-			console.error("Failed to unregister push notifications", error);
+	if (pushAvailableHere()) {
+		await setNotificationsEnabled(false).catch((error: unknown) => {
+			console.error(
+				"Failed to stop notifications for this account",
+				error,
+			);
 		});
+
+		if (await fcmServiceInstalled()) {
+			await deletePushToken().catch((error: unknown) => {
+				console.error("Failed to unregister push notifications", error);
+			});
+		}
 	}
 
 	try {
