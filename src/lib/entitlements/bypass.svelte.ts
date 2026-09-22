@@ -51,7 +51,7 @@ async function grantFromHonduras({ home }: { home: string }): Promise<void> {
 		await withDeadline({
 			work: async () => {
 				await updateLocation({ geohash });
-				await callMethod("refresh_token", { geohash });
+				await callMethod("refresh_session", { geohash });
 			},
 			ms: STEP_TIMEOUT_MS,
 		});

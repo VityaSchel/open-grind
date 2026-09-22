@@ -177,7 +177,7 @@ pub fn run() {
             api::auth::sign_in_with_google_handoff,
             api::auth::discard_google_handoff,
             api::auth::sign_in_with_facebook,
-            api::auth::refresh_token,
+            api::auth::refresh_session,
             api::auth::sign_out,
             api::auth::auth_state,
             api::auth::account_restriction,

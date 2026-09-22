@@ -134,7 +134,7 @@
 	async function tryAgain() {
 		busy = true;
 		try {
-			await callMethod("refresh_token");
+			await callMethod("refresh_session");
 			clearSessionError();
 		} catch (error) {
 			const appError = asAppError(error);

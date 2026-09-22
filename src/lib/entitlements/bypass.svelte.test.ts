@@ -116,7 +116,7 @@ describe("runEntitlementBypass", () => {
 		await runEntitlementBypass();
 
 		expect(order).toEqual(["refresh", "retry"]);
-		expect(callMethodMock).toHaveBeenCalledWith("refresh_token", {
+		expect(callMethodMock).toHaveBeenCalledWith("refresh_session", {
 			geohash: HONDURAS_GEOHASH,
 		});
 		expect(entitlementBypassState.open).toBe(false);
@@ -159,7 +159,7 @@ describe("runEntitlementBypass", () => {
 			"reconnect",
 			"retry",
 		]);
-		expect(callMethodMock).toHaveBeenCalledWith("refresh_token", {
+		expect(callMethodMock).toHaveBeenCalledWith("refresh_session", {
 			geohash: HONDURAS_GEOHASH,
 		});
 	});

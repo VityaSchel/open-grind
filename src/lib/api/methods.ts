@@ -86,7 +86,7 @@ export const methods = {
 		request: z.undefined(),
 		response: z.enum(["keyring", "file", "unavailable"]),
 	},
-	refresh_token: {
+	refresh_session: {
 		request: z.object({ geohash: geohashSchema.optional() }).optional(),
 		response: signInResultSchema,
 	},

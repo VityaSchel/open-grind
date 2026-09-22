@@ -139,7 +139,7 @@ pub async fn sign_in_with_facebook(
 }
 
 #[tauri::command]
-pub async fn refresh_token(
+pub async fn refresh_session(
 	state: tauri::State<'_, AppState>,
 	geohash: Option<String>,
 ) -> Result<SignInResult, AppError> {

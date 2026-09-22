@@ -88,7 +88,7 @@ export function demoCallMethod(method: string): unknown {
 		case "sign_in_with_google":
 		case "sign_in_with_google_token":
 		case "sign_in_with_facebook":
-		case "refresh_token":
+		case "refresh_session":
 			return { profileId: demoMeProfileId, restriction: null };
 		case "rotate_api_params":
 			return { "user-agent": "demo", "l-device-info": "demo" };

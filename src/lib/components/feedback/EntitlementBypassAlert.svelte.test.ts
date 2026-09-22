@@ -105,7 +105,7 @@ describe("EntitlementBypassAlert", () => {
 		await fireEvent.click(bypassButton());
 		await vi.waitFor(() => expect(retry).toHaveBeenCalledOnce());
 
-		expect(callMethodMock).toHaveBeenCalledWith("refresh_token", {
+		expect(callMethodMock).toHaveBeenCalledWith("refresh_session", {
 			geohash: HONDURAS_GEOHASH,
 		});
 		expect(showErrorToastMock).not.toHaveBeenCalled();
