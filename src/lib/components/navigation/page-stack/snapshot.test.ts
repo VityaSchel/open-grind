@@ -122,4 +122,25 @@ describe("snapshotPane", () => {
 		snapshot.restore();
 		expect(snapshot.node.querySelector("input")!.value).toBe("captured");
 	});
+
+	it("pins rows that skip offscreen rendering to their live height", () => {
+		const pane = mountPane(
+			"<p data-offscreen-skip></p><p data-offscreen-skip></p>",
+		);
+		const rows = pane.querySelectorAll<HTMLElement>(
+			"[data-offscreen-skip]",
+		);
+		Object.defineProperty(rows[0], "offsetHeight", { value: 55 });
+		Object.defineProperty(rows[1], "offsetHeight", { value: 310 });
+
+		const snapshot = snapshotPane(pane, "/settings/app/credits");
+		document.body.append(snapshot.node);
+		snapshot.restore();
+
+		const copies = snapshot.node.querySelectorAll<HTMLElement>(
+			"[data-offscreen-skip]",
+		);
+		expect(copies[0]?.style.containIntrinsicBlockSize).toBe("55px");
+		expect(copies[1]?.style.containIntrinsicBlockSize).toBe("310px");
+	});
 });

@@ -7,6 +7,7 @@ export type PaneSnapshot = {
 };
 
 const FORM_FIELDS = "input, textarea, select";
+const OFFSCREEN_SKIPPED = "[data-offscreen-skip]";
 const IDENTITY_ATTRIBUTES = ["id", "data-slot"];
 
 const scrolledIn = new WeakMap<HTMLElement, Set<Element>>();
@@ -61,6 +62,22 @@ function scrollCarriers(pane: HTMLElement, node: HTMLElement) {
 	});
 }
 
+function sizePins(pane: HTMLElement, node: HTMLElement) {
+	const copies = node.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED);
+	return [...pane.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED)].flatMap(
+		(source, index) => {
+			const copy = copies[index];
+			if (!copy) return [];
+			const height = `${source.offsetHeight}px`;
+			return [
+				() => {
+					copy.style.containIntrinsicBlockSize = height;
+				},
+			];
+		},
+	);
+}
+
 function formValue(field: Element) {
 	if (field instanceof HTMLInputElement)
 		return { value: field.value, checked: field.checked };
@@ -91,6 +108,7 @@ export function snapshotPane(pane: HTMLElement, path: string): PaneSnapshot {
 	}
 
 	const carried = [
+		...sizePins(pane, node),
 		...scrollCarriers(pane, node),
 		...formCarriers(pane, node),
 	];

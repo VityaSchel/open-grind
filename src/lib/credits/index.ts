@@ -14,6 +14,10 @@ export type LoadedEntry = {
 
 export type HighlightCard = Highlight & { entry?: LoadedEntry };
 
+export type CreditGroup = { title: string; entries: LoadedEntry[] };
+
+export type Credits = { cards: HighlightCard[]; groups: CreditGroup[] };
+
 const GROUPS: { title: string; ecosystems: CreditEcosystem[] }[] = [
 	{ title: "Web packages", ecosystems: ["npm", "asset"] },
 	{ title: "Rust crates", ecosystems: ["rust"] },
@@ -26,7 +30,7 @@ const compareEntries = (a: LoadedEntry, b: LoadedEntry) =>
 	compare(a.name.toLowerCase(), b.name.toLowerCase()) ||
 	compare(a.spdx, b.spdx);
 
-export const loadCredits = async () => {
+export const loadCredits = async (): Promise<Credits> => {
 	const { entries, texts } = await import("./generated.json");
 	const textsByHash = new Map(texts.map(({ hash, text }) => [hash, text]));
 

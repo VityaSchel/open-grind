@@ -354,6 +354,11 @@ a {
 	@apply size-full overflow-auto overscroll-contain;
 }
 
+[data-offscreen-skip] {
+	content-visibility: auto;
+	contain-intrinsic-block-size: auto var(--offscreen-block-size);
+}
+
 [data-sonner-toaster] {
 	font-family: var(--font-sans) !important;
 	/* bits-ui modal dialogs set body { pointer-events: none }; toasts must stay tappable */
