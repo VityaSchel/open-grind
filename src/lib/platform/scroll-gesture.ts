@@ -43,7 +43,7 @@ export class ScrollGestureState {
 
 	capture(on: boolean): void {
 		if (!isTauri()) return;
-		void invoke("scroll_gesture_capture", { capture: on }).catch(
+		void invoke("set_scroll_gesture_capture", { capture: on }).catch(
 			console.error,
 		);
 	}

@@ -186,7 +186,7 @@ test("a touch drag taps the actuator as it passes the trigger, once", async ({
 	page,
 }) => {
 	await openConversation(page, { platform: "android" });
-	const taps = await captureInvokes(page, "haptic_threshold_reached");
+	const taps = await captureInvokes(page, "play_threshold_haptic");
 
 	await swipeIncoming(page, 140);
 
@@ -198,7 +198,7 @@ test("a touch drag that stops short of the trigger taps nothing", async ({
 	page,
 }) => {
 	await openConversation(page, { platform: "android" });
-	const taps = await captureInvokes(page, "haptic_threshold_reached");
+	const taps = await captureInvokes(page, "play_threshold_haptic");
 
 	await swipeIncoming(page, 40);
 

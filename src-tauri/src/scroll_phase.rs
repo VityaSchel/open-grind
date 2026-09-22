@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 static CAPTURE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub fn scroll_gesture_capture(capture: bool) {
+pub fn set_scroll_gesture_capture(capture: bool) {
 	CAPTURE.store(capture, Ordering::Relaxed);
 }
 

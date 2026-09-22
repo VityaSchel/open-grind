@@ -2,7 +2,7 @@ import { Spring } from "svelte/motion";
 import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
-import { hapticThresholdReached } from "$lib/haptics";
+import { playThresholdHaptic } from "$lib/haptics";
 import { isMacosPlatform } from "$lib/platform/os";
 import {
 	scrollGesture,
@@ -85,7 +85,7 @@ export class SwipeToReply {
 	constructor({
 		direction,
 		onReply,
-		onArm = hapticThresholdReached,
+		onArm = playThresholdHaptic,
 		now = () => performance.now(),
 		scrollEndSupported = typeof window !== "undefined" &&
 			"onscrollend" in window,

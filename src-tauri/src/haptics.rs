@@ -1,10 +1,10 @@
 #[tauri::command]
-pub fn haptic_threshold_reached(window: tauri::WebviewWindow) {
+pub fn play_threshold_haptic(window: tauri::WebviewWindow) {
 	#[cfg(target_os = "android")]
-	android::threshold_reached(&window);
+	android::play_threshold(&window);
 
 	#[cfg(target_os = "macos")]
-	macos::threshold_reached();
+	macos::play_threshold();
 
 	#[cfg(not(target_os = "android"))]
 	let _ = window;
@@ -40,9 +40,7 @@ mod android {
 		Ok(())
 	}
 
-	pub fn threshold_reached<R: tauri::Runtime>(
-		window: &tauri::WebviewWindow<R>,
-	) {
+	pub fn play_threshold<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
 		let dispatched = window.with_webview(|webview| {
 			webview.jni_handle().exec(|env, _activity, view| {
 				if perform(env, view).is_err() {
@@ -63,7 +61,7 @@ mod macos {
 		NSHapticFeedbackPerformanceTime, NSHapticFeedbackPerformer,
 	};
 
-	pub fn threshold_reached() {
+	pub fn play_threshold() {
 		NSHapticFeedbackManager::defaultPerformer()
 			.performFeedbackPattern_performanceTime(
 				NSHapticFeedbackPattern::Alignment,

@@ -10,9 +10,9 @@ export function hapticsAvailable(): boolean {
 	return isAndroidPlatform() || isMacosPlatform();
 }
 
-export function hapticThresholdReached(): void {
+export function playThresholdHaptic(): void {
 	if (!hapticsAvailable()) return;
 	if (!preferencesLoaded()) return;
 	if (!preferencesSnapshot().hapticFeedback) return;
-	void invoke("haptic_threshold_reached").catch(console.error);
+	void invoke("play_threshold_haptic").catch(console.error);
 }
