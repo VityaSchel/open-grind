@@ -11,6 +11,7 @@ import { callMethod, loginResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { clearAccountState } from "$lib/api/sign-out";
 import { isAndroidPlatform } from "$lib/platform/os";
+import { delay } from "$lib/util/delay";
 
 const HANDBACK_EVENT = "google-oauth:handback";
 const READY_ATTEMPTS = 25;
@@ -44,14 +45,12 @@ async function exchange() {
 
 let running: Promise<void> | null = null;
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 async function backendAnswers(): Promise<boolean> {
 	for (let attempt = 0; attempt < READY_ATTEMPTS; attempt++) {
 		if (await invoke<boolean>("backend_ready").catch(() => false)) {
 			return true;
 		}
-		await wait(READY_POLL_MS);
+		await delay(READY_POLL_MS);
 	}
 	return false;
 }

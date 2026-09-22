@@ -10,13 +10,14 @@
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
 	import { asAppError } from "$lib/api/methods";
+	import AddTile from "$lib/components/shared/AddTile.svelte";
+	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
-	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
-	import SelectionGridTab from "../SelectionGridTab.svelte";
 	import type { TabSelection } from "../tabs";
 	import { mediaMessageDraft } from "./media-messages";
 	import MediaTile from "./MediaTile.svelte";
@@ -107,7 +108,7 @@
 	}
 </script>
 
-<SelectionGridTab
+<MediaGrid
 	items={media}
 	key={(item) => item.id}
 	empty={media?.length === 0 && uploadingCount === 0}
@@ -133,17 +134,17 @@
 		</Empty.Root>
 	{/snippet}
 	{#snippet leading()}
-		<button
-			type="button"
-			class="flex aspect-(--photo-grid-aspect) cursor-pointer flex-col items-center justify-center gap-1 bg-card-foreground/5 text-muted-foreground transition-colors hover:bg-card-foreground/10 hover:text-foreground"
-			aria-label="Add photo"
+		<AddTile
+			label="Add photo"
+			class="aspect-(--photo-grid-aspect)"
 			onclick={addPhoto}
-		>
-			<PlusIcon weight="bold" class="size-6" />
-			<span class="text-xs font-medium">Add photo</span>
-		</button>
+		/>
 		{#each Array(uploadingCount)}
-			<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
+			<MediaImage
+				src={null}
+				pending
+				class="aspect-(--photo-grid-aspect)"
+			/>
 		{/each}
 	{/snippet}
 	{#snippet tile(item, index)}
@@ -156,4 +157,4 @@
 			onclick={() => toggleSelected(item.id)}
 		/>
 	{/snippet}
-</SelectionGridTab>
+</MediaGrid>

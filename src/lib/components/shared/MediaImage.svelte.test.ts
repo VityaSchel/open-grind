@@ -8,6 +8,8 @@ import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
 import MediaImage from "./MediaImage.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
+const EMPTY = '[data-slot="empty-media"]';
+const PENDING = '[data-slot="media-image-pending"]';
 const SRC = "https://cdns.grindr.com/images/thumb/320x320/a";
 const OTHER_SRC = "https://cdns.grindr.com/images/thumb/320x320/b";
 
@@ -94,11 +96,27 @@ describe("MediaImage", () => {
 		expect(onload).toHaveBeenCalledOnce();
 	});
 
-	it("renders the fallback without an image element for a null source", () => {
+	it("renders a plain tile without the broken icon for a null source", () => {
 		const { container } = render(MediaImage, { props: { src: null } });
 
+		const empty = container.querySelector(EMPTY);
 		expect(container.querySelector("img")).toBeNull();
-		expect(container.querySelector(BROKEN)).not.toBeNull();
+		expect(container.querySelector(BROKEN)).toBeNull();
+		expect(empty).not.toBeNull();
+		expect(empty?.querySelector("svg")).toBeNull();
+	});
+
+	it("marks a null source as empty media rather than pending", () => {
+		const pending = render(MediaImage, {
+			props: { src: null, pending: true },
+		}).container;
+		expect(pending.querySelector(PENDING)).not.toBeNull();
+		expect(pending.querySelector(EMPTY)).toBeNull();
+		cleanup();
+
+		const empty = render(MediaImage, { props: { src: null } }).container;
+		expect(empty.querySelector(EMPTY)).not.toBeNull();
+		expect(empty.querySelector(PENDING)).toBeNull();
 	});
 
 	it("re-arms when the source changes after a failure", async () => {
@@ -172,6 +190,57 @@ describe("MediaImage", () => {
 		const broken = container.querySelector(BROKEN);
 		expect(broken?.getAttribute("role")).toBeNull();
 		expect(broken?.getAttribute("aria-label")).toBeNull();
+	});
+
+	it("renders a skeleton in place of any source while the media itself is pending", () => {
+		const { container } = render(MediaImage, {
+			props: { src: SRC, pending: true },
+		});
+
+		expect(container.querySelector("img")).toBeNull();
+		expect(container.querySelector(BROKEN)).toBeNull();
+		expect(container.querySelector(EMPTY)).toBeNull();
+		expect(container.querySelector(PENDING)).not.toBeNull();
+	});
+
+	it("carries a non-empty alt onto the pending placeholder as its accessible name", () => {
+		const { container } = render(MediaImage, {
+			props: {
+				src: SRC,
+				alt: "Album video in slot 1, processing",
+				pending: true,
+			},
+		});
+
+		const pending = container.querySelector(PENDING);
+		expect(pending?.getAttribute("role")).toBe("img");
+		expect(pending?.getAttribute("aria-label")).toBe(
+			"Album video in slot 1, processing",
+		);
+	});
+
+	it("leaves the pending placeholder roleless for an empty alt", () => {
+		const { container } = render(MediaImage, {
+			props: { src: null, pending: true },
+		});
+
+		const pending = container.querySelector(PENDING);
+		expect(pending).not.toBeNull();
+		expect(pending?.getAttribute("role")).toBeNull();
+		expect(pending?.getAttribute("aria-label")).toBeNull();
+	});
+
+	it("renders the same skeleton for a pending item with no source yet", () => {
+		const withSource = render(MediaImage, {
+			props: { src: SRC, pending: true },
+		}).container.innerHTML;
+		cleanup();
+		const withoutSource = render(MediaImage, {
+			props: { src: null, pending: true },
+		}).container.innerHTML;
+
+		expect(withoutSource).toContain('data-slot="media-image-pending"');
+		expect(withoutSource).toBe(withSource);
 	});
 
 	it("gives the fallback a 3 / 4 floor when no aspect ratio is known", async () => {

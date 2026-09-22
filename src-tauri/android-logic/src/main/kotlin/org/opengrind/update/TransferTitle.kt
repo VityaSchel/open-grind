@@ -6,6 +6,7 @@ enum class TransferTitle {
 	GoogleOauthUpdate,
 	RecaptchaInstall,
 	RecaptchaUpdate,
+	MediaUpload,
 	;
 
 	enum class Addon {
@@ -15,12 +16,15 @@ enum class TransferTitle {
 
 	companion object {
 		private const val FIRST_INSTALL = "install"
+		const val MEDIA_UPLOAD = "mediaUpload"
 
 		fun of(
 			updatesThisApp: Boolean,
 			addon: Addon?,
 			kind: String?,
+			purpose: String? = null,
 		): TransferTitle {
+			if (purpose == MEDIA_UPLOAD) return MediaUpload
 			if (updatesThisApp || addon == null) return AppUpdate
 			val firstInstall = kind == FIRST_INSTALL
 			return when (addon) {

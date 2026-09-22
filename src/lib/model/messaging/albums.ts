@@ -53,8 +53,14 @@ export const albumContentMin = z.object({
 export const albumContentSchema = albumContentMin.extend({
 	thumbUrl: mediaUrlSchema,
 	url: mediaUrlSchema.or(z.literal("")),
-	processing: z.boolean().nullable(),
+	processing: z.boolean(),
 	rejectionId: unmodeledSchema,
+});
+
+export type AlbumContent = z.infer<typeof albumContentSchema>;
+
+export const albumContentWithHashSchema = albumContentSchema.extend({
+	contentHash: z.string().optional(),
 });
 
 export const myAlbumSchema = albumDetailsSchema.extend({
@@ -62,7 +68,7 @@ export const myAlbumSchema = albumDetailsSchema.extend({
 	albumName: z.string().nullable(),
 	profileId: z.int(),
 	version: z.int(),
-	content: z.array(albumContentSchema),
+	content: z.array(albumContentWithHashSchema),
 	isShareable: z.boolean(),
 });
 
@@ -97,3 +103,48 @@ export const albumUnshareRequestSchema = z.object({
 });
 
 export type AlbumUnshareRequest = z.infer<typeof albumUnshareRequestSchema>;
+
+export const albumNameRequestSchema = z.object({
+	albumName: z.string().max(255).nullable(),
+});
+
+export type AlbumNameRequest = z.infer<typeof albumNameRequestSchema>;
+
+export const albumNameResponseSchema = z.object({
+	albumId: z.int(),
+	albumName: z.string().nullable(),
+});
+
+export const albumContentOrderRequestSchema = z.object({
+	contentIds: z.array(z.int()),
+});
+
+export type AlbumContentOrderRequest = z.infer<
+	typeof albumContentOrderRequestSchema
+>;
+
+export const albumStorageLimitsSchema = z.object({
+	subscriptionType: z.string(),
+	maxAlbums: z.int(),
+	maxContentItemsPerAlbum: z.int(),
+	maxShares: z.int(),
+	maxViewableAlbums: z.int(),
+	maxViewableVideos: z.int(),
+	maxContentSize: z.int(),
+	maxContentSizeHumanReadable: z.string(),
+	maxVideoLength: z.int(),
+	minVideoLength: z.int(),
+	maxShareableAlbums: z.int(),
+	maxVideosPerAlbum: z.int(),
+});
+
+export type AlbumStorageLimits = z.infer<typeof albumStorageLimitsSchema>;
+
+export const albumContentUploadResponseSchema = z.object({
+	contentId: z.int(),
+	contentUrl: z.string().nullable(),
+});
+
+export const albumContentProcessingResponseSchema = z.object({
+	processing: z.boolean(),
+});

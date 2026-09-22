@@ -52,6 +52,7 @@ pub enum AppError {
 	NetworkBlocked,
 	NotInitialized,
 	SessionCleared,
+	ContentTooLarge,
 	Recaptcha(RecaptchaError),
 }
 
@@ -72,6 +73,7 @@ impl AppError {
 			AppError::NetworkBlocked => "NetworkBlocked",
 			AppError::NotInitialized => "NotInitialized",
 			AppError::SessionCleared => "SessionCleared",
+			AppError::ContentTooLarge => "ContentTooLarge",
 			AppError::Recaptcha(_) => "Recaptcha",
 		}
 	}
@@ -109,6 +111,9 @@ impl fmt::Display for AppError {
 			}
 			AppError::NotInitialized => {
 				write!(f, "GrindrClient not initialized")
+			}
+			AppError::ContentTooLarge => {
+				write!(f, "Larger than the upload limit")
 			}
 			AppError::Recaptcha(error) => write!(f, "reCAPTCHA error: {error}"),
 		}
@@ -209,6 +214,7 @@ mod tests {
 			AppError::NetworkBlocked,
 			AppError::NotInitialized,
 			AppError::SessionCleared,
+			AppError::ContentTooLarge,
 			AppError::Recaptcha(RecaptchaError::Failed),
 		];
 		for error in errors {

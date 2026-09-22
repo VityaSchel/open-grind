@@ -13,6 +13,23 @@ fn requires_device_signature(path: &str) -> bool {
 	SIGNED_UPLOAD_PATHS.contains(&path)
 }
 
+pub(crate) fn refuse_signed_path(path: &str) -> Result<(), AppError> {
+	if requires_device_signature(path) {
+		return Err(AppError::Api {
+			code: 400,
+			message: format!("{path} needs the signed upload command"),
+		});
+	}
+	Ok(())
+}
+
+pub(crate) fn parse_method(method: &str) -> Result<grindr::Method, AppError> {
+	grindr::Method::from_str(method).map_err(|_| AppError::Api {
+		code: 400,
+		message: format!("Invalid method: {method}"),
+	})
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct RawResponse {
 	pub status: u16,
@@ -53,22 +70,8 @@ pub async fn request(
 ) -> Result<String, AppError> {
 	let payload = decode_request(&payload)?;
 
-	if requires_device_signature(&payload.path) {
-		return Err(AppError::Api {
-			code: 400,
-			message: format!(
-				"{} needs the signed upload command, not the REST bridge",
-				payload.path
-			),
-		});
-	}
-
-	let method = grindr::Method::from_str(&payload.method).map_err(|_| {
-		AppError::Api {
-			code: 400,
-			message: format!("Invalid method: {}", payload.method),
-		}
-	})?;
+	refuse_signed_path(&payload.path)?;
+	let method = parse_method(&payload.method)?;
 
 	let json_body: Option<serde_json::Value> = match payload.body {
 		Some(b) => Some(
@@ -165,6 +168,17 @@ mod tests {
 			"/v5/chat/media/upload?takenOnGrindr=false"
 		));
 		assert!(!requires_device_signature("/v7/profiles/1"));
+	}
+
+	#[test]
+	fn a_signed_upload_path_is_refused_with_a_client_error() {
+		assert!(matches!(
+			refuse_signed_path("/v5/media/upload"),
+			Err(AppError::Api { code: 400, .. })
+		));
+		assert!(
+			refuse_signed_path("/v1/albums/1/content?isFresh=false").is_ok()
+		);
 	}
 
 	#[test]

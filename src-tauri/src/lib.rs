@@ -6,11 +6,14 @@ mod context_menu;
 mod desktop_entry;
 mod error;
 mod haptics;
+mod hex;
 pub mod media;
 mod photo;
 mod scroll_phase;
 mod state;
 mod storage;
+mod upload;
+mod video;
 
 use std::sync::OnceLock;
 
@@ -161,6 +164,7 @@ pub fn run() {
         .manage(AppState {
             client: OnceLock::new(),
         })
+        .manage(upload::UploadLock::default())
         .manage(media::MediaProxy::default())
         .manage(api::session_recovery::SessionRecovery::default())
         .register_asynchronous_uri_scheme_protocol(media::SCHEME, media::handle)
@@ -181,7 +185,9 @@ pub fn run() {
             api::recaptcha::mint_recaptcha_token,
             storage::storage_backend,
             api::rest::request,
-            api::media_upload::upload_media,
+            upload::bytes::upload_media,
+            upload::inspect::inspect_media_file,
+            upload::file::upload_media_file,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
             api::ws::ws_send,

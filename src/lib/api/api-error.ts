@@ -13,6 +13,7 @@ export const apiErrorKinds = [
 	"NetworkBlocked",
 	"NotInitialized",
 	"SessionCleared",
+	"ContentTooLarge",
 	"Recaptcha",
 ] as const;
 
@@ -50,6 +51,10 @@ export class ApiError extends Error {
 		}
 		return false;
 	}
+}
+
+export function httpStatusOf(error: unknown): number | null {
+	return error instanceof ApiError ? (error.response?.status ?? null) : null;
 }
 
 export const blockedAndStaleMessages = {

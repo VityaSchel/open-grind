@@ -6,10 +6,9 @@ use tauri::plugin::PluginHandle;
 use tauri::{AppHandle, Manager, Wry};
 
 use super::super::baseline::{Baseline, InstallKind};
-use super::super::component::{self, Component};
+use super::super::component::Component;
 use super::super::error::UpdateError;
-use super::super::release::Candidate;
-use super::{Outcome, Unsupported};
+use super::{Outcome, TransferPurpose, Unsupported};
 
 pub struct AndroidUpdater {
 	pub handle: PluginHandle<Wry>,
@@ -54,8 +53,9 @@ struct PackageStateResponse {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct TransferRequest<'a> {
-	package_name: &'a str,
-	kind: InstallKind,
+	package_name: Option<&'a str>,
+	kind: Option<InstallKind>,
+	purpose: Option<&'a str>,
 }
 
 #[derive(Serialize)]
@@ -162,36 +162,49 @@ pub fn probe_package(app: &AppHandle, package: &str) -> Baseline {
 	}
 }
 
-pub fn begin_transfer<R: tauri::Runtime>(
+fn transfer_request(purpose: TransferPurpose) -> TransferRequest<'static> {
+	match purpose {
+		TransferPurpose::Update { package_name, kind } => TransferRequest {
+			package_name: Some(package_name),
+			kind: Some(kind),
+			purpose: None,
+		},
+		TransferPurpose::MediaUpload => TransferRequest {
+			package_name: None,
+			kind: None,
+			purpose: Some(super::MEDIA_UPLOAD),
+		},
+	}
+}
+
+fn send_transfer<R: tauri::Runtime>(
 	app: &AppHandle<R>,
-	candidate: &Candidate,
+	command: &str,
+	purpose: TransferPurpose,
 ) {
 	let Some(state) = app.try_state::<AndroidUpdater>() else {
 		return;
 	};
-	let package_name = component::by_key(&candidate.component)
-		.map_or(component::SELF_PACKAGE, Component::install_target);
 	if let Err(e) = state.handle.run_mobile_plugin::<serde_json::Value>(
-		"beginTransfer",
-		TransferRequest {
-			package_name,
-			kind: candidate.kind,
-		},
+		command,
+		transfer_request(purpose),
 	) {
-		tracing::warn!("[update] beginTransfer failed: {e}");
+		tracing::warn!("[transfer] {command} failed: {e}");
 	}
 }
 
-pub fn end_transfer<R: tauri::Runtime>(app: &AppHandle<R>) {
-	let Some(state) = app.try_state::<AndroidUpdater>() else {
-		return;
-	};
-	if let Err(e) = state
-		.handle
-		.run_mobile_plugin::<serde_json::Value>("endTransfer", ())
-	{
-		tracing::warn!("[update] endTransfer failed: {e}");
-	}
+pub(super) fn begin_transfer<R: tauri::Runtime>(
+	app: &AppHandle<R>,
+	purpose: TransferPurpose,
+) {
+	send_transfer(app, "beginTransfer", purpose);
+}
+
+pub(super) fn end_transfer<R: tauri::Runtime>(
+	app: &AppHandle<R>,
+	purpose: TransferPurpose,
+) {
+	send_transfer(app, "endTransfer", purpose);
 }
 
 pub fn sweep_replaced() {}

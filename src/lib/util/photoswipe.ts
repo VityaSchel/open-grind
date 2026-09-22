@@ -1,4 +1,5 @@
 import { type ComponentProps, mount, unmount } from "svelte";
+import type { PhotoSwipeEventsMap } from "photoswipe";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
@@ -13,6 +14,8 @@ const BROKEN_MEDIA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2
 type Failure = Parameters<
 	NonNullable<ComponentProps<typeof VideoPlayer>["onfail"]>
 >[0];
+
+type Content = PhotoSwipeEventsMap["contentLoad"]["content"];
 
 const failures = new WeakMap<object, Failure>();
 
@@ -92,33 +95,61 @@ function yieldToInteractiveContent(lightbox: PhotoSwipeLightbox): void {
 	});
 }
 
-export function applyPhotoSwipeVideo(
+export function applyPhotoSwipeComponent<Slide>(
 	lightbox: PhotoSwipeLightbox,
-	videoAt: (index: number) => VideoSlide | null,
+	{
+		slideAt,
+		render,
+	}: {
+		slideAt: (index: number) => Slide | null;
+		render: (mount: {
+			target: HTMLElement;
+			slide: Slide;
+			content: Content;
+		}) => Record<string, unknown>;
+	},
 ): void {
-	const players = new Map<HTMLElement, Record<string, unknown>>();
-
-	yieldToInteractiveContent(lightbox);
+	const mounted = new Map<HTMLElement, Record<string, unknown>>();
 
 	lightbox.addFilter("useContentPlaceholder", (usePlaceholder, content) =>
-		videoAt(content.index) === null ? usePlaceholder : false,
+		slideAt(content.index) === null ? usePlaceholder : false,
 	);
 
 	lightbox.on("contentLoad", (event) => {
 		const { content } = event;
-		const video = videoAt(content.index);
-		if (video === null) return;
+		const slide = slideAt(content.index);
+		if (slide === null) return;
 		event.preventDefault();
 		const element = document.createElement("div");
 		element.className = "size-full";
 		content.element = element;
 		content.state = "loading";
-		players.set(
-			element,
+		mounted.set(element, render({ target: element, slide, content }));
+	});
+
+	lightbox.on("contentDestroy", ({ content }) => {
+		const { element } = content;
+		if (!element) return;
+		const component = mounted.get(element);
+		if (component === undefined) return;
+		mounted.delete(element);
+		void unmount(component);
+	});
+}
+
+export function applyPhotoSwipeVideo(
+	lightbox: PhotoSwipeLightbox,
+	videoAt: (index: number) => VideoSlide | null,
+): void {
+	yieldToInteractiveContent(lightbox);
+
+	applyPhotoSwipeComponent(lightbox, {
+		slideAt: videoAt,
+		render: ({ target, slide, content }) =>
 			mount(VideoPlayer, {
-				target: element,
+				target,
 				props: {
-					...video,
+					...slide,
 					onready: () => content.onLoaded(),
 					onfail: (failure: Failure) => {
 						failures.set(content, failure);
@@ -129,7 +160,6 @@ export function applyPhotoSwipeVideo(
 					},
 				},
 			}),
-		);
 	});
 
 	lightbox.on("contentActivate", ({ content }) => {
@@ -141,15 +171,6 @@ export function applyPhotoSwipeVideo(
 
 	lightbox.on("contentDeactivate", ({ content }) => {
 		content.element?.querySelector("video")?.pause();
-	});
-
-	lightbox.on("contentDestroy", ({ content }) => {
-		const { element } = content;
-		if (!element) return;
-		const player = players.get(element);
-		if (player === undefined) return;
-		players.delete(element);
-		void unmount(player);
 	});
 }
 

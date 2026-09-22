@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
 
 	let {
@@ -24,9 +24,9 @@
 		error: unknown;
 		onRetry: () => void;
 		skeletons: number;
-		selected: SelectionSet<unknown>;
+		selected?: SelectionSet<unknown>;
 		gridClass?: import("svelte/elements").ClassValue;
-		emptyState: Snippet;
+		emptyState?: Snippet;
 		leading?: Snippet;
 		tile: Snippet<[T, number]>;
 	} = $props();
@@ -40,11 +40,15 @@
 	{:else if items === null}
 		<div class={["photo-grid", gridClass]}>
 			{#each Array(skeletons)}
-				<Skeleton class="aspect-(--photo-grid-aspect) rounded-none" />
+				<MediaImage
+					src={null}
+					pending
+					class="aspect-(--photo-grid-aspect)"
+				/>
 			{/each}
 		</div>
 	{:else if empty}
-		{@render emptyState()}
+		{@render emptyState?.()}
 	{:else}
 		<div class={["photo-grid", gridClass]}>
 			{@render leading?.()}
@@ -53,9 +57,11 @@
 			{/each}
 		</div>
 	{/if}
-	<div role="status" class="sr-only">
-		{selected.size === selected.max
-			? `Maximum ${selected.max} selected`
-			: ""}
-	</div>
+	{#if selected}
+		<div role="status" class="sr-only">
+			{selected.size === selected.max
+				? `Maximum ${selected.max} selected`
+				: ""}
+		</div>
+	{/if}
 </div>

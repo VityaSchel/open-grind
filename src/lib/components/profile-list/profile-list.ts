@@ -8,6 +8,8 @@ export type ProfileListProfile = Awaited<
 
 export type ProfileListToggle = {
 	icon: Snippet<[boolean]>;
+	emptyIcon?: Snippet;
+	control?: "button" | "checkbox";
 	label: string;
 	errorLabel: { turningOn: string; turningOff: string };
 	setOn: (args: { profileId: number; on: boolean }) => Promise<void>;

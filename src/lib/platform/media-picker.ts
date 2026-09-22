@@ -10,14 +10,15 @@ type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 const mimeTypesByExtension: Record<string, string> = {
 	jpeg: "image/jpeg",
 	jpg: "image/jpeg",
+	mov: "video/quicktime",
 	mp4: "video/mp4",
 	png: "image/png",
-	webm: "video/webm",
+	webp: "image/webp",
 };
 
-const imageExtensions = ["jpg", "jpeg", "png"];
+const imageExtensions = ["jpg", "jpeg", "png", "webp"];
 
-const videoExtensions = ["mp4", "webm"];
+const videoExtensions = ["mp4", "mov"];
 
 const filtersByKind = {
 	image: {

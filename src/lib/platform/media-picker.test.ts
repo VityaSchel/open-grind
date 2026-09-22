@@ -117,7 +117,9 @@ describe("pickMedia", () => {
 		await expect(pickMedia("image")).resolves.toBeNull();
 
 		expect(openMock).toHaveBeenCalledWith({
-			filters: [{ name: "Images", extensions: ["jpg", "jpeg", "png"] }],
+			filters: [
+				{ name: "Images", extensions: ["jpg", "jpeg", "png", "webp"] },
+			],
 			multiple: false,
 		});
 	});
@@ -140,14 +142,14 @@ describe("pickMultipleMedia", () => {
 		vi.spyOn(crypto, "randomUUID")
 			.mockReturnValueOnce(firstKey)
 			.mockReturnValueOnce(secondKey);
-		openMock.mockResolvedValue(["/tmp/clip.webm", "/tmp/raw.unknown"]);
+		openMock.mockResolvedValue(["/tmp/clip.mov", "/tmp/raw.unknown"]);
 
 		await expect(pickMultipleMedia("media")).resolves.toEqual([
 			{
 				source: "desktop",
 				key: firstKey,
-				mimeType: "video/webm",
-				path: "/tmp/clip.webm",
+				mimeType: "video/quicktime",
+				path: "/tmp/clip.mov",
 			},
 			{
 				source: "desktop",
@@ -161,7 +163,7 @@ describe("pickMultipleMedia", () => {
 			filters: [
 				{
 					name: "Media",
-					extensions: ["jpg", "jpeg", "png", "mp4", "webm"],
+					extensions: ["jpg", "jpeg", "png", "webp", "mp4", "mov"],
 				},
 			],
 			multiple: true,
@@ -172,8 +174,10 @@ describe("pickMultipleMedia", () => {
 		["/tmp/photo.jpg", "image/jpeg"],
 		["/tmp/photo.jpeg", "image/jpeg"],
 		["/tmp/photo.PNG", "image/png"],
+		["/tmp/photo.webp", "image/webp"],
 		["/tmp/clip.mp4", "video/mp4"],
-		["/tmp/clip.webm", "video/webm"],
+		["/tmp/clip.MOV", "video/quicktime"],
+		["/tmp/clip.webm", null],
 		["/tmp/noextension", null],
 	])("resolves the MIME type of %s to %s", async (path, mimeType) => {
 		vi.spyOn(crypto, "randomUUID").mockReturnValue(firstKey);
@@ -190,7 +194,7 @@ describe("pickMultipleMedia", () => {
 		await pickMultipleMedia("video");
 
 		expect(openMock).toHaveBeenCalledWith({
-			filters: [{ name: "Videos", extensions: ["mp4", "webm"] }],
+			filters: [{ name: "Videos", extensions: ["mp4", "mov"] }],
 			multiple: true,
 		});
 	});

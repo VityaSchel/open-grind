@@ -13,6 +13,7 @@ import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
+import type { MediaFileDescriptor } from "$lib/platform/media-file";
 
 type RequestInfo = { method: string; path: string; body?: unknown };
 
@@ -86,6 +87,62 @@ function buildRestResponse({
 	};
 }
 
+function decodeRestResponse({
+	encoded,
+	requestInfo,
+}: {
+	encoded: unknown;
+	requestInfo: RequestInfo;
+}) {
+	if (typeof encoded !== "string") {
+		throw new Error("Invalid response from backend");
+	}
+	const decoded = decode(fromBase64(encoded));
+	const { status, body: responseBody } = z
+		.object({ status: z.number(), body: z.instanceof(Uint8Array) })
+		.parse(decoded);
+	return buildRestResponse({ status, responseBody, requestInfo });
+}
+
+function restInvokeError({
+	error,
+	requestInfo,
+}: {
+	error: unknown;
+	requestInfo: RequestInfo;
+}): ApiError {
+	if (error instanceof ApiError) return error;
+	const appError = asAppError(error);
+	if (appError !== undefined) {
+		const blocked = blockedKindOf(appError.kind);
+		if (blocked !== undefined) {
+			markRequestBlocked({ kind: blocked });
+			return new ApiError({
+				message:
+					blocked === "network"
+						? "Request blocked before it reached Grindr"
+						: "Request blocked by Grindr",
+				request: requestInfo,
+				response: null,
+				kind: appError.kind,
+				cause: error,
+			});
+		}
+	}
+	if (appError?.kind === "NotLoggedIn") {
+		signOutIfSessionLost().catch((error) => console.error(error));
+	}
+	return new ApiError({
+		message:
+			appError?.prettyMessage ??
+			(error instanceof Error ? error.message : String(error)),
+		request: requestInfo,
+		response: null,
+		kind: appError?.kind ?? null,
+		cause: error,
+	});
+}
+
 // https://github.com/tauri-apps/tauri/issues/10573
 export async function invokeRest(
 	command: string,
@@ -93,46 +150,53 @@ export async function invokeRest(
 ) {
 	const { requestInfo } = options;
 	try {
-		const res = await invoke(command, options.args);
-		if (typeof res !== "string") {
-			throw new Error("Invalid response from backend");
-		}
-		const decoded = decode(fromBase64(res));
-		const { status, body: responseBody } = z
-			.object({ status: z.number(), body: z.instanceof(Uint8Array) })
-			.parse(decoded);
-		return buildRestResponse({ status, responseBody, requestInfo });
+		const encoded = await invoke(command, options.args);
+		return decodeRestResponse({ encoded, requestInfo });
 	} catch (error) {
-		if (error instanceof ApiError) throw error;
-		const appError = asAppError(error);
-		if (appError !== undefined) {
-			const blocked = blockedKindOf(appError.kind);
-			if (blocked !== undefined) {
-				markRequestBlocked({ kind: blocked });
-				throw new ApiError({
-					message:
-						blocked === "network"
-							? "Request blocked before it reached Grindr"
-							: "Request blocked by Grindr",
-					request: requestInfo,
-					response: null,
-					kind: appError.kind,
-					cause: error,
-				});
-			}
-		}
-		if (appError?.kind === "NotLoggedIn") {
-			signOutIfSessionLost().catch((error) => console.error(error));
-		}
-		throw new ApiError({
-			message:
-				appError?.prettyMessage ??
-				(error instanceof Error ? error.message : String(error)),
-			request: requestInfo,
-			response: null,
-			kind: appError?.kind ?? null,
-			cause: error,
-		});
+		throw restInvokeError({ error, requestInfo });
+	}
+}
+
+const uploadOutcomeSchema = z.object({
+	response: z.string(),
+	sha256: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/)
+		.nullable(),
+	bodySize: z.int().nonnegative(),
+});
+
+export async function uploadFileRest(
+	path: string,
+	options: {
+		file: MediaFileDescriptor;
+		part: { name: string; filename: string };
+		maxBodySize: number;
+		profileId: number;
+		onHashed?: (sha256: string) => void;
+	},
+) {
+	const method = "POST";
+	const requestInfo = { method, path };
+	try {
+		const outcome = uploadOutcomeSchema.parse(
+			await invoke("upload_media_file", {
+				file: options.file,
+				request: { method, path, part: options.part },
+				maxBodySize: options.maxBodySize,
+				profileId: String(options.profileId),
+			}),
+		);
+		if (outcome.sha256 !== null) options.onHashed?.(outcome.sha256);
+		return {
+			response: decodeRestResponse({
+				encoded: outcome.response,
+				requestInfo,
+			}),
+			sha256: outcome.sha256,
+		};
+	} catch (error) {
+		throw restInvokeError({ error, requestInfo });
 	}
 }
 

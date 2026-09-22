@@ -2,6 +2,7 @@
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
 	import ProfileItem from "$lib/components/profile/ProfileItem.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import { Checkbox } from "$lib/components/ui/checkbox";
 	import * as Item from "$lib/components/ui/item";
 	import type { ProfileListProfile, ProfileListToggle } from "./profile-list";
 
@@ -11,6 +12,7 @@
 		on,
 		submitting,
 		icon,
+		control: controlKind = "button",
 		label,
 		onToggle,
 	}: {
@@ -19,7 +21,7 @@
 		on: boolean;
 		submitting: boolean;
 		onToggle: () => void;
-	} & Pick<ProfileListToggle, "icon" | "label"> = $props();
+	} & Pick<ProfileListToggle, "icon" | "control" | "label"> = $props();
 
 	const identifies = $derived(profile?.displayName ?? `ID ${profileId}`);
 </script>
@@ -45,16 +47,26 @@
 		{/if}
 	{/snippet}
 	{#snippet control()}
-		<Button
-			size="icon-lg"
-			variant="ghost"
-			role="switch"
-			aria-checked={on}
-			aria-label="{label}: {identifies}"
-			disabled={submitting}
-			onclick={onToggle}
-		>
-			{@render icon(on)}
-		</Button>
+		{#if controlKind === "checkbox"}
+			<Checkbox
+				class="size-5 border-muted-foreground/50 after:-inset-y-3 data-checked:border-primary"
+				checked={on}
+				aria-label="{label}: {identifies}"
+				disabled={submitting}
+				onCheckedChange={onToggle}
+			/>
+		{:else}
+			<Button
+				size="icon-lg"
+				variant="ghost"
+				role="switch"
+				aria-checked={on}
+				aria-label="{label}: {identifies}"
+				disabled={submitting}
+				onclick={onToggle}
+			>
+				{@render icon(on)}
+			</Button>
+		{/if}
 	{/snippet}
 </ProfileItem>

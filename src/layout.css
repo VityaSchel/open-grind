@@ -110,6 +110,10 @@
 }
 
 @theme {
+	--container-media-panel: 50rem;
+}
+
+@theme {
 	--radius-grid: 17px;
 
 	--radius-composer: 19px;
@@ -413,6 +417,14 @@ a {
 
 @utility scrim {
 	background-image: var(--scrim);
+}
+
+@utility media-chip {
+	@apply rounded-full border border-white/10 bg-popover/40 scrim backdrop-filter-(--bd-chip);
+}
+
+@utility media-pill {
+	@apply bg-popover/20 scrim backdrop-filter-(--bd-chip);
 }
 
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
