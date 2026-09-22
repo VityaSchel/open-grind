@@ -15,8 +15,8 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { tabsListVariants } from "$lib/components/ui/tabs";
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import { traverseBackTo } from "$lib/util/history";
+	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 

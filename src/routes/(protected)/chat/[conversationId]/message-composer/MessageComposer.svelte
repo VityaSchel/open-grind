@@ -5,8 +5,8 @@
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
+	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 	import type {
 		ApiResponseMessage,
 		MessageDraft,

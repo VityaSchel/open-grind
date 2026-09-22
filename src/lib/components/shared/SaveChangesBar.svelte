@@ -3,8 +3,8 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import { fly } from "$lib/util/reduced-motion";
+	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 
 	let {
 		saving,

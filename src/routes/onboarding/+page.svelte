@@ -13,7 +13,7 @@
 	} from "$lib/platform/desktop-entry.svelte";
 	import { setAutomaticUpdateChecks } from "$lib/updates";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
+	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 	import icon from "../../../contrib/logo/open-grind.svg";
 
 	let checkAutomatically = $state(true);

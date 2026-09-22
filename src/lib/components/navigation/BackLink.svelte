@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterNavigate } from "$app/navigation";
+	import type { HTMLAnchorAttributes } from "svelte/elements";
 
 	import { canGoBack } from "$lib/util/history";
 
@@ -8,11 +9,10 @@
 		label = "Back",
 		class: className,
 		children,
-	}: {
+		...rest
+	}: Omit<HTMLAnchorAttributes, "href" | "onclick"> & {
 		href: string;
 		label?: string;
-		class?: import("svelte/elements").ClassValue;
-		children?: import("svelte").Snippet;
 	} = $props();
 
 	let leaving = false;
@@ -23,6 +23,7 @@
 </script>
 
 <a
+	{...rest}
 	{href}
 	aria-label={label}
 	class={className}

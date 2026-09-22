@@ -5,6 +5,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
+	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import InterestPager from "./InterestPager.svelte";
 	import { INTEREST_TABS } from "./tabs";
 
@@ -50,6 +51,7 @@
 		class="fixed top-0 left-0 z-10 w-full px-4 pt-fixed-header pb-2"
 		bgClass="bg-linear-to-b from-background to-transparent"
 		contentClass="flex items-center w-full *:flex-1 max-w-120 mx-auto"
+		{@attach topChrome}
 	>
 		<span
 			data-slot="interest-tab-chip"

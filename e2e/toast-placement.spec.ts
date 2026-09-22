@@ -4,6 +4,7 @@ import { SHARED_ALBUM_ID } from "./support/albums";
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
+const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 const TOAST_LABEL = "Placement probe";
 const TOAST_GAP_PX = 8;
 const WIDE_VIEWPORT = { width: 1024, height: 800 };
@@ -86,8 +87,48 @@ async function expectToastGapAbove(obstruction: Locator): Promise<void> {
 	);
 }
 
+async function expectTopToastGapBelow(obstruction: Locator): Promise<void> {
+	const page = obstruction.page();
+	await obstruction.waitFor({ timeout: 60_000 });
+	await page.evaluate(
+		async ({ module, label }) => {
+			const { showUpToDate } = await import(module);
+			showUpToDate(label);
+		},
+		{ module: UPDATE_TOASTS_MODULE_URL, label: TOAST_LABEL },
+	);
+	const toast = frontToast(page);
+	await expect(toast).toHaveAttribute("data-mounted", "true");
+	await toast.evaluate((element) =>
+		Promise.all(element.getAnimations().map(({ finished }) => finished)),
+	);
+	const toastBox = await toast.boundingBox();
+	const obstructionBox = await obstruction.boundingBox();
+	if (!toastBox || !obstructionBox) throw new Error("Nothing to measure");
+	expect(toastBox.y - (obstructionBox.y + obstructionBox.height)).toBeCloseTo(
+		TOAST_GAP_PX,
+		0,
+	);
+}
+
 test.beforeEach(async ({ page }) => {
 	await installTauriShim(page);
+});
+
+test.describe("a top toast rests 8px below the top chrome", () => {
+	test("on an app settings page", async ({ page }) => {
+		await page.goto("/settings/app");
+		await expectTopToastGapBelow(
+			page.getByRole("link", { name: "Back", exact: true }),
+		);
+	});
+
+	test("on another user's profile", async ({ page }) => {
+		await page.goto("/profile/100001");
+		await expectTopToastGapBelow(
+			page.getByRole("link", { name: "Back", exact: true }),
+		);
+	});
 });
 
 test.describe("a toast rests 8px above the bottom chrome", () => {
