@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { meTab } from "./support/app";
 import {
 	activeProfilePane,
 	openGridProfile,
@@ -19,10 +20,7 @@ async function fingerLane(page: Page) {
 		.locator("h1")
 		.boundingBox())!;
 	const y = heading.y + heading.height / 2;
-	return (fraction: number, below = 0) => ({
-		x: pager.x + pager.width * fraction,
-		y: y + below,
-	});
+	return (fraction: number) => ({ x: pager.x + pager.width * fraction, y });
 }
 
 function offStop({ scrollLeft, width }: PagerGeometry): number {
@@ -35,12 +33,10 @@ test("a finger still down outside the pager holds the landing until it lifts", a
 	const tiles = await openGridProfile(page, { nth: 1 });
 	const at = await fingerLane(page);
 	const fingers = await TrustedFingers.attach(page);
-	const settingsTab = (await page
-		.locator('nav a[href="/settings"]')
-		.boundingBox())!;
+	const meTabBox = (await meTab(page).boundingBox())!;
 	const outside = {
-		x: settingsTab.x + settingsTab.width / 2,
-		y: settingsTab.y + settingsTab.height / 2,
+		x: meTabBox.x + meTabBox.width / 2,
+		y: meTabBox.y + meTabBox.height / 2,
 	};
 
 	await fingers.down({ id: 1, ...at(0.8) });

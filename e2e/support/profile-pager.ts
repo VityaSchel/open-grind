@@ -108,17 +108,6 @@ export async function restsOn(
 		.toBe(0);
 }
 
-export function afterTwoFrames(page: Page): Promise<void> {
-	return page.evaluate(
-		() =>
-			new Promise<void>((resolve) =>
-				requestAnimationFrame(() =>
-					requestAnimationFrame(() => resolve()),
-				),
-			),
-	);
-}
-
 export async function swipeProfile(
 	page: Page,
 	{

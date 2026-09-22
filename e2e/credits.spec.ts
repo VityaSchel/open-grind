@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import generated from "../src/lib/credits/generated.json" with { type: "json" };
-import { captureOpenedUrls, installTauriShim } from "./support/app";
+import { backLink, captureOpenedUrls, installTauriShim } from "./support/app";
 
 const APP_SETTINGS = "/settings/app";
 const CREDITS = `${APP_SETTINGS}/credits`;
@@ -97,7 +97,7 @@ test.describe("credits page", () => {
 		};
 
 		await openCreditsAndScroll();
-		const back = page.getByRole("link", { name: "Back", exact: true });
+		const back = backLink(page);
 		await expect(back).toHaveAttribute("href", APP_SETTINGS);
 		await back.click();
 		await backOnAppSettings();

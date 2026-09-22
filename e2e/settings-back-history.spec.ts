@@ -1,14 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+import { historyDepth, pathname } from "./support/app";
 import {
 	APP_SETTINGS,
 	clickMeTab,
 	clickNavBarBack,
-	historyDepth,
 	openAppSettings,
 	openDeepLink,
 	openSettings,
-	pathname,
 	SETTINGS,
 	systemBack,
 } from "./support/page-stack";

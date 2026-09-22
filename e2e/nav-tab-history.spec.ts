@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim } from "./support/app";
-import { FIRST_ROUTE_COMPILE_MS, historyDepth } from "./support/page-stack";
+import {
+	ensureGridLocation,
+	FIRST_ROUTE_COMPILE_MS,
+	historyDepth,
+	installTauriShim,
+} from "./support/app";
 
 const TAPS = "/interest/taps";
 const PROFILE_LINK = 'a[href^="/profile/"]';

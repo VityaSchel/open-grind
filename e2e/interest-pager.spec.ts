@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim, TrustedTouch } from "./support/app";
+import { historyDepth, installTauriShim, TrustedTouch } from "./support/app";
 
 const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
@@ -44,7 +44,7 @@ test("a scroll that lands on Views switches the tab and updates the URL without 
 }) => {
 	const pager = page.locator(PAGER);
 	const before = await pager.evaluate((el) => el.scrollLeft);
-	const depth = await page.evaluate(() => history.length);
+	const depth = await historyDepth(page);
 
 	await pager.evaluate((el) => el.scrollTo({ left: 0, behavior: "smooth" }));
 	await expect.poll(() => pager.evaluate((el) => el.scrollLeft)).toBe(0);
@@ -52,7 +52,7 @@ test("a scroll that lands on Views switches the tab and updates the URL without 
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
 	expect(before, "started on the second pane").toBeGreaterThan(0);
 	expect(
-		await page.evaluate(() => history.length),
+		await historyDepth(page),
 		"a tab switch must not push an entry",
 	).toBe(depth);
 	await expect(page.locator(`${PAGER} .pull-scroller`)).toHaveCount(2);

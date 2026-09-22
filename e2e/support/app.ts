@@ -2,6 +2,26 @@ import type { CDPSession, Page } from "@playwright/test";
 
 export const DEMO_CONVERSATION = "/chat/100001:123456000";
 export const DEMO_GEOHASH = "u33dc0cpgp00";
+export const FIRST_ROUTE_COMPILE_MS = 120_000;
+
+export const backLink = (page: Page) =>
+	page.getByRole("link", { name: "Back", exact: true });
+export const meTab = (page: Page) =>
+	page.getByRole("link", { name: "Me", exact: true });
+
+export const pathname = (page: Page) => page.evaluate(() => location.pathname);
+export const historyDepth = (page: Page) => page.evaluate(() => history.length);
+
+export function afterTwoFrames(page: Page): Promise<void> {
+	return page.evaluate(
+		() =>
+			new Promise<void>((resolve) =>
+				requestAnimationFrame(() =>
+					requestAnimationFrame(() => resolve()),
+				),
+			),
+	);
+}
 
 declare global {
 	interface Window {

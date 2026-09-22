@@ -1,20 +1,25 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import {
+	backLink,
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+} from "./support/app";
 import {
 	APP_SETTINGS,
-	cancelSystemBack,
-	commitSystemBack,
 	dim,
-	FIRST_ROUTE_COMPILE_MS,
 	ghost,
 	openAppSettings,
 	openSettings,
 	pane,
-	progressSystemBack,
 	SETTINGS,
-	startSystemBack,
 } from "./support/page-stack";
+import {
+	cancelSystemBack,
+	commitSystemBack,
+	progressSystemBack,
+	startSystemBack,
+} from "./support/system-back";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -94,11 +99,13 @@ test("a pushed page enters over a snapshot of the page it came from", async ({
 	await openSettings(page);
 	await expect(ghost(page)).toHaveCount(0);
 
-	await openAppSettings(page);
-	await expect(ghost(page)).toHaveCount(0);
-	await expect(
-		page.getByRole("link", { name: "Back", exact: true }),
-	).toBeVisible();
+	await page.getByRole("link", { name: "App Settings" }).click();
+	await expect(dim(page)).toBeAttached();
+	await expect(ghost(page)).toHaveCount(1);
+	await expect(ghost(page)).toContainText("Sign Out");
+
+	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
+	await expect(backLink(page)).toBeVisible();
 });
 
 test("both panes paint the app background so neither shows through", async ({
@@ -153,11 +160,9 @@ test("neither axis of the document scrolls while two panes are on screen", async
 	await expect(dim(page)).toBeAttached();
 
 	const midTransition = await documentOverflow(page);
-	const ghostCount = await ghost(page).count();
 
 	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
 
-	expect(ghostCount).toBe(1);
 	expect(midTransition).toEqual({ x: 0, y: 0 });
 	expect(await documentOverflow(page)).toEqual({ x: 0, y: 0 });
 });
@@ -185,7 +190,7 @@ test("the Back button pops with the same animation", async ({ page }) => {
 	await openSettings(page);
 	await openAppSettings(page);
 
-	await page.getByRole("link", { name: "Back", exact: true }).click();
+	await backLink(page).click();
 	await expect(dim(page)).toBeAttached();
 	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
 
@@ -282,9 +287,7 @@ test("a page opened directly leaves the system gesture to the platform", async (
 	await installTauriShim(page);
 	await page.goto(APP_SETTINGS);
 	await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await page
-		.getByRole("link", { name: "Back", exact: true })
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await backLink(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 	expect(await startSystemBack(page)).toBe(false);
 	await expect(ghost(page)).toHaveCount(0);
@@ -293,7 +296,7 @@ test("a page opened directly leaves the system gesture to the platform", async (
 test("reduced motion swaps pages at once, yet the back gesture still follows the finger with nothing sliding behind", async ({
 	page,
 }) => {
-	await openSettings(page, "reduce");
+	await openSettings(page, { reducedMotion: "reduce" });
 	await page.getByRole("link", { name: "App Settings" }).click();
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
 	await expect(ghost(page)).toHaveCount(0);

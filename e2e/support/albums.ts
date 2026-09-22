@@ -1,6 +1,6 @@
 import { type Page } from "@playwright/test";
 
-import { installTauriShim } from "./app";
+import { backLink, installTauriShim } from "./app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./media";
 
 export const ALBUM_TILE = '[data-slot="album-tile"]';
@@ -35,5 +35,5 @@ export function openSharedAlbum(page: Page): Promise<void> {
 }
 
 export function back(page: Page): Promise<void> {
-	return page.getByRole("link", { name: "Back" }).click();
+	return backLink(page).click();
 }

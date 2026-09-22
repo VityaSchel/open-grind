@@ -1,15 +1,18 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
+import {
+	afterTwoFrames,
+	DEMO_CONVERSATION,
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+	pathname,
+} from "./support/app";
 import {
 	cancelSystemBack,
 	commitSystemBack,
-	FIRST_ROUTE_COMPILE_MS,
-	pathname,
 	progressSystemBack,
 	startSystemBack,
-} from "./support/page-stack";
-import { afterTwoFrames } from "./support/profile-pager";
+} from "./support/system-back";
 
 const PHONE = { width: 390, height: 844 };
 const WIDE = { width: 1024, height: 800 };
@@ -42,54 +45,42 @@ async function openInbox(page: Page) {
 	await rows(page).nth(1).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
-async function openConversation(page: Page) {
-	const href = await rows(page).nth(1).getAttribute("href");
-	await rows(page).nth(1).click();
-	await expect(page).toHaveURL(new RegExp(`${href}$`));
+async function openConversation(page: Page, { href }: { href?: string } = {}) {
+	const target = href ?? (await rows(page).nth(1).getAttribute("href"));
+	await page.locator(`a[href="${target}"]:visible`).click();
+	await expect(page).toHaveURL(new RegExp(`${target}$`));
 	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
-	return href;
+	return target;
 }
 
-async function recordFrames(page: Page) {
-	await page.evaluate(() => {
-		const frames: { base: number; sheet: number | null; path: string }[] =
-			[];
-		(window as unknown as { __frames: typeof frames }).__frames = frames;
-		const x = (slot: string) => {
-			const pane = document.querySelector(
-				`[data-slot="live-stack-${slot}"]`,
-			);
-			return pane
-				? new DOMMatrix(getComputedStyle(pane).transform).m41
-				: null;
-		};
-		const started = performance.now();
-		const sample = () => {
-			frames.push({
-				base: x("base") ?? 0,
-				sheet: x("sheet"),
-				path: location.pathname,
-			});
-			if (performance.now() - started < 2000)
-				requestAnimationFrame(sample);
-		};
-		requestAnimationFrame(sample);
-	});
-}
+type Frame = { base: number; sheet: number | null; path: string };
 
-async function recordedFrames(page: Page) {
-	await page.waitForTimeout(2100);
+function recordFrames(page: Page): Promise<Frame[]> {
 	return page.evaluate(
 		() =>
-			(
-				window as unknown as {
-					__frames: {
-						base: number;
-						sheet: number | null;
-						path: string;
-					}[];
-				}
-			).__frames,
+			new Promise<Frame[]>((resolve) => {
+				const frames: Frame[] = [];
+				const x = (slot: string) => {
+					const pane = document.querySelector(
+						`[data-slot="live-stack-${slot}"]`,
+					);
+					return pane
+						? new DOMMatrix(getComputedStyle(pane).transform).m41
+						: null;
+				};
+				const started = performance.now();
+				const sample = () => {
+					frames.push({
+						base: x("base") ?? 0,
+						sheet: x("sheet"),
+						path: location.pathname,
+					});
+					if (performance.now() - started < 2000)
+						requestAnimationFrame(sample);
+					else resolve(frames);
+				};
+				requestAnimationFrame(sample);
+			}),
 	);
 }
 
@@ -98,11 +89,9 @@ test.describe("the chat stack on a phone", () => {
 
 	test("a conversation slides in over the live list", async ({ page }) => {
 		await openInbox(page);
-		await recordFrames(page);
+		const recording = recordFrames(page);
 		await openConversation(page);
-		const frames = (await recordedFrames(page)).filter(
-			({ sheet }) => sheet !== null,
-		);
+		const frames = (await recording).filter(({ sheet }) => sheet !== null);
 
 		const sheetX = frames.map(({ sheet }) => sheet ?? 0);
 		expect(sheetX[0]).toBeGreaterThan(PHONE.width * 0.9);
@@ -161,12 +150,11 @@ test.describe("the chat stack on a phone", () => {
 				})
 				?.getAttribute("href"),
 		);
-		await page.locator(`a[href="${visibleRow}"]:visible`).click();
-		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+		await openConversation(page, { href: visibleRow! });
 
-		await recordFrames(page);
+		const recording = recordFrames(page);
 		await backToChats(page).click();
-		const leaving = (await recordedFrames(page)).filter(
+		const leaving = (await recording).filter(
 			({ path, sheet }) => path === "/chat" && sheet !== null,
 		);
 
@@ -240,21 +228,19 @@ test.describe("the chat stack on a phone", () => {
 		page,
 	}) => {
 		await openInbox(page);
-		await page.locator(`a[href="${DEMO_CONVERSATION}"]:visible`).click();
-		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+		await openConversation(page, { href: DEMO_CONVERSATION });
 		await messageRow(page).click({ button: "right" });
 		await page.getByRole("button", { name: "Reply" }).click();
 		await expect(page.getByLabel("Cancel reply")).toBeVisible();
 
 		await backToChats(page).click();
-		const midSlide = await page.evaluate(() => ({
-			leaving: document.querySelector("[data-leaving]") !== null,
-			passedToPlatform: window.__AndroidOnBackGesture?.(),
-		}));
-		expect(midSlide).toEqual({ leaving: true, passedToPlatform: true });
+		await expect(page.locator("[data-leaving]")).toBeAttached();
+		expect(
+			await page.evaluate(() => window.__AndroidOnBackGesture?.()),
+		).toBe(true);
 
 		await expect(sheet(page)).toHaveCount(0);
-		await page.locator(`a[href="${DEMO_CONVERSATION}"]:visible`).click();
+		await openConversation(page, { href: DEMO_CONVERSATION });
 		await expect(page.getByLabel("Cancel reply")).toBeVisible();
 	});
 
@@ -286,11 +272,9 @@ test.describe("the chat stack on a phone", () => {
 
 		expect(await startSystemBack(page)).toBe(false);
 
-		await recordFrames(page);
+		const recording = recordFrames(page);
 		await backToChats(page).click();
-		const frames = (await recordedFrames(page)).filter(
-			({ sheet }) => sheet !== null,
-		);
+		const frames = (await recording).filter(({ sheet }) => sheet !== null);
 		expect(frames.length).toBeGreaterThan(3);
 		await expect(page).toHaveURL(/\/chat$/);
 		await expect(rows(page).nth(1)).toBeVisible();
@@ -301,11 +285,10 @@ test.describe("the chat stack on a phone", () => {
 	}) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
 		await openInbox(page);
-		await recordFrames(page);
+		const recording = recordFrames(page);
 		await openConversation(page);
-		const frames = (await recordedFrames(page)).filter(
-			({ sheet }) => sheet !== null,
-		);
+		const frames = (await recording).filter(({ sheet }) => sheet !== null);
+		expect(frames.length).toBeGreaterThan(0);
 		expect(frames.every(({ sheet }) => sheet === 0)).toBe(true);
 
 		expect(await startSystemBack(page)).toBe(true);
