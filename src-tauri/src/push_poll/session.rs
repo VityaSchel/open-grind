@@ -1,10 +1,10 @@
 use grindr::{GrindrClient, Method};
+use serde_json::Value;
 
-use super::{poll, Poll};
+use super::{poll, Inbox, Poll, Watermarks};
 use crate::state;
 use crate::storage::{AuthStorage, DeviceStorage};
 
-const INBOX: &str = "/v4/inbox?page=1";
 const TAPS: &str = "/v2/taps/received";
 
 pub fn client() -> Option<GrindrClient> {
@@ -23,38 +23,45 @@ pub fn client() -> Option<GrindrClient> {
 	Some(state::share(|| built))
 }
 
-pub async fn collect(client: &GrindrClient, since: i64) -> Poll {
+pub async fn collect(client: &GrindrClient, since: Watermarks) -> Poll {
 	let me = client
 		.session_receiver()
 		.borrow()
 		.as_ref()
 		.and_then(|session| session.credentials.profile_id.clone());
-	let inbox = fetch(client, Method::POST, INBOX).await;
+	let inbox = inbox(client, since.inbox).await;
 	let taps = fetch(client, Method::GET, TAPS).await;
-	let mut collected = poll(
-		inbox.as_ref().unwrap_or(&serde_json::Value::Null),
-		taps.as_ref().unwrap_or(&serde_json::Value::Null),
-		since,
-		me.as_deref(),
-	);
-	if inbox.is_none() || taps.is_none() {
-		collected.watermark = since;
+	poll(inbox.as_ref(), taps.as_ref(), since, me.as_deref())
+}
+
+async fn inbox(client: &GrindrClient, watermark: i64) -> Option<Inbox> {
+	let mut inbox = Inbox::default();
+	let mut next = Some(1);
+	while let Some(number) = next {
+		let path = format!("/v4/inbox?page={number}");
+		let page = fetch(client, Method::POST, &path).await?;
+		next = inbox.read(&page, watermark);
 	}
-	collected
+	Some(inbox)
 }
 
 async fn fetch(
 	client: &GrindrClient,
 	method: Method,
 	path: &str,
-) -> Option<serde_json::Value> {
-	match client.request(method, path).send().await {
-		Ok(response) => {
-			Some(serde_json::from_slice(&response.body).unwrap_or_default())
-		}
-		Err(e) => {
-			tracing::warn!("[poll] {path} failed: {e}");
-			None
-		}
+) -> Option<Value> {
+	let response = client
+		.request(method, path)
+		.send()
+		.await
+		.inspect_err(|e| tracing::warn!("[poll] {path} failed: {e}"))
+		.ok()?;
+	let json = (200..300)
+		.contains(&response.status)
+		.then(|| serde_json::from_slice(&response.body).ok())
+		.flatten();
+	if json.is_none() {
+		tracing::warn!("[poll] {path} answered {}", response.status);
 	}
+	json
 }

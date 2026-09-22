@@ -7,25 +7,30 @@ object PushPoll {
 		System.loadLibrary("open_grind_lib")
 	}
 
-	external fun nativePoll(since: Long): String?
+	external fun nativePoll(sinceInbox: Long, sinceTaps: Long): String?
 
-	fun since(watermark: Long): Poll {
-		val answer = runCatching { nativePoll(watermark) }.getOrNull()
-			?: return Poll(watermark, emptyList())
-		return runCatching { parse(answer, watermark) }
-			.getOrDefault(Poll(watermark, emptyList()))
+	fun since(watermarks: Watermarks): Poll {
+		val nothing = Poll(watermarks, emptyList())
+		val answer = runCatching {
+			nativePoll(sinceInbox = watermarks.inbox, sinceTaps = watermarks.taps)
+		}.getOrNull() ?: return nothing
+		return runCatching { parse(answer) }.getOrDefault(nothing)
 	}
 
-	private fun parse(answer: String, watermark: Long): Poll {
+	private fun parse(answer: String): Poll {
 		val root = JSONObject(answer)
-		val pushes = root.optJSONArray("pushes") ?: return Poll(watermark, emptyList())
+		val pushes = root.getJSONArray("pushes")
 		val payloads = (0 until pushes.length()).mapNotNull { index ->
 			pushes.optJSONObject(index)?.let { push ->
 				push.keys().asSequence().associateWith { key -> push.optString(key) }
 			}
 		}
-		return Poll(root.optLong("watermark", watermark), payloads)
+		val watermarks = Watermarks(
+			inbox = root.getLong("inboxWatermark"),
+			taps = root.getLong("tapsWatermark"),
+		)
+		return Poll(watermarks, payloads)
 	}
 
-	data class Poll(val watermark: Long, val payloads: List<Map<String, String>>)
+	data class Poll(val watermarks: Watermarks, val payloads: List<Map<String, String>>)
 }

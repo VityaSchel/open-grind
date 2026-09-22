@@ -1,5 +1,6 @@
 package org.opengrind.push
 
+import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,6 +12,7 @@ import android.provider.Settings
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import org.opengrind.MainActivity
 import org.opengrind.R
 
@@ -27,9 +29,9 @@ object PushNotifier {
 			is PushDecision.DismissSender -> dismiss(context) {
 				it.notification.extras.getString(EXTRA_SENDER_ID) in decision.senderIds
 			}
-			is PushDecision.DismissNotification -> dismiss(context) {
-				it.id == decision.dedupeKey.hashCode()
-			}
+			is PushDecision.DismissConversation -> NotificationManagerCompat.from(context)
+				.cancel(MESSAGES_CHANNEL, decision.postedId)
+			is PushDecision.DismissNotification -> withdraw(context, decision)
 			PushDecision.Ignore -> Unit
 		}
 	}
@@ -53,16 +55,15 @@ object PushNotifier {
 		dismiss(context) { it.tag == channel }
 	}
 
-	fun openChannelSettings(context: Context, kind: PushKind) {
+	fun openChannelSettings(activity: Activity, kind: PushKind): Boolean {
 		val channel = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
-			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+			.putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
 			.putExtra(Settings.EXTRA_CHANNEL_ID, channelOf(kind))
-		start(context, listOf(channel) + appNotificationIntents(context))
+		return start(activity, listOf(channel) + appNotificationIntents(activity))
 	}
 
-	fun openAppNotificationSettings(context: Context) {
-		start(context, appNotificationIntents(context))
-	}
+	fun openAppNotificationSettings(activity: Activity): Boolean =
+		start(activity, appNotificationIntents(activity))
 
 	fun createChannels(context: Context) {
 		val manager = context.getSystemService(NotificationManager::class.java)
@@ -93,56 +94,74 @@ object PushNotifier {
 		if (!PushSettings.categoryEnabled(context, decision.kind)) return
 		createChannels(context)
 		val channel = channelOf(decision.kind)
-		val notification = NotificationCompat.Builder(context, channel)
+		val id = decision.postedId
+		val builder = NotificationCompat.Builder(context, channel)
 			.setSmallIcon(R.drawable.ic_notification)
-			.setContentTitle(decision.title)
-			.setContentText(decision.body)
-			.setStyle(NotificationCompat.BigTextStyle().bigText(decision.body))
-			.setCategory(NotificationCompat.CATEGORY_MESSAGE)
-			.setWhen(decision.timestamp)
+			.setColor(ContextCompat.getColor(context, R.color.brand_primary))
 			.setShowWhen(true)
 			.setAutoCancel(true)
-			.setGroup(decision.groupKey)
-			.setContentIntent(openIntent(context, decision))
+			.setContentIntent(openIntent(context, id, decision.deeplink))
 			.addExtras(Bundle().apply { putString(EXTRA_SENDER_ID, decision.senderId) })
-			.build()
-		NotificationManagerCompat.from(context)
-			.notify(channel, decision.dedupeKey.hashCode(), notification)
+		when (decision.kind) {
+			PushKind.Message -> ConversationNotification.post(
+				context,
+				channel,
+				id,
+				builder,
+				decision,
+				active(context).firstOrNull { it.tag == channel && it.id == id },
+			)
+			PushKind.Tap -> NotificationManagerCompat.from(context).notify(
+				channel,
+				id,
+				builder
+					.setContentTitle(decision.title)
+					.setContentText(decision.body)
+					.setStyle(NotificationCompat.BigTextStyle().bigText(decision.body))
+					.setCategory(NotificationCompat.CATEGORY_SOCIAL)
+					.setWhen(decision.timestamp)
+					.build(),
+			)
+		}
 	}
 
-	private fun openIntent(context: Context, decision: PushDecision.Notify): PendingIntent {
+	private fun withdraw(context: Context, decision: PushDecision.DismissNotification) {
+		dismiss(context) { it.tag == TAPS_CHANNEL && it.id == decision.tapPostedId }
+		active(context)
+			.filter { it.tag == MESSAGES_CHANNEL }
+			.forEach { ConversationNotification.withdraw(context, it, decision.dedupeKey) }
+	}
+
+	private fun openIntent(context: Context, requestCode: Int, deeplink: String): PendingIntent {
 		val intent = Intent(context, MainActivity::class.java)
 			.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-			.putExtra(EXTRA_DEEPLINK, decision.deeplink)
+			.putExtra(EXTRA_DEEPLINK, deeplink)
 		return PendingIntent.getActivity(
 			context,
-			decision.dedupeKey.hashCode(),
+			requestCode,
 			intent,
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
 		)
 	}
 
-	private fun appNotificationIntents(context: Context): List<Intent> = listOf(
+	private fun appNotificationIntents(activity: Activity): List<Intent> = listOf(
 		Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-			.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+			.putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName),
 		Intent(
 			Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-			Uri.fromParts("package", context.packageName, null),
+			Uri.fromParts("package", activity.packageName, null),
 		),
 	)
 
-	private fun start(context: Context, intents: List<Intent>) {
-		for (intent in intents) {
-			runCatching {
-				context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-				return
-			}
-		}
-	}
+	private fun start(activity: Activity, intents: List<Intent>): Boolean =
+		intents.any { intent -> runCatching { activity.startActivity(intent) }.isSuccess }
+
+	private fun active(context: Context): List<StatusBarNotification> =
+		context.getSystemService(NotificationManager::class.java).activeNotifications.toList()
 
 	private fun dismiss(context: Context, matches: (StatusBarNotification) -> Boolean) {
-		val manager = context.getSystemService(NotificationManager::class.java)
-		manager.activeNotifications
+		val manager = NotificationManagerCompat.from(context)
+		active(context)
 			.filter(matches)
 			.forEach { manager.cancel(it.tag, it.id) }
 	}

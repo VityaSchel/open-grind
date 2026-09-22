@@ -1,3 +1,5 @@
+use std::sync::OnceLock;
+
 use crate::error::AppError;
 
 mod entries;
@@ -38,6 +40,25 @@ const HAS_FILE_STORE: bool = cfg!(any(
 ));
 
 pub fn init_keyring() -> StorageBackend {
+	static USABLE: OnceLock<StorageBackend> = OnceLock::new();
+	cached(&USABLE, probe_keyring)
+}
+
+fn cached(
+	usable: &OnceLock<StorageBackend>,
+	probe: impl FnOnce() -> StorageBackend,
+) -> StorageBackend {
+	if let Some(backend) = usable.get() {
+		return *backend;
+	}
+	let backend = probe();
+	if backend != StorageBackend::Unavailable {
+		let _ = usable.set(backend);
+	}
+	backend
+}
+
+fn probe_keyring() -> StorageBackend {
 	let backend = match install_platform_store() {
 		Ok(()) => StorageBackend::Keyring,
 		Err(e) if HAS_FILE_STORE => {
@@ -203,14 +224,43 @@ mod tests {
 	}
 
 	#[test]
-	fn init_keyring_leaves_a_usable_store_behind() {
+	fn a_probe_leaves_a_usable_store_behind() {
 		with_file_store(|_| {
-			let backend = init_keyring();
+			let backend = probe_keyring();
 
 			assert_ne!(backend, StorageBackend::Unavailable);
 			assert!(keyring_core::get_default_store().is_some());
 			assert!(keyring_core::Entry::new("open-grind", "session").is_ok());
 		});
+	}
+
+	#[test]
+	fn a_second_init_keyring_reuses_the_first_probe() {
+		with_file_store(|_| {
+			let first = init_keyring();
+			keyring_core::unset_default_store();
+
+			assert_eq!(init_keyring(), first);
+			assert!(keyring_core::get_default_store().is_none());
+		});
+	}
+
+	#[test]
+	fn a_failed_probe_is_tried_again_and_a_usable_one_is_kept() {
+		let usable = OnceLock::new();
+
+		assert_eq!(
+			cached(&usable, || StorageBackend::Unavailable),
+			StorageBackend::Unavailable
+		);
+		assert_eq!(
+			cached(&usable, || StorageBackend::File),
+			StorageBackend::File
+		);
+		assert_eq!(
+			cached(&usable, || unreachable!("a usable backend is probed once")),
+			StorageBackend::File
+		);
 	}
 
 	#[test]

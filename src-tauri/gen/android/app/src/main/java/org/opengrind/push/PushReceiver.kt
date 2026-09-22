@@ -4,8 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ProcessLifecycleOwner
 
 class PushReceiver : BroadcastReceiver() {
 	override fun onReceive(context: Context, intent: Intent) {
@@ -29,12 +27,9 @@ class PushReceiver : BroadcastReceiver() {
 			System.currentTimeMillis(),
 		)
 		val decision = PushPayload.decide(data.toStringMap(), sentTime)
-		if (decision is PushDecision.Notify && appIsInForeground()) return
+		if (decision is PushDecision.Notify && AppForeground.visible()) return
 		PushNotifier.apply(context, decision)
 	}
-
-	private fun appIsInForeground(): Boolean =
-		ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
 
 	private fun Bundle.toStringMap(): Map<String, String> =
 		keySet().mapNotNull { key -> getString(key)?.let { key to it } }.toMap()

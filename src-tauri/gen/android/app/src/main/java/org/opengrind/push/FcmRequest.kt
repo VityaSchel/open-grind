@@ -2,7 +2,6 @@ package org.opengrind.push
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Handler
 import android.os.IBinder
@@ -29,19 +28,21 @@ class FcmRequest(
 	private val handler = Handler(Looper.getMainLooper())
 	private val replies = Messenger(
 		Handler(Looper.getMainLooper()) { reply ->
+			reply.data?.getString(PushContract.EXTRA_NONCE)?.let { nonce ->
+				PushSettings.setNonce(context, nonce)
+			}
 			settle(outcomeOf(reply))
 			true
 		},
 	)
-	private val expire = Runnable { settle(FcmOutcome.Failed(TIMED_OUT, null)) }
+	private val expire = Runnable { settle(FcmOutcome.Failed(PushContract.ERROR_TIMED_OUT, null)) }
 
 	fun send() {
-		val intent = Intent(PushContract.ACTION_BIND).setPackage(PushContract.ADDON_PACKAGE)
 		val bound = runCatching {
-			context.bindService(intent, this, Context.BIND_AUTO_CREATE)
+			context.bindService(PushContract.bindIntent(), this, Context.BIND_AUTO_CREATE)
 		}.getOrDefault(false)
 		if (!bound) {
-			settle(FcmOutcome.Failed(UNAVAILABLE, null))
+			settle(FcmOutcome.Failed(PushContract.ERROR_UNAVAILABLE, null))
 			return
 		}
 		handler.postDelayed(expire, TIMEOUT_MS)
@@ -52,26 +53,27 @@ class FcmRequest(
 		try {
 			Messenger(service).send(request)
 		} catch (e: RemoteException) {
-			settle(FcmOutcome.Failed(UNAVAILABLE, e.javaClass.simpleName))
+			settle(FcmOutcome.Failed(PushContract.ERROR_UNAVAILABLE, e.javaClass.simpleName))
 		}
 	}
 
-	override fun onServiceDisconnected(name: ComponentName) = settle(FcmOutcome.Failed(UNAVAILABLE, null))
+	override fun onServiceDisconnected(name: ComponentName) =
+		settle(FcmOutcome.Failed(PushContract.ERROR_UNAVAILABLE, null))
 
-	override fun onNullBinding(name: ComponentName) = settle(FcmOutcome.Failed(REFUSED, null))
+	override fun onNullBinding(name: ComponentName) = settle(FcmOutcome.Failed(PushContract.ERROR_REFUSED, null))
 
 	private fun outcomeOf(reply: Message): FcmOutcome {
 		val data = reply.data
-		data?.getString(PushContract.EXTRA_NONCE)?.let { PushSettings.setNonce(context, it) }
 		val token = data?.getString(PushContract.EXTRA_TOKEN)
 		return when {
-			reply.what == PushContract.MSG_TOKEN && !token.isNullOrEmpty() -> FcmOutcome.Token(token)
-			reply.what == PushContract.MSG_DELETED -> FcmOutcome.Deleted
 			reply.what == PushContract.MSG_ERROR -> FcmOutcome.Failed(
-				data?.getString(PushContract.EXTRA_ERROR) ?: UNAVAILABLE,
+				data?.getString(PushContract.EXTRA_ERROR) ?: PushContract.ERROR_UNAVAILABLE,
 				data?.getString(PushContract.EXTRA_ERROR_DETAIL),
 			)
-			else -> FcmOutcome.Failed(UNAVAILABLE, null)
+			what == PushContract.MSG_GET_TOKEN && reply.what == PushContract.MSG_TOKEN && !token.isNullOrEmpty() ->
+				FcmOutcome.Token(token)
+			what == PushContract.MSG_DELETE_TOKEN && reply.what == PushContract.MSG_DELETED -> FcmOutcome.Deleted
+			else -> FcmOutcome.Failed(PushContract.ERROR_UNAVAILABLE, null)
 		}
 	}
 
@@ -84,8 +86,5 @@ class FcmRequest(
 
 	private companion object {
 		const val TIMEOUT_MS = 20_000L
-		const val UNAVAILABLE = "fcm-unavailable"
-		const val REFUSED = "fcm-refused"
-		const val TIMED_OUT = "fcm-timed-out"
 	}
 }

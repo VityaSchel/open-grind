@@ -1,14 +1,19 @@
 #[cfg(target_os = "android")]
-#[path = "android.rs"]
-mod backend;
-#[cfg(not(target_os = "android"))]
-#[path = "unsupported.rs"]
-mod backend;
+mod android;
 mod error;
+#[cfg(test)]
+mod pins;
+#[cfg(not(target_os = "android"))]
+mod unsupported;
 
 #[cfg(target_os = "android")]
-pub use backend::plugin;
+pub use android::plugin;
 pub use error::PushError;
+
+#[cfg(target_os = "android")]
+use android as backend;
+#[cfg(not(target_os = "android"))]
+use unsupported as backend;
 
 use std::time::Duration;
 
@@ -39,29 +44,10 @@ pub struct PushCategory {
 #[serde(rename_all = "kebab-case")]
 pub enum NotificationPermissionState {
 	Granted,
-	Denied,
 	Prompt,
 	PromptWithRationale,
-}
-
-impl NotificationPermissionState {
-	pub fn wire(self) -> &'static str {
-		match self {
-			Self::Granted => "granted",
-			Self::Denied => "denied",
-			Self::Prompt => "prompt",
-			Self::PromptWithRationale => "prompt-with-rationale",
-		}
-	}
-
-	pub fn of(wire: &str) -> Self {
-		match wire {
-			"granted" => Self::Granted,
-			"prompt" => Self::Prompt,
-			"prompt-with-rationale" => Self::PromptWithRationale,
-			_ => Self::Denied,
-		}
-	}
+	#[serde(other)]
+	Denied,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -74,23 +60,18 @@ pub struct NotificationPermission {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PushMode {
-	Slow,
 	Fast,
+	Slow,
 }
 
+#[cfg(test)]
 impl PushMode {
-	pub fn wire(self) -> &'static str {
-		match self {
-			Self::Slow => "slow",
-			Self::Fast => "fast",
-		}
-	}
-
-	pub fn of(wire: &str) -> Self {
-		match wire {
-			"fast" => Self::Fast,
-			_ => Self::Slow,
-		}
+	pub fn wire(self) -> String {
+		serde_json::to_value(self)
+			.unwrap()
+			.as_str()
+			.unwrap()
+			.to_owned()
 	}
 }
 
@@ -269,34 +250,43 @@ mod tests {
 		assert_eq!(split.token, token);
 	}
 
+	fn decoded<T: serde::de::DeserializeOwned>(wire: &str) -> T {
+		serde_json::from_value(serde_json::json!(wire)).unwrap()
+	}
+
 	#[test]
 	fn every_mode_survives_the_trip_to_the_frontend_and_back() {
-		for mode in [PushMode::Slow, PushMode::Fast] {
-			let wire = serde_json::to_value(mode).unwrap();
-			assert_eq!(wire, serde_json::json!(mode.wire()));
-			assert_eq!(PushMode::of(mode.wire()), mode);
-			assert_eq!(serde_json::from_value::<PushMode>(wire).unwrap(), mode);
+		for (mode, wire) in [(PushMode::Slow, "slow"), (PushMode::Fast, "fast")]
+		{
+			assert_eq!(serde_json::to_value(mode).unwrap(), wire);
+			assert_eq!(decoded::<PushMode>(wire), mode);
 		}
 	}
 
 	#[test]
-	fn a_mode_open_grind_does_not_know_falls_back_to_the_safe_one() {
+	fn a_mode_open_grind_does_not_know_is_refused_rather_than_guessed() {
 		for wire in ["", "off", "FAST", "instant"] {
-			assert_eq!(PushMode::of(wire), PushMode::Slow);
+			assert!(
+				serde_json::from_value::<PushMode>(serde_json::json!(wire))
+					.is_err(),
+				"{wire:?} was accepted as a mode"
+			);
 		}
 	}
 
 	#[test]
 	fn every_permission_state_survives_the_trip_to_the_frontend_and_back() {
-		for state in [
-			NotificationPermissionState::Granted,
-			NotificationPermissionState::Denied,
-			NotificationPermissionState::Prompt,
-			NotificationPermissionState::PromptWithRationale,
+		for (state, wire) in [
+			(NotificationPermissionState::Granted, "granted"),
+			(NotificationPermissionState::Denied, "denied"),
+			(NotificationPermissionState::Prompt, "prompt"),
+			(
+				NotificationPermissionState::PromptWithRationale,
+				"prompt-with-rationale",
+			),
 		] {
-			let wire = serde_json::to_value(state).unwrap();
-			assert_eq!(wire, serde_json::json!(state.wire()));
-			assert_eq!(NotificationPermissionState::of(state.wire()), state);
+			assert_eq!(serde_json::to_value(state).unwrap(), wire);
+			assert_eq!(decoded::<NotificationPermissionState>(wire), state);
 		}
 	}
 
@@ -304,20 +294,24 @@ mod tests {
 	fn a_permission_state_android_invents_later_counts_as_denied() {
 		for wire in ["", "GRANTED", "ask", "prompt_with_rationale"] {
 			assert_eq!(
-				NotificationPermissionState::of(wire),
+				decoded::<NotificationPermissionState>(wire),
 				NotificationPermissionState::Denied
 			);
 		}
 	}
 
 	#[test]
-	fn the_signal_reaches_the_frontend_with_camel_case_keys() {
-		let json = serde_json::to_value(PushSignal {
-			deeplink_pending: true,
-			token_changed: false,
-		})
+	fn the_plugin_permission_answer_decodes_whole() {
+		let permission: NotificationPermission = serde_json::from_value(
+			serde_json::json!({ "granted": false, "state": "prompt-with-rationale" }),
+		)
 		.unwrap();
-		assert_eq!(json["deeplinkPending"], true);
-		assert_eq!(json["tokenChanged"], false);
+		assert_eq!(
+			permission,
+			NotificationPermission {
+				granted: false,
+				state: NotificationPermissionState::PromptWithRationale,
+			}
+		);
 	}
 }

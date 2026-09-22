@@ -7,6 +7,8 @@ enum class PushKind {
 	Tap,
 }
 
+private fun tapId(dedupeKey: String) = dedupeKey.hashCode()
+
 sealed interface PushDecision {
 	data class Notify(
 		val kind: PushKind,
@@ -14,27 +16,39 @@ sealed interface PushDecision {
 		val groupKey: String?,
 		val title: String,
 		val body: String,
-		val imageUrl: String?,
 		val deeplink: String,
 		val senderId: String?,
 		val timestamp: Long,
-	) : PushDecision
+	) : PushDecision {
+		val postedId: Int
+			get() = when (kind) {
+				PushKind.Message -> (groupKey ?: dedupeKey).hashCode()
+				PushKind.Tap -> tapId(dedupeKey)
+			}
+	}
 
 	data class DismissSender(val senderIds: List<String>) : PushDecision
 
-	data class DismissNotification(val dedupeKey: String) : PushDecision
+	data class DismissConversation(val conversationId: String) : PushDecision {
+		val postedId: Int
+			get() = conversationId.hashCode()
+	}
+
+	data class DismissNotification(val dedupeKey: String) : PushDecision {
+		val tapPostedId: Int
+			get() = tapId(dedupeKey)
+	}
 
 	data object Ignore : PushDecision
 }
 
 object PushPayload {
-	const val CONVERSATION_DEEPLINK = "grindr://conversation"
-	const val TAPS_DEEPLINK = "grindr://taps-inbox"
-
 	private const val VERSION_2 = "2"
 	private const val DEEPLINK_PREFIX = "grindr://"
 	private const val CLEAR_DEEPLINK = "grindr://clear"
 	private const val UNSEND_DEEPLINK = "grindr://unsend"
+	private const val CONVERSATION_DEEPLINK = "grindr://conversation"
+	private const val TAPS_DEEPLINK = "grindr://taps-inbox"
 	private const val FAVORITE_DEEPLINK = "grindr://favorite-profile"
 
 	private const val CHATS_CHANNEL = "id_grindr_notifications_channel_individual_v2"
@@ -53,7 +67,11 @@ object PushPayload {
 		if (!action.startsWith(DEEPLINK_PREFIX, ignoreCase = true)) return PushDecision.Ignore
 		val target = action.substringBefore('?').trimEnd('/').lowercase()
 
-		if (target == CLEAR_DEEPLINK) return dismissSender(action)
+		if (target == CLEAR_DEEPLINK) {
+			return queryParameter(action, "conversationId")
+				?.let(PushDecision::DismissConversation)
+				?: dismissSender(action)
+		}
 		if (target == UNSEND_DEEPLINK) return dismissNotification(action)
 
 		val kind = kindOf(target, data["channel"]) ?: return PushDecision.Ignore
@@ -75,7 +93,6 @@ object PushPayload {
 				PushStrings.SOMEONE,
 			) ?: PushStrings.SOMEONE,
 			body = body,
-			imageUrl = data["imageUrl"]?.takeIf(String::isNotBlank),
 			deeplink = action,
 			senderId = data["senderId"]?.takeIf(String::isNotBlank),
 			timestamp = data["timestamp"]?.toLongOrNull() ?: fallbackTimestamp,
@@ -86,7 +103,7 @@ object PushPayload {
 		trackingKeys.any(data::containsKey) ||
 			campaignKeys.any { key -> data[key]?.let { it != DIRECT_CAMPAIGN } == true }
 
-	fun queryParameter(action: String, name: String): String? =
+	private fun queryParameter(action: String, name: String): String? =
 		action.substringAfter('?', "")
 			.split('&')
 			.firstOrNull { it.substringBefore('=') == name }

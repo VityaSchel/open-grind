@@ -3,8 +3,7 @@ use std::fmt;
 use serde::Serialize;
 
 use crate::error::AppError;
-
-const MAX_DETAIL_CHARS: usize = 64;
+use crate::plugin_rejection::error_name;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "reason", content = "detail")]
@@ -25,7 +24,6 @@ pub enum PushError {
 
 impl PushError {
 	pub fn from_rejection(marker: Option<&str>, detail: Option<&str>) -> Self {
-		let name = || detail.filter(|d| is_error_name(d)).map(str::to_owned);
 		match marker {
 			Some("fcm-unavailable") => Self::AddonUnavailable,
 			Some("fcm-disabled") => Self::AddonDisabled,
@@ -34,8 +32,8 @@ impl PushError {
 			Some("untrusted-caller") => Self::UntrustedCaller,
 			Some("fcm-timed-out") => Self::TimedOut,
 			Some("firebase-unavailable") => Self::FirebaseUnavailable,
-			Some("token-failed") => Self::TokenFailed(name()),
-			Some("delete-failed") => Self::DeleteFailed(name()),
+			Some("token-failed") => Self::TokenFailed(error_name(detail)),
+			Some("delete-failed") => Self::DeleteFailed(error_name(detail)),
 			_ => Self::Failed,
 		}
 	}
@@ -46,13 +44,6 @@ impl PushError {
 			Self::TimedOut | Self::TokenFailed(_) | Self::FirebaseUnavailable
 		)
 	}
-}
-
-fn is_error_name(detail: &str) -> bool {
-	(1..=MAX_DETAIL_CHARS).contains(&detail.len())
-		&& detail
-			.bytes()
-			.all(|b| b.is_ascii_alphanumeric() || b == b'_')
 }
 
 impl fmt::Display for PushError {
@@ -107,7 +98,7 @@ mod tests {
 	}
 
 	#[test]
-	fn a_token_failure_keeps_the_firebase_exception_name() {
+	fn a_token_or_delete_failure_keeps_the_firebase_exception_name() {
 		assert_eq!(
 			PushError::from_rejection(
 				Some("token-failed"),
@@ -115,17 +106,25 @@ mod tests {
 			),
 			PushError::TokenFailed(Some("IOException".to_owned()))
 		);
+		assert_eq!(
+			PushError::from_rejection(
+				Some("delete-failed"),
+				Some("IOException")
+			),
+			PushError::DeleteFailed(Some("IOException".to_owned()))
+		);
+		assert_eq!(
+			PushError::from_rejection(Some("token-failed"), Some("has space")),
+			PushError::TokenFailed(None)
+		);
 	}
 
 	#[test]
-	fn a_detail_that_is_not_an_exception_name_is_dropped() {
-		let too_long = "A".repeat(MAX_DETAIL_CHARS + 1);
-		for detail in ["", "has space", "a:b", too_long.as_str()] {
-			assert_eq!(
-				PushError::from_rejection(Some("token-failed"), Some(detail)),
-				PushError::TokenFailed(None)
-			);
-		}
+	fn the_detail_only_travels_with_a_token_or_delete_failure() {
+		assert_eq!(
+			PushError::from_rejection(Some("fcm-refused"), Some("IOException")),
+			PushError::AddonRefused
+		);
 	}
 
 	#[test]

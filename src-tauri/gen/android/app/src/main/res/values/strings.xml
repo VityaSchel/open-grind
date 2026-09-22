@@ -13,6 +13,7 @@
 	<string name="addon_name_fcm">FCM service</string>
 	<string name="addon_name_generic">add-on</string>
 	<string name="media_upload_transfer_title">Uploading media</string>
-	<string name="push_channel_messages">Messages</string>
+	<string name="push_channel_messages">New messages</string>
 	<string name="push_channel_taps">Received taps</string>
+	<string name="push_self">You</string>
 </resources>

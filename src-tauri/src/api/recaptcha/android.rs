@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use tauri::plugin::mobile::PluginInvokeError;
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
 use super::{RecaptchaAction, RecaptchaError};
+use crate::plugin_rejection::classify;
 
 struct AndroidRecaptcha {
 	handle: PluginHandle<Wry>,
@@ -49,18 +49,6 @@ pub async fn mint_token(
 			},
 		)
 		.await
-		.map_err(map_plugin_error)?;
+		.map_err(|error| classify(error, RecaptchaError::from_rejection))?;
 	Ok(response.token)
-}
-
-fn map_plugin_error(error: PluginInvokeError) -> RecaptchaError {
-	match error {
-		PluginInvokeError::InvokeRejected(response) => {
-			RecaptchaError::from_rejection(
-				response.message.as_deref(),
-				response.code.as_deref(),
-			)
-		}
-		_ => RecaptchaError::Failed,
-	}
 }

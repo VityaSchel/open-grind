@@ -14,6 +14,7 @@ impl AppState {
 	}
 }
 
+#[cfg(target_os = "android")]
 pub fn shared() -> Option<grindr::GrindrClient> {
 	SHARED.get().cloned()
 }

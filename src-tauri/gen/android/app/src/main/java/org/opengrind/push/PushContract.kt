@@ -1,5 +1,7 @@
 package org.opengrind.push
 
+import android.content.Intent
+
 object PushContract {
 	const val ADDON_PACKAGE = "org.opengrind.fcm"
 
@@ -19,4 +21,12 @@ object PushContract {
 	const val MSG_TOKEN = 101
 	const val MSG_DELETED = 102
 	const val MSG_ERROR = 103
+
+	const val ERROR_UNAVAILABLE = "fcm-unavailable"
+	const val ERROR_UNTRUSTED = "fcm-untrusted"
+	const val ERROR_DISABLED = "fcm-disabled"
+	const val ERROR_REFUSED = "fcm-refused"
+	const val ERROR_TIMED_OUT = "fcm-timed-out"
+
+	fun bindIntent(): Intent = Intent(ACTION_BIND).setPackage(ADDON_PACKAGE)
 }

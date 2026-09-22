@@ -18,6 +18,9 @@ import app.tauri.plugin.Plugin
 import org.opengrind.addon.AddonGate
 import org.opengrind.addon.AddonLaunchCheck
 
+private const val NOTIFICATION_ALIAS = "postNotification"
+private const val ERROR_SETTINGS_UNAVAILABLE = "settings-unavailable"
+
 @InvokeArg
 internal class WatchArgs {
 	lateinit var onEvent: Channel
@@ -43,12 +46,11 @@ internal class CategoryArgs {
 	permissions = [
 		Permission(
 			strings = [Manifest.permission.POST_NOTIFICATIONS],
-			alias = PushPlugin.NOTIFICATION_ALIAS,
+			alias = NOTIFICATION_ALIAS,
 		),
 	],
 )
 class PushPlugin(private val activity: Activity) : Plugin(activity) {
-
 	override fun load(webView: WebView) {
 		super.load(webView)
 		offerDeeplink(activity.intent)
@@ -61,61 +63,31 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	fun addonReady(invoke: Invoke) = gated(invoke) { invoke.resolve() }
 
 	@Command
-	fun token(invoke: Invoke) = gated(invoke) {
-		FcmRequest(activity, PushContract.MSG_GET_TOKEN) { outcome ->
-			when (outcome) {
-				is FcmOutcome.Token -> invoke.resolve(JSObject().apply { put("token", outcome.token) })
-				is FcmOutcome.Failed -> invoke.reject(outcome.marker, outcome.detail)
-				else -> invoke.reject(ERROR_UNAVAILABLE)
-			}
-		}.send()
-	}
+	fun token(invoke: Invoke) = gated(invoke) { askAddon(invoke, PushContract.MSG_GET_TOKEN) }
 
 	@Command
-	fun deleteToken(invoke: Invoke) = gated(invoke) {
-		PushNotifier.cancelAll(activity)
-		FcmRequest(activity, PushContract.MSG_DELETE_TOKEN) { outcome ->
-			when (outcome) {
-				FcmOutcome.Deleted -> invoke.resolve()
-				is FcmOutcome.Failed -> invoke.reject(outcome.marker, outcome.detail)
-				else -> invoke.reject(ERROR_UNAVAILABLE)
-			}
-		}.send()
-	}
+	fun deleteToken(invoke: Invoke) = gated(invoke) { askAddon(invoke, PushContract.MSG_DELETE_TOKEN) }
 
 	@Command
-	fun notificationsEnabled(invoke: Invoke) {
-		invoke.resolve(
-			JSObject().apply {
-				put("enabled", PushSettings.notificationsEnabled(activity))
-			},
-		)
-	}
+	fun notificationsEnabled(invoke: Invoke) =
+		invoke.resolve(JSObject().apply { put("enabled", PushSettings.notificationsEnabled(activity)) })
 
 	@Command
 	fun setNotificationsEnabled(invoke: Invoke) {
 		val enabled = invoke.parseArgs(EnabledArgs::class.java).enabled
 		PushSettings.setNotificationsEnabled(activity, enabled)
-		if (enabled) {
-			PushNotifier.createChannels(activity)
-		} else {
-			PushNotifier.cancelAll(activity)
-			PushSettings.setWatermark(activity, 0L)
-		}
+		if (enabled) PushNotifier.createChannels(activity) else PushNotifier.cancelAll(activity)
 		PushSchedule.follow(activity, PushSettings.mode(activity))
 		invoke.resolve()
 	}
 
 	@Command
-	fun openNotificationSettings(invoke: Invoke) {
-		PushNotifier.openAppNotificationSettings(activity)
-		invoke.resolve()
-	}
+	fun openNotificationSettings(invoke: Invoke) =
+		settingsOpened(invoke, PushNotifier.openAppNotificationSettings(activity))
 
 	@Command
-	fun mode(invoke: Invoke) {
+	fun mode(invoke: Invoke) =
 		invoke.resolve(JSObject().apply { put("mode", PushSettings.mode(activity).wire) })
-	}
 
 	@Command
 	fun setMode(invoke: Invoke) {
@@ -143,51 +115,41 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	@Command
 	fun setCategory(invoke: Invoke) {
 		val args = invoke.parseArgs(CategoryArgs::class.java)
-		val kind = PushCategories.kindOf(args.category)
-		if (kind == null) {
-			invoke.reject("unknown category")
-			return
+		withCategory(invoke, args.category) { kind ->
+			PushSettings.setCategoryEnabled(activity, kind, args.enabled)
+			if (!args.enabled) PushNotifier.cancelCategory(activity, kind)
+			invoke.resolve()
 		}
-		PushSettings.setCategoryEnabled(activity, kind, args.enabled)
-		if (!args.enabled) PushNotifier.cancelCategory(activity, kind)
-		invoke.resolve()
 	}
 
 	@Command
-	fun openCategorySettings(invoke: Invoke) {
-		val kind = PushCategories.kindOf(
-			invoke.parseArgs(CategoryArgs::class.java).category,
-		)
-		if (kind == null) {
-			invoke.reject("unknown category")
-			return
+	fun openCategorySettings(invoke: Invoke) =
+		withCategory(invoke, invoke.parseArgs(CategoryArgs::class.java).category) { kind ->
+			PushNotifier.createChannels(activity)
+			settingsOpened(invoke, PushNotifier.openChannelSettings(activity, kind))
 		}
-		PushNotifier.createChannels(activity)
-		PushNotifier.openChannelSettings(activity, kind)
-		invoke.resolve()
-	}
-
-	@Command
-	fun notificationPermission(invoke: Invoke) = resolvePermission(invoke)
 
 	@Command
 	fun requestNotificationPermission(invoke: Invoke) {
-		val runtimeGrantNeeded = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-			!PushNotifier.notificationsPermitted(activity)
-		if (runtimeGrantNeeded) {
-			requestPermissionForAlias(NOTIFICATION_ALIAS, invoke, "resolvePermission")
-		} else {
-			resolvePermission(invoke)
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || PushNotifier.notificationsPermitted(activity)) {
+			return notificationPermission(invoke)
 		}
+		requestPermissionForAlias(NOTIFICATION_ALIAS, invoke, "notificationPermission")
 	}
 
+	@Command
 	@PermissionCallback
-	fun resolvePermission(invoke: Invoke) {
-		val granted = PushNotifier.notificationsPermitted(activity)
+	fun notificationPermission(invoke: Invoke) {
+		val permitted = PushNotifier.notificationsPermitted(activity)
+		val state = NotificationPermission.stateOf(
+			sdk = Build.VERSION.SDK_INT,
+			permitted = permitted,
+			pluginState = getPermissionState(NOTIFICATION_ALIAS)?.toString(),
+		)
 		invoke.resolve(
 			JSObject().apply {
-				put("granted", granted)
-				put("state", if (granted) STATE_GRANTED else deniedState())
+				put("granted", permitted)
+				put("state", state)
 			},
 		)
 	}
@@ -199,15 +161,8 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	}
 
 	@Command
-	fun takeDeeplink(invoke: Invoke) {
+	fun takeDeeplink(invoke: Invoke) =
 		invoke.resolve(JSObject().apply { put("deeplink", PushEvents.takeDeeplink()) })
-	}
-
-	private fun deniedState(): String {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return STATE_DENIED
-		val state = getPermissionState(NOTIFICATION_ALIAS)?.toString()
-		return if (state == null || state == STATE_GRANTED) STATE_DENIED else state
-	}
 
 	private fun offerDeeplink(intent: Intent?) {
 		val deeplink = intent?.getStringExtra(PushNotifier.EXTRA_DEEPLINK) ?: return
@@ -216,25 +171,29 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	}
 
 	private fun gated(invoke: Invoke, run: () -> Unit) {
-		val intent = Intent(PushContract.ACTION_BIND).setPackage(ADDON_PACKAGE)
-		when (AddonLaunchCheck.decideService(activity, intent, ADDON_PACKAGE)) {
+		when (AddonLaunchCheck.decideService(activity, PushContract.bindIntent(), PushContract.ADDON_PACKAGE)) {
 			AddonGate.Verdict.Launch -> run()
-			AddonGate.Verdict.Unavailable -> invoke.reject(ERROR_UNAVAILABLE)
-			AddonGate.Verdict.Disabled -> invoke.reject(ERROR_DISABLED)
-			AddonGate.Verdict.Untrusted -> invoke.reject(ERROR_UNTRUSTED)
+			AddonGate.Verdict.Unavailable -> invoke.reject(PushContract.ERROR_UNAVAILABLE)
+			AddonGate.Verdict.Disabled -> invoke.reject(PushContract.ERROR_DISABLED)
+			AddonGate.Verdict.Untrusted -> invoke.reject(PushContract.ERROR_UNTRUSTED)
 		}
 	}
 
-	internal companion object {
-		const val NOTIFICATION_ALIAS = "postNotification"
+	private fun withCategory(invoke: Invoke, category: String, run: (PushKind) -> Unit) {
+		val kind = PushCategories.kindOf(category) ?: return invoke.reject("unknown category")
+		run(kind)
+	}
 
-		const val STATE_GRANTED = "granted"
-		const val STATE_DENIED = "denied"
+	private fun settingsOpened(invoke: Invoke, opened: Boolean) =
+		if (opened) invoke.resolve() else invoke.reject(ERROR_SETTINGS_UNAVAILABLE)
 
-		const val ADDON_PACKAGE = "org.opengrind.fcm"
-
-		const val ERROR_UNAVAILABLE = "fcm-unavailable"
-		const val ERROR_UNTRUSTED = "fcm-untrusted"
-		const val ERROR_DISABLED = "fcm-disabled"
+	private fun askAddon(invoke: Invoke, what: Int) {
+		FcmRequest(activity, what) { outcome ->
+			when (outcome) {
+				is FcmOutcome.Token -> invoke.resolve(JSObject().apply { put("token", outcome.token) })
+				FcmOutcome.Deleted -> invoke.resolve()
+				is FcmOutcome.Failed -> invoke.reject(outcome.marker, outcome.detail)
+			}
+		}.send()
 	}
 }

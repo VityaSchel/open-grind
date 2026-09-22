@@ -1,6 +1,7 @@
 package org.opengrind.push
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class PushPayloadTest {
@@ -16,6 +17,23 @@ class PushPayloadTest {
 		"senderId" to "111",
 		"timestamp" to "1699999999000",
 	) + extra
+
+	private fun tap(vararg extra: Pair<String, String>) = message(
+		"notificationId" to "poll:tap:222",
+		"channel" to "id_grindr_notifications_channel_tap_v2",
+		"action" to "grindr://taps-inbox",
+		"body" to "TAP_NOTIFICATION_BODY",
+		"translateBody" to "true",
+		"senderId" to "222",
+		*extra,
+	)
+
+	private fun readElsewhere(conversationId: String) = mapOf(
+		"version" to "2",
+		"notificationId" to "poll:clear:$conversationId",
+		"action" to "grindr://clear?conversationId=$conversationId",
+		"timestamp" to "1699999999000",
+	)
 
 	private fun decide(data: Map<String, String>) = PushPayload.decide(data, now)
 
@@ -90,11 +108,58 @@ class PushPayloadTest {
 	}
 
 	@Test
+	fun `a clear push naming a tapper still withdraws their tap`() {
+		val decision = decide(
+			tap("action" to "grindr://clear?profileIds=222"),
+		) as PushDecision.DismissSender
+		assertEquals(listOf("222"), decision.senderIds)
+	}
+
+	@Test
+	fun `a chat read elsewhere withdraws only that chat, never the peer's taps`() {
+		assertEquals(
+			PushDecision.DismissConversation("111:222"),
+			decide(readElsewhere("111:222")),
+		)
+	}
+
+	@Test
+	fun `a chat read elsewhere withdraws the very notification its messages were posted under`() {
+		val posted = decide(message()) as PushDecision.Notify
+		val cleared = decide(readElsewhere(posted.groupKey!!)) as PushDecision.DismissConversation
+		assertEquals(posted.postedId, cleared.postedId)
+	}
+
+	@Test
+	fun `messages share one notification per conversation while taps stay apart`() {
+		val first = decide(message()) as PushDecision.Notify
+		val second = decide(message("notificationId" to "n-2")) as PushDecision.Notify
+		assertEquals(first.postedId, second.postedId)
+		val firstTap = decide(tap()) as PushDecision.Notify
+		val secondTap = decide(tap("notificationId" to "poll:tap:333")) as PushDecision.Notify
+		assertFalse(firstTap.postedId == secondTap.postedId)
+	}
+
+	@Test
+	fun `a clear push naming nobody is ignored`() {
+		assertEquals(PushDecision.Ignore, decide(message("action" to "grindr://clear?profileIds=")))
+	}
+
+	@Test
 	fun `an unsend push withdraws the one notification it names`() {
 		val decision = decide(
 			message("action" to "grindr://unsend?notificationId=n-9"),
 		) as PushDecision.DismissNotification
 		assertEquals("n-9", decision.dedupeKey)
+	}
+
+	@Test
+	fun `an unsend naming a tap withdraws the very notification the tap was posted under`() {
+		val posted = decide(tap()) as PushDecision.Notify
+		val unsent = decide(
+			message("action" to "grindr://unsend?notificationId=" + posted.dedupeKey),
+		) as PushDecision.DismissNotification
+		assertEquals(posted.postedId, unsent.tapPostedId)
 	}
 
 	@Test

@@ -258,6 +258,20 @@ mod tests {
 	}
 
 	#[test]
+	fn the_fcm_addon_is_its_own_package_and_release_track() {
+		assert!(!FCM.is_self());
+		assert_eq!(FCM.install_target(), "org.opengrind.fcm");
+		assert_eq!(
+			FCM.index_path,
+			"api/v1/repos/open-grind/fcm-service/releases?limit=3&draft=false"
+		);
+		assert_eq!(
+			FCM.payload_name("v1.0.1", universal_token("android").unwrap()),
+			"open-grind-fcm-service-v1.0.1-android.apk"
+		);
+	}
+
+	#[test]
 	fn the_published_names_compose_into_the_assets_that_exist() {
 		assert_eq!(
 			GOOGLE_OAUTH.payload_name(

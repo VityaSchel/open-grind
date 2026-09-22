@@ -184,17 +184,17 @@ pub use platform::{
 
 #[cfg(test)]
 mod pins {
-	use std::ops::Range;
-
 	use super::{suffix_for, Unsupported};
+	use crate::pin_support::{
+		addon_gate_verdicts, assert_rejections_classify_as, braced_block,
+		is_identifier, kotlin_constant, kotlin_package, source_tokens,
+		spaced_match, squashed, ADDON_GATE, MANIFEST,
+	};
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
 	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
 	const GATE: &str = include_str!(
 		"../../../../android-logic/src/main/kotlin/org/opengrind/update/InstallGate.kt"
-	);
-	const MANIFEST: &str = include_str!(
-		"../../../../gen/android/app/src/main/AndroidManifest.xml"
 	);
 	const PLAY_OVERLAY: &str = include_str!(
 		"../../../../gen/android/app/src/play/AndroidManifest.xml"
@@ -239,10 +239,6 @@ mod pins {
 		"../../../../gen/android/app/src/main/java/org/opengrind/update/TransferService.kt"
 	);
 
-	const ADDON_GATE: &str = include_str!(
-		"../../../../android-logic/src/main/kotlin/org/opengrind/addon/AddonGate.kt"
-	);
-
 	const RECAPTCHA_PLUGIN: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/recaptcha/RecaptchaPlugin.kt"
 	);
@@ -251,46 +247,6 @@ mod pins {
 
 	const MINT_TOKEN_PERMISSION: &str =
 		"org.opengrind.recaptcha.permission.MINT_TOKEN";
-
-	const PUSH_PLUGIN: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPlugin.kt"
-	);
-
-	const PUSH_CONTRACT: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushContract.kt"
-	);
-
-	const PUSH_BRIDGE: &str = include_str!("../../push/android.rs");
-
-	const PUSH_POLL: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPoll.kt"
-	);
-
-	const PUSH_POLL_BRIDGE: &str =
-		include_str!("../../../push_poll/android.rs");
-
-	const PUSH_MODE_KT: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushMode.kt"
-	);
-
-	const PUSH_SCHEDULE: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushSchedule.kt"
-	);
-
-	const PUSH_NOTIFIER_KT: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushNotifier.kt"
-	);
-
-	const PUSH_POLL_SERVICE: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/push/PushPollService.kt"
-	);
-
-	const PUSH_CATEGORIES_KT: &str = include_str!(
-		"../../../../android-logic/src/main/kotlin/org/opengrind/push/PushCategories.kt"
-	);
-
-	const PUSH_TYPES_TS: &str =
-		include_str!("../../../../../src/lib/push/types.ts");
 
 	const ADDON_NAMES: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/addon/AddonNames.kt"
@@ -313,20 +269,6 @@ mod pins {
 	const REQUEST_TOKEN_ACTION: &str =
 		"org.opengrind.google_oauth.action.REQUEST_TOKEN";
 	const TOKEN_EXTRA: &str = "org.opengrind.google_oauth.extra.TOKEN";
-
-	fn squashed(source: &str) -> String {
-		source.split_whitespace().collect()
-	}
-
-	fn kotlin_constant<'a>(source: &'a str, file: &str, name: &str) -> &'a str {
-		let start = spaced_match(source, &format!("const val {name} = \""))
-			.unwrap_or_else(|| panic!("{file} no longer declares {name}"))
-			.end;
-		let length = source[start..]
-			.find('"')
-			.unwrap_or_else(|| panic!("{file} {name} is not a string literal"));
-		&source[start..start + length]
-	}
 
 	fn bridge_function(name: &str) -> &'static str {
 		let start = ANDROID_BRIDGE
@@ -375,98 +317,6 @@ mod pins {
 			.unwrap_or_else(|| {
 				panic!("the manifest has no <{tag}> named {name}")
 			})
-	}
-
-	fn source_tokens(source: &str) -> Vec<&str> {
-		let mut tokens = Vec::new();
-		let mut word_start = None;
-		for (at, character) in source.char_indices() {
-			match (is_identifier(character), word_start) {
-				(true, None) => word_start = Some(at),
-				(false, Some(start)) => {
-					tokens.push(&source[start..at]);
-					word_start = None;
-				}
-				_ => {}
-			}
-			if !is_identifier(character) && !character.is_whitespace() {
-				tokens.push(&source[at..at + character.len_utf8()]);
-			}
-		}
-		if let Some(start) = word_start {
-			tokens.push(&source[start..]);
-		}
-		tokens
-	}
-
-	fn spaced_match(source: &str, header: &str) -> Option<Range<usize>> {
-		let tokens = source_tokens(header);
-		let first = *tokens.first()?;
-		source.match_indices(first).find_map(|(start, _)| {
-			if first.starts_with(is_identifier)
-				&& source[..start].ends_with(is_identifier)
-			{
-				return None;
-			}
-			let mut end = start;
-			for token in &tokens {
-				let rest = &source[end..];
-				let token_start = end + rest.len() - rest.trim_start().len();
-				if !source[token_start..].starts_with(token) {
-					return None;
-				}
-				end = token_start + token.len();
-				if token.starts_with(is_identifier)
-					&& source[end..].starts_with(is_identifier)
-				{
-					return None;
-				}
-			}
-			Some(start..end)
-		})
-	}
-
-	#[test]
-	fn a_spaced_match_ignores_layout_but_not_names() {
-		let source = "fun installPending(invoke: Invoke) {}\n\tfun install (\n\t\tinvoke : Invoke\n\t) {}";
-		let found = spaced_match(source, "fun install(invoke: Invoke)")
-			.expect("a reformatted declaration is still the declaration");
-		assert!(source[found].starts_with("fun install ("));
-		assert_eq!(spaced_match(source, "fun instal(invoke: Invoke)"), None);
-		assert_eq!(
-			spaced_match("funinstall(invoke: Invoke)", "fun install("),
-			None
-		);
-		assert_eq!(
-			spaced_match("class InstallArgsX", "class InstallArgs"),
-			None
-		);
-		assert_eq!(
-			spaced_match("internalclass InstallArgs", "class InstallArgs"),
-			None
-		);
-	}
-
-	fn braced_block<'a>(source: &'a str, file: &str, header: &str) -> &'a str {
-		let open = spaced_match(source, header)
-			.and_then(|found| {
-				source[found.end..].find('{').map(|brace| found.end + brace)
-			})
-			.unwrap_or_else(|| panic!("{file} no longer declares {header}"));
-		let mut depth = 0;
-		for (offset, character) in source[open..].char_indices() {
-			match character {
-				'{' => depth += 1,
-				'}' => {
-					depth -= 1;
-					if depth == 0 {
-						return &source[open + 1..open + offset];
-					}
-				}
-				_ => {}
-			}
-		}
-		panic!("{file} {header} has no closing brace")
 	}
 
 	fn gate_verdicts() -> Vec<String> {
@@ -708,10 +558,6 @@ mod pins {
 				"UpdatePlugin has no @Command named {command}"
 			);
 		}
-	}
-
-	fn is_identifier(character: char) -> bool {
-		character.is_alphanumeric() || character == '_'
 	}
 
 	fn declaration_at(source: &str, file: &str, header: &str) -> usize {
@@ -1090,14 +936,6 @@ mod pins {
 		}
 	}
 
-	fn gate_verdict_names() -> Vec<&'static str> {
-		braced_block(ADDON_GATE, "AddonGate.kt", "enum class Verdict")
-			.split(',')
-			.map(str::trim)
-			.filter(|name| !name.is_empty())
-			.collect()
-	}
-
 	#[test]
 	fn add_ons_are_trusted_by_their_pinned_release_certificate_whoever_signed_this_build(
 	) {
@@ -1123,34 +961,22 @@ mod pins {
 			.is_some(),
 			"AddonGate.kt no longer pins the add-on signer to InstallGate.RELEASE_CERT_SHA256"
 		);
-		for (file, plugin, call) in [
-			(
-				"GoogleOauthPlugin.kt",
-				SIGN_IN_PLUGIN,
-				"AddonLaunchCheck.decide(activity, intent, COMPANION_PACKAGE)",
-			),
-			(
-				"RecaptchaPlugin.kt",
-				RECAPTCHA_PLUGIN,
-				"AddonLaunchCheck.decide(activity, intent, ADDON_PACKAGE)",
-			),
-			(
-				"PushPlugin.kt",
-				PUSH_PLUGIN,
-				"AddonLaunchCheck.decideService(activity, intent, ADDON_PACKAGE)",
-			),
+		for (file, plugin, package) in [
+			("GoogleOauthPlugin.kt", SIGN_IN_PLUGIN, "COMPANION_PACKAGE"),
+			("RecaptchaPlugin.kt", RECAPTCHA_PLUGIN, "ADDON_PACKAGE"),
 		] {
 			assert!(
-				squashed(plugin)
-					.contains(&squashed(&format!("when ({call})"))),
-				"{file} no longer checks its add-on through AddonLaunchCheck before sending it the request"
+				squashed(plugin).contains(&squashed(&format!(
+					"when (AddonLaunchCheck.decide(activity, intent, {package}))"
+				))),
+				"{file} no longer checks {package} through AddonLaunchCheck before sending it the request"
 			);
 		}
 	}
 
 	#[test]
 	fn every_addon_plugin_answers_every_gate_verdict() {
-		let verdicts = gate_verdict_names();
+		let verdicts = addon_gate_verdicts();
 		assert!(
 			verdicts.contains(&"Launch") && verdicts.len() > 1,
 			"AddonGate.Verdict was not parsed: {verdicts:?}"
@@ -1158,7 +984,6 @@ mod pins {
 		for (file, plugin) in [
 			("GoogleOauthPlugin.kt", SIGN_IN_PLUGIN),
 			("RecaptchaPlugin.kt", RECAPTCHA_PLUGIN),
-			("PushPlugin.kt", PUSH_PLUGIN),
 		] {
 			let plugin = squashed(plugin);
 			assert!(
@@ -1180,7 +1005,7 @@ mod pins {
 
 		let file = "RecaptchaPlugin.kt";
 		let plugin = squashed(RECAPTCHA_PLUGIN);
-		let refusals = gate_verdict_names()
+		let refusals = addon_gate_verdicts()
 			.into_iter()
 			.filter(|verdict| *verdict != "Launch");
 		for verdict in refusals {
@@ -1230,11 +1055,10 @@ mod pins {
 			),
 			"{file} no longer passes the add-on's error and its detail through"
 		);
-		assert!(
-			squashed(RECAPTCHA_BRIDGE).contains(
-				"RecaptchaError::from_rejection(response.message.as_deref(),response.code.as_deref(),)"
-			),
-			"recaptcha/android.rs no longer classifies the rejection marker with its detail"
+		assert_rejections_classify_as(
+			"recaptcha/android.rs",
+			RECAPTCHA_BRIDGE,
+			"RecaptchaError",
 		);
 	}
 
@@ -1279,244 +1103,13 @@ mod pins {
 			);
 		}
 		let registered = squashed(RECAPTCHA_BRIDGE);
-		let package = RECAPTCHA_PLUGIN
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("RecaptchaPlugin.kt declares no package")
-			.trim();
+		let package = kotlin_package(RECAPTCHA_PLUGIN, file);
 		assert!(
 			registered.contains(&format!(
 				"register_android_plugin(\"{package}\",\"RecaptchaPlugin\",)"
 			)) && spaced_match(RECAPTCHA_PLUGIN, "class RecaptchaPlugin(").is_some(),
 			"recaptcha/android.rs registers a plugin class that {file} does not declare"
 		);
-	}
-
-	#[test]
-	fn the_fcm_push_bridge_matches_the_addon_contract() {
-		use super::super::component;
-
-		let file = "PushPlugin.kt";
-		let addon = component::FCM.install_target();
-		assert_eq!(
-			kotlin_constant(PUSH_PLUGIN, file, "ADDON_PACKAGE"),
-			addon,
-			"{file} ADDON_PACKAGE drifted from the component table"
-		);
-		assert!(
-			MANIFEST.contains(
-				"<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />"
-			),
-			"without POST_NOTIFICATIONS every push notification is dropped on Android 13 and newer"
-		);
-
-		let contract = "PushContract.kt";
-		for (constant, published) in [
-			("ADDON_PACKAGE", "org.opengrind.fcm"),
-			("ACTION_BIND", "org.opengrind.fcm.action.BIND"),
-			("EXTRA_NONCE", "org.opengrind.fcm.extra.NONCE"),
-			("ACTION_MESSAGE", "org.opengrind.fcm.action.MESSAGE"),
-			("ACTION_NEW_TOKEN", "org.opengrind.fcm.action.NEW_TOKEN"),
-			("EXTRA_DATA", "org.opengrind.fcm.extra.DATA"),
-			("EXTRA_SENT_TIME", "org.opengrind.fcm.extra.SENT_TIME"),
-			("EXTRA_TOKEN", "org.opengrind.fcm.extra.TOKEN"),
-			("EXTRA_ERROR", "org.opengrind.fcm.extra.ERROR"),
-			("EXTRA_ERROR_DETAIL", "org.opengrind.fcm.extra.ERROR_DETAIL"),
-		] {
-			assert_eq!(
-				kotlin_constant(PUSH_CONTRACT, contract, constant),
-				published,
-				"{contract} {constant} drifted from the add-on's published contract"
-			);
-		}
-
-		for constant in ["ACTION_MESSAGE", "ACTION_NEW_TOKEN"] {
-			let action = kotlin_constant(PUSH_CONTRACT, contract, constant);
-			assert!(
-				MANIFEST
-					.contains(&format!("<action android:name=\"{action}\" />")),
-				"PushReceiver has no intent filter for {action}, so the add-on's broadcast is dropped"
-			);
-		}
-
-		let package = PUSH_PLUGIN
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("PushPlugin.kt declares no package")
-			.trim();
-		assert!(
-			squashed(PUSH_BRIDGE).contains(&format!(
-				"register_android_plugin(\"{package}\",\"PushPlugin\""
-			)) && spaced_match(PUSH_PLUGIN, "class PushPlugin(").is_some(),
-			"push/android.rs registers a plugin class that {file} does not declare"
-		);
-	}
-
-	#[test]
-	fn the_background_poll_is_reachable_from_the_job_that_runs_it() {
-		let package = PUSH_POLL
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("PushPoll.kt declares no package")
-			.trim();
-		assert!(
-			spaced_match(PUSH_POLL, "external fun nativePoll(").is_some(),
-			"PushPoll.kt no longer declares the native method the poll job calls"
-		);
-		let symbol =
-			format!("Java_{}_PushPoll_nativePoll", package.replace('.', "_"));
-		assert!(
-			PUSH_POLL_BRIDGE.contains(&symbol),
-			"push_poll/android.rs exports no {symbol}, so the poll job would die with UnsatisfiedLinkError"
-		);
-		assert!(
-			squashed(PUSH_POLL)
-				.contains("System.loadLibrary(\"open_grind_lib\")"),
-			"PushPoll.kt no longer loads the library that defines nativePoll"
-		);
-
-		assert!(
-			MANIFEST.contains(
-				"android:name=\"org.opengrind.push.PushPollService\""
-			) && MANIFEST.contains(
-				"android:permission=\"android.permission.BIND_JOB_SERVICE\""
-			),
-			"a JobService Android cannot bind never polls"
-		);
-		assert!(
-			!squashed(PUSH_SCHEDULE).contains("setPersisted(true)")
-				|| MANIFEST.contains(
-					"<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\" />"
-				),
-			"setPersisted(true) throws without RECEIVE_BOOT_COMPLETED"
-		);
-		assert!(
-			!squashed(PUSH_SCHEDULE).contains("setRequiredNetworkType(")
-				|| MANIFEST.contains(
-					"<uses-permission android:name=\"android.permission.ACCESS_NETWORK_STATE\" />"
-				),
-			"a connectivity constraint throws SecurityException on Android 14 without ACCESS_NETWORK_STATE"
-		);
-
-		let envelope = serde_json::to_value(crate::push_poll::Poll::default())
-			.expect("a Poll serializes");
-		for key in envelope
-			.as_object()
-			.expect("a Poll is a JSON object")
-			.keys()
-		{
-			assert!(
-				squashed(PUSH_POLL).contains(&format!("\"{key}\"")),
-				"PushPoll.kt never reads {key}, so every poll would decode to nothing"
-			);
-		}
-	}
-
-	#[test]
-	fn every_notification_mode_is_spelled_the_same_in_all_three_languages() {
-		use crate::api::push::PushMode;
-
-		for mode in [PushMode::Slow, PushMode::Fast] {
-			let wire = mode.wire();
-			let kotlin = format!("{}(\"{wire}\")", {
-				let mut name = wire.to_owned();
-				name[..1].make_ascii_uppercase();
-				name
-			});
-			assert!(
-				squashed(PUSH_MODE_KT).contains(&squashed(&kotlin)),
-				"PushMode.kt has no entry {kotlin}"
-			);
-			assert!(
-				squashed(PUSH_TYPES_TS).contains(&format!("\"{wire}\"")),
-				"types.ts no longer offers the {wire} mode"
-			);
-		}
-	}
-
-	#[test]
-	fn every_notification_category_is_spelled_the_same_in_both_languages() {
-		let kotlin = squashed(PUSH_CATEGORIES_KT);
-		let wires: Vec<&str> = kotlin
-			.split("->\"")
-			.skip(1)
-			.filter_map(|rest| rest.split('"').next())
-			.collect();
-		assert!(!wires.is_empty(), "PushCategories.kt names no categories");
-		for wire in wires {
-			assert!(
-				squashed(PUSH_TYPES_TS).contains(&format!("\"{wire}\"")),
-				"types.ts no longer offers the {wire} category"
-			);
-		}
-	}
-
-	#[test]
-	fn a_muted_category_suppresses_only_new_notifications_never_dismissals() {
-		let notifier = squashed(PUSH_NOTIFIER_KT);
-		let guard =
-			"if(!PushSettings.categoryEnabled(context,decision.kind))return";
-		assert!(
-			notifier.contains(guard),
-			"PushNotifier no longer consults the category preference"
-		);
-		let notify = notifier
-			.split_once("privatefunnotify(")
-			.expect("PushNotifier declares no notify()")
-			.1;
-		assert!(
-			notify.contains(guard),
-			"the category guard left notify(); in apply() it would also swallow the clear and unsend dismissals"
-		);
-	}
-
-	#[test]
-	fn the_master_switch_suppresses_only_new_notifications_never_dismissals() {
-		let notifier = squashed(PUSH_NOTIFIER_KT);
-		let guard = "if(!PushSettings.notificationsEnabled(context))return";
-		assert!(
-			notifier.contains(guard),
-			"PushNotifier no longer consults the master notification switch"
-		);
-		let notify = notifier
-			.split_once("privatefunnotify(")
-			.expect("PushNotifier declares no notify()")
-			.1;
-		assert!(
-			notify.contains(guard),
-			"the master guard left notify(); in apply() it would also swallow the clear and unsend dismissals"
-		);
-	}
-
-	#[test]
-	fn the_background_poll_never_runs_while_notifications_are_off() {
-		assert!(
-			squashed(PUSH_SCHEDULE)
-				.contains("!PushSettings.notificationsEnabled(context)"),
-			"PushSchedule would arm the poll job with notifications off"
-		);
-		assert!(
-			squashed(PUSH_POLL_SERVICE)
-				.contains("!PushSettings.notificationsEnabled(this)"),
-			"a persisted poll job would sweep after a reboot with notifications off"
-		);
-	}
-
-	#[test]
-	fn the_master_switch_is_not_gated_behind_the_fcm_addon() {
-		let plugin = squashed(PUSH_PLUGIN);
-		for command in ["notificationsEnabled", "setNotificationsEnabled"] {
-			let body = plugin
-				.split_once(&format!("fun{command}("))
-				.unwrap_or_else(|| panic!("PushPlugin declares no {command}"))
-				.1
-				.split_once("@Command")
-				.map_or_else(|| plugin.clone(), |(body, _)| body.to_owned());
-			assert!(
-				!body.contains("gated("),
-				"{command} is behind the add-on gate, so slow mode could never turn notifications on or off"
-			);
-		}
 	}
 
 	#[test]
@@ -1624,11 +1217,7 @@ mod pins {
 			"the Play overlay no longer removes REQUEST_INSTALL_PACKAGES"
 		);
 
-		let update_package = PLUGIN
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("UpdatePlugin.kt declares no package")
-			.trim();
+		let update_package = kotlin_package(PLUGIN, "UpdatePlugin.kt");
 		let updater: Vec<(&str, String)> = declared(MANIFEST)
 			.filter(|(tag, name, _)| {
 				["activity", "service", "receiver", "provider"].contains(tag)

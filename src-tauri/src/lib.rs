@@ -9,16 +9,20 @@ mod haptics;
 mod hex;
 pub mod media;
 mod photo;
-pub mod push_poll;
+#[cfg(test)]
+mod pin_support;
+mod plugin_rejection;
+#[cfg(any(target_os = "android", test))]
+mod push_poll;
 mod scroll_phase;
-pub mod state;
+mod state;
 mod storage;
 mod upload;
 mod video;
 
-use tauri::Manager;
-
 use std::sync::OnceLock;
+
+use tauri::Manager;
 
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};

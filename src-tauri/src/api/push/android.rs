@@ -1,12 +1,11 @@
 use serde::{Deserialize, Serialize};
-use tauri::plugin::mobile::PluginInvokeError;
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
 use super::{
-	NotificationPermission, NotificationPermissionState, PushError, PushMode,
-	PushSignal,
+	NotificationPermission, PushCategory, PushError, PushMode, PushSignal,
 };
+use crate::plugin_rejection::classify;
 
 struct AndroidPush {
 	handle: PluginHandle<Wry>,
@@ -23,10 +22,9 @@ pub fn plugin() -> TauriPlugin<Wry> {
 		.build()
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ModeRequest {
-	mode: &'static str,
+#[derive(Serialize, Deserialize)]
+struct ModePayload {
+	mode: PushMode,
 }
 
 #[derive(Serialize)]
@@ -40,14 +38,7 @@ struct TokenResponse {
 	token: String,
 }
 
-#[derive(Deserialize)]
-struct PermissionResponse {
-	granted: bool,
-	state: String,
-}
-
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct EnabledRequest {
 	enabled: bool,
 }
@@ -57,21 +48,20 @@ struct EnabledResponse {
 	enabled: bool,
 }
 
-#[derive(Deserialize)]
-struct ModeResponse {
-	mode: String,
-}
-
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct CategoryRequest {
 	category: String,
 	enabled: bool,
 }
 
+#[derive(Serialize)]
+struct CategoryName {
+	category: String,
+}
+
 #[derive(Deserialize)]
 struct CategoriesResponse {
-	categories: Vec<super::PushCategory>,
+	categories: Vec<PushCategory>,
 }
 
 #[derive(Deserialize)]
@@ -80,9 +70,7 @@ struct DeeplinkResponse {
 }
 
 pub async fn addon_ready(app: &AppHandle) -> Result<(), PushError> {
-	call::<serde_json::Value>(app, "addonReady", ())
-		.await
-		.map(drop)
+	run(app, "addonReady", ()).await
 }
 
 pub async fn token(app: &AppHandle) -> Result<String, PushError> {
@@ -92,9 +80,7 @@ pub async fn token(app: &AppHandle) -> Result<String, PushError> {
 }
 
 pub async fn delete_token(app: &AppHandle) -> Result<(), PushError> {
-	call::<serde_json::Value>(app, "deleteToken", ())
-		.await
-		.map(drop)
+	run(app, "deleteToken", ()).await
 }
 
 pub async fn notifications_enabled(app: &AppHandle) -> Result<bool, PushError> {
@@ -107,41 +93,31 @@ pub async fn set_notifications_enabled(
 	app: &AppHandle,
 	enabled: bool,
 ) -> Result<(), PushError> {
-	call::<serde_json::Value>(
-		app,
-		"setNotificationsEnabled",
-		EnabledRequest { enabled },
-	)
-	.await
-	.map(drop)
+	run(app, "setNotificationsEnabled", EnabledRequest { enabled }).await
 }
 
 pub async fn open_notification_settings(
 	app: &AppHandle,
 ) -> Result<(), PushError> {
-	call::<serde_json::Value>(app, "openNotificationSettings", ())
-		.await
-		.map(drop)
+	run(app, "openNotificationSettings", ()).await
 }
 
 pub async fn mode(app: &AppHandle) -> Result<PushMode, PushError> {
-	call::<ModeResponse>(app, "mode", ())
+	call::<ModePayload>(app, "mode", ())
 		.await
-		.map(|response| PushMode::of(&response.mode))
+		.map(|response| response.mode)
 }
 
 pub async fn set_mode(
 	app: &AppHandle,
 	mode: PushMode,
 ) -> Result<(), PushError> {
-	call::<serde_json::Value>(app, "setMode", ModeRequest { mode: mode.wire() })
-		.await
-		.map(drop)
+	run(app, "setMode", ModePayload { mode }).await
 }
 
 pub async fn categories(
 	app: &AppHandle,
-) -> Result<Vec<super::PushCategory>, PushError> {
+) -> Result<Vec<PushCategory>, PushError> {
 	call::<CategoriesResponse>(app, "categories", ())
 		.await
 		.map(|response| response.categories)
@@ -152,53 +128,26 @@ pub async fn set_category(
 	category: String,
 	enabled: bool,
 ) -> Result<(), PushError> {
-	call::<serde_json::Value>(
-		app,
-		"setCategory",
-		CategoryRequest { category, enabled },
-	)
-	.await
-	.map(drop)
+	run(app, "setCategory", CategoryRequest { category, enabled }).await
 }
 
 pub async fn open_category_settings(
 	app: &AppHandle,
 	category: String,
 ) -> Result<(), PushError> {
-	call::<serde_json::Value>(
-		app,
-		"openCategorySettings",
-		CategoryRequest {
-			category,
-			enabled: true,
-		},
-	)
-	.await
-	.map(drop)
+	run(app, "openCategorySettings", CategoryName { category }).await
 }
 
 pub async fn notification_permission(
 	app: &AppHandle,
 ) -> Result<NotificationPermission, PushError> {
-	permission(app, "notificationPermission").await
+	call(app, "notificationPermission", ()).await
 }
 
 pub async fn request_notification_permission(
 	app: &AppHandle,
 ) -> Result<NotificationPermission, PushError> {
-	permission(app, "requestNotificationPermission").await
-}
-
-async fn permission(
-	app: &AppHandle,
-	command: &str,
-) -> Result<NotificationPermission, PushError> {
-	call::<PermissionResponse>(app, command, ())
-		.await
-		.map(|response| NotificationPermission {
-			granted: response.granted,
-			state: NotificationPermissionState::of(&response.state),
-		})
+	call(app, "requestNotificationPermission", ()).await
 }
 
 pub async fn take_deeplink(
@@ -219,7 +168,17 @@ pub fn watch(
 			WatchRequest { on_event },
 		)
 		.map(drop)
-		.map_err(rejection)
+		.map_err(|error| classify(error, PushError::from_rejection))
+}
+
+async fn run(
+	app: &AppHandle,
+	command: &str,
+	payload: impl Serialize,
+) -> Result<(), PushError> {
+	call::<serde_json::Value>(app, command, payload)
+		.await
+		.map(drop)
 }
 
 async fn call<T: serde::de::DeserializeOwned>(
@@ -230,7 +189,7 @@ async fn call<T: serde::de::DeserializeOwned>(
 	handle(app)?
 		.run_mobile_plugin_async(command, payload)
 		.await
-		.map_err(rejection)
+		.map_err(|error| classify(error, PushError::from_rejection))
 }
 
 fn handle(app: &AppHandle) -> Result<PluginHandle<Wry>, PushError> {
@@ -239,16 +198,4 @@ fn handle(app: &AppHandle) -> Result<PluginHandle<Wry>, PushError> {
 		.ok_or(PushError::Failed)?
 		.handle
 		.clone())
-}
-
-fn rejection(error: PluginInvokeError) -> PushError {
-	match error {
-		PluginInvokeError::InvokeRejected(response) => {
-			PushError::from_rejection(
-				response.message.as_deref(),
-				response.code.as_deref(),
-			)
-		}
-		_ => PushError::Failed,
-	}
 }
