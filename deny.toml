@@ -19,6 +19,7 @@ yanked = "deny"
 unmaintained = "workspace"
 ignore = [
 	{ id = "RUSTSEC-2026-0258", reason = "h2 0.3, via hyper 0.14 <- tonic <- devtools-core <- tauri-plugin-devtools, which is behind the optional `devtools` feature that only the dev scripts enable: `cargo tree -i h2@0.3.27` finds nothing without it. Reached only by this graph being audited with all-features. Re-check when tauri-plugin-devtools bumps tonic, and drop this line if the plugin ever goes." },
+	{ id = "RUSTSEC-2026-0293", reason = "ringbuf 0.4, via devtools-core <- tauri-plugin-devtools, behind the same dev-only `devtools` feature: `cargo tree -i ringbuf@0.4.8` finds nothing without it. devtools-core only calls push_overwrite and iter on its HeapRb, never the unsound Consumer::skip or Consumer::clear. The fix exists only in ringbuf 0.5.2 and devtools-core 0.4.0 still requires ^0.4. Drop this line once devtools-core moves to ringbuf 0.5.2 or later, or if the plugin goes." },
 ]
 
 [licenses]
