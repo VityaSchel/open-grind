@@ -468,7 +468,7 @@ describe("album uploads", () => {
 		expect(uploadAlbumContent).not.toHaveBeenCalled();
 	});
 
-	it.each(["SessionCleared", "NotLoggedIn"] as const)(
+	it.each(["SessionCleared", "NotSignedIn"] as const)(
 		"drops the queue once the session is gone (%s)",
 		async (kind) => {
 			vi.mocked(uploadAlbumContent).mockRejectedValue(

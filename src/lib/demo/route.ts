@@ -84,10 +84,10 @@ export function demoCallMethod(method: string): unknown {
 	switch (method) {
 		case "auth_state":
 			return demoMeProfileId;
-		case "login":
-		case "login_with_google":
-		case "google_sign_in":
-		case "login_with_facebook":
+		case "sign_in_with_email":
+		case "sign_in_with_google":
+		case "sign_in_with_google_token":
+		case "sign_in_with_facebook":
 		case "refresh_token":
 			return { profileId: demoMeProfileId, restriction: null };
 		case "rotate_api_params":

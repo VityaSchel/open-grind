@@ -142,7 +142,7 @@
 			if (blockedKind && markRequestBlocked({ kind: blockedKind })) {
 				return;
 			}
-			if (appError?.kind === "NotLoggedIn") {
+			if (appError?.kind === "NotSignedIn") {
 				toast.error("Your session expired — please sign in again");
 				await onSignOut();
 				return;

@@ -7,12 +7,12 @@ use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LoginResult {
+pub struct SignInResult {
 	pub profile_id: String,
 	pub restriction: Option<Restriction>,
 }
 
-impl From<grindr::LoginResult> for LoginResult {
+impl From<grindr::LoginResult> for SignInResult {
 	fn from(r: grindr::LoginResult) -> Self {
 		Self {
 			profile_id: r.profile_id,
@@ -71,33 +71,33 @@ fn region_str(region: grindr::VerificationRegion) -> &'static str {
 }
 
 #[tauri::command]
-pub async fn login(
+pub async fn sign_in_with_email(
 	state: tauri::State<'_, AppState>,
 	email: String,
 	password: String,
-) -> Result<LoginResult, AppError> {
+) -> Result<SignInResult, AppError> {
 	let result = state.client()?.login(&email, &password).await?;
-	Ok(LoginResult::from(result))
+	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
-pub async fn login_with_google(
+pub async fn sign_in_with_google(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
-) -> Result<LoginResult, AppError> {
+) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::google_oauth::fetch_google_access_token(&app).await?;
 	let result = state.client()?.google_sign_in(&access_token).await?;
-	Ok(LoginResult::from(result))
+	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
-pub async fn google_sign_in(
+pub async fn sign_in_with_google_token(
 	state: tauri::State<'_, AppState>,
 	token: String,
-) -> Result<LoginResult, AppError> {
+) -> Result<SignInResult, AppError> {
 	let result = state.client()?.google_sign_in(&token).await?;
-	Ok(LoginResult::from(result))
+	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
@@ -114,12 +114,12 @@ pub fn google_handback_pending(app: tauri::AppHandle) -> bool {
 pub async fn take_google_handback(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
-) -> Result<Option<LoginResult>, AppError> {
+) -> Result<Option<SignInResult>, AppError> {
 	let Some(token) = super::google_oauth::take_handback(&app) else {
 		return Ok(None);
 	};
 	let result = state.client()?.google_sign_in(&token).await?;
-	Ok(Some(LoginResult::from(result)))
+	Ok(Some(SignInResult::from(result)))
 }
 
 #[tauri::command]
@@ -128,31 +128,31 @@ pub fn discard_google_handback(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub async fn login_with_facebook(
+pub async fn sign_in_with_facebook(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
-) -> Result<LoginResult, AppError> {
+) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::facebook_oauth::fetch_facebook_access_token(&app).await?;
 	let result = state.client()?.facebook_sign_in(&access_token).await?;
-	Ok(LoginResult::from(result))
+	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
 pub async fn refresh_token(
 	state: tauri::State<'_, AppState>,
 	geohash: Option<String>,
-) -> Result<LoginResult, AppError> {
+) -> Result<SignInResult, AppError> {
 	let client = state.client()?;
 	let result = client
 		.refresh_token_with_geohash(geohash.as_deref())
 		.await
 		.map_err(|e| AppError::from_client_error(e, client))?;
-	Ok(LoginResult::from(result))
+	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
-pub async fn logout(
+pub async fn sign_out(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
 	media: tauri::State<'_, MediaProxy>,

@@ -233,7 +233,7 @@ describe("GoogleSignInForm", () => {
 		await fireEvent.click(button("Install"));
 		await settled();
 
-		expect(callMethodMock).toHaveBeenCalledWith("login_with_google");
+		expect(callMethodMock).toHaveBeenCalledWith("sign_in_with_google");
 		expect(api.checkForUpdate).not.toHaveBeenCalled();
 		expectBusy("Continue");
 	});
@@ -257,7 +257,7 @@ describe("GoogleSignInForm", () => {
 		answerInstallProbe(null);
 		await settled();
 
-		expect(callMethodMock).toHaveBeenCalledWith("login_with_google");
+		expect(callMethodMock).toHaveBeenCalledWith("sign_in_with_google");
 		expect(api.checkForUpdate).not.toHaveBeenCalled();
 		expectBusy("Continue");
 	});
@@ -444,9 +444,10 @@ describe("GoogleSignInForm", () => {
 		await fireEvent.click(button("Sign in"));
 		await settled();
 
-		expect(callMethodMock).toHaveBeenCalledWith("google_sign_in", {
-			token: "pasted-token",
-		});
+		expect(callMethodMock).toHaveBeenCalledWith(
+			"sign_in_with_google_token",
+			{ token: "pasted-token" },
+		);
 	});
 
 	it("leaves Install tappable while the install permission is pending", async () => {

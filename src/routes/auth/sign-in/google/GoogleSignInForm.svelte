@@ -111,7 +111,7 @@
 		if (continuing) return;
 		continuing = true;
 		try {
-			finishSignIn(await callMethod("login_with_google"));
+			finishSignIn(await callMethod("sign_in_with_google"));
 		} catch (error) {
 			reportSignInFailure({
 				error,
@@ -183,7 +183,7 @@
 				try {
 					submitting = true;
 					finishSignIn(
-						await callMethod("google_sign_in", {
+						await callMethod("sign_in_with_google_token", {
 							token: token.trim(),
 						}),
 					);

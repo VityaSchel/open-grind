@@ -26,7 +26,7 @@ const connectionFailedMessage =
 const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
 	...blockedAndStaleMessages,
 	RateLimited: "Grindr is rate limiting us",
-	NotLoggedIn: "You're signed out",
+	NotSignedIn: "You're signed out",
 	ContentTooLarge: "Larger than the upload limit",
 };
 
@@ -52,24 +52,27 @@ export const restrictionSchema = z.object({
 });
 export type Restriction = z.infer<typeof restrictionSchema>;
 
-export const loginResultSchema = z.object({
+export const signInResultSchema = z.object({
 	profileId: z.coerce.number().int().nonnegative(),
 	restriction: restrictionSchema.nullish(),
 });
 
 export const methods = {
-	login: {
+	sign_in_with_email: {
 		request: z.object({ email: z.email(), password: z.string().min(1) }),
-		response: loginResultSchema,
+		response: signInResultSchema,
 	},
-	login_with_google: { request: z.undefined(), response: loginResultSchema },
-	google_sign_in: {
-		request: z.object({ token: z.string().min(1) }),
-		response: loginResultSchema,
-	},
-	login_with_facebook: {
+	sign_in_with_google: {
 		request: z.undefined(),
-		response: loginResultSchema,
+		response: signInResultSchema,
+	},
+	sign_in_with_google_token: {
+		request: z.object({ token: z.string().min(1) }),
+		response: signInResultSchema,
+	},
+	sign_in_with_facebook: {
+		request: z.undefined(),
+		response: signInResultSchema,
 	},
 	auth_state: {
 		request: z.undefined(),
@@ -85,7 +88,7 @@ export const methods = {
 	},
 	refresh_token: {
 		request: z.object({ geohash: geohashSchema.optional() }).optional(),
-		response: loginResultSchema,
+		response: signInResultSchema,
 	},
 	rotate_api_params: {
 		request: z.undefined(),
@@ -94,7 +97,7 @@ export const methods = {
 			"l-device-info": z.string(),
 		}),
 	},
-	logout: { request: z.undefined(), response: z.null() },
+	sign_out: { request: z.undefined(), response: z.null() },
 	recaptcha_first_party_enabled: {
 		request: z.undefined(),
 		response: z.boolean(),

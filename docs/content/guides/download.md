@@ -41,7 +41,7 @@ Launch the installer and follow the steps.
 Notes:
 
 - GPS is not available through the geolocation plugin on Linux
-- Without a Secret Service the login is kept in a plain file under the app data directory
+- Without a Secret Service your sign-in is kept in a plain file under the app data directory
 
 ### AppImage (any distribution)
 

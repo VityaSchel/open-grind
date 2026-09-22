@@ -169,16 +169,16 @@ pub fn run() {
         .manage(api::session_recovery::SessionRecovery::default())
         .register_asynchronous_uri_scheme_protocol(media::SCHEME, media::handle)
         .invoke_handler(tauri::generate_handler![
-            api::auth::login,
-            api::auth::login_with_google,
-            api::auth::google_sign_in,
+            api::auth::sign_in_with_email,
+            api::auth::sign_in_with_google,
+            api::auth::sign_in_with_google_token,
             api::auth::backend_ready,
             api::auth::google_handback_pending,
             api::auth::take_google_handback,
             api::auth::discard_google_handback,
-            api::auth::login_with_facebook,
+            api::auth::sign_in_with_facebook,
             api::auth::refresh_token,
-            api::auth::logout,
+            api::auth::sign_out,
             api::auth::auth_state,
             api::auth::account_restriction,
             api::auth::recaptcha_first_party_enabled,

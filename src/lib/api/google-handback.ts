@@ -7,7 +7,7 @@ import {
 	confirmAccountSwitch,
 	googleHandbackState,
 } from "$lib/api/google-handback-state.svelte";
-import { callMethod, loginResultSchema } from "$lib/api/methods";
+import { callMethod, signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { clearAccountState } from "$lib/api/sign-out";
 import { isAndroidPlatform } from "$lib/platform/os";
@@ -40,7 +40,7 @@ async function exchange() {
 	const result = await invoke("take_google_handback");
 	return result === null || result === undefined
 		? null
-		: loginResultSchema.parse(result);
+		: signInResultSchema.parse(result);
 }
 
 let running: Promise<void> | null = null;

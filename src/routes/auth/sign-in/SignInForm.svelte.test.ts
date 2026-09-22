@@ -156,7 +156,7 @@ describe("SignInForm", () => {
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});
 
-	it("stays on the login screen when the Google OAuth app is turned off", async () => {
+	it("stays on the sign-in screen when the Google OAuth app is turned off", async () => {
 		callMethodMock.mockRejectedValue({
 			kind: "Auth",
 			message: "companion-disabled",

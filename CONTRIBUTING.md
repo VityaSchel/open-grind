@@ -90,7 +90,7 @@ const securityHeaders = {
 		"grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google",
 	"L-Device-Info":
 		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at login stage
+	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at sign-in
 	// more info about these headers in docs: ./docs/content/grindr-api/security-headers.md
 };
 
@@ -100,7 +100,7 @@ const req = await fetch("https://grindr.mobi/v8/sessions", {
 	body: JSON.stringify({
 		email: "yourmail@example.org",
 		password:
-			"comment out this field after you log in once, use authToken to refresh session",
+			"comment out this field after you sign in once, use authToken to refresh session",
 		// authToken:
 		//	"just reuse any of previous authTokens, even expired",
 		token: null,

@@ -129,7 +129,7 @@ function restInvokeError({
 			});
 		}
 	}
-	if (appError?.kind === "NotLoggedIn") {
+	if (appError?.kind === "NotSignedIn") {
 		signOutIfSessionLost().catch((error) => console.error(error));
 	}
 	return new ApiError({

@@ -17,7 +17,7 @@ body:
         - [Deleting albums](https://git.opengrind.org/open-grind/open-grind/issues/33)
         - [Send expiring albums](https://git.opengrind.org/open-grind/open-grind/issues/339)
         - [Incognito mode](https://git.opengrind.org/open-grind/open-grind/issues/247)
-        - [Login with Facebook](https://git.opengrind.org/open-grind/open-grind/issues/321)
+        - [Sign in with Facebook](https://git.opengrind.org/open-grind/open-grind/issues/321)
         - [Swiping left-right through profiles, next profile swipe](https://git.opengrind.org/open-grind/open-grind/issues/111)
   - type: textarea
     id: description

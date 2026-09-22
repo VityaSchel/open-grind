@@ -11,7 +11,7 @@ export const sessionErrorKinds = [
 	"SessionStale",
 	"Api",
 	"Banned",
-	"NotLoggedIn",
+	"NotSignedIn",
 ] as const satisfies readonly ApiErrorKind[];
 
 export type SessionErrorKind = (typeof sessionErrorKinds)[number];

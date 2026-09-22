@@ -64,7 +64,7 @@ export function isPlanLimitReached(error: unknown): boolean {
 
 function isSessionGone(error: unknown): boolean {
 	const kind = errorKindOf(error);
-	return kind === "SessionCleared" || kind === "NotLoggedIn";
+	return kind === "SessionCleared" || kind === "NotSignedIn";
 }
 
 function isRefusal(error: unknown): boolean {

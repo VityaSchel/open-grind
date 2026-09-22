@@ -42,7 +42,7 @@ pub enum AppError {
 	Connect(String),
 	Auth(String),
 	Media(String),
-	NotLoggedIn,
+	NotSignedIn,
 	SessionStale,
 	Api { code: i32, message: String },
 	Unauthorized { code: i32, message: String },
@@ -63,7 +63,7 @@ impl AppError {
 			AppError::Connect(_) => "Connect",
 			AppError::Auth(_) => "Auth",
 			AppError::Media(_) => "Media",
-			AppError::NotLoggedIn => "NotLoggedIn",
+			AppError::NotSignedIn => "NotSignedIn",
 			AppError::SessionStale => "SessionStale",
 			AppError::Api { .. } => "Api",
 			AppError::Unauthorized { .. } => "Unauthorized",
@@ -86,7 +86,7 @@ impl fmt::Display for AppError {
 			AppError::Connect(msg) => write!(f, "Could not connect: {msg}"),
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
 			AppError::Media(msg) => write!(f, "Media error: {msg}"),
-			AppError::NotLoggedIn => write!(f, "Not logged in"),
+			AppError::NotSignedIn => write!(f, "Not signed in"),
 			AppError::SessionStale => {
 				write!(f, "Could not refresh the session")
 			}
@@ -169,7 +169,7 @@ impl AppError {
 	) -> Self {
 		match (AppError::from(error), session_state(client)) {
 			(AppError::Auth(_), SessionState::SignedOut) => {
-				AppError::NotLoggedIn
+				AppError::NotSignedIn
 			}
 			(AppError::Auth(_), SessionState::AwaitingFirstToken) => {
 				AppError::SessionStale
@@ -198,7 +198,7 @@ mod tests {
 			AppError::Connect(String::new()),
 			AppError::Auth(String::new()),
 			AppError::Media(String::new()),
-			AppError::NotLoggedIn,
+			AppError::NotSignedIn,
 			AppError::SessionStale,
 			AppError::Api {
 				code: 0,
@@ -251,7 +251,7 @@ mod tests {
 	}
 
 	#[tokio::test]
-	async fn auth_failure_without_a_session_maps_to_not_logged_in() {
+	async fn auth_failure_without_a_session_maps_to_not_signed_in() {
 		let client =
 			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
 				.unwrap();
@@ -259,8 +259,8 @@ mod tests {
 
 		let app = AppError::from_client_error(error, &client);
 
-		assert!(matches!(app, AppError::NotLoggedIn));
-		assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "NotLoggedIn");
+		assert!(matches!(app, AppError::NotSignedIn));
+		assert_eq!(serde_json::to_value(&app).unwrap()["kind"], "NotSignedIn");
 	}
 
 	fn signed_in_client(
@@ -303,7 +303,7 @@ mod tests {
 		let client = signed_in_client(None);
 
 		let app = AppError::from_client_error(
-			grindr::GrindrError::Auth("not logged in".to_owned()),
+			grindr::GrindrError::Auth("not signed in".to_owned()),
 			&client,
 		);
 

@@ -8,7 +8,7 @@ import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 
 export async function signOut(): Promise<void> {
 	try {
-		await callMethod("logout");
+		await callMethod("sign_out");
 	} catch (error) {
 		console.error(error);
 	}

@@ -3,7 +3,7 @@ export const apiErrorKinds = [
 	"Connect",
 	"Auth",
 	"Media",
-	"NotLoggedIn",
+	"NotSignedIn",
 	"SessionStale",
 	"Api",
 	"Unauthorized",

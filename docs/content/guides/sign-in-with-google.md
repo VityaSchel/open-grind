@@ -10,7 +10,7 @@ Starting with v0.1.0-beta.2 it's possible to authenticate if your account in Gri
 
 ## Windows, Linux, macOS, iOS
 
-Just download the app and tap "Sign in with Google" on the login screen.
+Just download the app and tap "Sign in with Google" on the sign-in screen.
 
 ## Android
 
@@ -73,7 +73,7 @@ MicroG itself does not allow spoofing, as it's a drop-in that works via the same
 
 Yes, that's how web.grindr.com works. The entire authentication is web flow, meaning it's supposed to run in browsers, without requiring any device attestation tokens, so it's possible to run it on any platform, even in emulators. Web flow is launched from web.grindr.com with `responseType=postMessage` and the resulting code is posted by GIS JavaScript with `web.grindr.com` origin, so only pages with web.grindr.com origin can receive the callback. Additionally, browsers (even embedded ones) prevent actions such as opening new tabs without user gesture, which is why a tap is needed on the launch page. 
 
-However, there's another problem: Google OAuth Web Flow page checks aggressively for any signs of rendering the login page in embedded windows (including system WebViews, which is what Tauri uses under the hood of Open Grind UI), and while changing User-Agent and removing Sec- headers is possible for both WebKit-based WebViews (WKWebView for macOS & iOS, WebKitGTK for Linux) and Chromium-based WebViews (WebView2 for Windows, Chromium for Android), **Android's Chromium WebView specifically adds a special X-Requested-With header that's impossible to remove.** This has been pushed by Google specifically for "fraud/abuse detection" (i.e. to detect Android WebView in their services, such as the OAuth page). In 2023 it was announced Google starts a trial to allow developers to opt-out of sending this header, **but in 2025 the decision was reversed and X-Requested-With is now sent on all Android system's Chromium WebView requests with no option to disable it,** which is exactly what triggers Google OAuth page "security checks" and rejects attempts to sign in.
+However, there's another problem: Google OAuth Web Flow page checks aggressively for any signs of rendering the sign-in page in embedded windows (including system WebViews, which is what Tauri uses under the hood of Open Grind UI), and while changing User-Agent and removing Sec- headers is possible for both WebKit-based WebViews (WKWebView for macOS & iOS, WebKitGTK for Linux) and Chromium-based WebViews (WebView2 for Windows, Chromium for Android), **Android's Chromium WebView specifically adds a special X-Requested-With header that's impossible to remove.** This has been pushed by Google specifically for "fraud/abuse detection" (i.e. to detect Android WebView in their services, such as the OAuth page). In 2023 it was announced Google starts a trial to allow developers to opt-out of sending this header, **but in 2025 the decision was reversed and X-Requested-With is now sent on all Android system's Chromium WebView requests with no option to disable it,** which is exactly what triggers Google OAuth page "security checks" and rejects attempts to sign in.
 
 **All other platforms work just fine by rendering Google's OAuth page directly in platform's native WebView,** so it's only an issue on Android.
 

@@ -216,7 +216,7 @@ describe("SessionErrorAlert", () => {
 	});
 
 	it("signs out instead of retrying forever once the session is gone", async () => {
-		callMethodMock.mockRejectedValue({ kind: "NotLoggedIn" });
+		callMethodMock.mockRejectedValue({ kind: "NotSignedIn" });
 		render(SessionErrorAlert);
 
 		await fireEvent.click(

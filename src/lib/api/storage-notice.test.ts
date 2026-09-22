@@ -40,7 +40,7 @@ describe("noticeStorageBackend", () => {
 		expect(toastWarningMock).not.toHaveBeenCalled();
 	});
 
-	it("warns a Linux user whose login lives in a plain file", async () => {
+	it("warns a Linux user whose sign-in lives in a plain file", async () => {
 		await noticeWith("file");
 		expect(toastWarningMock).toHaveBeenCalledOnce();
 		expect(toastErrorMock).not.toHaveBeenCalled();
@@ -52,7 +52,7 @@ describe("noticeStorageBackend", () => {
 		expect(toastWarningMock).not.toHaveBeenCalled();
 	});
 
-	it("raises a persistent error when nothing can store the login", async () => {
+	it("raises a persistent error when nothing can store the sign-in", async () => {
 		await noticeWith("unavailable");
 		expect(toastErrorMock).toHaveBeenCalledOnce();
 		expect(toastErrorMock.mock.calls[0]?.[1]).toMatchObject({

@@ -79,7 +79,7 @@ describe("errorReport of an ApiError", () => {
 	it("keeps a null response null", () => {
 		const report = errorReport(
 			new ApiError({
-				message: "Not logged in",
+				message: "Not signed in",
 				request: { method: "GET", path: "/v4/me/profile" },
 				kind: "Auth",
 			}),
@@ -298,10 +298,10 @@ describe("errorReport of a value that is not an Error", () => {
 	it("reads a backend error object instead of stringifying it to [object Object]", () => {
 		expect(
 			errorReport(
-				{ kind: "Auth", message: "Not logged in" },
+				{ kind: "Auth", message: "Not signed in" },
 				{ redact: true },
 			),
-		).toEqual({ kind: "Auth", message: "Not logged in" });
+		).toEqual({ kind: "Auth", message: "Not signed in" });
 	});
 
 	it("wraps a primitive", () => {

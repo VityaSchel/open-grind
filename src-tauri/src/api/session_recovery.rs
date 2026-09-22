@@ -148,7 +148,7 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 				}
 				if matches!(
 					mapped,
-					AppError::Unauthorized { .. } | AppError::NotLoggedIn
+					AppError::Unauthorized { .. } | AppError::NotSignedIn
 				) {
 					return Outcome::Failed(SessionErrorPayload {
 						message: mapped.to_string(),

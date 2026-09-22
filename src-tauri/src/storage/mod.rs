@@ -387,7 +387,7 @@ mod tests {
 	}
 
 	#[test]
-	fn a_login_stored_before_credentials_existed_still_loads() {
+	fn a_session_stored_before_credentials_existed_still_loads() {
 		with_file_store(|_| {
 			let legacy = serde_json::json!({
 				"email": "user@example.com",
