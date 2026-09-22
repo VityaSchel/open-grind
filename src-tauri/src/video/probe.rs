@@ -1,6 +1,9 @@
 use std::io::{self, Read, Seek, SeekFrom};
 
-use crate::video::boxes::{children, find, find_path, read_at, Located, Span};
+use crate::video::boxes::{
+	be_u16, be_u32, children, find, find_path, handler_type, read_at, Located,
+	Span,
+};
 
 const SAMPLE_ENTRY_DIMENSIONS: u64 = 24;
 const TKHD_MATRIX_V0: u64 = 40;
@@ -11,7 +14,6 @@ const MATRIX_LEN: u64 = 36;
 pub struct Probe {
 	pub width: u32,
 	pub height: u32,
-	pub duration_ms: u64,
 }
 
 pub fn probe<R: Read + Seek>(reader: &mut R) -> io::Result<Option<Probe>> {
@@ -19,7 +21,6 @@ pub fn probe<R: Read + Seek>(reader: &mut R) -> io::Result<Option<Probe>> {
 	let Some(moov) = find(reader, Span { start: 0, end }, b"moov")? else {
 		return Ok(None);
 	};
-	let duration_ms = movie_duration_ms(reader, moov.body)?.unwrap_or_default();
 	for trak in children(reader, moov.body)?
 		.into_iter()
 		.filter(|child| child.is(b"trak"))
@@ -27,41 +28,9 @@ pub fn probe<R: Read + Seek>(reader: &mut R) -> io::Result<Option<Probe>> {
 		let Some((width, height)) = visual_size(reader, trak)? else {
 			continue;
 		};
-		return Ok(Some(Probe {
-			width,
-			height,
-			duration_ms,
-		}));
+		return Ok(Some(Probe { width, height }));
 	}
 	Ok(None)
-}
-
-fn movie_duration_ms<R: Read + Seek>(
-	reader: &mut R,
-	moov: Span,
-) -> io::Result<Option<u64>> {
-	let Some(mvhd) = find(reader, moov, b"mvhd")? else {
-		return Ok(None);
-	};
-	let mut version = [0u8; 4];
-	read_at(reader, mvhd.body.start, &mut version)?;
-	let (timescale, duration, unknown) = if version[0] == 1 {
-		let mut fields = [0u8; 28];
-		read_at(reader, mvhd.body.start + 4, &mut fields)?;
-		(u32_at(&fields, 16), u64_at(&fields, 20), u64::MAX)
-	} else {
-		let mut fields = [0u8; 16];
-		read_at(reader, mvhd.body.start + 4, &mut fields)?;
-		(
-			u32_at(&fields, 8),
-			u64::from(u32_at(&fields, 12)),
-			u64::from(u32::MAX),
-		)
-	};
-	if timescale == 0 || duration == unknown {
-		return Ok(None);
-	}
-	Ok(Some(duration.saturating_mul(1000) / u64::from(timescale)))
 }
 
 fn visual_size<R: Read + Seek>(
@@ -71,7 +40,7 @@ fn visual_size<R: Read + Seek>(
 	let Some(mdia) = find(reader, trak.body, b"mdia")? else {
 		return Ok(None);
 	};
-	if !is_visual_handler(reader, mdia.body)? {
+	if handler_type(reader, mdia.body)? != Some(*b"vide") {
 		return Ok(None);
 	}
 	let Some(stsd) =
@@ -98,8 +67,12 @@ fn visual_size<R: Read + Seek>(
 		entry.body.start + SAMPLE_ENTRY_DIMENSIONS,
 		&mut dimensions,
 	)?;
-	let width = u32::from(u16_at(&dimensions, 0));
-	let height = u32::from(u16_at(&dimensions, 2));
+	let (Some(width), Some(height)) =
+		(be_u16(&dimensions, 0), be_u16(&dimensions, 2))
+	else {
+		return Ok(None);
+	};
+	let (width, height) = (u32::from(width), u32::from(height));
 	if width == 0 || height == 0 {
 		return Ok(None);
 	}
@@ -129,35 +102,9 @@ fn quarter_turn<R: Read + Seek>(
 	}
 	let mut matrix = [0u8; MATRIX_LEN as usize];
 	read_at(reader, at, &mut matrix)?;
-	let horizontal = u32_at(&matrix, 0) == 0 && u32_at(&matrix, 16) == 0;
-	Ok(horizontal && u32_at(&matrix, 4) != 0 && u32_at(&matrix, 12) != 0)
-}
-
-fn is_visual_handler<R: Read + Seek>(
-	reader: &mut R,
-	mdia: Span,
-) -> io::Result<bool> {
-	let Some(hdlr) = find(reader, mdia, b"hdlr")? else {
-		return Ok(false);
-	};
-	if hdlr.body.size() < 12 {
-		return Ok(false);
-	}
-	let mut handler = [0u8; 4];
-	read_at(reader, hdlr.body.start + 8, &mut handler)?;
-	Ok(&handler == b"vide")
-}
-
-fn u16_at(bytes: &[u8], at: usize) -> u16 {
-	u16::from_be_bytes(bytes[at..at + 2].try_into().expect("two bytes"))
-}
-
-fn u32_at(bytes: &[u8], at: usize) -> u32 {
-	u32::from_be_bytes(bytes[at..at + 4].try_into().expect("four bytes"))
-}
-
-fn u64_at(bytes: &[u8], at: usize) -> u64 {
-	u64::from_be_bytes(bytes[at..at + 8].try_into().expect("eight bytes"))
+	let cell = |at: usize| be_u32(&matrix, at).unwrap_or_default();
+	let horizontal = cell(0) == 0 && cell(16) == 0;
+	Ok(horizontal && cell(4) != 0 && cell(12) != 0)
 }
 
 #[cfg(test)]
@@ -165,6 +112,7 @@ mod tests {
 	use std::io::Cursor;
 
 	use super::*;
+	use crate::video::test_support::CountingReader;
 
 	const FASTSTART: &[u8] = include_bytes!("fixtures/faststart.mp4");
 	const MOOV_LAST: &[u8] = include_bytes!("fixtures/moovlast.mp4");
@@ -182,8 +130,7 @@ mod tests {
 			probed(FASTSTART),
 			Some(Probe {
 				width: 16,
-				height: 16,
-				duration_ms: 1000
+				height: 16
 			})
 		);
 	}
@@ -194,8 +141,7 @@ mod tests {
 			probed(MOOV_LAST),
 			Some(Probe {
 				width: 16,
-				height: 16,
-				duration_ms: 1000
+				height: 16
 			})
 		);
 	}
@@ -206,8 +152,7 @@ mod tests {
 			probed(QUICKTIME),
 			Some(Probe {
 				width: 32,
-				height: 24,
-				duration_ms: 1000
+				height: 24
 			})
 		);
 	}
@@ -218,8 +163,7 @@ mod tests {
 			probed(ROTATED),
 			Some(Probe {
 				width: 32,
-				height: 16,
-				duration_ms: 1000
+				height: 16
 			})
 		);
 	}
@@ -230,26 +174,22 @@ mod tests {
 			probed(ANAMORPHIC),
 			Some(Probe {
 				width: 32,
-				height: 16,
-				duration_ms: 1000
+				height: 16
 			})
 		);
 	}
 
 	#[test]
 	fn reads_only_the_headers_it_needs() {
-		let mut reader = CountingReader {
-			inner: Cursor::new(MOOV_LAST),
-			read: 0,
-		};
+		let mut reader = CountingReader::new(MOOV_LAST);
 
 		let found = probe(&mut reader).expect("probe");
 
 		assert!(found.is_some());
 		assert!(
-			reader.read < MOOV_LAST.len() as u64,
+			reader.bytes_read < MOOV_LAST.len() as u64,
 			"read {} of {} bytes",
-			reader.read,
+			reader.bytes_read,
 			MOOV_LAST.len()
 		);
 	}
@@ -273,24 +213,5 @@ mod tests {
 		let head = &FASTSTART[..FASTSTART.len() / 4];
 
 		assert_eq!(probed(head), None);
-	}
-
-	struct CountingReader {
-		inner: Cursor<&'static [u8]>,
-		read: u64,
-	}
-
-	impl Read for CountingReader {
-		fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-			let read = self.inner.read(buf)?;
-			self.read += read as u64;
-			Ok(read)
-		}
-	}
-
-	impl Seek for CountingReader {
-		fn seek(&mut self, to: SeekFrom) -> io::Result<u64> {
-			self.inner.seek(to)
-		}
 	}
 }

@@ -3,6 +3,7 @@ use std::io::{self, Read, Seek, SeekFrom};
 const HEADER_LEN: u64 = 8;
 const LARGE_SIZE_LEN: u64 = 8;
 const FULL_BOX_LEN: u64 = 4;
+const HDLR_TYPE_AT: u64 = 8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
@@ -120,9 +121,12 @@ fn raw_header<R: Read + Seek>(
 	}
 	let mut header = [0u8; HEADER_LEN as usize];
 	read_at(reader, within.start, &mut header)?;
-	let box_type = four(&header[4..]);
-	let declared = u32::from_be_bytes(four(&header[..4])) as u64;
-	let (header_len, total) = match declared {
+	let (Some(declared), Some(box_type)) =
+		(be_u32(&header, 0), array_at(&header, 4))
+	else {
+		return Ok(None);
+	};
+	let (header_len, total) = match u64::from(declared) {
 		0 => (HEADER_LEN, within.size()),
 		1 => {
 			let mut large = [0u8; LARGE_SIZE_LEN as usize];
@@ -195,20 +199,59 @@ pub fn find_path<R: Read + Seek>(
 	Ok(found)
 }
 
+pub fn handler_type<R: Read + Seek>(
+	reader: &mut R,
+	mdia: Span,
+) -> io::Result<Option<[u8; 4]>> {
+	let Some(hdlr) = find(reader, mdia, b"hdlr")? else {
+		return Ok(None);
+	};
+	if hdlr.body.size() < HDLR_TYPE_AT + 4 {
+		return Ok(None);
+	}
+	let mut handler = [0u8; 4];
+	read_at(reader, hdlr.body.start + HDLR_TYPE_AT, &mut handler)?;
+	Ok(Some(handler))
+}
+
+pub fn read_up_to<R: Read>(
+	reader: &mut R,
+	buf: &mut [u8],
+) -> io::Result<usize> {
+	let mut filled = 0;
+	while filled < buf.len() {
+		let read = reader.read(&mut buf[filled..])?;
+		if read == 0 {
+			break;
+		}
+		filled += read;
+	}
+	Ok(filled)
+}
+
+pub fn be_u16(bytes: &[u8], at: usize) -> Option<u16> {
+	array_at(bytes, at).map(u16::from_be_bytes)
+}
+
+pub fn be_u32(bytes: &[u8], at: usize) -> Option<u32> {
+	array_at(bytes, at).map(u32::from_be_bytes)
+}
+
+pub fn be_u64(bytes: &[u8], at: usize) -> Option<u64> {
+	array_at(bytes, at).map(u64::from_be_bytes)
+}
+
+fn array_at<const N: usize>(bytes: &[u8], at: usize) -> Option<[u8; N]> {
+	bytes.get(at..)?.first_chunk().copied()
+}
+
 fn has_version_and_flags<R: Read + Seek>(
 	reader: &mut R,
 	body_start: u64,
 ) -> io::Result<bool> {
 	let mut peek = [0u8; HEADER_LEN as usize];
 	reader.seek(SeekFrom::Start(body_start))?;
-	let mut filled = 0;
-	while filled < peek.len() {
-		let read = reader.read(&mut peek[filled..])?;
-		if read == 0 {
-			break;
-		}
-		filled += read;
-	}
+	let filled = read_up_to(reader, &mut peek)?;
 	Ok(filled == peek.len() && !looks_like_box_type(&peek[4..]))
 }
 
@@ -216,29 +259,12 @@ fn looks_like_box_type(bytes: &[u8]) -> bool {
 	bytes.iter().all(|byte| (0x20..=0x7e).contains(byte))
 }
 
-fn four(bytes: &[u8]) -> [u8; 4] {
-	bytes[..4].try_into().expect("four bytes")
-}
-
 #[cfg(test)]
 mod tests {
 	use std::io::Cursor;
 
 	use super::*;
-
-	fn boxed(box_type: &[u8; 4], body: &[u8]) -> Vec<u8> {
-		let mut bytes = ((body.len() + 8) as u32).to_be_bytes().to_vec();
-		bytes.extend_from_slice(box_type);
-		bytes.extend_from_slice(body);
-		bytes
-	}
-
-	fn whole(bytes: &[u8]) -> Span {
-		Span {
-			start: 0,
-			end: bytes.len() as u64,
-		}
-	}
+	use crate::video::test_support::{boxed, whole, CountingReader};
 
 	#[test]
 	fn walks_siblings_and_reports_their_bodies() {
@@ -364,10 +390,7 @@ mod tests {
 			bytes.extend(boxed(b"free", b"padding"));
 		}
 		let span = whole(&bytes);
-		let mut reader = CountingReader {
-			inner: Cursor::new(bytes.clone()),
-			reads: 0,
-		};
+		let mut reader = CountingReader::new(&bytes);
 
 		let found = find(&mut reader, span, b"moov")
 			.expect("walk")
@@ -400,21 +423,71 @@ mod tests {
 		assert!(missing.is_none());
 	}
 
-	struct CountingReader {
-		inner: Cursor<Vec<u8>>,
-		reads: usize,
+	#[test]
+	fn reads_the_handler_type_after_the_version_and_pre_defined_fields() {
+		let mut body = vec![0u8; 8];
+		body.extend_from_slice(b"vide");
+		body.extend_from_slice(&[0u8; 12]);
+		let mdia = boxed(b"hdlr", &body);
+
+		let found =
+			handler_type(&mut Cursor::new(&mdia), whole(&mdia)).expect("read");
+
+		assert_eq!(found, Some(*b"vide"));
 	}
 
-	impl Read for CountingReader {
-		fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-			self.reads += 1;
-			self.inner.read(buf)
+	#[test]
+	fn a_missing_or_short_handler_has_no_type() {
+		let short = boxed(b"hdlr", &[0u8; 11]);
+		let other = boxed(b"minf", &[0u8; 24]);
+
+		for bytes in [short, other] {
+			assert_eq!(
+				handler_type(&mut Cursor::new(&bytes), whole(&bytes))
+					.expect("read"),
+				None
+			);
 		}
 	}
 
-	impl Seek for CountingReader {
-		fn seek(&mut self, to: SeekFrom) -> io::Result<u64> {
-			self.inner.seek(to)
+	#[test]
+	fn read_up_to_fills_across_short_reads_and_stops_at_the_end() {
+		let mut buf = [0u8; 8];
+
+		let filled =
+			read_up_to(&mut OneByteReader(b"abc".as_slice()), &mut buf)
+				.expect("read");
+
+		assert_eq!(filled, 3);
+		assert_eq!(&buf[..3], b"abc");
+	}
+
+	#[test]
+	fn big_endian_readers_refuse_to_run_past_the_slice() {
+		let bytes = [1u8, 2, 3, 4, 5, 6, 7, 8];
+
+		assert_eq!(be_u16(&bytes, 6), Some(0x0708));
+		assert_eq!(be_u32(&bytes, 4), Some(0x0506_0708));
+		assert_eq!(be_u64(&bytes, 0), Some(0x0102_0304_0506_0708));
+		assert_eq!(be_u16(&bytes, 7), None);
+		assert_eq!(be_u32(&bytes, 5), None);
+		assert_eq!(be_u64(&bytes, 1), None);
+		assert_eq!(be_u32(&bytes, usize::MAX), None);
+	}
+
+	struct OneByteReader<'a>(&'a [u8]);
+
+	impl Read for OneByteReader<'_> {
+		fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+			let Some((first, rest)) = self.0.split_first() else {
+				return Ok(0);
+			};
+			let Some(slot) = buf.first_mut() else {
+				return Ok(0);
+			};
+			*slot = *first;
+			self.0 = rest;
+			Ok(1)
 		}
 	}
 }

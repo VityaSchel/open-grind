@@ -1,15 +1,32 @@
 use std::io::{self, Read, Seek, SeekFrom};
+use std::ops::Range;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::video::boxes::{
-	children, find_path, header, read_at, Located, Span,
+	be_u32, be_u64, children, find, find_path, handler_type, header, read_at,
+	Located, Span,
 };
 
 const MOVIE_EPOCH_OFFSET: u64 = 2_082_844_800;
-const MAX_TABLE_BYTES: u64 = 64 * 1024 * 1024;
-const MAX_SAMPLES: usize = (MAX_TABLE_BYTES / 4) as usize;
+const MAX_TABLE_BYTES: u64 = 8 * 1024 * 1024;
 const FREE: &[u8; 4] = b"free";
+const STSZ: Layout = Layout {
+	count_at: 8,
+	stride: 4,
+};
+const STCO: Layout = Layout {
+	count_at: 4,
+	stride: 4,
+};
+const CO64: Layout = Layout {
+	count_at: 4,
+	stride: 8,
+};
+const STSC: Layout = Layout {
+	count_at: 4,
+	stride: 12,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Fill {
@@ -230,9 +247,7 @@ impl<R: Read + Seek> Planner<'_, R> {
 	}
 
 	fn track(&mut self, trak: Located) -> io::Result<()> {
-		let handler = self.handler(trak.body)?;
-		if matches!(handler, Some(handler) if &handler == b"vide" || &handler == b"soun")
-		{
+		if self.is_media(trak.body)? {
 			return self.walk(trak.body, Level::Trak);
 		}
 		let Some(ranges) = self.sample_ranges(trak.body)? else {
@@ -246,17 +261,12 @@ impl<R: Read + Seek> Planner<'_, R> {
 		Ok(())
 	}
 
-	fn handler(&mut self, trak: Span) -> io::Result<Option<[u8; 4]>> {
-		let Some(hdlr) = find_path(self.reader, trak, &[*b"mdia", *b"hdlr"])?
-		else {
-			return Ok(None);
+	fn is_media(&mut self, trak: Span) -> io::Result<bool> {
+		let Some(mdia) = find(self.reader, trak, b"mdia")? else {
+			return Ok(false);
 		};
-		if hdlr.body.size() < 12 {
-			return Ok(None);
-		}
-		let mut handler = [0u8; 4];
-		read_at(self.reader, hdlr.body.start + 8, &mut handler)?;
-		Ok(Some(handler))
+		let handler = handler_type(self.reader, mdia.body)?;
+		Ok(matches!(handler.as_ref(), Some(b"vide" | b"soun")))
 	}
 
 	fn sample_ranges(&mut self, trak: Span) -> io::Result<Option<Vec<Span>>> {
@@ -266,126 +276,72 @@ impl<R: Read + Seek> Planner<'_, R> {
 			return Ok(Some(Vec::new()));
 		};
 		let tables = children(self.reader, stbl.body)?;
-		let Some(sizes) = self.sample_sizes(&tables)? else {
+		let Some(sample_tables) = self.sample_tables(&tables)? else {
 			return Ok(None);
 		};
-		let Some(chunks) = self.chunk_offsets(&tables)? else {
+		Ok(sample_tables.chunk_spans(self.file_size))
+	}
+
+	fn sample_tables(
+		&mut self,
+		tables: &[Located],
+	) -> io::Result<Option<SampleTables>> {
+		let Some(sizes) = self.sample_sizes(tables)? else {
 			return Ok(None);
 		};
-		let Some(runs) = self.samples_per_chunk(&tables)? else {
+		let Some(chunk_offsets) = self.chunk_offsets(tables)? else {
 			return Ok(None);
 		};
-		let mut ranges = Vec::with_capacity(chunks.len());
-		let mut sample = 0usize;
-		let mut runs = runs.into_iter().peekable();
-		let mut per_chunk = 0usize;
-		for (index, offset) in chunks.into_iter().enumerate() {
-			while runs
-				.peek()
-				.is_some_and(|(first, _)| *first as usize <= index + 1)
-			{
-				per_chunk = runs.next().expect("peeked").1 as usize;
-			}
-			let end = sample.saturating_add(per_chunk).min(sizes.len());
-			let total: u64 =
-				sizes[sample.min(sizes.len())..end].iter().copied().sum();
-			sample = end;
-			if offset.saturating_add(total) > self.file_size {
-				return Ok(None);
-			}
-			ranges.push(Span {
-				start: offset,
-				end: offset + total,
-			});
-		}
-		Ok(Some(ranges))
+		let Some(runs) = self.entries(tables, b"stsc", STSC)? else {
+			return Ok(None);
+		};
+		Ok(Some(SampleTables {
+			sizes,
+			chunk_offsets,
+			runs,
+		}))
 	}
 
 	fn sample_sizes(
 		&mut self,
 		tables: &[Located],
-	) -> io::Result<Option<Vec<u64>>> {
+	) -> io::Result<Option<SampleSizes>> {
 		let Some(stsz) = self.table(tables, b"stsz")? else {
 			return Ok(None);
 		};
-		let (Some(fixed), Some(count)) = (word(&stsz, 4), word(&stsz, 8))
+		let (Some(fixed), Some(count)) = (be_u32(&stsz, 4), be_u32(&stsz, 8))
 		else {
 			return Ok(None);
 		};
-		let count = count as usize;
-		if fixed > 0 {
-			let claimed = (count as u64).saturating_mul(u64::from(fixed));
-			if count > MAX_SAMPLES || claimed > self.file_size {
-				return Ok(None);
-			}
-			return Ok(Some(vec![u64::from(fixed); count]));
+		if fixed == 0 {
+			return Ok(Entries::new(stsz, STSZ).map(SampleSizes::Listed));
 		}
-		let mut sizes = Vec::with_capacity(count.min(stsz.len() / 4));
-		for index in 0..count {
-			let Some(size) = word(&stsz, 12 + 4 * index) else {
-				return Ok(None);
-			};
-			sizes.push(u64::from(size));
+		let (size, count) = (u64::from(fixed), u64::from(count));
+		if count.saturating_mul(size) > self.file_size {
+			return Ok(None);
 		}
-		Ok(Some(sizes))
+		Ok(Some(SampleSizes::Fixed { size, count }))
 	}
 
 	fn chunk_offsets(
 		&mut self,
 		tables: &[Located],
-	) -> io::Result<Option<Vec<u64>>> {
+	) -> io::Result<Option<Entries>> {
 		if let Some(co64) = self.table(tables, b"co64")? {
-			let Some(count) = word(&co64, 4) else {
-				return Ok(None);
-			};
-			let mut offsets =
-				Vec::with_capacity((count as usize).min(co64.len() / 8));
-			for index in 0..count as usize {
-				let Some(offset) = long(&co64, 8 + 8 * index) else {
-					return Ok(None);
-				};
-				offsets.push(offset);
-			}
-			return Ok(Some(offsets));
+			return Ok(Entries::new(co64, CO64));
 		}
-		let Some(stco) = self.table(tables, b"stco")? else {
-			return Ok(None);
-		};
-		let Some(count) = word(&stco, 4) else {
-			return Ok(None);
-		};
-		let mut offsets =
-			Vec::with_capacity((count as usize).min(stco.len() / 4));
-		for index in 0..count as usize {
-			let Some(offset) = word(&stco, 8 + 4 * index) else {
-				return Ok(None);
-			};
-			offsets.push(u64::from(offset));
-		}
-		Ok(Some(offsets))
+		self.entries(tables, b"stco", STCO)
 	}
 
-	fn samples_per_chunk(
+	fn entries(
 		&mut self,
 		tables: &[Located],
-	) -> io::Result<Option<Vec<(u32, u32)>>> {
-		let Some(stsc) = self.table(tables, b"stsc")? else {
-			return Ok(None);
-		};
-		let Some(count) = word(&stsc, 4) else {
-			return Ok(None);
-		};
-		let mut runs =
-			Vec::with_capacity((count as usize).min(stsc.len() / 12));
-		for index in 0..count as usize {
-			let (Some(first), Some(per_chunk)) =
-				(word(&stsc, 8 + 12 * index), word(&stsc, 12 + 12 * index))
-			else {
-				return Ok(None);
-			};
-			runs.push((first, per_chunk));
-		}
-		Ok(Some(runs))
+		box_type: &[u8; 4],
+		layout: Layout,
+	) -> io::Result<Option<Entries>> {
+		Ok(self
+			.table(tables, box_type)?
+			.and_then(|bytes| Entries::new(bytes, layout)))
 	}
 
 	fn table(
@@ -406,16 +362,124 @@ impl<R: Read + Seek> Planner<'_, R> {
 	}
 }
 
-fn word(bytes: &[u8], at: usize) -> Option<u32> {
-	bytes
-		.get(at..at + 4)
-		.map(|four| u32::from_be_bytes(four.try_into().expect("four bytes")))
+#[derive(Debug, Clone, Copy)]
+struct Layout {
+	count_at: usize,
+	stride: usize,
 }
 
-fn long(bytes: &[u8], at: usize) -> Option<u64> {
-	bytes
-		.get(at..at + 8)
-		.map(|eight| u64::from_be_bytes(eight.try_into().expect("eight bytes")))
+struct Entries {
+	bytes: Vec<u8>,
+	start: usize,
+	stride: usize,
+	count: usize,
+}
+
+impl Entries {
+	fn new(bytes: Vec<u8>, layout: Layout) -> Option<Self> {
+		let count = be_u32(&bytes, layout.count_at)? as usize;
+		let start = layout.count_at + 4;
+		let room = bytes.len().checked_sub(start)? / layout.stride;
+		(count <= room).then_some(Self {
+			bytes,
+			start,
+			stride: layout.stride,
+			count,
+		})
+	}
+
+	fn entry(&self, index: usize) -> Option<&[u8]> {
+		if index >= self.count {
+			return None;
+		}
+		let at = self.start + index * self.stride;
+		self.bytes.get(at..at + self.stride)
+	}
+}
+
+enum SampleSizes {
+	Fixed { size: u64, count: u64 },
+	Listed(Entries),
+}
+
+impl SampleSizes {
+	fn count(&self) -> u64 {
+		match self {
+			Self::Fixed { count, .. } => *count,
+			Self::Listed(entries) => entries.count as u64,
+		}
+	}
+
+	fn total(&self, samples: Range<u64>) -> Option<u64> {
+		match self {
+			Self::Fixed { size, .. } => Some(
+				size.saturating_mul(samples.end.saturating_sub(samples.start)),
+			),
+			Self::Listed(entries) => samples
+				.map(|index| {
+					let entry = entries.entry(usize::try_from(index).ok()?)?;
+					be_u32(entry, 0).map(u64::from)
+				})
+				.sum(),
+		}
+	}
+}
+
+struct SampleTables {
+	sizes: SampleSizes,
+	chunk_offsets: Entries,
+	runs: Entries,
+}
+
+impl SampleTables {
+	fn chunk_spans(&self, file_size: u64) -> Option<Vec<Span>> {
+		let mut spans = Vec::new();
+		let mut sample = 0u64;
+		let mut per_chunk = 0u64;
+		let mut run = 0usize;
+		for index in 0..self.chunk_offsets.count {
+			while let Some(next) = self.runs.entry(run) {
+				if be_u32(next, 0)? as usize > index + 1 {
+					break;
+				}
+				per_chunk = u64::from(be_u32(next, 4)?);
+				run += 1;
+			}
+			let next_sample =
+				sample.saturating_add(per_chunk).min(self.sizes.count());
+			let total = self.sizes.total(sample..next_sample)?;
+			sample = next_sample;
+			let start = self.chunk_offset(index)?;
+			let end = start.saturating_add(total);
+			if end > file_size {
+				return None;
+			}
+			if total > 0 {
+				spans.push(Span { start, end });
+			}
+		}
+		Some(coalesced(spans))
+	}
+
+	fn chunk_offset(&self, index: usize) -> Option<u64> {
+		let entry = self.chunk_offsets.entry(index)?;
+		if self.chunk_offsets.stride == CO64.stride {
+			return be_u64(entry, 0);
+		}
+		be_u32(entry, 0).map(u64::from)
+	}
+}
+
+fn coalesced(mut spans: Vec<Span>) -> Vec<Span> {
+	spans.sort_unstable_by_key(|span| span.start);
+	spans.dedup_by(|next, kept| {
+		if next.start > kept.end {
+			return false;
+		}
+		kept.end = kept.end.max(next.end);
+		true
+	});
+	spans
 }
 
 pub struct PatchedReader<R> {
@@ -480,8 +544,8 @@ mod tests {
 	use std::io::Cursor;
 
 	use super::*;
-	use crate::video::boxes::{children, find, find_path};
 	use crate::video::probe::probe;
+	use crate::video::test_support::{boxed, whole};
 
 	const METADATA: &[u8] = include_bytes!("fixtures/metadata.mp4");
 	const PLANTED: [&[u8]; 6] = [
@@ -493,13 +557,6 @@ mod tests {
 		b"xmpmeta",
 	];
 	const UPLOADED_AT: u64 = 3_900_000_000;
-
-	fn boxed(box_type: &[u8; 4], body: &[u8]) -> Vec<u8> {
-		let mut bytes = ((body.len() + 8) as u32).to_be_bytes().to_vec();
-		bytes.extend_from_slice(box_type);
-		bytes.extend_from_slice(body);
-		bytes
-	}
 
 	fn planned(bytes: &[u8], uploaded_at: u64) -> Vec<Patch> {
 		plan(&mut Cursor::new(bytes), uploaded_at)
@@ -523,8 +580,7 @@ mod tests {
 
 	fn handlers(bytes: &[u8]) -> Vec<[u8; 4]> {
 		let mut reader = Cursor::new(bytes);
-		let end = bytes.len() as u64;
-		let moov = find(&mut reader, Span { start: 0, end }, b"moov")
+		let moov = find(&mut reader, whole(bytes), b"moov")
 			.expect("walk")
 			.expect("moov");
 		children(&mut reader, moov.body)
@@ -532,21 +588,16 @@ mod tests {
 			.into_iter()
 			.filter(|child| child.is(b"trak"))
 			.filter_map(|trak| {
-				let hdlr =
-					find_path(&mut reader, trak.body, &[*b"mdia", *b"hdlr"])
-						.expect("walk")?;
-				let mut handler = [0u8; 4];
-				read_at(&mut reader, hdlr.body.start + 8, &mut handler)
-					.expect("read");
-				Some(handler)
+				let mdia =
+					find(&mut reader, trak.body, b"mdia").expect("walk")?;
+				handler_type(&mut reader, mdia.body).expect("read")
 			})
 			.collect()
 	}
 
 	fn field(bytes: &[u8], path: &[[u8; 4]], at: u64) -> u32 {
 		let mut reader = Cursor::new(bytes);
-		let end = bytes.len() as u64;
-		let found = find_path(&mut reader, Span { start: 0, end }, path)
+		let found = find_path(&mut reader, whole(bytes), path)
 			.expect("walk")
 			.expect("box");
 		let mut word = [0u8; 4];
@@ -568,7 +619,7 @@ mod tests {
 	}
 
 	#[test]
-	fn the_patched_clip_keeps_its_size_duration_and_media_tracks() {
+	fn the_patched_clip_keeps_its_size_dimensions_and_media_tracks() {
 		let out = patched(METADATA, UPLOADED_AT);
 
 		assert_eq!(out.len(), METADATA.len());
@@ -786,6 +837,56 @@ mod tests {
 	}
 
 	#[test]
+	fn a_huge_fixed_size_sample_table_is_zeroed_without_expanding_it() {
+		const SAMPLES: u32 = 3_000_000_000;
+		const CHUNKS: u32 = 1_000;
+		let per_chunk = SAMPLES / CHUNKS;
+		let movie = |offsets: &[u32]| {
+			let mut stsz = vec![0u8; 4];
+			stsz.extend_from_slice(&1u32.to_be_bytes());
+			stsz.extend_from_slice(&SAMPLES.to_be_bytes());
+			let mut stbl = boxed(b"stsz", &stsz);
+			stbl.extend(boxed(b"stsc", &table(&[1, 1, per_chunk, 1])));
+			let mut stco = vec![CHUNKS];
+			stco.extend_from_slice(offsets);
+			stbl.extend(boxed(b"stco", &table(&stco)));
+			let mut mdia = hdlr(b"meta");
+			mdia.extend(boxed(b"minf", &boxed(b"stbl", &stbl)));
+			boxed(b"moov", &boxed(b"trak", &boxed(b"mdia", &mdia)))
+		};
+		let samples_at = movie(&[0; CHUNKS as usize]).len() as u64 + 16;
+		let offsets = (0..CHUNKS)
+			.map(|chunk| samples_at as u32 + chunk * per_chunk)
+			.collect::<Vec<_>>();
+		let mut head = movie(&offsets);
+		head.extend_from_slice(&1u32.to_be_bytes());
+		head.extend_from_slice(b"mdat");
+		head.extend_from_slice(&(16 + u64::from(SAMPLES)).to_be_bytes());
+		let file_size = samples_at + u64::from(SAMPLES);
+		let mut reader = SparseFile {
+			head,
+			len: file_size,
+			at: 0,
+		};
+
+		let patches = plan(&mut reader, UPLOADED_AT)
+			.expect("plan")
+			.expect("planned");
+
+		assert_eq!(patches.len(), 3, "{patches:?}");
+		assert_eq!(
+			patches.last(),
+			Some(&Patch {
+				span: Span {
+					start: samples_at,
+					end: file_size,
+				},
+				fill: Fill::Zeros,
+			})
+		);
+	}
+
+	#[test]
 	fn a_malformed_child_frees_the_rest_of_its_container() {
 		let mut moov = boxed(b"mvhd", &[0u8; 20]);
 		moov.extend_from_slice(&4096u32.to_be_bytes());
@@ -854,6 +955,42 @@ mod tests {
 			bytes.extend_from_slice(&word.to_be_bytes());
 		}
 		bytes
+	}
+
+	struct SparseFile {
+		head: Vec<u8>,
+		len: u64,
+		at: u64,
+	}
+
+	impl Read for SparseFile {
+		fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+			let remaining = self.len.saturating_sub(self.at);
+			let read = buf
+				.len()
+				.min(usize::try_from(remaining).unwrap_or(usize::MAX));
+			for (slot, at) in buf[..read].iter_mut().zip(self.at..) {
+				*slot = usize::try_from(at)
+					.ok()
+					.and_then(|at| self.head.get(at))
+					.copied()
+					.unwrap_or(0);
+			}
+			self.at += read as u64;
+			Ok(read)
+		}
+	}
+
+	impl Seek for SparseFile {
+		fn seek(&mut self, to: SeekFrom) -> io::Result<u64> {
+			self.at = match to {
+				SeekFrom::Start(at) => Some(at),
+				SeekFrom::End(delta) => self.len.checked_add_signed(delta),
+				SeekFrom::Current(delta) => self.at.checked_add_signed(delta),
+			}
+			.ok_or_else(|| io::Error::from(io::ErrorKind::InvalidInput))?;
+			Ok(self.at)
+		}
 	}
 
 	fn movie_with_text_track() -> Vec<u8> {
