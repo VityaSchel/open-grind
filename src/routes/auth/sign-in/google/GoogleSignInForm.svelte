@@ -31,17 +31,14 @@
 		addonPublishedHere,
 		addonUpdates,
 	} from "$lib/updates/addon.svelte";
+	import { manualInstallHref } from "$lib/updates/manual-install";
 	import {
 		googleSignInView,
 		installButton,
 		stageAwaitsUser,
 	} from "./google-sign-in-view";
 
-	const COMPANION_RELEASES =
-		"https://git.opengrind.org/open-grind/google-oauth-app/releases#install";
-	const COMPANION_GUIDE =
-		"https://opengrind.org/guides/sign-in-with-google#installed-from-google-play";
-	const companionHref = isPlayBuild() ? COMPANION_GUIDE : COMPANION_RELEASES;
+	const companionHref = manualInstallHref(GOOGLE_OAUTH_COMPONENT);
 	const automated = isAndroidPlatform();
 
 	let token = $state("");

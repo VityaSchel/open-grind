@@ -21,6 +21,15 @@ export const COMPONENT_PACKAGE = {
 	[FCM_COMPONENT]: "org.opengrind.fcm",
 } as const satisfies Record<ComponentKey, string>;
 
+export const COMPONENT_REPO = {
+	[APP_COMPONENT]: "https://git.opengrind.org/open-grind/open-grind",
+	[GOOGLE_OAUTH_COMPONENT]:
+		"https://git.opengrind.org/open-grind/google-oauth-app",
+	[RECAPTCHA_COMPONENT]:
+		"https://git.opengrind.org/open-grind/recaptcha-helper",
+	[FCM_COMPONENT]: "https://git.opengrind.org/open-grind/fcm-service",
+} as const satisfies Record<ComponentKey, string>;
+
 export const ADDON_NAME = {
 	[GOOGLE_OAUTH_COMPONENT]: "Google OAuth app",
 	[RECAPTCHA_COMPONENT]: "reCAPTCHA helper",
