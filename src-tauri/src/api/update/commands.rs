@@ -60,17 +60,17 @@ impl From<schedule::Ledger> for Settings {
 }
 
 #[tauri::command]
-pub fn update_capability(app: AppHandle) -> Capability {
+pub fn updater_capability(app: AppHandle) -> Capability {
 	install::capability_for(&app, &component::APP)
 }
 
 #[tauri::command]
-pub fn update_settings(app: AppHandle) -> Result<Settings, UpdateError> {
+pub fn updater_settings(app: AppHandle) -> Result<Settings, UpdateError> {
 	Ok(schedule::load(&app)?.into())
 }
 
 #[tauri::command]
-pub fn update_set_auto_check(
+pub fn updater_set_auto_check(
 	app: AppHandle,
 	enabled: bool,
 ) -> Result<Settings, UpdateError> {
@@ -78,7 +78,7 @@ pub fn update_set_auto_check(
 }
 
 #[tauri::command]
-pub async fn update_check(
+pub async fn updater_check(
 	app: AppHandle,
 	component: String,
 	trigger: Trigger,
@@ -114,7 +114,7 @@ pub async fn update_check(
 }
 
 #[tauri::command]
-pub async fn update_download(
+pub async fn updater_download(
 	app: AppHandle,
 	component: String,
 ) -> Result<Progress, UpdateError> {
@@ -157,7 +157,7 @@ pub async fn update_download(
 }
 
 #[tauri::command]
-pub async fn update_cancel_download(
+pub async fn updater_cancel_download(
 	app: AppHandle,
 	component: String,
 ) -> Result<(), UpdateError> {
@@ -168,12 +168,12 @@ pub async fn update_cancel_download(
 }
 
 #[tauri::command]
-pub fn update_progress(app: AppHandle) -> Option<Progress> {
+pub fn updater_progress(app: AppHandle) -> Option<Progress> {
 	app.state::<UpdateState>().downloads.snapshot()
 }
 
 #[tauri::command]
-pub fn update_readiness(
+pub fn updater_readiness(
 	app: AppHandle,
 	component: String,
 ) -> Result<Readiness, UpdateError> {
@@ -208,7 +208,7 @@ pub fn update_readiness(
 }
 
 #[tauri::command]
-pub async fn update_install(
+pub async fn updater_install(
 	app: AppHandle,
 	component: String,
 ) -> Result<(), UpdateError> {
@@ -246,12 +246,12 @@ fn unchanged_since_verification(
 }
 
 #[tauri::command]
-pub fn update_install_pending(app: AppHandle) -> bool {
+pub fn updater_install_pending(app: AppHandle) -> bool {
 	install::install_pending(&app)
 }
 
 #[tauri::command]
-pub fn update_installed_version(
+pub fn updater_installed_version(
 	app: AppHandle,
 	component: String,
 ) -> Result<Option<String>, UpdateError> {
@@ -260,18 +260,20 @@ pub fn update_installed_version(
 }
 
 #[tauri::command]
-pub fn update_take_install_outcome(app: AppHandle) -> Option<install::Outcome> {
+pub fn updater_take_install_outcome(
+	app: AppHandle,
+) -> Option<install::Outcome> {
 	install::take_outcome(&app)
 }
 
 #[tauri::command]
-pub fn update_open_install_permission_settings(
+pub fn updater_open_install_permission_settings(
 	app: AppHandle,
 ) -> Result<(), UpdateError> {
 	install::open_install_permission_settings(&app)
 }
 #[tauri::command]
-pub async fn update_discard(
+pub async fn updater_discard(
 	app: AppHandle,
 	component: String,
 ) -> Result<(), UpdateError> {

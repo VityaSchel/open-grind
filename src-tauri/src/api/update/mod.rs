@@ -102,7 +102,7 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<Wry> {
 		.build()
 }
 
-const INSTALL_EVENT: &str = "update:install";
+const INSTALL_EVENT: &str = "updater:install";
 
 fn watch_installs(app: &AppHandle) {
 	let sink = app.clone();

@@ -73,17 +73,17 @@ export function updatesAvailableHere(): boolean {
 
 export async function getUpdateCapability(): Promise<Capability> {
 	if (!updatesAvailableHere()) return unavailableCapability;
-	return parsed("update_capability", capabilitySchema);
+	return parsed("updater_capability", capabilitySchema);
 }
 
 export async function getUpdateSettings(): Promise<Settings> {
-	return parsed("update_settings", settingsSchema);
+	return parsed("updater_settings", settingsSchema);
 }
 
 export async function setAutomaticUpdateChecks(
 	enabled: boolean,
 ): Promise<Settings> {
-	return parsed("update_set_auto_check", settingsSchema, { enabled });
+	return parsed("updater_set_auto_check", settingsSchema, { enabled });
 }
 
 export async function checkForUpdate({
@@ -93,73 +93,73 @@ export async function checkForUpdate({
 	trigger: "manual" | "launch" | "automatic";
 	component?: ComponentKey;
 }): Promise<CheckResult> {
-	return parsed("update_check", checkResultSchema, { component, trigger });
+	return parsed("updater_check", checkResultSchema, { component, trigger });
 }
 
 export async function startUpdateDownload(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<Progress> {
-	return parsed("update_download", progressSchema, { component });
+	return parsed("updater_download", progressSchema, { component });
 }
 
 export async function cancelUpdateDownload(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<void> {
-	await invoke("update_cancel_download", { component });
+	await invoke("updater_cancel_download", { component });
 }
 
 export async function getUpdateProgress(): Promise<Progress | null> {
-	return parsed("update_progress", progressSchema.nullable());
+	return parsed("updater_progress", progressSchema.nullable());
 }
 
 export async function getUpdateReadiness(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<Readiness> {
 	if (!updatesAvailableHere()) return unavailableReadiness;
-	return parsed("update_readiness", readinessSchema, { component });
+	return parsed("updater_readiness", readinessSchema, { component });
 }
 
 export async function installUpdate(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<void> {
-	await invoke("update_install", { component });
+	await invoke("updater_install", { component });
 }
 
 export async function installPending(): Promise<boolean> {
 	if (!updatesAvailableHere()) return false;
-	return parsed("update_install_pending", z.boolean());
+	return parsed("updater_install_pending", z.boolean());
 }
 
 export async function getInstalledVersion(
 	component: ComponentKey,
 ): Promise<string | null> {
 	if (!updatesAvailableHere()) return null;
-	return parsed("update_installed_version", z.string().nullable(), {
+	return parsed("updater_installed_version", z.string().nullable(), {
 		component,
 	});
 }
 
 export async function takeInstallOutcome(): Promise<InstallOutcome | null> {
 	return parsed(
-		"update_take_install_outcome",
+		"updater_take_install_outcome",
 		installOutcomeSchema.nullable(),
 	);
 }
 
 export async function openInstallPermissionSettings(): Promise<void> {
-	await invoke("update_open_install_permission_settings");
+	await invoke("updater_open_install_permission_settings");
 }
 
 export async function discardStagedUpdate(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<void> {
-	await invoke("update_discard", { component });
+	await invoke("updater_discard", { component });
 }
 
 export function onInstallFinished(handler: (outcome: InstallOutcome) => void) {
-	return subscribed("update:install", installOutcomeSchema, handler);
+	return subscribed("updater:install", installOutcomeSchema, handler);
 }
 
 export function onUpdateProgress(handler: (progress: Progress) => void) {
-	return subscribed("update:progress", progressSchema, handler);
+	return subscribed("updater:progress", progressSchema, handler);
 }

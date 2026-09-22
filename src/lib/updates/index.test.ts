@@ -67,7 +67,7 @@ describe("update checks", () => {
 
 		const result = await checkForUpdate({ trigger: "automatic" });
 
-		expect(invokeMock).toHaveBeenCalledWith("update_check", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_check", {
 			component: "app",
 			trigger: "automatic",
 		});
@@ -183,14 +183,14 @@ describe("local install state", () => {
 		invokeMock.mockResolvedValue(true);
 
 		expect(await installPending()).toBe(true);
-		expect(invokeMock).toHaveBeenCalledWith("update_install_pending");
+		expect(invokeMock).toHaveBeenCalledWith("updater_install_pending");
 	});
 
 	it("reads the installed version of the component the caller names", async () => {
 		invokeMock.mockResolvedValue("1.4.0");
 
 		expect(await getInstalledVersion("google-oauth")).toBe("1.4.0");
-		expect(invokeMock).toHaveBeenCalledWith("update_installed_version", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_installed_version", {
 			component: "google-oauth",
 		});
 	});
@@ -221,7 +221,7 @@ describe("download and install", () => {
 
 		const progress = await startUpdateDownload();
 
-		expect(invokeMock).toHaveBeenCalledWith("update_download", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_download", {
 			component: "app",
 		});
 		expect(progress.phase).toBe("downloading");
@@ -257,7 +257,7 @@ describe("download and install", () => {
 	it("asks the backend to stop an in-flight download", async () => {
 		invokeMock.mockResolvedValue(null);
 		await cancelUpdateDownload();
-		expect(invokeMock).toHaveBeenCalledWith("update_cancel_download", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_cancel_download", {
 			component: "app",
 		});
 	});
@@ -265,13 +265,13 @@ describe("download and install", () => {
 	it("addresses the component the caller names, not always the app", async () => {
 		invokeMock.mockResolvedValue(null);
 		await installUpdate("google-oauth");
-		expect(invokeMock).toHaveBeenCalledWith("update_install", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_install", {
 			component: "google-oauth",
 		});
 
 		invokeMock.mockClear();
 		await discardStagedUpdate("google-oauth");
-		expect(invokeMock).toHaveBeenCalledWith("update_discard", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_discard", {
 			component: "google-oauth",
 		});
 	});
@@ -279,7 +279,7 @@ describe("download and install", () => {
 	it("hands off to the system installer without a payload of its own", async () => {
 		invokeMock.mockResolvedValue(null);
 		await installUpdate();
-		expect(invokeMock).toHaveBeenCalledWith("update_install", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_install", {
 			component: "app",
 		});
 	});
@@ -292,7 +292,7 @@ describe("download and install", () => {
 
 		const settings = await setAutomaticUpdateChecks(true);
 
-		expect(invokeMock).toHaveBeenCalledWith("update_set_auto_check", {
+		expect(invokeMock).toHaveBeenCalledWith("updater_set_auto_check", {
 			enabled: true,
 		});
 		expect(settings.autoCheck).toBe(true);
@@ -308,7 +308,7 @@ describe("progress events", () => {
 			string,
 			(event: { payload: unknown }) => void,
 		];
-		expect(event).toBe("update:progress");
+		expect(event).toBe("updater:progress");
 
 		callback({
 			payload: {

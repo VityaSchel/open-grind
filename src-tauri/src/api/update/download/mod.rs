@@ -17,7 +17,7 @@ use super::error::UpdateError;
 use super::release::Candidate;
 pub use queue::Downloads;
 
-pub(super) const PROGRESS_EVENT: &str = "update:progress";
+pub(super) const PROGRESS_EVENT: &str = "updater:progress";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "phase", content = "detail")]
