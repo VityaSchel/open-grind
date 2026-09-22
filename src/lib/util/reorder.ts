@@ -14,7 +14,6 @@ export function moveItem<T>({
 	return next;
 }
 
-/** Where the cell at `index` sits while the cell at `from` is held over `to`. */
 export function previewSlot({
 	index,
 	from,

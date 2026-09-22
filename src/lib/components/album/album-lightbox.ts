@@ -115,13 +115,12 @@ export async function openAlbumLightbox({
 			return null;
 		return { src: slide.url, poster: slide.coverUrl };
 	});
-	applyPhotoSwipeComponent(
-		lightbox,
-		(index) => {
+	applyPhotoSwipeComponent(lightbox, {
+		slideAt: (index) => {
 			const slide = slides[index];
 			return slide !== undefined && hasNoPlaysLeft(slide) ? slide : null;
 		},
-		(target, slide, content) => {
+		render: ({ target, slide, content }) => {
 			const locked = mount(NoPlaysLeftSlide, {
 				target,
 				props: { still: slide.coverUrl },
@@ -129,7 +128,7 @@ export async function openAlbumLightbox({
 			content.onLoaded();
 			return locked;
 		},
-	);
+	});
 	lightbox.on("closingAnimationEnd", onClosed);
 	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
 	lightbox.init();

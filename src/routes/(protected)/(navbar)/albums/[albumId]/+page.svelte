@@ -7,15 +7,16 @@
 	import AlbumEditor from "../album-editor/AlbumEditor.svelte";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 
+	const { data }: import("./$types").PageProps = $props();
+
 	const albumId = $derived(Number(page.params.albumId));
 
 	let attempt = $state(0);
 
-	async function loadAlbum(request: { albumId: number; attempt: number }) {
-		return await getAlbumContent(request.albumId);
-	}
-
-	const album = $derived(loadAlbum({ albumId, attempt }));
+	const album = $derived.by(() => {
+		void attempt;
+		return getAlbumContent(albumId);
+	});
 </script>
 
 <svelte:head>
@@ -41,7 +42,7 @@
 	</div>
 {:then loaded}
 	{#key loaded.albumId}
-		<AlbumEditor album={loaded} />
+		<AlbumEditor album={loaded} ourProfileId={data.ourProfileId} />
 	{/key}
 {:catch error}
 	<ApiErrorDisplay

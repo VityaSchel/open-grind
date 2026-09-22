@@ -10,7 +10,15 @@ vi.mock("$lib/components/album/album-lightbox", () => ({
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
 import type { AlbumContent } from "$lib/model/messaging/albums";
+import type { UploadLimits } from "../album-uploads/album-uploads-state.svelte";
 import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
+
+const limits: UploadLimits = {
+	maxContentSize: 10_000_000,
+	maxContentSizeHumanReadable: "10 MB",
+	maxContentItemsPerAlbum: 10,
+	maxVideosPerAlbum: 1,
+};
 
 function item({
 	contentId,
@@ -43,8 +51,9 @@ function previewAreaOf(content: AlbumContent[]): string {
 			albumName: "Studio",
 			content,
 			pending: [],
+			limits: null,
 			sharedCount: 0,
-			updatedLabel: "Sep 1",
+			updatedAt: "2026-09-01T10:00:00",
 			onOpenShares: () => {},
 		},
 	});
@@ -91,8 +100,9 @@ describe("album editor header", () => {
 				item({ contentId: 2, processing: false }),
 			],
 			pending: [],
+			limits: null,
 			sharedCount: 0,
-			updatedLabel: "Sep 1",
+			updatedAt: "2026-09-01T10:00:00",
 			onOpenShares: () => {},
 		};
 
@@ -101,7 +111,7 @@ describe("album editor header", () => {
 		cleanup();
 
 		const known = render(AlbumEditorHeader, {
-			props: { ...props, maxPhotos: 10, maxVideos: 1 },
+			props: { ...props, limits },
 		});
 		expect(known.getByText("1/10 photos, 1/1 videos")).toBeTruthy();
 	});
@@ -122,10 +132,9 @@ describe("album editor header", () => {
 					{ key: "a", kind: "photo" },
 					{ key: "b", kind: "video" },
 				],
-				maxPhotos: 10,
-				maxVideos: 1,
+				limits,
 				sharedCount: 0,
-				updatedLabel: "Sep 1",
+				updatedAt: "2026-09-01T10:00:00",
 				onOpenShares: () => {},
 			},
 		});

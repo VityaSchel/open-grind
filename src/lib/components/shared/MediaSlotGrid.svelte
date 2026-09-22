@@ -1,5 +1,10 @@
-<script lang="ts" module>
-	export type MediaSlotItem = {
+<script lang="ts">
+	import type { Snippet } from "svelte";
+
+	import { GridReorderState } from "./grid-reorder-state.svelte";
+	import MediaSlot from "./MediaSlot.svelte";
+
+	type MediaSlotItem = {
 		key: string;
 		src: string | null;
 		alt: string;
@@ -9,13 +14,6 @@
 		pending?: boolean;
 		onDelete?: () => void;
 	};
-</script>
-
-<script lang="ts">
-	import type { Snippet } from "svelte";
-
-	import { GridReorder } from "$lib/util/grid-reorder.svelte";
-	import MediaSlot from "./MediaSlot.svelte";
 
 	let {
 		slots,
@@ -35,7 +33,9 @@
 
 	const placeholders = $derived(Math.max(0, minSlots - slots.length));
 
-	const reorder = new GridReorder({ onReorder: (move) => onReorder(move) });
+	const reorder = new GridReorderState({
+		onReorder: (move) => onReorder(move),
+	});
 
 	const reorderable = $derived(!disabled && slots.length > 1);
 
@@ -54,6 +54,7 @@
 			role="listitem"
 			data-slot="media-slot-cell"
 			data-dragging={held ? "" : undefined}
+			data-reorderable={reorderable ? "" : undefined}
 			class={[
 				"touch-pan-y",
 				{

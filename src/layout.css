@@ -419,6 +419,14 @@ a {
 	background-image: var(--scrim);
 }
 
+@utility media-chip {
+	@apply rounded-full border border-white/10 bg-popover/40 scrim backdrop-filter-(--bd-chip);
+}
+
+@utility media-pill {
+	@apply bg-popover/20 scrim backdrop-filter-(--bd-chip);
+}
+
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
 :root {
 	--bar-content-gap: 0px;

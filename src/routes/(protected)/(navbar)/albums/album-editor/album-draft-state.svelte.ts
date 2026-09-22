@@ -9,6 +9,7 @@ import {
 } from "$lib/api/messaging/albums";
 import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
 import { now } from "$lib/util/clock";
+import { deepEqual } from "$lib/util/deep-equal";
 import { moveItem } from "$lib/util/reorder";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 
@@ -16,16 +17,9 @@ function idsOf(content: AlbumContent[]): number[] {
 	return content.map((item) => item.contentId);
 }
 
-function sameOrder(left: number[], right: number[]): boolean {
-	return (
-		left.length === right.length &&
-		left.every((contentId, index) => contentId === right[index])
-	);
-}
-
 export class StillProcessingError extends Error {}
 
-export class AlbumDraft {
+export class AlbumDraftState {
 	readonly albumId: number;
 
 	#savedName = $state("");
@@ -70,7 +64,7 @@ export class AlbumDraft {
 		return (
 			this.name !== this.#savedName ||
 			this.removed.length > 0 ||
-			!sameOrder(idsOf(this.content), this.#savedOrder)
+			!deepEqual(idsOf(this.content), this.#savedOrder)
 		);
 	}
 
@@ -78,12 +72,12 @@ export class AlbumDraft {
 		return this.dirty && !this.saving && !this.#uploadsPending();
 	}
 
-	isRemoved(contentId: number): boolean {
+	#isRemoved(contentId: number): boolean {
 		return this.removed.includes(contentId);
 	}
 
 	toggleRemoved(contentId: number): void {
-		this.removed = this.isRemoved(contentId)
+		this.removed = this.#isRemoved(contentId)
 			? this.removed.filter((id) => id !== contentId)
 			: [...this.removed, contentId];
 	}
@@ -128,27 +122,30 @@ export class AlbumDraft {
 			const { albumId } = this;
 			let refusedWhileProcessing = false;
 			let landed = false;
-			for (const contentId of [...this.removed]) {
-				if (!this.isRemoved(contentId)) continue;
-				try {
-					await deleteAlbumContent({ albumId, contentId });
-				} catch (error) {
-					if (!this.#isProcessingRefusal({ error, contentId }))
-						throw error;
-					refusedWhileProcessing = true;
-					continue;
+			try {
+				for (const contentId of [...this.removed]) {
+					if (!this.#isRemoved(contentId)) continue;
+					try {
+						await deleteAlbumContent({ albumId, contentId });
+					} catch (error) {
+						if (!this.#isProcessingRefusal({ error, contentId }))
+							throw error;
+						refusedWhileProcessing = true;
+						continue;
+					}
+					landed = true;
+					if (
+						this.#isRemoved(contentId) ||
+						!(await this.#listedByServer(contentId))
+					) {
+						this.forget(contentId);
+					}
 				}
-				landed = true;
-				if (
-					this.isRemoved(contentId) ||
-					!(await this.#listedByServer(contentId))
-				) {
-					this.forget(contentId);
-				}
-				forgetAlbumSlides(albumId);
+			} finally {
+				if (landed) forgetAlbumSlides(albumId);
 			}
 			const contentIds = idsOf(this.content);
-			if (!sameOrder(contentIds, this.#savedOrder)) {
+			if (!deepEqual(contentIds, this.#savedOrder)) {
 				await reorderAlbumContent({ albumId, contentIds });
 				const landedMeanwhile = this.#savedOrder.filter(
 					(id) => !contentIds.includes(id),

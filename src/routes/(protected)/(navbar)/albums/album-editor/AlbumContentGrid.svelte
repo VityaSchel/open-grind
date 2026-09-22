@@ -1,40 +1,38 @@
 <script lang="ts">
-	import { page } from "$app/state";
-	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
-	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
-
 	import {
 		albumMediaCounts,
 		isVideoContent,
 	} from "$lib/components/album/album";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as Empty from "$lib/components/ui/empty";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 	import { addAlbumMedia } from "../album-uploads/add-album-media";
-	import {
-		getAlbumUploads,
-		type PendingUpload,
+	import type {
+		AlbumUploads,
+		PendingUpload,
+		UploadLimits,
 	} from "../album-uploads/album-uploads-state.svelte";
+	import AlbumMediaEmpty from "./AlbumMediaEmpty.svelte";
 
 	let {
+		uploads,
 		albumId,
 		content,
 		pending,
 		removed,
 		saving,
-		maxPhotos,
+		limits,
 		onToggleRemoved,
 		onReorder,
 	}: {
+		uploads: AlbumUploads;
 		albumId: number;
 		content: AlbumContent[];
 		pending: PendingUpload[];
 		removed: number[];
 		saving: boolean;
-		maxPhotos: number | null;
+		limits: UploadLimits | null;
 		onToggleRemoved: (contentId: number) => void;
 		onReorder: (move: { from: number; to: number }) => void;
 	} = $props();
@@ -78,16 +76,14 @@
 
 	const photos = $derived(albumMediaCounts({ content, pending }).photos);
 
-	const full = $derived(maxPhotos !== null && photos >= maxPhotos);
+	const full = $derived(
+		limits !== null && photos >= limits.maxContentItemsPerAlbum,
+	);
 
 	async function add() {
 		adding = true;
 		try {
-			await addAlbumMedia({
-				uploads: getAlbumUploads(page.data.ourProfileId),
-				albumId,
-				content: () => content,
-			});
+			await addAlbumMedia({ uploads, albumId, content: () => content });
 		} finally {
 			adding = false;
 		}
@@ -95,26 +91,12 @@
 </script>
 
 {#if slots.length === 0}
-	<Empty.Root>
-		<Empty.Header>
-			<Empty.Media variant="icon">
-				<ImagesIcon weight="fill" />
-			</Empty.Media>
-			<Empty.Title>No media yet</Empty.Title>
-			<Empty.Description>
-				Photos and videos you add appear here.
-			</Empty.Description>
-		</Empty.Header>
-		<Empty.Content>
-			<Button
-				disabled={saving || adding || full}
-				onclick={() => void add()}
-			>
-				<PlusIcon weight="bold" />
-				Add photos or videos
-			</Button>
-		</Empty.Content>
-	</Empty.Root>
+	<AlbumMediaEmpty
+		title="No media yet"
+		description="Photos and videos you add appear here."
+		disabled={saving || adding || full}
+		onAdd={() => void add()}
+	/>
 {:else}
 	<MediaSlotGrid
 		{slots}

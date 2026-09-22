@@ -1,43 +1,43 @@
-<script lang="ts" module>
-	export type EditableAlbum = {
-		albumId: number;
-		albumName: string | null;
-		sharedCount: number;
-		updatedAt: string;
-		content: AlbumContent[];
-	};
-</script>
-
 <script lang="ts">
-	import { page } from "$app/state";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error-toast";
-	import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
 	import {
-		albumItemCountLabel,
-		albumUpdatedLabel,
-	} from "$lib/components/album/album";
+		type AlbumContentResponse,
+		getAlbumStorageLimits,
+	} from "$lib/api/messaging/albums";
+	import { albumItemCountLabel } from "$lib/components/album/album";
 	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
-	import { setSubpageActions } from "$lib/components/shared/subpage-actions.svelte";
-	import type { AlbumContent } from "$lib/model/messaging/albums";
+	import { setSubpageActions } from "$lib/components/shared/subpage-actions-context.svelte";
 	import {
 		getAlbumUploads,
 		type UploadLimits,
 	} from "../album-uploads/album-uploads-state.svelte";
-	import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
+	import {
+		AlbumDraftState,
+		StillProcessingError,
+	} from "./album-draft-state.svelte";
 	import AlbumContentGrid from "./AlbumContentGrid.svelte";
 	import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
 	import AlbumMenu from "./AlbumMenu.svelte";
 	import { AlbumSharedWith } from "./shared-with-state.svelte";
 	import SharedWithDialog from "./SharedWithDialog.svelte";
 
-	let { album }: { album: EditableAlbum } = $props();
+	let {
+		album,
+		ourProfileId,
+	}: {
+		album: Pick<
+			AlbumContentResponse,
+			"albumId" | "albumName" | "sharedCount" | "updatedAt" | "content"
+		>;
+		ourProfileId: number;
+	} = $props();
 
 	const initial = untrack(() => album);
-	const uploads = getAlbumUploads(page.data.ourProfileId);
-	const draft = new AlbumDraft({
+	const uploads = untrack(() => getAlbumUploads(ourProfileId));
+	const draft = new AlbumDraftState({
 		...initial,
 		uploadsPending: () => uploads.hasPending(initial.albumId),
 	});
@@ -90,19 +90,19 @@
 		bind:albumName={draft.name}
 		content={draft.remaining}
 		{pending}
-		maxPhotos={limits?.maxContentItemsPerAlbum ?? null}
-		maxVideos={limits?.maxVideosPerAlbum ?? null}
+		{limits}
 		sharedCount={shares.count}
-		updatedLabel={albumUpdatedLabel(draft.updatedAt)}
+		updatedAt={draft.updatedAt}
 		onOpenShares={() => (sharesOpen = true)}
 	/>
 	<AlbumContentGrid
+		{uploads}
 		albumId={draft.albumId}
 		content={draft.content}
 		{pending}
 		removed={draft.removed}
 		saving={draft.saving}
-		maxPhotos={limits?.maxContentItemsPerAlbum ?? null}
+		{limits}
 		onToggleRemoved={(contentId) => draft.toggleRemoved(contentId)}
 		onReorder={(positions) => draft.move(positions)}
 	/>

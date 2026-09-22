@@ -1,7 +1,7 @@
 import { SvelteMap } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
-import { nearestSlot, previewSlot } from "./reorder";
+import { nearestSlot, previewSlot } from "$lib/util/reorder";
 
 const TOUCH_LIFT_DELAY_MS = 300;
 const LIFT_TOLERANCE_PX = 10;
@@ -13,7 +13,7 @@ function centerOf(node: HTMLElement): Point {
 	return { x: left + width / 2, y: top + height / 2 };
 }
 
-export class GridReorder {
+export class GridReorderState {
 	#onReorder: (move: { from: number; to: number }) => void;
 	#nodes = new SvelteMap<number, HTMLElement>();
 	#centers: Point[] = [];

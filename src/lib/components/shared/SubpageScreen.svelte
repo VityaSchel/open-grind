@@ -5,7 +5,7 @@
 	import type { Snippet } from "svelte";
 
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
-	import { provideSubpageActions } from "./subpage-actions.svelte";
+	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
 	let {
 		routes,

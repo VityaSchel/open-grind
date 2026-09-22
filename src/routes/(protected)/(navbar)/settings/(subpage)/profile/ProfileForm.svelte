@@ -385,7 +385,7 @@
 		<SaveChangesBar
 			type="submit"
 			{saving}
-			disabled={saving || aboutMeOverLimit}
+			disabled={aboutMeOverLimit}
 			onclick={() => void save()}
 		/>
 	{/if}

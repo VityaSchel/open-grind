@@ -97,12 +97,17 @@ function yieldToInteractiveContent(lightbox: PhotoSwipeLightbox): void {
 
 export function applyPhotoSwipeComponent<Slide>(
 	lightbox: PhotoSwipeLightbox,
-	slideAt: (index: number) => Slide | null,
-	render: (
-		target: HTMLElement,
-		slide: Slide,
-		content: Content,
-	) => Record<string, unknown>,
+	{
+		slideAt,
+		render,
+	}: {
+		slideAt: (index: number) => Slide | null;
+		render: (mount: {
+			target: HTMLElement;
+			slide: Slide;
+			content: Content;
+		}) => Record<string, unknown>;
+	},
 ): void {
 	const mounted = new Map<HTMLElement, Record<string, unknown>>();
 
@@ -119,7 +124,7 @@ export function applyPhotoSwipeComponent<Slide>(
 		element.className = "size-full";
 		content.element = element;
 		content.state = "loading";
-		mounted.set(element, render(element, slide, content));
+		mounted.set(element, render({ target: element, slide, content }));
 	});
 
 	lightbox.on("contentDestroy", ({ content }) => {
@@ -138,22 +143,24 @@ export function applyPhotoSwipeVideo(
 ): void {
 	yieldToInteractiveContent(lightbox);
 
-	applyPhotoSwipeComponent(lightbox, videoAt, (target, video, content) =>
-		mount(VideoPlayer, {
-			target,
-			props: {
-				...video,
-				onready: () => content.onLoaded(),
-				onfail: (failure: Failure) => {
-					failures.set(content, failure);
-					console.error(
-						`[video] slide ${content.index} failed: ${failure.detail}`,
-					);
-					content.onError();
+	applyPhotoSwipeComponent(lightbox, {
+		slideAt: videoAt,
+		render: ({ target, slide, content }) =>
+			mount(VideoPlayer, {
+				target,
+				props: {
+					...slide,
+					onready: () => content.onLoaded(),
+					onfail: (failure: Failure) => {
+						failures.set(content, failure);
+						console.error(
+							`[video] slide ${content.index} failed: ${failure.detail}`,
+						);
+						content.onError();
+					},
 				},
-			},
-		}),
-	);
+			}),
+	});
 
 	lightbox.on("contentActivate", ({ content }) => {
 		content.element

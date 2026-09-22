@@ -97,34 +97,26 @@ describe("MediaImage", () => {
 	});
 
 	it("renders a plain tile without the broken icon for a null source", () => {
-		const { container } = render(MediaImage, {
-			props: { src: null, class: "size-full" },
-		});
+		const { container } = render(MediaImage, { props: { src: null } });
 
 		const empty = container.querySelector(EMPTY);
 		expect(container.querySelector("img")).toBeNull();
 		expect(container.querySelector(BROKEN)).toBeNull();
+		expect(empty).not.toBeNull();
 		expect(empty?.querySelector("svg")).toBeNull();
-		expect(empty?.classList.contains("size-full")).toBe(true);
 	});
 
-	it("gives a null source the pending skeleton's tile without the pulse", () => {
-		const { container } = render(MediaImage, {
-			props: { src: null, pending: true, class: "size-full" },
-		});
-		const pending = container.querySelector(PENDING);
-		const pendingClasses = [...(pending?.classList ?? [])];
+	it("marks a null source as empty media rather than pending", () => {
+		const pending = render(MediaImage, {
+			props: { src: null, pending: true },
+		}).container;
+		expect(pending.querySelector(PENDING)).not.toBeNull();
+		expect(pending.querySelector(EMPTY)).toBeNull();
 		cleanup();
-		const empty = render(MediaImage, {
-			props: { src: null, class: "size-full" },
-		}).container.querySelector(EMPTY);
-		const emptyClasses = [...(empty?.classList ?? [])];
 
-		expect(pendingClasses).toContain("animate-pulse");
-		expect(emptyClasses).toContain("animate-none");
-		expect(emptyClasses.filter((name) => name !== "animate-none")).toEqual(
-			pendingClasses.filter((name) => name !== "animate-pulse"),
-		);
+		const empty = render(MediaImage, { props: { src: null } }).container;
+		expect(empty.querySelector(EMPTY)).not.toBeNull();
+		expect(empty.querySelector(PENDING)).toBeNull();
 	});
 
 	it("re-arms when the source changes after a failure", async () => {
@@ -202,14 +194,13 @@ describe("MediaImage", () => {
 
 	it("renders a skeleton in place of any source while the media itself is pending", () => {
 		const { container } = render(MediaImage, {
-			props: { src: SRC, pending: true, class: "size-full" },
+			props: { src: SRC, pending: true },
 		});
 
-		const pending = container.querySelector(PENDING);
 		expect(container.querySelector("img")).toBeNull();
 		expect(container.querySelector(BROKEN)).toBeNull();
-		expect(pending?.classList.contains("animate-pulse")).toBe(true);
-		expect(pending?.classList.contains("size-full")).toBe(true);
+		expect(container.querySelector(EMPTY)).toBeNull();
+		expect(container.querySelector(PENDING)).not.toBeNull();
 	});
 
 	it("carries a non-empty alt onto the pending placeholder as its accessible name", () => {

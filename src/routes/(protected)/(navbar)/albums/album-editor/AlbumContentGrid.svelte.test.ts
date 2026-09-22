@@ -1,12 +1,27 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
 import type { AlbumContent } from "$lib/model/messaging/albums";
-import type { PendingUpload } from "../album-uploads/album-uploads-state.svelte";
+import {
+	getAlbumUploads,
+	type PendingUpload,
+	type UploadLimits,
+} from "../album-uploads/album-uploads-state.svelte";
 import AlbumContentGrid from "./AlbumContentGrid.svelte";
+
+const uploads = getAlbumUploads(1);
+
+function limitsOf(maxContentItemsPerAlbum: number): UploadLimits {
+	return {
+		maxContentSize: 10_000_000,
+		maxContentSizeHumanReadable: "10 MB",
+		maxContentItemsPerAlbum,
+		maxVideosPerAlbum: 1,
+	};
+}
 
 const readyPhoto: AlbumContent = {
 	contentId: 1,
@@ -44,12 +59,13 @@ describe("album content grid", () => {
 	it("shows a processing item as pending media instead of the placeholder media, keeping Remove", () => {
 		const { container, getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [processingVideo, readyPhoto],
 				pending: [],
 				removed: [],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -75,6 +91,7 @@ describe("album content grid", () => {
 	it("puts uploads in flight before the album, unremovable and unreorderable", () => {
 		const { container, getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto],
 				pending: [
@@ -83,7 +100,7 @@ describe("album content grid", () => {
 				] satisfies PendingUpload[],
 				removed: [],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -99,47 +116,56 @@ describe("album content grid", () => {
 				?.ariaLabel,
 		).toBe("Uploading photo");
 		expect(thirdCell?.querySelector("img")).not.toBeNull();
+		const removeButton = { name: /^Remove/ };
 		expect(
-			firstCell?.querySelector("button"),
+			within(firstCell!).queryByRole("button", removeButton),
 			"an upload in flight carries no remove button",
 		).toBeNull();
-		expect(secondCell?.querySelector("button")).toBeNull();
-		expect(thirdCell?.querySelector("button")).not.toBeNull();
+		expect(
+			within(secondCell!).queryByRole("button", removeButton),
+		).toBeNull();
+		expect(
+			within(thirdCell!).getByRole("button", {
+				name: "Remove album photo in slot 1",
+			}),
+		).toBeTruthy();
 		expect(
 			getByRole("img", { name: "Album photo in slot 1" }),
 		).toBeTruthy();
 		const settled = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto, processingVideo],
 				pending: [],
 				removed: [],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
 		});
 
 		expect(
-			cells(settled.container)[0]?.className,
+			cells(settled.container)[0]?.hasAttribute("data-reorderable"),
 			"two settled items reorder",
-		).toContain("touch-callout");
+		).toBe(true);
 		expect(
-			firstCell?.className,
+			firstCell?.hasAttribute("data-reorderable"),
 			"reordering is off while an upload is in flight",
-		).not.toContain("touch-callout");
+		).toBe(false);
 	});
 
 	it("leads the grid with an add tile that is neither a slot nor reorderable", () => {
 		const { container, getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto],
 				pending: [],
 				removed: [],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -165,12 +191,13 @@ describe("album content grid", () => {
 	it("disables adding while a save runs", () => {
 		const { getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto],
 				pending: [],
 				removed: [],
 				saving: true,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -184,6 +211,7 @@ describe("album content grid", () => {
 	it("stops adding once the album holds every photo it can", () => {
 		const { container } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto],
 				pending: [
@@ -191,7 +219,7 @@ describe("album content grid", () => {
 				] satisfies PendingUpload[],
 				removed: [readyPhoto.contentId],
 				saving: false,
-				maxPhotos: 2,
+				limits: limitsOf(2),
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -203,12 +231,13 @@ describe("album content grid", () => {
 		expect(
 			render(AlbumContentGrid, {
 				props: {
+					uploads,
 					albumId: 903,
 					content: [readyPhoto],
 					pending: [],
 					removed: [],
 					saving: false,
-					maxPhotos: null,
+					limits: null,
 					onToggleRemoved: () => {},
 					onReorder: () => {},
 				},
@@ -220,12 +249,13 @@ describe("album content grid", () => {
 	it("stops adding from the empty state when the album is full", () => {
 		const { getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [],
 				pending: [],
 				removed: [],
 				saving: false,
-				maxPhotos: 0,
+				limits: limitsOf(0),
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -239,12 +269,13 @@ describe("album content grid", () => {
 	it("offers the add button in the empty state", () => {
 		const { container, getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [],
 				pending: [],
 				removed: [],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -261,12 +292,13 @@ describe("album content grid", () => {
 	it("names every item and its remove toggle by the slot it sits in", () => {
 		const { getByRole } = render(AlbumContentGrid, {
 			props: {
+				uploads,
 				albumId: 903,
 				content: [readyPhoto, processingVideo],
 				pending: [],
 				removed: [processingVideo.contentId],
 				saving: false,
-				maxPhotos: null,
+				limits: null,
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},

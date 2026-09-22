@@ -7,43 +7,46 @@
 		albumMediaCounts,
 		readyAlbumMedia,
 	} from "$lib/components/album/album";
-	import AlbumNameField from "$lib/components/album/AlbumNameField.svelte";
 	import AlbumPreview from "$lib/components/album/AlbumPreview.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
-	import type { PendingUpload } from "../album-uploads/album-uploads-state.svelte";
+	import type {
+		PendingUpload,
+		UploadLimits,
+	} from "../album-uploads/album-uploads-state.svelte";
+	import { albumUpdatedLabel } from "./album-updated-label";
 	import AlbumHeaderLayout from "./AlbumHeaderLayout.svelte";
+	import AlbumNameField from "./AlbumNameField.svelte";
 
 	let {
 		albumId,
 		albumName = $bindable(),
 		content,
 		pending,
-		maxPhotos = null,
-		maxVideos = null,
+		limits,
 		sharedCount,
-		updatedLabel,
+		updatedAt,
 		onOpenShares,
 	}: {
 		albumId: number;
 		albumName: string;
 		content: AlbumContent[];
 		pending: PendingUpload[];
-		maxPhotos?: number | null;
-		maxVideos?: number | null;
+		limits: UploadLimits | null;
 		sharedCount: number;
-		updatedLabel: string;
+		updatedAt: string;
 		onOpenShares: () => void;
 	} = $props();
 
 	const counts = $derived(albumMediaCounts({ content, pending }));
 	const itemCountLabel = $derived(
-		maxPhotos === null || maxVideos === null
+		limits === null
 			? albumItemCountLabel(counts.photos + counts.videos)
-			: `${counts.photos}/${maxPhotos} photos, ${counts.videos}/${maxVideos} videos`,
+			: `${counts.photos}/${limits.maxContentItemsPerAlbum} photos, ${counts.videos}/${limits.maxVideosPerAlbum} videos`,
 	);
+	const updatedLabel = $derived(albumUpdatedLabel(updatedAt));
 	const cover = $derived(albumCoverContent(content));
 	const readyMedia = $derived(readyAlbumMedia(content));
 </script>

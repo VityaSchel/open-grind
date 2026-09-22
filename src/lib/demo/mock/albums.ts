@@ -95,7 +95,17 @@ const videoSlotByAlbum = new Map<number, "first" | "last">([
 	),
 ]);
 
-function demoPhotoItem({
+function demoContentId({
+	albumId,
+	slot,
+}: {
+	albumId: number;
+	slot: number;
+}): number {
+	return albumId * 100 + slot;
+}
+
+function demoContentItem({
 	albumId,
 	slot,
 	video,
@@ -114,7 +124,7 @@ function demoPhotoItem({
 		height: 400,
 	});
 	return {
-		contentId: albumId * 100 + slot,
+		contentId: demoContentId({ albumId, slot }),
 		contentType: video ? "video/mp4" : "image/jpeg",
 		coverUrl: processing ? albumProcessingPlaceholderUrl : thumb,
 		statusId: processing ? 3 : 1,
@@ -129,7 +139,7 @@ export function demoAlbumContent(albumId: number) {
 	const count = createdAlbumIds.includes(albumId) ? 0 : 3 + (albumId % 3);
 	const videoSlot = videoSlotByAlbum.get(albumId);
 	const seeded = Array.from({ length: count }, (_, i) =>
-		demoPhotoItem({
+		demoContentItem({
 			albumId,
 			slot: i,
 			video:
@@ -139,7 +149,7 @@ export function demoAlbumContent(albumId: number) {
 		}),
 	);
 	const uploaded = (uploadedContent.get(albumId) ?? []).map((item) =>
-		demoPhotoItem({ albumId, ...item }),
+		demoContentItem({ albumId, ...item }),
 	);
 	const content = [...uploaded, ...seeded].filter(
 		({ contentId }) => !deletedContentIds.has(contentId),
@@ -278,7 +288,7 @@ export function demoUploadAlbumContent({
 			item.processing = false;
 		}, DEMO_PROCESSING_MS);
 	}
-	const contentId = albumId * 100 + item.slot;
+	const contentId = demoContentId({ albumId, slot: item.slot });
 	return { contentId, sha256: demoContentHash(contentId) };
 }
 

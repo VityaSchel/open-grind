@@ -25,7 +25,13 @@
 	transition:fly={{ y: 80, duration: 300, easing: expoOut }}
 	{@attach bottomChrome}
 >
-	<Button {type} size="lg" class="h-12 w-full text-base" {disabled} {onclick}>
+	<Button
+		{type}
+		size="lg"
+		class="h-12 w-full text-base"
+		disabled={disabled || saving}
+		{onclick}
+	>
 		{#if saving}
 			<Spinner class="size-5" />
 		{/if}

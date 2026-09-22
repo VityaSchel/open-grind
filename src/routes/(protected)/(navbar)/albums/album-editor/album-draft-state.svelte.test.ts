@@ -21,7 +21,10 @@ vi.mock("$lib/components/album/album-lightbox", () => ({
 
 import { ApiError } from "$lib/api/api-error";
 import type { AlbumContent } from "$lib/model/messaging/albums";
-import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
+import {
+	AlbumDraftState,
+	StillProcessingError,
+} from "./album-draft-state.svelte";
 
 const ALBUM_ID = 903;
 
@@ -49,7 +52,7 @@ function deferred<T>() {
 }
 
 function draftOf(content: number[], albumName: string | null = "Studio") {
-	return new AlbumDraft({
+	return new AlbumDraftState({
 		albumId: ALBUM_ID,
 		albumName,
 		updatedAt: "2026-09-01T10:00:00",
@@ -57,7 +60,8 @@ function draftOf(content: number[], albumName: string | null = "Studio") {
 	});
 }
 
-const ids = (draft: AlbumDraft) => draft.content.map((one) => one.contentId);
+const ids = (draft: AlbumDraftState) =>
+	draft.content.map((one) => one.contentId);
 
 beforeEach(() => {
 	deleteMock.mockReset().mockResolvedValue(undefined);
@@ -75,9 +79,9 @@ function refusal(status: number): ApiError {
 	});
 }
 
-describe("AlbumDraft", () => {
+describe("AlbumDraftState", () => {
 	it("keeps a processing video marked when the server refuses to delete it yet", async () => {
-		const draft = new AlbumDraft({
+		const draft = new AlbumDraftState({
 			albumId: ALBUM_ID,
 			albumName: "Studio",
 			updatedAt: "2026-09-01T10:00:00",
@@ -96,7 +100,7 @@ describe("AlbumDraft", () => {
 			ids(draft),
 			"the deletable item is gone, the processing one stays",
 		).toEqual([2, 3]);
-		expect(draft.isRemoved(2)).toBe(true);
+		expect(draft.removed).toEqual([2]);
 		expect(
 			renameMock,
 			"the rest of the save still lands",
@@ -106,7 +110,7 @@ describe("AlbumDraft", () => {
 	});
 
 	it("reports nothing as updated when the only change was refused", async () => {
-		const draft = new AlbumDraft({
+		const draft = new AlbumDraftState({
 			albumId: ALBUM_ID,
 			albumName: "Studio",
 			updatedAt: "2026-09-01T10:00:00",
@@ -436,7 +440,7 @@ describe("AlbumDraft", () => {
 
 	it("does not save while uploads into the album are pending", async () => {
 		let uploading = true;
-		const draft = new AlbumDraft({
+		const draft = new AlbumDraftState({
 			albumId: ALBUM_ID,
 			albumName: "Studio",
 			updatedAt: "2026-09-01T10:00:00",

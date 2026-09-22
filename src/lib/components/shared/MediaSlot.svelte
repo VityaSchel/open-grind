@@ -53,9 +53,10 @@
 	/>
 	{#if video}
 		<div
-			class="absolute bottom-2.5 left-2.5 flex size-6 items-center justify-center rounded-full border border-white/10 bg-popover/40 scrim backdrop-filter-(--bd-chip) transition-opacity {removed
-				? 'opacity-40'
-				: ''}"
+			class={[
+				"absolute bottom-2.5 left-2.5 flex size-6 items-center justify-center media-chip transition-opacity",
+				{ "opacity-40": removed },
+			]}
 		>
 			<VideoIcon weight="fill" class="size-3.5" />
 		</div>
