@@ -12,7 +12,7 @@
 		parent,
 		children,
 	}: {
-		routes: Record<string, { title: string; back: string }>;
+		routes: Record<string, { title: string; back: string; wide?: boolean }>;
 		parent: string;
 		children?: Snippet;
 	} = $props();
@@ -70,7 +70,15 @@
 		<div
 			class="flex min-h-full w-full px-4 pt-header-clear-19 pb-nav-clear"
 		>
-			<div class="mx-auto flex w-full max-w-120 flex-col gap-3 pb-16">
+			<div
+				class={[
+					"mx-auto flex w-full flex-col gap-3 pb-16",
+					{
+						"max-w-media-panel": current.wide,
+						"max-w-120": !current.wide,
+					},
+				]}
+			>
 				{@render children?.()}
 			</div>
 		</div>

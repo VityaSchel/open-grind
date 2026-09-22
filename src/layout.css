@@ -110,6 +110,10 @@
 }
 
 @theme {
+	--container-media-panel: 50rem;
+}
+
+@theme {
 	--radius-grid: 17px;
 
 	--radius-composer: 19px;
