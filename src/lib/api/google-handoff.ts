@@ -5,15 +5,15 @@ import { toast } from "svelte-sonner";
 
 import {
 	confirmAccountSwitch,
-	googleHandbackState,
-} from "$lib/api/google-handback-state.svelte";
+	googleHandoffState,
+} from "$lib/api/google-handoff-state.svelte";
 import { callMethod, signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { clearAccountState } from "$lib/api/sign-out";
 import { isAndroidPlatform } from "$lib/platform/os";
 import { delay } from "$lib/util/delay";
 
-const HANDBACK_EVENT = "google-oauth:handback";
+const HANDOFF_EVENT = "google-oauth:handoff";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
@@ -21,7 +21,7 @@ const available = () => isTauri() && isAndroidPlatform();
 
 async function pending(): Promise<boolean> {
 	try {
-		return (await invoke<boolean>("google_handback_pending")) === true;
+		return (await invoke<boolean>("google_handoff_pending")) === true;
 	} catch (error) {
 		console.error(error);
 		return false;
@@ -30,14 +30,14 @@ async function pending(): Promise<boolean> {
 
 async function discard(): Promise<void> {
 	try {
-		await invoke("discard_google_handback");
+		await invoke("discard_google_handoff");
 	} catch (error) {
 		console.error(error);
 	}
 }
 
 async function exchange() {
-	const result = await invoke("take_google_handback");
+	const result = await invoke("sign_in_with_google_handoff");
 	return result === null || result === undefined
 		? null
 		: signInResultSchema.parse(result);
@@ -71,7 +71,7 @@ async function consume(): Promise<void> {
 		}
 		replacingAccount = true;
 	} else {
-		googleHandbackState.phase = "signingIn";
+		googleHandoffState.phase = "signingIn";
 		await goto("/auth/sign-in/google");
 	}
 
@@ -88,23 +88,23 @@ async function consume(): Promise<void> {
 		reportSignInFailure({ error, label: "Sign in with Google" });
 		if (!replacingAccount) await goto("/auth/sign-in/google");
 	} finally {
-		googleHandbackState.phase = "idle";
+		googleHandoffState.phase = "idle";
 	}
 }
 
-export function consumeGoogleHandback(): Promise<void> {
+export function consumeGoogleHandoff(): Promise<void> {
 	running ??= consume().finally(() => {
 		running = null;
 	});
 	return running;
 }
 
-export async function startGoogleHandbackWatch(): Promise<() => void> {
+export async function startGoogleHandoffWatch(): Promise<() => void> {
 	if (!available()) return () => {};
 
-	const unlisten = await listen(HANDBACK_EVENT, () => {
-		void consumeGoogleHandback();
+	const unlisten = await listen(HANDOFF_EVENT, () => {
+		void consumeGoogleHandoff();
 	});
-	void consumeGoogleHandback();
+	void consumeGoogleHandoff();
 	return unlisten;
 }

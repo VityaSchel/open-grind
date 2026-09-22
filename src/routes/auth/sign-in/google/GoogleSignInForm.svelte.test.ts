@@ -417,10 +417,10 @@ describe("GoogleSignInForm", () => {
 		expect(toCompanion.closest('[data-slot="card"]')).toBeNull();
 	});
 
-	it("keeps the signing-in card while a handback is being exchanged", async () => {
-		const { googleHandbackState } =
-			await import("$lib/api/google-handback-state.svelte");
-		googleHandbackState.phase = "signingIn";
+	it("keeps the signing-in card while a handoff is being exchanged", async () => {
+		const { googleHandoffState } =
+			await import("$lib/api/google-handoff-state.svelte");
+		googleHandoffState.phase = "signingIn";
 		try {
 			const { screen } = await opened();
 
@@ -429,7 +429,7 @@ describe("GoogleSignInForm", () => {
 				screen.queryByRole("button", { name: "Install" }),
 			).toBeNull();
 		} finally {
-			googleHandbackState.phase = "idle";
+			googleHandoffState.phase = "idle";
 		}
 	});
 

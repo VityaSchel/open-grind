@@ -106,16 +106,16 @@ pub fn backend_ready(state: tauri::State<'_, AppState>) -> bool {
 }
 
 #[tauri::command]
-pub fn google_handback_pending(app: tauri::AppHandle) -> bool {
-	super::google_oauth::handback_pending(&app)
+pub fn google_handoff_pending(app: tauri::AppHandle) -> bool {
+	super::google_oauth::handoff_pending(&app)
 }
 
 #[tauri::command]
-pub async fn take_google_handback(
+pub async fn sign_in_with_google_handoff(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
 ) -> Result<Option<SignInResult>, AppError> {
-	let Some(token) = super::google_oauth::take_handback(&app) else {
+	let Some(token) = super::google_oauth::take_handoff(&app) else {
 		return Ok(None);
 	};
 	let result = state.client()?.google_sign_in(&token).await?;
@@ -123,8 +123,8 @@ pub async fn take_google_handback(
 }
 
 #[tauri::command]
-pub fn discard_google_handback(app: tauri::AppHandle) {
-	super::google_oauth::discard_handback(&app);
+pub fn discard_google_handoff(app: tauri::AppHandle) {
+	super::google_oauth::discard_handoff(&app);
 }
 
 #[tauri::command]

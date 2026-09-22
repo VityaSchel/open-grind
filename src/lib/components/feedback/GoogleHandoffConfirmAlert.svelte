@@ -1,17 +1,15 @@
 <script lang="ts">
 	import {
 		answerAccountSwitch,
-		googleHandbackState,
-	} from "$lib/api/google-handback-state.svelte";
+		googleHandoffState,
+	} from "$lib/api/google-handoff-state.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
 
-	const switching = $derived(
-		googleHandbackState.phase === "switchingAccount",
-	);
+	const switching = $derived(googleHandoffState.phase === "switchingAccount");
 	const open = $derived(
-		switching || googleHandbackState.phase === "confirmingSwitch",
+		switching || googleHandoffState.phase === "confirmingSwitch",
 	);
 </script>
 
