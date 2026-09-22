@@ -10,9 +10,33 @@ use crate::upload::form::Framing;
 use crate::upload::picked::PickedFile;
 use crate::video::strip::{Patch, PatchedReader};
 
-pub const FILE_CHANGED: &str = "That file changed while it was uploading";
+const FILE_CHANGED: &str = "That file changed while it was uploading";
 
-pub type ContentDigest = Arc<Mutex<Option<[u8; 32]>>>;
+#[derive(Debug, Clone, Default)]
+pub struct ContentDigest(Arc<Mutex<Option<[u8; 32]>>>);
+
+impl ContentDigest {
+	#[cfg(test)]
+	pub fn holding(value: [u8; 32]) -> Self {
+		let digest = Self::default();
+		digest.set(Some(value));
+		digest
+	}
+
+	pub fn get(&self) -> Option<[u8; 32]> {
+		*self
+			.0
+			.lock()
+			.unwrap_or_else(|poisoned| poisoned.into_inner())
+	}
+
+	fn set(&self, value: Option<[u8; 32]>) {
+		*self
+			.0
+			.lock()
+			.unwrap_or_else(|poisoned| poisoned.into_inner()) = value;
+	}
+}
 
 pub struct FileBody<R: Runtime> {
 	pub app: AppHandle<R>,
@@ -30,7 +54,7 @@ impl<R: Runtime> BodySource for FileBody<R> {
 
 	fn open(&self) -> io::Result<Box<dyn Read + Send>> {
 		let file = self.file.open(&self.app)?;
-		store(&self.digest, None);
+		self.digest.set(None);
 		let content = HashingReader {
 			inner: PatchedReader::new(
 				file.take(self.content_len),
@@ -39,7 +63,7 @@ impl<R: Runtime> BodySource for FileBody<R> {
 			hasher: Sha256::new(),
 			read: 0,
 			expected: self.content_len,
-			digest: Arc::clone(&self.digest),
+			digest: self.digest.clone(),
 		};
 		Ok(Box::new(
 			Cursor::new(self.framing.head.clone())
@@ -67,7 +91,7 @@ impl Read for HashingReader {
 					FILE_CHANGED,
 				));
 			}
-			store(&self.digest, Some(self.hasher.clone().finalize().into()));
+			self.digest.set(Some(self.hasher.clone().finalize().into()));
 			return Ok(0);
 		}
 		self.hasher.update(&buf[..read]);
@@ -76,44 +100,22 @@ impl Read for HashingReader {
 	}
 }
 
-pub fn taken(digest: &ContentDigest) -> Option<[u8; 32]> {
-	*digest
-		.lock()
-		.unwrap_or_else(|poisoned| poisoned.into_inner())
-}
-
-fn store(digest: &ContentDigest, value: Option<[u8; 32]>) {
-	*digest
-		.lock()
-		.unwrap_or_else(|poisoned| poisoned.into_inner()) = value;
-}
-
 #[cfg(test)]
 mod tests {
-	use std::io::Write;
 	use std::path::PathBuf;
 
-	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
+	use tauri::test::MockRuntime;
 	use tauri_plugin_fs::FsExt;
 
 	use super::*;
 	use crate::hex::hex;
-	use crate::upload::content::sha256_hex;
+	use crate::upload::file::sha256_hex;
 	use crate::upload::form::FormPart;
+	use crate::upload::test_support::{app, TempFile};
 	use crate::video::boxes::Span;
 	use crate::video::strip::Fill;
 
 	const CONTENT: &[u8] = b"a tiny clip pretending to be an mp4";
-
-	fn temp_file(name: &str, bytes: &[u8]) -> PathBuf {
-		let path = std::env::temp_dir()
-			.join(format!("og-stream-{}-{name}", std::process::id()));
-		File::create(&path)
-			.expect("create")
-			.write_all(bytes)
-			.expect("write");
-		path
-	}
 
 	fn body(
 		app: &tauri::App<MockRuntime>,
@@ -140,21 +142,15 @@ mod tests {
 			}),
 			content_len,
 			patches: Arc::from(patches),
-			digest: Arc::new(Mutex::new(None)),
+			digest: ContentDigest::default(),
 		}
-	}
-
-	fn app() -> tauri::App<MockRuntime> {
-		mock_builder()
-			.plugin(tauri_plugin_fs::init())
-			.build(mock_context(noop_assets()))
-			.expect("mock app")
 	}
 
 	#[test]
 	fn the_stream_yields_exactly_the_size_it_promised() {
 		let app = app();
-		let path = temp_file("clip.mp4", CONTENT);
+		let temp = TempFile::new("clip.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = body(&app, &path, CONTENT.len() as u64);
 
 		let mut framed = Vec::new();
@@ -171,13 +167,13 @@ mod tests {
 			CONTENT
 		);
 		assert!(framed.ends_with(&source.framing.tail));
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_strip_plan_changes_the_bytes_that_are_sent_and_hashed() {
 		let app = app();
-		let path = temp_file("stripped.mp4", CONTENT);
+		let temp = TempFile::new("stripped.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = patched_body(
 			&app,
 			&path,
@@ -204,54 +200,54 @@ mod tests {
 		);
 		assert_eq!(framed.len() as u64, source.size());
 		assert_eq!(
-			taken(&source.digest).map(|digest| hex(&digest)),
+			source.digest.get().map(|digest| hex(&digest)),
 			Some(sha256_hex(&stripped))
 		);
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn the_digest_covers_the_content_and_not_the_framing() {
 		let app = app();
-		let path = temp_file("hashed.mp4", CONTENT);
+		let temp = TempFile::new("hashed.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = body(&app, &path, CONTENT.len() as u64);
 
-		assert_eq!(taken(&source.digest), None);
+		assert_eq!(source.digest.get(), None);
 		io::copy(&mut source.open().expect("open"), &mut io::sink())
 			.expect("copy");
 
 		assert_eq!(
-			taken(&source.digest).map(|digest| hex(&digest)),
+			source.digest.get().map(|digest| hex(&digest)),
 			Some(sha256_hex(CONTENT))
 		);
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_reopened_stream_starts_over_and_clears_the_digest() {
 		let app = app();
-		let path = temp_file("reopened.mp4", CONTENT);
+		let temp = TempFile::new("reopened.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = body(&app, &path, CONTENT.len() as u64);
 		io::copy(&mut source.open().expect("open"), &mut io::sink())
 			.expect("copy");
 
 		let mut second = source.open().expect("reopen");
-		assert_eq!(taken(&source.digest), None);
+		assert_eq!(source.digest.get(), None);
 		let mut framed = Vec::new();
 		second.read_to_end(&mut framed).expect("read");
 
 		assert_eq!(framed.len() as u64, source.size());
 		assert_eq!(
-			taken(&source.digest).map(|digest| hex(&digest)),
+			source.digest.get().map(|digest| hex(&digest)),
 			Some(sha256_hex(CONTENT))
 		);
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_file_that_shrank_fails_instead_of_sending_a_short_body() {
 		let app = app();
-		let path = temp_file("shrank.mp4", CONTENT);
+		let temp = TempFile::new("shrank.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = body(&app, &path, CONTENT.len() as u64 + 16);
 
 		let failed =
@@ -260,14 +256,14 @@ mod tests {
 
 		assert_eq!(failed.kind(), io::ErrorKind::UnexpectedEof);
 		assert_eq!(failed.to_string(), FILE_CHANGED);
-		assert_eq!(taken(&source.digest), None);
-		std::fs::remove_file(path).ok();
+		assert_eq!(source.digest.get(), None);
 	}
 
 	#[test]
 	fn a_file_that_grew_is_cut_to_the_promised_size() {
 		let app = app();
-		let path = temp_file("grew.mp4", CONTENT);
+		let temp = TempFile::new("grew.mp4", CONTENT);
+		let path = temp.path().to_path_buf();
 		let source = body(&app, &path, CONTENT.len() as u64 - 4);
 
 		let mut framed = Vec::new();
@@ -279,9 +275,8 @@ mod tests {
 
 		assert_eq!(framed.len() as u64, source.size());
 		assert_eq!(
-			taken(&source.digest).map(|digest| hex(&digest)),
+			source.digest.get().map(|digest| hex(&digest)),
 			Some(sha256_hex(&CONTENT[..CONTENT.len() - 4]))
 		);
-		std::fs::remove_file(path).ok();
 	}
 }

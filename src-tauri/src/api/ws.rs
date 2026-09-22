@@ -193,6 +193,8 @@ pub async fn ws_send(
 
 #[cfg(test)]
 mod tests {
+	use std::sync::OnceLock;
+
 	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
 
 	use super::*;
@@ -201,7 +203,9 @@ mod tests {
 		let client =
 			grindr::GrindrClient::new(grindr::DeviceInfo::generate(), None)
 				.expect("client");
-		let state = AppState::default();
+		let state = AppState {
+			client: OnceLock::new(),
+		};
 		assert!(state.client.set(client).is_ok());
 
 		mock_builder()

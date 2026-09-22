@@ -1,13 +1,9 @@
 use std::sync::OnceLock;
 
-use tokio::sync::Mutex;
-
 use crate::error::AppError;
 
-#[derive(Default)]
 pub struct AppState {
 	pub client: OnceLock<grindr::GrindrClient>,
-	pub upload: Mutex<()>,
 }
 
 impl AppState {

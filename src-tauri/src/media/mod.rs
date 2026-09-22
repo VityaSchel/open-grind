@@ -152,6 +152,8 @@ async fn serve_by<R: Runtime>(
 
 #[cfg(test)]
 mod tests {
+	use std::sync::OnceLock;
+
 	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
 	use tauri::Manager;
 
@@ -172,7 +174,9 @@ mod tests {
 	pub(super) fn app_without_a_client() -> tauri::App<MockRuntime> {
 		mock_builder()
 			.manage(MediaProxy::default())
-			.manage(AppState::default())
+			.manage(AppState {
+				client: OnceLock::new(),
+			})
 			.build(mock_context(noop_assets()))
 			.expect("mock app")
 	}

@@ -1,8 +1,7 @@
 use std::fs::File;
 use std::future::Future;
-use std::io::{self, Read, Seek, SeekFrom};
-use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::io::{Read, Seek, SeekFrom};
+use std::sync::Arc;
 use std::time::SystemTime;
 
 use grindr::{Bytes, Session};
@@ -10,23 +9,24 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::Runtime;
 
-use crate::api::rest::{encode_response, RawResponse};
+use crate::api::rest::{self, encode_response, RawResponse};
 use crate::api::update::TransferHold;
 use crate::error::AppError;
 use crate::hex::hex;
 use crate::photo;
 use crate::state::AppState;
 use crate::upload::form::{FormPart, Framing};
-use crate::upload::picked::{inspect, MediaKind, PickedFile};
-use crate::upload::stream::{taken, ContentDigest, FileBody};
+use crate::upload::inspect::{inspect, MediaKind};
+use crate::upload::picked::PickedFile;
+use crate::upload::stream::{ContentDigest, FileBody};
+use crate::upload::{media_error, UploadLock};
 use crate::video::strip::{self, Patch};
 
 const MAX_PHOTO_BYTES: u64 = 64 * 1024 * 1024;
 const VIDEO_MP4: &str = "video/mp4";
 
-pub const NOT_MEDIA: &str = "That file is not a photo or a video";
-pub const PHOTO_TOO_LARGE: &str = "Photos over 64 MB can't be uploaded";
-pub const VIDEO_UNREADABLE: &str = "That video's format can't be read";
+const NOT_MEDIA: &str = "That file is not a photo or a video";
+const VIDEO_UNREADABLE: &str = "That video's format can't be read";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,23 +52,37 @@ pub struct UploadOutcome {
 }
 
 #[derive(Debug)]
-pub struct PreparedStream {
-	pub framing: Framing,
-	pub body_size: u64,
+struct PreparedStream {
+	framing: Framing,
+	body_size: u64,
 }
 
 #[derive(Debug)]
-pub struct PreparedBody {
-	pub content_type: String,
-	pub body: Bytes,
-	pub sha256: String,
-	pub body_size: u64,
+struct PreparedBody {
+	content_type: String,
+	body: Bytes,
+	sha256: String,
+	body_size: u64,
 }
 
-pub fn prepare_stream(
-	part: &FormPart<'_>,
+struct StreamedPart<'a> {
+	part: &'a FormPart<'a>,
 	content_len: u64,
 	max_body_size: u64,
+}
+
+struct WholePart<'a> {
+	part: &'a FormPart<'a>,
+	content: Bytes,
+	max_body_size: u64,
+}
+
+fn prepare_stream(
+	StreamedPart {
+		part,
+		content_len,
+		max_body_size,
+	}: StreamedPart<'_>,
 ) -> Result<PreparedStream, AppError> {
 	let framing = Framing::new(part);
 	let body_size = framing.size(content_len);
@@ -78,12 +92,18 @@ pub fn prepare_stream(
 	Ok(PreparedStream { framing, body_size })
 }
 
-pub fn prepare_body(
-	part: &FormPart<'_>,
-	content: Bytes,
-	max_body_size: u64,
+fn prepare_body(
+	WholePart {
+		part,
+		content,
+		max_body_size,
+	}: WholePart<'_>,
 ) -> Result<PreparedBody, AppError> {
-	let prepared = prepare_stream(part, content.len() as u64, max_body_size)?;
+	let prepared = prepare_stream(StreamedPart {
+		part,
+		content_len: content.len() as u64,
+		max_body_size,
+	})?;
 	let sha256 = sha256_hex(&content);
 	let body = prepared.framing.frame(content);
 	Ok(PreparedBody {
@@ -94,7 +114,14 @@ pub fn prepare_body(
 	})
 }
 
-pub fn sha256_hex(bytes: &[u8]) -> String {
+fn photo_too_large() -> String {
+	format!(
+		"Photos over {} MB can't be uploaded",
+		MAX_PHOTO_BYTES / 1024 / 1024
+	)
+}
+
+pub(super) fn sha256_hex(bytes: &[u8]) -> String {
 	hex(&Sha256::digest(bytes))
 }
 
@@ -119,7 +146,7 @@ impl ContentHash {
 		match self {
 			ContentHash::Known(hex) => Some(hex),
 			ContentHash::Pending(digest) => {
-				taken(&digest).map(|digest| hex(&digest))
+				digest.get().map(|digest| hex(&digest))
 			}
 		}
 	}
@@ -151,7 +178,7 @@ fn read_source(mut file: File) -> Result<Source, AppError> {
 		}
 	}
 	if inspection.size > MAX_PHOTO_BYTES {
-		return Err(AppError::Media(PHOTO_TOO_LARGE.to_owned()));
+		return Err(AppError::Media(photo_too_large()));
 	}
 	file.seek(SeekFrom::Start(0)).map_err(media_error)?;
 	let mut bytes =
@@ -161,13 +188,9 @@ fn read_source(mut file: File) -> Result<Source, AppError> {
 		.read_to_end(&mut bytes)
 		.map_err(media_error)?;
 	if bytes.len() as u64 > MAX_PHOTO_BYTES {
-		return Err(AppError::Media(PHOTO_TOO_LARGE.to_owned()));
+		return Err(AppError::Media(photo_too_large()));
 	}
 	Ok(Source::Photo { bytes })
-}
-
-fn media_error(error: io::Error) -> AppError {
-	AppError::Media(error.to_string())
 }
 
 fn profile_of(session: &Option<Session>) -> Option<&str> {
@@ -207,30 +230,26 @@ async fn open_and_read<R: Runtime>(
 	app: tauri::AppHandle<R>,
 	file: PickedFile,
 ) -> Result<Source, AppError> {
-	tokio::task::spawn_blocking(move || {
+	photo::off_thread(move || {
 		read_source(file.open(&app).map_err(media_error)?)
 	})
-	.await
-	.map_err(|error| AppError::Media(error.to_string()))?
+	.await?
 }
 
 #[tauri::command]
 pub async fn upload_media_file(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	upload_lock: tauri::State<'_, UploadLock>,
 	file: PickedFile,
 	request: UploadRequest,
 	max_body_size: u64,
 	profile_id: String,
 ) -> Result<UploadOutcome, AppError> {
 	let client = state.client()?;
-	let method = grindr::Method::from_str(&request.method).map_err(|_| {
-		AppError::Api {
-			code: 400,
-			message: format!("Invalid method: {}", request.method),
-		}
-	})?;
-	let _one_at_a_time = state.upload.lock().await;
+	rest::refuse_signed_path(&request.path)?;
+	let method = rest::parse_method(&request.method)?;
+	let _one_at_a_time = upload_lock.0.lock().await;
 	let _background = TransferHold::media_upload(&app);
 
 	let source = open_and_read(app.clone(), file.clone()).await?;
@@ -238,15 +257,15 @@ pub async fn upload_media_file(
 		Source::Photo { bytes } => {
 			let photo =
 				photo::normalize(&app, bytes, photo::JPEG.to_owned()).await?;
-			let prepared = prepare_body(
-				&FormPart {
+			let prepared = prepare_body(WholePart {
+				part: &FormPart {
 					name: &request.part.name,
 					filename: &request.part.filename,
 					content_type: &photo.content_type,
 				},
-				Bytes::from(photo.bytes),
+				content: Bytes::from(photo.bytes),
 				max_body_size,
-			)?;
+			})?;
 			Outgoing {
 				content_type: prepared.content_type,
 				payload: Payload::Whole(prepared.body),
@@ -255,16 +274,16 @@ pub async fn upload_media_file(
 			}
 		}
 		Source::Video { size, patches } => {
-			let prepared = prepare_stream(
-				&FormPart {
+			let prepared = prepare_stream(StreamedPart {
+				part: &FormPart {
 					name: &request.part.name,
 					filename: &request.part.filename,
 					content_type: VIDEO_MP4,
 				},
-				size,
+				content_len: size,
 				max_body_size,
-			)?;
-			let digest: ContentDigest = Arc::new(Mutex::new(None));
+			})?;
+			let digest = ContentDigest::default();
 			Outgoing {
 				content_type: prepared.framing.content_type.clone(),
 				payload: Payload::Streamed(FileBody {
@@ -273,7 +292,7 @@ pub async fn upload_media_file(
 					framing: prepared.framing,
 					content_len: size,
 					patches,
-					digest: Arc::clone(&digest),
+					digest: digest.clone(),
 				}),
 				body_size: prepared.body_size,
 				sha256: ContentHash::Pending(digest),
@@ -315,10 +334,10 @@ pub async fn upload_media_file(
 
 #[cfg(test)]
 mod tests {
-	use std::io::Write;
-	use std::path::PathBuf;
+	use std::sync::Mutex;
 
 	use super::*;
+	use crate::upload::test_support::TempFile;
 
 	const CLIP: &[u8] = include_bytes!("../video/fixtures/metadata.mp4");
 
@@ -350,9 +369,18 @@ mod tests {
 	#[test]
 	fn a_body_over_the_limit_is_refused_before_framing() {
 		let content = Bytes::from(vec![1u8; 100]);
-		let fits = prepare_body(&PART, content.clone(), 300).expect("fits");
-		let refused = prepare_body(&PART, content, fits.body_size - 1)
-			.expect_err("refused");
+		let fits = prepare_body(WholePart {
+			part: &PART,
+			content: content.clone(),
+			max_body_size: 300,
+		})
+		.expect("fits");
+		let refused = prepare_body(WholePart {
+			part: &PART,
+			content,
+			max_body_size: fits.body_size - 1,
+		})
+		.expect_err("refused");
 
 		assert!(matches!(refused, AppError::ContentTooLarge));
 		assert_eq!(
@@ -363,9 +391,18 @@ mod tests {
 
 	#[test]
 	fn a_streamed_video_is_refused_on_its_framed_length() {
-		let fits = prepare_stream(&CLIP_PART, 1024, u64::MAX).expect("fits");
-		let refused = prepare_stream(&CLIP_PART, 1024, fits.body_size - 1)
-			.expect_err("refused");
+		let fits = prepare_stream(StreamedPart {
+			part: &CLIP_PART,
+			content_len: 1024,
+			max_body_size: u64::MAX,
+		})
+		.expect("fits");
+		let refused = prepare_stream(StreamedPart {
+			part: &CLIP_PART,
+			content_len: 1024,
+			max_body_size: fits.body_size - 1,
+		})
+		.expect_err("refused");
 
 		assert_eq!(fits.body_size, fits.framing.size(1024));
 		assert!(fits.body_size > 1024);
@@ -374,9 +411,12 @@ mod tests {
 
 	#[test]
 	fn the_framed_body_matches_its_reported_size_and_hashes_the_content() {
-		let prepared =
-			prepare_body(&PART, Bytes::from_static(b"abc"), u64::MAX)
-				.expect("prepared");
+		let prepared = prepare_body(WholePart {
+			part: &PART,
+			content: Bytes::from_static(b"abc"),
+			max_body_size: u64::MAX,
+		})
+		.expect("prepared");
 
 		assert_eq!(prepared.body.len() as u64, prepared.body_size);
 		assert!(prepared
@@ -396,31 +436,22 @@ mod tests {
 		);
 	}
 
-	fn temp_file(name: &str, bytes: &[u8]) -> PathBuf {
-		let path = std::env::temp_dir()
-			.join(format!("og-content-{}-{name}", std::process::id()));
-		File::create(&path)
-			.expect("create")
-			.write_all(bytes)
-			.expect("write");
-		path
-	}
-
 	#[test]
 	fn a_photo_is_read_whole_after_the_sniff() {
 		let mut bytes = b"\xFF\xD8\xFF\xE0".to_vec();
 		bytes.resize(500, 7);
-		let path = temp_file("photo.jpg", &bytes);
+		let temp = TempFile::new("photo.jpg", &bytes);
+		let path = temp.path().to_path_buf();
 
 		let read = read_source(File::open(&path).expect("open")).expect("read");
 
 		assert!(matches!(read, Source::Photo { bytes: read } if read == bytes));
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_video_is_left_on_disk_with_only_a_strip_plan_read() {
-		let path = temp_file("clip.mp4", CLIP);
+		let temp = TempFile::new("clip.mp4", CLIP);
+		let path = temp.path().to_path_buf();
 
 		let read = read_source(File::open(&path).expect("open")).expect("read");
 
@@ -429,14 +460,14 @@ mod tests {
 			Source::Video { size, patches }
 				if size == CLIP.len() as u64 && !patches.is_empty()
 		));
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_video_brand_without_a_visual_track_is_not_media() {
 		let mut bytes = b"\0\0\0\x18ftypmp42\0\0\0\0".to_vec();
 		bytes.resize(4096, 9);
-		let path = temp_file("broken.mp4", &bytes);
+		let temp = TempFile::new("broken.mp4", &bytes);
+		let path = temp.path().to_path_buf();
 
 		let refused =
 			read_source(File::open(&path).expect("open")).expect_err("refused");
@@ -444,7 +475,6 @@ mod tests {
 		assert!(
 			matches!(refused, AppError::Media(message) if message == NOT_MEDIA)
 		);
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
@@ -455,7 +485,8 @@ mod tests {
 			.rposition(|window| window == b"stco")
 			.expect("stco");
 		bytes[stco + 12..stco + 16].copy_from_slice(&u32::MAX.to_be_bytes());
-		let path = temp_file("unstrippable.mp4", &bytes);
+		let temp = TempFile::new("unstrippable.mp4", &bytes);
+		let path = temp.path().to_path_buf();
 
 		let refused =
 			read_source(File::open(&path).expect("open")).expect_err("refused");
@@ -463,12 +494,12 @@ mod tests {
 		assert!(
 			matches!(refused, AppError::Media(message) if message == VIDEO_UNREADABLE)
 		);
-		std::fs::remove_file(path).ok();
 	}
 
 	#[test]
 	fn a_stray_file_is_refused_as_a_media_error() {
-		let stray = temp_file("notes.txt", b"hello");
+		let stray_temp = TempFile::new("notes.txt", b"hello");
+		let stray = stray_temp.path().to_path_buf();
 
 		let stray_error =
 			read_source(File::open(&stray).expect("open")).expect_err("stray");
@@ -476,14 +507,12 @@ mod tests {
 		assert!(
 			matches!(stray_error, AppError::Media(message) if message == NOT_MEDIA)
 		);
-		std::fs::remove_file(stray).ok();
 	}
 
 	#[test]
 	fn a_pending_hash_that_was_never_filled_in_resolves_to_nothing() {
-		let pending = ContentHash::Pending(Arc::new(Mutex::new(None)));
-		let filled =
-			ContentHash::Pending(Arc::new(Mutex::new(Some([7u8; 32]))));
+		let pending = ContentHash::Pending(ContentDigest::default());
+		let filled = ContentHash::Pending(ContentDigest::holding([7u8; 32]));
 
 		assert_eq!(pending.resolve(), None);
 		assert_eq!(filled.resolve().expect("hash"), "07".repeat(32));

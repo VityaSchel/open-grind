@@ -49,7 +49,7 @@ pub async fn normalize<R: Runtime>(
 	})
 }
 
-async fn off_thread<T: Send + 'static>(
+pub(crate) async fn off_thread<T: Send + 'static>(
 	work: impl FnOnce() -> T + Send + 'static,
 ) -> Result<T, AppError> {
 	tokio::task::spawn_blocking(work)
