@@ -5,6 +5,7 @@ import {
 	albumCoverContent,
 	albumDisplayName,
 	albumItemCountLabel,
+	albumMediaCounts,
 	albumUpdatedLabel,
 	hasNoPlaysLeft,
 	isVideoContent,
@@ -48,6 +49,30 @@ describe("isVideoContent", () => {
 	it("splits video from image content types", () => {
 		expect(isVideoContent("video/mp4")).toBe(true);
 		expect(isVideoContent("image/jpeg")).toBe(false);
+	});
+});
+
+describe("albumMediaCounts", () => {
+	const photo = { contentType: "image/jpeg" };
+	const video = { contentType: "video/mp4" };
+
+	it("counts the album's photos and videos apart", () => {
+		expect(
+			albumMediaCounts({ content: [photo, video, photo], pending: [] }),
+		).toEqual({ photos: 2, videos: 1 });
+	});
+
+	it("counts uploads in flight with the kind they will land as", () => {
+		expect(
+			albumMediaCounts({
+				content: [photo],
+				pending: [
+					{ kind: "video" },
+					{ kind: "photo" },
+					{ kind: "photo" },
+				],
+			}),
+		).toEqual({ photos: 3, videos: 1 });
 	});
 });
 

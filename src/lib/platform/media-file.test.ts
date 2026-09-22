@@ -7,7 +7,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
-import { inspectMediaFile, mediaFileKindOf } from "$lib/api/media-file";
+import { inspectMediaFile, mediaFileKindOf } from "$lib/platform/media-file";
 import type { PickedMedia } from "$lib/platform/media-picker";
 
 beforeEach(() => {

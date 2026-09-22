@@ -4,11 +4,11 @@ import z from "zod";
 import { demoEnabled } from "$lib/demo";
 import type { PickedMedia } from "$lib/platform/media-picker";
 
-export const mediaFileKindSchema = z.enum(["photo", "video", "unsupported"]);
+const mediaFileKindSchema = z.enum(["photo", "video", "unsupported"]);
 
 export type MediaFileKind = z.infer<typeof mediaFileKindSchema>;
 
-export const mediaFileInspectionSchema = z.object({
+const mediaFileInspectionSchema = z.object({
 	kind: mediaFileKindSchema,
 	size: z.int().nonnegative(),
 	width: z.int().positive().optional(),
@@ -42,7 +42,9 @@ export async function inspectMediaFile(
 	);
 }
 
-export type NativeMedia = Exclude<PickedMedia, { source: "web" }>;
+type NativeMedia = Exclude<PickedMedia, { source: "web" }>;
+
+export type MediaFileDescriptor = ReturnType<typeof mediaFileDescriptor>;
 
 export function mediaFileDescriptor(media: NativeMedia) {
 	switch (media.source) {

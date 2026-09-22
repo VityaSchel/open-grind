@@ -42,6 +42,7 @@ function previewAreaOf(content: AlbumContent[]): string {
 			albumId: 900,
 			albumName: "Studio",
 			content,
+			pending: [],
 			sharedCount: 0,
 			updatedLabel: "Sep 1",
 			onOpenShares: () => {},
@@ -89,6 +90,7 @@ describe("album editor header", () => {
 				}),
 				item({ contentId: 2, processing: false }),
 			],
+			pending: [],
 			sharedCount: 0,
 			updatedLabel: "Sep 1",
 			onOpenShares: () => {},
@@ -102,6 +104,33 @@ describe("album editor header", () => {
 			props: { ...props, maxPhotos: 10, maxVideos: 1 },
 		});
 		expect(known.getByText("1/10 photos, 1/1 videos")).toBeTruthy();
+	});
+
+	it("counts uploads in flight against the limits", () => {
+		const { getByText } = render(AlbumEditorHeader, {
+			props: {
+				albumId: 900,
+				albumName: "Studio",
+				content: [
+					item({
+						contentId: 1,
+						processing: false,
+						contentType: "image/jpeg",
+					}),
+				],
+				pending: [
+					{ key: "a", kind: "photo" },
+					{ key: "b", kind: "video" },
+				],
+				maxPhotos: 10,
+				maxVideos: 1,
+				sharedCount: 0,
+				updatedLabel: "Sep 1",
+				onOpenShares: () => {},
+			},
+		});
+
+		expect(getByText("2/10 photos, 1/1 videos")).toBeTruthy();
 	});
 
 	it("badges the preview only with kinds that are ready to show", () => {

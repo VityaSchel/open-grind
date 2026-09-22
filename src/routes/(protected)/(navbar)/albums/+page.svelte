@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { getMyAlbums } from "$lib/api/messaging/albums";
+	import {
+		getAlbumStorageLimits,
+		getMyAlbums,
+	} from "$lib/api/messaging/albums";
 	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
-	import { uploads } from "./album-uploads/album-uploads.svelte";
 
 	let albums = $state<MyAlbum[] | null>(null);
 	let maxAlbums = $state<number | null>(null);
@@ -16,7 +18,7 @@
 
 	async function loadMaxAlbums(): Promise<number | null> {
 		try {
-			return (await uploads.storageLimits()).maxAlbums;
+			return (await getAlbumStorageLimits()).maxAlbums;
 		} catch (caught) {
 			console.error(caught);
 			return null;

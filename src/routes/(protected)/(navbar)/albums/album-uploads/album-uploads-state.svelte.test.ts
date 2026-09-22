@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import {
-	AlbumUploads,
+	type AlbumUploads,
+	getAlbumUploads,
 	type InspectedPick,
-	inspectPicks,
 	type UploadLimits,
-} from "./album-uploads.svelte";
+} from "./album-uploads-state.svelte";
 
 const { toastError, toastSuccess } = vi.hoisted(() => ({
 	toastError: vi.fn(),
@@ -18,8 +19,6 @@ const { toastError, toastSuccess } = vi.hoisted(() => ({
 vi.mock("svelte-sonner", () => ({
 	toast: { error: toastError, success: toastSuccess },
 }));
-
-vi.mock("$lib/api/media-file", () => ({ inspectMediaFile: vi.fn() }));
 
 vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
 	...(await importOriginal<object>()),
@@ -33,19 +32,12 @@ vi.mock("$lib/components/album/album-lightbox", () => ({
 	forgetAlbumSlides: vi.fn(),
 }));
 
-vi.mock("$lib/api/methods", async (importOriginal) => ({
-	...(await importOriginal<object>()),
-	callMethod: vi.fn(),
-}));
-
-const { inspectMediaFile } = await import("$lib/api/media-file");
 const {
 	getAlbumContent,
 	getAlbumContentProcessing,
 	getMyAlbums,
 	uploadAlbumContent,
 } = await import("$lib/api/messaging/albums");
-const { callMethod } = await import("$lib/api/methods");
 const { forgetAlbumSlides } =
 	await import("$lib/components/album/album-lightbox");
 
@@ -56,7 +48,6 @@ const ALBUM_ID = 4;
 const OUR_PROFILE_ID = 11;
 
 const limits: UploadLimits = {
-	maxAlbums: 5,
 	maxContentSize: 125_829_120,
 	maxContentSizeHumanReadable: "120 MB",
 	maxContentItemsPerAlbum: 3,
@@ -69,11 +60,7 @@ function media(key: string, mimeType: string): PickedMedia {
 
 function pick(key: string, mimeType: string): InspectedPick {
 	const kind = mimeType.startsWith("video/") ? "video" : "photo";
-	return {
-		media: media(key, mimeType),
-		kind,
-		inspection: { kind, size: 1024 },
-	};
+	return { media: media(key, mimeType), inspection: { kind, size: 1024 } };
 }
 
 function albumItem(contentId: number, contentHash?: string): AlbumContent {
@@ -113,33 +100,27 @@ function httpError(status: number): ApiError {
 	});
 }
 
+function enqueue(uploads: AlbumUploads, ...inspected: InspectedPick[]) {
+	uploads.enqueue({ albumId: ALBUM_ID, inspected, limits, content: [] });
+}
+
 function draftSpy() {
 	return { land: vi.fn(), replace: vi.fn(), forget: vi.fn() };
 }
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	vi.mocked(callMethod).mockResolvedValue(OUR_PROFILE_ID);
-	vi.mocked(inspectMediaFile).mockImplementation((media) =>
-		Promise.resolve({
-			kind: media.mimeType?.startsWith("video/")
-				? "video"
-				: media.mimeType?.startsWith("image/")
-					? "photo"
-					: "unsupported",
-			size: 1024,
-		}),
-	);
+	clearAccountCaches();
 	vi.mocked(getAlbumContent).mockResolvedValue(albumWith());
 	vi.mocked(getMyAlbums).mockResolvedValue({ albums: [] });
 });
 
 describe("album uploads", () => {
-	it("queues videos first and trims the rest to the album capacity", async () => {
+	it("queues videos first and trims the rest to the album capacity", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		const counts = await uploads.enqueue({
+		const counts = uploads.enqueue({
 			albumId: ALBUM_ID,
 			inspected: [
 				pick("a", "image/jpeg"),
@@ -153,11 +134,7 @@ describe("album uploads", () => {
 			content: [],
 		});
 
-		expect(counts).toEqual({
-			accepted: 4,
-			leftOutFull: 1,
-			leftOutVideoSlot: 1,
-		});
+		expect(counts).toEqual({ leftOutFull: 1, leftOutVideoSlot: 1 });
 		expect(uploads.pending(ALBUM_ID)).toEqual([
 			{ key: "e", kind: "video" },
 			{ key: "a", kind: "photo" },
@@ -166,11 +143,11 @@ describe("album uploads", () => {
 		]);
 	});
 
-	it("counts the content already in the album against the capacity", async () => {
+	it("counts the content already in the album against the capacity", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		const counts = await uploads.enqueue({
+		const counts = uploads.enqueue({
 			albumId: ALBUM_ID,
 			inspected: [pick("a", "image/jpeg"), pick("b", "video/mp4")],
 			limits,
@@ -182,73 +159,40 @@ describe("album uploads", () => {
 			],
 		});
 
-		expect(counts).toEqual({
-			accepted: 0,
-			leftOutFull: 2,
-			leftOutVideoSlot: 0,
-		});
+		expect(counts).toEqual({ leftOutFull: 2, leftOutVideoSlot: 0 });
 		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
 	});
 
-	it("leaves a video out of an album already full of photos", async () => {
+	it("leaves a video out of an album already full of photos", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		const counts = await uploads.enqueue({
+		const counts = uploads.enqueue({
 			albumId: ALBUM_ID,
 			inspected: [pick("a", "video/mp4")],
 			limits,
 			content: [albumItem(1), albumItem(2), albumItem(3)],
 		});
 
-		expect(counts).toEqual({
-			accepted: 0,
-			leftOutFull: 1,
-			leftOutVideoSlot: 0,
-		});
+		expect(counts).toEqual({ leftOutFull: 1, leftOutVideoSlot: 0 });
 		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
 	});
 
-	it("keeps the free video slot open while the album has photo room", async () => {
+	it("keeps the free video slot open while the album has photo room", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		const counts = await uploads.enqueue({
+		const counts = uploads.enqueue({
 			albumId: ALBUM_ID,
 			inspected: [pick("a", "video/mp4"), pick("b", "video/mp4")],
 			limits,
 			content: [albumItem(1), albumItem(2)],
 		});
 
-		expect(counts).toEqual({
-			accepted: 1,
-			leftOutFull: 0,
-			leftOutVideoSlot: 1,
-		});
+		expect(counts).toEqual({ leftOutFull: 0, leftOutVideoSlot: 1 });
 		expect(uploads.pending(ALBUM_ID)).toEqual([
 			{ key: "a", kind: "video" },
 		]);
-	});
-
-	it("refuses a file that is neither a photo nor a video", async () => {
-		const inspected = await inspectPicks([
-			media("a", "application/pdf"),
-			media("b", "image/jpeg"),
-		]);
-
-		expect(inspected).toEqual([pick("b", "image/jpeg")]);
-		expect(toastError).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
-		);
-	});
-
-	it("refuses a file it cannot inspect at all", async () => {
-		vi.mocked(inspectMediaFile).mockRejectedValue(new Error("gone"));
-
-		expect(await inspectPicks([media("a", "image/jpeg")])).toEqual([]);
-		expect(toastError).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
-		);
 	});
 
 	it("hands a landed item to the open draft", async () => {
@@ -257,16 +201,11 @@ describe("album uploads", () => {
 			sha256: "a".repeat(64),
 		});
 		vi.mocked(getAlbumContent).mockResolvedValue(albumWith(albumItem(7)));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "image/jpeg")],
-			limits,
-			content: [],
-		});
+		enqueue(uploads, pick("a", "image/jpeg"));
 		await vi.waitFor(() => expect(draft.land).toHaveBeenCalled());
 
 		expect(draft.land).toHaveBeenCalledWith(albumItem(7));
@@ -284,17 +223,12 @@ describe("album uploads", () => {
 			.mockRejectedValueOnce(httpError(500))
 			.mockRejectedValueOnce(httpError(500))
 			.mockResolvedValue(albumWith(albumItem(7)));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "image/jpeg")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "image/jpeg"));
 			await vi.advanceTimersByTimeAsync(0);
 
 			expect(uploads.hasPending(ALBUM_ID)).toBe(true);
@@ -319,17 +253,12 @@ describe("album uploads", () => {
 			sha256: "a".repeat(64),
 		});
 		vi.mocked(getAlbumContent).mockRejectedValue(httpError(500));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "image/jpeg")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "image/jpeg"));
 			await vi.advanceTimersByTimeAsync(30_000);
 
 			expect(uploads.hasPending(ALBUM_ID)).toBe(true);
@@ -359,17 +288,12 @@ describe("album uploads", () => {
 			albums: [{ albumId: ALBUM_ID, content: [albumItem(9, sha256)] }],
 		} as unknown as Awaited<ReturnType<typeof getMyAlbums>>);
 		vi.mocked(getAlbumContent).mockResolvedValue(albumWith(albumItem(9)));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "image/jpeg")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "image/jpeg"));
 			await vi.advanceTimersByTimeAsync(5_000);
 
 			expect(draft.land).toHaveBeenCalledWith(albumItem(9));
@@ -389,12 +313,12 @@ describe("album uploads", () => {
 		vi.mocked(getMyAlbums).mockResolvedValue({
 			albums: [{ albumId: ALBUM_ID, content: [albumItem(9, sha256)] }],
 		} as unknown as Awaited<ReturnType<typeof getMyAlbums>>);
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
+			uploads.enqueue({
 				albumId: ALBUM_ID,
 				inspected: [pick("a", "image/jpeg")],
 				limits,
@@ -412,15 +336,10 @@ describe("album uploads", () => {
 	it("gives up on an unconfirmed failure that never lands", async () => {
 		vi.useFakeTimers();
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(502));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "video/mp4")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(60_000);
 
 			expect(toastError).toHaveBeenCalledWith("Couldn't add video");
@@ -429,20 +348,15 @@ describe("album uploads", () => {
 		}
 	});
 
-	it("stops reconciling once the account is cleared", async () => {
+	it("stops reconciling once the uploads are destroyed", async () => {
 		vi.useFakeTimers();
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(502));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "image/jpeg")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "image/jpeg"));
 			await vi.advanceTimersByTimeAsync(5_000);
-			uploads.clear();
+			uploads.destroy();
 			vi.mocked(getMyAlbums).mockClear();
 			await vi.advanceTimersByTimeAsync(60_000);
 
@@ -455,14 +369,9 @@ describe("album uploads", () => {
 
 	it("stops uploading a kind the album has no room for", async () => {
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(402));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
-			limits,
-			content: [],
-		});
+		enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
 		await vi.waitFor(() =>
 			expect(uploads.hasPending(ALBUM_ID)).toBe(false),
 		);
@@ -475,14 +384,9 @@ describe("album uploads", () => {
 
 	it("names a one-video limit in the singular", async () => {
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(402));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "video/mp4")],
-			limits,
-			content: [],
-		});
+		enqueue(uploads, pick("a", "video/mp4"));
 		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
 
 		expect(toastError).toHaveBeenCalledWith(
@@ -492,14 +396,9 @@ describe("album uploads", () => {
 
 	it("reports a refused upload without reconciling", async () => {
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(400));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "image/jpeg")],
-			limits,
-			content: [],
-		});
+		enqueue(uploads, pick("a", "image/jpeg"));
 		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
 
 		expect(toastError).toHaveBeenCalledWith("Couldn't add photo");
@@ -508,42 +407,105 @@ describe("album uploads", () => {
 
 	it("names the size limit when the server refuses the body", async () => {
 		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(413));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "image/jpeg")],
-			limits,
-			content: [],
-		});
+		enqueue(uploads, pick("a", "image/jpeg"));
 		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
 
 		expect(toastError).toHaveBeenCalledWith("Larger than the 120 MB limit");
 		expect(getMyAlbums).not.toHaveBeenCalled();
 	});
 
-	it("drops the queue when the signed-in account changes", async () => {
-		vi.mocked(uploadAlbumContent).mockResolvedValue({
-			contentId: 7,
-			sha256: "c".repeat(64),
-		});
-		vi.mocked(callMethod)
-			.mockResolvedValueOnce(OUR_PROFILE_ID)
-			.mockResolvedValueOnce(OUR_PROFILE_ID)
-			.mockResolvedValue(OUR_PROFILE_ID + 1);
-		const uploads = new AlbumUploads();
-
-		await uploads.enqueue({
-			albumId: ALBUM_ID,
-			inspected: [pick("a", "image/jpeg"), pick("b", "image/jpeg")],
-			limits,
-			content: [],
-		});
-		await vi.waitFor(() =>
-			expect(uploads.hasPending(ALBUM_ID)).toBe(false),
+	it("stops uploading once the signed-in account changes", async () => {
+		let finish: (value: {
+			contentId: number;
+			sha256: string;
+		}) => void = () => {};
+		vi.mocked(uploadAlbumContent).mockReturnValue(
+			new Promise((resolve) => {
+				finish = resolve;
+			}),
 		);
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+		const draft = draftSpy();
+		uploads.attachDraft({ albumId: ALBUM_ID, draft });
+
+		enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
+		await vi.waitFor(() => expect(uploadAlbumContent).toHaveBeenCalled());
+		const next = getAlbumUploads(OUR_PROFILE_ID + 1);
+
+		expect(next).not.toBe(uploads);
+		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
+
+		finish({ contentId: 7, sha256: "c".repeat(64) });
+		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(uploadAlbumContent).toHaveBeenCalledTimes(1);
+		expect(uploadAlbumContent).toHaveBeenCalledWith(
+			expect.objectContaining({ profileId: OUR_PROFILE_ID }),
+		);
+		expect(getAlbumContent).not.toHaveBeenCalled();
+		expect(draft.land).not.toHaveBeenCalled();
+	});
+
+	it("keeps one uploads state per account until sign-out", () => {
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+
+		expect(getAlbumUploads(OUR_PROFILE_ID)).toBe(uploads);
+
+		clearAccountCaches();
+
+		expect(getAlbumUploads(OUR_PROFILE_ID)).not.toBe(uploads);
+	});
+
+	it("refuses new uploads once destroyed", () => {
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+		uploads.destroy();
+
+		enqueue(uploads, pick("a", "image/jpeg"));
+
+		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
+		expect(uploadAlbumContent).not.toHaveBeenCalled();
+	});
+
+	it.each(["SessionCleared", "NotLoggedIn"] as const)(
+		"drops the queue once the session is gone (%s)",
+		async (kind) => {
+			vi.mocked(uploadAlbumContent).mockRejectedValue(
+				new ApiError({
+					message: "Signed out",
+					request: { method: "POST", path: "/v1/albums" },
+					kind,
+				}),
+			);
+			const uploads = getAlbumUploads(OUR_PROFILE_ID);
+
+			enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
+			await vi.waitFor(() =>
+				expect(uploads.hasPending(ALBUM_ID)).toBe(false),
+			);
+
+			expect(uploadAlbumContent).toHaveBeenCalledTimes(1);
+			expect(getMyAlbums).not.toHaveBeenCalled();
+			expect(toastError).not.toHaveBeenCalled();
+		},
+	);
+
+	it("names the size limit when the backend refuses the file as too large", async () => {
+		vi.mocked(uploadAlbumContent).mockRejectedValue(
+			new ApiError({
+				message: "Too large",
+				request: { method: "POST", path: "/v1/albums" },
+				kind: "ContentTooLarge",
+			}),
+		);
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+
+		enqueue(uploads, pick("a", "video/mp4"));
+		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
+
+		expect(toastError).toHaveBeenCalledWith("Larger than the 120 MB limit");
+		expect(getMyAlbums).not.toHaveBeenCalled();
 	});
 
 	it("replaces a video the server finished processing", async () => {
@@ -558,17 +520,12 @@ describe("album uploads", () => {
 		vi.mocked(getAlbumContentProcessing)
 			.mockResolvedValueOnce({ processing: true })
 			.mockResolvedValue({ processing: false });
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "video/mp4")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(5_000);
 
 			expect(draft.land).toHaveBeenCalledWith(videoItem(7, true));
@@ -592,17 +549,12 @@ describe("album uploads", () => {
 		vi.mocked(getAlbumContentProcessing).mockResolvedValue({
 			processing: false,
 		});
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "video/mp4")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(2_500);
 
 			expect(draft.land).toHaveBeenCalledWith(videoItem(7, true));
@@ -627,17 +579,12 @@ describe("album uploads", () => {
 			albumWith(videoItem(7, true)),
 		);
 		vi.mocked(getAlbumContentProcessing).mockRejectedValue(httpError(404));
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "video/mp4")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(5_000);
 
 			expect(draft.forget).toHaveBeenCalledWith(7);
@@ -660,17 +607,12 @@ describe("album uploads", () => {
 		vi.mocked(getAlbumContentProcessing).mockResolvedValue({
 			processing: true,
 		});
-		const uploads = new AlbumUploads();
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 		const draft = draftSpy();
 		uploads.attachDraft({ albumId: ALBUM_ID, draft });
 
 		try {
-			await uploads.enqueue({
-				albumId: ALBUM_ID,
-				inspected: [pick("a", "video/mp4")],
-				limits,
-				content: [],
-			});
+			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(2_500 * 130);
 
 			expect(getAlbumContentProcessing).toHaveBeenCalledTimes(120);

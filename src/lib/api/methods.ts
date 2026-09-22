@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
 import {
+	ApiError,
 	type ApiErrorKind,
 	apiErrorKinds,
 	blockedAndStaleMessages,
@@ -205,6 +206,12 @@ export function asAppError(error: unknown) {
 		}
 		return { ...data, prettyMessage };
 	}
+}
+
+export function errorKindOf(error: unknown): ApiErrorKind | null {
+	return error instanceof ApiError
+		? error.kind
+		: (asAppError(error)?.kind ?? null);
 }
 
 export function summarizeServerMessage(message: string): string {

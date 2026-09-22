@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 
-import { ApiError } from "$lib/api/api-error";
+import { httpStatusOf } from "$lib/api/api-error";
 import {
 	deleteAlbumContent,
 	getAlbumContent,
@@ -181,8 +181,7 @@ export class AlbumDraft {
 		contentId: number;
 	}): boolean {
 		return (
-			error instanceof ApiError &&
-			error.response?.status === 400 &&
+			httpStatusOf(error) === 400 &&
 			this.content.some(
 				(item) => item.contentId === contentId && item.processing,
 			)

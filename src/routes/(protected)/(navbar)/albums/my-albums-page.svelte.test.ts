@@ -3,13 +3,11 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { api, limits } = vi.hoisted(() => ({
-	api: { getMyAlbums: vi.fn() },
-	limits: { storageLimits: vi.fn() },
+const { api } = vi.hoisted(() => ({
+	api: { getMyAlbums: vi.fn(), getAlbumStorageLimits: vi.fn() },
 }));
 
 vi.mock("$lib/api/messaging/albums", () => api);
-vi.mock("./album-uploads/album-uploads.svelte", () => ({ uploads: limits }));
 
 import { demoMyAlbums } from "$lib/demo/mock/albums";
 import MyAlbumsPage from "./+page.svelte";
@@ -42,7 +40,7 @@ afterEach(() => {
 
 describe("my albums page", () => {
 	it("leads with the add cell below the album cap", async () => {
-		limits.storageLimits.mockResolvedValueOnce({
+		api.getAlbumStorageLimits.mockResolvedValueOnce({
 			maxAlbums: albums.length + 1,
 		});
 
@@ -53,7 +51,7 @@ describe("my albums page", () => {
 	});
 
 	it("drops the add cell at the album cap", async () => {
-		limits.storageLimits.mockResolvedValueOnce({
+		api.getAlbumStorageLimits.mockResolvedValueOnce({
 			maxAlbums: albums.length,
 		});
 
@@ -65,7 +63,7 @@ describe("my albums page", () => {
 
 	it("waits for the limits before showing any cell", async () => {
 		let resolve: (value: { maxAlbums: number }) => void = () => {};
-		limits.storageLimits.mockReturnValueOnce(
+		api.getAlbumStorageLimits.mockReturnValueOnce(
 			new Promise((settle) => {
 				resolve = settle;
 			}),
@@ -84,7 +82,7 @@ describe("my albums page", () => {
 
 	it("keeps the add cell when the limits fail to load", async () => {
 		const failure = new Error("storage limits unavailable");
-		limits.storageLimits.mockRejectedValueOnce(failure);
+		api.getAlbumStorageLimits.mockRejectedValueOnce(failure);
 		const logged = vi.spyOn(console, "error").mockImplementation(() => {});
 
 		const tiles = await tilesOf(opened());

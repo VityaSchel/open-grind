@@ -4,7 +4,7 @@
 	import {
 		albumCoverContent,
 		albumItemCountLabel,
-		isVideoContent,
+		albumMediaCounts,
 		readyAlbumMedia,
 	} from "$lib/components/album/album";
 	import AlbumNameField from "$lib/components/album/AlbumNameField.svelte";
@@ -13,12 +13,14 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
+	import type { PendingUpload } from "../album-uploads/album-uploads-state.svelte";
 	import AlbumHeaderLayout from "./AlbumHeaderLayout.svelte";
 
 	let {
 		albumId,
 		albumName = $bindable(),
 		content,
+		pending,
 		maxPhotos = null,
 		maxVideos = null,
 		sharedCount,
@@ -28,6 +30,7 @@
 		albumId: number;
 		albumName: string;
 		content: AlbumContent[];
+		pending: PendingUpload[];
 		maxPhotos?: number | null;
 		maxVideos?: number | null;
 		sharedCount: number;
@@ -35,13 +38,11 @@
 		onOpenShares: () => void;
 	} = $props();
 
-	const videoCount = $derived(
-		content.filter((item) => isVideoContent(item.contentType)).length,
-	);
+	const counts = $derived(albumMediaCounts({ content, pending }));
 	const itemCountLabel = $derived(
 		maxPhotos === null || maxVideos === null
-			? albumItemCountLabel(content.length)
-			: `${content.length - videoCount}/${maxPhotos} photos, ${videoCount}/${maxVideos} videos`,
+			? albumItemCountLabel(counts.photos + counts.videos)
+			: `${counts.photos}/${maxPhotos} photos, ${counts.videos}/${maxVideos} videos`,
 	);
 	const cover = $derived(albumCoverContent(content));
 	const readyMedia = $derived(readyAlbumMedia(content));

@@ -17,7 +17,6 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 
 import { ApiError } from "$lib/api/api-error";
 import {
-	albumMediaErrorMessage,
 	getAlbumContentProcessing,
 	getAlbumShares,
 	getAlbumStorageLimits,
@@ -203,10 +202,7 @@ describe("albums API wrappers", () => {
 	});
 });
 
-const uploadLimits = {
-	maxContentSize: 125829120,
-	maxContentSizeHumanReadable: "120.00 MB",
-};
+const uploadLimits = { maxContentSize: 125829120 };
 
 const pickedPhoto = {
 	source: "desktop",
@@ -380,33 +376,6 @@ describe("album content upload", () => {
 
 		expect(error).toBeInstanceOf(ApiError);
 		expect((error as ApiError).kind).toBe("ContentTooLarge");
-		expect(albumMediaErrorMessage({ error, limits: uploadLimits })).toBe(
-			"Larger than the 120.00 MB limit",
-		);
-	});
-
-	it("reads a 413 refusal as the body being too large", () => {
-		const error = new ApiError({
-			message: "HTTP 413",
-			request: { method: "POST", path: "/v1/albums/900/content" },
-			response: { status: 413, body: "" },
-		});
-
-		expect(albumMediaErrorMessage({ error, limits: uploadLimits })).toBe(
-			"Larger than the 120.00 MB limit",
-		);
-	});
-
-	it("leaves every other failure without album-specific copy", () => {
-		const error = new ApiError({
-			message: "Something else",
-			request: { method: "POST", path: "/v1/albums/900/content" },
-			kind: "Api",
-		});
-
-		expect(
-			albumMediaErrorMessage({ error, limits: uploadLimits }),
-		).toBeNull();
 	});
 
 	it("prepends an uploaded photo to the demo album", () => {

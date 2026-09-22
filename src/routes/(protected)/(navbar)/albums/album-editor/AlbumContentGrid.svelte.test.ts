@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
 import type { AlbumContent } from "$lib/model/messaging/albums";
-import type { PendingUpload } from "../album-uploads/album-uploads.svelte";
+import type { PendingUpload } from "../album-uploads/album-uploads-state.svelte";
 import AlbumContentGrid from "./AlbumContentGrid.svelte";
 
 const readyPhoto: AlbumContent = {

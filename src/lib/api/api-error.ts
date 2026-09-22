@@ -53,6 +53,10 @@ export class ApiError extends Error {
 	}
 }
 
+export function httpStatusOf(error: unknown): number | null {
+	return error instanceof ApiError ? (error.response?.status ?? null) : null;
+}
+
 export const blockedAndStaleMessages = {
 	RequestBlocked: "Grindr is blocking your requests",
 	NetworkBlocked: "Something blocked the request before it reached Grindr",

@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 
-	import { isVideoContent } from "$lib/components/album/album";
+	import {
+		albumMediaCounts,
+		isVideoContent,
+	} from "$lib/components/album/album";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -10,7 +14,10 @@
 	import { proxyMediaUrl } from "$lib/util/media";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 	import { addAlbumMedia } from "../album-uploads/add-album-media";
-	import type { PendingUpload } from "../album-uploads/album-uploads.svelte";
+	import {
+		getAlbumUploads,
+		type PendingUpload,
+	} from "../album-uploads/album-uploads-state.svelte";
 
 	let {
 		albumId,
@@ -69,17 +76,18 @@
 
 	const slots = $derived([...pendingSlots, ...contentSlots]);
 
-	const photos = $derived(
-		content.filter((item) => !isVideoContent(item.contentType)).length +
-			pending.filter(({ kind }) => kind === "photo").length,
-	);
+	const photos = $derived(albumMediaCounts({ content, pending }).photos);
 
 	const full = $derived(maxPhotos !== null && photos >= maxPhotos);
 
 	async function add() {
 		adding = true;
 		try {
-			await addAlbumMedia({ albumId, content: () => content });
+			await addAlbumMedia({
+				uploads: getAlbumUploads(page.data.ourProfileId),
+				albumId,
+				content: () => content,
+			});
 		} finally {
 			adding = false;
 		}

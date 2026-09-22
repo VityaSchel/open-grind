@@ -13,6 +13,7 @@ import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
+import type { MediaFileDescriptor } from "$lib/platform/media-file";
 
 type RequestInfo = { method: string; path: string; body?: unknown };
 
@@ -86,7 +87,7 @@ function buildRestResponse({
 	};
 }
 
-export function decodeRestResponse({
+function decodeRestResponse({
 	encoded,
 	requestInfo,
 }: {
@@ -103,7 +104,7 @@ export function decodeRestResponse({
 	return buildRestResponse({ status, responseBody, requestInfo });
 }
 
-export function restInvokeError({
+function restInvokeError({
 	error,
 	requestInfo,
 }: {
@@ -151,6 +152,49 @@ export async function invokeRest(
 	try {
 		const encoded = await invoke(command, options.args);
 		return decodeRestResponse({ encoded, requestInfo });
+	} catch (error) {
+		throw restInvokeError({ error, requestInfo });
+	}
+}
+
+const uploadOutcomeSchema = z.object({
+	response: z.string(),
+	sha256: z
+		.string()
+		.regex(/^[0-9a-f]{64}$/)
+		.nullable(),
+	bodySize: z.int().nonnegative(),
+});
+
+export async function uploadFileRest(
+	path: string,
+	options: {
+		file: MediaFileDescriptor;
+		part: { name: string; filename: string };
+		maxBodySize: number;
+		profileId: number;
+		onHashed?: (sha256: string) => void;
+	},
+) {
+	const method = "POST";
+	const requestInfo = { method, path };
+	try {
+		const outcome = uploadOutcomeSchema.parse(
+			await invoke("upload_media_file", {
+				file: options.file,
+				request: { method, path, part: options.part },
+				maxBodySize: options.maxBodySize,
+				profileId: String(options.profileId),
+			}),
+		);
+		if (outcome.sha256 !== null) options.onHashed?.(outcome.sha256);
+		return {
+			response: decodeRestResponse({
+				encoded: outcome.response,
+				requestInfo,
+			}),
+			sha256: outcome.sha256,
+		};
 	} catch (error) {
 		throw restInvokeError({ error, requestInfo });
 	}

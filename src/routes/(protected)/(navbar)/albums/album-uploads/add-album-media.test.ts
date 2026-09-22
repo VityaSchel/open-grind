@@ -1,39 +1,46 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
-const store = vi.hoisted(() => ({
-	inspectPicks: vi.fn(),
-	uploads: { storageLimits: vi.fn(), pending: vi.fn(), enqueue: vi.fn() },
-}));
+const mediaFile = vi.hoisted(() => ({ inspectMediaFile: vi.fn() }));
+const api = vi.hoisted(() => ({ getAlbumStorageLimits: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
 vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("$lib/api/messaging/albums", () => api);
+vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	...mediaFile,
+}));
 vi.mock("$lib/platform/media-picker", () => picker);
-vi.mock("./album-uploads.svelte", () => store);
 vi.mock("svelte-sonner", () => sonner);
 
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import type { PickedMedia } from "$lib/platform/media-picker";
-import { addAlbumMedia } from "./add-album-media";
+import { addAlbumMedia, pickInspectedAlbumMedia } from "./add-album-media";
+import type { AlbumUploads } from "./album-uploads-state.svelte";
 
 const limits = {
-	maxAlbums: 5,
 	maxContentSize: 125829120,
 	maxContentSizeHumanReadable: "120.00 MB",
 	maxContentItemsPerAlbum: 10,
 	maxVideosPerAlbum: 1,
 };
 
-const picked: PickedMedia[] = [
-	{ source: "desktop", key: "p", mimeType: "image/jpeg", path: "/a.jpg" },
-];
+function desktopPick(key: string, mimeType: string): PickedMedia {
+	return { source: "desktop", key, mimeType, path: `/tmp/${key}` };
+}
+
+const picked = [desktopPick("p", "image/jpeg")];
 
 const inspected = picked.map((media) => ({
 	media,
-	kind: "photo" as const,
 	inspection: { kind: "photo" as const, size: 1024 },
 }));
+
+const store = { pending: vi.fn(), enqueue: vi.fn() };
+
+const uploads = store as unknown as AlbumUploads;
 
 function item(contentId: number, contentType: string): AlbumContent {
 	return {
@@ -51,20 +58,64 @@ function item(contentId: number, contentType: string): AlbumContent {
 beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
-	store.uploads.pending.mockReturnValue([]);
-	store.uploads.storageLimits.mockResolvedValue(limits);
-	store.uploads.enqueue.mockResolvedValue({
-		accepted: 1,
-		leftOutFull: 0,
-		leftOutVideoSlot: 0,
-	});
-	store.inspectPicks.mockResolvedValue(inspected);
+	store.pending.mockReturnValue([]);
+	store.enqueue.mockReturnValue({ leftOutFull: 0, leftOutVideoSlot: 0 });
+	api.getAlbumStorageLimits.mockResolvedValue(limits);
+	mediaFile.inspectMediaFile.mockImplementation((media: PickedMedia) =>
+		Promise.resolve({
+			kind: media.mimeType?.startsWith("video/")
+				? "video"
+				: media.mimeType?.startsWith("image/")
+					? "photo"
+					: "unsupported",
+			size: 1024,
+		}),
+	);
 	picker.pickMultipleMedia.mockResolvedValue(picked);
+});
+
+describe("picking media for an album", () => {
+	it("offers videos only when asked to", async () => {
+		await pickInspectedAlbumMedia({ videoRoom: true });
+		await pickInspectedAlbumMedia({ videoRoom: false });
+
+		expect(picker.pickMultipleMedia.mock.calls).toEqual([
+			["media"],
+			["image"],
+		]);
+	});
+
+	it("refuses a file that is neither a photo nor a video", async () => {
+		picker.pickMultipleMedia.mockResolvedValue([
+			desktopPick("a", "application/pdf"),
+			desktopPick("b", "image/jpeg"),
+		]);
+
+		expect(await pickInspectedAlbumMedia({ videoRoom: true })).toEqual([
+			{
+				media: desktopPick("b", "image/jpeg"),
+				inspection: { kind: "photo", size: 1024 },
+			},
+		]);
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"That file isn't a photo or video",
+		);
+	});
+
+	it("refuses a file it cannot inspect at all", async () => {
+		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
+
+		expect(await pickInspectedAlbumMedia({ videoRoom: true })).toEqual([]);
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"That file isn't a photo or video",
+		);
+	});
 });
 
 describe("adding media to an album", () => {
 	it("offers videos while a video slot is free", async () => {
 		await addAlbumMedia({
+			uploads,
 			albumId: 903,
 			content: () => [item(1, "image/jpeg")],
 		});
@@ -74,6 +125,7 @@ describe("adding media to an album", () => {
 
 	it("offers photos only once the album holds every video it can", async () => {
 		await addAlbumMedia({
+			uploads,
 			albumId: 903,
 			content: () => [item(1, "video/mp4")],
 		});
@@ -83,6 +135,7 @@ describe("adding media to an album", () => {
 
 	it("offers photos only once the album holds every photo it can", async () => {
 		await addAlbumMedia({
+			uploads,
 			albumId: 903,
 			content: () =>
 				Array.from({ length: 10 }, (_, index) =>
@@ -94,38 +147,34 @@ describe("adding media to an album", () => {
 	});
 
 	it("counts uploads in flight against the video limit", async () => {
-		store.uploads.pending.mockReturnValue([{ key: "a", kind: "video" }]);
+		store.pending.mockReturnValue([{ key: "a", kind: "video" }]);
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
-		expect(store.uploads.pending).toHaveBeenCalledWith(903);
+		expect(store.pending).toHaveBeenCalledWith(903);
 		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("image");
 	});
 
 	it("counts uploads in flight against the photo limit", async () => {
-		store.uploads.pending.mockReturnValue(
+		store.pending.mockReturnValue(
 			Array.from({ length: 10 }, (_, index) => ({
 				key: String(index),
 				kind: "photo",
 			})),
 		);
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
 		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("image");
 	});
 
 	it("enqueues what was picked and names what the album had no room for", async () => {
 		const content = [item(1, "image/jpeg")];
-		store.uploads.enqueue.mockResolvedValue({
-			accepted: 2,
-			leftOutFull: 3,
-			leftOutVideoSlot: 0,
-		});
+		store.enqueue.mockReturnValue({ leftOutFull: 3, leftOutVideoSlot: 0 });
 
-		await addAlbumMedia({ albumId: 903, content: () => content });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => content });
 
-		expect(store.uploads.enqueue).toHaveBeenCalledWith({
+		expect(store.enqueue).toHaveBeenCalledWith({
 			albumId: 903,
 			inspected,
 			limits,
@@ -137,13 +186,9 @@ describe("adding media to an album", () => {
 	});
 
 	it("names the video limit when a video was dropped for it", async () => {
-		store.uploads.enqueue.mockResolvedValue({
-			accepted: 1,
-			leftOutFull: 0,
-			leftOutVideoSlot: 2,
-		});
+		store.enqueue.mockReturnValue({ leftOutFull: 0, leftOutVideoSlot: 2 });
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
 		expect(sonner.toast.error).toHaveBeenCalledWith(
 			"You can have 1 video in your album. Remove one to add another.",
@@ -157,9 +202,9 @@ describe("adding media to an album", () => {
 			return Promise.resolve(picked);
 		});
 
-		await addAlbumMedia({ albumId: 903, content: () => content });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => content });
 
-		expect(store.uploads.enqueue).toHaveBeenCalledWith({
+		expect(store.enqueue).toHaveBeenCalledWith({
 			albumId: 903,
 			inspected,
 			limits,
@@ -168,16 +213,21 @@ describe("adding media to an album", () => {
 	});
 
 	it("leaves an unsupported file to the refusal inspection already showed", async () => {
-		store.inspectPicks.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([
+			desktopPick("a", "application/pdf"),
+		]);
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
-		expect(store.uploads.enqueue).not.toHaveBeenCalled();
-		expect(sonner.toast.error).not.toHaveBeenCalled();
+		expect(store.enqueue).not.toHaveBeenCalled();
+		expect(sonner.toast.error).toHaveBeenCalledTimes(1);
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"That file isn't a photo or video",
+		);
 	});
 
 	it("says nothing when everything picked was accepted", async () => {
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
 		expect(sonner.toast.error).not.toHaveBeenCalled();
 	});
@@ -185,17 +235,17 @@ describe("adding media to an album", () => {
 	it("says nothing when the picker was dismissed", async () => {
 		picker.pickMultipleMedia.mockResolvedValue([]);
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
-		expect(store.uploads.enqueue).not.toHaveBeenCalled();
+		expect(store.enqueue).not.toHaveBeenCalled();
 		expect(sonner.toast.error).not.toHaveBeenCalled();
 	});
 
 	it("reports a failure to read the limits instead of picking", async () => {
 		const error = new Error("offline");
-		store.uploads.storageLimits.mockRejectedValue(error);
+		api.getAlbumStorageLimits.mockRejectedValue(error);
 
-		await addAlbumMedia({ albumId: 903, content: () => [] });
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
 		expect(picker.pickMultipleMedia).not.toHaveBeenCalled();
 		expect(errorToast.showErrorToast).toHaveBeenCalledWith({

@@ -1,40 +1,73 @@
 import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "$lib/api/error-toast";
-import { isVideoContent } from "$lib/components/album/album";
-import { pickMultipleMedia } from "$lib/platform/media-picker";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
+import { albumMediaCounts } from "$lib/components/album/album";
 import {
-	type InspectedPick,
-	inspectPicks,
-	type UploadLimits,
-	uploads,
-} from "./album-uploads.svelte";
+	inspectMediaFile,
+	type MediaFileInspection,
+} from "$lib/platform/media-file";
+import {
+	type PickedMedia,
+	pickMultipleMedia,
+} from "$lib/platform/media-picker";
+import type { AlbumContent } from "$lib/model/messaging/albums";
+import type {
+	AlbumUploads,
+	InspectedPick,
+	UploadLimits,
+} from "./album-uploads-state.svelte";
+
+const UNSUPPORTED_MESSAGE = "That file isn't a photo or video";
+
+function isUploadable(
+	inspection: MediaFileInspection,
+): inspection is InspectedPick["inspection"] {
+	return inspection.kind !== "unsupported";
+}
+
+async function inspectPicks(picked: PickedMedia[]): Promise<InspectedPick[]> {
+	const inspected: InspectedPick[] = [];
+	for (const media of picked) {
+		const inspection = await inspectMediaFile(media).catch(() => null);
+		if (inspection === null || !isUploadable(inspection)) {
+			toast.error(UNSUPPORTED_MESSAGE);
+			continue;
+		}
+		inspected.push({ media, inspection });
+	}
+	return inspected;
+}
+
+export async function pickInspectedAlbumMedia({
+	videoRoom,
+}: {
+	videoRoom: boolean;
+}): Promise<InspectedPick[]> {
+	return await inspectPicks(
+		await pickMultipleMedia(videoRoom ? "media" : "image"),
+	);
+}
 
 function hasVideoRoom({
+	uploads,
 	albumId,
 	content,
 	limits,
 }: {
+	uploads: AlbumUploads;
 	albumId: number;
 	content: AlbumContent[];
 	limits: UploadLimits;
 }): boolean {
-	const pending = uploads.pending(albumId);
-	const videos =
-		content.filter((item) => isVideoContent(item.contentType)).length +
-		pending.filter(({ kind }) => kind === "video").length;
-	const photos =
-		content.filter((item) => !isVideoContent(item.contentType)).length +
-		pending.filter(({ kind }) => kind === "photo").length;
+	const { photos, videos } = albumMediaCounts({
+		content,
+		pending: uploads.pending(albumId),
+	});
 	return (
 		videos < limits.maxVideosPerAlbum &&
 		photos < limits.maxContentItemsPerAlbum
 	);
-}
-
-export function pickAlbumMedia(videoRoom: boolean) {
-	return pickMultipleMedia(videoRoom ? "media" : "image");
 }
 
 function videoLimitMessage(maxVideosPerAlbum: number): string {
@@ -42,18 +75,20 @@ function videoLimitMessage(maxVideosPerAlbum: number): string {
 	return `You can have ${maxVideosPerAlbum} ${noun} in your album. Remove one to add another.`;
 }
 
-export async function enqueueAlbumMedia({
+export function enqueueAlbumMedia({
+	uploads,
 	albumId,
 	inspected,
 	limits,
 	content,
 }: {
+	uploads: AlbumUploads;
 	albumId: number;
 	inspected: InspectedPick[];
 	limits: UploadLimits;
 	content: AlbumContent[];
-}): Promise<void> {
-	const { leftOutFull, leftOutVideoSlot } = await uploads.enqueue({
+}): void {
+	const { leftOutFull, leftOutVideoSlot } = uploads.enqueue({
 		albumId,
 		inspected,
 		limits,
@@ -66,21 +101,27 @@ export async function enqueueAlbumMedia({
 }
 
 export async function addAlbumMedia({
+	uploads,
 	albumId,
 	content,
 }: {
+	uploads: AlbumUploads;
 	albumId: number;
 	content: () => AlbumContent[];
 }): Promise<void> {
 	try {
-		const limits = await uploads.storageLimits();
-		const picked = await pickAlbumMedia(
-			hasVideoRoom({ albumId, content: content(), limits }),
-		);
-		if (picked.length === 0) return;
-		const inspected = await inspectPicks(picked);
+		const limits = await getAlbumStorageLimits();
+		const inspected = await pickInspectedAlbumMedia({
+			videoRoom: hasVideoRoom({
+				uploads,
+				albumId,
+				content: content(),
+				limits,
+			}),
+		});
 		if (inspected.length === 0) return;
-		await enqueueAlbumMedia({
+		enqueueAlbumMedia({
+			uploads,
 			albumId,
 			inspected,
 			limits,

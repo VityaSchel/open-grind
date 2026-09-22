@@ -1,10 +1,11 @@
 import { format, isSameYear } from "date-fns";
 
+import { type MediaFileKind, mediaFileKindOf } from "$lib/platform/media-file";
 import { now } from "$lib/util/clock";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 
 export function isVideoContent(contentType: string): boolean {
-	return contentType.startsWith("video/");
+	return mediaFileKindOf(contentType) === "video";
 }
 
 export function hasNoPlaysLeft(
@@ -27,6 +28,24 @@ export function readyAlbumMedia(
 		count: ready.length,
 		hasPhoto: ready.some((item) => !isVideoContent(item.contentType)),
 		hasVideo: ready.some((item) => isVideoContent(item.contentType)),
+	};
+}
+
+export function albumMediaCounts({
+	content,
+	pending,
+}: {
+	content: readonly Pick<AlbumContent, "contentType">[];
+	pending: readonly { kind: MediaFileKind }[];
+}): { photos: number; videos: number } {
+	const contentVideos = content.filter((item) =>
+		isVideoContent(item.contentType),
+	).length;
+	const pendingOf = (kind: MediaFileKind) =>
+		pending.filter((upload) => upload.kind === kind).length;
+	return {
+		photos: content.length - contentVideos + pendingOf("photo"),
+		videos: contentVideos + pendingOf("video"),
 	};
 }
 

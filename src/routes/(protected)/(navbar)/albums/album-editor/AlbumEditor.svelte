@@ -9,10 +9,12 @@
 </script>
 
 <script lang="ts">
+	import { page } from "$app/state";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error-toast";
+	import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
 	import {
 		albumItemCountLabel,
 		albumUpdatedLabel,
@@ -20,7 +22,10 @@
 	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
 	import { setSubpageActions } from "$lib/components/shared/subpage-actions.svelte";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
-	import { uploads } from "../album-uploads/album-uploads.svelte";
+	import {
+		getAlbumUploads,
+		type UploadLimits,
+	} from "../album-uploads/album-uploads-state.svelte";
 	import { AlbumDraft, StillProcessingError } from "./album-draft.svelte";
 	import AlbumContentGrid from "./AlbumContentGrid.svelte";
 	import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
@@ -31,6 +36,7 @@
 	let { album }: { album: EditableAlbum } = $props();
 
 	const initial = untrack(() => album);
+	const uploads = getAlbumUploads(page.data.ourProfileId);
 	const draft = new AlbumDraft({
 		...initial,
 		uploadsPending: () => uploads.hasPending(initial.albumId),
@@ -41,13 +47,14 @@
 	});
 
 	let sharesOpen = $state(false);
+	let limits = $state<UploadLimits | null>(null);
 
 	const pending = $derived(uploads.pending(draft.albumId));
 
 	setSubpageActions(menu);
 
-	void uploads
-		.storageLimits()
+	getAlbumStorageLimits()
+		.then((resolved) => (limits = resolved))
 		.catch((error: unknown) => console.error(error));
 
 	$effect(() => {
@@ -82,8 +89,9 @@
 		albumId={draft.albumId}
 		bind:albumName={draft.name}
 		content={draft.remaining}
-		maxPhotos={uploads.limits?.maxContentItemsPerAlbum ?? null}
-		maxVideos={uploads.limits?.maxVideosPerAlbum ?? null}
+		{pending}
+		maxPhotos={limits?.maxContentItemsPerAlbum ?? null}
+		maxVideos={limits?.maxVideosPerAlbum ?? null}
 		sharedCount={shares.count}
 		updatedLabel={albumUpdatedLabel(draft.updatedAt)}
 		onOpenShares={() => (sharesOpen = true)}
@@ -94,7 +102,7 @@
 		{pending}
 		removed={draft.removed}
 		saving={draft.saving}
-		maxPhotos={uploads.limits?.maxContentItemsPerAlbum ?? null}
+		maxPhotos={limits?.maxContentItemsPerAlbum ?? null}
 		onToggleRemoved={(contentId) => draft.toggleRemoved(contentId)}
 		onReorder={(positions) => draft.move(positions)}
 	/>

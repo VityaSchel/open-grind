@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from "$app/state";
 	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 
@@ -7,6 +8,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
+	import { getAlbumUploads } from "../album-uploads/album-uploads-state.svelte";
 	import { createAlbumFromMedia } from "./create-album-media";
 
 	let albumName = $state("");
@@ -17,6 +19,7 @@
 		try {
 			const name = albumName.trim();
 			await createAlbumFromMedia({
+				uploads: getAlbumUploads(page.data.ourProfileId),
 				albumName: name === "" ? null : name,
 			});
 		} finally {
