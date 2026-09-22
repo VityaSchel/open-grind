@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onNavigate } from "$app/navigation";
 	import { tick, untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
@@ -75,6 +76,11 @@
 
 	$effect(() => {
 		drafts.autosave({ conversationId, text: textContent });
+	});
+
+	onNavigate(({ to }) => {
+		if (to?.params?.conversationId !== conversationId)
+			drafts.save({ conversationId, text: textContent });
 	});
 
 	// Arming a reply should hand the user straight back to the composer, which

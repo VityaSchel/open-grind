@@ -18,6 +18,13 @@ export function traverseBackTo(pathname: string): boolean {
 	return false;
 }
 
+export function previousEntryPathname(): string | null {
+	const index = window.navigation?.currentEntry?.index;
+	if (index === undefined || index < 1) return null;
+	const url = window.navigation?.entries()[index - 1]?.url;
+	return url ? new URL(url).pathname : null;
+}
+
 export function navigationPending({
 	owns,
 }: {

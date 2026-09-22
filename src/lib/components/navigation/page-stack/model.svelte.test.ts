@@ -31,7 +31,13 @@ function makeStack({ reducedMotion = false, canGoBack = true } = {}) {
 				settle = resolve;
 			});
 			animations.push({ from, to, duration, easing, settle });
-			return { completed, cancel: () => settle(false) };
+			return {
+				completed,
+				cancel: () => {
+					settle(false);
+					return to;
+				},
+			};
 		},
 	};
 

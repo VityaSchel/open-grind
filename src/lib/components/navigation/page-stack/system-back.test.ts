@@ -70,4 +70,22 @@ describe("attachSystemBackGesture", () => {
 
 		detach();
 	});
+
+	it("keeps the gesture of a host that attached before the old one detached", () => {
+		const old = makeTarget();
+		const detachOld = attachSystemBackGesture(old.target);
+		const current = makeTarget();
+		const detachCurrent = attachSystemBackGesture(current.target);
+
+		detachOld();
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(current.calls.begin).toBe(1);
+		window.__AndroidOnBackGestureCancel?.();
+		expect(current.calls.cancel).toBe(1);
+		expect(old.calls.begin).toBe(0);
+
+		detachCurrent();
+		expect(window.__AndroidOnBackGestureStart).toBeUndefined();
+	});
 });

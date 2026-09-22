@@ -16,6 +16,7 @@ test("scrolling to the top loads older pages until the thread starts", async ({
 
 	await page
 		.getByText(NEWEST_MESSAGE, { exact: true })
+		.filter({ visible: true })
 		.waitFor({ timeout: 60_000 });
 	await expect(page.getByText(OLDEST_MESSAGE, { exact: true })).toHaveCount(
 		0,

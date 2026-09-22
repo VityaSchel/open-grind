@@ -36,21 +36,25 @@ export function attachSystemBackGesture(target: SystemBackTarget): () => void {
 	const ownsTheGesture = () =>
 		[...backGestureEventHandlers].at(-1) === commitInFlight;
 
-	window.__AndroidOnBackGestureStart = () => {
+	const start = () => {
 		if (!ownsTheGesture() || !target.begin()) return false;
 		frame = requestAnimationFrame(readProgress);
 		return true;
 	};
-	window.__AndroidOnBackGestureCancel = () => {
+	const cancel = () => {
 		stopReading();
 		target.cancel();
 	};
+	window.__AndroidOnBackGestureStart = start;
+	window.__AndroidOnBackGestureCancel = cancel;
 	backGestureEventHandlers.add(commitInFlight);
 
 	return () => {
 		stopReading();
 		backGestureEventHandlers.delete(commitInFlight);
-		delete window.__AndroidOnBackGestureStart;
-		delete window.__AndroidOnBackGestureCancel;
+		if (window.__AndroidOnBackGestureStart === start)
+			delete window.__AndroidOnBackGestureStart;
+		if (window.__AndroidOnBackGestureCancel === cancel)
+			delete window.__AndroidOnBackGestureCancel;
 	};
 }

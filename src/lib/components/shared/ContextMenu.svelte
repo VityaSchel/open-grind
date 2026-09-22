@@ -7,6 +7,8 @@
 		shift,
 	} from "@floating-ui/dom";
 
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+
 	let {
 		contextMenuOpen,
 		style,
@@ -40,6 +42,11 @@
 	);
 
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
+
+	dismissOnBackGesture({
+		active: () => true,
+		dismiss: () => contextMenuDialog?.close(),
+	});
 	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
 	let contextMenuListPosition: {

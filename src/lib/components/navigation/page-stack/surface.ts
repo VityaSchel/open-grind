@@ -8,7 +8,7 @@ export type PaneElements = {
 
 export type FrameAnimation = {
 	completed: Promise<boolean>;
-	cancel: () => void;
+	cancel: () => number;
 };
 
 export type StackSurface = {
@@ -45,7 +45,7 @@ export function paneSurface({
 			const { front, back, dim } = panes();
 			if (duration <= 0) {
 				apply(to);
-				return { completed: Promise.resolve(true), cancel: () => {} };
+				return { completed: Promise.resolve(true), cancel: () => to };
 			}
 
 			const start = frameAt(from);
@@ -84,7 +84,12 @@ export function paneSurface({
 				completed,
 				cancel: () => {
 					canceled = true;
+					const eased =
+						running[0]?.effect?.getComputedTiming().progress;
 					for (const animation of running) animation.cancel();
+					return typeof eased === "number"
+						? from + (to - from) * eased
+						: to;
 				},
 			};
 		},

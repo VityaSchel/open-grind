@@ -15,15 +15,20 @@ function edgeChrome(edge: Edge) {
 	const clearances = new SvelteMap<HTMLElement, number>();
 
 	const measure = (element: HTMLElement) => {
-		if (element.inert || element.getClientRects().length === 0) {
-			clearances.delete(element);
-			return;
-		}
-		clearances.set(element, contentClearance(edge, element));
+		const offScreen =
+			element.inert ||
+			element.closest("[data-leaving]") !== null ||
+			element.getClientRects().length === 0 ||
+			getComputedStyle(element).visibility === "hidden";
+		clearances.set(
+			element,
+			offScreen ? 0 : contentClearance(edge, element),
+		);
 	};
 
 	const attach: Attachment<HTMLElement> = (element) => {
 		const remeasure = () => measure(element);
+		clearances.set(element, 0);
 		const movesWithItsScroller =
 			getComputedStyle(element).position === "sticky";
 		const observer = new ResizeObserver(remeasure);

@@ -12,7 +12,7 @@ const NEXT_BUTTON = ".pswp__button--arrow--next";
 const CAROUSEL = ".carousel";
 const CAROUSEL_PHOTO = `${CAROUSEL} .item`;
 const CAROUSEL_ITEM = `${CAROUSEL_PHOTO}[href]`;
-const PROFILE_LINK = 'a[href="/profile/100001"]';
+const PROFILE_LINK = 'a[href="/profile/100001"]:visible';
 const FOUR_PHOTO_PROFILE = "/profile/100004";
 const ACTIVE_SLIDE_IMAGE = `.pswp__item:not([aria-hidden="true"]) ${SLIDE_IMAGE}:not(.pswp__img--placeholder)`;
 const PHOTO_ASPECT = 4 / 3;

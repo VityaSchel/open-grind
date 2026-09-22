@@ -354,7 +354,7 @@ test("a profile opened by link stands alone", async ({ page }) => {
 test("a profile opened from a chat stands alone", async ({ page }) => {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	const avatar = page.locator('a[href^="/profile/"]').first();
+	const avatar = page.locator('a[href^="/profile/"]:visible').first();
 	await avatar.waitFor({ timeout: 180_000 });
 	await avatar.click();
 

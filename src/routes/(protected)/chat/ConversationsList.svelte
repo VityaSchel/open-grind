@@ -20,21 +20,24 @@
 	import ConversationsFilters from "./filters/ConversationsFilters.svelte";
 	import LazyConversation from "./LazyConversation.svelte";
 
+	let {
+		covered = false,
+		class: className,
+	}: { covered?: boolean; class?: import("svelte/elements").ClassValue } =
+		$props();
+
 	const EAGER_COUNT = 10;
 
 	const conversations: ConversationsState = getConversations();
 	const mobile = below("split");
 
 	$effect(() => {
-		conversations.noteListViewed();
+		if (!covered) conversations.noteListViewed();
 	});
 
 	let container: HTMLDivElement | null = $state(null);
 
 	restoreScrollOnce({ container: () => container, state: conversations });
-
-	let { class: className }: { class?: import("svelte/elements").ClassValue } =
-		$props();
 
 	const selection = new SelectionSet<string>();
 	let selecting = $state(false);
@@ -87,7 +90,7 @@
 	}
 
 	$effect(() => {
-		if (selecting && (!mobile.current || selection.size === 0)) {
+		if (selecting && (!mobile.current || covered || selection.size === 0)) {
 			exitSelection();
 		}
 	});

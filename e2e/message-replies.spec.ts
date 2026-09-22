@@ -57,7 +57,9 @@ test("replying quotes the message it answers", async ({ page }) => {
 	await page.getByRole("textbox").fill("quoting you");
 	await page.getByRole("textbox").press("Enter");
 
-	await expect(page.getByText("quoting you")).toBeVisible();
+	await expect(
+		page.getByText("quoting you").filter({ visible: true }),
+	).toBeVisible();
 	await expect(page.locator(QUOTE)).toHaveCount(quotesBefore + 1);
 	await expect(replyBar).toBeHidden();
 });
@@ -74,7 +76,9 @@ test("cancelling a reply leaves the message unquoted", async ({ page }) => {
 	await page.getByRole("textbox").fill("just a message");
 	await page.getByRole("textbox").press("Enter");
 
-	await expect(page.getByText("just a message")).toBeVisible();
+	await expect(
+		page.getByText("just a message").filter({ visible: true }),
+	).toBeVisible();
 	await expect(page.locator(QUOTE)).toHaveCount(quotesBefore);
 });
 

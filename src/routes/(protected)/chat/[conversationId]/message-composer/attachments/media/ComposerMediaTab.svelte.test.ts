@@ -8,15 +8,15 @@ const drawer = vi.hoisted(() => ({ getDrawerMedia: vi.fn() }));
 const chatMedia = vi.hoisted(() => ({ addMediaToDrawer: vi.fn() }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 
-vi.mock("$app/state", () => ({
-	page: { params: { conversationId: "100001:100002" } },
-}));
 vi.mock("$lib/api/messaging/drawer", () => drawer);
 vi.mock("$lib/api/messaging/chat-media", () => chatMedia);
 vi.mock("$lib/platform/media-picker", () => picker);
 vi.mock("svelte-sonner", () => ({ toast: { error: vi.fn() } }));
 vi.mock("../../message-composer-context.svelte", () => ({
 	getMessageComposerContext: () => () => ({}),
+}));
+vi.mock("../../../conversation-state.svelte", () => ({
+	getConversationState: () => () => ({ conversationId: "100001:100002" }),
 }));
 
 import ComposerMediaTab from "./ComposerMediaTab.svelte";

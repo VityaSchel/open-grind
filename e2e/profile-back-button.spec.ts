@@ -38,7 +38,9 @@ test.beforeEach(async ({ page }) => {
 
 test("returns to the screen the profile was opened from", async ({ page }) => {
 	await page.goto(DEMO_CONVERSATION);
-	const profileLink = page.locator(`a[href="${DEMO_PROFILE}"]`).first();
+	const profileLink = page
+		.locator(`a[href="${DEMO_PROFILE}"]:visible`)
+		.first();
 	await profileLink.waitFor({ timeout: 120_000 });
 	await profileLink.click();
 	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });

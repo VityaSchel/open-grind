@@ -4,6 +4,7 @@ import type { NavigationType } from "@sveltejs/kit";
 import {
 	canGoBack,
 	navigationPending,
+	previousEntryPathname,
 	traverseBackTo,
 } from "$lib/util/history";
 
@@ -87,6 +88,22 @@ describe("traverseBackTo", () => {
 
 		expect(traverseBackTo("/settings")).toBe(false);
 		expect(go).not.toHaveBeenCalled();
+	});
+});
+
+describe("previousEntryPathname", () => {
+	it("names the page one Back press away", () => {
+		stubEntries(["/", "/chat", "/chat/1:2"], 2);
+
+		expect(previousEntryPathname()).toBe("/chat");
+	});
+
+	it("is null on the first entry or without the Navigation API", () => {
+		stubEntries(["/chat/1:2"], 0);
+		expect(previousEntryPathname()).toBeNull();
+
+		vi.stubGlobal("navigation", undefined);
+		expect(previousEntryPathname()).toBeNull();
 	});
 });
 
