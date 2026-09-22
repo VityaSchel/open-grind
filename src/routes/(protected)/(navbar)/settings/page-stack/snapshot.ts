@@ -25,7 +25,13 @@ export const trackScrolled: Attachment<HTMLElement> = (pane) => {
 	};
 };
 
-function childPath(root: Element, element: Element): number[] {
+function childPath({
+	root,
+	element,
+}: {
+	root: Element;
+	element: Element;
+}): number[] {
 	const path: number[] = [];
 	let node = element;
 	while (node !== root && node.parentElement) {
@@ -35,14 +41,26 @@ function childPath(root: Element, element: Element): number[] {
 	return path;
 }
 
-function follow(root: Element, path: number[]): Element | undefined {
+function follow({
+	root,
+	path,
+}: {
+	root: Element;
+	path: number[];
+}): Element | undefined {
 	return path.reduce<Element | undefined>(
 		(node, index) => node?.children[index],
 		root,
 	);
 }
 
-function scrollCarriers(pane: HTMLElement, node: HTMLElement) {
+function scrollCarriers({
+	pane,
+	clone,
+}: {
+	pane: HTMLElement;
+	clone: HTMLElement;
+}) {
 	const scrolled = scrolledIn.get(pane);
 	if (!scrolled) return [];
 	return [...scrolled].flatMap((source) => {
@@ -50,7 +68,10 @@ function scrollCarriers(pane: HTMLElement, node: HTMLElement) {
 			scrolled.delete(source);
 			return [];
 		}
-		const copy = follow(node, childPath(pane, source));
+		const copy = follow({
+			root: clone,
+			path: childPath({ root: pane, element: source }),
+		});
 		if (!copy) return [];
 		const { scrollTop, scrollLeft } = source;
 		return [
@@ -62,8 +83,8 @@ function scrollCarriers(pane: HTMLElement, node: HTMLElement) {
 	});
 }
 
-function sizePins(pane: HTMLElement, node: HTMLElement) {
-	const copies = node.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED);
+function sizePins({ pane, clone }: { pane: HTMLElement; clone: HTMLElement }) {
+	const copies = clone.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED);
 	return [...pane.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED)].flatMap(
 		(source, index) => {
 			const copy = copies[index];
@@ -87,8 +108,14 @@ function formValue(field: Element) {
 	return {};
 }
 
-function formCarriers(pane: HTMLElement, node: HTMLElement) {
-	const copies = node.querySelectorAll(FORM_FIELDS);
+function formCarriers({
+	pane,
+	clone,
+}: {
+	pane: HTMLElement;
+	clone: HTMLElement;
+}) {
+	const copies = clone.querySelectorAll(FORM_FIELDS);
 	return [...pane.querySelectorAll(FORM_FIELDS)].flatMap((field, index) => {
 		const copy = copies[index];
 		if (!copy) return [];
@@ -98,19 +125,24 @@ function formCarriers(pane: HTMLElement, node: HTMLElement) {
 }
 
 export function snapshotPane(pane: HTMLElement, path: string): PaneSnapshot {
-	const node = pane.cloneNode(true) as HTMLElement;
-	node.inert = true;
-	node.setAttribute("aria-hidden", "true");
+	const clone = pane.cloneNode(true) as HTMLElement;
+	clone.inert = true;
+	clone.setAttribute("aria-hidden", "true");
 	for (const attribute of IDENTITY_ATTRIBUTES) {
-		node.removeAttribute(attribute);
-		for (const element of node.querySelectorAll(`[${attribute}]`))
+		clone.removeAttribute(attribute);
+		for (const element of clone.querySelectorAll(`[${attribute}]`))
 			element.removeAttribute(attribute);
 	}
+	clone.dataset.slot = "page-stack-ghost";
 
 	const carried = [
-		...sizePins(pane, node),
-		...scrollCarriers(pane, node),
-		...formCarriers(pane, node),
+		...sizePins({ pane, clone }),
+		...scrollCarriers({ pane, clone }),
+		...formCarriers({ pane, clone }),
 	];
-	return { node, path, restore: () => carried.forEach((apply) => apply()) };
+	return {
+		node: clone,
+		path,
+		restore: () => carried.forEach((apply) => apply()),
+	};
 }

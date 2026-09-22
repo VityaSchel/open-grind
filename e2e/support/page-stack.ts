@@ -10,7 +10,7 @@ export const pane = (page: Page) =>
 	page.locator('[data-slot="page-stack-pane"]');
 export const dim = (page: Page) => page.locator('[data-slot="page-stack-dim"]');
 export const ghost = (page: Page) =>
-	page.locator('[aria-hidden="true"][inert]');
+	page.locator('[data-slot="page-stack-ghost"]');
 export const backLink = (page: Page) =>
 	page.getByRole("link", { name: "Back", exact: true });
 export const meTab = (page: Page) => page.getByRole("link", { name: "Me" });

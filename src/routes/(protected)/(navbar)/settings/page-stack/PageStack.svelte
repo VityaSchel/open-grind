@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onNavigate } from "$app/navigation";
+	import { untrack } from "svelte";
 	import { prefersReducedMotion } from "svelte/motion";
 	import type { Attachment } from "svelte/attachments";
 
+	import { STACK_Z } from "$lib/components/navigation/stack/motion";
+	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
-	import { PageStack } from "./page-stack/model.svelte";
-	import { STACK_Z } from "./page-stack/motion";
-	import { trackScrolled } from "./page-stack/snapshot";
-	import { paneSurface } from "./page-stack/surface";
+	import { PageStackState } from "./page-stack-state.svelte";
+	import { trackScrolled } from "./snapshot";
 
 	let {
 		scope,
@@ -17,7 +18,7 @@
 	let pane: HTMLElement | null = $state(null);
 	let dim: HTMLElement | null = $state(null);
 
-	const stack: PageStack = new PageStack({
+	const stack: PageStackState = new PageStackState({
 		surface: paneSurface({
 			panes: () => {
 				const ghost = stack.ghost?.node ?? null;
@@ -29,8 +30,7 @@
 		}),
 		livePane: () => pane,
 		reducedMotion: () => prefersReducedMotion.current,
-		inScope: (pathname) =>
-			pathname === scope || pathname.startsWith(`${scope}/`),
+		scope: untrack(() => scope),
 	});
 
 	const liveZ = $derived(

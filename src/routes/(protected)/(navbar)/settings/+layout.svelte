@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PageStack from "$lib/components/navigation/PageStack.svelte";
+	import PageStack from "./page-stack/PageStack.svelte";
 
 	let { children }: import("./$types").LayoutProps = $props();
 </script>

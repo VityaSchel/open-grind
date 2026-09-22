@@ -1,13 +1,17 @@
 import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "@sveltejs/kit";
 
-import { CANCEL_EASING, COMMIT_EASING } from "./motion";
-import { StackSettle } from "./settle";
-import type { StackSurface } from "./surface";
+import {
+	CANCEL_EASING,
+	COMMIT_EASING,
+} from "$lib/components/navigation/stack/motion";
+import { StackSettle } from "$lib/components/navigation/stack/settle";
+import { isWithin } from "$lib/util/pathname";
+import type { StackSurface } from "$lib/components/navigation/stack/surface";
 
 const BACK_WATCHDOG_MS = 1000;
 
-export class LiveStack {
+export class LiveStackState {
 	leaving = $state<string | null>(null);
 	moving = $state(false);
 	tracking = $state(false);
@@ -15,7 +19,7 @@ export class LiveStack {
 	readonly #settle: StackSettle;
 	readonly #top: () => string | null;
 	readonly #keyOf: (target: NavigationTarget) => string | null;
-	readonly #inScope: (pathname: string) => boolean;
+	readonly #scope: string;
 	readonly #reducedMotion: () => boolean;
 	readonly #backLandsOnBase: () => boolean;
 	readonly #keyboardVisible: () => boolean;
@@ -30,7 +34,7 @@ export class LiveStack {
 		surface,
 		top,
 		keyOf,
-		inScope,
+		scope,
 		reducedMotion,
 		backLandsOnBase,
 		keyboardVisible,
@@ -39,7 +43,7 @@ export class LiveStack {
 		surface: StackSurface;
 		top: () => string | null;
 		keyOf: (target: NavigationTarget) => string | null;
-		inScope: (pathname: string) => boolean;
+		scope: string;
 		reducedMotion: () => boolean;
 		backLandsOnBase: () => boolean;
 		keyboardVisible: () => boolean;
@@ -48,7 +52,7 @@ export class LiveStack {
 		this.#settle = new StackSettle({ surface, reducedMotion });
 		this.#top = top;
 		this.#keyOf = keyOf;
-		this.#inScope = inScope;
+		this.#scope = scope;
 		this.#reducedMotion = reducedMotion;
 		this.#backLandsOnBase = backLandsOnBase;
 		this.#keyboardVisible = keyboardVisible;
@@ -60,7 +64,7 @@ export class LiveStack {
 		return this.#top() !== null && !this.moving && !this.tracking;
 	}
 
-	get sheet(): string | null {
+	get sheetKey(): string | null {
 		return this.leaving ?? this.#top();
 	}
 
@@ -81,7 +85,8 @@ export class LiveStack {
 		const fromKey = this.#keyOf(from);
 		const toKey = this.#keyOf(to);
 		const staysInScope =
-			this.#inScope(from.url.pathname) && this.#inScope(to.url.pathname);
+			isWithin({ pathname: from.url.pathname, root: this.#scope }) &&
+			isWithin({ pathname: to.url.pathname, root: this.#scope });
 		const opens = fromKey === null && toKey !== null;
 		const closes = fromKey !== null && toKey === null;
 

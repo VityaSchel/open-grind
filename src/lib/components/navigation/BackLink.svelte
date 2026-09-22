@@ -3,6 +3,7 @@
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
 	import { canGoBack } from "$lib/util/history";
+	import { isPlainClick } from "$lib/util/plain-click";
 
 	let {
 		href,
@@ -26,8 +27,7 @@
 	{href}
 	aria-label={label}
 	onclick={(event) => {
-		if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-			return;
+		if (!isPlainClick(event)) return;
 		if (leaving) {
 			event.preventDefault();
 			return;

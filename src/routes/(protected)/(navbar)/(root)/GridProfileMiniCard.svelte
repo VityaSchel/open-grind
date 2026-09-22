@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation";
 
 	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
+	import { isPlainClick } from "$lib/util/plain-click";
 
 	let {
 		id,
@@ -28,14 +29,7 @@
 	} = $props();
 
 	function openInPager(event: MouseEvent) {
-		if (
-			event.button !== 0 ||
-			event.metaKey ||
-			event.ctrlKey ||
-			event.shiftKey ||
-			event.altKey
-		)
-			return;
+		if (!isPlainClick(event)) return;
 		event.preventDefault();
 		void goto(`/profile/${id}`, { state: { profileOrigin: "browse" } });
 	}

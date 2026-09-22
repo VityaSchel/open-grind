@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { PageStack } from "./model.svelte";
-import { CANCEL_EASING, COMMIT_EASING } from "./motion";
+import {
+	CANCEL_EASING,
+	COMMIT_EASING,
+} from "$lib/components/navigation/stack/motion";
 import {
 	fakeSurface,
 	flushMicrotasks,
 	navigationEvent,
 	settleLast,
-} from "./stack-test-helpers";
+} from "$lib/components/navigation/stack/stack-test-helpers";
+import { PageStackState } from "./page-stack-state.svelte";
 
 function makeStack({ reducedMotion = false, canGoBack = true } = {}) {
 	vi.stubGlobal("navigation", { canGoBack });
@@ -18,12 +21,11 @@ function makeStack({ reducedMotion = false, canGoBack = true } = {}) {
 
 	const { surface, applied, animations } = fakeSurface();
 
-	const stack = new PageStack({
+	const stack = new PageStackState({
 		surface,
 		livePane: () => pane,
 		reducedMotion: () => reducedMotion,
-		inScope: (pathname) =>
-			pathname === "/settings" || pathname.startsWith("/settings/"),
+		scope: "/settings",
 	});
 
 	return { stack, pane, applied, animations };
@@ -44,7 +46,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("PageStack navigation", () => {
+describe("PageStackState navigation", () => {
 	it("enters a pushed page from the right over a snapshot of the old one", async () => {
 		const { stack, applied, animations } = makeStack();
 
@@ -143,7 +145,7 @@ describe("PageStack navigation", () => {
 	});
 });
 
-describe("PageStack swipe back under reduced motion", () => {
+describe("PageStackState swipe back under reduced motion", () => {
 	it("follows the finger, then commits without a settle animation", async () => {
 		const { stack, applied, animations } = makeStack({
 			reducedMotion: true,
@@ -183,7 +185,7 @@ describe("PageStack swipe back under reduced motion", () => {
 	});
 });
 
-describe("PageStack swipe back", () => {
+describe("PageStackState swipe back", () => {
 	it("is unavailable until a push has been seen", async () => {
 		const harness = makeStack();
 		const { stack } = harness;
@@ -414,7 +416,7 @@ describe("PageStack swipe back", () => {
 	});
 });
 
-describe("PageStack commit with nothing to go back to", () => {
+describe("PageStackState commit with nothing to go back to", () => {
 	it("restores the pane instead of navigating into an empty history", async () => {
 		const harness = makeStack({ canGoBack: false });
 		const { stack, applied, animations } = harness;
@@ -432,7 +434,7 @@ describe("PageStack commit with nothing to go back to", () => {
 	});
 });
 
-describe("PageStack state under interruption", () => {
+describe("PageStackState state under interruption", () => {
 	it("drops a gesture still in flight when a navigation starts", async () => {
 		const harness = makeStack();
 		const { stack } = harness;

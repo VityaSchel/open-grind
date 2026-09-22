@@ -5,6 +5,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
+	import { isPlainClick } from "$lib/util/plain-click";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import InterestPager from "./InterestPager.svelte";
 	import { INTEREST_TABS } from "./tabs";
@@ -24,13 +25,7 @@
 	<Button
 		{href}
 		onclick={(event: MouseEvent) => {
-			if (
-				event.metaKey ||
-				event.ctrlKey ||
-				event.shiftKey ||
-				event.altKey
-			)
-				return;
+			if (!isPlainClick(event)) return;
 			event.preventDefault();
 			void goto(href, { replaceState: true, noScroll: true });
 		}}

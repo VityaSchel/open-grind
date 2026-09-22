@@ -34,7 +34,7 @@ const panePosition = (page: Page) =>
 			'[data-slot="page-stack-pane"]',
 		)!;
 		const behind = document.querySelector<HTMLElement>(
-			'[aria-hidden="true"][inert]',
+			'[data-slot="page-stack-ghost"]',
 		);
 		const shade = document.querySelector<HTMLElement>(
 			'[data-slot="page-stack-dim"]',
@@ -114,7 +114,7 @@ test("both panes paint the app background so neither shows through", async ({
 			'[data-slot="page-stack-pane"]',
 		)!;
 		const behind = document.querySelector<HTMLElement>(
-			'[aria-hidden="true"][inert]',
+			'[data-slot="page-stack-ghost"]',
 		)!;
 		return {
 			body,

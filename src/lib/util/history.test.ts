@@ -3,8 +3,8 @@ import type { NavigationType } from "@sveltejs/kit";
 
 import {
 	canGoBack,
+	earlierPathnames,
 	navigationPending,
-	previousEntryPathname,
 	traverseBackTo,
 } from "$lib/util/history";
 
@@ -91,19 +91,32 @@ describe("traverseBackTo", () => {
 	});
 });
 
-describe("previousEntryPathname", () => {
-	it("names the page one Back press away", () => {
-		stubEntries(["/", "/chat", "/chat/1:2"], 2);
+describe("earlierPathnames", () => {
+	it("lists the entries behind the current one, nearest first", () => {
+		stubEntries(["/", "/chat", "/chat/1:2", "/settings"], 2);
 
-		expect(previousEntryPathname()).toBe("/chat");
+		expect(earlierPathnames()).toEqual(["/chat", "/"]);
 	});
 
-	it("is null on the first entry or without the Navigation API", () => {
+	it("keeps an entry with no URL as a null gap", () => {
+		vi.stubGlobal("navigation", {
+			currentEntry: { index: 2 },
+			entries: () => [
+				{ url: "https://app.test/" },
+				{ url: null },
+				{ url: "https://app.test/chat" },
+			],
+		});
+
+		expect(earlierPathnames()).toEqual([null, "/"]);
+	});
+
+	it("is empty on the first entry or without the Navigation API", () => {
 		stubEntries(["/chat/1:2"], 0);
-		expect(previousEntryPathname()).toBeNull();
+		expect(earlierPathnames()).toEqual([]);
 
 		vi.stubGlobal("navigation", undefined);
-		expect(previousEntryPathname()).toBeNull();
+		expect(earlierPathnames()).toEqual([]);
 	});
 });
 

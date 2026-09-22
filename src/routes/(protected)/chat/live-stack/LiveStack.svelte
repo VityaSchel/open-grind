@@ -1,31 +1,32 @@
 <script lang="ts">
 	import { onNavigate } from "$app/navigation";
-	import { onDestroy, onMount, type Snippet } from "svelte";
+	import { page } from "$app/state";
+	import { onDestroy, onMount, type Snippet, untrack } from "svelte";
 	import { prefersReducedMotion } from "svelte/motion";
 	import type { NavigationTarget } from "@sveltejs/kit";
 	import type { Attachment } from "svelte/attachments";
 
+	import { STACK_Z } from "$lib/components/navigation/stack/motion";
+	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import {
 		softKeyboardHidden,
 		softKeyboardVisibility,
 	} from "$lib/platform/android-native-bridge";
 	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
-	import { previousEntryPathname } from "$lib/util/history";
+	import { earlierPathnames } from "$lib/util/history";
 	import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
-	import { LiveStack } from "./page-stack/live-stack.svelte";
-	import { STACK_Z } from "./page-stack/motion";
-	import { paneSurface } from "./page-stack/surface";
+	import { LiveStackState } from "./live-stack-state.svelte";
 
 	let {
-		top,
 		basePath,
 		keyOf,
 		base,
 		sheet,
 	}: {
-		top: string | null;
 		basePath: string;
-		keyOf: (target: NavigationTarget) => string | null;
+		keyOf: (
+			target: Pick<NavigationTarget, "params" | "route" | "url">,
+		) => string | null;
 		base: Snippet<[{ covered: boolean }]>;
 		sheet: Snippet<[string, { leaving: boolean }]>;
 	} = $props();
@@ -36,17 +37,16 @@
 	let sheetPane: HTMLElement | null = null;
 	let dim: HTMLElement | null = $state(null);
 
-	const stack: LiveStack = new LiveStack({
+	const stack: LiveStackState = new LiveStackState({
 		surface: paneSurface({
 			panes: () => ({ front: sheetPane, back: basePane, dim }),
 			parallax: () => !prefersReducedMotion.current,
 		}),
-		top: () => top,
+		top: () => keyOf(page),
 		keyOf: (target) => keyOf(target),
-		inScope: (pathname) =>
-			pathname === basePath || pathname.startsWith(`${basePath}/`),
+		scope: untrack(() => basePath),
 		reducedMotion: () => prefersReducedMotion.current,
-		backLandsOnBase: () => previousEntryPathname() === basePath,
+		backLandsOnBase: () => earlierPathnames()[0] === basePath,
 		keyboardVisible: () => softKeyboardVisibility() === true,
 		keyboardHidden: () =>
 			softKeyboardHidden({ settleMs: KEYBOARD_SETTLE_MS }),
@@ -90,7 +90,7 @@
 	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
 	style:z-index={STACK_Z.back}
 	style:visibility={stack.covered ? "hidden" : null}
-	inert={stack.sheet !== null}
+	inert={stack.sheetKey !== null}
 >
 	{#if baseMounted}
 		{@render base({ covered: stack.covered })}
@@ -104,8 +104,8 @@
 		style:z-index={STACK_Z.dim}
 	></div>
 {/if}
-{#if stack.sheet !== null}
-	{#key stack.sheet}
+{#if stack.sheetKey !== null}
+	{#key stack.sheetKey}
 		<div
 			{@attach placePane}
 			data-slot="live-stack-sheet"
@@ -114,7 +114,7 @@
 			inert={stack.leaving !== null}
 			data-leaving={stack.leaving !== null || undefined}
 		>
-			{@render sheet(stack.sheet, { leaving: stack.leaving !== null })}
+			{@render sheet(stack.sheetKey, { leaving: stack.leaving !== null })}
 		</div>
 	{/key}
 {/if}

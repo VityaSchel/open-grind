@@ -2,14 +2,17 @@ import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "@sveltejs/kit";
 
-import { LiveStack } from "./live-stack.svelte";
-import { CANCEL_EASING, COMMIT_EASING } from "./motion";
+import {
+	CANCEL_EASING,
+	COMMIT_EASING,
+} from "$lib/components/navigation/stack/motion";
 import {
 	fakeSurface,
 	flushMicrotasks,
 	navigationEvent,
 	settleLast,
-} from "./stack-test-helpers";
+} from "$lib/components/navigation/stack/stack-test-helpers";
+import { LiveStackState } from "./live-stack-state.svelte";
 
 const LIST = "/chat";
 const FIRST = "/chat/1:2";
@@ -25,12 +28,11 @@ function makeStack({
 	const { surface, applied, animations } = fakeSurface();
 	let hideKeyboard!: () => void;
 
-	const stack = new LiveStack({
+	const stack = new LiveStackState({
 		surface,
 		top: () => top,
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
-		inScope: (pathname) =>
-			pathname === LIST || pathname.startsWith(`${LIST}/`),
+		scope: LIST,
 		reducedMotion: () => reducedMotion,
 		backLandsOnBase: () => backLandsOnBase,
 		keyboardVisible: () => keyboardVisible,
@@ -89,7 +91,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("LiveStack opening a sheet", () => {
+describe("LiveStackState opening a sheet", () => {
 	it("keeps the base live and slides the sheet in from off screen", async () => {
 		const harness = makeStack();
 		const { stack, animations } = harness;
@@ -101,7 +103,7 @@ describe("LiveStack opening a sheet", () => {
 		expect(harness.applied.at(-1)).toBe(1);
 
 		harness.arrive(FIRST);
-		expect(stack.sheet).toBe("1:2");
+		expect(stack.sheetKey).toBe("1:2");
 		expect(stack.covered).toBe(false);
 
 		afterUpdate?.();
@@ -130,7 +132,7 @@ describe("LiveStack opening a sheet", () => {
 	});
 });
 
-describe("LiveStack closing a sheet", () => {
+describe("LiveStackState closing a sheet", () => {
 	async function opened(options: Parameters<typeof makeStack>[0] = {}) {
 		const harness = makeStack(options);
 		await navigate(harness, { from: LIST, to: FIRST });
@@ -144,13 +146,13 @@ describe("LiveStack closing a sheet", () => {
 
 		await navigate(harness, { from: FIRST, to: LIST });
 		expect(stack.leaving).toBe("1:2");
-		expect(stack.sheet).toBe("1:2");
+		expect(stack.sheetKey).toBe("1:2");
 		expect(stack.covered).toBe(false);
 		expect(animations.at(-1)).toMatchObject({ from: 0, to: 1 });
 
 		await settleLast(animations);
 		expect(stack.leaving).toBeNull();
-		expect(stack.sheet).toBeNull();
+		expect(stack.sheetKey).toBeNull();
 	});
 
 	it("reverses a push that Back interrupts from where it had reached", async () => {
@@ -177,7 +179,7 @@ describe("LiveStack closing a sheet", () => {
 		expect(applied.slice(appliedBeforeBack)).not.toContain(0);
 		expect(animations.at(-1)).toMatchObject({ from: 1, to: 1 });
 		await settleLast(animations);
-		expect(stack.sheet).toBeNull();
+		expect(stack.sheetKey).toBeNull();
 	});
 
 	it("waits for the keyboard to close before sliding", async () => {
@@ -207,19 +209,19 @@ describe("LiveStack closing a sheet", () => {
 
 		expect(animations).toHaveLength(count);
 		expect(stack.leaving).toBeNull();
-		expect(stack.sheet).toBe("3:4");
+		expect(stack.sheetKey).toBe("3:4");
 		expect(stack.covered).toBe(true);
 	});
 });
 
-describe("LiveStack between sheets and out of scope", () => {
+describe("LiveStackState between sheets and out of scope", () => {
 	it("jumps between two sheets without animating", async () => {
 		const harness = makeStack({ startAt: FIRST });
 
 		await navigate(harness, { from: FIRST, to: SECOND });
 
 		expect(harness.animations).toHaveLength(0);
-		expect(harness.stack.sheet).toBe("3:4");
+		expect(harness.stack.sheetKey).toBe("3:4");
 		expect(harness.applied.at(-1)).toBe(0);
 	});
 
@@ -233,7 +235,7 @@ describe("LiveStack between sheets and out of scope", () => {
 	});
 });
 
-describe("LiveStack back gesture", () => {
+describe("LiveStackState back gesture", () => {
 	it("refuses when Back would not land on the base", () => {
 		const { stack } = makeStack({ startAt: FIRST, backLandsOnBase: false });
 
@@ -284,7 +286,7 @@ describe("LiveStack back gesture", () => {
 		const count = animations.length;
 		await navigate(harness, { from: FIRST, to: LIST });
 		expect(animations).toHaveLength(count);
-		expect(stack.sheet).toBeNull();
+		expect(stack.sheetKey).toBeNull();
 		expect(stack.moving).toBe(false);
 	});
 
@@ -306,7 +308,7 @@ describe("LiveStack back gesture", () => {
 		const count = animations.length;
 		await navigate(harness, { from: FIRST, to: LIST });
 		expect(animations).toHaveLength(count);
-		expect(stack.sheet).toBeNull();
+		expect(stack.sheetKey).toBeNull();
 		expect(back).toHaveBeenCalledOnce();
 	});
 

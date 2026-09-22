@@ -6,7 +6,6 @@
 		getOrCreateConversationsState,
 		setConversations,
 	} from "$lib/chat/conversations-context.svelte";
-	import LiveStack from "$lib/components/navigation/LiveStack.svelte";
 	import NavBar from "$lib/components/shared/NavBar.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import * as Resizable from "$lib/components/ui/resizable";
@@ -14,6 +13,7 @@
 	import { below } from "$lib/util/breakpoints.svelte";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
 	import ConversationsList from "./ConversationsList.svelte";
+	import LiveStack from "./live-stack/LiveStack.svelte";
 
 	let { data }: import("./$types").LayoutProps = $props();
 
@@ -64,7 +64,6 @@
 
 {#if mobile.current}
 	<LiveStack
-		top={conversationId}
 		basePath="/chat"
 		keyOf={(target) => target.params?.conversationId ?? null}
 	>

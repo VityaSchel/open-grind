@@ -16,6 +16,8 @@
 	import { tabsListVariants } from "$lib/components/ui/tabs";
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
 	import { traverseBackTo } from "$lib/util/history";
+	import { isWithin } from "$lib/util/pathname";
+	import { isPlainClick } from "$lib/util/plain-click";
 	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
@@ -40,21 +42,14 @@
 		landsOn?: string;
 	}) {
 		return (event: MouseEvent) => {
-			if (
-				event.metaKey ||
-				event.ctrlKey ||
-				event.shiftKey ||
-				event.altKey
-			)
-				return;
+			if (!isPlainClick(event)) return;
 
 			const current = page.url.pathname;
 			if (current === landsOn) {
 				event.preventDefault();
 				return;
 			}
-			const subtree = href.endsWith("/") ? href : `${href}/`;
-			if (current !== href && !current.startsWith(subtree)) return;
+			if (!isWithin({ pathname: current, root: href })) return;
 
 			event.preventDefault();
 			if (!traverseBackTo(landsOn))

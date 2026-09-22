@@ -4,22 +4,37 @@ import { ancestorsOf, stackRelation } from "./hierarchy";
 
 describe("stackRelation", () => {
 	it("reads direction from the path hierarchy", () => {
-		expect(stackRelation("/settings", "/settings/app")).toBe("push");
-		expect(stackRelation("/settings/app", "/settings")).toBe("pop");
-		expect(stackRelation("/settings/app", "/settings/app/credits")).toBe(
+		expect(stackRelation({ from: "/settings", to: "/settings/app" })).toBe(
 			"push",
 		);
-		expect(stackRelation("/settings/app/credits", "/settings")).toBe("pop");
+		expect(stackRelation({ from: "/settings/app", to: "/settings" })).toBe(
+			"pop",
+		);
+		expect(
+			stackRelation({
+				from: "/settings/app",
+				to: "/settings/app/credits",
+			}),
+		).toBe("push");
+		expect(
+			stackRelation({ from: "/settings/app/credits", to: "/settings" }),
+		).toBe("pop");
 	});
 
 	it("has no direction between siblings or a page and itself", () => {
-		expect(stackRelation("/settings/app", "/settings/profile")).toBeNull();
-		expect(stackRelation("/settings", "/settings")).toBeNull();
-		expect(stackRelation("/settings", "/chat")).toBeNull();
+		expect(
+			stackRelation({ from: "/settings/app", to: "/settings/profile" }),
+		).toBeNull();
+		expect(
+			stackRelation({ from: "/settings", to: "/settings" }),
+		).toBeNull();
+		expect(stackRelation({ from: "/settings", to: "/chat" })).toBeNull();
 	});
 
 	it("does not treat a shared prefix as a parent", () => {
-		expect(stackRelation("/settings", "/settings-extra")).toBeNull();
+		expect(
+			stackRelation({ from: "/settings", to: "/settings-extra" }),
+		).toBeNull();
 		expect(ancestorsOf([{ path: "/settings" }], "/settings-extra")).toEqual(
 			[],
 		);

@@ -1,12 +1,16 @@
 import { tick } from "svelte";
 import type { OnNavigate } from "@sveltejs/kit";
 
+import {
+	CANCEL_EASING,
+	COMMIT_EASING,
+} from "$lib/components/navigation/stack/motion";
+import { StackSettle } from "$lib/components/navigation/stack/settle";
 import { canGoBack } from "$lib/util/history";
+import { isWithin } from "$lib/util/pathname";
+import type { StackSurface } from "$lib/components/navigation/stack/surface";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
-import { CANCEL_EASING, COMMIT_EASING } from "./motion";
-import { StackSettle } from "./settle";
 import { type PaneSnapshot, snapshotPane } from "./snapshot";
-import type { StackSurface } from "./surface";
 
 type LiveRole = "front" | "back";
 
@@ -14,7 +18,7 @@ function historyDirection(delta: number): StackRelation {
 	return delta < 0 ? "pop" : "push";
 }
 
-export class PageStack {
+export class PageStackState {
 	ghost = $state<PaneSnapshot | null>(null);
 	liveRole = $state<LiveRole>("front");
 	tracking = $state(false);
@@ -22,7 +26,7 @@ export class PageStack {
 	readonly #settle: StackSettle;
 	readonly #livePane: () => HTMLElement | null;
 	readonly #reducedMotion: () => boolean;
-	readonly #inScope: (pathname: string) => boolean;
+	readonly #scope: string;
 
 	#ancestors: PaneSnapshot[] = [];
 	#generation = 0;
@@ -33,17 +37,17 @@ export class PageStack {
 		surface,
 		livePane,
 		reducedMotion,
-		inScope,
+		scope,
 	}: {
 		surface: StackSurface;
 		livePane: () => HTMLElement | null;
 		reducedMotion: () => boolean;
-		inScope: (pathname: string) => boolean;
+		scope: string;
 	}) {
 		this.#settle = new StackSettle({ surface, reducedMotion });
 		this.#livePane = livePane;
 		this.#reducedMotion = reducedMotion;
-		this.#inScope = inScope;
+		this.#scope = scope;
 	}
 
 	get canSwipeBack(): boolean {
@@ -66,7 +70,10 @@ export class PageStack {
 		}
 
 		this.#settle.stop();
-		if (!this.#inScope(from) || !this.#inScope(to)) {
+		if (
+			!isWithin({ pathname: from, root: this.#scope }) ||
+			!isWithin({ pathname: to, root: this.#scope })
+		) {
 			this.#clear();
 			return;
 		}
@@ -74,7 +81,7 @@ export class PageStack {
 		const relation =
 			navigation.type === "popstate"
 				? historyDirection(navigation.delta)
-				: stackRelation(from, to);
+				: stackRelation({ from, to });
 		const pane = this.#livePane();
 		if (!relation || !pane) {
 			this.#ancestors = ancestorsOf(this.#ancestors, to);

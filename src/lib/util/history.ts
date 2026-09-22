@@ -4,25 +4,22 @@ export function canGoBack(): boolean {
 	return window.navigation?.canGoBack ?? history.length > 1;
 }
 
-export function traverseBackTo(pathname: string): boolean {
+export function earlierPathnames(): (string | null)[] {
 	const index = window.navigation?.currentEntry?.index;
 	const entries = window.navigation?.entries();
-	if (!entries || index === undefined || index < 1) return false;
+	if (!entries || index === undefined || index < 1) return [];
 
-	for (let i = index - 1; i >= 0; i--) {
-		const url = entries[i]?.url;
-		if (!url || new URL(url).pathname !== pathname) continue;
-		history.go(i - index);
-		return true;
-	}
-	return false;
+	return entries
+		.slice(0, index)
+		.reverse()
+		.map(({ url }) => (url ? new URL(url).pathname : null));
 }
 
-export function previousEntryPathname(): string | null {
-	const index = window.navigation?.currentEntry?.index;
-	if (index === undefined || index < 1) return null;
-	const url = window.navigation?.entries()[index - 1]?.url;
-	return url ? new URL(url).pathname : null;
+export function traverseBackTo(pathname: string): boolean {
+	const steps = earlierPathnames().indexOf(pathname);
+	if (steps < 0) return false;
+	history.go(-(steps + 1));
+	return true;
 }
 
 export function navigationPending({

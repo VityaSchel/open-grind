@@ -32,7 +32,7 @@ describe("snapshotPane", () => {
 		const snapshot = snapshotPane(pane, "/settings/profile");
 		document.body.append(snapshot.node);
 
-		expect(snapshot.node.hasAttribute("data-slot")).toBe(false);
+		expect(snapshot.node.dataset.slot).toBe("page-stack-ghost");
 		expect(snapshot.node.querySelector("[id]")).toBeNull();
 		expect(snapshot.node.querySelector("[data-slot]")).toBeNull();
 		expect(document.getElementById("display-name")).not.toBeNull();
