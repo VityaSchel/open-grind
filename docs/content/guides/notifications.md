@@ -25,7 +25,7 @@ Slow mode is the default notifications mode on Android. Open Grind checks for ne
 
 ### Fast mode {#android-fast-mode}
 
-Fast mode on Android **shows notifications instantly**, but uses closed-source Google's Firebase services, which requires installing Open Grind's [FCM service add-on](#installing-the-fcm-service) and having Google Play services or microG.
+Fast mode on Android **shows notifications instantly**, but uses closed-source Google's Firebase services, which requires installing Open Grind's [FCM service add-on](https://git.opengrind.org/open-grind/fcm-service) and having Google Play services or microG.
 
 To enable the fast mode:
 

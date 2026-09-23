@@ -290,7 +290,7 @@ describe("a missing FCM service", () => {
 	it.each([
 		[
 			"play",
-			"https://opengrind.org/guides/notifications#installing-the-fcm-service",
+			"https://opengrind.org/guides/notifications#android-fast-mode",
 		],
 		["", "https://git.opengrind.org/open-grind/fcm-service/releases"],
 	])(

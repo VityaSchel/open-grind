@@ -12,7 +12,7 @@ const MANUAL_INSTALL = {
 	},
 	[FCM_COMPONENT]: {
 		releases: `${COMPONENT_REPO[FCM_COMPONENT]}/releases`,
-		guide: "https://opengrind.org/guides/notifications#installing-the-fcm-service",
+		guide: "https://opengrind.org/guides/notifications#android-fast-mode",
 	},
 } as const;
 
