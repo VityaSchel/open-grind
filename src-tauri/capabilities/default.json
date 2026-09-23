@@ -8,65 +8,6 @@
 	"permissions": [
 		"core:default",
 		"os:default",
-		{
-			"identifier": "fs:allow-exists",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/preferences.data"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-read-file",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/preferences.data"
-				}
-			],
-			"deny": [
-				{
-					"path": "$APPLOCALDATA/credentials/**"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-write-file",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/preferences.data"
-				},
-				{
-					"path": "$APPLOCALDATA/preferences.data.tmp"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-rename",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/preferences.data"
-				},
-				{
-					"path": "$APPLOCALDATA/preferences.data.tmp"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-remove",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/preferences.data"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-mkdir",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA"
-				}
-			]
-		},
 		"opener:default",
 		"clipboard-manager:default",
 		"clipboard-manager:allow-write-text",

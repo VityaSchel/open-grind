@@ -2,20 +2,11 @@ import { decode } from "@msgpack/msgpack";
 import type { Page } from "@playwright/test";
 
 const APP_DATA_PREFIX = "e2e:appdata:";
-const FS_DELAY_KEY = "e2e:fsdelay";
+const WRITE_DELAY_KEY = "e2e:appdata-write-delay";
 
 export async function installPersistentAppData(page: Page): Promise<void> {
 	await page.addInitScript(
 		([KEY, DELAY_KEY]) => {
-			const decode = (value: string) =>
-				Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
-			const encode = (bytes: Uint8Array) =>
-				btoa(
-					Array.from(bytes, (byte) => String.fromCharCode(byte)).join(
-						"",
-					),
-				);
-
 			const writeDelayMs = () =>
 				Number(localStorage.getItem(DELAY_KEY) ?? "0");
 			const delayed = <T>(work: () => T): T | Promise<T> => {
@@ -40,49 +31,32 @@ export async function installPersistentAppData(page: Page): Promise<void> {
 			const passThrough = internals.invoke;
 
 			internals.invoke = (cmd, args, opts) => {
-				const fs = (args ?? {}) as {
-					path?: string;
-					oldPath?: string;
-					newPath?: string;
+				const { file = "", content = "" } = (args ?? {}) as {
+					file?: string;
+					content?: string;
 				};
-				const headerPath = (
-					(opts ?? {}) as { headers?: Record<string, string> }
-				).headers?.path;
 
-				if (cmd === "plugin:fs|exists")
-					return localStorage.getItem(KEY + fs.path) !== null;
-				if (cmd === "plugin:fs|read_file") {
-					const stored = localStorage.getItem(KEY + fs.path);
-					if (stored === null) throw new Error("ENOENT");
-					return decode(stored);
+				if (cmd === "read_app_data") {
+					const stored = localStorage.getItem(KEY + file);
+					if (stored === null) return null;
+					return Uint8Array.from(atob(stored), (char) =>
+						char.charCodeAt(0),
+					).buffer;
 				}
-				if (cmd === "plugin:fs|write_file") {
+				if (cmd === "write_app_data") {
 					return delayed(() => {
-						localStorage.setItem(
-							KEY +
-								decodeURIComponent(headerPath ?? fs.path ?? ""),
-							encode(
-								args instanceof Uint8Array
-									? args
-									: new Uint8Array(),
-							),
-						);
+						localStorage.setItem(KEY + file, content);
 						return null;
 					});
 				}
-				if (cmd === "plugin:fs|rename") {
-					return delayed(() => {
-						const stored = localStorage.getItem(KEY + fs.oldPath);
-						if (stored !== null)
-							localStorage.setItem(KEY + fs.newPath, stored);
-						localStorage.removeItem(KEY + fs.oldPath);
-						return null;
-					});
+				if (cmd === "remove_app_data") {
+					localStorage.removeItem(KEY + file);
+					return null;
 				}
 				return passThrough(cmd, args, opts);
 			};
 		},
-		[APP_DATA_PREFIX, FS_DELAY_KEY] as const,
+		[APP_DATA_PREFIX, WRITE_DELAY_KEY] as const,
 	);
 }
 
@@ -91,7 +65,7 @@ export async function storedPreferences(
 ): Promise<Record<string, unknown> | null> {
 	const raw = await page.evaluate(
 		(key) => localStorage.getItem(key),
-		`${APP_DATA_PREFIX}preferences.data`,
+		`${APP_DATA_PREFIX}preferences`,
 	);
 	if (raw === null) return null;
 	return decode(
@@ -107,6 +81,6 @@ export async function setAppDataWriteDelay(
 		([key, value]) => {
 			localStorage.setItem(key, String(value));
 		},
-		[FS_DELAY_KEY, ms] as const,
+		[WRITE_DELAY_KEY, ms] as const,
 	);
 }

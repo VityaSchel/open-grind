@@ -1,15 +1,6 @@
-import { isTauri } from "@tauri-apps/api/core";
-import { appLocalDataDir } from "@tauri-apps/api/path";
-import {
-	BaseDirectory,
-	exists,
-	mkdir,
-	readFile,
-	remove,
-	rename,
-	writeFile,
-} from "@tauri-apps/plugin-fs";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 
+import { toBase64 } from "$lib/util/base64";
 import {
 	existsWebAppDataFile,
 	readWebAppDataFile,
@@ -17,35 +8,44 @@ import {
 	writeWebAppDataFile,
 } from "./web-store";
 
-export async function existsAppDataFile(path: string) {
+const nativeFiles = { "preferences.data": "preferences" } as const;
+
+type AppDataPath = keyof typeof nativeFiles;
+
+async function readNativeFile(path: AppDataPath) {
+	const bytes = await invoke<ArrayBuffer | number[] | null>("read_app_data", {
+		file: nativeFiles[path],
+	});
+	return bytes === null ? null : new Uint8Array(bytes);
+}
+
+export async function existsAppDataFile(path: AppDataPath) {
 	if (!isTauri()) return existsWebAppDataFile(path);
-	return await exists(path, { baseDir: BaseDirectory.AppLocalData });
+	return (await readNativeFile(path)) !== null;
 }
 
-export async function readAppDataFile(path: string) {
+export async function readAppDataFile(path: AppDataPath) {
 	if (!isTauri()) return readWebAppDataFile(path);
-	return await readFile(path, { baseDir: BaseDirectory.AppLocalData });
+	const bytes = await readNativeFile(path);
+	if (bytes === null) throw new Error(`No app data file at ${path}`);
+	return bytes;
 }
 
-export async function removeAppDataFile(path: string) {
+export async function removeAppDataFile(path: AppDataPath) {
 	if (!isTauri()) return removeWebAppDataFile(path);
-	if (!(await existsAppDataFile(path))) return;
-	await remove(path, { baseDir: BaseDirectory.AppLocalData });
+	await invoke("remove_app_data", { file: nativeFiles[path] });
 }
 
 export async function writeAppDataFileAtomic({
 	path,
 	content,
 }: {
-	path: string;
+	path: AppDataPath;
 	content: Uint8Array;
 }) {
 	if (!isTauri()) return writeWebAppDataFile({ path, content });
-	await mkdir(await appLocalDataDir(), { recursive: true });
-	const tempPath = `${path}.tmp`;
-	await writeFile(tempPath, content, { baseDir: BaseDirectory.AppLocalData });
-	await rename(tempPath, path, {
-		oldPathBaseDir: BaseDirectory.AppLocalData,
-		newPathBaseDir: BaseDirectory.AppLocalData,
+	await invoke("write_app_data", {
+		file: nativeFiles[path],
+		content: toBase64(content),
 	});
 }

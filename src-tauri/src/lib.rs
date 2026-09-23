@@ -1,4 +1,5 @@
 pub mod api;
+mod app_data;
 mod app_settings;
 mod appearance;
 mod appimage;
@@ -235,6 +236,9 @@ pub fn run() {
             api::update::commands::updater_discard,
             app_settings::open_app_settings,
             appearance::backdrop_filter_renders,
+            app_data::read_app_data,
+            app_data::write_app_data,
+            app_data::remove_app_data,
         ])
         .setup(|app| {
             scroll_phase::install_scroll_gesture_bridge(app.handle());

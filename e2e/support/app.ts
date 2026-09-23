@@ -151,46 +151,31 @@ export async function installTauriShim(
 	{ platform = "macos" } = {},
 ): Promise<void> {
 	await page.addInitScript((platformName: string) => {
-		interface FsArgs {
-			path?: string;
-			oldPath?: string;
-			newPath?: string;
-		}
-		interface InvokeOptions {
-			headers?: Record<string, string>;
+		interface AppDataArgs {
+			file?: string;
+			content?: string;
 		}
 
 		const files = new Map<string, Uint8Array>();
 
-		const invoke = (
-			cmd: string,
-			args?: unknown,
-			opts?: unknown,
-		): unknown => {
-			const fs = (args ?? {}) as FsArgs;
-			const headers = ((opts ?? {}) as InvokeOptions).headers ?? {};
+		const invoke = (cmd: string, args?: unknown): unknown => {
+			const { file = "", content = "" } = (args ?? {}) as AppDataArgs;
 
-			if (cmd === "plugin:path|resolve_directory") return "/appdata";
 			if (cmd.startsWith("plugin:event|")) return null;
-			if (cmd === "plugin:fs|exists") return files.has(fs.path ?? "");
-			if (cmd === "plugin:fs|read_file") {
-				const data = files.get(fs.path ?? "");
-				if (!data) throw new Error("ENOENT");
-				return data;
+			if (cmd === "read_app_data") {
+				return files.get(file)?.slice().buffer ?? null;
 			}
-			if (cmd === "plugin:fs|mkdir") return null;
-			if (cmd === "plugin:fs|rename") {
-				const data = files.get(fs.oldPath ?? "");
-				if (data) files.set(fs.newPath ?? "", data);
-				files.delete(fs.oldPath ?? "");
+			if (cmd === "write_app_data") {
+				files.set(
+					file,
+					Uint8Array.from(atob(content), (char) =>
+						char.charCodeAt(0),
+					),
+				);
 				return null;
 			}
-			if (cmd === "plugin:fs|write_file") {
-				const path = decodeURIComponent(headers.path ?? fs.path ?? "");
-				files.set(
-					path,
-					args instanceof Uint8Array ? args : new Uint8Array(),
-				);
+			if (cmd === "remove_app_data") {
+				files.delete(file);
 				return null;
 			}
 			return null;
@@ -217,8 +202,8 @@ export async function installTauriShim(
 					currentWindow: { label: "main" },
 					currentWebview: { label: "main" },
 				},
-				invoke: (cmd: string, args?: unknown, opts?: unknown) =>
-					Promise.resolve(invoke(cmd, args, opts)),
+				invoke: (cmd: string, args?: unknown) =>
+					Promise.resolve(invoke(cmd, args)),
 			},
 		});
 	}, platform);
