@@ -148,28 +148,40 @@ fn round_trips() -> bool {
 		all(target_os = "macos", not(feature = "keychain"))
 	)
 ))]
-mod tests {
+pub(crate) mod test_support {
 	use std::path::Path;
 	use std::sync::Mutex;
 
-	use super::*;
+	use super::{file_store, init_file_store};
 
 	static DEFAULT_STORE: Mutex<()> = Mutex::new(());
 
-	const PERSISTED_ENTRIES: [&str; 3] =
-		["device-info", "device-signing-key", "session"];
-
-	fn lock() -> std::sync::MutexGuard<'static, ()> {
+	pub(crate) fn lock() -> std::sync::MutexGuard<'static, ()> {
 		DEFAULT_STORE.lock().unwrap_or_else(|e| e.into_inner())
 	}
 
-	fn with_file_store(test: impl FnOnce(&Path)) {
+	pub(crate) fn with_file_store(test: impl FnOnce(&Path)) {
 		let _guard = lock();
 		let base = file_store::scratch_dir();
 		init_file_store(base.clone());
 		test(&base);
 		std::fs::remove_dir_all(&base).ok();
 	}
+}
+
+#[cfg(all(
+	test,
+	any(
+		target_os = "linux",
+		all(target_os = "macos", not(feature = "keychain"))
+	)
+))]
+mod tests {
+	use super::test_support::{lock, with_file_store};
+	use super::*;
+
+	const PERSISTED_ENTRIES: [&str; 3] =
+		["device-info", "device-signing-key", "session"];
 
 	fn entry(user: &str) -> keyring_core::Entry {
 		keyring_core::Entry::new("open-grind", user).unwrap()

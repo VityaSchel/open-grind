@@ -10,11 +10,13 @@ import {
 } from "$lib/api/google-handoff-state.svelte";
 import { signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
-import { clearAccountState } from "$lib/api/sign-out";
+import { signOut } from "$lib/api/sign-out";
 import { isAndroidPlatform } from "$lib/platform/os";
 import { delay } from "$lib/util/delay";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
+const GOOGLE_SIGN_IN = "/auth/sign-in/google";
+const EXPIRED = "That Google sign-in expired. Try again.";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
@@ -64,30 +66,32 @@ async function mayHaveSession(): Promise<boolean> {
 async function consume(): Promise<void> {
 	if (!(await pending())) return;
 
-	let replacingAccount = false;
 	if (await mayHaveSession()) {
 		if (!(await confirmAccountSwitch())) {
 			await discard();
 			return;
 		}
-		replacingAccount = true;
+		if (!(await pending())) {
+			googleHandoffState.phase = "idle";
+			toast.error(EXPIRED);
+			return;
+		}
+		await signOut({ destination: GOOGLE_SIGN_IN });
 	} else {
-		googleHandoffState.phase = "signingIn";
-		await goto("/auth/sign-in/google");
+		await goto(GOOGLE_SIGN_IN);
 	}
+	googleHandoffState.phase = "signingIn";
 
 	try {
 		const result = await exchange();
 		if (!result) {
-			toast.error("That Google sign-in expired. Try again.");
+			toast.error(EXPIRED);
 			return;
 		}
-		if (replacingAccount) await clearAccountState();
 		finishSignIn(result);
 		if (result.restriction) await goto("/auth/sign-in");
 	} catch (error) {
 		reportSignInFailure({ error, label: "Sign in with Google" });
-		if (!replacingAccount) await goto("/auth/sign-in/google");
 	} finally {
 		googleHandoffState.phase = "idle";
 	}

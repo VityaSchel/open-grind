@@ -18,7 +18,9 @@ export function onSignOut(release: () => Promise<void>): void {
 	releases.add(release);
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut({
+	destination = "/auth/sign-in",
+}: { destination?: string } = {}): Promise<void> {
 	for (const release of releases) {
 		try {
 			await release();
@@ -33,7 +35,7 @@ export async function signOut(): Promise<void> {
 		console.error(error);
 	}
 
-	await goto("/auth/sign-in");
+	await goto(destination);
 	await clearAccountState();
 }
 

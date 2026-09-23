@@ -5,6 +5,8 @@ use crate::media::MediaProxy;
 use crate::state::AppState;
 use crate::storage::{AuthStorage, DeviceStorage, SigningKeyStorage};
 
+static SIGN_OUT: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SignInResult {
@@ -72,11 +74,14 @@ fn region_str(region: grindr::VerificationRegion) -> &'static str {
 
 #[tauri::command]
 pub async fn sign_in_with_email(
+	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 	email: String,
 	password: String,
 	captcha_token: Option<String>,
 ) -> Result<SignInResult, AppError> {
+	end_existing_session(&app, &state, &media).await?;
 	let client = state.client()?;
 	let result = match captcha_token {
 		Some(token) => {
@@ -93,18 +98,23 @@ pub async fn sign_in_with_email(
 pub async fn sign_in_with_google(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 ) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::google_oauth::fetch_google_access_token(&app).await?;
+	end_existing_session(&app, &state, &media).await?;
 	let result = state.client()?.sign_in_with_google(&access_token).await?;
 	Ok(SignInResult::from(result))
 }
 
 #[tauri::command]
 pub async fn sign_in_with_google_token(
+	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 	token: String,
 ) -> Result<SignInResult, AppError> {
+	end_existing_session(&app, &state, &media).await?;
 	let result = state.client()?.sign_in_with_google(&token).await?;
 	Ok(SignInResult::from(result))
 }
@@ -123,10 +133,12 @@ pub fn google_handoff_pending(app: tauri::AppHandle) -> bool {
 pub async fn sign_in_with_google_handoff(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 ) -> Result<Option<SignInResult>, AppError> {
 	let Some(token) = super::google_oauth::take_handoff(&app) else {
 		return Ok(None);
 	};
+	end_existing_session(&app, &state, &media).await?;
 	let result = state.client()?.sign_in_with_google(&token).await?;
 	Ok(Some(SignInResult::from(result)))
 }
@@ -140,9 +152,11 @@ pub fn discard_google_handoff(app: tauri::AppHandle) {
 pub async fn sign_in_with_facebook(
 	app: tauri::AppHandle,
 	state: tauri::State<'_, AppState>,
+	media: tauri::State<'_, MediaProxy>,
 ) -> Result<SignInResult, AppError> {
 	let access_token =
 		super::facebook_oauth::fetch_facebook_access_token(&app).await?;
+	end_existing_session(&app, &state, &media).await?;
 	let result = state.client()?.sign_in_with_facebook(&access_token).await?;
 	Ok(SignInResult::from(result))
 }
@@ -166,13 +180,39 @@ pub async fn sign_out(
 	state: tauri::State<'_, AppState>,
 	media: tauri::State<'_, MediaProxy>,
 ) -> Result<(), AppError> {
-	let client = state.client()?;
+	end_session(&app, &state, &media).await
+}
 
+pub(crate) async fn end_session(
+	app: &tauri::AppHandle,
+	state: &AppState,
+	media: &MediaProxy,
+) -> Result<(), AppError> {
+	let _one_at_a_time = SIGN_OUT.lock().await;
+	forget_account(state.client()?, media).await?;
+	super::facebook_oauth::forget_sign_in_profile(app).await;
+	Ok(())
+}
+
+async fn end_existing_session(
+	app: &tauri::AppHandle,
+	state: &AppState,
+	media: &MediaProxy,
+) -> Result<(), AppError> {
+	if state.client()?.session_receiver().borrow().is_none() {
+		return Ok(());
+	}
+	end_session(app, state, media).await
+}
+
+pub(crate) async fn forget_account(
+	client: &grindr::GrindrClient,
+	media: &MediaProxy,
+) -> Result<(), AppError> {
 	client.sign_out().await;
 	AuthStorage::delete_credentials();
 	SigningKeyStorage::delete();
 	media.forget_everything().await;
-	super::facebook_oauth::forget_sign_in_profile(&app).await;
 
 	let new_device = grindr::DeviceInfo::generate();
 	if let Err(e) = DeviceStorage::save(&new_device) {
@@ -215,6 +255,57 @@ pub async fn account_restriction(
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[cfg(any(
+		target_os = "linux",
+		all(target_os = "macos", not(feature = "keychain"))
+	))]
+	#[test]
+	fn ending_a_session_forgets_the_account_and_moves_to_a_new_device() {
+		crate::storage::test_support::with_file_store(|_| {
+			let old_device = grindr::DeviceInfo::generate();
+			let credentials = grindr::Credentials {
+				email: "user@example.com".to_owned(),
+				profile_id: Some("42".to_owned()),
+				auth_token: "auth-token".to_owned(),
+				kind: grindr::SessionKind::Email,
+				third_party_user_id: None,
+			};
+			DeviceStorage::save(&old_device).unwrap();
+			AuthStorage::set_credentials(&credentials).unwrap();
+			SigningKeyStorage::save(
+				&serde_json::from_value(serde_json::json!({
+					"key": "-----BEGIN PRIVATE KEY-----",
+					"user_id": "42",
+				}))
+				.unwrap(),
+			)
+			.unwrap();
+			let client = grindr::GrindrClient::new(
+				old_device.clone(),
+				Some(grindr::Session {
+					credentials,
+					token: None,
+				}),
+			)
+			.unwrap();
+
+			let runtime = tokio::runtime::Runtime::new().unwrap();
+			runtime
+				.block_on(forget_account(&client, &MediaProxy::default()))
+				.unwrap();
+
+			assert!(client.session_receiver().borrow().is_none());
+			assert!(AuthStorage::get_credentials().unwrap().is_none());
+			assert!(SigningKeyStorage::load().unwrap().is_none());
+			let stored = DeviceStorage::load().unwrap().expect("a new device");
+			assert_ne!(stored.device_id, old_device.device_id);
+			assert_eq!(
+				runtime.block_on(client.current_device()).device_id,
+				stored.device_id
+			);
+		});
+	}
 
 	#[test]
 	fn simulated_age_restriction_maps_to_frontend_shape() {
