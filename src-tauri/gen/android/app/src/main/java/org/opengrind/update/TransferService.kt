@@ -12,14 +12,22 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
+import java.lang.ref.WeakReference
 import org.opengrind.R
 import org.opengrind.addon.AddonNames
 
 // Prevent Android from freezing the process and dropping its sockets
 class TransferService : Service() {
 	private var wakeLock: PowerManager.WakeLock? = null
+	private var foregroundStartId: Int? = null
 
 	override fun onBind(intent: Intent?): IBinder? = null
+
+	override fun onCreate() {
+		super.onCreate()
+		running = WeakReference(this)
+	}
 
 	override fun onStartCommand(
 		intent: Intent?,
@@ -32,7 +40,7 @@ class TransferService : Service() {
 				NOTIFICATION_ID,
 				notification(
 					this,
-					Transfer(
+					holds.newest() ?: Transfer(
 						title = TransferTitle.named(intent?.getStringExtra(EXTRA_TITLE)),
 						addonPackage = intent?.getStringExtra(EXTRA_ADDON_PACKAGE),
 					),
@@ -44,10 +52,11 @@ class TransferService : Service() {
 				},
 			)
 		} catch (e: Exception) {
-			stopSelf(startId)
+			stopIfLatest(startId)
 			return START_NOT_STICKY
 		}
-		acquireWakeLock()
+		foregroundStartId = startId
+		settle()
 		return START_NOT_STICKY
 	}
 
@@ -55,13 +64,31 @@ class TransferService : Service() {
 		startId: Int,
 		fgsType: Int,
 	) {
+		foregroundStartId = null
 		stopSelf()
 	}
 
 	override fun onDestroy() {
+		if (running?.get() === this) running = null
 		wakeLock?.let { if (it.isHeld) it.release() }
 		wakeLock = null
+		getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
 		super.onDestroy()
+	}
+
+	private fun settle() {
+		val startId = foregroundStartId ?: return
+		val showing = holds.newest()
+		if (showing == null) {
+			stopIfLatest(startId)
+			return
+		}
+		getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification(this, showing))
+		acquireWakeLock()
+	}
+
+	private fun stopIfLatest(startId: Int) {
+		if (stopSelfResult(startId)) foregroundStartId = null
 	}
 
 	private fun acquireWakeLock() {
@@ -81,6 +108,7 @@ class TransferService : Service() {
 		private const val WAKE_LOCK_TAG = "opengrind:update"
 		private const val WAKE_LOCK_TIMEOUT_MS = 30L * 60L * 1000L
 		private val holds = TransferHolds()
+		private var running: WeakReference<TransferService>? = null
 
 		fun start(
 			context: Context,
@@ -98,14 +126,8 @@ class TransferService : Service() {
 			context: Context,
 			transfer: Transfer,
 		) {
-			val showing = holds.end(transfer)
-			if (showing == null) {
-				context.stopService(Intent(context, TransferService::class.java))
-				return
-			}
-			context
-				.getSystemService(NotificationManager::class.java)
-				.notify(NOTIFICATION_ID, notification(context, showing))
+			holds.end(transfer)
+			ContextCompat.getMainExecutor(context).execute { running?.get()?.settle() }
 		}
 
 		private fun notification(

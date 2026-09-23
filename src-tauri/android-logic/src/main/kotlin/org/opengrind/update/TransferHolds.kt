@@ -9,8 +9,10 @@ class TransferHolds {
 	}
 
 	@Synchronized
-	fun end(transfer: Transfer): Transfer? {
+	fun end(transfer: Transfer) {
 		active.remove(transfer)
-		return active.lastOrNull()
 	}
+
+	@Synchronized
+	fun newest(): Transfer? = active.lastOrNull()
 }

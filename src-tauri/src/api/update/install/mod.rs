@@ -1248,10 +1248,22 @@ mod pins {
 		assert!(
 			service.contains(
 				"funstart(context:Context,transfer:Transfer,){holds.begin(transfer)context.startForegroundService("
-			) && service.contains(
-				"funstop(context:Context,transfer:Transfer,){valshowing=holds.end(transfer)if(showing==null){context.stopService("
 			),
-			"TransferService no longer restarts on every hold and stops only when the last one ends"
+			"TransferService no longer restarts on every hold"
+		);
+		assert!(
+			service.contains(
+				"funstop(context:Context,transfer:Transfer,){holds.end(transfer)ContextCompat.getMainExecutor(context).execute{running?.get()?.settle()}}"
+			) && !service.contains("stopService("),
+			"TransferService is stopped from outside instead of stopping itself on the main thread"
+		);
+		assert!(
+			service.contains(
+				"}catch(e:Exception){stopIfLatest(startId)returnSTART_NOT_STICKY}foregroundStartId=startIdsettle()"
+			) && service.contains(
+				"privatefunsettle(){valstartId=foregroundStartId?:returnvalshowing=holds.newest()if(showing==null){stopIfLatest(startId)return}"
+			),
+			"TransferService can stop before it entered the foreground or while a transfer still runs"
 		);
 	}
 }
