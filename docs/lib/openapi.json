@@ -479,7 +479,7 @@
 					}
 				},
 				"summary": "Add media to drawer",
-				"description": "MediaId must be obtained through [uploading](/grindr-api/messaging/drawer#upload-media)."
+				"description": "Takes a `mediaId` from [uploading](/grindr-api/messaging/drawer#upload-media). Videos are accepted and listed as `video/mp4`."
 			},
 			"delete": {
 				"tags": [
@@ -6673,19 +6673,14 @@
 				},
 				"responses": {
 					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
-								}
-							}
-						},
-						"description": "OK"
+						"description": "Empty."
+					},
+					"402": {
+						"description": "The album is full. Unlike [Upload media to an album](/grindr-api/messaging/albums#upload-media-to-an-album), its video counts toward `maxContentItemsPerAlbum`. Empty body."
 					}
 				},
-				"summary": "Albums content chat list-by-id",
-				"description": "Unknown, `{\"ids\":[852120758]}` returns 400",
-				"x-wip": true
+				"summary": "Add drawer media to an album",
+				"description": "Copies media from the [drawer](/grindr-api/messaging/drawer#get-media-in-drawer) into the album. `ids` are drawer media ids."
 			}
 		},
 		"/v1/albums/storage": {
@@ -9852,7 +9847,8 @@
 						"schema": {
 							"type": "integer",
 							"format": "int64"
-						}
+						},
+						"description": "Duration in milliseconds."
 					},
 					{
 						"name": "looping",
@@ -9889,7 +9885,7 @@
 					}
 				},
 				"summary": "Upload media",
-				"description": "A correct `Content-Type` request header is required. `length` is sent for audio and video, `looping` only for video."
+				"description": "Requires a correct `Content-Type`. Set `length` for audio and video, and `looping` for video. Videos are uploaded as `video/mp4`."
 			}
 		},
 		"/v4/media/upload": {
@@ -9937,10 +9933,13 @@
 							}
 						},
 						"description": "OK"
+					},
+					"403": {
+						"description": "Daily limit of new profile photos reached (`ERR_EXCEED_PROFILE_IMAGE_DAILY_LIMIT`, code `51`)."
 					}
 				},
 				"summary": "Upload media (legacy)",
-				"description": "You must ensure thumbCoords's width and height dimensions are equal, i.e. y2-y1 must equal x2-x1. Submitting a non-square thumbnail won't trigger any errors and it will be uploaded to the CDN, however attempting to use such illegal thumbnail dimensions image in [Edit profile photos](/grindr-api/users/profiles#edit-profile-photos) will result in it being silently dropped/skipped.\n\nAlso there is a legacy `POST /v3/me/profile/images`.",
+				"description": "`thumbCoords` must be square (`y2 - y1` equals `x2 - x1`). A non-square thumbnail uploads without error, but [Edit profile photos](/grindr-api/users/profiles#edit-profile-photos) silently drops it.\n\nA legacy `POST /v3/me/profile/images` also exists.",
 				"x-legacy": true
 			}
 		},
