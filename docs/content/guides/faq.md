@@ -49,7 +49,9 @@ The only indirect counters are:
     - Number of registered users on git.opengrind.org (**IP addresses are not stored**)
     - Keep in mind these platforms do not collect or store any personally identifiable data about users
 
-Open Grind has opt-in auto-updater that sends an anonymous request to git.opengrind.org, but these requests are not logged or stored. If you installed the app from F-Droid, Obtainium, Aurora Store or Google Play, or from the `.deb`, Open Grind never updates itself. On Android builds signed by Open Grind, it can still check for add-on updates there: this is off by default, the first-run screen does not ask about it, and you can turn it on in Settings → App with "Check add-on updates automatically", or run it once with "Check for updates". On other installs, the first-run screen presents this choice with the checkbox pre-checked, no update check is sent until you confirm, and you can change it any time in Settings → App. On Android, tapping "Install" on the Google sign-in screen also requests the Google OAuth app's release list, APK and signature from git.opengrind.org (or opens its Releases page in your browser on builds not signed by Open Grind and on devices it has no build for), whatever you chose for update checks. Tapping **Continue** in the "Install push notifications add-on" dialog on the Notifications screen does the same for the FCM service.
+Open Grind has opt-in auto-updater that sends an anonymous request to git.opengrind.org. These requests are not logged or analyzed. Installs through the auto-updater (including add-on installs) are counted towards the download count on Releases pages.
+
+Open Grind installed from F-Droid, Google Play or .deb never updates itself, and updates are managed by your package manager or app store.
 
 **As of September 1st, 2026, the estimated number of users is ~67 000 based on the downloads counter.**
 
@@ -67,7 +69,7 @@ Open Grind is completely free, open source and transparent: no ads, no purchases
 
 :::
 
-::: details What about other apps such as Free Grind and GrindrX?
+::: details What about other apps such as Free Grind, Regrind and GrindrX?
 
 These are forks of Open Grind building upon its foundation. Neither are affiliated/verified/endorsed by Open Grind developers. All third-party clients put your personal sensitive information at risk. Avoid using Grindr clients that weren't audited independently, as they might contain spyware.
 
