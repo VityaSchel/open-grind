@@ -47,7 +47,14 @@ impl PickedFile {
 				File::open(path)
 			}
 			PickedFile::Android { uri } => {
-				if !uri.uri.starts_with(CONTENT_SCHEME) {
+				let refused =
+					uri.uri.strip_prefix(CONTENT_SCHEME).is_none_or(|rest| {
+						reaches_this_app(
+							authority(rest),
+							&app.config().identifier,
+						)
+					});
+				if refused {
 					return Err(io::Error::new(
 						io::ErrorKind::PermissionDenied,
 						OUTSIDE_SCOPE,
@@ -57,6 +64,26 @@ impl PickedFile {
 			}
 		}
 	}
+}
+
+fn authority(after_scheme: &str) -> &str {
+	after_scheme
+		.split(['/', '?', '#'])
+		.next()
+		.unwrap_or(after_scheme)
+}
+
+fn reaches_this_app(authority: &str, identifier: &str) -> bool {
+	if authority.contains('%') {
+		return true;
+	}
+	let provider = authority
+		.rsplit('@')
+		.next()
+		.unwrap_or(authority)
+		.to_ascii_lowercase();
+	let identifier = identifier.to_ascii_lowercase();
+	provider == identifier || provider.starts_with(&format!("{identifier}."))
 }
 
 #[cfg(target_os = "android")]
@@ -101,7 +128,61 @@ mod tests {
 	}
 
 	#[test]
-	fn an_android_uri_outside_the_content_provider_is_refused() {
+	fn the_app_s_own_file_provider_is_refused() {
+		let app = app();
+		let picked = PickedFile::Android {
+			uri: AndroidUri {
+				uri: format!(
+					"content://{}.fileprovider/my_cache_images/media/cached.jpg",
+					app.config().identifier
+				),
+				document_top_tree_uri: None,
+			},
+		};
+
+		let refused = picked.open(app.handle()).expect_err("refused");
+
+		assert_eq!(refused.kind(), io::ErrorKind::PermissionDenied);
+		assert_eq!(refused.to_string(), OUTSIDE_SCOPE);
+	}
+
+	#[test]
+	fn every_spelling_of_the_app_s_own_providers_is_refused() {
+		for authority in [
+			"org.opengrind",
+			"org.opengrind.fileprovider",
+			"org.opengrind.androidx-startup",
+			"0@org.opengrind.fileprovider",
+			"10@0@org.opengrind.fileprovider",
+			"ORG.OpenGrind.FileProvider",
+			"org%2Eopengrind.fileprovider",
+			"org.opengrind.fileprovider%00",
+		] {
+			assert!(
+				reaches_this_app(authority, "org.opengrind"),
+				"{authority} must be refused"
+			);
+		}
+	}
+
+	#[test]
+	fn other_apps_providers_are_left_to_android_s_grants() {
+		for authority in [
+			"media",
+			"0@media",
+			"com.android.providers.media.photopicker",
+			"com.android.externalstorage.documents",
+			"org.opengrindr.documents",
+		] {
+			assert!(
+				!reaches_this_app(authority, "org.opengrind"),
+				"{authority} must reach its provider"
+			);
+		}
+	}
+
+	#[test]
+	fn an_android_uri_with_a_non_content_scheme_is_refused() {
 		let app = app();
 		let picked = PickedFile::Android {
 			uri: AndroidUri {

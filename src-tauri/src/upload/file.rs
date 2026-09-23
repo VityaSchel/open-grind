@@ -162,54 +162,73 @@ struct Outgoing<R: Runtime> {
 fn read_source(mut file: File) -> Result<Source, AppError> {
 	let inspection = inspect(&mut file).map_err(media_error)?;
 	match inspection.kind {
-		MediaKind::Photo => {}
+		MediaKind::Photo => Ok(Source::Photo {
+			bytes: read_photo(&mut file, inspection.size)?,
+		}),
 		MediaKind::Video => {
 			let uploaded_at = strip::movie_time(SystemTime::now());
 			let patches = strip::plan(&mut file, uploaded_at)
 				.map_err(media_error)?
 				.ok_or_else(|| AppError::Media(VIDEO_UNREADABLE.to_owned()))?;
-			return Ok(Source::Video {
+			Ok(Source::Video {
 				size: inspection.size,
 				patches: Arc::from(patches),
-			});
+			})
 		}
-		MediaKind::Unsupported => {
-			return Err(AppError::Media(NOT_MEDIA.to_owned()))
-		}
+		MediaKind::Unsupported => Err(AppError::Media(NOT_MEDIA.to_owned())),
 	}
-	if inspection.size > MAX_PHOTO_BYTES {
+}
+
+fn read_photo(file: &mut File, size: u64) -> Result<Vec<u8>, AppError> {
+	if size > MAX_PHOTO_BYTES {
 		return Err(AppError::Media(photo_too_large()));
 	}
 	file.seek(SeekFrom::Start(0)).map_err(media_error)?;
-	let mut bytes =
-		Vec::with_capacity(inspection.size.min(MAX_PHOTO_BYTES) as usize);
-	(&mut file)
-		.take(MAX_PHOTO_BYTES + 1)
+	let mut bytes = Vec::with_capacity(size.min(MAX_PHOTO_BYTES) as usize);
+	file.take(MAX_PHOTO_BYTES + 1)
 		.read_to_end(&mut bytes)
 		.map_err(media_error)?;
 	if bytes.len() as u64 > MAX_PHOTO_BYTES {
 		return Err(AppError::Media(photo_too_large()));
 	}
-	Ok(Source::Photo { bytes })
+	Ok(bytes)
 }
 
-fn profile_of(session: &Option<Session>) -> Option<&str> {
+pub(super) async fn open_photo<R: Runtime>(
+	app: tauri::AppHandle<R>,
+	file: PickedFile,
+) -> Result<Option<Vec<u8>>, AppError> {
+	photo::off_thread(move || {
+		let mut file = file.open(&app).map_err(media_error)?;
+		let inspection = inspect(&mut file).map_err(media_error)?;
+		if inspection.kind != MediaKind::Photo {
+			return Ok(None);
+		}
+		read_photo(&mut file, inspection.size).map(Some)
+	})
+	.await?
+}
+
+pub(super) fn profile_of(session: &Option<Session>) -> Option<&str> {
 	session
 		.as_ref()
 		.and_then(|session| session.credentials.profile_id.as_deref())
 }
 
-fn signed_in_as(session: &Option<Session>, profile_id: &str) -> bool {
+pub(super) fn signed_in_as(
+	session: &Option<Session>,
+	profile_id: &str,
+) -> bool {
 	profile_of(session) == Some(profile_id)
 }
 
-struct Race<'a, F> {
-	sessions: &'a mut tokio::sync::watch::Receiver<Option<Session>>,
-	profile_id: &'a str,
-	send: F,
+pub(super) struct Race<'a, F> {
+	pub sessions: &'a mut tokio::sync::watch::Receiver<Option<Session>>,
+	pub profile_id: &'a str,
+	pub send: F,
 }
 
-async fn unless_session_changes<T>(
+pub(super) async fn unless_session_changes<T>(
 	race: Race<'_, impl Future<Output = T>>,
 ) -> Result<T, AppError> {
 	let Race {
