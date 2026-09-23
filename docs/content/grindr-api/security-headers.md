@@ -52,13 +52,14 @@ Example: `a1b2c3d4e5f60789;GLOBAL;2;8026152960;2400x1080;550e8400-e29b-41d4-a716
 Absence or incorrect forming of this header might lead to HTTP status 400 and `urn:gr:err:header` API error or 403 [WebSocket](/grindr-api/websocket/index#websocket) connection error.
 
 ```
-grindr3/25.20.0.147239;147239;<subscriptionTier>;<os>;<deviceModel>;<manufacturer>
+grindr3/<appVersion>;<buildNumber>;<subscriptionTier>;<os>;<deviceModel>;<manufacturer>
 ```
 
+- `appVersion` and `buildNumber`: the Grindr app version you present as and its build number, e.g. `26.17.0.181424` and `181424`
 - `subscriptionTier`: `Free`, `Plus`, `Xtra`, `Unlimited`, `Premium`, `Free_Plus`, `Free_Xtra`, `Free_Unlimited`, `Free_Premium`
 - `os`: `Android 13`, `Android 14`, etc.
  
-Example: `grindr3/25.20.0.147239;147239;Free;Android 13;Pixel 7;Google`
+Example: `grindr3/26.17.0.181424;181424;Free;Android 13;Pixel 7;Google`
 
 ## `L-Time-Zone`
 
