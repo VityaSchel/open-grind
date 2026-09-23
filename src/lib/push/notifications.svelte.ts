@@ -21,6 +21,7 @@ import { busy, notificationState } from "./notification-state.svelte";
 import { stopNotifications } from "./teardown";
 
 let reconciling: Promise<void> | null = null;
+let sentToSettings = false;
 
 export function reconcileNotifications(): Promise<void> {
 	reconciling ??= reconcile().finally(() => {
@@ -40,6 +41,8 @@ export async function toggleNotifications(enabled: boolean): Promise<void> {
 
 async function reconcile(): Promise<void> {
 	if (!pushAvailableHere() || busy()) return;
+	const returningFromSettings = sentToSettings;
+	sentToSettings = false;
 	notificationState.mode = await currentMode().catch(
 		() => notificationState.mode,
 	);
@@ -47,6 +50,10 @@ async function reconcile(): Promise<void> {
 		(await getPreferences().catch(() => null))?.notificationsEnabled ===
 		true;
 	const permission = await notificationPermission().catch(() => null);
+	if (!stored && returningFromSettings && permission?.granted) {
+		await turningOn(armNotifications);
+		return;
+	}
 	if (stored && permission?.granted === false) {
 		await stopNotifications().catch(() => {});
 		return;
@@ -59,12 +66,20 @@ async function reconcile(): Promise<void> {
 }
 
 async function turnNotificationsOn(): Promise<void> {
+	await turningOn(async () => {
+		if ((await notificationPermission()).state === "denied") {
+			await openNotificationSettings();
+			sentToSettings = true;
+		} else if ((await requestNotificationPermission()).granted) {
+			await armNotifications();
+		}
+	});
+}
+
+async function turningOn(steps: () => Promise<void>): Promise<void> {
 	notificationState.permissionPending = true;
 	try {
-		const permission = await requestNotificationPermission();
-		if (permission.granted) await armNotifications();
-		else if (permission.state === "denied")
-			await openNotificationSettings();
+		await steps();
 	} catch (error) {
 		await setNotificationsEnabled(false).catch(() => {});
 		showErrorToast({ label: pushFailures.turnOn, error });

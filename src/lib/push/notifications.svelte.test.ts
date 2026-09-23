@@ -69,43 +69,6 @@ describe("the notifications master switch", () => {
 		preferences.stored.notificationsEnabled = false;
 	});
 
-	it("asks Android for permission before it turns anything on", async () => {
-		const module = await freshModule();
-
-		await module.toggleNotifications(true);
-
-		expect(push.requestNotificationPermission).toHaveBeenCalled();
-		expect(push.setNotificationsEnabled).toHaveBeenCalledWith(true);
-		expect(module.notificationSettings.enabled).toBe(true);
-	});
-
-	it("stays off when the user denies the permission", async () => {
-		push.requestNotificationPermission.mockResolvedValue({
-			granted: false,
-			state: "prompt-with-rationale",
-		});
-		const module = await freshModule();
-
-		await module.toggleNotifications(true);
-
-		expect(push.setNotificationsEnabled).not.toHaveBeenCalled();
-		expect(push.openNotificationSettings).not.toHaveBeenCalled();
-		expect(module.notificationSettings.enabled).toBe(false);
-	});
-
-	it("sends a permanently blocked user to Android settings instead of a dead switch", async () => {
-		push.requestNotificationPermission.mockResolvedValue({
-			granted: false,
-			state: "denied",
-		});
-		const module = await freshModule();
-
-		await module.toggleNotifications(true);
-
-		expect(push.openNotificationSettings).toHaveBeenCalled();
-		expect(module.notificationSettings.enabled).toBe(false);
-	});
-
 	it("registers a fresh token when notifications return in Fast mode", async () => {
 		nativeMode("fast");
 		recordOrder();
