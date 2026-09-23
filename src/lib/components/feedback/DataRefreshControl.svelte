@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { cubicOut, expoOut } from "svelte/easing";
 	import { prefersReducedMotion, Tween } from "svelte/motion";
-	import type { ClassValue } from "svelte/elements";
 	import type { TransitionConfig } from "svelte/transition";
 
 	import { Button } from "$lib/components/ui/button";
@@ -24,14 +23,14 @@
 		position,
 		container,
 		hintOffset = 0,
-		containerClass,
+		anchorOffset = 0,
 		onrefresh,
 	}: {
 		updating?: boolean;
 		position: "top" | "bottom";
 		container?: HTMLElement | null;
 		hintOffset?: number;
-		containerClass?: ClassValue;
+		anchorOffset?: number;
 		onrefresh?: () => void;
 	} = $props();
 
@@ -243,9 +242,8 @@
 				"top-(--drc-anchor)": position === "top",
 				"bottom-(--drc-anchor)": position === "bottom",
 			},
-			containerClass,
 		)}
-		style:--drc-anchor="{headerOffset.px}px"
+		style:--drc-anchor="{headerOffset.px + anchorOffset}px"
 		style:height="{overlayHeight}px"
 		style:opacity
 	>

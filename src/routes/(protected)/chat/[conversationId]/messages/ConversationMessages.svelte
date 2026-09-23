@@ -179,15 +179,13 @@
 	}
 </script>
 
-<div
-	class="relative flex min-h-0 max-w-full flex-1 flex-col"
-	style:--composer-height="{composerHeight}px"
->
+<div class="relative flex min-h-0 max-w-full flex-1 flex-col">
 	<div
 		data-slot="messages-scroller"
-		class="flex min-h-0 max-w-full flex-1 flex-col gap-1 overflow-auto overscroll-contain p-2 pt-20 pb-[calc(var(--composer-height)+--spacing(1.5))] *:first:mt-auto"
+		class="flex min-h-0 max-w-full flex-1 flex-col gap-1 overflow-auto overscroll-contain p-2 pt-20 *:first:mt-auto"
 		bind:this={container}
 		style:overflow-anchor="none"
+		style:padding-bottom="calc({composerHeight}px + var(--spacing) * 1.5)"
 		onscroll={onContainerScroll}
 		onscrollend={onContainerScrollEnd}
 	>
@@ -214,16 +212,18 @@
 			bind:this={refreshControl}
 			{container}
 			updating={conversationState.refreshing}
-			containerClass="bottom-(--composer-height)"
+			anchorOffset={composerHeight}
 			hintOffset={8}
 			position="bottom"
 			onrefresh={() => void conversationState.refresh()}
 		/>
-		{#if !atFloor}
-			<ScrollToBottomButton
-				{seenMessageIds}
-				onclick={() => void scrollToRest(preferredScrollBehavior())}
-			/>
-		{/if}
+		<div class="contents" style:--composer-height="{composerHeight}px">
+			{#if !atFloor}
+				<ScrollToBottomButton
+					{seenMessageIds}
+					onclick={() => void scrollToRest(preferredScrollBehavior())}
+				/>
+			{/if}
+		</div>
 	{/if}
 </div>
