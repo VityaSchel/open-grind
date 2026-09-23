@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+
 	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
+	import { isPlainClick } from "$lib/util/plain-click";
 
 	let {
 		id,
@@ -24,6 +27,12 @@
 		isVisiting?: boolean;
 		hadRecentChat?: boolean;
 	} = $props();
+
+	function openInPager(event: MouseEvent) {
+		if (!isPlainClick(event)) return;
+		event.preventDefault();
+		void goto(`/profile/${id}`, { state: { profileOrigin: "browse" } });
+	}
 </script>
 
 <ProfileMiniCard
@@ -37,4 +46,5 @@
 	{isVisiting}
 	{hadRecentChat}
 	href="/profile/{id}"
+	onclick={openInPager}
 />

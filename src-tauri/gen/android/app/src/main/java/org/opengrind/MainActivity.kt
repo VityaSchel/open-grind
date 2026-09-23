@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.TextView
+import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
@@ -26,6 +27,7 @@ class MainActivity : TauriActivity() {
 	private var insetsLeft = 0
 	private var insetsRight = 0
 	@Volatile private var imeVisibleState = false
+	@Volatile private var backGestureProgress = 0f
 	private var webViewRef: WebView? = null
 	private var pendingWebViewWarning: WebViewSupport.Status? = null
 	private var shownWebViewWarning = false
@@ -63,7 +65,31 @@ class MainActivity : TauriActivity() {
 		@JavascriptInterface fun imeVisible() = imeVisibleState
 	}
 
+	private val backProgressCallback = object : OnBackPressedCallback(true) {
+		override fun handleOnBackStarted(backEvent: BackEventCompat) {
+			backGestureProgress = 0f
+			webViewRef?.evaluateJavascript("window.__AndroidOnBackGestureStart?.()", null)
+		}
+
+		override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+			backGestureProgress = backEvent.progress
+		}
+
+		override fun handleOnBackCancelled() {
+			backGestureProgress = 0f
+			webViewRef?.evaluateJavascript("window.__AndroidOnBackGestureCancel?.()", null)
+		}
+
+		override fun handleOnBackPressed() {
+			isEnabled = false
+			onBackPressedDispatcher.onBackPressed()
+			isEnabled = true
+		}
+	}
+
 	inner class BackInterface {
+		@JavascriptInterface fun gestureProgress() = backGestureProgress
+
 		@JavascriptInterface fun moveTaskToBack() {
 			runOnUiThread { this@MainActivity.moveTaskToBack(true) }
 		}
@@ -126,6 +152,11 @@ class MainActivity : TauriActivity() {
 		webView.settings.setGeolocationEnabled(false)
 		webView.addJavascriptInterface(InsetsInterface(), "__AndroidInsets")
 		webView.addJavascriptInterface(BackInterface(), "__AndroidBack")
+		// Registered here, not in onCreate: Tauri's AppPlugin adds its own back
+		// callback while the plugins load, and only the last one added gets the
+		// gesture progress. Move this earlier and the progress stops arriving.
+		backProgressCallback.remove()
+		onBackPressedDispatcher.addCallback(this, backProgressCallback)
 		maybeWarnAboutWebView()
 	}
 

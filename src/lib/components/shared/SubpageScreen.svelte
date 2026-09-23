@@ -4,7 +4,9 @@
 	import { ArrowLeftIcon } from "phosphor-svelte";
 	import type { Snippet } from "svelte";
 
+	import BackLink from "$lib/components/navigation/BackLink.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
+	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import { provideSubpageActions } from "./subpage-actions-context.svelte";
 
 	let {
@@ -48,14 +50,14 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
+	{@attach topChrome}
 >
-	<a
+	<BackLink
 		href={current.back}
-		aria-label="Back"
 		class="flex h-full w-19 shrink-0 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />
-	</a>
+	</BackLink>
 	<span class="min-w-0 flex-1 truncate">
 		{current.title}
 	</span>

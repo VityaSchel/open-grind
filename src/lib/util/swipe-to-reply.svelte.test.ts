@@ -31,6 +31,24 @@ describe("SwipeToReply", () => {
 		expect(onReply).not.toHaveBeenCalled();
 	});
 
+	it("eases the row back instead of jumping on release", () => {
+		const { swipe } = swipeToReply();
+
+		drag(swipe, { x: 40 });
+		swipe.handlers.onpointerup?.(pointer() as never);
+
+		expect(swipe.deltaX).toBe(40);
+	});
+
+	it("puts the row straight back under reduced motion", () => {
+		const { swipe } = swipeToReply({ reducedMotion: true });
+
+		drag(swipe, { x: 40 });
+		swipe.handlers.onpointerup?.(pointer() as never);
+
+		expect(swipe.deltaX).toBe(0);
+	});
+
 	it("does not reply when an armed drag is cancelled", () => {
 		const { swipe, onReply } = swipeToReply();
 

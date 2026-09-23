@@ -99,6 +99,33 @@ describe("the Updates section of the app settings on Android", () => {
 		).toBeTruthy();
 	}, 60_000);
 
+	it("shows the saved automatic checks value on the first frame when opened again", async () => {
+		updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: true });
+		const addonUpdates = {
+			state: "unsupported",
+			detail: {
+				reason: "externallyManaged",
+				detail: { installer: "org.fdroid.fdroid" },
+			},
+		} satisfies Capability;
+		const automaticChecks = () =>
+			testing.screen.getByRole("switch", {
+				name: /^Check add-on updates automatically/,
+			});
+
+		await opened(addonUpdates);
+		await testing.waitFor(() => {
+			expect(automaticChecks().getAttribute("aria-checked")).toBe("true");
+		});
+		testing.cleanup();
+
+		const { default: AppSettingsPage } = await import("./+page.svelte");
+		testing.render(AppSettingsPage);
+
+		expect(automaticChecks().getAttribute("aria-checked")).toBe("true");
+		expect(updateSettings.getUpdateSettings).toHaveBeenCalledOnce();
+	}, 60_000);
+
 	it("stays hidden on a build someone else signed", async () => {
 		const screen = await opened({
 			state: "unsupported",

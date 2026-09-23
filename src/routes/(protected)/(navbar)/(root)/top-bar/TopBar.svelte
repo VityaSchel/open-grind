@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CommandCenterTrigger from "$lib/components/command-center/CommandCenterTrigger.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
+	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import GridFilters from "../GridFilters.svelte";
 	import LocationChange from "../LocationChange.svelte";
 	import QuickFilters from "./QuickFilters.svelte";
@@ -14,6 +15,7 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex flex-col pt-fixed-header"
 	direction="topToBottom"
+	{@attach topChrome}
 >
 	<div class="scrollbar-thin flex gap-0.5 overflow-x-auto p-4 pt-0">
 		<LocationChange />

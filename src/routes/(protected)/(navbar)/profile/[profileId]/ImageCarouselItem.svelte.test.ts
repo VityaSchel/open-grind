@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
 import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 const PROPS = {
 	src: "https://cdns.grindr.com/images/profile/1024x1024/a",
-	thumb: "https://cdns.grindr.com/images/profile/1024x1024/a",
+	eager: true,
 	createdAt: null,
 	label: "Profile photo 1 of 2",
 };
@@ -40,5 +40,40 @@ describe("ImageCarouselItem", () => {
 		expect(
 			container.querySelector('[data-slot="broken-media"]'),
 		).not.toBeNull();
+	});
+
+	it("shows a spinner until the photo loads", async () => {
+		const { container } = render(ImageCarouselItem, { props: PROPS });
+
+		expect(screen.queryByRole("status")).not.toBeNull();
+		const img = container.querySelector("img")!;
+		Object.defineProperty(img, "naturalWidth", { get: () => 1024 });
+		await fireEvent.load(img);
+
+		expect(screen.queryByRole("status")).toBeNull();
+	});
+
+	it("hides the spinner when the photo fails", async () => {
+		const { container } = render(ImageCarouselItem, { props: PROPS });
+
+		expect(screen.queryByRole("status")).not.toBeNull();
+		await fireEvent.error(container.querySelector("img")!);
+
+		expect(screen.queryByRole("status")).toBeNull();
+	});
+
+	it("keeps an unloaded photo openable behind a loading box", () => {
+		const { container } = render(ImageCarouselItem, {
+			props: { ...PROPS, eager: false },
+		});
+
+		const anchor = container.querySelector("a")!;
+		expect(container.querySelector("img")).toBeNull();
+		expect(
+			container.querySelector('[data-slot="broken-media"]'),
+		).toBeNull();
+		expect(anchor.getAttribute("href")).toBe(PROPS.src);
+		expect(anchor.hasAttribute("aria-disabled")).toBe(false);
+		expect(screen.queryByRole("status")).not.toBeNull();
 	});
 });

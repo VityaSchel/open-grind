@@ -6,15 +6,14 @@ import { NO_METRICS, virtualWindow } from "./virtual-window.svelte";
 // writes it.
 let lastMetrics: GridMetrics = NO_METRICS;
 
-function measureCells(element: HTMLElement): GridMetrics {
+export function readGridMetrics(element: HTMLElement): GridMetrics {
 	const style = getComputedStyle(element);
 	const tracks = style.gridTemplateColumns.trim().split(/\s+/);
-	lastMetrics = {
+	return {
 		columns: tracks.length,
 		cellPx: Number.parseFloat(tracks[0] ?? "") || 0,
 		gapPx: Number.parseFloat(style.rowGap) || 0,
 	};
-	return lastMetrics;
 }
 
 export function virtualGrid({
@@ -27,7 +26,7 @@ export function virtualGrid({
 	return virtualWindow({
 		element: grid,
 		count,
-		measure: measureCells,
+		measure: (element) => (lastMetrics = readGridMetrics(element)),
 		initialMetrics: lastMetrics,
 	});
 }

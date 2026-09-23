@@ -1,7 +1,7 @@
 import { addPluginListener } from "@tauri-apps/api/core";
 
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
-import { remeasureBottomChrome } from "$lib/util/bottom-chrome.svelte";
+import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 
 function readEnvInset(prop: string): number {
 	const el = document.createElement("div");
@@ -25,13 +25,29 @@ export function applyAndroidInsets() {
 			value,
 		);
 	}
-	remeasureBottomChrome();
+	remeasureScreenChrome();
 
 	window.__reapplyInsets = applyAndroidInsets;
 }
 
 export function softKeyboardVisibility(): boolean | undefined {
 	return window.__AndroidInsets?.imeVisible?.();
+}
+
+export function softKeyboardHidden({
+	settleMs,
+}: {
+	settleMs: number;
+}): Promise<void> {
+	return new Promise((resolve) => {
+		const done = () => {
+			window.removeEventListener("resize", done);
+			clearTimeout(timeout);
+			resolve();
+		};
+		const timeout = setTimeout(done, settleMs);
+		window.addEventListener("resize", done);
+	});
 }
 
 function runBackGestureHandlers(): boolean {

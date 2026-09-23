@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from "$app/state";
 	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 	import { toast } from "svelte-sonner";
@@ -17,6 +16,7 @@
 	import * as Empty from "$lib/components/ui/empty";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { SelectionSet } from "$lib/util/selection.svelte";
+	import { getConversationState } from "../../../conversation-state.svelte";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import type { TabSelection } from "../tabs";
 	import { mediaMessageDraft } from "./media-messages";
@@ -33,6 +33,7 @@
 	} = $props();
 
 	const composer = getMessageComposerContext();
+	const conversationState = $derived(getConversationState()());
 	const selected = new SelectionSet<number>(10);
 
 	let media = $state<DrawerMedia[] | null>(null);
@@ -43,7 +44,7 @@
 		media = null;
 		error = null;
 		try {
-			media = await getDrawerMedia(page.params.conversationId as string);
+			media = await getDrawerMedia(conversationState.conversationId);
 		} catch (err) {
 			console.error(err);
 			error = err;

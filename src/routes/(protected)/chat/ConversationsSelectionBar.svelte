@@ -13,6 +13,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { below } from "$lib/util/breakpoints.svelte";
+	import { topChrome } from "$lib/util/screen-chrome.svelte";
 
 	let {
 		count,
@@ -68,6 +69,7 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex h-full items-center gap-1.5 px-3 pt-(--safe-area-top) max-selection-bar-compact:gap-1 max-selection-bar-compact:px-2"
 	tag="nav"
+	{@attach topChrome}
 >
 	<Button
 		size="icon-lg"

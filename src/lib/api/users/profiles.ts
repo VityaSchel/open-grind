@@ -206,6 +206,10 @@ export function invalidateProfile(profileId: number) {
 	profiles.delete(profileId);
 }
 
+export function isProfileCached(profileId: number): boolean {
+	return profiles.get(profileId) !== null;
+}
+
 onProfileViewabilityChange(({ profileId }) => invalidateProfile(profileId));
 
 export type ProfileEdit = Partial<

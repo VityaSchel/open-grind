@@ -24,6 +24,7 @@ export function attachTouchPull(
 	let startTarget: EventTarget | null = null;
 	let engaged = false;
 	let browserTookTheGesture = false;
+	let landedAtPullEdge = false;
 
 	const pullDelta = (touch: Touch) => {
 		const dy = touch.clientY - startY;
@@ -43,11 +44,16 @@ export function attachTouchPull(
 		startTarget = null;
 		engaged = false;
 		browserTookTheGesture = false;
+		landedAtPullEdge = false;
 		removeGestureListeners();
 	};
 
+	const claim = (event: TouchEvent) => {
+		if (landedAtPullEdge && event.cancelable) event.preventDefault();
+	};
+
 	const ownEveryFinger = (event: TouchEvent) => {
-		if (engaged && event.cancelable) event.preventDefault();
+		if (engaged) claim(event);
 	};
 
 	const onTouchMove = (event: TouchEvent) => {
@@ -82,7 +88,7 @@ export function attachTouchPull(
 		}
 
 		if (engaged) {
-			if (event.cancelable) event.preventDefault();
+			claim(event);
 			model.updatePull(Math.max(0, pullDelta(touch) - SLOP_PX));
 		}
 	};
@@ -111,7 +117,7 @@ export function attachTouchPull(
 		listenTarget.addEventListener(
 			"touchmove",
 			onTouchMove as EventListener,
-			{ passive: false },
+			{ passive: !landedAtPullEdge },
 		);
 		listenTarget.addEventListener("touchend", onTouchEnd as EventListener);
 		listenTarget.addEventListener(
@@ -151,6 +157,7 @@ export function attachTouchPull(
 		startTarget = event.target;
 		engaged = false;
 		browserTookTheGesture = false;
+		landedAtPullEdge = boundaryDistance() < AT_BOUNDARY_PX;
 		addGestureListeners();
 	};
 

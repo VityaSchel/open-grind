@@ -1,5 +1,4 @@
 import { showErrorToast } from "$lib/api/error-toast";
-import { recordProfileView } from "$lib/api/interest/views";
 import {
 	getFavoriteNote,
 	invalidateFavoriteNote,
@@ -8,15 +7,17 @@ import {
 	BlockedProfileError,
 	getProfile,
 	HiddenProfileError,
+	isProfileCached,
 	isUnviewableProfileError,
 	mergeProfileEditIntoCaches,
 	ProfileUnavailableError,
 	refreshProfile,
 } from "$lib/api/users/profiles";
-import { getPreferences } from "$lib/app-data/preferences.svelte";
 import type { TapType } from "$lib/model/interest/taps";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import type { Profile } from "$lib/model/users/profiles";
+
+export type FetchedProfile = { profile: Profile; note: FavoriteNote | null };
 
 export class ProfileState {
 	profile: Profile | null = $state(null);
@@ -30,23 +31,31 @@ export class ProfileState {
 
 	#fetchToken = 0;
 	#destroyed = false;
+	#active = false;
 
 	constructor({
 		profileId,
 		ourProfileId,
+		fetched,
 	}: {
 		profileId: number;
 		ourProfileId: number;
+		fetched?: FetchedProfile;
 	}) {
 		this.profileId = profileId;
 		this.ourProfileId = ourProfileId;
+		if (fetched) {
+			this.profile = fetched.profile;
+			this.note = fetched.note;
+			this.loading = false;
+			return;
+		}
 		if (!Number.isFinite(profileId)) {
 			this.error = new ProfileUnavailableError();
 			this.loading = false;
 			return;
 		}
 		void this.#load({ refresh: false });
-		if (!this.isOurProfile) void this.#recordView();
 	}
 
 	get isOurProfile(): boolean {
@@ -57,6 +66,16 @@ export class ProfileState {
 		this.#destroyed = true;
 	}
 
+	activate(): void {
+		if (this.#active) return;
+		this.#active = true;
+		if (this.profile?.isFavorite && !this.note) void this.#loadNote();
+	}
+
+	deactivate(): void {
+		this.#active = false;
+	}
+
 	retry(): void {
 		void this.#load({ refresh: false });
 	}
@@ -64,6 +83,15 @@ export class ProfileState {
 	refresh(): void {
 		if (this.loading || this.refreshing) return;
 		void this.#load({ refresh: true });
+	}
+
+	revalidate(): void {
+		if (this.loading || this.refreshing) return;
+		if (this.error) {
+			if (!isUnviewableProfileError(this.error)) this.retry();
+			return;
+		}
+		if (!isProfileCached(this.profileId)) this.refresh();
 	}
 
 	markBlocked(): void {
@@ -149,6 +177,7 @@ export class ProfileState {
 	}
 
 	async #loadNote(): Promise<void> {
+		if (!this.#active) return;
 		const token = this.#fetchToken;
 		try {
 			const note = await getFavoriteNote({ profileId: this.profileId });
@@ -156,20 +185,6 @@ export class ProfileState {
 			this.note = note;
 		} catch (error) {
 			console.error(error);
-		}
-	}
-
-	async #recordView(): Promise<void> {
-		try {
-			const { revealProfileViews } = await getPreferences();
-			if (!revealProfileViews) return;
-			await recordProfileView({ profileId: this.profileId });
-		} catch (error) {
-			console.error(error);
-			showErrorToast({
-				label: "Failed to record profile view preference or action",
-				error,
-			});
 		}
 	}
 

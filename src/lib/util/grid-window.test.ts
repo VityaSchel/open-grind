@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { type GridMetrics, gridWindow } from "./grid-window";
+import {
+	type GridMetrics,
+	gridWindow,
+	revealRowScrollTop,
+} from "./grid-window";
 
 const metrics: GridMetrics = { columns: 3, cellPx: 128, gapPx: 2 };
 const ROW_STRIDE = 130;
@@ -109,5 +113,81 @@ describe("gridWindow", () => {
 			paddingTopPx: 0,
 			paddingBottomPx: 0,
 		});
+	});
+});
+
+describe("revealRowScrollTop", () => {
+	const SAVED_TOP = 1000;
+	const HEADER_CLEAR = 76;
+	const NAV_CLEAR = 88;
+	const VIEWPORT = 800;
+	const BAND_TOP = SAVED_TOP + HEADER_CLEAR;
+	const BAND_BOTTOM = SAVED_TOP + VIEWPORT - NAV_CLEAR;
+	const BAND_CENTER_OFFSET =
+		HEADER_CLEAR + (VIEWPORT - HEADER_CLEAR - NAV_CLEAR) / 2;
+
+	const revealAt = (
+		rowTopPx: number,
+		{
+			savedTop = SAVED_TOP,
+			maxScrollTop = 10_000,
+		}: { savedTop?: number; maxScrollTop?: number } = {},
+	) =>
+		revealRowScrollTop({
+			savedTop,
+			rowTopPx,
+			rowHeightPx: metrics.cellPx,
+			viewportPx: VIEWPORT,
+			insetTopPx: HEADER_CLEAR,
+			insetBottomPx: NAV_CLEAR,
+			maxScrollTop,
+		});
+
+	const centeredOn = (rowTopPx: number) =>
+		rowTopPx + metrics.cellPx / 2 - BAND_CENTER_OFFSET;
+
+	it("keeps the saved offset while the whole row is in view", () => {
+		expect(revealAt(BAND_TOP + 2 * ROW_STRIDE)).toBe(SAVED_TOP);
+	});
+
+	it("keeps the saved offset for a row flush with both clearances", () => {
+		expect(revealAt(BAND_TOP)).toBe(SAVED_TOP);
+		expect(revealAt(BAND_BOTTOM - metrics.cellPx)).toBe(SAVED_TOP);
+	});
+
+	it("centers a row scrolled out above the band", () => {
+		const rowTopPx = SAVED_TOP - 4 * ROW_STRIDE;
+
+		expect(revealAt(rowTopPx)).toBe(centeredOn(rowTopPx));
+	});
+
+	it("centers a row far below the band", () => {
+		const rowTopPx = SAVED_TOP + 20 * ROW_STRIDE;
+
+		expect(revealAt(rowTopPx)).toBe(centeredOn(rowTopPx));
+	});
+
+	it("centers a row tucked under the header even though it is inside the viewport", () => {
+		const rowTopPx = BAND_TOP - 1;
+
+		expect(revealAt(rowTopPx)).toBe(centeredOn(rowTopPx));
+	});
+
+	it("centers a row whose top is in the band but whose bottom sits under the navbar clearance", () => {
+		const rowTopPx = BAND_BOTTOM - metrics.cellPx / 2;
+
+		expect(rowTopPx).toBeGreaterThan(BAND_TOP);
+		expect(rowTopPx).toBeLessThan(BAND_BOTTOM);
+		expect(revealAt(rowTopPx)).toBe(centeredOn(rowTopPx));
+	});
+
+	it("never scrolls above the top of the grid", () => {
+		expect(revealAt(HEADER_CLEAR)).toBe(0);
+	});
+
+	it("never scrolls past the end of the grid", () => {
+		expect(
+			revealAt(SAVED_TOP + 40 * ROW_STRIDE, { maxScrollTop: 4000 }),
+		).toBe(4000);
 	});
 });

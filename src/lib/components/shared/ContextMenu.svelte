@@ -7,6 +7,8 @@
 		shift,
 	} from "@floating-ui/dom";
 
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+
 	let {
 		contextMenuOpen,
 		style,
@@ -47,6 +49,11 @@
 		y: number;
 		placement: Placement;
 	} = $state({ x: 0, y: 0, placement: "right-start" });
+
+	dismissOnBackGesture({
+		active: () => true,
+		dismiss: () => contextMenuDialog?.close(),
+	});
 
 	$effect(() => {
 		if (!contextMenuTrigger || !contextMenuList) return;

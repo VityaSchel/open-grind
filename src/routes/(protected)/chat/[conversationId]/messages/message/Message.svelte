@@ -2,9 +2,9 @@
 	import { ArrowBendUpLeftIcon } from "phosphor-svelte";
 	import { tick, untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
-	import { scale } from "svelte/transition";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
+	import { scale } from "$lib/util/reduced-motion";
 	import {
 		MAX_DRAG_PX,
 		SwipeToReply,

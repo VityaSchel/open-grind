@@ -98,12 +98,32 @@ describe("attachTouchPull", () => {
 		boundary = 0;
 		leaf.dispatchEvent(touchEvent("touchmove", { y: 145 }));
 		expect(model.phase).toBe("idle");
-		leaf.dispatchEvent(touchEvent("touchmove", { y: 190 }));
+		const pullingMove = touchEvent("touchmove", { y: 190 });
+		const prevent = vi.spyOn(pullingMove, "preventDefault");
+		leaf.dispatchEvent(pullingMove);
 		expect(model.phase).toBe("pulling");
 		expect(model.displayPx).toBeGreaterThan(0);
+		expect(prevent).not.toHaveBeenCalled();
 		leaf.dispatchEvent(touchEvent("touchend", { y: 190 }));
 		expect(model.phase).toBe("idle");
 		detach();
+	});
+
+	it("blocks the browser's moves only for a finger that lands at the pull edge", () => {
+		const atEdge = setup();
+		const awayFromEdge = setup({ boundary: 50 });
+		const touchmoveOptions = (root: HTMLElement) => {
+			const addEventListener = vi.spyOn(root, "addEventListener");
+			root.dispatchEvent(touchEvent("touchstart", { y: 100 }));
+			return addEventListener.mock.calls.find(
+				([type]) => type === "touchmove",
+			)?.[2];
+		};
+
+		expect(touchmoveOptions(atEdge.root)).toEqual({ passive: false });
+		expect(touchmoveOptions(awayFromEdge.root)).toEqual({ passive: true });
+		atEdge.detach();
+		awayFromEdge.detach();
 	});
 
 	it("does not engage when a nested scroller owns the scroll", () => {

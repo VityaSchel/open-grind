@@ -7,6 +7,7 @@ const {
 	reconcileHandlers,
 	showErrorToastMock,
 	resolveGeohashMock,
+	resolveLazyProfileMock,
 	setPreferencesMock,
 	storedPreferences,
 } = vi.hoisted(() => ({
@@ -15,6 +16,7 @@ const {
 	patchCachedProfileMock: vi.fn(),
 	reconcileHandlers: [] as (() => unknown)[],
 	resolveGeohashMock: vi.fn(),
+	resolveLazyProfileMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	storedPreferences: { geohash: null as string | null },
@@ -24,7 +26,7 @@ vi.mock("./grid", () => ({
 	getGrid: getGridMock,
 	getCachedProfile: () => undefined,
 	patchCachedProfile: patchCachedProfileMock,
-	resolveLazyProfile: vi.fn(),
+	resolveLazyProfile: resolveLazyProfileMock,
 	setCachedProfile: vi.fn(),
 }));
 vi.mock("$lib/api/users/tags", () => ({ getTags: getTagsMock }));
@@ -54,8 +56,8 @@ import {
 } from "$lib/api/users/profile-viewability";
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
 import { defaultFilters } from "$lib/model/browse/grid/filters";
-import type { GridProfile } from "./grid";
 import { gridState } from "./grid-state.svelte";
+import { rendered } from "./grid-test-helpers";
 
 const page = (
 	ids: number[],
@@ -180,21 +182,6 @@ describe("grid blocking", () => {
 describe("grid favorites", () => {
 	const PROFILE_ID = 100001;
 
-	function rendered(isFavorite: boolean): GridProfile {
-		return {
-			type: "rendered",
-			id: PROFILE_ID,
-			displayName: "Ada",
-			distance: 100,
-			profilePhotosHashes: ["a"],
-			unread: 0,
-			onlineUntil: null,
-			isFavorite,
-			isVisiting: false,
-			hasChattedInLast24Hrs: false,
-		};
-	}
-
 	function edit(isFavorite: boolean, profileId = PROFILE_ID) {
 		mergeProfileEditIntoCaches({
 			cacheProfileId: profileId,
@@ -207,7 +194,7 @@ describe("grid favorites", () => {
 	});
 
 	it("follows a favorite added and removed elsewhere, list and cache", () => {
-		gridState.items = [rendered(false)];
+		gridState.items = [rendered({ id: PROFILE_ID })];
 
 		edit(true);
 
@@ -227,7 +214,7 @@ describe("grid favorites", () => {
 	});
 
 	it("ignores an edit that carries no favorite", () => {
-		gridState.items = [rendered(false)];
+		gridState.items = [rendered({ id: PROFILE_ID })];
 
 		mergeProfileEditIntoCaches({
 			cacheProfileId: PROFILE_ID,
@@ -252,6 +239,103 @@ describe("grid favorites", () => {
 			isVisiting: false,
 		});
 		expect(patchCachedProfileMock).toHaveBeenCalledOnce();
+	});
+});
+
+describe("shared profile order", () => {
+	it("dedupes the items into the order the grid renders", () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+			rendered({ id: 2 }),
+			rendered({ id: 1 }),
+			rendered({ id: 2 }),
+		];
+
+		expect(gridState.profiles).toEqual([
+			rendered({ id: 1 }),
+			rendered({ id: 2 }),
+		]);
+		expect(gridState.indexInProfiles(1)).toBe(0);
+		expect(gridState.indexInProfiles(2)).toBe(1);
+		expect(gridState.profileById(1)).toEqual(rendered({ id: 1 }));
+	});
+
+	it("answers -1 and null for a profile it does not list", () => {
+		gridState.items = [rendered({ id: 1 })];
+
+		expect(gridState.indexInProfiles(3)).toBe(-1);
+		expect(gridState.profileById(3)).toBeNull();
+	});
+
+	it("removes every copy of a repeated profile", () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+			rendered({ id: 2 }),
+			rendered({ id: 1 }),
+		];
+
+		gridState.removeProfile(1);
+
+		expect(gridState.profiles).toEqual([rendered({ id: 2 })]);
+		expect(gridState.indexInProfiles(1)).toBe(-1);
+	});
+
+	it("favorites the copy of a repeated profile that the order shows", () => {
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+			rendered({ id: 2 }),
+			rendered({ id: 1 }),
+		];
+
+		gridState.setFavorite({ profileId: 1, isFavorite: true });
+
+		expect(gridState.profileById(1)).toEqual(
+			rendered({ id: 1, isFavorite: true }),
+		);
+		expect(
+			gridState.profileById(2),
+			"favoriting one profile must not star its neighbors",
+		).toEqual(rendered({ id: 2 }));
+	});
+
+	it("drops every copy of a repeated profile that cannot be resolved", async () => {
+		resolveLazyProfileMock.mockResolvedValueOnce(null);
+		gridState.items = [
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+			rendered({ id: 2 }),
+			{ type: "lazy", id: 1, unread: 0, isVisiting: false },
+		];
+
+		await gridState.resolveProfile(1);
+
+		expect(gridState.profiles).toEqual([rendered({ id: 2 })]);
+	});
+});
+
+describe("reveal on return", () => {
+	it("hands the revealed profile out once", () => {
+		gridState.revealProfileId = 1;
+
+		expect(gridState.consumeReveal()).toBe(1);
+		expect(gridState.consumeReveal()).toBeNull();
+		expect(gridState.revealProfileId).toBeNull();
+	});
+
+	it("forgets the revealed profile when the grid is retried", async () => {
+		gridState.revealProfileId = 1;
+
+		gridState.retry();
+		await settle();
+
+		expect(gridState.consumeReveal()).toBeNull();
+	});
+
+	it("forgets the revealed profile when the grid is reset", () => {
+		gridState.revealProfileId = 1;
+
+		gridState.reset();
+
+		expect(gridState.consumeReveal()).toBeNull();
 	});
 });
 
@@ -504,6 +588,49 @@ describe("loaded pages", () => {
 		expect(gridState.items.map((item) => item.id)).toEqual([
 			3, 10, 7, 4, 5, 6, 8, 9,
 		]);
+	});
+
+	it("keeps the shared order in step with a re-head", async () => {
+		getGridMock.mockResolvedValue(page([3, 10, 7], { nextPage: 1 }));
+
+		await gridState.refresh({ background: true });
+
+		expect(gridState.profiles.map((profile) => profile.id)).toEqual([
+			3, 10, 7, 4, 5, 6, 8, 9,
+		]);
+		expect(gridState.indexInProfiles(10)).toBe(1);
+		expect(gridState.indexInProfiles(8)).toBe(6);
+		expect(gridState.indexInProfiles(1)).toBe(-1);
+		expect(gridState.profileById(1)).toBeNull();
+	});
+
+	it("keeps the revealed profile through a background re-head", async () => {
+		gridState.revealProfileId = 8;
+		getGridMock.mockResolvedValue(page([3, 10, 7], { nextPage: 1 }));
+
+		await gridState.refresh({ background: true });
+
+		expect(gridState.consumeReveal()).toBe(8);
+	});
+
+	it("keeps the shared order in step with a removed profile", () => {
+		gridState.removeProfile(5);
+
+		expect(gridState.profiles.map((profile) => profile.id)).toEqual([
+			1, 2, 3, 4, 6, 7, 8, 9,
+		]);
+		expect(gridState.indexInProfiles(5)).toBe(-1);
+		expect(gridState.indexInProfiles(6)).toBe(4);
+	});
+
+	it("keeps the shared order in step with an appended page", async () => {
+		getGridMock.mockResolvedValue(page([10, 11], { nextPage: 4 }));
+
+		await gridState.loadMore();
+
+		expect(gridState.profiles).toHaveLength(11);
+		expect(gridState.indexInProfiles(11)).toBe(10);
+		expect(gridState.profileById(11)).toEqual({ id: 11, type: "lazy" });
 	});
 
 	it("starts the grid over for a pull-to-refresh", async () => {

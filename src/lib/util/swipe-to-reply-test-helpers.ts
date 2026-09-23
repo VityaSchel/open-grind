@@ -18,10 +18,17 @@ export function pointer(overrides: Partial<PointerEvent> = {}) {
 	} as unknown as PointerEvent;
 }
 
-export function swipeToReply() {
+export function swipeToReply({
+	reducedMotion = false,
+}: { reducedMotion?: boolean } = {}) {
 	const onReply = vi.fn();
 	const onArm = vi.fn();
-	const swipe = new SwipeToReply({ direction: "right", onReply, onArm });
+	const swipe = new SwipeToReply({
+		direction: "right",
+		onReply,
+		onArm,
+		reducedMotion: () => reducedMotion,
+	});
 	return { swipe, onReply, onArm };
 }
 
@@ -38,7 +45,12 @@ export function drag(
 export function railHarness({
 	direction = "right",
 	scrollEndSupported = true,
-}: { direction?: "left" | "right"; scrollEndSupported?: boolean } = {}) {
+	reducedMotion = false,
+}: {
+	direction?: "left" | "right";
+	scrollEndSupported?: boolean;
+	reducedMotion?: boolean;
+} = {}) {
 	const onReply = vi.fn();
 	const onArm = vi.fn();
 	let time = 0;
@@ -48,6 +60,7 @@ export function railHarness({
 		onArm,
 		now: () => time,
 		scrollEndSupported,
+		reducedMotion: () => reducedMotion,
 	});
 	const rail = document.createElement("div");
 	const rest = direction === "right" ? MAX_DRAG_PX : 0;

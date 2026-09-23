@@ -23,13 +23,13 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
-	restoreScrollOnce(() => container, views);
+	restoreScrollOnce({ container: () => container, state: views });
 </script>
 
 <div class="screen-nav-host">
 	<div
 		bind:this={container}
-		class="pull-scroller"
+		class="pull-scroller overscroll-x-auto"
 		onscroll={() => (views.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div

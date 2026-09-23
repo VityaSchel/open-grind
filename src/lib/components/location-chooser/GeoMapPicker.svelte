@@ -8,6 +8,7 @@
 		TileLayer,
 	} from "sveaflet";
 	import { sineOut } from "svelte/easing";
+	import { prefersReducedMotion } from "svelte/motion";
 	import { fade } from "svelte/transition";
 	import type {
 		DragEndEvent,
@@ -41,6 +42,9 @@
 	const fix = $derived(locationRequest.lastFix);
 	const showAccuracy = $derived(locked && fix !== null && !locating);
 	const accuracyOwnsCamera = $derived(locked && fix !== null);
+	const cameraAnimation = $derived(
+		prefersReducedMotion.current ? { animate: false } : {},
+	);
 
 	const interactions = [
 		"dragging",
@@ -53,6 +57,7 @@
 	] as const;
 
 	let map: LeafletMap | undefined = $state();
+
 	let pendingCenter: { lat: number; lon: number; zoom: number } | undefined =
 		$state();
 
@@ -66,7 +71,7 @@
 		zoom: number;
 	}) {
 		if (accuracyOwnsCamera) return;
-		if (map) map.setView([lat, lon], zoom);
+		if (map) map.setView([lat, lon], zoom, cameraAnimation);
 		else pendingCenter = { lat, lon, zoom };
 	}
 
@@ -80,7 +85,7 @@
 		zoom: number;
 	}) {
 		pinPos = { lat, lon };
-		map?.setView([lat, lon], zoom);
+		map?.setView([lat, lon], zoom, cameraAnimation);
 	}
 
 	$effect(() => {
@@ -99,6 +104,7 @@
 				map.setView(
 					[pendingCenter.lat, pendingCenter.lon],
 					pendingCenter.zoom,
+					cameraAnimation,
 				);
 			}
 			pendingCenter = undefined;
@@ -138,7 +144,7 @@
 		if (!map || locked) return;
 		const onMapClick: LeafletMouseEventHandlerFn = ({ latlng }) => {
 			pinPos = { lat: latlng.lat, lon: latlng.lng };
-			map?.panTo(latlng);
+			map?.panTo(latlng, cameraAnimation);
 		};
 		map.on("click", onMapClick);
 		return () => {
@@ -153,6 +159,7 @@
 			center: [40.42267869390329, -3.697633348267032],
 			zoom: 2,
 			attributionControl: false,
+			zoomAnimation: !prefersReducedMotion.current,
 		}}
 		bind:instance={map}
 	>

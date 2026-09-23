@@ -4,6 +4,7 @@
 
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationError from "./ConversationError.svelte";
 	import ConversationPaginationSentinel from "./ConversationPaginationSentinel.svelte";
@@ -142,7 +143,7 @@
 				firstMessage.senderId === conversationState.ourProfileId ||
 				untrack(() => atFloor)
 			) {
-				void scrollToRest("smooth");
+				void scrollToRest(preferredScrollBehavior());
 			}
 		}
 		lastFirstId = firstId;
@@ -221,7 +222,7 @@
 		{#if !atFloor}
 			<ScrollToBottomButton
 				{seenMessageIds}
-				onclick={() => void scrollToRest("smooth")}
+				onclick={() => void scrollToRest(preferredScrollBehavior())}
 			/>
 		{/if}
 	{/if}

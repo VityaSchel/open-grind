@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
+import { backLink, DEMO_CONVERSATION, installTauriShim } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const DEMO_PROFILE = "/profile/100001";
@@ -8,10 +8,6 @@ const BROWSE_URL = /\/$/;
 const PROFILE_SCROLLER = '[data-slot="profile-scroller"]';
 const CORNER_GAP = 12;
 const CUTOUT = 24;
-
-function backLink(page: Page) {
-	return page.getByRole("link", { name: "Back", exact: true });
-}
 
 async function openProfileDirectly(page: Page): Promise<void> {
 	await page.goto(DEMO_PROFILE);
@@ -38,7 +34,9 @@ test.beforeEach(async ({ page }) => {
 
 test("returns to the screen the profile was opened from", async ({ page }) => {
 	await page.goto(DEMO_CONVERSATION);
-	const profileLink = page.locator(`a[href="${DEMO_PROFILE}"]`).first();
+	const profileLink = page
+		.locator(`a[href="${DEMO_PROFILE}"]:visible`)
+		.first();
 	await profileLink.waitFor({ timeout: 120_000 });
 	await profileLink.click();
 	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });

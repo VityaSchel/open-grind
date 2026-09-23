@@ -31,7 +31,10 @@
 	import { startAddonUpdateWatch } from "$lib/updates/addon.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import { startUpdateWatch } from "$lib/updates/updates-manager";
-	import { bottomChromeClearance } from "$lib/util/bottom-chrome.svelte";
+	import {
+		bottomChromeClearance,
+		topChromeClearance,
+	} from "$lib/util/screen-chrome.svelte";
 
 	onMount(() => {
 		installScrollGestureBridge();
@@ -122,7 +125,7 @@
 	});
 
 	const toastOffset = $derived({
-		top: "calc(var(--safe-area-top) + 0.5rem)",
+		top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px) + 0.5rem)`,
 		bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px) + 0.5rem)`,
 	});
 </script>

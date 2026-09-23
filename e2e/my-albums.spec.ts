@@ -14,11 +14,12 @@ import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 declare global {
 	interface Window {
-		__addAlbumRendered?: boolean;
+		__rendered?: Record<string, boolean>;
 	}
 }
 
-const ADD_ALBUM = 'a[href="/albums/new"]';
+const ADD_ALBUM = 'a[href="/settings/albums/new"]';
+const LOADING_TILE = '[data-slot="media-image-pending"]';
 
 const TINY_PNG =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -39,9 +40,13 @@ async function createAlbum(page: Page, name: string): Promise<void> {
 	await expect(page.locator(MEDIA_SLOT)).toHaveCount(1, { timeout: 30_000 });
 }
 
-async function watchAddAlbum(page: Page): Promise<() => Promise<boolean>> {
+async function watchRendered(
+	page: Page,
+	selector: string,
+): Promise<() => Promise<boolean>> {
 	await page.evaluate((selector) => {
-		window.__addAlbumRendered = false;
+		const rendered = (window.__rendered ??= {});
+		rendered[selector] = false;
 		new MutationObserver((records) => {
 			const added = records.flatMap((record) => [...record.addedNodes]);
 			if (
@@ -52,11 +57,15 @@ async function watchAddAlbum(page: Page): Promise<() => Promise<boolean>> {
 							node.querySelector(selector) !== null),
 				)
 			) {
-				window.__addAlbumRendered = true;
+				rendered[selector] = true;
 			}
 		}).observe(document.body, { subtree: true, childList: true });
-	}, ADD_ALBUM);
-	return () => page.evaluate(() => window.__addAlbumRendered === true);
+	}, selector);
+	return () =>
+		page.evaluate(
+			(selector) => window.__rendered?.[selector] === true,
+			selector,
+		);
 }
 
 test.describe("my albums", () => {
@@ -78,8 +87,8 @@ test.describe("my albums", () => {
 		const addAlbum = page.getByRole("link", { name: "Add album" });
 		await expect(addAlbum, "the add cell leads the grid").toBeVisible();
 		await expect(
-			page.locator(`${ALBUM_TILE}, a[href="/albums/new"]`).first(),
-		).toHaveAttribute("href", "/albums/new");
+			page.locator(`${ALBUM_TILE}, ${ADD_ALBUM}`).first(),
+		).toHaveAttribute("href", "/settings/albums/new");
 
 		await addAlbum.click();
 		await expect(page).toHaveURL(/\/albums\/new$/);
@@ -101,6 +110,21 @@ test.describe("my albums", () => {
 		await expect(
 			page.getByRole("button", { name: "Album menu" }),
 		).toHaveCount(0);
+	});
+
+	test("Back slides the album off My Albums as it was, not a loading grid", async ({
+		page,
+	}) => {
+		await openSharedAlbum(page);
+		const loadingShown = await watchRendered(page, LOADING_TILE);
+
+		await back(page);
+		await expect(page).toHaveURL(/\/albums$/);
+		await expect(page.locator(SHARED_ALBUM)).toBeVisible();
+
+		expect(await loadingShown(), "no loading tile ever appeared").toBe(
+			false,
+		);
 	});
 
 	test("an album opens on its own name, date and item count", async ({
@@ -151,11 +175,14 @@ test.describe("my albums", () => {
 		await expect(page.locator(".pswp__img").first()).toBeVisible();
 	});
 
-	test("deleting an album confirms first, then leaves the grid short", async ({
+	test("deleting an album confirms first, then walks back to a grid one short", async ({
 		page,
 	}) => {
 		await openAlbums(page);
 		const before = await page.locator(ALBUM_TILE).count();
+		const atAlbums = await page.evaluate(
+			() => navigation.currentEntry!.index,
+		);
 		await page.locator(SHARED_ALBUM).click();
 
 		await page
@@ -170,6 +197,10 @@ test.describe("my albums", () => {
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
 
 		await expect(page).toHaveURL(/\/albums$/, { timeout: 30_000 });
+		expect(
+			await page.evaluate(() => navigation.currentEntry!.index),
+			"it walked back to My Albums rather than stacking another",
+		).toBe(atAlbums);
 		await expect(page.locator(SHARED_ALBUM)).toHaveCount(0);
 		await expect(page.locator(ALBUM_TILE)).toHaveCount(before - 1);
 	});
@@ -245,7 +276,7 @@ test.describe("my albums", () => {
 		).toBeVisible();
 
 		await createAlbum(page, "Rooftop");
-		const addAlbumRendered = await watchAddAlbum(page);
+		const addAlbumRendered = await watchRendered(page, ADD_ALBUM);
 		await back(page);
 
 		await expect(page.locator(albumTileNamed("Rooftop"))).toBeVisible({

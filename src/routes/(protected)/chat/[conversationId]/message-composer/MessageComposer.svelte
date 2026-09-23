@@ -1,12 +1,13 @@
 <script lang="ts">
+	import { onNavigate } from "$app/navigation";
 	import { tick, untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
-	import { bottomChrome } from "$lib/util/bottom-chrome.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
+	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 	import type {
 		ApiResponseMessage,
 		MessageDraft,
@@ -75,6 +76,11 @@
 
 	$effect(() => {
 		drafts.autosave({ conversationId, text: textContent });
+	});
+
+	onNavigate(({ to }) => {
+		if (to?.params?.conversationId !== conversationId)
+			drafts.save({ conversationId, text: textContent });
 	});
 
 	// Arming a reply should hand the user straight back to the composer, which
