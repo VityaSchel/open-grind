@@ -24,6 +24,7 @@
 	import TextMessage from "./TextMessage.svelte";
 	import UnsentMessage from "./UnsentMessage.svelte";
 	import UnsupportedMessage from "./UnsupportedMessage.svelte";
+	import VideoMessage from "./VideoMessage.svelte";
 
 	let {
 		message,
@@ -221,6 +222,8 @@
 			/>
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
+		{:else if message.type === "Video" || message.type === "PrivateVideo"}
+			<VideoMessage message={message.body} {isOut} />
 		{:else if message.type === "Unsent"}
 			<UnsentMessage />
 		{:else}

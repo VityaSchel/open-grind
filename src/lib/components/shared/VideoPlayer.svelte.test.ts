@@ -73,6 +73,16 @@ describe("VideoPlayer", () => {
 		expect(player().controls()).not.toBeNull();
 	});
 
+	it("plays once unless asked to loop", () => {
+		expect(player().video.loop).toBe(false);
+		cleanup();
+
+		const { container } = render(VideoPlayer, {
+			props: { src: SRC, poster: null, loop: true },
+		});
+		expect(container.querySelector("video")?.loop).toBe(true);
+	});
+
 	it("keeps the controls up while a mouse moves onto them", async () => {
 		const { video, controls } = player();
 

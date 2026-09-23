@@ -84,7 +84,7 @@ export function applyPhotoSwipeBackGesture(lightbox: PhotoSwipeLightbox): void {
 	});
 }
 
-type VideoSlide = { src: string; poster: string | null };
+type VideoSlide = { src: string; poster: string | null; loop?: boolean };
 
 function yieldToInteractiveContent(lightbox: PhotoSwipeLightbox): void {
 	lightbox.on("pointerDown", (event) => {

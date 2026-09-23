@@ -42,3 +42,7 @@ export function profileMediaUrl({
 		`https://cdns.grindr.com/images/${CDN_VARIANTS[size]}/${mediaHash}`,
 	);
 }
+
+export function firstFrameSrc(src: string): string {
+	return `${src}#t=0.001`;
+}
