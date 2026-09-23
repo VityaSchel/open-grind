@@ -1042,20 +1042,6 @@
 			]
 		},
 		{
-			"id": "@tauri-apps/plugin-fs",
-			"name": "@tauri-apps/plugin-fs",
-			"ecosystem": "npm",
-			"versions": [
-				"2.5.1"
-			],
-			"spdx": "MIT OR Apache-2.0",
-			"url": "https://github.com/tauri-apps/plugins-workspace",
-			"textHashes": [
-				"283ea6cc2997a1a7",
-				"89ff9689dcf9dd53"
-			]
-		},
-		{
 			"id": "@tauri-apps/plugin-geolocation",
 			"name": "@tauri-apps/plugin-geolocation",
 			"ecosystem": "npm",
