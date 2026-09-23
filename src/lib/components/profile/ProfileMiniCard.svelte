@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { env } from "$env/dynamic/public";
 	import { ChatIcon, StarIcon } from "phosphor-svelte";
 	import type { Snippet } from "svelte";
 
@@ -6,7 +7,9 @@
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
 	import ProfileStatusIndicator from "$lib/components/profile/ProfileStatusIndicator.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
+	import Frost from "$lib/components/shared/Frost.svelte";
 	import { Badge } from "$lib/components/ui/badge";
+	import { profileMediaUrl } from "$lib/util/media";
 
 	let {
 		mediaHash = null,
@@ -37,13 +40,27 @@
 		href?: string | null;
 		onclick?: (event: MouseEvent) => void;
 		class?: import("svelte/elements").ClassValue;
-		overlay?: Snippet;
+		overlay?: Snippet<[string | null]>;
 	} = $props();
+
+	let loadedMediaHash = $state<string | null>(null);
+	const photo = $derived(
+		!env.PUBLIC_ENABLE_BLUR_EFFECTS &&
+			mediaHash !== null &&
+			loadedMediaHash === mediaHash
+			? profileMediaUrl({ mediaHash, size: "thumb" })
+			: null,
+	);
 </script>
 
 {#snippet content()}
 	<div class="absolute size-full bg-stone-700">
-		<UserAvatar {mediaHash} class="size-full" size="xl" />
+		<UserAvatar
+			{mediaHash}
+			class="size-full"
+			size="xl"
+			onload={() => (loadedMediaHash = mediaHash)}
+		/>
 	</div>
 	{#if distance !== null}
 		<span class="profile-card-distance absolute top-1 right-1.5">
@@ -55,7 +72,15 @@
 			class="absolute inset-s-2 top-2 z-1 flex w-1/6 flex-col items-center gap-1"
 		>
 			{#if isFavorite}
-				<div class="flex aspect-square h-auto w-full media-chip">
+				<div
+					class="relative flex aspect-square h-auto w-full media-chip"
+				>
+					<Frost
+						src={photo}
+						blur="chip"
+						class="-inset-px"
+						photoClass="-inset-s-2 -top-2"
+					/>
 					<StarIcon
 						weight="fill"
 						class="m-auto size-4/6 text-yellow-500"
@@ -64,7 +89,20 @@
 				</div>
 			{/if}
 			{#if hadRecentChat}
-				<div class="flex aspect-square h-auto w-full media-chip">
+				<div
+					class="relative flex aspect-square h-auto w-full media-chip"
+				>
+					<Frost
+						src={photo}
+						blur="chip"
+						class="-inset-px"
+						photoClass={[
+							"-inset-s-2",
+							isFavorite
+								? "top-[calc(-0.75rem-100cqw/6)]"
+								: "-top-2",
+						]}
+					/>
 					<ChatIcon
 						weight="fill"
 						class="m-auto size-3/5 -translate-y-px text-sky-400"
@@ -78,8 +116,14 @@
 		<div class="z-1 flex w-full items-center gap-0.5 p-0.5">
 			<Badge
 				variant="outline"
-				class="max-w-full min-w-0 shrink gap-0 media-pill"
+				class="relative max-w-full min-w-0 shrink gap-0 overflow-visible media-pill"
 			>
+				<Frost
+					src={photo}
+					blur="pill"
+					class="-inset-px"
+					photoClass="-inset-s-0.5 -bottom-0.5"
+				/>
 				<ProfileStatusIndicator
 					{onlineUntil}
 					{isVisiting}
@@ -116,7 +160,7 @@
 			{/if}
 		</div>
 	{/if}
-	{@render overlay?.()}
+	{@render overlay?.(photo)}
 {/snippet}
 
 {#if href !== null}
@@ -125,7 +169,7 @@
 		{onclick}
 		aria-label={anonymous ? "Profile" : undefined}
 		class={[
-			"relative flex aspect-square items-end overflow-hidden",
+			"@container relative flex aspect-square items-end overflow-hidden",
 			className,
 		]}
 	>
@@ -134,7 +178,7 @@
 {:else}
 	<div
 		class={[
-			"relative flex aspect-square items-end overflow-hidden",
+			"@container relative flex aspect-square items-end overflow-hidden",
 			className,
 		]}
 	>

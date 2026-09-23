@@ -54,7 +54,7 @@
 	{#if video}
 		<div
 			class={[
-				"absolute bottom-2.5 left-2.5 flex size-6 items-center justify-center media-chip transition-opacity",
+				"absolute bottom-2.5 left-2.5 flex size-6 items-center justify-center media-chip backdrop-filter-(--bd-chip) transition-opacity",
 				{ "opacity-40": removed },
 			]}
 		>

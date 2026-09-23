@@ -80,6 +80,7 @@
 	import GoogleHandoffConfirmAlert from "$lib/components/feedback/GoogleHandoffConfirmAlert.svelte";
 	import RequestBlockedAlert from "$lib/components/feedback/RequestBlockedAlert.svelte";
 	import SessionErrorAlert from "$lib/components/feedback/SessionErrorAlert.svelte";
+	import FrostFilters from "$lib/components/shared/FrostFilters.svelte";
 	import faviconSvg from "../../contrib/logo/open-grind.svg";
 
 	let { children }: { children?: import("svelte").Snippet } = $props();
@@ -154,6 +155,7 @@
 	]}
 	style:height="var(--safe-area-bottom)"
 ></div>
+<FrostFilters />
 <IconContext values={{ "aria-hidden": true }}>
 	<Toaster
 		position="bottom-center"

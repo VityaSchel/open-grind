@@ -4,6 +4,7 @@
 	import LockSimpleIcon from "phosphor-svelte/lib/LockSimpleIcon";
 
 	import ProfileMiniCard from "$lib/components/profile/ProfileMiniCard.svelte";
+	import Frost from "$lib/components/shared/Frost.svelte";
 	import RelativeTimeDynamic from "$lib/components/shared/RelativeTimeDynamic.svelte";
 	import type { ViewPreview } from "$lib/model/interest/views";
 
@@ -21,11 +22,17 @@
 	distance={preview.distance}
 	isFavorite={preview.isFavorite}
 >
-	{#snippet overlay()}
-		<div class="absolute inset-0 flex items-center justify-center">
+	{#snippet overlay(photo: string | null)}
+		<div class="absolute inset-0 isolate flex items-center justify-center">
 			<div
-				class="flex size-9 items-center justify-center rounded-full bg-black/35 scrim text-white backdrop-filter-(--bd-veil)"
+				class="relative flex size-9 items-center justify-center rounded-full bg-black/35 scrim text-white"
 			>
+				<Frost
+					src={photo}
+					blur="veil"
+					class="inset-0"
+					photoClass="top-1/2 left-1/2 -translate-1/2"
+				/>
 				{#if preview.isSecretAdmirer}
 					<HeartIcon weight="fill" class="size-4.5 text-rose-400" />
 					<span class="sr-only">Secret admirer</span>

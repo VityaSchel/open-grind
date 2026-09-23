@@ -482,11 +482,11 @@ a {
 }
 
 @utility media-chip {
-	@apply rounded-full border border-white/10 bg-popover/40 scrim backdrop-filter-(--bd-chip);
+	@apply rounded-full border border-white/10 bg-popover/40 scrim;
 }
 
 @utility media-pill {
-	@apply bg-popover/20 scrim backdrop-filter-(--bd-chip);
+	@apply bg-popover/20 scrim;
 }
 
 /* Backdrop blur: one token map per mode, keyed by data-backdrop-blur on <html>. */
@@ -497,6 +497,9 @@ a {
 	--bd-rail: blur(16px);
 	--bd-panel: blur(24px);
 	--bd-chip: blur(40px);
+	--pill-frost: url(#frost-pill-40);
+	--chip-frost: url(#frost-tile) url(#frost-round-40);
+	--veil-frost: url(#frost-tile) url(#frost-round-8);
 	--glass-controls-bg: rgba(0, 0, 0, 0.4);
 	--glass-controls-subdued-bg: rgba(0, 0, 0, 0.2);
 	--scrim: none;
@@ -506,6 +509,8 @@ a {
 	--bd-rail: blur(12px);
 	--bd-panel: blur(16px);
 	--bd-chip: blur(24px);
+	--pill-frost: url(#frost-pill-24);
+	--chip-frost: url(#frost-tile) url(#frost-round-24);
 	--bar-content-gap: 0.75rem;
 }
 
@@ -723,6 +728,9 @@ a {
 		rgba(0, 0, 0, 1) 100%
 	);
 }
+:root[data-backdrop-blur="off"] .frost {
+	display: none;
+}
 :root[data-backdrop-blur="off"] .pblur-scrim {
 	display: block;
 	background-image: linear-gradient(
@@ -786,7 +794,8 @@ a {
 		--glass-controls-subdued-bg: rgba(0, 0, 0, 0.42);
 		--scrim: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
 	}
-	:root:root .pblur-layer {
+	:root:root .pblur-layer,
+	:root:root .frost {
 		display: none;
 	}
 	:root:root .pblur-bg {

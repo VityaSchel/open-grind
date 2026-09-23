@@ -9,10 +9,12 @@
 		mediaHash,
 		class: className = "size-80",
 		size = "md",
+		onload,
 	}: {
 		mediaHash: string | null;
 		class?: import("svelte/elements").ClassValue;
 		size?: "md" | "lg" | "xl";
+		onload?: (image: HTMLImageElement) => void;
 	} = $props();
 </script>
 
@@ -28,6 +30,7 @@
 			tone="photo"
 			{size}
 			loading="lazy"
+			{onload}
 		/>
 	{:else}
 		<div class="flex size-full items-center justify-center bg-neutral-700">

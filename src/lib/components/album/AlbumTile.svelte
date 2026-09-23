@@ -54,7 +54,10 @@
 		imgClass="bg-card-foreground/10"
 	/>
 	<div class="z-1 flex w-full items-center p-1.5">
-		<Badge variant="outline" class="min-w-0 media-pill">
+		<Badge
+			variant="outline"
+			class="min-w-0 media-pill backdrop-filter-(--bd-chip)"
+		>
 			<span class="truncate font-semibold">
 				{albumDisplayName(album.albumName)}
 			</span>
@@ -75,7 +78,7 @@
 		</div>
 	{/if}
 	<div
-		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:media-chip"
+		class="absolute inset-s-1.5 top-1.5 z-1 flex gap-1 text-2xs font-semibold *:flex *:h-6 *:min-w-6 *:items-center *:justify-center *:gap-1 *:media-chip *:backdrop-filter-(--bd-chip)"
 	>
 		<div data-slot="album-count-badge" class="px-1.5">
 			<ImagesIcon weight="fill" class="size-3.5" />
