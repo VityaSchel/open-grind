@@ -75,11 +75,17 @@ pub async fn sign_in_with_email(
 	state: tauri::State<'_, AppState>,
 	email: String,
 	password: String,
+	captcha_token: Option<String>,
 ) -> Result<SignInResult, AppError> {
-	let result = state
-		.client()?
-		.sign_in_with_email(&email, &password)
-		.await?;
+	let client = state.client()?;
+	let result = match captcha_token {
+		Some(token) => {
+			client
+				.sign_in_with_email_captcha(&email, &password, &token)
+				.await?
+		}
+		None => client.sign_in_with_email(&email, &password).await?,
+	};
 	Ok(SignInResult::from(result))
 }
 

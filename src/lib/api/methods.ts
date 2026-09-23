@@ -59,7 +59,11 @@ export const signInResultSchema = z.object({
 
 export const methods = {
 	sign_in_with_email: {
-		request: z.object({ email: z.email(), password: z.string().min(1) }),
+		request: z.object({
+			email: z.email(),
+			password: z.string().min(1),
+			captchaToken: z.string().optional(),
+		}),
 		response: signInResultSchema,
 	},
 	sign_in_with_google: {

@@ -22,7 +22,6 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import RecaptchaUnsupported from "./RecaptchaUnsupported.svelte";
 
 	type OauthProvider = "google" | "facebook";
 
@@ -79,14 +78,48 @@
 		}),
 	});
 
+	const recaptchaErrorSchema = z.object({
+		kind: z.literal("Recaptcha"),
+		message: z.object({ reason: z.string() }),
+	});
+
+	const captchaSignInMessages: Record<string, string> = {
+		unsupportedPlatform:
+			"This account needs captcha verification, available through the Open Grind reCAPTCHA helper on Android.",
+		addonUnavailable:
+			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
+		addonDisabled:
+			"Enable the Open Grind reCAPTCHA helper to sign in to this account.",
+		addonUntrusted:
+			"The installed reCAPTCHA helper isn't the official Open Grind build.",
+		grindrMissing:
+			"The reCAPTCHA helper needs the Grindr app installed to verify this sign-in.",
+	};
+
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
+		if (submitting) return;
 		submitting = "password";
 		try {
+			if (await trySignIn()) return;
+			await trySignInWithCaptcha();
+		} finally {
+			submitting = false;
+		}
+	}
+
+	async function trySignIn(captchaToken?: string): Promise<boolean> {
+		try {
 			finishSignIn(
-				await callMethod("sign_in_with_email", { email, password }),
+				await callMethod("sign_in_with_email", {
+					email,
+					password,
+					captchaToken,
+				}),
 			);
+			return true;
 		} catch (error) {
+			let invalidCredentials = false;
 			reportSignInFailure({
 				error,
 				onFailure: (appError) => {
@@ -96,31 +129,48 @@
 					) {
 						return false;
 					}
-					toast.error("Invalid email or password");
-					void maybeCheckRecaptcha();
+					invalidCredentials = true;
 					return true;
 				},
 			});
-		} finally {
-			submitting = false;
+			if (invalidCredentials && captchaToken === undefined) return false;
+			if (invalidCredentials) toast.error("Invalid email or password");
+			return true;
 		}
 	}
 
-	let recaptchaChecked = false;
-	let recaptchaDialogOpen = $state(false);
-
-	async function maybeCheckRecaptcha() {
-		if (recaptchaChecked) return;
-		recaptchaChecked = true;
+	async function trySignInWithCaptcha() {
+		let required = false;
 		try {
-			const enabled = await callMethod("recaptcha_first_party_enabled");
-			if (enabled) recaptchaDialogOpen = true;
+			required = await callMethod("recaptcha_first_party_enabled");
 		} catch (error) {
 			console.error(
 				"[sign-in] failed to check recaptcha_first_party assignment",
 				error,
 			);
 		}
+		if (!required) {
+			toast.error("Invalid email or password");
+			return;
+		}
+		try {
+			const captchaToken = await callMethod("mint_recaptcha_token", {
+				action: "login",
+			});
+			await trySignIn(captchaToken);
+		} catch (error) {
+			reportCaptchaFailure(error);
+		}
+	}
+
+	function reportCaptchaFailure(error: unknown) {
+		const parsed = recaptchaErrorSchema.safeParse(error);
+		const reason = parsed.success ? parsed.data.message.reason : undefined;
+		if (reason === "cancelled") return;
+		toast.error(
+			(reason ? captchaSignInMessages[reason] : undefined) ??
+				"Captcha verification failed. Try again.",
+		);
 	}
 
 	async function signInWith(provider: OauthProvider) {
@@ -237,4 +287,3 @@
 		</Card.Footer>
 	</Card.Root>
 </form>
-<RecaptchaUnsupported bind:open={recaptchaDialogOpen} />
