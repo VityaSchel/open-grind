@@ -1102,7 +1102,7 @@
 			"name": "bits-ui",
 			"ecosystem": "npm",
 			"versions": [
-				"2.18.1"
+				"2.19.2"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/huntabyte/bits-ui",
