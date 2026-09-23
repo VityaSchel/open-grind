@@ -196,13 +196,11 @@ export async function uploadAlbumContent({
 		onHashed?.(uploaded.sha256);
 		return uploaded;
 	}
-	if (media.source === "web") {
-		throw new Error("A file picked in the browser has no native path");
-	}
+	const file = mediaFileDescriptor(media);
 	const { response, sha256 } = await uploadFileRest(
 		`/v1/albums/${albumId}/content?${albumContentQuery(inspection)}isFresh=false`,
 		{
-			file: mediaFileDescriptor(media),
+			file,
 			part: { name: "content", filename: "" },
 			maxBodySize: limits.maxContentSize,
 			profileId,

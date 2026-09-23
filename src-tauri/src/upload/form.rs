@@ -19,6 +19,14 @@ impl Framing {
 		Self::with_boundary(part, &Uuid::new_v4().hyphenated().to_string())
 	}
 
+	pub fn raw(content_type: &str) -> Self {
+		Self {
+			content_type: header_value(content_type),
+			head: Bytes::new(),
+			tail: Bytes::new(),
+		}
+	}
+
 	fn with_boundary(part: &FormPart<'_>, boundary: &str) -> Self {
 		let head = format!(
 			"--{boundary}\r\nContent-Disposition: form-data; name={}; filename={}\r\nContent-Type: {}\r\n\r\n",
@@ -144,6 +152,16 @@ Content-Type: video/mp4\r\n\
 			1
 		);
 		assert_eq!(head.matches("\r\n").count(), 4);
+	}
+
+	#[test]
+	fn a_raw_body_is_the_content_alone_under_its_own_type() {
+		let framing = Framing::raw("video/mp4\r\nX-Stolen: 1");
+		let content = Bytes::from_static(b"\0\0\0\x18ftypmp42");
+
+		assert_eq!(framing.content_type, "video/mp4X-Stolen: 1");
+		assert_eq!(framing.size(content.len() as u64), content.len() as u64);
+		assert_eq!(framing.frame(content.clone()), content);
 	}
 
 	#[test]

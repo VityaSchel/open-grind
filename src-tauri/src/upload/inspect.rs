@@ -30,6 +30,7 @@ fn sniff(head: &[u8]) -> MediaKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Inspection {
 	pub kind: MediaKind,
 	pub size: u64,
@@ -37,6 +38,8 @@ pub struct Inspection {
 	pub width: Option<u32>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub height: Option<u32>,
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub duration_ms: Option<u64>,
 }
 
 pub fn inspect(file: &mut File) -> io::Result<Inspection> {
@@ -58,6 +61,7 @@ pub fn inspect(file: &mut File) -> io::Result<Inspection> {
 		size,
 		width: probed.map(|probed| probed.width),
 		height: probed.map(|probed| probed.height),
+		duration_ms: probed.and_then(|probed| probed.duration_ms),
 	})
 }
 
@@ -97,7 +101,8 @@ mod tests {
 				kind: MediaKind::Unsupported,
 				size: 200,
 				width: None,
-				height: None
+				height: None,
+				duration_ms: None,
 			}
 		);
 	}
@@ -119,6 +124,11 @@ mod tests {
 		assert_eq!(inspection.kind, MediaKind::Video);
 		assert_eq!(inspection.width, Some(32));
 		assert_eq!(inspection.height, Some(24));
+		assert_eq!(inspection.duration_ms, Some(1000));
+		assert_eq!(
+			serde_json::to_value(inspection).unwrap()["durationMs"],
+			1000
+		);
 	}
 
 	#[test]
@@ -138,7 +148,8 @@ mod tests {
 				kind: MediaKind::Photo,
 				size: 8,
 				width: None,
-				height: None
+				height: None,
+				duration_ms: None,
 			}
 		);
 	}

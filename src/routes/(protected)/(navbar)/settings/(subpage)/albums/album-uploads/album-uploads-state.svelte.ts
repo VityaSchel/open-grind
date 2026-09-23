@@ -9,7 +9,7 @@ import {
 	getMyAlbums,
 	uploadAlbumContent,
 } from "$lib/api/messaging/albums";
-import { asAppError, errorKindOf } from "$lib/api/methods";
+import { errorKindOf, uploadRefusalMessage } from "$lib/api/methods";
 import { albumMediaCounts } from "$lib/components/album/album";
 import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
 import { delay } from "$lib/util/delay";
@@ -72,36 +72,6 @@ function isRefusal(error: unknown): boolean {
 	if (status !== null) return status < 500;
 	const kind = errorKindOf(error);
 	return kind === "ContentTooLarge" || kind === "Media";
-}
-
-function albumMediaErrorMessage({
-	error,
-	limits,
-}: {
-	error: unknown;
-	limits: UploadLimits;
-}): string | null {
-	if (
-		errorKindOf(error) === "ContentTooLarge" ||
-		httpStatusOf(error) === 413
-	) {
-		return `Larger than the ${limits.maxContentSizeHumanReadable} limit`;
-	}
-	return null;
-}
-
-function refusalMessage({
-	error,
-	limits,
-}: {
-	error: unknown;
-	limits: UploadLimits;
-}): string | null {
-	const tooLarge = albumMediaErrorMessage({ error, limits });
-	if (tooLarge !== null) return tooLarge;
-	if (errorKindOf(error) !== "Media") return null;
-	const detail = asAppError(error)?.message;
-	return typeof detail === "string" && detail !== "" ? detail : null;
 }
 
 function outOfRoomMessage({ inspection, limits }: QueuedUpload): string {
@@ -342,8 +312,10 @@ class AlbumUploadsState {
 			return;
 		}
 		toast.error(
-			refusalMessage({ error, limits: entry.limits }) ??
-				failureMessage(entry.inspection.kind),
+			uploadRefusalMessage({
+				error,
+				limitLabel: entry.limits.maxContentSizeHumanReadable,
+			}) ?? failureMessage(entry.inspection.kind),
 		);
 	}
 

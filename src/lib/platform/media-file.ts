@@ -13,6 +13,7 @@ const mediaFileInspectionSchema = z.object({
 	size: z.int().nonnegative(),
 	width: z.int().positive().optional(),
 	height: z.int().positive().optional(),
+	durationMs: z.int().nonnegative().optional(),
 });
 
 export type MediaFileInspection = z.infer<typeof mediaFileInspectionSchema>;
@@ -42,15 +43,15 @@ export async function inspectMediaFile(
 	);
 }
 
-type NativeMedia = Exclude<PickedMedia, { source: "web" }>;
-
 export type MediaFileDescriptor = ReturnType<typeof mediaFileDescriptor>;
 
-export function mediaFileDescriptor(media: NativeMedia) {
+export function mediaFileDescriptor(media: PickedMedia) {
 	switch (media.source) {
 		case "android":
 			return { source: media.source, uri: media.uri };
 		case "desktop":
 			return { source: media.source, path: media.path };
+		case "web":
+			throw new Error("A file picked in the browser has no native path");
 	}
 }

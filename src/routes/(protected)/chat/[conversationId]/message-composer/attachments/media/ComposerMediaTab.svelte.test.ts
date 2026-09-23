@@ -5,13 +5,18 @@ import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const drawer = vi.hoisted(() => ({ getDrawerMedia: vi.fn() }));
-const chatMedia = vi.hoisted(() => ({ addMediaToDrawer: vi.fn() }));
+const chatMedia = vi.hoisted(() => ({
+	addMediaToDrawer: vi.fn(),
+	CHAT_MEDIA_MAX_LABEL: "120.00 MB",
+	UnsupportedChatMediaError: class extends Error {},
+}));
+const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 
 vi.mock("$lib/api/messaging/drawer", () => drawer);
 vi.mock("$lib/api/messaging/chat-media", () => chatMedia);
 vi.mock("$lib/platform/media-picker", () => picker);
-vi.mock("svelte-sonner", () => ({ toast: { error: vi.fn() } }));
+vi.mock("svelte-sonner", () => sonner);
 vi.mock("../../message-composer-context.svelte", () => ({
 	getMessageComposerContext: () => () => ({}),
 }));
@@ -34,7 +39,10 @@ function renderTab() {
 	});
 }
 
-afterEach(() => cleanup());
+afterEach(() => {
+	cleanup();
+	vi.clearAllMocks();
+});
 
 describe("composer media tab", () => {
 	it("shows the loading grid as pending media images", async () => {
@@ -56,13 +64,39 @@ describe("composer media tab", () => {
 		await tick();
 		await tick();
 
-		await fireEvent.click(getByRole("button", { name: "Add photo" }));
+		await fireEvent.click(
+			getByRole("button", { name: "Add photo or video" }),
+		);
 		await vi.waitFor(() =>
 			expect(chatMedia.addMediaToDrawer).toHaveBeenCalledOnce(),
 		);
 		await tick();
 
+		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("media");
 		expect(container.querySelectorAll(PENDING)).toHaveLength(1);
 		expect(container.querySelectorAll(SKELETON)).toHaveLength(0);
+	});
+
+	it("names the size limit when a picked file is too large to send", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([
+			{ key: "picked", mimeType: "video/mp4", path: "/picked.mp4" },
+		]);
+		chatMedia.addMediaToDrawer.mockRejectedValue({
+			kind: "ContentTooLarge",
+		});
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(
+			getByRole("button", { name: "Add photo or video" }),
+		);
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				"Larger than the 120.00 MB limit",
+			),
+		);
 	});
 });

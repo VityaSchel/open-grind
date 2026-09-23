@@ -22,7 +22,9 @@ test.describe("every control has an accessible name", () => {
 		await expectEveryControlNamed(page, "conversation");
 
 		await page.locator('[aria-label="Add attachment"]').click();
-		await page.getByRole("button", { name: "Add photo" }).waitFor();
+		await page
+			.getByRole("button", { name: "Add photo or video" })
+			.waitFor();
 		await expectEveryControlNamed(page, "attachments drawer");
 
 		await page.getByRole("tab", { name: "Albums" }).click();

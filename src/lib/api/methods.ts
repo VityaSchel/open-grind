@@ -6,6 +6,7 @@ import {
 	type ApiErrorKind,
 	apiErrorKinds,
 	blockedAndStaleMessages,
+	httpStatusOf,
 } from "$lib/api/api-error";
 import { capText } from "$lib/api/redact/text";
 import { summariseNonJson } from "$lib/api/redact/value";
@@ -215,6 +216,22 @@ export function errorKindOf(error: unknown): ApiErrorKind | null {
 	return error instanceof ApiError
 		? error.kind
 		: (asAppError(error)?.kind ?? null);
+}
+
+export function uploadRefusalMessage({
+	error,
+	limitLabel,
+}: {
+	error: unknown;
+	limitLabel: string;
+}): string | null {
+	const kind = errorKindOf(error);
+	if (kind === "ContentTooLarge" || httpStatusOf(error) === 413) {
+		return `Larger than the ${limitLabel} limit`;
+	}
+	if (kind !== "Media") return null;
+	const detail = asAppError(error)?.message;
+	return typeof detail === "string" && detail !== "" ? detail : null;
 }
 
 export function summarizeServerMessage(message: string): string {

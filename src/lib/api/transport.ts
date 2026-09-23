@@ -170,7 +170,7 @@ export async function uploadFileRest(
 	path: string,
 	options: {
 		file: MediaFileDescriptor;
-		part: { name: string; filename: string };
+		part: { name: string; filename: string } | null;
 		maxBodySize: number;
 		profileId: number;
 		onHashed?: (sha256: string) => void;

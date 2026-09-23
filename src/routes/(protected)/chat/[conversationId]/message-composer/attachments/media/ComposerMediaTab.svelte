@@ -3,7 +3,11 @@
 	import PlusIcon from "phosphor-svelte/lib/PlusIcon";
 	import { toast } from "svelte-sonner";
 
-	import { addMediaToDrawer } from "$lib/api/messaging/chat-media";
+	import {
+		addMediaToDrawer,
+		CHAT_MEDIA_MAX_LABEL,
+		UnsupportedChatMediaError,
+	} from "$lib/api/messaging/chat-media";
 	import {
 		type DrawerMedia,
 		getDrawerMedia,
@@ -53,13 +57,28 @@
 
 	void load();
 
-	async function addPhoto() {
+	function addFailureMessage(err: unknown): string {
+		if (err instanceof UnsupportedChatMediaError) return err.message;
+		const rejected = asAppError(err);
+		if (rejected?.kind === "ContentTooLarge") {
+			return `Larger than the ${CHAT_MEDIA_MAX_LABEL} limit`;
+		}
+		if (
+			rejected?.kind === "Media" &&
+			typeof rejected.message === "string"
+		) {
+			return rejected.message;
+		}
+		return "Couldn't add photo or video";
+	}
+
+	async function addMedia() {
 		let picked;
 		try {
-			picked = await pickMultipleMedia("image");
+			picked = await pickMultipleMedia("media");
 		} catch (err) {
 			console.error(err);
-			toast.error("Couldn't open the photo picker");
+			toast.error("Couldn't open the picker");
 			return;
 		}
 		if (picked.length === 0) return;
@@ -74,15 +93,7 @@
 				];
 			} catch (err) {
 				console.error(err);
-				const rejected = asAppError(err);
-				if (
-					rejected?.kind === "Media" &&
-					typeof rejected.message === "string"
-				) {
-					toast.error(rejected.message);
-				} else {
-					toast.error("Couldn't add photo");
-				}
+				toast.error(addFailureMessage(err));
 			} finally {
 				uploadingCount--;
 			}
@@ -127,18 +138,18 @@
 				<Empty.Title>No media sent yet</Empty.Title>
 			</Empty.Header>
 			<Empty.Content>
-				<Button onclick={addPhoto}>
+				<Button onclick={addMedia}>
 					<PlusIcon weight="bold" />
-					Add photo
+					Add photo or video
 				</Button>
 			</Empty.Content>
 		</Empty.Root>
 	{/snippet}
 	{#snippet leading()}
 		<AddTile
-			label="Add photo"
+			label="Add photo or video"
 			class="aspect-(--photo-grid-aspect)"
-			onclick={addPhoto}
+			onclick={addMedia}
 		/>
 		{#each Array(uploadingCount)}
 			<MediaImage

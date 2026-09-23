@@ -40,7 +40,8 @@ pub struct PartSpec {
 pub struct UploadRequest {
 	pub method: String,
 	pub path: String,
-	pub part: PartSpec,
+	#[serde(default)]
+	pub part: Option<PartSpec>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -65,26 +66,36 @@ struct PreparedBody {
 	body_size: u64,
 }
 
-struct StreamedPart<'a> {
-	part: &'a FormPart<'a>,
+struct StreamedPart {
+	framing: Framing,
 	content_len: u64,
 	max_body_size: u64,
 }
 
-struct WholePart<'a> {
-	part: &'a FormPart<'a>,
+struct WholePart {
+	framing: Framing,
 	content: Bytes,
 	max_body_size: u64,
 }
 
+fn framing_for(part: Option<&PartSpec>, content_type: &str) -> Framing {
+	match part {
+		Some(part) => Framing::new(&FormPart {
+			name: &part.name,
+			filename: &part.filename,
+			content_type,
+		}),
+		None => Framing::raw(content_type),
+	}
+}
+
 fn prepare_stream(
 	StreamedPart {
-		part,
+		framing,
 		content_len,
 		max_body_size,
-	}: StreamedPart<'_>,
+	}: StreamedPart,
 ) -> Result<PreparedStream, AppError> {
-	let framing = Framing::new(part);
 	let body_size = framing.size(content_len);
 	if body_size > max_body_size {
 		return Err(AppError::ContentTooLarge);
@@ -94,13 +105,13 @@ fn prepare_stream(
 
 fn prepare_body(
 	WholePart {
-		part,
+		framing,
 		content,
 		max_body_size,
-	}: WholePart<'_>,
+	}: WholePart,
 ) -> Result<PreparedBody, AppError> {
 	let prepared = prepare_stream(StreamedPart {
-		part,
+		framing,
 		content_len: content.len() as u64,
 		max_body_size,
 	})?;
@@ -277,11 +288,10 @@ pub async fn upload_media_file(
 			let photo =
 				photo::normalize(&app, bytes, photo::JPEG.to_owned()).await?;
 			let prepared = prepare_body(WholePart {
-				part: &FormPart {
-					name: &request.part.name,
-					filename: &request.part.filename,
-					content_type: &photo.content_type,
-				},
+				framing: framing_for(
+					request.part.as_ref(),
+					&photo.content_type,
+				),
 				content: Bytes::from(photo.bytes),
 				max_body_size,
 			})?;
@@ -294,11 +304,7 @@ pub async fn upload_media_file(
 		}
 		Source::Video { size, patches } => {
 			let prepared = prepare_stream(StreamedPart {
-				part: &FormPart {
-					name: &request.part.name,
-					filename: &request.part.filename,
-					content_type: VIDEO_MP4,
-				},
+				framing: framing_for(request.part.as_ref(), VIDEO_MP4),
 				content_len: size,
 				max_body_size,
 			})?;
@@ -389,13 +395,13 @@ mod tests {
 	fn a_body_over_the_limit_is_refused_before_framing() {
 		let content = Bytes::from(vec![1u8; 100]);
 		let fits = prepare_body(WholePart {
-			part: &PART,
+			framing: Framing::new(&PART),
 			content: content.clone(),
 			max_body_size: 300,
 		})
 		.expect("fits");
 		let refused = prepare_body(WholePart {
-			part: &PART,
+			framing: Framing::new(&PART),
 			content,
 			max_body_size: fits.body_size - 1,
 		})
@@ -411,13 +417,13 @@ mod tests {
 	#[test]
 	fn a_streamed_video_is_refused_on_its_framed_length() {
 		let fits = prepare_stream(StreamedPart {
-			part: &CLIP_PART,
+			framing: Framing::new(&CLIP_PART),
 			content_len: 1024,
 			max_body_size: u64::MAX,
 		})
 		.expect("fits");
 		let refused = prepare_stream(StreamedPart {
-			part: &CLIP_PART,
+			framing: Framing::new(&CLIP_PART),
 			content_len: 1024,
 			max_body_size: fits.body_size - 1,
 		})
@@ -431,7 +437,7 @@ mod tests {
 	#[test]
 	fn the_framed_body_matches_its_reported_size_and_hashes_the_content() {
 		let prepared = prepare_body(WholePart {
-			part: &PART,
+			framing: Framing::new(&PART),
 			content: Bytes::from_static(b"abc"),
 			max_body_size: u64::MAX,
 		})
@@ -445,6 +451,32 @@ mod tests {
 			prepared.sha256,
 			"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
 		);
+	}
+
+	#[test]
+	fn a_raw_body_is_the_content_alone_under_the_media_type() {
+		let prepared = prepare_body(WholePart {
+			framing: framing_for(None, "image/jpeg"),
+			content: Bytes::from_static(b"abc"),
+			max_body_size: 3,
+		})
+		.expect("prepared");
+
+		assert_eq!(prepared.content_type, "image/jpeg");
+		assert_eq!(prepared.body.as_ref(), b"abc");
+		assert_eq!(prepared.body_size, 3);
+	}
+
+	#[test]
+	fn a_request_without_a_part_asks_for_a_raw_body() {
+		let request: UploadRequest =
+			serde_json::from_value(serde_json::json!({
+				"method": "POST",
+				"path": "/v5/chat/media/upload",
+			}))
+			.expect("request");
+
+		assert!(request.part.is_none());
 	}
 
 	#[test]
