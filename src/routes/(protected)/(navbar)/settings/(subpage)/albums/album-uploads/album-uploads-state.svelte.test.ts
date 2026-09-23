@@ -248,6 +248,43 @@ describe("album uploads", () => {
 		}
 	});
 
+	it("starts the next upload while the album read for the last one retries", async () => {
+		vi.useFakeTimers();
+		vi.mocked(uploadAlbumContent)
+			.mockResolvedValueOnce({ contentId: 7, sha256: "a".repeat(64) })
+			.mockResolvedValueOnce({ contentId: 8, sha256: "b".repeat(64) });
+		vi.mocked(getAlbumContent)
+			.mockRejectedValueOnce(httpError(500))
+			.mockResolvedValue(albumWith(albumItem(8), albumItem(7)));
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+		const draft = draftSpy();
+		uploads.attachDraft({ albumId: ALBUM_ID, draft });
+
+		try {
+			enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
+			await vi.advanceTimersByTimeAsync(0);
+
+			expect(uploadAlbumContent).toHaveBeenCalledTimes(2);
+			expect(
+				uploads.pending(ALBUM_ID),
+				"both tiles stay until the earlier landing answers, so they land in upload order",
+			).toEqual([
+				{ key: "a", kind: "photo" },
+				{ key: "b", kind: "photo" },
+			]);
+
+			await vi.advanceTimersByTimeAsync(5_000);
+
+			expect(
+				draft.land.mock.calls.map(([item]) => item.contentId),
+				"landings reach the draft in upload order, so the newest ends on top",
+			).toEqual([7, 8]);
+			expect(uploads.hasPending(ALBUM_ID)).toBe(false);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("drops the tile when the album read never answers", async () => {
 		vi.useFakeTimers();
 		vi.mocked(uploadAlbumContent).mockResolvedValue({

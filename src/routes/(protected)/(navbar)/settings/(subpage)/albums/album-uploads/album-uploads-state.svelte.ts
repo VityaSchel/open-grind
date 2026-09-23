@@ -120,6 +120,8 @@ function failureMessage(kind: UploadKind): string {
 class AlbumUploadsState {
 	readonly #profileId: number;
 	#queue = $state.raw<QueuedUpload[]>([]);
+	#landing = $state.raw<QueuedUpload[]>([]);
+	#landings = new Map<number, Promise<void>>();
 	#drafts = new Map<number, UploadLanding>();
 	#landed = new Map<number, Set<number>>();
 	#watching = new Set<string>();
@@ -132,7 +134,7 @@ class AlbumUploadsState {
 	}
 
 	pending(albumId: number): PendingUpload[] {
-		return this.#queue
+		return [...this.#landing, ...this.#queue]
 			.filter((queued) => queued.albumId === albumId)
 			.map(({ media, inspection }) => ({
 				key: media.key,
@@ -141,7 +143,7 @@ class AlbumUploadsState {
 	}
 
 	hasPending(albumId: number): boolean {
-		return this.#queue.some((queued) => queued.albumId === albumId);
+		return this.pending(albumId).length > 0;
 	}
 
 	attachDraft({
@@ -223,6 +225,8 @@ class AlbumUploadsState {
 	#drop(): void {
 		this.#epoch += 1;
 		this.#queue = [];
+		this.#landing = [];
+		this.#landings.clear();
 		this.#drafts.clear();
 		this.#landed.clear();
 		this.#watching.clear();
@@ -271,8 +275,32 @@ class AlbumUploadsState {
 				await this.#recover({ entry, error, sha256, before });
 			return;
 		}
-		if (epoch === this.#epoch)
-			await this.#land({ albumId: entry.albumId, contentId });
+		if (epoch === this.#epoch) this.#landInBackground({ entry, contentId });
+	}
+
+	#landInBackground({
+		entry,
+		contentId,
+	}: {
+		entry: QueuedUpload;
+		contentId: number;
+	}): void {
+		const { albumId } = entry;
+		this.#landedIds(albumId).add(contentId);
+		this.#queue = this.#queue.filter((queued) => queued !== entry);
+		this.#landing = [...this.#landing, entry];
+		const previous = this.#landings.get(albumId) ?? Promise.resolve();
+		const landed = previous
+			.then(() => this.#land({ albumId, contentId }))
+			.finally(() => {
+				this.#landing = this.#landing.filter(
+					(landing) => landing !== entry,
+				);
+			});
+		this.#landings.set(
+			albumId,
+			landed.catch((error: unknown) => console.error(error)),
+		);
 	}
 
 	async #recover({
@@ -299,7 +327,7 @@ class AlbumUploadsState {
 			});
 			if (epoch !== this.#epoch) return;
 			if (contentId !== null) {
-				await this.#land({ albumId: entry.albumId, contentId });
+				this.#landInBackground({ entry, contentId });
 				return;
 			}
 		}
