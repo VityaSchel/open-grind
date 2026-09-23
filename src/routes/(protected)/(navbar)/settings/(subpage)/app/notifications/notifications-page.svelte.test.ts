@@ -248,6 +248,31 @@ describe("a missing FCM service", () => {
 		expect(screen.queryByRole("status")).toBeNull();
 	});
 
+	it.each(["Cancel", "Continue"])(
+		"stays closed after %s instead of reselecting Fast mode from the focus it hands back",
+		async (button) => {
+			const { fast, slow } = await opened(NotificationsPage);
+			fast.focus();
+			await fireEvent.click(fast);
+			const dialog = await screen.findByRole("alertdialog", {
+				name: "Install push notifications add-on",
+			});
+			await waitFor(() =>
+				expect(dialog.contains(document.activeElement)).toBe(true),
+			);
+			const checks = push.fcmServiceInstalled.mock.calls.length;
+
+			await fireEvent.click(
+				within(dialog).getByRole("button", { name: button }),
+			);
+
+			await waitFor(() => expect(document.activeElement).toBe(slow));
+			expect(screen.queryByRole("alertdialog")).toBeNull();
+			expect(push.fcmServiceInstalled).toHaveBeenCalledTimes(checks);
+			expect(checked(slow)).toBe("true");
+		},
+	);
+
 	it("switches to Fast mode when the install finishes after the page was left", async () => {
 		await fireEvent.click((await opened(NotificationsPage)).fast);
 		await fireEvent.click(

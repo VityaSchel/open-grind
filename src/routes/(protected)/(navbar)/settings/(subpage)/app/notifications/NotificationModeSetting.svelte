@@ -29,9 +29,19 @@
 				"Poll for new notifications periodically in the background using Android's native scheduler",
 		},
 	];
+
+	let group = $state<HTMLElement | null>(null);
+
+	function focusSelectedMode(event: Event): void {
+		event.preventDefault();
+		group
+			?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]')
+			?.focus();
+	}
 </script>
 
 <RadioGroup.Root
+	bind:ref={group}
 	aria-label="Delivery mode"
 	disabled={notificationSettings.busy || !notificationSettings.enabled}
 	class="overflow-hidden rounded-2xl border border-border transition-opacity data-disabled:opacity-60"
@@ -89,4 +99,4 @@
 		</RadioGroup.Item>
 	{/each}
 </RadioGroup.Root>
-<PushAddonAlert />
+<PushAddonAlert onCloseAutoFocus={focusSelectedMode} />

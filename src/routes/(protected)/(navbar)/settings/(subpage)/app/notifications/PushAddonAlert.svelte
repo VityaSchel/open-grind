@@ -8,6 +8,9 @@
 	import { notificationSettings } from "$lib/push/notification-state.svelte";
 	import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
 
+	let { onCloseAutoFocus }: { onCloseAutoFocus: (event: Event) => void } =
+		$props();
+
 	const ADDON = ADDON_NAME[FCM_COMPONENT];
 
 	dismissOnBackGesture({
@@ -24,7 +27,7 @@
 		}
 	}
 >
-	<AlertDialog.Content interactOutsideBehavior="close">
+	<AlertDialog.Content interactOutsideBehavior="close" {onCloseAutoFocus}>
 		<AlertDialog.Header>
 			<AlertDialog.Title
 				>Install push notifications add-on</AlertDialog.Title
