@@ -2,10 +2,26 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
 import MediaImage from "./MediaImage.svelte";
+
+const loadSlots = vi.hoisted(() => ({
+	oneAtATime: undefined as
+		| import("$lib/util/media-load-slots").LoadSlots
+		| undefined,
+}));
+
+vi.mock("$lib/util/media-load-slots", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("$lib/util/media-load-slots")>();
+	return {
+		...actual,
+		acquireMediaLoadSlot: (grant: () => void) =>
+			loadSlots.oneAtATime!.acquire(grant),
+	};
+});
 
 const BROKEN = '[data-slot="broken-media"]';
 const EMPTY = '[data-slot="empty-media"]';
@@ -49,6 +65,13 @@ class FakeIntersectionObserver {
 }
 
 describe("MediaImage", () => {
+	beforeEach(async () => {
+		const { LoadSlots } = await vi.importActual<
+			typeof import("$lib/util/media-load-slots")
+		>("$lib/util/media-load-slots");
+		loadSlots.oneAtATime = new LoadSlots(1);
+	});
+
 	afterEach(() => {
 		cleanup();
 		vi.unstubAllGlobals();
@@ -261,5 +284,102 @@ describe("MediaImage", () => {
 
 		const broken = container.querySelector<HTMLElement>(BROKEN);
 		expect(broken?.style.aspectRatio).toBe("600 / 800");
+	});
+
+	it("waits for a free load slot before requesting the source", async () => {
+		const first = render(MediaImage, { props: { src: SRC } }).container;
+		const second = render(MediaImage, {
+			props: { src: OTHER_SRC },
+		}).container;
+
+		expect(second.querySelector("img")?.getAttribute("src")).toBe(
+			TRANSPARENT_PIXEL,
+		);
+
+		await loadedImage(first.querySelector("img")!, 320);
+		await tick();
+
+		expect(second.querySelector("img")?.src).toBe(OTHER_SRC);
+	});
+
+	it("frees its load slot when the source fails", async () => {
+		const first = render(MediaImage, { props: { src: SRC } }).container;
+		const second = render(MediaImage, {
+			props: { src: OTHER_SRC },
+		}).container;
+
+		await fireEvent.error(first.querySelector("img")!);
+		await tick();
+
+		expect(second.querySelector("img")?.src).toBe(OTHER_SRC);
+	});
+
+	it("keeps its load slot after unmounting mid-load until that load settles", async () => {
+		const first = render(MediaImage, { props: { src: SRC } });
+		const detached = first.container.querySelector("img")!;
+		const second = render(MediaImage, {
+			props: { src: OTHER_SRC },
+		}).container;
+
+		first.unmount();
+		await tick();
+		expect(second.querySelector("img")?.getAttribute("src")).toBe(
+			TRANSPARENT_PIXEL,
+		);
+
+		await fireEvent.load(detached);
+		await tick();
+
+		expect(second.querySelector("img")?.src).toBe(OTHER_SRC);
+	});
+
+	it("gives up an unmounted load's slot after 30 seconds", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		try {
+			const first = render(MediaImage, { props: { src: SRC } });
+			const second = render(MediaImage, {
+				props: { src: OTHER_SRC },
+			}).container;
+
+			first.unmount();
+			vi.advanceTimersByTime(30_000);
+			await tick();
+
+			expect(second.querySelector("img")?.src).toBe(OTHER_SRC);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("keeps showing the loaded photo while its next source waits for a slot", async () => {
+		const first = render(MediaImage, { props: { src: SRC } });
+		const firstImage = first.container.querySelector("img")!;
+		await loadedImage(firstImage, 320);
+		render(MediaImage, { props: { src: OTHER_SRC } });
+
+		await first.rerender({ src: `${OTHER_SRC}-next` });
+
+		expect(first.container.querySelector("img")?.src).toBe(SRC);
+	});
+
+	it("leaves the queue when its source changes while waiting", async () => {
+		const first = render(MediaImage, { props: { src: SRC } }).container;
+		const second = render(MediaImage, { props: { src: OTHER_SRC } });
+		const third = render(MediaImage, { props: { src: OTHER_SRC } });
+
+		await second.rerender({ src: null });
+		await loadedImage(first.querySelector("img")!, 320);
+		await tick();
+
+		expect(third.container.querySelector("img")?.src).toBe(OTHER_SRC);
+	});
+
+	it("holds no load slot while a lazy image is out of view", () => {
+		vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+		render(MediaImage, { props: { src: SRC, loading: "lazy" as const } });
+
+		const { container } = render(MediaImage, { props: { src: OTHER_SRC } });
+
+		expect(container.querySelector("img")?.src).toBe(OTHER_SRC);
 	});
 });

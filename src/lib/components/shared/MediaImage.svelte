@@ -4,6 +4,10 @@
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
 	} from "$lib/util/load-when-visible";
+	import {
+		acquireMediaLoadSlot,
+		releaseWhenSettled,
+	} from "$lib/util/media-load-slots";
 	import BrokenMedia from "./BrokenMedia.svelte";
 
 	let {
@@ -36,6 +40,26 @@
 
 	let armed = $state(false);
 	const deferred = $derived(loading === "lazy" && !armed);
+	const requested = $derived(
+		pending || deferred || failedSrc === src ? null : src,
+	);
+
+	let slotGranted = $state(false);
+	let shownSrc = $state<string | null>(null);
+	let imageElement = $state<HTMLImageElement>();
+	let releaseSlot = () => {};
+
+	$effect.pre(() => {
+		slotGranted = false;
+		if (requested === null) return;
+		const release = acquireMediaLoadSlot(() => (slotGranted = true));
+		releaseSlot = release;
+		return () => {
+			if (imageElement?.isConnected === false && !imageElement.complete)
+				releaseWhenSettled({ image: imageElement, release });
+			else release();
+		};
+	});
 </script>
 
 {#if pending || src === null}
@@ -47,20 +71,30 @@
 	/>
 {:else if failedSrc !== src}
 	<img
-		src={deferred ? TRANSPARENT_PIXEL : src}
+		bind:this={imageElement}
+		src={slotGranted ? src : (shownSrc ?? TRANSPARENT_PIXEL)}
 		{alt}
 		{loading}
 		use:loadWhenVisible={deferred ? () => (armed = true) : undefined}
 		draggable="false"
 		class={["object-cover", className, imgClass]}
 		style:aspect-ratio={aspectRatio}
-		onerror={() => (failedSrc = src)}
+		onerror={() => {
+			if (!slotGranted) return;
+			releaseSlot();
+			failedSrc = src;
+		}}
 		onload={(event) => {
 			const image = event.currentTarget;
 			if (!(image instanceof HTMLImageElement)) return;
-			if (image.src === TRANSPARENT_PIXEL) return;
-			if (image.naturalWidth === 0) failedSrc = src;
-			else onload?.(image);
+			if (!slotGranted || image.src === TRANSPARENT_PIXEL) return;
+			releaseSlot();
+			if (image.naturalWidth === 0) {
+				failedSrc = src;
+				return;
+			}
+			shownSrc = src;
+			onload?.(image);
 		}}
 	/>
 {:else}

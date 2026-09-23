@@ -4,8 +4,10 @@ import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PhotoSwipeModule } from "photoswipe";
 
+import { TRANSPARENT_PIXEL } from "$lib/util/load-when-visible";
 import {
 	applyPhotoSwipeOpenTracking,
+	applyPhotoSwipeThumbDimensions,
 	isPhotoSwipeBusy,
 	onPhotoSwipeIdle,
 	onPhotoSwipeOpening,
@@ -184,5 +186,35 @@ describe("applyPhotoSwipeOpenTracking", () => {
 
 		expect(idle).toHaveBeenCalledTimes(1);
 		expect(isPhotoSwipeBusy()).toBe(false);
+	});
+});
+
+describe("applyPhotoSwipeThumbDimensions", () => {
+	function thumbnailItem({ src, size }: { src: string; size: number }) {
+		const element = document.createElement("a");
+		const thumbnail = document.createElement("img");
+		thumbnail.src = src;
+		Object.defineProperty(thumbnail, "naturalWidth", { get: () => size });
+		Object.defineProperty(thumbnail, "naturalHeight", { get: () => size });
+		element.append(thumbnail);
+		return { element, width: 600, height: 800 };
+	}
+
+	function sized(item: ReturnType<typeof thumbnailItem>) {
+		const lightbox = new PhotoSwipeLightbox({});
+		applyPhotoSwipeThumbDimensions(lightbox);
+		return lightbox.applyFilters("itemData", item, 0);
+	}
+
+	it("sizes the slide from a loaded thumbnail", () => {
+		expect(
+			sized(thumbnailItem({ src: "https://cdn.test/a.jpg", size: 320 })),
+		).toMatchObject({ width: 320, height: 320 });
+	});
+
+	it("keeps the known size while the thumbnail still shows the placeholder pixel", () => {
+		expect(
+			sized(thumbnailItem({ src: TRANSPARENT_PIXEL, size: 1 })),
+		).toMatchObject({ width: 600, height: 800 });
 	});
 });
