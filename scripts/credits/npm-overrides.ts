@@ -26,7 +26,6 @@ const verbatimMit = (versions: string[]): NpmOverride => ({
 export const npmOverrides: Record<string, NpmOverride> = {
 	"@tauri-apps/plugin-clipboard-manager": tauriPlugin(["2.3.2"]),
 	"@tauri-apps/plugin-dialog": tauriPlugin(["2.7.1"]),
-	"@tauri-apps/plugin-fs": tauriPlugin(["2.5.1"]),
 	"@tauri-apps/plugin-geolocation": tauriPlugin(["2.3.2"]),
 	"@tauri-apps/plugin-opener": tauriPlugin(["2.5.4"]),
 	"@tauri-apps/plugin-os": tauriPlugin(["2.3.2"]),
