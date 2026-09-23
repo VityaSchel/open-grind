@@ -8,6 +8,7 @@
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { traverseBackTo } from "$lib/util/history";
 
 	let { albumId, saving = false }: { albumId: number; saving?: boolean } =
 		$props();
@@ -20,7 +21,8 @@
 		try {
 			await deleteAlbum({ albumId });
 			toast.success("Your album has been deleted");
-			await goto("/albums", { replaceState: true });
+			if (!traverseBackTo("/albums"))
+				await goto("/albums", { replaceState: true });
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Couldn't delete album", error });

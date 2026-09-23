@@ -151,11 +151,14 @@ test.describe("my albums", () => {
 		await expect(page.locator(".pswp__img").first()).toBeVisible();
 	});
 
-	test("deleting an album confirms first, then leaves the grid short", async ({
+	test("deleting an album confirms first, then walks back to a grid one short", async ({
 		page,
 	}) => {
 		await openAlbums(page);
 		const before = await page.locator(ALBUM_TILE).count();
+		const atAlbums = await page.evaluate(
+			() => navigation.currentEntry!.index,
+		);
 		await page.locator(SHARED_ALBUM).click();
 
 		await page
@@ -170,6 +173,10 @@ test.describe("my albums", () => {
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
 
 		await expect(page).toHaveURL(/\/albums$/, { timeout: 30_000 });
+		expect(
+			await page.evaluate(() => navigation.currentEntry!.index),
+			"it walked back to My Albums rather than stacking another",
+		).toBe(atAlbums);
 		await expect(page.locator(SHARED_ALBUM)).toHaveCount(0);
 		await expect(page.locator(ALBUM_TILE)).toHaveCount(before - 1);
 	});
