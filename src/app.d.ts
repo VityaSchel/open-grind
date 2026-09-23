@@ -1,3 +1,5 @@
+import type { NativeInsets } from "$lib/platform/android-native-bridge";
+
 declare global {
 	namespace App {
 		interface PageState {
@@ -6,7 +8,7 @@ declare global {
 	}
 
 	interface Window {
-		__reapplyInsets: () => unknown;
+		__reapplyInsets: (insets?: NativeInsets) => unknown;
 		__AndroidInsets?: {
 			top(): number;
 			bottom(): number;
