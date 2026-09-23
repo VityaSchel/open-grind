@@ -3,6 +3,7 @@ import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import { createAlbum, getAlbumStorageLimits } from "$lib/api/messaging/albums";
+import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 import {
 	enqueueAlbumMedia,
 	pickInspectedAlbumMedia,
@@ -16,9 +17,11 @@ const ALBUM_LIMIT_MESSAGE = "You can't create more albums";
 
 export async function createAlbumFromMedia({
 	uploads,
+	myAlbums,
 	albumName,
 }: {
 	uploads: AlbumUploads;
+	myAlbums: MyAlbumsState;
 	albumName: string | null;
 }): Promise<void> {
 	try {
@@ -28,6 +31,7 @@ export async function createAlbumFromMedia({
 		});
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
+		void myAlbums.reload();
 		await goto(`/settings/albums/${albumId}`, { replaceState: true });
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {

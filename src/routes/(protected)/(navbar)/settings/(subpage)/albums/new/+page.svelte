@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 	import AlbumMediaEmpty from "../album-editor/AlbumMediaEmpty.svelte";
@@ -17,6 +18,7 @@
 			const name = albumName.trim();
 			await createAlbumFromMedia({
 				uploads: getAlbumUploads(data.ourProfileId),
+				myAlbums: getMyAlbumsState(data.ourProfileId),
 				albumName: name === "" ? null : name,
 			});
 		} finally {

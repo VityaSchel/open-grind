@@ -3,10 +3,14 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const api = vi.hoisted(() => ({ getMyAlbums: vi.fn() }));
+const api = vi.hoisted(() => ({
+	getMyAlbums: vi.fn(),
+	getAlbumStorageLimits: vi.fn(() => Promise.resolve({ maxAlbums: 10 })),
+}));
 
 vi.mock("$lib/api/messaging/albums", () => api);
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
@@ -32,8 +36,9 @@ function withEveryItemProcessing(album: MyAlbum): MyAlbum {
 }
 
 async function settledMediaOf(albums: MyAlbum[]): Promise<Element> {
+	clearAccountCaches();
 	api.getMyAlbums.mockResolvedValueOnce({ albums });
-	const { container } = render(AlbumsLink);
+	const { container } = render(AlbumsLink, { props: { ourProfileId: 1 } });
 	return vi.waitFor(() => {
 		const media = container.querySelector(MEDIA);
 		if (media === null || media.querySelector('[data-slot="skeleton"]')) {

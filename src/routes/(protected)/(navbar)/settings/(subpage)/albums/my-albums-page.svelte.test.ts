@@ -9,16 +9,18 @@ const { api } = vi.hoisted(() => ({
 
 vi.mock("$lib/api/messaging/albums", () => api);
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import { demoMyAlbums } from "$lib/demo/mock/albums";
 import MyAlbumsPage from "./+page.svelte";
 
 const ALBUM_TILE = '[data-slot="album-tile"]';
 
 const albums = demoMyAlbums().albums;
+const PAGE_PROPS = { data: { ourProfileId: 1 }, params: {} };
 
 function opened(): HTMLElement {
 	api.getMyAlbums.mockResolvedValueOnce({ albums });
-	return render(MyAlbumsPage).container;
+	return render(MyAlbumsPage, { props: PAGE_PROPS }).container;
 }
 
 function tilesOf(container: HTMLElement): Promise<number> {
@@ -36,6 +38,7 @@ function addAlbum(): HTMLElement | null {
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
+	clearAccountCaches();
 });
 
 describe("my albums page", () => {
@@ -78,6 +81,23 @@ describe("my albums page", () => {
 		resolve({ maxAlbums: albums.length });
 		await tilesOf(container);
 		expect(addAlbum()).toBeNull();
+	});
+
+	it("shows the last list at once when it opens again, refreshing behind it", async () => {
+		api.getAlbumStorageLimits.mockResolvedValue({
+			maxAlbums: albums.length + 1,
+		});
+		await tilesOf(opened());
+		cleanup();
+		const fetched = api.getMyAlbums.mock.calls.length;
+
+		api.getMyAlbums.mockReturnValueOnce(new Promise(() => {}));
+		const reopened = render(MyAlbumsPage, { props: PAGE_PROPS }).container;
+
+		expect(reopened.querySelectorAll(ALBUM_TILE)).toHaveLength(
+			albums.length,
+		);
+		expect(api.getMyAlbums).toHaveBeenCalledTimes(fetched + 1);
 	});
 
 	it("keeps the add cell when the limits fail to load", async () => {

@@ -19,11 +19,14 @@ vi.mock("../album-uploads/add-album-media", () => media);
 vi.mock("svelte-sonner", () => sonner);
 
 import { ApiError } from "$lib/api/api-error";
+import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import type { AlbumUploads } from "../album-uploads/album-uploads-state.svelte";
 import { createAlbumFromMedia } from "./create-album-media";
 
 const uploads = {} as AlbumUploads;
+const reload = vi.fn();
+const myAlbums = { reload } as unknown as MyAlbumsState;
 
 const limits = {
 	maxAlbums: 5,
@@ -60,12 +63,16 @@ beforeEach(() => {
 
 describe("creating an album from its first upload", () => {
 	it("creates the album, opens it, and uploads there", async () => {
-		await createAlbumFromMedia({ uploads, albumName: "Trip" });
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: "Trip" });
 
 		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
 			videoRoom: true,
 		});
 		expect(api.createAlbum).toHaveBeenCalledWith({ albumName: "Trip" });
+		expect(
+			reload,
+			"My Albums drops its list rather than show one without the new album",
+		).toHaveBeenCalledOnce();
 		expect(navigation.goto).toHaveBeenCalledWith("/settings/albums/904", {
 			replaceState: true,
 		});
@@ -92,7 +99,7 @@ describe("creating an album from its first upload", () => {
 			maxVideosPerAlbum: 0,
 		});
 
-		await createAlbumFromMedia({ uploads, albumName: null });
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
 			videoRoom: false,
@@ -102,16 +109,17 @@ describe("creating an album from its first upload", () => {
 	it("creates nothing when nothing usable was picked", async () => {
 		media.pickInspectedAlbumMedia.mockResolvedValue([]);
 
-		await createAlbumFromMedia({ uploads, albumName: null });
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(api.createAlbum).not.toHaveBeenCalled();
 		expect(navigation.goto).not.toHaveBeenCalled();
+		expect(reload).not.toHaveBeenCalled();
 	});
 
 	it("names the album limit when the server refuses another album", async () => {
 		api.createAlbum.mockRejectedValue(httpError(402));
 
-		await createAlbumFromMedia({ uploads, albumName: null });
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(sonner.toast.error).toHaveBeenCalledWith(
 			"You can't create more albums",
@@ -124,7 +132,7 @@ describe("creating an album from its first upload", () => {
 		const error = httpError(500);
 		api.createAlbum.mockRejectedValue(error);
 
-		await createAlbumFromMedia({ uploads, albumName: null });
+		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(errorToast.showErrorToast).toHaveBeenCalledWith({
 			label: "Couldn't create album",

@@ -81,7 +81,7 @@
 </script>
 
 {#snippet menu()}
-	<AlbumMenu albumId={draft.albumId} saving={draft.saving} />
+	<AlbumMenu albumId={draft.albumId} saving={draft.saving} {ourProfileId} />
 {/snippet}
 
 <fieldset disabled={draft.saving} class="contents">

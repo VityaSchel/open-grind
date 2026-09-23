@@ -3,6 +3,7 @@
 	import { DotsThreeVerticalIcon, TrashIcon } from "phosphor-svelte";
 	import { toast } from "svelte-sonner";
 
+	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { deleteAlbum } from "$lib/api/messaging/albums";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -10,8 +11,11 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { traverseBackTo } from "$lib/util/history";
 
-	let { albumId, saving = false }: { albumId: number; saving?: boolean } =
-		$props();
+	let {
+		albumId,
+		ourProfileId,
+		saving = false,
+	}: { albumId: number; ourProfileId: number; saving?: boolean } = $props();
 
 	let confirming = $state(false);
 	let deleting = $state(false);
@@ -20,6 +24,7 @@
 		deleting = true;
 		try {
 			await deleteAlbum({ albumId });
+			getMyAlbumsState(ourProfileId).remove(albumId);
 			toast.success("Your album has been deleted");
 			if (!traverseBackTo("/settings/albums"))
 				await goto("/settings/albums", { replaceState: true });
