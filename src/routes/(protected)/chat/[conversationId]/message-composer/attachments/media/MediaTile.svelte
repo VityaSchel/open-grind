@@ -32,6 +32,7 @@
 	<MediaImage
 		src={proxyMediaUrl(item.url)}
 		alt="Photo {index + 1}"
+		loading="lazy"
 		class="size-full rounded-[inherit]"
 		imgClass="bg-card-foreground/10"
 	/>
