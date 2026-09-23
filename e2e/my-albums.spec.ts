@@ -18,7 +18,7 @@ declare global {
 	}
 }
 
-const ADD_ALBUM = 'a[href="/albums/new"]';
+const ADD_ALBUM = 'a[href="/settings/albums/new"]';
 
 const TINY_PNG =
 	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -78,8 +78,8 @@ test.describe("my albums", () => {
 		const addAlbum = page.getByRole("link", { name: "Add album" });
 		await expect(addAlbum, "the add cell leads the grid").toBeVisible();
 		await expect(
-			page.locator(`${ALBUM_TILE}, a[href="/albums/new"]`).first(),
-		).toHaveAttribute("href", "/albums/new");
+			page.locator(`${ALBUM_TILE}, ${ADD_ALBUM}`).first(),
+		).toHaveAttribute("href", "/settings/albums/new");
 
 		await addAlbum.click();
 		await expect(page).toHaveURL(/\/albums\/new$/);

@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { back, openAlbum, openAlbums, SHARED_ALBUM } from "./support/albums";
+import { stackSettled } from "./support/page-stack";
 
 type Box = { x: number; y: number; width: number; height: number };
 
@@ -141,11 +142,7 @@ async function expectNothingClipped(page: Page): Promise<void> {
 
 async function recordLoadingSkeleton(page: Page): Promise<void> {
 	await page.addInitScript(
-		({ header, preview }) => {
-			const boxOfElement = (element: Element): Box => {
-				const { x, y, width, height } = element.getBoundingClientRect();
-				return { x, y, width, height };
-			};
+		({ header, preview, pane }) => {
 			new MutationObserver(() => {
 				if (window.__albumSkeleton !== undefined) return;
 				const box = document.querySelector(
@@ -153,13 +150,28 @@ async function recordLoadingSkeleton(page: Page): Promise<void> {
 				);
 				const root = box?.closest(header) ?? null;
 				if (box === null || root === null) return;
+				const origin = root.closest(pane)?.getBoundingClientRect();
+				const boxOfElement = (element: Element): Box => {
+					const { x, y, width, height } =
+						element.getBoundingClientRect();
+					return {
+						x: x - (origin?.x ?? 0),
+						y: y - (origin?.y ?? 0),
+						width,
+						height,
+					};
+				};
 				window.__albumSkeleton = {
 					header: boxOfElement(root),
 					preview: boxOfElement(box),
 				};
 			}).observe(document, { childList: true, subtree: true });
 		},
-		{ header: HEADER, preview: PREVIEW_COLUMN },
+		{
+			header: HEADER,
+			preview: PREVIEW_COLUMN,
+			pane: '[data-slot="page-stack-pane"]',
+		},
 	);
 }
 
@@ -177,6 +189,7 @@ for (const { viewport, twoColumns } of LAYOUTS) {
 				page.getByRole("button", { name: "Preview album" }),
 			).toBeVisible();
 			await expect(page.getByText(/^\d+\/\d+ photos, /)).toBeVisible();
+			await stackSettled(page);
 
 			const editor = await measureHeader(page);
 			expectHeaderLayout({ boxes: editor, twoColumns });
@@ -208,6 +221,7 @@ for (const { viewport, twoColumns } of LAYOUTS) {
 			await expect(
 				page.locator(`${PREVIEW_COLUMN} > [data-slot="empty-media"]`),
 			).toBeVisible();
+			await stackSettled(page);
 
 			const created = await measureHeader(page);
 			expectHeaderLayout({ boxes: created, twoColumns });

@@ -97,7 +97,7 @@ test.describe("broken images", () => {
 	test("a failing album cover shows the placeholder", async ({ page }) => {
 		await installTauriShim(page);
 		await abortImages(page, CHAT_MEDIA_HOST);
-		await page.goto("/albums");
+		await page.goto("/settings/albums");
 
 		await page
 			.locator(`[data-slot="album-tile"] ${BROKEN}`)

@@ -16,6 +16,19 @@
 			title: "Hidden Users",
 			back: "/settings/account",
 		},
+		[`${base}/albums`]: {
+			title: "My Albums",
+			back: "/settings",
+			wide: true,
+		},
+		[`${base}/albums/new`]: {
+			title: "New Album",
+			back: "/settings/albums",
+		},
+		[`${base}/albums/[albumId]`]: {
+			title: "Edit Album",
+			back: "/settings/albums",
+		},
 		[`${base}/app`]: { title: "App Settings", back: "/settings" },
 		[`${base}/app/credits`]: {
 			title: "Credits & Licenses",

@@ -108,6 +108,30 @@ test("a pushed page enters over a snapshot of the page it came from", async ({
 	await expect(backLink(page)).toBeVisible();
 });
 
+test("My Albums slides onto the settings stack and swipes back off it", async ({
+	page,
+}) => {
+	await openSettings(page);
+
+	await page.getByRole("link", { name: "My Albums" }).click();
+	await expect(dim(page)).toBeAttached();
+	await expect(ghost(page)).toContainText("Sign Out");
+	await expect(page).toHaveURL(/\/settings\/albums$/);
+	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
+
+	expect(await startSystemBack(page), "the Me screen waits behind").toBe(
+		true,
+	);
+	await expect(ghost(page)).toContainText("Sign Out");
+	await progressSystemBack(page, 0.8);
+	await commitSystemBack(page);
+
+	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`), {
+		timeout: 5_000,
+	});
+	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
+});
+
 test("both panes paint the app background so neither shows through", async ({
 	page,
 }) => {

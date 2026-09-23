@@ -21,8 +21,8 @@
 		try {
 			await deleteAlbum({ albumId });
 			toast.success("Your album has been deleted");
-			if (!traverseBackTo("/albums"))
-				await goto("/albums", { replaceState: true });
+			if (!traverseBackTo("/settings/albums"))
+				await goto("/settings/albums", { replaceState: true });
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Couldn't delete album", error });

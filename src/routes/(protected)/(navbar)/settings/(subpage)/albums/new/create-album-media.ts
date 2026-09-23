@@ -28,7 +28,7 @@ export async function createAlbumFromMedia({
 		});
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
-		await goto(`/albums/${albumId}`, { replaceState: true });
+		await goto(`/settings/albums/${albumId}`, { replaceState: true });
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {
 		console.error(error);

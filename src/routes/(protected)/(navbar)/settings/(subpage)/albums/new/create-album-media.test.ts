@@ -66,7 +66,7 @@ describe("creating an album from its first upload", () => {
 			videoRoom: true,
 		});
 		expect(api.createAlbum).toHaveBeenCalledWith({ albumName: "Trip" });
-		expect(navigation.goto).toHaveBeenCalledWith("/albums/904", {
+		expect(navigation.goto).toHaveBeenCalledWith("/settings/albums/904", {
 			replaceState: true,
 		});
 		expect(media.enqueueAlbumMedia).toHaveBeenCalledWith({

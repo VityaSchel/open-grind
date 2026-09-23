@@ -60,13 +60,13 @@
 	{#snippet leading()}
 		{#if !atAlbumCap}
 			<AddTile
-				href="/albums/new"
+				href="/settings/albums/new"
 				label="Add album"
 				class="aspect-(--photo-grid-aspect)"
 			/>
 		{/if}
 	{/snippet}
 	{#snippet tile(album)}
-		<AlbumTile {album} href="/albums/{album.albumId}" />
+		<AlbumTile {album} href="/settings/albums/{album.albumId}" />
 	{/snippet}
 </MediaGrid>

@@ -195,7 +195,7 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 	});
 
 	test("while editing an album", async ({ page }) => {
-		await page.goto(`/albums/${SHARED_ALBUM_ID}`);
+		await page.goto(`/settings/albums/${SHARED_ALBUM_ID}`);
 		await makeDirty(page.getByRole("textbox", { name: "Album name" }));
 		await expectToastGap({ obstruction: saveButton(page), edge: "bottom" });
 	});
