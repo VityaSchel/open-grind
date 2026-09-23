@@ -15,6 +15,7 @@ export const apiErrorKinds = [
 	"SessionCleared",
 	"ContentTooLarge",
 	"Recaptcha",
+	"Push",
 ] as const;
 
 export type ApiErrorKind = (typeof apiErrorKinds)[number];

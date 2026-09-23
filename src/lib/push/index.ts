@@ -1,0 +1,122 @@
+import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
+
+import { asAppError } from "$lib/api/methods";
+import { isAndroidPlatform } from "$lib/platform/os";
+import { getInstalledVersion } from "$lib/updates";
+import { FCM_COMPONENT } from "$lib/updates/components";
+import {
+	type NotificationMode,
+	notificationModeSchema,
+	type NotificationPermission,
+	notificationPermissionSchema,
+	type PushCategory,
+	type PushCategoryName,
+	pushCategorySchema,
+	type PushErrorReason,
+	pushErrorSchema,
+	type PushSignal,
+	pushSignalSchema,
+	type PushToken,
+	pushTokenSchema,
+} from "./types";
+
+export * from "./types";
+
+export function pushAvailableHere(): boolean {
+	return isTauri() && isAndroidPlatform();
+}
+
+export function pushErrorReason(error: unknown): PushErrorReason | null {
+	const app = asAppError(error);
+	if (app?.kind !== "Push") return null;
+	return pushErrorSchema.safeParse(app.message).data?.reason ?? "failed";
+}
+
+export async function addonReady(): Promise<void> {
+	await invoke("push_addon_ready");
+}
+
+export async function mintPushToken(): Promise<PushToken> {
+	return pushTokenSchema.parse(await invoke("push_token"));
+}
+
+export async function deletePushToken(): Promise<void> {
+	await invoke("push_delete_token");
+}
+
+export async function notificationsEnabled(): Promise<boolean> {
+	return (await invoke<boolean>("push_notifications_enabled")) === true;
+}
+
+export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+	await invoke("push_set_notifications_enabled", { enabled });
+}
+
+export async function openNotificationSettings(): Promise<void> {
+	await invoke("push_open_notification_settings");
+}
+
+export async function currentMode(): Promise<NotificationMode> {
+	return notificationModeSchema.parse(await invoke("push_mode"));
+}
+
+export async function setMode(mode: NotificationMode): Promise<void> {
+	await invoke("push_set_mode", { mode });
+}
+
+export async function inFastMode(): Promise<boolean> {
+	return (await currentMode().catch(() => "slow")) === "fast";
+}
+
+export async function fcmServiceInstalled(): Promise<boolean> {
+	return (
+		(await getInstalledVersion(FCM_COMPONENT).catch(() => null)) !== null
+	);
+}
+
+export async function pushCategories(): Promise<PushCategory[]> {
+	return pushCategorySchema.array().parse(await invoke("push_categories"));
+}
+
+export async function setPushCategory({
+	category,
+	enabled,
+}: {
+	category: PushCategoryName;
+	enabled: boolean;
+}): Promise<void> {
+	await invoke("push_set_category", { category, enabled });
+}
+
+export async function openPushCategorySettings(
+	category: PushCategoryName,
+): Promise<void> {
+	await invoke("push_open_category_settings", { category });
+}
+
+export async function notificationPermission(): Promise<NotificationPermission> {
+	return notificationPermissionSchema.parse(
+		await invoke("push_notification_permission"),
+	);
+}
+
+export async function requestNotificationPermission(): Promise<NotificationPermission> {
+	return notificationPermissionSchema.parse(
+		await invoke("push_request_notification_permission"),
+	);
+}
+
+export async function takePushDeeplink(): Promise<string | null> {
+	return (await invoke<string | null>("push_take_deeplink")) ?? null;
+}
+
+export async function watchPush(
+	handler: (signal: PushSignal) => void,
+): Promise<void> {
+	const onEvent = new Channel<unknown>();
+	onEvent.onmessage = (payload) => {
+		const signal = pushSignalSchema.safeParse(payload);
+		if (signal.success) handler(signal.data);
+	};
+	await invoke("push_watch", { onEvent });
+}

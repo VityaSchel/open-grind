@@ -9,6 +9,11 @@ mod haptics;
 mod hex;
 pub mod media;
 mod photo;
+#[cfg(test)]
+mod pin_support;
+mod plugin_rejection;
+#[cfg(any(target_os = "android", test))]
+mod push_poll;
 mod scroll_phase;
 mod state;
 mod storage;
@@ -147,7 +152,8 @@ pub fn run() {
 	let builder = builder
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
-		.plugin(api::recaptcha::plugin());
+		.plugin(api::recaptcha::plugin())
+		.plugin(api::push::plugin());
 
 	builder
         .plugin(open_grind_platform_plugin())
@@ -182,6 +188,21 @@ pub fn run() {
             api::auth::account_restriction,
             api::auth::recaptcha_first_party_enabled,
             api::recaptcha::mint_recaptcha_token,
+            api::push::push_addon_ready,
+            api::push::push_token,
+            api::push::push_delete_token,
+            api::push::push_notifications_enabled,
+            api::push::push_set_notifications_enabled,
+            api::push::push_open_notification_settings,
+            api::push::push_mode,
+            api::push::push_set_mode,
+            api::push::push_categories,
+            api::push::push_set_category,
+            api::push::push_open_category_settings,
+            api::push::push_notification_permission,
+            api::push::push_request_notification_permission,
+            api::push::push_take_deeplink,
+            api::push::push_watch,
             storage::storage_backend,
             api::rest::request,
             upload::bytes::upload_media,
@@ -273,8 +294,10 @@ pub fn run() {
                 credentials,
                 token: None,
             });
-            let client = grindr::GrindrClient::new(device, resumed)
-                .expect("failed to build GrindrClient");
+            let client = state::share(|| {
+                grindr::GrindrClient::new(device, resumed)
+                    .expect("failed to build GrindrClient")
+            });
 
             {
                 let mut session_rx = client.session_receiver();

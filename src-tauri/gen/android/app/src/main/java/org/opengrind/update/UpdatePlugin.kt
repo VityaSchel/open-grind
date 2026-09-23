@@ -50,7 +50,8 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 	private fun isInstallableTarget(packageName: String): Boolean =
 		packageName == activity.packageName ||
 			packageName == GOOGLE_OAUTH ||
-			packageName == RECAPTCHA
+			packageName == RECAPTCHA ||
+			packageName == FCM
 
 	@Command
 	fun packageState(invoke: Invoke) {
@@ -190,34 +191,33 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 
 	@Command
 	fun beginTransfer(invoke: Invoke) {
-		val title = transferTitle(invoke)
-		runCatching { TransferService.start(context = activity, title = title) }
+		val transfer = transfer(invoke)
+		runCatching { TransferService.start(context = activity, transfer = transfer) }
 		invoke.resolve()
 	}
 
 	@Command
 	fun endTransfer(invoke: Invoke) {
-		val title = transferTitle(invoke)
-		runCatching { TransferService.stop(context = activity, title = title) }
+		val transfer = transfer(invoke)
+		runCatching { TransferService.stop(context = activity, transfer = transfer) }
 		invoke.resolve()
 	}
 
-	private fun transferTitle(invoke: Invoke): TransferTitle {
+	private fun transfer(invoke: Invoke): Transfer {
 		val args = runCatching { invoke.parseArgs(TransferArgs::class.java) }.getOrNull()
-		return TransferTitle.of(
-			updatesThisApp = args == null || args.packageName == activity.packageName,
-			addon = when (args?.packageName) {
-				GOOGLE_OAUTH -> TransferTitle.Addon.GoogleOauth
-				RECAPTCHA -> TransferTitle.Addon.Recaptcha
-				else -> null
-			},
-			kind = args?.kind,
-			purpose = args?.purpose,
+		return Transfer(
+			title = TransferTitle.of(
+				updatesThisApp = args == null || args.packageName == activity.packageName,
+				kind = args?.kind,
+				purpose = args?.purpose,
+			),
+			addonPackage = args?.packageName,
 		)
 	}
 
 	private companion object {
 		const val GOOGLE_OAUTH = "org.opengrind.google_oauth"
 		const val RECAPTCHA = "org.opengrind.recaptcha"
+		const val FCM = "org.opengrind.fcm"
 	}
 }

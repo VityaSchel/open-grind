@@ -1,0 +1,99 @@
+use tauri::AppHandle;
+
+use super::{
+	NotificationPermission, NotificationPermissionState, PushCategory,
+	PushError, PushMode, PushSignal,
+};
+
+const UNSUPPORTED: PushError = PushError::UnsupportedPlatform;
+
+pub async fn addon_ready(_app: &AppHandle) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn token(_app: &AppHandle) -> Result<String, PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn delete_token(_app: &AppHandle) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn notifications_enabled(
+	_app: &AppHandle,
+) -> Result<bool, PushError> {
+	Ok(false)
+}
+
+pub async fn set_notifications_enabled(
+	_app: &AppHandle,
+	_enabled: bool,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn open_notification_settings(
+	_app: &AppHandle,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn mode(_app: &AppHandle) -> Result<PushMode, PushError> {
+	Ok(PushMode::Slow)
+}
+
+pub async fn set_mode(
+	_app: &AppHandle,
+	_mode: PushMode,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn categories(
+	_app: &AppHandle,
+) -> Result<Vec<PushCategory>, PushError> {
+	Ok(Vec::new())
+}
+
+pub async fn set_category(
+	_app: &AppHandle,
+	_category: String,
+	_enabled: bool,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn open_category_settings(
+	_app: &AppHandle,
+	_category: String,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn notification_permission(
+	_app: &AppHandle,
+) -> Result<NotificationPermission, PushError> {
+	Ok(NotificationPermission {
+		granted: false,
+		state: NotificationPermissionState::Denied,
+	})
+}
+
+pub async fn request_notification_permission(
+	_app: &AppHandle,
+) -> Result<NotificationPermission, PushError> {
+	Err(UNSUPPORTED)
+}
+
+pub async fn take_deeplink(
+	_app: &AppHandle,
+) -> Result<Option<String>, PushError> {
+	Ok(None)
+}
+
+pub fn watch(
+	_app: &AppHandle,
+	_on_event: tauri::ipc::Channel<PushSignal>,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}

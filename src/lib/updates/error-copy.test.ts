@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	ADDON_KEYS,
+	ADDON_NAME,
 	APP_COMPONENT,
+	FCM_COMPONENT,
 	GOOGLE_OAUTH_COMPONENT,
 	RECAPTCHA_COMPONENT,
 } from "./components";
@@ -319,5 +322,50 @@ describe("copy for the reCAPTCHA helper", () => {
 				title: "Failed to verify the reCAPTCHA helper",
 			}),
 		).toBeUndefined();
+	});
+});
+
+describe("copy for the FCM service", () => {
+	const component = FCM_COMPONENT;
+
+	it("names the service wherever an add-on is named", () => {
+		expect(
+			unsupportedText({ reason: "foreignTarget" }, { component }),
+		).toBe(
+			"The installed FCM service isn't signed by Open Grind. Uninstall it to install the official one.",
+		);
+		expect(
+			updateErrorText(
+				{ kind: "signature" },
+				{ fallback: "fallback", component },
+			),
+		).toBe("Failed to verify the FCM service");
+		expect(noReleaseText({ component })).toBe(
+			"No FCM service release is published yet",
+		);
+		expect(
+			installFailedText({ code: -4, component, kind: "install" }),
+		).toBe("Not enough storage to install the FCM service");
+		expect(
+			problemBody({ component, title: "Couldn't check for updates" }),
+		).toBe("FCM service");
+	});
+});
+
+describe("copy that must name every add-on", () => {
+	it("never falls back to generic wording for a known add-on", () => {
+		for (const component of ADDON_KEYS) {
+			expect(
+				updateErrorText(
+					{ kind: "busy", detail: { component } },
+					{ fallback: "fallback", component: APP_COMPONENT },
+				),
+			).toBe(
+				`Wait for the ${ADDON_NAME[component]} to finish downloading`,
+			);
+			expect(
+				unsupportedText({ reason: "foreignTarget" }, { component }),
+			).toContain(ADDON_NAME[component]);
+		}
 	});
 });

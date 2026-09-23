@@ -66,7 +66,16 @@ pub static RECAPTCHA: Component = Component {
 	target: Target::Package("org.opengrind.recaptcha"),
 };
 
-pub static ALL: &[&Component] = &[&APP, &GOOGLE_OAUTH, &RECAPTCHA];
+pub static FCM: Component = Component {
+	key: "fcm",
+	index_path:
+		"api/v1/repos/open-grind/fcm-service/releases?limit=3&draft=false",
+	asset_stem: "open-grind-fcm-service",
+	asset_suffix: universal_asset_suffix,
+	target: Target::Package("org.opengrind.fcm"),
+};
+
+pub static ALL: &[&Component] = &[&APP, &GOOGLE_OAUTH, &RECAPTCHA, &FCM];
 
 fn abi_asset_suffix() -> Option<String> {
 	abi_token(std::env::consts::OS, std::env::consts::ARCH).map(str::to_owned)
@@ -245,6 +254,20 @@ mod tests {
 			RECAPTCHA
 				.payload_name("v1.0.0", universal_token("android").unwrap()),
 			"open-grind-recaptcha-helper-v1.0.0-android.apk"
+		);
+	}
+
+	#[test]
+	fn the_fcm_addon_is_its_own_package_and_release_track() {
+		assert!(!FCM.is_self());
+		assert_eq!(FCM.install_target(), "org.opengrind.fcm");
+		assert_eq!(
+			FCM.index_path,
+			"api/v1/repos/open-grind/fcm-service/releases?limit=3&draft=false"
+		);
+		assert_eq!(
+			FCM.payload_name("v1.0.1", universal_token("android").unwrap()),
+			"open-grind-fcm-service-v1.0.1-android.apk"
 		);
 	}
 

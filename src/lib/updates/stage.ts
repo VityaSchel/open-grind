@@ -40,28 +40,26 @@ const appTitles: Record<UpdateStage, string> = {
 	installing: "Installing…",
 };
 
-function addonTitles(
-	name: string,
-): Record<Release["kind"], Record<UpdateStage, string>> {
-	return {
-		install: {
-			available: `${name} is available`,
-			downloading: `Downloading the ${name}…`,
-			verifying: `Verifying the ${name}…`,
-			paused: `${name} is ready to download`,
-			ready: `${name} is downloaded`,
-			installing: `Installing the ${name}…`,
-		},
-		update: {
-			available: `${name} update available`,
-			downloading: `Downloading the ${name} update…`,
-			verifying: `Verifying the ${name} update…`,
-			paused: `${name} update is available`,
-			ready: `${name} update is downloaded`,
-			installing: `Updating the ${name}…`,
-		},
-	};
-}
+type AddonTitle = (addon: string) => string;
+
+const addonTitles: Record<Release["kind"], Record<UpdateStage, AddonTitle>> = {
+	install: {
+		available: (addon) => `${addon} is available`,
+		downloading: (addon) => `Downloading the ${addon}…`,
+		verifying: (addon) => `Verifying the ${addon}…`,
+		paused: (addon) => `${addon} is ready to download`,
+		ready: (addon) => `${addon} is downloaded`,
+		installing: (addon) => `Installing the ${addon}…`,
+	},
+	update: {
+		available: (addon) => `${addon} update available`,
+		downloading: (addon) => `Downloading the ${addon} update…`,
+		verifying: (addon) => `Verifying the ${addon} update…`,
+		paused: (addon) => `${addon} update is available`,
+		ready: (addon) => `${addon} update is downloaded`,
+		installing: (addon) => `Updating the ${addon}…`,
+	},
+};
 
 type StageCopyArgs = {
 	component: ComponentKey;
@@ -71,7 +69,7 @@ type StageCopyArgs = {
 
 export function stageTitle({ component, kind, stage }: StageCopyArgs): string {
 	if (component === APP_COMPONENT) return appTitles[stage];
-	return addonTitles(ADDON_NAME[component])[kind][stage];
+	return addonTitles[kind][stage](ADDON_NAME[component]);
 }
 
 const installBodies: Record<UpdateStage, string | undefined> = {

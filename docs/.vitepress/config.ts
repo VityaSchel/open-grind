@@ -29,6 +29,7 @@ const staticPages: StaticSidebarPages = {
 				{ text: "Commands", link: "/grindr-api/websocket/commands" },
 			],
 		},
+		{ text: "Push Notifications", link: "/grindr-api/push-notifications" },
 		{ text: "Appendix", link: "/grindr-api/appendix" },
 		{ text: "Shared types", link: "/grindr-api/shared-types" },
 	],
@@ -45,17 +46,30 @@ export default defineConfig({
 
 	cleanUrls: true,
 
-	rewrites: {
-		"generated/:path*": ":path*",
-	},
+	rewrites: { "generated/:path*": ":path*" },
 
 	title: "Open Grind",
 	description: "Open Grind project documentation and Grindr API reference",
 	head: [
-		["link", { rel: "icon", type: "image/png", href: "/favicon-96x96.png", sizes: "96x96" }],
+		[
+			"link",
+			{
+				rel: "icon",
+				type: "image/png",
+				href: "/favicon-96x96.png",
+				sizes: "96x96",
+			},
+		],
 		["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
 		["link", { rel: "shortcut icon", href: "/favicon.ico" }],
-		["link", { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" }],
+		[
+			"link",
+			{
+				rel: "apple-touch-icon",
+				sizes: "180x180",
+				href: "/apple-touch-icon.png",
+			},
+		],
 	],
 
 	themeConfig: {
@@ -70,9 +84,7 @@ export default defineConfig({
 			{ text: "Grindr API", link: "/grindr-api" },
 		],
 
-		search: {
-			provider: "local",
-		},
+		search: { provider: "local" },
 
 		sidebar: {
 			"/guides/": [
@@ -92,8 +104,15 @@ export default defineConfig({
 							text: "Video codecs on Linux",
 							link: "/guides/codecs",
 						},
+						{
+							text: "Notifications",
+							link: "/guides/notifications",
+						},
 						{ text: "FAQ", link: "/guides/faq" },
-						{ text: "Grindr API bypasses", link: "/guides/bypasses" },
+						{
+							text: "Grindr API bypasses",
+							link: "/guides/bypasses",
+						},
 					],
 				},
 				{
@@ -145,7 +164,10 @@ export default defineConfig({
 		},
 
 		socialLinks: [
-			{ icon: "git", link: "https://git.opengrind.org/open-grind/open-grind/" },
+			{
+				icon: "git",
+				link: "https://git.opengrind.org/open-grind/open-grind/",
+			},
 		],
 
 		footer: {
@@ -155,14 +177,11 @@ export default defineConfig({
 		},
 	},
 
-	vite: {
-		plugins: [icons()],
-		esbuild: { legalComments: "inline" },
-	},
+	vite: { plugins: [icons()], esbuild: { legalComments: "inline" } },
 
 	markdown: {
 		config: (md) => {
-			md.use(footnote)
-		}
-	}
+			md.use(footnote);
+		},
+	},
 });

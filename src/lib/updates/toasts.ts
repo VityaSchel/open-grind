@@ -10,6 +10,7 @@ import {
 	ADDON_NAME,
 	type AddonKey,
 	APP_COMPONENT,
+	COMPONENT_REPO,
 	type ComponentKey,
 } from "./components";
 import type { InstallKind } from "./flow";
@@ -19,13 +20,6 @@ import UpdateToast from "./UpdateToast.svelte";
 
 const PLACEMENT = { position: "top-center" } as const;
 const CARD_CLASS = "update-toast rounded-2xl";
-const RELEASES: Record<ComponentKey, string> = {
-	app: "https://git.opengrind.org/open-grind/open-grind/releases/tag",
-	"google-oauth":
-		"https://git.opengrind.org/open-grind/google-oauth-app/releases/tag",
-	recaptcha:
-		"https://git.opengrind.org/open-grind/recaptcha-helper/releases/tag",
-};
 const INSTALLED_TOAST = "update-installed";
 const CHECK_RESULT_TOAST = "update-check-result";
 
@@ -108,7 +102,10 @@ export async function showInstalled(): Promise<void> {
 			icon: CheckCircleIcon,
 			title: `Updated to ${tag}`,
 			body: "Tap to see changelog",
-			onActivate: () => openExternalLink(`${RELEASES.app}/${tag}`),
+			onActivate: () =>
+				openExternalLink(
+					`${COMPONENT_REPO[APP_COMPONENT]}/releases/tag/${tag}`,
+				),
 		},
 	});
 }
@@ -122,8 +119,8 @@ export function showAddonInstalled({
 	tag: string | null;
 	kind: InstallKind;
 }): void {
-	const name = ADDON_NAME[component];
-	const done = kind === "install" ? `${name} installed` : `${name} updated`;
+	const addon = ADDON_NAME[component];
+	const done = kind === "install" ? `${addon} installed` : `${addon} updated`;
 	toast.custom(ToastCard, {
 		...PLACEMENT,
 		id: `${INSTALLED_TOAST}:${component}`,
@@ -134,7 +131,10 @@ export function showAddonInstalled({
 			title: tag ? `${done}: ${tag}` : done,
 			body: tag ? "Tap to see changelog" : undefined,
 			onActivate: tag
-				? () => openExternalLink(`${RELEASES[component]}/${tag}`)
+				? () =>
+						openExternalLink(
+							`${COMPONENT_REPO[component]}/releases/tag/${tag}`,
+						)
 				: undefined,
 		},
 	});

@@ -28,6 +28,7 @@ const preferencesSchema = z.object({
 	hapticFeedback: z.boolean().default(true),
 	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
+	notificationsEnabled: z.boolean().default(false),
 	revealMessageRead: z.boolean().default(false),
 	revealProfileViews: z.boolean().default(false),
 	stayOnline: z.boolean().default(true),
@@ -142,6 +143,7 @@ const accountPreferenceKeys = [
 	"autoUpdateLocation",
 	"geohash",
 	"gridSearchFilters",
+	"notificationsEnabled",
 ] as const;
 
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {

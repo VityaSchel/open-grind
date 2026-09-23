@@ -32,6 +32,14 @@ bun scripts/svg-to-android-vector.ts \
   "$RES/drawable/ic_launcher_monochrome.xml" \
   --width 108 --height 108 --scale 0.832 --mono '#FFFFFF'
 
+# Notification small icon: Material's 24dp frame with a 20dp live area, so the
+# mark fills the status bar instead of the launcher icon's adaptive safe zone
+bun scripts/svg-to-android-vector.ts \
+  contrib/logo/app-foreground-icon.svg \
+  "$RES/drawable/ic_notification.xml" \
+  --width 24 --height 24 --scale 1.6414 \
+  --translate-x 0.82 --translate-y -46.78 --mono '#FFFFFF'
+
 # Adaptive icon
 cat > "$RES/mipmap-anydpi-v26/ic_launcher.xml" <<'XML'
 <?xml version="1.0" encoding="utf-8"?>

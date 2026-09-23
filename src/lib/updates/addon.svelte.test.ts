@@ -87,7 +87,28 @@ describe("the add-on activity the sign-in screen observes", () => {
 		expect(toasts.showAddonInstalled).toHaveBeenCalledOnce();
 	});
 
-	it("does not count an install the user cancelled", async () => {
+	it("tells each install listener once about a finished install, never a canceled one", async () => {
+		const { addonUpdates, onAddonInstalled } =
+			await import("./addon.svelte");
+		const listener = vi.fn(() => Promise.resolve());
+		onAddonInstalled({ component: "google-oauth", listener });
+		onAddonInstalled({ component: "google-oauth", listener });
+		readiness["google-oauth"] = ready("install");
+
+		await addonUpdates.installNow();
+		emitOutcome(
+			outcomeOf("google-oauth", { succeeded: false, canceled: true }),
+		);
+		await settled();
+		expect(listener).not.toHaveBeenCalled();
+
+		await addonUpdates.installNow();
+		emitOutcome(outcomeOf("google-oauth"));
+		await settled();
+		expect(listener).toHaveBeenCalledOnce();
+	});
+
+	it("does not count an install the user canceled", async () => {
 		const { addonActivity, addonUpdates } = await import("./addon.svelte");
 		readiness["google-oauth"] = ready("install");
 
@@ -141,7 +162,7 @@ describe("the reCAPTCHA helper's update flow", () => {
 		vi.useRealTimers();
 	});
 
-	it("is watched alongside the Google OAuth app", async () => {
+	it("is watched alongside every other add-on", async () => {
 		vi.useFakeTimers();
 		await probedCapability(releaseSigned);
 		const { startAddonUpdateWatch } = await import("./addon.svelte");
@@ -151,10 +172,10 @@ describe("the reCAPTCHA helper's update flow", () => {
 		const checked = api.checkForUpdate.mock.calls.map(
 			([{ component }]) => component,
 		);
-		expect(checked).toHaveLength(2);
 		expect(checked).toEqual(
-			expect.arrayContaining(["google-oauth", "recaptcha"]),
+			expect.arrayContaining(["google-oauth", "recaptcha", "fcm"]),
 		);
+		expect(checked).toHaveLength(3);
 	});
 
 	it("offers its update without touching the sign-in screen's activity", async () => {

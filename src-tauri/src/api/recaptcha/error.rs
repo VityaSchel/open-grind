@@ -3,8 +3,7 @@ use std::fmt;
 use serde::Serialize;
 
 use crate::error::AppError;
-
-const MAX_DETAIL_CHARS: usize = 64;
+use crate::plugin_rejection::error_name;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "reason", content = "detail")]
@@ -34,19 +33,10 @@ impl RecaptchaError {
 			Some("untrusted-caller") => Self::UntrustedCaller,
 			Some("unsupported-action") => Self::UnsupportedAction,
 			Some("grindr-missing") => Self::GrindrMissing,
-			Some("mint-failed") => Self::MintFailed(
-				detail.filter(|d| is_error_name(d)).map(str::to_owned),
-			),
+			Some("mint-failed") => Self::MintFailed(error_name(detail)),
 			_ => Self::Failed,
 		}
 	}
-}
-
-fn is_error_name(detail: &str) -> bool {
-	(1..=MAX_DETAIL_CHARS).contains(&detail.len())
-		&& detail
-			.bytes()
-			.all(|b| b.is_ascii_alphanumeric() || b == b'_')
 }
 
 impl fmt::Display for RecaptchaError {
@@ -118,22 +108,13 @@ mod tests {
 
 	#[test]
 	fn a_mint_failure_detail_that_is_not_an_error_name_is_dropped() {
-		let too_long = "A".repeat(MAX_DETAIL_CHARS + 1);
-		for detail in [
-			"",
-			"0cAFcWeA-token.part",
-			"has space",
-			"Bearer:x",
-			too_long.as_str(),
-		] {
-			assert_eq!(
-				RecaptchaError::from_rejection(
-					Some("mint-failed"),
-					Some(detail)
-				),
-				RecaptchaError::MintFailed(None)
-			);
-		}
+		assert_eq!(
+			RecaptchaError::from_rejection(
+				Some("mint-failed"),
+				Some("0cAFcWeA-token.part")
+			),
+			RecaptchaError::MintFailed(None)
+		);
 	}
 
 	#[test]

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Effective date: 2026-09-16
+Effective date: 2026-09-22
 
 This policy covers the Open Grind app, made by Open Grind Governance. Contact: [admin@opengrind.org](mailto:admin@opengrind.org)
 
@@ -8,8 +8,9 @@ This policy covers the Open Grind app, made by Open Grind Governance. Contact: [
 
 The app contacts each service below only for the features you use, over encrypted connections. Each service receives your IP address.
 
-- **Grindr**: your sign-in details, profile, photos, messages, location, reports and everything else you do on Grindr through the app, plus random device identifiers the app creates. See [Grindr's Privacy Policy](https://www.grindr.com/privacy-policy).
+- **Grindr**: your sign-in details, profile, photos, messages, location, reports and everything else you do on Grindr through the app, plus random device identifiers the app creates and, if you choose Fast mode for notifications, the push token and installation ID Google issues for this device. See [Grindr's Privacy Policy](https://www.grindr.com/privacy-policy).
 - **Google**, if you sign in with Google: what you enter on Google's sign-in page. See [Google's Privacy Policy](https://policies.google.com/privacy).
+- **Google**, if you choose Fast mode for notifications: the FCM service add-on registers this device with Firebase Cloud Messaging through Google Play services or microG, and Grindr sends your notifications through it, including sender names and message text. See [Google's Privacy Policy](https://policies.google.com/privacy).
 - **Meta**, if you sign in with Facebook: what you enter on Facebook's sign-in page. See [Meta's Privacy Policy](https://www.facebook.com/privacy/policy/).
 - **OpenStreetMap**, when the app shows a map for picking your location: requests for the map tiles of the area shown. See the [OpenStreetMap Foundation's Privacy Policy](https://osmfoundation.org/wiki/Privacy_Policy).
 - **git.opengrind.org**, if you check for updates, allow automatic update checks, or install or update an add-on: requests for release lists and files, with no account details or device identifiers. The file names can show your operating system and processor type.

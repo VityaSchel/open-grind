@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<uses-permission android:name="android.permission.INTERNET" />
 
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
 	<uses-permission android:name="org.opengrind.google_oauth.permission.REQUEST_TOKEN" />
 	<uses-permission android:name="org.opengrind.recaptcha.permission.MINT_TOKEN" />
 
@@ -13,6 +17,7 @@
 	<queries>
 		<package android:name="org.opengrind.google_oauth" />
 		<package android:name="org.opengrind.recaptcha" />
+		<package android:name="org.opengrind.fcm" />
 	</queries>
 
 	<!-- AndroidTV support -->
@@ -63,6 +68,20 @@
 		<receiver
 			android:name="org.opengrind.update.InstallResultReceiver"
 			android:exported="false" />
+
+		<service
+			android:name="org.opengrind.push.PushPollService"
+			android:exported="false"
+			android:permission="android.permission.BIND_JOB_SERVICE" />
+
+		<receiver
+			android:name="org.opengrind.push.PushReceiver"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="org.opengrind.fcm.action.MESSAGE" />
+				<action android:name="org.opengrind.fcm.action.NEW_TOKEN" />
+			</intent-filter>
+		</receiver>
 
 		<provider
 			android:name="androidx.core.content.FileProvider"

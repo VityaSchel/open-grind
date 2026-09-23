@@ -184,17 +184,17 @@ pub use platform::{
 
 #[cfg(test)]
 mod pins {
-	use std::ops::Range;
-
 	use super::{suffix_for, Unsupported};
+	use crate::pin_support::{
+		addon_gate_verdicts, assert_rejections_classify_as, braced_block,
+		is_identifier, kotlin_constant, kotlin_package, source_tokens,
+		spaced_match, squashed, ADDON_GATE, MANIFEST,
+	};
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
 	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
 	const GATE: &str = include_str!(
 		"../../../../android-logic/src/main/kotlin/org/opengrind/update/InstallGate.kt"
-	);
-	const MANIFEST: &str = include_str!(
-		"../../../../gen/android/app/src/main/AndroidManifest.xml"
 	);
 	const PLAY_OVERLAY: &str = include_str!(
 		"../../../../gen/android/app/src/play/AndroidManifest.xml"
@@ -239,10 +239,6 @@ mod pins {
 		"../../../../gen/android/app/src/main/java/org/opengrind/update/TransferService.kt"
 	);
 
-	const ADDON_GATE: &str = include_str!(
-		"../../../../android-logic/src/main/kotlin/org/opengrind/addon/AddonGate.kt"
-	);
-
 	const RECAPTCHA_PLUGIN: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/recaptcha/RecaptchaPlugin.kt"
 	);
@@ -251,6 +247,14 @@ mod pins {
 
 	const MINT_TOKEN_PERMISSION: &str =
 		"org.opengrind.recaptcha.permission.MINT_TOKEN";
+
+	const ADDON_NAMES: &str = include_str!(
+		"../../../../gen/android/app/src/main/java/org/opengrind/addon/AddonNames.kt"
+	);
+
+	const ANDROID_STRINGS: &str = include_str!(
+		"../../../../gen/android/app/src/main/res/values/strings.xml"
+	);
 
 	const SIGNING_CERTIFICATES: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/addon/PackageSigningCertificates.kt"
@@ -265,20 +269,6 @@ mod pins {
 	const REQUEST_TOKEN_ACTION: &str =
 		"org.opengrind.google_oauth.action.REQUEST_TOKEN";
 	const TOKEN_EXTRA: &str = "org.opengrind.google_oauth.extra.TOKEN";
-
-	fn squashed(source: &str) -> String {
-		source.split_whitespace().collect()
-	}
-
-	fn kotlin_constant<'a>(source: &'a str, file: &str, name: &str) -> &'a str {
-		let start = spaced_match(source, &format!("const val {name} = \""))
-			.unwrap_or_else(|| panic!("{file} no longer declares {name}"))
-			.end;
-		let length = source[start..]
-			.find('"')
-			.unwrap_or_else(|| panic!("{file} {name} is not a string literal"));
-		&source[start..start + length]
-	}
 
 	fn bridge_function(name: &str) -> &'static str {
 		let start = ANDROID_BRIDGE
@@ -327,98 +317,6 @@ mod pins {
 			.unwrap_or_else(|| {
 				panic!("the manifest has no <{tag}> named {name}")
 			})
-	}
-
-	fn source_tokens(source: &str) -> Vec<&str> {
-		let mut tokens = Vec::new();
-		let mut word_start = None;
-		for (at, character) in source.char_indices() {
-			match (is_identifier(character), word_start) {
-				(true, None) => word_start = Some(at),
-				(false, Some(start)) => {
-					tokens.push(&source[start..at]);
-					word_start = None;
-				}
-				_ => {}
-			}
-			if !is_identifier(character) && !character.is_whitespace() {
-				tokens.push(&source[at..at + character.len_utf8()]);
-			}
-		}
-		if let Some(start) = word_start {
-			tokens.push(&source[start..]);
-		}
-		tokens
-	}
-
-	fn spaced_match(source: &str, header: &str) -> Option<Range<usize>> {
-		let tokens = source_tokens(header);
-		let first = *tokens.first()?;
-		source.match_indices(first).find_map(|(start, _)| {
-			if first.starts_with(is_identifier)
-				&& source[..start].ends_with(is_identifier)
-			{
-				return None;
-			}
-			let mut end = start;
-			for token in &tokens {
-				let rest = &source[end..];
-				let token_start = end + rest.len() - rest.trim_start().len();
-				if !source[token_start..].starts_with(token) {
-					return None;
-				}
-				end = token_start + token.len();
-				if token.starts_with(is_identifier)
-					&& source[end..].starts_with(is_identifier)
-				{
-					return None;
-				}
-			}
-			Some(start..end)
-		})
-	}
-
-	#[test]
-	fn a_spaced_match_ignores_layout_but_not_names() {
-		let source = "fun installPending(invoke: Invoke) {}\n\tfun install (\n\t\tinvoke : Invoke\n\t) {}";
-		let found = spaced_match(source, "fun install(invoke: Invoke)")
-			.expect("a reformatted declaration is still the declaration");
-		assert!(source[found].starts_with("fun install ("));
-		assert_eq!(spaced_match(source, "fun instal(invoke: Invoke)"), None);
-		assert_eq!(
-			spaced_match("funinstall(invoke: Invoke)", "fun install("),
-			None
-		);
-		assert_eq!(
-			spaced_match("class InstallArgsX", "class InstallArgs"),
-			None
-		);
-		assert_eq!(
-			spaced_match("internalclass InstallArgs", "class InstallArgs"),
-			None
-		);
-	}
-
-	fn braced_block<'a>(source: &'a str, file: &str, header: &str) -> &'a str {
-		let open = spaced_match(source, header)
-			.and_then(|found| {
-				source[found.end..].find('{').map(|brace| found.end + brace)
-			})
-			.unwrap_or_else(|| panic!("{file} no longer declares {header}"));
-		let mut depth = 0;
-		for (offset, character) in source[open..].char_indices() {
-			match character {
-				'{' => depth += 1,
-				'}' => {
-					depth -= 1;
-					if depth == 0 {
-						return &source[open + 1..open + offset];
-					}
-				}
-				_ => {}
-			}
-		}
-		panic!("{file} {header} has no closing brace")
 	}
 
 	fn gate_verdicts() -> Vec<String> {
@@ -662,10 +560,6 @@ mod pins {
 		}
 	}
 
-	fn is_identifier(character: char) -> bool {
-		character.is_alphanumeric() || character == '_'
-	}
-
 	fn declaration_at(source: &str, file: &str, header: &str) -> usize {
 		spaced_match(source, header)
 			.unwrap_or_else(|| panic!("{file} no longer declares {header}"))
@@ -875,49 +769,53 @@ mod pins {
 		RECAPTCHA_PAIR.assert_requests_carry_the_parsed_fields(&["mintToken"]);
 	}
 
-	#[test]
-	fn the_frontend_component_table_matches_the_rust_one() {
-		use super::super::component;
-
+	fn components_ts_constant(name: &str) -> String {
 		let source = squashed(COMPONENTS_TS);
-		let constant = |name: &str| {
-			let declaration = format!("exportconst{name}=\"");
-			let start = source.find(&declaration).unwrap_or_else(|| {
-				panic!("components.ts no longer declares {name} as a string")
-			}) + declaration.len();
-			source[start..]
-				.split('"')
-				.next()
-				.unwrap_or_default()
-				.to_owned()
-		};
-		let table_start = source
-			.find("COMPONENT_PACKAGE={")
-			.expect("components.ts no longer declares COMPONENT_PACKAGE")
-			+ "COMPONENT_PACKAGE={".len();
-		let table = &source[table_start..];
-		let table =
-			&table[..table.find('}').expect("COMPONENT_PACKAGE is not closed")];
+		let declaration = format!("exportconst{name}=\"");
+		let start = source.find(&declaration).unwrap_or_else(|| {
+			panic!("components.ts no longer declares {name} as a string")
+		}) + declaration.len();
+		source[start..]
+			.split('"')
+			.next()
+			.unwrap_or_default()
+			.to_owned()
+	}
 
-		let mut declared: Vec<(String, String)> = table
+	fn components_ts_table(name: &str) -> Vec<(String, String)> {
+		let source = squashed(COMPONENTS_TS);
+		let opening = format!("{name}={{");
+		let start = source.find(&opening).unwrap_or_else(|| {
+			panic!("components.ts no longer declares {name}")
+		}) + opening.len();
+		let table = &source[start..];
+		let table = &table[..table
+			.find('}')
+			.unwrap_or_else(|| panic!("{name} is not closed"))];
+		let mut entries: Vec<(String, String)> = table
 			.split(',')
 			.filter(|entry| !entry.is_empty())
 			.map(|entry| {
-				let (key, package) =
-					entry.split_once(':').unwrap_or_else(|| {
-						panic!("COMPONENT_PACKAGE entry {entry} is not key: package")
-					});
+				let (key, value) = entry.split_once(':').unwrap_or_else(|| {
+					panic!("{name} entry {entry} is not key: value")
+				});
 				let key = match key
 					.strip_prefix('[')
-					.and_then(|name| name.strip_suffix(']'))
+					.and_then(|constant| constant.strip_suffix(']'))
 				{
-					Some(name) => constant(name),
+					Some(constant) => components_ts_constant(constant),
 					None => key.trim_matches(['"', '\'']).to_owned(),
 				};
-				(key, package.trim_matches(['"', '\'']).to_owned())
+				(key, value.trim_matches(['"', '\'']).to_owned())
 			})
 			.collect();
-		declared.sort();
+		entries.sort();
+		entries
+	}
+
+	#[test]
+	fn the_frontend_component_table_matches_the_rust_one() {
+		use super::super::component;
 
 		let mut expected: Vec<(String, String)> = component::ALL
 			.iter()
@@ -931,9 +829,49 @@ mod pins {
 		expected.sort();
 
 		assert_eq!(
-			declared, expected,
+			components_ts_table("COMPONENT_PACKAGE"),
+			expected,
 			"install outcomes are routed by COMPONENT_PACKAGE, so it must name every component's install target"
 		);
+	}
+
+	#[test]
+	fn every_addon_is_named_the_same_in_the_app_and_in_its_download_notification(
+	) {
+		use super::super::component;
+
+		let names = components_ts_table("ADDON_NAME");
+		let mut addons: Vec<&str> = component::ALL
+			.iter()
+			.filter(|component| !component.is_self())
+			.map(|component| component.key)
+			.collect();
+		addons.sort_unstable();
+		assert_eq!(
+			names
+				.iter()
+				.map(|(key, _)| key.as_str())
+				.collect::<Vec<_>>(),
+			addons,
+			"ADDON_NAME must name every add-on the component table knows"
+		);
+
+		for (key, name) in names {
+			let resource = format!("addon_name_{}", key.replace('-', "_"));
+			assert!(
+				squashed(ANDROID_STRINGS).contains(&squashed(&format!(
+					"<string name=\"{resource}\">{name}</string>"
+				))),
+				"strings.xml {resource} does not match ADDON_NAME, so the download notification names the add-on differently from the rest of the app"
+			);
+			let package = component::by_key(&key).unwrap().install_target();
+			assert!(
+				squashed(ADDON_NAMES).contains(&squashed(&format!(
+					"\"{package}\"->R.string.{resource}"
+				))),
+				"AddonNames.kt does not map {package} to {resource}"
+			);
+		}
 	}
 
 	#[test]
@@ -998,14 +936,6 @@ mod pins {
 		}
 	}
 
-	fn gate_verdict_names() -> Vec<&'static str> {
-		braced_block(ADDON_GATE, "AddonGate.kt", "enum class Verdict")
-			.split(',')
-			.map(str::trim)
-			.filter(|name| !name.is_empty())
-			.collect()
-	}
-
 	#[test]
 	fn add_ons_are_trusted_by_their_pinned_release_certificate_whoever_signed_this_build(
 	) {
@@ -1046,7 +976,7 @@ mod pins {
 
 	#[test]
 	fn every_addon_plugin_answers_every_gate_verdict() {
-		let verdicts = gate_verdict_names();
+		let verdicts = addon_gate_verdicts();
 		assert!(
 			verdicts.contains(&"Launch") && verdicts.len() > 1,
 			"AddonGate.Verdict was not parsed: {verdicts:?}"
@@ -1075,7 +1005,7 @@ mod pins {
 
 		let file = "RecaptchaPlugin.kt";
 		let plugin = squashed(RECAPTCHA_PLUGIN);
-		let refusals = gate_verdict_names()
+		let refusals = addon_gate_verdicts()
 			.into_iter()
 			.filter(|verdict| *verdict != "Launch");
 		for verdict in refusals {
@@ -1125,11 +1055,10 @@ mod pins {
 			),
 			"{file} no longer passes the add-on's error and its detail through"
 		);
-		assert!(
-			squashed(RECAPTCHA_BRIDGE).contains(
-				"RecaptchaError::from_rejection(response.message.as_deref(),response.code.as_deref(),)"
-			),
-			"recaptcha/android.rs no longer classifies the rejection marker with its detail"
+		assert_rejections_classify_as(
+			"recaptcha/android.rs",
+			RECAPTCHA_BRIDGE,
+			"RecaptchaError",
 		);
 	}
 
@@ -1174,11 +1103,7 @@ mod pins {
 			);
 		}
 		let registered = squashed(RECAPTCHA_BRIDGE);
-		let package = RECAPTCHA_PLUGIN
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("RecaptchaPlugin.kt declares no package")
-			.trim();
+		let package = kotlin_package(RECAPTCHA_PLUGIN, file);
 		assert!(
 			registered.contains(&format!(
 				"register_android_plugin(\"{package}\",\"RecaptchaPlugin\",)"
@@ -1292,11 +1217,7 @@ mod pins {
 			"the Play overlay no longer removes REQUEST_INSTALL_PACKAGES"
 		);
 
-		let update_package = PLUGIN
-			.lines()
-			.find_map(|line| line.strip_prefix("package "))
-			.expect("UpdatePlugin.kt declares no package")
-			.trim();
+		let update_package = kotlin_package(PLUGIN, "UpdatePlugin.kt");
 		let updater: Vec<(&str, String)> = declared(MANIFEST)
 			.filter(|(tag, name, _)| {
 				["activity", "service", "receiver", "provider"].contains(tag)
@@ -1326,9 +1247,9 @@ mod pins {
 		let service = squashed(TRANSFER_SERVICE);
 		assert!(
 			service.contains(
-				"funstart(context:Context,title:TransferTitle,){holds.begin(title)context.startForegroundService("
+				"funstart(context:Context,transfer:Transfer,){holds.begin(transfer)context.startForegroundService("
 			) && service.contains(
-				"funstop(context:Context,title:TransferTitle,){valshowing=holds.end(title)if(showing==null){context.stopService("
+				"funstop(context:Context,transfer:Transfer,){valshowing=holds.end(transfer)if(showing==null){context.stopService("
 			),
 			"TransferService no longer restarts on every hold and stops only when the last one ends"
 		);

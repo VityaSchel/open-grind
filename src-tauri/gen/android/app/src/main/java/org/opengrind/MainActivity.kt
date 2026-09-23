@@ -17,6 +17,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.crates.keyring.Keyring
+import org.opengrind.push.AppForeground
+import org.opengrind.push.PushNotifier
 
 class MainActivity : TauriActivity() {
 	private var insetsTop = 0
@@ -74,7 +76,9 @@ class MainActivity : TauriActivity() {
 			context = this,
 			minSupportedMajor = BuildConfig.MIN_SUPPORTED_WEBVIEW_MAJOR,
 		).takeIf { it.disposition == WebViewSupport.Disposition.WARNING }
+		if (isRelaunch(savedInstanceState)) intent.removeExtra(PushNotifier.EXTRA_DEEPLINK)
 		super.onCreate(savedInstanceState)
+		AppForeground.catchUpPollingOnLeave(this)
 
 		onBackPressedDispatcher.addCallback(this, backGestureCallback)
 
@@ -111,6 +115,11 @@ class MainActivity : TauriActivity() {
 		}
 	}
 	
+	override fun onNewIntent(intent: Intent) {
+		setIntent(intent)
+		super.onNewIntent(intent)
+	}
+
 	override fun onWebViewCreate(webView: WebView) {
 		super.onWebViewCreate(webView)
 		webViewRef = webView
@@ -119,6 +128,9 @@ class MainActivity : TauriActivity() {
 		webView.addJavascriptInterface(BackInterface(), "__AndroidBack")
 		maybeWarnAboutWebView()
 	}
+
+	private fun isRelaunch(savedInstanceState: Bundle?) =
+		savedInstanceState != null || (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
 
 	private fun maybeWarnAboutWebView() {
 		val warning = pendingWebViewWarning ?: return

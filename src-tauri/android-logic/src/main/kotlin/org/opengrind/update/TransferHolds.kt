@@ -1,16 +1,16 @@
 package org.opengrind.update
 
 class TransferHolds {
-	private val active = ArrayList<TransferTitle>()
+	private val active = ArrayList<Transfer>()
 
 	@Synchronized
-	fun begin(title: TransferTitle) {
-		active.add(title)
+	fun begin(transfer: Transfer) {
+		active.add(transfer)
 	}
 
 	@Synchronized
-	fun end(title: TransferTitle): TransferTitle? {
-		active.remove(title)
+	fun end(transfer: Transfer): Transfer? {
+		active.remove(transfer)
 		return active.lastOrNull()
 	}
 }
