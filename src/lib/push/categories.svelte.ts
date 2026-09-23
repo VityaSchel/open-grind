@@ -15,8 +15,12 @@ const ANDROID_OWNED: ReadonlySet<PushCategoryName> = new Set<PushCategoryName>([
 	"messages",
 ]);
 
+let sentToSettings: PushCategoryName | null = null;
+
 export async function loadNotificationCategories(): Promise<void> {
 	if (!pushAvailableHere()) return;
+	const returningFrom = sentToSettings;
+	sentToSettings = null;
 	const [device, account] = await Promise.all([
 		pushCategories().catch(() => null),
 		getPushSettings().catch(() => null),
@@ -33,6 +37,11 @@ export async function loadNotificationCategories(): Promise<void> {
 		);
 	}
 	notificationCategories.list = device;
+	const allowed = device.find((entry) => entry.category === returningFrom);
+	if (allowed && !allowed.systemBlocked && !allowed.enabled)
+		await saveCategory({ category: allowed.category, enabled: true }).catch(
+			() => {},
+		);
 }
 
 export async function toggleNotificationCategory({
@@ -46,13 +55,25 @@ export async function toggleNotificationCategory({
 		(entry) => entry.category === category,
 	);
 	if (current?.systemBlocked) {
-		if (enabled) await openPushCategorySettings(category);
+		if (!enabled) return;
+		await openPushCategorySettings(category);
+		sentToSettings = category;
 		return;
 	}
 	if (ANDROID_OWNED.has(category)) {
 		if (!enabled) await openPushCategorySettings(category);
 		return;
 	}
+	await saveCategory({ category, enabled });
+}
+
+async function saveCategory({
+	category,
+	enabled,
+}: {
+	category: PushCategoryName;
+	enabled: boolean;
+}): Promise<void> {
 	await setPushCategory({ category, enabled });
 	if (category === "taps")
 		await setPushSettings({ tapPushNotification: enabled });

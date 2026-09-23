@@ -166,3 +166,76 @@ describe("toggling a notification category", () => {
 		},
 	);
 });
+
+describe("coming back from Android settings", () => {
+	const tapsOff = (systemBlocked: boolean): PushCategory[] =>
+		open.map((entry) =>
+			entry.category === "taps"
+				? { ...entry, enabled: false, systemBlocked }
+				: entry,
+		);
+
+	function deviceSaves(): void {
+		push.setPushCategory.mockImplementation(({ category, enabled }) => {
+			deviceReports(
+				tapsOff(false).map((entry) =>
+					entry.category === category ? { ...entry, enabled } : entry,
+				),
+			);
+			return Promise.resolve();
+		});
+	}
+
+	async function sentToSettings() {
+		deviceReports(tapsOff(true));
+		const module = await loaded();
+		await module.toggleNotificationCategory({
+			category: "taps",
+			enabled: true,
+		});
+		expect(push.openPushCategorySettings).toHaveBeenCalledWith("taps");
+		return module;
+	}
+
+	it("turns Received taps on when the user allowed them there", async () => {
+		const module = await sentToSettings();
+		deviceReports(tapsOff(false));
+		deviceSaves();
+
+		await module.loadNotificationCategories();
+
+		expect(push.setPushCategory).toHaveBeenCalledWith({
+			category: "taps",
+			enabled: true,
+		});
+		expect(account.setPushSettings).toHaveBeenCalledWith({
+			tapPushNotification: true,
+		});
+		expect(
+			module.notificationCategories.list.find(
+				(entry) => entry.category === "taps",
+			)?.enabled,
+		).toBe(true);
+	});
+
+	it("stays off when the user came back without allowing them, and forgets the trip", async () => {
+		const module = await sentToSettings();
+		await module.loadNotificationCategories();
+		deviceReports(tapsOff(false));
+
+		await module.loadNotificationCategories();
+
+		expect(push.setPushCategory).not.toHaveBeenCalled();
+		expect(account.setPushSettings).not.toHaveBeenCalled();
+	});
+
+	it("leaves a category Android allowed without Open Grind alone", async () => {
+		deviceReports(tapsOff(true));
+		const module = await loaded();
+		deviceReports(tapsOff(false));
+
+		await module.loadNotificationCategories();
+
+		expect(push.setPushCategory).not.toHaveBeenCalled();
+	});
+});
