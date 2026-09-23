@@ -16240,7 +16240,8 @@
 						"type": "integer"
 					},
 					"maxVideosPerAlbum": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, videos per album, counted separately from `maxContentItemsPerAlbum`, so a full album holds `maxContentItemsPerAlbum` photos plus `maxVideosPerAlbum` videos"
 					}
 				},
 				"x-render-on-tag": "messaging/albums",
