@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 
@@ -76,11 +77,7 @@ async function pick({
 	}
 
 	if (isAndroidPlatform()) {
-		const uris = await AndroidFs.showOpenFilePicker({
-			pickerType: "Gallery",
-			mimeTypes: filter.mimeTypes,
-			multiple,
-		});
+		const uris = await pickAndroidUris({ filter, multiple });
 		return uris.map(
 			(uri): PickedMedia => ({
 				source: "android",
@@ -109,6 +106,29 @@ async function pick({
 			path,
 		}),
 	);
+}
+
+async function pickAndroidUris({
+	filter,
+	multiple,
+}: {
+	filter: MediaFilter;
+	multiple: boolean;
+}): Promise<AndroidFsUri[]> {
+	const picked = await invoke<string[] | null>("pick_android_media", {
+		mimeTypes: filter.mimeTypes,
+		multiple,
+	});
+	if (picked !== null) {
+		return picked.map(
+			(uri): AndroidFsUri => ({ uri, documentTopTreeUri: null }),
+		);
+	}
+	return AndroidFs.showOpenFilePicker({
+		pickerType: "Gallery",
+		mimeTypes: filter.mimeTypes,
+		multiple,
+	});
 }
 
 function mimeTypeFromPath(path: string): string | null {

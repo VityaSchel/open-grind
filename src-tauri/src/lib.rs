@@ -9,6 +9,7 @@ mod error;
 mod haptics;
 mod hex;
 pub mod media;
+mod media_picker;
 mod photo;
 #[cfg(test)]
 mod pin_support;
@@ -168,6 +169,7 @@ pub fn run() {
         .plugin(api::facebook_oauth::plugin())
         .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
+        .plugin(media_picker::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -236,6 +238,7 @@ pub fn run() {
             api::update::commands::updater_open_install_permission_settings,
             api::update::commands::updater_discard,
             app_settings::open_app_settings,
+            media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
             app_data::read_app_data,
             app_data::write_app_data,
