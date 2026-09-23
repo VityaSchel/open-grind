@@ -14,12 +14,18 @@ import AlbumContentGrid from "./AlbumContentGrid.svelte";
 
 const uploads = getAlbumUploads(1);
 
-function limitsOf(maxContentItemsPerAlbum: number): UploadLimits {
+function limitsOf({
+	photos,
+	videos,
+}: {
+	photos: number;
+	videos: number;
+}): UploadLimits {
 	return {
 		maxContentSize: 10_000_000,
 		maxContentSizeHumanReadable: "10 MB",
-		maxContentItemsPerAlbum,
-		maxVideosPerAlbum: 1,
+		maxContentItemsPerAlbum: photos,
+		maxVideosPerAlbum: videos,
 	};
 }
 
@@ -208,7 +214,7 @@ describe("album content grid", () => {
 		).toHaveProperty("disabled", true);
 	});
 
-	it("stops adding once the album holds every photo it can", () => {
+	it("keeps adding open for a video once the album holds every photo it can", () => {
 		const { container } = render(AlbumContentGrid, {
 			props: {
 				uploads,
@@ -217,9 +223,32 @@ describe("album content grid", () => {
 				pending: [
 					{ key: "a", kind: "photo" },
 				] satisfies PendingUpload[],
+				removed: [],
+				saving: false,
+				limits: limitsOf({ photos: 2, videos: 1 }),
+				onToggleRemoved: () => {},
+				onReorder: () => {},
+			},
+		});
+
+		expect(
+			container.querySelector('[data-slot="add-tile"]'),
+		).toHaveProperty("disabled", false);
+	});
+
+	it("stops adding once the album holds every photo and video it can", () => {
+		const { container } = render(AlbumContentGrid, {
+			props: {
+				uploads,
+				albumId: 903,
+				content: [readyPhoto],
+				pending: [
+					{ key: "a", kind: "photo" },
+					{ key: "b", kind: "video" },
+				] satisfies PendingUpload[],
 				removed: [readyPhoto.contentId],
 				saving: false,
-				limits: limitsOf(2),
+				limits: limitsOf({ photos: 2, videos: 1 }),
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},
@@ -255,7 +284,7 @@ describe("album content grid", () => {
 				pending: [],
 				removed: [],
 				saving: false,
-				limits: limitsOf(0),
+				limits: limitsOf({ photos: 0, videos: 0 }),
 				onToggleRemoved: () => {},
 				onReorder: () => {},
 			},

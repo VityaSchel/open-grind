@@ -66,7 +66,7 @@ describe("creating an album from its first upload", () => {
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: "Trip" });
 
 		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
-			videoRoom: true,
+			room: { photos: true, videos: true },
 		});
 		expect(api.createAlbum).toHaveBeenCalledWith({ albumName: "Trip" });
 		expect(
@@ -102,7 +102,7 @@ describe("creating an album from its first upload", () => {
 		await createAlbumFromMedia({ uploads, myAlbums, albumName: null });
 
 		expect(media.pickInspectedAlbumMedia).toHaveBeenCalledWith({
-			videoRoom: false,
+			room: { photos: true, videos: false },
 		});
 	});
 

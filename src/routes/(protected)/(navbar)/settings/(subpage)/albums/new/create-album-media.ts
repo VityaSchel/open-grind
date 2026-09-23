@@ -3,6 +3,7 @@ import { toast } from "svelte-sonner";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import { createAlbum, getAlbumStorageLimits } from "$lib/api/messaging/albums";
+import { albumRoom } from "$lib/components/album/album";
 import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 import {
 	enqueueAlbumMedia,
@@ -27,7 +28,7 @@ export async function createAlbumFromMedia({
 	try {
 		const limits = await getAlbumStorageLimits();
 		const inspected = await pickInspectedAlbumMedia({
-			videoRoom: limits.maxVideosPerAlbum > 0,
+			room: albumRoom({ content: [], pending: [], limits }),
 		});
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });

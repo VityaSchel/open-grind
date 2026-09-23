@@ -75,14 +75,29 @@ beforeEach(() => {
 });
 
 describe("picking media for an album", () => {
-	it("offers videos only when asked to", async () => {
-		await pickInspectedAlbumMedia({ videoRoom: true });
-		await pickInspectedAlbumMedia({ videoRoom: false });
+	it("offers only the kinds the album has room for", async () => {
+		await pickInspectedAlbumMedia({ room: { photos: true, videos: true } });
+		await pickInspectedAlbumMedia({
+			room: { photos: true, videos: false },
+		});
+		await pickInspectedAlbumMedia({
+			room: { photos: false, videos: true },
+		});
 
 		expect(picker.pickMultipleMedia.mock.calls).toEqual([
 			["media"],
 			["image"],
+			["video"],
 		]);
+	});
+
+	it("opens no picker when the album has room for nothing", async () => {
+		expect(
+			await pickInspectedAlbumMedia({
+				room: { photos: false, videos: false },
+			}),
+		).toEqual([]);
+		expect(picker.pickMultipleMedia).not.toHaveBeenCalled();
 	});
 
 	it("refuses a file that is neither a photo nor a video", async () => {
@@ -91,7 +106,11 @@ describe("picking media for an album", () => {
 			desktopPick("b", "image/jpeg"),
 		]);
 
-		expect(await pickInspectedAlbumMedia({ videoRoom: true })).toEqual([
+		expect(
+			await pickInspectedAlbumMedia({
+				room: { photos: true, videos: true },
+			}),
+		).toEqual([
 			{
 				media: desktopPick("b", "image/jpeg"),
 				inspection: { kind: "photo", size: 1024 },
@@ -105,7 +124,11 @@ describe("picking media for an album", () => {
 	it("refuses a file it cannot inspect at all", async () => {
 		mediaFile.inspectMediaFile.mockRejectedValue(new Error("gone"));
 
-		expect(await pickInspectedAlbumMedia({ videoRoom: true })).toEqual([]);
+		expect(
+			await pickInspectedAlbumMedia({
+				room: { photos: true, videos: true },
+			}),
+		).toEqual([]);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
 			"That file isn't a photo or video",
 		);
@@ -133,7 +156,7 @@ describe("adding media to an album", () => {
 		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("image");
 	});
 
-	it("offers photos only once the album holds every photo it can", async () => {
+	it("offers videos only once the album holds every photo it can", async () => {
 		await addAlbumMedia({
 			uploads,
 			albumId: 903,
@@ -143,7 +166,26 @@ describe("adding media to an album", () => {
 				),
 		});
 
-		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("image");
+		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("video");
+	});
+
+	it("opens no picker once the album holds every photo and video it can", async () => {
+		await addAlbumMedia({
+			uploads,
+			albumId: 903,
+			content: () => [
+				...Array.from({ length: 10 }, (_, index) =>
+					item(index + 1, "image/jpeg"),
+				),
+				item(11, "video/mp4"),
+			],
+		});
+
+		expect(picker.pickMultipleMedia).not.toHaveBeenCalled();
+		expect(store.enqueue).not.toHaveBeenCalled();
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"The album is full. Remove something to add more.",
+		);
 	});
 
 	it("counts uploads in flight against the video limit", async () => {
@@ -165,7 +207,7 @@ describe("adding media to an album", () => {
 
 		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
 
-		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("image");
+		expect(picker.pickMultipleMedia).toHaveBeenCalledWith("video");
 	});
 
 	it("enqueues what was picked and names what the album had no room for", async () => {

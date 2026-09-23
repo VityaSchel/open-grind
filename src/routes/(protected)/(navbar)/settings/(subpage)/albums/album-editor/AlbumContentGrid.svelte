@@ -1,8 +1,5 @@
 <script lang="ts">
-	import {
-		albumMediaCounts,
-		isVideoContent,
-	} from "$lib/components/album/album";
+	import { albumRoom, isVideoContent } from "$lib/components/album/album";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
 	import { proxyMediaUrl } from "$lib/util/media";
@@ -74,11 +71,11 @@
 
 	const slots = $derived([...pendingSlots, ...contentSlots]);
 
-	const photos = $derived(albumMediaCounts({ content, pending }).photos);
-
-	const full = $derived(
-		limits !== null && photos >= limits.maxContentItemsPerAlbum,
+	const room = $derived(
+		limits === null ? null : albumRoom({ content, pending, limits }),
 	);
+
+	const full = $derived(room !== null && !room.photos && !room.videos);
 
 	async function add() {
 		adding = true;

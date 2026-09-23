@@ -159,26 +159,28 @@ describe("album uploads", () => {
 			],
 		});
 
-		expect(counts).toEqual({ leftOutFull: 2, leftOutVideoSlot: 0 });
+		expect(counts).toEqual({ leftOutFull: 1, leftOutVideoSlot: 1 });
 		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
 	});
 
-	it("leaves a video out of an album already full of photos", () => {
+	it("takes a video into an album already full of photos", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
 		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
 		const counts = uploads.enqueue({
 			albumId: ALBUM_ID,
-			inspected: [pick("a", "video/mp4")],
+			inspected: [pick("a", "video/mp4"), pick("b", "image/jpeg")],
 			limits,
 			content: [albumItem(1), albumItem(2), albumItem(3)],
 		});
 
 		expect(counts).toEqual({ leftOutFull: 1, leftOutVideoSlot: 0 });
-		expect(uploads.hasPending(ALBUM_ID)).toBe(false);
+		expect(uploads.pending(ALBUM_ID)).toEqual([
+			{ key: "a", kind: "video" },
+		]);
 	});
 
-	it("keeps the free video slot open while the album has photo room", () => {
+	it("takes only as many videos as the video limit allows", () => {
 		vi.mocked(uploadAlbumContent).mockReturnValue(new Promise(() => {}));
 		const uploads = getAlbumUploads(OUR_PROFILE_ID);
 
@@ -377,6 +379,26 @@ describe("album uploads", () => {
 		);
 
 		expect(uploadAlbumContent).toHaveBeenCalledTimes(1);
+		expect(toastError).toHaveBeenCalledWith(
+			"This album already holds 3 photos",
+		);
+	});
+
+	it("keeps uploading a queued video after the album refuses a photo", async () => {
+		vi.mocked(uploadAlbumContent)
+			.mockRejectedValueOnce(httpError(402))
+			.mockReturnValue(new Promise(() => {}));
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+
+		enqueue(uploads, pick("a", "image/jpeg"));
+		enqueue(uploads, pick("b", "video/mp4"));
+		await vi.waitFor(() =>
+			expect(uploadAlbumContent).toHaveBeenCalledTimes(2),
+		);
+
+		expect(vi.mocked(uploadAlbumContent).mock.calls[1]?.[0]).toMatchObject({
+			inspection: { kind: "video" },
+		});
 		expect(toastError).toHaveBeenCalledWith(
 			"This album already holds 3 photos",
 		);

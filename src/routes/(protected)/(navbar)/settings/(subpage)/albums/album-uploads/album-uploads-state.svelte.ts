@@ -199,17 +199,19 @@ class AlbumUploadsState {
 				({ inspection }) => inspection.kind === "photo",
 			),
 		]) {
-			if (photos >= limits.maxContentItemsPerAlbum) {
-				leftOutFull += 1;
-				continue;
-			}
 			if (pick.inspection.kind === "video") {
 				if (videos >= limits.maxVideosPerAlbum) {
 					leftOutVideoSlot += 1;
 					continue;
 				}
 				videos += 1;
-			} else photos += 1;
+			} else {
+				if (photos >= limits.maxContentItemsPerAlbum) {
+					leftOutFull += 1;
+					continue;
+				}
+				photos += 1;
+			}
 			accepted.push({ ...pick, albumId, limits });
 		}
 

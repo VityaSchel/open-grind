@@ -5,6 +5,7 @@ import {
 	albumDisplayName,
 	albumItemCountLabel,
 	albumMediaCounts,
+	albumRoom,
 	hasNoPlaysLeft,
 	isVideoContent,
 	readyAlbumMedia,
@@ -33,6 +34,40 @@ describe("isVideoContent", () => {
 	it("splits video from image content types", () => {
 		expect(isVideoContent("video/mp4")).toBe(true);
 		expect(isVideoContent("image/jpeg")).toBe(false);
+	});
+});
+
+describe("albumRoom", () => {
+	const photo = { contentType: "image/jpeg" };
+	const video = { contentType: "video/mp4" };
+	const limits = { maxContentItemsPerAlbum: 2, maxVideosPerAlbum: 1 };
+
+	it("keeps the video slot open once every photo slot is taken", () => {
+		expect(
+			albumRoom({ content: [photo, photo], pending: [], limits }),
+		).toEqual({ photos: false, videos: true });
+	});
+
+	it("keeps photo slots open once the video slot is taken", () => {
+		expect(
+			albumRoom({ content: [photo, video], pending: [], limits }),
+		).toEqual({ photos: true, videos: false });
+	});
+
+	it("has no room once every photo and video slot is taken", () => {
+		expect(
+			albumRoom({ content: [photo, photo, video], pending: [], limits }),
+		).toEqual({ photos: false, videos: false });
+	});
+
+	it("counts uploads in flight against their own slots", () => {
+		expect(
+			albumRoom({
+				content: [photo],
+				pending: [{ kind: "photo" }, { kind: "video" }],
+				limits,
+			}),
+		).toEqual({ photos: false, videos: false });
 	});
 });
 

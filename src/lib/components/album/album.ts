@@ -1,5 +1,10 @@
 import { type MediaFileKind, mediaFileKindOf } from "$lib/platform/media-file";
-import type { AlbumContent } from "$lib/model/messaging/albums";
+import type {
+	AlbumContent,
+	AlbumStorageLimits,
+} from "$lib/model/messaging/albums";
+
+export type AlbumRoom = { photos: boolean; videos: boolean };
 
 export function isVideoContent(contentType: string): boolean {
 	return mediaFileKindOf(contentType) === "video";
@@ -43,6 +48,25 @@ export function albumMediaCounts({
 	return {
 		photos: content.length - contentVideos + pendingOf("photo"),
 		videos: contentVideos + pendingOf("video"),
+	};
+}
+
+export function albumRoom({
+	content,
+	pending,
+	limits,
+}: {
+	content: readonly Pick<AlbumContent, "contentType">[];
+	pending: readonly { kind: MediaFileKind }[];
+	limits: Pick<
+		AlbumStorageLimits,
+		"maxContentItemsPerAlbum" | "maxVideosPerAlbum"
+	>;
+}): AlbumRoom {
+	const { photos, videos } = albumMediaCounts({ content, pending });
+	return {
+		photos: photos < limits.maxContentItemsPerAlbum,
+		videos: videos < limits.maxVideosPerAlbum,
 	};
 }
 
