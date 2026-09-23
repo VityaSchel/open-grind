@@ -9,6 +9,7 @@ use crate::api::session_recovery::{
 	report_refresh_failure, SessionErrorPayload, SessionRecovery,
 };
 use crate::error::{AppError, BanInfo};
+use crate::media::MediaProxy;
 use crate::state::AppState;
 
 pub fn spawn_ws_task(app: AppHandle) {
@@ -78,6 +79,7 @@ pub fn spawn_ws_task(app: AppHandle) {
 				};
 				match event {
 					grindr::AuthEvent::SignedOut => {
+						forget_ended_session(&app).await;
 						app.emit(
 							"auth:session-error",
 							SessionErrorPayload {
@@ -103,12 +105,23 @@ pub fn spawn_ws_task(app: AppHandle) {
 						app.emit("auth:session-ok", ()).ok();
 					}
 					grindr::AuthEvent::Banned(info) => {
+						forget_ended_session(&app).await;
 						app.emit("auth:banned", BanInfo::from(info)).ok();
 					}
 					_ => {}
 				}
 			}
 		});
+	}
+}
+
+async fn forget_ended_session(app: &AppHandle) {
+	let state = app.state::<AppState>();
+	let media = app.state::<MediaProxy>();
+	if let Err(e) = super::auth::end_session(app, &state, &media).await {
+		tracing::error!(
+			"[auth] could not rotate the device after the session ended: {e}"
+		);
 	}
 }
 
