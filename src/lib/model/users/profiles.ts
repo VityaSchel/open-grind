@@ -320,6 +320,8 @@ export const profileMinSchema = z.object({
 	onlineUntil: z.number().nullable().optional(),
 });
 
+export const PROFILE_PHOTO_AWAITING_REVIEW = 0;
+
 export const profileShortSchema = profileMaskedSchema
 	.extend(profileMinSchema.shape)
 	.extend({

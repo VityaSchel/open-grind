@@ -1,14 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
-const { fetchRestMock } = vi.hoisted(() => ({
+const { fetchRestMock, invokeRestMock } = vi.hoisted(() => ({
 	fetchRestMock:
 		vi.fn<(path: string, options?: { method?: string }) => unknown>(),
+	invokeRestMock: vi.fn(),
 }));
 
 vi.mock("$lib/api/transport", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/transport")>()),
 	fetchRest: fetchRestMock,
+	invokeRest: invokeRestMock,
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
@@ -30,7 +32,9 @@ import {
 	patchOwnProfile,
 	ProfileUnavailableError,
 	type ProfileUpdate,
+	saveProfilePhotos,
 	updateOwnProfile,
+	uploadProfilePhoto,
 } from "$lib/api/users/profiles";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 import type { Profile } from "$lib/model/users/profiles";
@@ -546,5 +550,113 @@ describe("deleteProfilePhotos", () => {
 		});
 
 		expect(fetchRestMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("saveProfilePhotos", () => {
+	it("sends the first photo as primary and the rest in order as secondary", async () => {
+		await getProfile(PROFILE_ID);
+
+		await saveProfilePhotos({
+			cacheProfileId: PROFILE_ID,
+			mediaHashes: ["b", "a"],
+		});
+
+		expect(fetchRestMock).toHaveBeenLastCalledWith(
+			"/v3/me/profile/images",
+			{
+				method: "PUT",
+				body: { primaryImageHash: "b", secondaryImageHashes: ["a"] },
+			},
+		);
+		expect(
+			(await getProfile(PROFILE_ID)).medias.map(
+				({ mediaHash }) => mediaHash,
+			),
+		).toEqual(["b", "a"]);
+	});
+
+	it("clears the profile photos with a null primary", async () => {
+		await saveProfilePhotos({
+			cacheProfileId: PROFILE_ID,
+			mediaHashes: [],
+		});
+
+		expect(fetchRestMock).toHaveBeenLastCalledWith(
+			"/v3/me/profile/images",
+			{
+				method: "PUT",
+				body: { primaryImageHash: null, secondaryImageHashes: [] },
+			},
+		);
+	});
+
+	it("caches a photo it has not seen as awaiting review", async () => {
+		await getProfile(PROFILE_ID);
+
+		await saveProfilePhotos({
+			cacheProfileId: PROFILE_ID,
+			mediaHashes: ["a", "fresh"],
+		});
+
+		expect((await getProfile(PROFILE_ID)).medias[1]).toMatchObject({
+			mediaHash: "fresh",
+			state: 0,
+		});
+	});
+});
+
+describe("uploadProfilePhoto", () => {
+	const picked = {
+		source: "desktop",
+		key: "photo",
+		mimeType: "image/jpeg",
+		path: "/tmp/photo.jpg",
+	} as const;
+
+	function uploaded(state: string | null | undefined) {
+		invokeRestMock.mockResolvedValue(
+			okValidated({
+				hash: "top-level",
+				imageSizes: [
+					{
+						mediaHash: "a".repeat(40),
+						fullUrl: "https://cdns.grindr.com/images/profile/1.jpg",
+						thumbnail: false,
+						size: 1024,
+						...(state === undefined ? {} : { state }),
+					},
+				],
+			}),
+		);
+	}
+
+	it("uploads the picked file with a square thumb and keeps the first size's hash", async () => {
+		uploaded(undefined);
+
+		await expect(uploadProfilePhoto(picked)).resolves.toEqual({
+			mediaHash: "a".repeat(40),
+			pending: true,
+		});
+		expect(invokeRestMock).toHaveBeenCalledWith("upload_media", {
+			args: {
+				path: "/v4/media/upload?takenOnGrindr=false",
+				signed: false,
+				file: { source: "desktop", path: "/tmp/photo.jpg" },
+				squareThumb: true,
+			},
+			requestInfo: {
+				method: "POST",
+				path: "/v4/media/upload?takenOnGrindr=false",
+			},
+		});
+	});
+
+	it("reads a reviewed state as no longer awaiting review", async () => {
+		uploaded("Approved");
+
+		await expect(uploadProfilePhoto(picked)).resolves.toMatchObject({
+			pending: false,
+		});
 	});
 });

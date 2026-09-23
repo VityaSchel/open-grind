@@ -4,7 +4,7 @@ import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { getHiddenUsers } from "$lib/api/browse/hides";
 import { FetchCache } from "$lib/api/cache";
-import { fetchRest } from "$lib/api/transport";
+import { fetchRest, invokeRest } from "$lib/api/transport";
 import {
 	ProfileModerationError,
 	readBannedTerms,
@@ -13,15 +13,19 @@ import {
 	markProfileUnviewable,
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
+import { demoEnabled } from "$lib/demo";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { rightNowAttributionStatusSchema } from "$lib/model/right-now";
 import { arrayOfParsableEntries } from "$lib/model/tolerance";
 import {
 	type Profile,
+	PROFILE_PHOTO_AWAITING_REVIEW,
 	profileRightNowSchema,
 	profileSchema,
 	profileShortSchema,
 } from "$lib/model/users/profiles";
+import { mediaFileDescriptor } from "$lib/platform/media-file";
+import type { PickedMedia } from "$lib/platform/media-picker";
 
 function isProbablyUnavailable(profile: Profile) {
 	const nullFields = [
@@ -335,6 +339,77 @@ export async function updateOwnProfile({
 		message: `Unexpected ${res.status} response from profile update`,
 		request: { method: "PUT", path: "/v3.1/me/profile", body: profile },
 		response: { status: res.status, body },
+	});
+}
+
+const uploadProfilePhotoResponseSchema = z.object({
+	imageSizes: z.array(
+		z.object({
+			mediaHash: mediaHashPublicSchema,
+			state: z.string().nullish(),
+		}),
+	),
+});
+
+export async function uploadProfilePhoto(
+	media: PickedMedia,
+): Promise<{ mediaHash: string; pending: boolean }> {
+	if (demoEnabled) {
+		throw new Error("Profile photos can't be uploaded in the demo");
+	}
+	const file = mediaFileDescriptor(media);
+	const path = "/v4/media/upload?takenOnGrindr=false";
+	const response = await invokeRest("upload_media", {
+		args: { path, signed: false, file, squareThumb: true },
+		requestInfo: { method: "POST", path },
+	});
+	const [uploaded] = response.jsonParsed(
+		uploadProfilePhotoResponseSchema,
+	).imageSizes;
+	if (uploaded === undefined) {
+		throw new Error("The upload response named no photo");
+	}
+	return {
+		mediaHash: uploaded.mediaHash,
+		pending: (uploaded.state ?? "Pending") === "Pending",
+	};
+}
+
+export async function saveProfilePhotos({
+	cacheProfileId,
+	mediaHashes,
+}: {
+	cacheProfileId: number;
+	mediaHashes: string[];
+}) {
+	const res = await fetchRest("/v3/me/profile/images", {
+		method: "PUT",
+		body: {
+			primaryImageHash: mediaHashes[0] ?? null,
+			secondaryImageHashes: mediaHashes.slice(1),
+		},
+	});
+	res.assertOk();
+	const cached = profiles.get(cacheProfileId);
+	if (!cached) return;
+	const byHash = new Map(
+		cached.medias.map((media) => [media.mediaHash, media]),
+	);
+	mergeProfileEditIntoCaches({
+		cacheProfileId,
+		patch: {
+			medias: mediaHashes.map(
+				(mediaHash) =>
+					byHash.get(mediaHash) ?? {
+						mediaHash,
+						type: 0,
+						state: PROFILE_PHOTO_AWAITING_REVIEW,
+						reason: null,
+						takenOnGrindr: false,
+						createdAt: Date.now(),
+					},
+			),
+		},
 	});
 }
 
