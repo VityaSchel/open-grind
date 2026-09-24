@@ -2,12 +2,13 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
+	DEMO_CONVERSATION,
+	DEMO_CONVERSATION_ID,
+	emitMessageSent,
 	installEventInjection,
 	installTauriShim,
 } from "./support/app";
 
-const CONVERSATION = "/chat/100001:123456000";
-const CONVERSATION_ID = "100001:123456000";
 const ME = 123456000;
 const THEM = 100001;
 const THREAD_BUBBLE = '[data-slot="message"] [data-slot="message-bubble"]';
@@ -21,7 +22,7 @@ const LONG_TEXT = Array.from(
 
 test("right-clicking a message opens its context menu", async ({ page }) => {
 	await installTauriShim(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 
 	const bubble = page.getByText("Hey! Lorem ipsum dolor sit amet.").first();
 	await bubble.waitFor();
@@ -33,6 +34,23 @@ test("right-clicking a message opens its context menu", async ({ page }) => {
 	).toBeVisible();
 });
 
+test("pressing Enter on a message opens its context menu", async ({ page }) => {
+	await installTauriShim(page);
+	await page.goto(DEMO_CONVERSATION);
+	const row = page
+		.locator('[data-slot="message"] [role="button"]')
+		.filter({ hasText: "Hey! Lorem ipsum dolor sit amet." })
+		.first();
+	await row.waitFor();
+
+	await row.focus();
+	await page.keyboard.press("Enter");
+
+	await expect(
+		page.getByRole("button", { name: "Delete for me" }),
+	).toBeVisible();
+});
+
 let messageCount = 0;
 
 async function deliver(
@@ -40,27 +58,17 @@ async function deliver(
 	{ text, senderId }: { text: string; senderId: number },
 ): Promise<Locator> {
 	const timestamp = Date.now() + 60_000 + messageCount++;
-	await page.evaluate(
-		(payload) => {
-			window.__emitTauriEvent?.("grindr:chat_v1_message_sent", {
-				type: "chat.v1.message_sent",
-				notificationId: null,
-				ref: null,
-				payload,
-			});
-		},
-		{
-			type: "Text",
-			body: { text },
-			messageId: `ws-${timestamp}`,
-			conversationId: CONVERSATION_ID,
-			senderId,
-			timestamp,
-			unsent: false,
-			reactions: [],
-			replyToMessage: null,
-		},
-	);
+	await emitMessageSent(page, {
+		type: "Text",
+		body: { text },
+		messageId: `ws-${timestamp}`,
+		conversationId: DEMO_CONVERSATION_ID,
+		senderId,
+		timestamp,
+		unsent: false,
+		reactions: [],
+		replyToMessage: null,
+	});
 	const bubble = page.locator(THREAD_BUBBLE, { hasText: text });
 	await bubble.waitFor();
 	return bubble;
@@ -73,7 +81,7 @@ async function openConversation(
 	await page.setViewportSize(viewport);
 	await installTauriShim(page);
 	await installEventInjection(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(THREAD_BUBBLE).first().waitFor({ timeout: 60_000 });
 }
 
