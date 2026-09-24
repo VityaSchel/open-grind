@@ -73,6 +73,21 @@ describe("VideoPlayer", () => {
 		expect(player().controls()).not.toBeNull();
 	});
 
+	it("shows the first frame when there is no cover", () => {
+		const { video } = player();
+		expect(video.hasAttribute("poster")).toBe(false);
+		expect(video.getAttribute("src")).toBe(`${SRC}#t=0.001`);
+	});
+
+	it("keeps the cover as the poster and the source as given", () => {
+		const { container } = render(VideoPlayer, {
+			props: { src: SRC, poster: "ogmedia://media/a.cover" },
+		});
+		const video = container.querySelector("video");
+		expect(video?.getAttribute("poster")).toBe("ogmedia://media/a.cover");
+		expect(video?.getAttribute("src")).toBe(SRC);
+	});
+
 	it("plays once unless asked to loop", () => {
 		expect(player().video.loop).toBe(false);
 		cleanup();

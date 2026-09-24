@@ -119,6 +119,29 @@ index 0000000..2aa7046
 +
 +    override fun close() = Rust.streamClose(handle)
 +}
+diff --git a/src/android/kotlin/RustWebChromeClient.kt b/src/android/kotlin/RustWebChromeClient.kt
+index bba26db..f6958a2 100644
+--- a/src/android/kotlin/RustWebChromeClient.kt
++++ b/src/android/kotlin/RustWebChromeClient.kt
+@@ -14,6 +14,7 @@ import android.app.AlertDialog
+ import android.content.ActivityNotFoundException
+ import android.content.DialogInterface
+ import android.content.Intent
++import android.graphics.Bitmap
+ import android.net.Uri
+ import android.os.Build
+ import android.os.Environment
+@@ -91,6 +92,10 @@ class RustWebChromeClient(appActivity: WryActivity) : WebChromeClient() {
+     super.onHideCustomView()
+   }
+ 
++  override fun getDefaultVideoPoster(): Bitmap {
++    return Bitmap.createBitmap(50, 50, Bitmap.Config.ARGB_8888)
++  }
++
+   override fun onPermissionRequest(request: PermissionRequest) {
+     val isRequestPermissionRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+     val permissionList: MutableList<String> = ArrayList()
 diff --git a/src/android/kotlin/RustWebViewClient.kt b/src/android/kotlin/RustWebViewClient.kt
 index 3dae460..c698b94 100644
 --- a/src/android/kotlin/RustWebViewClient.kt

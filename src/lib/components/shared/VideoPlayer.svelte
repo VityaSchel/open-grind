@@ -12,6 +12,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { now } from "$lib/util/clock";
 	import { formatMediaDuration } from "$lib/util/format-time";
+	import { firstFrameSrc } from "$lib/util/media";
 	import VideoScrubber from "./VideoScrubber.svelte";
 
 	let {
@@ -128,7 +129,7 @@
 		bind:currentTime
 		bind:duration
 		bind:buffered
-		{src}
+		src={poster === null ? firstFrameSrc(src) : src}
 		poster={poster ?? undefined}
 		{loop}
 		playsinline

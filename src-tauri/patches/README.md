@@ -41,6 +41,8 @@ On Android the custom-protocol handler runs while the process-global `REQUEST_HA
 
 Backport of [wry 0.56.0](https://github.com/tauri-apps/wry/releases/tag/wry-v0.56.0). **Delete when a `tauri-runtime-wry` requiring `wry >= 0.56` is published**.
 
+Android WebView paints `WebChromeClient.getDefaultVideoPoster()`, a gray play icon when it returns null, on every `<video>` without a `poster` until it plays or seeks. `android/kotlin/RustWebChromeClient.kt` returns a transparent bitmap instead. Backport of [wry#1804](https://github.com/tauri-apps/wry/pull/1804) from 0.56.1: **delete once the lock resolves `wry >= 0.56.1`**.
+
 On Android wry hands `WebResourceResponse` a `ByteArrayInputStream` of the fully buffered body. A handler can instead register a `ResponseStream` and name its id in the `x-wry-stream` header, and the WebView pulls the body through JNI.
 
 | File                           | Change                                                                                                                       |
