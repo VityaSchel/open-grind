@@ -5,6 +5,12 @@ export type OptimisticMessage = ApiResponseMessage & {
 	sendError?: unknown;
 };
 
+export function previewedMessage(
+	messages: OptimisticMessage[],
+): OptimisticMessage | undefined {
+	return messages.find((m) => m.status !== "error");
+}
+
 export function removeDuplicateMessages(
 	messages: OptimisticMessage[],
 ): OptimisticMessage[] {

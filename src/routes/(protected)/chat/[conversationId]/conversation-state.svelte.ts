@@ -28,6 +28,7 @@ import {
 	matchPendingEcho,
 	mergeServerMessages,
 	type OptimisticMessage,
+	previewedMessage,
 	removeDuplicateMessages,
 } from "./merge-messages";
 import { getConversation } from "./messages";
@@ -432,10 +433,9 @@ export class ConversationState {
 		const findOptimistic = () =>
 			this.messages.find((m) => m.messageId === tempId);
 		const sending = findOptimistic();
-		if (sending) {
-			sending.status = "pending";
-			sending.sendError = undefined;
-		}
+		if (!sending) return;
+		sending.status = "pending";
+		sending.sendError = undefined;
 		try {
 			const sent = await sendMessage({
 				toUserId: this.profile!.profileId,
@@ -532,18 +532,19 @@ export class ConversationState {
 	}
 
 	remove(messageId: string) {
-		const isLatest = this.messages.at(0)?.messageId === messageId;
+		const previewed =
+			previewedMessage(this.messages)?.messageId === messageId;
 
 		let revert = () => {};
 		const index = this.messages.findIndex((m) => m.messageId === messageId);
 		const removed = this.messages[index];
 		if (removed) {
 			this.messages.splice(index, 1);
-			if (isLatest) this.#updatePreview(this.messages.at(0));
+			if (previewed) this.#updatePreview(previewedMessage(this.messages));
 			this.#syncCache();
 			const revertDeleteMessage = () => {
 				this.messages.splice(index, 0, removed);
-				if (isLatest) this.#updatePreview(removed);
+				if (previewed) this.#updatePreview(removed);
 				this.#syncCache();
 			};
 

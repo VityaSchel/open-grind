@@ -66,6 +66,15 @@
 			: null,
 	);
 
+	const textContent = $derived(
+		message.type === "Text" ? message.body.text : undefined,
+	);
+	const hasMenuActions = $derived(
+		textContent !== undefined ||
+			[onReply, onDelete, onUnsend, onCopyError, onReport].some(
+				(action) => action !== undefined,
+			),
+	);
 	const firstInStack = $derived(indexInStack === 0);
 	const lastInStack = $derived(indexInStack === stackLength - 1);
 
@@ -116,8 +125,12 @@
 		"quotes",
 	];
 
+	$effect(() => {
+		if (!hasMenuActions) contextMenuOpen = false;
+	});
+
 	function onContextMenu() {
-		if (!messageElement || !frameElement) return;
+		if (!messageElement || !frameElement || !hasMenuActions) return;
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
@@ -343,10 +356,10 @@
 		anchor={liftedAnchor({ frame: frameElement, content: messageElement })}
 		{content}
 		{isOut}
-		selectable={message.type === "Text"}
+		selectable={textContent !== undefined}
 		onClose={() => (contextMenuOpen = false)}
 		style={inheritedStyles}
-		textContent={message.type === "Text" ? message.body.text : undefined}
+		{textContent}
 		reactionAvailable={message.reactions.length === 0 &&
 			!isOut &&
 			!message.unsent}

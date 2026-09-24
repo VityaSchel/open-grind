@@ -112,16 +112,18 @@
 				<WarningCircleIcon /> Copy error
 			</Button>
 		{/if}
-		<Button
-			variant="ghost"
-			onclick={() => {
-				onDelete?.();
-				props.onClose();
-			}}
-		>
-			<TrashIcon />
-			Delete for me
-		</Button>
+		{#if onDelete}
+			<Button
+				variant="ghost"
+				onclick={() => {
+					onDelete();
+					props.onClose();
+				}}
+			>
+				<TrashIcon />
+				Delete for me
+			</Button>
+		{/if}
 		{#if onUnsend}
 			<Button
 				variant="ghost"

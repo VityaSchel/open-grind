@@ -55,6 +55,19 @@ const profile = {
 };
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+const updatePreviewMock = vi.fn();
+
+const delivered = (messageId: string, timestamp: number) => ({
+	messageId,
+	conversationId: CONVERSATION_ID,
+	senderId: PEER_ID,
+	timestamp,
+	type: "Text" as const,
+	body: { text: messageId },
+	unsent: false,
+	reactions: [],
+	replyToMessage: null,
+});
 
 function outbound(type: string, body: unknown): MessageDraft {
 	const message = { type, body } as unknown as Message;
@@ -73,7 +86,7 @@ function create() {
 			clearActive: vi.fn(),
 			getCachedConversation: vi.fn(() => undefined),
 			setCachedConversation: vi.fn(),
-			updatePreview: vi.fn(),
+			updatePreview: updatePreviewMock,
 			markRead: vi.fn(),
 			ensureLoaded: vi.fn(),
 			remove: vi.fn(() => ({ revert: vi.fn() })),
@@ -184,6 +197,74 @@ describe("ConversationState send failures", () => {
 		);
 		expect(state.messages[0]?.messageId).toBe("server-1");
 		expect(state.messages[0]?.status).toBe("sent");
+	});
+
+	it("sends nothing when the bypass retries a message that was deleted", async () => {
+		sendMessageMock.mockRejectedValueOnce(entitlementLimit());
+
+		const state = create();
+		await flush();
+		state.send([expiringPhoto()]);
+		await flush();
+		state.remove(state.messages[0]!.messageId);
+
+		const { retry } = offerBypassMock.mock.calls[0]?.[0] as {
+			retry: () => Promise<void>;
+		};
+		await retry();
+
+		expect(sendMessageMock).toHaveBeenCalledOnce();
+	});
+
+	it("keeps the last delivered message as the preview when the newest failed one is deleted", async () => {
+		getConversationMock.mockResolvedValue({
+			messages: [delivered("server-1", 500)],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		sendMessageMock.mockRejectedValue(new Error("offline"));
+
+		const state = create();
+		await flush();
+		state.send([outbound("Text", { text: "older" })]);
+		state.send([outbound("Text", { text: "newer" })]);
+		await flush();
+		expect(updatePreviewMock).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({
+				type: "Text",
+				text: "server-1",
+			}),
+			timestamp: 500,
+		});
+
+		updatePreviewMock.mockClear();
+		state.remove(state.messages[0]!.messageId);
+
+		expect(updatePreviewMock).not.toHaveBeenCalled();
+	});
+
+	it("moves the preview on when the delivered message under a failed one is deleted", async () => {
+		getConversationMock.mockResolvedValue({
+			messages: [delivered("server-2", 600), delivered("server-1", 500)],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		sendMessageMock.mockRejectedValue(new Error("offline"));
+
+		const state = create();
+		await flush();
+		state.send([outbound("Text", { text: "failed" })]);
+		await flush();
+		state.remove("server-2");
+
+		expect(updatePreviewMock).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ text: "server-1" }),
+			timestamp: 500,
+		});
 	});
 
 	it("puts the failed bubble back to pending while the retry is in flight", async () => {
