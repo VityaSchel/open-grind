@@ -56,10 +56,7 @@
 		vaccineOptions,
 		weightKgRange,
 	} from "./options";
-	import {
-		profilePhotoChanges,
-		saveProfilePhotoChanges,
-	} from "./profile-photo-changes";
+	import { saveProfilePhotoOrder } from "./profile-photo-order";
 	import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 	let {
@@ -124,6 +121,7 @@
 			mediaHash: media.mediaHash,
 			pending: media.state === PROFILE_PHOTO_AWAITING_REVIEW,
 		})),
+		removedPhotos: [] as string[],
 	});
 
 	let saving = $state(false);
@@ -176,22 +174,27 @@
 			showDistance: initial.showDistance,
 			profileTags: sent.profileTags,
 		} satisfies ProfileUpdate;
-		const photos = profilePhotoChanges({
-			saved: savedForm.medias.map((media) => media.mediaHash),
-			sent: sent.medias.map((media) => media.mediaHash),
-		});
+		const removedPhotos = new Set(sent.removedPhotos);
+		const keptPhotos = sent.medias.filter(
+			(media) => !removedPhotos.has(media.mediaHash),
+		);
 		try {
 			await Promise.all([
 				updateOwnProfile({
 					cacheProfileId: ourProfileId,
 					profile: body,
 				}),
-				saveProfilePhotoChanges({
+				saveProfilePhotoOrder({
 					cacheProfileId: ourProfileId,
-					changes: photos,
+					saved: savedForm.medias.map((media) => media.mediaHash),
+					kept: keptPhotos.map((media) => media.mediaHash),
 				}),
 			]);
-			savedForm = sent;
+			form.medias = form.medias.filter(
+				(media) => !removedPhotos.has(media.mediaHash),
+			);
+			form.removedPhotos = [];
+			savedForm = { ...sent, medias: keptPhotos, removedPhotos: [] };
 			toast.success("Profile updated");
 		} catch (error) {
 			if (error instanceof ProfileModerationError) {
@@ -219,6 +222,8 @@
 			<h2>Photos</h2>
 			<ProfilePicturesUpload
 				bind:medias={form.medias}
+				bind:removed={form.removedPhotos}
+				{ourProfileId}
 				disabled={saving}
 			/>
 		</section>

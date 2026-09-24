@@ -1,9 +1,20 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	type RenderResult,
+} from "@testing-library/svelte";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const profiles = vi.hoisted(() => ({ uploadProfilePhoto: vi.fn() }));
+import { rightClick } from "$lib/test/right-click";
+
+const profiles = vi.hoisted(() => ({
+	uploadProfilePhoto: vi.fn(),
+	getProfileUploadedPhotos: vi.fn(),
+	deleteProfilePhotos: vi.fn(),
+}));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const demo = vi.hoisted(() => ({ demoEnabled: false }));
@@ -33,6 +44,27 @@ function hashes(count: number) {
 
 const PENDING = '[data-slot="media-image-pending"]';
 
+function previousUploads(...mediaHashes: string[]) {
+	profiles.getProfileUploadedPhotos.mockResolvedValue({
+		medias: mediaHashes.map((mediaHash) => ({
+			mediaHash,
+			type: 0,
+			state: 1,
+		})),
+	});
+}
+
+async function uploadFromSheet(
+	findByRole: RenderResult<typeof ProfilePicturesUpload>["findByRole"],
+) {
+	await fireEvent.click(await findByRole("button", { name: "Add photos" }));
+	await fireEvent.click(
+		await findByRole("button", { name: "Upload photos" }),
+	);
+}
+
+beforeEach(() => previousUploads());
+
 afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
@@ -43,6 +75,7 @@ describe("profile pictures upload", () => {
 	it("names every photo and its remove button by the slot it sits in", () => {
 		const { getByRole } = render(ProfilePicturesUpload, {
 			props: {
+				ourProfileId: 1,
 				medias: [{ mediaHash: "first" }, { mediaHash: "second" }],
 			},
 		});
@@ -60,7 +93,10 @@ describe("profile pictures upload", () => {
 
 	it("shows a photo awaiting review as its thumbnail, named as awaiting review", () => {
 		const { getByRole, container } = render(ProfilePicturesUpload, {
-			props: { medias: [{ mediaHash: "first", pending: true }] },
+			props: {
+				ourProfileId: 1,
+				medias: [{ mediaHash: "first", pending: true }],
+			},
 		});
 
 		expect(
@@ -74,11 +110,11 @@ describe("profile pictures upload", () => {
 	it("puts photos still uploading after the ones already there", async () => {
 		picker.pickMultipleMedia.mockResolvedValue(picks(1));
 		profiles.uploadProfilePhoto.mockReturnValue(new Promise(() => {}));
-		const { getByRole, container } = render(ProfilePicturesUpload, {
-			props: { medias: [{ mediaHash: "old" }] },
+		const { findByRole, container } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [{ mediaHash: "old" }] },
 		});
 
-		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await uploadFromSheet(findByRole);
 
 		await vi.waitFor(() =>
 			expect(container.querySelector(PENDING)).not.toBeNull(),
@@ -90,23 +126,87 @@ describe("profile pictures upload", () => {
 		expect(cells.at(-1)?.querySelector(PENDING)).not.toBeNull();
 	});
 
-	it("opens one picker for a double tap", async () => {
+	it("keeps the add tile off while the picker is open", async () => {
 		picker.pickMultipleMedia.mockReturnValue(new Promise(() => {}));
-		const { getByRole } = render(ProfilePicturesUpload, {
-			props: { medias: [] },
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [] },
 		});
-		const add = getByRole("button", { name: "Add photos" });
 
-		await fireEvent.click(add);
-		await fireEvent.click(add);
+		await uploadFromSheet(findByRole);
 
 		expect(picker.pickMultipleMedia).toHaveBeenCalledOnce();
+		expect(getByRole("button", { name: "Add photos" })).toHaveProperty(
+			"disabled",
+			true,
+		);
+	});
+
+	it("marks a photo for removal with one tap and keeps it with the next", async () => {
+		const { getByRole } = render(ProfilePicturesUpload, {
+			props: {
+				ourProfileId: 1,
+				medias: [{ mediaHash: "first" }, { mediaHash: "second" }],
+				removed: [],
+			},
+		});
+
+		await fireEvent.click(
+			getByRole("button", { name: "Remove profile photo in slot 2" }),
+		);
+		await fireEvent.click(
+			getByRole("button", { name: "Keep profile photo in slot 2" }),
+		);
+
+		expect(
+			getByRole("button", { name: "Remove profile photo in slot 2" }),
+		).toBeTruthy();
+		expect(
+			getByRole("img", { name: "Profile photo in slot 2" }),
+		).toBeTruthy();
+	});
+
+	it("adds chosen previous uploads after the photos already there", async () => {
+		previousUploads("first", "earlier");
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [{ mediaHash: "first" }] },
+		});
+
+		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await fireEvent.click(await findByRole("button", { name: "Photo 1" }));
+		await fireEvent.click(getByRole("button", { name: /Add to profile/ }));
+
+		expect(
+			await findByRole("img", { name: "Profile photo in slot 2" }),
+		).toBeTruthy();
+		expect(profiles.getProfileUploadedPhotos).toHaveBeenCalledWith({
+			selected: false,
+		});
+	});
+
+	it("deletes a previous upload for good from the sheet", async () => {
+		previousUploads("earlier");
+		profiles.deleteProfilePhotos.mockResolvedValue(undefined);
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 7, medias: [] },
+		});
+
+		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await rightClick(await findByRole("button", { name: "Photo 1" }));
+		await fireEvent.click(
+			await findByRole("menuitem", { name: "Delete permanently" }),
+		);
+		await fireEvent.click(await findByRole("button", { name: "Delete" }));
+
+		expect(profiles.deleteProfilePhotos).toHaveBeenCalledWith({
+			cacheProfileId: 7,
+			mediaHashes: ["earlier"],
+		});
 	});
 
 	it("offers no uploads in the demo", () => {
 		demo.demoEnabled = true;
 		const { queryByRole } = render(ProfilePicturesUpload, {
-			props: { medias: [] },
+			props: { ourProfileId: 1, medias: [] },
 		});
 
 		expect(queryByRole("button", { name: "Add photos" })).toBeNull();
@@ -114,13 +214,13 @@ describe("profile pictures upload", () => {
 
 	it("offers adding photos only while a slot is free", () => {
 		const { queryByRole, unmount } = render(ProfilePicturesUpload, {
-			props: { medias: hashes(5) },
+			props: { ourProfileId: 1, medias: hashes(5) },
 		});
 		expect(queryByRole("button", { name: "Add photos" })).toBeTruthy();
 		unmount();
 
 		const full = render(ProfilePicturesUpload, {
-			props: { medias: hashes(6) },
+			props: { ourProfileId: 1, medias: hashes(6) },
 		});
 		expect(full.queryByRole("button", { name: "Add photos" })).toBeNull();
 	});
@@ -130,11 +230,11 @@ describe("profile pictures upload", () => {
 		profiles.uploadProfilePhoto
 			.mockResolvedValueOnce({ mediaHash: "new-1", pending: true })
 			.mockResolvedValueOnce({ mediaHash: "new-2", pending: true });
-		const { getByRole } = render(ProfilePicturesUpload, {
-			props: { medias: [{ mediaHash: "old" }] },
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [{ mediaHash: "old" }] },
 		});
 
-		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await uploadFromSheet(findByRole);
 
 		await vi.waitFor(() =>
 			expect(
@@ -153,11 +253,11 @@ describe("profile pictures upload", () => {
 			mediaHash: "new",
 			pending: true,
 		});
-		const { getByRole } = render(ProfilePicturesUpload, {
-			props: { medias: hashes(4) },
+		const { findByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: hashes(4) },
 		});
 
-		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await uploadFromSheet(findByRole);
 
 		await vi.waitFor(() =>
 			expect(profiles.uploadProfilePhoto).toHaveBeenCalledTimes(2),
@@ -177,11 +277,11 @@ describe("profile pictures upload", () => {
 				response: { status: 403, body: "" },
 			}),
 		);
-		const { getByRole, container } = render(ProfilePicturesUpload, {
-			props: { medias: [] },
+		const { findByRole, container } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [] },
 		});
 
-		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+		await uploadFromSheet(findByRole);
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
