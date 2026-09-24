@@ -1,16 +1,20 @@
 <script lang="ts">
 	import {
+		type ClientRectObject,
 		computePosition,
 		flip,
 		offset,
 		type Placement,
 		shift,
+		type VirtualElement,
 	} from "@floating-ui/dom";
+	import { untrack } from "svelte";
 
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { followViewportResizes } from "$lib/util/follow-viewport-resizes";
 
 	let {
-		contextMenuOpen,
+		anchor,
 		style,
 		content,
 		onClose,
@@ -18,12 +22,7 @@
 		selectable = false,
 		children,
 	}: {
-		contextMenuOpen: {
-			x: number;
-			y: number;
-			width: number;
-			height: number;
-		};
+		anchor: VirtualElement;
 		style: string;
 		onClose: () => void;
 		isOut?: boolean;
@@ -31,6 +30,8 @@
 		content: import("svelte").Snippet<[boolean]>;
 		children?: import("svelte").Snippet<[Placement]>;
 	} = $props();
+
+	const VIEWPORT_SETTLE_MS = 500;
 
 	const preferredPlacement: Placement = $derived(
 		isOut ? "left-start" : "right-start",
@@ -42,34 +43,56 @@
 	);
 
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
-	let contextMenuTrigger: HTMLDivElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
 	let contextMenuListPosition: {
 		x: number;
 		y: number;
 		placement: Placement;
 	} = $state({ x: 0, y: 0, placement: "right-start" });
+	let liftedBox = $state(untrack(() => anchor.getBoundingClientRect()));
 
 	dismissOnBackGesture({
 		active: () => true,
 		dismiss: () => contextMenuDialog?.close(),
 	});
 
+	function sameBox(a: ClientRectObject, b: ClientRectObject) {
+		return (
+			a.x === b.x &&
+			a.y === b.y &&
+			a.width === b.width &&
+			a.height === b.height
+		);
+	}
+
 	$effect(() => {
-		if (!contextMenuTrigger || !contextMenuList) return;
-		computePosition(contextMenuTrigger, contextMenuList, {
-			placement: preferredPlacement,
-			middleware: [
-				offset(8),
-				flip({ fallbackPlacements, fallbackStrategy: "bestFit" }),
-				shift({ padding: 8 }),
-			],
-			strategy: "fixed",
-		})
-			.then(({ x, y, placement }) => {
-				contextMenuListPosition = { x, y, placement };
+		const list = contextMenuList;
+		if (!list) return;
+		let placedBox: ClientRectObject | undefined;
+		const place = () => {
+			const box = anchor.getBoundingClientRect();
+			if (placedBox && sameBox(placedBox, box)) return;
+			placedBox = box;
+			liftedBox = box;
+			computePosition(anchor, list, {
+				placement: preferredPlacement,
+				middleware: [
+					offset(8),
+					flip({ fallbackPlacements, fallbackStrategy: "bestFit" }),
+					shift({ padding: 8 }),
+				],
+				strategy: "fixed",
 			})
-			.catch((error) => console.error(error));
+				.then(({ x, y, placement }) => {
+					contextMenuListPosition = { x, y, placement };
+				})
+				.catch((error) => console.error(error));
+		};
+		place();
+		return followViewportResizes({
+			settleMs: VIEWPORT_SETTLE_MS,
+			onFrame: place,
+		});
 	});
 
 	$effect(() => {
@@ -84,13 +107,6 @@
 	});
 </script>
 
-<svelte:window
-	onresize={() => {
-		if (contextMenuOpen) {
-			contextMenuDialog?.close();
-		}
-	}}
-/>
 <dialog
 	class="menu-scrim fixed top-0 left-0 z-9999 size-full max-h-none max-w-none bg-transparent"
 	bind:this={contextMenuDialog}
@@ -105,12 +121,11 @@
 	onclose={() => onClose()}
 >
 	<div
-		bind:this={contextMenuTrigger}
 		class="absolute"
-		style:left="{contextMenuOpen.x}px"
-		style:top="{contextMenuOpen.y}px"
-		style:width="{contextMenuOpen.width}px"
-		style:height="{contextMenuOpen.height}px"
+		style:left="{liftedBox.x}px"
+		style:top="{liftedBox.y}px"
+		style:width="{liftedBox.width}px"
+		style:height="{liftedBox.height}px"
 		{style}
 		inert={!selectable}
 	>
@@ -118,6 +133,7 @@
 	</div>
 	<div
 		bind:this={contextMenuList}
+		data-slot="context-menu-list"
 		class="fixed flex flex-col"
 		style:left="{contextMenuListPosition.x}px"
 		style:top="{contextMenuListPosition.y}px"

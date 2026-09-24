@@ -1,6 +1,7 @@
 import type { CDPSession, Page } from "@playwright/test";
 
-export const DEMO_CONVERSATION = "/chat/100001:123456000";
+export const DEMO_CONVERSATION_ID = "100001:123456000";
+export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
 export const DEMO_GEOHASH = "u33dc0cpgp00";
 export const FIRST_ROUTE_COMPILE_MS = 120_000;
 
@@ -72,6 +73,19 @@ export async function installEventInjection(page: Page): Promise<void> {
 				handlers.get(id)?.({ event, id, payload });
 		};
 	});
+}
+
+export function emitMessageSent(page: Page, payload: unknown): Promise<void> {
+	return page.evaluate(
+		(message) =>
+			window.__emitTauriEvent?.("grindr:chat_v1_message_sent", {
+				type: "chat.v1.message_sent",
+				notificationId: null,
+				ref: null,
+				payload: message,
+			}),
+		payload,
+	);
 }
 
 export async function captureInvokes(page: Page, command: string) {

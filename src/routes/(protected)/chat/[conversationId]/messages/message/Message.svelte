@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { ArrowBendUpLeftIcon } from "phosphor-svelte";
-	import { tick, untrack } from "svelte";
+	import { untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
+	import type { VirtualElement } from "@floating-ui/dom";
 
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { scale } from "$lib/util/reduced-motion";
@@ -76,10 +77,7 @@
 		timestamp: message.timestamp,
 	}));
 
-	let contextMenuOpen:
-		| false
-		| { x: number; y: number; width: number; height: number } =
-		$state(false);
+	let contextMenuOpen = $state(false);
 	let frameElement: HTMLElement | null = $state(null);
 	let messageElement: HTMLElement | null = $state(null);
 
@@ -120,30 +118,40 @@
 
 	function onContextMenu() {
 		if (!messageElement || !frameElement) return;
-		// The clone renders the quote too, so it is the frame that decides how
-		// tall the lifted box is, while the bubble still decides where it sits.
-		const contentRect = messageElement.getBoundingClientRect();
-		const frameRect = frameElement.getBoundingClientRect();
-		const quoteRect = frameElement
-			.querySelector('[data-slot="message-quote"]')
-			?.getBoundingClientRect();
-		const liftedWidth = Math.max(contentRect.width, quoteRect?.width ?? 0);
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
-		contextMenuOpen = {
-			x: isOut ? contentRect.right - liftedWidth : contentRect.x,
-			y: frameRect.y,
-			width: liftedWidth,
-			height: frameRect.height,
-		};
-		tick()
-			.then(() => contextMenu?.showModal())
-			.catch((error) => console.error(error));
+		contextMenuOpen = true;
 	}
 
-	let contextMenu: HTMLDialogElement | null = $state(null);
+	function liftedAnchor({
+		frame,
+		content,
+	}: {
+		frame: HTMLElement;
+		content: HTMLElement;
+	}): VirtualElement {
+		return {
+			getBoundingClientRect() {
+				const contentRect = content.getBoundingClientRect();
+				const frameRect = frame.getBoundingClientRect();
+				const quoteRect = frame
+					.querySelector('[data-slot="message-quote"]')
+					?.getBoundingClientRect();
+				const width = Math.max(
+					contentRect.width,
+					quoteRect?.width ?? 0,
+				);
+				return new DOMRect(
+					isOut ? contentRect.right - width : contentRect.x,
+					frameRect.y,
+					width,
+					frameRect.height,
+				);
+			},
+		};
+	}
 
 	// A dblclick carries no pointerType of its own, and only the pointer can
 	// tell a double tap (react) from a double click (reply).
@@ -330,9 +338,9 @@
 	{/if}
 </div>
 
-{#if contextMenuOpen}
+{#if contextMenuOpen && frameElement && messageElement}
 	<MessageContextMenu
-		{contextMenuOpen}
+		anchor={liftedAnchor({ frame: frameElement, content: messageElement })}
 		{content}
 		{isOut}
 		selectable={message.type === "Text"}
