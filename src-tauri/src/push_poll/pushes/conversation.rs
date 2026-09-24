@@ -2,8 +2,8 @@ use serde_json::Value;
 
 use super::body::{describe, set_body_key, GENERIC_BODY};
 use super::{
-	base, line_key, profile_id, Push, CATCH_UP_LINE, CHATS_CHANNEL,
-	CLEAR_DEEPLINK, CONVERSATION_DEEPLINK,
+	base, cleared, line_key, profile_id, Push, CATCH_UP_LINE, CHATS_CHANNEL,
+	CONVERSATION_DEEPLINK,
 };
 
 pub(super) struct Conversation<'a> {
@@ -82,11 +82,9 @@ impl<'a> Conversation<'a> {
 		if self.data["unreadCount"].as_i64() != Some(0) {
 			return None;
 		}
-		Some(Push::from([
-			("version", "2".to_owned()),
-			("action", format!("{CLEAR_DEEPLINK}{}", self.id)),
-			("notificationId", format!("poll:clear:{}", self.id)),
-			("timestamp", self.at.to_string()),
-		]))
+		let mut push = cleared(self.id);
+		push.insert("notificationId", format!("poll:clear:{}", self.id));
+		push.insert("timestamp", self.at.to_string());
+		Some(push)
 	}
 }

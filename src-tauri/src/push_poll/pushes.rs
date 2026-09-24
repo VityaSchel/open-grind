@@ -56,6 +56,13 @@ fn line_key(conversation: &str, line: &str) -> String {
 	format!("poll:{conversation}:{line}")
 }
 
+fn cleared(conversation: &str) -> Push {
+	Push::from([
+		("version", "2".to_owned()),
+		("action", format!("{CLEAR_DEEPLINK}{conversation}")),
+	])
+}
+
 pub fn poll(
 	inbox: Option<&Inbox>,
 	taps: Option<&Value>,

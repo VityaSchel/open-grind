@@ -34,7 +34,7 @@ pub async fn collect(
 		.as_ref()
 		.and_then(|session| session.credentials.profile_id.clone());
 	let inbox = inbox(client, since.inbox).await;
-	let taps = fetch(client, Method::GET, TAPS, None).await;
+	let taps = fetch(client, Method::GET, TAPS).await;
 	let mut polled = poll(inbox.as_ref(), taps.as_ref(), since, me.as_deref());
 	for conversation in shown {
 		polled
@@ -48,19 +48,24 @@ async fn withdrawals(
 	client: &GrindrClient,
 	conversation: &ShownConversation,
 ) -> Vec<Push> {
-	let ids = conversation.message_ids();
-	if ids.is_empty() {
+	let check = conversation.check();
+	let method = if check.body.is_some() {
+		Method::POST
+	} else {
+		Method::GET
+	};
+	let Some((status, answer)) =
+		respond(client, method, &check.path, check.body.as_ref()).await
+	else {
 		return Vec::new();
+	};
+	let withdrawn = conversation.withdrawals(status, &answer);
+	let understood = (200..300).contains(&status) && !answer.is_null()
+		|| !withdrawn.is_empty();
+	if !understood {
+		tracing::warn!("[poll] {} answered {status}", check.path);
 	}
-	let path = format!(
-		"/v4/chat/conversation/{}/message-by-id",
-		conversation.conversation_id
-	);
-	let body = serde_json::json!({ "messageIds": ids });
-	fetch(client, Method::POST, &path, Some(&body))
-		.await
-		.map(|answer| conversation.withdrawals(&answer))
-		.unwrap_or_default()
+	withdrawn
 }
 
 async fn inbox(client: &GrindrClient, watermark: i64) -> Option<Inbox> {
@@ -68,7 +73,7 @@ async fn inbox(client: &GrindrClient, watermark: i64) -> Option<Inbox> {
 	let mut next = Some(1);
 	while let Some(number) = next {
 		let path = format!("/v4/inbox?page={number}");
-		let page = fetch(client, Method::POST, &path, None).await?;
+		let page = fetch(client, Method::POST, &path).await?;
 		next = inbox.read(&page, watermark);
 	}
 	Some(inbox)
@@ -78,8 +83,24 @@ async fn fetch(
 	client: &GrindrClient,
 	method: Method,
 	path: &str,
-	body: Option<&Value>,
 ) -> Option<Value> {
+	let (status, json) = respond(client, method, path, None).await?;
+	let json = (200..300)
+		.contains(&status)
+		.then_some(json)
+		.filter(|json| !json.is_null());
+	if json.is_none() {
+		tracing::warn!("[poll] {path} answered {status}");
+	}
+	json
+}
+
+async fn respond(
+	client: &GrindrClient,
+	method: Method,
+	path: &str,
+	body: Option<&Value>,
+) -> Option<(u16, Value)> {
 	let mut request = client.request(method, path);
 	if let Some(body) = body {
 		request = request.json(body);
@@ -89,12 +110,6 @@ async fn fetch(
 		.await
 		.inspect_err(|e| tracing::warn!("[poll] {path} failed: {e}"))
 		.ok()?;
-	let json = (200..300)
-		.contains(&response.status)
-		.then(|| serde_json::from_slice(&response.body).ok())
-		.flatten();
-	if json.is_none() {
-		tracing::warn!("[poll] {path} answered {}", response.status);
-	}
-	json
+	let json = serde_json::from_slice(&response.body).unwrap_or(Value::Null);
+	Some((response.status, json))
 }
