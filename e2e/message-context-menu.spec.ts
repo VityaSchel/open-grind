@@ -180,6 +180,54 @@ async function openMenuNearBottom(page: Page): Promise<void> {
 	await openMenuOn(held);
 }
 
+function systemBarOverlap(page: Page): Promise<number> {
+	return page.locator(MENU_LIST).evaluate((list) => {
+		const rootStyle = getComputedStyle(document.documentElement);
+		const inset = (side: string) =>
+			parseFloat(rootStyle.getPropertyValue(`--safe-area-${side}`)) || 0;
+		const box = list.getBoundingClientRect();
+		return Math.max(
+			0,
+			inset("top") - box.top,
+			box.bottom - (innerHeight - inset("bottom")),
+		);
+	});
+}
+
+test("a context menu opened near the bottom stays clear of the system bars", async ({
+	page,
+}) => {
+	await openMenuNearBottom(page);
+
+	expect(await systemBarOverlap(page)).toBe(0);
+});
+
+test("the newest message's context menu stays clear of the navigation bar", async ({
+	page,
+}) => {
+	await openConversation(page, { width: 420, height: 800 });
+	await openMenuOn(await deliver(page, { text: "Newest", senderId: ME }));
+
+	expect(await systemBarOverlap(page)).toBe(0);
+});
+
+test("a message taller than the screen keeps its whole context menu in reach", async ({
+	page,
+}) => {
+	await openConversation(page, { width: 420, height: 800 });
+	await openMenuOn(
+		await deliver(page, {
+			text: Array.from({ length: 6 }, () => LONG_TEXT).join(" "),
+			senderId: THEM,
+		}),
+	);
+
+	expect(await systemBarOverlap(page)).toBe(0);
+	await expect(
+		page.getByRole("button", { name: "Delete for me" }),
+	).toBeInViewport({ ratio: 1 });
+});
+
 test("a context menu near the bottom keeps one placement while the viewport settles", async ({
 	page,
 }) => {

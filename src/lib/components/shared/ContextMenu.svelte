@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		type ClientRectObject,
 		computePosition,
 		flip,
 		offset,
@@ -8,7 +7,7 @@
 		shift,
 		type VirtualElement,
 	} from "@floating-ui/dom";
-	import { untrack } from "svelte";
+	import { type Snippet, untrack } from "svelte";
 
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { followViewportResizes } from "$lib/util/follow-viewport-resizes";
@@ -20,6 +19,7 @@
 		onClose,
 		isOut = false,
 		selectable = false,
+		header,
 		children,
 	}: {
 		anchor: VirtualElement;
@@ -27,11 +27,13 @@
 		onClose: () => void;
 		isOut?: boolean;
 		selectable?: boolean;
-		content: import("svelte").Snippet<[boolean]>;
-		children?: import("svelte").Snippet<[Placement]>;
+		content: Snippet<[boolean]>;
+		header?: Snippet;
+		children?: Snippet;
 	} = $props();
 
 	const VIEWPORT_SETTLE_MS = 500;
+	const EDGE_GAP_PX = 8;
 
 	const preferredPlacement: Placement = $derived(
 		isOut ? "left-start" : "right-start",
@@ -44,11 +46,8 @@
 
 	let contextMenuDialog: HTMLDialogElement | null = $state(null);
 	let contextMenuList: HTMLDivElement | null = $state(null);
-	let contextMenuListPosition: {
-		x: number;
-		y: number;
-		placement: Placement;
-	} = $state({ x: 0, y: 0, placement: "right-start" });
+	let contextMenuItems: HTMLDivElement | null = $state(null);
+	let contextMenuListPosition = $state({ x: 0, y: 0 });
 	let liftedBox = $state(untrack(() => anchor.getBoundingClientRect()));
 
 	dismissOnBackGesture({
@@ -56,35 +55,47 @@
 		dismiss: () => contextMenuDialog?.close(),
 	});
 
-	function sameBox(a: ClientRectObject, b: ClientRectObject) {
-		return (
-			a.x === b.x &&
-			a.y === b.y &&
-			a.width === b.width &&
-			a.height === b.height
-		);
+	function safeAreaPadding() {
+		const rootStyle = getComputedStyle(document.documentElement);
+		const clearance = (side: "top" | "right" | "bottom" | "left") =>
+			(parseFloat(rootStyle.getPropertyValue(`--safe-area-${side}`)) ||
+				0) + EDGE_GAP_PX;
+		return {
+			top: clearance("top"),
+			right: clearance("right"),
+			bottom: clearance("bottom"),
+			left: clearance("left"),
+		};
 	}
 
 	$effect(() => {
 		const list = contextMenuList;
 		if (!list) return;
-		let placedBox: ClientRectObject | undefined;
 		const place = () => {
-			const box = anchor.getBoundingClientRect();
-			if (placedBox && sameBox(placedBox, box)) return;
-			placedBox = box;
-			liftedBox = box;
+			liftedBox = anchor.getBoundingClientRect();
+			const padding = safeAreaPadding();
 			computePosition(anchor, list, {
 				placement: preferredPlacement,
 				middleware: [
-					offset(8),
-					flip({ fallbackPlacements, fallbackStrategy: "bestFit" }),
-					shift({ padding: 8 }),
+					offset(({ placement }) => ({
+						mainAxis: EDGE_GAP_PX,
+						alignmentAxis:
+							placement.startsWith("left") ||
+							placement.startsWith("right")
+								? -(contextMenuItems?.offsetTop ?? 0)
+								: 0,
+					})),
+					flip({
+						fallbackPlacements,
+						fallbackStrategy: "bestFit",
+						padding,
+					}),
+					shift({ padding, crossAxis: true }),
 				],
 				strategy: "fixed",
 			})
-				.then(({ x, y, placement }) => {
-					contextMenuListPosition = { x, y, placement };
+				.then(({ x, y }) => {
+					contextMenuListPosition = { x, y };
 				})
 				.catch((error) => console.error(error));
 		};
@@ -138,6 +149,9 @@
 		style:left="{contextMenuListPosition.x}px"
 		style:top="{contextMenuListPosition.y}px"
 	>
-		{@render children?.(contextMenuListPosition.placement)}
+		{@render header?.()}
+		<div bind:this={contextMenuItems}>
+			{@render children?.()}
+		</div>
 	</div>
 </dialog>
