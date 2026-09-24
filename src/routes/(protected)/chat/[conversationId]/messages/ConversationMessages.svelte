@@ -22,6 +22,9 @@
 	const FLOOR_SLOP_PX = 16;
 
 	let atFloor = $state(true);
+	let restingFloorDistance = 0;
+	let readerScrollTop = 0;
+	let ownScrollTop: number | null = null;
 	// Seen-ness is tracked by message identity, never by comparing timestamps:
 	// merges adopt server timestamps for messages already on screen, and a
 	// watermark would re-count them as new.
@@ -56,6 +59,7 @@
 	async function scrollToRest(behavior: ScrollBehavior) {
 		await tick();
 		atFloor = true;
+		restingFloorDistance = 0;
 		if (behavior === "smooth") {
 			scrollingToRest = true;
 			if (scrollingToRestTimer !== null)
@@ -75,16 +79,24 @@
 	}
 
 	function onContainerScroll() {
+		if (!readerScrolled()) return;
+		ownScrollTop = null;
 		if (scrollingToRest) {
 			if (floorDistance() <= 1) endScrollingToRest();
 			return;
 		}
-		atFloor = floorDistance() <= FLOOR_SLOP_PX;
+		recordRestingPlace();
 	}
 
 	function onContainerScrollEnd() {
 		endScrollingToRest();
-		atFloor = floorDistance() <= FLOOR_SLOP_PX;
+		if (readerScrolled()) recordRestingPlace();
+	}
+
+	function recordRestingPlace(scrollTop = container?.scrollTop ?? 0): void {
+		readerScrollTop = scrollTop;
+		restingFloorDistance = floorDistance();
+		atFloor = restingFloorDistance <= FLOOR_SLOP_PX;
 	}
 
 	$effect(stopSmoothScrollOnGesture);
@@ -113,6 +125,9 @@
 			scrollDone = false;
 			lastFirstId = "";
 			atFloor = true;
+			restingFloorDistance = 0;
+			readerScrollTop = 0;
+			ownScrollTop = null;
 			seenMessageIds.clear();
 			endScrollingToRest();
 		});
@@ -149,18 +164,69 @@
 		lastFirstId = firstId;
 	}
 
-	let floorDistanceBeforeComposerResize = 0;
+	function keepBottomEdge({
+		scroller,
+		heightChange,
+	}: {
+		scroller: HTMLElement;
+		heightChange: number;
+	}): void {
+		const intended = readerScrollTop - heightChange;
+		scroller.scrollTop = intended;
+		ownScrollTop = scroller.scrollTop;
+		recordRestingPlace(intended);
+	}
 
-	$effect.pre(measureFloorBeforeComposerResize);
+	function holdFloor(el: HTMLElement): void {
+		if (scrollingToRest) refreshControl?.scrollToRest("smooth");
+		else
+			el.scrollTop =
+				el.scrollHeight - el.clientHeight - restingFloorDistance;
+	}
 
-	// Measured before the padding changes: growing padding never moves
-	// scrollTop while shrinking padding self-clamps, so only the distance the
-	// reader was resting at survives both directions.
-	function measureFloorBeforeComposerResize(): void {
-		void composerHeight;
-		untrack(() => {
-			floorDistanceBeforeComposerResize = floorDistance();
+	let observedScrollerSize: { width: number; height: number } | null = null;
+
+	// A resize can clamp scrollTop before the observer below runs, and the
+	// observer's own writes scroll too. Neither is the reader's scroll.
+	function readerScrolled(): boolean {
+		return (
+			!scrollerResizePending() && container?.scrollTop !== ownScrollTop
+		);
+	}
+
+	function scrollerResizePending(): boolean {
+		const observed = observedScrollerSize;
+		return (
+			container !== null &&
+			observed !== null &&
+			(container.offsetWidth !== observed.width ||
+				container.offsetHeight !== observed.height)
+		);
+	}
+
+	$effect(keepBottomOnScrollerResize);
+
+	function keepBottomOnScrollerResize() {
+		const el = container;
+		if (!el) return;
+		observedScrollerSize = null;
+		const observer = new ResizeObserver(() => {
+			const previous = observedScrollerSize;
+			const resized = scrollerResizePending();
+			observedScrollerSize = {
+				width: el.offsetWidth,
+				height: el.offsetHeight,
+			};
+			if (!resized || !previous) return;
+			if (atFloor || scrollingToRest) holdFloor(el);
+			else
+				keepBottomEdge({
+					scroller: el,
+					heightChange: el.offsetHeight - previous.height,
+				});
 		});
+		observer.observe(el, { box: "border-box" });
+		return () => observer.disconnect();
 	}
 
 	$effect(keepFloorOnComposerResize);
@@ -170,11 +236,8 @@
 		const el = container;
 		if (!el) return;
 		untrack(() => {
-			if (!atFloor) return;
-			el.scrollTop =
-				el.scrollHeight -
-				el.clientHeight -
-				floorDistanceBeforeComposerResize;
+			if (atFloor || scrollingToRest) holdFloor(el);
+			else if (!scrollerResizePending()) recordRestingPlace();
 		});
 	}
 </script>
