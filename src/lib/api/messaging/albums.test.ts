@@ -17,6 +17,7 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 
 import { ApiError } from "$lib/api/api-error";
 import {
+	addDrawerMediaToAlbum,
 	getAlbumContentProcessing,
 	getAlbumShares,
 	getAlbumStorageLimits,
@@ -49,6 +50,16 @@ beforeEach(() => {
 });
 
 describe("albums API wrappers", () => {
+	it("adds drawer media to an album by id, never as fresh", async () => {
+		await addDrawerMediaToAlbum({ albumId: 900, mediaIds: [5, 6] });
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			"/v1/albums/900/content/chat/list-by-id?isFresh=false",
+			{ method: "POST", body: { ids: [5, 6] } },
+		);
+		expect(assertOk).toHaveBeenCalledOnce();
+	});
+
 	it("shares an album with every listed profile and asserts the status", async () => {
 		await shareAlbum({ albumId: 900, profileIds: [11, 22] });
 

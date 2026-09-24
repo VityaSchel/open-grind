@@ -153,6 +153,19 @@ export async function deleteAlbumContent({
 	}).then((res) => res.assertOk());
 }
 
+export async function addDrawerMediaToAlbum({
+	albumId,
+	mediaIds,
+}: {
+	albumId: number;
+	mediaIds: number[];
+}) {
+	await fetchRest(
+		`/v1/albums/${albumId}/content/chat/list-by-id?isFresh=false`,
+		{ method: "POST", body: { ids: mediaIds } },
+	).then((res) => res.assertOk());
+}
+
 export async function reorderAlbumContent({
 	albumId,
 	contentIds,

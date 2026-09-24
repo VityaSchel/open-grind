@@ -26,6 +26,7 @@ import {
 	deleteProfilePhotos,
 	getProfile,
 	getProfiles,
+	getProfileUploadedPhotos,
 	HiddenProfileError,
 	isProfileCached,
 	onProfileEdit,
@@ -174,6 +175,15 @@ beforeEach(() => {
 			}
 			if (path === "/v3/me/profile/images") {
 				return Promise.resolve(ok(null));
+			}
+			if (path.startsWith("/v3.1/me/profile/images?selected=")) {
+				return Promise.resolve(
+					okValidated({
+						medias: [
+							{ mediaHash: "a".repeat(40), type: 0, state: 1 },
+						],
+					}),
+				);
 			}
 			throw new Error(`unexpected request: ${method} ${path}`);
 		},
@@ -658,5 +668,19 @@ describe("uploadProfilePhoto", () => {
 		await expect(uploadProfilePhoto(picked)).resolves.toMatchObject({
 			pending: false,
 		});
+	});
+});
+
+describe("getProfileUploadedPhotos", () => {
+	it("asks for the photos off the profile when listing previous uploads", async () => {
+		await expect(
+			getProfileUploadedPhotos({ selected: false }),
+		).resolves.toEqual({
+			medias: [{ mediaHash: "a".repeat(40), type: 0, state: 1 }],
+		});
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			"/v3.1/me/profile/images?selected=false",
+		);
 	});
 });

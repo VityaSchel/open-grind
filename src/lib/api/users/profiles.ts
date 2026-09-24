@@ -437,18 +437,23 @@ export async function deleteProfilePhotos({
 	});
 }
 
-export async function getProfileUploadedPhotos() {
-	return await fetchRest("/v3.1/me/profile/images").then((res) =>
-		res.jsonParsed(
-			z.object({
-				medias: z.array(
-					z.object({
-						mediaHash: mediaHashPublicSchema,
-						type: z.int(),
-						state: z.int(),
-					}),
-				),
-			}),
-		),
+export async function getProfileUploadedPhotos({
+	selected,
+}: {
+	selected: boolean;
+}) {
+	return await fetchRest(`/v3.1/me/profile/images?selected=${selected}`).then(
+		(res) =>
+			res.jsonParsed(
+				z.object({
+					medias: z.array(
+						z.object({
+							mediaHash: mediaHashPublicSchema,
+							type: z.int(),
+							state: z.int(),
+						}),
+					),
+				}),
+			),
 	);
 }
