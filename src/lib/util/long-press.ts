@@ -7,8 +7,9 @@ const NATIVE_CONTEXTMENU_DELAY_MS = 500;
 const CLICK_SUPPRESS_MS = 700;
 
 let lastFiredAt = 0;
+let heldTouchUntil = 0;
 let suppressClickUntil = 0;
-let clickSuppressorAttached = false;
+let documentListenersAttached = false;
 
 function fireOnce(onLongPress: () => void): void {
 	const now = Date.now();
@@ -28,11 +29,36 @@ function onGlobalClickCapture(event: MouseEvent): void {
 	event.stopPropagation();
 }
 
+function onGlobalPointerDownCapture(): void {
+	suppressClickUntil = 0;
+}
+
 function suppressNextClick(): void {
 	suppressClickUntil = Date.now() + CLICK_SUPPRESS_MS;
-	if (clickSuppressorAttached || typeof document === "undefined") return;
-	clickSuppressorAttached = true;
+	if (documentListenersAttached || typeof document === "undefined") return;
+	documentListenersAttached = true;
 	document.addEventListener("click", onGlobalClickCapture, { capture: true });
+	document.addEventListener("pointerdown", onGlobalPointerDownCapture, {
+		capture: true,
+	});
+}
+
+// Chromium follows a held touch with its own contextmenu, and WebKitGTK sends
+// one typed as a mouse when the finger lifts: both belong to the fired hold.
+function holdTouch(): void {
+	heldTouchUntil = Number.POSITIVE_INFINITY;
+	if (typeof window === "undefined") return;
+	const release = () => {
+		heldTouchUntil = Date.now() + NATIVE_CONTEXTMENU_DELAY_MS;
+		window.removeEventListener("pointerup", release, true);
+		window.removeEventListener("pointercancel", release, true);
+	};
+	window.addEventListener("pointerup", release, true);
+	window.addEventListener("pointercancel", release, true);
+}
+
+function isTouchLike(pointerType: string | undefined): boolean {
+	return pointerType === "touch" || pointerType === "pen";
 }
 
 type LongPressHandlers = Pick<
@@ -48,6 +74,7 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let originX = 0;
 	let originY = 0;
+	let pressing = false;
 	let pressConsumed = false;
 
 	const cancel = () => {
@@ -62,11 +89,13 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			pressConsumed = false;
 			cancel();
 			if (event.pointerType === "mouse") return;
+			pressing = true;
 			originX = event.clientX;
 			originY = event.clientY;
 			timer = setTimeout(() => {
 				timer = null;
 				pressConsumed = true;
+				holdTouch();
 				fireOnce(onLongPress);
 			}, LONG_PRESS_DURATION_MS);
 		},
@@ -81,19 +110,29 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			}
 		},
 		onpointerup(event) {
+			pressing = false;
 			cancel();
 			if (pressConsumed && event.pointerType !== "mouse") {
 				suppressNextClick();
 			}
 		},
-		onpointercancel: cancel,
+		onpointercancel() {
+			pressing = false;
+			cancel();
+		},
 		oncontextmenu(event) {
 			event.preventDefault();
 			cancel();
-			if (!pressConsumed) {
-				pressConsumed = true;
-				fireOnce(onLongPress);
+			if (Date.now() < heldTouchUntil) return;
+			if (pressing && pressConsumed) return;
+			pressConsumed = true;
+			const { pointerType } = event as Partial<PointerEvent>;
+			if (pointerType === "mouse" || pointerType === "") {
+				onLongPress();
+				return;
 			}
+			if (isTouchLike(pointerType)) holdTouch();
+			fireOnce(onLongPress);
 		},
 	};
 }
