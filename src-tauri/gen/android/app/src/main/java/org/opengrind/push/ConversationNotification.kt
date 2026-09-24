@@ -1,6 +1,7 @@
 package org.opengrind.push
 
 import android.content.Context
+import android.os.Bundle
 import android.service.notification.StatusBarNotification
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.MessagingStyle
@@ -11,6 +12,7 @@ import org.opengrind.push.ConversationLines.Line
 
 object ConversationNotification {
 	private const val EXTRA_DEDUPE_KEY = "org.opengrind.push.extra.DEDUPE_KEY"
+	private const val EXTRA_CONVERSATION_ID = "org.opengrind.push.extra.CONVERSATION_ID"
 
 	fun post(
 		context: Context,
@@ -19,13 +21,14 @@ object ConversationNotification {
 		builder: NotificationCompat.Builder,
 		decision: PushDecision.Notify,
 		posted: StatusBarNotification?,
+		withdrawn: Set<String>,
 	) {
 		val shown = posted
 			?.let { MessagingStyle.extractMessagingStyleFromNotification(it.notification) }
 			?.let(::linesOf)
 			.orEmpty()
 		val lines = ConversationLines.append(
-			shown,
+			ConversationLines.remove(shown, withdrawn),
 			Line(decision.dedupeKey, decision.body, decision.timestamp),
 		)
 		if (lines == shown) return
@@ -34,14 +37,21 @@ object ConversationNotification {
 			.setStyle(style(context, peer, lines))
 			.setCategory(NotificationCompat.CATEGORY_MESSAGE)
 			.setWhen(lines.last().timestamp)
+			.addExtras(Bundle().apply { putString(EXTRA_CONVERSATION_ID, decision.groupKey) })
 			.build()
 		NotificationManagerCompat.from(context).notify(channel, id, notification)
 	}
 
-	fun withdraw(context: Context, posted: StatusBarNotification, dedupeKey: String) {
+	fun shown(posted: StatusBarNotification): PushPoll.ShownConversation? {
+		val conversationId = posted.notification.extras.getString(EXTRA_CONVERSATION_ID) ?: return null
+		val style = MessagingStyle.extractMessagingStyleFromNotification(posted.notification) ?: return null
+		return PushPoll.ShownConversation(conversationId, linesOf(style).map(Line::dedupeKey))
+	}
+
+	fun withdraw(context: Context, posted: StatusBarNotification, dedupeKeys: Set<String>) {
 		val style = MessagingStyle.extractMessagingStyleFromNotification(posted.notification) ?: return
 		val shown = linesOf(style)
-		val lines = ConversationLines.remove(shown, dedupeKey)
+		val lines = ConversationLines.remove(shown, dedupeKeys)
 		if (lines == shown) return
 		val manager = NotificationManagerCompat.from(context)
 		val peer = style.messages.firstNotNullOfOrNull { it.person }

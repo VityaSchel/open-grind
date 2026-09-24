@@ -27,15 +27,14 @@ class PushPollService : JobService() {
 	private fun sweep(params: JobParameters) {
 		runCatching {
 			Keyring.initializeNdkContext(applicationContext)
-			val poll = PushPoll.since(PushSettings.watermarks(this))
+			val poll = PushPoll.since(PushSettings.watermarks(this), PushNotifier.shownConversations(this))
 			val now = System.currentTimeMillis()
 			if (!abandoned.get()) {
 				val seen = PushSettings.watermarks(this)
-				for (payload in poll.payloads) {
-					val decision = PushPayload.decide(payload, now)
-					if (decision is PushDecision.Notify && caughtUp(seen, decision)) continue
-					PushNotifier.apply(this, decision)
-				}
+				val decisions = poll.payloads
+					.map { payload -> PushPayload.decide(payload, now) }
+					.filterNot { decision -> decision is PushDecision.Notify && caughtUp(seen, decision) }
+				PushNotifier.applyAll(this, decisions)
 				PushSettings.advanceWatermarks(this, poll.watermarks)
 			}
 		}

@@ -10,6 +10,6 @@ object ConversationLines {
 		return (lines + line).sortedBy(Line::timestamp).takeLast(LIMIT)
 	}
 
-	fun remove(lines: List<Line>, dedupeKey: String): List<Line> =
-		lines.filterNot { it.dedupeKey == dedupeKey }
+	fun remove(lines: List<Line>, dedupeKeys: Set<String>): List<Line> =
+		lines.filterNot { it.dedupeKey in dedupeKeys }
 }

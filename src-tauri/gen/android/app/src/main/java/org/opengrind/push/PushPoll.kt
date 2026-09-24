@@ -1,5 +1,6 @@
 package org.opengrind.push
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 object PushPoll {
@@ -7,12 +8,16 @@ object PushPoll {
 		System.loadLibrary("open_grind_lib")
 	}
 
-	external fun nativePoll(sinceInbox: Long, sinceTaps: Long): String?
+	external fun nativePoll(sinceInbox: Long, sinceTaps: Long, shownConversations: String): String?
 
-	fun since(watermarks: Watermarks): Poll {
+	fun since(watermarks: Watermarks, shown: List<ShownConversation>): Poll {
 		val nothing = Poll(watermarks, emptyList())
 		val answer = runCatching {
-			nativePoll(sinceInbox = watermarks.inbox, sinceTaps = watermarks.taps)
+			nativePoll(
+				sinceInbox = watermarks.inbox,
+				sinceTaps = watermarks.taps,
+				shownConversations = encode(shown),
+			)
 		}.getOrNull() ?: return nothing
 		return runCatching { parse(answer) }.getOrDefault(nothing)
 	}
@@ -32,5 +37,16 @@ object PushPoll {
 		return Poll(watermarks, payloads)
 	}
 
+	private fun encode(shown: List<ShownConversation>): String =
+		JSONArray(
+			shown.map { conversation ->
+				JSONObject()
+					.put("conversationId", conversation.conversationId)
+					.put("keys", JSONArray(conversation.keys))
+			},
+		).toString()
+
 	data class Poll(val watermarks: Watermarks, val payloads: List<Map<String, String>>)
+
+	data class ShownConversation(val conversationId: String, val keys: List<String>)
 }

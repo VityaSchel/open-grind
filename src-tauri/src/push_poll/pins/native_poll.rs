@@ -13,6 +13,7 @@ fn poll_symbol() -> String {
 fn jni_type(kotlin: &str) -> &'static str {
 	match kotlin {
 		"Long" => "jlong",
+		"String" => "JString<'local>",
 		"String?" => "jstring",
 		other => panic!("the JNI pin has no JNI type for the Kotlin {other}"),
 	}
@@ -177,7 +178,7 @@ fn the_poll_bridge_takes_and_returns_what_kotlin_declares() {
 fn each_watermark_reaches_the_poll_under_its_own_name() {
 	assert!(
 		squashed(POLL).contains(
-			"nativePoll(sinceInbox=watermarks.inbox,sinceTaps=watermarks.taps)"
+			"nativePoll(sinceInbox=watermarks.inbox,sinceTaps=watermarks.taps,shownConversations=encode(shown),)"
 		),
 		"PushPoll.kt no longer passes each watermark to nativePoll by name, so the two can swap unnoticed"
 	);

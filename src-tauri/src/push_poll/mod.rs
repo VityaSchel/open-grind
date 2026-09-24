@@ -7,4 +7,4 @@ mod pushes;
 mod session;
 
 #[cfg(target_os = "android")]
-use pushes::{poll, Inbox, Poll, Watermarks};
+use pushes::{poll, Inbox, Poll, Push, ShownConversation, Watermarks};

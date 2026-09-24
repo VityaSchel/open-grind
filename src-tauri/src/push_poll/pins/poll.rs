@@ -5,8 +5,9 @@ use serde_json::Value;
 use super::{PAYLOAD, POLL, POLL_SERVICE, SCHEDULE, STRINGS};
 use crate::pin_support::{braced_block, kotlin_constant, squashed};
 use crate::push_poll::pushes::{
-	Poll, BODY_KEYS, CHATS_CHANNEL, CLEAR_DEEPLINK, CONVERSATION_DEEPLINK,
-	GENERIC_BODY, TAPS_CHANNEL, TAPS_DEEPLINK,
+	Poll, ShownConversation, BODY_KEYS, CHATS_CHANNEL, CLEAR_DEEPLINK,
+	CONVERSATION_DEEPLINK, GENERIC_BODY, TAPS_CHANNEL, TAPS_DEEPLINK,
+	UNSEND_DEEPLINK,
 };
 
 fn payload_constant(name: &str) -> &'static str {
@@ -89,6 +90,7 @@ fn every_link_and_channel_the_poll_emits_is_one_kotlin_routes() {
 	for (rust, kotlin, parameter) in [
 		(CONVERSATION_DEEPLINK, "CONVERSATION_DEEPLINK", "id"),
 		(CLEAR_DEEPLINK, "CLEAR_DEEPLINK", "conversationId"),
+		(UNSEND_DEEPLINK, "UNSEND_DEEPLINK", "notificationId"),
 	] {
 		assert_eq!(
 			rust,
@@ -112,4 +114,33 @@ fn every_link_and_channel_the_poll_emits_is_one_kotlin_routes() {
 			"the poll's {kotlin} is not the one PushPayload.kt routes"
 		);
 	}
+}
+
+#[test]
+fn the_cards_kotlin_reports_reach_the_poll_under_the_names_it_reads() {
+	let encode = braced_block(POLL, "PushPoll.kt", "private fun encode(");
+	let names: Vec<&str> = encode
+		.split(".put(\"")
+		.skip(1)
+		.filter_map(|call| call.split('"').next())
+		.collect();
+	assert_eq!(
+		names,
+		["conversationId", "keys"],
+		"PushPoll.kt encodes the shown cards under different names"
+	);
+	assert!(
+		squashed(encode).contains(".put(\"keys\",JSONArray("),
+		"PushPoll.kt no longer sends the keys as a JSON array, so the poll could not read any card"
+	);
+	let shown: ShownConversation = serde_json::from_value(serde_json::json!({
+		names[0]: "111:222",
+		names[1]: ["poll:111:222:2000:c0ffee"],
+	}))
+	.expect("the poll reads the cards Kotlin encodes");
+	assert_eq!(
+		shown.message_ids(),
+		["2000:c0ffee"],
+		"a card Kotlin reports would never be checked for unsent messages"
+	);
 }

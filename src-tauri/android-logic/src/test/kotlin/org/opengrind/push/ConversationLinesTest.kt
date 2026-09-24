@@ -58,18 +58,24 @@ class ConversationLinesTest {
 
 	@Test
 	fun `an unsent message is removed and the rest stay in order`() {
-		val lines = ConversationLines.remove(conversation(3), "m2")
+		val lines = ConversationLines.remove(conversation(3), setOf("m2"))
 		assertEquals(listOf("m1", "m3"), lines.map(Line::dedupeKey))
+	}
+
+	@Test
+	fun `several unsent messages go in one pass`() {
+		val lines = ConversationLines.remove(conversation(4), setOf("m1", "m3", "elsewhere"))
+		assertEquals(listOf("m2", "m4"), lines.map(Line::dedupeKey))
 	}
 
 	@Test
 	fun `removing a message the conversation does not show changes nothing`() {
 		val shown = conversation(3)
-		assertEquals(shown, ConversationLines.remove(shown, "elsewhere"))
+		assertEquals(shown, ConversationLines.remove(shown, setOf("elsewhere")))
 	}
 
 	@Test
 	fun `removing the only line leaves the conversation empty`() {
-		assertEquals(emptyList<Line>(), ConversationLines.remove(conversation(1), "m1"))
+		assertEquals(emptyList<Line>(), ConversationLines.remove(conversation(1), setOf("m1")))
 	}
 }
