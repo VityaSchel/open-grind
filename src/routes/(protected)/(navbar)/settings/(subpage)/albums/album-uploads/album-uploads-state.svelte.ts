@@ -3,6 +3,7 @@ import { toast } from "svelte-sonner";
 import { accountScoped } from "$lib/api/account-caches";
 import { httpStatusOf } from "$lib/api/api-error";
 import {
+	addDrawerMediaToAlbum,
 	type AlbumContentResponse,
 	getAlbumContent,
 	getAlbumContentProcessing,
@@ -347,6 +348,44 @@ class AlbumUploadsState {
 			if (landed !== undefined) return landed.contentId;
 		}
 		return null;
+	}
+
+	async addFromDrawer({
+		albumId,
+		mediaIds,
+		present,
+	}: {
+		albumId: number;
+		mediaIds: number[];
+		present: readonly number[];
+	}): Promise<void> {
+		await addDrawerMediaToAlbum({ albumId, mediaIds });
+		forgetAlbumSlides(albumId);
+		void this.#landAdded({ albumId, present: new Set(present) });
+	}
+
+	async #landAdded({
+		albumId,
+		present,
+	}: {
+		albumId: number;
+		present: ReadonlySet<number>;
+	}): Promise<void> {
+		const epoch = this.#epoch;
+		const content = await this.#readContent(albumId);
+		if (epoch !== this.#epoch) return;
+		if (content === null) {
+			toast.success(LOST_READ_MESSAGE);
+			return;
+		}
+		const draft = this.#drafts.get(albumId);
+		const added = content.filter((item) => !present.has(item.contentId));
+		for (const item of added.toReversed()) {
+			this.#landedIds(albumId).add(item.contentId);
+			draft?.land(item);
+			if (item.processing)
+				void this.#watch({ albumId, contentId: item.contentId });
+		}
 	}
 
 	async #land({

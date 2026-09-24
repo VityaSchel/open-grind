@@ -292,6 +292,23 @@ export function demoUploadAlbumContent({
 	return { contentId, sha256: demoContentHash(contentId) };
 }
 
+export function demoAddToAlbum({
+	albumId,
+	kinds,
+}: {
+	albumId: number;
+	kinds: MediaFileKind[];
+}): boolean {
+	const { content } = demoAlbumContent(albumId);
+	if (
+		content.length + kinds.length >
+		demoAlbumStorageLimits.maxContentItemsPerAlbum
+	)
+		return false;
+	for (const kind of kinds) demoUploadAlbumContent({ albumId, kind });
+	return true;
+}
+
 export function demoMyAlbums() {
 	const albums = [
 		...demoAlbumSeeds.map((seed, index) => ({

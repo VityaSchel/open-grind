@@ -87,9 +87,16 @@ async function traceUploads(page: Page): Promise<() => Promise<UploadTrace>> {
 async function addMedia(
 	page: Page,
 	files: { name: string; mimeType: string; buffer: Buffer }[],
+	{ fromSheet = true }: { fromSheet?: boolean } = {},
 ): Promise<void> {
 	const chooser = page.waitForEvent("filechooser");
 	await page.getByRole("button", { name: "Add photos or videos" }).click();
+	if (fromSheet) {
+		await page
+			.getByRole("button", { name: "Upload photos or videos" })
+			.first()
+			.click();
+	}
 	await (await chooser).setFiles(files);
 }
 
@@ -194,13 +201,36 @@ test.describe("album uploads", () => {
 		).toHaveCount(4);
 	});
 
+	test("previous uploads join the album from the sheet", async ({ page }) => {
+		await openSharedAlbum(page);
+		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
+
+		await page
+			.getByRole("button", { name: "Add photos or videos" })
+			.click();
+		const sheet = page.getByRole("dialog", { name: "Add to album" });
+		await sheet
+			.getByRole("button", { name: "Photo 1", exact: true })
+			.click();
+		await sheet
+			.getByRole("button", { name: "Photo 2", exact: true })
+			.click();
+		await sheet.getByRole("button", { name: /^Add to album/ }).click();
+
+		await expect(sheet).toBeHidden();
+		await expect(page.locator(MEDIA_SLOT)).toHaveCount(5, {
+			timeout: 30_000,
+		});
+		await expect(page.getByText("5/10 photos, 0/1 videos")).toBeVisible();
+	});
+
 	test("a new album is created by its first photo", async ({ page }) => {
 		await openAlbums(page);
 		await page.getByRole("link", { name: "Add album" }).click();
 		await expect(page).toHaveURL(/\/albums\/new$/);
 		await page.getByRole("textbox", { name: "Album name" }).fill("Rooftop");
 
-		await addMedia(page, [photoFile("one.png")]);
+		await addMedia(page, [photoFile("one.png")], { fromSheet: false });
 
 		await expect(page).toHaveURL(/\/albums\/\d+$/, { timeout: 30_000 });
 		await expect(

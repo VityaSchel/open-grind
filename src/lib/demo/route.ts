@@ -14,6 +14,7 @@ import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import { demoMeProfileId } from "./config";
 import {
+	demoAddToAlbum,
 	demoAlbumContent,
 	demoAlbumContentProcessing,
 	demoAlbumExists,
@@ -327,6 +328,28 @@ export function demoRoute({
 	) {
 		const { albumName } = albumNameRequestSchema.parse(body);
 		return ok(demoRenameAlbum({ albumId: Number(segments[2]), albumName }));
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v1" &&
+		segments[1] === "albums" &&
+		segments[3] === "content" &&
+		segments[4] === "chat" &&
+		segments[5] === "list-by-id"
+	) {
+		const ids = (body as { ids?: number[] } | null)?.ids ?? [];
+		const drawer = new Map(
+			demoDrawerMedia().map((item) => [item.id, item]),
+		);
+		const added = demoAddToAlbum({
+			albumId: Number(segments[2]),
+			kinds: ids.map((id) =>
+				drawer.get(id)?.contentType.startsWith("video/")
+					? "video"
+					: "photo",
+			),
+		});
+		return added ? ok(null) : { status: 402, body: null };
 	}
 	if (
 		method === "POST" &&

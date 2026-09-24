@@ -13,10 +13,11 @@ import {
 	pickMultipleMedia,
 } from "$lib/platform/media-picker";
 import type { AlbumContent } from "$lib/model/messaging/albums";
-import type {
-	AlbumUploads,
-	InspectedPick,
-	UploadLimits,
+import {
+	type AlbumUploads,
+	type InspectedPick,
+	isPlanLimitReached,
+	type UploadLimits,
 } from "./album-uploads-state.svelte";
 
 const UNSUPPORTED_MESSAGE = "That file isn't a photo or video";
@@ -120,5 +121,30 @@ export async function addAlbumMedia({
 	} catch (error) {
 		console.error(error);
 		showErrorToast({ label: "Couldn't add to album", error });
+	}
+}
+
+export async function addPreviousUploads({
+	uploads,
+	albumId,
+	mediaIds,
+	present,
+}: {
+	uploads: AlbumUploads;
+	albumId: number;
+	mediaIds: number[];
+	present: readonly number[];
+}): Promise<boolean> {
+	try {
+		await uploads.addFromDrawer({ albumId, mediaIds, present });
+		return true;
+	} catch (error) {
+		console.error(error);
+		if (isPlanLimitReached(error)) {
+			toast.error(ALBUM_FULL_MESSAGE);
+		} else {
+			showErrorToast({ label: "Couldn't add to album", error });
+		}
+		return false;
 	}
 }
