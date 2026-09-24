@@ -125,9 +125,6 @@ export const videoMessageSchema = messageBaseSchema.safeExtend({
 
 export type VideoMessage = z.infer<typeof videoMessageSchema>;
 
-export const VIEW_ONCE_MAX_VIEWS = 1;
-export const REPLAYABLE_MAX_VIEWS = 2;
-
 export const nonExpiringVideoMessageSchema = messageBaseSchema.safeExtend({
 	type: z.literal("NonExpiringVideo"),
 	body: unmodeledSchema,

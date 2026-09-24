@@ -1,10 +1,10 @@
-import {
-	type MessageDraft,
-	REPLAYABLE_MAX_VIEWS,
-	VIEW_ONCE_MAX_VIEWS,
-} from "$lib/model/messaging/messages";
 import { mediaFileKindOf } from "$lib/platform/media-file";
 import type { DrawerMedia } from "$lib/api/messaging/drawer";
+import type { MessageDraft } from "$lib/model/messaging/messages";
+
+const VIEW_ONCE_MAX_VIEWS = 1;
+
+const REPLAYABLE_MAX_VIEWS = 2;
 
 function imageHashFromUrl(url: string): string {
 	return /([0-9a-f]{64}|[0-9a-f]{40})/i.exec(url)?.[1] ?? "";
@@ -31,6 +31,7 @@ function videoMessageDraft({
 				contentType: item.contentType,
 				length: 0,
 				maxViews,
+				viewsRemaining: maxViews,
 				looping: false,
 			},
 		},

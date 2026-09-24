@@ -223,7 +223,12 @@
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
 		{:else if message.type === "Video" || message.type === "PrivateVideo"}
-			<VideoMessage message={message.body} {isOut} />
+			<VideoMessage
+				message={message.body}
+				conversationId={message.conversationId}
+				messageId={message.messageId}
+				delivered={status !== "pending" && status !== "error"}
+			/>
 		{:else if message.type === "Unsent"}
 			<UnsentMessage />
 		{:else}

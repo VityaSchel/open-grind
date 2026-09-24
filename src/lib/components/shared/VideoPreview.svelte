@@ -4,14 +4,7 @@
 	let {
 		src,
 		class: className,
-		aspectRatio,
-		onmetadata,
-	}: {
-		src: string;
-		class?: import("svelte/elements").ClassValue;
-		aspectRatio?: string;
-		onmetadata?: (video: HTMLVideoElement) => void;
-	} = $props();
+	}: { src: string; class?: import("svelte/elements").ClassValue } = $props();
 
 	let armed = $state(false);
 </script>
@@ -26,6 +19,4 @@
 	tabindex="-1"
 	aria-hidden="true"
 	class={["pointer-events-none object-cover", className]}
-	style:aspect-ratio={aspectRatio}
-	onloadedmetadata={(event) => onmetadata?.(event.currentTarget)}
 ></video>

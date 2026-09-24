@@ -65,7 +65,7 @@ describe("mediaMessageDraft", () => {
 		contentType: "video/mp4",
 	};
 
-	it("sends a video that can be replayed", () => {
+	it("sends a video with two views, all of them left on our own bubble", () => {
 		const draft = mediaMessageDraft({ item: video, expiring: false });
 
 		expect(draft.outbound).toEqual({
@@ -80,12 +80,13 @@ describe("mediaMessageDraft", () => {
 				contentType: "video/mp4",
 				length: 0,
 				maxViews: 2,
+				viewsRemaining: 2,
 				looping: false,
 			},
 		});
 	});
 
-	it("sends an expiring video as view once", () => {
+	it("sends an expiring video as view once, its one view left on our own bubble", () => {
 		const draft = mediaMessageDraft({ item: video, expiring: true });
 
 		expect(draft.outbound).toEqual({
@@ -94,7 +95,12 @@ describe("mediaMessageDraft", () => {
 		});
 		expect(draft.optimistic).toMatchObject({
 			type: "Video",
-			body: { mediaId: video.id, url: video.url, maxViews: 1 },
+			body: {
+				mediaId: video.id,
+				url: video.url,
+				maxViews: 1,
+				viewsRemaining: 1,
+			},
 		});
 	});
 

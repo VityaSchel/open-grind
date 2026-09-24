@@ -10,163 +10,268 @@ const dimensions = vi.hoisted(() => ({
 	measureVideo: vi.fn(() => Promise.resolve({ width: 720, height: 1280 })),
 	measureImage: vi.fn(),
 }));
+const messagesApi = vi.hoisted(() => ({ getSingleMessage: vi.fn() }));
+const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
 vi.mock("./video-lightbox", () => lightbox);
 vi.mock("$lib/util/media-dimensions", () => dimensions);
+vi.mock("$lib/api/error-toast", () => errorToast);
+vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
+	...messagesApi,
+}));
 
-import { viewedVideos } from "$lib/chat/viewed-videos.svelte";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import Message from "./Message.svelte";
 
-const URL = "https://cdns.grindr.com/videos/chat/clip.mp4";
-const PREVIEW = '[data-slot="video-preview"]';
-const UNAVAILABLE = '[data-slot="video-message-unavailable"]';
+const LIST_URL = "https://cdns.grindr.com/videos/chat/list.mp4";
+const REFETCHED_URL = "https://cdns.grindr.com/videos/chat/refetched.mp4";
+const CONVERSATION_ID = "100001:100002";
+const MESSAGE_ID = "m1";
+const PLAY = { name: "Play expiring video" };
+const SPENT = '[data-slot="video-message-spent"]';
 
-function renderVideo({
+function videoMessage({
 	body,
 	isOut = false,
 }: {
 	body: Record<string, unknown>;
 	isOut?: boolean;
 }) {
-	const message = apiResponseMessageSchema.parse({
-		messageId: "m1",
-		conversationId: "100001:100002",
+	return apiResponseMessageSchema.parse({
+		messageId: MESSAGE_ID,
+		conversationId: CONVERSATION_ID,
 		senderId: isOut ? 100001 : 100002,
 		timestamp: 1_700_000_000_000,
 		type: "Video",
 		body: {
 			mediaId: 900_001,
-			url: URL,
+			url: LIST_URL,
 			contentType: "video/mp4",
 			length: 12_000,
 			maxViews: 2,
+			viewsRemaining: 2,
 			looping: false,
 			...body,
 		},
 	});
+}
+
+function renderVideo({
+	body,
+	isOut = false,
+	status,
+}: {
+	body: Record<string, unknown>;
+	isOut?: boolean;
+	status?: "sent" | "pending" | "error";
+}) {
 	return render(Message, {
 		props: {
-			message,
+			message: videoMessage({ body, isOut }),
 			isOut,
 			isRead: null,
 			indexInStack: 0,
 			stackLength: 1,
+			status,
 		},
 	});
 }
 
-afterEach(() => {
-	cleanup();
-	vi.clearAllMocks();
-	viewedVideos.clear();
-});
+function refetchReturns(body: Record<string, unknown>) {
+	messagesApi.getSingleMessage.mockResolvedValue({
+		message: videoMessage({ body: { url: REFETCHED_URL, ...body } }),
+	});
+}
 
-async function watchOnce(
-	name: string,
-	getByRole: (role: string, options: { name: string }) => HTMLElement,
-) {
-	await fireEvent.click(getByRole("button", { name }));
-	await vi.waitFor(() =>
-		expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
-	);
+function closeLightbox() {
 	const [call] = lightbox.openVideoLightbox.mock.calls as unknown as [
 		[{ onClosed: () => void }],
 	];
 	call[0].onClosed();
 }
 
-describe("video message", () => {
-	it("previews a replayable video behind a play control", () => {
-		const { getByRole, container } = renderVideo({ body: {} });
+afterEach(() => {
+	cleanup();
+	vi.clearAllMocks();
+});
 
-		expect(getByRole("button", { name: "Play video" })).toBeTruthy();
-		expect(container.querySelector<HTMLVideoElement>(PREVIEW)?.src).toBe(
-			`${URL}#t=0.001`,
-		);
-		expect(container.querySelector(UNAVAILABLE)).toBeNull();
+describe("video message", () => {
+	it("labels every video as expiring, whatever its view budget", () => {
+		for (const maxViews of [1, 2]) {
+			const { getByRole, getByText, unmount } = renderVideo({
+				body: { maxViews, viewsRemaining: maxViews },
+			});
+
+			expect(getByRole("button", PLAY)).toBeTruthy();
+			expect(getByText("Expiring video")).toBeTruthy();
+			unmount();
+		}
 	});
 
-	it("plays the video in the lightbox, looping when the sender asked", async () => {
-		const { getByRole } = renderVideo({ body: { looping: true } });
+	it("never loads the video into the bubble", () => {
+		const { container } = renderVideo({ body: {} });
 
-		await fireEvent.click(getByRole("button", { name: "Play video" }));
+		expect(container.querySelector("video")).toBeNull();
+		expect(
+			container.querySelector('[data-slot="video-preview"]'),
+		).toBeNull();
+	});
+
+	it("keeps our own sent video with views left playable", () => {
+		const { getByRole } = renderVideo({
+			body: { viewsRemaining: 1 },
+			isOut: true,
+		});
+
+		expect(getByRole("button", PLAY)).toBeTruthy();
+	});
+
+	it("greys out a video without views left, received or sent", () => {
+		for (const isOut of [false, true]) {
+			for (const viewsRemaining of [0, undefined]) {
+				const { queryByRole, getByText, container, unmount } =
+					renderVideo({ body: { viewsRemaining }, isOut });
+
+				expect(queryByRole("button", PLAY)).toBeNull();
+				expect(container.querySelector(SPENT)).not.toBeNull();
+				expect(getByText("Expiring video")).toBeTruthy();
+				unmount();
+			}
+		}
+	});
+
+	it("spends a view by refetching the message and plays the refetched url", async () => {
+		refetchReturns({ looping: true, viewsRemaining: 1 });
+		const { getByRole } = renderVideo({ body: {} });
+
+		await fireEvent.click(getByRole("button", PLAY));
 
 		await vi.waitFor(() =>
 			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
 		);
+		expect(messagesApi.getSingleMessage).toHaveBeenCalledExactlyOnceWith({
+			conversationId: CONVERSATION_ID,
+			messageId: MESSAGE_ID,
+		});
 		expect(lightbox.openVideoLightbox).toHaveBeenCalledWith(
 			expect.objectContaining({
-				video: { src: URL, loop: true, width: 720, height: 1280 },
+				video: {
+					src: REFETCHED_URL,
+					loop: true,
+					width: 720,
+					height: 1280,
+				},
 			}),
 		);
+		expect(dimensions.measureVideo).toHaveBeenCalledExactlyOnceWith(
+			REFETCHED_URL,
+		);
 	});
 
-	it("hides an expiring video's frames behind a play control", () => {
-		const { getByRole, container } = renderVideo({ body: { maxViews: 1 } });
+	it("does not loop unless the sender asked", async () => {
+		refetchReturns({ looping: false });
+		const { getByRole } = renderVideo({ body: { looping: true } });
 
-		expect(
-			getByRole("button", { name: "Play expiring video" }),
-		).toBeTruthy();
-		expect(container.querySelector(PREVIEW)).toBeNull();
-	});
-
-	it("locks a received view-once video after it was watched", async () => {
-		const { getByRole, queryByRole, container } = renderVideo({
-			body: { maxViews: 1 },
-		});
-
-		await watchOnce("Play expiring video", getByRole);
+		await fireEvent.click(getByRole("button", PLAY));
 
 		await vi.waitFor(() =>
-			expect(container.querySelector(UNAVAILABLE)).not.toBeNull(),
+			expect(lightbox.openVideoLightbox).toHaveBeenCalledWith(
+				expect.objectContaining({
+					video: expect.objectContaining({ loop: false }),
+				}),
+			),
 		);
-		expect(
-			queryByRole("button", { name: "Play expiring video" }),
-		).toBeNull();
 	});
 
-	it("keeps our own view-once video playable after we watch it", async () => {
-		const { getByRole } = renderVideo({
-			body: { maxViews: 1 },
-			isOut: true,
+	it("greys out a view once video after its only play", async () => {
+		refetchReturns({ maxViews: 1, viewsRemaining: 0 });
+		const { getByRole, queryByRole, container } = renderVideo({
+			body: { maxViews: 1, viewsRemaining: 1 },
 		});
 
-		await watchOnce("Play expiring video", getByRole);
+		await fireEvent.click(getByRole("button", PLAY));
+		await vi.waitFor(() =>
+			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
+		);
+		closeLightbox();
 
-		expect(
-			getByRole("button", { name: "Play expiring video" }),
-		).toBeTruthy();
+		await vi.waitFor(() =>
+			expect(container.querySelector(SPENT)).not.toBeNull(),
+		);
+		expect(queryByRole("button", PLAY)).toBeNull();
 	});
 
-	it("shows a received video without a url as expired", () => {
-		const { queryByRole, getByText, container } = renderVideo({
-			body: { url: null, maxViews: 1 },
-		});
+	it("spends another view on each play while views are left", async () => {
+		refetchReturns({ viewsRemaining: 1 });
+		const { getByRole } = renderVideo({ body: {} });
 
-		expect(queryByRole("button", { name: /play/i })).toBeNull();
-		expect(container.querySelector(PREVIEW)).toBeNull();
-		expect(container.querySelector(UNAVAILABLE)).not.toBeNull();
-		expect(getByText("Expired video")).toBeTruthy();
+		await fireEvent.click(getByRole("button", PLAY));
+		await vi.waitFor(() =>
+			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
+		);
+		closeLightbox();
+
+		await vi.waitFor(() =>
+			expect(
+				(getByRole("button", PLAY) as HTMLButtonElement).disabled,
+			).toBe(false),
+		);
+		await fireEvent.click(getByRole("button", PLAY));
+		await vi.waitFor(() =>
+			expect(lightbox.openVideoLightbox).toHaveBeenCalledTimes(2),
+		);
+		expect(messagesApi.getSingleMessage).toHaveBeenCalledTimes(2);
 	});
 
-	it("shows a received video with no views left as expired", () => {
-		const { queryByRole, container } = renderVideo({
-			body: { maxViews: 1, viewsRemaining: 0 },
-		});
+	it("toasts and keeps the bubble when the refetch fails", async () => {
+		messagesApi.getSingleMessage.mockRejectedValue(new Error("offline"));
+		const { getByRole } = renderVideo({ body: {} });
 
-		expect(queryByRole("button", { name: /play/i })).toBeNull();
-		expect(container.querySelector(UNAVAILABLE)).not.toBeNull();
+		await fireEvent.click(getByRole("button", PLAY));
+
+		await vi.waitFor(() =>
+			expect(errorToast.showErrorToast).toHaveBeenCalledOnce(),
+		);
+		expect(lightbox.openVideoLightbox).not.toHaveBeenCalled();
+		await vi.waitFor(() =>
+			expect(
+				(getByRole("button", PLAY) as HTMLButtonElement).disabled,
+			).toBe(false),
+		);
 	});
 
-	it("keeps our own sent video without a url as an inert bubble", () => {
-		const { queryByRole, queryByText, container } = renderVideo({
-			body: { url: null },
-			isOut: true,
-		});
+	it("greys out the bubble when the refetched message has no url", async () => {
+		refetchReturns({ url: null, viewsRemaining: 0 });
+		const { getByRole, queryByRole, container } = renderVideo({ body: {} });
 
-		expect(queryByRole("button", { name: /play/i })).toBeNull();
-		expect(container.querySelector(UNAVAILABLE)).not.toBeNull();
-		expect(queryByText("Expired video")).toBeNull();
+		await fireEvent.click(getByRole("button", PLAY));
+
+		await vi.waitFor(() =>
+			expect(container.querySelector(SPENT)).not.toBeNull(),
+		);
+		expect(queryByRole("button", PLAY)).toBeNull();
+		expect(errorToast.showErrorToast).not.toHaveBeenCalled();
+		expect(lightbox.openVideoLightbox).not.toHaveBeenCalled();
 	});
+
+	it("keeps our own video inert until the server confirms it", async () => {
+		for (const status of ["pending", "error"] as const) {
+			const { queryByRole, container, unmount } = renderVideo({
+				body: { viewsRemaining: 2 },
+				isOut: true,
+				status,
+			});
+
+			expect(queryByRole("button", PLAY)).toBeNull();
+			const bubble = container.querySelector<HTMLElement>(
+				'[data-slot="video-message-sending"]',
+			);
+			expect(bubble).not.toBeNull();
+			await fireEvent.click(bubble!);
+			expect(messagesApi.getSingleMessage).not.toHaveBeenCalled();
+			unmount();
+		}
+	});
+
 });
