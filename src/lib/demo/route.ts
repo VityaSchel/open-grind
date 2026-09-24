@@ -33,6 +33,7 @@ import {
 	demoConversationMessages,
 	demoConversations,
 	demoDeleteConversation,
+	demoDeleteDrawerMedia,
 	demoDrawerMedia,
 	demoSentMessage,
 	demoSetConversationMuted,
@@ -406,8 +407,12 @@ export function demoRoute({
 		demoDeleteConversation(conversationId);
 		return ok({});
 	}
-	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer/")) {
+	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer")) {
 		return ok(demoDrawerMedia());
+	}
+	if (method === "DELETE" && rawPath.startsWith("/v4/chat/media/drawer/")) {
+		demoDeleteDrawerMedia(Number(segments.at(-1)));
+		return ok({});
 	}
 	if (method === "GET" && rawPath === "/v3/places/search") {
 		return ok({ places: [] });

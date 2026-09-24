@@ -23,7 +23,7 @@
 		children,
 	}: {
 		anchor: VirtualElement;
-		style: string;
+		style?: string;
 		onClose: () => void;
 		isOut?: boolean;
 		selectable?: boolean;

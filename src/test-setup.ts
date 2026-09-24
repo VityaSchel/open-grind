@@ -90,3 +90,19 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 		disconnect() {}
 	};
 }
+
+// jsdom has no modal dialogs; opening one only needs the `open` state, and
+// closing one fires `close` as a task, as browsers do.
+if (
+	typeof HTMLDialogElement !== "undefined" &&
+	!HTMLDialogElement.prototype.showModal
+) {
+	HTMLDialogElement.prototype.showModal = function () {
+		this.open = true;
+	};
+	HTMLDialogElement.prototype.close = function () {
+		if (!this.open) return;
+		this.open = false;
+		setTimeout(() => this.dispatchEvent(new Event("close")));
+	};
+}

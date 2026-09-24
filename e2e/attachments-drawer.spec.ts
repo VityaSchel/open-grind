@@ -5,6 +5,7 @@ import {
 	box,
 	DRAWER,
 	expandToFull,
+	MEDIA_TILE,
 	openAttachments,
 	SELECTABLE_MEDIA_TILE,
 	SELECTED_MEDIA_TILE,
@@ -380,6 +381,210 @@ test.describe("attachments drawer", () => {
 			await page.locator(SELECTED_MEDIA_TILE).count(),
 			"closing by dragging a tile must not select it",
 		).toBe(0);
+	});
+
+	test("right-click deletes a tile for good after confirming, and the drawer stays open", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		const tiles = page.locator(MEDIA_TILE);
+		const before = await tiles.count();
+		const firstId = await page.evaluate(
+			(selector) => document.querySelector(selector)?.outerHTML,
+			MEDIA_TILE,
+		);
+
+		await tiles.first().click({ button: "right" });
+		await page
+			.getByRole("menuitem", { name: "Delete permanently" })
+			.click();
+		const confirm = page.getByRole("alertdialog");
+		await expect(confirm).toContainText("Delete this photo?");
+		await confirm.getByRole("button", { name: "Delete" }).click();
+
+		await expect(tiles).toHaveCount(before - 1);
+		expect(
+			await page.evaluate(
+				(selector) => document.querySelector(selector)?.outerHTML,
+				MEDIA_TILE,
+			),
+		).not.toBe(firstId);
+		await expect(page.locator(DRAWER)).toBeVisible();
+		expect(await page.locator(SELECTED_MEDIA_TILE).count()).toBe(0);
+	});
+
+	test("touch: a long press opens the delete menu without selecting the tile", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		const touch = await TrustedTouch.attach(page);
+		const rect = (await page
+			.locator(SELECTABLE_MEDIA_TILE)
+			.first()
+			.boundingBox())!;
+
+		await touch.start(rect.x + rect.width / 2, rect.y + rect.height / 2);
+		await page.waitForTimeout(900);
+		await expect(
+			page.getByRole("menuitem", { name: "Delete permanently" }),
+		).toBeVisible();
+		await touch.end();
+		await page.waitForTimeout(300);
+
+		await expect(
+			page.getByRole("menuitem", { name: "Delete permanently" }),
+			"lifting the finger that opened the menu keeps it open",
+		).toBeVisible();
+		await page.waitForTimeout(400);
+		expect(await page.locator(SELECTED_MEDIA_TILE).count()).toBe(0);
+
+		await page.keyboard.press("Escape");
+		await expect(
+			page.getByRole("menuitem", { name: "Delete permanently" }),
+		).toBeHidden();
+		await expect(page.locator(DRAWER)).toBeVisible();
+	});
+
+	test("tiles sit in rows with nothing between them but the grid gap", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		const rows = await page.evaluate((selector) => {
+			const tiles = [
+				...document.querySelectorAll<HTMLElement>(selector),
+			].map((tile) => tile.getBoundingClientRect());
+			const top = tiles[0]!.top;
+			const nextRow = tiles.find((tile) => tile.top > top + 1)!;
+			return { height: tiles[0]!.height, pitch: nextRow.top - top };
+		}, MEDIA_TILE);
+
+		expect(rows.pitch - rows.height).toBeLessThanOrEqual(3);
+	});
+
+	test("the menu lifts the tile over a blurred scrim, with the menu beside it", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		const tile = page.locator(MEDIA_TILE).nth(1);
+		const tileBox = (await tile.boundingBox())!;
+
+		await tile.click({ button: "right" });
+
+		const lifted = page.locator('[data-slot="media-tile-lifted"]');
+		const menu = page.getByRole("menu", { name: /options$/ });
+		await expect(menu).toBeVisible();
+		const liftedBox = (await lifted.boundingBox())!;
+		const menuBox = (await menu.boundingBox())!;
+		expect(Math.abs(liftedBox.x - tileBox.x)).toBeLessThan(2);
+		expect(Math.abs(liftedBox.y - tileBox.y)).toBeLessThan(2);
+		const gapRight = menuBox.x - (liftedBox.x + liftedBox.width);
+		const gapLeft = liftedBox.x - (menuBox.x + menuBox.width);
+		expect(
+			[gapRight, gapLeft].some((gap) => gap >= 4 && gap <= 16),
+			"the menu sits right beside the tile",
+		).toBe(true);
+		expect(Math.abs(menuBox.y - liftedBox.y)).toBeLessThan(12);
+		expect(
+			await lifted.evaluate((copy) => {
+				const image = copy.querySelector("img");
+				const frame = copy.querySelector("canvas");
+				return (
+					(image !== null && image.currentSrc !== "") ||
+					(frame !== null && frame.width > 0)
+				);
+			}),
+			"the lifted copy shows the tile's media",
+		).toBe(true);
+		expect(
+			await page.evaluate(
+				() =>
+					getComputedStyle(
+						document.querySelector("dialog.menu-scrim")!,
+						"::backdrop",
+					).backdropFilter,
+			),
+		).toContain("blur");
+		await expect(tile).toHaveCSS("opacity", "0");
+	});
+
+	test("tapping the scrim closes the menu only, selecting nothing under it", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		await page.locator(SELECTABLE_MEDIA_TILE).first().click();
+		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(1);
+		const neighbor = page.locator(SELECTABLE_MEDIA_TILE).nth(2);
+		const neighborBox = (await neighbor.boundingBox())!;
+
+		await page
+			.locator(SELECTABLE_MEDIA_TILE)
+			.nth(1)
+			.click({ button: "right" });
+		await expect(page.getByRole("menu")).toBeVisible();
+		await page.mouse.click(
+			neighborBox.x + neighborBox.width / 2,
+			neighborBox.y + neighborBox.height / 2,
+		);
+		await expect(page.getByRole("menu")).toHaveCount(0);
+		await page.waitForTimeout(300);
+		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(1);
+
+		await page
+			.locator(SELECTABLE_MEDIA_TILE)
+			.nth(1)
+			.click({ button: "right" });
+		await expect(page.getByRole("menu")).toBeVisible();
+		await page.mouse.click(210, 20);
+		await expect(page.getByRole("menu")).toHaveCount(0);
+		await page.waitForTimeout(400);
+		await expect(page.locator(DRAWER)).toBeVisible();
+		await expect(page.locator(SELECTED_MEDIA_TILE)).toHaveCount(1);
+	});
+
+	test("Escape and a right-click on the scrim close the menu, not the sheet, and keep the scroll", async ({
+		page,
+	}) => {
+		await openAttachments(page);
+		await expandToFull(page);
+		const scroller = page.locator("[data-slot=sheet-scroller]");
+		await scroller.evaluate((el) => (el.scrollTop += 120));
+		const scrolled = await scroller.evaluate((el) => el.scrollTop);
+		const tile = page.locator(MEDIA_TILE).nth(4);
+
+		await tile.click({ button: "right" });
+		await expect(page.getByRole("menu")).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(page.getByRole("menu")).toHaveCount(0);
+		await expect(page.locator(DRAWER)).toBeVisible();
+		expect(await scroller.evaluate((el) => el.scrollTop)).toBe(scrolled);
+
+		await tile.click({ button: "right" });
+		await expect(page.getByRole("menu")).toBeVisible();
+		const other = (await page.locator(MEDIA_TILE).nth(5).boundingBox())!;
+		await page.mouse.click(
+			other.x + other.width / 2,
+			other.y + other.height / 2,
+			{ button: "right" },
+		);
+		await page.waitForTimeout(400);
+		await expect(
+			page.locator("dialog[open]"),
+			"the right-click closes the menu and opens no other",
+		).toHaveCount(0);
+		await expect(page.locator(DRAWER)).toHaveAttribute(
+			"data-state",
+			"open",
+		);
+		expect(
+			await page
+				.locator(MEDIA_TILE)
+				.evaluateAll(
+					(tiles) =>
+						tiles.filter((t) => getComputedStyle(t).opacity === "0")
+							.length,
+				),
+		).toBe(0);
+		expect(await scroller.evaluate((el) => el.scrollTop)).toBe(scrolled);
 	});
 
 	test("the sheet scroller has scroll to give but paints no scrollbar", async ({

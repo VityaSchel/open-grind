@@ -4,7 +4,12 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const drawer = vi.hoisted(() => ({ getDrawerMedia: vi.fn() }));
+import { rightClick } from "$lib/test/right-click";
+
+const drawer = vi.hoisted(() => ({
+	getDrawerMedia: vi.fn(),
+	deleteDrawerMedia: vi.fn(),
+}));
 const chatMedia = vi.hoisted(() => ({
 	addMediaToDrawer: vi.fn(),
 	CHAT_MEDIA_MAX_LABEL: "120.00 MB",
@@ -98,5 +103,40 @@ describe("composer media tab", () => {
 				"Larger than the 120.00 MB limit",
 			),
 		);
+	});
+
+	it("deletes a drawer item for good and drops it from the selection", async () => {
+		const onSelectionChange = vi.fn();
+		drawer.getDrawerMedia.mockResolvedValue([
+			{
+				id: 800_001,
+				url: "https://cdns.grindr.com/images/chat/a",
+				contentType: "image/jpeg",
+				createdTs: 1_700_000_000_000,
+				used: false,
+				takenOnGrindr: true,
+			},
+		]);
+		drawer.deleteDrawerMedia.mockResolvedValue(undefined);
+		const { findByRole, queryByRole } = render(ComposerMediaTab, {
+			props: { onClose: () => {}, onSelectionChange, expiring: false },
+		});
+		const tile = await findByRole("button", { name: "Photo 1" });
+
+		await fireEvent.click(tile);
+		await rightClick(tile);
+		await fireEvent.click(
+			await findByRole("menuitem", { name: "Delete permanently" }),
+		);
+		await fireEvent.click(await findByRole("button", { name: "Delete" }));
+
+		expect(drawer.deleteDrawerMedia).toHaveBeenCalledWith(800_001);
+		await vi.waitFor(() =>
+			expect(queryByRole("button", { name: "Photo 1" })).toBeNull(),
+		);
+		expect(onSelectionChange).toHaveBeenLastCalledWith({
+			count: 0,
+			label: "Send",
+		});
 	});
 });
