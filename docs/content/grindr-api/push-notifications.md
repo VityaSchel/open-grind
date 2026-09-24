@@ -63,8 +63,8 @@ A direct text message carries its text **in plaintext** with `translateBody` set
 
 Two actions are **cancel-only** and must never be rendered:
 
-- `grindr://clear?profileIds=<id,…>` — withdraw every notification whose `senderId` is listed, e.g. once the conversation was read elsewhere
-- `grindr://unsend?notificationId=<id>` — withdraw one notification, e.g. after the sender unsent the message
+- `grindr://clear?profileIds=<id,…>` — withdraw every notification whose `senderId` is listed
+- `grindr://unsend?notificationId=<id>` — withdraw one notification
 
 ## Channels
 
@@ -118,10 +118,11 @@ A client without FCM can rebuild chat and tap notifications from two REST calls:
 
 `preview` holds only the last message, so several messages sent between two calls show up as one. When `preview.senderId` is the signed-in profile, the last message is the user's own and the unread messages are older than the preview; their content isn't in the response.
 
-`unreadCount` 0 is the only sign that a conversation was read elsewhere. The inbox has no unsend signal.
+`unreadCount` 0 is the only sign that a conversation was read elsewhere. The inbox has no unsend signal. Once a profile blocks another, the blocked profile gets `403` `urn:gr:err:unauthorized_action` for that conversation's messages and the conversation is cleared.
 
 Each case maps to a V2 payload:
 
 - An unread conversation — `action` `grindr://conversation?id=<conversationId>&senderId=<peer>`, `title` `name`, `body` `preview.text`. A preview without text maps to the `CHAT_*_NOTIFICATION_BODY` [text key](#text-keys) for its `preview.type`, e.g. `Image` to `CHAT_IMAGE_NOTIFICATION_BODY` and `Giphy` to `CHAT_GIF_NOTIFICATION_BODY`
 - A conversation read elsewhere — Grindr has no chat-scoped withdrawal: `grindr://clear?profileIds=<peer>` also withdraws that profile's tap notifications. Open Grind's poll emits its own `grindr://clear?conversationId=<conversationId>` instead, which the official client does not understand
 - A received tap — `action` `grindr://taps-inbox`, `title` `displayName`, `body` `TAP_NOTIFICATION_BODY`
+- A shown message that was unsent — Open Grind's poll fetches the messages it shows by ID and emits `grindr://unsend?notificationId=<id>` for each one returned with `unsent: true` or no longer returned
