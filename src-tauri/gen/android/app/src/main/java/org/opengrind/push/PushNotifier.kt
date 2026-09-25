@@ -45,6 +45,14 @@ object PushNotifier {
 		if (withdrawn.isNotEmpty()) withdraw(context, withdrawn, keys, settled)
 	}
 
+	fun dismissConversation(context: Context, conversationId: String, dedupeKey: String?) {
+		val decision = PushDecision.DismissConversation(conversationId)
+		val card = active(context).firstOrNull { it.tag == MESSAGES_CHANNEL && it.id == decision.postedId }
+		val withdrawn = card != null && dedupeKey != null &&
+			ConversationNotification.withdraw(context, card, setOf(dedupeKey))
+		if (!withdrawn) apply(context, decision)
+	}
+
 	fun cancelAll(context: Context) {
 		dismiss(context) { it.tag == MESSAGES_CHANNEL || it.tag == TAPS_CHANNEL }
 	}

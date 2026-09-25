@@ -59,6 +59,13 @@ struct CategoryName {
 	category: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ConversationRequest {
+	conversation_id: String,
+	dedupe_key: Option<String>,
+}
+
 #[derive(Deserialize)]
 struct CategoriesResponse {
 	categories: Vec<PushCategory>,
@@ -100,6 +107,24 @@ pub async fn open_notification_settings(
 	app: &AppHandle,
 ) -> Result<(), PushError> {
 	run(app, "openNotificationSettings", ()).await
+}
+
+pub async fn dismiss_conversation(
+	app: &AppHandle,
+	conversation_id: String,
+	message_id: Option<String>,
+) -> Result<(), PushError> {
+	let dedupe_key = message_id
+		.map(|message| crate::push_poll::line_key(&conversation_id, &message));
+	run(
+		app,
+		"dismissConversation",
+		ConversationRequest {
+			conversation_id,
+			dedupe_key,
+		},
+	)
+	.await
 }
 
 pub async fn mode(app: &AppHandle) -> Result<PushMode, PushError> {

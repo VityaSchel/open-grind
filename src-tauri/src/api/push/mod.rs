@@ -123,6 +123,18 @@ pub async fn push_set_notifications_enabled(
 }
 
 #[tauri::command]
+pub async fn push_dismiss_conversation(
+	app: AppHandle,
+	conversation_id: String,
+	message_id: Option<String>,
+) -> Result<(), AppError> {
+	Ok(
+		backend::dismiss_conversation(&app, conversation_id, message_id)
+			.await?,
+	)
+}
+
+#[tauri::command]
 pub async fn push_open_notification_settings(
 	app: AppHandle,
 ) -> Result<(), AppError> {

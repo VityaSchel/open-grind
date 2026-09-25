@@ -38,6 +38,14 @@ pub async fn open_notification_settings(
 	Err(UNSUPPORTED)
 }
 
+pub async fn dismiss_conversation(
+	_app: &AppHandle,
+	_conversation_id: String,
+	_message_id: Option<String>,
+) -> Result<(), PushError> {
+	Err(UNSUPPORTED)
+}
+
 pub async fn mode(_app: &AppHandle) -> Result<PushMode, PushError> {
 	Ok(PushMode::Slow)
 }

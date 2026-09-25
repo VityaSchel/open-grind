@@ -42,6 +42,12 @@ internal class CategoryArgs {
 	var enabled: Boolean = true
 }
 
+@InvokeArg
+internal class ConversationArgs {
+	lateinit var conversationId: String
+	var dedupeKey: String? = null
+}
+
 @TauriPlugin(
 	permissions = [
 		Permission(
@@ -78,6 +84,13 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 		PushSettings.setNotificationsEnabled(activity, enabled)
 		if (enabled) PushNotifier.createChannels(activity) else PushNotifier.cancelAll(activity)
 		PushSchedule.follow(activity, PushSettings.mode(activity))
+		invoke.resolve()
+	}
+
+	@Command
+	fun dismissConversation(invoke: Invoke) {
+		val args = invoke.parseArgs(ConversationArgs::class.java)
+		PushNotifier.dismissConversation(activity, args.conversationId, args.dedupeKey)
 		invoke.resolve()
 	}
 

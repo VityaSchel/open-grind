@@ -52,7 +52,7 @@ pub(super) const CLEAR_DEEPLINK: &str = "grindr://clear?conversationId=";
 pub(super) const UNSEND_DEEPLINK: &str = "grindr://unsend?notificationId=";
 const CATCH_UP_LINE: &str = "unread";
 
-fn line_key(conversation: &str, line: &str) -> String {
+pub fn line_key(conversation: &str, line: &str) -> String {
 	format!("poll:{conversation}:{line}")
 }
 

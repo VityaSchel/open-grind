@@ -26,6 +26,9 @@ const delivery = vi.hoisted(() => ({
 const categories = vi.hoisted(() => ({
 	loadNotificationCategories: vi.fn<() => Promise<void>>(),
 }));
+const chatWithdrawals = vi.hoisted(() => ({
+	watchChatWithdrawals: vi.fn<() => Promise<(() => void)[]>>(),
+}));
 const push = vi.hoisted(() => ({
 	fcmServiceInstalled: vi.fn<() => Promise<boolean>>(),
 	inFastMode: vi.fn<() => Promise<boolean>>(),
@@ -44,6 +47,7 @@ vi.mock("./teardown", () => teardown);
 vi.mock("./notifications.svelte", () => notifications);
 vi.mock("./delivery.svelte", () => delivery);
 vi.mock("./categories.svelte", () => categories);
+vi.mock("./chat-withdrawals", () => chatWithdrawals);
 vi.mock("./index", () => push);
 
 const token: PushToken = {
@@ -81,6 +85,7 @@ beforeEach(() => {
 	delivery.fallBackToSlow.mockResolvedValue(undefined);
 	notifications.reconcileNotifications.mockResolvedValue(undefined);
 	categories.loadNotificationCategories.mockResolvedValue(undefined);
+	chatWithdrawals.watchChatWithdrawals.mockResolvedValue([]);
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
@@ -94,6 +99,15 @@ describe("watching push", () => {
 		expect(push.watchPush).not.toHaveBeenCalled();
 		expect(signOut.onSignOut).not.toHaveBeenCalled();
 		expect(categories.loadNotificationCategories).not.toHaveBeenCalled();
+		expect(chatWithdrawals.watchChatWithdrawals).not.toHaveBeenCalled();
+	});
+
+	it("clears chats the websocket reports unsent or deleted while the app runs", async () => {
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(chatWithdrawals.watchChatWithdrawals).toHaveBeenCalledOnce();
 	});
 
 	it("reconciles with Android before it touches the registration", async () => {

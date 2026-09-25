@@ -194,6 +194,7 @@ pub fn run() {
             api::push::push_delete_token,
             api::push::push_notifications_enabled,
             api::push::push_set_notifications_enabled,
+            api::push::push_dismiss_conversation,
             api::push::push_open_notification_settings,
             api::push::push_mode,
             api::push::push_set_mode,

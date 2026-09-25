@@ -1,3 +1,4 @@
+mod bridge;
 mod contract;
 mod gate;
 mod settings;

@@ -187,8 +187,8 @@ mod pins {
 	use super::{suffix_for, Unsupported};
 	use crate::pin_support::{
 		addon_gate_verdicts, assert_rejections_classify_as, braced_block,
-		is_identifier, kotlin_constant, kotlin_package, source_tokens,
-		spaced_match, squashed, ADDON_GATE, MANIFEST,
+		camel_case, is_identifier, kotlin_constant, kotlin_package,
+		source_tokens, spaced_match, squashed, ADDON_GATE, MANIFEST,
 	};
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
@@ -573,19 +573,6 @@ mod pins {
 	) -> &'a str {
 		let at = declaration_at(source, file, header);
 		braced_block(&source[at..], file, header)
-	}
-
-	fn camel_case(snake: &str) -> String {
-		let mut parts = snake.split('_');
-		let mut camel = parts.next().unwrap_or_default().to_owned();
-		for part in parts {
-			let mut characters = part.chars();
-			if let Some(first) = characters.next() {
-				camel.extend(first.to_uppercase());
-				camel.push_str(characters.as_str());
-			}
-		}
-		camel
 	}
 
 	struct PluginPair {

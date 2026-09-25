@@ -3,6 +3,7 @@ import { goto } from "$app/navigation";
 import { registerPushToken } from "$lib/api/settings/account";
 import { onSignOut } from "$lib/api/sign-out";
 import { loadNotificationCategories } from "./categories.svelte";
+import { watchChatWithdrawals } from "./chat-withdrawals";
 import { routeForDeeplink } from "./deeplink";
 import { fastDeliveryDead } from "./delivery-dead";
 import { fallBackToSlow } from "./delivery.svelte";
@@ -20,6 +21,7 @@ import { forgetPushRegistration } from "./teardown";
 export async function startPushWatch(): Promise<void> {
 	if (!pushAvailableHere()) return;
 	onSignOut(releaseRegistration);
+	await watchChatWithdrawals();
 	await watchPush(({ deeplinkPending, tokenChanged }) => {
 		if (deeplinkPending) void openPendingDeeplink();
 		if (tokenChanged) void syncPushToken({ rotated: true });

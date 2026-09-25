@@ -52,6 +52,16 @@ export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
 	await invoke("push_set_notifications_enabled", { enabled });
 }
 
+export async function dismissPushConversation({
+	conversationId,
+	messageId,
+}: {
+	conversationId: string;
+	messageId?: string;
+}): Promise<void> {
+	await invoke("push_dismiss_conversation", { conversationId, messageId });
+}
+
 export async function openNotificationSettings(): Promise<void> {
 	await invoke("push_open_notification_settings");
 }

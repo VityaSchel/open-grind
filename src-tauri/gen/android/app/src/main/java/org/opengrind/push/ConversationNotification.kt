@@ -48,16 +48,16 @@ object ConversationNotification {
 		return PushPoll.ShownConversation(conversationId, linesOf(style).map(Line::dedupeKey))
 	}
 
-	fun withdraw(context: Context, posted: StatusBarNotification, dedupeKeys: Set<String>) {
-		val style = MessagingStyle.extractMessagingStyleFromNotification(posted.notification) ?: return
+	fun withdraw(context: Context, posted: StatusBarNotification, dedupeKeys: Set<String>): Boolean {
+		val style = MessagingStyle.extractMessagingStyleFromNotification(posted.notification) ?: return false
 		val shown = linesOf(style)
 		val lines = ConversationLines.remove(shown, dedupeKeys)
-		if (lines == shown) return
+		if (lines == shown) return false
 		val manager = NotificationManagerCompat.from(context)
 		val peer = style.messages.firstNotNullOfOrNull { it.person }
 		if (lines.isEmpty() || peer == null) {
 			manager.cancel(posted.tag, posted.id)
-			return
+			return true
 		}
 		val notification = NotificationCompat.Builder(context, posted.notification)
 			.setStyle(style(context, peer, lines))
@@ -65,6 +65,7 @@ object ConversationNotification {
 			.setOnlyAlertOnce(true)
 			.build()
 		manager.notify(posted.tag, posted.id, notification)
+		return true
 	}
 
 	private fun linesOf(style: MessagingStyle): List<Line> = style.messages.mapNotNull { message ->

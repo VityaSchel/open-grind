@@ -17,6 +17,19 @@ pub fn is_identifier(character: char) -> bool {
 	character.is_alphanumeric() || character == '_'
 }
 
+pub fn camel_case(snake: &str) -> String {
+	let mut parts = snake.split('_');
+	let mut camel = parts.next().unwrap_or_default().to_owned();
+	for part in parts {
+		let mut characters = part.chars();
+		if let Some(first) = characters.next() {
+			camel.extend(first.to_uppercase());
+			camel.push_str(characters.as_str());
+		}
+	}
+	camel
+}
+
 pub fn source_tokens(source: &str) -> Vec<&str> {
 	let mut tokens = Vec::new();
 	let mut word_start = None;
