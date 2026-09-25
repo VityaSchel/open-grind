@@ -13,6 +13,7 @@
 
 	import fireEmoji from "$lib/assets/emojis/fire/32px.png";
 	import ContextMenu from "$lib/components/shared/ContextMenu.svelte";
+	import ContextMenuPanel from "$lib/components/shared/ContextMenuPanel.svelte";
 	import { Button } from "$lib/components/ui/button";
 
 	let {
@@ -72,9 +73,7 @@
 			</Button>
 		{/if}
 	{/snippet}
-	<div
-		class="flex w-45 flex-col rounded-xl bg-black/80 p-1 *:justify-start *:active:translate-y-0!"
-	>
+	<ContextMenuPanel>
 		{#if onReply}
 			<Button
 				variant="ghost"
@@ -147,5 +146,5 @@
 				<FlagIcon /> Report
 			</Button>
 		{/if}
-	</div>
+	</ContextMenuPanel>
 </ContextMenu>
