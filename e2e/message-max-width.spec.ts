@@ -1,9 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installEventInjection, installTauriShim } from "./support/app";
+import {
+	DEMO_CONVERSATION,
+	DEMO_CONVERSATION_ID,
+	emitMessageSent,
+	installEventInjection,
+	installTauriShim,
+} from "./support/app";
 
-const CONVERSATION = "/chat/100001:123456000";
-const CONVERSATION_ID = "100001:123456000";
 const ME = 123456000;
 const THEM = 100001;
 const MESSAGE_ROW = '[role="button"][tabindex="0"]';
@@ -104,7 +108,7 @@ function message({
 		type: "Text",
 		body: { text },
 		messageId: `ws-${timestamp}`,
-		conversationId: CONVERSATION_ID,
+		conversationId: DEMO_CONVERSATION_ID,
 		senderId: fromMe ? ME : THEM,
 		timestamp,
 		unsent: false,
@@ -124,20 +128,6 @@ function message({
 	};
 }
 
-async function deliverOverTheWebsocket(
-	page: Page,
-	payload: unknown,
-): Promise<void> {
-	await page.evaluate((body) => {
-		window.__emitTauriEvent?.("grindr:chat_v1_message_sent", {
-			type: "chat.v1.message_sent",
-			notificationId: null,
-			ref: null,
-			payload: body,
-		});
-	}, payload);
-}
-
 async function openConversation(
 	page: Page,
 	{ width, platform = "macos" }: { width: number; platform?: string },
@@ -145,12 +135,12 @@ async function openConversation(
 	await page.setViewportSize({ width, height: 800 });
 	await installTauriShim(page, { platform });
 	await installEventInjection(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
 	const alreadyThere = await page.locator(MESSAGE_ROW).count();
 	for (const [index, each] of CASES.entries())
-		await deliverOverTheWebsocket(
+		await emitMessageSent(
 			page,
 			message({ ...each, timestamp: Date.now() + index * 1000 }),
 		);

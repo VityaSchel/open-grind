@@ -1,13 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import {
+	DEMO_CONVERSATION,
+	DEMO_CONVERSATION_ID,
+	emitMessageSent,
 	flownIn,
 	installEventInjection,
 	installTauriShim,
 } from "./support/app";
 
-const CONVERSATION = "/chat/100001:123456000";
-const CONVERSATION_ID = "100001:123456000";
 const THEM = 100001;
 const MESSAGE_ROW = '[role="button"][tabindex="0"]';
 const MESSAGE = '[data-slot="message"]';
@@ -20,24 +21,13 @@ function peerText(timestamp: number) {
 		type: "Text",
 		body: { text: `late arrival ${timestamp}` },
 		messageId: `ws-in-${timestamp}`,
-		conversationId: CONVERSATION_ID,
+		conversationId: DEMO_CONVERSATION_ID,
 		senderId: THEM,
 		timestamp,
 		unsent: false,
 		reactions: [],
 		replyToMessage: null,
 	};
-}
-
-async function receiveMessage(page: Page, message: unknown): Promise<void> {
-	await page.evaluate((payload) => {
-		window.__emitTauriEvent?.("grindr:chat_v1_message_sent", {
-			type: "chat.v1.message_sent",
-			notificationId: null,
-			ref: null,
-			payload,
-		});
-	}, message);
 }
 
 async function scrollAwayFromFloor(page: Page): Promise<void> {
@@ -56,7 +46,7 @@ test("a message is judged visible against the conversation, not a box of its own
 	page,
 }) => {
 	await installTauriShim(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
 	const rooting = await page.evaluate(
@@ -92,7 +82,7 @@ test("the scroll-down button rides above the composer at the list's trailing edg
 	page,
 }) => {
 	await installTauriShim(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
 	await scrollAwayFromFloor(page);
@@ -125,13 +115,13 @@ test("a message arriving while scrolled away badges the scroll-down button until
 }) => {
 	await installTauriShim(page);
 	await installEventInjection(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
 	await scrollAwayFromFloor(page);
 	await expect(page.locator(BADGE)).toHaveCount(0);
 
-	await receiveMessage(page, peerText(Date.now()));
+	await emitMessageSent(page, peerText(Date.now()));
 	await expect(page.locator(BADGE)).toHaveText("1");
 
 	await page.locator(SCROLL_DOWN).click();

@@ -1,10 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installEventInjection, installTauriShim } from "./support/app";
+import {
+	DEMO_CONVERSATION,
+	DEMO_CONVERSATION_ID,
+	emitMessageSent,
+	installEventInjection,
+	installTauriShim,
+} from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
-const CONVERSATION = "/chat/100001:123456000";
-const CONVERSATION_ID = "100001:123456000";
 const ME = 123456000;
 const THEM = 100001;
 const MESSAGE_ROW = '[role="button"][tabindex="0"]';
@@ -16,27 +20,20 @@ async function openConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await installTauriShim(page);
 	await installEventInjection(page);
-	await page.goto(CONVERSATION);
+	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 	await page.waitForTimeout(1000);
 }
 
 async function receiveOwnMessage(page: Page, message: unknown): Promise<void> {
-	await page.evaluate((payload) => {
-		window.__emitTauriEvent?.("grindr:chat_v1_message_sent", {
-			type: "chat.v1.message_sent",
-			notificationId: null,
-			ref: null,
-			payload,
-		});
-	}, message);
+	await emitMessageSent(page, message);
 	await page.waitForTimeout(1000);
 }
 
 function ourMessage(timestamp: number) {
 	return {
 		messageId: `ws-out-${timestamp}`,
-		conversationId: CONVERSATION_ID,
+		conversationId: DEMO_CONVERSATION_ID,
 		senderId: ME,
 		timestamp,
 		unsent: false,
@@ -89,7 +86,7 @@ function outgoingReply(timestamp: number) {
 			type: "Text",
 			body: { text: "Sed do eiusmod tempor incididunt?" },
 			messageId: "2:demo-100001-2",
-			conversationId: CONVERSATION_ID,
+			conversationId: DEMO_CONVERSATION_ID,
 			senderId: THEM,
 			timestamp: timestamp - 60_000,
 			unsent: false,
