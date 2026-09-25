@@ -505,6 +505,7 @@
 					}
 				},
 				"summary": "Delete media from drawer",
+				"description": "Removes the item from the drawer. Album copies made with [Add drawer media to an album](/grindr-api/messaging/albums#add-drawer-media-to-an-album) are separate files and stay. The CDN may keep serving the deleted file's signed url from cache.",
 				"x-idempotent": true
 			}
 		},
@@ -6680,7 +6681,7 @@
 					}
 				},
 				"summary": "Add drawer media to an album",
-				"description": "Copies media from the [drawer](/grindr-api/messaging/drawer#get-media-in-drawer) into the album. `ids` are drawer media ids."
+				"description": "Copies media from the [drawer](/grindr-api/messaging/drawer#get-media-in-drawer) into the album. `ids` are drawer media ids. A video id results in `400`, even within `maxVideoLength`."
 			}
 		},
 		"/v1/albums/storage": {
