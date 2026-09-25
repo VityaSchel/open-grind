@@ -9971,7 +9971,7 @@
 					}
 				},
 				"summary": "Edit profile photos",
-				"description": "Setting both `primaryImageHash` and `secondaryImageHashes` to `null` works. But setting `primaryImageHash` to a hash value while setting `secondaryImageHashes` to null causes HTTP status 400 Bad Request error. It's recommended to just use `[]` for `secondaryImageHashes` rather than `null`.\n\nSupplied images must have square thumbnails, otherwise they will be silently skipped. See [Upload media (legacy)](/grindr-api/users/profiles#upload-media-legacy).\n\nRepeating `primaryImageHash` value in `secondaryImageHashes` array will result in secondaryImageHashes's entry being silently dropped from supplied request array. Repeating `secondaryImageHashes` values will result in successfully saving the array as-is to the server, however the official mobile client seems to drop repeating media when processing `secondaryImageHashes` response."
+				"description": "Both fields may be `null`. A `primaryImageHash` with `secondaryImageHashes: null` gets `400`; send `[]` instead.\n\nPhotos without a square thumbnail are silently skipped; see [Upload media (legacy)](/grindr-api/users/profiles#upload-media-legacy).\n\nA `secondaryImageHashes` entry equal to `primaryImageHash` is dropped. Repeated `secondaryImageHashes` entries are saved as sent."
 			},
 			"delete": {
 				"tags": [
@@ -12649,7 +12649,7 @@
 				"in": "query",
 				"name": "takenOnGrindr",
 				"required": true,
-				"description": "Media captured with the in-app camera. The official client uses a signed upload endpoint only when this is `true` and the `taken-on-grindr-signing-enabled` flag is on.",
+				"description": "Media captured with the in-app camera.",
 				"schema": {
 					"type": "boolean"
 				}
