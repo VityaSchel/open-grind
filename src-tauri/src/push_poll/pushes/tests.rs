@@ -3,13 +3,13 @@ use super::inbox::{continues, INBOX_PAGES};
 use super::*;
 use serde_json::json;
 
-const ME: Option<&str> = Some("111");
-const SINCE: Watermarks = Watermarks {
+pub(super) const ME: Option<&str> = Some("111");
+pub(super) const SINCE: Watermarks = Watermarks {
 	inbox: 1000,
 	taps: 1000,
 };
 
-fn conversation_entry(over: Value) -> Value {
+pub(super) fn conversation_entry(over: Value) -> Value {
 	let mut data = json!({
 		"conversationId": "111:222",
 		"name": "Viktor",
@@ -32,7 +32,7 @@ fn conversation_entry(over: Value) -> Value {
 	json!({ "type": "full_conversation_v1", "data": data })
 }
 
-fn inbox(entries: Value) -> Inbox {
+pub(super) fn inbox(entries: Value) -> Inbox {
 	let mut inbox = Inbox::default();
 	inbox.read(&json!({ "entries": entries }), SINCE.inbox);
 	inbox
@@ -43,7 +43,13 @@ fn taps(profiles: Value) -> Value {
 }
 
 fn polled(entries: Value, profiles: Value) -> Poll {
-	poll(Some(&inbox(entries)), Some(&taps(profiles)), SINCE, ME)
+	poll(
+		Some(&inbox(entries)),
+		&Pages::new(),
+		Some(&taps(profiles)),
+		SINCE,
+		ME,
+	)
 }
 
 fn page(timestamps: &[i64], next_page: Value) -> Value {
@@ -223,7 +229,7 @@ fn a_read_conversation_is_cleared_whatever_the_taps_say() {
 		json!({ "unreadCount": 0, "lastActivityTimestamp": 3000 })
 	)]));
 	let cleared = |taps: Option<Value>| {
-		let result = poll(Some(&read), taps.as_ref(), SINCE, ME);
+		let result = poll(Some(&read), &Pages::new(), taps.as_ref(), SINCE, ME);
 		result
 			.pushes
 			.iter()
@@ -342,7 +348,7 @@ fn a_failed_source_keeps_its_watermark_and_announces_nothing() {
 	let unread = inbox(json!([conversation_entry(json!({}))]));
 	let tapped = taps(json!([{ "profileId": 333, "timestamp": 2500 }]));
 
-	let without_taps = poll(Some(&unread), None, since, ME);
+	let without_taps = poll(Some(&unread), &Pages::new(), None, since, ME);
 	assert_eq!(without_taps.pushes.len(), 1);
 	assert_eq!(
 		without_taps.watermarks,
@@ -352,7 +358,7 @@ fn a_failed_source_keeps_its_watermark_and_announces_nothing() {
 		}
 	);
 
-	let without_inbox = poll(None, Some(&tapped), since, ME);
+	let without_inbox = poll(None, &Pages::new(), Some(&tapped), since, ME);
 	assert_eq!(without_inbox.pushes.len(), 1);
 	assert_eq!(without_inbox.pushes[0]["channel"], TAPS_CHANNEL);
 	assert_eq!(
@@ -363,7 +369,10 @@ fn a_failed_source_keeps_its_watermark_and_announces_nothing() {
 		}
 	);
 
-	assert_eq!(poll(None, None, since, ME), Poll::unchanged(since));
+	assert_eq!(
+		poll(None, &Pages::new(), None, since, ME),
+		Poll::unchanged(since)
+	);
 }
 
 #[test]
@@ -376,7 +385,7 @@ fn a_response_open_grind_cannot_read_announces_nothing_rather_than_failing() {
 	] {
 		let mut inbox = Inbox::default();
 		assert_eq!(inbox.read(&inbox_page, SINCE.inbox), None);
-		let result = poll(Some(&inbox), Some(&taps), SINCE, ME);
+		let result = poll(Some(&inbox), &Pages::new(), Some(&taps), SINCE, ME);
 		assert_eq!(result, Poll::unchanged(SINCE));
 	}
 }
@@ -438,12 +447,12 @@ fn a_walk_cut_short_by_the_page_cap_advances_to_the_newest_announced_conversatio
 
 	let (fetched, capped) = walk(&pages, SINCE.inbox);
 	assert_eq!(fetched, INBOX_PAGES);
-	let result = poll(Some(&capped), None, SINCE, ME);
+	let result = poll(Some(&capped), &Pages::new(), None, SINCE, ME);
 	assert_eq!(result.pushes.len(), 10);
 	assert_eq!(result.watermarks.inbox, 9000);
 
 	let (_, again) = walk(&pages, result.watermarks.inbox);
-	let next = poll(Some(&again), None, result.watermarks, ME);
+	let next = poll(Some(&again), &Pages::new(), None, result.watermarks, ME);
 	assert!(next.pushes.is_empty());
 	assert_eq!(next.watermarks, result.watermarks);
 }

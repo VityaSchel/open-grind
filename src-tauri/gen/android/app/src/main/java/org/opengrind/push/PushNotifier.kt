@@ -29,9 +29,9 @@ object PushNotifier {
 		val withdrawn = decisions.filterIsInstance<PushDecision.DismissNotification>()
 		val keys = withdrawn.mapTo(HashSet()) { it.dedupeKey }
 		val settled = HashSet<Posted>()
+		for (batch in NotifyBatches.of(decisions)) notify(context, batch, keys)?.let(settled::add)
 		for (decision in decisions) {
 			when (decision) {
-				is PushDecision.Notify -> notify(context, decision, keys)?.let(settled::add)
 				is PushDecision.DismissSender -> settled += dismiss(context) {
 					it.notification.extras.getString(EXTRA_SENDER_ID) in decision.senderIds
 				}
@@ -39,7 +39,7 @@ object PushNotifier {
 					NotificationManagerCompat.from(context).cancel(MESSAGES_CHANNEL, decision.postedId)
 					settled += Posted(MESSAGES_CHANNEL, decision.postedId)
 				}
-				is PushDecision.DismissNotification, PushDecision.Ignore -> Unit
+				is PushDecision.Notify, is PushDecision.DismissNotification, PushDecision.Ignore -> Unit
 			}
 		}
 		if (withdrawn.isNotEmpty()) withdraw(context, withdrawn, keys, settled)
@@ -112,9 +112,10 @@ object PushNotifier {
 
 	private fun notify(
 		context: Context,
-		decision: PushDecision.Notify,
+		batch: List<PushDecision.Notify>,
 		withdrawn: Set<String>,
 	): Posted? {
+		val decision = batch.maxBy(PushDecision.Notify::timestamp)
 		if (!PushSettings.notificationsEnabled(context)) return null
 		if (!notificationsPermitted(context)) return null
 		if (!PushSettings.categoryEnabled(context, decision.kind)) return null
@@ -135,6 +136,7 @@ object PushNotifier {
 				id,
 				builder,
 				decision,
+				batch.map { ConversationLines.Line(it.dedupeKey, it.body, it.timestamp) },
 				active(context).firstOrNull { it.tag == channel && it.id == id },
 				withdrawn,
 			)

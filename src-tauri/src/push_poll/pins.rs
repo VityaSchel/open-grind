@@ -22,3 +22,7 @@ const PAYLOAD: &str = include_str!(
 const STRINGS: &str = include_str!(
 	"../../android-logic/src/main/kotlin/org/opengrind/push/PushStrings.kt"
 );
+
+const LINES: &str = include_str!(
+	"../../android-logic/src/main/kotlin/org/opengrind/push/ConversationLines.kt"
+);

@@ -11,19 +11,19 @@ class ConversationLinesTest {
 
 	@Test
 	fun `the first message of a conversation becomes its only line`() {
-		assertEquals(listOf(line("m1", 1_000)), ConversationLines.append(emptyList(), line("m1", 1_000)))
+		assertEquals(listOf(line("m1", 1_000)), ConversationLines.append(emptyList(), listOf(line("m1", 1_000))))
 	}
 
 	@Test
 	fun `a new message is added after the ones already shown`() {
-		val lines = ConversationLines.append(conversation(2), line("m3", 3_000))
+		val lines = ConversationLines.append(conversation(2), listOf(line("m3", 3_000)))
 		assertEquals(listOf("m1", "m2", "m3"), lines.map(Line::dedupeKey))
 	}
 
 	@Test
 	fun `a message delivered twice is shown once and leaves the conversation unchanged`() {
 		val shown = conversation(3)
-		val lines = ConversationLines.append(shown, line("m2", 9_000))
+		val lines = ConversationLines.append(shown, listOf(line("m2", 9_000)))
 		assertEquals(shown, lines)
 	}
 
@@ -31,20 +31,20 @@ class ConversationLinesTest {
 	fun `a message that arrives late is placed by its timestamp`() {
 		val lines = ConversationLines.append(
 			listOf(line("m1", 1_000), line("m3", 3_000)),
-			line("m2", 2_000),
+			listOf(line("m2", 2_000)),
 		)
 		assertEquals(listOf("m1", "m2", "m3"), lines.map(Line::dedupeKey))
 	}
 
 	@Test
 	fun `messages sharing a timestamp keep their arrival order`() {
-		val lines = ConversationLines.append(listOf(line("first", 1_000)), line("second", 1_000))
+		val lines = ConversationLines.append(listOf(line("first", 1_000)), listOf(line("second", 1_000)))
 		assertEquals(listOf("first", "second"), lines.map(Line::dedupeKey))
 	}
 
 	@Test
 	fun `a full conversation drops its oldest line to make room`() {
-		val lines = ConversationLines.append(conversation(ConversationLines.LIMIT), line("new", 99_000))
+		val lines = ConversationLines.append(conversation(ConversationLines.LIMIT), listOf(line("new", 99_000)))
 		assertEquals(ConversationLines.LIMIT, lines.size)
 		assertEquals("m2", lines.first().dedupeKey)
 		assertEquals("new", lines.last().dedupeKey)
@@ -53,7 +53,7 @@ class ConversationLinesTest {
 	@Test
 	fun `a full conversation ignores a message older than everything it shows`() {
 		val shown = conversation(ConversationLines.LIMIT)
-		assertEquals(shown, ConversationLines.append(shown, line("stale", 0)))
+		assertEquals(shown, ConversationLines.append(shown, listOf(line("stale", 0))))
 	}
 
 	@Test
@@ -77,5 +77,37 @@ class ConversationLinesTest {
 	@Test
 	fun `removing the only line leaves the conversation empty`() {
 		assertEquals(emptyList<Line>(), ConversationLines.remove(conversation(1), setOf("m1")))
+	}
+
+	@Test
+	fun `several messages from one check are added together in time order`() {
+		val lines = ConversationLines.append(
+			conversation(1),
+			listOf(line("m3", 3_000), line("m2", 2_000)),
+		)
+		assertEquals(listOf("m1", "m2", "m3"), lines.map(Line::dedupeKey))
+	}
+
+	@Test
+	fun `a check repeating a shown message adds only the new ones`() {
+		val lines = ConversationLines.append(
+			conversation(2),
+			listOf(line("m2", 2_000), line("m3", 3_000), line("m3", 3_000)),
+		)
+		assertEquals(listOf("m1", "m2", "m3"), lines.map(Line::dedupeKey))
+	}
+
+	@Test
+	fun `a check with nothing new leaves the conversation as it was`() {
+		val shown = conversation(2)
+		assertEquals(shown, ConversationLines.append(shown, listOf(line("m1", 1_000))))
+		assertEquals(shown, ConversationLines.append(shown, emptyList()))
+	}
+
+	@Test
+	fun `a burst larger than a card keeps its newest lines`() {
+		val burst = (1..ConversationLines.LIMIT + 3).map { line("b$it", it * 1_000L) }
+		val lines = ConversationLines.append(emptyList(), burst)
+		assertEquals(burst.takeLast(ConversationLines.LIMIT), lines)
 	}
 }

@@ -109,7 +109,7 @@ The legacy shape dispatches on `notificationType` instead of an action:
 
 ## Polling instead of push
 
-A client without FCM can rebuild chat and tap notifications from two REST calls:
+A client without FCM can rebuild chat and tap notifications over REST:
 
 - [Get conversations](/grindr-api/messaging/conversations#get-conversations), `POST /v4/inbox?page=<n>` — the next page exists while the response carries `nextPage`. Each `entries[].data` carries `conversationId`, `name`, `lastActivityTimestamp`, `unreadCount`, `muted`, `participants[].profileId` and a `preview` of the last message with `messageId`, `senderId`, `type` and `text`
 - [Get received taps](/grindr-api/interest/taps#get-received-taps), `GET /v2/taps/received` — each `profiles[]` entry carries `profileId`, `displayName` and `timestamp`
@@ -123,7 +123,8 @@ A client without FCM can rebuild chat and tap notifications from two REST calls:
 Each case maps to a V2 payload:
 
 - An unread conversation — `action` `grindr://conversation?id=<conversationId>&senderId=<peer>`, `title` `name`, `body` `preview.text`. A preview without text maps to the `CHAT_*_NOTIFICATION_BODY` [text key](#text-keys) for its `preview.type`, e.g. `Image` to `CHAT_IMAGE_NOTIFICATION_BODY` and `Giphy` to `CHAT_GIF_NOTIFICATION_BODY`
+- A message from [Get messages in a conversation](/grindr-api/messaging/messages#get-messages-in-a-conversation) — the same payload with the message's `timestamp`, and `body` from `body.text`, `body.albumContentReply` or `body.photoContentReply`, else the text key for its `type`
 - A conversation read elsewhere — Grindr has no chat-scoped withdrawal: `grindr://clear?profileIds=<peer>` also withdraws that profile's tap notifications. Open Grind's poll emits its own `grindr://clear?conversationId=<conversationId>` instead, which the official client does not understand
 - A received tap — `action` `grindr://taps-inbox`, `title` `displayName`, `body` `TAP_NOTIFICATION_BODY`
-- A shown message that was unsent — Open Grind's poll fetches the messages it shows by ID and emits `grindr://unsend?notificationId=<id>` for each one returned with `unsent: true` or no longer returned
+- A shown message that [Refresh messages](/grindr-api/messaging/conversations#refresh-messages) returns with `unsent: true` or no longer returns — `action` `grindr://unsend?notificationId=<id>`
 - A shown conversation after a block — the same request answers `403` `urn:gr:err:unauthorized_action`, and the poll emits `grindr://clear?conversationId=<conversationId>`. For notifications without a resolved message, checked with [Get messages in a conversation](/grindr-api/messaging/messages#get-messages-in-a-conversation).

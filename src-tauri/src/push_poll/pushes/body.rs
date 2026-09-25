@@ -54,13 +54,27 @@ fn body_key(message_type: &str) -> Option<&'static str> {
 		.map(|(key, _)| *key)
 }
 
+const MESSAGE_TEXTS: [&str; 3] =
+	["text", "albumContentReply", "photoContentReply"];
+
 pub(super) fn describe(preview: &Value, push: &mut Push) {
-	if let Some(text) = preview["text"].as_str().filter(|text| !text.is_empty())
-	{
+	write_body(preview["text"].as_str(), &preview["type"], push);
+}
+
+pub(super) fn describe_message(message: &Value, push: &mut Push) {
+	let text = MESSAGE_TEXTS
+		.iter()
+		.filter_map(|field| message["body"][field].as_str())
+		.find(|text| !text.is_empty());
+	write_body(text, &message["type"], push);
+}
+
+fn write_body(text: Option<&str>, message_type: &Value, push: &mut Push) {
+	if let Some(text) = text.filter(|text| !text.is_empty()) {
 		push.insert("body", text.to_owned());
 		return;
 	}
-	let key = preview["type"]
+	let key = message_type
 		.as_str()
 		.and_then(body_key)
 		.unwrap_or(GENERIC_BODY);

@@ -20,6 +20,7 @@ object ConversationNotification {
 		id: Int,
 		builder: NotificationCompat.Builder,
 		decision: PushDecision.Notify,
+		added: List<Line>,
 		posted: StatusBarNotification?,
 		withdrawn: Set<String>,
 	) {
@@ -27,10 +28,7 @@ object ConversationNotification {
 			?.let { MessagingStyle.extractMessagingStyleFromNotification(it.notification) }
 			?.let(::linesOf)
 			.orEmpty()
-		val lines = ConversationLines.append(
-			ConversationLines.remove(shown, withdrawn),
-			Line(decision.dedupeKey, decision.body, decision.timestamp),
-		)
+		val lines = ConversationLines.append(ConversationLines.remove(shown, withdrawn), added)
 		if (lines == shown) return
 		val peer = Person.Builder().setName(decision.title).setKey(decision.senderId).build()
 		val notification = builder

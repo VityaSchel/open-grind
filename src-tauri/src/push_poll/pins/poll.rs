@@ -2,12 +2,12 @@ use std::collections::BTreeSet;
 
 use serde_json::Value;
 
-use super::{PAYLOAD, POLL, POLL_SERVICE, SCHEDULE, STRINGS};
+use super::{LINES, PAYLOAD, POLL, POLL_SERVICE, SCHEDULE, STRINGS};
 use crate::pin_support::{braced_block, kotlin_constant, squashed};
 use crate::push_poll::pushes::{
 	Poll, ShownConversation, BODY_KEYS, CHATS_CHANNEL, CLEAR_DEEPLINK,
-	CONVERSATION_DEEPLINK, GENERIC_BODY, TAPS_CHANNEL, TAPS_DEEPLINK,
-	UNSEND_DEEPLINK,
+	CONVERSATION_DEEPLINK, GENERIC_BODY, MESSAGE_LINES, TAPS_CHANNEL,
+	TAPS_DEEPLINK, UNSEND_DEEPLINK,
 };
 
 fn payload_constant(name: &str) -> &'static str {
@@ -142,5 +142,13 @@ fn the_cards_kotlin_reports_reach_the_poll_under_the_names_it_reads() {
 		shown.message_ids(),
 		["2000:c0ffee"],
 		"a card Kotlin reports would never be checked for unsent messages"
+	);
+}
+
+#[test]
+fn a_check_fetches_no_more_messages_than_a_card_shows() {
+	assert!(
+		squashed(LINES).contains(&format!("constvalLIMIT={MESSAGE_LINES}")),
+		"ConversationLines.LIMIT no longer equals MESSAGE_LINES, so a check fetches lines the card drops or shows fewer than it could"
 	);
 }

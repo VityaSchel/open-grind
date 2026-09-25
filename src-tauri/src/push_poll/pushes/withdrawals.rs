@@ -6,9 +6,10 @@ use std::collections::HashSet;
 use serde::Deserialize;
 use serde_json::Value;
 
-use super::{cleared, line_key, Push, CATCH_UP_LINE, UNSEND_DEEPLINK};
-
-const BLOCKED: &str = "urn:gr:err:unauthorized_action";
+use super::{
+	blocked, cleared, line_key, messages_path, Answer, Push, CATCH_UP_LINE,
+	UNSEND_DEEPLINK,
+};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,10 +29,7 @@ impl ShownConversation {
 		let ids = self.message_ids();
 		if ids.is_empty() {
 			return Check {
-				path: format!(
-					"/v5/chat/conversation/{}/message",
-					self.conversation_id
-				),
+				path: messages_path(&self.conversation_id),
 				body: None,
 			};
 		}
@@ -55,11 +53,26 @@ impl ShownConversation {
 			.collect()
 	}
 
-	pub fn withdrawals(&self, status: u16, answer: &Value) -> Vec<Push> {
-		if status == 403 && answer["type"].as_str() == Some(BLOCKED) {
+	pub fn answered_by(&self, (status, page): &Answer) -> bool {
+		if blocked(*status, page) {
+			return true;
+		}
+		let Some(messages) = page["messages"].as_array() else {
+			return false;
+		};
+		let returned: HashSet<&str> = messages
+			.iter()
+			.filter_map(|message| message["messageId"].as_str())
+			.collect();
+		(200..300).contains(status)
+			&& self.message_ids().iter().all(|id| returned.contains(id))
+	}
+
+	pub fn withdrawals(&self, (status, answer): &Answer) -> Vec<Push> {
+		if blocked(*status, answer) {
 			return vec![cleared(&self.conversation_id)];
 		}
-		if !(200..300).contains(&status) {
+		if !(200..300).contains(status) {
 			return Vec::new();
 		}
 		let Some(messages) = answer["messages"].as_array() else {
