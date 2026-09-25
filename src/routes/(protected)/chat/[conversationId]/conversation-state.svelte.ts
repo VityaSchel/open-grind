@@ -234,7 +234,7 @@ export class ConversationState {
 			}
 
 			this.messages = messages;
-			this.#updatePreview(this.messages.at(0));
+			this.#updatePreview();
 			this.#syncCache();
 
 			for (const m of fresh) {
@@ -460,8 +460,7 @@ export class ConversationState {
 				msg.status = "error";
 				msg.sendError = error;
 			}
-			const latestSent = this.messages.find((m) => m.status === "sent");
-			if (!this.#destroyed) this.#updatePreview(latestSent);
+			if (!this.#destroyed) this.#updatePreview();
 			throw error;
 		}
 	}
@@ -475,17 +474,15 @@ export class ConversationState {
 		serverMessageId: string;
 		serverTimestamp: number;
 	}): void {
-		const wasNewestBeforeAdopting =
-			this.messages.at(0)?.messageId === message.messageId;
+		const wasPreviewed =
+			previewedMessage(this.messages)?.messageId === message.messageId;
 		message.status = "sent";
 		message.messageId = serverMessageId;
 		message.timestamp = serverTimestamp;
 		this.#resortNewestFirst();
-		const newest = this.messages.at(0);
-		const isNewestAfterAdopting = newest?.messageId === serverMessageId;
-		if (wasNewestBeforeAdopting || isNewestAfterAdopting) {
-			this.#updatePreview(newest);
-		}
+		const isPreviewed =
+			previewedMessage(this.messages)?.messageId === serverMessageId;
+		if (wasPreviewed || isPreviewed) this.#updatePreview();
 		this.#syncCache();
 	}
 
@@ -523,7 +520,7 @@ export class ConversationState {
 		});
 	}
 
-	#updatePreview(message: OptimisticMessage | undefined) {
+	#updatePreview(message = previewedMessage(this.messages)) {
 		this.#conversations.updatePreview({
 			conversationId: this.conversationId,
 			preview: previewFromMessage(message),
@@ -540,7 +537,7 @@ export class ConversationState {
 		const removed = this.messages[index];
 		if (removed) {
 			this.messages.splice(index, 1);
-			if (previewed) this.#updatePreview(previewedMessage(this.messages));
+			if (previewed) this.#updatePreview();
 			this.#syncCache();
 			const revertDeleteMessage = () => {
 				this.messages.splice(index, 0, removed);
@@ -623,7 +620,8 @@ export class ConversationState {
 	}
 
 	markMessageAsUnsent(messageId: string) {
-		const isLatest = this.messages.at(0)?.messageId === messageId;
+		const previewed =
+			previewedMessage(this.messages)?.messageId === messageId;
 
 		const msg = this.messages.find((m) => m.messageId === messageId);
 		let revert: () => void = () => {};
@@ -637,13 +635,13 @@ export class ConversationState {
 			msg.type = "Unsent";
 			msg.body = null;
 			this.#syncCache();
-			if (isLatest) this.#updatePreview(msg);
+			if (previewed) this.#updatePreview(msg);
 			revert = () => {
 				msg.unsent = original.unsent;
 				msg.type = original.type;
 				msg.body = original.body;
 				this.#syncCache();
-				if (isLatest) this.#updatePreview(msg);
+				if (previewed) this.#updatePreview(msg);
 			};
 		}
 		return { revert };

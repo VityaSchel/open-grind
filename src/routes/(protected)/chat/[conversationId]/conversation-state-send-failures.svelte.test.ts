@@ -267,6 +267,83 @@ describe("ConversationState send failures", () => {
 		});
 	});
 
+	it("keeps a newer pending message as the preview when an older send fails", async () => {
+		let rejectOlder!: (error: Error) => void;
+		sendMessageMock
+			.mockReturnValueOnce(
+				new Promise((_, reject) => {
+					rejectOlder = reject;
+				}),
+			)
+			.mockReturnValueOnce(new Promise(() => {}));
+
+		const state = create();
+		await flush();
+		state.send([outbound("Text", { text: "older" })]);
+		state.send([outbound("Text", { text: "newer" })]);
+		rejectOlder(new Error("offline"));
+		await flush();
+
+		expect(updatePreviewMock).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ text: "newer" }),
+			timestamp: expect.any(Number),
+		});
+	});
+
+	it("keeps a failed message out of the preview when a refresh brings new messages", async () => {
+		getConversationMock.mockResolvedValue({
+			messages: [delivered("server-1", 500)],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		sendMessageMock.mockRejectedValue(new Error("offline"));
+
+		const state = create();
+		await flush();
+		state.send([outbound("Text", { text: "failed" })]);
+		await flush();
+
+		getConversationMock.mockResolvedValue({
+			messages: [delivered("server-2", 600), delivered("server-1", 500)],
+			profile,
+			pageKey: null,
+			lastReadTimestamp: null,
+		});
+		await state.refresh();
+
+		expect(state.messages[0]?.status).toBe("error");
+		expect(updatePreviewMock).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ text: "server-2" }),
+			timestamp: 600,
+		});
+	});
+
+	it("keeps a failed message out of the preview when an older-stamped send lands under it", async () => {
+		const clock = vi.spyOn(Date, "now");
+		sendMessageMock
+			.mockRejectedValueOnce(new Error("offline"))
+			.mockResolvedValueOnce({ messageId: "server-1", timestamp: 900 });
+
+		const state = create();
+		await flush();
+		clock.mockReturnValue(1000);
+		state.send([outbound("Text", { text: "failed" })]);
+		await flush();
+		clock.mockReturnValue(2000);
+		state.send([outbound("Text", { text: "landed" })]);
+		await flush();
+
+		expect(state.messages.map((m) => m.status)).toEqual(["error", "sent"]);
+		expect(updatePreviewMock).toHaveBeenLastCalledWith({
+			conversationId: CONVERSATION_ID,
+			preview: expect.objectContaining({ text: "landed" }),
+			timestamp: 900,
+		});
+	});
+
 	it("puts the failed bubble back to pending while the retry is in flight", async () => {
 		sendMessageMock.mockRejectedValueOnce(entitlementLimit());
 
