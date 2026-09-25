@@ -61,10 +61,12 @@ function renderVideo({
 	body,
 	isOut = false,
 	status,
+	onDelete,
 }: {
 	body: Record<string, unknown>;
 	isOut?: boolean;
 	status?: "sent" | "pending" | "error";
+	onDelete?: () => void;
 }) {
 	return render(Message, {
 		props: {
@@ -74,6 +76,7 @@ function renderVideo({
 			indexInStack: 0,
 			stackLength: 1,
 			status,
+			onDelete,
 		},
 	});
 }
@@ -274,4 +277,18 @@ describe("video message", () => {
 		}
 	});
 
+	it("lets Enter on the play button reach the button instead of opening the message menu", async () => {
+		const { getByRole } = renderVideo({ body: {}, onDelete: vi.fn() });
+		const play = getByRole("button", PLAY);
+		const enter = new KeyboardEvent("keydown", {
+			key: "Enter",
+			bubbles: true,
+			cancelable: true,
+		});
+
+		await fireEvent(play, enter);
+
+		expect(enter.defaultPrevented).toBe(false);
+		expect(document.querySelector("dialog[open]")).toBeNull();
+	});
 });
