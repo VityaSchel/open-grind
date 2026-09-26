@@ -91,6 +91,24 @@ test("the command palette title exists only while the palette is open", async ({
 	await expect(page.getByText("Command Palette")).toHaveCount(0);
 });
 
+test("the command palette search box names the suggestion list it controls", async ({
+	page,
+}) => {
+	await page.goto("/settings");
+	await page
+		.getByRole("navigation", { name: "Main" })
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+	await page.keyboard.press("ControlOrMeta+k");
+
+	const suggestions = page.getByRole("listbox");
+	await expect(suggestions).toBeVisible();
+	await expect(page.getByRole("combobox")).toHaveAttribute(
+		"aria-controls",
+		(await suggestions.getAttribute("id")) ?? "missing list id",
+	);
+});
+
 test("the report link on the 404 page is a plain link, not a button", async ({
 	page,
 }) => {

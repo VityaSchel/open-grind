@@ -19,6 +19,8 @@
 	import FilterGridCommand from "./filter-grid/FilterGridCommand.svelte";
 	import QuickGoToCommandGroup from "./quick-go-to/QuickGoToCommandGroup.svelte";
 
+	const suggestionsId = $props.id();
+
 	onMount(() => {
 		return tinykeys(window, {
 			"$mod+k": (event) => {
@@ -49,9 +51,10 @@
 	>
 		<Command.Input
 			placeholder="Quick actions..."
+			aria-controls={suggestionsId}
 			bind:value={commandCenterState.query}
 		/>
-		<Command.List class="mt-2">
+		<Command.List id={suggestionsId} class="mt-2">
 			<Command.Empty class="text-muted-foreground">
 				Unknown command
 			</Command.Empty>
