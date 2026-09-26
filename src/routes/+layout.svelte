@@ -23,6 +23,7 @@
 		applyBackGestureHandler,
 		registerAndroidBackButtonListener,
 	} from "$lib/platform/android-native-bridge";
+	import { blockNativeMenu } from "$lib/platform/block-native-menu";
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { isAndroidPlatform } from "$lib/platform/os";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
@@ -57,6 +58,7 @@
 		applyAndroidInsets();
 		applyBackGestureHandler();
 		const releaseZoomBlock = blockZoom();
+		const releaseNativeMenuBlock = blockNativeMenu();
 		if (isAndroidPlatform()) {
 			void registerAndroidBackButtonListener().catch((error) => {
 				console.error("Failed to register back button listener", error);
@@ -68,7 +70,10 @@
 		void hydrateBackdropCompositing().catch((error: unknown) => {
 			console.error("Failed to read backdrop compositing", error);
 		});
-		return releaseZoomBlock;
+		return () => {
+			releaseZoomBlock();
+			releaseNativeMenuBlock();
+		};
 	});
 
 	import { env } from "$env/dynamic/public";
