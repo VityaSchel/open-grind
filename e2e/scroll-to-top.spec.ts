@@ -96,6 +96,37 @@ function geometry(page: Page, scroller: string) {
 }
 
 for (const surface of SURFACES) {
+	test(`${surface.name} runs its content under the navbar`, async ({
+		page,
+	}) => {
+		await open(page, surface);
+
+		const { visibleBottom, navbarBottom } = await page
+			.locator(NAVBAR_PILL)
+			.evaluate((pill, scroller) => {
+				let visibleBottom = Infinity;
+				for (
+					let el = document.querySelector(scroller);
+					el !== null;
+					el = el.parentElement
+				) {
+					const clips = getComputedStyle(el).overflowY !== "visible";
+					if (clips || el === document.querySelector(scroller)) {
+						visibleBottom = Math.min(
+							visibleBottom,
+							el.getBoundingClientRect().bottom,
+						);
+					}
+				}
+				return {
+					visibleBottom,
+					navbarBottom: pill.getBoundingClientRect().bottom,
+				};
+			}, surface.scroller);
+
+		expect(visibleBottom).toBeGreaterThanOrEqual(navbarBottom);
+	});
+
 	test(`${surface.name} offers a scroll-to-top button that clears the navbar`, async ({
 		page,
 	}) => {

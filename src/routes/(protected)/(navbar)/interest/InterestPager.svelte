@@ -65,7 +65,7 @@
 
 <div
 	data-slot="interest-pager"
-	class="no-scrollbar flex w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
+	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >
 	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">
