@@ -218,7 +218,7 @@ pub fn run() {
             api::client::rotate_api_params,
             api::session_recovery::set_app_active,
             api::session_recovery::current_session,
-            haptics::play_threshold_haptic,
+            haptics::play_haptic,
             scroll_phase::set_scroll_gesture_capture,
             desktop_entry::desktop_entry_state,
             desktop_entry::desktop_entry_install,

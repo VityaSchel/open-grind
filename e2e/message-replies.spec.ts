@@ -190,19 +190,19 @@ test("a touch drag taps the actuator as it passes the trigger, once", async ({
 	page,
 }) => {
 	await openConversation(page, { platform: "android" });
-	const taps = await captureInvokes(page, "play_threshold_haptic");
+	const taps = await captureInvokes(page, "play_haptic");
 
 	await swipeIncoming(page, 140);
 
 	await expect(page.getByLabel("Cancel reply")).toBeVisible();
-	expect(await taps()).toHaveLength(1);
+	expect(await taps()).toEqual([{ kind: "threshold" }]);
 });
 
 test("a touch drag that stops short of the trigger taps nothing", async ({
 	page,
 }) => {
 	await openConversation(page, { platform: "android" });
-	const taps = await captureInvokes(page, "play_threshold_haptic");
+	const taps = await captureInvokes(page, "play_haptic");
 
 	await swipeIncoming(page, 40);
 

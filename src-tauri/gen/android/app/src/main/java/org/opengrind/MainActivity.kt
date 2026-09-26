@@ -166,6 +166,7 @@ class MainActivity : TauriActivity() {
 		super.onWebViewCreate(webView)
 		webViewRef = webView
 		webView.settings.setGeolocationEnabled(false)
+		webView.isHapticFeedbackEnabled = false
 		webView.addJavascriptInterface(InsetsInterface(), "__AndroidInsets")
 		webView.addJavascriptInterface(BackInterface(), "__AndroidBack")
 		// Registered here, not in onCreate: Tauri's AppPlugin adds its own back
