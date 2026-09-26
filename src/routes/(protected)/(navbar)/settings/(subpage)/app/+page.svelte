@@ -70,7 +70,7 @@
 	<PreferenceSwitchSetting
 		preference="hapticFeedback"
 		title="Haptic feedback"
-		description="Play a short tap when a swipe has gone far enough to reply."
+		description="Use the haptic engine for interactions."
 	/>
 {/if}
 {#if desktopEntryAvailable()}
