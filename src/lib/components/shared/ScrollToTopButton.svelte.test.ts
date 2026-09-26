@@ -2,11 +2,12 @@
 
 import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ScrollToTopButton from "./ScrollToTopButton.svelte";
 
 const SCREEN_HEIGHT = 800;
+const GLIDE_MS = 400;
 
 async function settle() {
 	await tick();
@@ -23,8 +24,6 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 		value: 20_000,
 		configurable: true,
 	});
-	const scroll = vi.fn();
-	scroller.scroll = scroll;
 	scroller.scrollTop = scrollTop;
 	document.body.append(scroller);
 
@@ -37,7 +36,6 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 		);
 	return {
 		scroller,
-		scroll,
 		button,
 		async scrollTo(top: number) {
 			scroller.scrollTop = top;
@@ -52,13 +50,28 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 			button()?.click();
 			await settle();
 		},
+		async glideFor(ms: number) {
+			vi.advanceTimersByTime(ms);
+			await settle();
+		},
 	};
 }
 
 describe("the scroll-to-top button", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({
+			toFake: [
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+				"performance",
+			],
+		});
+	});
+
 	afterEach(() => {
 		cleanup();
 		document.body.replaceChildren();
+		vi.useRealTimers();
 	});
 
 	it("appears once the scroller leaves the top and hides on the way back", async () => {
@@ -97,13 +110,11 @@ describe("the scroll-to-top button", () => {
 		await view.scrollTo(5000);
 
 		await view.click();
-
 		expect(view.scroller.scrollTop).toBe(SCREEN_HEIGHT);
-		expect(view.scroll).toHaveBeenCalledWith({
-			top: 0,
-			behavior: "smooth",
-		});
 		expect(view.button()).toBeNull();
+
+		await view.glideFor(GLIDE_MS);
+		expect(view.scroller.scrollTop).toBe(0);
 	});
 
 	it("glides without a jump when the top is less than a screen away", async () => {
@@ -111,12 +122,26 @@ describe("the scroll-to-top button", () => {
 		await view.scrollTo(500);
 
 		await view.click();
-
 		expect(view.scroller.scrollTop).toBe(500);
-		expect(view.scroll).toHaveBeenCalledWith({
-			top: 0,
-			behavior: "smooth",
-		});
+
+		await view.glideFor(GLIDE_MS);
+		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("starts the glide fast and slows into the top", async () => {
+		const view = await mountWithScroller();
+		await view.scrollTo(SCREEN_HEIGHT);
+
+		await view.click();
+		await view.glideFor(GLIDE_MS / 4);
+		const firstQuarter = SCREEN_HEIGHT - view.scroller.scrollTop;
+		await view.glideFor(GLIDE_MS / 2);
+		const lastQuarterStart = view.scroller.scrollTop;
+		await view.glideFor(GLIDE_MS / 4);
+
+		expect(firstQuarter).toBeGreaterThan(SCREEN_HEIGHT / 3);
+		expect(lastQuarterStart).toBeLessThan(SCREEN_HEIGHT / 30);
+		expect(view.scroller.scrollTop).toBe(0);
 	});
 
 	for (const takeover of ["wheel", "touchstart"]) {
@@ -139,36 +164,23 @@ describe("the scroll-to-top button", () => {
 		await view.scrollTo(5000);
 		await view.click();
 
-		await view.scrollTo(0);
+		await view.glideFor(GLIDE_MS);
 		await view.scrollTo(400);
 
 		expect(view.button()).not.toBeNull();
 	});
 
-	it("releases the button on the scroll end of an interrupted glide", async () => {
+	it("ignores the scroll events its own glide causes", async () => {
 		const view = await mountWithScroller();
 		await view.scrollTo(5000);
 		await view.click();
 
-		view.scroller.scrollTop = 400;
+		await view.glideFor(GLIDE_MS / 2);
+		await view.dispatch("scroll");
 		await view.dispatch("scrollend");
 
-		expect(view.button()).not.toBeNull();
-	});
-
-	it("releases the button when a glide never lands", async () => {
-		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-		try {
-			const view = await mountWithScroller();
-			await view.scrollTo(5000);
-			await view.click();
-
-			vi.advanceTimersByTime(1500);
-			await settle();
-
-			expect(view.button()).not.toBeNull();
-		} finally {
-			vi.useRealTimers();
-		}
+		expect(view.button()).toBeNull();
+		await view.glideFor(GLIDE_MS / 2);
+		expect(view.scroller.scrollTop).toBe(0);
 	});
 });

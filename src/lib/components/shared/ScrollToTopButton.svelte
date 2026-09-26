@@ -1,7 +1,8 @@
 <script lang="ts">
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
+	import { prefersReducedMotion } from "svelte/motion";
 
-	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
+	import { glideScrollTop } from "$lib/util/scroll";
 	import { cn } from "$lib/util/utils";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
 
@@ -14,15 +15,14 @@
 	} = $props();
 
 	const TOP_SLOP_PX = 16;
-	const GLIDE_TIMEOUT_MS = 1500;
+	const GLIDE_MS = 400;
 
 	let atTop = $state(true);
-	let gliding = false;
-	let glideTimer: ReturnType<typeof setTimeout> | undefined;
+	let cancelGlide: (() => void) | null = null;
 
 	function releaseGlide() {
-		gliding = false;
-		clearTimeout(glideTimer);
+		cancelGlide?.();
+		cancelGlide = null;
 	}
 
 	function settle() {
@@ -35,17 +35,17 @@
 		if (!el) return;
 
 		const onScroll = () => {
-			if (!gliding || el.scrollTop <= 1) settle();
+			if (cancelGlide === null) settle();
 		};
 
 		settle();
 		el.addEventListener("scroll", onScroll, { passive: true });
-		el.addEventListener("scrollend", settle, { passive: true });
+		el.addEventListener("scrollend", onScroll, { passive: true });
 		el.addEventListener("wheel", releaseGlide, { passive: true });
 		el.addEventListener("touchstart", releaseGlide, { passive: true });
 		return () => {
 			el.removeEventListener("scroll", onScroll);
-			el.removeEventListener("scrollend", settle);
+			el.removeEventListener("scrollend", onScroll);
 			el.removeEventListener("wheel", releaseGlide);
 			el.removeEventListener("touchstart", releaseGlide);
 			releaseGlide();
@@ -55,12 +55,18 @@
 	function scrollToTop() {
 		const el = container;
 		if (!el) return;
+		releaseGlide();
 		atTop = true;
-		gliding = true;
-		clearTimeout(glideTimer);
-		glideTimer = setTimeout(settle, GLIDE_TIMEOUT_MS);
+		if (prefersReducedMotion.current) {
+			el.scrollTop = 0;
+			return;
+		}
 		el.scrollTop = Math.min(el.scrollTop, el.clientHeight);
-		el.scroll({ top: 0, behavior: preferredScrollBehavior() });
+		cancelGlide = glideScrollTop({
+			element: el,
+			durationMs: GLIDE_MS,
+			onLanded: settle,
+		});
 	}
 </script>
 
