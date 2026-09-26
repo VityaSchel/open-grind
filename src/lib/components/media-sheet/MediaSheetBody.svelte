@@ -13,6 +13,7 @@
 	let sheet = $state<HTMLDivElement | null>(null);
 	let peek = $state<HTMLDivElement | null>(null);
 	let settleTimer: ReturnType<typeof setTimeout> | null = null;
+	let atTop = $state(true);
 
 	function settleToNearestSize() {
 		const el = sheet;
@@ -22,6 +23,11 @@
 			top: el.scrollTop < range / 2 ? 0 : range,
 			behavior: preferredScrollBehavior(),
 		});
+	}
+
+	function onScroll() {
+		atTop = (sheet?.scrollTop ?? 0) < 1;
+		scheduleSettle();
 	}
 
 	function scheduleSettle() {
@@ -40,10 +46,14 @@
 <div
 	bind:this={sheet}
 	data-slot="sheet-scroller"
-	onscroll={scheduleSettle}
+	onscroll={onScroll}
 	class={[
 		"no-scrollbar overflow-x-hidden overscroll-contain select-none",
-		{ "h-full overflow-y-auto": fullsize, "h-fit": !fullsize },
+		{
+			"h-full overflow-y-auto": fullsize,
+			"h-fit": !fullsize,
+			"touch-pan-down": fullsize && atTop,
+		},
 	]}
 >
 	{#if fullsize}
