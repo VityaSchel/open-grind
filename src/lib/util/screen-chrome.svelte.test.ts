@@ -103,3 +103,21 @@ describe("screen chrome clearance", () => {
 		expect(topChromeClearance()).toBe(76);
 	});
 });
+
+describe("screen chrome marking", () => {
+	it("marks each bar with its edge while attached and unmarks it on detach", () => {
+		const topBar = bar({ top: 0, height: 76 });
+		const bottomBar = bar({ top: 736, height: 64 });
+		const detachTop = topChrome(topBar);
+		const detachBottom = bottomChrome(bottomBar);
+
+		expect(topBar.dataset.screenChrome).toBe("top");
+		expect(bottomBar.dataset.screenChrome).toBe("bottom");
+
+		if (detachTop) detachTop();
+		if (detachBottom) detachBottom();
+
+		expect(topBar.hasAttribute("data-screen-chrome")).toBe(false);
+		expect(bottomBar.hasAttribute("data-screen-chrome")).toBe(false);
+	});
+});

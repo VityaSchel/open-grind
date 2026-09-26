@@ -65,6 +65,7 @@
 
 <main
 	data-slot="interest-pager"
+	data-scroll-intent="x"
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >

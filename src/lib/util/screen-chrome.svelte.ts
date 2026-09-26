@@ -35,6 +35,7 @@ function edgeChrome(edge: Edge) {
 	const attach: Attachment<HTMLElement> = (element) => {
 		const remeasure = () => measure(element);
 		clearances.set(element, 0);
+		element.dataset.screenChrome = edge;
 		const movesWithItsScroller =
 			getComputedStyle(element).position === "sticky";
 		const observer = new ResizeObserver(remeasure);
@@ -54,6 +55,7 @@ function edgeChrome(edge: Edge) {
 			element.removeEventListener("outrostart", remeasure);
 			window.removeEventListener("scroll", remeasure, { capture: true });
 			clearances.delete(element);
+			delete element.dataset.screenChrome;
 		};
 	};
 
