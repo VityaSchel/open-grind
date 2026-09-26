@@ -416,6 +416,71 @@ describe("PageStackState swipe back", () => {
 	});
 });
 
+describe("PageStackState back gesture during the slide-in", () => {
+	async function slidingIn() {
+		const harness = makeStack();
+		const start = await harness.stack.navigate(
+			navigationEvent({ from: "/settings", to: "/settings/app" }),
+		);
+		start?.();
+		const slideIn = harness.animations.at(-1)!;
+		slideIn.reached = 0.6;
+		return { ...harness, slideIn };
+	}
+
+	it("picks the page up where the slide-in has reached and lets the finger drive the rest of the way", async () => {
+		const { stack, applied, slideIn } = await slidingIn();
+
+		expect(stack.beginSwipeBack()).toBe(true);
+		expect(applied.at(-1)).toBe(0.6);
+		await flushMicrotasks();
+		expect(stack.ghost?.path).toBe("/settings");
+
+		stack.trackSwipeBack(0.5);
+		expect(applied.at(-1)).toBeCloseTo(0.8);
+
+		slideIn.reached = 0;
+		stack.trackSwipeBack(0.5);
+		expect(applied.at(-1)).toBe(0.5);
+	});
+
+	it("commits from where the picked-up page is and goes back once", async () => {
+		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		const { stack, animations } = await slidingIn();
+
+		stack.beginSwipeBack();
+		stack.trackSwipeBack(0.5);
+		stack.commitSwipeBack();
+
+		expect(animations.at(-1)).toMatchObject({
+			from: expect.closeTo(0.8),
+			to: 1,
+			easing: COMMIT_EASING,
+		});
+		await settleLast(animations);
+		expect(back).toHaveBeenCalledTimes(1);
+	});
+
+	it("finishes the slide-in when the gesture is canceled", async () => {
+		const back = vi.spyOn(history, "back").mockImplementation(() => {});
+		const { stack, applied, animations } = await slidingIn();
+
+		stack.beginSwipeBack();
+		stack.trackSwipeBack(0.5);
+		stack.cancelSwipeBack();
+
+		expect(animations.at(-1)).toMatchObject({
+			from: expect.closeTo(0.8),
+			to: 0,
+			easing: CANCEL_EASING,
+		});
+		await settleLast(animations);
+		expect(back).not.toHaveBeenCalled();
+		expect(stack.ghost).toBeNull();
+		expect(applied.at(-1)).toBe(0);
+	});
+});
+
 describe("PageStackState commit with nothing to go back to", () => {
 	it("restores the pane instead of navigating into an empty history", async () => {
 		const harness = makeStack({ canGoBack: false });

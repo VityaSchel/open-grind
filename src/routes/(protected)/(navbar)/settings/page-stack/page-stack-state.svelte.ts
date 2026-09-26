@@ -127,10 +127,9 @@ export class PageStackState {
 		const previous = this.#ancestors.at(-1);
 		if (!this.canSwipeBack || !previous || !this.#livePane()) return false;
 
-		this.#settle.stop();
 		this.ghost = previous;
 		this.liveRole = "front";
-		this.#settle.progress = 0;
+		this.#settle.pickUp();
 		this.tracking = true;
 		void tick().then(() => {
 			previous.restore();

@@ -84,3 +84,73 @@ describe("StackSettle settling", () => {
 		expect(animations.at(-1)).toMatchObject({ from: 0.7, to: 0 });
 	});
 });
+
+describe("StackSettle picking up a settle", () => {
+	it("lets a settle heading in keep sliding under the finger, which drives the rest of the way out", () => {
+		const { settle, applied, animations } = makeSettle();
+		settle.progress = 1;
+		void settle.settleTo({ target: 0, easing: COMMIT_EASING });
+		const slideIn = animations.at(-1)!;
+		slideIn.reached = 0.6;
+
+		settle.pickUp();
+		expect(applied.at(-1)).toBe(0.6);
+
+		settle.track(0.5);
+		expect(applied.at(-1)).toBeCloseTo(0.8);
+
+		slideIn.reached = 0.2;
+		settle.track(0.5);
+		expect(applied.at(-1)).toBeCloseTo(0.6);
+
+		slideIn.reached = 0;
+		settle.track(0.5);
+		expect(applied.at(-1)).toBe(0.5);
+		settle.track(1);
+		expect(applied.at(-1)).toBe(1);
+	});
+
+	it("settles from where the picked-up page is and forgets the slide it picked up", () => {
+		const { settle, animations } = makeSettle();
+		settle.progress = 1;
+		void settle.settleTo({ target: 0, easing: COMMIT_EASING });
+		const slideIn = animations.at(-1)!;
+		slideIn.reached = 0.6;
+		settle.pickUp();
+		settle.track(0.5);
+
+		void settle.settleTo({ target: 1, easing: COMMIT_EASING });
+		expect(animations.at(-1)).toMatchObject({
+			from: expect.closeTo(0.8),
+			to: 1,
+			duration: expect.closeTo(SETTLE_MS * 0.2),
+		});
+
+		slideIn.reached = 0.4;
+		settle.track(0.25);
+		expect(settle.progress).toBe(0.25);
+	});
+
+	it("starts from fully in when nothing is sliding", () => {
+		const { settle, applied } = makeSettle();
+		settle.progress = 0.4;
+
+		settle.pickUp();
+
+		expect(settle.settlingIn).toBe(false);
+		expect(applied.at(-1)).toBe(0);
+	});
+
+	it("drops a settle heading out and starts from fully in", () => {
+		const { settle, applied, animations } = makeSettle();
+		void settle.settleTo({ target: 1, easing: COMMIT_EASING });
+		animations.at(-1)!.reached = 0.3;
+
+		settle.pickUp();
+
+		expect(settle.settlingIn).toBe(false);
+		expect(applied.at(-1)).toBe(0);
+		settle.track(0.5);
+		expect(applied.at(-1)).toBe(0.5);
+	});
+});

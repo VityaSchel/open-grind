@@ -139,13 +139,13 @@ export class LiveStackState {
 		if (
 			this.#top() === null ||
 			this.leaving !== null ||
-			this.moving ||
+			(this.moving && !this.#settle.settlingIn) ||
 			!this.#backLandsOnBase()
 		)
 			return false;
 
-		this.#settle.stop();
-		this.#settle.progress = 0;
+		this.#settle.pickUp();
+		this.moving = false;
 		this.tracking = true;
 		void tick().then(() => this.applyFrame());
 		return true;

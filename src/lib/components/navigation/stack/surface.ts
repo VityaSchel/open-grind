@@ -9,6 +9,7 @@ type PaneElements = {
 export type FrameAnimation = {
 	completed: Promise<boolean>;
 	cancel: () => number;
+	detach: () => () => number;
 };
 
 export type StackSurface = {
@@ -45,7 +46,11 @@ export function paneSurface({
 			const { front, back, dim } = panes();
 			if (duration <= 0) {
 				apply(to);
-				return { completed: Promise.resolve(true), cancel: () => to };
+				return {
+					completed: Promise.resolve(true),
+					cancel: () => to,
+					detach: () => () => to,
+				};
 			}
 
 			const start = frameAt(from);
@@ -70,26 +75,40 @@ export function paneSurface({
 				),
 			].filter((animation) => animation !== undefined);
 
+			const [clock, ...followers] = running;
+			const reached = () => {
+				const eased = clock?.effect?.getComputedTiming().progress;
+				return typeof eased === "number"
+					? from + (to - from) * eased
+					: to;
+			};
+
 			let canceled = false;
 			const completed = Promise.allSettled(
 				running.map((animation) => animation.finished),
 			).then(() => {
-				if (canceled) return false;
-				apply(to);
+				if (!canceled) apply(to);
 				for (const animation of running) animation.cancel();
-				return true;
+				return !canceled;
 			});
 
 			return {
 				completed,
 				cancel: () => {
 					canceled = true;
-					const eased =
-						running[0]?.effect?.getComputedTiming().progress;
+					const progress = reached();
 					for (const animation of running) animation.cancel();
-					return typeof eased === "number"
-						? from + (to - from) * eased
-						: to;
+					return progress;
+				},
+				detach: () => {
+					canceled = true;
+					for (const animation of followers) animation.cancel();
+					const effect = clock?.effect as
+						| KeyframeEffect
+						| null
+						| undefined;
+					if (effect) effect.target = null;
+					return reached;
 				},
 			};
 		},

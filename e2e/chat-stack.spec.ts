@@ -12,6 +12,7 @@ import {
 	commitSystemBack,
 	progressSystemBack,
 	startSystemBack,
+	startSystemBackMidSlide,
 } from "./support/system-back";
 
 const PHONE = { width: 390, height: 844 };
@@ -182,6 +183,43 @@ test.describe("the chat stack on a phone", () => {
 			-PHONE.width * PARALLAX * 0.7,
 			-1,
 		);
+
+		expect(await commitSystemBack(page)).toBe(false);
+		await expect(page).toHaveURL(/\/chat$/);
+		await expect(sheet(page)).toHaveCount(0);
+		await expect(dim(page)).toHaveCount(0);
+	});
+
+	test("a back gesture during the slide-in picks the conversation up where it is, lets the finger drive the rest and commits back to the list", async ({
+		page,
+	}) => {
+		await openInbox(page);
+
+		const pickUp = startSystemBackMidSlide(
+			page,
+			'[data-slot="live-stack-sheet"]',
+		);
+		await rows(page).nth(1).click();
+		const { started, before, pickedUp, aFrameLater } = await pickUp;
+
+		expect(started).toBe(true);
+		expect(pickedUp, "the sheet stays where it was").toBeCloseTo(
+			before,
+			-1,
+		);
+		expect(aFrameLater, "the sheet must not snap fully in").toBeGreaterThan(
+			0,
+		);
+		expect(aFrameLater).toBeLessThanOrEqual(before);
+		await expect(base(page)).toHaveCSS("visibility", "visible");
+
+		await progressSystemBack(page, 0.5);
+		expect(await offsetX(page, "sheet")).toBeGreaterThanOrEqual(
+			PHONE.width / 2 - 1,
+		);
+		await expect
+			.poll(() => offsetX(page, "sheet"))
+			.toBeCloseTo(PHONE.width / 2, 0);
 
 		expect(await commitSystemBack(page)).toBe(false);
 		await expect(page).toHaveURL(/\/chat$/);

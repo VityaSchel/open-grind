@@ -38,6 +38,10 @@ export function fakeSurface() {
 					settle(false);
 					return animation.reached;
 				},
+				detach: () => {
+					settle(false);
+					return () => animation.reached;
+				},
 			};
 		},
 	};

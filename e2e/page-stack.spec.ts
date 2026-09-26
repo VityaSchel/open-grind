@@ -19,6 +19,7 @@ import {
 	commitSystemBack,
 	progressSystemBack,
 	startSystemBack,
+	startSystemBackMidSlide,
 } from "./support/system-back";
 
 test.describe.configure({ timeout: 180_000 });
@@ -260,6 +261,39 @@ test("committing the system back gesture navigates back", async ({ page }) => {
 	});
 	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
 	expect(await documentOverflow(page)).toEqual({ x: 0, y: 0 });
+});
+
+test("a back gesture during the slide-in picks the page up where it is, lets the finger drive the rest, and canceling finishes the slide-in", async ({
+	page,
+}) => {
+	const width = page.viewportSize()!.width;
+	await openSettings(page);
+
+	const pickUp = startSystemBackMidSlide(
+		page,
+		'[data-slot="page-stack-pane"]',
+	);
+	await page.getByRole("link", { name: "App Settings" }).click();
+	const { started, before, pickedUp, aFrameLater } = await pickUp;
+
+	expect(started).toBe(true);
+	expect(pickedUp, "the page stays where it was").toBeCloseTo(before, -1);
+	expect(aFrameLater, "the page must not snap fully in").toBeGreaterThan(0);
+	expect(aFrameLater).toBeLessThanOrEqual(before);
+	await expect(ghost(page)).toContainText("Sign Out");
+
+	await progressSystemBack(page, 0.5);
+	expect((await panePosition(page)).live).toBeGreaterThanOrEqual(
+		width / 2 - 1,
+	);
+	await expect
+		.poll(async () => (await panePosition(page)).live)
+		.toBeCloseTo(width / 2, 0);
+
+	await cancelSystemBack(page);
+	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
+	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+	expect((await panePosition(page)).live).toBe(0);
 });
 
 test("a back swipe started while the last one is still sliding out goes back from where that one lands", async ({
