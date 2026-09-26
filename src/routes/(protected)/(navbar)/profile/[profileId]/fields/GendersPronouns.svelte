@@ -38,39 +38,47 @@
 				<circle cx="12" cy="12" r="4" />
 			</g>
 		</svg>
-		{#if genders !== null && genders.length > 0}
-			{#await allGenders}
-				<Spinner />
-			{:then allGenders}
-				{genders
-					.map(
-						(genderId) =>
-							allGenders.find((g) => g.genderId === genderId)
-								?.gender,
-					)
-					.join(", ")}
-			{:catch}
-				<span class="load-fail">Failed to load genders</span>
-			{/await}
-		{/if}
-		{#if genders !== null && genders.length > 0 && pronouns !== null && pronouns.length > 0}
-			<Separator orientation="vertical" />
-		{/if}
-		{#if pronouns !== null && pronouns.length > 0}
-			{#await allPronouns}
-				<Spinner />
-			{:then allPronouns}
-				{pronouns
-					.map(
-						(pronounId) =>
-							allPronouns.find((p) => p.pronounId === pronounId)
-								?.pronoun,
-					)
-					.join(", ")}
-			{:catch}
-				<span class="load-fail">Failed to load pronouns</span>
-			{/await}
-		{/if}
+		<span class="flex min-w-0 flex-wrap items-center gap-x-1.5">
+			{#if genders !== null && genders.length > 0}
+				{#await allGenders}
+					<Spinner />
+				{:then allGenders}
+					<span>
+						{genders
+							.map(
+								(genderId) =>
+									allGenders.find(
+										(g) => g.genderId === genderId,
+									)?.gender,
+							)
+							.join(", ")}
+					</span>
+				{:catch}
+					<span class="load-fail">Failed to load genders</span>
+				{/await}
+			{/if}
+			{#if genders !== null && genders.length > 0 && pronouns !== null && pronouns.length > 0}
+				<Separator orientation="vertical" class="h-4" />
+			{/if}
+			{#if pronouns !== null && pronouns.length > 0}
+				{#await allPronouns}
+					<Spinner />
+				{:then allPronouns}
+					<span>
+						{pronouns
+							.map(
+								(pronounId) =>
+									allPronouns.find(
+										(p) => p.pronounId === pronounId,
+									)?.pronoun,
+							)
+							.join(", ")}
+					</span>
+				{:catch}
+					<span class="load-fail">Failed to load pronouns</span>
+				{/await}
+			{/if}
+		</span>
 	</ProfileField>
 {/if}
 
