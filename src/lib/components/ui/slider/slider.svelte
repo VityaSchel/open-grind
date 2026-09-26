@@ -64,13 +64,14 @@ get along, so we shut typescript up by casting `value` to `never`.
 				: next)
 	}
 	data-slot="slider"
+	data-vaul-no-drag
 	{orientation}
 	min={scale ? 0 : min}
 	max={scale ? TRACK_RESOLUTION : max}
 	step={scaledSteps ?? step}
 	thumbPositioning="exact"
 	class={cn(
-		"relative flex touch-none items-center select-none data-disabled:opacity-50 data-horizontal:mx-[calc(var(--slider-thumb-size)/2)] data-horizontal:h-4 data-horizontal:w-[calc(100%-var(--slider-thumb-size))] data-vertical:my-[calc(var(--slider-thumb-size)/2)] data-vertical:h-[calc(100%-var(--slider-thumb-size))] data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
+		"relative flex touch-none items-center select-none in-data-vaul-drawer:touch-none! data-disabled:opacity-50 data-horizontal:mx-[calc(var(--slider-thumb-size)/2)] data-horizontal:h-4 data-horizontal:w-[calc(100%-var(--slider-thumb-size))] data-vertical:my-[calc(var(--slider-thumb-size)/2)] data-vertical:h-[calc(100%-var(--slider-thumb-size))] data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
 		className,
 	)}
 	{...restProps}
