@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { MEDIA_TILE, openAttachments } from "./support/drawer";
+import {
+	LIFTED_MEDIA_TILE,
+	MEDIA_TILE,
+	openAttachments,
+} from "./support/drawer";
 import { CHAT_MEDIA_HOST, holdImages, serveImages } from "./support/media";
-
-const LIFTED = '[data-slot="media-tile-lifted"]';
 
 test.describe("media tile menu", () => {
 	test("the lifted copy keeps the corners of the tile it lifts", async ({
@@ -26,12 +28,12 @@ test.describe("media tile menu", () => {
 				.locator(MEDIA_TILE)
 				.nth(index)
 				.click({ button: "right" });
-			await expect(page.locator(LIFTED)).toHaveCSS(
+			await expect(page.locator(LIFTED_MEDIA_TILE)).toHaveCSS(
 				"border-radius",
 				corners[index]!,
 			);
 			await page.keyboard.press("Escape");
-			await expect(page.locator(LIFTED)).toHaveCount(0);
+			await expect(page.locator(LIFTED_MEDIA_TILE)).toHaveCount(0);
 		}
 	});
 
@@ -64,7 +66,7 @@ test.describe("media tile menu", () => {
 		const tile = page.locator(MEDIA_TILE).first();
 
 		await tile.click({ button: "right" });
-		const lifted = page.locator(LIFTED);
+		const lifted = page.locator(LIFTED_MEDIA_TILE);
 		await expect(lifted).toBeVisible();
 		await expect(lifted.locator("img")).toHaveCount(0);
 

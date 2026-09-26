@@ -29,10 +29,30 @@ vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ conversationId: "100001:100002" }),
 }));
 
+import type { DrawerMedia } from "$lib/api/messaging/drawer";
 import ComposerMediaTab from "./ComposerMediaTab.svelte";
 
 const PENDING = '[data-slot="media-image-pending"]';
 const SKELETON = '[data-slot="skeleton"]';
+const PREVIEW = '[data-slot="video-preview"]';
+const VIDEO_BADGE = '[data-slot="media-tile-video-badge"]';
+const LIFTED = '[data-slot="media-tile-lifted"]';
+
+const photo: DrawerMedia = {
+	id: 800_001,
+	url: `https://cdns.grindr.com/images/chat/${"a".repeat(64)}`,
+	contentType: "image/jpeg",
+	createdTs: 1_700_000_000_000,
+	used: false,
+	takenOnGrindr: true,
+};
+
+const video: DrawerMedia = {
+	...photo,
+	id: 800_002,
+	url: "https://cdns.grindr.com/videos/chat/clip.mp4",
+	contentType: "video/mp4",
+};
 
 function renderTab() {
 	return render(ComposerMediaTab, {
@@ -105,18 +125,50 @@ describe("composer media tab", () => {
 		);
 	});
 
+	it("shows a video as a muted, paused preview marked as video", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([photo, video]);
+		const { findByRole } = renderTab();
+
+		const tile = await findByRole("button", { name: "Video 2" });
+
+		const preview = tile.querySelector<HTMLVideoElement>(PREVIEW);
+		expect(preview?.src).toBe(`${video.url}#t=0.001`);
+		expect(preview?.muted).toBe(true);
+		expect(preview?.autoplay).toBe(false);
+		expect(preview?.preload).toBe("metadata");
+		expect(tile.querySelector(VIDEO_BADGE)).not.toBeNull();
+	});
+
+	it("keeps a photo as an image without the video badge", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([photo, video]);
+		const { findByRole } = renderTab();
+
+		const tile = await findByRole("button", { name: "Photo 1" });
+
+		expect(tile.querySelector(PREVIEW)).toBeNull();
+		expect(tile.querySelector(VIDEO_BADGE)).toBeNull();
+	});
+
+	it("marks media already sent on its tile and on the lifted copy", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([
+			{ ...photo, used: true },
+			video,
+		]);
+		const { findByRole, getByRole } = renderTab();
+
+		const sent = await findByRole("button", { name: "Photo 1 Sent" });
+		expect(
+			getByRole("button", { name: "Video 2" }).textContent,
+		).not.toContain("Sent");
+
+		await rightClick(sent);
+		await findByRole("menuitem", { name: "Delete permanently" });
+		expect(document.querySelector(LIFTED)?.textContent).toContain("Sent");
+	});
+
 	it("deletes a drawer item for good and drops it from the selection", async () => {
 		const onSelectionChange = vi.fn();
-		drawer.getDrawerMedia.mockResolvedValue([
-			{
-				id: 800_001,
-				url: "https://cdns.grindr.com/images/chat/a",
-				contentType: "image/jpeg",
-				createdTs: 1_700_000_000_000,
-				used: false,
-				takenOnGrindr: true,
-			},
-		]);
+		drawer.getDrawerMedia.mockResolvedValue([photo]);
 		drawer.deleteDrawerMedia.mockResolvedValue(undefined);
 		const { findByRole, queryByRole } = render(ComposerMediaTab, {
 			props: { onClose: () => {}, onSelectionChange, expiring: false },

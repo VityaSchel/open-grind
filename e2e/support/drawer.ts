@@ -6,6 +6,7 @@ export const DRAWER = "[data-vaul-drawer]";
 const PANEL = "[data-slot=sheet-panel]";
 
 export const MEDIA_TILE = '[data-slot="media-tile"]';
+export const LIFTED_MEDIA_TILE = '[data-slot="media-tile-lifted"]';
 export const ALBUM_TILE = '[data-slot="album-tile"]';
 export const SELECTED_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="true"]`;
 export const SELECTABLE_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="false"]`;

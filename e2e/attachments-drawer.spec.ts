@@ -5,6 +5,7 @@ import {
 	box,
 	DRAWER,
 	expandToFull,
+	LIFTED_MEDIA_TILE,
 	MEDIA_TILE,
 	openAttachments,
 	SELECTABLE_MEDIA_TILE,
@@ -470,7 +471,7 @@ test.describe("attachments drawer", () => {
 
 		await tile.click({ button: "right" });
 
-		const lifted = page.locator('[data-slot="media-tile-lifted"]');
+		const lifted = page.locator(LIFTED_MEDIA_TILE);
 		const menu = page.getByRole("menu", { name: /options$/ });
 		await expect(menu).toBeVisible();
 		const liftedBox = (await lifted.boundingBox())!;

@@ -7,8 +7,6 @@
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
 	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
 	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Button } from "$lib/components/ui/button";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
@@ -71,41 +69,36 @@
 		</MediaSheetBody>
 
 		<MediaSheetActions
-			visible={selection !== undefined && selection.count > 0}
 			class="bottom-18"
+			label={selection?.label ?? ""}
+			count={selection?.count ?? 0}
+			onSubmit={submitSelection}
 		>
-			{#if selectedTab === "media"}
-				<Toggle
-					aria-label="Set photo as expiring after 10 seconds"
-					size="lg"
-					class={{
-						"bg-muted hover:bg-muted/80": !expiring,
-						"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
-							expiring,
-					}}
-					variant="default"
-					bind:pressed={expiring}
-				>
-					<TimerIcon
-						weight={expiring ? "fill" : "regular"}
-						class="size-5"
-					/>
-					{#if expiring}
-						10s
-					{:else}
-						Off
-					{/if}
-				</Toggle>
-			{/if}
-			<Button size="lg" class="shadow-lg" onclick={submitSelection}>
-				{selection?.label}
-				<Badge
-					variant="secondary"
-					class="bg-primary-foreground/10 text-primary-foreground"
-				>
-					{selection?.count}
-				</Badge>
-			</Button>
+			{#snippet leading()}
+				{#if selectedTab === "media"}
+					<Toggle
+						aria-label="Set photo as expiring after 10 seconds"
+						size="lg"
+						class={{
+							"bg-muted hover:bg-muted/80": !expiring,
+							"bg-popover-foreground! text-popover hover:bg-popover-foreground/80! hover:text-popover":
+								expiring,
+						}}
+						variant="default"
+						bind:pressed={expiring}
+					>
+						<TimerIcon
+							weight={expiring ? "fill" : "regular"}
+							class="size-5"
+						/>
+						{#if expiring}
+							10s
+						{:else}
+							Off
+						{/if}
+					</Toggle>
+				{/if}
+			{/snippet}
 		</MediaSheetActions>
 
 		<Drawer.Footer
