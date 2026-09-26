@@ -4,6 +4,47 @@ const COMPOSITING_OFF_VARS: [&str; 2] = [
 	"WEBKIT_DISABLE_DMABUF_RENDERER",
 ];
 
+#[cfg(any(target_os = "linux", test))]
+const ENVIRONMENT_DEFAULTS: [(&str, &str); 1] = [
+	// GTK 3 crashes on NVIDIA under Wayland without it:
+	// https://gitlab.gnome.org/GNOME/gtk/-/issues/8056
+	("__NV_DISABLE_EXPLICIT_SYNC", "1"),
+];
+
+#[cfg(any(target_os = "linux", test))]
+fn defaults_to_apply(
+	is_set: impl Fn(&str) -> bool,
+) -> impl Iterator<Item = (&'static str, &'static str)> {
+	ENVIRONMENT_DEFAULTS
+		.into_iter()
+		.filter(move |(name, _)| !is_set(name))
+}
+
+#[cfg(target_os = "linux")]
+pub fn apply_environment_defaults() {
+	for (name, value) in
+		defaults_to_apply(|name| std::env::var_os(name).is_some())
+	{
+		std::env::set_var(name, value);
+	}
+}
+
+#[cfg(test)]
+mod environment_default_tests {
+	#[test]
+	fn applies_every_default_when_nothing_is_set() {
+		assert_eq!(
+			super::defaults_to_apply(|_| false).collect::<Vec<_>>(),
+			super::ENVIRONMENT_DEFAULTS
+		);
+	}
+
+	#[test]
+	fn keeps_a_value_the_user_already_set() {
+		assert_eq!(super::defaults_to_apply(|_| true).count(), 0);
+	}
+}
+
 #[cfg(target_os = "linux")]
 fn disabled_by_environment(read: impl Fn(&str) -> Option<String>) -> bool {
 	COMPOSITING_OFF_VARS

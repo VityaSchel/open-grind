@@ -127,6 +127,9 @@ fn quit_when_closed(window: &tauri::WebviewWindow) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+	#[cfg(target_os = "linux")]
+	appearance::apply_environment_defaults();
+
 	api::update::enforce_home();
 
 	#[cfg(feature = "devtools")]

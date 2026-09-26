@@ -43,6 +43,24 @@ Notes:
 - GPS is not available through the geolocation plugin on Linux
 - Without a Secret Service your sign-in is kept in a plain file under the app data directory
 
+::: info If the window stays blank, flickers, or Open Grind closes as soon as it opens
+
+This happens with some NVIDIA graphics drivers. Open Grind already sets `__NV_DISABLE_EXPLICIT_SYNC=1`, which fixes the "Error 71 (Protocol error)" crash on Wayland. If the window only flickers, try starting Open Grind with `__NV_DISABLE_EXPLICIT_SYNC=0` first.
+
+If that doesn't help, start Open Grind with GPU rendering turned off:
+
+```sh
+WEBKIT_DISABLE_DMABUF_RENDERER=1 ./open-grind-*.AppImage
+```
+
+For the deb or Arch package, run `WEBKIT_DISABLE_DMABUF_RENDERER=1 open-grind`. Blur effects are turned off in this mode, and scrolling is less smooth.
+
+To keep the setting when you open Open Grind from the apps menu, put `env` and the setting at the start of the `Exec=` line in the menu entry:
+
+- AppImage: in `~/.local/share/applications/open-grind.desktop`, keep the path that is already there, for example `Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 "/home/you/Apps/open-grind.AppImage"`
+- deb or Arch: copy `/usr/share/applications/Open Grind.desktop` to `~/.local/share/applications/`, then change the copy to `Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 open-grind`
+:::
+
 ### AppImage (any distribution)
 
 The AppImage runs on any distribution that has WebKitGTK 4.1.
