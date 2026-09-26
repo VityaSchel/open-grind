@@ -22,7 +22,7 @@ test("a photo with unique pixels sent from the app reaches the counterpart", asy
 	await app.getByRole("button", { name: "Add attachment" }).click();
 	await app.getByRole("tab", { name: "Media" }).click();
 	await app
-		.getByRole("button", { name: "Add photo or video" })
+		.getByRole("button", { name: "Upload photos or videos" })
 		.first()
 		.click();
 	await pickNewestPhoto({ multiple: true });

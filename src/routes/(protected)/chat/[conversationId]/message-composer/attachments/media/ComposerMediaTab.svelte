@@ -60,7 +60,7 @@
 			uploadRefusalMessage({
 				error: err,
 				limitLabel: CHAT_MEDIA_MAX_LABEL,
-			}) ?? "Couldn't add photo or video"
+			}) ?? "Couldn't upload photo or video"
 		);
 	}
 
@@ -129,7 +129,7 @@
 	{selected}
 	onToggle={toggleSelected}
 	emptyTitle="No media sent yet"
-	addLabel="Add photo or video"
+	addLabel="Upload photos or videos"
 	onAdd={addMedia}
 	pending={uploadingCount}
 	remove={(item) => deleteDrawerMedia(item.id)}

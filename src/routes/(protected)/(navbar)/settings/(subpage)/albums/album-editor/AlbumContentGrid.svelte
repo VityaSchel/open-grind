@@ -136,7 +136,6 @@
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}
-	title="Add to album"
 	uploadLabel="Upload photos or videos"
 	submitLabel="Add to album"
 	max={itemRoom}

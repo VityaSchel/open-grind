@@ -9,7 +9,6 @@
 	import type { PreviousUploadsProps } from "./previous-uploads";
 
 	let {
-		title,
 		uploadLabel,
 		submitLabel,
 		max,
@@ -70,7 +69,7 @@
 </script>
 
 <MediaSheetBody>
-	<Drawer.Title class="mb-3 px-1">{title}</Drawer.Title>
+	<Drawer.Title class="mb-3 px-1">Previous uploads</Drawer.Title>
 	<MediaSheetGrid
 		{items}
 		{error}

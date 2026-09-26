@@ -36,7 +36,9 @@ async function pickIntoAlbum(page: Page) {
 		.getByRole("button", { name: "Add photos or videos" })
 		.first()
 		.click();
-	const previousUploads = page.getByRole("dialog", { name: "Add to album" });
+	const previousUploads = page.getByRole("dialog", {
+		name: "Previous uploads",
+	});
 	const offersPreviousUploads = await previousUploads
 		.waitFor({ timeout: 5000 })
 		.then(

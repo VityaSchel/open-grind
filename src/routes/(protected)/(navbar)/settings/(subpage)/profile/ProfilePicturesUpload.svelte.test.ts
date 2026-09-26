@@ -165,6 +165,18 @@ describe("profile pictures upload", () => {
 		).toBeTruthy();
 	});
 
+	it("titles its sheet Previous uploads", async () => {
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [] },
+		});
+
+		await fireEvent.click(getByRole("button", { name: "Add photos" }));
+
+		expect(
+			await findByRole("dialog", { name: "Previous uploads" }),
+		).toBeTruthy();
+	});
+
 	it("adds chosen previous uploads after the photos already there", async () => {
 		previousUploads("first", "earlier");
 		const { findByRole, getByRole } = render(ProfilePicturesUpload, {

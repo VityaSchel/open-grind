@@ -90,7 +90,7 @@ describe("composer media tab", () => {
 		await tick();
 
 		await fireEvent.click(
-			getByRole("button", { name: "Add photo or video" }),
+			getByRole("button", { name: "Upload photos or videos" }),
 		);
 		await vi.waitFor(() =>
 			expect(chatMedia.addMediaToDrawer).toHaveBeenCalledOnce(),
@@ -115,12 +115,33 @@ describe("composer media tab", () => {
 		await tick();
 
 		await fireEvent.click(
-			getByRole("button", { name: "Add photo or video" }),
+			getByRole("button", { name: "Upload photos or videos" }),
 		);
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
 				"Larger than the 120.00 MB limit",
+			),
+		);
+	});
+
+	it("says the upload failed when a picked file can't be uploaded", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([
+			{ key: "picked", mimeType: "image/jpeg", path: "/picked.jpg" },
+		]);
+		chatMedia.addMediaToDrawer.mockRejectedValue(new Error("offline"));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(
+			getByRole("button", { name: "Upload photos or videos" }),
+		);
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				"Couldn't upload photo or video",
 			),
 		);
 	});

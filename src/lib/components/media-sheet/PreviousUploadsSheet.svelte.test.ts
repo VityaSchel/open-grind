@@ -32,7 +32,6 @@ function renderSheet({
 	return render(PreviousUploadsSheet<Upload>, {
 		props: {
 			open: true,
-			title: "Add to album",
 			uploadLabel: "Upload photos or videos",
 			submitLabel: "Add to album",
 			max,
@@ -68,7 +67,9 @@ describe("previous uploads sheet", () => {
 
 		expect(onUpload).toHaveBeenCalledOnce();
 		await vi.waitFor(() =>
-			expect(queryByRole("dialog", { name: "Add to album" })).toBeNull(),
+			expect(
+				queryByRole("dialog", { name: "Previous uploads" }),
+			).toBeNull(),
 		);
 	});
 

@@ -5,7 +5,6 @@ export type UploadTile = {
 };
 
 export type PreviousUploadsProps<Item> = {
-	title: string;
 	uploadLabel: string;
 	submitLabel: string;
 	max: number | null;

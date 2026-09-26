@@ -180,7 +180,6 @@
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}
-	title="Add photos"
 	uploadLabel="Upload photos"
 	submitLabel="Add to profile"
 	max={room}

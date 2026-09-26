@@ -41,6 +41,7 @@
 </script>
 
 <MediaSheet bind:open fullsize={isFullsizeTab}>
+	<Drawer.Title class="sr-only">Attachments</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}
 		class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
