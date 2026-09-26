@@ -6,22 +6,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Drafts } from "$lib/chat/drafts.svelte";
 
-const { conversations, currentPage } = vi.hoisted(() => ({
+const { conversations, currentPage, playHapticMock } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
 	currentPage: { params: {} },
+	playHapticMock: vi.fn(),
 }));
 
 vi.mock("$app/state", () => ({ page: currentPage }));
 vi.mock("$lib/chat/conversations-context.svelte", () => ({
 	getConversations: () => conversations,
 }));
+vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
+import { contextMenuEvent } from "$lib/test/context-menu";
 import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
 import Conversation from "./Conversation.svelte";
 
 const DESCRIPTION = '[data-slot="item-description"]';
 const DRAFT_PREFIX = '[data-slot="conversation-draft-prefix"]';
+const MENU_TRIGGER = '[data-slot="context-menu-trigger"]';
 const CONVERSATION_ID = "a:1";
+const BITS_HOLD_MS = 750;
 
 let drafts: Drafts;
 
@@ -182,5 +187,74 @@ describe("Conversation preview line", () => {
 		const { container } = renderRow(textPreview("hello there"));
 
 		expect(previewLine(container)).toBe("hello there");
+	});
+});
+
+function renderRowWithMenu(): HTMLElement {
+	const { container } = render(Conversation, {
+		props: { conversation: conversation(null) },
+	});
+	const trigger = container.querySelector<HTMLElement>(MENU_TRIGGER);
+	if (trigger === null) throw new Error("Missing context menu trigger");
+	return trigger;
+}
+
+function pointerDown(pointerType: string): MouseEvent {
+	return Object.assign(new MouseEvent("pointerdown", { bubbles: true }), {
+		pointerType,
+	});
+}
+
+async function menuOpened(trigger: HTMLElement): Promise<boolean> {
+	await tick();
+	return trigger.getAttribute("data-state") === "open";
+}
+
+describe("Conversation menu haptics", () => {
+	beforeEach(() => {
+		conversations.drafts = new Drafts();
+		playHapticMock.mockReset();
+	});
+
+	afterEach(cleanup);
+
+	it("taps once when a touch long press opens the menu", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+
+		expect(await menuOpened(trigger)).toBe(true);
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("taps when the menu's own hold timer opens it for a touch", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerDown("touch"));
+		await new Promise((resolve) => setTimeout(resolve, BITS_HOLD_MS));
+
+		expect(await menuOpened(trigger)).toBe(true);
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("stays quiet when a right-click opens the menu", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerDown("mouse"));
+		trigger.dispatchEvent(contextMenuEvent({ pointerType: "mouse" }));
+
+		expect(await menuOpened(trigger)).toBe(true);
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("stays quiet when the menu key opens the menu after a touch", async () => {
+		const trigger = renderRowWithMenu();
+
+		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(contextMenuEvent({ pointerType: "" }));
+
+		expect(await menuOpened(trigger)).toBe(true);
+		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });

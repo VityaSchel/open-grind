@@ -46,6 +46,7 @@
 	}
 
 	const longPress = longPressHandlers(openMenu);
+	const menuReady = $derived(onMenu !== undefined && !busy);
 </script>
 
 <button
@@ -68,7 +69,7 @@
 		pressedHere = true;
 		touchDown = event.pointerType !== "mouse";
 		openedByTouch = false;
-		if (onMenu !== undefined) longPress.onpointerdown?.(event);
+		if (menuReady) longPress.onpointerdown?.(event);
 	}}
 	onpointermove={(event) => longPress.onpointermove?.(event)}
 	onpointerup={(event) => {
@@ -93,7 +94,8 @@
 		? undefined
 		: (event) => {
 				event.stopPropagation();
-				longPress.oncontextmenu?.(event);
+				if (menuReady) longPress.oncontextmenu?.(event);
+				else event.preventDefault();
 			}}
 >
 	{#if video}

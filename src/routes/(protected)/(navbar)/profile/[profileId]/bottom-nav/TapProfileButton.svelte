@@ -4,7 +4,9 @@
 	import TapIcon from "$lib/components/profile/TapIcon.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { playHaptic } from "$lib/haptics";
 	import { TapType, tapTypes } from "$lib/model/interest/taps";
+	import { firedByTouch } from "$lib/platform/touch-origin";
 
 	let {
 		profileId,
@@ -49,6 +51,7 @@
 	bind:ref={customAnchor}
 	oncontextmenu={(e) => {
 		e.preventDefault();
+		if (!open && firedByTouch(e)) playHaptic("longPress");
 		open = true;
 	}}
 	onclick={() => send(defaultTapType)}

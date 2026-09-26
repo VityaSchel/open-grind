@@ -1,6 +1,7 @@
 import { SvelteMap } from "svelte/reactivity";
 import type { Attachment } from "svelte/attachments";
 
+import { playHaptic } from "$lib/haptics";
 import { nearestSlot, previewSlot } from "$lib/util/reorder";
 
 const TOUCH_LIFT_DELAY_MS = 300;
@@ -70,6 +71,7 @@ export class GridReorderState {
 		this.#timer = setTimeout(() => {
 			this.#timer = null;
 			this.#lift(origin);
+			if (this.dragging) playHaptic("dragStart");
 		}, TOUCH_LIFT_DELAY_MS);
 	}
 

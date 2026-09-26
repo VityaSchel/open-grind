@@ -4,6 +4,8 @@
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
 
+	import { playHaptic } from "$lib/haptics";
+	import { firedByTouch } from "$lib/platform/touch-origin";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { scale } from "$lib/util/reduced-motion";
 	import {
@@ -130,13 +132,14 @@
 		if (!hasMenuActions) contextMenuOpen = false;
 	});
 
-	function onContextMenu() {
-		if (!messageElement || !frameElement || !hasMenuActions) return;
+	function openContextMenu(): boolean {
+		if (!messageElement || !frameElement || !hasMenuActions) return false;
 		const computed = getComputedStyle(messageElement);
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
 		contextMenuOpen = true;
+		return true;
 	}
 
 	function liftedAnchor({
@@ -316,12 +319,14 @@
 					if (event.target !== event.currentTarget) return;
 					if (event.key === "Enter" || event.key === " ") {
 						event.preventDefault();
-						onContextMenu();
+						openContextMenu();
 					}
 				}}
 				oncontextmenu={(event) => {
 					event.preventDefault();
-					onContextMenu();
+					if (openContextMenu() && firedByTouch(event)) {
+						playHaptic("longPress");
+					}
 				}}
 				style:visibility={contextMenuOpen ? "hidden" : undefined}
 				style:transform={swipe?.deltaX

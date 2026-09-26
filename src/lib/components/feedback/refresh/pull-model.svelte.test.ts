@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
+vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
 import { PullModel } from "./pull-model.svelte";
 
@@ -153,5 +156,71 @@ describe("PullModel", () => {
 		model.cancel();
 		expect(model.phase).toBe("idle");
 		expect(onTrigger).not.toHaveBeenCalled();
+	});
+});
+
+describe("PullModel haptics", () => {
+	beforeEach(() => {
+		playHapticMock.mockReset();
+	});
+
+	it("taps once as a touch pull arms, however far it goes past", () => {
+		const { model } = makeModel();
+		model.beginPull("touch");
+		model.updatePull(60);
+		expect(playHapticMock).not.toHaveBeenCalled();
+		model.updatePull(110);
+		model.updatePull(200);
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("threshold");
+	});
+
+	it("taps as a pre-resisted overscroll pull reaches the space", () => {
+		const { model } = makeModel();
+		model.beginPull("overscroll");
+		model.updatePull(30, { preResisted: true });
+		model.updatePull(48, { preResisted: true });
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("threshold");
+	});
+
+	it("stays quiet when a pull that armed dips back and arms again", () => {
+		const { model } = makeModel();
+		model.beginPull("touch");
+		model.updatePull(110);
+		model.updatePull(60);
+		model.updatePull(110);
+		expect(playHapticMock).toHaveBeenCalledOnce();
+	});
+
+	it("taps again once a pull has gone all the way back and returns", () => {
+		const { model } = makeModel();
+		model.beginPull("touch");
+		model.updatePull(110);
+		model.updatePull(0);
+		model.updatePull(110);
+		expect(playHapticMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("taps once for each new pull", () => {
+		const { model } = makeModel();
+		model.beginPull("touch");
+		model.updatePull(110);
+		model.cancel();
+		model.beginPull("touch");
+		model.updatePull(110);
+		expect(playHapticMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("stays quiet for a pull that never arms", () => {
+		const { model } = makeModel();
+		model.beginPull("touch");
+		model.updatePull(60);
+		model.release();
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("stays quiet for a refresh started by a click", () => {
+		const { model } = makeModel();
+		model.clickTrigger();
+		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });

@@ -16,7 +16,9 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Item from "$lib/components/ui/item";
+	import { playHaptic } from "$lib/haptics";
 	import { previewLabel } from "$lib/model/messaging/message-preview";
+	import { firedByTouch } from "$lib/platform/touch-origin";
 	import type { Conversation } from "$lib/model/messaging/conversations";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
 
@@ -44,6 +46,7 @@
 	const isSelected = $derived(selection?.has(conversationId) ?? false);
 
 	let contextMenuUsed = $state(false);
+	let pressedByTouch = false;
 
 	function togglePinned() {
 		void conversations.setPinned({
@@ -159,10 +162,16 @@
 {:else}
 	<ContextMenu.Root
 		onOpenChange={(open) => {
-			if (open) contextMenuUsed = true;
+			if (!open) return;
+			contextMenuUsed = true;
+			if (pressedByTouch) playHaptic("longPress");
 		}}
 	>
-		<ContextMenu.Trigger class="rounded-2xl">
+		<ContextMenu.Trigger
+			class="rounded-2xl"
+			onpointerdown={(event) => (pressedByTouch = firedByTouch(event))}
+			oncontextmenu={(event) => (pressedByTouch = firedByTouch(event))}
+		>
 			{@render row()}
 		</ContextMenu.Trigger>
 		{#if contextMenuUsed}

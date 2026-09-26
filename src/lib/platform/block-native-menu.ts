@@ -1,3 +1,6 @@
+import { playHaptic } from "$lib/haptics";
+import { firedByTouch } from "$lib/platform/touch-origin";
+
 const TEXT_INPUT_TYPES = new Set([
 	"email",
 	"number",
@@ -60,7 +63,10 @@ export function blockNativeMenu(): () => void {
 	const onContextMenu = (event: MouseEvent) => {
 		if (event.defaultPrevented) return;
 		const selection = window.getSelection();
-		if (allowsNativeMenu({ target: event.target, selection })) return;
+		if (allowsNativeMenu({ target: event.target, selection })) {
+			if (firedByTouch(event)) playHaptic("longPress");
+			return;
+		}
 		event.preventDefault();
 	};
 	window.addEventListener("contextmenu", onContextMenu);

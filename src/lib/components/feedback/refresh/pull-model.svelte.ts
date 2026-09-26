@@ -1,3 +1,5 @@
+import { playHaptic } from "$lib/haptics";
+
 export type PullSource = "touch" | "overscroll" | "click";
 export type PullPhase = "idle" | "pulling" | "armed" | "refreshing";
 export type PullOutcome = "triggered" | "canceled";
@@ -21,6 +23,7 @@ export class PullModel {
 	getBaseline?: () => number;
 
 	#baseline = 0;
+	#armAnnounced = false;
 	#triggeredAt = 0;
 	#now: () => number;
 
@@ -47,6 +50,7 @@ export class PullModel {
 		if (this.busy || this.gestureActive) return false;
 		this.source = source;
 		this.#clearSettled();
+		this.#armAnnounced = false;
 		this.#baseline = Math.max(0, this.getBaseline?.() ?? 0);
 		this.displayPx = this.#baseline;
 		this.phase = "pulling";
@@ -56,16 +60,16 @@ export class PullModel {
 	updatePull(rawPx: number, { preResisted = false } = {}): void {
 		if (!this.gestureActive) return;
 		const pull = Math.max(0, rawPx);
+		if (pull === 0) this.#armAnnounced = false;
 		if (preResisted) {
 			this.displayPx = pull;
-			this.phase =
-				this.space > 0 && pull >= this.space ? "armed" : "pulling";
+			this.#reach(this.space > 0 && pull >= this.space);
 			return;
 		}
 		const range = Math.max(0, this.space * OVERSHOOT - this.#baseline);
 		this.displayPx =
 			this.#baseline + range * (1 - Math.exp(-pull / RESISTANCE_PX));
-		this.phase = this.space > 0 && pull >= ARM_RAW_PX ? "armed" : "pulling";
+		this.#reach(this.space > 0 && pull >= ARM_RAW_PX);
 	}
 
 	release(): void {
@@ -101,6 +105,13 @@ export class PullModel {
 			0,
 			MIN_REFRESHING_MS - (this.#now() - this.#triggeredAt),
 		);
+	}
+
+	#reach(armed: boolean): void {
+		this.phase = armed ? "armed" : "pulling";
+		if (!armed || this.#armAnnounced) return;
+		this.#armAnnounced = true;
+		playHaptic("threshold");
 	}
 
 	#fire(): void {

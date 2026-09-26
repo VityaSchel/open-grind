@@ -1,5 +1,7 @@
 import type { HTMLAttributes } from "svelte/elements";
 
+import { playHaptic } from "$lib/haptics";
+
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
 // A layout shift can land the contextmenu or the click on another element.
@@ -11,10 +13,21 @@ let heldTouchUntil = 0;
 let suppressClickUntil = 0;
 let documentListenersAttached = false;
 
-function fireOnce(onLongPress: () => void): void {
+function isTouchLike(pointerType: string | undefined): boolean {
+	return pointerType === "touch" || pointerType === "pen";
+}
+
+function fireOnce({
+	onLongPress,
+	pointerType,
+}: {
+	onLongPress: () => void;
+	pointerType: string | undefined;
+}): void {
 	const now = Date.now();
 	if (now - lastFiredAt < NATIVE_CONTEXTMENU_DELAY_MS) return;
 	lastFiredAt = now;
+	if (isTouchLike(pointerType)) playHaptic("longPress");
 	onLongPress();
 }
 
@@ -57,10 +70,6 @@ function holdTouch(): void {
 	window.addEventListener("pointercancel", release, true);
 }
 
-function isTouchLike(pointerType: string | undefined): boolean {
-	return pointerType === "touch" || pointerType === "pen";
-}
-
 type LongPressHandlers = Pick<
 	HTMLAttributes<HTMLElement>,
 	| "onpointerdown"
@@ -92,11 +101,12 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			pressing = true;
 			originX = event.clientX;
 			originY = event.clientY;
+			const { pointerType } = event;
 			timer = setTimeout(() => {
 				timer = null;
 				pressConsumed = true;
 				holdTouch();
-				fireOnce(onLongPress);
+				fireOnce({ onLongPress, pointerType });
 			}, LONG_PRESS_DURATION_MS);
 		},
 		onpointermove(event) {
@@ -132,7 +142,7 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 				return;
 			}
 			if (isTouchLike(pointerType)) holdTouch();
-			fireOnce(onLongPress);
+			fireOnce({ onLongPress, pointerType });
 		},
 	};
 }

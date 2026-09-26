@@ -1,9 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
+vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
 import {
 	allowsNativeMenu,
 	blockNativeMenu,
 } from "$lib/platform/block-native-menu";
+import { contextMenuEvent } from "$lib/test/context-menu";
+import type { TouchOriginHints } from "$lib/platform/touch-origin";
 
 function mount(html: string): HTMLElement {
 	document.body.innerHTML = html;
@@ -42,12 +47,11 @@ function select(node: Node): Selection {
 	return selection;
 }
 
-function contextMenuOn(target: Element): MouseEvent {
-	const event = new MouseEvent("contextmenu", {
-		bubbles: true,
-		cancelable: true,
-		button: 2,
-	});
+function contextMenuOn(
+	target: Element,
+	origin: TouchOriginHints = {},
+): MouseEvent {
+	const event = contextMenuEvent(origin);
 	target.dispatchEvent(event);
 	return event;
 }
@@ -195,5 +199,54 @@ describe("blockNativeMenu", () => {
 		mount('<a href="/profile/1">Profile</a>');
 		release();
 		expect(contextMenuOn(query("a")).defaultPrevented).toBe(false);
+	});
+});
+
+describe("blockNativeMenu haptics", () => {
+	let release = () => {};
+
+	beforeEach(() => {
+		playHapticMock.mockReset();
+		release = blockNativeMenu();
+	});
+
+	afterEach(() => {
+		release();
+	});
+
+	it("taps when a touch long press opens a text field's own menu", () => {
+		mount("<textarea></textarea>");
+		contextMenuOn(query("textarea"), { pointerType: "touch" });
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("taps when a touch long press opens the menu of selected text", () => {
+		mount("<p>Some <b>selected</b> words</p>");
+		select(query("b"));
+		contextMenuOn(query("b"), {
+			sourceCapabilities: { firesTouchEvents: true },
+		});
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("stays quiet for a right-click on a text field", () => {
+		mount("<textarea></textarea>");
+		contextMenuOn(query("textarea"), { pointerType: "mouse" });
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("stays quiet when a touch long press on a plain element is blocked", () => {
+		mount('<a href="/profile/1">Profile</a>');
+		contextMenuOn(query("a"), { pointerType: "touch" });
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("leaves the tap to a handler that already took the event", () => {
+		mount("<textarea></textarea>");
+		query("textarea").addEventListener("contextmenu", (event) =>
+			event.preventDefault(),
+		);
+		contextMenuOn(query("textarea"), { pointerType: "touch" });
+		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });

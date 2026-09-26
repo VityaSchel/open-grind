@@ -2,6 +2,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
+vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
+
 import { longPressHandlers } from "./long-press";
 
 function contextMenu(pointerType?: string) {
@@ -31,6 +34,7 @@ beforeEach(() => {
 	vi.useFakeTimers();
 	clock += 60_000;
 	vi.setSystemTime(clock);
+	playHapticMock.mockReset();
 });
 
 afterEach(() => {
@@ -147,5 +151,70 @@ describe("longPressHandlers", () => {
 
 		expect(onClick).not.toHaveBeenCalled();
 		button.remove();
+	});
+});
+
+describe("long-press haptics", () => {
+	it("taps once when a touch hold fires, though the browser also sends contextmenu", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.onpointerdown?.(pointer("pointerdown", "touch"));
+		vi.advanceTimersByTime(450);
+		vi.advanceTimersByTime(50);
+		handlers.oncontextmenu?.(contextMenu("touch"));
+
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("taps when a pen hold fires", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.onpointerdown?.(pointer("pointerdown", "pen"));
+		vi.advanceTimersByTime(450);
+
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("taps when a touch contextmenu opens the menu before the timer", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.oncontextmenu?.(contextMenu("touch"));
+
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("stays quiet for right-clicks and the keyboard menu key", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.onpointerdown?.(pointer("pointerdown", "mouse"));
+		handlers.oncontextmenu?.(contextMenu("mouse"));
+		vi.advanceTimersByTime(1000);
+		handlers.oncontextmenu?.(contextMenu(""));
+
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("stays quiet when a hold is cut short", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.onpointerdown?.(pointer("pointerdown", "touch"));
+		vi.advanceTimersByTime(300);
+		handlers.onpointerup?.(pointer("pointerup", "touch"));
+		vi.advanceTimersByTime(500);
+
+		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+
+	it("stays quiet for a touch hold that lands too soon after another long press to fire", () => {
+		const first = longPressHandlers(() => {});
+		const onSecond = vi.fn();
+		const second = longPressHandlers(onSecond);
+
+		first.oncontextmenu?.(contextMenu());
+		second.onpointerdown?.(pointer("pointerdown", "touch"));
+		vi.advanceTimersByTime(450);
+
+		expect(onSecond).not.toHaveBeenCalled();
+		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });
