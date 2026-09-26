@@ -30,7 +30,7 @@ test.describe("every navigation bar has a name of its own", () => {
 		{ path: DEMO_CONVERSATION, names: ["Conversation"] },
 		{
 			path: DEMO_PROFILE,
-			names: ["Chat and tap", "Main", "Profile actions"],
+			names: ["Back", "Chat and tap", "Main", "Profile actions"],
 		},
 	];
 	for (const { path, names } of pages) {
@@ -57,4 +57,36 @@ test.describe("every screen has one main landmark", () => {
 			await expect(page.getByRole("main")).toHaveCount(1);
 		});
 	}
+});
+
+test("the profile back link sits in a navigation landmark", async ({
+	page,
+}) => {
+	await page.goto(DEMO_PROFILE);
+
+	await expect(
+		page
+			.getByRole("navigation", { name: "Back" })
+			.getByRole("link", { name: "Back" }),
+	).toBeVisible({ timeout: FIRST_ROUTE_COMPILE_MS });
+});
+
+test("the command palette title exists only while the palette is open", async ({
+	page,
+}) => {
+	await page.goto("/settings");
+	await page
+		.getByRole("navigation", { name: "Main" })
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await expect(page.getByText("Command Palette")).toHaveCount(0);
+
+	await page.keyboard.press("ControlOrMeta+k");
+
+	await expect(
+		page.getByRole("dialog", { name: "Command Palette" }),
+	).toBeVisible();
+
+	await page.keyboard.press("Escape");
+
+	await expect(page.getByText("Command Palette")).toHaveCount(0);
 });

@@ -32,10 +32,6 @@
 </script>
 
 <Dialog.Root bind:open {...restProps}>
-	<Dialog.Header class="sr-only">
-		<Dialog.Title>{title}</Dialog.Title>
-		<Dialog.Description>{description}</Dialog.Description>
-	</Dialog.Header>
 	<Dialog.Content
 		class={cn(
 			"top-1/3 translate-y-0 overflow-hidden rounded-4xl! p-0",
@@ -44,6 +40,10 @@
 		{showCloseButton}
 		{portalProps}
 	>
+		<Dialog.Header class="sr-only">
+			<Dialog.Title>{title}</Dialog.Title>
+			<Dialog.Description>{description}</Dialog.Description>
+		</Dialog.Header>
 		<Command {...restProps} bind:value bind:ref {children} />
 	</Dialog.Content>
 </Dialog.Root>
