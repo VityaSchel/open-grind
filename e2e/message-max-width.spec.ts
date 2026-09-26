@@ -10,7 +10,7 @@ import {
 
 const ME = 123456000;
 const THEM = 100001;
-const MESSAGE_ROW = '[role="button"][tabindex="0"]';
+const MESSAGE_ROW = '[role="article"]';
 const BUBBLE = '[data-slot="message-bubble"]';
 const QUOTE = '[data-slot="message-quote"]';
 const SCROLLER = '[data-slot="messages-scroller"]';

@@ -9,7 +9,7 @@ import {
 
 const CONVERSATION = "/chat/100001:123456000";
 const WITH_AN_UNSENT_MESSAGE = "/chat/100009:123456000";
-const MESSAGE_ROW = '[role="button"][tabindex="0"]';
+const MESSAGE_ROW = '[role="article"]';
 // only an incoming row pads its end, and only incoming rows swipe rightward
 const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 const SCROLLER = '[data-slot="messages-scroller"]';

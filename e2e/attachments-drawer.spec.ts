@@ -12,7 +12,7 @@ import {
 	snapTops,
 } from "./support/drawer";
 
-const MESSAGE = '[role="button"][tabindex="0"]';
+const MESSAGE = '[role="article"]';
 
 test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({

@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { ArrowBendUpLeftIcon } from "phosphor-svelte";
+	import { ArrowBendUpLeftIcon, DotsThreeIcon } from "phosphor-svelte";
 	import { untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";
 
+	import { Button } from "$lib/components/ui/button";
 	import { playHaptic } from "$lib/haptics";
 	import { firedByTouch } from "$lib/platform/touch-origin";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { scale } from "$lib/util/reduced-motion";
+	import { returnFocus } from "$lib/util/return-focus";
 	import {
 		MAX_DRAG_PX,
 		SwipeToReply,
@@ -89,9 +91,18 @@
 		timestamp: message.timestamp,
 	}));
 
+	const ACTIONS_GAP_PX = 4;
+
 	let contextMenuOpen = $state(false);
+	let menuOpener: HTMLElement | null = null;
+	let rowElement: HTMLElement | null = $state(null);
 	let frameElement: HTMLElement | null = $state(null);
 	let messageElement: HTMLElement | null = $state(null);
+	let actionsFocused = $state(false);
+	let actionsPlacement = $state({ inset: 0, top: 0 });
+	const actionsStyle = $derived(
+		`top: ${actionsPlacement.top}px; ${isOut ? "right" : "left"}: min(${actionsPlacement.inset}px, 100% - 2rem)`,
+	);
 
 	function setRefs({ frame, content }: MessageRefs) {
 		frameElement = frame;
@@ -138,9 +149,41 @@
 		inheritedStyles = INHERITED_PROPS.map(
 			(prop) => `${prop}: ${computed.getPropertyValue(prop)}`,
 		).join("; ");
+		const focused = document.activeElement;
+		menuOpener =
+			focused instanceof HTMLElement && rowElement?.contains(focused)
+				? focused
+				: null;
 		contextMenuOpen = true;
 		return true;
 	}
+
+	function closeContextMenu() {
+		contextMenuOpen = false;
+		if (menuOpener !== null) returnFocus(menuOpener);
+		menuOpener = null;
+	}
+
+	function placeActions() {
+		if (!rowElement || !messageElement) return;
+		const row = rowElement.getBoundingClientRect();
+		const bubble = messageElement.getBoundingClientRect();
+		const beside = isOut
+			? row.right - bubble.left
+			: bubble.right - row.left;
+		actionsPlacement = {
+			inset: beside + ACTIONS_GAP_PX,
+			top: bubble.top - row.top + bubble.height / 2,
+		};
+	}
+
+	$effect(() => {
+		if (!actionsFocused || !rowElement || !messageElement) return;
+		const observer = new ResizeObserver(placeActions);
+		observer.observe(rowElement);
+		observer.observe(messageElement);
+		return () => observer.disconnect();
+	});
 
 	function liftedAnchor({
 		frame,
@@ -283,15 +326,15 @@
 				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
 			{/if}
 			<div
+				bind:this={rowElement}
 				class={[
-					"w-full shrink-0",
+					"relative w-full shrink-0",
 					{
 						"pe-3 *:float-start *:me-auto": !isOut,
 						"ps-3 *:float-end *:ms-auto": isOut,
 					},
 				]}
-				role="button"
-				tabindex="0"
+				role="article"
 				onpointerdown={(event) => (lastPointerType = event.pointerType)}
 				ondblclick={(event) => {
 					const selection = window.getSelection();
@@ -315,13 +358,6 @@
 						selection?.removeAllRanges();
 					}
 				}}
-				onkeydown={(event) => {
-					if (event.target !== event.currentTarget) return;
-					if (event.key === "Enter" || event.key === " ") {
-						event.preventDefault();
-						openContextMenu();
-					}
-				}}
 				oncontextmenu={(event) => {
 					event.preventDefault();
 					if (openContextMenu() && firedByTouch(event)) {
@@ -334,6 +370,26 @@
 					: undefined}
 			>
 				{@render content()}
+				{#if hasMenuActions}
+					<Button
+						data-slot="message-actions"
+						variant="secondary"
+						size="icon-sm"
+						aria-label="Message actions"
+						aria-haspopup="dialog"
+						aria-expanded={contextMenuOpen}
+						class="absolute size-8 -translate-y-1/2 scroll-my-20 transition-none not-focus-visible:sr-only"
+						style={actionsStyle}
+						onfocus={() => {
+							placeActions();
+							actionsFocused = true;
+						}}
+						onblur={() => (actionsFocused = false)}
+						onclick={() => openContextMenu()}
+					>
+						<DotsThreeIcon weight="bold" />
+					</Button>
+				{/if}
 			</div>
 			{#if swipe && railWheel && isOut}
 				<div class="shrink-0" style:width="{MAX_DRAG_PX}px"></div>
@@ -371,7 +427,7 @@
 		{content}
 		{isOut}
 		selectable={textContent !== undefined}
-		onClose={() => (contextMenuOpen = false)}
+		onClose={closeContextMenu}
 		style={inheritedStyles}
 		{textContent}
 		reactionAvailable={message.reactions.length === 0 &&

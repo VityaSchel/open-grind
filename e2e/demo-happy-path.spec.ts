@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { ensureGridLocation, installTauriShim } from "./support/app";
 
-const MESSAGE = '[role="button"][tabindex="0"]';
+const MESSAGE = '[role="article"]';
 
 test("grid tile opens a profile, which opens a conversation that accepts a message", async ({
 	page,

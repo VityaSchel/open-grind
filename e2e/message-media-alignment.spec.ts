@@ -6,7 +6,7 @@ import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const CONVERSATION = "/chat/100002:123456000";
 const SCROLLER = '[data-slot="messages-scroller"]';
-const ROW = '[role="button"][tabindex="0"]';
+const ROW = '[role="article"]';
 const PHOTO = 'a[aria-label="Photo"]';
 
 // ms-3/me-3: the gutter a message keeps against the conversation edge

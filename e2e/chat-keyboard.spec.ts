@@ -173,7 +173,7 @@ for (const delay of [40, 80]) {
 		const before = await readView(page);
 
 		await page
-			.locator(`${MESSAGE} [role="button"]`)
+			.locator(`${MESSAGE} [role="article"]`)
 			.last()
 			.click({ button: "right" });
 		await page.getByRole("button", { name: "Reply" }).click();

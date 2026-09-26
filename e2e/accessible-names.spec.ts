@@ -9,7 +9,7 @@ import {
 import { ALBUM_TILE } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
-const MESSAGE = '[role="button"][tabindex="0"]';
+const MESSAGE = '[role="article"]';
 
 test.beforeEach(async ({ page }) => {
 	await installTauriShim(page);

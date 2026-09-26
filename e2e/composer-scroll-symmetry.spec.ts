@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 
-const MESSAGE = '[role="button"][tabindex="0"]';
+const MESSAGE = '[role="article"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const LONG_DRAFT =
 	"one two three four five six seven eight nine ten eleven twelve thirteen " +

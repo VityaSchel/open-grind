@@ -34,23 +34,6 @@ test("right-clicking a message opens its context menu", async ({ page }) => {
 	).toBeVisible();
 });
 
-test("pressing Enter on a message opens its context menu", async ({ page }) => {
-	await installTauriShim(page);
-	await page.goto(DEMO_CONVERSATION);
-	const row = page
-		.locator('[data-slot="message"] [role="button"]')
-		.filter({ hasText: "Hey! Lorem ipsum dolor sit amet." })
-		.first();
-	await row.waitFor();
-
-	await row.focus();
-	await page.keyboard.press("Enter");
-
-	await expect(
-		page.getByRole("button", { name: "Delete for me" }),
-	).toBeVisible();
-});
-
 let messageCount = 0;
 
 async function deliver(

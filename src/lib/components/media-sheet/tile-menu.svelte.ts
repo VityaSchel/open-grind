@@ -1,4 +1,4 @@
-import { tick } from "svelte";
+import { returnFocus } from "$lib/util/return-focus";
 
 export class TileMenuState<Item> {
 	current = $state<{
@@ -26,12 +26,6 @@ export class TileMenuState<Item> {
 	close(): void {
 		const tile = this.current?.tile;
 		this.current = null;
-		if (tile === undefined) return;
-		void tick().then(() => {
-			const focused = document.activeElement;
-			if (!tile.isConnected) return;
-			if (focused !== null && focused !== document.body) return;
-			tile.focus({ preventScroll: true });
-		});
+		if (tile !== undefined) returnFocus(tile);
 	}
 }

@@ -6,7 +6,7 @@ import { installEventInjection, installTauriShim } from "./support/app";
 // bridge; its scroll:gesture events are injected the same way the app would
 // receive them from AppKit, while real mouse wheels feed the axis decision.
 const CONVERSATION = "/chat/100001:123456000";
-const MESSAGE_ROW = '[role="button"][tabindex="0"]';
+const MESSAGE_ROW = '[role="article"]';
 const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 const SCROLLER = '[data-slot="messages-scroller"]';
 

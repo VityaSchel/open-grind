@@ -5,7 +5,7 @@ import { DRAWER } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
 const DEMO_CHAT = "/chat/100001:123456000";
-const MESSAGE_ROW = '[role="button"][tabindex="0"]';
+const MESSAGE_ROW = '[role="article"]';
 const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 
 async function openReportSheet(page: import("@playwright/test").Page) {
