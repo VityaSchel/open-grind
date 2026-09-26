@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim } from "./support/app";
-
-const MESSAGE = '[role="article"]';
+import {
+	ensureGridLocation,
+	installTauriShim,
+	MESSAGE_ROW,
+} from "./support/app";
 
 test("grid tile opens a profile, which opens a conversation that accepts a message", async ({
 	page,
@@ -29,7 +31,7 @@ test("grid tile opens a profile, which opens a conversation that accepts a messa
 	await composer.fill(sent);
 	await page.locator("form button[type=submit]").click();
 
-	await expect(page.locator(MESSAGE).last()).toContainText(sent);
+	await expect(page.locator(MESSAGE_ROW).last()).toContainText(sent);
 	await expect(composer).toHaveValue("");
 	await expect(page.getByText("Sending...")).toHaveCount(0);
 	await expect(page.getByText("Failed to send")).toHaveCount(0);

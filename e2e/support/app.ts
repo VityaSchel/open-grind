@@ -2,6 +2,9 @@ import type { CDPSession, Page } from "@playwright/test";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
+export const MESSAGE_ROW = '[role="article"]';
+// only an incoming row pads its end, and only incoming rows swipe rightward
+export const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 export const DEMO_GEOHASH = "u33dc0cpgp00";
 export const FIRST_ROUTE_COMPILE_MS = 120_000;
 

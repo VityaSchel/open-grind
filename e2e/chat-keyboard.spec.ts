@@ -4,6 +4,7 @@ import {
 	afterTwoFrames,
 	DEMO_CONVERSATION,
 	installTauriShim,
+	MESSAGE_ROW,
 } from "./support/app";
 
 const MESSAGE = '[data-slot="message"]';
@@ -173,7 +174,7 @@ for (const delay of [40, 80]) {
 		const before = await readView(page);
 
 		await page
-			.locator(`${MESSAGE} [role="article"]`)
+			.locator(`${MESSAGE} ${MESSAGE_ROW}`)
 			.last()
 			.click({ button: "right" });
 		await page.getByRole("button", { name: "Reply" }).click();

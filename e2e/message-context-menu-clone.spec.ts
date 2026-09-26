@@ -6,12 +6,12 @@ import {
 	emitMessageSent,
 	installEventInjection,
 	installTauriShim,
+	MESSAGE_ROW,
 } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const ME = 123456000;
 const THEM = 100001;
-const MESSAGE_ROW = '[role="article"]';
 const ALBUM = '[aria-label="Open album"]';
 const PHOTO = 'a[aria-label="Photo"]';
 const QUOTE = '[data-slot="message-quote"]';

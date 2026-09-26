@@ -1,8 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
+import {
+	DEMO_CONVERSATION,
+	installTauriShim,
+	MESSAGE_ROW,
+} from "./support/app";
 
-const MESSAGE = '[role="article"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const LONG_DRAFT =
 	"one two three four five six seven eight nine ten eleven twelve thirteen " +
@@ -36,14 +39,14 @@ function readView(page: Page): Promise<View> {
 				newestMessageBottom: newest.getBoundingClientRect().bottom,
 			};
 		},
-		{ message: MESSAGE, scroller: SCROLLER },
+		{ message: MESSAGE_ROW, scroller: SCROLLER },
 	);
 }
 
 async function openConversation(page: Page) {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	await page.locator(MESSAGE).first().waitFor({ timeout: 30_000 });
+	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
 	await page.waitForFunction(
 		(scroller) =>
 			[
@@ -96,7 +99,7 @@ const growers: Grower[] = [
 		grow: async (page) => {
 			// the newest row is the only one on screen at the floor, and
 			// dispatching stops playwright scrolling what we measure
-			await page.locator(MESSAGE).last().dispatchEvent("contextmenu");
+			await page.locator(MESSAGE_ROW).last().dispatchEvent("contextmenu");
 			await page.getByRole("button", { name: "Reply" }).click();
 			await page.getByLabel("Cancel reply").waitFor();
 		},
@@ -208,7 +211,7 @@ test.describe("a composer resize is undone exactly when it is reversed", () => {
 			};
 		};
 
-		await page.locator(MESSAGE).last().dispatchEvent("contextmenu");
+		await page.locator(MESSAGE_ROW).last().dispatchEvent("contextmenu");
 		await page.getByRole("button", { name: "Reply" }).click();
 		const opening = await sample();
 		expect(opening.animated, "the bar really animates").toBeGreaterThan(8);

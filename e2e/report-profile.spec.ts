@@ -1,12 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { INCOMING_ROW, installTauriShim, MESSAGE_ROW } from "./support/app";
 import { DRAWER } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
 const DEMO_CHAT = "/chat/100001:123456000";
-const MESSAGE_ROW = '[role="article"]';
-const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 
 async function openReportSheet(page: import("@playwright/test").Page) {
 	await installTauriShim(page);

@@ -5,11 +5,11 @@ import {
 	DEMO_CONVERSATION,
 	ensureGridLocation,
 	installTauriShim,
+	MESSAGE_ROW,
 } from "./support/app";
 import { ALBUM_TILE } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
-const MESSAGE = '[role="article"]';
 
 test.beforeEach(async ({ page }) => {
 	await installTauriShim(page);
@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 test.describe("every control has an accessible name", () => {
 	test("conversation and its composer", async ({ page }) => {
 		await page.goto(DEMO_CONVERSATION);
-		await page.locator(MESSAGE).first().waitFor({ timeout: 120_000 });
+		await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 120_000 });
 		await expectEveryControlNamed(page, "conversation");
 
 		await page.locator('[aria-label="Add attachment"]').click();

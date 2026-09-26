@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { TrustedTouch, wheel } from "./support/app";
+import { MESSAGE_ROW, TrustedTouch, wheel } from "./support/app";
 import {
 	box,
 	DRAWER,
@@ -12,8 +12,6 @@ import {
 	SELECTED_MEDIA_TILE,
 	snapTops,
 } from "./support/drawer";
-
-const MESSAGE = '[role="article"]';
 
 test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
@@ -299,7 +297,7 @@ test.describe("attachments drawer", () => {
 		page,
 	}) => {
 		await openAttachments(page);
-		await page.locator(MESSAGE).first().waitFor({ timeout: 30_000 });
+		await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
 		const bubbles = page
 			.locator("button")
 			.filter({ hasText: "Expiring image" });

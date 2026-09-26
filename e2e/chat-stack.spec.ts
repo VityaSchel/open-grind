@@ -5,6 +5,7 @@ import {
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
+	MESSAGE_ROW,
 	pathname,
 } from "./support/app";
 import {
@@ -29,7 +30,7 @@ const backToChats = (page: Page) =>
 	page.getByRole("link", { name: "Back to chats" });
 const REPLIABLE = "consectetur adipiscing elit";
 const messageRow = (page: Page) =>
-	page.locator('[role="article"]').filter({ hasText: REPLIABLE });
+	page.locator(MESSAGE_ROW).filter({ hasText: REPLIABLE });
 
 const offsetX = (page: Page, slot: "base" | "sheet") =>
 	page
@@ -285,10 +286,7 @@ test.describe("the chat stack on a phone", () => {
 	}) => {
 		await openInbox(page);
 		const href = await openConversation(page);
-		await page
-			.locator('[role="article"]')
-			.first()
-			.click({ button: "right" });
+		await page.locator(MESSAGE_ROW).first().click({ button: "right" });
 		const reply = page.getByRole("button", { name: "Reply" });
 		await expect(reply).toBeVisible();
 

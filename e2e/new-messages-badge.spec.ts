@@ -7,10 +7,10 @@ import {
 	flownIn,
 	installEventInjection,
 	installTauriShim,
+	MESSAGE_ROW,
 } from "./support/app";
 
 const THEM = 100001;
-const MESSAGE_ROW = '[role="article"]';
 const MESSAGE = '[data-slot="message"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const SCROLL_DOWN = '[aria-label="Scroll to newest messages"]';

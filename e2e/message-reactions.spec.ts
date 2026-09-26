@@ -1,9 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim, TrustedTouch } from "./support/app";
+import { installTauriShim, MESSAGE_ROW, TrustedTouch } from "./support/app";
 
 const CONVERSATION = "/chat/100001:123456000";
-const MESSAGE_ROW = '[role="article"]';
 const REACTABLE = "Sed do eiusmod tempor incididunt?";
 const REACT_BUTTON = { name: "React with fire" };
 const HINT = "Double tap to";

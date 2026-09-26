@@ -1,13 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installEventInjection, installTauriShim } from "./support/app";
+import {
+	INCOMING_ROW,
+	installEventInjection,
+	installTauriShim,
+	MESSAGE_ROW,
+} from "./support/app";
 
 // The default shim platform is macos, so these pages run the gesture-phase
 // bridge; its scroll:gesture events are injected the same way the app would
 // receive them from AppKit, while real mouse wheels feed the axis decision.
 const CONVERSATION = "/chat/100001:123456000";
-const MESSAGE_ROW = '[role="article"]';
-const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 const SCROLLER = '[data-slot="messages-scroller"]';
 
 async function openConversation(page: Page) {
