@@ -90,3 +90,15 @@ test("the command palette title exists only while the palette is open", async ({
 
 	await expect(page.getByText("Command Palette")).toHaveCount(0);
 });
+
+test("the report link on the 404 page is a plain link, not a button", async ({
+	page,
+}) => {
+	await page.goto("/definitely-not-a-route");
+	const report = page.getByRole("link", { name: "Report an issue" });
+	await report.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+	await expect(page.getByRole("button").filter({ has: report })).toHaveCount(
+		0,
+	);
+});

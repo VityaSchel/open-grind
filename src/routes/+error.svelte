@@ -6,9 +6,10 @@
 	import { toast } from "svelte-sonner";
 
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import { cn } from "$lib/util/utils";
 
 	const title = $derived.by(() => {
 		switch (page.status) {
@@ -60,13 +61,15 @@
 					</Button>
 				</div>
 			</Empty.Content>
-			<Button variant="link" class="text-muted-foreground" size="sm">
-				<Link
-					href="https://git.opengrind.org/open-grind/open-grind/issues"
-				>
-					Report an issue <ArrowUpRightIcon class="inline" />
-				</Link>
-			</Button>
+			<Link
+				href="https://git.opengrind.org/open-grind/open-grind/issues"
+				class={cn(
+					buttonVariants({ variant: "link", size: "sm" }),
+					"text-muted-foreground",
+				)}
+			>
+				Report an issue <ArrowUpRightIcon class="inline" />
+			</Link>
 		</Empty.Root>
 	{/if}
 </main>
