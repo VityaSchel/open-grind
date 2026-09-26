@@ -5,6 +5,7 @@
 	import {
 		HEIGHT_CM_MAX,
 		HEIGHT_CM_MIN,
+		rangeBoundTexts,
 	} from "$lib/model/browse/grid/filters";
 	import { formatHeight } from "$lib/util/units";
 
@@ -14,8 +15,15 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	const units = $derived(preferencesSnapshot().units);
-	const min = $derived(value[0] ?? HEIGHT_CM_MIN);
-	const max = $derived(value[1] ?? HEIGHT_CM_MAX);
+	const [minText, maxText] = $derived(
+		rangeBoundTexts({
+			floor: HEIGHT_CM_MIN,
+			ceiling: HEIGHT_CM_MAX,
+			range: value,
+			format: formatHeight,
+			units,
+		}),
+	);
 </script>
 
 <div class="block w-full space-y-3">
@@ -23,9 +31,7 @@
 		id="height"
 		label="Height"
 		bind:checked
-		endLabel={`${min === HEIGHT_CM_MIN ? "No min" : formatHeight(min, units)} - ${
-			max === HEIGHT_CM_MAX ? "No max" : formatHeight(max, units)
-		}`}
+		endLabel={`${minText} - ${maxText}`}
 		contentClass="ps-7 h-6"
 	>
 		<Slider
@@ -40,6 +46,7 @@
 			min={HEIGHT_CM_MIN}
 			max={HEIGHT_CM_MAX}
 			step={1}
+			thumbValueTexts={[minText, maxText]}
 			thumbLabels={["Minimum height", "Maximum height"]}
 		/>
 	</FilterDropdown>

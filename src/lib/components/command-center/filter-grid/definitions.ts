@@ -16,6 +16,7 @@ import {
 	HEIGHT_CM_MIN,
 	isFilterableGenderId,
 	isFilterableTribe,
+	rangeBoundTexts,
 	WEIGHT_GRAMS_MAX,
 	WEIGHT_GRAMS_MIN,
 	WEIGHT_KG_MAX,
@@ -32,7 +33,7 @@ import {
 	sexualPositions,
 	tribes,
 } from "$lib/model/users/profiles";
-import { formatHeight, formatWeightKg, type UnitSystem } from "$lib/util/units";
+import { formatHeight, formatWeightKg } from "$lib/util/units";
 import {
 	booleanApply,
 	boundApply,
@@ -46,21 +47,13 @@ import {
 } from "./apply";
 import type { BooleanKey, Filter, ListKey, Render } from "./types";
 
-function rangeText({
-	floor,
-	ceiling,
-	range: [min = floor, max = ceiling],
-	format,
-}: {
-	floor: number;
-	ceiling: number;
-	range: number[];
-	format: (value: number, units: UnitSystem) => string;
-}): string {
-	const units = preferencesSnapshot().units;
-	return `${min === floor ? "No min" : format(min, units)} - ${
-		max === ceiling ? "No max" : format(max, units)
-	}`;
+function rangeText(
+	bounds: Omit<Parameters<typeof rangeBoundTexts>[0], "units">,
+): string {
+	return rangeBoundTexts({
+		...bounds,
+		units: preferencesSnapshot().units,
+	}).join(" - ");
 }
 
 function booleanFilter({

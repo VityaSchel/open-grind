@@ -16,6 +16,7 @@ import {
 	tagTextByKey,
 } from "$lib/model/users/tags";
 import type { Gender } from "$lib/model/users/genders";
+import type { UnitSystem } from "$lib/util/units";
 
 export const filterIsFavoriteSchema = z.boolean();
 export const filterIsOnlineSchema = z.boolean();
@@ -40,6 +41,23 @@ export const isFullRange = ({
 	min: number;
 	max: number;
 }) => from === min && to === max;
+
+export const rangeBoundTexts = ({
+	floor,
+	ceiling,
+	range: [min = floor, max = ceiling],
+	format,
+	units,
+}: {
+	floor: number;
+	ceiling: number;
+	range: number[];
+	format: (value: number, units: UnitSystem) => string;
+	units: UnitSystem;
+}): [string, string] => [
+	min === floor ? "No min" : format(min, units),
+	max === ceiling ? "No max" : format(max, units),
+];
 
 export const AGE_MIN = 18;
 export const AGE_MAX = 99;

@@ -16,8 +16,10 @@ import {
 	gridSearchFiltersSchema,
 	isFilterableGender,
 	isFilterableTagKey,
+	rangeBoundTexts,
 	tagCatalog,
 } from "$lib/model/browse/grid/filters";
+import { formatWeightKg } from "$lib/util/units";
 
 describe("grid search filter schemas", () => {
 	it("accepts the default filter state", () => {
@@ -143,5 +145,43 @@ describe("tagCatalog", () => {
 		expect(
 			catalog.keysOf(["Wandern", "hiking", "gaming", "unknown"]),
 		).toEqual(["hiking", "gaming", "unknown"]);
+	});
+});
+
+describe("rangeBoundTexts", () => {
+	it("names an open bound instead of formatting it", () => {
+		expect(
+			rangeBoundTexts({
+				floor: 40,
+				ceiling: 200,
+				range: [81, 200],
+				format: formatWeightKg,
+				units: "metric",
+			}),
+		).toEqual(["81 kg", "No max"]);
+	});
+
+	it("treats a missing bound as open", () => {
+		expect(
+			rangeBoundTexts({
+				floor: 40,
+				ceiling: 200,
+				range: [],
+				format: formatWeightKg,
+				units: "metric",
+			}),
+		).toEqual(["No min", "No max"]);
+	});
+
+	it("formats the bounds in the given units", () => {
+		expect(
+			rangeBoundTexts({
+				floor: 40,
+				ceiling: 200,
+				range: [40, 100],
+				format: formatWeightKg,
+				units: "imperial",
+			}),
+		).toEqual(["No min", "220 lb"]);
 	});
 });

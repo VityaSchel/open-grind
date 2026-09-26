@@ -3,6 +3,7 @@
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
 	import {
+		rangeBoundTexts,
 		WEIGHT_KG_MAX,
 		WEIGHT_KG_MIN,
 	} from "$lib/model/browse/grid/filters";
@@ -15,8 +16,15 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	const units = $derived(preferencesSnapshot().units);
-	const min = $derived(value[0] ?? WEIGHT_KG_MIN);
-	const max = $derived(value[1] ?? WEIGHT_KG_MAX);
+	const [minText, maxText] = $derived(
+		rangeBoundTexts({
+			floor: WEIGHT_KG_MIN,
+			ceiling: WEIGHT_KG_MAX,
+			range: value,
+			format: formatWeightKg,
+			units,
+		}),
+	);
 </script>
 
 <div class="block w-full space-y-3">
@@ -24,9 +32,7 @@
 		id="weight"
 		label="Weight"
 		bind:checked
-		endLabel={`${min === WEIGHT_KG_MIN ? "No min" : formatWeightKg(min, units)} - ${
-			max === WEIGHT_KG_MAX ? "No max" : formatWeightKg(max, units)
-		}`}
+		endLabel={`${minText} - ${maxText}`}
 		contentClass="ps-7 h-6"
 	>
 		<Slider
@@ -39,6 +45,7 @@
 				}
 			}
 			scale={WEIGHT_SLIDER_SCALE}
+			thumbValueTexts={[minText, maxText]}
 			thumbLabels={["Minimum weight", "Maximum weight"]}
 		/>
 	</FilterDropdown>

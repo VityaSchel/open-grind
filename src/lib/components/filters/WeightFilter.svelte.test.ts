@@ -3,10 +3,13 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const preferences = vi.hoisted(() => ({ units: "metric" }));
+
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	preferencesSnapshot: () => ({ units: "metric" }),
+	preferencesSnapshot: () => preferences,
 }));
 
+import { formatWeightKg } from "$lib/util/units";
 import WeightFilter from "./WeightFilter.svelte";
 
 const TRACK_WIDTH = 1000;
@@ -30,9 +33,26 @@ function renderFilter(value: number[]) {
 	};
 }
 
-afterEach(cleanup);
+const maximumWeight = () =>
+	screen.getByRole("slider", { name: "Maximum weight" });
+
+afterEach(() => {
+	cleanup();
+	preferences.units = "metric";
+});
 
 describe("WeightFilter", () => {
+	it("announces each thumb in the units its label shows", () => {
+		preferences.units = "imperial";
+		renderFilter([80, 272]);
+
+		expect(minimumWeight().getAttribute("aria-valuetext")).toBe(
+			formatWeightKg(80, "imperial"),
+		);
+		expect(minimumWeight().getAttribute("aria-valuetext")).toMatch(/lb/);
+		expect(maximumWeight().getAttribute("aria-valuetext")).toBe("No max");
+	});
+
 	it("announces kilograms and moves one kilogram per arrow key", async () => {
 		renderFilter([80, 272]);
 
