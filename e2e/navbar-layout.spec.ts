@@ -43,3 +43,21 @@ test("the bottom navbar fits a 1080px physical-width screen", async ({
 		expect(bounds.right).toBeLessThanOrEqual(layout.cssViewportWidth);
 	}
 });
+
+test.describe("on a 412 × 920 phone with 64 px system bars", () => {
+	test.use({ viewport: { width: 412, height: 920 } });
+
+	test("the Me screen fits without scrolling", async ({ page }) => {
+		await installTauriShim(page);
+		await page.goto("/settings");
+		const scroller = page.locator('[data-slot="me-scroller"]');
+		await expect(
+			scroller.getByRole("button", { name: "Sign out" }),
+		).toBeVisible();
+		await page.waitForLoadState("networkidle");
+
+		expect(
+			await scroller.evaluate((el) => el.scrollHeight - el.clientHeight),
+		).toBeLessThanOrEqual(0);
+	});
+});
