@@ -63,7 +63,7 @@
 	});
 </script>
 
-<div
+<main
 	data-slot="interest-pager"
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
@@ -78,7 +78,7 @@
 			<TapsReceivedList {ourProfileId} active={routed === 1} />
 		{/if}
 	</div>
-</div>
+</main>
 
 <style>
 	[data-slot="interest-pager"] {

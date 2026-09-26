@@ -5,7 +5,7 @@
 	import Link from "$lib/components/ui/link/Link.svelte";
 </script>
 
-<div class="flex flex-1 px-8">
+<main class="flex flex-1 px-8">
 	<Alert.Root class="m-auto w-full max-w-sm">
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>Unimplemented</Alert.Title>
@@ -17,4 +17,4 @@
 			</Link>.
 		</Alert.Description>
 	</Alert.Root>
-</div>
+</main>

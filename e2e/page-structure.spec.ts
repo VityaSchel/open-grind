@@ -45,3 +45,16 @@ test.describe("every navigation bar has a name of its own", () => {
 		});
 	}
 });
+
+test.describe("every screen has one main landmark", () => {
+	for (const path of ["/right-now", "/interest/views", "/interest/taps"]) {
+		test(path, async ({ page }) => {
+			await page.goto(path);
+			await page
+				.getByRole("navigation", { name: "Main" })
+				.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+			await expect(page.getByRole("main")).toHaveCount(1);
+		});
+	}
+});

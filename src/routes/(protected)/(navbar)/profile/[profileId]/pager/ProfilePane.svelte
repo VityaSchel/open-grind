@@ -67,7 +67,7 @@
 	style:left="{position * 100}%"
 >
 	{#if showsErrorScreen}
-		<div
+		<main
 			inert={!active}
 			class="flex size-full overflow-y-auto pb-(--nav-height)"
 		>
@@ -91,7 +91,7 @@
 					class="m-auto"
 				/>
 			{/if}
-		</div>
+		</main>
 	{:else}
 		<div
 			bind:this={scroller}

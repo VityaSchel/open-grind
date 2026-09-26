@@ -246,6 +246,17 @@ describe("ProfilePane loading", () => {
 });
 
 describe("ProfilePane roles", () => {
+	it("puts the active pane's error screen in its main landmark", async () => {
+		getProfileMock.mockRejectedValue(new HiddenProfileError());
+		const { section } = renderPane({ active: true, row: null });
+		await flush();
+
+		const main = within(section).getByRole("main");
+		expect(
+			within(main).getByRole("button", { name: "Unhide" }),
+		).not.toBeNull();
+	});
+
 	it("keeps a neighbor's error screen out of input", async () => {
 		getProfileMock.mockRejectedValue(new HiddenProfileError());
 		const { section } = renderPane({ active: false, row: null });
