@@ -13,7 +13,7 @@
 		acceptNSFWPics,
 		ethnicities,
 		healthPracticeLabels,
-		hivStatuses,
+		hivStatusLabels,
 		lookingFor as lookingForLabels,
 		meetAt as meetAtLabels,
 		relationshipStatuses,
@@ -115,70 +115,62 @@
 		{#if aboutMe !== null}
 			<AboutMe>{aboutMe}</AboutMe>
 		{/if}
-		{#if (genders && genders.length > 0) || (pronouns && pronouns.length > 0) || ethnicity !== null || relationshipStatus !== null || (grindrTribes && grindrTribes.length > 0)}
-			<ProfileSection title="Stats">
-				<Genders {genders} {pronouns} />
-				<LookupField
-					icon={UsersThreeIcon}
-					value={grindrTribes}
-					options={tribes}
-				/>
-				<LookupField
-					icon={GlobeStandIcon}
-					value={ethnicity}
-					options={ethnicities}
-				/>
-				<LookupField
-					icon={UsersIcon}
-					value={relationshipStatus}
-					options={relationshipStatuses}
-				/>
-			</ProfileSection>
-		{/if}
-		{#if (lookingFor && lookingFor.length > 0) || (meetAt && meetAt.length > 0) || nsfw !== null}
-			<ProfileSection title="Expectations">
-				<LookupField
-					icon={EyesIcon}
-					weight="fill"
-					label="Looking For"
-					value={lookingFor}
-					options={lookingForLabels}
-				/>
-				<LookupField
-					icon={HouseIcon}
-					label="Meet At"
-					value={meetAt}
-					options={meetAtLabels}
-				/>
-				<LookupField
-					icon={CameraIcon}
-					label="NSFW Pics?"
-					value={nsfw}
-					options={acceptNSFWPics}
-				/>
-			</ProfileSection>
-		{/if}
-		{#if hivStatus !== null || lastTestedDateValue !== null || (sexualHealthValue && sexualHealthValue.length > 0)}
-			<ProfileSection title="Health">
-				<LookupField
-					icon={HivStatusIcon}
-					label="HIV Status"
-					value={hivStatus}
-					options={hivStatuses}
-				/>
-				<LastTested lastTestedDate={lastTestedDateValue} />
-				<LookupField
-					icon={HeartbeatIcon}
-					label="Health Practices"
-					value={sexualHealthValue}
-					options={healthPracticeLabels}
-				/>
-			</ProfileSection>
-		{/if}
-		{#if socialNetworks && Object.keys(socialNetworks).length > 0}
-			<ProfileSection title="Socials">
-				<Socials socials={socialNetworks} />
-			</ProfileSection>
-		{/if}
+		<ProfileSection title="Stats">
+			<Genders {genders} {pronouns} />
+			<LookupField
+				icon={UsersThreeIcon}
+				value={grindrTribes}
+				options={tribes}
+			/>
+			<LookupField
+				icon={GlobeStandIcon}
+				value={ethnicity}
+				options={ethnicities}
+			/>
+			<LookupField
+				icon={UsersIcon}
+				value={relationshipStatus}
+				options={relationshipStatuses}
+			/>
+		</ProfileSection>
+		<ProfileSection title="Expectations">
+			<LookupField
+				icon={EyesIcon}
+				weight="fill"
+				label="Looking For"
+				value={lookingFor}
+				options={lookingForLabels}
+			/>
+			<LookupField
+				icon={HouseIcon}
+				label="Meet At"
+				value={meetAt}
+				options={meetAtLabels}
+			/>
+			<LookupField
+				icon={CameraIcon}
+				label="NSFW Pics?"
+				value={nsfw}
+				options={acceptNSFWPics}
+			/>
+		</ProfileSection>
+		<ProfileSection title="Health">
+			<LookupField
+				icon={HivStatusIcon}
+				label="HIV Status"
+				value={hivStatus}
+				options={hivStatusLabels}
+			/>
+			<LastTested lastTestedDate={lastTestedDateValue} />
+			<LookupField
+				icon={HeartbeatIcon}
+				label="Health Practices"
+				value={sexualHealthValue}
+				options={healthPracticeLabels}
+			/>
+		</ProfileSection>
+		<ProfileSection title="Socials">
+			<Socials socials={socialNetworks} />
+		</ProfileSection>
 	</div>
 {/if}

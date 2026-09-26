@@ -19541,7 +19541,8 @@
 					"1": "Negative",
 					"2": "Negative, on PrEP",
 					"3": "Positive",
-					"4": "Positive, undetectable"
+					"4": "Positive, undetectable",
+					"5": "Prefer to discuss"
 				},
 				"x-render-on-tag": "users/profiles",
 				"x-display-name": "HIV status"
