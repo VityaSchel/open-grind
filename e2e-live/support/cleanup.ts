@@ -1,10 +1,16 @@
-import z from "zod";
 import type { Page } from "@playwright/test";
 
-import { conversationIdBetween, liveAccounts } from "./accounts";
+import { liveAccounts } from "./accounts";
+import { myAlbums } from "./albums";
 import { appRequest } from "./app";
+import { liveConversationId, recordLiveConversation } from "./chat";
 import { counterpart } from "./counterpart";
-import { cleanUpLedger, type Ledger, type LedgerCleaners } from "./ledger";
+import {
+	albumContentOf,
+	cleanUpLedger,
+	type Ledger,
+	type LedgerCleaners,
+} from "./ledger";
 import { liveNamePrefix } from "./names";
 
 export class CleanupError extends Error {
@@ -33,7 +39,7 @@ export async function deleteLiveConversation(page: Page) {
 	await expectGone({
 		page,
 		method: "DELETE",
-		path: `/v4/chat/conversation/${conversationIdBetween(liveAccounts.app, liveAccounts.counterpart)}`,
+		path: `/v4/chat/conversation/${liveConversationId}`,
 		target: liveAccounts.counterpart,
 	});
 }
@@ -48,6 +54,15 @@ export function cleanersFor(page: Page): LedgerCleaners {
 				path: `/v1/albums/${serverId}`,
 				target: liveAccounts.app,
 			}),
+		"album-content": async ({ serverId }) => {
+			const { albumId, contentId } = albumContentOf(serverId);
+			await expectGone({
+				page,
+				method: "DELETE",
+				path: `/v1/albums/${albumId}/content/${contentId}`,
+				target: liveAccounts.app,
+			});
+		},
 		"drawer-media": ({ serverId }) =>
 			expectGone({
 				page,
@@ -58,24 +73,9 @@ export function cleanersFor(page: Page): LedgerCleaners {
 	};
 }
 
-const myAlbumsSchema = z.object({
-	albums: z.array(
-		z.object({
-			albumId: z.coerce.string(),
-			albumName: z.string().nullish(),
-		}),
-	),
-});
-
 export async function leftoverLiveAlbumIds(page: Page) {
-	const response = await appRequest({
-		page,
-		method: "GET",
-		path: "/v1/albums",
-	});
-	return myAlbumsSchema
-		.parse(response.json())
-		.albums.filter(({ albumName }) => albumName?.startsWith(liveNamePrefix))
+	return (await myAlbums(page))
+		.filter(({ albumName }) => albumName?.startsWith(liveNamePrefix))
 		.map(({ albumId }) => albumId);
 }
 
@@ -96,15 +96,7 @@ export async function sweep({
 			label: "leftover og-e2e album",
 		});
 	}
-	ledger.record({
-		kind: "conversation",
-		serverId: conversationIdBetween(
-			liveAccounts.app,
-			liveAccounts.counterpart,
-		),
-		owner: liveAccounts.app,
-		label: "conversation with the counterpart",
-	});
+	recordLiveConversation(ledger);
 	return await cleanUpLedger({
 		ledger,
 		cleaners: cleanersFor(page),

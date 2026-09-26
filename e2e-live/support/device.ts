@@ -42,7 +42,7 @@ function adbOrNull(args: string[]) {
 	}
 }
 
-async function waitFor<T>({
+export async function waitFor<T>({
 	what,
 	timeoutMs,
 	probe,

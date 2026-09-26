@@ -9,7 +9,7 @@ import { RateLimitedError, stopReason } from "./rate-limit";
 
 const ledgerEntrySchema = z.object({
 	id: z.string(),
-	kind: z.enum(["conversation", "album", "drawer-media"]),
+	kind: z.enum(["conversation", "album", "album-content", "drawer-media"]),
 	serverId: z.string(),
 	owner: z.number(),
 	label: z.string(),
@@ -27,6 +27,28 @@ export type NewLedgerEntry = Pick<
 	LedgerEntry,
 	"kind" | "serverId" | "owner" | "label"
 >;
+
+export class LedgerError extends Error {
+	override name = "LedgerError";
+}
+
+export function albumContentServerId({
+	albumId,
+	contentId,
+}: {
+	albumId: string;
+	contentId: string;
+}) {
+	return `${albumId}/${contentId}`;
+}
+
+export function albumContentOf(serverId: string) {
+	const [, albumId, contentId] = serverId.match(/^(\d+)\/(\d+)$/) ?? [];
+	if (albumId === undefined || contentId === undefined) {
+		throw new LedgerError(`${serverId} is not an album/content pair`);
+	}
+	return { albumId, contentId };
+}
 
 export class Ledger {
 	readonly #file: string;
