@@ -119,3 +119,6 @@ jobs:
 
       - name: End-to-end tests
         run: cd "$CI_WORKSPACE" && bun run test:e2e
+
+      - name: Layout guard
+        run: cd "$CI_WORKSPACE" && bun run test:e2e:guard
