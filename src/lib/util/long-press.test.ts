@@ -5,17 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
+import { contextMenuEvent } from "$lib/test/context-menu";
+import type { TouchOriginHints } from "$lib/platform/touch-origin";
 import { longPressHandlers } from "./long-press";
 
-function contextMenu(pointerType?: string) {
-	const event = new MouseEvent("contextmenu", {
-		bubbles: true,
-		cancelable: true,
-	});
-	if (pointerType !== undefined) {
-		Object.defineProperty(event, "pointerType", { value: pointerType });
-	}
-	return event as unknown as Parameters<
+function contextMenu(origin?: TouchOriginHints) {
+	return contextMenuEvent(origin) as unknown as Parameters<
 		NonNullable<ReturnType<typeof longPressHandlers>["oncontextmenu"]>
 	>[0];
 }
@@ -50,7 +45,7 @@ describe("longPressHandlers", () => {
 		handlers.onpointerdown?.(pointer("pointerdown", "touch"));
 		vi.advanceTimersByTime(450);
 		vi.advanceTimersByTime(50);
-		handlers.oncontextmenu?.(contextMenu("touch"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "touch" }));
 
 		expect(onLongPress).toHaveBeenCalledOnce();
 	});
@@ -61,7 +56,7 @@ describe("longPressHandlers", () => {
 
 		for (let click = 0; click < 2; click += 1) {
 			handlers.onpointerdown?.(pointer("pointerdown", "mouse"));
-			handlers.oncontextmenu?.(contextMenu("mouse"));
+			handlers.oncontextmenu?.(contextMenu({ pointerType: "mouse" }));
 			vi.advanceTimersByTime(100);
 		}
 
@@ -77,7 +72,7 @@ describe("longPressHandlers", () => {
 		pressed.onpointerdown?.(pointer("pointerdown", "touch"));
 		vi.advanceTimersByTime(450);
 		vi.advanceTimersByTime(50);
-		underFinger.oncontextmenu?.(contextMenu("touch"));
+		underFinger.oncontextmenu?.(contextMenu({ pointerType: "touch" }));
 
 		expect(first).toHaveBeenCalledOnce();
 		expect(second).not.toHaveBeenCalled();
@@ -87,9 +82,9 @@ describe("longPressHandlers", () => {
 		const onLongPress = vi.fn();
 		const handlers = longPressHandlers(onLongPress);
 
-		handlers.oncontextmenu?.(contextMenu(""));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "" }));
 		vi.advanceTimersByTime(100);
-		handlers.oncontextmenu?.(contextMenu(""));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "" }));
 
 		expect(onLongPress).toHaveBeenCalledTimes(2);
 	});
@@ -99,9 +94,9 @@ describe("longPressHandlers", () => {
 		const handlers = longPressHandlers(onLongPress);
 
 		handlers.onpointerdown?.(pointer("pointerdown", "mouse"));
-		handlers.oncontextmenu?.(contextMenu("mouse"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "mouse" }));
 		vi.advanceTimersByTime(1000);
-		handlers.oncontextmenu?.(contextMenu(""));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "" }));
 
 		expect(onLongPress).toHaveBeenCalledTimes(2);
 	});
@@ -114,7 +109,7 @@ describe("longPressHandlers", () => {
 		vi.advanceTimersByTime(450);
 		window.dispatchEvent(new Event("pointerup"));
 		handlers.onpointerup?.(pointer("pointerup", "touch"));
-		handlers.oncontextmenu?.(contextMenu("mouse"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "mouse" }));
 
 		expect(onLongPress).toHaveBeenCalledOnce();
 	});
@@ -161,7 +156,7 @@ describe("long-press haptics", () => {
 		handlers.onpointerdown?.(pointer("pointerdown", "touch"));
 		vi.advanceTimersByTime(450);
 		vi.advanceTimersByTime(50);
-		handlers.oncontextmenu?.(contextMenu("touch"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "touch" }));
 
 		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
 	});
@@ -178,7 +173,17 @@ describe("long-press haptics", () => {
 	it("taps when a touch contextmenu opens the menu before the timer", () => {
 		const handlers = longPressHandlers(() => {});
 
-		handlers.oncontextmenu?.(contextMenu("touch"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "touch" }));
+
+		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
+	});
+
+	it("taps when a contextmenu without a pointer type came from touch", () => {
+		const handlers = longPressHandlers(() => {});
+
+		handlers.oncontextmenu?.(
+			contextMenu({ sourceCapabilities: { firesTouchEvents: true } }),
+		);
 
 		expect(playHapticMock).toHaveBeenCalledExactlyOnceWith("longPress");
 	});
@@ -187,9 +192,9 @@ describe("long-press haptics", () => {
 		const handlers = longPressHandlers(() => {});
 
 		handlers.onpointerdown?.(pointer("pointerdown", "mouse"));
-		handlers.oncontextmenu?.(contextMenu("mouse"));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "mouse" }));
 		vi.advanceTimersByTime(1000);
-		handlers.oncontextmenu?.(contextMenu(""));
+		handlers.oncontextmenu?.(contextMenu({ pointerType: "" }));
 
 		expect(playHapticMock).not.toHaveBeenCalled();
 	});

@@ -8,7 +8,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/right-click";
+import { rightClick } from "$lib/test/context-menu";
 
 const profiles = vi.hoisted(() => ({
 	uploadProfilePhoto: vi.fn(),

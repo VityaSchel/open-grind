@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/right-click";
+import { rightClick } from "$lib/test/context-menu";
 
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 

@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "$lib/haptics";
+import { firedByTouch } from "$lib/platform/touch-origin";
 
 const LONG_PRESS_DURATION_MS = 450;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 12;
@@ -13,21 +14,17 @@ let heldTouchUntil = 0;
 let suppressClickUntil = 0;
 let documentListenersAttached = false;
 
-function isTouchLike(pointerType: string | undefined): boolean {
-	return pointerType === "touch" || pointerType === "pen";
-}
-
 function fireOnce({
 	onLongPress,
-	pointerType,
+	byTouch,
 }: {
 	onLongPress: () => void;
-	pointerType: string | undefined;
+	byTouch: boolean;
 }): void {
 	const now = Date.now();
 	if (now - lastFiredAt < NATIVE_CONTEXTMENU_DELAY_MS) return;
 	lastFiredAt = now;
-	if (isTouchLike(pointerType)) playHaptic("longPress");
+	if (byTouch) playHaptic("longPress");
 	onLongPress();
 }
 
@@ -101,12 +98,12 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 			pressing = true;
 			originX = event.clientX;
 			originY = event.clientY;
-			const { pointerType } = event;
+			const byTouch = firedByTouch(event);
 			timer = setTimeout(() => {
 				timer = null;
 				pressConsumed = true;
 				holdTouch();
-				fireOnce({ onLongPress, pointerType });
+				fireOnce({ onLongPress, byTouch });
 			}, LONG_PRESS_DURATION_MS);
 		},
 		onpointermove(event) {
@@ -141,8 +138,9 @@ export function longPressHandlers(onLongPress: () => void): LongPressHandlers {
 				onLongPress();
 				return;
 			}
-			if (isTouchLike(pointerType)) holdTouch();
-			fireOnce({ onLongPress, pointerType });
+			const byTouch = firedByTouch(event);
+			if (byTouch) holdTouch();
+			fireOnce({ onLongPress, byTouch });
 		},
 	};
 }

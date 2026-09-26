@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { rightClick } from "$lib/test/right-click";
+import { rightClick } from "$lib/test/context-menu";
 
 const drawer = vi.hoisted(() => ({
 	getDrawerMedia: vi.fn(),
