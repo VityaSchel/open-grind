@@ -7,6 +7,7 @@
 		WEIGHT_KG_MIN,
 	} from "$lib/model/browse/grid/filters";
 	import { formatWeightKg } from "$lib/util/units";
+	import { WEIGHT_SLIDER_SCALE } from "./slider-scale";
 
 	let {
 		checked = $bindable(),
@@ -37,9 +38,7 @@
 					value = v;
 				}
 			}
-			min={WEIGHT_KG_MIN}
-			max={WEIGHT_KG_MAX}
-			step={1}
+			scale={WEIGHT_SLIDER_SCALE}
 			thumbLabels={["Minimum weight", "Maximum weight"]}
 		/>
 	</FilterDropdown>
