@@ -224,7 +224,7 @@
 		},
 		{
 			"name": "messaging/albums",
-			"description": "WIP. No idea what SpankBank, pressie albums and paywalled albums are."
+			"description": "Pressie albums are albums other profiles shared with you. `POST /v3/pressie-albums/feed` lists them in `sharedAlbums`; `albumViewable: false` marks a locked one, and `POST /v3/pressie-albums/feed/paywall/` returns blurred previews of locked albums. `profileFeeds` holds new content from those albums, one entry per profile, with `paywallStatus: PAYWALL` on locked entries."
 		},
 		{
 			"name": "messaging/conversations"
@@ -6817,7 +6817,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Pressie albums feed paywall"
+				"summary": "Get previews of locked albums shared with us"
 			}
 		},
 		"/v3/pressie-albums/feed/{profileId}": {
@@ -16302,7 +16302,7 @@
 								},
 								"paywallStatus": {
 									"type": "string",
-									"description": "e.g. `ALLOW`"
+									"description": "`ALLOW` or `PAYWALL` (locked)"
 								},
 								"seen": {
 									"type": "boolean"
