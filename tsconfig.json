@@ -27,6 +27,7 @@
 		"tests/**/*.svelte",
 		"e2e/*.ts",
 		"e2e/support/**/*.ts",
+		"e2e-live/**/*.ts",
 		"playwright.config.ts",
 		"playwright.guard.config.ts"
 	]

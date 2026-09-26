@@ -44,7 +44,7 @@ export default defineConfig(async ({ command }) => ({
 
 	test: {
 		environment: "jsdom",
-		include: ["src/**/*.test.ts"],
+		include: ["src/**/*.test.ts", "e2e-live/support/**/*.test.ts"],
 		setupFiles: ["src/test-setup.ts"],
 		// tinykeys caches navigator.platform at load, so vi.resetModules() cannot
 		// re-resolve `$mod` unless tinykeys goes through the module runner too.

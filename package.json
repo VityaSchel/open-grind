@@ -40,6 +40,9 @@
 		"test:unit": "svelte-kit sync && vitest run",
 		"test:e2e": "playwright test",
 		"test:e2e:guard": "playwright test -c playwright.guard.config.ts",
+		"test:live": "playwright test -c e2e-live/playwright.live.config.ts --project flows",
+		"test:live:sweep": "playwright test -c e2e-live/playwright.live.config.ts --project sweep",
+		"test:live:device": "playwright test -c e2e-live/playwright.live.config.ts --project device",
 		"dev:updater-server": "bun scripts/updater-release-server.ts",
 		"test:android": "cd src-tauri/gen/android && ./gradlew :app:testUniversalReleaseUnitTest",
 		"test:android-logic": "src-tauri/gen/android/gradlew -p src-tauri/android-logic test"
