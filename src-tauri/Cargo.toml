@@ -17,6 +17,10 @@ edition = "2021"
 name = "open_grind_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[example]]
+name = "live-counterpart"
+path = "../e2e-live/counterpart/main.rs"
+
 [features]
 keychain = ["dep:apple-native-keyring-store"]
 private-api = []
