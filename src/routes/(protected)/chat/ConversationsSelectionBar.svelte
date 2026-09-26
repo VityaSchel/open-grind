@@ -69,6 +69,7 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex h-full items-center gap-1.5 px-3 pt-(--safe-area-top) max-selection-bar-compact:gap-1 max-selection-bar-compact:px-2"
 	tag="nav"
+	aria-label="Selection"
 	{@attach topChrome}
 >
 	<Button

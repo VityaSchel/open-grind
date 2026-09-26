@@ -28,6 +28,7 @@
 		{@attach active && bottomChrome}
 	>
 		<nav
+			aria-label="Chat and tap"
 			class="flex flex-row items-center gap-2 rounded-full bg-muted p-2 shadow-xl"
 		>
 			<OpenConversationButton {profileId} {ourProfileId} />

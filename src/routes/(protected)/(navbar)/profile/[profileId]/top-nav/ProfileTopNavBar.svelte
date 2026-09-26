@@ -22,6 +22,7 @@
 </script>
 
 <nav
+	aria-label="Profile actions"
 	class="absolute right-2 flex -translate-y-1/2 flex-row-reverse items-center gap-1.5"
 >
 	{#if isOurProfile}

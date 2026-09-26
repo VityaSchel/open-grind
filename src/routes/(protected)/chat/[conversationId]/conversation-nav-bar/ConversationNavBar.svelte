@@ -17,6 +17,7 @@
 	bgClass="bg-linear-to-b max-split:from-background split:from-card to-transparent"
 	contentClass="flex items-center h-full"
 	tag="nav"
+	aria-label="Conversation"
 	{@attach topChrome}
 >
 	<BackLink

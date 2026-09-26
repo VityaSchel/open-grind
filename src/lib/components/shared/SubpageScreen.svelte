@@ -50,6 +50,7 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex items-center h-full pe-5.5 pt-(--safe-area-top)"
 	tag="nav"
+	aria-label="Page"
 	{@attach topChrome}
 >
 	<BackLink
