@@ -40,6 +40,8 @@
 	--sidebar-ring: oklch(0.556 0 0);
 	--message-bubble-in: oklch(0.7882 0.1455 228.36);
 	--message-bubble-out: oklch(0.8618 0.1973 89.76);
+	--stack-scrim: 0.8;
+	--stack-edge: -1px 0 0 oklch(1 0 0 / 10%);
 	--list-rail: 117px;
 	--safe-area-top: 0px;
 	--safe-area-bottom: 0px;

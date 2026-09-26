@@ -100,7 +100,7 @@
 	<div
 		bind:this={dim}
 		data-slot="live-stack-dim"
-		class="pointer-events-none fixed inset-0 bg-black opacity-0"
+		class="pointer-events-none fixed inset-0 bg-[rgb(0_0_0/var(--stack-scrim))] opacity-0"
 		style:z-index={STACK_Z.dim}
 	></div>
 {/if}
@@ -109,7 +109,7 @@
 		<div
 			{@attach placePane}
 			data-slot="live-stack-sheet"
-			class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
+			class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom) shadow-(--stack-edge)"
 			style:z-index={STACK_Z.front}
 			inert={stack.leaving !== null}
 			data-leaving={stack.leaving !== null || undefined}

@@ -16,8 +16,9 @@ function paneAt(easedProgress: number | null) {
 			getComputedTiming: () => timing,
 		},
 	};
-	pane.animate = vi.fn(() => animation as unknown as Animation);
-	return { pane, animation, timing, finish: () => finish() };
+	const animate = vi.fn(() => animation as unknown as Animation);
+	pane.animate = animate;
+	return { pane, animate, animation, timing, finish: () => finish() };
 }
 
 function surfaceOver({
@@ -104,5 +105,22 @@ describe("paneSurface", () => {
 		expect(await running.completed).toBe(true);
 		expect(running.cancel()).toBe(0);
 		expect(running.detach()()).toBe(0);
+	});
+
+	it("runs the scrim from clear to full opacity as a pane covers the one behind", () => {
+		const dim = paneAt(0);
+		const surface = paneSurface({
+			panes: () => ({ front: null, back: null, dim: dim.pane }),
+			parallax: () => true,
+		});
+
+		surface.apply(0.25);
+		expect(dim.pane.style.opacity).toBe("0.75");
+
+		surface.animate({ from: 1, to: 0, duration: 540, easing: "linear" });
+		expect(dim.animate).toHaveBeenCalledWith(
+			[{ opacity: 0 }, { opacity: 1 }],
+			expect.objectContaining({ duration: 540 }),
+		);
 	});
 });

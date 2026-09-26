@@ -7,7 +7,7 @@ describe("paneFrame", () => {
 		const frame = paneFrame({ progress: 0, parallax: true });
 		expect(frame.front).toBe("translate3d(0.000%,0,0)");
 		expect(frame.back).toBe("translate3d(-33.000%,0,0)");
-		expect(frame.dim).toBeCloseTo(0.1);
+		expect(frame.dim).toBe(1);
 	});
 
 	it("parks the front pane offscreen and the back pane centered when complete", () => {
@@ -21,7 +21,7 @@ describe("paneFrame", () => {
 		const half = paneFrame({ progress: 0.5, parallax: true });
 		expect(half.front).toBe("translate3d(50.000%,0,0)");
 		expect(half.back).toBe("translate3d(-16.500%,0,0)");
-		expect(half.dim).toBeCloseTo(0.05);
+		expect(half.dim).toBe(0.5);
 	});
 });
 

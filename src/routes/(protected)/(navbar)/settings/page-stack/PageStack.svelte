@@ -58,7 +58,7 @@
 		bind:this={pane}
 		{@attach trackScrolled}
 		data-slot="page-stack-pane"
-		class="fixed inset-0 bg-background pt-(--safe-area-top) pb-(--content-pb)"
+		class="fixed inset-0 bg-background pt-(--safe-area-top) pb-(--content-pb) shadow-(--stack-edge)"
 		style:z-index={liveZ}
 	>
 		{@render children?.()}
@@ -67,7 +67,7 @@
 		<div
 			bind:this={dim}
 			data-slot="page-stack-dim"
-			class="pointer-events-none fixed inset-0 bg-black opacity-0"
+			class="pointer-events-none fixed inset-0 bg-[rgb(0_0_0/var(--stack-scrim))] opacity-0"
 			style:z-index={STACK_Z.dim}
 		></div>
 	{/if}

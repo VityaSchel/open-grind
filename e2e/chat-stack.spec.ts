@@ -8,6 +8,13 @@ import {
 	MESSAGE_ROW,
 	pathname,
 } from "./support/app";
+import { BLUR_MODES, setBlurMode } from "./support/layout-guard";
+import {
+	DARK_SCRIM,
+	edgeLineColumns,
+	expectEdgeJustLeftOf,
+	scrimStrength,
+} from "./support/stack-layers";
 import {
 	cancelSystemBack,
 	commitSystemBack,
@@ -189,6 +196,49 @@ test.describe("the chat stack on a phone", () => {
 		await expect(dim(page)).toHaveCount(0);
 	});
 
+	test("the system back gesture dims the list and edges the conversation sliding off it", async ({
+		page,
+	}) => {
+		await openInbox(page);
+		await openConversation(page);
+
+		expect(await startSystemBack(page)).toBe(true);
+		await progressSystemBack(page, 0.25);
+		const left = await sheet(page).evaluate(
+			(pane) => pane.getBoundingClientRect().x,
+		);
+
+		expect(await scrimStrength(dim(page))).toBeCloseTo(
+			DARK_SCRIM * 0.75,
+			2,
+		);
+		await expectEdgeJustLeftOf(page, { x: left });
+		await cancelSystemBack(page);
+	});
+
+	test("neither the list nor a conversation shows an edge at rest in any blur mode", async ({
+		page,
+	}) => {
+		const leftColumn = { x: 0, y: 0, width: 2, height: PHONE.height };
+		await openInbox(page);
+		for (const mode of BLUR_MODES) {
+			await setBlurMode(page, mode);
+			expect(
+				await edgeLineColumns(page, { clip: leftColumn }),
+				`list, ${mode}`,
+			).toEqual([]);
+		}
+
+		await openConversation(page);
+		for (const mode of BLUR_MODES) {
+			await setBlurMode(page, mode);
+			expect(
+				await edgeLineColumns(page, { clip: leftColumn }),
+				`conversation, ${mode}`,
+			).toEqual([]);
+		}
+	});
+
 	test("a back gesture during the slide-in picks the conversation up where it is, lets the finger drive the rest and commits back to the list", async ({
 		page,
 	}) => {
@@ -329,6 +379,7 @@ test.describe("the chat stack on a phone", () => {
 		await progressSystemBack(page, 0.5);
 		expect(await offsetX(page, "sheet")).toBeCloseTo(PHONE.width * 0.5, -1);
 		expect(await offsetX(page, "base")).toBe(0);
+		expect(await scrimStrength(dim(page))).toBeCloseTo(DARK_SCRIM * 0.5, 2);
 		await cancelSystemBack(page);
 	});
 });
