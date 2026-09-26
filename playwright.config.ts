@@ -6,8 +6,15 @@ const PORT = 5177;
 // chromium refuses to sandbox as root, and the CI runner executes steps as root
 const chromiumSandbox = process.getuid?.() !== 0;
 
+export const DEMO_ENV = {
+	PUBLIC_ENABLE_DEMO: "1",
+	PUBLIC_TEST_INSETS: "1",
+	PUBLIC_BACKDROP_BLUR: "max",
+};
+
 export default defineConfig({
 	testDir: "e2e",
+	testIgnore: "layout-guard.spec.ts",
 	fullyParallel: false,
 	workers: 1,
 	retries: 1,
@@ -28,10 +35,6 @@ export default defineConfig({
 		port: PORT,
 		reuseExistingServer: true,
 		timeout: 120_000,
-		env: {
-			PUBLIC_ENABLE_DEMO: "1",
-			PUBLIC_TEST_INSETS: "1",
-			PUBLIC_BACKDROP_BLUR: "max",
-		},
+		env: DEMO_ENV,
 	},
 });
