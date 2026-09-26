@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const lightbox = vi.hoisted(() => ({
-	openVideoLightbox: vi.fn(() => Promise.resolve()),
+	openLightbox: vi.fn(() => Promise.resolve()),
 }));
 const dimensions = vi.hoisted(() => ({
 	measureVideo: vi.fn(() => Promise.resolve({ width: 720, height: 1280 })),
@@ -13,7 +13,10 @@ const dimensions = vi.hoisted(() => ({
 const messagesApi = vi.hoisted(() => ({ getSingleMessage: vi.fn() }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
-vi.mock("./video-lightbox", () => lightbox);
+vi.mock("$lib/util/photoswipe", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/util/photoswipe")>()),
+	...lightbox,
+}));
 vi.mock("$lib/util/media-dimensions", () => dimensions);
 vi.mock("$lib/api/error-toast", () => errorToast);
 vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
@@ -22,6 +25,7 @@ vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
 }));
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import type { openLightbox } from "$lib/util/photoswipe";
 import Message from "./Message.svelte";
 
 const LIST_URL = "https://cdns.grindr.com/videos/chat/list.mp4";
@@ -84,11 +88,15 @@ function refetchReturns(body: Record<string, unknown>) {
 	});
 }
 
-function closeLightbox() {
-	const [call] = lightbox.openVideoLightbox.mock.calls as unknown as [
-		[{ onClosed: () => void }],
+function openedLightbox() {
+	const [call] = lightbox.openLightbox.mock.calls as unknown as [
+		Parameters<typeof openLightbox>,
 	];
-	call[0].onClosed();
+	return call[0];
+}
+
+function closeLightbox() {
+	openedLightbox().onClosed();
 }
 
 afterEach(() => {
@@ -148,22 +156,25 @@ describe("video message", () => {
 		await fireEvent.click(getByRole("button", PLAY));
 
 		await vi.waitFor(() =>
-			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
+			expect(lightbox.openLightbox).toHaveBeenCalledOnce(),
 		);
 		expect(messagesApi.getSingleMessage).toHaveBeenCalledExactlyOnceWith({
 			conversationId: CONVERSATION_ID,
 			messageId: MESSAGE_ID,
 		});
-		expect(lightbox.openVideoLightbox).toHaveBeenCalledWith(
+		const { items, videoAt } = openedLightbox();
+		expect(items).toEqual([
 			expect.objectContaining({
-				video: {
-					src: REFETCHED_URL,
-					loop: true,
-					width: 720,
-					height: 1280,
-				},
+				src: REFETCHED_URL,
+				width: 720,
+				height: 1280,
 			}),
-		);
+		]);
+		expect(videoAt?.(0)).toEqual({
+			src: REFETCHED_URL,
+			poster: null,
+			loop: true,
+		});
 		expect(dimensions.measureVideo).toHaveBeenCalledExactlyOnceWith(
 			REFETCHED_URL,
 		);
@@ -176,11 +187,10 @@ describe("video message", () => {
 		await fireEvent.click(getByRole("button", PLAY));
 
 		await vi.waitFor(() =>
-			expect(lightbox.openVideoLightbox).toHaveBeenCalledWith(
-				expect.objectContaining({
-					video: expect.objectContaining({ loop: false }),
-				}),
-			),
+			expect(lightbox.openLightbox).toHaveBeenCalledOnce(),
+		);
+		expect(openedLightbox().videoAt?.(0)).toEqual(
+			expect.objectContaining({ loop: false }),
 		);
 	});
 
@@ -192,7 +202,7 @@ describe("video message", () => {
 
 		await fireEvent.click(getByRole("button", PLAY));
 		await vi.waitFor(() =>
-			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
+			expect(lightbox.openLightbox).toHaveBeenCalledOnce(),
 		);
 		closeLightbox();
 
@@ -208,7 +218,7 @@ describe("video message", () => {
 
 		await fireEvent.click(getByRole("button", PLAY));
 		await vi.waitFor(() =>
-			expect(lightbox.openVideoLightbox).toHaveBeenCalledOnce(),
+			expect(lightbox.openLightbox).toHaveBeenCalledOnce(),
 		);
 		closeLightbox();
 
@@ -219,7 +229,7 @@ describe("video message", () => {
 		);
 		await fireEvent.click(getByRole("button", PLAY));
 		await vi.waitFor(() =>
-			expect(lightbox.openVideoLightbox).toHaveBeenCalledTimes(2),
+			expect(lightbox.openLightbox).toHaveBeenCalledTimes(2),
 		);
 		expect(messagesApi.getSingleMessage).toHaveBeenCalledTimes(2);
 	});
@@ -233,7 +243,7 @@ describe("video message", () => {
 		await vi.waitFor(() =>
 			expect(errorToast.showErrorToast).toHaveBeenCalledOnce(),
 		);
-		expect(lightbox.openVideoLightbox).not.toHaveBeenCalled();
+		expect(lightbox.openLightbox).not.toHaveBeenCalled();
 		await vi.waitFor(() =>
 			expect(
 				(getByRole("button", PLAY) as HTMLButtonElement).disabled,
@@ -252,7 +262,7 @@ describe("video message", () => {
 		);
 		expect(queryByRole("button", PLAY)).toBeNull();
 		expect(errorToast.showErrorToast).not.toHaveBeenCalled();
-		expect(lightbox.openVideoLightbox).not.toHaveBeenCalled();
+		expect(lightbox.openLightbox).not.toHaveBeenCalled();
 	});
 
 	it("keeps our own video inert until the server confirms it", async () => {

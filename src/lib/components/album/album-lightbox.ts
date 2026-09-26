@@ -16,13 +16,7 @@ import {
 	measureVideo,
 	type MediaDimensions,
 } from "$lib/util/media-dimensions";
-import {
-	applyPhotoSwipeBackGesture,
-	applyPhotoSwipeComponent,
-	applyPhotoSwipeErrorUi,
-	applyPhotoSwipeVideo,
-	applyPhotoSwipeViewportSync,
-} from "$lib/util/photoswipe";
+import { applyPhotoSwipeComponent, openLightbox } from "$lib/util/photoswipe";
 import { hasNoPlaysLeft, isVideoContent } from "./album";
 import NoPlaysLeftSlide from "./NoPlaysLeftSlide.svelte";
 
@@ -80,7 +74,7 @@ export async function loadAlbumSlides(albumId: number): Promise<AlbumSlide[]> {
 	return slides;
 }
 
-export async function openAlbumLightbox({
+export function openAlbumLightbox({
 	slides,
 	signal,
 	onClosed,
@@ -89,48 +83,40 @@ export async function openAlbumLightbox({
 	signal: AbortSignal;
 	onClosed: () => void;
 }): Promise<void> {
-	const { default: PhotoSwipeLightbox } = await import("photoswipe/lightbox");
-	if (signal.aborted) return;
-	const lightbox = new PhotoSwipeLightbox({
-		showHideAnimationType: "fade",
-		pswpModule: () => import("photoswipe"),
-		mainClass: "pswp--buttons-visible",
-	});
-	applyPhotoSwipeErrorUi(lightbox);
-	applyPhotoSwipeViewportSync(lightbox);
-	lightbox.addFilter("numItems", () => slides.length);
-	lightbox.addFilter("itemData", (itemData, index) => {
-		const slide = slides[index];
-		if (slide === undefined) return itemData;
-		return { src: slide.url, width: slide.width, height: slide.height };
-	});
-	applyPhotoSwipeBackGesture(lightbox);
-	applyPhotoSwipeVideo(lightbox, (index) => {
-		const slide = slides[index];
-		if (
-			slide === undefined ||
-			!isVideoContent(slide.contentType) ||
-			hasNoPlaysLeft(slide)
-		)
-			return null;
-		return { src: slide.url, poster: slide.coverUrl };
-	});
-	applyPhotoSwipeComponent(lightbox, {
-		slideAt: (index) => {
+	return openLightbox({
+		items: slides.map(({ url, width, height }) => ({
+			src: url,
+			width,
+			height,
+		})),
+		videoAt: (index) => {
 			const slide = slides[index];
-			return slide !== undefined && hasNoPlaysLeft(slide) ? slide : null;
+			if (
+				slide === undefined ||
+				!isVideoContent(slide.contentType) ||
+				hasNoPlaysLeft(slide)
+			)
+				return null;
+			return { src: slide.url, poster: slide.coverUrl };
 		},
-		render: ({ target, slide, content }) => {
-			const locked = mount(NoPlaysLeftSlide, {
-				target,
-				props: { still: slide.coverUrl },
-			});
-			content.onLoaded();
-			return locked;
-		},
+		configure: (lightbox) =>
+			applyPhotoSwipeComponent(lightbox, {
+				slideAt: (index) => {
+					const slide = slides[index];
+					return slide !== undefined && hasNoPlaysLeft(slide)
+						? slide
+						: null;
+				},
+				render: ({ target, slide, content }) => {
+					const locked = mount(NoPlaysLeftSlide, {
+						target,
+						props: { still: slide.coverUrl },
+					});
+					content.onLoaded();
+					return locked;
+				},
+			}),
+		signal,
+		onClosed,
 	});
-	lightbox.on("closingAnimationEnd", onClosed);
-	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
-	lightbox.init();
-	lightbox.loadAndOpen(0);
 }

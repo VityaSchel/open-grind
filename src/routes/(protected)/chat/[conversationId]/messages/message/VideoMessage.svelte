@@ -10,11 +10,13 @@
 		measureVideo,
 		type MediaDimensions,
 	} from "$lib/util/media-dimensions";
+	import { openLightbox } from "$lib/util/photoswipe";
 	import type { VideoMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
-	import { type LightboxVideo, openVideoLightbox } from "./video-lightbox";
 
 	type VideoBody = VideoMessage["body"];
+
+	type LightboxVideo = { src: string; loop: boolean } & MediaDimensions;
 
 	let {
 		conversationId,
@@ -104,8 +106,9 @@
 		if (player.status !== "open") return;
 		const { video, viewsLeft } = player;
 		const controller = new AbortController();
-		openVideoLightbox({
-			video,
+		openLightbox({
+			items: [video],
+			videoAt: () => ({ src: video.src, poster: null, loop: video.loop }),
 			signal: controller.signal,
 			onClosed: () => finishPlayback(viewsLeft),
 		}).catch((error: unknown) => {
