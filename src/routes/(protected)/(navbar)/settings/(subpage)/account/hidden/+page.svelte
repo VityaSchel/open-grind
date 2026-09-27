@@ -24,7 +24,7 @@
 <ProfileList
 	eager
 	loadIds={async () =>
-		(await getHiddenUsers()).map(({ profileId }) => profileId)}
+		(await getHiddenUsers()).map(({ profileId }) => profileId).toReversed()}
 	setOn={({ profileId, on }) =>
 		on ? hideUser({ profileId }) : unhideUser({ profileId })}
 	{icon}

@@ -3811,6 +3811,7 @@
 									"properties": {
 										"blocking": {
 											"type": "array",
+											"description": "newest first",
 											"items": {
 												"type": "object",
 												"properties": {
@@ -4553,6 +4554,7 @@
 									"properties": {
 										"hides": {
 											"type": "array",
+											"description": "oldest first",
 											"items": {
 												"type": "object",
 												"properties": {
