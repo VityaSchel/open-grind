@@ -19,3 +19,9 @@ See ([huntabyte/vaul-svelte#138](https://github.com/huntabyte/vaul-svelte/issues
 ## `svelte-sonner`
 
 A toast stacked itself behind every other toast on screen, not just the ones sharing its position, so a `bottom-center` toast pushed a `top-center` toast down by its own height plus the gap. `heights` is one global array and `HeightT` carries no position, so `toastsHeightBefore` summed across positions; upstream React sonner filters that list by position. The patch records the position with each measured height and filters on it.
+
+## `bits-ui`
+
+Dropdown and context menu items ignored a hovering pen. Every menu hover handler returns early unless `pointerType` is `"mouse"`, so an S Pen never focused an item, opened a submenu or kept the submenu grace area. The patch adds `isHoverPointerEvent()`, true for a mouse or for a pen with no buttons pressed, and uses it in those handlers. A pen on the glass or holding its barrel button still acts like touch, so pen scrolling does not move focus. The context menu trigger's long-press keeps `isMouseEvent()`: `pointerup` carries no buttons, so a pen-inclusive check would skip clearing the 700 ms timer and every pen tap would open the menu.
+
+Radix has the same mouse-only gate, see [radix-ui/primitives#1403](https://github.com/radix-ui/primitives/issues/1403).

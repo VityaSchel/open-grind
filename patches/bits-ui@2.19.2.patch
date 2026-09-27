@@ -1,0 +1,122 @@
+diff --git a/dist/bits/menu/menu.svelte.js b/dist/bits/menu/menu.svelte.js
+index de42a776fbee0977fabb16289350b246752d54e4..87557aa9f52b2be79c5041d0f58371264c3b2422 100644
+--- a/dist/bits/menu/menu.svelte.js
++++ b/dist/bits/menu/menu.svelte.js
+@@ -1,6 +1,6 @@
+ import { afterTick, mergeProps, onDestroyEffect, attachRef, DOMContext, getDocument, getWindow, simpleBox, boxWith, } from "svelte-toolbelt";
+ import { Context, watch } from "runed";
+-import { FIRST_LAST_KEYS, LAST_KEYS, SELECTION_KEYS, SUB_OPEN_KEYS, getCheckedState, isMouseEvent, } from "./utils.js";
++import { FIRST_LAST_KEYS, LAST_KEYS, SELECTION_KEYS, SUB_OPEN_KEYS, getCheckedState, isMouseEvent, isHoverPointerEvent, } from "./utils.js";
+ import { focusFirst } from "../../internal/focus.js";
+ import { CustomEventDispatcher } from "../../internal/events.js";
+ import { isElement, isElementOrSVGElement, isHTMLElement } from "../../internal/is.js";
+@@ -200,25 +200,25 @@ class MenuSubmenuIntent {
+             if (!triggerNode || !contentNode || !enabled)
+                 return;
+             const onTriggerMove = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 this.#launchPoint = { x: e.clientX, y: e.clientY };
+                 if (!this.#active)
+                     this.#preview(e, "content");
+             };
+             const onTriggerLeave = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 this.#engage(e, "content");
+             };
+             const onContentMove = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 if (!this.#active)
+                     this.#preview(e, "trigger");
+             };
+             const onContentLeave = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 if (isElement(e.relatedTarget)) {
+                     const selector = this.#opts.subContentSelector();
+@@ -235,12 +235,12 @@ class MenuSubmenuIntent {
+                 this.#engage(e, "trigger");
+             };
+             const onTriggerEnter = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 this.#disengage();
+             };
+             const onContentEnter = (e) => {
+-                if (!isMouseEvent(e))
++                if (!isHoverPointerEvent(e))
+                     return;
+                 this.#disengage();
+             };
+@@ -416,7 +416,7 @@ class MenuSubmenuIntent {
+     #onDocMove = (e) => {
+         if (!this.#active || !this.#target)
+             return;
+-        if (!isMouseEvent(e))
++        if (!isHoverPointerEvent(e))
+             return;
+         const triggerNode = this.#opts.triggerNode();
+         const contentNode = this.#opts.contentNode();
+@@ -981,7 +981,7 @@ class MenuItemSharedState {
+     onpointermove(e) {
+         if (e.defaultPrevented)
+             return;
+-        if (!isMouseEvent(e))
++        if (!isHoverPointerEvent(e))
+             return;
+         if (this.opts.disabled.current) {
+             this.content.onItemLeave(e);
+@@ -999,7 +999,7 @@ class MenuItemSharedState {
+     onpointerleave(e) {
+         if (e.defaultPrevented)
+             return;
+-        if (!isMouseEvent(e))
++        if (!isHoverPointerEvent(e))
+             return;
+         this.content.onItemLeave(e);
+     }
+@@ -1139,7 +1139,7 @@ export class MenuSubTriggerState {
+         this.#openTimer = null;
+     }
+     onpointermove(e) {
+-        if (!isMouseEvent(e))
++        if (!isHoverPointerEvent(e))
+             return;
+         if (this.submenu.root.isPointerInTransit) {
+             if (this.#openTimer !== null)
+@@ -1165,7 +1165,7 @@ export class MenuSubTriggerState {
+         }
+     }
+     onpointerleave(e) {
+-        if (!isMouseEvent(e))
++        if (!isHoverPointerEvent(e))
+             return;
+         this.#clearOpenTimer();
+     }
+diff --git a/dist/bits/menu/utils.d.ts b/dist/bits/menu/utils.d.ts
+index 48e65bdcadcde591762f384201616fc3c9215564..9acdabde333f95178c02207fb2652f8db098fe67 100644
+--- a/dist/bits/menu/utils.d.ts
++++ b/dist/bits/menu/utils.d.ts
+@@ -9,3 +9,4 @@ export declare const SUB_CLOSE_KEYS: Record<Direction, string[]>;
+ export declare function isIndeterminate(checked?: CheckedState): checked is "indeterminate";
+ export declare function getCheckedState(checked: CheckedState): "checked" | "unchecked" | "indeterminate";
+ export declare function isMouseEvent(event: PointerEvent): boolean;
++export declare function isHoverPointerEvent(event: PointerEvent): boolean;
+diff --git a/dist/bits/menu/utils.js b/dist/bits/menu/utils.js
+index 6eee6d400cce1b95b6d4d4bb2a6012fdb43912c3..e7012c0ba52f4ce8ab307a234d47e836e4b6c7e1 100644
+--- a/dist/bits/menu/utils.js
++++ b/dist/bits/menu/utils.js
+@@ -20,3 +20,6 @@ export function getCheckedState(checked) {
+ export function isMouseEvent(event) {
+     return event.pointerType === "mouse";
+ }
++export function isHoverPointerEvent(event) {
++    return event.pointerType === "mouse" || (event.pointerType === "pen" && event.buttons === 0);
++}
