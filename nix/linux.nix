@@ -17,6 +17,7 @@ let
     at-spi2-core
     libayatana-appindicator
     librsvg
+    gst_all_1.gstreamer
     xorg.libX11
   ];
 

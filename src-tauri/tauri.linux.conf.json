@@ -1,0 +1,7 @@
+{
+	"bundle": {
+		"resources": {
+			"gen/webkit-extensions/libogmedia.so": "webkit-extensions/libogmedia.so"
+		}
+	}
+}

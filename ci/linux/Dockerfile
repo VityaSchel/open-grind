@@ -8,7 +8,7 @@ RUN echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/$
 
 RUN apt-get -qq -o Acquire::Check-Valid-Until=false update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends \
 	build-essential clang libclang-dev pkg-config cmake ninja-build perl git ca-certificates curl xz-utils \
-	libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev librsvg2-dev libssl-dev \
+	libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev librsvg2-dev libssl-dev libgstreamer1.0-dev \
 	binutils file squashfs-tools \
 	&& rm -rf /var/lib/apt/lists/*
 

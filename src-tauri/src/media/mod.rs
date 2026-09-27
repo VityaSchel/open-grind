@@ -1,5 +1,7 @@
 mod buffered;
 mod cache;
+#[cfg(target_os = "linux")]
+mod element;
 mod flight;
 mod range;
 mod registry;
@@ -27,6 +29,9 @@ use response::refused;
 use stream::serve_streamed;
 use target::{decode_target, Target};
 use windowed::Windowed;
+
+#[cfg(target_os = "linux")]
+pub use element::{serve_element_opens, WEBKIT_EXTENSIONS};
 
 pub const SCHEME: &str = "ogmedia";
 

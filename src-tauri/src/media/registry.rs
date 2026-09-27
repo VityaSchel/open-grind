@@ -3,15 +3,15 @@ pub use tauri::wry::{
 	register_stream, unregister_stream, ResponseStream, STREAM_HEADER,
 };
 
-#[cfg(all(test, not(target_os = "android")))]
-pub use stub::with_stream;
+#[cfg(all(any(test, target_os = "linux"), not(target_os = "android")))]
+pub use local::with_stream;
 #[cfg(not(target_os = "android"))]
-pub use stub::{
+pub use local::{
 	register_stream, unregister_stream, ResponseStream, STREAM_HEADER,
 };
 
 #[cfg(not(target_os = "android"))]
-mod stub {
+mod local {
 	use std::collections::HashMap;
 	use std::io;
 	use std::sync::atomic::{AtomicU64, Ordering};
@@ -58,7 +58,7 @@ mod stub {
 		true
 	}
 
-	#[cfg(test)]
+	#[cfg(any(test, target_os = "linux"))]
 	pub fn with_stream<T>(
 		id: u64,
 		body: impl FnOnce(&mut dyn ResponseStream) -> T,

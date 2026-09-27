@@ -55,7 +55,8 @@
 			"deb": {
 				"depends": [
 					"libsoup-3.0-0",
-					"librsvg2-2"
+					"librsvg2-2",
+					"libgstreamer1.0-0"
 				],
 				"recommends": [
 					"libayatana-appindicator3-1",

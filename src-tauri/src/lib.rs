@@ -262,11 +262,17 @@ pub fn run() {
                 .cloned()
                 .collect();
             for window in deferred {
-                let window =
+                let builder =
                     tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
                         .user_agent(&user_agent)
-                        .on_navigation(is_app_url)
-                        .build()?;
+                        .on_navigation(is_app_url);
+                #[cfg(target_os = "linux")]
+                let builder = builder.extensions_path(
+                    app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
+                );
+                let window = builder.build()?;
+                #[cfg(target_os = "linux")]
+                media::serve_element_opens(&window);
                 appearance::unlock_visual_effects(&window);
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]

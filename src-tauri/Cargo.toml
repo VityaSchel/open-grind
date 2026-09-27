@@ -28,6 +28,7 @@ devtools = ["dep:tauri-plugin-devtools"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+cc = "1"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
@@ -81,6 +82,7 @@ windows-core = "0.61"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
+webkit2gtk = { version = "2", features = ["v2_28"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "1.0.0"
