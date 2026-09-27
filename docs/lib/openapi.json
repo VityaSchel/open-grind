@@ -12458,7 +12458,8 @@
 				"in": "query",
 				"schema": {
 					"type": "number",
-					"format": "float"
+					"format": "float",
+					"description": "number in centimeters, a range excludes profiles without a height"
 				}
 			},
 			"CascadeHeightCmMaxQuery": {
@@ -12466,7 +12467,8 @@
 				"in": "query",
 				"schema": {
 					"type": "number",
-					"format": "float"
+					"format": "float",
+					"description": "number in centimeters, a range excludes profiles without a height; the bound is loose, `130` also returns 131"
 				}
 			},
 			"CascadeWeightGramsMinQuery": {
@@ -12474,7 +12476,8 @@
 				"in": "query",
 				"schema": {
 					"type": "number",
-					"format": "float"
+					"format": "float",
+					"description": "number in grams, a range excludes profiles without a weight"
 				}
 			},
 			"CascadeWeightGramsMaxQuery": {
@@ -12482,7 +12485,8 @@
 				"in": "query",
 				"schema": {
 					"type": "number",
-					"format": "float"
+					"format": "float",
+					"description": "number in grams, a range excludes profiles without a weight; the bound is loose, `45000` also returns 45359"
 				}
 			},
 			"CascadeTribesQuery": {
