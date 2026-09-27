@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -38,6 +39,7 @@ class MainActivity : TauriActivity() {
 	private var webViewRef: WebView? = null
 	private var pendingWebViewWarning: WebViewSupport.Status? = null
 	private var shownWebViewWarning = false
+	private val hoverRepair = WebViewHoverRepair(context = this, webView = { webViewRef })
 
 	override val handleBackNavigation = false
 
@@ -160,6 +162,16 @@ class MainActivity : TauriActivity() {
 	override fun onNewIntent(intent: Intent) {
 		setIntent(intent)
 		super.onNewIntent(intent)
+	}
+
+	override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+		hoverRepair.observe(event)
+		return super.dispatchGenericMotionEvent(event)
+	}
+
+	override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+		hoverRepair.observe(event)
+		return super.dispatchTouchEvent(event)
 	}
 
 	override fun onWebViewCreate(webView: WebView) {
