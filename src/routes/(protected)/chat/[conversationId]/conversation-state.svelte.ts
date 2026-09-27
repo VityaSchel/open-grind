@@ -40,6 +40,10 @@ export type ConversationProfile = Awaited<
 	ReturnType<typeof getConversation>
 >["profile"];
 
+function asSent(message: ApiResponseMessage): OptimisticMessage {
+	return { ...message, status: "sent" };
+}
+
 type MessageDelivery = {
 	tempId: string;
 	message: OutboundMessage;
@@ -283,10 +287,7 @@ export class ConversationState {
 			this.conversationId,
 		);
 		if (cached) {
-			this.messages = cached.messages.map((m) => ({
-				...m,
-				status: "sent" as const,
-			}));
+			this.messages = cached.messages.map(asSent);
 			this.profile = cached.profile;
 			this.pageKey = cached.pageKey;
 			this.lastReadTimestamp = cached.lastReadTimestamp;
@@ -303,7 +304,7 @@ export class ConversationState {
 			void this.#conversations.markRead(this.conversationId);
 			if (this.#destroyed) return;
 			this.messages = removeDuplicateMessages(
-				result.messages.map((m) => ({ ...m, status: "sent" as const })),
+				result.messages.map(asSent),
 			);
 			this.profile = result.profile;
 			this.pageKey = result.pageKey;
@@ -319,7 +320,9 @@ export class ConversationState {
 		}
 	}
 
-	async loadMore(): Promise<void> {
+	async loadMore({
+		commit = (apply) => apply(),
+	}: { commit?: (apply: () => void) => void } = {}): Promise<void> {
 		if (this.loadingMore || this.pageKey === null) return;
 		this.loadingMore = true;
 		try {
@@ -328,16 +331,16 @@ export class ConversationState {
 				pageKey: this.pageKey,
 			});
 			if (this.#destroyed) return;
-			this.messages = removeDuplicateMessages([
-				...this.messages,
-				...result.messages.map((m) => ({
-					...m,
-					status: "sent" as const,
-				})),
-			]);
-			this.pageKey = result.pageKey;
-			this.#advanceLastRead(result.lastReadTimestamp);
-			this.#syncCache();
+			commit(() => {
+				this.messages = removeDuplicateMessages([
+					...this.messages,
+					...result.messages.map(asSent),
+				]);
+				this.pageKey = result.pageKey;
+				this.loadingMore = false;
+				this.#advanceLastRead(result.lastReadTimestamp);
+				this.#syncCache();
+			});
 		} catch (error) {
 			if (this.#destroyed) return;
 			console.error(error);

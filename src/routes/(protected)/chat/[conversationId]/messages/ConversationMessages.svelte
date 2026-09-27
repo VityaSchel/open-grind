@@ -262,9 +262,11 @@
 			<div
 				class="flex min-h-overscrollable shrink-0 flex-col justify-end gap-1"
 			>
-				{#if conversationState.loadingMore}
-					<Spinner class="mt-25 shrink-0 self-center" />
-				{/if}
+				<div class="flex h-10 shrink-0 items-center justify-center">
+					{#if conversationState.loadingMore}
+						<Spinner />
+					{/if}
+				</div>
 				<ConversationPaginationSentinel {container} />
 				<MessagesList {seenMessageIds} />
 			</div>
