@@ -20,15 +20,17 @@ cd /work
 # keep the cache on the mounted filesystem and copy instead of hardlinking.
 export BUN_INSTALL_CACHE_DIR="${BUN_INSTALL_CACHE_DIR:-/work/.bun-cache}"
 bun install --frozen-lockfile --backend copyfile
-bun run tauri build --bundles deb
 
 out="/work/src-tauri/target/release"
 bin="$out/open-grind"
+rm -rf "$out/bundle/deb" "$out/bundle/appimage"
+bun run tauri build --bundles deb
 
 # tauri-bundler walks directories unsorted and stamps wall-clock mtimes into
 # both tars and the ar header, so the .deb never reproduces as built:
 # https://github.com/tauri-apps/tauri/issues/13612
 set -- "$out"/bundle/deb/*.deb
+[ -e "$1" ] || set --
 [ "$#" -eq 1 ] || { echo "FATAL: expected one .deb, found $#" >&2; exit 1; }
 bundled=$1
 work=$(mktemp -d)
