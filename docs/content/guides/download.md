@@ -42,24 +42,7 @@ Notes:
 
 - GPS is not available through the geolocation plugin on Linux
 - Without a Secret Service your sign-in is kept in a plain file under the app data directory
-
-::: info If the window stays blank, flickers, or Open Grind closes as soon as it opens
-
-This happens with some NVIDIA graphics drivers. Open Grind already sets `__NV_DISABLE_EXPLICIT_SYNC=1`, which fixes the "Error 71 (Protocol error)" crash on Wayland. If the window only flickers, try starting Open Grind with `__NV_DISABLE_EXPLICIT_SYNC=0` first.
-
-If that doesn't help, start Open Grind with GPU rendering turned off:
-
-```sh
-WEBKIT_DISABLE_DMABUF_RENDERER=1 ./open-grind-*.AppImage
-```
-
-For the deb or Arch package, run `WEBKIT_DISABLE_DMABUF_RENDERER=1 open-grind`. Blur effects are turned off in this mode, and scrolling is less smooth.
-
-To keep the setting when you open Open Grind from the apps menu, put `env` and the setting at the start of the `Exec=` line in the menu entry:
-
-- AppImage: in `~/.local/share/applications/open-grind.desktop`, keep the path that is already there, for example `Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 "/home/you/Apps/open-grind.AppImage"`
-- deb or Arch: copy `/usr/share/applications/Open Grind.desktop` to `~/.local/share/applications/`, then change the copy to `Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 open-grind`
-:::
+- If the window stays blank, flickers, closes instantly or draws parts of the app wrong, see [Rendering problems](#rendering-problems)
 
 ### AppImage (any distribution)
 
@@ -131,6 +114,26 @@ Open Grind is still in beta, so every release so far is published to the `beta` 
 As of September 1st, 2026, AUR has disabled account registration and new package publishing, so it's not possible to install Open Grind from AUR right now.
 
 The PKGBUILD for Arch Linux can be found in [ci/aur/PKGBUILD](https://git.opengrind.org/open-grind/open-grind/src/branch/main/ci/aur/PKGBUILD).
+
+### Rendering problems
+
+Window is drawn with WebKitGTK and your graphics driver. With some combinations, parts of the window draw wrong.
+
+1. Update your system. WebKitGTK 2.54 fixed several scrolling glitches.
+2. Try closing Open Grind, then launching from a terminal with one of these settings:
+   - `WEBKIT_SKIA_ENABLE_CPU_RENDERING=1` if icons, images or text look broken. Blur works.
+   - `WEBKIT_DMABUF_RENDERER_FORCE_SHM=1` if the window flickers or turns black. Blur works.
+   - `WEBKIT_DISABLE_DMABUF_RENDERER=1` if rows disappear while you scroll, or if nothing else helps. Blur is turned off and scrolling is less smooth.
+
+   ```sh
+   WEBKIT_DISABLE_DMABUF_RENDERER=1 ./open-grind-*.AppImage
+   ```
+
+For the deb or Arch package, run `WEBKIT_DISABLE_DMABUF_RENDERER=1 open-grind`.
+
+On NVIDIA, the launcher already sets `__NV_DISABLE_EXPLICIT_SYNC=1`, which fixes the "Error 71 (Protocol error)" crash on Wayland. If the window only flickers, try `__NV_DISABLE_EXPLICIT_SYNC=0` before the settings above.
+
+When you [report a rendering problem](https://git.opengrind.org/open-grind/open-grind/issues/new?template=.forgejo%2fissue_template%2fbug.yaml), include your GPU and driver version, your WebKitGTK version, whether you use Wayland or X11, and which settings you tried.
 
 ## macOS
 

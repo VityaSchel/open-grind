@@ -137,6 +137,7 @@ fi
 ```bash
 # 1. Reproduce the app locally
 git checkout v<tag>
+rm -rf src-tauri/target/release/bundle/deb src-tauri/target/release/bundle/appimage
 podman build -t open-grind-linux ci/linux
 podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
 

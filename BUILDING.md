@@ -171,7 +171,9 @@ podman build -t open-grind-linux ci/linux
 podman run --rm -v "$PWD:/work" open-grind-linux sh ci/linux/build.sh
 ```
 
-The result is `src-tauri/target/release/bundle/deb/open-grind-v<version>-linux-<arch>.deb` and `src-tauri/target/release/bundle/appimage/open-grind-v<version>-linux-<arch>.AppImage`.
+`bun run package:linux` runs both. Docker takes the same two commands with `docker` in place of `podman`.
+
+The result is `src-tauri/target/release/bundle/deb/open-grind-v<version>-linux-<arch>.deb` and `src-tauri/target/release/bundle/appimage/open-grind-v<version>-linux-<arch>.AppImage`. Each run empties both directories first, so they only ever hold the latest build.
 
 The script repacks what `tauri build` generated with `dpkg-deb` under `SOURCE_DATE_EPOCH`, because tauri-bundler writes clock mtimes and unsorted entries ([tauri#13612](https://github.com/tauri-apps/tauri/issues/13612)).
 
