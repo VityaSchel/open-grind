@@ -1,10 +1,10 @@
 <script lang="ts">
 	import "photoswipe/style.css";
 	import { format } from "date-fns";
-	import { UserIcon } from "phosphor-svelte";
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
+	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
 	import { profileMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
@@ -181,9 +181,7 @@
 		</div>
 	{:else}
 		<div class="absolute size-full bg-neutral-700">
-			<UserIcon
-				weight="fill"
-				color="var(--color-stone-400)"
+			<UserSilhouette
 				class="absolute top-1/2 left-1/2 size-3/4 -translate-1/2"
 			/>
 		</div>

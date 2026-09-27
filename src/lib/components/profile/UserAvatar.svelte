@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from "$env/dynamic/public";
-	import { UserIcon } from "phosphor-svelte";
 
+	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { profileMediaUrl } from "$lib/util/media";
 
@@ -34,9 +34,7 @@
 		/>
 	{:else}
 		<div class="flex size-full items-center justify-center bg-neutral-700">
-			<UserIcon
-				weight="fill"
-				color="var(--color-stone-400)"
+			<UserSilhouette
 				class={[
 					"m-auto",
 					{
