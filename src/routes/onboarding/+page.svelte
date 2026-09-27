@@ -73,17 +73,21 @@
 		class="sticky bottom-0 flex shrink-0 flex-col items-center gap-2 bg-background pt-2 pb-[calc(2rem+var(--safe-area-bottom))]"
 		{@attach bottomChrome}
 	>
-		{#if updatesSelfManaged()}
-			<Label class="flex items-center rounded-xl p-2 pb-3">
-				<Checkbox bind:checked={checkAutomatically} />
-				Check updates automatically
-			</Label>
-		{/if}
-		{#if offerAppsMenu()}
-			<Label class="flex items-center rounded-xl p-2 pb-3">
-				<Checkbox bind:checked={addToAppsMenu} />
-				Add Open Grind to your apps menu
-			</Label>
+		{#if updatesSelfManaged() || offerAppsMenu()}
+			<div class="flex flex-col items-start pb-1">
+				{#if updatesSelfManaged()}
+					<Label class="flex items-center rounded-xl p-2">
+						<Checkbox bind:checked={checkAutomatically} />
+						Check updates automatically
+					</Label>
+				{/if}
+				{#if offerAppsMenu()}
+					<Label class="flex items-center rounded-xl p-2">
+						<Checkbox bind:checked={addToAppsMenu} />
+						Add Open Grind to your apps menu
+					</Label>
+				{/if}
+			</div>
 		{/if}
 		<Button
 			size="lg"
