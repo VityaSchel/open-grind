@@ -1,4 +1,4 @@
-import type { CDPSession, Page } from "@playwright/test";
+import type { CDPSession, Locator, Page } from "@playwright/test";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
@@ -268,6 +268,26 @@ export class TrustedTouch {
 		}
 		if (release) await this.end();
 	}
+}
+
+export async function hoverPen({
+	page,
+	target,
+}: {
+	page: Page;
+	target: Locator;
+}): Promise<void> {
+	const box = await target.boundingBox();
+	if (box === null) throw new Error("The pen target has no box");
+	const pen = await page.context().newCDPSession(page);
+	await pen.send("Input.dispatchMouseEvent", {
+		type: "mouseMoved",
+		x: box.x + box.width / 2,
+		y: box.y + box.height / 2,
+		pointerType: "pen",
+		buttons: 0,
+	});
+	await pen.detach();
 }
 
 // One continuous gesture stream with a single lift, the shape a real trackpad

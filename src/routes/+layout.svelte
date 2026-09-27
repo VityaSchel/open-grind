@@ -25,6 +25,7 @@
 	} from "$lib/platform/android-native-bridge";
 	import { blockNativeMenu } from "$lib/platform/block-native-menu";
 	import { blockZoom } from "$lib/platform/block-zoom";
+	import { trackHoverPointer } from "$lib/platform/hover-pointer";
 	import { isAndroidPlatform } from "$lib/platform/os";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
 	import { reconcileNotifications } from "$lib/push/notifications.svelte";
@@ -59,6 +60,7 @@
 		applyBackGestureHandler();
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
+		const releaseHoverPointer = trackHoverPointer();
 		if (isAndroidPlatform()) {
 			void registerAndroidBackButtonListener().catch((error) => {
 				console.error("Failed to register back button listener", error);
@@ -73,6 +75,7 @@
 		return () => {
 			releaseZoomBlock();
 			releaseNativeMenuBlock();
+			releaseHoverPointer();
 		};
 	});
 

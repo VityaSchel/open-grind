@@ -15,7 +15,7 @@
 {#if entry.texts.length}
 	<details class="group/license min-w-0" bind:open>
 		<summary
-			class="flex w-fit cursor-pointer list-none items-center gap-1 rounded-md py-0.5 pe-1 text-2xs text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/30 can-hover:hover:text-foreground"
+			class="flex w-fit cursor-pointer list-none items-center gap-1 rounded-md py-0.5 pe-1 text-2xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/30"
 		>
 			<CaretRightIcon
 				class="size-3 shrink-0 transition-transform group-open/license:rotate-90 motion-reduce:transition-none"

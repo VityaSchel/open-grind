@@ -5,7 +5,12 @@ import { openAlbum, TWO_ROW_ALBUM } from "./support/albums";
 const NON_TEXT_CONTRAST = 3;
 
 function iconContrastOverPhotos(page: Page, name: string) {
-	return page.getByRole("button", { name }).evaluate((button) => {
+	return page.getByRole("button", { name }).evaluate(async (button) => {
+		await Promise.all(
+			button
+				.getAnimations({ subtree: true })
+				.map((animation) => animation.finished),
+		);
 		const context = document
 			.createElement("canvas")
 			.getContext("2d", { willReadFrequently: true });
@@ -67,7 +72,7 @@ test("remove and undo stay legible over light, gray and dark photos", async ({
 
 	await page
 		.getByRole("button", { name: "Remove album photo in slot 1" })
-		.click();
+		.tap();
 	for (const ratio of await iconContrastOverPhotos(
 		page,
 		"Keep album photo in slot 1",

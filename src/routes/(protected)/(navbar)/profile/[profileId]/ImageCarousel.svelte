@@ -200,7 +200,10 @@
 			display: none;
 		}
 		.pswp--profile-carousel .pswp__button--close {
-			@apply mr-3 size-11 self-center rounded-full bg-black/55 opacity-100 backdrop-filter-(--bd-veil) focus:bg-black/55 active:bg-black/55 can-hover:hover:bg-black/75;
+			@apply mr-3 size-11 self-center rounded-full bg-black/55 opacity-100 backdrop-filter-(--bd-veil) focus:bg-black/55 active:bg-black/55;
+			@variant hover {
+				@apply bg-black/75;
+			}
 		}
 		.pswp--profile-carousel .pswp__button--close .pswp__icn {
 			@apply inset-0 m-auto;
