@@ -6,11 +6,14 @@ use super::super::response::{refused, Freshness};
 use super::super::target::host_of;
 use super::adapter::WebViewStream;
 
+pub const TELLS_THE_LENGTH: bool = cfg!(target_vendor = "apple");
+
 pub struct Streamed {
 	pub id: u64,
 	pub status: u16,
 	pub content_type: Option<String>,
 	pub content_range: Option<String>,
+	pub length: Option<u64>,
 }
 
 pub fn streamed(response: Streamed) -> Response<Vec<u8>> {
@@ -29,6 +32,9 @@ pub fn streamed(response: Streamed) -> Response<Vec<u8>> {
 	if let Some(content_range) = response.content_range {
 		builder = builder.header(header::CONTENT_RANGE, content_range);
 	}
+	if let Some(length) = response.length.filter(|_| TELLS_THE_LENGTH) {
+		builder = builder.header(header::CONTENT_LENGTH, length);
+	}
 	builder
 		.body(Vec::new())
 		.unwrap_or_else(|_| refused(StatusCode::INTERNAL_SERVER_ERROR))
@@ -40,6 +46,7 @@ pub fn refuse(status: u16, at: u64) -> Response<Vec<u8>> {
 		status,
 		content_type: None,
 		content_range: None,
+		length: Some(0),
 	})
 }
 
@@ -49,6 +56,7 @@ pub fn poison() -> Response<Vec<u8>> {
 		status: 200,
 		content_type: None,
 		content_range: None,
+		length: None,
 	})
 }
 

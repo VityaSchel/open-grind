@@ -57,7 +57,6 @@ pub(super) async fn loaded_from(id: u64, at: u64) -> (u64, u64, Vec<u8>) {
 			let skipped = stream.skip(at)?;
 			read_to_end(stream).map(|body| (advertised, skipped, body))
 		})
-		.expect("registered")
 	})
 	.await
 	.unwrap()
@@ -86,7 +85,10 @@ async fn a_cached_seek_streams_the_tail_through_the_registry() {
 		header_str(&response, header::CONTENT_TYPE),
 		Some("image/webp")
 	);
-	assert_eq!(header_str(&response, header::CONTENT_LENGTH), None);
+	assert_eq!(
+		header_str(&response, header::CONTENT_LENGTH),
+		super::reply::TELLS_THE_LENGTH.then_some("6")
+	);
 	let id = stream_id(&response);
 	assert_eq!(loaded_from(id, 4).await, (10, 4, b"567890".to_vec()));
 	assert!(unregister_stream(id));

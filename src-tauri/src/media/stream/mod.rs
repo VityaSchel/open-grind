@@ -26,9 +26,11 @@ use super::requested::Requested;
 use super::upstream::refusal_detail;
 use super::MediaProxy;
 use adapter::{WebViewStream, CHANNEL_SLOTS};
-use answer::{answer, Answer, Head};
-use open::open;
-use pump::{run, tee_capacity, Chunks, Outcome, Pump, Source, IDLE};
+pub use answer::{answer, Answer, Head};
+pub use fault::Fault;
+pub use open::open;
+use pump::{run, tee_capacity, Outcome, Pump, IDLE};
+pub use pump::{Chunks, Source};
 use reply::{deny, poison, refuse, streamed, unreachable, Streamed};
 
 const HEAD_DEADLINE: Duration = Duration::from_secs(25);
@@ -119,6 +121,8 @@ async fn respond<R: Runtime>(
 				status,
 				content_type: opening.content_type,
 				content_range,
+				length: (placement.length > 0)
+					.then(|| placement.length - requested.start()),
 			})
 		}
 		Answer::Refuse { status, at } => refuse(status, at),

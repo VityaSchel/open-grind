@@ -3750,6 +3750,7 @@ dependencies = [
  "windows-core 0.61.2",
  "windows-native-keyring-store",
  "wreq",
+ "wry",
 ]
 
 [[package]]

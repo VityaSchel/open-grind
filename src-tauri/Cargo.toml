@@ -32,7 +32,7 @@ cc = "1"
 
 [dev-dependencies]
 tauri = { version = "2", features = ["test"] }
-tokio = { version = "1", features = ["net", "io-util", "rt-multi-thread"] }
+tokio = { version = "1", features = ["net", "io-util", "rt-multi-thread", "test-util"] }
 
 [dependencies]
 tauri = { version = "2", features = ["macos-private-api"] }
@@ -70,6 +70,9 @@ objc2 = "0.6"
 block2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSHapticFeedback", "block2", "objc2-core-foundation"] }
 rfd = "0.16"
+
+[target.'cfg(target_vendor = "apple")'.dependencies]
+wry = { version = "0.55", default-features = false }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"] }

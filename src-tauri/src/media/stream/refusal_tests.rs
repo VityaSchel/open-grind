@@ -43,8 +43,8 @@ fn a_stream_that_never_opens_past_zero_answers_with_a_poisoned_stream() {
 
 	assert_eq!(response.status(), StatusCode::OK);
 	let id = stream_id(&response);
-	assert!(with_stream(id, |stream| stream.available())
-		.expect("registered")
-		.is_err());
+	let error = with_stream(id, |stream| stream.available())
+		.expect_err("a poisoned stream refuses to size itself");
+	assert_ne!(error.kind(), std::io::ErrorKind::NotFound);
 	unregister_stream(id);
 }

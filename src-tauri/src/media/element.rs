@@ -88,8 +88,7 @@ fn deliver(response: &Response<Vec<u8>>, offset: u64, mut socket: UnixStream) {
 		.get(STREAM_HEADER)
 		.and_then(|value| value.to_str().ok()?.parse::<u64>().ok());
 	let size = stream
-		.and_then(|id| with_stream(id, |stream| stream.available().ok()))
-		.flatten()
+		.and_then(|id| with_stream(id, |stream| stream.available()).ok())
 		.unwrap_or(0);
 	let mut header = [0; 16];
 	header[..8].copy_from_slice(&u64::from(status).to_le_bytes());
@@ -108,8 +107,8 @@ fn skip_to(id: u64, offset: u64) -> bool {
 	let mut skipped = 0;
 	while skipped < offset {
 		match with_stream(id, |stream| stream.skip(offset - skipped)) {
-			Some(Ok(0)) | Some(Err(_)) | None => return false,
-			Some(Ok(n)) => skipped += n,
+			Ok(0) | Err(_) => return false,
+			Ok(n) => skipped += n,
 		}
 	}
 	true
@@ -118,8 +117,8 @@ fn skip_to(id: u64, offset: u64) -> bool {
 fn pipe(id: u64, socket: &mut UnixStream) {
 	let mut piece = vec![0; PIECE];
 	loop {
-		let read = with_stream(id, |stream| stream.read(&mut piece));
-		let Some(Ok(length)) = read else {
+		let Ok(length) = with_stream(id, |stream| stream.read(&mut piece))
+		else {
 			return;
 		};
 		if length == 0 || socket.write_all(&piece[..length]).is_err() {

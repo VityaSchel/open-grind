@@ -7,6 +7,8 @@ mod range;
 mod registry;
 mod requested;
 mod response;
+mod session;
+mod sessioned;
 mod stream;
 mod target;
 mod upstream;
@@ -25,7 +27,9 @@ use buffered::serve_buffered;
 use cache::{CachedMedia, MediaCache};
 use flight::Flights;
 use registry::unregister_stream;
+use requested::Requested;
 use response::refused;
+use sessioned::{answers_whole, serve_sessioned, Sessions};
 use stream::serve_streamed;
 use target::{decode_target, Target};
 use windowed::Windowed;
@@ -40,23 +44,39 @@ const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
 const STREAMING_PLATFORM: bool = cfg!(target_os = "android");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Host {
+	AndroidWebView,
+	WkWebView,
+	WholeBodies,
+}
+
+const HOST: Host = if cfg!(target_os = "android") {
+	Host::AndroidWebView
+} else if cfg!(target_os = "macos") {
+	Host::WkWebView
+} else {
+	Host::WholeBodies
+};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Delivery {
 	Buffered,
 	Streamed,
+	Sessioned,
 }
 
 impl Delivery {
-	fn pick(
-		streaming_platform: bool,
-		fetcher: MediaFetcher,
-		range: Option<&str>,
-	) -> Self {
-		let plays_or_seeks =
-			fetcher == MediaFetcher::MediaPlayer || range.is_some();
-		if streaming_platform && plays_or_seeks {
-			Self::Streamed
-		} else {
-			Self::Buffered
+	fn pick(host: Host, fetcher: MediaFetcher, range: Option<&str>) -> Self {
+		let video = fetcher == MediaFetcher::MediaPlayer;
+		match host {
+			Host::AndroidWebView if video || range.is_some() => Self::Streamed,
+			Host::WkWebView
+				if video && !answers_whole(Requested::parse(range)) =>
+			{
+				Self::Streamed
+			}
+			Host::WkWebView | Host::WholeBodies if video => Self::Sessioned,
+			_ => Self::Buffered,
 		}
 	}
 }
@@ -67,6 +87,7 @@ pub struct MediaProxy {
 	flights: Flights,
 	fetches: Arc<Semaphore>,
 	pumps: Mutex<HashMap<u64, JoinHandle<()>>>,
+	sessions: Sessions,
 }
 
 impl Default for MediaProxy {
@@ -77,6 +98,7 @@ impl Default for MediaProxy {
 			flights: Flights::default(),
 			fetches: Arc::new(Semaphore::new(OFFICIAL_APP_REQUESTS_PER_HOST)),
 			pumps: Mutex::default(),
+			sessions: Sessions::default(),
 		}
 	}
 }
@@ -92,6 +114,7 @@ impl MediaProxy {
 			pump.abort();
 			unregister_stream(id);
 		}
+		self.sessions.clear();
 		self.cache.lock().await.clear();
 		self.windowed.lock().await.clear();
 		self.flights.clear().await;
@@ -133,7 +156,7 @@ async fn serve<R: Runtime>(
 		return refused(StatusCode::BAD_REQUEST);
 	};
 	let range = range.as_deref();
-	let delivery = Delivery::pick(STREAMING_PLATFORM, fetcher, range);
+	let delivery = Delivery::pick(HOST, fetcher, range);
 	serve_by(delivery, app, &url, fetcher, range, is_head).await
 }
 
@@ -148,6 +171,9 @@ async fn serve_by<R: Runtime>(
 	match delivery {
 		Delivery::Streamed if !is_head => {
 			serve_streamed(app, url, fetcher, range).await
+		}
+		Delivery::Sessioned => {
+			serve_sessioned(app, url, fetcher, range, is_head).await
 		}
 		Delivery::Streamed | Delivery::Buffered => {
 			serve_buffered(app, url, fetcher, range, is_head).await
@@ -354,20 +380,47 @@ mod tests {
 		assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 	}
 
-	#[test]
-	fn only_a_video_or_a_seek_streams_and_only_on_a_streaming_platform() {
-		let video = grindr::MediaFetcher::MediaPlayer;
-		let image = grindr::MediaFetcher::ImageLoader;
+	const VIDEO: MediaFetcher = MediaFetcher::MediaPlayer;
+	const IMAGE: MediaFetcher = MediaFetcher::ImageLoader;
 
-		assert_eq!(Delivery::pick(true, video, None), Delivery::Streamed);
+	#[test]
+	fn android_streams_every_video_and_every_seek() {
+		let host = Host::AndroidWebView;
+
+		assert_eq!(Delivery::pick(host, VIDEO, None), Delivery::Streamed);
 		assert_eq!(
-			Delivery::pick(true, image, Some("bytes=0-")),
+			Delivery::pick(host, IMAGE, Some("bytes=0-")),
 			Delivery::Streamed
 		);
-		assert_eq!(Delivery::pick(true, image, None), Delivery::Buffered);
+		assert_eq!(Delivery::pick(host, IMAGE, None), Delivery::Buffered);
+	}
+
+	#[test]
+	fn a_wkwebview_video_read_small_enough_to_answer_whole_uses_a_session() {
+		let host = Host::WkWebView;
+
 		assert_eq!(
-			Delivery::pick(false, video, Some("bytes=0-")),
+			Delivery::pick(host, VIDEO, Some("bytes=65536-131071")),
+			Delivery::Sessioned
+		);
+		assert_eq!(
+			Delivery::pick(host, VIDEO, Some("bytes=0-")),
+			Delivery::Streamed
+		);
+		assert_eq!(Delivery::pick(host, VIDEO, None), Delivery::Streamed);
+		assert_eq!(
+			Delivery::pick(host, IMAGE, Some("bytes=0-")),
 			Delivery::Buffered
 		);
+	}
+
+	#[test]
+	fn a_webview_taking_whole_bodies_reads_every_video_through_a_session() {
+		let host = Host::WholeBodies;
+
+		for range in [None, Some("bytes=0-"), Some("bytes=10-20")] {
+			assert_eq!(Delivery::pick(host, VIDEO, range), Delivery::Sessioned);
+		}
+		assert_eq!(Delivery::pick(host, IMAGE, None), Delivery::Buffered);
 	}
 }
