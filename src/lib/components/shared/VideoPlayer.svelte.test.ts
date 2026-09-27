@@ -251,4 +251,28 @@ describe("VideoPlayer", () => {
 		expect(ready).toBe(1);
 		expect(failures).toHaveLength(0);
 	});
+
+	it("keeps one seek in flight and applies only the newest queued target", async () => {
+		const { container, video } = player();
+		let seeking = false;
+		Object.defineProperty(video, "seeking", { get: () => seeking });
+		Object.defineProperty(video, "duration", {
+			value: 60,
+			configurable: true,
+		});
+		await fireEvent(video, new Event("durationchange"));
+		const slider = container.querySelector<HTMLElement>('[role="slider"]')!;
+
+		await fireEvent.keyDown(slider, { key: "End" });
+		expect(video.currentTime).toBe(60);
+		seeking = true;
+		await fireEvent.keyDown(slider, { key: "Home" });
+		await fireEvent.keyDown(slider, { key: "ArrowRight" });
+		expect(video.currentTime).toBe(60);
+		expect(slider.getAttribute("aria-valuenow")).toBe("5");
+
+		seeking = false;
+		await fireEvent(video, new Event("seeked"));
+		expect(video.currentTime).toBe(5);
+	});
 });
