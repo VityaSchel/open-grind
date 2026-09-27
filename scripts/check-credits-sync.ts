@@ -96,12 +96,12 @@ if (auditedTargets.join() !== deniedTargets.join()) {
 	);
 }
 
-const pinnedInWorkflow = /CARGO_ABOUT_VERSION:\s*"([^"]+)"/.exec(
-	read(".forgejo/workflows/credits.yml"),
+const pinnedInImage = /^CARGO_ABOUT_VERSION=(\S+)$/m.exec(
+	read("ci/check-image.sh"),
 )?.[1];
-if (pinnedInWorkflow !== requiredCargoAbout) {
+if (pinnedInImage !== requiredCargoAbout) {
 	report(
-		`the collector needs cargo-about ${requiredCargoAbout} but .forgejo/workflows/credits.yml installs ${pinnedInWorkflow ?? "nothing"}`,
+		`the collector needs cargo-about ${requiredCargoAbout} but ci/check-image.sh installs ${pinnedInImage ?? "nothing"}`,
 	);
 }
 
