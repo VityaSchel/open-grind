@@ -44,6 +44,45 @@ test("the bottom navbar fits a 1080px physical-width screen", async ({
 	}
 });
 
+test.describe("in a 308 × 404 pop-up window", () => {
+	test.use({ viewport: { width: 308, height: 404 } });
+
+	test("the bottom navbar scrolls to both of its ends", async ({ page }) => {
+		await installTauriShim(page);
+		await page.goto("/right-now");
+
+		const links = page.getByRole("navigation").locator(".links");
+		await expect(links).toBeVisible();
+
+		const ends = await links.evaluate((linksElement) => {
+			const content = linksElement.parentElement;
+			const avatar = content?.querySelector('a[aria-label="Me"]');
+			if (!content || !avatar)
+				throw new Error("Navbar structure not found");
+
+			content.scrollLeft = 0;
+			const atStart = {
+				content: content.getBoundingClientRect().left,
+				links: linksElement.getBoundingClientRect().left,
+			};
+			content.scrollLeft = content.scrollWidth;
+			const atEnd = {
+				content: content.getBoundingClientRect().right,
+				avatar: avatar.getBoundingClientRect().right,
+			};
+			return {
+				overflow: content.scrollWidth - content.clientWidth,
+				atStart,
+				atEnd,
+			};
+		});
+
+		expect(ends.overflow).toBeGreaterThan(0);
+		expect(ends.atStart.links).toBeGreaterThanOrEqual(ends.atStart.content);
+		expect(ends.atEnd.avatar).toBeLessThanOrEqual(ends.atEnd.content);
+	});
+});
+
 test.describe("on a 412 × 920 phone with 64 px system bars", () => {
 	test.use({ viewport: { width: 412, height: 920 } });
 
