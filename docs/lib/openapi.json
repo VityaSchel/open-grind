@@ -4194,7 +4194,7 @@
 					}
 				},
 				"summary": "Get Cascade",
-				"description": "Fetching the cascade also marks our profile online by always instantly setting `onlineUntil` to current time + exactly 600 s.",
+				"description": "Fetching the cascade also marks our profile online by always instantly setting `onlineUntil` to current time + exactly 600 s. Every cascade except a `favorites` one also moves our profile to `nearbyGeoHash`, whatever its filters or page.",
 				"x-query-groups": [
 					"CascadeQuery"
 				]
@@ -12566,7 +12566,8 @@
 				"name": "favorites",
 				"in": "query",
 				"schema": {
-					"type": "boolean"
+					"type": "boolean",
+					"description": "`distanceMeters` is measured from our stored position (set by `PUT /v4/location` or any cascade without `favorites`), not from `nearbyGeoHash`"
 				}
 			},
 			"CascadeShowSponsoredProfilesQuery": {
