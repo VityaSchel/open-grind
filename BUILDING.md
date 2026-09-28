@@ -72,7 +72,7 @@ Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolcha
 > First time you run `nix develop` or `nix run` in Open Grind's repository, Nix will download and setup about 3 GB environment, which might take some time, depending on your internet connection speed.
 
 > [!NOTE]
-> If you use [direnv](https://direnv.net/), the bundled [.envrc](./.envrc) activates the dev shell automatically when you `cd` into the repository. `nix run .#build-*` started from a dev shell drops its environment and keeps only `HOME`, `USER`, `LOGNAME`, `TERM`, locale, proxy and CA certificate variables, `CARGO_HOME`, `XWIN_CACHE_DIR`, `NODE_OPTIONS`, `OPEN_GRIND_*` and `MACOS_*`.
+> If you use [direnv](https://direnv.net/), the bundled [.envrc](./.envrc) activates the dev shell automatically when you `cd` into the repository. `nix run .#build-*` started from a dev shell drops its environment and keeps only `HOME`, `USER`, `LOGNAME`, `TERM`, locale, proxy and CA certificate variables, `CARGO_HOME`, `XWIN_CACHE_DIR`, `NODE_OPTIONS`, `OPEN_GRIND_*`, `MACOS_*` and the `PATH` entries outside the Nix store.
 
 ### Build apk manually (advanced)
 
@@ -235,7 +235,7 @@ A macOS build needs a Mac. Nix pins the toolchain and remaps the build paths the
 nix run .#build-macos
 ```
 
-This builds a universal app, signs it, and writes the release zip to `src-tauri/target/release/artifacts/`. The signature is not reproducible without the key, so [reproducing a release](./REPRODUCIBILITY.md#macos) strips it from both sides. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
+This builds a universal app, signs it ad-hoc unless `MACOS_SIGN_IDENTITY` is set, and writes the release zip to `src-tauri/target/release/artifacts/`. The ad-hoc zip [reproduces](./REPRODUCIBILITY.md#macos) byte for byte. The build always enables the `keychain` feature, ad-hoc builds therefore cannot read back credentials an earlier build wrote. A release build refuses to run from anywhere but `/Applications` or `~/Applications`. Debug builds do not reproduce; the release profile is the default, `nix run .#build-macos -- --debug` to opt out.
 
 ### Build for the App Store
 
