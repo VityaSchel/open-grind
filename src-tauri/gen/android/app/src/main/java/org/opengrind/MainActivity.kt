@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -122,7 +123,7 @@ class MainActivity : TauriActivity() {
 			isAppearanceLightNavigationBars = false
 		}
 		
-		ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
+		ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(android.R.id.content)) { view, insets ->
 			val bars = insets.getInsets(
 				WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
 			)
