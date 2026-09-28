@@ -18,6 +18,7 @@ import {
 	getConversationMessages,
 	getSingleMessage,
 	reactToMessage,
+	refreshMessagesById,
 	sendMessage,
 	unsendMessage,
 } from "$lib/api/messaging/messages";
@@ -32,6 +33,7 @@ function apiMessage(overrides = {}) {
 		timestamp: 1_710_000_000_000,
 		unsent: false,
 		reactions: [],
+		dynamic: false,
 		...overrides,
 	};
 }
@@ -168,6 +170,23 @@ describe("message API wrappers", () => {
 		expect(fetchRestMock).toHaveBeenCalledWith(
 			"/v4/chat/conversation/conversation-1/message/msg-2",
 			{ method: "GET" },
+		);
+	});
+
+	it("refreshes messages by id in one request", async () => {
+		const data = { messages: [apiMessage({ messageId: "msg-2" })] };
+		fetchRestMock.mockResolvedValue(response({ data }));
+
+		await expect(
+			refreshMessagesById({
+				conversationId: "conversation-1",
+				messageIds: ["msg-2", "msg-3"],
+			}),
+		).resolves.toEqual(data);
+
+		expect(fetchRestMock).toHaveBeenCalledWith(
+			"/v4/chat/conversation/conversation-1/message-by-id",
+			{ method: "POST", body: { messageIds: ["msg-2", "msg-3"] } },
 		);
 	});
 

@@ -36,6 +36,7 @@ import {
 	demoDeleteConversation,
 	demoDeleteDrawerMedia,
 	demoDrawerMedia,
+	demoMessagesById,
 	demoSentMessage,
 	demoSetConversationMuted,
 	demoSetConversationPinned,
@@ -258,6 +259,15 @@ export function demoRoute({
 		segments.length === 6
 	) {
 		return ok(demoSingleMessage({ conversationId, messageId }));
+	}
+	if (
+		method === "POST" &&
+		segments[0] === "v4" &&
+		segments[2] === "conversation" &&
+		segments[4] === "message-by-id"
+	) {
+		const { messageIds = [] } = body as { messageIds?: string[] };
+		return ok(demoMessagesById({ conversationId, messageIds }));
 	}
 	if (method === "GET" && rawPath === "/v1/albums") {
 		return ok(demoMyAlbums());

@@ -18,6 +18,7 @@ describe("previewFromMessage", () => {
 				timestamp: 1_710_000_000_000,
 				unsent: false,
 				reactions: [],
+				dynamic: false,
 			}),
 		).toEqual({
 			type: "Text",
@@ -48,6 +49,7 @@ describe("previewFromMessage", () => {
 				timestamp: 1_710_000_000_000,
 				unsent: false,
 				reactions: [],
+				dynamic: false,
 			}),
 		).toEqual({ type: "Album", text: null, albumId: 7, imageHash: null });
 	});
@@ -75,6 +77,7 @@ describe("previewFromMessage", () => {
 				timestamp: 1_710_000_000_000,
 				unsent: false,
 				reactions: [],
+				dynamic: false,
 			});
 			expect(preview).toEqual({
 				type,
@@ -102,6 +105,7 @@ describe("previewFromMessage", () => {
 			timestamp: 1_710_000_000_000,
 			unsent: false,
 			reactions: [],
+			dynamic: false,
 		});
 
 		expect(preview).toEqual({
@@ -131,6 +135,7 @@ describe("previewFromMessage", () => {
 			timestamp: 1_710_000_000_000,
 			unsent: false,
 			reactions: [],
+			dynamic: false,
 		});
 
 		expect(previewLabel(preview)).toBe("Expiring video");

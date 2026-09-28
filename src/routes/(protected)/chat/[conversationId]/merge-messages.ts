@@ -1,7 +1,8 @@
 import { parseSignedUrl, unsignedUrl } from "$lib/util/signed-url";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
-const SIGNATURE_RENEWAL_AGE_MS = 10 * 60 * 1000;
+const RECONCILE_RENEWAL_AGE_MS = 10 * 60 * 1000;
+const REFRESH_RENEWAL_AGE_MS = 1000;
 
 export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
@@ -48,31 +49,32 @@ function earliestExpiry(body: unknown): number {
 	);
 }
 
+type Renewal = { renewalAgeMs: number };
+
 function signatureIsStale({
 	server,
 	local,
-}: {
-	server: unknown;
-	local: unknown;
-}): boolean {
-	return (
-		earliestExpiry(server) - earliestExpiry(local) >=
-		SIGNATURE_RENEWAL_AGE_MS
-	);
+	renewalAgeMs,
+}: { server: unknown; local: unknown } & Renewal): boolean {
+	return earliestExpiry(server) - earliestExpiry(local) >= renewalAgeMs;
 }
+
+type ServerAndLocal = { server: ApiResponseMessage; local: OptimisticMessage };
 
 function sameBody({
 	server,
 	local,
-}: {
-	server: ApiResponseMessage;
-	local: OptimisticMessage;
-}): boolean {
+	renewalAgeMs,
+}: ServerAndLocal & Renewal): boolean {
 	if (server.type !== local.type) return false;
 	if (JSON.stringify(server.body) === JSON.stringify(local.body)) return true;
 	return (
 		withoutSignatures(server.body) === withoutSignatures(local.body) &&
-		!signatureIsStale({ server: server.body, local: local.body })
+		!signatureIsStale({
+			server: server.body,
+			local: local.body,
+			renewalAgeMs,
+		})
 	);
 }
 
@@ -82,8 +84,60 @@ function sameMetadata(
 ): boolean {
 	return (
 		server.unsent === local.unsent &&
+		server.dynamic === local.dynamic &&
 		JSON.stringify(server.reactions) === JSON.stringify(local.reactions)
 	);
+}
+
+function mergeServerVersion({
+	server,
+	local,
+	renewalAgeMs,
+}: ServerAndLocal & Renewal): { message: OptimisticMessage; updated: boolean } {
+	const keepsLocalBody = sameBody({ server, local, renewalAgeMs });
+	return {
+		message: {
+			...server,
+			body: keepsLocalBody ? local.body : server.body,
+			status: "sent",
+		} as OptimisticMessage,
+		updated: !keepsLocalBody || !sameMetadata(server, local),
+	};
+}
+
+export function patchMessages({
+	local,
+	server,
+}: {
+	local: OptimisticMessage[];
+	server: ApiResponseMessage[];
+}): { messages: OptimisticMessage[]; changed: boolean } {
+	const serverById = new Map(server.map((m) => [m.messageId, m] as const));
+	let changed = false;
+	const messages = local.map((message) => {
+		const serverVersion = serverById.get(message.messageId);
+		if (message.status !== "sent" || serverVersion === undefined)
+			return message;
+		const merge = mergeServerVersion({
+			server: serverVersion,
+			local: message,
+			renewalAgeMs: REFRESH_RENEWAL_AGE_MS,
+		});
+		if (merge.updated) changed = true;
+		return merge.message;
+	});
+	return { messages: removeDuplicateMessages(messages), changed };
+}
+
+export function sentMessages(
+	messages: OptimisticMessage[],
+): ApiResponseMessage[] {
+	return messages
+		.filter((m) => m.status === "sent")
+		.map(({ status: _status, ...rest }) => {
+			void _status;
+			return rest;
+		});
 }
 
 export function mergeServerMessages({
@@ -114,17 +168,13 @@ export function mergeServerMessages({
 		seenLocalIds.add(message.messageId);
 		const serverVersion = serverById.get(message.messageId);
 		if (serverVersion) {
-			const keepsLocalBody = sameBody({
+			const merge = mergeServerVersion({
 				server: serverVersion,
 				local: message,
+				renewalAgeMs: RECONCILE_RENEWAL_AGE_MS,
 			});
-			merged.push({
-				...serverVersion,
-				body: keepsLocalBody ? message.body : serverVersion.body,
-				status: "sent",
-			} as OptimisticMessage);
-			if (!keepsLocalBody || !sameMetadata(serverVersion, message))
-				updated++;
+			merged.push(merge.message);
+			if (merge.updated) updated++;
 		} else if (!serverPageIsEmpty && message.timestamp < oldestServerTs) {
 			merged.push(message);
 		} else {

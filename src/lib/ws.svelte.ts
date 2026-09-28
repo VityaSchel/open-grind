@@ -28,6 +28,21 @@ export const chatV1MessageSentEventSchema = notificationEventSchema.safeExtend({
 	payload: apiResponseMessageSchema,
 });
 
+export const chatV1MessageSentKindEventSchema =
+	notificationEventSchema.safeExtend({
+		type: z.literal("chat.v1.message_sent"),
+		payload: z.object({ conversationId: z.string(), type: z.string() }),
+	});
+
+export const chatV1RefreshDynamicEventSchema =
+	notificationEventSchema.safeExtend({
+		type: z.literal("chat.v1.refresh_dynamic"),
+		payload: z.object({
+			conversationId: z.string(),
+			messageType: z.string(),
+		}),
+	});
+
 export const chatV1ConversationDeleteEventSchema =
 	notificationEventSchema.safeExtend({
 		type: z.literal("chat.v1.conversation.delete"),
@@ -288,3 +303,11 @@ class WsState {
 }
 
 export const ws = new WsState();
+
+export function stopListening(listeners: Promise<() => void>[]): void {
+	for (const listener of listeners) {
+		listener
+			.then((unlisten) => unlisten())
+			.catch((error) => console.error(error));
+	}
+}

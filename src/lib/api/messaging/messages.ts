@@ -73,6 +73,23 @@ export async function getSingleMessage({
 	return message;
 }
 
+export async function refreshMessagesById({
+	conversationId,
+	messageIds,
+}: {
+	conversationId: string;
+	messageIds: string[];
+}) {
+	return await fetchRest(
+		`/v4/chat/conversation/${conversationId}/message-by-id`,
+		{ method: "POST", body: { messageIds } },
+	).then((res) =>
+		res.jsonParsed(
+			z.object({ messages: z.array(apiResponseMessageSchema) }),
+		),
+	);
+}
+
 export async function sendMessage({
 	toUserId,
 	message,

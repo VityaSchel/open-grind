@@ -207,6 +207,33 @@ describe("demo route data matches the real schemas", () => {
 		expect(expiringImages).toBeGreaterThan(0);
 	});
 
+	it("refreshes the requested messages of a demo thread", () => {
+		const inbox = route("/v4/inbox?page=1", "POST") as {
+			entries: { data: { conversationId: string } }[];
+		};
+		const id = inbox.entries[0]!.data.conversationId;
+		const thread = z
+			.array(apiResponseMessageSchema)
+			.parse(
+				(
+					route(
+						`/v5/chat/conversation/${id}/message?profile=true`,
+					) as { messages: unknown[] }
+				).messages,
+			);
+		const wanted = thread.slice(0, 2).map((m) => m.messageId);
+
+		const refreshed = z
+			.object({ messages: z.array(apiResponseMessageSchema) })
+			.parse(
+				route(`/v4/chat/conversation/${id}/message-by-id`, "POST", {
+					messageIds: [...wanted, "missing"],
+				}),
+			);
+
+		expect(refreshed.messages.map((m) => m.messageId)).toEqual(wanted);
+	});
+
 	it("paginated message requests are empty", () => {
 		const body = route(
 			"/v5/chat/conversation/100000:100001/message?profile=true&pageKey=x",

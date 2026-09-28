@@ -351,10 +351,14 @@ describe("ConversationState send timestamp", () => {
 
 		state.send([outbound("Text", { text: "a" })]);
 		const optimisticTimestamp = state.messages[0]!.timestamp;
-		emitMessageSent(echo("real-a", "Text", { text: "a" }));
+		emitMessageSent({
+			...echo("real-a", "Text", { text: "a" }),
+			dynamic: true,
+		});
 
 		expect(optimisticTimestamp).not.toBe(5000);
 		expect(state.messages[0]!.messageId).toBe("real-a");
+		expect(state.messages[0]!.dynamic).toBe(true);
 		expect(state.messages[0]!.timestamp).toBe(5000);
 		expect(conversations.updatePreview).toHaveBeenLastCalledWith(
 			expect.objectContaining({

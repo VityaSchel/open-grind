@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
-import { mergeServerMessages, type OptimisticMessage } from "./merge-messages";
+import {
+	mergeServerMessages,
+	type OptimisticMessage,
+	patchMessages,
+} from "./merge-messages";
 
 function message(messageId: string, timestamp: number): ApiResponseMessage {
 	return {
@@ -179,5 +183,108 @@ describe("mergeServerMessages with signed media", () => {
 		});
 
 		expect(result.changed).toBe(true);
+	});
+});
+
+describe("patchMessages", () => {
+	const text = ({ id, text }: { id: string; text: string }) =>
+		({
+			...message(id, 1000),
+			body: { text },
+		}) as unknown as ApiResponseMessage;
+
+	it("updates only the refreshed messages and drops none", () => {
+		const pending: OptimisticMessage = {
+			...text({ id: "draft", text: "draft" }),
+			status: "pending",
+		};
+		const local: OptimisticMessage[] = [
+			pending,
+			{ ...text({ id: "a", text: "old" }), status: "sent" },
+			{ ...text({ id: "b", text: "kept" }), status: "sent" },
+		];
+
+		const result = patchMessages({
+			local,
+			server: [text({ id: "a", text: "new" })],
+		});
+
+		expect(result.changed).toBe(true);
+		expect(
+			result.messages.map((m) => [
+				m.messageId,
+				(m.body as { text: string }).text,
+			]),
+		).toEqual([
+			["draft", "draft"],
+			["a", "new"],
+			["b", "kept"],
+		]);
+	});
+
+	it("reports no change when the refreshed messages are the same", () => {
+		const a = text({ id: "a", text: "same" });
+
+		expect(
+			patchMessages({ local: [{ ...a, status: "sent" }], server: [a] })
+				.changed,
+		).toBe(false);
+	});
+
+	it("adopts any newer signature a refresh hands out", () => {
+		const signed = (expires: number) =>
+			({
+				...message("album", 1000),
+				type: "Album",
+				body: {
+					albumId: 7,
+					coverUrl: `https://d3.cloudfront.net/a.jpg?Expires=${expires}&Signature=S${expires}`,
+				},
+			}) as unknown as ApiResponseMessage;
+		const local = (expires: number): OptimisticMessage[] => [
+			{ ...signed(expires), status: "sent" },
+		];
+
+		const renewed = patchMessages({
+			local: local(1_700_000_000),
+			server: [signed(1_700_000_300)],
+		});
+		expect(renewed.changed).toBe(true);
+		expect(renewed.messages[0]?.body).toMatchObject({
+			coverUrl: expect.stringContaining("Expires=1700000300"),
+		});
+
+		expect(
+			patchMessages({
+				local: local(1_700_000_300),
+				server: [signed(1_700_000_000)],
+			}).changed,
+		).toBe(false);
+	});
+
+	it("reports a message the server stopped marking dynamic", () => {
+		const a = { ...text({ id: "a", text: "same" }), dynamic: true };
+
+		expect(
+			patchMessages({
+				local: [{ ...a, status: "sent" }],
+				server: [{ ...a, dynamic: false }],
+			}).changed,
+		).toBe(true);
+	});
+
+	it("never patches a message that is still being sent", () => {
+		const pending: OptimisticMessage = {
+			...text({ id: "a", text: "draft" }),
+			status: "pending",
+		};
+
+		const result = patchMessages({
+			local: [pending],
+			server: [text({ id: "a", text: "server" })],
+		});
+
+		expect(result.changed).toBe(false);
+		expect(result.messages).toEqual([pending]);
 	});
 });

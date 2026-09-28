@@ -4,6 +4,7 @@ import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1ConversationReadEventSchema,
 	chatV1MessageSentEventSchema,
+	chatV1RefreshDynamicEventSchema,
 	commandResponseEventSchema,
 } from "./ws.svelte";
 
@@ -54,6 +55,20 @@ describe("websocket event envelopes", () => {
 				},
 			}).success,
 		).toBe(true);
+	});
+
+	it("reads which conversation a dynamic refresh is for", () => {
+		const parsed = chatV1RefreshDynamicEventSchema.safeParse({
+			type: "chat.v1.refresh_dynamic",
+			notificationId: null,
+			ref: null,
+			payload: { conversationId: "1:2", messageType: "Album" },
+		});
+
+		expect(parsed.data?.payload).toEqual({
+			conversationId: "1:2",
+			messageType: "Album",
+		});
 	});
 
 	it("accepts a command response that carries no payload", () => {

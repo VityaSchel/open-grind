@@ -220,7 +220,14 @@ function buildMessage({
 		profileId: message.fromMe ? conv.withId : demoMeProfileId,
 		reactionType: 1,
 	}));
-	const base = { messageId, conversationId, senderId, timestamp, reactions };
+	const base = {
+		messageId,
+		conversationId,
+		senderId,
+		timestamp,
+		reactions,
+		dynamic: false,
+	};
 	switch (message.kind) {
 		case "image":
 			return {
@@ -468,6 +475,24 @@ export function demoSingleMessage({
 	return { message: message ?? null };
 }
 
+export function demoMessagesById({
+	conversationId,
+	messageIds,
+}: {
+	conversationId: string;
+	messageIds: string[];
+}) {
+	const conv = demoConversationById.get(conversationId);
+	const wanted = new Set(messageIds);
+	return {
+		messages: conv
+			? threadMessages(conv).filter((entry) =>
+					wanted.has(entry.messageId),
+				)
+			: [],
+	};
+}
+
 let demoSentCounter = 0;
 
 export function demoSentMessage(body: unknown): ApiResponseMessage {
@@ -487,6 +512,7 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 		timestamp,
 		unsent: false,
 		reactions: [],
+		dynamic: false,
 		replyToMessage:
 			sent.replyToMessageId === undefined
 				? null

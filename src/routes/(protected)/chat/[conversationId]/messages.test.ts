@@ -12,6 +12,7 @@ const baseMessage = {
 	conversationId: "conversation-1",
 	unsent: false,
 	reactions: [],
+	dynamic: false,
 };
 
 function localDayStart(timestamp: number): number {

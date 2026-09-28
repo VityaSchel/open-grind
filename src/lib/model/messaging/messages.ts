@@ -29,7 +29,7 @@ const messageOverlayBaseSchema = z.object({
 		),
 		fallback: [],
 	}),
-	dynamic: unmodeledSchema,
+	dynamic: serverDefault({ value: z.boolean(), fallback: false }),
 	chat1Type: unmodeledSchema,
 	replyPreview: unmodeledSchema,
 });

@@ -131,6 +131,7 @@ describe("apiResponseMessageSchema", () => {
 				timestamp: 1_710_000_000_000,
 				unsent: false,
 				reactions: [{ profileId: 99, reactionType: 1 }],
+				dynamic: true,
 			}),
 		).toEqual({
 			type: "Text",
@@ -141,7 +142,21 @@ describe("apiResponseMessageSchema", () => {
 			timestamp: 1_710_000_000_000,
 			unsent: false,
 			reactions: [{ profileId: 99, reactionType: 1 }],
+			dynamic: true,
 		});
+	});
+
+	it("reads a message without a dynamic flag as not dynamic", () => {
+		expect(
+			apiResponseMessageSchema.parse({
+				type: "Text",
+				body: { text: "hello" },
+				messageId: "msg-1",
+				conversationId: "conversation-1",
+				senderId: 42,
+				timestamp: 1_710_000_000_000,
+			}).dynamic,
+		).toBe(false);
 	});
 
 	it("degrades an unmodeled message type to Unknown, keeping the wire type", () => {
