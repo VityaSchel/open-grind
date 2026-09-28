@@ -2,6 +2,7 @@ mod buffered;
 mod cache;
 #[cfg(target_os = "linux")]
 mod element;
+mod failures;
 mod flight;
 mod range;
 mod registry;
@@ -20,11 +21,14 @@ use std::sync::Arc;
 use grindr::MediaFetcher;
 use tauri::async_runtime::JoinHandle;
 use tauri::http::{header, Method, Request, Response, StatusCode};
-use tauri::{AppHandle, Runtime, UriSchemeContext, UriSchemeResponder};
+use tauri::{
+	AppHandle, Manager, Runtime, UriSchemeContext, UriSchemeResponder,
+};
 use tokio::sync::{Mutex, Semaphore};
 
 use buffered::serve_buffered;
-use cache::{CachedMedia, MediaCache};
+use cache::{cache_key, CachedMedia, MediaCache};
+use failures::{target_path_of, Failures, MediaFailure};
 use flight::Flights;
 use registry::unregister_stream;
 use requested::Requested;
@@ -84,6 +88,7 @@ impl Delivery {
 pub struct MediaProxy {
 	cache: Mutex<MediaCache>,
 	windowed: Mutex<Windowed>,
+	failures: Mutex<Failures>,
 	flights: Flights,
 	fetches: Arc<Semaphore>,
 	pumps: Mutex<HashMap<u64, JoinHandle<()>>>,
@@ -95,6 +100,7 @@ impl Default for MediaProxy {
 		Self {
 			cache: Mutex::default(),
 			windowed: Mutex::default(),
+			failures: Mutex::default(),
 			flights: Flights::default(),
 			fetches: Arc::new(Semaphore::new(OFFICIAL_APP_REQUESTS_PER_HOST)),
 			pumps: Mutex::default(),
@@ -117,8 +123,22 @@ impl MediaProxy {
 		self.sessions.clear();
 		self.cache.lock().await.clear();
 		self.windowed.lock().await.clear();
+		self.failures.lock().await.clear();
 		self.flights.clear().await;
 	}
+
+	async fn failure_of(&self, src: &str) -> Option<MediaFailure> {
+		let Target { url, .. } = decode_target(target_path_of(src)?)?;
+		self.failures.lock().await.get(cache_key(&url))
+	}
+}
+
+#[tauri::command]
+pub async fn media_failure(
+	app: AppHandle,
+	src: String,
+) -> Option<MediaFailure> {
+	app.state::<MediaProxy>().failure_of(&src).await
 }
 
 pub fn handle<R: Runtime>(
@@ -362,13 +382,83 @@ mod tests {
 		let proxy = app.state::<MediaProxy>();
 		cache(&app, PHOTO, b"webpbytes").await;
 		proxy.windowed.lock().await.always(PHOTO.to_owned());
+		proxy
+			.failures
+			.lock()
+			.await
+			.record(PHOTO, MediaFailure::of_status(502, PHOTO));
 		drop(proxy.flights.acquire(PHOTO).await);
 
 		proxy.forget_everything().await;
 
 		assert!(proxy.cache.lock().await.get(PHOTO).is_none());
 		assert!(proxy.windowed.lock().await.is_empty());
+		assert!(proxy.failures.lock().await.is_empty());
 		assert!(proxy.flights.is_empty().await);
+	}
+
+	fn ogmedia_src(url: &str) -> String {
+		use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+		format!("http://ogmedia.localhost/i{}", URL_SAFE_NO_PAD.encode(url))
+	}
+
+	fn upstream(status: u16) -> grindr::MediaResponse {
+		grindr::MediaResponse {
+			status,
+			content_type: Some("image/jpeg".to_owned()),
+			content_range: None,
+			accept_ranges: None,
+			body: grindr::Bytes::from_static(b"jpegbytes"),
+		}
+	}
+
+	#[tokio::test]
+	async fn a_refused_signature_is_remembered_for_its_renewal_until_a_load_succeeds(
+	) {
+		let old = "https://d3.cloudfront.net/a.jpg?Expires=1&Signature=OLD";
+		let renewed = "https://d3.cloudfront.net/a.jpg?Expires=2&Signature=NEW";
+		let app = app_without_a_client();
+		let proxy = app.state::<MediaProxy>();
+
+		buffered::settle(
+			&proxy,
+			cache_key(old),
+			old,
+			upstream(403),
+			None,
+			false,
+		)
+		.await;
+		let failure = proxy.failure_of(&ogmedia_src(renewed)).await;
+		buffered::settle(
+			&proxy,
+			cache_key(renewed),
+			renewed,
+			upstream(200),
+			None,
+			false,
+		)
+		.await;
+
+		assert_eq!(failure.and_then(|failure| failure.status), Some(403));
+		assert!(proxy.failure_of(&ogmedia_src(renewed)).await.is_none());
+	}
+
+	#[tokio::test]
+	async fn a_refused_image_leaves_its_failure_for_the_page_to_read() {
+		let app = app_without_a_client();
+		let src = format!("{}?retry=1", ogmedia_src(PHOTO));
+
+		serve(app.handle(), image(PHOTO), None, false).await;
+		let failure = app.state::<MediaProxy>().failure_of(&src).await;
+
+		assert_eq!(
+			failure.map(|failure| (failure.kind, failure.host)),
+			Some((
+				failures::FailureKind::NotReady,
+				"cdns.grindr.com".to_owned()
+			))
+		);
 	}
 
 	#[tokio::test]

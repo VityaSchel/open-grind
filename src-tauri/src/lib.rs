@@ -212,6 +212,7 @@ pub fn run() {
             api::push::push_watch,
             storage::storage_backend,
             api::rest::request,
+            media::media_failure,
             upload::bytes::upload_media,
             upload::inspect::inspect_media_file,
             upload::file::upload_media_file,

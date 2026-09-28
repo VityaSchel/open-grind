@@ -1,8 +1,9 @@
-use grindr::MediaFetcher;
+use grindr::{MediaFetcher, MediaResponse};
 use tauri::http::{Response, StatusCode};
 use tauri::{AppHandle, Manager, Runtime};
 
 use super::cache::{cache_key, CachedMedia};
+use super::failures::MediaFailure;
 use super::range::deliver_ranged;
 use super::response::{deliverable_status, Freshness};
 use super::stream::serve_streamed;
@@ -64,18 +65,36 @@ pub async fn serve_buffered<R: Runtime>(
 					drop(flight);
 					serve_windowed(app, url, fetcher, range, is_head).await
 				}
-				Fallback::Stream | Fallback::Refuse => refusal(error, url),
+				Fallback::Stream | Fallback::Refuse => {
+					let failure = MediaFailure::of_error(&error, url);
+					proxy.failures.lock().await.record(&key, failure);
+					refusal(error, url)
+				}
 			};
 		}
 	};
 
+	settle(&proxy, &key, url, fetched, range, is_head).await
+}
+
+pub async fn settle(
+	proxy: &MediaProxy,
+	key: &str,
+	url: &str,
+	fetched: MediaResponse,
+	range: Option<&str>,
+	is_head: bool,
+) -> Response<Vec<u8>> {
 	if deliverable_status(fetched.status) == Some(StatusCode::OK) {
 		let media = CachedMedia {
 			content_type: fetched.content_type,
 			body: fetched.body,
 		};
-		proxy.cache.lock().await.put(&key, media.clone());
-		return deliver_ranged(&media, range, is_head, freshness);
+		proxy.cache.lock().await.put(key, media.clone());
+		proxy.failures.lock().await.forget(key);
+		return deliver_ranged(&media, range, is_head, Freshness::of(url));
 	}
+	let failure = MediaFailure::of_status(fetched.status, url);
+	proxy.failures.lock().await.record(key, failure);
 	deliver_upstream(fetched, is_head)
 }
