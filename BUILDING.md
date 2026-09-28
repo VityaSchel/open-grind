@@ -72,7 +72,7 @@ Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolcha
 > First time you run `nix develop` or `nix run` in Open Grind's repository, Nix will download and setup about 3 GB environment, which might take some time, depending on your internet connection speed.
 
 > [!NOTE]
-> If you use [direnv](https://direnv.net/), the bundled [.envrc](./.envrc) activates the dev shell automatically when you `cd` into the repository.
+> If you use [direnv](https://direnv.net/), the bundled [.envrc](./.envrc) activates the dev shell automatically when you `cd` into the repository. `nix run .#build-*` started from a dev shell drops its environment and keeps only `HOME`, `USER`, `LOGNAME`, `TERM`, locale, proxy and CA certificate variables, `CARGO_HOME`, `XWIN_CACHE_DIR`, `NODE_OPTIONS`, `OPEN_GRIND_*` and `MACOS_*`.
 
 ### Build apk manually (advanced)
 
@@ -252,7 +252,7 @@ The default build uses two private macOS APIs: WebKit's `_setUseSystemAppearance
 | `MACOS_SIGN_IDENTITY`  | `-`     | `-` is ad-hoc                                                  |
 | `MACOS_NOTARY_PROFILE` | unset   | `notarytool` keychain profile; when set, notarizes and staples |
 
-`src-tauri/entitlements.plist` is passed to `codesign` when it exists.
+`src-tauri/entitlements.plist` is passed to the signer when it exists. Ad-hoc builds are signed by the pinned `rcodesign`, Developer ID builds by macOS `codesign`.
 
 For distribution, store the notary credentials once, then build:
 

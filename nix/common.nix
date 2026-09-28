@@ -33,6 +33,31 @@ rec {
 
   exportEnv = env: lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=${v}") env);
 
+  # A dev shell (nix develop, direnv) exports compiler flags, CC, its own tools and
+  # SOURCE_DATE_EPOCH=315532800, and every one of them changes the build.
+  cleanEnv = ''
+    if [ -n "''${IN_NIX_SHELL:-}" ]; then
+      kept=()
+      for name in HOME USER LOGNAME TERM LANG SSL_CERT_FILE NIX_SSL_CERT_FILE CARGO_HOME XWIN_CACHE_DIR NODE_OPTIONS \
+        http_proxy https_proxy no_proxy all_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY ALL_PROXY \
+        "''${!LC_@}" "''${!OPEN_GRIND_@}" "''${!MACOS_@}"; do
+        if [ -n "''${!name+set}" ]; then
+          kept+=("$name=''${!name}")
+        fi
+      done
+      hostPath=""
+      IFS=: read -ra entries <<<"$PATH"
+      for entry in "''${entries[@]}"; do
+        case "$entry" in
+          /nix/store/*) ;;
+          *) hostPath="''${hostPath:+$hostPath:}$entry" ;;
+        esac
+      done
+      echo "Leaving the Nix dev shell environment" >&2
+      exec env -i "''${kept[@]}" PATH="$hostPath" "$0" "$@"
+    fi
+  '';
+
   reproPreamble = ''
     ROOT="''${OPEN_GRIND_ROOT:-$PWD}"
     cd "$ROOT"
@@ -63,7 +88,7 @@ rec {
     export TZ=UTC
     export LC_ALL=C
     export LANG=C
-    SOURCE_DATE_EPOCH="''${SOURCE_DATE_EPOCH:-$(git -C "$ROOT" log -1 --pretty=%ct)}"
+    SOURCE_DATE_EPOCH="$(git -C "$ROOT" log -1 --pretty=%ct)"
     export SOURCE_DATE_EPOCH
     export NODE_OPTIONS="''${NODE_OPTIONS:---max-old-space-size=4096}"
   '';
@@ -79,6 +104,7 @@ rec {
       inherit name runtimeInputs;
       meta.mainProgram = name;
       text = ''
+        ${cleanEnv}
         ${exportEnv (baseEnv // env)}
         ${reproPreamble}
         ${desktopRepro}

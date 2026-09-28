@@ -240,8 +240,10 @@ fi
     | macOS SDK                         | `flake.lock` (nixpkgs `apple-sdk`, exported as `SDKROOT`)  |
     | `plutil` (Info.plist)             | `flake.lock` (nixpkgs `xcbuild`)                           |
     | Checkout path and `CARGO_HOME`    | remapped to `/open-grind` and `/cargo` by `nix/common.nix` |
+    | Ad-hoc signature                  | `flake.lock` (nixpkgs `rcodesign`)                         |
+    | Zip archive                       | `flake.lock` (nixpkgs `zip`)                               |
 
-`codesign` and `ditto` come from macOS itself and cannot be pinned by Nix. Neither affects the compiled code: `ditto` only packs the archive, and the signature is removed from both sides before comparing.
+Only a Developer ID build is signed by `codesign` from macOS itself, and its signature is removed from both sides before comparing.
 
 A signature cannot be reproduced without its key, and removing one does not restore the pre-signing bytes, so both sides are brought to the same state instead: re-sign ad-hoc, remove that signature, delete the signature directory. That normalization is signing identity-independent. Stripping also hides the hardened runtime and the entitlements, so step 3 checks those first.
 

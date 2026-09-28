@@ -109,6 +109,8 @@ let
     text = ''
       set -euo pipefail
 
+      ${common.cleanEnv}
+      unset SOURCE_DATE_EPOCH
       ${envExports}
       export PATH="${buildToolsBin}:${cmakeBin}:$PATH"
       export NODE_OPTIONS="''${NODE_OPTIONS:---max-old-space-size=4096}"
