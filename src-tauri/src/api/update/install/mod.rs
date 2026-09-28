@@ -215,6 +215,9 @@ mod pins {
 	const COMPONENTS_TS: &str =
 		include_str!("../../../../../src/lib/updates/components.ts");
 
+	const CAPABILITY_TS: &str =
+		include_str!("../../../../../src/lib/updates/capability.svelte.ts");
+
 	const INSTALLER: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/update/ApkInstaller.kt"
 	);
@@ -894,6 +897,61 @@ mod pins {
 				kotlin_constant(PLUGIN, "UpdatePlugin.kt", constant)
 			})
 			.collect()
+	}
+
+	fn quoted_list(
+		source: &str,
+		file: &str,
+		opening: &str,
+		closing: char,
+	) -> Vec<String> {
+		let source = squashed(source);
+		let start = source
+			.find(opening)
+			.unwrap_or_else(|| panic!("{file} no longer declares {opening}"))
+			+ opening.len();
+		let list = &source[start..];
+		let list = &list[..list
+			.find(closing)
+			.unwrap_or_else(|| panic!("{opening} in {file} is not closed"))];
+		list.split(',')
+			.filter(|entry| !entry.is_empty())
+			.map(|entry| {
+				entry
+					.strip_prefix('"')
+					.and_then(|entry| entry.strip_suffix('"'))
+					.unwrap_or_else(|| {
+						panic!("{entry} in {file} is not a string literal")
+					})
+					.to_owned()
+			})
+			.collect()
+	}
+
+	#[test]
+	fn every_fdroid_client_the_frontend_names_is_an_external_updater() {
+		let updaters = quoted_list(
+			GATE,
+			"InstallGate.kt",
+			"valEXTERNAL_UPDATERS=setOf(",
+			')',
+		);
+		let clients = quoted_list(
+			CAPABILITY_TS,
+			"capability.svelte.ts",
+			"constFDROID_CLIENTS=newSet([",
+			']',
+		);
+		assert!(
+			!clients.is_empty(),
+			"capability.svelte.ts lists no F-Droid client"
+		);
+		for client in &clients {
+			assert!(
+				updaters.contains(client),
+				"{client} never reaches the frontend as externallyManaged, so its installs would miss the F-Droid notice"
+			);
+		}
 	}
 
 	#[test]

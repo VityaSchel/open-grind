@@ -7,6 +7,14 @@ const undetermined = {
 	detail: { reason: "undetermined" },
 } satisfies Capability;
 
+const FDROID_CLIENTS = new Set([
+	"org.fdroid.fdroid",
+	"org.fdroid.fdroid.privileged",
+	"org.fdroid.basic",
+	"com.looker.droidify",
+	"com.machiav3lli.fdroid",
+]);
+
 let capability = $state<Capability | null>(null);
 let hydrating: Promise<Capability> | null = null;
 
@@ -22,6 +30,14 @@ export async function hydrateUpdateCapability(): Promise<void> {
 
 export function updatesSelfManaged(): boolean {
 	return capability?.state === "supported";
+}
+
+export function installedFromFdroid(): boolean {
+	return (
+		capability?.state === "unsupported" &&
+		capability.detail.reason === "externallyManaged" &&
+		FDROID_CLIENTS.has(capability.detail.detail.installer)
+	);
 }
 
 export function buildSignedByOpenGrind(): boolean {

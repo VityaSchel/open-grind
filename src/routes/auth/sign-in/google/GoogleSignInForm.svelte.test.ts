@@ -12,6 +12,7 @@ import {
 
 import {
 	awaitingPermission,
+	installedBy,
 	offer,
 	outcomeOf,
 	progressOf,
@@ -142,6 +143,15 @@ describe("GoogleSignInForm", () => {
 		expect(button("paste the OAuth token manually")).toBeTruthy();
 		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
 		expect(screen.queryByLabelText("Token")).toBeNull();
+	});
+
+	it("says the app bypasses F-Droid's checks on an F-Droid install", async () => {
+		getUpdateCapability.mockResolvedValue(installedBy("org.fdroid.fdroid"));
+		const { screen } = await opened();
+
+		expect(textOf(screen.getByText(/bypasses F-Droid's checks/))).toBe(
+			"It comes from git.opengrind.org, not F-Droid, so installing it bypasses F-Droid's checks.",
+		);
 	});
 
 	it("installs through the toast and then offers to continue", async () => {

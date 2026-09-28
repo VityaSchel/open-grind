@@ -6,6 +6,7 @@
 		dismissAddonDialog,
 	} from "$lib/push/delivery.svelte";
 	import { notificationSettings } from "$lib/push/notification-state.svelte";
+	import { installedFromFdroid } from "$lib/updates/capability.svelte";
 	import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
 
 	let { onCloseAutoFocus }: { onCloseAutoFocus: (event: Event) => void } =
@@ -36,6 +37,9 @@
 				To enable the fast mode, download and install {ADDON} add-on for Open
 				Grind. It includes Google's proprietary Firebase library and needs
 				Google Play services or microG, so it's not installed by default.
+				{#if installedFromFdroid()}
+					This add-on bypasses F-Droid's checks.
+				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

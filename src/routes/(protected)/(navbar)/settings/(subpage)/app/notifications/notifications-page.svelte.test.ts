@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type * as Os from "$lib/platform/os";
 import type { PushToken } from "$lib/push/types";
+import type * as Capability from "$lib/updates/capability.svelte";
 import {
 	account,
 	addon,
@@ -20,6 +21,7 @@ import {
 	currentPlatform,
 	disabled,
 	inMode,
+	installedFromFdroid,
 	installNow,
 	opened,
 	openExternalLink,
@@ -49,6 +51,12 @@ vi.mock(
 	async () =>
 		(await import("./notifications-page-test-helpers.svelte")).addon,
 );
+vi.mock("$lib/updates/capability.svelte", async (importOriginal) => ({
+	...(await importOriginal<typeof Capability>()),
+	installedFromFdroid: (
+		await import("./notifications-page-test-helpers.svelte")
+	).installedFromFdroid,
+}));
 vi.mock("$lib/api/error-toast", async () => ({
 	showErrorToast: (await import("./notifications-page-test-helpers.svelte"))
 		.showErrorToast,
@@ -246,6 +254,33 @@ describe("a missing FCM service", () => {
 		);
 		expect(checked(slow)).toBe("true");
 		expect(screen.queryByRole("status")).toBeNull();
+	});
+
+	it("says the add-on bypasses F-Droid's checks only on an F-Droid install", async () => {
+		const notice =
+			"It comes from git.opengrind.org, not F-Droid, so installing it bypasses F-Droid's checks.";
+		installedFromFdroid.mockReturnValue(true);
+		const { fast } = await opened(NotificationsPage);
+
+		await fireEvent.click(fast);
+		const dialog = await screen.findByRole("alertdialog", {
+			name: "Install push notifications add-on",
+		});
+
+		expect(dialog.textContent.replace(/\s+/g, " ")).toContain(
+			`so it's not installed by default. ${notice}`,
+		);
+	});
+
+	it("leaves F-Droid out of the add-on dialog on other installs", async () => {
+		const { fast } = await opened(NotificationsPage);
+
+		await fireEvent.click(fast);
+		const dialog = await screen.findByRole("alertdialog", {
+			name: "Install push notifications add-on",
+		});
+
+		expect(dialog.textContent).not.toContain("F-Droid");
 	});
 
 	it.each(["Cancel", "Continue"])(

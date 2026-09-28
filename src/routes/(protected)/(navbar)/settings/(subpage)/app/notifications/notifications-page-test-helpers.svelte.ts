@@ -74,6 +74,7 @@ export async function addonInstalled(): Promise<void> {
 	await Promise.all([...installListeners].map((listener) => listener()));
 }
 
+export const installedFromFdroid = vi.fn(() => false);
 export const currentPlatform = vi.fn<typeof Os.currentPlatform>();
 export const showErrorToast = vi.fn();
 export const openExternalLink = vi.fn();
@@ -100,6 +101,7 @@ export async function resetNotificationsPage(): Promise<void> {
 	appLifecycle.active = true;
 	installListeners.clear();
 	currentPlatform.mockReturnValue("android");
+	installedFromFdroid.mockReturnValue(false);
 	addon.addonInstallerAvailable.mockReturnValue(true);
 	inMode("slow");
 	push.fcmServiceInstalled.mockResolvedValue(true);

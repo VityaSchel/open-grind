@@ -10,9 +10,22 @@ import {
 import type { InstallKind, StagePresenter, UpdateFlow } from "./flow";
 import type * as UpdateApi from "./index";
 import type * as Toasts from "./toasts";
-import type { CheckResult, InstallOutcome, Progress, Readiness } from "./types";
+import type {
+	Capability,
+	CheckResult,
+	InstallOutcome,
+	Progress,
+	Readiness,
+} from "./types";
 
 const PUBLISHED_TAG = "v1.2.0";
+
+export function installedBy(installer: string): Capability {
+	return {
+		state: "unsupported",
+		detail: { reason: "externallyManaged", detail: { installer } },
+	};
+}
 
 export async function settled(): Promise<void> {
 	await new Promise<void>((resolve) => setTimeout(resolve, 0));
