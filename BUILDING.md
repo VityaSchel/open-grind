@@ -59,7 +59,7 @@ docker image rm open-grind-build   # removes the thin image
 
 ### Build apk with Nix only (faster)
 
-Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolchain — Rust, the JDK, the Android SDK, the NDK, Gradle, Bun, and Node.js — so any contributor on Linux or macOS can produce an identical build in an identical environment.
+Open Grind ships a [Nix flake](./flake.nix) that pins the entire Android toolchain — Rust, the JDK, the Android SDK, the NDK, Gradle, Bun, and Node.js — so a native build on x86_64 Linux reproduces the release. On Apple Silicon, only the [Docker build](#build-apk-with-nix-in-docker-easiest) does.
 
 - [Nix](https://nixos.org/download) >= 2.18
 - ~30 GB of disk space
