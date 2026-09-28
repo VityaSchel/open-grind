@@ -1,6 +1,7 @@
 import type z from "zod";
 
 import { getCascadeV4 } from "$lib/api/browse/grid";
+import { updateLocation } from "$lib/api/browse/location";
 import { TtlCache } from "$lib/api/cache";
 import { getProfiles } from "$lib/api/users/profiles";
 import { awaitEntitlementGrant } from "$lib/entitlements/bypass.svelte";
@@ -84,6 +85,11 @@ function gridProfile({
 
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	await awaitEntitlementGrant();
+	if (query.favorites && !query.pageNumber) {
+		await updateLocation({ geohash: query.nearbyGeoHash }).catch(
+			(error: unknown) => console.error(error),
+		);
+	}
 	const response = await getCascadeV4(query);
 	const items: GridProfile[] = [];
 

@@ -1,13 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCascadeV4Mock, awaitEntitlementGrantMock, getProfilesMock } =
-	vi.hoisted(() => ({
-		getCascadeV4Mock: vi.fn(),
-		awaitEntitlementGrantMock: vi.fn(),
-		getProfilesMock: vi.fn(),
-	}));
+const {
+	getCascadeV4Mock,
+	updateLocationMock,
+	awaitEntitlementGrantMock,
+	getProfilesMock,
+} = vi.hoisted(() => ({
+	getCascadeV4Mock: vi.fn(),
+	updateLocationMock: vi.fn(),
+	awaitEntitlementGrantMock: vi.fn(),
+	getProfilesMock: vi.fn(),
+}));
 
 vi.mock("$lib/api/browse/grid", () => ({ getCascadeV4: getCascadeV4Mock }));
+vi.mock("$lib/api/browse/location", () => ({
+	updateLocation: updateLocationMock,
+}));
 vi.mock("$lib/api/users/profiles", () => ({ getProfiles: getProfilesMock }));
 vi.mock("$lib/entitlements/bypass.svelte", () => ({
 	awaitEntitlementGrant: awaitEntitlementGrantMock,
@@ -47,6 +55,7 @@ describe("grid profile cache TTL", () => {
 });
 
 const LAST_ONLINE = 1_757_000_000_000;
+const NEARBY = "u33dc0cpgp00";
 
 const v4Profile = (id: number) => ({
 	profileId: id,
@@ -78,13 +87,91 @@ const cascade = (items: unknown[]) => {
 		nextPage: null,
 		shuffled: false,
 	});
-	return getGrid({ nearbyGeoHash: "u33dc0cpgp00" });
+	return getGrid({ nearbyGeoHash: NEARBY });
 };
 
 describe("getGrid", () => {
 	beforeEach(() => {
-		getCascadeV4Mock.mockReset();
+		getCascadeV4Mock
+			.mockReset()
+			.mockResolvedValue({ items: [], nextPage: null, shuffled: false });
+		updateLocationMock.mockReset().mockResolvedValue(undefined);
 		awaitEntitlementGrantMock.mockResolvedValue(undefined);
+	});
+
+	it("moves the stored location to the grid geohash before a favorites cascade", async () => {
+		let finishMove!: () => void;
+		updateLocationMock.mockReturnValue(
+			new Promise<void>((resolve) => {
+				finishMove = resolve;
+			}),
+		);
+
+		const pending = getGrid({ nearbyGeoHash: NEARBY, favorites: true });
+		await vi.waitFor(() =>
+			expect(updateLocationMock).toHaveBeenCalledExactlyOnceWith({
+				geohash: NEARBY,
+			}),
+		);
+		expect(getCascadeV4Mock).not.toHaveBeenCalled();
+
+		finishMove();
+		await pending;
+
+		expect(getCascadeV4Mock).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		{ page: "a plain first page", query: {} },
+		{
+			page: "a later favorites page",
+			query: { favorites: true, pageNumber: 1 },
+		},
+	])("leaves the stored location alone for $page", async ({ query }) => {
+		await getGrid({ nearbyGeoHash: NEARBY, ...query });
+
+		expect(updateLocationMock).not.toHaveBeenCalled();
+		expect(getCascadeV4Mock).toHaveBeenCalledOnce();
+	});
+
+	it("still loads favorites when the location update fails", async () => {
+		const consoleError = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+		const failure = new Error("offline");
+		updateLocationMock.mockRejectedValue(failure);
+		getCascadeV4Mock.mockResolvedValue({
+			items: [{ type: "full_profile_v1", data: v4Profile(9) }],
+			nextPage: null,
+			shuffled: false,
+		});
+
+		const { items } = await getGrid({
+			nearbyGeoHash: NEARBY,
+			favorites: true,
+		});
+
+		expect(items).toMatchObject([{ id: 9 }]);
+		expect(consoleError).toHaveBeenCalledWith(failure);
+		consoleError.mockRestore();
+	});
+
+	it("holds the favorites location update until an entitlement handover is done", async () => {
+		let finishHandover!: () => void;
+		awaitEntitlementGrantMock.mockReturnValue(
+			new Promise<void>((resolve) => {
+				finishHandover = resolve;
+			}),
+		);
+
+		const pending = getGrid({ nearbyGeoHash: NEARBY, favorites: true });
+		await vi.waitFor(() => expect(finishHandover).toBeDefined());
+		expect(updateLocationMock).not.toHaveBeenCalled();
+
+		finishHandover();
+		await pending;
+
+		expect(updateLocationMock).toHaveBeenCalledOnce();
 	});
 
 	it("holds the cascade until an entitlement handover is done", async () => {
