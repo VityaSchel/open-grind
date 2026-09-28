@@ -5,22 +5,28 @@ const {
 	updateLocationMock,
 	awaitEntitlementGrantMock,
 	getProfilesMock,
+	clearProfileCachesMock,
 } = vi.hoisted(() => ({
 	getCascadeV4Mock: vi.fn(),
 	updateLocationMock: vi.fn(),
 	awaitEntitlementGrantMock: vi.fn(),
 	getProfilesMock: vi.fn(),
+	clearProfileCachesMock: vi.fn(),
 }));
 
 vi.mock("$lib/api/browse/grid", () => ({ getCascadeV4: getCascadeV4Mock }));
 vi.mock("$lib/api/browse/location", () => ({
 	updateLocation: updateLocationMock,
 }));
-vi.mock("$lib/api/users/profiles", () => ({ getProfiles: getProfilesMock }));
+vi.mock("$lib/api/users/profiles", () => ({
+	getProfiles: getProfilesMock,
+	clearProfileCaches: clearProfileCachesMock,
+}));
 vi.mock("$lib/entitlements/bypass.svelte", () => ({
 	awaitEntitlementGrant: awaitEntitlementGrantMock,
 }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 import {
 	getCachedProfile,
@@ -56,6 +62,8 @@ describe("grid profile cache TTL", () => {
 
 const LAST_ONLINE = 1_757_000_000_000;
 const NEARBY = "u33dc0cpgp00";
+const NEARBY_WITHIN_COARSE_CELL = "u33dc0cpgp01";
+const FAR = "u281z7hdm51t";
 
 const v4Profile = (id: number) => ({
 	profileId: id,
@@ -310,6 +318,95 @@ describe("getGrid", () => {
 		]);
 
 		expect(items).toEqual([]);
+	});
+});
+
+describe("cached profiles after the stored location moves", () => {
+	beforeEach(async () => {
+		clearAccountCaches();
+		getCascadeV4Mock
+			.mockReset()
+			.mockResolvedValue({ items: [], nextPage: null, shuffled: false });
+		updateLocationMock.mockReset().mockResolvedValue(undefined);
+		awaitEntitlementGrantMock.mockResolvedValue(undefined);
+		await getGrid({ nearbyGeoHash: NEARBY });
+		clearProfileCachesMock.mockReset();
+	});
+
+	it("drops them once a favorites location update lands", async () => {
+		setCachedProfile(rendered({ id: 1 }));
+		let finishMove!: () => void;
+		updateLocationMock.mockReturnValue(
+			new Promise<void>((resolve) => {
+				finishMove = resolve;
+			}),
+		);
+
+		const pending = getGrid({ nearbyGeoHash: FAR, favorites: true });
+		await vi.waitFor(() => expect(updateLocationMock).toHaveBeenCalled());
+		expect(clearProfileCachesMock).not.toHaveBeenCalled();
+		expect(getCachedProfile(1)).not.toBeNull();
+
+		finishMove();
+		await pending;
+
+		expect(clearProfileCachesMock).toHaveBeenCalledOnce();
+		expect(getCachedProfile(1)).toBeNull();
+	});
+
+	it("drops them only once a plain cascade at a new location answered", async () => {
+		let answer!: () => void;
+		getCascadeV4Mock.mockReturnValue(
+			new Promise((resolve) => {
+				answer = () =>
+					resolve({ items: [], nextPage: null, shuffled: false });
+			}),
+		);
+
+		const pending = getGrid({ nearbyGeoHash: FAR });
+		await vi.waitFor(() => expect(getCascadeV4Mock).toHaveBeenCalled());
+		expect(clearProfileCachesMock).not.toHaveBeenCalled();
+
+		answer();
+		await pending;
+
+		expect(clearProfileCachesMock).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		{ spot: "the same location", geohash: NEARBY },
+		{
+			spot: "a spot in the same coarse cell",
+			geohash: NEARBY_WITHIN_COARSE_CELL,
+		},
+	])("keeps them for fetches at $spot", async ({ geohash }) => {
+		setCachedProfile(rendered({ id: 1 }));
+
+		await getGrid({ nearbyGeoHash: geohash });
+		await getGrid({ nearbyGeoHash: geohash, favorites: true });
+
+		expect(clearProfileCachesMock).not.toHaveBeenCalled();
+		expect(getCachedProfile(1)).not.toBeNull();
+	});
+
+	it("forgets the stored location on an account switch", async () => {
+		clearAccountCaches();
+
+		await getGrid({ nearbyGeoHash: NEARBY });
+
+		expect(clearProfileCachesMock).toHaveBeenCalledOnce();
+	});
+
+	it("keeps them when the favorites location update fails", async () => {
+		const consoleError = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+		updateLocationMock.mockRejectedValue(new Error("offline"));
+
+		await getGrid({ nearbyGeoHash: FAR, favorites: true });
+
+		expect(clearProfileCachesMock).not.toHaveBeenCalled();
+		consoleError.mockRestore();
 	});
 });
 

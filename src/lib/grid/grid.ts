@@ -1,10 +1,12 @@
 import type z from "zod";
 
+import { registerAccountCache } from "$lib/api/account-caches";
 import { getCascadeV4 } from "$lib/api/browse/grid";
 import { updateLocation } from "$lib/api/browse/location";
 import { TtlCache } from "$lib/api/cache";
-import { getProfiles } from "$lib/api/users/profiles";
+import { clearProfileCaches, getProfiles } from "$lib/api/users/profiles";
 import { awaitEntitlementGrant } from "$lib/entitlements/bypass.svelte";
+import { coarsenGeohash } from "$lib/model/geohash";
 import { now } from "$lib/util/clock";
 import type { cascadeV4ResponseFullProfileV1Schema } from "$lib/model/browse/grid/cascade/response/v4";
 
@@ -86,11 +88,13 @@ function gridProfile({
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 	await awaitEntitlementGrant();
 	if (query.favorites && !query.pageNumber) {
-		await updateLocation({ geohash: query.nearbyGeoHash }).catch(
+		await updateLocation({ geohash: query.nearbyGeoHash }).then(
+			() => recordStoredLocation(query.nearbyGeoHash),
 			(error: unknown) => console.error(error),
 		);
 	}
 	const response = await getCascadeV4(query);
+	if (!query.favorites) recordStoredLocation(query.nearbyGeoHash);
 	const items: GridProfile[] = [];
 
 	for (const item of response.items) {
@@ -121,6 +125,22 @@ export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
 const profileCache = new TtlCache<number, RenderedGridProfile>({
 	ttlMs: 60_000,
 });
+
+let storedGeohash: string | null = null;
+
+registerAccountCache({
+	reset: () => {
+		storedGeohash = null;
+	},
+});
+
+function recordStoredLocation(geohash: string): void {
+	const coarse = coarsenGeohash(geohash);
+	if (coarse === storedGeohash) return;
+	storedGeohash = coarse;
+	clearProfileCaches();
+	profileCache.clear();
+}
 
 export function getCachedProfile(id: number): RenderedGridProfile | null {
 	return profileCache.get(id);
