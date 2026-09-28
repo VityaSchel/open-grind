@@ -3,8 +3,8 @@ about: Something is broken
 title: ""
 ref: "main"
 labels:
-  - bug
   - app
+  - app/bug
 body:
   - type: markdown
     attributes:
