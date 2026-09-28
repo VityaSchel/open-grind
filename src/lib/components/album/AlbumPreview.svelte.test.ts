@@ -81,3 +81,43 @@ describe("album preview", () => {
 		expect(sonner.toast.message).not.toHaveBeenCalled();
 	});
 });
+
+describe("album preview cover renewal", () => {
+	const OLD =
+		"https://d3.cloudfront.net/albums/c.jpg?Expires=1700000900&Signature=OLD&Key-Pair-Id=K";
+	const RENEWED =
+		"https://d3.cloudfront.net/albums/c.jpg?Expires=1700004500&Signature=NEW&Key-Pair-Id=K";
+
+	function renderCover(coverUrl: string) {
+		const { container, rerender } = render(AlbumPreview, {
+			props: { albumId: 900, coverUrl, hasPhoto: true, hasVideo: false },
+		});
+		const image = () => {
+			const img = container.querySelector("img");
+			if (img === null) throw new Error("no cover image");
+			return img;
+		};
+		return { image, renew: (next: string) => rerender({ coverUrl: next }) };
+	}
+
+	it("keeps a loaded cover on its url when only the signature is renewed", async () => {
+		const cover = renderCover(OLD);
+		Object.defineProperty(cover.image(), "naturalWidth", {
+			get: () => 300,
+		});
+		await fireEvent.load(cover.image());
+
+		await cover.renew(RENEWED);
+
+		expect(cover.image().getAttribute("src")).toBe(OLD);
+	});
+
+	it("loads the renewed url for a cover that failed", async () => {
+		const cover = renderCover(OLD);
+		await fireEvent.error(cover.image());
+
+		await cover.renew(RENEWED);
+
+		expect(cover.image().getAttribute("src")).toBe(RENEWED);
+	});
+});

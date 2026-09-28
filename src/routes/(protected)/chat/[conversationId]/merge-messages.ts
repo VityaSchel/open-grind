@@ -1,4 +1,7 @@
+import { parseSignedUrl, unsignedUrl } from "$lib/util/signed-url";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+
+const SIGNATURE_RENEWAL_AGE_MS = 10 * 60 * 1000;
 
 export type OptimisticMessage = ApiResponseMessage & {
 	status: "sent" | "pending" | "error";
@@ -24,13 +27,61 @@ export function removeDuplicateMessages(
 		.toSorted((a, b) => b.timestamp - a.timestamp);
 }
 
-function sameServerVersion(
+function withoutSignatures(body: unknown): string {
+	return JSON.stringify(body, (_key, value: unknown) =>
+		typeof value === "string" ? unsignedUrl(value) : value,
+	);
+}
+
+function stringsIn(value: unknown): string[] {
+	if (typeof value === "string") return [value];
+	if (typeof value !== "object" || value === null) return [];
+	return Object.values(value).flatMap(stringsIn);
+}
+
+function earliestExpiry(body: unknown): number {
+	return Math.min(
+		...stringsIn(body).map(
+			(value) =>
+				parseSignedUrl(value)?.expiresAt ?? Number.POSITIVE_INFINITY,
+		),
+	);
+}
+
+function signatureIsStale({
+	server,
+	local,
+}: {
+	server: unknown;
+	local: unknown;
+}): boolean {
+	return (
+		earliestExpiry(server) - earliestExpiry(local) >=
+		SIGNATURE_RENEWAL_AGE_MS
+	);
+}
+
+function sameBody({
+	server,
+	local,
+}: {
+	server: ApiResponseMessage;
+	local: OptimisticMessage;
+}): boolean {
+	if (server.type !== local.type) return false;
+	if (JSON.stringify(server.body) === JSON.stringify(local.body)) return true;
+	return (
+		withoutSignatures(server.body) === withoutSignatures(local.body) &&
+		!signatureIsStale({ server: server.body, local: local.body })
+	);
+}
+
+function sameMetadata(
 	server: ApiResponseMessage,
 	local: OptimisticMessage,
 ): boolean {
 	return (
 		server.unsent === local.unsent &&
-		server.type === local.type &&
 		JSON.stringify(server.reactions) === JSON.stringify(local.reactions)
 	);
 }
@@ -63,8 +114,17 @@ export function mergeServerMessages({
 		seenLocalIds.add(message.messageId);
 		const serverVersion = serverById.get(message.messageId);
 		if (serverVersion) {
-			merged.push({ ...serverVersion, status: "sent" as const });
-			if (!sameServerVersion(serverVersion, message)) updated++;
+			const keepsLocalBody = sameBody({
+				server: serverVersion,
+				local: message,
+			});
+			merged.push({
+				...serverVersion,
+				body: keepsLocalBody ? message.body : serverVersion.body,
+				status: "sent",
+			} as OptimisticMessage);
+			if (!keepsLocalBody || !sameMetadata(serverVersion, message))
+				updated++;
 		} else if (!serverPageIsEmpty && message.timestamp < oldestServerTs) {
 			merged.push(message);
 		} else {
