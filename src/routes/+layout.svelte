@@ -34,7 +34,9 @@
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import { startUpdateWatch } from "$lib/updates/updates-manager";
 	import {
+		bottomBlurBarClearance,
 		bottomChromeClearance,
+		topBlurBarClearance,
 		topChromeClearance,
 	} from "$lib/util/screen-chrome.svelte";
 
@@ -134,8 +136,8 @@
 	});
 
 	const toastOffset = $derived({
-		top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px) + 0.5rem)`,
-		bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px) + 0.5rem)`,
+		top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px, ${topBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
+		bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px, ${bottomBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
 	});
 </script>
 

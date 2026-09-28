@@ -2,6 +2,7 @@ import {
 	preferencesLoaded,
 	preferencesSnapshot,
 } from "$lib/app-data/preferences.svelte";
+import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 import {
 	backdropBlurTrialArm,
 	syncBackdropBlurTrial,
@@ -62,6 +63,7 @@ export function applyBackdropBlurQuality(): void {
 	const root = document.documentElement;
 	if (root.getAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE) !== quality) {
 		root.setAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE, quality);
+		remeasureScreenChrome();
 	}
 	rememberForNextLaunch(settledBackdropBlurQuality());
 }

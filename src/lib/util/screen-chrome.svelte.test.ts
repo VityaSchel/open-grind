@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Attachment } from "svelte/attachments";
 
 import {
+	bottomBlurBarClearance,
 	bottomChrome,
 	bottomChromeClearance,
 	remeasureScreenChrome,
@@ -54,6 +55,18 @@ describe("screen chrome clearance", () => {
 
 		expect(topChromeClearance()).toBe(76);
 		expect(bottomChromeClearance()).toBe(64);
+	});
+
+	it("reports progressive blur bars apart from the rest of the chrome", () => {
+		const navBar = bar({ top: 736, height: 64 });
+		navBar.classList.add("pblur");
+		detachAfterEach(bottomChrome(navBar));
+		detachAfterEach(bottomChrome(bar({ top: 600, height: 200 })));
+		remeasureScreenChrome();
+		flushSync();
+
+		expect(bottomChromeClearance()).toBe(200);
+		expect(bottomBlurBarClearance()).toBe(64);
 	});
 
 	it("keeps counting a bar in an inert pane that is still on screen", () => {

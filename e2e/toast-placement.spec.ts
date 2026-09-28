@@ -7,11 +7,13 @@ import {
 	installTauriShim,
 	meTab,
 } from "./support/app";
+import { setBlurMode } from "./support/layout-guard";
 
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
 const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 const TOAST_LABEL = "Placement probe";
 const TOAST_GAP_PX = 8;
+const LOW_BAR_GAP_PX = 12;
 const WIDE_VIEWPORT = { width: 1024, height: 800 };
 const RAISED_BOTTOM_INSET_PX = 120;
 
@@ -89,9 +91,11 @@ function showToast({ page, edge }: { page: Page; edge: ToastEdge }) {
 async function expectToastGap({
 	obstruction,
 	edge,
+	expectedGap = TOAST_GAP_PX,
 }: {
 	obstruction: Locator;
 	edge: ToastEdge;
+	expectedGap?: number;
 }): Promise<void> {
 	const page = obstruction.page();
 	await obstruction.waitFor({ timeout: 60_000 });
@@ -108,7 +112,16 @@ async function expectToastGap({
 		edge === "top"
 			? toastBox.y - (obstructionBox.y + obstructionBox.height)
 			: obstructionBox.y - (toastBox.y + toastBox.height);
-	expect(gap).toBeCloseTo(TOAST_GAP_PX, 0);
+	expect(gap).toBeCloseTo(expectedGap, 0);
+}
+
+async function useLowBlur(page: Page): Promise<void> {
+	await expect(page.locator("html")).toHaveAttribute(
+		"data-backdrop-blur",
+		"max",
+		{ timeout: 60_000 },
+	);
+	await setBlurMode(page, "min");
 }
 
 test.beforeEach(async ({ page }) => {
@@ -198,6 +211,43 @@ test.describe("a toast rests 8px above the bottom chrome", () => {
 		await page.goto(`/settings/albums/${SHARED_ALBUM_ID}`);
 		await makeDirty(page.getByRole("textbox", { name: "Album name" }));
 		await expectToastGap({ obstruction: saveButton(page), edge: "bottom" });
+	});
+});
+
+test.describe("in Low blur, a toast keeps the bar gap", () => {
+	test("above the bottom chrome on the browse grid", async ({ page }) => {
+		await page.goto("/");
+		await useLowBlur(page);
+		await expectToastGap({
+			obstruction: meTab(page),
+			edge: "bottom",
+			expectedGap: TOAST_GAP_PX + LOW_BAR_GAP_PX,
+		});
+	});
+
+	test("only against bars, not against the composer", async ({ page }) => {
+		await page.goto(DEMO_CONVERSATION);
+		await composer(page).waitFor({ timeout: 60_000 });
+		await useLowBlur(page);
+		await expectToastGap({ obstruction: composer(page), edge: "bottom" });
+	});
+
+	test("only against bars, not below a profile's back link", async ({
+		page,
+	}) => {
+		await page.goto("/profile/100001");
+		await useLowBlur(page);
+		await expectToastGap({ obstruction: backLink(page), edge: "top" });
+	});
+
+	test("below the Interest bar", async ({ page }) => {
+		await page.goto("/interest/taps");
+		await useLowBlur(page);
+		await expectToastGap({
+			obstruction: page.getByRole("navigation", { name: "Interest" }),
+			edge: "top",
+			expectedGap: LOW_BAR_GAP_PX,
+		});
 	});
 });
 

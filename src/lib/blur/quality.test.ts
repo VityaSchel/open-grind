@@ -12,6 +12,12 @@ const { compositingMock } = vi.hoisted(() => ({
 	compositingMock: vi.fn(() => true),
 }));
 
+const { remeasureMock } = vi.hoisted(() => ({ remeasureMock: vi.fn() }));
+
+vi.mock("$lib/util/screen-chrome.svelte", () => ({
+	remeasureScreenChrome: remeasureMock,
+}));
+
 vi.mock("./compositing.svelte", () => ({
 	backdropCompositingRenders: compositingMock,
 	hydrateBackdropCompositing: () => Promise.resolve(),
@@ -117,6 +123,15 @@ describe("applyBackdropBlurQuality", () => {
 			document.documentElement.getAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE),
 		).toBe("off");
 		expect(localStorage.getItem(BACKDROP_BLUR_MIRROR_KEY)).toBe("off");
+	});
+
+	it("remeasures the screen chrome only when the level changes", async () => {
+		withBackdropSupport(true);
+		await setPreferences({ backdropBlurQuality: "min" });
+		remeasureMock.mockClear();
+		applyBackdropBlurQuality();
+		applyBackdropBlurQuality();
+		expect(remeasureMock).toHaveBeenCalledTimes(1);
 	});
 
 	it("mirrors the settled level, never a trial arm", async () => {
