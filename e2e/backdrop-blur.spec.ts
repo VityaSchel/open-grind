@@ -1,9 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
 
 const PINNED_QUALITY = "max";
 const FIRST_ROUTE_COMPILE_MS = 120_000;
+const LOW_BAR_GAP_PX = 12;
 
 test.describe.configure({ timeout: 240_000 });
 
@@ -116,6 +117,54 @@ test("off replaces the blur on ordinary surfaces with a black wash", async ({
 	await expect(surface).toHaveCSS(
 		"background-image",
 		"linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45))",
+	);
+});
+
+async function expectLowLiftsOffNavbar(element: Locator) {
+	const page = element.page();
+	const navbar = page.getByRole("navigation", { name: "Main" });
+	await expect(element).toBeVisible();
+
+	const gapAboveNavbar = async () => {
+		const box = await element.boundingBox();
+		const nav = await navbar.boundingBox();
+		if (!box || !nav) throw new Error("Nothing to measure");
+		return nav.y - (box.y + box.height);
+	};
+
+	const fullGap = await gapAboveNavbar();
+	await setQuality(page, "min");
+	expect((await gapAboveNavbar()) - fullGap).toBeCloseTo(LOW_BAR_GAP_PX, 0);
+}
+
+test("low lifts the profile chat bar off the navbar by the bar gap", async ({
+	page,
+}) => {
+	await openWithBlurReady(page, "/profile/100001");
+	await expectLowLiftsOffNavbar(
+		page.getByRole("navigation", { name: "Chat and tap" }),
+	);
+});
+
+test("low lifts the save changes bar off the navbar by the bar gap", async ({
+	page,
+}) => {
+	await openWithBlurReady(page, "/settings/profile");
+	const displayName = page.getByRole("textbox", { name: "Display name" });
+	await displayName.waitFor();
+	const saveBarShown = page.evaluate(
+		() =>
+			new Promise<void>((shown) =>
+				document.addEventListener("introend", () => shown(), {
+					capture: true,
+					once: true,
+				}),
+			),
+	);
+	await displayName.fill("Renamed in a test");
+	await saveBarShown;
+	await expectLowLiftsOffNavbar(
+		page.getByRole("button", { name: "Save changes" }),
 	);
 });
 

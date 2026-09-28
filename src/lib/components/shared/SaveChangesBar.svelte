@@ -21,7 +21,7 @@
 
 <div
 	data-slot="save-changes-bar"
-	class="sticky bottom-(--content-pb) z-10 -mx-4 mt-auto -mb-[calc(4.5rem+var(--bar-content-gap))] px-4 pb-3"
+	class="sticky bottom-[calc(var(--content-pb)+var(--bar-content-gap))] z-10 -mx-4 mt-auto -mb-18 px-4 pb-3"
 	transition:fly={{ y: 80, duration: 300, easing: expoOut }}
 	{@attach bottomChrome}
 >
