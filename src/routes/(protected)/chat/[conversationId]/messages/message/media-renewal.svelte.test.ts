@@ -18,6 +18,7 @@ vi.mock("$lib/platform/media-failure", async (importOriginal) => ({
 		Promise.resolve({
 			kind: "status",
 			status: 403,
+			phase: null,
 			host: "d3.cloudfront.net",
 			signatureExpired: false,
 		}),

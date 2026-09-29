@@ -30,6 +30,7 @@ describe("mediaFailure", () => {
 		const failure = {
 			kind: "status",
 			status: 403,
+			phase: null,
 			host: "d3.cloudfront.net",
 			signatureExpired: true,
 		};
@@ -60,6 +61,7 @@ describe("describeMediaFailure", () => {
 			describeMediaFailure({
 				kind: "status",
 				status: 403,
+				phase: null,
 				host: "d3.cloudfront.net",
 				signatureExpired: true,
 			}),
@@ -68,10 +70,20 @@ describe("describeMediaFailure", () => {
 			describeMediaFailure({
 				kind: "transport",
 				status: null,
+				phase: null,
 				host: "cdns.grindr.com",
 				signatureExpired: false,
 			}),
 		).toBe("transport from cdns.grindr.com");
+		expect(
+			describeMediaFailure({
+				kind: "timeout",
+				status: null,
+				phase: "headers",
+				host: "d3.cloudfront.net",
+				signatureExpired: false,
+			}),
+		).toBe("timeout (headers) from d3.cloudfront.net");
 		expect(describeMediaFailure(null)).toBe("no details");
 	});
 });
@@ -80,6 +92,7 @@ describe("remedyFor", () => {
 	const of = (overrides: Partial<MediaFailure>): MediaFailure => ({
 		kind: "status",
 		status: null,
+		phase: null,
 		host: "d3.cloudfront.net",
 		signatureExpired: false,
 		...overrides,
@@ -101,6 +114,19 @@ describe("remedyFor", () => {
 		expect(remedyFor(of({ status: 403 }))).toBe("renew");
 		expect(remedyFor(of({ status: 404, signatureExpired: true }))).toBe(
 			"renew",
+		);
+	});
+
+	it("retries a timeout unless the whole transfer already ran out of time", () => {
+		expect(remedyFor(of({ kind: "timeout", phase: "headers" }))).toBe(
+			"retry",
+		);
+		expect(remedyFor(of({ kind: "timeout", phase: "receiving" }))).toBe(
+			"retry",
+		);
+		expect(remedyFor(of({ kind: "timeout", phase: null }))).toBe("retry");
+		expect(remedyFor(of({ kind: "timeout", phase: "unfinished" }))).toBe(
+			"none",
 		);
 	});
 

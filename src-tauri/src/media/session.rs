@@ -22,6 +22,7 @@ const STALL: Duration = Duration::from_secs(1);
 pub enum Failure {
 	Refused(u16),
 	Upstream(String),
+	TimedOut(String),
 }
 
 impl From<Fault> for Failure {

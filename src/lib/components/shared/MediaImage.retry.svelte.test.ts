@@ -41,6 +41,7 @@ const SRC = "http://ogmedia.localhost/iPAYLOAD";
 const failure = (overrides: Record<string, unknown>) => ({
 	kind: "status",
 	status: null,
+	phase: null,
 	host: "d3.cloudfront.net",
 	signatureExpired: false,
 	...overrides,
@@ -226,6 +227,19 @@ describe("MediaImage recovery", () => {
 
 		expect(tile.onexpired).toHaveBeenCalledOnce();
 		expect(tile.broken()).not.toBeNull();
+	});
+
+	it("does not retry a transfer that already ran out of time", async () => {
+		failures.mediaFailure.mockResolvedValue(
+			failure({ kind: "timeout", phase: "unfinished" }),
+		);
+		const tile = renderImage();
+
+		await failed(tile.image());
+		await vi.advanceTimersByTimeAsync(2000);
+
+		expect(tile.broken()).not.toBeNull();
+		expect(tile.image()).toBeNull();
 	});
 
 	it("shows the broken placeholder at once for a missing file", async () => {

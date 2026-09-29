@@ -17,6 +17,7 @@ mod windowed;
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 use grindr::MediaFetcher;
 use tauri::async_runtime::JoinHandle;
@@ -46,6 +47,8 @@ pub const SCHEME: &str = "ogmedia";
 const MAX_MEDIA_BYTES: usize = 16 * 1024 * 1024;
 const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
 const STREAMING_PLATFORM: bool = cfg!(target_os = "android");
+const ANDROID_ANSWER_DEADLINE: Duration = Duration::from_secs(25);
+const RETRIED_HEADERS_DEADLINE: Duration = Duration::from_secs(45);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Host {
@@ -251,6 +254,48 @@ mod tests {
 		name: impl header::AsHeaderName,
 	) -> Option<&str> {
 		response.headers().get(name).and_then(|v| v.to_str().ok())
+	}
+
+	const VIDEO_URL: &str =
+		"https://d3.cloudfront.net/v.mp4?Expires=1&Signature=S";
+	const TWO_HEADER_WAITS: Duration = Duration::from_secs(40);
+
+	async fn assert_waits_out_a_retried_header_wait(delivery: Delivery) {
+		let app = app_without_a_client();
+		let slots = Arc::clone(&app.state::<MediaProxy>().fetches);
+		let _taken = slots
+			.acquire_many_owned(OFFICIAL_APP_REQUESTS_PER_HOST as u32)
+			.await
+			.unwrap();
+		let started = tokio::time::Instant::now();
+		let opening = serve_by(
+			delivery,
+			app.handle(),
+			VIDEO_URL,
+			grindr::MediaFetcher::MediaPlayer,
+			None,
+			false,
+		);
+		tokio::pin!(opening);
+
+		let early = tokio::time::timeout(TWO_HEADER_WAITS, &mut opening).await;
+
+		assert!(
+			early.is_err(),
+			"{delivery:?} gave up during the crate's retry"
+		);
+		assert_eq!(opening.await.status(), StatusCode::GATEWAY_TIMEOUT);
+		assert!(started.elapsed() >= RETRIED_HEADERS_DEADLINE);
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_desktop_video_stream_waits_out_a_retried_header_wait() {
+		assert_waits_out_a_retried_header_wait(Delivery::Streamed).await;
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_desktop_video_session_waits_out_a_retried_header_wait() {
+		assert_waits_out_a_retried_header_wait(Delivery::Sessioned).await;
 	}
 
 	#[tokio::test]

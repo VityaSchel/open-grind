@@ -4,6 +4,7 @@ use super::super::registry::{register_stream, STREAM_HEADER};
 use super::super::requested::Requested;
 use super::super::response::{refused, Freshness};
 use super::super::target::host_of;
+use super::super::upstream::GatewayFailure;
 use super::adapter::WebViewStream;
 
 pub const TELLS_THE_LENGTH: bool = cfg!(target_vendor = "apple");
@@ -70,11 +71,15 @@ pub fn deny(status: StatusCode, at: u64) -> Response<Vec<u8>> {
 pub fn unreachable(
 	url: &str,
 	requested: &Requested,
-	detail: String,
+	failure: GatewayFailure,
 ) -> Response<Vec<u8>> {
-	tracing::warn!("[media] stream failed for {}: {detail}", host_of(url));
+	tracing::warn!(
+		"[media] stream failed for {}: {}",
+		host_of(url),
+		failure.detail
+	);
 	if requested.start() == 0 {
-		return refused(StatusCode::GATEWAY_TIMEOUT);
+		return refused(failure.status);
 	}
 	poison()
 }

@@ -17,11 +17,11 @@ use super::session::{
 use super::stream::{answer, open, Answer, Head, Source};
 use super::target::host_of;
 use super::upstream::refusal_detail;
-use super::MediaProxy;
+use super::{MediaProxy, RETRIED_HEADERS_DEADLINE};
 
 const SESSIONS: usize = 4;
 const IDLE: Duration = Duration::from_secs(20);
-const OPEN_DEADLINE: Duration = Duration::from_secs(25);
+const OPEN_DEADLINE: Duration = RETRIED_HEADERS_DEADLINE;
 const WHOLE_ANSWERS_UP_TO: u64 = RANGE_WINDOW_BYTES;
 
 type Shared = Arc<Mutex<Session<Source>>>;
@@ -125,11 +125,17 @@ impl<R: Runtime> Opener for Upstream<'_, R> {
 				Ok(Err(error)) => {
 					return Err(match refusal_detail(error) {
 						Err(status) => Failure::Refused(status.as_u16()),
-						Ok(detail) => Failure::Upstream(detail),
+						Ok(failure)
+							if failure.status
+								== StatusCode::GATEWAY_TIMEOUT =>
+						{
+							Failure::TimedOut(failure.detail)
+						}
+						Ok(failure) => Failure::Upstream(failure.detail),
 					})
 				}
 				Err(_) => {
-					return Err(Failure::Upstream(format!(
+					return Err(Failure::TimedOut(format!(
 						"no headers within {OPEN_DEADLINE:?}"
 					)))
 				}
@@ -213,6 +219,13 @@ pub async fn serve_sessioned<R: Runtime>(
 				host_of(url)
 			);
 			refused(StatusCode::BAD_GATEWAY)
+		}
+		Err(Failure::TimedOut(detail)) => {
+			tracing::warn!(
+				"[media] video read timed out for {}: {detail}",
+				host_of(url)
+			);
+			refused(StatusCode::GATEWAY_TIMEOUT)
 		}
 	}
 }

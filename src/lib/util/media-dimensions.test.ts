@@ -21,6 +21,7 @@ describe("measureImage", () => {
 		mediaFailureMock.mockResolvedValue({
 			kind: "status",
 			status: 403,
+			phase: null,
 			host: "d3.cloudfront.net",
 			signatureExpired: true,
 		});

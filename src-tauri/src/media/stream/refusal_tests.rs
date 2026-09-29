@@ -1,3 +1,4 @@
+use super::super::upstream::GatewayFailure;
 use tauri::http::StatusCode;
 
 use super::super::registry::{unregister_stream, with_stream, STREAM_HEADER};
@@ -29,8 +30,11 @@ async fn a_streamed_seek_without_a_client_is_refused_through_an_empty_stream() {
 
 #[test]
 fn a_stream_that_never_opens_at_zero_fails_the_load_at_once() {
-	let response =
-		unreachable(VIDEO, &Requested::Whole, "no headers".to_owned());
+	let response = unreachable(
+		VIDEO,
+		&Requested::Whole,
+		GatewayFailure::timed_out("no headers".to_owned()),
+	);
 
 	assert_eq!(response.status(), StatusCode::GATEWAY_TIMEOUT);
 	assert_eq!(header_str(&response, STREAM_HEADER), None);
@@ -38,8 +42,11 @@ fn a_stream_that_never_opens_at_zero_fails_the_load_at_once() {
 
 #[test]
 fn a_stream_that_never_opens_past_zero_answers_with_a_poisoned_stream() {
-	let response =
-		unreachable(VIDEO, &Requested::From(9), "no headers".to_owned());
+	let response = unreachable(
+		VIDEO,
+		&Requested::From(9),
+		GatewayFailure::timed_out("no headers".to_owned()),
+	);
 
 	assert_eq!(response.status(), StatusCode::OK);
 	let id = stream_id(&response);

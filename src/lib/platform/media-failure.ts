@@ -6,11 +6,15 @@ const mediaFailureSchema = z.object({
 		"status",
 		"connect",
 		"transport",
+		"timeout",
 		"tooLarge",
 		"refused",
 		"notReady",
 	]),
 	status: z.int().nullable(),
+	phase: z
+		.enum(["sending", "headers", "receiving", "unfinished", "other"])
+		.nullable(),
 	host: z.string(),
 	signatureExpired: z.boolean(),
 });
@@ -42,6 +46,7 @@ export function remedyFor(failure: MediaFailure | null): MediaRemedy {
 		failure.kind === "connect" ||
 		failure.kind === "transport" ||
 		failure.kind === "notReady" ||
+		(failure.kind === "timeout" && failure.phase !== "unfinished") ||
 		(failure.status ?? 0) >= 500;
 	if (transient) return "retry";
 	return failure.signatureExpired ? "renew" : "none";
@@ -50,7 +55,11 @@ export function remedyFor(failure: MediaFailure | null): MediaRemedy {
 export function describeMediaFailure(failure: MediaFailure | null): string {
 	if (failure === null) return "no details";
 	const what =
-		failure.kind === "status" ? `status ${failure.status}` : failure.kind;
+		failure.kind === "status"
+			? `status ${failure.status}`
+			: failure.phase === null
+				? failure.kind
+				: `${failure.kind} (${failure.phase})`;
 	const expired = failure.signatureExpired ? ", signature expired" : "";
 	return `${what} from ${failure.host}${expired}`;
 }

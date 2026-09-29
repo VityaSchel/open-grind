@@ -145,6 +145,9 @@ impl From<grindr::GrindrError> for AppError {
 			}
 			grindr::GrindrError::Blocked(_) => AppError::NetworkBlocked,
 			grindr::GrindrError::SessionCleared => AppError::SessionCleared,
+			e @ grindr::GrindrError::Timeout(_) => {
+				AppError::Http(e.to_string())
+			}
 			_ => AppError::Http(e.to_string()),
 		}
 	}
@@ -243,6 +246,16 @@ mod tests {
 		assert_eq!(json["message"]["code"], 27);
 		assert_eq!(json["message"]["subReason"], "DRUG_SALES");
 		assert_eq!(json["message"]["automated"], true);
+	}
+
+	#[test]
+	fn a_timeout_reaches_the_page_as_a_retryable_http_error() {
+		let app = AppError::from(grindr::GrindrError::Timeout(
+			grindr::TimeoutPhase::Headers,
+		));
+		let json = serde_json::to_value(&app).unwrap();
+		assert_eq!(json["kind"], "Http");
+		assert_eq!(json["message"], "timed out: no response in time");
 	}
 
 	#[test]

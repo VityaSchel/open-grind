@@ -36,14 +36,18 @@ impl Fallback {
 		fetcher: MediaFetcher,
 	) -> Self {
 		let body_will_never_fit = matches!(error, FetchError::Oversized);
-		let deadline_ran_out =
-			matches!(error, FetchError::Upstream(GrindrError::Http(_)));
+		let transfer_broke = matches!(
+			error,
+			FetchError::Upstream(
+				GrindrError::Http(_) | GrindrError::Timeout(_)
+			)
+		);
 		let plays_from_windows = fetcher == MediaFetcher::MediaPlayer;
 
 		match (
 			streaming_platform,
 			body_will_never_fit,
-			deadline_ran_out && plays_from_windows,
+			transfer_broke && plays_from_windows,
 		) {
 			(true, true, _) => Self::Stream,
 			(false, true, _) | (false, _, true) => Self::Window,
@@ -116,25 +120,52 @@ pub fn without_url(mut message: String) -> String {
 	message
 }
 
-pub fn refusal_detail(error: FetchError) -> Result<String, StatusCode> {
+pub struct GatewayFailure {
+	pub status: StatusCode,
+	pub detail: String,
+}
+
+impl GatewayFailure {
+	pub fn timed_out(detail: String) -> Self {
+		Self {
+			status: StatusCode::GATEWAY_TIMEOUT,
+			detail,
+		}
+	}
+}
+
+fn gateway_status(error: &FetchError) -> StatusCode {
+	match error {
+		FetchError::Upstream(GrindrError::Timeout(_)) => {
+			StatusCode::GATEWAY_TIMEOUT
+		}
+		_ => StatusCode::BAD_GATEWAY,
+	}
+}
+
+pub fn refusal_detail(error: FetchError) -> Result<GatewayFailure, StatusCode> {
 	match error {
 		FetchError::Busy => Err(StatusCode::SERVICE_UNAVAILABLE),
 		FetchError::Upstream(GrindrError::InvalidRequest(_)) => {
 			Err(StatusCode::BAD_REQUEST)
 		}
-		error => Ok(detail_of(&error)),
+		error => Ok(GatewayFailure {
+			status: gateway_status(&error),
+			detail: detail_of(&error),
+		}),
 	}
 }
 
 pub fn refusal(error: FetchError, url: &str) -> Response<Vec<u8>> {
 	match refusal_detail(error) {
 		Err(status) => refused(status),
-		Ok(detail) => {
+		Ok(failure) => {
 			tracing::warn!(
-				"[media] fetch failed for {}: {detail}",
-				host_of(url)
+				"[media] fetch failed for {}: {}",
+				host_of(url),
+				failure.detail
 			);
-			refused(StatusCode::BAD_GATEWAY)
+			refused(failure.status)
 		}
 	}
 }
@@ -182,18 +213,21 @@ mod tests {
 
 	#[test]
 	fn only_a_video_whose_deadline_ran_out_is_worth_windowing() {
-		let timed_out = FetchError::Upstream(GrindrError::Http(
-			"operation timed out".to_owned(),
-		));
+		for broke in [
+			GrindrError::Http("connection reset".to_owned()),
+			GrindrError::Timeout(grindr::TimeoutPhase::Receiving),
+		] {
+			let broke = FetchError::Upstream(broke);
 
-		assert_eq!(
-			Fallback::pick(false, &timed_out, MediaFetcher::MediaPlayer),
-			Fallback::Window
-		);
-		assert_eq!(
-			Fallback::pick(false, &timed_out, MediaFetcher::ImageLoader),
-			Fallback::Refuse
-		);
+			assert_eq!(
+				Fallback::pick(false, &broke, MediaFetcher::MediaPlayer),
+				Fallback::Window
+			);
+			assert_eq!(
+				Fallback::pick(false, &broke, MediaFetcher::ImageLoader),
+				Fallback::Refuse
+			);
+		}
 	}
 
 	#[test]
@@ -314,7 +348,8 @@ mod tests {
 		let detail = refusal_detail(FetchError::Upstream(GrindrError::Http(
 			format!("error sending request for url ({signed}): reset"),
 		)))
-		.expect("an upstream failure is logged");
+		.expect("an upstream failure is logged")
+		.detail;
 
 		assert_eq!(detail, "HTTP error: error sending request: reset");
 		assert!(!detail.contains("SECRET"));
@@ -332,8 +367,14 @@ mod tests {
 			),
 			(FetchError::Oversized, StatusCode::BAD_GATEWAY),
 			(
-				FetchError::Upstream(GrindrError::Http("timeout".to_owned())),
+				FetchError::Upstream(GrindrError::Http("reset".to_owned())),
 				StatusCode::BAD_GATEWAY,
+			),
+			(
+				FetchError::Upstream(GrindrError::Timeout(
+					grindr::TimeoutPhase::Headers,
+				)),
+				StatusCode::GATEWAY_TIMEOUT,
 			),
 		];
 		for (error, status) in cases {

@@ -2184,9 +2184,9 @@ dependencies = [
 
 [[package]]
 name = "grindr"
-version = "0.25.0+26.17.0.181424"
+version = "0.26.0+26.17.0.181424"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99894d7d04da764cb3f8e0961e08c22852355719fe4e88c03f081bef3015e077"
+checksum = "246ba3591033c190ff62a57c72b81cc769c0f841e86c04cfdefd2ea5a8d40732"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -2205,6 +2205,8 @@ dependencies = [
  "spki",
  "thiserror 2.0.18",
  "tokio",
+ "tower-layer",
+ "tower-service",
  "tracing",
  "uuid",
  "wreq",

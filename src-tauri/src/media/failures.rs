@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use grindr::GrindrError;
+use grindr::{GrindrError, TimeoutPhase};
 use serde::Serialize;
 
 use super::target::host_of;
@@ -15,6 +15,7 @@ pub enum FailureKind {
 	Status,
 	Connect,
 	Transport,
+	Timeout,
 	TooLarge,
 	Refused,
 	NotReady,
@@ -25,13 +26,21 @@ pub enum FailureKind {
 pub struct MediaFailure {
 	pub kind: FailureKind,
 	pub status: Option<u16>,
+	pub phase: Option<&'static str>,
 	pub host: String,
 	pub signature_expired: bool,
 }
 
 impl MediaFailure {
 	pub fn of_status(status: u16, url: &str) -> Self {
-		Self::new(FailureKind::Status, Some(status), url)
+		Self {
+			status: Some(status),
+			..Self::new(FailureKind::Status, url)
+		}
+	}
+
+	pub fn late(url: &str) -> Self {
+		Self::new(FailureKind::Timeout, url)
 	}
 
 	pub fn of_error(error: &FetchError, url: &str) -> Self {
@@ -44,18 +53,35 @@ impl MediaFailure {
 			FetchError::Upstream(GrindrError::Connect(_)) => {
 				FailureKind::Connect
 			}
+			FetchError::Upstream(GrindrError::Timeout(phase)) => {
+				return Self {
+					phase: Some(phase_name(*phase)),
+					..Self::new(FailureKind::Timeout, url)
+				};
+			}
 			FetchError::Upstream(_) => FailureKind::Transport,
 		};
-		Self::new(kind, None, url)
+		Self::new(kind, url)
 	}
 
-	fn new(kind: FailureKind, status: Option<u16>, url: &str) -> Self {
+	fn new(kind: FailureKind, url: &str) -> Self {
 		Self {
 			kind,
-			status,
+			status: None,
+			phase: None,
 			host: host_of(url).to_owned(),
 			signature_expired: signature_expired(url),
 		}
+	}
+}
+
+fn phase_name(phase: TimeoutPhase) -> &'static str {
+	match phase {
+		TimeoutPhase::Sending => "sending",
+		TimeoutPhase::Headers => "headers",
+		TimeoutPhase::Receiving => "receiving",
+		TimeoutPhase::Unfinished => "unfinished",
+		_ => "other",
 	}
 }
 
@@ -129,7 +155,7 @@ mod tests {
 
 		assert_eq!(
 			json,
-			r#"{"kind":"status","status":403,"host":"d3.cloudfront.net","signatureExpired":true}"#
+			r#"{"kind":"status","status":403,"phase":null,"host":"d3.cloudfront.net","signatureExpired":true}"#
 		);
 	}
 
@@ -160,11 +186,33 @@ mod tests {
 			FailureKind::Transport
 		);
 		assert_eq!(
+			kind(FetchError::Upstream(GrindrError::Timeout(
+				TimeoutPhase::Receiving
+			))),
+			FailureKind::Timeout
+		);
+		assert_eq!(
 			kind(FetchError::Upstream(GrindrError::InvalidRequest(
 				"host".into()
 			))),
 			FailureKind::Refused
 		);
+	}
+
+	#[test]
+	fn a_timeout_names_the_phase_it_hit() {
+		let phase = |phase| {
+			MediaFailure::of_error(
+				&FetchError::Upstream(GrindrError::Timeout(phase)),
+				SIGNED,
+			)
+			.phase
+		};
+
+		assert_eq!(phase(TimeoutPhase::Headers), Some("headers"));
+		assert_eq!(phase(TimeoutPhase::Receiving), Some("receiving"));
+		assert_eq!(phase(TimeoutPhase::Unfinished), Some("unfinished"));
+		assert_eq!(phase(TimeoutPhase::Sending), Some("sending"));
 	}
 
 	#[test]
