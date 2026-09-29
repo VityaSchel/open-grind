@@ -10,7 +10,7 @@ Media files are identified by either a 40-character (public files) or 64-charact
 
 The official app sends `Accept: image/webp,image/*;q=0.8` and the same [User-Agent](/grindr-api/security-headers#user-agent) as the API, plus `Accept-Encoding: gzip` unless the request carries a `Range`. Same [TLS and HTTP/2 fingerprint](/grindr-api/security-headers). No `Authorization`, no `L-*` headers, no cookies.
 
-Signed URLs rotate their `Signature` on every fetch while the rest of the URL stays stable, so cache on the URL without its query.
+A signed URL keeps its path when it is signed again, so cache on the URL without its query. Chat image URLs repeat until they expire, album cover URLs are signed again in every response.
 
 Album videos are played with `android.media.MediaPlayer` User-Agent:
 

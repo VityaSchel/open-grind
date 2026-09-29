@@ -220,7 +220,7 @@
 		},
 		{
 			"name": "media/signed-cdn-files",
-			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. New signed URLs are generated and populated in API responses when existing URL expires. `Expires` query argument holds expiration date in unix timestamp in seconds, 15 minutes.\n\nBase URL appears to be: `https://{distribution}.cloudfront.net/`, always take the full URL from the `url` property on the media object itself."
+			"description": "CDN files accessible via signed URLs signed with `Signature` query argument. `Expires` query argument holds expiration date in unix timestamp in seconds. Chat image URLs live 15 minutes: API responses repeat the same URL until it expires, then carry a new one. Album cover URLs live 30 minutes and are signed again in every response.\n\nBase URL appears to be: `https://{distribution}.cloudfront.net/`, always take the full URL from the `url` property on the media object itself."
 		},
 		{
 			"name": "messaging/albums",
@@ -7225,7 +7225,7 @@
 					}
 				},
 				"summary": "Refresh messages",
-				"description": "Requests the messages with the given message IDs."
+				"description": "Returns the messages with the given message IDs, oldest first. IDs of messages that don't exist are left out."
 			}
 		},
 		"/v4/chat/conversation/{conversationId}/read/{messageId}": {
@@ -17676,7 +17676,7 @@
 					},
 					"dynamic": {
 						"type": "boolean",
-						"description": "boolean, unknown purpose, WIP"
+						"description": "boolean, `true` for `Album` messages and `false` for `Text`, `Image` and `ExpiringImage` messages. Current bodies of dynamic messages are returned by [Refresh messages](/grindr-api/messaging/conversations#refresh-messages)"
 					},
 					"chat1Type": {
 						"description": "string, see [Message type](/grindr-api/messaging/messages#message-type)",
