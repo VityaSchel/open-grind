@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ImageBrokenIcon } from "phosphor-svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	let {
 		class: className,
@@ -7,12 +8,14 @@
 		size = "sm",
 		aspectRatio,
 		label,
+		attach = () => {},
 	}: {
 		class?: import("svelte/elements").ClassValue;
 		tone?: "muted" | "photo";
 		size?: "xs" | "sm" | "md" | "lg" | "xl";
 		aspectRatio?: string;
 		label?: string;
+		attach?: Attachment<HTMLElement>;
 	} = $props();
 </script>
 
@@ -29,6 +32,7 @@
 		className,
 	]}
 	style:aspect-ratio={aspectRatio}
+	{@attach attach}
 >
 	<ImageBrokenIcon
 		weight="fill"

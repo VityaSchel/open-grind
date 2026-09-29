@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { onDestroy } from "svelte";
+	import { onDestroy, untrack } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import {
@@ -7,6 +8,7 @@
 		mediaFailure,
 		remedyFor,
 	} from "$lib/platform/media-failure";
+	import { now } from "$lib/util/clock";
 	import {
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
@@ -16,6 +18,8 @@
 		acquireMediaLoadSlot,
 		releaseWhenSettled,
 	} from "$lib/util/media-load-slots";
+	import { probeMedia } from "$lib/util/media-probe";
+	import { mediaRetry } from "$lib/util/media-retry.svelte";
 	import BrokenMedia from "./BrokenMedia.svelte";
 
 	let {
@@ -49,14 +53,22 @@
 	} = $props();
 
 	const RETRY_DELAY_MS = 2000;
+	const MAX_REARMS = 3;
+	const REARM_SPACING_MS = 30 * 1000;
 
 	let armed = $state(false);
 	const deferred = $derived(loading === "lazy" && !armed);
 
-	let recovery = $state<{ src: string; retrying: boolean } | null>(null);
+	let recovery = $state<{
+		src: string;
+		retrying: boolean;
+		attempt: number;
+	} | null>(null);
 	const recovering = $derived(recovery?.src === src ? recovery : null);
 	const loadSrc = $derived(
-		recovering?.retrying && src !== null ? retryMediaSrc(src) : src,
+		recovering?.retrying && src !== null
+			? retryMediaSrc({ src, attempt: recovering.attempt })
+			: src,
 	);
 	const requested = $derived(
 		pending ||
@@ -67,9 +79,26 @@
 			: loadSrc,
 	);
 
+	type Stalled = {
+		src: string;
+		attempts: number;
+		at: number;
+		generation: number;
+	};
+
 	let retryTimer: ReturnType<typeof setTimeout> | undefined;
 	let renewedSinceLoad = false;
-	onDestroy(() => clearTimeout(retryTimer));
+	let stalled = $state<Stalled | null>(null);
+	let brokenVisible = $state(false);
+	let probe: { src: string; controller: AbortController } | null = null;
+	let handedSlot: (() => void) | null = null;
+	let rearmTimer: ReturnType<typeof setTimeout> | undefined;
+	onDestroy(() => {
+		clearTimeout(retryTimer);
+		clearTimeout(rearmTimer);
+		probe?.controller.abort();
+		handedSlot?.();
+	});
 
 	async function recover(failed: string): Promise<void> {
 		if (!explainsMediaFailures()) {
@@ -77,12 +106,13 @@
 			return;
 		}
 		const retried = recovering?.retrying === true;
-		recovery = { src: failed, retrying: false };
+		recovery = { src: failed, retrying: false, attempt: 1 };
 		const remedy = remedyFor(await mediaFailure(failed));
 		if (src !== failed) return;
 		if (remedy === "retry" && !retried) {
 			retryTimer = setTimeout(() => {
-				if (src === failed) recovery = { src: failed, retrying: true };
+				if (src === failed)
+					recovery = { src: failed, retrying: true, attempt: 1 };
 			}, RETRY_DELAY_MS);
 			return;
 		}
@@ -90,8 +120,78 @@
 			renewedSinceLoad = true;
 			await onexpired();
 		}
-		if (src === failed) failedSrc = failed;
+		if (src !== failed) return;
+		failedSrc = failed;
+		stalled =
+			remedy === "retry"
+				? {
+						src: failed,
+						attempts:
+							stalled?.src === failed ? stalled.attempts : 0,
+						at: now(),
+						generation: mediaRetry.generation,
+					}
+				: null;
 	}
+
+	function rearm(): void {
+		const pause = stalled;
+		if (pause === null || pause.src !== src || failedSrc !== src) return;
+		if (probe !== null && probe.src !== src) {
+			probe.controller.abort();
+			probe = null;
+		}
+		if (!brokenVisible || probe !== null) return;
+		if (pause.attempts >= MAX_REARMS) return;
+		if (pause.generation === mediaRetry.generation) return;
+		const wait = REARM_SPACING_MS - (now() - pause.at);
+		if (wait > 0) {
+			clearTimeout(rearmTimer);
+			rearmTimer = setTimeout(rearm, wait);
+			return;
+		}
+		const attempt = pause.attempts + 2;
+		stalled = {
+			src: pause.src,
+			attempts: pause.attempts + 1,
+			at: now(),
+			generation: mediaRetry.generation,
+		};
+		const controller = new AbortController();
+		probe = { src: pause.src, controller };
+		void probeMedia({
+			src: retryMediaSrc({ src: pause.src, attempt }),
+			signal: controller.signal,
+		}).then((slot) => {
+			if (probe?.controller === controller) probe = null;
+			if (slot === null) return;
+			if (controller.signal.aborted || src !== pause.src) return slot();
+			handedSlot = slot;
+			recovery = { src: pause.src, retrying: true, attempt };
+			failedSrc = null;
+		});
+	}
+
+	$effect(() => {
+		void mediaRetry.generation;
+		untrack(rearm);
+	});
+
+	const watchBrokenTile: Attachment<HTMLElement> = (node) => {
+		if (typeof IntersectionObserver === "undefined") {
+			brokenVisible = true;
+			return () => (brokenVisible = false);
+		}
+		const observer = new IntersectionObserver((entries) => {
+			brokenVisible = entries.at(-1)?.isIntersecting ?? false;
+			if (brokenVisible) rearm();
+		});
+		observer.observe(node);
+		return () => {
+			observer.disconnect();
+			brokenVisible = false;
+		};
+	};
 
 	let slotGranted = $state(false);
 	let shownSrc = $state<string | null>(null);
@@ -101,7 +201,11 @@
 	$effect.pre(() => {
 		slotGranted = false;
 		if (requested === null) return;
-		const release = acquireMediaLoadSlot(() => (slotGranted = true));
+		const handed = handedSlot;
+		handedSlot = null;
+		const release =
+			handed ?? acquireMediaLoadSlot(() => (slotGranted = true));
+		if (handed !== null) slotGranted = true;
 		releaseSlot = release;
 		return () => {
 			if (imageElement?.isConnected === false && !imageElement.complete)
@@ -144,6 +248,7 @@
 			}
 			shownSrc = loadSrc;
 			renewedSinceLoad = false;
+			stalled = null;
 			onload?.(image);
 		}}
 	/>
@@ -154,5 +259,6 @@
 		class={className}
 		aspectRatio={aspectRatio ?? fallbackAspectRatio}
 		label={alt === "" ? undefined : alt}
+		attach={watchBrokenTile}
 	/>
 {/if}

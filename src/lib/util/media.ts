@@ -43,8 +43,14 @@ export function profileMediaUrl({
 	);
 }
 
-export function retryMediaSrc(src: string): string {
-	return `${src}${src.includes("?") ? "&" : "?"}retry=1`;
+export function retryMediaSrc({
+	src,
+	attempt,
+}: {
+	src: string;
+	attempt: number;
+}): string {
+	return `${src}${src.includes("?") ? "&" : "?"}retry=${attempt}`;
 }
 
 export function firstFrameSrc(src: string): string {
