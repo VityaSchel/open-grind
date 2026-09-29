@@ -102,7 +102,10 @@ function slideRect(
 	{ selector }: { selector: string },
 ): Promise<Rect | null> {
 	return page.evaluate((selector) => {
-		const rect = document.querySelector(selector)?.getBoundingClientRect();
+		const node = document.querySelector(selector);
+		if (node instanceof HTMLImageElement && node.naturalWidth === 0)
+			return null;
+		const rect = node?.getBoundingClientRect();
 		if (rect === undefined || rect.width === 0 || rect.height === 0)
 			return null;
 		return { top: rect.top, width: rect.width, height: rect.height };

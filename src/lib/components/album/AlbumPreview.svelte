@@ -83,6 +83,7 @@
 		const { slides } = preview;
 		const controller = new AbortController();
 		openAlbumLightbox({
+			albumId,
 			slides,
 			signal: controller.signal,
 			onClosed: () => (preview = { status: "idle" }),

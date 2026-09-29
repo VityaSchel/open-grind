@@ -125,11 +125,6 @@
 					height: image.size?.height ?? 0,
 				},
 			],
-			configure: (lightbox) =>
-				lightbox.addFilter(
-					"useContentPlaceholder",
-					(usePlaceholder) => usePlaceholder && image.size !== null,
-				),
 			signal: controller.signal,
 			onClosed: () => {
 				imageState = { status: "idle" };

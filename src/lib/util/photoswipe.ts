@@ -210,6 +210,7 @@ export async function openLightbox({
 		if (item === undefined) return itemData;
 		return { src: item.src, width: item.width, height: item.height };
 	});
+	applyPhotoSwipeLoadedSize(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
 	if (videoAt !== undefined) applyPhotoSwipeVideo(lightbox, videoAt);
 	configure?.(lightbox);
@@ -230,6 +231,14 @@ export function applyPhotoSwipeThumbDimensions(
 		}
 		return itemData;
 	});
+	applyPhotoSwipeLoadedSize(lightbox);
+}
+
+export function applyPhotoSwipeLoadedSize(lightbox: PhotoSwipeLightbox): void {
+	lightbox.addFilter(
+		"useContentPlaceholder",
+		(usePlaceholder, content) => usePlaceholder && content.width > 0,
+	);
 	lightbox.on("loadComplete", ({ slide, content }) => {
 		const image = content.element;
 		if (
