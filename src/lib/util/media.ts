@@ -43,6 +43,10 @@ export function profileMediaUrl({
 	);
 }
 
+export function retryMediaSrc(src: string): string {
+	return `${src}${src.includes("?") ? "&" : "?"}retry=1`;
+}
+
 export function firstFrameSrc(src: string): string {
 	return `${src}#t=0.001`;
 }

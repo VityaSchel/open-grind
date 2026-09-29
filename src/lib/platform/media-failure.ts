@@ -17,8 +17,14 @@ const mediaFailureSchema = z.object({
 
 export type MediaFailure = z.infer<typeof mediaFailureSchema>;
 
+export type MediaRemedy = "retry" | "renew" | "none";
+
+export function explainsMediaFailures(): boolean {
+	return isTauri();
+}
+
 export async function mediaFailure(src: string): Promise<MediaFailure | null> {
-	if (!isTauri()) return null;
+	if (!explainsMediaFailures()) return null;
 	try {
 		return mediaFailureSchema
 			.nullable()
@@ -27,6 +33,18 @@ export async function mediaFailure(src: string): Promise<MediaFailure | null> {
 		console.error(error);
 		return null;
 	}
+}
+
+export function remedyFor(failure: MediaFailure | null): MediaRemedy {
+	if (failure === null) return "none";
+	if (failure.status === 403) return "renew";
+	const transient =
+		failure.kind === "connect" ||
+		failure.kind === "transport" ||
+		failure.kind === "notReady" ||
+		(failure.status ?? 0) >= 500;
+	if (transient) return "retry";
+	return failure.signatureExpired ? "renew" : "none";
 }
 
 export function describeMediaFailure(failure: MediaFailure | null): string {

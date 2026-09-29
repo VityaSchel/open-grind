@@ -12,6 +12,7 @@ import { type OptimisticMessage, patchMessages } from "./merge-messages";
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const PERIODIC_MIN_AGE_MS = 10 * 60 * 1000;
 const TICK_MS = 60 * 1000;
+const RENEWAL_COOLDOWN_MS = 60 * 1000;
 const ALBUM_MESSAGE_TYPES = new Set([
 	"Album",
 	"ExpiringAlbum",
@@ -24,28 +25,35 @@ export class DynamicMessagesRefresh {
 	readonly #conversationId: string;
 	readonly #messages: () => OptimisticMessage[];
 	readonly #commit: (messages: OptimisticMessage[]) => void;
+	readonly #reconcile: () => Promise<void>;
 	readonly #paused: () => boolean;
 	readonly #timer: ReturnType<typeof setInterval>;
 	readonly #listeners: Promise<() => void>[];
 	#lastPeriodicAt = Number.NEGATIVE_INFINITY;
-	#inFlight = false;
-	#allRequested = false;
+	#lastRenewalAt = Number.NEGATIVE_INFINITY;
+	#renewal: Promise<void> | null = null;
+	#renewalTimer: ReturnType<typeof setTimeout> | undefined;
+	#running: Promise<void> | null = null;
+	#queuedAll: Promise<void> | null = null;
 	#destroyed = false;
 
 	constructor({
 		conversationId,
 		messages,
 		commit,
+		reconcile,
 		paused,
 	}: {
 		conversationId: string;
 		messages: () => OptimisticMessage[];
 		commit: (messages: OptimisticMessage[]) => void;
+		reconcile: () => Promise<void>;
 		paused: () => boolean;
 	}) {
 		this.#conversationId = conversationId;
 		this.#messages = messages;
 		this.#commit = commit;
+		this.#reconcile = reconcile;
 		this.#paused = paused;
 		this.#listeners = [
 			ws.on(
@@ -71,9 +79,28 @@ export class DynamicMessagesRefresh {
 		this.#tick();
 	}
 
+	renewMedia(): Promise<void> {
+		this.#renewal ??= this.#nextRenewal().finally(() => {
+			this.#renewal = null;
+		});
+		return this.#renewal;
+	}
+
+	async #nextRenewal(): Promise<void> {
+		const wait = this.#lastRenewalAt + RENEWAL_COOLDOWN_MS - now();
+		if (wait > 0)
+			await new Promise((resolve) => {
+				this.#renewalTimer = setTimeout(resolve, wait);
+			});
+		if (this.#destroyed) return;
+		this.#lastRenewalAt = now();
+		await Promise.all([this.#reconcile(), this.#refresh("all")]);
+	}
+
 	destroy(): void {
 		this.#destroyed = true;
 		clearInterval(this.#timer);
+		clearTimeout(this.#renewalTimer);
 		stopListening(this.#listeners);
 	}
 
@@ -95,11 +122,15 @@ export class DynamicMessagesRefresh {
 		);
 	}
 
-	async #refresh(scope: Scope): Promise<void> {
-		if (this.#destroyed || this.#paused()) return;
-		if (this.#inFlight) {
-			if (scope === "all") this.#allRequested = true;
-			return;
+	#refresh(scope: Scope): Promise<void> {
+		if (this.#destroyed || this.#paused()) return Promise.resolve();
+		if (this.#running !== null) {
+			if (scope === "periodic") return this.#running;
+			this.#queuedAll ??= this.#running.then(() => {
+				this.#queuedAll = null;
+				return this.#refresh("all");
+			});
+			return this.#queuedAll;
 		}
 		if (scope === "periodic") this.#lastPeriodicAt = now();
 		const requested = new Map(
@@ -108,8 +139,14 @@ export class DynamicMessagesRefresh {
 				JSON.stringify(m),
 			]),
 		);
-		if (requested.size === 0) return;
-		this.#inFlight = true;
+		if (requested.size === 0) return Promise.resolve();
+		this.#running = this.#fetchAndPatch(requested).finally(() => {
+			this.#running = null;
+		});
+		return this.#running;
+	}
+
+	async #fetchAndPatch(requested: Map<string, string>): Promise<void> {
 		try {
 			const { messages } = await refreshMessagesById({
 				conversationId: this.#conversationId,
@@ -129,12 +166,6 @@ export class DynamicMessagesRefresh {
 			if (patched.changed) this.#commit(patched.messages);
 		} catch (error) {
 			console.error("Failed to refresh dynamic messages", error);
-		} finally {
-			this.#inFlight = false;
-			if (this.#allRequested) {
-				this.#allRequested = false;
-				void this.#refresh("all");
-			}
 		}
 	}
 }

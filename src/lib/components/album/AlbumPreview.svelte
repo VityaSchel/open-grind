@@ -24,6 +24,7 @@
 		class: className,
 		contentClass,
 		attach = () => {},
+		onexpired,
 		children,
 	}: {
 		albumId: number;
@@ -34,6 +35,7 @@
 		class?: ClassValue;
 		contentClass?: ClassValue;
 		attach?: Attachment<HTMLElement>;
+		onexpired?: () => Promise<void>;
 		children?: Snippet;
 	} = $props();
 
@@ -113,6 +115,7 @@
 	<MediaImage
 		src={proxyMediaUrl(shownCoverUrl)}
 		onload={() => (loadedCoverUrl = shownCoverUrl)}
+		{onexpired}
 		class="absolute top-0 left-0 h-full w-full rounded-[inherit]"
 		imgClass="bg-card-foreground/10"
 	/>

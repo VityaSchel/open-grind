@@ -83,7 +83,7 @@ export class ConversationState {
 		markRead: (messageId) => this.#markRead(messageId),
 	});
 	#unsubscribeReconcile: () => void;
-	#dynamicRefresh: DynamicMessagesRefresh;
+	readonly dynamicRefresh: DynamicMessagesRefresh;
 
 	constructor({
 		conversationId,
@@ -184,10 +184,11 @@ export class ConversationState {
 				},
 			),
 		);
-		this.#dynamicRefresh = new DynamicMessagesRefresh({
+		this.dynamicRefresh = new DynamicMessagesRefresh({
 			conversationId,
 			messages: () => this.messages,
 			commit: (messages) => this.#commitMessages(messages),
+			reconcile: () => this.#reconcileMessages(),
 			paused: () => this.error !== null,
 		});
 	}
@@ -207,7 +208,7 @@ export class ConversationState {
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();
 		this.#readReceipts.destroy();
-		this.#dynamicRefresh.destroy();
+		this.dynamicRefresh.destroy();
 	}
 
 	async #reconcileMessages(): Promise<void> {

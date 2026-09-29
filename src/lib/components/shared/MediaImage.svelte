@@ -1,9 +1,17 @@
 <script lang="ts">
+	import { onDestroy } from "svelte";
+
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import {
+		explainsMediaFailures,
+		mediaFailure,
+		remedyFor,
+	} from "$lib/platform/media-failure";
 	import {
 		loadWhenVisible,
 		TRANSPARENT_PIXEL,
 	} from "$lib/util/load-when-visible";
+	import { retryMediaSrc } from "$lib/util/media";
 	import {
 		acquireMediaLoadSlot,
 		releaseWhenSettled,
@@ -23,6 +31,7 @@
 		pending = false,
 		failedSrc = $bindable(null),
 		onload,
+		onexpired,
 	}: {
 		src: string | null;
 		alt?: string;
@@ -36,13 +45,53 @@
 		pending?: boolean;
 		failedSrc?: string | null;
 		onload?: (image: HTMLImageElement) => void;
+		onexpired?: () => Promise<void>;
 	} = $props();
+
+	const RETRY_DELAY_MS = 2000;
 
 	let armed = $state(false);
 	const deferred = $derived(loading === "lazy" && !armed);
-	const requested = $derived(
-		pending || deferred || failedSrc === src ? null : src,
+
+	let recovery = $state<{ src: string; retrying: boolean } | null>(null);
+	const recovering = $derived(recovery?.src === src ? recovery : null);
+	const loadSrc = $derived(
+		recovering?.retrying && src !== null ? retryMediaSrc(src) : src,
 	);
+	const requested = $derived(
+		pending ||
+			deferred ||
+			failedSrc === src ||
+			recovering?.retrying === false
+			? null
+			: loadSrc,
+	);
+
+	let retryTimer: ReturnType<typeof setTimeout> | undefined;
+	let renewedSinceLoad = false;
+	onDestroy(() => clearTimeout(retryTimer));
+
+	async function recover(failed: string): Promise<void> {
+		if (!explainsMediaFailures()) {
+			failedSrc = failed;
+			return;
+		}
+		const retried = recovering?.retrying === true;
+		recovery = { src: failed, retrying: false };
+		const remedy = remedyFor(await mediaFailure(failed));
+		if (src !== failed) return;
+		if (remedy === "retry" && !retried) {
+			retryTimer = setTimeout(() => {
+				if (src === failed) recovery = { src: failed, retrying: true };
+			}, RETRY_DELAY_MS);
+			return;
+		}
+		if (remedy === "renew" && onexpired && !renewedSinceLoad) {
+			renewedSinceLoad = true;
+			await onexpired();
+		}
+		if (src === failed) failedSrc = failed;
+	}
 
 	let slotGranted = $state(false);
 	let shownSrc = $state<string | null>(null);
@@ -72,7 +121,7 @@
 {:else if failedSrc !== src}
 	<img
 		bind:this={imageElement}
-		src={slotGranted ? src : (shownSrc ?? TRANSPARENT_PIXEL)}
+		src={slotGranted ? loadSrc : (shownSrc ?? TRANSPARENT_PIXEL)}
 		{alt}
 		{loading}
 		use:loadWhenVisible={deferred ? () => (armed = true) : undefined}
@@ -82,7 +131,7 @@
 		onerror={() => {
 			if (!slotGranted) return;
 			releaseSlot();
-			failedSrc = src;
+			if (src !== null) void recover(src);
 		}}
 		onload={(event) => {
 			const image = event.currentTarget;
@@ -93,7 +142,8 @@
 				failedSrc = src;
 				return;
 			}
-			shownSrc = src;
+			shownSrc = loadSrc;
+			renewedSinceLoad = false;
 			onload?.(image);
 		}}
 	/>

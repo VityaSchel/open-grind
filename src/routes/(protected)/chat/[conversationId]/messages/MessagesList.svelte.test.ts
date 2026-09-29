@@ -9,18 +9,23 @@ const {
 	unsendMessageMock,
 	offerBypassMock,
 	showErrorToastMock,
+	setMediaRenewalMock,
 } = vi.hoisted(() => ({
 	messagePropsSeen: [] as Record<string, unknown>[],
 	deleteMessageForMeMock: vi.fn(),
 	unsendMessageMock: vi.fn(),
 	offerBypassMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
+	setMediaRenewalMock: vi.fn(),
 }));
 
 vi.mock("./message/Message.svelte", () => ({
 	default: (_anchor: unknown, props: Record<string, unknown>) => {
 		messagePropsSeen.push(props);
 	},
+}));
+vi.mock("./message/media-renewal", () => ({
+	setMediaRenewal: setMediaRenewalMock,
 }));
 vi.mock("$lib/api/messaging/messages", () => ({
 	deleteMessageForMe: deleteMessageForMeMock,
@@ -48,6 +53,7 @@ const MESSAGE_ID = "m1";
 const OUR_ID = 1;
 
 const revert = vi.fn();
+const renewMediaMock = vi.fn(() => Promise.resolve());
 const remove = vi.fn(() => ({ revert: vi.fn() }));
 
 const paywall = () =>
@@ -88,6 +94,7 @@ function renderOwnMessage({
 		reactTo: vi.fn(),
 		reportRead: vi.fn(),
 		setReplyTo: vi.fn(),
+		dynamicRefresh: { renewMedia: renewMediaMock },
 	};
 	render(MessagesList, { seenMessageIds: new Set<string>() });
 	expect(messagePropsSeen).toHaveLength(1);
@@ -103,6 +110,17 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
+});
+
+describe("MessagesList media renewal", () => {
+	it("lets its messages renew the chat's signed media", async () => {
+		renderOwnMessage();
+		const renew = setMediaRenewalMock.mock.lastCall?.[0] as () => unknown;
+
+		await renew();
+
+		expect(renewMediaMock).toHaveBeenCalledOnce();
+	});
 });
 
 describe("MessagesList actions", () => {

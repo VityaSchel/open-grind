@@ -13,7 +13,9 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 
 import {
 	describeMediaFailure,
+	type MediaFailure,
 	mediaFailure,
+	remedyFor,
 } from "$lib/platform/media-failure";
 
 const SRC = "http://ogmedia.localhost/iPAYLOAD";
@@ -71,5 +73,46 @@ describe("describeMediaFailure", () => {
 			}),
 		).toBe("transport from cdns.grindr.com");
 		expect(describeMediaFailure(null)).toBe("no details");
+	});
+});
+
+describe("remedyFor", () => {
+	const of = (overrides: Partial<MediaFailure>): MediaFailure => ({
+		kind: "status",
+		status: null,
+		host: "d3.cloudfront.net",
+		signatureExpired: false,
+		...overrides,
+	});
+
+	it("retries what a second attempt can fix", () => {
+		for (const failure of [
+			of({ kind: "connect" }),
+			of({ kind: "transport" }),
+			of({ kind: "notReady" }),
+			of({ status: 500 }),
+			of({ kind: "transport", signatureExpired: true }),
+		]) {
+			expect(remedyFor(failure), JSON.stringify(failure)).toBe("retry");
+		}
+	});
+
+	it("renews a refused or expired signature", () => {
+		expect(remedyFor(of({ status: 403 }))).toBe("renew");
+		expect(remedyFor(of({ status: 404, signatureExpired: true }))).toBe(
+			"renew",
+		);
+	});
+
+	it("gives up on everything else", () => {
+		for (const failure of [
+			of({ status: 404 }),
+			of({ status: 499 }),
+			of({ kind: "tooLarge" }),
+			of({ kind: "refused" }),
+			null,
+		]) {
+			expect(remedyFor(failure), JSON.stringify(failure)).toBe("none");
+		}
 	});
 });

@@ -14,6 +14,7 @@
 		type OptimisticMessage,
 	} from "../conversation-state.svelte";
 	import { processMessages } from "../messages";
+	import { setMediaRenewal } from "./message/media-renewal";
 	import Message from "./message/Message.svelte";
 
 	let { seenMessageIds }: { seenMessageIds: Set<string> } = $props();
@@ -22,6 +23,7 @@
 	let reportProfileId = $state<number | null>(null);
 
 	const conversationState = $derived(getConversationState()());
+	setMediaRenewal(() => conversationState.dynamicRefresh.renewMedia());
 
 	const messages = $derived(
 		processMessages({

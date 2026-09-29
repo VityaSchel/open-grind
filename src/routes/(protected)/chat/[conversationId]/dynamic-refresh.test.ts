@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type z from "zod";
 
-const { refreshMessagesByIdMock, handlers, appLifecycle } = vi.hoisted(() => ({
-	refreshMessagesByIdMock: vi.fn(),
-	handlers: new Map<string, (event: unknown) => void>(),
-	appLifecycle: { active: true },
-}));
+const { refreshMessagesByIdMock, reconcileMock, handlers, appLifecycle } =
+	vi.hoisted(() => ({
+		reconcileMock: vi.fn(() => Promise.resolve()),
+		refreshMessagesByIdMock: vi.fn(),
+		handlers: new Map<string, (event: unknown) => void>(),
+		appLifecycle: { active: true },
+	}));
 
 vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
@@ -75,6 +77,7 @@ function start(
 		conversationId: CONVERSATION_ID,
 		messages: () => messages,
 		commit,
+		reconcile: reconcileMock,
 		paused,
 	});
 	return { commit, refresh };
@@ -106,6 +109,7 @@ beforeEach(() => {
 	appLifecycle.active = true;
 	refreshMessagesByIdMock.mockReset();
 	refreshMessagesByIdMock.mockResolvedValue({ messages: [] });
+	reconcileMock.mockClear();
 });
 
 afterEach(() => {
@@ -313,6 +317,46 @@ describe("dynamic message refresh", () => {
 			["untouched", { text: "after" }],
 		]);
 		expect(committed[0]?.reactions).toHaveLength(1);
+		refresh.destroy();
+	});
+
+	it("renews on request with a page refetch and a dynamic refresh, holding extra requests to once a minute", async () => {
+		const { refresh } = start([message({ id: "young", ageMinutes: 1 })]);
+		await settle();
+
+		await refresh.renewMedia();
+		const queued = refresh.renewMedia();
+		const sameQueue = refresh.renewMedia();
+		await settle();
+		expect(refreshMessagesByIdMock).toHaveBeenCalledTimes(1);
+		expect(reconcileMock).toHaveBeenCalledTimes(1);
+		expect(sameQueue).toBe(queued);
+
+		await vi.advanceTimersByTimeAsync(MINUTE);
+		await queued;
+
+		expect(refreshMessagesByIdMock).toHaveBeenCalledTimes(2);
+		expect(reconcileMock).toHaveBeenCalledTimes(2);
+		refresh.destroy();
+	});
+
+	it("settles a requested renewal only once its answer is applied", async () => {
+		const young = message({ id: "young", ageMinutes: 1, text: "before" });
+		const answer = deferred<{ messages: unknown[] }>();
+		refreshMessagesByIdMock.mockReturnValueOnce(answer.promise);
+		const { commit, refresh } = start([young]);
+		await settle();
+
+		let settled = false;
+		void refresh.renewMedia().then(() => (settled = true));
+		await settle();
+		expect(settled).toBe(false);
+
+		answer.resolve({ messages: [serverCopy(young, "after")] });
+		await settle();
+
+		expect(settled).toBe(true);
+		expect(commit).toHaveBeenCalledOnce();
 		refresh.destroy();
 	});
 
