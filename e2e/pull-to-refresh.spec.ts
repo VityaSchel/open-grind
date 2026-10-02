@@ -7,6 +7,7 @@ import {
 	MESSAGE_ROW,
 	wheel,
 } from "./support/app";
+import { openTaps, TAP_ROW } from "./support/interest-pager";
 import {
 	BUTTON_ROW_PX,
 	CONVERSATION_ROW,
@@ -25,18 +26,12 @@ const ME = 123456000;
 const CONVERSATIONS_MODULE_URL =
 	"/src/lib/chat/conversations-context.svelte.ts";
 const SCROLL_AWAY_PX = 10;
-const TAP_ROW = "a[href^='/profile/']";
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const SCREEN_TALLER_THAN_ITS_CONTENT = { width: 420, height: 3000 };
 const ROOM_ABOVE_COMPOSER_PROPERTY = "--refresh-inset-bottom";
 
-async function openTaps(page: Page) {
-	await installTauriShim(page);
-	await page.goto("/interest/taps");
-	await page
-		.locator(TAP_ROW)
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+async function openRefreshableTaps(page: Page) {
+	await openTaps(page);
 	await page
 		.locator("[data-refresh-phase]")
 		.first()
@@ -74,8 +69,7 @@ const roomAboveComposer = (scroller: Locator) =>
 
 async function revealButtonOver(
 	page: Page,
-	row: Locator,
-	{ towardBoundary = -100 } = {},
+	{ row, towardBoundary = -100 }: { row: Locator; towardBoundary?: number },
 ) {
 	const box = await row.boundingBox();
 	if (!box) throw new Error("the row is not on screen");
@@ -347,7 +341,7 @@ test.describe("pull to refresh", () => {
 
 	for (const list of [
 		{ name: "the inbox", open: openInbox, row: CONVERSATION_ROW },
-		{ name: "the taps list", open: openTaps, row: TAP_ROW },
+		{ name: "the taps list", open: openRefreshableTaps, row: TAP_ROW },
 	]) {
 		test(`on ${list.name} the button takes a row of its own above the first entry, and gives it back once the reader scrolls on`, async ({
 			page,
@@ -356,7 +350,7 @@ test.describe("pull to refresh", () => {
 			const firstRow = page.locator(list.row).first();
 			const restingTop = await topOf(firstRow);
 
-			const pointer = await revealButtonOver(page, firstRow);
+			const pointer = await revealButtonOver(page, { row: firstRow });
 			await expect
 				.poll(() => topOf(firstRow))
 				.toBe(restingTop + BUTTON_ROW_PX);
@@ -380,7 +374,7 @@ test.describe("pull to refresh", () => {
 		await openInbox(page);
 		const firstRow = page.locator(CONVERSATION_ROW).first();
 		const restingTop = await topOf(firstRow);
-		await revealButtonOver(page, firstRow);
+		await revealButtonOver(page, { row: firstRow });
 		await expect
 			.poll(() => topOf(firstRow))
 			.toBe(restingTop + BUTTON_ROW_PX);
@@ -413,7 +407,8 @@ test.describe("pull to refresh", () => {
 		const newest = page.locator(MESSAGE_ROW).last();
 		const restingBottom = await bottomOf(newest);
 
-		const pointer = await revealButtonOver(page, newest, {
+		const pointer = await revealButtonOver(page, {
+			row: newest,
 			towardBoundary: 100,
 		});
 		await expect
@@ -449,7 +444,7 @@ test.describe("pull to refresh", () => {
 		const scroller = page.locator(MESSAGES_SCROLLER);
 		const newest = page.locator(MESSAGE_ROW).last();
 		const restingBottom = await bottomOf(newest);
-		await revealButtonOver(page, newest, { towardBoundary: 100 });
+		await revealButtonOver(page, { row: newest, towardBoundary: 100 });
 		await expect
 			.poll(() => roomAboveComposer(scroller))
 			.toBe(`${BUTTON_ROW_PX}px`);
@@ -537,7 +532,8 @@ test.describe("pull to refresh", () => {
 			const restingRange = await scrollRange(scroller);
 			expect(restingRange).toBeLessThanOrEqual(1);
 
-			await revealButtonOver(page, row, {
+			await revealButtonOver(page, {
+				row,
 				towardBoundary: surface.towardBoundary,
 			});
 			await expect

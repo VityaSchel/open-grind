@@ -4,6 +4,7 @@ import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import {
 	openAppSettings,
 	openSettings,
+	STACK_PANE,
 	stackSettled,
 } from "./support/page-stack";
 import { pauseOnceSliding, resumeSlides } from "./support/stack-layers";
@@ -21,11 +22,11 @@ const DESKTOPS = [
 
 test.describe.configure({ timeout: 180_000 });
 
-const unsupported = (page: Page, named: string) =>
+const unsupported = (page: Page, { named }: { named: string }) =>
 	page.getByText(`Notifications are not supported on ${named} yet.`);
 
-const textCenter = (page: Page, named: string) =>
-	unsupported(page, named).evaluate((message) => {
+const textCenter = (page: Page, { named }: { named: string }) =>
+	unsupported(page, { named }).evaluate((message) => {
 		const text = document.createRange();
 		text.selectNodeContents(message);
 		const { left, right, top, bottom } = text.getBoundingClientRect();
@@ -42,11 +43,11 @@ for (const screen of SCREENS) {
 			}) => {
 				await installTauriShim(page, { platform });
 				await page.goto(NOTIFICATIONS);
-				await unsupported(page, named).waitFor({
+				await unsupported(page, { named }).waitFor({
 					timeout: FIRST_ROUTE_COMPILE_MS,
 				});
 
-				const center = await textCenter(page, named);
+				const center = await textCenter(page, { named });
 
 				expect(
 					Math.abs(center.x - screen.viewport.width / 2),
@@ -63,12 +64,10 @@ for (const screen of SCREENS) {
 			await openSettings(page, { platform: "windows" });
 			await openAppSettings(page);
 
-			const sliding = pauseOnceSliding(page, {
-				pane: '[data-slot="page-stack-pane"]',
-			});
+			const sliding = pauseOnceSliding(page, { pane: STACK_PANE });
 			await page.getByRole("link", { name: "Notifications" }).click();
 			const travelled = await sliding;
-			const center = await textCenter(page, "Windows");
+			const center = await textCenter(page, { named: "Windows" });
 			await resumeSlides(page);
 			await stackSettled(page);
 

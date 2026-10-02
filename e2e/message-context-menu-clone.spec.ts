@@ -4,6 +4,9 @@ import {
 	DEMO_CONVERSATION,
 	DEMO_CONVERSATION_ID,
 	emitMessageSent,
+	EXPIRED_IMAGE,
+	EXPIRING_IMAGE,
+	EXPIRING_VIDEO,
 	expiringImageMessage,
 	expiringVideoMessage,
 	installEventInjection,
@@ -17,9 +20,6 @@ const THEM = 100001;
 const ALBUM = '[aria-label="Open album"]';
 const PHOTO = 'a[aria-label="Photo"]';
 const QUOTE = '[data-slot="message-quote"]';
-const EXPIRING_IMAGE = '[data-slot="expiring-image-message"]';
-const EXPIRED_IMAGE = '[data-slot="expiring-image-message-expired"]';
-const EXPIRING_VIDEO = '[data-slot="video-message"]';
 
 async function openConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);

@@ -1,12 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { GRID_READY_SELECTOR, installTauriShim, openGrid } from "./support/app";
 import {
-	ensureGridLocation,
-	FIRST_ROUTE_COMPILE_MS,
-	GRID_READY_SELECTOR,
-	installTauriShim,
-} from "./support/app";
-import {
+	chooseUnits,
 	installPersistentAppData,
 	storedPreferences,
 } from "./support/app-data";
@@ -15,29 +11,8 @@ const PICKED_IN_IMPERIAL = { height: [130, 241], weight: [42.2, 272] };
 
 test.describe.configure({ timeout: 240_000 });
 
-async function chooseUnits({
-	page,
-	units,
-}: {
-	page: Page;
-	units: "Imperial" | "Metric";
-}) {
-	await page.goto("/settings/app");
-	const option = page.getByRole("radio", { name: units });
-	await option.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await option.click();
-	await expect
-		.poll(async () => (await storedPreferences(page))?.units)
-		.toBe(units.toLowerCase());
-}
-
 async function openAllFilters(page: Page) {
-	await page.goto("/");
-	await page
-		.locator("nav a")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	await page.locator(GRID_READY_SELECTOR).click();
 	const apply = page.getByRole("button", { name: "Apply" });
 	await apply.waitFor();
@@ -71,7 +46,7 @@ async function stepThumb({
 }
 
 async function pickInImperial(page: Page) {
-	await chooseUnits({ page, units: "Imperial" });
+	await chooseUnits(page, { units: "Imperial" });
 	const apply = await openAllFilters(page);
 
 	await page.getByRole("checkbox", { name: "Height" }).click();
@@ -108,7 +83,7 @@ test("a filter picked in inches and pounds stays as saved in metric units until 
 	page,
 }) => {
 	await pickInImperial(page);
-	await chooseUnits({ page, units: "Metric" });
+	await chooseUnits(page, { units: "Metric" });
 	const apply = await openAllFilters(page);
 
 	await expect(page.getByText("130 cm - No max")).toBeVisible();

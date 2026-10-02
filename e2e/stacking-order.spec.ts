@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { SHARED_ALBUM_ID } from "./support/albums";
-import { installTauriShim } from "./support/app";
+import { animationsFinished, installTauriShim } from "./support/app";
 import { DRAWER } from "./support/drawer";
-import { animationsFinished, showRestingToast } from "./support/toast";
+import { showRestingToast } from "./support/toast";
 
 const DEMO_PROFILE = "/profile/100001";
 const SHARED_ALBUM = `/settings/albums/${SHARED_ALBUM_ID}`;

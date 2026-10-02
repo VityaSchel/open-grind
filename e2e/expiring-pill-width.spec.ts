@@ -2,8 +2,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
 	emitMessageSent,
+	EXPIRED_IMAGE,
+	EXPIRING_IMAGE,
+	EXPIRING_VIDEO,
 	expiringImageMessage,
 	expiringVideoMessage,
+	FIRST_ROUTE_COMPILE_MS,
 	installEventInjection,
 	installTauriShim,
 	MESSAGE_ROW,
@@ -13,10 +17,7 @@ const ME = 123456000;
 const THEM = 100006;
 const CONVERSATION_ID = `${THEM}:${ME}`;
 const SCROLLER = '[data-slot="messages-scroller"]';
-const EXPIRING_IMAGE = '[data-slot="expiring-image-message"]';
 const SPENT_IMAGE = '[data-slot="expiring-image-message-spent"]';
-const EXPIRED_IMAGE = '[data-slot="expiring-image-message-expired"]';
-const EXPIRING_VIDEO = '[data-slot="video-message"]';
 const LONGER_LABEL = "Selbstlöschendes Bild";
 const SHORTER_LABEL = "Bild";
 const OVERLONG_LABEL = Array.from({ length: 8 }, () => LONGER_LABEL).join(" ");
@@ -84,7 +85,10 @@ async function openPill(page: Page, pill: Pill): Promise<Locator> {
 	await installTauriShim(page);
 	await installEventInjection(page);
 	await page.goto(`/chat/${CONVERSATION_ID}`);
-	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
+	await page
+		.locator(MESSAGE_ROW)
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	if (pill.delivered) {
 		await emitMessageSent(page, pill.delivered());
 		await expect(

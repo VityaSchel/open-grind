@@ -1,10 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import {
-	ensureGridLocation,
-	FIRST_ROUTE_COMPILE_MS,
-	installTauriShim,
-} from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 import {
 	installPersistentAppData,
 	storedPreferences,
@@ -23,12 +19,7 @@ test("Fresh in the filter sheet narrows the grid and stays in step with the top 
 	test.setTimeout(180_000);
 	await installTauriShim(page);
 	await installPersistentAppData(page);
-	await page.goto("/");
-	await page
-		.locator("nav a")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 	const everyone = await shownProfiles(page);
 

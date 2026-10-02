@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import {
-	ensureGridLocation,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
+	openGrid,
 } from "./support/app";
 
 const CONVERSATION_LINK = 'a[href^="/chat/1"]';
@@ -14,18 +14,7 @@ interface QuickFilter {
 	switchLabel: string;
 }
 
-async function openGrid(page: Page): Promise<void> {
-	await installTauriShim(page);
-	await page.goto("/");
-	await page
-		.locator("nav a")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await ensureGridLocation(page);
-}
-
 async function openInbox(page: Page): Promise<void> {
-	await installTauriShim(page);
 	await page.goto("/chat");
 	await page
 		.locator(CONVERSATION_LINK)
@@ -84,6 +73,7 @@ for (const { name, open, quickFilters } of SCREENS) {
 		page,
 	}) => {
 		test.setTimeout(180_000);
+		await installTauriShim(page);
 		await open(page);
 
 		for (const quickFilter of quickFilters) {

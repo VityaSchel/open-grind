@@ -82,7 +82,9 @@ test.describe("my albums", () => {
 		page,
 	}) => {
 		await openSharedAlbum(page);
-		const loadingShown = await watchRendered(page, LOADING_TILE);
+		const loadingShown = await watchRendered(page, {
+			selector: LOADING_TILE,
+		});
 
 		await back(page);
 		await expect(page).toHaveURL(/\/albums$/);
@@ -242,7 +244,9 @@ test.describe("my albums", () => {
 		).toBeVisible();
 
 		await createAlbum(page, "Rooftop");
-		const addAlbumRendered = await watchRendered(page, ADD_ALBUM);
+		const addAlbumRendered = await watchRendered(page, {
+			selector: ADD_ALBUM,
+		});
 		await back(page);
 
 		await expect(page.locator(albumTileNamed("Rooftop"))).toBeVisible({

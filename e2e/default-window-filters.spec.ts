@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import tauriConfig from "../src-tauri/tauri.conf.json" with { type: "json" };
-import { CLASSIC_SCROLLBARS } from "./support/app";
+import { animationsFinished, CLASSIC_SCROLLBARS } from "./support/app";
 import { openBrowse } from "./support/profile-pager";
 
 const [mainWindow] = tauriConfig.app.windows;
@@ -46,13 +46,7 @@ test("the default window opens All filters as three columns that stay under the 
 	await page.getByRole("button", { name: "All filters" }).click();
 	await page.getByRole("button", { name: "Apply" }).waitFor();
 	const sheet = page.locator('[data-slot="sheet-content"]');
-	await sheet.evaluate((node) =>
-		Promise.all(
-			node
-				.getAnimations({ subtree: true })
-				.map((animation) => animation.finished),
-		),
-	);
+	await animationsFinished(sheet, { subtree: true });
 
 	const columnLeaders = sheet.getByRole("checkbox", {
 		name: /^(Favorites|Position|Tribes)$/,

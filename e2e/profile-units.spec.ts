@@ -6,10 +6,7 @@ import {
 	installTauriShim,
 	meTab,
 } from "./support/app";
-import {
-	installPersistentAppData,
-	storedPreferences,
-} from "./support/app-data";
+import { chooseUnits, installPersistentAppData } from "./support/app-data";
 
 const saveChanges = (page: Page) =>
 	page.getByRole("button", { name: "Save changes" });
@@ -21,13 +18,7 @@ test.describe.configure({ timeout: 240_000 });
 test.beforeEach(async ({ page }) => {
 	await installTauriShim(page);
 	await installPersistentAppData(page);
-	await page.goto("/settings/app");
-	const imperial = page.getByRole("radio", { name: "Imperial" });
-	await imperial.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await imperial.click();
-	await expect
-		.poll(async () => (await storedPreferences(page))?.units)
-		.toBe("imperial");
+	await chooseUnits(page, { units: "Imperial" });
 
 	await page.goto("/settings/profile");
 	await weight(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

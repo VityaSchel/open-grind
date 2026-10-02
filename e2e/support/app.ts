@@ -5,6 +5,9 @@ export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
 export const MESSAGE_ROW = '[role="article"]';
 // only an incoming row pads its end, and only incoming rows swipe rightward
 export const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
+export const EXPIRING_IMAGE = '[data-slot="expiring-image-message"]';
+export const EXPIRED_IMAGE = '[data-slot="expiring-image-message-expired"]';
+export const EXPIRING_VIDEO = '[data-slot="video-message"]';
 export const DEMO_GEOHASH = "u33dc0cpgp00";
 export const FIRST_ROUTE_COMPILE_MS = 120_000;
 export const CLASSIC_SCROLLBARS: Parameters<typeof test.use>[0] = {
@@ -31,6 +34,21 @@ export function afterTwoFrames(page: Page): Promise<void> {
 	);
 }
 
+export function animationsFinished(
+	layer: Locator,
+	{ subtree = false } = {},
+): Promise<unknown> {
+	return layer.evaluate(
+		(element, subtree) =>
+			Promise.all(
+				element
+					.getAnimations({ subtree })
+					.map(({ finished }) => finished),
+			),
+		subtree,
+	);
+}
+
 declare global {
 	interface Window {
 		__capturedInvokes?: Record<string, unknown[]>;
@@ -41,7 +59,7 @@ declare global {
 
 export async function watchRendered(
 	page: Page,
-	selector: string,
+	{ selector }: { selector: string },
 ): Promise<() => Promise<boolean>> {
 	await page.evaluate((selector) => {
 		const rendered = (window.__rendered ??= {});
@@ -228,6 +246,15 @@ export async function ensureGridLocation(page: Page): Promise<void> {
 		await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
 	}
 	await allFilters.waitFor({ timeout: 60_000 });
+}
+
+export async function openGrid(page: Page): Promise<void> {
+	await page.goto("/");
+	await page
+		.locator("nav a")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await ensureGridLocation(page);
 }
 
 export async function runPaletteCommand(

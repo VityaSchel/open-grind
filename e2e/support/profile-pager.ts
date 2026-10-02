@@ -5,7 +5,7 @@ import {
 	type Page,
 } from "@playwright/test";
 
-import { ensureGridLocation, installTauriShim, TrustedTouch } from "./app";
+import { installTauriShim, openGrid, TrustedTouch } from "./app";
 
 const GRID_TILE = '.photo-grid a[href^="/profile/"]';
 
@@ -29,9 +29,7 @@ export function profileUrl(profileId: number): RegExp {
 
 export async function openBrowse(page: Page): Promise<number[]> {
 	await installTauriShim(page);
-	await page.goto("/");
-	await page.locator("nav a").first().waitFor({ timeout: 180_000 });
-	await ensureGridLocation(page);
+	await openGrid(page);
 	const tiles = page.locator(GRID_TILE);
 	await tiles.nth(8).waitFor({ timeout: 60_000 });
 	return tileIds(page);

@@ -1,8 +1,9 @@
 import type { Page } from "@playwright/test";
 
-import { installTauriShim, TrustedTouch } from "./app";
+import { FIRST_ROUTE_COMPILE_MS, installTauriShim, TrustedTouch } from "./app";
 
 export const TAPS = "/interest/taps";
+export const TAP_ROW = 'a[href^="/profile/"]';
 export const PAGER = '[data-slot="interest-pager"]';
 export const TAPS_PANE = '[data-slot="interest-pane-taps"]';
 export const VIEWS_SCROLLER = '[data-slot="views-scroller"]';
@@ -16,9 +17,9 @@ export async function openTaps(
 	await installTauriShim(page, { platform });
 	await page.goto(TAPS);
 	await page
-		.locator('a[href^="/profile/"]')
+		.locator(TAP_ROW)
 		.first()
-		.waitFor({ timeout: 180_000 });
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
 export async function swipeAcross(

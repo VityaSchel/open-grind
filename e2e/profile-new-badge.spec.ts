@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 
 const NEW_PROFILE = "/profile/100005";
 const ESTABLISHED_PROFILE = "/profile/100001";
@@ -15,7 +15,7 @@ async function openProfile(
 	{ url }: { url: string },
 ): Promise<void> {
 	await page.goto(url);
-	await page.locator(STATUS_ROW).waitFor({ timeout: 120_000 });
+	await page.locator(STATUS_ROW).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
 test.beforeEach(async ({ page }) => {

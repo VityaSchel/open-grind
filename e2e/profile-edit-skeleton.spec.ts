@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import { type Box, expectSameBox } from "./support/box";
+import { STACK_PANE } from "./support/page-stack";
 
 type Row = { box: Box; parts: Box[] };
 
@@ -31,7 +32,6 @@ const FORM: EditorSelectors = {
 	photos: '[data-slot="media-slot-grid"]',
 };
 const SECTION = '[data-slot="profile-form-section"]';
-const PANE = '[data-slot="page-stack-pane"]';
 
 const VIEWPORTS = [
 	{ width: 360, height: 800 },
@@ -75,7 +75,7 @@ async function recordLoadingSkeleton(page: Page): Promise<void> {
 					window.__measureProfileEditor?.(skeleton);
 			}).observe(document, { childList: true, subtree: true });
 		},
-		{ skeleton: SKELETON, section: SECTION, pane: PANE },
+		{ skeleton: SKELETON, section: SECTION, pane: STACK_PANE },
 	);
 }
 

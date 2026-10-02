@@ -16,6 +16,8 @@ import {
 	openSettings,
 	pane,
 	SETTINGS,
+	STACK_DIM,
+	STACK_GHOST,
 	stackSettled,
 } from "./support/page-stack";
 import {
@@ -244,7 +246,7 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 		await expect(pane(page)).toBeVisible();
 	};
 	await openSettings(page, { platform: "android" });
-	const slid = await watchRendered(page, '[data-slot="page-stack-ghost"]');
+	const slid = await watchRendered(page, { selector: STACK_GHOST });
 
 	await openProfileEditor();
 	await backLink(page).click();
@@ -262,7 +264,7 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 	await stackSettled(page);
 	expect(await slid(), "a pushed page slides in").toBe(true);
 
-	const slidOff = await watchRendered(page, '[data-slot="page-stack-dim"]');
+	const slidOff = await watchRendered(page, { selector: STACK_DIM });
 	await clickMeTab(page);
 	await expect(viewProfile).toBeVisible();
 	expect(await slidOff(), "and slides back off under the Me tab").toBe(true);
@@ -283,7 +285,7 @@ test("Back still slides down the stack after a profile was opened from the block
 	await expect(pane(page)).toBeVisible();
 
 	for (const parent of [/\/settings\/account$/, /\/settings$/]) {
-		const slid = await watchRendered(page, '[data-slot="page-stack-dim"]');
+		const slid = await watchRendered(page, { selector: STACK_DIM });
 		await backLink(page).click();
 		await expect(page).toHaveURL(parent);
 		await stackSettled(page);

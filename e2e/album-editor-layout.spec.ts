@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { back, openAlbum, openAlbums, SHARED_ALBUM } from "./support/albums";
 import { type Box, expectSameBox } from "./support/box";
-import { stackSettled } from "./support/page-stack";
+import { STACK_PANE, stackSettled } from "./support/page-stack";
 
 type HeaderBoxes = { header: Box; preview: Box; name: Box };
 
@@ -149,11 +149,7 @@ async function recordLoadingSkeleton(page: Page): Promise<void> {
 				};
 			}).observe(document, { childList: true, subtree: true });
 		},
-		{
-			header: HEADER,
-			preview: PREVIEW_COLUMN,
-			pane: '[data-slot="page-stack-pane"]',
-		},
+		{ header: HEADER, preview: PREVIEW_COLUMN, pane: STACK_PANE },
 	);
 }
 

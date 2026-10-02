@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { animationsFinished } from "./app";
+
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
 const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 
@@ -33,12 +35,6 @@ function showToast({
 			showErrorToast({ label: title, error: new Error(title) });
 		},
 		{ module: ERROR_TOAST_MODULE_URL, title: label },
-	);
-}
-
-export function animationsFinished(layer: Locator): Promise<unknown> {
-	return layer.evaluate((element) =>
-		Promise.all(element.getAnimations().map(({ finished }) => finished)),
 	);
 }
 

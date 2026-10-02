@@ -1,5 +1,7 @@
 import { decode } from "@msgpack/msgpack";
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+
+import { FIRST_ROUTE_COMPILE_MS } from "./app";
 
 const APP_DATA_PREFIX = "e2e:appdata:";
 const WRITE_DELAY_KEY = "e2e:appdata-write-delay";
@@ -71,6 +73,19 @@ export async function storedPreferences(
 	return decode(
 		Uint8Array.from(atob(raw), (char) => char.charCodeAt(0)),
 	) as Record<string, unknown>;
+}
+
+export async function chooseUnits(
+	page: Page,
+	{ units }: { units: "Imperial" | "Metric" },
+): Promise<void> {
+	await page.goto("/settings/app");
+	const option = page.getByRole("radio", { name: units });
+	await option.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await option.click();
+	await expect
+		.poll(async () => (await storedPreferences(page))?.units)
+		.toBe(units.toLowerCase());
 }
 
 export async function setAppDataWriteDelay(

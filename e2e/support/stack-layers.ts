@@ -3,6 +3,12 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { afterTwoFrames } from "./app";
 
 export const DARK_SCRIM = 0.8;
+export const PHONE = { width: 390, height: 844 };
+export const LIVE_STACK = {
+	base: '[data-slot="live-stack-base"]',
+	sheet: '[data-slot="live-stack-sheet"]',
+	dim: '[data-slot="live-stack-dim"]',
+};
 const NO_EDGE = "0 0 #0000";
 const VISIBLE_STEP = 8;
 

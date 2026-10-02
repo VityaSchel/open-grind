@@ -2,7 +2,12 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import generated from "../src/lib/credits/generated.json" with { type: "json" };
 import { highlights } from "../src/lib/credits/highlights";
-import { backLink, captureOpenedUrls, installTauriShim } from "./support/app";
+import {
+	backLink,
+	captureOpenedUrls,
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+} from "./support/app";
 
 const APP_SETTINGS = "/settings/app";
 const CREDITS = `${APP_SETTINGS}/credits`;
@@ -53,7 +58,7 @@ const scrollTop = (page: Page) =>
 async function openCredits(page: Page) {
 	await installTauriShim(page);
 	await page.goto(CREDITS);
-	await rows(page).first().waitFor({ timeout: 120_000 });
+	await rows(page).first().waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
 const sidewaysOverflow = (page: Page) =>
@@ -106,7 +111,7 @@ test.describe("credits page", () => {
 		page,
 	}) => {
 		await openCredits(page);
-		await suggestAnEdit(page).waitFor({ timeout: 120_000 });
+		await suggestAnEdit(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 		for (const [title, count] of Object.entries(SECTION_ROWS)) {
 			expect(count).toBeGreaterThan(0);
@@ -118,7 +123,7 @@ test.describe("credits page", () => {
 		page,
 	}) => {
 		await openCredits(page);
-		await suggestAnEdit(page).waitFor({ timeout: 120_000 });
+		await suggestAnEdit(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 		const webview2 = (scope: Page | Locator) =>
 			rows(scope).filter({
@@ -144,7 +149,9 @@ test.describe("credits page", () => {
 		const openCreditsAndScroll = async () => {
 			await link.click();
 			await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
-			await suggestAnEdit(page).waitFor({ timeout: 120_000 });
+			await suggestAnEdit(page).waitFor({
+				timeout: FIRST_ROUTE_COMPILE_MS,
+			});
 			expect(await scrollTop(page)).toBe(0);
 			await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
 			await expect.poll(() => scrollTop(page)).toBeGreaterThan(2000);

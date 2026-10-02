@@ -13,8 +13,10 @@ import {
 	DARK_SCRIM,
 	edgeLineColumns,
 	expectEdgeJustLeftOf,
+	LIVE_STACK,
 	pauseMidSlide,
 	pauseOnceSliding,
+	PHONE,
 	resumeSlides,
 	scrimStrength,
 } from "./support/stack-layers";
@@ -26,14 +28,13 @@ import {
 	startSystemBackMidSlide,
 } from "./support/system-back";
 
-const PHONE = { width: 390, height: 844 };
 const WIDE = { width: 1024, height: 800 };
 const PARALLAX = 0.33;
 
-const SHEET = '[data-slot="live-stack-sheet"]';
-const base = (page: Page) => page.locator('[data-slot="live-stack-base"]');
+const SHEET = LIVE_STACK.sheet;
+const base = (page: Page) => page.locator(LIVE_STACK.base);
 const sheet = (page: Page) => page.locator(SHEET);
-const dim = (page: Page) => page.locator('[data-slot="live-stack-dim"]');
+const dim = (page: Page) => page.locator(LIVE_STACK.dim);
 const listScroller = (page: Page) =>
 	page.locator('[data-slot="conversations-scroller"]');
 const rows = (page: Page) => page.locator('a[href^="/chat/"]:visible');

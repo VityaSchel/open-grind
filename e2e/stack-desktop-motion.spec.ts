@@ -5,23 +5,34 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 } from "./support/app";
-import { APP_SETTINGS, openSettings, SETTINGS } from "./support/page-stack";
-import { pauseOnceSliding, resumeSlides } from "./support/stack-layers";
+import {
+	APP_SETTINGS,
+	openSettings,
+	SETTINGS,
+	STACK_DIM,
+	STACK_GHOST,
+	STACK_PANE,
+} from "./support/page-stack";
+import {
+	LIVE_STACK,
+	pauseOnceSliding,
+	PHONE,
+	resumeSlides,
+} from "./support/stack-layers";
 
 const DESKTOP = { width: 1000, height: 800 };
-const PHONE = { width: 390, height: 844 };
 
 test.use({ viewport: DESKTOP });
 
 const SETTINGS_STACK = {
-	live: '[data-slot="page-stack-pane"]',
-	snapshot: '[data-slot="page-stack-ghost"]',
-	dim: '[data-slot="page-stack-dim"]',
+	live: STACK_PANE,
+	snapshot: STACK_GHOST,
+	dim: STACK_DIM,
 };
 const CHAT_STACK = {
-	list: '[data-slot="live-stack-base"]',
-	conversation: '[data-slot="live-stack-sheet"]',
-	dim: '[data-slot="live-stack-dim"]',
+	list: LIVE_STACK.base,
+	conversation: LIVE_STACK.sheet,
+	dim: LIVE_STACK.dim,
 };
 
 type PaneSample = { x: number; opacity: number; edge: string };
