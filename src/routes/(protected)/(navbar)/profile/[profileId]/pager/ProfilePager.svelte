@@ -41,6 +41,7 @@
 	const snap = new SnapPager({
 		count: () => pager.track.length,
 		onVisible: (positions) => pager.setVisiblePositions(positions),
+		onHeading: (position) => pager.setHeading(position),
 		onRest: (position) => {
 			if (
 				position === pager.activePosition ||
@@ -137,6 +138,7 @@
 			profileState={state}
 			{position}
 			active={position === pager.activePosition}
+			leaving={pager.leaving({ position })}
 			row={pager.row(profileId)}
 			heroHash={pager.heroHash(profileId)}
 		/>

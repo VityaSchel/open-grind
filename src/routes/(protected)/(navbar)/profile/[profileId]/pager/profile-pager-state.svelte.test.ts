@@ -237,6 +237,75 @@ describe("ProfilePagerState navigation", () => {
 	});
 });
 
+describe("ProfilePagerState profiles being left", () => {
+	const beingLeft = (pager: ReturnType<typeof openPager>) =>
+		mountedPositions(pager).filter((position) =>
+			pager.leaving({ position }),
+		);
+
+	it("leaves no profile while one fills the pager, even with a step heading elsewhere", () => {
+		const pager = openPager({
+			source: gridSource({ ids: range(1, 10) }),
+			profileId: 6,
+		});
+
+		pager.setHeading(6);
+
+		expect(beingLeft(pager)).toEqual([]);
+	});
+
+	it("leaves the on-screen profile the pager is not heading to, never one mounted ahead", () => {
+		const pager = openPager({
+			source: gridSource({ ids: range(1, 10) }),
+			profileId: 6,
+		});
+
+		pager.setHeading(6);
+		pager.setVisiblePositions({ first: 5, last: 6 });
+		expect(mountedPositions(pager)).toEqual([4, 5, 6, 7]);
+		expect(beingLeft(pager)).toEqual([5]);
+
+		pager.setHeading(5);
+		expect(beingLeft(pager)).toEqual([6]);
+
+		pager.setVisiblePositions({ first: 5, last: 5 });
+		expect(beingLeft(pager)).toEqual([]);
+	});
+
+	it("leaves both on-screen profiles while the pager heads past them", () => {
+		const pager = openPager({
+			source: gridSource({ ids: range(1, 10) }),
+			profileId: 6,
+		});
+
+		pager.setHeading(7);
+		pager.setVisiblePositions({ first: 5, last: 6 });
+		expect(beingLeft(pager)).toEqual([5, 6]);
+
+		pager.setVisiblePositions({ first: 6, last: 7 });
+		expect(beingLeft(pager)).toEqual([6]);
+	});
+
+	it("leaves no profile once reset between two of them", () => {
+		const pager = openPager({
+			source: gridSource({ ids: range(1, 10) }),
+			profileId: 6,
+		});
+		pager.setHeading(6);
+		pager.setVisiblePositions({ first: 5, last: 6 });
+
+		pager.reset({
+			profileId: 7,
+			ourProfileId: OUR_ID,
+			origin: "browse",
+			historyTraversal: false,
+		});
+
+		expect(mountedPositions(pager)).toEqual([5, 6, 7]);
+		expect(beingLeft(pager)).toEqual([]);
+	});
+});
+
 describe("ProfilePagerState views", () => {
 	it("records the entry once and nothing for mounted neighbors", async () => {
 		const pager = openPager({

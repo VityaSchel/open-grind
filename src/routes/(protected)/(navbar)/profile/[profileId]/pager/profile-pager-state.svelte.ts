@@ -62,8 +62,9 @@ export class ProfilePagerState {
 	readonly #stopFollowingViewability: () => void;
 	#ourProfileId = 0;
 	#browsing = false;
-	#visibleFirst = 0;
-	#visibleLast = 0;
+	#visibleFirst = $state(0);
+	#visibleLast = $state(0);
+	#heading = $state(0);
 
 	readonly mounted: MountedProfile[] = $derived(
 		[...this.#states]
@@ -164,6 +165,19 @@ export class ProfilePagerState {
 		this.#visibleLast = last;
 		this.#extendTrack();
 		this.#syncStates();
+	}
+
+	setHeading(position: number): void {
+		this.#heading = position;
+	}
+
+	leaving({ position }: { position: number }): boolean {
+		return (
+			this.#visibleFirst !== this.#visibleLast &&
+			position !== this.#heading &&
+			position >= this.#visibleFirst &&
+			position <= this.#visibleLast
+		);
 	}
 
 	commit({ position }: { position: number }): number | null {

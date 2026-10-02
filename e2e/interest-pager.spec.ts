@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	afterTwoFrames,
 	historyDepth,
+	holdPagerAt,
 	TrustedTouch,
 	wheel,
 } from "./support/app";
@@ -33,18 +34,6 @@ test.describe.configure({ timeout: 300_000 });
 test.beforeEach(async ({ page }) => {
 	await openTaps(page);
 });
-
-function holdPagerBetweenTabs(page: Page, { progress }: { progress: number }) {
-	return page.locator(PAGER).evaluate((pager, heldAt) => {
-		window.dispatchEvent(
-			new TouchEvent("touchstart", {
-				touches: [new Touch({ identifier: 0, target: pager })],
-			}),
-		);
-		pager.style.scrollSnapType = "none";
-		pager.scrollLeft = Math.round(pager.clientWidth * heldAt);
-	}, progress);
-}
 
 test("the pager starts on the routed tab and mounts only that list", async ({
 	page,
@@ -264,7 +253,7 @@ test("a tab tap keeps the list being left locked for the whole glide", async ({
 test("a finger that lifts before halfway locks the list being left as soon as the pager moves on", async ({
 	page,
 }) => {
-	await holdPagerBetweenTabs(page, { progress: 0.7 });
+	await holdPagerAt(page.locator(PAGER), { progress: 0.7 });
 	await expect(page.locator(VIEWS_PANE)).toHaveAttribute("inert", "");
 	await expect(page.locator(TAPS_PANE)).not.toHaveAttribute("inert");
 
@@ -295,7 +284,7 @@ test("a wheel over the tab being left scrolls nothing in it, while the incoming 
 	page,
 }) => {
 	const pager = page.locator(PAGER);
-	await holdPagerBetweenTabs(page, { progress: 0.35 });
+	await holdPagerAt(pager, { progress: 0.35 });
 	await expect(page.locator(TAPS_PANE)).toHaveAttribute("inert", "");
 	await page
 		.locator(`${VIEWS_PANE} a[href^="/profile/"]`)

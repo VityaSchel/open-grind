@@ -4,7 +4,9 @@ import {
 	afterTwoFrames,
 	backLink,
 	historyDepth,
+	holdPagerAt,
 	TrustedTouch,
+	wheel,
 } from "./support/app";
 import {
 	ACTIVE_PANE,
@@ -21,6 +23,12 @@ import {
 	swipeProfile,
 	swipeToNext,
 } from "./support/profile-pager";
+
+declare global {
+	interface Window {
+		__clickedProfiles?: string[];
+	}
+}
 
 test.describe.configure({ timeout: 300_000 });
 
@@ -126,6 +134,89 @@ test("a finger held between two profiles never commits", async ({ page }) => {
 
 	await expect(page).toHaveURL(profileUrl(tiles[2]!));
 	await restsOn(page, { position: 2 });
+});
+
+test("a finger held past halfway locks only the profile being left, and landing unlocks it", async ({
+	page,
+}) => {
+	const tiles = await openGridProfile(page, { nth: 1 });
+	const left = paneAt(page, { position: 1 });
+	const incoming = paneAt(page, { position: 2 });
+
+	const touch = await pagerHeldAt(page, { fraction: 0.65 });
+
+	await expect(left).toHaveAttribute("inert", "");
+	await expect(incoming).not.toHaveAttribute("inert");
+
+	await touch.end();
+
+	await expect(page).toHaveURL(profileUrl(tiles[2]!));
+	await restsOn(page, { position: 2 });
+	await expect(left).not.toHaveAttribute("inert");
+	await expect(incoming).not.toHaveAttribute("inert");
+});
+
+test("a wheel over the profile being left scrolls nothing in it, while the incoming profile scrolls", async ({
+	page,
+}) => {
+	await openGridProfile(page, { nth: 1 });
+	const pager = profilePager(page);
+	const left = paneAt(page, { position: 1 });
+	const incoming = paneAt(page, { position: 2 });
+	const scrolled = (pane: typeof left) =>
+		pane
+			.getByRole("main", { includeHidden: true })
+			.evaluate((main) => main.parentElement!.scrollTop);
+
+	await holdPagerAt(pager, { progress: 1.65 });
+	await expect(left).toHaveAttribute("inert", "");
+	await afterTwoFrames(page);
+	const box = (await pager.boundingBox())!;
+	const seam = (await incoming.boundingBox())!.x;
+	const y = box.y + box.height / 2;
+
+	await wheel(page, { x: (box.x + seam) / 2, y }, 300);
+	await wheel(page, { x: (seam + box.x + box.width) / 2, y }, 300);
+
+	await expect.poll(() => scrolled(incoming)).toBeGreaterThan(0);
+	expect(await scrolled(left), "the locked profile must not scroll").toBe(0);
+});
+
+test("a click over the profile being left reaches nothing in it, while the incoming profile takes one", async ({
+	page,
+}) => {
+	await openGridProfile(page, { nth: 1 });
+	const touch = await pagerHeldAt(page, { fraction: 0.65 });
+	await expect
+		.poll(async () => {
+			const { scrollLeft, width } = await pagerGeometry(page);
+			return scrollLeft / width;
+		})
+		.toBeGreaterThan(1.5);
+	await afterTwoFrames(page);
+	const box = (await profilePager(page).boundingBox())!;
+	const seam = (await paneAt(page, { position: 2 }).boundingBox())!.x;
+	const y = box.y + box.height / 2;
+	await page.evaluate((pane) => {
+		window.__clickedProfiles = [];
+		for (const section of document.querySelectorAll<HTMLElement>(pane))
+			section.addEventListener(
+				"click",
+				(event) => {
+					event.preventDefault();
+					window.__clickedProfiles!.push(section.style.left);
+				},
+				{ capture: true },
+			);
+	}, PANE);
+
+	await page.mouse.click((box.x + seam) / 2, y);
+	await page.mouse.click((seam + box.x + box.width) / 2, y);
+
+	expect(await page.evaluate(() => window.__clickedProfiles)).toEqual([
+		"200%",
+	]);
+	await touch.end();
 });
 
 test("a drag that starts on the photo pages too", async ({ page }) => {

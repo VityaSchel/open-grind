@@ -22,6 +22,7 @@ const {
 	recordProfileViewMock,
 	profileMediaUrlMock,
 	isPhotoSwipeBusyMock,
+	onPhotoSwipeOpeningMock,
 	goto,
 	afterNavigate,
 	navigating,
@@ -36,6 +37,7 @@ const {
 			`https://cdn.test/${size}/${mediaHash}`,
 	),
 	isPhotoSwipeBusyMock: vi.fn<() => boolean>(),
+	onPhotoSwipeOpeningMock: vi.fn<(listener: () => void) => () => void>(),
 	goto: vi.fn<(...args: unknown[]) => Promise<void>>(),
 	afterNavigate: vi.fn<(callback: () => void) => void>(),
 	navigating: {
@@ -81,6 +83,7 @@ vi.mock("$lib/util/media", async (importOriginal) => ({
 vi.mock("$lib/util/photoswipe", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/util/photoswipe")>()),
 	isPhotoSwipeBusy: isPhotoSwipeBusyMock,
+	onPhotoSwipeOpening: onPhotoSwipeOpeningMock,
 }));
 vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
 	default: () => {},
@@ -126,20 +129,25 @@ async function openProfile({
 	layout.measure(WIDTH);
 	await flush();
 	const host = layout.node;
+	const panes = () =>
+		[
+			...host.querySelectorAll<HTMLElement>('[data-slot="profile-pane"]'),
+		].map((section) => ({
+			section,
+			left: section.style.left,
+			name: section.querySelector("h1")?.textContent.trim(),
+			active: !section.hasAttribute("aria-hidden"),
+		}));
 
 	return {
 		host,
-		panes: () =>
-			[
-				...host.querySelectorAll<HTMLElement>(
-					'[data-slot="profile-pane"]',
-				),
-			].map((section) => ({
-				section,
-				left: section.style.left,
-				name: section.querySelector("h1")?.textContent.trim(),
-				active: !section.hasAttribute("aria-hidden"),
-			})),
+		panes,
+		locked: () =>
+			panes()
+				.filter(({ section }) => section.inert)
+				.map(({ left }) => left),
+		touch: layout.touch,
+		scrollTo: layout.scrollTo,
 		scroll: async (left: number) => {
 			layout.scroll(left);
 			await flush();
@@ -167,6 +175,7 @@ beforeEach(() => {
 	);
 	recordProfileViewMock.mockResolvedValue(undefined);
 	isPhotoSwipeBusyMock.mockReturnValue(false);
+	onPhotoSwipeOpeningMock.mockReturnValue(() => {});
 	goto.mockReturnValue(new Promise(() => {}));
 });
 
@@ -327,6 +336,106 @@ describe("the profile page entered from Browse", () => {
 		await pager.scroll(WIDTH + 2);
 		expect(fetchedIds()).toContain(D);
 		expect(viewedIds()).toEqual([B]);
+	});
+});
+
+describe("the profile page between two profiles", () => {
+	const openSecondOfFour = () =>
+		openProfile({ gridIds: [A, B, C, D], profileId: B, origin: "browse" });
+
+	async function pressArrowRight() {
+		window.dispatchEvent(
+			new KeyboardEvent("keydown", {
+				key: "ArrowRight",
+				code: "ArrowRight",
+				bubbles: true,
+			}),
+		);
+		await flush();
+	}
+
+	it("locks the incoming profile under a held finger until it is more than half in, then the one being left", async () => {
+		const pager = await openSecondOfFour();
+		expect(pager.locked()).toEqual([]);
+
+		pager.touch("touchstart");
+		await pager.scroll(1.4 * WIDTH);
+		expect(pager.locked()).toEqual(["200%"]);
+
+		await pager.scroll(1.6 * WIDTH);
+		expect(pager.locked()).toEqual(["100%"]);
+	});
+
+	it("locks the profile a lifted finger flings away from before the pager is halfway, and nothing once it lands", async () => {
+		const pager = await openSecondOfFour();
+
+		pager.touch("touchstart");
+		await pager.scroll(1.2 * WIDTH);
+		pager.touch("touchend");
+		await pager.scroll(1.3 * WIDTH);
+		expect(pager.locked()).toEqual(["100%"]);
+
+		await pager.scroll(2 * WIDTH);
+		expect(pager.locked()).toEqual([]);
+		expect(pager.panes().find(({ active }) => active)?.left).toBe("200%");
+	});
+
+	it("locks the incoming profile again when a released pager turns back", async () => {
+		const pager = await openSecondOfFour();
+
+		pager.touch("touchstart");
+		await pager.scroll(1.3 * WIDTH);
+		pager.touch("touchend");
+		await pager.scroll(1.4 * WIDTH);
+		expect(pager.locked()).toEqual(["100%"]);
+
+		await pager.scroll(1.35 * WIDTH);
+		expect(pager.locked()).toEqual(["200%"]);
+
+		await pager.scroll(WIDTH);
+		expect(pager.locked()).toEqual([]);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("locks every profile an arrow-key step passes, from its first scroll to its landing", async () => {
+		const pager = await openSecondOfFour();
+
+		await pressArrowRight();
+		expect(pager.scrollTo).toHaveBeenLastCalledWith({
+			left: 2 * WIDTH,
+			behavior: "smooth",
+		});
+		expect(pager.locked()).toEqual([]);
+
+		await pager.scroll(1.1 * WIDTH);
+		expect(pager.locked()).toEqual(["100%"]);
+
+		await pressArrowRight();
+		await pager.scroll(1.5 * WIDTH);
+		expect(pager.locked()).toEqual(["100%", "200%"]);
+
+		await pager.scroll(2.5 * WIDTH);
+		expect(pager.locked()).toEqual(["200%"]);
+
+		await pager.scroll(3 * WIDTH);
+		expect(pager.locked()).toEqual([]);
+		expect(goto).toHaveBeenCalledExactlyOnceWith(`/profile/${D}`, COMMIT);
+	});
+
+	it("locks nothing once an opening photo viewer puts the pager back on the open profile", async () => {
+		const pager = await openSecondOfFour();
+		pager.touch("touchstart");
+		await pager.scroll(1.6 * WIDTH);
+		expect(pager.locked()).toEqual(["100%"]);
+
+		for (const [opening] of onPhotoSwipeOpeningMock.mock.calls) opening();
+		await flush();
+
+		expect(pager.scrollTo).toHaveBeenLastCalledWith({
+			left: WIDTH,
+			behavior: "instant",
+		});
+		expect(pager.locked()).toEqual([]);
 	});
 });
 

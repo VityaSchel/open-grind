@@ -1,12 +1,6 @@
 // @vitest-environment jsdom
 
-import {
-	cleanup,
-	fireEvent,
-	render,
-	screen,
-	within,
-} from "@testing-library/svelte";
+import { cleanup, fireEvent, screen, within } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -66,15 +60,15 @@ import {
 	BlockedProfileError,
 	HiddenProfileError,
 } from "$lib/api/users/profiles";
-import { rendered } from "$lib/grid/grid-test-helpers";
-import type { RenderedGridProfile } from "$lib/grid/grid";
 import type { Profile } from "$lib/model/users/profiles";
-import { ProfileState } from "../profile-state.svelte";
 import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
-import ProfilePane from "./ProfilePane.svelte";
+import {
+	gridRow,
+	PROFILE_ID,
+	renderPane,
+	ROW_HASH,
+} from "./profile-pane-test-helpers";
 
-const PROFILE_ID = 100001;
-const ROW_HASH = "rowphoto";
 const SECOND_HASH = "secondphoto";
 
 const LOADED = {
@@ -84,17 +78,6 @@ const LOADED = {
 	mediaHashes: [ROW_HASH, SECOND_HASH],
 };
 
-function gridRow({
-	id = PROFILE_ID,
-}: { id?: number } = {}): RenderedGridProfile {
-	return {
-		...rendered({ id }),
-		displayName: "Peer",
-		age: 27,
-		profilePhotosHashes: [ROW_HASH],
-	};
-}
-
 function serviceUnavailable(): ApiError {
 	return new ApiError({
 		message: "Service Unavailable",
@@ -102,33 +85,6 @@ function serviceUnavailable(): ApiError {
 		response: { status: 503, body: "" },
 		kind: "Http",
 	});
-}
-
-function renderPane({
-	active,
-	row,
-	position = 0,
-	profileId = PROFILE_ID,
-}: {
-	active: boolean;
-	row: RenderedGridProfile | null;
-	position?: number;
-	profileId?: number;
-}) {
-	const profileState = new ProfileState({ profileId, ourProfileId: OUR_ID });
-	const { container } = render(ProfilePane, {
-		props: {
-			profileState,
-			position,
-			active,
-			row,
-			heroHash: row?.profilePhotosHashes?.[0] ?? null,
-		},
-	});
-	const section = container.querySelector<HTMLElement>(
-		'[data-slot="profile-pane"]',
-	)!;
-	return { profileState, section };
 }
 
 function headingElement(section: HTMLElement): HTMLElement | null {
@@ -140,12 +96,6 @@ function heading(section: HTMLElement): string | undefined {
 		?.textContent.replace(/\s+/g, " ")
 		.replace(" ,", ",")
 		.trim();
-}
-
-function inertElements(section: HTMLElement): HTMLElement[] {
-	return [section, ...section.querySelectorAll<HTMLElement>("*")].filter(
-		(element) => element.inert === true,
-	);
 }
 
 function photoSources(section: HTMLElement): (string | null)[] {
@@ -531,69 +481,5 @@ describe("ProfilePane hiding and blocking", () => {
 			error: rejection,
 		});
 		expect(getProfileMock).toHaveBeenCalledOnce();
-	});
-});
-
-describe("ProfilePane roles", () => {
-	it("puts the active pane's error screen in its main landmark", async () => {
-		getProfileMock.mockRejectedValue(new HiddenProfileError());
-		const { section } = renderPane({ active: true, row: null });
-		await flush();
-
-		const main = within(section).getByRole("main");
-		expect(
-			within(main).getByRole("button", { name: "Unhide" }),
-		).not.toBeNull();
-	});
-
-	it("keeps a neighbor's error screen out of input", async () => {
-		getProfileMock.mockRejectedValue(new HiddenProfileError());
-		const { section } = renderPane({ active: false, row: null });
-		await flush();
-
-		const unhide = screen.getByRole("button", {
-			name: "Unhide",
-			hidden: true,
-		});
-		expect(section.getAttribute("aria-hidden")).toBe("true");
-		expect(inertElements(section)).toEqual([section.firstElementChild]);
-		expect(section.firstElementChild!.contains(unhide)).toBe(true);
-	});
-
-	it("keeps a neighbor out of assistive tech and input while its scroller stays scrollable", async () => {
-		const { section } = renderPane({
-			active: false,
-			row: gridRow(),
-			position: 3,
-		});
-		await flush();
-
-		const main = section.querySelector("main")!;
-		const bottomBar = screen
-			.getByRole("link", { name: "Write a message...", hidden: true })
-			.closest("nav")!.parentElement!;
-		expect(section.style.left).toBe("300%");
-		expect(section.getAttribute("aria-hidden")).toBe("true");
-		expect(inertElements(section)).toEqual([main, bottomBar]);
-		expect(main.parentElement!.getAttribute("tabindex")).toBe("-1");
-		expect(
-			section.querySelector('[data-slot="profile-scroller"]'),
-		).toBeNull();
-		expect(dataRefreshControlMock).not.toHaveBeenCalled();
-	});
-
-	it("gives the active pane the scroller slot, live controls and the refresh control", async () => {
-		const { section } = renderPane({ active: true, row: gridRow() });
-		await flush();
-
-		const scroller = section.querySelector("main")!.parentElement!;
-		expect(section.hasAttribute("aria-hidden")).toBe(false);
-		expect(inertElements(section)).toEqual([]);
-		expect(scroller.getAttribute("data-slot")).toBe("profile-scroller");
-		expect(scroller.hasAttribute("tabindex")).toBe(false);
-		expect(
-			screen.getByRole("link", { name: "Write a message..." }),
-		).not.toBeNull();
-		expect(dataRefreshControlMock).toHaveBeenCalledOnce();
 	});
 });

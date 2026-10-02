@@ -27,12 +27,14 @@
 		profileState,
 		position,
 		active,
+		leaving,
 		row,
 		heroHash,
 	}: {
 		profileState: ProfileState;
 		position: number;
 		active: boolean;
+		leaving: boolean;
 		row: RenderedGridProfile | null;
 		heroHash: string | null;
 	} = $props();
@@ -65,6 +67,7 @@
 <section
 	data-slot="profile-pane"
 	aria-hidden={active ? undefined : "true"}
+	inert={leaving}
 	class="absolute inset-y-0 w-full bg-background contain-strict"
 	style:left="{position * 100}%"
 >

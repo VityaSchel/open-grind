@@ -395,6 +395,21 @@ export async function trackpadSwipe(
 	await cdp.detach();
 }
 
+export function holdPagerAt(
+	pager: Locator,
+	{ progress }: { progress: number },
+): Promise<void> {
+	return pager.evaluate((node, heldAt) => {
+		window.dispatchEvent(
+			new TouchEvent("touchstart", {
+				touches: [new Touch({ identifier: 0, target: node })],
+			}),
+		);
+		node.style.scrollSnapType = "none";
+		node.scrollLeft = Math.round(node.clientWidth * heldAt);
+	}, progress);
+}
+
 export async function wheel(
 	page: Page,
 	at: { x: number; y: number },
