@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
@@ -18,36 +19,50 @@
 		message: ApiResponseMessage;
 		sender?: { name: string; avatarMediaHash: string | null };
 	} = $props();
+
+	const TAP_SLOP_PX = 10;
+
+	let press: AbortController | null = null;
+
+	onDestroy(() => press?.abort());
+
+	function pressed(down: PointerEvent) {
+		press?.abort();
+		const held = new AbortController();
+		press = held;
+		const { signal } = held;
+		let movedOff = false;
+		window.addEventListener(
+			"pointermove",
+			(move) => {
+				const travelled =
+					Math.abs(move.clientX - down.clientX) +
+					Math.abs(move.clientY - down.clientY);
+				if (travelled > TAP_SLOP_PX) movedOff = true;
+			},
+			{ signal },
+		);
+		window.addEventListener(
+			"pointerup",
+			() => {
+				held.abort();
+				if (movedOff) return;
+				void goto(`/chat/${conversationId}`);
+				toast.dismiss(conversationId);
+			},
+			{ signal },
+		);
+		window.addEventListener("pointercancel", () => held.abort(), {
+			signal,
+		});
+	}
 </script>
 
 <div
 	role="button"
 	tabindex={0}
 	class="flex h-14 w-full items-center gap-2 rounded-2xl border border-border bg-popover p-2 pe-3 text-start"
-	onpointerdown={(e) => {
-		const startPos = { x: e.clientX, y: e.clientY };
-		let jumpedOff = false;
-		const onPointerMove = (e: MouseEvent) => {
-			const delta = {
-				x: Math.abs(e.x - startPos.x),
-				y: Math.abs(e.y - startPos.y),
-			};
-			if (delta.x + delta.y > 10) {
-				jumpedOff = true;
-				window.removeEventListener("pointermove", onPointerMove);
-			}
-		};
-		const onPointerUp = () => {
-			if (!jumpedOff) {
-				void goto(`/chat/${conversationId}`);
-				toast.dismiss(conversationId);
-			}
-			window.removeEventListener("pointerup", onPointerUp);
-			window.removeEventListener("pointermove", onPointerMove);
-		};
-		window.addEventListener("pointermove", onPointerMove);
-		window.addEventListener("pointerup", onPointerUp);
-	}}
+	onpointerdown={pressed}
 >
 	<UserAvatar
 		mediaHash={sender?.avatarMediaHash ?? null}
