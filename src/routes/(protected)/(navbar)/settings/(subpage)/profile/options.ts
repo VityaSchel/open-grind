@@ -1,4 +1,8 @@
 import {
+	sexualPositionIcons,
+	sexualPositionOrder,
+} from "$lib/components/profile/sexual-position-icons";
+import {
 	acceptNSFWPics,
 	bodyTypes,
 	ethnicities,
@@ -32,7 +36,11 @@ export const ethnicityOptions = optionsFromMap(ethnicities);
 export const relationshipOptions = optionsFromMap(relationshipStatuses);
 export const bodyTypeOptions = optionsFromMap(bodyTypes);
 export const hivOptions = optionsFromMap(hivStatuses);
-export const positionOptions = optionsFromMap(sexualPositions);
+export const positionOptions = sexualPositionOrder.map((position) => ({
+	value: position,
+	label: sexualPositions[position],
+	icon: sexualPositionIcons[position],
+}));
 export const nsfwOptions = optionsFromMap(acceptNSFWPics);
 export const lookingForOptions = optionsFromMap(lookingForLabels);
 export const tribeOptions = optionsFromMap(tribes);

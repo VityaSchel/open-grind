@@ -27,6 +27,23 @@ const DROPDOWNS = [
 	"Vaccines",
 ];
 const COMBOBOXES = ["Tags", "Gender", "Pronouns"];
+const SECTIONS = [
+	"Photos",
+	"Basics",
+	"About",
+	"Stats",
+	"Expectations",
+	"Health",
+	"Socials",
+];
+const POSITION_SPECTRUM = [
+	"Top",
+	"Vers Top",
+	"Versatile",
+	"Vers Bottom",
+	"Bottom",
+	"Side",
+];
 
 const fieldLabel = (page: Page, name: string) =>
 	page
@@ -81,4 +98,61 @@ test("tapping a picker's label leaves the picker closed", async ({ page }) => {
 		await page.keyboard.press("Escape");
 		await expect(picker).toHaveAttribute("aria-expanded", "false");
 	}
+});
+
+test("the sections follow the order of the profile they describe", async ({
+	page,
+}) => {
+	await expect(page.locator("form").getByRole("heading")).toHaveText(
+		SECTIONS,
+	);
+});
+
+test("each visibility switch is grouped right below the field it hides", async ({
+	page,
+}) => {
+	for (const [field, visibility] of [
+		[page.getByRole("slider", { name: "Age" }), "Show my age"],
+		[dropdown(page, "Position"), "Show my position"],
+		[dropdown(page, "My tribes"), "Show my tribes"],
+	] as const) {
+		const visibilitySwitch = page.getByRole("switch", { name: visibility });
+		const pair = page
+			.locator('[data-slot="field-pair"]')
+			.filter({ has: visibilitySwitch });
+		await expect(pair).toHaveCount(1);
+		await expect(pair.getByRole("switch")).toHaveCount(1);
+		await expect(pair.locator(field)).toBeVisible();
+
+		const fieldBox = await field.boundingBox();
+		const switchBox = await visibilitySwitch.boundingBox();
+		expect(switchBox!.y).toBeGreaterThanOrEqual(
+			fieldBox!.y + fieldBox!.height,
+		);
+	}
+});
+
+test("the position menu runs from top to side with an icon per position", async ({
+	page,
+}) => {
+	const position = dropdown(page, "Position");
+	await position.click();
+
+	const items = page.getByRole("menuitemradio");
+	await expect(items).toHaveText(["Not set", ...POSITION_SPECTRUM]);
+	for (const name of POSITION_SPECTRUM) {
+		await expect(
+			page
+				.getByRole("menuitemradio", { name, exact: true })
+				.locator('[data-slot="select-field-icon"]'),
+		).toHaveCount(1);
+	}
+
+	await page
+		.getByRole("menuitemradio", { name: "Vers Top", exact: true })
+		.click();
+	await expect(position).toHaveAccessibleName("Position Vers Top");
+	await expect(
+		position.locator('[data-slot="select-field-icon"]'),
+	).toHaveCount(1);
 });

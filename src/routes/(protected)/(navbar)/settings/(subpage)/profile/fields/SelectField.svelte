@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends number">
-	import { CaretUpDownIcon } from "phosphor-svelte";
+	import { CaretUpDownIcon, type IconComponentProps } from "phosphor-svelte";
+	import type { Component } from "svelte";
 
 	import Field from "$lib/components/fields/Field.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -16,13 +17,15 @@
 	}: {
 		label: string;
 		value: T | null;
-		options: Option<T>[];
+		options: (Option<T> & { icon?: Component<IconComponentProps> })[];
 		placeholder?: string;
 		clearLabel?: string;
 		nullable?: boolean;
 	} = $props();
 
 	const selected = $derived(options.find((option) => option.value === value));
+	const SelectedIcon = $derived(selected?.icon);
+	const hasIcons = $derived(options.some((option) => option.icon));
 </script>
 
 <Field {label}>
@@ -36,7 +39,15 @@
 						variant="outline"
 						class="w-full justify-between font-normal"
 					>
-						<span class={{ "text-muted-foreground": !selected }}>
+						<span
+							class={[
+								"flex min-w-0 items-center gap-2",
+								{ "text-muted-foreground": !selected },
+							]}
+						>
+							{#if SelectedIcon}
+								<SelectedIcon data-slot="select-field-icon" />
+							{/if}
 							{selected?.label ?? placeholder}
 						</span>
 						<CaretUpDownIcon class="size-4 shrink-0 opacity-60" />
@@ -57,12 +68,18 @@
 					}
 				>
 					{#if nullable}
-						<DropdownMenu.RadioItem value=""
-							>{clearLabel}</DropdownMenu.RadioItem
+						<DropdownMenu.RadioItem
+							value=""
+							data-inset={hasIcons || undefined}
 						>
+							{clearLabel}
+						</DropdownMenu.RadioItem>
 					{/if}
 					{#each options as option (option.value)}
 						<DropdownMenu.RadioItem value={String(option.value)}>
+							{#if option.icon}
+								<option.icon data-slot="select-field-icon" />
+							{/if}
 							{option.label}
 						</DropdownMenu.RadioItem>
 					{/each}
