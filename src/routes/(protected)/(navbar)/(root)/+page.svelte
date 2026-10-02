@@ -51,7 +51,7 @@
 			>
 				<div
 					data-slot="grid-content"
-					class="@container/photo-grid flex min-h-overscrollable flex-col gap-4 px-4 pt-header-clear-17 pb-nav-clear"
+					class="@container/photo-grid min-h-overscrollable flex flex-col gap-4 px-4 pt-header-clear-17 pb-nav-clear"
 				>
 					<Grid {geohash} />
 				</div>

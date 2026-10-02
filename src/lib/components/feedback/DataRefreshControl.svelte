@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from "svelte";
 	import { cubicOut, expoOut } from "svelte/easing";
 	import { prefersReducedMotion, Tween } from "svelte/motion";
 	import type { TransitionConfig } from "svelte/transition";
@@ -24,6 +25,7 @@
 		hintOffset = 0,
 		anchorOffset = 0,
 		onrefresh,
+		oninsetchange,
 	}: {
 		updating?: boolean;
 		position: "top" | "bottom";
@@ -31,6 +33,7 @@
 		hintOffset?: number;
 		anchorOffset?: number;
 		onrefresh?: () => void;
+		oninsetchange?: () => void;
 	} = $props();
 
 	const BUTTON_HEIGHT_PX = 32;
@@ -54,6 +57,8 @@
 	const restingButton = new RestingButtonModel({ probeMs: MOUSE_PROBE_MS });
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
+	const buttonSpace = new Tween(0, REVEAL_TRANSITION);
+	const pointerOnlySpace = new Tween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
 	model.space = ARM_PX;
 
@@ -115,8 +120,11 @@
 	const hintMayOverflowBand = $derived(hintShown);
 	const buttonShown = $derived.by(() => {
 		if (activeFace) return activeFace === "button";
-		return lingerFace === "button" && reveal.current > 0;
+		return lingerFace === "button" && buttonSpace.current > 0;
 	});
+	const bandHeight = $derived(
+		hintShown ? reveal.current : buttonSpace.current,
+	);
 
 	const discSpinning = $derived(
 		busy || (!model.gestureActive && model.settledOutcome === "triggered"),
@@ -154,7 +162,7 @@
 		} else {
 			return Math.min(
 				1,
-				Math.max(0, (reveal.current / REST_HEIGHT_PX) * 1.6 - 0.2),
+				Math.max(0, (buttonSpace.current / REST_HEIGHT_PX) * 1.6 - 0.2),
 			);
 		}
 	});
@@ -176,11 +184,47 @@
 		if (model.gestureActive && model.source === "overscroll") {
 			void reveal.set(model.displayPx, { duration: 0 });
 		} else if (!model.gestureActive) {
-			void reveal.set(
-				restingButton.shown ? REST_HEIGHT_PX : 0,
-				settleMotion(),
-			);
+			void reveal.set(0, settleMotion());
 		}
+	});
+
+	$effect(() => {
+		void buttonSpace.set(
+			restingButton.shown ? REST_HEIGHT_PX : 0,
+			settleMotion(),
+		);
+	});
+
+	$effect(() => {
+		void pointerOnlySpace.set(
+			restingButton.pointerOnly ? REST_HEIGHT_PX : 0,
+			settleMotion(),
+		);
+	});
+
+	const closingRoomClampsScroll = $derived(position === "bottom");
+	const contentInset = $derived(
+		closingRoomClampsScroll
+			? pointerOnlySpace.current
+			: buttonSpace.current,
+	);
+	const contentInsetProperty = $derived(
+		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
+	);
+
+	$effect(() => {
+		const target = container;
+		const property = contentInsetProperty;
+		if (!target) return;
+		$effect(() => {
+			const restingAtFloor =
+				position === "bottom" &&
+				Math.abs(boundaryDistance()) < AT_BOUNDARY_PX;
+			target.style.setProperty(property, `${contentInset}px`);
+			if (restingAtFloor) geometry.scrollToRest();
+			untrack(() => oninsetchange?.());
+		});
+		return () => target.style.removeProperty(property);
 	});
 
 	const shouldRevealRestingButton = () =>
@@ -248,7 +292,7 @@
 				anchorEdge,
 				{ "overflow-clip": !hintMayOverflowBand },
 			]}
-			style:height="{reveal.current}px"
+			style:height="{bandHeight}px"
 			style:opacity={bandOpacity}
 		>
 			{#if hintShown}
@@ -312,7 +356,7 @@
 {#snippet button()}
 	<Button
 		size="sm"
-		class="pointer-events-auto h-(--height) w-25 backdrop-filter-(--bd-chip)"
+		class="pointer-events-auto h-(--height) w-25"
 		style="--height: {BUTTON_HEIGHT_PX}px;"
 		onclick={() => model.clickTrigger()}
 	>

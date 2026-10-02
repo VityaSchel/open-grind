@@ -1,6 +1,12 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import {
+	DEMO_CONVERSATION,
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+	MESSAGE_ROW,
+	wheel,
+} from "./support/app";
 import { driveInOneGesture, installFakeOverscroll } from "./support/pull";
 
 const ARM_PX = 18;
@@ -10,17 +16,86 @@ const DISC_REST_MS = 400;
 const ME = 123456000;
 const CONVERSATIONS_MODULE_URL =
 	"/src/lib/chat/conversations-context.svelte.ts";
+const BUTTON_ROW_PX = 56;
+const SCROLL_AWAY_PX = 10;
+const CONVERSATION_ROW = "a[href^='/chat/']";
+const TAP_ROW = "a[href^='/profile/']";
+const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';
+const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
+const SCREEN_TALLER_THAN_ITS_CONTENT = { width: 420, height: 3000 };
+const ROOM_ABOVE_COMPOSER_PROPERTY = "--refresh-inset-bottom";
 
 async function openInbox(page: Page) {
 	await installTauriShim(page);
 	await installFakeOverscroll(page);
 	await page.goto("/chat");
 	await page
-		.locator("a[href^='/chat/']")
+		.locator(CONVERSATION_ROW)
 		.first()
-		.waitFor({ timeout: 120_000 });
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
 	await page.waitForTimeout(600);
+}
+
+async function openTaps(page: Page) {
+	await installTauriShim(page);
+	await page.goto("/interest/taps");
+	await page
+		.locator(TAP_ROW)
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await page
+		.locator("[data-refresh-phase]")
+		.first()
+		.waitFor({ state: "attached" });
+	await page.waitForTimeout(600);
+}
+
+async function openConversation(page: Page) {
+	await installTauriShim(page);
+	await page.goto(DEMO_CONVERSATION);
+	await page
+		.locator(MESSAGE_ROW)
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await page
+		.locator(`${MESSAGES_SCROLLER} ~ [data-refresh-phase]`)
+		.waitFor({ state: "attached" });
+	await page.waitForTimeout(600);
+}
+
+const refreshButton = (page: Page) =>
+	page.getByRole("button", { name: "Refresh" });
+
+const topOf = (row: Locator) =>
+	row.evaluate((el) => el.getBoundingClientRect().top);
+
+const bottomOf = (row: Locator) =>
+	row.evaluate((el) => el.getBoundingClientRect().bottom);
+
+const floorDistance = (scroller: Locator) =>
+	scroller.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop);
+
+const scrollRange = (scroller: Locator) =>
+	scroller.evaluate((el) => el.scrollHeight - el.clientHeight);
+
+const roomAboveComposer = (scroller: Locator) =>
+	scroller.evaluate(
+		(el: HTMLElement, room) => el.style.getPropertyValue(room),
+		ROOM_ABOVE_COMPOSER_PROPERTY,
+	);
+
+async function revealButtonOver(
+	page: Page,
+	row: Locator,
+	{ towardBoundary = -100 } = {},
+) {
+	const box = await row.boundingBox();
+	if (!box) throw new Error("the row is not on screen");
+	const pointer = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	await wheel(page, pointer, towardBoundary);
+	await expect(refreshButton(page)).toBeVisible();
+	return pointer;
 }
 
 test.describe("pull to refresh", () => {
@@ -282,4 +357,207 @@ test.describe("pull to refresh", () => {
 		expect(steps.spinning).toMatchObject(whole);
 		expect(steps.finished).toMatchObject(whole);
 	});
+
+	for (const list of [
+		{ name: "the inbox", open: openInbox, row: CONVERSATION_ROW },
+		{ name: "the taps list", open: openTaps, row: TAP_ROW },
+	]) {
+		test(`on ${list.name} the button takes a row of its own above the first entry, and gives it back once the reader scrolls on`, async ({
+			page,
+		}) => {
+			await list.open(page);
+			const firstRow = page.locator(list.row).first();
+			const restingTop = await topOf(firstRow);
+
+			const pointer = await revealButtonOver(page, firstRow);
+			await expect
+				.poll(() => topOf(firstRow))
+				.toBe(restingTop + BUTTON_ROW_PX);
+			const button = await refreshButton(page).boundingBox();
+			if (!button) throw new Error("the Refresh button has no box");
+			expect(button.y + button.height).toBeLessThan(
+				restingTop + BUTTON_ROW_PX,
+			);
+
+			await wheel(page, pointer, SCROLL_AWAY_PX);
+			await expect(refreshButton(page)).toBeHidden();
+			await expect
+				.poll(() => topOf(firstRow))
+				.toBe(restingTop - SCROLL_AWAY_PX);
+		});
+	}
+
+	test("a clicked refresh spins in the button's row without moving the list", async ({
+		page,
+	}) => {
+		await openInbox(page);
+		const firstRow = page.locator(CONVERSATION_ROW).first();
+		const restingTop = await topOf(firstRow);
+		await revealButtonOver(page, firstRow);
+		await expect
+			.poll(() => topOf(firstRow))
+			.toBe(restingTop + BUTTON_ROW_PX);
+
+		const rowTops = await firstRow.evaluateHandle((row) => {
+			const seen = new Set<number>();
+			const sample = () => {
+				seen.add(row.getBoundingClientRect().top);
+				requestAnimationFrame(sample);
+			};
+			requestAnimationFrame(sample);
+			return seen;
+		});
+		await refreshButton(page).click();
+		await expect(
+			page.locator("[data-refresh-disc][data-spinning]"),
+		).toBeVisible();
+		await expect(refreshButton(page)).toBeVisible();
+
+		expect(await rowTops.evaluate((seen) => [...seen])).toEqual([
+			restingTop + BUTTON_ROW_PX,
+		]);
+	});
+
+	test("in a conversation the button takes its room above the composer and keeps it while the reader is scrolled up", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		const scroller = page.locator(MESSAGES_SCROLLER);
+		const newest = page.locator(MESSAGE_ROW).last();
+		const restingBottom = await bottomOf(newest);
+
+		const pointer = await revealButtonOver(page, newest, {
+			towardBoundary: 100,
+		});
+		await expect
+			.poll(() => roomAboveComposer(scroller))
+			.toBe(`${BUTTON_ROW_PX}px`);
+		expect(await bottomOf(newest)).toBe(restingBottom - BUTTON_ROW_PX);
+		expect(await floorDistance(scroller)).toBeLessThanOrEqual(1);
+		const button = await refreshButton(page).boundingBox();
+		const composer = await page
+			.locator('[data-slot="message-composer"]')
+			.boundingBox();
+		if (!button || !composer)
+			throw new Error("the Refresh button or the composer has no box");
+		expect(button.y).toBeGreaterThan(restingBottom - BUTTON_ROW_PX);
+		expect(button.y + button.height).toBeLessThan(composer.y);
+
+		await wheel(page, pointer, -SCROLL_AWAY_PX);
+		await expect(refreshButton(page)).toBeHidden();
+		expect(await floorDistance(scroller)).toBe(SCROLL_AWAY_PX);
+		expect(await bottomOf(newest)).toBe(
+			restingBottom - BUTTON_ROW_PX + SCROLL_AWAY_PX,
+		);
+
+		await wheel(page, pointer, 100);
+		await expect(refreshButton(page)).toBeVisible();
+		expect(await bottomOf(newest)).toBe(restingBottom - BUTTON_ROW_PX);
+	});
+
+	test("a message sent from the floor lands above the button's room without closing it", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		const scroller = page.locator(MESSAGES_SCROLLER);
+		const newest = page.locator(MESSAGE_ROW).last();
+		const restingBottom = await bottomOf(newest);
+		await revealButtonOver(page, newest, { towardBoundary: 100 });
+		await expect
+			.poll(() => roomAboveComposer(scroller))
+			.toBe(`${BUTTON_ROW_PX}px`);
+		expect(await bottomOf(newest)).toBe(restingBottom - BUTTON_ROW_PX);
+
+		const rooms = await scroller.evaluateHandle((el: HTMLElement, room) => {
+			const seen = new Set<string>();
+			const sample = () => {
+				seen.add(el.style.getPropertyValue(room));
+				requestAnimationFrame(sample);
+			};
+			requestAnimationFrame(sample);
+			return seen;
+		}, ROOM_ABOVE_COMPOSER_PROPERTY);
+		const sent = `sent from the floor ${Date.now()}`;
+		await page.getByRole("textbox").fill(sent);
+		await page.getByRole("textbox").press("Enter");
+		await expect(newest).toContainText(sent);
+		await expect.poll(() => floorDistance(scroller)).toBeLessThanOrEqual(1);
+		await expect(refreshButton(page)).toBeVisible();
+
+		expect(await bottomOf(newest)).toBeCloseTo(
+			restingBottom - BUTTON_ROW_PX,
+			0,
+		);
+		expect(await rooms.evaluate((seen) => [...seen])).toEqual([
+			`${BUTTON_ROW_PX}px`,
+		]);
+	});
+
+	test("a message sent while the button's room is still opening lands on the floor all the same", async ({
+		page,
+	}) => {
+		await openConversation(page);
+		const scroller = page.locator(MESSAGES_SCROLLER);
+		const newest = page.locator(MESSAGE_ROW).last();
+		const sent = `sent while the room opens ${Date.now()}`;
+		await page.getByRole("textbox").fill(sent);
+		const box = await newest.boundingBox();
+		if (!box) throw new Error("the newest message is not on screen");
+
+		await wheel(
+			page,
+			{ x: box.x + box.width / 2, y: box.y + box.height / 2 },
+			100,
+		);
+		await page.getByRole("textbox").press("Enter");
+
+		await expect(newest).toContainText(sent);
+		await expect
+			.poll(() => roomAboveComposer(scroller))
+			.toBe(`${BUTTON_ROW_PX}px`);
+		await expect.poll(() => floorDistance(scroller)).toBeLessThanOrEqual(1);
+		await expect(refreshButton(page)).toBeVisible();
+	});
+
+	for (const surface of [
+		{
+			name: "an inbox",
+			open: openInbox,
+			scroller: CONVERSATIONS_SCROLLER,
+			nearestRow: (page: Page) => page.locator(CONVERSATION_ROW).first(),
+			edgeOf: topOf,
+			towardBoundary: -100,
+			shift: BUTTON_ROW_PX,
+		},
+		{
+			name: "a conversation",
+			open: openConversation,
+			scroller: MESSAGES_SCROLLER,
+			nearestRow: (page: Page) => page.locator(MESSAGE_ROW).last(),
+			edgeOf: bottomOf,
+			towardBoundary: 100,
+			shift: -BUTTON_ROW_PX,
+		},
+	]) {
+		test(`${surface.name} shorter than the screen makes the button's room out of its spare height, not out of new scroll range`, async ({
+			page,
+		}) => {
+			await page.setViewportSize(SCREEN_TALLER_THAN_ITS_CONTENT);
+			await surface.open(page);
+			const scroller = page.locator(surface.scroller);
+			const row = surface.nearestRow(page);
+			const restingEdge = await surface.edgeOf(row);
+			const restingRange = await scrollRange(scroller);
+			expect(restingRange).toBeLessThanOrEqual(1);
+
+			await revealButtonOver(page, row, {
+				towardBoundary: surface.towardBoundary,
+			});
+			await expect
+				.poll(() => surface.edgeOf(row))
+				.toBe(restingEdge + surface.shift);
+
+			expect(await scrollRange(scroller)).toBe(restingRange);
+		});
+	}
 });

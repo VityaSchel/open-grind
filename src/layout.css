@@ -348,7 +348,12 @@ a {
 /* 1px past full height keeps a scroll container technically scrollable, so
    a native rubber band (and with it pull-to-refresh) works on short content */
 @utility min-h-overscrollable {
-	min-height: calc(100% + 1px);
+	min-height: calc(
+		100% + 1px - var(--refresh-inset-top, 0px) -
+			var(--refresh-inset-bottom, 0px)
+	);
+	margin-top: var(--refresh-inset-top, 0px);
+	margin-bottom: var(--refresh-inset-bottom, 0px);
 }
 
 @utility screen-nav-host {

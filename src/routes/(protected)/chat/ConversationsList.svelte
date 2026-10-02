@@ -196,7 +196,7 @@
 				</div>
 			{:else}
 				<div
-					class="flex min-h-overscrollable shrink-0 flex-col gap-1 pb-nav-clear"
+					class="min-h-overscrollable flex shrink-0 flex-col gap-1 pb-nav-clear"
 				>
 					{#each conversations.entries as conversation, i (conversation.data.conversationId)}
 						{@const conversationId =

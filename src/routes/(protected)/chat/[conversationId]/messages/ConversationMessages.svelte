@@ -184,6 +184,10 @@
 				el.scrollHeight - el.clientHeight - restingFloorDistance;
 	}
 
+	function retargetRestScroll(): void {
+		if (scrollingToRest) refreshControl?.scrollToRest("smooth");
+	}
+
 	let observedScrollerSize: { width: number; height: number } | null = null;
 
 	// A resize can clamp scrollTop before the observer below runs, and the
@@ -260,7 +264,7 @@
 			<ConversationError />
 		{:else}
 			<div
-				class="flex min-h-overscrollable shrink-0 flex-col justify-end gap-1"
+				class="min-h-overscrollable flex shrink-0 flex-col justify-end gap-1"
 			>
 				<div class="flex h-10 shrink-0 items-center justify-center">
 					{#if conversationState.loadingMore}
@@ -281,6 +285,7 @@
 			hintOffset={8}
 			position="bottom"
 			onrefresh={() => void conversationState.refresh()}
+			oninsetchange={retargetRestScroll}
 		/>
 		<div class="contents" style:--composer-height="{composerHeight}px">
 			{#if !atFloor}
