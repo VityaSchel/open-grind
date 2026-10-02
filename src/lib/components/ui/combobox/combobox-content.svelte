@@ -24,7 +24,7 @@
 		onpointerdown={() => ctx.setKeyboardNav(false)}
 		onpointermove={() => ctx.setKeyboardNav(false)}
 		class={cn(
-			"z-50 max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none dark:ring-foreground/10",
+			"z-popover max-h-72 w-(--bits-floating-anchor-width) overflow-y-auto rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 outline-none dark:ring-foreground/10",
 			className,
 		)}
 		{...restProps}

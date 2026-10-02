@@ -117,6 +117,12 @@
 }
 
 @theme {
+	--z-index-toast: 140000;
+	--z-index-popover: 145000;
+	--z-index-safe-area: 150000;
+}
+
+@theme {
 	--radius-grid: 17px;
 
 	--radius-composer: 19px;
@@ -364,6 +370,7 @@ a {
 
 [data-sonner-toaster] {
 	font-family: var(--font-sans) !important;
+	z-index: var(--z-index-toast) !important;
 	/* bits-ui modal dialogs set body { pointer-events: none }; toasts must stay tappable */
 	pointer-events: auto;
 }
@@ -373,10 +380,6 @@ a {
 	color: var(--popover) !important;
 	border-radius: 1.25rem !important;
 	border: 1px solid var(--color-border) !important;
-}
-
-[data-sonner-toaster][data-y-position="top"] {
-	z-index: 149999;
 }
 
 .incoming-message-toast[data-sonner-toast] {

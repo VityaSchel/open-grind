@@ -146,8 +146,9 @@
 	<link rel="icon" href={faviconSvg} type="image/svg+xml" />
 </svelte:head>
 <div
+	data-slot="safe-area-strip"
 	class={[
-		"fixed inset-x-0 top-0 z-150000",
+		"fixed inset-x-0 top-0 z-safe-area",
 		{
 			"bg-background/50": !env.PUBLIC_TEST_INSETS,
 			"bg-red-900": env.PUBLIC_TEST_INSETS,
@@ -156,8 +157,9 @@
 	style:height="var(--safe-area-top)"
 ></div>
 <div
+	data-slot="safe-area-strip"
 	class={[
-		"fixed inset-x-0 bottom-0 z-150000",
+		"fixed inset-x-0 bottom-0 z-safe-area",
 		{
 			"bg-background/50": !env.PUBLIC_TEST_INSETS,
 			"bg-red-900": env.PUBLIC_TEST_INSETS,

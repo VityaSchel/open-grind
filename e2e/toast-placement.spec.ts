@@ -8,19 +8,14 @@ import {
 	meTab,
 } from "./support/app";
 import { setBlurMode } from "./support/layout-guard";
+import { showRestingToast, type ToastEdge } from "./support/toast";
 
-const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
-const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 const TOAST_LABEL = "Placement probe";
 const TOAST_GAP_PX = 8;
 const LOW_BAR_GAP_PX = 12;
 const WIDE_VIEWPORT = { width: 1024, height: 800 };
 const RAISED_BOTTOM_INSET_PX = 120;
 
-const frontToast = (page: Page) =>
-	page.locator('[data-sonner-toast][data-front="true"]', {
-		hasText: TOAST_LABEL,
-	});
 const composer = (page: Page) => page.locator('[data-slot="message-composer"]');
 const profileActionBar = (page: Page) =>
 	page
@@ -68,26 +63,6 @@ async function bottomToasterOffset(page: Page): Promise<string> {
 		.evaluate((toaster) => getComputedStyle(toaster).bottom);
 }
 
-type ToastEdge = "top" | "bottom";
-
-function showToast({ page, edge }: { page: Page; edge: ToastEdge }) {
-	if (edge === "top")
-		return page.evaluate(
-			async ({ module, label }) => {
-				const { showUpToDate } = await import(module);
-				showUpToDate(label);
-			},
-			{ module: UPDATE_TOASTS_MODULE_URL, label: TOAST_LABEL },
-		);
-	return page.evaluate(
-		async ({ module, label }) => {
-			const { showErrorToast } = await import(module);
-			showErrorToast({ label, error: new Error(label) });
-		},
-		{ module: ERROR_TOAST_MODULE_URL, label: TOAST_LABEL },
-	);
-}
-
 async function expectToastGap({
 	obstruction,
 	edge,
@@ -99,12 +74,7 @@ async function expectToastGap({
 }): Promise<void> {
 	const page = obstruction.page();
 	await obstruction.waitFor({ timeout: 60_000 });
-	await showToast({ page, edge });
-	const toast = frontToast(page);
-	await expect(toast).toHaveAttribute("data-mounted", "true");
-	await toast.evaluate((element) =>
-		Promise.all(element.getAnimations().map(({ finished }) => finished)),
-	);
+	const toast = await showRestingToast({ page, edge, label: TOAST_LABEL });
 	const toastBox = await toast.boundingBox();
 	const obstructionBox = await obstruction.boundingBox();
 	if (!toastBox || !obstructionBox) throw new Error("Nothing to measure");
