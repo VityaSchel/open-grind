@@ -10,10 +10,35 @@ import {
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getProfileMock, dataRefreshControlMock } = vi.hoisted(() => ({
+const {
+	getProfileMock,
+	dataRefreshControlMock,
+	hideUserMock,
+	unhideUserMock,
+	blockUserMock,
+	unblockUserMock,
+	showErrorToastMock,
+} = vi.hoisted(() => ({
 	getProfileMock: vi.fn(),
 	dataRefreshControlMock: vi.fn(),
+	hideUserMock: vi.fn(),
+	unhideUserMock: vi.fn(),
+	blockUserMock: vi.fn(),
+	unblockUserMock: vi.fn(),
+	showErrorToastMock: vi.fn(),
 }));
+
+vi.mock("$lib/api/browse/hides", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/browse/hides")>()),
+	hideUser: hideUserMock,
+	unhideUser: unhideUserMock,
+}));
+vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
+	blockUser: blockUserMock,
+	unblockUser: unblockUserMock,
+}));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
 vi.mock("$lib/api/users/profiles", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/users/profiles")>()),
@@ -37,7 +62,10 @@ vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
 }));
 
 import { ApiError } from "$lib/api/api-error";
-import { HiddenProfileError } from "$lib/api/users/profiles";
+import {
+	BlockedProfileError,
+	HiddenProfileError,
+} from "$lib/api/users/profiles";
 import { rendered } from "$lib/grid/grid-test-helpers";
 import type { RenderedGridProfile } from "$lib/grid/grid";
 import type { Profile } from "$lib/model/users/profiles";
@@ -123,6 +151,24 @@ function inertElements(section: HTMLElement): HTMLElement[] {
 function photoSources(section: HTMLElement): (string | null)[] {
 	return [...section.querySelectorAll(".carousel img")].map((image) =>
 		image.getAttribute("src"),
+	);
+}
+
+function pendingRequest(request: ReturnType<typeof vi.fn>) {
+	const response = Promise.withResolvers<void>();
+	request.mockReturnValueOnce(response.promise);
+	return response;
+}
+
+function button(name: string): HTMLButtonElement {
+	return screen.getByRole<HTMLButtonElement>("button", { name });
+}
+
+async function chooseFromProfileMenu(name: string) {
+	await fireEvent.keyDown(button("Profile menu"), { key: "Enter" });
+	const items = await screen.findAllByRole("menuitem", { hidden: true });
+	await fireEvent.click(
+		items.find((item) => item.textContent.trim() === name)!,
 	);
 }
 
@@ -357,6 +403,134 @@ describe("ProfilePane profile actions", () => {
 		expect(
 			actions.queryByRole("link", { name: "Edit profile" }),
 		).toBeNull();
+	});
+});
+
+describe("ProfilePane hiding and blocking", () => {
+	it("shows the hidden screen while the hide request is in flight, with Unhide waiting for it", async () => {
+		const hide = pendingRequest(hideUserMock);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		await chooseFromProfileMenu("Hide profile");
+
+		expect(hideUserMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(
+			within(section).getByText("You hid this profile."),
+		).not.toBeNull();
+		expect(button("Unhide").disabled).toBe(true);
+
+		hide.resolve();
+		await flush();
+
+		expect(button("Unhide").disabled).toBe(false);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("brings the profile back and reports the failure when the hide is rejected", async () => {
+		const hide = pendingRequest(hideUserMock);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+		await chooseFromProfileMenu("Hide profile");
+		const rejection = new Error("offline");
+
+		hide.reject(rejection);
+		await flush();
+
+		expect(within(section).queryByText("You hid this profile.")).toBeNull();
+		expect(heading(section)).toBe("Loaded, 30");
+		expect(button("Profile menu").disabled).toBe(false);
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to hide user",
+			error: rejection,
+		});
+		expect(getProfileMock).toHaveBeenCalledOnce();
+	});
+
+	it("shows the blocked screen while the block request is in flight and takes it back on failure", async () => {
+		const block = pendingRequest(blockUserMock);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		await chooseFromProfileMenu("Block profile");
+
+		expect(
+			within(section).getByText("You have blocked this profile."),
+		).not.toBeNull();
+		expect(button("Unblock").disabled).toBe(true);
+
+		const rejection = new Error("offline");
+		block.reject(rejection);
+		await flush();
+
+		expect(heading(section)).toBe("Loaded, 30");
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to block user",
+			error: rejection,
+		});
+	});
+
+	it("shows the profile again at once on Unhide and holds its menu until the request lands", async () => {
+		hideUserMock.mockResolvedValueOnce(undefined);
+		const unhide = pendingRequest(unhideUserMock);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+		await chooseFromProfileMenu("Hide profile");
+		await flush();
+
+		await fireEvent.click(button("Unhide"));
+
+		expect(heading(section)).toBe("Loaded, 30");
+		expect(button("Profile menu").disabled).toBe(true);
+
+		unhide.resolve();
+		await flush();
+
+		expect(button("Profile menu").disabled).toBe(false);
+		expect(getProfileMock).toHaveBeenCalledOnce();
+	});
+
+	it("loads a profile blocked on the server only once the unblock lands", async () => {
+		getProfileMock.mockRejectedValueOnce(
+			new BlockedProfileError({ blockedByUs: true }),
+		);
+		const unblock = pendingRequest(unblockUserMock);
+		const { section } = renderPane({ active: true, row: null });
+		await flush();
+
+		await fireEvent.click(button("Unblock"));
+
+		expect(screen.queryByText("You have blocked this profile.")).toBeNull();
+		expect(getProfileMock).toHaveBeenCalledOnce();
+
+		unblock.resolve();
+		await flush();
+
+		expect(getProfileMock).toHaveBeenCalledTimes(2);
+		expect(heading(section)).toBe("Loaded, 30");
+	});
+
+	it("puts the blocked screen back and reports the failure when the unblock is rejected", async () => {
+		getProfileMock.mockRejectedValueOnce(
+			new BlockedProfileError({ blockedByUs: true }),
+		);
+		const unblock = pendingRequest(unblockUserMock);
+		renderPane({ active: true, row: null });
+		await flush();
+		await fireEvent.click(button("Unblock"));
+		const rejection = new Error("offline");
+
+		unblock.reject(rejection);
+		await flush();
+
+		expect(button("Unblock").disabled).toBe(false);
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to unblock user",
+			error: rejection,
+		});
+		expect(getProfileMock).toHaveBeenCalledOnce();
 	});
 });
 

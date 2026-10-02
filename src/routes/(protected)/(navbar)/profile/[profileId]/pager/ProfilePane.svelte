@@ -77,12 +77,14 @@
 				<BlockedProfile
 					profileId={profileState.profileId}
 					blockedByUs={error.blockedByUs}
-					onRefresh={() => profileState.markViewable()}
+					submitting={profileState.changingViewability}
+					markViewable={() => profileState.markViewable()}
 				/>
 			{:else if error instanceof HiddenProfileError}
 				<HiddenProfile
 					profileId={profileState.profileId}
-					onRefresh={() => profileState.markViewable()}
+					submitting={profileState.changingViewability}
+					markViewable={() => profileState.markViewable()}
 				/>
 			{:else if error instanceof ProfileUnavailableError}
 				<NotFound />
@@ -121,8 +123,9 @@
 				<ProfileTopNavBar
 					{ourProfile}
 					{profile}
-					onBlocked={() => profileState.markBlocked()}
-					onHidden={() => profileState.markHidden()}
+					changingViewability={profileState.changingViewability}
+					markBlocked={() => profileState.markBlocked()}
+					markHidden={() => profileState.markHidden()}
 					onFavorite={(isFavorite) =>
 						profileState.setFavorite(isFavorite)}
 				/>

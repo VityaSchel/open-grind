@@ -14,7 +14,11 @@ import {
 	markHiddenProfilesUnviewable,
 	unhideUser,
 } from "$lib/api/browse/hides";
-import { isProfileViewable } from "$lib/api/users/profile-viewability";
+import {
+	isProfileViewable,
+	onProfileViewabilityChange,
+	type ProfileViewabilityChange,
+} from "$lib/api/users/profile-viewability";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 
 const hides = [{ profileId: 1 }, { profileId: 2 }];
@@ -22,6 +26,20 @@ const hides = [{ profileId: 1 }, { profileId: 2 }];
 const PROFILE_ID = 7;
 
 let assertOk: ReturnType<typeof vi.fn>;
+
+function pendingRequest() {
+	const response = Promise.withResolvers<{ assertOk: () => void }>();
+	fetchRestMock.mockReturnValueOnce(response.promise);
+	return {
+		succeed: () => response.resolve({ assertOk: () => {} }),
+		fail: () =>
+			response.resolve({
+				assertOk: () => {
+					throw new Error("API request failed with status 500");
+				},
+			}),
+	};
+}
 
 beforeEach(() => {
 	fetchRestMock.mockReset();
@@ -72,6 +90,20 @@ describe("hideUser", () => {
 			`/v1/me/hides/${PROFILE_ID}`,
 			{ method: "POST" },
 		);
+		expect(fetchRestMock).toHaveBeenCalledTimes(3);
+	});
+
+	it("keeps the cached list until the server accepts the hide", async () => {
+		await getHiddenUsers();
+		const request = pendingRequest();
+
+		const hiding = hideUser({ profileId: PROFILE_ID });
+		await getHiddenUsers();
+		expect(fetchRestMock).toHaveBeenCalledTimes(2);
+
+		request.succeed();
+		await hiding;
+		await getHiddenUsers();
 		expect(fetchRestMock).toHaveBeenCalledTimes(3);
 	});
 
@@ -151,17 +183,52 @@ describe("hidden profiles and viewability", () => {
 		expect(isProfileViewable(PROFILE_ID)).toBe(false);
 	});
 
-	it("leaves the profile viewable when the request fails", async () => {
-		fetchRestMock.mockResolvedValueOnce({
-			assertOk: () => {
-				throw new Error("API request failed with status 500");
-			},
-		});
-
-		await expect(hideUser({ profileId: PROFILE_ID })).rejects.toThrow(
-			"status 500",
+	it("leaves the lists alone until the server accepts the hide", async () => {
+		const changes: ProfileViewabilityChange[] = [];
+		const stopListening = onProfileViewabilityChange((change) =>
+			changes.push(change),
 		);
+		const request = pendingRequest();
+
+		const hiding = hideUser({ profileId: PROFILE_ID });
+		expect(changes).toEqual([]);
 		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+
+		request.succeed();
+		await hiding;
+		stopListening();
+		expect(changes).toEqual([{ profileId: PROFILE_ID, viewable: false }]);
+	});
+
+	it("leaves the lists alone when the request fails", async () => {
+		const changes: ProfileViewabilityChange[] = [];
+		const stopListening = onProfileViewabilityChange((change) =>
+			changes.push(change),
+		);
+		const request = pendingRequest();
+
+		const hiding = hideUser({ profileId: PROFILE_ID });
+		request.fail();
+
+		await expect(hiding).rejects.toThrow("status 500");
+		stopListening();
+		expect(changes).toEqual([]);
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+	});
+
+	it("keeps an already unviewable profile unviewable when the request fails", async () => {
+		fetchRestMock.mockResolvedValueOnce({
+			jsonParsed: () => ({ hides: [{ profileId: PROFILE_ID }] }),
+			assertOk,
+		});
+		await markHiddenProfilesUnviewable();
+		const request = pendingRequest();
+
+		const hiding = hideUser({ profileId: PROFILE_ID });
+		request.fail();
+
+		await expect(hiding).rejects.toThrow("status 500");
+		expect(isProfileViewable(PROFILE_ID)).toBe(false);
 	});
 
 	it("marks everyone the server still lists as hidden", async () => {

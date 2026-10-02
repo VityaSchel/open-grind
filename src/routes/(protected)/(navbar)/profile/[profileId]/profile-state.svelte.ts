@@ -19,12 +19,18 @@ import type { Profile } from "$lib/model/users/profiles";
 
 export type FetchedProfile = { profile: Profile; note: FavoriteNote | null };
 
+export type PendingViewabilityChange = {
+	revert: () => void;
+	settle: () => void;
+};
+
 export class ProfileState {
 	profile: Profile | null = $state(null);
 	note: FavoriteNote | null = $state(null);
 	loading = $state(true);
 	refreshing = $state(false);
 	error: Error | null = $state(null);
+	changingViewability = $state(false);
 
 	readonly profileId: number;
 	readonly ourProfileId: number;
@@ -81,12 +87,12 @@ export class ProfileState {
 	}
 
 	refresh(): void {
-		if (this.loading || this.refreshing) return;
+		if (this.#busy) return;
 		void this.#load({ refresh: true });
 	}
 
 	revalidate(): void {
-		if (this.loading || this.refreshing) return;
+		if (this.#busy) return;
 		if (this.error) {
 			if (!isUnviewableProfileError(this.error)) this.retry();
 			return;
@@ -94,17 +100,18 @@ export class ProfileState {
 		if (!isProfileCached(this.profileId)) this.refresh();
 	}
 
-	markBlocked(): void {
-		this.error = new BlockedProfileError({ blockedByUs: true });
+	markBlocked(): PendingViewabilityChange {
+		return this.#changeViewability({
+			error: new BlockedProfileError({ blockedByUs: true }),
+		});
 	}
 
-	markHidden(): void {
-		this.error = new HiddenProfileError();
+	markHidden(): PendingViewabilityChange {
+		return this.#changeViewability({ error: new HiddenProfileError() });
 	}
 
-	markViewable(): void {
-		this.error = null;
-		if (!this.profile) this.retry();
+	markViewable(): PendingViewabilityChange {
+		return this.#changeViewability({ error: null });
 	}
 
 	setTap(tapType: TapType | null): void {
@@ -135,6 +142,30 @@ export class ProfileState {
 		this.note = note;
 	}
 
+	get #busy(): boolean {
+		return this.loading || this.refreshing || this.changingViewability;
+	}
+
+	#changeViewability({
+		error,
+	}: {
+		error: Error | null;
+	}): PendingViewabilityChange {
+		const previous = this.error;
+		this.error = error;
+		this.changingViewability = true;
+		return {
+			revert: () => {
+				this.changingViewability = false;
+				if (this.error === error) this.error = previous;
+			},
+			settle: () => {
+				this.changingViewability = false;
+				if (!this.error && !this.profile) this.retry();
+			},
+		};
+	}
+
 	async #load({ refresh }: { refresh: boolean }): Promise<void> {
 		if (refresh) {
 			this.refreshing = true;
@@ -146,13 +177,14 @@ export class ProfileState {
 			this.note = null;
 		}
 		const token = ++this.#fetchToken;
+		const errorBeforeLoad = this.error;
 		try {
 			const profile = refresh
 				? await refreshProfile(this.profileId)
 				: await getProfile(this.profileId);
 			if (this.#superseded(token)) return;
 			this.profile = profile;
-			this.error = null;
+			if (this.error === errorBeforeLoad) this.error = null;
 			if (profile.isFavorite) void this.#loadNote();
 		} catch (error) {
 			if (this.#superseded(token)) return;

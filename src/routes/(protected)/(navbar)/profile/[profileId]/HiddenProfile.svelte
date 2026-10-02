@@ -5,11 +5,17 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
+	import type { PendingViewabilityChange } from "./profile-state.svelte";
 
-	let { profileId, onRefresh }: { profileId: number; onRefresh: () => void } =
-		$props();
-
-	let submitting = $state(false);
+	let {
+		profileId,
+		submitting,
+		markViewable,
+	}: {
+		profileId: number;
+		submitting: boolean;
+		markViewable: () => PendingViewabilityChange;
+	} = $props();
 </script>
 
 <Empty.Root>
@@ -23,19 +29,17 @@
 				variant="secondary"
 				disabled={submitting}
 				onclick={async () => {
-					if (submitting) return;
-					submitting = true;
+					const { revert, settle } = markViewable();
 					try {
 						await unhideUser({ profileId });
-						onRefresh();
+						settle();
 					} catch (error) {
+						revert();
 						console.error(error);
 						showErrorToast({
 							label: "Failed to unhide user",
 							error,
 						});
-					} finally {
-						submitting = false;
 					}
 				}}>Unhide</Button
 			>

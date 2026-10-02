@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Profile } from "$lib/model/users/profiles";
+	import type { PendingViewabilityChange } from "../profile-state.svelte";
 	import EditProfileButton from "./EditProfileButton.svelte";
 	import FavoriteProfileToggle from "./FavoriteProfileToggle.svelte";
 	import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
@@ -7,14 +8,16 @@
 	let {
 		ourProfile,
 		profile,
-		onBlocked,
-		onHidden,
+		changingViewability,
+		markBlocked,
+		markHidden,
 		onFavorite,
 	}: {
 		ourProfile: boolean;
 		profile: Profile | null;
-		onBlocked: () => void;
-		onHidden: () => void;
+		changingViewability: boolean;
+		markBlocked: () => PendingViewabilityChange;
+		markHidden: () => PendingViewabilityChange;
 		onFavorite: (isFavorite: boolean) => void;
 	} = $props();
 </script>
@@ -35,8 +38,9 @@
 			<ProfileActionsMenu
 				profileId={profile.profileId}
 				blockable={profile.isBlockable !== false}
-				{onBlocked}
-				{onHidden}
+				submitting={changingViewability}
+				{markBlocked}
+				{markHidden}
 			/>
 		{/if}
 	</nav>

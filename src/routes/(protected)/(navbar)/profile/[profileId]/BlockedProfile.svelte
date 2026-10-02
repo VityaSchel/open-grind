@@ -6,15 +6,19 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import type { PendingViewabilityChange } from "./profile-state.svelte";
 
 	let {
 		profileId,
 		blockedByUs,
-		onRefresh,
-	}: { profileId: number; blockedByUs: boolean; onRefresh: () => void } =
-		$props();
-
-	let submitting = $state(false);
+		submitting,
+		markViewable,
+	}: {
+		profileId: number;
+		blockedByUs: boolean;
+		submitting: boolean;
+		markViewable: () => PendingViewabilityChange;
+	} = $props();
 </script>
 
 <Empty.Root>
@@ -35,19 +39,17 @@
 					variant="secondary"
 					disabled={submitting}
 					onclick={async () => {
-						if (submitting) return;
-						submitting = true;
+						const { revert, settle } = markViewable();
 						try {
 							await unblockUser({ profileId });
-							onRefresh();
+							settle();
 						} catch (error) {
+							revert();
 							console.error(error);
 							showErrorToast({
 								label: "Failed to unblock user",
 								error,
 							});
-						} finally {
-							submitting = false;
 						}
 					}}>Unblock</Button
 				>

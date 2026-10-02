@@ -14,32 +14,33 @@
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import type { PendingViewabilityChange } from "../profile-state.svelte";
 
 	let {
 		profileId,
 		blockable,
-		onBlocked,
-		onHidden,
+		submitting,
+		markBlocked,
+		markHidden,
 	}: {
 		profileId: number;
 		blockable: boolean;
-		onBlocked: () => void;
-		onHidden: () => void;
+		submitting: boolean;
+		markBlocked: () => PendingViewabilityChange;
+		markHidden: () => PendingViewabilityChange;
 	} = $props();
 
-	let submitting = $state(false);
 	let reportOpen = $state(false);
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger>
+	<DropdownMenu.Trigger disabled={submitting}>
 		{#snippet child({ props: { class: className, ...props } })}
 			<Button
 				size="icon-lg"
 				variant="secondary"
 				aria-label="Profile menu"
 				class={[className, "size-12"]}
-				disabled={submitting}
 				{...props}
 			>
 				<DotsThreeIcon class="size-8" />
@@ -72,10 +73,12 @@
 		</DropdownMenu.Item>
 		<DropdownMenu.Item
 			onSelect={async () => {
+				const { revert, settle } = markHidden();
 				try {
 					await hideUser({ profileId });
-					onHidden();
+					settle();
 				} catch (error) {
+					revert();
 					console.error(error);
 					showErrorToast({ label: "Failed to hide user", error });
 				}
@@ -87,10 +90,12 @@
 		{#if blockable}
 			<DropdownMenu.Item
 				onSelect={async () => {
+					const { revert, settle } = markBlocked();
 					try {
 						await blockUser({ profileId });
-						onBlocked();
+						settle();
 					} catch (error) {
+						revert();
 						console.error(error);
 						showErrorToast({
 							label: "Failed to block user",
@@ -106,4 +111,9 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<ReportSheet bind:open={reportOpen} {profileId} {blockable} {onBlocked} />
+<ReportSheet
+	bind:open={reportOpen}
+	{profileId}
+	{blockable}
+	onBlocked={() => markBlocked().settle()}
+/>
