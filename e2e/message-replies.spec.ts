@@ -185,6 +185,47 @@ test("a touch drag past the trigger replies on lift", async ({ page }) => {
 	await expect(page.getByLabel("Cancel reply")).toBeVisible();
 });
 
+test("a touch platform's rows neither scroll sideways nor widen the conversation, and still reply to a swipe", async ({
+	page,
+}) => {
+	await openConversation(page, { platform: "android" });
+
+	const reached = await railOf(page.locator(MESSAGE_ROW)).evaluateAll(
+		(rails) =>
+			rails.map((rail) => {
+				rail.scrollLeft = rail.scrollWidth;
+				return rail.scrollLeft;
+			}),
+	);
+	expect(reached.length).toBeGreaterThan(0);
+	expect(new Set(reached)).toEqual(new Set([0]));
+
+	const row = page.locator(INCOMING_ROW).last();
+	await row.scrollIntoViewIfNeeded();
+	const rest = (await row.boundingBox())!;
+	const y = rest.y + rest.height / 2;
+	const touch = await TrustedTouch.attach(page);
+	await touch.drag(
+		page,
+		{ x: rest.x + 60, y },
+		{ x: rest.x + 200, y },
+		{ steps: 14, holdMs: 16, release: false },
+	);
+
+	expect((await row.boundingBox())!.x).toBeGreaterThan(rest.x + 64);
+	expect(
+		await page
+			.locator(SCROLLER)
+			.evaluate(
+				(scroller) => scroller.scrollWidth - scroller.clientWidth,
+			),
+	).toBe(0);
+
+	await touch.end();
+
+	await expect(page.getByLabel("Cancel reply")).toBeVisible();
+});
+
 test("a touch drag taps the actuator as it passes the trigger, once", async ({
 	page,
 }) => {

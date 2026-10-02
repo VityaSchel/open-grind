@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SwipeToReply } from "$lib/util/swipe-to-reply.svelte";
+import { SwipeToReply, wheelInputMode } from "$lib/util/swipe-to-reply.svelte";
 import {
 	drag,
 	pointer,
 	swipeToReply,
+	touchOnlyHarness,
 	TRIGGER_DISTANCE_PX,
 } from "./swipe-to-reply-test-helpers";
 
@@ -176,5 +177,87 @@ describe("SwipeToReply", () => {
 		swipe.handlers.onpointerup?.(pointer() as never);
 
 		expect(onArm).not.toHaveBeenCalled();
+	});
+});
+
+describe("wheelInputMode", () => {
+	const tauri = globalThis as {
+		isTauri?: boolean;
+		__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };
+	};
+
+	function runningOn(platform: string) {
+		tauri.isTauri = true;
+		tauri.__TAURI_OS_PLUGIN_INTERNALS__ = { platform };
+	}
+
+	afterEach(() => {
+		delete tauri.isTauri;
+		delete tauri.__TAURI_OS_PLUGIN_INTERNALS__;
+	});
+
+	it("takes no wheel input where fingers are the only pointer", () => {
+		runningOn("android");
+		expect(wheelInputMode()).toBe("none");
+
+		runningOn("ios");
+		expect(wheelInputMode()).toBe("none");
+	});
+
+	it("keeps the bridge on macOS and the rail on every other desktop", () => {
+		runningOn("macos");
+		expect(wheelInputMode()).toBe("bridge");
+
+		runningOn("linux");
+		expect(wheelInputMode()).toBe("rail");
+
+		runningOn("windows");
+		expect(wheelInputMode()).toBe("rail");
+	});
+
+	it("keeps the rail in a plain browser", () => {
+		expect(wheelInputMode()).toBe("rail");
+	});
+});
+
+describe("SwipeToReply without a wheel path", () => {
+	it("leaves the row unscrolled and unlistened", () => {
+		const { row, listen, cleanup } = touchOnlyHarness();
+
+		expect(row.scrollLeft).toBe(0);
+		expect(listen).not.toHaveBeenCalled();
+		expect(cleanup).toBeUndefined();
+	});
+
+	it("ignores a wheel swipe over the row", () => {
+		const { swipe, onReply, onArm, row } = touchOnlyHarness();
+
+		for (let step = 0; step < 6; step++) {
+			row.dispatchEvent(
+				new WheelEvent("wheel", {
+					deltaX: -16,
+					deltaMode: 0,
+					cancelable: true,
+				}),
+			);
+			row.scrollLeft -= 16;
+			row.dispatchEvent(new Event("scroll"));
+		}
+		row.dispatchEvent(new Event("scrollend"));
+
+		expect(swipe.progress).toBe(0);
+		expect(onArm).not.toHaveBeenCalled();
+		expect(onReply).not.toHaveBeenCalled();
+	});
+
+	it("still arms and replies to a touch drag", () => {
+		const { swipe, onReply, onArm } = touchOnlyHarness();
+
+		drag(swipe, { x: TRIGGER_DISTANCE_PX + 20 });
+		expect(swipe.armed).toBe(true);
+		expect(onArm).toHaveBeenCalledOnce();
+		swipe.handlers.onpointerup?.(pointer() as never);
+
+		expect(onReply).toHaveBeenCalledOnce();
 	});
 });

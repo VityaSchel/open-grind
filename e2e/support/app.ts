@@ -247,7 +247,7 @@ export async function runPaletteCommand(
 }
 
 // The platform decides which wheel path the app takes: "macos" (the
-// default) runs the gesture-phase bridge, anything else the scroller rail.
+// default) runs the gesture-phase bridge.
 export async function installTauriShim(
 	page: Page,
 	{ platform = "macos" } = {},

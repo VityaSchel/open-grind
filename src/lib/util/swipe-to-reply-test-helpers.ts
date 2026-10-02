@@ -133,6 +133,21 @@ export function railHarness({
 	};
 }
 
+export function touchOnlyHarness() {
+	const onReply = vi.fn();
+	const onArm = vi.fn();
+	const swipe = new SwipeToReply({
+		direction: "right",
+		onReply,
+		onArm,
+		wheelMode: "none",
+	});
+	const row = document.createElement("div");
+	const listen = vi.spyOn(row, "addEventListener");
+	const cleanup = swipe.attachRail(row);
+	return { swipe, onReply, onArm, row, listen, cleanup };
+}
+
 export function bridgeHarness({
 	direction = "right",
 }: { direction?: "left" | "right" } = {}) {

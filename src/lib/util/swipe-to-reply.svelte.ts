@@ -3,7 +3,7 @@ import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "$lib/haptics";
-import { isMacosPlatform } from "$lib/platform/os";
+import { isMacosPlatform, isMobilePlatform } from "$lib/platform/os";
 import {
 	scrollGesture,
 	type ScrollGestureState,
@@ -39,14 +39,15 @@ type SwipeHandlers = Pick<
 	| "onlostpointercapture"
 >;
 
-export type WheelInputMode = "rail" | "bridge";
+export type WheelInputMode = "rail" | "bridge" | "none";
 
 // macOS mirrors every scroll event's gesture phase from AppKit, so raw wheel
 // deltas gated on finger contact replace the native scroller — which also
 // stops the rail from latching vertical wheel gestures away from the
-// conversation's own overscroll. Everywhere else the rail stays.
+// conversation's own overscroll.
 export function wheelInputMode(): WheelInputMode {
-	return isMacosPlatform() ? "bridge" : "rail";
+	if (isMacosPlatform()) return "bridge";
+	return isMobilePlatform() ? "none" : "rail";
 }
 
 export class SwipeToReply {
@@ -144,6 +145,7 @@ export class SwipeToReply {
 	// cancelled, so every wheel that vertical scrolling or pull-to-refresh
 	// may need passes through untouched.
 	readonly attachRail: Attachment<HTMLElement> = (node) => {
+		if (this.#wheelMode === "none") return;
 		if (this.#wheelMode === "bridge") return this.#attachBridge(node);
 		this.#rail = node;
 		this.#railRest = this.#dragSign === 1 ? MAX_DRAG_PX : 0;
