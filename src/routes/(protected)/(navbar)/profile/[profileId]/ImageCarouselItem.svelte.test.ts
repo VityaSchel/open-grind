@@ -62,7 +62,7 @@ describe("ImageCarouselItem", () => {
 		expect(screen.queryByRole("status")).toBeNull();
 	});
 
-	it("keeps an unloaded photo openable behind a loading box", () => {
+	it("keeps a photo out of reach openable behind a still box", () => {
 		const { container } = render(ImageCarouselItem, {
 			props: { ...PROPS, eager: false },
 		});
@@ -74,6 +74,17 @@ describe("ImageCarouselItem", () => {
 		).toBeNull();
 		expect(anchor.getAttribute("href")).toBe(PROPS.src);
 		expect(anchor.hasAttribute("aria-disabled")).toBe(false);
+		expect(screen.queryByRole("status")).toBeNull();
+	});
+
+	it("starts spinning once the photo comes into reach", async () => {
+		const { container, rerender } = render(ImageCarouselItem, {
+			props: { ...PROPS, eager: false },
+		});
+
+		await rerender({ eager: true });
+
+		expect(container.querySelector("img")).not.toBeNull();
 		expect(screen.queryByRole("status")).not.toBeNull();
 	});
 });

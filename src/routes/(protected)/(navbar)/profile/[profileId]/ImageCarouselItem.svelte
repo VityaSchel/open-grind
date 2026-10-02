@@ -43,11 +43,11 @@
 				height = image.naturalHeight;
 			}}
 		/>
-	{/if}
-	{#if width === null && !failed}
-		<Spinner
-			class="pointer-events-none absolute inset-0 m-auto size-8 text-stone-400"
-		/>
+		{#if width === null && !failed}
+			<Spinner
+				class="pointer-events-none absolute inset-0 m-auto size-8 text-stone-400"
+			/>
+		{/if}
 	{/if}
 </a>
 
