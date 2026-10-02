@@ -52,6 +52,17 @@ describe("buildCascadeQuery", () => {
 		expect(query.tribes).toEqual([Tribe.Bear]);
 	});
 
+	it("asks for fresh profiles only while Fresh is on", () => {
+		const on = buildCascadeQuery({
+			geohash,
+			filters: { ...defaultFilters, isFresh: true },
+		});
+		const off = buildCascadeQuery({ geohash, filters: defaultFilters });
+
+		expect(on.fresh).toBe(true);
+		expect(off.fresh).toBeUndefined();
+	});
+
 	it("leaves out a list filter that is on but has nothing sendable", () => {
 		const query = buildCascadeQuery({
 			geohash,
@@ -146,6 +157,12 @@ describe("sentFilterKeys", () => {
 				tribes: [Tribe.Trans],
 			}),
 		).toEqual(["favorites"]);
+	});
+
+	it("lists Fresh as a sent filter", () => {
+		expect(sentFilterKeys({ ...defaultFilters, isFresh: true })).toEqual([
+			"fresh",
+		]);
 	});
 
 	it("lists every filter the request carries", () => {

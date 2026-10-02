@@ -69,6 +69,25 @@ describe("demo route data matches the real schemas", () => {
 		);
 	});
 
+	it("a fresh cascade lists only profiles the profile route marks as new", () => {
+		const newFlags = (query: string) => {
+			const { items } = cascadeV4ResponseSchema.parse(
+				route(`/v4/cascade?nearbyGeoHash=u00${query}`),
+			);
+			const { profiles } = route("/v3/profiles", "POST", {
+				targetProfileIds: items.flatMap((item) =>
+					"data" in item && "profileId" in item.data
+						? [item.data.profileId]
+						: [],
+				),
+			}) as { profiles: { isNew: boolean }[] };
+			return profiles.map((profile) => profile.isNew);
+		};
+
+		expect(newFlags("")).toContain(false);
+		expect(new Set(newFlags("&fresh=true"))).toEqual(new Set([true]));
+	});
+
 	it("full profile validates for an arbitrary id", () => {
 		const body = route("/v7/profiles/100123") as { profiles: unknown[] };
 		profileSchema.parse(body.profiles[0]);

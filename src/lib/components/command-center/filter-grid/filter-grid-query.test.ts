@@ -78,6 +78,13 @@ describe("parseFilterGridQuery", () => {
 		expect(parsedAt(result.parsed, 1).valueText).toBe("Top, Versatile");
 	});
 
+	it("turns Fresh on from fresh=true", () => {
+		const result = parseFilterGridQuery("?fresh=true");
+		expect(result.invalidCount).toBe(0);
+		expect(result.parsed.map((p) => p.key)).toEqual(["fresh"]);
+		expect(result.filters.isFresh).toBe(true);
+	});
+
 	it("rejects an incomplete combined range without throwing", () => {
 		for (const query of ["?age=", "?age=25", "?height=170", "?weight=70"]) {
 			const result = parseFilterGridQuery(query);

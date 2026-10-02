@@ -46,6 +46,9 @@
 	<FilterBoolean id="right-now" bind:checked={filters.isRightNow}>
 		Right now
 	</FilterBoolean>
+	<FilterBoolean id="fresh" bind:checked={filters.isFresh}>
+		Fresh
+	</FilterBoolean>
 	<AgeFilter bind:checked={filters.ageEnabled} bind:value={filters.age} />
 	<GendersFilter
 		bind:checked={filters.genderEnabled}
