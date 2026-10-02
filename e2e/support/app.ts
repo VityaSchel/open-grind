@@ -91,6 +91,58 @@ export function emitMessageSent(page: Page, payload: unknown): Promise<void> {
 	);
 }
 
+type MessageEnvelope = {
+	messageId: string;
+	conversationId: string;
+	senderId: number;
+	timestamp: number;
+};
+
+export function expiringImageMessage({
+	envelope,
+	spent = false,
+}: {
+	envelope: MessageEnvelope;
+	spent?: boolean;
+}) {
+	return {
+		type: "ExpiringImage",
+		body: {
+			mediaId: 910_900,
+			width: 600,
+			height: 800,
+			url: spent
+				? null
+				: "https://picsum.photos/seed/expiring-image/600/800",
+			duration: 10_000,
+			viewsRemaining: spent ? 0 : 1,
+			expiresAt: envelope.timestamp + 86_400_000,
+			viewed: spent,
+		},
+		...envelope,
+	};
+}
+
+export function expiringVideoMessage({
+	envelope,
+}: {
+	envelope: MessageEnvelope;
+}) {
+	return {
+		type: "Video",
+		body: {
+			mediaId: 900_001,
+			url: "https://cdns.grindr.com/videos/chat/clip.mp4",
+			contentType: "video/mp4",
+			length: 8000,
+			maxViews: 2,
+			viewsRemaining: 2,
+			looping: false,
+		},
+		...envelope,
+	};
+}
+
 export async function captureInvokes(page: Page, command: string) {
 	await page.evaluate((watched) => {
 		if (!window.__capturedInvokes) {

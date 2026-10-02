@@ -121,7 +121,7 @@
 	});
 
 	const bubbleClass: import("svelte/elements").ClassValue = $derived([
-		"relative flex w-50 items-center gap-2 rounded-xl border border-border bg-input px-4 py-3 text-start font-medium",
+		"relative flex w-fit items-center gap-2 rounded-xl border border-border bg-input px-4 py-3 text-start font-medium",
 		media.cornerClass,
 		{ "ms-3": !media.clone, "size-full": media.clone },
 	]);
