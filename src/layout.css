@@ -519,8 +519,8 @@ a {
 	--bd-panel: blur(24px);
 	--bd-chip: blur(40px);
 	--pill-frost: url(#frost-pill-40);
-	--chip-frost: url(#frost-tile) url(#frost-round-40);
-	--veil-frost: url(#frost-tile) url(#frost-round-8);
+	--chip-frost: url(#frost-tile-6) url(#frost-round-40);
+	--veil-frost: url(#frost-tile-1) url(#frost-round-8);
 	--glass-controls-bg: rgba(0, 0, 0, 0.4);
 	--glass-controls-subdued-bg: rgba(0, 0, 0, 0.2);
 	--scrim: none;
@@ -531,7 +531,7 @@ a {
 	--bd-panel: blur(16px);
 	--bd-chip: blur(24px);
 	--pill-frost: url(#frost-pill-24);
-	--chip-frost: url(#frost-tile) url(#frost-round-24);
+	--chip-frost: url(#frost-tile-6) url(#frost-round-24);
 	--bar-content-gap: 0.75rem;
 }
 
