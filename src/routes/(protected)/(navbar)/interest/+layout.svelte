@@ -8,6 +8,7 @@
 	import { toggleVariants } from "$lib/components/ui/toggle";
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
+	import { cn } from "$lib/util/utils";
 	import InterestPager from "./InterestPager.svelte";
 	import { INTEREST_TABS, interestTabIndex } from "./tabs";
 
@@ -42,7 +43,6 @@
 </script>
 
 {#snippet tab(href: string, label: string)}
-	{@const active = page.url.pathname === href}
 	<Button
 		{href}
 		onclick={(event: MouseEvent) => {
@@ -50,11 +50,10 @@
 			event.preventDefault();
 			void goto(href, { replaceState: true, noScroll: true });
 		}}
-		class={[
+		class={cn(
 			toggleVariants({ variant: "default" }),
-			"text-muted-foreground",
-			{ "hover:bg-muted-foreground/10": !active },
-		]}
+			"text-muted-foreground hover:bg-transparent",
+		)}
 	>
 		{label}
 	</Button>
