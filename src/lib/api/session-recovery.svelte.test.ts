@@ -8,6 +8,7 @@ import {
 	type SessionErrorReport,
 	sessionRecovery,
 } from "$lib/api/session-recovery.svelte";
+import { setVisibility } from "$lib/test/visibility";
 
 const { callMethodMock, toastErrorMock, toastDismissMock } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
@@ -22,14 +23,6 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 vi.mock("svelte-sonner", () => ({
 	toast: { error: toastErrorMock, dismiss: toastDismissMock },
 }));
-
-function setVisibility(state: "visible" | "hidden") {
-	Object.defineProperty(document, "visibilityState", {
-		value: state,
-		configurable: true,
-	});
-	document.dispatchEvent(new Event("visibilitychange"));
-}
 
 function report(overrides: Partial<SessionErrorReport> = {}) {
 	sessionRecovery.report({

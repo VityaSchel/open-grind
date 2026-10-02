@@ -1,8 +1,10 @@
 import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 import { signedInProfileId } from "$lib/api/current-session";
+import { isMobilePlatform } from "$lib/platform/os";
 import { ws } from "$lib/ws.svelte";
 
 const THROTTLE_MS = 2000;
+const DESKTOP_LONG_ABSENCE_MS = 5 * 60 * 1000;
 
 export type ReconcileHandler = () => void | Promise<void>;
 
@@ -10,7 +12,7 @@ class Reconciler {
 	#handlers = new Set<ReconcileHandler>();
 	#lastReconcileAt = 0;
 	#resyncTimer: ReturnType<typeof setTimeout> | null = null;
-	#wasHidden = false;
+	#hiddenAt: number | null = null;
 	#firstConnect = true;
 
 	constructor() {
@@ -35,11 +37,14 @@ class Reconciler {
 		if (typeof document !== "undefined") {
 			document.addEventListener("visibilitychange", () => {
 				if (document.visibilityState === "hidden") {
-					this.#wasHidden = true;
+					this.#hiddenAt = Date.now();
 					return;
 				}
-				if (!this.#wasHidden) return;
-				this.#wasHidden = false;
+				if (this.#hiddenAt === null) return;
+				const awayMs = Date.now() - this.#hiddenAt;
+				this.#hiddenAt = null;
+				if (!isMobilePlatform() && awayMs < DESKTOP_LONG_ABSENCE_MS)
+					return;
 				void appLifecycle.activate().then(() => this.#trigger());
 			});
 		}
