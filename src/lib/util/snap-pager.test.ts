@@ -321,6 +321,139 @@ describe("SnapPager over the macOS finger-phase bridge", () => {
 	});
 });
 
+describe("SnapPager while macOS trackpad momentum carries it", () => {
+	function flicked() {
+		vi.useFakeTimers();
+		const mac = macosGesture();
+		const h = harness({ fingerPhase: mac.gesture });
+		mac.fingers();
+		h.scroll(0.2 * WIDTH);
+		mac.released();
+		mac.momentum();
+		return { mac, h };
+	}
+
+	function passStillFrames() {
+		for (let frame = 0; frame < 3; frame += 1)
+			vi.advanceTimersToNextFrame();
+	}
+
+	it("ignores a scrollend the engine fires before the momentum is over", () => {
+		const { h } = flicked();
+
+		h.scroll(0.47 * WIDTH);
+		h.node.dispatchEvent(new Event("scrollend"));
+
+		expect(h.scrollTo).not.toHaveBeenCalled();
+		expect(h.onRest).not.toHaveBeenCalled();
+	});
+
+	it("does not glide on still frames between the release and the end of the momentum", () => {
+		const { h } = flicked();
+
+		passStillFrames();
+		h.scroll(0.47 * WIDTH);
+		passStillFrames();
+
+		expect(h.scrollTo).not.toHaveBeenCalled();
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("glides to the nearest profile on a scrollend once the trackpad is idle", () => {
+		const { mac, h } = flicked();
+
+		h.scroll(0.47 * WIDTH);
+		mac.idle();
+		h.node.dispatchEvent(new Event("scrollend"));
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: 0,
+			behavior: "smooth",
+		});
+	});
+
+	it("glides a pager the momentum left between profiles, three still frames after it ends", () => {
+		const { mac, h } = flicked();
+
+		h.scroll(1.3 * WIDTH);
+		h.node.dispatchEvent(new Event("scrollend"));
+		mac.idle();
+		vi.advanceTimersToNextFrame();
+		vi.advanceTimersToNextFrame();
+		expect(h.scrollTo).not.toHaveBeenCalled();
+		vi.advanceTimersToNextFrame();
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: WIDTH,
+			behavior: "smooth",
+		});
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("leaves a pager that keeps moving after the momentum ends to the engine", () => {
+		const { mac, h } = flicked();
+
+		h.scroll(0.7 * WIDTH);
+		mac.idle();
+		for (const left of [0.8, 0.9, 0.95].map((page) => page * WIDTH)) {
+			vi.advanceTimersToNextFrame();
+			vi.advanceTimersToNextFrame();
+			h.scroll(left);
+		}
+		h.scroll(WIDTH);
+		vi.advanceTimersToNextFrame();
+
+		expect(h.scrollTo).not.toHaveBeenCalled();
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(1);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("rests and never scrolls when the momentum lands on a profile", () => {
+		const { mac, h } = flicked();
+
+		h.scroll(WIDTH);
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(1);
+		h.node.dispatchEvent(new Event("scrollend"));
+		mac.idle();
+		passStillFrames();
+
+		expect(h.scrollTo).not.toHaveBeenCalled();
+		expect(h.onRest).toHaveBeenLastCalledWith(1);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("glides a pager the fingers let go of between profiles with no momentum", () => {
+		vi.useFakeTimers();
+		const mac = macosGesture();
+		const h = harness({ fingerPhase: mac.gesture });
+
+		mac.fingers();
+		h.scroll(1.3 * WIDTH);
+		mac.released();
+		passStillFrames();
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: WIDTH,
+			behavior: "smooth",
+		});
+	});
+
+	it("keeps gliding on every scrollend, and watches no frames, where no bridge reports a phase", () => {
+		vi.useFakeTimers();
+		const h = harness();
+
+		h.wheel({ deltaX: 40 });
+		h.scroll(0.47 * WIDTH);
+		h.node.dispatchEvent(new Event("scrollend"));
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: 0,
+			behavior: "smooth",
+		});
+		expect(vi.getTimerCount()).toBe(0);
+	});
+});
+
 describe("SnapPager schedules nothing for input that lands on a profile", () => {
 	it("across touches, wheels, trackpad phases, steps, placements and resizes", () => {
 		vi.useFakeTimers();

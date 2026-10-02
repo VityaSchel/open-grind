@@ -93,9 +93,10 @@ export class SnapPager {
 		);
 		const resize = new ResizeObserver((entries) => this.#onResize(entries));
 		resize.observe(node);
-		const stopPhase = this.#fingerPhase?.onPhaseChange(() =>
-			this.settleNow(),
-		);
+		const stopPhase = this.#fingerPhase?.onPhaseChange((phase) => {
+			this.settleNow();
+			if (phase === "idle") this.#watchRelease();
+		});
 
 		return () => {
 			listening.abort();
@@ -134,8 +135,7 @@ export class SnapPager {
 	step(offset: number): void {
 		if (this.#width <= 0 || this.#held()) return;
 		const nearest = this.#nearestPosition();
-		if (this.#fingerPhase?.phase === "momentum" && !this.#aligned(nearest))
-			return;
+		if (this.#coasting() && !this.#aligned(nearest)) return;
 		const target = this.#clamp((this.#stepTarget ?? nearest) + offset);
 		this.#stepTarget = target;
 		this.#reportHeading();
@@ -189,8 +189,18 @@ export class SnapPager {
 		return this.#fingers > 0 || this.#fingerPhase?.fingersDown === true;
 	}
 
+	#coasting(): boolean {
+		return this.#fingerPhase?.phase === "momentum";
+	}
+
 	#canSnap(): boolean {
 		return this.#width > 0 && !this.#held() && this.#widthMatchesLayout();
+	}
+
+	#canGlideToNearest(): boolean {
+		return (
+			this.#canSnap() && this.#stepTarget === null && !this.#coasting()
+		);
 	}
 
 	#report(position: number): void {
@@ -269,7 +279,7 @@ export class SnapPager {
 
 	readonly #checkRelease = (): void => {
 		this.#releaseWatch = null;
-		if (!this.#canSnap() || this.#stepTarget !== null) return;
+		if (!this.#canGlideToNearest()) return;
 		const position = this.#nearestPosition();
 		if (this.#aligned(position)) return;
 		this.#stillFrames += 1;
@@ -281,7 +291,7 @@ export class SnapPager {
 	};
 
 	#snapStranded(): void {
-		if (!this.#canSnap() || this.#stepTarget !== null) return;
+		if (!this.#canGlideToNearest()) return;
 		const position = this.#nearestPosition();
 		if (!this.#aligned(position))
 			this.#scrollToPosition(position, { animated: true });
