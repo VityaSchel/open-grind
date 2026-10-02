@@ -60,6 +60,14 @@ Android JKS SHA-256 fingerprint:
 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
 ```
 
+Google Play code transparency key SHA-256 fingerprint:
+
+```
+0bb3cac7023f0871c31402be5c3ac3ed7ff01b7fa1dd74fcfa13072f07b83ab5
+```
+
+Google Play delivers APKs signed with a key Google holds, so this key signs the list of code hashes inside them instead — see [Verify Google Play install](./BUILDING.md#verify-google-play-install).
+
 ## Governance certification
 
 The current [decision making authority](./GOVERNANCE.md#maintainers) certifies the master key with their personal key, which ties the project key to whoever holds it. That signature is not part of the canonical key above and is published only here:

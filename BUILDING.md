@@ -138,16 +138,31 @@ OPEN_GRIND_KEYSTORE_PROPERTIES=~/.config/open-grind/keystore.properties \
 - [Verify minisign signature](#verify-minisign-signature) to prove the APK was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#android) to prove the APK was built from the open source code
 
+### Verify Google Play install
+
+Google signs the APKs it delivers with its own key, so their signature says nothing about who built the code. The code transparency file inside them does: it lists the hash of every DEX file and native library, signed with a key only Open Grind developers hold.
+
+1. Connect the device with the app installed from Google Play and check it with [bundletool](https://github.com/google/bundletool/releases):
+
+```bash
+bundletool check-transparency --mode=connected_device --package-name=org.opengrind
+```
+
+2. Compare the printed fingerprint of the code transparency key certificate with the one in [KEYS.md](./KEYS.md#platforms-signing).
+
+Code transparency covers code only. Resources, assets and the manifest are not part of it.
+
 ### Publish to Google Play
 
 The Play bundle removes the in-app updater, so it is built separately from the APK. Every release runs `play.yml`, which builds the bundle on several providers and publishes the verified `open-grind-unsigned-play` artifact.
 
 1. Download the artifact from the `play` workflow run.
 
-2. Sign it with the Play upload key. The properties file has the same fields as [contrib/keystore.properties.example](./contrib/keystore.properties.example) and points at an RSA keystore:
+2. Add [code transparency](https://developer.android.com/guide/app-bundle/code-transparency) and sign it with the Play upload key. Each properties file has the same fields as [contrib/keystore.properties.example](./contrib/keystore.properties.example) and points at its own RSA keystore; the code transparency key needs at least 3072 bits. Signing fails unless the code transparency key is the one [KEYS.md](./KEYS.md) publishes:
 
 ```bash
 OPEN_GRIND_PLAY_KEYSTORE_PROPERTIES=~/.config/open-grind/play-upload.properties \
+OPEN_GRIND_PLAY_TRANSPARENCY_KEYSTORE_PROPERTIES=~/.config/open-grind/play-transparency.properties \
   nix develop .#play --command bun ci/sign.ts /path/to/open-grind-v<version>-android-unsigned.aab
 ```
 

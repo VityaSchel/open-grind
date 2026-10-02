@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
+import { mkdtemp, rm } from "fs/promises";
+import { tmpdir } from "os";
 import path from "path";
 
 const TOOLING = {
 	aab: {
-		binaries: ["jarsigner", "keytool", "unzip"],
+		binaries: ["bundletool", "jarsigner", "keytool", "unzip"],
 		shell: "nix develop .#play",
 		rewrites: true,
 	},
@@ -60,12 +62,19 @@ for (const binary of tooling.binaries) {
 const home = process.env.HOME ?? "~";
 const untilde = (p: string) => p.replace(/^~/, home);
 
-const releaseKey = (
+const TRANSPARENCY_FILE =
+	"BUNDLE-METADATA/com.android.tools.build.bundletool/code_transparency_signed.jwt";
+const TRANSPARENCY_FINGERPRINT_LABEL =
+	"Google Play code transparency key SHA-256 fingerprint:";
+
+const publishedKeys = (
 	await Bun.file(path.join(import.meta.dir, "..", "KEYS.md")).text()
 )
 	.split("\n")
-	.map((line) => line.trim())
-	.find((line) => line.startsWith("RW") && line.length === 56);
+	.map((line) => line.trim());
+const releaseKey = publishedKeys.find(
+	(line) => line.startsWith("RW") && line.length === 56,
+);
 if (!releaseKey) {
 	throw new Error("KEYS.md publishes no minisign release key");
 }
@@ -154,55 +163,130 @@ async function bundleEntries(bundle: string) {
 		.sort();
 }
 
+function publishedTransparencyFingerprint() {
+	const label = publishedKeys.indexOf(TRANSPARENCY_FINGERPRINT_LABEL);
+	const fingerprint = publishedKeys
+		.slice(label + 1)
+		.find((line) => /^[0-9a-f]{64}$/.test(line));
+	if (label === -1 || !fingerprint) {
+		throw new Error(
+			"KEYS.md publishes no Google Play code transparency fingerprint",
+		);
+	}
+	return fingerprint;
+}
+
+async function addTransparency(input: string, output: string) {
+	const { store, alias, password } = await keystore(
+		"OPEN_GRIND_PLAY_TRANSPARENCY_KEYSTORE_PROPERTIES",
+	);
+	const passwordFile = path.join(path.dirname(output), "password");
+	await Bun.write(passwordFile, password);
+	const added = Bun.spawnSync(
+		[
+			"bundletool",
+			"add-transparency",
+			`--bundle=${input}`,
+			`--output=${output}`,
+			`--ks=${store}`,
+			`--ks-key-alias=${alias}`,
+			`--ks-pass=file:${passwordFile}`,
+			`--key-pass=file:${passwordFile}`,
+		],
+		{ stdio: ["inherit", "inherit", "inherit"] },
+	);
+	if (added.exitCode !== 0) {
+		throw new Error(`bundletool add-transparency exited ${added.exitCode}`);
+	}
+}
+
+async function checkTransparency(bundle: string) {
+	const report =
+		await $`bundletool check-transparency --mode=bundle --bundle=${bundle}`.text();
+	const fingerprint = report
+		.match(
+			/code transparency key certificate[^:]*: ((?:[0-9A-F]{2} ?){32})/,
+		)?.[1]
+		?.replaceAll(" ", "")
+		.toLowerCase();
+	if (!report.includes("Code transparency verified") || !fingerprint) {
+		throw new Error(`code transparency did not verify:\n${report}`);
+	}
+	if (fingerprint !== publishedTransparencyFingerprint()) {
+		throw new Error(
+			`code transparency key ${fingerprint} is not the one KEYS.md publishes`,
+		);
+	}
+	console.log(`code transparency key SHA-256: ${fingerprint}`);
+}
+
 async function signAab(input: string, output: string) {
 	const { store, alias, password } = await keystore(
 		"OPEN_GRIND_PLAY_KEYSTORE_PROPERTIES",
 	);
-	const signed = Bun.spawnSync(
-		[
-			"jarsigner",
-			"-keystore",
-			store,
-			"-storepass:env",
-			"KEYSTORE_PASSWORD",
-			"-keypass:env",
-			"KEYSTORE_PASSWORD",
-			"-sigalg",
-			"SHA256withRSA",
-			"-digestalg",
-			"SHA-256",
-			"-signedjar",
-			output,
-			input,
-			alias,
-		],
-		{
-			env: { ...process.env, KEYSTORE_PASSWORD: password },
-			stdio: ["inherit", "inherit", "inherit"],
-		},
-	);
-	if (signed.exitCode !== 0) {
-		throw new Error(`jarsigner exited ${signed.exitCode}`);
+	publishedTransparencyFingerprint();
+	const scratch = await mkdtemp(path.join(tmpdir(), "open-grind-aab-"));
+	try {
+		const transparent = path.join(scratch, path.basename(input));
+		const signed = path.join(scratch, "signed.aab");
+		await addTransparency(input, transparent);
+		const signing = Bun.spawnSync(
+			[
+				"jarsigner",
+				"-keystore",
+				store,
+				"-storepass:env",
+				"KEYSTORE_PASSWORD",
+				"-keypass:env",
+				"KEYSTORE_PASSWORD",
+				"-sigalg",
+				"SHA256withRSA",
+				"-digestalg",
+				"SHA-256",
+				"-signedjar",
+				signed,
+				transparent,
+				alias,
+			],
+			{
+				env: { ...process.env, KEYSTORE_PASSWORD: password },
+				stdio: ["inherit", "inherit", "inherit"],
+			},
+		);
+		if (signing.exitCode !== 0) {
+			throw new Error(`jarsigner exited ${signing.exitCode}`);
+		}
+		const [unsigned, withSignature] = await Promise.all([
+			bundleEntries(input),
+			bundleEntries(signed),
+		]);
+		const builtEntries = withSignature.filter(
+			(entry) => !entry.startsWith(`${TRANSPARENCY_FILE} `),
+		);
+		if (
+			unsigned.length === 0 ||
+			builtEntries.length !== withSignature.length - 1 ||
+			unsigned.join("\n") !== builtEntries.join("\n")
+		) {
+			throw new Error(
+				"signing changed the bundle beyond its signature and code transparency file",
+			);
+		}
+		await checkTransparency(signed);
+		const certificate =
+			await $`keytool -printcert -jarfile ${signed}`.text();
+		const fingerprint = certificate
+			.split("\n")
+			.find((line) => line.trim().startsWith("SHA256:"));
+		if (!fingerprint) {
+			throw new Error("no certificate fingerprint in keytool output");
+		}
+		await Bun.write(output, Bun.file(signed));
+		console.log(fingerprint.trim());
+		console.log(`${unsigned.length} entries unchanged, signed: ${output}`);
+	} finally {
+		await rm(scratch, { recursive: true, force: true });
 	}
-	const [unsigned, withSignature] = await Promise.all([
-		bundleEntries(input),
-		bundleEntries(output),
-	]);
-	if (
-		unsigned.length === 0 ||
-		unsigned.join("\n") !== withSignature.join("\n")
-	) {
-		throw new Error("signing changed the bundle beyond its signature");
-	}
-	const certificate = await $`keytool -printcert -jarfile ${output}`.text();
-	const fingerprint = certificate
-		.split("\n")
-		.find((line) => line.trim().startsWith("SHA256:"));
-	if (!fingerprint) {
-		throw new Error("no certificate fingerprint in keytool output");
-	}
-	console.log(fingerprint.trim());
-	console.log(`${unsigned.length} entries unchanged, signed: ${output}`);
 }
 
 async function minisign(file: string) {

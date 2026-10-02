@@ -137,6 +137,7 @@ rec {
 
   playShell = pkgs.mkShell {
     packages = frontendInputs ++ [
+      pkgs.bundletool
       pkgs.fastlane
       pkgs.jdk21_headless
       pkgs.unzip
