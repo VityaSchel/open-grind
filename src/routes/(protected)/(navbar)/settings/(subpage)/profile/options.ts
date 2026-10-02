@@ -17,6 +17,7 @@ import {
 } from "$lib/model/users/profiles";
 import { type ProfileTagsResponse, tagTextByKey } from "$lib/model/users/tags";
 import { optionsFromMap } from "$lib/util/options";
+import { cmToInches, formatFeetInches, kgToPounds } from "$lib/util/units";
 import type { Gender } from "$lib/model/users/genders";
 import type { Pronoun } from "$lib/model/users/pronouns";
 
@@ -29,11 +30,26 @@ export const maxProfilePronouns = 3;
 export const primaryGenderOrder = [1, 4, 5, 2, 6, 7, 3];
 
 export const heightCmRange = { min: 120, max: 250 } as const;
+export const heightInchRange = {
+	min: cmToInches(heightCmRange.min),
+	max: cmToInches(heightCmRange.max),
+} as const;
 export const weightKgRange = { min: 30, max: 250 } as const;
+export const weightPoundRange = {
+	min: kgToPounds(weightKgRange.min),
+	max: kgToPounds(weightKgRange.max),
+} as const;
 export const ageRange = { min: 18, max: 99 } as const;
 
 export const ethnicityOptions = optionsFromMap(ethnicities);
 export const relationshipOptions = optionsFromMap(relationshipStatuses);
+export const heightInchOptions = Array.from(
+	{ length: heightInchRange.max - heightInchRange.min + 1 },
+	(_, index) => {
+		const inches = heightInchRange.min + index;
+		return { value: inches, label: formatFeetInches(inches) };
+	},
+);
 export const bodyTypeOptions = optionsFromMap(bodyTypes);
 export const hivOptions = optionsFromMap(hivStatuses);
 export const positionOptions = sexualPositionOrder.map((position) => ({

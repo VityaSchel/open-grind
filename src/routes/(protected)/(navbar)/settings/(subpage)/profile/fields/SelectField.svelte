@@ -1,4 +1,5 @@
 <script lang="ts" generics="T extends number">
+	import { IsUsingKeyboard } from "bits-ui";
 	import { CaretUpDownIcon, type IconComponentProps } from "phosphor-svelte";
 	import type { Component } from "svelte";
 
@@ -26,6 +27,19 @@
 	const selected = $derived(options.find((option) => option.value === value));
 	const SelectedIcon = $derived(selected?.icon);
 	const hasIcons = $derived(options.some((option) => option.icon));
+	let menu = $state<HTMLElement | null>(null);
+	const usingKeyboard = new IsUsingKeyboard();
+
+	function revealSelected(opening: Event) {
+		const checked = menu?.querySelector<HTMLElement>(
+			'[role="menuitemradio"][aria-checked="true"]',
+		);
+		if (!checked) return;
+		checked.scrollIntoView({ block: "center" });
+		if (!usingKeyboard.current) return;
+		opening.preventDefault();
+		checked.focus({ preventScroll: true });
+	}
 </script>
 
 <Field {label}>
@@ -55,7 +69,9 @@
 				{/snippet}
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content
+				bind:ref={menu}
 				class="max-h-72 w-(--bits-dropdown-menu-anchor-width)"
+				onOpenAutoFocus={revealSelected}
 			>
 				<DropdownMenu.RadioGroup
 					bind:value={

@@ -12,6 +12,7 @@
 		step = 1,
 		unit,
 		placeholder,
+		onfocus,
 	}: {
 		label: string;
 		value: number | null;
@@ -20,6 +21,7 @@
 		step?: number;
 		unit?: string;
 		placeholder?: string;
+		onfocus?: () => void;
 	} = $props();
 
 	const allowsDecimal = $derived(step % 1 !== 0);
@@ -76,7 +78,10 @@
 				inputmode={allowsDecimal ? "decimal" : "numeric"}
 				bind:value={text}
 				oninput={handleInput}
-				onfocus={() => (focused = true)}
+				onfocus={() => {
+					focused = true;
+					onfocus?.();
+				}}
 				onblur={commit}
 				{placeholder}
 				class={{ "pr-10": unit }}

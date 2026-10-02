@@ -29,11 +29,12 @@
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
 	import FieldPair from "./fields/FieldPair.svelte";
+	import HeightField from "./fields/HeightField.svelte";
 	import MultiSelectField from "./fields/MultiSelectField.svelte";
-	import NumberField from "./fields/NumberField.svelte";
 	import SelectField from "./fields/SelectField.svelte";
 	import SocialField from "./fields/SocialField.svelte";
 	import SwitchRow from "./fields/SwitchRow.svelte";
+	import WeightField from "./fields/WeightField.svelte";
 	import {
 		ageRange,
 		bodyTypeOptions,
@@ -43,7 +44,6 @@
 		ethnicityOptions,
 		fieldLimits,
 		healthOptions,
-		heightCmRange,
 		hivOptions,
 		lookingForOptions,
 		maxProfileGenders,
@@ -55,7 +55,6 @@
 		relationshipOptions,
 		tribeOptions,
 		vaccineOptions,
-		weightKgRange,
 	} from "./options";
 	import { saveProfilePhotoOrder } from "./profile-photo-order";
 	import ProfileFormSection from "./ProfileFormSection.svelte";
@@ -262,23 +261,8 @@
 					bind:checked={form.showPosition}
 				/>
 			</FieldPair>
-			<NumberField
-				label="Height"
-				bind:value={form.height}
-				min={heightCmRange.min}
-				max={heightCmRange.max}
-				unit="cm"
-				placeholder="—"
-			/>
-			<NumberField
-				label="Weight"
-				bind:value={form.weightKg}
-				min={weightKgRange.min}
-				max={weightKgRange.max}
-				step={0.5}
-				unit="kg"
-				placeholder="—"
-			/>
+			<HeightField bind:value={form.height} />
+			<WeightField bind:value={form.weightKg} />
 			<SelectField
 				label="Body type"
 				bind:value={form.bodyType}
