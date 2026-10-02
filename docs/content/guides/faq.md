@@ -53,7 +53,7 @@ Open Grind has opt-in auto-updater that sends an anonymous request to git.opengr
 
 Open Grind installed from F-Droid, Google Play or .deb never updates itself, and updates are managed by your package manager or app store.
 
-**As of September 1st, 2026, the estimated number of users is ~67 000 based on the downloads counter.**
+**As of October 2nd, 2026, the estimated number of users is ~61 000 based on the downloads counter.**
 
 :::
 
