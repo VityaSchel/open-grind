@@ -40,7 +40,7 @@ const weightGrams = ({
 	kg: number | undefined;
 	end: number;
 	endGrams: number;
-}) => (kg === undefined || kg === end ? endGrams : kg * 1000);
+}) => (kg === undefined || kg === end ? endGrams : Math.round(kg * 1000));
 
 type CascadeQuery = z.infer<typeof cascadeV4QuerySchema>;
 type CascadeFilters = Omit<CascadeQuery, "nearbyGeoHash">;

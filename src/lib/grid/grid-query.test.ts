@@ -126,6 +126,22 @@ describe("buildCascadeQuery ranges", () => {
 		});
 	});
 
+	it("sends whole grams for a weight picked in pounds", () => {
+		const query = buildCascadeQuery({
+			geohash,
+			filters: {
+				...defaultFilters,
+				weightEnabled: true,
+				weight: [64.4, 128.8],
+			},
+		});
+
+		expect(query).toMatchObject({
+			weightGramsMin: 64400,
+			weightGramsMax: 128800,
+		});
+	});
+
 	it("sends the official weight maximum in grams", () => {
 		const query = buildCascadeQuery({
 			geohash,

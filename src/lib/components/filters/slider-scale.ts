@@ -2,12 +2,9 @@ import {
 	type SliderScale,
 	TRACK_RESOLUTION,
 } from "$lib/components/ui/slider/scale";
-import {
-	AGE_MAX,
-	AGE_MIN,
-	WEIGHT_KG_MAX,
-	WEIGHT_KG_MIN,
-} from "$lib/model/browse/grid/filters";
+import { AGE_MAX, AGE_MIN } from "$lib/model/browse/grid/filters";
+import type { UnitSystem } from "$lib/util/units";
+import { type UnitStops, WEIGHT_STOPS } from "./unit-stops";
 
 type Curve = (share: number) => number;
 
@@ -85,9 +82,17 @@ export const AGE_SLIDER_SCALE = taperedScale({
 	taper: 7,
 });
 
-export const WEIGHT_SLIDER_SCALE = taperedScale({
-	min: WEIGHT_KG_MIN,
-	max: WEIGHT_KG_MAX,
-	knee: 105,
-	taper: 10,
-});
+const WEIGHT_KNEE_KG = 105;
+
+const weightScale = ({ first, last, toStop }: UnitStops) =>
+	taperedScale({
+		min: first,
+		max: last,
+		knee: toStop(WEIGHT_KNEE_KG),
+		taper: 10,
+	});
+
+export const WEIGHT_SLIDER_SCALES: Record<UnitSystem, SliderScale> = {
+	metric: weightScale(WEIGHT_STOPS.metric),
+	imperial: weightScale(WEIGHT_STOPS.imperial),
+};

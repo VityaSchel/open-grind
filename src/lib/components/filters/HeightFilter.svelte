@@ -8,6 +8,7 @@
 		rangeBoundTexts,
 	} from "$lib/model/browse/grid/filters";
 	import { formatHeight } from "$lib/util/units";
+	import { HEIGHT_STOPS, storedAfterMove } from "./unit-stops";
 
 	let {
 		checked = $bindable(),
@@ -15,6 +16,8 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	const units = $derived(preferencesSnapshot().units);
+	const stops = $derived(HEIGHT_STOPS[units]);
+	const shown = $derived(value.map((heightCm) => stops.toStop(heightCm)));
 	const [minText, maxText] = $derived(
 		rangeBoundTexts({
 			floor: HEIGHT_CM_MIN,
@@ -37,14 +40,14 @@
 		<Slider
 			type="multiple"
 			bind:value={
-				() => value,
-				(v: number[]) => {
+				() => shown,
+				(moved: number[]) => {
 					checked = true;
-					value = v;
+					value = storedAfterMove({ stops, stored: value, moved });
 				}
 			}
-			min={HEIGHT_CM_MIN}
-			max={HEIGHT_CM_MAX}
+			min={stops.first}
+			max={stops.last}
 			step={1}
 			thumbValueTexts={[minText, maxText]}
 			thumbLabels={["Minimum height", "Maximum height"]}

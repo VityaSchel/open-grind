@@ -4,10 +4,12 @@ import {
 	type SliderScale,
 	TRACK_RESOLUTION,
 } from "$lib/components/ui/slider/scale";
+import { WEIGHT_KG_MAX, WEIGHT_KG_MIN } from "$lib/model/browse/grid/filters";
+import { kgToPounds } from "$lib/util/units";
 import {
 	AGE_SLIDER_SCALE,
 	taperedScale,
-	WEIGHT_SLIDER_SCALE,
+	WEIGHT_SLIDER_SCALES,
 } from "./slider-scale";
 
 const valuesOf = ({ min, max }: SliderScale) =>
@@ -26,7 +28,8 @@ const trackShareUpTo = ({
 
 describe.each([
 	{ name: "age", scale: AGE_SLIDER_SCALE, knee: 45 },
-	{ name: "weight", scale: WEIGHT_SLIDER_SCALE, knee: 105 },
+	{ name: "weight", scale: WEIGHT_SLIDER_SCALES.metric, knee: 105 },
+	{ name: "pound weight", scale: WEIGHT_SLIDER_SCALES.imperial, knee: 231 },
 ])("$name scale", ({ scale, knee }) => {
 	it("returns every whole value from its own position", () => {
 		for (const value of valuesOf(scale))
@@ -93,11 +96,35 @@ describe("age scale", () => {
 describe("weight scale", () => {
 	it("gives weights up to 105 kg about three fifths of the track", () => {
 		const share = trackShareUpTo({
-			scale: WEIGHT_SLIDER_SCALE,
+			scale: WEIGHT_SLIDER_SCALES.metric,
 			value: 105,
 		});
 		expect(share).toBeGreaterThan(0.58);
 		expect(share).toBeLessThan(0.62);
+	});
+
+	it("has a stop for every whole pound from 90 to 600", () => {
+		expect(WEIGHT_SLIDER_SCALES.imperial).toMatchObject({
+			min: 90,
+			max: 600,
+		});
+		expect(WEIGHT_SLIDER_SCALES.imperial.positions).toHaveLength(511);
+	});
+
+	it("puts a weight at the same place on the track in either unit", () => {
+		for (let kg = WEIGHT_KG_MIN; kg <= WEIGHT_KG_MAX; kg++) {
+			const shareInKilograms = trackShareUpTo({
+				scale: WEIGHT_SLIDER_SCALES.metric,
+				value: kg,
+			});
+			const shareInPounds = trackShareUpTo({
+				scale: WEIGHT_SLIDER_SCALES.imperial,
+				value: kgToPounds(kg),
+			});
+			expect(Math.abs(shareInPounds - shareInKilograms)).toBeLessThan(
+				0.005,
+			);
+		}
 	});
 });
 

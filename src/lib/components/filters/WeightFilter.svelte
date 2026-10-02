@@ -8,7 +8,8 @@
 		WEIGHT_KG_MIN,
 	} from "$lib/model/browse/grid/filters";
 	import { formatWeightKg } from "$lib/util/units";
-	import { WEIGHT_SLIDER_SCALE } from "./slider-scale";
+	import { WEIGHT_SLIDER_SCALES } from "./slider-scale";
+	import { storedAfterMove, WEIGHT_STOPS } from "./unit-stops";
 
 	let {
 		checked = $bindable(),
@@ -16,6 +17,8 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	const units = $derived(preferencesSnapshot().units);
+	const stops = $derived(WEIGHT_STOPS[units]);
+	const shown = $derived(value.map((weightKg) => stops.toStop(weightKg)));
 	const [minText, maxText] = $derived(
 		rangeBoundTexts({
 			floor: WEIGHT_KG_MIN,
@@ -38,13 +41,13 @@
 		<Slider
 			type="multiple"
 			bind:value={
-				() => value,
-				(v: number[]) => {
+				() => shown,
+				(moved: number[]) => {
 					checked = true;
-					value = v;
+					value = storedAfterMove({ stops, stored: value, moved });
 				}
 			}
-			scale={WEIGHT_SLIDER_SCALE}
+			scale={WEIGHT_SLIDER_SCALES[units]}
 			thumbValueTexts={[minText, maxText]}
 			thumbLabels={["Minimum weight", "Maximum weight"]}
 		/>
