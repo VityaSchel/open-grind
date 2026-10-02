@@ -18,6 +18,7 @@ on:
       - src-tauri/patches/**
       - src-tauri/about.toml
       - src-tauri/about.hbs
+      - rust-toolchain.toml
       - .forgejo/workflows/credits.yml
   push:
     branches: [main]
@@ -36,6 +37,7 @@ on:
       - src-tauri/patches/**
       - src-tauri/about.toml
       - src-tauri/about.hbs
+      - rust-toolchain.toml
       - .forgejo/workflows/credits.yml
   workflow_dispatch:
 

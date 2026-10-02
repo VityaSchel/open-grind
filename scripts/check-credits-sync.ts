@@ -1,7 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import {
+	misplacedAnchors,
+	platformOfTriple,
+	scopeLabel,
+	targetTriples,
+	unshippedTargets,
+} from "./credits/platforms";
 import { requiredCargoAbout } from "./credits/rust";
 import { highlights } from "../src/lib/credits/highlights";
+import { type CreditPlatform, creditPlatforms } from "../src/lib/credits/types";
 
 const repoRoot = path.resolve(import.meta.dir, "..");
 
@@ -12,6 +20,7 @@ type GeneratedEntry = {
 	id: string;
 	name: string;
 	ecosystem: string;
+	platform?: string;
 	versions: string[];
 	textHashes: string[];
 };
@@ -81,20 +90,62 @@ for (const highlight of highlights) {
 	}
 }
 
-const targets = (file: string) => {
-	const block = /^targets = \[(.*?)^\]/ms.exec(read(file))?.[1] ?? "";
-	return [...block.matchAll(/"([^"]+)"/g)]
-		.map(([, triple]) => triple!)
-		.sort();
-};
-
-const auditedTargets = targets("src-tauri/about.toml");
-const deniedTargets = targets("deny.toml");
+const auditedTargets = targetTriples(read("src-tauri/about.toml"));
+const deniedTargets = targetTriples(read("deny.toml"));
 if (auditedTargets.join() !== deniedTargets.join()) {
 	report(
 		`src-tauri/about.toml audits ${auditedTargets.join(", ")} but deny.toml audits ${deniedTargets.join(", ")}`,
 	);
 }
+
+const auditedPlatforms = new Set<CreditPlatform>();
+for (const triple of auditedTargets) {
+	try {
+		auditedPlatforms.add(platformOfTriple(triple));
+	} catch (error) {
+		report((error as Error).message);
+	}
+}
+for (const platform of creditPlatforms) {
+	if (!auditedPlatforms.has(platform)) {
+		report(
+			`src-tauri/about.toml audits no ${platform} target, so nothing can be credited as ${platform}-only`,
+		);
+	}
+}
+
+const installedButUnaudited = targetTriples(read("rust-toolchain.toml")).filter(
+	(triple) => !auditedTargets.includes(triple),
+);
+if (installedButUnaudited.join() !== unshippedTargets.toSorted().join()) {
+	report(
+		`rust-toolchain.toml installs ${installedButUnaudited.join(", ") || "no targets"} beyond the audited ones, but unshippedTargets expects ${unshippedTargets.join(", ") || "none"}: a target that starts shipping must be audited in src-tauri/about.toml, or the single-platform labels stop being true`,
+	);
+}
+
+for (const entry of credits.entries) {
+	const { platform } = entry;
+	if (
+		platform !== undefined &&
+		!creditPlatforms.includes(platform as CreditPlatform)
+	) {
+		report(`${entry.name} is credited to the unknown platform ${platform}`);
+	}
+	if (entry.ecosystem === "android" && platform !== "android") {
+		report(
+			`${entry.name} only ships in the APK but is credited as ${scopeLabel(platform)}`,
+		);
+	}
+	if (["npm", "asset"].includes(entry.ecosystem) && platform !== undefined) {
+		report(
+			`${entry.name} ships in the one frontend bundle every platform loads but is credited as ${scopeLabel(platform)}`,
+		);
+	}
+}
+
+misplacedAnchors(
+	credits.entries.filter((it) => it.ecosystem === "rust"),
+).forEach(report);
 
 const pinnedInImage = /^CARGO_ABOUT_VERSION=(\S+)$/m.exec(
 	read("ci/check-image.sh"),

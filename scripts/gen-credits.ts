@@ -1,6 +1,7 @@
 import path from "node:path";
 import { collectManualCredits } from "./credits/manual";
 import { collectNpmCredits } from "./credits/npm";
+import { scopeLabel } from "./credits/platforms";
 import { collectRustCredits } from "./credits/rust";
 import type { CreditEntry, CreditsChunk } from "./credits/types";
 
@@ -21,6 +22,7 @@ const groupKey = (entry: CreditEntry) =>
 		entry.name,
 		entry.spdx,
 		entry.textHashes.toSorted().join(","),
+		entry.platform ?? "",
 	].join(" ");
 
 const merge = (chunks: CreditsChunk[]): Credits => {
@@ -35,6 +37,7 @@ const merge = (chunks: CreditsChunk[]): Credits => {
 				id: first.id,
 				name: first.name,
 				ecosystem: first.ecosystem,
+				platform: first.platform,
 				versions: [
 					...new Set(
 						byId
@@ -101,13 +104,13 @@ if (process.argv.includes("--check")) {
 	console.log(`credits up to date (${credits.entries.length} entries)`);
 } else {
 	await Bun.write(OUTPUT, serialized);
-	const counts = Object.groupBy(credits.entries, (entry) => entry.ecosystem);
+	const tally = (label: (entry: MergedEntry) => string) =>
+		Object.entries(Object.groupBy(credits.entries, label))
+			.sort(([a], [b]) => compare(a, b))
+			.map(([name, group]) => `${name} ${group?.length}`)
+			.join(", ");
 	console.log(
-		`wrote ${credits.entries.length} entries and ${credits.texts.length} license texts (` +
-			Object.entries(counts)
-				.sort(([a], [b]) => compare(a, b))
-				.map(([name, group]) => `${name} ${group?.length}`)
-				.join(", ") +
-			")",
+		`wrote ${credits.entries.length} entries and ${credits.texts.length} license texts ` +
+			`(${tally((entry) => entry.ecosystem)}; ${tally((entry) => scopeLabel(entry.platform))})`,
 	);
 }

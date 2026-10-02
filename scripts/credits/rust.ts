@@ -1,6 +1,14 @@
 import { $ } from "bun";
 import { join } from "node:path";
 import { hashText } from "./hash";
+import {
+	type CargoMetadata,
+	classifyCrates,
+	exclusivePlatform,
+	misplacedAnchors,
+	type PlatformsByCrate,
+	targetTriples,
+} from "./platforms";
 import type { CreditEntry, CreditsChunk } from "./types";
 
 const manifestDir = join(import.meta.dir, "../../src-tauri");
@@ -107,6 +115,33 @@ const assertPinnedNoticesPresent = ({
 	}
 };
 
+const cargoMetadata = async (platformFilter: string[]) => {
+	const result =
+		await $`cargo metadata --format-version 1 --locked --features ${releaseFeatures} ${platformFilter}`
+			.cwd(manifestDir)
+			.nothrow()
+			.quiet();
+	if (result.exitCode !== 0) {
+		throw new Error(
+			`cargo metadata ${platformFilter.join(" ")} exited ${result.exitCode}\n${result.stderr.toString()}`,
+		);
+	}
+	return result.json() as CargoMetadata;
+};
+
+const collectCratePlatforms = async (): Promise<PlatformsByCrate> => {
+	const audited = targetTriples(
+		await Bun.file(join(manifestDir, "about.toml")).text(),
+	);
+	return classifyCrates({
+		graphs: await Array.fromAsync(audited, async (triple) => ({
+			triple,
+			metadata: await cargoMetadata(["--filter-platform", triple]),
+		})),
+		unfiltered: await cargoMetadata([]),
+	});
+};
+
 const addTo = (map: Map<string, Set<string>>, key: string, value: string) =>
 	map.get(key)?.add(value) ?? map.set(key, new Set([value]));
 
@@ -126,6 +161,8 @@ export const collectRustCredits = async (): Promise<CreditsChunk> => {
 	}
 	assertPinnedNoticesPresent({ ids: idsByCrate, hashes: hashesByCrate });
 
+	const platformsByCrate = await collectCratePlatforms();
+
 	const entries = [...Map.groupBy(about.crates, (krate) => krate.name)].map(
 		([name, unsorted]): CreditEntry => {
 			const versions = unsorted.toSorted((a, b) =>
@@ -139,6 +176,11 @@ export const collectRustCredits = async (): Promise<CreditsChunk> => {
 				name,
 				version: versions.map((it) => it.version).join(", "),
 				ecosystem: "rust",
+				platform: exclusivePlatform({
+					name,
+					versions: versions.map((it) => it.version),
+					platformsByCrate,
+				}),
 				spdx:
 					expressions.length === 1
 						? expressions[0]!
@@ -151,6 +193,12 @@ export const collectRustCredits = async (): Promise<CreditsChunk> => {
 			};
 		},
 	);
+	const misplaced = misplacedAnchors(entries);
+	if (misplaced.length > 0) {
+		throw new Error(
+			`cargo metadata --filter-platform no longer tells the platforms apart: ${misplaced.join("; ")}`,
+		);
+	}
 
 	return { entries, texts };
 };

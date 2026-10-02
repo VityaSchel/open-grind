@@ -1,10 +1,14 @@
-import type { CreditEcosystem } from "../../src/lib/credits/types";
+import type {
+	CreditEcosystem,
+	CreditPlatform,
+} from "../../src/lib/credits/types";
 
 export type CreditEntry = {
 	id: string;
 	name: string;
 	version?: string;
 	ecosystem: CreditEcosystem;
+	platform?: CreditPlatform;
 	spdx: string;
 	shipped?: string;
 	url?: string;
