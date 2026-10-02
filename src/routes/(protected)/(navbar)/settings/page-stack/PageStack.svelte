@@ -7,6 +7,8 @@
 	import { STACK_Z } from "$lib/components/navigation/stack/motion";
 	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
+	import { earlierPathnames } from "$lib/util/history";
+	import { pushedFromChain } from "./hierarchy";
 	import { PageStackState } from "./page-stack-state.svelte";
 	import { trackScrolled } from "./snapshot";
 
@@ -31,6 +33,10 @@
 		livePane: () => pane,
 		reducedMotion: () => prefersReducedMotion.current,
 		scope: untrack(() => scope),
+		pushedFrom: pushedFromChain({
+			pathname: location.pathname,
+			earlier: earlierPathnames(),
+		}),
 	});
 
 	const liveZ = $derived(

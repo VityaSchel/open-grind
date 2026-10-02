@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ancestorsOf, stackRelation } from "./hierarchy";
+import { ancestorsOf, pushedFromChain, stackRelation } from "./hierarchy";
 
 describe("stackRelation", () => {
 	it("reads direction from the path hierarchy", () => {
@@ -56,5 +56,37 @@ describe("ancestorsOf", () => {
 
 	it("drops an entry once the path has returned to it", () => {
 		expect(ancestorsOf([{ path: "/settings" }], "/settings")).toEqual([]);
+	});
+});
+
+describe("pushedFromChain", () => {
+	it("walks back through history while each entry is a parent of the one after it", () => {
+		expect(
+			pushedFromChain({
+				pathname: "/settings/account/blocked",
+				earlier: ["/settings/account", "/settings", "/browse"],
+			}),
+		).toEqual([{ path: "/settings" }, { path: "/settings/account" }]);
+	});
+
+	it("stops at the first entry the page was not pushed from", () => {
+		expect(
+			pushedFromChain({
+				pathname: "/settings/profile",
+				earlier: ["/profile/1", "/settings"],
+			}),
+		).toEqual([]);
+		expect(
+			pushedFromChain({
+				pathname: "/settings/account/blocked",
+				earlier: ["/settings/account", null, "/settings"],
+			}),
+		).toEqual([{ path: "/settings/account" }]);
+	});
+
+	it("is empty for a page opened directly", () => {
+		expect(
+			pushedFromChain({ pathname: "/settings/app", earlier: [] }),
+		).toEqual([]);
 	});
 });

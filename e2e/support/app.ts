@@ -35,7 +35,36 @@ declare global {
 	interface Window {
 		__capturedInvokes?: Record<string, unknown[]>;
 		__emitTauriEvent?: (event: string, payload: unknown) => void;
+		__rendered?: Record<string, boolean>;
 	}
+}
+
+export async function watchRendered(
+	page: Page,
+	selector: string,
+): Promise<() => Promise<boolean>> {
+	await page.evaluate((selector) => {
+		const rendered = (window.__rendered ??= {});
+		rendered[selector] = false;
+		new MutationObserver((records) => {
+			const added = records.flatMap((record) => [...record.addedNodes]);
+			if (
+				added.some(
+					(node) =>
+						node instanceof Element &&
+						(node.matches(selector) ||
+							node.querySelector(selector) !== null),
+				)
+			) {
+				rendered[selector] = true;
+			}
+		}).observe(document.body, { subtree: true, childList: true });
+	}, selector);
+	return () =>
+		page.evaluate(
+			(selector) => window.__rendered?.[selector] === true,
+			selector,
+		);
 }
 
 type TauriInternals = {

@@ -29,6 +29,7 @@ export class PageStackState {
 	readonly #scope: string;
 
 	#ancestors: PaneSnapshot[] = [];
+	#pushedFrom: { path: string }[];
 	#generation = 0;
 	#backOwed = false;
 	#committedByGesture = false;
@@ -38,16 +39,19 @@ export class PageStackState {
 		livePane,
 		reducedMotion,
 		scope,
+		pushedFrom,
 	}: {
 		surface: StackSurface;
 		livePane: () => HTMLElement | null;
 		reducedMotion: () => boolean;
 		scope: string;
+		pushedFrom: { path: string }[];
 	}) {
 		this.#settle = new StackSettle({ surface, reducedMotion });
 		this.#livePane = livePane;
 		this.#reducedMotion = reducedMotion;
 		this.#scope = scope;
+		this.#pushedFrom = pushedFrom;
 	}
 
 	get canSwipeBack(): boolean {
@@ -65,7 +69,7 @@ export class PageStackState {
 
 		if (this.#committedByGesture) {
 			this.#committedByGesture = false;
-			this.#ancestors = ancestorsOf(this.#ancestors, to);
+			this.#keepAncestorsOf(to);
 			return () => void this.#adoptGhost();
 		}
 
@@ -83,15 +87,25 @@ export class PageStackState {
 				? historyDirection(navigation.delta)
 				: stackRelation({ from, to });
 		const pane = this.#livePane();
-		if (!relation || !pane) {
-			this.#ancestors = ancestorsOf(this.#ancestors, to);
+		const pushedFromDestination = this.#pushedFrom.some(
+			({ path }) => path === to,
+		);
+		if (
+			!relation ||
+			!pane ||
+			(relation === "pop" && !pushedFromDestination)
+		) {
+			this.#keepAncestorsOf(to);
 			this.#rest();
 			return;
 		}
 
 		const snapshot = snapshotPane(pane, from);
-		if (relation === "push") this.#ancestors.push(snapshot);
-		this.#ancestors = ancestorsOf(this.#ancestors, to);
+		if (relation === "push") {
+			this.#ancestors.push(snapshot);
+			this.#pushedFrom.push(snapshot);
+		}
+		this.#keepAncestorsOf(to);
 		if (this.#reducedMotion()) {
 			this.#rest();
 			return;
@@ -187,9 +201,15 @@ export class PageStackState {
 		this.ghost = null;
 	}
 
+	#keepAncestorsOf(pathname: string): void {
+		this.#ancestors = ancestorsOf(this.#ancestors, pathname);
+		this.#pushedFrom = ancestorsOf(this.#pushedFrom, pathname);
+	}
+
 	#clear(): void {
 		this.#settle.stop();
 		this.#ancestors = [];
+		this.#pushedFrom = [];
 		this.tracking = false;
 		this.#rest();
 	}

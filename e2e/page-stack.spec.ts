@@ -4,16 +4,19 @@ import {
 	backLink,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
+	watchRendered,
 } from "./support/app";
 import { BLUR_MODES, setBlurMode } from "./support/layout-guard";
 import {
 	APP_SETTINGS,
+	clickMeTab,
 	dim,
 	ghost,
 	openAppSettings,
 	openSettings,
 	pane,
 	SETTINGS,
+	stackSettled,
 } from "./support/page-stack";
 import {
 	DARK_SCRIM,
@@ -227,6 +230,65 @@ test("the Back button pops with the same animation", async ({ page }) => {
 	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
 	await expect(ghost(page)).toHaveCount(0);
 	expect(await documentOverflow(page)).toEqual({ x: 0, y: 0 });
+});
+
+test("the detour through your own profile cuts on every hop, both ways and from the Me tab, while a pushed page still slides off", async ({
+	page,
+}) => {
+	const viewProfile = page.getByRole("link", { name: "View your profile" });
+	const editProfile = page.getByRole("link", { name: "Edit profile" });
+	const openProfileEditor = async () => {
+		await viewProfile.click();
+		await editProfile.click();
+		await expect(page).toHaveURL(/\/settings\/profile$/);
+		await expect(pane(page)).toBeVisible();
+	};
+	await openSettings(page);
+	const slid = await watchRendered(page, '[data-slot="page-stack-ghost"]');
+
+	await openProfileEditor();
+	await backLink(page).click();
+	await expect(editProfile).toBeVisible();
+	await backLink(page).click();
+	await expect(viewProfile).toBeVisible();
+
+	await openProfileEditor();
+	await clickMeTab(page);
+	await expect(viewProfile).toBeVisible();
+	expect(await slid(), "a page slid somewhere along the detour").toBe(false);
+
+	await page.getByRole("link", { name: "Account Settings" }).click();
+	await expect(page).toHaveURL(/\/settings\/account$/);
+	await stackSettled(page);
+	expect(await slid(), "a pushed page slides in").toBe(true);
+
+	const slidOff = await watchRendered(page, '[data-slot="page-stack-dim"]');
+	await clickMeTab(page);
+	await expect(viewProfile).toBeVisible();
+	expect(await slidOff(), "and slides back off under the Me tab").toBe(true);
+});
+
+test("Back still slides down the stack after a profile was opened from the blocked list", async ({
+	page,
+}) => {
+	const blockedList = /\/settings\/account\/blocked$/;
+	await openSettings(page);
+	await page.getByRole("link", { name: "Account Settings" }).click();
+	await page.getByRole("link", { name: "Blocked users" }).click();
+	await expect(page).toHaveURL(blockedList);
+	await page.locator('a[href^="/profile/"]').first().click();
+	await expect(page).toHaveURL(/\/profile\/\d+$/);
+	await backLink(page).click();
+	await expect(page).toHaveURL(blockedList);
+	await expect(pane(page)).toBeVisible();
+
+	for (const parent of [/\/settings\/account$/, /\/settings$/]) {
+		const slid = await watchRendered(page, '[data-slot="page-stack-dim"]');
+		await backLink(page).click();
+		await expect(page).toHaveURL(parent);
+		await stackSettled(page);
+		expect(await slid(), `onto ${parent}`).toBe(true);
+	}
 });
 
 test("the panes follow the system back gesture's progress", async ({
