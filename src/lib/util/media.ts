@@ -30,6 +30,13 @@ export function proxyMediaUrl(
 	return convertFileSrc(`${FETCHER_TAG[as]}${payload}`, MEDIA_SCHEME);
 }
 
+export function isProxiedMediaUrl(url: URL): boolean {
+	return (
+		url.protocol === `${MEDIA_SCHEME}:` ||
+		url.hostname === `${MEDIA_SCHEME}.localhost`
+	);
+}
+
 export function profileMediaUrl({
 	mediaHash,
 	size,

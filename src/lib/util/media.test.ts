@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { fromBase64 } from "$lib/util/base64";
-import { profileMediaUrl, proxyMediaUrl } from "$lib/util/media";
+import {
+	isProxiedMediaUrl,
+	profileMediaUrl,
+	proxyMediaUrl,
+} from "$lib/util/media";
 
 const PHOTO = "https://cdns.grindr.com/images/thumb/320x320/deadbeef";
 const SIGNED =
@@ -106,4 +110,22 @@ describe("profileMediaUrl", () => {
 			),
 		).toBe("https://cdns.grindr.com/images/profile/1024x1024/deadbeef");
 	});
+});
+
+describe("isProxiedMediaUrl", () => {
+	it.each(["macos", "android"])(
+		"recognizes the form the proxy takes on %s",
+		(osName) => {
+			runningOn(osName);
+
+			expect(isProxiedMediaUrl(new URL(proxyMediaUrl(PHOTO)))).toBe(true);
+		},
+	);
+
+	it.each([PHOTO, "http://tauri.localhost/", "tauri://localhost/chat"])(
+		"tells %s apart from proxied media",
+		(url) => {
+			expect(isProxiedMediaUrl(new URL(url))).toBe(false);
+		},
+	);
 });

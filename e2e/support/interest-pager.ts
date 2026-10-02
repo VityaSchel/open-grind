@@ -9,8 +9,11 @@ export const VIEWS_SCROLLER = '[data-slot="views-scroller"]';
 export const TAPS_SCROLLER = '[data-slot="taps-scroller"]';
 export const LIST_SCROLLERS = [VIEWS_SCROLLER, TAPS_SCROLLER];
 
-export async function openTaps(page: Page): Promise<void> {
-	await installTauriShim(page);
+export async function openTaps(
+	page: Page,
+	{ platform }: { platform?: string } = {},
+): Promise<void> {
+	await installTauriShim(page, { platform });
 	await page.goto(TAPS);
 	await page
 		.locator('a[href^="/profile/"]')

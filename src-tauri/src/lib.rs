@@ -520,3 +520,36 @@ mod frontend_method_pins {
 		}
 	}
 }
+
+#[cfg(test)]
+mod opener_scope_pins {
+	const CAPABILITY: &str = include_str!("../capabilities/default.json");
+
+	#[test]
+	fn the_system_browser_is_never_handed_an_app_origin() {
+		let capability: serde_json::Value =
+			serde_json::from_str(CAPABILITY).unwrap();
+		let denied: Vec<&str> = capability["permissions"]
+			.as_array()
+			.unwrap()
+			.iter()
+			.filter(|permission| {
+				permission["identifier"] == "opener:allow-open-url"
+			})
+			.flat_map(|permission| permission["deny"].as_array().unwrap())
+			.map(|scope| scope["url"].as_str().unwrap())
+			.collect();
+		for origin in [
+			"http://tauri.localhost",
+			"https://tauri.localhost",
+			"http://ogmedia.localhost",
+			"http://localhost",
+			"http://127.0.0.1",
+		] {
+			assert!(
+				denied.contains(&format!("{origin}*").as_str()),
+				"{origin} can still be opened in the system browser"
+			);
+		}
+	}
+}
