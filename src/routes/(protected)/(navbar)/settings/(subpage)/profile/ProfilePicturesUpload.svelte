@@ -15,8 +15,8 @@
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { profileMediaUrl } from "$lib/util/media";
 	import { moveItem } from "$lib/util/reorder";
+	import { maxProfilePhotos } from "./options";
 
-	const MAX_PHOTOS = 6;
 	const DAILY_LIMIT_MESSAGE =
 		"You've reached today's limit for new profile photos";
 
@@ -43,7 +43,7 @@
 		mounted = false;
 	});
 
-	const room = $derived(MAX_PHOTOS - medias.length - uploading.length);
+	const room = $derived(maxProfilePhotos - medias.length - uploading.length);
 	const canAdd = $derived(room > 0 && !demoEnabled);
 
 	function slotKey(mediaHash: string, index: number): string {
@@ -130,7 +130,7 @@
 		const accepted = picked.slice(0, Math.max(0, room));
 		if (picked.length > accepted.length) {
 			toast.error(
-				`${picked.length - accepted.length} left out, a profile holds up to ${MAX_PHOTOS} photos`,
+				`${picked.length - accepted.length} left out, a profile holds up to ${maxProfilePhotos} photos`,
 			);
 		}
 		uploading = [...uploading, ...accepted.map(({ key }) => key)];
@@ -162,7 +162,7 @@
 <MediaSlotGrid
 	{slots}
 	removed={removedKeys}
-	minSlots={canAdd ? MAX_PHOTOS - 1 : MAX_PHOTOS}
+	minSlots={canAdd ? maxProfilePhotos - 1 : maxProfilePhotos}
 	disabled={disabled || uploading.length > 0}
 	leading={canAdd ? addTile : undefined}
 	onReorder={({ from, to }) =>

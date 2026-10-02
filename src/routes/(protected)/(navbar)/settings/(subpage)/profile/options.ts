@@ -26,6 +26,7 @@ export const fieldLimits = { displayName: 25, aboutMe: 255 } as const;
 export const maxProfileTags = 10;
 export const maxProfileGenders = 3;
 export const maxProfilePronouns = 3;
+export const maxProfilePhotos = 6;
 
 export const primaryGenderOrder = [1, 4, 5, 2, 6, 7, 3];
 

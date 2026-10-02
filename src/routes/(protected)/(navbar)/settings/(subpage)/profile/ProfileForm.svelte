@@ -215,6 +215,7 @@
 </script>
 
 <form
+	data-slot="profile-form"
 	class="flex grow flex-col gap-6"
 	onsubmit={(event) => event.preventDefault()}
 >
