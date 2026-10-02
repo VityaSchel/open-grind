@@ -38,7 +38,7 @@
 			<ProfileActionsMenu
 				profileId={profile.profileId}
 				blockable={profile.isBlockable !== false}
-				submitting={changingViewability}
+				{changingViewability}
 				{markBlocked}
 				{markHidden}
 			/>

@@ -2,21 +2,23 @@
 	import { ProhibitIcon } from "phosphor-svelte";
 
 	import { unblockUser } from "$lib/api/browse/blocks";
-	import { showErrorToast } from "$lib/api/error-toast";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";
-	import type { PendingViewabilityChange } from "./profile-state.svelte";
+	import {
+		applyViewabilityChange,
+		type PendingViewabilityChange,
+	} from "./profile-state.svelte";
 
 	let {
 		profileId,
 		blockedByUs,
-		submitting,
+		changingViewability,
 		markViewable,
 	}: {
 		profileId: number;
 		blockedByUs: boolean;
-		submitting: boolean;
+		changingViewability: boolean;
 		markViewable: () => PendingViewabilityChange;
 	} = $props();
 </script>
@@ -37,21 +39,13 @@
 			{#if blockedByUs}
 				<Button
 					variant="secondary"
-					disabled={submitting}
-					onclick={async () => {
-						const { revert, settle } = markViewable();
-						try {
-							await unblockUser({ profileId });
-							settle();
-						} catch (error) {
-							revert();
-							console.error(error);
-							showErrorToast({
-								label: "Failed to unblock user",
-								error,
-							});
-						}
-					}}>Unblock</Button
+					disabled={changingViewability}
+					onclick={() =>
+						applyViewabilityChange({
+							change: markViewable,
+							request: () => unblockUser({ profileId }),
+							failureLabel: "Failed to unblock user",
+						})}>Unblock</Button
 				>
 			{:else}
 				If you know this is a bug in the app, <Link

@@ -24,6 +24,26 @@ export type PendingViewabilityChange = {
 	settle: () => void;
 };
 
+export async function applyViewabilityChange({
+	change,
+	request,
+	failureLabel,
+}: {
+	change: () => PendingViewabilityChange;
+	request: () => Promise<unknown>;
+	failureLabel: string;
+}): Promise<void> {
+	const { revert, settle } = change();
+	try {
+		await request();
+		settle();
+	} catch (error) {
+		revert();
+		console.error(error);
+		showErrorToast({ label: failureLabel, error });
+	}
+}
+
 export class ProfileState {
 	profile: Profile | null = $state(null);
 	note: FavoriteNote | null = $state(null);

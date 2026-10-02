@@ -20,7 +20,7 @@ it("settles a block the report sheet has already sent instead of leaving it in f
 		props: {
 			profileId: 100001,
 			blockable: true,
-			submitting: false,
+			changingViewability: false,
 			markBlocked,
 			markHidden: vi.fn(),
 		},

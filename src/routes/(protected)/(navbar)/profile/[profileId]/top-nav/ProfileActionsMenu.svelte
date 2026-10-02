@@ -14,18 +14,21 @@
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import type { PendingViewabilityChange } from "../profile-state.svelte";
+	import {
+		applyViewabilityChange,
+		type PendingViewabilityChange,
+	} from "../profile-state.svelte";
 
 	let {
 		profileId,
 		blockable,
-		submitting,
+		changingViewability,
 		markBlocked,
 		markHidden,
 	}: {
 		profileId: number;
 		blockable: boolean;
-		submitting: boolean;
+		changingViewability: boolean;
 		markBlocked: () => PendingViewabilityChange;
 		markHidden: () => PendingViewabilityChange;
 	} = $props();
@@ -34,7 +37,7 @@
 </script>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger disabled={submitting}>
+	<DropdownMenu.Trigger disabled={changingViewability}>
 		{#snippet child({ props: { class: className, ...props } })}
 			<Button
 				size="icon-lg"
@@ -72,37 +75,24 @@
 			Report profile
 		</DropdownMenu.Item>
 		<DropdownMenu.Item
-			onSelect={async () => {
-				const { revert, settle } = markHidden();
-				try {
-					await hideUser({ profileId });
-					settle();
-				} catch (error) {
-					revert();
-					console.error(error);
-					showErrorToast({ label: "Failed to hide user", error });
-				}
-			}}
+			onSelect={() =>
+				applyViewabilityChange({
+					change: markHidden,
+					request: () => hideUser({ profileId }),
+					failureLabel: "Failed to hide user",
+				})}
 		>
 			<EyeSlashIcon class="size-5" />
 			Hide profile
 		</DropdownMenu.Item>
 		{#if blockable}
 			<DropdownMenu.Item
-				onSelect={async () => {
-					const { revert, settle } = markBlocked();
-					try {
-						await blockUser({ profileId });
-						settle();
-					} catch (error) {
-						revert();
-						console.error(error);
-						showErrorToast({
-							label: "Failed to block user",
-							error,
-						});
-					}
-				}}
+				onSelect={() =>
+					applyViewabilityChange({
+						change: markBlocked,
+						request: () => blockUser({ profileId }),
+						failureLabel: "Failed to block user",
+					})}
 			>
 				<ProhibitIcon class="size-5" />
 				Block profile
