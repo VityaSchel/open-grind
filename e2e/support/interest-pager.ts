@@ -161,20 +161,3 @@ export async function glideToViews(page: Page) {
 	).toBeGreaterThan(0);
 	return { frames, gliding };
 }
-
-export function listScrollbars(page: Page) {
-	return page.evaluate(
-		(scrollers) =>
-			scrollers.map((selector) => {
-				const scroller = document.querySelector(selector);
-				return (
-					scroller && {
-						scrollbarWidth:
-							getComputedStyle(scroller).scrollbarWidth,
-						contentWidth: scroller.clientWidth,
-					}
-				);
-			}),
-		LIST_SCROLLERS,
-	);
-}

@@ -12,29 +12,22 @@ const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
 const REPLACE = { replaceState: true, noScroll: true };
 
-type ListProps = { paging: boolean };
-
-const { goto, afterNavigate, navigating, ViewsGrid, TapsReceivedList } =
-	vi.hoisted(() => ({
-		goto: vi.fn(),
-		afterNavigate: vi.fn<(callback: () => void) => void>(),
-		navigating: {
-			type: null as NavigationType | null,
-			to: null as { url: URL } | null,
-		},
-		ViewsGrid: vi.fn<(anchor: Node, props: ListProps) => void>(),
-		TapsReceivedList: vi.fn<(anchor: Node, props: ListProps) => void>(),
-	}));
+const { goto, afterNavigate, navigating } = vi.hoisted(() => ({
+	goto: vi.fn(),
+	afterNavigate: vi.fn<(callback: () => void) => void>(),
+	navigating: {
+		type: null as NavigationType | null,
+		to: null as { url: URL } | null,
+	},
+}));
 
 vi.mock("$app/navigation", () => ({ goto, afterNavigate }));
 vi.mock("$app/state", async () => {
 	const { SvelteURL } = await import("svelte/reactivity");
 	return { navigating, page: { url: new SvelteURL("https://app.test/") } };
 });
-vi.mock("./views/ViewsGrid.svelte", () => ({ default: ViewsGrid }));
-vi.mock("./taps/TapsReceivedList.svelte", () => ({
-	default: TapsReceivedList,
-}));
+vi.mock("./views/ViewsGrid.svelte", () => ({ default: () => {} }));
+vi.mock("./taps/TapsReceivedList.svelte", () => ({ default: () => {} }));
 
 function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 	page.url.pathname = TAPS;
@@ -126,13 +119,6 @@ function panesSwallowingClicks(pager: { node: HTMLElement }) {
 		.map((pane) => pane.getAttribute("data-slot"));
 }
 
-function listsToldPaging() {
-	flushSync();
-	return [ViewsGrid, TapsReceivedList].map(
-		(list) => list.mock.lastCall?.[1].paging,
-	);
-}
-
 function restOnViews({
 	located = TAPS,
 	pending,
@@ -153,8 +139,6 @@ describe("InterestPager", () => {
 		vi.unstubAllGlobals();
 		goto.mockReset();
 		afterNavigate.mockReset();
-		ViewsGrid.mockReset();
-		TapsReceivedList.mockReset();
 	});
 
 	it("opens on the routed tab without replacing the URL", () => {
@@ -415,18 +399,6 @@ describe("InterestPager", () => {
 
 		pager.scroll(0);
 		expect(markup(pager)).toEqual(resting);
-	});
-
-	it("tells both lists while the pager is between tabs, and that it is over once it lands", () => {
-		const pager = mountPager();
-		expect(listsToldPaging()).toEqual([undefined, false]);
-
-		pager.touch("touchstart");
-		pager.scroll(0.6 * WIDTH);
-		expect(listsToldPaging()).toEqual([true, true]);
-
-		pager.scroll(0);
-		expect(listsToldPaging()).toEqual([false, false]);
 	});
 
 	it("is unsettled from the moment a finger lands on it until that finger lifts on a tab", () => {

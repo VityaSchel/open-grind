@@ -8,15 +8,11 @@
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
-	import { hidesOverlayScrollbar } from "../overlay-scrollbar";
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
 
-	let {
-		ourProfileId,
-		active,
-		paging,
-	}: { ourProfileId: number; active: boolean; paging: boolean } = $props();
+	let { ourProfileId, active }: { ourProfileId: number; active: boolean } =
+		$props();
 
 	const taps = untrack(() => {
 		const state = getTapsState(ourProfileId);
@@ -29,10 +25,6 @@
 	});
 
 	let container: HTMLDivElement | null = $state(null);
-
-	const overlayScrollbarHidden = $derived(
-		hidesOverlayScrollbar({ paging, container }),
-	);
 
 	restoreScrollOnce({ container: () => container, state: taps });
 </script>
@@ -49,10 +41,7 @@
 	<div
 		bind:this={container}
 		data-slot="taps-scroller"
-		class={[
-			"pull-scroller overscroll-x-auto",
-			{ "no-scrollbar": overlayScrollbarHidden },
-		]}
+		class="pull-scroller overscroll-x-auto"
 		onscroll={() => (taps.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div

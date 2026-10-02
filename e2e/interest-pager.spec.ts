@@ -11,7 +11,6 @@ import {
 	CHIP,
 	glideToViews,
 	LIST_SCROLLERS,
-	listScrollbars,
 	openTaps,
 	PAGER,
 	panesSwallowingClicks,
@@ -32,6 +31,7 @@ declare global {
 		__clickedPanes?: string[];
 		__heardRows?: string[];
 		__chipDetachedAt?: number[];
+		__scrollerClassChanges?: string[];
 	}
 }
 
@@ -145,26 +145,34 @@ test("a finger held past halfway has only the tab being left swallow clicks, and
 	await expect.poll(() => panesSwallowingClicks(page)).toEqual([]);
 });
 
-test("both lists drop their scrollbar while a finger holds the pager between tabs, and show it again once it lands", async ({
+test("both lists keep their classes while a finger drags the pager between tabs and lands", async ({
 	page,
 }) => {
 	const pager = page.locator(PAGER);
 	const width = await pager.evaluate((el) => el.clientWidth);
-	const shown = { scrollbarWidth: "auto", contentWidth: width };
-	const hidden = { scrollbarWidth: "none", contentWidth: width };
-	expect(await listScrollbars(page)).toEqual([null, shown]);
+	await pager.evaluate((el, scrollers) => {
+		const changed: string[] = [];
+		window.__scrollerClassChanges = changed;
+		new MutationObserver((records) => {
+			for (const { target } of records)
+				if (target instanceof Element && target.matches(scrollers))
+					changed.push(target.getAttribute("data-slot")!);
+		}).observe(el, { attributeFilter: ["class"], subtree: true });
+	}, LIST_SCROLLERS.join());
 
 	const touch = await swipeAcross(page, {
 		distancePx: Math.round(width * 0.65),
 		release: false,
 	});
-
-	await expect.poll(() => listScrollbars(page)).toEqual([hidden, hidden]);
-
+	await expect(page.locator(LIST_SCROLLERS.join())).toHaveCount(2);
+	await afterTwoFrames(page);
 	await touch.end();
-
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
-	await expect.poll(() => listScrollbars(page)).toEqual([shown, shown]);
+	await afterTwoFrames(page);
+
+	expect(await page.evaluate(() => window.__scrollerClassChanges)).toEqual(
+		[],
+	);
 });
 
 test("a click over the tab being left reaches nothing in it, while the incoming tab takes one", async ({

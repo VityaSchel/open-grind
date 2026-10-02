@@ -22,7 +22,7 @@
 	const TABS = INTEREST_TABS.map((tab) => tab.href);
 
 	let mounted = $state([false, false]);
-	let paging = $state(false);
+	let paging = false;
 	let heading: number | null = null;
 	let restedPane: number | null = null;
 
@@ -100,12 +100,12 @@
 >
 	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">
 		{#if mounted[0]}
-			<ViewsGrid {ourProfileId} {paging} />
+			<ViewsGrid {ourProfileId} />
 		{/if}
 	</div>
 	<div data-slot="interest-pane-taps" class="w-full shrink-0 snap-start">
 		{#if mounted[1]}
-			<TapsReceivedList {ourProfileId} active={routed === 1} {paging} />
+			<TapsReceivedList {ourProfileId} active={routed === 1} />
 		{/if}
 	</div>
 </main>

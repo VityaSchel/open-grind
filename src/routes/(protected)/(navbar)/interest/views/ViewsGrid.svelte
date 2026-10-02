@@ -7,15 +7,13 @@
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
-	import { hidesOverlayScrollbar } from "../overlay-scrollbar";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import UntrackedViewsGrid from "./UntrackedViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";
 	import ViewedProfile from "./ViewedProfile.svelte";
 	import { getViewsState } from "./views-state.svelte";
 
-	let { ourProfileId, paging }: { ourProfileId: number; paging: boolean } =
-		$props();
+	let { ourProfileId }: { ourProfileId: number } = $props();
 
 	const views = untrack(() => {
 		const state = getViewsState(ourProfileId);
@@ -24,10 +22,6 @@
 	});
 
 	let container: HTMLDivElement | null = $state(null);
-
-	const overlayScrollbarHidden = $derived(
-		hidesOverlayScrollbar({ paging, container }),
-	);
 
 	restoreScrollOnce({ container: () => container, state: views });
 </script>
@@ -44,10 +38,7 @@
 	<div
 		bind:this={container}
 		data-slot="views-scroller"
-		class={[
-			"pull-scroller overscroll-x-auto",
-			{ "no-scrollbar": overlayScrollbarHidden },
-		]}
+		class="pull-scroller overscroll-x-auto"
 		onscroll={() => (views.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
