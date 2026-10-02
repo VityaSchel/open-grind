@@ -19,6 +19,7 @@ import {
 	onProfileViewabilityChange,
 	type ProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
+import { pendingRequest } from "$lib/test/pending-request";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 
 const blocking = [{ profileId: 1, blockedTime: 0 }];
@@ -35,20 +36,6 @@ function respondWithBlocking(blocked: { profileId: number }[]) {
 		}),
 		assertOk: () => {},
 	});
-}
-
-function pendingRequest() {
-	const response = Promise.withResolvers<{ assertOk: () => void }>();
-	fetchRestMock.mockReturnValueOnce(response.promise);
-	return {
-		succeed: () => response.resolve({ assertOk: () => {} }),
-		fail: () =>
-			response.resolve({
-				assertOk: () => {
-					throw new Error("API request failed with status 500");
-				},
-			}),
-	};
 }
 
 beforeEach(() => {
@@ -102,7 +89,7 @@ describe("blockUser", () => {
 		const stopListening = onProfileViewabilityChange((change) =>
 			changes.push(change),
 		);
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
 		expect(changes).toEqual([]);
@@ -119,7 +106,7 @@ describe("blockUser", () => {
 		const stopListening = onProfileViewabilityChange((change) =>
 			changes.push(change),
 		);
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
 		request.fail();
@@ -133,7 +120,7 @@ describe("blockUser", () => {
 	it("keeps an already unviewable profile unviewable when the request fails", async () => {
 		respondWithBlocking([{ profileId: PROFILE_ID }]);
 		await markBlockedProfilesUnviewable();
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
 		request.fail();
@@ -144,7 +131,7 @@ describe("blockUser", () => {
 
 	it("drops the cached blocking list once the server accepts the block", async () => {
 		await getBlockedUsers();
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
 		await getBlockedUsers();
@@ -158,7 +145,7 @@ describe("blockUser", () => {
 
 	it("keeps the cached blocking list when the request fails", async () => {
 		await getBlockedUsers();
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
 		request.fail();

@@ -19,6 +19,7 @@ import {
 	onProfileViewabilityChange,
 	type ProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
+import { pendingRequest } from "$lib/test/pending-request";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 
 const hides = [{ profileId: 1 }, { profileId: 2 }];
@@ -26,20 +27,6 @@ const hides = [{ profileId: 1 }, { profileId: 2 }];
 const PROFILE_ID = 7;
 
 let assertOk: ReturnType<typeof vi.fn>;
-
-function pendingRequest() {
-	const response = Promise.withResolvers<{ assertOk: () => void }>();
-	fetchRestMock.mockReturnValueOnce(response.promise);
-	return {
-		succeed: () => response.resolve({ assertOk: () => {} }),
-		fail: () =>
-			response.resolve({
-				assertOk: () => {
-					throw new Error("API request failed with status 500");
-				},
-			}),
-	};
-}
 
 beforeEach(() => {
 	fetchRestMock.mockReset();
@@ -95,7 +82,7 @@ describe("hideUser", () => {
 
 	it("keeps the cached list until the server accepts the hide", async () => {
 		await getHiddenUsers();
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const hiding = hideUser({ profileId: PROFILE_ID });
 		await getHiddenUsers();
@@ -188,7 +175,7 @@ describe("hidden profiles and viewability", () => {
 		const stopListening = onProfileViewabilityChange((change) =>
 			changes.push(change),
 		);
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const hiding = hideUser({ profileId: PROFILE_ID });
 		expect(changes).toEqual([]);
@@ -205,7 +192,7 @@ describe("hidden profiles and viewability", () => {
 		const stopListening = onProfileViewabilityChange((change) =>
 			changes.push(change),
 		);
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const hiding = hideUser({ profileId: PROFILE_ID });
 		request.fail();
@@ -222,7 +209,7 @@ describe("hidden profiles and viewability", () => {
 			assertOk,
 		});
 		await markHiddenProfilesUnviewable();
-		const request = pendingRequest();
+		const request = pendingRequest(fetchRestMock);
 
 		const hiding = hideUser({ profileId: PROFILE_ID });
 		request.fail();
