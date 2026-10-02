@@ -105,6 +105,21 @@ describe("PositionQuickFilter", () => {
 		expect(onapply).not.toHaveBeenCalled();
 	});
 
+	it("keeps reset available with nothing selected, where it changes nothing", async () => {
+		const { onapply } = await renderOpened({ positions: [] });
+
+		expect(button("Reset")).toHaveProperty("disabled", false);
+
+		await fireEvent.click(button("Reset"));
+
+		expect(screen.queryAllByRole("button", { pressed: true })).toEqual([]);
+		expect(filterSwitch().getAttribute("aria-checked")).toBe("false");
+
+		await fireEvent.click(button("Apply"));
+
+		expect(onapply).toHaveBeenCalledExactlyOnceWith([]);
+	});
+
 	it("keeps an in-progress edit when the stored positions change underneath", async () => {
 		const { onapply, rerender } = await renderOpened({ positions: [] });
 

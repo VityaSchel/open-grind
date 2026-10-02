@@ -107,6 +107,21 @@ describe("DistanceQuickFilter", () => {
 		expect(onapply).toHaveBeenCalledExactlyOnceWith(10 * METRES_PER_KM);
 	});
 
+	it("keeps reset available at the default distance, where it changes nothing", async () => {
+		const { onapply } = await renderOpened({ distanceMetres: null });
+
+		expect(button("Reset")).toHaveProperty("disabled", false);
+
+		await fireEvent.click(button("Reset"));
+
+		expect(screen.getByText("Within 10 km")).toBeTruthy();
+		expect(filterSwitch().getAttribute("aria-checked")).toBe("false");
+
+		await fireEvent.click(button("Apply"));
+
+		expect(onapply).toHaveBeenCalledExactlyOnceWith(null);
+	});
+
 	it("keeps an in-progress edit when the stored distance changes underneath", async () => {
 		const { onapply, rerender } = await renderOpened({
 			distanceMetres: null,
