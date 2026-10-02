@@ -39,6 +39,10 @@ impl MediaFailure {
 		}
 	}
 
+	pub fn of_stream_status(status: u16, url: &str) -> Option<Self> {
+		(!matches!(status, 200 | 206)).then(|| Self::of_status(status, url))
+	}
+
 	pub fn late(url: &str) -> Self {
 		Self::new(FailureKind::Timeout, url)
 	}
@@ -157,6 +161,19 @@ mod tests {
 			json,
 			r#"{"kind":"status","status":403,"phase":null,"host":"d3.cloudfront.net","signatureExpired":true}"#
 		);
+	}
+
+	#[test]
+	fn a_stream_that_opens_with_another_status_is_a_failure() {
+		for opened in [200, 206] {
+			assert_eq!(MediaFailure::of_stream_status(opened, SIGNED), None);
+		}
+		for refused in [403, 404, 416, 502] {
+			assert_eq!(
+				MediaFailure::of_stream_status(refused, SIGNED),
+				Some(MediaFailure::of_status(refused, SIGNED))
+			);
+		}
 	}
 
 	#[test]

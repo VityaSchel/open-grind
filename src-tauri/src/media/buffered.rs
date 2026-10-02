@@ -10,7 +10,7 @@ use super::cache::{cache_key, CachedMedia};
 use super::failures::MediaFailure;
 use super::range::deliver_ranged;
 use super::response::{deliverable_status, refused, Freshness};
-use super::stream::serve_streamed;
+use super::stream::serve_streamed_until;
 use super::target::host_of;
 use super::upstream::{
 	deliver_upstream, detail_of, fetch, refusal, serve_windowed, Fallback,
@@ -67,7 +67,7 @@ async fn serve_buffered_within<R: Runtime>(
 			return match Fallback::pick(STREAMING_PLATFORM, &error, fetcher) {
 				Fallback::Stream if !is_head => {
 					drop(flight);
-					serve_streamed(app, url, fetcher, range).await
+					streamed_instead(app, url, fetcher, range, until).await
 				}
 				Fallback::Window => {
 					tracing::warn!(
@@ -105,6 +105,21 @@ async fn within<F: Future>(
 		Some(until) => timeout_at(until, work).await.ok(),
 		None => Some(work.await),
 	}
+}
+
+async fn streamed_instead<R: Runtime>(
+	app: &AppHandle<R>,
+	url: &str,
+	fetcher: MediaFetcher,
+	range: Option<&str>,
+	until: Option<Instant>,
+) -> Response<Vec<u8>> {
+	let served = serve_streamed_until(app, url, fetcher, range, until).await;
+	if let Some(failure) = served.failure {
+		let proxy = app.state::<MediaProxy>();
+		proxy.failures.lock().await.record(cache_key(url), failure);
+	}
+	served.response
 }
 
 async fn late(proxy: &MediaProxy, key: &str, url: &str) -> Response<Vec<u8>> {
@@ -148,12 +163,13 @@ mod tests {
 	use tauri::http::{Response, StatusCode};
 	use tauri::test::MockRuntime;
 	use tauri::{AppHandle, Manager};
+	use tokio::time::Instant;
 
 	use super::super::cache::cache_key;
 	use super::super::failures::FailureKind;
 	use super::super::tests::app_without_a_client;
 	use super::super::{MediaProxy, OFFICIAL_APP_REQUESTS_PER_HOST};
-	use super::serve_buffered_within;
+	use super::{serve_buffered_within, streamed_instead};
 
 	const PHOTO: &str = "https://cdns.grindr.com/images/thumb/320x320/ff";
 	const DEADLINE: Duration = Duration::from_secs(25);
@@ -173,6 +189,16 @@ mod tests {
 		.await
 	}
 
+	async fn remembered(
+		app: &AppHandle<MockRuntime>,
+	) -> Option<(FailureKind, Option<&'static str>)> {
+		let proxy = app.state::<MediaProxy>();
+		let failures = proxy.failures.lock().await;
+		failures
+			.get(cache_key(PHOTO))
+			.map(|failure| (failure.kind, failure.phase))
+	}
+
 	async fn assert_answered_as_a_timeout(app: &AppHandle<MockRuntime>) {
 		let response =
 			tokio::time::timeout(DEADLINE * 2, serve(app, Some(DEADLINE)))
@@ -180,14 +206,51 @@ mod tests {
 				.expect("the deadline answers before the fetch does");
 
 		assert_eq!(response.status(), StatusCode::GATEWAY_TIMEOUT);
-		let failure = app
-			.state::<MediaProxy>()
-			.failures
-			.lock()
+		assert_eq!(remembered(app).await, Some((FailureKind::Timeout, None)));
+	}
+
+	async fn fall_back(
+		app: &AppHandle<MockRuntime>,
+		until: Option<Instant>,
+	) -> Response<Vec<u8>> {
+		streamed_instead(app, PHOTO, MediaFetcher::ImageLoader, None, until)
 			.await
-			.get(cache_key(PHOTO))
-			.expect("a recorded failure");
-		assert_eq!((failure.kind, failure.phase), (FailureKind::Timeout, None));
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_stream_fallback_gets_only_the_time_the_photo_has_left() {
+		let app = app_without_a_client();
+		let slots = Arc::clone(&app.state::<MediaProxy>().fetches);
+		let _taken = slots
+			.acquire_many_owned(OFFICIAL_APP_REQUESTS_PER_HOST as u32)
+			.await
+			.unwrap();
+		let left = Duration::from_secs(7);
+		let started = Instant::now();
+
+		let response = fall_back(app.handle(), Some(started + left)).await;
+
+		assert_eq!(response.status(), StatusCode::GATEWAY_TIMEOUT);
+		assert!(started.elapsed() >= left);
+		assert!(started.elapsed() < left + Duration::from_secs(1));
+		assert_eq!(
+			remembered(app.handle()).await,
+			Some((FailureKind::Timeout, None))
+		);
+	}
+
+	#[tokio::test(start_paused = true)]
+	async fn a_stream_fallback_refused_at_once_leaves_its_own_reason() {
+		let app = app_without_a_client();
+		let until = Instant::now() + DEADLINE;
+
+		let response = fall_back(app.handle(), Some(until)).await;
+
+		assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+		assert_eq!(
+			remembered(app.handle()).await,
+			Some((FailureKind::NotReady, None))
+		);
 	}
 
 	#[tokio::test(start_paused = true)]

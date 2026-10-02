@@ -19,8 +19,10 @@ use grindr::MediaFetcher;
 use tauri::http::Response;
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::sync::{mpsc, oneshot, OwnedSemaphorePermit};
+use tokio::time::{timeout_at, Instant};
 
 use super::cache::{cache_key, CachedMedia};
+use super::failures::MediaFailure;
 use super::registry::register_stream;
 use super::requested::Requested;
 use super::upstream::{refusal_detail, GatewayFailure};
@@ -50,12 +52,30 @@ struct Opening {
 	permit: Option<OwnedSemaphorePermit>,
 }
 
+pub struct Served {
+	pub response: Response<Vec<u8>>,
+	pub failure: Option<MediaFailure>,
+}
+
 pub async fn serve_streamed<R: Runtime>(
 	app: &AppHandle<R>,
 	url: &str,
 	fetcher: MediaFetcher,
 	range: Option<&str>,
 ) -> Response<Vec<u8>> {
+	serve_streamed_until(app, url, fetcher, range, None)
+		.await
+		.response
+}
+
+pub async fn serve_streamed_until<R: Runtime>(
+	app: &AppHandle<R>,
+	url: &str,
+	fetcher: MediaFetcher,
+	range: Option<&str>,
+	until: Option<Instant>,
+) -> Served {
+	let until = until.unwrap_or_else(|| Instant::now() + HEAD_DEADLINE);
 	let requested = Requested::parse(range);
 	let at = requested.start();
 	let key = cache_key(url).to_owned();
@@ -67,11 +87,15 @@ pub async fn serve_streamed<R: Runtime>(
 			source: Source::Cached(hit.body),
 			permit: None,
 		};
-		return respond(app, opening, &requested).await;
+		return Served {
+			response: respond(app, opening, &requested).await,
+			failure: None,
+		};
 	}
 	let opened = open(app, url, fetcher, &requested);
-	match tokio::time::timeout(HEAD_DEADLINE, opened).await {
+	match timeout_at(until, opened).await {
 		Ok(Ok((permit, stream))) => {
+			let failure = MediaFailure::of_stream_status(stream.status, url);
 			let opening = Opening {
 				key,
 				content_type: stream.content_type.clone(),
@@ -79,19 +103,26 @@ pub async fn serve_streamed<R: Runtime>(
 				source: Source::Live(Box::new(stream)),
 				permit: Some(permit),
 			};
-			respond(app, opening, &requested).await
+			Served {
+				response: respond(app, opening, &requested).await,
+				failure,
+			}
 		}
-		Ok(Err(error)) => match refusal_detail(error) {
-			Err(status) => deny(status, at),
-			Ok(failure) => unreachable(url, &requested, failure),
+		Ok(Err(error)) => Served {
+			failure: Some(MediaFailure::of_error(&error, url)),
+			response: match refusal_detail(error) {
+				Err(status) => deny(status, at),
+				Ok(failure) => unreachable(url, &requested, failure),
+			},
 		},
-		Err(_) => unreachable(
-			url,
-			&requested,
-			GatewayFailure::timed_out(format!(
-				"no headers within {HEAD_DEADLINE:?}"
-			)),
-		),
+		Err(_) => Served {
+			response: unreachable(
+				url,
+				&requested,
+				GatewayFailure::timed_out("no headers in time".to_owned()),
+			),
+			failure: Some(MediaFailure::late(url)),
+		},
 	}
 }
 
