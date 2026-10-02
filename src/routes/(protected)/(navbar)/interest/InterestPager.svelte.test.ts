@@ -42,10 +42,22 @@ function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 	navigating.type = null;
 	navigating.to = null;
 
+	const settling: { unsettled: boolean; restingTab?: number } = {
+		unsettled: false,
+	};
 	const layout = fakePagerLayout({
 		mount: () => {
 			const { container } = render(InterestPager, {
-				props: { ourProfileId: 1 },
+				props: {
+					ourProfileId: 1,
+					onUnsettle: () => {
+						settling.unsettled = true;
+					},
+					onSettle: (tab) => {
+						settling.unsettled = false;
+						settling.restingTab = tab;
+					},
+				},
 			});
 			const pager = container.querySelector<HTMLElement>(
 				'[data-slot="interest-pager"]',
@@ -56,7 +68,7 @@ function mountPager({ scrollLeft = WIDTH }: { scrollLeft?: number } = {}) {
 	});
 	layout.node.scrollLeft = scrollLeft;
 	layout.measure(WIDTH);
-	return layout;
+	return { ...layout, settling };
 }
 
 function navigated() {
@@ -365,5 +377,43 @@ describe("InterestPager", () => {
 
 		pager.scroll(0);
 		expect(listsToldPaging()).toEqual([false, false]);
+	});
+
+	it("is unsettled from the moment a finger lands on it until that finger lifts on a tab", () => {
+		const pager = mountPager();
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 1 });
+
+		pager.touch("touchstart");
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.scroll(0.4 * WIDTH);
+		pager.scroll(0);
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.touch("touchend");
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 0 });
+	});
+
+	it("settles on its tab again when a finger lifts without having paged", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart");
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.touch("touchend");
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 1 });
+	});
+
+	it("is unsettled for the whole glide to a tab picked outside the pager", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 1 });
+
+		pager.scroll(0.9 * WIDTH);
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.scroll(0);
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 0 });
 	});
 });

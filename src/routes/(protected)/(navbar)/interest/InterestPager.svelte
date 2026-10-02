@@ -9,7 +9,15 @@
 	import TapsReceivedList from "./taps/TapsReceivedList.svelte";
 	import ViewsGrid from "./views/ViewsGrid.svelte";
 
-	let { ourProfileId }: { ourProfileId: number } = $props();
+	let {
+		ourProfileId,
+		onUnsettle,
+		onSettle,
+	}: {
+		ourProfileId: number;
+		onUnsettle: () => void;
+		onSettle: (tab: number) => void;
+	} = $props();
 
 	const TABS = INTEREST_TABS.map((tab) => tab.href);
 
@@ -26,11 +34,13 @@
 			for (let pane = first; pane <= last; pane += 1)
 				mounted[pane] = true;
 			paging = first !== last;
+			if (paging) onUnsettle();
 		},
 		onHeading: (pane) => {
 			heading = pane;
 		},
 		onRest: (pane) => {
+			onSettle(pane);
 			const landed = TABS[pane];
 			const pending = navigating.to?.url.pathname;
 			const ownReplacePending =
@@ -72,6 +82,7 @@
 <main
 	data-slot="interest-pager"
 	data-scroll-intent="x"
+	ontouchstart={onUnsettle}
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >

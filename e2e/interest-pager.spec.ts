@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
 	afterTwoFrames,
@@ -8,24 +8,26 @@ import {
 	wheel,
 } from "./support/app";
 import {
+	CHIP,
+	glideToViews,
 	LIST_SCROLLERS,
 	listScrollbars,
 	openTaps,
 	PAGER,
 	swipeAcross,
+	tabTrack,
 	TAPS,
 	TAPS_PANE,
 	TAPS_SCROLLER,
+	VIEWS,
+	VIEWS_PANE,
 	VIEWS_SCROLLER,
 } from "./support/interest-pager";
-
-const VIEWS = "/interest/views";
-const VIEWS_PANE = '[data-slot="interest-pane-views"]';
 
 declare global {
 	interface Window {
 		__clickedPanes?: string[];
-		__glideFrames?: { progress: number; locked: (string | undefined)[] }[];
+		__chipDetachedAt?: number[];
 	}
 }
 
@@ -208,41 +210,8 @@ test("a click over the tab being left reaches nothing in it, while the incoming 
 test("a tab tap keeps the list being left locked for the whole glide", async ({
 	page,
 }) => {
-	await page.evaluate(
-		([pagerSlot, viewsSlot, tapsSlot]) => {
-			const pager = document.querySelector<HTMLElement>(pagerSlot!)!;
-			const views = document.querySelector<HTMLElement>(viewsSlot!)!;
-			const taps = document.querySelector<HTMLElement>(tapsSlot!)!;
-			window.__glideFrames = [];
-			const sample = () => {
-				window.__glideFrames!.push({
-					progress: pager.scrollLeft / pager.clientWidth,
-					locked: [views, taps]
-						.filter((pane) => pane.inert)
-						.map((pane) => pane.dataset.slot),
-				});
-				requestAnimationFrame(sample);
-			};
-			requestAnimationFrame(sample);
-		},
-		[PAGER, VIEWS_PANE, TAPS_PANE],
-	);
+	const { frames, gliding } = await glideToViews(page);
 
-	await page.getByRole("link", { name: "Views" }).click();
-	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
-	await expect
-		.poll(() => page.locator(PAGER).evaluate((el) => el.scrollLeft))
-		.toBe(0);
-	await afterTwoFrames(page);
-
-	const frames = (await page.evaluate(() => window.__glideFrames))!;
-	const gliding = frames.filter(
-		({ progress }) => progress > 0.05 && progress < 0.95,
-	);
-	expect(
-		gliding.length,
-		"the glide was seen between the tabs",
-	).toBeGreaterThan(0);
 	expect(
 		gliding.filter(({ locked }) => locked.join() !== "interest-pane-taps"),
 		"only Taps, the list being left, is locked on every frame of the glide",
@@ -337,14 +306,14 @@ test("a vertical finger drag scrolls the list and does not page", async ({
 test("the chip behind the tabs follows the pager wherever it is", async ({
 	page,
 }) => {
-	const chip = page.locator('[data-slot="interest-tab-chip"]');
-	const box = async (locator: ReturnType<Page["locator"]>) =>
-		(await locator.boundingBox())!;
-	const views = await box(page.getByRole("link", { name: "Views" }));
-	const taps = await box(page.getByRole("link", { name: "Taps" }));
+	const chip = async () => (await page.locator(CHIP).boundingBox())!;
+	const { views, span } = await tabTrack(page);
+	const taps = (await page
+		.getByRole("link", { name: "Taps" })
+		.boundingBox())!;
 
-	await expect.poll(async () => (await box(chip)).x).toBeCloseTo(taps.x, 0);
-	expect((await box(chip)).width).toBeCloseTo(taps.width, 0);
+	await expect.poll(async () => (await chip()).x).toBeCloseTo(taps.x, 0);
+	expect((await chip()).width).toBeCloseTo(taps.width, 0);
 
 	const pager = page.locator(PAGER);
 	const width = await pager.evaluate((el) => el.clientWidth);
@@ -358,12 +327,133 @@ test("the chip behind the tabs follows the pager wherever it is", async ({
 		);
 		expect(progress).toBeGreaterThan(0.2);
 		expect(progress).toBeLessThan(0.8);
-		const expected = views.x + (taps.x - views.x) * progress;
-		return Math.abs((await box(chip)).x - expected);
+		return Math.abs((await chip()).x - (views + span * progress));
 	};
 	await expect.poll(chipOffTrack).toBeLessThan(1);
 
 	await touch.end();
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
-	await expect.poll(async () => (await box(chip)).x).toBeCloseTo(views.x, 0);
+	await expect.poll(async () => (await chip()).x).toBeCloseTo(views, 0);
+});
+
+test("the chip is animated only while the pager is held or between tabs", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const { views, span } = await tabTrack(page);
+	const chipProgress = async () =>
+		((await page.locator(CHIP).boundingBox())!.x - views) / span;
+	const animations = () =>
+		page
+			.locator(CHIP)
+			.evaluate((chip) => ({
+				onChip: chip.getAnimations().length,
+				running: document
+					.getAnimations()
+					.filter((animation) => animation.playState === "running")
+					.length,
+			}));
+	const atRest = { onChip: 0, running: 0 };
+
+	await expect.poll(animations, "a fresh entry on Taps").toEqual(atRest);
+	expect(await chipProgress()).toBeCloseTo(1, 2);
+
+	const width = await pager.evaluate((el) => el.clientWidth);
+	const touch = await swipeAcross(page, {
+		distancePx: Math.round(width * 0.65),
+		release: false,
+	});
+
+	await expect.poll(chipProgress).toBeLessThan(0.8);
+	expect(await chipProgress()).toBeGreaterThan(0.2);
+	expect((await animations()).onChip, "a held swipe drives the chip").toBe(1);
+
+	await touch.end();
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+
+	await expect.poll(animations, "at rest on Views").toEqual(atRest);
+	expect(await chipProgress()).toBeCloseTo(0, 2);
+
+	await page.getByRole("link", { name: "Taps" }).click();
+	await expect(page).toHaveURL(new RegExp(`${TAPS}$`));
+	await expect.poll(() => pager.evaluate((el) => el.scrollLeft)).toBe(width);
+
+	await expect.poll(animations, "back at rest on Taps").toEqual(atRest);
+	expect(await chipProgress()).toBeCloseTo(1, 2);
+});
+
+test("a tab tap carries the chip along with the pager on every frame", async ({
+	page,
+}) => {
+	const { views, span } = await tabTrack(page);
+	const { frames } = await glideToViews(page);
+
+	const offTrack = frames.map(({ progress, chipLeft }) =>
+		Math.abs(chipLeft - (views + span * progress)),
+	);
+	expect(
+		Math.max(...offTrack),
+		"the chip never leaves the pager's position",
+	).toBeLessThan(1);
+	const pagerBehindRoute = frames.filter(
+		({ path, progress }) => path === VIEWS && progress > 0.95,
+	);
+	expect(
+		pagerBehindRoute.length,
+		"the tap was seen before the pager moved",
+	).toBeGreaterThan(0);
+	expect(
+		pagerBehindRoute.filter(({ chipAnimated }) => !chipAnimated),
+		"the chip rides the pager from the tap on",
+	).toEqual([]);
+});
+
+test("a flick the page was too busy to see keeps the chip riding the pager", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const box = (await page.locator(TAPS_SCROLLER).boundingBox())!;
+	await page.evaluate(
+		([pagerSlot, chipSlot]) => {
+			const pager = document.querySelector<HTMLElement>(pagerSlot!)!;
+			const chip = document.querySelector<HTMLElement>(chipSlot!)!;
+			const detachedAt: number[] = [];
+			window.__chipDetachedAt = detachedAt;
+			new MutationObserver(() => {
+				if (chip.getAnimations().length === 0)
+					detachedAt.push(pager.scrollLeft / pager.clientWidth);
+			}).observe(chip, { attributes: true });
+			window.addEventListener(
+				"touchstart",
+				() => {
+					const busyUntil = performance.now() + 200;
+					while (performance.now() < busyUntil);
+				},
+				{ passive: true, capture: true, once: true },
+			);
+		},
+		[PAGER, CHIP],
+	);
+
+	const cdp = await page.context().newCDPSession(page);
+	await cdp.send("Input.synthesizeScrollGesture", {
+		x: box.x + 100,
+		y: box.y + box.height / 2,
+		xDistance: 220,
+		yDistance: 0,
+		speed: 3000,
+		preventFling: false,
+		gestureSourceType: "touch",
+	} as never);
+	await cdp.detach();
+
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect.poll(() => pager.evaluate((el) => el.scrollLeft)).toBe(0);
+	await expect
+		.poll(() => page.evaluate(() => window.__chipDetachedAt))
+		.not.toEqual([]);
+	expect(
+		await page.evaluate(() => window.__chipDetachedAt),
+		"the chip lets go only once the pager rests on Views",
+	).toEqual([0]);
 });
