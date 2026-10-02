@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { currentPlatform } from "$lib/platform/os";
+	import { currentPlatform, platformNames } from "$lib/platform/os";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
 	import NotificationMasterSetting from "./NotificationMasterSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";
 
 	const platform = currentPlatform();
-	const desktopNames: Partial<Record<typeof platform, string>> = {
-		macos: "macOS",
-		windows: "Windows",
-		linux: "Linux",
-	};
-	const platformName = desktopNames[platform] ?? "this platform";
+	const names: Partial<Record<typeof platform, string>> = platformNames;
+	const platformName = names[platform] ?? "this platform";
 </script>
 
 {#if platform === "android"}

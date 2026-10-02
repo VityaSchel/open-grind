@@ -1,5 +1,11 @@
+import { platformNames } from "$lib/platform/os";
 import { highlights } from "./highlights";
-import type { CreditEcosystem, CreditPlatform, Highlight } from "./types";
+import {
+	type CreditEcosystem,
+	type CreditPlatform,
+	creditPlatforms,
+	type Highlight,
+} from "./types";
 
 export type LoadedEntry = {
 	id: string;
@@ -25,10 +31,10 @@ const GROUPS: ({ title: string } & (
 ))[] = [
 	{ title: "Web packages", ecosystems: ["npm", "asset"] },
 	{ title: "Rust crates", ecosystems: ["rust"] },
-	{ title: "Android libraries", platform: "android" },
-	{ title: "Linux libraries", platform: "linux" },
-	{ title: "macOS libraries", platform: "macos" },
-	{ title: "Windows libraries", platform: "windows" },
+	...creditPlatforms.map((platform) => ({
+		title: `${platformNames[platform]} libraries`,
+		platform,
+	})),
 ];
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);

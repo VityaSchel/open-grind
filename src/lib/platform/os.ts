@@ -1,6 +1,13 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { type Platform, platform } from "@tauri-apps/plugin-os";
 
+export const platformNames = {
+	android: "Android",
+	linux: "Linux",
+	macos: "macOS",
+	windows: "Windows",
+} as const satisfies Partial<Record<Platform, string>>;
+
 export function currentPlatform(): Platform | "web" {
 	return isTauri() ? platform() : "web";
 }
