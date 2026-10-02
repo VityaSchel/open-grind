@@ -1,27 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { attachOverscrollPull } from "./overscroll-adapter";
-import {
-	ARMING_PX,
-	makeModel,
-	NON_ARMING_PX,
-	touchEvent,
-} from "./pull-test-helpers";
+import { ARMING_PX, makeModel, NON_ARMING_PX } from "./pull-test-helpers";
+
+const KEY_BAND_WINDOW_MS = 500;
 
 describe("attachOverscrollPull", () => {
 	function setup() {
 		const { model, onTrigger } = makeModel();
 		const target = document.createElement("div");
-		const onWheelOrTouchBand = vi.fn();
-		const onBandWithoutWheelOrTouch = vi.fn();
+		const onPullBand = vi.fn();
+		const onKeyBand = vi.fn();
 		let over = 0;
 		let clock = 0;
+		let keyAt: number | null = null;
 		const detach = attachOverscrollPull(model, {
 			listenTarget: target,
 			overscrollPx: () => over,
 			now: () => clock,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
+			scrollKeyAt: () => keyAt,
+			onPullBand,
+			onKeyBand,
 		});
 		const wheel = () => target.dispatchEvent(new Event("wheel"));
 		const scroll = (
@@ -37,8 +36,10 @@ describe("attachOverscrollPull", () => {
 			target.dispatchEvent(new Event("scroll"));
 		};
 		const scrollEnd = () => target.dispatchEvent(new Event("scrollend"));
-		const touch = (type: "touchstart" | "touchend") =>
-			target.dispatchEvent(touchEvent(type));
+		const scrollKey = ({ after = 0 }: { after?: number } = {}) => {
+			clock += after;
+			keyAt = clock;
+		};
 		const settleMidList = () => {
 			scroll(-200);
 			scrollEnd();
@@ -46,12 +47,12 @@ describe("attachOverscrollPull", () => {
 		return {
 			model,
 			onTrigger,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
+			onPullBand,
+			onKeyBand,
 			wheel,
 			scroll,
 			scrollEnd,
-			touch,
+			scrollKey,
 			settleMidList,
 			detach,
 		};
@@ -93,45 +94,81 @@ describe("attachOverscrollPull", () => {
 		detach();
 	});
 
-	it("pulls a touch-held band that carries no wheels and fires if it ever armed", () => {
-		const { model, onTrigger, scroll, scrollEnd, touch, detach } = setup();
-		touch("touchstart");
-		scroll(10, { finger: false });
-		expect(model.phase).toBe("pulling");
-		scroll(ARMING_PX, { finger: false });
-		scroll(NON_ARMING_PX, { finger: false });
-		expect(model.phase).toBe("pulling");
-		touch("touchend");
-		scrollEnd();
-		expect(model.phase).toBe("refreshing");
-		expect(onTrigger).toHaveBeenCalledOnce();
-		detach();
-	});
-
-	it("stops counting a touch once the last finger lifts", () => {
-		const { model, onBandWithoutWheelOrTouch, scroll, touch, detach } =
-			setup();
-		touch("touchstart");
-		touch("touchend");
-		scroll(10, { finger: false });
-		expect(model.phase).toBe("idle");
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
-		detach();
-	});
-
-	it("never pulls, arms or fires on a band that no wheel and no touch drives, and reports it", () => {
+	it("pulls a band that carries no wheels at all and fires if it ever armed", () => {
 		const {
 			model,
 			onTrigger,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
+			onPullBand,
+			onKeyBand,
 			scroll,
 			scrollEnd,
 			detach,
 		} = setup();
+		scroll(10, { finger: false });
+		expect(model.phase).toBe("pulling");
+		expect(onPullBand).toHaveBeenCalledOnce();
+		scroll(ARMING_PX, { finger: false });
+		scroll(NON_ARMING_PX, { finger: false });
+		expect(model.phase).toBe("pulling");
+		scrollEnd();
+		expect(model.phase).toBe("refreshing");
+		expect(onTrigger).toHaveBeenCalledOnce();
+		expect(onKeyBand).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it("pulls from the first band frame when its wheel arrives only after it", () => {
+		const { model, onPullBand, onKeyBand, scroll, detach } = setup();
+		scroll(3, { finger: false });
+		expect(model.phase).toBe("pulling");
+		expect(onPullBand).toHaveBeenCalledOnce();
+		scroll(10);
+		expect(model.phase).toBe("pulling");
+		expect(onKeyBand).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it("keeps reading the band as a pull when it grows on without wheels after Safari's lift-time scrollend", () => {
+		const { model, onPullBand, onKeyBand, scroll, scrollEnd, detach } =
+			setup();
+		scroll(10);
+		scroll(NON_ARMING_PX);
+		scrollEnd();
+		expect(model.phase).toBe("idle");
+		scroll(26, { finger: false });
+		scroll(31, { finger: false });
+		expect(model.phase).toBe("pulling");
+		expect(onPullBand).toHaveBeenCalledTimes(4);
+		expect(onKeyBand).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it("reports a band without wheels as a pull even while it is suppressed as momentum", () => {
+		const { model, onPullBand, onKeyBand, scroll, detach } = setup();
+		scroll(-90, { finger: false });
+		scroll(-40, { finger: false });
+		scroll(20, { finger: false });
+		expect(model.phase).toBe("idle");
+		expect(onPullBand).toHaveBeenCalledOnce();
+		expect(onKeyBand).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it("never pulls, arms or fires on a band that a scroll key drives, and reports it", () => {
+		const {
+			model,
+			onTrigger,
+			onPullBand,
+			onKeyBand,
+			scroll,
+			scrollEnd,
+			scrollKey,
+			detach,
+		} = setup();
+		scrollKey();
 		scroll(6, { finger: false });
 		expect(model.phase).toBe("idle");
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
+		expect(onKeyBand).toHaveBeenCalledOnce();
 		scroll(ARMING_PX, { advance: 100, finger: false });
 		expect(model.phase).toBe("idle");
 		expect(model.source).toBe(null);
@@ -139,70 +176,94 @@ describe("attachOverscrollPull", () => {
 		scrollEnd();
 		expect(model.phase).toBe("idle");
 		expect(onTrigger).not.toHaveBeenCalled();
-		expect(onWheelOrTouchBand).not.toHaveBeenCalled();
+		expect(onPullBand).not.toHaveBeenCalled();
 		detach();
 	});
 
-	it("reports a band that no wheel or touch drives only once it is deep enough to be a band", () => {
-		const { onBandWithoutWheelOrTouch, scroll, detach } = setup();
+	it("reports a key-driven band only once it is deep enough to be a band", () => {
+		const { onKeyBand, scroll, scrollKey, detach } = setup();
+		scrollKey();
 		scroll(1.5, { finger: false });
-		expect(onBandWithoutWheelOrTouch).not.toHaveBeenCalled();
+		expect(onKeyBand).not.toHaveBeenCalled();
 		scroll(3, { advance: 100, finger: false });
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
+		expect(onKeyBand).toHaveBeenCalledOnce();
 		detach();
 	});
 
-	it("lets a wheel that arrives a frame late still claim the band as a pull", () => {
-		const {
-			model,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
-			scroll,
-			detach,
-		} = setup();
-		scroll(3, { finger: false });
+	it("keeps a key-driven band out of the pull for as long as it lasts, after the key press goes stale", () => {
+		const { model, onPullBand, onKeyBand, scroll, scrollKey, detach } =
+			setup();
+		scrollKey();
+		scroll(6, { finger: false });
+		for (let frame = 1; frame <= 40; frame += 1)
+			scroll(6 + frame / 2, { finger: false });
+		scroll(4, { finger: false });
+		scroll(0, { finger: false });
 		expect(model.phase).toBe("idle");
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
-		expect(onWheelOrTouchBand).not.toHaveBeenCalled();
-		scroll(10);
+		expect(onPullBand).not.toHaveBeenCalled();
+		expect(onKeyBand).toHaveBeenCalled();
+		detach();
+	});
+
+	it("reads a band again after a pause, by the latest key event", () => {
+		const { model, onPullBand, scroll, scrollKey, detach } = setup();
+		scrollKey();
+		scroll(6, { finger: false });
+		scroll(22, { finger: false });
+		scrollKey({ after: 400 });
+		scroll(12, { finger: false });
+		expect(onPullBand).not.toHaveBeenCalled();
+		scroll(14, { advance: KEY_BAND_WINDOW_MS + 100, finger: false });
+		expect(onPullBand).toHaveBeenCalled();
 		expect(model.phase).toBe("pulling");
-		expect(onWheelOrTouchBand).toHaveBeenCalledOnce();
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
 		detach();
 	});
 
-	it("does not count a wheel that moved nothing long before the band", () => {
-		const {
-			model,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
-			wheel,
-			scroll,
-			detach,
-		} = setup();
+	it("does not count a wheel that moved nothing long before the band as a finger on it", () => {
+		const { model, onTrigger, wheel, scroll, scrollEnd, detach } = setup();
 		wheel();
-		scroll(6, { advance: 1000, finger: false });
-		expect(model.phase).toBe("idle");
-		expect(onBandWithoutWheelOrTouch).toHaveBeenCalledOnce();
-		expect(onWheelOrTouchBand).not.toHaveBeenCalled();
+		scroll(ARMING_PX, { advance: 1000, finger: false });
+		expect(model.phase).toBe("armed");
+		scrollEnd();
+		expect(model.settledOutcome).toBe("canceled");
+		expect(onTrigger).not.toHaveBeenCalled();
 		detach();
 	});
 
-	it("reports a wheel-driven band even when the gesture is no pull", () => {
-		const {
-			model,
-			onWheelOrTouchBand,
-			onBandWithoutWheelOrTouch,
-			scroll,
-			settleMidList,
-			detach,
-		} = setup();
+	it("reads the next band as a pull once the key press is stale", () => {
+		const { model, onPullBand, scroll, scrollEnd, scrollKey, detach } =
+			setup();
+		scrollKey();
+		scroll(6, { finger: false });
+		scroll(0, { finger: false });
+		scrollEnd();
+		scroll(10, { advance: KEY_BAND_WINDOW_MS + 100, finger: false });
+		expect(model.phase).toBe("pulling");
+		expect(onPullBand).toHaveBeenCalledOnce();
+		detach();
+	});
+
+	it("does not hand a pull that is under way to a key pressed during it", () => {
+		const { model, onKeyBand, scroll, scrollKey, detach } = setup();
+		scroll(10);
+		scrollKey();
+		scroll(0.2);
+		scroll(12);
+		expect(model.phase).toBe("pulling");
+		expect(model.displayPx).toBe(12);
+		expect(onKeyBand).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it("reports a band even when the gesture is no pull", () => {
+		const { model, onPullBand, onKeyBand, scroll, settleMidList, detach } =
+			setup();
 		settleMidList();
 		scroll(-20, { advance: 100 });
 		scroll(30, { advance: 100 });
 		expect(model.phase).toBe("idle");
-		expect(onWheelOrTouchBand).toHaveBeenCalledOnce();
-		expect(onBandWithoutWheelOrTouch).not.toHaveBeenCalled();
+		expect(onPullBand).toHaveBeenCalledOnce();
+		expect(onKeyBand).not.toHaveBeenCalled();
 		detach();
 	});
 
@@ -330,14 +391,8 @@ describe("attachOverscrollPull", () => {
 	});
 
 	it("does not treat spring-back after Safari's lift-time scrollend as a new pull", () => {
-		const {
-			model,
-			onTrigger,
-			onBandWithoutWheelOrTouch,
-			scroll,
-			scrollEnd,
-			detach,
-		} = setup();
+		const { model, onTrigger, onKeyBand, scroll, scrollEnd, detach } =
+			setup();
 		scroll(10);
 		scroll(NON_ARMING_PX);
 		scrollEnd();
@@ -348,7 +403,7 @@ describe("attachOverscrollPull", () => {
 		expect(model.phase).toBe("idle");
 		expect(model.source).toBe(null);
 		expect(onTrigger).not.toHaveBeenCalled();
-		expect(onBandWithoutWheelOrTouch).not.toHaveBeenCalled();
+		expect(onKeyBand).not.toHaveBeenCalled();
 		detach();
 	});
 

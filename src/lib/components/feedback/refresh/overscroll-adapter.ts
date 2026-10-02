@@ -9,13 +9,15 @@ const VELOCITY_DECAY_PER_SAMPLE = 0.85;
 // Browsers skip scrollend for programmatic and zero-length scrolls, so we watch
 // for a pause instead. https://github.com/w3c/csswg-drafts/issues/8218
 const RESTING_GAP_MS = 250;
+const KEY_BAND_WINDOW_MS = 500;
 
 export interface OverscrollPullOptions {
 	listenTarget: EventTarget;
 	overscrollPx: () => number;
 	now?: () => number;
-	onWheelOrTouchBand?: () => void;
-	onBandWithoutWheelOrTouch?: () => void;
+	scrollKeyAt?: () => number | null;
+	onPullBand?: () => void;
+	onKeyBand?: () => void;
 }
 
 export function attachOverscrollPull(
@@ -24,8 +26,9 @@ export function attachOverscrollPull(
 		listenTarget,
 		overscrollPx,
 		now = () => performance.now(),
-		onWheelOrTouchBand,
-		onBandWithoutWheelOrTouch,
+		scrollKeyAt = () => null,
+		onPullBand,
+		onKeyBand,
 	}: OverscrollPullOptions,
 ): () => void {
 	let active = false;
@@ -34,7 +37,7 @@ export function attachOverscrollPull(
 	let armedByFinger = false;
 	let deviceEmitsWheels = false;
 	let unpairedWheelAt: number | null = null;
-	let touching = false;
+	let keyBand = false;
 	let prevOver = overscrollPx();
 	let prevAt = now();
 	let velocityPeak = 0;
@@ -55,19 +58,12 @@ export function attachOverscrollPull(
 		unpairedWheelAt = now();
 	};
 
-	const onTouchStart = () => {
-		touching = true;
-	};
-
-	const onTouchLift = (event: TouchEvent) => {
-		touching = event.touches.length > 0;
-	};
-
 	const onScroll = () => {
 		const over = overscrollPx();
 		const at = now();
+		const pausedBefore = at - prevAt > RESTING_GAP_MS;
 		const quietGapCanEndGesture = !gestureHadWheels || !offBoundary;
-		if (!active && quietGapCanEndGesture && at - prevAt > RESTING_GAP_MS) {
+		if (!active && quietGapCanEndGesture && pausedBefore) {
 			restingOver = prevOver;
 			offBoundary = restingOver < -AT_BOUNDARY_PX;
 			suppressed = false;
@@ -105,24 +101,29 @@ export function attachOverscrollPull(
 			return;
 		}
 
-		const drivenByWheelOrTouch = gestureHadWheels || touching;
+		const bandBegins = cameFrom <= ENGAGE_PX || pausedBefore;
+		if (!active && bandBegins) {
+			const keyAt = scrollKeyAt();
+			keyBand = keyAt !== null && at - keyAt <= KEY_BAND_WINDOW_MS;
+		}
 		const bandDetected = over > BAND_DETECT_PX;
-		if (bandDetected && drivenByWheelOrTouch) onWheelOrTouchBand?.();
+		if (keyBand) {
+			if (bandDetected) onKeyBand?.();
+			return;
+		}
+		if (bandDetected) onPullBand?.();
 
 		if (!active && !suppressed) {
 			const springingBack = over <= cameFrom;
 			if (
 				offBoundary ||
 				springingBack ||
-				velocityPeak > MOMENTUM_VELOCITY_PX_PER_MS
+				velocityPeak > MOMENTUM_VELOCITY_PX_PER_MS ||
+				!model.beginPull("overscroll")
 			) {
 				suppressed = true;
-			} else if (!drivenByWheelOrTouch) {
-				if (bandDetected) onBandWithoutWheelOrTouch?.();
-			} else if (model.beginPull("overscroll")) {
-				active = true;
 			} else {
-				suppressed = true;
+				active = true;
 			}
 		}
 		if (active) {
@@ -147,21 +148,7 @@ export function attachOverscrollPull(
 	listenTarget.addEventListener("wheel", onWheel, { passive: true });
 	listenTarget.addEventListener("scroll", onScroll, { passive: true });
 	listenTarget.addEventListener("scrollend", onScrollEnd, { passive: true });
-	listenTarget.addEventListener("touchstart", onTouchStart, {
-		passive: true,
-	});
-	listenTarget.addEventListener("touchend", onTouchLift as EventListener);
-	listenTarget.addEventListener("touchcancel", onTouchLift as EventListener);
 	return () => {
-		listenTarget.removeEventListener("touchstart", onTouchStart);
-		listenTarget.removeEventListener(
-			"touchend",
-			onTouchLift as EventListener,
-		);
-		listenTarget.removeEventListener(
-			"touchcancel",
-			onTouchLift as EventListener,
-		);
 		listenTarget.removeEventListener("wheel", onWheel);
 		listenTarget.removeEventListener("scroll", onScroll);
 		listenTarget.removeEventListener("scrollend", onScrollEnd);

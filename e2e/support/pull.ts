@@ -104,6 +104,8 @@ export async function driveInOneGesture<K extends string>(
 			scroller.dispatchEvent(new Event("scroll"));
 		};
 		const lift = () => scroller.dispatchEvent(new Event("scrollend"));
+		const scrollKey = (key) =>
+			window.dispatchEvent(new KeyboardEvent("keydown", { key }));
 		const discVisibility = ${DISC_VISIBILITY_IN_PAGE};
 		const snap = () => {
 			const button = band.querySelector("button");

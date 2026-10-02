@@ -11,6 +11,7 @@ const TWEEN_FRAMES = 20;
 const TWEEN_MS = TWEEN_FRAMES * FRAME_MS;
 const SHARED_FRAME_LOOP_DRAIN_MS = 300;
 const PAST_MOUSE_PROBE_MS = 150;
+const STALE_KEY_MS = 600;
 const MIN_REFRESHING_MS = 500;
 const BUTTON_REST_HEIGHT = "56px";
 const CONTENT_HEIGHT = 2000;
@@ -141,6 +142,12 @@ async function mountAtRest(edge: Edge) {
 		},
 		async pressInsideList(key: string) {
 			scroller.dispatchEvent(
+				new KeyboardEvent("keydown", { key, bubbles: true }),
+			);
+			await settle();
+		},
+		async pressOutsideList(key: string) {
+			document.body.dispatchEvent(
 				new KeyboardEvent("keydown", { key, bubbles: true }),
 			);
 			await settle();
@@ -431,9 +438,21 @@ describe("the refresh control", () => {
 		expect(view.scrollWrites()).toBe(scrollWritesBeforeBand);
 	});
 
-	it("offers the button instead of the pull hint for a band that no wheel or touch drives, and never refreshes", async () => {
+	it("shows the pull hint and no button for a band that no wheel comes with", async () => {
+		const view = await mountAtRest("top");
+
+		await view.moveBandTo({ px: 6, pulledByWheel: false });
+
+		expect(view.phase()).toBe("pulling");
+		expect(view.bandText()).toBe("Pull to refresh");
+		expect(view.button()).toBeNull();
+		expect(view.contentInset()).toBe("0px");
+	});
+
+	it("offers the button instead of the pull hint for a band that a scroll key drives, and never refreshes", async () => {
 		const view = await mountAtRest("top");
 		const whileBanding: { phase?: string; bandText?: string }[] = [];
+		await view.pressOutsideList("PageUp");
 
 		for (const px of [6, 22]) {
 			await view.moveBandTo({ px: px, pulledByWheel: false });
@@ -455,14 +474,15 @@ describe("the refresh control", () => {
 		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
 	});
 
-	it("goes back to the pull hint at the next band a wheel drives", async () => {
+	it("goes back to the pull hint at the next band once the key press is stale", async () => {
 		const view = await mountAtRest("top");
+		await view.pressOutsideList("PageUp");
 		await view.moveBandTo({ px: 6, pulledByWheel: false });
 		await view.releaseBand();
-		await view.wait(TWEEN_MS);
+		await view.wait(STALE_KEY_MS);
 		expect(view.button()).not.toBeNull();
 
-		await view.moveBandTo({ px: 6, pulledByWheel: true });
+		await view.moveBandTo({ px: 6, pulledByWheel: false });
 
 		expect(view.phase()).toBe("pulling");
 		expect(view.bandText()).toBe("Pull to refresh");

@@ -1,4 +1,13 @@
-import { consumesScrollKeys, scrollKeysToward } from "$lib/util/scroll-keys";
+import { isMacosPlatform } from "$lib/platform/os";
+import {
+	scrollGesture,
+	type ScrollGestureState,
+} from "$lib/platform/scroll-gesture";
+import {
+	consumesScrollKeys,
+	keyScrollsToward,
+	scrollKeysToward,
+} from "$lib/util/scroll-keys";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
 import type { RestingButtonModel } from "./resting-button.svelte";
@@ -21,6 +30,7 @@ export type PullInputsOptions = {
 	setDistance: (px: number) => void;
 	shouldReveal: () => boolean;
 	shouldConceal: () => boolean;
+	fingerPhase?: ScrollGestureState | null;
 };
 
 export function attachPullInputs(
@@ -37,8 +47,12 @@ export function attachPullInputs(
 		setDistance,
 		shouldReveal,
 		shouldConceal,
+		fingerPhase = isMacosPlatform() ? scrollGesture : null,
 	}: PullInputsOptions,
 ): () => void {
+	const trackpadScrolling = () =>
+		fingerPhase !== null && fingerPhase.phase !== "idle";
+
 	const onScroll = () => {
 		if (
 			!model.gestureActive &&
@@ -74,6 +88,14 @@ export function attachPullInputs(
 		restingButton.offerWithoutPull();
 	};
 
+	let scrollKeyAt: number | null = null;
+	const noteScrollKey = (event: KeyboardEvent) => {
+		if (!keyScrollsToward({ event, edge: position })) return;
+		if (consumesScrollKeys(event.target)) return;
+		scrollKeyAt = performance.now();
+	};
+	const onWindowCapture = { capture: true, passive: true };
+
 	// Without this the touch drag freezes: PullModel resists across
 	// space * OVERSHOOT minus the baseline, leaving no range to move through.
 	const noteTouch = () => restingButton.leaveBoundary();
@@ -84,6 +106,8 @@ export function attachPullInputs(
 	});
 	target.addEventListener("keydown", onKeyDown);
 	target.addEventListener("touchmove", noteTouch, { passive: true });
+	window.addEventListener("keydown", noteScrollKey, onWindowCapture);
+	window.addEventListener("keyup", noteScrollKey, onWindowCapture);
 
 	const detach = [
 		attachTouchPull(model, {
@@ -95,8 +119,9 @@ export function attachPullInputs(
 		attachOverscrollPull(model, {
 			listenTarget: target,
 			overscrollPx,
-			onWheelOrTouchBand: () => restingButton.leaveBoundary(),
-			onBandWithoutWheelOrTouch: () => restingButton.offerWithoutPull(),
+			scrollKeyAt: () => (trackpadScrolling() ? null : scrollKeyAt),
+			onPullBand: () => restingButton.leaveBoundary(),
+			onKeyBand: () => restingButton.offerWithoutPull(),
 		}),
 	];
 
@@ -107,6 +132,8 @@ export function attachPullInputs(
 		target.removeEventListener("wheel", onWheel as EventListener);
 		target.removeEventListener("keydown", onKeyDown);
 		target.removeEventListener("touchmove", noteTouch);
+		window.removeEventListener("keydown", noteScrollKey, onWindowCapture);
+		window.removeEventListener("keyup", noteScrollKey, onWindowCapture);
 		detach.forEach((cleanup) => cleanup());
 	};
 }

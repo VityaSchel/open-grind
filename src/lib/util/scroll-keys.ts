@@ -9,6 +9,17 @@ export const scrollKeys: ReadonlySet<string> = new Set([
 	" ",
 ]);
 
+export function keyScrollsToward({
+	event,
+	edge,
+}: {
+	event: KeyboardEvent;
+	edge: "top" | "bottom";
+}): boolean {
+	if (event.key === " ") return event.shiftKey === (edge === "top");
+	return scrollKeysToward[edge].has(event.key);
+}
+
 export function consumesScrollKeys(target: EventTarget | null): boolean {
 	return (
 		target instanceof HTMLInputElement ||

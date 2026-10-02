@@ -14,9 +14,30 @@ const SHALLOW_PX = 8;
 const PAST_ARM_PX = 26;
 const BAND_STEP_MS = 50;
 const WOULD_HAVE_REFRESHED_MS = 300;
+const STALE_KEY_MS = 600;
 
 test.describe("refreshing without a pull", () => {
-	test("a rubber band that no wheel or touch drives offers the Refresh button without ever pulling, and the next wheel-driven band brings the hint back", async ({
+	test("a rubber band that no wheel comes with is still a pull and offers no Refresh button", async ({
+		page,
+	}) => {
+		await openInbox(page);
+
+		await driveInOneGesture(
+			page,
+			[],
+			`
+			spring(${SHALLOW_PX}); await sleep(${BAND_STEP_MS});
+			return {};
+		`,
+		);
+
+		await expect(
+			page.getByText("Pull to refresh", { exact: true }),
+		).toBeVisible();
+		await expect(refreshButton(page)).toBeHidden();
+	});
+
+	test("a rubber band that a scroll key drives offers the Refresh button without ever pulling, and the next band brings the hint back", async ({
 		page,
 	}) => {
 		await openInbox(page);
@@ -36,6 +57,7 @@ test.describe("refreshing without a pull", () => {
 			page,
 			[],
 			`
+			scrollKey("PageUp");
 			spring(${SHALLOW_PX}); await sleep(${BAND_STEP_MS});
 			spring(${PAST_ARM_PX}); await sleep(${BAND_STEP_MS});
 			lift();
@@ -51,7 +73,8 @@ test.describe("refreshing without a pull", () => {
 			page,
 			[],
 			`
-			gesture(${SHALLOW_PX}); await sleep(${BAND_STEP_MS});
+			await sleep(${STALE_KEY_MS});
+			spring(${SHALLOW_PX}); await sleep(${BAND_STEP_MS});
 			return {};
 		`,
 		);
