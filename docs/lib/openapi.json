@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.17.0.181424 (2026-09-22)"
+		"version": "26.18.0.184315 (2026-09-29)"
 	},
 	"servers": [
 		{
@@ -1686,17 +1686,22 @@
 					"safety/legal-agreements"
 				],
 				"operationId": "createOptOutConsent",
+				"summary": "Get opt out status",
 				"requestBody": {
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
-									}
+								"type": "object",
+								"required": [
+									"optOutType"
 								],
-								"x-original-type": "ConsentRequest"
+								"properties": {
+									"optOutType": {
+										"type": "string",
+										"description": "string, e.g. `\"TOP_PICKS\"`"
+									}
+								}
 							}
 						}
 					}
@@ -1706,15 +1711,101 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "ConsentOptStatusResponse"
+									"type": "object",
+									"properties": {
+										"isOptedOut": {
+											"type": "boolean"
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"deprecated": true,
+				"description": "Superseded by [Get opt statuses](/grindr-api/safety/legal-agreements#get-opt-statuses)."
+			}
+		},
+		"/v1/opt-status": {
+			"post": {
+				"tags": [
+					"safety/legal-agreements"
+				],
+				"operationId": "getOptStatuses",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get opt statuses",
+				"description": "Returns the opt-out and opt-in state of several consent types in one call.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"optOutTypes",
+									"optInTypes"
+								],
+								"properties": {
+									"optOutTypes": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										},
+										"description": "array of strings, opt-out types to look up, may be empty; known types: `\"TOP_PICKS\"`, `\"AI_NON_SENSITIVE\"`, `\"GAI\"`, `\"CHAT_SUGGESTIONS\"`, `\"ALBUM_UPDATES_SHARING\"`"
+									},
+									"optInTypes": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										},
+										"description": "array of strings, opt-in types to look up, may be empty; known type: `\"AI_USAGE_AND_FEATURES\"`"
+									},
+									"includeDerivedOptOuts": {
+										"type": "boolean",
+										"description": "boolean, effect unknown, optional"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"optOuts": {
+											"type": "object",
+											"additionalProperties": {
+												"type": "boolean"
+											},
+											"description": "object keyed by the requested opt-out types; `true` means opted out"
+										},
+										"optIns": {
+											"type": "object",
+											"additionalProperties": {
+												"type": "boolean"
+											},
+											"description": "object keyed by the requested opt-in types; `true` means opted in"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "A requested type is unknown, or `optOutTypes` or `optInTypes` is missing."
+					}
+				}
 			}
 		},
 		"/v3/logging/mobile/logs": {
@@ -3700,6 +3791,9 @@
 							}
 						},
 						"description": "OK"
+					},
+					"404": {
+						"description": "Returned to some accounts with an empty body; the condition is unknown."
 					}
 				},
 				"x-wip": true
@@ -3734,9 +3828,10 @@
 											"SHARED",
 											"DECLINED",
 											"UNAVAILABLE",
-											"NOT_APPLICABLE"
+											"NOT_APPLICABLE",
+											"VERIFICATION_REQUIRED"
 										],
-										"description": "`\"SHARED\"`, `\"DECLINED\"`, `\"UNAVAILABLE\"` or `\"NOT_APPLICABLE\"`"
+										"description": "`\"SHARED\"`, `\"DECLINED\"`, `\"UNAVAILABLE\"`, `\"NOT_APPLICABLE\"` or `\"VERIFICATION_REQUIRED\"` (the store itself asks for an age check)"
 									},
 									"ageLowerBound": {
 										"type": "integer",
@@ -4179,6 +4274,14 @@
 					},
 					{
 						"$ref": "#/components/parameters/CascadeHotQuery"
+					},
+					{
+						"name": "tribesImInto",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"description": "array of integers concatenated with a `,`, same IDs as `tribes`, matches the tribes a profile is into (`tribesImInto`) instead of its own, see [Tribes](/grindr-api/users/profiles#tribes)"
 					}
 				],
 				"responses": {
@@ -8698,7 +8801,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "string with the Facebook app id. Grindr's is `1273378622718674`, unchanged from v25.20.0 to v26.17.0"
+						"description": "string with the Facebook app id. Grindr's is `1273378622718674`, unchanged from v25.20.0"
 					},
 					{
 						"name": "redirect_uri",
@@ -8893,7 +8996,7 @@
 				],
 				"operationId": "exchangeFacebookAuthCode",
 				"summary": "Exchange Facebook auth code",
-				"description": "PKCE authorization-code exchange, reached whenever a redirect comes back with a `code` and no `access_token` — from [Facebook login dialog](/grindr-api/third-party-integrations/facebook#facebook-login-dialog) on the Custom Tab path, or from a native app-switch handler, which forwards a code challenge of its own without ever loading that URL. The WebView path carries no PKCE and so never reaches here.\n\nBeing a Graph call it also carries `sdk=android`, `format=json` and an app access token `access_token=<app id>|<client token>` — for Grindr `1273378622718674|5524d0b5439620826256ca48978b95a3`, both halves shipped in the APK's string resources and unchanged from v25.20.0 to v26.17.0.\n\nThe `access_token` from the response is what ends up in `thirdPartyToken` on [Login via third party](/grindr-api/authentication#login-via-third-party-wip).",
+				"description": "PKCE authorization-code exchange, reached whenever a redirect comes back with a `code` and no `access_token` — from [Facebook login dialog](/grindr-api/third-party-integrations/facebook#facebook-login-dialog) on the Custom Tab path, or from a native app-switch handler, which forwards a code challenge of its own without ever loading that URL. The WebView path carries no PKCE and so never reaches here.\n\nBeing a Graph call it also carries `sdk=android`, `format=json` and an app access token `access_token=<app id>|<client token>` — for Grindr `1273378622718674|5524d0b5439620826256ca48978b95a3`, both halves shipped in the APK's string resources and unchanged from v25.20.0.\n\nThe `access_token` from the response is what ends up in `thirdPartyToken` on [Login via third party](/grindr-api/authentication#login-via-third-party-wip).",
 				"parameters": [
 					{
 						"name": "code",
@@ -10183,6 +10286,10 @@
 											"type": "string",
 											"nullable": true
 										},
+										"source": {
+											"type": "string",
+											"description": "string, e.g. `\"POPULAR\"`"
+										},
 										"entitlement": {
 											"allOf": [
 												{
@@ -10200,19 +10307,19 @@
 				}
 			}
 		},
-		"/v1/similar-profiles/redeem": {
+		"/v1/similar-profiles/unlock": {
 			"post": {
 				"tags": [
 					"users/profiles"
 				],
-				"operationId": "redeemSimilarProfile",
+				"operationId": "unlockSimilarProfile",
 				"security": [
 					{
 						"Grindr3Auth": []
 					}
 				],
-				"summary": "Redeem similar profile",
-				"description": "Redeems `targetProfileId` against the similar-profiles allowance and returns the updated allowance.",
+				"summary": "Unlock similar profile",
+				"description": "Unlocks `targetProfileId` against the similar-profiles allowance, see `entitlement` in [Get similar profiles](/grindr-api/users/profiles#get-similar-profiles), and returns the updated allowance.",
 				"requestBody": {
 					"required": true,
 					"content": {
@@ -10242,9 +10349,11 @@
 							}
 						},
 						"description": "OK"
+					},
+					"402": {
+						"description": "The allowance is used up."
 					}
-				},
-				"x-wip": true
+				}
 			}
 		},
 		"/v1/profile-insights/{profileId}": {
@@ -11127,12 +11236,12 @@
 					}
 				],
 				"summary": "Get discover profiles",
-				"description": "The sole discover endpoint as of app 26.10.0 (replaced `/v3/discover` and `/v2/discover`). Response body shape: `{ status, body: { items, metadata, storedPreferences, types } }` (`DiscoverFeedData`); the `profiles`/`UpsellProfileDto` array present through v3 was dropped. Full item/metadata modeling is pending.",
+				"description": "The sole discover endpoint as of app 26.10.0 (replaced `/v3/discover` and `/v2/discover`). Response body shape: `{ status, body: { items, metadata, storedPreferences, types } }` (`DiscoverFeedData`). With `status` `\"SubscriptionRequired\"`, `body` is `{ profiles, upsell }` instead, `profiles` an array and `upsell` a string. `metadata.exhausted` is a boolean and may be absent. A profile item's `data.resolution` is `{ action, actionTakenAt }` for a profile that was already acted on (`action` is `\"PASS\"`, `\"TAP\"` or `\"CHAT\"`, `actionTakenAt` a long integer), `null` or absent otherwise. Full item/metadata modeling is pending.",
 				"parameters": [
 					{
 						"name": "geohash",
 						"in": "query",
-						"required": false,
+						"required": true,
 						"schema": {
 							"type": "string"
 						}
@@ -12086,7 +12195,7 @@
 					}
 				],
 				"summary": "Get hookup intent post",
-				"description": "Returns your hookup intent post. `post` is `null` when hookup intent is off.",
+				"description": "Returns your hookup intent post. Answers `204` with an empty body when you have none.",
 				"responses": {
 					"200": {
 						"content": {
@@ -12101,12 +12210,21 @@
 												}
 											],
 											"nullable": true
+										},
+										"status": {
+											"$ref": "#/components/schemas/HookupIntentStatus"
+										},
+										"renewsIn": {
+											"$ref": "#/components/schemas/HookupIntentRenewsIn"
 										}
 									}
 								}
 							}
 						},
 						"description": "OK"
+					},
+					"204": {
+						"description": "No hookup intent post."
 					}
 				}
 			},
@@ -12141,6 +12259,12 @@
 									"properties": {
 										"post": {
 											"$ref": "#/components/schemas/HookupIntentPost"
+										},
+										"status": {
+											"$ref": "#/components/schemas/HookupIntentStatus"
+										},
+										"renewsIn": {
+											"$ref": "#/components/schemas/HookupIntentRenewsIn"
 										}
 									}
 								}
@@ -12197,6 +12321,12 @@
 									"properties": {
 										"post": {
 											"$ref": "#/components/schemas/HookupIntentPost"
+										},
+										"status": {
+											"$ref": "#/components/schemas/HookupIntentStatus"
+										},
+										"renewsIn": {
+											"$ref": "#/components/schemas/HookupIntentRenewsIn"
 										}
 									}
 								}
@@ -12248,6 +12378,7 @@
 					}
 				],
 				"summary": "Renew hookup intent post",
+				"description": "Renews your hookup intent post, see `status` and `renewsIn` in [Get hookup intent post](/grindr-api/right-now#get-hookup-intent-post).",
 				"parameters": [
 					{
 						"name": "postId",
@@ -12264,14 +12395,30 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"post": {
+											"$ref": "#/components/schemas/HookupIntentPost"
+										},
+										"status": {
+											"$ref": "#/components/schemas/HookupIntentStatus"
+										},
+										"renewsIn": {
+											"$ref": "#/components/schemas/HookupIntentRenewsIn"
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
+					},
+					"404": {
+						"description": "No such post."
+					},
+					"409": {
+						"description": "Conflicts with the current post state."
 					}
-				},
-				"x-wip": true
+				}
 			}
 		}
 	},
@@ -12853,7 +13000,8 @@
 							},
 							"textStatus": {
 								"type": "string",
-								"nullable": true
+								"nullable": true,
+								"description": "string or `null`, known values: `\"AWAITING_MODERATION\"`, `\"MODERATION_FAILED\"`, `\"ERROR\"`"
 							},
 							"rejectReasons": {
 								"type": "array",
@@ -12995,7 +13143,8 @@
 							],
 							"properties": {
 								"type": {
-									"type": "string"
+									"type": "string",
+									"description": "`\"image_v1\"` or `\"album_v1\"`"
 								},
 								"data": {
 									"type": "object",
@@ -13006,7 +13155,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
 										}
 									}
 								}
@@ -13037,7 +13186,8 @@
 							],
 							"properties": {
 								"type": {
-									"type": "string"
+									"type": "string",
+									"description": "`\"image_v1\"` or `\"album_v1\"`"
 								},
 								"data": {
 									"type": "object",
@@ -13048,7 +13198,7 @@
 										"id": {
 											"type": "integer",
 											"format": "int64",
-											"description": "long integer, media ID"
+											"description": "long integer, media ID; for `\"image_v1\"` the `mediaId` returned by a Right Now media upload, see [Upload right now media](/grindr-api/right-now#upload-right-now-media-wip) and [Upload Right Now media (v2)](/grindr-api/right-now#upload-right-now-media-v2-wip)"
 										}
 									}
 								}
@@ -13062,6 +13212,17 @@
 						"type": "integer"
 					}
 				}
+			},
+			"HookupIntentStatus": {
+				"type": "string",
+				"nullable": true,
+				"description": "`\"ACTIVE\"`, `\"INACTIVE\"` (see [Renew hookup intent post](/grindr-api/right-now#renew-hookup-intent-post)) or `null`"
+			},
+			"HookupIntentRenewsIn": {
+				"type": "integer",
+				"format": "int64",
+				"nullable": true,
+				"description": "long integer, appears to be the number of seconds until the post has to be [renewed](/grindr-api/right-now#renew-hookup-intent-post), or `null`"
 			},
 			"SimilarProfilesEntitlement": {
 				"type": "object",
@@ -13082,7 +13243,7 @@
 						"type": "integer",
 						"format": "int64",
 						"nullable": true,
-						"description": "long integer, when the allowance resets, or `null`"
+						"description": "long integer, when the allowance resets, appears to be a unix timestamp in milliseconds, or `null`"
 					}
 				}
 			},
@@ -14850,6 +15011,10 @@
 					},
 					"approximateDistance": {
 						"type": "boolean"
+					},
+					"showOnMap": {
+						"type": "boolean",
+						"description": "boolean, whether the profile is shown on the map, optional"
 					},
 					"nsfw": {
 						"$ref": "#/components/schemas/AcceptNsfwPics"
@@ -18518,7 +18683,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -19096,6 +19261,12 @@
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "favs_unlimited_upsell_v1"
 			},
+			"DayPassUnlimitedUpsellV1": {
+				"type": "object",
+				"description": "Empty.",
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "day_pass_unlimited_upsell_v1"
+			},
 			"FavoritesHeaderNoFreeResultsV1": {
 				"type": "object",
 				"description": "Empty.",
@@ -19639,7 +19810,7 @@
 			},
 			"SessionId": {
 				"type": "object",
-				"description": "JWT obtained from authentication flow. Decoded JWT content:\n\nHeaders claims structure:\n\n- `kid` — key ID\n- `alg` — `\"RS256\"`\n- `typ` — `\"JWT\"`\n\nPayload claims:\n\n- `exp` — number, unix timestamp in seconds defining token expiration date\n- `profileId` — string with numbers, account's ID\n- `roles` — unknown array, appears to be empty\n- `features` — array of strings, e.g. `\"HidePremiumStore\"`, `\"CreateVideoCall\"`, `\"VideoCallDailyFree\"`\n- `featureFlags` — array of strings, e.g. `\"profile-insights\"`, `\"online-until-updates\"`, `\"enable-account-filters-bulk-exposure\"`, `\"a-list-v3\"`, `\"discover-v2\"`, `\"boost_purchase_fixes\"`, `\"discover-studfinder-upsell\"`\n- `experiments` — object with experiment name → variant string, known keys:\n  - `explore-paywall-profiles` — string, e.g. `\"test\"`\n  - `limiting_chat_credits_from_unlimited_to_5_for_xtra_users_in_explore` — string, e.g. `\"treatment\"`\n  - `validation-aa-backend-profileid` — string, e.g. `\"test\"`\n  - `grindr-core-day-pass` — string, e.g. `\"control\"`\n  - `llm-age-verification-methods` — string, e.g. `\"variant_b\"`\n  - `trans_tribe_filtering_changes` — string, e.g. `\"Test\"`\n  - `green_dot_v2` — string, e.g. `\"treatment-1\"`\n  - `sponsored-profiles-cascade-selection-mode` — string, e.g. `\"treatment\"`\n  - `read-receipt-ad-reward` — string, e.g. `\"variant_2\"`\n  - `taps-paywall` — string, e.g. `\"treatment-1\"`\n  - `explore-insertables-v1` — string, e.g. `\"treatment-insertables-below-mpu\"`\n  - `reduce_number_of_free_profiles_from_99_to_90` — string, e.g. `\"test\"`\n  - `cascade-mpu-explore-studfinder-2026-03-12` — string, e.g. `\"control\"`\n  - `reduce_number_of_results_with_age_filter_for_free_users` — string, e.g. `\"test\"`\n  - `mpu-heuristic-algorithm-optimizations-q125` — string, e.g. `\"control\"`\n  - `ships_in_the_night_v3` — string, e.g. `\"treatment\"`\n  - `cascade-mpu-disable-poc-heuristic-2026-03-02` — string, e.g. `\"treatment\"`\n  - `for-you-recsys-v1_1` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-profile-limit-2026-03-12` — string, e.g. `\"treatment\"`\n  - `reduce_free_user_results_with_any_filter` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-unlimited-2026-02-02` — string, e.g. `\"treatment\"`\n  - `mpu-rest-of-world` — string, e.g. `\"treatment\"`\n  - `top_18_mpu_profiles_are_online_in_extended_cascade_and_explore` — string, e.g. `\"control\"`\n  - `for-you-v2` — string, e.g. `\"Test\"`\n  - `rewarded-ads-viewed-me-v2` — string, e.g. `\"variant_1\"`\n  - `mega-boost-v1` — string, e.g. `\"mega-boost-low\"`\n- `systemTime` — unix timestamp in milliseconds\n- `upsells` — unknown object, appears to be empty\n- `restriction` — string or `null`; account restriction type, one of `\"AGE_RESTRICTED\"`, `\"TIMED_BAN\"`, `\"TRUST_VENDOR_REJECTED\"`; absent/`null` when unrestricted\n- `restrictionReason` — string or `null`; for `AGE_RESTRICTED` one of `\"UK_VERIFICATION_REQUIRED\"`, `\"BR_VERIFICATION_REQUIRED\"`, `\"AU_VERIFICATION_REQUIRED\"`, `\"BANNED_USER\"`, `\"VERIFICATION_REQUESTED\"`; for `TRUST_VENDOR_REJECTED` a free-form reason\n- `banDetails` — object, present when `restriction` is `\"TIMED_BAN\"`: `expiryTime` (unix seconds), `reason` (see `BanReason`), `subReason` (see `BanSubReason`), `isAutomated`, `isAgreementCompleted`, `systemTime` (unix ms)\n- `grit` — unknown UUIDv4 string",
+				"description": "JWT obtained from authentication flow. Decoded JWT content:\n\nHeaders claims structure:\n\n- `kid` — key ID\n- `alg` — `\"RS256\"`\n- `typ` — `\"JWT\"`\n\nPayload claims:\n\n- `exp` — number, unix timestamp in seconds defining token expiration date\n- `profileId` — string with numbers, account's ID\n- `roles` — unknown array, appears to be empty\n- `features` — array of strings, e.g. `\"HidePremiumStore\"`, `\"CreateVideoCall\"`, `\"VideoCallDailyFree\"`\n- `featureFlags` — array of strings, e.g. `\"profile-insights\"`, `\"online-until-updates\"`, `\"enable-account-filters-bulk-exposure\"`, `\"a-list-v3\"`, `\"discover-v2\"`, `\"boost_purchase_fixes\"`, `\"discover-studfinder-upsell\"`\n- `experiments` — object with experiment name → variant string, known keys:\n  - `explore-paywall-profiles` — string, e.g. `\"test\"`\n  - `limiting_chat_credits_from_unlimited_to_5_for_xtra_users_in_explore` — string, e.g. `\"treatment\"`\n  - `validation-aa-backend-profileid` — string, e.g. `\"test\"`\n  - `grindr-core-day-pass` — string, e.g. `\"control\"`\n  - `llm-age-verification-methods` — string, e.g. `\"variant_b\"`\n  - `trans_tribe_filtering_changes` — string, e.g. `\"Test\"`\n  - `green_dot_v2` — string, e.g. `\"treatment-1\"`\n  - `sponsored-profiles-cascade-selection-mode` — string, e.g. `\"treatment\"`\n  - `read-receipt-ad-reward` — string, e.g. `\"variant_2\"`\n  - `taps-paywall` — string, e.g. `\"treatment-1\"`\n  - `explore-insertables-v1` — string, e.g. `\"treatment-insertables-below-mpu\"`\n  - `reduce_number_of_free_profiles_from_99_to_90` — string, e.g. `\"test\"`\n  - `cascade-mpu-explore-studfinder-2026-03-12` — string, e.g. `\"control\"`\n  - `reduce_number_of_results_with_age_filter_for_free_users` — string, e.g. `\"test\"`\n  - `mpu-heuristic-algorithm-optimizations-q125` — string, e.g. `\"control\"`\n  - `ships_in_the_night_v3` — string, e.g. `\"treatment\"`\n  - `cascade-mpu-disable-poc-heuristic-2026-03-02` — string, e.g. `\"treatment\"`\n  - `for-you-recsys-v1_1` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-profile-limit-2026-03-12` — string, e.g. `\"treatment\"`\n  - `reduce_free_user_results_with_any_filter` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-unlimited-2026-02-02` — string, e.g. `\"treatment\"`\n  - `mpu-rest-of-world` — string, e.g. `\"treatment\"`\n  - `top_18_mpu_profiles_are_online_in_extended_cascade_and_explore` — string, e.g. `\"control\"`\n  - `for-you-v2` — string, e.g. `\"Test\"`\n  - `rewarded-ads-viewed-me-v2` — string, e.g. `\"variant_1\"`\n  - `mega-boost-v1` — string, e.g. `\"mega-boost-low\"`\n- `systemTime` — unix timestamp in milliseconds\n- `upsells` — unknown object, appears to be empty\n- `restriction` — string or `null`; account restriction type, one of `\"AGE_RESTRICTED\"`, `\"TIMED_BAN\"`, `\"TRUST_VENDOR_REJECTED\"`; absent/`null` when unrestricted\n- `restrictionReason` — string or `null`; for `AGE_RESTRICTED` one of `\"UK_VERIFICATION_REQUIRED\"`, `\"BR_VERIFICATION_REQUIRED\"`, `\"AU_VERIFICATION_REQUIRED\"`, `\"US_VERIFICATION_REQUIRED\"` (calls for an app store age signal, see [Submit store age verification result](/grindr-api/browse/age-verification#submit-store-age-verification-result-wip)), `\"BANNED_USER\"`, `\"VERIFICATION_REQUESTED\"`; for `TRUST_VENDOR_REJECTED` a free-form reason\n- `banDetails` — object, present when `restriction` is `\"TIMED_BAN\"`: `expiryTime` (unix seconds), `reason` (see `BanReason`), `subReason` (see `BanSubReason`), `isAutomated`, `isAgreementCompleted`, `systemTime` (unix ms)\n- `grit` — unknown UUIDv4 string",
 				"x-render-on-tag": "authentication",
 				"x-display-name": "Session ID"
 			},
