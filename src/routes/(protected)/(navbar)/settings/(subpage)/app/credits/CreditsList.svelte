@@ -40,7 +40,7 @@
 {#each sections as section, index (section.title)}
 	{@const shownBatches = revealed.count - batchesBefore(index)}
 	{#if shownBatches > 0}
-		<section class="flex min-w-0 flex-col">
+		<section class="flex min-w-0 flex-col" data-slot="credit-section">
 			<h2 class="mb-1">{section.title}</h2>
 			{#each section.batches.slice(0, shownBatches) as batch, batchIndex (batchIndex)}
 				{#each batch as entry (entry.ecosystem + entry.id + entry.spdx)}

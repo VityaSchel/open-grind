@@ -1,19 +1,49 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import generated from "../src/lib/credits/generated.json" with { type: "json" };
+import { highlights } from "../src/lib/credits/highlights";
 import { backLink, captureOpenedUrls, installTauriShim } from "./support/app";
 
 const APP_SETTINGS = "/settings/app";
 const CREDITS = `${APP_SETTINGS}/credits`;
 const ISSUE_URL = "https://git.opengrind.org/open-grind/open-grind/issues/new";
-const HEADINGS = [
-	"Special thanks",
-	"Web packages",
-	"Rust crates",
-	"Android libraries",
-];
 
-const rows = (page: Page) => page.locator('[data-slot="credit-row"]');
+const featured = new Set(
+	highlights.map(({ ref }) => `${ref.ecosystem}:${ref.id}`),
+);
+const listed = generated.entries.filter(
+	(entry) => !featured.has(`${entry.ecosystem}:${entry.id}`),
+);
+const sharedRows = (ecosystems: string[]) =>
+	listed.filter(
+		(entry) =>
+			entry.platform === undefined &&
+			ecosystems.includes(entry.ecosystem),
+	).length;
+const platformRows = (platform: string) =>
+	listed.filter((entry) => entry.platform === platform).length;
+const SECTION_ROWS = {
+	"Web packages": sharedRows(["npm", "asset"]),
+	"Rust crates": sharedRows(["rust"]),
+	"Android libraries": platformRows("android"),
+	"Linux libraries": platformRows("linux"),
+	"macOS libraries": platformRows("macos"),
+	"Windows libraries": platformRows("windows"),
+};
+const HEADINGS = ["Special thanks", ...Object.keys(SECTION_ROWS)];
+
+const rows = (scope: Page | Locator) =>
+	scope.locator('[data-slot="credit-row"]');
+const section = ({ page, title }: { page: Page; title: string }) =>
+	page
+		.locator('[data-slot="credit-section"]')
+		.filter({
+			has: page.getByRole("heading", {
+				level: 2,
+				name: title,
+				exact: true,
+			}),
+		});
 const suggestAnEdit = (page: Page) =>
 	page.getByRole("link", { name: "Suggest an edit" });
 const scroller = (page: Page) => page.locator('[data-slot="subpage-scroller"]');
@@ -70,6 +100,34 @@ test.describe("credits page", () => {
 		const cards = await page.locator('[data-slot="credit-card"]').count();
 		expect(cards).toBeGreaterThan(0);
 		await expect(rows(page)).toHaveCount(generated.entries.length - cards);
+	});
+
+	test("each section lists its own libraries, platform-only ones under their platform", async ({
+		page,
+	}) => {
+		await openCredits(page);
+		await suggestAnEdit(page).waitFor({ timeout: 120_000 });
+
+		for (const [title, count] of Object.entries(SECTION_ROWS)) {
+			expect(count).toBeGreaterThan(0);
+			await expect(rows(section({ page, title }))).toHaveCount(count);
+		}
+	});
+
+	test("a Windows-only crate is listed once, under Windows libraries", async ({
+		page,
+	}) => {
+		await openCredits(page);
+		await suggestAnEdit(page).waitFor({ timeout: 120_000 });
+
+		const webview2 = (scope: Page | Locator) =>
+			rows(scope).filter({
+				has: page.getByText("webview2-com", { exact: true }),
+			});
+		await expect(webview2(page)).toHaveCount(1);
+		await expect(
+			webview2(section({ page, title: "Windows libraries" })),
+		).toHaveCount(1);
 	});
 
 	test("each settings page keeps its own scroll offset across Back", async ({
