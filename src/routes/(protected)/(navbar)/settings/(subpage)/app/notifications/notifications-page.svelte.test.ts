@@ -257,8 +257,7 @@ describe("a missing FCM service", () => {
 	});
 
 	it("says the add-on bypasses F-Droid's checks only on an F-Droid install", async () => {
-		const notice =
-			"It comes from git.opengrind.org, not F-Droid, so installing it bypasses F-Droid's checks.";
+		const notice = "This add-on bypasses F-Droid's checks.";
 		installedFromFdroid.mockReturnValue(true);
 		const { fast } = await opened(NotificationsPage);
 
