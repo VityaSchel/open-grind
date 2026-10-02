@@ -13,7 +13,8 @@
 	import ViewedProfile from "./ViewedProfile.svelte";
 	import { getViewsState } from "./views-state.svelte";
 
-	let { ourProfileId }: { ourProfileId: number } = $props();
+	let { ourProfileId, paging }: { ourProfileId: number; paging: boolean } =
+		$props();
 
 	const views = untrack(() => {
 		const state = getViewsState(ourProfileId);
@@ -23,13 +24,22 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
+	const overlayScrollbarHidden = $derived.by(() => {
+		if (!paging || !container) return false;
+		return container.offsetWidth === container.clientWidth;
+	});
+
 	restoreScrollOnce({ container: () => container, state: views });
 </script>
 
 <div class="screen-nav-host">
 	<div
 		bind:this={container}
-		class="pull-scroller overscroll-x-auto"
+		data-slot="views-scroller"
+		class={[
+			"pull-scroller overscroll-x-auto",
+			{ "no-scrollbar": overlayScrollbarHidden },
+		]}
 		onscroll={() => (views.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div

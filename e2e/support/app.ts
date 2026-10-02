@@ -1,4 +1,4 @@
-import type { CDPSession, Locator, Page } from "@playwright/test";
+import type { CDPSession, Locator, Page, test } from "@playwright/test";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
@@ -7,6 +7,10 @@ export const MESSAGE_ROW = '[role="article"]';
 export const INCOMING_ROW = `${MESSAGE_ROW}.pe-3`;
 export const DEMO_GEOHASH = "u33dc0cpgp00";
 export const FIRST_ROUTE_COMPILE_MS = 120_000;
+export const CLASSIC_SCROLLBARS: Parameters<typeof test.use>[0] = {
+	launchOptions: ({ launchOptions }, use) =>
+		use({ ...launchOptions, ignoreDefaultArgs: ["--hide-scrollbars"] }),
+};
 
 export const backLink = (page: Page) =>
 	page.getByRole("link", { name: "Back", exact: true });

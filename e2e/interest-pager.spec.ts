@@ -3,16 +3,23 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	afterTwoFrames,
 	historyDepth,
-	installTauriShim,
 	TrustedTouch,
+	wheel,
 } from "./support/app";
+import {
+	LIST_SCROLLERS,
+	listScrollbars,
+	openTaps,
+	PAGER,
+	swipeAcross,
+	TAPS,
+	TAPS_PANE,
+	TAPS_SCROLLER,
+	VIEWS_SCROLLER,
+} from "./support/interest-pager";
 
-const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
-const PAGER = '[data-slot="interest-pager"]';
 const VIEWS_PANE = '[data-slot="interest-pane-views"]';
-const TAPS_PANE = '[data-slot="interest-pane-taps"]';
-const PROFILE_LINK = 'a[href^="/profile/"]';
 
 declare global {
 	interface Window {
@@ -24,22 +31,35 @@ declare global {
 test.describe.configure({ timeout: 300_000 });
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
-	await page.goto(TAPS);
-	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 180_000 });
+	await openTaps(page);
 });
+
+function holdPagerBetweenTabs(page: Page, { progress }: { progress: number }) {
+	return page.locator(PAGER).evaluate((pager, heldAt) => {
+		window.dispatchEvent(
+			new TouchEvent("touchstart", {
+				touches: [new Touch({ identifier: 0, target: pager })],
+			}),
+		);
+		pager.style.scrollSnapType = "none";
+		pager.scrollLeft = Math.round(pager.clientWidth * heldAt);
+	}, progress);
+}
 
 test("the pager starts on the routed tab and mounts only that list", async ({
 	page,
 }) => {
 	const pager = page.locator(PAGER);
-	const geometry = await pager.evaluate((el) => ({
-		scrollLeft: el.scrollLeft,
-		clientWidth: el.clientWidth,
-		scrollWidth: el.scrollWidth,
-		height: Math.round(el.getBoundingClientRect().height),
-		scrollers: el.querySelectorAll(".pull-scroller").length,
-	}));
+	const geometry = await pager.evaluate(
+		(el, scrollers) => ({
+			scrollLeft: el.scrollLeft,
+			clientWidth: el.clientWidth,
+			scrollWidth: el.scrollWidth,
+			height: Math.round(el.getBoundingClientRect().height),
+			scrollers: el.querySelectorAll(scrollers).length,
+		}),
+		LIST_SCROLLERS.join(),
+	);
 
 	expect(geometry.scrollWidth, "two panes wide").toBe(
 		geometry.clientWidth * 2,
@@ -69,26 +89,8 @@ test("a scroll that lands on Views switches the tab and updates the URL without 
 		await historyDepth(page),
 		"a tab switch must not push an entry",
 	).toBe(depth);
-	await expect(page.locator(`${PAGER} .pull-scroller`)).toHaveCount(2);
+	await expect(page.locator(LIST_SCROLLERS.join())).toHaveCount(2);
 });
-
-async function swipeAcross(
-	page: Page,
-	{ distancePx, release = true }: { distancePx: number; release?: boolean },
-) {
-	const box = (await page
-		.locator(`${PAGER} .pull-scroller`)
-		.first()
-		.boundingBox())!;
-	const touch = await TrustedTouch.attach(page);
-	await touch.drag(
-		page,
-		{ x: box.x + box.width * 0.3, y: box.y + box.height / 2 },
-		{ x: box.x + box.width * 0.3 + distancePx, y: box.y + box.height / 2 },
-		{ steps: 16, holdMs: 16, release },
-	);
-	return touch;
-}
 
 test("a finger drag inside the list pages to the other tab", async ({
 	page,
@@ -149,6 +151,28 @@ test("a finger held past halfway locks only the tab being left, and landing unlo
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
 	await expect(taps).not.toHaveAttribute("inert");
 	await expect(views).not.toHaveAttribute("inert");
+});
+
+test("both lists drop their scrollbar while a finger holds the pager between tabs, and show it again once it lands", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const width = await pager.evaluate((el) => el.clientWidth);
+	const shown = { scrollbarWidth: "auto", contentWidth: width };
+	const hidden = { scrollbarWidth: "none", contentWidth: width };
+	expect(await listScrollbars(page)).toEqual([null, shown]);
+
+	const touch = await swipeAcross(page, {
+		distancePx: Math.round(width * 0.65),
+		release: false,
+	});
+
+	await expect.poll(() => listScrollbars(page)).toEqual([hidden, hidden]);
+
+	await touch.end();
+
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect.poll(() => listScrollbars(page)).toEqual([shown, shown]);
 });
 
 test("a click over the tab being left reaches nothing in it, while the incoming tab takes one", async ({
@@ -237,11 +261,68 @@ test("a tab tap keeps the list being left locked for the whole glide", async ({
 	expect(frames.at(-1)?.locked, "nothing stays locked at rest").toEqual([]);
 });
 
+test("a finger that lifts before halfway locks the list being left as soon as the pager moves on", async ({
+	page,
+}) => {
+	await holdPagerBetweenTabs(page, { progress: 0.7 });
+	await expect(page.locator(VIEWS_PANE)).toHaveAttribute("inert", "");
+	await expect(page.locator(TAPS_PANE)).not.toHaveAttribute("inert");
+
+	const lockedOnTheNextFrame = await page.locator(PAGER).evaluate(
+		(pager) =>
+			new Promise((resolve) => {
+				window.dispatchEvent(
+					new TouchEvent("touchend", { touches: [] }),
+				);
+				pager.scrollLeft = Math.round(pager.clientWidth * 0.6);
+				requestAnimationFrame(() =>
+					resolve(
+						Array.from(pager.children)
+							.filter(
+								(pane) =>
+									pane instanceof HTMLElement && pane.inert,
+							)
+							.map((pane) => pane.getAttribute("data-slot")),
+					),
+				);
+			}),
+	);
+
+	expect(lockedOnTheNextFrame).toEqual(["interest-pane-taps"]);
+});
+
+test("a wheel over the tab being left scrolls nothing in it, while the incoming tab scrolls", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	await holdPagerBetweenTabs(page, { progress: 0.35 });
+	await expect(page.locator(TAPS_PANE)).toHaveAttribute("inert", "");
+	await page
+		.locator(`${VIEWS_PANE} a[href^="/profile/"]`)
+		.first()
+		.waitFor({ timeout: 60_000 });
+	await afterTwoFrames(page);
+	const box = (await pager.boundingBox())!;
+	const seam = (await page.locator(TAPS_PANE).boundingBox())!.x;
+	const y = box.y + box.height / 2;
+
+	await wheel(page, { x: (seam + box.x + box.width) / 2, y }, 300);
+	await wheel(page, { x: (box.x + seam) / 2, y }, 300);
+
+	await expect
+		.poll(() => page.locator(VIEWS_SCROLLER).evaluate((el) => el.scrollTop))
+		.toBeGreaterThan(0);
+	expect(
+		await page.locator(TAPS_SCROLLER).evaluate((el) => el.scrollTop),
+		"the locked list must not scroll",
+	).toBe(0);
+});
+
 test("a vertical finger drag scrolls the list and does not page", async ({
 	page,
 }) => {
 	const pager = page.locator(PAGER);
-	const scroller = page.locator(`${PAGER} .pull-scroller`).first();
+	const scroller = page.locator(TAPS_SCROLLER);
 	const width = await pager.evaluate((el) => el.clientWidth);
 	const box = (await scroller.boundingBox())!;
 

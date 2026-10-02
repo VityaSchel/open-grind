@@ -81,7 +81,7 @@
 		inert={paging && heading !== 0}
 	>
 		{#if mounted[0]}
-			<ViewsGrid {ourProfileId} />
+			<ViewsGrid {ourProfileId} {paging} />
 		{/if}
 	</div>
 	<div
@@ -90,7 +90,7 @@
 		inert={paging && heading !== 1}
 	>
 		{#if mounted[1]}
-			<TapsReceivedList {ourProfileId} active={routed === 1} />
+			<TapsReceivedList {ourProfileId} active={routed === 1} {paging} />
 		{/if}
 	</div>
 </main>

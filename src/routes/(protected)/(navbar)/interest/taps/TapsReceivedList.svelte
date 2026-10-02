@@ -11,8 +11,11 @@
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
 
-	let { ourProfileId, active }: { ourProfileId: number; active: boolean } =
-		$props();
+	let {
+		ourProfileId,
+		active,
+		paging,
+	}: { ourProfileId: number; active: boolean; paging: boolean } = $props();
 
 	const taps = untrack(() => {
 		const state = getTapsState(ourProfileId);
@@ -26,13 +29,22 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
+	const overlayScrollbarHidden = $derived.by(() => {
+		if (!paging || !container) return false;
+		return container.offsetWidth === container.clientWidth;
+	});
+
 	restoreScrollOnce({ container: () => container, state: taps });
 </script>
 
 <div class="screen-nav-host">
 	<div
 		bind:this={container}
-		class="pull-scroller overscroll-x-auto"
+		data-slot="taps-scroller"
+		class={[
+			"pull-scroller overscroll-x-auto",
+			{ "no-scrollbar": overlayScrollbarHidden },
+		]}
 		onscroll={() => (taps.scrollY = container?.scrollTop ?? 0)}
 	>
 		<div
