@@ -27,7 +27,8 @@
 				<span role="separator"></span>
 				<Socials />
 				<span
-					class="px-4 py-2 font-mono text-xs break-all whitespace-pre-wrap text-muted-foreground select-text"
+					data-slot="me-version"
+					class="px-4 pt-2 pb-7 font-mono text-xs break-all whitespace-pre-wrap text-muted-foreground select-text"
 				>
 					{version}
 				</span>

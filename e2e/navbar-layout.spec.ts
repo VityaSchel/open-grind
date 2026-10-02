@@ -100,3 +100,51 @@ test.describe("on a 412 × 920 phone with 64 px system bars", () => {
 		).toBeLessThanOrEqual(0);
 	});
 });
+
+test.describe("on a 360 × 640 phone with 64 px system bars", () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	test("the Me screen's version label ends no closer to the navbar than to the link above it", async ({
+		page,
+	}) => {
+		await installTauriShim(page);
+		await page.goto("/settings");
+		const scroller = page.locator('[data-slot="me-scroller"]');
+		await expect(
+			scroller.getByRole("button", { name: "Sign out" }),
+		).toBeVisible();
+		await page.waitForLoadState("networkidle");
+
+		const gaps = await scroller.evaluate((scrollerElement) => {
+			const version = scrollerElement.querySelector(
+				'[data-slot="me-version"]',
+			);
+			const linkAbove = version?.previousElementSibling;
+			const meTab = document.querySelector(
+				'nav[aria-label="Main"] a[aria-label="Me"]',
+			);
+			if (!version || !linkAbove || !meTab)
+				throw new Error("Me screen structure not found");
+
+			const contentBounds = (element: Element) => {
+				const range = document.createRange();
+				range.selectNodeContents(element);
+				return range.getBoundingClientRect();
+			};
+
+			scrollerElement.scrollTop = scrollerElement.scrollHeight;
+			const versionText = contentBounds(version);
+			return {
+				scrollRange:
+					scrollerElement.scrollHeight - scrollerElement.clientHeight,
+				aboveVersion: versionText.top - contentBounds(linkAbove).bottom,
+				belowVersion:
+					meTab.getBoundingClientRect().top - versionText.bottom,
+			};
+		});
+
+		expect(gaps.scrollRange).toBeGreaterThan(0);
+		expect(gaps.aboveVersion).toBeGreaterThan(0);
+		expect(gaps.belowVersion).toBeGreaterThanOrEqual(gaps.aboveVersion);
+	});
+});
