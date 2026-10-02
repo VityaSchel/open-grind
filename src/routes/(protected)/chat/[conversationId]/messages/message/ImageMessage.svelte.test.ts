@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import PhotoSwipeLightbox from "photoswipe/lightbox";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import Message from "./Message.svelte";
@@ -62,7 +63,10 @@ function loaded(img: HTMLImageElement) {
 	return fireEvent.load(img);
 }
 
-afterEach(() => cleanup());
+afterEach(() => {
+	cleanup();
+	vi.restoreAllMocks();
+});
 
 describe("photo message", () => {
 	it("keeps a loaded photo on its url when only the signature is renewed", async () => {
@@ -91,5 +95,23 @@ describe("photo message", () => {
 		await photo.renew(OTHER_FILE);
 
 		expect(photo.image().getAttribute("src")).toBe(OTHER_FILE);
+	});
+
+	it("starts a lightbox for a photo that stays on screen", async () => {
+		const init = vi.spyOn(PhotoSwipeLightbox.prototype, "init");
+		renderPhoto(OLD);
+
+		await vi.waitFor(() => expect(init).toHaveBeenCalledTimes(1));
+	});
+
+	it("starts no lightbox for a photo that left before the lightbox loaded", async () => {
+		const init = vi.spyOn(PhotoSwipeLightbox.prototype, "init");
+		renderPhoto(OLD);
+
+		cleanup();
+		await import("photoswipe/lightbox");
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(init).not.toHaveBeenCalled();
 	});
 });

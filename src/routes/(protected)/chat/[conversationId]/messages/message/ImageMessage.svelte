@@ -43,9 +43,11 @@
 	$effect(() => {
 		const gallery = media.el;
 		if (!gallery) return;
+		let disposed = false;
 		let lightbox: PhotoSwipeLightbox | undefined;
 		import("photoswipe/lightbox")
 			.then(({ default: PhotoSwipeLightbox }) => {
+				if (disposed) return;
 				lightbox = new PhotoSwipeLightbox({
 					gallery,
 					children: "a[href]",
@@ -148,7 +150,10 @@
 				lightbox.init();
 			})
 			.catch((error) => console.error(error));
-		return () => lightbox?.destroy();
+		return () => {
+			disposed = true;
+			lightbox?.destroy();
+		};
 	});
 </script>
 
