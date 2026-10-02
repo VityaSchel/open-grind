@@ -19,6 +19,7 @@ export class SnapPager {
 	readonly #count: () => number;
 	readonly #onVisible: (positions: VisiblePositions) => void;
 	readonly #onRest: (position: number) => void;
+	readonly #onHeading: (position: number) => void;
 	readonly #fingerPhase: ScrollGestureState | null;
 	readonly #reducedMotion: () => boolean;
 
@@ -28,6 +29,9 @@ export class SnapPager {
 	#releaseWatch: number | null = null;
 	#width = 0;
 	#nearest: number | null = null;
+	#heading: number | null = null;
+	#lastLeft = 0;
+	#travel = 0;
 	#visible: VisiblePositions | null = null;
 	#touchLifts: AbortController | null = null;
 	#stepTarget: number | null = null;
@@ -37,18 +41,21 @@ export class SnapPager {
 		count,
 		onVisible,
 		onRest,
+		onHeading = () => {},
 		fingerPhase = isMacosPlatform() ? scrollGesture : null,
 		reducedMotion = () => prefersReducedMotion.current,
 	}: {
 		count: () => number;
 		onVisible: (positions: VisiblePositions) => void;
 		onRest: (position: number) => void;
+		onHeading?: (position: number) => void;
 		fingerPhase?: ScrollGestureState | null;
 		reducedMotion?: () => boolean;
 	}) {
 		this.#count = count;
 		this.#onVisible = onVisible;
 		this.#onRest = onRest;
+		this.#onHeading = onHeading;
 		this.#fingerPhase = fingerPhase;
 		this.#reducedMotion = reducedMotion;
 	}
@@ -59,6 +66,7 @@ export class SnapPager {
 		const options = { passive: true, signal: listening.signal };
 		const dropStepTarget = () => {
 			this.#stepTarget = null;
+			this.#reportHeading();
 		};
 		const onWindow = { ...options, capture: true };
 		node.addEventListener("scroll", () => this.#onScroll(), options);
@@ -116,8 +124,10 @@ export class SnapPager {
 			this.#report(position);
 			return;
 		}
-		if (animated) this.#stepTarget = position;
-		else this.#report(position);
+		if (animated) {
+			this.#stepTarget = position;
+			this.#reportHeading();
+		} else this.#report(position);
 		this.#scrollToPosition(position, { animated });
 	}
 
@@ -128,6 +138,7 @@ export class SnapPager {
 			return;
 		const target = this.#clamp((this.#stepTarget ?? nearest) + offset);
 		this.#stepTarget = target;
+		this.#reportHeading();
 		this.#scrollToPosition(target, { animated: true });
 	}
 
@@ -184,7 +195,26 @@ export class SnapPager {
 
 	#report(position: number): void {
 		this.#nearest = position;
+		this.#lastLeft = this.#left;
+		this.#setHeading(position);
 		this.#reportVisible({ first: position, last: position });
+	}
+
+	#reportHeading(): void {
+		this.#setHeading(this.#stepTarget ?? this.#travelTarget());
+	}
+
+	#travelTarget(): number | null {
+		if (this.#held() || this.#travel === 0 || this.#width <= 0)
+			return this.#nearest;
+		const { first, last } = this.#overlapping();
+		return this.#travel < 0 ? first : last;
+	}
+
+	#setHeading(heading: number | null): void {
+		if (heading === null || heading === this.#heading) return;
+		this.#heading = heading;
+		this.#onHeading(heading);
 	}
 
 	#reportVisible({ first, last }: VisiblePositions): void {
@@ -197,7 +227,11 @@ export class SnapPager {
 	#onScroll(): void {
 		this.#stillFrames = 0;
 		if (!this.#widthMatchesLayout()) return;
+		const left = this.#left;
+		this.#travel = Math.sign(left - this.#lastLeft) || this.#travel;
+		this.#lastLeft = left;
 		this.#nearest = this.#nearestPosition();
+		this.#reportHeading();
 		this.#reportVisible(this.#overlapping());
 		this.settleNow();
 	}

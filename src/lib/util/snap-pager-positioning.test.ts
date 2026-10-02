@@ -400,6 +400,148 @@ describe("SnapPager visible tracking", () => {
 	});
 });
 
+describe("SnapPager heading", () => {
+	it("reports the placed pane at the first measurement", () => {
+		const h = harness({ measured: false });
+
+		h.pager.place(3);
+		expect(h.onHeading).not.toHaveBeenCalled();
+
+		h.measure(WIDTH);
+
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(3);
+	});
+
+	it("follows the nearest pane under a drag, flipping at the midpoint and once per change", () => {
+		const h = harness();
+
+		h.touch("touchstart");
+		h.scroll(0.2 * WIDTH);
+		h.scroll(0.49 * WIDTH);
+		expect(h.onHeading).not.toHaveBeenCalled();
+
+		h.scroll(0.51 * WIDTH);
+		h.scroll(0.9 * WIDTH);
+		h.scroll(0.4 * WIDTH);
+
+		expect(h.onHeading.mock.calls).toEqual([[1], [0]]);
+	});
+
+	it("names the pane an animated placement glides to before it scrolls", () => {
+		const h = harness();
+
+		h.pager.place(3, { animated: true });
+		h.scroll(0.2 * WIDTH);
+		h.scroll(1.6 * WIDTH);
+		h.scroll(3 * WIDTH);
+
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(3);
+	});
+
+	it("names the pane a step glides to, and the next one when presses add up", () => {
+		const h = harness();
+
+		h.pager.step(1);
+		h.scroll(0.2 * WIDTH);
+		h.pager.step(1);
+
+		expect(h.onHeading.mock.calls).toEqual([[1], [2]]);
+	});
+
+	it("names the next pane the way it travels when a pointer press drops the glide", () => {
+		const h = harness();
+
+		h.pager.place(3, { animated: true });
+		h.scroll(1.2 * WIDTH);
+		h.pointerDown();
+
+		expect(h.onHeading.mock.calls).toEqual([[3], [2]]);
+	});
+
+	it("names the next pane the way it travels on a sideways wheel, not a vertical one", () => {
+		const h = harness();
+
+		h.pager.place(3, { animated: true });
+		h.scroll(1.2 * WIDTH);
+		h.wheel({ deltaX: 2, deltaY: 60 });
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(3);
+
+		h.wheel({ deltaX: 40 });
+
+		expect(h.onHeading).toHaveBeenLastCalledWith(2);
+	});
+
+	it("names the pane a lifted finger flings toward before the pager is halfway there", () => {
+		const h = harness();
+
+		h.touch("touchstart");
+		h.scroll(0.3 * WIDTH);
+		expect(h.onHeading).not.toHaveBeenCalled();
+
+		h.touch("touchend");
+		h.scroll(0.35 * WIDTH);
+
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(1);
+	});
+
+	it("keeps the pane a lifted finger falls back to", () => {
+		const h = harness();
+
+		h.touch("touchstart");
+		h.scroll(0.3 * WIDTH);
+		h.touch("touchend");
+		h.scroll(0.2 * WIDTH);
+		h.scroll(0);
+
+		expect(h.onHeading).not.toHaveBeenCalled();
+	});
+
+	it("turns back with a released pager that reverses", () => {
+		const h = harness();
+
+		h.scroll(0.3 * WIDTH);
+		h.scroll(0.2 * WIDTH);
+
+		expect(h.onHeading.mock.calls).toEqual([[1], [0]]);
+	});
+
+	it("names the pane macOS momentum carries toward once the fingers lift", () => {
+		const { gesture, fingers, momentum } = macosGesture();
+		const h = harness({ fingerPhase: gesture });
+
+		fingers();
+		h.scroll(0.3 * WIDTH);
+		expect(h.onHeading).not.toHaveBeenCalled();
+
+		momentum();
+		h.scroll(0.4 * WIDTH);
+
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(1);
+	});
+
+	it("names the placed pane of an instant placement", () => {
+		const h = harness();
+
+		h.pager.step(1);
+		h.pager.place(4);
+
+		expect(h.onHeading.mock.calls).toEqual([[1], [4]]);
+	});
+
+	it("keeps the landed pane once a glide has rested", () => {
+		const h = harness();
+
+		h.pager.place(2, { animated: true });
+		h.scroll(2 * WIDTH);
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(2);
+
+		h.touch("touchstart");
+		h.scroll(2.2 * WIDTH);
+
+		expect(h.onHeading).toHaveBeenCalledExactlyOnceWith(2);
+	});
+});
+
 describe("SnapPager.settleNow", () => {
 	it("rests at once on an aligned, released pager", () => {
 		const h = harness();

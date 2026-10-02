@@ -107,10 +107,12 @@ export function harness({
 	document.body.append(node);
 	const onRest = vi.fn();
 	const onVisible = vi.fn();
+	const onHeading = vi.fn();
 	const pager = new SnapPager({
 		count: () => count,
 		onVisible,
 		onRest,
+		onHeading,
 		fingerPhase,
 		reducedMotion: () => reducedMotion,
 	});
@@ -133,6 +135,7 @@ export function harness({
 		layout.measure(WIDTH);
 		onVisible.mockClear();
 		onRest.mockClear();
+		onHeading.mockClear();
 	}
 
 	return {
@@ -141,6 +144,7 @@ export function harness({
 		child,
 		onRest,
 		onVisible,
+		onHeading,
 		attach,
 		detach: () => {
 			if (!cleanup) return;

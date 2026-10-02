@@ -14,6 +14,8 @@
 	const TABS = INTEREST_TABS.map((tab) => tab.href);
 
 	let mounted = $state([false, false]);
+	let paging = $state(false);
+	let heading = $state<number | null>(null);
 	let restedPane: number | null = null;
 
 	const routed = $derived(interestTabIndex(page.url.pathname));
@@ -23,6 +25,10 @@
 		onVisible: ({ first, last }) => {
 			for (let pane = first; pane <= last; pane += 1)
 				mounted[pane] = true;
+			paging = first !== last;
+		},
+		onHeading: (pane) => {
+			heading = pane;
 		},
 		onRest: (pane) => {
 			const landed = TABS[pane];
@@ -69,12 +75,20 @@
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >
-	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">
+	<div
+		data-slot="interest-pane-views"
+		class="w-full shrink-0 snap-start"
+		inert={paging && heading !== 0}
+	>
 		{#if mounted[0]}
 			<ViewsGrid {ourProfileId} />
 		{/if}
 	</div>
-	<div data-slot="interest-pane-taps" class="w-full shrink-0 snap-start">
+	<div
+		data-slot="interest-pane-taps"
+		class="w-full shrink-0 snap-start"
+		inert={paging && heading !== 1}
+	>
 		{#if mounted[1]}
 			<TapsReceivedList {ourProfileId} active={routed === 1} />
 		{/if}

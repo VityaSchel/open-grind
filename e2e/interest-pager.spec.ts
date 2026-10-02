@@ -1,11 +1,25 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { historyDepth, installTauriShim, TrustedTouch } from "./support/app";
+import {
+	afterTwoFrames,
+	historyDepth,
+	installTauriShim,
+	TrustedTouch,
+} from "./support/app";
 
 const TAPS = "/interest/taps";
 const VIEWS = "/interest/views";
 const PAGER = '[data-slot="interest-pager"]';
+const VIEWS_PANE = '[data-slot="interest-pane-views"]';
+const TAPS_PANE = '[data-slot="interest-pane-taps"]';
 const PROFILE_LINK = 'a[href^="/profile/"]';
+
+declare global {
+	interface Window {
+		__clickedPanes?: string[];
+		__glideFrames?: { progress: number; locked: (string | undefined)[] }[];
+	}
+}
 
 test.describe.configure({ timeout: 300_000 });
 
@@ -112,6 +126,115 @@ test("a finger held on the other tab keeps the URL until it lifts", async ({
 	await touch.end();
 
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+});
+
+test("a finger held past halfway locks only the tab being left, and landing unlocks it", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const views = page.locator(VIEWS_PANE);
+	const taps = page.locator(TAPS_PANE);
+	const width = await pager.evaluate((el) => el.clientWidth);
+
+	const touch = await swipeAcross(page, {
+		distancePx: Math.round(width * 0.65),
+		release: false,
+	});
+
+	await expect(taps).toHaveAttribute("inert", "");
+	await expect(views).not.toHaveAttribute("inert");
+
+	await touch.end();
+
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect(taps).not.toHaveAttribute("inert");
+	await expect(views).not.toHaveAttribute("inert");
+});
+
+test("a click over the tab being left reaches nothing in it, while the incoming tab takes one", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	const width = await pager.evaluate((el) => el.clientWidth);
+	const touch = await swipeAcross(page, {
+		distancePx: Math.round(width * 0.65),
+		release: false,
+	});
+	await expect
+		.poll(() => pager.evaluate((el) => el.scrollLeft / el.clientWidth))
+		.toBeLessThan(0.5);
+	await afterTwoFrames(page);
+	const box = (await pager.boundingBox())!;
+	const seam = (await page.locator(TAPS_PANE).boundingBox())!.x;
+	const y = box.y + box.height / 2;
+	await page.evaluate(
+		(panes) => {
+			window.__clickedPanes = [];
+			for (const pane of panes)
+				document.querySelector(pane)!.addEventListener(
+					"click",
+					(event) => {
+						event.preventDefault();
+						window.__clickedPanes!.push(pane);
+					},
+					{ capture: true },
+				);
+		},
+		[VIEWS_PANE, TAPS_PANE],
+	);
+
+	await page.mouse.click((seam + box.x + box.width) / 2, y);
+	await page.mouse.click((box.x + seam) / 2, y);
+
+	expect(await page.evaluate(() => window.__clickedPanes)).toEqual([
+		VIEWS_PANE,
+	]);
+	await touch.end();
+});
+
+test("a tab tap keeps the list being left locked for the whole glide", async ({
+	page,
+}) => {
+	await page.evaluate(
+		([pagerSlot, viewsSlot, tapsSlot]) => {
+			const pager = document.querySelector<HTMLElement>(pagerSlot!)!;
+			const views = document.querySelector<HTMLElement>(viewsSlot!)!;
+			const taps = document.querySelector<HTMLElement>(tapsSlot!)!;
+			window.__glideFrames = [];
+			const sample = () => {
+				window.__glideFrames!.push({
+					progress: pager.scrollLeft / pager.clientWidth,
+					locked: [views, taps]
+						.filter((pane) => pane.inert)
+						.map((pane) => pane.dataset.slot),
+				});
+				requestAnimationFrame(sample);
+			};
+			requestAnimationFrame(sample);
+		},
+		[PAGER, VIEWS_PANE, TAPS_PANE],
+	);
+
+	await page.getByRole("link", { name: "Views" }).click();
+	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
+	await expect
+		.poll(() => page.locator(PAGER).evaluate((el) => el.scrollLeft))
+		.toBe(0);
+	await afterTwoFrames(page);
+
+	const frames = (await page.evaluate(() => window.__glideFrames))!;
+	const gliding = frames.filter(
+		({ progress }) => progress > 0.05 && progress < 0.95,
+	);
+	expect(
+		gliding.length,
+		"the glide was seen between the tabs",
+	).toBeGreaterThan(0);
+	expect(
+		gliding.filter(({ locked }) => locked.join() !== "interest-pane-taps"),
+		"only Taps, the list being left, is locked on every frame of the glide",
+	).toEqual([]);
+	expect(frames.at(-1)?.locked, "nothing stays locked at rest").toEqual([]);
 });
 
 test("a vertical finger drag scrolls the list and does not page", async ({

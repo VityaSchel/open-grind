@@ -69,6 +69,13 @@ function loading(pathname: string) {
 	navigating.to = { url: new URL(pathname, page.url) };
 }
 
+function lockedPanes(pager: { node: HTMLElement }) {
+	flushSync();
+	return [...pager.node.children]
+		.filter((pane) => pane instanceof HTMLElement && pane.inert)
+		.map((pane) => pane.getAttribute("data-slot"));
+}
+
 function restOnViews({
 	located = TAPS,
 	pending,
@@ -262,5 +269,73 @@ describe("InterestPager", () => {
 			behavior: "smooth",
 		});
 		expect(pager.scrollTo).toHaveBeenCalledTimes(2);
+	});
+
+	it("locks the tab a drag shows less than half of, and neither once the pager rests", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart");
+		pager.scroll(0.6 * WIDTH);
+		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+
+		pager.scroll(0.4 * WIDTH);
+		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+
+		pager.scroll(0);
+		expect(lockedPanes(pager)).toEqual([]);
+	});
+
+	it("locks the tab being left as soon as a lifted finger lets the pager glide on, before it is halfway", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart");
+		pager.scroll(0.8 * WIDTH);
+		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+
+		pager.touch("touchend");
+		pager.scroll(0.7 * WIDTH);
+
+		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("locks the incoming tab again when a lifted finger lets the pager fall back", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart");
+		pager.scroll(0.8 * WIDTH);
+		pager.touch("touchend");
+		pager.scroll(0.9 * WIDTH);
+
+		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+	});
+
+	it("locks the tab being left from the first scroll of a glide to a tab picked outside the pager", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+		expect(lockedPanes(pager)).toEqual([]);
+
+		pager.scroll(0.9 * WIDTH);
+
+		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("keeps the tab being left locked when a press on the pager drops the glide before halfway", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+		pager.scroll(0.9 * WIDTH);
+		pager.node.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+
+		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+	});
+
+	it("locks neither tab when a switch lands in a single jump", () => {
+		const pager = mountPager();
+
+		route(VIEWS);
+		pager.scroll(0);
+
+		expect(lockedPanes(pager)).toEqual([]);
 	});
 });
