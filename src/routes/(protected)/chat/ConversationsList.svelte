@@ -174,7 +174,7 @@
 	<div class="relative flex min-h-0 flex-1 flex-col">
 		{#if !conversations.loading && (conversations.entries.length > 0 || !conversations.error)}
 			<DataRefreshControl
-				{container}
+				container={covered ? null : container}
 				updating={conversations.refreshing}
 				position="top"
 				onrefresh={() => void conversations.refresh()}

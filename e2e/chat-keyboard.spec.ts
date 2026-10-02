@@ -6,21 +6,15 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
+import {
+	type Keyboard,
+	sendInsets,
+	switchKeyboardAtOnce,
+} from "./support/keyboard";
 
 const MESSAGE = '[data-slot="message"]';
 const SCROLLER = '[data-slot="messages-scroller"]';
 const COMPOSER = '[data-slot="message-composer"]';
-
-type Keyboard = {
-	viewport: { width: number; height: number };
-	insets: {
-		top: number;
-		bottom: number;
-		left: number;
-		right: number;
-		ime: boolean;
-	};
-};
 
 const KEYBOARD_CLOSED: Keyboard = {
 	viewport: { width: 420, height: 900 },
@@ -69,18 +63,6 @@ async function openConversation(page: Page): Promise<void> {
 		return images !== undefined && [...images].every((img) => img.complete);
 	}, SCROLLER);
 	await page.waitForTimeout(500);
-}
-
-function sendInsets(page: Page, insets: Keyboard["insets"]): Promise<unknown> {
-	return page.evaluate((next) => window.__reapplyInsets(next), insets);
-}
-
-async function switchKeyboardAtOnce(
-	page: Page,
-	{ viewport, insets }: Keyboard,
-): Promise<void> {
-	await sendInsets(page, insets);
-	await page.setViewportSize(viewport);
 }
 
 async function scrollAboveNewest(page: Page, distance: number): Promise<void> {

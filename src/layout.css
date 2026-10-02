@@ -373,6 +373,16 @@ a {
 	contain-intrinsic-block-size: auto var(--offscreen-block-size);
 }
 
+[data-covered] {
+	content-visibility: hidden;
+}
+
+@supports not (content-visibility: hidden) {
+	[data-covered] {
+		visibility: hidden;
+	}
+}
+
 [data-sonner-toaster] {
 	font-family: var(--font-sans) !important;
 	z-index: var(--z-index-toast) !important;

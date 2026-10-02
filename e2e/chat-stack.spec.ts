@@ -8,12 +8,24 @@ import {
 	MESSAGE_ROW,
 	pathname,
 } from "./support/app";
+import {
+	backToChats,
+	base,
+	dim,
+	listScroller,
+	openConversation,
+	openInbox,
+	row,
+	rows,
+	SHEET,
+	sheet,
+	WIDE,
+} from "./support/chat-stack";
 import { BLUR_MODES, setBlurMode } from "./support/layout-guard";
 import {
 	DARK_SCRIM,
 	edgeLineColumns,
 	expectEdgeJustLeftOf,
-	LIVE_STACK,
 	pauseMidSlide,
 	pauseOnceSliding,
 	PHONE,
@@ -28,22 +40,10 @@ import {
 	startSystemBackMidSlide,
 } from "./support/system-back";
 
-const WIDE = { width: 1024, height: 800 };
 const PARALLAX = 0.33;
 
-const SHEET = LIVE_STACK.sheet;
-const base = (page: Page) => page.locator(LIVE_STACK.base);
-const sheet = (page: Page) => page.locator(SHEET);
-const dim = (page: Page) => page.locator(LIVE_STACK.dim);
-const listScroller = (page: Page) =>
-	page.locator('[data-slot="conversations-scroller"]');
-const rows = (page: Page) => page.locator('a[href^="/chat/"]:visible');
-const row = (page: Page, { href }: { href: string }) =>
-	page.locator(`a[href="${href}"]:visible`);
 const highlightedRows = (page: Page) =>
 	base(page).locator('[data-slot="item"][data-variant="muted"]');
-const backToChats = (page: Page) =>
-	page.getByRole("link", { name: "Back to chats" });
 const REPLIABLE = "consectetur adipiscing elit";
 const messageRow = (page: Page) =>
 	page.locator(MESSAGE_ROW).filter({ hasText: REPLIABLE });
@@ -54,20 +54,6 @@ const offsetX = (page: Page, slot: "base" | "sheet") =>
 		.evaluate((pane) =>
 			Math.round(new DOMMatrix(getComputedStyle(pane).transform).m41),
 		);
-
-async function openInbox(page: Page, { platform = "macos" } = {}) {
-	await installTauriShim(page, { platform });
-	await page.goto("/chat");
-	await rows(page).nth(1).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-}
-
-async function openConversation(page: Page, { href }: { href?: string } = {}) {
-	const target = href ?? (await rows(page).nth(1).getAttribute("href"));
-	await row(page, { href: target! }).click();
-	await expect(page).toHaveURL(new RegExp(`${target}$`));
-	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
-	return target;
-}
 
 async function tapRow(page: Page, { href, x }: { href: string; x: number }) {
 	const box = (await row(page, { href }).boundingBox())!;
@@ -140,7 +126,7 @@ test.describe("the chat stack on a phone", () => {
 		});
 		await openConversation(page);
 
-		await expect(base(page)).toHaveCSS("visibility", "hidden");
+		await expect(base(page)).toHaveCSS("content-visibility", "hidden");
 		await expect(base(page)).toHaveAttribute("inert", "");
 		await expect(
 			base(page).getByRole("link", {
@@ -192,7 +178,7 @@ test.describe("the chat stack on a phone", () => {
 		expect(leaving[0]?.sheet).toBeLessThan(PHONE.width * 0.5);
 		expect(leaving.at(-1)?.sheet).toBeGreaterThan(PHONE.width * 0.9);
 		await expect(sheet(page)).toHaveCount(0);
-		await expect(base(page)).toHaveCSS("visibility", "visible");
+		await expect(base(page)).toHaveCSS("content-visibility", "visible");
 		expect(
 			await listScroller(page).evaluate((scroller) => scroller.scrollTop),
 		).toBe(listOffset);
@@ -206,7 +192,7 @@ test.describe("the chat stack on a phone", () => {
 
 		expect(await startSystemBack(page)).toBe(true);
 		await progressSystemBack(page, 0.3);
-		await expect(base(page)).toHaveCSS("visibility", "visible");
+		await expect(base(page)).toHaveCSS("content-visibility", "visible");
 		expect(await offsetX(page, "sheet")).toBeCloseTo(PHONE.width * 0.3, -1);
 		expect(await offsetX(page, "base")).toBeCloseTo(
 			-PHONE.width * PARALLAX * 0.7,
@@ -280,7 +266,7 @@ test.describe("the chat stack on a phone", () => {
 			0,
 		);
 		expect(aFrameLater).toBeLessThanOrEqual(before);
-		await expect(base(page)).toHaveCSS("visibility", "visible");
+		await expect(base(page)).toHaveCSS("content-visibility", "visible");
 
 		await progressSystemBack(page, 0.5);
 		expect(await offsetX(page, "sheet")).toBeGreaterThanOrEqual(
@@ -308,7 +294,7 @@ test.describe("the chat stack on a phone", () => {
 
 		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
 		await expect(page).toHaveURL(new RegExp(`${href}$`));
-		await expect(base(page)).toHaveCSS("visibility", "hidden");
+		await expect(base(page)).toHaveCSS("content-visibility", "hidden");
 		expect(await offsetX(page, "sheet")).toBe(0);
 	});
 

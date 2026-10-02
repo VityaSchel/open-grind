@@ -98,7 +98,7 @@
 	data-slot="live-stack-base"
 	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
 	style:z-index={STACK_Z.back}
-	style:visibility={stack.covered ? "hidden" : null}
+	data-covered={stack.covered || undefined}
 	inert={stack.sheetOpen}
 >
 	{#if baseMounted}

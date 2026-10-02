@@ -23,7 +23,7 @@ function edgeChrome(edge: Edge) {
 	const measure = (element: HTMLElement) => {
 		const offScreen =
 			element.inert ||
-			element.closest("[data-leaving]") !== null ||
+			element.closest("[data-leaving], [data-covered]") !== null ||
 			element.getClientRects().length === 0 ||
 			getComputedStyle(element).visibility === "hidden";
 		clearances.set(

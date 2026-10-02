@@ -42,6 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	for (const teardown of teardowns.splice(0)) teardown();
+	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
 	document.body.replaceChildren();
 });
@@ -94,6 +95,30 @@ describe("screen chrome clearance", () => {
 		expect(bottomChromeClearance()).toBe(0);
 
 		pane.removeAttribute("data-leaving");
+		remeasureScreenChrome();
+		flushSync();
+		expect(bottomChromeClearance()).toBe(64);
+	});
+
+	it("ignores a bar inside a covered pane without reading its layout or style", () => {
+		const pane = document.createElement("div");
+		pane.setAttribute("data-covered", "");
+		document.body.append(pane);
+		const navBar = bar({ top: 736, height: 64 });
+		pane.append(navBar);
+		detachAfterEach(bottomChrome(navBar));
+		const layoutReads = [
+			vi.spyOn(navBar, "getClientRects"),
+			vi.spyOn(navBar, "getBoundingClientRect"),
+			vi.spyOn(window, "getComputedStyle"),
+		];
+		remeasureScreenChrome();
+		flushSync();
+
+		expect(bottomChromeClearance()).toBe(0);
+		for (const read of layoutReads) expect(read).not.toHaveBeenCalled();
+
+		pane.removeAttribute("data-covered");
 		remeasureScreenChrome();
 		flushSync();
 		expect(bottomChromeClearance()).toBe(64);
