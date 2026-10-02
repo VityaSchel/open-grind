@@ -34,6 +34,37 @@ describe("RestingButtonModel", () => {
 		expect(button.offered).toBe(false);
 	});
 
+	it("drops a pending probe that is cancelled before it fires", () => {
+		const button = new RestingButtonModel({ probeMs: PROBE_MS });
+
+		button.probePointer();
+		vi.advanceTimersByTime(PROBE_MS - 1);
+		button.cancelProbe();
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(button.offered).toBe(false);
+	});
+
+	it("still trusts the next pointer probe after one was cancelled", () => {
+		const button = new RestingButtonModel({ probeMs: PROBE_MS });
+		button.probePointer();
+		button.cancelProbe();
+
+		button.probePointer();
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(button.offered).toBe(true);
+	});
+
+	it("keeps an offer that was already made when a probe is cancelled", () => {
+		const button = new RestingButtonModel({ probeMs: PROBE_MS });
+		button.offerWithoutPull();
+
+		button.cancelProbe();
+
+		expect(button.offered).toBe(true);
+	});
+
 	it("stops trusting the pointer for good once the band moves", () => {
 		const button = new RestingButtonModel({ probeMs: PROBE_MS });
 

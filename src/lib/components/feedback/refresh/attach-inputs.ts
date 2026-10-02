@@ -18,6 +18,8 @@ import {
 } from "./scroll-chain";
 import { attachTouchPull } from "./touch-adapter";
 
+const TRACKPAD_TAIL_MS = 100;
+
 export type PullInputsOptions = {
 	model: PullModel;
 	restingButton: RestingButtonModel;
@@ -50,8 +52,11 @@ export function attachPullInputs(
 		fingerPhase = isMacosPlatform() ? scrollGesture : null,
 	}: PullInputsOptions,
 ): () => void {
+	let trackpadEndedAt = -Infinity;
 	const trackpadScrolling = () =>
-		fingerPhase !== null && fingerPhase.phase !== "idle";
+		fingerPhase !== null &&
+		(fingerPhase.phase !== "idle" ||
+			performance.now() - trackpadEndedAt < TRACKPAD_TAIL_MS);
 
 	const onScroll = () => {
 		if (
@@ -69,10 +74,11 @@ export function attachPullInputs(
 	};
 
 	const onWheel = (event: WheelEvent) => {
-		// A sideways-dominant wheel is not an attempt to pull; the swipe
+		// A wheel that is not vertical-dominant is no attempt to pull; the swipe
 		// gesture cancels such wheels, and probing on their vertical crumbs
 		// would misread the trackpad as a mouse.
-		if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+		if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+		if (trackpadScrolling()) return;
 		const toward = position === "top" ? -event.deltaY : event.deltaY;
 		if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
 		restingButton.probePointer();
@@ -109,6 +115,11 @@ export function attachPullInputs(
 	window.addEventListener("keydown", noteScrollKey, onWindowCapture);
 	window.addEventListener("keyup", noteScrollKey, onWindowCapture);
 
+	const stopWatchingPhase = fingerPhase?.onPhaseChange((phase) => {
+		if (phase === "idle") trackpadEndedAt = performance.now();
+		else restingButton.cancelProbe();
+	});
+
 	const detach = [
 		attachTouchPull(model, {
 			listenTarget: target,
@@ -134,6 +145,7 @@ export function attachPullInputs(
 		target.removeEventListener("touchmove", noteTouch);
 		window.removeEventListener("keydown", noteScrollKey, onWindowCapture);
 		window.removeEventListener("keyup", noteScrollKey, onWindowCapture);
+		stopWatchingPhase?.();
 		detach.forEach((cleanup) => cleanup());
 	};
 }

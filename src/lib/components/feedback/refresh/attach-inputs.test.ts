@@ -13,6 +13,7 @@ const PROBE_MS = 120;
 const FRAME_MS = 16;
 const BAND_PX = 6;
 const STALE_KEY_MS = 600;
+const TRACKPAD_TAIL_MS = 100;
 
 function harness({
 	position = "bottom",
@@ -122,6 +123,104 @@ describe("the mouse probe at the boundary", () => {
 		vi.advanceTimersByTime(PROBE_MS);
 
 		expect(h.restingButton.offered).toBe(false);
+		h.detach();
+	});
+
+	it.each([
+		{ deltaX: 1, deltaY: 1 },
+		{ deltaX: -1, deltaY: 1 },
+		{ deltaX: 30, deltaY: 30 },
+	])(
+		"ignores a wheel that is exactly diagonal at $deltaX by $deltaY",
+		({ deltaX, deltaY }) => {
+			const h = harness();
+
+			h.wheel(deltaX, deltaY);
+			vi.advanceTimersByTime(PROBE_MS);
+
+			expect(h.restingButton.offered).toBe(false);
+			h.detach();
+		},
+	);
+
+	it("still reads a wheel that is barely more vertical than sideways as a pointer", () => {
+		const h = harness();
+
+		h.wheel(3, 4);
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(h.restingButton.offered).toBe(true);
+		h.detach();
+	});
+});
+
+describe("the mouse probe at the boundary on macOS", () => {
+	it.each(["fingers", "momentum"] as const)(
+		"ignores a vertical wheel that arrives in the trackpad's %s phase",
+		(state) => {
+			const fingerPhase = new ScrollGestureState();
+			const h = harness({ fingerPhase });
+			fingerPhase.ingest({ state });
+
+			h.wheel(0, 40);
+			vi.advanceTimersByTime(PROBE_MS);
+
+			expect(h.restingButton.offered).toBe(false);
+			h.detach();
+		},
+	);
+
+	it.each(["fingers", "momentum"] as const)(
+		"cancels a probe that a wheel armed just before the trackpad's %s phase arrives",
+		(state) => {
+			const fingerPhase = new ScrollGestureState();
+			const h = harness({ fingerPhase });
+
+			h.wheel(0, 40);
+			vi.advanceTimersByTime(PROBE_MS - 1);
+			fingerPhase.ingest({ state });
+			vi.advanceTimersByTime(PROBE_MS);
+
+			expect(h.restingButton.offered).toBe(false);
+			h.detach();
+		},
+	);
+
+	it("ignores the last momentum wheel, which lands just after the trackpad reports idle", () => {
+		const fingerPhase = new ScrollGestureState();
+		const h = harness({ fingerPhase });
+		fingerPhase.ingest({ state: "momentum" });
+		fingerPhase.ingest({ state: "idle" });
+
+		vi.advanceTimersByTime(3);
+		h.wheel(0, 14);
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(h.restingButton.offered).toBe(false);
+		h.detach();
+	});
+
+	it("reads a bandless wheel as a pointer again once the trackpad gesture has died out", () => {
+		const fingerPhase = new ScrollGestureState();
+		const h = harness({ fingerPhase });
+		fingerPhase.ingest({ state: "momentum" });
+		fingerPhase.ingest({ state: "idle" });
+
+		vi.advanceTimersByTime(TRACKPAD_TAIL_MS);
+		h.wheel(0, 40);
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(h.restingButton.offered).toBe(true);
+		h.detach();
+	});
+
+	it("still reads a bandless mouse wheel, which has no phases, as a pointer", () => {
+		const h = harness({ fingerPhase: new ScrollGestureState() });
+
+		h.wheel(0, 40);
+		vi.advanceTimersByTime(PROBE_MS);
+
+		expect(h.restingButton.offered).toBe(true);
 		h.detach();
 	});
 });
@@ -356,6 +455,7 @@ describe("a rubber band at the boundary on macOS", () => {
 		const h = harness({ position: "top", fingerPhase });
 		fingerPhase.ingest({ state: "fingers" });
 		fingerPhase.ingest({ state: "released" });
+		vi.advanceTimersByTime(TRACKPAD_TAIL_MS);
 		h.pressOutsideList("PageUp");
 
 		h.band({ pulledByWheel: false });

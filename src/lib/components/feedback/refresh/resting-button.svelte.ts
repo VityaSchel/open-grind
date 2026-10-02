@@ -22,6 +22,10 @@ export class RestingButtonModel {
 		}, this.#probeMs);
 	}
 
+	cancelProbe(): void {
+		clearTimeout(this.#probe);
+	}
+
 	offerWithoutPull(): void {
 		this.#offered = true;
 	}
@@ -33,6 +37,6 @@ export class RestingButtonModel {
 	}
 
 	destroy(): void {
-		clearTimeout(this.#probe);
+		this.cancelProbe();
 	}
 }
