@@ -1,10 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
-import { installFakeOverscroll, type PullSnapshot } from "./support/pull";
+import { driveInOneGesture, installFakeOverscroll } from "./support/pull";
 
 const ARM_PX = 18;
+const SHALLOW_PX = 6;
 const REFRESH_SETTLE_MS = 2400;
+const DISC_REST_MS = 400;
+const ME = 123456000;
+const CONVERSATIONS_MODULE_URL =
+	"/src/lib/chat/conversations-context.svelte.ts";
 
 async function openInbox(page: Page) {
 	await installTauriShim(page);
@@ -16,56 +21,6 @@ async function openInbox(page: Page) {
 		.waitFor({ timeout: 120_000 });
 	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
 	await page.waitForTimeout(600);
-}
-
-async function driveInOneGesture<K extends string>(
-	page: Page,
-	keys: readonly K[],
-	body: string,
-): Promise<Record<K, PullSnapshot>> {
-	const snapshots: Partial<Record<K, PullSnapshot>> =
-		await page.evaluate(`(async () => {
-		const scroller = document.querySelector(
-			'[data-slot="conversations-scroller"]',
-		);
-		if (!scroller) throw new Error("conversations scroller not found");
-		const overlay = document.querySelector("[data-refresh-phase]");
-		if (!overlay) throw new Error("refresh control not found");
-		const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-		const gesture = (px) => {
-			scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: -8 }));
-			scroller.__band = px;
-			scroller.dispatchEvent(new Event("scroll"));
-		};
-		const spring = (px) => {
-			scroller.__band = px;
-			scroller.dispatchEvent(new Event("scroll"));
-		};
-		const lift = () => scroller.dispatchEvent(new Event("scrollend"));
-		const snap = () => {
-			const button = overlay.querySelector("button");
-			const disc = overlay.querySelector("[data-refresh-disc]");
-			const hint = button || disc ? null : overlay.querySelector("span");
-			return {
-				phase: overlay.dataset.refreshPhase,
-				overlayHeight: Math.round(overlay.getBoundingClientRect().height),
-				opacity: parseFloat(getComputedStyle(overlay).opacity),
-				hint: hint ? hint.textContent.trim() : null,
-				hasButton: !!button,
-				disc: !!disc,
-				spinning: !!overlay.querySelector("[data-refresh-disc][data-spinning]"),
-				bandWrites: scroller.__bandWrites ?? 0,
-			};
-		};
-		${body}
-	})()`);
-
-	const missing = keys.filter((key) => snapshots[key] === undefined);
-	if (missing.length > 0)
-		throw new Error(
-			`the page returned no snapshot for ${missing.join(", ")}`,
-		);
-	return snapshots as Record<K, PullSnapshot>;
 }
 
 test.describe("pull to refresh", () => {
@@ -96,12 +51,12 @@ test.describe("pull to refresh", () => {
 		);
 
 		expect(steps.resting).toMatchObject({ hasButton: false, disc: false });
-		expect(steps.resting.overlayHeight).toBeLessThanOrEqual(1);
+		expect(steps.resting.bandHeight).toBeLessThanOrEqual(1);
 
 		expect(steps.pulling).toMatchObject({
 			hint: "Pull to refresh",
 			hasButton: false,
-			overlayHeight: 8,
+			bandHeight: 8,
 		});
 		expect(steps.pulling.opacity).toBeGreaterThan(0.2);
 
@@ -110,7 +65,7 @@ test.describe("pull to refresh", () => {
 			hint: "Release to refresh",
 		});
 		expect(steps.armed.opacity).toBeGreaterThan(0.95);
-		expect(steps.deep.overlayHeight).toBe(44);
+		expect(steps.deep.bandHeight).toBe(44);
 
 		expect(steps.held.phase).toBe("armed");
 		expect(steps.fired).toMatchObject({
@@ -149,9 +104,9 @@ test.describe("pull to refresh", () => {
 		expect(steps.springing).toMatchObject({
 			phase: "idle",
 			hint: "Pull to refresh",
-			overlayHeight: 10,
+			bandHeight: 10,
 		});
-		expect(steps.collapsed.overlayHeight).toBeLessThanOrEqual(1);
+		expect(steps.collapsed.bandHeight).toBeLessThanOrEqual(1);
 	});
 
 	test("a gesture that arrives from mid-list never engages at the boundary", async ({
@@ -237,12 +192,94 @@ test.describe("pull to refresh", () => {
 		);
 
 		expect(steps.revealed.hasButton).toBe(true);
-		expect(steps.revealed.overlayHeight).toBeGreaterThanOrEqual(50);
+		expect(steps.revealed.bandHeight).toBeGreaterThanOrEqual(50);
 		expect(steps.clicked).toMatchObject({
 			phase: "refreshing",
 			disc: true,
 			spinning: true,
 		});
 		expect(steps.settled).toMatchObject({ phase: "idle", hasButton: true });
+	});
+
+	test("a pull that starts while the disc of a finished refresh is still leaving shows its hint at the band", async ({
+		page,
+	}) => {
+		await openInbox(page);
+		const steps = await driveInOneGesture(
+			page,
+			["leaving", "pulled", "gone"],
+			`
+			const { getOrCreateConversationsState } = await import(
+				"${CONVERSATIONS_MODULE_URL}"
+			);
+			const conversations = getOrCreateConversationsState(${ME});
+			conversations.refreshing = true;
+			await sleep(${DISC_REST_MS});
+			const outroStarted = new Promise((resolve) =>
+				document.addEventListener("outrostart", resolve, {
+					capture: true,
+					once: true,
+				}),
+			);
+			conversations.refreshing = false;
+			await outroStarted;
+			const outro = overlay
+				.getAnimations({ subtree: true })
+				.filter((animation) => !(animation instanceof CSSAnimation));
+			if (outro.length === 0) throw new Error("the disc outro is not running");
+			outro.forEach((animation) => animation.pause());
+			const leaving = snap();
+			gesture(0); await sleep(20);
+			gesture(${SHALLOW_PX}); await sleep(30);
+			const pulled = snap();
+			outro.forEach((animation) => animation.finish());
+			await sleep(60);
+			const gone = snap();
+			return { leaving, pulled, gone };
+		`,
+		);
+
+		expect(steps.leaving).toMatchObject({ disc: true, hint: null });
+		expect(steps.pulled).toMatchObject({
+			phase: "pulling",
+			disc: true,
+			hint: "Pull to refresh",
+			bandHeight: SHALLOW_PX,
+		});
+		expect(steps.pulled.hintBottom).toBeLessThanOrEqual(SHALLOW_PX);
+		expect(steps.pulled.opacity).toBeLessThan(1);
+		expect(steps.gone).toMatchObject({
+			disc: false,
+			hint: "Pull to refresh",
+			bandHeight: SHALLOW_PX,
+			hintBottom: steps.pulled.hintBottom,
+		});
+	});
+
+	test("the disc of a finished refresh stays whole and opaque until it starts leaving", async ({
+		page,
+	}) => {
+		await openInbox(page);
+		const steps = await driveInOneGesture(
+			page,
+			["spinning", "finished"],
+			`
+			const { getOrCreateConversationsState } = await import(
+				"${CONVERSATIONS_MODULE_URL}"
+			);
+			const conversations = getOrCreateConversationsState(${ME});
+			conversations.refreshing = true;
+			await sleep(${DISC_REST_MS});
+			const spinning = snap();
+			conversations.refreshing = false;
+			await null;
+			const finished = snap();
+			return { spinning, finished };
+		`,
+		);
+
+		const whole = { disc: true, discClippedPx: 0, discOpacity: 1 };
+		expect(steps.spinning).toMatchObject(whole);
+		expect(steps.finished).toMatchObject(whole);
 	});
 });

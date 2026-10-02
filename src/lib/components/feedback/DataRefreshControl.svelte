@@ -5,7 +5,6 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { scale } from "$lib/util/reduced-motion";
-	import { cn } from "$lib/util/utils";
 	import { attachPullInputs } from "./refresh/attach-inputs";
 	import {
 		MAX_SLINGSHOT_TENSION,
@@ -88,7 +87,6 @@
 	const discTop = new Tween(DISC_START, { duration: 250, easing: cubicOut });
 	const settleMotion = () =>
 		prefersReducedMotion.current ? { duration: 0 } : undefined;
-	let discOutro = $state(false);
 
 	function discDragTop(displayPx: number): number {
 		const drag = Math.min(1, displayPx / ARM_PX);
@@ -147,12 +145,8 @@
 		}
 	});
 
-	const discVisible = $derived(discShown || discOutro);
-	const overlayHeight = $derived(discVisible ? DISC_WINDOW : reveal.current);
-	const opacity = $derived.by(() => {
-		if (discVisible) {
-			return 1;
-		} else if (hintShown) {
+	const bandOpacity = $derived.by(() => {
+		if (hintShown) {
 			return Math.min(
 				1,
 				Math.max(0, (reveal.current / ARM_PX) * 1.2 - 0.2),
@@ -163,6 +157,10 @@
 				Math.max(0, (reveal.current / REST_HEIGHT_PX) * 1.6 - 0.2),
 			);
 		}
+	});
+	const anchorEdge = $derived({
+		"top-0": position === "top",
+		"bottom-0": position === "bottom",
 	});
 	const geometry = scrollGeometry({
 		container: () => container,
@@ -179,7 +177,7 @@
 			void reveal.set(model.displayPx, { duration: 0 });
 		} else if (!model.gestureActive) {
 			void reveal.set(
-				busy || restingButton.shown ? REST_HEIGHT_PX : 0,
+				restingButton.shown ? REST_HEIGHT_PX : 0,
 				settleMotion(),
 			);
 		}
@@ -234,72 +232,80 @@
 	<div
 		data-refresh-phase={model.phase}
 		data-refresh-source={model.source}
-		class={cn(
-			"pointer-events-none z-10",
-			{ "overflow-clip": !hintMayOverflowBand },
-			"absolute inset-x-0",
+		class={[
+			"pointer-events-none absolute inset-x-0 z-10",
 			{
 				"top-(--drc-anchor)": position === "top",
 				"bottom-(--drc-anchor)": position === "bottom",
 			},
-		)}
+		]}
 		style:--drc-anchor="{headerOffset.px + anchorOffset}px"
-		style:height="{overlayHeight}px"
-		style:opacity
 	>
-		{#if discShown}
-			<div
-				class={[
-					"absolute left-1/2",
-					{
-						"top-0": position === "top",
-						"bottom-0": position === "bottom",
-					},
-				]}
-				style:translate="-50% {position === 'top'
-					? discTop.current
-					: -discTop.current}px"
-				out:scale={{ duration: 150, easing: cubicOut }}
-				onoutrostart={() => (discOutro = true)}
-				onoutroend={() => {
-					discOutro = false;
-					void discTop.set(DISC_START, { duration: 0 });
-				}}
-			>
-				<RefreshDisc progress={discProgress} spinning={discSpinning} />
-			</div>
-		{:else if hintShown}
-			<span
-				class={[
-					"absolute left-1/2 text-xs whitespace-nowrap text-muted-foreground",
-					{
-						"bottom-1": position === "top",
-						"top-1": position === "bottom",
-					},
-				]}
-				style:translate="-50% {position === 'top'
-					? hintOffset
-					: -hintOffset}px"
-			>
-				{#if model.phase === "armed"}
-					Release to refresh
-				{:else}
-					Pull to refresh
-				{/if}
-			</span>
-		{:else if buttonShown}
-			<div
-				class={[
-					"absolute left-1/2 -translate-x-1/2",
-					{
-						"bottom-3": position === "top",
-						"top-3": position === "bottom",
-					},
-				]}
-			>
-				{@render button()}
-			</div>
-		{/if}
+		<div
+			data-slot="refresh-band"
+			class={[
+				"absolute inset-x-0",
+				anchorEdge,
+				{ "overflow-clip": !hintMayOverflowBand },
+			]}
+			style:height="{reveal.current}px"
+			style:opacity={bandOpacity}
+		>
+			{#if hintShown}
+				<span
+					class={[
+						"absolute left-1/2 text-xs whitespace-nowrap text-muted-foreground",
+						{
+							"bottom-1": position === "top",
+							"top-1": position === "bottom",
+						},
+					]}
+					style:translate="-50% {position === 'top'
+						? hintOffset
+						: -hintOffset}px"
+				>
+					{#if model.phase === "armed"}
+						Release to refresh
+					{:else}
+						Pull to refresh
+					{/if}
+				</span>
+			{:else if buttonShown}
+				<div
+					class={[
+						"absolute left-1/2 -translate-x-1/2",
+						{
+							"bottom-3": position === "top",
+							"top-3": position === "bottom",
+						},
+					]}
+				>
+					{@render button()}
+				</div>
+			{/if}
+		</div>
+		<div
+			data-slot="refresh-disc-window"
+			class={["absolute inset-x-0 overflow-clip", anchorEdge]}
+			style:height="{DISC_WINDOW}px"
+		>
+			{#if discShown}
+				<div
+					class={["absolute left-1/2", anchorEdge]}
+					style:translate="-50% {position === 'top'
+						? discTop.current
+						: -discTop.current}px"
+					out:scale={{ duration: 150, easing: cubicOut }}
+					onoutroend={() =>
+						void discTop.set(DISC_START, { duration: 0 })}
+				>
+					<RefreshDisc
+						progress={discProgress}
+						spinning={discSpinning}
+					/>
+				</div>
+			{/if}
+		</div>
 	</div>
 {/if}
 
