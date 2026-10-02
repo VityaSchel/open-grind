@@ -38,6 +38,14 @@
 </script>
 
 <div class="screen-nav-host">
+	{#if !taps.loading && (taps.taps.length > 0 || !taps.error)}
+		<DataRefreshControl
+			{container}
+			updating={taps.refreshing}
+			position="top"
+			onrefresh={() => void taps.refresh()}
+		/>
+	{/if}
 	<div
 		bind:this={container}
 		data-slot="taps-scroller"
@@ -80,13 +88,5 @@
 			{/if}
 		</div>
 	</div>
-	{#if !taps.loading && (taps.taps.length > 0 || !taps.error)}
-		<DataRefreshControl
-			{container}
-			updating={taps.refreshing}
-			position="top"
-			onrefresh={() => void taps.refresh()}
-		/>
-	{/if}
 	<ScrollToTopButton {container} class="bottom-nav-clear" />
 </div>

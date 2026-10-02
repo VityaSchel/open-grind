@@ -70,8 +70,14 @@ async function mountAtRest(edge: Edge) {
 	});
 	document.body.append(scroller);
 
+	const onrefresh = vi.fn();
 	const view = render(DataRefreshControl, {
-		props: { container: scroller, position: edge, updating: false },
+		props: {
+			container: scroller,
+			position: edge,
+			updating: false,
+			onrefresh,
+		},
 	});
 	await settle();
 
@@ -101,6 +107,9 @@ async function mountAtRest(edge: Edge) {
 		band,
 		wait,
 		contentInset,
+		onrefresh,
+		phase: () => anchor().dataset.refreshPhase,
+		bandText: () => band().textContent?.trim(),
 		scrollWrites: () => scrollWrites,
 		unmount: view.unmount,
 		disc: () => discWindow().querySelector("[data-refresh-disc]"),
@@ -114,13 +123,26 @@ async function mountAtRest(edge: Edge) {
 			await view.rerender({ updating });
 			await settle();
 		},
-		async pullBandTo(px: number) {
+		async moveBandTo({
+			px,
+			pulledByWheel,
+		}: {
+			px: number;
+			pulledByWheel: boolean;
+		}) {
 			vi.advanceTimersByTime(FRAME_MS);
-			scroller.dispatchEvent(
-				new WheelEvent("wheel", { deltaY: -4 * intoContent }),
-			);
+			if (pulledByWheel)
+				scroller.dispatchEvent(
+					new WheelEvent("wheel", { deltaY: -4 * intoContent }),
+				);
 			bandPx = px;
 			scroller.dispatchEvent(new Event("scroll"));
+			await settle();
+		},
+		async pressInsideList(key: string) {
+			scroller.dispatchEvent(
+				new KeyboardEvent("keydown", { key, bubbles: true }),
+			);
 			await settle();
 		},
 		async releaseBand() {
@@ -212,14 +234,14 @@ describe("the refresh control", () => {
 		await view.startDiscOutro();
 		expect(outroEvents).toEqual(["outrostart"]);
 
-		await view.pullBandTo(6);
+		await view.moveBandTo({ px: 6, pulledByWheel: true });
 
 		expect(view.disc()).not.toBeNull();
-		expect(view.band().textContent?.trim()).toBe("Pull to refresh");
+		expect(view.bandText()).toBe("Pull to refresh");
 		expect(view.band().style.height).toBe("6px");
 		expect(Number(view.band().style.opacity)).toBeLessThan(1);
 
-		await view.pullBandTo(9);
+		await view.moveBandTo({ px: 9, pulledByWheel: true });
 		expect(view.band().style.height).toBe("9px");
 
 		await view.finishDiscOutro();
@@ -325,7 +347,7 @@ describe("the refresh control", () => {
 		const whilePulling: string[] = [];
 
 		for (const px of [6, 14, 22]) {
-			await view.pullBandTo(px);
+			await view.moveBandTo({ px: px, pulledByWheel: true });
 			whilePulling.push(view.contentInset());
 		}
 		expect(view.band().style.height).toBe("22px");
@@ -401,11 +423,62 @@ describe("the refresh control", () => {
 		const scrollWritesBeforeBand = view.scrollWrites();
 		expect(scrollWritesBeforeBand).toBeGreaterThan(0);
 
-		await view.pullBandTo(6);
+		await view.moveBandTo({ px: 6, pulledByWheel: true });
 		const closing = await view.contentFramesOver(TWEEN_FRAMES);
 
 		expect(distinctInsets(closing).length).toBeGreaterThan(2);
 		expect(view.contentInset()).toBe("0px");
 		expect(view.scrollWrites()).toBe(scrollWritesBeforeBand);
+	});
+
+	it("offers the button instead of the pull hint for a band that no wheel or touch drives, and never refreshes", async () => {
+		const view = await mountAtRest("top");
+		const whileBanding: { phase?: string; bandText?: string }[] = [];
+
+		for (const px of [6, 22]) {
+			await view.moveBandTo({ px: px, pulledByWheel: false });
+			whileBanding.push({
+				phase: view.phase(),
+				bandText: view.bandText(),
+			});
+		}
+		await view.releaseBand();
+		await view.wait(TWEEN_MS);
+
+		expect(whileBanding).toEqual([
+			{ phase: "idle", bandText: "Refresh" },
+			{ phase: "idle", bandText: "Refresh" },
+		]);
+		expect(view.phase()).toBe("idle");
+		expect(view.onrefresh).not.toHaveBeenCalled();
+		expect(view.button()).not.toBeNull();
+		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+	});
+
+	it("goes back to the pull hint at the next band a wheel drives", async () => {
+		const view = await mountAtRest("top");
+		await view.moveBandTo({ px: 6, pulledByWheel: false });
+		await view.releaseBand();
+		await view.wait(TWEEN_MS);
+		expect(view.button()).not.toBeNull();
+
+		await view.moveBandTo({ px: 6, pulledByWheel: true });
+
+		expect(view.phase()).toBe("pulling");
+		expect(view.bandText()).toBe("Pull to refresh");
+		expect(view.button()).toBeNull();
+	});
+
+	it("offers the button for a key that scrolls toward the edge the list already rests at", async () => {
+		const view = await mountAtRest("top");
+
+		await view.pressInsideList("ArrowDown");
+		const afterKeyIntoContent = await view.contentFramesOver(TWEEN_FRAMES);
+		await view.pressInsideList("ArrowUp");
+		await view.wait(TWEEN_MS);
+
+		expect(distinctInsets(afterKeyIntoContent)).toEqual(["0px"]);
+		expect(view.button()).not.toBeNull();
+		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
 	});
 });

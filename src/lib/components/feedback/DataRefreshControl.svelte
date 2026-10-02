@@ -58,7 +58,7 @@
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
 	const buttonSpace = new Tween(0, REVEAL_TRANSITION);
-	const pointerOnlySpace = new Tween(0, REVEAL_TRANSITION);
+	const offeredSpace = new Tween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
 	model.space = ARM_PX;
 
@@ -196,17 +196,15 @@
 	});
 
 	$effect(() => {
-		void pointerOnlySpace.set(
-			restingButton.pointerOnly ? REST_HEIGHT_PX : 0,
+		void offeredSpace.set(
+			restingButton.offered ? REST_HEIGHT_PX : 0,
 			settleMotion(),
 		);
 	});
 
 	const closingRoomClampsScroll = $derived(position === "bottom");
 	const contentInset = $derived(
-		closingRoomClampsScroll
-			? pointerOnlySpace.current
-			: buttonSpace.current,
+		closingRoomClampsScroll ? offeredSpace.current : buttonSpace.current,
 	);
 	const contentInsetProperty = $derived(
 		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
@@ -228,7 +226,7 @@
 	});
 
 	const shouldRevealRestingButton = () =>
-		restingButton.pointerOnly &&
+		restingButton.offered &&
 		!restingButton.shown &&
 		!busy &&
 		!model.gestureActive &&

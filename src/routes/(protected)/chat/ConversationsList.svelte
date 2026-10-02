@@ -168,6 +168,14 @@
 
 <div class="flex h-full w-full min-w-list-rail flex-col">
 	<div class="relative flex min-h-0 flex-1 flex-col">
+		{#if !conversations.loading && (conversations.entries.length > 0 || !conversations.error)}
+			<DataRefreshControl
+				{container}
+				updating={conversations.refreshing}
+				position="top"
+				onrefresh={() => void conversations.refresh()}
+			/>
+		{/if}
 		<div
 			bind:this={container}
 			data-slot="conversations-scroller"
@@ -222,14 +230,6 @@
 				</div>
 			{/if}
 		</div>
-		{#if !conversations.loading && (conversations.entries.length > 0 || !conversations.error)}
-			<DataRefreshControl
-				{container}
-				updating={conversations.refreshing}
-				position="top"
-				onrefresh={() => void conversations.refresh()}
-			/>
-		{/if}
 		<ScrollToTopButton {container} class="bottom-(--nav-clear)" />
 		<ConversationsFilters
 			filters={conversations.filters}

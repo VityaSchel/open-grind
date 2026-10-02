@@ -7,7 +7,15 @@ import {
 	MESSAGE_ROW,
 	wheel,
 } from "./support/app";
-import { driveInOneGesture, installFakeOverscroll } from "./support/pull";
+import {
+	BUTTON_ROW_PX,
+	CONVERSATION_ROW,
+	CONVERSATIONS_SCROLLER,
+	driveInOneGesture,
+	openInbox,
+	refreshButton,
+	topOf,
+} from "./support/pull";
 
 const ARM_PX = 18;
 const SHALLOW_PX = 6;
@@ -16,26 +24,11 @@ const DISC_REST_MS = 400;
 const ME = 123456000;
 const CONVERSATIONS_MODULE_URL =
 	"/src/lib/chat/conversations-context.svelte.ts";
-const BUTTON_ROW_PX = 56;
 const SCROLL_AWAY_PX = 10;
-const CONVERSATION_ROW = "a[href^='/chat/']";
 const TAP_ROW = "a[href^='/profile/']";
-const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const SCREEN_TALLER_THAN_ITS_CONTENT = { width: 420, height: 3000 };
 const ROOM_ABOVE_COMPOSER_PROPERTY = "--refresh-inset-bottom";
-
-async function openInbox(page: Page) {
-	await installTauriShim(page);
-	await installFakeOverscroll(page);
-	await page.goto("/chat");
-	await page
-		.locator(CONVERSATION_ROW)
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
-	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
-	await page.waitForTimeout(600);
-}
 
 async function openTaps(page: Page) {
 	await installTauriShim(page);
@@ -63,12 +56,6 @@ async function openConversation(page: Page) {
 		.waitFor({ state: "attached" });
 	await page.waitForTimeout(600);
 }
-
-const refreshButton = (page: Page) =>
-	page.getByRole("button", { name: "Refresh" });
-
-const topOf = (row: Locator) =>
-	row.evaluate((el) => el.getBoundingClientRect().top);
 
 const bottomOf = (row: Locator) =>
 	row.evaluate((el) => el.getBoundingClientRect().bottom);

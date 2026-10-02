@@ -33,6 +33,14 @@
 </script>
 
 <div class="screen-nav-host">
+	{#if !views.loading && (views.views.length > 0 || !views.error)}
+		<DataRefreshControl
+			{container}
+			updating={views.refreshing}
+			position="top"
+			onrefresh={() => void views.refresh()}
+		/>
+	{/if}
 	<div
 		bind:this={container}
 		data-slot="views-scroller"
@@ -88,13 +96,5 @@
 			{/if}
 		</div>
 	</div>
-	{#if !views.loading && (views.views.length > 0 || !views.error)}
-		<DataRefreshControl
-			{container}
-			updating={views.refreshing}
-			position="top"
-			onrefresh={() => void views.refresh()}
-		/>
-	{/if}
 	<ScrollToTopButton {container} class="bottom-nav-clear" />
 </div>

@@ -43,6 +43,15 @@
 	{:else}
 		<main class="screen-nav-host">
 			<TopBar />
+			{#if !gridState.loading && !gridState.error}
+				<DataRefreshControl
+					container={gridContainer}
+					updating={gridState.refreshing}
+					position="top"
+					onrefresh={() =>
+						void gridState.refresh({ keepLoadedPages: false })}
+				/>
+			{/if}
 			<div
 				class="pull-scroller"
 				bind:this={gridContainer}
@@ -56,15 +65,6 @@
 					<Grid {geohash} />
 				</div>
 			</div>
-			{#if !gridState.loading && !gridState.error}
-				<DataRefreshControl
-					container={gridContainer}
-					updating={gridState.refreshing}
-					position="top"
-					onrefresh={() =>
-						void gridState.refresh({ keepLoadedPages: false })}
-				/>
-			{/if}
 			<ScrollToTopButton
 				container={gridContainer}
 				class="bottom-nav-clear"

@@ -2,6 +2,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { consumesScrollKeys } from "$lib/util/scroll-keys";
 import {
 	ARM_MIN_EVENTS,
 	ARM_TRAVEL_PX,
@@ -130,10 +131,7 @@ const SCROLL_KEYS = new Set([
 
 function onKeyDown(event: KeyboardEvent): void {
 	if (!SCROLL_KEYS.has(event.key)) return;
-	const target = event.target;
-	if (target instanceof HTMLElement && target.isContentEditable) return;
-	if (target instanceof HTMLInputElement) return;
-	if (target instanceof HTMLTextAreaElement) return;
+	if (consumesScrollKeys(event.target)) return;
 	lastInputAt = performance.now();
 }
 

@@ -1,6 +1,10 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
-const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';
+import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./app";
+
+export const BUTTON_ROW_PX = 56;
+export const CONVERSATION_ROW = "a[href^='/chat/']";
+export const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';
 
 export type PullSnapshot = {
 	phase: string | undefined;
@@ -57,6 +61,24 @@ export async function installFakeOverscroll(page: Page): Promise<void> {
 		})()`,
 	});
 }
+
+export async function openInbox(page: Page) {
+	await installTauriShim(page);
+	await installFakeOverscroll(page);
+	await page.goto("/chat");
+	await page
+		.locator(CONVERSATION_ROW)
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
+	await page.waitForTimeout(600);
+}
+
+export const refreshButton = (page: Page) =>
+	page.getByRole("button", { name: "Refresh" });
+
+export const topOf = (row: Locator) =>
+	row.evaluate((el) => el.getBoundingClientRect().top);
 
 export async function driveInOneGesture<K extends string>(
 	page: Page,

@@ -1,8 +1,8 @@
 export class RestingButtonModel {
 	shown = $state(false);
 
-	#pointerOnly = $state(false);
-	#sawBand = false;
+	#offered = $state(false);
+	#sawPull = false;
 	#probe: ReturnType<typeof setTimeout> | undefined;
 	#probeMs: number;
 
@@ -10,21 +10,25 @@ export class RestingButtonModel {
 		this.#probeMs = probeMs;
 	}
 
-	get pointerOnly(): boolean {
-		return this.#pointerOnly;
+	get offered(): boolean {
+		return this.#offered;
 	}
 
 	probePointer(): void {
-		if (this.#sawBand || this.#pointerOnly) return;
+		if (this.#sawPull || this.#offered) return;
 		clearTimeout(this.#probe);
 		this.#probe = setTimeout(() => {
-			if (!this.#sawBand) this.#pointerOnly = true;
+			if (!this.#sawPull) this.#offered = true;
 		}, this.#probeMs);
 	}
 
+	offerWithoutPull(): void {
+		this.#offered = true;
+	}
+
 	leaveBoundary(): void {
-		this.#sawBand = true;
-		this.#pointerOnly = false;
+		this.#sawPull = true;
+		this.#offered = false;
 		this.shown = false;
 	}
 

@@ -97,6 +97,14 @@
 			{/if}
 		</main>
 	{:else}
+		{#if active}
+			<DataRefreshControl
+				container={scroller}
+				updating={profileState.refreshing}
+				position="top"
+				onrefresh={() => profileState.refresh()}
+			/>
+		{/if}
 		<div
 			bind:this={scroller}
 			{...scrollerHooks}
@@ -175,14 +183,6 @@
 				tapType={profile.tapType}
 				{active}
 				onTap={(tapType) => profileState.setTap(tapType)}
-			/>
-		{/if}
-		{#if active}
-			<DataRefreshControl
-				container={scroller}
-				updating={profileState.refreshing}
-				position="top"
-				onrefresh={() => profileState.refresh()}
 			/>
 		{/if}
 	{/if}
