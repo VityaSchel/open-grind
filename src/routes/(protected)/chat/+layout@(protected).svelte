@@ -67,9 +67,9 @@
 		basePath="/chat"
 		keyOf={(target) => target.params?.conversationId ?? null}
 	>
-		{#snippet base({ covered })}
+		{#snippet base({ covered, uncovering })}
 			<main class="flex min-h-0 flex-1 flex-col">
-				<ConversationsList {covered} />
+				<ConversationsList {covered} filtersLocked={uncovering} />
 			</main>
 			<NavBar ourProfileId={data.ourProfileId} />
 		{/snippet}

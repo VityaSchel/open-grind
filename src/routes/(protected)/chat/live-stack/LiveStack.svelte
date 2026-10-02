@@ -27,7 +27,7 @@
 		keyOf: (
 			target: Pick<NavigationTarget, "params" | "route" | "url">,
 		) => string | null;
-		base: Snippet<[{ covered: boolean }]>;
+		base: Snippet<[{ covered: boolean; uncovering: boolean }]>;
 		sheet: Snippet<[string, { leaving: boolean }]>;
 	} = $props();
 
@@ -90,10 +90,13 @@
 	class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)"
 	style:z-index={STACK_Z.back}
 	style:visibility={stack.covered ? "hidden" : null}
-	inert={stack.sheetKey !== null}
+	inert={stack.sheetOpen}
 >
 	{#if baseMounted}
-		{@render base({ covered: stack.covered })}
+		{@render base({
+			covered: stack.covered,
+			uncovering: stack.leaving !== null,
+		})}
 	{/if}
 </div>
 {#if stack.moving || stack.tracking}
@@ -111,10 +114,13 @@
 			data-slot="live-stack-sheet"
 			class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom) shadow-(--stack-edge)"
 			style:z-index={STACK_Z.front}
-			inert={stack.leaving !== null}
 			data-leaving={stack.leaving !== null || undefined}
 		>
-			{@render sheet(stack.sheetKey, { leaving: stack.leaving !== null })}
+			<div class="contents" inert={stack.leaving !== null}>
+				{@render sheet(stack.sheetKey, {
+					leaving: stack.leaving !== null,
+				})}
+			</div>
 		</div>
 	{/key}
 {/if}

@@ -13,6 +13,9 @@ import {
 	DARK_SCRIM,
 	edgeLineColumns,
 	expectEdgeJustLeftOf,
+	pauseMidSlide,
+	pauseOnceSliding,
+	resumeSlides,
 	scrimStrength,
 } from "./support/stack-layers";
 import {
@@ -27,12 +30,17 @@ const PHONE = { width: 390, height: 844 };
 const WIDE = { width: 1024, height: 800 };
 const PARALLAX = 0.33;
 
+const SHEET = '[data-slot="live-stack-sheet"]';
 const base = (page: Page) => page.locator('[data-slot="live-stack-base"]');
-const sheet = (page: Page) => page.locator('[data-slot="live-stack-sheet"]');
+const sheet = (page: Page) => page.locator(SHEET);
 const dim = (page: Page) => page.locator('[data-slot="live-stack-dim"]');
 const listScroller = (page: Page) =>
 	page.locator('[data-slot="conversations-scroller"]');
 const rows = (page: Page) => page.locator('a[href^="/chat/"]:visible');
+const row = (page: Page, { href }: { href: string }) =>
+	page.locator(`a[href="${href}"]:visible`);
+const highlightedRows = (page: Page) =>
+	base(page).locator('[data-slot="item"][data-variant="muted"]');
 const backToChats = (page: Page) =>
 	page.getByRole("link", { name: "Back to chats" });
 const REPLIABLE = "consectetur adipiscing elit";
@@ -46,19 +54,33 @@ const offsetX = (page: Page, slot: "base" | "sheet") =>
 			Math.round(new DOMMatrix(getComputedStyle(pane).transform).m41),
 		);
 
-async function openInbox(page: Page) {
-	await installTauriShim(page);
+async function openInbox(page: Page, { platform = "macos" } = {}) {
+	await installTauriShim(page, { platform });
 	await page.goto("/chat");
 	await rows(page).nth(1).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
 async function openConversation(page: Page, { href }: { href?: string } = {}) {
 	const target = href ?? (await rows(page).nth(1).getAttribute("href"));
-	await page.locator(`a[href="${target}"]:visible`).click();
+	await row(page, { href: target! }).click();
 	await expect(page).toHaveURL(new RegExp(`${target}$`));
 	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
 	return target;
 }
+
+async function tapRow(page: Page, { href, x }: { href: string; x: number }) {
+	const box = (await row(page, { href }).boundingBox())!;
+	await row(page, { href }).click({
+		position: { x: x - box.x, y: box.height / 2 },
+	});
+}
+
+const historyPathnames = (page: Page) =>
+	page.evaluate(() =>
+		(window.navigation?.entries() ?? []).map(
+			({ url }) => new URL(url ?? "").pathname,
+		),
+	);
 
 type Frame = { base: number; sheet: number | null; path: string };
 
@@ -244,10 +266,7 @@ test.describe("the chat stack on a phone", () => {
 	}) => {
 		await openInbox(page);
 
-		const pickUp = startSystemBackMidSlide(
-			page,
-			'[data-slot="live-stack-sheet"]',
-		);
+		const pickUp = startSystemBackMidSlide(page, SHEET);
 		await rows(page).nth(1).click();
 		const { started, before, pickedUp, aFrameLater } = await pickUp;
 
@@ -274,25 +293,6 @@ test.describe("the chat stack on a phone", () => {
 		await expect(page).toHaveURL(/\/chat$/);
 		await expect(sheet(page)).toHaveCount(0);
 		await expect(dim(page)).toHaveCount(0);
-	});
-
-	test("a back swipe started while the last one is still sliding out finishes that one first", async ({
-		page,
-	}) => {
-		await openInbox(page);
-		await openConversation(page);
-
-		await startSystemBack(page);
-		await progressSystemBack(page, 0.4);
-		expect(await commitSystemBack(page)).toBe(false);
-
-		expect(
-			await startSystemBack(page),
-			"the system owns the second swipe",
-		).toBe(false);
-		await afterTwoFrames(page);
-		expect(await pathname(page)).toBe("/chat");
-		await expect(sheet(page)).toHaveCount(0);
 	});
 
 	test("canceling the system back gesture covers the list again", async ({
@@ -381,6 +381,178 @@ test.describe("the chat stack on a phone", () => {
 		expect(await offsetX(page, "base")).toBe(0);
 		expect(await scrimStrength(dim(page))).toBeCloseTo(DARK_SCRIM * 0.5, 2);
 		await cancelSystemBack(page);
+	});
+});
+
+test.describe("the list behind a conversation that is sliding out on an Android phone", () => {
+	test.use({ viewport: PHONE });
+
+	async function openOneOfTwo(page: Page) {
+		await openInbox(page, { platform: "android" });
+		const other = await rows(page).nth(2).getAttribute("href");
+		const opened = await openConversation(page);
+		return { opened: opened!, other: other! };
+	}
+
+	async function pressBackAndHoldMidSlide(page: Page) {
+		const paused = pauseMidSlide(page, { pane: SHEET });
+		await backToChats(page).click();
+		const edge = await paused;
+		await expect(sheet(page)).toHaveAttribute("data-leaving");
+		return edge;
+	}
+
+	test("another conversation opens while the last one is still sliding out", async ({
+		page,
+	}) => {
+		const { other } = await openOneOfTwo(page);
+		const edge = await pressBackAndHoldMidSlide(page);
+
+		await tapRow(page, { href: other, x: edge / 2 });
+
+		await expect(page).toHaveURL(new RegExp(`${other}$`));
+		expect(await historyPathnames(page)).toEqual(["/chat", other]);
+		await resumeSlides(page);
+		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+		await expect(sheet(page)).toHaveCount(1);
+		expect(await offsetX(page, "sheet")).toBe(0);
+		await expect(base(page)).toHaveAttribute("inert");
+	});
+
+	test("a released back gesture frees the list and clears the row highlight before the conversation has slid out", async ({
+		page,
+	}) => {
+		const { other } = await openOneOfTwo(page);
+
+		expect(await startSystemBack(page)).toBe(true);
+		await progressSystemBack(page, 0.4);
+		await expect(base(page)).toHaveAttribute("inert");
+		await expect(highlightedRows(page)).toHaveCount(1);
+
+		const held = pauseOnceSliding(page, { pane: SHEET });
+		expect(await commitSystemBack(page)).toBe(false);
+		const edge = await held;
+
+		await expect(base(page)).not.toHaveAttribute("inert");
+		await expect(highlightedRows(page)).toHaveCount(0);
+		expect(await pathname(page)).toBe("/chat");
+		expect(await sheet(page).getAttribute("data-leaving")).not.toBeNull();
+		expect(await offsetX(page, "sheet")).toBeLessThan(PHONE.width);
+
+		await tapRow(page, { href: other, x: edge / 2 });
+		await expect(page).toHaveURL(new RegExp(`${other}$`));
+		expect(await historyPathnames(page)).toEqual(["/chat", other]);
+	});
+
+	test("a back swipe started while the last one is still sliding out is left to the system and does not cut that slide", async ({
+		page,
+	}) => {
+		await openOneOfTwo(page);
+		await startSystemBack(page);
+		await progressSystemBack(page, 0.4);
+		const held = pauseOnceSliding(page, { pane: SHEET });
+		expect(await commitSystemBack(page)).toBe(false);
+		const edge = await held;
+
+		expect(
+			await startSystemBack(page),
+			"the system owns the second swipe",
+		).toBe(false);
+		await afterTwoFrames(page);
+		expect(await offsetX(page, "sheet")).toBeCloseTo(edge, -1);
+		expect(await pathname(page)).toBe("/chat");
+
+		await resumeSlides(page);
+		await expect(sheet(page)).toHaveCount(0);
+		expect(await pathname(page)).toBe("/chat");
+	});
+
+	test("a tap on the part the leaving conversation still covers does not reach the list", async ({
+		page,
+	}) => {
+		const { other } = await openOneOfTwo(page);
+		const edge = await pressBackAndHoldMidSlide(page);
+		const box = (await row(page, { href: other }).boundingBox())!;
+		const covered = {
+			x: (edge + PHONE.width) / 2,
+			y: box.y + box.height / 2,
+		};
+
+		const stacked = await page.evaluate(({ x, y }) => {
+			const [top, ...under] = document.elementsFromPoint(x, y);
+			return {
+				top: top?.getAttribute("data-slot"),
+				rowUnderneath: under.some((element) =>
+					element.closest('a[href^="/chat/"]'),
+				),
+			};
+		}, covered);
+		expect(stacked).toEqual({
+			top: "live-stack-sheet",
+			rowUnderneath: true,
+		});
+
+		await page.mouse.click(covered.x, covered.y);
+		await afterTwoFrames(page);
+
+		expect(await pathname(page)).toBe("/chat");
+		await resumeSlides(page);
+		await expect(sheet(page)).toHaveCount(0);
+		expect(await pathname(page)).toBe("/chat");
+	});
+
+	test("a second tap on Back lands on the filter bar the conversation uncovers and switches no filter on", async ({
+		page,
+	}) => {
+		await openOneOfTwo(page);
+		const arrow = (await backToChats(page).boundingBox())!;
+		const edge = await pressBackAndHoldMidSlide(page);
+		const secondTap = {
+			x: arrow.x + arrow.width / 2,
+			y: arrow.y + arrow.height / 2,
+		};
+		expect(secondTap.x, "the arrow's spot is uncovered").toBeLessThan(edge);
+
+		await page.mouse.click(secondTap.x, secondTap.y);
+		await resumeSlides(page);
+		await expect(sheet(page)).toHaveCount(0);
+
+		expect(await pathname(page)).toBe("/chat");
+		for (const name of ["Favorites only", "Unread"])
+			await expect(
+				page.getByRole("button", { name, exact: true }),
+			).toHaveAttribute("aria-pressed", "false");
+	});
+
+	test("tapping the same conversation mid-slide brings it back live without remounting it", async ({
+		page,
+	}) => {
+		const { opened } = await openOneOfTwo(page);
+		await sheet(page).evaluate((pane) => {
+			(pane as HTMLElement & { __kept?: boolean }).__kept = true;
+		});
+		const edge = await pressBackAndHoldMidSlide(page);
+
+		const slidingBackIn = pauseOnceSliding(page, { pane: SHEET });
+		await tapRow(page, { href: opened, x: edge / 2 });
+		await slidingBackIn;
+
+		await expect(page).toHaveURL(new RegExp(`${opened}$`));
+		await expect(sheet(page)).not.toHaveAttribute("data-leaving");
+		await expect(page.getByRole("textbox")).toBeEnabled();
+		expect(
+			await offsetX(page, "sheet"),
+			"still on its way in",
+		).toBeGreaterThan(0);
+		expect(
+			await sheet(page).evaluate(
+				(pane) => (pane as HTMLElement & { __kept?: boolean }).__kept,
+			),
+		).toBe(true);
+
+		await resumeSlides(page);
+		await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
+		expect(await offsetX(page, "sheet")).toBe(0);
 	});
 });
 

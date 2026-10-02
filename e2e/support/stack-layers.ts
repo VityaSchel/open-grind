@@ -112,6 +112,20 @@ export function pauseMidSlide(page: Page, { pane }: { pane: string }) {
 	}, pane);
 }
 
+export function pauseOnceSliding(page: Page, { pane }: { pane: string }) {
+	return page.evaluate(async (selector) => {
+		const nextFrame = () => new Promise(requestAnimationFrame);
+		const sliding = () =>
+			document
+				.querySelector(selector)
+				?.getAnimations()
+				.some((animation) => animation.playState === "running");
+		while (!sliding()) await nextFrame();
+		for (const animation of document.getAnimations()) animation.pause();
+		return document.querySelector(selector)?.getBoundingClientRect().x ?? 0;
+	}, pane);
+}
+
 export const resumeSlides = (page: Page) =>
 	page.evaluate(() => {
 		for (const animation of document.getAnimations()) animation.play();

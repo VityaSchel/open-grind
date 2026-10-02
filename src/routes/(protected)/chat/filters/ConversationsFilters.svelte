@@ -15,10 +15,12 @@
 		filters,
 		onchange,
 		inert = false,
+		locked = false,
 	}: {
 		filters: ConversationFilters;
 		onchange: (values: Partial<ConversationFilterValues>) => void;
 		inert?: boolean;
+		locked?: boolean;
 	} = $props();
 
 	const LABELLED_TOGGLES = [
@@ -42,64 +44,66 @@
 	{inert}
 	{@attach !inert && topChrome}
 >
-	<ToggleGroup.Root
-		type="multiple"
-		variant="default"
-		size="sm"
-		class="h-9"
-		bind:value={
-			() => (values.favorites ? ["favorites"] : []),
-			(active: string[]) =>
-				onchange({ favorites: active.includes("favorites") })
-		}
-	>
-		<ToggleGroup.Item
-			value="favorites"
-			aria-label="Favorites only"
-			class={buttonVariants({ variant: "secondary" })}
+	<div class="contents" inert={locked}>
+		<ToggleGroup.Root
+			type="multiple"
+			variant="default"
+			size="sm"
+			class="h-9"
+			bind:value={
+				() => (values.favorites ? ["favorites"] : []),
+				(active: string[]) =>
+					onchange({ favorites: active.includes("favorites") })
+			}
 		>
-			<StarIcon weight={values.favorites ? "fill" : "bold"} />
-		</ToggleGroup.Item>
-	</ToggleGroup.Root>
-	<ToggleGroup.Root
-		type="multiple"
-		variant="default"
-		size="sm"
-		class="h-9"
-		bind:value={
-			() =>
-				LABELLED_TOGGLES.filter(({ key }) => values[key]).map(
-					({ key }) => key,
-				),
-			(active: string[]) =>
-				onchange({
-					unread: active.includes("unread"),
-					online: active.includes("online"),
-					rightNow: active.includes("rightNow"),
-				})
-		}
-	>
-		{#each LABELLED_TOGGLES as { key, label } (key)}
 			<ToggleGroup.Item
-				value={key}
+				value="favorites"
+				aria-label="Favorites only"
 				class={buttonVariants({ variant: "secondary" })}
 			>
-				{label}
+				<StarIcon weight={values.favorites ? "fill" : "bold"} />
 			</ToggleGroup.Item>
-		{/each}
-	</ToggleGroup.Root>
-	<QuickFilterButton
-		active={values.distanceMetres !== null}
-		onclick={() => (open.distance = true)}
-	>
-		Distance
-	</QuickFilterButton>
-	<QuickFilterButton
-		active={values.positions.length > 0}
-		onclick={() => (open.position = true)}
-	>
-		Position
-	</QuickFilterButton>
+		</ToggleGroup.Root>
+		<ToggleGroup.Root
+			type="multiple"
+			variant="default"
+			size="sm"
+			class="h-9"
+			bind:value={
+				() =>
+					LABELLED_TOGGLES.filter(({ key }) => values[key]).map(
+						({ key }) => key,
+					),
+				(active: string[]) =>
+					onchange({
+						unread: active.includes("unread"),
+						online: active.includes("online"),
+						rightNow: active.includes("rightNow"),
+					})
+			}
+		>
+			{#each LABELLED_TOGGLES as { key, label } (key)}
+				<ToggleGroup.Item
+					value={key}
+					class={buttonVariants({ variant: "secondary" })}
+				>
+					{label}
+				</ToggleGroup.Item>
+			{/each}
+		</ToggleGroup.Root>
+		<QuickFilterButton
+			active={values.distanceMetres !== null}
+			onclick={() => (open.distance = true)}
+		>
+			Distance
+		</QuickFilterButton>
+		<QuickFilterButton
+			active={values.positions.length > 0}
+			onclick={() => (open.position = true)}
+		>
+			Position
+		</QuickFilterButton>
+	</div>
 </ProgressiveBlur>
 
 <DistanceQuickFilter

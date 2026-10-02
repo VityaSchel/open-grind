@@ -22,9 +22,13 @@
 
 	let {
 		covered = false,
+		filtersLocked = false,
 		class: className,
-	}: { covered?: boolean; class?: import("svelte/elements").ClassValue } =
-		$props();
+	}: {
+		covered?: boolean;
+		filtersLocked?: boolean;
+		class?: import("svelte/elements").ClassValue;
+	} = $props();
 
 	const EAGER_COUNT = 10;
 
@@ -235,6 +239,7 @@
 			filters={conversations.filters}
 			onchange={(values) => conversations.setFilters(values)}
 			inert={selecting}
+			locked={filtersLocked}
 		/>
 	</div>
 </div>
