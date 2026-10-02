@@ -146,6 +146,7 @@
 		{loop}
 		playsinline
 		preload="metadata"
+		data-slot="video-player-media"
 		class="size-full object-contain"
 		onloadeddata={loaded}
 		onseeked={seeked}
