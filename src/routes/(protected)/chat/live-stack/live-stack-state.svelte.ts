@@ -1,12 +1,9 @@
 import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "@sveltejs/kit";
 
-import {
-	CANCEL_EASING,
-	COMMIT_EASING,
-} from "$lib/components/navigation/stack/motion";
 import { StackSettle } from "$lib/components/navigation/stack/settle";
 import { isWithin } from "$lib/util/pathname";
+import type { StackMotion } from "$lib/components/navigation/stack/motion";
 import type { StackSurface } from "$lib/components/navigation/stack/surface";
 
 const BACK_WATCHDOG_MS = 1000;
@@ -31,6 +28,7 @@ export class LiveStackState {
 
 	constructor({
 		surface,
+		motion,
 		top,
 		keyOf,
 		scope,
@@ -40,6 +38,7 @@ export class LiveStackState {
 		keyboardHidden,
 	}: {
 		surface: StackSurface;
+		motion: StackMotion;
 		top: () => string | null;
 		keyOf: (target: NavigationTarget) => string | null;
 		scope: string;
@@ -48,7 +47,7 @@ export class LiveStackState {
 		keyboardVisible: () => boolean;
 		keyboardHidden: () => Promise<void>;
 	}) {
-		this.#settle = new StackSettle({ surface, reducedMotion });
+		this.#settle = new StackSettle({ surface, motion, reducedMotion });
 		this.#top = top;
 		this.#keyOf = keyOf;
 		this.#scope = scope;
@@ -126,7 +125,7 @@ export class LiveStackState {
 			void this.#beforeSettle({ opens, waitForKeyboard }).then(() => {
 				if (generation !== this.#generation) return;
 				void this.#settle
-					.settleTo({ target: opens ? 0 : 1, easing: COMMIT_EASING })
+					.settleTo({ target: opens ? 0 : 1, intent: "commit" })
 					.then((settled) => {
 						if (settled && generation === this.#generation)
 							this.#rest(toKey);
@@ -162,7 +161,7 @@ export class LiveStackState {
 		this.moving = true;
 		this.#committedSlide = this.#settle.settleTo({
 			target: 1,
-			easing: COMMIT_EASING,
+			intent: "commit",
 		});
 		this.#watchdog = setTimeout(
 			() => this.#abandonBack(),
@@ -195,7 +194,7 @@ export class LiveStackState {
 	#returnToCovered(): void {
 		const generation = this.#generation;
 		void this.#settle
-			.settleTo({ target: 0, easing: CANCEL_EASING })
+			.settleTo({ target: 0, intent: "cancel" })
 			.then((settled) => {
 				if (settled && generation === this.#generation)
 					this.moving = false;

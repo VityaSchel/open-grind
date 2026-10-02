@@ -1,11 +1,14 @@
 import { vi } from "vitest";
 
+import { stackMotion } from "$lib/components/navigation/stack/motion";
 import {
 	fakeSurface,
 	navigationEvent,
 	settleLast,
 } from "$lib/components/navigation/stack/stack-test-helpers";
 import { PageStackState } from "./page-stack-state.svelte";
+
+export const motion = stackMotion({ platform: "android" });
 
 export function makeStack({
 	reducedMotion = false,
@@ -26,6 +29,7 @@ export function makeStack({
 
 	const stack = new PageStackState({
 		surface,
+		motion,
 		livePane: () => pane,
 		reducedMotion: () => reducedMotion,
 		scope: "/settings",

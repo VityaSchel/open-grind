@@ -117,7 +117,7 @@ test.describe("the chat stack on a phone", () => {
 	test.use({ viewport: PHONE });
 
 	test("a conversation slides in over the live list", async ({ page }) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		const recording = recordFrames(page);
 		await openConversation(page);
 		const frames = (await recording).filter(({ sheet }) => sheet !== null);
@@ -133,7 +133,7 @@ test.describe("the chat stack on a phone", () => {
 	test("the list stays mounted, hidden and inert under an open conversation", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		await listScroller(page).evaluate((scroller) => {
 			(scroller as HTMLElement & { __kept?: boolean }).__kept = true;
 		});
@@ -159,7 +159,7 @@ test.describe("the chat stack on a phone", () => {
 	test("Back slides the conversation out and the list keeps its scroll position", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		await listScroller(page).evaluate((scroller) => {
 			scroller.scrollTop = 120;
 		});
@@ -200,7 +200,7 @@ test.describe("the chat stack on a phone", () => {
 	test("the system back gesture drags the conversation and commits back to the list", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		await openConversation(page);
 
 		expect(await startSystemBack(page)).toBe(true);
@@ -221,7 +221,7 @@ test.describe("the chat stack on a phone", () => {
 	test("the system back gesture dims the list and edges the conversation sliding off it", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		await openConversation(page);
 
 		expect(await startSystemBack(page)).toBe(true);
@@ -242,7 +242,7 @@ test.describe("the chat stack on a phone", () => {
 		page,
 	}) => {
 		const leftColumn = { x: 0, y: 0, width: 2, height: PHONE.height };
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		for (const mode of BLUR_MODES) {
 			await setBlurMode(page, mode);
 			expect(
@@ -264,7 +264,7 @@ test.describe("the chat stack on a phone", () => {
 	test("a back gesture during the slide-in picks the conversation up where it is, lets the finger drive the rest and commits back to the list", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 
 		const pickUp = startSystemBackMidSlide(page, SHEET);
 		await rows(page).nth(1).click();
@@ -298,7 +298,7 @@ test.describe("the chat stack on a phone", () => {
 	test("canceling the system back gesture covers the list again", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		const href = await openConversation(page);
 
 		await startSystemBack(page);
@@ -314,7 +314,7 @@ test.describe("the chat stack on a phone", () => {
 	test("Back pressed while a conversation slides out passes through and keeps its armed reply", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		await openConversation(page, { href: DEMO_CONVERSATION });
 		await messageRow(page).click({ button: "right" });
 		await page.getByRole("button", { name: "Reply" }).click();
@@ -334,7 +334,7 @@ test.describe("the chat stack on a phone", () => {
 	test("Back closes an open message menu instead of leaving the conversation", async ({
 		page,
 	}) => {
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		const href = await openConversation(page);
 		await page.locator(MESSAGE_ROW).first().click({ button: "right" });
 		const reply = page.getByRole("button", { name: "Reply" });
@@ -350,7 +350,7 @@ test.describe("the chat stack on a phone", () => {
 	test("a conversation opened directly leaves the gesture to the platform, yet Back still slides over the list", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "android" });
 		await page.goto(DEMO_CONVERSATION);
 		await backToChats(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
@@ -368,7 +368,7 @@ test.describe("the chat stack on a phone", () => {
 		page,
 	}) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
-		await openInbox(page);
+		await openInbox(page, { platform: "android" });
 		const recording = recordFrames(page);
 		await openConversation(page);
 		const frames = (await recording).filter(({ sheet }) => sheet !== null);

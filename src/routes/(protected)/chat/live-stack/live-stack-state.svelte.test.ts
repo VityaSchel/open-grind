@@ -2,10 +2,7 @@ import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "@sveltejs/kit";
 
-import {
-	CANCEL_EASING,
-	COMMIT_EASING,
-} from "$lib/components/navigation/stack/motion";
+import { stackMotion } from "$lib/components/navigation/stack/motion";
 import {
 	fakeSurface,
 	flushMicrotasks,
@@ -17,6 +14,8 @@ import { LiveStackState } from "./live-stack-state.svelte";
 const LIST = "/chat";
 const FIRST = "/chat/1:2";
 const SECOND = "/chat/3:4";
+
+const motion = stackMotion({ platform: "android" });
 
 function makeStack({
 	reducedMotion = false,
@@ -30,6 +29,7 @@ function makeStack({
 
 	const stack = new LiveStackState({
 		surface,
+		motion,
 		top: () => top,
 		keyOf: (target: NavigationTarget) => keyOf(target.url.pathname),
 		scope: LIST,
@@ -123,7 +123,7 @@ describe("LiveStackState opening a sheet", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: COMMIT_EASING,
+			easing: motion.commitEasing,
 		});
 
 		await settleLast(animations);
@@ -324,7 +324,7 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 0.3,
 			to: 0,
-			easing: CANCEL_EASING,
+			easing: motion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -436,7 +436,7 @@ describe("LiveStackState back gesture", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: CANCEL_EASING,
+			easing: motion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);
@@ -495,7 +495,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 1,
-			easing: COMMIT_EASING,
+			easing: motion.commitEasing,
 		});
 
 		const count = animations.length;
@@ -519,7 +519,7 @@ describe("LiveStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.85),
 			to: 0,
-			easing: CANCEL_EASING,
+			easing: motion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(stack.covered).toBe(true);

@@ -1,4 +1,4 @@
-import { settleDuration } from "./motion";
+import { settleDuration, type SettleIntent, type StackMotion } from "./motion";
 import type { FrameAnimation, StackSurface } from "./surface";
 
 const FULLY_IN = 0;
@@ -8,6 +8,7 @@ export class StackSettle {
 	progress = 0;
 
 	readonly #surface: StackSurface;
+	readonly #motion: StackMotion;
 	readonly #reducedMotion: () => boolean;
 
 	#running: { animation: FrameAnimation; target: number } | null = null;
@@ -15,12 +16,15 @@ export class StackSettle {
 
 	constructor({
 		surface,
+		motion,
 		reducedMotion,
 	}: {
 		surface: StackSurface;
+		motion: StackMotion;
 		reducedMotion: () => boolean;
 	}) {
 		this.#surface = surface;
+		this.#motion = motion;
 		this.#reducedMotion = reducedMotion;
 	}
 
@@ -50,10 +54,10 @@ export class StackSettle {
 
 	async settleTo({
 		target,
-		easing,
+		intent,
 	}: {
 		target: number;
-		easing: string;
+		intent: SettleIntent;
 	}): Promise<boolean> {
 		this.stop();
 		const animation = this.#surface.animate({
@@ -61,8 +65,15 @@ export class StackSettle {
 			to: target,
 			duration: this.#reducedMotion()
 				? 0
-				: settleDuration(this.progress, target),
-			easing,
+				: settleDuration({
+						from: this.progress,
+						to: target,
+						motion: this.#motion,
+					}),
+			easing:
+				intent === "commit"
+					? this.#motion.commitEasing
+					: this.#motion.cancelEasing,
 		});
 		this.#running = { animation, target };
 		if (!(await animation.completed)) return false;

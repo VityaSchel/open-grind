@@ -1,13 +1,10 @@
 import { tick } from "svelte";
 import type { OnNavigate } from "@sveltejs/kit";
 
-import {
-	CANCEL_EASING,
-	COMMIT_EASING,
-} from "$lib/components/navigation/stack/motion";
 import { StackSettle } from "$lib/components/navigation/stack/settle";
 import { canGoBack } from "$lib/util/history";
 import { isWithin } from "$lib/util/pathname";
+import type { StackMotion } from "$lib/components/navigation/stack/motion";
 import type { StackSurface } from "$lib/components/navigation/stack/surface";
 import { ancestorsOf, stackRelation, type StackRelation } from "./hierarchy";
 import { type PaneSnapshot, snapshotPane } from "./snapshot";
@@ -36,18 +33,20 @@ export class PageStackState {
 
 	constructor({
 		surface,
+		motion,
 		livePane,
 		reducedMotion,
 		scope,
 		pushedFrom,
 	}: {
 		surface: StackSurface;
+		motion: StackMotion;
 		livePane: () => HTMLElement | null;
 		reducedMotion: () => boolean;
 		scope: string;
 		pushedFrom: { path: string }[];
 	}) {
-		this.#settle = new StackSettle({ surface, reducedMotion });
+		this.#settle = new StackSettle({ surface, motion, reducedMotion });
 		this.#livePane = livePane;
 		this.#reducedMotion = reducedMotion;
 		this.#scope = scope;
@@ -112,9 +111,10 @@ export class PageStackState {
 		}
 
 		const target = relation === "push" ? 0 : 1;
+		const turnsAround = this.ghost?.path === to;
 		this.ghost = snapshot;
 		this.liveRole = relation === "push" ? "front" : "back";
-		this.#settle.progress = 1 - target;
+		if (!turnsAround) this.#settle.progress = 1 - target;
 
 		await tick();
 		snapshot.restore();
@@ -123,7 +123,7 @@ export class PageStackState {
 		return () => {
 			if (generation !== this.#generation) return;
 			void this.#settle
-				.settleTo({ target, easing: COMMIT_EASING })
+				.settleTo({ target, intent: "commit" })
 				.then((settled) => {
 					if (settled) this.ghost = null;
 				});
@@ -173,7 +173,7 @@ export class PageStackState {
 		void this.#settle
 			.settleTo({
 				target: commit ? 1 : 0,
-				easing: commit ? COMMIT_EASING : CANCEL_EASING,
+				intent: commit ? "commit" : "cancel",
 			})
 			.then((settled) => {
 				if (!settled) return;

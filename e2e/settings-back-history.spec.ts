@@ -19,7 +19,7 @@ test.describe.configure({ timeout: 180_000 });
 test("the navbar Back returns to the previous entry instead of pushing one", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const atSettings = await historyDepth(page);
 
 	await openAppSettings(page);
@@ -45,7 +45,7 @@ test("the navbar Back returns to the previous entry instead of pushing one", asy
 test("a system back after the navbar Back does not re-enter App Settings", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 	await clickNavBarBack(page);
 
@@ -60,7 +60,7 @@ test("a system back after the navbar Back does not re-enter App Settings", async
 test("consecutive system backs keep walking out, never back in", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	const visited: string[] = [];
@@ -78,7 +78,7 @@ test("consecutive system backs keep walking out, never back in", async ({
 test("navbar Back and system back do not oscillate with App Settings", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const start = await historyDepth(page);
 	const visited: string[] = [];
 	const depths: number[] = [];
@@ -112,7 +112,7 @@ test("navbar Back and system back do not oscillate with App Settings", async ({
 test("the Me tab returns to the Me screen instead of pushing one", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const atSettings = await historyDepth(page);
 
 	await openAppSettings(page);
@@ -137,7 +137,7 @@ test("the Me tab returns to the Me screen instead of pushing one", async ({
 test("a round trip through the Me tab does not make back oscillate", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const start = await historyDepth(page);
 
 	await openAppSettings(page);
@@ -164,7 +164,7 @@ test("a round trip through the Me tab does not make back oscillate", async ({
 test("the Me tab collapses every entry between here and the Me screen", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const atSettings = await historyDepth(page);
 
 	await page.getByRole("link", { name: "Account Settings" }).click();
@@ -201,7 +201,7 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 test("the Me tab still navigates from a deep-linked subpage", async ({
 	page,
 }) => {
-	await openDeepLink(page, APP_SETTINGS);
+	await openDeepLink(page, APP_SETTINGS, { platform: "android" });
 
 	await clickMeTab(page);
 

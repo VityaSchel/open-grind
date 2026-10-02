@@ -1,15 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-	CANCEL_EASING,
-	COMMIT_EASING,
-} from "$lib/components/navigation/stack/motion";
-import {
 	flushMicrotasks,
 	navigationEvent,
 	settleLast,
 } from "$lib/components/navigation/stack/stack-test-helpers";
-import { makeStack, push } from "./page-stack-test-helpers";
+import { makeStack, motion, push } from "./page-stack-test-helpers";
 
 afterEach(() => {
 	document.body.innerHTML = "";
@@ -32,7 +28,7 @@ describe("PageStackState navigation", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: 1,
 			to: 0,
-			easing: COMMIT_EASING,
+			easing: motion.commitEasing,
 		});
 
 		await settleLast(animations);
@@ -274,7 +270,7 @@ describe("PageStackState swipe back", () => {
 
 		expect(animations.at(-1)).toMatchObject({
 			to: 1,
-			easing: COMMIT_EASING,
+			easing: motion.commitEasing,
 		});
 		expect(back).not.toHaveBeenCalled();
 
@@ -356,7 +352,7 @@ describe("PageStackState swipe back", () => {
 
 		expect(animations.at(-1)).toMatchObject({
 			to: 0,
-			easing: CANCEL_EASING,
+			easing: motion.cancelEasing,
 		});
 		await settleLast(animations);
 
@@ -494,7 +490,7 @@ describe("PageStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.8),
 			to: 1,
-			easing: COMMIT_EASING,
+			easing: motion.commitEasing,
 		});
 		await settleLast(animations);
 		expect(back).toHaveBeenCalledTimes(1);
@@ -511,7 +507,7 @@ describe("PageStackState back gesture during the slide-in", () => {
 		expect(animations.at(-1)).toMatchObject({
 			from: expect.closeTo(0.8),
 			to: 0,
-			easing: CANCEL_EASING,
+			easing: motion.cancelEasing,
 		});
 		await settleLast(animations);
 		expect(back).not.toHaveBeenCalled();
@@ -555,6 +551,23 @@ describe("PageStackState state under interruption", () => {
 			stack.tracking,
 			"a live gesture must not outlive a navigation",
 		).toBe(false);
+	});
+
+	it("turns a push around from where it had reached, not from a full page", async () => {
+		const { stack, applied, animations } = makeStack();
+		const entering = await stack.navigate(
+			navigationEvent({ from: "/settings", to: "/settings/app" }),
+		);
+		entering?.();
+		animations.at(-1)!.reached = 0.7;
+
+		const leaving = await stack.navigate(
+			navigationEvent({ from: "/settings/app", to: "/settings" }),
+		);
+		expect(stack.ghost?.path).toBe("/settings/app");
+		expect(applied.at(-1)).toBe(0.7);
+		leaving?.();
+		expect(animations.at(-1)).toMatchObject({ from: 0.7, to: 1 });
 	});
 
 	it("ignores the settle starter of a superseded navigation", async () => {

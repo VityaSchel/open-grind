@@ -6,7 +6,10 @@
 	import type { NavigationTarget } from "@sveltejs/kit";
 	import type { Attachment } from "svelte/attachments";
 
-	import { STACK_Z } from "$lib/components/navigation/stack/motion";
+	import {
+		STACK_Z,
+		stackMotion,
+	} from "$lib/components/navigation/stack/motion";
 	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import {
 		softKeyboardHidden,
@@ -37,11 +40,15 @@
 	let sheetPane: HTMLElement | null = null;
 	let dim: HTMLElement | null = $state(null);
 
+	const motion = stackMotion();
+
 	const stack: LiveStackState = new LiveStackState({
 		surface: paneSurface({
 			panes: () => ({ front: sheetPane, back: basePane, dim }),
 			parallax: () => !prefersReducedMotion.current,
+			motion,
 		}),
+		motion,
 		top: () => keyOf(page),
 		keyOf: (target) => keyOf(target),
 		scope: untrack(() => basePath),
@@ -112,7 +119,14 @@
 		<div
 			{@attach placePane}
 			data-slot="live-stack-sheet"
-			class="fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom) shadow-(--stack-edge)"
+			class={[
+				"fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)",
+				{
+					"shadow-(--stack-edge)": motion.edge,
+					"pointer-events-none":
+						motion.fade && stack.leaving !== null,
+				},
+			]}
 			style:z-index={STACK_Z.front}
 			data-leaving={stack.leaving !== null || undefined}
 		>

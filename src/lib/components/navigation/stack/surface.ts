@@ -1,4 +1,4 @@
-import { paneFrame } from "./motion";
+import { paneFrame, type StackMotion } from "./motion";
 
 type PaneElements = {
 	front: HTMLElement | null;
@@ -25,18 +25,20 @@ export type StackSurface = {
 export function paneSurface({
 	panes,
 	parallax,
+	motion,
 }: {
 	panes: () => PaneElements;
 	parallax: () => boolean;
+	motion: StackMotion;
 }): StackSurface {
 	const frameAt = (progress: number) =>
-		paneFrame({ progress, parallax: parallax() });
+		paneFrame({ progress, parallax: parallax(), motion });
 
 	const apply = (progress: number) => {
 		const { front, back, dim } = panes();
 		const frame = frameAt(progress);
-		if (front) front.style.transform = frame.front;
-		if (back) back.style.transform = frame.back;
+		if (front) Object.assign(front.style, frame.front);
+		if (back) Object.assign(back.style, frame.back);
 		if (dim) dim.style.opacity = String(frame.dim);
 	};
 
@@ -61,12 +63,12 @@ export function paneSurface({
 				fill: "both",
 			};
 			const running = [
-				front?.animate(
-					[{ transform: start.front }, { transform: end.front }],
-					timing,
-				),
+				front?.animate([start.front, end.front], timing),
 				back?.animate(
-					[{ transform: start.back }, { transform: end.back }],
+					[
+						{ transform: start.back.transform },
+						{ transform: end.back.transform },
+					],
 					timing,
 				),
 				dim?.animate(

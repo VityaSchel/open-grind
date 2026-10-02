@@ -4,7 +4,10 @@
 	import { prefersReducedMotion } from "svelte/motion";
 	import type { Attachment } from "svelte/attachments";
 
-	import { STACK_Z } from "$lib/components/navigation/stack/motion";
+	import {
+		STACK_Z,
+		stackMotion,
+	} from "$lib/components/navigation/stack/motion";
 	import { paneSurface } from "$lib/components/navigation/stack/surface";
 	import { attachSystemBackGesture } from "$lib/platform/system-back-gesture";
 	import { earlierPathnames } from "$lib/util/history";
@@ -20,6 +23,8 @@
 	let pane: HTMLElement | null = $state(null);
 	let dim: HTMLElement | null = $state(null);
 
+	const motion = stackMotion();
+
 	const stack: PageStackState = new PageStackState({
 		surface: paneSurface({
 			panes: () => {
@@ -29,7 +34,9 @@
 					: { front: ghost, back: pane, dim };
 			},
 			parallax: () => !prefersReducedMotion.current,
+			motion,
 		}),
+		motion,
 		livePane: () => pane,
 		reducedMotion: () => prefersReducedMotion.current,
 		scope: untrack(() => scope),
@@ -64,7 +71,10 @@
 		bind:this={pane}
 		{@attach trackScrolled}
 		data-slot="page-stack-pane"
-		class="fixed inset-0 bg-background pt-(--safe-area-top) pb-(--content-pb) shadow-(--stack-edge)"
+		class={[
+			"fixed inset-0 bg-background pt-(--safe-area-top) pb-(--content-pb)",
+			{ "shadow-(--stack-edge)": motion.edge },
+		]}
 		style:z-index={liveZ}
 	>
 		{@render children?.()}

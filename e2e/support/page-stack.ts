@@ -26,10 +26,13 @@ export const stackSettled = (page: Page) =>
 
 export async function openSettings(
 	page: Page,
-	{ reducedMotion }: { reducedMotion?: "reduce" } = {},
+	{
+		reducedMotion,
+		platform,
+	}: { reducedMotion?: "reduce"; platform?: string } = {},
 ) {
 	if (reducedMotion) await page.emulateMedia({ reducedMotion });
-	await installTauriShim(page);
+	await installTauriShim(page, { platform });
 	await page.goto(SETTINGS);
 	await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await page
@@ -37,8 +40,12 @@ export async function openSettings(
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
-export async function openDeepLink(page: Page, path: string) {
-	await installTauriShim(page);
+export async function openDeepLink(
+	page: Page,
+	path: string,
+	{ platform }: { platform?: string } = {},
+) {
+	await installTauriShim(page, { platform });
 	await page.goto(path);
 	await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await stackSettled(page);

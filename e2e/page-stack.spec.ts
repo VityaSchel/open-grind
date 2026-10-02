@@ -105,7 +105,7 @@ const navBarHitTest = (page: Page) =>
 test("a pushed page enters over a snapshot of the page it came from", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await expect(ghost(page)).toHaveCount(0);
 
 	await page.getByRole("link", { name: "App Settings" }).click();
@@ -120,7 +120,7 @@ test("a pushed page enters over a snapshot of the page it came from", async ({
 test("My Albums slides onto the settings stack and swipes back off it", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 
 	await page.getByRole("link", { name: "My Albums" }).click();
 	await expect(dim(page)).toBeAttached();
@@ -144,7 +144,7 @@ test("My Albums slides onto the settings stack and swipes back off it", async ({
 test("both panes paint the app background so neither shows through", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await page.getByRole("link", { name: "App Settings" }).click();
 	await expect(dim(page)).toBeAttached();
 
@@ -171,7 +171,7 @@ test("both panes paint the app background so neither shows through", async ({
 test("the bottom nav bar stays above both panes, at rest and mid-slide", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	expect(await navBarHitTest(page)).toEqual({ present: true, onTop: true });
 
 	await page.getByRole("link", { name: "App Settings" }).click();
@@ -186,7 +186,7 @@ test("the bottom nav bar stays above both panes, at rest and mid-slide", async (
 test("neither axis of the document scrolls while two panes are on screen", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	expect(await documentOverflow(page)).toEqual({ x: 0, y: 0 });
 
 	await page.getByRole("link", { name: "App Settings" }).click();
@@ -203,7 +203,7 @@ test("neither axis of the document scrolls while two panes are on screen", async
 test("the settings header keeps its viewport geometry while the panes move", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	const header = page.locator("nav.pblur").first();
@@ -220,7 +220,7 @@ test("the settings header keeps its viewport geometry while the panes move", asy
 });
 
 test("the Back button pops with the same animation", async ({ page }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	await backLink(page).click();
@@ -243,7 +243,7 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 		await expect(page).toHaveURL(/\/settings\/profile$/);
 		await expect(pane(page)).toBeVisible();
 	};
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	const slid = await watchRendered(page, '[data-slot="page-stack-ghost"]');
 
 	await openProfileEditor();
@@ -272,7 +272,7 @@ test("Back still slides down the stack after a profile was opened from the block
 	page,
 }) => {
 	const blockedList = /\/settings\/account\/blocked$/;
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await page.getByRole("link", { name: "Account Settings" }).click();
 	await page.getByRole("link", { name: "Blocked users" }).click();
 	await expect(page).toHaveURL(blockedList);
@@ -294,7 +294,7 @@ test("Back still slides down the stack after a profile was opened from the block
 test("the panes follow the system back gesture's progress", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	expect(await startSystemBack(page)).toBe(true);
@@ -320,7 +320,7 @@ test("the panes follow the system back gesture's progress", async ({
 test("the page sliding off draws a one-pixel edge against the dimmed page underneath", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	expect(await startSystemBack(page)).toBe(true);
@@ -336,7 +336,7 @@ test("the Back button slides the page off with the same edge over the same scrim
 	page,
 }) => {
 	const { width, height } = page.viewportSize()!;
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	const paused = pauseMidSlide(page, {
@@ -363,7 +363,7 @@ test("the Back button slides the page off with the same edge over the same scrim
 test("a page at rest shows no edge along the left of the screen in any blur mode", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 	const { height } = page.viewportSize()!;
 
@@ -379,7 +379,7 @@ test("a page at rest shows no edge along the left of the screen in any blur mode
 });
 
 test("committing the system back gesture navigates back", async ({ page }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	await startSystemBack(page);
@@ -397,7 +397,7 @@ test("a back gesture during the slide-in picks the page up where it is, lets the
 	page,
 }) => {
 	const width = page.viewportSize()!.width;
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 
 	const pickUp = startSystemBackMidSlide(
 		page,
@@ -430,7 +430,7 @@ test("a back swipe started while the last one is still sliding out goes back fro
 	page,
 }) => {
 	const PRIVACY = `${SETTINGS}/account/privacy`;
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await page.getByRole("link", { name: "Account Settings" }).click();
 	await expect(dim(page)).toHaveCount(0, { timeout: 5_000 });
 	await page.getByRole("link", { name: "Privacy" }).click();
@@ -457,7 +457,7 @@ test("a back swipe started while the last one is still sliding out goes back fro
 test("canceling the system back gesture stays on the page", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await openAppSettings(page);
 
 	await startSystemBack(page);
@@ -472,7 +472,7 @@ test("canceling the system back gesture stays on the page", async ({
 test("a page opened directly leaves the system gesture to the platform", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "android" });
 	await page.goto(APP_SETTINGS);
 	await pane(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await backLink(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
@@ -484,7 +484,7 @@ test("a page opened directly leaves the system gesture to the platform", async (
 test("reduced motion swaps pages at once, yet the back gesture still follows the finger with nothing sliding behind", async ({
 	page,
 }) => {
-	await openSettings(page, { reducedMotion: "reduce" });
+	await openSettings(page, { reducedMotion: "reduce", platform: "android" });
 	await page.getByRole("link", { name: "App Settings" }).click();
 	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
 	await expect(ghost(page)).toHaveCount(0);
@@ -511,7 +511,7 @@ test("reduced motion swaps pages at once, yet the back gesture still follows the
 test("a modal opened from settings covers both panes and the nav bar", async ({
 	page,
 }) => {
-	await openSettings(page);
+	await openSettings(page, { platform: "android" });
 	await page.getByRole("button", { name: "Sign Out" }).click();
 	await expect(
 		page.locator('[data-slot="alert-dialog-content"]'),

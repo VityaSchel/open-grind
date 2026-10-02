@@ -78,7 +78,7 @@ test.describe("my albums", () => {
 		).toHaveCount(0);
 	});
 
-	test("Back slides the album off My Albums as it was, not a loading grid", async ({
+	test("Back returns to My Albums as it was, not a loading grid", async ({
 		page,
 	}) => {
 		await openSharedAlbum(page);

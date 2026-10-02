@@ -4,14 +4,9 @@ import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import {
 	openAppSettings,
 	openSettings,
-	pane,
 	stackSettled,
 } from "./support/page-stack";
-import {
-	cancelSystemBack,
-	progressSystemBack,
-	startSystemBack,
-} from "./support/system-back";
+import { pauseOnceSliding, resumeSlides } from "./support/stack-layers";
 
 const NOTIFICATIONS = "/settings/app/notifications";
 const SCREENS = [
@@ -62,24 +57,24 @@ for (const screen of SCREENS) {
 			});
 		}
 
-		test("the message stays in the middle of its page while the page is dragged back", async ({
+		test("the message stays in the middle of its page while the page slides in", async ({
 			page,
 		}) => {
-			await openSettings(page);
+			await openSettings(page, { platform: "windows" });
 			await openAppSettings(page);
+
+			const sliding = pauseOnceSliding(page, {
+				pane: '[data-slot="page-stack-pane"]',
+			});
 			await page.getByRole("link", { name: "Notifications" }).click();
-			await expect(page).toHaveURL(new RegExp(`${NOTIFICATIONS}$`));
+			const travelled = await sliding;
+			const center = await textCenter(page, "Windows");
+			await resumeSlides(page);
 			await stackSettled(page);
 
-			expect(await startSystemBack(page)).toBe(true);
-			await progressSystemBack(page, 0.5);
-			const dragged = (await pane(page).boundingBox())!.x;
-			const center = await textCenter(page, "macOS");
-			await cancelSystemBack(page);
-
-			expect(dragged).toBeCloseTo(screen.viewport.width / 2, 0);
+			expect(travelled).toBeGreaterThan(0);
 			expect(
-				Math.abs(center.x - dragged - screen.viewport.width / 2),
+				Math.abs(center.x - travelled - screen.viewport.width / 2),
 			).toBeLessThanOrEqual(1);
 			expect(
 				Math.abs(center.y - screen.viewport.height / 2),
