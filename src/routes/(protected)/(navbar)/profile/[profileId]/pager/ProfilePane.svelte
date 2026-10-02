@@ -15,11 +15,13 @@
 	import type { RenderedGridProfile } from "$lib/grid/grid";
 	import BlockedProfile from "../BlockedProfile.svelte";
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
+	import FavoriteNoteButton from "../favorite-note/FavoriteNoteButton.svelte";
 	import HiddenProfile from "../HiddenProfile.svelte";
 	import ImageCarousel from "../ImageCarousel.svelte";
 	import type { ProfileState } from "../profile-state.svelte";
 	import ProfileBody from "../ProfileBody.svelte";
 	import ProfilePreview from "../ProfilePreview.svelte";
+	import ProfileTopNavBar from "../top-nav/ProfileTopNavBar.svelte";
 
 	let {
 		profileState,
@@ -109,6 +111,21 @@
 						class="aspect-3/4 h-auto max-h-photo w-full rounded-none"
 					/>
 				{/if}
+				{#if profile?.isFavorite && profileState.note && !ourProfile}
+					<FavoriteNoteButton
+						profileId={profile.profileId}
+						note={profileState.note}
+						onSave={(note) => profileState.setNote(note)}
+					/>
+				{/if}
+				<ProfileTopNavBar
+					{ourProfile}
+					{profile}
+					onBlocked={() => profileState.markBlocked()}
+					onHidden={() => profileState.markHidden()}
+					onFavorite={(isFavorite) =>
+						profileState.setFavorite(isFavorite)}
+				/>
 				{#if profile}
 					<ProfileBody {profileState} />
 				{:else if row}

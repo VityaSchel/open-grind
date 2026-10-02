@@ -56,9 +56,11 @@ const LOADED = {
 	mediaHashes: [ROW_HASH, SECOND_HASH],
 };
 
-function gridRow(): RenderedGridProfile {
+function gridRow({
+	id = PROFILE_ID,
+}: { id?: number } = {}): RenderedGridProfile {
 	return {
-		...rendered({ id: PROFILE_ID }),
+		...rendered({ id }),
 		displayName: "Peer",
 		age: 27,
 		profilePhotosHashes: [ROW_HASH],
@@ -78,15 +80,14 @@ function renderPane({
 	active,
 	row,
 	position = 0,
+	profileId = PROFILE_ID,
 }: {
 	active: boolean;
 	row: RenderedGridProfile | null;
 	position?: number;
+	profileId?: number;
 }) {
-	const profileState = new ProfileState({
-		profileId: PROFILE_ID,
-		ourProfileId: OUR_ID,
-	});
+	const profileState = new ProfileState({ profileId, ourProfileId: OUR_ID });
 	const { container } = render(ProfilePane, {
 		props: {
 			profileState,
@@ -242,6 +243,120 @@ describe("ProfilePane loading", () => {
 				'[data-slot="skeleton"]',
 			),
 		).not.toBeNull();
+	});
+});
+
+describe("ProfilePane profile actions", () => {
+	it("offers Edit profile on our own pane while it loads", async () => {
+		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
+		const { section } = renderPane({
+			active: true,
+			row: null,
+			profileId: OUR_ID,
+		});
+		await tick();
+
+		expect(headingElement(section)).toBeNull();
+		expect(
+			screen
+				.getByRole("link", { name: "Edit profile" })
+				.getAttribute("href"),
+		).toBe("/settings/profile");
+	});
+
+	it("keeps the same Edit profile link when our own profile loads", async () => {
+		const loaded = Promise.withResolvers<Profile>();
+		getProfileMock.mockReturnValueOnce(loaded.promise);
+		const { section } = renderPane({
+			active: true,
+			row: null,
+			profileId: OUR_ID,
+		});
+		await tick();
+		const loadingLink = screen.getByRole("link", { name: "Edit profile" });
+
+		loaded.resolve(
+			fullProfile({ profileId: OUR_ID, displayName: "Me", age: 30 }),
+		);
+		await flush();
+
+		expect(heading(section)).toBe("Me, 30");
+		expect(screen.getByRole("link", { name: "Edit profile" })).toBe(
+			loadingLink,
+		);
+	});
+
+	it("keeps the same Edit profile link through a failed load and its retry", async () => {
+		getProfileMock.mockRejectedValueOnce(serviceUnavailable());
+		getProfileMock.mockResolvedValueOnce(
+			fullProfile({ profileId: OUR_ID, displayName: "Me", age: 30 }),
+		);
+		const { section } = renderPane({
+			active: true,
+			row: gridRow({ id: OUR_ID }),
+			profileId: OUR_ID,
+		});
+		await flush();
+		const failedLink = screen.getByRole("link", { name: "Edit profile" });
+
+		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await flush();
+
+		expect(heading(section)).toBe("Me, 30");
+		expect(screen.getByRole("link", { name: "Edit profile" })).toBe(
+			failedLink,
+		);
+	});
+
+	it("leaves Edit profile off the full error screen of our own profile", async () => {
+		getProfileMock.mockRejectedValue(serviceUnavailable());
+		renderPane({ active: true, row: null, profileId: OUR_ID });
+		await flush();
+
+		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
+		expect(
+			screen.queryByRole("navigation", { name: "Profile actions" }),
+		).toBeNull();
+	});
+
+	it("reaches a favorite's note before the profile actions", async () => {
+		const favorite = { ...fullProfile(LOADED), isFavorite: true };
+		getProfileMock.mockResolvedValue(favorite);
+		const { profileState } = renderPane({ active: true, row: gridRow() });
+		await flush();
+		profileState.setNote({ notes: "Met at the gym", phoneNumber: "" });
+		await tick();
+
+		const controls = screen.getAllByRole("button");
+		const note = screen.getByRole("button", { name: "Met at the gym" });
+		const menu = screen.getByRole("button", { name: "Profile menu" });
+		expect(controls.indexOf(note)).toBeLessThan(controls.indexOf(menu));
+	});
+
+	it("holds someone else's profile actions back until the profile loads", async () => {
+		const loaded = Promise.withResolvers<Profile>();
+		getProfileMock.mockReturnValueOnce(loaded.promise);
+		renderPane({ active: true, row: gridRow() });
+		await tick();
+		expect(
+			screen.queryByRole("navigation", { name: "Profile actions" }),
+		).toBeNull();
+
+		loaded.resolve(fullProfile(LOADED));
+		await flush();
+
+		const actions = within(
+			screen.getByRole("navigation", { name: "Profile actions" }),
+		);
+		expect(
+			actions.getByRole("switch", { name: "Add to favorites" }),
+		).not.toBeNull();
+		expect(
+			actions.getByRole("button", { name: "Profile menu" }),
+		).not.toBeNull();
+		expect(
+			actions.queryByRole("link", { name: "Edit profile" }),
+		).toBeNull();
 	});
 });
 

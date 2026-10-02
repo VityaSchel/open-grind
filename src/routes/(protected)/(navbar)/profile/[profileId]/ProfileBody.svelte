@@ -21,7 +21,6 @@
 	} from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
-	import FavoriteNoteButton from "./favorite-note/FavoriteNoteButton.svelte";
 	import Genders from "./fields/GendersPronouns.svelte";
 	import HivStatusIcon from "./fields/HivStatusIcon.svelte";
 	import LastTested from "./fields/LastTested.svelte";
@@ -35,7 +34,6 @@
 	import ProfileSection from "./ProfileSection.svelte";
 	import ProfileTags from "./ProfileTags.svelte";
 	import SexualPosition from "./SexualPosition.svelte";
-	import ProfileTopNavBar from "./top-nav/ProfileTopNavBar.svelte";
 
 	let { profileState }: { profileState: ProfileState } = $props();
 
@@ -70,20 +68,6 @@
 		sexualHealth: sexualHealthValue,
 		socialNetworks,
 	} = profile}
-	{#if !ourProfile && profile.isFavorite && profileState.note}
-		<FavoriteNoteButton
-			profileId={profile.profileId}
-			note={profileState.note}
-			onSave={(note) => profileState.setNote(note)}
-		/>
-	{/if}
-	<ProfileTopNavBar
-		ourProfileId={profileState.ourProfileId}
-		{profile}
-		onBlocked={() => profileState.markBlocked()}
-		onHidden={() => profileState.markHidden()}
-		onFavorite={(isFavorite) => profileState.setFavorite(isFavorite)}
-	/>
 	<div
 		class={[
 			"flex flex-col p-4",
