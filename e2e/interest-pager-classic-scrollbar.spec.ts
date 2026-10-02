@@ -6,6 +6,7 @@ import {
 	listScrollbars,
 	openTaps,
 	PAGER,
+	panesSwallowingClicks,
 	swipeAcross,
 	TAPS_PANE,
 } from "./support/interest-pager";
@@ -34,7 +35,7 @@ test("lists whose scrollbar takes room beside them keep it, and their width, whi
 		distancePx: Math.round(width * 0.65),
 		release: false,
 	});
-	await expect(page.locator(TAPS_PANE)).toHaveAttribute("inert", "");
+	await expect.poll(() => panesSwallowingClicks(page)).toEqual([TAPS_PANE]);
 	await afterTwoFrames(page);
 
 	expect(await listScrollbars(page)).toEqual([narrowed, narrowed]);

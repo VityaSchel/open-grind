@@ -23,7 +23,7 @@
 
 	let mounted = $state([false, false]);
 	let paging = $state(false);
-	let heading = $state<number | null>(null);
+	let heading: number | null = null;
 	let restedPane: number | null = null;
 
 	const routed = $derived(interestTabIndex(page.url.pathname));
@@ -77,29 +77,33 @@
 		restedPane = null;
 		snap.place(routed, { animated: true });
 	});
+
+	function swallowClickOutsideHeadingPane(
+		event: MouseEvent & { currentTarget: HTMLElement },
+	) {
+		if (!paging || heading === null) return;
+		const headingPane = event.currentTarget.children[heading];
+		if (event.target instanceof Node && headingPane?.contains(event.target))
+			return;
+		event.preventDefault();
+		event.stopPropagation();
+	}
 </script>
 
 <main
 	data-slot="interest-pager"
 	data-scroll-intent="x"
 	ontouchstart={onUnsettle}
+	onclickcapture={swallowClickOutsideHeadingPane}
 	class="screen-nav-host no-scrollbar flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
 	{@attach snap.attach}
 >
-	<div
-		data-slot="interest-pane-views"
-		class="w-full shrink-0 snap-start"
-		inert={paging && heading !== 0}
-	>
+	<div data-slot="interest-pane-views" class="w-full shrink-0 snap-start">
 		{#if mounted[0]}
 			<ViewsGrid {ourProfileId} {paging} />
 		{/if}
 	</div>
-	<div
-		data-slot="interest-pane-taps"
-		class="w-full shrink-0 snap-start"
-		inert={paging && heading !== 1}
-	>
+	<div data-slot="interest-pane-taps" class="w-full shrink-0 snap-start">
 		{#if mounted[1]}
 			<TapsReceivedList {ourProfileId} active={routed === 1} {paging} />
 		{/if}

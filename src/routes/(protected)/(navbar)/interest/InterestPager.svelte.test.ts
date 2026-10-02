@@ -88,10 +88,41 @@ function loading(pathname: string) {
 	navigating.to = { url: new URL(pathname, page.url) };
 }
 
-function lockedPanes(pager: { node: HTMLElement }) {
+function clickSwallowed(pane: Element) {
+	const row = pane.appendChild(document.createElement("button"));
+	const heard = vi.fn();
+	document.addEventListener("click", heard);
+	const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+	row.dispatchEvent(click);
+	document.removeEventListener("click", heard);
+	row.remove();
+	const unheard = heard.mock.calls.length === 0;
+	expect(
+		click.defaultPrevented,
+		"a click is cancelled exactly when no listener hears it",
+	).toBe(unheard);
+	return unheard;
+}
+
+function markup(pager: { node: HTMLElement }) {
 	flushSync();
+	return [pager.node, ...pager.node.children].map((element) => ({
+		attributes: element
+			.getAttributeNames()
+			.map((name) => `${name}=${element.getAttribute(name)}`),
+		inert:
+			element.hasAttribute("inert") ||
+			(element instanceof HTMLElement && element.inert === true),
+	}));
+}
+
+function panesSwallowingClicks(pager: { node: HTMLElement }) {
+	expect(
+		markup(pager).filter(({ inert }) => inert),
+		"no pane is made inert",
+	).toEqual([]);
 	return [...pager.node.children]
-		.filter((pane) => pane instanceof HTMLElement && pane.inert)
+		.filter(clickSwallowed)
 		.map((pane) => pane.getAttribute("data-slot"));
 }
 
@@ -299,34 +330,34 @@ describe("InterestPager", () => {
 		expect(pager.scrollTo).toHaveBeenCalledTimes(2);
 	});
 
-	it("locks the tab a drag shows less than half of, and neither once the pager rests", () => {
+	it("swallows clicks on the tab a drag shows less than half of, and on neither once the pager rests", () => {
 		const pager = mountPager();
 
 		pager.touch("touchstart");
 		pager.scroll(0.6 * WIDTH);
-		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-views"]);
 
 		pager.scroll(0.4 * WIDTH);
-		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-taps"]);
 
 		pager.scroll(0);
-		expect(lockedPanes(pager)).toEqual([]);
+		expect(panesSwallowingClicks(pager)).toEqual([]);
 	});
 
-	it("locks the tab being left as soon as a lifted finger lets the pager glide on, before it is halfway", () => {
+	it("swallows clicks on the tab being left as soon as a lifted finger lets the pager glide on, before it is halfway", () => {
 		const pager = mountPager();
 
 		pager.touch("touchstart");
 		pager.scroll(0.8 * WIDTH);
-		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-views"]);
 
 		pager.touch("touchend");
 		pager.scroll(0.7 * WIDTH);
 
-		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-taps"]);
 	});
 
-	it("locks the incoming tab again when a lifted finger lets the pager fall back", () => {
+	it("swallows clicks on the incoming tab again when a lifted finger lets the pager fall back", () => {
 		const pager = mountPager();
 
 		pager.touch("touchstart");
@@ -334,37 +365,56 @@ describe("InterestPager", () => {
 		pager.touch("touchend");
 		pager.scroll(0.9 * WIDTH);
 
-		expect(lockedPanes(pager)).toEqual(["interest-pane-views"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-views"]);
 	});
 
-	it("locks the tab being left from the first scroll of a glide to a tab picked outside the pager", () => {
+	it("swallows clicks on the tab being left from the first scroll of a glide to a tab picked outside the pager", () => {
 		const pager = mountPager();
 
 		route(VIEWS);
-		expect(lockedPanes(pager)).toEqual([]);
+		expect(panesSwallowingClicks(pager)).toEqual([]);
 
 		pager.scroll(0.9 * WIDTH);
 
-		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-taps"]);
 	});
 
-	it("keeps the tab being left locked when a press on the pager drops the glide before halfway", () => {
+	it("keeps swallowing clicks on the tab being left when a press on the pager drops the glide before halfway", () => {
 		const pager = mountPager();
 
 		route(VIEWS);
 		pager.scroll(0.9 * WIDTH);
 		pager.node.dispatchEvent(new Event("pointerdown", { bubbles: true }));
 
-		expect(lockedPanes(pager)).toEqual(["interest-pane-taps"]);
+		expect(panesSwallowingClicks(pager)).toEqual(["interest-pane-taps"]);
 	});
 
-	it("locks neither tab when a switch lands in a single jump", () => {
+	it("swallows clicks on neither tab when a switch lands in a single jump", () => {
 		const pager = mountPager();
 
 		route(VIEWS);
 		pager.scroll(0);
 
-		expect(lockedPanes(pager)).toEqual([]);
+		expect(panesSwallowingClicks(pager)).toEqual([]);
+	});
+
+	it("leaves the attributes of the pager and its tabs as they were through a drag and the glide after it", () => {
+		const pager = mountPager();
+		const resting = markup(pager);
+
+		pager.touch("touchstart");
+		pager.scroll(0.6 * WIDTH);
+		expect(markup(pager)).toEqual(resting);
+
+		pager.scroll(0.4 * WIDTH);
+		expect(markup(pager)).toEqual(resting);
+
+		pager.touch("touchend");
+		pager.scroll(0.2 * WIDTH);
+		expect(markup(pager)).toEqual(resting);
+
+		pager.scroll(0);
+		expect(markup(pager)).toEqual(resting);
 	});
 
 	it("tells both lists while the pager is between tabs, and that it is over once it lands", () => {

@@ -14,8 +14,11 @@ import {
 	listScrollbars,
 	openTaps,
 	PAGER,
+	panesSwallowingClicks,
+	rowsOnScreen,
 	swipeAcross,
 	tabTrack,
+	TAP_ROW,
 	TAPS,
 	TAPS_PANE,
 	TAPS_SCROLLER,
@@ -27,6 +30,7 @@ import {
 declare global {
 	interface Window {
 		__clickedPanes?: string[];
+		__heardRows?: string[];
 		__chipDetachedAt?: number[];
 	}
 }
@@ -121,12 +125,10 @@ test("a finger held on the other tab keeps the URL until it lifts", async ({
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
 });
 
-test("a finger held past halfway locks only the tab being left, and landing unlocks it", async ({
+test("a finger held past halfway has only the tab being left swallow clicks, and landing lets it take them again", async ({
 	page,
 }) => {
 	const pager = page.locator(PAGER);
-	const views = page.locator(VIEWS_PANE);
-	const taps = page.locator(TAPS_PANE);
 	const width = await pager.evaluate((el) => el.clientWidth);
 
 	const touch = await swipeAcross(page, {
@@ -134,14 +136,13 @@ test("a finger held past halfway locks only the tab being left, and landing unlo
 		release: false,
 	});
 
-	await expect(taps).toHaveAttribute("inert", "");
-	await expect(views).not.toHaveAttribute("inert");
+	await expect.poll(() => panesSwallowingClicks(page)).toEqual([TAPS_PANE]);
+	await expect(pager.locator("[inert]")).toHaveCount(0);
 
 	await touch.end();
 
 	await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
-	await expect(taps).not.toHaveAttribute("inert");
-	await expect(views).not.toHaveAttribute("inert");
+	await expect.poll(() => panesSwallowingClicks(page)).toEqual([]);
 });
 
 test("both lists drop their scrollbar while a finger holds the pager between tabs, and show it again once it lands", async ({
@@ -207,26 +208,30 @@ test("a click over the tab being left reaches nothing in it, while the incoming 
 	await touch.end();
 });
 
-test("a tab tap keeps the list being left locked for the whole glide", async ({
+test("a tab tap has the list being left swallow clicks for the whole glide", async ({
 	page,
 }) => {
 	const { frames, gliding } = await glideToViews(page);
 
 	expect(
-		gliding.filter(({ locked }) => locked.join() !== "interest-pane-taps"),
-		"only Taps, the list being left, is locked on every frame of the glide",
+		gliding.filter(
+			({ swallowingClicks }) => swallowingClicks.join() !== TAPS_PANE,
+		),
+		"only Taps, the list being left, swallows clicks on every frame of the glide",
 	).toEqual([]);
-	expect(frames.at(-1)?.locked, "nothing stays locked at rest").toEqual([]);
+	expect(
+		frames.at(-1)?.swallowingClicks,
+		"both lists take clicks at rest",
+	).toEqual([]);
 });
 
-test("a finger that lifts before halfway locks the list being left as soon as the pager moves on", async ({
+test("a finger that lifts before halfway has the list being left swallow clicks as soon as the pager moves on", async ({
 	page,
 }) => {
 	await holdPagerAt(page.locator(PAGER), { progress: 0.7 });
-	await expect(page.locator(VIEWS_PANE)).toHaveAttribute("inert", "");
-	await expect(page.locator(TAPS_PANE)).not.toHaveAttribute("inert");
+	await expect.poll(() => panesSwallowingClicks(page)).toEqual([VIEWS_PANE]);
 
-	const lockedOnTheNextFrame = await page.locator(PAGER).evaluate(
+	const swallowingOnTheNextFrame = await page.locator(PAGER).evaluate(
 		(pager) =>
 			new Promise((resolve) => {
 				window.dispatchEvent(
@@ -234,29 +239,62 @@ test("a finger that lifts before halfway locks the list being left as soon as th
 				);
 				pager.scrollLeft = Math.round(pager.clientWidth * 0.6);
 				requestAnimationFrame(() =>
-					resolve(
-						Array.from(pager.children)
-							.filter(
-								(pane) =>
-									pane instanceof HTMLElement && pane.inert,
-							)
-							.map((pane) => pane.getAttribute("data-slot")),
-					),
+					resolve(window.__panesSwallowingClicks!()),
 				);
 			}),
 	);
 
-	expect(lockedOnTheNextFrame).toEqual(["interest-pane-taps"]);
+	expect(swallowingOnTheNextFrame).toEqual([TAPS_PANE]);
 });
 
-test("a wheel over the tab being left scrolls nothing in it, while the incoming tab scrolls", async ({
+test("a row of the tab being left opens nothing when clicked, while a row of the incoming tab opens its profile", async ({
 	page,
 }) => {
 	const pager = page.locator(PAGER);
 	await holdPagerAt(pager, { progress: 0.35 });
-	await expect(page.locator(TAPS_PANE)).toHaveAttribute("inert", "");
+	await expect.poll(() => panesSwallowingClicks(page)).toEqual([TAPS_PANE]);
 	await page
-		.locator(`${VIEWS_PANE} a[href^="/profile/"]`)
+		.locator(`${VIEWS_PANE} ${TAP_ROW}`)
+		.first()
+		.waitFor({ timeout: 60_000 });
+	await afterTwoFrames(page);
+	const depth = await historyDepth(page);
+	const [leaving] = await rowsOnScreen(page, { pane: TAPS_PANE });
+	const incoming = (await rowsOnScreen(page, { pane: VIEWS_PANE })).find(
+		({ href }) => href !== leaving?.href,
+	);
+	expect(leaving, "a row of the tab being left is on screen").toBeDefined();
+	expect(incoming, "a row of the incoming tab is on screen").toBeDefined();
+
+	await page.evaluate(() => {
+		window.__heardRows = [];
+		document.addEventListener("click", ({ target }) => {
+			const row = target instanceof Element ? target.closest("a") : null;
+			window.__heardRows!.push(row?.pathname ?? "");
+		});
+	});
+
+	await page.mouse.click(leaving!.x, leaving!.y);
+	await page.mouse.click(incoming!.x, incoming!.y);
+
+	await expect(page).toHaveURL(new RegExp(`${incoming!.href}$`));
+	expect(
+		await page.evaluate(() => window.__heardRows),
+		"the click on the row being left never reached the app",
+	).toEqual([incoming!.href]);
+	expect(
+		await historyDepth(page),
+		"only the incoming row opened a profile",
+	).toBe(depth + 1);
+});
+
+test("a wheel over the tab being left still scrolls it, and so does one over the incoming tab", async ({
+	page,
+}) => {
+	const pager = page.locator(PAGER);
+	await holdPagerAt(pager, { progress: 0.35 });
+	await page
+		.locator(`${VIEWS_PANE} ${TAP_ROW}`)
 		.first()
 		.waitFor({ timeout: 60_000 });
 	await afterTwoFrames(page);
@@ -267,13 +305,10 @@ test("a wheel over the tab being left scrolls nothing in it, while the incoming 
 	await wheel(page, { x: (seam + box.x + box.width) / 2, y }, 300);
 	await wheel(page, { x: (box.x + seam) / 2, y }, 300);
 
-	await expect
-		.poll(() => page.locator(VIEWS_SCROLLER).evaluate((el) => el.scrollTop))
-		.toBeGreaterThan(0);
-	expect(
-		await page.locator(TAPS_SCROLLER).evaluate((el) => el.scrollTop),
-		"the locked list must not scroll",
-	).toBe(0);
+	for (const scroller of [TAPS_SCROLLER, VIEWS_SCROLLER])
+		await expect
+			.poll(() => page.locator(scroller).evaluate((el) => el.scrollTop))
+			.toBeGreaterThan(0);
 });
 
 test("a vertical finger drag scrolls the list and does not page", async ({

@@ -20,7 +20,7 @@ export const LIST_SCROLLERS = [VIEWS_SCROLLER, TAPS_SCROLLER];
 
 type GlideFrame = {
 	progress: number;
-	locked: (string | undefined)[];
+	swallowingClicks: string[];
 	chipLeft: number;
 	chipAnimated: boolean;
 	path: string;
@@ -29,6 +29,7 @@ type GlideFrame = {
 declare global {
 	interface Window {
 		__glideFrames?: GlideFrame[];
+		__panesSwallowingClicks?: () => string[];
 	}
 }
 
@@ -37,6 +38,22 @@ export async function openTaps(
 	{ platform }: { platform?: string } = {},
 ): Promise<void> {
 	await installTauriShim(page, { platform });
+	await page.addInitScript(
+		(panes) => {
+			window.__panesSwallowingClicks = () =>
+				panes.filter((pane) => {
+					const click = new MouseEvent("click", {
+						bubbles: true,
+						cancelable: true,
+					});
+					return (
+						document.querySelector(pane)?.dispatchEvent(click) ===
+						false
+					);
+				});
+		},
+		[VIEWS_PANE, TAPS_PANE],
+	);
 	await page.goto(TAPS);
 	await page
 		.locator(TAP_ROW)
@@ -62,6 +79,42 @@ export async function swipeAcross(
 	return touch;
 }
 
+export function panesSwallowingClicks(page: Page) {
+	return page.evaluate(() => window.__panesSwallowingClicks!());
+}
+
+export function rowsOnScreen(page: Page, { pane }: { pane: string }) {
+	return page.evaluate(
+		([paneSlot, pagerSlot, rowSlot]) => {
+			const pager = document
+				.querySelector(pagerSlot!)!
+				.getBoundingClientRect();
+			return Array.from(
+				document.querySelectorAll<HTMLAnchorElement>(
+					`${paneSlot} ${rowSlot}`,
+				),
+				(row) => {
+					const box = row.getBoundingClientRect();
+					const x =
+						(Math.max(box.left, pager.left) +
+							Math.min(box.right, pager.right)) /
+						2;
+					const y =
+						(Math.max(box.top, pager.top) +
+							Math.min(box.bottom, pager.bottom)) /
+						2;
+					return { x, y, href: row.pathname, row };
+				},
+			)
+				.filter(({ x, y, row }) =>
+					row.contains(document.elementFromPoint(x, y)),
+				)
+				.map(({ x, y, href }) => ({ x, y, href }));
+		},
+		[pane, PAGER, TAP_ROW],
+	);
+}
+
 export async function tabTrack(page: Page) {
 	const left = async (name: string) =>
 		(await page.getByRole("link", { name }).boundingBox())!.x;
@@ -71,19 +124,15 @@ export async function tabTrack(page: Page) {
 
 export async function glideToViews(page: Page) {
 	await page.evaluate(
-		([pagerSlot, viewsSlot, tapsSlot, chipSlot]) => {
+		([pagerSlot, chipSlot]) => {
 			const pager = document.querySelector<HTMLElement>(pagerSlot!)!;
-			const views = document.querySelector<HTMLElement>(viewsSlot!)!;
-			const taps = document.querySelector<HTMLElement>(tapsSlot!)!;
 			const chip = document.querySelector<HTMLElement>(chipSlot!)!;
 			const frames: GlideFrame[] = [];
 			window.__glideFrames = frames;
 			const sample = () => {
 				frames.push({
 					progress: pager.scrollLeft / pager.clientWidth,
-					locked: [views, taps]
-						.filter((pane) => pane.inert)
-						.map((pane) => pane.dataset.slot),
+					swallowingClicks: window.__panesSwallowingClicks!(),
 					chipLeft: chip.getBoundingClientRect().x,
 					chipAnimated: chip.getAnimations().length > 0,
 					path: location.pathname,
@@ -92,7 +141,7 @@ export async function glideToViews(page: Page) {
 			};
 			requestAnimationFrame(sample);
 		},
-		[PAGER, VIEWS_PANE, TAPS_PANE, CHIP],
+		[PAGER, CHIP],
 	);
 
 	await page.getByRole("link", { name: "Views" }).click();
