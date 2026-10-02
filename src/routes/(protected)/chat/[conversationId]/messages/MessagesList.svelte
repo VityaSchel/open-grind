@@ -141,6 +141,7 @@
 	<ReportSheet
 		bind:open={reportOpen}
 		profileId={reportProfileId}
+		subject="message"
 		locations={["CHAT_MESSAGE"]}
 	/>
 {/if}
