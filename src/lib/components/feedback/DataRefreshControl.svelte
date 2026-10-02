@@ -117,7 +117,6 @@
 			reveal.current > 0
 		);
 	});
-	const hintMayOverflowBand = $derived(hintShown);
 	const buttonShown = $derived.by(() => {
 		if (activeFace) return activeFace === "button";
 		return lingerFace === "button" && buttonSpace.current > 0;
@@ -288,7 +287,7 @@
 			class={[
 				"absolute inset-x-0",
 				anchorEdge,
-				{ "overflow-clip": !hintMayOverflowBand },
+				{ "overflow-clip": !hintShown },
 			]}
 			style:height="{bandHeight}px"
 			style:opacity={bandOpacity}

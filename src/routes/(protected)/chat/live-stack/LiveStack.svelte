@@ -59,6 +59,8 @@
 			softKeyboardHidden({ settleMs: KEYBOARD_SETTLE_MS }),
 	});
 
+	const leaving = $derived(stack.leaving !== null);
+
 	let baseMounted = $state(!stack.covered);
 
 	onMount(() => {
@@ -100,10 +102,7 @@
 	inert={stack.sheetOpen}
 >
 	{#if baseMounted}
-		{@render base({
-			covered: stack.covered,
-			uncovering: stack.leaving !== null,
-		})}
+		{@render base({ covered: stack.covered, uncovering: leaving })}
 	{/if}
 </div>
 {#if stack.moving || stack.tracking}
@@ -123,17 +122,14 @@
 				"fixed inset-0 flex flex-col bg-background pt-(--safe-area-top) pb-(--safe-area-bottom)",
 				{
 					"shadow-(--stack-edge)": motion.edge,
-					"pointer-events-none":
-						motion.fade && stack.leaving !== null,
+					"pointer-events-none": motion.fade && leaving,
 				},
 			]}
 			style:z-index={STACK_Z.front}
-			data-leaving={stack.leaving !== null || undefined}
+			data-leaving={leaving || undefined}
 		>
-			<div class="contents" inert={stack.leaving !== null}>
-				{@render sheet(stack.sheetKey, {
-					leaving: stack.leaving !== null,
-				})}
+			<div class="contents" inert={leaving}>
+				{@render sheet(stack.sheetKey, { leaving })}
 			</div>
 		</div>
 	{/key}

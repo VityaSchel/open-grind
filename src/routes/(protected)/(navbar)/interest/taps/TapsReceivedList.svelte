@@ -8,6 +8,7 @@
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
+	import { hidesOverlayScrollbar } from "../overlay-scrollbar";
 	import EmptyTapsList from "./EmptyTapsList.svelte";
 	import TapReceivedProfile from "./TapReceivedProfile.svelte";
 
@@ -29,10 +30,9 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
-	const overlayScrollbarHidden = $derived.by(() => {
-		if (!paging || !container) return false;
-		return container.offsetWidth === container.clientWidth;
-	});
+	const overlayScrollbarHidden = $derived(
+		hidesOverlayScrollbar({ paging, container }),
+	);
 
 	restoreScrollOnce({ container: () => container, state: taps });
 </script>

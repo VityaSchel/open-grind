@@ -1,4 +1,4 @@
-import { consumesScrollKeys } from "$lib/util/scroll-keys";
+import { consumesScrollKeys, scrollKeysToward } from "$lib/util/scroll-keys";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import type { PullModel } from "./pull-model.svelte";
 import type { RestingButtonModel } from "./resting-button.svelte";
@@ -8,11 +8,6 @@ import {
 	type PullPosition,
 } from "./scroll-chain";
 import { attachTouchPull } from "./touch-adapter";
-
-const KEYS_TOWARD_BOUNDARY: Record<PullPosition, ReadonlySet<string>> = {
-	top: new Set(["ArrowUp", "PageUp", "Home"]),
-	bottom: new Set(["ArrowDown", "PageDown", "End"]),
-};
 
 export type PullInputsOptions = {
 	model: PullModel;
@@ -71,7 +66,7 @@ export function attachPullInputs(
 
 	const onKeyDown = (event: KeyboardEvent) => {
 		if (event.defaultPrevented) return;
-		if (!KEYS_TOWARD_BOUNDARY[position].has(event.key)) return;
+		if (!scrollKeysToward[position].has(event.key)) return;
 		if (consumesScrollKeys(event.target)) return;
 		if (boundaryDistance() >= AT_BOUNDARY_PX) return;
 		if (!chainAllowsPull({ start: event.target, root: target, position }))

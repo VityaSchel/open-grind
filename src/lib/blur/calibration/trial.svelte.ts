@@ -2,7 +2,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
-import { consumesScrollKeys } from "$lib/util/scroll-keys";
+import { consumesScrollKeys, scrollKeys } from "$lib/util/scroll-keys";
 import {
 	ARM_MIN_EVENTS,
 	ARM_TRAVEL_PX,
@@ -119,18 +119,8 @@ function onWheel(): void {
 	lastInputAt = performance.now();
 }
 
-const SCROLL_KEYS = new Set([
-	"ArrowDown",
-	"ArrowUp",
-	"End",
-	"Home",
-	"PageDown",
-	"PageUp",
-	" ",
-]);
-
 function onKeyDown(event: KeyboardEvent): void {
-	if (!SCROLL_KEYS.has(event.key)) return;
+	if (!scrollKeys.has(event.key)) return;
 	if (consumesScrollKeys(event.target)) return;
 	lastInputAt = performance.now();
 }

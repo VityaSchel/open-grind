@@ -7,6 +7,7 @@
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
+	import { hidesOverlayScrollbar } from "../overlay-scrollbar";
 	import EmptyViewsGrid from "./EmptyViewsGrid.svelte";
 	import UntrackedViewsGrid from "./UntrackedViewsGrid.svelte";
 	import ViewedPreview from "./ViewedPreview.svelte";
@@ -24,10 +25,9 @@
 
 	let container: HTMLDivElement | null = $state(null);
 
-	const overlayScrollbarHidden = $derived.by(() => {
-		if (!paging || !container) return false;
-		return container.offsetWidth === container.clientWidth;
-	});
+	const overlayScrollbarHidden = $derived(
+		hidesOverlayScrollbar({ paging, container }),
+	);
 
 	restoreScrollOnce({ container: () => container, state: views });
 </script>
