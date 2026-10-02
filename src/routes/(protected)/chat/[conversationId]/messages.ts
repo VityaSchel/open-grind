@@ -1,27 +1,33 @@
 import { getConversationMessages } from "$lib/api/messaging/messages";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 
-type StackedMessage = { indexInStack: number; stackLength: number };
+type StackedMessage = Pick<ApiResponseMessage, "messageId" | "timestamp"> & {
+	indexInStack: number;
+	stackLength: number;
+};
 
-export function getStackedMessages<T extends ApiResponseMessage>({
+export function getStackedMessages({
 	messages,
 	ourProfileId,
 }: {
-	messages: T[];
+	messages: ApiResponseMessage[];
 	ourProfileId: number;
 }) {
-	const stackedMessages: (T & StackedMessage)[] = [];
+	const stackedMessages: StackedMessage[] = [];
 
-	let stack: { time: number; isOut: boolean; messages: T[] } | undefined;
+	let stack:
+		| { time: number; isOut: boolean; messages: ApiResponseMessage[] }
+		| undefined;
 	const flush = () => {
 		if (stack) {
 			const stackMessages = stack.messages;
 			stackedMessages.push(
-				...(stackMessages.map((msg, i, arr) => ({
-					...msg,
+				...stackMessages.map(({ messageId, timestamp }, i, arr) => ({
+					messageId,
+					timestamp,
 					indexInStack: arr.length - 1 - i,
 					stackLength: arr.length,
-				})) as (T & StackedMessage)[]),
+				})),
 			);
 			stack = undefined;
 		}
@@ -44,11 +50,9 @@ export function getStackedMessages<T extends ApiResponseMessage>({
 
 type GroupedMessage = { dayStart?: number };
 
-export function groupMessagesByDate<T extends ApiResponseMessage>({
-	messages,
-}: {
-	messages: T[];
-}): (T & GroupedMessage)[] {
+export function groupMessagesByDate<
+	T extends Pick<ApiResponseMessage, "timestamp">,
+>({ messages }: { messages: T[] }): (T & GroupedMessage)[] {
 	let dayStartGroup: number | undefined;
 	const groupedMessages = messages.toReversed().map((message) => {
 		const dayStart = new Date(message.timestamp).setHours(0, 0, 0, 0);
@@ -61,11 +65,11 @@ export function groupMessagesByDate<T extends ApiResponseMessage>({
 	return groupedMessages.toReversed();
 }
 
-export function processMessages<T extends ApiResponseMessage>({
+export function processMessages({
 	messages,
 	ourProfileId,
 }: {
-	messages: T[];
+	messages: ApiResponseMessage[];
 	ourProfileId: number;
 }) {
 	return groupMessagesByDate({

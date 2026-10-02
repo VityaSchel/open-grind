@@ -95,14 +95,15 @@ function mergeServerVersion({
 	renewalAgeMs,
 }: ServerAndLocal & Renewal): { message: OptimisticMessage; updated: boolean } {
 	const keepsLocalBody = sameBody({ server, local, renewalAgeMs });
-	return {
-		message: {
-			...server,
-			body: keepsLocalBody ? local.body : server.body,
-			status: "sent",
-		} as OptimisticMessage,
-		updated: !keepsLocalBody || !sameMetadata(server, local),
-	};
+	const updated = !keepsLocalBody || !sameMetadata(server, local);
+	const merged = {
+		...server,
+		body: keepsLocalBody ? local.body : server.body,
+		status: "sent",
+	} as OptimisticMessage;
+	const identical =
+		!updated && JSON.stringify(merged) === JSON.stringify(local);
+	return { message: identical ? local : merged, updated };
 }
 
 export function patchMessages({

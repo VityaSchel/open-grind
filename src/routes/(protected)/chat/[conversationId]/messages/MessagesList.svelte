@@ -25,11 +25,13 @@
 	const conversationState = $derived(getConversationState()());
 	setMediaRenewal(() => conversationState.dynamicRefresh.renewMedia());
 
-	const messages = $derived(
-		processMessages({
-			messages: conversationState.messages,
-			ourProfileId: conversationState.ourProfileId,
-		}),
+	const layoutByMessageId = $derived(
+		new Map(
+			processMessages({
+				messages: conversationState.messages,
+				ourProfileId: conversationState.ourProfileId,
+			}).map((layout) => [layout.messageId, layout] as const),
+		),
 	);
 
 	async function unsend({
@@ -85,19 +87,25 @@
 	}
 </script>
 
-{#each messages.toReversed() as message (message.messageId)}
+{#each conversationState.messages.toReversed() as message (message.messageId)}
 	{@const isOut = message.senderId === conversationState.ourProfileId}
 	{@const delivered = message.status === "sent"}
+	{@const layout = layoutByMessageId.get(message.messageId)}
+	{@const indexInStack = layout?.indexInStack ?? 0}
+	{@const stackLength = layout?.stackLength ?? 1}
+	{@const dayStart = layout?.dayStart}
+	{@const isRead =
+		isOut && message.messageId === conversationState.messages[0]?.messageId
+			? conversationState.lastReadTimestamp === message.timestamp
+			: null}
 	<Message
 		{message}
 		{isOut}
-		indexInStack={message.indexInStack}
-		stackLength={message.stackLength}
-		dayStart={message.dayStart}
+		{indexInStack}
+		{stackLength}
+		{dayStart}
 		status={message.status}
-		isRead={isOut && message.messageId === messages[0]?.messageId
-			? conversationState.lastReadTimestamp === message.timestamp
-			: null}
+		{isRead}
 		onVisible={!isOut
 			? () => {
 					seenMessageIds.add(message.messageId);

@@ -63,6 +63,27 @@ describe("mergeServerMessages", () => {
 		expect(result.messages.map((m) => m.messageId)).toEqual(["b", "a"]);
 		expect(result.changed).toBe(false);
 	});
+
+	it("hands back the same object for a message the server did not change", () => {
+		const kept = sent("a", 1000);
+
+		const result = mergeServerMessages({
+			local: [kept],
+			server: [message("b", 2000), message("a", 1000)],
+		});
+
+		expect(result.messages.map((m) => m.messageId)).toEqual(["b", "a"]);
+		expect(result.messages[1]).toBe(kept);
+	});
+
+	it("takes the server's version when a field outside the body moved", () => {
+		const result = mergeServerMessages({
+			local: [sent("a", 1000)],
+			server: [message("a", 1500)],
+		});
+
+		expect(result.messages.map((m) => m.timestamp)).toEqual([1500]);
+	});
 });
 
 describe("mergeServerMessages with signed media", () => {
@@ -224,11 +245,12 @@ describe("patchMessages", () => {
 
 	it("reports no change when the refreshed messages are the same", () => {
 		const a = text({ id: "a", text: "same" });
+		const local: OptimisticMessage = { ...a, status: "sent" };
 
-		expect(
-			patchMessages({ local: [{ ...a, status: "sent" }], server: [a] })
-				.changed,
-		).toBe(false);
+		const result = patchMessages({ local: [local], server: [a] });
+
+		expect(result.changed).toBe(false);
+		expect(result.messages[0]).toBe(local);
 	});
 
 	it("adopts any newer signature a refresh hands out", () => {
