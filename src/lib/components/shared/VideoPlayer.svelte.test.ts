@@ -252,6 +252,18 @@ describe("VideoPlayer", () => {
 		expect(failures).toHaveLength(0);
 	});
 
+	it("releases its source once it is gone", () => {
+		const { video } = player();
+		const sourcesAtLoad: (string | null)[] = [];
+		video.load = () => {
+			sourcesAtLoad.push(video.getAttribute("src"));
+		};
+
+		cleanup();
+
+		expect(sourcesAtLoad).toEqual([null]);
+	});
+
 	it("keeps one seek in flight and applies only the newest queued target", async () => {
 		const { container, video } = player();
 		let seeking = false;

@@ -63,3 +63,10 @@ export function retryMediaSrc({
 export function firstFrameSrc(src: string): string {
 	return `${src}#t=0.001`;
 }
+
+export function releaseVideoOnDestroy(video: HTMLVideoElement): () => void {
+	return () => {
+		video.removeAttribute("src");
+		video.load();
+	};
+}

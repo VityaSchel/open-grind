@@ -106,3 +106,7 @@ if (
 		setTimeout(() => this.dispatchEvent(new Event("close")));
 	};
 }
+
+if (typeof HTMLMediaElement !== "undefined") {
+	HTMLMediaElement.prototype.load = () => {};
+}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { loadWhenVisible } from "$lib/util/load-when-visible";
-	import { firstFrameSrc } from "$lib/util/media";
+	import { firstFrameSrc, releaseVideoOnDestroy } from "$lib/util/media";
 
 	let {
 		src,
@@ -14,6 +14,7 @@
 	data-slot="video-preview"
 	src={armed ? firstFrameSrc(src) : undefined}
 	use:loadWhenVisible={() => (armed = true)}
+	{@attach releaseVideoOnDestroy}
 	preload="metadata"
 	muted
 	playsinline
