@@ -5,6 +5,12 @@
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";
 
 	const platform = currentPlatform();
+	const desktopNames: Partial<Record<typeof platform, string>> = {
+		macos: "macOS",
+		windows: "Windows",
+		linux: "Linux",
+	};
+	const platformName = desktopNames[platform] ?? "this platform";
 </script>
 
 {#if platform === "android"}
@@ -12,13 +18,9 @@
 	<NotificationModeSetting />
 	<NotificationCategoriesSetting />
 {:else}
-	<p>Notifications aren't supported on this platform yet.</p>
+	<p
+		class="fixed inset-x-4 inset-y-0 m-auto size-fit text-center text-sm text-balance text-muted-foreground"
+	>
+		Notifications are not supported on {platformName} yet.
+	</p>
 {/if}
-
-<style lang="postcss">
-	@reference "$layout";
-
-	p {
-		@apply px-4 text-sm text-muted-foreground;
-	}
-</style>

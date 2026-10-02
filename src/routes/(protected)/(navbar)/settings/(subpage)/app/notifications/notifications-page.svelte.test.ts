@@ -87,19 +87,28 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it("says notifications aren't supported off Android", () => {
-		currentPlatform.mockReturnValue("linux");
+	it.each([
+		["macos", "macOS"],
+		["windows", "Windows"],
+		["linux", "Linux"],
+		["ios", "this platform"],
+		["web", "this platform"],
+	] as const)(
+		"says on %s that notifications are not supported on %s yet",
+		(platform, named) => {
+			currentPlatform.mockReturnValue(platform);
 
-		render(NotificationsPage);
+			render(NotificationsPage);
 
-		expect(
-			screen.getByText(
-				"Notifications aren't supported on this platform yet.",
-			),
-		).toBeTruthy();
-		expect(screen.queryByRole("switch")).toBeNull();
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-	});
+			expect(
+				screen.getByText(
+					`Notifications are not supported on ${named} yet.`,
+				),
+			).toBeTruthy();
+			expect(screen.queryByRole("switch")).toBeNull();
+			expect(screen.queryByRole("radiogroup")).toBeNull();
+		},
+	);
 
 	it("opens turned on in Slow mode with every editable control usable", async () => {
 		const { master, delivery, fast, slow, taps } =
