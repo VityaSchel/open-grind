@@ -10,6 +10,7 @@ const PRE_MVP_VERSION = "0.1.0";
 const handAssignedPreMvpCodes: Record<string, (index: number) => number> = {
 	alpha: (index) => 999 + index,
 	beta: (index) => 1000 + 10 * index,
+	rc: (index) => 1000 + 100 * index,
 };
 
 type Occurrence = { file: string; literal: string };
@@ -26,10 +27,15 @@ function versionCodeFor({
 	prerelease,
 }: Version): number | null {
 	const [tag, index] = prerelease.replace(DEV_SUFFIX, "").split(".");
+	const release = major * 1_000_000 + minor * 10_000 + patch * 100;
+	if (!tag) return release;
 	if (`${major}.${minor}.${patch}` === PRE_MVP_VERSION) {
-		return handAssignedPreMvpCodes[tag ?? ""]?.(Number(index)) ?? null;
+		return handAssignedPreMvpCodes[tag]?.(Number(index)) ?? null;
 	}
-	return major * 1_000_000 + minor * 1_000 + patch;
+	const candidate = Number(index);
+	if (tag !== "rc" || !Number.isInteger(candidate)) return null;
+	if (candidate < 1 || candidate > 99) return null;
+	return release - 100 + candidate;
 }
 
 function versionOccurrences({
