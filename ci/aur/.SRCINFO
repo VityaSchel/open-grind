@@ -28,11 +28,11 @@ pkgbase = open-grind-bin
 	sha256sums = 18b347191b86bde3646ab8c21910f01fda8d3d2caca5ebc8fe402a62f3425f5e
 	source_x86_64 = open-grind-bin-0.1.0beta.5-x86_64.deb::https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.deb
 	source_x86_64 = open-grind-bin-0.1.0beta.5-x86_64.deb.minisig::https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.deb.minisig
-	sha256sums_x86_64 = c6e7245f96cb4bde3869438f36629592cc9cd82413017e5097191562e25c0d61
-	sha256sums_x86_64 = f4a6c06299daeafd1baca652335f6ed008f7249528c7a8cbc9297faec0347aa7
+	sha256sums_x86_64 = 8b742db475dea6a35165903feded0a71a5ebad1a64c0a345c8ee1215f1cb16b2
+	sha256sums_x86_64 = b96bb14d6c2057b6d4e250588d88d53c13872b8836604d9616cf80c01c7ebb4b
 	source_aarch64 = open-grind-bin-0.1.0beta.5-aarch64.deb::https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.deb
 	source_aarch64 = open-grind-bin-0.1.0beta.5-aarch64.deb.minisig::https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.deb.minisig
-	sha256sums_aarch64 = 2747d5c9c48a760b107ef41df2394c8667b4009ccba640b7a2936a765fd9335a
-	sha256sums_aarch64 = 8278db4c03e07574829f5cccd1b22bc51dd92640edeb7dde38902fc1d1297daa
+	sha256sums_aarch64 = f7424e7f027d4ece2c50d1730b9d593cc03c8a9a0cb4b8473a7023ecf2bc110a
+	sha256sums_aarch64 = 12eb846fe5a10cbfda2ae3bb07f54d3c584b162a35bc5e8a3f7e2cff944394b6
 
 pkgname = open-grind-bin
