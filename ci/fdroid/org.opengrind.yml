@@ -37,20 +37,13 @@ Builds:
       - printf '%s\n' "experimental-features = nix-command flakes" "sandbox = false"
         > ~/.config/nix/nix.conf
     build:
-      - git checkout -- src-tauri/gen/android/gradlew src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
+      - ln -s $(which gradle) src-tauri/gen/android/gradlew
       - export NIX_REMOTE=
       - nix run .#build-android -- apk
 
 AllowedAPKSigningKeys: 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
 
-MaintainerNotes: |-
-  Built with the project's Nix flake so F-Droid reproduces the published release binary,
-  the result of `nix run .#build-android` output. Committed gradle-wrapper.jar is
-  Gradle 8.14.5 jar (sha256 7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172).
-  Build step restores it and gradlew after fdroid's pre-scan sweep deletes them,
-  because `tauri android build` shells out to ./gradlew and the release binary this
-  recipe must reproduce is built with that same pinned Gradle (distributionSha256Sum
-  6f74b601422d6d6fc4e1f9a1ab6522f642c2fdcbc15ae33ebd30ba3d7198e854).
+MaintainerNotes: Built with the project's Nix flake to reproduce the release APK.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$
