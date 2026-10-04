@@ -10,6 +10,7 @@
 
 - **[Download Open Grind](https://opengrind.org/download)** from the official website
 - **[Source releases page](https://git.opengrind.org/open-grind/open-grind/releases)** at git.opengrind.org/open-grind/open-grind
+- **[Google Play](https://play.google.com/store/apps/details?id=org.opengrind)** for Android
 
 Never install Open Grind from sources not listed above.
 

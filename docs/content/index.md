@@ -47,7 +47,7 @@ features:
     link: /guides/features/no-ads
   - title: All platforms
     icon: '<span class="vp-icon i-platforms"></span>'
-    details: Download for free on Android, Windows, Linux, macOS, from F-Droid, apt or directly
+    details: Download for free on Android, Windows, Linux, macOS, from Google Play, apt or directly
     link: /guides/download
   - title: Privacy built-in
     icon: '<span class="vp-icon i-privacy"></span>'

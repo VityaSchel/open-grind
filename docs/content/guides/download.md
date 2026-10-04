@@ -11,7 +11,7 @@ titleTemplate: ':title — free & open source Grindr client'
 
 # Download Open Grind
 
-Never download Open Grind from unofficial sources. The only official source of Open Grind releases is https://git.opengrind.org/open-grind/open-grind/releases. All releases are signed and reproducible.
+Never download Open Grind from unofficial sources. The only official sources of Open Grind are https://git.opengrind.org/open-grind/open-grind/releases and [Google Play](https://play.google.com/store/apps/details?id=org.opengrind). All releases are signed and reproducible.
 
 > [!Warning] 🚧&nbsp;&nbsp;Open Grind is in active development.&nbsp;&nbsp;🚧
 > [Contribute to the project](https://git.opengrind.org/open-grind/open-grind/) or [join the discussion](https://matrix.to/#/#opengrind:opengrind.org) to help us prioritize features and improvements.
@@ -19,10 +19,15 @@ Never download Open Grind from unofficial sources. The only official source of O
 ## Android
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium">Download for Android (apk)</VPButton>
+    <VPButton href="https://play.google.com/store/apps/details?id=org.opengrind" size="medium">Install from Google Play</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium" theme="alt">Download for Android (apk)</VPButton>
 </div>
 
-Install using your system's APK installer. Optionally, enable auto updates.
+Google Play updates the app for you. To install the APK, use your system's APK installer and optionally enable auto updates.
+
+- **Switching between Google Play and the APK** (or F-Droid) requires uninstalling first, because Google signs its version with its own key. Uninstalling signs you out and resets app settings.
+- **Add-ons** (Google sign-in, fast notifications, reCAPTCHA helper) can't be installed by the Google Play version. Install them from their pages: [Sign in with Google](/guides/sign-in-with-google#installed-from-google-play), [Notifications](/guides/notifications).
+- **To verify the Google Play version**, follow [Verify Google Play install](https://git.opengrind.org/open-grind/open-grind/src/branch/main/BUILDING.md#verify-google-play-install).
 
 ## Windows
 
