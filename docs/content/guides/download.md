@@ -19,11 +19,11 @@ Never download Open Grind from unofficial sources. The only official sources of 
 ## Android
 
 <div class="vpbuttons-row">
-    <VPButton href="https://play.google.com/store/apps/details?id=org.opengrind" size="medium">Install from Google Play</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium" theme="alt">Download for Android (apk)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium">Download for Android (apk)</VPButton>
+    <VPButton href="https://play.google.com/store/apps/details?id=org.opengrind" size="medium" theme="alt">Install from Google Play</VPButton>
 </div>
 
-Google Play updates the app for you. To install the APK, use your system's APK installer and optionally enable auto updates.
+To install the APK, use your system's APK installer and optionally enable auto updates.
 
 - **Switching between Google Play and the APK** (or F-Droid) requires uninstalling first, because Google signs its version with its own key. Uninstalling signs you out and resets app settings.
 - **Add-ons** (Google sign-in, fast notifications, reCAPTCHA helper) can't be installed by the Google Play version. Install them from their pages: [Sign in with Google](/guides/sign-in-with-google#installed-from-google-play), [Notifications](/guides/notifications).
