@@ -1,0 +1,43 @@
+# i18n
+
+Strings live in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. `en` is the source. Weblate writes every other language; never edit those by hand. A string missing from a language renders in English.
+
+## Adding a string
+
+1. Add it to `locales/en/<namespace>.json` in American English
+2. Render it with `t("namespace.key", params)` from `$lib/i18n`, or with `Rich.svelte` when it has tags
+3. Once a file has no raw text left, list it in `translatedSvelteFiles` or `translatedScriptFiles` in `eslint.config.js`
+4. Commit. The pre-commit hook writes `generated.ts` with `bun run gen:i18n` and fails until you stage it
+
+## Syntax
+
+| Element   | Example                               | Rule                                                                                                                                                  |
+| --------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Key       | `feedback.requestBlocked.rotate`      | camelCase segments of `[A-Za-z0-9_-]` along the code path. A new meaning, param or tag gets a new key                                                 |
+| Text      | `Couldn't copy to clipboard`          | Non-empty, real characters (`…`, U+00A0), no HTML entities                                                                                            |
+| Param     | `{{name}}`                            | Plain `{{name}}` only, a string formatted in code                                                                                                     |
+| Plural    | `key_one`, `key_other`                | Exactly these two, picked by `{{count}}`, a number that appears nowhere else. A `_one` with a param also has `{{count}}`. Text for 0 gets its own key |
+| Rich text | `This is a <link>known issue</link>.` | Flat tags without attributes, each rendered by the `Rich.svelte` snippet of that name, not named `children`, `key` or `params`                        |
+
+## `check:i18n` fails on
+
+- English outside this syntax
+- Translations with a syntax error, a tag or param English lacks, or an object where English has a string
+- A translation file without an English source, or a locale directory that is not a canonical BCP 47 tag
+- An outdated `generated.ts`
+
+## Weblate component `app-common`
+
+| Setting                       | Value                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| File format                   | i18next JSON file v4                                                                           |
+| File mask                     | `src/lib/i18n/locales/*/common.json`                                                           |
+| Base                          | `src/lib/i18n/locales/en/common.json`                                                          |
+| Template for new translations | Empty                                                                                          |
+| File format parameters        | `json_indent` 1, `json_indent_style` tabs, `json_sort_keys` none                               |
+| Language code style           | BCP (`pt-BR`)                                                                                  |
+| Language filter               | `^[^.@]+$`; `@` codes such as `ru@formal` break `Intl`                                         |
+| Translation flags             | `i18next-interpolation`                                                                        |
+| Add-ons                       | Cleanup translation files, Add missing languages, Component discovery                          |
+| Discovery regex               | `src/lib/i18n/locales/(?P<language>[^/.]*)/(?P<component>[^/]*)\.json`                         |
+| Discovered components         | Base `src/lib/i18n/locales/en/{{ component }}.json`, name `app-{{ component }}`, same settings |

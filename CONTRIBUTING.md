@@ -25,7 +25,7 @@ Thanks for considering contributing to Open Grind.
 AI-generated pull requests are not allowed. AI-assisted code is allowed. All contributions must be aligned with [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 - Use American English spelling
-- Internationalization is out of scope for now (see [#106](https://git.opengrind.org/open-grind/open-grind/issues/106)), so keep interface strings inline in American English, no translation layer and no partial translations
+- Add interface strings to `src/lib/i18n/locales/en` only, see [src/lib/i18n/README.md](./src/lib/i18n/README.md)
 - Use [Phosphor Icons](https://phosphoricons.com) whenever possible
 
 ## Getting started
@@ -200,6 +200,7 @@ Before opening a pull request, run the same checks CI runs:
 
 - `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
 - `bun run check` — `svelte-check` type checking.
+- `bun run check:i18n` — translation files and `src/lib/i18n/generated.ts`, which `bun run gen:i18n` regenerates.
 - `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
 - `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
 
@@ -229,6 +230,7 @@ The dev server also serves a Google OAuth app release when given `COMPANION_PAYL
 
 - `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
 - `*.{json,md,yml,yaml,css,html}` — Prettier
+- `src/lib/i18n/locales/en/*.json` — `bun run gen:i18n`, which stops the commit until `src/lib/i18n/generated.ts` is staged, then Prettier
 - `*.sh` — ShellCheck
 - `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
 
