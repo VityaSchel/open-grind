@@ -11,6 +11,8 @@ Strings live in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. `en` is t
 
 Call `t()` in markup, `$derived` or a function. Lint rejects a result stored at module scope or at the top of a `<script>`, since it keeps the old language after a locale switch.
 
+Dev builds add two pseudo-locales that `pseudo.ts` builds from English in memory. Open the app with `?locale=en-XA` to see every translated string accented, padded and wrapped in `⟦…⟧`, or with `?locale=ar-XB` to see it right to left, so raw English stands out.
+
 ## Renaming a key
 
 Lock the Weblate components and merge their pending changes first, then run `bun scripts/i18n/rename-key.ts <old> <new>` with full keys. It moves the string in every language, rewrites its quoted uses under `src/`, and regenerates `generated.ts`. A new meaning needs a new key instead.

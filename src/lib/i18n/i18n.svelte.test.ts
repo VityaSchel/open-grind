@@ -134,12 +134,14 @@ describe("live locale switching", () => {
 });
 
 describe("setLocale", () => {
-	it("lists the source locale and every translated locale", () => {
+	it("lists the source, translated and dev pseudo-locales", () => {
 		expect(locales).toEqual([
 			"ar",
+			"ar-XB",
 			"cs",
 			"de",
 			"en",
+			"en-XA",
 			"eo",
 			"fr",
 			"he",

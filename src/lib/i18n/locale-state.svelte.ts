@@ -3,6 +3,7 @@ import {
 	sourceFiles,
 	translationFiles,
 } from "./catalog-files";
+import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
 import { parseLocalePath, SOURCE_LOCALE } from "./syntax";
 
 export type Catalog = {
@@ -88,6 +89,10 @@ function toCatalog({
 }
 
 async function loadCatalog(locale: string): Promise<Catalog> {
+	if (import.meta.env.DEV && isPseudoLocale(locale)) {
+		const source = state.source.dictionary;
+		return { locale, dictionary: pseudoDictionary({ locale, source }) };
+	}
 	const files = Object.entries(translationFiles).filter(
 		([path]) => parseLocalePath(path).locale === locale,
 	);
@@ -133,6 +138,7 @@ export const locales: readonly string[] = [
 	...Object.keys(translationFiles).map(
 		(path) => parseLocalePath(path).locale,
 	),
+	...(import.meta.env.DEV ? PSEUDO_LOCALES : []),
 ]
 	.filter((locale, index, all) => all.indexOf(locale) === index)
 	.sort();
