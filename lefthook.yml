@@ -3,6 +3,13 @@ extends:
 
 pre-commit:
   commands:
+    text:
+      exclude:
+        - "src/lib/i18n/locales/en/*.json"
+    i18n:
+      glob: "src/lib/i18n/locales/en/*.json"
+      run: bun run gen:i18n && git diff --exit-code -- src/lib/i18n/generated.ts && bunx prettier --write {staged_files}
+      stage_fixed: true
     clippy:
       glob: "*.rs"
       run: env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_COMMON_DIR cargo clippy --manifest-path src-tauri/Cargo.toml --lib --all-targets

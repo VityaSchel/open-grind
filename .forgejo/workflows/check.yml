@@ -91,6 +91,9 @@ jobs:
       - name: Check the credits against the lockfiles
         run: cd "$CI_WORKSPACE" && bun run check:credits-sync
 
+      - name: Check the translations
+        run: cd "$CI_WORKSPACE" && bun run check:i18n
+
       - name: Lint
         run: cd "$CI_WORKSPACE" && bun ci/lint.ts
 
