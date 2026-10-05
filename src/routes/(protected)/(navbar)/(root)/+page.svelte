@@ -30,6 +30,12 @@
 			});
 		},
 	});
+
+	$effect(() =>
+		gridState.onStartOver(() => {
+			if (gridContainer) gridContainer.scrollTop = 0;
+		}),
+	);
 </script>
 
 <svelte:head>

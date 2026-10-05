@@ -20,8 +20,20 @@ class FakeGridState {
 	viewActive = false;
 	scrollY = SAVED_TOP;
 	revealProfileId: number | null = REVEALED_ID;
+	startOverListeners = new Set<() => void>();
 
 	load() {}
+
+	onStartOver(listener: () => void): () => void {
+		this.startOverListeners.add(listener);
+		return () => {
+			this.startOverListeners.delete(listener);
+		};
+	}
+
+	startOver() {
+		for (const listener of this.startOverListeners) listener();
+	}
 
 	consumeReveal(): number | null {
 		const profileId = this.revealProfileId;
@@ -123,5 +135,24 @@ describe("the grid page", () => {
 		await loaded();
 
 		expect(scroller.scrollTop).toBe(SAVED_TOP);
+	});
+
+	it("jumps back to the top when the grid starts over", async () => {
+		const scroller = await mountedGrid();
+		await loaded();
+		scroller.scrollTop = 2400;
+
+		fakeGrid.startOver();
+
+		expect(scroller.scrollTop).toBe(0);
+	});
+
+	it("stops listening once the page is gone", async () => {
+		await mountedGrid();
+		expect(fakeGrid.startOverListeners.size).toBe(1);
+
+		cleanup();
+
+		expect(fakeGrid.startOverListeners.size).toBe(0);
 	});
 });
