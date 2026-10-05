@@ -6,6 +6,8 @@ import { defineConfig } from "eslint/config";
 
 import svelteConfig from "./svelte.config.js";
 
+const vendoredGlob = "src/lib/components/ui/**";
+
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
@@ -40,11 +42,35 @@ const svelteRawTextSelectors = rawText([
 	`${textAttribute} > SvelteMustacheTag > ${literalText}`,
 ]);
 
+const translationCall = `CallExpression[callee.name=/^(?:t|richParts)$/]`;
+const eagerTranslationCall = `${translationCall}:not(:matches(:function, ClassBody, CallExpression[callee.name="$derived"]) *)`;
+const topLevelInitializer = (root) =>
+	`:matches(${root} > VariableDeclaration, ${root} > ExportNamedDeclaration > VariableDeclaration) > VariableDeclarator`;
+
+const scriptStaleTextSelectors = [
+	{
+		selector: `${topLevelInitializer("Program")} ${eagerTranslationCall}`,
+		message: "Call t() inside a function so the text follows the locale",
+	},
+];
+
+const svelteStaleTextSelectors = [
+	{
+		selector: `${topLevelInitializer("SvelteScriptElement")} ${eagerTranslationCall}`,
+		message:
+			"Wrap t() in $derived or a function so the text follows the locale",
+	},
+	{
+		selector: `SvelteMustacheTag[kind="raw"] ${translationCall}`,
+		message: "Render translations as text or with Rich.svelte, not {@html}",
+	},
+];
+
 export default defineConfig(
 	...sveltekit({
 		svelteConfig,
 		tailwindEntry: "src/layout.css",
-		vendoredGlob: "src/lib/components/ui/**",
+		vendoredGlob,
 		ignores: [
 			"src-tauri/",
 			"reverse/",
@@ -58,6 +84,29 @@ export default defineConfig(
 		],
 	}),
 	{
+		files: ["src/**/*.ts"],
+		rules: {
+			"no-restricted-syntax": ["error", ...scriptStaleTextSelectors],
+		},
+	},
+	{
+		files: [`${vendoredGlob}/*.svelte`],
+		rules: {
+			"no-restricted-syntax": ["error", ...svelteStaleTextSelectors],
+		},
+	},
+	{
+		files: ["src/**/*.svelte"],
+		ignores: [vendoredGlob],
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				...conditionalClassSelectors,
+				...svelteStaleTextSelectors,
+			],
+		},
+	},
+	{
 		files: translatedSvelteFiles,
 		rules: {
 			"no-restricted-syntax": [
@@ -65,11 +114,18 @@ export default defineConfig(
 				...conditionalClassSelectors,
 				...svelteRawTextSelectors,
 				...scriptRawTextSelectors,
+				...svelteStaleTextSelectors,
 			],
 		},
 	},
 	{
 		files: translatedScriptFiles,
-		rules: { "no-restricted-syntax": ["error", ...scriptRawTextSelectors] },
+		rules: {
+			"no-restricted-syntax": [
+				"error",
+				...scriptRawTextSelectors,
+				...scriptStaleTextSelectors,
+			],
+		},
 	},
 );
