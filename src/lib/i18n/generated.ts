@@ -4,6 +4,7 @@ export interface Messages {
 	"common.time.hours": { count: number };
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
+	"common.time.yesterday": undefined;
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
 	"feedback.errorToast.copyDetails": undefined;

@@ -8,6 +8,7 @@
 		"minutes_one": "{{count}} min",
 		"minutes_other": "{{count}} mins",
 		"hours_one": "{{count}} hr",
-		"hours_other": "{{count}} hrs"
+		"hours_other": "{{count}} hrs",
+		"yesterday": "Yesterday"
 	}
 }
