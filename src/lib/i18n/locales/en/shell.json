@@ -1,0 +1,12 @@
+{
+	"error": {
+		"pageNotFound": "Page not found",
+		"title": "Unexpected Error",
+		"description": "An unexpected error has occurred.",
+		"refresh": "Refresh",
+		"goHome": "Go to home page",
+		"copyError": "Copy error",
+		"copied": "Error message copied to clipboard",
+		"reportIssue": "Report an issue"
+	}
+}

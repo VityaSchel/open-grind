@@ -1,4 +1,14 @@
 {
+	"errorToast": {
+		"defaultLabel": "An error occurred",
+		"copyDetails": "Copy details"
+	},
+	"errorCopy": {
+		"copied": "Error details copied to clipboard",
+		"errors": {
+			"copyFailed": "Couldn't copy to clipboard"
+		}
+	},
 	"requestBlocked": {
 		"cloudflare": {
 			"knownIssue": "This is a <link>known issue</link>."

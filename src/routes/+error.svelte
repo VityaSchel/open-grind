@@ -9,16 +9,16 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import { t } from "$lib/i18n";
 	import { cn } from "$lib/util/utils";
 
-	const title = $derived.by(() => {
-		switch (page.status) {
-			case 404:
-				return "Page not found";
-			default:
-				return "Unexpected Error";
-		}
-	});
+	const title = $derived(
+		t(
+			page.status === 404
+				? "shell.error.pageNotFound"
+				: "shell.error.title",
+		),
+	);
 </script>
 
 <svelte:head>
@@ -33,18 +33,18 @@
 				<Empty.Media variant="icon" class="mb-0">
 					<ExclamationMarkIcon />
 				</Empty.Media>
-				<Empty.Title>Unexpected Error</Empty.Title>
+				<Empty.Title>{t("shell.error.title")}</Empty.Title>
 				<Empty.Description
-					>An unexpected error has occurred.</Empty.Description
+					>{t("shell.error.description")}</Empty.Description
 				>
 			</Empty.Header>
 			<Empty.Content>
 				<div class="flex gap-2">
 					<Button href="/">
 						{#if page.url.pathname === "/"}
-							Refresh
+							{t("shell.error.refresh")}
 						{:else}
-							Go to home page
+							{t("shell.error.goHome")}
 						{/if}
 					</Button>
 					<Button
@@ -54,10 +54,10 @@
 								page.error?.message ||
 									"No error message available",
 							).catch((error) => console.error(error));
-							toast.success("Error message copied to clipboard");
+							toast.success(t("shell.error.copied"));
 						}}
 					>
-						Copy error
+						{t("shell.error.copyError")}
 					</Button>
 				</div>
 			</Empty.Content>
@@ -68,7 +68,8 @@
 					"text-muted-foreground",
 				)}
 			>
-				Report an issue <ArrowUpRightIcon class="inline" />
+				{t("shell.error.reportIssue")}
+				<ArrowUpRightIcon class="inline" />
 			</Link>
 		</Empty.Root>
 	{/if}
