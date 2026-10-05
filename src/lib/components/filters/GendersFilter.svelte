@@ -6,7 +6,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
-	import { isFilterableGender } from "$lib/model/browse/grid/filters";
+	import { compareFilterGenders } from "$lib/model/browse/grid/filters";
 	import { instantWhenReducedMotion } from "$lib/util/reduced-motion";
 	import FilterBoolean from "./FilterBoolean.svelte";
 	import { isGenderChipShown, selectGenders } from "./gender-chips";
@@ -17,11 +17,7 @@
 	}: { checked: boolean; value: number[] } = $props();
 
 	const genders = $derived(
-		getGenders().then((genders) =>
-			genders
-				.filter(isFilterableGender)
-				.sort((a, b) => a.sortFilter - b.sortFilter),
-		),
+		getGenders().then((genders) => genders.toSorted(compareFilterGenders)),
 	);
 
 	const hide = instantWhenReducedMotion(
@@ -39,7 +35,7 @@
 	let expanded = $state(false);
 </script>
 
-<div class="flex min-w-0 flex-col gap-2">
+<div data-slot="gender-filter" class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="gender" bind:checked>Gender</FilterBoolean>
 	<div class="ps-6">
 		{#await genders}
@@ -54,7 +50,7 @@
 					() => value.map(String),
 					(next: string[]) => {
 						value = selectGenders({
-							genders,
+							catalog: genders,
 							previous: value,
 							next: next.map(Number),
 						});

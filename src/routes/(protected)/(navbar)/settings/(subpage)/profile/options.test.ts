@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
 	ageRange,
+	buildGenderOptions,
 	fieldLimits,
 	heightCmRange,
 	heightInchOptions,
@@ -46,5 +47,36 @@ describe("profile edit options", () => {
 		const icons = positionOptions.map((option) => option.icon);
 
 		expect(new Set(icons).size).toBe(positionOptions.length);
+	});
+
+	it("lists the primary genders first, then by profile sort position", () => {
+		const { options } = buildGenderOptions([
+			{ genderId: 0, gender: "-", displayGroup: 0 },
+			{
+				genderId: 62,
+				gender: "Ask Me",
+				displayGroup: 2,
+				sortProfile: 16,
+			},
+			{
+				genderId: 10,
+				gender: "Agender",
+				displayGroup: 2,
+				sortProfile: 1,
+			},
+			{ genderId: 3, gender: "Non-Binary", displayGroup: 1 },
+			{ genderId: 2, gender: "Woman", displayGroup: 1 },
+			{ genderId: 4, gender: "Cis Man", displayGroup: 1 },
+			{ genderId: 1, gender: "Man", displayGroup: 1 },
+		]);
+
+		expect(options.map((option) => option.label)).toEqual([
+			"Man",
+			"Cis Man",
+			"Woman",
+			"Non-Binary",
+			"Agender",
+			"Ask Me",
+		]);
 	});
 });

@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
 import {
 	AcceptNSFWPics,
 	BodyType,
@@ -15,7 +16,6 @@ import {
 	tagsOf,
 	tagTextByKey,
 } from "$lib/model/users/tags";
-import type { Gender } from "$lib/model/users/genders";
 import type { UnitSystem } from "$lib/util/units";
 
 export const filterIsFavoriteSchema = z.boolean();
@@ -77,11 +77,21 @@ export const GENDER_ASK_ME = 62;
 
 export const isFilterableGenderId = (id: number) => id !== GENDER_ASK_ME;
 
-export const isFilterableGender = (
-	gender: Gender,
-): gender is Gender & { sortFilter: number } =>
-	typeof gender.sortFilter === "number" &&
-	isFilterableGenderId(gender.genderId);
+export const isFilterableGender = ({
+	genderId,
+	displayGroup,
+}: Pick<Gender, "genderId" | "displayGroup">) =>
+	displayGroup > 0 && isFilterableGenderId(genderId);
+
+type SortableFilterGender = Pick<Gender, "genderId" | "sortFilter">;
+
+export const compareFilterGenders = (
+	a: SortableFilterGender,
+	b: SortableFilterGender,
+) =>
+	primaryGenderRank(a.genderId) - primaryGenderRank(b.genderId) ||
+	(a.sortFilter ?? Infinity) - (b.sortFilter ?? Infinity) ||
+	a.genderId - b.genderId;
 
 export const filterTagsEnabledSchema = z.boolean();
 export const filterTagsSchema = z.array(z.string());
