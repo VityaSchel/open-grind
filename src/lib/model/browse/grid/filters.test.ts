@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	compareFilterGenders,
 	defaultFilters,
 	FilterAcceptNSFWPics,
 	filterAcceptNSFWPicsSchema,
@@ -15,6 +16,7 @@ import {
 	GENDER_ASK_ME,
 	gridSearchFiltersSchema,
 	isFilterableGender,
+	isFilterableGenderId,
 	isFilterableTagKey,
 	rangeBoundTexts,
 	tagCatalog,
@@ -66,19 +68,63 @@ describe("grid search filter schemas", () => {
 });
 
 describe("filterable values", () => {
-	const gender = {
-		genderId: 1,
-		gender: "Man",
-		displayGroup: 1,
-		sortFilter: 1,
-	};
+	const gender = ({
+		genderId,
+		displayGroup = 1,
+		sortFilter = null,
+	}: {
+		genderId: number;
+		displayGroup?: number;
+		sortFilter?: number | null;
+	}) => ({ genderId, gender: String(genderId), displayGroup, sortFilter });
 
-	it("offers only genders the official filter sheet lists", () => {
-		expect(isFilterableGender(gender)).toBe(true);
-		expect(isFilterableGender({ ...gender, sortFilter: null })).toBe(false);
-		expect(isFilterableGender({ ...gender, genderId: GENDER_ASK_ME })).toBe(
-			false,
-		);
+	it("offers every displayed gender, with or without a filter sort position", () => {
+		for (const genderId of [1, 2, 4, 6])
+			expect(isFilterableGender(gender({ genderId }))).toBe(true);
+		expect(
+			isFilterableGender(
+				gender({ genderId: 10, displayGroup: 2, sortFilter: 3 }),
+			),
+		).toBe(true);
+	});
+
+	it("does not offer a gender outside the display groups", () => {
+		expect(
+			isFilterableGender(gender({ genderId: 0, displayGroup: 0 })),
+		).toBe(false);
+	});
+
+	it("never offers Ask me", () => {
+		expect(
+			isFilterableGender(
+				gender({ genderId: GENDER_ASK_ME, displayGroup: 2 }),
+			),
+		).toBe(false);
+		expect(isFilterableGenderId(GENDER_ASK_ME)).toBe(false);
+		expect(isFilterableGenderId(4)).toBe(true);
+	});
+
+	it("orders the primary genders first, then by filter sort position with unsorted last", () => {
+		const catalog = [
+			gender({ genderId: 0, displayGroup: 0 }),
+			gender({ genderId: 4 }),
+			gender({ genderId: 1 }),
+			gender({ genderId: 5, sortFilter: 1 }),
+			gender({ genderId: 6 }),
+			gender({ genderId: 3, sortFilter: 10 }),
+			gender({ genderId: 7, sortFilter: 2 }),
+			gender({ genderId: 2 }),
+			gender({ genderId: 10, displayGroup: 2, sortFilter: 3 }),
+			gender({ genderId: 11, displayGroup: 2, sortFilter: 4 }),
+			gender({ genderId: GENDER_ASK_ME, displayGroup: 2 }),
+			gender({ genderId: 12, displayGroup: 2, sortFilter: 6 }),
+		];
+
+		expect(
+			catalog
+				.toSorted(compareFilterGenders)
+				.map(({ genderId }) => genderId),
+		).toEqual([1, 4, 5, 2, 6, 7, 3, 10, 11, 12, 0, GENDER_ASK_ME]);
 	});
 
 	it("hides the tags that moved to genders", () => {

@@ -2,6 +2,7 @@ import {
 	sexualPositionIcons,
 	sexualPositionOrder,
 } from "$lib/components/profile/sexual-position-icons";
+import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
 import {
 	acceptNSFWPics,
 	bodyTypes,
@@ -18,7 +19,6 @@ import {
 import { type ProfileTagsResponse, tagTextByKey } from "$lib/model/users/tags";
 import { optionsFromMap } from "$lib/util/options";
 import { cmToInches, formatFeetInches, kgToPounds } from "$lib/util/units";
-import type { Gender } from "$lib/model/users/genders";
 import type { Pronoun } from "$lib/model/users/pronouns";
 
 export const fieldLimits = { displayName: 25, aboutMe: 255 } as const;
@@ -27,8 +27,6 @@ export const maxProfileTags = 10;
 export const maxProfileGenders = 3;
 export const maxProfilePronouns = 3;
 export const maxProfilePhotos = 6;
-
-export const primaryGenderOrder = [1, 4, 5, 2, 6, 7, 3];
 
 export const heightCmRange = { min: 120, max: 250 } as const;
 export const heightInchRange = {
@@ -67,16 +65,13 @@ export const healthOptions = optionsFromMap(healthPractices);
 
 export function buildGenderOptions(genders: Gender[]) {
 	const byId = new Map(genders.map((gender) => [gender.genderId, gender]));
-	const primaryRank = (id: number) => {
-		const index = primaryGenderOrder.indexOf(id);
-		return index === -1 ? Infinity : index;
-	};
 	return {
 		options: genders
 			.filter((gender) => (gender.displayGroup ?? 0) > 0)
 			.sort(
 				(a, b) =>
-					primaryRank(a.genderId) - primaryRank(b.genderId) ||
+					primaryGenderRank(a.genderId) -
+						primaryGenderRank(b.genderId) ||
 					(a.sortProfile ?? Infinity) - (b.sortProfile ?? Infinity) ||
 					a.genderId - b.genderId,
 			)
