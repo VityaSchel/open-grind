@@ -1,5 +1,7 @@
 export const SOURCE_LOCALE = "en";
 
+export const KEY_SEGMENT = /^[A-Za-z0-9][\w-]*$/;
+
 export const PLACEHOLDER = /\{\{(.+?)\}\}/g;
 
 export const PLURAL_CATEGORIES = [

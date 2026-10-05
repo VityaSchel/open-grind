@@ -1,4 +1,5 @@
 import {
+	KEY_SEGMENT,
 	PLACEHOLDER,
 	PLURAL_KEY,
 	SOURCE_LOCALE,
@@ -18,7 +19,6 @@ type Catalog = {
 
 type Inspection = { params: string[]; tags: string[]; problems: string[] };
 
-const KEY_SEGMENT = /^[A-Za-z0-9][\w-]*$/;
 const PARAM_NAME = /^[A-Za-z_]\w*$/;
 const TAG_LIKE = /<\/?[A-Za-z][^<>]*>/g;
 const ENTITY = /&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[Xx][\dA-Fa-f]+);/g;
@@ -26,7 +26,7 @@ const RESERVED_TAGS = new Set(["children", "key", "params"]);
 
 const baseOf = (key: string) => PLURAL_KEY.exec(key)?.[1] ?? key;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
 function isCanonicalLocale(locale: string): boolean {

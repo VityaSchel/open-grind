@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
-import { readLocaleFiles } from "./locale-files";
+import { FIXTURES, readLocaleFiles } from "./locale-files";
 import { weblatePluralForms } from "./weblate-plurals";
-
-const FIXTURES = "src/lib/i18n/fixtures";
 
 describe("weblatePluralForms", () => {
 	const saved = [...readLocaleFiles(FIXTURES)]

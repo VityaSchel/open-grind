@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
-import { readLocaleFiles } from "./locale-files";
+import { FIXTURES, readLocaleFiles } from "./locale-files";
 import { renderTypes } from "./render-types";
 import {
 	checkTranslation,
 	collectMessages,
 	type SourceFile,
 } from "./source-messages";
-
-const FIXTURES = "src/lib/i18n/fixtures";
 
 const file = (json: unknown): SourceFile => ({
 	namespace: "ns",

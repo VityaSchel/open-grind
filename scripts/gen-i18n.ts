@@ -1,11 +1,10 @@
 import path from "node:path";
 
 import { SOURCE_LOCALE } from "../src/lib/i18n/syntax";
-import { readLocaleFiles } from "./i18n/locale-files";
+import { LOCALES, readLocaleFiles } from "./i18n/locale-files";
 import { renderTypes } from "./i18n/render-types";
 import { checkTranslation, collectMessages } from "./i18n/source-messages";
 
-const LOCALES = path.join(import.meta.dir, "../src/lib/i18n/locales");
 const OUTPUT = path.join(import.meta.dir, "../src/lib/i18n/generated.ts");
 
 const catalogs = readLocaleFiles(LOCALES);

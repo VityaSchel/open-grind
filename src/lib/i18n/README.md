@@ -9,6 +9,10 @@ Strings live in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. `en` is t
 3. Once a file has no raw text left, list it in `translatedSvelteFiles` or `translatedScriptFiles` in `eslint.config.js`
 4. Commit. The pre-commit hook writes `generated.ts` with `bun run gen:i18n` and fails until you stage it
 
+## Renaming a key
+
+Lock the Weblate components and merge their pending changes first, then run `bun scripts/i18n/rename-key.ts <old> <new>` with full keys. It moves the string in every language, rewrites its quoted uses under `src/`, and regenerates `generated.ts`. A new meaning needs a new key instead.
+
 ## Syntax
 
 | Element   | Example                               | Rule                                                                                                                                                  |
