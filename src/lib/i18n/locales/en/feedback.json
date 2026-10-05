@@ -1,0 +1,7 @@
+{
+	"requestBlocked": {
+		"cloudflare": {
+			"knownIssue": "This is a <link>known issue</link>."
+		}
+	}
+}
