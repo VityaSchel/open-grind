@@ -11,7 +11,19 @@
 	},
 	"requestBlocked": {
 		"cloudflare": {
+			"title": "Grindr blocks your requests",
+			"description": "Cloudflare protecting the Grindr API is currently blocking your requests because of suspicious activity.",
+			"advice": "You can also rotate request parameters using the button below.",
 			"knownIssue": "This is a <link>known issue</link>."
-		}
+		},
+		"network": {
+			"title": "Something blocked the request before it reached Grindr",
+			"description": "A VPN, DNS filter, captive portal, or a school or work network may have answered instead of Grindr, or an edge in front of the Grindr API turned the request away.",
+			"advice": "Otherwise, switch to another network, or rotate request parameters using the button below."
+		},
+		"vpnHint": "If you use a VPN, try disabling it.",
+		"dontShowAgain": "Don't show again in this session",
+		"rotate": "Rotate parameters",
+		"rotated": "Successfully rotated device parameters"
 	}
 }

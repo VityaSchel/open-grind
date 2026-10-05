@@ -8,6 +8,16 @@ export interface Messages {
 	"feedback.errorCopy.errors.copyFailed": undefined;
 	"feedback.errorToast.copyDetails": undefined;
 	"feedback.errorToast.defaultLabel": undefined;
+	"feedback.requestBlocked.cloudflare.advice": undefined;
+	"feedback.requestBlocked.cloudflare.description": undefined;
+	"feedback.requestBlocked.cloudflare.title": undefined;
+	"feedback.requestBlocked.dontShowAgain": undefined;
+	"feedback.requestBlocked.network.advice": undefined;
+	"feedback.requestBlocked.network.description": undefined;
+	"feedback.requestBlocked.network.title": undefined;
+	"feedback.requestBlocked.rotate": undefined;
+	"feedback.requestBlocked.rotated": undefined;
+	"feedback.requestBlocked.vpnHint": undefined;
 	"shell.error.copied": undefined;
 	"shell.error.copyError": undefined;
 	"shell.error.description": undefined;
