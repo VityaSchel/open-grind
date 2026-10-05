@@ -47,6 +47,7 @@ class GridState {
 	#resolvingIds = new Set<number>();
 	#firstPageIds = new Set<number>();
 	#fetchToken = 0;
+	#startOverListeners = new Set<() => void>();
 	#indexById = $derived(indexProfilesById(this.profiles));
 
 	indexInProfiles(profileId: number): number {
@@ -84,21 +85,33 @@ class GridState {
 		this.items = this.items.filter((item) => item.id !== profileId);
 	}
 
+	onStartOver(listener: () => void): () => void {
+		this.#startOverListeners.add(listener);
+		return () => {
+			this.#startOverListeners.delete(listener);
+		};
+	}
+
 	load(geohash: string): void {
 		if (untrack(() => this.#retargeted === geohash)) return;
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
 			return;
 		this.#geohash = geohash;
-		this.#reset();
-		this.scrollY = 0;
-		void this.#fetchProfiles(geohash);
+		this.#startOver(geohash);
 	}
 
 	retry(): void {
 		if (!this.#geohash) return;
+		this.#startOver(this.#geohash);
+	}
+
+	#startOver(geohash: string): void {
 		this.#reset();
 		this.scrollY = 0;
-		void this.#fetchProfiles(this.#geohash);
+		untrack(() => {
+			for (const listener of this.#startOverListeners) listener();
+		});
+		void this.#fetchProfiles(geohash);
 	}
 
 	async refresh({
