@@ -59,10 +59,9 @@ test("unhiding from the profile brings the profile back", async ({ page }) => {
 	).toBeVisible();
 });
 
-test("the hidden list shows the most recently hidden first", async ({
-	page,
-}) => {
-	test.setTimeout(240_000);
+async function hideTwoFromGrid(
+	page: Page,
+): Promise<{ hiddenFirst: string; hiddenLast: string }> {
 	const hiddenFirst = await openFirstGridProfile(page);
 	await hideActiveProfile(page);
 	await page.goBack();
@@ -75,15 +74,58 @@ test("the hidden list shows the most recently hidden first", async ({
 	await nextCard.click();
 	await expect(page).toHaveURL(new RegExp(`${hiddenLast}$`));
 	await hideActiveProfile(page);
+	return { hiddenFirst, hiddenLast };
+}
+
+const HIDDEN_ROWS = '[data-slot="subpage-scroller"] a[href^="/profile/"]';
+
+async function expectHiddenList({
+	page,
+	hrefs,
+}: {
+	page: Page;
+	hrefs: string[];
+}) {
+	const rows = page.locator(HIDDEN_ROWS);
+	await expect(rows).toHaveCount(hrefs.length, { timeout: 60_000 });
+	for (const [index, href] of hrefs.entries())
+		await expect(rows.nth(index)).toHaveAttribute("href", href);
+}
+
+test("the hidden list shows the most recently hidden first", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	const { hiddenFirst, hiddenLast } = await hideTwoFromGrid(page);
 
 	await clickMeTab(page);
 	await page.getByRole("link", { name: "Account Settings" }).click();
 	await page.getByRole("link", { name: "Hidden users" }).click();
 
-	const rows = page.locator(
-		'[data-slot="subpage-scroller"] a[href^="/profile/"]',
-	);
-	await expect(rows).toHaveCount(2, { timeout: 60_000 });
-	await expect(rows.nth(0)).toHaveAttribute("href", hiddenLast);
-	await expect(rows.nth(1)).toHaveAttribute("href", hiddenFirst);
+	await expectHiddenList({ page, hrefs: [hiddenLast, hiddenFirst] });
+});
+
+test("hiding again from the hidden list moves the profile to the top", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	const { hiddenFirst, hiddenLast } = await hideTwoFromGrid(page);
+	await clickMeTab(page);
+	await page.getByRole("link", { name: "Account Settings" }).click();
+	await page.getByRole("link", { name: "Hidden users" }).click();
+	await expectHiddenList({ page, hrefs: [hiddenLast, hiddenFirst] });
+
+	const toggle = page
+		.locator('[data-slot="subpage-scroller"]')
+		.getByRole("switch")
+		.nth(1);
+	await toggle.click();
+	await expect(toggle).toHaveAttribute("aria-checked", "false");
+	await toggle.click();
+	await expect(toggle).toHaveAttribute("aria-checked", "true");
+
+	await page.goBack();
+	await page.getByRole("link", { name: "Hidden users" }).click();
+
+	await expectHiddenList({ page, hrefs: [hiddenFirst, hiddenLast] });
 });

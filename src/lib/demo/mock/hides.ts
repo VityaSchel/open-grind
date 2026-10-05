@@ -1,7 +1,11 @@
 const hiddenIds = new Set<number>();
 
+// Grindr lists hides in no stable order, so the demo keeps them out of the
+// order they were hidden in.
 export function demoHiddenUsers(): { profileId: number }[] {
-	return [...hiddenIds].map((profileId) => ({ profileId }));
+	const [oldest, ...newer] = hiddenIds;
+	const listed = oldest === undefined ? [] : [...newer, oldest];
+	return listed.map((profileId) => ({ profileId }));
 }
 
 export function demoSetHidden({
