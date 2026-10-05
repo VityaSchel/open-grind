@@ -24,7 +24,11 @@ Strings live in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. `en` is t
 - English outside this syntax
 - Translations with a syntax error, a tag or param English lacks, or an object where English has a string
 - A translation file without an English source, or a locale directory that is not a canonical BCP 47 tag
+- Translations that drop a tag or param English has for the same counts, except `{{count}}` in a plural form that covers a single number
+- A string where English has an object
 - An outdated `generated.ts`
+
+It warns, without failing, on partly filled plural groups, plural forms Weblate does not offer for the language, keys English no longer has, and empty values, and prints each language's translated message count.
 
 ## Weblate component `app-common`
 

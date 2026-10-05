@@ -4,6 +4,7 @@ import {
 	SOURCE_LOCALE,
 	TAG_TOKEN,
 } from "../../src/lib/i18n/syntax";
+import { type PluralForms, weblatePluralForms } from "./weblate-plurals";
 
 export type SourceFile = { namespace: string; text: string };
 
@@ -240,20 +241,42 @@ export function collectMessages(files: SourceFile[]): {
 }
 
 type SourceIndex = {
-	texts: ReadonlySet<string>;
+	inspections: ReadonlyMap<string, Inspection>;
+	objects: ReadonlySet<string>;
 	pluralBases: ReadonlySet<string>;
 	messages: ReadonlyMap<string, Message>;
 };
 
+export type TranslationReport = {
+	errors: string[];
+	warnings: string[];
+	translated: number;
+	total: number;
+};
+
+type Findings = Pick<TranslationReport, "errors" | "warnings">;
+
+type EnglishForm = { message: Message; category?: string };
+
+type DriftContext = {
+	locale: string;
+	index: SourceIndex;
+	plurals: PluralForms;
+	partial: ReadonlyMap<string, string[]>;
+};
+
 function indexSource(source: SourceFile[]): SourceIndex {
-	const { texts } = readCatalog(source);
+	const { texts, objects } = readCatalog(source);
 	const pluralBases = new Set<string>();
 	const messages = new Map<string, Message>();
 	for (const [key, forms] of groupForms(texts)) {
 		if (!forms.has(key)) pluralBases.add(key);
 		messages.set(key, describe({ key, forms, errors: [] }));
 	}
-	return { texts: new Set(texts.keys()), pluralBases, messages };
+	const inspections = new Map(
+		[...texts].map(([key, text]) => [key, inspect(text)] as const),
+	);
+	return { inspections, objects, pluralBases, messages };
 }
 
 function holdsMessage({
@@ -264,10 +287,152 @@ function holdsMessage({
 	path: string;
 }): boolean {
 	return (
-		index.texts.has(path) ||
+		index.inspections.has(path) ||
 		index.pluralBases.has(path) ||
 		index.pluralBases.has(baseOf(path))
 	);
+}
+
+function formOf({
+	index,
+	key,
+}: {
+	index: SourceIndex;
+	key: string;
+}): EnglishForm | undefined {
+	const [, base = "", category] = PLURAL_KEY.exec(key) ?? [];
+	const plural = index.pluralBases.has(base)
+		? index.messages.get(base)
+		: undefined;
+	if (plural !== undefined) return { message: plural, category };
+	const message = index.inspections.has(key)
+		? index.messages.get(key)
+		: undefined;
+	return message === undefined ? undefined : { message };
+}
+
+function completeness({
+	index,
+	texts,
+	plurals,
+}: {
+	index: SourceIndex;
+	texts: ReadonlyMap<string, string>;
+	plurals: PluralForms;
+}): { translated: number; partial: Map<string, string[]> } {
+	let translated = 0;
+	const partial = new Map<string, string[]>();
+	for (const { key } of index.messages.values()) {
+		const suffixes = index.pluralBases.has(key)
+			? plurals.offered.map((category) => `_${category}`)
+			: [""];
+		const missing = suffixes.filter(
+			(suffix) => (texts.get(`${key}${suffix}`) ?? "") === "",
+		);
+		if (missing.length === 0) translated += 1;
+		else if (missing.length < suffixes.length) partial.set(key, missing);
+	}
+	return { translated, partial };
+}
+
+function expectedTokens({
+	index,
+	plurals,
+	form: { message, category },
+}: {
+	index: SourceIndex;
+	plurals: PluralForms;
+	form: EnglishForm;
+}): Pick<Inspection, "params" | "tags"> {
+	if (category === undefined) return message;
+	const sources = plurals.sourceCategories.get(category) ?? [];
+	const english = [...sources].flatMap(
+		(source) => index.inspections.get(`${message.key}_${source}`) ?? [],
+	);
+	const unique = (names: string[]) => [...new Set(names)].sort();
+	return {
+		params: unique(english.flatMap(({ params }) => params)),
+		tags: unique(english.flatMap(({ tags }) => tags)),
+	};
+}
+
+function reportDrift({
+	key,
+	text,
+	found,
+	form,
+	context,
+	into,
+}: {
+	key: string;
+	text: string;
+	found: Inspection;
+	form: EnglishForm | undefined;
+	context: DriftContext;
+	into: Findings;
+}): void {
+	const { locale, index, plurals, partial } = context;
+	if (form === undefined) {
+		if (index.objects.has(key)) {
+			into.errors.push(`${key}: is a string where English has an object`);
+		} else {
+			into.warnings.push(`${key}: English no longer has this key`);
+		}
+		return;
+	}
+	const { message, category } = form;
+	if (category !== undefined && !plurals.offered.includes(category)) {
+		into.warnings.push(
+			`${key}: Weblate offers no _${category} form for ${locale} and drops it on save`,
+		);
+	} else if (text === "") {
+		if (!partial.has(message.key)) {
+			into.warnings.push(`${key}: empty, so it renders in English`);
+		}
+	} else {
+		const expected = expectedTokens({ index, plurals, form });
+		const countOptional =
+			category !== undefined && plurals.singleNumber.has(category);
+		const lost = [
+			...expected.tags
+				.filter((tag) => !found.tags.includes(tag))
+				.map((tag) => `<${tag}>`),
+			...expected.params
+				.filter((param) => !found.params.includes(param))
+				.filter((param) => !(countOptional && param === "count"))
+				.map((param) => `{{${param}}}`),
+		];
+		into.errors.push(
+			...lost.map(
+				(token) => `${key}: lacks ${token} from the English message`,
+			),
+		);
+	}
+}
+
+function reportAdditions({
+	key,
+	found,
+	english,
+	into,
+}: {
+	key: string;
+	found: Inspection;
+	english: Message;
+	into: Findings;
+}): void {
+	for (const tag of found.tags) {
+		if (!english.tags.includes(tag)) {
+			into.errors.push(`${key}: <${tag}> is not in the English message`);
+		}
+	}
+	for (const param of found.params) {
+		if (!english.params.includes(param)) {
+			into.errors.push(
+				`${key}: {{${param}}} is not in the English message`,
+			);
+		}
+	}
 }
 
 export function checkTranslation({
@@ -278,50 +443,64 @@ export function checkTranslation({
 	locale: string;
 	files: SourceFile[];
 	source: SourceFile[];
-}): string[] {
+}): TranslationReport {
 	const index = indexSource(source);
+	const total = index.messages.size;
+	if (!isCanonicalLocale(locale)) {
+		const error = `${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`;
+		return { errors: [error], warnings: [], translated: 0, total };
+	}
 	const namespaces = new Set(source.map(({ namespace }) => namespace));
 	const known = files.filter(({ namespace }) => namespaces.has(namespace));
 	const { texts, objects, errors } = readCatalog(known);
-	const problems = [
-		...files
-			.filter((file) => !known.includes(file))
-			.map(
-				({ namespace }) =>
-					`${namespace}.json: has no English source file`,
-			),
-		...errors,
-	];
+	const findings: Findings = {
+		errors: [
+			...files
+				.filter((file) => !known.includes(file))
+				.map(
+					({ namespace }) =>
+						`${namespace}.json: has no English source file`,
+				),
+			...errors,
+		],
+		warnings: [],
+	};
 	for (const path of objects) {
 		if (holdsMessage({ index, path })) {
-			problems.push(`${path}: is an object where English has a message`);
+			findings.errors.push(
+				`${path}: is an object where English has a message`,
+			);
 		}
 	}
+	const plurals = weblatePluralForms(locale);
+	const { translated, partial } = completeness({ index, texts, plurals });
+	for (const [base, missing] of partial) {
+		findings.warnings.push(
+			`${base}: no text for ${missing.join(", ")}, so those counts render in English`,
+		);
+	}
+	const context = { locale, index, plurals, partial };
 	for (const [key, text] of texts) {
 		const found = inspect(text);
-		problems.push(...found.problems.map((problem) => `${key}: ${problem}`));
-		const english = index.messages.get(baseOf(key));
-		if (english === undefined) continue;
-		for (const tag of found.tags) {
-			if (!english.tags.includes(tag)) {
-				problems.push(`${key}: <${tag}> is not in the English message`);
-			}
+		findings.errors.push(
+			...found.problems.map((problem) => `${key}: ${problem}`),
+		);
+		const form = formOf({ index, key });
+		if (form !== undefined) {
+			reportAdditions({
+				key,
+				found,
+				english: form.message,
+				into: findings,
+			});
 		}
-		for (const param of found.params) {
-			if (!english.params.includes(param)) {
-				problems.push(
-					`${key}: {{${param}}} is not in the English message`,
-				);
-			}
-		}
+		reportDrift({ key, text, found, form, context, into: findings });
 	}
-	const localeErrors = isCanonicalLocale(locale)
-		? []
-		: [
-				`${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`,
-			];
-	return [
-		...localeErrors,
-		...problems.map((problem) => `${locale}/${problem}`),
-	];
+	const scoped = (line: string) => `${locale}/${line}`;
+	return {
+		errors: findings.errors.map(scoped),
+		warnings: findings.warnings.map(scoped).sort(),
+		translated,
+		total,
+	};
 }

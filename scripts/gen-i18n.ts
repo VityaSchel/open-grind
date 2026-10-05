@@ -11,10 +11,19 @@ const OUTPUT = path.join(import.meta.dir, "../src/lib/i18n/generated.ts");
 const catalogs = readLocaleFiles(LOCALES);
 const source = catalogs.get(SOURCE_LOCALE) ?? [];
 const { messages, errors } = collectMessages(source);
-const translationErrors = [...catalogs]
+const reports = [...catalogs]
 	.filter(([locale]) => locale !== SOURCE_LOCALE)
-	.flatMap(([locale, files]) => checkTranslation({ locale, files, source }));
-const problems = [...errors, ...translationErrors];
+	.map(([locale, files]) => ({
+		locale,
+		...checkTranslation({ locale, files, source }),
+	}));
+
+for (const { locale, warnings, translated, total } of reports) {
+	for (const warning of warnings) console.warn(`warning: ${warning}`);
+	console.log(`${locale}: ${translated}/${total} messages translated`);
+}
+
+const problems = [...errors, ...reports.flatMap((report) => report.errors)];
 
 if (problems.length > 0) {
 	console.error(problems.map((problem) => `error: ${problem}`).join("\n"));

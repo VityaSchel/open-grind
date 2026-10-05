@@ -2,7 +2,16 @@ export const SOURCE_LOCALE = "en";
 
 export const PLACEHOLDER = /\{\{(.+?)\}\}/g;
 
-export const PLURAL_KEY = /^(.+)_(zero|one|two|few|many|other)$/;
+export const PLURAL_CATEGORIES = [
+	"zero",
+	"one",
+	"two",
+	"few",
+	"many",
+	"other",
+] as const satisfies readonly Intl.LDMLPluralRule[];
+
+export const PLURAL_KEY = new RegExp(`^(.+)_(${PLURAL_CATEGORIES.join("|")})$`);
 
 const TAG_NAME = "[A-Za-z][A-Za-z0-9]*";
 
