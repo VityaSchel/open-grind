@@ -17,6 +17,7 @@ export default defineConfig(
 			"scripts/",
 			"ci/",
 			"e2e/updater/",
+			"src/lib/i18n/generated.ts",
 		],
 	}),
 );

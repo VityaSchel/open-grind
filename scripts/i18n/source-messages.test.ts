@@ -1,0 +1,354 @@
+import { describe, expect, it } from "vitest";
+
+import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
+import { readLocaleFiles } from "./locale-files";
+import { renderTypes } from "./render-types";
+import {
+	checkTranslation,
+	collectMessages,
+	type SourceFile,
+} from "./source-messages";
+
+const FIXTURES = "src/lib/i18n/fixtures";
+
+const file = (json: unknown): SourceFile => ({
+	namespace: "ns",
+	text: JSON.stringify(json),
+});
+
+const errorsOf = (json: unknown) => collectMessages([file(json)]).errors;
+
+describe("collectMessages", () => {
+	it("derives params, tags and plural counts", () => {
+		const { messages, errors } = collectMessages([
+			file({
+				nested: { greeting: "Hi {{ name }} and {{name}}" },
+				photos_one: "{{count}} photo by {{author}}",
+				photos_other:
+					"<b>{{count}}</b> photos by <link>{{author}}</link>",
+				plain: "No params",
+				videos_one: "One video",
+				videos_other: "{{count}} videos",
+			}),
+		]);
+		expect(errors).toEqual([]);
+		expect(messages).toEqual([
+			{ key: "ns.nested.greeting", params: ["name"], tags: [] },
+			{
+				key: "ns.photos",
+				params: ["author", "count"],
+				tags: ["b", "link"],
+			},
+			{ key: "ns.plain", params: [], tags: [] },
+			{ key: "ns.videos", params: ["count"], tags: [] },
+		]);
+	});
+
+	it.each([
+		[
+			{ a_zero: "x", a_one: "x", a_other: "x" },
+			"en/ns.a: plurals need exactly _one and _other, found _one, _other, _zero",
+		],
+		[
+			{ a_other: "x" },
+			"en/ns.a: plurals need exactly _one and _other, found _other",
+		],
+		[
+			{ a_one: "x", a_few: "x", a_other: "x" },
+			"en/ns.a: plurals need exactly _one and _other, found _few, _one, _other",
+		],
+		[
+			{ a_one: "One by {{author}}", a_other: "{{count}} by {{author}}" },
+			"en/ns.a_one: has a placeholder, so it needs {{count}} as well",
+		],
+		[
+			{ "a.b": "x" },
+			'en/ns.a.b: key segments are [A-Za-z0-9_-] and never contain "."',
+		],
+		[
+			{ a: "x", a_one: "x", a_other: "x" },
+			"en/ns.a: a plain value and plural forms share this key",
+		],
+		[
+			{ a_one: "x", a_other: "x", a: { b: "x" } },
+			"en/ns.a: plural forms and nested keys share this key",
+		],
+		[{ a: "<b><i>x</i></b>" }, "en/ns.a: <i> is unbalanced or nested"],
+		[{ a: "<b>x" }, "en/ns.a: <b> is never closed"],
+		[{ a: "x</b>" }, "en/ns.a: </b> is unbalanced or nested"],
+		[{ a: "<b>x</i>" }, "en/ns.a: </i> is unbalanced or nested"],
+		[
+			{ a: "line<br/>break" },
+			"en/ns.a: <br/> is not a plain <name> or </name> tag",
+		],
+		[
+			{ a: '<a href="/">x</a>' },
+			'en/ns.a: <a href="/"> is not a plain <name> or </name> tag',
+		],
+		[{ a: "<key>x</key>" }, "en/ns.a: <key> uses a reserved tag name"],
+		[
+			{ a: "{{- name}}" },
+			"en/ns.a: {{- name}} is not a plain {{name}} placeholder",
+		],
+		[
+			{ a: "{{n, number}}" },
+			"en/ns.a: {{n, number}} is not a plain {{name}} placeholder",
+		],
+		[
+			{ a: "{{user.name}}" },
+			"en/ns.a: {{user.name}} is not a plain {{name}} placeholder",
+		],
+		[
+			{ a: "Hi {name}" },
+			"en/ns.a: stray brace outside a {{name}} placeholder",
+		],
+		[
+			{ a: "Hi {{name}" },
+			"en/ns.a: stray brace outside a {{name}} placeholder",
+		],
+		[{ a: "$t(ns.b)" }, "en/ns.a: $t() nesting is not supported"],
+		[
+			{ a: "Fish &amp; chips" },
+			"en/ns.a: &amp; is an HTML entity; write the character itself",
+		],
+		[
+			{ a: "10&#160;km" },
+			"en/ns.a: &#160; is an HTML entity; write the character itself",
+		],
+		[
+			{ a: "10&#xA0;km" },
+			"en/ns.a: &#xA0; is an HTML entity; write the character itself",
+		],
+		[
+			{ a: "{{count}} new" },
+			"en/ns.a: {{count}} needs plural forms ns.a_one/_other",
+		],
+		[{ a: "" }, "en/ns.a: empty string renders as the key"],
+		[{ a: 1 }, "en/ns.a: values must be strings or objects"],
+		[{ a: ["x"] }, "en/ns.a: values must be strings or objects"],
+		[{ a: null }, "en/ns.a: values must be strings or objects"],
+		["x", "en/ns.json: must hold a JSON object"],
+		[["x"], "en/ns.json: must hold a JSON object"],
+	])("rejects %j", (json, error) => {
+		expect(errorsOf(json)).toEqual([error]);
+	});
+
+	it("rejects namespaces that are not plain names", () => {
+		expect(
+			collectMessages([{ namespace: "a.b", text: "{}" }]).errors,
+		).toEqual(["en/a.b.json: file names are [A-Za-z0-9_-]"]);
+	});
+
+	it("rejects files that are not JSON", () => {
+		expect(
+			collectMessages([{ namespace: "ns", text: "{" }]).errors,
+		).toEqual([expect.stringMatching(/^en\/ns\.json: invalid JSON: /)]);
+	});
+});
+
+describe("checkTranslation", () => {
+	const source = [
+		file({
+			plain: "Archived",
+			greeting: "Say hi to {{name}}!",
+			terms: "Accept the <link>terms</link> and the <b>policy</b>.",
+			photos_one: "One photo",
+			photos_other: "{{count}} photos",
+			nested: { title: "Account" },
+		}),
+	];
+	const check = (json: unknown) =>
+		checkTranslation({ locale: "ru", files: [file(json)], source });
+
+	it.each([
+		{
+			plain: "",
+			greeting: "{{name }}",
+			photos_one: "{{count}} фото",
+			photos_few: "",
+			photos_many: "{{count}} фото",
+			nested: { title: "Аккаунт" },
+		},
+		{ terms: "Примите <b>политику</b> и <link>условия</link>." },
+		{ terms: "Примите <link>условия</link>." },
+		{ photos: "" },
+		{ photos_zero: "Нет фото" },
+		{ nested: "Аккаунт" },
+		{ removed: "<i>Удалено</i>" },
+	])("accepts %j", (json) => {
+		expect(check(json)).toEqual([]);
+	});
+
+	it.each([
+		[
+			{ plain: "{{amount, currency}}" },
+			"ru/ns.plain: {{amount, currency}} is not a plain {{name}} placeholder",
+		],
+		[
+			{ plain: { short: "Архив" } },
+			"ru/ns.plain: is an object where English has a message",
+		],
+		[
+			{ photos: { short: "Фото" } },
+			"ru/ns.photos: is an object where English has a message",
+		],
+		[
+			{ photos_one: { short: "Фото" } },
+			"ru/ns.photos_one: is an object where English has a message",
+		],
+		[
+			{ photos_few: { short: "Фото" } },
+			"ru/ns.photos_few: is an object where English has a message",
+		],
+		[
+			{ terms: "<link>Условия</link> и <i>политика</i>" },
+			"ru/ns.terms: <i> is not in the English message",
+		],
+		[
+			{ plain: "<b>Архив</b>" },
+			"ru/ns.plain: <b> is not in the English message",
+		],
+		[
+			{ photos_few: "<b>{{count}}</b> фото" },
+			"ru/ns.photos_few: <b> is not in the English message",
+		],
+		[
+			{ greeting: "Привет, {{nmae}}!" },
+			"ru/ns.greeting: {{nmae}} is not in the English message",
+		],
+		[
+			{ photos_few: "{{n}} фото" },
+			"ru/ns.photos_few: {{n}} is not in the English message",
+		],
+		["x", "ru/ns.json: must hold a JSON object"],
+	])("rejects %j", (json, error) => {
+		expect(check(json)).toEqual([error]);
+	});
+
+	it.each(["pt_BR", "ru@formal", "PT-br", "en_US"])(
+		"rejects the locale directory %s",
+		(locale) => {
+			expect(
+				checkTranslation({ locale, files: [file({})], source }),
+			).toEqual([
+				`${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`,
+			]);
+		},
+	);
+
+	it("rejects namespaces without an English source", () => {
+		expect(
+			checkTranslation({
+				locale: "ru",
+				files: [{ namespace: "extra", text: '{ "a": "x" }' }],
+				source,
+			}),
+		).toEqual(["ru/extra.json: has no English source file"]);
+	});
+});
+
+describe("Weblate-saved files", () => {
+	const fixtures = readLocaleFiles(FIXTURES);
+	const source = fixtures.get(SOURCE_LOCALE) ?? [];
+	const translations = [...fixtures].filter(
+		([locale]) => locale !== SOURCE_LOCALE,
+	);
+
+	it("covers the plural shapes of ten languages", () => {
+		expect([...fixtures.keys()]).toEqual([
+			"ar",
+			"cs",
+			"en",
+			"fr",
+			"he",
+			"ja",
+			"pl",
+			"pt-BR",
+			"ru",
+			"uk",
+		]);
+	});
+
+	it("accepts the English template", () => {
+		const { messages, errors } = collectMessages(source);
+		expect(errors).toEqual([]);
+		expect(messages.map(({ key }) => key)).toEqual([
+			"sample.app.name",
+			"sample.app.tagline",
+			"sample.chat.greeting",
+			"sample.chat.shared",
+			"sample.chat.typing",
+			"sample.chat.unread",
+			"sample.inbox.archived",
+			"sample.inbox.empty",
+			"sample.photos",
+			"sample.settings.consent",
+			"sample.settings.theme.dark",
+			"sample.settings.theme.light",
+		]);
+		expect(messages).toContainEqual({
+			key: "sample.settings.consent",
+			params: [],
+			tags: ["privacy", "terms"],
+		});
+	});
+
+	it.each(translations)("accepts %s", (locale, files) => {
+		expect(checkTranslation({ locale, files, source })).toEqual([]);
+	});
+});
+
+describe("renderTypes", () => {
+	const json = {
+		Zulu: "Zulu",
+		alpha: "Alpha {{name}}",
+		Bravo: "<link>Bravo</link> {{first}} {{second}}",
+		photos_one: "One photo",
+		photos_other: "<b>{{count}}</b> photos",
+	};
+
+	it("prints one member per line in code point order", () => {
+		expect(renderTypes(collectMessages([file(json)]).messages)).toBe(
+			[
+				"export interface Messages {",
+				'\t"ns.Zulu": undefined;',
+				'\t"ns.alpha": { name: string };',
+				"}",
+				"",
+				"export interface RichMessages {",
+				'\t"ns.Bravo": { first: string; second: string };',
+				'\t"ns.photos": { count: number };',
+				"}",
+				"",
+				"export interface RichTags {",
+				'\t"ns.Bravo": "link";',
+				'\t"ns.photos": "b";',
+				"}",
+				"",
+			].join("\n"),
+		);
+	});
+
+	it("ignores file and key order", () => {
+		const reversed = Object.fromEntries(Object.entries(json).reverse());
+		const render = (files: SourceFile[]) =>
+			renderTypes(collectMessages(files).messages);
+		const other = { namespace: "aa", text: '{ "x": "X" }' };
+		expect(render([other, file(reversed)])).toBe(
+			render([file(json), other]),
+		);
+	});
+
+	it("prints empty interfaces without messages", () => {
+		expect(renderTypes([])).toBe(
+			[
+				"export interface Messages {}",
+				"",
+				"export interface RichMessages {}",
+				"",
+				"export interface RichTags {}",
+				"",
+			].join("\n"),
+		);
+	});
+});

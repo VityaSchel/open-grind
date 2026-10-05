@@ -28,6 +28,8 @@
 		"check:credits": "bun scripts/gen-credits.ts --check",
 		"check:credits-sync": "bun scripts/check-credits-sync.ts",
 		"check:credits-android": "bun scripts/check-android-credits.ts",
+		"gen:i18n": "bun scripts/gen-i18n.ts",
+		"check:i18n": "bun scripts/gen-i18n.ts --check",
 		"package:linux": "podman build -t open-grind-linux ci/linux && podman run --rm -v \"$PWD:/work\" open-grind-linux sh ci/linux/build.sh",
 		"package:macos": "nix run .#build-macos --",
 		"lint": "svelte-kit sync && eslint --concurrency=2 .",

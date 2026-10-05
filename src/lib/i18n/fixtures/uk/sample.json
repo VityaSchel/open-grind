@@ -1,0 +1,10 @@
+{
+	"photos_one": "F0:one {{count}}",
+	"photos_few": "F1:few {{count}}",
+	"photos_many": "F2:many {{count}}",
+	"chat": {
+		"unread_one": "F0:one {{count}}",
+		"unread_few": "",
+		"unread_many": "F2:many {{count}}"
+	}
+}

@@ -1,0 +1,28 @@
+{
+	"app": {
+		"name": "Open Grind",
+		"tagline": "A free client — no ads, no tracking"
+	},
+	"chat": {
+		"greeting": "Say hi to {{name}}!",
+		"shared_one": "{{name}} shared <b>{{count}} photo</b> in {{album}}",
+		"shared_other": "{{name}} shared <b>{{count}} photos</b> in {{album}}",
+		"typing": "{{name}} is typing…",
+		"unread_one": "{{count}} unread message",
+		"unread_other": "{{count}} unread messages",
+		"drafts": {}
+	},
+	"photos_one": "One photo",
+	"photos_other": "{{count}} photos",
+	"settings": {
+		"consent": "Read the <terms>terms</terms> and the <privacy>privacy policy</privacy>.",
+		"theme": {
+			"dark": "Dark",
+			"light": "Light"
+		}
+	},
+	"inbox": {
+		"empty": "No messages yet",
+		"archived": "Archived"
+	}
+}
