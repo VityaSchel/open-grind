@@ -1,7 +1,7 @@
 import { registerAccountCache } from "$lib/api/account-caches";
 import { now } from "$lib/util/clock";
 
-const PROPAGATION_MS = 15_000;
+export const PROPAGATION_MS = 15_000;
 
 // The server keeps listing a profile as blocked or hidden for a moment after we
 // lift it, so a list refetched right after the mutation resurrects the state we
