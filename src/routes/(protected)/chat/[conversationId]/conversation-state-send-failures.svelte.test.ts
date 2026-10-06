@@ -168,7 +168,7 @@ describe("ConversationState send failures", () => {
 
 		expect(offerBypassMock).toHaveBeenCalledTimes(2);
 		expect(offerBypassMock).toHaveBeenCalledWith({
-			reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+			reason: "chat.conversation.bypassReason.expiringPhotoLimit",
 			retry: expect.any(Function),
 		});
 		expect(state.messages.every((m) => m.status === "error")).toBe(true);

@@ -45,7 +45,8 @@ import {
 
 const RUN_TIMEOUT_MS = 15_000;
 
-const REASON = "Unsending a message requires a Grindr subscription.";
+const REASON = "chat.conversation.bypassReason.unsend";
+const LATER_REASON = "chat.conversation.bypassReason.expiringPhotoLimit";
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -73,7 +74,7 @@ describe("offerEntitlementBypass", () => {
 		const first = vi.fn(() => Promise.resolve());
 		const second = vi.fn(() => Promise.resolve());
 		offerEntitlementBypass({ reason: REASON, retry: first });
-		offerEntitlementBypass({ reason: "another feature", retry: second });
+		offerEntitlementBypass({ reason: LATER_REASON, retry: second });
 
 		expect(entitlementBypassState.reason).toBe(REASON);
 
@@ -382,13 +383,13 @@ describe("runEntitlementBypass", () => {
 
 		const running = runEntitlementBypass();
 		await vi.waitFor(() => expect(finishRetry).toBeDefined());
-		offerEntitlementBypass({ reason: "a later limit", retry: late });
+		offerEntitlementBypass({ reason: LATER_REASON, retry: late });
 		finishRetry();
 		await running;
 
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.busy).toBe(false);
-		expect(entitlementBypassState.reason).toBe("a later limit");
+		expect(entitlementBypassState.reason).toBe(LATER_REASON);
 		expect(late).not.toHaveBeenCalled();
 
 		await runEntitlementBypass();

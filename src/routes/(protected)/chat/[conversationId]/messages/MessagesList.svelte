@@ -61,7 +61,7 @@
 			console.error(error);
 			if (tieredFeature(error) === "UnsentMessage") {
 				offerEntitlementBypass({
-					reason: "Unsending a message requires a Grindr subscription.",
+					reason: "chat.conversation.bypassReason.unsend",
 					retry: () => unsend({ state, messageId }),
 				});
 				return;

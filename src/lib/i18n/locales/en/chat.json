@@ -1,0 +1,24 @@
+{
+	"messagePreview": {
+		"album": "Album",
+		"expiringImage": "Expiring image",
+		"expiringVideo": "Expiring video",
+		"photo": "Photo",
+		"unsent": "Unsent message",
+		"voiceMessage": "Voice message",
+		"video": "Video",
+		"videoCall": "Video call",
+		"gaymoji": "Gaymoji",
+		"gif": "GIF",
+		"location": "Location",
+		"profile": "Profile",
+		"rightNow": "Right Now",
+		"message": "Message"
+	},
+	"conversation": {
+		"bypassReason": {
+			"expiringPhotoLimit": "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+			"unsend": "Unsending a message requires a Grindr subscription."
+		}
+	}
+}

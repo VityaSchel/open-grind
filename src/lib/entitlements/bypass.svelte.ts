@@ -11,18 +11,19 @@ import { callMethod } from "$lib/api/methods";
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 import { withDeadline } from "$lib/util/deadline";
 import { ws } from "$lib/ws.svelte";
+import type { PlainMessageKey } from "$lib/i18n";
 import { randomHondurasGeohash } from "./honduras";
 
-type BlockedAction = { reason: string; retry: () => Promise<unknown> };
+type BlockedAction = { reason: PlainMessageKey; retry: () => Promise<unknown> };
 
 const STEP_TIMEOUT_MS = 10_000;
 const RUN_TIMEOUT_MS = 15_000;
 
 export const entitlementBypassState = $state<{
 	open: boolean;
-	reason: string;
+	reason: PlainMessageKey | null;
 	busy: boolean;
-}>({ open: false, reason: "", busy: false });
+}>({ open: false, reason: null, busy: false });
 
 let blocked: BlockedAction[] = [];
 let granting: Promise<void> | null = null;

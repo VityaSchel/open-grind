@@ -438,7 +438,7 @@ describe("MessagesList unsend", () => {
 
 		expect(revert).toHaveBeenCalledOnce();
 		expect(offerBypassMock).toHaveBeenCalledWith({
-			reason: "Unsending a message requires a Grindr subscription.",
+			reason: "chat.conversation.bypassReason.unsend",
 			retry: expect.any(Function),
 		});
 		expect(showErrorToastMock).not.toHaveBeenCalled();

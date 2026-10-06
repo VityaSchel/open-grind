@@ -6,6 +6,7 @@
 		entitlementBypassState,
 		runEntitlementBypass,
 	} from "$lib/entitlements/bypass.svelte";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	const escapeKeydownBehavior = $derived(
@@ -33,7 +34,11 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Paid feature</AlertDialog.Title>
 			<AlertDialog.Description>
-				<p class="mb-3">{entitlementBypassState.reason}</p>
+				<p class="mb-3">
+					{entitlementBypassState.reason === null
+						? ""
+						: t(entitlementBypassState.reason)}
+				</p>
 				Open Grind can attempt to bypass this by momentarily spoofing your
 				geolocation to Honduras.
 				<Link href="https://opengrind.org/guides/bypasses">

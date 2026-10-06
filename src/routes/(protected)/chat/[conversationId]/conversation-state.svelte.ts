@@ -428,7 +428,7 @@ export class ConversationState {
 				urn === "urn:gr:err:entitlement_limit"
 			) {
 				offerEntitlementBypass({
-					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
+					reason: "chat.conversation.bypassReason.expiringPhotoLimit",
 					retry: () => this.#attemptSend(delivery),
 				});
 			}

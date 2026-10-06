@@ -30,6 +30,7 @@ const translatedScriptFiles = [
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/model/browse/grid/filters.ts",
 	"src/lib/model/interest/taps.ts",
+	"src/lib/model/messaging/message-preview.ts",
 	"src/lib/model/users/profiles.ts",
 	"src/lib/util/format-time.ts",
 	"src/lib/util/units.ts",

@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	previewFromMessage,
 	previewLabel,
@@ -174,5 +176,28 @@ describe("quoteLabel", () => {
 
 	it("does not render an empty pill for a blank text message", () => {
 		expect(quoteLabel(preview("Text", "   "))).toBe("Message");
+	});
+});
+
+describe("preview labels across locales", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("translates a type at call time and leaves message text alone", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(previewLabel({ type: "Image" })).toMatch(PSEUDO_MESSAGE);
+		expect(previewLabel({ type: "Album", albumId: 7 })).toMatch(
+			PSEUDO_MESSAGE,
+		);
+		expect(previewLabel({ type: "Text", text: "Album" })).toBe("Album");
+		expect(previewLabel(null)).toBeNull();
+		expect(quoteLabel({ type: "Unsent" })).toMatch(PSEUDO_MESSAGE);
+		expect(quoteLabel({ type: "Giphy" })).toMatch(PSEUDO_MESSAGE);
+		expect(quoteLabel({ type: "Text", text: "   " })).toMatch(
+			PSEUDO_MESSAGE,
+		);
+		expect(quoteLabel({ type: "Text", text: "Photo" })).toBe("Photo");
 	});
 });

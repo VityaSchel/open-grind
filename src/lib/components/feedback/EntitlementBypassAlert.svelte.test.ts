@@ -3,6 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+
 const {
 	callMethodMock,
 	reconnectMock,
@@ -41,14 +43,16 @@ const { backGestureEventHandlers } =
 	await import("$lib/platform/back-gesture-event.svelte");
 const EntitlementBypassAlert = (await import("./EntitlementBypassAlert.svelte"))
 	.default;
+const { setLocale, SOURCE_LOCALE } = await import("$lib/i18n");
 
+const REASON_KEY = "chat.conversation.bypassReason.unsend";
 const REASON = "Unsending a message requires a Grindr subscription.";
 
 const bypassButton = () => screen.getByRole("button", { name: "Bypass" });
 const cancelButton = () => screen.getByRole("button", { name: "Cancel" });
 
 async function offer(retry = vi.fn(() => Promise.resolve())) {
-	offerEntitlementBypass({ reason: REASON, retry });
+	offerEntitlementBypass({ reason: REASON_KEY, retry });
 	await vi.waitFor(bypassButton);
 	return retry;
 }
@@ -78,9 +82,10 @@ describe("EntitlementBypassAlert", () => {
 		render(EntitlementBypassAlert);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		dismissEntitlementBypass();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("explains the paid feature and what the bypass does", async () => {
@@ -97,6 +102,15 @@ describe("EntitlementBypassAlert", () => {
 			"href",
 			"https://opengrind.org/guides/bypasses",
 		);
+	});
+
+	it("shows the reason in the active locale", async () => {
+		await offer();
+
+		await setLocale({ locale: "en-XA" });
+
+		await vi.waitFor(() => expect(screen.queryByText(REASON)).toBeNull());
+		expect(screen.getByText(PSEUDO_MESSAGE)).toBeTruthy();
 	});
 
 	it("reissues the token and replays the action on Bypass", async () => {
