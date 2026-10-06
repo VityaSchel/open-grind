@@ -1,12 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	acceptNSFWPics,
 	BodyType,
+	bodyTypes,
+	ethnicities,
 	healthPracticeLabels,
 	healthPractices,
+	hivStatuses,
+	hivStatusLabels,
+	lookingFor,
+	meetAt,
 	profileSchema,
+	relationshipStatuses,
+	sexualPositions,
 	Tribe,
+	tribes,
 	UnsettableHealthPractice,
+	vaccines,
 } from "$lib/model/users/profiles";
 
 const unknownToUs = 9_999;
@@ -92,5 +103,61 @@ describe("health practices we can show but not set", () => {
 
 	it("still labels the practice the current Grindr build dropped", () => {
 		expect(healthPracticeLabels[4]).toBe("I'm HIV undetectable");
+	});
+});
+
+describe("vocabulary labels", () => {
+	const listed = (labels: Readonly<Record<number, string>>) =>
+		Object.entries(labels)
+			.map(([id, label]) => `${id}=${label}`)
+			.join("|");
+
+	it("names every id in English", () => {
+		const vocabularies = {
+			sexualPositions,
+			lookingFor,
+			acceptNSFWPics,
+			relationshipStatuses,
+			bodyTypes,
+			tribes,
+			meetAt,
+			ethnicities,
+			hivStatuses,
+			hivStatusLabels,
+			healthPractices,
+			healthPracticeLabels,
+			vaccines,
+		};
+
+		expect(
+			Object.fromEntries(
+				Object.entries(vocabularies).map(([name, labels]) => [
+					name,
+					listed(labels),
+				]),
+			),
+		).toEqual({
+			sexualPositions:
+				"1=Top|2=Bottom|3=Versatile|4=Vers Bottom|5=Vers Top|6=Side",
+			lookingFor:
+				"2=Chat|3=Dates|4=Friends|5=Networking|6=Relationship|7=Hookups",
+			acceptNSFWPics: "1=Never|2=Not At First|3=Yes Please",
+			relationshipStatuses:
+				"1=Single|2=Dating|3=Exclusive|4=Committed|5=Partnered|6=Engaged|7=Married|8=Open Relationship",
+			bodyTypes: "1=Toned|2=Average|3=Large|4=Muscular|5=Slim|6=Stocky",
+			tribes: "1=Bear|2=Clean-Cut|3=Daddy|4=Discreet|5=Geek|6=Jock|7=Leather|8=Otter|9=Poz|10=Rugged|11=Trans|12=Twink|13=Sober",
+			meetAt: "1=My Place|2=Your Place|3=Bar|4=Coffee Shop|5=Restaurant",
+			ethnicities:
+				"1=Asian|2=Black|3=Latino|4=Middle Eastern|5=Mixed|6=Native American|7=White|8=Other|9=South Asian",
+			hivStatuses:
+				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, undetectable",
+			hivStatusLabels:
+				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, undetectable|5=Prefer to discuss",
+			healthPractices:
+				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV undetectable|5=Prefer to discuss",
+			healthPracticeLabels:
+				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV undetectable|5=Prefer to discuss|6=Sober|7=Drug-Free",
+			vaccines: "1=COVID-19|2=Monkeypox|3=Meningitis",
+		});
 	});
 });

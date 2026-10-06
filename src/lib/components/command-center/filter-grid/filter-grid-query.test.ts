@@ -1,12 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { sentFilterKeys } from "$lib/grid/grid-query";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import {
 	defaultFilters,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
 } from "$lib/model/browse/grid/filters";
 import { parseFilterGridQuery } from "./filter-grid-query";
+
+afterEach(async () => {
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 function parsedAt<T>(entries: readonly T[], index: number): T {
 	const entry = entries[index];
@@ -100,6 +105,12 @@ describe("parseFilterGridQuery", () => {
 	it("renders human labels for enum values", () => {
 		const result = parseFilterGridQuery("?tribes=1,6");
 		expect(parsedAt(result.parsed, 0).valueText).toBe("Bear, Jock");
+	});
+
+	it("renders enum labels in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+		const result = parseFilterGridQuery("?tribes=1");
+		expect(parsedAt(result.parsed, 0).valueText).toContain("⟦Ɓéáŕ ö⟧");
 	});
 
 	it("combines photo flags into a single photos field", () => {

@@ -60,7 +60,9 @@ export const bodyTypeOptions = optionsFromMap(bodyTypes);
 export const hivOptions = optionsFromMap(hivStatuses);
 export const positionOptions = sexualPositionOrder.map((position) => ({
 	value: position,
-	label: sexualPositions[position],
+	get label() {
+		return sexualPositions[position];
+	},
 	icon: sexualPositionIcons[position],
 }));
 export const nsfwOptions = optionsFromMap(acceptNSFWPics);

@@ -137,15 +137,14 @@ function enumFilter({
 	labelMap: Record<number, string>;
 }): Filter {
 	const allowed = new Set(Object.values(enumObject));
-	const labels = allowed.has(-1)
-		? { ...labelMap, [-1]: "Not specified" }
-		: labelMap;
+	const labelOf = (id: number) =>
+		id === -1 && allowed.has(-1) ? "Not specified" : labelMap[id];
 	return {
 		label,
 		render: (filters) =>
 			formatList(
 				(filters[target] as number[]).map(
-					(id) => labels[id] ?? String(id),
+					(id) => labelOf(id) ?? String(id),
 				),
 			),
 		params: [

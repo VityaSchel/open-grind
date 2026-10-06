@@ -12,8 +12,11 @@ const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
+	"src/lib/components/filters/OptionFilter.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LastTested.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LookupField.svelte",
+	"src/routes/(protected)/(navbar)/profile/[[]profileId]/HeightWeightBodyType.svelte",
+	"src/routes/(protected)/(navbar)/profile/[[]profileId]/SexualPosition.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 ];
 
@@ -24,9 +27,11 @@ const translatedScriptFiles = [
 	"src/lib/api/methods.ts",
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/model/browse/grid/filters.ts",
+	"src/lib/model/users/profiles.ts",
 	"src/lib/util/format-time.ts",
 	"src/lib/util/units.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/album-updated-label.ts",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/options.ts",
 ];
 
 const letter = String.raw`/\p{L}/u`;

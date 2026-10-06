@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { translatedLabels } from "$lib/i18n/labels";
 import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { viewSourceEnumSchema } from "$lib/model/interest/view-source";
 import { mediaHashPublicSchema } from "$lib/model/media";
@@ -13,6 +14,7 @@ import {
 	serverDefault,
 } from "$lib/model/tolerance";
 import { unmodeledSchema } from "$lib/model/types";
+import type { MessageKey } from "$lib/i18n";
 
 export const SexualPosition = {
 	Top: 1,
@@ -23,14 +25,16 @@ export const SexualPosition = {
 	Side: 6,
 } as const;
 
-export const sexualPositions = {
-	[SexualPosition.Top]: "Top",
-	[SexualPosition.Bottom]: "Bottom",
-	[SexualPosition.Versatile]: "Versatile",
-	[SexualPosition.VersBottom]: "Vers Bottom",
-	[SexualPosition.VersTop]: "Vers Top",
-	[SexualPosition.Side]: "Side",
-};
+const sexualPositionKeys = {
+	[SexualPosition.Top]: "profile.sexualPosition.top",
+	[SexualPosition.Bottom]: "profile.sexualPosition.bottom",
+	[SexualPosition.Versatile]: "profile.sexualPosition.versatile",
+	[SexualPosition.VersBottom]: "profile.sexualPosition.versBottom",
+	[SexualPosition.VersTop]: "profile.sexualPosition.versTop",
+	[SexualPosition.Side]: "profile.sexualPosition.side",
+} as const satisfies Record<SexualPositionId, MessageKey>;
+
+export const sexualPositions = translatedLabels(sexualPositionKeys);
 
 export const sexualPositionSchema = z.enum(SexualPosition);
 
@@ -45,14 +49,16 @@ export const LookingFor = {
 	Hookups: 7,
 } as const;
 
-export const lookingFor = {
-	[LookingFor.Chat]: "Chat",
-	[LookingFor.Dates]: "Dates",
-	[LookingFor.Friends]: "Friends",
-	[LookingFor.Networking]: "Networking",
-	[LookingFor.Relationship]: "Relationship",
-	[LookingFor.Hookups]: "Hookups",
-} as const;
+const lookingForKeys = {
+	[LookingFor.Chat]: "profile.lookingFor.chat",
+	[LookingFor.Dates]: "profile.lookingFor.dates",
+	[LookingFor.Friends]: "profile.lookingFor.friends",
+	[LookingFor.Networking]: "profile.lookingFor.networking",
+	[LookingFor.Relationship]: "profile.lookingFor.relationship",
+	[LookingFor.Hookups]: "profile.lookingFor.hookups",
+} as const satisfies Record<LookingForId, MessageKey>;
+
+export const lookingFor = translatedLabels(lookingForKeys);
 
 export const lookingForSchema = z.enum(LookingFor);
 
@@ -64,11 +70,13 @@ export const AcceptNSFWPics = {
 	YesPlease: 3,
 } as const;
 
-export const acceptNSFWPics = {
-	[AcceptNSFWPics.Never]: "Never",
-	[AcceptNSFWPics.NotAtFirst]: "Not At First",
-	[AcceptNSFWPics.YesPlease]: "Yes Please",
-} as const;
+const acceptNSFWPicsKeys = {
+	[AcceptNSFWPics.Never]: "profile.acceptNsfwPics.never",
+	[AcceptNSFWPics.NotAtFirst]: "profile.acceptNsfwPics.notAtFirst",
+	[AcceptNSFWPics.YesPlease]: "profile.acceptNsfwPics.yesPlease",
+} as const satisfies Record<AcceptNSFWPicsId, MessageKey>;
+
+export const acceptNSFWPics = translatedLabels(acceptNSFWPicsKeys);
 
 export const acceptNSFWPicsSchema = z.enum(AcceptNSFWPics);
 
@@ -85,16 +93,19 @@ export const RelationshipStatus = {
 	OpenRelationship: 8,
 } as const;
 
-export const relationshipStatuses = {
-	[RelationshipStatus.Single]: "Single",
-	[RelationshipStatus.Dating]: "Dating",
-	[RelationshipStatus.Exclusive]: "Exclusive",
-	[RelationshipStatus.Committed]: "Committed",
-	[RelationshipStatus.Partnered]: "Partnered",
-	[RelationshipStatus.Engaged]: "Engaged",
-	[RelationshipStatus.Married]: "Married",
-	[RelationshipStatus.OpenRelationship]: "Open Relationship",
-} as const;
+const relationshipStatusKeys = {
+	[RelationshipStatus.Single]: "profile.relationshipStatus.single",
+	[RelationshipStatus.Dating]: "profile.relationshipStatus.dating",
+	[RelationshipStatus.Exclusive]: "profile.relationshipStatus.exclusive",
+	[RelationshipStatus.Committed]: "profile.relationshipStatus.committed",
+	[RelationshipStatus.Partnered]: "profile.relationshipStatus.partnered",
+	[RelationshipStatus.Engaged]: "profile.relationshipStatus.engaged",
+	[RelationshipStatus.Married]: "profile.relationshipStatus.married",
+	[RelationshipStatus.OpenRelationship]:
+		"profile.relationshipStatus.openRelationship",
+} as const satisfies Record<RelationshipStatusId, MessageKey>;
+
+export const relationshipStatuses = translatedLabels(relationshipStatusKeys);
 
 export const relationshipStatusSchema = z.enum(RelationshipStatus);
 
@@ -109,14 +120,16 @@ export const BodyType = {
 	Stocky: 6,
 } as const;
 
-export const bodyTypes = {
-	[BodyType.Toned]: "Toned",
-	[BodyType.Average]: "Average",
-	[BodyType.Large]: "Large",
-	[BodyType.Muscular]: "Muscular",
-	[BodyType.Slim]: "Slim",
-	[BodyType.Stocky]: "Stocky",
-} as const;
+const bodyTypeKeys = {
+	[BodyType.Toned]: "profile.bodyType.toned",
+	[BodyType.Average]: "profile.bodyType.average",
+	[BodyType.Large]: "profile.bodyType.large",
+	[BodyType.Muscular]: "profile.bodyType.muscular",
+	[BodyType.Slim]: "profile.bodyType.slim",
+	[BodyType.Stocky]: "profile.bodyType.stocky",
+} as const satisfies Record<BodyTypeId, MessageKey>;
+
+export const bodyTypes = translatedLabels(bodyTypeKeys);
 
 export const bodyTypeSchema = z.enum(BodyType);
 
@@ -138,21 +151,23 @@ export const Tribe = {
 	Sober: 13,
 } as const;
 
-export const tribes = {
-	[Tribe.Bear]: "Bear",
-	[Tribe.CleanCut]: "Clean-Cut",
-	[Tribe.Daddy]: "Daddy",
-	[Tribe.Discreet]: "Discreet",
-	[Tribe.Geek]: "Geek",
-	[Tribe.Jock]: "Jock",
-	[Tribe.Leather]: "Leather",
-	[Tribe.Otter]: "Otter",
-	[Tribe.Poz]: "Poz",
-	[Tribe.Rugged]: "Rugged",
-	[Tribe.Sober]: "Sober",
-	[Tribe.Trans]: "Trans",
-	[Tribe.Twink]: "Twink",
-} as const;
+const tribeKeys = {
+	[Tribe.Bear]: "profile.tribe.bear",
+	[Tribe.CleanCut]: "profile.tribe.cleanCut",
+	[Tribe.Daddy]: "profile.tribe.daddy",
+	[Tribe.Discreet]: "profile.tribe.discreet",
+	[Tribe.Geek]: "profile.tribe.geek",
+	[Tribe.Jock]: "profile.tribe.jock",
+	[Tribe.Leather]: "profile.tribe.leather",
+	[Tribe.Otter]: "profile.tribe.otter",
+	[Tribe.Poz]: "profile.tribe.poz",
+	[Tribe.Rugged]: "profile.tribe.rugged",
+	[Tribe.Sober]: "profile.tribe.sober",
+	[Tribe.Trans]: "profile.tribe.trans",
+	[Tribe.Twink]: "profile.tribe.twink",
+} as const satisfies Record<TribeId, MessageKey>;
+
+export const tribes = translatedLabels(tribeKeys);
 
 export const tribeSchema = z.enum(Tribe);
 
@@ -166,13 +181,15 @@ export const MeetAt = {
 	Restaurant: 5,
 } as const;
 
-export const meetAt = {
-	[MeetAt.MyPlace]: "My Place",
-	[MeetAt.YourPlace]: "Your Place",
-	[MeetAt.Bar]: "Bar",
-	[MeetAt.CoffeeShop]: "Coffee Shop",
-	[MeetAt.Restaurant]: "Restaurant",
-} as const;
+const meetAtKeys = {
+	[MeetAt.MyPlace]: "profile.meetAt.myPlace",
+	[MeetAt.YourPlace]: "profile.meetAt.yourPlace",
+	[MeetAt.Bar]: "profile.meetAt.bar",
+	[MeetAt.CoffeeShop]: "profile.meetAt.coffeeShop",
+	[MeetAt.Restaurant]: "profile.meetAt.restaurant",
+} as const satisfies Record<MeetAtId, MessageKey>;
+
+export const meetAt = translatedLabels(meetAtKeys);
 
 export const meetAtSchema = z.enum(MeetAt);
 
@@ -190,17 +207,19 @@ export const Ethnicity = {
 	SouthAsian: 9,
 } as const;
 
-export const ethnicities = {
-	[Ethnicity.Asian]: "Asian",
-	[Ethnicity.Black]: "Black",
-	[Ethnicity.Latino]: "Latino",
-	[Ethnicity.MiddleEastern]: "Middle Eastern",
-	[Ethnicity.Mixed]: "Mixed",
-	[Ethnicity.NativeAmerican]: "Native American",
-	[Ethnicity.White]: "White",
-	[Ethnicity.Other]: "Other",
-	[Ethnicity.SouthAsian]: "South Asian",
-} as const;
+const ethnicityKeys = {
+	[Ethnicity.Asian]: "profile.ethnicity.asian",
+	[Ethnicity.Black]: "profile.ethnicity.black",
+	[Ethnicity.Latino]: "profile.ethnicity.latino",
+	[Ethnicity.MiddleEastern]: "profile.ethnicity.middleEastern",
+	[Ethnicity.Mixed]: "profile.ethnicity.mixed",
+	[Ethnicity.NativeAmerican]: "profile.ethnicity.nativeAmerican",
+	[Ethnicity.White]: "profile.ethnicity.white",
+	[Ethnicity.Other]: "profile.ethnicity.other",
+	[Ethnicity.SouthAsian]: "profile.ethnicity.southAsian",
+} as const satisfies Record<EthnicityId, MessageKey>;
+
+export const ethnicities = translatedLabels(ethnicityKeys);
 
 export const ethnicitySchema = z.enum(Ethnicity);
 
@@ -213,19 +232,27 @@ export const HivStatus = {
 	PositiveUndetectable: 4,
 } as const;
 
-export const hivStatuses = {
-	[HivStatus.Negative]: "Negative",
-	[HivStatus.NegativeOnPrep]: "Negative, on PrEP",
-	[HivStatus.Positive]: "Positive",
-	[HivStatus.PositiveUndetectable]: "Positive, undetectable",
-} as const;
+const hivStatusKeys = {
+	[HivStatus.Negative]: "profile.hivStatus.negative",
+	[HivStatus.NegativeOnPrep]: "profile.hivStatus.negativeOnPrep",
+	[HivStatus.Positive]: "profile.hivStatus.positive",
+	[HivStatus.PositiveUndetectable]: "profile.hivStatus.positiveUndetectable",
+} as const satisfies Record<HivStatusId, MessageKey>;
+
+export const hivStatuses = translatedLabels(hivStatusKeys);
 
 export const UnsettableHivStatus = { PreferToDiscuss: 5 } as const;
 
-export const hivStatusLabels = {
-	...hivStatuses,
-	[UnsettableHivStatus.PreferToDiscuss]: "Prefer to discuss",
-} as const;
+const hivStatusLabelKeys = {
+	...hivStatusKeys,
+	[UnsettableHivStatus.PreferToDiscuss]: "profile.hivStatus.preferToDiscuss",
+} as const satisfies Record<
+	| HivStatusId
+	| (typeof UnsettableHivStatus)[keyof typeof UnsettableHivStatus],
+	MessageKey
+>;
+
+export const hivStatusLabels = translatedLabels(hivStatusLabelKeys);
 
 export const hivStatusSchema = z.enum(HivStatus);
 
@@ -239,21 +266,29 @@ export const HealthPractice = {
 	PreferToDiscuss: 5,
 } as const;
 
-export const healthPractices = {
-	[HealthPractice.Condoms]: "Condoms",
-	[HealthPractice.DoxyPEP]: "I'm on doxyPEP",
-	[HealthPractice.PrEP]: "I'm on PrEP",
-	[HealthPractice.HIVUndetectable]: "I'm HIV undetectable",
-	[HealthPractice.PreferToDiscuss]: "Prefer to discuss",
-} as const;
+const healthPracticeKeys = {
+	[HealthPractice.Condoms]: "profile.healthPractice.condoms",
+	[HealthPractice.DoxyPEP]: "profile.healthPractice.doxyPep",
+	[HealthPractice.PrEP]: "profile.healthPractice.prep",
+	[HealthPractice.HIVUndetectable]: "profile.healthPractice.hivUndetectable",
+	[HealthPractice.PreferToDiscuss]: "profile.healthPractice.preferToDiscuss",
+} as const satisfies Record<HealthPracticeId, MessageKey>;
+
+export const healthPractices = translatedLabels(healthPracticeKeys);
 
 export const UnsettableHealthPractice = { Sober: 6, DrugFree: 7 } as const;
 
-export const healthPracticeLabels = {
-	...healthPractices,
-	[UnsettableHealthPractice.Sober]: "Sober",
-	[UnsettableHealthPractice.DrugFree]: "Drug-Free",
-} as const;
+const healthPracticeLabelKeys = {
+	...healthPracticeKeys,
+	[UnsettableHealthPractice.Sober]: "profile.healthPractice.sober",
+	[UnsettableHealthPractice.DrugFree]: "profile.healthPractice.drugFree",
+} as const satisfies Record<
+	| HealthPracticeId
+	| (typeof UnsettableHealthPractice)[keyof typeof UnsettableHealthPractice],
+	MessageKey
+>;
+
+export const healthPracticeLabels = translatedLabels(healthPracticeLabelKeys);
 
 export const healthPracticesSchema = z.enum(HealthPractice);
 
@@ -261,11 +296,13 @@ export type HealthPracticeId = z.infer<typeof healthPracticesSchema>;
 
 export const Vaccine = { COVID19: 1, Monkeypox: 2, Meningitis: 3 } as const;
 
-export const vaccines = {
-	[Vaccine.COVID19]: "COVID-19",
-	[Vaccine.Monkeypox]: "Monkeypox",
-	[Vaccine.Meningitis]: "Meningitis",
-} as const;
+const vaccineKeys = {
+	[Vaccine.COVID19]: "profile.vaccine.covid19",
+	[Vaccine.Monkeypox]: "profile.vaccine.monkeypox",
+	[Vaccine.Meningitis]: "profile.vaccine.meningitis",
+} as const satisfies Record<VaccineId, MessageKey>;
+
+export const vaccines = translatedLabels(vaccineKeys);
 
 export const vaccinesSchema = z.enum(Vaccine);
 

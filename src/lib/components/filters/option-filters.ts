@@ -19,11 +19,13 @@ export const optionFilters = {
 	tribes: {
 		id: "tribes",
 		label: "Tribes",
-		table: Object.fromEntries(
-			Object.entries(tribes).filter(([id]) =>
-				isFilterableTribe(Number(id)),
-			),
-		),
+		get table() {
+			return Object.fromEntries(
+				Object.entries(tribes).filter(([id]) =>
+					isFilterableTribe(Number(id)),
+				),
+			);
+		},
 	},
 	bodyTypes: { id: "body-type", label: "Body Type", table: bodyTypes },
 	relationshipStatuses: {

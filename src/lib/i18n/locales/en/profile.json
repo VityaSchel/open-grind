@@ -1,5 +1,98 @@
 {
 	"fields": {
 		"lastTested": "Last Tested"
+	},
+	"sexualPosition": {
+		"top": "Top",
+		"bottom": "Bottom",
+		"versatile": "Versatile",
+		"versBottom": "Vers Bottom",
+		"versTop": "Vers Top",
+		"side": "Side"
+	},
+	"lookingFor": {
+		"chat": "Chat",
+		"dates": "Dates",
+		"friends": "Friends",
+		"networking": "Networking",
+		"relationship": "Relationship",
+		"hookups": "Hookups"
+	},
+	"acceptNsfwPics": {
+		"never": "Never",
+		"notAtFirst": "Not At First",
+		"yesPlease": "Yes Please"
+	},
+	"relationshipStatus": {
+		"single": "Single",
+		"dating": "Dating",
+		"exclusive": "Exclusive",
+		"committed": "Committed",
+		"partnered": "Partnered",
+		"engaged": "Engaged",
+		"married": "Married",
+		"openRelationship": "Open Relationship"
+	},
+	"bodyType": {
+		"toned": "Toned",
+		"average": "Average",
+		"large": "Large",
+		"muscular": "Muscular",
+		"slim": "Slim",
+		"stocky": "Stocky"
+	},
+	"tribe": {
+		"bear": "Bear",
+		"cleanCut": "Clean-Cut",
+		"daddy": "Daddy",
+		"discreet": "Discreet",
+		"geek": "Geek",
+		"jock": "Jock",
+		"leather": "Leather",
+		"otter": "Otter",
+		"poz": "Poz",
+		"rugged": "Rugged",
+		"trans": "Trans",
+		"twink": "Twink",
+		"sober": "Sober"
+	},
+	"meetAt": {
+		"myPlace": "My Place",
+		"yourPlace": "Your Place",
+		"bar": "Bar",
+		"coffeeShop": "Coffee Shop",
+		"restaurant": "Restaurant"
+	},
+	"ethnicity": {
+		"asian": "Asian",
+		"black": "Black",
+		"latino": "Latino",
+		"middleEastern": "Middle Eastern",
+		"mixed": "Mixed",
+		"nativeAmerican": "Native American",
+		"white": "White",
+		"other": "Other",
+		"southAsian": "South Asian"
+	},
+	"hivStatus": {
+		"negative": "Negative",
+		"negativeOnPrep": "Negative, on PrEP",
+		"positive": "Positive",
+		"positiveUndetectable": "Positive, undetectable",
+		"preferToDiscuss": "Prefer to discuss"
+	},
+	"healthPractice": {
+		"condoms": "Condoms",
+		"doxyPep": "I'm on doxyPEP",
+		"prep": "I'm on PrEP",
+		"hivUndetectable": "I'm HIV undetectable",
+		"preferToDiscuss": "Prefer to discuss",
+		"sober": "Sober",
+		"drugFree": "Drug-Free"
+	},
+	"vaccine": {
+		"covid19": "COVID-19",
+		"monkeypox": "Monkeypox",
+		"meningitis": "Meningitis"
 	}
 }

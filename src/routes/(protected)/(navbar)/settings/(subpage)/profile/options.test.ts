@@ -8,6 +8,7 @@ import {
 	heightInchOptions,
 	heightInchRange,
 	positionOptions,
+	tribeOptions,
 	weightKgRange,
 	weightPoundRange,
 } from "./options";
@@ -58,5 +59,14 @@ describe("profile edit options", () => {
 		const icons = positionOptions.map((option) => option.icon);
 
 		expect(new Set(icons).size).toBe(positionOptions.length);
+	});
+
+	it("labels each vocabulary option in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+		expect(tribeOptions[0]?.label).toBe("⟦Ɓéáŕ ö⟧");
+		expect(positionOptions[0]?.label).toBe("⟦Ţöþ ö⟧");
+		await setLocale({ locale: SOURCE_LOCALE });
+		expect(tribeOptions[0]?.label).toBe("Bear");
+		expect(positionOptions[0]?.label).toBe("Top");
 	});
 });

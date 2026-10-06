@@ -21,6 +21,14 @@ describe("optionsFromMap", () => {
 			{ value: 20, label: "Twenty" },
 		]);
 	});
+
+	it("reads each label from the map when it is shown", () => {
+		const labels = { 1: "One" };
+		const [option] = optionsFromMap(labels);
+		labels[1] = "Uno";
+
+		expect(option?.label).toBe("Uno");
+	});
 });
 
 describe("labelFromMap", () => {
