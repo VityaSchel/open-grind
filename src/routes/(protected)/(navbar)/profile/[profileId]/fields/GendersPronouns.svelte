@@ -3,6 +3,7 @@
 	import { getPronouns } from "$lib/api/users/pronouns";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { formatList } from "$lib/i18n/format";
 	import ProfileField from "./ProfileField.svelte";
 
 	const allGenders = $derived(getGenders());
@@ -44,14 +45,16 @@
 					<Spinner />
 				{:then allGenders}
 					<span>
-						{genders
-							.map(
-								(genderId) =>
-									allGenders.find(
-										(g) => g.genderId === genderId,
-									)?.gender,
-							)
-							.join(", ")}
+						{formatList(
+							genders
+								.map(
+									(genderId) =>
+										allGenders.find(
+											(g) => g.genderId === genderId,
+										)?.gender,
+								)
+								.filter((gender) => gender !== undefined),
+						)}
 					</span>
 				{:catch}
 					<span class="load-fail">Failed to load genders</span>
@@ -65,14 +68,16 @@
 					<Spinner />
 				{:then allPronouns}
 					<span>
-						{pronouns
-							.map(
-								(pronounId) =>
-									allPronouns.find(
-										(p) => p.pronounId === pronounId,
-									)?.pronoun,
-							)
-							.join(", ")}
+						{formatList(
+							pronouns
+								.map(
+									(pronounId) =>
+										allPronouns.find(
+											(p) => p.pronounId === pronounId,
+										)?.pronoun,
+								)
+								.filter((pronoun) => pronoun !== undefined),
+						)}
 					</span>
 				{:catch}
 					<span class="load-fail">Failed to load pronouns</span>

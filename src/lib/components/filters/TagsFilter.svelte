@@ -4,6 +4,7 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { formatList } from "$lib/i18n/format";
 	import { tagCatalog } from "$lib/model/browse/grid/filters";
 	import { deepEqual } from "$lib/util/deep-equal";
 	import FilterDropdown from "./FilterDropdown.svelte";
@@ -44,7 +45,7 @@
 		tag.textsLower.some((text) => text.startsWith(query));
 
 	const valueLabel = $derived(
-		value.map((key) => catalog?.textOf(key) ?? key).join(", "),
+		formatList(value.map((key) => catalog?.textOf(key) ?? key)),
 	);
 </script>
 

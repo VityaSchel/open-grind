@@ -1,5 +1,5 @@
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
-import { formatRange } from "$lib/i18n/format";
+import { formatList, formatRange } from "$lib/i18n/format";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -143,9 +143,11 @@ function enumFilter({
 	return {
 		label,
 		render: (filters) =>
-			(filters[target] as number[])
-				.map((id) => labels[id] ?? String(id))
-				.join(", "),
+			formatList(
+				(filters[target] as number[]).map(
+					(id) => labels[id] ?? String(id),
+				),
+			),
 		params: [
 			{
 				keys,
@@ -190,7 +192,7 @@ export const filters: Filter[] = [
 	}),
 	{
 		label: "photos",
-		render: (f) => f.photos.map((tag) => photoLabels[tag]).join(", "),
+		render: (f) => formatList(f.photos.map((tag) => photoLabels[tag])),
 		params: [
 			{
 				keys: ["photoOnly", "hasPhotos"],
@@ -319,9 +321,11 @@ export const filters: Filter[] = [
 	{
 		label: "genders",
 		render: (f) =>
-			f.genders
-				.map((id) => (id === -1 ? "Not specified" : String(id)))
-				.join(", "),
+			formatList(
+				f.genders.map((id) =>
+					id === -1 ? "Not specified" : String(id),
+				),
+			),
 		params: [
 			{
 				keys: ["genders", "gender"],
@@ -337,7 +341,7 @@ export const filters: Filter[] = [
 	},
 	{
 		label: "tags",
-		render: (f) => f.tags.join(", "),
+		render: (f) => formatList(f.tags),
 		params: [
 			{
 				keys: ["tags", "tag"],

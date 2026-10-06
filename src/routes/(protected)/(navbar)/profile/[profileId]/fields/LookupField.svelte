@@ -2,6 +2,7 @@
 	import type { IconWeight } from "phosphor-svelte";
 	import type { Component } from "svelte";
 
+	import { formatList } from "$lib/i18n/format";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
@@ -25,7 +26,7 @@
 		const labels = value
 			.map((entry) => options[entry])
 			.filter((label) => label !== undefined);
-		return labels.length === 0 ? null : labels.join(", ");
+		return labels.length === 0 ? null : formatList(labels);
 	});
 </script>
 
