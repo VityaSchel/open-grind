@@ -19,5 +19,17 @@
 			"region": "Notifications",
 			"close": "Close toast"
 		}
+	},
+	"navBar": {
+		"a11y": {
+			"navigation": "Main",
+			"me": "Me"
+		},
+		"tabs": {
+			"browse": "Browse",
+			"rightNow": "Right Now",
+			"interest": "Interest",
+			"inbox": "Inbox"
+		}
 	}
 }

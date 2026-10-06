@@ -14,6 +14,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { tabsListVariants } from "$lib/components/ui/tabs";
+	import { t } from "$lib/i18n";
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
 	import { traverseBackTo } from "$lib/util/history";
 	import { isWithin } from "$lib/util/pathname";
@@ -61,7 +62,7 @@
 <ProgressiveBlur
 	direction="bottomToTop"
 	tag="nav"
-	aria-label="Main"
+	aria-label={t("shell.navBar.a11y.navigation")}
 	class="fixed bottom-0 z-50 w-full pt-2 pb-fixed-nav"
 	bgClass="bg-linear-to-t from-background to-transparent"
 	contentClass="flex gap-2 overflow-auto no-scrollbar px-1 *:first:ms-auto *:last:me-auto"
@@ -80,7 +81,7 @@
 			onclick={tabNavigation({ href: "/" })}
 		>
 			<DotsNineIcon weight="fill" />
-			Browse
+			{t("shell.navBar.tabs.browse")}
 		</a>
 		<a
 			href="/right-now"
@@ -88,7 +89,7 @@
 			onclick={tabNavigation({ href: "/right-now" })}
 		>
 			<DropIcon weight="fill" />
-			Right Now
+			{t("shell.navBar.tabs.rightNow")}
 		</a>
 		<a
 			href="/interest"
@@ -101,7 +102,7 @@
 			})}
 		>
 			<FireIcon weight="fill" />
-			Interest
+			{t("shell.navBar.tabs.interest")}
 			{#if hasUnseenTaps}
 				<Badge
 					class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0"
@@ -114,7 +115,7 @@
 			onclick={tabNavigation({ href: "/chat" })}
 		>
 			<ChatCircleIcon weight="fill" />
-			Inbox
+			{t("shell.navBar.tabs.inbox")}
 			{#if hasUnread}
 				<Badge
 					class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0"
@@ -124,7 +125,7 @@
 	</div>
 	<a
 		href="/settings"
-		aria-label="Me"
+		aria-label={t("shell.navBar.a11y.me")}
 		onclick={tabNavigation({ href: "/settings" })}
 		class={[
 			"flex size-14 shrink-0 rounded-full border bg-muted p-1",

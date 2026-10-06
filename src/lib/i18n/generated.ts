@@ -188,6 +188,12 @@ export interface Messages {
 	"shell.error.refresh": undefined;
 	"shell.error.reportIssue": undefined;
 	"shell.error.title": undefined;
+	"shell.navBar.a11y.me": undefined;
+	"shell.navBar.a11y.navigation": undefined;
+	"shell.navBar.tabs.browse": undefined;
+	"shell.navBar.tabs.inbox": undefined;
+	"shell.navBar.tabs.interest": undefined;
+	"shell.navBar.tabs.rightNow": undefined;
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;
