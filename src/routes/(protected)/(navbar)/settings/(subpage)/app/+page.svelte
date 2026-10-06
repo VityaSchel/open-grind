@@ -16,6 +16,7 @@
 		updatesSelfManaged,
 		updatesUnsupportedReason,
 	} from "$lib/updates/capability.svelte";
+	import type { UnimplementedMessageKey } from "$lib/components/feedback/unimplemented";
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
@@ -44,7 +45,7 @@
 	unimplemented,
 }: {
 	title: string;
-	unimplemented: { feature: string; issue: number };
+	unimplemented: { message: UnimplementedMessageKey; issue: number };
 })}
 	<Item.Root variant="outline">
 		{#snippet child({ props })}
@@ -102,9 +103,15 @@
 <h2>Security</h2>
 {@render item({
 	title: "Discreet app icon",
-	unimplemented: { feature: "Discreet app icon", issue: 97 },
+	unimplemented: {
+		message: "settings.app.discreetAppIcon.unimplemented",
+		issue: 97,
+	},
 })}
-{@render item({ title: "PIN", unimplemented: { feature: "PIN", issue: 50 } })}
+{@render item({
+	title: "PIN",
+	unimplemented: { message: "settings.app.pin.unimplemented", issue: 50 },
+})}
 {#if updatesSelfManaged() || updatesUnsupportedReason() !== null || addonInstallerAvailable()}
 	<h2>Updates</h2>
 	<AutomaticUpdatesSetting />

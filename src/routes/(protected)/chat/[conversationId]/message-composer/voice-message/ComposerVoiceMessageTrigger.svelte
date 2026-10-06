@@ -13,7 +13,10 @@
 	aria-label="Record voice message"
 	onclick={() => {
 		toast(ToastUnimplemented, {
-			componentProps: { feature: "Voice messages", issue: 35 },
+			componentProps: {
+				message: "chat.composer.voiceMessage.unimplemented",
+				issue: 35,
+			},
 		});
 	}}
 	class="ps-0"

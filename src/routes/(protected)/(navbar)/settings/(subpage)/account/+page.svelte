@@ -16,7 +16,7 @@
 					event.preventDefault();
 					toast(ToastUnimplemented, {
 						componentProps: {
-							feature: "Account settings",
+							message: "settings.account.unimplemented",
 							issue: 47,
 						},
 					});

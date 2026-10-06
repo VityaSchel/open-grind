@@ -71,7 +71,10 @@
 				/>
 			</Tabs.Content>
 			<Tabs.Content value="location">
-				<ComposerUnimplementedTab label="Sharing location" issue={35} />
+				<ComposerUnimplementedTab
+					message="chat.composer.attachments.location.unimplemented"
+					issue={35}
+				/>
 			</Tabs.Content>
 		</MediaSheetBody>
 

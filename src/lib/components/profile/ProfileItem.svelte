@@ -4,6 +4,7 @@
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Item from "$lib/components/ui/item";
+	import { t } from "$lib/i18n";
 	import { longPressHandlers } from "$lib/util/long-press";
 
 	let {
@@ -44,7 +45,9 @@
 		onLongPress ? longPressHandlers(onLongPress) : {},
 	);
 	const linkTabindex = $derived(onToggleSelected ? -1 : undefined);
-	const accessibleName = $derived(title.value ?? title.fallback ?? "Someone");
+	const accessibleName = $derived(
+		title.value ?? title.fallback ?? t("common.someone"),
+	);
 </script>
 
 {#snippet avatarNode()}

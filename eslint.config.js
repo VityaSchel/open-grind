@@ -12,7 +12,9 @@ const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
+	"src/lib/components/feedback/ToastUnimplemented.svelte",
 	"src/lib/components/filters/OptionFilter.svelte",
+	"src/lib/components/profile/DisplayName.svelte",
 	"src/lib/components/profile/TapIcon.svelte",
 	"src/lib/components/shared/SubpageScreen.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LastTested.svelte",
@@ -20,7 +22,9 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/bottom-nav/TapProfileButton.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/HeightWeightBodyType.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/SexualPosition.svelte",
+	"src/routes/(protected)/(navbar)/right-now/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/+layout.svelte",
+	"src/routes/(protected)/chat/[[]conversationId]/message-composer/attachments/ComposerUnimplementedTab.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 ];
 

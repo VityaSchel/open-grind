@@ -13,5 +13,16 @@
 			"credits": "Credits & Licenses",
 			"profile": "Edit Profile"
 		}
+	},
+	"account": {
+		"unimplemented": "TODO: Account settings not implemented yet, tracking in <link>#{{issue}}</link>"
+	},
+	"app": {
+		"discreetAppIcon": {
+			"unimplemented": "TODO: Discreet app icon not implemented yet, tracking in <link>#{{issue}}</link>"
+		},
+		"pin": {
+			"unimplemented": "TODO: PIN not implemented yet, tracking in <link>#{{issue}}</link>"
+		}
 	}
 }

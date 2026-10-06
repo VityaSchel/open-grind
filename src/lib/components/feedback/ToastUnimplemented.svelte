@@ -2,15 +2,21 @@
 	import { WarningCircleIcon } from "phosphor-svelte";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import Rich from "$lib/i18n/Rich.svelte";
+	import type { UnimplementedMessageKey } from "./unimplemented";
 
-	let { feature, issue }: { feature: string; issue: number } = $props();
+	let {
+		message,
+		issue,
+	}: { message: UnimplementedMessageKey; issue: number } = $props();
 </script>
 
 <span>
 	<WarningCircleIcon weight="fill" class="me-1 inline size-5 align-middle" />
-	TODO: {feature} not implemented yet, tracking in <Link
-		href="https://git.opengrind.org/open-grind/open-grind/issues/{issue}"
-	>
-		#{issue}
-	</Link>
+	<Rich key={message} params={{ issue: String(issue) }}>
+		{#snippet link(text)}<Link
+				href="https://git.opengrind.org/open-grind/open-grind/issues/{issue}"
+				>{text}</Link
+			>{/snippet}
+	</Rich>
 </span>

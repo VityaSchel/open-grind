@@ -33,11 +33,13 @@ export interface Messages {
 	"common.actions.close": undefined;
 	"common.actions.retry": undefined;
 	"common.format.range": { max: string; min: string };
+	"common.someone": undefined;
 	"common.time.hours": { count: number };
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
 	"common.time.today": undefined;
 	"common.time.yesterday": undefined;
+	"common.unimplemented.title": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
 	"feedback.actions.copyDetails": undefined;
 	"feedback.apiError.connect": undefined;
@@ -177,9 +179,25 @@ export interface Messages {
 }
 
 export interface RichMessages {
+	"auth.passwordReset.unimplemented": { issue: string };
+	"auth.signUp.unimplemented": { issue: string };
+	"browse.rightNow.unimplemented": { issue: string };
+	"chat.composer.attachments.location.unimplemented": { issue: string };
+	"chat.composer.voiceMessage.unimplemented": { issue: string };
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
+	"settings.account.unimplemented": { issue: string };
+	"settings.app.discreetAppIcon.unimplemented": { issue: string };
+	"settings.app.pin.unimplemented": { issue: string };
 }
 
 export interface RichTags {
+	"auth.passwordReset.unimplemented": "link";
+	"auth.signUp.unimplemented": "link";
+	"browse.rightNow.unimplemented": "link";
+	"chat.composer.attachments.location.unimplemented": "link";
+	"chat.composer.voiceMessage.unimplemented": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
+	"settings.account.unimplemented": "link";
+	"settings.app.discreetAppIcon.unimplemented": "link";
+	"settings.app.pin.unimplemented": "link";
 }

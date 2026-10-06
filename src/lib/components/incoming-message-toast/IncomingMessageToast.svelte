@@ -4,6 +4,7 @@
 	import { toast } from "svelte-sonner";
 
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		previewFromMessage,
 		previewLabel,
@@ -79,7 +80,7 @@
 			<span
 				class="font-normal tracking-tight text-muted-foreground italic"
 			>
-				Someone
+				{t("common.someone")}
 			</span>
 		{/if}
 		<p class="truncate text-sm">

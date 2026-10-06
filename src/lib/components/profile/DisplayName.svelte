@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { t } from "$lib/i18n";
+
 	let {
 		name,
-		fallback = "Someone",
+		fallback,
 		class: className,
 	}: {
 		name: string | null;
@@ -14,6 +16,6 @@
 	<span class={className}>{name}</span>
 {:else}
 	<span class={["font-normal tracking-tight italic", className]}
-		>{fallback}</span
+		>{fallback ?? t("common.someone")}</span
 	>
 {/if}

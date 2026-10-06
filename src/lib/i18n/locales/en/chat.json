@@ -39,7 +39,13 @@
 				"send": "Send",
 				"share": "Share",
 				"unshare": "Unshare"
+			},
+			"location": {
+				"unimplemented": "Sharing location is not implemented yet, tracking in <link>#{{issue}}</link>."
 			}
+		},
+		"voiceMessage": {
+			"unimplemented": "TODO: Voice messages not implemented yet, tracking in <link>#{{issue}}</link>"
 		}
 	}
 }
