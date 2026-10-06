@@ -11,6 +11,8 @@ const vendoredGlob = "src/lib/components/ui/**";
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
+	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LastTested.svelte",
+	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 ];
 
 const translatedScriptFiles = [
@@ -20,6 +22,7 @@ const translatedScriptFiles = [
 	"src/lib/model/browse/grid/filters.ts",
 	"src/lib/util/format-time.ts",
 	"src/lib/util/units.ts",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/album-updated-label.ts",
 ];
 
 const letter = String.raw`/\p{L}/u`;

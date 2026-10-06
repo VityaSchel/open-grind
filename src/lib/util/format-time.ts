@@ -1,6 +1,5 @@
-import { format } from "date-fns";
-
 import { t } from "$lib/i18n";
+import { formatDate } from "$lib/i18n/format";
 
 export function formatMediaDuration(seconds: number) {
 	const total =
@@ -24,6 +23,7 @@ export function formatTimeRelativeCustom(date: number) {
 		return t("common.time.hours", { count });
 	} else if (diff < 2 * 24 * 60 * 60 * 1000)
 		return t("common.time.yesterday");
-	else if (diff < 7 * 24 * 60 * 60 * 1000) return format(date, "EEEE");
-	else return format(date, "MMM d");
+	else if (diff < 7 * 24 * 60 * 60 * 1000)
+		return formatDate({ date, preset: "weekday" });
+	else return formatDate({ date, preset: "monthDay" });
 }

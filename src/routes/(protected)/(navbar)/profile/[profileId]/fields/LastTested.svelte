@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { format } from "date-fns";
 	import { ClockIcon } from "phosphor-svelte";
 
+	import { t } from "$lib/i18n";
+	import { formatDate } from "$lib/i18n/format";
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";
 
@@ -11,8 +12,8 @@
 {#if lastTestedDate !== null}
 	<ProfileField>
 		<ClockIcon class="shrink-0" />
-		<ProfileValueLabel label="Last Tested">
-			{format(new Date(lastTestedDate), "LLLL yyyy")}
+		<ProfileValueLabel label={t("profile.fields.lastTested")}>
+			{formatDate({ date: lastTestedDate, preset: "monthYear" })}
 		</ProfileValueLabel>
 	</ProfileField>
 {/if}

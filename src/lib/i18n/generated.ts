@@ -9,6 +9,7 @@ export interface Messages {
 	"common.time.hours": { count: number };
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
+	"common.time.today": undefined;
 	"common.time.yesterday": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
 	"feedback.errorCopy.copied": undefined;
@@ -25,6 +26,7 @@ export interface Messages {
 	"feedback.requestBlocked.rotate": undefined;
 	"feedback.requestBlocked.rotated": undefined;
 	"feedback.requestBlocked.vpnHint": undefined;
+	"profile.fields.lastTested": undefined;
 	"shell.error.copied": undefined;
 	"shell.error.copyError": undefined;
 	"shell.error.description": undefined;
