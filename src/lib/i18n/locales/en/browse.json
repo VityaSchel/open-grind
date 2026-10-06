@@ -1,0 +1,9 @@
+{
+	"filters": {
+		"noMin": "No min",
+		"noMax": "No max",
+		"ageAndOver_one": "{{count}} year & over",
+		"ageAndOver_other": "{{count}} years & over",
+		"withinDistance": "Within {{distance}}"
+	}
+}

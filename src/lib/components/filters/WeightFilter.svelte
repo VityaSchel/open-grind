@@ -2,6 +2,7 @@
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
+	import { formatRange } from "$lib/i18n/format";
 	import {
 		rangeBoundTexts,
 		WEIGHT_KG_MAX,
@@ -35,7 +36,7 @@
 		id="weight"
 		label="Weight"
 		bind:checked
-		endLabel={`${minText} - ${maxText}`}
+		endLabel={formatRange({ min: minText, max: maxText })}
 		contentClass="ps-7 h-6"
 	>
 		<Slider

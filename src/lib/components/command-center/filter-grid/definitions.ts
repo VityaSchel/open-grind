@@ -1,4 +1,5 @@
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { formatRange } from "$lib/i18n/format";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -50,10 +51,11 @@ import type { BooleanKey, Filter, ListKey, Render } from "./types";
 function rangeText(
 	bounds: Omit<Parameters<typeof rangeBoundTexts>[0], "units">,
 ): string {
-	return rangeBoundTexts({
+	const [min, max] = rangeBoundTexts({
 		...bounds,
 		units: preferencesSnapshot().units,
-	}).join(" - ");
+	});
+	return formatRange({ min, max });
 }
 
 function booleanFilter({

@@ -13,5 +13,8 @@
 	},
 	"format": {
 		"range": "{{min}} - {{max}}"
+	},
+	"units": {
+		"feetInches": "{{feet}}'{{inches}}\""
 	}
 }

@@ -1,4 +1,8 @@
 export interface Messages {
+	"browse.filters.ageAndOver": { count: number };
+	"browse.filters.noMax": undefined;
+	"browse.filters.noMin": undefined;
+	"browse.filters.withinDistance": { distance: string };
 	"common.actions.close": undefined;
 	"common.actions.retry": undefined;
 	"common.format.range": { max: string; min: string };
@@ -6,6 +10,7 @@ export interface Messages {
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
 	"common.time.yesterday": undefined;
+	"common.units.feetInches": { feet: string; inches: string };
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
 	"feedback.errorToast.copyDetails": undefined;

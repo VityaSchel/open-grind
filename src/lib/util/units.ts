@@ -1,5 +1,8 @@
 import z from "zod";
 
+import { t } from "$lib/i18n";
+import { formatNumber, isolate } from "$lib/i18n/format";
+
 export const unitSystemSchema = z.enum(["metric", "imperial"]);
 
 export type UnitSystem = z.infer<typeof unitSystemSchema>;
@@ -17,15 +20,27 @@ export function formatDistance(
 ): string {
 	if (units === "imperial") {
 		if (distanceMetres < METRES_PER_MILE) {
-			return `${Math.round(distanceMetres * FEET_PER_METRE)} ft`;
+			return formatNumber({
+				value: distanceMetres * FEET_PER_METRE,
+				preset: "distanceFeet",
+			});
 		}
-		return `${(distanceMetres / METRES_PER_MILE).toFixed(1)} mi`;
+		return formatNumber({
+			value: distanceMetres / METRES_PER_MILE,
+			preset: "distanceMiles",
+		});
 	}
 
 	if (distanceMetres < METRES_PER_KILOMETRE) {
-		return `${Math.round(distanceMetres)} m`;
+		return formatNumber({
+			value: distanceMetres,
+			preset: "distanceMeters",
+		});
 	}
-	return `${(distanceMetres / METRES_PER_KILOMETRE).toFixed(1)} km`;
+	return formatNumber({
+		value: distanceMetres / METRES_PER_KILOMETRE,
+		preset: "distanceKilometers",
+	});
 }
 
 export function cmToInches(cm: number): number {
@@ -39,7 +54,12 @@ export function inchesToCm(inches: number): number {
 export function formatFeetInches(totalInches: number): string {
 	const feet = Math.floor(totalInches / INCHES_PER_FOOT);
 	const inches = totalInches % INCHES_PER_FOOT;
-	return `${feet}'${inches}"`;
+	return isolate(
+		t("common.units.feetInches", {
+			feet: String(feet),
+			inches: String(inches),
+		}),
+	);
 }
 
 export function formatHeight(heightCm: number, units: UnitSystem): string {
@@ -47,7 +67,7 @@ export function formatHeight(heightCm: number, units: UnitSystem): string {
 		return formatFeetInches(cmToInches(heightCm));
 	}
 
-	return `${Math.round(heightCm)} cm`;
+	return formatNumber({ value: heightCm, preset: "heightCentimeters" });
 }
 
 export function kgToPounds(kg: number): number {
@@ -60,10 +80,13 @@ export function poundsToKg(pounds: number): number {
 
 export function formatWeightKg(weightKg: number, units: UnitSystem): string {
 	if (units === "imperial") {
-		return `${kgToPounds(weightKg)} lb`;
+		return formatNumber({
+			value: kgToPounds(weightKg),
+			preset: "weightPounds",
+		});
 	}
 
-	return `${Math.round(weightKg)} kg`;
+	return formatNumber({ value: weightKg, preset: "weightKilograms" });
 }
 
 export function formatWeightGrams(

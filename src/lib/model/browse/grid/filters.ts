@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { t } from "$lib/i18n";
+import { formatRange } from "$lib/i18n/format";
 import {
 	AcceptNSFWPics,
 	BodyType,
@@ -55,15 +57,17 @@ export const rangeBoundTexts = ({
 	format: (value: number, units: UnitSystem) => string;
 	units: UnitSystem;
 }): [string, string] => [
-	min === floor ? "No min" : format(min, units),
-	max === ceiling ? "No max" : format(max, units),
+	min === floor ? t("browse.filters.noMin") : format(min, units),
+	max === ceiling ? t("browse.filters.noMax") : format(max, units),
 ];
 
 export const AGE_MIN = 18;
 export const AGE_MAX = 99;
 
-export const ageRangeLabel = ([from, to]: number[]) =>
-	to === AGE_MAX ? `${from} years & over` : `${from} - ${to}`;
+export const ageRangeLabel = ([from = AGE_MIN, to = AGE_MAX]: number[]) =>
+	to === AGE_MAX
+		? t("browse.filters.ageAndOver", { count: from })
+		: formatRange({ min: String(from), max: String(to) });
 
 export const filterAgeEnabledSchema = z.boolean();
 export const filterAgeSchema = rangeSchema({ min: AGE_MIN, max: AGE_MAX });

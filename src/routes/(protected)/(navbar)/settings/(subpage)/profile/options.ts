@@ -48,7 +48,12 @@ export const heightInchOptions = Array.from(
 	{ length: heightInchRange.max - heightInchRange.min + 1 },
 	(_, index) => {
 		const inches = heightInchRange.min + index;
-		return { value: inches, label: formatFeetInches(inches) };
+		return {
+			value: inches,
+			get label() {
+				return formatFeetInches(inches);
+			},
+		};
 	},
 );
 export const bodyTypeOptions = optionsFromMap(bodyTypes);
