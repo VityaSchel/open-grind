@@ -10,5 +10,8 @@
 		"hours_one": "{{count}} hr",
 		"hours_other": "{{count}} hrs",
 		"yesterday": "Yesterday"
+	},
+	"format": {
+		"range": "{{min}} - {{max}}"
 	}
 }

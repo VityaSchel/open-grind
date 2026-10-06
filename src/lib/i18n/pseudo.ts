@@ -13,11 +13,15 @@ function accent(message: string): string {
 	});
 }
 
+function bracket(text: string): string {
+	return `⟦${text}⟧`;
+}
+
 function expand(message: string): string {
 	const length = Math.ceil(message.replace(MARKUP, "").length * EXPANSION);
 	const repeats = Math.ceil(length / FILLER.length);
 	const padding = FILLER.repeat(repeats).slice(0, length);
-	return `⟦${accent(message + padding)}⟧`;
+	return bracket(accent(message + padding));
 }
 
 function overrideRightToLeft(message: string): string {
@@ -25,9 +29,12 @@ function overrideRightToLeft(message: string): string {
 }
 
 const transforms = {
-	"en-XA": expand,
-	"ar-XB": overrideRightToLeft,
-} satisfies Record<string, (message: string) => string>;
+	"en-XA": { message: expand, formatted: bracket },
+	"ar-XB": { message: overrideRightToLeft, formatted: (text) => text },
+} satisfies Record<
+	string,
+	Record<"message" | "formatted", (text: string) => string>
+>;
 
 export type PseudoLocale = keyof typeof transforms;
 
@@ -44,7 +51,7 @@ export function pseudoDictionary({
 	locale: PseudoLocale;
 	source: ReadonlyMap<string, string>;
 }): Map<string, string> {
-	const transform = transforms[locale];
+	const transform = transforms[locale].message;
 	const { pluralCategories } = new Intl.PluralRules(locale).resolvedOptions();
 	const manyForms = pluralCategories.filter((category) => category !== "one");
 	const dictionary = new Map<string, string>();
@@ -57,4 +64,14 @@ export function pseudoDictionary({
 		for (const target of keys) dictionary.set(target, transform(message));
 	}
 	return dictionary;
+}
+
+export function markFormatted({
+	locale,
+	text,
+}: {
+	locale: string;
+	text: string;
+}): string {
+	return isPseudoLocale(locale) ? transforms[locale].formatted(text) : text;
 }

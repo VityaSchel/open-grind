@@ -147,6 +147,10 @@ export function getLocale(): string {
 	return state.translation?.locale ?? SOURCE_LOCALE;
 }
 
+export function getTextDirection(): "ltr" | "rtl" {
+	return textDirection(getLocale());
+}
+
 export function getCatalogs(): readonly Catalog[] {
 	const { translation, source } = state;
 	return translation === undefined ? [source] : [translation, source];

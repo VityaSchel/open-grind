@@ -1,6 +1,7 @@
 export interface Messages {
 	"common.actions.close": undefined;
 	"common.actions.retry": undefined;
+	"common.format.range": { max: string; min: string };
 	"common.time.hours": { count: number };
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
