@@ -1,3 +1,5 @@
+import { untrack } from "svelte";
+
 import {
 	type CatalogJson,
 	sourceFiles,
@@ -145,6 +147,15 @@ export const locales: readonly string[] = [
 
 export function getLocale(): string {
 	return state.translation?.locale ?? SOURCE_LOCALE;
+}
+
+export function followLocale(apply: () => void): () => void {
+	return $effect.root(() => {
+		$effect(() => {
+			getLocale();
+			untrack(apply);
+		});
+	});
 }
 
 export function getTextDirection(): "ltr" | "rtl" {

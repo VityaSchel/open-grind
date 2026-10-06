@@ -11,6 +11,7 @@ import type { KeyArgs, MessageKey, Params, RichKey, RichPart } from "./types";
 
 export {
 	type CountFormatter,
+	followLocale,
 	getLocale,
 	locales,
 	setCountFormatter,

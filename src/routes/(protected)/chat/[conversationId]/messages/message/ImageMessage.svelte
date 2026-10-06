@@ -7,6 +7,7 @@
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeLabels,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
@@ -57,6 +58,7 @@
 					hideAnimationDuration: 500,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeLabels(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);

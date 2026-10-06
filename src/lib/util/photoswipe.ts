@@ -7,6 +7,7 @@ import type {
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
+import { followLocale, type MessageKey, richParts, t } from "$lib/i18n";
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import { openExternalLink } from "$lib/platform/link-opener";
 import { isLinuxPlatform } from "$lib/platform/os";
@@ -27,40 +28,129 @@ const failures = new WeakMap<object, Failure>();
 
 const CODECS_GUIDE = "https://opengrind.org/guides/codecs";
 
-function undecodableNotice(): HTMLParagraphElement {
-	const notice = document.createElement("p");
-	notice.className = "mt-4 max-w-80 text-center text-sm text-neutral-400";
-	if (!isLinuxPlatform() || canDecodeH264()) {
-		notice.textContent = "This video cannot be played on this system.";
-		return notice;
-	}
-	notice.textContent =
-		"Playing this video needs an H.264 decoder, which is not installed on this system. ";
+const buttonTitleKeys = {
+	close: "common.actions.close",
+	zoom: "media.lightbox.zoom",
+	arrowPrev: "media.lightbox.previous",
+	arrowNext: "media.lightbox.next",
+} as const satisfies Record<string, MessageKey>;
+
+type TitledButton = keyof typeof buttonTitleKeys;
+
+function isTitledButton(name: string | undefined): name is TitledButton {
+	return name !== undefined && Object.hasOwn(buttonTitleKeys, name);
+}
+
+function followLocaleWhileOpen({
+	lightbox,
+	apply,
+}: {
+	lightbox: PhotoSwipeLightbox;
+	apply: () => void;
+}): void {
+	let stopFollowing: (() => void) | undefined;
+	lightbox.on("beforeOpen", () => {
+		stopFollowing = followLocale(apply);
+	});
+	lightbox.on("destroy", () => {
+		stopFollowing?.();
+		stopFollowing = undefined;
+	});
+}
+
+function codecsGuideLink(text: string): HTMLAnchorElement {
 	const guide = document.createElement("a");
 	guide.href = CODECS_GUIDE;
 	guide.className = "underline";
-	guide.textContent = "How to install video codecs";
+	guide.textContent = text;
 	guide.onclick = (event) => {
 		event.preventDefault();
 		openExternalLink(CODECS_GUIDE);
 	};
-	notice.append(guide);
+	return guide;
+}
+
+function undecodableNotice(): HTMLParagraphElement {
+	const notice = document.createElement("p");
+	notice.className = "mt-4 max-w-80 text-center text-sm text-neutral-400";
+	if (!isLinuxPlatform() || canDecodeH264()) {
+		notice.textContent = t("media.lightbox.errors.playFailed");
+		return notice;
+	}
+	for (const { tag, text } of richParts(
+		"media.lightbox.errors.decoderMissing",
+	)) {
+		notice.append(tag === "link" ? codecsGuideLink(text) : text);
+	}
 	return notice;
 }
 
+function renderMediaError({
+	element,
+	failure,
+}: {
+	element: HTMLElement;
+	failure: Failure | undefined;
+}): void {
+	element.innerHTML = BROKEN_MEDIA_SVG;
+	if (failure?.undecodable === true) {
+		element.classList.add("flex", "flex-col", "items-center");
+		element.append(undecodableNotice());
+		return;
+	}
+	element.setAttribute("role", "img");
+	element.setAttribute("aria-label", t("media.lightbox.errors.loadFailed"));
+}
+
 export function applyPhotoSwipeErrorUi(lightbox: PhotoSwipeLightbox): void {
+	const rendered = new Map<HTMLElement, Failure | undefined>();
 	lightbox.addFilter("contentErrorElement", (element, content) => {
 		const failure = failures.get(content);
 		if (failure !== undefined) element.dataset.failure = failure.detail;
-		element.innerHTML = BROKEN_MEDIA_SVG;
-		if (failure?.undecodable === true) {
-			element.classList.add("flex", "flex-col", "items-center");
-			element.append(undecodableNotice());
-			return element;
-		}
-		element.setAttribute("role", "img");
-		element.setAttribute("aria-label", "Media failed to load");
+		rendered.set(element, failure);
+		renderMediaError({ element, failure });
 		return element;
+	});
+	followLocaleWhileOpen({
+		lightbox,
+		apply: () => {
+			for (const [element, failure] of rendered)
+				renderMediaError({ element, failure });
+		},
+	});
+	lightbox.on("destroy", () => {
+		rendered.clear();
+	});
+}
+
+function labelButton({
+	element,
+	title,
+}: {
+	element: HTMLElement;
+	title: string;
+}): void {
+	element.title = title;
+	element.setAttribute("aria-label", title);
+}
+
+export function applyPhotoSwipeLabels(lightbox: PhotoSwipeLightbox): void {
+	const titled = new Map<HTMLElement, TitledButton>();
+	lightbox.addFilter("uiElement", (element, { name }) => {
+		if (!isTitledButton(name)) return element;
+		titled.set(element, name);
+		labelButton({ element, title: t(buttonTitleKeys[name]) });
+		return element;
+	});
+	followLocaleWhileOpen({
+		lightbox,
+		apply: () => {
+			for (const [element, name] of titled)
+				labelButton({ element, title: t(buttonTitleKeys[name]) });
+		},
+	});
+	lightbox.on("destroy", () => {
+		titled.clear();
 	});
 }
 
@@ -208,6 +298,7 @@ export async function openLightbox({
 		mainClass: "pswp--buttons-visible",
 	});
 	applyPhotoSwipeErrorUi(lightbox);
+	applyPhotoSwipeLabels(lightbox);
 	applyPhotoSwipeViewportSync(lightbox);
 	lightbox.addFilter("numItems", () => items.length);
 	lightbox.addFilter("itemData", (itemData, index) => {

@@ -8,5 +8,12 @@
 	},
 	"rightNow": {
 		"unimplemented": "\"Right now\" tab is not implemented yet, tracking in <link>#{{issue}}</link>."
+	},
+	"locationChooser": {
+		"map": {
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"selectedLocation": "Selected location"
+		}
 	}
 }

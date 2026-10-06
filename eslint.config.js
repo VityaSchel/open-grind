@@ -10,10 +10,12 @@ const vendoredGlob = "src/lib/components/ui/**";
 
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
+	"src/routes/+layout.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
 	"src/lib/components/feedback/ToastUnimplemented.svelte",
 	"src/lib/components/filters/OptionFilter.svelte",
+	"src/lib/components/location-chooser/GeoMapPicker.svelte",
 	"src/lib/components/profile/DisplayName.svelte",
 	"src/lib/components/profile/TapIcon.svelte",
 	"src/lib/components/shared/SubpageScreen.svelte",
@@ -42,6 +44,7 @@ const translatedScriptFiles = [
 	"src/lib/model/messaging/message-preview.ts",
 	"src/lib/model/users/profiles.ts",
 	"src/lib/util/format-time.ts",
+	"src/lib/util/photoswipe.ts",
 	"src/lib/util/reconciling-list-state.svelte.ts",
 	"src/lib/util/units.ts",
 	"src/routes/(protected)/(navbar)/interest/views/views-state.svelte.ts",

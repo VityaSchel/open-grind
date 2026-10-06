@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CatalogJson } from "./catalog-files";
 import Probe from "./fixtures/Probe.svelte";
 import {
+	followLocale,
 	getLocale,
 	locales,
 	richParts,
@@ -131,6 +132,24 @@ describe("live locale switching", () => {
 		flushSync();
 		stop();
 		expect(seen).toEqual(["2 mins", "2 Min."]);
+	});
+
+	it("reapplies imperative text on each switch until stopped", async () => {
+		const label = document.createElement("button");
+		const stop = followLocale(() => {
+			label.title = t("common.actions.close");
+		});
+		flushSync();
+		expect(label.title).toBe("Close");
+
+		await setLocale({ locale: "de" });
+		flushSync();
+		expect(label.title).toBe("Schließen");
+
+		stop();
+		await setLocale({ locale: SOURCE_LOCALE });
+		flushSync();
+		expect(label.title).toBe("Schließen");
 	});
 });
 

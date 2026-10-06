@@ -9,6 +9,7 @@
 	import {
 		applyPhotoSwipeBackGesture,
 		applyPhotoSwipeErrorUi,
+		applyPhotoSwipeLabels,
 		applyPhotoSwipeOpenTracking,
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
@@ -50,6 +51,7 @@
 					mainClass: `pswp--buttons-visible pswp--profile-carousel`,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
+				applyPhotoSwipeLabels(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);

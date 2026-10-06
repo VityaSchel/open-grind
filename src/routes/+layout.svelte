@@ -18,6 +18,7 @@
 	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
 	import { hydrateBackdropCompositing } from "$lib/blur/compositing.svelte";
 	import { applyBackdropBlurQuality } from "$lib/blur/quality.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		applyAndroidInsets,
 		applyBackGestureHandler,
@@ -178,6 +179,8 @@
 		mobileOffset={toastOffset}
 		toastOptions={{ class: "toast" }}
 		expand
+		containerAriaLabel={t("shell.toaster.a11y.region")}
+		closeButtonAriaLabel={t("shell.toaster.a11y.close")}
 	/>
 	{@render children?.()}
 	<RequestBlockedAlert />

@@ -13,5 +13,11 @@
 		"a11y": {
 			"navigation": "Page"
 		}
+	},
+	"toaster": {
+		"a11y": {
+			"region": "Notifications",
+			"close": "Close toast"
+		}
 	}
 }

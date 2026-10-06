@@ -3,6 +3,9 @@ export interface Messages {
 	"browse.filters.noMax": undefined;
 	"browse.filters.noMin": undefined;
 	"browse.filters.withinDistance": { distance: string };
+	"browse.locationChooser.map.selectedLocation": undefined;
+	"browse.locationChooser.map.zoomIn": undefined;
+	"browse.locationChooser.map.zoomOut": undefined;
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
@@ -79,6 +82,11 @@ export interface Messages {
 	"interest.taps.errors.refreshFailed": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;
+	"media.lightbox.errors.loadFailed": undefined;
+	"media.lightbox.errors.playFailed": undefined;
+	"media.lightbox.next": undefined;
+	"media.lightbox.previous": undefined;
+	"media.lightbox.zoom": undefined;
 	"profile.acceptNsfwPics.never": undefined;
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;
@@ -181,6 +189,8 @@ export interface Messages {
 	"shell.error.reportIssue": undefined;
 	"shell.error.title": undefined;
 	"shell.subpageScreen.a11y.navigation": undefined;
+	"shell.toaster.a11y.close": undefined;
+	"shell.toaster.a11y.region": undefined;
 }
 
 export interface RichMessages {
@@ -190,6 +200,7 @@ export interface RichMessages {
 	"chat.composer.attachments.location.unimplemented": { issue: string };
 	"chat.composer.voiceMessage.unimplemented": { issue: string };
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
+	"media.lightbox.errors.decoderMissing": undefined;
 	"settings.account.unimplemented": { issue: string };
 	"settings.app.discreetAppIcon.unimplemented": { issue: string };
 	"settings.app.pin.unimplemented": { issue: string };
@@ -202,6 +213,7 @@ export interface RichTags {
 	"chat.composer.attachments.location.unimplemented": "link";
 	"chat.composer.voiceMessage.unimplemented": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
+	"media.lightbox.errors.decoderMissing": "link";
 	"settings.account.unimplemented": "link";
 	"settings.app.discreetAppIcon.unimplemented": "link";
 	"settings.app.pin.unimplemented": "link";
