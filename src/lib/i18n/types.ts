@@ -4,6 +4,9 @@ import type { Messages, RichMessages, RichTags } from "./generated";
 
 export type MessageKey = keyof Messages;
 export type RichKey = keyof RichMessages;
+export type PlainMessageKey = {
+	[K in MessageKey]: [Messages[K]] extends [undefined] ? K : never;
+}[MessageKey];
 
 type UnionToIntersection<U> = (
 	U extends unknown ? (union: U) => void : never

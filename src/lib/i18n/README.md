@@ -11,6 +11,8 @@ Strings live in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. `en` is t
 
 Call `t()` in markup, `$derived` or a function. Lint rejects a result stored at module scope or at the top of a `<script>`, since it keeps the old language after a locale switch.
 
+Label an enum with a table of semantic keys, `as const satisfies Record<Id, MessageKey>`. Where code indexes labels by id, wrap the table in `translatedLabels()` from `$lib/i18n/labels`: each read calls `t()`, so copy the entries, for example with `Object.entries` or a spread, only when the text is shown.
+
 Diagnostics such as console output, copied error details and `ApiError.message` stay English. Where one reuses a catalog string, render it with `sourceText()`, which takes the same arguments as `t()`.
 
 Dev builds add two pseudo-locales that `pseudo.ts` builds from English in memory. Open the app with `?locale=en-XA` to see every translated string accented, padded and wrapped in `⟦…⟧`, or with `?locale=ar-XB` to see it right to left, so raw English stands out.
