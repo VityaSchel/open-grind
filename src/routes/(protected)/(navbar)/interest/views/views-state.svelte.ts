@@ -12,6 +12,7 @@ import {
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
+import { t } from "$lib/i18n";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { viewedMeV1NewViewReceivedEventSchema, ws } from "$lib/ws.svelte";
 import type { ViewerProfile, ViewPreview } from "$lib/model/interest/views";
@@ -56,7 +57,7 @@ export class ViewsState extends ReconcilingListState<
 	constructor() {
 		super({
 			pageSize: PAGE_SIZE,
-			refreshErrorLabel: "Failed to refresh views",
+			refreshErrorLabel: () => t("interest.views.errors.refreshFailed"),
 		});
 		this.start();
 	}
@@ -89,7 +90,7 @@ export class ViewsState extends ReconcilingListState<
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
-				label: "Failed to turn on the Viewed Me List",
+				label: t("interest.views.errors.turnOnViewedMeFailed"),
 				error,
 			});
 		} finally {

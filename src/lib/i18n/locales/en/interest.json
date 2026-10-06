@@ -1,0 +1,13 @@
+{
+	"taps": {
+		"errors": {
+			"refreshFailed": "Failed to refresh taps"
+		}
+	},
+	"views": {
+		"errors": {
+			"refreshFailed": "Failed to refresh views",
+			"turnOnViewedMeFailed": "Failed to turn on the Viewed Me List"
+		}
+	}
+}

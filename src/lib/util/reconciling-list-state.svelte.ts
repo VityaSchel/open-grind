@@ -9,7 +9,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	scrollY = 0;
 
 	readonly #pageSize: number;
-	readonly #refreshErrorLabel: string;
+	readonly #refreshErrorLabel: () => string;
 	#loaded = false;
 	#destroyed = false;
 	#unsubscribeReconcile: (() => void) | null = null;
@@ -23,7 +23,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 		refreshErrorLabel,
 	}: {
 		pageSize: number;
-		refreshErrorLabel: string;
+		refreshErrorLabel: () => string;
 	}) {
 		this.#pageSize = pageSize;
 		this.#refreshErrorLabel = refreshErrorLabel;
@@ -67,7 +67,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
-				label: this.#refreshErrorLabel,
+				label: this.#refreshErrorLabel(),
 				error,
 				onRetry: () => void this.refresh(),
 			});

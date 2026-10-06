@@ -18,6 +18,7 @@ import {
 	mergeConversation,
 } from "$lib/chat/merge-conversation";
 import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
+import { t } from "$lib/i18n";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
@@ -263,7 +264,7 @@ class ConversationsState {
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
-				label: "Failed to refresh conversations",
+				label: t("chat.conversations.errors.refreshFailed"),
 				error,
 				onRetry: () => void this.refresh(),
 			});
@@ -280,18 +281,14 @@ class ConversationsState {
 		void this.refresh();
 	}
 
-	#syncLatest(args: { errorLabel: string }): Promise<boolean> {
-		this.#syncLatestInFlight ??= this.#runSyncLatest(args).finally(() => {
+	#syncLatest(): Promise<boolean> {
+		this.#syncLatestInFlight ??= this.#runSyncLatest().finally(() => {
 			this.#syncLatestInFlight = null;
 		});
 		return this.#syncLatestInFlight;
 	}
 
-	async #runSyncLatest({
-		errorLabel,
-	}: {
-		errorLabel: string;
-	}): Promise<boolean> {
+	async #runSyncLatest(): Promise<boolean> {
 		// Claiming would make an in-flight #load drop the nextPage it fetched.
 		const fetchEpoch = this.#fetches.current;
 		try {
@@ -318,7 +315,10 @@ class ConversationsState {
 			return true;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: errorLabel, error });
+			showErrorToast({
+				label: t("chat.conversations.errors.syncFailed"),
+				error,
+			});
 			return false;
 		}
 	}
@@ -380,8 +380,7 @@ class ConversationsState {
 
 	async ensureLoaded(conversationId: string): Promise<boolean> {
 		if (this.#find(conversationId)) return true;
-		const errorLabel = "Failed to sync conversation into sidebar";
-		return this.#fetches.track(this.#syncLatest({ errorLabel }));
+		return this.#fetches.track(this.#syncLatest());
 	}
 
 	async #loadMissing(id: string): Promise<Conversation | undefined> {
@@ -448,7 +447,7 @@ class ConversationsState {
 				} catch (error) {
 					console.error(error);
 					showErrorToast({
-						label: "Failed to mark conversation as read",
+						label: t("chat.conversations.errors.markReadFailed"),
 						error,
 					});
 					entry.data.unreadCount += clearedCount;
@@ -468,7 +467,7 @@ class ConversationsState {
 		field: ConversationFlagField;
 		value: boolean;
 		request: (conversationId: string) => Promise<unknown>;
-		errorLabel: string;
+		errorLabel: () => string;
 	}): Promise<void> {
 		const targets = conversationIds
 			.map((id) => this.#find(id))
@@ -519,9 +518,10 @@ class ConversationsState {
 			value: pinned,
 			request: (conversationId) =>
 				setConversationPinned({ conversationId, pinned }),
-			errorLabel: pinned
-				? "Failed to pin conversation"
-				: "Failed to unpin conversation",
+			errorLabel: () =>
+				pinned
+					? t("chat.conversations.errors.pinFailed")
+					: t("chat.conversations.errors.unpinFailed"),
 		});
 	}
 
@@ -538,9 +538,10 @@ class ConversationsState {
 			value: muted,
 			request: (conversationId) =>
 				setConversationMuted({ conversationId, muted }),
-			errorLabel: muted
-				? "Failed to mute conversation"
-				: "Failed to unmute conversation",
+			errorLabel: () =>
+				muted
+					? t("chat.conversations.errors.muteFailed")
+					: t("chat.conversations.errors.unmuteFailed"),
 		});
 	}
 
@@ -573,7 +574,7 @@ class ConversationsState {
 					this.drafts.forget(conversationId);
 				},
 				rollback: ({ revert }) => revert(),
-				errorLabel: "Failed to delete conversation",
+				errorLabel: () => t("chat.conversations.errors.deleteFailed"),
 			});
 			if (rolledBack) this.#sortEntries();
 		} finally {

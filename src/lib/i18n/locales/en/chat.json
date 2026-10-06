@@ -20,5 +20,17 @@
 			"expiringPhotoLimit": "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
 			"unsend": "Unsending a message requires a Grindr subscription."
 		}
+	},
+	"conversations": {
+		"errors": {
+			"refreshFailed": "Failed to refresh conversations",
+			"syncFailed": "Failed to sync conversation into sidebar",
+			"markReadFailed": "Failed to mark conversation as read",
+			"pinFailed": "Failed to pin conversation",
+			"unpinFailed": "Failed to unpin conversation",
+			"muteFailed": "Failed to mute conversation",
+			"unmuteFailed": "Failed to unmute conversation",
+			"deleteFailed": "Failed to delete conversation"
+		}
 	}
 }

@@ -5,6 +5,14 @@ export interface Messages {
 	"browse.filters.withinDistance": { distance: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;
+	"chat.conversations.errors.deleteFailed": undefined;
+	"chat.conversations.errors.markReadFailed": undefined;
+	"chat.conversations.errors.muteFailed": undefined;
+	"chat.conversations.errors.pinFailed": undefined;
+	"chat.conversations.errors.refreshFailed": undefined;
+	"chat.conversations.errors.syncFailed": undefined;
+	"chat.conversations.errors.unmuteFailed": undefined;
+	"chat.conversations.errors.unpinFailed": undefined;
 	"chat.messagePreview.album": undefined;
 	"chat.messagePreview.expiringImage": undefined;
 	"chat.messagePreview.expiringVideo": undefined;
@@ -58,6 +66,9 @@ export interface Messages {
 	"feedback.requestBlocked.rotate": undefined;
 	"feedback.requestBlocked.rotated": undefined;
 	"feedback.requestBlocked.vpnHint": undefined;
+	"interest.taps.errors.refreshFailed": undefined;
+	"interest.views.errors.refreshFailed": undefined;
+	"interest.views.errors.turnOnViewedMeFailed": undefined;
 	"profile.acceptNsfwPics.never": undefined;
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;

@@ -7,6 +7,7 @@ import {
 	onProfileViewabilityChange,
 } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
+import { t } from "$lib/i18n";
 import { tapsLastViewed } from "$lib/interest/taps-last-viewed";
 import { ReconcilingListState } from "$lib/util/reconciling-list-state.svelte";
 import { tapV1TapSentEventSchema, ws } from "$lib/ws.svelte";
@@ -42,7 +43,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	constructor({ ourProfileId }: { ourProfileId: number }) {
 		super({
 			pageSize: PAGE_SIZE,
-			refreshErrorLabel: "Failed to refresh taps",
+			refreshErrorLabel: () => t("interest.taps.errors.refreshFailed"),
 		});
 		this.ourProfileId = ourProfileId;
 		this.#lastViewedAt = tapsLastViewed.load(ourProfileId);

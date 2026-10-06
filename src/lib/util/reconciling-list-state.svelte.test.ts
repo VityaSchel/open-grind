@@ -27,11 +27,13 @@ import { ReconcilingListState } from "./reconciling-list-state.svelte";
 
 type Item = { id: number; count: number };
 
+let refreshErrorLabel = "Failed to refresh";
+
 class TestList extends ReconcilingListState<Item, Item[]> {
 	items: Item[] = [];
 
 	constructor() {
-		super({ pageSize: 2, refreshErrorLabel: "Failed to refresh" });
+		super({ pageSize: 2, refreshErrorLabel: () => refreshErrorLabel });
 		this.start();
 	}
 
@@ -96,6 +98,7 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
+	refreshErrorLabel = "Failed to refresh";
 	fetchMock.mockReset();
 	showErrorToastMock.mockReset();
 	unlistenMock.mockReset();
@@ -255,6 +258,21 @@ describe("ReconcilingListState", () => {
 		});
 		expect(state.error).toBeNull();
 		expect(ids(state)).toEqual([1]);
+	});
+
+	it("names a refresh failure in the wording current when it fails", async () => {
+		fetchMock
+			.mockResolvedValueOnce([item(1)])
+			.mockRejectedValueOnce(new Error("offline"));
+		const state = new TestList();
+		await waitForLoaded(state);
+		refreshErrorLabel = "Échec de l'actualisation";
+
+		await reconcileHandlers[0]?.();
+
+		expect(showErrorToastMock).toHaveBeenCalledWith(
+			expect.objectContaining({ label: "Échec de l'actualisation" }),
+		);
 	});
 
 	it("loads once, including when the list is legitimately empty", async () => {
