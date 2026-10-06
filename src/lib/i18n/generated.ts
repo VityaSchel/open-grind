@@ -182,6 +182,7 @@ export interface Messages {
 	"settings.subpage.titles.notifications": undefined;
 	"settings.subpage.titles.privacy": undefined;
 	"settings.subpage.titles.profile": undefined;
+	"shell.backLink.a11y.label": undefined;
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
@@ -213,6 +214,7 @@ export interface Messages {
 	"shell.onboarding.start": undefined;
 	"shell.onboarding.tagline": undefined;
 	"shell.onboarding.title": undefined;
+	"shell.saveChangesBar.save": undefined;
 	"shell.scrollToTopButton.a11y.label": undefined;
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;

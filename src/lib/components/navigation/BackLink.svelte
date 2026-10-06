@@ -2,12 +2,13 @@
 	import { afterNavigate } from "$app/navigation";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
+	import { t } from "$lib/i18n";
 	import { canGoBack } from "$lib/util/history";
 	import { isPlainClick } from "$lib/util/plain-click";
 
 	let {
 		href,
-		label = "Back",
+		label,
 		children,
 		...rest
 	}: Omit<HTMLAnchorAttributes, "href" | "onclick"> & {
@@ -25,7 +26,7 @@
 <a
 	{...rest}
 	{href}
-	aria-label={label}
+	aria-label={label ?? t("shell.backLink.a11y.label")}
 	onclick={(event) => {
 		if (!isPlainClick(event)) return;
 		if (leaving) {

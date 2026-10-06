@@ -3,6 +3,7 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { t } from "$lib/i18n";
 	import { fly } from "$lib/util/reduced-motion";
 	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
 
@@ -35,6 +36,6 @@
 		{#if saving}
 			<Spinner class="size-5" />
 		{/if}
-		Save changes
+		{t("shell.saveChangesBar.save")}
 	</Button>
 </div>
