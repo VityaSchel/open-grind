@@ -1,5 +1,5 @@
 import { encode } from "@msgpack/msgpack";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
@@ -15,6 +15,7 @@ import {
 	parseApiResponse,
 	schemaMismatchMessage,
 } from "$lib/api/transport";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { toBase64 } from "$lib/util/base64";
 
@@ -168,6 +169,20 @@ describe("jsonParsed", () => {
 			message: "API request failed with status 500",
 			response: { status: 500 },
 			retryable: true,
+		});
+	});
+});
+
+describe("fetchRest", () => {
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it("keeps a backend failure's message English for error reports", async () => {
+		await setLocale({ locale: "en-XA" });
+		invokeMock.mockRejectedValue({ kind: "RateLimited" });
+
+		await expect(fetchRest("/v4/cascade")).rejects.toMatchObject({
+			kind: "RateLimited",
+			message: "Grindr is rate limiting us",
 		});
 	});
 });

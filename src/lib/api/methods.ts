@@ -5,7 +5,7 @@ import {
 	ApiError,
 	type ApiErrorKind,
 	apiErrorKinds,
-	blockedAndStaleMessages,
+	apiErrorMessageKeys,
 	httpStatusOf,
 } from "$lib/api/api-error";
 import { capText } from "$lib/api/redact/text";
@@ -15,21 +15,34 @@ import {
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled } from "$lib/demo";
+import { type MessageKey, sourceText, t, type Translate } from "$lib/i18n";
 import { geohashSchema } from "$lib/model/geohash";
 
 const maxPrettyMessageChars = 200;
 
-const unknownErrorMessage = "An unknown error occurred";
+const messagelessMessageKeys = {
+	RequestBlocked: apiErrorMessageKeys.RequestBlocked,
+	NetworkBlocked: apiErrorMessageKeys.NetworkBlocked,
+	SessionStale: apiErrorMessageKeys.SessionStale,
+	RateLimited: "feedback.appError.rateLimited",
+	NotSignedIn: "feedback.appError.notSignedIn",
+	ContentTooLarge: "feedback.appError.contentTooLarge",
+} as const satisfies Partial<Record<ApiErrorKind, MessageKey>>;
 
-const connectionFailedMessage =
-	"Couldn't connect to Grindr. Check your internet connection and try again.";
+type MessagelessMessageKey =
+	| (typeof messagelessMessageKeys)[keyof typeof messagelessMessageKeys]
+	| "feedback.appError.unknown";
 
-const messagelessMessages: Partial<Record<ApiErrorKind, string>> = {
-	...blockedAndStaleMessages,
-	RateLimited: "Grindr is rate limiting us",
-	NotSignedIn: "You're signed out",
-	ContentTooLarge: "Larger than the upload limit",
-};
+const appErrorSchema = z.object({
+	kind: z.enum(apiErrorKinds),
+	message: z
+		.string()
+		.or(z.object({ code: z.number(), message: z.string() }))
+		.or(z.object({ reason: z.string(), detail: z.string().nullish() }))
+		.optional(),
+});
+
+type AppError = z.infer<typeof appErrorSchema>;
 
 export const banInfoSchema = z.object({
 	kind: z.string(),
@@ -179,37 +192,54 @@ export function asBanned(error: unknown): BanInfo | null {
 	return parsed.success ? parsed.data.message : null;
 }
 
+function messagelessMessageKey(kind: ApiErrorKind): MessagelessMessageKey {
+	const keys: Partial<Record<ApiErrorKind, MessagelessMessageKey>> =
+		messagelessMessageKeys;
+	return keys[kind] ?? "feedback.appError.unknown";
+}
+
+function describeAppError({
+	appError: { kind, message },
+	translate,
+}: {
+	appError: AppError;
+	translate: Translate;
+}): string {
+	if (kind === "Connect") {
+		return translate("feedback.appError.connectionFailed");
+	}
+	if (typeof message === "string") {
+		return describeServerMessage({ message, translate });
+	}
+	if (message !== undefined && "code" in message) {
+		return translate("feedback.appError.withCode", {
+			code: String(message.code),
+			detail: describeServerMessage({
+				message: message.message,
+				translate,
+			}),
+		});
+	}
+	return translate(messagelessMessageKey(kind));
+}
+
 export function asAppError(error: unknown) {
-	const { data, success } = z
-		.object({
-			kind: z.enum(apiErrorKinds),
-			message: z
-				.string()
-				.or(z.object({ code: z.number(), message: z.string() }))
-				.or(
-					z.object({
-						reason: z.string(),
-						detail: z.string().nullish(),
-					}),
-				)
-				.optional(),
-		})
-		.safeParse(error);
+	const { data, success } = appErrorSchema.safeParse(error);
 	if (success) {
-		let prettyMessage: string;
-		if (data.kind === "Connect") {
-			prettyMessage = connectionFailedMessage;
-		} else if (typeof data.message === "string") {
-			prettyMessage = summarizeServerMessage(data.message);
-		} else if (data.message && "code" in data.message) {
-			const { code, message } = data.message;
-			prettyMessage = `Error ${code}: ${summarizeServerMessage(message)}`;
-		} else {
-			prettyMessage =
-				messagelessMessages[data.kind] ?? unknownErrorMessage;
-		}
+		const prettyMessage = describeAppError({
+			appError: data,
+			translate: t,
+		});
 		return { ...data, prettyMessage };
 	}
+}
+
+export function diagnosticMessage(error: unknown): string {
+	const { data, success } = appErrorSchema.safeParse(error);
+	if (success) {
+		return describeAppError({ appError: data, translate: sourceText });
+	}
+	return error instanceof Error ? error.message : String(error);
 }
 
 export function errorKindOf(error: unknown): ApiErrorKind | null {
@@ -227,19 +257,31 @@ export function uploadRefusalMessage({
 }): string | null {
 	const kind = errorKindOf(error);
 	if (kind === "ContentTooLarge" || httpStatusOf(error) === 413) {
-		return `Larger than the ${limitLabel} limit`;
+		return t("feedback.appError.overLimit", { limit: limitLabel });
 	}
 	if (kind !== "Media") return null;
 	const detail = asAppError(error)?.message;
 	return typeof detail === "string" && detail !== "" ? detail : null;
 }
 
-export function summarizeServerMessage(message: string): string {
+function describeServerMessage({
+	message,
+	translate,
+}: {
+	message: string;
+	translate: Translate;
+}): string {
 	const summary = summariseNonJson(message);
 	if (summary.nonJson !== "html") {
 		return capText(message, maxPrettyMessageChars);
 	}
 	return summary.title === undefined
-		? "The server returned a web page instead of data"
-		: `The server returned a web page: "${summary.title}"`;
+		? translate("feedback.appError.webPage")
+		: translate("feedback.appError.titledWebPage", {
+				title: summary.title,
+			});
+}
+
+export function summarizeServerMessage(message: string): string {
+	return describeServerMessage({ message, translate: t });
 }

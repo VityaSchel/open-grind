@@ -17,8 +17,10 @@ const translatedSvelteFiles = [
 ];
 
 const translatedScriptFiles = [
+	"src/lib/api/api-error.ts",
 	"src/lib/api/error-copy.ts",
 	"src/lib/api/error-toast.ts",
+	"src/lib/api/methods.ts",
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/model/browse/grid/filters.ts",
 	"src/lib/util/format-time.ts",

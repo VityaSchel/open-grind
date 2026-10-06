@@ -1,3 +1,5 @@
+import { type MessageKey, t } from "$lib/i18n";
+
 export const apiErrorKinds = [
 	"Http",
 	"Connect",
@@ -58,8 +60,20 @@ export function httpStatusOf(error: unknown): number | null {
 	return error instanceof ApiError ? (error.response?.status ?? null) : null;
 }
 
-export const blockedAndStaleMessages = {
-	RequestBlocked: "Grindr is blocking your requests",
-	NetworkBlocked: "Something blocked the request before it reached Grindr",
-	SessionStale: "Couldn't refresh your session",
-} as const satisfies Partial<Record<ApiErrorKind, string>>;
+export const apiErrorMessageKeys = {
+	Connect: "feedback.apiError.connect",
+	Http: "feedback.apiError.http",
+	RequestBlocked: "feedback.apiError.requestBlocked",
+	NetworkBlocked: "feedback.apiError.networkBlocked",
+	SessionStale: "feedback.apiError.sessionStale",
+} as const satisfies Partial<Record<ApiErrorKind, MessageKey>>;
+
+type ApiErrorMessageKey =
+	(typeof apiErrorMessageKeys)[keyof typeof apiErrorMessageKeys];
+
+export function apiErrorMessage(kind: ApiErrorKind): string | undefined {
+	const keys: Partial<Record<ApiErrorKind, ApiErrorMessageKey>> =
+		apiErrorMessageKeys;
+	const key = keys[kind];
+	return key === undefined ? undefined : t(key);
+}

@@ -1,17 +1,19 @@
 import { readFileSync } from "node:fs";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	asAppError,
 	asBanned,
 	banInfoSchema,
 	callMethod,
+	diagnosticMessage,
 	markRequestBlocked,
 	methods,
 	restrictionSchema,
 } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod } from "$lib/demo";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
@@ -178,6 +180,42 @@ describe("asAppError", () => {
 				message: { code: 403, message: cloudflareBlockPage },
 			})?.message,
 		).toEqual({ code: 403, message: cloudflareBlockPage });
+	});
+});
+
+describe("diagnosticMessage", () => {
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it("keeps a bare tag's wording English while the interface is not", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(asAppError({ kind: "RateLimited" })?.prettyMessage).not.toBe(
+			"Grindr is rate limiting us",
+		);
+		expect(diagnosticMessage({ kind: "RateLimited" })).toBe(
+			"Grindr is rate limiting us",
+		);
+	});
+
+	it("frames server text in English while the interface is not", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			diagnosticMessage({
+				kind: "Api",
+				message: { code: 403, message: cloudflareBlockPage },
+			}),
+		).toBe(
+			"Error 403: The server returned a web page: " +
+				'"Attention Required! | Cloudflare"',
+		);
+	});
+
+	it("passes through what is not an app error", () => {
+		expect(diagnosticMessage(new Error("socket hang up"))).toBe(
+			"socket hang up",
+		);
+		expect(diagnosticMessage("offline")).toBe("offline");
 	});
 });
 

@@ -21,6 +21,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 	},
 }));
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { ws } from "$lib/ws.svelte";
 
 const RESPONSE_EVENT = "grindr:chat_v1_message_send_response";
@@ -66,8 +67,9 @@ describe("ws.sendCommand", () => {
 		listeners.clear();
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		vi.useRealTimers();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("resolves with the parsed response payload", async () => {
@@ -143,6 +145,16 @@ describe("ws.sendCommand", () => {
 			name: "ApiError",
 			kind: "Http",
 			cause: appError,
+		});
+	});
+
+	it("keeps a transport failure's message English for error reports", async () => {
+		await setLocale({ locale: "en-XA" });
+		invokeMock.mockRejectedValue({ kind: "RateLimited" });
+
+		await expect(sendCommand()).rejects.toMatchObject({
+			kind: "RateLimited",
+			message: "Grindr is rate limiting us",
 		});
 	});
 

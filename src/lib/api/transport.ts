@@ -6,6 +6,7 @@ import { ApiError } from "$lib/api/api-error";
 import {
 	asAppError,
 	blockedKindOf,
+	diagnosticMessage,
 	markRequestBlocked,
 } from "$lib/api/methods";
 import { redactPath } from "$lib/api/redact/text";
@@ -133,9 +134,7 @@ function restInvokeError({
 		signOutIfSessionLost().catch((error) => console.error(error));
 	}
 	return new ApiError({
-		message:
-			appError?.prettyMessage ??
-			(error instanceof Error ? error.message : String(error)),
+		message: diagnosticMessage(error),
 		request: requestInfo,
 		response: null,
 		kind: appError?.kind ?? null,

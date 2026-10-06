@@ -9,6 +9,24 @@
 			"copyFailed": "Couldn't copy to clipboard"
 		}
 	},
+	"apiError": {
+		"connect": "Couldn't connect to Grindr",
+		"http": "Couldn't reach the server",
+		"requestBlocked": "Grindr is blocking your requests",
+		"networkBlocked": "Something blocked the request before it reached Grindr",
+		"sessionStale": "Couldn't refresh your session"
+	},
+	"appError": {
+		"connectionFailed": "Couldn't connect to Grindr. Check your internet connection and try again.",
+		"rateLimited": "Grindr is rate limiting us",
+		"notSignedIn": "You're signed out",
+		"contentTooLarge": "Larger than the upload limit",
+		"overLimit": "Larger than the {{limit}} limit",
+		"unknown": "An unknown error occurred",
+		"withCode": "Error {{code}}: {{detail}}",
+		"webPage": "The server returned a web page instead of data",
+		"titledWebPage": "The server returned a web page: \"{{title}}\""
+	},
 	"requestBlocked": {
 		"cloudflare": {
 			"title": "Grindr blocks your requests",

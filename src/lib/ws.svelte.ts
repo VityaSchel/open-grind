@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
 import { ApiError } from "$lib/api/api-error";
-import { asAppError } from "$lib/api/methods";
+import { asAppError, diagnosticMessage } from "$lib/api/methods";
 import { tapTypeOrNoneSchema } from "$lib/model/interest/taps";
 import { mediaHashPublicSchema } from "$lib/model/media";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
@@ -199,11 +199,7 @@ class WsState {
 						error instanceof ApiError
 							? error
 							: new ApiError({
-									message:
-										asAppError(error)?.prettyMessage ??
-										(error instanceof Error
-											? error.message
-											: String(error)),
+									message: diagnosticMessage(error),
 									request,
 									kind: asAppError(error)?.kind ?? null,
 									cause: error,
