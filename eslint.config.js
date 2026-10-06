@@ -55,6 +55,7 @@ const translatedScriptFiles = [
 ];
 
 const letter = String.raw`/\p{L}/u`;
+const brandOnly = String.raw`/^\s*Open Grind\s*$/u`;
 const literalText = `:matches(Literal[value=${letter}], TemplateLiteral:has(> TemplateElement[value.cooked=${letter}]))`;
 const toastCall = `CallExpression:matches([callee.name="toast"], [callee.object.name="toast"][callee.property.name!="dismiss"])`;
 const textAttribute = `SvelteAttribute[key.name=/^(?:aria-label|aria-description|alt|title|placeholder)$/]`;
@@ -72,7 +73,7 @@ const scriptRawTextSelectors = rawText([
 ]);
 
 const svelteRawTextSelectors = rawText([
-	`SvelteText[value=${letter}]`,
+	`SvelteText[value=${letter}]:not(SvelteStyleElement > SvelteText, [value=${brandOnly}])`,
 	`${textAttribute} > SvelteLiteral[value=${letter}]`,
 	`${textAttribute} > SvelteMustacheTag > ${literalText}`,
 ]);
