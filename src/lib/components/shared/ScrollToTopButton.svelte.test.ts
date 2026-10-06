@@ -4,11 +4,12 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import ScrollToTopButton from "./ScrollToTopButton.svelte";
 
 const SCREEN_HEIGHT = 800;
 const GLIDE_MS = 400;
-
 async function settle() {
 	await tick();
 	await tick();
@@ -68,10 +69,11 @@ describe("the scroll-to-top button", () => {
 		});
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		document.body.replaceChildren();
 		vi.useRealTimers();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("appears once the scroller leaves the top and hides on the way back", async () => {
@@ -182,5 +184,19 @@ describe("the scroll-to-top button", () => {
 		expect(view.button()).toBeNull();
 		await view.glideFor(GLIDE_MS / 2);
 		expect(view.scroller.scrollTop).toBe(0);
+	});
+
+	it("renames the button when the locale changes", async () => {
+		const view = await mountWithScroller({ scrollTop: 5000 });
+		expect(view.button()).not.toBeNull();
+
+		await setLocale({ locale: "en-XA" });
+		await settle();
+
+		const label = document
+			.querySelector("button")
+			?.getAttribute("aria-label");
+		expect(label).toBe(t("shell.scrollToTopButton.a11y.label"));
+		expect(label).toMatch(PSEUDO_MESSAGE);
 	});
 });

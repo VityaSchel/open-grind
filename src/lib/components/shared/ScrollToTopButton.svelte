@@ -2,6 +2,7 @@
 	import CaretUpIcon from "phosphor-svelte/lib/CaretUpIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
+	import { t } from "$lib/i18n";
 	import { glideScrollTop } from "$lib/util/scroll";
 	import { cn } from "$lib/util/utils";
 	import ScrollJumpButton from "./ScrollJumpButton.svelte";
@@ -72,7 +73,7 @@
 
 {#if !atTop}
 	<ScrollJumpButton
-		label="Scroll to top"
+		label={t("shell.scrollToTopButton.a11y.label")}
 		class={cn("absolute inset-x-0 z-10 mx-auto w-fit", className)}
 		onclick={scrollToTop}
 	>

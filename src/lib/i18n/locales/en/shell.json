@@ -14,6 +14,16 @@
 			"navigation": "Page"
 		}
 	},
+	"dataRefreshControl": {
+		"pullHint": "Pull to refresh",
+		"releaseHint": "Release to refresh",
+		"refreshButton": "Refresh"
+	},
+	"scrollToTopButton": {
+		"a11y": {
+			"label": "Scroll to top"
+		}
+	},
 	"toaster": {
 		"a11y": {
 			"region": "Notifications",

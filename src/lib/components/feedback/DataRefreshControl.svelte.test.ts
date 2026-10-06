@@ -4,6 +4,8 @@ import { cleanup, render } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import DataRefreshControl from "./DataRefreshControl.svelte";
 
 const FRAME_MS = 16;
@@ -16,7 +18,6 @@ const MIN_REFRESHING_MS = 500;
 const BUTTON_REST_HEIGHT = "56px";
 const CONTENT_HEIGHT = 2000;
 const VIEWPORT_HEIGHT = 500;
-
 type Edge = "top" | "bottom";
 type ContentFrame = { band: string; inset: string; restDistance: number };
 
@@ -225,13 +226,14 @@ describe("the refresh control", () => {
 		});
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		document.body.replaceChildren();
 		outroListeners.abort();
 		vi.restoreAllMocks();
 		vi.advanceTimersByTime(SHARED_FRAME_LOOP_DRAIN_MS);
 		vi.useRealTimers();
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("shows the pull hint at the band's own height while the disc is still leaving", async () => {
@@ -500,5 +502,35 @@ describe("the refresh control", () => {
 		expect(distinctInsets(afterKeyIntoContent)).toEqual(["0px"]);
 		expect(view.button()).not.toBeNull();
 		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+	});
+
+	it("rewords the pull and release hints when the locale changes", async () => {
+		const view = await mountAtRest("top");
+		await view.moveBandTo({ px: 6, pulledByWheel: true });
+
+		await setLocale({ locale: "en-XA" });
+		await settle();
+		const pulling = view.bandText();
+		await view.moveBandTo({ px: 22, pulledByWheel: true });
+		const armed = view.bandText();
+
+		expect(pulling).toBe(t("shell.dataRefreshControl.pullHint"));
+		expect(armed).toBe(t("shell.dataRefreshControl.releaseHint"));
+		for (const hint of [pulling, armed])
+			expect(hint).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("renames the resting button when the locale changes", async () => {
+		const view = await mountAtRest("top");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+
+		await setLocale({ locale: "en-XA" });
+		await settle();
+
+		expect(view.bandText()).toBe(
+			t("shell.dataRefreshControl.refreshButton"),
+		);
+		expect(view.bandText()).toMatch(PSEUDO_MESSAGE);
 	});
 });
