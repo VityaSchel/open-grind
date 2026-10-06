@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from "@testing-library/svelte";
+import { flushSync } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
 import ApiErrorDisplay from "./ApiErrorDisplay.svelte";
 
 const request = { method: "GET", path: "/v4/cascade", body: undefined };
@@ -21,7 +23,10 @@ function retryButton(): HTMLElement | undefined {
 	);
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("ApiErrorDisplay", () => {
 	it("offers Retry for an error that cannot be classified as retryable", () => {
@@ -91,5 +96,28 @@ describe("ApiErrorDisplay", () => {
 		render(ApiErrorDisplay, { props: { error: schemaMismatch() } });
 
 		expect(screen.getByText("Something went wrong")).toBeTruthy();
+	});
+
+	it("follows the interface language once rendered", async () => {
+		const error = new ApiError({
+			message: "Connect failure",
+			request,
+			kind: "Connect",
+		});
+		render(ApiErrorDisplay, { props: { error, onRetry: vi.fn() } });
+
+		await setLocale({ locale: "en-XA" });
+		flushSync();
+
+		expect(screen.getByText(t("feedback.apiError.connect"))).toBeTruthy();
+		expect(screen.queryByText("Couldn't connect to Grindr")).toBeNull();
+		expect(
+			screen.getByRole("button", { name: t("common.actions.retry") }),
+		).toBeTruthy();
+		expect(
+			screen.getByRole("button", {
+				name: t("feedback.actions.copyDetails"),
+			}),
+		).toBeTruthy();
 	});
 });

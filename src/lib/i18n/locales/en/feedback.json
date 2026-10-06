@@ -1,7 +1,9 @@
 {
-	"errorToast": {
-		"defaultLabel": "An error occurred",
+	"actions": {
 		"copyDetails": "Copy details"
+	},
+	"errorToast": {
+		"defaultLabel": "An error occurred"
 	},
 	"errorCopy": {
 		"copied": "Error details copied to clipboard",
@@ -15,6 +17,10 @@
 		"requestBlocked": "Grindr is blocking your requests",
 		"networkBlocked": "Something blocked the request before it reached Grindr",
 		"sessionStale": "Couldn't refresh your session"
+	},
+	"apiErrorDisplay": {
+		"retryableFailure": "The server ran into a problem",
+		"unknownFailure": "Something went wrong"
 	},
 	"appError": {
 		"connectionFailed": "Couldn't connect to Grindr. Check your internet connection and try again.",

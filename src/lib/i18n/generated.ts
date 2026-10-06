@@ -12,11 +12,14 @@ export interface Messages {
 	"common.time.today": undefined;
 	"common.time.yesterday": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
+	"feedback.actions.copyDetails": undefined;
 	"feedback.apiError.connect": undefined;
 	"feedback.apiError.http": undefined;
 	"feedback.apiError.networkBlocked": undefined;
 	"feedback.apiError.requestBlocked": undefined;
 	"feedback.apiError.sessionStale": undefined;
+	"feedback.apiErrorDisplay.retryableFailure": undefined;
+	"feedback.apiErrorDisplay.unknownFailure": undefined;
 	"feedback.appError.connectionFailed": undefined;
 	"feedback.appError.contentTooLarge": undefined;
 	"feedback.appError.notSignedIn": undefined;
@@ -28,7 +31,6 @@ export interface Messages {
 	"feedback.appError.withCode": { code: string; detail: string };
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
-	"feedback.errorToast.copyDetails": undefined;
 	"feedback.errorToast.defaultLabel": undefined;
 	"feedback.requestBlocked.cloudflare.advice": undefined;
 	"feedback.requestBlocked.cloudflare.description": undefined;

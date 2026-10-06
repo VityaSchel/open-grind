@@ -2,6 +2,7 @@
 	import { ApiError, apiErrorMessage } from "$lib/api/api-error";
 	import { promptCopyError } from "$lib/api/error-copy";
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 
 	let {
 		error,
@@ -21,7 +22,11 @@
 		apiError?.kind ? apiErrorMessage(apiError.kind) : undefined,
 	);
 	const fallbackMessage = $derived(
-		retryable ? "The server ran into a problem" : "Something went wrong",
+		t(
+			retryable
+				? "feedback.apiErrorDisplay.retryableFailure"
+				: "feedback.apiErrorDisplay.unknownFailure",
+		),
 	);
 	const message = $derived(kindMessage ?? fallbackMessage);
 </script>
@@ -37,7 +42,7 @@
 				size="sm"
 				onclick={onRetry}
 			>
-				Retry
+				{t("common.actions.retry")}
 			</Button>
 		{/if}
 		<Button
@@ -45,7 +50,7 @@
 			size="sm"
 			onclick={() => void promptCopyError(error).catch(() => {})}
 		>
-			Copy details
+			{t("feedback.actions.copyDetails")}
 		</Button>
 	</div>
 </div>

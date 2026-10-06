@@ -19,7 +19,7 @@ export function showErrorToast({
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
 	const copyDetails = {
-		label: t("feedback.errorToast.copyDetails"),
+		label: t("feedback.actions.copyDetails"),
 		onClick: () => void promptCopyError(error).catch(() => {}),
 	};
 	if (onRetry) {
