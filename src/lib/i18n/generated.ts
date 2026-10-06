@@ -39,6 +39,7 @@ export interface Messages {
 	"common.carousel.a11y.previous": undefined;
 	"common.commandDialog.a11y.description": undefined;
 	"common.commandDialog.a11y.title": undefined;
+	"common.desktopEntry.errors.addFailed": undefined;
 	"common.format.range": { max: string; min: string };
 	"common.someone": undefined;
 	"common.spinner.a11y.loading": undefined;
@@ -49,6 +50,7 @@ export interface Messages {
 	"common.time.yesterday": undefined;
 	"common.unimplemented.title": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
+	"common.updates.checkAutomatically": undefined;
 	"feedback.actions.copyDetails": undefined;
 	"feedback.apiError.connect": undefined;
 	"feedback.apiError.http": undefined;
@@ -194,6 +196,20 @@ export interface Messages {
 	"shell.navBar.tabs.inbox": undefined;
 	"shell.navBar.tabs.interest": undefined;
 	"shell.navBar.tabs.rightNow": undefined;
+	"shell.notFound.clippy.a11y.image": undefined;
+	"shell.notFound.clippy.lost": undefined;
+	"shell.notFound.clippy.never.ageVerification": undefined;
+	"shell.notFound.clippy.never.exploitation": undefined;
+	"shell.notFound.clippy.never.sellData": undefined;
+	"shell.notFound.clippy.offer": undefined;
+	"shell.notFound.clippy.promise": undefined;
+	"shell.notFound.description": undefined;
+	"shell.onboarding.addToAppsMenu": undefined;
+	"shell.onboarding.description": undefined;
+	"shell.onboarding.errors.finishSetupFailed": undefined;
+	"shell.onboarding.start": undefined;
+	"shell.onboarding.tagline": undefined;
+	"shell.onboarding.title": undefined;
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;

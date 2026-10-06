@@ -12,6 +12,7 @@ const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/routes/+layout.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
+	"src/lib/components/feedback/NotFound.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
 	"src/lib/components/feedback/ToastUnimplemented.svelte",
 	"src/lib/components/filters/OptionFilter.svelte",
@@ -32,6 +33,7 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/app/credits/BlurbText.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/message-composer/attachments/ComposerUnimplementedTab.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
+	"src/routes/onboarding/+page.svelte",
 ];
 
 const translatedScriptFiles = [

@@ -38,5 +38,13 @@
 		"a11y": {
 			"loading": "Loading"
 		}
+	},
+	"updates": {
+		"checkAutomatically": "Check updates automatically"
+	},
+	"desktopEntry": {
+		"errors": {
+			"addFailed": "Couldn't add Open Grind to your apps"
+		}
 	}
 }

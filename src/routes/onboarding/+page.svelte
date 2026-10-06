@@ -6,6 +6,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { Label } from "$lib/components/ui/label";
+	import { t } from "$lib/i18n";
 	import {
 		desktopEntryAvailable,
 		desktopEntryInstalled,
@@ -32,7 +33,7 @@
 			if (addToAppsMenu && offerAppsMenu()) {
 				await setDesktopEntryInstalled(true).catch((error: unknown) =>
 					showErrorToast({
-						label: "Couldn't add Open Grind to your apps",
+						label: t("common.desktopEntry.errors.addFailed"),
 						error,
 					}),
 				);
@@ -41,13 +42,16 @@
 			await goto("/");
 		} catch (error) {
 			starting = false;
-			showErrorToast({ label: "Couldn't finish setup", error });
+			showErrorToast({
+				label: t("shell.onboarding.errors.finishSetupFailed"),
+				error,
+			});
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Welcome</title>
+	<title>{t("shell.onboarding.title")}</title>
 </svelte:head>
 
 <main class="flex min-h-dvh flex-col px-8 pt-[calc(2rem+var(--safe-area-top))]">
@@ -60,12 +64,11 @@
 				Open Grind
 			</h1>
 			<p class="text-xl text-muted-foreground">
-				Unofficial Grindr client
+				{t("shell.onboarding.tagline")}
 			</p>
 		</div>
 		<p class="max-w-sm text-balance text-muted-foreground">
-			Cross-platform, free, libre, ad-free, tracker-free, privacy-centered
-			and community-driven
+			{t("shell.onboarding.description")}
 		</p>
 	</div>
 
@@ -78,13 +81,13 @@
 				{#if updatesSelfManaged()}
 					<Label class="flex items-center rounded-xl p-2">
 						<Checkbox bind:checked={checkAutomatically} />
-						Check updates automatically
+						{t("common.updates.checkAutomatically")}
 					</Label>
 				{/if}
 				{#if offerAppsMenu()}
 					<Label class="flex items-center rounded-xl p-2">
 						<Checkbox bind:checked={addToAppsMenu} />
-						Add Open Grind to your apps menu
+						{t("shell.onboarding.addToAppsMenu")}
 					</Label>
 				{/if}
 			</div>
@@ -95,7 +98,7 @@
 			disabled={starting}
 			onclick={start}
 		>
-			Get started
+			{t("shell.onboarding.start")}
 		</Button>
 	</div>
 </main>

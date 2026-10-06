@@ -31,5 +31,31 @@
 			"interest": "Interest",
 			"inbox": "Inbox"
 		}
+	},
+	"notFound": {
+		"description": "The page you are looking for does not exist.",
+		"clippy": {
+			"lost": "It looks like you're a little lost.",
+			"offer": "Would you like help?",
+			"promise": "Don't worry, Clippy would never",
+			"never": {
+				"sellData": "Sell your information",
+				"ageVerification": "Add AI age verification",
+				"exploitation": "Exploit troubled queers"
+			},
+			"a11y": {
+				"image": "Clippy"
+			}
+		}
+	},
+	"onboarding": {
+		"title": "Welcome",
+		"tagline": "Unofficial Grindr client",
+		"description": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven",
+		"addToAppsMenu": "Add Open Grind to your apps menu",
+		"start": "Get started",
+		"errors": {
+			"finishSetupFailed": "Couldn't finish setup"
+		}
 	}
 }
