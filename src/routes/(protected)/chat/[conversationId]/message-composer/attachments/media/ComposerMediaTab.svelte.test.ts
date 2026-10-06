@@ -209,7 +209,7 @@ describe("composer media tab", () => {
 		);
 		expect(onSelectionChange).toHaveBeenLastCalledWith({
 			count: 0,
-			label: "Send",
+			action: "send",
 		});
 	});
 });

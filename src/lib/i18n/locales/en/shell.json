@@ -8,5 +8,10 @@
 		"copyError": "Copy error",
 		"copied": "Error message copied to clipboard",
 		"reportIssue": "Report an issue"
+	},
+	"subpageScreen": {
+		"a11y": {
+			"navigation": "Page"
+		}
 	}
 }

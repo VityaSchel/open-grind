@@ -14,11 +14,13 @@ const translatedSvelteFiles = [
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
 	"src/lib/components/filters/OptionFilter.svelte",
 	"src/lib/components/profile/TapIcon.svelte",
+	"src/lib/components/shared/SubpageScreen.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LastTested.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LookupField.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/bottom-nav/TapProfileButton.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/HeightWeightBodyType.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/SexualPosition.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/+layout.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 ];
 

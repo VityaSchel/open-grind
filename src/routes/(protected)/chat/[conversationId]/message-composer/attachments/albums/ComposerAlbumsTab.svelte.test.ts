@@ -125,7 +125,7 @@ describe("composer albums tab", () => {
 		tile(SHARED_ALBUM).click();
 		await tick();
 
-		expect(armed()).toEqual({ count: 1, label: "Unshare" });
+		expect(armed()).toEqual({ count: 1, action: "unshare" });
 		expect(tile(UNSHARED_ALBUM).disabled).toBe(true);
 		expect(tile(UNSHARED_ALBUM).className).toContain("opacity-50");
 	});
@@ -136,13 +136,13 @@ describe("composer albums tab", () => {
 
 		tile(UNSHARED_ALBUM).click();
 		await tick();
-		expect(armed()).toEqual({ count: 1, label: "Share" });
+		expect(armed()).toEqual({ count: 1, action: "share" });
 		expect(tile(SHARED_ALBUM).disabled).toBe(true);
 		expect(tile(SHARED_ALBUM).className).toContain("opacity-50");
 
 		tile(UNSHARED_ALBUM).click();
 		await tick();
-		expect(armed()).toEqual({ count: 0, label: "Share" });
+		expect(armed()).toEqual({ count: 0, action: "share" });
 		expect(tile(SHARED_ALBUM).disabled).toBe(false);
 	});
 
@@ -167,7 +167,7 @@ describe("composer albums tab", () => {
 		});
 		expect(api.shareAlbum).not.toHaveBeenCalled();
 		expect(onClose).not.toHaveBeenCalled();
-		expect(armed()).toEqual({ count: 0, label: "Share" });
+		expect(armed()).toEqual({ count: 0, action: "share" });
 		for (const albumId of [UNSHARED_ALBUM, SHARED_ALBUM, LOCKED_ALBUM]) {
 			expect(tile(albumId).disabled).toBe(true);
 			expect(tile(albumId).className).toContain("opacity-50");
@@ -212,6 +212,6 @@ describe("composer albums tab", () => {
 		expect(toastError).toHaveBeenCalledWith("Couldn't unshare album");
 		expect(tile(SHARED_ALBUM).disabled).toBe(false);
 		expect(tile(SHARED_ALBUM).getAttribute("aria-pressed")).toBe("true");
-		expect(armed()).toEqual({ count: 1, label: "Unshare" });
+		expect(armed()).toEqual({ count: 1, action: "unshare" });
 	});
 });

@@ -3,6 +3,9 @@ export interface Messages {
 	"browse.filters.noMax": undefined;
 	"browse.filters.noMin": undefined;
 	"browse.filters.withinDistance": { distance: string };
+	"chat.composer.attachments.actions.send": undefined;
+	"chat.composer.attachments.actions.share": undefined;
+	"chat.composer.attachments.actions.unshare": undefined;
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;
 	"chat.conversations.errors.deleteFailed": undefined;
@@ -151,6 +154,17 @@ export interface Messages {
 	"profile.vaccine.covid19": undefined;
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
+	"settings.subpage.titles.account": undefined;
+	"settings.subpage.titles.albums": undefined;
+	"settings.subpage.titles.app": undefined;
+	"settings.subpage.titles.blocked": undefined;
+	"settings.subpage.titles.credits": undefined;
+	"settings.subpage.titles.editAlbum": undefined;
+	"settings.subpage.titles.hidden": undefined;
+	"settings.subpage.titles.newAlbum": undefined;
+	"settings.subpage.titles.notifications": undefined;
+	"settings.subpage.titles.privacy": undefined;
+	"settings.subpage.titles.profile": undefined;
 	"shell.error.copied": undefined;
 	"shell.error.copyError": undefined;
 	"shell.error.description": undefined;
@@ -159,6 +173,7 @@ export interface Messages {
 	"shell.error.refresh": undefined;
 	"shell.error.reportIssue": undefined;
 	"shell.error.title": undefined;
+	"shell.subpageScreen.a11y.navigation": undefined;
 }
 
 export interface RichMessages {

@@ -1,0 +1,17 @@
+{
+	"subpage": {
+		"titles": {
+			"account": "Account Settings",
+			"privacy": "Privacy",
+			"blocked": "Blocked Users",
+			"hidden": "Hidden Users",
+			"albums": "My Albums",
+			"newAlbum": "New Album",
+			"editAlbum": "Edit Album",
+			"app": "App Settings",
+			"notifications": "Notifications",
+			"credits": "Credits & Licenses",
+			"profile": "Edit Profile"
+		}
+	}
+}

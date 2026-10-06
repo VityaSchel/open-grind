@@ -32,5 +32,14 @@
 			"unmuteFailed": "Failed to unmute conversation",
 			"deleteFailed": "Failed to delete conversation"
 		}
+	},
+	"composer": {
+		"attachments": {
+			"actions": {
+				"send": "Send",
+				"share": "Share",
+				"unshare": "Unshare"
+			}
+		}
 	}
 }

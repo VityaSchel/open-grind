@@ -10,10 +10,16 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
+	import { t } from "$lib/i18n";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
-	import type { SelectionTab, Tab, TabSelection } from "./tabs";
+	import {
+		selectionActionKeys,
+		type SelectionTab,
+		type Tab,
+		type TabSelection,
+	} from "./tabs";
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
@@ -71,7 +77,9 @@
 
 		<MediaSheetActions
 			class="bottom-18"
-			label={selection?.label ?? ""}
+			label={selection === undefined
+				? ""
+				: t(selectionActionKeys[selection.action])}
 			count={selection?.count ?? 0}
 			onSubmit={submitSelection}
 		>

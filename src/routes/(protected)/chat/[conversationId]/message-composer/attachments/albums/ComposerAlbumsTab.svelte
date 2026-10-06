@@ -45,12 +45,12 @@
 			return "unsharing";
 		else return "sharing";
 	});
-	const label = $derived.by(() => {
+	const action = $derived.by(() => {
 		switch (mode) {
 			case "sharing":
-				return "Share";
+				return "share";
 			case "unsharing":
-				return "Unshare";
+				return "unshare";
 		}
 	});
 
@@ -84,7 +84,7 @@
 
 	function toggleSelected(albumId: number) {
 		selected.toggle(albumId);
-		onSelectionChange({ count: selected.size, label });
+		onSelectionChange({ count: selected.size, action });
 	}
 
 	function share({
@@ -116,7 +116,7 @@
 			console.error(err);
 			toast.error("Couldn't unshare album");
 			selected.add(albumId);
-			onSelectionChange({ count: selected.size, label });
+			onSelectionChange({ count: selected.size, action });
 		} finally {
 			pendingUnshares--;
 		}
@@ -128,7 +128,7 @@
 		const albumIds = selected.values();
 		const submitted = mode;
 		selected.clear();
-		onSelectionChange({ count: 0, label });
+		onSelectionChange({ count: 0, action });
 		if (submitted === "unsharing") {
 			for (const albumId of albumIds)
 				void unshare({ albumId, profileId: target });

@@ -94,7 +94,7 @@
 
 	function toggleSelected(id: number) {
 		selected.toggle(id);
-		onSelectionChange({ count: selected.size, label: "Send" });
+		onSelectionChange({ count: selected.size, action: "send" });
 	}
 
 	function describe(item: DrawerMedia) {

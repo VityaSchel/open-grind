@@ -1,45 +1,56 @@
 <script lang="ts">
-	import SubpageScreen from "$lib/components/shared/SubpageScreen.svelte";
+	import SubpageScreen, {
+		type SubpageRoute,
+	} from "$lib/components/shared/SubpageScreen.svelte";
 
 	const base = "/(protected)/(navbar)/settings/(subpage)";
 	const routes = {
-		[`${base}/account`]: { title: "Account Settings", back: "/settings" },
+		[`${base}/account`]: {
+			title: "settings.subpage.titles.account",
+			back: "/settings",
+		},
 		[`${base}/account/privacy`]: {
-			title: "Privacy",
+			title: "settings.subpage.titles.privacy",
 			back: "/settings/account",
 		},
 		[`${base}/account/blocked`]: {
-			title: "Blocked Users",
+			title: "settings.subpage.titles.blocked",
 			back: "/settings/account",
 		},
 		[`${base}/account/hidden`]: {
-			title: "Hidden Users",
+			title: "settings.subpage.titles.hidden",
 			back: "/settings/account",
 		},
 		[`${base}/albums`]: {
-			title: "My Albums",
+			title: "settings.subpage.titles.albums",
 			back: "/settings",
 			wide: true,
 		},
 		[`${base}/albums/new`]: {
-			title: "New Album",
+			title: "settings.subpage.titles.newAlbum",
 			back: "/settings/albums",
 		},
 		[`${base}/albums/[albumId]`]: {
-			title: "Edit Album",
+			title: "settings.subpage.titles.editAlbum",
 			back: "/settings/albums",
 		},
-		[`${base}/app`]: { title: "App Settings", back: "/settings" },
+		[`${base}/app`]: {
+			title: "settings.subpage.titles.app",
+			back: "/settings",
+		},
 		[`${base}/app/notifications`]: {
-			title: "Notifications",
+			title: "settings.subpage.titles.notifications",
 			back: "/settings/app",
 		},
 		[`${base}/app/credits`]: {
-			title: "Credits & Licenses",
+			title: "settings.subpage.titles.credits",
 			back: "/settings/app",
 		},
-		[`${base}/profile`]: { title: "Edit Profile", back: "/settings" },
-	};
+		[`${base}/profile`]: {
+			title: "settings.subpage.titles.profile",
+			back: "/settings",
+		},
+	} as const satisfies Record<string, SubpageRoute>;
 
 	let { children }: import("./$types").LayoutProps = $props();
 </script>
