@@ -98,6 +98,16 @@ export interface Messages {
 	"profile.sexualPosition.versBottom": undefined;
 	"profile.sexualPosition.versTop": undefined;
 	"profile.sexualPosition.versatile": undefined;
+	"profile.tap.a11y.icon.friendly": undefined;
+	"profile.tap.a11y.icon.hot": undefined;
+	"profile.tap.a11y.icon.looking": undefined;
+	"profile.tap.a11y.send.friendly": undefined;
+	"profile.tap.a11y.send.hot": undefined;
+	"profile.tap.a11y.send.looking": undefined;
+	"profile.tap.a11y.sent.friendly": undefined;
+	"profile.tap.a11y.sent.hot": undefined;
+	"profile.tap.a11y.sent.looking": undefined;
+	"profile.tap.errors.sendFailed": undefined;
 	"profile.tribe.bear": undefined;
 	"profile.tribe.cleanCut": undefined;
 	"profile.tribe.daddy": undefined;

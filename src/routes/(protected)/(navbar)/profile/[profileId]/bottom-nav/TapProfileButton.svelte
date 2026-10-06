@@ -5,7 +5,8 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { playHaptic } from "$lib/haptics";
-	import { TapType, tapTypes } from "$lib/model/interest/taps";
+	import { type MessageKey, t } from "$lib/i18n";
+	import { TapType } from "$lib/model/interest/taps";
 	import { firedByTouch } from "$lib/platform/touch-origin";
 
 	let {
@@ -30,7 +31,10 @@
 			await sendTap({ recipientId: profileId, tapType: reaction });
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to send tap", error });
+			showErrorToast({
+				label: t("profile.tap.errors.sendFailed"),
+				error,
+			});
 			onTap(null);
 		} finally {
 			sending = false;
@@ -39,6 +43,18 @@
 
 	const defaultTapType = TapType.Hot;
 
+	const sendKeys = {
+		[TapType.Friendly]: "profile.tap.a11y.send.friendly",
+		[TapType.Hot]: "profile.tap.a11y.send.hot",
+		[TapType.Looking]: "profile.tap.a11y.send.looking",
+	} as const satisfies Record<TapType, MessageKey>;
+
+	const sentKeys = {
+		[TapType.Friendly]: "profile.tap.a11y.sent.friendly",
+		[TapType.Hot]: "profile.tap.a11y.sent.hot",
+		[TapType.Looking]: "profile.tap.a11y.sent.looking",
+	} as const satisfies Record<TapType, MessageKey>;
+
 	const sent = $derived(tapType !== null);
 </script>
 
@@ -46,8 +62,8 @@
 	size="icon-lg"
 	variant={sent ? "default" : "outline"}
 	aria-label={tapType === null
-		? `Send a ${tapTypes[defaultTapType]} tap`
-		: `${tapTypes[tapType]} tap sent`}
+		? t(sendKeys[defaultTapType])
+		: t(sentKeys[tapType])}
 	bind:ref={customAnchor}
 	oncontextmenu={(e) => {
 		e.preventDefault();
@@ -67,7 +83,7 @@
 {#snippet tapOption(tapType: TapType)}
 	<DropdownMenu.Item
 		class="w-10 px-2"
-		aria-label="Send a {tapTypes[tapType]} tap"
+		aria-label={t(sendKeys[tapType])}
 		onclick={() => send(tapType)}
 	>
 		<TapIcon {tapType} />

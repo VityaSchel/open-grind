@@ -94,5 +94,27 @@
 		"covid19": "COVID-19",
 		"monkeypox": "Monkeypox",
 		"meningitis": "Meningitis"
+	},
+	"tap": {
+		"a11y": {
+			"icon": {
+				"friendly": "Cookie tap",
+				"hot": "Fire tap",
+				"looking": "Demon tap"
+			},
+			"send": {
+				"friendly": "Send a Cookie tap",
+				"hot": "Send a Fire tap",
+				"looking": "Send a Demon tap"
+			},
+			"sent": {
+				"friendly": "Cookie tap sent",
+				"hot": "Fire tap sent",
+				"looking": "Demon tap sent"
+			}
+		},
+		"errors": {
+			"sendFailed": "Failed to send tap"
+		}
 	}
 }
