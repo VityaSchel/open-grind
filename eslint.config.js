@@ -122,7 +122,11 @@ export default defineConfig(
 	{
 		files: [`${vendoredGlob}/*.svelte`],
 		rules: {
-			"no-restricted-syntax": ["error", ...svelteStaleTextSelectors],
+			"no-restricted-syntax": [
+				"error",
+				...svelteRawTextSelectors,
+				...svelteStaleTextSelectors,
+			],
 		},
 	},
 	{

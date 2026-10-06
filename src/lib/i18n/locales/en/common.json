@@ -21,5 +21,22 @@
 	"unimplemented": {
 		"title": "Unimplemented"
 	},
-	"someone": "Someone"
+	"someone": "Someone",
+	"carousel": {
+		"a11y": {
+			"previous": "Previous slide",
+			"next": "Next slide"
+		}
+	},
+	"commandDialog": {
+		"a11y": {
+			"title": "Command Palette",
+			"description": "Search for a command to run..."
+		}
+	},
+	"spinner": {
+		"a11y": {
+			"loading": "Loading"
+		}
+	}
 }

@@ -5,6 +5,7 @@
 	import type { ComponentProps } from "svelte";
 
 	import { Button } from "$lib/components/ui/button/index.js";
+	import { t } from "$lib/i18n";
 	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
 	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 	import DialogPortal from "./dialog-portal.svelte";
@@ -52,7 +53,7 @@
 						{...props}
 					>
 						<XIcon />
-						<span class="sr-only">Close</span>
+						<span class="sr-only">{t("common.actions.close")}</span>
 					</Button>
 				{/snippet}
 			</DialogPrimitive.Close>

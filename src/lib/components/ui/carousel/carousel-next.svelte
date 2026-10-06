@@ -3,6 +3,7 @@
 	import type { WithoutChildren } from "bits-ui";
 
 	import { Button, type Props } from "$lib/components/ui/button/index.js";
+	import { t } from "$lib/i18n";
 	import { cn } from "$lib/util/utils.js";
 	import { getEmblaContext } from "./context.js";
 
@@ -36,5 +37,5 @@
 	{...restProps}
 >
 	<CaretRightIcon />
-	<span class="sr-only">Next slide</span>
+	<span class="sr-only">{t("common.carousel.a11y.next")}</span>
 </Button>

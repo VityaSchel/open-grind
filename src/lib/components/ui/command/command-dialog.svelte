@@ -6,6 +6,7 @@
 	import type { Snippet } from "svelte";
 
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
+	import { t } from "$lib/i18n";
 	import { cn, type WithoutChildrenOrChild } from "$lib/util/utils.js";
 	import Command from "./command.svelte";
 
@@ -13,8 +14,8 @@
 		open = $bindable(false),
 		ref = $bindable(null),
 		value = $bindable(""),
-		title = "Command Palette",
-		description = "Search for a command to run...",
+		title,
+		description,
 		showCloseButton,
 		portalProps,
 		children,
@@ -41,8 +42,15 @@
 		{portalProps}
 	>
 		<Dialog.Header class="sr-only">
-			<Dialog.Title>{title}</Dialog.Title>
-			<Dialog.Description>{description}</Dialog.Description>
+			<Dialog.Title
+				>{title ?? t("common.commandDialog.a11y.title")}</Dialog.Title
+			>
+			<Dialog.Description
+				>{description ??
+					t(
+						"common.commandDialog.a11y.description",
+					)}</Dialog.Description
+			>
 		</Dialog.Header>
 		<Command {...restProps} bind:value bind:ref {children} />
 	</Dialog.Content>

@@ -32,8 +32,13 @@ export interface Messages {
 	"chat.messagePreview.voiceMessage": undefined;
 	"common.actions.close": undefined;
 	"common.actions.retry": undefined;
+	"common.carousel.a11y.next": undefined;
+	"common.carousel.a11y.previous": undefined;
+	"common.commandDialog.a11y.description": undefined;
+	"common.commandDialog.a11y.title": undefined;
 	"common.format.range": { max: string; min: string };
 	"common.someone": undefined;
+	"common.spinner.a11y.loading": undefined;
 	"common.time.hours": { count: number };
 	"common.time.justNow": undefined;
 	"common.time.minutes": { count: number };
