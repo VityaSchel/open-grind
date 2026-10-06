@@ -24,5 +24,22 @@
 		"pin": {
 			"unimplemented": "TODO: PIN not implemented yet, tracking in <link>#{{issue}}</link>"
 		}
+	},
+	"credits": {
+		"highlights": {
+			"svelte": "Thanks to <project>{{name}}</project> for the awesome UI building framework!",
+			"svelteKit": "Thanks to <project>{{name}}</project> for the awesome frontend framework!",
+			"tauri": "Thanks to <project>{{name}}</project> for the cross-platform framework!",
+			"photoSwipe": "Thanks to <project>{{name}}</project> for the awesome lightbox component!",
+			"sveaflet": "Thanks to <project>{{name}}</project> for the awesome map component!",
+			"svelteSonner": "Thanks to <project>{{name}}</project> for the awesome toasts component!",
+			"tailwindCss": "Thanks to <project>{{name}}</project> for the framework to rapidly style UIs!",
+			"zod": "Thanks to <project>{{name}}</project> for the awesome schema validation library!",
+			"shadcnSvelte": "Thanks to <project>{{name}}</project> for re-building the awesome shadcn/ui!",
+			"bitsUi": "Thanks to <project>{{name}}</project> for the awesome Svelte UI components library!",
+			"emblaCarouselSvelte": "Thanks to <project>{{name}}</project> for the awesome image carousel library!",
+			"phosphorSvelte": "Thanks to <project>{{name}}</project> for providing the awesome Phosphor Icons set!",
+			"vaulSvelte": "Thanks to <project>{{name}}</project> for the awesome Drawer component!"
+		}
 	}
 }

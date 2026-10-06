@@ -26,6 +26,7 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/SexualPosition.svelte",
 	"src/routes/(protected)/(navbar)/right-now/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/+layout.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/app/credits/BlurbText.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/message-composer/attachments/ComposerUnimplementedTab.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 ];
@@ -37,6 +38,7 @@ const translatedScriptFiles = [
 	"src/lib/api/methods.ts",
 	"src/lib/chat/conversations-state.svelte.ts",
 	"src/lib/chat/optimistic-batch.ts",
+	"src/lib/credits/highlights.ts",
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/interest/taps-state.svelte.ts",
 	"src/lib/model/browse/grid/filters.ts",

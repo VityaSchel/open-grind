@@ -204,6 +204,19 @@ export interface RichMessages {
 	"settings.account.unimplemented": { issue: string };
 	"settings.app.discreetAppIcon.unimplemented": { issue: string };
 	"settings.app.pin.unimplemented": { issue: string };
+	"settings.credits.highlights.bitsUi": { name: string };
+	"settings.credits.highlights.emblaCarouselSvelte": { name: string };
+	"settings.credits.highlights.phosphorSvelte": { name: string };
+	"settings.credits.highlights.photoSwipe": { name: string };
+	"settings.credits.highlights.shadcnSvelte": { name: string };
+	"settings.credits.highlights.sveaflet": { name: string };
+	"settings.credits.highlights.svelte": { name: string };
+	"settings.credits.highlights.svelteKit": { name: string };
+	"settings.credits.highlights.svelteSonner": { name: string };
+	"settings.credits.highlights.tailwindCss": { name: string };
+	"settings.credits.highlights.tauri": { name: string };
+	"settings.credits.highlights.vaulSvelte": { name: string };
+	"settings.credits.highlights.zod": { name: string };
 }
 
 export interface RichTags {
@@ -217,4 +230,17 @@ export interface RichTags {
 	"settings.account.unimplemented": "link";
 	"settings.app.discreetAppIcon.unimplemented": "link";
 	"settings.app.pin.unimplemented": "link";
+	"settings.credits.highlights.bitsUi": "project";
+	"settings.credits.highlights.emblaCarouselSvelte": "project";
+	"settings.credits.highlights.phosphorSvelte": "project";
+	"settings.credits.highlights.photoSwipe": "project";
+	"settings.credits.highlights.shadcnSvelte": "project";
+	"settings.credits.highlights.sveaflet": "project";
+	"settings.credits.highlights.svelte": "project";
+	"settings.credits.highlights.svelteKit": "project";
+	"settings.credits.highlights.svelteSonner": "project";
+	"settings.credits.highlights.tailwindCss": "project";
+	"settings.credits.highlights.tauri": "project";
+	"settings.credits.highlights.vaulSvelte": "project";
+	"settings.credits.highlights.zod": "project";
 }
