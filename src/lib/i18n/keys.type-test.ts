@@ -8,7 +8,9 @@ import {
 	richParts,
 	type RichProps,
 	type RichPropsOf,
+	sourceText,
 	t,
+	type Translate,
 } from "$lib/i18n";
 
 type TextSnippet = Snippet<[text: string]>;
@@ -73,6 +75,7 @@ expectTypeOf(t<"common.actions.close">).parameters.toEqualTypeOf<
 expectTypeOf(t<"common.time.minutes">).parameters.toEqualTypeOf<
 	[key: "common.time.minutes", params: { count: number }]
 >();
+expectTypeOf(sourceText).toEqualTypeOf<Translate>();
 expectTypeOf(
 	richParts<"feedback.requestBlocked.cloudflare.knownIssue">,
 ).parameters.toEqualTypeOf<

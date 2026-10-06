@@ -156,8 +156,18 @@ export function getCatalogs(): readonly Catalog[] {
 	return translation === undefined ? [source] : [translation, source];
 }
 
-export function formatCount(count: number): string {
-	return state.countFormatter({ count, locale: getLocale() });
+export function getSourceCatalog(): Catalog {
+	return state.source;
+}
+
+export function formatCount({
+	count,
+	locale,
+}: {
+	count: number;
+	locale: string;
+}): string {
+	return state.countFormatter({ count, locale });
 }
 
 export function setCountFormatter(formatter: CountFormatter): void {

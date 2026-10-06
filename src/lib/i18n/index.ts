@@ -1,6 +1,12 @@
 import type { Messages, RichMessages } from "./generated";
-import { formatCount, getCatalogs } from "./locale-state.svelte";
-import { PLACEHOLDER, TAG_PAIR } from "./syntax";
+import {
+	type Catalog,
+	formatCount,
+	getCatalogs,
+	getLocale,
+	getSourceCatalog,
+} from "./locale-state.svelte";
+import { PLACEHOLDER, SOURCE_LOCALE, TAG_PAIR } from "./syntax";
 import type { KeyArgs, MessageKey, Params, RichKey, RichPart } from "./types";
 
 export {
@@ -44,18 +50,36 @@ function candidateKeys({
 	return count === 0 ? [`${key}_zero`, plural] : [plural];
 }
 
-function lookup(key: string, params: Params | undefined): string {
+function lookup({
+	key,
+	params,
+	catalogs,
+}: {
+	key: string;
+	params: Params | undefined;
+	catalogs: readonly Catalog[];
+}): string {
 	const count = typeof params?.count === "number" ? params.count : undefined;
-	for (const { locale, dictionary } of getCatalogs()) {
+	for (const { locale, dictionary } of catalogs) {
 		for (const candidate of candidateKeys({ key, locale, count })) {
 			const text = dictionary.get(candidate);
 			if (text !== undefined) return text;
 		}
 	}
-	return count === undefined ? key : lookup(key, undefined);
+	return count === undefined
+		? key
+		: lookup({ key, params: undefined, catalogs });
 }
 
-function interpolate(template: string, params: Params | undefined): string {
+function interpolate({
+	template,
+	params,
+	locale,
+}: {
+	template: string;
+	params: Params | undefined;
+	locale: string;
+}): string {
 	return template.replace(PLACEHOLDER, (placeholder, inner: string) => {
 		const name = inner.trim();
 		if (params === undefined || !Object.hasOwn(params, name)) {
@@ -63,7 +87,7 @@ function interpolate(template: string, params: Params | undefined): string {
 		}
 		const value = params[name];
 		return name === "count" && typeof value === "number"
-			? formatCount(value)
+			? formatCount({ count: value, locale })
 			: String(value);
 	});
 }
@@ -73,28 +97,42 @@ export function t<K extends MessageKey>(
 	...args: KeyArgs<Messages[K]>
 ): string {
 	const [params] = args;
-	return interpolate(lookup(key, params), params);
+	const template = lookup({ key, params, catalogs: getCatalogs() });
+	return interpolate({ template, params, locale: getLocale() });
 }
+
+export function sourceText<K extends MessageKey>(
+	key: K,
+	...args: KeyArgs<Messages[K]>
+): string {
+	const [params] = args;
+	const template = lookup({ key, params, catalogs: [getSourceCatalog()] });
+	return interpolate({ template, params, locale: SOURCE_LOCALE });
+}
+
+export type Translate = typeof t;
 
 export function richParts<K extends RichKey>(
 	key: K,
 	...args: KeyArgs<RichMessages[K]>
 ): RichPart[] {
 	const [params] = args;
-	const template = lookup(key, params);
+	const locale = getLocale();
+	const text = (template: string) =>
+		interpolate({ template, params, locale });
+	const template = lookup({ key, params, catalogs: getCatalogs() });
 	const parts: RichPart[] = [];
 	let end = 0;
 	for (const match of template.matchAll(TAG_PAIR)) {
 		const [element, tag, inner = ""] = match;
 		if (match.index > end) {
-			const text = interpolate(template.slice(end, match.index), params);
-			parts.push({ text });
+			parts.push({ text: text(template.slice(end, match.index)) });
 		}
-		parts.push({ tag, text: interpolate(inner, params) });
+		parts.push({ tag, text: text(inner) });
 		end = match.index + element.length;
 	}
 	if (end < template.length) {
-		parts.push({ text: interpolate(template.slice(end), params) });
+		parts.push({ text: text(template.slice(end)) });
 	}
 	return parts;
 }

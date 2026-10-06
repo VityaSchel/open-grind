@@ -10,6 +10,7 @@ import {
 	setCountFormatter,
 	setLocale,
 	SOURCE_LOCALE,
+	sourceText,
 	t,
 } from "./index";
 import Rich from "./Rich.svelte";
@@ -247,6 +248,20 @@ describe("t", () => {
 		);
 		await setLocale({ locale: "de" });
 		expect(t("common.time.minutes", { count: 1234 })).toBe("1.234 Min.");
+	});
+});
+
+describe("sourceText", () => {
+	it("renders English whatever locale is active", async () => {
+		setCountFormatter(({ count, locale }) =>
+			new Intl.NumberFormat(locale).format(count),
+		);
+		await setLocale({ locale: "de" });
+		expect(t("common.actions.close")).toBe("Schließen");
+		expect(sourceText("common.actions.close")).toBe("Close");
+		expect(sourceText("common.time.minutes", { count: 1234 })).toBe(
+			"1,234 mins",
+		);
 	});
 });
 
