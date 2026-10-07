@@ -15,30 +15,34 @@
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 
 	const status = $derived(accountStatusState.status);
 
 	const content = $derived.by(() => {
 		if (status?.kind === "banned") {
-			let description = "Grindr has banned this account";
-			if (status.info.reason) {
-				description += ` (${status.info.reason})`;
-			}
-			description += ". You can't sign in until the ban is lifted.";
-			return { title: "Your account is banned", description };
+			const { reason } = status.info;
+			return {
+				title: t("feedback.accountStatus.banned.title"),
+				description: reason
+					? t("feedback.accountStatus.banned.descriptionWithReason", {
+							reason,
+						})
+					: t("feedback.accountStatus.banned.description"),
+			};
 		}
 		if (status?.kind === "restriction") {
 			if (status.restriction.kind === "ageVerification") {
 				return {
-					title: "Age verification required",
-					description:
-						"Grindr requires you to verify your age before continuing. Complete it in the official Grindr app, then sign in again. Open Grind does not bypass age verification.",
+					title: t("feedback.accountStatus.ageVerification.title"),
+					description: t(
+						"feedback.accountStatus.ageVerification.description",
+					),
 				};
 			}
 			return {
-				title: "Account restricted",
-				description:
-					"Your account is currently restricted and can't be used. Check the official Grindr app for details.",
+				title: t("feedback.accountStatus.restricted.title"),
+				description: t("feedback.accountStatus.restricted.description"),
 			};
 		}
 		return { title: "", description: "" };
@@ -75,7 +79,7 @@
 			const clipboard =
 				await import("@tauri-apps/plugin-clipboard-manager");
 			await clipboard.writeText(JSON.stringify(status.info, null, 2));
-			toast.success("Details copied to clipboard");
+			toast.success(t("feedback.accountStatus.copied"));
 		} catch (error) {
 			console.error(error);
 		}
@@ -106,10 +110,12 @@
 		<AlertDialog.Footer>
 			{#if status?.kind === "banned"}
 				<Button variant="ghost" onclick={copyDetails} disabled={busy}>
-					Copy details
+					{t("feedback.actions.copyDetails")}
 				</Button>
 			{/if}
-			<Button onclick={onSignOut} disabled={busy}>Sign out</Button>
+			<Button onclick={onSignOut} disabled={busy}
+				>{t("feedback.actions.signOut")}</Button
+			>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

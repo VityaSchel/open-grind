@@ -52,6 +52,14 @@ export interface Messages {
 	"common.unimplemented.title": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
 	"common.updates.checkAutomatically": undefined;
+	"feedback.accountStatus.ageVerification.description": undefined;
+	"feedback.accountStatus.ageVerification.title": undefined;
+	"feedback.accountStatus.banned.description": undefined;
+	"feedback.accountStatus.banned.descriptionWithReason": { reason: string };
+	"feedback.accountStatus.banned.title": undefined;
+	"feedback.accountStatus.copied": undefined;
+	"feedback.accountStatus.restricted.description": undefined;
+	"feedback.accountStatus.restricted.title": undefined;
 	"feedback.actions.copyDetails": undefined;
 	"feedback.actions.signOut": undefined;
 	"feedback.apiError.connect": undefined;

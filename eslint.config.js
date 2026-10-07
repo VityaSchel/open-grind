@@ -11,6 +11,7 @@ const vendoredGlob = "src/lib/components/ui/**";
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/routes/+layout.svelte",
+	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/DataRefreshControl.svelte",
 	"src/lib/components/feedback/NotFound.svelte",
