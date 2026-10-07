@@ -14,8 +14,8 @@ pub const COMPANION_UNAVAILABLE: &str = "companion-unavailable";
 pub const COMPANION_UNTRUSTED: &str = "companion-untrusted";
 pub const COMPANION_REFUSED: &str = "companion-refused";
 pub const COMPANION_DISABLED: &str = "companion-disabled";
+pub const COMPANION_FAILED: &str = "companion-failed";
 const COMPANION_CANCELLED: &str = "cancelled";
-const COMPANION_FAILED: &str = "Google sign-in failed";
 
 pub trait OauthProvider: Send + Sync + 'static {
 	const NAME: &'static str;
@@ -219,6 +219,11 @@ mod tests {
 				"companionRefused = \"{COMPANION_REFUSED}\""
 			)),
 			"sign-in.ts companionRefused is not {COMPANION_REFUSED}"
+		);
+		assert!(
+			frontend
+				.contains(&format!("companionFailed = \"{COMPANION_FAILED}\"")),
+			"sign-in.ts companionFailed is not {COMPANION_FAILED}"
 		);
 		let squashed =
 			|source: &str| source.split_whitespace().collect::<String>();

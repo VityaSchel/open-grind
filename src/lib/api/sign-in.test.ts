@@ -36,6 +36,11 @@ const failures = [
 		error: { kind: "RateLimited" },
 		english: "Too many attempts. Please try again later.",
 	},
+	{
+		failure: "a failed Google OAuth app",
+		error: { kind: "Auth", message: "companion-failed" },
+		english: "Google sign-in failed",
+	},
 ];
 
 const companionMessages = [

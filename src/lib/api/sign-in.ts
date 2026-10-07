@@ -23,6 +23,7 @@ export const companionUnavailable = "companion-unavailable";
 export const companionUntrusted = "companion-untrusted";
 export const companionRefused = "companion-refused";
 export const companionDisabled = "companion-disabled";
+const companionFailed = "companion-failed";
 
 export function untrustedCompanionMessage(): string {
 	return t("auth.signIn.companion.errors.untrusted");
@@ -67,6 +68,12 @@ export function reportSignInFailure({
 			return;
 		}
 		if (onAuthFailure(appError.message)) return;
+		if (appError.message === companionFailed) {
+			toast.error(
+				t("auth.signIn.errors.providerFailed", { provider: "Google" }),
+			);
+			return;
+		}
 	}
 	if (appError && onFailure(appError)) return;
 	const ban = asBanned(error);
