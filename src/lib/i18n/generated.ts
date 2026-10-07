@@ -116,9 +116,15 @@ export interface Messages {
 	"feedback.storageNotice.unavailable": undefined;
 	"interest.tabs.taps": undefined;
 	"interest.tabs.views": undefined;
+	"interest.taps.empty.title": undefined;
 	"interest.taps.errors.refreshFailed": undefined;
+	"interest.views.empty.description": undefined;
+	"interest.views.empty.title": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;
+	"interest.views.untracked.description": undefined;
+	"interest.views.untracked.enable": undefined;
+	"interest.views.untracked.title": undefined;
 	"media.lightbox.errors.loadFailed": undefined;
 	"media.lightbox.errors.playFailed": undefined;
 	"media.lightbox.next": undefined;
@@ -264,6 +270,7 @@ export interface RichMessages {
 	"feedback.copyErrorConfirm.description": undefined;
 	"feedback.entitlementBypass.explanation": undefined;
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
+	"interest.taps.empty.description": undefined;
 	"media.lightbox.errors.decoderMissing": undefined;
 	"settings.account.unimplemented": { issue: string };
 	"settings.app.discreetAppIcon.unimplemented": { issue: string };
@@ -293,6 +300,7 @@ export interface RichTags {
 	"feedback.copyErrorConfirm.description": "warning";
 	"feedback.entitlementBypass.explanation": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
+	"interest.taps.empty.description": "link";
 	"media.lightbox.errors.decoderMissing": "link";
 	"settings.account.unimplemented": "link";
 	"settings.app.discreetAppIcon.unimplemented": "link";

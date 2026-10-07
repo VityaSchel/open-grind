@@ -4,11 +4,24 @@
 		"taps": "Taps"
 	},
 	"taps": {
+		"empty": {
+			"title": "No Taps Yet",
+			"description": "Browse <link>Grid</link> to find people, and they might tap you back."
+		},
 		"errors": {
 			"refreshFailed": "Failed to refresh taps"
 		}
 	},
 	"views": {
+		"empty": {
+			"title": "No Views Yet",
+			"description": "When someone views your profile, they'll show up here."
+		},
+		"untracked": {
+			"title": "Profile viewers aren't tracked",
+			"description": "Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client.",
+			"enable": "Enable"
+		},
 		"errors": {
 			"refreshFailed": "Failed to refresh views",
 			"turnOnViewedMeFailed": "Failed to turn on the Viewed Me List"

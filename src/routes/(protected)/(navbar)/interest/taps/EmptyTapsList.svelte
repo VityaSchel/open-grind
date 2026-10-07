@@ -2,6 +2,8 @@
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 
 	import * as Empty from "$lib/components/ui/empty";
+	import { t } from "$lib/i18n";
+	import Rich from "$lib/i18n/Rich.svelte";
 </script>
 
 <Empty.Root>
@@ -9,9 +11,11 @@
 		<Empty.Media variant="icon">
 			<FireIcon weight="fill" />
 		</Empty.Media>
-		<Empty.Title>No Taps Yet</Empty.Title>
+		<Empty.Title>{t("interest.taps.empty.title")}</Empty.Title>
 		<Empty.Description>
-			Browse <a href="/">Grid</a> to find people, and they might tap you back.
+			<Rich key="interest.taps.empty.description">
+				{#snippet link(text)}<a href="/">{text}</a>{/snippet}
+			</Rich>
 		</Empty.Description>
 	</Empty.Header>
 </Empty.Root>
