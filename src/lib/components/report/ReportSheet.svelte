@@ -4,7 +4,7 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { reportProfile } from "$lib/api/safety/reports";
-	import { Button } from "$lib/components/ui/button";
+	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { Textarea } from "$lib/components/ui/textarea";
@@ -15,7 +15,9 @@
 		type ReportReason,
 		reportReasonSchema,
 	} from "$lib/model/safety/reports";
+	import { cn } from "$lib/util/utils";
 	import type { Profile } from "$lib/model/users/profiles";
+	import BlockingGuideLink from "./BlockingGuideLink.svelte";
 	import { buildProfileReport } from "./report-request";
 
 	type ReportSubject = "profile" | "message";
@@ -26,14 +28,14 @@
 		subject = "profile",
 		locations: presetLocations,
 		blockable = true,
-		onBlocked,
+		onBlock,
 	}: {
 		open: boolean;
 		profileId: Profile["profileId"];
 		subject?: ReportSubject;
 		locations?: ReportLocation[];
 		blockable?: boolean;
-		onBlocked?: () => void;
+		onBlock?: () => Promise<void>;
 	} = $props();
 
 	const reasonLabels: Record<ReportReason, string> = {
@@ -122,9 +124,8 @@
 		if (blocking) return;
 		blocking = true;
 		try {
-			await blockUser({ profileId });
+			await (onBlock ? onBlock() : blockUser({ profileId }));
 			open = false;
-			onBlocked?.();
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Failed to block user", error });
@@ -163,10 +164,11 @@
 				</div>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer>
-				{#if blockable}
+				<div class="relative flex">
 					<Button
 						variant="destructive"
-						disabled={blocking}
+						disabled={blocking || !blockable}
+						class={["flex-1", { "px-9": !blockable }]}
 						onclick={() => void block()}
 					>
 						{#if blocking}
@@ -174,7 +176,18 @@
 						{/if}
 						Block profile
 					</Button>
-				{/if}
+					{#if !blockable}
+						<BlockingGuideLink
+							class={cn(
+								buttonVariants({
+									variant: "ghost",
+									size: "icon-xs",
+								}),
+								"absolute inset-y-0 end-1.5 my-auto",
+							)}
+						/>
+					{/if}
+				</div>
 				<Button variant="secondary" onclick={() => (open = false)}>
 					Done
 				</Button>

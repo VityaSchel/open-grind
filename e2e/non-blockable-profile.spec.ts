@@ -1,16 +1,20 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { captureOpenedUrls, installTauriShim } from "./support/app";
 import { DRAWER } from "./support/drawer";
 
 const BLOCKABLE_PROFILE = "/profile/100001";
 const NON_BLOCKABLE_PROFILE = "/profile/100010";
+const BLOCKING_GUIDE =
+	"https://opengrind.org/guides/blocking-and-hiding-profiles";
+const GUIDE_NAME = "Why can't I block this profile?";
+const BLOCKED = "You have blocked this profile.";
 
 async function openProfileMenu({
 	page,
 	profile,
 }: {
-	page: import("@playwright/test").Page;
+	page: Page;
 	profile: string;
 }) {
 	await installTauriShim(page);
@@ -19,32 +23,14 @@ async function openProfileMenu({
 	await page.getByRole("menuitem", { name: "Hide profile" }).waitFor();
 }
 
-test("a blockable profile offers both hide and block", async ({ page }) => {
-	test.setTimeout(240_000);
-	await openProfileMenu({ page, profile: BLOCKABLE_PROFILE });
-
-	await expect(
-		page.getByRole("menuitem", { name: "Block profile" }),
-	).toBeVisible();
-});
-
-test("a non-blockable profile offers hide but not block", async ({ page }) => {
-	test.setTimeout(240_000);
-	await openProfileMenu({ page, profile: NON_BLOCKABLE_PROFILE });
-
-	await expect(
-		page.getByRole("menuitem", { name: "Hide profile" }),
-	).toBeVisible();
-	await expect(
-		page.getByRole("menuitem", { name: "Block profile" }),
-	).toHaveCount(0);
-});
-
-test("reporting a non-blockable profile does not offer to block", async ({
+async function reportAsSpam({
 	page,
-}) => {
-	test.setTimeout(240_000);
-	await openProfileMenu({ page, profile: NON_BLOCKABLE_PROFILE });
+	profile,
+}: {
+	page: Page;
+	profile: string;
+}) {
+	await openProfileMenu({ page, profile });
 	await page.getByRole("menuitem", { name: "Report profile" }).click();
 
 	const drawer = page.locator(DRAWER);
@@ -56,12 +42,87 @@ test("reporting a non-blockable profile does not offer to block", async ({
 	await expect(
 		drawer.getByText("Grindr will review this profile."),
 	).toBeVisible();
+	return drawer;
+}
 
-	await expect(drawer.getByRole("button", { name: "Done" })).toBeVisible();
+test("a blockable profile offers both hide and block, and blocks", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	await openProfileMenu({ page, profile: BLOCKABLE_PROFILE });
+
+	const block = page.getByRole("menuitem", { name: "Block profile" });
+	await expect(block).toBeEnabled();
+	expect(await page.getByRole("menuitem", { name: GUIDE_NAME }).count()).toBe(
+		0,
+	);
+	await block.click();
+
+	await expect(page.getByText(BLOCKED)).toBeVisible();
+});
+
+test("a non-blockable profile shows Block disabled with a link to the blocking guide", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	await openProfileMenu({ page, profile: NON_BLOCKABLE_PROFILE });
+	const opened = await captureOpenedUrls(page);
+
+	const block = page.getByRole("menuitem", { name: "Block profile" });
+	await expect(block).toBeVisible();
+	await expect(block).toBeDisabled();
+	await block.click({ force: true });
+
+	const guide = page.getByRole("menuitem", { name: GUIDE_NAME });
+	await expect(guide).toBeVisible();
+	await guide.click();
+
+	await expect.poll(opened).toEqual([BLOCKING_GUIDE]);
+	await expect(block).toBeHidden();
+	expect(await page.getByText(BLOCKED).count()).toBe(0);
+});
+
+test("the keyboard skips a disabled Block and reaches the blocking guide", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	await installTauriShim(page);
+	await page.goto(NON_BLOCKABLE_PROFILE);
+	const opened = await captureOpenedUrls(page);
+
+	await page.getByLabel("Profile menu").focus();
+	await page.keyboard.press("Enter");
+	await page.getByRole("menuitem", { name: "Hide profile" }).focus();
+	await page.keyboard.press("ArrowDown");
+
 	await expect(
-		drawer.getByRole("button", { name: "Block profile" }),
-	).toHaveCount(0);
-	await expect(
-		drawer.getByText("You can block this profile so you stop seeing it."),
-	).toHaveCount(0);
+		page.getByRole("menuitem", { name: GUIDE_NAME }),
+	).toBeFocused();
+	await page.keyboard.press("Enter");
+
+	await expect.poll(opened).toEqual([BLOCKING_GUIDE]);
+	expect(await page.getByText(BLOCKED).count()).toBe(0);
+});
+
+test("reporting a non-blockable profile shows Block disabled with a link to the blocking guide", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	const drawer = await reportAsSpam({ page, profile: NON_BLOCKABLE_PROFILE });
+	const opened = await captureOpenedUrls(page);
+
+	const block = drawer.getByRole("button", { name: "Block profile" });
+	await expect(block).toBeVisible();
+	await expect(block).toBeDisabled();
+	expect(
+		await drawer
+			.getByText("You can block this profile so you stop seeing it.")
+			.count(),
+	).toBe(0);
+	await block.click({ force: true });
+	await drawer.getByRole("link", { name: GUIDE_NAME }).click();
+
+	await expect.poll(opened).toEqual([BLOCKING_GUIDE]);
+	await expect(drawer).toBeVisible();
+	expect(await page.getByText(BLOCKED).count()).toBe(0);
 });
