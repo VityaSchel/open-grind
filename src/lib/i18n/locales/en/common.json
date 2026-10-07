@@ -1,7 +1,8 @@
 {
 	"actions": {
 		"close": "Close",
-		"retry": "Retry"
+		"retry": "Retry",
+		"copyError": "Copy error"
 	},
 	"time": {
 		"justNow": "Just now",

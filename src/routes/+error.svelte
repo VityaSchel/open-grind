@@ -57,7 +57,7 @@
 							toast.success(t("shell.error.copied"));
 						}}
 					>
-						{t("shell.error.copyError")}
+						{t("common.actions.copyError")}
 					</Button>
 				</div>
 			</Empty.Content>

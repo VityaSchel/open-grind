@@ -34,6 +34,7 @@ export interface Messages {
 	"chat.messagePreview.videoCall": undefined;
 	"chat.messagePreview.voiceMessage": undefined;
 	"common.actions.close": undefined;
+	"common.actions.copyError": undefined;
 	"common.actions.retry": undefined;
 	"common.carousel.a11y.next": undefined;
 	"common.carousel.a11y.previous": undefined;
@@ -187,7 +188,6 @@ export interface Messages {
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
 	"shell.error.copied": undefined;
-	"shell.error.copyError": undefined;
 	"shell.error.description": undefined;
 	"shell.error.goHome": undefined;
 	"shell.error.pageNotFound": undefined;
