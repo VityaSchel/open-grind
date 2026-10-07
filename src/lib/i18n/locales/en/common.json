@@ -1,6 +1,7 @@
 {
 	"actions": {
 		"close": "Close",
+		"cancel": "Cancel",
 		"retry": "Retry",
 		"copyError": "Copy error"
 	},

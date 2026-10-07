@@ -101,5 +101,14 @@
 	"storageNotice": {
 		"unavailable": "This device can't keep you signed in. You'll be signed out when the app closes.",
 		"plainFile": "No secret service found. Your sign-in is kept in a plain file only your user can read."
+	},
+	"entitlementBypass": {
+		"title": "Paid feature",
+		"explanation": "Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. <link>Learn more</link>.",
+		"bypass": "Bypass",
+		"needsLocation": "Set your location before using this bypass",
+		"errors": {
+			"bypassFailed": "Failed to bypass this paid feature"
+		}
 	}
 }

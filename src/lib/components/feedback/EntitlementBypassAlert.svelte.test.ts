@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
@@ -50,6 +56,14 @@ const REASON = "Unsending a message requires a Grindr subscription.";
 
 const bypassButton = () => screen.getByRole("button", { name: "Bypass" });
 const cancelButton = () => screen.getByRole("button", { name: "Cancel" });
+
+function description(): HTMLElement {
+	const node = screen
+		.getByRole("alertdialog")
+		.querySelector<HTMLElement>('[data-slot="alert-dialog-description"]');
+	if (node === null) throw new Error("no dialog description");
+	return node;
+}
 
 async function offer(retry = vi.fn(() => Promise.resolve())) {
 	offerEntitlementBypass({ reason: REASON_KEY, retry });
@@ -104,13 +118,52 @@ describe("EntitlementBypassAlert", () => {
 		);
 	});
 
+	it("explains the bypass in one sentence that links the guide", async () => {
+		await offer();
+
+		expect(description().textContent).toBe(
+			`${REASON} Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. Learn more.`,
+		);
+		expect(
+			within(description()).getByRole("link", { name: "Learn more" }),
+		).toBeTruthy();
+	});
+
 	it("shows the reason in the active locale", async () => {
 		await offer();
+		const reason = screen.getByText(REASON);
 
 		await setLocale({ locale: "en-XA" });
 
 		await vi.waitFor(() => expect(screen.queryByText(REASON)).toBeNull());
-		expect(screen.getByText(PSEUDO_MESSAGE)).toBeTruthy();
+		expect(reason.textContent).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("words the prompt in the active locale", async () => {
+		await offer();
+		const title = screen.getByText("Paid feature");
+		const buttons = [cancelButton(), bypassButton()];
+		const href = within(description())
+			.getByRole("link", { name: "Learn more" })
+			.getAttribute("href");
+
+		await setLocale({ locale: "en-XA" });
+
+		const explanation = [...description().childNodes]
+			.filter((node) => node.nodeName !== "P")
+			.map((node) => node.textContent)
+			.join("")
+			.trim();
+		const lines = [
+			title.textContent,
+			explanation,
+			...buttons.map((button) => button.textContent),
+		];
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+		const link = within(description()).getByRole("link");
+		expect(link.getAttribute("href")).toBe(href);
+		expect(link.textContent).not.toBe("Learn more");
+		expect(explanation).toContain(link.textContent);
 	});
 
 	it("reissues the token and replays the action on Bypass", async () => {

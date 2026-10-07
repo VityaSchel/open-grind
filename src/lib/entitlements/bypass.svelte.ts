@@ -9,9 +9,9 @@ import { updateLocation } from "$lib/api/browse/location";
 import { showErrorToast } from "$lib/api/error-toast";
 import { callMethod } from "$lib/api/methods";
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { type PlainMessageKey, t } from "$lib/i18n";
 import { withDeadline } from "$lib/util/deadline";
 import { ws } from "$lib/ws.svelte";
-import type { PlainMessageKey } from "$lib/i18n";
 import { randomHondurasGeohash } from "./honduras";
 
 type BlockedAction = { reason: PlainMessageKey; retry: () => Promise<unknown> };
@@ -43,7 +43,10 @@ function reportBypassFailure({
 	error: unknown;
 }): void {
 	console.error(`Entitlement bypass failed: ${step}`, error);
-	showErrorToast({ label: "Failed to bypass this paid feature", error });
+	showErrorToast({
+		label: t("feedback.entitlementBypass.errors.bypassFailed"),
+		error,
+	});
 }
 
 async function grantFromHonduras({ home }: { home: string }): Promise<void> {
@@ -125,7 +128,7 @@ export async function runEntitlementBypass(): Promise<void> {
 	const home = preferencesSnapshot().geohash;
 	if (home === null) {
 		dismissEntitlementBypass();
-		toast.error("Set your location before using this bypass", {
+		toast.error(t("feedback.entitlementBypass.needsLocation"), {
 			id: "entitlement-bypass",
 		});
 		return;

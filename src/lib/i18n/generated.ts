@@ -33,6 +33,7 @@ export interface Messages {
 	"chat.messagePreview.video": undefined;
 	"chat.messagePreview.videoCall": undefined;
 	"chat.messagePreview.voiceMessage": undefined;
+	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
 	"common.actions.copyError": undefined;
 	"common.actions.retry": undefined;
@@ -81,6 +82,10 @@ export interface Messages {
 	"feedback.copyErrorConfirm.copy": undefined;
 	"feedback.copyErrorConfirm.redact": undefined;
 	"feedback.copyErrorConfirm.title": undefined;
+	"feedback.entitlementBypass.bypass": undefined;
+	"feedback.entitlementBypass.errors.bypassFailed": undefined;
+	"feedback.entitlementBypass.needsLocation": undefined;
+	"feedback.entitlementBypass.title": undefined;
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
 	"feedback.errorToast.defaultLabel": undefined;
@@ -254,6 +259,7 @@ export interface RichMessages {
 	"chat.composer.attachments.location.unimplemented": { issue: string };
 	"chat.composer.voiceMessage.unimplemented": { issue: string };
 	"feedback.copyErrorConfirm.description": undefined;
+	"feedback.entitlementBypass.explanation": undefined;
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
 	"media.lightbox.errors.decoderMissing": undefined;
 	"settings.account.unimplemented": { issue: string };
@@ -281,6 +287,7 @@ export interface RichTags {
 	"chat.composer.attachments.location.unimplemented": "link";
 	"chat.composer.voiceMessage.unimplemented": "link";
 	"feedback.copyErrorConfirm.description": "warning";
+	"feedback.entitlementBypass.explanation": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
 	"media.lightbox.errors.decoderMissing": "link";
 	"settings.account.unimplemented": "link";

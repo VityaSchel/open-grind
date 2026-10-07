@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	callMethodMock,
@@ -35,6 +35,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	awaitEntitlementGrant,
 	dismissEntitlementBypass,
@@ -438,6 +440,46 @@ describe("runEntitlementBypass", () => {
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
 			label: "Failed to bypass this paid feature",
 			error: expect.anything(),
+		});
+	});
+});
+
+describe("runEntitlementBypass in another locale", () => {
+	beforeEach(async () => {
+		await setLocale({ locale: "en-XA" });
+	});
+
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("asks for a location in the active locale", async () => {
+		preferencesMock.mockReturnValue({ geohash: null });
+		offerEntitlementBypass({
+			reason: REASON,
+			retry: vi.fn(() => Promise.resolve()),
+		});
+
+		await runEntitlementBypass();
+
+		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+			{ id: "entitlement-bypass" },
+		);
+	});
+
+	it("labels a failed bypass in the active locale", async () => {
+		const failure = new Error("still gated");
+		offerEntitlementBypass({
+			reason: REASON,
+			retry: () => Promise.reject(failure),
+		});
+
+		await runEntitlementBypass();
+
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: expect.stringMatching(PSEUDO_MESSAGE),
+			error: failure,
 		});
 	});
 });
