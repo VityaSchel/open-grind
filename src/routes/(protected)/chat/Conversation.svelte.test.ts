@@ -18,6 +18,7 @@ vi.mock("$lib/chat/conversations-context.svelte", () => ({
 }));
 vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
+import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
 import { contextMenuEvent } from "$lib/test/context-menu";
 import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
 import Conversation from "./Conversation.svelte";
@@ -256,5 +257,36 @@ describe("Conversation menu haptics", () => {
 
 		expect(await menuOpened(trigger)).toBe(true);
 		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("Conversation menu back gesture", () => {
+	beforeEach(() => {
+		conversations.drafts = new Drafts();
+		applyBackGestureHandler();
+	});
+
+	afterEach(cleanup);
+
+	it("closes the menu on Back without letting Back leave the inbox", async () => {
+		const trigger = renderRowWithMenu();
+		expect(
+			window.__AndroidOnBackGesture?.(),
+			"a closed menu leaves Back alone",
+		).toBe(true);
+
+		trigger.dispatchEvent(pointerDown("touch"));
+		trigger.dispatchEvent(contextMenuEvent({ pointerType: "touch" }));
+		expect(await menuOpened(trigger)).toBe(true);
+
+		expect(window.__AndroidOnBackGesture?.(), "the menu takes Back").toBe(
+			false,
+		);
+
+		expect(await menuOpened(trigger)).toBe(false);
+		expect(
+			window.__AndroidOnBackGesture?.(),
+			"the next Back goes on to navigation",
+		).toBe(true);
 	});
 });

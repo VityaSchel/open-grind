@@ -21,12 +21,14 @@ vi.mock("$lib/platform/link-opener", () => ({
 	openExternalLink: openExternalLinkMock,
 }));
 
+import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;
 const GUIDE_NAME = "Why can't I block this profile?";
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+const backHandledInApp = () => window.__AndroidOnBackGesture?.() === false;
 
 function renderMenu({ blockable }: { blockable: boolean }) {
 	const blocking = { revert: vi.fn(), settle: vi.fn() };
@@ -70,6 +72,7 @@ async function blockItem() {
 beforeEach(() => {
 	vi.clearAllMocks();
 	blockUserMock.mockResolvedValue(undefined);
+	applyBackGestureHandler();
 });
 
 afterEach(cleanup);
@@ -126,4 +129,22 @@ it("settles a block the report sheet sends once it lands", async () => {
 	expect(markBlocked).toHaveBeenCalledOnce();
 	expect(blocking.settle).toHaveBeenCalledOnce();
 	expect(blocking.revert).not.toHaveBeenCalled();
+});
+
+it("closes on Back instead of letting Back leave the profile", async () => {
+	renderMenu({ blockable: true });
+	const trigger = screen.getByRole("button", { name: "Profile menu" });
+	expect(backHandledInApp(), "a closed menu leaves Back alone").toBe(false);
+
+	await openMenu();
+	expect(backHandledInApp(), "the open menu takes Back").toBe(true);
+	await flush();
+
+	expect(trigger.getAttribute("aria-expanded")).toBe("false");
+	await vi.waitFor(() =>
+		expect(
+			screen.queryAllByRole("menuitem", { hidden: true }),
+		).toHaveLength(0),
+	);
+	expect(backHandledInApp(), "the next Back leaves the profile").toBe(false);
 });
