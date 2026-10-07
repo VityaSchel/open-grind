@@ -5,12 +5,14 @@ import {
 	callMethod,
 	markRequestBlocked,
 } from "$lib/api/methods";
+import { showPersistentErrorToast } from "$lib/api/persistent-error-toast";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import {
 	clearSessionError,
 	type SessionErrorKind,
 	sessionErrorState,
 } from "$lib/api/session-error-state.svelte";
+import { t } from "$lib/i18n";
 
 const STALE_REPORT_MS = 60_000;
 
@@ -101,9 +103,9 @@ class SessionRecovery {
 		sessionErrorState.unauthorized = report.unauthorized;
 
 		if (report.kind === "Http" || report.kind === "RateLimited") {
-			toast.error("Can't reach Grindr — retrying", {
+			showPersistentErrorToast({
 				id: TRANSPORT_TOAST_ID,
-				duration: Number.POSITIVE_INFINITY,
+				message: () => t("feedback.sessionRecovery.retrying"),
 			});
 			return;
 		}

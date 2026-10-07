@@ -53,6 +53,7 @@ export interface Messages {
 	"common.units.feetInches": { feet: string; inches: string };
 	"common.updates.checkAutomatically": undefined;
 	"feedback.actions.copyDetails": undefined;
+	"feedback.actions.signOut": undefined;
 	"feedback.apiError.connect": undefined;
 	"feedback.apiError.http": undefined;
 	"feedback.apiError.networkBlocked": undefined;
@@ -82,6 +83,18 @@ export interface Messages {
 	"feedback.requestBlocked.rotate": undefined;
 	"feedback.requestBlocked.rotated": undefined;
 	"feedback.requestBlocked.vpnHint": undefined;
+	"feedback.sessionError.copied": undefined;
+	"feedback.sessionError.detailAfterAttempts": { count: number; detail: string };
+	"feedback.sessionError.dismiss": undefined;
+	"feedback.sessionError.errors.tryAgainFailed": undefined;
+	"feedback.sessionError.expired": undefined;
+	"feedback.sessionError.rateLimited.description": undefined;
+	"feedback.sessionError.refused.description": undefined;
+	"feedback.sessionError.refused.title": undefined;
+	"feedback.sessionError.tryAgain": undefined;
+	"feedback.sessionError.unreachable.description": undefined;
+	"feedback.sessionError.unreachable.title": undefined;
+	"feedback.sessionRecovery.retrying": undefined;
 	"interest.taps.errors.refreshFailed": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;

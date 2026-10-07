@@ -1,11 +1,19 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { sessionErrorState } from "$lib/api/session-error-state.svelte";
 import { sessionRecovery } from "$lib/api/session-recovery.svelte";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import SessionErrorAlert from "./SessionErrorAlert.svelte";
 
 const {
@@ -55,6 +63,7 @@ vi.mock("svelte-sonner", () => ({
 		error: toastErrorMock,
 		success: toastSuccessMock,
 		dismiss: toastDismissMock,
+		getActiveToasts: () => [],
 	},
 }));
 
@@ -85,10 +94,11 @@ describe("SessionErrorAlert", () => {
 		requestBlockedAlertState.disable = false;
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		requestBlockedAlertState.open = false;
 		requestBlockedAlertState.disable = false;
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("takes the dialog back down when the session recovers on its own", () => {
@@ -319,4 +329,52 @@ describe("SessionErrorAlert", () => {
 		expect(sessionErrorState.open).toBe(true);
 		expect(toastErrorMock).toHaveBeenCalled();
 	});
+
+	it("speaks the active locale but copies the error in English", async () => {
+		sessionErrorState.kind = "Api";
+		sessionErrorState.attempts = 3;
+		render(SessionErrorAlert);
+		const copyButton = screen.getByRole("button", { name: "Copy error" });
+		await setLocale({ locale: "en-XA" });
+
+		const dialog = screen.getByRole("alertdialog");
+		const lines = [
+			dialog.querySelector('[data-slot="alert-dialog-title"]'),
+			dialog.querySelector('[data-slot="alert-dialog-description"]'),
+			screen.getByText(/connection reset/),
+			...within(dialog).getAllByRole("button"),
+		].map((line) => line?.textContent.trim());
+		expect(lines).toHaveLength(7);
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+
+		await fireEvent.click(copyButton);
+
+		await vi.waitFor(() => {
+			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+				"connection reset (after 3 attempts)",
+			);
+		});
+		expect(toastSuccessMock).toHaveBeenLastCalledWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+		);
+	});
+
+	it.each([
+		{ outcome: "a session that is gone", error: { kind: "NotSignedIn" } },
+		{ outcome: "a failure with no message", error: new Error("offline") },
+	])(
+		"words a retry that hits $outcome in the active locale",
+		async ({ error }) => {
+			callMethodMock.mockRejectedValue(error);
+			render(SessionErrorAlert);
+			const tryAgain = screen.getByRole("button", { name: "Try again" });
+			await setLocale({ locale: "en-XA" });
+
+			await fireEvent.click(tryAgain);
+
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				expect.stringMatching(PSEUDO_MESSAGE),
+			);
+		},
+	);
 });

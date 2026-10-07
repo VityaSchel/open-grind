@@ -1,6 +1,7 @@
 {
 	"actions": {
-		"copyDetails": "Copy details"
+		"copyDetails": "Copy details",
+		"signOut": "Sign out"
 	},
 	"errorToast": {
 		"defaultLabel": "An error occurred"
@@ -49,5 +50,30 @@
 		"dontShowAgain": "Don't show again in this session",
 		"rotate": "Rotate parameters",
 		"rotated": "Successfully rotated device parameters"
+	},
+	"sessionError": {
+		"rateLimited": {
+			"description": "Grindr turned away our attempts to refresh your session. Wait a moment and try again."
+		},
+		"refused": {
+			"title": "Grindr refused your session",
+			"description": "Grindr wouldn't refresh your session. Try again, and if it keeps happening, copy the error and report it."
+		},
+		"unreachable": {
+			"title": "Can't connect to Grindr",
+			"description": "We couldn't reach Grindr to refresh your session. Check your internet connection and try again. If this keeps happening, copy the error and report it."
+		},
+		"detailAfterAttempts_one": "{{detail}} (after {{count}} attempt)",
+		"detailAfterAttempts_other": "{{detail}} (after {{count}} attempts)",
+		"copied": "Error copied to clipboard",
+		"expired": "Your session expired — please sign in again",
+		"dismiss": "Dismiss",
+		"tryAgain": "Try again",
+		"errors": {
+			"tryAgainFailed": "Still can't connect"
+		}
+	},
+	"sessionRecovery": {
+		"retrying": "Can't reach Grindr — retrying"
 	}
 }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { sessionErrorState } from "$lib/api/session-error-state.svelte";
@@ -8,20 +8,28 @@ import {
 	type SessionErrorReport,
 	sessionRecovery,
 } from "$lib/api/session-recovery.svelte";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { setVisibility } from "$lib/test/visibility";
 
-const { callMethodMock, toastErrorMock, toastDismissMock } = vi.hoisted(() => ({
-	callMethodMock: vi.fn(),
-	toastErrorMock: vi.fn(),
-	toastDismissMock: vi.fn(),
-}));
+const { callMethodMock, toastErrorMock, toastDismissMock, activeToastsMock } =
+	vi.hoisted(() => ({
+		callMethodMock: vi.fn(),
+		toastErrorMock: vi.fn(),
+		toastDismissMock: vi.fn(),
+		activeToastsMock: vi.fn(),
+	}));
 
 vi.mock("$lib/api/methods", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/methods")>()),
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({
-	toast: { error: toastErrorMock, dismiss: toastDismissMock },
+	toast: {
+		error: toastErrorMock,
+		dismiss: toastDismissMock,
+		getActiveToasts: activeToastsMock,
+	},
 }));
 
 function report(overrides: Partial<SessionErrorReport> = {}) {
@@ -44,10 +52,15 @@ describe("sessionRecovery", () => {
 			.mockResolvedValue({ profileId: 1, expiresAt: 0, stale: true });
 		toastErrorMock.mockReset();
 		toastDismissMock.mockReset();
+		activeToastsMock.mockReset().mockReturnValue([]);
 		requestBlockedAlertState.open = false;
 		requestBlockedAlertState.kind = "cloudflare";
 		sessionRecovery.recover();
 		setVisibility("visible");
+	});
+
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
 	it("raises a refusal from Grindr as a blocking dialog", async () => {
@@ -76,6 +89,44 @@ describe("sessionRecovery", () => {
 
 		expect(sessionErrorState.open).toBe(false);
 		expect(toastErrorMock).toHaveBeenCalledOnce();
+	});
+
+	it("says it keeps retrying while Grindr is out of reach", async () => {
+		report({ kind: "Http" });
+		await settle();
+
+		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+			"Can't reach Grindr — retrying",
+			expect.anything(),
+		);
+	});
+
+	it("says it keeps retrying in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		report({ kind: "RateLimited" });
+		await settle();
+
+		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+			expect.stringMatching(PSEUDO_MESSAGE),
+			expect.anything(),
+		);
+	});
+
+	it("rewords the retry toast it shows after a locale switch", async () => {
+		report({ kind: "Http" });
+		await settle();
+		const [title, options] = toastErrorMock.mock.calls[0] ?? [];
+		activeToastsMock.mockReturnValue([{ ...options, title }]);
+
+		await setLocale({ locale: "en-XA" });
+
+		await vi.waitFor(() =>
+			expect(toastErrorMock).toHaveBeenLastCalledWith(
+				expect.stringMatching(PSEUDO_MESSAGE),
+				options,
+			),
+		);
 	});
 
 	it("routes an edge block to the request-blocked alert", async () => {

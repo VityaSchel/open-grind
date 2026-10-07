@@ -13,6 +13,8 @@ Call `t()` in markup, `$derived` or a function. Lint rejects a result stored at 
 
 Text a library writes into the DOM once, such as Leaflet or PhotoSwipe controls, does not re-render. Reapply it from an `$effect` that calls `t()`, or outside a component from `followLocale()`, which runs a callback on the next effect flush and again after every switch until stopped.
 
+A toast keeps the text it was shown with. Show an error toast that stays until dismissed with `showPersistentErrorToast()` from `$lib/api/persistent-error-toast`, which rewords it after a switch.
+
 Label an enum with a table of semantic keys, `as const satisfies Record<Id, MessageKey>`. Where code indexes labels by id, wrap the table in `translatedLabels()` from `$lib/i18n/labels`: each read calls `t()`, so copy the entries, for example with `Object.entries` or a spread, only when the text is shown.
 
 Diagnostics such as console output, copied error details and `ApiError.message` stay English. Where one reuses a catalog string, render it with `sourceText()`, which takes the same arguments as `t()`.
