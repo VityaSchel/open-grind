@@ -43,6 +43,7 @@ export interface Messages {
 	"common.commandDialog.a11y.title": undefined;
 	"common.desktopEntry.errors.addFailed": undefined;
 	"common.format.range": { max: string; min: string };
+	"common.sections.interest": undefined;
 	"common.someone": undefined;
 	"common.spinner.a11y.loading": undefined;
 	"common.time.hours": { count: number };
@@ -229,7 +230,6 @@ export interface Messages {
 	"shell.navBar.a11y.navigation": undefined;
 	"shell.navBar.tabs.browse": undefined;
 	"shell.navBar.tabs.inbox": undefined;
-	"shell.navBar.tabs.interest": undefined;
 	"shell.navBar.tabs.rightNow": undefined;
 	"shell.notFound.clippy.a11y.image": undefined;
 	"shell.notFound.clippy.lost": undefined;

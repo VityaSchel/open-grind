@@ -48,5 +48,8 @@
 		"errors": {
 			"addFailed": "Couldn't add Open Grind to your apps"
 		}
+	},
+	"sections": {
+		"interest": "Interest"
 	}
 }

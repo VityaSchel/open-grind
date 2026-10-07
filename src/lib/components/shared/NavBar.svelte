@@ -102,7 +102,7 @@
 			})}
 		>
 			<FireIcon weight="fill" />
-			{t("shell.navBar.tabs.interest")}
+			{t("common.sections.interest")}
 			{#if hasUnseenTaps}
 				<Badge
 					class="absolute inset-e-2 top-1 size-2.5 rounded-full p-0"
