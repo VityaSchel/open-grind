@@ -22,6 +22,18 @@
 			"description": "Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client.",
 			"enable": "Enable"
 		},
+		"preview": {
+			"a11y": {
+				"secretAdmirer": "Secret admirer",
+				"hiddenViewer": "Hidden viewer"
+			},
+			"totalViews_one": "{{count}} view",
+			"totalViews_other": "{{count}} views",
+			"viewCount_one": "{{count}}<srOnly>view</srOnly>",
+			"viewCount_other": "{{count}}<srOnly>views</srOnly>",
+			"cappedViewCount_one": "{{count}}+<srOnly>views</srOnly>",
+			"cappedViewCount_other": "{{count}}+<srOnly>views</srOnly>"
+		},
 		"errors": {
 			"refreshFailed": "Failed to refresh views",
 			"turnOnViewedMeFailed": "Failed to turn on the Viewed Me List"

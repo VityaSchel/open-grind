@@ -41,6 +41,7 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/interest/taps/TapsReceivedList.svelte",
 	"src/routes/(protected)/(navbar)/interest/views/EmptyViewsGrid.svelte",
 	"src/routes/(protected)/(navbar)/interest/views/UntrackedViewsGrid.svelte",
+	"src/routes/(protected)/(navbar)/interest/views/ViewedPreview.svelte",
 	"src/routes/(protected)/(navbar)/interest/views/ViewedProfile.svelte",
 	"src/routes/(protected)/(navbar)/interest/views/ViewsGrid.svelte",
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/fields/LastTested.svelte",

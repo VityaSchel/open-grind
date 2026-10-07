@@ -122,6 +122,9 @@ export interface Messages {
 	"interest.views.empty.title": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;
+	"interest.views.preview.a11y.hiddenViewer": undefined;
+	"interest.views.preview.a11y.secretAdmirer": undefined;
+	"interest.views.preview.totalViews": { count: number };
 	"interest.views.untracked.description": undefined;
 	"interest.views.untracked.enable": undefined;
 	"interest.views.untracked.title": undefined;
@@ -271,6 +274,8 @@ export interface RichMessages {
 	"feedback.entitlementBypass.explanation": undefined;
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
 	"interest.taps.empty.description": undefined;
+	"interest.views.preview.cappedViewCount": { count: number };
+	"interest.views.preview.viewCount": { count: number };
 	"media.lightbox.errors.decoderMissing": undefined;
 	"settings.account.unimplemented": { issue: string };
 	"settings.app.discreetAppIcon.unimplemented": { issue: string };
@@ -301,6 +306,8 @@ export interface RichTags {
 	"feedback.entitlementBypass.explanation": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
 	"interest.taps.empty.description": "link";
+	"interest.views.preview.cappedViewCount": "srOnly";
+	"interest.views.preview.viewCount": "srOnly";
 	"media.lightbox.errors.decoderMissing": "link";
 	"settings.account.unimplemented": "link";
 	"settings.app.discreetAppIcon.unimplemented": "link";
