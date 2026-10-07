@@ -71,7 +71,7 @@ async function mountConversation({
 		error: null,
 	});
 	box.current = state;
-	const { container } = render(ConversationMessages, {
+	const { container, rerender } = render(ConversationMessages, {
 		props: { composerHeight: 0 },
 	});
 	const scroller = container.querySelector(
@@ -103,9 +103,35 @@ async function mountConversation({
 			scroller.dispatchEvent(new Event("scrollend"));
 			await tick();
 		},
+		async resizeComposer(composerHeight: number) {
+			await rerender({ composerHeight });
+			await tick();
+		},
 		scrollDownButton: () =>
 			container.querySelector('[aria-label="Scroll to newest messages"]'),
 		badge: () => container.querySelector('[data-slot="badge"]'),
+	};
+}
+
+type Layout = { scrollHeight: number; clientHeight: number; trueFloor: number };
+
+function layOutLikeAnEngine(scroller: HTMLElement) {
+	const layout: Layout = { scrollHeight: 0, clientHeight: 0, trueFloor: 0 };
+	let scrollTop = 0;
+	Object.defineProperties(scroller, {
+		scrollHeight: { get: () => layout.scrollHeight, configurable: true },
+		clientHeight: { get: () => layout.clientHeight, configurable: true },
+		scrollTop: {
+			get: () => scrollTop,
+			set: (top: number) => {
+				scrollTop = Math.min(Math.max(0, top), layout.trueFloor);
+			},
+			configurable: true,
+		},
+	});
+	return (next: Layout) => {
+		Object.assign(layout, next);
+		scrollTop = Math.min(scrollTop, layout.trueFloor);
 	};
 }
 
@@ -213,5 +239,57 @@ describe("the new-messages badge", () => {
 
 		expect(conversation.scrollDownButton()).not.toBeNull();
 		expect(conversation.badge()).toBeNull();
+	});
+});
+
+describe("holding the floor through a composer resize", () => {
+	afterEach(() => {
+		cleanup();
+		vi.unstubAllGlobals();
+	});
+
+	async function readerRestsAt({
+		scrollTop,
+		trueFloor,
+	}: {
+		scrollTop: number;
+		trueFloor: number;
+	}) {
+		const conversation = await mountConversation({
+			messages: [message({ timestamp: 2000 })],
+		});
+		const layOut = layOutLikeAnEngine(conversation.scroller);
+		layOut({ scrollHeight: 1000, clientHeight: 400, trueFloor });
+		conversation.scroller.scrollTop = scrollTop;
+		conversation.scroller.dispatchEvent(new Event("scroll"));
+		conversation.scroller.dispatchEvent(new Event("scrollend"));
+		await tick();
+		return { conversation, layOut };
+	}
+
+	it("puts a reader resting within rounding of the floor back on the true floor", async () => {
+		vi.stubGlobal("devicePixelRatio", 1.25);
+		const { conversation, layOut } = await readerRestsAt({
+			scrollTop: 599,
+			trueFloor: 599,
+		});
+
+		layOut({ scrollHeight: 1000, clientHeight: 380, trueFloor: 619.6 });
+		await conversation.resizeComposer(20);
+
+		expect(conversation.scroller.scrollTop).toBe(619.6);
+	});
+
+	it("keeps a reader resting a few pixels above the floor that far above it", async () => {
+		vi.stubGlobal("devicePixelRatio", 1.25);
+		const { conversation, layOut } = await readerRestsAt({
+			scrollTop: 594,
+			trueFloor: 599.6,
+		});
+
+		layOut({ scrollHeight: 1000, clientHeight: 380, trueFloor: 619.6 });
+		await conversation.resizeComposer(20);
+
+		expect(conversation.scroller.scrollTop).toBe(614);
 	});
 });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { makeModel, makeScrollable, touchEvent } from "./pull-test-helpers";
+import { scrollGeometry } from "./scroll-geometry";
 import { attachTouchPull } from "./touch-adapter";
 
 describe("attachTouchPull", () => {
@@ -24,6 +25,7 @@ describe("attachTouchPull", () => {
 
 	afterEach(() => {
 		document.body.innerHTML = "";
+		vi.unstubAllGlobals();
 	});
 
 	it("engages after slop, owns the gesture, arms and triggers on release", () => {
@@ -205,6 +207,68 @@ describe("attachTouchPull", () => {
 		expect(model.phase).toBe("armed");
 		root.dispatchEvent(touchEvent("touchend", { id: 8, y: 260 }));
 		expect(onTrigger).toHaveBeenCalledOnce();
+		detach();
+	});
+
+	function setupAboveFloor({
+		devicePixelRatio,
+		rawGap,
+	}: {
+		devicePixelRatio: number;
+		rawGap: number;
+	}) {
+		vi.stubGlobal("devicePixelRatio", devicePixelRatio);
+		const { model, onTrigger } = makeModel();
+		const root = document.createElement("div");
+		const leaf = document.createElement("span");
+		root.appendChild(leaf);
+		document.body.appendChild(root);
+		makeScrollable(root, {
+			scrollHeight: 1167,
+			clientHeight: 674,
+			scrollTop: 493 - rawGap,
+		});
+		const detach = attachTouchPull(model, {
+			listenTarget: root,
+			scrollRoot: () => root,
+			boundaryDistance: scrollGeometry({
+				container: () => root,
+				position: () => "bottom",
+			}).boundaryDistance,
+			position: "bottom",
+		});
+		return { model, onTrigger, leaf, detach };
+	}
+
+	it.each([
+		{ devicePixelRatio: 1.25, rawGap: 1 },
+		{ devicePixelRatio: 1.5, rawGap: 1.33 },
+		{ devicePixelRatio: 2.625, rawGap: 1.33 },
+	])(
+		"pulls at a floor that rounds $rawGap px below the scroll range at a device pixel ratio of $devicePixelRatio",
+		(floor) => {
+			const { model, onTrigger, leaf, detach } = setupAboveFloor(floor);
+
+			leaf.dispatchEvent(touchEvent("touchstart", { y: 300 }));
+			leaf.dispatchEvent(touchEvent("touchmove", { y: 140 }));
+			expect(model.phase).toBe("armed");
+			leaf.dispatchEvent(touchEvent("touchend", { y: 140 }));
+
+			expect(onTrigger).toHaveBeenCalledOnce();
+			detach();
+		},
+	);
+
+	it("leaves the drag to native scrolling for a reader resting just past rounding above the floor", () => {
+		const { model, leaf, detach } = setupAboveFloor({
+			devicePixelRatio: 1.25,
+			rawGap: 2,
+		});
+
+		leaf.dispatchEvent(touchEvent("touchstart", { y: 300 }));
+		leaf.dispatchEvent(touchEvent("touchmove", { y: 140 }));
+
+		expect(model.phase).toBe("idle");
 		detach();
 	});
 
