@@ -11,16 +11,20 @@ import {
 import { signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { signOut } from "$lib/api/sign-out";
+import { t } from "$lib/i18n";
 import { isAndroidPlatform } from "$lib/platform/os";
 import { delay } from "$lib/util/delay";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
 const GOOGLE_SIGN_IN = "/auth/sign-in/google";
-const EXPIRED = "That Google sign-in expired. Try again.";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
 const available = () => isTauri() && isAndroidPlatform();
+
+function reportExpired(): void {
+	toast.error(t("auth.googleHandoff.errors.expired"));
+}
 
 async function pending(): Promise<boolean> {
 	try {
@@ -73,7 +77,7 @@ async function consume(): Promise<void> {
 		}
 		if (!(await pending())) {
 			googleHandoffState.phase = "idle";
-			toast.error(EXPIRED);
+			reportExpired();
 			return;
 		}
 		await signOut({ destination: GOOGLE_SIGN_IN });
@@ -85,13 +89,16 @@ async function consume(): Promise<void> {
 	try {
 		const result = await exchange();
 		if (!result) {
-			toast.error(EXPIRED);
+			reportExpired();
 			return;
 		}
 		finishSignIn(result);
 		if (result.restriction) await goto("/auth/sign-in");
 	} catch (error) {
-		reportSignInFailure({ error, label: "Sign in with Google" });
+		reportSignInFailure({
+			error,
+			label: t("auth.googleHandoff.errors.signInFailed"),
+		});
 	} finally {
 		googleHandoffState.phase = "idle";
 	}

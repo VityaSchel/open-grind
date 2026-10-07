@@ -76,6 +76,8 @@ const translatedScriptFiles = [
 	"src/lib/api/api-error.ts",
 	"src/lib/api/error-copy.ts",
 	"src/lib/api/error-toast.ts",
+	"src/lib/api/google-handoff-state.svelte.ts",
+	"src/lib/api/google-handoff.ts",
 	"src/lib/api/methods.ts",
 	"src/lib/api/persistent-error-toast.ts",
 	"src/lib/api/session-recovery.svelte.ts",
