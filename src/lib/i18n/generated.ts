@@ -8,6 +8,7 @@ export interface Messages {
 	"auth.signIn.captcha.errors.verifyFailed": undefined;
 	"auth.signIn.companion.errors.disabled": undefined;
 	"auth.signIn.companion.errors.refused": undefined;
+	"auth.signIn.companion.errors.unavailable": undefined;
 	"auth.signIn.companion.errors.untrusted": undefined;
 	"auth.signIn.description": undefined;
 	"auth.signIn.email.label": undefined;
@@ -19,10 +20,18 @@ export interface Messages {
 	"auth.signIn.facebook.errors.dialogError": undefined;
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
 	"auth.signIn.forgotPassword": undefined;
+	"auth.signIn.google.goBack": undefined;
+	"auth.signIn.google.install.fdroidNotice": undefined;
 	"auth.signIn.google.installButton.downloading": undefined;
 	"auth.signIn.google.installButton.install": undefined;
 	"auth.signIn.google.installButton.installing": undefined;
 	"auth.signIn.google.installButton.verifying": undefined;
+	"auth.signIn.google.paste.steps.copyToken": undefined;
+	"auth.signIn.google.paste.steps.submit": { button: string };
+	"auth.signIn.google.paste.token.label": undefined;
+	"auth.signIn.google.paste.token.placeholder": undefined;
+	"auth.signIn.google.signingIn.description": undefined;
+	"auth.signIn.google.signingIn.title": undefined;
 	"auth.signIn.heading": undefined;
 	"auth.signIn.password.label": undefined;
 	"auth.signIn.submit": undefined;
@@ -66,6 +75,7 @@ export interface Messages {
 	"chat.messagePreview.voiceMessage": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
+	"common.actions.continue": undefined;
 	"common.actions.copyError": undefined;
 	"common.actions.retry": undefined;
 	"common.carousel.a11y.next": undefined;
@@ -296,6 +306,12 @@ export interface Messages {
 
 export interface RichMessages {
 	"auth.passwordReset.unimplemented": { issue: string };
+	"auth.signIn.google.continue.description": undefined;
+	"auth.signIn.google.install.description": undefined;
+	"auth.signIn.google.install.playDescription": undefined;
+	"auth.signIn.google.paste.steps.install": undefined;
+	"auth.signIn.google.pasteManually": undefined;
+	"auth.signIn.google.useCompanion": undefined;
 	"auth.signUp.unimplemented": { issue: string };
 	"browse.rightNow.unimplemented": { issue: string };
 	"chat.composer.attachments.location.unimplemented": { issue: string };
@@ -328,6 +344,12 @@ export interface RichMessages {
 
 export interface RichTags {
 	"auth.passwordReset.unimplemented": "link";
+	"auth.signIn.google.continue.description": "link";
+	"auth.signIn.google.install.description": "link";
+	"auth.signIn.google.install.playDescription": "link";
+	"auth.signIn.google.paste.steps.install": "link";
+	"auth.signIn.google.pasteManually": "button";
+	"auth.signIn.google.useCompanion": "button";
 	"auth.signUp.unimplemented": "link";
 	"browse.rightNow.unimplemented": "link";
 	"chat.composer.attachments.location.unimplemented": "link";

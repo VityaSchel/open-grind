@@ -66,6 +66,7 @@ const translatedSvelteFiles = [
 	"src/routes/auth/sign-in/+page.svelte",
 	"src/routes/auth/sign-in/SignInForm.svelte",
 	"src/routes/auth/sign-in/google/+page.svelte",
+	"src/routes/auth/sign-in/google/GoogleSignInForm.svelte",
 	"src/routes/auth/sign-up/+page.svelte",
 	"src/routes/auth/sign-up/RegisterForm.svelte",
 	"src/routes/onboarding/+page.svelte",

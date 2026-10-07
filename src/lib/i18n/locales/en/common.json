@@ -2,6 +2,7 @@
 	"actions": {
 		"close": "Close",
 		"cancel": "Cancel",
+		"continue": "Continue",
 		"retry": "Retry",
 		"copyError": "Copy error"
 	},
