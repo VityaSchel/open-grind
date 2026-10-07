@@ -116,6 +116,7 @@ test.describe("converted navigation chrome under en-XA", () => {
 	const routes = [
 		{ path: "/right-now", roles: ["main", "navigation"], landmarks: 2 },
 		{ path: "/settings/app", roles: ["navigation"], landmarks: 2 },
+		{ path: "/interest/views", roles: ["navigation"], landmarks: 2 },
 	] as const;
 
 	test.beforeEach(async ({ page }) => {
