@@ -19,4 +19,10 @@ export default defineConfig(
 			"e2e/updater/",
 		],
 	}),
+	{
+		// Avoid projectService reloads when switching between TypeScript and Svelte.
+		languageOptions: {
+			parserOptions: { extraFileExtensions: [".svelte"] },
+		},
+	},
 );
