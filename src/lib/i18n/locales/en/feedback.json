@@ -91,5 +91,9 @@
 			"description": "Your account is currently restricted and can't be used. Check the official Grindr app for details."
 		},
 		"copied": "Details copied to clipboard"
+	},
+	"storageNotice": {
+		"unavailable": "This device can't keep you signed in. You'll be signed out when the app closes.",
+		"plainFile": "No secret service found. Your sign-in is kept in a plain file only your user can read."
 	}
 }

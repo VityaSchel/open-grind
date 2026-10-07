@@ -51,6 +51,7 @@ const translatedScriptFiles = [
 	"src/lib/api/methods.ts",
 	"src/lib/api/persistent-error-toast.ts",
 	"src/lib/api/session-recovery.svelte.ts",
+	"src/lib/api/storage-notice.ts",
 	"src/lib/chat/conversations-state.svelte.ts",
 	"src/lib/chat/optimistic-batch.ts",
 	"src/lib/credits/highlights.ts",

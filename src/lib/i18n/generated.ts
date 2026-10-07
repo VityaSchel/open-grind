@@ -103,6 +103,8 @@ export interface Messages {
 	"feedback.sessionError.unreachable.description": undefined;
 	"feedback.sessionError.unreachable.title": undefined;
 	"feedback.sessionRecovery.retrying": undefined;
+	"feedback.storageNotice.plainFile": undefined;
+	"feedback.storageNotice.unavailable": undefined;
 	"interest.taps.errors.refreshFailed": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;

@@ -2,18 +2,19 @@ import { platform } from "@tauri-apps/plugin-os";
 import { toast } from "svelte-sonner";
 
 import { callMethod } from "$lib/api/methods";
+import { showPersistentErrorToast } from "$lib/api/persistent-error-toast";
+import { t } from "$lib/i18n";
 
 export async function noticeStorageBackend(): Promise<void> {
 	const backend = await callMethod("storage_backend").catch(() => null);
 	if (backend === "unavailable") {
-		toast.error(
-			"This device can't keep you signed in. You'll be signed out when the app closes.",
-			{ id: "storage-backend", duration: Number.POSITIVE_INFINITY },
-		);
+		showPersistentErrorToast({
+			id: "storage-backend",
+			message: () => t("feedback.storageNotice.unavailable"),
+		});
 	} else if (backend === "file" && platform() === "linux") {
-		toast.warning(
-			"No secret service found. Your sign-in is kept in a plain file only your user can read.",
-			{ id: "storage-backend" },
-		);
+		toast.warning(t("feedback.storageNotice.plainFile"), {
+			id: "storage-backend",
+		});
 	}
 }
