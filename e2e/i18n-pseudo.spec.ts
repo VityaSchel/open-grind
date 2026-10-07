@@ -46,8 +46,12 @@ async function openNotFoundPage(
 
 function readPseudoText(roots: Locator) {
 	return roots.evaluateAll((elements) => {
+		const withoutPseudo = (text: string): string => {
+			const stripped = text.replace(/⟦[^⟦⟧]*⟧/g, " ");
+			return stripped === text ? text : withoutPseudo(stripped);
+		};
 		const outsidePseudo = (text: string) =>
-			text.replace(/⟦[^⟦⟧]*⟧/g, " ").match(/\p{Script=Latin}+/gu) ?? [];
+			withoutPseudo(text).match(/\p{Script=Latin}+/gu) ?? [];
 		const translationOff = (element: Element) =>
 			element.closest("[translate]")?.getAttribute("translate") === "no";
 		const translatable = (element: Element) =>
