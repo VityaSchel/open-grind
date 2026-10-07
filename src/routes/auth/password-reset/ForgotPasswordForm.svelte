@@ -23,7 +23,7 @@
 			href="/auth/sign-in"
 			class="mbs-1 block size-fit px-0"
 		>
-			Sign In
+			{t("auth.signIn.title")}
 		</Button>
 	</Alert.Description>
 </Alert.Root>

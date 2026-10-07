@@ -60,6 +60,13 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageDateGroup.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/MessageQuote.svelte",
 	"src/routes/(protected)/chat/[[]conversationId]/messages/message/TextMessage.svelte",
+	"src/routes/auth/+layout.svelte",
+	"src/routes/auth/password-reset/+page.svelte",
+	"src/routes/auth/password-reset/ForgotPasswordForm.svelte",
+	"src/routes/auth/sign-in/+page.svelte",
+	"src/routes/auth/sign-in/google/+page.svelte",
+	"src/routes/auth/sign-up/+page.svelte",
+	"src/routes/auth/sign-up/RegisterForm.svelte",
 	"src/routes/onboarding/+page.svelte",
 ];
 
@@ -91,6 +98,7 @@ const translatedScriptFiles = [
 	"src/routes/(protected)/(navbar)/interest/views/views-state.svelte.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/album-updated-label.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/options.ts",
+	"src/routes/auth/+layout.ts",
 ];
 
 const brands = [

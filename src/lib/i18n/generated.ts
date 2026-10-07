@@ -1,4 +1,8 @@
 export interface Messages {
+	"auth.passwordReset.title": undefined;
+	"auth.signIn.title": undefined;
+	"auth.signIn.withGoogle": undefined;
+	"auth.signUp.title": undefined;
 	"browse.filters.ageAndOver": { count: number };
 	"browse.filters.noMax": undefined;
 	"browse.filters.noMin": undefined;
