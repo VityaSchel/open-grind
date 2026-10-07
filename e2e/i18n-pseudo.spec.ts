@@ -1,13 +1,19 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
-import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
+import {
+	FIRST_ROUTE_COMPILE_MS,
+	installTauriShim,
+	pathname,
+} from "./support/app";
 
 const FAILING_ROUTE = "/interest";
 const FAILING_LOAD = /\/interest\/\+page\.ts(?:\?|$)/;
 const THROWING_LOAD =
 	'export const load = () => { throw new Error("pseudo-locale check"); };';
 const MISSING_ROUTE = "/no-such-page";
+const AUTH_LAYOUT_LOAD = /\/routes\/auth\/\+layout\.ts(?:\?|$)/;
+const SIGNED_OUT_LOAD = "export const load = () => {};";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -160,4 +166,64 @@ test("ar-XB lays the navigation bar out right to left", async ({ page }) => {
 		inbox.boundingBox(),
 	]);
 	expect(browseBox?.x).toBeGreaterThan(inboxBox?.x ?? Infinity);
+});
+
+test.describe("auth pages under en-XA", () => {
+	const authPages = [
+		{
+			name: "sign-in page",
+			path: "/auth/sign-in",
+			platform: "web",
+			shows: '[data-slot="input"][type="email"]',
+		},
+		{
+			name: "Google token paste view",
+			path: "/auth/sign-in/google",
+			platform: "web",
+			shows: '[data-slot="textarea"]',
+		},
+		{
+			name: "Google add-on install view",
+			path: "/auth/sign-in/google",
+			platform: "android",
+			shows: 'p [data-slot="button"]',
+		},
+		{
+			name: "password-reset page",
+			path: "/auth/password-reset",
+			platform: "web",
+			shows: '[data-slot="alert"]',
+		},
+		{
+			name: "sign-up page",
+			path: "/auth/sign-up",
+			platform: "web",
+			shows: '[data-slot="alert"]',
+		},
+	] as const;
+
+	for (const { name, path, platform, shows } of authPages) {
+		test(`the ${name} renders only pseudo-translated text`, async ({
+			page,
+		}) => {
+			if (platform !== "web") await installTauriShim(page, { platform });
+			await page.route(AUTH_LAYOUT_LOAD, (route) =>
+				route.fulfill({
+					contentType: "text/javascript",
+					body: SIGNED_OUT_LOAD,
+				}),
+			);
+			await page.goto(`${path}?locale=en-XA`);
+			const content = page.getByRole("main");
+			await content
+				.locator(shows)
+				.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+			expect(await pathname(page)).toBe(path);
+			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+			await expect(page).toHaveTitle(PSEUDO_MESSAGE);
+			const { messages, leaks } = await readPseudoText(content);
+			expect(messages).toBeGreaterThan(0);
+			expect(leaks).toEqual([]);
+		});
+	}
 });
