@@ -1,8 +1,4 @@
-import {
-	KEY_SEGMENT,
-	PLURAL_KEY,
-	SOURCE_LOCALE,
-} from "../../src/lib/i18n/syntax";
+import { NAME, PLURAL_KEY, SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
 import { isRecord } from "./source-messages";
 
 export type LocaleFile = { locale: string; namespace: string; text: string };
@@ -35,7 +31,7 @@ function parseKey(key: string): MessagePath {
 	if (
 		leaf === undefined ||
 		PLURAL_KEY.test(key) ||
-		!segments.every((segment) => KEY_SEGMENT.test(segment))
+		!segments.every((segment) => NAME.test(segment))
 	) {
 		throw new Error(`${key} is not a valid message key`);
 	}

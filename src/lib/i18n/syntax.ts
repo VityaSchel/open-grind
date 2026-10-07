@@ -1,6 +1,8 @@
 export const SOURCE_LOCALE = "en";
 
-export const KEY_SEGMENT = /^[A-Za-z0-9][\w-]*$/;
+const NAME_PATTERN = "[a-z][A-Za-z0-9]*";
+
+export const NAME = new RegExp(`^${NAME_PATTERN}$`);
 
 const PLACEHOLDER_PATTERN = String.raw`\{\{(.+?)\}\}`;
 
@@ -17,13 +19,14 @@ export const PLURAL_CATEGORIES = [
 
 export const PLURAL_KEY = new RegExp(`^(.+)_(${PLURAL_CATEGORIES.join("|")})$`);
 
-const TAG_NAME = "[A-Za-z][A-Za-z0-9]*";
+export const TAG_PAIR = new RegExp(`<(${NAME_PATTERN})>(.*?)</\\1>`, "gs");
 
-export const TAG_PAIR = new RegExp(`<(${TAG_NAME})>(.*?)</\\1>`, "gs");
+export const TAG_TOKEN = new RegExp(`^<(/?)(${NAME_PATTERN})>$`);
 
-export const TAG_TOKEN = new RegExp(`^<(/?)(${TAG_NAME})>$`);
-
-export const MARKUP = new RegExp(`${PLACEHOLDER_PATTERN}|</?${TAG_NAME}>`, "g");
+export const MARKUP = new RegExp(
+	`${PLACEHOLDER_PATTERN}|</?${NAME_PATTERN}>`,
+	"g",
+);
 
 export function parseLocalePath(path: string): {
 	locale: string;

@@ -60,10 +60,6 @@ describe("collectMessages", () => {
 			"en/ns.a_one: has a placeholder, so it needs {{count}} as well",
 		],
 		[
-			{ "a.b": "x" },
-			'en/ns.a.b: key segments are [A-Za-z0-9_-] and never contain "."',
-		],
-		[
 			{ a: "x", a_one: "x", a_other: "x" },
 			"en/ns.a: a plain value and plural forms share this key",
 		],
@@ -71,30 +67,42 @@ describe("collectMessages", () => {
 			{ a_one: "x", a_other: "x", a: { b: "x" } },
 			"en/ns.a: plural forms and nested keys share this key",
 		],
+		[
+			{ group_one: { label: "x" } },
+			"en/ns.group_one: holds nested keys, so it takes no plural suffix",
+		],
 		[{ a: "<b><i>x</i></b>" }, "en/ns.a: <i> is unbalanced or nested"],
 		[{ a: "<b>x" }, "en/ns.a: <b> is never closed"],
 		[{ a: "x</b>" }, "en/ns.a: </b> is unbalanced or nested"],
 		[{ a: "<b>x</i>" }, "en/ns.a: </i> is unbalanced or nested"],
 		[
 			{ a: "line<br/>break" },
-			"en/ns.a: <br/> is not a plain <name> or </name> tag",
+			"en/ns.a: <br/> is not a plain camelCase <name> or </name> tag",
 		],
 		[
 			{ a: '<a href="/">x</a>' },
-			'en/ns.a: <a href="/"> is not a plain <name> or </name> tag',
+			'en/ns.a: <a href="/"> is not a plain camelCase <name> or </name> tag',
+		],
+		[
+			{ a: "<Link>x</Link>" },
+			"en/ns.a: <Link> is not a plain camelCase <name> or </name> tag",
 		],
 		[{ a: "<key>x</key>" }, "en/ns.a: <key> uses a reserved tag name"],
 		[
 			{ a: "{{- name}}" },
-			"en/ns.a: {{- name}} is not a plain {{name}} placeholder",
+			"en/ns.a: {{- name}} is not a plain camelCase {{name}} placeholder",
 		],
 		[
 			{ a: "{{n, number}}" },
-			"en/ns.a: {{n, number}} is not a plain {{name}} placeholder",
+			"en/ns.a: {{n, number}} is not a plain camelCase {{name}} placeholder",
 		],
 		[
 			{ a: "{{user.name}}" },
-			"en/ns.a: {{user.name}} is not a plain {{name}} placeholder",
+			"en/ns.a: {{user.name}} is not a plain camelCase {{name}} placeholder",
+		],
+		[
+			{ a: "Hi {{userName}} and {{UserName}}" },
+			"en/ns.a: {{UserName}} is not a plain camelCase {{name}} placeholder",
 		],
 		[
 			{ a: "Hi {name}" },
@@ -131,10 +139,19 @@ describe("collectMessages", () => {
 		expect(errorsOf(json)).toEqual([error]);
 	});
 
-	it("rejects namespaces that are not plain names", () => {
-		expect(
-			collectMessages([{ namespace: "a.b", text: "{}" }]).errors,
-		).toEqual(["en/a.b.json: file names are [A-Za-z0-9_-]"]);
+	it.each(["a.b", "a_b", "Upper"])(
+		"rejects the key segment %s",
+		(segment) => {
+			expect(errorsOf({ [segment]: "x" })).toEqual([
+				`en/ns.${segment}: key segments are camelCase [a-z][A-Za-z0-9]*, plus a plural suffix such as _one`,
+			]);
+		},
+	);
+
+	it.each(["a.b", "a-b", "Ab"])("rejects the namespace %s", (namespace) => {
+		expect(collectMessages([{ namespace, text: "{}" }]).errors).toEqual([
+			`en/${namespace}.json: file names are camelCase [a-z][A-Za-z0-9]*`,
+		]);
 	});
 
 	it("rejects files that are not JSON", () => {
@@ -180,7 +197,7 @@ describe("checkTranslation", () => {
 	it.each([
 		[
 			{ plain: "{{amount, currency}}" },
-			"ru/ns.plain: {{amount, currency}} is not a plain {{name}} placeholder",
+			"ru/ns.plain: {{amount, currency}} is not a plain camelCase {{name}} placeholder",
 		],
 		[
 			{ plain: { short: "Архив" } },
@@ -520,9 +537,9 @@ describe("Weblate-saved files", () => {
 
 describe("renderTypes", () => {
 	const json = {
-		Zulu: "Zulu",
-		alpha: "Alpha {{name}}",
-		Bravo: "<link>Bravo</link> {{first}} {{second}}",
+		alphabet: "Alphabet {{name}}",
+		alphaZulu: "Alpha Zulu",
+		bravo: "<link>Bravo</link> {{first}} {{second}}",
 		photos_one: "One photo",
 		photos_other: "<b>{{count}}</b> photos",
 	};
@@ -531,17 +548,17 @@ describe("renderTypes", () => {
 		expect(renderTypes(collectMessages([file(json)]).messages)).toBe(
 			[
 				"export interface Messages {",
-				'\t"ns.Zulu": undefined;',
-				'\t"ns.alpha": { name: string };',
+				'\t"ns.alphaZulu": undefined;',
+				'\t"ns.alphabet": { name: string };',
 				"}",
 				"",
 				"export interface RichMessages {",
-				'\t"ns.Bravo": { first: string; second: string };',
+				'\t"ns.bravo": { first: string; second: string };',
 				'\t"ns.photos": { count: number };',
 				"}",
 				"",
 				"export interface RichTags {",
-				'\t"ns.Bravo": "link";',
+				'\t"ns.bravo": "link";',
 				'\t"ns.photos": "b";',
 				"}",
 				"",

@@ -1,5 +1,5 @@
 import {
-	KEY_SEGMENT,
+	NAME,
 	PLACEHOLDER,
 	PLURAL_KEY,
 	SOURCE_LOCALE,
@@ -19,7 +19,6 @@ type Catalog = {
 
 type Inspection = { params: string[]; tags: string[]; problems: string[] };
 
-const PARAM_NAME = /^[A-Za-z_]\w*$/;
 const TAG_LIKE = /<\/?[A-Za-z][^<>]*>/g;
 const ENTITY = /&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[Xx][\dA-Fa-f]+);/g;
 const RESERVED_TAGS = new Set(["children", "key", "params"]);
@@ -53,11 +52,11 @@ function flatten({
 	} else {
 		into.objects.add(key);
 		for (const [segment, child] of Object.entries(value)) {
-			if (KEY_SEGMENT.test(segment)) {
+			if (NAME.test(baseOf(segment))) {
 				flatten({ value: child, key: `${key}.${segment}`, into });
 			} else {
 				into.errors.push(
-					`${key}.${segment}: key segments are [A-Za-z0-9_-] and never contain "."`,
+					`${key}.${segment}: key segments are camelCase [a-z][A-Za-z0-9]*, plus a plural suffix such as _one`,
 				);
 			}
 		}
@@ -108,7 +107,7 @@ function readTags(text: string): { tags: string[]; problem?: string } {
 		if (slash === undefined) {
 			return {
 				tags,
-				problem: `${token} is not a plain <name> or </name> tag`,
+				problem: `${token} is not a plain camelCase <name> or </name> tag`,
 			};
 		}
 		if (RESERVED_TAGS.has(name)) {
@@ -134,10 +133,12 @@ function inspect(text: string): Inspection {
 	if (text.includes("$t(")) problems.push("$t() nesting is not supported");
 	for (const [placeholder, inner = ""] of text.matchAll(PLACEHOLDER)) {
 		const name = inner.trim();
-		if (PARAM_NAME.test(name)) {
+		if (NAME.test(name)) {
 			params.push(name);
 		} else {
-			problems.push(`${placeholder} is not a plain {{name}} placeholder`);
+			problems.push(
+				`${placeholder} is not a plain camelCase {{name}} placeholder`,
+			);
 		}
 	}
 	if (/[{}]/.test(text.replace(PLACEHOLDER, ""))) {
@@ -215,13 +216,20 @@ export function collectMessages(files: SourceFile[]): {
 	messages: Message[];
 	errors: string[];
 } {
-	const named = files.filter(({ namespace }) => KEY_SEGMENT.test(namespace));
+	const named = files.filter(({ namespace }) => NAME.test(namespace));
 	const { texts, objects, errors } = readCatalog(named);
+	for (const key of objects) {
+		if (PLURAL_KEY.test(key)) {
+			errors.push(
+				`${key}: holds nested keys, so it takes no plural suffix`,
+			);
+		}
+	}
 	const fileErrors = files
 		.filter((file) => !named.includes(file))
 		.map(
 			({ namespace }) =>
-				`${namespace}.json: file names are [A-Za-z0-9_-]`,
+				`${namespace}.json: file names are camelCase [a-z][A-Za-z0-9]*`,
 		);
 	for (const [key, text] of texts) {
 		if (text === "") errors.push(`${key}: empty string renders as the key`);

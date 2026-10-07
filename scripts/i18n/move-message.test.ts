@@ -283,6 +283,16 @@ describe("moveMessage", () => {
 				"common/x.close",
 				"common/x.close is not a valid message key",
 			],
+			[
+				"common.actions.close",
+				"common.actions.close_button",
+				"common.actions.close_button is not a valid message key",
+			],
+			[
+				"common.actions.close",
+				"common.actions.Close",
+				"common.actions.Close is not a valid message key",
+			],
 		])("%s to %s", (from, to, reason) => {
 			expect(() => moveMessage({ files, from, to })).toThrow(
 				new Error(reason),
