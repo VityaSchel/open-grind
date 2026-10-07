@@ -8,6 +8,8 @@ import {
 	refusedCompanionMessage,
 	untrustedCompanionMessage,
 } from "$lib/api/sign-in";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import SignInForm from "./SignInForm.svelte";
 
 const { callMethodMock, gotoMock, toastMock } = vi.hoisted(() => ({
@@ -22,6 +24,57 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 	callMethod: callMethodMock,
 }));
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+
+const invalidCredentials = {
+	kind: "Api",
+	message: { code: 4, message: "Invalid input parameters" },
+};
+
+const captchaFailures = [
+	{
+		failure: "a missing reCAPTCHA helper",
+		reason: "addonUnavailable",
+		english:
+			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
+	},
+	{
+		failure: "an unexplained captcha failure",
+		reason: "mintFailed",
+		english: "Captcha verification failed. Try again.",
+	},
+];
+
+function refuseCaptcha(reason: string) {
+	return {
+		rejects: {
+			sign_in_with_email: invalidCredentials,
+			mint_recaptcha_token: { kind: "Recaptcha", message: { reason } },
+		},
+		resolves: { recaptcha_first_party_enabled: true },
+	};
+}
+
+function answer({
+	rejects,
+	resolves,
+}: {
+	rejects: Record<string, unknown>;
+	resolves: Record<string, unknown>;
+}) {
+	const outcomes = new Map<string, () => Promise<unknown>>([
+		...Object.entries(rejects).map(
+			([method, reason]) =>
+				[method, vi.fn().mockRejectedValue(reason)] as const,
+		),
+		...Object.entries(resolves).map(
+			([method, value]) =>
+				[method, vi.fn().mockResolvedValue(value)] as const,
+		),
+	]);
+	callMethodMock.mockImplementation((method: string) =>
+		outcomes.get(method)?.(),
+	);
+}
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -272,5 +325,144 @@ describe("SignInForm", () => {
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
 			"Invalid email or password",
 		);
+	});
+
+	it.each(captchaFailures)(
+		"explains $failure",
+		async ({ reason, english }) => {
+			answer(refuseCaptcha(reason));
+			render(SignInForm);
+
+			await submitSignIn();
+			await vi.waitFor(() => {
+				expect(toastMock.error).toHaveBeenCalledOnce();
+			});
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(english);
+		},
+	);
+});
+
+const localizedFailures = [
+	{
+		failure: "wrong credentials",
+		button: "Sign in",
+		rejects: { sign_in_with_email: invalidCredentials },
+		resolves: { recaptcha_first_party_enabled: false },
+	},
+	{
+		failure: "wrong credentials after a captcha",
+		button: "Sign in",
+		rejects: { sign_in_with_email: invalidCredentials },
+		resolves: {
+			recaptcha_first_party_enabled: true,
+			mint_recaptcha_token: "token",
+		},
+	},
+	...captchaFailures.map(({ failure, reason }) => ({
+		failure,
+		button: "Sign in",
+		...refuseCaptcha(reason),
+	})),
+	{
+		failure: "a Facebook dialog error",
+		button: "Sign in with Facebook",
+		rejects: {
+			sign_in_with_facebook: {
+				kind: "Auth",
+				message: "facebook-dialog-error",
+			},
+		},
+		resolves: {},
+	},
+	{
+		failure: "a Facebook app handoff",
+		button: "Sign in with Facebook",
+		rejects: {
+			sign_in_with_facebook: {
+				kind: "Auth",
+				message: "facebook-handoff-refused",
+			},
+		},
+		resolves: {},
+	},
+];
+
+describe("SignInForm in the active locale", () => {
+	beforeEach(() => {
+		callMethodMock.mockReset();
+		toastMock.error.mockReset();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+	});
+
+	afterEach(async () => {
+		cleanup();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("renders its copy in the active locale", async () => {
+		const { container } = render(SignInForm);
+		await setLocale({ locale: "en-XA" });
+
+		const header = [
+			...container.querySelectorAll(
+				'[data-slot="card-title"], [data-slot="card-description"]',
+			),
+		].map((node) => node.textContent.trim());
+		expect(header).toHaveLength(2);
+		for (const text of header) expect(text).toMatch(PSEUDO_MESSAGE);
+		expect(
+			screen.getAllByRole("link", { name: PSEUDO_MESSAGE }),
+		).toHaveLength(2);
+		expect(screen.getAllByLabelText(PSEUDO_MESSAGE)).toHaveLength(2);
+		expect(
+			screen.getAllByRole("button", { name: PSEUDO_MESSAGE }),
+		).toHaveLength(3);
+		expect(
+			screen.getByLabelText(PSEUDO_MESSAGE, { selector: "#email" }),
+		).toHaveProperty("placeholder", expect.stringMatching(PSEUDO_MESSAGE));
+	});
+
+	it.each(localizedFailures)(
+		"explains $failure in the active locale",
+		async ({ button, rejects, resolves }) => {
+			answer({ rejects, resolves });
+			render(SignInForm);
+			const email = screen.getByLabelText("Email");
+			const password = screen.getByLabelText("Password");
+			const target = screen.getByRole("button", { name: button });
+			await setLocale({ locale: "en-XA" });
+
+			await fireEvent.input(email, {
+				target: { value: "someone@example.com" },
+			});
+			await fireEvent.input(password, { target: { value: "hunter2" } });
+			await fireEvent.click(target);
+			await vi.waitFor(() => {
+				expect(toastMock.error).toHaveBeenCalledOnce();
+			});
+
+			expect(toastMock.error).toHaveBeenCalledWith(
+				expect.stringMatching(PSEUDO_MESSAGE),
+			);
+		},
+	);
+
+	it("names the provider whose sign-in failed in the active locale", async () => {
+		callMethodMock.mockRejectedValue(new Error("boom"));
+		render(SignInForm);
+		const google = screen.getByRole("button", {
+			name: "Sign in with Google",
+		});
+		await setLocale({ locale: "en-XA" });
+
+		await fireEvent.click(google);
+		await vi.waitFor(() => {
+			expect(toastMock.error).toHaveBeenCalledOnce();
+		});
+
+		const [label] = toastMock.error.mock.lastCall ?? [];
+		expect(label).toMatch(PSEUDO_MESSAGE);
+		expect(label).toContain("Google");
 	});
 });

@@ -22,6 +22,7 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { type PlainMessageKey, t } from "$lib/i18n";
 
 	type OauthProvider = "google" | "facebook";
 
@@ -55,12 +56,10 @@
 			label: "Facebook",
 			failures: {
 				"facebook-dialog-error": () =>
-					toast.error(
-						"Facebook didn't grant access. Try again, or sign in with your email and password.",
-					),
+					toast.error(t("auth.signIn.facebook.errors.dialogError")),
 				"facebook-handoff-refused": () =>
 					toast.error(
-						"Facebook tried to open its own app, which Open Grind can't use. Sign in with your email and password instead.",
+						t("auth.signIn.facebook.errors.handoffRefused"),
 					),
 			},
 		},
@@ -83,18 +82,24 @@
 		message: z.object({ reason: z.string() }),
 	});
 
-	const captchaSignInMessages: Record<string, string> = {
-		unsupportedPlatform:
-			"This account needs captcha verification, available through the Open Grind reCAPTCHA helper on Android.",
-		addonUnavailable:
-			"Install the Open Grind reCAPTCHA helper to sign in to this account.",
-		addonDisabled:
-			"Enable the Open Grind reCAPTCHA helper to sign in to this account.",
-		addonUntrusted:
-			"The installed reCAPTCHA helper isn't the official Open Grind build.",
-		grindrMissing:
-			"The reCAPTCHA helper needs the Grindr app installed to verify this sign-in.",
-	};
+	const captchaSignInMessageKeys = {
+		unsupportedPlatform: "auth.signIn.captcha.errors.unsupportedPlatform",
+		addonUnavailable: "auth.signIn.captcha.errors.addonUnavailable",
+		addonDisabled: "auth.signIn.captcha.errors.addonDisabled",
+		addonUntrusted: "auth.signIn.captcha.errors.addonUntrusted",
+		grindrMissing: "auth.signIn.captcha.errors.grindrMissing",
+	} as const satisfies Record<string, PlainMessageKey>;
+
+	type ExplainedCaptchaReason = keyof typeof captchaSignInMessageKeys;
+
+	function isExplainedCaptchaReason(
+		reason: string | undefined,
+	): reason is ExplainedCaptchaReason {
+		return (
+			reason !== undefined &&
+			Object.hasOwn(captchaSignInMessageKeys, reason)
+		);
+	}
 
 	async function signIn(event: SubmitEvent) {
 		event.preventDefault();
@@ -134,7 +139,9 @@
 				},
 			});
 			if (invalidCredentials && captchaToken === undefined) return false;
-			if (invalidCredentials) toast.error("Invalid email or password");
+			if (invalidCredentials) {
+				toast.error(t("auth.signIn.errors.invalidCredentials"));
+			}
 			return true;
 		}
 	}
@@ -150,7 +157,7 @@
 			);
 		}
 		if (!required) {
-			toast.error("Invalid email or password");
+			toast.error(t("auth.signIn.errors.invalidCredentials"));
 			return;
 		}
 		try {
@@ -168,8 +175,11 @@
 		const reason = parsed.success ? parsed.data.message.reason : undefined;
 		if (reason === "cancelled") return;
 		toast.error(
-			(reason ? captchaSignInMessages[reason] : undefined) ??
-				"Captcha verification failed. Try again.",
+			t(
+				isExplainedCaptchaReason(reason)
+					? captchaSignInMessageKeys[reason]
+					: "auth.signIn.captcha.errors.verifyFailed",
+			),
 		);
 	}
 
@@ -182,7 +192,9 @@
 		} catch (error) {
 			reportSignInFailure({
 				error,
-				label: `${label} sign-in failed`,
+				label: t("auth.signIn.errors.providerFailed", {
+					provider: label,
+				}),
 				onAuthFailure: (message) => {
 					const handle = failures[message];
 					handle?.();
@@ -198,24 +210,24 @@
 <form onsubmit={signIn} class="contents">
 	<Card.Root class="m-auto w-full max-w-sm">
 		<Card.Header>
-			<Card.Title>Sign in to your account</Card.Title>
+			<Card.Title>{t("auth.signIn.heading")}</Card.Title>
 			<Card.Description>
-				Enter your email below to sign in to your account
+				{t("auth.signIn.description")}
 			</Card.Description>
 			<Card.Action>
 				<Button variant="link" href="/auth/sign-up" class="px-0">
-					Sign Up
+					{t("auth.signUp.title")}
 				</Button>
 			</Card.Action>
 		</Card.Header>
 		<Card.Content>
 			<div class="flex flex-col gap-6">
 				<div class="grid gap-2">
-					<Label for="email">Email</Label>
+					<Label for="email">{t("auth.signIn.email.label")}</Label>
 					<Input
 						id="email"
 						type="email"
-						placeholder="m@example.com"
+						placeholder={t("auth.signIn.email.placeholder")}
 						required
 						bind:value={email}
 						disabled={submitting !== false}
@@ -223,12 +235,14 @@
 				</div>
 				<div class="grid gap-2">
 					<div class="flex items-center">
-						<Label for="password">Password</Label>
+						<Label for="password"
+							>{t("auth.signIn.password.label")}</Label
+						>
 						<a
 							href="/auth/password-reset"
 							class="ms-auto inline-block text-sm underline-offset-4 hover:underline"
 						>
-							Forgot your password?
+							{t("auth.signIn.forgotPassword")}
 						</a>
 					</div>
 					<Input
@@ -252,7 +266,7 @@
 				{#if submitting === "password"}
 					<Spinner aria-hidden="true" />
 				{/if}
-				Sign in
+				{t("auth.signIn.submit")}
 			</Button>
 			<Button
 				type="button"
@@ -267,7 +281,7 @@
 				{:else}
 					<SiGoogle class="size-4" aria-hidden="true" />
 				{/if}
-				Sign in with Google
+				{t("auth.signIn.withGoogle")}
 			</Button>
 			<Button
 				type="button"
@@ -282,7 +296,7 @@
 				{:else}
 					<SiFacebook class="size-4" aria-hidden="true" />
 				{/if}
-				Sign in with Facebook
+				{t("auth.signIn.withFacebook")}
 			</Button>
 		</Card.Footer>
 	</Card.Root>

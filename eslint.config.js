@@ -64,6 +64,7 @@ const translatedSvelteFiles = [
 	"src/routes/auth/password-reset/+page.svelte",
 	"src/routes/auth/password-reset/ForgotPasswordForm.svelte",
 	"src/routes/auth/sign-in/+page.svelte",
+	"src/routes/auth/sign-in/SignInForm.svelte",
 	"src/routes/auth/sign-in/google/+page.svelte",
 	"src/routes/auth/sign-up/+page.svelte",
 	"src/routes/auth/sign-up/RegisterForm.svelte",
