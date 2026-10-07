@@ -114,6 +114,8 @@ export interface Messages {
 	"feedback.sessionRecovery.retrying": undefined;
 	"feedback.storageNotice.plainFile": undefined;
 	"feedback.storageNotice.unavailable": undefined;
+	"interest.tabs.taps": undefined;
+	"interest.tabs.views": undefined;
 	"interest.taps.errors.refreshFailed": undefined;
 	"interest.views.errors.refreshFailed": undefined;
 	"interest.views.errors.turnOnViewedMeFailed": undefined;

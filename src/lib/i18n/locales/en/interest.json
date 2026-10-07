@@ -1,4 +1,8 @@
 {
+	"tabs": {
+		"views": "Views",
+		"taps": "Taps"
+	},
 	"taps": {
 		"errors": {
 			"refreshFailed": "Failed to refresh taps"
