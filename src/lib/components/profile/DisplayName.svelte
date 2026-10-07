@@ -13,7 +13,7 @@
 </script>
 
 {#if name}
-	<span class={className}>{name}</span>
+	<span class={className} translate="no">{name}</span>
 {:else}
 	<span class={["font-normal tracking-tight italic", className]}
 		>{fallback ?? t("common.someone")}</span

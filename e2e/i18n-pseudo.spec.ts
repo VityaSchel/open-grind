@@ -42,8 +42,10 @@ function readPseudoText(roots: Locator) {
 	return roots.evaluateAll((elements) => {
 		const outsidePseudo = (text: string) =>
 			text.replace(/⟦[^⟦⟧]*⟧/g, " ").match(/\p{Script=Latin}+/gu) ?? [];
+		const translationOff = (element: Element) =>
+			element.closest("[translate]")?.getAttribute("translate") === "no";
 		const translatable = (element: Element) =>
-			element.closest('[translate="no"]') === null &&
+			!translationOff(element) &&
 			element.checkVisibility({ visibilityProperty: true });
 		const texts = elements.map((root) => {
 			const walker = document.createTreeWalker(

@@ -17,7 +17,10 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Item from "$lib/components/ui/item";
 	import { playHaptic } from "$lib/haptics";
-	import { previewLabel } from "$lib/model/messaging/message-preview";
+	import {
+		previewIsUserText,
+		previewLabel,
+	} from "$lib/model/messaging/message-preview";
 	import { firedByTouch } from "$lib/platform/touch-origin";
 	import type { Conversation } from "$lib/model/messaging/conversations";
 	import type { SelectionSet } from "$lib/util/selection.svelte";
@@ -39,6 +42,7 @@
 	const preview = $derived(conversation.data.preview);
 	const participant = $derived(conversation.data.participants[0]);
 	const previewText = $derived(previewLabel(preview));
+	const previewUserText = $derived(previewIsUserText(preview));
 	const conversationId = $derived(conversation.data.conversationId);
 	const draft = $derived(conversations.drafts.get(conversationId));
 
@@ -102,6 +106,7 @@
 	>
 		{#snippet description()}
 			<Item.Description
+				translate={draft !== "" || previewUserText ? "no" : undefined}
 				class={[
 					"wrap-anywhere",
 					{
@@ -115,7 +120,8 @@
 				{#if draft !== ""}
 					<span
 						data-slot="conversation-draft-prefix"
-						class="font-bold text-primary">Draft:&nbsp;</span
+						class="font-bold text-primary"
+						translate="yes">Draft:&nbsp;</span
 					>{draft}
 				{:else if previewText !== null}
 					{previewText}

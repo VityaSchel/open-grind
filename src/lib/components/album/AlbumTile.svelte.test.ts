@@ -7,6 +7,7 @@ import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
 } from "$lib/demo/mock/albums";
+import { untranslatableTexts } from "$lib/test/untranslatable";
 import type { MyAlbum } from "$lib/model/messaging/albums";
 import AlbumTile from "./AlbumTile.svelte";
 
@@ -111,6 +112,20 @@ describe("album tile", () => {
 		expect(countBadgeText(empty)).toBe("0 0 items");
 		expect(empty.querySelector(VIDEO_BADGE)).toBeNull();
 		expect(processing.outerHTML).toBe(empty.outerHTML);
+	});
+
+	it("keeps an album's name out of page translation but not the fallback or badges", () => {
+		const album = { ...demoAlbum(), albumName: "Studio" };
+		const named = tileOf(album);
+
+		expect(named.textContent).toContain("Studio");
+		expect(untranslatableTexts(named)).toEqual(["Studio"]);
+		cleanup();
+
+		const untitled = tileOf({ ...album, albumName: null });
+
+		expect(untitled.textContent).toContain("Untitled album");
+		expect(untranslatableTexts(untitled)).toEqual([]);
 	});
 
 	it("counts and badges only the ready items of a partly processed album", () => {

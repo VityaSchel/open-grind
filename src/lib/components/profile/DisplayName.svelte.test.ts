@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { untranslatableTexts } from "$lib/test/untranslatable";
 import DisplayName from "./DisplayName.svelte";
 
 afterEach(async () => {
@@ -25,6 +26,19 @@ describe("DisplayName", () => {
 		});
 
 		expect(container.textContent).toBe("Unnamed");
+	});
+
+	it("keeps a name out of page translation but not the fallback", () => {
+		const { container: named } = render(DisplayName, {
+			props: { name: "Sam" },
+		});
+		expect(untranslatableTexts(named)).toEqual(["Sam"]);
+		cleanup();
+
+		const { container: nameless } = render(DisplayName, {
+			props: { name: null },
+		});
+		expect(untranslatableTexts(nameless)).toEqual([]);
 	});
 
 	it("renames the fallback when the locale changes", async () => {

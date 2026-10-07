@@ -143,3 +143,13 @@ export function previewLabel(
 export function quoteLabel(preview: MessagePreview): string {
 	return previewContentLabel(quoteContent(preview));
 }
+
+export function previewIsUserText(
+	preview: MessagePreview | null | undefined,
+): boolean {
+	return previewContent(preview)?.kind === "text";
+}
+
+export function quoteIsUserText(preview: MessagePreview): boolean {
+	return quoteContent(preview).kind === "text";
+}

@@ -4,7 +4,9 @@ import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	previewFromMessage,
+	previewIsUserText,
 	previewLabel,
+	quoteIsUserText,
 	quoteLabel,
 } from "$lib/model/messaging/message-preview";
 
@@ -176,6 +178,21 @@ describe("quoteLabel", () => {
 
 	it("does not render an empty pill for a blank text message", () => {
 		expect(quoteLabel(preview("Text", "   "))).toBe("Message");
+	});
+});
+
+describe("user text in previews", () => {
+	it("tells message text from a label we supply", () => {
+		expect(previewIsUserText({ type: "Text", text: "Photo" })).toBe(true);
+		expect(previewIsUserText({ type: "Image" })).toBe(false);
+		expect(previewIsUserText({ type: "Audio" })).toBe(false);
+		expect(previewIsUserText(null)).toBe(false);
+	});
+
+	it("treats the stand-in for a blank quote as our label", () => {
+		expect(quoteIsUserText({ type: "Text", text: "hello" })).toBe(true);
+		expect(quoteIsUserText({ type: "Text", text: "   " })).toBe(false);
+		expect(quoteIsUserText({ type: "Giphy" })).toBe(false);
 	});
 });
 

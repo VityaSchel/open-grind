@@ -5,7 +5,10 @@
 </script>
 
 <Card.Root class="mt-6">
-	<Card.Content class="wrap-break-word whitespace-pre-wrap select-text">
+	<Card.Content
+		class="wrap-break-word whitespace-pre-wrap select-text"
+		translate="no"
+	>
 		{@render children?.()}
 	</Card.Content>
 </Card.Root>

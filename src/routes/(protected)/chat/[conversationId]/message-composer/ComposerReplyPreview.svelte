@@ -5,6 +5,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import {
 		previewFromMessage,
+		quoteIsUserText,
 		quoteLabel,
 	} from "$lib/model/messaging/message-preview";
 	import { slide } from "$lib/util/reduced-motion";
@@ -15,7 +16,9 @@
 		onCancel,
 	}: { message: ApiResponseMessage; onCancel?: () => void } = $props();
 
-	const label = $derived(quoteLabel(previewFromMessage(message)));
+	const preview = $derived(previewFromMessage(message));
+	const label = $derived(quoteLabel(preview));
+	const userText = $derived(quoteIsUserText(preview));
 </script>
 
 <div
@@ -23,7 +26,10 @@
 	transition:slide={{ duration: 200, easing: expoOut }}
 >
 	<ArrowBendUpLeftIcon class="shrink-0 text-muted-foreground" size={16} />
-	<span class="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+	<span
+		class="min-w-0 flex-1 truncate text-sm text-muted-foreground"
+		translate={userText ? "no" : undefined}
+	>
 		{label}
 	</span>
 	<Button

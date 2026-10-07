@@ -19,6 +19,7 @@ vi.mock("$lib/chat/conversations-context.svelte", () => ({
 vi.mock("$lib/haptics", () => ({ playHaptic: playHapticMock }));
 
 import { contextMenuEvent } from "$lib/test/context-menu";
+import { untranslatableTexts } from "$lib/test/untranslatable";
 import type { Conversation as ConversationType } from "$lib/model/messaging/conversations";
 import Conversation from "./Conversation.svelte";
 
@@ -91,6 +92,12 @@ function renderRow(
 
 function descriptionClass(container: HTMLElement): string {
 	return container.querySelector(DESCRIPTION)?.className ?? "";
+}
+
+function untranslatablePreview(container: HTMLElement): string[] {
+	const description = container.querySelector(DESCRIPTION);
+	if (description === null) throw new Error("Missing preview line");
+	return untranslatableTexts(description);
 }
 
 function previewLine(container: HTMLElement): string {
@@ -180,6 +187,35 @@ describe("Conversation preview line", () => {
 		);
 
 		expect(descriptionClass(drafted)).not.toContain("text-white");
+	});
+
+	it("keeps message words out of page translation but not a type label", () => {
+		const { container: text } = renderRow(textPreview("hello there"));
+
+		expect(untranslatablePreview(text)).toEqual(["hello there"]);
+		cleanup();
+
+		const { container: photo } = renderRow({
+			...textPreview("hello there"),
+			type: "Image",
+			text: null,
+			imageHash: "abc",
+		});
+
+		expect(previewLine(photo)).toBe("Photo");
+		expect(untranslatablePreview(photo)).toEqual([]);
+		cleanup();
+
+		const { container: missing } = renderRow(null);
+
+		expect(untranslatablePreview(missing)).toEqual([]);
+	});
+
+	it("keeps the draft out of page translation but not its prefix", () => {
+		drafts.save({ conversationId: CONVERSATION_ID, text: "see you at" });
+		const { container } = renderRow(textPreview("hello there"));
+
+		expect(untranslatablePreview(container)).toEqual(["see you at"]);
 	});
 
 	it("ignores a draft belonging to another conversation", () => {

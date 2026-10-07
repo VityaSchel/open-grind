@@ -80,11 +80,13 @@
 						>
 							<span
 								class="line-clamp-1 block max-w-full truncate"
+								translate="no"
 							>
 								{place.name}
 							</span>
 							<span
 								class="line-clamp-1 block max-w-full truncate text-sm text-popover/40"
+								translate="no"
 							>
 								{place.address}
 							</span>

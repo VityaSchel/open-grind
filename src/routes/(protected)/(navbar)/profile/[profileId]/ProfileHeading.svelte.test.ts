@@ -3,6 +3,7 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { untranslatableTexts } from "$lib/test/untranslatable";
 import ProfileHeading from "./ProfileHeading.svelte";
 
 function renderHeading(props: {
@@ -17,6 +18,7 @@ function renderHeading(props: {
 			.replace(" ,", ",")
 			.trim(),
 		placeholder: heading.querySelector('[data-slot="skeleton"]'),
+		untranslatable: untranslatableTexts(heading),
 	};
 }
 
@@ -51,6 +53,16 @@ describe("ProfileHeading", () => {
 
 		expect(text).toBe("Peer,");
 		expect(placeholder).not.toBeNull();
+	});
+
+	it("keeps the name out of page translation, not the age or fallback", () => {
+		expect(
+			renderHeading({ displayName: "Peer", age: 27 }).untranslatable,
+		).toEqual(["Peer"]);
+		cleanup();
+		expect(
+			renderHeading({ displayName: null, age: 27 }).untranslatable,
+		).toEqual([]);
 	});
 
 	it("calls a nameless profile Someone", () => {

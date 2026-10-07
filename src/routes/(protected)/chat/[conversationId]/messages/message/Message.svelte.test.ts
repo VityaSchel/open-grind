@@ -12,6 +12,7 @@ vi.mock("$lib/haptics", () => ({
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import { contextMenuEvent } from "$lib/test/context-menu";
+import { untranslatableTexts } from "$lib/test/untranslatable";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
@@ -19,9 +20,11 @@ const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
 function renderMessage({
 	type,
 	body,
+	replyToMessage,
 }: {
 	type: string;
 	body: Record<string, unknown>;
+	replyToMessage?: { type: string; body: Record<string, unknown> };
 }) {
 	const { container } = render(Message, {
 		props: {
@@ -32,6 +35,11 @@ function renderMessage({
 				timestamp: 1_700_000_000_000,
 				type,
 				body,
+				replyToMessage: replyToMessage && {
+					messageId: "m0",
+					senderId: 100001,
+					...replyToMessage,
+				},
 			}),
 			isOut: false,
 			isRead: null,
@@ -60,6 +68,45 @@ async function menuOpened(row: HTMLElement): Promise<boolean> {
 afterEach(() => {
 	cleanup();
 	playHapticMock.mockReset();
+});
+
+describe("message translation boundary", () => {
+	it("keeps the words of a text message out of page translation", () => {
+		expect(untranslatableTexts(renderTextMessage())).toEqual([
+			"hello there",
+		]);
+	});
+
+	it("keeps quoted words out of page translation but not a quoted type label", () => {
+		const quotingText = renderMessage({
+			type: "Text",
+			body: { text: "sure" },
+			replyToMessage: { type: "Text", body: { text: "lunch?" } },
+		});
+
+		expect(untranslatableTexts(quotingText)).toEqual(["lunch?", "sure"]);
+		cleanup();
+
+		const quotingPhoto = renderMessage({
+			type: "Text",
+			body: { text: "sure" },
+			replyToMessage: {
+				type: "Image",
+				body: {
+					mediaId: 1,
+					width: 300,
+					height: 400,
+					url: "https://d3.cloudfront.net/chat/a.jpg?Expires=1700000900&Signature=s&Key-Pair-Id=K",
+					imageHash: "a".repeat(64),
+					takenOnGrindr: false,
+					createdAt: null,
+				},
+			},
+		});
+
+		expect(quotingPhoto.textContent).toContain("Photo");
+		expect(untranslatableTexts(quotingPhoto)).toEqual(["sure"]);
+	});
 });
 
 describe("message menu haptics", () => {

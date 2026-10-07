@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		previewFromMessage,
+		quoteIsUserText,
 		quoteLabel,
 	} from "$lib/model/messaging/message-preview";
 	import type { QuotedMessage } from "$lib/model/messaging/messages";
@@ -11,7 +12,9 @@
 	const { isOut } = $derived(getMessageContext()());
 	const { clone } = $derived(getMessageMetaContext()());
 
-	const label = $derived(quoteLabel(previewFromMessage(quoted)));
+	const preview = $derived(previewFromMessage(quoted));
+	const label = $derived(quoteLabel(preview));
+	const userText = $derived(quoteIsUserText(preview));
 </script>
 
 <div
@@ -37,6 +40,8 @@
 	<span
 		class="mx-1 min-w-0 rounded-xl bg-muted px-3 py-1.5 text-sm text-muted-foreground"
 	>
-		<span class="line-clamp-1">{label}</span>
+		<span class="line-clamp-1" translate={userText ? "no" : undefined}
+			>{label}</span
+		>
 	</span>
 </div>

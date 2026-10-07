@@ -10,7 +10,7 @@
 
 <h1 class="text-2xl wrap-break-word">
 	{#if displayName !== null}
-		<span class="font-semibold">
+		<span class="font-semibold" translate="no">
 			{displayName}
 		</span>{:else}<span
 			class="font-normal tracking-tight text-muted-foreground italic"

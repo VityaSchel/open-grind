@@ -32,6 +32,6 @@
 		weight={empty ? "regular" : "fill"}
 		class="size-4 shrink-0"
 	/>
-	<span class="truncate">{label}</span>
+	<span class="truncate" translate={empty ? undefined : "no"}>{label}</span>
 </Button>
 <FavoriteNoteEditor {profileId} {note} {onSave} bind:open />

@@ -7,6 +7,7 @@
 	import { t } from "$lib/i18n";
 	import {
 		previewFromMessage,
+		previewIsUserText,
 		previewLabel,
 	} from "$lib/model/messaging/message-preview";
 	import { type ApiResponseMessage } from "$lib/model/messaging/messages";
@@ -22,6 +23,8 @@
 	} = $props();
 
 	const TAP_SLOP_PX = 10;
+
+	const preview = $derived(previewFromMessage(message));
 
 	let press: AbortController | null = null;
 
@@ -73,6 +76,7 @@
 		{#if sender && sender.name}
 			<span
 				class="truncate font-heading text-sm leading-snug font-medium"
+				translate="no"
 			>
 				{sender.name}
 			</span>
@@ -83,8 +87,11 @@
 				{t("common.someone")}
 			</span>
 		{/if}
-		<p class="truncate text-sm">
-			{previewLabel(previewFromMessage(message))}
+		<p
+			class="truncate text-sm"
+			translate={previewIsUserText(preview) ? "no" : undefined}
+		>
+			{previewLabel(preview)}
 		</p>
 	</div>
 </div>

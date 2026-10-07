@@ -58,7 +58,10 @@
 			variant="outline"
 			class="min-w-0 media-pill backdrop-filter-(--bd-chip)"
 		>
-			<span class="truncate font-semibold">
+			<span
+				class="truncate font-semibold"
+				translate={album.albumName ? "no" : undefined}
+			>
 				{albumDisplayName(album.albumName)}
 			</span>
 		</Badge>
