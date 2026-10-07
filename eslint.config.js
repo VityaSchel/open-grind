@@ -17,6 +17,7 @@ const translatedSvelteFiles = [
 	"src/lib/components/feedback/CopyErrorConfirmAlert.svelte",
 	"src/lib/components/feedback/DataRefreshControl.svelte",
 	"src/lib/components/feedback/EntitlementBypassAlert.svelte",
+	"src/lib/components/feedback/GoogleHandoffConfirmAlert.svelte",
 	"src/lib/components/feedback/NotFound.svelte",
 	"src/lib/components/feedback/RequestBlockedAlert.svelte",
 	"src/lib/components/feedback/SessionErrorAlert.svelte",

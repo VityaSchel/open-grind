@@ -6,6 +6,7 @@
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { t } from "$lib/i18n";
 
 	const switching = $derived(googleHandoffState.phase === "switchingAccount");
 	const open = $derived(
@@ -23,20 +24,23 @@
 >
 	<AlertDialog.Content interactOutsideBehavior="close">
 		<AlertDialog.Header>
-			<AlertDialog.Title>Switch Google account?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{t("auth.googleHandoff.switchAccount.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				You have signed in to another Google account using the Google
-				OAuth app.
+				{t("auth.googleHandoff.switchAccount.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={switching} class="contents">
-				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel
+					>{t("common.actions.cancel")}</AlertDialog.Cancel
+				>
 				<Button onclick={() => answerAccountSwitch(true)}>
 					{#if switching}
 						<Spinner />
 					{/if}
-					Continue
+					{t("common.actions.continue")}
 				</Button>
 			</fieldset>
 		</AlertDialog.Footer>

@@ -1,6 +1,8 @@
 export interface Messages {
 	"auth.googleHandoff.errors.expired": undefined;
 	"auth.googleHandoff.errors.signInFailed": undefined;
+	"auth.googleHandoff.switchAccount.description": undefined;
+	"auth.googleHandoff.switchAccount.title": undefined;
 	"auth.passwordReset.title": undefined;
 	"auth.signIn.captcha.errors.addonDisabled": undefined;
 	"auth.signIn.captcha.errors.addonUnavailable": undefined;
