@@ -10,6 +10,7 @@ import {
 const ALIGNED_PX = 1;
 const CLIENT_WIDTH_ROUNDING_PX = 1;
 const VISIBLE_EDGE_PX = 1;
+const LAYOUT_UNIT_PX = 1 / 64;
 const TOUCH_LIFTS = ["touchend", "touchcancel"] as const;
 const STILL_FRAMES_BEFORE_GLIDE = 3;
 
@@ -298,7 +299,8 @@ export class SnapPager {
 	}
 
 	#onResize(entries: ResizeObserverEntry[]): void {
-		const width = entries.at(-1)?.contentBoxSize[0]?.inlineSize ?? 0;
+		const entry = entries.at(-1);
+		const width = entry ? exactInlineSize(entry) : 0;
 		const previous = this.#width;
 		if (width === previous) return;
 		this.#width = width;
@@ -322,4 +324,19 @@ export class SnapPager {
 			behavior: animated && !this.#reducedMotion() ? "smooth" : "instant",
 		});
 	}
+}
+
+// Blink floors contentBoxSize to a layout unit while panes sit at exact device
+// pixels, so every page would add the dropped fraction to position * width.
+function exactInlineSize({
+	contentBoxSize,
+	devicePixelContentBoxSize,
+}: ResizeObserverEntry): number {
+	const layoutSize = contentBoxSize[0]?.inlineSize ?? 0;
+	const devicePixels = devicePixelContentBoxSize?.[0]?.inlineSize;
+	if (devicePixels === undefined) return layoutSize;
+	const exactSize = devicePixels / window.devicePixelRatio;
+	return Math.abs(exactSize - layoutSize) < LAYOUT_UNIT_PX
+		? exactSize
+		: layoutSize;
 }

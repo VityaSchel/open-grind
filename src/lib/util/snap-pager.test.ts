@@ -77,6 +77,88 @@ describe("SnapPager rests on an aligned pager", () => {
 	});
 });
 
+describe("SnapPager on a screen whose CSS width splits a layout unit", () => {
+	const DEVICE_PIXEL_RATIO = 2.6875;
+	const DEVICE_PIXELS = 1221;
+	const EXACT_WIDTH = DEVICE_PIXELS / DEVICE_PIXEL_RATIO;
+	const FLOORED_WIDTH = 454.3125;
+	const DEEP = 90;
+
+	function deepPager() {
+		vi.stubGlobal("devicePixelRatio", DEVICE_PIXEL_RATIO);
+		return harness({ count: 120, measured: false });
+	}
+
+	it("opens a deep pane alone on its stop and rests there", () => {
+		const h = deepPager();
+
+		h.pager.place(DEEP);
+		h.measureBoxes({
+			contentBox: FLOORED_WIDTH,
+			devicePixels: DEVICE_PIXELS,
+		});
+		h.scroll(DEEP * EXACT_WIDTH);
+
+		expect(h.onVisible).toHaveBeenLastCalledWith({
+			first: DEEP,
+			last: DEEP,
+		});
+		expect(h.onHeading).toHaveBeenLastCalledWith(DEEP);
+		expect(h.onRest).toHaveBeenLastCalledWith(DEEP);
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: DEEP * EXACT_WIDTH,
+			behavior: "instant",
+		});
+	});
+
+	it("rests where a swipe lands on a deep pane", () => {
+		const h = deepPager();
+		h.measureBoxes({
+			contentBox: FLOORED_WIDTH,
+			devicePixels: DEVICE_PIXELS,
+		});
+		h.pager.place(DEEP - 1);
+		h.scroll((DEEP - 1) * EXACT_WIDTH);
+
+		h.touch("touchstart");
+		h.scroll((DEEP - 0.5) * EXACT_WIDTH);
+		h.scroll(DEEP * EXACT_WIDTH);
+		h.touch("touchend");
+
+		expect(h.onVisible).toHaveBeenLastCalledWith({
+			first: DEEP,
+			last: DEEP,
+		});
+		expect(h.onRest).toHaveBeenLastCalledWith(DEEP);
+	});
+
+	it("pages by the content box where the engine reports no device pixels", () => {
+		const h = deepPager();
+
+		h.pager.place(DEEP);
+		h.measure(FLOORED_WIDTH);
+		h.scroll(DEEP * FLOORED_WIDTH);
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: DEEP * FLOORED_WIDTH,
+			behavior: "instant",
+		});
+		expect(h.onRest).toHaveBeenLastCalledWith(DEEP);
+	});
+
+	it("pages by the content box where device pixels round off a fractional width", () => {
+		const h = harness({ count: 120, measured: false });
+
+		h.pager.place(DEEP);
+		h.measureBoxes({ contentBox: 400.296875, devicePixels: 400 });
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: DEEP * 400.296875,
+			behavior: "instant",
+		});
+	});
+});
+
 describe("SnapPager under its own touches", () => {
 	it("waits for the finger to lift before resting", () => {
 		const h = harness();

@@ -72,6 +72,28 @@ export function fakePagerLayout({
 				} as unknown as ResizeObserverEntry,
 			]);
 		},
+		measureBoxes: ({
+			contentBox,
+			devicePixels,
+		}: {
+			contentBox: number;
+			devicePixels: number;
+		}) => {
+			layoutWidth = devicePixels / window.devicePixelRatio;
+			resizeCallbacks.get(node)?.([
+				{
+					contentBoxSize: [
+						{ inlineSize: contentBox, blockSize: 800 },
+					],
+					devicePixelContentBoxSize: [
+						{
+							inlineSize: devicePixels,
+							blockSize: 800 * window.devicePixelRatio,
+						},
+					],
+				} as unknown as ResizeObserverEntry,
+			]);
+		},
 		relayout: (width: number) => {
 			layoutWidth = width;
 		},
