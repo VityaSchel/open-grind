@@ -89,6 +89,31 @@ async function submitSignIn() {
 	await settle();
 }
 
+const facebookFailures = [
+	{
+		failure: "a Facebook dialog error",
+		marker: "facebook-dialog-error",
+		english:
+			"Facebook didn't grant access. Try again, or sign in with your email and password.",
+	},
+	{
+		failure: "a Facebook app handoff",
+		marker: "facebook-handoff-refused",
+		english:
+			"Facebook tried to open its own app, which Open Grind can't use. Sign in with your email and password instead.",
+	},
+	{
+		failure: "a Facebook redirect it can't verify",
+		marker: "facebook-unverified",
+		english: "Sign-in could not be verified",
+	},
+	{
+		failure: "a Facebook sign-in that timed out",
+		marker: "facebook-timed-out",
+		english: "Sign-in timed out",
+	},
+];
+
 describe("SignInForm", () => {
 	beforeEach(() => {
 		callMethodMock.mockReset();
@@ -267,6 +292,22 @@ describe("SignInForm", () => {
 		);
 	});
 
+	it.each(facebookFailures)(
+		"explains $failure",
+		async ({ marker, english }) => {
+			callMethodMock.mockRejectedValue({ kind: "Auth", message: marker });
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: "Sign in with Facebook" }),
+			);
+			await settle();
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(english);
+			expect(gotoMock).not.toHaveBeenCalled();
+		},
+	);
+
 	it("keeps the password button's name while it signs in", async () => {
 		callMethodMock.mockReturnValue(new Promise(() => {}));
 		render(SignInForm);
@@ -364,28 +405,12 @@ const localizedFailures = [
 		button: "Sign in",
 		...refuseCaptcha(reason),
 	})),
-	{
-		failure: "a Facebook dialog error",
+	...facebookFailures.map(({ failure, marker }) => ({
+		failure,
 		button: "Sign in with Facebook",
-		rejects: {
-			sign_in_with_facebook: {
-				kind: "Auth",
-				message: "facebook-dialog-error",
-			},
-		},
+		rejects: { sign_in_with_facebook: { kind: "Auth", message: marker } },
 		resolves: {},
-	},
-	{
-		failure: "a Facebook app handoff",
-		button: "Sign in with Facebook",
-		rejects: {
-			sign_in_with_facebook: {
-				kind: "Auth",
-				message: "facebook-handoff-refused",
-			},
-		},
-		resolves: {},
-	},
+	})),
 ];
 
 describe("SignInForm in the active locale", () => {

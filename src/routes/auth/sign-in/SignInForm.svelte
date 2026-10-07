@@ -61,6 +61,10 @@
 					toast.error(
 						t("auth.signIn.facebook.errors.handoffRefused"),
 					),
+				"facebook-unverified": () =>
+					toast.error(t("auth.signIn.facebook.errors.unverified")),
+				"facebook-timed-out": () =>
+					toast.error(t("auth.signIn.facebook.errors.timedOut")),
 			},
 		},
 	};

@@ -23,6 +23,8 @@ export interface Messages {
 	"auth.signIn.errors.rateLimited": undefined;
 	"auth.signIn.facebook.errors.dialogError": undefined;
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
+	"auth.signIn.facebook.errors.timedOut": undefined;
+	"auth.signIn.facebook.errors.unverified": undefined;
 	"auth.signIn.forgotPassword": undefined;
 	"auth.signIn.google.goBack": undefined;
 	"auth.signIn.google.install.fdroidNotice": undefined;
