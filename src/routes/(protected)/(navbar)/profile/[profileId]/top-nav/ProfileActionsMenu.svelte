@@ -11,6 +11,7 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { hideUser } from "$lib/api/browse/hides";
 	import { showErrorToast } from "$lib/api/error-toast";
+	import BlockingGuideLink from "$lib/components/report/BlockingGuideLink.svelte";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
@@ -85,8 +86,10 @@
 			<EyeSlashIcon class="size-5" />
 			Hide profile
 		</DropdownMenu.Item>
-		{#if blockable}
+		<div class="flex items-center">
 			<DropdownMenu.Item
+				disabled={!blockable}
+				class="flex-1"
 				onSelect={() =>
 					applyViewabilityChange({
 						change: markBlocked,
@@ -97,7 +100,16 @@
 				<ProhibitIcon class="size-5" />
 				Block profile
 			</DropdownMenu.Item>
-		{/if}
+			{#if !blockable}
+				<DropdownMenu.Item
+					class="me-2 size-7 cursor-pointer justify-center rounded-full p-0"
+				>
+					{#snippet child({ props })}
+						<BlockingGuideLink {...props} />
+					{/snippet}
+				</DropdownMenu.Item>
+			{/if}
+		</div>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
@@ -105,5 +117,8 @@
 	bind:open={reportOpen}
 	{profileId}
 	{blockable}
-	onBlocked={() => markBlocked().settle()}
+	onBlock={async () => {
+		await blockUser({ profileId });
+		markBlocked().settle();
+	}}
 />

@@ -422,6 +422,24 @@ describe("ProfilePane hiding and blocking", () => {
 		});
 	});
 
+	it("keeps a non-blockable profile on screen when its disabled Block is pressed", async () => {
+		getProfileMock.mockResolvedValue({
+			...fullProfile(LOADED),
+			isBlockable: false,
+		});
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		await chooseFromProfileMenu("Block profile");
+		await flush();
+
+		expect(blockUserMock).not.toHaveBeenCalled();
+		expect(heading(section)).toBe("Loaded, 30");
+		expect(
+			within(section).queryByText("You have blocked this profile."),
+		).toBeNull();
+	});
+
 	it("shows the profile again at once on Unhide and holds its menu until the request lands", async () => {
 		hideUserMock.mockResolvedValueOnce(undefined);
 		const unhide = pendingRequest(unhideUserMock);
