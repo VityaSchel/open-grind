@@ -12,6 +12,12 @@
 			"copyFailed": "Couldn't copy to clipboard"
 		}
 	},
+	"copyErrorConfirm": {
+		"title": "Copy error details?",
+		"description": "<warning>Be mindful of what you share on the internet!</warning> The error might contain your personal data. Only copy it unredacted if a developer asks you to.",
+		"redact": "Redact sensitive info (recommended)",
+		"copy": "Copy"
+	},
 	"apiError": {
 		"connect": "Couldn't connect to Grindr",
 		"http": "Couldn't reach the server",

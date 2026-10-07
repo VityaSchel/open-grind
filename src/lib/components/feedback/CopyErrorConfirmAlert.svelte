@@ -8,6 +8,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Switch from "$lib/components/ui/switch/switch.svelte";
+	import { t } from "$lib/i18n";
+	import Rich from "$lib/i18n/Rich.svelte";
 
 	let redact = $state(true);
 	const preview = $derived(
@@ -30,11 +32,13 @@
 	>
 		<div class="grid grid-rows-[auto_minmax(0,1fr)_auto] gap-4">
 			<AlertDialog.Header>
-				<AlertDialog.Title>Copy error details?</AlertDialog.Title>
+				<AlertDialog.Title
+					>{t("feedback.copyErrorConfirm.title")}</AlertDialog.Title
+				>
 				<AlertDialog.Description class="text-wrap">
-					<b>Be mindful of what you share on the internet!</b> The error
-					might contain your personal data. Only copy it unredacted if a
-					developer asks you to.
+					<Rich key="feedback.copyErrorConfirm.description">
+						{#snippet warning(text)}<b>{text}</b>{/snippet}
+					</Rich>
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<div
@@ -50,7 +54,7 @@
 						bind:checked={redact}
 					/>
 					<span class="truncate">
-						Redact sensitive info (recommended)
+						{t("feedback.copyErrorConfirm.redact")}
 					</span>
 				</Label>
 				<div
@@ -65,12 +69,14 @@
 						class="rounded-t-none rounded-b-[inherit] border-0"
 						size="lg"
 					>
-						Copy
+						{t("feedback.copyErrorConfirm.copy")}
 					</Button>
 				</div>
 			</div>
 			<AlertDialog.Footer>
-				<AlertDialog.Cancel>Close</AlertDialog.Cancel>
+				<AlertDialog.Cancel
+					>{t("common.actions.close")}</AlertDialog.Cancel
+				>
 			</AlertDialog.Footer>
 		</div>
 	</AlertDialog.Content>

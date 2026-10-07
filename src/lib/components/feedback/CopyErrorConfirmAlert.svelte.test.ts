@@ -3,6 +3,9 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+
 const { writeTextMock, toastMock } = vi.hoisted(() => ({
 	writeTextMock: vi.fn(),
 	toastMock: { success: vi.fn(), error: vi.fn() },
@@ -21,8 +24,23 @@ const CopyErrorConfirmAlert = (await import("./CopyErrorConfirmAlert.svelte"))
 
 const error = new Error("failed for me@example.com");
 
+const WARNING = "Be mindful of what you share on the internet!";
+const REDACT_LABEL = "Redact sensitive info (recommended)";
+
 function copiedText(): string {
 	return String(writeTextMock.mock.calls.at(-1)?.[0]);
+}
+
+async function openDescription(): Promise<Element> {
+	void promptCopyError(error);
+	const dialog = await screen.findByRole("alertdialog", {
+		name: "Copy error details?",
+	});
+	const description = dialog.querySelector(
+		'[data-slot="alert-dialog-description"]',
+	);
+	if (description === null) throw new Error("no dialog description");
+	return description;
 }
 
 describe("CopyErrorConfirmAlert", () => {
@@ -33,10 +51,45 @@ describe("CopyErrorConfirmAlert", () => {
 		render(CopyErrorConfirmAlert);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		copyErrorConfirmState.open = false;
 		copyErrorConfirmState.resolve = null;
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("warns in bold that the details might hold personal data", async () => {
+		const description = await openDescription();
+
+		expect(description.textContent).toBe(
+			`${WARNING} The error might contain your personal data. Only copy it unredacted if a developer asks you to.`,
+		);
+		expect(
+			[...description.querySelectorAll("b")].map(
+				(bold) => bold.textContent,
+			),
+		).toStrictEqual([WARNING]);
+		expect(screen.getByRole("switch", { name: REDACT_LABEL })).toBeTruthy();
+	});
+
+	it("words the confirmation in the active locale", async () => {
+		const description = await openDescription();
+		const title = screen.getByText("Copy error details?");
+		const controls = [
+			screen.getByText(REDACT_LABEL),
+			screen.getByRole("button", { name: "Copy" }),
+			screen.getByRole("button", { name: "Close" }),
+		];
+
+		await setLocale({ locale: "en-XA" });
+
+		const lines = [title, description, ...controls].map(
+			(node) => node.textContent,
+		);
+		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
+		const warning = description.querySelector("b")?.textContent ?? "";
+		expect(warning).not.toBe(WARNING);
+		expect(description.textContent.startsWith(`⟦${warning} `)).toBe(true);
 	});
 
 	it("hides the popup and reports success once the details are copied", async () => {

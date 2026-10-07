@@ -78,6 +78,9 @@ export interface Messages {
 	"feedback.appError.unknown": undefined;
 	"feedback.appError.webPage": undefined;
 	"feedback.appError.withCode": { code: string; detail: string };
+	"feedback.copyErrorConfirm.copy": undefined;
+	"feedback.copyErrorConfirm.redact": undefined;
+	"feedback.copyErrorConfirm.title": undefined;
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
 	"feedback.errorToast.defaultLabel": undefined;
@@ -250,6 +253,7 @@ export interface RichMessages {
 	"browse.rightNow.unimplemented": { issue: string };
 	"chat.composer.attachments.location.unimplemented": { issue: string };
 	"chat.composer.voiceMessage.unimplemented": { issue: string };
+	"feedback.copyErrorConfirm.description": undefined;
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
 	"media.lightbox.errors.decoderMissing": undefined;
 	"settings.account.unimplemented": { issue: string };
@@ -276,6 +280,7 @@ export interface RichTags {
 	"browse.rightNow.unimplemented": "link";
 	"chat.composer.attachments.location.unimplemented": "link";
 	"chat.composer.voiceMessage.unimplemented": "link";
+	"feedback.copyErrorConfirm.description": "warning";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
 	"media.lightbox.errors.decoderMissing": "link";
 	"settings.account.unimplemented": "link";
