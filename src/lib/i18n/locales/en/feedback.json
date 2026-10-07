@@ -110,5 +110,8 @@
 		"errors": {
 			"bypassFailed": "Failed to bypass this paid feature"
 		}
+	},
+	"autoLocationToast": {
+		"message": "Your location will be updating automatically using GPS. Turn this off in the <icon></icon> menu."
 	}
 }

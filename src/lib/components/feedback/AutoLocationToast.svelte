@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { MapPinIcon } from "phosphor-svelte";
+
+	import Rich from "$lib/i18n/Rich.svelte";
 </script>
 
 <span>
-	Your location will be updating automatically using GPS. Turn this off in the
-	<MapPinIcon weight="fill" class="inline size-5 align-middle" /> menu.
+	<Rich key="feedback.autoLocationToast.message">
+		{#snippet icon()}<MapPinIcon
+				weight="fill"
+				class="inline size-5 align-middle"
+			/>{/snippet}
+	</Rich>
 </span>

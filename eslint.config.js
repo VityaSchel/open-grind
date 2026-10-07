@@ -13,6 +13,7 @@ const translatedSvelteFiles = [
 	"src/routes/+layout.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
+	"src/lib/components/feedback/AutoLocationToast.svelte",
 	"src/lib/components/feedback/CopyErrorConfirmAlert.svelte",
 	"src/lib/components/feedback/DataRefreshControl.svelte",
 	"src/lib/components/feedback/EntitlementBypassAlert.svelte",

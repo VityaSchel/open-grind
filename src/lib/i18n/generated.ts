@@ -258,6 +258,7 @@ export interface RichMessages {
 	"browse.rightNow.unimplemented": { issue: string };
 	"chat.composer.attachments.location.unimplemented": { issue: string };
 	"chat.composer.voiceMessage.unimplemented": { issue: string };
+	"feedback.autoLocationToast.message": undefined;
 	"feedback.copyErrorConfirm.description": undefined;
 	"feedback.entitlementBypass.explanation": undefined;
 	"feedback.requestBlocked.cloudflare.knownIssue": undefined;
@@ -286,6 +287,7 @@ export interface RichTags {
 	"browse.rightNow.unimplemented": "link";
 	"chat.composer.attachments.location.unimplemented": "link";
 	"chat.composer.voiceMessage.unimplemented": "link";
+	"feedback.autoLocationToast.message": "icon";
 	"feedback.copyErrorConfirm.description": "warning";
 	"feedback.entitlementBypass.explanation": "link";
 	"feedback.requestBlocked.cloudflare.knownIssue": "link";
