@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { UpdateStage } from "$lib/updates/stage";
 import {
 	googleSignInView,
@@ -69,6 +71,10 @@ describe("an add-on stage the screen may withdraw", () => {
 });
 
 describe("the Install button", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
 	it("says what the add-on flow is doing while it downloads, verifies or installs", () => {
 		const during = (stage: UpdateStage) =>
 			installButton({ stage, starting: false });
@@ -101,5 +107,20 @@ describe("the Install button", () => {
 			label: "Install",
 			busy: true,
 		});
+	});
+
+	it("labels every stage in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		for (const stage of [
+			null,
+			"downloading",
+			"verifying",
+			"installing",
+		] as const) {
+			expect(installButton({ stage, starting: false }).label).toMatch(
+				PSEUDO_MESSAGE,
+			);
+		}
 	});
 });

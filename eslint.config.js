@@ -102,6 +102,7 @@ const translatedScriptFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/album-updated-label.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/options.ts",
 	"src/routes/auth/+layout.ts",
+	"src/routes/auth/sign-in/google/google-sign-in-view.ts",
 ];
 
 const brands = [

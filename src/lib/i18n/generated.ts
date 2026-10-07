@@ -19,6 +19,10 @@ export interface Messages {
 	"auth.signIn.facebook.errors.dialogError": undefined;
 	"auth.signIn.facebook.errors.handoffRefused": undefined;
 	"auth.signIn.forgotPassword": undefined;
+	"auth.signIn.google.installButton.downloading": undefined;
+	"auth.signIn.google.installButton.install": undefined;
+	"auth.signIn.google.installButton.installing": undefined;
+	"auth.signIn.google.installButton.verifying": undefined;
 	"auth.signIn.heading": undefined;
 	"auth.signIn.password.label": undefined;
 	"auth.signIn.submit": undefined;

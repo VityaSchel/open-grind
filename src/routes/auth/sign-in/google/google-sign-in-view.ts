@@ -1,3 +1,4 @@
+import { t } from "$lib/i18n";
 import type { UpdateStage } from "$lib/updates/stage";
 
 export type GoogleSignInView = "install" | "continue" | "paste";
@@ -28,12 +29,24 @@ export function installButton({
 }): { label: string; busy: boolean } {
 	switch (stage) {
 		case "downloading":
-			return { label: "Downloading…", busy: true };
+			return {
+				label: t("auth.signIn.google.installButton.downloading"),
+				busy: true,
+			};
 		case "verifying":
-			return { label: "Verifying…", busy: true };
+			return {
+				label: t("auth.signIn.google.installButton.verifying"),
+				busy: true,
+			};
 		case "installing":
-			return { label: "Installing…", busy: true };
+			return {
+				label: t("auth.signIn.google.installButton.installing"),
+				busy: true,
+			};
 		default:
-			return { label: "Install", busy: starting };
+			return {
+				label: t("auth.signIn.google.installButton.install"),
+				busy: starting,
+			};
 	}
 }
