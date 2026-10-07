@@ -74,10 +74,38 @@ const translatedScriptFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/options.ts",
 ];
 
+const brands = [
+	"Open Grind",
+	"Grindr",
+	"Google",
+	"Facebook",
+	"Android",
+	"Linux",
+	"macOS",
+	"Windows",
+	"Bits UI",
+	"Svelte",
+	"Sveaflet",
+	"Tailwind CSS",
+	"Tauri",
+	"Zod",
+];
+
 const letter = String.raw`/\p{L}/u`;
-const brandOnly = String.raw`/^\s*Open Grind\s*$/u`;
+const brandOnly = String.raw`/^\s*(?:${brands.join("|")})\s*$/u`;
+const capitalized = String.raw`/^[^\p{L}]*\p{Lu}/u`;
+const identifier = String.raw`/^(?:[\p{Lu}\d_]+|\p{Lu}[\p{L}\d]*\p{Ll}\p{Lu}[\p{L}\d]*)$/u`;
+const letterless = String.raw`/^[^\p{L}]*$/u`;
+const spacedWord = String.raw`/\s\p{L}/u`;
 const literalText = `:matches(Literal[value=${letter}], TemplateLiteral:has(> TemplateElement[value.cooked=${letter}]))`;
+const proseLiteral = `Literal[value=${capitalized}]:not([value=${identifier}], [value=${brandOnly}])`;
+const proseTemplate = `TemplateLiteral:matches(:has(> TemplateElement:first-child[value.cooked=${capitalized}]), :has(> TemplateElement:first-child[value.cooked=${letterless}]):has(> TemplateElement[value.cooked=${spacedWord}]))`;
+const diagnosticCall = `:matches(CallExpression[callee.object.name="console"], CallExpression[callee.name="writeText"], CallExpression[callee.property.name="writeText"], NewExpression[callee.name=/Error$/])`;
+const proseText = `:matches(${proseLiteral}, ${proseTemplate}):not(${diagnosticCall} *)`;
 const toastCall = `CallExpression:matches([callee.name="toast"], [callee.object.name="toast"][callee.property.name!="dismiss"])`;
+const toastTextProperty = `:matches(${toastCall} > ObjectExpression Property[key.name=/^(?:description|label)$/], CallExpression[callee.name="showErrorToast"] > ObjectExpression > Property[key.name="label"])`;
+const fallbackOperator = `LogicalExpression:matches([operator="??"], [operator="||"]):not(BinaryExpression[operator=/^[!=]==?$/] > *)`;
+const identityProperty = `Property[key.name=/^(?:kind|type)$/]`;
 const textAttribute = `SvelteAttribute[key.name=/^(?:aria-label|aria-description|alt|title|placeholder)$/]`;
 
 const rawText = (selectors) =>
@@ -88,8 +116,11 @@ const rawText = (selectors) =>
 
 const scriptRawTextSelectors = rawText([
 	`${toastCall} > ${literalText}`,
-	`${toastCall} > ObjectExpression Property[key.name=/^(?:description|label)$/] > ${literalText}`,
-	`CallExpression[callee.name="showErrorToast"] > ObjectExpression > Property[key.name="label"] > ${literalText}`,
+	`${toastTextProperty} > ${literalText}`,
+	`${fallbackOperator} > ${proseText}.right`,
+	`AssignmentPattern > ${proseText}.right`,
+	`ConditionalExpression > ${proseText}:matches(.consequent, .alternate)`,
+	`Property:not(${identityProperty}, ${toastTextProperty}) > ${proseText}.value`,
 ]);
 
 const svelteRawTextSelectors = rawText([
