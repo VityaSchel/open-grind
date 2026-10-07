@@ -5,10 +5,19 @@
 <script lang="ts">
 	import { ContextMenu as ContextMenuPrimitive } from "bits-ui";
 
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+
 	let {
 		open = $bindable(false),
 		...restProps
 	}: ContextMenuPrimitive.RootProps = $props();
+
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => {
+			open = false;
+		},
+	});
 
 	$effect(() => {
 		if (!open) return;
