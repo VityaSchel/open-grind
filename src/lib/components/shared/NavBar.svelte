@@ -7,7 +7,7 @@
 	import FireIcon from "phosphor-svelte/lib/FireIcon";
 	import { untrack } from "svelte";
 
-	import { getProfile } from "$lib/api/users/profiles";
+	import { getProfile, onProfileEdit } from "$lib/api/users/profiles";
 	import { getOrCreateConversationsState } from "$lib/chat/conversations-context.svelte";
 	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
@@ -22,8 +22,18 @@
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
 
-	const myProfilePhotos = untrack(() =>
-		getProfile(ourProfileId).then((profile) => profile.medias),
+	let myProfilePhotos = $state(
+		untrack(() =>
+			getProfile(ourProfileId).then((profile) => profile.medias),
+		),
+	);
+
+	$effect(() =>
+		onProfileEdit(({ profileId, patch }) => {
+			if (profileId !== ourProfileId || patch.medias === undefined)
+				return;
+			myProfilePhotos = Promise.resolve(patch.medias);
+		}),
 	);
 
 	const conversations = untrack(() =>

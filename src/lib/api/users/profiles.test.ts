@@ -614,6 +614,28 @@ describe("saveProfilePhotos", () => {
 			state: 0,
 		});
 	});
+
+	it("reports the saved photos to the profile edit listeners after the cache entry expired", async () => {
+		let clock = 1_000;
+		setNowForTesting(() => clock);
+		await getProfile(PROFILE_ID);
+		const edits: { profileId: number; patch: Partial<Profile> }[] = [];
+		const unsubscribe = onProfileEdit((edit) => edits.push(edit));
+
+		clock += 60_000;
+		await saveProfilePhotos({
+			cacheProfileId: PROFILE_ID,
+			mediaHashes: ["fresh", "a"],
+		});
+		unsubscribe();
+
+		expect(
+			edits.map(({ profileId, patch }) => ({
+				profileId,
+				mediaHashes: patch.medias?.map(({ mediaHash }) => mediaHash),
+			})),
+		).toEqual([{ profileId: PROFILE_ID, mediaHashes: ["fresh", "a"] }]);
+	});
 });
 
 describe("uploadProfilePhoto", () => {
