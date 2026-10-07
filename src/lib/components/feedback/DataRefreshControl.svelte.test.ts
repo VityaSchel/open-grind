@@ -38,18 +38,19 @@ async function settle() {
 	for (let turn = 0; turn < 6; turn += 1) await tick();
 }
 
-async function mountAtRest(edge: Edge) {
+async function mountAtRest(edge: Edge, { floorRoundingPx = 0 } = {}) {
 	const scroller = document.createElement("div");
 	const intoContent = edge === "top" ? 1 : -1;
 	const contentInset = () =>
 		scroller.style.getPropertyValue(`--refresh-inset-${edge}`);
 	const maxScrollTop = () =>
 		CONTENT_HEIGHT + (parseFloat(contentInset()) || 0) - VIEWPORT_HEIGHT;
+	const trueFloor = () => maxScrollTop() - floorRoundingPx;
 	const restDistance = () =>
-		edge === "top" ? scrollTop : maxScrollTop() - scrollTop;
+		edge === "top" ? scrollTop : trueFloor() - scrollTop;
 	let bandPx = 0;
 	let scrollWrites = 0;
-	let scrollTop = edge === "top" ? 0 : maxScrollTop();
+	let scrollTop = edge === "top" ? 0 : trueFloor();
 	Object.defineProperties(scroller, {
 		scrollHeight: {
 			get: () => maxScrollTop() + VIEWPORT_HEIGHT,
@@ -63,7 +64,7 @@ async function mountAtRest(edge: Edge) {
 		},
 		scroll: {
 			value: ({ top }: { top: number }) => {
-				scrollTop = top;
+				scrollTop = Math.min(Math.max(0, top), trueFloor());
 				scrollWrites += 1;
 			},
 			configurable: true,
@@ -230,6 +231,7 @@ describe("the refresh control", () => {
 		document.body.replaceChildren();
 		outroListeners.abort();
 		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
 		vi.advanceTimersByTime(SHARED_FRAME_LOOP_DRAIN_MS);
 		vi.useRealTimers();
 	});
@@ -405,6 +407,19 @@ describe("the refresh control", () => {
 		expect(distinctInsets(opening).length).toBeGreaterThan(2);
 		for (const { restDistance } of opening)
 			expect(restDistance).toBeLessThan(1);
+		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+		expect(view.button()).not.toBeNull();
+	});
+
+	it("keeps a conversation on its true floor while that room opens, where the floor rounds a whole pixel below the scroll range", async () => {
+		vi.stubGlobal("devicePixelRatio", 1.25);
+		const view = await mountAtRest("bottom", { floorRoundingPx: 1 });
+
+		await view.wheelWithoutBand();
+		const opening = await view.contentFramesOver(TWEEN_FRAMES);
+
+		expect(distinctInsets(opening).length).toBeGreaterThan(2);
+		for (const { restDistance } of opening) expect(restDistance).toBe(0);
 		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
 		expect(view.button()).not.toBeNull();
 	});

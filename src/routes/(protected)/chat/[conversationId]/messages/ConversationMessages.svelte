@@ -3,6 +3,7 @@
 	import { SvelteSet } from "svelte/reactivity";
 
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
+	import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
 	import { getConversationState } from "../conversation-state.svelte";
@@ -53,6 +54,10 @@
 		);
 	}
 
+	function reachedFloor() {
+		return edgeGap(floorDistance()) <= 0;
+	}
+
 	let scrollingToRest = false;
 	let scrollingToRestTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -67,7 +72,7 @@
 			scrollingToRestTimer = setTimeout(endScrollingToRest, 1500);
 		}
 		refreshControl?.scrollToRest(behavior);
-		if (floorDistance() <= 1) endScrollingToRest();
+		if (reachedFloor()) endScrollingToRest();
 	}
 
 	function endScrollingToRest() {
@@ -82,7 +87,7 @@
 		if (!readerScrolled()) return;
 		ownScrollTop = null;
 		if (scrollingToRest) {
-			if (floorDistance() <= 1) endScrollingToRest();
+			if (reachedFloor()) endScrollingToRest();
 			return;
 		}
 		recordRestingPlace();
@@ -179,6 +184,8 @@
 
 	function holdFloor(el: HTMLElement): void {
 		if (scrollingToRest) refreshControl?.scrollToRest("smooth");
+		else if (edgeGap(restingFloorDistance) === 0)
+			el.scrollTop = el.scrollHeight;
 		else
 			el.scrollTop =
 				el.scrollHeight - el.clientHeight - restingFloorDistance;

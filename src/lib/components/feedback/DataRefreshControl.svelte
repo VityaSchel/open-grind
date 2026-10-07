@@ -215,8 +215,7 @@
 		if (!target) return;
 		$effect(() => {
 			const restingAtFloor =
-				position === "bottom" &&
-				Math.abs(boundaryDistance()) < AT_BOUNDARY_PX;
+				position === "bottom" && boundaryDistance() === 0;
 			target.style.setProperty(property, `${contentInset}px`);
 			if (restingAtFloor) geometry.scrollToRest();
 			untrack(() => oninsetchange?.());

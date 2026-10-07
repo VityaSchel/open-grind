@@ -1,7 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { attachOverscrollPull } from "./overscroll-adapter";
-import { ARMING_PX, makeModel, NON_ARMING_PX } from "./pull-test-helpers";
+import {
+	ARMING_PX,
+	makeModel,
+	makeScrollable,
+	NON_ARMING_PX,
+} from "./pull-test-helpers";
+import { scrollGeometry } from "./scroll-geometry";
 
 const KEY_BAND_WINDOW_MS = 500;
 
@@ -471,6 +477,70 @@ describe("attachOverscrollPull", () => {
 		expect(model.phase).toBe("armed");
 		scrollEnd();
 		expect(onTrigger).toHaveBeenCalledOnce();
+		detach();
+	});
+});
+
+describe("attachOverscrollPull at a conversation's floor", () => {
+	const SCROLL_RANGE = 493;
+
+	function attachAtFloor() {
+		const { model } = makeModel();
+		const scroller = document.createElement("div");
+		makeScrollable(scroller, {
+			scrollHeight: 1167,
+			clientHeight: 674,
+			scrollTop: SCROLL_RANGE,
+		});
+		let clock = 0;
+		const detach = attachOverscrollPull(model, {
+			listenTarget: scroller,
+			overscrollPx: scrollGeometry({
+				container: () => scroller,
+				position: () => "bottom",
+			}).overscrollPx,
+			now: () => clock,
+		});
+		const clampPast = (px: number) => {
+			clock += 16;
+			scroller.scrollTop = SCROLL_RANGE + px;
+			scroller.dispatchEvent(new Event("scroll"));
+		};
+		return { model, clampPast, detach };
+	}
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it.each([
+		{ devicePixelRatio: 1.25, pastRange: 0.6 },
+		{ devicePixelRatio: 1.25, pastRange: 1 },
+		{ devicePixelRatio: 1.25, pastRange: 1.4 },
+		{ devicePixelRatio: 1.25, pastRange: 1.6 },
+		{ devicePixelRatio: 2.625, pastRange: 0.6 },
+		{ devicePixelRatio: 2.625, pastRange: 1 },
+		{ devicePixelRatio: 2.625, pastRange: 1.2 },
+	])(
+		"reads a layout clamp $pastRange px past the scroll range at a device pixel ratio of $devicePixelRatio as no pull",
+		({ devicePixelRatio, pastRange }) => {
+			vi.stubGlobal("devicePixelRatio", devicePixelRatio);
+			const { model, clampPast, detach } = attachAtFloor();
+
+			clampPast(pastRange);
+
+			expect(model.phase).toBe("idle");
+			detach();
+		},
+	);
+
+	it("still pulls a rubber band that reaches past the rounding", () => {
+		vi.stubGlobal("devicePixelRatio", 1.25);
+		const { model, clampPast, detach } = attachAtFloor();
+
+		clampPast(2.5);
+
+		expect(model.phase).toBe("pulling");
 		detach();
 	});
 });
