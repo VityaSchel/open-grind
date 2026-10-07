@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
-use crate::api::oauth::{new_nonce, without_secrets, CANCELED};
+use crate::api::oauth::{delivered, new_nonce, without_secrets, CANCELED};
 use crate::error::AppError;
 
 use super::GoogleOauthBridge;
@@ -146,9 +146,7 @@ async fn run_flow(
 		}
 	});
 
-	let result = rx.await.map_err(|_| {
-		AppError::Auth("sign-in flow ended unexpectedly".into())
-	})?;
+	let result = delivered(rx).await;
 
 	let _ = window.clear_all_browsing_data();
 	let _ = window.close();

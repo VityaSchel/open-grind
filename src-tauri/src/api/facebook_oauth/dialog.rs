@@ -3,7 +3,7 @@ use std::time::Duration;
 use tauri::Url;
 use tokio::sync::oneshot;
 
-use crate::api::oauth::CANCELED;
+use crate::api::oauth::{delivered, CANCELED};
 use crate::error::AppError;
 
 const DIALOG_URL: &str = "https://www.facebook.com/v16.0/dialog/oauth";
@@ -91,16 +91,15 @@ pub async fn wait_for_result(
 	rx: oneshot::Receiver<Result<String, String>>,
 	limit: Duration,
 ) -> Result<String, String> {
-	match tokio::time::timeout(limit, rx).await {
-		Ok(Ok(result)) => result,
-		Ok(Err(_)) => Err("sign-in flow ended unexpectedly".to_owned()),
-		Err(_) => Err(TIMED_OUT.to_owned()),
-	}
+	tokio::time::timeout(limit, delivered(rx))
+		.await
+		.unwrap_or_else(|_| Err(TIMED_OUT.to_owned()))
 }
 
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::api::oauth::FLOW_ENDED;
 
 	fn url(s: &str) -> Url {
 		Url::parse(s).unwrap()
@@ -220,7 +219,7 @@ mod tests {
 		drop(tx);
 		assert_eq!(
 			wait_for_result(rx, Duration::from_secs(1)).await,
-			Err("sign-in flow ended unexpectedly".into())
+			Err(FLOW_ENDED.into())
 		);
 	}
 

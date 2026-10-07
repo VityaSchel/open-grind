@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import {
 	refusedCompanionMessage,
+	signInFlowEnded,
+	signInInProgress,
 	untrustedCompanionMessage,
 } from "$lib/api/sign-in";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
@@ -308,6 +310,46 @@ describe("SignInForm", () => {
 		},
 	);
 
+	it.each(["Google", "Facebook"])(
+		"says a %s sign-in is already in progress",
+		async (vendor) => {
+			callMethodMock.mockRejectedValue({
+				kind: "Auth",
+				message: signInInProgress,
+			});
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+			);
+			await settle();
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				`${vendor} sign-in already in progress`,
+			);
+		},
+	);
+
+	it.each(["Google", "Facebook"])(
+		"explains a %s sign-in flow that ended unexpectedly",
+		async (vendor) => {
+			callMethodMock.mockRejectedValue({
+				kind: "Auth",
+				message: signInFlowEnded,
+			});
+			render(SignInForm);
+
+			await fireEvent.click(
+				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+			);
+			await settle();
+
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"sign-in flow ended unexpectedly",
+			);
+		},
+	);
+
 	it("keeps the password button's name while it signs in", async () => {
 		callMethodMock.mockReturnValue(new Promise(() => {}));
 		render(SignInForm);
@@ -411,6 +453,14 @@ const localizedFailures = [
 		rejects: { sign_in_with_facebook: { kind: "Auth", message: marker } },
 		resolves: {},
 	})),
+	{
+		failure: "a sign-in flow that ended unexpectedly",
+		button: "Sign in with Google",
+		rejects: {
+			sign_in_with_google: { kind: "Auth", message: signInFlowEnded },
+		},
+		resolves: {},
+	},
 ];
 
 describe("SignInForm in the active locale", () => {
@@ -490,4 +540,28 @@ describe("SignInForm in the active locale", () => {
 		expect(label).toMatch(PSEUDO_MESSAGE);
 		expect(label).toContain("Google");
 	});
+
+	it.each(["Google", "Facebook"])(
+		"names the %s sign-in already in progress in the active locale",
+		async (vendor) => {
+			callMethodMock.mockRejectedValue({
+				kind: "Auth",
+				message: signInInProgress,
+			});
+			render(SignInForm);
+			const target = screen.getByRole("button", {
+				name: `Sign in with ${vendor}`,
+			});
+			await setLocale({ locale: "en-XA" });
+
+			await fireEvent.click(target);
+			await vi.waitFor(() => {
+				expect(toastMock.error).toHaveBeenCalledOnce();
+			});
+
+			const [message] = toastMock.error.mock.lastCall ?? [];
+			expect(message).toMatch(PSEUDO_MESSAGE);
+			expect(message).toContain(vendor);
+		},
+	);
 });

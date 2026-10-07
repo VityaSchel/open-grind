@@ -15,6 +15,8 @@
 		finishSignIn,
 		refusedCompanionMessage,
 		reportSignInFailure,
+		signInFlowEnded,
+		signInInProgress,
 		untrustedCompanionMessage,
 	} from "$lib/api/sign-in";
 	import { Button } from "$lib/components/ui/button";
@@ -67,6 +69,14 @@
 					toast.error(t("auth.signIn.facebook.errors.timedOut")),
 			},
 		},
+	};
+
+	const flowFailures: Record<string, (label: string) => void> = {
+		[signInInProgress]: (label) =>
+			toast.error(
+				t("auth.signIn.errors.inProgress", { provider: label }),
+			),
+		[signInFlowEnded]: () => toast.error(t("auth.signIn.errors.flowEnded")),
 	};
 
 	let email = $state("");
@@ -200,8 +210,8 @@
 					provider: label,
 				}),
 				onAuthFailure: (message) => {
-					const handle = failures[message];
-					handle?.();
+					const handle = failures[message] ?? flowFailures[message];
+					handle?.(label);
 					return handle !== undefined;
 				},
 			});

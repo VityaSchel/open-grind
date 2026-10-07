@@ -17,6 +17,8 @@ export interface Messages {
 	"auth.signIn.description": undefined;
 	"auth.signIn.email.label": undefined;
 	"auth.signIn.email.placeholder": undefined;
+	"auth.signIn.errors.flowEnded": undefined;
+	"auth.signIn.errors.inProgress": { provider: string };
 	"auth.signIn.errors.invalidCredentials": undefined;
 	"auth.signIn.errors.notRegistered": undefined;
 	"auth.signIn.errors.providerFailed": { provider: string };

@@ -12,9 +12,7 @@ use crate::error::AppError;
 
 pub struct Facebook;
 
-impl OauthProvider for Facebook {
-	const NAME: &'static str = "Facebook";
-}
+impl OauthProvider for Facebook {}
 
 pub type FacebookOauthBridge = OauthBridge<Facebook>;
 

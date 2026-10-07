@@ -24,6 +24,8 @@ export const companionUntrusted = "companion-untrusted";
 export const companionRefused = "companion-refused";
 export const companionDisabled = "companion-disabled";
 const companionFailed = "companion-failed";
+export const signInInProgress = "sign-in-in-progress";
+export const signInFlowEnded = "sign-in-flow-ended";
 
 export function untrustedCompanionMessage(): string {
 	return t("auth.signIn.companion.errors.untrusted");
