@@ -111,7 +111,8 @@ const identifier = String.raw`/^(?:[\p{Lu}\d_]+|\p{Lu}[\p{L}\d]*\p{Ll}\p{Lu}[\p{
 const letterless = String.raw`/^[^\p{L}]*$/u`;
 const spacedWord = String.raw`/\s\p{L}/u`;
 const literalText = `:matches(Literal[value=${letter}], TemplateLiteral:has(> TemplateElement[value.cooked=${letter}]))`;
-const proseLiteral = `Literal[value=${capitalized}]:not([value=${identifier}], [value=${brandOnly}])`;
+const proseValue = `[value=${capitalized}]:not([value=${identifier}], [value=${brandOnly}])`;
+const proseLiteral = `Literal${proseValue}`;
 const proseTemplate = `TemplateLiteral:matches(:has(> TemplateElement:first-child[value.cooked=${capitalized}]), :has(> TemplateElement:first-child[value.cooked=${letterless}]):has(> TemplateElement[value.cooked=${spacedWord}]))`;
 const diagnosticCall = `:matches(CallExpression[callee.object.name="console"], CallExpression[callee.name="writeText"], CallExpression[callee.property.name="writeText"], NewExpression[callee.name=/Error$/])`;
 const proseText = `:matches(${proseLiteral}, ${proseTemplate}):not(${diagnosticCall} *)`;
@@ -120,6 +121,8 @@ const toastTextProperty = `:matches(${toastCall} > ObjectExpression Property[key
 const fallbackOperator = `LogicalExpression:matches([operator="??"], [operator="||"]):not(BinaryExpression[operator=/^[!=]==?$/] > *)`;
 const identityProperty = `Property[key.name=/^(?:kind|type)$/]`;
 const textAttribute = `SvelteAttribute[key.name=/^(?:aria-label|aria-description|alt|title|placeholder)$/]`;
+const schemaCall = `CallExpression:matches([callee.object.name="z"], [callee.property.name="catch"])`;
+const componentAttribute = `SvelteElement[kind="component"] > SvelteStartTag > SvelteAttribute:not(${textAttribute})`;
 
 const rawText = (selectors) =>
 	selectors.map((selector) => ({
@@ -134,12 +137,18 @@ const scriptRawTextSelectors = rawText([
 	`AssignmentPattern > ${proseText}.right`,
 	`ConditionalExpression > ${proseText}:matches(.consequent, .alternate)`,
 	`Property:not(${identityProperty}, ${toastTextProperty}) > ${proseText}.value`,
+	`CallExpression:not(${toastCall}, ${schemaCall}) > ${proseText}.arguments`,
+	`VariableDeclarator > ${proseText}.init`,
+	`ReturnStatement > ${proseText}`,
+	`ArrowFunctionExpression > ${proseText}.body`,
 ]);
 
 const svelteRawTextSelectors = rawText([
 	`SvelteText[value=${letter}]:not(SvelteStyleElement > SvelteText, [value=${brandOnly}])`,
 	`${textAttribute} > SvelteLiteral[value=${letter}]`,
 	`${textAttribute} > SvelteMustacheTag > ${literalText}`,
+	`${componentAttribute} > SvelteLiteral${proseValue}`,
+	`${componentAttribute} > SvelteMustacheTag > ${proseText}`,
 ]);
 
 const translationCall = `CallExpression[callee.name=/^(?:t|richParts)$/]`;
