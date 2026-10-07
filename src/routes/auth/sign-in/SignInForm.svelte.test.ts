@@ -187,7 +187,7 @@ describe("SignInForm", () => {
 		await settle();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			untrustedCompanionMessage,
+			untrustedCompanionMessage(),
 		);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith(
 			"/auth/sign-in/google?paste",
@@ -207,7 +207,7 @@ describe("SignInForm", () => {
 		await settle();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			refusedCompanionMessage,
+			refusedCompanionMessage(),
 		);
 		expect(gotoMock).toHaveBeenCalledExactlyOnceWith(
 			"/auth/sign-in/google?paste",

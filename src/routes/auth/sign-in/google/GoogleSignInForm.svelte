@@ -122,16 +122,16 @@
 						return true;
 					}
 					if (message === companionDisabled) {
-						toast.error(disabledCompanionMessage);
+						toast.error(disabledCompanionMessage());
 						return true;
 					}
 					if (message === companionUntrusted) {
-						toast.error(untrustedCompanionMessage);
+						toast.error(untrustedCompanionMessage());
 						pasting = true;
 						return true;
 					}
 					if (message === companionRefused) {
-						toast.error(refusedCompanionMessage);
+						toast.error(refusedCompanionMessage());
 						pasting = true;
 						return true;
 					}

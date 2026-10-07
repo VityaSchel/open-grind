@@ -39,13 +39,13 @@
 			failures: {
 				[companionUnavailable]: () => void goto("/auth/sign-in/google"),
 				[companionDisabled]: () =>
-					toast.error(disabledCompanionMessage),
+					toast.error(disabledCompanionMessage()),
 				[companionUntrusted]: () => {
-					toast.error(untrustedCompanionMessage);
+					toast.error(untrustedCompanionMessage());
 					void goto("/auth/sign-in/google?paste");
 				},
 				[companionRefused]: () => {
-					toast.error(refusedCompanionMessage);
+					toast.error(refusedCompanionMessage());
 					void goto("/auth/sign-in/google?paste");
 				},
 			},

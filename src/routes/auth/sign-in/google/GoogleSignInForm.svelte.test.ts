@@ -484,7 +484,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			untrustedCompanionMessage,
+			untrustedCompanionMessage(),
 		);
 		expect(screen.getByLabelText("Token")).toBeTruthy();
 	});
@@ -506,7 +506,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			refusedCompanionMessage,
+			refusedCompanionMessage(),
 		);
 		expect(screen.getByLabelText("Token")).toBeTruthy();
 

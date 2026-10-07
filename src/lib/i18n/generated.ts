@@ -1,5 +1,10 @@
 export interface Messages {
 	"auth.passwordReset.title": undefined;
+	"auth.signIn.companion.errors.disabled": undefined;
+	"auth.signIn.companion.errors.refused": undefined;
+	"auth.signIn.companion.errors.untrusted": undefined;
+	"auth.signIn.errors.notRegistered": undefined;
+	"auth.signIn.errors.rateLimited": undefined;
 	"auth.signIn.title": undefined;
 	"auth.signIn.withGoogle": undefined;
 	"auth.signUp.title": undefined;
