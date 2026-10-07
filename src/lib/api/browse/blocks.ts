@@ -1,7 +1,6 @@
 import z from "zod";
 
-import { createRecentlyLifted } from "$lib/api/browse/recently-lifted";
-import { FetchCache } from "$lib/api/cache";
+import { EditableServerList } from "$lib/api/browse/editable-server-list";
 import { fetchRest } from "$lib/api/transport";
 import {
 	markProfileUnviewable,
@@ -17,25 +16,21 @@ const getBlockedUsersResponseSchema = z.object({
 
 type BlockedUsers = z.infer<typeof getBlockedUsersResponseSchema>["blocking"];
 
-const blockedUsers = new FetchCache<null, BlockedUsers>(
-	() =>
+const blockedUsers = new EditableServerList({
+	request: () =>
 		fetchRest("/v3.1/me/blocks").then(
 			(res) => res.jsonParsed(getBlockedUsersResponseSchema).blocking,
 		),
-	{ ttlMs: 5_000 },
-);
-
-const recentlyUnblocked = createRecentlyLifted();
+	ttlMs: 5_000,
+});
 
 export function getBlockedUsers(): Promise<BlockedUsers> {
-	return blockedUsers.fetch(null);
+	return blockedUsers.entries();
 }
 
 export async function markBlockedProfilesUnviewable(): Promise<void> {
-	for (const { profileId } of await getBlockedUsers()) {
-		if (recentlyUnblocked.has(profileId)) continue;
+	for (const { profileId } of await getBlockedUsers())
 		markProfileUnviewable(profileId);
-	}
 }
 
 export async function blockUser({
@@ -43,10 +38,13 @@ export async function blockUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "POST" }).then(
-		(res) => res.assertOk(),
-	);
-	blockedUsers.clear();
+	await blockedUsers.add({
+		profileId,
+		request: () =>
+			fetchRest(`/v3/me/blocks/${profileId}`, { method: "POST" }).then(
+				(res) => res.assertOk(),
+			),
+	});
 	markProfileUnviewable(profileId);
 }
 
@@ -55,12 +53,12 @@ export async function unblockUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v3/me/blocks/${profileId}`, { method: "DELETE" }).then(
-		(res) => res.assertOk(),
-	);
-	recentlyUnblocked.remember(profileId);
-	blockedUsers.update(null, (blocking) =>
-		blocking.filter((blocked) => blocked.profileId !== profileId),
-	);
+	await blockedUsers.remove({
+		profileId,
+		request: () =>
+			fetchRest(`/v3/me/blocks/${profileId}`, { method: "DELETE" }).then(
+				(res) => res.assertOk(),
+			),
+	});
 	markProfileViewable(profileId);
 }

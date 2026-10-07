@@ -26,14 +26,20 @@ const blocking = [{ profileId: 1, blockedTime: 0 }];
 
 const PROFILE_ID = 7;
 
+const CACHE_TTL_MS = 5_000;
+
+function blockingList(blocked: { profileId: number }[]) {
+	return {
+		blocking: blocked.map(({ profileId }) => ({
+			profileId,
+			blockedTime: 0,
+		})),
+	};
+}
+
 function respondWithBlocking(blocked: { profileId: number }[]) {
 	fetchRestMock.mockResolvedValue({
-		jsonParsed: () => ({
-			blocking: blocked.map(({ profileId }) => ({
-				profileId,
-				blockedTime: 0,
-			})),
-		}),
+		jsonParsed: () => blockingList(blocked),
 		assertOk: () => {},
 	});
 }
@@ -154,9 +160,30 @@ describe("blockUser", () => {
 		await getBlockedUsers();
 		expect(fetchRestMock).toHaveBeenCalledTimes(2);
 	});
+
+	it("does not join a blocking list request sent before the block", async () => {
+		const request = pendingRequest(fetchRestMock);
+		const before = getBlockedUsers();
+		await blockUser({ profileId: PROFILE_ID });
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
+
+		const after = await getBlockedUsers();
+		request.succeed(blockingList([]));
+
+		expect(await before).toEqual([]);
+		expect(after).toEqual([{ profileId: PROFILE_ID, blockedTime: 0 }]);
+		expect(fetchRestMock).toHaveBeenCalledTimes(3);
+	});
 });
 
 describe("unblockUser", () => {
+	let clock = 0;
+
+	beforeEach(() => {
+		clock = 1_000;
+		setNowForTesting(() => clock);
+	});
+
 	it("makes the profile viewable again", async () => {
 		await blockUser({ profileId: PROFILE_ID });
 		await unblockUser({ profileId: PROFILE_ID });
@@ -164,18 +191,112 @@ describe("unblockUser", () => {
 		expect(isProfileViewable(PROFILE_ID)).toBe(true);
 	});
 
-	it("does not let a stale blocking list hide the profile again", async () => {
-		let clock = 1_000;
-		setNowForTesting(() => clock);
-		respondWithBlocking([{ profileId: PROFILE_ID }]);
-		await markBlockedProfilesUnviewable();
+	it("deletes the block and takes the profile out of the cached list", async () => {
+		respondWithBlocking([{ profileId: PROFILE_ID }, { profileId: 8 }]);
+		await getBlockedUsers();
 
 		await unblockUser({ profileId: PROFILE_ID });
-		// past the list cache TTL, so the lagging server list is refetched
-		clock += 6_000;
+
+		expect(fetchRestMock).toHaveBeenNthCalledWith(
+			2,
+			`/v3/me/blocks/${PROFILE_ID}`,
+			{ method: "DELETE" },
+		);
+		expect(await getBlockedUsers()).toEqual([
+			{ profileId: 8, blockedTime: 0 },
+		]);
+		expect(fetchRestMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("does not let a blocking list requested before the unblock hide the profile again", async () => {
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
 		await markBlockedProfilesUnviewable();
+		clock += CACHE_TTL_MS;
+		const request = pendingRequest(fetchRestMock);
+		const marking = markBlockedProfilesUnviewable();
+		clock += 1;
+
+		await unblockUser({ profileId: PROFILE_ID });
+		clock += 1;
+		request.succeed(blockingList([{ profileId: PROFILE_ID }]));
+		await marking;
 
 		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+	});
+
+	it("leaves the profile out of a read that joins a request sent before the unblock", async () => {
+		const request = pendingRequest(fetchRestMock);
+		const before = getBlockedUsers();
+		clock += 1;
+		await unblockUser({ profileId: PROFILE_ID });
+		clock += 1;
+
+		const joined = getBlockedUsers();
+		request.succeed(blockingList([{ profileId: PROFILE_ID }]));
+
+		expect(await before).toEqual([]);
+		expect(await joined).toEqual([]);
+		expect(fetchRestMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("leaves the profile out of a blocking list requested while the unblock was on its way", async () => {
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
+		await markBlockedProfilesUnviewable();
+		clock += CACHE_TTL_MS;
+		const deletion = pendingRequest(fetchRestMock);
+		const unblocking = unblockUser({ profileId: PROFILE_ID });
+		clock += 1;
+		const listRequest = pendingRequest(fetchRestMock);
+		const marking = markBlockedProfilesUnviewable();
+		const listing = getBlockedUsers();
+		clock += 1;
+		deletion.succeed();
+		await unblocking;
+		clock += 1;
+
+		listRequest.succeed(
+			blockingList([{ profileId: PROFILE_ID }, { profileId: 8 }]),
+		);
+		await marking;
+
+		expect(await listing).toEqual([{ profileId: 8, blockedTime: 0 }]);
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+		expect(fetchRestMock).toHaveBeenCalledTimes(3);
+	});
+
+	it("still counts a block made elsewhere after the unblock", async () => {
+		await unblockUser({ profileId: PROFILE_ID });
+		clock += 1;
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
+
+		expect(await getBlockedUsers()).toEqual([
+			{ profileId: PROFILE_ID, blockedTime: 0 },
+		]);
+	});
+
+	it("keeps a profile unblocked and blocked again here in a list requested before both", async () => {
+		const request = pendingRequest(fetchRestMock);
+		const listing = getBlockedUsers();
+		clock += 1;
+		await unblockUser({ profileId: PROFILE_ID });
+		clock += 1;
+		await blockUser({ profileId: PROFILE_ID });
+
+		request.succeed(blockingList([{ profileId: PROFILE_ID }]));
+
+		expect(await listing).toEqual([
+			{ profileId: PROFILE_ID, blockedTime: 0 },
+		]);
+	});
+
+	it("forgets its unblocks for the next account", async () => {
+		await unblockUser({ profileId: PROFILE_ID });
+		clearAccountCaches();
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
+
+		expect(await getBlockedUsers()).toEqual([
+			{ profileId: PROFILE_ID, blockedTime: 0 },
+		]);
 	});
 });
 
