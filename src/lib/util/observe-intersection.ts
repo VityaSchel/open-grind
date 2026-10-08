@@ -13,7 +13,7 @@ export function observeIntersection(
 	if (handle === undefined) return { destroy: () => {} };
 	const observer = new IntersectionObserver(
 		(entries) => {
-			if (!entries[0]?.isIntersecting) return;
+			if (!entries.at(-1)?.isIntersecting) return;
 			if (once) observer.disconnect();
 			void Promise.resolve(handle()).catch((error: unknown) =>
 				console.error(error),
