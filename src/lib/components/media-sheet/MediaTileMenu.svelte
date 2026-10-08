@@ -6,6 +6,7 @@
 	import ContextMenuPanel from "$lib/components/shared/ContextMenuPanel.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
+	import { isPastMiddleColumn } from "./tile-menu.svelte";
 
 	let {
 		tile,
@@ -23,8 +24,8 @@
 		overlay?: Snippet;
 	} = $props();
 
-	const { rect, corners } = untrack(() => ({
-		rect: tile.getBoundingClientRect(),
+	const { pastMiddle, corners } = untrack(() => ({
+		pastMiddle: isPastMiddleColumn(tile),
 		corners: getComputedStyle(tile).borderRadius,
 	}));
 
@@ -74,11 +75,7 @@
 	}}
 	oncontextmenu={(event) => event.preventDefault()}
 >
-	<ContextMenu
-		anchor={tile}
-		isOut={rect.x + rect.width / 2 > window.innerWidth / 2}
-		{onClose}
-	>
+	<ContextMenu anchor={tile} isOut={pastMiddle} {onClose}>
 		{#snippet content()}
 			<div
 				data-slot="media-tile-lifted"
