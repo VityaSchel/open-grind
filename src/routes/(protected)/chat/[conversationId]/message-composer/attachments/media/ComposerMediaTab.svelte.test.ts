@@ -102,6 +102,43 @@ describe("composer media tab", () => {
 		expect(container.querySelectorAll(SKELETON)).toHaveLength(0);
 	});
 
+	it("opens one picker however fast the add tile is tapped twice", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		const add = getByRole("button", { name: "Upload photos or videos" });
+		await fireEvent.click(add);
+		await fireEvent.click(add);
+
+		expect(picker.pickMultipleMedia).toHaveBeenCalledOnce();
+	});
+
+	it("opens the picker again while picked media is still uploading", async () => {
+		drawer.getDrawerMedia.mockResolvedValue([]);
+		picker.pickMultipleMedia.mockResolvedValue([
+			{ key: "picked", mimeType: "image/jpeg", path: "/picked.jpg" },
+		]);
+		chatMedia.addMediaToDrawer.mockReturnValue(new Promise(() => {}));
+		const { getByRole } = renderTab();
+		await tick();
+		await tick();
+
+		await fireEvent.click(
+			getByRole("button", { name: "Upload photos or videos" }),
+		);
+		await vi.waitFor(() =>
+			expect(chatMedia.addMediaToDrawer).toHaveBeenCalledOnce(),
+		);
+		await fireEvent.click(
+			getByRole("button", { name: "Upload photos or videos" }),
+		);
+
+		expect(picker.pickMultipleMedia).toHaveBeenCalledTimes(2);
+	});
+
 	it("names the size limit when a picked file is too large to send", async () => {
 		drawer.getDrawerMedia.mockResolvedValue([]);
 		picker.pickMultipleMedia.mockResolvedValue([

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.SystemClock
 import androidx.activity.result.ActivityResult
-import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -14,6 +13,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import org.opengrind.addon.AddonLaunchCheck
 import org.opengrind.addon.AddonGate
+import org.opengrind.launchForResult
 
 @InvokeArg
 internal class WatchArgs {
@@ -28,7 +28,7 @@ class GoogleOauthPlugin(private val activity: Activity) : Plugin(activity) {
         try {
             val intent = Intent(REQUEST_TOKEN_ACTION).setPackage(COMPANION_PACKAGE)
             when (AddonLaunchCheck.decide(activity, intent, COMPANION_PACKAGE)) {
-                AddonGate.Verdict.Launch -> startActivityForResult(invoke, intent, "tokenResult")
+                AddonGate.Verdict.Launch -> activity.launchForResult(intent) { tokenResult(invoke, it) }
                 AddonGate.Verdict.Unavailable -> invoke.reject(ERROR_UNAVAILABLE)
                 AddonGate.Verdict.Disabled -> invoke.reject(ERROR_DISABLED)
                 AddonGate.Verdict.Untrusted -> invoke.reject(ERROR_UNTRUSTED)
@@ -71,8 +71,7 @@ class GoogleOauthPlugin(private val activity: Activity) : Plugin(activity) {
         if (TokenHandoff.pending(SystemClock.elapsedRealtime())) HandoffEvents.notifyPending()
     }
 
-    @ActivityCallback
-    fun tokenResult(invoke: Invoke, result: ActivityResult) {
+    private fun tokenResult(invoke: Invoke, result: ActivityResult) {
         if (result.resultCode == Activity.RESULT_OK) {
             val token = result.data?.getStringExtra(EXTRA_TOKEN)
             if (token.isNullOrEmpty()) {
