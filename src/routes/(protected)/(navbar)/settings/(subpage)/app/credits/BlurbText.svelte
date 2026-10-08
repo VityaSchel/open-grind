@@ -10,13 +10,14 @@
 	}: { name: string; blurb?: HighlightBlurbKey; url?: string } = $props();
 </script>
 
-{#snippet project(text: string)}
-	{#if url}<Link href={url} class="font-semibold hover:underline">{text}</Link
-		>{:else}<span class="font-semibold">{text}</span>{/if}
+{#snippet projectLink()}
+	{#if url}<Link href={url} class="font-semibold hover:underline">{name}</Link
+		>{:else}<span class="font-semibold">{name}</span>{/if}
 {/snippet}
 
 <p class="text-sm wrap-anywhere text-muted-foreground">
-	{#if blurb}<Rich key={blurb} {name} {project} />{:else}{@render project(
-			name,
-		)}{/if}
+	{#if blurb}<Rich
+			key={blurb}
+			{projectLink}
+		/>{:else}{@render projectLink()}{/if}
 </p>
