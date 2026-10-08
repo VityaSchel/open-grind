@@ -6,7 +6,7 @@
 	"taps": {
 		"empty": {
 			"title": "No Taps Yet",
-			"description": "Browse <link>Grid</link> to find people, and they might tap you back."
+			"description": "Browse <gridLink>Grid</gridLink> to find people, and they might tap you back."
 		},
 		"errors": {
 			"refreshFailed": "Failed to refresh taps"

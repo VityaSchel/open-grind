@@ -14,7 +14,7 @@
 		<Empty.Title>{t("interest.taps.empty.title")}</Empty.Title>
 		<Empty.Description>
 			<Rich key="interest.taps.empty.description">
-				{#snippet link(text)}<a href="/">{text}</a>{/snippet}
+				{#snippet gridLink(text)}<a href="/">{text}</a>{/snippet}
 			</Rich>
 		</Empty.Description>
 	</Empty.Header>

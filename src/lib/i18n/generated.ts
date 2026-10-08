@@ -349,7 +349,7 @@ export interface RichMessages {
 	"feedback.entitlementBypass.explanation": { bypassGuideLink: "tag" };
 	"feedback.requestBlocked.cloudflare.knownIssue": { knownIssueLink: "tag" };
 	"feedback.sessionError.detailAfterAttempts": { count: "count"; detail: "placeholder" };
-	"interest.taps.empty.description": { link: "tag" };
+	"interest.taps.empty.description": { gridLink: "tag" };
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { link: "tag" };
