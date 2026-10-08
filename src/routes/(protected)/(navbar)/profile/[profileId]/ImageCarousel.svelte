@@ -13,6 +13,7 @@
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
+	import { devicePixelHeight } from "./device-pixel-height";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 	let {
@@ -124,10 +125,13 @@
 	let indicatorHeight = $state(BULLET_SIZE_PX);
 </script>
 
-<div class="relative aspect-3/4 h-auto max-h-photo w-full">
+<div
+	class="relative aspect-3/4 h-auto max-h-photo w-full"
+	{@attach devicePixelHeight}
+>
 	{#if medias.length}
 		<div
-			class="carousel relative flex size-full max-h-[inherit] snap-y snap-mandatory flex-col overflow-auto *:snap-center"
+			class="carousel relative flex size-full max-h-(--device-pixel-height) snap-y snap-mandatory flex-col overflow-auto *:snap-center"
 			bind:this={gallery}
 			onscroll={() => {
 				if (!gallery) return;
