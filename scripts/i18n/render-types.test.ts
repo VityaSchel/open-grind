@@ -29,7 +29,7 @@ describe("renderTypes", () => {
 				'\t"ns.alphabet": { name: "placeholder" };',
 				'\t"ns.bravo": { first: "placeholder"; link: "tag"; second: "placeholder" };',
 				'\t"ns.photos": { b: "tag"; count: "count" };',
-				'\t"ns.terms": { app: "text"; b: "tag" };',
+				'\t"ns.terms": { app: "placeholderInTag"; b: "tag" };',
 				"}",
 				"",
 			].join("\n"),

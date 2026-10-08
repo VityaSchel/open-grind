@@ -43,12 +43,12 @@ No name may be `key` or `children`, and no tag may be `count`, the plural number
 
 `RichMessages` in `generated.ts` lists every message with a tag, or with a placeholder other than `{{count}}`, and gives each name one of four kinds. `Rich.svelte` takes the `key` and one prop per name:
 
-| Kind          | In English                       | Prop                                                               |
-| ------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `tag`         | `<gridLink>Grid</gridLink>`      | A snippet that renders the translated text it receives             |
-| `placeholder` | `{{menuIcon}}` outside every tag | A string, or a snippet without parameters that renders a component |
-| `text`        | `{{name}}` inside a tag          | A string                                                           |
-| `count`       | `{{count}}`                      | A number, formatted for the locale                                 |
+| Kind               | In English                       | Prop                                                               |
+| ------------------ | -------------------------------- | ------------------------------------------------------------------ |
+| `tag`              | `<gridLink>Grid</gridLink>`      | A snippet that renders the translated text it receives             |
+| `placeholder`      | `{{menuIcon}}` outside every tag | A string, or a snippet without parameters that renders a component |
+| `placeholderInTag` | `{{name}}` inside a tag          | A string                                                           |
+| `count`            | `{{count}}`                      | A number, formatted for the locale                                 |
 
 ```svelte
 {#snippet gridLink(text: string)}<a href="/">{text}</a>{/snippet}

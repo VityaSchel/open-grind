@@ -29,7 +29,7 @@ export type KeyArgs<P> = unknown extends P
 type NameProps = {
 	tag: Snippet<[text: string]>;
 	placeholder: string | Snippet;
-	text: string;
+	placeholderInTag: string;
 	count: number;
 };
 

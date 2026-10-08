@@ -36,7 +36,7 @@ expectTypeOf<KeyArgs<{ flag: boolean }>>().toEqualTypeOf<[params: never]>();
 type Terms = RichPropsOf<{
 	app: "placeholder";
 	link: "tag";
-	who: "text";
+	who: "placeholderInTag";
 	count: "count";
 }>;
 

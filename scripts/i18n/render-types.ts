@@ -12,7 +12,7 @@ function namesType({ params, tags, wrapped }: Message): string {
 	const kindOf = (name: string) => {
 		if (tags.includes(name)) return "tag";
 		if (name === "count") return "count";
-		return wrapped.includes(name) ? "text" : "placeholder";
+		return wrapped.includes(name) ? "placeholderInTag" : "placeholder";
 	};
 	const fields = [...tags, ...params]
 		.sort()
