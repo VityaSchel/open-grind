@@ -22,7 +22,7 @@
 
 	const hide = instantWhenReducedMotion(
 		(node: HTMLDivElement): TransitionConfig => {
-			const width = node.offsetWidth;
+			const { width } = node.getBoundingClientRect();
 			return {
 				duration: 400,
 				css: (t: number, u: number) =>
