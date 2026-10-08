@@ -155,6 +155,16 @@ describe("collectMessages", () => {
 		},
 	);
 
+	it.each([
+		["icon", "Open the <icon></icon> menu."],
+		["project", "Thanks to <project>{{name}}</project>!"],
+		["link", "Track <link>#{{issue}}</link>."],
+	])("rejects <%s> wrapping only what the app supplies", (tag, text) => {
+		expect(errorsOf({ a: text })).toEqual([
+			`en/ns.a: <${tag}> wraps no text; use a {{placeholder}} for what the app supplies`,
+		]);
+	});
+
 	it.each(["a.b", "a-b", "Ab"])("rejects the namespace %s", (namespace) => {
 		expect(collectMessages([{ namespace, text: "{}" }]).errors).toEqual([
 			`en/${namespace}.json: file names are camelCase [a-z][A-Za-z0-9]*`,

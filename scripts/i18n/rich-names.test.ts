@@ -22,6 +22,7 @@ describe("checkTranslation of rich names", () => {
 				invite: "Пригласите {{name}} в <groupLink>группу</groupLink>",
 				menu: "Отключите это в меню {{menuIcon}}.",
 				photos_few: "<b>{{count}} фото</b>",
+				photos_many: "<b>{{count}}</b> фотографий",
 			}),
 		).toEqual([]);
 	});
@@ -31,6 +32,12 @@ describe("checkTranslation of rich names", () => {
 			{ invite: "Пригласите <groupLink>{{name}} в группу</groupLink>" },
 			[
 				"ru/ns.invite: {{name}} is inside a tag, which English never does",
+			],
+		],
+		[
+			{ invite: "Пригласите {{name}} в <groupLink></groupLink>" },
+			[
+				"ru/ns.invite: <groupLink> wraps no text; use a {{placeholder}} for what the app supplies",
 			],
 		],
 		[

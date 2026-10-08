@@ -37,6 +37,25 @@ describe("inspect", () => {
 		});
 	});
 
+	it.each([
+		"<b>by {{name}}</b>",
+		"<albumLink>{{album}} album</albumLink>",
+		"<b>写真</b>を見る",
+	])("accepts the tag in %j as wrapping text", (text) => {
+		expect(inspect(text).problems).toEqual([]);
+	});
+
+	it.each([
+		["Rated <b>4.5</b>", "b"],
+		["Rated <b> </b>", "b"],
+		["<b>{{album}}!</b>", "b"],
+		["Open the <menuIcon></menuIcon> menu, {{name}}", "menuIcon"],
+	])("rejects the tag in %j as wrapping no text", (text, tag) => {
+		expect(inspect(text).problems).toEqual([
+			`<${tag}> wraps no text; use a {{placeholder}} for what the app supplies`,
+		]);
+	});
+
 	it("keeps reading placeholders after a broken tag", () => {
 		expect(inspect("<b>x</i> {{name}} <i>{{count}}</i>")).toEqual({
 			params: ["name", "count"],

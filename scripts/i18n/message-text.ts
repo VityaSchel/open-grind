@@ -12,6 +12,7 @@ const TOKEN = new RegExp(
 	"gu",
 );
 const ENTITY = /&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[Xx][\dA-Fa-f]+);/g;
+const LETTER = /\p{L}/u;
 const RESERVED = new Set(["children", "key"]);
 const RESERVED_TAGS = new Set([...RESERVED, "count"]);
 
@@ -46,9 +47,15 @@ function tagProblem({
 }
 
 function readMarkup({ text, into }: { text: string; into: Inspection }): void {
-	let open: string | undefined;
+	let open: { name: string; wrapsText: boolean } | undefined;
 	let broken = false;
-	for (const [token, placeholder] of text.matchAll(TOKEN)) {
+	let end = 0;
+	for (const match of text.matchAll(TOKEN)) {
+		const [token, placeholder] = match;
+		if (open !== undefined) {
+			open.wrapsText ||= LETTER.test(text.slice(end, match.index));
+		}
+		end = match.index + token.length;
 		if (placeholder !== undefined) {
 			const name = placeholder.trim();
 			const problem = placeholderProblem({ token, name });
@@ -56,23 +63,34 @@ function readMarkup({ text, into }: { text: string; into: Inspection }): void {
 				into.problems.push(problem);
 			} else {
 				into.params.push(name);
-				if (open !== undefined) into.wrapped.push(name);
+				if (open !== undefined) {
+					into.wrapped.push(name);
+					open.wrapsText ||= name === "count";
+				}
 			}
 		} else if (!broken) {
-			const problem = tagProblem({ token, open });
+			const problem = tagProblem({ token, open: open?.name });
 			if (problem !== undefined) {
 				into.problems.push(problem);
 				broken = true;
 				open = undefined;
 			} else if (open === undefined) {
-				open = TAG_TOKEN.exec(token)?.[2];
+				const name = TAG_TOKEN.exec(token)?.[2] ?? "";
+				open = { name, wrapsText: false };
 			} else {
-				into.tags.push(open);
+				into.tags.push(open.name);
+				if (!open.wrapsText) {
+					into.problems.push(
+						`<${open.name}> wraps no text; use a {{placeholder}} for what the app supplies`,
+					);
+				}
 				open = undefined;
 			}
 		}
 	}
-	if (open !== undefined) into.problems.push(`<${open}> is never closed`);
+	if (open !== undefined) {
+		into.problems.push(`<${open.name}> is never closed`);
+	}
 }
 
 export function inspect(text: string): Inspection {

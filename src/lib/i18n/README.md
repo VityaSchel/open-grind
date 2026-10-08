@@ -40,6 +40,7 @@ Lock the Weblate components and merge their pending changes first, then run `bun
 - English outside this syntax
 - Translations with a syntax error, a tag or param English lacks, or an object where English has a string
 - Translations that move into a tag a param English keeps outside every tag
+- A tag, in English or a translation, that wraps no letter and no `{{count}}`; what the app supplies is a param
 - A translation file without an English source, or a locale directory that is not a canonical BCP 47 tag
 - Translations that drop a tag or param English has for the same counts, except `{{count}}` in a plural form that covers a single number
 - A string where English has an object
