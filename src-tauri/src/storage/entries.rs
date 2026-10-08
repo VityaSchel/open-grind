@@ -3,7 +3,7 @@ use crate::error::AppError;
 pub struct DeviceStorage;
 
 impl DeviceStorage {
-	fn entry() -> Result<keyring_core::Entry, AppError> {
+	fn entry() -> Result<super::Entry, AppError> {
 		super::entry("device-info")
 	}
 
@@ -61,7 +61,7 @@ impl DeviceStorage {
 pub struct AuthStorage;
 
 impl AuthStorage {
-	fn entry() -> Result<keyring_core::Entry, AppError> {
+	fn entry() -> Result<super::Entry, AppError> {
 		super::entry("session")
 	}
 
@@ -111,7 +111,7 @@ impl AuthStorage {
 pub struct SigningKeyStorage;
 
 impl SigningKeyStorage {
-	fn entry() -> Result<keyring_core::Entry, AppError> {
+	fn entry() -> Result<super::Entry, AppError> {
 		super::entry("device-signing-key")
 	}
 
