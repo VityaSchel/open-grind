@@ -9,7 +9,6 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import Switch from "$lib/components/ui/switch/switch.svelte";
 	import { t } from "$lib/i18n";
-	import Rich from "$lib/i18n/Rich.svelte";
 
 	let redact = $state(true);
 	const preview = $derived(
@@ -36,9 +35,8 @@
 					>{t("feedback.copyErrorConfirm.title")}</AlertDialog.Title
 				>
 				<AlertDialog.Description class="text-wrap">
-					<Rich key="feedback.copyErrorConfirm.description">
-						{#snippet warning(text)}<b>{text}</b>{/snippet}
-					</Rich>
+					<b>{t("feedback.copyErrorConfirm.warning")}</b>
+					<span>{t("feedback.copyErrorConfirm.description")}</span>
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<div

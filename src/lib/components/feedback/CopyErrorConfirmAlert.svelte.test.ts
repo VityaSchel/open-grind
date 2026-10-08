@@ -69,6 +69,7 @@ describe("CopyErrorConfirmAlert", () => {
 				(bold) => bold.textContent,
 			),
 		).toStrictEqual([WARNING]);
+		expect(description.children).toHaveLength(2);
 		expect(screen.getByRole("switch", { name: REDACT_LABEL })).toBeTruthy();
 	});
 
@@ -89,7 +90,7 @@ describe("CopyErrorConfirmAlert", () => {
 		for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
 		const warning = description.querySelector("b")?.textContent ?? "";
 		expect(warning).not.toBe(WARNING);
-		expect(description.textContent.startsWith(`⟦${warning} `)).toBe(true);
+		expect(description.textContent.startsWith(`${warning} ⟦`)).toBe(true);
 	});
 
 	it("hides the popup and reports success once the details are copied", async () => {

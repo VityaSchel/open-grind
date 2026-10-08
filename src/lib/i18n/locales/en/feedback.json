@@ -14,7 +14,8 @@
 	},
 	"copyErrorConfirm": {
 		"title": "Copy error details?",
-		"description": "<warning>Be mindful of what you share on the internet!</warning> The error might contain your personal data. Only copy it unredacted if a developer asks you to.",
+		"warning": "Be mindful of what you share on the internet!",
+		"description": "The error might contain your personal data. Only copy it unredacted if a developer asks you to.",
 		"redact": "Redact sensitive info (recommended)",
 		"copy": "Copy"
 	},

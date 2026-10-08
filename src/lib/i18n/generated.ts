@@ -135,8 +135,10 @@ export interface Messages {
 	"feedback.appError.webPage": undefined;
 	"feedback.appError.withCode": { code: string; detail: string };
 	"feedback.copyErrorConfirm.copy": undefined;
+	"feedback.copyErrorConfirm.description": undefined;
 	"feedback.copyErrorConfirm.redact": undefined;
 	"feedback.copyErrorConfirm.title": undefined;
+	"feedback.copyErrorConfirm.warning": undefined;
 	"feedback.entitlementBypass.bypass": undefined;
 	"feedback.entitlementBypass.errors.bypassFailed": undefined;
 	"feedback.entitlementBypass.needsLocation": undefined;
@@ -343,7 +345,6 @@ export interface RichMessages {
 	"feedback.appError.titledWebPage": { title: "placeholder" };
 	"feedback.appError.withCode": { code: "placeholder"; detail: "placeholder" };
 	"feedback.autoLocationToast.message": { icon: "tag" };
-	"feedback.copyErrorConfirm.description": { warning: "tag" };
 	"feedback.entitlementBypass.explanation": { link: "tag" };
 	"feedback.requestBlocked.cloudflare.knownIssue": { link: "tag" };
 	"feedback.sessionError.detailAfterAttempts": { count: "count"; detail: "placeholder" };
