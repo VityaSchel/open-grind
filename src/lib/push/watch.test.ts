@@ -195,6 +195,8 @@ describe("losing Fast mode", () => {
 		"addonUntrusted",
 		"addonDisabled",
 		"addonRefused",
+		"addonOutdated",
+		"addonHidden",
 		"untrustedCaller",
 		"firebaseUnavailable",
 	] as const)("falls back to Slow mode on %s", async (reason) => {
@@ -228,6 +230,19 @@ describe("losing Fast mode", () => {
 
 		expect(delivery.fallBackToSlow).not.toHaveBeenCalled();
 	});
+
+	it.each(["addonTurnedOff", "addonBlocked"] as const)(
+		"keeps Fast mode while an installed add-on cannot be reached (%s)",
+		async (reason) => {
+			account.registerPushToken.mockRejectedValue(new Error(reason));
+			push.pushErrorReason.mockReturnValue(reason);
+			const module = await freshModule();
+
+			await module.startPushWatch();
+
+			expect(delivery.fallBackToSlow).not.toHaveBeenCalled();
+		},
+	);
 
 	it("keeps Fast mode through a failure the add-on did not cause", async () => {
 		account.registerPushToken.mockRejectedValue(new Error("offline"));
