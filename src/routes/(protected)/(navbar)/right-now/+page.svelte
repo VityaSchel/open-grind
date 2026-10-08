@@ -1,8 +1,8 @@
 <script lang="ts">
 	import SmileySadIcon from "phosphor-svelte/lib/SmileySadIcon";
 
+	import IssueLink from "$lib/components/feedback/IssueLink.svelte";
 	import * as Alert from "$lib/components/ui/alert";
-	import Link from "$lib/components/ui/link/Link.svelte";
 	import { t } from "$lib/i18n";
 	import Rich from "$lib/i18n/Rich.svelte";
 </script>
@@ -12,11 +12,8 @@
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>{t("common.unimplemented.title")}</Alert.Title>
 		<Alert.Description>
-			<Rich key="browse.rightNow.unimplemented" issue="43">
-				{#snippet link(text)}<Link
-						href="https://git.opengrind.org/open-grind/open-grind/issues/43"
-						>{text}</Link
-					>{/snippet}
+			<Rich key="browse.rightNow.unimplemented">
+				{#snippet issueLink()}<IssueLink issue={43} />{/snippet}
 			</Rich>
 		</Alert.Description>
 	</Alert.Root>

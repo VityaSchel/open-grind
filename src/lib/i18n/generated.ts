@@ -4,6 +4,7 @@ export interface Messages {
 	"auth.googleHandoff.switchAccount.description": undefined;
 	"auth.googleHandoff.switchAccount.title": undefined;
 	"auth.passwordReset.title": undefined;
+	"auth.passwordReset.unimplemented": { issueLink: string };
 	"auth.signIn.captcha.errors.addonDisabled": undefined;
 	"auth.signIn.captcha.errors.addonUnavailable": undefined;
 	"auth.signIn.captcha.errors.addonUntrusted": undefined;
@@ -47,6 +48,7 @@ export interface Messages {
 	"auth.signIn.withFacebook": undefined;
 	"auth.signIn.withGoogle": undefined;
 	"auth.signUp.title": undefined;
+	"auth.signUp.unimplemented": { issueLink: string };
 	"browse.filters.ageAndOver": { count: number };
 	"browse.filters.noMax": undefined;
 	"browse.filters.noMin": undefined;
@@ -54,6 +56,7 @@ export interface Messages {
 	"browse.locationChooser.map.selectedLocation": undefined;
 	"browse.locationChooser.map.zoomIn": undefined;
 	"browse.locationChooser.map.zoomOut": undefined;
+	"browse.rightNow.unimplemented": { issueLink: string };
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
@@ -313,7 +316,7 @@ export interface Messages {
 }
 
 export interface RichMessages {
-	"auth.passwordReset.unimplemented": { issue: "text"; link: "tag" };
+	"auth.passwordReset.unimplemented": { issueLink: "placeholder" };
 	"auth.signIn.errors.inProgress": { provider: "placeholder" };
 	"auth.signIn.errors.providerFailed": { provider: "placeholder" };
 	"auth.signIn.google.continue.description": { companionLink: "tag" };
@@ -323,9 +326,9 @@ export interface RichMessages {
 	"auth.signIn.google.paste.steps.submit": { button: "placeholder" };
 	"auth.signIn.google.pasteManually": { pasteButton: "tag" };
 	"auth.signIn.google.useCompanion": { companionButton: "tag" };
-	"auth.signUp.unimplemented": { issue: "text"; link: "tag" };
+	"auth.signUp.unimplemented": { issueLink: "placeholder" };
 	"browse.filters.withinDistance": { distance: "placeholder" };
-	"browse.rightNow.unimplemented": { issue: "text"; link: "tag" };
+	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.attachments.location.unimplemented": { issue: "text"; link: "tag" };
 	"chat.composer.voiceMessage.unimplemented": { issue: "text"; link: "tag" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };

@@ -7,7 +7,7 @@
 		"withinDistance": "Within {{distance}}"
 	},
 	"rightNow": {
-		"unimplemented": "\"Right now\" tab is not implemented yet, tracking in <link>#{{issue}}</link>."
+		"unimplemented": "\"Right now\" tab is not implemented yet, tracking in {{issueLink}}."
 	},
 	"locationChooser": {
 		"map": {

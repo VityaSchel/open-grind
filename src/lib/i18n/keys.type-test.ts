@@ -65,28 +65,6 @@ expectTypeOf<{
 	link: Snippet<[value: number]>;
 }>().not.toExtend<KnownIssue>();
 
-type Tracked = RichProps<"auth.passwordReset.unimplemented">;
-
-expectTypeOf<{
-	key: "auth.passwordReset.unimplemented";
-	issue: string;
-	link: TextSnippet;
-}>().toExtend<Tracked>();
-expectTypeOf<{
-	key: "auth.passwordReset.unimplemented";
-	issue: number;
-	link: TextSnippet;
-}>().not.toExtend<Tracked>();
-expectTypeOf<{
-	key: "auth.passwordReset.unimplemented";
-	issue: Snippet;
-	link: TextSnippet;
-}>().not.toExtend<Tracked>();
-expectTypeOf<{
-	key: "auth.passwordReset.unimplemented";
-	link: TextSnippet;
-}>().not.toExtend<Tracked>();
-
 type InProgress = RichProps<"auth.signIn.errors.inProgress">;
 
 expectTypeOf<{
@@ -126,18 +104,20 @@ expectTypeOf<{
 	srOnly: TextSnippet;
 }>().not.toExtend<Views>();
 
-expectTypeOf<RichKeyWith<{ issue: "text"; link: "tag" }>>().toEqualTypeOf<
+expectTypeOf<RichKeyWith<{ issueLink: "placeholder" }>>().toEqualTypeOf<
 	| "auth.passwordReset.unimplemented"
 	| "auth.signUp.unimplemented"
 	| "browse.rightNow.unimplemented"
+>();
+expectTypeOf<RichKeyWith<{ issue: "text"; link: "tag" }>>().toEqualTypeOf<
 	| "chat.composer.attachments.location.unimplemented"
 	| "chat.composer.voiceMessage.unimplemented"
 	| "settings.account.unimplemented"
 	| "settings.app.discreetAppIcon.unimplemented"
 	| "settings.app.pin.unimplemented"
 >();
-expectTypeOf<"auth.passwordReset.unimplemented">().not.toExtend<
-	RichKeyWith<{ link: "tag" }>
+expectTypeOf<"interest.views.preview.viewCount">().not.toExtend<
+	RichKeyWith<{ srOnly: "tag" }>
 >();
 
 expectTypeOf<RichArgs<"media.lightbox.errors.decoderMissing">>().toEqualTypeOf<
@@ -145,9 +125,6 @@ expectTypeOf<RichArgs<"media.lightbox.errors.decoderMissing">>().toEqualTypeOf<
 >();
 expectTypeOf<RichArgs<"interest.views.preview.viewCount">>().toEqualTypeOf<
 	[params: { count: number }]
->();
-expectTypeOf<RichArgs<"auth.passwordReset.unimplemented">>().toEqualTypeOf<
-	[params: { issue: string }]
 >();
 expectTypeOf<RichArgs<"auth.signIn.errors.inProgress">>().toEqualTypeOf<
 	[params: { provider: string }]
