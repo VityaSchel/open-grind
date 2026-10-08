@@ -21,8 +21,12 @@ function snapToDevicePixels(length: number): number {
 export class GridReorderState {
 	#onReorder: (move: { from: number; to: number }) => void;
 	#nodes = new SvelteMap<number, HTMLElement>();
+	#grid: HTMLElement | null = null;
 	#centers: Point[] = [];
+	#gridAtLift: Point = { x: 0, y: 0 };
 	#grab: Point = { x: 0, y: 0 };
+	#pointer: Point = { x: 0, y: 0 };
+	#scrollWatch: AbortController | null = null;
 	#timer: ReturnType<typeof setTimeout> | null = null;
 	#pressed: {
 		index: number;
@@ -46,6 +50,13 @@ export class GridReorderState {
 	get dragging(): boolean {
 		return this.from >= 0;
 	}
+
+	grid: Attachment<HTMLElement> = (node) => {
+		this.#grid = node;
+		return () => {
+			if (this.#grid === node) this.#grid = null;
+		};
+	};
 
 	cell(index: number): Attachment<HTMLElement> {
 		return (node) => {
@@ -104,6 +115,8 @@ export class GridReorderState {
 
 	cancel(): void {
 		this.#clearTimer();
+		this.#scrollWatch?.abort();
+		this.#scrollWatch = null;
 		this.#pressed = null;
 		this.from = -1;
 		this.to = -1;
@@ -131,19 +144,43 @@ export class GridReorderState {
 			.map(([, element]) => centerOf(element));
 		const center = this.#centers[pressed.index];
 		if (center === undefined) return;
+		this.#gridAtLift = this.#gridCorner();
 		this.#grab = { x: at.x - center.x, y: at.y - center.y };
+		this.#pointer = at;
 		this.#offset = { x: 0, y: 0 };
 		this.from = pressed.index;
 		this.to = pressed.index;
 		pressed.node.setPointerCapture(pressed.pointerId);
+		this.#watchScroll();
 	}
 
 	#track(at: Point): void {
+		this.#pointer = at;
 		const origin = this.#centers[this.from];
 		if (origin === undefined) return;
-		const held = { x: at.x - this.#grab.x, y: at.y - this.#grab.y };
+		const corner = this.#gridCorner();
+		const held = {
+			x: at.x - this.#grab.x - (corner.x - this.#gridAtLift.x),
+			y: at.y - this.#grab.y - (corner.y - this.#gridAtLift.y),
+		};
 		this.#offset = { x: held.x - origin.x, y: held.y - origin.y };
 		this.to = nearestSlot({ centers: this.#centers, ...held });
+	}
+
+	#gridCorner(): Point {
+		if (this.#grid === null) return { x: 0, y: 0 };
+		const { left, top } = this.#grid.getBoundingClientRect();
+		return { x: left, y: top };
+	}
+
+	#watchScroll(): void {
+		this.#scrollWatch?.abort();
+		this.#scrollWatch = new AbortController();
+		document.addEventListener("scroll", () => this.#track(this.#pointer), {
+			capture: true,
+			passive: true,
+			signal: this.#scrollWatch.signal,
+		});
 	}
 
 	#clearTimer(): void {
