@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { untrack } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
+	import { edgeGap } from "$lib/components/feedback/refresh/scroll-geometry";
 	import AgeFilter from "$lib/components/filters/age/AgeFilterField.svelte";
 	import FilterBoolean from "$lib/components/filters/FilterBoolean.svelte";
 	import GendersFilter from "$lib/components/filters/GendersFilter.svelte";
@@ -26,7 +28,27 @@
 		}
 	});
 
-	let contentScroll = $state(0);
+	let atTop = $state(true);
+	let atBottom = $state(false);
+
+	const trackScrollEdges: Attachment<HTMLElement> = (scroller) => {
+		const classify = () => {
+			const { scrollTop, scrollHeight, clientHeight } = scroller;
+			atTop = scrollTop <= 0;
+			atBottom = edgeGap(scrollHeight - clientHeight - scrollTop) <= 0;
+		};
+		classify();
+		const resizes = new ResizeObserver(classify);
+		resizes.observe(scroller);
+		for (const column of scroller.children) resizes.observe(column);
+		scroller.addEventListener("scroll", classify, { passive: true });
+		return () => {
+			resizes.disconnect();
+			scroller.removeEventListener("scroll", classify);
+			atTop = true;
+			atBottom = false;
+		};
+	};
 
 	dismissOnBackGesture({
 		active: () => open,
@@ -125,20 +147,15 @@
 		<Sheet.Header
 			class={[
 				"border border-x-0 border-t-0 border-transparent p-4 transition-colors",
-				{ "border-muted": contentScroll > 0 },
+				{ "border-muted": !atTop },
 			]}
 		>
 			<Sheet.Title>Filters</Sheet.Title>
 		</Sheet.Header>
 		<div
 			class="flex max-h-full min-h-0 w-full flex-1 shrink gap-4 overflow-auto px-4 py-1 pb-4 *:flex-1 *:flex-col *:gap-4 **:break-inside-avoid max-lg:flex-col lg:gap-12"
-			onscroll={(event) => {
-				if (event.target instanceof HTMLDivElement) {
-					contentScroll =
-						event.target.scrollTop /
-						(event.target.scrollHeight - event.target.clientHeight);
-				}
-			}}
+			data-slot="grid-filters-scroller"
+			{@attach trackScrollEdges}
 		>
 			<div class="flex max-w-full">
 				{@render col1()}
@@ -153,7 +170,7 @@
 		<Sheet.Footer
 			class={[
 				"border border-x-0 border-b-0 border-transparent p-4 transition-colors sm:items-end",
-				{ "border-muted": contentScroll < 1 },
+				{ "border-muted": !atBottom },
 			]}
 		>
 			<Button
