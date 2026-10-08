@@ -1,12 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { installTauriShim, openGrid, wheel } from "./support/app";
+import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { refreshButton } from "./support/pull";
 
-const TRANSPORT_MODULE = /\/src\/lib\/api\/transport\.ts(\?.*)?$/;
-const DEMO_RESPONSE = "const { status, body } = demoRoute({";
-const FAULTY_DEMO_RESPONSE =
-	"const { status, body } = (await globalThis.__cascadeFault(path)) ?? demoRoute({";
 const SCROLLER = ".pull-scroller";
 const PROFILE_LINK = '[data-slot="grid-cells"] a[href^="/profile/"]';
 const TOAST = "[data-sonner-toast]";
@@ -38,7 +35,7 @@ async function injectCascadeFaults(page: Page): Promise<void> {
 		};
 		Object.assign(window, {
 			__cascade: log,
-			__cascadeFault: async (path: string) => {
+			__demoFault: async ({ path }: { path: string }) => {
 				const url = new URL(path, location.origin);
 				if (url.pathname !== "/v4/cascade") return undefined;
 				const pageNumber = Number(
@@ -57,14 +54,7 @@ async function injectCascadeFaults(page: Page): Promise<void> {
 			},
 		});
 	});
-	await page.route(TRANSPORT_MODULE, async (route) => {
-		const response = await route.fetch();
-		const source = await response.text();
-		await route.fulfill({
-			response,
-			body: source.replace(DEMO_RESPONSE, FAULTY_DEMO_RESPONSE),
-		});
-	});
+	await routeDemoThroughFaultHook(page);
 }
 
 const cascadeRequests = (page: Page) =>
