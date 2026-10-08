@@ -44,7 +44,12 @@
 	});
 </script>
 
-<div data-slot="media-slot-grid" role="list" class="grid grid-cols-3 gap-2">
+<div
+	data-slot="media-slot-grid"
+	role="list"
+	class="grid grid-cols-3 gap-2"
+	{@attach reorder.grid}
+>
 	{#if leading}
 		<div role="listitem">{@render leading()}</div>
 	{/if}

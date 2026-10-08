@@ -163,3 +163,80 @@ describe("GridReorderState preview at a fractional device pixel ratio", () => {
 		}
 	});
 });
+
+function scrollingGrid({ cells }: { cells: number }) {
+	const page = { scrolled: 0 };
+	const box = ({ left, top }: { left: number; top: number }) => ({
+		getBoundingClientRect: () => ({
+			left,
+			top: top - page.scrolled,
+			width: CELL_PX,
+			height: CELL_PX,
+		}),
+		addEventListener: () => {},
+		removeEventListener: () => {},
+		setPointerCapture: () => {},
+	});
+	const moves: { from: number; to: number }[] = [];
+	const reorder = new GridReorderState({
+		onReorder: (move) => moves.push(move),
+	});
+	reorder.grid(box({ left: 0, top: 0 }) as unknown as HTMLElement);
+	const nodes = Array.from({ length: cells }, (_, index) => {
+		const node = box({
+			left: (index % 3) * CELL_PX,
+			top: Math.floor(index / 3) * CELL_PX,
+		}) as unknown as HTMLElement;
+		reorder.cell(index)(node);
+		return node;
+	});
+	const scrollBy = (distance: number) => {
+		page.scrolled += distance;
+		document.body.dispatchEvent(new Event("scroll"));
+	};
+	const pointerAt = ({ x, y }: { x: number; y: number }) =>
+		({
+			button: 0,
+			pointerId: 1,
+			pointerType: "mouse",
+			clientX: x,
+			clientY: y,
+			currentTarget: nodes[0],
+		}) as unknown as PointerEvent;
+	const liftFirstCell = () => {
+		reorder.press({ event: pointerAt({ x: 50, y: 50 }), index: 0 });
+		reorder.move(pointerAt({ x: 65, y: 50 }));
+	};
+	return { reorder, moves, scrollBy, pointerAt, liftFirstCell };
+}
+
+describe("GridReorderState while the page scrolls under a held cell", () => {
+	it("aims at the slot that scrolled under a still pointer", () => {
+		const { reorder, moves, scrollBy, pointerAt, liftFirstCell } =
+			scrollingGrid({ cells: 6 });
+		liftFirstCell();
+		reorder.move(pointerAt({ x: 250, y: 50 }));
+		expect(reorder.to).toBe(2);
+
+		scrollBy(CELL_PX);
+
+		expect(reorder.to, "the slot a row below now sits there").toBe(5);
+		expect(
+			reorder.transformFor(0),
+			"the held cell stays under the pointer",
+		).toBe("translate(185px, 100px)");
+		reorder.release();
+		expect(moves).toEqual([{ from: 0, to: 5 }]);
+	});
+
+	it("drops the cell where the pointer lets go after the page scrolled", () => {
+		const { reorder, moves, scrollBy, pointerAt, liftFirstCell } =
+			scrollingGrid({ cells: 6 });
+		liftFirstCell();
+		scrollBy(CELL_PX);
+		reorder.move(pointerAt({ x: 150, y: 50 }));
+		reorder.release();
+
+		expect(moves).toEqual([{ from: 0, to: 4 }]);
+	});
+});

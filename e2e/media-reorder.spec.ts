@@ -10,7 +10,14 @@ import {
 } from "./support/albums";
 import { installTauriShim, TrustedTouch } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
-import { expectPreviewOnDevicePixels } from "./support/media-reorder";
+import {
+	cellCentersInGrid,
+	expectPreviewOnDevicePixels,
+	gridCorner,
+	gridCornerOnceScrolled,
+	heldPhotoCenter,
+	type Point,
+} from "./support/media-reorder";
 
 async function revealGrid(page: Page) {
 	await page
@@ -245,5 +252,124 @@ test.describe("media reorder in a desktop window", () => {
 	}) => {
 		await openAlbum(page, TWO_ROW_ALBUM);
 		await expectPreviewOnDevicePixels({ page, from: 0, to: 4 });
+	});
+});
+
+test.describe("media reorder while the page scrolls under a held photo", () => {
+	const LIFT_PX = 15;
+
+	async function measureGrid(page: Page) {
+		const centers = await cellCentersInGrid(page);
+		const corner = await gridCorner(page);
+		const at = ({ index, from }: { index: number; from: Point }) => ({
+			x: from.x + centers[index]!.x,
+			y: from.y + centers[index]!.y,
+		});
+		return { centers, corner, at };
+	}
+
+	async function lift({ page, at }: { page: Page; at: Point }) {
+		await page.mouse.move(at.x, at.y);
+		await page.mouse.down();
+		await page.mouse.move(at.x + LIFT_PX, at.y, { steps: 3 });
+		return { x: at.x + LIFT_PX, y: at.y };
+	}
+
+	function slotUnder({
+		centers,
+		corner,
+		pointer,
+	}: {
+		centers: Point[];
+		corner: Point;
+		pointer: Point;
+	}) {
+		const distances = centers.map(({ x, y }) =>
+			Math.hypot(corner.x + x - pointer.x, corner.y + y - pointer.y),
+		);
+		return distances.indexOf(Math.min(...distances));
+	}
+
+	test("a wheel turn drops the album photo in the slot that scrolled under the pointer", async ({
+		page,
+	}) => {
+		await openAlbum(page, TWO_ROW_ALBUM);
+		const before = await mediaOrder(page);
+		const { centers, corner, at } = await measureGrid(page);
+
+		await lift({ page, at: at({ index: 0, from: corner }) });
+		const aim = at({ index: 1, from: corner });
+		await page.mouse.move(aim.x, aim.y, { steps: 8 });
+		await page.mouse.wheel(0, Math.round(centers[4]!.y - centers[1]!.y));
+		const scrolled = await gridCornerOnceScrolled({ page, from: corner });
+		expect(
+			slotUnder({ centers, corner: scrolled, pointer: aim }),
+			"the slot a row down scrolled under the pointer",
+		).toBe(4);
+		await page.mouse.up();
+		await page.waitForTimeout(600);
+
+		expect(await mediaOrder(page)).toEqual([
+			before[1],
+			before[2],
+			before[3],
+			before[4],
+			before[0],
+		]);
+	});
+
+	test("PageDown keeps the slot the album photo is released over", async ({
+		page,
+	}) => {
+		await openAlbum(page, TWO_ROW_ALBUM);
+		const before = await mediaOrder(page);
+		const { corner, at } = await measureGrid(page);
+
+		await lift({ page, at: at({ index: 0, from: corner }) });
+		await page.keyboard.press("PageDown");
+		const scrolled = await gridCornerOnceScrolled({ page, from: corner });
+		const target = at({ index: 4, from: scrolled });
+		await page.mouse.move(target.x, target.y, { steps: 8 });
+		await page.mouse.up();
+		await page.waitForTimeout(600);
+
+		expect(await mediaOrder(page)).toEqual([
+			before[1],
+			before[2],
+			before[3],
+			before[4],
+			before[0],
+		]);
+	});
+
+	test("a wheel turn keeps the held profile photo under the pointer, and it lands where it is released", async ({
+		page,
+	}) => {
+		await installTauriShim(page);
+		await serveImages(page, CHAT_MEDIA_HOST);
+		await page.goto("/settings/profile");
+		await page.locator(CELL).first().waitFor({ timeout: 60_000 });
+		await page.waitForTimeout(600);
+		const before = await mediaOrder(page);
+		const { corner, at } = await measureGrid(page);
+
+		await lift({ page, at: at({ index: 1, from: corner }) });
+		const held = await heldPhotoCenter(page);
+		await page.mouse.wheel(0, 100);
+		const scrolled = await gridCornerOnceScrolled({ page, from: corner });
+		const stillHeld = await heldPhotoCenter(page);
+		expect(
+			Math.hypot(stillHeld.x - held.x, stillHeld.y - held.y),
+			"the held photo stays under the still pointer",
+		).toBeLessThan(1);
+
+		const target = at({ index: 0, from: scrolled });
+		await page.mouse.move(target.x, target.y, { steps: 8 });
+		await page.mouse.up();
+		await page.waitForTimeout(400);
+
+		const after = await mediaOrder(page);
+		expect(after[0], "the held photo leads now").toBe(before[1]);
+		expect(after[1]).toBe(before[0]);
 	});
 });
