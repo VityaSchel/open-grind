@@ -10,7 +10,7 @@
 	class="flex min-w-0 flex-col gap-0.5 px-1 py-1.5"
 	data-slot="credit-row"
 	data-offscreen-skip
-	style:--offscreen-block-size="3.4375rem"
+	style:--offscreen-block-size="2.65625rem"
 >
 	<BlurbText name={entry.name} url={entry.url} />
 	<LicenseDisclosure {entry} />

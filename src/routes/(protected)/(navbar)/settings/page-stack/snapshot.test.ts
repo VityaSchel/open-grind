@@ -123,15 +123,19 @@ describe("snapshotPane", () => {
 		expect(snapshot.node.querySelector("input")!.value).toBe("captured");
 	});
 
-	it("pins rows that skip offscreen rendering to their live height", () => {
+	it("pins each row that skips offscreen rendering to the content box it fills live, fractions included", () => {
 		const pane = mountPane(
-			"<p data-offscreen-skip></p><p data-offscreen-skip></p>",
+			'<p data-offscreen-skip style="padding: 6px 4px; border-width: 0"></p><p data-offscreen-skip style="padding: 2px; border: 1.5px solid"></p>',
 		);
 		const rows = pane.querySelectorAll<HTMLElement>(
 			"[data-offscreen-skip]",
 		);
-		Object.defineProperty(rows[0], "offsetHeight", { value: 55 });
-		Object.defineProperty(rows[1], "offsetHeight", { value: 310 });
+		const liveHeights = [54.5, 310.25];
+		rows.forEach((row, index) =>
+			vi
+				.spyOn(row, "getBoundingClientRect")
+				.mockReturnValue({ height: liveHeights[index] } as DOMRect),
+		);
 
 		const snapshot = snapshotPane(pane, "/settings/app/credits");
 		document.body.append(snapshot.node);
@@ -140,7 +144,7 @@ describe("snapshotPane", () => {
 		const copies = snapshot.node.querySelectorAll<HTMLElement>(
 			"[data-offscreen-skip]",
 		);
-		expect(copies[0]?.style.containIntrinsicBlockSize).toBe("55px");
-		expect(copies[1]?.style.containIntrinsicBlockSize).toBe("310px");
+		expect(copies[0]?.style.containIntrinsicBlockSize).toBe("42.5px");
+		expect(copies[1]?.style.containIntrinsicBlockSize).toBe("303.25px");
 	});
 });
