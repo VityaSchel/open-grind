@@ -31,7 +31,7 @@ describe("checkTranslation of rich names", () => {
 		[
 			{ invite: "Пригласите <groupLink>{{name}} в группу</groupLink>" },
 			[
-				"ru/ns.invite: {{name}} is inside a tag, which English never does",
+				"ru/ns.invite: move {{name}} out of its tag, as in the English message",
 			],
 		],
 		[
@@ -51,7 +51,7 @@ describe("checkTranslation of rich names", () => {
 			{ menu: "Отключите это в <b>меню {{menuIcon}}</b>." },
 			[
 				"ru/ns.menu: <b> is not in the English message",
-				"ru/ns.menu: {{menuIcon}} is inside a tag, which English never does",
+				"ru/ns.menu: move {{menuIcon}} out of its tag, as in the English message",
 			],
 		],
 		[

@@ -13,8 +13,7 @@ const TOKEN = new RegExp(
 );
 const ENTITY = /&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[Xx][\dA-Fa-f]+);/g;
 const LETTER = /\p{L}/u;
-const RESERVED = new Set(["children", "key"]);
-const RESERVED_TAGS = new Set([...RESERVED, "count"]);
+const RICH_PROP_NAMES = new Set(["children", "key"]);
 
 function placeholderProblem({
 	token,
@@ -24,9 +23,11 @@ function placeholderProblem({
 	name: string;
 }): string | undefined {
 	if (!NAME.test(name)) {
-		return `${token} is not a plain camelCase {{name}} placeholder`;
+		return `${token} is not a valid placeholder; write {{camelCaseName}} with no format options`;
 	}
-	return RESERVED.has(name) ? `${token} uses a reserved name` : undefined;
+	return RICH_PROP_NAMES.has(name)
+		? `${token} is reserved for a Rich.svelte prop; pick another name`
+		: undefined;
 }
 
 function tagProblem({
@@ -38,12 +39,25 @@ function tagProblem({
 }): string | undefined {
 	const [, slash, name = ""] = TAG_TOKEN.exec(token) ?? [];
 	if (slash === undefined) {
-		return `${token} is not a plain camelCase <name> or </name> tag`;
+		return `${token} is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes`;
 	}
-	if (RESERVED_TAGS.has(name)) return `${token} uses a reserved name`;
-	const opens = slash === "" && open === undefined;
-	const closes = slash === "/" && open === name;
-	return opens || closes ? undefined : `${token} is unbalanced or nested`;
+	if (RICH_PROP_NAMES.has(name)) {
+		return `${token} is reserved for a Rich.svelte prop; pick another name`;
+	}
+	if (name === "count") {
+		return `${token} is reserved for the plural {{count}}; pick another name`;
+	}
+	if (slash === "") {
+		return open === undefined
+			? undefined
+			: `${token} opens inside <${open}>, but tags cannot nest`;
+	}
+	if (open === undefined) {
+		return `${token} has no matching <${name}> before it`;
+	}
+	return open === name
+		? undefined
+		: `${token} does not match the open <${open}>`;
 }
 
 function readMarkup({ text, into }: { text: string; into: Inspection }): void {
@@ -89,7 +103,9 @@ function readMarkup({ text, into }: { text: string; into: Inspection }): void {
 		}
 	}
 	if (open !== undefined) {
-		into.problems.push(`<${open.name}> is never closed`);
+		into.problems.push(
+			`<${open.name}> is never closed; add </${open.name}> after its text`,
+		);
 	}
 }
 
@@ -101,11 +117,15 @@ export function inspect(text: string): Inspection {
 		problems: [],
 	};
 	if (text.includes("$t(")) {
-		found.problems.push("$t() nesting is not supported");
+		found.problems.push(
+			"$t() is not supported; write the referenced text out in full",
+		);
 	}
 	readMarkup({ text, into: found });
 	if (/[{}]/.test(text.replace(PLACEHOLDER, ""))) {
-		found.problems.push("stray brace outside a {{name}} placeholder");
+		found.problems.push(
+			"has a { or } that is not part of a {{name}} placeholder",
+		);
 	}
 	for (const [entity] of text.matchAll(ENTITY)) {
 		found.problems.push(

@@ -149,7 +149,8 @@ const componentAttribute = `SvelteElement[kind="component"] > SvelteStartTag > S
 const rawText = (selectors) =>
 	selectors.map((selector) => ({
 		selector,
-		message: "Render interface text through t() from $lib/i18n",
+		message:
+			"Move this text to src/lib/i18n/locales/en and render it with t(), or with Rich.svelte or richParts() when it has tags",
 	}));
 
 const scriptRawTextSelectors = rawText([

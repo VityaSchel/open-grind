@@ -25,11 +25,26 @@ describe("inspect", () => {
 	});
 
 	it.each([
-		["<key>x</key>", "<key> uses a reserved name"],
-		["<children>x</children>", "<children> uses a reserved name"],
-		["<count>x</count>", "<count> uses a reserved name"],
-		["Hi {{key}}", "{{key}} uses a reserved name"],
-		["Hi {{children}}", "{{children}} uses a reserved name"],
+		[
+			"<key>x</key>",
+			"<key> is reserved for a Rich.svelte prop; pick another name",
+		],
+		[
+			"<children>x</children>",
+			"<children> is reserved for a Rich.svelte prop; pick another name",
+		],
+		[
+			"<count>x</count>",
+			"<count> is reserved for the plural {{count}}; pick another name",
+		],
+		[
+			"Hi {{key}}",
+			"{{key}} is reserved for a Rich.svelte prop; pick another name",
+		],
+		[
+			"Hi {{children}}",
+			"{{children}} is reserved for a Rich.svelte prop; pick another name",
+		],
 	])("rejects the reserved name in %j", (text, problem) => {
 		expect(inspect(text)).toMatchObject({
 			params: [],
@@ -61,7 +76,7 @@ describe("inspect", () => {
 			params: ["name", "count"],
 			tags: [],
 			wrapped: [],
-			problems: ["</i> is unbalanced or nested"],
+			problems: ["</i> does not match the open <b>"],
 		});
 	});
 
@@ -71,7 +86,7 @@ describe("inspect", () => {
 		["<_b>Закрыть</_b>", "<_b>"],
 	])("rejects the tag name in %j", (text, token) => {
 		expect(inspect(text).problems).toEqual([
-			`${token} is not a plain camelCase <name> or </name> tag`,
+			`${token} is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes`,
 		]);
 	});
 });

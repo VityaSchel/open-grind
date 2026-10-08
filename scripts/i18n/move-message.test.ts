@@ -250,48 +250,57 @@ describe("moveMessage", () => {
 			[
 				"common.actions.close",
 				"common.actions.close.label",
-				"common.actions.close.label already exists in en",
+				"common.actions.close.label would sit inside common.actions.close itself; rename common.actions.close to a temporary key first, then to common.actions.close.label",
 			],
 			[
 				"common.actions.close",
 				"common.time.minutes.short",
-				"common.time.minutes.short already exists in en",
+				"common.time.minutes.short would sit inside the message common.time.minutes in en",
 			],
 			[
 				"common.actions.close",
 				"common.stale",
 				"common.stale already exists in de",
 			],
-			["common", "common.close", "common is not a valid message key"],
+			[
+				"common",
+				"common.close",
+				"common is not a full key; write the file name and the path, as in common.actions.close",
+			],
 			[
 				"common.actions.close",
 				"common.time.minutes_one",
-				"common.time.minutes_one is not a valid message key",
+				"common.time.minutes_one is one plural form; pass common.time.minutes to move all its forms",
 			],
 			[
 				"common.actions.close",
 				"common..close",
-				"common..close is not a valid message key",
+				"common..close has an empty part; remove the extra dot",
+			],
+			[
+				"common.actions.close",
+				"common.close.",
+				"common.close. has an empty part; remove the extra dot",
 			],
 			[
 				"common.actions.close",
 				"common.actions.close me",
-				"common.actions.close me is not a valid message key",
+				'common.actions.close me is not a valid key; "close me" is not camelCase',
 			],
 			[
 				"common.actions.close",
 				"common/x.close",
-				"common/x.close is not a valid message key",
+				'common/x.close is not a valid key; "common/x" is not camelCase',
 			],
 			[
 				"common.actions.close",
 				"common.actions.close_button",
-				"common.actions.close_button is not a valid message key",
+				'common.actions.close_button is not a valid key; "close_button" is not camelCase',
 			],
 			[
 				"common.actions.close",
 				"common.actions.Close",
-				"common.actions.Close is not a valid message key",
+				'common.actions.Close is not a valid key; "Close" is not camelCase',
 			],
 		])("%s to %s", (from, to, reason) => {
 			expect(() => moveMessage({ files, from, to })).toThrow(

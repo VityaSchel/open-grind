@@ -28,12 +28,25 @@ function parseKey(key: string): MessagePath {
 	const segments = key.split(".");
 	const [namespace = "", ...parents] = segments;
 	const leaf = parents.pop();
-	if (
-		leaf === undefined ||
-		PLURAL_KEY.test(key) ||
-		!segments.every((segment) => NAME.test(segment))
-	) {
-		throw new Error(`${key} is not a valid message key`);
+	const pluralBase = PLURAL_KEY.exec(key)?.[1];
+	const invalid = segments.find((segment) => !NAME.test(segment));
+	if (leaf === undefined) {
+		throw new Error(
+			`${key} is not a full key; write the file name and the path, as in common.actions.close`,
+		);
+	}
+	if (pluralBase !== undefined) {
+		throw new Error(
+			`${key} is one plural form; pass ${pluralBase} to move all its forms`,
+		);
+	}
+	if (invalid === "") {
+		throw new Error(`${key} has an empty part; remove the extra dot`);
+	}
+	if (invalid !== undefined) {
+		throw new Error(
+			`${key} is not a valid key; "${invalid}" is not camelCase`,
+		);
 	}
 	return { namespace, parents, leaf };
 }
@@ -80,29 +93,35 @@ function formNames({
 		.map(([name]) => name);
 }
 
-function isOccupied({
+function messageAbove({
+	tree,
+	target: { namespace, parents },
+}: {
+	tree: Tree;
+	target: MessagePath;
+}): string | undefined {
+	const depth = parents.findIndex(
+		(segment, index) =>
+			formNames({
+				parent: objectAt({ tree, path: parents.slice(0, index) }),
+				leaf: segment,
+			}).length > 0,
+	);
+	return depth === -1
+		? undefined
+		: [namespace, ...parents.slice(0, depth + 1)].join(".");
+}
+
+function isTaken({
 	tree,
 	target: { parents, leaf },
 }: {
 	tree: Tree;
 	target: MessagePath;
 }): boolean {
-	const holdsMessage = ({
-		path,
-		name,
-	}: {
-		path: readonly string[];
-		name: string;
-	}) => {
-		const parent = objectAt({ tree, path });
-		return formNames({ parent, leaf: name }).length > 0;
-	};
+	const parent = objectAt({ tree, path: parents });
 	return (
-		parents.some((segment, depth) =>
-			holdsMessage({ path: parents.slice(0, depth), name: segment }),
-		) ||
-		holdsMessage({ path: parents, name: leaf }) ||
-		objectAt({ tree, path: parents })?.[leaf] !== undefined
+		formNames({ parent, leaf }).length > 0 || parent?.[leaf] !== undefined
 	);
 }
 
@@ -260,12 +279,19 @@ export function moveMessage({
 	if (locate({ files: english, source }) === undefined) {
 		throw new Error(`${from} does not exist in ${SOURCE_LOCALE}`);
 	}
-	const taken = parsed.find(
-		({ namespace, tree }) =>
-			namespace === target.namespace && isOccupied({ tree, target }),
-	);
-	if (taken !== undefined) {
-		throw new Error(`${to} already exists in ${taken.locale}`);
+	for (const { locale, namespace, tree } of parsed) {
+		if (namespace !== target.namespace) continue;
+		const message = messageAbove({ tree, target });
+		if (message !== undefined) {
+			throw new Error(
+				message === from
+					? `${to} would sit inside ${from} itself; rename ${from} to a temporary key first, then to ${to}`
+					: `${to} would sit inside the message ${message} in ${locale}`,
+			);
+		}
+		if (isTaken({ tree, target })) {
+			throw new Error(`${to} already exists in ${locale}`);
+		}
 	}
 	return [...Map.groupBy(parsed, ({ locale }) => locale).values()].flatMap(
 		(locale) => moveInLocale({ files: locale, source, target }),

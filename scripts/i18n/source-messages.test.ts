@@ -41,15 +41,15 @@ describe("collectMessages", () => {
 	it.each([
 		[
 			{ a_zero: "x", a_one: "x", a_other: "x" },
-			"en/ns.a: plurals need exactly _one and _other, found _one, _other, _zero",
+			"en/ns.a: English plurals need exactly _one and _other, found _one, _other, _zero",
 		],
 		[
 			{ a_other: "x" },
-			"en/ns.a: plurals need exactly _one and _other, found _other",
+			"en/ns.a: English plurals need exactly _one and _other, found _other",
 		],
 		[
 			{ a_one: "x", a_few: "x", a_other: "x" },
-			"en/ns.a: plurals need exactly _one and _other, found _few, _one, _other",
+			"en/ns.a: English plurals need exactly _one and _other, found _few, _one, _other",
 		],
 		[
 			{ a_one: "One by {{author}}", a_other: "{{count}} by {{author}}" },
@@ -57,69 +57,81 @@ describe("collectMessages", () => {
 		],
 		[
 			{ a: "x", a_one: "x", a_other: "x" },
-			"en/ns.a: a plain value and plural forms share this key",
+			"en/ns.a: is used by both a plain value and plural forms; keep one of them",
 		],
 		[
 			{ a_one: "x", a_other: "x", a: { b: "x" } },
-			"en/ns.a: plural forms and nested keys share this key",
+			"en/ns.a: is used by both plural forms and nested keys; rename one of them",
 		],
 		[
 			{ group_one: { label: "x" } },
-			"en/ns.group_one: holds nested keys, so it takes no plural suffix",
+			"en/ns.group_one: holds nested keys, so drop its plural suffix",
 		],
-		[{ a: "<b><i>x</i></b>" }, "en/ns.a: <i> is unbalanced or nested"],
-		[{ a: "<b>x" }, "en/ns.a: <b> is never closed"],
-		[{ a: "x</b>" }, "en/ns.a: </b> is unbalanced or nested"],
-		[{ a: "<b>x</i>" }, "en/ns.a: </i> is unbalanced or nested"],
+		[
+			{ a: "<b><i>x</i></b>" },
+			"en/ns.a: <i> opens inside <b>, but tags cannot nest",
+		],
+		[
+			{ a: "<b>x" },
+			"en/ns.a: <b> is never closed; add </b> after its text",
+		],
+		[{ a: "x</b>" }, "en/ns.a: </b> has no matching <b> before it"],
+		[{ a: "<b>x</i>" }, "en/ns.a: </i> does not match the open <b>"],
 		[
 			{ a: "line<br/>break" },
-			"en/ns.a: <br/> is not a plain camelCase <name> or </name> tag",
+			"en/ns.a: <br/> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes",
 		],
 		[
 			{ a: '<a href="/">x</a>' },
-			'en/ns.a: <a href="/"> is not a plain camelCase <name> or </name> tag',
+			'en/ns.a: <a href="/"> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes',
 		],
 		[
 			{ a: "<Link>x</Link>" },
-			"en/ns.a: <Link> is not a plain camelCase <name> or </name> tag",
+			"en/ns.a: <Link> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes",
 		],
-		[{ a: "<key>x</key>" }, "en/ns.a: <key> uses a reserved name"],
+		[
+			{ a: "<key>x</key>" },
+			"en/ns.a: <key> is reserved for a Rich.svelte prop; pick another name",
+		],
 		[
 			{ a: "<gridLink>Grid</gridLink> and {{gridLink}}" },
-			"en/ns.a: <gridLink> and {{gridLink}} share a name",
+			"en/ns.a: <gridLink> and {{gridLink}} share a name; rename one of them",
 		],
 		[
 			{
 				a_one: "<views>{{count}} view</views>",
 				a_other: "{{count}} {{views}}",
 			},
-			"en/ns.a: <views> and {{views}} share a name",
+			"en/ns.a: <views> and {{views}} share a name; rename one of them",
 		],
 		[
 			{ a: "{{- name}}" },
-			"en/ns.a: {{- name}} is not a plain camelCase {{name}} placeholder",
+			"en/ns.a: {{- name}} is not a valid placeholder; write {{camelCaseName}} with no format options",
 		],
 		[
 			{ a: "{{n, number}}" },
-			"en/ns.a: {{n, number}} is not a plain camelCase {{name}} placeholder",
+			"en/ns.a: {{n, number}} is not a valid placeholder; write {{camelCaseName}} with no format options",
 		],
 		[
 			{ a: "{{user.name}}" },
-			"en/ns.a: {{user.name}} is not a plain camelCase {{name}} placeholder",
+			"en/ns.a: {{user.name}} is not a valid placeholder; write {{camelCaseName}} with no format options",
 		],
 		[
 			{ a: "Hi {{userName}} and {{UserName}}" },
-			"en/ns.a: {{UserName}} is not a plain camelCase {{name}} placeholder",
+			"en/ns.a: {{UserName}} is not a valid placeholder; write {{camelCaseName}} with no format options",
 		],
 		[
 			{ a: "Hi {name}" },
-			"en/ns.a: stray brace outside a {{name}} placeholder",
+			"en/ns.a: has a { or } that is not part of a {{name}} placeholder",
 		],
 		[
 			{ a: "Hi {{name}" },
-			"en/ns.a: stray brace outside a {{name}} placeholder",
+			"en/ns.a: has a { or } that is not part of a {{name}} placeholder",
 		],
-		[{ a: "$t(ns.b)" }, "en/ns.a: $t() nesting is not supported"],
+		[
+			{ a: "$t(ns.b)" },
+			"en/ns.a: $t() is not supported; write the referenced text out in full",
+		],
 		[
 			{ a: "Fish &amp; chips" },
 			"en/ns.a: &amp; is an HTML entity; write the character itself",
@@ -134,12 +146,24 @@ describe("collectMessages", () => {
 		],
 		[
 			{ a: "{{count}} new" },
-			"en/ns.a: {{count}} needs plural forms ns.a_one/_other",
+			"en/ns.a: has {{count}}, so split it into ns.a_one and ns.a_other",
 		],
-		[{ a: "" }, "en/ns.a: empty string renders as the key"],
-		[{ a: 1 }, "en/ns.a: values must be strings or objects"],
-		[{ a: ["x"] }, "en/ns.a: values must be strings or objects"],
-		[{ a: null }, "en/ns.a: values must be strings or objects"],
+		[
+			{ a: "" },
+			"en/ns.a: is empty and would show as the key; write the text",
+		],
+		[
+			{ a: 1 },
+			"en/ns.a: must be a string or an object of keys, not a number",
+		],
+		[
+			{ a: ["x"] },
+			"en/ns.a: must be a string or an object of keys, not an array",
+		],
+		[
+			{ a: null },
+			"en/ns.a: must be a string or an object of keys, not null",
+		],
 		["x", "en/ns.json: must hold a JSON object"],
 		[["x"], "en/ns.json: must hold a JSON object"],
 	])("rejects %j", (json, error) => {
@@ -150,7 +174,7 @@ describe("collectMessages", () => {
 		"rejects the key segment %s",
 		(segment) => {
 			expect(errorsOf({ [segment]: "x" })).toEqual([
-				`en/ns.${segment}: key segments are camelCase [a-z][A-Za-z0-9]*, plus a plural suffix such as _one`,
+				`en/ns.${segment}: ${segment} is not a camelCase key; write it like sendButton, or photos_one for a plural form`,
 			]);
 		},
 	);
@@ -167,14 +191,16 @@ describe("collectMessages", () => {
 
 	it.each(["a.b", "a-b", "Ab"])("rejects the namespace %s", (namespace) => {
 		expect(collectMessages([{ namespace, text: "{}" }]).errors).toEqual([
-			`en/${namespace}.json: file names are camelCase [a-z][A-Za-z0-9]*`,
+			`en/${namespace}.json: ${namespace} is not a camelCase file name such as chat or profileEditor`,
 		]);
 	});
 
 	it("rejects files that are not JSON", () => {
 		expect(
 			collectMessages([{ namespace: "ns", text: "{" }]).errors,
-		).toEqual([expect.stringMatching(/^en\/ns\.json: invalid JSON: /)]);
+		).toEqual([
+			expect.stringMatching(/^en\/ns\.json: is not valid JSON: /),
+		]);
 	});
 });
 
@@ -214,23 +240,23 @@ describe("checkTranslation", () => {
 	it.each([
 		[
 			{ plain: "{{amount, currency}}" },
-			"ru/ns.plain: {{amount, currency}} is not a plain camelCase {{name}} placeholder",
+			"ru/ns.plain: {{amount, currency}} is not a valid placeholder; write {{camelCaseName}} with no format options",
 		],
 		[
 			{ plain: { short: "Архив" } },
-			"ru/ns.plain: is an object where English has a message",
+			"ru/ns.plain: is an object, but English has a message here; remove the object",
 		],
 		[
 			{ photos: { short: "Фото" } },
-			"ru/ns.photos: is an object where English has a message",
+			"ru/ns.photos: is an object, but English has a message here; remove the object",
 		],
 		[
 			{ photos_one: { short: "Фото" } },
-			"ru/ns.photos_one: is an object where English has a message",
+			"ru/ns.photos_one: is an object, but English has a message here; remove the object",
 		],
 		[
 			{ photos_few: { short: "Фото" } },
-			"ru/ns.photos_few: is an object where English has a message",
+			"ru/ns.photos_few: is an object, but English has a message here; remove the object",
 		],
 		[
 			{ terms: "<link>Условия</link>, <b>политика</b> и <i>правила</i>" },
@@ -243,7 +269,7 @@ describe("checkTranslation", () => {
 		[
 			{ photos_few: "<b>{{count}}</b> фото" },
 			"ru/ns.photos_few: <b> is not in the English message",
-			"ru/ns.photos_few: {{count}} is inside a tag, which English never does",
+			"ru/ns.photos_few: move {{count}} out of its tag, as in the English message",
 		],
 		[
 			{ greeting: "Привет, {{name}} и {{nmae}}!" },
@@ -297,7 +323,9 @@ describe("checkTranslation", () => {
 		],
 		[
 			{ nested: "Аккаунт" },
-			["ru/ns.nested: is a string where English has an object"],
+			[
+				"ru/ns.nested: is a string, but English has nested keys here; remove the string",
+			],
 		],
 	])("reports drift in %j", (json, errors) => {
 		expect(check(json).errors).toEqual(errors);
@@ -382,7 +410,7 @@ describe("checkTranslation", () => {
 	it.each([
 		[
 			{ photos_one: "{{count}} фото" },
-			"ru/ns.photos: no text for _few, _many, so those counts render in English",
+			"ru/ns.photos: has no text for _few, _many, so those counts show in English",
 		],
 		[
 			{
@@ -390,7 +418,7 @@ describe("checkTranslation", () => {
 				photos_few: "",
 				photos_many: "{{count}} фото",
 			},
-			"ru/ns.photos: no text for _few, so those counts render in English",
+			"ru/ns.photos: has no text for _few, so those counts show in English",
 		],
 		[
 			{ photos_zero: "Нет фото" },
@@ -402,20 +430,23 @@ describe("checkTranslation", () => {
 		],
 		[
 			{ removed: "Удалено" },
-			"ru/ns.removed: English no longer has this key",
+			"ru/ns.removed: English no longer has this key, so nothing shows it",
 		],
-		[{ photos: "Фото" }, "ru/ns.photos: English no longer has this key"],
+		[
+			{ photos: "Фото" },
+			"ru/ns.photos: English no longer has this key, so nothing shows it",
+		],
 		[
 			{ plain_few: "{{x}} <b>Архивы</b>" },
-			"ru/ns.plain_few: English no longer has this key",
+			"ru/ns.plain_few: English no longer has this key, so nothing shows it",
 		],
-		[{ plain: "" }, "ru/ns.plain: empty, so it renders in English"],
+		[{ plain: "" }, "ru/ns.plain: is empty, so it shows in English"],
 		[
 			{ photos_one: "", photos_few: "", photos_many: "" },
 			[
-				"ru/ns.photos_few: empty, so it renders in English",
-				"ru/ns.photos_many: empty, so it renders in English",
-				"ru/ns.photos_one: empty, so it renders in English",
+				"ru/ns.photos_few: is empty, so it shows in English",
+				"ru/ns.photos_many: is empty, so it shows in English",
+				"ru/ns.photos_one: is empty, so it shows in English",
 			],
 		],
 	])("warns about %j", (json, warning) => {
@@ -440,17 +471,29 @@ describe("checkTranslation", () => {
 		).toMatchObject({ translated: 3, total: 6 });
 	});
 
-	it.each(["pt_BR", "ru@formal", "PT-br", "en_US"])(
-		"rejects the locale directory %s",
-		(locale) => {
-			expect(
-				checkTranslation({ locale, files: [sourceFile({})], source })
-					.errors,
-			).toEqual([
-				`${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`,
-			]);
-		},
-	);
+	it.each([
+		[
+			"pt_BR",
+			"pt_BR: the directory name is not a canonical BCP 47 tag such as pt-BR; set Weblate's language code style to BCP",
+		],
+		[
+			"PT-br",
+			"PT-br: the directory name is not a canonical BCP 47 tag such as pt-BR; set Weblate's language code style to BCP",
+		],
+		[
+			"en_US",
+			"en_US: the directory name is not a canonical BCP 47 tag such as pt-BR; set Weblate's language code style to BCP",
+		],
+		[
+			"ru@formal",
+			"ru@formal: a locale with @ breaks Intl; exclude it with Weblate's language filter",
+		],
+	])("rejects the locale directory %s", (locale, error) => {
+		expect(
+			checkTranslation({ locale, files: [sourceFile({})], source })
+				.errors,
+		).toEqual([error]);
+	});
 
 	it("rejects namespaces without an English source", () => {
 		expect(
@@ -459,7 +502,9 @@ describe("checkTranslation", () => {
 				files: [{ namespace: "extra", text: '{ "a": "x" }' }],
 				source,
 			}).errors,
-		).toEqual(["ru/extra.json: has no English source file"]);
+		).toEqual([
+			"ru/extra.json: has no English en/extra.json; rename or remove it",
+		]);
 	});
 });
 
@@ -510,36 +555,36 @@ describe("Weblate-saved files", () => {
 	it.each([
 		[
 			"ar",
-			"ar/sample.chat.unread: no text for _one, so those counts render in English",
+			"ar/sample.chat.unread: has no text for _one, so those counts show in English",
 		],
 		[
 			"cs",
-			"cs/sample.chat.unread: no text for _few, so those counts render in English",
+			"cs/sample.chat.unread: has no text for _few, so those counts show in English",
 		],
 		[
 			"fr",
-			"fr/sample.chat.unread: no text for _many, so those counts render in English",
+			"fr/sample.chat.unread: has no text for _many, so those counts show in English",
 		],
 		[
 			"he",
-			"he/sample.chat.unread: no text for _two, so those counts render in English",
+			"he/sample.chat.unread: has no text for _two, so those counts show in English",
 		],
-		["ja", "ja/sample.chat.unread_other: empty, so it renders in English"],
+		["ja", "ja/sample.chat.unread_other: is empty, so it shows in English"],
 		[
 			"pl",
-			"pl/sample.chat.unread: no text for _few, so those counts render in English",
+			"pl/sample.chat.unread: has no text for _few, so those counts show in English",
 		],
 		[
 			"pt-BR",
-			"pt-BR/sample.chat.unread: no text for _many, so those counts render in English",
+			"pt-BR/sample.chat.unread: has no text for _many, so those counts show in English",
 		],
 		[
 			"ru",
-			"ru/sample.chat.unread: no text for _few, so those counts render in English",
+			"ru/sample.chat.unread: has no text for _few, so those counts show in English",
 		],
 		[
 			"uk",
-			"uk/sample.chat.unread: no text for _few, so those counts render in English",
+			"uk/sample.chat.unread: has no text for _few, so those counts show in English",
 		],
 	])(
 		"accepts %s and warns only about its cleared form",

@@ -30,6 +30,17 @@ function isCanonicalLocale(locale: string): boolean {
 	}
 }
 
+function localeDirectoryError(locale: string): string {
+	return locale.includes("@")
+		? `${locale}: a locale with @ breaks Intl; exclude it with Weblate's language filter`
+		: `${locale}: the directory name is not a canonical BCP 47 tag such as pt-BR; set Weblate's language code style to BCP`;
+}
+
+function typeName(value: unknown): string {
+	if (value === null) return "null";
+	return Array.isArray(value) ? "an array" : `a ${typeof value}`;
+}
+
 function flatten({
 	value,
 	key,
@@ -42,7 +53,9 @@ function flatten({
 	if (typeof value === "string") {
 		into.texts.set(key, value);
 	} else if (!isRecord(value)) {
-		into.errors.push(`${key}: values must be strings or objects`);
+		into.errors.push(
+			`${key}: must be a string or an object of keys, not ${typeName(value)}`,
+		);
 	} else {
 		into.objects.add(key);
 		for (const [segment, child] of Object.entries(value)) {
@@ -50,7 +63,7 @@ function flatten({
 				flatten({ value: child, key: `${key}.${segment}`, into });
 			} else {
 				into.errors.push(
-					`${key}.${segment}: key segments are camelCase [a-z][A-Za-z0-9]*, plus a plural suffix such as _one`,
+					`${key}.${segment}: ${segment} is not a camelCase key; write it like sendButton, or photos_one for a plural form`,
 				);
 			}
 		}
@@ -69,7 +82,9 @@ function readCatalog(files: SourceFile[]): Catalog {
 			json = JSON.parse(text);
 		} catch (error) {
 			const reason = error instanceof Error ? error.message : error;
-			catalog.errors.push(`${namespace}.json: invalid JSON: ${reason}`);
+			catalog.errors.push(
+				`${namespace}.json: is not valid JSON: ${reason}`,
+			);
 			continue;
 		}
 		if (isRecord(json)) {
@@ -123,10 +138,14 @@ function describe({
 		}
 	}
 	if (!plural && params.has("count")) {
-		errors.push(`${key}: {{count}} needs plural forms ${key}_one/_other`);
+		errors.push(
+			`${key}: has {{count}}, so split it into ${key}_one and ${key}_other`,
+		);
 	}
 	for (const name of [...tags].filter((tag) => params.has(tag))) {
-		errors.push(`${key}: <${name}> and {{${name}}} share a name`);
+		errors.push(
+			`${key}: <${name}> and {{${name}}} share a name; rename one of them`,
+		);
 	}
 	const sorted = (names: Set<string>) => [...names].sort();
 	return {
@@ -151,13 +170,13 @@ function shapeError({
 		.sort();
 	if (!forms.has(key)) {
 		if (objects.has(key)) {
-			return `${key}: plural forms and nested keys share this key`;
+			return `${key}: is used by both plural forms and nested keys; rename one of them`;
 		}
 		if (suffixes.join() !== "one,other") {
-			return `${key}: plurals need exactly _one and _other, found _${suffixes.join(", _")}`;
+			return `${key}: English plurals need exactly _one and _other, found _${suffixes.join(", _")}`;
 		}
 	} else if (forms.size > 1) {
-		return `${key}: a plain value and plural forms share this key`;
+		return `${key}: is used by both a plain value and plural forms; keep one of them`;
 	}
 	return undefined;
 }
@@ -170,19 +189,21 @@ export function collectMessages(files: SourceFile[]): {
 	const { texts, objects, errors } = readCatalog(named);
 	for (const key of objects) {
 		if (PLURAL_KEY.test(key)) {
-			errors.push(
-				`${key}: holds nested keys, so it takes no plural suffix`,
-			);
+			errors.push(`${key}: holds nested keys, so drop its plural suffix`);
 		}
 	}
 	const fileErrors = files
 		.filter((file) => !named.includes(file))
 		.map(
 			({ namespace }) =>
-				`${namespace}.json: file names are camelCase [a-z][A-Za-z0-9]*`,
+				`${namespace}.json: ${namespace} is not a camelCase file name such as chat or profileEditor`,
 		);
 	for (const [key, text] of texts) {
-		if (text === "") errors.push(`${key}: empty string renders as the key`);
+		if (text === "") {
+			errors.push(
+				`${key}: is empty and would show as the key; write the text`,
+			);
+		}
 	}
 	const messages: Message[] = [];
 	for (const [key, forms] of groupForms(texts)) {
@@ -332,9 +353,13 @@ function reportDrift({
 	const { locale, index, plurals, partial } = context;
 	if (form === undefined) {
 		if (index.objects.has(key)) {
-			into.errors.push(`${key}: is a string where English has an object`);
+			into.errors.push(
+				`${key}: is a string, but English has nested keys here; remove the string`,
+			);
 		} else {
-			into.warnings.push(`${key}: English no longer has this key`);
+			into.warnings.push(
+				`${key}: English no longer has this key, so nothing shows it`,
+			);
 		}
 		return;
 	}
@@ -345,7 +370,7 @@ function reportDrift({
 		);
 	} else if (text === "") {
 		if (!partial.has(message.key)) {
-			into.warnings.push(`${key}: empty, so it renders in English`);
+			into.warnings.push(`${key}: is empty, so it shows in English`);
 		}
 	} else {
 		const expected = expectedTokens({ index, plurals, form });
@@ -397,7 +422,7 @@ function reportAdditions({
 			!english.wrapped.includes(param)
 		) {
 			into.errors.push(
-				`${key}: {{${param}}} is inside a tag, which English never does`,
+				`${key}: move {{${param}}} out of its tag, as in the English message`,
 			);
 		}
 	}
@@ -415,8 +440,12 @@ export function checkTranslation({
 	const index = indexSource(source);
 	const total = index.messages.size;
 	if (!isCanonicalLocale(locale)) {
-		const error = `${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`;
-		return { errors: [error], warnings: [], translated: 0, total };
+		return {
+			errors: [localeDirectoryError(locale)],
+			warnings: [],
+			translated: 0,
+			total,
+		};
 	}
 	const namespaces = new Set(source.map(({ namespace }) => namespace));
 	const known = files.filter(({ namespace }) => namespaces.has(namespace));
@@ -427,7 +456,7 @@ export function checkTranslation({
 				.filter((file) => !known.includes(file))
 				.map(
 					({ namespace }) =>
-						`${namespace}.json: has no English source file`,
+						`${namespace}.json: has no English en/${namespace}.json; rename or remove it`,
 				),
 			...errors,
 		],
@@ -436,7 +465,7 @@ export function checkTranslation({
 	for (const path of objects) {
 		if (holdsMessage({ index, path })) {
 			findings.errors.push(
-				`${path}: is an object where English has a message`,
+				`${path}: is an object, but English has a message here; remove the object`,
 			);
 		}
 	}
@@ -444,7 +473,7 @@ export function checkTranslation({
 	const { translated, partial } = completeness({ index, texts, plurals });
 	for (const [base, missing] of partial) {
 		findings.warnings.push(
-			`${base}: no text for ${missing.join(", ")}, so those counts render in English`,
+			`${base}: has no text for ${missing.join(", ")}, so those counts show in English`,
 		);
 	}
 	const context = { locale, index, plurals, partial };

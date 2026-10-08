@@ -14,7 +14,9 @@ function fail(reason: string): never {
 const args = process.argv.slice(2);
 const [from, to] = args;
 if (args.length !== 2 || from === undefined || to === undefined) {
-	fail("usage: bun scripts/i18n/rename-key.ts <old> <new>");
+	fail(
+		"usage: bun scripts/i18n/rename-key.ts <old key> <new key>, both full keys such as common.actions.close",
+	);
 }
 
 const catalogs = [...readLocaleFiles(LOCALES)].flatMap(([locale, files]) =>
