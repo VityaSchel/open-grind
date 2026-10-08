@@ -41,11 +41,11 @@
 				"unshare": "Unshare"
 			},
 			"location": {
-				"unimplemented": "Sharing location is not implemented yet, tracking in <link>#{{issue}}</link>."
+				"unimplemented": "Sharing location is not implemented yet, tracking in {{issueLink}}."
 			}
 		},
 		"voiceMessage": {
-			"unimplemented": "TODO: Voice messages not implemented yet, tracking in <link>#{{issue}}</link>"
+			"unimplemented": "TODO: Voice messages not implemented yet, tracking in {{issueLink}}"
 		}
 	}
 }

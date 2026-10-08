@@ -60,6 +60,8 @@ export interface Messages {
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
+	"chat.composer.attachments.location.unimplemented": { issueLink: string };
+	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;
 	"chat.conversations.errors.deleteFailed": undefined;
@@ -267,6 +269,9 @@ export interface Messages {
 	"profile.vaccine.covid19": undefined;
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
+	"settings.account.unimplemented": { issueLink: string };
+	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
+	"settings.app.pin.unimplemented": { issueLink: string };
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;
 	"settings.subpage.titles.app": undefined;
@@ -329,8 +334,8 @@ export interface RichMessages {
 	"auth.signUp.unimplemented": { issueLink: "placeholder" };
 	"browse.filters.withinDistance": { distance: "placeholder" };
 	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
-	"chat.composer.attachments.location.unimplemented": { issue: "text"; link: "tag" };
-	"chat.composer.voiceMessage.unimplemented": { issue: "text"; link: "tag" };
+	"chat.composer.attachments.location.unimplemented": { issueLink: "placeholder" };
+	"chat.composer.voiceMessage.unimplemented": { issueLink: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: "placeholder" };
@@ -346,9 +351,9 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { link: "tag" };
-	"settings.account.unimplemented": { issue: "text"; link: "tag" };
-	"settings.app.discreetAppIcon.unimplemented": { issue: "text"; link: "tag" };
-	"settings.app.pin.unimplemented": { issue: "text"; link: "tag" };
+	"settings.account.unimplemented": { issueLink: "placeholder" };
+	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };
+	"settings.app.pin.unimplemented": { issueLink: "placeholder" };
 	"settings.credits.highlights.bitsUi": { name: "text"; project: "tag" };
 	"settings.credits.highlights.emblaCarouselSvelte": { name: "text"; project: "tag" };
 	"settings.credits.highlights.phosphorSvelte": { name: "text"; project: "tag" };

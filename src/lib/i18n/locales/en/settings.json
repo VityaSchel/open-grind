@@ -15,14 +15,14 @@
 		}
 	},
 	"account": {
-		"unimplemented": "TODO: Account settings not implemented yet, tracking in <link>#{{issue}}</link>"
+		"unimplemented": "TODO: Account settings not implemented yet, tracking in {{issueLink}}"
 	},
 	"app": {
 		"discreetAppIcon": {
-			"unimplemented": "TODO: Discreet app icon not implemented yet, tracking in <link>#{{issue}}</link>"
+			"unimplemented": "TODO: Discreet app icon not implemented yet, tracking in {{issueLink}}"
 		},
 		"pin": {
-			"unimplemented": "TODO: PIN not implemented yet, tracking in <link>#{{issue}}</link>"
+			"unimplemented": "TODO: PIN not implemented yet, tracking in {{issueLink}}"
 		}
 	},
 	"credits": {
