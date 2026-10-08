@@ -51,11 +51,15 @@ export interface Messages {
 	"auth.signUp.unimplemented": { issueLink: string };
 	"browse.filters.age.a11y.maximum": undefined;
 	"browse.filters.age.a11y.minimum": undefined;
+	"browse.filters.age.a11y.toggle": undefined;
 	"browse.filters.age.label": undefined;
 	"browse.filters.ageAndOver": { count: number };
 	"browse.filters.apply": undefined;
 	"browse.filters.distance.a11y.maximum": undefined;
+	"browse.filters.favorites": undefined;
+	"browse.filters.fresh": undefined;
 	"browse.filters.genders.label": undefined;
+	"browse.filters.haventChattedToday": undefined;
 	"browse.filters.height.a11y.maximum": undefined;
 	"browse.filters.height.a11y.minimum": undefined;
 	"browse.filters.height.label": undefined;
@@ -96,6 +100,7 @@ export interface Messages {
 	"browse.grid.errors.refreshFailed": undefined;
 	"browse.grid.searchFilters.errors.loadFailed": undefined;
 	"browse.grid.searchFilters.errors.updateFailed": undefined;
+	"browse.gridFilters.title": undefined;
 	"browse.location.errors.autoUpdateFailed": undefined;
 	"browse.location.errors.locateFailed": undefined;
 	"browse.location.openSettings": undefined;
@@ -114,6 +119,7 @@ export interface Messages {
 	"browse.locationEmpty.pickManually": undefined;
 	"browse.locationEmpty.title": undefined;
 	"browse.locationEmpty.useCurrentLocation": undefined;
+	"browse.quickFilters.a11y.allFilters": undefined;
 	"browse.rightNow.unimplemented": { issueLink: string };
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
@@ -157,7 +163,11 @@ export interface Messages {
 	"common.desktopEntry.errors.addFailed": undefined;
 	"common.filters.noResults": undefined;
 	"common.filters.notSpecified": undefined;
+	"common.filters.online": undefined;
+	"common.filters.position.a11y.toggle": undefined;
 	"common.filters.position.label": undefined;
+	"common.filters.position.title": undefined;
+	"common.filters.rightNow": undefined;
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;

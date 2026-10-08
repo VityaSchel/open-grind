@@ -14,6 +14,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let { open = $bindable() }: { open: boolean } = $props();
@@ -38,16 +39,16 @@
 
 {#snippet col1()}
 	<FilterBoolean id="favorite" bind:checked={filters.isFavorite}>
-		Favorites
+		{t("browse.filters.favorites")}
 	</FilterBoolean>
 	<FilterBoolean id="online" bind:checked={filters.isOnline}>
-		Online
+		{t("common.filters.online")}
 	</FilterBoolean>
 	<FilterBoolean id="right-now" bind:checked={filters.isRightNow}>
-		Right now
+		{t("common.filters.rightNow")}
 	</FilterBoolean>
 	<FilterBoolean id="fresh" bind:checked={filters.isFresh}>
-		Fresh
+		{t("browse.filters.fresh")}
 	</FilterBoolean>
 	<AgeFilter bind:checked={filters.ageEnabled} bind:value={filters.age} />
 	<GendersFilter
@@ -109,7 +110,7 @@
 		id="havent-chatted-today"
 		bind:checked={filters.haventChattedTodayEnabled}
 	>
-		Haven't chatted today
+		{t("browse.filters.haventChattedToday")}
 	</FilterBoolean>
 	<OptionFilter
 		filter={optionFilters.healthPractices}
@@ -128,7 +129,7 @@
 				{ "border-muted": contentScroll > 0 },
 			]}
 		>
-			<Sheet.Title>Filters</Sheet.Title>
+			<Sheet.Title>{t("browse.gridFilters.title")}</Sheet.Title>
 		</Sheet.Header>
 		<div
 			class="flex max-h-full min-h-0 w-full flex-1 shrink gap-4 overflow-auto px-4 py-1 pb-4 *:flex-1 *:flex-col *:gap-4 **:break-inside-avoid max-lg:flex-col lg:gap-12"
@@ -163,7 +164,7 @@
 					open = false;
 				}}
 			>
-				Apply
+				{t("browse.filters.apply")}
 			</Button>
 		</Sheet.Footer>
 	</Sheet.Content>

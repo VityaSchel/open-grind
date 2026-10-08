@@ -5,6 +5,7 @@
 	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import { defaultFilters } from "$lib/model/browse/grid/filters";
 	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
 
@@ -23,8 +24,8 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Positions"
-	switchLabel="Filter by position"
+	title={t("common.filters.position.title")}
+	switchLabel={t("common.filters.position.a11y.toggle")}
 	onreset={() => {
 		value = defaultFilters.positions;
 	}}

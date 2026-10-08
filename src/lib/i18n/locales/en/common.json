@@ -57,8 +57,14 @@
 	"filters": {
 		"noResults": "No Results",
 		"notSpecified": "Not specified",
+		"online": "Online",
+		"rightNow": "Right now",
 		"position": {
-			"label": "Position"
+			"label": "Position",
+			"title": "Positions",
+			"a11y": {
+				"toggle": "Filter by position"
+			}
 		}
 	},
 	"location": {

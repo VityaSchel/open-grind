@@ -41,6 +41,14 @@
 		"useCurrentLocation": "Use current location",
 		"pickManually": "Pick manually"
 	},
+	"gridFilters": {
+		"title": "Filters"
+	},
+	"quickFilters": {
+		"a11y": {
+			"allFilters": "All filters"
+		}
+	},
 	"filters": {
 		"noMin": "No min",
 		"noMax": "No max",
@@ -51,11 +59,15 @@
 		"reset": "Reset",
 		"less": "Less",
 		"more": "More",
+		"favorites": "Favorites",
+		"fresh": "Fresh",
+		"haventChattedToday": "Haven't chatted today",
 		"age": {
 			"label": "Age",
 			"a11y": {
 				"minimum": "Minimum age",
-				"maximum": "Maximum age"
+				"maximum": "Maximum age",
+				"toggle": "Filter by age"
 			}
 		},
 		"height": {

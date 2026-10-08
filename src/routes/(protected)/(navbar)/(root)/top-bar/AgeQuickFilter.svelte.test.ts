@@ -29,12 +29,16 @@ vi.stubGlobal(
 );
 
 import { gridState } from "$lib/grid/grid-state.svelte";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { slot } from "$lib/i18n/fixtures/dom";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { defaultFilters } from "$lib/model/browse/grid/filters";
 import AgeQuickFilter from "./AgeQuickFilter.svelte";
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	gridState.filters.reset();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("AgeQuickFilter", () => {
@@ -72,5 +76,31 @@ describe("AgeQuickFilter", () => {
 		await fireEvent.click(screen.getByRole("button", { name: "Apply" }));
 
 		expect(gridState.filters.snapshot()).toEqual(defaultFilters);
+	});
+
+	it("words the drawer title, switch and actions in the active locale", async () => {
+		await gridState.filters.ready;
+		render(AgeQuickFilter, { props: { open: true } });
+		flushSync();
+
+		const title = slot("drawer-title");
+		const filterSwitch = screen.getByRole("switch", {
+			name: "Filter by age",
+		});
+		const actions = ["Reset", "Apply"].map((name) =>
+			screen.getByRole("button", { name }),
+		);
+
+		expect(title.textContent).toBe("Age");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(title.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(screen.getByRole("switch", { name: PSEUDO_MESSAGE })).toBe(
+			filterSwitch,
+		);
+		expect(screen.getAllByRole("button", { name: PSEUDO_MESSAGE })).toEqual(
+			actions,
+		);
 	});
 });

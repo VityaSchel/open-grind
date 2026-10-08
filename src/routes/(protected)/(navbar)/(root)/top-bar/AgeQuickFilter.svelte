@@ -4,6 +4,7 @@
 	import AgeFilterSlider from "$lib/components/filters/age/AgeFilterSlider.svelte";
 	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		ageRangeLabel,
 		defaultFilters,
@@ -26,8 +27,8 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Age"
-	switchLabel="Filter by age"
+	title={t("browse.filters.age.label")}
+	switchLabel={t("browse.filters.age.a11y.toggle")}
 	onreset={() => {
 		value = defaultFilters.age;
 	}}

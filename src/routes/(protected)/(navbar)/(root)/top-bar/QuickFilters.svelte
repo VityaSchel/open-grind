@@ -5,6 +5,7 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import { defaultFilters } from "$lib/model/browse/grid/filters";
 	import AgeQuickFilter from "./AgeQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
@@ -22,19 +23,19 @@
 
 <Button
 	variant="secondary"
-	aria-label="All filters"
+	aria-label={t("browse.quickFilters.a11y.allFilters")}
 	onclick={() => (openFilters.all = true)}
 >
 	<SlidersHorizontalIcon />
 </Button>
 <QuickFilterButton active={ageEnabled} onclick={() => (openFilters.age = true)}>
-	Age
+	{t("browse.filters.age.label")}
 </QuickFilterButton>
 <QuickFilterButton
 	active={positionEnabled}
 	onclick={() => (openFilters.position = true)}
 >
-	Position
+	{t("common.filters.position.label")}
 </QuickFilterButton>
 <ToggleGroup.Root
 	type="multiple"
@@ -56,19 +57,19 @@
 		value="isOnline"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Online
+		{t("common.filters.online")}
 	</ToggleGroup.Item>
 	<ToggleGroup.Item
 		value="isRightNow"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Right now
+		{t("common.filters.rightNow")}
 	</ToggleGroup.Item>
 	<ToggleGroup.Item
 		value="isFresh"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		Fresh
+		{t("browse.filters.fresh")}
 	</ToggleGroup.Item>
 </ToggleGroup.Root>
 
