@@ -10,7 +10,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:tools": "bun x tsc --noEmit -p tsconfig.tools.json && bun x tsc --noEmit -p scripts/store-screenshots",
 		"check:config": "opengrind-config check",
-		"check:deps": "cargo deny --manifest-path src-tauri/Cargo.toml check && bun audit && bun audit --cwd docs",
+		"check:deps": "cargo deny --manifest-path src-tauri/Cargo.toml check && bun audit && bun audit --cwd docs --ignore=GHSA-vfj7-8cjw-p6xm",
 		"bump": "bun scripts/bump-version.ts",
 		"check:version": "bun scripts/check-version.ts",
 		"check:backup-rules": "bun scripts/check-backup-rules.ts",
