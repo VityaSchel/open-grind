@@ -1,11 +1,14 @@
 use std::fs;
 use std::io::{self, ErrorKind, Write};
 use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::{InvokeResponseBody, Response};
 use tauri::{AppHandle, Manager};
+
+static APP_DATA_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -70,6 +73,7 @@ impl AppDataDir {
 		file: AppDataFile,
 		content: &[u8],
 	) -> io::Result<()> {
+		let _exclusive = exclusive();
 		fs::create_dir_all(&self.0)?;
 		let temp = self.temp_path(file);
 		let written = fs::File::create(&temp)
@@ -85,11 +89,16 @@ impl AppDataDir {
 	}
 
 	fn remove(&self, file: AppDataFile) -> io::Result<()> {
+		let _exclusive = exclusive();
 		match fs::remove_file(self.path(file)) {
 			Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
 			removed => removed,
 		}
 	}
+}
+
+fn exclusive() -> MutexGuard<'static, ()> {
+	APP_DATA_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 async fn off_the_runtime<T: Send + 'static>(
@@ -133,6 +142,7 @@ pub async fn remove_app_data(
 #[cfg(test)]
 mod tests {
 	use std::sync::atomic::{AtomicUsize, Ordering};
+	use std::sync::Barrier;
 
 	use super::*;
 
@@ -216,6 +226,34 @@ mod tests {
 			.write_atomic(AppDataFile::Preferences, b"content")
 			.is_err());
 
+		assert_eq!(scratch.entries(), ["preferences.data"]);
+	}
+
+	#[test]
+	fn overlapping_writes_all_succeed_and_publish_one_whole_content() {
+		let scratch = ScratchDir::new();
+		let dir = &scratch.app_data();
+		let start = &Barrier::new(8);
+		let payloads: Vec<Vec<u8>> = (1..=8u8)
+			.map(|byte| vec![byte; usize::from(byte) * 64 * 1024])
+			.collect();
+
+		std::thread::scope(|scope| {
+			for payload in &payloads {
+				scope.spawn(move || {
+					start.wait();
+					dir.write_atomic(AppDataFile::Preferences, payload)
+						.unwrap();
+				});
+			}
+		});
+
+		let published = dir.read(AppDataFile::Preferences).unwrap().unwrap();
+		assert!(
+			payloads.contains(&published),
+			"published a torn file of {} bytes",
+			published.len()
+		);
 		assert_eq!(scratch.entries(), ["preferences.data"]);
 	}
 
