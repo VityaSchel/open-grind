@@ -30,10 +30,11 @@
 		size="lg"
 		class="h-12 w-full text-base"
 		disabled={disabled || saving}
+		aria-busy={saving}
 		{onclick}
 	>
 		{#if saving}
-			<Spinner class="size-5" />
+			<Spinner class="size-5" aria-hidden="true" />
 		{/if}
 		Save changes
 	</Button>

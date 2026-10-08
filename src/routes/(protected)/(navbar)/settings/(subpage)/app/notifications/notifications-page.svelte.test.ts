@@ -120,7 +120,7 @@ describe("the notifications page", () => {
 		expect(checked(fast)).toBe("false");
 		for (const control of [fast, slow, taps])
 			expect(disabled(control)).toBe(false);
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
 
 	it("disables both delivery modes while notifications are off", async () => {
@@ -142,7 +142,7 @@ describe("the notifications page", () => {
 		await fireEvent.click(master);
 
 		expect(delivery.hasAttribute("data-disabled")).toBe(true);
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 		teardown.resolve();
 		await waitFor(() => expect(stored.notificationsEnabled).toBe(false));
 	});
@@ -175,24 +175,26 @@ describe("choosing Fast mode", () => {
 
 		await fireEvent.click(fast);
 
-		expect(await within(fast).findByRole("status")).toBeTruthy();
-		expect(within(slow).queryByRole("status")).toBeNull();
+		expect(
+			await within(fast).findByRole("status", { hidden: true }),
+		).toBeTruthy();
+		expect(within(slow).queryByRole("status", { hidden: true })).toBeNull();
 		expect(checked(slow)).toBe("true");
 		registration.resolve();
 		await waitFor(() => expect(checked(fast)).toBe("true"));
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
 
 	it("keeps spinning on Fast mode when the page is reopened mid-registration", async () => {
 		const registration = Promise.withResolvers<void>();
 		account.registerPushToken.mockReturnValueOnce(registration.promise);
 		await fireEvent.click((await opened(NotificationsPage)).fast);
-		await screen.findByRole("status");
+		await screen.findByRole("status", { hidden: true });
 		cleanup();
 
 		const { fast } = await opened(NotificationsPage);
 
-		expect(within(fast).getByRole("status")).toBeTruthy();
+		expect(within(fast).getByRole("status", { hidden: true })).toBeTruthy();
 		registration.resolve();
 		await waitFor(() => expect(checked(fast)).toBe("true"));
 	});
@@ -212,7 +214,7 @@ describe("choosing Fast mode", () => {
 		);
 		expect(checked(slow)).toBe("true");
 		expect(push.setMode).not.toHaveBeenCalled();
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
 
 	it("shows no spinner while switching back to Slow mode", async () => {
@@ -228,7 +230,7 @@ describe("choosing Fast mode", () => {
 		await waitFor(() =>
 			expect(delivery.hasAttribute("data-disabled")).toBe(true),
 		);
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 		switching.resolve();
 		await waitFor(() => expect(checked(slow)).toBe("true"));
 		expect(account.unregisterPushToken).toHaveBeenCalledWith(token.token);
@@ -252,7 +254,7 @@ describe("a missing FCM service", () => {
 			"To enable the fast mode, download and install FCM service add-on for Open Grind. It includes Google's proprietary Firebase library and needs Google Play services or microG, so it's not installed by default.",
 		);
 		expect(checked(slow)).toBe("true");
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 		await fireEvent.click(
 			within(dialog).getByRole("button", { name: "Continue" }),
 		);
@@ -262,7 +264,7 @@ describe("a missing FCM service", () => {
 			expect(screen.queryByRole("alertdialog")).toBeNull(),
 		);
 		expect(checked(slow)).toBe("true");
-		expect(screen.queryByRole("status")).toBeNull();
+		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
 
 	it("says the add-on bypasses F-Droid's checks only on an F-Droid install", async () => {

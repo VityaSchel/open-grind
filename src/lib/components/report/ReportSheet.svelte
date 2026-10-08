@@ -168,11 +168,12 @@
 					<Button
 						variant="destructive"
 						disabled={blocking || !blockable}
+						aria-busy={blocking}
 						class={["flex-1", { "px-9": !blockable }]}
 						onclick={() => void block()}
 					>
 						{#if blocking}
-							<Spinner />
+							<Spinner aria-hidden="true" />
 						{/if}
 						Block profile
 					</Button>
@@ -265,10 +266,11 @@
 				<ResponsiveDialog.Footer>
 					<Button
 						disabled={submitting || reason === null}
+						aria-busy={submitting}
 						onclick={() => void submit()}
 					>
 						{#if submitting}
-							<Spinner />
+							<Spinner aria-hidden="true" />
 						{/if}
 						Submit report
 					</Button>
