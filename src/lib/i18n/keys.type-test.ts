@@ -51,18 +51,18 @@ type KnownIssue = RichProps<"feedback.requestBlocked.cloudflare.knownIssue">;
 
 expectTypeOf<{
 	key: "feedback.requestBlocked.cloudflare.knownIssue";
-	link: TextSnippet;
+	knownIssueLink: TextSnippet;
 }>().toExtend<KnownIssue>();
 expectTypeOf<{
 	key: "feedback.requestBlocked.cloudflare.knownIssue";
 }>().not.toExtend<KnownIssue>();
 expectTypeOf<{
 	key: "feedback.requestBlocked.cloudflare.knownIssue";
-	link: string;
+	knownIssueLink: string;
 }>().not.toExtend<KnownIssue>();
 expectTypeOf<{
 	key: "feedback.requestBlocked.cloudflare.knownIssue";
-	link: Snippet<[value: number]>;
+	knownIssueLink: Snippet<[value: number]>;
 }>().not.toExtend<KnownIssue>();
 
 type InProgress = RichProps<"auth.signIn.errors.inProgress">;

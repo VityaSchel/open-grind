@@ -44,7 +44,7 @@
 				{t(copy.description)}
 				{#if cloudflare}
 					<Rich key="feedback.requestBlocked.cloudflare.knownIssue">
-						{#snippet link(text)}<Link
+						{#snippet knownIssueLink(text)}<Link
 								href="https://git.opengrind.org/open-grind/open-grind/issues/81"
 								>{text}</Link
 							>{/snippet}

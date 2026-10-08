@@ -34,7 +34,8 @@ export const translationFiles = {
 	"./locales/de/feedback.json": inline({
 		requestBlocked: {
 			cloudflare: {
-				knownIssue: "Das ist ein <link>bekanntes Problem</link>.",
+				knownIssue:
+					"Das ist ein <knownIssueLink>bekanntes Problem</knownIssueLink>.",
 			},
 		},
 	}),
@@ -42,7 +43,7 @@ export const translationFiles = {
 		requestBlocked: {
 			cloudflare: {
 				knownIssue:
-					"<valueOf>Tio</valueOf> estas <link>konata</link> <constructor>problemo</constructor>{{toString}}.",
+					"<valueOf>Tio</valueOf> estas <knownIssueLink>konata</knownIssueLink> <constructor>problemo</constructor>{{toString}}.",
 			},
 		},
 	}),

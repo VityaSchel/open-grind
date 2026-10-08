@@ -25,7 +25,7 @@ describe("richParts", () => {
 			richParts("feedback.requestBlocked.cloudflare.knownIssue"),
 		).toEqual([
 			{ kind: "text", text: "This is a " },
-			{ kind: "tag", name: "link", text: "known issue" },
+			{ kind: "tag", name: "knownIssueLink", text: "known issue" },
 			{ kind: "text", text: "." },
 		]);
 		await setLocale({ locale: "eo" });
@@ -34,7 +34,7 @@ describe("richParts", () => {
 		).toEqual([
 			{ kind: "tag", name: "valueOf", text: "Tio" },
 			{ kind: "text", text: " estas " },
-			{ kind: "tag", name: "link", text: "konata" },
+			{ kind: "tag", name: "knownIssueLink", text: "konata" },
 			{ kind: "text", text: " " },
 			{ kind: "tag", name: "constructor", text: "problemo" },
 			{ kind: "placeholder", name: "toString", text: "{{toString}}" },

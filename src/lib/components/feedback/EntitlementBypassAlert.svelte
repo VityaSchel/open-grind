@@ -43,7 +43,7 @@
 						: t(entitlementBypassState.reason)}
 				</p>
 				<Rich key="feedback.entitlementBypass.explanation">
-					{#snippet link(text)}<Link
+					{#snippet bypassGuideLink(text)}<Link
 							href="https://opengrind.org/guides/bypasses"
 							>{text}</Link
 						>{/snippet}

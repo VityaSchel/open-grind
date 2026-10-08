@@ -6,7 +6,7 @@
 
 <span>
 	<Rich key="feedback.autoLocationToast.message">
-		{#snippet icon()}<MapPinIcon
+		{#snippet menuIcon()}<MapPinIcon
 				weight="fill"
 				class="inline size-5 align-middle"
 			/>{/snippet}

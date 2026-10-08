@@ -11,6 +11,6 @@
 <p data-slot="minutes">{minutes}</p>
 <p data-slot="known-issue">
 	<Rich key="feedback.requestBlocked.cloudflare.knownIssue">
-		{#snippet link(text)}<a href="/issues/81">{text}</a>{/snippet}
+		{#snippet knownIssueLink(text)}<a href="/issues/81">{text}</a>{/snippet}
 	</Rich>
 </p>

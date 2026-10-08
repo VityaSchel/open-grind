@@ -46,7 +46,7 @@
 			"title": "Grindr blocks your requests",
 			"description": "Cloudflare protecting the Grindr API is currently blocking your requests because of suspicious activity.",
 			"advice": "You can also rotate request parameters using the button below.",
-			"knownIssue": "This is a <link>known issue</link>."
+			"knownIssue": "This is a <knownIssueLink>known issue</knownIssueLink>."
 		},
 		"network": {
 			"title": "Something blocked the request before it reached Grindr",
@@ -105,7 +105,7 @@
 	},
 	"entitlementBypass": {
 		"title": "Paid feature",
-		"explanation": "Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. <link>Learn more</link>.",
+		"explanation": "Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. <bypassGuideLink>Learn more</bypassGuideLink>.",
 		"bypass": "Bypass",
 		"needsLocation": "Set your location before using this bypass",
 		"errors": {
@@ -113,6 +113,6 @@
 		}
 	},
 	"autoLocationToast": {
-		"message": "Your location will be updating automatically using GPS. Turn this off in the <icon></icon> menu."
+		"message": "Your location will be updating automatically using GPS. Turn this off in the {{menuIcon}} menu."
 	}
 }

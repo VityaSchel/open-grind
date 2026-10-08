@@ -93,7 +93,7 @@ describe("pseudo-locales at runtime", () => {
 			richParts("feedback.requestBlocked.cloudflare.knownIssue"),
 		).toEqual([
 			{ kind: "text", text: "⟦Ţĥîš îš á " },
-			{ kind: "tag", name: "link", text: "ķñöŵñ îššûé" },
+			{ kind: "tag", name: "knownIssueLink", text: "ķñöŵñ îššûé" },
 			{ kind: "text", text: ". öñé ţŵö⟧" },
 		]);
 	});
