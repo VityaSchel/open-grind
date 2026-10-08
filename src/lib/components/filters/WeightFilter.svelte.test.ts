@@ -9,6 +9,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { formatWeightKg, kgToPounds } from "$lib/util/units";
 import WeightFilter from "./WeightFilter.svelte";
 
@@ -57,12 +59,28 @@ function pressTrackMiddle(track: HTMLElement) {
 const maximumWeight = () =>
 	screen.getByRole("slider", { name: "Maximum weight" });
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	preferences.units = "metric";
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("WeightFilter", () => {
+	it("names the field and both thumbs in the active locale", async () => {
+		renderFilter([80, 272]);
+		const field = screen.getByRole("checkbox", { name: "Weight" });
+		const thumbs = [minimumWeight(), maximumWeight()];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(screen.getAllByRole("slider", { name: PSEUDO_MESSAGE })).toEqual(
+			thumbs,
+		);
+	});
+
 	it("announces each thumb in the units its label shows", () => {
 		preferences.units = "imperial";
 		renderFilter([80, 272]);

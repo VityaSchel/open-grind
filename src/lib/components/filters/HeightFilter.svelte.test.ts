@@ -10,6 +10,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesSnapshot: () => preferences,
 }));
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { HEIGHT_CM_MAX, HEIGHT_CM_MIN } from "$lib/model/browse/grid/filters";
 import { formatHeight } from "$lib/util/units";
 import HeightFilter from "./HeightFilter.svelte";
@@ -38,12 +40,28 @@ async function press({ name, key }: { name: string; key: string }) {
 	return valueText(name);
 }
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	preferences.units = "metric";
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("HeightFilter", () => {
+	it("names the field and both thumbs in the active locale", async () => {
+		renderFilter([170, 190]);
+		const field = screen.getByRole("checkbox", { name: "Height" });
+		const thumbs = [thumb("Minimum height"), thumb("Maximum height")];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(screen.getAllByRole("slider", { name: PSEUDO_MESSAGE })).toEqual(
+			thumbs,
+		);
+	});
+
 	it("announces each thumb in the units its label shows", () => {
 		preferences.units = "imperial";
 		renderFilter([HEIGHT_CM_MIN, 180]);

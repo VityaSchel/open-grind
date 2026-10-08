@@ -3,6 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import AgeFilterField from "./AgeFilterField.svelte";
 
 const TRACK_WIDTH = 1000;
@@ -40,9 +42,27 @@ function pointer({
 	);
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("AgeFilterField", () => {
+	it("names the field and both thumbs in the active locale", async () => {
+		renderField([25, 60]);
+		const field = screen.getByRole("checkbox", { name: "Age" });
+		const thumbs = [minimumAge(), maximumAge()];
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(screen.getByRole("checkbox", { name: PSEUDO_MESSAGE })).toBe(
+			field,
+		);
+		expect(screen.getAllByRole("slider", { name: PSEUDO_MESSAGE })).toEqual(
+			thumbs,
+		);
+	});
+
 	it("announces ages, not track positions", () => {
 		renderField([25, 60]);
 

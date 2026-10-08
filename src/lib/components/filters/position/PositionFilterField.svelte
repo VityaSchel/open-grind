@@ -2,6 +2,7 @@
 	import type z from "zod";
 
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
+	import { t } from "$lib/i18n";
 	import type { filterPositionSchema } from "$lib/model/browse/grid/filters";
 	import FilterBoolean from "../FilterBoolean.svelte";
 
@@ -13,7 +14,9 @@
 </script>
 
 <div class="flex min-w-0 flex-col gap-2">
-	<FilterBoolean id="position" bind:checked>Position</FilterBoolean>
+	<FilterBoolean id="position" bind:checked>
+		{t("common.filters.position.label")}
+	</FilterBoolean>
 	<div class="ps-6">
 		<PositionFilterToggle
 			bind:value={

@@ -3,10 +3,15 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { FilterPosition } from "$lib/model/browse/grid/filters";
 import PositionFilterToggle from "./PositionFilterToggle.svelte";
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("PositionFilterToggle", () => {
 	it("offers the positions from top to side, then the unspecified one", () => {
@@ -25,6 +30,17 @@ describe("PositionFilterToggle", () => {
 			"Side",
 			"Not specified",
 		]);
+	});
+
+	it("words the unspecified choice in the active locale", async () => {
+		render(PositionFilterToggle, { props: { value: [] } });
+		const notSpecified = screen.getByRole("button", {
+			name: "Not specified",
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(notSpecified.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 
 	it("draws every choice with an icon of its own", () => {

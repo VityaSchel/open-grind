@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Slider } from "$lib/components/ui/slider";
+	import { t } from "$lib/i18n";
 	import { MAX_DISTANCE_STEPS, maxDistanceLabel } from "./distance-steps";
 
 	let { value = $bindable() }: { value: number } = $props();
@@ -14,7 +15,7 @@
 	min={0}
 	max={MAX_DISTANCE_STEPS.length - 1}
 	step={1}
-	thumbLabels={["Maximum distance"]}
+	thumbLabels={[t("browse.filters.distance.a11y.maximum")]}
 	thumbValueTexts={[maxDistanceLabel({ step: value, units })]}
 	bind:value={
 		() => index,

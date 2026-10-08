@@ -1,5 +1,6 @@
 <script lang="ts" generics="T extends unknown">
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { t } from "$lib/i18n";
 	import FilterDropdown from "./FilterDropdown.svelte";
 
 	let {
@@ -22,7 +23,13 @@
 
 	const allItems = $derived(
 		notSpecified
-			? [...items, { value: convert("-1"), label: "Not specified" }]
+			? [
+					...items,
+					{
+						value: convert("-1"),
+						label: t("common.filters.notSpecified"),
+					},
+				]
 			: items,
 	);
 </script>

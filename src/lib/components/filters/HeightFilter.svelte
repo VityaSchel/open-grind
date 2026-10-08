@@ -2,6 +2,7 @@
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import FilterDropdown from "$lib/components/filters/FilterDropdown.svelte";
 	import { Slider } from "$lib/components/ui/slider";
+	import { t } from "$lib/i18n";
 	import { formatRange } from "$lib/i18n/format";
 	import {
 		HEIGHT_CM_MAX,
@@ -33,7 +34,7 @@
 <div class="block w-full space-y-3">
 	<FilterDropdown
 		id="height"
-		label="Height"
+		label={t("browse.filters.height.label")}
 		bind:checked
 		endLabel={formatRange({ min: minText, max: maxText })}
 		contentClass="ps-7 h-6"
@@ -51,7 +52,10 @@
 			max={stops.last}
 			step={1}
 			thumbValueTexts={[minText, maxText]}
-			thumbLabels={["Minimum height", "Maximum height"]}
+			thumbLabels={[
+				t("browse.filters.height.a11y.minimum"),
+				t("browse.filters.height.a11y.maximum"),
+			]}
 		/>
 	</FilterDropdown>
 </div>

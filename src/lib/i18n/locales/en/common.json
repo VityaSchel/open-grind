@@ -55,7 +55,11 @@
 		"interest": "Interest"
 	},
 	"filters": {
-		"noResults": "No Results"
+		"noResults": "No Results",
+		"notSpecified": "Not specified",
+		"position": {
+			"label": "Position"
+		}
 	},
 	"location": {
 		"errors": {

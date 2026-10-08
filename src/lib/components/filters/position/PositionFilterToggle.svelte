@@ -7,6 +7,7 @@
 		sexualPositionOrder,
 	} from "$lib/components/profile/sexual-position-icons";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { t } from "$lib/i18n";
 	import {
 		FilterPosition,
 		filterPositionSchema,
@@ -37,6 +38,6 @@
 	{/each}
 	<ToggleGroup.Item value={FilterPosition.NotSpecified.toString()}>
 		<XIcon />
-		Not specified
+		{t("common.filters.notSpecified")}
 	</ToggleGroup.Item>
 </ToggleGroup.Root>

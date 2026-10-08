@@ -46,7 +46,44 @@
 		"noMax": "No max",
 		"ageAndOver_one": "{{count}} year & over",
 		"ageAndOver_other": "{{count}} years & over",
-		"withinDistance": "Within {{distance}}"
+		"withinDistance": "Within {{distance}}",
+		"apply": "Apply",
+		"reset": "Reset",
+		"age": {
+			"label": "Age",
+			"a11y": {
+				"minimum": "Minimum age",
+				"maximum": "Maximum age"
+			}
+		},
+		"height": {
+			"label": "Height",
+			"a11y": {
+				"minimum": "Minimum height",
+				"maximum": "Maximum height"
+			}
+		},
+		"weight": {
+			"label": "Weight",
+			"a11y": {
+				"minimum": "Minimum weight",
+				"maximum": "Maximum weight"
+			}
+		},
+		"distance": {
+			"a11y": {
+				"maximum": "Maximum distance"
+			}
+		},
+		"options": {
+			"tribes": "Tribes",
+			"bodyType": "Body Type",
+			"relationshipStatus": "Relationship Status",
+			"acceptNsfwPics": "Accept NSFW Pics",
+			"lookingFor": "Looking for",
+			"meetAt": "Meet at",
+			"healthPractices": "Health Practices"
+		}
 	},
 	"rightNow": {
 		"unimplemented": "\"Right now\" tab is not implemented yet, tracking in {{issueLink}}."

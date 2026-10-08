@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { Label } from "$lib/components/ui/label";
+	import { t } from "$lib/i18n";
 	import { ageRangeLabel } from "$lib/model/browse/grid/filters";
 	import FilterField from "../FilterField.svelte";
 	import AgeFilterSlider from "./AgeFilterSlider.svelte";
@@ -18,7 +19,7 @@
 <div class="inline-block w-full space-y-3">
 	<FilterField>
 		<Checkbox id="filters-age-{uid}" bind:checked />
-		<Label for="filters-age-{uid}">Age</Label>
+		<Label for="filters-age-{uid}">{t("browse.filters.age.label")}</Label>
 		<span class="ml-auto min-w-0 truncate">
 			{label}
 		</span>

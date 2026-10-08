@@ -8,17 +8,18 @@ import {
 	relationshipStatuses,
 	tribes,
 } from "$lib/model/users/profiles";
+import type { PlainMessageKey } from "$lib/i18n";
 
 export type OptionFilterDefinition = {
 	id: string;
-	label: string;
+	label: PlainMessageKey;
 	table: Record<number, string>;
 };
 
 export const optionFilters = {
 	tribes: {
 		id: "tribes",
-		label: "Tribes",
+		label: "browse.filters.options.tribes",
 		get table() {
 			return Object.fromEntries(
 				Object.entries(tribes).filter(([id]) =>
@@ -27,22 +28,34 @@ export const optionFilters = {
 			);
 		},
 	},
-	bodyTypes: { id: "body-type", label: "Body Type", table: bodyTypes },
+	bodyTypes: {
+		id: "body-type",
+		label: "browse.filters.options.bodyType",
+		table: bodyTypes,
+	},
 	relationshipStatuses: {
 		id: "relationship-status",
-		label: "Relationship Status",
+		label: "browse.filters.options.relationshipStatus",
 		table: relationshipStatuses,
 	},
 	acceptNSFWPics: {
 		id: "accept-nsfw-pics",
-		label: "Accept NSFW Pics",
+		label: "browse.filters.options.acceptNsfwPics",
 		table: acceptNSFWPics,
 	},
-	lookingFor: { id: "looking-for", label: "Looking for", table: lookingFor },
-	meetAt: { id: "meet-at", label: "Meet at", table: meetAt },
+	lookingFor: {
+		id: "looking-for",
+		label: "browse.filters.options.lookingFor",
+		table: lookingFor,
+	},
+	meetAt: {
+		id: "meet-at",
+		label: "browse.filters.options.meetAt",
+		table: meetAt,
+	},
 	healthPractices: {
 		id: "health-practices",
-		label: "Health Practices",
+		label: "browse.filters.options.healthPractices",
 		table: healthPractices,
 	},
 } as const satisfies Record<string, OptionFilterDefinition>;
