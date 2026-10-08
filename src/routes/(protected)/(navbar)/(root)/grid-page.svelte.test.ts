@@ -14,7 +14,7 @@ class FakeGridState {
 	loading = $state(true);
 	error: Error | null = null;
 	refreshing = false;
-	loadingMore = false;
+	paging = { running: false, failure: null, armToken: "" };
 	nextPage: number | null = null;
 	profiles: GridProfile[] = [];
 	viewActive = false;

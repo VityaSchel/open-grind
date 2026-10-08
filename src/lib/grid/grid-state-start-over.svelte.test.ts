@@ -119,7 +119,7 @@ describe("starting over", () => {
 
 		await gridState.refresh({ keepLoadedPages: false });
 		await gridState.refresh({ background: true });
-		await gridState.loadMore();
+		await gridState.paging.run();
 
 		expect(getGridMock).toHaveBeenCalledTimes(3);
 		expect(startedOver).not.toHaveBeenCalled();

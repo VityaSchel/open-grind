@@ -12,7 +12,6 @@ import { onProfileEdit } from "$lib/api/users/profiles";
 import { RememberedConversationFlags } from "$lib/chat/conversation-flags";
 import { sortConversations } from "$lib/chat/conversation-order";
 import { InboxViewedMarker } from "$lib/chat/inbox-last-viewed.svelte";
-import { InboxPaging } from "$lib/chat/inbox-paging.svelte";
 import {
 	type ConversationFlagField,
 	mergeConversation,
@@ -21,6 +20,7 @@ import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
+import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import {
 	chatV1ConversationDeleteEventSchema,
 	chatV1MessageSentEventSchema,
@@ -63,7 +63,7 @@ class ConversationsState {
 	readonly drafts = new Drafts();
 	readonly filters = new ConversationFilters();
 	readonly inboxViewed: InboxViewedMarker;
-	readonly paging: InboxPaging;
+	readonly paging: SentinelPaging;
 	#onIncomingMessage: IncomingMessageHandler;
 	#activeConversationId: string | null = null;
 	#wsPromises: Promise<() => void>[] = [];
@@ -98,7 +98,7 @@ class ConversationsState {
 		this.ourProfileId = ourProfileId;
 		this.#onIncomingMessage = onIncomingMessage;
 		this.inboxViewed = new InboxViewedMarker({ profileId: ourProfileId });
-		this.paging = new InboxPaging({
+		this.paging = new SentinelPaging({
 			loadPage: (page) => this.#fetches.track(this.#load(page)),
 			cursor: () => this.nextPage,
 		});

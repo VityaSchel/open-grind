@@ -2,7 +2,7 @@ import { ApiError } from "$lib/api/api-error";
 
 const RETRY_DELAYS_MS = [2_000, 6_000, 18_000];
 
-export class InboxPaging {
+export class SentinelPaging {
 	running = $state(false);
 	failure: Error | null = $state(null);
 	#armNonce = $state(0);
