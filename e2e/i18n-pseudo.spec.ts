@@ -2,9 +2,11 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import {
+	DEMO_GEOHASH,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	pathname,
+	runPaletteCommand,
 } from "./support/app";
 
 const FAILING_ROUTE = "/interest";
@@ -14,6 +16,7 @@ const THROWING_LOAD =
 const MISSING_ROUTE = "/no-such-page";
 const AUTH_LAYOUT_LOAD = /\/routes\/auth\/\+layout\.ts(?:\?|$)/;
 const SIGNED_OUT_LOAD = "export const load = () => {};";
+const BRAND_TITLE = "Open Grind";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -44,8 +47,11 @@ async function openNotFoundPage(
 	return waitForErrorContent(page);
 }
 
-function readPseudoText(roots: Locator) {
-	return roots.evaluateAll((elements) => {
+function readPseudoText(
+	roots: Locator,
+	{ brandTitle = "" }: { brandTitle?: string } = {},
+) {
+	return roots.evaluateAll((elements, brand) => {
 		const withoutPseudo = (text: string): string => {
 			const stripped = text.replace(/⟦[^⟦⟧]*⟧/g, " ");
 			return stripped === text ? text : withoutPseudo(stripped);
@@ -79,13 +85,12 @@ function readPseudoText(roots: Locator) {
 					(name) => element.getAttribute(name) ?? "",
 				),
 			);
+		const title = document.title === brand ? "" : document.title;
 		return {
 			messages: texts.join("").match(/⟦/g)?.length ?? 0,
-			leaks: [...texts, document.title, ...attributes].flatMap(
-				outsidePseudo,
-			),
+			leaks: [...texts, title, ...attributes].flatMap(outsidePseudo),
 		};
-	});
+	}, brandTitle);
 }
 
 test.describe("error pages under en-XA", () => {
@@ -124,18 +129,31 @@ test("an unknown locale parameter leaves the app in English", async ({
 	await expect(page).not.toHaveTitle(/[⟦\u202E]/);
 });
 
+interface ChromeRoute {
+	path: string;
+	roles: readonly ("main" | "navigation")[];
+	landmarks: number;
+	brandTitle?: string;
+}
+
 test.describe("converted navigation chrome under en-XA", () => {
-	const routes = [
+	const routes: readonly ChromeRoute[] = [
+		{
+			path: "/",
+			roles: ["main", "navigation"],
+			landmarks: 2,
+			brandTitle: BRAND_TITLE,
+		},
 		{ path: "/right-now", roles: ["main", "navigation"], landmarks: 2 },
 		{ path: "/settings/app", roles: ["navigation"], landmarks: 2 },
 		{ path: "/interest/views", roles: ["navigation"], landmarks: 2 },
-	] as const;
+	];
 
 	test.beforeEach(async ({ page }) => {
 		await installTauriShim(page);
 	});
 
-	for (const { path, roles, landmarks } of routes) {
+	for (const { path, roles, landmarks, brandTitle } of routes) {
 		test(`${path} renders its ${roles.join(" and ")} landmarks only pseudo-translated`, async ({
 			page,
 		}) => {
@@ -147,10 +165,43 @@ test.describe("converted navigation chrome under en-XA", () => {
 				timeout: FIRST_ROUTE_COMPILE_MS,
 			});
 			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
-			const { messages, leaks } = await readPseudoText(roots);
+			const { messages, leaks } = await readPseudoText(roots, {
+				brandTitle,
+			});
 			expect(messages).toBeGreaterThan(0);
 			expect(leaks).toEqual([]);
 		});
+	}
+});
+
+test("the browse grid top bar and its quick-filter drawers render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page, { platform: "android" });
+	await page.goto("/?locale=en-XA");
+	await page
+		.locator("nav a")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
+	const topBar = page.locator("[data-fixed-header]");
+	const drawerPills = topBar
+		.locator("button:not([aria-label], [aria-pressed])")
+		.filter({ hasText: PSEUDO_MESSAGE });
+	await expect(drawerPills).toHaveCount(2, { timeout: 60_000 });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const scans = [await readPseudoText(topBar, { brandTitle: BRAND_TITLE })];
+	for (const pill of await drawerPills.all()) {
+		await pill.click();
+		const drawer = page.getByRole("dialog");
+		await drawer.waitFor();
+		scans.push(await readPseudoText(drawer, { brandTitle: BRAND_TITLE }));
+		await page.keyboard.press("Escape");
+		await expect(drawer).toBeHidden();
+	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
 	}
 });
 
