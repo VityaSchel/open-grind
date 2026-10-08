@@ -115,12 +115,13 @@ test.describe("the newest message of a conversation at a fractional device pixel
 		await expect
 			.poll(() => roomAboveComposer(scroller))
 			.toBe(`${BUTTON_ROW_PX}px`);
-		await afterTwoFrames(page);
-		expect(
-			Math.abs(
-				(await bottomOf(newest)) - (restingBottom - BUTTON_ROW_PX),
-			),
-		).toBeLessThanOrEqual(1 / DEVICE_PIXEL_RATIO);
+		await expect
+			.poll(async () =>
+				Math.abs(
+					(await bottomOf(newest)) - (restingBottom - BUTTON_ROW_PX),
+				),
+			)
+			.toBeLessThanOrEqual(1 / DEVICE_PIXEL_RATIO);
 		await expect(refreshButton(page)).toBeVisible();
 	});
 

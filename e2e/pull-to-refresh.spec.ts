@@ -5,6 +5,7 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	MESSAGE_ROW,
+	openGrid,
 	wheel,
 } from "./support/app";
 import { openTaps, TAP_ROW } from "./support/interest-pager";
@@ -29,6 +30,10 @@ const SCROLL_AWAY_PX = 10;
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const SCREEN_TALLER_THAN_ITS_CONTENT = { width: 420, height: 3000 };
 const ROOM_ABOVE_COMPOSER_PROPERTY = "--refresh-inset-bottom";
+const BROWSE_TILE = '[data-slot="grid-content"] a[href^="/profile/"]';
+const GRID_PREPARE_MS = 180_000;
+const BUTTON_CLEARANCE_PX = 12;
+const SLIDE_SLIP_PX = 2;
 
 async function openRefreshableTaps(page: Page) {
 	await openTaps(page);
@@ -36,6 +41,15 @@ async function openRefreshableTaps(page: Page) {
 		.locator("[data-refresh-phase]")
 		.first()
 		.waitFor({ state: "attached" });
+	await page.waitForTimeout(600);
+}
+
+async function openBrowse(page: Page) {
+	test.setTimeout(GRID_PREPARE_MS);
+	await installTauriShim(page);
+	await openGrid(page);
+	await page.locator(BROWSE_TILE).first().waitFor();
+	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
 	await page.waitForTimeout(600);
 }
 
@@ -60,6 +74,12 @@ const floorDistance = (scroller: Locator) =>
 
 const scrollRange = (scroller: Locator) =>
 	scroller.evaluate((el) => el.scrollHeight - el.clientHeight);
+
+const slidingContent = (scroller: Locator) =>
+	scroller.evaluate((el) => {
+		const content = el.querySelector(":scope > [data-refresh-content]");
+		return content?.getAnimations().length ?? 0;
+	});
 
 const roomAboveComposer = (scroller: Locator) =>
 	scroller.evaluate(
@@ -368,6 +388,43 @@ test.describe("pull to refresh", () => {
 		});
 	}
 
+	test("on Browse the tiles slide down in step with the button, so the button never covers the first row", async ({
+		page,
+	}) => {
+		await openBrowse(page);
+		const firstTile = page.locator(BROWSE_TILE).first();
+		const restingTop = await topOf(firstTile);
+		const clearances = await firstTile.evaluateHandle((tile) => {
+			const band = tile
+				.closest("main")
+				?.querySelector('[data-slot="refresh-band"]');
+			if (!band) throw new Error("refresh band not found");
+			const seen: number[] = [];
+			new MutationObserver(() => {
+				const button = band.querySelector("button");
+				if (!button) return;
+				const drawnBottom = Math.min(
+					button.getBoundingClientRect().bottom,
+					band.getBoundingClientRect().bottom,
+				);
+				seen.push(tile.getBoundingClientRect().top - drawnBottom);
+			}).observe(band, { attributes: true, attributeFilter: ["style"] });
+			return seen;
+		});
+
+		await revealButtonOver(page, { row: firstTile });
+		await expect
+			.poll(() => topOf(firstTile))
+			.toBe(restingTop + BUTTON_ROW_PX);
+
+		const seen = await clearances.evaluate((list) => [...list]);
+		expect(seen.length).toBeGreaterThan(2);
+		expect(seen.at(-1)).toBeCloseTo(BUTTON_CLEARANCE_PX, 0);
+		expect(Math.min(...seen)).toBeGreaterThanOrEqual(
+			BUTTON_CLEARANCE_PX - SLIDE_SLIP_PX,
+		);
+	});
+
 	test("a clicked refresh spins in the button's row without moving the list", async ({
 		page,
 	}) => {
@@ -414,7 +471,9 @@ test.describe("pull to refresh", () => {
 		await expect
 			.poll(() => roomAboveComposer(scroller))
 			.toBe(`${BUTTON_ROW_PX}px`);
-		expect(await bottomOf(newest)).toBe(restingBottom - BUTTON_ROW_PX);
+		await expect
+			.poll(() => bottomOf(newest))
+			.toBe(restingBottom - BUTTON_ROW_PX);
 		expect(await floorDistance(scroller)).toBeLessThanOrEqual(1);
 		const button = await refreshButton(page).boundingBox();
 		const composer = await page
@@ -448,7 +507,9 @@ test.describe("pull to refresh", () => {
 		await expect
 			.poll(() => roomAboveComposer(scroller))
 			.toBe(`${BUTTON_ROW_PX}px`);
-		expect(await bottomOf(newest)).toBe(restingBottom - BUTTON_ROW_PX);
+		await expect
+			.poll(() => bottomOf(newest))
+			.toBe(restingBottom - BUTTON_ROW_PX);
 
 		const rooms = await scroller.evaluateHandle((el: HTMLElement, room) => {
 			const seen = new Set<string>();
@@ -463,13 +524,10 @@ test.describe("pull to refresh", () => {
 		await page.getByRole("textbox").fill(sent);
 		await page.getByRole("textbox").press("Enter");
 		await expect(newest).toContainText(sent);
-		await expect.poll(() => floorDistance(scroller)).toBeLessThanOrEqual(1);
+		await expect
+			.poll(() => bottomOf(newest))
+			.toBeCloseTo(restingBottom - BUTTON_ROW_PX, 0);
 		await expect(refreshButton(page)).toBeVisible();
-
-		expect(await bottomOf(newest)).toBeCloseTo(
-			restingBottom - BUTTON_ROW_PX,
-			0,
-		);
 		expect(await rooms.evaluate((seen) => [...seen])).toEqual([
 			`${BUTTON_ROW_PX}px`,
 		]);
@@ -521,7 +579,7 @@ test.describe("pull to refresh", () => {
 			shift: -BUTTON_ROW_PX,
 		},
 	]) {
-		test(`${surface.name} shorter than the screen makes the button's room out of its spare height, not out of new scroll range`, async ({
+		test(`${surface.name} shorter than the screen makes the button's room out of its spare height, and never out of new scroll range while the list slides`, async ({
 			page,
 		}) => {
 			await page.setViewportSize(SCREEN_TALLER_THAN_ITS_CONTENT);
@@ -531,16 +589,35 @@ test.describe("pull to refresh", () => {
 			const restingEdge = await surface.edgeOf(row);
 			const restingRange = await scrollRange(scroller);
 			expect(restingRange).toBeLessThanOrEqual(1);
+			const ranges = await scroller.evaluateHandle((el) => {
+				const seen: number[] = [];
+				const sample = () => {
+					seen.push(el.scrollHeight - el.clientHeight);
+					requestAnimationFrame(sample);
+				};
+				requestAnimationFrame(sample);
+				return seen;
+			});
 
-			await revealButtonOver(page, {
+			const pointer = await revealButtonOver(page, {
 				row,
 				towardBoundary: surface.towardBoundary,
 			});
 			await expect
 				.poll(() => surface.edgeOf(row))
 				.toBe(restingEdge + surface.shift);
-
 			expect(await scrollRange(scroller)).toBe(restingRange);
+
+			await wheel(page, pointer, -surface.towardBoundary, {
+				steps: 2,
+				gapMs: 30,
+			});
+			await expect(refreshButton(page)).toBeHidden();
+			await expect.poll(() => slidingContent(scroller)).toBe(0);
+
+			const seen = await ranges.evaluate((list) => [...list]);
+			expect(seen.length).toBeGreaterThan(2);
+			expect(Math.max(...seen)).toBeLessThanOrEqual(restingRange);
 		});
 	}
 });

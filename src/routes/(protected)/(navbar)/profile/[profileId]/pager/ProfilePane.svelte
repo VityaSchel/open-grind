@@ -114,6 +114,7 @@
 		>
 			<main
 				inert={!active}
+				data-refresh-content
 				class="relative mx-auto min-h-overscrollable w-full max-w-200"
 			>
 				{#if profile || medias.length > 0}
