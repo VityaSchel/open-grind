@@ -202,12 +202,12 @@
 						{#if view === "install" && isPlayBuild()}
 							<Rich
 								key="auth.signIn.google.install.playDescription"
-								link={companionLink}
+								{companionLink}
 							/>
 						{:else if view === "install"}
 							<Rich
 								key="auth.signIn.google.install.description"
-								link={companionLink}
+								{companionLink}
 							/>
 							{#if installedFromFdroid()}
 								<span class="mt-2 block">
@@ -219,14 +219,14 @@
 						{:else if view === "continue"}
 							<Rich
 								key="auth.signIn.google.continue.description"
-								link={companionLink}
+								{companionLink}
 							/>
 						{:else}
 							<ol class="ms-5 list-decimal">
 								<li>
 									<Rich
 										key="auth.signIn.google.paste.steps.install"
-										link={companionLink}
+										{companionLink}
 									/>
 								</li>
 								<li>
@@ -313,7 +313,7 @@
 			<p class="text-center text-sm text-muted-foreground">
 				{#if view === "paste"}
 					<Rich key="auth.signIn.google.useCompanion">
-						{#snippet button(text)}
+						{#snippet companionButton(text)}
 							<Button
 								variant="link"
 								class="h-auto p-0"
@@ -326,7 +326,7 @@
 					</Rich>
 				{:else}
 					<Rich key="auth.signIn.google.pasteManually">
-						{#snippet button(text)}
+						{#snippet pasteButton(text)}
 							<Button
 								variant="link"
 								class="h-auto p-0"
