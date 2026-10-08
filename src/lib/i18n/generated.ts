@@ -53,6 +53,18 @@ export interface Messages {
 	"browse.filters.noMax": undefined;
 	"browse.filters.noMin": undefined;
 	"browse.filters.withinDistance": { distance: string };
+	"browse.grid.a11y.loadingMore": undefined;
+	"browse.grid.empty.noFavorites.description": undefined;
+	"browse.grid.empty.noFavorites.title": undefined;
+	"browse.grid.empty.noMatchingFavorites.description": undefined;
+	"browse.grid.empty.noProfiles.description": undefined;
+	"browse.grid.empty.noProfiles.title": undefined;
+	"browse.grid.empty.resetFilters": undefined;
+	"browse.grid.errors.loadMoreFailed": undefined;
+	"browse.grid.errors.loadProfileFailed": undefined;
+	"browse.grid.errors.refreshFailed": undefined;
+	"browse.grid.searchFilters.errors.loadFailed": undefined;
+	"browse.grid.searchFilters.errors.updateFailed": undefined;
 	"browse.locationChooser.map.selectedLocation": undefined;
 	"browse.locationChooser.map.zoomIn": undefined;
 	"browse.locationChooser.map.zoomOut": undefined;
@@ -96,6 +108,7 @@ export interface Messages {
 	"common.commandDialog.a11y.description": undefined;
 	"common.commandDialog.a11y.title": undefined;
 	"common.desktopEntry.errors.addFailed": undefined;
+	"common.filters.noResults": undefined;
 	"common.format.range": { max: string; min: string };
 	"common.sections.interest": undefined;
 	"common.someone": undefined;

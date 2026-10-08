@@ -9,6 +9,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { t } from "$lib/i18n";
 import { autoLocation } from "$lib/location/auto-location";
 import { reconciler } from "$lib/util/reconcile";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
@@ -164,7 +165,10 @@ class GridState {
 			this.nextPage = result.nextPage;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to load more profiles", error });
+			showErrorToast({
+				label: t("browse.grid.errors.loadMoreFailed"),
+				error,
+			});
 		} finally {
 			this.loadingMore = false;
 		}
@@ -197,7 +201,10 @@ class GridState {
 			}
 		} catch (error) {
 			console.error(id, error);
-			showErrorToast({ label: "Failed to load profile", error });
+			showErrorToast({
+				label: t("browse.grid.errors.loadProfileFailed"),
+				error,
+			});
 		} finally {
 			this.#resolvingIds.delete(id);
 		}
@@ -274,7 +281,7 @@ class GridState {
 			if (opts?.background) return;
 			if (opts?.silent) {
 				showErrorToast({
-					label: "Failed to refresh profiles",
+					label: t("browse.grid.errors.refreshFailed"),
 					error: err,
 					onRetry: () =>
 						void this.refresh({

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { virtualGrid } from "$lib/util/virtual-grid.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";
@@ -101,7 +102,7 @@
 	</div>
 	<div role="status" class="sr-only">
 		{#if gridState.loadingMore}
-			Loading more profiles
+			{t("browse.grid.a11y.loadingMore")}
 		{/if}
 	</div>
 	{#if gridState.nextPage !== 0 && gridState.nextPage !== null}

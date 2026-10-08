@@ -1,4 +1,34 @@
 {
+	"grid": {
+		"a11y": {
+			"loadingMore": "Loading more profiles"
+		},
+		"empty": {
+			"noProfiles": {
+				"title": "No Profiles Found",
+				"description": "Try adjusting your filters or reset them to defaults."
+			},
+			"noMatchingFavorites": {
+				"description": "No favorites match these filters."
+			},
+			"noFavorites": {
+				"title": "No Favorites Yet",
+				"description": "Tap the star on someone's profile to save them here."
+			},
+			"resetFilters": "Reset filters"
+		},
+		"errors": {
+			"loadMoreFailed": "Failed to load more profiles",
+			"loadProfileFailed": "Failed to load profile",
+			"refreshFailed": "Failed to refresh profiles"
+		},
+		"searchFilters": {
+			"errors": {
+				"loadFailed": "Failed to load filters",
+				"updateFailed": "Failed to update filters"
+			}
+		}
+	},
 	"filters": {
 		"noMin": "No min",
 		"noMax": "No max",

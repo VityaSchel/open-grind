@@ -52,5 +52,8 @@
 	},
 	"sections": {
 		"interest": "Interest"
+	},
+	"filters": {
+		"noResults": "No Results"
 	}
 }

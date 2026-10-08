@@ -7,6 +7,7 @@
 	import * as Empty from "$lib/components/ui/empty";
 	import { sentFilterKeys } from "$lib/grid/grid-query";
 	import { gridState } from "$lib/grid/grid-state.svelte";
+	import { t } from "$lib/i18n";
 	import { defaultFilters } from "$lib/model/browse/grid/filters";
 
 	const sentFilters = $derived(
@@ -28,19 +29,21 @@
 			<Icon weight={favorites ? "fill" : "regular"} />
 		</Empty.Media>
 		{#if !favorites}
-			<Empty.Title>No Profiles Found</Empty.Title>
+			<Empty.Title>{t("browse.grid.empty.noProfiles.title")}</Empty.Title>
 			<Empty.Description>
-				Try adjusting your filters or reset them to defaults.
+				{t("browse.grid.empty.noProfiles.description")}
 			</Empty.Description>
 		{:else if otherFilters}
-			<Empty.Title>No Results</Empty.Title>
+			<Empty.Title>{t("common.filters.noResults")}</Empty.Title>
 			<Empty.Description>
-				No favorites match these filters.
+				{t("browse.grid.empty.noMatchingFavorites.description")}
 			</Empty.Description>
 		{:else}
-			<Empty.Title>No Favorites Yet</Empty.Title>
+			<Empty.Title>
+				{t("browse.grid.empty.noFavorites.title")}
+			</Empty.Title>
 			<Empty.Description>
-				Tap the star on someone's profile to save them here.
+				{t("browse.grid.empty.noFavorites.description")}
 			</Empty.Description>
 		{/if}
 	</Empty.Header>
@@ -50,7 +53,7 @@
 				variant="outline"
 				onclick={() => gridState.filters.resetFilters()}
 			>
-				Reset filters
+				{t("browse.grid.empty.resetFilters")}
 			</Button>
 		</div>
 	</Empty.Content>
