@@ -16,6 +16,7 @@ const MIN_REFRESHING_MS = 500;
 const BUTTON_REST_HEIGHT = "56px";
 const CONTENT_HEIGHT = 2000;
 const VIEWPORT_HEIGHT = 500;
+const SHORT_CONTENT_HEIGHT = 300;
 
 type Edge = "top" | "bottom";
 type ContentFrame = { band: string; inset: string; restDistance: number };
@@ -38,13 +39,19 @@ async function settle() {
 	for (let turn = 0; turn < 6; turn += 1) await tick();
 }
 
-async function mountAtRest(edge: Edge, { floorRoundingPx = 0 } = {}) {
+async function mountAtRest(
+	edge: Edge,
+	{ floorRoundingPx = 0, contentHeight = CONTENT_HEIGHT } = {},
+) {
 	const scroller = document.createElement("div");
 	const intoContent = edge === "top" ? 1 : -1;
 	const contentInset = () =>
 		scroller.style.getPropertyValue(`--refresh-inset-${edge}`);
 	const maxScrollTop = () =>
-		CONTENT_HEIGHT + (parseFloat(contentInset()) || 0) - VIEWPORT_HEIGHT;
+		Math.max(
+			0,
+			contentHeight + (parseFloat(contentInset()) || 0) - VIEWPORT_HEIGHT,
+		);
 	const trueFloor = () => maxScrollTop() - floorRoundingPx;
 	const restDistance = () =>
 		edge === "top" ? scrollTop : trueFloor() - scrollTop;
@@ -162,6 +169,12 @@ async function mountAtRest(edge: Edge, { floorRoundingPx = 0 } = {}) {
 		async scrollIntoContent(px: number) {
 			scrollTop += px * intoContent;
 			scroller.dispatchEvent(new Event("scroll"));
+			await settle();
+		},
+		async wheelAwayWithoutScrolling() {
+			scroller.dispatchEvent(
+				new WheelEvent("wheel", { deltaY: 40 * intoContent }),
+			);
 			await settle();
 		},
 		async wheelWithoutBand() {
@@ -421,6 +434,35 @@ describe("the refresh control", () => {
 		expect(distinctInsets(opening).length).toBeGreaterThan(2);
 		for (const { restDistance } of opening) expect(restDistance).toBe(0);
 		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+		expect(view.button()).not.toBeNull();
+	});
+
+	it("hides the button above the composer on a wheel away from it in a conversation too short to scroll", async () => {
+		const view = await mountAtRest("bottom", {
+			contentHeight: SHORT_CONTENT_HEIGHT,
+		});
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+		expect(view.button()).not.toBeNull();
+
+		await view.wheelAwayWithoutScrolling();
+		await view.wait(TWEEN_MS);
+
+		expect(view.button()).toBeNull();
+	});
+
+	it("offers the button again once a long conversation scrolls back to its floor after a wheel away", async () => {
+		const view = await mountAtRest("bottom");
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+
+		await view.wheelAwayWithoutScrolling();
+		await view.scrollIntoContent(10);
+		await view.wait(TWEEN_MS);
+		expect(view.button()).toBeNull();
+		await view.scrollIntoContent(-10);
+		await view.wait(TWEEN_MS);
+
 		expect(view.button()).not.toBeNull();
 	});
 
