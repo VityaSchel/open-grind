@@ -271,6 +271,7 @@
 			<ConversationError />
 		{:else}
 			<div
+				data-refresh-content
 				class="min-h-overscrollable flex shrink-0 flex-col justify-end gap-1"
 			>
 				<div class="flex h-10 shrink-0 items-center justify-center">

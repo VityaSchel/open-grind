@@ -7,6 +7,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { scale } from "$lib/util/reduced-motion";
 	import { attachPullInputs } from "./refresh/attach-inputs";
+	import { contentSlide } from "./refresh/content-slide";
 	import {
 		MAX_SLINGSHOT_TENSION,
 		slingshotTension,
@@ -46,6 +47,10 @@
 		duration: 250,
 		easing: expoOut,
 	};
+	const CONTENT_SLIDE: KeyframeAnimationOptions = {
+		duration: REVEAL_TRANSITION.duration,
+		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+	};
 
 	const mounted = $derived(!!container);
 	let distance = $state(Infinity);
@@ -58,7 +63,6 @@
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
 	const buttonSpace = new Tween(0, REVEAL_TRANSITION);
-	const offeredSpace = new Tween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
 	model.space = ARM_PX;
 
@@ -194,33 +198,61 @@
 		);
 	});
 
-	$effect(() => {
-		void offeredSpace.set(
-			restingButton.offered ? REST_HEIGHT_PX : 0,
-			settleMotion(),
-		);
-	});
-
 	const closingRoomClampsScroll = $derived(position === "bottom");
-	const contentInset = $derived(
-		closingRoomClampsScroll ? offeredSpace.current : buttonSpace.current,
+	const roomOpen = $derived(
+		closingRoomClampsScroll ? restingButton.offered : restingButton.shown,
 	);
+	const contentInset = $derived(roomOpen ? REST_HEIGHT_PX : 0);
 	const contentInsetProperty = $derived(
 		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
 	);
+
+	const slide = contentSlide({ timing: CONTENT_SLIDE });
+
+	$effect(() => {
+		void buttonSpace.current;
+		slide.follow();
+	});
+
+	type InsetChange = { target: HTMLElement; property: string; inset: number };
+
+	function applyContentInset({ target, property, inset }: InsetChange) {
+		const restingAtFloor =
+			position === "bottom" && boundaryDistance() === 0;
+		target.style.setProperty(property, `${inset}px`);
+		if (restingAtFloor) geometry.scrollToRest();
+		oninsetchange?.();
+	}
+
+	function slideContentInset({ target, property, inset }: InsetChange) {
+		const change = () => applyContentInset({ target, property, inset });
+		const written =
+			parseFloat(target.style.getPropertyValue(property)) || 0;
+		const slideWouldStretchScrollRange =
+			position === "top" && inset < written;
+		if (slideWouldStretchScrollRange)
+			slide.ahead({ scroller: target, byPx: inset - written, change });
+		else slide.across({ scroller: target, edge: position, change });
+	}
 
 	$effect(() => {
 		const target = container;
 		const property = contentInsetProperty;
 		if (!target) return;
+		let attached = false;
 		$effect(() => {
-			const restingAtFloor =
-				position === "bottom" && boundaryDistance() === 0;
-			target.style.setProperty(property, `${contentInset}px`);
-			if (restingAtFloor) geometry.scrollToRest();
-			untrack(() => oninsetchange?.());
+			const change = { target, property, inset: contentInset };
+			untrack(() =>
+				attached
+					? slideContentInset(change)
+					: applyContentInset(change),
+			);
+			attached = true;
 		});
-		return () => target.style.removeProperty(property);
+		return () => {
+			slide.cancel();
+			target.style.removeProperty(property);
+		};
 	});
 
 	const shouldRevealRestingButton = () =>
