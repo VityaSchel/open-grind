@@ -12,7 +12,7 @@
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>{t("common.unimplemented.title")}</Alert.Title>
 		<Alert.Description>
-			<Rich key="browse.rightNow.unimplemented" params={{ issue: "43" }}>
+			<Rich key="browse.rightNow.unimplemented" issue="43">
 				{#snippet link(text)}<Link
 						href="https://git.opengrind.org/open-grind/open-grind/issues/43"
 						>{text}</Link

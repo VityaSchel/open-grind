@@ -16,9 +16,7 @@
 {/snippet}
 
 <p class="text-sm wrap-anywhere text-muted-foreground">
-	{#if blurb}<Rich
-			key={blurb}
-			params={{ name }}
-			{project}
-		/>{:else}{@render project(name)}{/if}
+	{#if blurb}<Rich key={blurb} {name} {project} />{:else}{@render project(
+			name,
+		)}{/if}
 </p>

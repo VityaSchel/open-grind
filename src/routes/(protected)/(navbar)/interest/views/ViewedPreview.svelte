@@ -77,7 +77,7 @@
 						<EyeIcon weight="bold" class="size-3" />
 						<Rich
 							key={viewCount.key}
-							params={{ count: viewCount.count }}
+							count={viewCount.count}
 							{srOnly}
 						/>
 					</span>

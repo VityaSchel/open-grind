@@ -12,7 +12,7 @@
 	<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 	<Alert.Title>{t("common.unimplemented.title")}</Alert.Title>
 	<Alert.Description>
-		<Rich key="auth.passwordReset.unimplemented" params={{ issue: "22" }}>
+		<Rich key="auth.passwordReset.unimplemented" issue="22">
 			{#snippet link(text)}<Link
 					href="https://git.opengrind.org/open-grind/open-grind/issues/22"
 					>{text}</Link

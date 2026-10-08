@@ -27,18 +27,19 @@ Lock the Weblate components and merge their pending changes first, then run `bun
 
 ## Syntax
 
-| Element   | Example                               | Rule                                                                                                                                                  |
-| --------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Key       | `feedback.requestBlocked.rotate`      | camelCase segments, `[a-z][A-Za-z0-9]*`, along the code path. A new meaning, param or tag gets a new key                                              |
-| Text      | `Couldn't copy to clipboard`          | Non-empty, real characters (`…`, U+00A0), no HTML entities                                                                                            |
-| Param     | `{{name}}`                            | Plain camelCase `{{name}}` only, a string formatted in code                                                                                           |
-| Plural    | `key_one`, `key_other`                | Exactly these two, picked by `{{count}}`, a number that appears nowhere else. A `_one` with a param also has `{{count}}`. Text for 0 gets its own key |
-| Rich text | `This is a <link>known issue</link>.` | Flat camelCase tags without attributes, each rendered by the `Rich.svelte` snippet of that name, not named `children`, `key` or `params`              |
+| Element   | Example                               | Rule                                                                                                                                                                               |
+| --------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Key       | `feedback.requestBlocked.rotate`      | camelCase segments, `[a-z][A-Za-z0-9]*`, along the code path. A new meaning, param or tag gets a new key                                                                           |
+| Text      | `Couldn't copy to clipboard`          | Non-empty, real characters (`…`, U+00A0), no HTML entities                                                                                                                         |
+| Param     | `{{name}}`                            | Plain camelCase `{{name}}` only, a string formatted in code, not named `children` or `key`                                                                                         |
+| Plural    | `key_one`, `key_other`                | Exactly these two, picked by `{{count}}`, a number that appears nowhere else. A `_one` with a param also has `{{count}}`. Text for 0 gets its own key                              |
+| Rich text | `This is a <link>known issue</link>.` | Flat camelCase tags without attributes, each rendered by the `Rich.svelte` snippet of that name. A tag is not named `children`, `key`, `count` or like a param of the same message |
 
 ## `check:i18n` fails on
 
 - English outside this syntax
 - Translations with a syntax error, a tag or param English lacks, or an object where English has a string
+- Translations that move into a tag a param English keeps outside every tag
 - A translation file without an English source, or a locale directory that is not a canonical BCP 47 tag
 - Translations that drop a tag or param English has for the same counts, except `{{count}}` in a plural form that covers a single number
 - A string where English has an object

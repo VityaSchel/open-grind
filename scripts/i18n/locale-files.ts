@@ -10,6 +10,11 @@ export const LOCALES = path.join(I18N, "locales");
 
 export const FIXTURES = path.join(I18N, "fixtures");
 
+export const sourceFile = (json: unknown): SourceFile => ({
+	namespace: "ns",
+	text: JSON.stringify(json),
+});
+
 export function readLocaleFiles(directory: string): Map<string, SourceFile[]> {
 	const files = globSync("*/*.json", { cwd: directory })
 		.sort()

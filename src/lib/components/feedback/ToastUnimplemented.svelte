@@ -13,7 +13,7 @@
 
 <span>
 	<WarningCircleIcon weight="fill" class="me-1 inline size-5 align-middle" />
-	<Rich key={message} params={{ issue: String(issue) }}>
+	<Rich key={message} issue={String(issue)}>
 		{#snippet link(text)}<Link
 				href="https://git.opengrind.org/open-grind/open-grind/issues/{issue}"
 				>{text}</Link

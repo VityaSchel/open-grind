@@ -1,4 +1,4 @@
-import type { Messages, RichMessages } from "./generated";
+import type { Messages } from "./generated";
 import {
 	type Catalog,
 	formatCount,
@@ -7,7 +7,14 @@ import {
 	getSourceCatalog,
 } from "./locale-state.svelte";
 import { PLACEHOLDER, SOURCE_LOCALE, TAG_PAIR } from "./syntax";
-import type { KeyArgs, MessageKey, Params, RichKey, RichPart } from "./types";
+import type {
+	KeyArgs,
+	MessageKey,
+	Params,
+	RichArgs,
+	RichKey,
+	RichPart,
+} from "./types";
 
 export {
 	type CountFormatter,
@@ -115,7 +122,7 @@ export type Translate = typeof t;
 
 export function richParts<K extends RichKey>(
 	key: K,
-	...args: KeyArgs<RichMessages[K]>
+	...args: RichArgs<K>
 ): RichPart[] {
 	const [params] = args;
 	const locale = getLocale();

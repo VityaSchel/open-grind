@@ -1,12 +1,6 @@
-import type { RichKey } from "$lib/i18n";
-import type { RichMessages, RichTags } from "$lib/i18n/generated";
+import type { RichKeyWith } from "$lib/i18n";
 
-type IssueParams = { issue: string };
-
-export type UnimplementedMessageKey = {
-	[K in RichKey]: [RichTags[K], RichMessages[K]] extends ["link", IssueParams]
-		? [IssueParams] extends [RichMessages[K]]
-			? K
-			: never
-		: never;
-}[RichKey];
+export type UnimplementedMessageKey = RichKeyWith<{
+	issue: "text";
+	link: "tag";
+}>;

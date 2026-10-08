@@ -1,29 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
-import { FIXTURES, readLocaleFiles } from "./locale-files";
-import { renderTypes } from "./render-types";
-import {
-	checkTranslation,
-	collectMessages,
-	type SourceFile,
-} from "./source-messages";
+import { FIXTURES, readLocaleFiles, sourceFile } from "./locale-files";
+import { checkTranslation, collectMessages } from "./source-messages";
 
-const file = (json: unknown): SourceFile => ({
-	namespace: "ns",
-	text: JSON.stringify(json),
-});
-
-const errorsOf = (json: unknown) => collectMessages([file(json)]).errors;
+const errorsOf = (json: unknown) => collectMessages([sourceFile(json)]).errors;
 
 describe("collectMessages", () => {
-	it("derives params, tags and plural counts", () => {
+	it("derives params, tags, wrapped params and plural counts", () => {
 		const { messages, errors } = collectMessages([
-			file({
+			sourceFile({
 				nested: { greeting: "Hi {{ name }} and {{name}}" },
 				photos_one: "{{count}} photo by {{author}}",
 				photos_other:
-					"<b>{{count}}</b> photos by <link>{{author}}</link>",
+					"<b>{{count}}</b> photos by <link>the {{author}} page</link>",
 				plain: "No params",
 				videos_one: "One video",
 				videos_other: "{{count}} videos",
@@ -31,14 +21,20 @@ describe("collectMessages", () => {
 		]);
 		expect(errors).toEqual([]);
 		expect(messages).toEqual([
-			{ key: "ns.nested.greeting", params: ["name"], tags: [] },
+			{
+				key: "ns.nested.greeting",
+				params: ["name"],
+				tags: [],
+				wrapped: [],
+			},
 			{
 				key: "ns.photos",
 				params: ["author", "count"],
 				tags: ["b", "link"],
+				wrapped: ["author", "count"],
 			},
-			{ key: "ns.plain", params: [], tags: [] },
-			{ key: "ns.videos", params: ["count"], tags: [] },
+			{ key: "ns.plain", params: [], tags: [], wrapped: [] },
+			{ key: "ns.videos", params: ["count"], tags: [], wrapped: [] },
 		]);
 	});
 
@@ -87,7 +83,18 @@ describe("collectMessages", () => {
 			{ a: "<Link>x</Link>" },
 			"en/ns.a: <Link> is not a plain camelCase <name> or </name> tag",
 		],
-		[{ a: "<key>x</key>" }, "en/ns.a: <key> uses a reserved tag name"],
+		[{ a: "<key>x</key>" }, "en/ns.a: <key> uses a reserved name"],
+		[
+			{ a: "<gridLink>Grid</gridLink> and {{gridLink}}" },
+			"en/ns.a: <gridLink> and {{gridLink}} share a name",
+		],
+		[
+			{
+				a_one: "<views>{{count}} view</views>",
+				a_other: "{{count}} {{views}}",
+			},
+			"en/ns.a: <views> and {{views}} share a name",
+		],
 		[
 			{ a: "{{- name}}" },
 			"en/ns.a: {{- name}} is not a plain camelCase {{name}} placeholder",
@@ -163,7 +170,7 @@ describe("collectMessages", () => {
 
 describe("checkTranslation", () => {
 	const source = [
-		file({
+		sourceFile({
 			plain: "Archived",
 			greeting: "Say hi to {{name}}!",
 			terms: "Accept the <link>terms</link> and the <b>policy</b>.",
@@ -175,7 +182,7 @@ describe("checkTranslation", () => {
 		}),
 	];
 	const check = (json: unknown, locale = "ru") =>
-		checkTranslation({ locale, files: [file(json)], source });
+		checkTranslation({ locale, files: [sourceFile(json)], source });
 
 	it.each([
 		{
@@ -226,14 +233,15 @@ describe("checkTranslation", () => {
 		[
 			{ photos_few: "<b>{{count}}</b> фото" },
 			"ru/ns.photos_few: <b> is not in the English message",
+			"ru/ns.photos_few: {{count}} is inside a tag, which English never does",
 		],
 		[
 			{ greeting: "Привет, {{name}} и {{nmae}}!" },
 			"ru/ns.greeting: {{nmae}} is not in the English message",
 		],
 		["x", "ru/ns.json: must hold a JSON object"],
-	])("rejects %j", (json, error) => {
-		expect(check(json).errors).toEqual([error]);
+	])("rejects %j", (json, ...errors) => {
+		expect(check(json).errors).toEqual(errors);
 	});
 
 	it.each([
@@ -347,14 +355,14 @@ describe("checkTranslation", () => {
 	])(
 		"compares %s %j with the English forms for the same counts",
 		(locale, json, errors) => {
-			const english = file({
+			const english = sourceFile({
 				photos_one: "One photo",
 				photos_other: "<b>{{count}}</b> photos from {{name}}",
 			});
 			expect(
 				checkTranslation({
 					locale,
-					files: [file(json)],
+					files: [sourceFile(json)],
 					source: [english],
 				}).errors,
 			).toEqual(errors);
@@ -426,7 +434,8 @@ describe("checkTranslation", () => {
 		"rejects the locale directory %s",
 		(locale) => {
 			expect(
-				checkTranslation({ locale, files: [file({})], source }).errors,
+				checkTranslation({ locale, files: [sourceFile({})], source })
+					.errors,
 			).toEqual([
 				`${locale}: not a canonical BCP 47 tag; set Weblate's language code style to BCP`,
 			]);
@@ -484,6 +493,7 @@ describe("Weblate-saved files", () => {
 			key: "sample.settings.consent",
 			params: [],
 			tags: ["privacy", "terms"],
+			wrapped: [],
 		});
 	});
 
@@ -533,59 +543,4 @@ describe("Weblate-saved files", () => {
 			});
 		},
 	);
-});
-
-describe("renderTypes", () => {
-	const json = {
-		alphabet: "Alphabet {{name}}",
-		alphaZulu: "Alpha Zulu",
-		bravo: "<link>Bravo</link> {{first}} {{second}}",
-		photos_one: "One photo",
-		photos_other: "<b>{{count}}</b> photos",
-	};
-
-	it("prints one member per line in code point order", () => {
-		expect(renderTypes(collectMessages([file(json)]).messages)).toBe(
-			[
-				"export interface Messages {",
-				'\t"ns.alphaZulu": undefined;',
-				'\t"ns.alphabet": { name: string };',
-				"}",
-				"",
-				"export interface RichMessages {",
-				'\t"ns.bravo": { first: string; second: string };',
-				'\t"ns.photos": { count: number };',
-				"}",
-				"",
-				"export interface RichTags {",
-				'\t"ns.bravo": "link";',
-				'\t"ns.photos": "b";',
-				"}",
-				"",
-			].join("\n"),
-		);
-	});
-
-	it("ignores file and key order", () => {
-		const reversed = Object.fromEntries(Object.entries(json).reverse());
-		const render = (files: SourceFile[]) =>
-			renderTypes(collectMessages(files).messages);
-		const other = { namespace: "aa", text: '{ "x": "X" }' };
-		expect(render([other, file(reversed)])).toBe(
-			render([file(json), other]),
-		);
-	});
-
-	it("prints empty interfaces without messages", () => {
-		expect(renderTypes([])).toBe(
-			[
-				"export interface Messages {}",
-				"",
-				"export interface RichMessages {}",
-				"",
-				"export interface RichTags {}",
-				"",
-			].join("\n"),
-		);
-	});
 });

@@ -319,12 +319,14 @@ describe("richParts", () => {
 		await unmount(probe);
 	});
 
-	it("fills params inside and around the tags of the plural form", async () => {
+	it("fills values inside and around the tags of the plural form", async () => {
 		const rich = mount(Rich as never, {
 			target: document.body,
 			props: {
 				key: "sample.chat.shared",
-				params: { name: "Sam", count: 1, album: "Trips" },
+				name: "Sam",
+				count: 1,
+				album: "Trips",
 				b: createRawSnippet((text: () => string) => ({
 					render: () => `<b>${text()}</b>`,
 				})),

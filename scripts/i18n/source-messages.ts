@@ -1,27 +1,21 @@
-import {
-	NAME,
-	PLACEHOLDER,
-	PLURAL_KEY,
-	SOURCE_LOCALE,
-	TAG_TOKEN,
-} from "../../src/lib/i18n/syntax";
+import { NAME, PLURAL_KEY, SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
+import { type Inspection, inspect } from "./message-text";
 import { type PluralForms, weblatePluralForms } from "./weblate-plurals";
 
 export type SourceFile = { namespace: string; text: string };
 
-export type Message = { key: string; params: string[]; tags: string[] };
+export type Message = {
+	key: string;
+	params: string[];
+	tags: string[];
+	wrapped: string[];
+};
 
 type Catalog = {
 	texts: Map<string, string>;
 	objects: Set<string>;
 	errors: string[];
 };
-
-type Inspection = { params: string[]; tags: string[]; problems: string[] };
-
-const TAG_LIKE = /<\/?[A-Za-z][^<>]*>/g;
-const ENTITY = /&(?:[A-Za-z][A-Za-z0-9]*|#\d+|#[Xx][\dA-Fa-f]+);/g;
-const RESERVED_TAGS = new Set(["children", "key", "params"]);
 
 const baseOf = (key: string) => PLURAL_KEY.exec(key)?.[1] ?? key;
 
@@ -99,61 +93,6 @@ function groupForms(
 	return groups;
 }
 
-function readTags(text: string): { tags: string[]; problem?: string } {
-	const tags: string[] = [];
-	let open: string | undefined;
-	for (const [token] of text.matchAll(TAG_LIKE)) {
-		const [, slash, name = ""] = TAG_TOKEN.exec(token) ?? [];
-		if (slash === undefined) {
-			return {
-				tags,
-				problem: `${token} is not a plain camelCase <name> or </name> tag`,
-			};
-		}
-		if (RESERVED_TAGS.has(name)) {
-			return { tags, problem: `${token} uses a reserved tag name` };
-		}
-		if (slash === "" && open === undefined) {
-			open = name;
-		} else if (slash === "/" && open === name) {
-			tags.push(name);
-			open = undefined;
-		} else {
-			return { tags, problem: `${token} is unbalanced or nested` };
-		}
-	}
-	return open === undefined
-		? { tags }
-		: { tags, problem: `<${open}> is never closed` };
-}
-
-function inspect(text: string): Inspection {
-	const params: string[] = [];
-	const problems: string[] = [];
-	if (text.includes("$t(")) problems.push("$t() nesting is not supported");
-	for (const [placeholder, inner = ""] of text.matchAll(PLACEHOLDER)) {
-		const name = inner.trim();
-		if (NAME.test(name)) {
-			params.push(name);
-		} else {
-			problems.push(
-				`${placeholder} is not a plain camelCase {{name}} placeholder`,
-			);
-		}
-	}
-	if (/[{}]/.test(text.replace(PLACEHOLDER, ""))) {
-		problems.push("stray brace outside a {{name}} placeholder");
-	}
-	for (const [entity] of text.matchAll(ENTITY)) {
-		problems.push(
-			`${entity} is an HTML entity; write the character itself`,
-		);
-	}
-	const { tags, problem } = readTags(text);
-	if (problem !== undefined) problems.push(problem);
-	return { params, tags, problems };
-}
-
 function describe({
 	key,
 	forms,
@@ -166,11 +105,13 @@ function describe({
 	const plural = !forms.has(key);
 	const params = new Set<string>(plural ? ["count"] : []);
 	const tags = new Set<string>();
+	const wrapped = new Set<string>();
 	for (const [form, text] of forms) {
 		const found = inspect(text);
 		errors.push(...found.problems.map((problem) => `${form}: ${problem}`));
 		for (const name of found.params) params.add(name);
 		for (const name of found.tags) tags.add(name);
+		for (const name of found.wrapped) wrapped.add(name);
 		if (
 			form === `${key}_one` &&
 			found.params.length > 0 &&
@@ -184,7 +125,16 @@ function describe({
 	if (!plural && params.has("count")) {
 		errors.push(`${key}: {{count}} needs plural forms ${key}_one/_other`);
 	}
-	return { key, params: [...params].sort(), tags: [...tags].sort() };
+	for (const name of [...tags].filter((tag) => params.has(tag))) {
+		errors.push(`${key}: <${name}> and {{${name}}} share a name`);
+	}
+	const sorted = (names: Set<string>) => [...names].sort();
+	return {
+		key,
+		params: sorted(params),
+		tags: sorted(tags),
+		wrapped: sorted(wrapped),
+	};
 }
 
 function shapeError({
@@ -438,6 +388,16 @@ function reportAdditions({
 		if (!english.params.includes(param)) {
 			into.errors.push(
 				`${key}: {{${param}}} is not in the English message`,
+			);
+		}
+	}
+	for (const param of found.wrapped) {
+		if (
+			english.params.includes(param) &&
+			!english.wrapped.includes(param)
+		) {
+			into.errors.push(
+				`${key}: {{${param}}} is inside a tag, which English never does`,
 			);
 		}
 	}

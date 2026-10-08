@@ -18,7 +18,7 @@
 		<SmileySadIcon size="2em" color="#ffba20" weight="fill" />
 		<Alert.Title>{t("common.unimplemented.title")}</Alert.Title>
 		<Alert.Description>
-			<Rich key={message} params={{ issue: String(issue) }}>
+			<Rich key={message} issue={String(issue)}>
 				{#snippet link(text)}<Link
 						href="https://git.opengrind.org/open-grind/open-grind/issues/{issue}"
 						>{text}</Link
