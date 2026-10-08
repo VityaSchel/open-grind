@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
-import { InboxPaging } from "./inbox-paging.svelte";
+import { SentinelPaging } from "./sentinel-paging.svelte";
 
 const request = { method: "POST", path: "/v4/inbox" };
 
@@ -18,7 +18,7 @@ const permanent = () =>
 
 function pagingWith(loadPage: (page: number) => Promise<void>) {
 	let cursor: number | null = 2;
-	const paging = new InboxPaging({ loadPage, cursor: () => cursor });
+	const paging = new SentinelPaging({ loadPage, cursor: () => cursor });
 	return { paging, setCursor: (next: number | null) => (cursor = next) };
 }
 
@@ -32,7 +32,7 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-describe("InboxPaging", () => {
+describe("SentinelPaging", () => {
 	it("loads the current cursor and stays quiet when there is none", async () => {
 		const loadPage = vi.fn(() => Promise.resolve());
 		const { paging, setCursor } = pagingWith(loadPage);

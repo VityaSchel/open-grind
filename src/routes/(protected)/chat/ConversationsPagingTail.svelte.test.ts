@@ -4,7 +4,7 @@ import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "$lib/api/api-error";
-import { InboxPaging } from "$lib/chat/inbox-paging.svelte";
+import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import ConversationsPagingTail from "./ConversationsPagingTail.svelte";
 
 class FakeIntersectionObserver {
@@ -60,7 +60,7 @@ function mount({
 	listEmpty?: boolean;
 	hasMore?: boolean;
 } = {}) {
-	const paging = new InboxPaging({ loadPage, cursor: () => 2 });
+	const paging = new SentinelPaging({ loadPage, cursor: () => 2 });
 	const rendered = render(ConversationsPagingTail, {
 		paging,
 		hasMore,

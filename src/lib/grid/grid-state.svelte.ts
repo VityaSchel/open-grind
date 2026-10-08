@@ -11,6 +11,7 @@ import {
 } from "$lib/app-data/preferences.svelte";
 import { autoLocation } from "$lib/location/auto-location";
 import { reconciler } from "$lib/util/reconcile";
+import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import {
 	getCachedProfile,
@@ -29,7 +30,10 @@ class GridState {
 	items: GridProfile[] = $state.raw([]);
 	readonly profiles: GridProfile[] = $derived(dedupeGridProfiles(this.items));
 	nextPage: number | null = $state(0);
-	loadingMore = $state(false);
+	readonly paging = new SentinelPaging({
+		loadPage: (page) => this.#loadPage(page),
+		cursor: () => this.nextPage || null,
+	});
 	loading = $state(false);
 	refreshing = $state(false);
 	error: Error | null = $state(null);
@@ -137,7 +141,6 @@ class GridState {
 	#reset(): void {
 		this.items = [];
 		this.nextPage = 0;
-		this.loadingMore = false;
 		this.loading = true;
 		this.error = null;
 		this.currentQuery = null;
@@ -157,30 +160,25 @@ class GridState {
 		this.filters.reset();
 	}
 
-	async loadMore(): Promise<void> {
-		if (this.loadingMore || !this.nextPage || !this.currentQuery) return;
-		this.loadingMore = true;
+	async #loadPage(page: number): Promise<void> {
 		const token = this.#fetchToken;
 		const query = this.currentQuery;
-		try {
-			const result = await getGrid({
-				...query,
-				pageNumber: this.nextPage,
-			});
-			if (token !== this.#fetchToken || query !== this.currentQuery)
-				return;
-			const loadedIds = new Set(this.items.map((item) => item.id));
-			this.items = [
-				...this.items,
-				...result.items.filter((item) => !loadedIds.has(item.id)),
-			];
-			this.nextPage = result.nextPage;
-		} catch (error) {
-			console.error(error);
-			showErrorToast({ label: "Failed to load more profiles", error });
-		} finally {
-			this.loadingMore = false;
-		}
+		if (query === null) return;
+		const isCurrent = () =>
+			token === this.#fetchToken && query === this.currentQuery;
+		const result = await getGrid({ ...query, pageNumber: page }).catch(
+			(error: unknown) => {
+				if (isCurrent()) throw error;
+				return null;
+			},
+		);
+		if (result === null || !isCurrent()) return;
+		const loadedIds = new Set(this.items.map((item) => item.id));
+		this.items = [
+			...this.items,
+			...result.items.filter((item) => !loadedIds.has(item.id)),
+		];
+		this.nextPage = result.nextPage;
 	}
 
 	async resolveProfile(id: number): Promise<void> {
@@ -278,6 +276,7 @@ class GridState {
 			this.#firstPageIds = firstPageIds;
 			this.items = [...result.items, ...laterPages];
 			if (laterPages.length === 0) this.nextPage = result.nextPage;
+			this.paging.rearm();
 			this.error = null;
 			this.loading = false;
 		} catch (err) {
