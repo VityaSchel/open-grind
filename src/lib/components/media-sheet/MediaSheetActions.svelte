@@ -4,20 +4,21 @@
 
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { fly } from "$lib/util/reduced-motion";
 	import { cn } from "$lib/util/utils";
 
 	let {
 		label,
 		count,
-		disabled = false,
+		busy = false,
 		onSubmit,
 		class: className,
 		leading,
 	}: {
 		label: string;
 		count: number;
-		disabled?: boolean;
+		busy?: boolean;
 		onSubmit: () => void;
 		class?: string;
 		leading?: Snippet;
@@ -35,7 +36,16 @@
 		out:fly={{ duration: 400, y: 100, easing: sineIn }}
 	>
 		{@render leading?.()}
-		<Button size="lg" class="shadow-lg" {disabled} onclick={onSubmit}>
+		<Button
+			size="lg"
+			class="shadow-lg"
+			disabled={busy}
+			aria-busy={busy}
+			onclick={onSubmit}
+		>
+			{#if busy}
+				<Spinner aria-hidden="true" />
+			{/if}
 			{label}
 			<Badge
 				variant="secondary"

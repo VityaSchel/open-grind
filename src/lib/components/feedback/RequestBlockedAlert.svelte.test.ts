@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import RequestBlockedAlert from "./RequestBlockedAlert.svelte";
 
 const { callMethodMock, toastMock } = vi.hoisted(() => ({
@@ -18,6 +19,18 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const rotateButton = () =>
+	screen.getByRole("button", { name: "Rotate parameters" });
+const closeButton = () => screen.getByRole("button", { name: "Close" });
+
+async function startRotationThatHangs() {
+	const rotation = Promise.withResolvers<void>();
+	callMethodMock.mockReturnValueOnce(rotation.promise);
+	render(RequestBlockedAlert);
+	await fireEvent.click(rotateButton());
+	return rotation.resolve;
+}
 
 describe("RequestBlockedAlert", () => {
 	beforeEach(() => {
@@ -47,17 +60,13 @@ describe("RequestBlockedAlert", () => {
 			screen.getByText(/Cloudflare protecting the Grindr API/),
 		).toBeTruthy();
 		expect(screen.getByRole("link", { name: "known issue" })).toBeTruthy();
-		expect(
-			screen.getByRole("button", { name: "Rotate parameters" }),
-		).toBeTruthy();
+		expect(rotateButton()).toBeTruthy();
 	});
 
 	it("rotates device parameters and closes", async () => {
 		render(RequestBlockedAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Rotate parameters" }),
-		);
+		await fireEvent.click(rotateButton());
 		await settle();
 
 		expect(callMethodMock).toHaveBeenCalledWith("rotate_api_params");
@@ -79,16 +88,14 @@ describe("RequestBlockedAlert", () => {
 			screen.getByText(/edge in front of the Grindr API/),
 		).toBeTruthy();
 		expect(screen.queryByRole("link", { name: "known issue" })).toBeNull();
-		expect(screen.getByRole("button", { name: "Close" })).toBeTruthy();
+		expect(closeButton()).toBeTruthy();
 	});
 
 	it("keeps the rotate action on a block it cannot attribute", async () => {
 		requestBlockedAlertState.kind = "network";
 		render(RequestBlockedAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Rotate parameters" }),
-		);
+		await fireEvent.click(rotateButton());
 		await settle();
 
 		expect(callMethodMock).toHaveBeenCalledWith("rotate_api_params");
@@ -102,5 +109,41 @@ describe("RequestBlockedAlert", () => {
 		expect(
 			screen.getByLabelText("Don't show again in this session"),
 		).toBeTruthy();
+	});
+
+	it("marks Rotate parameters busy and locks both buttons while rotating parameters", async () => {
+		const finishRotation = await startRotationThatHangs();
+
+		expect(rotateButton().getAttribute("aria-busy")).toBe("true");
+		expect(rotateButton().matches(":disabled")).toBe(true);
+		expect(closeButton().matches(":disabled")).toBe(true);
+
+		finishRotation();
+		await vi.waitFor(() =>
+			expect(requestBlockedAlertState.open).toBe(false),
+		);
+	});
+
+	it("keeps Escape and the back gesture from closing the dialog while rotating parameters", async () => {
+		const finishRotation = await startRotationThatHangs();
+
+		await fireEvent.keyDown(document, { key: "Escape" });
+		expect(backGestureEventHandlers.size).toBe(1);
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(requestBlockedAlertState.open).toBe(true);
+		finishRotation();
+		await vi.waitFor(() =>
+			expect(requestBlockedAlertState.open).toBe(false),
+		);
+	});
+
+	it("closes on the back gesture without rotating parameters", () => {
+		render(RequestBlockedAlert);
+
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(requestBlockedAlertState.open).toBe(false);
+		expect(callMethodMock).not.toHaveBeenCalled();
 	});
 });

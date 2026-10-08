@@ -37,7 +37,7 @@
 		{/if}
 	</div>
 	{#if busy}
-		<Spinner class="text-muted-foreground" />
+		<Spinner class="text-muted-foreground" aria-hidden="true" />
 	{/if}
-	<Switch bind:checked disabled={disabled || busy} />
+	<Switch bind:checked disabled={disabled || busy} aria-busy={busy} />
 </Label>

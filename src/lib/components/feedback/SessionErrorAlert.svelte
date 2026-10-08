@@ -21,6 +21,7 @@
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { ws } from "$lib/ws.svelte";
 
@@ -69,12 +70,16 @@
 		};
 	});
 
+	let running: false | "tryAgain" | "signOut" = $state(false);
+
+	const escapeKeydownBehavior = $derived(running ? "ignore" : "close");
+
 	dismissOnBackGesture({
 		active: () => sessionErrorState.open,
-		dismiss: () => sessionRecovery.dismiss(),
+		dismiss: () => {
+			if (!running) sessionRecovery.dismiss();
+		},
 	});
-
-	let busy = $state(false);
 
 	const copy = $derived.by(() => {
 		switch (sessionErrorState.kind) {
@@ -132,7 +137,7 @@
 	}
 
 	async function tryAgain() {
-		busy = true;
+		running = "tryAgain";
 		try {
 			await callMethod("refresh_session");
 			clearSessionError();
@@ -149,24 +154,29 @@
 			}
 			toast.error(appError?.prettyMessage ?? "Still can't connect");
 		} finally {
-			busy = false;
+			running = false;
 		}
 	}
 
 	async function onSignOut() {
-		busy = true;
+		running = "signOut";
 		try {
 			await signOut();
 		} finally {
-			busy = false;
+			running = false;
 			sessionErrorState.open = false;
 		}
 	}
 </script>
 
-<AlertDialog.Root bind:open={sessionErrorState.open}>
+<AlertDialog.Root
+	bind:open={sessionErrorState.open}
+	onOpenChange={(open) => {
+		if (!open) sessionRecovery.dismiss();
+	}}
+>
 	<AlertDialog.Content
-		escapeKeydownBehavior="ignore"
+		{escapeKeydownBehavior}
 		interactOutsideBehavior="ignore"
 	>
 		<AlertDialog.Header>
@@ -182,20 +192,31 @@
 			</p>
 		{/if}
 		<AlertDialog.Footer>
-			<Button variant="ghost" onclick={copyError} disabled={busy}>
-				Copy error
-			</Button>
-			<Button
-				variant="ghost"
-				onclick={() => sessionRecovery.dismiss()}
-				disabled={busy}
-			>
-				Dismiss
-			</Button>
-			<Button variant="outline" onclick={onSignOut} disabled={busy}>
-				Sign out
-			</Button>
-			<Button onclick={tryAgain} disabled={busy}>Try again</Button>
+			<fieldset disabled={running !== false} class="contents">
+				<Button variant="ghost" onclick={copyError}>Copy error</Button>
+				<Button
+					variant="ghost"
+					onclick={() => sessionRecovery.dismiss()}
+				>
+					Dismiss
+				</Button>
+				<Button
+					variant="outline"
+					onclick={onSignOut}
+					aria-busy={running === "signOut"}
+				>
+					{#if running === "signOut"}
+						<Spinner aria-hidden="true" />
+					{/if}
+					Sign out
+				</Button>
+				<Button onclick={tryAgain} aria-busy={running === "tryAgain"}>
+					{#if running === "tryAgain"}
+						<Spinner aria-hidden="true" />
+					{/if}
+					Try again
+				</Button>
+			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

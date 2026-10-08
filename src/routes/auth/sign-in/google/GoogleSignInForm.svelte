@@ -271,7 +271,11 @@
 							type="submit"
 							class="w-full"
 							disabled={submitting || token.trim().length === 0}
+							aria-busy={submitting}
 						>
+							{#if submitting}
+								<Spinner aria-hidden="true" />
+							{/if}
 							Sign in
 						</Button>
 					{/if}

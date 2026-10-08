@@ -112,9 +112,10 @@ describe("EntitlementBypassAlert", () => {
 		await vi.waitFor(() => expect(entitlementBypassState.open).toBe(false));
 	});
 
-	it("locks both buttons while the bypass is in flight", async () => {
+	it("marks Bypass busy and locks both buttons while the bypass is in flight", async () => {
 		const finishRetry = await startBypassThatHangs();
 
+		expect(bypassButton().getAttribute("aria-busy")).toBe("true");
 		expect(bypassButton().matches(":disabled")).toBe(true);
 		expect(cancelButton().matches(":disabled")).toBe(true);
 
