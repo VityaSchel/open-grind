@@ -77,11 +77,18 @@ function recordTransition(
 								Number(animation.effect?.getTiming().duration),
 							),
 						});
-					if (performance.now() - started < 1500)
-						requestAnimationFrame(sample);
-					else resolve(frames);
 				};
-				requestAnimationFrame(sample);
+				// Svelte's async-mode tick() resolves in a later rAF callback than
+				// ours, so read each frame once all of its callbacks have run.
+				const frame = () => {
+					const last = performance.now() - started >= 1500;
+					setTimeout(() => {
+						sample();
+						if (last) resolve(frames);
+					});
+					if (!last) requestAnimationFrame(frame);
+				};
+				requestAnimationFrame(frame);
 			}),
 		selectors,
 	);
