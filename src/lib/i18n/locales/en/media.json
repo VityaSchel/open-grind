@@ -6,7 +6,7 @@
 		"errors": {
 			"loadFailed": "Media failed to load",
 			"playFailed": "This video cannot be played on this system.",
-			"decoderMissing": "Playing this video needs an H.264 decoder, which is not installed on this system. <link>How to install video codecs</link>"
+			"decoderMissing": "Playing this video needs an H.264 decoder, which is not installed on this system. <codecsGuideLink>How to install video codecs</codecsGuideLink>"
 		}
 	}
 }

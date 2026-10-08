@@ -79,7 +79,7 @@ function undecodableNotice(): HTMLParagraphElement {
 	}
 	for (const part of richParts("media.lightbox.errors.decoderMissing")) {
 		notice.append(
-			part.kind === "tag" && part.name === "link"
+			part.kind === "tag" && part.name === "codecsGuideLink"
 				? codecsGuideLink(part.text)
 				: part.text,
 		);

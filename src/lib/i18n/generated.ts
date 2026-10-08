@@ -352,7 +352,7 @@ export interface RichMessages {
 	"interest.taps.empty.description": { gridLink: "tag" };
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
-	"media.lightbox.errors.decoderMissing": { link: "tag" };
+	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
 	"settings.account.unimplemented": { issueLink: "placeholder" };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };
 	"settings.app.pin.unimplemented": { issueLink: "placeholder" };
