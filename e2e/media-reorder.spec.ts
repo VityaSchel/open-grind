@@ -10,6 +10,7 @@ import {
 } from "./support/albums";
 import { installTauriShim, TrustedTouch } from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+import { expectPreviewOnDevicePixels } from "./support/media-reorder";
 
 async function revealGrid(page: Page) {
 	await page
@@ -233,5 +234,16 @@ test.describe("media reorder", () => {
 		const after = await mediaOrder(page);
 		expect(after[0], "the dragged photo leads now").toBe(before[1]);
 		expect(after[1]).toBe(before[0]);
+	});
+});
+
+test.describe("media reorder in a desktop window", () => {
+	test.use({ viewport: { width: 800, height: 800 } });
+
+	test("photos pushed aside by a held one sit on whole device pixels", async ({
+		page,
+	}) => {
+		await openAlbum(page, TWO_ROW_ALBUM);
+		await expectPreviewOnDevicePixels({ page, from: 0, to: 4 });
 	});
 });
