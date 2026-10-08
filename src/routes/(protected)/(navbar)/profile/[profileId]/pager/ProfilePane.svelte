@@ -80,7 +80,6 @@
 				<BlockedProfile
 					profileId={profileState.profileId}
 					blockedByUs={error.blockedByUs}
-					changingViewability={profileState.changingViewability}
 					markViewable={() => profileState.markViewable()}
 				/>
 			{:else if error instanceof HiddenProfileError}

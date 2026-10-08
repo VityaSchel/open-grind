@@ -9,6 +9,7 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import {
+	BlockDidNotStickError,
 	blockUser,
 	getBlockedUsers,
 	markBlockedProfilesUnviewable,
@@ -84,24 +85,64 @@ describe("getBlockedUsers", () => {
 });
 
 describe("blockUser", () => {
+	beforeEach(() => {
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
+	});
+
 	it("marks the blocked profile as unviewable", async () => {
 		await blockUser({ profileId: PROFILE_ID });
 
 		expect(isProfileViewable(PROFILE_ID)).toBe(false);
 	});
 
-	it("leaves the lists alone until the server accepts the block", async () => {
+	it("confirms the block with a fresh read of the blocked list", async () => {
+		await blockUser({ profileId: PROFILE_ID });
+
+		expect(fetchRestMock).toHaveBeenNthCalledWith(
+			1,
+			`/v3/me/blocks/${PROFILE_ID}`,
+			{ method: "POST" },
+		);
+		expect(fetchRestMock).toHaveBeenNthCalledWith(2, "/v3.1/me/blocks");
+	});
+
+	it("does not trust a blocked list cached before the block", async () => {
+		respondWithBlocking([{ profileId: 8 }]);
+		await getBlockedUsers();
+		respondWithBlocking([{ profileId: PROFILE_ID }, { profileId: 8 }]);
+
+		await blockUser({ profileId: PROFILE_ID });
+
+		expect(isProfileViewable(PROFILE_ID)).toBe(false);
+		expect(fetchRestMock).toHaveBeenCalledTimes(3);
+	});
+
+	it("fails and leaves the profile viewable when the blocked list does not include it", async () => {
+		respondWithBlocking([{ profileId: 8 }]);
+
+		await expect(blockUser({ profileId: PROFILE_ID })).rejects.toThrow(
+			BlockDidNotStickError,
+		);
+
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+		expect(fetchRestMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("leaves the lists alone until the blocked list confirms the block", async () => {
 		const changes: ProfileViewabilityChange[] = [];
 		const stopListening = onProfileViewabilityChange((change) =>
 			changes.push(change),
 		);
 		const request = pendingRequest(fetchRestMock);
+		const confirmation = pendingRequest(fetchRestMock);
 
 		const blocking = blockUser({ profileId: PROFILE_ID });
+		request.succeed();
+		await vi.waitFor(() => expect(fetchRestMock).toHaveBeenCalledTimes(2));
 		expect(changes).toEqual([]);
 		expect(isProfileViewable(PROFILE_ID)).toBe(true);
 
-		request.succeed();
+		confirmation.succeed(blockingList([{ profileId: PROFILE_ID }]));
 		await blocking;
 		stopListening();
 		expect(changes).toEqual([{ profileId: PROFILE_ID, viewable: false }]);
@@ -176,6 +217,98 @@ describe("blockUser", () => {
 	});
 });
 
+describe("blocking and unblocking right away", () => {
+	const blockRequest = ([path, options]: unknown[]) =>
+		path === `/v3/me/blocks/${PROFILE_ID}` &&
+		(options as { method: string }).method === "POST";
+	const unblockRequest = ([path, options]: unknown[]) =>
+		path === `/v3/me/blocks/${PROFILE_ID}` &&
+		(options as { method: string }).method === "DELETE";
+	const listRequests = () =>
+		fetchRestMock.mock.calls.filter(([path]) => path === "/v3.1/me/blocks");
+
+	it("sends the unblock only after the block it undoes", async () => {
+		const block = pendingRequest(fetchRestMock);
+		const blocking = blockUser({ profileId: PROFILE_ID });
+		const unblocking = unblockUser({ profileId: PROFILE_ID });
+		await Promise.resolve();
+
+		expect(fetchRestMock.mock.calls.some(unblockRequest)).toBe(false);
+		block.succeed();
+		await Promise.all([blocking, unblocking]);
+
+		const order = fetchRestMock.mock.calls.flatMap((call) =>
+			blockRequest(call)
+				? ["block"]
+				: unblockRequest(call)
+					? ["unblock"]
+					: [],
+		);
+		expect(order).toEqual(["block", "unblock"]);
+	});
+
+	it("does not check a block that was undone while it was on its way", async () => {
+		respondWithBlocking([]);
+		const block = pendingRequest(fetchRestMock);
+		const blocking = blockUser({ profileId: PROFILE_ID });
+		const unblocking = unblockUser({ profileId: PROFILE_ID });
+
+		block.succeed();
+
+		await expect(blocking).resolves.toBeUndefined();
+		await unblocking;
+		expect(listRequests()).toEqual([]);
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+	});
+
+	it("drops the check of a block undone while the blocked list loads", async () => {
+		respondWithBlocking([]);
+		const check = Promise.withResolvers<void>();
+		fetchRestMock.mockImplementation((path: string) =>
+			path === "/v3.1/me/blocks"
+				? check.promise.then(() => ({
+						jsonParsed: () => blockingList([]),
+						assertOk: () => {},
+					}))
+				: Promise.resolve({
+						jsonParsed: () => null,
+						assertOk: () => {},
+					}),
+		);
+		const blocking = blockUser({ profileId: PROFILE_ID });
+		await vi.waitFor(() => expect(listRequests()).toHaveLength(1));
+
+		await unblockUser({ profileId: PROFILE_ID });
+		check.resolve();
+
+		await expect(blocking).resolves.toBeUndefined();
+		expect(isProfileViewable(PROFILE_ID)).toBe(true);
+	});
+
+	it("does not report a failed block that was already undone", async () => {
+		const block = pendingRequest(fetchRestMock);
+		const blocking = blockUser({ profileId: PROFILE_ID });
+		const unblocking = unblockUser({ profileId: PROFILE_ID });
+
+		block.fail();
+
+		await expect(blocking).resolves.toBeUndefined();
+		await unblocking;
+	});
+
+	it("drops the check of a block made before switching accounts", async () => {
+		respondWithBlocking([]);
+		const block = pendingRequest(fetchRestMock);
+		const blocking = blockUser({ profileId: PROFILE_ID });
+
+		clearAccountCaches();
+		block.succeed();
+
+		await expect(blocking).resolves.toBeUndefined();
+		expect(listRequests()).toEqual([]);
+	});
+});
+
 describe("unblockUser", () => {
 	let clock = 0;
 
@@ -185,6 +318,7 @@ describe("unblockUser", () => {
 	});
 
 	it("makes the profile viewable again", async () => {
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
 		await blockUser({ profileId: PROFILE_ID });
 		await unblockUser({ profileId: PROFILE_ID });
 
@@ -277,6 +411,7 @@ describe("unblockUser", () => {
 	it("keeps a profile unblocked and blocked again here in a list requested before both", async () => {
 		const request = pendingRequest(fetchRestMock);
 		const listing = getBlockedUsers();
+		respondWithBlocking([{ profileId: PROFILE_ID }]);
 		clock += 1;
 		await unblockUser({ profileId: PROFILE_ID });
 		clock += 1;

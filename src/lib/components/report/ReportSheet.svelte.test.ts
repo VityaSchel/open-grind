@@ -3,37 +3,28 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-	reportProfileMock,
-	blockUserMock,
-	showErrorToastMock,
-	openExternalLinkMock,
-} = vi.hoisted(() => ({
-	reportProfileMock: vi.fn<() => Promise<void>>(),
-	blockUserMock: vi.fn<() => Promise<void>>(),
-	showErrorToastMock: vi.fn(),
-	openExternalLinkMock: vi.fn(),
-}));
+const { reportProfileMock, blockUserMock, showBlockFailureMock } = vi.hoisted(
+	() => ({
+		reportProfileMock: vi.fn<() => Promise<void>>(),
+		blockUserMock: vi.fn<() => Promise<void>>(),
+		showBlockFailureMock: vi.fn(),
+	}),
+);
 
 vi.mock("$lib/api/safety/reports", () => ({
 	reportProfile: reportProfileMock,
 }));
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/platform/link-opener", () => ({
-	openExternalLink: openExternalLinkMock,
-}));
+vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
+vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
 
 import ReportSheet from "./ReportSheet.svelte";
 
 const PROFILE_ID = 100010;
 
-async function submitSpamReport({
-	blockable,
-	onBlock,
-}: { blockable?: boolean; onBlock?: () => Promise<void> } = {}) {
+async function submitSpamReport({ onBlock }: { onBlock?: () => void } = {}) {
 	render(ReportSheet, {
-		props: { open: true, profileId: PROFILE_ID, blockable, onBlock },
+		props: { open: true, profileId: PROFILE_ID, onBlock },
 	});
 	await fireEvent.click(await screen.findByRole("radio", { name: "Spam" }));
 	await fireEvent.click(
@@ -57,80 +48,50 @@ afterEach(() => {
 });
 
 describe("report sheet", () => {
-	it("offers to block the reported profile and blocks it", async () => {
-		const block = await submitSpamReport();
-
+	it("closes at once and blocks the reported profile in the background", async () => {
+		const block = Promise.withResolvers<void>();
+		blockUserMock.mockReturnValueOnce(block.promise);
+		const button = await submitSpamReport();
 		expect(
 			screen.getByText(
 				"You can block this profile so you stop seeing it.",
 			),
 		).not.toBeNull();
-		await fireEvent.click(block);
+
+		await fireEvent.click(button);
 
 		expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
 		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-		expect(
-			screen.queryByRole("link", {
-				name: "Why can't I block this profile?",
-			}),
-		).toBeNull();
+		block.resolve();
+		await Promise.resolve();
+		expect(showBlockFailureMock).not.toHaveBeenCalled();
 	});
 
-	it("keeps Block disabled for a non-blockable profile and links to the blocking guide", async () => {
-		const onBlock = vi.fn(() => Promise.resolve());
-		const block = await submitSpamReport({ blockable: false, onBlock });
+	it("reports a background block that fails after it closed", async () => {
+		const rejection = new Error("not listed");
+		const block = Promise.withResolvers<void>();
+		blockUserMock.mockReturnValueOnce(block.promise);
 
-		expect(block.disabled).toBe(true);
-		expect(
-			screen.queryByText(
-				"You can block this profile so you stop seeing it.",
+		await fireEvent.click(await submitSpamReport());
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+		block.reject(rejection);
+
+		await vi.waitFor(() =>
+			expect(showBlockFailureMock).toHaveBeenCalledExactlyOnceWith(
+				rejection,
 			),
-		).toBeNull();
-		await fireEvent.click(
-			screen.getByRole("link", {
-				name: "Why can't I block this profile?",
-			}),
 		);
-
-		expect(openExternalLinkMock).toHaveBeenCalledExactlyOnceWith(
-			"https://opengrind.org/guides/blocking-and-hiding-profiles",
-		);
-		expect(onBlock).not.toHaveBeenCalled();
-		expect(blockUserMock).not.toHaveBeenCalled();
-		expect(screen.getByRole("dialog")).not.toBeNull();
 	});
 
-	it("lets its owner carry out the block", async () => {
-		const onBlock = vi.fn(() => Promise.resolve());
-		const block = await submitSpamReport({ onBlock });
+	it("closes at once and leaves the block to its owner", async () => {
+		const onBlock = vi.fn();
 
-		await fireEvent.click(block);
+		await fireEvent.click(await submitSpamReport({ onBlock }));
 
 		expect(onBlock).toHaveBeenCalledOnce();
 		expect(blockUserMock).not.toHaveBeenCalled();
 		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-	});
-
-	it("stays open and reports a block that fails", async () => {
-		const rejection = new Error("offline");
-		const block = await submitSpamReport({
-			onBlock: () => Promise.reject(rejection),
-		});
-
-		await fireEvent.click(block);
-
-		await vi.waitFor(() =>
-			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to block user",
-				error: rejection,
-			}),
-		);
-		expect(
-			screen.getByRole<HTMLButtonElement>("button", {
-				name: "Block profile",
-			}).disabled,
-		).toBe(false);
 	});
 });

@@ -3,11 +3,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-const { reportSheetMock, blockUserMock, openExternalLinkMock } = vi.hoisted(
+const { reportSheetMock, blockUserMock, showBlockFailureMock } = vi.hoisted(
 	() => ({
 		reportSheetMock: vi.fn(),
 		blockUserMock: vi.fn<() => Promise<void>>(),
-		openExternalLinkMock: vi.fn(),
+		showBlockFailureMock: vi.fn(),
 	}),
 );
 
@@ -17,26 +17,24 @@ vi.mock("$lib/components/report/ReportSheet.svelte", () => ({
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
 vi.mock("$lib/api/browse/hides", () => ({ hideUser: vi.fn() }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
-vi.mock("$lib/platform/link-opener", () => ({
-	openExternalLink: openExternalLinkMock,
+vi.mock("$lib/components/report/block-failure", () => ({
+	showBlockFailure: showBlockFailureMock,
 }));
 
 import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100010;
-const GUIDE_NAME = "Why can't I block this profile?";
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const backHandledInApp = () => window.__AndroidOnBackGesture?.() === false;
 
-function renderMenu({ blockable }: { blockable: boolean }) {
+function renderMenu() {
 	const blocking = { revert: vi.fn(), settle: vi.fn() };
 	const markBlocked = vi.fn(() => blocking);
 	render(ProfileActionsMenu, {
 		props: {
 			profileId: PROFILE_ID,
-			blockable,
 			changingViewability: false,
 			markBlocked,
 			markHidden: vi.fn(),
@@ -48,7 +46,7 @@ function renderMenu({ blockable }: { blockable: boolean }) {
 function reportSheetProps() {
 	const [, props] = reportSheetMock.mock.lastCall as [
 		unknown,
-		{ blockable: boolean; onBlock: () => Promise<void> },
+		{ onBlock: () => void },
 	];
 	return props;
 }
@@ -75,53 +73,57 @@ beforeEach(() => {
 	applyBackGestureHandler();
 });
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	vi.restoreAllMocks();
+});
 
-it("blocks a blockable profile from the menu", async () => {
-	const { blocking } = renderMenu({ blockable: true });
+it("shows the profile as blocked at once and settles once the block is confirmed", async () => {
+	const block = Promise.withResolvers<void>();
+	blockUserMock.mockReturnValueOnce(block.promise);
+	const { blocking, markBlocked } = renderMenu();
 
-	await fireEvent.click(await blockItem());
+	const item = await blockItem();
+	expect(item.getAttribute("aria-disabled")).not.toBe("true");
+	await fireEvent.click(item);
+	await flush();
+	expect(markBlocked).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
+
+	block.resolve();
 	await flush();
 
 	expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
 		profileId: PROFILE_ID,
 	});
 	expect(blocking.settle).toHaveBeenCalledOnce();
-	expect(screen.queryByLabelText(GUIDE_NAME)).toBeNull();
+	expect(showBlockFailureMock).not.toHaveBeenCalled();
 });
 
-it("keeps Block disabled for a non-blockable profile and links to the blocking guide", async () => {
-	const { markBlocked } = renderMenu({ blockable: false });
+it("brings the profile back and explains a block that did not stick", async () => {
+	const rejection = new Error("not listed");
+	blockUserMock.mockRejectedValueOnce(rejection);
+	vi.spyOn(console, "error").mockImplementation(() => {});
+	const { blocking } = renderMenu();
 
-	const block = await blockItem();
-	expect(block.getAttribute("aria-disabled")).toBe("true");
-	await fireEvent.click(block);
-	await fireEvent.keyDown(block, { key: "Enter" });
-	await fireEvent.click(screen.getByLabelText(GUIDE_NAME));
+	await fireEvent.click(await blockItem());
 	await flush();
 
-	expect(openExternalLinkMock).toHaveBeenCalledExactlyOnceWith(
-		"https://opengrind.org/guides/blocking-and-hiding-profiles",
-	);
-	expect(markBlocked).not.toHaveBeenCalled();
-	expect(blockUserMock).not.toHaveBeenCalled();
+	expect(blocking.revert).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
+	expect(showBlockFailureMock).toHaveBeenCalledExactlyOnceWith(rejection);
 });
 
-it("tells the report sheet whether the profile can be blocked", () => {
-	renderMenu({ blockable: false });
-
-	expect(reportSheetProps().blockable).toBe(false);
-});
-
-it("settles a block the report sheet sends once it lands", async () => {
+it("shows a block from the report sheet at once and settles it once confirmed", async () => {
 	const block = Promise.withResolvers<void>();
 	blockUserMock.mockReturnValueOnce(block.promise);
-	const { blocking, markBlocked } = renderMenu({ blockable: true });
+	const { blocking, markBlocked } = renderMenu();
 
-	const blocked = reportSheetProps().onBlock();
-	expect(markBlocked).not.toHaveBeenCalled();
+	reportSheetProps().onBlock();
+	expect(markBlocked).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
 	block.resolve();
-	await blocked;
+	await flush();
 
 	expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
 		profileId: PROFILE_ID,
@@ -132,7 +134,7 @@ it("settles a block the report sheet sends once it lands", async () => {
 });
 
 it("closes on Back instead of letting Back leave the profile", async () => {
-	renderMenu({ blockable: true });
+	renderMenu();
 	const trigger = screen.getByRole("button", { name: "Profile menu" });
 	expect(backHandledInApp(), "a closed menu leaves Back alone").toBe(false);
 
