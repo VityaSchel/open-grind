@@ -96,6 +96,10 @@ describe("the notifications master switch", () => {
 		"addonRefused",
 		"addonUntrusted",
 		"addonUnavailable",
+		"addonOutdated",
+		"addonHidden",
+		"addonTurnedOff",
+		"addonBlocked",
 	] as const)(
 		"falls back to Slow mode when registering fails with %s on the way back on",
 		async (reason) => {

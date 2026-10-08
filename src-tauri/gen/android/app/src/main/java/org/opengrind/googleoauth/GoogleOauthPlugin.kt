@@ -32,6 +32,9 @@ class GoogleOauthPlugin(private val activity: Activity) : Plugin(activity) {
                 AddonGate.Verdict.Unavailable -> invoke.reject(ERROR_UNAVAILABLE)
                 AddonGate.Verdict.Disabled -> invoke.reject(ERROR_DISABLED)
                 AddonGate.Verdict.Untrusted -> invoke.reject(ERROR_UNTRUSTED)
+                AddonGate.Verdict.Hidden -> invoke.reject(ERROR_UNAVAILABLE)
+                AddonGate.Verdict.TurnedOff -> invoke.reject(ERROR_UNAVAILABLE)
+                AddonGate.Verdict.Outdated -> invoke.reject(ERROR_UNAVAILABLE)
             }
         } catch (e: SecurityException) {
             invoke.reject(ERROR_REFUSED)

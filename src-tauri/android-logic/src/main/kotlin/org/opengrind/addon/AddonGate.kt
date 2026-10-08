@@ -14,6 +14,7 @@ object AddonGate {
 
 	enum class Presence {
 		Absent,
+		Hidden,
 		Disabled,
 		Enabled,
 	}
@@ -23,17 +24,27 @@ object AddonGate {
 		Unavailable,
 		Disabled,
 		Untrusted,
+		Hidden,
+		TurnedOff,
+		Outdated,
 	}
 
 	fun decide(
 		addonPackage: String,
 		resolves: Boolean,
 		presence: Presence,
+		turnedOff: Boolean,
 		certificates: SigningCertificates,
+		version: Long? = null,
+		minVersion: Long = 0,
 	): Verdict = when {
-		(resolves || presence != Presence.Absent) && !releaseSigned(addonPackage, certificates) -> Verdict.Untrusted
+		resolves && !releaseSigned(addonPackage, certificates) -> Verdict.Untrusted
+		presence == Presence.Hidden -> Verdict.Hidden
+		presence != Presence.Absent && !releaseSigned(addonPackage, certificates) -> Verdict.Untrusted
 		!resolves && presence == Presence.Disabled -> Verdict.Disabled
+		!resolves && turnedOff -> Verdict.TurnedOff
 		!resolves -> Verdict.Unavailable
+		version != null && version < minVersion -> Verdict.Outdated
 		else -> Verdict.Launch
 	}
 
