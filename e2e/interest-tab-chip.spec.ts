@@ -42,6 +42,49 @@ async function chipProgress(page: Page) {
 	return ((await page.locator(CHIP).boundingBox())!.x - views) / span;
 }
 
+// Input.synthesizeScrollGesture delivers no touchmove on Linux headless, so it
+// never moves the pager in CI.
+async function flick(
+	page: Page,
+	{
+		from,
+		distancePx,
+		pxPerSecond,
+	}: {
+		from: { x: number; y: number };
+		distancePx: number;
+		pxPerSecond: number;
+	},
+) {
+	const steps = 8;
+	const secondsPerStep = distancePx / pxPerSecond / steps;
+	const startedAt = Date.now() / 1000;
+	const cdp = await page.context().newCDPSession(page);
+	const touch = (type: string, { step }: { step: number }) =>
+		cdp.send("Input.dispatchTouchEvent", {
+			type,
+			touchPoints:
+				type === "touchEnd"
+					? []
+					: [
+							{
+								x: from.x + (distancePx * step) / steps,
+								y: from.y,
+								id: 1,
+							},
+						],
+			timestamp: startedAt + step * secondsPerStep,
+		} as never);
+	await Promise.all([
+		touch("touchStart", { step: 0 }),
+		...Array.from({ length: steps }, (_, index) =>
+			touch("touchMove", { step: index + 1 }),
+		),
+		touch("touchEnd", { step: steps }),
+	]);
+	await cdp.detach();
+}
+
 test.describe("on Android", () => {
 	test.beforeEach(async ({ page }) => {
 		await openTaps(page, { platform: "android" });
@@ -149,17 +192,11 @@ test.describe("on Android", () => {
 			[PAGER, CHIP],
 		);
 
-		const cdp = await page.context().newCDPSession(page);
-		await cdp.send("Input.synthesizeScrollGesture", {
-			x: box.x + 100,
-			y: box.y + box.height / 2,
-			xDistance: 220,
-			yDistance: 0,
-			speed: 3000,
-			preventFling: false,
-			gestureSourceType: "touch",
-		} as never);
-		await cdp.detach();
+		await flick(page, {
+			from: { x: box.x + 100, y: box.y + box.height / 2 },
+			distancePx: 220,
+			pxPerSecond: 3000,
+		});
 
 		await expect(page).toHaveURL(new RegExp(`${VIEWS}$`));
 		await expect.poll(() => pager.evaluate((el) => el.scrollLeft)).toBe(0);
