@@ -1,6 +1,7 @@
 import { flushSync, mount, unmount } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { restoreCountFormatter } from "./fixtures/count-formatter";
 import { markup, slot } from "./fixtures/dom";
 import Probe from "./fixtures/Probe.svelte";
 import {
@@ -28,7 +29,7 @@ const text = (name: string) =>
 const html = (name: string) => markup(slot(name));
 
 afterEach(async () => {
-	setCountFormatter(({ count }) => String(count));
+	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 	document.body.replaceChildren();
 });

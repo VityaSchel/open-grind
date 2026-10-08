@@ -49,6 +49,8 @@
 		"withinDistance": "Within {{distance}}",
 		"apply": "Apply",
 		"reset": "Reset",
+		"less": "Less",
+		"more": "More",
 		"age": {
 			"label": "Age",
 			"a11y": {
@@ -83,6 +85,26 @@
 			"lookingFor": "Looking for",
 			"meetAt": "Meet at",
 			"healthPractices": "Health Practices"
+		},
+		"photos": {
+			"label": "Photos",
+			"hasPhotos": "Has Photos",
+			"hasFacePics": "Has Face Pics",
+			"hasAlbums": "Has Album(s)"
+		},
+		"genders": {
+			"label": "Gender"
+		},
+		"tags": {
+			"label": "Tags",
+			"selected_one": "{{count}} selected",
+			"selected_other": "{{count}} selected",
+			"truncated_one": "Showing first {{shown}} of {{count}} match, keep typing to narrow down",
+			"truncated_other": "Showing first {{shown}} of {{count}} matches, keep typing to narrow down",
+			"noMatches": "No tags match \"{{query}}\"",
+			"errors": {
+				"loadFailed": "Failed to load tags"
+			}
 		}
 	},
 	"rightNow": {

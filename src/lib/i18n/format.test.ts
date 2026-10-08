@@ -1,18 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { restoreCountFormatter } from "./fixtures/count-formatter";
 import {
 	type DatePresetName,
 	formatDate,
+	formatInteger,
 	formatList,
 	formatNumber,
 	formatRange,
 	isolate,
 	type NumberPresetName,
 } from "./format";
-import { setLocale, SOURCE_LOCALE } from "./index";
+import { setCountFormatter, setLocale, SOURCE_LOCALE } from "./index";
 
 afterEach(async () => {
 	vi.restoreAllMocks();
+	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -140,6 +143,19 @@ describe("formatList", () => {
 		expect(formatList(["Top", "Bottom", "Versatile"])).toBe(
 			"Top, Bottom, Versatile",
 		);
+	});
+});
+
+describe("formatInteger", () => {
+	it("prints plain English digits", () => {
+		expect(formatInteger(50)).toBe("50");
+		expect(formatInteger(1234)).toBe("1234");
+	});
+
+	it("uses the count formatter with the active locale", async () => {
+		setCountFormatter(({ count, locale }) => `${locale}:${count}`);
+		await setLocale({ locale: "en-XA" });
+		expect(formatInteger(50)).toBe("en-XA:50");
 	});
 });
 

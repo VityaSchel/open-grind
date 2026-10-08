@@ -1,5 +1,9 @@
 import { t } from "./index";
-import { getLocale, getTextDirection } from "./locale-state.svelte";
+import {
+	formatCount,
+	getLocale,
+	getTextDirection,
+} from "./locale-state.svelte";
 import { markFormatted } from "./pseudo";
 import { SOURCE_LOCALE } from "./syntax";
 
@@ -101,6 +105,10 @@ export function formatNumber({
 	});
 	const text = formatter.format(round(value));
 	return markFormatted({ locale: getLocale(), text });
+}
+
+export function formatInteger(value: number): string {
+	return formatCount({ count: value, locale: getLocale() });
 }
 
 export function formatDate({

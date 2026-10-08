@@ -6,6 +6,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { t } from "$lib/i18n";
 	import { isFilterableGender } from "$lib/model/browse/grid/filters";
 	import { instantWhenReducedMotion } from "$lib/util/reduced-motion";
 	import FilterBoolean from "./FilterBoolean.svelte";
@@ -40,7 +41,9 @@
 </script>
 
 <div class="flex min-w-0 flex-col gap-2">
-	<FilterBoolean id="gender" bind:checked>Gender</FilterBoolean>
+	<FilterBoolean id="gender" bind:checked>
+		{t("browse.filters.genders.label")}
+	</FilterBoolean>
 	<div class="ps-6">
 		{#await genders}
 			<Spinner />
@@ -76,20 +79,24 @@
 						</div>
 					{/if}
 				{/each}
-				<ToggleGroup.Item value="-1">Not specified</ToggleGroup.Item>
+				<ToggleGroup.Item value="-1">
+					{t("common.filters.notSpecified")}
+				</ToggleGroup.Item>
 				<Button
 					variant="secondary"
 					onclick={() => (expanded = !expanded)}
 				>
 					{#if expanded}
-						Less
+						{t("browse.filters.less")}
 					{:else}
-						More
+						{t("browse.filters.more")}
 					{/if}
 				</Button>
 			</ToggleGroup.Root>
 		{:catch}
-			<div class="text-sm text-destructive">Failed to load genders</div>
+			<div class="text-sm text-destructive">
+				{t("common.genders.errors.loadFailed")}
+			</div>
 		{/await}
 	</div>
 </div>

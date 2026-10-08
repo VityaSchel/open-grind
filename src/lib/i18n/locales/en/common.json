@@ -65,5 +65,13 @@
 		"errors": {
 			"saveFailed": "Failed to save location"
 		}
+	},
+	"genders": {
+		"errors": {
+			"loadFailed": "Failed to load genders"
+		}
+	},
+	"tags": {
+		"searchPlaceholder": "Search tags..."
 	}
 }
