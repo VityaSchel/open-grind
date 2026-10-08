@@ -3,7 +3,6 @@ package org.opengrind.recaptcha
 import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.ActivityResult
-import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -12,6 +11,7 @@ import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
 import org.opengrind.addon.AddonLaunchCheck
 import org.opengrind.addon.AddonGate
+import org.opengrind.launchForResult
 
 @InvokeArg
 internal class MintArgs {
@@ -29,7 +29,7 @@ class RecaptchaPlugin(private val activity: Activity) : Plugin(activity) {
 				.setPackage(ADDON_PACKAGE)
 				.putExtra(EXTRA_ACTION, action)
 			when (AddonLaunchCheck.decide(activity, intent, ADDON_PACKAGE)) {
-				AddonGate.Verdict.Launch -> startActivityForResult(invoke, intent, "mintResult")
+				AddonGate.Verdict.Launch -> activity.launchForResult(intent) { mintResult(invoke, it) }
 				AddonGate.Verdict.Unavailable -> invoke.reject(ERROR_UNAVAILABLE)
 				AddonGate.Verdict.Disabled -> invoke.reject(ERROR_DISABLED)
 				AddonGate.Verdict.Untrusted -> invoke.reject(ERROR_UNTRUSTED)
@@ -39,8 +39,7 @@ class RecaptchaPlugin(private val activity: Activity) : Plugin(activity) {
 		}
 	}
 
-	@ActivityCallback
-	fun mintResult(invoke: Invoke, result: ActivityResult) {
+	private fun mintResult(invoke: Invoke, result: ActivityResult) {
 		val data = result.data
 		if (result.resultCode == Activity.RESULT_OK) {
 			val token = data?.getStringExtra(EXTRA_TOKEN)

@@ -40,6 +40,7 @@
 	let media = $state<DrawerMedia[] | null>(null);
 	let error = $state<unknown>(null);
 	let uploadingCount = $state(0);
+	let picking = false;
 
 	async function load() {
 		media = null;
@@ -65,6 +66,8 @@
 	}
 
 	async function addMedia() {
+		if (picking) return;
+		picking = true;
 		let picked;
 		try {
 			picked = await pickMultipleMedia("media");
@@ -72,6 +75,8 @@
 			console.error(err);
 			toast.error("Couldn't open the picker");
 			return;
+		} finally {
+			picking = false;
 		}
 		if (picked.length === 0) return;
 
