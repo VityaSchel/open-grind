@@ -28,6 +28,7 @@ function isRequestedAfter({
 export class EditableServerList<Entry extends ListedProfile> {
 	#snapshots: FetchCache<null, Snapshot<Entry>>;
 	#latestEditByProfileId = new Map<number, Edit>();
+	#editRequestsInFlight = new Map<number, Promise<void>>();
 
 	constructor({
 		request,
@@ -98,12 +99,32 @@ export class EditableServerList<Entry extends ListedProfile> {
 		request: () => Promise<void>;
 	}): Promise<void> {
 		const epoch = accountEpoch();
-		await request();
+		await this.#sendAfterEarlierEdits({ profileId, request });
 		if (!isAccountEpochCurrent(epoch)) return;
 		this.#recordAsNewestEdit({
 			profileId,
 			edit: { listed, completedAt: now() },
 		});
+	}
+
+	async #sendAfterEarlierEdits({
+		profileId,
+		request,
+	}: {
+		profileId: number;
+		request: () => Promise<void>;
+	}): Promise<void> {
+		const earlier = this.#editRequestsInFlight.get(profileId);
+		const sent = earlier
+			? earlier.catch(() => {}).then(request)
+			: request();
+		this.#editRequestsInFlight.set(profileId, sent);
+		try {
+			await sent;
+		} finally {
+			if (this.#editRequestsInFlight.get(profileId) === sent)
+				this.#editRequestsInFlight.delete(profileId);
+		}
 	}
 
 	#recordAsNewestEdit({

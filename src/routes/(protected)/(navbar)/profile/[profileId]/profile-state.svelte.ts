@@ -24,23 +24,25 @@ export type PendingViewabilityChange = {
 	settle: () => void;
 };
 
-export async function applyViewabilityChange({
-	change,
-	request,
-	failureLabel,
-}: {
-	change: () => PendingViewabilityChange;
-	request: () => Promise<unknown>;
-	failureLabel: string;
-}): Promise<void> {
-	const { revert, settle } = change();
+type ViewabilityFailureNotice =
+	| { failureLabel: string }
+	| { showFailure: (error: unknown) => void };
+
+export async function applyViewabilityChange(
+	options: {
+		change: () => PendingViewabilityChange;
+		request: () => Promise<unknown>;
+	} & ViewabilityFailureNotice,
+): Promise<void> {
+	const { revert, settle } = options.change();
 	try {
-		await request();
+		await options.request();
 		settle();
 	} catch (error) {
 		revert();
 		console.error(error);
-		showErrorToast({ label: failureLabel, error });
+		if ("showFailure" in options) options.showFailure(error);
+		else showErrorToast({ label: options.failureLabel, error });
 	}
 }
 
@@ -56,6 +58,7 @@ export class ProfileState {
 	readonly ourProfileId: number;
 
 	#fetchToken = 0;
+	#viewabilityChangeToken = 0;
 	#destroyed = false;
 	#active = false;
 
@@ -171,15 +174,19 @@ export class ProfileState {
 	}: {
 		error: Error | null;
 	}): PendingViewabilityChange {
+		const token = ++this.#viewabilityChangeToken;
+		const superseded = () => token !== this.#viewabilityChangeToken;
 		const previous = this.error;
 		this.error = error;
 		this.changingViewability = true;
 		return {
 			revert: () => {
+				if (superseded()) return;
 				this.changingViewability = false;
 				if (this.error === error) this.error = previous;
 			},
 			settle: () => {
+				if (superseded()) return;
 				this.changingViewability = false;
 				if (!this.error && !this.profile) this.retry();
 			},

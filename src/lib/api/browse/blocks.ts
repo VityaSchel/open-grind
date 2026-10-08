@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { registerAccountCache } from "$lib/api/account-caches";
 import { EditableServerList } from "$lib/api/browse/editable-server-list";
 import { fetchRest } from "$lib/api/transport";
 import {
@@ -33,19 +34,45 @@ export async function markBlockedProfilesUnviewable(): Promise<void> {
 		markProfileUnviewable(profileId);
 }
 
+export class BlockDidNotStickError extends Error {
+	constructor() {
+		super(
+			"Grindr accepted the block but does not list the profile as blocked",
+		);
+		this.name = "BlockDidNotStickError";
+	}
+}
+
+const blockAttempts = new Map<number, object>();
+registerAccountCache({ reset: () => blockAttempts.clear() });
+
 export async function blockUser({
 	profileId,
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await blockedUsers.add({
-		profileId,
-		request: () =>
-			fetchRest(`/v3/me/blocks/${profileId}`, { method: "POST" }).then(
-				(res) => res.assertOk(),
-			),
-	});
-	markProfileUnviewable(profileId);
+	const attempt = {};
+	blockAttempts.set(profileId, attempt);
+	const superseded = () => blockAttempts.get(profileId) !== attempt;
+	try {
+		await blockedUsers.add({
+			profileId,
+			request: () =>
+				fetchRest(`/v3/me/blocks/${profileId}`, {
+					method: "POST",
+				}).then((res) => res.assertOk()),
+		});
+		if (superseded()) return;
+		const blocking = await getBlockedUsers();
+		if (superseded()) return;
+		if (!blocking.some((blocked) => blocked.profileId === profileId))
+			throw new BlockDidNotStickError();
+		markProfileUnviewable(profileId);
+	} catch (error) {
+		if (!superseded()) throw error;
+	} finally {
+		if (!superseded()) blockAttempts.delete(profileId);
+	}
 }
 
 export async function unblockUser({
@@ -53,6 +80,7 @@ export async function unblockUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
+	blockAttempts.delete(profileId);
 	await blockedUsers.remove({
 		profileId,
 		request: () =>

@@ -11,7 +11,7 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { hideUser } from "$lib/api/browse/hides";
 	import { showErrorToast } from "$lib/api/error-toast";
-	import BlockingGuideLink from "$lib/components/report/BlockingGuideLink.svelte";
+	import { showBlockFailure } from "$lib/components/report/block-failure";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
@@ -22,19 +22,25 @@
 
 	let {
 		profileId,
-		blockable,
 		changingViewability,
 		markBlocked,
 		markHidden,
 	}: {
 		profileId: number;
-		blockable: boolean;
 		changingViewability: boolean;
 		markBlocked: () => PendingViewabilityChange;
 		markHidden: () => PendingViewabilityChange;
 	} = $props();
 
 	let reportOpen = $state(false);
+
+	function block() {
+		void applyViewabilityChange({
+			change: markBlocked,
+			request: () => blockUser({ profileId }),
+			showFailure: showBlockFailure,
+		});
+	}
 </script>
 
 <DropdownMenu.Root>
@@ -86,39 +92,11 @@
 			<EyeSlashIcon class="size-5" />
 			Hide profile
 		</DropdownMenu.Item>
-		<div class="flex items-center">
-			<DropdownMenu.Item
-				disabled={!blockable}
-				class="flex-1"
-				onSelect={() =>
-					applyViewabilityChange({
-						change: markBlocked,
-						request: () => blockUser({ profileId }),
-						failureLabel: "Failed to block user",
-					})}
-			>
-				<ProhibitIcon class="size-5" />
-				Block profile
-			</DropdownMenu.Item>
-			{#if !blockable}
-				<DropdownMenu.Item
-					class="me-2 size-7 cursor-pointer justify-center rounded-full p-0"
-				>
-					{#snippet child({ props })}
-						<BlockingGuideLink {...props} />
-					{/snippet}
-				</DropdownMenu.Item>
-			{/if}
-		</div>
+		<DropdownMenu.Item onSelect={block}>
+			<ProhibitIcon class="size-5" />
+			Block profile
+		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<ReportSheet
-	bind:open={reportOpen}
-	{profileId}
-	{blockable}
-	onBlock={async () => {
-		await blockUser({ profileId });
-		markBlocked().settle();
-	}}
-/>
+<ReportSheet bind:open={reportOpen} {profileId} onBlock={block} />

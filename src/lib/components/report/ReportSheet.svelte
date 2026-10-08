@@ -4,7 +4,7 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { reportProfile } from "$lib/api/safety/reports";
-	import { Button, buttonVariants } from "$lib/components/ui/button";
+	import { Button } from "$lib/components/ui/button";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { Textarea } from "$lib/components/ui/textarea";
@@ -15,9 +15,8 @@
 		type ReportReason,
 		reportReasonSchema,
 	} from "$lib/model/safety/reports";
-	import { cn } from "$lib/util/utils";
 	import type { Profile } from "$lib/model/users/profiles";
-	import BlockingGuideLink from "./BlockingGuideLink.svelte";
+	import { showBlockFailure } from "./block-failure";
 	import { buildProfileReport } from "./report-request";
 
 	type ReportSubject = "profile" | "message";
@@ -27,15 +26,13 @@
 		profileId,
 		subject = "profile",
 		locations: presetLocations,
-		blockable = true,
 		onBlock,
 	}: {
 		open: boolean;
 		profileId: Profile["profileId"];
 		subject?: ReportSubject;
 		locations?: ReportLocation[];
-		blockable?: boolean;
-		onBlock?: () => Promise<void>;
+		onBlock?: () => void;
 	} = $props();
 
 	const reasonLabels: Record<ReportReason, string> = {
@@ -82,7 +79,6 @@
 	let locations = $state<ReportLocation[]>([]);
 	let comment = $state("");
 	let submitting = $state(false);
-	let blocking = $state(false);
 	let submitted = $state(false);
 
 	const copy = $derived(subjectCopy[subject]);
@@ -120,17 +116,18 @@
 		}
 	}
 
-	async function block() {
-		if (blocking) return;
-		blocking = true;
+	function block() {
+		open = false;
+		if (onBlock) onBlock();
+		else void blockInBackground();
+	}
+
+	async function blockInBackground() {
 		try {
-			await (onBlock ? onBlock() : blockUser({ profileId }));
-			open = false;
+			await blockUser({ profileId });
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to block user", error });
-		} finally {
-			blocking = false;
+			showBlockFailure(error);
 		}
 	}
 </script>
@@ -156,39 +153,15 @@
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
 					<p>{copy.reviewed}</p>
-					{#if blockable}
-						<p class="text-sm text-muted-foreground">
-							You can block this profile so you stop seeing it.
-						</p>
-					{/if}
+					<p class="text-sm text-muted-foreground">
+						You can block this profile so you stop seeing it.
+					</p>
 				</div>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer>
-				<div class="relative flex">
-					<Button
-						variant="destructive"
-						disabled={blocking || !blockable}
-						aria-busy={blocking}
-						class={["flex-1", { "px-9": !blockable }]}
-						onclick={() => void block()}
-					>
-						{#if blocking}
-							<Spinner aria-hidden="true" />
-						{/if}
-						Block profile
-					</Button>
-					{#if !blockable}
-						<BlockingGuideLink
-							class={cn(
-								buttonVariants({
-									variant: "ghost",
-									size: "icon-xs",
-								}),
-								"absolute inset-y-0 end-1.5 my-auto",
-							)}
-						/>
-					{/if}
-				</div>
+				<Button variant="destructive" onclick={block}>
+					Block profile
+				</Button>
 				<Button variant="secondary" onclick={() => (open = false)}>
 					Done
 				</Button>
