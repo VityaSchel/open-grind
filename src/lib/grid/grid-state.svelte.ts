@@ -10,6 +10,7 @@ import {
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import { autoLocation } from "$lib/location/auto-location";
+import { Generation } from "$lib/util/generation";
 import { reconciler } from "$lib/util/reconcile";
 import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
@@ -50,7 +51,7 @@ class GridState {
 	#retargeted: string | null = null;
 	#resolvingIds = new Set<number>();
 	#firstPageIds = new Set<number>();
-	#fetchToken = 0;
+	#generation = new Generation();
 	#startOverListeners = new Set<() => void>();
 	#indexById = $derived(indexProfilesById(this.profiles));
 
@@ -150,7 +151,7 @@ class GridState {
 	}
 
 	reset(): void {
-		this.#fetchToken += 1;
+		this.#generation.next();
 		this.#reset();
 		this.loading = false;
 		this.refreshing = false;
@@ -161,11 +162,12 @@ class GridState {
 	}
 
 	async #loadPage(page: number): Promise<void> {
-		const token = this.#fetchToken;
+		const generation = this.#generation.current;
 		const query = this.currentQuery;
 		if (query === null) return;
 		const isCurrent = () =>
-			token === this.#fetchToken && query === this.currentQuery;
+			!this.#generation.isStale(generation) &&
+			query === this.currentQuery;
 		const result = await getGrid({ ...query, pageNumber: page }).catch(
 			(error: unknown) => {
 				if (isCurrent()) throw error;
@@ -184,7 +186,7 @@ class GridState {
 	async resolveProfile(id: number): Promise<void> {
 		if (this.#resolvingIds.has(id)) return;
 		this.#resolvingIds.add(id);
-		const token = this.#fetchToken;
+		const generation = this.#generation.current;
 		try {
 			const item = this.items.find((i) => i.id === id);
 			if (!item || item.type !== "lazy") return;
@@ -197,7 +199,7 @@ class GridState {
 			}
 
 			const resolved = await resolveLazyProfile(item);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const idx = this.items.findIndex((i) => i.id === id);
 			if (idx === -1) return;
 			if (resolved) {
@@ -216,13 +218,14 @@ class GridState {
 
 	async #withLiveLocation(
 		geohash: string,
-		token: number,
+		generation: number,
 		background: boolean,
 	): Promise<string> {
 		const resolved = await autoLocation.resolveGeohash(geohash, {
 			background,
 		});
-		if (token !== this.#fetchToken || resolved === geohash) return geohash;
+		if (this.#generation.isStale(generation) || resolved === geohash)
+			return geohash;
 		this.#geohash = resolved;
 		this.#retargeted = resolved;
 		setPreferences({ geohash: resolved }).catch((error: unknown) =>
@@ -240,28 +243,28 @@ class GridState {
 			keepLoadedPages?: boolean;
 		},
 	): Promise<void> {
-		const token = ++this.#fetchToken;
+		const generation = this.#generation.next();
 		this.#retargeted = null;
 		try {
 			await this.filters.ready;
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const [geohash] = await Promise.all([
 				(opts?.sampleLocation ?? true)
 					? this.#withLiveLocation(
 							requestedGeohash,
-							token,
+							generation,
 							opts?.background ?? false,
 						)
 					: requestedGeohash,
 				this.filters.resolveTagKeys(),
 			]);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const query = buildCascadeQuery({
 				geohash,
 				filters: this.filters.value,
 			});
 			const result = await getGrid(query);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			this.currentQuery = query;
 			this.#resolvingIds.clear();
 			const firstPageIds = new Set(result.items.map((item) => item.id));
@@ -280,7 +283,7 @@ class GridState {
 			this.error = null;
 			this.loading = false;
 		} catch (err) {
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			console.error(err);
 			this.loading = false;
 			if (opts?.background) return;

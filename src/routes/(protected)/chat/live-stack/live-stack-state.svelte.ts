@@ -2,6 +2,7 @@ import { tick } from "svelte";
 import type { NavigationTarget, OnNavigate } from "@sveltejs/kit";
 
 import { StackSettle } from "$lib/components/navigation/stack/settle";
+import { Generation } from "$lib/util/generation";
 import { isWithin } from "$lib/util/pathname";
 import type { StackMotion } from "$lib/components/navigation/stack/motion";
 import type { StackSurface } from "$lib/components/navigation/stack/surface";
@@ -22,7 +23,7 @@ export class LiveStackState {
 	readonly #keyboardVisible: () => boolean;
 	readonly #keyboardHidden: () => Promise<void>;
 
-	#generation = 0;
+	#generation = new Generation();
 	#committedSlide: Promise<boolean> | null = null;
 	#watchdog: ReturnType<typeof setTimeout> | undefined;
 
@@ -78,7 +79,7 @@ export class LiveStackState {
 		const { from, to } = navigation;
 		if (!from || !to) return;
 
-		const generation = ++this.#generation;
+		const generation = this.#generation.next();
 		this.tracking = false;
 		this.#clearWatchdog();
 
@@ -96,7 +97,7 @@ export class LiveStackState {
 			this.leaving = fromKey;
 			return () => {
 				void committedSlide.then((settled) => {
-					if (settled && generation === this.#generation)
+					if (settled && !this.#generation.isStale(generation))
 						this.#rest(null);
 				});
 			};
@@ -120,14 +121,14 @@ export class LiveStackState {
 		this.applyFrame();
 
 		return () => {
-			if (generation !== this.#generation) return;
+			if (this.#generation.isStale(generation)) return;
 			if (opens) this.leaving = null;
 			void this.#beforeSettle({ opens, waitForKeyboard }).then(() => {
-				if (generation !== this.#generation) return;
+				if (this.#generation.isStale(generation)) return;
 				void this.#settle
 					.settleTo({ target: opens ? 0 : 1, intent: "commit" })
 					.then((settled) => {
-						if (settled && generation === this.#generation)
+						if (settled && !this.#generation.isStale(generation))
 							this.#rest(toKey);
 					});
 			});
@@ -178,7 +179,7 @@ export class LiveStackState {
 	}
 
 	dispose(): void {
-		this.#generation++;
+		this.#generation.next();
 		this.#settle.stop();
 		this.#clearWatchdog();
 		this.#committedSlide = null;
@@ -192,11 +193,11 @@ export class LiveStackState {
 	}
 
 	#returnToCovered(): void {
-		const generation = this.#generation;
+		const generation = this.#generation.current;
 		void this.#settle
 			.settleTo({ target: 0, intent: "cancel" })
 			.then((settled) => {
-				if (settled && generation === this.#generation)
+				if (settled && !this.#generation.isStale(generation))
 					this.moving = false;
 			});
 	}

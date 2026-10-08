@@ -7,6 +7,7 @@ import {
 import { registerAccountCache } from "$lib/api/account-caches";
 import { isMobilePlatform } from "$lib/platform/os";
 import { now } from "$lib/util/clock";
+import { Generation } from "$lib/util/generation";
 
 export type Coordinates = { lat: number; lon: number };
 type Fix = Coordinates & { accuracyMeters: number };
@@ -22,28 +23,28 @@ class LocationRequest {
 	pending = $state(false);
 	lastFix = $state<Fix | null>(null);
 	lastFixAt: number | null = null;
-	#token = 0;
+	#generation = new Generation();
 
 	get generation(): number {
-		return this.#token;
+		return this.#generation.current;
 	}
 
 	abort(): void {
-		this.#token += 1;
+		this.#generation.next();
 		this.pending = false;
 	}
 
 	abortStale(generation: number): void {
-		if (this.#token === generation) this.abort();
+		if (!this.#generation.isStale(generation)) this.abort();
 	}
 
 	async run({
 		prompt = true,
 	}: { prompt?: boolean } = {}): Promise<LocationOutcome> {
 		if (!isMobilePlatform()) return { status: "unsupported" };
-		const token = ++this.#token;
+		const generation = this.#generation.next();
 		this.pending = true;
-		const superseded = () => token !== this.#token;
+		const superseded = () => this.#generation.isStale(generation);
 		try {
 			let permissions = await checkPermissions();
 			if (superseded()) return { status: "aborted" };

@@ -324,7 +324,7 @@ class ConversationsState {
 	}
 
 	async #load(page: number): Promise<void> {
-		const fetchEpoch = this.#fetches.claim();
+		const fetchEpoch = this.#fetches.next();
 		const result = await getConversations({
 			page,
 			filters: this.filters.request,
@@ -347,7 +347,7 @@ class ConversationsState {
 
 	async #claimEpochAfterInitial(): Promise<number> {
 		await this.#initialLoad.catch(() => {});
-		return this.#fetches.claim();
+		return this.#fetches.next();
 	}
 
 	refresh(): Promise<void> {

@@ -4,6 +4,7 @@ import {
 	registerAccountCache,
 } from "$lib/api/account-caches";
 import { now } from "$lib/util/clock";
+import { Generation } from "$lib/util/generation";
 
 type CacheOptions = { ttlMs?: number };
 
@@ -12,7 +13,7 @@ type CachedValue = NonNullable<unknown>;
 export class TtlCache<K, V extends CachedValue> {
 	#entries = new Map<K, { value: V; storedAt: number }>();
 	#ttlMs: number;
-	protected generation = 0;
+	protected generation = new Generation();
 
 	constructor({ ttlMs = Number.POSITIVE_INFINITY }: CacheOptions = {}) {
 		this.#ttlMs = ttlMs;
@@ -40,11 +41,11 @@ export class TtlCache<K, V extends CachedValue> {
 
 	delete(key: K): void {
 		this.#entries.delete(key);
-		this.generation += 1;
+		this.generation.next();
 	}
 
 	clear(): void {
-		this.generation += 1;
+		this.generation.next();
 		this.#entries.clear();
 	}
 }
@@ -68,12 +69,12 @@ export class FetchCache<K, V extends CachedValue> extends TtlCache<K, V> {
 		const pending = this.#inFlight.get(key);
 		if (pending) return pending;
 		const epoch = accountEpoch();
-		const generation = this.generation;
+		const generation = this.generation.current;
 		const request: Promise<V> = this.#fetch(key)
 			.then((value) => {
 				if (
 					isAccountEpochCurrent(epoch) &&
-					generation === this.generation
+					!this.generation.isStale(generation)
 				)
 					this.set(key, value);
 				return value;

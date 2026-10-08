@@ -13,6 +13,7 @@ import {
 	ProfileUnavailableError,
 	refreshProfile,
 } from "$lib/api/users/profiles";
+import { Generation } from "$lib/util/generation";
 import type { TapType } from "$lib/model/interest/taps";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import type { Profile } from "$lib/model/users/profiles";
@@ -57,8 +58,8 @@ export class ProfileState {
 	readonly profileId: number;
 	readonly ourProfileId: number;
 
-	#fetchToken = 0;
-	#viewabilityChangeToken = 0;
+	#generation = new Generation();
+	#viewabilityChanges = new Generation();
 	#destroyed = false;
 	#active = false;
 
@@ -174,8 +175,8 @@ export class ProfileState {
 	}: {
 		error: Error | null;
 	}): PendingViewabilityChange {
-		const token = ++this.#viewabilityChangeToken;
-		const superseded = () => token !== this.#viewabilityChangeToken;
+		const generation = this.#viewabilityChanges.next();
+		const superseded = () => this.#viewabilityChanges.isStale(generation);
 		const previous = this.error;
 		this.error = error;
 		this.changingViewability = true;
@@ -203,18 +204,18 @@ export class ProfileState {
 			this.profile = null;
 			this.note = null;
 		}
-		const token = ++this.#fetchToken;
+		const generation = this.#generation.next();
 		const errorBeforeLoad = this.error;
 		try {
 			const profile = refresh
 				? await refreshProfile(this.profileId)
 				: await getProfile(this.profileId);
-			if (this.#superseded(token)) return;
+			if (this.#superseded(generation)) return;
 			this.profile = profile;
 			if (this.error === errorBeforeLoad) this.error = null;
 			if (profile.isFavorite) void this.#loadNote();
 		} catch (error) {
-			if (this.#superseded(token)) return;
+			if (this.#superseded(generation)) return;
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({
@@ -228,7 +229,7 @@ export class ProfileState {
 				error instanceof Error ? error : new Error(String(error));
 			this.profile = null;
 		} finally {
-			if (!this.#superseded(token)) {
+			if (!this.#superseded(generation)) {
 				this.loading = false;
 				this.refreshing = false;
 			}
@@ -237,17 +238,17 @@ export class ProfileState {
 
 	async #loadNote(): Promise<void> {
 		if (!this.#active) return;
-		const token = this.#fetchToken;
+		const generation = this.#generation.current;
 		try {
 			const note = await getFavoriteNote({ profileId: this.profileId });
-			if (this.#superseded(token)) return;
+			if (this.#superseded(generation)) return;
 			this.note = note;
 		} catch (error) {
 			console.error(error);
 		}
 	}
 
-	#superseded(token: number): boolean {
-		return this.#destroyed || token !== this.#fetchToken;
+	#superseded(generation: number): boolean {
+		return this.#destroyed || this.#generation.isStale(generation);
 	}
 }

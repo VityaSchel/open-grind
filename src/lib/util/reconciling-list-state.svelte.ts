@@ -1,4 +1,5 @@
 import { showErrorToast } from "$lib/api/error-toast";
+import { Generation } from "$lib/util/generation";
 import { reconciler } from "$lib/util/reconcile";
 
 export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
@@ -15,7 +16,7 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 	#unsubscribeReconcile: (() => void) | null = null;
 	#unlisten: Promise<() => void> | null = null;
 	#buffer: TItem[] | null = null;
-	#fetchToken = 0;
+	#generation = new Generation();
 	#refreshRequestedSinceFetchStart = false;
 
 	constructor({
@@ -114,13 +115,13 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 
 	async #replaceFromServer(): Promise<void> {
 		if (this.#destroyed) return;
-		const token = ++this.#fetchToken;
+		const generation = this.#generation.next();
 		this.#refreshRequestedSinceFetchStart = false;
 		const buffer: TItem[] = [];
 		this.#buffer = buffer;
 		try {
 			const snapshot = await this.fetch();
-			if (this.#superseded(token)) return;
+			if (this.#superseded(generation)) return;
 			const covered = this.applySnapshotReturningCoveredKeys(snapshot);
 			for (const item of buffer) {
 				if (!covered.has(this.keyOf(item))) this.applyUpsert(item);
@@ -128,15 +129,15 @@ export abstract class ReconcilingListState<TItem, TSnapshot, TKey = number> {
 			this.#loaded = true;
 			this.error = null;
 		} catch (error) {
-			if (this.#superseded(token)) return;
+			if (this.#superseded(generation)) return;
 			throw error;
 		} finally {
 			if (this.#buffer === buffer) this.#buffer = null;
 		}
 	}
 
-	#superseded(token: number): boolean {
-		return this.#destroyed || token !== this.#fetchToken;
+	#superseded(generation: number): boolean {
+		return this.#destroyed || this.#generation.isStale(generation);
 	}
 
 	protected abstract get length(): number;

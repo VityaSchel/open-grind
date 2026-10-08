@@ -1,3 +1,4 @@
+import { Generation } from "$lib/util/generation";
 import {
 	APP_COMPONENT,
 	COMPONENT_PACKAGE,
@@ -70,7 +71,7 @@ export class UpdateFlow {
 	#offerTag: string | null = null;
 	readonly #installOnReturn = new ReturnAction();
 	#readyKind: InstallKind = "update";
-	#showing = 0;
+	#showing = new Generation();
 	#armedTag: string | null = null;
 	#canInstallNow = false;
 	#installing = false;
@@ -583,7 +584,7 @@ export class UpdateFlow {
 		}
 		this.#shown = next;
 		this.#visible = true;
-		const showing = ++this.#showing;
+		const showing = this.#showing.next();
 		this.#presenter.show({
 			view: next,
 			kind: this.#readyKind,
@@ -597,7 +598,7 @@ export class UpdateFlow {
 						}),
 				),
 			onDismiss: () => {
-				if (showing !== this.#showing) return;
+				if (this.#showing.isStale(showing)) return;
 				if (offerable) this.#dismissed = true;
 				this.#visible = false;
 			},
@@ -607,7 +608,7 @@ export class UpdateFlow {
 	#hide(): void {
 		this.#installOnReturn.forget();
 		this.#offerTag = null;
-		this.#showing++;
+		this.#showing.next();
 		this.#visible = false;
 		this.#presenter.dismiss();
 	}

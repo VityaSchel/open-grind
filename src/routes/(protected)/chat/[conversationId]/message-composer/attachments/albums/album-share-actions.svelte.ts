@@ -6,17 +6,18 @@ import {
 	unshareAlbum,
 } from "$lib/api/messaging/albums";
 import { albumShares } from "$lib/chat/album-shares.svelte";
+import { Generation } from "$lib/util/generation";
 
 export class AlbumShareActions {
 	#resolved = new SvelteSet<number>();
-	#generation = 0;
+	#generation = new Generation();
 
 	isResolved(albumId: number): boolean {
 		return this.#resolved.has(albumId);
 	}
 
 	async load({ albumIds }: { albumIds: number[] }): Promise<void> {
-		const generation = ++this.#generation;
+		const generation = this.#generation.next();
 		this.#resolved.clear();
 		await Promise.all(
 			albumIds.map(async (albumId) => {
@@ -26,7 +27,7 @@ export class AlbumShareActions {
 				} catch (err) {
 					console.error(err);
 				}
-				if (generation !== this.#generation) return;
+				if (this.#generation.isStale(generation)) return;
 				albumShares.record({ albumId, profileIds });
 				this.#resolved.add(albumId);
 			}),
