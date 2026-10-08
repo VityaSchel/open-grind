@@ -14,6 +14,10 @@ function centerOf(node: HTMLElement): Point {
 	return { x: left + width / 2, y: top + height / 2 };
 }
 
+function snapToDevicePixels(length: number): number {
+	return Math.round(length * devicePixelRatio) / devicePixelRatio;
+}
+
 export class GridReorderState {
 	#onReorder: (move: { from: number; to: number }) => void;
 	#nodes = new SvelteMap<number, HTMLElement>();
@@ -114,7 +118,9 @@ export class GridReorderState {
 		const there =
 			this.#centers[previewSlot({ index, from: this.from, to: this.to })];
 		if (here === undefined || there === undefined) return undefined;
-		return `translate(${there.x - here.x}px, ${there.y - here.y}px)`;
+		const x = snapToDevicePixels(there.x - here.x);
+		const y = snapToDevicePixels(there.y - here.y);
+		return `translate(${x}px, ${y}px)`;
 	}
 
 	#lift(at: Point): void {

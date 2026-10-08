@@ -127,3 +127,39 @@ describe("GridReorderState haptics", () => {
 		expect(playHapticMock).not.toHaveBeenCalled();
 	});
 });
+
+describe("GridReorderState preview at a fractional device pixel ratio", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it("moves every displaced cell by whole device pixels", () => {
+		const devicePixelRatio = 2.8125;
+		vi.stubGlobal("devicePixelRatio", devicePixelRatio);
+		const reorder = new GridReorderState({ onReorder: () => {} });
+		const first = fakeCell(0);
+		[first, fakeCell(1), fakeCell(2)].forEach((cell, index) =>
+			reorder.cell(index)(cell),
+		);
+		reorder.press({
+			event: pointer({ pointerType: "mouse", node: first }),
+			index: 0,
+		});
+		reorder.move(pointer({ pointerType: "mouse", node: first, x: 70 }));
+		reorder.move(pointer({ pointerType: "mouse", node: first, x: 250 }));
+		expect(reorder.to).toBe(2);
+
+		const translations = [1, 2].flatMap((index) => {
+			const match = /translate\((.+)px, (.+)px\)/.exec(
+				reorder.transformFor(index) ?? "",
+			);
+			return match ? [Number(match[1]), Number(match[2])] : [];
+		});
+		expect(translations).toHaveLength(4);
+		expect(translations.some((length) => length !== 0)).toBe(true);
+		for (const length of translations) {
+			const devicePixels = length * devicePixelRatio;
+			expect(devicePixels).toBeCloseTo(Math.round(devicePixels), 6);
+		}
+	});
+});
