@@ -154,7 +154,7 @@ test.describe("credits page", () => {
 			});
 			expect(await scrollTop(page)).toBe(0);
 			await scroller(page).evaluate((el) => el.scrollTo(0, 3000));
-			await expect.poll(() => scrollTop(page)).toBeGreaterThan(2000);
+			await expect.poll(() => scrollTop(page)).toBe(3000);
 		};
 		const backOnAppSettings = async () => {
 			await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));

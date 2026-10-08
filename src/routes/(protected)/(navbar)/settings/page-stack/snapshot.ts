@@ -9,6 +9,12 @@ export type PaneSnapshot = {
 const FORM_FIELDS = "input, textarea, select";
 const OFFSCREEN_SKIPPED = "[data-offscreen-skip]";
 const IDENTITY_ATTRIBUTES = ["id", "data-slot"];
+const BLOCK_EDGES = [
+	"paddingTop",
+	"paddingBottom",
+	"borderTopWidth",
+	"borderBottomWidth",
+] as const;
 
 const scrolledIn = new WeakMap<HTMLElement, Set<Element>>();
 
@@ -83,13 +89,21 @@ function scrollCarriers({
 	});
 }
 
+function contentBlockSize(element: HTMLElement): number {
+	const style = getComputedStyle(element);
+	return BLOCK_EDGES.reduce(
+		(size, edge) => size - parseFloat(style[edge]),
+		element.getBoundingClientRect().height,
+	);
+}
+
 function sizePins({ pane, clone }: { pane: HTMLElement; clone: HTMLElement }) {
 	const copies = clone.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED);
 	return [...pane.querySelectorAll<HTMLElement>(OFFSCREEN_SKIPPED)].flatMap(
 		(source, index) => {
 			const copy = copies[index];
 			if (!copy) return [];
-			const height = `${source.offsetHeight}px`;
+			const height = `${contentBlockSize(source)}px`;
 			return [
 				() => {
 					copy.style.containIntrinsicBlockSize = height;
