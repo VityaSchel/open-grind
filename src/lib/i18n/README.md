@@ -31,7 +31,7 @@ Lock the Weblate components and merge their pending changes first, then run `bun
 | --------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Key       | `feedback.requestBlocked.rotate`      | camelCase segments, `[a-z][A-Za-z0-9]*`, along the code path. A new meaning, param or tag gets a new key                                                                           |
 | Text      | `Couldn't copy to clipboard`          | Non-empty, real characters (`…`, U+00A0), no HTML entities                                                                                                                         |
-| Param     | `{{name}}`                            | Plain camelCase `{{name}}` only, a string formatted in code, not named `children` or `key`                                                                                         |
+| Param     | `{{name}}`                            | Plain camelCase `{{name}}` only, not named `children` or `key`. A string formatted in code or, outside tags, a component passed to `Rich.svelte`                                   |
 | Plural    | `key_one`, `key_other`                | Exactly these two, picked by `{{count}}`, a number that appears nowhere else. A `_one` with a param also has `{{count}}`. Text for 0 gets its own key                              |
 | Rich text | `This is a <link>known issue</link>.` | Flat camelCase tags without attributes, each rendered by the `Rich.svelte` snippet of that name. A tag is not named `children`, `key`, `count` or like a param of the same message |
 

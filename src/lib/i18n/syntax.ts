@@ -19,7 +19,10 @@ export const PLURAL_CATEGORIES = [
 
 export const PLURAL_KEY = new RegExp(`^(.+)_(${PLURAL_CATEGORIES.join("|")})$`);
 
-export const TAG_PAIR = new RegExp(`<(${NAME_PATTERN})>(.*?)</\\1>`, "gs");
+export const RICH_TOKEN = new RegExp(
+	`${PLACEHOLDER_PATTERN}|<(${NAME_PATTERN})>(.*?)</\\2>`,
+	"gs",
+);
 
 export const TAG_TOKEN = new RegExp(`^<(/?)(${NAME_PATTERN})>$`);
 

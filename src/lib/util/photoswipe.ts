@@ -77,10 +77,12 @@ function undecodableNotice(): HTMLParagraphElement {
 		notice.textContent = t("media.lightbox.errors.playFailed");
 		return notice;
 	}
-	for (const { tag, text } of richParts(
-		"media.lightbox.errors.decoderMissing",
-	)) {
-		notice.append(tag === "link" ? codecsGuideLink(text) : text);
+	for (const part of richParts("media.lightbox.errors.decoderMissing")) {
+		notice.append(
+			part.kind === "tag" && part.name === "link"
+				? codecsGuideLink(part.text)
+				: part.text,
+		);
 	}
 	return notice;
 }

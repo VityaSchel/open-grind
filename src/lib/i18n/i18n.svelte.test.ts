@@ -1,72 +1,20 @@
-import { createRawSnippet, flushSync, mount, unmount } from "svelte";
+import { flushSync, mount, unmount } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { CatalogJson } from "./catalog-files";
+import { markup, slot } from "./fixtures/dom";
 import Probe from "./fixtures/Probe.svelte";
 import {
 	followLocale,
 	getLocale,
 	locales,
-	richParts,
 	setCountFormatter,
 	setLocale,
 	SOURCE_LOCALE,
 	sourceText,
 	t,
 } from "./index";
-import Rich from "./Rich.svelte";
 
-vi.mock("./catalog-files", async (importOriginal) => {
-	const { sourceFiles } =
-		await importOriginal<typeof import("./catalog-files")>();
-	const fixtureSources = import.meta.glob<CatalogJson>(
-		"./fixtures/en/*.json",
-		{ import: "default" },
-	);
-	const fixtureTranslations = import.meta.glob<CatalogJson>(
-		["./fixtures/*/*.json", "!./fixtures/en/*.json"],
-		{ import: "default" },
-	);
-	const loadedSources = await Promise.all(
-		Object.entries(fixtureSources).map(
-			async ([path, load]) => [path, await load()] as const,
-		),
-	);
-	const inline = (json: CatalogJson) => () => Promise.resolve(json);
-	return {
-		sourceFiles: { ...sourceFiles, ...Object.fromEntries(loadedSources) },
-		translationFiles: {
-			...fixtureTranslations,
-			"./locales/de/common.json": inline({
-				actions: { close: "Schließen" },
-				time: {
-					minutes_zero: "Keine Minuten",
-					minutes_one: "{{count}} Min.",
-					minutes_other: "{{ count }} Min.",
-				},
-			}),
-			"./locales/de/feedback.json": inline({
-				requestBlocked: {
-					cloudflare: {
-						knownIssue:
-							"Das ist ein <link>bekanntes Problem</link>.",
-					},
-				},
-			}),
-			"./locales/eo/feedback.json": inline({
-				requestBlocked: {
-					cloudflare: {
-						knownIssue:
-							"<valueOf>Tio</valueOf> estas <link>konata</link> <constructor>problemo</constructor>.",
-					},
-				},
-			}),
-			"./locales/ur/common.json": inline({}),
-			"./locales/ur-Aran/common.json": inline({}),
-			"./locales/ur-Arab/common.json": inline({}),
-		},
-	};
-});
+vi.mock("./catalog-files", () => import("./fixtures/mock-catalog-files"));
 
 type FixtureTranslate = (
 	key: string,
@@ -75,12 +23,9 @@ type FixtureTranslate = (
 
 const translateFixture = t as unknown as FixtureTranslate;
 
-const slot = (name: string) =>
-	document.querySelector<HTMLElement>(`[data-slot="${name}"]`)!;
 const text = (name: string) =>
 	slot(name).textContent.replace(/\s+/g, " ").trim();
-const html = (name: string) =>
-	slot(name).innerHTML.replaceAll("<!---->", "").trim();
+const html = (name: string) => markup(slot(name));
 
 afterEach(async () => {
 	setCountFormatter(({ count }) => String(count));
@@ -281,62 +226,6 @@ describe("sourceText", () => {
 		expect(sourceText("common.time.minutes", { count: 1234 })).toBe(
 			"1,234 mins",
 		);
-	});
-});
-
-describe("richParts", () => {
-	it("splits the tags of the selected template", async () => {
-		expect(
-			richParts("feedback.requestBlocked.cloudflare.knownIssue"),
-		).toEqual([
-			{ text: "This is a " },
-			{ tag: "link", text: "known issue" },
-			{ text: "." },
-		]);
-		await setLocale({ locale: "eo" });
-		expect(
-			richParts("feedback.requestBlocked.cloudflare.knownIssue"),
-		).toEqual([
-			{ tag: "valueOf", text: "Tio" },
-			{ text: " estas " },
-			{ tag: "link", text: "konata" },
-			{ text: " " },
-			{ tag: "constructor", text: "problemo" },
-			{ text: "." },
-		]);
-	});
-
-	it("renders translator tags without a snippet as text", async () => {
-		await setLocale({ locale: "eo" });
-		const probe = mount(Probe, {
-			target: document.body,
-			props: { count: 1 },
-		});
-		flushSync();
-		expect(html("known-issue")).toBe(
-			'Tio estas <a href="/issues/81">konata</a> problemo.',
-		);
-		await unmount(probe);
-	});
-
-	it("fills values inside and around the tags of the plural form", async () => {
-		const rich = mount(Rich as never, {
-			target: document.body,
-			props: {
-				key: "sample.chat.shared",
-				name: "Sam",
-				count: 1,
-				album: "Trips",
-				b: createRawSnippet((text: () => string) => ({
-					render: () => `<b>${text()}</b>`,
-				})),
-			},
-		});
-		flushSync();
-		expect(document.body.innerHTML.replaceAll("<!---->", "")).toBe(
-			"Sam shared <b>1 photo</b> in Trips",
-		);
-		await unmount(rich);
 	});
 });
 

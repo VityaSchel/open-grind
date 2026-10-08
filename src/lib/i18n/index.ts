@@ -6,7 +6,7 @@ import {
 	getLocale,
 	getSourceCatalog,
 } from "./locale-state.svelte";
-import { PLACEHOLDER, SOURCE_LOCALE, TAG_PAIR } from "./syntax";
+import { PLACEHOLDER, RICH_TOKEN, SOURCE_LOCALE } from "./syntax";
 import type {
 	KeyArgs,
 	MessageKey,
@@ -79,6 +79,22 @@ function lookup({
 		: lookup({ key, params: undefined, catalogs });
 }
 
+function formatValue({
+	name,
+	params,
+	locale,
+}: {
+	name: string;
+	params: Params | undefined;
+	locale: string;
+}): string | undefined {
+	if (params === undefined || !Object.hasOwn(params, name)) return undefined;
+	const value = params[name];
+	return name === "count" && typeof value === "number"
+		? formatCount({ count: value, locale })
+		: String(value);
+}
+
 function interpolate({
 	template,
 	params,
@@ -88,16 +104,11 @@ function interpolate({
 	params: Params | undefined;
 	locale: string;
 }): string {
-	return template.replace(PLACEHOLDER, (placeholder, inner: string) => {
-		const name = inner.trim();
-		if (params === undefined || !Object.hasOwn(params, name)) {
-			return placeholder;
-		}
-		const value = params[name];
-		return name === "count" && typeof value === "number"
-			? formatCount({ count: value, locale })
-			: String(value);
-	});
+	return template.replace(
+		PLACEHOLDER,
+		(placeholder, inner: string) =>
+			formatValue({ name: inner.trim(), params, locale }) ?? placeholder,
+	);
 }
 
 export function t<K extends MessageKey>(
@@ -126,21 +137,34 @@ export function richParts<K extends RichKey>(
 ): RichPart[] {
 	const [params] = args;
 	const locale = getLocale();
-	const text = (template: string) =>
-		interpolate({ template, params, locale });
 	const template = lookup({ key, params, catalogs: getCatalogs() });
 	const parts: RichPart[] = [];
-	let end = 0;
-	for (const match of template.matchAll(TAG_PAIR)) {
-		const [element, tag, inner = ""] = match;
-		if (match.index > end) {
-			parts.push({ text: text(template.slice(end, match.index)) });
+	const appendText = (text: string) => {
+		const last = parts.at(-1);
+		if (last?.kind === "text") {
+			parts[parts.length - 1] = { kind: "text", text: last.text + text };
+		} else if (text !== "") {
+			parts.push({ kind: "text", text });
 		}
-		parts.push({ tag, text: text(inner) });
-		end = match.index + element.length;
+	};
+	let end = 0;
+	for (const match of template.matchAll(RICH_TOKEN)) {
+		const [token, placeholder, tag, inner = ""] = match;
+		appendText(template.slice(end, match.index));
+		end = match.index + token.length;
+		if (tag !== undefined) {
+			const text = interpolate({ template: inner, params, locale });
+			parts.push({ kind: "tag", name: tag, text });
+			continue;
+		}
+		const name = (placeholder ?? "").trim();
+		const value = formatValue({ name, params, locale });
+		if (value === undefined) {
+			parts.push({ kind: "placeholder", name, text: token });
+		} else {
+			appendText(value);
+		}
 	}
-	if (end < template.length) {
-		parts.push({ text: text(template.slice(end)) });
-	}
+	appendText(template.slice(end));
 	return parts;
 }

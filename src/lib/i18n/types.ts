@@ -28,7 +28,7 @@ export type KeyArgs<P> = unknown extends P
 
 type NameProps = {
 	tag: Snippet<[text: string]>;
-	placeholder: string;
+	placeholder: string | Snippet;
 	text: string;
 	count: number;
 };
@@ -71,4 +71,10 @@ export type RichKeyWith<Names> = {
 		: never;
 }[RichKey];
 
-export type RichPart = { readonly tag?: string; readonly text: string };
+export type RichPart =
+	| { readonly kind: "text"; readonly text: string }
+	| {
+			readonly kind: "tag" | "placeholder";
+			readonly name: string;
+			readonly text: string;
+	  };

@@ -8,13 +8,15 @@
 		type RichProps,
 	} from "$lib/i18n";
 
+	type Render = Snippet<[text?: string]>;
+
 	let { key, ...names }: RichProps<K> = $props();
 
 	const entries = $derived(Object.entries<unknown>(names));
 	const snippets = $derived(
 		new Map(
 			entries.filter(
-				(entry): entry is [string, Snippet<[text: string]>] =>
+				(entry): entry is [string, Render] =>
 					typeof entry[1] === "function",
 			),
 		),
@@ -32,7 +34,8 @@
 </script>
 
 {#each parts as part, index (index)}
-	{@const render =
-		part.tag === undefined ? undefined : snippets.get(part.tag)}
-	{#if render}{@render render(part.text)}{:else}{part.text}{/if}
+	{@const render = part.kind === "text" ? undefined : snippets.get(part.name)}
+	{#if render === undefined}{part.text}{:else if part.kind === "tag"}{@render render(
+			part.text,
+		)}{:else}{@render render()}{/if}
 {/each}

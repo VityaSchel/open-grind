@@ -41,7 +41,7 @@ type Terms = RichPropsOf<{
 }>;
 
 expectTypeOf<Terms>().toEqualTypeOf<{
-	app: string;
+	app: string | Snippet;
 	link: TextSnippet;
 	who: string;
 	count: number;
@@ -79,6 +79,11 @@ expectTypeOf<{
 }>().not.toExtend<Tracked>();
 expectTypeOf<{
 	key: "auth.passwordReset.unimplemented";
+	issue: Snippet;
+	link: TextSnippet;
+}>().not.toExtend<Tracked>();
+expectTypeOf<{
+	key: "auth.passwordReset.unimplemented";
 	link: TextSnippet;
 }>().not.toExtend<Tracked>();
 
@@ -88,6 +93,14 @@ expectTypeOf<{
 	key: "auth.signIn.errors.inProgress";
 	provider: string;
 }>().toExtend<InProgress>();
+expectTypeOf<{
+	key: "auth.signIn.errors.inProgress";
+	provider: Snippet;
+}>().toExtend<InProgress>();
+expectTypeOf<{
+	key: "auth.signIn.errors.inProgress";
+	provider: number;
+}>().not.toExtend<InProgress>();
 expectTypeOf<{
 	key: "auth.signIn.errors.inProgress";
 	provider: TextSnippet;
