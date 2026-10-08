@@ -1,22 +1,15 @@
 use std::sync::OnceLock;
 
-use crate::error::AppError;
-
 mod entries;
 #[cfg(any(
 	target_os = "linux",
 	all(target_os = "macos", not(feature = "keychain"))
 ))]
 mod file_store;
+mod keyring;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
-
-const SERVICE: &str = "open-grind";
-
-pub(crate) fn entry(name: &str) -> Result<keyring_core::Entry, AppError> {
-	keyring_core::Entry::new(SERVICE, name)
-		.map_err(|e| AppError::Auth(e.to_string()))
-}
+pub(crate) use keyring::{entry, Entry};
 
 #[cfg(any(
 	target_os = "linux",

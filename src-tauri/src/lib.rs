@@ -371,7 +371,8 @@ pub fn run() {
                 tauri::async_runtime::spawn(async move {
                     SigningKeyStorage::restore(&client).await;
                     while key_rx.changed().await.is_ok() {
-                        match key_rx.borrow().clone() {
+                        let key = key_rx.borrow().clone();
+                        match key {
                             Some(k) => {
                                 if let Err(e) = SigningKeyStorage::save(&k) {
                                     tracing::error!("[signing] persist failed: {e}");
