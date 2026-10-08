@@ -3,6 +3,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { encodeGeohash } from "$lib/model/geohash";
 
 const {
@@ -105,9 +107,21 @@ describe("LocationChooser", () => {
 		setPreferencesMock.mockResolvedValue(undefined);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		cleanup();
 		vi.resetAllMocks();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("relabels Save and the GPS switch when the locale switches", async () => {
+		open();
+		const save = saveButton();
+		const gpsLabel = screen.getByText("Update automatically using GPS");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(save.textContent).toMatch(PSEUDO_MESSAGE);
+		expect(gpsLabel.textContent).toMatch(PSEUDO_MESSAGE);
 	});
 
 	it("asks for a fresh fix the moment it opens", () => {

@@ -3,6 +3,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { t } from "$lib/i18n";
 import { decodeGeohash, encodeGeohash } from "$lib/model/geohash";
 import { isMobilePlatform } from "$lib/platform/os";
 import { now } from "$lib/util/clock";
@@ -67,7 +68,7 @@ class AutoLocation {
 			console.error(outcome.error);
 			this.#reportOnce(() => {
 				showErrorToast({
-					label: "Failed to update your location automatically",
+					label: t("browse.location.errors.autoUpdateFailed"),
 					error: outcome.error,
 				});
 			});

@@ -29,6 +29,18 @@
 			}
 		}
 	},
+	"locationChange": {
+		"a11y": {
+			"change": "Change location",
+			"autoUpdating": "Location is updating automatically"
+		}
+	},
+	"locationEmpty": {
+		"title": "Choose location",
+		"description": "Pick a location on the map or select from the list to find nearby profiles.",
+		"useCurrentLocation": "Use current location",
+		"pickManually": "Pick manually"
+	},
 	"filters": {
 		"noMin": "No min",
 		"noMax": "No max",
@@ -44,6 +56,21 @@
 			"zoomIn": "Zoom in",
 			"zoomOut": "Zoom out",
 			"selectedLocation": "Selected location"
+		},
+		"autoUpdate": "Update automatically using GPS",
+		"searchPlaceholder": "Search places...",
+		"a11y": {
+			"title": "Choose location",
+			"description": "Drag the map to place the pin where you want to browse from.",
+			"locateMe": "Locate me"
+		}
+	},
+	"location": {
+		"permissionDenied": "Location permission denied. Change this in your system settings to use GPS.",
+		"openSettings": "Settings",
+		"errors": {
+			"locateFailed": "Failed to get current location",
+			"autoUpdateFailed": "Failed to update your location automatically"
 		}
 	}
 }

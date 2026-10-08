@@ -4,6 +4,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let {
@@ -40,7 +41,7 @@
 	<Input
 		id="search-place"
 		type="search"
-		placeholder="Search places..."
+		placeholder={t("browse.locationChooser.searchPlaceholder")}
 		bind:value={
 			() => query,
 			(value: string) => {

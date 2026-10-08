@@ -4,7 +4,8 @@
 		"cancel": "Cancel",
 		"continue": "Continue",
 		"retry": "Retry",
-		"copyError": "Copy error"
+		"copyError": "Copy error",
+		"save": "Save"
 	},
 	"time": {
 		"justNow": "Just now",
@@ -55,5 +56,10 @@
 	},
 	"filters": {
 		"noResults": "No Results"
+	},
+	"location": {
+		"errors": {
+			"saveFailed": "Failed to save location"
+		}
 	}
 }

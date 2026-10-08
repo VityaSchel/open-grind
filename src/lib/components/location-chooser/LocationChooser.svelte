@@ -10,6 +10,7 @@
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { Switch } from "$lib/components/ui/switch";
+	import { t } from "$lib/i18n";
 	import { autoLocation } from "$lib/location/auto-location";
 	import { reportLocationFailure } from "$lib/location/location-feedback";
 	import { locationRequest } from "$lib/location/location-request.svelte";
@@ -120,7 +121,9 @@
 	{/await}
 {/snippet}
 {#snippet saveButton()}
-	<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>Save</Button>
+	<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>
+		{t("common.actions.save")}
+	</Button>
 {/snippet}
 {#snippet trackGpsAutomaticallySwitcher(opts?: {
 	class: import("svelte/elements").ClassValue;
@@ -134,7 +137,9 @@
 				(newValue: boolean) => void setAutoUpdateLocation(newValue)
 			}
 		/>
-		<span class="truncate py-1">Update automatically using GPS</span>
+		<span class="truncate py-1">
+			{t("browse.locationChooser.autoUpdate")}
+		</span>
 	</Label>
 {/snippet}
 <ResponsiveDialog.Root bind:open>
@@ -145,9 +150,11 @@
 			drawerClass="mt-0! mb-(--safe-area-bottom) h-full!"
 		>
 			<ResponsiveDialog.Header class="sr-only">
-				<ResponsiveDialog.Title>Choose location</ResponsiveDialog.Title>
+				<ResponsiveDialog.Title>
+					{t("browse.locationChooser.a11y.title")}
+				</ResponsiveDialog.Title>
 				<ResponsiveDialog.Description>
-					Drag the map to place the pin where you want to browse from.
+					{t("browse.locationChooser.a11y.description")}
 				</ResponsiveDialog.Description>
 			</ResponsiveDialog.Header>
 			<div
