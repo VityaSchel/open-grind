@@ -2,6 +2,7 @@ import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
 import { recordProfileView } from "$lib/api/interest/views";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
+import { t } from "$lib/i18n";
 
 const visitedProfileIds = new Set<number>();
 
@@ -28,7 +29,7 @@ export async function recordProfileVisit({
 	} catch (error) {
 		console.error(error);
 		showErrorToast({
-			label: "Failed to record profile view preference or action",
+			label: t("profile.visit.errors.recordFailed"),
 			error,
 		});
 	}

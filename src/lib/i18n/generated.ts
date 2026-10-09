@@ -272,12 +272,15 @@ export interface Messages {
 	"profile.acceptNsfwPics.never": undefined;
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;
+	"profile.backButton.a11y.navigation": undefined;
 	"profile.bodyType.average": undefined;
 	"profile.bodyType.large": undefined;
 	"profile.bodyType.muscular": undefined;
 	"profile.bodyType.slim": undefined;
 	"profile.bodyType.stocky": undefined;
 	"profile.bodyType.toned": undefined;
+	"profile.bottomNav.a11y.navigation": undefined;
+	"profile.bottomNav.writeMessage": undefined;
 	"profile.ethnicity.asian": undefined;
 	"profile.ethnicity.black": undefined;
 	"profile.ethnicity.latino": undefined;
@@ -328,6 +331,7 @@ export interface Messages {
 	"profile.onlineStatus.onlineNow": undefined;
 	"profile.onlineStatus.onlineNowVisiting": undefined;
 	"profile.onlineStatus.visiting": undefined;
+	"profile.page.errors.refreshFailed": undefined;
 	"profile.relationshipStatus.committed": undefined;
 	"profile.relationshipStatus.dating": undefined;
 	"profile.relationshipStatus.engaged": undefined;
@@ -352,6 +356,12 @@ export interface Messages {
 	"profile.tap.a11y.sent.hot": undefined;
 	"profile.tap.a11y.sent.looking": undefined;
 	"profile.tap.errors.sendFailed": undefined;
+	"profile.topNav.a11y.navigation": undefined;
+	"profile.topNav.editProfile": undefined;
+	"profile.topNav.favorite.a11y.add": undefined;
+	"profile.topNav.favorite.a11y.remove": undefined;
+	"profile.topNav.favorite.errors.addFailed": undefined;
+	"profile.topNav.favorite.errors.removeFailed": undefined;
 	"profile.tribe.bear": undefined;
 	"profile.tribe.cleanCut": undefined;
 	"profile.tribe.daddy": undefined;
@@ -368,6 +378,7 @@ export interface Messages {
 	"profile.vaccine.covid19": undefined;
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
+	"profile.visit.errors.recordFailed": undefined;
 	"settings.account.unimplemented": { issueLink: string };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
 	"settings.app.pin.unimplemented": { issueLink: string };

@@ -13,6 +13,7 @@ import {
 	ProfileUnavailableError,
 	refreshProfile,
 } from "$lib/api/users/profiles";
+import { t } from "$lib/i18n";
 import type { TapType } from "$lib/model/interest/taps";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import type { Profile } from "$lib/model/users/profiles";
@@ -211,7 +212,7 @@ export class ProfileState {
 			if (refresh && !isUnviewableProfileError(error)) {
 				console.error(error);
 				showErrorToast({
-					label: "Failed to refresh profile",
+					label: t("profile.page.errors.refreshFailed"),
 					error,
 					onRetry: () => void this.refresh(),
 				});

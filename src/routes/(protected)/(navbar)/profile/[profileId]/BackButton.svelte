@@ -2,10 +2,11 @@
 	import { ArrowLeftIcon } from "phosphor-svelte";
 
 	import BackLink from "$lib/components/navigation/BackLink.svelte";
+	import { t } from "$lib/i18n";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 </script>
 
-<nav aria-label="Back">
+<nav aria-label={t("profile.backButton.a11y.navigation")}>
 	<BackLink
 		href="/"
 		{@attach topChrome}

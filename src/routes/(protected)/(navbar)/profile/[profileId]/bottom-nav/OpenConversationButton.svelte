@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from "$lib/components/ui/button/button.svelte";
+	import { t } from "$lib/i18n";
 
 	let {
 		profileId,
@@ -17,5 +18,7 @@
 	class="flex-1 justify-start bg-input/20!"
 	href="/chat/{conversationId}"
 >
-	<span class="font-normal text-muted-foreground">Write a message...</span>
+	<span class="font-normal text-muted-foreground"
+		>{t("profile.bottomNav.writeMessage")}</span
+	>
 </Button>

@@ -30,7 +30,9 @@ vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
 }));
 
 import { HiddenProfileError } from "$lib/api/users/profiles";
-import { flush, fullProfile } from "./profile-pager-test-helpers";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";
 
 function inertElements(section: HTMLElement): HTMLElement[] {
@@ -44,7 +46,10 @@ beforeEach(() => {
 	getProfileMock.mockResolvedValue(fullProfile({ profileId: PROFILE_ID }));
 });
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("ProfilePane roles", () => {
 	it("puts the active pane's error screen in its main landmark", async () => {
@@ -146,5 +151,43 @@ describe("ProfilePane roles", () => {
 		await flush();
 
 		expect(inertElements(section)).toEqual([section]);
+	});
+});
+
+describe("ProfilePane chrome wording", () => {
+	it("words a peer's landmarks and message link in the active locale", async () => {
+		renderPane({ active: true, row: gridRow() });
+		await flush();
+		const topNav = screen.getByRole("navigation", {
+			name: "Profile actions",
+		});
+		const bottomNav = screen.getByRole("navigation", {
+			name: "Chat and tap",
+		});
+		const writeMessage = within(bottomNav).getByRole("link");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(topNav.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(bottomNav.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(writeMessage.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("words our Edit profile link and the retry control in the active locale", async () => {
+		getProfileMock.mockRejectedValue(new Error("offline"));
+		renderPane({
+			active: true,
+			row: gridRow({ id: OUR_ID }),
+			profileId: OUR_ID,
+		});
+		await flush();
+		const editProfile = screen.getByRole("link", { name: "Edit profile" });
+		const retry = screen.getByRole("button", { name: "Retry" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(editProfile.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(editProfile.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		expect(retry.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
 	});
 });

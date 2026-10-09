@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "$lib/i18n";
 	import type { Profile } from "$lib/model/users/profiles";
 	import type { PendingViewabilityChange } from "../profile-state.svelte";
 	import EditProfileButton from "./EditProfileButton.svelte";
@@ -24,7 +25,7 @@
 
 {#if ourProfile || profile}
 	<nav
-		aria-label="Profile actions"
+		aria-label={t("profile.topNav.a11y.navigation")}
 		class="absolute right-2 flex -translate-y-1/2 flex-row-reverse items-center gap-1.5"
 	>
 		{#if ourProfile}

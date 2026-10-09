@@ -7,6 +7,7 @@
 		removeFavoriteUser,
 	} from "$lib/api/users/favorites";
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 
 	let {
 		profileId,
@@ -39,8 +40,8 @@
 			console.error(error);
 			showErrorToast({
 				label: isFavorite
-					? "Failed to remove from favorites"
-					: "Failed to add to favorites",
+					? t("profile.topNav.favorite.errors.removeFailed")
+					: t("profile.topNav.favorite.errors.addFailed"),
 				error,
 			});
 		} finally {
@@ -50,7 +51,9 @@
 	variant="secondary"
 	aria-checked={isFavorite}
 	role="switch"
-	aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+	aria-label={isFavorite
+		? t("profile.topNav.favorite.a11y.remove")
+		: t("profile.topNav.favorite.a11y.add")}
 	class="size-12"
 	disabled={submitting}
 >

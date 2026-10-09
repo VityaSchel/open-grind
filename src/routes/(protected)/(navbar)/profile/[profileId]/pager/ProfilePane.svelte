@@ -12,6 +12,7 @@
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { t } from "$lib/i18n";
 	import type { RenderedGridProfile } from "$lib/grid/grid";
 	import BlockedProfile from "../BlockedProfile.svelte";
 	import ProfileBottomNavBar from "../bottom-nav/ProfileBottomNavBar.svelte";
@@ -149,7 +150,7 @@
 							<Button
 								variant="secondary"
 								size="icon-lg"
-								aria-label="Retry"
+								aria-label={t("common.actions.retry")}
 								onclick={() => profileState.retry()}
 							>
 								<ArrowClockwiseIcon weight="bold" />

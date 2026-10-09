@@ -161,5 +161,42 @@
 		"a11y": {
 			"photo": "Profile photo {{position}} of {{total}}"
 		}
+	},
+	"backButton": {
+		"a11y": {
+			"navigation": "Back"
+		}
+	},
+	"bottomNav": {
+		"writeMessage": "Write a message...",
+		"a11y": {
+			"navigation": "Chat and tap"
+		}
+	},
+	"topNav": {
+		"a11y": {
+			"navigation": "Profile actions"
+		},
+		"editProfile": "Edit profile",
+		"favorite": {
+			"a11y": {
+				"add": "Add to favorites",
+				"remove": "Remove from favorites"
+			},
+			"errors": {
+				"addFailed": "Failed to add to favorites",
+				"removeFailed": "Failed to remove from favorites"
+			}
+		}
+	},
+	"page": {
+		"errors": {
+			"refreshFailed": "Failed to refresh profile"
+		}
+	},
+	"visit": {
+		"errors": {
+			"recordFailed": "Failed to record profile view preference or action"
+		}
 	}
 }
