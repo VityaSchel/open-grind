@@ -46,7 +46,7 @@ When the matching `translate*` flag is `"true"`, the field holds a key rather th
 - `CHAT_EXPIRING_IMAGE_NOTIFICATION_BODY` — Sent you an expiring image
 - `CHAT_ALBUM_NOTIFICATION_BODY` — Shared their album
 - `CHAT_ALBUM_CONTENT_REACTION_NOTIFICATION_BODY` — Liked your album content
-- `CHAT_MESSAGE_REACTION_NOTIFICATION_BODY` — <name> tapped your message, with the name as the first `bodyArgs` item
+- `CHAT_MESSAGE_REACTION_NOTIFICATION_BODY` — `<name>` tapped your message, with the name as the first `bodyArgs` item
 
 Other key families exist for A-List updates, Boost, album updates, Right Now, Discover, subscription offers, and online and activity alerts (`*_ONLINE_NOTIFICATION_*`, `UNREAD_CHATS_NOTIFICATION_*`, `VIEWED_PROFILE_NOTIFICATION_*`).
 
