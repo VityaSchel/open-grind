@@ -1,5 +1,9 @@
 export const SOURCE_LOCALE = "en";
 
+export const FALLBACK_LOCALES: ReadonlyMap<string, readonly string[]> = new Map(
+	[["es", ["es-419"]]],
+);
+
 const NAME_PATTERN = "[a-z][A-Za-z0-9]*";
 
 export const NAME = new RegExp(`^${NAME_PATTERN}$`);

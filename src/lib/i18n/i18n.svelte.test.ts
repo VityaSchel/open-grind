@@ -109,6 +109,8 @@ describe("setLocale", () => {
 			"en",
 			"en-XA",
 			"eo",
+			"es",
+			"es-419",
 			"fr",
 			"he",
 			"ja",
@@ -286,6 +288,19 @@ const FR_PT = {
 	],
 };
 
+const SPANISH_FORMS = [
+	"F2:other 0",
+	"F0:one 1",
+	"F2:other 2",
+	"F2:other 3",
+	"F2:other 5",
+	"F2:other 11",
+	"F2:other 21",
+	"F2:other 22",
+	"F2:other 101",
+	"F1:many 1000000",
+];
+
 const WEBLATE_SAVED: Record<string, { photos: string[]; unread: string[] }> = {
 	en: {
 		photos: [
@@ -365,6 +380,7 @@ const WEBLATE_SAVED: Record<string, { photos: string[]; unread: string[] }> = {
 			"F2:other 1000000",
 		],
 	},
+	"es-419": { photos: SPANISH_FORMS, unread: SPANISH_FORMS },
 	fr: FR_PT,
 	he: {
 		photos: [
@@ -449,4 +465,87 @@ describe("Weblate-saved files", () => {
 			expect(render("sample.chat.unread")).toEqual(unread);
 		},
 	);
+});
+
+const SPANISH_KEYS = [
+	"sample.inbox.empty",
+	"sample.inbox.archived",
+	"sample.settings.theme.light",
+	"sample.app.tagline",
+];
+
+const SPANISH_TEXTS = {
+	es: [
+		"Aún no tienes mensajes",
+		"Archivados",
+		"Claro",
+		"A free client — no ads, no tracking",
+	],
+	"es-419": [
+		"Todavía no hay mensajes",
+		"Archivados",
+		"Light",
+		"A free client — no ads, no tracking",
+	],
+	de: [
+		"No messages yet",
+		"Archived",
+		"Light",
+		"A free client — no ads, no tracking",
+	],
+};
+
+const renderSpanishKeys = () =>
+	SPANISH_KEYS.map((key) => translateFixture(key));
+
+describe("Spanish fallback", () => {
+	it("renders es, then es-419, then English key by key", async () => {
+		await setLocale({ locale: "es" });
+		expect(getLocale()).toBe("es");
+		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS.es);
+	});
+
+	it("falls back from es-419 straight to English", async () => {
+		await setLocale({ locale: "es-419" });
+		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS["es-419"]);
+	});
+
+	it("rebuilds the chain on every switch", async () => {
+		await setLocale({ locale: "es" });
+		await setLocale({ locale: "de" });
+		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS.de);
+		await setLocale({ locale: "es-419" });
+		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS["es-419"]);
+		await setLocale({ locale: "es" });
+		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS.es);
+	});
+
+	it("falls back to es-419 plural forms key by key", async () => {
+		await setLocale({ locale: "es" });
+		const render = (key: string) =>
+			COUNTS.map((count) => translateFixture(key, { count }));
+		expect(render("sample.photos")).toEqual([
+			"0 fotos",
+			"Una foto",
+			"2 fotos",
+			"3 fotos",
+			"5 fotos",
+			"11 fotos",
+			"21 fotos",
+			"22 fotos",
+			"101 fotos",
+			"1000000 de fotos",
+		]);
+		expect(render("sample.chat.unread")).toEqual(SPANISH_FORMS);
+	});
+
+	it("formats counts in es-419 text for es", async () => {
+		setCountFormatter(({ count, locale }) =>
+			new Intl.NumberFormat(locale).format(count),
+		);
+		await setLocale({ locale: "es" });
+		expect(
+			translateFixture("sample.chat.unread", { count: 1_000_000 }),
+		).toBe("F1:many 1.000.000");
+	});
 });

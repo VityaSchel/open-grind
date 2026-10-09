@@ -512,11 +512,13 @@ describe("Weblate-saved files", () => {
 	const fixtures = readLocaleFiles(FIXTURES);
 	const source = fixtures.get(SOURCE_LOCALE) ?? [];
 
-	it("covers the plural shapes of ten languages", () => {
+	it("covers the plural shapes of ten languages and Spanish", () => {
 		expect([...fixtures.keys()]).toEqual([
 			"ar",
 			"cs",
 			"en",
+			"es-419",
+			"es",
 			"fr",
 			"he",
 			"ja",
@@ -598,4 +600,39 @@ describe("Weblate-saved files", () => {
 			});
 		},
 	);
+
+	it("checks es and es-419 each against English alone", () => {
+		expect(
+			["es", "es-419"].map((locale) =>
+				checkTranslation({
+					locale,
+					files: fixtures.get(locale) ?? [],
+					source,
+				}),
+			),
+		).toEqual([
+			{ errors: [], warnings: [], translated: 3, total: 12 },
+			{ errors: [], warnings: [], translated: 4, total: 12 },
+		]);
+	});
+
+	it("names es-419 before English for gaps in es", () => {
+		expect(
+			checkTranslation({
+				locale: "es",
+				files: [
+					{
+						namespace: "sample",
+						text: JSON.stringify({
+							photos_one: "Una foto",
+							photos_other: "{{count}} fotos",
+						}),
+					},
+				],
+				source,
+			}).warnings,
+		).toEqual([
+			"es/sample.photos: has no text for _many, so those counts show in es-419, then English",
+		]);
+	});
 });

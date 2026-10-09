@@ -1,6 +1,6 @@
 # i18n
 
-Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. Edit `en` only. Weblate writes the other languages, and a missing translation falls back to English.
+Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. Edit `en` only. Weblate writes the other languages, and a missing translation falls back to English. Spain Spanish (`es`) first falls back to Latin American Spanish (`es-419`).
 
 ## Adding a string
 

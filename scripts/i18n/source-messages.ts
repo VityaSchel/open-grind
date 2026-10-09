@@ -1,4 +1,9 @@
-import { NAME, PLURAL_KEY, SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
+import {
+	FALLBACK_LOCALES,
+	NAME,
+	PLURAL_KEY,
+	SOURCE_LOCALE,
+} from "../../src/lib/i18n/syntax";
 import { type Inspection, inspect } from "./message-text";
 import { type PluralForms, weblatePluralForms } from "./weblate-plurals";
 
@@ -18,6 +23,9 @@ type Catalog = {
 };
 
 const baseOf = (key: string) => PLURAL_KEY.exec(key)?.[1] ?? key;
+
+const shownIn = (locale: string) =>
+	[...(FALLBACK_LOCALES.get(locale) ?? []), "English"].join(", then ");
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -370,7 +378,9 @@ function reportDrift({
 		);
 	} else if (text === "") {
 		if (!partial.has(message.key)) {
-			into.warnings.push(`${key}: is empty, so it shows in English`);
+			into.warnings.push(
+				`${key}: is empty, so it shows in ${shownIn(locale)}`,
+			);
 		}
 	} else {
 		const expected = expectedTokens({ index, plurals, form });
@@ -473,7 +483,7 @@ export function checkTranslation({
 	const { translated, partial } = completeness({ index, texts, plurals });
 	for (const [base, missing] of partial) {
 		findings.warnings.push(
-			`${base}: has no text for ${missing.join(", ")}, so those counts show in English`,
+			`${base}: has no text for ${missing.join(", ")}, so those counts show in ${shownIn(locale)}`,
 		);
 	}
 	const context = { locale, index, plurals, partial };

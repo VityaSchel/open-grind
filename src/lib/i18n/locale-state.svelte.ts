@@ -6,7 +6,7 @@ import {
 	translationFiles,
 } from "./catalog-files";
 import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
-import { parseLocalePath, SOURCE_LOCALE } from "./syntax";
+import { FALLBACK_LOCALES, parseLocalePath, SOURCE_LOCALE } from "./syntax";
 
 export type Catalog = {
 	readonly locale: string;
@@ -109,6 +109,11 @@ async function loadCatalog(locale: string): Promise<Catalog> {
 	return toCatalog({ locale, files: loaded });
 }
 
+function loadTranslations(locale: string): Promise<Catalog[]> {
+	const chain = [locale, ...(FALLBACK_LOCALES.get(locale) ?? [])];
+	return Promise.all(chain.map((chainLocale) => loadCatalog(chainLocale)));
+}
+
 function textDirection(locale: string): "ltr" | "rtl" {
 	const { script = "" } = new Intl.Locale(locale).maximize();
 	return RTL_SCRIPTS.has(script) ? "rtl" : "ltr";
@@ -121,7 +126,7 @@ const sourceCatalog = toCatalog({
 
 class LocaleState {
 	source: Catalog = $state.raw(sourceCatalog);
-	translation: Catalog | undefined = $state.raw();
+	translations: readonly Catalog[] = $state.raw([]);
 	countFormatter: CountFormatter = ({ count }) => String(count);
 	requested = SOURCE_LOCALE;
 }
@@ -146,7 +151,7 @@ export const locales: readonly string[] = [
 	.sort();
 
 export function getLocale(): string {
-	return state.translation?.locale ?? SOURCE_LOCALE;
+	return state.translations[0]?.locale ?? SOURCE_LOCALE;
 }
 
 export function followLocale(apply: () => void): () => void {
@@ -163,8 +168,7 @@ export function getTextDirection(): "ltr" | "rtl" {
 }
 
 export function getCatalogs(): readonly Catalog[] {
-	const { translation, source } = state;
-	return translation === undefined ? [source] : [translation, source];
+	return [...state.translations, state.source];
 }
 
 export function getSourceCatalog(): Catalog {
@@ -190,10 +194,10 @@ export async function setLocale({ locale }: { locale: string }): Promise<void> {
 		throw new RangeError(`No translations for locale "${locale}"`);
 	}
 	state.requested = locale;
-	const translation =
-		locale === SOURCE_LOCALE ? undefined : await loadCatalog(locale);
+	const translations =
+		locale === SOURCE_LOCALE ? [] : await loadTranslations(locale);
 	if (state.requested !== locale) return;
-	state.translation = translation;
+	state.translations = translations;
 	document.documentElement.lang = locale;
 	document.documentElement.dir = textDirection(locale);
 }

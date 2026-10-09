@@ -1,0 +1,13 @@
+{
+	"photos_one": "Una foto",
+	"photos_many": "{{count}} de fotos",
+	"photos_other": "{{count}} fotos",
+	"inbox": {
+		"empty": "Aún no tienes mensajes"
+	},
+	"settings": {
+		"theme": {
+			"light": "Claro"
+		}
+	}
+}
