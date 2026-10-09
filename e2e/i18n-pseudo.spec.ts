@@ -17,6 +17,12 @@ const MISSING_ROUTE = "/no-such-page";
 const AUTH_LAYOUT_LOAD = /\/routes\/auth\/\+layout\.ts(?:\?|$)/;
 const SIGNED_OUT_LOAD = "export const load = () => {};";
 const BRAND_TITLE = "Open Grind";
+const DEMO_PROFILE = "/profile/100001";
+const PROFILE_NAVIGATIONS = 4;
+const REPORT_MENU_ITEM = 1;
+const VIEWED_PROFILE_CARD = '.photo-grid > a[href^="/profile/"]';
+const VIEWED_PREVIEW_CARD = '.photo-grid > div:not([data-slot="skeleton"])';
+const RECEIVED_TAP = '[data-slot="taps-scroller"] a[href^="/profile/"]';
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -133,6 +139,7 @@ interface ChromeRoute {
 	path: string;
 	roles: readonly ("main" | "navigation")[];
 	landmarks: number;
+	shows?: readonly string[];
 	brandTitle?: string;
 }
 
@@ -146,14 +153,30 @@ test.describe("converted navigation chrome under en-XA", () => {
 		},
 		{ path: "/right-now", roles: ["main", "navigation"], landmarks: 2 },
 		{ path: "/settings/app", roles: ["navigation"], landmarks: 2 },
-		{ path: "/interest/views", roles: ["navigation"], landmarks: 2 },
+		{
+			path: "/interest/views",
+			roles: ["main", "navigation"],
+			landmarks: 3,
+			shows: [VIEWED_PROFILE_CARD, VIEWED_PREVIEW_CARD],
+		},
+		{
+			path: "/interest/taps",
+			roles: ["main", "navigation"],
+			landmarks: 3,
+			shows: [RECEIVED_TAP],
+		},
+		{
+			path: DEMO_PROFILE,
+			roles: ["main", "navigation"],
+			landmarks: PROFILE_NAVIGATIONS + 1,
+		},
 	];
 
 	test.beforeEach(async ({ page }) => {
 		await installTauriShim(page);
 	});
 
-	for (const { path, roles, landmarks, brandTitle } of routes) {
+	for (const { path, roles, landmarks, shows = [], brandTitle } of routes) {
 		test(`${path} renders its ${roles.join(" and ")} landmarks only pseudo-translated`, async ({
 			page,
 		}) => {
@@ -164,6 +187,13 @@ test.describe("converted navigation chrome under en-XA", () => {
 			await expect(roots).toHaveCount(landmarks, {
 				timeout: FIRST_ROUTE_COMPILE_MS,
 			});
+			for (const selector of shows) {
+				await page
+					.getByRole("main")
+					.locator(selector)
+					.first()
+					.waitFor({ timeout: 60_000 });
+			}
 			await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
 			const { messages, leaks } = await readPseudoText(roots, {
 				brandTitle,
@@ -199,6 +229,47 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 		await page.keyboard.press("Escape");
 		await expect(drawer).toBeHidden();
 	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+test("the profile note editor, actions menu and report sheet render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto(`${DEMO_PROFILE}?locale=en-XA`);
+	await expect(page.getByRole("navigation")).toHaveCount(
+		PROFILE_NAVIGATIONS,
+		{ timeout: FIRST_ROUTE_COMPILE_MS },
+	);
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const pane = page.getByRole("main");
+	const dialog = page.getByRole("dialog");
+
+	await pane.locator(':scope > [data-slot="button"]').click();
+	await dialog.waitFor();
+	const scans = [await readPseudoText(dialog)];
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+
+	await pane.locator('[aria-haspopup="menu"]').click();
+	const menu = page.getByRole("menu");
+	await menu.waitFor();
+	scans.push(await readPseudoText(menu));
+	await menu.getByRole("menuitem").nth(REPORT_MENU_ITEM).click();
+	await dialog
+		.locator('[data-slot="report-reasons"] [data-value="IMPERSONATION"]')
+		.click();
+	await dialog.locator('[data-slot="report-locations"]').waitFor();
+	scans.push(await readPseudoText(dialog));
+	await dialog
+		.locator('[data-slot="drawer-footer"] [data-slot="button"]')
+		.click();
+	await dialog.locator('[data-slot="report-submitted"]').waitFor();
+	scans.push(await readPseudoText(dialog));
+
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
