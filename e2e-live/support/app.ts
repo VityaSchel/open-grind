@@ -20,7 +20,7 @@ export class AppRequestError extends Error {
 	override name = "AppRequestError";
 }
 
-async function invoke({
+export async function invoke({
 	page,
 	command,
 	args,

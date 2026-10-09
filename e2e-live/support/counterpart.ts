@@ -91,6 +91,13 @@ export const counterpart = {
 			.parse(await runCounterpart(["probe"]));
 	},
 
+	async peerDistance() {
+		const { distance } = z
+			.object({ status: z.literal(200), distance: z.number() })
+			.parse(await runCounterpart(["peer-distance", ...pairFlags]));
+		return distance;
+	},
+
 	async sendText(text: string) {
 		assertCounterpartWrite();
 		return z

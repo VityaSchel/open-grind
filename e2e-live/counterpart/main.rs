@@ -129,6 +129,7 @@ async fn main() -> ExitCode {
 async fn run(args: &Args) -> Result<Value, Failure> {
 	match args.command.as_str() {
 		"probe" => probe().await,
+		"peer-distance" => peer_distance(args).await,
 		"send-text" => send_text(args).await,
 		"find-message" => find_message(args).await,
 		"delete-conversation" => delete_conversation(args).await,
@@ -182,6 +183,23 @@ async fn probe() -> Result<Value, Failure> {
 		"ok": true,
 		"status": response.status,
 		"profileId": body["profiles"][0]["profileId"],
+	}))
+}
+
+async fn peer_distance(args: &Args) -> Result<Value, Failure> {
+	let pair = live_pair(args)?;
+	let client = signed_in(pair.actor).await?;
+	let response = client
+		.request(Method::GET, &format!("/v7/profiles/{}", pair.peer))
+		.send()
+		.await?;
+	let body = json_body(&response)?;
+	let profile = &body["profiles"][0];
+	Ok(json!({
+		"ok": true,
+		"status": response.status,
+		"profileId": profile["profileId"],
+		"distance": profile["distance"],
 	}))
 }
 
