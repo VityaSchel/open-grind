@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.18.0.184315 (2026-09-29)"
+		"version": "26.20.0.187695 (2026-10-09)"
 	},
 	"servers": [
 		{
@@ -204,6 +204,9 @@
 			"x-wip": true
 		},
 		{
+			"name": "interest/matches"
+		},
+		{
 			"name": "interest/taps",
 			"description": "Cookie taps are essentially bubbles \"hi\" but your client can choose to render them as 🍪. There is no separate cookie tap type."
 		},
@@ -262,6 +265,10 @@
 		},
 		{
 			"name": "users/profiles"
+		},
+		{
+			"name": "users/stories",
+			"x-wip": true
 		},
 		{
 			"name": "websocket"
@@ -2728,6 +2735,8 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreProductsStore",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get store shop products](/grindr-api/commerce/storeapirest#get-store-shop-products-wip).",
 				"responses": {
 					"200": {
 						"content": {
@@ -2832,6 +2841,8 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getProductsByOneStopShopCategory",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products-wip).",
 				"parameters": [
 					{
 						"name": "oneStopShopCategory",
@@ -2940,6 +2951,32 @@
 								"schema": {
 									"$ref": "#/components/schemas/UndocumentedObject",
 									"x-original-type": "StoreInProfileResponse"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
+		"/v1/shop/googleplay/products/store": {
+			"get": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "getStoreShopProducts",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/UndocumentedObject"
+										}
+									],
+									"x-original-type": "ShopCatalogDto"
 								}
 							}
 						},
@@ -5346,6 +5383,318 @@
 				"x-wip": true
 			}
 		},
+		"/v1/matches": {
+			"get": {
+				"tags": [
+					"interest/matches"
+				],
+				"operationId": "getMatches",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, maximum number of matches"
+					},
+					{
+						"name": "withProfileDetail",
+						"in": "query",
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"name": "cursor",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, appears to take `nextCursor` from the previous response, optional"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"matches": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/Match"
+											}
+										},
+										"nextCursor": {
+											"type": "string",
+											"nullable": true
+										},
+										"total": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get matches"
+			}
+		},
+		"/v1/stories": {
+			"post": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "createStory",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StoryRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Create story",
+				"x-wip": true
+			}
+		},
+		"/v1/stories/inbox": {
+			"get": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "getStoriesInbox",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "pageNumber",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, starts at `1`"
+					},
+					{
+						"name": "pageSize",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, number of posters per page"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"posters": {
+											"type": "array",
+											"nullable": true,
+											"items": {
+												"$ref": "#/components/schemas/StoryPoster"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"404": {
+						"description": "Returned with an empty body; appears to mean Stories are not enabled for the account (no `stories-v1` [assignment](/grindr-api/analytics/assignments))."
+					}
+				},
+				"summary": "Get stories inbox",
+				"description": "Profiles with active stories.",
+				"x-wip": true
+			}
+		},
+		"/v1/stories/mine": {
+			"get": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "getMyStories",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"stories": {
+											"type": "array",
+											"nullable": true,
+											"items": {
+												"$ref": "#/components/schemas/MyStory"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"404": {
+						"description": "Returned with an empty body; appears to mean Stories are not enabled for the account (no `stories-v1` [assignment](/grindr-api/analytics/assignments))."
+					}
+				},
+				"summary": "Get my stories",
+				"x-wip": true
+			}
+		},
+		"/v1/stories/{storyId}": {
+			"get": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "getStory",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/StoryIdPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get story",
+				"x-wip": true
+			},
+			"delete": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "deleteStory",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/StoryIdPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Delete story",
+				"x-wip": true
+			}
+		},
+		"/v1/stories/{storyId}/views": {
+			"post": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "recordStoryView",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/StoryIdPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"summary": "Record story view",
+				"x-wip": true
+			}
+		},
+		"/v1/stories/profiles/{profileId}": {
+			"get": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "getProfileStories",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/ProfileIdIntegerPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UndocumentedObject"
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get profile stories",
+				"x-wip": true
+			}
+		},
 		"/v2/taps/received": {
 			"get": {
 				"tags": [
@@ -7099,6 +7448,53 @@
 					}
 				},
 				"summary": "Get conversations by IDs"
+			}
+		},
+		"/v2/inbox/conversation": {
+			"post": {
+				"tags": [
+					"messaging/conversations"
+				],
+				"operationId": "getConversationsByIdV2",
+				"parameters": [
+					{
+						"name": "includeReactionUnreads",
+						"in": "query",
+						"schema": {
+							"type": "boolean"
+						},
+						"description": "boolean, appears to count unread reactions as unread activity"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "array",
+								"items": {
+									"$ref": "#/components/schemas/ConversationId"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/ConversationData"
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get conversations by IDs (v2)"
 			}
 		},
 		"/v4/chat/conversation/{conversationId}": {
@@ -10587,6 +10983,8 @@
 					"commerce/storeapirest"
 				],
 				"operationId": "getStoreProductsProfileDrawer",
+				"deprecated": true,
+				"description": "Removed in the official Android client v26.20.0. Superseded by [Get profile drawer shop products](/grindr-api/commerce/storeapirest#get-profile-drawer-shop-products-wip).",
 				"responses": {
 					"200": {
 						"content": {
@@ -10954,6 +11352,41 @@
 					}
 				},
 				"x-wip": true
+			}
+		},
+		"/v1/store-and-profile/facepile": {
+			"get": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "getStoreAndProfileFacepile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get store-and-profile facepile",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"imageUrls": {
+											"type": "array",
+											"description": "array of strings, profile image URLs, may be empty",
+											"items": {
+												"type": "string"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				}
 			}
 		},
 		"/v2/media/upload": {
@@ -12464,6 +12897,15 @@
 					"format": "int64"
 				}
 			},
+			"StoryIdPath": {
+				"name": "storyId",
+				"in": "path",
+				"required": true,
+				"schema": {
+					"type": "integer",
+					"format": "int64"
+				}
+			},
 			"ProfileIdStringPath": {
 				"name": "profileId",
 				"in": "path",
@@ -12832,6 +13274,388 @@
 						"type": "boolean",
 						"nullable": true,
 						"description": "Notify on received taps."
+					},
+					"tappedPushNotification": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "Notify when a profile you tapped comes online."
+					},
+					"mediaRecipientPushNotification": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "Notify when a profile you sent photos to comes online."
+					},
+					"recommendedPushNotification": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "Notify when a recommended profile nearby is online."
+					},
+					"unreadChatsPushNotification": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "Remind about unread chats."
+					},
+					"viewedProfilePushNotification": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "Notify when the profile gets views."
+					}
+				}
+			},
+			"Match": {
+				"type": "object",
+				"properties": {
+					"matchId": {
+						"type": "string"
+					},
+					"source": {
+						"type": "string",
+						"description": "`\"MUTUAL_TAP\"`, `\"MUTUAL_VIEWS\"`, `\"MUTUAL_VIEW\"`, `\"TAP_YOUR_TYPE\"` or `\"VIEW_YOUR_TYPE\"`"
+					},
+					"lastInteraction": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"isViewable": {
+						"type": "boolean",
+						"description": "boolean, appears to be `false` when the profile is locked behind a subscription"
+					},
+					"profile": {
+						"type": "object",
+						"properties": {
+							"profileId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"displayName": {
+								"type": "string",
+								"nullable": true
+							},
+							"profileImageMediaHash": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/MediaHash"
+									}
+								],
+								"nullable": true
+							},
+							"onlineUntil": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/TimestampMs"
+									}
+								],
+								"nullable": true
+							},
+							"position": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/SexualPositionId"
+									}
+								],
+								"nullable": true
+							},
+							"height": {
+								"type": "number",
+								"nullable": true,
+								"description": "number, appears to be in centimeters"
+							},
+							"weight": {
+								"type": "number",
+								"nullable": true,
+								"description": "number, appears to be in grams"
+							},
+							"distance": {
+								"type": "number",
+								"nullable": true,
+								"description": "number, appears to be in meters"
+							},
+							"age": {
+								"type": "integer",
+								"nullable": true
+							},
+							"visitingStatus": {
+								"type": "boolean",
+								"nullable": true
+							},
+							"tapped": {
+								"type": "boolean",
+								"nullable": true
+							}
+						}
+					}
+				}
+			},
+			"StoryMedia": {
+				"type": "object",
+				"properties": {
+					"mediaId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"thumbnailUrl": {
+						"type": "string"
+					},
+					"fullImageUrl": {
+						"type": "string"
+					},
+					"state": {
+						"type": "string",
+						"nullable": true,
+						"description": "`\"PENDING\"`, `\"APPROVED\"`, `\"REJECTED\"`, `\"DELETED\"` or `null`"
+					},
+					"reason": {
+						"type": "string",
+						"nullable": true
+					},
+					"isRejectAutomated": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"shouldBlur": {
+						"type": "boolean"
+					},
+					"isNsfw": {
+						"type": "boolean"
+					}
+				}
+			},
+			"Story": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true
+					},
+					"mediaHash": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/MediaHash"
+							}
+						],
+						"nullable": true
+					},
+					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"distance": {
+						"type": "integer",
+						"nullable": true,
+						"description": "integer, appears to be in meters"
+					},
+					"media": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/StoryMedia"
+							}
+						],
+						"nullable": true
+					},
+					"caption": {
+						"type": "object",
+						"nullable": true,
+						"properties": {
+							"text": {
+								"type": "string",
+								"nullable": true
+							}
+						}
+					},
+					"posted": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"expiration": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"viewed": {
+						"type": "boolean"
+					}
+				}
+			},
+			"StoryPoster": {
+				"type": "object",
+				"properties": {
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true
+					},
+					"mediaHash": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/MediaHash"
+							}
+						],
+						"nullable": true
+					},
+					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"hasUnviewed": {
+						"type": "boolean"
+					},
+					"isFavorite": {
+						"type": "boolean"
+					},
+					"rightNow": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowStatus"
+							}
+						],
+						"nullable": true
+					},
+					"stories": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/Story"
+						}
+					}
+				}
+			},
+			"MyStory": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"status": {
+						"type": "string",
+						"nullable": true,
+						"description": "`\"PENDING\"`, `\"ACTIVE\"`, `\"REJECTED\"`, `\"EXPIRED\"` or `null`"
+					},
+					"media": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/StoryMedia"
+							}
+						],
+						"nullable": true
+					},
+					"caption": {
+						"type": "object",
+						"nullable": true,
+						"properties": {
+							"text": {
+								"type": "string",
+								"nullable": true
+							},
+							"textStatus": {
+								"type": "string",
+								"nullable": true,
+								"description": "`\"AWAITING_MODERATION\"`, `\"MODERATION_APPROVED\"`, `\"MODERATION_FAILED\"` or `null`"
+							},
+							"rejectReasons": {
+								"type": "array",
+								"nullable": true,
+								"description": "array of strings: `\"BULLYING\"`, `\"SELF_HARM\"`, `\"DRUG_PATTERNS\"`, `\"HATE_SPEECH\"`, `\"SOL_SEX\"`, `\"SPAM_DISRUPT\"`, `\"UNDERAGE\"`",
+								"items": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"posted": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"expiration": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					}
+				}
+			},
+			"StoryRequest": {
+				"type": "object",
+				"required": [
+					"mediaId",
+					"audience"
+				],
+				"properties": {
+					"mediaId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"caption": {
+						"type": "string",
+						"description": "string, optional"
+					},
+					"audience": {
+						"type": "object",
+						"required": [
+							"options"
+						],
+						"properties": {
+							"options": {
+								"type": "array",
+								"description": "array of strings, e.g. `[\"EVERYONE\"]`",
+								"items": {
+									"type": "string"
+								}
+							},
+							"myType": {
+								"type": "object",
+								"description": "object, optional",
+								"properties": {
+									"ageMin": {
+										"type": "integer",
+										"description": "integer, optional"
+									},
+									"ageMax": {
+										"type": "integer",
+										"description": "integer, optional"
+									},
+									"positions": {
+										"type": "array",
+										"description": "array of [sexual position IDs](/grindr-api/users/profiles#sexual-position-id), optional",
+										"items": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			},
@@ -13178,6 +14002,7 @@
 					},
 					"media": {
 						"type": "array",
+						"description": "array of objects, optional; an empty array appears to remove the photo",
 						"items": {
 							"type": "object",
 							"required": [
@@ -16702,6 +17527,17 @@
 						"type": "integer",
 						"description": "[Profile ID](/grindr-api/users/profiles#profilemin)"
 					},
+					"reactorId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true,
+						"description": "long integer, appears to be the [Profile ID](/grindr-api/users/profiles#profilemin) of the profile that last reacted in the conversation, or `null`"
+					},
+					"unsent": {
+						"type": "boolean",
+						"nullable": true,
+						"description": "boolean, appears to be `true` when the previewed message was unsent, may be absent"
+					},
 					"type": {
 						"$ref": "#/components/schemas/MessageType"
 					},
@@ -17013,6 +17849,10 @@
 							"type": "integer"
 						},
 						"description": "array of integers, [sexual position IDs](/grindr-api/users/profiles#sexual-position-id)"
+					},
+					"includeReactionUnreads": {
+						"type": "boolean",
+						"description": "boolean, appears to count unread reactions as unread activity, optional"
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
@@ -18683,7 +19523,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1), [edge_carousel_v1](/grindr-api/browse/grid#edge-carousel-v1), [for_you_now_v1](/grindr-api/browse/grid#for-you-now-v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -19266,6 +20106,143 @@
 				"description": "Empty.",
 				"x-render-on-tag": "browse/grid",
 				"x-display-name": "day_pass_unlimited_upsell_v1"
+			},
+			"EdgeCarouselV1": {
+				"type": "object",
+				"description": "Edge Recommends carousel of profiles.",
+				"properties": {
+					"items": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"profileId": {
+									"type": "integer",
+									"format": "int64"
+								},
+								"source": {
+									"type": "string",
+									"nullable": true
+								},
+								"tag": {
+									"type": "string",
+									"nullable": true
+								},
+								"onlineUntil": {
+									"type": "integer",
+									"format": "int64",
+									"nullable": true
+								},
+								"displayName": {
+									"type": "string",
+									"nullable": true
+								},
+								"primaryImageUrl": {
+									"type": "string",
+									"nullable": true
+								},
+								"favorite": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"chatted": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"rightNow": {
+									"type": "string",
+									"nullable": true
+								},
+								"unreadCount": {
+									"type": "integer",
+									"nullable": true
+								},
+								"viewed": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"roaming": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"isVisiting": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"isPopular": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"distanceMeters": {
+									"type": "number",
+									"nullable": true
+								},
+								"isRewarded": {
+									"type": "boolean",
+									"nullable": true
+								},
+								"fuzzedLat": {
+									"type": "number",
+									"nullable": true
+								},
+								"fuzzedLon": {
+									"type": "number",
+									"nullable": true
+								},
+								"rightNowPin": {
+									"type": "object",
+									"nullable": true,
+									"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
+								}
+							},
+							"required": [
+								"profileId"
+							]
+						}
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "edge_carousel_v1",
+				"required": [
+					"items"
+				]
+			},
+			"ForYouNowV1": {
+				"type": "object",
+				"properties": {
+					"remainingUnlocks": {
+						"type": "integer",
+						"nullable": true
+					},
+					"recommendationUuid": {
+						"type": "string"
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"locked": {
+									"type": "boolean"
+								},
+								"profileItem": {
+									"type": "object",
+									"description": "object, [full_profile_v1](/grindr-api/browse/grid#full-profile-v1) data"
+								}
+							},
+							"required": [
+								"locked",
+								"profileItem"
+							]
+						}
+					}
+				},
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "for_you_now_v1",
+				"required": [
+					"recommendationUuid",
+					"items"
+				]
 			},
 			"FavoritesHeaderNoFreeResultsV1": {
 				"type": "object",
@@ -20059,7 +21036,8 @@
 					"ADS_FREE_SESSION",
 					"READ_RECEIPTS",
 					"CASCADE_PROFILES_UNLOCK",
-					"TAPS_RECEIVED_UNLOCK"
+					"TAPS_RECEIVED_UNLOCK",
+					"INCOGNITO_SESSION"
 				],
 				"description": "Feature that can be temporarily unlocked by watching a rewarded ad.",
 				"x-enum-labels": {
@@ -20067,7 +21045,8 @@
 					"ADS_FREE_SESSION": "Temporarily remove ads",
 					"READ_RECEIPTS": "Temporarily enable message read receipts",
 					"CASCADE_PROFILES_UNLOCK": "Unlock additional cascade (grid) profiles",
-					"TAPS_RECEIVED_UNLOCK": "Reveal taps you have received"
+					"TAPS_RECEIVED_UNLOCK": "Reveal taps you have received",
+					"INCOGNITO_SESSION": "Temporarily enable Incognito"
 				},
 				"x-render-on-tag": "commerce/rewarded-ads",
 				"x-display-name": "Rewarded Ad Type"
@@ -21190,7 +22169,8 @@
 			"group": "users",
 			"items": [
 				"users/profiles",
-				"users/favorites"
+				"users/favorites",
+				"users/stories"
 			]
 		},
 		{
@@ -21215,6 +22195,7 @@
 			"items": [
 				"interest/views",
 				"interest/taps",
+				"interest/matches",
 				"interest/alist"
 			]
 		},
