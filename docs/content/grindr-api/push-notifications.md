@@ -46,8 +46,9 @@ When the matching `translate*` flag is `"true"`, the field holds a key rather th
 - `CHAT_EXPIRING_IMAGE_NOTIFICATION_BODY` — Sent you an expiring image
 - `CHAT_ALBUM_NOTIFICATION_BODY` — Shared their album
 - `CHAT_ALBUM_CONTENT_REACTION_NOTIFICATION_BODY` — Liked your album content
+- `CHAT_MESSAGE_REACTION_NOTIFICATION_BODY` — <name> tapped your message, with the name as the first `bodyArgs` item
 
-Other key families exist for A-List updates, Boost, album updates, Right Now, Discover and subscription offers.
+Other key families exist for A-List updates, Boost, album updates, Right Now, Discover, subscription offers, and online and activity alerts (`*_ONLINE_NOTIFICATION_*`, `UNREAD_CHATS_NOTIFICATION_*`, `VIEWED_PROFILE_NOTIFICATION_*`).
 
 A direct text message carries its text **in plaintext** with `translateBody` set to `"false"`; only media and system messages use a key.
 
@@ -60,6 +61,7 @@ A direct text message carries its text **in plaintext** with `translateBody` set
 - `grindr://fresh-albums?albumIds=<id,…>&albumProfileId=<profileId>` — album updates
 - `grindr://boost?action=<action>&source=<source>` — Boost results
 - `grindr://favorite-profile?profileID=<profileId>` — a favorite came online; the parameter is also spelled `profileId`
+- `grindr://growth-notification?type=<type>&profileID=<profileId>` — online and activity alerts; `type` is `favorite_online`, `tapped_online`, `recommended_online`, `multiple_favorites_online`, `unread_chats`, `viewed_profile` or `media_recipient_online`; `profileID` (also `profileId`) names the profile for the profile types
 
 Two actions are **cancel-only** and must never be rendered:
 
@@ -78,6 +80,7 @@ Two actions are **cancel-only** and must never be rendered:
 - `id_grindr_notifications_channel_promotions` — promotions
 - `id_grindr_notifications_channel_subscriptions` — subscriptions
 - `id_grindr_notifications_channel_video_chat` — video calls
+- `id_grindr_notifications_channel_ads` — ads
 - `event_calendar_channel_id` — event calendar
 
 ## Dedupe and grouping
