@@ -82,5 +82,11 @@
 	},
 	"profileFields": {
 		"healthPractices": "Health Practices"
+	},
+	"profileSections": {
+		"stats": "Stats",
+		"expectations": "Expectations",
+		"health": "Health",
+		"socials": "Socials"
 	}
 }

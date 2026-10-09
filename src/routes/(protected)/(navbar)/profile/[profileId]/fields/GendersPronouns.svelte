@@ -3,6 +3,7 @@
 	import { getPronouns } from "$lib/api/users/pronouns";
 	import Separator from "$lib/components/ui/separator/separator.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { t } from "$lib/i18n";
 	import { formatList } from "$lib/i18n/format";
 	import ProfileField from "./ProfileField.svelte";
 
@@ -57,7 +58,9 @@
 						)}
 					</span>
 				{:catch}
-					<span class="load-fail">Failed to load genders</span>
+					<span class="load-fail"
+						>{t("common.genders.errors.loadFailed")}</span
+					>
 				{/await}
 			{/if}
 			{#if genders !== null && genders.length > 0 && pronouns !== null && pronouns.length > 0}
@@ -80,7 +83,9 @@
 						)}
 					</span>
 				{:catch}
-					<span class="load-fail">Failed to load pronouns</span>
+					<span class="load-fail"
+						>{t("profile.fields.pronouns.errors.loadFailed")}</span
+					>
 				{/await}
 			{/if}
 		</span>

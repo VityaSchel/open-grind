@@ -3,6 +3,8 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { isPhotoSwipeBusy } from "$lib/util/photoswipe";
 import ImageCarousel from "./ImageCarousel.svelte";
 
@@ -19,6 +21,11 @@ function mediasOf(hashes: string[]) {
 }
 
 const MEDIAS = mediasOf(["first", "second"]);
+
+const photoLabels = (container: HTMLElement) =>
+	[...container.querySelectorAll(".item")].map((item) =>
+		item.getAttribute("aria-label"),
+	);
 
 function galleryOf({
 	container,
@@ -39,7 +46,36 @@ function galleryOf({
 }
 
 describe("ImageCarousel", () => {
-	afterEach(cleanup);
+	afterEach(async () => {
+		cleanup();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("labels each photo with its position among the photos", () => {
+		const { container } = render(ImageCarousel, {
+			props: { medias: MEDIAS },
+		});
+
+		expect(photoLabels(container)).toEqual([
+			"Profile photo 1 of 2",
+			"Profile photo 2 of 2",
+		]);
+	});
+
+	it("words the photo labels in the active locale", async () => {
+		const { container } = render(ImageCarousel, {
+			props: { medias: MEDIAS },
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		const labels = photoLabels(container);
+		for (const label of labels) expect(label).toMatch(PSEUDO_MESSAGE);
+		expect(labels.map((label) => label?.match(/\d+/g))).toEqual([
+			["1", "2"],
+			["2", "2"],
+		]);
+	});
 
 	it("keeps the first photo element when the one-photo list grows into the full list", async () => {
 		const { container, rerender } = render(ImageCarousel, {

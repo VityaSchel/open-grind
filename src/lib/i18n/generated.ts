@@ -171,6 +171,10 @@ export interface Messages {
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
 	"common.profileFields.healthPractices": undefined;
+	"common.profileSections.expectations": undefined;
+	"common.profileSections.health": undefined;
+	"common.profileSections.socials": undefined;
+	"common.profileSections.stats": undefined;
 	"common.sections.interest": undefined;
 	"common.someone": undefined;
 	"common.spinner.a11y.loading": undefined;
@@ -284,7 +288,12 @@ export interface Messages {
 	"profile.ethnicity.southAsian": undefined;
 	"profile.ethnicity.white": undefined;
 	"profile.favoriteStar.a11y.label": undefined;
+	"profile.fields.acceptNsfwPics": undefined;
+	"profile.fields.hivStatus": undefined;
 	"profile.fields.lastTested": undefined;
+	"profile.fields.lookingFor": undefined;
+	"profile.fields.meetAt": undefined;
+	"profile.fields.pronouns.errors.loadFailed": undefined;
 	"profile.healthPractice.condoms": undefined;
 	"profile.healthPractice.doxyPep": undefined;
 	"profile.healthPractice.drugFree": undefined;
@@ -297,6 +306,7 @@ export interface Messages {
 	"profile.hivStatus.positive": undefined;
 	"profile.hivStatus.positiveUndetectable": undefined;
 	"profile.hivStatus.preferToDiscuss": undefined;
+	"profile.imageCarousel.a11y.photo": { position: string; total: string };
 	"profile.item.a11y.profileLink": { name: string };
 	"profile.lookingFor.chat": undefined;
 	"profile.lookingFor.dates": undefined;
@@ -454,6 +464,7 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
+	"profile.imageCarousel.a11y.photo": { position: "placeholder"; total: "placeholder" };
 	"profile.item.a11y.profileLink": { name: "placeholder" };
 	"profile.miniCard.cappedUnreadCount": { cappedCount: "tag"; count: "count"; srOnly: "tag" };
 	"profile.miniCard.unreadCount": { count: "count"; srOnly: "tag" };

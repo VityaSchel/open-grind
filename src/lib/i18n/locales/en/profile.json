@@ -1,6 +1,15 @@
 {
 	"fields": {
-		"lastTested": "Last Tested"
+		"lastTested": "Last Tested",
+		"lookingFor": "Looking For",
+		"meetAt": "Meet At",
+		"acceptNsfwPics": "NSFW Pics?",
+		"hivStatus": "HIV Status",
+		"pronouns": {
+			"errors": {
+				"loadFailed": "Failed to load pronouns"
+			}
+		}
 	},
 	"sexualPosition": {
 		"top": "Top",
@@ -146,6 +155,11 @@
 	"item": {
 		"a11y": {
 			"profileLink": "{{name}}'s profile"
+		}
+	},
+	"imageCarousel": {
+		"a11y": {
+			"photo": "Profile photo {{position}} of {{total}}"
 		}
 	}
 }

@@ -5,6 +5,8 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import { profileMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
@@ -162,7 +164,10 @@
 					{src}
 					eager={index <= reach}
 					{createdAt}
-					label="Profile photo {index + 1} of {medias.length}"
+					label={t("profile.imageCarousel.a11y.photo", {
+						position: formatInteger(index + 1),
+						total: formatInteger(medias.length),
+					})}
 				/>
 			{/each}
 		</div>
