@@ -55,11 +55,11 @@ Absence or incorrect forming of this header might lead to HTTP status 400 and `u
 grindr3/<appVersion>;<buildNumber>;<subscriptionTier>;<os>;<deviceModel>;<manufacturer>
 ```
 
-- `appVersion` and `buildNumber`: the Grindr app version you present as and its build number, e.g. `26.19.0.185656` and `185656`
+- `appVersion` and `buildNumber`: the Grindr app version you present as and its build number, e.g. `26.20.0.187695` and `187695`
 - `subscriptionTier`: `Free`, `Plus`, `Xtra`, `Unlimited`, `Premium`, `Free_Plus`, `Free_Xtra`, `Free_Unlimited`, `Free_Premium`
 - `os`: `Android 13`, `Android 14`, etc.
  
-Example: `grindr3/26.19.0.185656;185656;Free;Android 13;Pixel 7;Google`
+Example: `grindr3/26.20.0.187695;187695;Free;Android 13;Pixel 7;Google`
 
 ## `L-Time-Zone`
 
