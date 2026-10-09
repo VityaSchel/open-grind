@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - src/**
+      - "!src/lib/i18n/locales/**"
       - scripts/credits/**
       - scripts/gen-credits.ts
       - package.json
@@ -24,6 +25,7 @@ on:
     branches: [main]
     paths:
       - src/**
+      - "!src/lib/i18n/locales/**"
       - scripts/credits/**
       - scripts/gen-credits.ts
       - package.json

@@ -3,6 +3,10 @@ name: check
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - "**"
+      - "!src/lib/i18n/locales/**"
+      - src/lib/i18n/locales/en/**
 
 concurrency:
   group: open-grind-check-${{ forgejo.event.pull_request.number }}

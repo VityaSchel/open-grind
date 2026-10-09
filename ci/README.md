@@ -4,17 +4,18 @@ Self-hosted Forgejo runners on rented ephemeral VMs.
 
 ## Workflows
 
-| Workflow          | Trigger              | Description                                                                                                                                         |
-| ----------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build.yml`       | manual               | Builds the universal Android APK, the x86_64 and arm64 Linux AppImage and deb and Windows installers on several providers, verifies reproducibility |
-| `check.yml`       | pull request         | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                                  |
-| `fdroid.yml`      | manual               | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                                           |
-| `audit.yml`       | weekly, pull request | `cargo deny` and `bun audit`                                                                                                                        |
-| `credits.yml`     | pull request, push   | Regenerates the third-party credits and fails when they drift                                                                                       |
-| `keys.yml`        | push                 | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                                      |
-| `warm.yml`        | push                 | Keeps the check workflow caches warm                                                                                                                |
-| `publish-apt.yml` | release              | Publishes the `.deb` to the Forgejo apt registry                                                                                                    |
-| `play.yml`        | release, manual      | Builds the Google Play app bundle on several providers, verifies reproducibility                                                                    |
+| Workflow           | Trigger                  | Description                                                                                                                                            |
+| ------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `build.yml`        | manual                   | Builds the universal Android APK, the x86_64 and arm64 Linux AppImage and deb and Windows installers on several providers, verifies reproducibility    |
+| `check.yml`        | pull request             | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                                     |
+| `translations.yml` | translation pull request | `check:i18n` and Prettier on the non-English locale files when a pull request changes them; `check.yml` skips a pull request that changes nothing else |
+| `fdroid.yml`       | manual                   | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                                              |
+| `audit.yml`        | weekly, pull request     | `cargo deny` and `bun audit`                                                                                                                           |
+| `credits.yml`      | pull request, push       | Regenerates the third-party credits and fails when they drift                                                                                          |
+| `keys.yml`         | push                     | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                                         |
+| `warm.yml`         | push                     | Keeps the check workflow caches warm                                                                                                                   |
+| `publish-apt.yml`  | release                  | Publishes the `.deb` to the Forgejo apt registry                                                                                                       |
+| `play.yml`         | release, manual          | Builds the Google Play app bundle on several providers, verifies reproducibility                                                                       |
 
 ## Scripts
 

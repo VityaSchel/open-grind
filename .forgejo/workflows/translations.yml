@@ -1,0 +1,63 @@
+name: translations
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - src/lib/i18n/locales/**
+      - "!src/lib/i18n/locales/en/**"
+      - .forgejo/workflows/translations.yml
+
+concurrency:
+  group: open-grind-translations-${{ forgejo.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  translations:
+    runs-on: ["fork", "toolchain", "8c16g", "hetzner"]
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: >-
+          /usr/bin/env
+          -u GITHUB_TOKEN -u FORGEJO_TOKEN
+          -u ACTIONS_RUNTIME_TOKEN
+          -u ACTIONS_ID_TOKEN_REQUEST_TOKEN -u ACTIONS_ID_TOKEN_REQUEST_URL
+          -u ACTIONS_CACHE_URL -u ACTIONS_RUNTIME_URL -u ACTIONS_RESULTS_URL
+          bash --noprofile --norc -e -o pipefail {0}
+    env:
+      PR_NUMBER: ${{ forgejo.event.pull_request.number }}
+      EXPECTED_SHA: ${{ forgejo.event.pull_request.head.sha }}
+      CI_WORKSPACE: /opt/open-grind-translations
+    steps:
+      - name: Verify CI environment
+        run: |
+          set -euo pipefail
+
+          leaked=$(env | grep -iE '(TOKEN|SECRET|PASSWORD|CREDENTIAL|KEY)=.' || true)
+          [ -z "$leaked" ] || { echo "FATAL: privileged credential reachable by PR code:"; echo "$leaked" | sed 's/=.*/=<redacted>/'; exit 1; }
+
+      - name: Check out PR
+        run: |
+          set -euo pipefail
+
+          : "${CI_WORKSPACE:?}"
+          rm -rf "$CI_WORKSPACE"
+          mkdir -p "$CI_WORKSPACE"
+          cd "$CI_WORKSPACE"
+
+          git init -q .
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          git fetch -q --depth 1 origin "refs/pull/${PR_NUMBER}/head"
+          git checkout -q FETCH_HEAD
+          [ -z "$EXPECTED_SHA" ] || [ "$(git rev-parse HEAD)" = "$EXPECTED_SHA" ] \
+            || { echo "FATAL: PR head moved since approval (want $EXPECTED_SHA, got $(git rev-parse HEAD))"; exit 1; }
+
+      - name: Install JS dependencies
+        run: cd "$CI_WORKSPACE" && bun install --frozen-lockfile --ignore-scripts --no-summary
+
+      - name: Check the translations
+        run: cd "$CI_WORKSPACE" && bun run check:i18n
+
+      - name: Formatting
+        run: cd "$CI_WORKSPACE" && bunx prettier --check src/lib/i18n/locales
