@@ -1,0 +1,14 @@
+- Unresponsive profiles deep in Browse fixed
+- Unsend & expiring photo bypass fixed
+- Block works on every profile
+- Men & Women filters fixed
+- Back gesture closes menus first
+- Grid scrolls to top on filter change
+- Browse paging loop fixed
+- Clearer push notification errors
+- Facebook sign-in freeze fixed
+- False "can't stay signed in" warning fixed
+- Stuck update notification fixed
+- Layout glitches on scaled screens fixed
+
+Full changelog: https://s.opengrind.org/changelogs/v0.1.0-beta.5.1
