@@ -69,7 +69,6 @@ export interface Messages {
 	"browse.filters.noMin": undefined;
 	"browse.filters.options.acceptNsfwPics": undefined;
 	"browse.filters.options.bodyType": undefined;
-	"browse.filters.options.healthPractices": undefined;
 	"browse.filters.options.lookingFor": undefined;
 	"browse.filters.options.meetAt": undefined;
 	"browse.filters.options.relationshipStatus": undefined;
@@ -171,6 +170,7 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.profileFields.healthPractices": undefined;
 	"common.sections.interest": undefined;
 	"common.someone": undefined;
 	"common.spinner.a11y.loading": undefined;

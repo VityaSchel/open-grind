@@ -55,7 +55,7 @@ export const optionFilters = {
 	},
 	healthPractices: {
 		id: "health-practices",
-		label: "browse.filters.options.healthPractices",
+		label: "common.profileFields.healthPractices",
 		table: healthPractices,
 	},
 } as const satisfies Record<string, OptionFilterDefinition>;

@@ -95,8 +95,7 @@
 			"relationshipStatus": "Relationship Status",
 			"acceptNsfwPics": "Accept NSFW Pics",
 			"lookingFor": "Looking for",
-			"meetAt": "Meet at",
-			"healthPractices": "Health Practices"
+			"meetAt": "Meet at"
 		},
 		"photos": {
 			"label": "Photos",

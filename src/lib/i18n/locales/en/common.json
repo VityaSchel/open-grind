@@ -79,5 +79,8 @@
 	},
 	"tags": {
 		"searchPlaceholder": "Search tags..."
+	},
+	"profileFields": {
+		"healthPractices": "Health Practices"
 	}
 }
