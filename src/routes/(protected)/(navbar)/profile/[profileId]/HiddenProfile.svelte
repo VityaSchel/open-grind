@@ -4,6 +4,7 @@
 	import { unhideUser } from "$lib/api/browse/hides";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
+	import { t } from "$lib/i18n";
 	import {
 		applyViewabilityChange,
 		type PendingViewabilityChange,
@@ -25,7 +26,7 @@
 		<Empty.Media variant="icon">
 			<EyeSlashIcon />
 		</Empty.Media>
-		<Empty.Title>You hid this profile.</Empty.Title>
+		<Empty.Title>{t("profile.hidden.title")}</Empty.Title>
 		<Empty.Description>
 			<Button
 				variant="secondary"
@@ -34,8 +35,10 @@
 					applyViewabilityChange({
 						change: markViewable,
 						request: () => unhideUser({ profileId }),
-						failureLabel: "Failed to unhide user",
-					})}>Unhide</Button
+						failureLabel: t(
+							"profile.viewability.errors.unhideFailed",
+						),
+					})}>{t("profile.hidden.unhide")}</Button
 			>
 		</Empty.Description>
 	</Empty.Header>

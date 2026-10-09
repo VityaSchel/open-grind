@@ -14,6 +14,7 @@
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { t } from "$lib/i18n";
 	import {
 		applyViewabilityChange,
 		type PendingViewabilityChange,
@@ -42,7 +43,7 @@
 			<Button
 				size="icon-lg"
 				variant="secondary"
-				aria-label="Profile menu"
+				aria-label={t("profile.topNav.actionsMenu.a11y.trigger")}
 				class={[className, "size-12"]}
 				{...props}
 			>
@@ -57,33 +58,35 @@
 					const clipboard =
 						await import("@tauri-apps/plugin-clipboard-manager");
 					await clipboard.writeText(String(profileId));
-					toast.success("Profile ID copied to clipboard");
+					toast.success(t("profile.topNav.actionsMenu.idCopied"));
 				} catch (error) {
 					console.error(error);
 					showErrorToast({
-						label: "Failed to copy profile ID",
+						label: t(
+							"profile.topNav.actionsMenu.errors.copyIdFailed",
+						),
 						error,
 					});
 				}
 			}}
 		>
 			<CopyIcon class="size-5" />
-			Copy profile ID
+			{t("profile.topNav.actionsMenu.copyId")}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={() => (reportOpen = true)}>
 			<FlagIcon class="size-5" />
-			Report profile
+			{t("profile.topNav.actionsMenu.report")}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item
 			onSelect={() =>
 				applyViewabilityChange({
 					change: markHidden,
 					request: () => hideUser({ profileId }),
-					failureLabel: "Failed to hide user",
+					failureLabel: t("profile.viewability.errors.hideFailed"),
 				})}
 		>
 			<EyeSlashIcon class="size-5" />
-			Hide profile
+			{t("profile.topNav.actionsMenu.hide")}
 		</DropdownMenu.Item>
 		{#if blockable}
 			<DropdownMenu.Item
@@ -91,11 +94,13 @@
 					applyViewabilityChange({
 						change: markBlocked,
 						request: () => blockUser({ profileId }),
-						failureLabel: "Failed to block user",
+						failureLabel: t(
+							"profile.viewability.errors.blockFailed",
+						),
 					})}
 			>
 				<ProhibitIcon class="size-5" />
-				Block profile
+				{t("profile.topNav.actionsMenu.block")}
 			</DropdownMenu.Item>
 		{/if}
 	</DropdownMenu.Content>

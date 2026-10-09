@@ -2,6 +2,7 @@
 	import { NotePencilIcon } from "phosphor-svelte";
 
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 	import type { FavoriteNote } from "$lib/model/users/favorites";
 	import type { Profile } from "$lib/model/users/profiles";
 	import FavoriteNoteEditor from "./FavoriteNoteEditor.svelte";
@@ -19,7 +20,9 @@
 	let open = $state(false);
 
 	const empty = $derived(!note.notes && !note.phoneNumber);
-	const label = $derived(note.notes || note.phoneNumber || "Add note");
+	const label = $derived(
+		note.notes || note.phoneNumber || t("profile.favoriteNote.add"),
+	);
 </script>
 
 <Button

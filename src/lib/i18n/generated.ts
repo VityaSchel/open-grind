@@ -273,6 +273,9 @@ export interface Messages {
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;
 	"profile.backButton.a11y.navigation": undefined;
+	"profile.blocked.byThem": undefined;
+	"profile.blocked.byUs": undefined;
+	"profile.blocked.unblock": undefined;
 	"profile.bodyType.average": undefined;
 	"profile.bodyType.large": undefined;
 	"profile.bodyType.muscular": undefined;
@@ -290,6 +293,15 @@ export interface Messages {
 	"profile.ethnicity.other": undefined;
 	"profile.ethnicity.southAsian": undefined;
 	"profile.ethnicity.white": undefined;
+	"profile.favoriteNote.a11y.description": undefined;
+	"profile.favoriteNote.add": undefined;
+	"profile.favoriteNote.deleted": undefined;
+	"profile.favoriteNote.errors.saveFailed": undefined;
+	"profile.favoriteNote.phoneNumber.label": undefined;
+	"profile.favoriteNote.phoneNumber.placeholder": undefined;
+	"profile.favoriteNote.placeholder": undefined;
+	"profile.favoriteNote.saved": undefined;
+	"profile.favoriteNote.title": undefined;
 	"profile.favoriteStar.a11y.label": undefined;
 	"profile.fields.acceptNsfwPics": undefined;
 	"profile.fields.hivStatus": undefined;
@@ -304,6 +316,8 @@ export interface Messages {
 	"profile.healthPractice.preferToDiscuss": undefined;
 	"profile.healthPractice.prep": undefined;
 	"profile.healthPractice.sober": undefined;
+	"profile.hidden.title": undefined;
+	"profile.hidden.unhide": undefined;
 	"profile.hivStatus.negative": undefined;
 	"profile.hivStatus.negativeOnPrep": undefined;
 	"profile.hivStatus.positive": undefined;
@@ -357,6 +371,13 @@ export interface Messages {
 	"profile.tap.a11y.sent.looking": undefined;
 	"profile.tap.errors.sendFailed": undefined;
 	"profile.topNav.a11y.navigation": undefined;
+	"profile.topNav.actionsMenu.a11y.trigger": undefined;
+	"profile.topNav.actionsMenu.block": undefined;
+	"profile.topNav.actionsMenu.copyId": undefined;
+	"profile.topNav.actionsMenu.errors.copyIdFailed": undefined;
+	"profile.topNav.actionsMenu.hide": undefined;
+	"profile.topNav.actionsMenu.idCopied": undefined;
+	"profile.topNav.actionsMenu.report": undefined;
 	"profile.topNav.editProfile": undefined;
 	"profile.topNav.favorite.a11y.add": undefined;
 	"profile.topNav.favorite.a11y.remove": undefined;
@@ -378,6 +399,10 @@ export interface Messages {
 	"profile.vaccine.covid19": undefined;
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
+	"profile.viewability.errors.blockFailed": undefined;
+	"profile.viewability.errors.hideFailed": undefined;
+	"profile.viewability.errors.unblockFailed": undefined;
+	"profile.viewability.errors.unhideFailed": undefined;
 	"profile.visit.errors.recordFailed": undefined;
 	"settings.account.unimplemented": { issueLink: string };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
@@ -475,6 +500,7 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
+	"profile.blocked.bugHint": { reportIssueLink: "tag" };
 	"profile.imageCarousel.a11y.photo": { position: "placeholder"; total: "placeholder" };
 	"profile.item.a11y.profileLink": { name: "placeholder" };
 	"profile.miniCard.cappedUnreadCount": { cappedCount: "tag"; count: "count"; srOnly: "tag" };

@@ -3,9 +3,13 @@
 import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { untranslatableTexts } from "$lib/test/untranslatable";
 import type { FavoriteNote } from "$lib/model/users/favorites";
 import FavoriteNoteButton from "./FavoriteNoteButton.svelte";
+
+const SAVED_NOTE = "met at the gym";
 
 function renderButton(note: FavoriteNote) {
 	render(FavoriteNoteButton, {
@@ -14,16 +18,16 @@ function renderButton(note: FavoriteNote) {
 	return screen.getByRole("button");
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("FavoriteNoteButton", () => {
 	it("keeps a saved note out of page translation", () => {
-		const button = renderButton({
-			notes: "met at the gym",
-			phoneNumber: "",
-		});
+		const button = renderButton({ notes: SAVED_NOTE, phoneNumber: "" });
 
-		expect(untranslatableTexts(button)).toEqual(["met at the gym"]);
+		expect(untranslatableTexts(button)).toEqual([SAVED_NOTE]);
 	});
 
 	it("keeps a saved phone number out of page translation", () => {
@@ -37,5 +41,23 @@ describe("FavoriteNoteButton", () => {
 
 		expect(button.textContent).toContain("Add note");
 		expect(untranslatableTexts(button)).toEqual([]);
+	});
+
+	it("words the prompt in the active locale", async () => {
+		const button = renderButton({ notes: "", phoneNumber: "" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(button.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		expect(untranslatableTexts(button)).toEqual([]);
+	});
+
+	it("shows a saved note as written in any locale", async () => {
+		const button = renderButton({ notes: SAVED_NOTE, phoneNumber: "" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(button.textContent.trim()).toBe(SAVED_NOTE);
+		expect(untranslatableTexts(button)).toEqual([SAVED_NOTE]);
 	});
 });

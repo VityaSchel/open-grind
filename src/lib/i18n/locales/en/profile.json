@@ -187,6 +187,19 @@
 				"addFailed": "Failed to add to favorites",
 				"removeFailed": "Failed to remove from favorites"
 			}
+		},
+		"actionsMenu": {
+			"a11y": {
+				"trigger": "Profile menu"
+			},
+			"copyId": "Copy profile ID",
+			"idCopied": "Profile ID copied to clipboard",
+			"report": "Report profile",
+			"hide": "Hide profile",
+			"block": "Block profile",
+			"errors": {
+				"copyIdFailed": "Failed to copy profile ID"
+			}
 		}
 	},
 	"page": {
@@ -197,6 +210,41 @@
 	"visit": {
 		"errors": {
 			"recordFailed": "Failed to record profile view preference or action"
+		}
+	},
+	"viewability": {
+		"errors": {
+			"blockFailed": "Failed to block user",
+			"unblockFailed": "Failed to unblock user",
+			"hideFailed": "Failed to hide user",
+			"unhideFailed": "Failed to unhide user"
+		}
+	},
+	"blocked": {
+		"byUs": "You have blocked this profile.",
+		"byThem": "This person has blocked you.",
+		"unblock": "Unblock",
+		"bugHint": "If you know this is a bug in the app, <reportIssueLink>report an issue</reportIssueLink>."
+	},
+	"hidden": {
+		"title": "You hid this profile.",
+		"unhide": "Unhide"
+	},
+	"favoriteNote": {
+		"add": "Add note",
+		"title": "Note",
+		"a11y": {
+			"description": "A private note about this profile. Only you can see it."
+		},
+		"placeholder": "Note for this profile...",
+		"phoneNumber": {
+			"label": "Phone number",
+			"placeholder": "Optional"
+		},
+		"saved": "Note saved",
+		"deleted": "Note deleted",
+		"errors": {
+			"saveFailed": "Failed to save note"
 		}
 	}
 }
