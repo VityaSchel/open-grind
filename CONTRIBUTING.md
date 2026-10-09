@@ -87,7 +87,7 @@ const securityHeaders = {
 	requireRealDeviceInfo: "true",
 	"L-Time-Zone": "Europe/Madrid",
 	"User-Agent":
-		"grindr3/26.18.0.184315;184315;Free;Android 13;Pixel 7;Google",
+		"grindr3/26.20.0.187695;187695;Free;Android 13;Pixel 7;Google",
 	"L-Device-Info":
 		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at sign-in
