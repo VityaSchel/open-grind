@@ -1,193 +1,134 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-	callMethodMock,
-	reconnectMock,
-	showErrorToastMock,
-	toastMock,
-	updateLocationMock,
-	preferencesMock,
-	HONDURAS_GEOHASH,
-	HOME_GEOHASH,
-} = vi.hoisted(() => ({
-	callMethodMock: vi.fn(),
-	reconnectMock: vi.fn(),
-	showErrorToastMock: vi.fn(),
-	toastMock: { error: vi.fn() },
-	updateLocationMock: vi.fn(),
-	preferencesMock: vi.fn(),
-	HONDURAS_GEOHASH: "d4b1hqtcyz1k",
-	HOME_GEOHASH: "u33dc0cpnp0m",
-}));
+const { holdInHondurasMock, showErrorToastMock, toastMock, preferencesMock } =
+	vi.hoisted(() => ({
+		holdInHondurasMock: vi.fn(),
+		showErrorToastMock: vi.fn(),
+		toastMock: { error: vi.fn() },
+		preferencesMock: vi.fn(),
+	}));
 
 vi.mock("svelte-sonner", () => ({ toast: toastMock }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
-vi.mock("$lib/api/methods", () => ({ callMethod: callMethodMock }));
-vi.mock("$lib/ws.svelte", () => ({ ws: { reconnect: reconnectMock } }));
-vi.mock("./honduras", () => ({
-	randomHondurasGeohash: () => HONDURAS_GEOHASH,
-}));
-vi.mock("$lib/api/browse/location", () => ({
-	updateLocation: updateLocationMock,
-}));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesSnapshot: preferencesMock,
 }));
+vi.mock("./honduras-hold", () => ({ holdInHonduras: holdInHondurasMock }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import {
-	awaitEntitlementGrant,
 	dismissEntitlementBypass,
 	entitlementBypassState,
 	offerEntitlementBypass,
+	reportRefusedDespiteBypass,
 	runEntitlementBypass,
 } from "./bypass.svelte";
+import type { LocationLease } from "./honduras-hold";
 
-const RUN_TIMEOUT_MS = 15_000;
-
+const HOME = "u33dc0cpnp0m";
 const REASON = "Unsending a message requires a Grindr subscription.";
+
+function fakeHold() {
+	const ended = Promise.withResolvers<void>();
+	let holders = 0;
+	const lease = vi.fn((): LocationLease => {
+		holders += 1;
+		let holding = true;
+		return {
+			release: vi.fn(() => {
+				if (holding) {
+					holding = false;
+					holders -= 1;
+					if (holders === 0) ended.resolve();
+				}
+				return Promise.resolve();
+			}),
+		};
+	});
+	return { hold: { lease, ended: ended.promise }, end: ended.resolve };
+}
+
+async function granted(offer: Promise<LocationLease | null>) {
+	const lease = await offer;
+	if (lease === null) throw new Error("expected a lease");
+	return lease;
+}
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	callMethodMock.mockResolvedValue({ profileId: 1 });
-	reconnectMock.mockResolvedValue(undefined);
-	updateLocationMock.mockResolvedValue(undefined);
-	preferencesMock.mockReturnValue({ geohash: HOME_GEOHASH });
+	preferencesMock.mockReturnValue({ geohash: HOME });
+	holdInHondurasMock.mockImplementation(() =>
+		Promise.resolve(fakeHold().hold),
+	);
 	dismissEntitlementBypass();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("offerEntitlementBypass", () => {
 	it("opens the prompt with the caller's reason", () => {
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: vi.fn(() => Promise.resolve()),
-		});
+		void offerEntitlementBypass({ reason: REASON });
 
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.reason).toBe(REASON);
 		expect(entitlementBypassState.busy).toBe(false);
 	});
 
-	it("collects a batch of failures behind one prompt", async () => {
-		const first = vi.fn(() => Promise.resolve());
-		const second = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry: first });
-		offerEntitlementBypass({ reason: "another feature", retry: second });
-
+	it("puts a batch of failures behind one prompt and one hold", async () => {
+		const first = offerEntitlementBypass({ reason: REASON });
+		const second = offerEntitlementBypass({ reason: "another feature" });
 		expect(entitlementBypassState.reason).toBe(REASON);
 
-		await runEntitlementBypass();
+		const running = runEntitlementBypass();
+		const leases = await Promise.all([granted(first), granted(second)]);
+		await Promise.all(leases.map((lease) => lease.release()));
+		await running;
 
-		expect(callMethodMock).toHaveBeenCalledTimes(1);
-		expect(first).toHaveBeenCalledOnce();
-		expect(second).toHaveBeenCalledOnce();
+		expect(holdInHondurasMock).toHaveBeenCalledExactlyOnceWith({
+			home: HOME,
+		});
 	});
 });
 
 describe("dismissEntitlementBypass", () => {
-	it("closes the prompt and drops the blocked actions", async () => {
-		const retry = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry });
+	it("answers every queued request with no lease and closes the prompt", async () => {
+		const first = offerEntitlementBypass({ reason: REASON });
+		const second = offerEntitlementBypass({ reason: REASON });
 
 		dismissEntitlementBypass();
+
+		await expect(first).resolves.toBeNull();
+		await expect(second).resolves.toBeNull();
+		expect(entitlementBypassState.open).toBe(false);
+	});
+
+	it("spoofs nothing when Bypass comes after the queue was dropped", async () => {
+		void offerEntitlementBypass({ reason: REASON });
+		dismissEntitlementBypass();
+
 		await runEntitlementBypass();
 
+		expect(holdInHondurasMock).not.toHaveBeenCalled();
+	});
+
+	it("drops the queued requests when the account is reset", async () => {
+		const offer = offerEntitlementBypass({ reason: REASON });
+
+		clearAccountCaches();
+
+		await expect(offer).resolves.toBeNull();
 		expect(entitlementBypassState.open).toBe(false);
-		expect(retry).not.toHaveBeenCalled();
 	});
 });
 
 describe("runEntitlementBypass", () => {
-	it("reissues the token from Honduras, then retries", async () => {
-		const order: string[] = [];
-		callMethodMock.mockImplementation(() => {
-			order.push("refresh");
-			return Promise.resolve({ profileId: 1 });
-		});
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: () => {
-				order.push("retry");
-				return Promise.resolve();
-			},
-		});
-
-		await runEntitlementBypass();
-
-		expect(order).toEqual(["refresh", "retry"]);
-		expect(callMethodMock).toHaveBeenCalledWith("refresh_session", {
-			geohash: HONDURAS_GEOHASH,
-		});
-		expect(entitlementBypassState.open).toBe(false);
-		expect(entitlementBypassState.busy).toBe(false);
-		expect(showErrorToastMock).not.toHaveBeenCalled();
-	});
-
-	it("moves to Honduras, reissues there, then moves back", async () => {
-		const order: string[] = [];
-		updateLocationMock.mockImplementation(
-			({ geohash }: { geohash: string }) => {
-				order.push(
-					geohash === HONDURAS_GEOHASH ? "move:hn" : "move:home",
-				);
-				return Promise.resolve();
-			},
-		);
-		callMethodMock.mockImplementation(() => {
-			order.push("refresh");
-			return Promise.resolve({ profileId: 1 });
-		});
-		reconnectMock.mockImplementation(() => {
-			order.push("reconnect");
-			return Promise.resolve();
-		});
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: () => {
-				order.push("retry");
-				return Promise.resolve();
-			},
-		});
-
-		await runEntitlementBypass();
-
-		expect(order).toEqual([
-			"move:hn",
-			"refresh",
-			"move:home",
-			"reconnect",
-			"retry",
-		]);
-		expect(callMethodMock).toHaveBeenCalledWith("refresh_session", {
-			geohash: HONDURAS_GEOHASH,
-		});
-	});
-
-	it("moves back even when reissuing the session fails", async () => {
-		callMethodMock.mockRejectedValue(new Error("offline"));
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: vi.fn(() => Promise.resolve()),
-		});
-
-		await runEntitlementBypass();
-
-		expect(updateLocationMock).toHaveBeenLastCalledWith({
-			geohash: HOME_GEOHASH,
-		});
-	});
-
 	it("refuses to spoof when there is no location to come back to", async () => {
 		preferencesMock.mockReturnValue({ geohash: null });
-		const retry = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry });
+		const offer = offerEntitlementBypass({ reason: REASON });
 
 		await runEntitlementBypass();
 
-		expect(updateLocationMock).not.toHaveBeenCalled();
-		expect(callMethodMock).not.toHaveBeenCalled();
-		expect(retry).not.toHaveBeenCalled();
+		await expect(offer).resolves.toBeNull();
+		expect(holdInHondurasMock).not.toHaveBeenCalled();
 		expect(entitlementBypassState.open).toBe(false);
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
 			"Set your location before using this bypass",
@@ -195,248 +136,126 @@ describe("runEntitlementBypass", () => {
 		);
 	});
 
-	it("holds the grid off until the session has been reissued", async () => {
-		let finishRefresh!: () => void;
-		callMethodMock.mockImplementation(
-			() =>
-				new Promise((resolve) => {
-					finishRefresh = () => resolve({ profileId: 1 });
-				}),
-		);
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: vi.fn(() => Promise.resolve()),
-		});
+	it("holds the prompt open and busy until every lease is released", async () => {
+		const first = offerEntitlementBypass({ reason: REASON });
+		const second = offerEntitlementBypass({ reason: REASON });
 
 		const running = runEntitlementBypass();
-		await vi.waitFor(() => expect(finishRefresh).toBeDefined());
-		let gridReleased = false;
-		const grid = awaitEntitlementGrant().then(() => (gridReleased = true));
-		await Promise.resolve();
-		expect(gridReleased).toBe(false);
-
-		finishRefresh();
-		await grid;
-		await running;
-		expect(gridReleased).toBe(true);
-	});
-
-	it("gives up rather than trapping the user in the prompt", async () => {
-		vi.useFakeTimers();
-		try {
-			callMethodMock.mockReturnValue(new Promise(() => {}));
-			offerEntitlementBypass({
-				reason: REASON,
-				retry: vi.fn(() => Promise.resolve()),
-			});
-
-			const running = runEntitlementBypass();
-			await vi.advanceTimersByTimeAsync(0);
-			expect(entitlementBypassState.busy).toBe(true);
-
-			await vi.advanceTimersByTimeAsync(RUN_TIMEOUT_MS);
-			await running;
-		} finally {
-			vi.useRealTimers();
-		}
-
-		expect(entitlementBypassState.busy).toBe(false);
-		expect(entitlementBypassState.open).toBe(false);
-		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
-			error: expect.anything(),
-		});
-	});
-
-	it("never leaves the grid waiting on a failed handover", async () => {
-		let failRefresh!: () => void;
-		callMethodMock.mockImplementation(
-			() =>
-				new Promise((_, reject) => {
-					failRefresh = () => reject(new Error("offline"));
-				}),
-		);
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: vi.fn(() => Promise.resolve()),
-		});
-
-		const running = runEntitlementBypass();
-		await vi.waitFor(() => expect(failRefresh).toBeDefined());
-		let released = false;
-		void awaitEntitlementGrant().then(() => (released = true));
-		await Promise.resolve();
-		expect(released).toBe(false);
-
-		failRefresh();
-		await running;
-
-		expect(released).toBe(true);
-	});
-
-	it("keeps the grid gated until the move back from Honduras lands", async () => {
-		let finishHome!: () => void;
-		updateLocationMock.mockImplementation(
-			({ geohash }: { geohash: string }) =>
-				geohash === HOME_GEOHASH
-					? new Promise<void>((resolve) => {
-							finishHome = resolve;
-						})
-					: Promise.resolve(),
-		);
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: vi.fn(() => Promise.resolve()),
-		});
-
-		const running = runEntitlementBypass();
-		await vi.waitFor(() => expect(finishHome).toBeDefined());
-		let released = false;
-		void awaitEntitlementGrant().then(() => (released = true));
-		await Promise.resolve();
-		expect(released).toBe(false);
-
-		finishHome();
-		await running;
-
-		expect(released).toBe(true);
-	});
-
-	it("moves back home before it gives up on a hung reissue", async () => {
-		vi.useFakeTimers();
-		try {
-			callMethodMock.mockReturnValue(new Promise(() => {}));
-			offerEntitlementBypass({
-				reason: REASON,
-				retry: vi.fn(() => Promise.resolve()),
-			});
-
-			const running = runEntitlementBypass();
-			await vi.advanceTimersByTimeAsync(RUN_TIMEOUT_MS);
-			await running;
-		} finally {
-			vi.useRealTimers();
-		}
-
-		expect(updateLocationMock).toHaveBeenLastCalledWith({
-			geohash: HOME_GEOHASH,
-		});
-		await expect(awaitEntitlementGrant()).resolves.toBeUndefined();
-	});
-
-	it("joins a run already in flight instead of spoofing twice", async () => {
-		let finishRefresh!: () => void;
-		callMethodMock.mockImplementation(
-			() =>
-				new Promise((resolve) => {
-					finishRefresh = () => resolve({ profileId: 1 });
-				}),
-		);
-		const retry = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry });
-
-		const first = runEntitlementBypass();
-		await vi.waitFor(() => expect(finishRefresh).toBeDefined());
-		const second = runEntitlementBypass();
-
-		finishRefresh();
-		await Promise.all([first, second]);
-
-		expect(callMethodMock).toHaveBeenCalledOnce();
-		expect(retry).toHaveBeenCalledOnce();
-		expect(showErrorToastMock).not.toHaveBeenCalled();
-	});
-
-	it("holds the prompt open and busy until the retry settles", async () => {
-		let finishRetry!: () => void;
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: () =>
-				new Promise<void>((resolve) => {
-					finishRetry = resolve;
-				}),
-		});
-
-		const running = runEntitlementBypass();
-		await vi.waitFor(() => expect(finishRetry).toBeDefined());
+		const [firstLease, secondLease] = await Promise.all([
+			granted(first),
+			granted(second),
+		]);
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.busy).toBe(true);
 
-		finishRetry();
+		await firstLease.release();
+		await Promise.resolve();
+		expect(entitlementBypassState.busy).toBe(true);
+
+		await secondLease.release();
+		await running;
+		expect(entitlementBypassState.busy).toBe(false);
+		expect(entitlementBypassState.open).toBe(false);
+	});
+
+	it("closes the prompt when the hold ends before the lease is released", async () => {
+		const { hold, end } = fakeHold();
+		holdInHondurasMock.mockResolvedValue(hold);
+		const offer = offerEntitlementBypass({ reason: REASON });
+
+		const running = runEntitlementBypass();
+		await granted(offer);
+		end();
 		await running;
 
+		expect(entitlementBypassState.busy).toBe(false);
+		expect(entitlementBypassState.open).toBe(false);
+	});
+
+	it("reports a failed handover once and answers every request with no lease", async () => {
+		const failure = new Error("offline");
+		holdInHondurasMock.mockRejectedValue(failure);
+		const first = offerEntitlementBypass({ reason: REASON });
+		const second = offerEntitlementBypass({ reason: REASON });
+
+		await runEntitlementBypass();
+
+		await expect(first).resolves.toBeNull();
+		await expect(second).resolves.toBeNull();
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to bypass this paid feature",
+			error: failure,
+			id: "entitlement-bypass",
+		});
 		expect(entitlementBypassState.open).toBe(false);
 		expect(entitlementBypassState.busy).toBe(false);
 	});
 
-	it("keeps offering a failure that arrives while it is running", async () => {
-		let finishRetry!: () => void;
-		const late = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: () =>
-				new Promise<void>((resolve) => {
-					finishRetry = resolve;
-				}),
+	it("answers no lease quietly when the account signed out mid-handover", async () => {
+		holdInHondurasMock.mockResolvedValue(null);
+		const offer = offerEntitlementBypass({ reason: REASON });
+
+		await runEntitlementBypass();
+
+		await expect(offer).resolves.toBeNull();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("ignores a second tap while a bypass runs", async () => {
+		const offer = offerEntitlementBypass({ reason: REASON });
+		const running = runEntitlementBypass();
+		const lease = await granted(offer);
+		let lateAnswered = false;
+		void offerEntitlementBypass({ reason: "a later limit" }).then(() => {
+			lateAnswered = true;
 		});
 
+		await runEntitlementBypass();
+
+		expect(entitlementBypassState.busy).toBe(true);
+		expect(entitlementBypassState.open).toBe(true);
+		expect(holdInHondurasMock).toHaveBeenCalledOnce();
+		await lease.release();
+		await running;
+		expect(lateAnswered).toBe(false);
+	});
+
+	it("keeps offering a failure that arrives while it is running", async () => {
+		const first = offerEntitlementBypass({ reason: REASON });
 		const running = runEntitlementBypass();
-		await vi.waitFor(() => expect(finishRetry).toBeDefined());
-		offerEntitlementBypass({ reason: "a later limit", retry: late });
-		finishRetry();
+		const lease = await granted(first);
+
+		const late = offerEntitlementBypass({ reason: "a later limit" });
+		await lease.release();
 		await running;
 
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.busy).toBe(false);
 		expect(entitlementBypassState.reason).toBe("a later limit");
-		expect(late).not.toHaveBeenCalled();
+		expect(holdInHondurasMock).toHaveBeenCalledOnce();
 
-		await runEntitlementBypass();
-		expect(late).toHaveBeenCalledOnce();
+		const second = runEntitlementBypass();
+		await (await granted(late)).release();
+		await second;
+		expect(holdInHondurasMock).toHaveBeenCalledTimes(2);
 		expect(entitlementBypassState.open).toBe(false);
 	});
+});
 
-	it("abandons the retries when the account is signed out mid-run", async () => {
-		const retry = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry });
-		callMethodMock.mockImplementation(() => {
-			clearAccountCaches();
-			return Promise.resolve({ profileId: 1 });
-		});
+describe("reportRefusedDespiteBypass", () => {
+	it("reports a refused retry under the bypass toast", () => {
+		const refusal = new Error("still gated");
 
-		await runEntitlementBypass();
-
-		expect(retry).not.toHaveBeenCalled();
-		expect(showErrorToastMock).not.toHaveBeenCalled();
-		expect(entitlementBypassState.open).toBe(false);
-	});
-
-	it("reports a retry that fails again", async () => {
-		offerEntitlementBypass({
-			reason: REASON,
-			retry: () => Promise.reject(new Error("still gated")),
-		});
-
-		await runEntitlementBypass();
+		reportRefusedDespiteBypass(refusal);
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
 			label: "Failed to bypass this paid feature",
-			error: expect.anything(),
+			error: refusal,
+			id: "entitlement-bypass",
 		});
-		expect(entitlementBypassState.open).toBe(false);
-	});
-
-	it("reports a token reissue that fails", async () => {
-		callMethodMock.mockRejectedValue(new Error("offline"));
-		const retry = vi.fn(() => Promise.resolve());
-		offerEntitlementBypass({ reason: REASON, retry });
-
-		await runEntitlementBypass();
-
-		expect(retry).not.toHaveBeenCalled();
-		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
-			error: expect.anything(),
-		});
+		expect(console.error).toHaveBeenCalledWith(
+			"Entitlement bypass failed: the action was still refused",
+			refusal,
+		);
 	});
 });

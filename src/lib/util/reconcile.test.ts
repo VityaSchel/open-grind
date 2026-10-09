@@ -8,6 +8,7 @@ const {
 	droppedHandlers,
 	rejectedHandlers,
 	isMobilePlatformMock,
+	awaitHomeLocationMock,
 } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(() =>
 		Promise.resolve({ profileId: 1, expiresAt: null, stale: false }),
@@ -16,6 +17,7 @@ const {
 	droppedHandlers: [] as ((skipped: number) => void)[],
 	rejectedHandlers: [] as ((eventType: string) => void)[],
 	isMobilePlatformMock: vi.fn(() => false),
+	awaitHomeLocationMock: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("$lib/api/methods", async (importOriginal) => ({
@@ -23,6 +25,9 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 	callMethod: callMethodMock,
 }));
 vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
+vi.mock("$lib/entitlements/honduras-hold", () => ({
+	awaitHomeLocation: awaitHomeLocationMock,
+}));
 vi.mock("$lib/ws.svelte", () => ({
 	ws: {
 		onConnected(handler: () => void) {
@@ -237,5 +242,32 @@ describe("Reconciler on returning to the app", () => {
 		setVisibility("visible");
 		await flushMockSubscriptions();
 		expect(handler).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("Reconciler while the profile is away from home", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it("refetches only once the profile is back home", async () => {
+		const backHome = Promise.withResolvers<void>();
+		awaitHomeLocationMock.mockReturnValueOnce(backHome.promise);
+		const reconciler = await freshReconciler();
+		const handler = vi.fn();
+		reconciler.subscribe(handler);
+
+		reconnect();
+		reconnect();
+		await flushMockSubscriptions();
+		expect(handler).not.toHaveBeenCalled();
+
+		backHome.resolve();
+		await flushMockSubscriptions();
+		expect(handler).toHaveBeenCalledOnce();
 	});
 });

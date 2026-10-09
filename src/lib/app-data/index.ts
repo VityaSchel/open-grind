@@ -8,7 +8,10 @@ import {
 	writeWebAppDataFile,
 } from "./web-store";
 
-const nativeFiles = { "preferences.data": "preferences" } as const;
+const nativeFiles = {
+	"preferences.data": "preferences",
+	"honduras-hold.data": "hondurasHold",
+} as const;
 
 type AppDataPath = keyof typeof nativeFiles;
 
