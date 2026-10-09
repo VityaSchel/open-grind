@@ -19,7 +19,7 @@ Never download Open Grind from unofficial sources. The only official sources of 
 ## Android
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-android.apk" size="medium">Download for Android (apk)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-android.apk" size="medium">Download for Android (apk)</VPButton>
     <VPButton href="https://play.google.com/store/apps/details?id=org.opengrind" size="medium" theme="alt">Install from Google Play</VPButton>
 </div>
 
@@ -32,8 +32,8 @@ To install the APK, use your system's APK installer and optionally enable auto u
 ## Windows
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-windows-x86_64.exe" size="medium">Download for Windows x86_64</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-windows-arm64.exe" size="medium">Download for Windows arm64</VPButton>
 </div>
 
 Launch the installer and follow the steps.
@@ -63,8 +63,8 @@ Install WebKitGTK 4.1:
 | openSUSE       | `libwebkit2gtk-4_1-0` |
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.AppImage" size="medium">Download for Linux x86_64 (AppImage)</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.AppImage" size="medium">Download for Linux arm64 (AppImage)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-linux-x86_64.AppImage" size="medium">Download for Linux x86_64 (AppImage)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-linux-arm64.AppImage" size="medium">Download for Linux arm64 (AppImage)</VPButton>
 </div>
 
 Make the AppImage executable and run it:
@@ -84,8 +84,8 @@ In GNOME Files, the same thing is Properties &rarr; Permissions &rarr; "Executab
 ### deb (Debian, Ubuntu, Linux Mint, other Debian-based)
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-linux-x86_64.deb" size="medium">Download for Debian/Ubuntu x86_64 (deb)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-linux-arm64.deb" size="medium">Download for Debian/Ubuntu arm64 (deb)</VPButton>
 </div>
 
 - **To install updates**, set up [apt](#apt-repository). Auto-updater is not available for deb releases.
@@ -143,7 +143,7 @@ When you [report a rendering problem](https://git.opengrind.org/open-grind/open-
 ## macOS
 
 <div class="vpbuttons-row">
-    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5/open-grind-v0.1.0-beta.5-macos.zip" size="medium">Download for macOS (universal)</VPButton>
+    <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-macos.zip" size="medium">Download for macOS (universal)</VPButton>
 </div>
 
 Extract Open&nbsp;Grind.app from zip archive and move to Applications folder.
