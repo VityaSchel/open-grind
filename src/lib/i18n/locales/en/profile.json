@@ -127,5 +127,25 @@
 	"newBadge": {
 		"label": "New",
 		"title": "Joined recently"
+	},
+	"favoriteStar": {
+		"a11y": {
+			"label": "Favorite"
+		}
+	},
+	"miniCard": {
+		"a11y": {
+			"chattedRecently": "Chatted recently",
+			"anonymous": "Profile"
+		},
+		"unreadCount_one": "{{count}} <srOnly>unread messages</srOnly>",
+		"unreadCount_other": "{{count}} <srOnly>unread messages</srOnly>",
+		"cappedUnreadCount_one": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>",
+		"cappedUnreadCount_other": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>"
+	},
+	"item": {
+		"a11y": {
+			"profileLink": "{{name}}'s profile"
+		}
 	}
 }

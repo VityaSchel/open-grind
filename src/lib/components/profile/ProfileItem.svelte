@@ -97,7 +97,9 @@
 	{#if avatar.link}
 		<a
 			href={avatar.link}
-			aria-label="{accessibleName}'s profile"
+			aria-label={t("profile.item.a11y.profileLink", {
+				name: accessibleName,
+			})}
 			class="rounded-l-2xl @max-row:hidden"
 			tabindex={linkTabindex}
 		>

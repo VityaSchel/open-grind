@@ -283,6 +283,7 @@ export interface Messages {
 	"profile.ethnicity.other": undefined;
 	"profile.ethnicity.southAsian": undefined;
 	"profile.ethnicity.white": undefined;
+	"profile.favoriteStar.a11y.label": undefined;
 	"profile.fields.lastTested": undefined;
 	"profile.healthPractice.condoms": undefined;
 	"profile.healthPractice.doxyPep": undefined;
@@ -296,6 +297,7 @@ export interface Messages {
 	"profile.hivStatus.positive": undefined;
 	"profile.hivStatus.positiveUndetectable": undefined;
 	"profile.hivStatus.preferToDiscuss": undefined;
+	"profile.item.a11y.profileLink": { name: string };
 	"profile.lookingFor.chat": undefined;
 	"profile.lookingFor.dates": undefined;
 	"profile.lookingFor.friends": undefined;
@@ -307,6 +309,8 @@ export interface Messages {
 	"profile.meetAt.myPlace": undefined;
 	"profile.meetAt.restaurant": undefined;
 	"profile.meetAt.yourPlace": undefined;
+	"profile.miniCard.a11y.anonymous": undefined;
+	"profile.miniCard.a11y.chattedRecently": undefined;
 	"profile.newBadge.label": undefined;
 	"profile.newBadge.title": undefined;
 	"profile.onlineStatus.lastOnline": { ago: string };
@@ -450,6 +454,9 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
+	"profile.item.a11y.profileLink": { name: "placeholder" };
+	"profile.miniCard.cappedUnreadCount": { cappedCount: "tag"; count: "count"; srOnly: "tag" };
+	"profile.miniCard.unreadCount": { count: "count"; srOnly: "tag" };
 	"profile.onlineStatus.lastOnline": { ago: "placeholder" };
 	"settings.account.unimplemented": { issueLink: "placeholder" };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };
