@@ -246,5 +246,52 @@
 		"errors": {
 			"saveFailed": "Failed to save note"
 		}
+	},
+	"report": {
+		"reason": {
+			"spam": "Spam",
+			"harassmentBullying": "Harassment or Bullying",
+			"hateDiscrimination": "Hate Speech/Discrimination",
+			"nudityPornography": "Nudity or Pornography",
+			"underage": "Underage",
+			"impersonation": "Impersonation",
+			"illegalActivity": "Illegal Activity",
+			"sexualSolicitation": "Sexual Solicitation",
+			"seriousInPersonIncident": "Serious In Person Incident"
+		},
+		"location": {
+			"profilePhoto": "Profile Photo",
+			"profileInformation": "Profile Information",
+			"chatMessage": "Chat Message",
+			"album": "Album",
+			"rightNowPhoto": "Right Now Image",
+			"rightNowText": "Right Now Text"
+		},
+		"profile": {
+			"title": "Report profile",
+			"a11y": {
+				"description": "Send a report about this profile to Grindr."
+			},
+			"reviewed": "Grindr will review this profile."
+		},
+		"message": {
+			"title": "Report message",
+			"a11y": {
+				"description": "Send a report about this person's messages to Grindr."
+			},
+			"reviewed": "Grindr will review your report."
+		},
+		"submitted": "Report submitted",
+		"blockHint": "You can block this profile so you stop seeing it.",
+		"done": "Done",
+		"a11y": {
+			"reason": "Reason"
+		},
+		"whereItHappened": "Where it happened",
+		"details": "Details (optional)",
+		"submit": "Submit report",
+		"errors": {
+			"sendFailed": "Failed to send report"
+		}
 	}
 }

@@ -9,6 +9,7 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { type MessageKey, t } from "$lib/i18n";
 	import {
 		type ReportLocation,
 		reportLocationSchema,
@@ -36,45 +37,43 @@
 		onBlocked?: () => void;
 	} = $props();
 
-	const reasonLabels: Record<ReportReason, string> = {
-		SPAM: "Spam",
-		HARASSMENT_BULLYING: "Harassment or Bullying",
-		HATE_DISCRIMINATION: "Hate Speech/Discrimination",
-		NUDITY_PORNOGRAPHY: "Nudity or Pornography",
-		UNDERAGE: "Underage",
-		IMPERSONATION: "Impersonation",
-		ILLEGAL_ACTIVITY: "Illegal Activity",
-		SEXUAL_SOLICITATION: "Sexual Solicitation",
-		SERIOUS_IN_PERSON_INCIDENT: "Serious In Person Incident",
-	};
+	const reasonKeys = {
+		SPAM: "profile.report.reason.spam",
+		HARASSMENT_BULLYING: "profile.report.reason.harassmentBullying",
+		HATE_DISCRIMINATION: "profile.report.reason.hateDiscrimination",
+		NUDITY_PORNOGRAPHY: "profile.report.reason.nudityPornography",
+		UNDERAGE: "profile.report.reason.underage",
+		IMPERSONATION: "profile.report.reason.impersonation",
+		ILLEGAL_ACTIVITY: "profile.report.reason.illegalActivity",
+		SEXUAL_SOLICITATION: "profile.report.reason.sexualSolicitation",
+		SERIOUS_IN_PERSON_INCIDENT:
+			"profile.report.reason.seriousInPersonIncident",
+	} as const satisfies Record<ReportReason, MessageKey>;
 
-	const locationLabels: Record<ReportLocation, string> = {
-		PROFILE_PHOTO: "Profile Photo",
-		PROFILE_INFORMATION: "Profile Information",
-		CHAT_MESSAGE: "Chat Message",
-		ALBUM: "Album",
-		RIGHT_NOW_PHOTO: "Right Now Image",
-		RIGHT_NOW_TEXT: "Right Now Text",
-	};
+	const locationKeys = {
+		PROFILE_PHOTO: "profile.report.location.profilePhoto",
+		PROFILE_INFORMATION: "profile.report.location.profileInformation",
+		CHAT_MESSAGE: "profile.report.location.chatMessage",
+		ALBUM: "profile.report.location.album",
+		RIGHT_NOW_PHOTO: "profile.report.location.rightNowPhoto",
+		RIGHT_NOW_TEXT: "profile.report.location.rightNowText",
+	} as const satisfies Record<ReportLocation, MessageKey>;
 
-	const subjectCopy: Record<
-		ReportSubject,
-		{ title: string; description: string; reviewed: string }
-	> = {
+	const subjectKeys = {
 		profile: {
-			title: "Report profile",
-			description: "Send a report about this profile to Grindr.",
-			reviewed: "Grindr will review this profile.",
+			title: "profile.report.profile.title",
+			description: "profile.report.profile.a11y.description",
+			reviewed: "profile.report.profile.reviewed",
 		},
 		message: {
-			title: "Report message",
-			description:
-				"Send a report about this person's messages to Grindr.",
-			reviewed: "Grindr will review your report.",
+			title: "profile.report.message.title",
+			description: "profile.report.message.a11y.description",
+			reviewed: "profile.report.message.reviewed",
 		},
-	};
-
-	const detailsLabel = "Details (optional)";
+	} as const satisfies Record<
+		ReportSubject,
+		Record<"title" | "description" | "reviewed", MessageKey>
+	>;
 
 	let reason = $state<ReportReason | null>(null);
 	let locations = $state<ReportLocation[]>([]);
@@ -83,7 +82,7 @@
 	let blocking = $state(false);
 	let submitted = $state(false);
 
-	const copy = $derived(subjectCopy[subject]);
+	const subjectKey = $derived(subjectKeys[subject]);
 	const isSpam = $derived(reason === "SPAM");
 	const reasonChosen = $derived(reason !== null);
 	const wherePickerShown = $derived(
@@ -112,7 +111,10 @@
 			submitted = true;
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to send report", error });
+			showErrorToast({
+				label: t("profile.report.errors.sendFailed"),
+				error,
+			});
 		} finally {
 			submitting = false;
 		}
@@ -127,7 +129,10 @@
 			onBlocked?.();
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to block user", error });
+			showErrorToast({
+				label: t("profile.viewability.errors.blockFailed"),
+				error,
+			});
 		} finally {
 			blocking = false;
 		}
@@ -142,10 +147,12 @@
 	>
 		<ResponsiveDialog.Header>
 			<ResponsiveDialog.Title>
-				{submitted ? "Report submitted" : copy.title}
+				{submitted
+					? t("profile.report.submitted")
+					: t(subjectKey.title)}
 			</ResponsiveDialog.Title>
 			<ResponsiveDialog.Description class="sr-only">
-				{copy.description}
+				{t(subjectKey.description)}
 			</ResponsiveDialog.Description>
 		</ResponsiveDialog.Header>
 		{#if submitted}
@@ -154,10 +161,10 @@
 					data-slot="report-submitted"
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
-					<p>{copy.reviewed}</p>
+					<p>{t(subjectKey.reviewed)}</p>
 					{#if blockable}
 						<p class="text-sm text-muted-foreground">
-							You can block this profile so you stop seeing it.
+							{t("profile.report.blockHint")}
 						</p>
 					{/if}
 				</div>
@@ -172,11 +179,11 @@
 						{#if blocking}
 							<Spinner />
 						{/if}
-						Block profile
+						{t("profile.topNav.actionsMenu.block")}
 					</Button>
 				{/if}
 				<Button variant="secondary" onclick={() => (open = false)}>
-					Done
+					{t("profile.report.done")}
 				</Button>
 			</ResponsiveDialog.Footer>
 		{:else}
@@ -194,7 +201,7 @@
 							orientation="vertical"
 							variant="outline"
 							spacing={2}
-							aria-label="Reason"
+							aria-label={t("profile.report.a11y.reason")}
 							class="w-full"
 							bind:value={
 								() => reason ?? "",
@@ -207,7 +214,7 @@
 						>
 							{#each reportReasonSchema.options as value (value)}
 								<ToggleGroup.Item {value} class="justify-start">
-									{reasonLabels[value]}
+									{t(reasonKeys[value])}
 								</ToggleGroup.Item>
 							{/each}
 						</ToggleGroup.Root>
@@ -218,13 +225,13 @@
 							class="flex flex-col gap-1.5"
 						>
 							<span class="px-1 text-sm leading-none font-medium">
-								Where it happened
+								{t("profile.report.whereItHappened")}
 							</span>
 							<ToggleGroup.Root
 								type="multiple"
 								variant="outline"
 								spacing={2}
-								aria-label="Where it happened"
+								aria-label={t("profile.report.whereItHappened")}
 								class="w-full flex-wrap gap-1"
 								bind:value={
 									() => locations,
@@ -234,7 +241,7 @@
 							>
 								{#each reportLocationSchema.options as value (value)}
 									<ToggleGroup.Item {value}>
-										{locationLabels[value]}
+										{t(locationKeys[value])}
 									</ToggleGroup.Item>
 								{/each}
 							</ToggleGroup.Root>
@@ -243,8 +250,8 @@
 					{#if detailsShown}
 						<Textarea
 							bind:value={comment}
-							aria-label={detailsLabel}
-							placeholder={detailsLabel}
+							aria-label={t("profile.report.details")}
+							placeholder={t("profile.report.details")}
 							class="min-h-24"
 						/>
 					{/if}
@@ -257,7 +264,7 @@
 						{#if submitting}
 							<Spinner />
 						{/if}
-						Submit report
+						{t("profile.report.submit")}
 					</Button>
 				</ResponsiveDialog.Footer>
 			</fieldset>
