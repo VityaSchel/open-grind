@@ -199,17 +199,31 @@ const rawText = (selectors) =>
 			"Move this text to src/lib/i18n/locales/en and render it with t(), or with Rich.svelte or richParts() when it has tags",
 	}));
 
+const proseAt = ({ parent, field = "" }) => [
+	`${parent} > ${proseText}${field}`,
+	`${parent} > ArrayExpression${field} > ${proseText}`,
+];
+
 const scriptRawTextSelectors = rawText([
 	`${toastCall} > ${literalText}`,
 	`${toastTextProperty} > ${literalText}`,
-	`${fallbackOperator} > ${proseText}.right`,
-	`AssignmentPattern > ${proseText}.right`,
-	`ConditionalExpression > ${proseText}:matches(.consequent, .alternate)`,
-	`Property:not(${identityProperty}, ${toastTextProperty}) > ${proseText}.value`,
-	`CallExpression:not(${toastCall}, ${schemaCall}) > ${proseText}.arguments`,
-	`VariableDeclarator > ${proseText}.init`,
-	`ReturnStatement > ${proseText}`,
-	`ArrowFunctionExpression > ${proseText}.body`,
+	...proseAt({ parent: fallbackOperator, field: ".right" }),
+	...proseAt({ parent: "AssignmentPattern", field: ".right" }),
+	...proseAt({
+		parent: "ConditionalExpression",
+		field: ":matches(.consequent, .alternate)",
+	}),
+	...proseAt({
+		parent: `Property:not(${identityProperty}, ${toastTextProperty})`,
+		field: ".value",
+	}),
+	...proseAt({
+		parent: `CallExpression:not(${toastCall}, ${schemaCall})`,
+		field: ".arguments",
+	}),
+	...proseAt({ parent: "VariableDeclarator", field: ".init" }),
+	...proseAt({ parent: "ReturnStatement" }),
+	...proseAt({ parent: "ArrowFunctionExpression", field: ".body" }),
 ]);
 
 const svelteRawTextSelectors = rawText([
@@ -217,7 +231,7 @@ const svelteRawTextSelectors = rawText([
 	`${textAttribute} > SvelteLiteral[value=${letter}]`,
 	`${textAttribute} > SvelteMustacheTag > ${literalText}`,
 	`${componentAttribute} > SvelteLiteral${proseValue}`,
-	`${componentAttribute} > SvelteMustacheTag > ${proseText}`,
+	...proseAt({ parent: `${componentAttribute} > SvelteMustacheTag` }),
 ]);
 
 const translationCall = `CallExpression[callee.name=/^(?:t|richParts)$/]`;
