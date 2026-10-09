@@ -7,7 +7,10 @@
 		unsendMessage,
 	} from "$lib/api/messaging/messages";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
-	import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+	import {
+		offerEntitlementBypass,
+		reportRefusedDespiteBypass,
+	} from "$lib/entitlements/bypass.svelte";
 	import {
 		type ConversationState,
 		getConversationState,
@@ -60,10 +63,13 @@
 		} catch (error) {
 			console.error(error);
 			if (tieredFeature(error) === "UnsentMessage") {
-				offerEntitlementBypass({
+				const lease = await offerEntitlementBypass({
 					reason: "Unsending a message requires a Grindr subscription.",
-					retry: () => unsend({ state, messageId }),
 				});
+				if (lease === null) return;
+				await unsend({ state, messageId })
+					.catch(reportRefusedDespiteBypass)
+					.finally(lease.release);
 				return;
 			}
 			showErrorToast({ label: "Failed to unsend message", error });

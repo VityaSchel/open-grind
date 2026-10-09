@@ -9,7 +9,10 @@ import {
 	sendMessage,
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+import {
+	offerEntitlementBypass,
+	reportRefusedDespiteBypass,
+} from "$lib/entitlements/bypass.svelte";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { reconciler } from "$lib/util/reconcile";
 import {
@@ -427,10 +430,13 @@ export class ConversationState {
 				delivery.message.type === "ExpiringImage" &&
 				urn === "urn:gr:err:entitlement_limit"
 			) {
-				offerEntitlementBypass({
+				const lease = await offerEntitlementBypass({
 					reason: "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
-					retry: () => this.#attemptSend(delivery),
 				});
+				if (lease === null) return;
+				await this.#attemptSend(delivery)
+					.catch(reportRefusedDespiteBypass)
+					.finally(lease.release);
 			}
 		}
 	}

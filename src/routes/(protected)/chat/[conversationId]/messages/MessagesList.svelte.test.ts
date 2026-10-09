@@ -10,6 +10,7 @@ const {
 	deleteMessageForMeMock,
 	unsendMessageMock,
 	offerBypassMock,
+	reportRefusedMock,
 	showErrorToastMock,
 	setMediaRenewalMock,
 } = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const {
 	deleteMessageForMeMock: vi.fn(),
 	unsendMessageMock: vi.fn(),
 	offerBypassMock: vi.fn(),
+	reportRefusedMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	setMediaRenewalMock: vi.fn(),
 }));
@@ -49,6 +51,7 @@ vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("$lib/api/error-copy", () => ({ promptCopyError: vi.fn() }));
 vi.mock("$lib/entitlements/bypass.svelte", () => ({
 	offerEntitlementBypass: offerBypassMock,
+	reportRefusedDespiteBypass: reportRefusedMock,
 }));
 
 const conversationState = vi.hoisted<{ current: unknown }>(() => ({
@@ -429,48 +432,110 @@ describe("MessagesList actions", () => {
 });
 
 describe("MessagesList unsend", () => {
+	const UNSEND_REASON = "Unsending a message requires a Grindr subscription.";
+
+	const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+	function grantLease() {
+		const release = vi.fn(() => Promise.resolve());
+		offerBypassMock.mockResolvedValue({ release });
+		return release;
+	}
+
 	it("offers the bypass and puts the message back when unsend is paywalled", async () => {
 		unsendMessageMock.mockRejectedValue(paywall());
+		offerBypassMock.mockResolvedValue(null);
 
 		const unsend = renderOwnMessage().onUnsend as () => void;
 		unsend();
 		await vi.waitFor(() => expect(offerBypassMock).toHaveBeenCalled());
 
-		expect(revert).toHaveBeenCalledOnce();
-		expect(offerBypassMock).toHaveBeenCalledWith({
-			reason: "Unsending a message requires a Grindr subscription.",
-			retry: expect.any(Function),
+		expect(offerBypassMock).toHaveBeenCalledExactlyOnceWith({
+			reason: UNSEND_REASON,
 		});
+		expect(revert).toHaveBeenCalledOnce();
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
-	it("unsends again when the bypass retries it", async () => {
-		unsendMessageMock.mockRejectedValueOnce(paywall());
+	it("leaves the message in place without a toast when the bypass is declined", async () => {
+		unsendMessageMock.mockRejectedValue(paywall());
+		offerBypassMock.mockResolvedValue(null);
 
 		const unsend = renderOwnMessage().onUnsend as () => void;
 		unsend();
 		await vi.waitFor(() => expect(offerBypassMock).toHaveBeenCalled());
+		await settle();
 
-		unsendMessageMock.mockResolvedValue(undefined);
-		const { retry } = offerBypassMock.mock.calls[0]?.[0] as {
-			retry: () => Promise<void>;
-		};
-		await retry();
+		expect(unsendMessageMock).toHaveBeenCalledOnce();
+		expect(revert).toHaveBeenCalledOnce();
+		expect(reportRefusedMock).not.toHaveBeenCalled();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("unsends again under the granted lease and releases it after the retry settles", async () => {
+		const retry = Promise.withResolvers<undefined>();
+		unsendMessageMock
+			.mockRejectedValueOnce(paywall())
+			.mockReturnValueOnce(retry.promise);
+		const release = grantLease();
+
+		const unsend = renderOwnMessage().onUnsend as () => void;
+		unsend();
+		await vi.waitFor(() =>
+			expect(unsendMessageMock).toHaveBeenCalledTimes(2),
+		);
+		await settle();
 
 		expect(unsendMessageMock).toHaveBeenNthCalledWith(2, {
 			conversationId: CONVERSATION_ID,
 			messageId: MESSAGE_ID,
 		});
+		expect(release).not.toHaveBeenCalled();
+
+		retry.resolve(undefined);
+		await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+
 		expect(revert).toHaveBeenCalledOnce();
+		expect(reportRefusedMock).not.toHaveBeenCalled();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("reports a retry refused despite the bypass, puts the message back and still releases the lease", async () => {
+		const refusal = paywall();
+		unsendMessageMock
+			.mockRejectedValueOnce(paywall())
+			.mockRejectedValueOnce(refusal);
+		const release = grantLease();
+
+		const unsend = renderOwnMessage().onUnsend as () => void;
+		unsend();
+		await vi.waitFor(() => expect(release).toHaveBeenCalledOnce());
+
+		expect(reportRefusedMock).toHaveBeenCalledOnce();
+		expect(reportRefusedMock.mock.calls[0]?.[0]).toBe(refusal);
+		expect(revert).toHaveBeenCalledTimes(2);
+		expect(revert.mock.invocationCallOrder[1]).toBeLessThan(
+			release.mock.invocationCallOrder[0]!,
+		);
+		expect(reportRefusedMock.mock.invocationCallOrder[0]).toBeLessThan(
+			release.mock.invocationCallOrder[0]!,
+		);
+		expect(offerBypassMock).toHaveBeenCalledOnce();
+		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
 	it("falls back to a toast for a plain unsend failure", async () => {
-		unsendMessageMock.mockRejectedValue(new Error("offline"));
+		const failure = new Error("offline");
+		unsendMessageMock.mockRejectedValue(failure);
 
 		const unsend = renderOwnMessage().onUnsend as () => void;
 		unsend();
 		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
 
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Failed to unsend message",
+			error: failure,
+		});
 		expect(offerBypassMock).not.toHaveBeenCalled();
 		expect(revert).toHaveBeenCalledOnce();
 	});

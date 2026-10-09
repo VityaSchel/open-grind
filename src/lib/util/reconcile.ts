@@ -1,5 +1,6 @@
 import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 import { signedInProfileId } from "$lib/api/current-session";
+import { awaitHomeLocation } from "$lib/entitlements/honduras-hold";
 import { isMobilePlatform } from "$lib/platform/os";
 import { ws } from "$lib/ws.svelte";
 
@@ -72,6 +73,7 @@ class Reconciler {
 		if (now - this.#lastReconcileAt < THROTTLE_MS) return;
 		this.#lastReconcileAt = now;
 
+		await awaitHomeLocation();
 		const profileId = await signedInProfileId().catch(() => null);
 		if (profileId === null) return;
 

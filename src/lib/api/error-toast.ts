@@ -11,14 +11,17 @@ export function showErrorToast({
 	label = "An error occurred",
 	error,
 	onRetry,
+	id,
 }: {
 	label?: string;
 	error: unknown;
 	onRetry?: () => void;
+	id?: string;
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
 	if (onRetry) {
 		toast.error(label, {
+			id,
 			action: { label: "Retry", onClick: onRetry },
 			cancel: {
 				label: "Copy details",
@@ -28,6 +31,7 @@ export function showErrorToast({
 		return;
 	}
 	toast.error(label, {
+		id,
 		action: {
 			label: "Copy details",
 			onClick: () => void promptCopyError(error).catch(() => {}),

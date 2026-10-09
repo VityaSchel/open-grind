@@ -14,12 +14,14 @@ static APP_DATA_LOCK: Mutex<()> = Mutex::new(());
 #[serde(rename_all = "camelCase")]
 pub enum AppDataFile {
 	Preferences,
+	HondurasHold,
 }
 
 impl AppDataFile {
 	const fn file_name(self) -> &'static str {
 		match self {
 			Self::Preferences => "preferences.data",
+			Self::HondurasHold => "honduras-hold.data",
 		}
 	}
 }
@@ -287,9 +289,11 @@ mod tests {
 		};
 
 		assert_eq!(named("preferences").unwrap(), AppDataFile::Preferences);
+		assert_eq!(named("hondurasHold").unwrap(), AppDataFile::HondurasHold);
 		for rejected in [
 			"preferences.data",
 			"Preferences",
+			"honduras-hold.data",
 			"../preferences",
 			"/data/user/0/org.opengrind/files/preferences.data",
 			"content://org.opengrind/preferences",
