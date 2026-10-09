@@ -307,6 +307,13 @@ export interface Messages {
 	"profile.meetAt.myPlace": undefined;
 	"profile.meetAt.restaurant": undefined;
 	"profile.meetAt.yourPlace": undefined;
+	"profile.newBadge.label": undefined;
+	"profile.newBadge.title": undefined;
+	"profile.onlineStatus.lastOnline": { ago: string };
+	"profile.onlineStatus.offline": undefined;
+	"profile.onlineStatus.onlineNow": undefined;
+	"profile.onlineStatus.onlineNowVisiting": undefined;
+	"profile.onlineStatus.visiting": undefined;
 	"profile.relationshipStatus.committed": undefined;
 	"profile.relationshipStatus.dating": undefined;
 	"profile.relationshipStatus.engaged": undefined;
@@ -443,6 +450,7 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
+	"profile.onlineStatus.lastOnline": { ago: "placeholder" };
 	"settings.account.unimplemented": { issueLink: "placeholder" };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: "placeholder" };
 	"settings.app.pin.unimplemented": { issueLink: "placeholder" };

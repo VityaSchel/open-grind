@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatDistanceStrict } from "date-fns";
-
+	import { t } from "$lib/i18n";
+	import { formatRelativeTime } from "$lib/i18n/format";
 	import { getNow } from "$lib/util/now";
 
 	let {
@@ -22,12 +22,14 @@
 			class="ms-0.5 inline-block size-2 shrink-0 rounded-full bg-green-500"
 		>
 		</span>
-		Online now
+		{t("profile.onlineStatus.onlineNow")}
 	</div>
 {:else if seen !== null}
 	<span class="text-gray-500">
-		Online {formatDistanceStrict(seen, getNow(), { addSuffix: true })}
+		{t("profile.onlineStatus.lastOnline", {
+			ago: formatRelativeTime({ date: seen, baseDate: getNow() }),
+		})}
 	</span>
 {:else}
-	<span class="text-gray-500">Offline</span>
+	<span class="text-gray-500">{t("profile.onlineStatus.offline")}</span>
 {/if}

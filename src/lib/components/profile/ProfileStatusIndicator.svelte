@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { AirplaneTiltIcon } from "phosphor-svelte";
 
+	import { t } from "$lib/i18n";
 	import { getNow } from "$lib/util/now";
 
 	let {
@@ -16,13 +17,13 @@
 	const online = $derived((onlineUntil ?? 0) > getNow());
 	const title = $derived.by(() => {
 		if (online && isVisiting) {
-			return "Online now. Visiting";
+			return t("profile.onlineStatus.onlineNowVisiting");
 		}
 		if (online) {
-			return "Online now";
+			return t("profile.onlineStatus.onlineNow");
 		}
 		if (isVisiting) {
-			return "Visiting";
+			return t("profile.onlineStatus.visiting");
 		}
 	});
 </script>

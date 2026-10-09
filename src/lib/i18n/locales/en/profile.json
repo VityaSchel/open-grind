@@ -116,5 +116,16 @@
 		"errors": {
 			"sendFailed": "Failed to send tap"
 		}
+	},
+	"onlineStatus": {
+		"onlineNow": "Online now",
+		"onlineNowVisiting": "Online now. Visiting",
+		"visiting": "Visiting",
+		"lastOnline": "Online {{ago}}",
+		"offline": "Offline"
+	},
+	"newBadge": {
+		"label": "New",
+		"title": "Joined recently"
 	}
 }

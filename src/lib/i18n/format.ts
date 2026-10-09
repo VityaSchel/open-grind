@@ -1,3 +1,9 @@
+import {
+	type FormatDistanceFn,
+	formatDistanceStrict,
+	type FormatDistanceToken,
+} from "date-fns";
+
 import { t } from "./index";
 import {
 	formatCount,
@@ -65,12 +71,25 @@ const datePresets = {
 	monthYear: { month: "long", year: "numeric" },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
+type DistanceUnitToken = Extract<FormatDistanceToken, `x${string}`>;
+
+const distanceUnits = {
+	xSeconds: "second",
+	xMinutes: "minute",
+	xHours: "hour",
+	xDays: "day",
+	xWeeks: "week",
+	xMonths: "month",
+	xYears: "year",
+} as const satisfies Record<DistanceUnitToken, Intl.RelativeTimeFormatUnit>;
+
 export type NumberPresetName = keyof typeof numberPresets;
 export type DatePresetName = keyof typeof datePresets;
 
 const numberFormats = new Map<string, Intl.NumberFormat>();
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
 const listFormats = new Map<string, Intl.ListFormat>();
+const relativeTimeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
 function cachedFormatter<Formatter>({
 	cache,
@@ -125,6 +144,35 @@ export function formatDate({
 			new Intl.DateTimeFormat(locales, datePresets[preset]),
 	});
 	return markFormatted({ locale: getLocale(), text: formatter.format(date) });
+}
+
+export function formatRelativeTime({
+	date,
+	baseDate,
+}: {
+	date: Date | number;
+	baseDate: Date | number;
+}): string {
+	const formatter = cachedFormatter({
+		cache: relativeTimeFormats,
+		preset: "always",
+		create: (locales) =>
+			new Intl.RelativeTimeFormat(locales, { numeric: "always" }),
+	});
+	const formatDistance: FormatDistanceFn = (token, count, options) =>
+		formatter
+			.formatToParts(
+				(options?.comparison ?? 0) > 0 ? count : -count,
+				distanceUnits[token as DistanceUnitToken],
+			)
+			.filter((part) => part.type !== "group")
+			.map((part) => part.value)
+			.join("");
+	const text = formatDistanceStrict(date, baseDate, {
+		addSuffix: true,
+		locale: { formatDistance },
+	});
+	return markFormatted({ locale: getLocale(), text });
 }
 
 export function formatList(items: readonly string[]): string {

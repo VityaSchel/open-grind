@@ -1,3 +1,4 @@
+import { formatDistanceStrict } from "date-fns";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { restoreCountFormatter } from "./fixtures/count-formatter";
@@ -8,10 +9,13 @@ import {
 	formatList,
 	formatNumber,
 	formatRange,
+	formatRelativeTime,
 	isolate,
 	type NumberPresetName,
 } from "./format";
 import { setCountFormatter, setLocale, SOURCE_LOCALE } from "./index";
+
+vi.mock("./catalog-files", () => import("./fixtures/mock-catalog-files"));
 
 afterEach(async () => {
 	vi.restoreAllMocks();
@@ -107,6 +111,36 @@ const dateCases: Record<DatePresetName, [Date, string][]> = {
 	],
 };
 
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const BASE_DATE = new Date(2026, 9, 9, 12);
+
+const relativeTimeCases: [offset: number, text: string][] = [
+	[0, "0 seconds ago"],
+	[SECOND, "1 second ago"],
+	[45 * SECOND, "45 seconds ago"],
+	[MINUTE, "1 minute ago"],
+	[5 * MINUTE, "5 minutes ago"],
+	[59.5 * MINUTE, "60 minutes ago"],
+	[HOUR, "1 hour ago"],
+	[3 * HOUR, "3 hours ago"],
+	[2 * DAY, "2 days ago"],
+	[31 * DAY, "1 month ago"],
+	[200 * DAY, "7 months ago"],
+	[360 * DAY, "1 year ago"],
+	[800 * DAY, "2 years ago"],
+	[1002 * 365 * DAY, "1002 years ago"],
+	[-2 * MINUTE, "in 2 minutes"],
+	[-1002 * 365 * DAY, "in 1002 years"],
+];
+
+const dateAgo = (offset: number) => BASE_DATE.getTime() - offset;
+
+const timeAgo = (offset: number) =>
+	formatRelativeTime({ date: dateAgo(offset), baseDate: BASE_DATE });
+
 describe("number presets", () => {
 	it.each(Object.entries(numberCases))(
 		"%s prints today's English",
@@ -133,6 +167,32 @@ describe("date presets", () => {
 			}
 		},
 	);
+});
+
+describe("formatRelativeTime", () => {
+	it.each(relativeTimeCases)(
+		"prints an offset of %d ms as %s, as date-fns does",
+		(offset, text) => {
+			expect(timeAgo(offset)).toBe(text);
+			expect(
+				formatDistanceStrict(dateAgo(offset), BASE_DATE, {
+					addSuffix: true,
+				}),
+			).toBe(text);
+		},
+	);
+
+	it("marks the text as formatted under en-XA", async () => {
+		await setLocale({ locale: "en-XA" });
+		expect(timeAgo(5 * MINUTE)).toBe("⟦5 minutes ago⟧");
+	});
+
+	it("words the distance in the active locale", async () => {
+		await setLocale({ locale: "fr" });
+		expect(timeAgo(5 * MINUTE)).toBe("il y a 5 minutes");
+		expect(timeAgo(DAY)).toBe("il y a 1 jour");
+		expect(timeAgo(-2 * MINUTE)).toBe("dans 2 minutes");
+	});
 });
 
 describe("formatList", () => {
