@@ -255,7 +255,7 @@ describe("ViewsState", () => {
 		await reconcileHandlers[0]?.();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith({
-			label: "Failed to refresh views",
+			label: "Couldn’t refresh views",
 			error: expect.any(Error),
 			onRetry: expect.any(Function),
 		});
@@ -593,7 +593,7 @@ describe("ViewsState viewed-me tracking", () => {
 		expect(state.viewedMeHidden).toBe(true);
 		expect(state.enablingViewedMe).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledWith({
-			label: "Failed to turn on the Viewed Me List",
+			label: "Couldn’t turn on Viewed Me",
 			error: expect.any(Error),
 		});
 	});

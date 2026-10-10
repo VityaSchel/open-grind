@@ -9,7 +9,7 @@
 			"description": "Browse <gridLink>Grid</gridLink> to find people, and they might tap you back."
 		},
 		"errors": {
-			"refreshFailed": "Failed to refresh taps"
+			"refreshFailed": "Couldn’t refresh taps"
 		}
 	},
 	"views": {
@@ -18,9 +18,9 @@
 			"description": "When someone views your profile, they’ll show up here."
 		},
 		"untracked": {
-			"title": "Profile Viewers Aren’t Tracked",
-			"description": "Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client.",
-			"enable": "Enable"
+			"title": "Viewed Me is off",
+			"description": "Grindr isn’t recording who views your profile because “Show Me In Viewed Me List” is off in your Grindr settings. Turning it on changes it in the official Grindr app too, and lets people see when you view their profiles.",
+			"enable": "Turn on"
 		},
 		"preview": {
 			"a11y": {
@@ -35,8 +35,8 @@
 			"cappedViewCount_other": "{{count}}+<srOnly>views</srOnly>"
 		},
 		"errors": {
-			"refreshFailed": "Failed to refresh views",
-			"turnOnViewedMeFailed": "Failed to turn on the Viewed Me List"
+			"refreshFailed": "Couldn’t refresh views",
+			"turnOnViewedMeFailed": "Couldn’t turn on Viewed Me"
 		}
 	}
 }

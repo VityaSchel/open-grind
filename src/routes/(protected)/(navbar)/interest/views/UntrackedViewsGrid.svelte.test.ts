@@ -27,12 +27,12 @@ describe("UntrackedViewsGrid", () => {
 		const { container } = renderUntracked();
 
 		expect(container.textContent).toBe(
-			" Profile Viewers Aren’t Tracked Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client. Enable",
+			" Viewed Me is off Grindr isn’t recording who views your profile because “Show Me In Viewed Me List” is off in your Grindr settings. Turning it on changes it in the official Grindr app too, and lets people see when you view their profiles. Turn on",
 		);
-		expect(enableButton().textContent).toBe("Enable");
+		expect(enableButton().textContent).toBe("Turn on");
 	});
 
-	it("turns tracking on when Enable is pressed", async () => {
+	it("turns tracking on when Turn on is pressed", async () => {
 		const { onEnable } = renderUntracked();
 		expect(onEnable).not.toHaveBeenCalled();
 
@@ -41,7 +41,7 @@ describe("UntrackedViewsGrid", () => {
 		expect(onEnable).toHaveBeenCalledOnce();
 	});
 
-	it("disables Enable while tracking is being turned on", async () => {
+	it("disables Turn on while tracking is being turned on", async () => {
 		const { rerender } = renderUntracked({ enabling: true });
 
 		expect(enableButton().disabled).toBe(true);
