@@ -24,7 +24,7 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title={t("common.filters.position.title")}
+	title={t("common.filters.position.label")}
 	switchLabel={t("common.filters.position.a11y.toggle")}
 	onreset={() => {
 		value = defaultFilters.positions;

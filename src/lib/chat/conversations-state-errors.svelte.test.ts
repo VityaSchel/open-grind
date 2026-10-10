@@ -65,31 +65,31 @@ describe("ConversationsState failure toasts", () => {
 			"pinning",
 			(state: ConversationsState) =>
 				state.setPinned({ conversationIds: [PLAIN], pinned: true }),
-			"Failed to pin conversation",
+			"Couldn’t pin conversation",
 		],
 		[
 			"unpinning",
 			(state: ConversationsState) =>
 				state.setPinned({ conversationIds: [FLAGGED], pinned: false }),
-			"Failed to unpin conversation",
+			"Couldn’t unpin conversation",
 		],
 		[
 			"muting",
 			(state: ConversationsState) =>
 				state.setMuted({ conversationIds: [PLAIN], muted: true }),
-			"Failed to mute conversation",
+			"Couldn’t mute conversation",
 		],
 		[
 			"unmuting",
 			(state: ConversationsState) =>
 				state.setMuted({ conversationIds: [FLAGGED], muted: false }),
-			"Failed to unmute conversation",
+			"Couldn’t unmute conversation",
 		],
 		[
 			"deleting",
 			(state: ConversationsState) =>
 				state.deleteConversations([FLAGGED, PLAIN]),
-			"Failed to delete conversation",
+			"Couldn’t delete conversation",
 		],
 	])("names the action when %s fails", async (_action, act, label) => {
 		const state = new ConversationsState({
@@ -118,7 +118,7 @@ describe("ConversationsState failure toasts", () => {
 		await expect(state.ensureLoaded("c:3")).resolves.toBe(false);
 
 		expect(showErrorToastMock).toHaveBeenCalledWith({
-			label: "Failed to sync conversation into sidebar",
+			label: "Couldn’t update the inbox",
 			error: expect.any(Error),
 		});
 	});

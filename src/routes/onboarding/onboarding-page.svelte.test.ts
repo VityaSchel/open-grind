@@ -75,7 +75,7 @@ describe("Onboarding page", () => {
 		await vi.waitFor(() =>
 			expect(showErrorToast).toHaveBeenCalledWith(
 				expect.objectContaining({
-					label: "Couldn’t add Open Grind to your apps",
+					label: "Couldn’t add Open Grind to your apps menu",
 				}),
 			),
 		);

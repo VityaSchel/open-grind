@@ -310,13 +310,13 @@ describe("applyPhotoSwipeLabels", () => {
 	it("relabels a shown load error when the locale switches", async () => {
 		const lightbox = await openLabeled();
 		lightbox.pswp?.currSlide?.content.onError();
-		expect(errorLabel()).toBe("Media failed to load");
+		expect(errorLabel()).toBe("Couldn’t load media");
 
 		await setLocale({ locale: "en-XA" });
 		flushSync();
 
 		expect(errorLabel()).toBe(t("media.lightbox.errors.loadFailed"));
-		expect(errorLabel()).not.toBe("Media failed to load");
+		expect(errorLabel()).not.toBe("Couldn’t load media");
 	});
 });
 
@@ -348,7 +348,7 @@ describe("applyPhotoSwipeVideo", () => {
 		const notice = document.querySelector(".pswp__error-msg p");
 		const guide = notice?.querySelector("a");
 		expect(notice?.textContent).toBe(
-			"Playing this video needs an H.264 decoder, which is not installed on this system. How to install video codecs",
+			"Playing this video needs an H.264 decoder, which isn’t installed on this system. How to install video codecs",
 		);
 		expect(guide?.textContent).toBe("How to install video codecs");
 		expect(guide?.getAttribute("href")).toBe(

@@ -168,7 +168,6 @@ export interface Messages {
 	"common.filters.online": undefined;
 	"common.filters.position.a11y.toggle": undefined;
 	"common.filters.position.label": undefined;
-	"common.filters.position.title": undefined;
 	"common.filters.rightNow": undefined;
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;

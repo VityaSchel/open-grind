@@ -89,7 +89,7 @@ describe("GendersFilter", () => {
 	it("says when the genders fail to load, in the active locale", async () => {
 		getGendersMock.mockRejectedValue(new Error("offline"));
 		renderFilter();
-		const failure = await screen.findByText("Failed to load genders");
+		const failure = await screen.findByText("Couldn’t load genders");
 
 		await setLocale({ locale: "en-XA" });
 

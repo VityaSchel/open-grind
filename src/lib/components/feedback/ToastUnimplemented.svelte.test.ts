@@ -17,7 +17,7 @@ describe("ToastUnimplemented", () => {
 		});
 
 		expect(container.textContent).toBe(
-			" TODO: Voice messages not implemented yet, tracking in #35",
+			" Voice messages aren’t implemented yet. Follow the progress in #35.",
 		);
 		expect(getByRole("link", { name: "#35" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/35",

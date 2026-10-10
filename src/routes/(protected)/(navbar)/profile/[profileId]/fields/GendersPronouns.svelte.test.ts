@@ -37,7 +37,7 @@ const failures = [
 	{
 		kind: "genders",
 		lookup: getGendersMock,
-		message: "Failed to load genders",
+		message: "Couldn’t load genders",
 		otherNames: PRONOUN_NAMES,
 	},
 	{

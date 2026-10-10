@@ -28,14 +28,14 @@
 	"someone": "Someone",
 	"carousel": {
 		"a11y": {
-			"previous": "Previous Slide",
-			"next": "Next Slide"
+			"previous": "Previous slide",
+			"next": "Next slide"
 		}
 	},
 	"commandDialog": {
 		"a11y": {
-			"title": "Command Palette",
-			"description": "Search for a command to run…"
+			"title": "Command Center",
+			"description": "Search for a command to run."
 		}
 	},
 	"spinner": {
@@ -48,7 +48,7 @@
 	},
 	"desktopEntry": {
 		"errors": {
-			"addFailed": "Couldn’t add Open Grind to your apps"
+			"addFailed": "Couldn’t add Open Grind to your apps menu"
 		}
 	},
 	"sections": {
@@ -61,7 +61,6 @@
 		"rightNow": "Right Now",
 		"position": {
 			"label": "Position",
-			"title": "Positions",
 			"a11y": {
 				"toggle": "Filter by Position"
 			}
@@ -69,12 +68,12 @@
 	},
 	"location": {
 		"errors": {
-			"saveFailed": "Failed to save location"
+			"saveFailed": "Couldn’t save location"
 		}
 	},
 	"genders": {
 		"errors": {
-			"loadFailed": "Failed to load genders"
+			"loadFailed": "Couldn’t load genders"
 		}
 	},
 	"tags": {

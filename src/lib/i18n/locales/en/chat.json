@@ -23,14 +23,14 @@
 	},
 	"conversations": {
 		"errors": {
-			"refreshFailed": "Failed to refresh conversations",
-			"syncFailed": "Failed to sync conversation into sidebar",
-			"markReadFailed": "Failed to mark conversation as read",
-			"pinFailed": "Failed to pin conversation",
-			"unpinFailed": "Failed to unpin conversation",
-			"muteFailed": "Failed to mute conversation",
-			"unmuteFailed": "Failed to unmute conversation",
-			"deleteFailed": "Failed to delete conversation"
+			"refreshFailed": "Couldn’t refresh conversations",
+			"syncFailed": "Couldn’t update the inbox",
+			"markReadFailed": "Couldn’t mark conversation as read",
+			"pinFailed": "Couldn’t pin conversation",
+			"unpinFailed": "Couldn’t unpin conversation",
+			"muteFailed": "Couldn’t mute conversation",
+			"unmuteFailed": "Couldn’t unmute conversation",
+			"deleteFailed": "Couldn’t delete conversation"
 		}
 	},
 	"composer": {
@@ -41,11 +41,11 @@
 				"unshare": "Unshare"
 			},
 			"location": {
-				"unimplemented": "Sharing location is not implemented yet, tracking in {{issueLink}}."
+				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}."
 			}
 		},
 		"voiceMessage": {
-			"unimplemented": "TODO: Voice messages not implemented yet, tracking in {{issueLink}}"
+			"unimplemented": "Voice messages aren’t implemented yet. Follow the progress in {{issueLink}}."
 		}
 	}
 }

@@ -17,7 +17,7 @@ describe("ComposerUnimplementedTab", () => {
 		});
 
 		expect(container.textContent).toBe(
-			" Unimplemented Sharing location is not implemented yet, tracking in #35.",
+			" Unimplemented Sharing your location isn’t implemented yet. Follow the progress in #35.",
 		);
 		expect(getByRole("link", { name: "#35" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/35",

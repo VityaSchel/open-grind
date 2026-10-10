@@ -34,7 +34,7 @@ const DISTANCE: QuickFilter = {
 };
 const GRID_POSITION: QuickFilter = {
 	pill: "Position",
-	title: "Positions",
+	title: "Position",
 	switchLabel: "Filter by Position",
 };
 const INBOX_POSITION: QuickFilter = {
