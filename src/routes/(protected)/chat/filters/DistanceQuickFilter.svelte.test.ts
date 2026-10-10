@@ -12,7 +12,7 @@ import DistanceQuickFilter from "./DistanceQuickFilter.svelte";
 const METRES_PER_KM = 1000;
 
 function filterSwitch(): HTMLElement {
-	return screen.getByRole("switch", { name: "Filter by distance" });
+	return screen.getByRole("switch", { name: "Filter by Distance" });
 }
 
 function distanceSlider(): HTMLElement {

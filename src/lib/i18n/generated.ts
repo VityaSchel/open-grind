@@ -160,6 +160,8 @@ export interface Messages {
 	"chat.deleteConversations.many.title": { count: number };
 	"chat.deleteConversations.one.description": undefined;
 	"chat.deleteConversations.one.title": undefined;
+	"chat.filters.a11y.favoritesOnly": undefined;
+	"chat.filters.unread": undefined;
 	"chat.layout.selectConversation": undefined;
 	"chat.messagePreview.album": undefined;
 	"chat.messagePreview.expiringImage": undefined;
@@ -187,6 +189,8 @@ export interface Messages {
 	"common.commandDialog.a11y.description": undefined;
 	"common.commandDialog.a11y.title": undefined;
 	"common.desktopEntry.errors.addFailed": undefined;
+	"common.filters.distance.a11y.toggle": undefined;
+	"common.filters.distance.label": undefined;
 	"common.filters.noResults": undefined;
 	"common.filters.notSpecified": undefined;
 	"common.filters.online": undefined;

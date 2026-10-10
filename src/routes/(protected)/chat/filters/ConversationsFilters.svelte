@@ -5,6 +5,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { type MessageKey, t } from "$lib/i18n";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import type { ConversationFilters } from "$lib/chat/conversation-filters.svelte";
 	import type { ConversationFilterValues } from "$lib/model/messaging/conversation-filters";
@@ -23,11 +24,15 @@
 		locked?: boolean;
 	} = $props();
 
-	const LABELLED_TOGGLES = [
-		{ key: "unread", label: "Unread" },
-		{ key: "online", label: "Online" },
-		{ key: "rightNow", label: "Right now" },
-	] as const;
+	const LABELLED_TOGGLES = ["unread", "online", "rightNow"] as const;
+
+	type ToggleId = (typeof LABELLED_TOGGLES)[number];
+
+	const toggleLabelKeys = {
+		unread: "chat.filters.unread",
+		online: "common.filters.online",
+		rightNow: "common.filters.rightNow",
+	} as const satisfies Record<ToggleId, MessageKey>;
 
 	const values = $derived(filters.value);
 
@@ -58,7 +63,7 @@
 		>
 			<ToggleGroup.Item
 				value="favorites"
-				aria-label="Favorites only"
+				aria-label={t("chat.filters.a11y.favoritesOnly")}
 				class={buttonVariants({ variant: "secondary" })}
 			>
 				<StarIcon weight={values.favorites ? "fill" : "bold"} />
@@ -70,10 +75,7 @@
 			size="sm"
 			class="h-9"
 			bind:value={
-				() =>
-					LABELLED_TOGGLES.filter(({ key }) => values[key]).map(
-						({ key }) => key,
-					),
+				() => LABELLED_TOGGLES.filter((key) => values[key]),
 				(active: string[]) =>
 					onchange({
 						unread: active.includes("unread"),
@@ -82,12 +84,12 @@
 					})
 			}
 		>
-			{#each LABELLED_TOGGLES as { key, label } (key)}
+			{#each LABELLED_TOGGLES as key (key)}
 				<ToggleGroup.Item
 					value={key}
 					class={buttonVariants({ variant: "secondary" })}
 				>
-					{label}
+					{t(toggleLabelKeys[key])}
 				</ToggleGroup.Item>
 			{/each}
 		</ToggleGroup.Root>
@@ -95,13 +97,13 @@
 			active={values.distanceMetres !== null}
 			onclick={() => (open.distance = true)}
 		>
-			Distance
+			{t("common.filters.distance.label")}
 		</QuickFilterButton>
 		<QuickFilterButton
 			active={values.positions.length > 0}
 			onclick={() => (open.position = true)}
 		>
-			Position
+			{t("common.filters.position.label")}
 		</QuickFilterButton>
 	</div>
 </ProgressiveBlur>

@@ -3,6 +3,7 @@
 
 	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
 	import PositionFilterToggle from "$lib/components/filters/position/PositionFilterToggle.svelte";
+	import { t } from "$lib/i18n";
 	import type { FilterPositionId } from "$lib/model/browse/grid/filters";
 
 	let {
@@ -30,8 +31,8 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Positions"
-	switchLabel="Filter by position"
+	title={t("common.filters.position.label")}
+	switchLabel={t("common.filters.position.a11y.toggle")}
 	onreset={() => (value = [])}
 	onapply={() => onapply(enabled ? value.toSorted((a, b) => a - b) : [])}
 >

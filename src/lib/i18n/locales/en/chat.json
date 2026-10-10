@@ -83,6 +83,12 @@
 			"description_other": "These conversations will be deleted for you only. This can’t be undone."
 		}
 	},
+	"filters": {
+		"unread": "Unread",
+		"a11y": {
+			"favoritesOnly": "Favorites Only"
+		}
+	},
 	"composer": {
 		"attachments": {
 			"actions": {

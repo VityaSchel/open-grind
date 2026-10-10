@@ -82,7 +82,7 @@ async function rightEdgeOf(page: Page, name: string): Promise<number> {
 const BOOLEAN_PILLS = [
 	{ label: "Unread", matching: [THEO, JAMES, PABLO] },
 	{ label: "Online", matching: [JACK] },
-	{ label: "Right now", matching: [THEO] },
+	{ label: "Right Now", matching: [THEO] },
 ];
 
 for (const { label, matching } of BOOLEAN_PILLS) {
@@ -117,7 +117,7 @@ test("two pills filter to the intersection, not the union", async ({
 		.poll(() => listedConversations(page))
 		.toEqual([THEO, JAMES, PABLO]);
 
-	const rightNow = pill(page, "Right now");
+	const rightNow = pill(page, "Right Now");
 	await rightNow.click();
 	await expect.poll(() => listedConversations(page)).toEqual([THEO]);
 
@@ -134,7 +134,7 @@ test("the star keeps the other pills it does not own", async ({ page }) => {
 	await openInbox(page);
 
 	const unread = pill(page, "Unread");
-	const star = page.getByRole("button", { name: "Favorites only" });
+	const star = page.getByRole("button", { name: "Favorites Only" });
 	await unread.click();
 	await expect
 		.poll(() => listedConversations(page))
@@ -167,7 +167,7 @@ test("the distance drawer applies its slider value and lights the pill", async (
 	await openFilterDrawer(page, "Distance");
 
 	const slider = page.getByRole("slider", { name: "Maximum Distance" });
-	const enabled = page.getByRole("switch", { name: "Filter by distance" });
+	const enabled = page.getByRole("switch", { name: "Filter by Distance" });
 	await expect(enabled).toHaveAttribute("aria-checked", "false");
 	await expect(drawerBody(page)).toHaveText("Within 10 km");
 
@@ -210,7 +210,7 @@ test("the position drawer filters the inbox down to the picked position", async 
 	await openFilterDrawer(page, "Position");
 
 	const side = page.getByRole("button", { name: "Side", exact: true });
-	const enabled = page.getByRole("switch", { name: "Filter by position" });
+	const enabled = page.getByRole("switch", { name: "Filter by Position" });
 	await expect(enabled).toHaveAttribute("aria-checked", "false");
 
 	await side.click();

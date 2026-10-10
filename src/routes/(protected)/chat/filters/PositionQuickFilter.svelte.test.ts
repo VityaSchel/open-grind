@@ -10,7 +10,7 @@ import {
 import PositionQuickFilter from "./PositionQuickFilter.svelte";
 
 function filterSwitch(): HTMLElement {
-	return screen.getByRole("switch", { name: "Filter by position" });
+	return screen.getByRole("switch", { name: "Filter by Position" });
 }
 
 function button(name: string): HTMLElement {

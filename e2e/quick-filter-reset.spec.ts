@@ -30,26 +30,17 @@ const AGE: QuickFilter = {
 const DISTANCE: QuickFilter = {
 	pill: "Distance",
 	title: "Distance",
-	switchLabel: "Filter by distance",
+	switchLabel: "Filter by Distance",
 };
-const GRID_POSITION: QuickFilter = {
+const POSITION: QuickFilter = {
 	pill: "Position",
 	title: "Position",
 	switchLabel: "Filter by Position",
 };
-const INBOX_POSITION: QuickFilter = {
-	pill: "Position",
-	title: "Positions",
-	switchLabel: "Filter by position",
-};
 
 const SCREENS = [
-	{ name: "grid", open: openGrid, quickFilters: [AGE, GRID_POSITION] },
-	{
-		name: "inbox",
-		open: openInbox,
-		quickFilters: [DISTANCE, INBOX_POSITION],
-	},
+	{ name: "grid", open: openGrid, quickFilters: [AGE, POSITION] },
+	{ name: "inbox", open: openInbox, quickFilters: [DISTANCE, POSITION] },
 ];
 
 async function resetUntouchedFilter({

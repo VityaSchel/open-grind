@@ -65,6 +65,12 @@
 			"a11y": {
 				"toggle": "Filter by Position"
 			}
+		},
+		"distance": {
+			"label": "Distance",
+			"a11y": {
+				"toggle": "Filter by Distance"
+			}
 		}
 	},
 	"location": {

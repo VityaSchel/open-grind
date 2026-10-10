@@ -10,6 +10,7 @@
 	} from "$lib/components/filters/distance/distance-steps";
 	import DistanceFilterSlider from "$lib/components/filters/distance/DistanceFilterSlider.svelte";
 	import FilterDrawer from "$lib/components/filters/FilterDrawer.svelte";
+	import { t } from "$lib/i18n";
 
 	let {
 		open = $bindable(),
@@ -41,8 +42,8 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title="Distance"
-	switchLabel="Filter by distance"
+	title={t("common.filters.distance.label")}
+	switchLabel={t("common.filters.distance.a11y.toggle")}
 	onreset={() => (step = DEFAULT_MAX_DISTANCE_STEP)}
 	onapply={() => onapply(enabled ? maxDistanceMetres({ step, units }) : null)}
 >

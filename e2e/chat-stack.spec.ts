@@ -505,7 +505,7 @@ test.describe("the list behind a conversation that is sliding out on an Android 
 		await expect(sheet(page)).toHaveCount(0);
 
 		expect(await pathname(page)).toBe("/chat");
-		for (const name of ["Favorites only", "Unread"])
+		for (const name of ["Favorites Only", "Unread"])
 			await expect(
 				page.getByRole("button", { name, exact: true }),
 			).toHaveAttribute("aria-pressed", "false");
