@@ -10,6 +10,7 @@ import {
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
 import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+import { t } from "$lib/i18n";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { reconciler } from "$lib/util/reconcile";
 import {
@@ -256,7 +257,7 @@ export class ConversationState {
 				this.error = error;
 			} else {
 				showErrorToast({
-					label: "Failed to refresh messages",
+					label: t("chat.conversation.errors.refreshFailed"),
 					error,
 					onRetry: () => void this.refresh(),
 				});
@@ -355,7 +356,7 @@ export class ConversationState {
 				this.error = error;
 			} else {
 				showErrorToast({
-					label: "Failed to load more messages",
+					label: t("chat.conversation.errors.loadMoreFailed"),
 					error,
 				});
 			}
@@ -584,7 +585,7 @@ export class ConversationState {
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
-				label: "Failed to mark conversation as read",
+				label: t("chat.conversations.errors.markReadFailed"),
 				error,
 			});
 		}

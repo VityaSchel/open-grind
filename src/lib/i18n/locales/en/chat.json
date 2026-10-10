@@ -22,6 +22,31 @@
 		"bypassReason": {
 			"expiringPhotoLimit": "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",
 			"unsend": "Unsending a message requires a Grindr subscription."
+		},
+		"navBar": {
+			"a11y": {
+				"navigation": "Conversation",
+				"back": "Back to chats"
+			},
+			"distanceUnknown": "Distance unknown"
+		},
+		"errors": {
+			"loadFailed": "Couldn’t load conversation",
+			"refreshFailed": "Couldn’t refresh messages",
+			"loadMoreFailed": "Couldn’t load more messages"
+		},
+		"unavailable": "Conversation is no longer available"
+	},
+	"messages": {
+		"errors": {
+			"unsendFailed": "Couldn’t unsend message",
+			"deleteFailed": "Couldn’t delete message",
+			"reactFailed": "Couldn’t react to message"
+		},
+		"scrollToBottomButton": {
+			"a11y": {
+				"label": "Scroll to newest messages"
+			}
 		}
 	},
 	"conversations": {

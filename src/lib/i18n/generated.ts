@@ -130,6 +130,13 @@ export interface Messages {
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;
+	"chat.conversation.errors.loadFailed": undefined;
+	"chat.conversation.errors.loadMoreFailed": undefined;
+	"chat.conversation.errors.refreshFailed": undefined;
+	"chat.conversation.navBar.a11y.back": undefined;
+	"chat.conversation.navBar.a11y.navigation": undefined;
+	"chat.conversation.navBar.distanceUnknown": undefined;
+	"chat.conversation.unavailable": undefined;
 	"chat.conversations.a11y.loadingMore": undefined;
 	"chat.conversations.empty.filteredDescription": undefined;
 	"chat.conversations.empty.title": undefined;
@@ -177,6 +184,10 @@ export interface Messages {
 	"chat.messagePreview.video": undefined;
 	"chat.messagePreview.videoCall": undefined;
 	"chat.messagePreview.voiceMessage": undefined;
+	"chat.messages.errors.deleteFailed": undefined;
+	"chat.messages.errors.reactFailed": undefined;
+	"chat.messages.errors.unsendFailed": undefined;
+	"chat.messages.scrollToBottomButton.a11y.label": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
 	"common.actions.continue": undefined;

@@ -4,6 +4,7 @@
 	import BackLink from "$lib/components/navigation/BackLink.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { t } from "$lib/i18n";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import { getConversationState } from "../conversation-state.svelte";
 	import ConversationNavBarProfile from "./ConversationNavBarProfile.svelte";
@@ -17,12 +18,12 @@
 	bgClass="bg-linear-to-b max-split:from-background split:from-card to-transparent"
 	contentClass="flex items-center h-full"
 	tag="nav"
-	aria-label="Conversation"
+	aria-label={t("chat.conversation.navBar.a11y.navigation")}
 	{@attach topChrome}
 >
 	<BackLink
 		href="/chat"
-		label="Back to chats"
+		label={t("chat.conversation.navBar.a11y.back")}
 		class="flex h-full w-19 items-center justify-center"
 	>
 		<ArrowLeftIcon size={32} />
@@ -30,7 +31,7 @@
 	{#if conversationState.profile !== null}
 		<ConversationNavBarProfile profile={conversationState.profile} />
 	{:else if conversationState.error}
-		<span class="flex-1">Failed to load conversation</span>
+		<span class="flex-1">{t("chat.conversation.errors.loadFailed")}</span>
 	{:else}
 		<div class="flex flex-1 items-center gap-3 py-4 ps-0">
 			<Skeleton class="size-avatar rounded-full" />

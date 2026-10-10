@@ -411,7 +411,7 @@ describe("MessagesList actions", () => {
 		await (onDelete as () => Promise<void>)();
 
 		expect(showErrorToastMock).toHaveBeenCalledWith(
-			expect.objectContaining({ label: "Failed to delete message" }),
+			expect.objectContaining({ label: "Couldn’t delete message" }),
 		);
 		expect(remove.mock.results[0]!.value.revert).toHaveBeenCalledOnce();
 	});

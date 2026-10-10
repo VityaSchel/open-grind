@@ -8,6 +8,7 @@
 	} from "$lib/api/messaging/messages";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		type ConversationState,
 		getConversationState,
@@ -66,7 +67,10 @@
 				});
 				return;
 			}
-			showErrorToast({ label: "Failed to unsend message", error });
+			showErrorToast({
+				label: t("chat.messages.errors.unsendFailed"),
+				error,
+			});
 		}
 	}
 
@@ -81,7 +85,10 @@
 			});
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to delete message", error });
+			showErrorToast({
+				label: t("chat.messages.errors.deleteFailed"),
+				error,
+			});
 			revert();
 		}
 	}
@@ -133,7 +140,10 @@
 				});
 			} catch (error) {
 				console.error(error);
-				showErrorToast({ label: "Failed to react to message", error });
+				showErrorToast({
+					label: t("chat.messages.errors.reactFailed"),
+					error,
+				});
 			}
 		}}
 		onUnsend={isOut && delivered && !message.unsent

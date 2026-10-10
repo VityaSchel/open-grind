@@ -3,6 +3,8 @@
 
 	import ScrollJumpButton from "$lib/components/shared/ScrollJumpButton.svelte";
 	import { Badge } from "$lib/components/ui/badge";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import { getConversationState } from "../conversation-state.svelte";
 
 	let {
@@ -30,7 +32,7 @@
 </script>
 
 <ScrollJumpButton
-	label="Scroll to newest messages"
+	label={t("chat.messages.scrollToBottomButton.a11y.label")}
 	class="absolute right-3 bottom-[calc(var(--composer-height)+--spacing(3))] z-2"
 	{onclick}
 >
@@ -40,7 +42,7 @@
 			<Badge
 				class="pointer-events-none absolute -top-1.5 -right-1.5 min-w-5 px-count-badge"
 			>
-				{unreadCount}
+				{formatInteger(unreadCount)}
 			</Badge>
 		{/if}
 	{/snippet}

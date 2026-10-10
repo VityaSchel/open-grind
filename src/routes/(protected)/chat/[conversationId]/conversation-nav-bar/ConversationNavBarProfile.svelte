@@ -5,6 +5,7 @@
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Avatar from "$lib/components/ui/avatar";
 	import * as Card from "$lib/components/ui/card";
+	import { t } from "$lib/i18n";
 	import type { ConversationProfile } from "../conversation-state.svelte";
 
 	let { profile }: { profile: ConversationProfile } = $props();
@@ -30,9 +31,9 @@
 				<DisplayName name={profile.name} class="truncate" />
 			</Card.Title>
 			{#if profile.distance === null}
-				<Card.Description class="truncate"
-					>Distance unknown</Card.Description
-				>
+				<Card.Description class="truncate">
+					{t("chat.conversation.navBar.distanceUnknown")}
+				</Card.Description>
 			{:else}
 				<Card.Description class="truncate">
 					<DistanceFormatted distance={profile.distance} />
