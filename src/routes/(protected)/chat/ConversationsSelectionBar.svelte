@@ -12,6 +12,7 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { t } from "$lib/i18n";
 	import { below } from "$lib/util/breakpoints.svelte";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 
@@ -38,7 +39,9 @@
 	const actions = $derived([
 		{
 			key: "pin" as const,
-			label: allPinned ? "Unpin selected" : "Pin selected",
+			label: allPinned
+				? t("chat.conversations.selectionBar.actions.unpin")
+				: t("chat.conversations.selectionBar.actions.pin"),
 			icon: allPinned ? PushPinSlashIcon : PushPinIcon,
 			weight: "fill" as const,
 			destructive: false,
@@ -46,7 +49,9 @@
 		},
 		{
 			key: "mute" as const,
-			label: allMuted ? "Unmute selected" : "Mute selected",
+			label: allMuted
+				? t("chat.conversations.selectionBar.actions.unmute")
+				: t("chat.conversations.selectionBar.actions.mute"),
 			icon: allMuted ? BellIcon : BellSimpleSlashIcon,
 			weight: "fill" as const,
 			destructive: false,
@@ -54,7 +59,7 @@
 		},
 		{
 			key: "delete" as const,
-			label: "Delete selected",
+			label: t("chat.conversations.selectionBar.actions.delete"),
 			icon: TrashIcon,
 			weight: undefined,
 			destructive: true,
@@ -69,20 +74,20 @@
 	bgClass="bg-linear-to-b from-background to-transparent"
 	contentClass="flex h-full items-center gap-1.5 px-3 pt-(--safe-area-top) max-selection-bar-compact:gap-1 max-selection-bar-compact:px-2"
 	tag="nav"
-	aria-label="Selection"
+	aria-label={t("chat.conversations.selectionBar.a11y.navigation")}
 	{@attach topChrome}
 >
 	<Button
 		size="icon-lg"
 		variant="ghost"
 		class="max-selection-bar-compact:size-9"
-		aria-label="Exit selection"
+		aria-label={t("chat.conversations.selectionBar.a11y.exit")}
 		onclick={onClose}
 	>
 		<XIcon class="size-6 max-selection-bar-compact:size-5" />
 	</Button>
 	<span class="flex-1 truncate text-lg font-medium">
-		{count} selected
+		{t("chat.conversations.selectionBar.selected", { count })}
 	</span>
 	{#if collapsed.current}
 		<DropdownMenu.Root>
@@ -95,7 +100,9 @@
 							className,
 							"size-12 max-selection-bar-compact:size-10",
 						]}
-						aria-label="Selection actions"
+						aria-label={t(
+							"chat.conversations.selectionBar.a11y.actions",
+						)}
 						{...props}
 					>
 						<DotsThreeVerticalIcon

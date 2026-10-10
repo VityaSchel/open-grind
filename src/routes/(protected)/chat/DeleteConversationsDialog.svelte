@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import { t } from "$lib/i18n";
 
 	let {
 		open = $bindable(false),
@@ -12,24 +13,20 @@
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>
-				Delete
-				{#if count === 1}
-					conversation
-				{:else}
-					{count} conversations
-				{/if}?
+				{count === 1
+					? t("chat.deleteConversations.one.title")
+					: t("chat.deleteConversations.many.title", { count })}
 			</AlertDialog.Title>
 			<AlertDialog.Description>
-				{#if count === 1}
-					This conversation
-				{:else}
-					These conversations
-				{/if}
-				will be deleted for you only. This cannot be undone.
+				{count === 1
+					? t("chat.deleteConversations.one.description")
+					: t("chat.deleteConversations.many.description", { count })}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				variant="destructive"
 				size="lg"
@@ -38,7 +35,7 @@
 					onConfirm();
 				}}
 			>
-				Delete
+				{t("common.actions.delete")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

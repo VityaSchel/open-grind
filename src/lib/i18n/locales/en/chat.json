@@ -53,6 +53,34 @@
 				"mute": "Mute",
 				"unmute": "Unmute"
 			}
+		},
+		"selectionBar": {
+			"a11y": {
+				"navigation": "Selection",
+				"exit": "Exit selection",
+				"actions": "Selection actions"
+			},
+			"selected_one": "{{count}} selected",
+			"selected_other": "{{count}} selected",
+			"actions": {
+				"pin": "Pin selected",
+				"unpin": "Unpin selected",
+				"mute": "Mute selected",
+				"unmute": "Unmute selected",
+				"delete": "Delete selected"
+			}
+		}
+	},
+	"deleteConversations": {
+		"one": {
+			"title": "Delete conversation?",
+			"description": "This conversation will be deleted for you only. This can’t be undone."
+		},
+		"many": {
+			"title_one": "Delete {{count}} conversation?",
+			"title_other": "Delete {{count}} conversations?",
+			"description_one": "These conversations will be deleted for you only. This can’t be undone.",
+			"description_other": "These conversations will be deleted for you only. This can’t be undone."
 		}
 	},
 	"composer": {

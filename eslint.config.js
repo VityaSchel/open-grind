@@ -128,6 +128,8 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/chat/Conversation.svelte",
 	"src/routes/(protected)/chat/ConversationsList.svelte",
 	"src/routes/(protected)/chat/ConversationsPagingTail.svelte",
+	"src/routes/(protected)/chat/ConversationsSelectionBar.svelte",
+	"src/routes/(protected)/chat/DeleteConversationsDialog.svelte",
 	"src/routes/(protected)/chat/EmptyConversationsList.svelte",
 	"src/routes/(protected)/chat/LazyConversation.svelte",
 	"src/routes/(protected)/chat/live-stack/LiveStack.svelte",
