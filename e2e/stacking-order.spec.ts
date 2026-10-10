@@ -156,10 +156,10 @@ test("a toast over the report sheet stays in front and takes a tap", async ({
 		TOAST,
 	);
 
-	await toast.getByRole("button", { name: "Copy details" }).tap();
+	await toast.getByRole("button", { name: "Copy Details" }).tap();
 
 	await expect(
-		page.getByRole("alertdialog", { name: "Copy error details?" }),
+		page.getByRole("alertdialog", { name: "Copy Error Details?" }),
 	).toBeVisible();
 	await expect(sheet).toHaveAttribute("data-state", "open");
 });

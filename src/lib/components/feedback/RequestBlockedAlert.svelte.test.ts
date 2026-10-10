@@ -42,13 +42,13 @@ describe("RequestBlockedAlert", () => {
 	it("names Cloudflare and offers to rotate device parameters", () => {
 		render(RequestBlockedAlert);
 
-		expect(screen.getByText("Grindr blocks your requests")).toBeTruthy();
+		expect(screen.getByText("Grindr Blocks Your Requests")).toBeTruthy();
 		expect(
 			screen.getByText(/Cloudflare protecting the Grindr API/),
 		).toBeTruthy();
 		expect(screen.getByRole("link", { name: "known issue" })).toBeTruthy();
 		expect(
-			screen.getByRole("button", { name: "Rotate parameters" }),
+			screen.getByRole("button", { name: "Rotate Parameters" }),
 		).toBeTruthy();
 	});
 
@@ -56,7 +56,7 @@ describe("RequestBlockedAlert", () => {
 		render(RequestBlockedAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Rotate parameters" }),
+			screen.getByRole("button", { name: "Rotate Parameters" }),
 		);
 		await settle();
 
@@ -71,7 +71,7 @@ describe("RequestBlockedAlert", () => {
 
 		expect(
 			screen.getByText(
-				"Something blocked the request before it reached Grindr",
+				"Something Blocked the Request Before It Reached Grindr",
 			),
 		).toBeTruthy();
 		expect(screen.getByText(/captive portal/)).toBeTruthy();
@@ -87,7 +87,7 @@ describe("RequestBlockedAlert", () => {
 		render(RequestBlockedAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Rotate parameters" }),
+			screen.getByRole("button", { name: "Rotate Parameters" }),
 		);
 		await settle();
 

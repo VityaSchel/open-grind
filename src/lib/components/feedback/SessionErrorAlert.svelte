@@ -30,7 +30,7 @@
 
 	const copyKeys = {
 		rateLimited: {
-			title: "feedback.appError.rateLimited",
+			title: "feedback.sessionError.rateLimited.title",
 			description: "feedback.sessionError.rateLimited.description",
 		},
 		refused: {

@@ -209,8 +209,37 @@ describe("SessionErrorAlert", () => {
 		await settle();
 
 		expect(sessionErrorState.open).toBe(true);
-		expect(screen.getByText("Grindr refused your session")).toBeTruthy();
+		expect(screen.getByText("Grindr Refused Your Session")).toBeTruthy();
 		expect(toastErrorMock).not.toHaveBeenCalled();
+	});
+
+	it("retitles an open dialog when Grindr then rate limits the refresh", async () => {
+		sessionErrorState.open = false;
+		render(SessionErrorAlert);
+
+		emit("auth:session-error", {
+			message: "Could not refresh the session",
+			unauthorized: false,
+			kind: "SessionStale",
+			attempts: 3,
+			transient: false,
+		});
+		emit("auth:session-error", {
+			message: "Too many requests",
+			unauthorized: false,
+			kind: "RateLimited",
+			attempts: 3,
+			transient: false,
+		});
+		await settle();
+
+		expect(sessionErrorState.open).toBe(true);
+		expect(
+			screen
+				.getByRole("alertdialog")
+				.querySelector('[data-slot="alert-dialog-title"]')
+				?.textContent.trim(),
+		).toBe("Grindr Is Rate Limiting Us");
 	});
 
 	it("closes on a refresh that succeeds", async () => {
@@ -218,7 +247,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
+			screen.getByRole("button", { name: "Try Again" }),
 		);
 
 		expect(signOutMock).not.toHaveBeenCalled();
@@ -230,7 +259,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
+			screen.getByRole("button", { name: "Try Again" }),
 		);
 
 		expect(signOutMock).toHaveBeenCalledOnce();
@@ -291,7 +320,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
+			screen.getByRole("button", { name: "Try Again" }),
 		);
 
 		expect(requestBlockedAlertState.open).toBe(true);
@@ -305,7 +334,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
+			screen.getByRole("button", { name: "Try Again" }),
 		);
 
 		expect(requestBlockedAlertState.open).toBe(false);
@@ -322,7 +351,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
+			screen.getByRole("button", { name: "Try Again" }),
 		);
 
 		expect(signOutMock).not.toHaveBeenCalled();
@@ -367,7 +396,7 @@ describe("SessionErrorAlert", () => {
 		async ({ error }) => {
 			callMethodMock.mockRejectedValue(error);
 			render(SessionErrorAlert);
-			const tryAgain = screen.getByRole("button", { name: "Try again" });
+			const tryAgain = screen.getByRole("button", { name: "Try Again" });
 			await setLocale({ locale: "en-XA" });
 
 			await fireEvent.click(tryAgain);

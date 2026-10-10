@@ -242,6 +242,7 @@ export interface Messages {
 	"feedback.sessionError.errors.tryAgainFailed": undefined;
 	"feedback.sessionError.expired": undefined;
 	"feedback.sessionError.rateLimited.description": undefined;
+	"feedback.sessionError.rateLimited.title": undefined;
 	"feedback.sessionError.refused.description": undefined;
 	"feedback.sessionError.refused.title": undefined;
 	"feedback.sessionError.tryAgain": undefined;

@@ -92,7 +92,7 @@ describe("AccountStatusAlert", () => {
 
 		expect(accountStatusState.open).toBe(true);
 		expect(
-			await screen.findByText("Age verification required"),
+			await screen.findByText("Age Verification Required"),
 		).toBeTruthy();
 	});
 
@@ -124,7 +124,7 @@ describe("AccountStatusAlert", () => {
 			emit("auth:banned", { ...ban, reason });
 
 			await screen.findByRole("alertdialog");
-			expect(dialogText("title")).toBe("Your account is banned");
+			expect(dialogText("title")).toBe("Your Account Is Banned");
 			expect(dialogText("description")).toBe(description);
 		},
 	);
@@ -134,19 +134,19 @@ describe("AccountStatusAlert", () => {
 			status: "a ban",
 			event: "auth:banned",
 			payload: { ...ban, reason: "spam" },
-			buttons: ["Copy details", "Sign out"],
+			buttons: ["Copy Details", "Sign Out"],
 		},
 		{
 			status: "an age check",
 			event: "auth:restriction",
 			payload: { kind: "ageVerification" },
-			buttons: ["Sign out"],
+			buttons: ["Sign Out"],
 		},
 		{
 			status: "a restriction",
 			event: "auth:restriction",
 			payload: { kind: "timedBan" },
-			buttons: ["Sign out"],
+			buttons: ["Sign Out"],
 		},
 	])(
 		"words $status in the active locale",
@@ -198,7 +198,7 @@ describe("AccountStatusAlert", () => {
 			await renderAlert();
 			emit("auth:banned", info);
 			const copyButton = await screen.findByRole("button", {
-				name: "Copy details",
+				name: "Copy Details",
 			});
 			await setLocale({ locale });
 

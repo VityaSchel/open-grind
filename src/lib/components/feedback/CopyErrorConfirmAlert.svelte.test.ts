@@ -34,7 +34,7 @@ function copiedText(): string {
 async function openDescription(): Promise<Element> {
 	void promptCopyError(error);
 	const dialog = await screen.findByRole("alertdialog", {
-		name: "Copy error details?",
+		name: "Copy Error Details?",
 	});
 	const description = dialog.querySelector(
 		'[data-slot="alert-dialog-description"]',
@@ -75,7 +75,7 @@ describe("CopyErrorConfirmAlert", () => {
 
 	it("words the confirmation in the active locale", async () => {
 		const description = await openDescription();
-		const title = screen.getByText("Copy error details?");
+		const title = screen.getByText("Copy Error Details?");
 		const controls = [
 			screen.getByText(REDACT_LABEL),
 			screen.getByRole("button", { name: "Copy" }),
