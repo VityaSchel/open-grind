@@ -3,8 +3,8 @@
 		"close": "Close",
 		"cancel": "Cancel",
 		"continue": "Continue",
-		"retry": "Retry",
-		"copyError": "Copy Error",
+		"retry": "Try again",
+		"copyError": "Copy error details",
 		"save": "Save"
 	},
 	"time": {

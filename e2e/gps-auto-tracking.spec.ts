@@ -44,7 +44,7 @@ test("detecting the location turns on automatic updates and explains it", async 
 	await useCurrent.click();
 
 	await expect(toast(page)).toContainText(
-		"Your location will be updating automatically using GPS",
+		"Your location now updates automatically using GPS",
 	);
 	await expect(gridReady(page)).toBeVisible({ timeout: 60_000 });
 	await expect(trackingDot(page)).toHaveCount(1);

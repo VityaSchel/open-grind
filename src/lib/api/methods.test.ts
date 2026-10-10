@@ -73,11 +73,8 @@ describe("asAppError", () => {
 
 	it.each([
 		["RequestBlocked", "Grindr is blocking your requests"],
-		[
-			"NetworkBlocked",
-			"Something blocked the request before it reached Grindr",
-		],
-		["RateLimited", "Grindr is rate limiting us"],
+		["NetworkBlocked", "Something is blocking your requests to Grindr"],
+		["RateLimited", "Too many requests. Wait a moment and try again."],
 		["NotSignedIn", "You’re signed out"],
 		["SessionStale", "Couldn’t refresh your session"],
 	])("says what %s means without a message to quote", (kind, expected) => {
@@ -86,7 +83,7 @@ describe("asAppError", () => {
 
 	it("falls back to the unknown-error wording for a bare tag it has no copy for", () => {
 		expect(asAppError({ kind: "NotInitialized" })?.prettyMessage).toBe(
-			"An unknown error occurred",
+			"Something went wrong",
 		);
 	});
 
@@ -99,7 +96,7 @@ describe("asAppError", () => {
 
 		expect(appError?.kind).toBe("Recaptcha");
 		expect(appError?.message).toEqual(message);
-		expect(appError?.prettyMessage).toBe("An unknown error occurred");
+		expect(appError?.prettyMessage).toBe("Something went wrong");
 	});
 
 	it("ignores unknown errors", () => {
@@ -190,10 +187,10 @@ describe("diagnosticMessage", () => {
 		await setLocale({ locale: "en-XA" });
 
 		expect(asAppError({ kind: "RateLimited" })?.prettyMessage).not.toBe(
-			"Grindr is rate limiting us",
+			"Too many requests. Wait a moment and try again.",
 		);
 		expect(diagnosticMessage({ kind: "RateLimited" })).toBe(
-			"Grindr is rate limiting us",
+			"Too many requests. Wait a moment and try again.",
 		);
 	});
 

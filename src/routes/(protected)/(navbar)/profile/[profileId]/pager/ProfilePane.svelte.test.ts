@@ -144,9 +144,11 @@ describe("ProfilePane failures", () => {
 		]);
 		expect(heading(section)).toBe("Peer, 27");
 		expect(
-			screen.getByRole("button", { name: "Retry", hidden: true }),
+			screen.getByRole("button", { name: "Try again", hidden: true }),
 		).not.toBeNull();
-		expect(screen.queryByText("Couldn’t reach the server")).toBeNull();
+		expect(
+			screen.queryByText("Couldn’t get a response from Grindr"),
+		).toBeNull();
 	});
 
 	it("loads the profile again from the retry control", async () => {
@@ -154,12 +156,14 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await flush();
 
 		expect(getProfileMock).toHaveBeenCalledTimes(2);
 		expect(heading(section)).toBe("Loaded, 30");
-		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
 	it("shows the full error screen for a failed load with no grid row", async () => {
@@ -167,7 +171,9 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: null });
 		await flush();
 
-		expect(screen.getByText("Couldn’t reach the server")).not.toBeNull();
+		expect(
+			screen.getByText("Couldn’t get a response from Grindr"),
+		).not.toBeNull();
 		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
 	});
@@ -295,7 +301,9 @@ describe("ProfilePane profile actions", () => {
 		await flush();
 		const failedLink = screen.getByRole("link", { name: "Edit Profile" });
 
-		await fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Try again" }),
+		);
 		await flush();
 
 		expect(heading(section)).toBe("Me, 30");
@@ -309,7 +317,9 @@ describe("ProfilePane profile actions", () => {
 		renderPane({ active: true, row: null, profileId: OUR_ID });
 		await flush();
 
-		expect(screen.getByText("Couldn’t reach the server")).not.toBeNull();
+		expect(
+			screen.getByText("Couldn’t get a response from Grindr"),
+		).not.toBeNull();
 		expect(
 			screen.queryByRole("navigation", { name: "Profile Actions" }),
 		).toBeNull();

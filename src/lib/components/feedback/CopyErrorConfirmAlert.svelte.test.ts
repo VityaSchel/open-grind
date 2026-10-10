@@ -25,7 +25,7 @@ const CopyErrorConfirmAlert = (await import("./CopyErrorConfirmAlert.svelte"))
 const error = new Error("failed for me@example.com");
 
 const WARNING = "Be mindful of what you share on the internet!";
-const REDACT_LABEL = "Redact sensitive info (recommended)";
+const REDACT_LABEL = "Redact personal data (recommended)";
 
 function copiedText(): string {
 	return String(writeTextMock.mock.calls.at(-1)?.[0]);
@@ -34,7 +34,7 @@ function copiedText(): string {
 async function openDescription(): Promise<Element> {
 	void promptCopyError(error);
 	const dialog = await screen.findByRole("alertdialog", {
-		name: "Copy Error Details?",
+		name: "Copy error details?",
 	});
 	const description = dialog.querySelector(
 		'[data-slot="alert-dialog-description"]',
@@ -62,7 +62,7 @@ describe("CopyErrorConfirmAlert", () => {
 		const description = await openDescription();
 
 		expect(description.textContent).toBe(
-			`${WARNING} The error might contain your personal data. Only copy it unredacted if a developer asks you to.`,
+			`${WARNING} The error details might contain your personal data. Copy them unredacted only if a developer asks you to.`,
 		);
 		expect(
 			[...description.querySelectorAll("b")].map(
@@ -75,7 +75,7 @@ describe("CopyErrorConfirmAlert", () => {
 
 	it("words the confirmation in the active locale", async () => {
 		const description = await openDescription();
-		const title = screen.getByText("Copy Error Details?");
+		const title = screen.getByText("Copy error details?");
 		const controls = [
 			screen.getByText(REDACT_LABEL),
 			screen.getByRole("button", { name: "Copy" }),
@@ -104,7 +104,7 @@ describe("CopyErrorConfirmAlert", () => {
 		expect(screen.queryByRole("button", { name: "Copy" })).toBeNull();
 		expect(copiedText()).toContain("<email>");
 		expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
-			"Error details copied to clipboard",
+			"Copied to clipboard",
 		);
 		expect(toastMock.error).not.toHaveBeenCalled();
 	});

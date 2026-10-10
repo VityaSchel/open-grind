@@ -109,7 +109,7 @@ describe("ConversationsPagingTail", () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(container.textContent?.trim()).not.toBe("");
-		expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
 		expect(skeletonCount(container)).toBe(0);
 	});
 
@@ -160,7 +160,7 @@ describe("ConversationsPagingTail", () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(loadPage).toHaveBeenCalledTimes(1);
-		expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
 	});
 
 	it("shows the settled empty state when there is nothing at all", () => {
@@ -190,7 +190,7 @@ describe("ConversationsPagingTail", () => {
 			"Failed to load more conversations",
 		);
 
-		screen.getByRole("button", { name: "Retry" }).click();
+		screen.getByRole("button", { name: "Try again" }).click();
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(screen.getByRole("status").textContent?.trim()).toBe(
@@ -198,7 +198,7 @@ describe("ConversationsPagingTail", () => {
 		);
 	});
 
-	it("recovers on a tap of Retry", async () => {
+	it("recovers on a tap of Try again", async () => {
 		const loadPage = vi
 			.fn<(page: number) => Promise<void>>()
 			.mockRejectedValueOnce(retryableFailure())
@@ -206,11 +206,11 @@ describe("ConversationsPagingTail", () => {
 		const { container } = mount({ loadPage });
 		await vi.advanceTimersByTimeAsync(0);
 
-		screen.getByRole("button", { name: "Retry" }).click();
+		screen.getByRole("button", { name: "Try again" }).click();
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(loadPage).toHaveBeenCalledTimes(2);
-		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 		expect(skeletonCount(container)).toBe(0);
 	});
 });

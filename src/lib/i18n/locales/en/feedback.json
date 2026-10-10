@@ -1,119 +1,111 @@
 {
 	"actions": {
-		"copyDetails": "Copy Details",
-		"signOut": "Sign Out"
-	},
-	"errorToast": {
-		"defaultLabel": "An error occurred"
+		"signOut": "Sign out"
 	},
 	"errorCopy": {
-		"copied": "Error details copied to clipboard",
+		"copied": "Copied to clipboard",
 		"errors": {
 			"copyFailed": "Couldn’t copy to clipboard"
 		}
 	},
 	"copyErrorConfirm": {
-		"title": "Copy Error Details?",
+		"title": "Copy error details?",
 		"warning": "Be mindful of what you share on the internet!",
-		"description": "The error might contain your personal data. Only copy it unredacted if a developer asks you to.",
-		"redact": "Redact sensitive info (recommended)",
+		"description": "The error details might contain your personal data. Copy them unredacted only if a developer asks you to.",
+		"redact": "Redact personal data (recommended)",
 		"copy": "Copy"
 	},
 	"apiError": {
 		"connect": "Couldn’t connect to Grindr",
-		"http": "Couldn’t reach the server",
+		"http": "Couldn’t get a response from Grindr",
 		"requestBlocked": "Grindr is blocking your requests",
-		"networkBlocked": "Something blocked the request before it reached Grindr",
+		"networkBlocked": "Something is blocking your requests to Grindr",
 		"sessionStale": "Couldn’t refresh your session"
 	},
 	"apiErrorDisplay": {
-		"retryableFailure": "The server ran into a problem",
-		"unknownFailure": "Something went wrong"
+		"retryableFailure": "Grindr ran into a problem"
 	},
 	"appError": {
 		"connectionFailed": "Couldn’t connect to Grindr. Check your internet connection and try again.",
-		"rateLimited": "Grindr is rate limiting us",
+		"rateLimited": "Too many requests. Wait a moment and try again.",
 		"notSignedIn": "You’re signed out",
 		"contentTooLarge": "Larger than the upload limit",
 		"overLimit": "Larger than the {{limit}} limit",
-		"unknown": "An unknown error occurred",
+		"unknown": "Something went wrong",
 		"withCode": "Error {{code}}: {{detail}}",
 		"webPage": "The server returned a web page instead of data",
 		"titledWebPage": "The server returned a web page: “{{title}}”"
 	},
 	"requestBlocked": {
 		"cloudflare": {
-			"title": "Grindr Blocks Your Requests",
+			"title": "Grindr is blocking your requests",
 			"description": "Cloudflare protecting the Grindr API is currently blocking your requests because of suspicious activity.",
-			"advice": "You can also rotate request parameters using the button below.",
+			"advice": "You can also rotate the device parameters using the button below.",
 			"knownIssue": "This is a <knownIssueLink>known issue</knownIssueLink>."
 		},
 		"network": {
-			"title": "Something Blocked the Request Before It Reached Grindr",
-			"description": "A VPN, DNS filter, captive portal, or a school or work network may have answered instead of Grindr, or an edge in front of the Grindr API turned the request away.",
-			"advice": "Otherwise, switch to another network, or rotate request parameters using the button below."
+			"title": "Something is blocking your requests to Grindr",
+			"description": "A VPN, DNS filter, captive portal, or school or work network may be answering instead of Grindr, or a server in front of the Grindr API is turning your requests away.",
+			"advice": "Otherwise, switch to another network or rotate the device parameters using the button below."
 		},
 		"vpnHint": "If you use a VPN, try disabling it.",
 		"dontShowAgain": "Don’t show again in this session",
-		"rotate": "Rotate Parameters",
-		"rotated": "Successfully rotated device parameters"
+		"rotate": "Rotate device parameters",
+		"rotated": "Device parameters rotated"
 	},
 	"sessionError": {
 		"rateLimited": {
-			"title": "Grindr Is Rate Limiting Us",
-			"description": "Grindr turned away our attempts to refresh your session. Wait a moment and try again."
+			"title": "Too many requests",
+			"description": "Grindr is limiting requests, so your session wasn’t refreshed. Wait a moment and try again."
 		},
 		"refused": {
-			"title": "Grindr Refused Your Session",
-			"description": "Grindr wouldn’t refresh your session. Try again, and if it keeps happening, copy the error and report it."
+			"title": "Grindr refused your session",
+			"description": "Grindr wouldn’t refresh your session. Try again, and if it keeps happening, copy the error details and report them."
 		},
 		"unreachable": {
-			"title": "Can’t Connect to Grindr",
-			"description": "We couldn’t reach Grindr to refresh your session. Check your internet connection and try again. If this keeps happening, copy the error and report it."
+			"title": "Can’t connect to Grindr",
+			"description": "Open Grind couldn’t connect to Grindr to refresh your session. Check your internet connection and try again. If it keeps happening, copy the error details and report them."
 		},
 		"detailAfterAttempts_one": "{{detail}} (after {{count}} attempt)",
 		"detailAfterAttempts_other": "{{detail}} (after {{count}} attempts)",
-		"copied": "Error copied to clipboard",
-		"expired": "Your session expired — please sign in again",
+		"expired": "Your session expired. Sign in again.",
 		"dismiss": "Dismiss",
-		"tryAgain": "Try Again",
 		"errors": {
-			"tryAgainFailed": "Still can’t connect"
+			"tryAgainFailed": "Still can’t refresh your session"
 		}
 	},
 	"sessionRecovery": {
-		"retrying": "Can’t reach Grindr — retrying"
+		"retrying": "Couldn’t refresh your session. Retrying…"
 	},
 	"accountStatus": {
 		"banned": {
-			"title": "Your Account Is Banned",
+			"title": "Your account is banned",
 			"description": "Grindr has banned this account. You can’t sign in until the ban is lifted.",
 			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can’t sign in until the ban is lifted."
 		},
 		"ageVerification": {
-			"title": "Age Verification Required",
-			"description": "Grindr requires you to verify your age before continuing. Complete it in the official Grindr app, then sign in again. Open Grind does not bypass age verification."
+			"title": "Age verification required",
+			"description": "Grindr requires you to verify your age before continuing. Complete it in the official Grindr app, then sign in again. Open Grind doesn’t bypass age verification."
 		},
 		"restricted": {
-			"title": "Account Restricted",
+			"title": "Account restricted",
 			"description": "Your account is currently restricted and can’t be used. Check the official Grindr app for details."
-		},
-		"copied": "Details copied to clipboard"
+		}
 	},
 	"storageNotice": {
 		"unavailable": "This device can’t keep you signed in. You’ll be signed out when the app closes.",
-		"plainFile": "No secret service found. Your sign-in is kept in a plain file only your user can read."
+		"plainFile": "No Secret Service keyring found. Your sign-in is kept in a plain file that only your system user account can read."
 	},
 	"entitlementBypass": {
-		"title": "Paid Feature",
+		"title": "Paid feature",
 		"explanation": "Open Grind can attempt to bypass this by momentarily spoofing your geolocation to Honduras. <bypassGuideLink>Learn more</bypassGuideLink>.",
 		"bypass": "Bypass",
 		"needsLocation": "Set your location before using this bypass",
 		"errors": {
-			"bypassFailed": "Failed to bypass this paid feature"
+			"bypassFailed": "Couldn’t bypass this paid feature"
 		}
 	},
 	"autoLocationToast": {
-		"message": "Your location will be updating automatically using GPS. Turn this off in the {{menuIcon}} menu."
+		"message": "Your location now updates automatically using GPS. Turn this off in the {{menuIcon}} menu."
 	}
 }

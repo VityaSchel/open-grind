@@ -28,7 +28,7 @@ describe("AutoLocationToast", () => {
 		const { container } = render(AutoLocationToast);
 
 		expect(textAroundIcon(container)).toStrictEqual([
-			"Your location will be updating automatically using GPS. Turn this off in the ",
+			"Your location now updates automatically using GPS. Turn this off in the ",
 			" menu.",
 		]);
 	});

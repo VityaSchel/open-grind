@@ -214,7 +214,7 @@ describe("SignInForm", () => {
 		await settle();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			"Something blocked the request before it reached Grindr",
+			"Something is blocking your requests to Grindr",
 		);
 	});
 

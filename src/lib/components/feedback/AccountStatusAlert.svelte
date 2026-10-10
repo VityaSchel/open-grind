@@ -79,7 +79,7 @@
 			const clipboard =
 				await import("@tauri-apps/plugin-clipboard-manager");
 			await clipboard.writeText(JSON.stringify(status.info, null, 2));
-			toast.success(t("feedback.accountStatus.copied"));
+			toast.success(t("feedback.errorCopy.copied"));
 		} catch (error) {
 			console.error(error);
 		}
@@ -110,7 +110,7 @@
 		<AlertDialog.Footer>
 			{#if status?.kind === "banned"}
 				<Button variant="ghost" onclick={copyDetails} disabled={busy}>
-					{t("feedback.actions.copyDetails")}
+					{t("common.actions.copyError")}
 				</Button>
 			{/if}
 			<Button onclick={onSignOut} disabled={busy}

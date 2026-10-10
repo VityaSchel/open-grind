@@ -17,7 +17,7 @@ describe("translatedLabels", () => {
 	it("names each id with its message", () => {
 		expect(Object.entries(labels)).toEqual([
 			["1", "Close"],
-			["3", "Retry"],
+			["3", "Try again"],
 		]);
 	});
 

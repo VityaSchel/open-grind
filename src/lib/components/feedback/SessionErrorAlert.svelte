@@ -153,7 +153,7 @@
 			const clipboard =
 				await import("@tauri-apps/plugin-clipboard-manager");
 			await clipboard.writeText(detail);
-			toast.success(t("feedback.sessionError.copied"));
+			toast.success(t("feedback.errorCopy.copied"));
 		} catch (error) {
 			console.error(error);
 		}
@@ -228,7 +228,7 @@
 				{t("feedback.actions.signOut")}
 			</Button>
 			<Button onclick={tryAgain} disabled={busy}
-				>{t("feedback.sessionError.tryAgain")}</Button
+				>{t("common.actions.retry")}</Button
 			>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

@@ -25,7 +25,7 @@
 		t(
 			retryable
 				? "feedback.apiErrorDisplay.retryableFailure"
-				: "feedback.apiErrorDisplay.unknownFailure",
+				: "feedback.appError.unknown",
 		),
 	);
 	const message = $derived(kindMessage ?? fallbackMessage);
@@ -50,7 +50,7 @@
 			size="sm"
 			onclick={() => void promptCopyError(error).catch(() => {})}
 		>
-			{t("feedback.actions.copyDetails")}
+			{t("common.actions.copyError")}
 		</Button>
 	</div>
 </div>

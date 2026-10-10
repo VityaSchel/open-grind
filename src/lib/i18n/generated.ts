@@ -192,10 +192,8 @@ export interface Messages {
 	"feedback.accountStatus.banned.description": undefined;
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: string };
 	"feedback.accountStatus.banned.title": undefined;
-	"feedback.accountStatus.copied": undefined;
 	"feedback.accountStatus.restricted.description": undefined;
 	"feedback.accountStatus.restricted.title": undefined;
-	"feedback.actions.copyDetails": undefined;
 	"feedback.actions.signOut": undefined;
 	"feedback.apiError.connect": undefined;
 	"feedback.apiError.http": undefined;
@@ -203,7 +201,6 @@ export interface Messages {
 	"feedback.apiError.requestBlocked": undefined;
 	"feedback.apiError.sessionStale": undefined;
 	"feedback.apiErrorDisplay.retryableFailure": undefined;
-	"feedback.apiErrorDisplay.unknownFailure": undefined;
 	"feedback.appError.connectionFailed": undefined;
 	"feedback.appError.contentTooLarge": undefined;
 	"feedback.appError.notSignedIn": undefined;
@@ -225,7 +222,6 @@ export interface Messages {
 	"feedback.entitlementBypass.title": undefined;
 	"feedback.errorCopy.copied": undefined;
 	"feedback.errorCopy.errors.copyFailed": undefined;
-	"feedback.errorToast.defaultLabel": undefined;
 	"feedback.requestBlocked.cloudflare.advice": undefined;
 	"feedback.requestBlocked.cloudflare.description": undefined;
 	"feedback.requestBlocked.cloudflare.title": undefined;
@@ -236,7 +232,6 @@ export interface Messages {
 	"feedback.requestBlocked.rotate": undefined;
 	"feedback.requestBlocked.rotated": undefined;
 	"feedback.requestBlocked.vpnHint": undefined;
-	"feedback.sessionError.copied": undefined;
 	"feedback.sessionError.detailAfterAttempts": { count: number; detail: string };
 	"feedback.sessionError.dismiss": undefined;
 	"feedback.sessionError.errors.tryAgainFailed": undefined;
@@ -245,7 +240,6 @@ export interface Messages {
 	"feedback.sessionError.rateLimited.title": undefined;
 	"feedback.sessionError.refused.description": undefined;
 	"feedback.sessionError.refused.title": undefined;
-	"feedback.sessionError.tryAgain": undefined;
 	"feedback.sessionError.unreachable.description": undefined;
 	"feedback.sessionError.unreachable.title": undefined;
 	"feedback.sessionRecovery.retrying": undefined;
@@ -465,11 +459,9 @@ export interface Messages {
 	"shell.dataRefreshControl.pullHint": undefined;
 	"shell.dataRefreshControl.refreshButton": undefined;
 	"shell.dataRefreshControl.releaseHint": undefined;
-	"shell.error.copied": undefined;
 	"shell.error.description": undefined;
 	"shell.error.goHome": undefined;
 	"shell.error.pageNotFound": undefined;
-	"shell.error.refresh": undefined;
 	"shell.error.reportIssue": undefined;
 	"shell.error.title": undefined;
 	"shell.navBar.a11y.me": undefined;

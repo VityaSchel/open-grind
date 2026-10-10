@@ -42,7 +42,7 @@
 				<div class="flex gap-2">
 					<Button href="/">
 						{#if page.url.pathname === "/"}
-							{t("shell.error.refresh")}
+							{t("common.actions.retry")}
 						{:else}
 							{t("shell.error.goHome")}
 						{/if}
@@ -54,7 +54,7 @@
 								page.error?.message ||
 									"No error message available",
 							).catch((error) => console.error(error));
-							toast.success(t("shell.error.copied"));
+							toast.success(t("feedback.errorCopy.copied"));
 						}}
 					>
 						{t("common.actions.copyError")}

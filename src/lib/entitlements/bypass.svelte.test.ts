@@ -246,7 +246,7 @@ describe("runEntitlementBypass", () => {
 		expect(entitlementBypassState.busy).toBe(false);
 		expect(entitlementBypassState.open).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error: expect.anything(),
 		});
 	});
@@ -423,7 +423,7 @@ describe("runEntitlementBypass", () => {
 		await runEntitlementBypass();
 
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error: expect.anything(),
 		});
 		expect(entitlementBypassState.open).toBe(false);
@@ -438,7 +438,7 @@ describe("runEntitlementBypass", () => {
 
 		expect(retry).not.toHaveBeenCalled();
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to bypass this paid feature",
+			label: "Couldn’t bypass this paid feature",
 			error: expect.anything(),
 		});
 	});

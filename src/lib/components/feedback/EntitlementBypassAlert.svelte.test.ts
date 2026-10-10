@@ -105,7 +105,7 @@ describe("EntitlementBypassAlert", () => {
 	it("explains the paid feature and what the bypass does", async () => {
 		await offer();
 
-		expect(screen.getByText("Paid Feature")).toBeTruthy();
+		expect(screen.getByText("Paid feature")).toBeTruthy();
 		expect(screen.getByText(REASON)).toBeTruthy();
 		expect(
 			screen.getByText(
@@ -141,7 +141,7 @@ describe("EntitlementBypassAlert", () => {
 
 	it("words the prompt in the active locale", async () => {
 		await offer();
-		const title = screen.getByText("Paid Feature");
+		const title = screen.getByText("Paid feature");
 		const buttons = [cancelButton(), bypassButton()];
 		const href = within(description())
 			.getByRole("link", { name: "Learn more" })

@@ -182,7 +182,7 @@ describe("ProfilePane chrome wording", () => {
 		});
 		await flush();
 		const editProfile = screen.getByRole("link", { name: "Edit Profile" });
-		const retry = screen.getByRole("button", { name: "Retry" });
+		const retry = screen.getByRole("button", { name: "Try again" });
 
 		await setLocale({ locale: "en-XA" });
 

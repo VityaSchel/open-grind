@@ -154,7 +154,7 @@ describe("ws.sendCommand", () => {
 
 		await expect(sendCommand()).rejects.toMatchObject({
 			kind: "RateLimited",
-			message: "Grindr is rate limiting us",
+			message: "Too many requests. Wait a moment and try again.",
 		});
 	});
 

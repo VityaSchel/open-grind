@@ -141,7 +141,7 @@ describe("GoogleSignInForm", () => {
 		expect(button("Install").getAttribute("aria-busy")).toBe("false");
 		expect(screen.getByRole("link", { name: "Go Back" })).toBeTruthy();
 		expect(button("paste the OAuth token manually")).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 		expect(screen.queryByLabelText("Token")).toBeNull();
 	});
 

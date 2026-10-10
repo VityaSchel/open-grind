@@ -182,7 +182,7 @@ describe("fetchRest", () => {
 
 		await expect(fetchRest("/v4/cascade")).rejects.toMatchObject({
 			kind: "RateLimited",
-			message: "Grindr is rate limiting us",
+			message: "Too many requests. Wait a moment and try again.",
 		});
 	});
 });

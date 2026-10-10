@@ -9,7 +9,7 @@ function isSessionGone({ kind }: ApiError): boolean {
 }
 
 export function showErrorToast({
-	label = t("feedback.errorToast.defaultLabel"),
+	label = t("feedback.appError.unknown"),
 	error,
 	onRetry,
 }: {
@@ -19,7 +19,7 @@ export function showErrorToast({
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
 	const copyDetails = {
-		label: t("feedback.actions.copyDetails"),
+		label: t("common.actions.copyError"),
 		onClick: () => void promptCopyError(error).catch(() => {}),
 	};
 	if (onRetry) {

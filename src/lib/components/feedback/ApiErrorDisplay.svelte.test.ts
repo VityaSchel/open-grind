@@ -19,7 +19,7 @@ const schemaMismatch = () =>
 
 function retryButton(): HTMLElement | undefined {
 	return [...document.querySelectorAll("button")].find(
-		(button) => button.textContent?.trim() === "Retry",
+		(button) => button.textContent?.trim() === "Try again",
 	);
 }
 
@@ -29,7 +29,7 @@ afterEach(async () => {
 });
 
 describe("ApiErrorDisplay", () => {
-	it("offers Retry for an error that cannot be classified as retryable", () => {
+	it("offers a retry button for an error that cannot be classified as retryable", () => {
 		const error = schemaMismatch();
 		expect(error.retryable).toBe(false);
 
@@ -49,7 +49,7 @@ describe("ApiErrorDisplay", () => {
 		expect(onRetry).toHaveBeenCalledOnce();
 	});
 
-	it("offers no Retry when the caller has no way to retry", () => {
+	it("offers no retry button when the caller has no way to retry", () => {
 		render(ApiErrorDisplay, { props: { error: schemaMismatch() } });
 
 		expect(retryButton()).toBeUndefined();
@@ -57,12 +57,9 @@ describe("ApiErrorDisplay", () => {
 
 	it.each([
 		["Connect", "Couldn’t connect to Grindr"],
-		["Http", "Couldn’t reach the server"],
+		["Http", "Couldn’t get a response from Grindr"],
 		["RequestBlocked", "Grindr is blocking your requests"],
-		[
-			"NetworkBlocked",
-			"Something blocked the request before it reached Grindr",
-		],
+		["NetworkBlocked", "Something is blocking your requests to Grindr"],
 		["SessionStale", "Couldn’t refresh your session"],
 	] as const)("blames %s for the failure it actually was", (kind, shown) => {
 		render(ApiErrorDisplay, {
@@ -89,7 +86,7 @@ describe("ApiErrorDisplay", () => {
 
 		render(ApiErrorDisplay, { props: { error } });
 
-		expect(screen.getByText("The server ran into a problem")).toBeTruthy();
+		expect(screen.getByText("Grindr ran into a problem")).toBeTruthy();
 	});
 
 	it("stays vague when nothing classified the failure", () => {
@@ -115,9 +112,7 @@ describe("ApiErrorDisplay", () => {
 			screen.getByRole("button", { name: t("common.actions.retry") }),
 		).toBeTruthy();
 		expect(
-			screen.getByRole("button", {
-				name: t("feedback.actions.copyDetails"),
-			}),
+			screen.getByRole("button", { name: t("common.actions.copyError") }),
 		).toBeTruthy();
 	});
 });

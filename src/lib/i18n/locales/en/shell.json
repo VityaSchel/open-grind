@@ -3,9 +3,7 @@
 		"pageNotFound": "Page not found",
 		"title": "Unexpected error",
 		"description": "Something went wrong while loading this page.",
-		"refresh": "Refresh",
 		"goHome": "Go to Browse",
-		"copied": "Error message copied to clipboard",
 		"reportIssue": "Report an issue"
 	},
 	"subpageScreen": {
