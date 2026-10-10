@@ -1,12 +1,12 @@
 {
 	"error": {
-		"pageNotFound": "Page Not Found",
-		"title": "Unexpected Error",
-		"description": "An unexpected error has occurred.",
+		"pageNotFound": "Page not found",
+		"title": "Unexpected error",
+		"description": "Something went wrong while loading this page.",
 		"refresh": "Refresh",
-		"goHome": "Go to Home Page",
+		"goHome": "Go to Browse",
 		"copied": "Error message copied to clipboard",
-		"reportIssue": "Report an Issue"
+		"reportIssue": "Report an issue"
 	},
 	"subpageScreen": {
 		"a11y": {
@@ -19,7 +19,7 @@
 		}
 	},
 	"saveChangesBar": {
-		"save": "Save Changes"
+		"save": "Save changes"
 	},
 	"dataRefreshControl": {
 		"pullHint": "Pull to refresh",
@@ -28,13 +28,13 @@
 	},
 	"scrollToTopButton": {
 		"a11y": {
-			"label": "Scroll to Top"
+			"label": "Scroll to top"
 		}
 	},
 	"toaster": {
 		"a11y": {
 			"region": "Notifications",
-			"close": "Close Toast"
+			"close": "Close notification"
 		}
 	},
 	"navBar": {
@@ -49,7 +49,7 @@
 		}
 	},
 	"notFound": {
-		"description": "The page you are looking for does not exist.",
+		"description": "The page you’re looking for doesn’t exist.",
 		"clippy": {
 			"lost": "It looks like you’re a little lost.",
 			"offer": "Would you like help?",
@@ -67,9 +67,9 @@
 	"onboarding": {
 		"title": "Welcome",
 		"tagline": "Unofficial Grindr client",
-		"description": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven",
+		"description": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered, and community-driven",
 		"addToAppsMenu": "Add Open Grind to your apps menu",
-		"start": "Get Started",
+		"start": "Get started",
 		"errors": {
 			"finishSetupFailed": "Couldn’t finish setup"
 		}

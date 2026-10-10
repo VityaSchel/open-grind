@@ -9,7 +9,7 @@ import {
 import { chooseUnits, installPersistentAppData } from "./support/app-data";
 
 const saveChanges = (page: Page) =>
-	page.getByRole("button", { name: "Save Changes" });
+	page.getByRole("button", { name: "Save changes" });
 const height = (page: Page) => page.getByRole("button", { name: /^Height / });
 const weight = (page: Page) => page.getByRole("textbox", { name: "Weight" });
 

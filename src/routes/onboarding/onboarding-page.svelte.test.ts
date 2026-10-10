@@ -42,7 +42,7 @@ afterEach(async () => {
 });
 
 function startButton() {
-	return screen.getByRole("button", { name: "Get Started" });
+	return screen.getByRole("button", { name: "Get started" });
 }
 
 describe("Onboarding page", () => {
@@ -57,12 +57,12 @@ describe("Onboarding page", () => {
 		).toEqual([
 			"Open Grind",
 			"Unofficial Grindr client",
-			"Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven",
+			"Cross-platform, free, libre, ad-free, tracker-free, privacy-centered, and community-driven",
 			"Check updates automatically",
 			"",
 			"Add Open Grind to your apps menu",
 			"",
-			"Get Started",
+			"Get started",
 		]);
 	});
 

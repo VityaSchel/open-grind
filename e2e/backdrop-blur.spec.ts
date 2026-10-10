@@ -164,7 +164,7 @@ test("low lifts the save changes bar off the navbar by the bar gap", async ({
 	await displayName.fill("Renamed in a test");
 	await saveBarShown;
 	await expectLowLiftsOffNavbar(
-		page.getByRole("button", { name: "Save Changes" }),
+		page.getByRole("button", { name: "Save changes" }),
 	);
 });
 

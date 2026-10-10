@@ -184,7 +184,7 @@ export const SURFACES: Surface[] = [
 		path: "/definitely-not-a-route",
 		bars: {},
 		ready: shows((page) =>
-			page.getByRole("link", { name: "Report an Issue" }),
+			page.getByRole("link", { name: "Report an issue" }),
 		),
 	},
 ];

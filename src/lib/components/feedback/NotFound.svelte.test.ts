@@ -34,7 +34,7 @@ describe("NotFound", () => {
 		const { container } = render(NotFound);
 
 		expect(container.textContent).toBe(
-			"   Page Not Found The page you are looking for does not exist. Go to Home Page Report an Issue ",
+			"   Page not found The page you’re looking for doesn’t exist. Go to Browse Report an issue ",
 		);
 		expect(container.querySelector("img")?.getAttribute("alt")).toBe(
 			"Clippy",

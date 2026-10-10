@@ -14,7 +14,7 @@ async function saveAboutMe({ page, text }: { page: Page; text: string }) {
 	const aboutMe = page.getByRole("textbox", { name: "About me" });
 	await expect(aboutMe).toBeEditable({ timeout: 60_000 });
 	await aboutMe.fill(text);
-	await page.getByRole("button", { name: "Save Changes" }).click();
+	await page.getByRole("button", { name: "Save changes" }).click();
 	await expect.poll(() => serverAboutMe(page)).toBe(text);
 }
 

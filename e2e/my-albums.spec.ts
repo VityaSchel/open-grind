@@ -121,7 +121,7 @@ test.describe("my albums", () => {
 		const name = page.getByRole("textbox", { name: "Album name" });
 		await expect(name).toHaveValue("Studio", { timeout: 30_000 });
 		await name.fill("Darkroom");
-		await page.getByRole("button", { name: "Save Changes" }).click();
+		await page.getByRole("button", { name: "Save changes" }).click();
 
 		await back(page);
 		await expect(
@@ -179,7 +179,7 @@ test.describe("my albums", () => {
 		await openSharedAlbum(page);
 		await expect(page.locator(MEDIA_SLOT)).toHaveCount(3);
 
-		const save = page.getByRole("button", { name: "Save Changes" });
+		const save = page.getByRole("button", { name: "Save changes" });
 		await expect(save, "nothing to save yet").toBeHidden();
 
 		const mark = page.getByRole("button", {
