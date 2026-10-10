@@ -177,6 +177,7 @@ v0.1.0-beta.3   = 1030 (due to error, the actual release is 1020)
 v0.1.0-beta.4   = 1040 (error fixed, actual release jumps from 1020 to 1040)
 v0.1.0-beta.4.1 = 1041
 v0.1.0-beta.5   = 1050
+v0.1.0-beta.5.1 = 1051
 ```
 
 Post-mvp versioning:
