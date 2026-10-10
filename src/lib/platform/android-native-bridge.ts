@@ -1,6 +1,6 @@
 import { addPluginListener } from "@tauri-apps/api/core";
 
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
 import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 
 const SAFE_AREA_SIDES = ["top", "bottom", "left", "right"] as const;
@@ -102,13 +102,6 @@ export function softKeyboardHidden({
 		const timeout = setTimeout(done, settleMs);
 		window.addEventListener("resize", done);
 	});
-}
-
-function runBackGestureHandlers(): boolean {
-	for (const handler of [...backGestureEventHandlers].reverse()) {
-		if (handler() !== true) return true;
-	}
-	return false;
 }
 
 export function applyBackGestureHandler() {

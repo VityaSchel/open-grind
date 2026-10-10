@@ -3,6 +3,7 @@
 import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import BackButton from "./BackButton.svelte";
 
 const { afterNavigateCallbacks } = vi.hoisted(() => ({
@@ -54,6 +55,21 @@ function clickFollowsLink(
 	return followsLink;
 }
 
+function pressEscape({
+	on = window,
+	repeat = false,
+}: { on?: EventTarget; repeat?: boolean } = {}) {
+	on.dispatchEvent(
+		new KeyboardEvent("keydown", {
+			key: "Escape",
+			code: "Escape",
+			bubbles: true,
+			cancelable: true,
+			repeat,
+		}),
+	);
+}
+
 function completeNavigation() {
 	for (const onNavigated of afterNavigateCallbacks) onNavigated();
 }
@@ -61,6 +77,7 @@ function completeNavigation() {
 describe("BackButton", () => {
 	afterEach(() => {
 		cleanup();
+		document.body.replaceChildren();
 		vi.unstubAllGlobals();
 		afterNavigateCallbacks.length = 0;
 	});
@@ -114,6 +131,66 @@ describe("BackButton", () => {
 
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(back).toHaveBeenCalledTimes(2);
+	});
+
+	it("goes back on Escape", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+
+		pressEscape();
+
+		expect(back).toHaveBeenCalledOnce();
+	});
+
+	it("pops once for Escape pressed twice before the navigation lands", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+
+		pressEscape();
+		pressEscape();
+
+		expect(back).toHaveBeenCalledOnce();
+	});
+
+	it("ignores Escape held down", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+
+		pressEscape({ repeat: true });
+
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("leaves Escape typed into a text field to the field", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+		const field = document.body.appendChild(
+			document.createElement("input"),
+		);
+
+		pressEscape({ on: field });
+
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("lets whatever the back gesture would dismiss take Escape first", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+		const cancelReply = vi.fn(() => false);
+		backGestureEventHandlers.add(cancelReply);
+
+		pressEscape();
+		backGestureEventHandlers.delete(cancelReply);
+
+		expect(cancelReply).toHaveBeenCalledOnce();
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("goes back on Escape past a back handler with nothing to dismiss", () => {
+		const { back } = renderBackLink({ canGoBack: true });
+		const idle = vi.fn(() => true);
+		backGestureEventHandlers.add(idle);
+
+		pressEscape();
+		backGestureEventHandlers.delete(idle);
+
+		expect(idle).toHaveBeenCalledOnce();
+		expect(back).toHaveBeenCalledOnce();
 	});
 
 	it("leaves a modified click to the browser", () => {
