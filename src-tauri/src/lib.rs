@@ -35,7 +35,7 @@ const MIN_CHROMIUM_MAJOR: u32 = 111;
 const MIN_WEBKITGTK: (u32, u32) = (2, 42);
 
 #[cfg(desktop)]
-const MAIN_WINDOW_LABEL: &str = "main";
+pub(crate) const MAIN_WINDOW_LABEL: &str = "main";
 
 const OPEN_GRIND_PLATFORM: &str = if cfg!(target_os = "android") {
 	"android"

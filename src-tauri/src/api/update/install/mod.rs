@@ -4,60 +4,17 @@ mod android;
 pub use android::AndroidUpdater;
 #[cfg(not(target_os = "android"))]
 mod desktop;
+mod hold;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Runtime};
 
-use super::baseline::{Baseline, InstallKind};
-use super::component::{self, Component};
-use super::release::Candidate;
+use super::baseline::Baseline;
+use super::component::Component;
+use hold::TransferPurpose;
+pub use hold::{TransferHold, TransferProgress};
 
 #[cfg_attr(not(target_os = "android"), allow(dead_code))]
 const MEDIA_UPLOAD: &str = "mediaUpload";
-
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
-#[derive(Debug, Clone, Copy)]
-enum TransferPurpose {
-	Update {
-		package_name: &'static str,
-		kind: InstallKind,
-	},
-	MediaUpload,
-}
-
-pub struct TransferHold<'a, R: Runtime> {
-	app: &'a AppHandle<R>,
-	purpose: TransferPurpose,
-}
-
-impl<'a, R: Runtime> TransferHold<'a, R> {
-	pub fn update(app: &'a AppHandle<R>, candidate: &Candidate) -> Self {
-		let package_name = component::by_key(&candidate.component)
-			.map_or(component::SELF_PACKAGE, Component::install_target);
-		Self::begin(
-			app,
-			TransferPurpose::Update {
-				package_name,
-				kind: candidate.kind,
-			},
-		)
-	}
-
-	pub fn media_upload(app: &'a AppHandle<R>) -> Self {
-		Self::begin(app, TransferPurpose::MediaUpload)
-	}
-
-	fn begin(app: &'a AppHandle<R>, purpose: TransferPurpose) -> Self {
-		platform::begin_transfer(app, purpose);
-		Self { app, purpose }
-	}
-}
-
-impl<R: Runtime> Drop for TransferHold<'_, R> {
-	fn drop(&mut self) {
-		platform::end_transfer(self.app, self.purpose);
-	}
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(
@@ -551,7 +508,11 @@ mod pins {
 			invoked.contains(&"installPending"),
 			"the bridge no longer asks the plugin whether an install is pending"
 		);
-		for command in invoked {
+		assert_plugin_declares(&invoked);
+	}
+
+	fn assert_plugin_declares(commands: &[&str]) {
+		for command in commands {
 			assert!(
 				spaced_match(
 					PLUGIN,
@@ -752,6 +713,23 @@ mod pins {
 			"packageState",
 			"watchInstall",
 		]);
+	}
+
+	#[test]
+	fn every_transfer_command_exists_in_kotlin_with_its_fields() {
+		let bridge = squashed(ANDROID_BRIDGE);
+		let sent: Vec<&str> = bridge
+			.split("send_transfer(app,\"")
+			.skip(1)
+			.filter_map(|call| call.split('"').next())
+			.collect();
+		assert_eq!(sent, ["beginTransfer", "transferProgress", "endTransfer"]);
+		assert_plugin_declares(&sent);
+		assert_eq!(
+			UPDATE_PAIR.rust_wire_fields("TransferRequest"),
+			UPDATE_PAIR.kotlin_arg_fields("TransferArgs"),
+			"TransferRequest and TransferArgs disagree on field names"
+		);
 	}
 
 	#[test]
