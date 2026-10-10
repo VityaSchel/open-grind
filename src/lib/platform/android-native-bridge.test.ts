@@ -95,6 +95,19 @@ describe("applyAndroidInsets", () => {
 		expect(remeasureScreenChrome).toHaveBeenCalledOnce();
 	});
 
+	it("announces each change to the safe area once", async () => {
+		const applyAndroidInsets = await loadApplyAndroidInsets();
+		const { onSafeAreaChange } = await import("$lib/util/safe-area");
+		const changed = vi.fn();
+		onSafeAreaChange(changed);
+
+		applyAndroidInsets(KEYBOARD_HIDDEN);
+		applyAndroidInsets({ ...KEYBOARD_HIDDEN });
+		applyAndroidInsets({ ...KEYBOARD_HIDDEN, left: 33 });
+
+		expect(changed).toHaveBeenCalledTimes(2);
+	});
+
 	it("falls back to env() without the native bridge, once", async () => {
 		const applyAndroidInsets = await loadApplyAndroidInsets();
 

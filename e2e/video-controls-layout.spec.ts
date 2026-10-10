@@ -1,9 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { ACTIVE_SURFACE, openClip } from "./support/video";
+import { ACTIVE_SURFACE, CONTROLS, openClip } from "./support/video";
 
-const CONTROLS =
-	'.pswp__item:not([aria-hidden="true"]) [data-pswp-interactive]';
 const MUTE = `${CONTROLS} button[aria-label="Mute"], ${CONTROLS} button[aria-label="Unmute"]`;
 const SCRUBBER = `${ACTIVE_SURFACE} [role="slider"]`;
 
@@ -26,7 +24,6 @@ function controlsGeometry(page: Page) {
 				muteLeft: speaker.left,
 				muteRight: speaker.right,
 				trackWidth: track.width,
-				viewport: window.innerWidth,
 			};
 		},
 		{ controls: CONTROLS, mute: MUTE, scrubber: SCRUBBER },
@@ -34,7 +31,7 @@ function controlsGeometry(page: Page) {
 }
 
 test.describe("video controls layout", () => {
-	test("a narrow slide keeps every control inside the bar", async ({
+	test("a narrow window keeps every control inside the bar", async ({
 		page,
 	}) => {
 		await openClip(page);
@@ -59,13 +56,9 @@ test.describe("video controls layout", () => {
 			g.trackWidth,
 			"and the scrubber keeps a usable track instead of collapsing",
 		).toBeGreaterThanOrEqual(64);
-		expect(
-			g.barWidth,
-			"the bar may overhang the slide, but never the viewport",
-		).toBeLessThanOrEqual(g.viewport);
 	});
 
-	test("a wide slide still insets the bar from the slide edges", async ({
+	test("a phone-width window insets the bar 1rem from the slide edges", async ({
 		page,
 	}) => {
 		await openClip(page);
@@ -80,10 +73,29 @@ test.describe("video controls layout", () => {
 		}, ACTIVE_SURFACE);
 		const g = await controlsGeometry(page);
 
-		expect(
-			g.barLeft - slideLeft,
-			"a wide slide keeps the 1rem inset on the left",
-		).toBeCloseTo(16, 0);
+		expect(g.barLeft - slideLeft, "on the left").toBeCloseTo(16, 0);
 		expect(slideRight - g.barRight, "and on the right").toBeCloseTo(16, 0);
+	});
+
+	test("a wide window caps the bar and centers it at the slide's bottom", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1280, height: 720 });
+		await openClip(page);
+		await page.locator(ACTIVE_SURFACE).hover();
+		await page.waitForTimeout(300);
+
+		const slide = (await page.locator(ACTIVE_SURFACE).boundingBox())!;
+		const bar = (await page.locator(CONTROLS).boundingBox())!;
+
+		expect(bar.width, "the bar stops growing at 36rem").toBeCloseTo(576, 0);
+		expect(bar.x - slide.x, "centered").toBeCloseTo(
+			slide.x + slide.width - (bar.x + bar.width),
+			0,
+		);
+		expect(
+			slide.y + slide.height - (bar.y + bar.height),
+			"1rem above the slide's bottom",
+		).toBeCloseTo(16, 0);
 	});
 });

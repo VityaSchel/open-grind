@@ -11,6 +11,7 @@
 
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { followViewportResizes } from "$lib/util/follow-viewport-resizes";
+	import { safeAreaInsets } from "$lib/util/safe-area";
 
 	let {
 		anchor,
@@ -56,15 +57,12 @@
 	});
 
 	function safeAreaPadding() {
-		const rootStyle = getComputedStyle(document.documentElement);
-		const clearance = (side: "top" | "right" | "bottom" | "left") =>
-			(parseFloat(rootStyle.getPropertyValue(`--safe-area-${side}`)) ||
-				0) + EDGE_GAP_PX;
+		const { top, right, bottom, left } = safeAreaInsets();
 		return {
-			top: clearance("top"),
-			right: clearance("right"),
-			bottom: clearance("bottom"),
-			left: clearance("left"),
+			top: top + EDGE_GAP_PX,
+			right: right + EDGE_GAP_PX,
+			bottom: bottom + EDGE_GAP_PX,
+			left: left + EDGE_GAP_PX,
 		};
 	}
 

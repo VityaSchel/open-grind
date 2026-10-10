@@ -154,13 +154,11 @@
 		onerror={failed}
 	></video>
 	{#if controlsVisible}
-		<div
-			class="absolute right-[calc(1rem+var(--safe-area-right))] bottom-[calc(1rem+var(--safe-area-bottom))] left-[calc(1rem+var(--safe-area-left))] flex justify-center"
-		>
+		<div class="absolute inset-x-4 bottom-4 flex justify-center">
 			<div
 				data-pswp-interactive
 				transition:fade={{ duration: 150, easing: sineOut }}
-				class="flex grow items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
+				class="flex max-w-xl grow items-center gap-3 rounded-full p-3 text-white glass-media-controls-subdued"
 			>
 				<Button
 					variant="outline"
