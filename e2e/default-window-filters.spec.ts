@@ -49,7 +49,7 @@ test("the default window opens All filters as three columns that stay under the 
 	await animationsFinished(sheet, { subtree: true });
 
 	const columnLeaders = sheet.getByRole("checkbox", {
-		name: /^(Favorites|Position|Tribes)$/,
+		name: /^(Favorites|Position|Their Tribes)$/,
 	});
 	await expect(columnLeaders).toHaveCount(3);
 	const leaderLefts = await columnLeaders.evaluateAll((nodes) =>

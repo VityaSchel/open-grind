@@ -170,6 +170,18 @@ describe("parseFilterGridQuery", () => {
 			expect(parsedAt(result.parsed, 0).valid).toBe(true);
 			expect(result.filters.tribes).toEqual([1, 11]);
 		});
+
+		it("is accepted among the tribes they're into while the gender filter flag is on", () => {
+			featureFlagsState.keys = ["gender-filter"];
+			const result = parseFilterGridQuery("?tribesImInto=1,11,-1");
+			expect(parsedAt(result.parsed, 0).valid).toBe(true);
+			expect(parsedAt(result.parsed, 0).valueText).toBe(
+				"Bear, Trans, Not specified",
+			);
+			expect(result.filters.tribesImIntoEnabled).toBe(true);
+			expect(result.filters.tribesImInto).toEqual([1, 11, -1]);
+			expect(result.filters.tribesEnabled).toBe(false);
+		});
 	});
 
 	it("flags unknown keys as invalid", () => {

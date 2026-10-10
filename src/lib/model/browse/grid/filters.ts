@@ -249,6 +249,9 @@ export const gridSearchFiltersSchema = z.object({
 	tribesEnabled: filterTribesEnabledSchema.default(false),
 	tribes: filterTribesSchema.default([]),
 
+	tribesImIntoEnabled: filterTribesEnabledSchema.default(false),
+	tribesImInto: filterTribesSchema.default([]),
+
 	bodyTypesEnabled: filterBodyTypeEnabledSchema.default(false),
 	bodyTypes: filterBodyTypeSchema.default([]),
 

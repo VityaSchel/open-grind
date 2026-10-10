@@ -266,6 +266,14 @@ export const filters: Filter[] = [
 		isOffered: isTribeOfferedNow,
 	}),
 	enumFilter({
+		label: "tribes they're into",
+		keys: ["tribesImInto"],
+		target: "tribesImInto",
+		enabled: "tribesImIntoEnabled",
+		enumObject: FilterTribe,
+		labelMap: tribes,
+	}),
+	enumFilter({
 		label: "body type",
 		keys: ["bodyTypes", "bodyType", "body"],
 		target: "bodyTypes",

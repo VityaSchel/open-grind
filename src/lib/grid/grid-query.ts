@@ -126,6 +126,10 @@ function cascadeFilters({
 				isTribeOffered({ id, genderFilterFlag }),
 			),
 		}),
+		tribesImInto: sendable({
+			enabled: filters.tribesImIntoEnabled,
+			values: filters.tribesImInto,
+		}),
 		bodyTypes: sendable({
 			enabled: filters.bodyTypesEnabled,
 			values: filters.bodyTypes,

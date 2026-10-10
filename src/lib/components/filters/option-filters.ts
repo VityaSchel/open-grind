@@ -19,9 +19,14 @@ export type OptionFilterDefinition = {
 export const optionFilters = {
 	tribes: {
 		id: "tribes",
-		label: "Tribes",
+		label: "Their Tribes",
 		table: tribes,
 		isOffered: isTribeOfferedNow,
+	},
+	tribesImInto: {
+		id: "tribes-im-into",
+		label: "Tribes They're Into",
+		table: tribes,
 	},
 	bodyTypes: { id: "body-type", label: "Body Type", table: bodyTypes },
 	relationshipStatuses: {

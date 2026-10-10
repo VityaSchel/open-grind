@@ -4318,7 +4318,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "array of integers concatenated with a `,`, same IDs as `tribes`, matches the tribes a profile is into (`tribesImInto`) instead of its own, see [Tribes](/grindr-api/users/profiles#tribes)"
+						"description": "array of integers concatenated with a `,`, same IDs as `tribes`, `-1` means \"Not Specified\", matches the tribes a profile is into (`tribesImInto`) instead of its own, see [Tribes](/grindr-api/users/profiles#tribes)"
 					}
 				],
 				"responses": {
