@@ -30,7 +30,7 @@ test.describe("every navigation bar has a name of its own", () => {
 		{ path: DEMO_CONVERSATION, names: ["Conversation"] },
 		{
 			path: DEMO_PROFILE,
-			names: ["Back", "Chat and tap", "Main", "Profile actions"],
+			names: ["Back", "Chat and Tap", "Main", "Profile Actions"],
 		},
 	];
 	for (const { path, names } of pages) {

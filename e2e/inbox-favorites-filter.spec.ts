@@ -53,9 +53,9 @@ test("unstarring the last favorite leaves the filter with no results", async ({
 		page.locator('[data-slot="conversations-scroller"]'),
 	).toBeHidden();
 	await page.locator('a[href="/profile/100001"]:visible').first().click();
-	await page.getByRole("switch", { name: "Remove from favorites" }).click();
+	await page.getByRole("switch", { name: "Remove from Favorites" }).click();
 	await expect(
-		page.getByRole("switch", { name: "Add to favorites" }),
+		page.getByRole("switch", { name: "Add to Favorites" }),
 	).toBeVisible();
 
 	await page.locator('nav a[href="/chat"]').first().click();

@@ -142,7 +142,7 @@ test("low lifts the profile chat bar off the navbar by the bar gap", async ({
 }) => {
 	await openWithBlurReady(page, "/profile/100001");
 	await expectLowLiftsOffNavbar(
-		page.getByRole("navigation", { name: "Chat and tap" }),
+		page.getByRole("navigation", { name: "Chat and Tap" }),
 	);
 });
 

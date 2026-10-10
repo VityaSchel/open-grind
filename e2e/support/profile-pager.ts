@@ -65,7 +65,7 @@ export async function openGridProfile(
 
 export async function profileLoaded(page: Page): Promise<void> {
 	await activeProfilePane(page)
-		.getByRole("button", { name: "Profile menu" })
+		.getByRole("button", { name: "Profile Menu" })
 		.waitFor({ timeout: 60_000 });
 }
 

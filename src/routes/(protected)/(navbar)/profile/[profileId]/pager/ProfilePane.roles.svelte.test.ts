@@ -159,10 +159,10 @@ describe("ProfilePane chrome wording", () => {
 		renderPane({ active: true, row: gridRow() });
 		await flush();
 		const topNav = screen.getByRole("navigation", {
-			name: "Profile actions",
+			name: "Profile Actions",
 		});
 		const bottomNav = screen.getByRole("navigation", {
-			name: "Chat and tap",
+			name: "Chat and Tap",
 		});
 		const writeMessage = within(bottomNav).getByRole("link");
 
@@ -173,7 +173,7 @@ describe("ProfilePane chrome wording", () => {
 		expect(writeMessage.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 
-	it("words our Edit profile link and the retry control in the active locale", async () => {
+	it("words our Edit Profile link and the retry control in the active locale", async () => {
 		getProfileMock.mockRejectedValue(new Error("offline"));
 		renderPane({
 			active: true,
@@ -181,7 +181,7 @@ describe("ProfilePane chrome wording", () => {
 			profileId: OUR_ID,
 		});
 		await flush();
-		const editProfile = screen.getByRole("link", { name: "Edit profile" });
+		const editProfile = screen.getByRole("link", { name: "Edit Profile" });
 		const retry = screen.getByRole("button", { name: "Retry" });
 
 		await setLocale({ locale: "en-XA" });

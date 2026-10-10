@@ -54,7 +54,7 @@ const reasonLabels: Record<ReportReason, string> = {
 	IMPERSONATION: "Impersonation",
 	ILLEGAL_ACTIVITY: "Illegal Activity",
 	SEXUAL_SOLICITATION: "Sexual Solicitation",
-	SERIOUS_IN_PERSON_INCIDENT: "Serious In Person Incident",
+	SERIOUS_IN_PERSON_INCIDENT: "Serious in Person Incident",
 };
 
 const locationLabels: Record<ReportLocation, string> = {
@@ -69,13 +69,13 @@ const locationLabels: Record<ReportLocation, string> = {
 const subjects = [
 	{
 		props: { subject: "profile" },
-		title: "Report profile",
+		title: "Report Profile",
 		description: "Send a report about this profile to Grindr.",
 		reviewed: "Grindr will review this profile.",
 	},
 	{
 		props: { subject: "message", locations: ["CHAT_MESSAGE"] },
-		title: "Report message",
+		title: "Report Message",
 		description: "Send a report about this person's messages to Grindr.",
 		reviewed: "Grindr will review your report.",
 	},
@@ -145,7 +145,7 @@ async function failBlock(): Promise<Error> {
 	const failure = new Error("offline");
 	blockUserMock.mockRejectedValueOnce(failure);
 	const [block] = footerButtons();
-	if (block === undefined) throw new Error("no Block profile button");
+	if (block === undefined) throw new Error("no Block Profile button");
 	await fireEvent.click(block);
 	await vi.waitFor(() => {
 		expect(showErrorToastMock).toHaveBeenCalledOnce();
@@ -179,7 +179,7 @@ describe("ReportSheet", () => {
 		expect(texts(within(group).getAllByRole("radio"))).toEqual(
 			reportReasonSchema.options.map((reason) => reasonLabels[reason]),
 		);
-		expect(submitButton().textContent.trim()).toBe("Submit report");
+		expect(submitButton().textContent.trim()).toBe("Submit Report");
 		expect(submitButton()).toHaveProperty("disabled", true);
 	});
 
@@ -249,7 +249,7 @@ describe("ReportSheet", () => {
 			await submitAndWait("HARASSMENT_BULLYING");
 
 			screen.getByRole("dialog", {
-				name: "Report submitted",
+				name: "Report Submitted",
 				description,
 			});
 			expect(
@@ -275,9 +275,9 @@ describe("ReportSheet", () => {
 		await submitAndWait("SPAM");
 
 		expect(slot("report-submitted").textContent).toContain(BLOCK_HINT);
-		expect(texts(footerButtons())).toEqual(["Block profile", "Done"]);
+		expect(texts(footerButtons())).toEqual(["Block Profile", "Done"]);
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Block profile" }),
+			screen.getByRole("button", { name: "Block Profile" }),
 		);
 		await vi.waitFor(() => {
 			expect(onBlocked).toHaveBeenCalledOnce();

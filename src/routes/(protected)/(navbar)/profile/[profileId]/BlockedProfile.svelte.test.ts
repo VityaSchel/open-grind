@@ -21,8 +21,8 @@ const BUG_REPORT_URL =
 	"https://git.opengrind.org/open-grind/open-grind/issues/new?template=.forgejo%2fissue_template%2fbug.yaml";
 
 const variants = [
-	{ blockedByUs: true, title: "You have blocked this profile." },
-	{ blockedByUs: false, title: "This person has blocked you." },
+	{ blockedByUs: true, title: "You Have Blocked This Profile." },
+	{ blockedByUs: false, title: "This Person Has Blocked You." },
 ];
 
 function renderBlocked({ blockedByUs }: { blockedByUs: boolean }) {

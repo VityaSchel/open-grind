@@ -238,7 +238,7 @@ test("the detour through your own profile cuts on every hop, both ways and from 
 	page,
 }) => {
 	const viewProfile = page.getByRole("link", { name: "View your profile" });
-	const editProfile = page.getByRole("link", { name: "Edit profile" });
+	const editProfile = page.getByRole("link", { name: "Edit Profile" });
 	const openProfileEditor = async () => {
 		await viewProfile.click();
 		await editProfile.click();

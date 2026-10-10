@@ -21,9 +21,9 @@ async function openFirstGridProfile(page: Page): Promise<string> {
 }
 
 async function hideActiveProfile(page: Page) {
-	await activeProfilePane(page).getByLabel("Profile menu").click();
-	await page.getByRole("menuitem", { name: "Hide profile" }).click();
-	await expect(page.getByText("You hid this profile.")).toBeVisible();
+	await activeProfilePane(page).getByLabel("Profile Menu").click();
+	await page.getByRole("menuitem", { name: "Hide Profile" }).click();
+	await expect(page.getByText("You Hid This Profile.")).toBeVisible();
 }
 
 test("hiding a profile takes it off the grid and offers an undo", async ({
@@ -33,10 +33,10 @@ test("hiding a profile takes it off the grid and offers an undo", async ({
 	const href = await openFirstGridProfile(page);
 
 	await hideActiveProfile(page);
-	await expect(page.getByText("You have blocked this profile.")).toHaveCount(
+	await expect(page.getByText("You Have Blocked This Profile.")).toHaveCount(
 		0,
 	);
-	await expect(page.getByText("This person has blocked you.")).toHaveCount(0);
+	await expect(page.getByText("This Person Has Blocked You.")).toHaveCount(0);
 
 	await page.goBack();
 	await expect(page).toHaveURL(/\/$/);
@@ -53,9 +53,9 @@ test("unhiding from the profile brings the profile back", async ({ page }) => {
 		.getByRole("button", { name: "Unhide" })
 		.click();
 
-	await expect(page.getByText("You hid this profile.")).toHaveCount(0);
+	await expect(page.getByText("You Hid This Profile.")).toHaveCount(0);
 	await expect(
-		activeProfilePane(page).getByLabel("Profile menu"),
+		activeProfilePane(page).getByLabel("Profile Menu"),
 	).toBeVisible();
 });
 

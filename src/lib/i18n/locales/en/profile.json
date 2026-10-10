@@ -29,7 +29,7 @@
 	},
 	"acceptNsfwPics": {
 		"never": "Never",
-		"notAtFirst": "Not At First",
+		"notAtFirst": "Not at First",
 		"yesPlease": "Yes Please"
 	},
 	"relationshipStatus": {
@@ -87,15 +87,15 @@
 		"negative": "Negative",
 		"negativeOnPrep": "Negative, on PrEP",
 		"positive": "Positive",
-		"positiveUndetectable": "Positive, undetectable",
-		"preferToDiscuss": "Prefer to discuss"
+		"positiveUndetectable": "Positive, Undetectable",
+		"preferToDiscuss": "Prefer to Discuss"
 	},
 	"healthPractice": {
 		"condoms": "Condoms",
 		"doxyPep": "I'm on doxyPEP",
 		"prep": "I'm on PrEP",
-		"hivUndetectable": "I'm HIV undetectable",
-		"preferToDiscuss": "Prefer to discuss",
+		"hivUndetectable": "I'm HIV Undetectable",
+		"preferToDiscuss": "Prefer to Discuss",
 		"sober": "Sober",
 		"drugFree": "Drug-Free"
 	},
@@ -112,14 +112,14 @@
 				"looking": "Demon tap"
 			},
 			"send": {
-				"friendly": "Send a Cookie tap",
-				"hot": "Send a Fire tap",
-				"looking": "Send a Demon tap"
+				"friendly": "Send a Cookie Tap",
+				"hot": "Send a Fire Tap",
+				"looking": "Send a Demon Tap"
 			},
 			"sent": {
-				"friendly": "Cookie tap sent",
-				"hot": "Fire tap sent",
-				"looking": "Demon tap sent"
+				"friendly": "Cookie Tap Sent",
+				"hot": "Fire Tap Sent",
+				"looking": "Demon Tap Sent"
 			}
 		},
 		"errors": {
@@ -170,18 +170,18 @@
 	"bottomNav": {
 		"writeMessage": "Write a message…",
 		"a11y": {
-			"navigation": "Chat and tap"
+			"navigation": "Chat and Tap"
 		}
 	},
 	"topNav": {
 		"a11y": {
-			"navigation": "Profile actions"
+			"navigation": "Profile Actions"
 		},
-		"editProfile": "Edit profile",
+		"editProfile": "Edit Profile",
 		"favorite": {
 			"a11y": {
-				"add": "Add to favorites",
-				"remove": "Remove from favorites"
+				"add": "Add to Favorites",
+				"remove": "Remove from Favorites"
 			},
 			"errors": {
 				"addFailed": "Failed to add to favorites",
@@ -190,13 +190,13 @@
 		},
 		"actionsMenu": {
 			"a11y": {
-				"trigger": "Profile menu"
+				"trigger": "Profile Menu"
 			},
-			"copyId": "Copy profile ID",
+			"copyId": "Copy Profile ID",
 			"idCopied": "Profile ID copied to clipboard",
-			"report": "Report profile",
-			"hide": "Hide profile",
-			"block": "Block profile",
+			"report": "Report Profile",
+			"hide": "Hide Profile",
+			"block": "Block Profile",
 			"errors": {
 				"copyIdFailed": "Failed to copy profile ID"
 			}
@@ -221,17 +221,17 @@
 		}
 	},
 	"blocked": {
-		"byUs": "You have blocked this profile.",
-		"byThem": "This person has blocked you.",
+		"byUs": "You Have Blocked This Profile.",
+		"byThem": "This Person Has Blocked You.",
 		"unblock": "Unblock",
 		"bugHint": "If you know this is a bug in the app, <reportIssueLink>report an issue</reportIssueLink>."
 	},
 	"hidden": {
-		"title": "You hid this profile.",
+		"title": "You Hid This Profile.",
 		"unhide": "Unhide"
 	},
 	"favoriteNote": {
-		"add": "Add note",
+		"add": "Add Note",
 		"title": "Note",
 		"a11y": {
 			"description": "A private note about this profile. Only you can see it."
@@ -257,7 +257,7 @@
 			"impersonation": "Impersonation",
 			"illegalActivity": "Illegal Activity",
 			"sexualSolicitation": "Sexual Solicitation",
-			"seriousInPersonIncident": "Serious In Person Incident"
+			"seriousInPersonIncident": "Serious in Person Incident"
 		},
 		"location": {
 			"profilePhoto": "Profile Photo",
@@ -268,20 +268,20 @@
 			"rightNowText": "Right Now Text"
 		},
 		"profile": {
-			"title": "Report profile",
+			"title": "Report Profile",
 			"a11y": {
 				"description": "Send a report about this profile to Grindr."
 			},
 			"reviewed": "Grindr will review this profile."
 		},
 		"message": {
-			"title": "Report message",
+			"title": "Report Message",
 			"a11y": {
 				"description": "Send a report about this person's messages to Grindr."
 			},
 			"reviewed": "Grindr will review your report."
 		},
-		"submitted": "Report submitted",
+		"submitted": "Report Submitted",
 		"blockHint": "You can block this profile so you stop seeing it.",
 		"done": "Done",
 		"a11y": {
@@ -289,7 +289,7 @@
 		},
 		"whereItHappened": "Where it happened",
 		"details": "Details (optional)",
-		"submit": "Submit report",
+		"submit": "Submit Report",
 		"errors": {
 			"sendFailed": "Failed to send report"
 		}

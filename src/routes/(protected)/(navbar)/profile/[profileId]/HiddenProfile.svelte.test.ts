@@ -55,7 +55,7 @@ describe("HiddenProfile", () => {
 	it("says the profile is hidden and offers Unhide", () => {
 		renderHidden();
 
-		expect(slot("empty-title").textContent).toBe("You hid this profile.");
+		expect(slot("empty-title").textContent).toBe("You Hid This Profile.");
 		expect(screen.getByRole("button").textContent).toBe("Unhide");
 	});
 

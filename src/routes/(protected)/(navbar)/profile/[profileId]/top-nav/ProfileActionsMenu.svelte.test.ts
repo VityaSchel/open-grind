@@ -36,25 +36,25 @@ import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100001;
 const ITEMS = [
-	"Copy profile ID",
-	"Report profile",
-	"Hide profile",
-	"Block profile",
+	"Copy Profile ID",
+	"Report Profile",
+	"Hide Profile",
+	"Block Profile",
 ];
 
 const failures = [
 	{
-		item: "Copy profile ID",
+		item: "Copy Profile ID",
 		request: writeTextMock,
 		label: "Failed to copy profile ID",
 	},
 	{
-		item: "Hide profile",
+		item: "Hide Profile",
 		request: hideUserMock,
 		label: "Failed to hide user",
 	},
 	{
-		item: "Block profile",
+		item: "Block Profile",
 		request: blockUserMock,
 		label: "Failed to block user",
 	},
@@ -102,7 +102,7 @@ async function fail({
 }
 
 async function copyId() {
-	await choose("Copy profile ID");
+	await choose("Copy Profile ID");
 	await vi.waitFor(() => {
 		expect(toastSuccessMock).toHaveBeenCalledOnce();
 	});
@@ -145,10 +145,10 @@ it("settles a block the report sheet has already sent instead of leaving it in f
 });
 
 describe("ProfileActionsMenu wording", () => {
-	it("names the trigger Profile menu", () => {
+	it("names the trigger Profile Menu", () => {
 		const trigger = renderMenu({ blockable: true });
 
-		expect(screen.getByRole("button", { name: "Profile menu" })).toBe(
+		expect(screen.getByRole("button", { name: "Profile Menu" })).toBe(
 			trigger,
 		);
 	});

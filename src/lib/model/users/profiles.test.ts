@@ -102,7 +102,7 @@ describe("health practices we can show but not set", () => {
 	});
 
 	it("still labels the practice the current Grindr build dropped", () => {
-		expect(healthPracticeLabels[4]).toBe("I'm HIV undetectable");
+		expect(healthPracticeLabels[4]).toBe("I'm HIV Undetectable");
 	});
 });
 
@@ -141,7 +141,7 @@ describe("vocabulary labels", () => {
 				"1=Top|2=Bottom|3=Versatile|4=Vers Bottom|5=Vers Top|6=Side",
 			lookingFor:
 				"2=Chat|3=Dates|4=Friends|5=Networking|6=Relationship|7=Hookups",
-			acceptNSFWPics: "1=Never|2=Not At First|3=Yes Please",
+			acceptNSFWPics: "1=Never|2=Not at First|3=Yes Please",
 			relationshipStatuses:
 				"1=Single|2=Dating|3=Exclusive|4=Committed|5=Partnered|6=Engaged|7=Married|8=Open Relationship",
 			bodyTypes: "1=Toned|2=Average|3=Large|4=Muscular|5=Slim|6=Stocky",
@@ -150,13 +150,13 @@ describe("vocabulary labels", () => {
 			ethnicities:
 				"1=Asian|2=Black|3=Latino|4=Middle Eastern|5=Mixed|6=Native American|7=White|8=Other|9=South Asian",
 			hivStatuses:
-				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, undetectable",
+				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, Undetectable",
 			hivStatusLabels:
-				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, undetectable|5=Prefer to discuss",
+				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, Undetectable|5=Prefer to Discuss",
 			healthPractices:
-				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV undetectable|5=Prefer to discuss",
+				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV Undetectable|5=Prefer to Discuss",
 			healthPracticeLabels:
-				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV undetectable|5=Prefer to discuss|6=Sober|7=Drug-Free",
+				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV Undetectable|5=Prefer to Discuss|6=Sober|7=Drug-Free",
 			vaccines: "1=COVID-19|2=Monkeypox|3=Meningitis",
 		});
 	});

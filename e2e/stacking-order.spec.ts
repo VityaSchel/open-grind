@@ -9,7 +9,7 @@ const DEMO_PROFILE = "/profile/100001";
 const SHARED_ALBUM = `/settings/albums/${SHARED_ALBUM_ID}`;
 const TOAST_LABEL = "Stacking probe";
 const MENUS_REACHING_A_TOAST = [
-	{ trigger: "Profile menu", url: DEMO_PROFILE, edge: "bottom" },
+	{ trigger: "Profile Menu", url: DEMO_PROFILE, edge: "bottom" },
 	{ trigger: "Album menu", url: SHARED_ALBUM, edge: "top" },
 ] as const;
 const MENU = '[data-slot="dropdown-menu-content"]';
@@ -114,7 +114,7 @@ test("the safe-area strips stay in front of an open menu and of toasts on both e
 	page,
 }) => {
 	await page.goto(DEMO_PROFILE);
-	const menu = await openMenu({ page, trigger: "Profile menu" });
+	const menu = await openMenu({ page, trigger: "Profile Menu" });
 	await showRestingToast({ page, edge: "top", label: "Top probe" });
 	await showRestingToast({ page, edge: "bottom", label: "Bottom probe" });
 	const strips = page.locator(SAFE_AREA_STRIP);
@@ -140,8 +140,8 @@ test("a toast over the report sheet stays in front and takes a tap", async ({
 	page,
 }) => {
 	await page.goto(DEMO_PROFILE);
-	const menu = await openMenu({ page, trigger: "Profile menu" });
-	await menu.getByRole("menuitem", { name: "Report profile" }).click();
+	const menu = await openMenu({ page, trigger: "Profile Menu" });
+	await menu.getByRole("menuitem", { name: "Report Profile" }).click();
 	const sheet = page.locator(DRAWER);
 	await sheet.waitFor();
 	await animationsFinished(sheet);
