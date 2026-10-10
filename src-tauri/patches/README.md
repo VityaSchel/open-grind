@@ -2,7 +2,7 @@
 
 Diffs against crates pulled from crates.io. Their sources are not committed.
 
-`bun run patch-deps` downloads each `.crate`, checks it against the sha256 in [`scripts/patch-deps.ts`](../../scripts/patch-deps.ts), applies the diff, and writes `src-tauri/.patched/<name>`, which `[patch.crates-io]` points at and git ignores. It runs from `postinstall` and from `reproPreamble` in [`nix/common.nix`](../../nix/common.nix), which every release build and the F-Droid recipe use. Re-runs compare a stamp and skip the network.
+`bun run patch-deps` downloads each `.crate`, checks it against the sha256 in [`scripts/patch-deps.ts`](../../scripts/patch-deps.ts), applies the diff, and writes `src-tauri/.patched/<name>`, which `[patch.crates-io]` points at and git ignores. It runs from `postinstall`, from `reproPreamble` in [`nix/common.nix`](../../nix/common.nix), which every release build uses, and from [`ci/fdroid/build-android.sh`](../../ci/fdroid/build-android.sh), which the F-Droid recipe uses. Re-runs compare a stamp and skip the network.
 
 Edit the tree and write the diff back with:
 
