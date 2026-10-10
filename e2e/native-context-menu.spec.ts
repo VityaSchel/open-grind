@@ -34,7 +34,7 @@ function selectText(target: Locator): Promise<void> {
 
 async function openProfile(page: Page): Promise<void> {
 	await page.goto(DEMO_PROFILE);
-	await page.getByLabel("Profile Menu").waitFor({ timeout: 120_000 });
+	await page.getByLabel("Profile menu").waitFor({ timeout: 120_000 });
 }
 
 test.beforeEach(async ({ page }) => {

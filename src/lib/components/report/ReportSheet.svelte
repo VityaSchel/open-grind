@@ -63,16 +63,14 @@
 		profile: {
 			title: "profile.report.profile.title",
 			description: "profile.report.profile.a11y.description",
-			reviewed: "profile.report.profile.reviewed",
 		},
 		message: {
 			title: "profile.report.message.title",
 			description: "profile.report.message.a11y.description",
-			reviewed: "profile.report.message.reviewed",
 		},
 	} as const satisfies Record<
 		ReportSubject,
-		Record<"title" | "description" | "reviewed", MessageKey>
+		Record<"title" | "description", MessageKey>
 	>;
 
 	let reason = $state<ReportReason | null>(null);
@@ -161,7 +159,7 @@
 					data-slot="report-submitted"
 					class="flex flex-col items-center gap-2 py-4 text-center"
 				>
-					<p>{t(subjectKey.reviewed)}</p>
+					<p>{t("profile.report.reviewed")}</p>
 					{#if blockable}
 						<p class="text-sm text-muted-foreground">
 							{t("profile.report.blockHint")}

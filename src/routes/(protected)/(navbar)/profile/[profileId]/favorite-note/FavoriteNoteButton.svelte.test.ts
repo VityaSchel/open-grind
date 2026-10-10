@@ -39,7 +39,7 @@ describe("FavoriteNoteButton", () => {
 	it("lets page translation reach the prompt shown without a note", () => {
 		const button = renderButton({ notes: "", phoneNumber: "" });
 
-		expect(button.textContent).toContain("Add Note");
+		expect(button.textContent).toContain("Add note");
 		expect(untranslatableTexts(button)).toEqual([]);
 	});
 

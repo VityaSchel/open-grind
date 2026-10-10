@@ -35,29 +35,16 @@ import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
 const PROFILE_ID = 100001;
-const ITEMS = [
-	"Copy Profile ID",
-	"Report Profile",
-	"Hide Profile",
-	"Block Profile",
-];
+const ITEMS = ["Copy profile ID", "Report user", "Hide user", "Block user"];
 
 const failures = [
 	{
-		item: "Copy Profile ID",
+		item: "Copy profile ID",
 		request: writeTextMock,
-		label: "Failed to copy profile ID",
+		label: "Couldn’t copy profile ID",
 	},
-	{
-		item: "Hide Profile",
-		request: hideUserMock,
-		label: "Failed to hide user",
-	},
-	{
-		item: "Block Profile",
-		request: blockUserMock,
-		label: "Failed to block user",
-	},
+	{ item: "Hide user", request: hideUserMock, label: "Couldn’t hide" },
+	{ item: "Block user", request: blockUserMock, label: "Couldn’t block" },
 ];
 
 function renderMenu({ blockable }: { blockable: boolean }) {
@@ -102,7 +89,7 @@ async function fail({
 }
 
 async function copyId() {
-	await choose("Copy Profile ID");
+	await choose("Copy profile ID");
 	await vi.waitFor(() => {
 		expect(toastSuccessMock).toHaveBeenCalledOnce();
 	});
@@ -145,10 +132,10 @@ it("settles a block the report sheet has already sent instead of leaving it in f
 });
 
 describe("ProfileActionsMenu wording", () => {
-	it("names the trigger Profile Menu", () => {
+	it("names the trigger Profile menu", () => {
 		const trigger = renderMenu({ blockable: true });
 
-		expect(screen.getByRole("button", { name: "Profile Menu" })).toBe(
+		expect(screen.getByRole("button", { name: "Profile menu" })).toBe(
 			trigger,
 		);
 	});

@@ -43,7 +43,7 @@ type SheetProps = Pick<
 const PROFILE_ID = 7;
 const DETAILS = "Details (optional)";
 const WHERE = "Where it happened";
-const BLOCK_HINT = "You can block this profile so you stop seeing it.";
+const BLOCK_HINT = "You can block this user so you no longer see each other.";
 
 const reasonLabels: Record<ReportReason, string> = {
 	SPAM: "Spam",
@@ -54,7 +54,7 @@ const reasonLabels: Record<ReportReason, string> = {
 	IMPERSONATION: "Impersonation",
 	ILLEGAL_ACTIVITY: "Illegal Activity",
 	SEXUAL_SOLICITATION: "Sexual Solicitation",
-	SERIOUS_IN_PERSON_INCIDENT: "Serious in Person Incident",
+	SERIOUS_IN_PERSON_INCIDENT: "Serious In-Person Incident",
 };
 
 const locationLabels: Record<ReportLocation, string> = {
@@ -62,21 +62,21 @@ const locationLabels: Record<ReportLocation, string> = {
 	PROFILE_INFORMATION: "Profile Information",
 	CHAT_MESSAGE: "Chat Message",
 	ALBUM: "Album",
-	RIGHT_NOW_PHOTO: "Right Now Image",
+	RIGHT_NOW_PHOTO: "Right Now Photo",
 	RIGHT_NOW_TEXT: "Right Now Text",
 };
 
 const subjects = [
 	{
 		props: { subject: "profile" },
-		title: "Report Profile",
-		description: "Send a report about this profile to Grindr.",
-		reviewed: "Grindr will review this profile.",
+		title: "Report User",
+		description: "Send a report about this user to Grindr.",
+		reviewed: "Grindr will review your report.",
 	},
 	{
 		props: { subject: "message", locations: ["CHAT_MESSAGE"] },
-		title: "Report Message",
-		description: "Send a report about this person’s messages to Grindr.",
+		title: "Report Messages",
+		description: "Send a report about this user’s messages to Grindr.",
 		reviewed: "Grindr will review your report.",
 	},
 ] satisfies {
@@ -145,7 +145,7 @@ async function failBlock(): Promise<Error> {
 	const failure = new Error("offline");
 	blockUserMock.mockRejectedValueOnce(failure);
 	const [block] = footerButtons();
-	if (block === undefined) throw new Error("no Block Profile button");
+	if (block === undefined) throw new Error("no Block user button");
 	await fireEvent.click(block);
 	await vi.waitFor(() => {
 		expect(showErrorToastMock).toHaveBeenCalledOnce();
@@ -154,8 +154,8 @@ async function failBlock(): Promise<Error> {
 }
 
 const failures = [
-	{ action: "sending", fail: failSubmit, label: "Failed to send report" },
-	{ action: "blocking", fail: failBlock, label: "Failed to block user" },
+	{ action: "sending", fail: failSubmit, label: "Couldn’t send report" },
+	{ action: "blocking", fail: failBlock, label: "Couldn’t block" },
 ];
 
 beforeEach(() => {
@@ -179,7 +179,7 @@ describe("ReportSheet", () => {
 		expect(texts(within(group).getAllByRole("radio"))).toEqual(
 			reportReasonSchema.options.map((reason) => reasonLabels[reason]),
 		);
-		expect(submitButton().textContent.trim()).toBe("Submit Report");
+		expect(submitButton().textContent.trim()).toBe("Submit report");
 		expect(submitButton()).toHaveProperty("disabled", true);
 	});
 
@@ -249,7 +249,7 @@ describe("ReportSheet", () => {
 			await submitAndWait("HARASSMENT_BULLYING");
 
 			screen.getByRole("dialog", {
-				name: "Report Submitted",
+				name: "Report submitted",
 				description,
 			});
 			expect(
@@ -275,9 +275,9 @@ describe("ReportSheet", () => {
 		await submitAndWait("SPAM");
 
 		expect(slot("report-submitted").textContent).toContain(BLOCK_HINT);
-		expect(texts(footerButtons())).toEqual(["Block Profile", "Done"]);
+		expect(texts(footerButtons())).toEqual(["Block user", "Done"]);
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Block Profile" }),
+			screen.getByRole("button", { name: "Block user" }),
 		);
 		await vi.waitFor(() => {
 			expect(onBlocked).toHaveBeenCalledOnce();

@@ -62,7 +62,7 @@ test("arrow keys leave the profile alone while a menu is open", async ({
 }) => {
 	await openGridProfile(page, { nth: 1 });
 
-	await activeProfilePane(page).getByLabel("Profile Menu").click();
+	await activeProfilePane(page).getByLabel("Profile menu").click();
 	await page.getByRole("menuitem").first().waitFor({ timeout: 30_000 });
 	const { scrollLeft } = await pagerGeometry(page);
 

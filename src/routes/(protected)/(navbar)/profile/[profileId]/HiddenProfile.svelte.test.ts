@@ -55,11 +55,13 @@ describe("HiddenProfile", () => {
 	it("says the profile is hidden and offers Unhide", () => {
 		renderHidden();
 
-		expect(slot("empty-title").textContent).toBe("You Hid This Profile.");
+		expect(slot("empty-title").textContent).toBe(
+			"You have hidden this user",
+		);
 		expect(screen.getByRole("button").textContent).toBe("Unhide");
 	});
 
-	it("toasts Failed to unhide user and reverts when unhiding fails", async () => {
+	it("toasts Couldn’t unhide and reverts when unhiding fails", async () => {
 		const pending = renderHidden();
 
 		const failure = await failUnhide();
@@ -68,7 +70,7 @@ describe("HiddenProfile", () => {
 			profileId: PROFILE_ID,
 		});
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to unhide user",
+			label: "Couldn’t unhide",
 			error: failure,
 		});
 		expect(pending.revert).toHaveBeenCalledOnce();

@@ -127,30 +127,30 @@ test("a profile hidden from the pager keeps its place", async ({ page }) => {
 	const tiles = await openGridProfile(page, { nth: 1 });
 
 	await activeProfilePane(page)
-		.getByRole("button", { name: "Profile Menu" })
+		.getByRole("button", { name: "Profile menu" })
 		.click();
-	await page.getByRole("menuitem", { name: "Hide Profile" }).click();
-	await expect(page.getByText("You Hid This Profile.")).toBeVisible();
+	await page.getByRole("menuitem", { name: "Hide user" }).click();
+	await expect(page.getByText("You have hidden this user")).toBeVisible();
 	await expect(
 		page.locator("body"),
 		"the closing menu no longer blocks touches",
 	).not.toHaveCSS("pointer-events", "none");
 
 	await swipeProfile(page, {
-		on: activeProfilePane(page).getByText("You Hid This Profile."),
+		on: activeProfilePane(page).getByText("You have hidden this user"),
 	});
 	await expect(page).toHaveURL(profileUrl(tiles[2]!));
 	await restsOn(page, { position: 2 });
 
 	await swipeToPrevious(page, { tiles, landing: 1 });
 	await expect(
-		activeProfilePane(page).getByText("You Hid This Profile."),
+		activeProfilePane(page).getByText("You have hidden this user"),
 	).toBeVisible();
 
 	await swipeProfile(page, {
 		from: 0.15,
 		to: 0.85,
-		on: activeProfilePane(page).getByText("You Hid This Profile."),
+		on: activeProfilePane(page).getByText("You have hidden this user"),
 	});
 	await expect(page).toHaveURL(profileUrl(tiles[0]!));
 	await restsOn(page, { position: 0 });

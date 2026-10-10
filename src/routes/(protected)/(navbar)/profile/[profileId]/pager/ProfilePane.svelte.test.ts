@@ -115,7 +115,7 @@ function button(name: string): HTMLButtonElement {
 }
 
 async function chooseFromProfileMenu(name: string) {
-	await fireEvent.keyDown(button("Profile Menu"), { key: "Enter" });
+	await fireEvent.keyDown(button("Profile menu"), { key: "Enter" });
 	const items = await screen.findAllByRole("menuitem", { hidden: true });
 	await fireEvent.click(
 		items.find((item) => item.textContent.trim() === name)!,
@@ -183,7 +183,7 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		expect(screen.getByText("You Hid This Profile.")).not.toBeNull();
+		expect(screen.getByText("You have hidden this user")).not.toBeNull();
 		expect(section.querySelector("img")).toBeNull();
 		expect(headingElement(section)).toBeNull();
 	});
@@ -249,7 +249,7 @@ describe("ProfilePane loading", () => {
 });
 
 describe("ProfilePane profile actions", () => {
-	it("offers Edit Profile on our own pane while it loads", async () => {
+	it("offers Edit profile on our own pane while it loads", async () => {
 		getProfileMock.mockReturnValueOnce(new Promise(() => {}));
 		const { section } = renderPane({
 			active: true,
@@ -261,12 +261,12 @@ describe("ProfilePane profile actions", () => {
 		expect(headingElement(section)).toBeNull();
 		expect(
 			screen
-				.getByRole("link", { name: "Edit Profile" })
+				.getByRole("link", { name: "Edit profile" })
 				.getAttribute("href"),
 		).toBe("/settings/profile");
 	});
 
-	it("keeps the same Edit Profile link when our own profile loads", async () => {
+	it("keeps the same Edit profile link when our own profile loads", async () => {
 		const loaded = Promise.withResolvers<Profile>();
 		getProfileMock.mockReturnValueOnce(loaded.promise);
 		const { section } = renderPane({
@@ -275,7 +275,7 @@ describe("ProfilePane profile actions", () => {
 			profileId: OUR_ID,
 		});
 		await tick();
-		const loadingLink = screen.getByRole("link", { name: "Edit Profile" });
+		const loadingLink = screen.getByRole("link", { name: "Edit profile" });
 
 		loaded.resolve(
 			fullProfile({ profileId: OUR_ID, displayName: "Me", age: 30 }),
@@ -283,12 +283,12 @@ describe("ProfilePane profile actions", () => {
 		await flush();
 
 		expect(heading(section)).toBe("Me, 30");
-		expect(screen.getByRole("link", { name: "Edit Profile" })).toBe(
+		expect(screen.getByRole("link", { name: "Edit profile" })).toBe(
 			loadingLink,
 		);
 	});
 
-	it("keeps the same Edit Profile link through a failed load and its retry", async () => {
+	it("keeps the same Edit profile link through a failed load and its retry", async () => {
 		getProfileMock.mockRejectedValueOnce(serviceUnavailable());
 		getProfileMock.mockResolvedValueOnce(
 			fullProfile({ profileId: OUR_ID, displayName: "Me", age: 30 }),
@@ -299,7 +299,7 @@ describe("ProfilePane profile actions", () => {
 			profileId: OUR_ID,
 		});
 		await flush();
-		const failedLink = screen.getByRole("link", { name: "Edit Profile" });
+		const failedLink = screen.getByRole("link", { name: "Edit profile" });
 
 		await fireEvent.click(
 			screen.getByRole("button", { name: "Try again" }),
@@ -307,12 +307,12 @@ describe("ProfilePane profile actions", () => {
 		await flush();
 
 		expect(heading(section)).toBe("Me, 30");
-		expect(screen.getByRole("link", { name: "Edit Profile" })).toBe(
+		expect(screen.getByRole("link", { name: "Edit profile" })).toBe(
 			failedLink,
 		);
 	});
 
-	it("leaves Edit Profile off the full error screen of our own profile", async () => {
+	it("leaves Edit profile off the full error screen of our own profile", async () => {
 		getProfileMock.mockRejectedValue(serviceUnavailable());
 		renderPane({ active: true, row: null, profileId: OUR_ID });
 		await flush();
@@ -335,7 +335,7 @@ describe("ProfilePane profile actions", () => {
 
 		const controls = screen.getAllByRole("button");
 		const note = screen.getByRole("button", { name: "Met at the gym" });
-		const menu = screen.getByRole("button", { name: "Profile Menu" });
+		const menu = screen.getByRole("button", { name: "Profile menu" });
 		expect(controls.indexOf(note)).toBeLessThan(controls.indexOf(menu));
 	});
 
@@ -355,13 +355,13 @@ describe("ProfilePane profile actions", () => {
 			screen.getByRole("navigation", { name: "Profile Actions" }),
 		);
 		expect(
-			actions.getByRole("switch", { name: "Add to Favorites" }),
+			actions.getByRole("switch", { name: "Add to favorites" }),
 		).not.toBeNull();
 		expect(
-			actions.getByRole("button", { name: "Profile Menu" }),
+			actions.getByRole("button", { name: "Profile menu" }),
 		).not.toBeNull();
 		expect(
-			actions.queryByRole("link", { name: "Edit Profile" }),
+			actions.queryByRole("link", { name: "Edit profile" }),
 		).toBeNull();
 	});
 });
@@ -372,13 +372,13 @@ describe("ProfilePane hiding and blocking", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await chooseFromProfileMenu("Hide Profile");
+		await chooseFromProfileMenu("Hide user");
 
 		expect(hideUserMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
 		expect(
-			within(section).getByText("You Hid This Profile."),
+			within(section).getByText("You have hidden this user"),
 		).not.toBeNull();
 		expect(button("Unhide").disabled).toBe(true);
 
@@ -393,17 +393,19 @@ describe("ProfilePane hiding and blocking", () => {
 		const hide = pendingRequest(hideUserMock);
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
-		await chooseFromProfileMenu("Hide Profile");
+		await chooseFromProfileMenu("Hide user");
 		const rejection = new Error("offline");
 
 		hide.reject(rejection);
 		await flush();
 
-		expect(within(section).queryByText("You Hid This Profile.")).toBeNull();
+		expect(
+			within(section).queryByText("You have hidden this user"),
+		).toBeNull();
 		expect(heading(section)).toBe("Loaded, 30");
-		expect(button("Profile Menu").disabled).toBe(false);
+		expect(button("Profile menu").disabled).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to hide user",
+			label: "Couldn’t hide",
 			error: rejection,
 		});
 		expect(getProfileMock).toHaveBeenCalledOnce();
@@ -414,10 +416,10 @@ describe("ProfilePane hiding and blocking", () => {
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
 
-		await chooseFromProfileMenu("Block Profile");
+		await chooseFromProfileMenu("Block user");
 
 		expect(
-			within(section).getByText("You Have Blocked This Profile."),
+			within(section).getByText("You have blocked this user"),
 		).not.toBeNull();
 		expect(button("Unblock").disabled).toBe(true);
 
@@ -427,7 +429,7 @@ describe("ProfilePane hiding and blocking", () => {
 
 		expect(heading(section)).toBe("Loaded, 30");
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to block user",
+			label: "Couldn’t block",
 			error: rejection,
 		});
 	});
@@ -437,18 +439,18 @@ describe("ProfilePane hiding and blocking", () => {
 		const unhide = pendingRequest(unhideUserMock);
 		const { section } = renderPane({ active: true, row: gridRow() });
 		await flush();
-		await chooseFromProfileMenu("Hide Profile");
+		await chooseFromProfileMenu("Hide user");
 		await flush();
 
 		await fireEvent.click(button("Unhide"));
 
 		expect(heading(section)).toBe("Loaded, 30");
-		expect(button("Profile Menu").disabled).toBe(true);
+		expect(button("Profile menu").disabled).toBe(true);
 
 		unhide.resolve();
 		await flush();
 
-		expect(button("Profile Menu").disabled).toBe(false);
+		expect(button("Profile menu").disabled).toBe(false);
 		expect(getProfileMock).toHaveBeenCalledOnce();
 	});
 
@@ -462,7 +464,7 @@ describe("ProfilePane hiding and blocking", () => {
 
 		await fireEvent.click(button("Unblock"));
 
-		expect(screen.queryByText("You Have Blocked This Profile.")).toBeNull();
+		expect(screen.queryByText("You have blocked this user")).toBeNull();
 		expect(getProfileMock).toHaveBeenCalledOnce();
 
 		unblock.resolve();
@@ -487,7 +489,7 @@ describe("ProfilePane hiding and blocking", () => {
 
 		expect(button("Unblock").disabled).toBe(false);
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to unblock user",
+			label: "Couldn’t unblock",
 			error: rejection,
 		});
 		expect(getProfileMock).toHaveBeenCalledOnce();

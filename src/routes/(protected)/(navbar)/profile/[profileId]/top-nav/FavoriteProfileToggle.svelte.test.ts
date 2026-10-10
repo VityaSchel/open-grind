@@ -25,16 +25,16 @@ const PROFILE_ID = 7;
 
 const notFavorite = {
 	isFavorite: false,
-	name: "Add to Favorites",
+	name: "Add to favorites",
 	request: addFavoriteUserMock,
-	failureLabel: "Failed to add to favorites",
+	failureLabel: "Couldn’t add to favorites",
 };
 
 const favorite = {
 	isFavorite: true,
-	name: "Remove from Favorites",
+	name: "Remove from favorites",
 	request: removeFavoriteUserMock,
-	failureLabel: "Failed to remove from favorites",
+	failureLabel: "Couldn’t remove from favorites",
 };
 
 const states = [notFavorite, favorite];

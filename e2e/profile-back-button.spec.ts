@@ -11,7 +11,7 @@ const CUTOUT = 24;
 
 async function openProfileDirectly(page: Page): Promise<void> {
 	await page.goto(DEMO_PROFILE);
-	await page.getByLabel("Profile Menu").waitFor({ timeout: 120_000 });
+	await page.getByLabel("Profile menu").waitFor({ timeout: 120_000 });
 }
 
 function backLinkIsTopmost(page: Page): Promise<boolean> {
@@ -39,7 +39,7 @@ test("returns to the screen the profile was opened from", async ({ page }) => {
 		.first();
 	await profileLink.waitFor({ timeout: 120_000 });
 	await profileLink.click();
-	await page.getByLabel("Profile Menu").waitFor({ timeout: 30_000 });
+	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });
 
 	await backLink(page).click();
 
@@ -65,7 +65,7 @@ test("opens Browse after coming back to a profile that was the first screen", as
 	await page.getByRole("link", { name: "Write a message…" }).click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await page.goBack();
-	await page.getByLabel("Profile Menu").waitFor({ timeout: 30_000 });
+	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });
 
 	await backLink(page).click();
 
@@ -82,7 +82,7 @@ test("keeps working after a client-side hop to another profile", async ({
 	await palette.fill("#100002");
 	await page.getByRole("option", { name: "#100002" }).click();
 	await expect(page).toHaveURL(/\/profile\/100002$/);
-	await page.getByLabel("Profile Menu").waitFor({ timeout: 30_000 });
+	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });
 
 	await backLink(page).click();
 	await expect(page).toHaveURL(new RegExp(`${DEMO_PROFILE}$`));
@@ -147,9 +147,9 @@ test("clears a side cutout", async ({ page }) => {
 
 test("goes back from the hidden version of the profile", async ({ page }) => {
 	await openProfileDirectly(page);
-	await page.getByLabel("Profile Menu").click();
-	await page.getByRole("menuitem", { name: "Hide Profile" }).click();
-	await expect(page.getByText("You Hid This Profile.")).toBeVisible();
+	await page.getByLabel("Profile menu").click();
+	await page.getByRole("menuitem", { name: "Hide user" }).click();
+	await expect(page.getByText("You have hidden this user")).toBeVisible();
 
 	await backLink(page).click();
 

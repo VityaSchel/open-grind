@@ -91,7 +91,7 @@ export const SURFACES: Surface[] = [
 		path: "/profile/100001",
 		bars: BARS_OVER_CONTENT,
 		ready: shows((page) =>
-			page.getByRole("button", { name: "Profile Menu" }),
+			page.getByRole("button", { name: "Profile menu" }),
 		),
 	},
 	{

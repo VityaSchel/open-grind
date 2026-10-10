@@ -10,8 +10,8 @@ import ProfileMiniCard from "./ProfileMiniCard.svelte";
 
 const HREF = "/profile/1";
 
-function unreadBadge() {
-	return screen.getByText("unread messages").parentElement!;
+function unreadBadge({ srText = "unread messages" }: { srText?: string } = {}) {
+	return screen.getByText(srText).parentElement!;
 }
 
 beforeEach(() => {
@@ -70,15 +70,18 @@ describe("ProfileMiniCard", () => {
 	});
 
 	it.each([
-		{ unread: 1, announced: "1 unread messages" },
+		{ unread: 1, srText: "unread message", announced: "1 unread message" },
 		{ unread: 3, announced: "3 unread messages" },
 		{ unread: 99, announced: "99 unread messages" },
 		{ unread: 100, announced: "99+ unread messages" },
-	])("announces $unread unread as $announced", ({ unread, announced }) => {
-		render(ProfileMiniCard, { unread, href: HREF });
+	])(
+		"announces $unread unread as $announced",
+		({ unread, srText, announced }) => {
+			render(ProfileMiniCard, { unread, href: HREF });
 
-		expect(unreadBadge().textContent).toBe(announced);
-	});
+			expect(unreadBadge({ srText }).textContent).toBe(announced);
+		},
+	);
 
 	it("shows no unread badge without unread messages", () => {
 		render(ProfileMiniCard, { unread: 0, href: HREF });

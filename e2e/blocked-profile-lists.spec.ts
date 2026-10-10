@@ -16,11 +16,9 @@ async function blockFirstViewer(page: Page) {
 	await cards.first().click();
 	await expect(page).toHaveURL(new RegExp(`${href}$`));
 
-	await page.getByLabel("Profile Menu").click();
-	await page.getByRole("menuitem", { name: "Block Profile" }).click();
-	await expect(
-		page.getByText("You Have Blocked This Profile."),
-	).toBeVisible();
+	await page.getByLabel("Profile menu").click();
+	await page.getByRole("menuitem", { name: "Block user" }).click();
+	await expect(page.getByText("You have blocked this user")).toBeVisible();
 
 	return {
 		cards,
@@ -47,7 +45,7 @@ test("unblocking a viewer puts them back in the viewed list", async ({
 	const { cards, viewedBefore, blocked } = await blockFirstViewer(page);
 
 	await page.getByRole("button", { name: "Unblock" }).click();
-	await expect(page.getByLabel("Profile Menu")).toBeVisible();
+	await expect(page.getByLabel("Profile menu")).toBeVisible();
 
 	await page.goBack();
 	await expect(page).toHaveURL(/\/interest\/views$/);

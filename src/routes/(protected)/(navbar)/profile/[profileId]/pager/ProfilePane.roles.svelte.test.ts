@@ -173,7 +173,7 @@ describe("ProfilePane chrome wording", () => {
 		expect(writeMessage.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 
-	it("words our Edit Profile link and the retry control in the active locale", async () => {
+	it("words our Edit profile link and the retry control in the active locale", async () => {
 		getProfileMock.mockRejectedValue(new Error("offline"));
 		renderPane({
 			active: true,
@@ -181,7 +181,7 @@ describe("ProfilePane chrome wording", () => {
 			profileId: OUR_ID,
 		});
 		await flush();
-		const editProfile = screen.getByRole("link", { name: "Edit Profile" });
+		const editProfile = screen.getByRole("link", { name: "Edit profile" });
 		const retry = screen.getByRole("button", { name: "Try again" });
 
 		await setLocale({ locale: "en-XA" });

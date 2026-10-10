@@ -160,14 +160,14 @@ describe("FavoriteNoteEditor", () => {
 	);
 
 	it.each(saves)(
-		"toasts Failed to save note when saving $change fails",
+		"toasts Couldn’t save note when saving $change fails",
 		async ({ notes, request }) => {
 			const onSave = renderEditor();
 
 			const failure = await failSave({ notes, request });
 
 			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label: "Failed to save note",
+				label: "Couldn’t save note",
 				error: failure,
 			});
 			expect(onSave).not.toHaveBeenCalled();

@@ -21,8 +21,8 @@ const BUG_REPORT_URL =
 	"https://git.opengrind.org/open-grind/open-grind/issues/new?template=.forgejo%2fissue_template%2fbug.yaml";
 
 const variants = [
-	{ blockedByUs: true, title: "You Have Blocked This Profile." },
-	{ blockedByUs: false, title: "This Person Has Blocked You." },
+	{ blockedByUs: true, title: "You have blocked this user" },
+	{ blockedByUs: false, title: "This user has blocked you" },
 ];
 
 function renderBlocked({ blockedByUs }: { blockedByUs: boolean }) {
@@ -104,7 +104,7 @@ describe("BlockedProfile", () => {
 		expect(screen.queryByRole("button")).toBeNull();
 	});
 
-	it("toasts Failed to unblock user and reverts when unblocking fails", async () => {
+	it("toasts Couldn’t unblock and reverts when unblocking fails", async () => {
 		const pending = renderBlocked({ blockedByUs: true });
 
 		const failure = await failUnblock();
@@ -113,7 +113,7 @@ describe("BlockedProfile", () => {
 			profileId: PROFILE_ID,
 		});
 		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-			label: "Failed to unblock user",
+			label: "Couldn’t unblock",
 			error: failure,
 		});
 		expect(pending.revert).toHaveBeenCalledOnce();

@@ -364,10 +364,8 @@ export interface Messages {
 	"profile.report.location.rightNowPhoto": undefined;
 	"profile.report.location.rightNowText": undefined;
 	"profile.report.message.a11y.description": undefined;
-	"profile.report.message.reviewed": undefined;
 	"profile.report.message.title": undefined;
 	"profile.report.profile.a11y.description": undefined;
-	"profile.report.profile.reviewed": undefined;
 	"profile.report.profile.title": undefined;
 	"profile.report.reason.harassmentBullying": undefined;
 	"profile.report.reason.hateDiscrimination": undefined;
@@ -378,6 +376,7 @@ export interface Messages {
 	"profile.report.reason.sexualSolicitation": undefined;
 	"profile.report.reason.spam": undefined;
 	"profile.report.reason.underage": undefined;
+	"profile.report.reviewed": undefined;
 	"profile.report.submit": undefined;
 	"profile.report.submitted": undefined;
 	"profile.report.whereItHappened": undefined;

@@ -15,8 +15,8 @@ async function openProfileMenu({
 }) {
 	await installTauriShim(page);
 	await page.goto(profile);
-	await page.getByLabel("Profile Menu").click();
-	await page.getByRole("menuitem", { name: "Hide Profile" }).waitFor();
+	await page.getByLabel("Profile menu").click();
+	await page.getByRole("menuitem", { name: "Hide user" }).waitFor();
 }
 
 test("a blockable profile offers both hide and block", async ({ page }) => {
@@ -24,7 +24,7 @@ test("a blockable profile offers both hide and block", async ({ page }) => {
 	await openProfileMenu({ page, profile: BLOCKABLE_PROFILE });
 
 	await expect(
-		page.getByRole("menuitem", { name: "Block Profile" }),
+		page.getByRole("menuitem", { name: "Block user" }),
 	).toBeVisible();
 });
 
@@ -33,10 +33,10 @@ test("a non-blockable profile offers hide but not block", async ({ page }) => {
 	await openProfileMenu({ page, profile: NON_BLOCKABLE_PROFILE });
 
 	await expect(
-		page.getByRole("menuitem", { name: "Hide Profile" }),
+		page.getByRole("menuitem", { name: "Hide user" }),
 	).toBeVisible();
 	await expect(
-		page.getByRole("menuitem", { name: "Block Profile" }),
+		page.getByRole("menuitem", { name: "Block user" }),
 	).toHaveCount(0);
 });
 
@@ -45,23 +45,25 @@ test("reporting a non-blockable profile does not offer to block", async ({
 }) => {
 	test.setTimeout(240_000);
 	await openProfileMenu({ page, profile: NON_BLOCKABLE_PROFILE });
-	await page.getByRole("menuitem", { name: "Report Profile" }).click();
+	await page.getByRole("menuitem", { name: "Report user" }).click();
 
 	const drawer = page.locator(DRAWER);
 	await drawer.waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(700);
 
 	await drawer.getByRole("radio", { name: "Spam" }).click();
-	await drawer.getByRole("button", { name: "Submit Report" }).click();
+	await drawer.getByRole("button", { name: "Submit report" }).click();
 	await expect(
-		drawer.getByText("Grindr will review this profile."),
+		drawer.getByText("Grindr will review your report."),
 	).toBeVisible();
 
 	await expect(drawer.getByRole("button", { name: "Done" })).toBeVisible();
 	await expect(
-		drawer.getByRole("button", { name: "Block Profile" }),
+		drawer.getByRole("button", { name: "Block user" }),
 	).toHaveCount(0);
 	await expect(
-		drawer.getByText("You can block this profile so you stop seeing it."),
+		drawer.getByText(
+			"You can block this user so you no longer see each other.",
+		),
 	).toHaveCount(0);
 });

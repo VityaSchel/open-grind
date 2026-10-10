@@ -21,7 +21,7 @@ function renderButton() {
 	const { getByRole } = render(TapProfileButton, {
 		props: { profileId: 2, tapType: null, onTap: () => {} },
 	});
-	return getByRole("button", { name: "Send a Fire Tap" });
+	return getByRole("button", { name: "Send a Fire tap" });
 }
 
 afterEach(() => {
@@ -56,10 +56,10 @@ describe("tap labels", () => {
 	});
 
 	it.each([
-		[null, "Send a Fire Tap"],
-		[TapType.Friendly, "Cookie Tap Sent"],
-		[TapType.Hot, "Fire Tap Sent"],
-		[TapType.Looking, "Demon Tap Sent"],
+		[null, "Send a Fire tap"],
+		[TapType.Friendly, "Cookie tap sent"],
+		[TapType.Hot, "Fire tap sent"],
+		[TapType.Looking, "Demon tap sent"],
 	])("labels the button for tap type %s", (tapType, label) => {
 		const { getByRole } = render(TapProfileButton, {
 			props: { profileId: 2, tapType, onTap: () => {} },
@@ -75,9 +75,9 @@ describe("tap labels", () => {
 		const items = await screen.findAllByRole("menuitem");
 
 		expect(items.map((item) => item.getAttribute("aria-label"))).toEqual([
-			"Send a Cookie Tap",
-			"Send a Fire Tap",
-			"Send a Demon Tap",
+			"Send a Cookie tap",
+			"Send a Fire tap",
+			"Send a Demon tap",
 		]);
 	});
 
@@ -90,7 +90,7 @@ describe("tap labels", () => {
 
 		await vi.waitFor(() => {
 			expect(showErrorToastMock).toHaveBeenCalledWith(
-				expect.objectContaining({ label: "Failed to send tap" }),
+				expect.objectContaining({ label: "Couldn’t send tap" }),
 			);
 		});
 	});

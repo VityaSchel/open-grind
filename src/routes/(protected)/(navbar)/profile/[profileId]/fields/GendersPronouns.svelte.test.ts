@@ -43,7 +43,7 @@ const failures = [
 	{
 		kind: "pronouns",
 		lookup: getPronounsMock,
-		message: "Failed to load pronouns",
+		message: "Couldn’t load pronouns",
 		otherNames: GENDER_NAMES,
 	},
 ];

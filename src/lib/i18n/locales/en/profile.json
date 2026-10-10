@@ -7,7 +7,7 @@
 		"hivStatus": "HIV Status",
 		"pronouns": {
 			"errors": {
-				"loadFailed": "Failed to load pronouns"
+				"loadFailed": "Couldn’t load pronouns"
 			}
 		}
 	},
@@ -112,18 +112,18 @@
 				"looking": "Demon tap"
 			},
 			"send": {
-				"friendly": "Send a Cookie Tap",
-				"hot": "Send a Fire Tap",
-				"looking": "Send a Demon Tap"
+				"friendly": "Send a Cookie tap",
+				"hot": "Send a Fire tap",
+				"looking": "Send a Demon tap"
 			},
 			"sent": {
-				"friendly": "Cookie Tap Sent",
-				"hot": "Fire Tap Sent",
-				"looking": "Demon Tap Sent"
+				"friendly": "Cookie tap sent",
+				"hot": "Fire tap sent",
+				"looking": "Demon tap sent"
 			}
 		},
 		"errors": {
-			"sendFailed": "Failed to send tap"
+			"sendFailed": "Couldn’t send tap"
 		}
 	},
 	"onlineStatus": {
@@ -147,7 +147,7 @@
 			"chattedRecently": "Chatted recently",
 			"anonymous": "Profile"
 		},
-		"unreadCount_one": "{{count}} <srOnly>unread messages</srOnly>",
+		"unreadCount_one": "{{count}} <srOnly>unread message</srOnly>",
 		"unreadCount_other": "{{count}} <srOnly>unread messages</srOnly>",
 		"cappedUnreadCount_one": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>",
 		"cappedUnreadCount_other": "<cappedCount>{{count}}+</cappedCount> <srOnly>unread messages</srOnly>"
@@ -177,61 +177,61 @@
 		"a11y": {
 			"navigation": "Profile Actions"
 		},
-		"editProfile": "Edit Profile",
+		"editProfile": "Edit profile",
 		"favorite": {
 			"a11y": {
-				"add": "Add to Favorites",
-				"remove": "Remove from Favorites"
+				"add": "Add to favorites",
+				"remove": "Remove from favorites"
 			},
 			"errors": {
-				"addFailed": "Failed to add to favorites",
-				"removeFailed": "Failed to remove from favorites"
+				"addFailed": "Couldn’t add to favorites",
+				"removeFailed": "Couldn’t remove from favorites"
 			}
 		},
 		"actionsMenu": {
 			"a11y": {
-				"trigger": "Profile Menu"
+				"trigger": "Profile menu"
 			},
-			"copyId": "Copy Profile ID",
+			"copyId": "Copy profile ID",
 			"idCopied": "Profile ID copied to clipboard",
-			"report": "Report Profile",
-			"hide": "Hide Profile",
-			"block": "Block Profile",
+			"report": "Report user",
+			"hide": "Hide user",
+			"block": "Block user",
 			"errors": {
-				"copyIdFailed": "Failed to copy profile ID"
+				"copyIdFailed": "Couldn’t copy profile ID"
 			}
 		}
 	},
 	"page": {
 		"errors": {
-			"refreshFailed": "Failed to refresh profile"
+			"refreshFailed": "Couldn’t refresh profile"
 		}
 	},
 	"visit": {
 		"errors": {
-			"recordFailed": "Failed to record profile view preference or action"
+			"recordFailed": "Couldn’t record your view of this profile"
 		}
 	},
 	"viewability": {
 		"errors": {
-			"blockFailed": "Failed to block user",
-			"unblockFailed": "Failed to unblock user",
-			"hideFailed": "Failed to hide user",
-			"unhideFailed": "Failed to unhide user"
+			"blockFailed": "Couldn’t block",
+			"unblockFailed": "Couldn’t unblock",
+			"hideFailed": "Couldn’t hide",
+			"unhideFailed": "Couldn’t unhide"
 		}
 	},
 	"blocked": {
-		"byUs": "You Have Blocked This Profile.",
-		"byThem": "This Person Has Blocked You.",
+		"byUs": "You have blocked this user",
+		"byThem": "This user has blocked you",
 		"unblock": "Unblock",
 		"bugHint": "If you know this is a bug in the app, <reportIssueLink>report an issue</reportIssueLink>."
 	},
 	"hidden": {
-		"title": "You Hid This Profile.",
+		"title": "You have hidden this user",
 		"unhide": "Unhide"
 	},
 	"favoriteNote": {
-		"add": "Add Note",
+		"add": "Add note",
 		"title": "Note",
 		"a11y": {
 			"description": "A private note about this profile. Only you can see it."
@@ -244,7 +244,7 @@
 		"saved": "Note saved",
 		"deleted": "Note deleted",
 		"errors": {
-			"saveFailed": "Failed to save note"
+			"saveFailed": "Couldn’t save note"
 		}
 	},
 	"report": {
@@ -257,41 +257,40 @@
 			"impersonation": "Impersonation",
 			"illegalActivity": "Illegal Activity",
 			"sexualSolicitation": "Sexual Solicitation",
-			"seriousInPersonIncident": "Serious in Person Incident"
+			"seriousInPersonIncident": "Serious In-Person Incident"
 		},
 		"location": {
 			"profilePhoto": "Profile Photo",
 			"profileInformation": "Profile Information",
 			"chatMessage": "Chat Message",
 			"album": "Album",
-			"rightNowPhoto": "Right Now Image",
+			"rightNowPhoto": "Right Now Photo",
 			"rightNowText": "Right Now Text"
 		},
 		"profile": {
-			"title": "Report Profile",
+			"title": "Report User",
 			"a11y": {
-				"description": "Send a report about this profile to Grindr."
-			},
-			"reviewed": "Grindr will review this profile."
+				"description": "Send a report about this user to Grindr."
+			}
 		},
 		"message": {
-			"title": "Report Message",
+			"title": "Report Messages",
 			"a11y": {
-				"description": "Send a report about this person’s messages to Grindr."
-			},
-			"reviewed": "Grindr will review your report."
+				"description": "Send a report about this user’s messages to Grindr."
+			}
 		},
-		"submitted": "Report Submitted",
-		"blockHint": "You can block this profile so you stop seeing it.",
+		"submitted": "Report submitted",
+		"reviewed": "Grindr will review your report.",
+		"blockHint": "You can block this user so you no longer see each other.",
 		"done": "Done",
 		"a11y": {
 			"reason": "Reason"
 		},
 		"whereItHappened": "Where it happened",
 		"details": "Details (optional)",
-		"submit": "Submit Report",
+		"submit": "Submit report",
 		"errors": {
-			"sendFailed": "Failed to send report"
+			"sendFailed": "Couldn’t send report"
 		}
 	}
 }
