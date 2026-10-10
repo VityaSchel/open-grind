@@ -2,7 +2,7 @@
 
 To open a profile by ID in Grindr, use the [Command Center](/guides/features/command-center/).
 
-First, copy the ID. Use the <img src="./profile-actions-button.webp" width="36" height="36" class="inline" alt="Profile actions, three vertical dots"> button on the profile page. In the menu, tap "Copy profile ID" and a large number will be copied to your clipboard, like this: `852120758`.
+First, copy the ID. Use the <img src="./profile-actions-button.webp" width="36" height="36" class="inline" alt="Profile menu, three vertical dots"> button on the profile page. In the menu, tap “Copy profile ID” and a large number will be copied to your clipboard, like this: `852120758`.
 
 <img src="./profile-actions-menu.webp" width="196" height="125" style="margin-inline: auto">
 
