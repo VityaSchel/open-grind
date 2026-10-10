@@ -22,7 +22,7 @@ export async function ensureDeviceLocation(page: Page) {
 	await navigateInApp({ page, path: "/" });
 	const profileTile = page.locator('a[href^="/profile/"]').first();
 	const useCurrentLocation = page.getByRole("button", {
-		name: "Use Current Location",
+		name: "Use current location",
 	});
 	await expect(profileTile.or(useCurrentLocation)).toBeVisible({
 		timeout: 60_000,

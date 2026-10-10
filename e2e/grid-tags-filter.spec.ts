@@ -14,7 +14,7 @@ test("the tags filter saves tag keys and shows tag texts", async ({ page }) => {
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);
 
-	await page.locator('[aria-label="All Filters"]').click();
+	await page.locator('[aria-label="All filters"]').click();
 	const apply = page.getByRole("button", { name: "Apply" });
 	await apply.waitFor();
 	await page.getByRole("checkbox", { name: "Tags" }).click();

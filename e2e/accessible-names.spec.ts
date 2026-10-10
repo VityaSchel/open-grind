@@ -61,7 +61,7 @@ test.describe("every control has an accessible name", () => {
 		await ensureGridLocation(page);
 		await expectEveryControlNamed(page, "grid");
 
-		const allFilters = page.locator('[aria-label="All Filters"]');
+		const allFilters = page.locator('[aria-label="All filters"]');
 
 		await allFilters.click();
 		await page.getByRole("button", { name: "Apply" }).waitFor();
@@ -73,12 +73,12 @@ test.describe("every control has an accessible name", () => {
 		await expectEveryControlNamed(page, "age filter");
 		await page.keyboard.press("Escape");
 
-		await page.locator('[aria-label="Change Location"]').click();
+		await page.locator('[aria-label="Change location"]').click();
 		await page
 			.getByPlaceholder("Search places…")
 			.waitFor({ timeout: 180_000 });
 		await page
-			.getByRole("button", { name: "Selected Location" })
+			.getByRole("button", { name: "Selected location" })
 			.waitFor({ timeout: 60_000 });
 		await expectEveryControlNamed(page, "location picker");
 	});

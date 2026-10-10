@@ -7,7 +7,7 @@ import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import PhotosFilter from "./PhotosFilter.svelte";
 
-const CHOICES = ["Has Photos", "Has Face Pics", "Has Album(s)"];
+const CHOICES = ["Has Photos", "Has Face Pics", "Has Albums"];
 
 afterEach(async () => {
 	cleanup();

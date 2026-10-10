@@ -43,7 +43,7 @@ test("the default window opens All Filters as three columns that stay under the 
 	page,
 }) => {
 	await openBrowse(page);
-	await page.getByRole("button", { name: "All Filters" }).click();
+	await page.getByRole("button", { name: "All filters" }).click();
 	await page.getByRole("button", { name: "Apply" }).waitFor();
 	const sheet = page.locator('[data-slot="sheet-content"]');
 	await animationsFinished(sheet, { subtree: true });

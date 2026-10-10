@@ -237,7 +237,7 @@ export function flownIn(page: Page, button: string): Promise<unknown> {
 	);
 }
 
-export const GRID_READY_SELECTOR = '[aria-label="All Filters"]';
+export const GRID_READY_SELECTOR = '[aria-label="All filters"]';
 
 export async function ensureGridLocation(page: Page): Promise<void> {
 	const allFilters = page.locator(GRID_READY_SELECTOR);

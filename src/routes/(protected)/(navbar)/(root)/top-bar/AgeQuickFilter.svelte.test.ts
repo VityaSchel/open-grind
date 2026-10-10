@@ -47,12 +47,12 @@ describe("AgeQuickFilter", () => {
 		render(AgeQuickFilter, { props: { open: true } });
 		flushSync();
 
-		expect(document.body.textContent).toContain("18 years & over");
+		expect(document.body.textContent).toContain("18 years and over");
 
 		gridState.filters.set({ age: [30, 40] });
 		flushSync();
 
-		expect(document.body.textContent).toContain("18 years & over");
+		expect(document.body.textContent).toContain("18 years and over");
 		expect(document.body.textContent).not.toContain("30–40");
 	});
 
@@ -70,7 +70,7 @@ describe("AgeQuickFilter", () => {
 
 		await fireEvent.click(reset);
 
-		expect(document.body.textContent).toContain("18 years & over");
+		expect(document.body.textContent).toContain("18 years and over");
 		expect(filterSwitch.getAttribute("aria-checked")).toBe("false");
 
 		await fireEvent.click(screen.getByRole("button", { name: "Apply" }));

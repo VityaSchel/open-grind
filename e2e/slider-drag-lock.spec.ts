@@ -89,7 +89,7 @@ const FULL_FILTERS: Surface = {
 	thumb: "Minimum Age",
 	open: async (page) => {
 		await openBrowse(page);
-		await page.getByRole("button", { name: "All Filters" }).click();
+		await page.getByRole("button", { name: "All filters" }).click();
 		return settledDialog(page, "Filters");
 	},
 };

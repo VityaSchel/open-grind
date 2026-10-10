@@ -16,7 +16,8 @@ import {
 
 const mapControls = (page: Page) => page.locator('[data-slot="map-controls"]');
 const searchBox = (page: Page) => page.locator("#search-place");
-const locateButton = (page: Page) => page.locator('[aria-label="Locate Me"]');
+const locateButton = (page: Page) =>
+	page.locator('[aria-label="Go to current location"]');
 const zoomControl = (page: Page) => page.locator(".leaflet-control-zoom");
 const draggableMap = (page: Page) =>
 	page.locator(".leaflet-container.leaflet-grab");

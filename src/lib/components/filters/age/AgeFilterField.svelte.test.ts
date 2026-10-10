@@ -96,7 +96,7 @@ describe("AgeFilterField", () => {
 
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("18");
 		expect(maximumAge().getAttribute("aria-valuenow")).toBe("99");
-		expect(screen.getByText("18 years & over")).toBeTruthy();
+		expect(screen.getByText("18 years and over")).toBeTruthy();
 	});
 
 	it("gives the common ages most of the track when pressed and dragged", async () => {
@@ -104,7 +104,7 @@ describe("AgeFilterField", () => {
 
 		await pointer({ target: track, type: "pointerdown", clientX: 500 });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("40");
-		expect(screen.getByText("40 years & over")).toBeTruthy();
+		expect(screen.getByText("40 years and over")).toBeTruthy();
 
 		await pointer({ target: track, type: "pointermove", clientX: 250 });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("29");
@@ -113,6 +113,6 @@ describe("AgeFilterField", () => {
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("74");
 		await pointer({ target: track, type: "pointerup", clientX: 900 });
 
-		expect(screen.getByText("74 years & over")).toBeTruthy();
+		expect(screen.getByText("74 years and over")).toBeTruthy();
 	});
 });

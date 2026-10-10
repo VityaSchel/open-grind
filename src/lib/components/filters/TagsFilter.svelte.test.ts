@@ -16,7 +16,7 @@ import TagsFilter from "./TagsFilter.svelte";
 const SEARCH_RESULTS_SHOWN = 50;
 const MATCHING_TAGS = SEARCH_RESULTS_SHOWN + 10;
 const truncatedNotice = (format: (value: number) => string) =>
-	`Showing first ${format(SEARCH_RESULTS_SHOWN)} of ${format(MATCHING_TAGS)} matches, keep typing to narrow down`;
+	`Showing the first ${format(SEARCH_RESULTS_SHOWN)} of ${format(MATCHING_TAGS)} matches. Keep typing to narrow the results.`;
 
 const tag = (tagId: number, text: string) => ({
 	tagId,
@@ -138,7 +138,7 @@ describe("TagsFilter", () => {
 		renderFilter();
 		await search("match");
 
-		const notice = await screen.findByText(/^Showing first /);
+		const notice = await screen.findByText(/^Showing the first /);
 
 		expect(notice.textContent).toBe(truncatedNotice(bracketed));
 	});
@@ -158,7 +158,7 @@ describe("TagsFilter", () => {
 	it("says when the tags fail to load, in the active locale", async () => {
 		getTagsMock.mockRejectedValue(new Error("offline"));
 		renderFilter();
-		const failure = await screen.findByText("Failed to load tags");
+		const failure = await screen.findByText("Couldn’t load tags");
 
 		await setLocale({ locale: "en-XA" });
 

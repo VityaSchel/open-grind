@@ -58,9 +58,9 @@ describe("GeoMapPicker labels", () => {
 			).not.toBeNull(),
 		);
 		expect(mapLabels(container)).toEqual({
-			zoomIn: ["Zoom In", "Zoom In"],
-			zoomOut: ["Zoom Out", "Zoom Out"],
-			pin: "Selected Location",
+			zoomIn: ["Zoom in", "Zoom in"],
+			zoomOut: ["Zoom out", "Zoom out"],
+			pin: "Selected location",
 		});
 
 		await setLocale({ locale: "en-XA" });
@@ -68,7 +68,7 @@ describe("GeoMapPicker labels", () => {
 		await vi.waitFor(() =>
 			expect(mapLabels(container)).toEqual(translatedLabels()),
 		);
-		expect(mapLabels(container).pin).not.toBe("Selected Location");
+		expect(mapLabels(container).pin).not.toBe("Selected location");
 	});
 
 	it("rebuilds the zoom control in the current locale when unlocked", async () => {
@@ -87,6 +87,6 @@ describe("GeoMapPicker labels", () => {
 		await rerender({ locked: false });
 
 		expect(mapLabels(container).zoomIn).toEqual(translatedLabels().zoomIn);
-		expect(mapLabels(container).zoomIn[0]).not.toBe("Zoom In");
+		expect(mapLabels(container).zoomIn[0]).not.toBe("Zoom in");
 	});
 });

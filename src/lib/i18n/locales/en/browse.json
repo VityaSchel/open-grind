@@ -6,54 +6,54 @@
 		"empty": {
 			"noProfiles": {
 				"title": "No Profiles Found",
-				"description": "Try adjusting your filters or reset them to defaults."
+				"description": "Try changing or resetting your filters."
 			},
 			"noMatchingFavorites": {
 				"description": "No favorites match these filters."
 			},
 			"noFavorites": {
 				"title": "No Favorites Yet",
-				"description": "Tap the star on someone’s profile to save them here."
+				"description": "Select the star on someone’s profile to save them here."
 			},
-			"resetFilters": "Reset Filters"
+			"resetFilters": "Reset filters"
 		},
 		"errors": {
-			"loadMoreFailed": "Failed to load more profiles",
-			"loadProfileFailed": "Failed to load profile",
-			"refreshFailed": "Failed to refresh profiles"
+			"loadMoreFailed": "Couldn’t load more profiles",
+			"loadProfileFailed": "Couldn’t load profile",
+			"refreshFailed": "Couldn’t refresh profiles"
 		},
 		"searchFilters": {
 			"errors": {
-				"loadFailed": "Failed to load filters",
-				"updateFailed": "Failed to update filters"
+				"loadFailed": "Couldn’t load filters",
+				"updateFailed": "Couldn’t save filters"
 			}
 		}
 	},
 	"locationChange": {
 		"a11y": {
-			"change": "Change Location",
+			"change": "Change location",
 			"autoUpdating": "Location is updating automatically"
 		}
 	},
 	"locationEmpty": {
 		"title": "Choose Location",
-		"description": "Pick a location on the map or select from the list to find nearby profiles.",
-		"useCurrentLocation": "Use Current Location",
-		"pickManually": "Pick Manually"
+		"description": "Use your current location or choose one on the map to find nearby profiles.",
+		"useCurrentLocation": "Use current location",
+		"pickManually": "Choose on map"
 	},
 	"gridFilters": {
 		"title": "Filters"
 	},
 	"quickFilters": {
 		"a11y": {
-			"allFilters": "All Filters"
+			"allFilters": "All filters"
 		}
 	},
 	"filters": {
 		"noMin": "No min",
 		"noMax": "No max",
-		"ageAndOver_one": "{{count}} year & over",
-		"ageAndOver_other": "{{count}} years & over",
+		"ageAndOver_one": "{{count}} year and over",
+		"ageAndOver_other": "{{count}} years and over",
 		"withinDistance": "Within {{distance}}",
 		"apply": "Apply",
 		"reset": "Reset",
@@ -101,7 +101,7 @@
 			"label": "Photos",
 			"hasPhotos": "Has Photos",
 			"hasFacePics": "Has Face Pics",
-			"hasAlbums": "Has Album(s)"
+			"hasAlbums": "Has Albums"
 		},
 		"genders": {
 			"label": "Gender"
@@ -110,37 +110,37 @@
 			"label": "Tags",
 			"selected_one": "{{count}} selected",
 			"selected_other": "{{count}} selected",
-			"truncated_one": "Showing first {{shown}} of {{count}} match, keep typing to narrow down",
-			"truncated_other": "Showing first {{shown}} of {{count}} matches, keep typing to narrow down",
+			"truncated_one": "Showing the first {{shown}} of {{count}} match. Keep typing to narrow the results.",
+			"truncated_other": "Showing the first {{shown}} of {{count}} matches. Keep typing to narrow the results.",
 			"noMatches": "No tags match “{{query}}”",
 			"errors": {
-				"loadFailed": "Failed to load tags"
+				"loadFailed": "Couldn’t load tags"
 			}
 		}
 	},
 	"rightNow": {
-		"unimplemented": "“Right Now” tab is not implemented yet, tracking in {{issueLink}}."
+		"unimplemented": "The Right Now tab isn’t implemented yet. Follow the progress in {{issueLink}}."
 	},
 	"locationChooser": {
 		"map": {
-			"zoomIn": "Zoom In",
-			"zoomOut": "Zoom Out",
-			"selectedLocation": "Selected Location"
+			"zoomIn": "Zoom in",
+			"zoomOut": "Zoom out",
+			"selectedLocation": "Selected location"
 		},
 		"autoUpdate": "Update automatically using GPS",
 		"searchPlaceholder": "Search places…",
 		"a11y": {
 			"title": "Choose Location",
 			"description": "Drag the map to place the pin where you want to browse from.",
-			"locateMe": "Locate Me"
+			"locateMe": "Go to current location"
 		}
 	},
 	"location": {
 		"permissionDenied": "Location permission denied. Change this in your system settings to use GPS.",
 		"openSettings": "Settings",
 		"errors": {
-			"locateFailed": "Failed to get current location",
-			"autoUpdateFailed": "Failed to update your location automatically"
+			"locateFailed": "Couldn’t get your current location",
+			"autoUpdateFailed": "Couldn’t update your location automatically"
 		}
 	}
 }

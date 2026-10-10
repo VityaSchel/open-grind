@@ -25,17 +25,17 @@ const variants = [
 	{
 		name: "no favorites filter",
 		filters: { isOnline: true },
-		text: " No Profiles Found Try adjusting your filters or reset them to defaults. Reset Filters",
+		text: " No Profiles Found Try changing or resetting your filters. Reset filters",
 	},
 	{
 		name: "favorites with other filters",
 		filters: { isFavorite: true, isOnline: true },
-		text: " No Results No favorites match these filters. Reset Filters",
+		text: " No Results No favorites match these filters. Reset filters",
 	},
 	{
 		name: "favorites alone",
 		filters: { isFavorite: true },
-		text: " No Favorites Yet Tap the star on someone’s profile to save them here. Reset Filters",
+		text: " No Favorites Yet Select the star on someone’s profile to save them here. Reset filters",
 	},
 ] satisfies {
 	name: string;

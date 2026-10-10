@@ -29,7 +29,7 @@ test("favorites that match no other filter say so, and reset brings profiles bac
 	).toBeVisible();
 	await expect(page.locator(PROFILE_LINK)).toHaveCount(0);
 
-	await page.getByRole("button", { name: "Reset Filters" }).click();
+	await page.getByRole("button", { name: "Reset filters" }).click();
 
 	await expect(page.locator(PROFILE_LINK).first()).toBeVisible();
 });
