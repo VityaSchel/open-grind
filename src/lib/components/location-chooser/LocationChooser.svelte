@@ -8,7 +8,6 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { Label } from "$lib/components/ui/label";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
-	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
 	import { Switch } from "$lib/components/ui/switch";
 	import { autoLocation } from "$lib/location/auto-location";
 	import { reportLocationFailure } from "$lib/location/location-feedback";
@@ -16,7 +15,7 @@
 	import { encodeGeohash } from "$lib/model/geohash";
 	import { isMobilePlatform } from "$lib/platform/os";
 	import { PIN_ZOOM } from "./constants";
-	import type GeoMapPickerComponent from "./GeoMapPicker.svelte";
+	import GeoMapPicker from "./GeoMapPicker.svelte";
 
 	let {
 		onSubmit,
@@ -28,7 +27,7 @@
 			autoUpdateLocation: boolean;
 		}) => void;
 		open: boolean;
-		pinPos?: { lat: number; lon: number; zoom: number } | undefined;
+		pinPos?: { lat: number; lon: number } | undefined;
 	} = $props();
 
 	const gpsAvailable = isMobilePlatform();
@@ -53,8 +52,7 @@
 	const fix = $derived(locationRequest.lastFix);
 	$effect(() => {
 		if (!autoUpdateLocation || !fix) return;
-		const zoom = untrack(() => pinPos?.zoom) ?? PIN_ZOOM;
-		pinPos = { lat: fix.lat, lon: fix.lon, zoom };
+		pinPos = { lat: fix.lat, lon: fix.lon };
 	});
 
 	$effect(() => {
@@ -77,47 +75,14 @@
 		open = false;
 		void onSubmit(submission);
 	}
-
-	let geoMapPicker: GeoMapPickerComponent | null = $state(null);
-
-	let pendingCenter: { lat: number; lon: number; zoom: number } | null =
-		$state(null);
-	export function centerAt({
-		lat,
-		lon,
-		zoom,
-	}: {
-		lat: number;
-		lon: number;
-		zoom: number;
-	}) {
-		if (!geoMapPicker) {
-			pendingCenter = { lat, lon, zoom };
-		} else {
-			geoMapPicker.centerAt({ lat, lon, zoom });
-		}
-	}
-
-	$effect(() => {
-		if (pendingCenter && geoMapPicker) {
-			geoMapPicker.centerAt(pendingCenter);
-			pendingCenter = null;
-		}
-	});
 </script>
 
 {#snippet mapPicker()}
-	{#await import("./GeoMapPicker.svelte")}
-		<div class="flex h-full items-center justify-center">
-			<Spinner class="size-8" />
-		</div>
-	{:then { default: GeoMapPicker }}
-		<GeoMapPicker
-			bind:pinPos
-			bind:this={geoMapPicker}
-			locked={autoUpdateLocation}
-		/>
-	{/await}
+	<GeoMapPicker
+		bind:pinPos
+		initialView={pinPos ? { ...pinPos, zoom: PIN_ZOOM } : undefined}
+		locked={autoUpdateLocation}
+	/>
 {/snippet}
 {#snippet saveButton()}
 	<Button type="submit" disabled={!pinPos} onclick={onSubmitPin}>Save</Button>

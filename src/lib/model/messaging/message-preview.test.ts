@@ -158,7 +158,6 @@ describe("quoteLabel", () => {
 	it.each([
 		["Unsent", "Unsent message"],
 		["Audio", "Voice message"],
-		["Location", "Location"],
 		["NonExpiringVideo", "Video"],
 		["Unknown", "Message"],
 	])("names a %s quote rather than rendering nothing", (type, expected) => {
@@ -168,6 +167,7 @@ describe("quoteLabel", () => {
 
 	it.each([
 		["ExpiringImage", "Expiring image"],
+		["Location", "Location"],
 		["Giphy", "GIF"],
 		["Gaymoji", "Gaymoji"],
 	])(

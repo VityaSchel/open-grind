@@ -29,7 +29,11 @@ const locationRequestMock = vi.hoisted(() => ({
 	run: runMock,
 	abortStale: abortStaleMock,
 	pending: false,
-	lastFix: null,
+	lastFix: null as {
+		lat: number;
+		lon: number;
+		accuracyMeters: number;
+	} | null,
 	lastFixAt: null as number | null,
 	generation: 7,
 }));
@@ -78,6 +82,7 @@ describe("autoLocation.resolveGeohash", () => {
 		setPreferencesMock.mockResolvedValue(undefined);
 		locationRequestMock.pending = false;
 		locationRequestMock.lastFixAt = null;
+		locationRequestMock.lastFix = null;
 	});
 
 	afterEach(() => {
@@ -116,6 +121,7 @@ describe("autoLocation.resolveGeohash", () => {
 
 	it("a background refresh reuses a fix for six minutes", async () => {
 		locationRequestMock.lastFixAt = 0;
+		locationRequestMock.lastFix = ok(BERLIN).coords;
 		setNowForTesting(() => BACKGROUND_FIX_MAX_AGE_MS - 1);
 		await autoLocation.resolveGeohash(CURRENT, { background: true });
 		expect(runMock).not.toHaveBeenCalled();
@@ -125,20 +131,41 @@ describe("autoLocation.resolveGeohash", () => {
 		expect(runMock).toHaveBeenCalledTimes(1);
 	});
 
-	it("an interactive refresh reuses a fix for seconds only", async () => {
+	it("uses a fresh Locate me fix for background browse updates", async () => {
+		const moved = metersNorth(250);
 		locationRequestMock.lastFixAt = 0;
+		locationRequestMock.lastFix = ok(moved).coords;
+		setNowForTesting(() => BACKGROUND_FIX_MAX_AGE_MS - 1);
+
+		await expect(
+			autoLocation.resolveGeohash(CURRENT, { background: true }),
+		).resolves.toBe(encodeGeohash(moved));
+		expect(runMock).not.toHaveBeenCalled();
+	});
+
+	it("uses the cached coordinates until an interactive fix becomes stale", async () => {
+		const cached = metersNorth(250);
+		const fresh = metersNorth(500);
+		locationRequestMock.lastFixAt = 0;
+		locationRequestMock.lastFix = ok(cached).coords;
+		runMock.mockResolvedValue(ok(fresh));
 		setNowForTesting(() => INTERACTIVE_FIX_MAX_AGE_MS - 1);
-		await autoLocation.resolveGeohash(CURRENT);
+		await expect(autoLocation.resolveGeohash(CURRENT)).resolves.toBe(
+			encodeGeohash(cached),
+		);
 		expect(runMock).not.toHaveBeenCalled();
 
 		setNowForTesting(() => INTERACTIVE_FIX_MAX_AGE_MS);
-		await autoLocation.resolveGeohash(CURRENT);
-		expect(runMock).toHaveBeenCalledTimes(1);
+		await expect(autoLocation.resolveGeohash(CURRENT)).resolves.toBe(
+			encodeGeohash(fresh),
+		);
+		expect(runMock).toHaveBeenCalledExactlyOnceWith({ prompt: false });
 	});
 
 	describe("refreshStaleFix", () => {
 		it("fetches for the map once the fix is seconds-stale", async () => {
 			locationRequestMock.lastFixAt = 0;
+			locationRequestMock.lastFix = ok(BERLIN).coords;
 			setNowForTesting(() => INTERACTIVE_FIX_MAX_AGE_MS - 1);
 			await autoLocation.refreshStaleFix();
 			expect(runMock).not.toHaveBeenCalled();
@@ -264,6 +291,17 @@ describe("autoLocation.resolveGeohash", () => {
 	});
 
 	describe("while the chooser owns GPS", () => {
+		it("keeps the grid in place when a cached fix has moved", async () => {
+			locationRequestMock.lastFixAt = 0;
+			locationRequestMock.lastFix = ok(metersNorth(250)).coords;
+			autoLocation.suspend();
+
+			await expect(autoLocation.resolveGeohash(CURRENT)).resolves.toBe(
+				CURRENT,
+			);
+			expect(runMock).not.toHaveBeenCalled();
+		});
+
 		it("still samples for the map but never moves the grid", async () => {
 			const moved = metersNorth(250);
 			runMock.mockResolvedValue(ok(moved));

@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { latLng, Map, Marker } from "leaflet";
+import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { encodeGeohash } from "$lib/model/geohash";
+import { PIN_ZOOM } from "./constants";
+import { stubMapResizeObserver } from "./map-test-helpers";
 
 const {
 	abortMock,
@@ -71,18 +75,15 @@ vi.mock("$lib/util/breakpoints.svelte", () => ({
 
 const LocationChooser = (await import("./LocationChooser.svelte")).default;
 
+await import("./GeoMap.svelte");
+
 const BERLIN = { lat: 52.52, lon: 13.405 };
 const PARIS = { lat: 48.8566, lon: 2.3522 };
 
 function open(props: Record<string, unknown> = {}) {
 	const onSubmit = vi.fn();
 	render(LocationChooser, {
-		props: {
-			onSubmit,
-			open: true,
-			pinPos: { ...PARIS, zoom: 12 },
-			...props,
-		},
+		props: { onSubmit, open: true, pinPos: PARIS, ...props },
 	});
 	return onSubmit;
 }
@@ -108,6 +109,110 @@ describe("LocationChooser", () => {
 	afterEach(() => {
 		cleanup();
 		vi.resetAllMocks();
+		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+	});
+
+	it("saves the map center after panning, with a fixed marker", async () => {
+		const setView = vi.spyOn(Map.prototype, "setView");
+		const onSubmit = open();
+		await screen.findByRole("button", { name: "Locate me" });
+		const map = setView.mock.instances[0];
+		if (!(map instanceof Map)) throw new Error("Map was not mounted");
+		expect(map.getCenter()).toEqual(latLng(PARIS.lat, PARIS.lon));
+		expect(map.getZoom()).toBe(PIN_ZOOM);
+		flushSync(() => map.panBy([100, 80], { animate: false }));
+		const center = map.getCenter().wrap();
+		const selected = { lat: center.lat, lon: center.lng };
+		expect(encodeGeohash(selected)).not.toBe(encodeGeohash(PARIS));
+		const markers: Marker[] = [];
+		map.eachLayer((layer) => {
+			if (layer instanceof Marker) markers.push(layer);
+		});
+		expect(markers).toHaveLength(1);
+		expect(markers[0]?.getLatLng().lat).toBeCloseTo(
+			map.getCenter().lat,
+			10,
+		);
+		expect(markers[0]?.getLatLng().lng).toBeCloseTo(
+			map.getCenter().lng,
+			10,
+		);
+		expect(markers[0]?.dragging?.enabled()).toBe(false);
+
+		await fireEvent.click(saveButton());
+		expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+			geohash: encodeGeohash(selected),
+			autoUpdateLocation: false,
+		});
+	});
+
+	it("keeps the pin visible after GPS recenters from another world copy", async () => {
+		const setView = vi.spyOn(Map.prototype, "setView");
+		const onSubmit = open();
+		let finish!: (outcome: unknown) => void;
+		runMock.mockReturnValue(
+			new Promise((resolve) => {
+				finish = resolve;
+			}),
+		);
+		await screen.findByRole("button", { name: "Locate me" });
+		const map = setView.mock.instances[0];
+		if (!(map instanceof Map)) throw new Error("Map was not mounted");
+		flushSync(() => {
+			map.setView([52, 373], 12, { animate: false });
+			map.fire("drag");
+		});
+		const worldMarkers: Marker[] = [];
+		map.eachLayer((layer) => {
+			if (layer instanceof Marker) worldMarkers.push(layer);
+		});
+		expect(worldMarkers[0]?.getLatLng()).toEqual(latLng(52, 373));
+
+		await fireEvent.click(gpsSwitch());
+		expect(map.getCenter().lng).toBeCloseTo(373);
+		flushSync(() =>
+			finish(reportFix({ lat: 52, lon: 13, accuracyMeters: 12 })),
+		);
+		await vi.waitFor(() => expect(map.getCenter().lng).toBeCloseTo(13));
+		await fireEvent.click(gpsSwitch());
+		const markers: Marker[] = [];
+		map.eachLayer((layer) => {
+			if (layer instanceof Marker) markers.push(layer);
+		});
+		expect(markers).toHaveLength(1);
+		expect(markers[0]?.getLatLng()).toEqual(latLng(52, 13));
+		expect(markers[0]?.dragging?.enabled()).toBe(false);
+
+		await fireEvent.click(saveButton());
+		expect(onSubmit).toHaveBeenCalledExactlyOnceWith({
+			geohash: encodeGeohash({ lat: 52, lon: 13 }),
+			autoUpdateLocation: false,
+		});
+	});
+
+	it("does not select a location when resizing emits a map move", async () => {
+		const resize = stubMapResizeObserver();
+		const setView = vi.spyOn(Map.prototype, "setView");
+		const invalidateSize = vi
+			.spyOn(Map.prototype, "invalidateSize")
+			.mockImplementation(function (this: Map) {
+				return this.fire("move");
+			});
+		const onSubmit = open({ pinPos: undefined });
+		await screen.findByRole("button", { name: "Locate me" });
+		const map = setView.mock.instances[0];
+		if (!(map instanceof Map)) throw new Error("Map was not mounted");
+		flushSync(() => resize());
+		expect(invalidateSize).toHaveBeenCalledWith();
+		expect(saveButton().hasAttribute("disabled")).toBe(true);
+		const markers: Marker[] = [];
+		map.eachLayer((layer) => {
+			if (layer instanceof Marker) markers.push(layer);
+		});
+		expect(markers).toHaveLength(0);
+		await fireEvent.click(saveButton());
+		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
 	it("asks for a fresh fix the moment it opens", () => {
@@ -151,11 +256,7 @@ describe("LocationChooser", () => {
 
 	it("reverts to the stored setting when dismissed without saving", async () => {
 		const { unmount } = render(LocationChooser, {
-			props: {
-				onSubmit: vi.fn(),
-				open: true,
-				pinPos: { ...PARIS, zoom: 12 },
-			},
+			props: { onSubmit: vi.fn(), open: true, pinPos: PARIS },
 		});
 		await fireEvent.click(gpsSwitch());
 		await vi.waitFor(() => expect(runMock).toHaveBeenCalled());
@@ -251,11 +352,7 @@ describe("LocationChooser", () => {
 
 	it("forgets a dismissed toggle on reopen", async () => {
 		const { rerender } = render(LocationChooser, {
-			props: {
-				onSubmit: vi.fn(),
-				open: true,
-				pinPos: { ...PARIS, zoom: 12 },
-			},
+			props: { onSubmit: vi.fn(), open: true, pinPos: PARIS },
 		});
 		await fireEvent.click(gpsSwitch());
 		await vi.waitFor(() => expect(runMock).toHaveBeenCalled());
@@ -307,6 +404,8 @@ describe("LocationChooser GPS feedback", () => {
 	afterEach(() => {
 		cleanup();
 		vi.resetAllMocks();
+		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
 	});
 
 	it("follows a fix resolved by a grid refresh while open", async () => {

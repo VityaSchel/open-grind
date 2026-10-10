@@ -141,7 +141,7 @@
 	class={[
 		"group/sheet no-scrollbar overflow-x-hidden overscroll-contain select-none",
 		{
-			"h-full scroll-pb-[calc(--spacing(30)+var(--bar-content-gap))] overflow-y-auto":
+			"h-full scroll-pb-(--sheet-actions-clearance) overflow-y-auto":
 				fullsize,
 			"h-fit": !fullsize,
 			"touch-pan-down": fullsize && atTop,
