@@ -56,14 +56,14 @@
 	},
 	"filters": {
 		"noResults": "No Results",
-		"notSpecified": "Not specified",
+		"notSpecified": "Not Specified",
 		"online": "Online",
-		"rightNow": "Right now",
+		"rightNow": "Right Now",
 		"position": {
 			"label": "Position",
 			"title": "Positions",
 			"a11y": {
-				"toggle": "Filter by position"
+				"toggle": "Filter by Position"
 			}
 		}
 	},

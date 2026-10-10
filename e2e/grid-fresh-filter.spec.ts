@@ -23,7 +23,7 @@ test("Fresh in the filter sheet narrows the grid and stays in step with the top 
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 	const everyone = await shownProfiles(page);
 
-	const allFilters = page.getByRole("button", { name: "All filters" });
+	const allFilters = page.getByRole("button", { name: "All Filters" });
 	const apply = page.getByRole("button", { name: "Apply" });
 	const freshRow = page.getByRole("checkbox", { name: "Fresh", exact: true });
 	const freshToggle = page.getByRole("button", {

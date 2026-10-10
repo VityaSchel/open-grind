@@ -50,7 +50,7 @@ describe("HeightFilter", () => {
 	it("names the field and both thumbs in the active locale", async () => {
 		renderFilter([170, 190]);
 		const field = screen.getByRole("checkbox", { name: "Height" });
-		const thumbs = [thumb("Minimum height"), thumb("Maximum height")];
+		const thumbs = [thumb("Minimum Height"), thumb("Maximum Height")];
 
 		await setLocale({ locale: "en-XA" });
 
@@ -66,18 +66,18 @@ describe("HeightFilter", () => {
 		preferences.units = "imperial";
 		renderFilter([HEIGHT_CM_MIN, 180]);
 
-		expect(valueText("Minimum height")).toBe("No min");
-		expect(valueText("Maximum height")).toBe(formatHeight(180, "imperial"));
-		expect(valueText("Maximum height")).not.toMatch(/cm/);
+		expect(valueText("Minimum Height")).toBe("No min");
+		expect(valueText("Maximum Height")).toBe(formatHeight(180, "imperial"));
+		expect(valueText("Maximum Height")).not.toMatch(/cm/);
 	});
 
 	it("moves one centimetre per arrow key in metric units", async () => {
 		const stored = renderFilter([170, HEIGHT_CM_MAX]);
 
-		await press({ name: "Minimum height", key: "ArrowRight" });
+		await press({ name: "Minimum Height", key: "ArrowRight" });
 
 		expect(stored.height).toEqual([171, HEIGHT_CM_MAX]);
-		expect(thumb("Minimum height").getAttribute("aria-valuenow")).toBe(
+		expect(thumb("Minimum Height").getAttribute("aria-valuenow")).toBe(
 			"171",
 		);
 		expect(screen.getByText("171 cm - No max")).toBeTruthy();
@@ -88,12 +88,12 @@ describe("HeightFilter in imperial units", () => {
 	it("moves one whole inch per arrow key, never repeating a label", async () => {
 		preferences.units = "imperial";
 		renderFilter([170, HEIGHT_CM_MAX]);
-		expect(valueText("Minimum height")).toBe("5'7\"");
+		expect(valueText("Minimum Height")).toBe("5'7\"");
 
 		const labels = [];
 		for (let presses = 0; presses < 5; presses++)
 			labels.push(
-				await press({ name: "Minimum height", key: "ArrowRight" }),
+				await press({ name: "Minimum Height", key: "ArrowRight" }),
 			);
 
 		expect(labels).toEqual(["5'8\"", "5'9\"", "5'10\"", "5'11\"", "6'0\""]);
@@ -104,16 +104,16 @@ describe("HeightFilter in imperial units", () => {
 		preferences.units = "imperial";
 		renderFilter([170, 183]);
 
-		expect(thumb("Minimum height").getAttribute("aria-valuemin")).toBe(
+		expect(thumb("Minimum Height").getAttribute("aria-valuemin")).toBe(
 			"48",
 		);
-		expect(thumb("Minimum height").getAttribute("aria-valuemax")).toBe(
+		expect(thumb("Minimum Height").getAttribute("aria-valuemax")).toBe(
 			"95",
 		);
-		expect(thumb("Minimum height").getAttribute("aria-valuenow")).toBe(
+		expect(thumb("Minimum Height").getAttribute("aria-valuenow")).toBe(
 			"67",
 		);
-		expect(thumb("Maximum height").getAttribute("aria-valuenow")).toBe(
+		expect(thumb("Maximum Height").getAttribute("aria-valuenow")).toBe(
 			"72",
 		);
 	});
@@ -122,7 +122,7 @@ describe("HeightFilter in imperial units", () => {
 		preferences.units = "imperial";
 		const stored = renderFilter([170, HEIGHT_CM_MAX]);
 
-		await press({ name: "Minimum height", key: "ArrowRight" });
+		await press({ name: "Minimum Height", key: "ArrowRight" });
 
 		expect(stored.height).toEqual([173, HEIGHT_CM_MAX]);
 	});
@@ -131,10 +131,10 @@ describe("HeightFilter in imperial units", () => {
 		preferences.units = "imperial";
 		const stored = renderFilter([170, 176]);
 
-		await press({ name: "Minimum height", key: "ArrowLeft" });
+		await press({ name: "Minimum Height", key: "ArrowLeft" });
 		expect(stored.height).toEqual([168, 176]);
 
-		await press({ name: "Maximum height", key: "ArrowRight" });
+		await press({ name: "Maximum Height", key: "ArrowRight" });
 		expect(stored.height).toEqual([168, 178]);
 	});
 
@@ -144,8 +144,8 @@ describe("HeightFilter in imperial units", () => {
 
 		await tick();
 
-		expect(valueText("Minimum height")).toBe("5'7\"");
-		expect(valueText("Maximum height")).toBe("5'9\"");
+		expect(valueText("Minimum Height")).toBe("5'7\"");
+		expect(valueText("Maximum Height")).toBe("5'9\"");
 		expect(stored.height).toEqual([171, 176]);
 	});
 
@@ -153,10 +153,10 @@ describe("HeightFilter in imperial units", () => {
 		preferences.units = "imperial";
 		const stored = renderFilter([124, 239]);
 
-		expect(await press({ name: "Minimum height", key: "ArrowLeft" })).toBe(
+		expect(await press({ name: "Minimum Height", key: "ArrowLeft" })).toBe(
 			"No min",
 		);
-		expect(await press({ name: "Maximum height", key: "ArrowRight" })).toBe(
+		expect(await press({ name: "Maximum Height", key: "ArrowRight" })).toBe(
 			"No max",
 		);
 		expect(stored.height).toEqual([HEIGHT_CM_MIN, HEIGHT_CM_MAX]);
@@ -165,9 +165,9 @@ describe("HeightFilter in imperial units", () => {
 	it("drops a bound stored a centimetre above the shortest height", async () => {
 		preferences.units = "imperial";
 		const stored = renderFilter([122, HEIGHT_CM_MAX]);
-		expect(valueText("Minimum height")).toBe("4'0\"");
+		expect(valueText("Minimum Height")).toBe("4'0\"");
 
-		expect(await press({ name: "Minimum height", key: "ArrowLeft" })).toBe(
+		expect(await press({ name: "Minimum Height", key: "ArrowLeft" })).toBe(
 			"No min",
 		);
 		expect(stored.height).toEqual([HEIGHT_CM_MIN, HEIGHT_CM_MAX]);

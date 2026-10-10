@@ -16,7 +16,7 @@ function filterSwitch(): HTMLElement {
 }
 
 function distanceSlider(): HTMLElement {
-	return screen.getByRole("slider", { name: "Maximum distance" });
+	return screen.getByRole("slider", { name: "Maximum Distance" });
 }
 
 function button(name: string): HTMLElement {

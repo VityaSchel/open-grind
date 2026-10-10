@@ -25,22 +25,31 @@ async function openInbox(page: Page): Promise<void> {
 const AGE: QuickFilter = {
 	pill: "Age",
 	title: "Age",
-	switchLabel: "Filter by age",
+	switchLabel: "Filter by Age",
 };
 const DISTANCE: QuickFilter = {
 	pill: "Distance",
 	title: "Distance",
 	switchLabel: "Filter by distance",
 };
-const POSITION: QuickFilter = {
+const GRID_POSITION: QuickFilter = {
+	pill: "Position",
+	title: "Positions",
+	switchLabel: "Filter by Position",
+};
+const INBOX_POSITION: QuickFilter = {
 	pill: "Position",
 	title: "Positions",
 	switchLabel: "Filter by position",
 };
 
 const SCREENS = [
-	{ name: "grid", open: openGrid, quickFilters: [AGE, POSITION] },
-	{ name: "inbox", open: openInbox, quickFilters: [DISTANCE, POSITION] },
+	{ name: "grid", open: openGrid, quickFilters: [AGE, GRID_POSITION] },
+	{
+		name: "inbox",
+		open: openInbox,
+		quickFilters: [DISTANCE, INBOX_POSITION],
+	},
 ];
 
 async function resetUntouchedFilter({
@@ -51,7 +60,10 @@ async function resetUntouchedFilter({
 	quickFilter: QuickFilter;
 }): Promise<void> {
 	const drawer = page.getByRole("dialog", { name: title });
-	const filterSwitch = drawer.getByRole("switch", { name: switchLabel });
+	const filterSwitch = drawer.getByRole("switch", {
+		name: switchLabel,
+		exact: true,
+	});
 	const reset = drawer.getByRole("button", { name: "Reset", exact: true });
 
 	await page.getByRole("button", { name: pill, exact: true }).click();

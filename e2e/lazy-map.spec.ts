@@ -14,10 +14,10 @@ test("leaflet is not loaded until the location picker opens", async ({
 	await installTauriShim(page);
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
-	await page.getByRole("button", { name: "Pick manually" }).waitFor();
+	await page.getByRole("button", { name: "Pick Manually" }).waitFor();
 	expect(leafletRequests).toEqual([]);
 
-	await page.getByRole("button", { name: "Pick manually" }).click();
+	await page.getByRole("button", { name: "Pick Manually" }).click();
 	await page.getByPlaceholder("Search places…").waitFor({ timeout: 180_000 });
 	expect(leafletRequests.length).toBeGreaterThan(0);
 });

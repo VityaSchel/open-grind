@@ -17,7 +17,7 @@ import WeightFilter from "./WeightFilter.svelte";
 const TRACK_WIDTH = 1000;
 
 const minimumWeight = () =>
-	screen.getByRole("slider", { name: "Minimum weight" });
+	screen.getByRole("slider", { name: "Minimum Weight" });
 
 function renderFilter(weight: number[]) {
 	const stored = $state({ weight });
@@ -57,7 +57,7 @@ function pressTrackMiddle(track: HTMLElement) {
 }
 
 const maximumWeight = () =>
-	screen.getByRole("slider", { name: "Maximum weight" });
+	screen.getByRole("slider", { name: "Maximum Weight" });
 
 afterEach(async () => {
 	cleanup();

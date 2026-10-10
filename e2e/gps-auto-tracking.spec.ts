@@ -38,7 +38,7 @@ test("detecting the location turns on automatic updates and explains it", async 
 	await installGpsHarness(page);
 	await page.goto("/");
 	const useCurrent = page.getByRole("button", {
-		name: "Use current location",
+		name: "Use Current Location",
 	});
 	await useCurrent.waitFor({ timeout: 120_000 });
 	await useCurrent.click();

@@ -28,14 +28,14 @@ describe("PositionFilterToggle", () => {
 			"Vers Bottom",
 			"Bottom",
 			"Side",
-			"Not specified",
+			"Not Specified",
 		]);
 	});
 
 	it("words the unspecified choice in the active locale", async () => {
 		render(PositionFilterToggle, { props: { value: [] } });
 		const notSpecified = screen.getByRole("button", {
-			name: "Not specified",
+			name: "Not Specified",
 		});
 
 		await setLocale({ locale: "en-XA" });
@@ -65,6 +65,6 @@ describe("PositionFilterToggle", () => {
 			screen
 				.getAllByRole("button", { pressed: true })
 				.map((choice) => choice.textContent.trim()),
-		).toEqual(["Vers Top", "Not specified"]);
+		).toEqual(["Vers Top", "Not Specified"]);
 	});
 });

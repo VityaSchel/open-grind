@@ -9,8 +9,8 @@ import AgeFilterField from "./AgeFilterField.svelte";
 
 const TRACK_WIDTH = 1000;
 
-const minimumAge = () => screen.getByRole("slider", { name: "Minimum age" });
-const maximumAge = () => screen.getByRole("slider", { name: "Maximum age" });
+const minimumAge = () => screen.getByRole("slider", { name: "Minimum Age" });
+const maximumAge = () => screen.getByRole("slider", { name: "Maximum Age" });
 
 function renderField(value: number[]) {
 	const { container } = render(AgeFilterField, {

@@ -19,7 +19,7 @@ afterEach(async () => {
 describe("DistanceFilterSlider", () => {
 	it("names its thumb in the active locale", async () => {
 		render(DistanceFilterSlider, { props: { value: 10 } });
-		const thumb = screen.getByRole("slider", { name: "Maximum distance" });
+		const thumb = screen.getByRole("slider", { name: "Maximum Distance" });
 
 		await setLocale({ locale: "en-XA" });
 

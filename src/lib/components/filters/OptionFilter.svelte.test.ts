@@ -24,7 +24,7 @@ describe("OptionFilter", () => {
 		});
 		const field = screen.getByRole("checkbox", { name: "Body Type" });
 		const notSpecified = screen.getByRole("button", {
-			name: "Not specified",
+			name: "Not Specified",
 		});
 
 		await setLocale({ locale: "en-XA" });

@@ -15,7 +15,7 @@
 				"title": "No Favorites Yet",
 				"description": "Tap the star on someone's profile to save them here."
 			},
-			"resetFilters": "Reset filters"
+			"resetFilters": "Reset Filters"
 		},
 		"errors": {
 			"loadMoreFailed": "Failed to load more profiles",
@@ -31,22 +31,22 @@
 	},
 	"locationChange": {
 		"a11y": {
-			"change": "Change location",
+			"change": "Change Location",
 			"autoUpdating": "Location is updating automatically"
 		}
 	},
 	"locationEmpty": {
-		"title": "Choose location",
+		"title": "Choose Location",
 		"description": "Pick a location on the map or select from the list to find nearby profiles.",
-		"useCurrentLocation": "Use current location",
-		"pickManually": "Pick manually"
+		"useCurrentLocation": "Use Current Location",
+		"pickManually": "Pick Manually"
 	},
 	"gridFilters": {
 		"title": "Filters"
 	},
 	"quickFilters": {
 		"a11y": {
-			"allFilters": "All filters"
+			"allFilters": "All Filters"
 		}
 	},
 	"filters": {
@@ -61,32 +61,32 @@
 		"more": "More",
 		"favorites": "Favorites",
 		"fresh": "Fresh",
-		"haventChattedToday": "Haven't chatted today",
+		"haventChattedToday": "Haven't Chatted Today",
 		"age": {
 			"label": "Age",
 			"a11y": {
-				"minimum": "Minimum age",
-				"maximum": "Maximum age",
-				"toggle": "Filter by age"
+				"minimum": "Minimum Age",
+				"maximum": "Maximum Age",
+				"toggle": "Filter by Age"
 			}
 		},
 		"height": {
 			"label": "Height",
 			"a11y": {
-				"minimum": "Minimum height",
-				"maximum": "Maximum height"
+				"minimum": "Minimum Height",
+				"maximum": "Maximum Height"
 			}
 		},
 		"weight": {
 			"label": "Weight",
 			"a11y": {
-				"minimum": "Minimum weight",
-				"maximum": "Maximum weight"
+				"minimum": "Minimum Weight",
+				"maximum": "Maximum Weight"
 			}
 		},
 		"distance": {
 			"a11y": {
-				"maximum": "Maximum distance"
+				"maximum": "Maximum Distance"
 			}
 		},
 		"options": {
@@ -94,8 +94,8 @@
 			"bodyType": "Body Type",
 			"relationshipStatus": "Relationship Status",
 			"acceptNsfwPics": "Accept NSFW Pics",
-			"lookingFor": "Looking for",
-			"meetAt": "Meet at"
+			"lookingFor": "Looking For",
+			"meetAt": "Meet At"
 		},
 		"photos": {
 			"label": "Photos",
@@ -119,20 +119,20 @@
 		}
 	},
 	"rightNow": {
-		"unimplemented": "\"Right now\" tab is not implemented yet, tracking in {{issueLink}}."
+		"unimplemented": "\"Right Now\" tab is not implemented yet, tracking in {{issueLink}}."
 	},
 	"locationChooser": {
 		"map": {
-			"zoomIn": "Zoom in",
-			"zoomOut": "Zoom out",
-			"selectedLocation": "Selected location"
+			"zoomIn": "Zoom In",
+			"zoomOut": "Zoom Out",
+			"selectedLocation": "Selected Location"
 		},
 		"autoUpdate": "Update automatically using GPS",
 		"searchPlaceholder": "Search places…",
 		"a11y": {
-			"title": "Choose location",
+			"title": "Choose Location",
 			"description": "Drag the map to place the pin where you want to browse from.",
-			"locateMe": "Locate me"
+			"locateMe": "Locate Me"
 		}
 	},
 	"location": {

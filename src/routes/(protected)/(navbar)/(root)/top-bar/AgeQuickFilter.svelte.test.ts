@@ -63,7 +63,7 @@ describe("AgeQuickFilter", () => {
 
 		const reset = screen.getByRole("button", { name: "Reset" });
 		const filterSwitch = screen.getByRole("switch", {
-			name: "Filter by age",
+			name: "Filter by Age",
 		});
 
 		expect(reset).toHaveProperty("disabled", false);
@@ -85,7 +85,7 @@ describe("AgeQuickFilter", () => {
 
 		const title = slot("drawer-title");
 		const filterSwitch = screen.getByRole("switch", {
-			name: "Filter by age",
+			name: "Filter by Age",
 		});
 		const actions = ["Reset", "Apply"].map((name) =>
 			screen.getByRole("button", { name }),

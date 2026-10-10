@@ -166,7 +166,7 @@ test("the distance drawer applies its slider value and lights the pill", async (
 
 	await openFilterDrawer(page, "Distance");
 
-	const slider = page.getByRole("slider", { name: "Maximum distance" });
+	const slider = page.getByRole("slider", { name: "Maximum Distance" });
 	const enabled = page.getByRole("switch", { name: "Filter by distance" });
 	await expect(enabled).toHaveAttribute("aria-checked", "false");
 	await expect(drawerBody(page)).toHaveText("Within 10 km");

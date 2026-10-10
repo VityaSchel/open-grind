@@ -110,7 +110,7 @@ async function openFilters(page: Page): Promise<void> {
 	const sheet = page.getByRole("dialog");
 	await sheet.getByRole("button", { name: "Apply" }).waitFor();
 	await sheet.getByRole("checkbox", { name: "Online", exact: true }).click();
-	await setMinimumAge(sheet.getByRole("slider", { name: "Minimum age" }));
+	await setMinimumAge(sheet.getByRole("slider", { name: "Minimum Age" }));
 	await sheet.getByRole("button", { name: "Versatile", exact: true }).click();
 	await sheet.getByRole("checkbox", { name: "Tags" }).click();
 	await sheet.getByRole("button", { name: "Fitness", exact: true }).click();

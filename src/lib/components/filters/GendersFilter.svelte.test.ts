@@ -49,7 +49,7 @@ describe("GendersFilter", () => {
 
 		expect(screen.getByRole("checkbox", { name: "Gender" })).toBeTruthy();
 		expect(
-			screen.getByRole("button", { name: "Not specified" }),
+			screen.getByRole("button", { name: "Not Specified" }),
 		).toBeTruthy();
 		expect(
 			screen.queryByRole("button", { name: "Trans Women" }),
@@ -68,7 +68,7 @@ describe("GendersFilter", () => {
 		const toggle = await screen.findByRole("button", { name: "More" });
 		const field = screen.getByRole("checkbox", { name: "Gender" });
 		const notSpecified = screen.getByRole("button", {
-			name: "Not specified",
+			name: "Not Specified",
 		});
 
 		await setLocale({ locale: "en-XA" });

@@ -13,7 +13,7 @@ export const trackingDot = (page: Page) =>
 export const gpsSwitch = (page: Page) =>
 	page.locator("#track-gps-automatically");
 export const locationButton = (page: Page) =>
-	page.locator('[aria-label="Change location"]');
+	page.locator('[aria-label="Change Location"]');
 export const saveButton = (page: Page) =>
 	page.getByRole("button", { name: "Save" });
 export const gridReady = (page: Page) => page.locator(GRID_READY_SELECTOR);
