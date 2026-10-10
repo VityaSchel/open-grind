@@ -17591,11 +17591,12 @@
 					"imageHash": {
 						"type": "string",
 						"nullable": true,
-						"description": "public media hash or `null`; `null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`"
+						"description": "for `ProfilePhotoReply`, the [media hash](/grindr-api/media/public-cdn-files) of the profile photo replied to; `null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`"
 					},
 					"photoContentReply": {
+						"type": "string",
 						"nullable": true,
-						"description": "`null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`; not yet observed non-null"
+						"description": "for `ProfilePhotoReply`, the reply text; otherwise `null`"
 					}
 				},
 				"x-render-on-tag": "messaging/conversations"
@@ -18389,13 +18390,15 @@
 				"type": "object",
 				"properties": {
 					"imageHash": {
-						"type": "string"
+						"type": "string",
+						"description": "[media hash](/grindr-api/media/public-cdn-files) of the recipient's profile photo being replied to"
 					},
 					"photoContentReply": {
-						"type": "string"
+						"type": "string",
+						"description": "reply text"
 					}
 				},
-				"description": "Body for `\"ProfilePhotoReply\"` message type. Unknown, WIP.",
+				"description": "Body for `\"ProfilePhotoReply\"` message type.",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"imageHash",
