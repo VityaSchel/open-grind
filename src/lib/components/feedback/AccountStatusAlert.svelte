@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { listen } from "@tauri-apps/api/event";
 	import { onMount } from "svelte";
-	import { toast } from "svelte-sonner";
 
 	import {
 		accountStatusState,
 		showAccountRestriction,
 	} from "$lib/api/account-status-state.svelte";
+	import { copyToClipboard } from "$lib/api/error-copy";
 	import {
 		banInfoSchema,
 		callMethod,
@@ -73,16 +73,9 @@
 
 	let busy = $state(false);
 
-	async function copyDetails() {
+	function copyDetails() {
 		if (status?.kind !== "banned") return;
-		try {
-			const clipboard =
-				await import("@tauri-apps/plugin-clipboard-manager");
-			await clipboard.writeText(JSON.stringify(status.info, null, 2));
-			toast.success(t("feedback.errorCopy.copied"));
-		} catch (error) {
-			console.error(error);
-		}
+		void copyToClipboard({ text: JSON.stringify(status.info, null, 2) });
 	}
 
 	async function onSignOut() {

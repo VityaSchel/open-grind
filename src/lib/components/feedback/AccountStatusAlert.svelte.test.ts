@@ -14,16 +14,19 @@ import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import AccountStatusAlert from "./AccountStatusAlert.svelte";
 
-const { callMethodMock, tauriListeners, toastSuccessMock, writeTextMock } =
-	vi.hoisted(() => ({
-		callMethodMock: vi.fn(),
-		tauriListeners: new Map<
-			string,
-			(event: { payload: unknown }) => void
-		>(),
-		toastSuccessMock: vi.fn(),
-		writeTextMock: vi.fn(),
-	}));
+const {
+	callMethodMock,
+	tauriListeners,
+	toastErrorMock,
+	toastSuccessMock,
+	writeTextMock,
+} = vi.hoisted(() => ({
+	callMethodMock: vi.fn(),
+	tauriListeners: new Map<string, (event: { payload: unknown }) => void>(),
+	toastErrorMock: vi.fn(),
+	toastSuccessMock: vi.fn(),
+	writeTextMock: vi.fn(),
+}));
 
 vi.mock("@tauri-apps/api/event", () => ({
 	listen: (name: string, handler: (event: { payload: unknown }) => void) => {
@@ -35,12 +38,16 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/methods")>()),
 	callMethod: callMethodMock,
 }));
-vi.mock("svelte-sonner", () => ({ toast: { success: toastSuccessMock } }));
+vi.mock("svelte-sonner", () => ({
+	toast: { success: toastSuccessMock, error: toastErrorMock },
+}));
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
 
 const ban = { kind: "BANNED", code: 403, message: "Account banned" };
+
+const COPY_ERROR_DETAILS = "Copy error details";
 
 const descriptionWithoutReason =
 	"Grindr has banned this account. You can’t sign in until the ban is lifted.";
@@ -134,7 +141,7 @@ describe("AccountStatusAlert", () => {
 			status: "a ban",
 			event: "auth:banned",
 			payload: { ...ban, reason: "spam" },
-			buttons: ["Copy error details", "Sign out"],
+			buttons: [COPY_ERROR_DETAILS, "Sign out"],
 		},
 		{
 			status: "an age check",
@@ -198,7 +205,7 @@ describe("AccountStatusAlert", () => {
 			await renderAlert();
 			emit("auth:banned", info);
 			const copyButton = await screen.findByRole("button", {
-				name: "Copy error details",
+				name: COPY_ERROR_DETAILS,
 			});
 			await setLocale({ locale });
 
@@ -210,6 +217,25 @@ describe("AccountStatusAlert", () => {
 			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
 				JSON.stringify(info, null, 2),
 			);
+			expect(toastErrorMock).not.toHaveBeenCalled();
 		},
 	);
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		await renderAlert();
+		emit("auth:banned", ban);
+
+		await fireEvent.click(
+			await screen.findByRole("button", { name: COPY_ERROR_DETAILS }),
+		);
+
+		await vi.waitFor(() => {
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(toastSuccessMock).not.toHaveBeenCalled();
+	});
 });

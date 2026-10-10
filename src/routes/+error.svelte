@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 	import { page } from "$app/state";
 	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
 	import ExclamationMarkIcon from "phosphor-svelte/lib/ExclamationMarkIcon";
-	import { toast } from "svelte-sonner";
 
+	import { promptCopyError } from "$lib/api/error-copy";
 	import NotFound from "$lib/components/feedback/NotFound.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
@@ -49,13 +48,8 @@
 					</Button>
 					<Button
 						variant="outline"
-						onclick={() => {
-							writeText(
-								page.error?.message ||
-									"No error message available",
-							).catch((error) => console.error(error));
-							toast.success(t("feedback.errorCopy.copied"));
-						}}
+						onclick={() =>
+							void promptCopyError(page.error).catch(() => {})}
 					>
 						{t("common.actions.copyError")}
 					</Button>

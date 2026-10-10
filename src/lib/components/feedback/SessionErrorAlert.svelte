@@ -4,6 +4,7 @@
 	import { toast } from "svelte-sonner";
 	import z from "zod";
 
+	import { copyToClipboard } from "$lib/api/error-copy";
 	import {
 		asAppError,
 		blockedKindOf,
@@ -148,17 +149,6 @@
 		}),
 	);
 
-	async function copyError() {
-		try {
-			const clipboard =
-				await import("@tauri-apps/plugin-clipboard-manager");
-			await clipboard.writeText(detail);
-			toast.success(t("feedback.errorCopy.copied"));
-		} catch (error) {
-			console.error(error);
-		}
-	}
-
 	async function tryAgain() {
 		busy = true;
 		try {
@@ -214,7 +204,11 @@
 			</p>
 		{/if}
 		<AlertDialog.Footer>
-			<Button variant="ghost" onclick={copyError} disabled={busy}>
+			<Button
+				variant="ghost"
+				onclick={() => void copyToClipboard({ text: detail })}
+				disabled={busy}
+			>
 				{t("common.actions.copyError")}
 			</Button>
 			<Button

@@ -15,13 +15,21 @@ export function getErrorText(
 export async function promptCopyError(error: unknown): Promise<void> {
 	const copyOptions = await confirmCopyError(error);
 	if ("abort" in copyOptions) return;
-	await writeToClipboard(getErrorText(error, { redact: copyOptions.redact }));
+	await copyToClipboard({
+		text: getErrorText(error, { redact: copyOptions.redact }),
+	});
 }
 
-async function writeToClipboard(text: string): Promise<void> {
+export async function copyToClipboard({
+	text,
+	copiedMessage = t("feedback.errorCopy.copied"),
+}: {
+	text: string;
+	copiedMessage?: string;
+}): Promise<void> {
 	try {
 		await clipboard.writeText(text);
-		toast.success(t("feedback.errorCopy.copied"));
+		toast.success(copiedMessage);
 	} catch (error) {
 		console.error(error);
 		toast.error(t("feedback.errorCopy.errors.copyFailed"));

@@ -80,6 +80,7 @@ describe("SessionErrorAlert", () => {
 			.mockResolvedValue({ profileId: 1, expiresAt: 0, stale: true });
 		signOutMock.mockReset().mockResolvedValue(undefined);
 		toastErrorMock.mockReset();
+		toastSuccessMock.mockReset();
 		writeTextMock.mockReset().mockResolvedValue(undefined);
 		tauriListeners.clear();
 		wsConnectedHandlers.length = 0;
@@ -280,6 +281,27 @@ describe("SessionErrorAlert", () => {
 		await vi.waitFor(() => {
 			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(400));
 		});
+	});
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		render(SessionErrorAlert);
+
+		await fireEvent.click(
+			screen.getByRole("button", { name: "Copy error details" }),
+		);
+
+		await vi.waitFor(() => {
+			expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+			"connection reset",
+		);
+		expect(toastSuccessMock).not.toHaveBeenCalled();
+		expect(sessionErrorState.open).toBe(true);
 	});
 
 	it("keeps the attempt count visible on a huge error", async () => {
