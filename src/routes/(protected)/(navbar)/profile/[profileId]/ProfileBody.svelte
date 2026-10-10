@@ -5,6 +5,7 @@
 		GlobeStandIcon,
 		HeartbeatIcon,
 		HouseIcon,
+		SyringeIcon,
 		UsersIcon,
 		UsersThreeIcon,
 	} from "phosphor-svelte";
@@ -18,6 +19,7 @@
 		meetAt as meetAtLabels,
 		relationshipStatuses,
 		tribes,
+		vaccines as vaccineLabels,
 	} from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
@@ -60,11 +62,13 @@
 		ethnicity,
 		relationshipStatus,
 		grindrTribes,
+		tribesImInto,
 		lookingFor,
 		meetAt,
 		nsfw,
 		hivStatus,
 		lastTestedDate: lastTestedDateValue,
+		vaccines,
 		sexualHealth: sexualHealthValue,
 		socialNetworks,
 	} = profile}
@@ -119,6 +123,12 @@
 		</ProfileSection>
 		<ProfileSection title="Expectations">
 			<LookupField
+				icon={UsersThreeIcon}
+				label="I'm Into"
+				value={tribesImInto}
+				options={tribes}
+			/>
+			<LookupField
 				icon={EyesIcon}
 				weight="fill"
 				label="Looking For"
@@ -146,6 +156,12 @@
 				options={hivStatusLabels}
 			/>
 			<LastTested lastTestedDate={lastTestedDateValue} />
+			<LookupField
+				icon={SyringeIcon}
+				label="Vaccinated for"
+				value={vaccines}
+				options={vaccineLabels}
+			/>
 			<LookupField
 				icon={HeartbeatIcon}
 				label="Health Practices"
