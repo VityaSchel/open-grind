@@ -61,7 +61,7 @@ export class GridSearchFiltersState {
 			work: getTags,
 			ms: TAG_LOOKUP_DEADLINE_MS,
 		});
-		const keys = tagCatalog(languages).keysOf(tags);
+		const keys = tagCatalog({ languages }).keysOf(tags);
 		if (!this.value || !deepEqual(this.value.tags, tags)) return;
 		if (deepEqual(keys, tags)) return;
 		this.value = { ...this.value, tags: keys };

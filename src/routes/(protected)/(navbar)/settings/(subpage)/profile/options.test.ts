@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	ageRange,
 	buildGenderOptions,
+	buildTagOptions,
 	fieldLimits,
 	heightCmRange,
 	heightInchOptions,
@@ -77,6 +78,45 @@ describe("profile edit options", () => {
 			"Non-Binary",
 			"Agender",
 			"Ask Me",
+		]);
+	});
+});
+
+describe("buildTagOptions", () => {
+	const tags = [
+		{
+			language: "en",
+			categoryCollection: [
+				{
+					text: "Identity",
+					possessiveText: null,
+					tags: [
+						{ tagId: 1, key: "ftm", text: "FTM" },
+						{ tagId: 2, key: "hiking", text: "Hiking" },
+						{ tagId: 3, key: "mtf", text: "MTF" },
+					],
+				},
+			],
+		},
+	];
+
+	it("offers only the tags it is told to and still labels the rest", () => {
+		const { options, resolveLabel } = buildTagOptions({
+			tags,
+			isOffered: (key) => key === "hiking",
+		});
+
+		expect(options.map(({ value }) => value)).toEqual(["hiking"]);
+		expect(resolveLabel("ftm")).toBe("FTM");
+	});
+
+	it("sorts the offered tags by their text", () => {
+		const { options } = buildTagOptions({ tags, isOffered: () => true });
+
+		expect(options.map(({ label }) => label)).toEqual([
+			"FTM",
+			"Hiking",
+			"MTF",
 		]);
 	});
 });

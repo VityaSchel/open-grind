@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isTagKeyOfferedNow } from "$lib/api/feature-flags-state.svelte";
 	import { getTags } from "$lib/api/users/tags";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
@@ -28,7 +29,7 @@
 
 	let catalog: ReturnType<typeof tagCatalog> | null = $state.raw(null);
 	const tagsPromise = getTags().then((languages) => {
-		const loaded = tagCatalog(languages);
+		const loaded = tagCatalog({ languages, isOffered: isTagKeyOfferedNow });
 		const keys = loaded.keysOf(value);
 		if (!deepEqual(keys, value)) value = keys;
 		catalog = loaded;

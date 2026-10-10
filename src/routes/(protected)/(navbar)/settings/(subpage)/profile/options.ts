@@ -98,10 +98,17 @@ export function buildPronounOptions(pronouns: Pronoun[]) {
 	};
 }
 
-export function buildTagOptions(tags: ProfileTagsResponse) {
+export function buildTagOptions({
+	tags,
+	isOffered,
+}: {
+	tags: ProfileTagsResponse;
+	isOffered: (key: string) => boolean;
+}) {
 	const textByKey = tagTextByKey(tags);
 	return {
 		options: [...textByKey]
+			.filter(([key]) => isOffered(key))
 			.map(([key, text]) => ({ value: key, label: text }))
 			.sort((a, b) => a.label.localeCompare(b.label)),
 		resolveLabel: (key: string) => textByKey.get(key),

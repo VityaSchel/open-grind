@@ -8,6 +8,10 @@
 	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error-toast";
+	import {
+		isTagKeyOfferedNow,
+		isTribeOfferedNow,
+	} from "$lib/api/feature-flags-state.svelte";
 	import { ProfileModerationError } from "$lib/api/users/profile-moderation";
 	import {
 		type ProfileUpdate,
@@ -82,7 +86,7 @@
 	const { options: pronounOptions, resolveLabel: resolvePronounLabel } =
 		untrack(() => buildPronounOptions(pronouns));
 	const { options: tagOptions, resolveLabel: resolveTagLabel } = untrack(() =>
-		buildTagOptions(tags),
+		buildTagOptions({ tags, isOffered: isTagKeyOfferedNow }),
 	);
 
 	const initial = untrack(() => $state.snapshot(profile));
@@ -90,7 +94,7 @@
 	let form = $state({
 		displayName: initial.displayName ?? "",
 		aboutMe: initial.aboutMe ?? "",
-		profileTags: [...initial.profileTags],
+		profileTags: initial.profileTags.filter(isTagKeyOfferedNow),
 		genderIds: [...(initial.genders ?? [])],
 		pronounIds: [...(initial.pronouns ?? [])],
 		age: initial.age ?? ageRange.min,
@@ -106,7 +110,7 @@
 		ethnicity: initial.ethnicity,
 		relationshipStatus: initial.relationshipStatus,
 		showTribes: initial.showTribes,
-		grindrTribes: [...initial.grindrTribes],
+		grindrTribes: initial.grindrTribes.filter(isTribeOfferedNow),
 		tribesImInto: [...(initial.tribesImInto ?? [])],
 		lookingFor: [...initial.lookingFor],
 		meetAt: [...(initial.meetAt ?? [])],

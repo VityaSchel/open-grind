@@ -47,3 +47,13 @@ export function tagTextByKey(languages: ProfileTagsResponse) {
 	}
 	return textByKey;
 }
+
+const TAG_KEYS_MOVED_TO_GENDERS = ["ftm", "mtf"];
+
+export const isTagKeyOffered = ({
+	key,
+	genderFilterFlag,
+}: {
+	key: string;
+	genderFilterFlag: boolean;
+}) => !genderFilterFlag || !TAG_KEYS_MOVED_TO_GENDERS.includes(key);

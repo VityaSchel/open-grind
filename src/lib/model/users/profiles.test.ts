@@ -4,12 +4,27 @@ import {
 	BodyType,
 	healthPracticeLabels,
 	healthPractices,
+	isTribeOffered,
 	profileSchema,
 	Tribe,
 	UnsettableHealthPractice,
 } from "$lib/model/users/profiles";
 
 const unknownToUs = 9_999;
+
+describe("isTribeOffered", () => {
+	it("withholds the Trans tribe only while the gender filter flag is on", () => {
+		expect(
+			isTribeOffered({ id: Tribe.Trans, genderFilterFlag: true }),
+		).toBe(false);
+		expect(
+			isTribeOffered({ id: Tribe.Trans, genderFilterFlag: false }),
+		).toBe(true);
+		expect(isTribeOffered({ id: Tribe.Bear, genderFilterFlag: true })).toBe(
+			true,
+		);
+	});
+});
 
 describe("profileSchema tolerance to new server vocabularies", () => {
 	const { bodyType, ethnicity, grindrTribes, lookingFor, rightNow, tapType } =

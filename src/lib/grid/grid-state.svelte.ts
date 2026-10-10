@@ -3,6 +3,10 @@ import type z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
+import {
+	genderFilterFlag,
+	refreshFeatureFlags,
+} from "$lib/api/feature-flags-state.svelte";
 import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
 import {
@@ -257,11 +261,13 @@ class GridState {
 						)
 					: requestedGeohash,
 				this.filters.resolveTagKeys(),
+				refreshFeatureFlags(),
 			]);
 			if (this.#generation.isStale(generation)) return;
 			const query = buildCascadeQuery({
 				geohash,
 				filters: this.filters.value,
+				genderFilterFlag: genderFilterFlag(),
 			});
 			const result = await getGrid(query);
 			if (this.#generation.isStale(generation)) return;

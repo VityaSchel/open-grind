@@ -12,6 +12,12 @@
 		checked: boolean;
 		value: number[];
 	} = $props();
+
+	const items = $derived(
+		optionsFromMap(filter.table).filter(
+			(option) => filter.isOffered?.(option.value) ?? true,
+		),
+	);
 </script>
 
 <FilterSimpleArray
@@ -19,7 +25,7 @@
 	bind:value
 	id={filter.id}
 	label={filter.label}
-	items={optionsFromMap(filter.table)}
+	{items}
 	convert={Number}
 	notSpecified
 />

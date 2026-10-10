@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { refreshFeatureFlags } from "$lib/api/feature-flags-state.svelte";
 	import { getGenders } from "$lib/api/users/genders";
 	import { getProfile } from "$lib/api/users/profiles";
 	import { getPronouns } from "$lib/api/users/pronouns";
@@ -23,6 +24,7 @@
 				console.error("Failed to load tags", error);
 				return [];
 			}),
+			refreshFeatureFlags(),
 		]);
 		return { profile, genders, pronouns, tags };
 	}

@@ -192,6 +192,7 @@ pub fn run() {
             api::auth::refresh_session,
             api::auth::sign_out,
             api::auth::account_restriction,
+            api::auth::session_feature_flags,
             api::auth::recaptcha_first_party_enabled,
             api::recaptcha::mint_recaptcha_token,
             api::push::push_addon_ready,

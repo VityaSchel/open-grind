@@ -17,7 +17,6 @@ import {
 	gridSearchFiltersSchema,
 	isFilterableGender,
 	isFilterableGenderId,
-	isFilterableTagKey,
 	rangeBoundTexts,
 	tagCatalog,
 } from "$lib/model/browse/grid/filters";
@@ -126,12 +125,6 @@ describe("filterable values", () => {
 				.map(({ genderId }) => genderId),
 		).toEqual([1, 4, 5, 2, 6, 7, 3, 10, 11, 12, 0, GENDER_ASK_ME]);
 	});
-
-	it("hides the tags that moved to genders", () => {
-		expect(isFilterableTagKey("ftm")).toBe(false);
-		expect(isFilterableTagKey("mtf")).toBe(false);
-		expect(isFilterableTagKey("coffee")).toBe(true);
-	});
 });
 
 const languages = [
@@ -163,27 +156,35 @@ const languages = [
 
 describe("tagCatalog", () => {
 	it("lists each key once with the first language's text", () => {
-		const catalog = tagCatalog(languages);
+		const catalog = tagCatalog({ languages });
 
 		expect(catalog.flat.map(({ key, text }) => [key, text])).toEqual([
+			["ftm", "FTM"],
 			["gaming", "Gaming"],
 			["hiking", "Hiking"],
 		]);
 		expect(catalog.textOf("hiking")).toBe("Hiking");
 	});
 
-	it("leaves the tags that moved to genders out of the lists", () => {
-		const catalog = tagCatalog(languages);
+	it("leaves tags that are not offered out of the lists but still resolves them", () => {
+		const catalog = tagCatalog({
+			languages,
+			isOffered: (key) => key !== "ftm",
+		});
 
 		expect(catalog.categories[0]?.tags.map(({ key }) => key)).toEqual([
 			"hiking",
 			"gaming",
 		]);
+		expect(catalog.flat.map(({ key }) => key)).toEqual([
+			"gaming",
+			"hiking",
+		]);
 		expect(catalog.keysOf(["FTM"])).toEqual(["ftm"]);
 	});
 
 	it("finds a key by its text in any language", () => {
-		const catalog = tagCatalog(languages);
+		const catalog = tagCatalog({ languages });
 
 		expect(
 			catalog.flat.find(({ key }) => key === "hiking")?.textsLower,

@@ -1,4 +1,5 @@
-use serde::Serialize;
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
 use crate::media::MediaProxy;
@@ -252,6 +253,41 @@ pub async fn account_restriction(
 		.map(Restriction::from))
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FeatureFlagClaims {
+	#[serde(default)]
+	feature_flags: Vec<String>,
+}
+
+fn feature_flags_of(session_id: &str) -> Vec<String> {
+	session_id
+		.split('.')
+		.nth(1)
+		.and_then(|payload| URL_SAFE_NO_PAD.decode(payload).ok())
+		.and_then(|json| {
+			serde_json::from_slice::<FeatureFlagClaims>(&json).ok()
+		})
+		.map(|claims| claims.feature_flags)
+		.unwrap_or_default()
+}
+
+#[tauri::command]
+pub async fn session_feature_flags(
+	state: tauri::State<'_, AppState>,
+) -> Result<Vec<String>, AppError> {
+	let Ok(client) = state.client() else {
+		return Ok(Vec::new());
+	};
+	Ok(client
+		.session_receiver()
+		.borrow()
+		.as_ref()
+		.and_then(|s| s.token.as_ref())
+		.map(|token| feature_flags_of(&token.session_id))
+		.unwrap_or_default())
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -319,5 +355,32 @@ mod tests {
 		assert_eq!(json["kind"], "ageVerification");
 		assert_eq!(json["region"], "uk");
 		assert_eq!(json["reason"], "UK_VERIFICATION_REQUIRED");
+	}
+
+	fn jwt_with_payload(payload: serde_json::Value) -> String {
+		format!(
+			"{}.{}.signature",
+			URL_SAFE_NO_PAD.encode(r#"{"alg":"HS256"}"#),
+			URL_SAFE_NO_PAD.encode(payload.to_string()),
+		)
+	}
+
+	#[test]
+	fn feature_flags_come_from_the_session_jwt() {
+		let token = jwt_with_payload(serde_json::json!({
+			"exp": 1,
+			"featureFlags": ["edge-boost", "gender-filter"],
+		}));
+		assert_eq!(feature_flags_of(&token), ["edge-boost", "gender-filter"]);
+	}
+
+	#[test]
+	fn an_unreadable_session_jwt_has_no_feature_flags() {
+		assert!(feature_flags_of("sid").is_empty());
+		assert!(feature_flags_of("a.%%%.c").is_empty());
+		assert!(feature_flags_of(&jwt_with_payload(
+			serde_json::json!({ "exp": 1 })
+		))
+		.is_empty());
 	}
 }

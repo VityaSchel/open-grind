@@ -83,6 +83,10 @@ export const methods = {
 		request: z.undefined(),
 		response: restrictionSchema.nullish(),
 	},
+	session_feature_flags: {
+		request: z.undefined(),
+		response: z.array(z.string()),
+	},
 	storage_backend: {
 		request: z.undefined(),
 		response: z.enum(["keyring", "file", "unavailable"]),
