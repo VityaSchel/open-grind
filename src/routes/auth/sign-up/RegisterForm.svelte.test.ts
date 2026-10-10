@@ -17,7 +17,7 @@ describe("RegisterForm", () => {
 		const { container, getByRole } = render(RegisterForm);
 
 		expect(container.textContent).toBe(
-			" Unimplemented Registration is not implemented yet, track #21. Sign In",
+			" Unimplemented Signing up isn’t implemented yet. Follow the progress in #21. Sign in",
 		);
 		expect(getByRole("link", { name: "#21" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/21",

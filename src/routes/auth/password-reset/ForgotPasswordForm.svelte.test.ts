@@ -17,7 +17,7 @@ describe("ForgotPasswordForm", () => {
 		const { container, getByRole } = render(ForgotPasswordForm);
 
 		expect(container.textContent).toBe(
-			" Unimplemented Password reset is not implemented yet, track #22. Sign In",
+			" Unimplemented Password reset isn’t implemented yet. Follow the progress in #22. Sign in",
 		);
 		expect(getByRole("link", { name: "#22" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/22",

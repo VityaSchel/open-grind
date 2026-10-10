@@ -214,7 +214,7 @@
 			document.documentElement.innerHTML =
 				'<head><meta charset="utf-8" />' +
 				'<meta name="viewport" content="width=device-width,initial-scale=1" />' +
-				"<title>Sign in with Google</title></head><body></body>";
+				"<title>Sign In with Google</title></head><body></body>";
 		} catch {}
 		injectStyles();
 		ui.mount();

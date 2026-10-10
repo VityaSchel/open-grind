@@ -130,8 +130,8 @@ describe("GoogleSignInForm in the active locale", () => {
 		platform.isAndroidPlatform.mockReturnValue(false);
 		const { container, screen } = await opened();
 		const token = screen.getByLabelText("Token");
-		const signIn = screen.getByRole("button", { name: "Sign In" });
-		const goBack = screen.getByRole("link", { name: "Go Back" });
+		const signIn = screen.getByRole("button", { name: "Sign in" });
+		const goBack = screen.getByRole("link", { name: "Go back" });
 		const link = companionLink();
 
 		await switchLocale("en-XA");

@@ -29,17 +29,17 @@ const failures = [
 		failure: "an account Grindr doesn't know",
 		error: { kind: "Auth", message: "account not registered" },
 		english:
-			"Account not registered in Grindr. Register first using the official Grindr app",
+			"This account isn’t registered with Grindr. Sign up in the official Grindr app first.",
 	},
 	{
 		failure: "too many attempts",
 		error: { kind: "RateLimited" },
-		english: "Too many attempts. Please try again later.",
+		english: "Too many attempts. Try again later.",
 	},
 	{
 		failure: "a failed Google OAuth app",
 		error: { kind: "Auth", message: "companion-failed" },
-		english: "Google sign-in failed",
+		english: "Couldn’t sign in with Google",
 	},
 ];
 

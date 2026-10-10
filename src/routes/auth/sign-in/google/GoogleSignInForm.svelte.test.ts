@@ -130,7 +130,7 @@ describe("GoogleSignInForm", () => {
 
 		expect(api.getInstalledVersion).toHaveBeenCalledWith("google-oauth");
 		expect(textOf(screen.getByText(/Download and install the/))).toBe(
-			"Download and install the Open Grind Google OAuth app to sign in with Google",
+			"Download and install the Open Grind Google OAuth app to sign in with Google.",
 		);
 		const releasePage = screen.getByRole("link", {
 			name: "Open Grind Google OAuth app",
@@ -139,7 +139,7 @@ describe("GoogleSignInForm", () => {
 		expect(releasePage).toHaveProperty("href", COMPANION_RELEASES);
 		expect(button("Install")).toHaveProperty("disabled", false);
 		expect(button("Install").getAttribute("aria-busy")).toBe("false");
-		expect(screen.getByRole("link", { name: "Go Back" })).toBeTruthy();
+		expect(screen.getByRole("link", { name: "Go back" })).toBeTruthy();
 		expect(button("paste the OAuth token manually")).toBeTruthy();
 		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 		expect(screen.queryByLabelText("Token")).toBeNull();
@@ -149,8 +149,8 @@ describe("GoogleSignInForm", () => {
 		getUpdateCapability.mockResolvedValue(installedBy("org.fdroid.fdroid"));
 		const { screen } = await opened();
 
-		expect(textOf(screen.getByText(/bypasses F-Droid’s checks/))).toBe(
-			"This add-on bypasses F-Droid’s checks",
+		expect(textOf(screen.getByText(/bypass F-Droid’s checks/))).toBe(
+			"By installing it, you choose to bypass F-Droid’s checks.",
 		);
 	});
 
@@ -185,7 +185,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(textOf(screen.getByText(/Continue in the/))).toBe(
-			"Continue in the Open Grind Google OAuth app to sign in with Google",
+			"Continue in the Open Grind Google OAuth app to sign in with Google.",
 		);
 		expect(button("Continue")).toHaveProperty("disabled", false);
 		expect(callMethodMock).not.toHaveBeenCalled();
@@ -434,7 +434,7 @@ describe("GoogleSignInForm", () => {
 		try {
 			const { screen } = await opened();
 
-			expect(screen.getByText("Signing You In")).toBeTruthy();
+			expect(screen.getByText("Signing you in")).toBeTruthy();
 			expect(
 				screen.queryByRole("button", { name: "Install" }),
 			).toBeNull();
@@ -451,7 +451,7 @@ describe("GoogleSignInForm", () => {
 		await fireEvent.input(screen.getByLabelText("Token"), {
 			target: { value: "  pasted-token \n" },
 		});
-		await fireEvent.click(button("Sign In"));
+		await fireEvent.click(button("Sign in"));
 		await settled();
 
 		expect(callMethodMock).toHaveBeenCalledWith(
@@ -706,9 +706,9 @@ describe("GoogleSignInForm", () => {
 
 		expect(screen.getByLabelText("Token")).toBeTruthy();
 		expect(screen.getAllByRole("listitem").map(textOf)).toEqual([
-			"Install the Open Grind Google OAuth app",
-			"Sign in with Google in the Open Grind Google OAuth app and copy the token",
-			"Return to this screen, paste it and tap “Sign In”",
+			"Install the Open Grind Google OAuth app.",
+			"Sign in with Google in the Open Grind Google OAuth app and copy the token.",
+			"Return to this screen, paste the token, and tap “Sign in”.",
 		]);
 		expect(screen.queryByRole("button", { name: /^Install/ })).toBeNull();
 

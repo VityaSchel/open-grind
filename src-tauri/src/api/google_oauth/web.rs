@@ -102,7 +102,7 @@ async fn run_flow(
 	#[allow(unused_mut)]
 	let mut builder =
 		WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::External(url))
-			.title("Sign in with Google")
+			.title("Sign In with Google")
 			.inner_size(window_width, window_height)
 			.user_agent(USER_AGENT)
 			.initialization_script(init_script(&nonce))

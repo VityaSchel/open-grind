@@ -97,7 +97,9 @@ async function consume(): Promise<void> {
 	} catch (error) {
 		reportSignInFailure({
 			error,
-			label: t("auth.googleHandoff.errors.signInFailed"),
+			label: t("auth.signIn.errors.providerFailed", {
+				provider: "Google",
+			}),
 		});
 	} finally {
 		googleHandoffState.phase = "idle";

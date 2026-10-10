@@ -42,7 +42,7 @@ const SIGNED_IN_AS = 42;
 const NEW_ACCOUNT = { profileId: 7, restriction: null };
 const GOOGLE_SIGN_IN = "/auth/sign-in/google";
 const EXPIRED = "That Google sign-in expired. Try again.";
-const FAILURE_LABEL = "Sign in with Google";
+const FAILURE_LABEL = "Couldn’t sign in with Google";
 const REFUSAL = new Error("banned");
 
 function backend({

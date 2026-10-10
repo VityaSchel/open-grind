@@ -18,9 +18,9 @@ import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import GoogleHandoffConfirmAlert from "./GoogleHandoffConfirmAlert.svelte";
 
-const TITLE = "Switch Google Account?";
+const TITLE = "Switch Google account?";
 const DESCRIPTION =
-	"You have signed in to another Google account using the Google OAuth app.";
+	"You have signed in to another Google account using the Open Grind Google OAuth app.";
 
 function askToSwitch(): Promise<boolean> {
 	const answer = confirmAccountSwitch();

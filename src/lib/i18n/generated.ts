@@ -1,8 +1,8 @@
 export interface Messages {
 	"auth.googleHandoff.errors.expired": undefined;
-	"auth.googleHandoff.errors.signInFailed": undefined;
 	"auth.googleHandoff.switchAccount.description": undefined;
 	"auth.googleHandoff.switchAccount.title": undefined;
+	"auth.passwordReset.signIn": undefined;
 	"auth.passwordReset.title": undefined;
 	"auth.passwordReset.unimplemented": { issueLink: string };
 	"auth.signIn.captcha.errors.addonDisabled": undefined;
@@ -41,12 +41,15 @@ export interface Messages {
 	"auth.signIn.google.paste.token.placeholder": undefined;
 	"auth.signIn.google.signingIn.description": undefined;
 	"auth.signIn.google.signingIn.title": undefined;
+	"auth.signIn.google.title": undefined;
 	"auth.signIn.heading": undefined;
 	"auth.signIn.password.label": undefined;
+	"auth.signIn.signUp": undefined;
 	"auth.signIn.submit": undefined;
 	"auth.signIn.title": undefined;
 	"auth.signIn.withFacebook": undefined;
 	"auth.signIn.withGoogle": undefined;
+	"auth.signUp.signIn": undefined;
 	"auth.signUp.title": undefined;
 	"auth.signUp.unimplemented": { issueLink: string };
 	"browse.filters.age.a11y.maximum": undefined;

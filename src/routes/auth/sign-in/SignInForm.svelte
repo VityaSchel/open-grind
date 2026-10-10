@@ -230,7 +230,7 @@
 			</Card.Description>
 			<Card.Action>
 				<Button variant="link" href="/auth/sign-up" class="px-0">
-					{t("auth.signUp.title")}
+					{t("auth.signIn.signUp")}
 				</Button>
 			</Card.Action>
 		</Card.Header>

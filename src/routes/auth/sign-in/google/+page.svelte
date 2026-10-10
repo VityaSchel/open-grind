@@ -4,6 +4,6 @@
 </script>
 
 <svelte:head>
-	<title>{t("auth.signIn.withGoogle")}</title>
+	<title>{t("auth.signIn.google.title")}</title>
 </svelte:head>
 <GoogleSignInForm />

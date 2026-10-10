@@ -58,7 +58,7 @@ async fn run_flow(
 		WINDOW_LABEL,
 		WebviewUrl::External(dialog_url(&state)?),
 	)
-	.title("Sign in with Facebook")
+	.title("Sign In with Facebook")
 	.inner_size(window_width, window_height)
 	.incognito(true)
 	.general_autofill_enabled(false)

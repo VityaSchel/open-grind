@@ -197,7 +197,7 @@
 		>
 			<Card.Root class="gap-4">
 				<Card.Header>
-					<Card.Title>{t("auth.signIn.withGoogle")}</Card.Title>
+					<Card.Title>{t("auth.signIn.google.title")}</Card.Title>
 					<Card.Description>
 						{#if view === "install" && isPlayBuild()}
 							<Rich
