@@ -132,7 +132,7 @@ describe("CopyErrorConfirmAlert", () => {
 		expect(copyErrorConfirmState.open).toBe(false);
 		expect(toastMock.success).not.toHaveBeenCalled();
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			"Couldn't copy to clipboard",
+			"Couldn’t copy to clipboard",
 		);
 	});
 

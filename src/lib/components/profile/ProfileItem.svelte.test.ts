@@ -39,11 +39,11 @@ afterEach(async () => {
 
 describe("ProfileItem", () => {
 	it.each([
-		{ title: { value: "Sam" }, label: "Sam's profile" },
-		{ title: { value: null }, label: "Someone's profile" },
+		{ title: { value: "Sam" }, label: "Sam’s profile" },
+		{ title: { value: null }, label: "Someone’s profile" },
 		{
 			title: { value: null, fallback: "Unnamed" },
-			label: "Unnamed's profile",
+			label: "Unnamed’s profile",
 		},
 	])("labels the avatar link $label", ({ title, label }) => {
 		renderItem(title);
@@ -62,7 +62,7 @@ describe("ProfileItem", () => {
 			value: "Sam",
 			badge: favoriteBadge,
 		});
-		const avatarLink = screen.getByRole("link", { name: "Sam's profile" });
+		const avatarLink = screen.getByRole("link", { name: "Sam’s profile" });
 		const favorite = screen.getByText("Favorite");
 
 		await setLocale({ locale: "en-XA" });

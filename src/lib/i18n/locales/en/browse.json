@@ -13,7 +13,7 @@
 			},
 			"noFavorites": {
 				"title": "No Favorites Yet",
-				"description": "Tap the star on someone's profile to save them here."
+				"description": "Tap the star on someone’s profile to save them here."
 			},
 			"resetFilters": "Reset Filters"
 		},
@@ -61,7 +61,7 @@
 		"more": "More",
 		"favorites": "Favorites",
 		"fresh": "Fresh",
-		"haventChattedToday": "Haven't Chatted Today",
+		"haventChattedToday": "Haven’t Chatted Today",
 		"age": {
 			"label": "Age",
 			"a11y": {
@@ -112,14 +112,14 @@
 			"selected_other": "{{count}} selected",
 			"truncated_one": "Showing first {{shown}} of {{count}} match, keep typing to narrow down",
 			"truncated_other": "Showing first {{shown}} of {{count}} matches, keep typing to narrow down",
-			"noMatches": "No tags match \"{{query}}\"",
+			"noMatches": "No tags match “{{query}}”",
 			"errors": {
 				"loadFailed": "Failed to load tags"
 			}
 		}
 	},
 	"rightNow": {
-		"unimplemented": "\"Right Now\" tab is not implemented yet, tracking in {{issueLink}}."
+		"unimplemented": "“Right Now” tab is not implemented yet, tracking in {{issueLink}}."
 	},
 	"locationChooser": {
 		"map": {

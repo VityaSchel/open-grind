@@ -81,11 +81,11 @@ describe("AgeFilterField", () => {
 
 		await fireEvent.keyDown(minimumAge(), { key: "ArrowRight" });
 		expect(minimumAge().getAttribute("aria-valuenow")).toBe("26");
-		expect(screen.getByText("26 - 60")).toBeTruthy();
+		expect(screen.getByText("26–60")).toBeTruthy();
 
 		await fireEvent.keyDown(maximumAge(), { key: "ArrowLeft" });
 		expect(maximumAge().getAttribute("aria-valuenow")).toBe("59");
-		expect(screen.getByText("26 - 59")).toBeTruthy();
+		expect(screen.getByText("26–59")).toBeTruthy();
 	});
 
 	it("reaches the youngest and oldest ages with Home and End", async () => {

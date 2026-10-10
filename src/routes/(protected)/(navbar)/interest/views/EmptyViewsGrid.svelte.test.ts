@@ -25,7 +25,7 @@ describe("EmptyViewsGrid", () => {
 		const { container } = render(EmptyViewsGrid);
 
 		expect(container.textContent).toBe(
-			" No Views Yet When someone views your profile, they'll show up here.",
+			" No Views Yet When someone views your profile, they’ll show up here.",
 		);
 	});
 

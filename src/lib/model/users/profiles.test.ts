@@ -102,7 +102,7 @@ describe("health practices we can show but not set", () => {
 	});
 
 	it("still labels the practice the current Grindr build dropped", () => {
-		expect(healthPracticeLabels[4]).toBe("I'm HIV Undetectable");
+		expect(healthPracticeLabels[4]).toBe("I’m HIV Undetectable");
 	});
 });
 
@@ -154,9 +154,9 @@ describe("vocabulary labels", () => {
 			hivStatusLabels:
 				"1=Negative|2=Negative, on PrEP|3=Positive|4=Positive, Undetectable|5=Prefer to Discuss",
 			healthPractices:
-				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV Undetectable|5=Prefer to Discuss",
+				"1=Condoms|2=I’m on doxyPEP|3=I’m on PrEP|4=I’m HIV Undetectable|5=Prefer to Discuss",
 			healthPracticeLabels:
-				"1=Condoms|2=I'm on doxyPEP|3=I'm on PrEP|4=I'm HIV Undetectable|5=Prefer to Discuss|6=Sober|7=Drug-Free",
+				"1=Condoms|2=I’m on doxyPEP|3=I’m on PrEP|4=I’m HIV Undetectable|5=Prefer to Discuss|6=Sober|7=Drug-Free",
 			vaccines: "1=COVID-19|2=Monkeypox|3=Meningitis",
 		});
 	});

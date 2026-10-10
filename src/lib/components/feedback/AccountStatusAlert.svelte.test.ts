@@ -43,7 +43,7 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 const ban = { kind: "BANNED", code: 403, message: "Account banned" };
 
 const descriptionWithoutReason =
-	"Grindr has banned this account. You can't sign in until the ban is lifted.";
+	"Grindr has banned this account. You can’t sign in until the ban is lifted.";
 
 function emit(event: string, payload: unknown) {
 	tauriListeners.get(event)?.({ payload });
@@ -111,7 +111,7 @@ describe("AccountStatusAlert", () => {
 		{
 			reason: "spam",
 			description:
-				"Grindr has banned this account (spam). You can't sign in until the ban is lifted.",
+				"Grindr has banned this account (spam). You can’t sign in until the ban is lifted.",
 		},
 		{ reason: null, description: descriptionWithoutReason },
 		{ reason: undefined, description: descriptionWithoutReason },

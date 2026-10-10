@@ -50,7 +50,7 @@ describe("NotFound", () => {
 			document.querySelector('[data-slot="tooltip-content"]')
 				?.textContent,
 		).toBe(
-			"It looks like you're a little lost.  Would you like help?  Don't worry, Clippy would never Sell your information Add AI age verification Exploit troubled queers ",
+			"It looks like you’re a little lost.  Would you like help?  Don’t worry, Clippy would never Sell your information Add AI age verification Exploit troubled queers ",
 		);
 	});
 

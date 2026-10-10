@@ -92,9 +92,9 @@
 	},
 	"healthPractice": {
 		"condoms": "Condoms",
-		"doxyPep": "I'm on doxyPEP",
-		"prep": "I'm on PrEP",
-		"hivUndetectable": "I'm HIV Undetectable",
+		"doxyPep": "I’m on doxyPEP",
+		"prep": "I’m on PrEP",
+		"hivUndetectable": "I’m HIV Undetectable",
 		"preferToDiscuss": "Prefer to Discuss",
 		"sober": "Sober",
 		"drugFree": "Drug-Free"
@@ -154,7 +154,7 @@
 	},
 	"item": {
 		"a11y": {
-			"profileLink": "{{name}}'s profile"
+			"profileLink": "{{name}}’s profile"
 		}
 	},
 	"imageCarousel": {
@@ -277,7 +277,7 @@
 		"message": {
 			"title": "Report Message",
 			"a11y": {
-				"description": "Send a report about this person's messages to Grindr."
+				"description": "Send a report about this person’s messages to Grindr."
 			},
 			"reviewed": "Grindr will review your report."
 		},

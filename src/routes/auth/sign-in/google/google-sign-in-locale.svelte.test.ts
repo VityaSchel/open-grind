@@ -145,7 +145,7 @@ describe("GoogleSignInForm in the active locale", () => {
 			signIn,
 			goBack,
 		]);
-		expect(textOf(steps[2])).toContain(`"${textOf(signIn)}"`);
+		expect(textOf(steps[2])).toContain(`“${textOf(signIn)}”`);
 		expect(token.getAttribute("placeholder")).toMatch(PSEUDO_MESSAGE);
 		expect(textOf(link)).not.toMatch(ASCII_LETTER);
 	});

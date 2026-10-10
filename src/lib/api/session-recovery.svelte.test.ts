@@ -96,7 +96,7 @@ describe("sessionRecovery", () => {
 		await settle();
 
 		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
-			"Can't reach Grindr — retrying",
+			"Can’t reach Grindr — retrying",
 			expect.anything(),
 		);
 	});

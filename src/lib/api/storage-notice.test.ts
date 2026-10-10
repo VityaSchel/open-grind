@@ -56,7 +56,7 @@ const notices = [
 		backend: "unavailable",
 		toast: toastErrorMock,
 		english:
-			"This device can't keep you signed in. You'll be signed out when the app closes.",
+			"This device can’t keep you signed in. You’ll be signed out when the app closes.",
 		options: { id: "storage-backend", duration: Number.POSITIVE_INFINITY },
 	},
 ];

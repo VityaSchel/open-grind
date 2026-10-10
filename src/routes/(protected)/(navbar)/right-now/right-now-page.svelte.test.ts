@@ -12,7 +12,7 @@ describe("Right Now page", () => {
 		const { container, getByRole } = render(RightNowPage);
 
 		expect(container.textContent).toBe(
-			' Unimplemented "Right Now" tab is not implemented yet, tracking in #43.',
+			" Unimplemented “Right Now” tab is not implemented yet, tracking in #43.",
 		);
 		expect(getByRole("link", { name: "#43" }).getAttribute("href")).toBe(
 			"https://git.opengrind.org/open-grind/open-grind/issues/43",

@@ -56,14 +56,14 @@ describe("ApiErrorDisplay", () => {
 	});
 
 	it.each([
-		["Connect", "Couldn't connect to Grindr"],
-		["Http", "Couldn't reach the server"],
+		["Connect", "Couldn’t connect to Grindr"],
+		["Http", "Couldn’t reach the server"],
 		["RequestBlocked", "Grindr is blocking your requests"],
 		[
 			"NetworkBlocked",
 			"Something blocked the request before it reached Grindr",
 		],
-		["SessionStale", "Couldn't refresh your session"],
+		["SessionStale", "Couldn’t refresh your session"],
 	] as const)("blames %s for the failure it actually was", (kind, shown) => {
 		render(ApiErrorDisplay, {
 			props: {
@@ -110,7 +110,7 @@ describe("ApiErrorDisplay", () => {
 		flushSync();
 
 		expect(screen.getByText(t("feedback.apiError.connect"))).toBeTruthy();
-		expect(screen.queryByText("Couldn't connect to Grindr")).toBeNull();
+		expect(screen.queryByText("Couldn’t connect to Grindr")).toBeNull();
 		expect(
 			screen.getByRole("button", { name: t("common.actions.retry") }),
 		).toBeTruthy();

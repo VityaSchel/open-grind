@@ -82,8 +82,8 @@ describe("collectMessages", () => {
 			"en/ns.a: <br/> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes",
 		],
 		[
-			{ a: '<a href="/">x</a>' },
-			'en/ns.a: <a href="/"> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes',
+			{ a: "<a href=/>x</a>" },
+			"en/ns.a: <a href=/> is not a valid tag; write <camelCaseName> or </camelCaseName> with no attributes",
 		],
 		[
 			{ a: "<Link>x</Link>" },
@@ -161,6 +161,19 @@ describe("collectMessages", () => {
 			"en/ns.a.b: has three dots; write … (one character) instead",
 		],
 		[
+			{ a: "Don't" },
+			"en/ns.a: has a straight apostrophe; write ’ instead, or ′ for feet",
+		],
+		[
+			{ a: 'Tap "Send"' },
+			"en/ns.a: has a straight quotation mark; write “ ” for quotes, or ′ ″ for feet and inches",
+		],
+		[
+			{ a: "{{feet}}'{{inches}}\"" },
+			"en/ns.a: has a straight apostrophe; write ’ instead, or ′ for feet",
+			"en/ns.a: has a straight quotation mark; write “ ” for quotes, or ′ ″ for feet and inches",
+		],
+		[
 			{ a: 1 },
 			"en/ns.a: must be a string or an object of keys, not a number",
 		],
@@ -174,8 +187,8 @@ describe("collectMessages", () => {
 		],
 		["x", "en/ns.json: must hold a JSON object"],
 		[["x"], "en/ns.json: must hold a JSON object"],
-	])("rejects %j", (json, error) => {
-		expect(errorsOf(json)).toEqual([error]);
+	])("rejects %j", (json, ...errors) => {
+		expect(errorsOf(json)).toEqual(errors);
 	});
 
 	it.each(["a.b", "a_b", "Upper"])(
@@ -203,7 +216,13 @@ describe("collectMessages", () => {
 		]);
 	});
 
-	it.each(["Loading…", "Wait.. for it", "v1.2.3"])("accepts %j", (text) => {
+	it.each([
+		"Loading…",
+		"Wait.. for it",
+		"v1.2.3",
+		"Don’t tap “Send”",
+		"{{feet}}′{{inches}}″",
+	])("accepts %j", (text) => {
 		expect(errorsOf({ a: text })).toEqual([]);
 	});
 
@@ -246,6 +265,7 @@ describe("checkTranslation", () => {
 		{ photos_zero: "Нет фото" },
 		{ removed: "<i>Удалено</i>" },
 		{ plain: "Архив..." },
+		{ plain: "Архив \"Входящие\" и 'Избранное'" },
 	])("accepts %j", (json) => {
 		expect(check(json).errors).toEqual([]);
 	});

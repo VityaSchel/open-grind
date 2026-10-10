@@ -53,7 +53,7 @@ describe("AgeQuickFilter", () => {
 		flushSync();
 
 		expect(document.body.textContent).toContain("18 years & over");
-		expect(document.body.textContent).not.toContain("30 - 40");
+		expect(document.body.textContent).not.toContain("30–40");
 	});
 
 	it("keeps reset available at the default age range, where it changes nothing", async () => {

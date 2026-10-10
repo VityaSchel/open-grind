@@ -48,7 +48,7 @@ const companionMessages = [
 		verdict: "untrusted",
 		message: untrustedCompanionMessage,
 		english:
-			"The installed Open Grind Google OAuth app isn't signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
+			"The installed Open Grind Google OAuth app isn’t signed by Open Grind, so its token was refused. Uninstall it, or paste the OAuth token manually.",
 	},
 	{
 		verdict: "refused",

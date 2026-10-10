@@ -103,7 +103,7 @@ test("reporting a chat message titles the sheet for the message and prefills the
 		drawer.getByRole("heading", { name: "Report Message" }),
 	).toBeVisible();
 	await expect(drawer).toHaveAccessibleDescription(
-		"Send a report about this person's messages to Grindr.",
+		"Send a report about this person’s messages to Grindr.",
 	);
 
 	await drawer.getByRole("radio", { name: "Harassment or Bullying" }).click();

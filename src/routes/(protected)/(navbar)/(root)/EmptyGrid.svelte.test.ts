@@ -35,7 +35,7 @@ const variants = [
 	{
 		name: "favorites alone",
 		filters: { isFavorite: true },
-		text: " No Favorites Yet Tap the star on someone's profile to save them here. Reset Filters",
+		text: " No Favorites Yet Tap the star on someone’s profile to save them here. Reset Filters",
 	},
 ] satisfies {
 	name: string;

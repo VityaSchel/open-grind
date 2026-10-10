@@ -146,7 +146,7 @@ describe("ProfilePane failures", () => {
 		expect(
 			screen.getByRole("button", { name: "Retry", hidden: true }),
 		).not.toBeNull();
-		expect(screen.queryByText("Couldn't reach the server")).toBeNull();
+		expect(screen.queryByText("Couldn’t reach the server")).toBeNull();
 	});
 
 	it("loads the profile again from the retry control", async () => {
@@ -167,7 +167,7 @@ describe("ProfilePane failures", () => {
 		const { section } = renderPane({ active: true, row: null });
 		await flush();
 
-		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
+		expect(screen.getByText("Couldn’t reach the server")).not.toBeNull();
 		expect(headingElement(section)).toBeNull();
 		expect(section.querySelector(".carousel")).toBeNull();
 	});
@@ -309,7 +309,7 @@ describe("ProfilePane profile actions", () => {
 		renderPane({ active: true, row: null, profileId: OUR_ID });
 		await flush();
 
-		expect(screen.getByText("Couldn't reach the server")).not.toBeNull();
+		expect(screen.getByText("Couldn’t reach the server")).not.toBeNull();
 		expect(
 			screen.queryByRole("navigation", { name: "Profile Actions" }),
 		).toBeNull();

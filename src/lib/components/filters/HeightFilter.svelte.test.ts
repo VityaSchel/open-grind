@@ -80,7 +80,7 @@ describe("HeightFilter", () => {
 		expect(thumb("Minimum Height").getAttribute("aria-valuenow")).toBe(
 			"171",
 		);
-		expect(screen.getByText("171 cm - No max")).toBeTruthy();
+		expect(screen.getByText("171 cm–No max")).toBeTruthy();
 	});
 });
 
@@ -88,7 +88,7 @@ describe("HeightFilter in imperial units", () => {
 	it("moves one whole inch per arrow key, never repeating a label", async () => {
 		preferences.units = "imperial";
 		renderFilter([170, HEIGHT_CM_MAX]);
-		expect(valueText("Minimum Height")).toBe("5'7\"");
+		expect(valueText("Minimum Height")).toBe("5′7″");
 
 		const labels = [];
 		for (let presses = 0; presses < 5; presses++)
@@ -96,8 +96,8 @@ describe("HeightFilter in imperial units", () => {
 				await press({ name: "Minimum Height", key: "ArrowRight" }),
 			);
 
-		expect(labels).toEqual(["5'8\"", "5'9\"", "5'10\"", "5'11\"", "6'0\""]);
-		expect(screen.getByText("6'0\" - No max")).toBeTruthy();
+		expect(labels).toEqual(["5′8″", "5′9″", "5′10″", "5′11″", "6′0″"]);
+		expect(screen.getByText("6′0″–No max")).toBeTruthy();
 	});
 
 	it("counts the thumbs in inches", () => {
@@ -144,8 +144,8 @@ describe("HeightFilter in imperial units", () => {
 
 		await tick();
 
-		expect(valueText("Minimum Height")).toBe("5'7\"");
-		expect(valueText("Maximum Height")).toBe("5'9\"");
+		expect(valueText("Minimum Height")).toBe("5′7″");
+		expect(valueText("Maximum Height")).toBe("5′9″");
 		expect(stored.height).toEqual([171, 176]);
 	});
 
@@ -165,7 +165,7 @@ describe("HeightFilter in imperial units", () => {
 	it("drops a bound stored a centimetre above the shortest height", async () => {
 		preferences.units = "imperial";
 		const stored = renderFilter([122, HEIGHT_CM_MAX]);
-		expect(valueText("Minimum Height")).toBe("4'0\"");
+		expect(valueText("Minimum Height")).toBe("4′0″");
 
 		expect(await press({ name: "Minimum Height", key: "ArrowLeft" })).toBe(
 			"No min",

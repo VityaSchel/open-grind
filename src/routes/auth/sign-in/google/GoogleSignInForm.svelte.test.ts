@@ -149,8 +149,8 @@ describe("GoogleSignInForm", () => {
 		getUpdateCapability.mockResolvedValue(installedBy("org.fdroid.fdroid"));
 		const { screen } = await opened();
 
-		expect(textOf(screen.getByText(/bypasses F-Droid's checks/))).toBe(
-			"This add-on bypasses F-Droid's checks",
+		expect(textOf(screen.getByText(/bypasses F-Droid’s checks/))).toBe(
+			"This add-on bypasses F-Droid’s checks",
 		);
 	});
 
@@ -363,7 +363,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-			"Couldn't find the Open Grind Google OAuth app on your device. Install it first, or paste the OAuth token manually.",
+			"Couldn’t find the Open Grind Google OAuth app on your device. Install it first, or paste the OAuth token manually.",
 		);
 		expect(button("Install")).toBeTruthy();
 
@@ -708,7 +708,7 @@ describe("GoogleSignInForm", () => {
 		expect(screen.getAllByRole("listitem").map(textOf)).toEqual([
 			"Install the Open Grind Google OAuth app",
 			"Sign in with Google in the Open Grind Google OAuth app and copy the token",
-			'Return to this screen, paste it and tap "Sign In"',
+			"Return to this screen, paste it and tap “Sign In”",
 		]);
 		expect(screen.queryByRole("button", { name: /^Install/ })).toBeNull();
 

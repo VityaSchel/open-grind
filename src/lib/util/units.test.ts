@@ -35,8 +35,8 @@ describe("formatDistance", () => {
 describe("formatHeight", () => {
 	it("shows whole centimetres or feet and inches", () => {
 		expect(formatHeight(180, "metric")).toBe("180 cm");
-		expect(formatHeight(180, "imperial")).toBe("5'11\"");
-		expect(formatHeight(183, "imperial")).toBe("6'0\"");
+		expect(formatHeight(180, "imperial")).toBe("5′11″");
+		expect(formatHeight(183, "imperial")).toBe("6′0″");
 	});
 });
 
@@ -51,14 +51,14 @@ describe("formatWeightKg and formatWeightGrams", () => {
 
 describe("formatFeetInches", () => {
 	it("splits whole inches into feet and the inches left over", () => {
-		expect(formatFeetInches(47)).toBe("3'11\"");
-		expect(formatFeetInches(72)).toBe("6'0\"");
-		expect(formatFeetInches(98)).toBe("8'2\"");
+		expect(formatFeetInches(47)).toBe("3′11″");
+		expect(formatFeetInches(72)).toBe("6′0″");
+		expect(formatFeetInches(98)).toBe("8′2″");
 	});
 
 	it("keeps feet before inches in a right-to-left locale", async () => {
 		await setLocale({ locale: "ar-XB" });
-		expect(formatFeetInches(71)).toBe("\u2068\u202E5'11\"\u202C\u2069");
+		expect(formatFeetInches(71)).toBe("\u2068\u202E5′11″\u202C\u2069");
 	});
 });
 

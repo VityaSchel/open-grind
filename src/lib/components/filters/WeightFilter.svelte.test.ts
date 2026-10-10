@@ -102,7 +102,7 @@ describe("WeightFilter", () => {
 		await fireEvent.keyDown(minimumWeight(), { key: "ArrowRight" });
 
 		expect(minimumWeight().getAttribute("aria-valuenow")).toBe("81");
-		expect(screen.getByText("81 kg - No max")).toBeTruthy();
+		expect(screen.getByText("81 kg–No max")).toBeTruthy();
 	});
 
 	it("gives the common weights most of the track", async () => {
@@ -111,7 +111,7 @@ describe("WeightFilter", () => {
 		await pressTrackMiddle(track);
 
 		expect(minimumWeight().getAttribute("aria-valuenow")).toBe("94");
-		expect(screen.getByText("94 kg - No max")).toBeTruthy();
+		expect(screen.getByText("94 kg–No max")).toBeTruthy();
 	});
 
 	it("keeps a weight picked in pounds while the other thumb moves in kilograms", async () => {
@@ -129,7 +129,7 @@ describe("WeightFilter", () => {
 		await fireEvent.keyDown(maximumWeight(), { key: "ArrowRight" });
 
 		expect(stored.weight).toEqual([41, 272]);
-		expect(screen.getByText("No min - No max")).toBeTruthy();
+		expect(screen.getByText("No min–No max")).toBeTruthy();
 	});
 });
 
@@ -146,7 +146,7 @@ describe("WeightFilter in imperial units", () => {
 		}
 
 		expect(labels).toEqual(["177 lb", "178 lb", "179 lb"]);
-		expect(screen.getByText("179 lb - No max")).toBeTruthy();
+		expect(screen.getByText("179 lb–No max")).toBeTruthy();
 	});
 
 	it("counts the thumbs in pounds", () => {
@@ -187,7 +187,7 @@ describe("WeightFilter in imperial units", () => {
 		await fireEvent.keyDown(maximumWeight(), { key: "End" });
 
 		expect(stored.weight).toEqual([41, 272]);
-		expect(screen.getByText("No min - No max")).toBeTruthy();
+		expect(screen.getByText("No min–No max")).toBeTruthy();
 	});
 
 	it("keeps each weight where the kilogram track has it", async () => {

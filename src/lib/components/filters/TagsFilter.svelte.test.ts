@@ -147,12 +147,12 @@ describe("TagsFilter", () => {
 		renderFilter();
 		await search("x");
 
-		const empty = await screen.findByText('No tags match "x"');
+		const empty = await screen.findByText("No tags match “x”");
 
 		await setLocale({ locale: "en-XA" });
 
 		expect(empty.textContent).toMatch(PSEUDO_MESSAGE);
-		expect(empty.textContent).toContain('"x"');
+		expect(empty.textContent).toContain("“x”");
 	});
 
 	it("says when the tags fail to load, in the active locale", async () => {

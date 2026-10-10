@@ -217,6 +217,16 @@ export function collectMessages(files: SourceFile[]): {
 				`${key}: has three dots; write … (one character) instead`,
 			);
 		}
+		if (text.includes("'")) {
+			errors.push(
+				`${key}: has a straight apostrophe; write ’ instead, or ′ for feet`,
+			);
+		}
+		if (text.includes('"')) {
+			errors.push(
+				`${key}: has a straight quotation mark; write “ ” for quotes, or ′ ″ for feet and inches`,
+			);
+		}
 	}
 	const messages: Message[] = [];
 	for (const [key, forms] of groupForms(texts)) {

@@ -220,10 +220,8 @@ describe("formatInteger", () => {
 });
 
 describe("formatRange", () => {
-	it("puts a spaced hyphen between the bounds", () => {
-		expect(formatRange({ min: "No min", max: "6'0\"" })).toBe(
-			"No min - 6'0\"",
-		);
+	it("closes up an en dash between the bounds", () => {
+		expect(formatRange({ min: "No min", max: "6′0″" })).toBe("No min–6′0″");
 	});
 });
 

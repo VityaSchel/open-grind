@@ -96,13 +96,13 @@ const facebookFailures = [
 		failure: "a Facebook dialog error",
 		marker: "facebook-dialog-error",
 		english:
-			"Facebook didn't grant access. Try again, or sign in with your email and password.",
+			"Facebook didn’t grant access. Try again, or sign in with your email and password.",
 	},
 	{
 		failure: "a Facebook app handoff",
 		marker: "facebook-handoff-refused",
 		english:
-			"Facebook tried to open its own app, which Open Grind can't use. Sign in with your email and password instead.",
+			"Facebook tried to open its own app, which Open Grind can’t use. Sign in with your email and password instead.",
 	},
 	{
 		failure: "a Facebook redirect it can't verify",

@@ -309,7 +309,7 @@ describe("SessionErrorAlert", () => {
 
 		expect(
 			screen.getByText(
-				'The server returned a web page: "Attention Required! | Cloudflare"',
+				"The server returned a web page: “Attention Required! | Cloudflare”",
 			),
 		).toBeTruthy();
 		expect(screen.queryByText(/Ray ID/)).toBeNull();

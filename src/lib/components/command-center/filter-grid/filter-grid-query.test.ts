@@ -65,7 +65,7 @@ describe("parseFilterGridQuery", () => {
 		const result = parseFilterGridQuery("?ageMin=25&ageMax=40");
 		expect(result.parsed).toHaveLength(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("age");
-		expect(parsedAt(result.parsed, 0).valueText).toBe("25 - 40");
+		expect(parsedAt(result.parsed, 0).valueText).toBe("25–40");
 	});
 
 	it("supports the combined `age=min-max` syntax with an open bound", () => {

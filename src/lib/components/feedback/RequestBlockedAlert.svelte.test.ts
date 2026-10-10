@@ -100,7 +100,7 @@ describe("RequestBlockedAlert", () => {
 		render(RequestBlockedAlert);
 
 		expect(
-			screen.getByLabelText("Don't show again in this session"),
+			screen.getByLabelText("Don’t show again in this session"),
 		).toBeTruthy();
 	});
 });

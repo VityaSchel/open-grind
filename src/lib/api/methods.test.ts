@@ -39,7 +39,7 @@ describe("asAppError", () => {
 				"error sending request for url (https://grindr.mobi/v4/cascade): client error (Connect)",
 		});
 		expect(appError?.prettyMessage).toBe(
-			"Couldn't connect to Grindr. Check your internet connection and try again.",
+			"Couldn’t connect to Grindr. Check your internet connection and try again.",
 		);
 		expect(appError?.message).toContain("client error (Connect)");
 	});
@@ -78,8 +78,8 @@ describe("asAppError", () => {
 			"Something blocked the request before it reached Grindr",
 		],
 		["RateLimited", "Grindr is rate limiting us"],
-		["NotSignedIn", "You're signed out"],
-		["SessionStale", "Couldn't refresh your session"],
+		["NotSignedIn", "You’re signed out"],
+		["SessionStale", "Couldn’t refresh your session"],
 	])("says what %s means without a message to quote", (kind, expected) => {
 		expect(asAppError({ kind })?.prettyMessage).toBe(expected);
 	});
@@ -117,7 +117,7 @@ describe("asAppError", () => {
 
 		expect(appError?.prettyMessage).toBe(
 			"Error 403: The server returned a web page: " +
-				'"Attention Required! | Cloudflare"',
+				"“Attention Required! | Cloudflare”",
 		);
 		expect(appError?.prettyMessage).not.toContain("203.0.113.7");
 	});
@@ -135,7 +135,7 @@ describe("asAppError", () => {
 				?.prettyMessage,
 		).toBe(
 			"Error 403: The server returned a web page: " +
-				'"Attention Required! | Cloudflare"',
+				"“Attention Required! | Cloudflare”",
 		);
 	});
 
@@ -146,7 +146,7 @@ describe("asAppError", () => {
 				message: `upstream proxy error: ${cloudflareBlockPage}`,
 			})?.prettyMessage,
 		).toBe(
-			'The server returned a web page: "Attention Required! | Cloudflare"',
+			"The server returned a web page: “Attention Required! | Cloudflare”",
 		);
 	});
 
@@ -207,7 +207,7 @@ describe("diagnosticMessage", () => {
 			}),
 		).toBe(
 			"Error 403: The server returned a web page: " +
-				'"Attention Required! | Cloudflare"',
+				"“Attention Required! | Cloudflare”",
 		);
 	});
 

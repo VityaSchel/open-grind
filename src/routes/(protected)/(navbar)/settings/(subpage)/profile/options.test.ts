@@ -32,16 +32,16 @@ describe("profile edit options", () => {
 
 	it("offers one height per inch, labelled in feet and inches", () => {
 		expect(heightInchOptions).toHaveLength(52);
-		expect(heightInchOptions[0]).toEqual({ value: 47, label: "3'11\"" });
-		expect(heightInchOptions[25]).toEqual({ value: 72, label: "6'0\"" });
-		expect(heightInchOptions.at(-1)).toEqual({ value: 98, label: "8'2\"" });
+		expect(heightInchOptions[0]).toEqual({ value: 47, label: "3′11″" });
+		expect(heightInchOptions[25]).toEqual({ value: 72, label: "6′0″" });
+		expect(heightInchOptions.at(-1)).toEqual({ value: 98, label: "8′2″" });
 	});
 
 	it("labels each height in the active locale", async () => {
 		await setLocale({ locale: "en-XA" });
-		expect(heightInchOptions[0]?.label).toBe("⟦3'11\" ⟧");
+		expect(heightInchOptions[0]?.label).toBe("⟦3′11″ ⟧");
 		await setLocale({ locale: SOURCE_LOCALE });
-		expect(heightInchOptions[0]?.label).toBe("3'11\"");
+		expect(heightInchOptions[0]?.label).toBe("3′11″");
 	});
 
 	it("lists positions along the spectrum from top to side", () => {

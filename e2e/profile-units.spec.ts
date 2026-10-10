@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
 test("the profile editor shows height and weight in imperial units without changing them", async ({
 	page,
 }) => {
-	await expect(height(page)).toHaveAccessibleName("Height 5'10\"");
+	await expect(height(page)).toHaveAccessibleName("Height 5′10″");
 	await expect(weight(page)).toHaveValue("165");
 	await expect(page.getByText("lb", { exact: true })).toBeVisible();
 	expect(await page.getByText(/^(cm|kg)$/).count()).toBe(0);
@@ -37,7 +37,7 @@ test("the profile editor shows height and weight in imperial units without chang
 	await expect(weight(page)).not.toBeFocused();
 	await height(page).click();
 	const shownHeight = page.getByRole("menuitemradio", {
-		name: "5'10\"",
+		name: "5′10″",
 		exact: true,
 	});
 	await expect(shownHeight).toBeInViewport({ ratio: 1 });
@@ -56,7 +56,7 @@ test("the height menu opened from the keyboard starts on the height it shows", a
 	await page.keyboard.press("Enter");
 
 	const shownHeight = page.getByRole("menuitemradio", {
-		name: "5'10\"",
+		name: "5′10″",
 		exact: true,
 	});
 	await expect(shownHeight).toBeFocused();
@@ -64,7 +64,7 @@ test("the height menu opened from the keyboard starts on the height it shows", a
 
 	await page.keyboard.press("ArrowDown");
 	await expect(
-		page.getByRole("menuitemradio", { name: "5'11\"", exact: true }),
+		page.getByRole("menuitemradio", { name: "5′11″", exact: true }),
 	).toBeFocused();
 });
 
@@ -73,7 +73,7 @@ test("a height picked in feet and a weight typed in pounds reach the profile", a
 }) => {
 	await height(page).click();
 	await page
-		.getByRole("menuitemradio", { name: "6'0\"", exact: true })
+		.getByRole("menuitemradio", { name: "6′0″", exact: true })
 		.click();
 	await weight(page).fill("180");
 	await saveChanges(page).click();
@@ -84,5 +84,5 @@ test("a height picked in feet and a weight typed in pounds reach the profile", a
 
 	const stats = page.getByText("180 lb").first();
 	await expect(stats).toBeVisible();
-	await expect(stats).toContainText("6'0\"");
+	await expect(stats).toContainText("6′0″");
 });

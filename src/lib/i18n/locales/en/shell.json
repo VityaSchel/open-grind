@@ -51,9 +51,9 @@
 	"notFound": {
 		"description": "The page you are looking for does not exist.",
 		"clippy": {
-			"lost": "It looks like you're a little lost.",
+			"lost": "It looks like you’re a little lost.",
 			"offer": "Would you like help?",
-			"promise": "Don't worry, Clippy would never",
+			"promise": "Don’t worry, Clippy would never",
 			"never": {
 				"sellData": "Sell your information",
 				"ageVerification": "Add AI age verification",
@@ -71,7 +71,7 @@
 		"addToAppsMenu": "Add Open Grind to your apps menu",
 		"start": "Get Started",
 		"errors": {
-			"finishSetupFailed": "Couldn't finish setup"
+			"finishSetupFailed": "Couldn’t finish setup"
 		}
 	}
 }

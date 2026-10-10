@@ -56,7 +56,7 @@ describe("HeightField in imperial units", () => {
 		preferences.units = "imperial";
 		const { container } = renderField(180);
 
-		expect(picker().textContent?.trim()).toBe("5'11\"");
+		expect(picker().textContent?.trim()).toBe("5′11″");
 		expect(container.textContent).not.toContain("cm");
 		expect(screen.queryByRole("textbox")).toBeNull();
 	});
@@ -65,18 +65,18 @@ describe("HeightField in imperial units", () => {
 		preferences.units = "imperial";
 		const { stored } = renderField(180);
 
-		await pick("6'0\"");
+		await pick("6′0″");
 
 		expect(stored.heightCm).toBe(183);
-		expect(picker().textContent?.trim()).toBe("6'0\"");
+		expect(picker().textContent?.trim()).toBe("6′0″");
 	});
 
 	it("keeps the stored height when the shown one is picked again", async () => {
 		preferences.units = "imperial";
 		const { stored } = renderField(179);
 
-		expect(picker().textContent?.trim()).toBe("5'10\"");
-		await pick("5'10\"");
+		expect(picker().textContent?.trim()).toBe("5′10″");
+		await pick("5′10″");
 
 		expect(stored.heightCm).toBe(179);
 	});
@@ -88,8 +88,8 @@ describe("HeightField in imperial units", () => {
 		const offered = (await openMenu()).map(labelOf);
 
 		expect(offered).toHaveLength(53);
-		expect(offered.slice(0, 3)).toEqual(["Not set", "3'11\"", "4'0\""]);
-		expect(offered.at(-1)).toBe("8'2\"");
+		expect(offered.slice(0, 3)).toEqual(["Not set", "3′11″", "4′0″"]);
+		expect(offered.at(-1)).toBe("8′2″");
 	});
 
 	it("opens from the keyboard with the shown height focused", async () => {
@@ -100,17 +100,17 @@ describe("HeightField in imperial units", () => {
 		await new Promise((resolve) => requestAnimationFrame(resolve));
 		await tick();
 
-		expect(labelOf(document.activeElement!)).toBe("5'11\"");
+		expect(labelOf(document.activeElement!)).toBe("5′11″");
 	});
 
 	it("never stores less than the shortest supported height", async () => {
 		preferences.units = "imperial";
 		const { stored } = renderField(180);
 
-		await pick("3'11\"");
+		await pick("3′11″");
 
 		expect(stored.heightCm).toBe(120);
-		expect(picker().textContent?.trim()).toBe("3'11\"");
+		expect(picker().textContent?.trim()).toBe("3′11″");
 	});
 
 	it("clears the stored height when Not set is picked", async () => {

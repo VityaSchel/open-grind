@@ -76,7 +76,7 @@ const subjects = [
 	{
 		props: { subject: "message", locations: ["CHAT_MESSAGE"] },
 		title: "Report Message",
-		description: "Send a report about this person's messages to Grindr.",
+		description: "Send a report about this person’s messages to Grindr.",
 		reviewed: "Grindr will review your report.",
 	},
 ] satisfies {

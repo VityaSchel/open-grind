@@ -17,10 +17,10 @@
 		"today": "Today"
 	},
 	"format": {
-		"range": "{{min}} - {{max}}"
+		"range": "{{min}}–{{max}}"
 	},
 	"units": {
-		"feetInches": "{{feet}}'{{inches}}\""
+		"feetInches": "{{feet}}′{{inches}}″"
 	},
 	"unimplemented": {
 		"title": "Unimplemented"
@@ -48,7 +48,7 @@
 	},
 	"desktopEntry": {
 		"errors": {
-			"addFailed": "Couldn't add Open Grind to your apps"
+			"addFailed": "Couldn’t add Open Grind to your apps"
 		}
 	},
 	"sections": {

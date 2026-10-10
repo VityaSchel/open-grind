@@ -9,7 +9,7 @@
 	"errorCopy": {
 		"copied": "Error details copied to clipboard",
 		"errors": {
-			"copyFailed": "Couldn't copy to clipboard"
+			"copyFailed": "Couldn’t copy to clipboard"
 		}
 	},
 	"copyErrorConfirm": {
@@ -20,26 +20,26 @@
 		"copy": "Copy"
 	},
 	"apiError": {
-		"connect": "Couldn't connect to Grindr",
-		"http": "Couldn't reach the server",
+		"connect": "Couldn’t connect to Grindr",
+		"http": "Couldn’t reach the server",
 		"requestBlocked": "Grindr is blocking your requests",
 		"networkBlocked": "Something blocked the request before it reached Grindr",
-		"sessionStale": "Couldn't refresh your session"
+		"sessionStale": "Couldn’t refresh your session"
 	},
 	"apiErrorDisplay": {
 		"retryableFailure": "The server ran into a problem",
 		"unknownFailure": "Something went wrong"
 	},
 	"appError": {
-		"connectionFailed": "Couldn't connect to Grindr. Check your internet connection and try again.",
+		"connectionFailed": "Couldn’t connect to Grindr. Check your internet connection and try again.",
 		"rateLimited": "Grindr is rate limiting us",
-		"notSignedIn": "You're signed out",
+		"notSignedIn": "You’re signed out",
 		"contentTooLarge": "Larger than the upload limit",
 		"overLimit": "Larger than the {{limit}} limit",
 		"unknown": "An unknown error occurred",
 		"withCode": "Error {{code}}: {{detail}}",
 		"webPage": "The server returned a web page instead of data",
-		"titledWebPage": "The server returned a web page: \"{{title}}\""
+		"titledWebPage": "The server returned a web page: “{{title}}”"
 	},
 	"requestBlocked": {
 		"cloudflare": {
@@ -54,7 +54,7 @@
 			"advice": "Otherwise, switch to another network, or rotate request parameters using the button below."
 		},
 		"vpnHint": "If you use a VPN, try disabling it.",
-		"dontShowAgain": "Don't show again in this session",
+		"dontShowAgain": "Don’t show again in this session",
 		"rotate": "Rotate Parameters",
 		"rotated": "Successfully rotated device parameters"
 	},
@@ -65,11 +65,11 @@
 		},
 		"refused": {
 			"title": "Grindr Refused Your Session",
-			"description": "Grindr wouldn't refresh your session. Try again, and if it keeps happening, copy the error and report it."
+			"description": "Grindr wouldn’t refresh your session. Try again, and if it keeps happening, copy the error and report it."
 		},
 		"unreachable": {
-			"title": "Can't Connect to Grindr",
-			"description": "We couldn't reach Grindr to refresh your session. Check your internet connection and try again. If this keeps happening, copy the error and report it."
+			"title": "Can’t Connect to Grindr",
+			"description": "We couldn’t reach Grindr to refresh your session. Check your internet connection and try again. If this keeps happening, copy the error and report it."
 		},
 		"detailAfterAttempts_one": "{{detail}} (after {{count}} attempt)",
 		"detailAfterAttempts_other": "{{detail}} (after {{count}} attempts)",
@@ -78,17 +78,17 @@
 		"dismiss": "Dismiss",
 		"tryAgain": "Try Again",
 		"errors": {
-			"tryAgainFailed": "Still can't connect"
+			"tryAgainFailed": "Still can’t connect"
 		}
 	},
 	"sessionRecovery": {
-		"retrying": "Can't reach Grindr — retrying"
+		"retrying": "Can’t reach Grindr — retrying"
 	},
 	"accountStatus": {
 		"banned": {
 			"title": "Your Account Is Banned",
-			"description": "Grindr has banned this account. You can't sign in until the ban is lifted.",
-			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can't sign in until the ban is lifted."
+			"description": "Grindr has banned this account. You can’t sign in until the ban is lifted.",
+			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can’t sign in until the ban is lifted."
 		},
 		"ageVerification": {
 			"title": "Age Verification Required",
@@ -96,12 +96,12 @@
 		},
 		"restricted": {
 			"title": "Account Restricted",
-			"description": "Your account is currently restricted and can't be used. Check the official Grindr app for details."
+			"description": "Your account is currently restricted and can’t be used. Check the official Grindr app for details."
 		},
 		"copied": "Details copied to clipboard"
 	},
 	"storageNotice": {
-		"unavailable": "This device can't keep you signed in. You'll be signed out when the app closes.",
+		"unavailable": "This device can’t keep you signed in. You’ll be signed out when the app closes.",
 		"plainFile": "No secret service found. Your sign-in is kept in a plain file only your user can read."
 	},
 	"entitlementBypass": {
