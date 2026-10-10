@@ -31,7 +31,8 @@ Builds:
       - apt-get install -y -t trixie-backports libclang1-21 libclang-common-21-dev
     output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
     build:
-      - ln -s $(which gradle) src-tauri/gen/android/gradlew
+      - printf '#!/bin/sh\nexec gradle "$@"\n' > src-tauri/gen/android/gradlew
+      - chmod +x src-tauri/gen/android/gradlew
       - ci/fdroid/build-android.sh
     ndk: 29.0.14206865
 
