@@ -7463,7 +7463,7 @@
 						"schema": {
 							"type": "boolean"
 						},
-						"description": "boolean, appears to count unread reactions as unread activity"
+						"description": "boolean. Right after the other participant reacted to the previewed message, `true` and `false` returned the same conversation"
 					}
 				],
 				"requestBody": {
@@ -17464,7 +17464,7 @@
 					},
 					"onlineUntil": {
 						"nullable": true,
-						"description": "unix timestamp in milliseconds or `null`",
+						"description": "unix timestamp in milliseconds or `null`; not sent by `/v1/inbox/conversation`; may be absent",
 						"allOf": [
 							{
 								"$ref": "#/components/schemas/TimestampMs"
@@ -17483,26 +17483,22 @@
 							}
 						],
 						"nullable": true,
-						"description": "[Sexual position ID](/grindr-api/users/profiles#sexual-position-id) or `null`"
+						"description": "[Sexual position ID](/grindr-api/users/profiles#sexual-position-id) or `null`; not sent by `/v1/inbox/conversation`; may be absent"
 					},
 					"isInAList": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "not sent by `/v1/inbox/conversation`; may be absent"
 					},
 					"hasDatingPotential": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "not sent by `/v1/inbox/conversation`; may be absent"
+					},
+					"isOnPrep": {
+						"type": "boolean",
+						"description": "not sent by `/v1/inbox/conversation`; may be absent"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations",
-				"required": [
-					"profileId",
-					"primaryMediaHash",
-					"lastOnline",
-					"onlineUntil",
-					"distanceMetres",
-					"position",
-					"isInAList",
-					"hasDatingPotential"
-				]
+				"x-render-on-tag": "messaging/conversations"
 			},
 			"ConversationPreview": {
 				"type": "object",
@@ -17531,12 +17527,20 @@
 						"type": "integer",
 						"format": "int64",
 						"nullable": true,
-						"description": "long integer, appears to be the [Profile ID](/grindr-api/users/profiles#profilemin) of the profile that last reacted in the conversation, or `null`"
+						"description": "`null` in every observed response, including right after the other participant reacted to the previewed message; not sent by `/v1/inbox/conversation`; may be absent"
+					},
+					"reactionType": {
+						"nullable": true,
+						"description": "`null` in every observed response, including right after a reaction to the previewed message; not sent by `/v1/inbox/conversation`; may be absent"
+					},
+					"reactionTimestamp": {
+						"nullable": true,
+						"description": "`null` in every observed response, including right after a reaction to the previewed message; not sent by `/v1/inbox/conversation`; may be absent"
 					},
 					"unsent": {
 						"type": "boolean",
 						"nullable": true,
-						"description": "boolean, appears to be `true` when the previewed message was unsent, may be absent"
+						"description": "may be absent; not sent in any observed response. Once the last message is unsent, `preview` itself is `null`."
 					},
 					"type": {
 						"$ref": "#/components/schemas/MessageType"
@@ -17549,75 +17553,52 @@
 						"nullable": true
 					},
 					"url": {
+						"type": "string",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `Image`, the image's [media hash](/grindr-api/media/public-cdn-files), not a URL; `null` for `Text`, `Location`, `Audio`, `Album` and `AlbumContentReply`"
 					},
 					"lat": {
 						"type": "number",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `Location`, the shared latitude; otherwise `null`"
 					},
 					"lon": {
 						"type": "number",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `Location`, the shared longitude; otherwise `null`"
 					},
 					"albumId": {
 						"type": "integer",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `Album` and `AlbumContentReply`, the album ID; otherwise `null`"
 					},
 					"albumContentId": {
+						"type": "integer",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `AlbumContentReply`, the ID of the album content replied to; otherwise `null`"
 					},
 					"albumContentReply": {
+						"type": "string",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `AlbumContentReply`, the reply text; otherwise `null`"
 					},
 					"duration": {
 						"type": "integer",
 						"format": "int64",
 						"nullable": true,
-						"description": "appears to be null"
+						"description": "for `Audio`, the `length` the audio was uploaded with, in milliseconds; otherwise `null`"
 					},
 					"imageHash": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "public media hash or `null`; `null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`"
 					},
 					"photoContentReply": {
 						"nullable": true,
-						"description": "appears to be null"
-					},
-					"rightNowStatus": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/RightNowAttributionStatus"
-							}
-						],
-						"nullable": true,
-						"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
+						"description": "`null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`; not yet observed non-null"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations",
-				"required": [
-					"conversationId",
-					"messageId",
-					"chat1MessageId",
-					"senderId",
-					"type",
-					"chat1Type",
-					"text",
-					"url",
-					"lat",
-					"lon",
-					"albumId",
-					"albumContentId",
-					"albumContentReply",
-					"duration",
-					"imageHash",
-					"photoContentReply"
-				]
+				"x-render-on-tag": "messaging/conversations"
 			},
 			"ConversationData": {
 				"type": "object",
@@ -17652,7 +17633,7 @@
 							}
 						],
 						"nullable": true,
-						"description": "[Conversation preview](/grindr-api/messaging/conversations#conversationpreview) or `null` (e.g. a partial conversation with no message)"
+						"description": "[Conversation preview](/grindr-api/messaging/conversations#conversationpreview) or `null` (e.g. a partial conversation with no message, or once the last message was unsent)"
 					},
 					"muted": {
 						"type": "boolean"
@@ -17664,7 +17645,8 @@
 						"type": "boolean"
 					},
 					"context": {
-						"nullable": true
+						"nullable": true,
+						"description": "`null` in every observed response"
 					},
 					"onlineUntil": {
 						"nullable": true,
@@ -17681,27 +17663,28 @@
 							}
 						]
 					},
+					"rightNowStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowAttributionStatus"
+							}
+						],
+						"nullable": true,
+						"description": "Right Now attribution status, e.g. `\"NONE\"`"
+					},
 					"hasUnreadThrob": {
 						"type": "boolean"
+					},
+					"isTopConnection": {
+						"type": "boolean",
+						"description": "not sent by `/v1/inbox/conversation`; may be absent"
+					},
+					"smartLabel": {
+						"nullable": true,
+						"description": "`null` in every observed response; not sent by `/v1/inbox/conversation`; may be absent"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations",
-				"required": [
-					"conversationId",
-					"name",
-					"participants",
-					"lastActivityTimestamp",
-					"unreadCount",
-					"preview",
-					"muted",
-					"pinned",
-					"favorite",
-					"context",
-					"onlineUntil",
-					"translatable",
-					"rightNow",
-					"hasUnreadThrob"
-				]
+				"x-render-on-tag": "messaging/conversations"
 			},
 			"Conversation": {
 				"type": "object",
@@ -17852,7 +17835,7 @@
 					},
 					"includeReactionUnreads": {
 						"type": "boolean",
-						"description": "boolean, appears to count unread reactions as unread activity, optional"
+						"description": "boolean, optional. With `unreadOnly`, a conversation whose only new activity is the other participant's reaction to your message came back with neither `true` nor `false`"
 					}
 				},
 				"x-render-on-tag": "messaging/conversations",
@@ -17896,14 +17879,7 @@
 						"description": "integer, e.g. `2`; `null` or absent on the last page"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations",
-				"required": [
-					"entries",
-					"showsFreeHeaderLabel",
-					"totalFullConversations",
-					"totalPartialConversations",
-					"maxDisplayLockCount"
-				]
+				"x-render-on-tag": "messaging/conversations"
 			},
 			"MessageReaction": {
 				"type": "object",
