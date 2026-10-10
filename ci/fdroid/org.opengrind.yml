@@ -28,17 +28,40 @@ Builds:
     sudo:
       - apt-get update
       - apt-get install -y gcc libc-dev rustup
-      - apt-get install -y -t trixie-backports libclang1-21 libclang-common-21-dev
-    output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
+      - apt-get install -y -t trixie-backports libclang1-${libclangMajor} libclang-common-${libclangMajor}-dev
+      - curl -fsSL -o /tmp/node.tar.gz https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-linux-x64.tar.gz
+      - echo "${nodeSha256}  /tmp/node.tar.gz" | sha256sum -c -
+      - tar -xzf /tmp/node.tar.gz -C /opt
+      - curl -fsSL -o /tmp/bun.zip https://github.com/oven-sh/bun/releases/download/bun-v${bunVersion}/bun-linux-x64.zip
+      - echo "${bunSha256}  /tmp/bun.zip" | sha256sum -c -
+      - unzip -q /tmp/bun.zip -d /opt
+    output: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
+    prebuild:
+      - sdkmanager "platforms;android-${compileSdk}" "build-tools;${buildTools}" "cmake;${cmakeVersion}"
+      - rustup toolchain install ${rustVersion} --profile minimal --target aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
     build:
-      - printf '#!/bin/sh\nexec gradle "$@"\n' > src-tauri/gen/android/gradlew
-      - chmod +x src-tauri/gen/android/gradlew
-      - ci/fdroid/build-android.sh
-    ndk: 29.0.14206865
+      - unset SOURCE_DATE_EPOCH
+      - export CARGO_HOME=$HOME/.cargo JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - export ANDROID_HOME=$$SDK$$ ANDROID_SDK_ROOT=$$SDK$$
+      - export ANDROID_NDK_HOME=$$NDK$$ ANDROID_NDK_ROOT=$$NDK$$ NDK_HOME=$$NDK$$
+      - export LIBCLANG_PATH=/usr/lib/llvm-${libclangMajor}/lib CMAKE_GENERATOR=Ninja
+      - export NODE_OPTIONS=--max-old-space-size=4096
+      - export PATH=$$SDK$$/build-tools/${buildTools}:$$SDK$$/cmake/${cmakeVersion}/bin:$CARGO_HOME/bin:/opt/bun-linux-x64:/opt/node-v${nodeVersion}-linux-x64/bin:$JAVA_HOME/bin:$PATH
+      - ROOT=$(pwd -P)
+      - export RUSTFLAGS="--remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=$ROOT=/open-grind"
+      - export CFLAGS="-ffile-prefix-map=$CARGO_HOME=/cargo -ffile-prefix-map=$ROOT=/open-grind"
+      - export CXXFLAGS="$CFLAGS"
+      - bun run patch-deps
+      - export GRADLE_USER_HOME=$HOME/.gradle-opengrind
+      - mkdir -p $GRADLE_USER_HOME
+      - echo "android.aapt2FromMavenOverride=$$SDK$$/build-tools/${buildTools}/aapt2" > $GRADLE_USER_HOME/gradle.properties
+      - bun ci
+      - bun run tauri android build --apk
+    ndk: ${ndkVersion}
 
 AllowedAPKSigningKeys: 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
 
-MaintainerNotes: ci/fdroid/build-android.sh pins the release build's toolchain.
+MaintainerNotes: Mirrors the Nix release build's toolchain so the APK reproduces.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$

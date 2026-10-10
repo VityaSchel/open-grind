@@ -35,20 +35,84 @@ const readConf = async (commit: string): Promise<TauriConf> =>
 		await $`git -C ${root} show ${`${commit}:src-tauri/tauri.conf.json`}`.text(),
 	);
 
-const recipe = ({
+const readProperties = async (file: string): Promise<Map<string, string>> =>
+	new Map(
+		(await Bun.file(path.join(root, file)).text())
+			.split("\n")
+			.filter((line) => !line.startsWith("#") && line.includes("="))
+			.map((line) => {
+				const separator = line.indexOf("=");
+				return [line.slice(0, separator), line.slice(separator + 1)];
+			}),
+	);
+
+const requireKey = (properties: Map<string, string>, key: string): string => {
+	const value = properties.get(key);
+	if (!value) throw new Error(`no ${key} in the toolchain pins`);
+	return value;
+};
+
+const toolchainInputs = [
+	"flake.lock",
+	"rust-toolchain.toml",
+	"src-tauri/gen/android/gradle.properties",
+];
+
+const readToolchain = async (
+	commit: string,
+): Promise<Record<string, string>> => {
+	const changed = (
+		await $`git -C ${root} diff --name-only ${commit} -- ${toolchainInputs}`.text()
+	).trim();
+	if (changed) {
+		throw new Error(
+			`${commit} builds with a different toolchain (${changed.replaceAll("\n", ", ")}); render its recipe from a checkout of it`,
+		);
+	}
+	const pins = await readProperties("ci/fdroid/toolchain.properties");
+	const android = await readProperties(
+		"src-tauri/gen/android/gradle.properties",
+	);
+	const rustVersion = (
+		await Bun.file(path.join(root, "rust-toolchain.toml")).text()
+	).match(/^channel = "(.+)"$/m)?.[1];
+	if (!rustVersion) throw new Error("rust-toolchain.toml has no channel");
+	return {
+		nodeVersion: requireKey(pins, "node.version"),
+		nodeSha256: requireKey(pins, "node.sha256"),
+		bunVersion: requireKey(pins, "bun.version"),
+		bunSha256: requireKey(pins, "bun.sha256"),
+		libclangMajor: requireKey(pins, "libclang.version").split(".")[0],
+		rustVersion,
+		compileSdk: requireKey(android, "opengrind.android.compileSdk"),
+		buildTools: requireKey(android, "opengrind.android.buildTools"),
+		cmakeVersion: requireKey(android, "opengrind.android.cmake"),
+		ndkVersion: requireKey(android, "opengrind.android.ndk"),
+	};
+};
+
+const recipe = async ({
 	commit,
 	conf,
 }: {
 	commit: string;
 	conf: TauriConf;
-}): string =>
-	recipeTemplate
-		.replaceAll("${versionName}", conf.version)
-		.replaceAll(
-			"${versionCode}",
-			conf.bundle.android.versionCode.toString(),
-		)
-		.replaceAll("${commit}", commit);
+}): Promise<string> => {
+	const values = {
+		versionName: conf.version,
+		versionCode: conf.bundle.android.versionCode.toString(),
+		commit,
+		...(await readToolchain(commit)),
+	};
+	const rendered = Object.entries(values).reduce(
+		(text, [key, value]) => text.replaceAll(`\${${key}}`, value),
+		recipeTemplate,
+	);
+	const unfilled = rendered.match(/\$\{[A-Za-z0-9]+\}/);
+	if (unfilled)
+		throw new Error(`recipe template leaves ${unfilled[0]} unset`);
+	return rendered;
+};
 
 const withoutReferenceBinary = (rendered: string): string =>
 	rendered.replace(/^Binaries:.*\n/m, "");
@@ -57,7 +121,9 @@ if (process.argv[2] === "emit") {
 	const ref = process.argv[3];
 	if (!ref) throw new Error("usage: fdroid.ts emit <tag|commit>");
 	const commit = await resolveCommit(ref);
-	process.stdout.write(recipe({ commit, conf: await readConf(commit) }));
+	process.stdout.write(
+		await recipe({ commit, conf: await readConf(commit) }),
+	);
 	process.exit(0);
 }
 
@@ -71,7 +137,7 @@ console.log(
 const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
 await Bun.write(
 	path.join(fdd, "metadata", `${APPID}.yml`),
-	withoutReferenceBinary(recipe({ commit: sha, conf })),
+	withoutReferenceBinary(await recipe({ commit: sha, conf })),
 );
 
 await $`docker pull ${IMAGE}`;
