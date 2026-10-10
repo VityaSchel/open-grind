@@ -187,7 +187,7 @@ describe("ConversationsPagingTail", () => {
 		mount({ loadPage });
 		await vi.advanceTimersByTimeAsync(0);
 		expect(screen.getByRole("status").textContent?.trim()).toBe(
-			"Failed to load more conversations",
+			"Couldn’t load more conversations",
 		);
 
 		screen.getByRole("button", { name: "Try again" }).click();

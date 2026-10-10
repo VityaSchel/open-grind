@@ -5,6 +5,8 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Drafts } from "$lib/chat/drafts.svelte";
+import { setCountFormatter } from "$lib/i18n";
+import { restoreCountFormatter } from "$lib/i18n/fixtures/count-formatter";
 
 const { conversations, currentPage, playHapticMock } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
@@ -25,6 +27,7 @@ import Conversation from "./Conversation.svelte";
 
 const DESCRIPTION = '[data-slot="item-description"]';
 const DRAFT_PREFIX = '[data-slot="conversation-draft-prefix"]';
+const UNREAD_BADGE = '[data-slot="badge"]';
 const MENU_TRIGGER = '[data-slot="context-menu-trigger"]';
 const CONVERSATION_ID = "a:1";
 const BITS_HOLD_MS = 750;
@@ -223,6 +226,27 @@ describe("Conversation preview line", () => {
 		const { container } = renderRow(textPreview("hello there"));
 
 		expect(previewLine(container)).toBe("hello there");
+	});
+});
+
+describe("Conversation unread badge", () => {
+	beforeEach(() => {
+		conversations.drafts = new Drafts();
+	});
+
+	afterEach(() => {
+		cleanup();
+		restoreCountFormatter();
+	});
+
+	it("prints the unread count with the count formatter", () => {
+		const bracketed = (value: number) => `[${value}]`;
+		setCountFormatter(({ count }) => bracketed(count));
+		const { container } = renderRow(textPreview("hello there"), 12);
+
+		expect(container.querySelector(UNREAD_BADGE)?.textContent?.trim()).toBe(
+			bracketed(12),
+		);
 	});
 });
 

@@ -656,7 +656,7 @@ describe("ConversationsState paging failures", () => {
 		expect(state.paging.running).toBe(false);
 		expect(showErrorToastMock).not.toHaveBeenCalledWith(
 			expect.objectContaining({
-				label: "Failed to load more conversations",
+				label: "Couldn’t load more conversations",
 			}),
 		);
 	});

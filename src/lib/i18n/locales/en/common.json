@@ -3,6 +3,7 @@
 		"close": "Close",
 		"cancel": "Cancel",
 		"continue": "Continue",
+		"delete": "Delete",
 		"retry": "Try again",
 		"copyError": "Copy error details",
 		"save": "Save"

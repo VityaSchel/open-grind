@@ -17,6 +17,9 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Item from "$lib/components/ui/item";
 	import { playHaptic } from "$lib/haptics";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
+	import Rich from "$lib/i18n/Rich.svelte";
 	import {
 		previewIsUserText,
 		previewLabel,
@@ -118,18 +121,20 @@
 				]}
 			>
 				{#if draft !== ""}
-					<span
-						data-slot="conversation-draft-prefix"
-						class="font-bold text-primary"
-						translate="yes">Draft:&nbsp;</span
-					>{draft}
+					<Rich key="chat.conversations.row.draft" {draft}>
+						{#snippet draftPrefix(text)}<span
+								data-slot="conversation-draft-prefix"
+								class="font-bold text-primary"
+								translate="yes">{text}</span
+							>{/snippet}
+					</Rich>
 				{:else if previewText !== null}
 					{previewText}
 				{:else}
 					<span
 						class="font-normal tracking-tight text-muted-foreground italic"
 					>
-						Preview not available
+						{t("chat.conversations.row.previewUnavailable")}
 					</span>
 				{/if}
 			</Item.Description>
@@ -155,7 +160,7 @@
 							: "default"}
 						class="px-count-badge @max-row:hidden"
 					>
-						{conversation.data.unreadCount}
+						{formatInteger(conversation.data.unreadCount)}
 					</Badge>
 				{/if}
 			</Item.Actions>
@@ -185,19 +190,19 @@
 				<ContextMenu.Item onSelect={togglePinned}>
 					{#if conversation.data.pinned}
 						<PushPinSlashIcon weight="fill" class="size-5" />
-						Unpin
+						{t("chat.conversations.row.actions.unpin")}
 					{:else}
 						<PushPinIcon weight="fill" class="size-5" />
-						Pin
+						{t("chat.conversations.row.actions.pin")}
 					{/if}
 				</ContextMenu.Item>
 				<ContextMenu.Item onSelect={toggleMuted}>
 					{#if conversation.data.muted}
 						<BellIcon weight="fill" class="size-5" />
-						Unmute
+						{t("chat.conversations.row.actions.unmute")}
 					{:else}
 						<BellSimpleSlashIcon weight="fill" class="size-5" />
-						Mute
+						{t("chat.conversations.row.actions.mute")}
 					{/if}
 				</ContextMenu.Item>
 				<ContextMenu.Separator />
@@ -206,7 +211,7 @@
 					onSelect={onRequestDelete}
 				>
 					<TrashIcon class="size-5" />
-					Delete
+					{t("common.actions.delete")}
 				</ContextMenu.Item>
 			</ContextMenu.Content>
 		{/if}

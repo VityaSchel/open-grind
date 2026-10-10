@@ -130,7 +130,11 @@ export interface Messages {
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;
+	"chat.conversations.a11y.loadingMore": undefined;
+	"chat.conversations.empty.filteredDescription": undefined;
+	"chat.conversations.empty.title": undefined;
 	"chat.conversations.errors.deleteFailed": undefined;
+	"chat.conversations.errors.loadMoreFailed": undefined;
 	"chat.conversations.errors.markReadFailed": undefined;
 	"chat.conversations.errors.muteFailed": undefined;
 	"chat.conversations.errors.pinFailed": undefined;
@@ -138,6 +142,12 @@ export interface Messages {
 	"chat.conversations.errors.syncFailed": undefined;
 	"chat.conversations.errors.unmuteFailed": undefined;
 	"chat.conversations.errors.unpinFailed": undefined;
+	"chat.conversations.row.actions.mute": undefined;
+	"chat.conversations.row.actions.pin": undefined;
+	"chat.conversations.row.actions.unmute": undefined;
+	"chat.conversations.row.actions.unpin": undefined;
+	"chat.conversations.row.previewUnavailable": undefined;
+	"chat.layout.selectConversation": undefined;
 	"chat.messagePreview.album": undefined;
 	"chat.messagePreview.expiringImage": undefined;
 	"chat.messagePreview.expiringVideo": undefined;
@@ -156,6 +166,7 @@ export interface Messages {
 	"common.actions.close": undefined;
 	"common.actions.continue": undefined;
 	"common.actions.copyError": undefined;
+	"common.actions.delete": undefined;
 	"common.actions.retry": undefined;
 	"common.actions.save": undefined;
 	"common.carousel.a11y.next": undefined;
@@ -509,6 +520,8 @@ export interface RichMessages {
 	"browse.rightNow.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.attachments.location.unimplemented": { issueLink: "placeholder" };
 	"chat.composer.voiceMessage.unimplemented": { issueLink: "placeholder" };
+	"chat.conversations.empty.description": { gridLink: "tag" };
+	"chat.conversations.row.draft": { draft: "placeholder"; draftPrefix: "tag" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: "placeholder" };

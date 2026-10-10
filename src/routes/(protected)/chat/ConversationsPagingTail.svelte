@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
+	import { t } from "$lib/i18n";
 	import { observeIntersection } from "$lib/util/observe-intersection";
 	import type { InboxPaging } from "$lib/chat/inbox-paging.svelte";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
@@ -20,9 +21,9 @@
 
 <div role="status" class="sr-only">
 	{paging.running
-		? "Loading more conversations"
+		? t("chat.conversations.a11y.loadingMore")
 		: paging.failure
-			? "Failed to load more conversations"
+			? t("chat.conversations.errors.loadMoreFailed")
 			: ""}
 </div>
 {#if listEmpty && !hasMore}

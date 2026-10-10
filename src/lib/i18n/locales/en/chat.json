@@ -1,4 +1,7 @@
 {
+	"layout": {
+		"selectConversation": "Select a conversation to start chatting"
+	},
 	"messagePreview": {
 		"album": "Album",
 		"expiringImage": "Expiring image",
@@ -22,6 +25,9 @@
 		}
 	},
 	"conversations": {
+		"a11y": {
+			"loadingMore": "Loading more conversations"
+		},
 		"errors": {
 			"refreshFailed": "Couldn’t refresh conversations",
 			"syncFailed": "Couldn’t update the inbox",
@@ -30,7 +36,23 @@
 			"unpinFailed": "Couldn’t unpin conversation",
 			"muteFailed": "Couldn’t mute conversation",
 			"unmuteFailed": "Couldn’t unmute conversation",
-			"deleteFailed": "Couldn’t delete conversation"
+			"deleteFailed": "Couldn’t delete conversation",
+			"loadMoreFailed": "Couldn’t load more conversations"
+		},
+		"empty": {
+			"title": "No Conversations Yet",
+			"description": "Browse <gridLink>Grid</gridLink> to find people to chat with.",
+			"filteredDescription": "No conversations match these filters."
+		},
+		"row": {
+			"draft": "<draftPrefix>Draft:</draftPrefix> {{draft}}",
+			"previewUnavailable": "Preview not available",
+			"actions": {
+				"pin": "Pin",
+				"unpin": "Unpin",
+				"mute": "Mute",
+				"unmute": "Unmute"
+			}
 		}
 	},
 	"composer": {
