@@ -27,5 +27,6 @@ Self-hosted Forgejo runners on rented ephemeral VMs.
 | `verify.ts`                | Every artifact, one copy per box in `BOXES`/`ARM_BOXES`; either may be empty                                           |
 | `sign.ts`                  | Sign. APK: apksigner and minisign; AAB: code transparency, then jarsigner with the Play upload key; the rest: minisign |
 | `play-upload.sh`           | Upload a signed AAB, its release notes and the store listing to Google Play with fastlane                              |
+| `play-metadata.sh`         | Derive the Play store listing from `fastlane/metadata`: Play short description and a source code link                  |
 | `cache.ts`, `rust-env.sh`  | Check runner caches                                                                                                    |
 | `check-image.sh`           | The check runner image                                                                                                 |
