@@ -242,7 +242,7 @@ describe("SessionErrorAlert", () => {
 		render(SessionErrorAlert);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Copy error" }),
+			screen.getByRole("button", { name: "Copy Error" }),
 		);
 
 		expect(
@@ -334,7 +334,7 @@ describe("SessionErrorAlert", () => {
 		sessionErrorState.kind = "Api";
 		sessionErrorState.attempts = 3;
 		render(SessionErrorAlert);
-		const copyButton = screen.getByRole("button", { name: "Copy error" });
+		const copyButton = screen.getByRole("button", { name: "Copy Error" });
 		await setLocale({ locale: "en-XA" });
 
 		const dialog = screen.getByRole("alertdialog");

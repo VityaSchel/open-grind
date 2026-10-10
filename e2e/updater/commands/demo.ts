@@ -66,7 +66,7 @@ running  v${oldVersion}   offering  v${newVersion}${failMode ? `   FAILING: ${fa
 app log  ${appLog}
 
 what to do:
-  1. press "Get started" — the update checkbox is already on
+  1. press "Get Started" — the update checkbox is already on
   2. a toast drops in from the top — tap it to download
   3. it verifies, swaps itself, quits and comes back on its own
   4. the only toast now is "Updated to v${newVersion}" — tapping it opens the changelog

@@ -23,7 +23,7 @@ const profileActionBar = (page: Page) =>
 		.filter({ has: page.getByRole("link", { name: "Write a message…" }) });
 
 const saveButton = (page: Page) =>
-	page.getByRole("button", { name: "Save changes" });
+	page.getByRole("button", { name: "Save Changes" });
 
 const profileDisplayName = (page: Page) =>
 	page.getByRole("textbox", { name: "Display name" });

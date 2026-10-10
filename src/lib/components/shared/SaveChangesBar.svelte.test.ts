@@ -18,14 +18,14 @@ describe("SaveChangesBar", () => {
 			props: { saving: false, onclick: vi.fn() },
 		});
 		const button = screen.getByRole<HTMLButtonElement>("button", {
-			name: "Save changes",
+			name: "Save Changes",
 		});
 		expect(button.disabled).toBe(false);
 
 		await view.rerender({ saving: true });
 
 		expect(button.disabled).toBe(true);
-		expect(button.textContent.trim()).toBe("Save changes");
+		expect(button.textContent.trim()).toBe("Save Changes");
 	});
 
 	it("renames the button when the locale changes", async () => {

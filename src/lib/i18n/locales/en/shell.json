@@ -1,12 +1,12 @@
 {
 	"error": {
-		"pageNotFound": "Page not found",
+		"pageNotFound": "Page Not Found",
 		"title": "Unexpected Error",
 		"description": "An unexpected error has occurred.",
 		"refresh": "Refresh",
-		"goHome": "Go to home page",
+		"goHome": "Go to Home Page",
 		"copied": "Error message copied to clipboard",
-		"reportIssue": "Report an issue"
+		"reportIssue": "Report an Issue"
 	},
 	"subpageScreen": {
 		"a11y": {
@@ -19,7 +19,7 @@
 		}
 	},
 	"saveChangesBar": {
-		"save": "Save changes"
+		"save": "Save Changes"
 	},
 	"dataRefreshControl": {
 		"pullHint": "Pull to refresh",
@@ -28,13 +28,13 @@
 	},
 	"scrollToTopButton": {
 		"a11y": {
-			"label": "Scroll to top"
+			"label": "Scroll to Top"
 		}
 	},
 	"toaster": {
 		"a11y": {
 			"region": "Notifications",
-			"close": "Close toast"
+			"close": "Close Toast"
 		}
 	},
 	"navBar": {
@@ -69,7 +69,7 @@
 		"tagline": "Unofficial Grindr client",
 		"description": "Cross-platform, free, libre, ad-free, tracker-free, privacy-centered and community-driven",
 		"addToAppsMenu": "Add Open Grind to your apps menu",
-		"start": "Get started",
+		"start": "Get Started",
 		"errors": {
 			"finishSetupFailed": "Couldn't finish setup"
 		}

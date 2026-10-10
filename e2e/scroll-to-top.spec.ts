@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { ensureGridLocation, flownIn, installTauriShim } from "./support/app";
 
-const BUTTON = '[aria-label="Scroll to top"]';
+const BUTTON = '[aria-label="Scroll to Top"]';
 const NAVBAR_PILL = "nav .links";
 const PROFILE_LINK = 'a[href^="/profile/"]';
 const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';

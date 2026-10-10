@@ -113,7 +113,7 @@ test("the report link on the 404 page is a plain link, not a button", async ({
 	page,
 }) => {
 	await page.goto("/definitely-not-a-route");
-	const report = page.getByRole("link", { name: "Report an issue" });
+	const report = page.getByRole("link", { name: "Report an Issue" });
 	await report.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 	await expect(page.getByRole("button").filter({ has: report })).toHaveCount(

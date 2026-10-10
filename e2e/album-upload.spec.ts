@@ -23,7 +23,7 @@ const TINY_PNG =
 
 const TINY_MP4 = "AAAAGGZ0eXBpc29tAAACAGlzb21pc28y";
 
-const SAVE = "Save changes";
+const SAVE = "Save Changes";
 
 function photoFile(name: string) {
 	return {

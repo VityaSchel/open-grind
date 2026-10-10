@@ -4,7 +4,7 @@
 		"cancel": "Cancel",
 		"continue": "Continue",
 		"retry": "Retry",
-		"copyError": "Copy error",
+		"copyError": "Copy Error",
 		"save": "Save"
 	},
 	"time": {
@@ -28,8 +28,8 @@
 	"someone": "Someone",
 	"carousel": {
 		"a11y": {
-			"previous": "Previous slide",
-			"next": "Next slide"
+			"previous": "Previous Slide",
+			"next": "Next Slide"
 		}
 	},
 	"commandDialog": {

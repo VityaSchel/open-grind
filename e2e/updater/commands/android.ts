@@ -72,7 +72,7 @@ export async function android({
 	const steps = [
 		...(keepData
 			? []
-			: ['press "Get started" — the update checkbox is already on']),
+			: ['press "Get Started" — the update checkbox is already on']),
 		"a toast drops in from the top — tap it to download",
 		'"Verifying the update…" only shows when a resumed download has to\n     re-hash the part it already had; a fresh download verifies in ~60ms',
 		`tap "Update is downloaded"${

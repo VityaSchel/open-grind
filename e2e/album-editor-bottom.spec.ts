@@ -78,7 +78,7 @@ async function expectSaveBarRestsBelow({
 	lastContent: Locator;
 }) {
 	const bar = page.locator(SAVE_BAR);
-	const save = page.getByRole("button", { name: "Save changes" });
+	const save = page.getByRole("button", { name: "Save Changes" });
 	const rowGap = await bar.evaluate((element) =>
 		parseFloat(getComputedStyle(element.parentElement!).rowGap),
 	);

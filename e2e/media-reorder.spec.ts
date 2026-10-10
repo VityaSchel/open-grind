@@ -136,9 +136,9 @@ test.describe("media reorder", () => {
 
 		const reordered = await mediaOrder(page);
 		expect(reordered).not.toEqual(before);
-		await page.getByRole("button", { name: "Save changes" }).click();
+		await page.getByRole("button", { name: "Save Changes" }).click();
 		await expect(
-			page.getByRole("button", { name: "Save changes" }),
+			page.getByRole("button", { name: "Save Changes" }),
 		).toBeHidden({ timeout: 30_000 });
 
 		await back(page);
@@ -168,7 +168,7 @@ test.describe("media reorder", () => {
 
 		expect(await mediaOrder(page)).toEqual(before);
 		await expect(
-			page.getByRole("button", { name: "Save changes" }),
+			page.getByRole("button", { name: "Save Changes" }),
 			"a no-op drag leaves nothing to save",
 		).toBeHidden();
 	});

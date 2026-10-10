@@ -33,7 +33,7 @@ async function mountWithScroller({ scrollTop = 0 } = {}) {
 
 	const button = () =>
 		view.container.querySelector<HTMLElement>(
-			'[aria-label="Scroll to top"]',
+			'[aria-label="Scroll to Top"]',
 		);
 	return {
 		scroller,

@@ -42,7 +42,7 @@ afterEach(async () => {
 });
 
 function startButton() {
-	return screen.getByRole("button", { name: "Get started" });
+	return screen.getByRole("button", { name: "Get Started" });
 }
 
 describe("Onboarding page", () => {
@@ -62,7 +62,7 @@ describe("Onboarding page", () => {
 			"",
 			"Add Open Grind to your apps menu",
 			"",
-			"Get started",
+			"Get Started",
 		]);
 	});
 

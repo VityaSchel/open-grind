@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { installTauriShim } from "./support/app";
 
-const SAVE = "Save changes";
+const SAVE = "Save Changes";
 
 test("editing the profile arms the save button and saving disarms it", async ({
 	page,
