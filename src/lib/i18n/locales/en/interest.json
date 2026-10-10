@@ -18,7 +18,7 @@
 			"description": "When someone views your profile, they'll show up here."
 		},
 		"untracked": {
-			"title": "Profile viewers aren't tracked",
+			"title": "Profile Viewers Aren't Tracked",
 			"description": "Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client.",
 			"enable": "Enable"
 		},

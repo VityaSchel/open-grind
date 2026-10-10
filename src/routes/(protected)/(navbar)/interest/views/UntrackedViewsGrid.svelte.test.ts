@@ -27,7 +27,7 @@ describe("UntrackedViewsGrid", () => {
 		const { container } = renderUntracked();
 
 		expect(container.textContent).toBe(
-			" Profile viewers aren't tracked Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client. Enable",
+			" Profile Viewers Aren't Tracked Your profile viewers are not being recorded, because you have toggled Viewed Me List off in the official app. Press the button below to enable this feature and update this setting in the official client. Enable",
 		);
 		expect(enableButton().textContent).toBe("Enable");
 	});
