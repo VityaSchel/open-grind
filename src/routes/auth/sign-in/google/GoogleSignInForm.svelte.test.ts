@@ -139,7 +139,7 @@ describe("GoogleSignInForm", () => {
 		expect(releasePage).toHaveProperty("href", COMPANION_RELEASES);
 		expect(button("Install")).toHaveProperty("disabled", false);
 		expect(button("Install").getAttribute("aria-busy")).toBe("false");
-		expect(screen.getByRole("link", { name: "Go back" })).toBeTruthy();
+		expect(screen.getByRole("link", { name: "Go Back" })).toBeTruthy();
 		expect(button("paste the OAuth token manually")).toBeTruthy();
 		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
 		expect(screen.queryByLabelText("Token")).toBeNull();
@@ -434,7 +434,7 @@ describe("GoogleSignInForm", () => {
 		try {
 			const { screen } = await opened();
 
-			expect(screen.getByText("Signing you in")).toBeTruthy();
+			expect(screen.getByText("Signing You In")).toBeTruthy();
 			expect(
 				screen.queryByRole("button", { name: "Install" }),
 			).toBeNull();
@@ -451,7 +451,7 @@ describe("GoogleSignInForm", () => {
 		await fireEvent.input(screen.getByLabelText("Token"), {
 			target: { value: "  pasted-token \n" },
 		});
-		await fireEvent.click(button("Sign in"));
+		await fireEvent.click(button("Sign In"));
 		await settled();
 
 		expect(callMethodMock).toHaveBeenCalledWith(
@@ -708,7 +708,7 @@ describe("GoogleSignInForm", () => {
 		expect(screen.getAllByRole("listitem").map(textOf)).toEqual([
 			"Install the Open Grind Google OAuth app",
 			"Sign in with Google in the Open Grind Google OAuth app and copy the token",
-			'Return to this screen, paste it and tap "Sign in"',
+			'Return to this screen, paste it and tap "Sign In"',
 		]);
 		expect(screen.queryByRole("button", { name: /^Install/ })).toBeNull();
 

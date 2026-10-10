@@ -87,7 +87,7 @@ async function submitSignIn() {
 	await fireEvent.input(screen.getByLabelText("Password"), {
 		target: { value: "hunter2" },
 	});
-	await fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+	await fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
 	await settle();
 }
 
@@ -174,7 +174,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -192,7 +192,7 @@ describe("SignInForm", () => {
 			render(SignInForm);
 
 			await fireEvent.click(
-				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+				screen.getByRole("button", { name: `Sign In with ${vendor}` }),
 			);
 			await settle();
 
@@ -209,7 +209,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -226,7 +226,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -244,7 +244,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -262,7 +262,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -282,7 +282,7 @@ describe("SignInForm", () => {
 		render(SignInForm);
 
 		await fireEvent.click(
-			screen.getByRole("button", { name: "Sign in with Google" }),
+			screen.getByRole("button", { name: "Sign In with Google" }),
 		);
 		await settle();
 
@@ -301,7 +301,7 @@ describe("SignInForm", () => {
 			render(SignInForm);
 
 			await fireEvent.click(
-				screen.getByRole("button", { name: "Sign in with Facebook" }),
+				screen.getByRole("button", { name: "Sign In with Facebook" }),
 			);
 			await settle();
 
@@ -320,7 +320,7 @@ describe("SignInForm", () => {
 			render(SignInForm);
 
 			await fireEvent.click(
-				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+				screen.getByRole("button", { name: `Sign In with ${vendor}` }),
 			);
 			await settle();
 
@@ -340,12 +340,12 @@ describe("SignInForm", () => {
 			render(SignInForm);
 
 			await fireEvent.click(
-				screen.getByRole("button", { name: `Sign in with ${vendor}` }),
+				screen.getByRole("button", { name: `Sign In with ${vendor}` }),
 			);
 			await settle();
 
 			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
-				"sign-in flow ended unexpectedly",
+				"Sign-in flow ended unexpectedly",
 			);
 		},
 	);
@@ -356,11 +356,11 @@ describe("SignInForm", () => {
 
 		await submitSignIn();
 
-		const busy = screen.getByRole("button", { name: "Sign in" });
+		const busy = screen.getByRole("button", { name: "Sign In" });
 		expect(busy.getAttribute("aria-busy")).toBe("true");
 		expect(
 			screen
-				.getByRole("button", { name: "Sign in with Google" })
+				.getByRole("button", { name: "Sign In with Google" })
 				.getAttribute("aria-busy"),
 		).toBe("false");
 	});
@@ -370,7 +370,7 @@ describe("SignInForm", () => {
 		async (vendor) => {
 			callMethodMock.mockReturnValue(new Promise(() => {}));
 			render(SignInForm);
-			const name = `Sign in with ${vendor}`;
+			const name = `Sign In with ${vendor}`;
 
 			await fireEvent.click(screen.getByRole("button", { name }));
 			await settle();
@@ -429,13 +429,13 @@ describe("SignInForm", () => {
 const localizedFailures = [
 	{
 		failure: "wrong credentials",
-		button: "Sign in",
+		button: "Sign In",
 		rejects: { sign_in_with_email: invalidCredentials },
 		resolves: { recaptcha_first_party_enabled: false },
 	},
 	{
 		failure: "wrong credentials after a captcha",
-		button: "Sign in",
+		button: "Sign In",
 		rejects: { sign_in_with_email: invalidCredentials },
 		resolves: {
 			recaptcha_first_party_enabled: true,
@@ -444,18 +444,18 @@ const localizedFailures = [
 	},
 	...captchaFailures.map(({ failure, reason }) => ({
 		failure,
-		button: "Sign in",
+		button: "Sign In",
 		...refuseCaptcha(reason),
 	})),
 	...facebookFailures.map(({ failure, marker }) => ({
 		failure,
-		button: "Sign in with Facebook",
+		button: "Sign In with Facebook",
 		rejects: { sign_in_with_facebook: { kind: "Auth", message: marker } },
 		resolves: {},
 	})),
 	{
 		failure: "a sign-in flow that ended unexpectedly",
-		button: "Sign in with Google",
+		button: "Sign In with Google",
 		rejects: {
 			sign_in_with_google: { kind: "Auth", message: signInFlowEnded },
 		},
@@ -527,7 +527,7 @@ describe("SignInForm in the active locale", () => {
 		callMethodMock.mockRejectedValue(new Error("boom"));
 		render(SignInForm);
 		const google = screen.getByRole("button", {
-			name: "Sign in with Google",
+			name: "Sign In with Google",
 		});
 		await setLocale({ locale: "en-XA" });
 
@@ -550,7 +550,7 @@ describe("SignInForm in the active locale", () => {
 			});
 			render(SignInForm);
 			const target = screen.getByRole("button", {
-				name: `Sign in with ${vendor}`,
+				name: `Sign In with ${vendor}`,
 			});
 			await setLocale({ locale: "en-XA" });
 

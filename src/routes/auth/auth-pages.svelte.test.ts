@@ -23,7 +23,7 @@ const pages = [
 	},
 	{
 		route: "/auth/sign-in/google",
-		title: "Sign in with Google",
+		title: "Sign In with Google",
 		load: () => import("./sign-in/google/+page.svelte"),
 	},
 	{

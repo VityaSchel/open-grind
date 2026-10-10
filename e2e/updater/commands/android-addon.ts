@@ -96,7 +96,7 @@ export async function androidAddon({
 	const steps =
 		mode === "install"
 			? [
-					'press "Get Started", then "Sign in with Google"',
+					'press "Get Started", then "Sign In with Google"',
 					'tap "Install"; the button reads "Downloading…" while the toast shows the progress',
 					...(permitted ? [] : [permissionStep]),
 					'the button reads "Installing…"; confirm Android\'s install dialog',
