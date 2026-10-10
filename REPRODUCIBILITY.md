@@ -58,6 +58,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 
 - **Canonical builder:** Linux x86_64; `nix run .#build-android`
 - **Official releases:** multiple providers in `build.yml` CI and F-Droid
+- **F-Droid:** builds use [`ci/fdroid/build-android.sh`](./ci/fdroid/build-android.sh) instead of Nix
 - Cross-compilation table **for Android builds**:
 
     |            | On x86_64   | On arm64                 |

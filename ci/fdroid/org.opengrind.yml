@@ -25,25 +25,17 @@ Builds:
   - versionName: ${versionName}
     versionCode: ${versionCode}
     commit: ${commit}
-    timeout: 14400
     sudo:
       - apt-get update
-      - apt-get install -y nix-bin
-      - mkdir -p /nix/var/nix
-      - chown -R vagrant /nix
+      - apt-get install -y gcc libc-dev rustup
+      - apt-get install -y -t trixie-backports libclang1-${libclangMajor} libclang-common-${libclangMajor}-dev
     output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
-    prebuild:
-      - mkdir -p ~/.config/nix
-      - printf '%s\n' "experimental-features = nix-command flakes" "sandbox = false"
-        > ~/.config/nix/nix.conf
-    build:
-      - ln -s $(which gradle) src-tauri/gen/android/gradlew
-      - export NIX_REMOTE=
-      - nix run .#build-android -- apk
+    build: ci/fdroid/build-android.sh
+    ndk: ${ndkVersion}
 
 AllowedAPKSigningKeys: 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
 
-MaintainerNotes: Built with the project's Nix flake to reproduce the release APK.
+MaintainerNotes: ci/fdroid/build-android.sh mirrors the Nix release toolchain.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$

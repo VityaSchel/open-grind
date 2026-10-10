@@ -35,20 +35,62 @@ const readConf = async (commit: string): Promise<TauriConf> =>
 		await $`git -C ${root} show ${`${commit}:src-tauri/tauri.conf.json`}`.text(),
 	);
 
-const recipe = ({
+const readProperty = async ({
+	commit,
+	file,
+	key,
+}: {
+	commit: string;
+	file: string;
+	key: string;
+}): Promise<string> => {
+	const text = await $`git -C ${root} show ${`${commit}:${file}`}`
+		.quiet()
+		.text()
+		.catch(() => {
+			throw new Error(
+				`${commit} has no ${file}, so its recipe has to inline the build`,
+			);
+		});
+	const value = text.match(
+		new RegExp(`^${key.replaceAll(".", "\\.")}=(.+)$`, "m"),
+	)?.[1];
+	if (!value) throw new Error(`${file} at ${commit} has no ${key}`);
+	return value;
+};
+
+const recipe = async ({
 	commit,
 	conf,
 }: {
 	commit: string;
 	conf: TauriConf;
-}): string =>
-	recipeTemplate
-		.replaceAll("${versionName}", conf.version)
-		.replaceAll(
-			"${versionCode}",
-			conf.bundle.android.versionCode.toString(),
-		)
-		.replaceAll("${commit}", commit);
+}): Promise<string> => {
+	const libclangVersion = await readProperty({
+		commit,
+		file: "ci/fdroid/toolchain.properties",
+		key: "libclang.version",
+	});
+	const values = {
+		versionName: conf.version,
+		versionCode: conf.bundle.android.versionCode.toString(),
+		commit,
+		ndkVersion: await readProperty({
+			commit,
+			file: "src-tauri/gen/android/gradle.properties",
+			key: "opengrind.android.ndk",
+		}),
+		libclangMajor: libclangVersion.split(".")[0],
+	};
+	const rendered = Object.entries(values).reduce(
+		(text, [key, value]) => text.replaceAll(`\${${key}}`, value),
+		recipeTemplate,
+	);
+	const unfilled = rendered.match(/\$\{[A-Za-z0-9]+\}/);
+	if (unfilled)
+		throw new Error(`recipe template leaves ${unfilled[0]} unset`);
+	return rendered;
+};
 
 const withoutReferenceBinary = (rendered: string): string =>
 	rendered.replace(/^Binaries:.*\n/m, "");
@@ -57,7 +99,9 @@ if (process.argv[2] === "emit") {
 	const ref = process.argv[3];
 	if (!ref) throw new Error("usage: fdroid.ts emit <tag|commit>");
 	const commit = await resolveCommit(ref);
-	process.stdout.write(recipe({ commit, conf: await readConf(commit) }));
+	process.stdout.write(
+		await recipe({ commit, conf: await readConf(commit) }),
+	);
 	process.exit(0);
 }
 
@@ -71,7 +115,7 @@ console.log(
 const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
 await Bun.write(
 	path.join(fdd, "metadata", `${APPID}.yml`),
-	withoutReferenceBinary(recipe({ commit: sha, conf })),
+	withoutReferenceBinary(await recipe({ commit: sha, conf })),
 );
 
 await $`docker pull ${IMAGE}`;
