@@ -111,7 +111,7 @@ test("coming back from a chat keeps the swipe track", async ({ page }) => {
 	const tiles = await openGridProfile(page, { nth: 1 });
 
 	await activeProfilePane(page)
-		.getByRole("link", { name: "Write a message..." })
+		.getByRole("link", { name: "Write a message…" })
 		.click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await page.goBack();

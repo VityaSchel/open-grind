@@ -153,6 +153,14 @@ describe("collectMessages", () => {
 			"en/ns.a: is empty and would show as the key; write the text",
 		],
 		[
+			{ a: "Loading..." },
+			"en/ns.a: has three dots; write … (one character) instead",
+		],
+		[
+			{ a: { b: "Search places...." } },
+			"en/ns.a.b: has three dots; write … (one character) instead",
+		],
+		[
 			{ a: 1 },
 			"en/ns.a: must be a string or an object of keys, not a number",
 		],
@@ -195,6 +203,10 @@ describe("collectMessages", () => {
 		]);
 	});
 
+	it.each(["Loading…", "Wait.. for it", "v1.2.3"])("accepts %j", (text) => {
+		expect(errorsOf({ a: text })).toEqual([]);
+	});
+
 	it("rejects files that are not JSON", () => {
 		expect(
 			collectMessages([{ namespace: "ns", text: "{" }]).errors,
@@ -233,6 +245,7 @@ describe("checkTranslation", () => {
 		{ photos: "" },
 		{ photos_zero: "Нет фото" },
 		{ removed: "<i>Удалено</i>" },
+		{ plain: "Архив..." },
 	])("accepts %j", (json) => {
 		expect(check(json).errors).toEqual([]);
 	});

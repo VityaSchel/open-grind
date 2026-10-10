@@ -75,7 +75,7 @@ test.describe("every control has an accessible name", () => {
 
 		await page.locator('[aria-label="Change location"]').click();
 		await page
-			.getByPlaceholder("Search places...")
+			.getByPlaceholder("Search places…")
 			.waitFor({ timeout: 180_000 });
 		await page
 			.getByRole("button", { name: "Selected location" })

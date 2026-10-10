@@ -130,7 +130,7 @@ async function openPabloProfile(page: Page): Promise<void> {
 	const stats = page.getByText("Stats", { exact: true });
 	await visit({ page, path: `/profile/${PABLO_PROFILE_ID}`, ready: stats });
 	const composer = page.locator("nav", {
-		has: page.getByRole("link", { name: "Write a message..." }),
+		has: page.getByRole("link", { name: "Write a message…" }),
 	});
 	const [statsBox, composerBox] = await Promise.all([
 		layoutBox(stats),

@@ -35,7 +35,7 @@
 	"commandDialog": {
 		"a11y": {
 			"title": "Command Palette",
-			"description": "Search for a command to run..."
+			"description": "Search for a command to run…"
 		}
 	},
 	"spinner": {
@@ -78,7 +78,7 @@
 		}
 	},
 	"tags": {
-		"searchPlaceholder": "Search tags..."
+		"searchPlaceholder": "Search tags…"
 	},
 	"profileFields": {
 		"healthPractices": "Health Practices"

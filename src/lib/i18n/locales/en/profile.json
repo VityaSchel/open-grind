@@ -168,7 +168,7 @@
 		}
 	},
 	"bottomNav": {
-		"writeMessage": "Write a message...",
+		"writeMessage": "Write a message…",
 		"a11y": {
 			"navigation": "Chat and tap"
 		}
@@ -236,7 +236,7 @@
 		"a11y": {
 			"description": "A private note about this profile. Only you can see it."
 		},
-		"placeholder": "Note for this profile...",
+		"placeholder": "Note for this profile…",
 		"phoneNumber": {
 			"label": "Phone number",
 			"placeholder": "Optional"

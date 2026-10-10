@@ -20,9 +20,7 @@ const composer = (page: Page) => page.locator('[data-slot="message-composer"]');
 const profileActionBar = (page: Page) =>
 	page
 		.getByRole("navigation")
-		.filter({
-			has: page.getByRole("link", { name: "Write a message..." }),
-		});
+		.filter({ has: page.getByRole("link", { name: "Write a message…" }) });
 
 const saveButton = (page: Page) =>
 	page.getByRole("button", { name: "Save changes" });

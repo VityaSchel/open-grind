@@ -21,7 +21,7 @@ test("grid tile opens a profile, which opens a conversation that accepts a messa
 	await expect(page).toHaveURL(/\/profile\/\d+$/);
 
 	await page
-		.getByRole("link", { name: "Write a message..." })
+		.getByRole("link", { name: "Write a message…" })
 		.click({ timeout: 60_000 });
 	await expect(page).toHaveURL(/\/chat\/\d+:\d+$/);
 

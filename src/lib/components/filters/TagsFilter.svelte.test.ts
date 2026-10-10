@@ -93,7 +93,7 @@ describe("TagsFilter", () => {
 		renderFilter();
 		const toggle = await screen.findByRole("button", { name: "More" });
 		const field = screen.getByRole("checkbox", { name: "Tags" });
-		const searchBox = screen.getByPlaceholderText("Search tags...");
+		const searchBox = screen.getByPlaceholderText("Search tags…");
 
 		await setLocale({ locale: "en-XA" });
 

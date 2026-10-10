@@ -128,7 +128,7 @@
 			"selectedLocation": "Selected location"
 		},
 		"autoUpdate": "Update automatically using GPS",
-		"searchPlaceholder": "Search places...",
+		"searchPlaceholder": "Search places…",
 		"a11y": {
 			"title": "Choose location",
 			"description": "Drag the map to place the pin where you want to browse from.",

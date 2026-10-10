@@ -212,6 +212,11 @@ export function collectMessages(files: SourceFile[]): {
 				`${key}: is empty and would show as the key; write the text`,
 			);
 		}
+		if (text.includes("...")) {
+			errors.push(
+				`${key}: has three dots; write … (one character) instead`,
+			);
+		}
 	}
 	const messages: Message[] = [];
 	for (const [key, forms] of groupForms(texts)) {

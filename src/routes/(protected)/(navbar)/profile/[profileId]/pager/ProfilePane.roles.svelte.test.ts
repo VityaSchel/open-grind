@@ -87,7 +87,7 @@ describe("ProfilePane roles", () => {
 
 		const main = section.querySelector("main")!;
 		const bottomBar = screen
-			.getByRole("link", { name: "Write a message...", hidden: true })
+			.getByRole("link", { name: "Write a message…", hidden: true })
 			.closest("nav")!.parentElement!;
 		expect(section.style.left).toBe("300%");
 		expect(section.getAttribute("aria-hidden")).toBe("true");
@@ -109,7 +109,7 @@ describe("ProfilePane roles", () => {
 		expect(scroller.getAttribute("data-slot")).toBe("profile-scroller");
 		expect(scroller.hasAttribute("tabindex")).toBe(false);
 		expect(
-			screen.getByRole("link", { name: "Write a message..." }),
+			screen.getByRole("link", { name: "Write a message…" }),
 		).not.toBeNull();
 		expect(dataRefreshControlMock).toHaveBeenCalledOnce();
 	});
@@ -136,7 +136,7 @@ describe("ProfilePane roles", () => {
 
 		const main = section.querySelector("main")!;
 		const bottomBar = screen
-			.getByRole("link", { name: "Write a message...", hidden: true })
+			.getByRole("link", { name: "Write a message…", hidden: true })
 			.closest("nav")!.parentElement!;
 		expect(inertElements(section)).toEqual([section, main, bottomBar]);
 	});

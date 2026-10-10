@@ -62,7 +62,7 @@ test("opens Browse after coming back to a profile that was the first screen", as
 	page,
 }) => {
 	await openProfileDirectly(page);
-	await page.getByRole("link", { name: "Write a message..." }).click();
+	await page.getByRole("link", { name: "Write a message…" }).click();
 	await expect(page).toHaveURL(/\/chat\//);
 	await page.goBack();
 	await page.getByLabel("Profile menu").waitFor({ timeout: 30_000 });

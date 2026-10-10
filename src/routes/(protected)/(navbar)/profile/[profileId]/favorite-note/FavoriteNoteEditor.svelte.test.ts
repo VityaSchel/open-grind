@@ -137,7 +137,7 @@ describe("FavoriteNoteEditor", () => {
 		renderEditor();
 
 		expect(notesField().getAttribute("placeholder")).toBe(
-			"Note for this profile...",
+			"Note for this profile…",
 		);
 		expect(phoneField().getAttribute("placeholder")).toBe("Optional");
 		expect(saveButton().textContent.trim()).toBe("Save");
