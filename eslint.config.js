@@ -211,6 +211,7 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/ProfileForm.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/ProfileFormSection.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/ProfileFormSkeleton.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/ProfilePicturesUpload.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/fields/ComboField.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/fields/DateField.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/fields/FieldPair.svelte",

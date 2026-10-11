@@ -769,6 +769,18 @@ export interface Messages {
 	"settings.profile.fields.vaccines": undefined;
 	"settings.profile.fields.weight": undefined;
 	"settings.profile.notSet": undefined;
+	"settings.profile.photos.a11y.keepSlot": { slot: string };
+	"settings.profile.photos.a11y.removeSlot": { slot: string };
+	"settings.profile.photos.a11y.slot": { slot: string };
+	"settings.profile.photos.a11y.slotAwaitingReview": { slot: string };
+	"settings.profile.photos.a11y.uploading": undefined;
+	"settings.profile.photos.add": undefined;
+	"settings.profile.photos.errors.dailyLimit": undefined;
+	"settings.profile.photos.errors.leftOut": { count: number; max: string };
+	"settings.profile.photos.errors.openPickerFailed": undefined;
+	"settings.profile.photos.errors.uploadFailed": undefined;
+	"settings.profile.photos.submit": undefined;
+	"settings.profile.photos.upload": undefined;
 	"settings.profile.placeholders.aboutMe": undefined;
 	"settings.profile.placeholders.displayName": undefined;
 	"settings.profile.placeholders.searchGenders": undefined;
@@ -924,4 +936,9 @@ export interface RichMessages {
 	"settings.profile.combo.a11y.remove": { label: "placeholder" };
 	"settings.profile.combo.selected": { count: "count"; max: "placeholder" };
 	"settings.profile.combo.selectedAtMax": { count: "count"; max: "placeholder" };
+	"settings.profile.photos.a11y.keepSlot": { slot: "placeholder" };
+	"settings.profile.photos.a11y.removeSlot": { slot: "placeholder" };
+	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
+	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
+	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
 }

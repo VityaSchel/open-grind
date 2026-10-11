@@ -11,14 +11,13 @@
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
 	import { demoEnabled } from "$lib/demo";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import { PROFILE_PHOTO_AWAITING_REVIEW } from "$lib/model/users/profiles";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { profileMediaUrl } from "$lib/util/media";
 	import { moveItem } from "$lib/util/reorder";
 	import { maxProfilePhotos } from "./options";
-
-	const DAILY_LIMIT_MESSAGE =
-		"You've reached today's limit for new profile photos";
 
 	type PreviousUpload = { mediaHash: string; state: number };
 
@@ -66,25 +65,30 @@
 
 	const slots = $derived([
 		...medias.map((media, index) => {
-			const label = `photo in slot ${index + 1}`;
+			const slot = formatInteger(index + 1);
 			return {
 				key: slotKey(media.mediaHash, index),
 				src: profileMediaUrl({
 					mediaHash: media.mediaHash,
 					size: "thumb",
 				}),
-				alt: media.pending
-					? `Profile ${label}, awaiting review`
-					: `Profile ${label}`,
-				deleteLabel: `Remove profile ${label}`,
-				undoLabel: `Keep profile ${label}`,
+				alt: t(
+					media.pending
+						? "settings.profile.photos.a11y.slotAwaitingReview"
+						: "settings.profile.photos.a11y.slot",
+					{ slot },
+				),
+				deleteLabel: t("settings.profile.photos.a11y.removeSlot", {
+					slot,
+				}),
+				undoLabel: t("settings.profile.photos.a11y.keepSlot", { slot }),
 				onDelete: () => toggleRemoved(media.mediaHash),
 			};
 		}),
 		...uploading.map((key) => ({
 			key: `uploading:${key}`,
 			src: null,
-			alt: "Uploading profile photo",
+			alt: t("settings.profile.photos.a11y.uploading"),
 			pending: true,
 		})),
 	]);
@@ -124,13 +128,16 @@
 			picked = await pickMultipleMedia("image");
 		} catch (error) {
 			console.error(error);
-			toast.error("Couldn't open the photo picker");
+			toast.error(t("settings.profile.photos.errors.openPickerFailed"));
 			return;
 		}
 		const accepted = picked.slice(0, Math.max(0, room));
 		if (picked.length > accepted.length) {
 			toast.error(
-				`${picked.length - accepted.length} left out, a profile holds up to ${maxProfilePhotos} photos`,
+				t("settings.profile.photos.errors.leftOut", {
+					count: picked.length - accepted.length,
+					max: formatInteger(maxProfilePhotos),
+				}),
 			);
 		}
 		uploading = [...uploading, ...accepted.map(({ key }) => key)];
@@ -143,7 +150,11 @@
 				console.error(error);
 				const dailyLimit = httpStatusOf(error) === 403;
 				toast.error(
-					dailyLimit ? DAILY_LIMIT_MESSAGE : "Couldn't upload photo",
+					t(
+						dailyLimit
+							? "settings.profile.photos.errors.dailyLimit"
+							: "settings.profile.photos.errors.uploadFailed",
+					),
 				);
 				if (dailyLimit) {
 					const dropped = new Set(
@@ -171,7 +182,7 @@
 
 {#snippet addTile()}
 	<AddTile
-		label="Add photos"
+		label={t("settings.profile.photos.add")}
 		class="aspect-square w-full rounded-xl"
 		disabled={disabled || adding}
 		onclick={() => (sheetOpen = true)}
@@ -180,8 +191,8 @@
 
 <PreviousUploadsSheet
 	bind:open={sheetOpen}
-	uploadLabel="Upload photos"
-	submitLabel="Add to profile"
+	uploadLabel={t("settings.profile.photos.upload")}
+	submitLabel={t("settings.profile.photos.submit")}
 	max={room}
 	load={loadPreviousUploads}
 	describe={({ mediaHash }) => ({

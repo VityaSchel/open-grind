@@ -206,6 +206,25 @@
 			"basics": "Basics",
 			"about": "About"
 		},
+		"photos": {
+			"add": "Add photos",
+			"upload": "Upload photos",
+			"submit": "Add to profile",
+			"a11y": {
+				"slot": "Profile photo in slot {{slot}}",
+				"slotAwaitingReview": "Profile photo in slot {{slot}}, awaiting review",
+				"removeSlot": "Remove profile photo in slot {{slot}}",
+				"keepSlot": "Keep profile photo in slot {{slot}}",
+				"uploading": "Uploading profile photo"
+			},
+			"errors": {
+				"dailyLimit": "You’ve reached today’s limit for new profile photos",
+				"openPickerFailed": "Couldn’t open the photo picker",
+				"uploadFailed": "Couldn’t upload photo",
+				"leftOut_one": "{{count}} left out, a profile holds up to {{max}} photos",
+				"leftOut_other": "{{count}} left out, a profile holds up to {{max}} photos"
+			}
+		},
 		"fields": {
 			"displayName": "Display name",
 			"age": "Age",

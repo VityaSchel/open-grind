@@ -25,6 +25,12 @@ vi.mock("svelte-sonner", () => sonner);
 vi.mock("$lib/demo", () => demo);
 
 import { ApiError } from "$lib/api/api-error";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import {
+	bracketCounts,
+	restoreCountFormatter,
+} from "$lib/i18n/fixtures/count-formatter";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 function picks(count: number) {
@@ -65,10 +71,12 @@ async function uploadFromSheet(
 
 beforeEach(() => previousUploads());
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
 	demo.demoEnabled = false;
+	restoreCountFormatter();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("profile pictures upload", () => {
@@ -297,7 +305,7 @@ describe("profile pictures upload", () => {
 
 		await vi.waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
-				"You've reached today's limit for new profile photos",
+				"You’ve reached today’s limit for new profile photos",
 			),
 		);
 		await vi.waitFor(() =>
@@ -305,5 +313,50 @@ describe("profile pictures upload", () => {
 		);
 		expect(profiles.uploadProfilePhoto).toHaveBeenCalledOnce();
 		expect(sonner.toast.error).toHaveBeenCalledOnce();
+	});
+
+	it("numbers the slots and the photo limit with the count formatter", async () => {
+		const bracketed = bracketCounts();
+		picker.pickMultipleMedia.mockResolvedValue(picks(3));
+		profiles.uploadProfilePhoto.mockReturnValue(new Promise(() => {}));
+		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: hashes(4) },
+		});
+
+		expect(
+			getByRole("img", { name: `Profile photo in slot ${bracketed(1)}` }),
+		).toBeTruthy();
+		await uploadFromSheet(findByRole);
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				`${bracketed(1)} left out, a profile holds up to ${bracketed(6)} photos`,
+			),
+		);
+	});
+
+	it("names its photos, buttons and add tile in the active locale", async () => {
+		const { getByRole } = render(ProfilePicturesUpload, {
+			props: {
+				ourProfileId: 1,
+				medias: [{ mediaHash: "first" }, { mediaHash: "second" }],
+				removed: ["second"],
+			},
+		});
+		const photo = getByRole("img", { name: "Profile photo in slot 1" });
+		const remove = getByRole("button", {
+			name: "Remove profile photo in slot 1",
+		});
+		const keep = getByRole("button", {
+			name: "Keep profile photo in slot 2",
+		});
+		const add = getByRole("button", { name: "Add photos" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(photo.getAttribute("alt")).toMatch(PSEUDO_MESSAGE);
+		expect(remove.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(keep.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(add.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 });
