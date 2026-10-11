@@ -15,6 +15,7 @@ export const init: ClientInit = async () => {
 	if (import.meta.env.DEV) await applyLocaleParam();
 };
 
-export const handleError: HandleClientError = ({ error, event }) => {
+export const handleError: HandleClientError = ({ error, event, message }) => {
 	console.error("Error during request to", event.url.pathname, ":", error);
+	return { message, ...(error instanceof Error && { type: error.name }) };
 };

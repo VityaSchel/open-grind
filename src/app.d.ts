@@ -2,6 +2,11 @@ import type { NativeInsets } from "$lib/platform/android-native-bridge";
 
 declare global {
 	namespace App {
+		interface Error {
+			message: string;
+			type?: string;
+		}
+
 		interface PageState {
 			profileOrigin?: "browse";
 		}

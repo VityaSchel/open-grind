@@ -49,7 +49,10 @@
 					<Button
 						variant="outline"
 						onclick={() =>
-							void promptCopyError(page.error).catch(() => {})}
+							void promptCopyError({
+								...page.error,
+								status: page.status,
+							}).catch(() => {})}
 					>
 						{t("common.actions.copyError")}
 					</Button>
