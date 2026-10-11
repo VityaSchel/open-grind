@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
 import { sentFilterKeys } from "$lib/grid/grid-query";
-import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	defaultFilters,
@@ -75,6 +75,49 @@ describe("parseFilterGridQuery", () => {
 		expect(result.filters.weight).toEqual([WEIGHT_KG_MIN, 81]);
 	});
 
+	it("names each filter as the filters UI does", () => {
+		const result = parseFilterGridQuery(
+			[
+				"?online=true&favorites=true&rightNow=true&fresh=true",
+				"notRecentlyChatted=true&hasPhotos=true&age=18-30",
+				"height=150-200&weight=60-80&position=1&tribes=1&bodyType=1",
+				"relationship=1&nsfw=1&lookingFor=1&meetAt=1&health=1",
+				"genders=-1&tags=bear",
+			].join("&"),
+		);
+		expect(
+			result.parsed.map((filter) => filter.label && t(filter.label)),
+		).toEqual([
+			"Online",
+			"Favorites",
+			"Right Now",
+			"Fresh",
+			"Haven’t Chatted Today",
+			"Photos",
+			"Age",
+			"Height",
+			"Weight",
+			"Position",
+			"Tribes",
+			"Body Type",
+			"Relationship Status",
+			"Accept NSFW Pics",
+			"Looking For",
+			"Meet At",
+			"Health Practices",
+			"Gender",
+			"Tags",
+		]);
+	});
+
+	it("words yes and no for boolean filters", () => {
+		const result = parseFilterGridQuery("?online=true&favorites=false");
+		expect(result.parsed.map((filter) => filter.valueText)).toEqual([
+			"Yes",
+			"No",
+		]);
+	});
+
 	it("renders min and max as a single field, matching the filters UI", () => {
 		const result = parseFilterGridQuery("?ageMin=25&ageMax=40");
 		expect(result.parsed).toHaveLength(1);
@@ -132,7 +175,7 @@ describe("parseFilterGridQuery", () => {
 		expect(result.parsed).toHaveLength(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("photos");
 		expect(parsedAt(result.parsed, 0).valueText).toBe(
-			"Has photos, Has albums",
+			"Has Photos, Has Albums",
 		);
 		expect(result.filters.photos).toEqual(["has-photos", "has-albums"]);
 	});
@@ -171,13 +214,13 @@ describe("parseFilterGridQuery", () => {
 		expect(parsedAt(nsfw.parsed, 0).valid).toBe(true);
 		expect(nsfw.filters.acceptNSFWPicsEnabled).toBe(true);
 		expect(nsfw.filters.acceptNSFWPics).toEqual([1, -1]);
-		expect(parsedAt(nsfw.parsed, 0).valueText).toBe("Never, Not specified");
+		expect(parsedAt(nsfw.parsed, 0).valueText).toBe("Never, Not Specified");
 
 		const genders = parseFilterGridQuery("?genders=-1,42");
 		expect(parsedAt(genders.parsed, 0).valid).toBe(true);
 		expect(genders.filters.genderEnabled).toBe(true);
 		expect(genders.filters.genders).toEqual([-1, 42]);
-		expect(parsedAt(genders.parsed, 0).valueText).toBe("Not specified, 42");
+		expect(parsedAt(genders.parsed, 0).valueText).toBe("Not Specified, 42");
 	});
 
 	it("flags the Ask me gender as invalid because the server fails on it", () => {
@@ -210,6 +253,7 @@ describe("parseFilterGridQuery", () => {
 		const result = parseFilterGridQuery("?nope=1");
 		expect(parsedAt(result.parsed, 0).valid).toBe(false);
 		expect(parsedAt(result.parsed, 0).key).toBe("nope");
+		expect(parsedAt(result.parsed, 0).label).toBeUndefined();
 		expect(errorTextAt(result.parsed, 0)).toBe("Unknown filter");
 	});
 

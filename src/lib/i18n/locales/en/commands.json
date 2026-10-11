@@ -17,6 +17,8 @@
 		"controlKey": "Ctrl"
 	},
 	"filterGrid": {
+		"yes": "Yes",
+		"no": "No",
 		"errors": {
 			"unknownFilter": "Unknown filter",
 			"expectedBoolean": "Expected {{trueValue}} or {{falseValue}}",

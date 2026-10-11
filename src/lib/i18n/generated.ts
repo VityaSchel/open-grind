@@ -242,6 +242,8 @@ export interface Messages {
 	"commands.filterGrid.errors.rangeSyntax": { example: string };
 	"commands.filterGrid.errors.unknownFilter": undefined;
 	"commands.filterGrid.errors.unknownValue": { value: string };
+	"commands.filterGrid.no": undefined;
+	"commands.filterGrid.yes": undefined;
 	"commands.trigger.controlKey": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;

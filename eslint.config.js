@@ -271,6 +271,7 @@ const translatedScriptFiles = [
 	"src/lib/components/album/album.ts",
 	"src/lib/components/command-center/command-center-state.svelte.ts",
 	"src/lib/components/command-center/filter-grid/apply.ts",
+	"src/lib/components/command-center/filter-grid/definitions.ts",
 	"src/lib/components/command-center/filter-grid/filter-error-text.ts",
 	"src/lib/components/command-center/filter-grid/filter-grid-query.ts",
 	"src/lib/components/command-center/filter-grid/types.ts",

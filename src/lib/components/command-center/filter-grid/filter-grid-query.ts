@@ -35,7 +35,12 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 		}
 		let badge = badges.get(handler.filter);
 		if (!badge) {
-			badge = { key: handler.filter.label, valueText: "", valid: true };
+			badge = {
+				key: handler.filter.id,
+				label: handler.filter.label,
+				valueText: "",
+				valid: true,
+			};
 			badges.set(handler.filter, badge);
 			parsed.push(badge);
 		}

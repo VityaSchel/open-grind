@@ -1,3 +1,4 @@
+import type { PlainMessageKey } from "$lib/i18n";
 import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
 
 export type FilterError =
@@ -14,6 +15,7 @@ export type InvalidValueKind = Extract<FilterError, { value: string }>["kind"];
 
 export type ParsedFilter = {
 	key: string;
+	label?: PlainMessageKey;
 	valueText: string;
 	valid: boolean;
 	error?: FilterError;
@@ -31,7 +33,33 @@ export type Apply = (raw: string, draft: GridSearchFilters) => ApplyResult;
 export type Render = (filters: GridSearchFilters) => string;
 
 export type Param = { keys: string[]; apply: Apply };
-export type Filter = { label: string; render: Render; params: Param[] };
+export type FilterId =
+	| "online"
+	| "favorites"
+	| "rightNow"
+	| "fresh"
+	| "notRecentlyChatted"
+	| "photos"
+	| "age"
+	| "height"
+	| "weight"
+	| "position"
+	| "tribes"
+	| "bodyType"
+	| "relationship"
+	| "nsfw"
+	| "lookingFor"
+	| "meetAt"
+	| "health"
+	| "genders"
+	| "tags";
+
+export type Filter = {
+	id: FilterId;
+	label: PlainMessageKey;
+	render: Render;
+	params: Param[];
+};
 
 export type BooleanKey = {
 	[K in keyof GridSearchFilters]: GridSearchFilters[K] extends boolean
