@@ -4,6 +4,7 @@ import type { Snippet } from "svelte";
 import {
 	type KeyArgs,
 	type MessageKey,
+	type MessageKeyWith,
 	type RichArgs,
 	type RichKey,
 	type RichKeyWith,
@@ -133,6 +134,22 @@ expectTypeOf(t<"common.actions.close">).parameters.toEqualTypeOf<
 >();
 expectTypeOf(t<"common.time.minutes">).parameters.toEqualTypeOf<
 	[key: "common.time.minutes", params: { count: number }]
+>();
+expectTypeOf(t<MessageKeyWith<{ count: number }>>).toBeCallableWith(
+	"chat.conversations.errors.deleteFailed",
+	{ count: 2 },
+);
+expectTypeOf<"chat.conversations.errors.deleteFailed">().toExtend<
+	MessageKeyWith<{ count: number }>
+>();
+expectTypeOf<"common.actions.close">().not.toExtend<
+	MessageKeyWith<{ count: number }>
+>();
+expectTypeOf<"browse.filters.tags.truncated">().not.toExtend<
+	MessageKeyWith<{ count: number }>
+>();
+expectTypeOf<"browse.filters.tags.truncated">().toExtend<
+	MessageKeyWith<{ count: number; shown: string }>
 >();
 expectTypeOf(sourceText).toEqualTypeOf<Translate>();
 expectTypeOf(

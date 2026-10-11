@@ -17,7 +17,7 @@ import {
 	mergeConversation,
 } from "$lib/chat/merge-conversation";
 import { applyOptimisticBatch } from "$lib/chat/optimistic-batch";
-import { t } from "$lib/i18n";
+import { type MessageKeyWith, t } from "$lib/i18n";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { below } from "$lib/util/breakpoints.svelte";
 import { reconciler } from "$lib/util/reconcile";
@@ -467,7 +467,7 @@ class ConversationsState {
 		field: ConversationFlagField;
 		value: boolean;
 		request: (conversationId: string) => Promise<unknown>;
-		errorLabel: () => string;
+		errorLabel: MessageKeyWith<{ count: number }>;
 	}): Promise<void> {
 		const targets = conversationIds
 			.map((id) => this.#find(id))
@@ -518,10 +518,9 @@ class ConversationsState {
 			value: pinned,
 			request: (conversationId) =>
 				setConversationPinned({ conversationId, pinned }),
-			errorLabel: () =>
-				pinned
-					? t("chat.conversations.errors.pinFailed")
-					: t("chat.conversations.errors.unpinFailed"),
+			errorLabel: pinned
+				? "chat.conversations.errors.pinFailed"
+				: "chat.conversations.errors.unpinFailed",
 		});
 	}
 
@@ -538,10 +537,9 @@ class ConversationsState {
 			value: muted,
 			request: (conversationId) =>
 				setConversationMuted({ conversationId, muted }),
-			errorLabel: () =>
-				muted
-					? t("chat.conversations.errors.muteFailed")
-					: t("chat.conversations.errors.unmuteFailed"),
+			errorLabel: muted
+				? "chat.conversations.errors.muteFailed"
+				: "chat.conversations.errors.unmuteFailed",
 		});
 	}
 
@@ -574,7 +572,7 @@ class ConversationsState {
 					this.drafts.forget(conversationId);
 				},
 				rollback: ({ revert }) => revert(),
-				errorLabel: () => t("chat.conversations.errors.deleteFailed"),
+				errorLabel: "chat.conversations.errors.deleteFailed",
 			});
 			if (rolledBack) this.#sortEntries();
 		} finally {

@@ -5,8 +5,15 @@ const { showErrorToastMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/i18n", async (importOriginal) => {
+	const i18n = await importOriginal<typeof import("$lib/i18n")>();
+	return { ...i18n, t: vi.fn(i18n.t) };
+});
 
+import { t } from "$lib/i18n";
 import { applyOptimisticBatch } from "./optimistic-batch";
+
+const errorLabel = "chat.conversations.errors.deleteFailed";
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -14,9 +21,8 @@ beforeEach(() => {
 });
 
 describe("applyOptimisticBatch", () => {
-	it("rolls back failed items and labels the toast", async () => {
+	it("rolls back failed items and counts them in the toast", async () => {
 		const error = new Error("offline");
-		const errorLabel = vi.fn(() => "failed");
 		const rollback = vi.fn();
 
 		const rolledBack = await applyOptimisticBatch({
@@ -30,14 +36,29 @@ describe("applyOptimisticBatch", () => {
 		expect(rolledBack).toBe(true);
 		expect(rollback.mock.calls).toEqual([[3], [1]]);
 		expect(showErrorToastMock).toHaveBeenCalledWith({
-			label: "failed",
+			label: "Couldn’t delete 2 conversations",
+			error,
+		});
+	});
+
+	it("names a single failure among successes in the singular", async () => {
+		const error = new Error("offline");
+
+		await applyOptimisticBatch({
+			items: [1, 2, 3],
+			request: (item) =>
+				item === 3 ? Promise.reject(error) : Promise.resolve(),
+			rollback: vi.fn(),
+			errorLabel,
+		});
+
+		expect(showErrorToastMock).toHaveBeenCalledWith({
+			label: "Couldn’t delete conversation",
 			error,
 		});
 	});
 
 	it("builds no label when every item succeeds", async () => {
-		const errorLabel = vi.fn(() => "failed");
-
 		const rolledBack = await applyOptimisticBatch({
 			items: [1, 2],
 			request: () => Promise.resolve(),
@@ -46,7 +67,7 @@ describe("applyOptimisticBatch", () => {
 		});
 
 		expect(rolledBack).toBe(false);
-		expect(errorLabel).not.toHaveBeenCalled();
+		expect(t).not.toHaveBeenCalled();
 		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 });

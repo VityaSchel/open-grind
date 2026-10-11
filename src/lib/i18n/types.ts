@@ -7,6 +7,13 @@ export type RichKey = keyof RichMessages;
 export type PlainMessageKey = {
 	[K in MessageKey]: [Messages[K]] extends [undefined] ? K : never;
 }[MessageKey];
+export type MessageKeyWith<Params> = {
+	[K in MessageKey]: [Messages[K]] extends [Params]
+		? [Params] extends [Messages[K]]
+			? K
+			: never
+		: never;
+}[MessageKey];
 
 type UnionToIntersection<U> = (
 	U extends unknown ? (union: U) => void : never
