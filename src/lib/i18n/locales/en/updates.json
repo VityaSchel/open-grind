@@ -1,13 +1,106 @@
 {
 	"addons": {
 		"googleOauth": {
-			"name": "Open Grind Google OAuth app"
+			"name": "Open Grind Google OAuth app",
+			"stage": {
+				"install": {
+					"available": "Open Grind Google OAuth app is available",
+					"downloading": "Downloading the Open Grind Google OAuth app…",
+					"verifying": "Verifying the Open Grind Google OAuth app…",
+					"paused": "Open Grind Google OAuth app is ready to download",
+					"ready": "Open Grind Google OAuth app is downloaded",
+					"installing": "Installing the Open Grind Google OAuth app…"
+				},
+				"update": {
+					"available": "Open Grind Google OAuth app update available",
+					"downloading": "Downloading the Open Grind Google OAuth app update…",
+					"verifying": "Verifying the Open Grind Google OAuth app update…",
+					"paused": "Open Grind Google OAuth app update is available",
+					"ready": "Open Grind Google OAuth app update is downloaded",
+					"installing": "Updating the Open Grind Google OAuth app…"
+				}
+			},
+			"installed": "Open Grind Google OAuth app installed",
+			"installedVersion": "Open Grind Google OAuth app installed: {{tag}}",
+			"updated": "Open Grind Google OAuth app updated",
+			"updatedVersion": "Open Grind Google OAuth app updated: {{tag}}",
+			"upToDate": "The Open Grind Google OAuth app is up to date"
 		},
 		"recaptcha": {
-			"name": "Open Grind reCAPTCHA helper"
+			"name": "Open Grind reCAPTCHA helper",
+			"stage": {
+				"install": {
+					"available": "Open Grind reCAPTCHA helper is available",
+					"downloading": "Downloading the Open Grind reCAPTCHA helper…",
+					"verifying": "Verifying the Open Grind reCAPTCHA helper…",
+					"paused": "Open Grind reCAPTCHA helper is ready to download",
+					"ready": "Open Grind reCAPTCHA helper is downloaded",
+					"installing": "Installing the Open Grind reCAPTCHA helper…"
+				},
+				"update": {
+					"available": "Open Grind reCAPTCHA helper update available",
+					"downloading": "Downloading the Open Grind reCAPTCHA helper update…",
+					"verifying": "Verifying the Open Grind reCAPTCHA helper update…",
+					"paused": "Open Grind reCAPTCHA helper update is available",
+					"ready": "Open Grind reCAPTCHA helper update is downloaded",
+					"installing": "Updating the Open Grind reCAPTCHA helper…"
+				}
+			},
+			"installed": "Open Grind reCAPTCHA helper installed",
+			"installedVersion": "Open Grind reCAPTCHA helper installed: {{tag}}",
+			"updated": "Open Grind reCAPTCHA helper updated",
+			"updatedVersion": "Open Grind reCAPTCHA helper updated: {{tag}}",
+			"upToDate": "The Open Grind reCAPTCHA helper is up to date"
 		},
 		"fcm": {
-			"name": "Open Grind FCM service"
+			"name": "Open Grind FCM service",
+			"stage": {
+				"install": {
+					"available": "Open Grind FCM service is available",
+					"downloading": "Downloading the Open Grind FCM service…",
+					"verifying": "Verifying the Open Grind FCM service…",
+					"paused": "Open Grind FCM service is ready to download",
+					"ready": "Open Grind FCM service is downloaded",
+					"installing": "Installing the Open Grind FCM service…"
+				},
+				"update": {
+					"available": "Open Grind FCM service update available",
+					"downloading": "Downloading the Open Grind FCM service update…",
+					"verifying": "Verifying the Open Grind FCM service update…",
+					"paused": "Open Grind FCM service update is available",
+					"ready": "Open Grind FCM service update is downloaded",
+					"installing": "Updating the Open Grind FCM service…"
+				}
+			},
+			"installed": "Open Grind FCM service installed",
+			"installedVersion": "Open Grind FCM service installed: {{tag}}",
+			"updated": "Open Grind FCM service updated",
+			"updatedVersion": "Open Grind FCM service updated: {{tag}}",
+			"upToDate": "The Open Grind FCM service is up to date"
 		}
+	},
+	"stage": {
+		"available": "New update available",
+		"downloading": "Downloading update…",
+		"verifying": "Verifying the update…",
+		"paused": "Update is available",
+		"ready": "Update is downloaded",
+		"installing": "Installing…",
+		"hints": {
+			"installOrDismiss": "Tap to install, swipe to dismiss",
+			"download": "Tap to download",
+			"install": "Tap to install",
+			"updateOrDismiss": "Tap to update, swipe to dismiss",
+			"update": "Tap to update"
+		}
+	},
+	"toasts": {
+		"a11y": {
+			"stopDownload": "Stop the download"
+		},
+		"manualInstall": "The update is ready in Finder",
+		"updatedTo": "Updated to {{tag}}",
+		"changelog": "Tap to see changelog",
+		"upToDate": "Open Grind is up to date"
 	}
 }

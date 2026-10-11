@@ -7,8 +7,8 @@ import { toast } from "svelte-sonner";
 
 import { t } from "$lib/i18n";
 import { openExternalLink } from "$lib/platform/link-opener";
+import { ADDON_MESSAGES } from "./addon-messages";
 import {
-	ADDON_NAME,
 	type AddonKey,
 	APP_COMPONENT,
 	COMPONENT_REPO,
@@ -84,7 +84,7 @@ export function showManualInstall(body: string): void {
 		class: CARD_CLASS,
 		componentProps: {
 			icon: FolderOpenIcon,
-			title: "The update is ready in Finder",
+			title: t("updates.toasts.manualInstall"),
 			body,
 		},
 	});
@@ -101,8 +101,8 @@ export async function showInstalled(): Promise<void> {
 		class: CARD_CLASS,
 		componentProps: {
 			icon: CheckCircleIcon,
-			title: `Updated to ${tag}`,
-			body: "Tap to see changelog",
+			title: t("updates.toasts.updatedTo", { tag }),
+			body: t("updates.toasts.changelog"),
 			onActivate: () =>
 				openExternalLink(
 					`${COMPONENT_REPO[APP_COMPONENT]}/releases/tag/${tag}`,
@@ -111,17 +111,27 @@ export async function showInstalled(): Promise<void> {
 	});
 }
 
+type AddonInstall = {
+	component: AddonKey;
+	tag: string | null;
+	kind: InstallKind;
+};
+
+function addonInstalledTitle({ component, tag, kind }: AddonInstall): string {
+	const messages = ADDON_MESSAGES[component];
+	const installed = kind === "install";
+	if (!tag) return t(installed ? messages.installed : messages.updated);
+	const versioned = installed
+		? messages.installedVersion
+		: messages.updatedVersion;
+	return t(versioned, { tag });
+}
+
 export function showAddonInstalled({
 	component,
 	tag,
 	kind,
-}: {
-	component: AddonKey;
-	tag: string | null;
-	kind: InstallKind;
-}): void {
-	const addon = t(ADDON_NAME[component]);
-	const done = kind === "install" ? `${addon} installed` : `${addon} updated`;
+}: AddonInstall): void {
 	toast.custom(ToastCard, {
 		...PLACEMENT,
 		id: `${INSTALLED_TOAST}:${component}`,
@@ -129,8 +139,8 @@ export function showAddonInstalled({
 		class: CARD_CLASS,
 		componentProps: {
 			icon: CheckCircleIcon,
-			title: tag ? `${done}: ${tag}` : done,
-			body: tag ? "Tap to see changelog" : undefined,
+			title: addonInstalledTitle({ component, tag, kind }),
+			body: tag ? t("updates.toasts.changelog") : undefined,
 			onActivate: tag
 				? () =>
 						openExternalLink(

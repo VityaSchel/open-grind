@@ -79,17 +79,15 @@ describe("the up-to-date toast", () => {
 			await setLocale({ locale: SOURCE_LOCALE });
 		});
 
-		it("names the add-on in the language active when it shows", async () => {
+		it("words it in the language active when it shows", async () => {
 			const presenter = toastPresenter("fcm");
 			await setLocale({ locale: "en-XA" });
-			const name = t("updates.addons.fcm.name");
+			const title = t("updates.addons.fcm.upToDate");
 
 			presenter.upToDate();
 
-			expect(name).toMatch(PSEUDO_MESSAGE);
-			expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(
-				`The ${name} is up to date`,
-			);
+			expect(title).toMatch(PSEUDO_MESSAGE);
+			expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(title);
 		});
 	});
 

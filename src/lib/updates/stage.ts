@@ -1,5 +1,6 @@
-import { t } from "$lib/i18n";
-import { ADDON_NAME, APP_COMPONENT, type ComponentKey } from "./components";
+import { type PlainMessageKey, t } from "$lib/i18n";
+import { ADDON_MESSAGES } from "./addon-messages";
+import { APP_COMPONENT, type ComponentKey } from "./components";
 import type { Progress, Release, UpdateError } from "./types";
 
 export type UpdateStage =
@@ -32,35 +33,14 @@ export function stageOf(progress: Progress): StageChange {
 	}
 }
 
-const appTitles: Record<UpdateStage, string> = {
-	available: "New update available",
-	downloading: "Downloading update…",
-	verifying: "Verifying the update…",
-	paused: "Update is available",
-	ready: "Update is downloaded",
-	installing: "Installing…",
-};
-
-type AddonTitle = (addon: string) => string;
-
-const addonTitles: Record<Release["kind"], Record<UpdateStage, AddonTitle>> = {
-	install: {
-		available: (addon) => `${addon} is available`,
-		downloading: (addon) => `Downloading the ${addon}…`,
-		verifying: (addon) => `Verifying the ${addon}…`,
-		paused: (addon) => `${addon} is ready to download`,
-		ready: (addon) => `${addon} is downloaded`,
-		installing: (addon) => `Installing the ${addon}…`,
-	},
-	update: {
-		available: (addon) => `${addon} update available`,
-		downloading: (addon) => `Downloading the ${addon} update…`,
-		verifying: (addon) => `Verifying the ${addon} update…`,
-		paused: (addon) => `${addon} update is available`,
-		ready: (addon) => `${addon} update is downloaded`,
-		installing: (addon) => `Updating the ${addon}…`,
-	},
-};
+const appTitleKeys = {
+	available: "updates.stage.available",
+	downloading: "updates.stage.downloading",
+	verifying: "updates.stage.verifying",
+	paused: "updates.stage.paused",
+	ready: "updates.stage.ready",
+	installing: "updates.stage.installing",
+} as const satisfies Record<UpdateStage, PlainMessageKey>;
 
 type StageCopyArgs = {
 	component: ComponentKey;
@@ -69,24 +49,24 @@ type StageCopyArgs = {
 };
 
 export function stageTitle({ component, kind, stage }: StageCopyArgs): string {
-	if (component === APP_COMPONENT) return appTitles[stage];
-	return addonTitles[kind][stage](t(ADDON_NAME[component]));
+	if (component === APP_COMPONENT) return t(appTitleKeys[stage]);
+	return t(ADDON_MESSAGES[component].stage[kind][stage]);
 }
 
-const installBodies: Record<UpdateStage, string | undefined> = {
-	available: "Tap to install, swipe to dismiss",
+const installHintKeys = {
+	available: "updates.stage.hints.installOrDismiss",
 	downloading: undefined,
 	verifying: undefined,
-	paused: "Tap to download",
-	ready: "Tap to install",
+	paused: "updates.stage.hints.download",
+	ready: "updates.stage.hints.install",
 	installing: undefined,
-};
+} as const satisfies Record<UpdateStage, PlainMessageKey | undefined>;
 
-const addonUpdateBodies: Record<UpdateStage, string | undefined> = {
-	...installBodies,
-	available: "Tap to update, swipe to dismiss",
-	ready: "Tap to update",
-};
+const addonUpdateHintKeys = {
+	...installHintKeys,
+	available: "updates.stage.hints.updateOrDismiss",
+	ready: "updates.stage.hints.update",
+} as const satisfies Record<UpdateStage, PlainMessageKey | undefined>;
 
 export function stageBody({
 	component,
@@ -94,5 +74,6 @@ export function stageBody({
 	stage,
 }: StageCopyArgs): string | undefined {
 	const updatesAddon = component !== APP_COMPONENT && kind === "update";
-	return (updatesAddon ? addonUpdateBodies : installBodies)[stage];
+	const key = (updatesAddon ? addonUpdateHintKeys : installHintKeys)[stage];
+	return key === undefined ? undefined : t(key);
 }

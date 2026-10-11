@@ -1,5 +1,6 @@
 import { t } from "$lib/i18n";
-import { ADDON_NAME, APP_COMPONENT, type ComponentKey } from "./components";
+import { ADDON_MESSAGES } from "./addon-messages";
+import { APP_COMPONENT, type ComponentKey } from "./components";
 import { problemBody } from "./error-copy";
 import type { StagePresenter } from "./flow";
 import {
@@ -13,11 +14,11 @@ import {
 } from "./toasts";
 
 function upToDateTitle(component: ComponentKey): string {
-	const subject =
+	return t(
 		component === APP_COMPONENT
-			? "Open Grind"
-			: `The ${t(ADDON_NAME[component])}`;
-	return `${subject} is up to date`;
+			? "updates.toasts.upToDate"
+			: ADDON_MESSAGES[component].upToDate,
+	);
 }
 
 export function toastPresenter(component: ComponentKey): StagePresenter {

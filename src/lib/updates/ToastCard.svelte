@@ -2,6 +2,8 @@
 	import XIcon from "phosphor-svelte/lib/XIcon";
 	import type { Component, Snippet } from "svelte";
 
+	import { t } from "$lib/i18n";
+
 	let {
 		icon: Icon,
 		title,
@@ -91,7 +93,7 @@
 	{#if onCancel}
 		<button
 			type="button"
-			aria-label="Stop the download"
+			aria-label={t("updates.toasts.a11y.stopDownload")}
 			class="-mr-1 shrink-0 cursor-pointer p-1 text-muted-foreground hover:text-foreground"
 			onpointerdown={(event) => event.stopPropagation()}
 			onclick={onCancel}
