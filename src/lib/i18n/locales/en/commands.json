@@ -1,0 +1,16 @@
+{
+	"commandCenter": {
+		"placeholder": "Type a command…",
+		"empty": "Unknown command",
+		"a11y": {
+			"list": "Suggestions…"
+		},
+		"suggestions": {
+			"heading": "Suggestions",
+			"openProfileById": "Start with {{prefix}} to open profile by ID",
+			"filterGrid": "Start with {{prefix}} to filter grid",
+			"quickGoTo": "Start with {{prefix}} to quick go to",
+			"setLocationByGeohash": "Start with {{prefix}} to set location by geohash"
+		}
+	}
+}

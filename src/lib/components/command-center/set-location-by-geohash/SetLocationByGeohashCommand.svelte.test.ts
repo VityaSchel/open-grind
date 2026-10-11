@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { encode } from "@msgpack/msgpack";
-import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
+import { cleanup, fireEvent } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { readMock, writeMock, writeTextMock, toastMock, showErrorToastMock } =
@@ -30,32 +30,14 @@ vi.mock("$lib/grid/grid-state.svelte", () => ({
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
 import { commandCenterState } from "../command-center-state.svelte";
-import CommandCenter from "../CommandCenter.svelte";
+import {
+	openWith,
+	option,
+	options,
+	type,
+} from "../command-center-test-helpers";
 
 const GEOHASH = "u33dc0cpgp00";
-
-Element.prototype.scrollIntoView = () => {};
-
-function options(): HTMLElement[] {
-	return screen.queryAllByRole("option");
-}
-
-function option(value: string): HTMLElement | undefined {
-	return options().find((item) => item.dataset.value === value);
-}
-
-async function type(query: string) {
-	await fireEvent.input(screen.getByRole("combobox"), {
-		target: { value: query },
-	});
-	await vi.waitFor(() => expect(options().length).toBeGreaterThan(0));
-}
-
-async function openWith(query: string) {
-	commandCenterState.open = true;
-	render(CommandCenter);
-	await type(query);
-}
 
 beforeEach(async () => {
 	readMock.mockReset().mockResolvedValue(encode({}));

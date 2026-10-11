@@ -11,6 +11,7 @@
 	import OpenProfileByIdCommand from "$lib/components/command-center/open-profile-by-id/OpenProfileByIdCommand.svelte";
 	import SetLocationByGeohashCommand from "$lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte";
 	import * as Command from "$lib/components/ui/command";
+	import { t } from "$lib/i18n";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -50,34 +51,50 @@
 		shouldFilter={commandCenterState.query.length > 0}
 	>
 		<Command.Input
-			placeholder="Quick actions..."
+			placeholder={t("commands.commandCenter.placeholder")}
 			aria-controls={suggestionsId}
 			bind:value={commandCenterState.query}
 		/>
-		<Command.List id={suggestionsId} class="mt-2">
+		<Command.List
+			id={suggestionsId}
+			aria-label={t("commands.commandCenter.a11y.list")}
+			class="mt-2"
+		>
 			<Command.Empty class="text-muted-foreground">
-				Unknown command
+				{t("commands.commandCenter.empty")}
 			</Command.Empty>
 			{#if commandCenterState.query.length === 0}
-				<Command.Group heading="Suggestions">
-					<CommandSuggestion prefix="#" command="open profile by id">
+				<Command.Group
+					heading={t("commands.commandCenter.suggestions.heading")}
+					value="suggestions"
+				>
+					<CommandSuggestion
+						prefix="#"
+						message="commands.commandCenter.suggestions.openProfileById"
+					>
 						{#snippet icon()}
 							<UserIcon />
 						{/snippet}
 					</CommandSuggestion>
-					<CommandSuggestion prefix="?" command="filter grid">
+					<CommandSuggestion
+						prefix="?"
+						message="commands.commandCenter.suggestions.filterGrid"
+					>
 						{#snippet icon()}
 							<FunnelIcon />
 						{/snippet}
 					</CommandSuggestion>
-					<CommandSuggestion prefix="/" command="quick go to">
+					<CommandSuggestion
+						prefix="/"
+						message="commands.commandCenter.suggestions.quickGoTo"
+					>
 						{#snippet icon()}
 							<MagnifyingGlassIcon />
 						{/snippet}
 					</CommandSuggestion>
 					<CommandSuggestion
 						prefix="@"
-						command="set location by geohash"
+						message="commands.commandCenter.suggestions.setLocationByGeohash"
 					>
 						{#snippet icon()}
 							<MapPinIcon />

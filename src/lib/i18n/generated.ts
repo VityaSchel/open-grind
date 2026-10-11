@@ -226,6 +226,14 @@ export interface Messages {
 	"chat.messages.errors.reactFailed": undefined;
 	"chat.messages.errors.unsendFailed": undefined;
 	"chat.messages.scrollToBottomButton.a11y.label": undefined;
+	"commands.commandCenter.a11y.list": undefined;
+	"commands.commandCenter.empty": undefined;
+	"commands.commandCenter.placeholder": undefined;
+	"commands.commandCenter.suggestions.filterGrid": { prefix: string };
+	"commands.commandCenter.suggestions.heading": undefined;
+	"commands.commandCenter.suggestions.openProfileById": { prefix: string };
+	"commands.commandCenter.suggestions.quickGoTo": { prefix: string };
+	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: string };
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
 	"common.actions.continue": undefined;
@@ -686,6 +694,10 @@ export interface RichMessages {
 	"chat.message.status.readAt": { time: "placeholder" };
 	"chat.message.status.sentAt": { time: "placeholder" };
 	"chat.message.unsupported": { type: "placeholder" };
+	"commands.commandCenter.suggestions.filterGrid": { prefix: "placeholder" };
+	"commands.commandCenter.suggestions.openProfileById": { prefix: "placeholder" };
+	"commands.commandCenter.suggestions.quickGoTo": { prefix: "placeholder" };
+	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };
