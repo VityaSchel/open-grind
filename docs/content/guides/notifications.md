@@ -15,19 +15,19 @@ To enable notifications, go to **App Settings → Notifications**. Support varie
 
 ## Android
 
-On Android, choose one of two modes: [Slow mode](#android-slow-mode) (default) or [Fast mode](#android-fast-mode) (recommended).
+On Android, choose one of two modes: [Slow Mode](#android-slow-mode) (default) or [Fast Mode](#android-fast-mode) (recommended).
 
 To change alert level, sound, whether text of the notification appears on the lock screen, change settings in Android system settings directly.
 
-### Slow mode {#android-slow-mode}
+### Slow Mode {#android-slow-mode}
 
-Slow mode is the default notifications mode on Android. Open Grind checks for new events in the background **about every 15 minutes**. Android may force the interval to be longer, for example in battery saver or when you haven't opened the app for a while.
+Slow Mode is the default notifications mode on Android. Open Grind checks for new events in the background **about every 15 minutes**. Android may force the interval to be longer, for example in battery saver or when you haven't opened the app for a while.
 
-### Fast mode {#android-fast-mode}
+### Fast Mode {#android-fast-mode}
 
-Fast mode on Android **shows notifications instantly**, but uses closed-source Google's Firebase services, which requires installing Open Grind's [FCM service add-on](https://git.opengrind.org/open-grind/fcm-service) and having Google Play services or microG.
+Fast Mode on Android **shows notifications instantly**, but uses closed-source Google's Firebase services, which requires installing Open Grind's [FCM service add-on](https://git.opengrind.org/open-grind/fcm-service) and having Google Play services or microG.
 
-To enable the fast mode:
+To enable Fast Mode:
 
 1. Choose "Fast Mode" in Notifications settings
 2. Tap "Continue"

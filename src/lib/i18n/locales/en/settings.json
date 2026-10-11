@@ -168,7 +168,7 @@
 		},
 		"addon": {
 			"title": "Install push notifications add-on",
-			"description": "To enable the fast mode, download and install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it’s not installed by default."
+			"description": "To enable Fast Mode, install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it isn’t installed by default."
 		}
 	},
 	"credits": {

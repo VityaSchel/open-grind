@@ -82,7 +82,7 @@ describe("turning Fast mode on", () => {
 		expect(module.notificationSettings.mode).toBe("slow");
 		expect(module.notificationSettings.phase).toBe("idle");
 		expect(toastLabel()).toBe(
-			"Couldn't enable the fast mode for push notifications",
+			"Couldn't enable Fast Mode for push notifications",
 		);
 	});
 
@@ -97,7 +97,7 @@ describe("turning Fast mode on", () => {
 		expect(account.registerPushToken).not.toHaveBeenCalled();
 		expect(module.notificationSettings.mode).toBe("slow");
 		expect(toastLabel()).toBe(
-			"Couldn't enable the fast mode for push notifications",
+			"Couldn't enable Fast Mode for push notifications",
 		);
 		expect(toastDetails()).toMatchObject({
 			message: "This device has no Google Play services or microG.",
@@ -253,7 +253,7 @@ describe("going back to Slow mode", () => {
 		expect(module.notificationSettings.mode).toBe("fast");
 		expect(module.notificationSettings.phase).toBe("idle");
 		expect(toastLabel()).toBe(
-			"Couldn't switch push notifications to the slow mode",
+			"Couldn't switch push notifications to Slow Mode",
 		);
 	});
 
@@ -278,7 +278,7 @@ describe("falling back to Slow mode", () => {
 		expect(push.setMode).toHaveBeenCalledWith("slow");
 		expect(module.notificationSettings.mode).toBe("slow");
 		expect(toastLabel()).toBe(
-			"Couldn't enable the fast mode for push notifications",
+			"Couldn't enable Fast Mode for push notifications",
 		);
 		expect(toastDetails()).toMatchObject({
 			message: expect.stringMatching(/^The FCM service is disabled/),
@@ -295,7 +295,7 @@ describe("falling back to Slow mode", () => {
 
 		expect(module.notificationSettings.mode).toBe("fast");
 		expect(toastLabel()).toBe(
-			"Couldn't switch push notifications to the slow mode",
+			"Couldn't switch push notifications to Slow Mode",
 		);
 		expect(toastDetails()).toBe(refusal);
 	});

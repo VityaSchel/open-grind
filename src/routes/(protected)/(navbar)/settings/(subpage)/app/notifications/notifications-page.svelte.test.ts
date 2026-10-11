@@ -208,7 +208,7 @@ describe("choosing Fast mode", () => {
 		await waitFor(() =>
 			expect(showErrorToast).toHaveBeenCalledWith(
 				expect.objectContaining({
-					label: "Couldn't enable the fast mode for push notifications",
+					label: "Couldn't enable Fast Mode for push notifications",
 				}),
 			),
 		);
@@ -251,7 +251,7 @@ describe("a missing FCM service", () => {
 		});
 
 		expect(dialog.textContent.replace(/\s+/g, " ")).toContain(
-			"To enable the fast mode, download and install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it’s not installed by default.",
+			"To enable Fast Mode, install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it isn’t installed by default.",
 		);
 		expect(checked(slow)).toBe("true");
 		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
@@ -279,7 +279,7 @@ describe("a missing FCM service", () => {
 		});
 
 		expect(dialog.textContent.replace(/\s+/g, " ")).toContain(
-			`so it’s not installed by default. ${notice}`,
+			`so it isn’t installed by default. ${notice}`,
 		);
 	});
 

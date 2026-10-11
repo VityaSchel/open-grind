@@ -5,7 +5,7 @@ import type { PushErrorReason } from "./types";
 const ADDON = ADDON_NAME[FCM_COMPONENT];
 
 const reasons: Record<PushErrorReason, string | null> = {
-	unsupportedPlatform: "Fast mode only works on Android.",
+	unsupportedPlatform: "Fast Mode only works on Android.",
 	addonUnavailable: `Open Grind couldn't reach the ${ADDON}.`,
 	addonDisabled: `The ${ADDON} is disabled. Enable it in Android settings.`,
 	addonUntrusted: `The installed ${ADDON} isn't signed by Open Grind. Uninstall it, then install the official one.`,
@@ -26,8 +26,8 @@ const reasons: Record<PushErrorReason, string | null> = {
 export const pushFailures = {
 	turnOn: "Couldn't turn on notifications",
 	turnOff: "Couldn't turn off notifications",
-	fastMode: "Couldn't enable the fast mode for push notifications",
-	slowMode: "Couldn't switch push notifications to the slow mode",
+	fastMode: "Couldn't enable Fast Mode for push notifications",
+	slowMode: "Couldn't switch push notifications to Slow Mode",
 };
 
 export function explainedPushError(error: unknown): unknown {

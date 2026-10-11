@@ -113,7 +113,7 @@ describe("the notifications master switch", () => {
 			expect(module.notificationSettings.mode).toBe("slow");
 			expect(module.notificationSettings.enabled).toBe(true);
 			expect(toastLabel()).toBe(
-				"Couldn't enable the fast mode for push notifications",
+				"Couldn't enable Fast Mode for push notifications",
 			);
 		},
 	);
@@ -239,7 +239,7 @@ describe("reconciling with Android", () => {
 		expect(push.setMode).toHaveBeenCalledWith("slow");
 		expect(module.notificationSettings.mode).toBe("slow");
 		expect(toastLabel()).toBe(
-			"Couldn't enable the fast mode for push notifications",
+			"Couldn't enable Fast Mode for push notifications",
 		);
 		expect(toastDetails()).toMatchObject({
 			message: expect.stringMatching(/^Open Grind couldn't reach/),
