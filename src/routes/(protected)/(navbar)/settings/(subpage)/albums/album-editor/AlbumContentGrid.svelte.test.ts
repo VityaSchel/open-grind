@@ -4,6 +4,9 @@ import { cleanup, render, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { slot } from "$lib/i18n/fixtures/dom";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import {
 	getAlbumUploads,
@@ -58,7 +61,10 @@ function cells(container: HTMLElement): HTMLElement[] {
 	];
 }
 
-afterEach(() => cleanup());
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("album content grid", () => {
 	it("shows a processing item as pending media instead of the placeholder media, keeping Remove", () => {
@@ -312,6 +318,10 @@ describe("album content grid", () => {
 		expect(
 			container.querySelector('[data-slot="media-slot-grid"]'),
 		).toBeNull();
+		expect(slot("empty-title").textContent.trim()).toBe("No Media Yet");
+		expect(slot("empty-description").textContent.trim()).toBe(
+			"Photos and videos you add appear here.",
+		);
 		expect(
 			getByRole("button", { name: "Add photos or videos" }),
 		).toBeTruthy();
@@ -344,5 +354,69 @@ describe("album content grid", () => {
 		expect(
 			getByRole("button", { name: "Keep album video in slot 2" }),
 		).toBeTruthy();
+	});
+
+	it("names its slots and the add tile in the active locale", async () => {
+		const { container, getByRole } = render(AlbumContentGrid, {
+			props: {
+				uploads,
+				albumId: 903,
+				content: [readyPhoto, processingVideo],
+				pending: [
+					{ key: "a", kind: "photo" },
+				] satisfies PendingUpload[],
+				removed: [processingVideo.contentId],
+				saving: false,
+				limits: null,
+				onToggleRemoved: () => {},
+				onReorder: () => {},
+			},
+		});
+		const photo = getByRole("img", { name: "Album photo in slot 1" });
+		const remove = getByRole("button", {
+			name: "Remove album photo in slot 1",
+		});
+		const keep = getByRole("button", {
+			name: "Keep album video in slot 2",
+		});
+		const add = getByRole("button", { name: "Add photos or videos" });
+
+		await setLocale({ locale: "en-XA" });
+
+		const [uploadingCell, , processingCell] = cells(container);
+		expect(
+			uploadingCell?.querySelector('[data-slot="media-image-pending"]')
+				?.ariaLabel,
+		).toMatch(PSEUDO_MESSAGE);
+		expect(
+			processingCell?.querySelector('[data-slot="media-image-pending"]')
+				?.ariaLabel,
+		).toMatch(PSEUDO_MESSAGE);
+		expect(photo.getAttribute("alt")).toMatch(PSEUDO_MESSAGE);
+		expect(remove.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(keep.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(add.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("titles its empty state in the active locale", async () => {
+		render(AlbumContentGrid, {
+			props: {
+				uploads,
+				albumId: 903,
+				content: [],
+				pending: [],
+				removed: [],
+				saving: false,
+				limits: null,
+				onToggleRemoved: () => {},
+				onReorder: () => {},
+			},
+		});
+
+		await setLocale({ locale: "en-XA" });
+
+		for (const name of ["empty-title", "empty-description"]) {
+			expect(slot(name).textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
 	});
 });

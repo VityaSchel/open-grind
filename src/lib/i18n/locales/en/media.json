@@ -125,6 +125,26 @@
 				"a11y": {
 					"trigger": "Album menu"
 				}
+			},
+			"content": {
+				"addMedia": "Add photos or videos",
+				"addToAlbum": "Add to album",
+				"empty": {
+					"title": "No Media Yet",
+					"description": "Photos and videos you add appear here."
+				},
+				"a11y": {
+					"uploadingPhoto": "Uploading photo",
+					"uploadingVideo": "Uploading video",
+					"photoSlot": "Album photo in slot {{slot}}",
+					"videoSlot": "Album video in slot {{slot}}",
+					"photoSlotProcessing": "Album photo in slot {{slot}}, processing",
+					"videoSlotProcessing": "Album video in slot {{slot}}, processing",
+					"removePhotoSlot": "Remove album photo in slot {{slot}}",
+					"removeVideoSlot": "Remove album video in slot {{slot}}",
+					"keepPhotoSlot": "Keep album photo in slot {{slot}}",
+					"keepVideoSlot": "Keep album video in slot {{slot}}"
+				}
 			}
 		},
 		"sharedWith": {

@@ -4,6 +4,7 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
+	import { t } from "$lib/i18n";
 
 	let {
 		title,
@@ -29,7 +30,7 @@
 	<Empty.Content>
 		<Button {disabled} onclick={onAdd}>
 			<PlusIcon weight="bold" />
-			Add photos or videos
+			{t("media.albums.editor.content.addMedia")}
 		</Button>
 	</Empty.Content>
 </Empty.Root>
