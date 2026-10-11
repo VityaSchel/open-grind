@@ -10,8 +10,11 @@ import {
 } from "$lib/i18n/regional";
 
 export const NATIVE_READ_TIMEOUT_MS = 500;
+export const NATIVE_READ_LIMIT_MS = 5000;
 
 const CHANGED_EVENT = "regional-settings-changed";
+
+let systemRead: Promise<void> = Promise.resolve();
 
 function regionalOverride(): RegionalSettings | undefined {
 	const value = new URLSearchParams(location.search).get("regional");
@@ -21,6 +24,19 @@ function regionalOverride(): RegionalSettings | undefined {
 function nativeSettings(value: unknown): RegionalSettings | undefined {
 	const parsed = regionalSettingsSchema.safeParse(value);
 	return parsed.success ? parsed.data : undefined;
+}
+
+function settledWithin({
+	promise,
+	ms,
+}: {
+	promise: Promise<void>;
+	ms: number;
+}): Promise<void> {
+	return Promise.race([
+		promise,
+		new Promise<void>((resolve) => setTimeout(resolve, ms)),
+	]);
 }
 
 function followWebSettings(): void {
@@ -45,13 +61,11 @@ async function followNativeSettings(): Promise<void> {
 				setRegionalSettings(settings);
 		})
 		.catch(console.error);
-	await Promise.race([
-		initial,
-		new Promise((resolve) => setTimeout(resolve, NATIVE_READ_TIMEOUT_MS)),
-	]);
+	systemRead = settledWithin({ promise: initial, ms: NATIVE_READ_LIMIT_MS });
+	await settledWithin({ promise: initial, ms: NATIVE_READ_TIMEOUT_MS });
 }
 
-export async function startRegionalSettings(): Promise<void> {
+async function start(): Promise<void> {
 	const pinned = import.meta.env.DEV ? regionalOverride() : undefined;
 	if (pinned !== undefined) {
 		setRegionalSettings(pinned);
@@ -60,4 +74,13 @@ export async function startRegionalSettings(): Promise<void> {
 	} else {
 		followWebSettings();
 	}
+}
+
+export function startRegionalSettings(): Promise<void> {
+	systemRead = Promise.resolve();
+	return start();
+}
+
+export function regionalSettingsReady(): Promise<void> {
+	return systemRead;
 }

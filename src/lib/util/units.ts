@@ -2,10 +2,19 @@ import z from "zod";
 
 import { t } from "$lib/i18n";
 import { formatNumber, isolate } from "$lib/i18n/format";
+import type { MeasurementSystem } from "$lib/i18n/regional";
 
 export const unitSystemSchema = z.enum(["metric", "imperial"]);
 
 export type UnitSystem = z.infer<typeof unitSystemSchema>;
+
+export function unitSystemFor(
+	measurementSystem: MeasurementSystem | undefined,
+): UnitSystem {
+	return measurementSystem === "us" || measurementSystem === "uk"
+		? "imperial"
+		: "metric";
+}
 
 const FEET_PER_METRE = 3.28084;
 export const METRES_PER_MILE = 1609.344;

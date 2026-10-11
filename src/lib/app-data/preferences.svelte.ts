@@ -4,9 +4,11 @@ import z from "zod";
 
 import { backdropBlurCalibrationSchema } from "$lib/blur/calibration/decide";
 import { backdropBlurQualitySchema } from "$lib/blur/quality";
+import { getRegionalSettings } from "$lib/i18n";
 import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
-import { unitSystemSchema } from "$lib/util/units";
+import { regionalSettingsReady } from "$lib/platform/regional-settings";
+import { unitSystemFor, unitSystemSchema } from "$lib/util/units";
 import {
 	existsAppDataFile,
 	readAppDataFile,
@@ -65,9 +67,15 @@ function publish(preferences: Preferences): void {
 	loaded = true;
 }
 
+async function defaultPreferences(): Promise<Preferences> {
+	await regionalSettingsReady();
+	const { measurementSystem } = getRegionalSettings();
+	return preferencesSchema.parse({ units: unitSystemFor(measurementSystem) });
+}
+
 async function readFromDisk(): Promise<Preferences> {
 	if (!(await existsAppDataFile("preferences.data"))) {
-		return preferencesSchema.parse({});
+		return defaultPreferences();
 	}
 	const bytes = await readAppDataFile("preferences.data");
 	return preferencesSchema.parse(decode(bytes));
@@ -129,7 +137,7 @@ export async function setPreferences(
 
 async function resetToDefaults(): Promise<void> {
 	await enqueueWrite(async () => {
-		const preferences = preferencesSchema.parse({});
+		const preferences = await defaultPreferences();
 		await writeAppDataFileAtomic({
 			path: "preferences.data",
 			content: encode(preferences),
@@ -157,7 +165,7 @@ export async function clearAccountPreferences(): Promise<void> {
 		const preferences = preferencesSchema.parse(kept);
 		publish(preferences);
 		const encoded = encode(preferences);
-		if (bytesEqual(encoded, encode(preferencesSchema.parse({})))) {
+		if (bytesEqual(encoded, encode(await defaultPreferences()))) {
 			await removeAppDataFile("preferences.data");
 		} else {
 			await writeAppDataFileAtomic({

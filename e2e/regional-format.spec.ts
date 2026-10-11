@@ -55,6 +55,14 @@ test("follows a 24-hour clock chosen on a US system", async ({ page }) => {
 	await expect(page.getByText("9.3 km", { exact: true })).toBeVisible();
 });
 
+test("starts in miles on a system that measures in US units", async ({
+	page,
+}) => {
+	await openHenry(page, { query: "?regional=en-US-u-ms-ussystem" });
+
+	await expect(page.getByText("5.8 mi", { exact: true })).toBeVisible();
+});
+
 test.describe("on a browser set to German", () => {
 	test.use({ locale: "de-DE" });
 
