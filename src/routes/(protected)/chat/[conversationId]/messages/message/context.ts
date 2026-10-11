@@ -9,7 +9,6 @@ export const [getMessageContext, setMessageContext] =
 			lastInStack: boolean;
 			indexInStack: number;
 			isOut: boolean;
-			timestamp: number;
 		}
 	>();
 

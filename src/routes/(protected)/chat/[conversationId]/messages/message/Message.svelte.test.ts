@@ -1,13 +1,21 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, within } from "@testing-library/svelte";
+import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
+const { playHapticMock, toastMock, writeTextMock } = vi.hoisted(() => ({
+	playHapticMock: vi.fn(),
+	toastMock: { success: vi.fn(), error: vi.fn() },
+	writeTextMock: vi.fn(),
+}));
 vi.mock("$lib/haptics", () => ({
 	hapticsAvailable: () => true,
 	playHaptic: playHapticMock,
+}));
+vi.mock("svelte-sonner", () => ({ toast: toastMock }));
+vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
+	writeText: writeTextMock,
 }));
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
@@ -16,15 +24,20 @@ import { untranslatableTexts } from "$lib/test/untranslatable";
 import Message from "./Message.svelte";
 
 const MESSAGE_ROW = '[data-slot="message"] [role="article"]';
+const SENT_AT = new Date(2026, 9, 5, 9, 5);
 
 function renderMessage({
 	type,
 	body,
 	replyToMessage,
+	isRead = null,
+	status,
 }: {
 	type: string;
 	body: Record<string, unknown>;
 	replyToMessage?: { type: string; body: Record<string, unknown> };
+	isRead?: boolean | null;
+	status?: "sent" | "pending" | "error";
 }) {
 	const { container } = render(Message, {
 		props: {
@@ -32,7 +45,7 @@ function renderMessage({
 				messageId: "m1",
 				conversationId: "100001:100002",
 				senderId: 100002,
-				timestamp: 1_700_000_000_000,
+				timestamp: SENT_AT.getTime(),
 				type,
 				body,
 				replyToMessage: replyToMessage && {
@@ -42,9 +55,10 @@ function renderMessage({
 				},
 			}),
 			isOut: false,
-			isRead: null,
+			isRead,
 			indexInStack: 0,
 			stackLength: 1,
+			status,
 		},
 	});
 	const row = container.querySelector<HTMLElement>(MESSAGE_ROW);
@@ -65,9 +79,17 @@ async function menuOpened(row: HTMLElement): Promise<boolean> {
 	return row.style.visibility === "hidden";
 }
 
+async function openMenu(row: HTMLElement): Promise<HTMLDialogElement> {
+	actionsButton(row).click();
+	await tick();
+	const dialog = document.querySelector("dialog");
+	if (dialog === null) throw new Error("Missing message menu");
+	return dialog;
+}
+
 afterEach(() => {
 	cleanup();
-	playHapticMock.mockReset();
+	vi.resetAllMocks();
 });
 
 describe("message translation boundary", () => {
@@ -107,6 +129,37 @@ describe("message translation boundary", () => {
 		expect(quotingPhoto.textContent).toContain("Photo");
 		expect(untranslatableTexts(quotingPhoto)).toEqual(["sure"]);
 	});
+
+	it("keeps an unsupported wire type out of page translation", () => {
+		const row = renderMessage({ type: "SomethingNew", body: {} });
+
+		expect(row.textContent?.trim()).toBe(
+			"Unsupported message type: SomethingNew",
+		);
+		expect(untranslatableTexts(row)).toEqual(["SomethingNew"]);
+	});
+});
+
+describe("message status line", () => {
+	it.each([
+		{ isRead: true, status: "sent", text: "Read 9:05" },
+		{ isRead: false, status: "sent", text: "Sent 9:05" },
+		{ isRead: null, status: "sent", text: "9:05" },
+		{ isRead: false, status: "pending", text: "Sending…" },
+		{ isRead: false, status: "error", text: "Not sent" },
+	] as const)(
+		"reads $text for a $status message in local time",
+		({ isRead, status, text }) => {
+			renderMessage({
+				type: "Text",
+				body: { text: "hello there" },
+				isRead,
+				status,
+			});
+
+			expect(screen.queryAllByText(text)).toHaveLength(1);
+		},
+	);
 });
 
 describe("message menu haptics", () => {
@@ -153,6 +206,51 @@ describe("message menu haptics", () => {
 
 		expect(await menuOpened(row)).toBe(false);
 		expect(playHapticMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("message menu", () => {
+	it("names the fire icon with the end of the double-tap hint", async () => {
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+		const fireIcon = within(dialog).getByAltText("react with fire");
+
+		expect(fireIcon.parentElement?.textContent?.trim()).toBe(
+			"Double tap to",
+		);
+	});
+
+	it("copies the message words, says so and closes", async () => {
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("button", { name: "Copy message" }).click();
+
+		await vi.waitFor(() => {
+			expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
+				"Message copied to clipboard",
+			);
+		});
+		expect(writeTextMock).toHaveBeenCalledExactlyOnceWith("hello there");
+		expect(toastMock.error).not.toHaveBeenCalled();
+		await vi.waitFor(() => expect(row.style.visibility).toBe(""));
+	});
+
+	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
+		writeTextMock.mockRejectedValue(new Error("no clipboard"));
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const row = renderTextMessage();
+		const dialog = await openMenu(row);
+
+		within(dialog).getByRole("button", { name: "Copy message" }).click();
+
+		await vi.waitFor(() => {
+			expect(toastMock.error).toHaveBeenCalledExactlyOnceWith(
+				"Couldn’t copy to clipboard",
+			);
+		});
+		expect(toastMock.success).not.toHaveBeenCalled();
+		await vi.waitFor(() => expect(row.style.visibility).toBe(""));
 	});
 });
 
@@ -204,10 +302,7 @@ describe("message actions button", () => {
 		const row = renderTextMessage();
 		const button = actionsButton(row);
 		button.focus();
-		button.click();
-		await tick();
-		const dialog = document.querySelector("dialog");
-		if (dialog === null) throw new Error("Missing message menu");
+		const dialog = await openMenu(row);
 		within(dialog).getByRole("button", { name: "Copy message" }).focus();
 
 		dialog.close();

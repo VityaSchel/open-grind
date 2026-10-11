@@ -33,6 +33,6 @@ test("grid tile opens a profile, which opens a conversation that accepts a messa
 
 	await expect(page.locator(MESSAGE_ROW).last()).toContainText(sent);
 	await expect(composer).toHaveValue("");
-	await expect(page.getByText("Sending...")).toHaveCount(0);
-	await expect(page.getByText("Failed to send")).toHaveCount(0);
+	await expect(page.getByText("Sending…")).toHaveCount(0);
+	await expect(page.getByText("Not sent")).toHaveCount(0);
 });

@@ -49,6 +49,36 @@
 			}
 		}
 	},
+	"message": {
+		"a11y": {
+			"actions": "Message actions"
+		},
+		"status": {
+			"sending": "Sending…",
+			"notSent": "Not sent",
+			"readAt": "Read {{time}}",
+			"sentAt": "Sent {{time}}"
+		},
+		"contextMenu": {
+			"doubleTapToReact": "Double tap to <fireIcon>react with fire</fireIcon>",
+			"a11y": {
+				"reactWithFire": "React with fire"
+			},
+			"reply": "Reply",
+			"copy": "Copy message",
+			"copied": "Message copied to clipboard",
+			"deleteForMe": "Delete for me",
+			"unsend": "Unsend message",
+			"report": "Report"
+		},
+		"reaction": {
+			"a11y": {
+				"fire": "Fire reaction"
+			}
+		},
+		"unsent": "Message unsent",
+		"unsupported": "Unsupported message type: {{type}}"
+	},
 	"conversations": {
 		"a11y": {
 			"loadingMore": "Loading more conversations"
