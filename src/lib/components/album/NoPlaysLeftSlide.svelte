@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { LockIcon } from "phosphor-svelte";
 
+	import { t } from "$lib/i18n";
+
 	let { still }: { still: string | null } = $props();
 
 	let failed = $state(false);
@@ -20,5 +22,5 @@
 		/>
 	{/if}
 	<LockIcon weight="fill" class="relative aspect-square h-auto w-1/6" />
-	<span class="relative">No plays left</span>
+	<span class="relative">{t("media.album.noPlaysLeft")}</span>
 </div>

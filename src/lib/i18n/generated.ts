@@ -236,8 +236,10 @@ export interface Messages {
 	"common.actions.save": undefined;
 	"common.albumShare.errors.shareFailed": undefined;
 	"common.albumShare.errors.unshareFailed": undefined;
+	"common.carousel.a11y.carouselRole": undefined;
 	"common.carousel.a11y.next": undefined;
 	"common.carousel.a11y.previous": undefined;
+	"common.carousel.a11y.slideRole": undefined;
 	"common.chat.writeMessage": undefined;
 	"common.commandDialog.a11y.description": undefined;
 	"common.commandDialog.a11y.title": undefined;
@@ -344,6 +346,7 @@ export interface Messages {
 	"interest.views.untracked.description": undefined;
 	"interest.views.untracked.enable": undefined;
 	"interest.views.untracked.title": undefined;
+	"media.album.noPlaysLeft": undefined;
 	"media.grid.a11y.maxSelected": { count: number };
 	"media.lightbox.errors.loadFailed": undefined;
 	"media.lightbox.errors.playFailed": undefined;

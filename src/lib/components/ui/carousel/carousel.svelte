@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "$lib/i18n";
 	import { cn, type WithElementRef } from "$lib/util/utils.js";
 	import {
 		type CarouselAPI,
@@ -87,7 +88,7 @@
 	data-slot="carousel"
 	class={cn("relative", className)}
 	role="region"
-	aria-roledescription="carousel"
+	aria-roledescription={t("common.carousel.a11y.carouselRole")}
 	{...restProps}
 >
 	{@render children?.()}

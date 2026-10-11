@@ -242,7 +242,9 @@ describe("applyPhotoSwipeLabels", () => {
 		await setLocale({ locale: SOURCE_LOCALE });
 	});
 
-	async function openLabeled() {
+	async function openLabeled({
+		configure,
+	}: { configure?: (lightbox: PhotoSwipeLightbox) => void } = {}) {
 		const lightbox = new PhotoSwipeLightbox({
 			dataSource: [
 				{ src: "a.jpg", width: 100, height: 100 },
@@ -255,6 +257,7 @@ describe("applyPhotoSwipeLabels", () => {
 		opened = lightbox;
 		applyPhotoSwipeErrorUi(lightbox);
 		applyPhotoSwipeLabels(lightbox);
+		configure?.(lightbox);
 		lightbox.init();
 		lightbox.loadAndOpen(0);
 		await vi.waitFor(() => expect(lightbox.pswp?.opener.isOpen).toBe(true));
@@ -277,6 +280,18 @@ describe("applyPhotoSwipeLabels", () => {
 			t("media.lightbox.previous"),
 			t("media.lightbox.next"),
 		].map((title) => [title, title]);
+
+	const roleDescriptions = () =>
+		[".pswp__scroll-wrap", ".pswp__item"].flatMap((selector) =>
+			[...document.querySelectorAll(selector)].map((element) =>
+				element.getAttribute("aria-roledescription"),
+			),
+		);
+
+	const translatedRoles = () => [
+		t("common.carousel.a11y.carouselRole"),
+		...Array.from({ length: 3 }, () => t("common.carousel.a11y.slideRole")),
+	];
 
 	const errorLabel = () =>
 		document
@@ -305,6 +320,37 @@ describe("applyPhotoSwipeLabels", () => {
 
 		expect(buttonLabels()).toEqual(translatedLabels());
 		expect(buttonLabels()[0]?.[0]).not.toBe("Close");
+	});
+
+	it("describes the carousel and its slides in the locale the lightbox opens in", async () => {
+		await setLocale({ locale: "en-XA" });
+		let atFirstLayout: (string | null)[] = [];
+		await openLabeled({
+			configure: (lightbox) =>
+				lightbox.on("initialLayout", () => {
+					atFirstLayout = roleDescriptions();
+				}),
+		});
+
+		expect(atFirstLayout).toEqual(translatedRoles());
+		expect(roleDescriptions()).toEqual(translatedRoles());
+		expect(atFirstLayout[0]).not.toBe("carousel");
+	});
+
+	it("redescribes the open carousel and its slides when the locale switches", async () => {
+		await openLabeled();
+		expect(roleDescriptions()).toEqual([
+			"carousel",
+			"slide",
+			"slide",
+			"slide",
+		]);
+
+		await setLocale({ locale: "en-XA" });
+		flushSync();
+
+		expect(roleDescriptions()).toEqual(translatedRoles());
+		expect(roleDescriptions()[0]).not.toBe("carousel");
 	});
 
 	it("relabels a shown load error when the locale switches", async () => {

@@ -138,6 +138,18 @@ function labelButton({
 	element.setAttribute("aria-label", title);
 }
 
+function describeCarouselRoles(lightbox: PhotoSwipeLightbox): void {
+	const pswp = lightbox.pswp;
+	if (pswp === undefined) return;
+	pswp.scrollWrap?.setAttribute(
+		"aria-roledescription",
+		t("common.carousel.a11y.carouselRole"),
+	);
+	const slideRole = t("common.carousel.a11y.slideRole");
+	for (const { el } of pswp.mainScroll.itemHolders)
+		el.setAttribute("aria-roledescription", slideRole);
+}
+
 export function applyPhotoSwipeLabels(lightbox: PhotoSwipeLightbox): void {
 	const titled = new Map<HTMLElement, TitledButton>();
 	lightbox.addFilter("uiElement", (element, { name }) => {
@@ -146,11 +158,15 @@ export function applyPhotoSwipeLabels(lightbox: PhotoSwipeLightbox): void {
 		labelButton({ element, title: t(buttonTitleKeys[name]) });
 		return element;
 	});
+	lightbox.on("firstUpdate", () => {
+		describeCarouselRoles(lightbox);
+	});
 	followLocaleWhileOpen({
 		lightbox,
 		apply: () => {
 			for (const [element, name] of titled)
 				labelButton({ element, title: t(buttonTitleKeys[name]) });
+			describeCarouselRoles(lightbox);
 		},
 	});
 	lightbox.on("destroy", () => {

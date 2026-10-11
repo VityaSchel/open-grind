@@ -9,6 +9,9 @@
 			"decoderMissing": "Playing this video needs an H.264 decoder, which isn’t installed on this system. <codecsGuideLink>How to install video codecs</codecsGuideLink>"
 		}
 	},
+	"album": {
+		"noPlaysLeft": "No plays left"
+	},
 	"sheet": {
 		"tile": {
 			"a11y": {

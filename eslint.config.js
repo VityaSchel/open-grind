@@ -11,6 +11,7 @@ const vendoredGlob = "src/lib/components/ui/**";
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/routes/+layout.svelte",
+	"src/lib/components/album/NoPlaysLeftSlide.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/AutoLocationToast.svelte",
@@ -246,6 +247,7 @@ const translatedScriptFiles = [
 	"src/lib/chat/seen-messages.ts",
 	"src/lib/chat/unread-while-missing.ts",
 	"src/lib/credits/highlights.ts",
+	"src/lib/components/album/album-lightbox.ts",
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/components/filters/gender-chips.ts",
 	"src/lib/components/filters/option-filters.ts",
@@ -342,7 +344,7 @@ const toastCall = `CallExpression:matches([callee.name="toast"], [callee.object.
 const toastTextProperty = `:matches(${toastCall} > ObjectExpression Property[key.name=/^(?:description|label)$/], CallExpression[callee.name="showErrorToast"] > ObjectExpression > Property[key.name="label"])`;
 const fallbackOperator = `LogicalExpression:matches([operator="??"], [operator="||"]):not(BinaryExpression[operator=/^[!=]==?$/] > *)`;
 const identityProperty = `Property[key.name=/^(?:kind|type)$/]`;
-const textAttribute = `SvelteAttribute[key.name=/^(?:aria-label|aria-description|alt|title|placeholder)$/]`;
+const textAttribute = `SvelteAttribute[key.name=/^(?:aria-label|aria-description|aria-roledescription|alt|title|placeholder)$/]`;
 const schemaCall = `CallExpression:matches([callee.object.name="z"], [callee.property.name="catch"])`;
 const componentAttribute = `SvelteElement[kind="component"] > SvelteStartTag > SvelteAttribute:not(${textAttribute})`;
 

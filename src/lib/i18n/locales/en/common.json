@@ -31,7 +31,9 @@
 	"carousel": {
 		"a11y": {
 			"previous": "Previous slide",
-			"next": "Next slide"
+			"next": "Next slide",
+			"carouselRole": "carousel",
+			"slideRole": "slide"
 		}
 	},
 	"commandDialog": {
