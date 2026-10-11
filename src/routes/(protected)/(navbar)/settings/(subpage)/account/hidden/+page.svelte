@@ -11,10 +11,11 @@
 		unhideUser,
 	} from "$lib/api/browse/hides";
 	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
+	import { t } from "$lib/i18n";
 </script>
 
 <svelte:head>
-	<title>Hidden users</title>
+	<title>{t("settings.subpage.titles.hidden")}</title>
 </svelte:head>
 
 {#snippet icon(on: boolean)}
@@ -28,10 +29,13 @@
 		on ? hideUser({ profileId }) : unhideUser({ profileId })}
 	{icon}
 	{scroll}
-	label="Hidden"
-	errorLabel={{ turningOn: "Failed to hide", turningOff: "Failed to unhide" }}
+	label={t("settings.hidden.a11y.toggle")}
+	errorLabel={{
+		turningOn: t("profile.viewability.errors.hideFailed"),
+		turningOff: t("profile.viewability.errors.unhideFailed"),
+	}}
 	empty={{
-		title: "No Hidden Users",
-		description: "People you hide will appear here.",
+		title: t("settings.hidden.empty.title"),
+		description: t("settings.hidden.empty.description"),
 	}}
 />

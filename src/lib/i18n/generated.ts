@@ -297,6 +297,11 @@ export interface Messages {
 	"common.media.errors.videoUnreadable": undefined;
 	"common.media.uploadPhotosOrVideos": undefined;
 	"common.profileFields.healthPractices": undefined;
+	"common.profileList.a11y.profileId": { id: string };
+	"common.profileList.a11y.toggle": { label: string; name: string };
+	"common.profileList.errors.loadFailed": undefined;
+	"common.profileList.profileId": { id: string };
+	"common.profileList.unavailable": undefined;
 	"common.profileSections.expectations": undefined;
 	"common.profileSections.health": undefined;
 	"common.profileSections.socials": undefined;
@@ -634,6 +639,9 @@ export interface Messages {
 	"settings.account.unimplemented": { issueLink: string };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
 	"settings.app.pin.unimplemented": { issueLink: string };
+	"settings.blocked.a11y.toggle": undefined;
+	"settings.blocked.empty.description": undefined;
+	"settings.blocked.empty.title": undefined;
 	"settings.credits.highlights.bitsUi": { projectLink: string };
 	"settings.credits.highlights.emblaCarouselSvelte": { projectLink: string };
 	"settings.credits.highlights.phosphorSvelte": { projectLink: string };
@@ -647,6 +655,9 @@ export interface Messages {
 	"settings.credits.highlights.tauri": { projectLink: string };
 	"settings.credits.highlights.vaulSvelte": { projectLink: string };
 	"settings.credits.highlights.zod": { projectLink: string };
+	"settings.hidden.a11y.toggle": undefined;
+	"settings.hidden.empty.description": undefined;
+	"settings.hidden.empty.title": undefined;
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;
 	"settings.subpage.titles.app": undefined;
@@ -731,6 +742,9 @@ export interface RichMessages {
 	"commands.setLocationByGeohash.hint": { length: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
+	"common.profileList.a11y.profileId": { id: "placeholder" };
+	"common.profileList.a11y.toggle": { label: "placeholder"; name: "placeholder" };
+	"common.profileList.profileId": { id: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: "placeholder" };
 	"feedback.appError.overLimit": { limit: "placeholder" };

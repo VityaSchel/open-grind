@@ -4,6 +4,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import * as Item from "$lib/components/ui/item";
+	import { t } from "$lib/i18n";
 	import type { ProfileListProfile, ProfileListToggle } from "./profile-list";
 
 	let {
@@ -23,14 +24,21 @@
 		onToggle: () => void;
 	} & Pick<ProfileListToggle, "icon" | "control" | "label"> = $props();
 
-	const identifies = $derived(profile?.displayName ?? `ID ${profileId}`);
+	const id = $derived(String(profileId));
+	const identifies = $derived(
+		profile?.displayName ?? t("common.profileList.a11y.profileId", { id }),
+	);
+	const toggleLabel = $derived(
+		t("common.profileList.a11y.toggle", { label, name: identifies }),
+	);
 </script>
 
 <ProfileItem
 	avatar={{ mediaHash: profile?.profileImageMediaHash ?? null }}
 	title={{
 		value: profile?.displayName ?? null,
-		fallback: profile === null ? "Unavailable profile" : undefined,
+		fallback:
+			profile === null ? t("common.profileList.unavailable") : undefined,
 	}}
 	onlineUntil={profile?.onlineUntil ?? null}
 	link="/profile/{profileId}"
@@ -38,7 +46,7 @@
 	{#snippet description()}
 		{#if profile === null}
 			<Item.Description class="text-muted-foreground">
-				ID: {profileId}
+				{t("common.profileList.profileId", { id })}
 			</Item.Description>
 		{:else if profile.distance !== null}
 			<Item.Description class="text-muted-foreground">
@@ -51,7 +59,7 @@
 			<Checkbox
 				class="size-5 border-muted-foreground/50 after:-inset-y-3 data-checked:border-primary"
 				checked={on}
-				aria-label="{label}: {identifies}"
+				aria-label={toggleLabel}
 				disabled={submitting}
 				onCheckedChange={onToggle}
 			/>
@@ -61,7 +69,7 @@
 				variant="ghost"
 				role="switch"
 				aria-checked={on}
-				aria-label="{label}: {identifies}"
+				aria-label={toggleLabel}
 				disabled={submitting}
 				onclick={onToggle}
 			>

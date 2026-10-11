@@ -96,6 +96,17 @@
 			"unshareFailed": "Couldn’t unshare album"
 		}
 	},
+	"profileList": {
+		"unavailable": "Unavailable profile",
+		"profileId": "ID: {{id}}",
+		"errors": {
+			"loadFailed": "Couldn’t load profiles"
+		},
+		"a11y": {
+			"profileId": "ID {{id}}",
+			"toggle": "{{label}}: {{name}}"
+		}
+	},
 	"location": {
 		"errors": {
 			"saveFailed": "Couldn’t save location"

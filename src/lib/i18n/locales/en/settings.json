@@ -17,6 +17,24 @@
 	"account": {
 		"unimplemented": "Account settings aren’t implemented yet. Follow the progress in {{issueLink}}."
 	},
+	"blocked": {
+		"empty": {
+			"title": "No Blocked Users",
+			"description": "People you block will appear here."
+		},
+		"a11y": {
+			"toggle": "Blocked"
+		}
+	},
+	"hidden": {
+		"empty": {
+			"title": "No Hidden Users",
+			"description": "People you hide will appear here."
+		},
+		"a11y": {
+			"toggle": "Hidden"
+		}
+	},
 	"app": {
 		"discreetAppIcon": {
 			"unimplemented": "Discreet App Icon isn’t implemented yet. Follow the progress in {{issueLink}}."

@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const { getProfilesMock, showErrorToastMock } = vi.hoisted(() => ({
 	getProfilesMock:
@@ -9,6 +9,8 @@ const { getProfilesMock, showErrorToastMock } = vi.hoisted(() => ({
 vi.mock("$lib/api/users/profiles", () => ({ getProfiles: getProfilesMock }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { ProfileListProfile } from "./profile-list";
 import { ProfileListState } from "./profile-list-state.svelte";
 
@@ -32,8 +34,8 @@ function createList({
 		loadIds,
 		setOn,
 		errorLabel: {
-			turningOn: "Failed to block",
-			turningOff: "Failed to unblock",
+			turningOn: "Couldn’t block",
+			turningOff: "Couldn’t unblock",
 		},
 		eager,
 	}));
@@ -54,6 +56,10 @@ beforeEach(() => {
 		Promise.resolve(profileIds.map(resolvedProfile)),
 	);
 	vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(async () => {
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 it("takes the whole id list but resolves no profile before anything is visible", async () => {
@@ -207,6 +213,9 @@ it("retries a failed chunk the next time its range is asked for", async () => {
 
 	list.setVisible({ start: 0, end: 20 });
 	await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+	expect(showErrorToastMock).toHaveBeenCalledWith(
+		expect.objectContaining({ label: "Couldn’t load profiles" }),
+	);
 
 	list.setVisible({ start: 0, end: 25 });
 	await vi.waitFor(() => expect(list.profile(1000)).toBeDefined());
@@ -227,6 +236,17 @@ it("retries a failed chunk from the error toast's retry action", async () => {
 
 	await vi.waitFor(() => expect(list.profile(1000)).toBeDefined());
 	expect(getProfilesMock).toHaveBeenCalledTimes(2);
+});
+
+it("words the chunk failure toast in the locale active when it shows", async () => {
+	const { list } = await loadedList();
+	getProfilesMock.mockRejectedValueOnce(new Error("network"));
+	await setLocale({ locale: "en-XA" });
+
+	list.setVisible({ start: 0, end: 20 });
+	await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+
+	expect(showErrorToastMock.mock.calls[0]![0].label).toMatch(PSEUDO_MESSAGE);
 });
 
 it("stays silent about requests that reject after dispose", async () => {
@@ -269,7 +289,7 @@ it("rolls the toggle back when the request fails", async () => {
 
 	expect(list.isOn(1000)).toBe(true);
 	expect(showErrorToastMock).toHaveBeenCalledWith(
-		expect.objectContaining({ label: "Failed to unblock" }),
+		expect.objectContaining({ label: "Couldn’t unblock" }),
 	);
 });
 
