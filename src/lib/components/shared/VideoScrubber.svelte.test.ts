@@ -3,6 +3,8 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import VideoScrubber from "./VideoScrubber.svelte";
 
 const DURATION = 100;
@@ -54,7 +56,21 @@ function pointer(track: HTMLElement, type: string, clientX: number) {
 }
 
 describe("VideoScrubber", () => {
-	afterEach(cleanup);
+	afterEach(async () => {
+		cleanup();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("names the slider in the active locale and reads the time as m:ss", async () => {
+		const { track } = scrubber({ currentTime: 65 });
+		expect(track.getAttribute("aria-label")).toBe("Seek");
+		expect(track.getAttribute("aria-valuetext")).toBe("1:05");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(track.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(track.getAttribute("aria-valuetext")).toBe("1:05");
+	});
 
 	it("seeks to the fraction of the track that was pressed", async () => {
 		const { track, onseek } = scrubber();

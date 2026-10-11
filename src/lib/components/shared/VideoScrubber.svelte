@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SvelteMediaTimeRange } from "svelte/elements";
 
+	import { t } from "$lib/i18n";
 	import { formatMediaDuration } from "$lib/util/format-time";
 
 	const STEP_SECONDS = 5;
@@ -76,7 +77,7 @@
 	bind:this={track}
 	role="slider"
 	tabindex="0"
-	aria-label="Seek"
+	aria-label={t("media.videoScrubber.a11y.seek")}
 	aria-valuemin={0}
 	aria-valuemax={duration}
 	aria-valuenow={currentTime}

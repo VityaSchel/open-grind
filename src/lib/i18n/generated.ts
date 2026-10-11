@@ -362,6 +362,11 @@ export interface Messages {
 	"media.sheet.tileMenu.a11y.photoOptions": undefined;
 	"media.sheet.tileMenu.a11y.videoOptions": undefined;
 	"media.sheet.tileMenu.deletePermanently": undefined;
+	"media.videoPlayer.a11y.mute": undefined;
+	"media.videoPlayer.a11y.pause": undefined;
+	"media.videoPlayer.a11y.play": undefined;
+	"media.videoPlayer.a11y.unmute": undefined;
+	"media.videoScrubber.a11y.seek": undefined;
 	"profile.acceptNsfwPics.never": undefined;
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;

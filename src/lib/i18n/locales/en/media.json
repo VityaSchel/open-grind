@@ -44,5 +44,18 @@
 			"maxSelected_one": "Maximum {{count}} selected",
 			"maxSelected_other": "Maximum {{count}} selected"
 		}
+	},
+	"videoPlayer": {
+		"a11y": {
+			"play": "Play",
+			"pause": "Pause",
+			"mute": "Mute",
+			"unmute": "Unmute"
+		}
+	},
+	"videoScrubber": {
+		"a11y": {
+			"seek": "Seek"
+		}
 	}
 }

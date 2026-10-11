@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, within } from "@testing-library/svelte";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import VideoPlayer from "./VideoPlayer.svelte";
 
 const CONTROLS = "[data-pswp-interactive]";
@@ -67,7 +69,11 @@ function pointer(
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe("VideoPlayer", () => {
-	afterEach(cleanup);
+	afterEach(async () => {
+		cleanup();
+		vi.restoreAllMocks();
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
 
 	it("opens with the controls up", () => {
 		expect(player().controls()).not.toBeNull();
@@ -169,6 +175,34 @@ describe("VideoPlayer", () => {
 
 		expect(controls()).not.toBeNull();
 		expect(document.activeElement).toBe(buttons.at(-1));
+	});
+
+	it("names its controls in the active locale", async () => {
+		vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+		vi.spyOn(HTMLMediaElement.prototype, "pause").mockReturnValue();
+		const { controls } = player();
+		const names = () =>
+			[...controls()!.querySelectorAll("button, [role='slider']")].map(
+				(control) => control.getAttribute("aria-label"),
+			);
+		const toggle = async () => {
+			for (const button of within(controls()!).getAllByRole("button"))
+				await fireEvent.click(button);
+		};
+
+		expect(names()).toEqual(["Play", "Seek", "Unmute"]);
+		await toggle();
+		expect(names()).toEqual(["Pause", "Seek", "Mute"]);
+
+		await setLocale({ locale: "en-XA" });
+		const playing = names();
+		await toggle();
+		const paused = names();
+
+		for (const name of [...playing, ...paused])
+			expect(name).toMatch(PSEUDO_MESSAGE);
+		expect(paused[1]).toBe(playing[1]);
+		expect(new Set([...playing, ...paused]).size).toBe(5);
 	});
 
 	it("reports a decode failure without retrying, because a retry cannot help", async () => {

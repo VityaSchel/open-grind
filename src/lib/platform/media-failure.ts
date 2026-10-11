@@ -63,3 +63,16 @@ export function describeMediaFailure(failure: MediaFailure | null): string {
 	const expired = failure.signatureExpired ? ", signature expired" : "";
 	return `${what} from ${failure.host}${expired}`;
 }
+
+export function describeMediaError({
+	error,
+	elapsedSeconds,
+}: {
+	error: Pick<MediaError, "code" | "message"> | null;
+	elapsedSeconds: number;
+}): string {
+	const after = `after ${elapsedSeconds.toFixed(1)}s`;
+	if (error === null) return `unknown media error ${after}`;
+	const message = error.message === "" ? "" : `: ${error.message}`;
+	return `MediaError ${error.code} ${after}${message}`;
+}
