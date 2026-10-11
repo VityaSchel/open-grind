@@ -205,6 +205,21 @@ describe("TapsState", () => {
 		expect(state.taps[0]?.isFavorite).toBe(true);
 	});
 
+	it("hands only a tap sent to us to the incoming-tap handler", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [] });
+		const onIncomingTap = vi.fn();
+		const state = new TapsState({ ourProfileId: 99, onIncomingTap });
+		await waitForLoaded(state);
+
+		emitTap(tapEvent({ senderId: 1, recipientId: 99 }));
+		emitTap(tapEvent({ senderId: 2, recipientId: 7 }));
+
+		expect(onIncomingTap).toHaveBeenCalledExactlyOnceWith({
+			senderId: 1,
+			senderName: "Profile 1",
+		});
+	});
+
 	it("records initial load errors and retries", async () => {
 		getReceivedTapsMock
 			.mockRejectedValueOnce(new Error("offline"))

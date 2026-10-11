@@ -14,11 +14,7 @@ const SCREENS = [
 	{ name: "a 420 × 800 phone", viewport: { width: 420, height: 800 } },
 	{ name: "a 1040 × 800 desktop", viewport: { width: 1040, height: 800 } },
 ];
-const DESKTOPS = [
-	{ platform: "macos", named: "macOS" },
-	{ platform: "windows", named: "Windows" },
-	{ platform: "linux", named: "Linux" },
-];
+const UNSUPPORTED = { platform: "ios", named: "this platform" };
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -37,37 +33,35 @@ for (const screen of SCREENS) {
 	test.describe(`on ${screen.name}`, () => {
 		test.use({ viewport: screen.viewport });
 
-		for (const { platform, named } of DESKTOPS) {
-			test(`${named} is named as unsupported in the very middle of the page`, async ({
-				page,
-			}) => {
-				await installTauriShim(page, { platform });
-				await page.goto(NOTIFICATIONS);
-				await unsupported(page, { named }).waitFor({
-					timeout: FIRST_ROUTE_COMPILE_MS,
-				});
-
-				const center = await textCenter(page, { named });
-
-				expect(
-					Math.abs(center.x - screen.viewport.width / 2),
-				).toBeLessThanOrEqual(1);
-				expect(
-					Math.abs(center.y - screen.viewport.height / 2),
-				).toBeLessThanOrEqual(1);
+		test("an unsupported platform is named in the very middle of the page", async ({
+			page,
+		}) => {
+			await installTauriShim(page, { platform: UNSUPPORTED.platform });
+			await page.goto(NOTIFICATIONS);
+			await unsupported(page, UNSUPPORTED).waitFor({
+				timeout: FIRST_ROUTE_COMPILE_MS,
 			});
-		}
+
+			const center = await textCenter(page, UNSUPPORTED);
+
+			expect(
+				Math.abs(center.x - screen.viewport.width / 2),
+			).toBeLessThanOrEqual(1);
+			expect(
+				Math.abs(center.y - screen.viewport.height / 2),
+			).toBeLessThanOrEqual(1);
+		});
 
 		test("the message stays in the middle of its page while the page slides in", async ({
 			page,
 		}) => {
-			await openSettings(page, { platform: "windows" });
+			await openSettings(page, { platform: UNSUPPORTED.platform });
 			await openAppSettings(page);
 
 			const sliding = pauseOnceSliding(page, { pane: STACK_PANE });
 			await page.getByRole("link", { name: "Notifications" }).click();
 			const travelled = await sliding;
-			const center = await textCenter(page, { named: "Windows" });
+			const center = await textCenter(page, UNSUPPORTED);
 			await resumeSlides(page);
 			await stackSettled(page);
 

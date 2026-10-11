@@ -44,11 +44,15 @@ vi.mock("$lib/platform/link-opener", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof Os>()),
-	currentPlatform: (await import("./notifications-page-test-helpers.svelte"))
-		.currentPlatform,
-}));
+vi.mock("$lib/platform/os", async (importOriginal) => {
+	const { currentPlatform } =
+		await import("./notifications-page-test-helpers.svelte");
+	return {
+		...(await importOriginal<typeof Os>()),
+		currentPlatform,
+		isAndroidPlatform: () => currentPlatform() === "android",
+	};
+});
 vi.mock("$lib/api/app-lifecycle.svelte", async () => ({
 	appLifecycle: (await import("./notifications-page-test-helpers.svelte"))
 		.appLifecycle,

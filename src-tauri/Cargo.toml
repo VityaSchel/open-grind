@@ -69,6 +69,8 @@ objc2 = "0.6"
 # Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs
 block2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSHapticFeedback", "block2", "objc2-core-foundation"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSBundle", "NSError", "NSString"] }
+objc2-user-notifications = { version = "0.3", default-features = false, features = ["std", "bitflags", "block2", "UNNotification", "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse", "UNNotificationSettings", "UNNotificationSound", "UNNotificationTrigger", "UNUserNotificationCenter"] }
 rfd = "0.16"
 
 [target.'cfg(target_vendor = "apple")'.dependencies]
@@ -80,12 +82,15 @@ apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "prote
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-native-keyring-store = "1.1.0"
 webview2-com = "0.38"
-windows = { version = "0.61", features = ["Win32_System_Com"] }
+windows = { version = "0.61", features = ["Data_Xml_Dom", "Foundation", "UI_Notifications", "Win32_System_Com"] }
 windows-core = "0.61"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
+gdk = "0.18"
+gdkwayland-sys = "0.18"
 webkit2gtk = { version = "2", features = ["v2_28"] }
+zbus = "5"
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-native-keyring-store = "1.0.0"

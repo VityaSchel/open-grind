@@ -27,7 +27,8 @@ export const push = {
 	notificationPermission: vi.fn<typeof PushApi.notificationPermission>(),
 	openNotificationSettings: vi.fn(settled),
 	openPushCategorySettings: vi.fn(settled),
-	pushAvailableHere: () => true,
+	pushAvailableHere: () =>
+		["android", "linux", "macos", "windows"].includes(currentPlatform()),
 	pushCategories: vi.fn<typeof PushApi.pushCategories>(),
 	pushErrorReason: () => null,
 	requestNotificationPermission:

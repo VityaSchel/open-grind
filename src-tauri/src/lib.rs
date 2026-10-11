@@ -111,6 +111,15 @@ fn outdated_webview_notice() -> Option<String> {
 	None
 }
 
+#[cfg(desktop)]
+pub(crate) fn focus_main_window(app: &tauri::AppHandle) {
+	if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+		let _ = window.unminimize();
+		let _ = window.show();
+		let _ = window.set_focus();
+	}
+}
+
 // Tauri exits only once every window is gone, and sign-in opens a second one.
 #[cfg(desktop)]
 fn quit_when_closed(window: &tauri::WebviewWindow) {
@@ -141,13 +150,7 @@ pub fn run() {
 	// https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/single-instance
 	#[cfg(desktop)]
 	let builder = builder.plugin(tauri_plugin_single_instance::init(
-		|app, _args, _cwd| {
-			if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-				let _ = window.unminimize();
-				let _ = window.show();
-				let _ = window.set_focus();
-			}
-		},
+		|app, _args, _cwd| focus_main_window(app),
 	));
 
 	#[cfg(feature = "devtools")]
@@ -157,8 +160,9 @@ pub fn run() {
 	let builder = builder
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
-		.plugin(api::recaptcha::plugin())
-		.plugin(api::push::plugin());
+		.plugin(api::recaptcha::plugin());
+
+	let builder = builder.plugin(api::push::plugin());
 
 	builder
         .plugin(open_grind_platform_plugin())
@@ -201,6 +205,7 @@ pub fn run() {
             api::push::push_notifications_enabled,
             api::push::push_set_notifications_enabled,
             api::push::push_dismiss_conversation,
+            api::push::push_shown_conversations,
             api::push::push_open_notification_settings,
             api::push::push_mode,
             api::push::push_set_mode,
@@ -209,7 +214,9 @@ pub fn run() {
             api::push::push_open_category_settings,
             api::push::push_notification_permission,
             api::push::push_request_notification_permission,
+            api::push::push_notify,
             api::push::push_take_deeplink,
+            api::push::push_deeplink_pending,
             api::push::push_watch,
             storage::storage_backend,
             api::rest::request,

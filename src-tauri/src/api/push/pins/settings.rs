@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use super::{CATEGORIES, EVENTS, MODE, NOTIFIER, PLUGIN, TYPES_TS};
-use crate::api::push::{PushMode, PushSignal};
+use crate::api::push::{Category, PushMode, PushSignal};
 use crate::pin_support::squashed;
 
 #[test]
@@ -34,6 +34,22 @@ fn every_notification_category_is_spelled_the_same_in_both_languages() {
 		.collect();
 	assert!(!wires.is_empty(), "PushCategories.kt names no categories");
 	for wire in wires {
+		assert!(
+			squashed(TYPES_TS).contains(&format!("\"{wire}\"")),
+			"types.ts no longer offers the {wire} category"
+		);
+	}
+}
+
+#[test]
+fn every_category_rust_names_is_one_the_frontend_offers() {
+	for category in Category::ALL {
+		let wire = category.name();
+		assert_eq!(
+			serde_json::from_value::<Category>(serde_json::json!(wire)).ok(),
+			Some(category),
+			"{wire} does not decode back to its own category"
+		);
 		assert!(
 			squashed(TYPES_TS).contains(&format!("\"{wire}\"")),
 			"types.ts no longer offers the {wire} category"

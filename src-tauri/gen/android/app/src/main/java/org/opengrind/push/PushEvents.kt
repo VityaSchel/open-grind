@@ -22,6 +22,9 @@ object PushEvents {
 	fun takeDeeplink(): String? = pendingDeeplink.also { pendingDeeplink = null }
 
 	@Synchronized
+	fun deeplinkPending(): Boolean = pendingDeeplink != null
+
+	@Synchronized
 	fun notifyTokenChanged() {
 		send(deeplinkPending = false, tokenChanged = true)
 	}

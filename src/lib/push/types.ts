@@ -14,6 +14,15 @@ export type PushCategory = z.infer<typeof pushCategorySchema>;
 
 export type PushCategoryName = PushCategory["category"];
 
+export type Announcement = {
+	category: PushCategoryName;
+	tag: string;
+	messageId: string | null;
+	title: string;
+	body: string;
+	deeplink: string;
+};
+
 export const notificationPermissionSchema = z.object({
 	granted: z.boolean(),
 	state: z
@@ -24,6 +33,10 @@ export const notificationPermissionSchema = z.object({
 export type NotificationPermission = z.infer<
 	typeof notificationPermissionSchema
 >;
+
+export const TAP_TAG_PREFIX = "tap:";
+
+export const shownConversationsSchema = z.string().array();
 
 export const pushTokenSchema = z.object({
 	token: z.string().min(1),

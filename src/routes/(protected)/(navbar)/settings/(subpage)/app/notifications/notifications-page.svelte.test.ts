@@ -65,11 +65,15 @@ vi.mock("$lib/platform/link-opener", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof Os>()),
-	currentPlatform: (await import("./notifications-page-test-helpers.svelte"))
-		.currentPlatform,
-}));
+vi.mock("$lib/platform/os", async (importOriginal) => {
+	const { currentPlatform } =
+		await import("./notifications-page-test-helpers.svelte");
+	return {
+		...(await importOriginal<typeof Os>()),
+		currentPlatform,
+		isAndroidPlatform: () => currentPlatform() === "android",
+	};
+});
 vi.mock("$lib/api/app-lifecycle.svelte", () => ({
 	appLifecycle: { active: true },
 }));
@@ -87,25 +91,37 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it.each([
-		["macos", "macOS"],
-		["windows", "Windows"],
-		["linux", "Linux"],
-		["ios", "this platform"],
-		["web", "this platform"],
-	] as const)(
-		"says on %s that notifications are not supported on %s yet",
-		(platform, named) => {
+	it.each(["ios", "web"] as const)(
+		"says on %s that notifications are not supported on this platform yet",
+		(platform) => {
 			currentPlatform.mockReturnValue(platform);
 
 			render(NotificationsPage);
 
 			expect(
 				screen.getByText(
-					`Notifications are not supported on ${named} yet.`,
+					"Notifications are not supported on this platform yet.",
 				),
 			).toBeTruthy();
 			expect(screen.queryByRole("switch")).toBeNull();
+			expect(screen.queryByRole("radiogroup")).toBeNull();
+		},
+	);
+
+	it.each(["macos", "windows", "linux"] as const)(
+		"offers the switch and both categories on %s, with no delivery modes",
+		async (platform) => {
+			currentPlatform.mockReturnValue(platform);
+
+			render(NotificationsPage);
+
+			await screen.findByRole("switch", { name: "Received taps" });
+			expect(
+				screen.getByRole("switch", { name: "Enable notifications" }),
+			).toBeTruthy();
+			expect(
+				screen.getByRole("switch", { name: "New messages" }),
+			).toBeTruthy();
 			expect(screen.queryByRole("radiogroup")).toBeNull();
 		},
 	);

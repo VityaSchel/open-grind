@@ -10,6 +10,8 @@ const push = vi.hoisted(() => ({
 				messageId?: string;
 			}) => Promise<void>
 		>(),
+	pushAvailableHere: () => true,
+	shownPushConversations: vi.fn<() => Promise<string[]>>(),
 }));
 
 vi.mock("@tauri-apps/api/event", () => ({
@@ -33,7 +35,8 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 }));
 vi.mock("./index", () => push);
 
-const { watchChatWithdrawals } = await import("./chat-withdrawals");
+const { watchChatWithdrawals, withdrawShownReadChats } =
+	await import("./chat-withdrawals");
 
 function message(over: Record<string, unknown>) {
 	return {
@@ -105,5 +108,23 @@ describe("withdrawing chat notifications over the websocket", () => {
 		await Promise.resolve();
 
 		expect(logged).toHaveBeenCalled();
+	});
+});
+
+describe("withdrawing chats a refresh shows as read", () => {
+	it("withdraws only the read chats that have a notification showing", async () => {
+		push.shownPushConversations.mockResolvedValue(["1:2", "3:4"]);
+
+		await withdrawShownReadChats(["3:4", "5:6"]);
+
+		expect(push.dismissPushConversation).toHaveBeenCalledExactlyOnceWith({
+			conversationId: "3:4",
+		});
+	});
+
+	it("does not ask what is showing when nothing was read", async () => {
+		await withdrawShownReadChats([]);
+
+		expect(push.shownPushConversations).not.toHaveBeenCalled();
 	});
 });

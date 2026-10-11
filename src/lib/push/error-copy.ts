@@ -5,7 +5,7 @@ import type { PushErrorReason } from "./types";
 const ADDON = ADDON_NAME[FCM_COMPONENT];
 
 const reasons: Record<PushErrorReason, string | null> = {
-	unsupportedPlatform: "Fast mode only works on Android.",
+	unsupportedPlatform: "This build of Open Grind can't show notifications.",
 	addonUnavailable: `Open Grind couldn't reach the ${ADDON}.`,
 	addonDisabled: `The ${ADDON} is disabled. Enable it in Android settings.`,
 	addonUntrusted: `The installed ${ADDON} isn't signed by Open Grind. Uninstall it, then install the official one.`,
