@@ -79,5 +79,12 @@
 		"a11y": {
 			"seek": "Seek"
 		}
+	},
+	"picker": {
+		"filters": {
+			"image": "Images",
+			"video": "Videos",
+			"media": "Media"
+		}
 	}
 }

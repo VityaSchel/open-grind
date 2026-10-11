@@ -361,6 +361,9 @@ export interface Messages {
 	"media.lightbox.next": undefined;
 	"media.lightbox.previous": undefined;
 	"media.lightbox.zoom": undefined;
+	"media.picker.filters.image": undefined;
+	"media.picker.filters.media": undefined;
+	"media.picker.filters.video": undefined;
 	"media.sheet.deleteDialog.description": undefined;
 	"media.sheet.deleteDialog.photoTitle": undefined;
 	"media.sheet.deleteDialog.videoTitle": undefined;

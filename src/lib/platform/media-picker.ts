@@ -1,11 +1,22 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
+import {
+	AndroidFs,
+	type AndroidFsUri,
+	type AndroidOpenFilePickerOptions,
+} from "tauri-plugin-android-fs-api";
 
 import { demoEnabled } from "$lib/demo";
+import { type PlainMessageKey, t } from "$lib/i18n";
 import { isAndroidPlatform } from "$lib/platform/os";
 
-type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
+export type MediaKind = "image" | "video" | "media";
+
+type MediaFilter = {
+	name: PlainMessageKey;
+	extensions: string[];
+	mimeTypes: string[];
+};
 
 const mimeTypesByExtension: Record<string, string> = {
 	jpeg: "image/jpeg",
@@ -22,23 +33,24 @@ const videoExtensions = ["mp4", "mov"];
 
 const filtersByKind = {
 	image: {
-		name: "Images",
+		name: "media.picker.filters.image",
 		extensions: imageExtensions,
 		mimeTypes: ["image/*"],
 	},
 	video: {
-		name: "Videos",
+		name: "media.picker.filters.video",
 		extensions: videoExtensions,
 		mimeTypes: ["video/*"],
 	},
 	media: {
-		name: "Media",
+		name: "media.picker.filters.media",
 		extensions: [...imageExtensions, ...videoExtensions],
 		mimeTypes: ["image/*", "video/*"],
 	},
-} satisfies Record<string, MediaFilter>;
+} satisfies Record<MediaKind, MediaFilter>;
 
-export type MediaKind = keyof typeof filtersByKind;
+const galleryPicker =
+	"Gallery" satisfies AndroidOpenFilePickerOptions["pickerType"];
 
 export type PickedMedia = { key: string; mimeType: string | null } & (
 	| { source: "android"; uri: AndroidFsUri }
@@ -88,7 +100,7 @@ async function pick({
 		);
 	}
 
-	const filters = [{ name: filter.name, extensions: filter.extensions }];
+	const filters = [{ name: t(filter.name), extensions: filter.extensions }];
 	const selection = multiple
 		? await open({ filters, multiple: true })
 		: await open({ filters, multiple: false });
@@ -125,7 +137,7 @@ async function pickAndroidUris({
 		);
 	}
 	return AndroidFs.showOpenFilePicker({
-		pickerType: "Gallery",
+		pickerType: galleryPicker,
 		mimeTypes: filter.mimeTypes,
 		multiple,
 	});

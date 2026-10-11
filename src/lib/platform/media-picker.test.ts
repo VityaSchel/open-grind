@@ -19,6 +19,8 @@ vi.mock("tauri-plugin-android-fs-api", () => ({ AndroidFs: androidFsMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { pickMedia, pickMultipleMedia } from "$lib/platform/media-picker";
 
 const photoUri = {
@@ -49,9 +51,10 @@ beforeEach(() => {
 	platformMock.mockReturnValue("macos");
 });
 
-afterEach(() => {
+afterEach(async () => {
 	vi.restoreAllMocks();
 	delete tauri.isTauri;
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("pickMedia", () => {
@@ -149,6 +152,23 @@ describe("pickMultipleMedia", () => {
 		await expect(pickMultipleMedia("media")).resolves.toEqual([
 			{ source: "desktop", key: firstKey, mimeType, path },
 		]);
+	});
+
+	it("names the desktop filter in the app language", async () => {
+		await setLocale({ locale: "en-XA" });
+		openMock.mockResolvedValue([]);
+
+		await pickMultipleMedia("video");
+
+		expect(openMock).toHaveBeenCalledWith({
+			filters: [
+				{
+					name: expect.stringMatching(PSEUDO_MESSAGE),
+					extensions: ["mp4", "mov"],
+				},
+			],
+			multiple: true,
+		});
 	});
 
 	it("narrows the desktop filter to videos for the video kind", async () => {
