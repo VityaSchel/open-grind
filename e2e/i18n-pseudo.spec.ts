@@ -39,6 +39,8 @@ const PHOTO_CONVERSATION = "/chat/100002:123456000";
 const DRAWER_PILL = "button:not([aria-label], [aria-pressed])";
 const MENU_TRIGGER = '[aria-haspopup="menu"]';
 const ADD_TILE = '[data-slot="add-tile"]';
+const SHARED_WITH_BUTTON =
+	'[data-slot="album-header-fields"] [data-slot="button"]';
 const CANCEL_BUTTON = '[data-slot="alert-dialog-cancel"]';
 const PLAYED_OUT_CONVERSATION = "/chat/100006:123456000";
 const ALBUM_PREVIEW = '[data-slot="album-preview"]';
@@ -384,7 +386,7 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 	}
 });
 
-test("my albums, an album, its previous uploads and its menu render only pseudo-translated text", async ({
+test("my albums, an album, its Shared With list, its previous uploads and its menu render only pseudo-translated text", async ({
 	page,
 }) => {
 	await openAlbums(page, { locale: "en-XA" });
@@ -396,6 +398,15 @@ test("my albums, an album, its previous uploads and its menu render only pseudo-
 
 	await enterAlbum(page, SHARED_ALBUM);
 	scans.push(await readPseudoText(content));
+
+	const sharedWithButton = content.locator(SHARED_WITH_BUTTON);
+	await expect(sharedWithButton).toBeEnabled({ timeout: 30_000 });
+	await sharedWithButton.click();
+	const sharedWith = page.getByRole("dialog");
+	await sharedWith.getByRole("checkbox").first().waitFor({ timeout: 30_000 });
+	scans.push(await readPseudoText(sharedWith));
+	await page.keyboard.press("Escape");
+	await expect(sharedWith).toBeHidden();
 
 	await content.locator(ADD_TILE).click();
 	const uploads = page.getByRole("dialog");
