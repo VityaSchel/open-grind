@@ -160,7 +160,7 @@ test.describe("broken images", () => {
 		await expect(page.locator(".pswp")).toHaveCount(0);
 
 		await page
-			.getByRole("button", { name: "Expiring image", exact: true })
+			.getByRole("button", { name: "Expiring photo", exact: true })
 			.last()
 			.click();
 		const errorSlide = page.locator(

@@ -300,7 +300,7 @@ test.describe("attachments drawer", () => {
 		await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
 		const bubbles = page
 			.locator("button")
-			.filter({ hasText: "Expiring image" });
+			.filter({ hasText: "Expiring photo" });
 		const before = await bubbles.count();
 
 		await page.locator(SELECTABLE_MEDIA_TILE).first().click();

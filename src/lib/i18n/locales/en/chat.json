@@ -4,7 +4,7 @@
 	},
 	"messagePreview": {
 		"album": "Album",
-		"expiringImage": "Expiring image",
+		"expiringImage": "Expiring photo",
 		"expiringVideo": "Expiring video",
 		"photo": "Photo",
 		"unsent": "Unsent message",
@@ -77,7 +77,23 @@
 			}
 		},
 		"unsent": "Message unsent",
-		"unsupported": "Unsupported message type: {{type}}"
+		"unsupported": "Unsupported message type: {{type}}",
+		"expiringImage": {
+			"expired": "Expired photo",
+			"errors": {
+				"loadFailed": "Couldn’t load expiring photo",
+				"openFailed": "Couldn’t open expiring photo"
+			}
+		},
+		"video": {
+			"a11y": {
+				"play": "Play expiring video"
+			},
+			"errors": {
+				"loadFailed": "Couldn’t load expiring video",
+				"openFailed": "Couldn’t open expiring video"
+			}
+		}
 	},
 	"conversations": {
 		"a11y": {

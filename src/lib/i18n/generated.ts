@@ -178,6 +178,9 @@ export interface Messages {
 	"chat.message.contextMenu.reply": undefined;
 	"chat.message.contextMenu.report": undefined;
 	"chat.message.contextMenu.unsend": undefined;
+	"chat.message.expiringImage.errors.loadFailed": undefined;
+	"chat.message.expiringImage.errors.openFailed": undefined;
+	"chat.message.expiringImage.expired": undefined;
 	"chat.message.reaction.a11y.fire": undefined;
 	"chat.message.status.notSent": undefined;
 	"chat.message.status.readAt": { time: string };
@@ -185,6 +188,9 @@ export interface Messages {
 	"chat.message.status.sentAt": { time: string };
 	"chat.message.unsent": undefined;
 	"chat.message.unsupported": { type: string };
+	"chat.message.video.a11y.play": undefined;
+	"chat.message.video.errors.loadFailed": undefined;
+	"chat.message.video.errors.openFailed": undefined;
 	"chat.messagePreview.album": undefined;
 	"chat.messagePreview.expiringImage": undefined;
 	"chat.messagePreview.expiringVideo": undefined;

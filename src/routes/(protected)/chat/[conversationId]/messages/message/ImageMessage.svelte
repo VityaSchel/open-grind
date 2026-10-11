@@ -3,6 +3,7 @@
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { t } from "$lib/i18n";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
@@ -168,7 +169,7 @@
 		rel="noreferrer"
 		data-pswp-width={size.width ?? undefined}
 		data-pswp-height={size.height ?? undefined}
-		aria-label="Photo"
+		aria-label={t("chat.messagePreview.photo")}
 		aria-disabled={failed ? "true" : undefined}
 		class="item block"
 	>

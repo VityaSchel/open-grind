@@ -5,6 +5,7 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getSingleMessage } from "$lib/api/messaging/messages";
+	import { t } from "$lib/i18n";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import {
 		measureVideo,
@@ -94,7 +95,7 @@
 				if (controller.signal.aborted) return;
 				console.error(error);
 				showErrorToast({
-					label: "Failed to load expiring video",
+					label: t("chat.message.video.errors.loadFailed"),
 					error,
 				});
 				player = { status: "idle" };
@@ -114,7 +115,10 @@
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
 			console.error(error);
-			showErrorToast({ label: "Failed to open expiring video", error });
+			showErrorToast({
+				label: t("chat.message.video.errors.openFailed"),
+				error,
+			});
 			finishPlayback(viewsLeft);
 		});
 		return () => controller.abort();
@@ -129,7 +133,7 @@
 
 {#snippet bubbleContent()}
 	<VideoCameraIcon size={24} weight="fill" class="shrink-0" />
-	<span>Expiring video</span>
+	<span>{t("chat.messagePreview.expiringVideo")}</span>
 	{@render media.adornments?.()}
 {/snippet}
 
@@ -144,7 +148,7 @@
 				"opacity-50": player.status === "loading",
 			},
 		]}
-		aria-label="Play expiring video"
+		aria-label={t("chat.message.video.a11y.play")}
 		disabled={player.status !== "idle"}
 		onclick={play}
 		{@attach media.attach}
