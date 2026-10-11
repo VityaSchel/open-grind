@@ -7,9 +7,9 @@
 		type AlbumContentResponse,
 		getAlbumStorageLimits,
 	} from "$lib/api/messaging/albums";
-	import { albumItemCountLabel } from "$lib/components/album/album";
 	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
 	import { setSubpageActions } from "$lib/components/shared/subpage-actions-context.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		getAlbumUploads,
 		type UploadLimits,
@@ -66,16 +66,19 @@
 	function save() {
 		draft
 			.save()
-			.then(() => toast.success("Album updated"))
+			.then(() => toast.success(t("media.albums.editor.saved")))
 			.catch((error: unknown) => {
 				console.error(error);
 				if (error instanceof StillProcessingError) {
 					toast.error(
-						"This video is still processing. Try removing it again in a moment",
+						t("media.albums.editor.errors.stillProcessing"),
 					);
 					return;
 				}
-				showErrorToast({ label: "Couldn't save album changes", error });
+				showErrorToast({
+					label: t("media.albums.editor.errors.saveFailed"),
+					error,
+				});
 			});
 	}
 </script>
@@ -109,7 +112,9 @@
 </fieldset>
 <div role="status" class="sr-only">
 	{draft.removed.length > 0
-		? `${albumItemCountLabel(draft.removed.length)} marked for removal`
+		? t("media.albums.editor.a11y.markedForRemoval", {
+				count: draft.removed.length,
+			})
 		: ""}
 </div>
 {#if draft.dirty}

@@ -364,6 +364,7 @@ export interface Messages {
 	"media.album.tile.shared": undefined;
 	"media.album.untitled": undefined;
 	"media.albums.add": undefined;
+	"media.albums.editor.a11y.markedForRemoval": { count: number };
 	"media.albums.editor.content.a11y.keepPhotoSlot": { slot: string };
 	"media.albums.editor.content.a11y.keepVideoSlot": { slot: string };
 	"media.albums.editor.content.a11y.photoSlot": { slot: string };
@@ -378,6 +379,8 @@ export interface Messages {
 	"media.albums.editor.content.addToAlbum": undefined;
 	"media.albums.editor.content.empty.description": undefined;
 	"media.albums.editor.content.empty.title": undefined;
+	"media.albums.editor.errors.saveFailed": undefined;
+	"media.albums.editor.errors.stillProcessing": undefined;
 	"media.albums.editor.header.a11y.preview": undefined;
 	"media.albums.editor.header.mediaUsage": { maxPhotos: string; maxVideos: string; photos: string; videos: string };
 	"media.albums.editor.header.sharedWith": undefined;
@@ -390,6 +393,7 @@ export interface Messages {
 	"media.albums.editor.menu.errors.deleteFailed": undefined;
 	"media.albums.editor.name.hint": undefined;
 	"media.albums.editor.name.label": undefined;
+	"media.albums.editor.saved": undefined;
 	"media.albums.new.empty.description": undefined;
 	"media.albums.new.empty.title": undefined;
 	"media.albums.new.errors.albumLimit": undefined;

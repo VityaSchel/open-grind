@@ -145,6 +145,15 @@
 					"keepPhotoSlot": "Keep album photo in slot {{slot}}",
 					"keepVideoSlot": "Keep album video in slot {{slot}}"
 				}
+			},
+			"saved": "Album updated",
+			"errors": {
+				"stillProcessing": "This video is still processing. Try removing it again in a moment",
+				"saveFailed": "Couldn’t save album changes"
+			},
+			"a11y": {
+				"markedForRemoval_one": "{{count}} item marked for removal",
+				"markedForRemoval_other": "{{count}} items marked for removal"
 			}
 		},
 		"sharedWith": {

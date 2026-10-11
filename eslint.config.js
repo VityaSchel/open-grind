@@ -152,6 +152,7 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/[[]albumId]/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumContentGrid.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumEditor.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumEditorHeader.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumHeaderLayout.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumMediaEmpty.svelte",
