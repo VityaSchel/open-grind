@@ -19,6 +19,6 @@
 	href="/chat/{conversationId}"
 >
 	<span class="font-normal text-muted-foreground"
-		>{t("profile.bottomNav.writeMessage")}</span
+		>{t("common.chat.writeMessage")}</span
 	>
 </Button>

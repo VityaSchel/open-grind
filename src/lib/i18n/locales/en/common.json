@@ -107,5 +107,8 @@
 		"expectations": "Expectations",
 		"health": "Health",
 		"socials": "Socials"
+	},
+	"chat": {
+		"writeMessage": "Write a message…"
 	}
 }

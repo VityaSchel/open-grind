@@ -168,7 +168,6 @@
 		}
 	},
 	"bottomNav": {
-		"writeMessage": "Write a message…",
 		"a11y": {
 			"navigation": "Chat and Tap"
 		}

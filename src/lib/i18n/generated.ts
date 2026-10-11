@@ -143,7 +143,6 @@ export interface Messages {
 	"chat.composer.attachments.tabs.media": undefined;
 	"chat.composer.errors.sendFailed": undefined;
 	"chat.composer.replyPreview.a11y.cancel": undefined;
-	"chat.composer.textInput.placeholder": undefined;
 	"chat.composer.voiceMessage.a11y.record": undefined;
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
@@ -239,6 +238,7 @@ export interface Messages {
 	"common.albumShare.errors.unshareFailed": undefined;
 	"common.carousel.a11y.next": undefined;
 	"common.carousel.a11y.previous": undefined;
+	"common.chat.writeMessage": undefined;
 	"common.commandDialog.a11y.description": undefined;
 	"common.commandDialog.a11y.title": undefined;
 	"common.desktopEntry.errors.addFailed": undefined;
@@ -363,7 +363,6 @@ export interface Messages {
 	"profile.bodyType.stocky": undefined;
 	"profile.bodyType.toned": undefined;
 	"profile.bottomNav.a11y.navigation": undefined;
-	"profile.bottomNav.writeMessage": undefined;
 	"profile.ethnicity.asian": undefined;
 	"profile.ethnicity.black": undefined;
 	"profile.ethnicity.latino": undefined;
