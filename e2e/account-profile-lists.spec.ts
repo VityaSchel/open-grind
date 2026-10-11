@@ -12,8 +12,8 @@ test("account settings link to the profile lists", async ({ page }) => {
 	await page.goto("/settings/account");
 
 	for (const [name, href] of [
-		["Blocked users", BLOCKED_LIST],
-		["Hidden users", "/settings/account/hidden"],
+		["Blocked Users", BLOCKED_LIST],
+		["Hidden Users", "/settings/account/hidden"],
 	]) {
 		await expect(page.getByRole("link", { name })).toHaveAttribute(
 			"href",

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const pending = vi.hoisted(() => () => new Promise<never>(() => {}));
@@ -19,6 +19,7 @@ vi.mock("$app/navigation", () => ({ beforeNavigate: vi.fn() }));
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import AccountPage from "./+page.svelte";
 import BlockedPage from "./blocked/+page.svelte";
 import HiddenPage from "./hidden/+page.svelte";
 
@@ -51,6 +52,20 @@ describe("account pages", () => {
 			await setLocale({ locale: "en-XA" });
 
 			expect(document.title).toMatch(PSEUDO_MESSAGE);
+		},
+	);
+
+	it.each([
+		{ route: "/settings/account/privacy", title: "Privacy" },
+		...pages,
+	])(
+		"links $route from account settings by its title",
+		({ route, title }) => {
+			render(AccountPage);
+
+			expect(
+				screen.getByRole("link", { name: title }).getAttribute("href"),
+			).toBe(route);
 		},
 	);
 });

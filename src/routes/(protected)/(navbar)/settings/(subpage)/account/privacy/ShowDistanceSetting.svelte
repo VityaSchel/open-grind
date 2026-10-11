@@ -5,6 +5,7 @@
 	import { getProfile, patchOwnProfile } from "$lib/api/users/profiles";
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "$lib/i18n";
 	import { formatDistance } from "$lib/util/units";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
@@ -30,8 +31,10 @@
 </script>
 
 <SwitchField
-	title="Show my distance"
-	description="Reveal your approximate location to other users as distance, e.g. {exampleDistance}."
+	title={t("settings.privacy.showDistance.title")}
+	description={t("settings.privacy.showDistance.description", {
+		distance: exampleDistance,
+	})}
 	disabled={!loaded}
 	bind:checked={
 		() => value,
@@ -44,7 +47,10 @@
 				patch: { showDistance: newValue },
 			}).catch((error) => {
 				value = previous;
-				showErrorToast({ label: "Failed to update setting", error });
+				showErrorToast({
+					label: t("settings.setting.errors.saveFailed"),
+					error,
+				});
 			});
 		}
 	}

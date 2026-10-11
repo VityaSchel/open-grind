@@ -169,7 +169,7 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 
 	await page.getByRole("link", { name: "Account Settings" }).click();
 	await expect(page).toHaveURL(/\/settings\/account$/);
-	await page.getByRole("link", { name: "Blocked users" }).click();
+	await page.getByRole("link", { name: "Blocked Users" }).click();
 	await expect(page).toHaveURL(/\/settings\/account\/blocked$/);
 	const atBlocked = await historyDepth(page);
 

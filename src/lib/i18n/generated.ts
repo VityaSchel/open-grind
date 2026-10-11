@@ -636,6 +636,9 @@ export interface Messages {
 	"profile.viewability.errors.unblockFailed": undefined;
 	"profile.viewability.errors.unhideFailed": undefined;
 	"profile.visit.errors.recordFailed": undefined;
+	"settings.account.deleteAccount": undefined;
+	"settings.account.email": undefined;
+	"settings.account.password": undefined;
 	"settings.account.unimplemented": { issueLink: string };
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
 	"settings.app.pin.unimplemented": { issueLink: string };
@@ -658,6 +661,9 @@ export interface Messages {
 	"settings.hidden.a11y.toggle": undefined;
 	"settings.hidden.empty.description": undefined;
 	"settings.hidden.empty.title": undefined;
+	"settings.privacy.showDistance.description": { distance: string };
+	"settings.privacy.showDistance.title": undefined;
+	"settings.setting.errors.saveFailed": undefined;
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;
 	"settings.subpage.titles.app": undefined;
@@ -792,4 +798,5 @@ export interface RichMessages {
 	"settings.credits.highlights.tauri": { projectLink: "placeholder" };
 	"settings.credits.highlights.vaulSvelte": { projectLink: "placeholder" };
 	"settings.credits.highlights.zod": { projectLink: "placeholder" };
+	"settings.privacy.showDistance.description": { distance: "placeholder" };
 }

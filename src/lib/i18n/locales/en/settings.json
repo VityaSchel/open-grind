@@ -14,8 +14,22 @@
 			"profile": "Edit Profile"
 		}
 	},
+	"setting": {
+		"errors": {
+			"saveFailed": "Couldn’t save setting"
+		}
+	},
 	"account": {
+		"email": "Email",
+		"password": "Password",
+		"deleteAccount": "Delete account",
 		"unimplemented": "Account settings aren’t implemented yet. Follow the progress in {{issueLink}}."
+	},
+	"privacy": {
+		"showDistance": {
+			"title": "Show my distance",
+			"description": "Reveal your approximate location to other users as distance, e.g. {{distance}}."
+		}
 	},
 	"blocked": {
 		"empty": {

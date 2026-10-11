@@ -4,6 +4,7 @@
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";
+	import { t } from "$lib/i18n";
 </script>
 
 {#snippet item({ title }: { title: string })}
@@ -54,12 +55,18 @@
 		{/snippet}
 	</Item.Root>
 {/snippet}
-{@render linkItem({ title: "Privacy", href: "/settings/account/privacy" })}
-{@render item({ title: "Email" })}
-{@render item({ title: "Password" })}
 {@render linkItem({
-	title: "Blocked users",
+	title: t("settings.subpage.titles.privacy"),
+	href: "/settings/account/privacy",
+})}
+{@render item({ title: t("settings.account.email") })}
+{@render item({ title: t("settings.account.password") })}
+{@render linkItem({
+	title: t("settings.subpage.titles.blocked"),
 	href: "/settings/account/blocked",
 })}
-{@render linkItem({ title: "Hidden users", href: "/settings/account/hidden" })}
-{@render item({ title: "Delete account" })}
+{@render linkItem({
+	title: t("settings.subpage.titles.hidden"),
+	href: "/settings/account/hidden",
+})}
+{@render item({ title: t("settings.account.deleteAccount") })}

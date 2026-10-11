@@ -276,7 +276,7 @@ test("Back still slides down the stack after a profile was opened from the block
 	const blockedList = /\/settings\/account\/blocked$/;
 	await openSettings(page, { platform: "android" });
 	await page.getByRole("link", { name: "Account Settings" }).click();
-	await page.getByRole("link", { name: "Blocked users" }).click();
+	await page.getByRole("link", { name: "Blocked Users" }).click();
 	await expect(page).toHaveURL(blockedList);
 	await page.locator('a[href^="/profile/"]').first().click();
 	await expect(page).toHaveURL(/\/profile\/\d+$/);
