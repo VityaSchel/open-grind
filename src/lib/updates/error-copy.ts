@@ -1,6 +1,7 @@
 import z from "zod";
 
-import { t } from "$lib/i18n";
+import { type PlainMessageKey, t } from "$lib/i18n";
+import { ADDON_MESSAGES, type AddonErrorName } from "./addon-messages";
 import {
 	ADDON_NAME,
 	APP_COMPONENT,
@@ -14,18 +15,30 @@ import {
 	type UpdateError,
 } from "./types";
 
-const unsupportedCopy: Record<Unsupported["reason"], string> = {
-	externallyManaged:
-		"Updates are managed by the store that installed the app",
-	foreignSigner: "This build was not signed by Open Grind",
-	foreignTarget: "The installed app isn't signed by Open Grind",
-	undetermined: "Open Grind can't tell whether it may update itself",
-	noReleaseArtifacts: "No release is published for this platform",
-	sandboxed: "The sandbox this app runs in manages its own updates",
-	locationNotWritable: "Open Grind can't install the update in its directory",
-};
+type Reason = Unsupported["reason"];
+type KnownKind = Exclude<UpdateError["kind"], "unsupported">;
 
-const userCanFix: Record<Unsupported["reason"], boolean> = {
+const unsupportedKeys = {
+	externallyManaged: "updates.errors.unsupported.externallyManaged",
+	foreignSigner: "updates.errors.unsupported.foreignSigner",
+	foreignTarget: "updates.errors.unsupported.foreignTarget",
+	undetermined: "updates.errors.unsupported.undetermined",
+	noReleaseArtifacts: "updates.errors.unsupported.noReleaseArtifacts",
+	sandboxed: "updates.errors.unsupported.sandboxed",
+	locationNotWritable: "updates.errors.unsupported.locationNotWritable",
+} as const satisfies Record<Reason, PlainMessageKey>;
+
+const addonUnsupportedErrors = {
+	externallyManaged: "externallyManaged",
+	foreignSigner: "foreignSigner",
+	foreignTarget: "foreignTarget",
+	undetermined: "undetermined",
+	noReleaseArtifacts: "noReleaseArtifacts",
+	sandboxed: null,
+	locationNotWritable: null,
+} as const satisfies Record<Reason, AddonErrorName | null>;
+
+const userCanFix: Record<Reason, boolean> = {
 	externallyManaged: false,
 	foreignSigner: false,
 	foreignTarget: true,
@@ -39,80 +52,111 @@ export function unsupportedIsFixable(detail: Unsupported): boolean {
 	return userCanFix[detail.reason];
 }
 
-type KnownKind = Exclude<UpdateError["kind"], "unsupported">;
-type AddonText = (addon: string) => string;
-
-const copy: Record<KnownKind, string> = {
-	network: "Couldn't reach the release server",
-	server: "The release server refused the request",
-	malformedIndex: "The release server sent something unreadable",
-	noArtifact: "The release has no download for this platform",
-	unsigned: "Failed to verify the update",
-	foreignUrl: "The release points somewhere outside the release server",
-	signature: "Failed to verify the update",
-	storage: "Couldn't write the update to storage",
-	oversize: "The download was larger than the release said",
-	assetReplaced: "The release changed during the download. Try again.",
-	canceled: "Update canceled",
-	nothingStaged: "No update is ready to install",
-	needsUnknownSources: "Open Grind needs permission to install updates",
-	needsManualInstall: "Quit Open Grind, then drag it onto Applications",
-	install: "Couldn't install the update",
-	checkTooSoon: "Already checked for updates recently",
-	autoChecksDisabled: "Automatic update checks are turned off",
-	unknownComponent: "Open Grind doesn't know that component",
-	busy: "Another download is already running",
-};
-
-const addonUnsupportedCopy: Partial<Record<Unsupported["reason"], AddonText>> =
-	{
-		externallyManaged: (addon) =>
-			`The store that installed the ${addon} manages its updates`,
-		foreignSigner: (addon) =>
-			`This copy of Open Grind isn't signed by Open Grind, so it can't install the ${addon}`,
-		foreignTarget: (addon) =>
-			`The installed ${addon} isn't signed by Open Grind. Uninstall it to install the official one.`,
-		noReleaseArtifacts: (addon) =>
-			`The ${addon} isn't published for this device`,
-		undetermined: (addon) =>
-			`Open Grind can't tell whether it may install the ${addon}`,
-	};
-
-const addonCopy: Partial<Record<KnownKind, AddonText>> = {
-	unsigned: (addon) => `Failed to verify the ${addon}`,
-	signature: (addon) => `Failed to verify the ${addon}`,
-	storage: (addon) => `Couldn't save the ${addon} download`,
-	install: (addon) => `Couldn't install the ${addon}`,
-};
-
-const addonUpdateCopy: Partial<Record<KnownKind, AddonText>> = {
-	install: (addon) => `Couldn't update the ${addon}`,
-};
-
-const addonNoStorageCopy: Record<Release["kind"], AddonText> = {
-	install: (addon) => `Not enough storage to install the ${addon}`,
-	update: (addon) => `Not enough storage to update the ${addon}`,
-};
+const kindKeys = {
+	network: "updates.errors.network",
+	server: "updates.errors.serverRefused",
+	malformedIndex: "updates.errors.malformedIndex",
+	noArtifact: "updates.errors.noArtifact",
+	unsigned: "updates.errors.verifyFailed",
+	foreignUrl: "updates.errors.foreignUrl",
+	signature: "updates.errors.verifyFailed",
+	storage: "updates.errors.writeFailed",
+	oversize: "updates.errors.oversize",
+	assetReplaced: "updates.errors.assetReplaced",
+	canceled: "updates.errors.canceled",
+	nothingStaged: "updates.errors.nothingStaged",
+	needsUnknownSources: "updates.errors.needsUnknownSources",
+	needsManualInstall: "updates.errors.needsManualInstall",
+	install: "updates.errors.installFailed",
+	checkTooSoon: "updates.errors.checkTooSoon",
+	autoChecksDisabled: "updates.errors.autoChecksDisabled",
+	unknownComponent: "updates.errors.unknownComponent",
+	busy: "updates.errors.busy",
+} as const satisfies Record<KnownKind, PlainMessageKey>;
 
 const busyDetailSchema = z.object({ component: z.enum(COMPONENT_KEYS) });
 
 const PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE = -4;
 
-function busyText(component: ComponentKey): string {
-	return component === APP_COMPONENT
-		? "Wait for the Open Grind update to finish downloading"
-		: `Wait for the ${t(ADDON_NAME[component])} to finish downloading`;
+function addonKindError({
+	kind,
+	installKind,
+}: {
+	kind: KnownKind;
+	installKind: Release["kind"];
+}): AddonErrorName | null {
+	switch (kind) {
+		case "unsigned":
+		case "signature":
+			return "verifyFailed";
+		case "storage":
+			return "saveDownloadFailed";
+		case "install":
+			return installKind === "update" ? "updateFailed" : "installFailed";
+		default:
+			return null;
+	}
+}
+
+function unsupportedKey({
+	reason,
+	component,
+}: {
+	reason: Reason;
+	component: ComponentKey;
+}): PlainMessageKey {
+	if (component !== APP_COMPONENT) {
+		const addonError = addonUnsupportedErrors[reason];
+		if (addonError !== null) {
+			return ADDON_MESSAGES[component].errors[addonError];
+		}
+	}
+	return unsupportedKeys[reason];
+}
+
+function knownKey({
+	kind,
+	component,
+	installKind,
+}: {
+	kind: KnownKind;
+	component: ComponentKey;
+	installKind: Release["kind"];
+}): PlainMessageKey {
+	if (component !== APP_COMPONENT) {
+		const addonError = addonKindError({ kind, installKind });
+		if (addonError !== null) {
+			return ADDON_MESSAGES[component].errors[addonError];
+		}
+	}
+	return kindKeys[kind];
+}
+
+function busyKey(running: ComponentKey): PlainMessageKey {
+	return running === APP_COMPONENT
+		? "updates.errors.busyApp"
+		: ADDON_MESSAGES[running].errors.busy;
+}
+
+function noStorageKey({
+	component,
+	installKind,
+}: {
+	component: ComponentKey;
+	installKind: Release["kind"];
+}): PlainMessageKey {
+	if (component === APP_COMPONENT) return "updates.errors.noStorage";
+	const { errors } = ADDON_MESSAGES[component];
+	return installKind === "update"
+		? errors.noStorageToUpdate
+		: errors.noStorageToInstall;
 }
 
 export function unsupportedText(
 	{ reason }: Unsupported | Pick<Unsupported, "reason">,
 	{ component = APP_COMPONENT }: { component?: ComponentKey } = {},
 ): string {
-	const addonText =
-		component === APP_COMPONENT
-			? undefined
-			: addonUnsupportedCopy[reason]?.(t(ADDON_NAME[component]));
-	return addonText ?? unsupportedCopy[reason];
+	return t(unsupportedKey({ reason, component }));
 }
 
 export function noReleaseText({
@@ -120,9 +164,11 @@ export function noReleaseText({
 }: {
 	component: ComponentKey;
 }): string {
-	const subject =
-		component === APP_COMPONENT ? "Open Grind" : t(ADDON_NAME[component]);
-	return `No ${subject} release is published yet`;
+	return t(
+		component === APP_COMPONENT
+			? "updates.errors.noRelease"
+			: ADDON_MESSAGES[component].errors.noRelease,
+	);
 }
 
 export function updateErrorText(
@@ -140,13 +186,11 @@ export function updateErrorText(
 	}
 	if (known.kind === "busy") {
 		const running = busyDetailSchema.safeParse(known.detail);
-		return running.success ? busyText(running.data.component) : copy.busy;
+		return t(
+			running.success ? busyKey(running.data.component) : kindKeys.busy,
+		);
 	}
-	if (component === APP_COMPONENT) return copy[known.kind];
-	const addon = t(ADDON_NAME[component]);
-	const updateText =
-		kind === "update" ? addonUpdateCopy[known.kind]?.(addon) : undefined;
-	return updateText ?? addonCopy[known.kind]?.(addon) ?? copy[known.kind];
+	return t(knownKey({ kind: known.kind, component, installKind: kind }));
 }
 
 export function installFailedText({
@@ -158,15 +202,11 @@ export function installFailedText({
 	component: ComponentKey;
 	kind: Release["kind"];
 }): string {
-	if (code === PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE) {
-		return component === APP_COMPONENT
-			? "Not enough storage to install the update"
-			: addonNoStorageCopy[kind](t(ADDON_NAME[component]));
-	}
-	return updateErrorText(
-		{ kind: "install" },
-		{ fallback: copy.install, component, kind },
-	);
+	const key =
+		code === PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE
+			? noStorageKey({ component, installKind: kind })
+			: knownKey({ kind: "install", component, installKind: kind });
+	return t(key);
 }
 
 export function problemBody({
@@ -177,8 +217,8 @@ export function problemBody({
 	title: string;
 }): string | undefined {
 	if (component === APP_COMPONENT) return undefined;
-	const addon = t(ADDON_NAME[component]);
-	return title.toLowerCase().includes(addon.toLowerCase())
-		? undefined
-		: addon;
+	const namesAddon = Object.values(ADDON_MESSAGES[component].errors).some(
+		(key) => t(key) === title,
+	);
+	return namesAddon ? undefined : t(ADDON_NAME[component]);
 }

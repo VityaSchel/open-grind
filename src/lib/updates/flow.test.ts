@@ -204,8 +204,8 @@ describe("the app's own flow", () => {
 
 describe("a download that fails verification", () => {
 	it.each<[ComponentKey, string]>([
-		["google-oauth", "Failed to verify the Open Grind Google OAuth app"],
-		["app", "Failed to verify the update"],
+		["google-oauth", "Couldn’t verify the Open Grind Google OAuth app"],
+		["app", "Couldn’t verify the update"],
 	])("names what the %s flow downloaded", async (component, message) => {
 		api.checkForUpdate.mockResolvedValue(offer("update", { component }));
 		const { flow, view } = await flowFor(component);
@@ -393,7 +393,7 @@ describe("checking on request", () => {
 		await flow.start();
 
 		expect(view.problems()).toEqual([
-			"problem:Failed to verify the Open Grind Google OAuth app",
+			"problem:Couldn’t verify the Open Grind Google OAuth app",
 		]);
 	});
 
@@ -406,7 +406,7 @@ describe("checking on request", () => {
 
 		expect(await flow.checkNow({ reportFailure: true })).toBe("failed");
 		expect(view.problems()).toEqual([
-			"problem:Couldn't reach the release server",
+			"problem:Couldn’t reach the release server",
 		]);
 	});
 });

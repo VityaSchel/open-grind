@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	ADDON_KEYS,
+	ADDON_NAME,
 	APP_COMPONENT,
 	FCM_COMPONENT,
 	GOOGLE_OAUTH_COMPONENT,
@@ -25,19 +28,19 @@ const foreignTarget = {
 describe("copy for an installed package signed by someone else", () => {
 	it("names the app generically for the app itself", () => {
 		expect(unsupportedText({ reason: "foreignTarget" })).toBe(
-			"The installed app isn't signed by Open Grind",
+			"The installed app isn’t signed by Open Grind",
 		);
 		expect(
 			updateErrorText(foreignTarget, {
 				fallback: "fallback",
 				component: APP_COMPONENT,
 			}),
-		).toBe("The installed app isn't signed by Open Grind");
+		).toBe("The installed app isn’t signed by Open Grind");
 	});
 
 	it("tells the user to uninstall the impostor Google OAuth app", () => {
 		const text =
-			"The installed Open Grind Google OAuth app isn't signed by Open Grind. Uninstall it to install the official one.";
+			"The installed Open Grind Google OAuth app isn’t signed by Open Grind. Uninstall it to install the official one.";
 
 		expect(
 			unsupportedText(
@@ -64,7 +67,7 @@ describe("copy for an installed package signed by someone else", () => {
 describe("copy for an Open Grind build signed by someone else", () => {
 	it("blames this build, not the Google OAuth app, when the Google OAuth app cannot be installed", () => {
 		const text =
-			"This copy of Open Grind isn't signed by Open Grind, so it can't install the Open Grind Google OAuth app";
+			"This copy of Open Grind isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app";
 
 		expect(
 			unsupportedText(
@@ -82,7 +85,7 @@ describe("copy for an Open Grind build signed by someone else", () => {
 
 	it("keeps the app's own wording", () => {
 		expect(unsupportedText({ reason: "foreignSigner" })).toBe(
-			"This build was not signed by Open Grind",
+			"This build isn’t signed by Open Grind",
 		);
 	});
 });
@@ -114,17 +117,17 @@ describe("copy for a release index with nothing to install", () => {
 
 describe("copy for an install the system refused", () => {
 	it.each([
-		[APP_COMPONENT, "install", "Couldn't install the update"],
-		[APP_COMPONENT, "update", "Couldn't install the update"],
+		[APP_COMPONENT, "install", "Couldn’t install the update"],
+		[APP_COMPONENT, "update", "Couldn’t install the update"],
 		[
 			GOOGLE_OAUTH_COMPONENT,
 			"install",
-			"Couldn't install the Open Grind Google OAuth app",
+			"Couldn’t install the Open Grind Google OAuth app",
 		],
 		[
 			GOOGLE_OAUTH_COMPONENT,
 			"update",
-			"Couldn't update the Open Grind Google OAuth app",
+			"Couldn’t update the Open Grind Google OAuth app",
 		],
 	] as const)(
 		"words a %s %s by what was installed",
@@ -168,7 +171,7 @@ describe("copy for an install the system refused", () => {
 					component: GOOGLE_OAUTH_COMPONENT,
 					kind: "install",
 				}),
-			).toBe("Couldn't install the Open Grind Google OAuth app");
+			).toBe("Couldn’t install the Open Grind Google OAuth app");
 		},
 	);
 });
@@ -226,27 +229,161 @@ describe("copy for a release replaced after its one automatic retry", () => {
 	});
 });
 
-describe("the subject line under a problem", () => {
+describe("copy for the app's own update errors", () => {
 	it.each([
-		"Couldn't install the Open Grind Google OAuth app",
-		"Couldn't update the Open Grind Google OAuth app",
-		"Failed to verify the Open Grind Google OAuth app",
-		"No Open Grind Google OAuth app release is published yet",
-		"The installed Open Grind Google OAuth app isn't signed by Open Grind. Uninstall it to install the official one.",
-	])("is left out when the title says %s", (title) => {
-		expect(problemBody({ component: GOOGLE_OAUTH_COMPONENT, title })).toBe(
-			undefined,
-		);
+		[{ kind: "unsigned" }, "Couldn’t verify the update"],
+		[{ kind: "signature" }, "Couldn’t verify the update"],
+		[{ kind: "network" }, "Couldn’t reach the release server"],
+		[{ kind: "storage" }, "Couldn’t write the update to storage"],
+		[
+			{ kind: "unknownComponent" },
+			"Open Grind doesn’t know that component",
+		],
+		[
+			{ kind: "unsupported", detail: { reason: "undetermined" } },
+			"Open Grind can’t tell whether it may update itself",
+		],
+		[
+			{
+				kind: "unsupported",
+				detail: {
+					reason: "locationNotWritable",
+					detail: { path: "/Applications/Open Grind.app" },
+				},
+			},
+			"Open Grind can’t install the update in its directory",
+		],
+	])("words %j", (error, text) => {
+		expect(updateErrorText(error, { fallback: "fallback" })).toBe(text);
 	});
 
+	it("keeps the caller's fallback for an error it does not know", () => {
+		expect(
+			updateErrorText(new Error("no plugin"), { fallback: "fallback" }),
+		).toBe("fallback");
+	});
+});
+
+describe("copy for the Google OAuth app's own errors", () => {
+	const component = GOOGLE_OAUTH_COMPONENT;
+
 	it.each([
-		"Couldn't reach the release server",
-		"Another download is already running",
-		"Finish the other install first",
-		"The release changed during the download. Try again.",
-	])("names the Google OAuth app under %s", (title) => {
-		expect(problemBody({ component: GOOGLE_OAUTH_COMPONENT, title })).toBe(
-			"Open Grind Google OAuth app",
+		[
+			{ kind: "unsigned" },
+			"Couldn’t verify the Open Grind Google OAuth app",
+		],
+		[
+			{ kind: "storage" },
+			"Couldn’t save the Open Grind Google OAuth app download",
+		],
+		[
+			{
+				kind: "unsupported",
+				detail: {
+					reason: "noReleaseArtifacts",
+					detail: { target: "android-x86" },
+				},
+			},
+			"The Open Grind Google OAuth app isn’t published for this device",
+		],
+		[
+			{ kind: "unsupported", detail: { reason: "undetermined" } },
+			"Open Grind can’t tell whether it may install the Open Grind Google OAuth app",
+		],
+	])("words %j", (error, text) => {
+		expect(
+			updateErrorText(error, { fallback: "fallback", component }),
+		).toBe(text);
+	});
+});
+
+describe("the subject line under a problem", () => {
+	const component = GOOGLE_OAUTH_COMPONENT;
+	const fallback = "fallback";
+
+	it.each<[string, () => string]>([
+		[
+			"a refused install",
+			() => installFailedText({ component, kind: "install" }),
+		],
+		[
+			"a refused update",
+			() => installFailedText({ component, kind: "update" }),
+		],
+		[
+			"full storage",
+			() => installFailedText({ code: -4, component, kind: "update" }),
+		],
+		[
+			"a failed verification",
+			() =>
+				updateErrorText({ kind: "signature" }, { fallback, component }),
+		],
+		["no published release", () => noReleaseText({ component })],
+		[
+			"an impostor install",
+			() => unsupportedText({ reason: "foreignTarget" }, { component }),
+		],
+		[
+			"its own running download",
+			() =>
+				updateErrorText(
+					{ kind: "busy", detail: { component } },
+					{ fallback, component },
+				),
+		],
+	])("is left out under its own message for %s", (_, title) => {
+		expect(problemBody({ component, title: title() })).toBe(undefined);
+	});
+
+	it.each<[string, () => string]>([
+		[
+			"an unreachable server",
+			() => updateErrorText({ kind: "network" }, { fallback, component }),
+		],
+		[
+			"an unnamed running download",
+			() => updateErrorText({ kind: "busy" }, { fallback, component }),
+		],
+		[
+			"the app's running download",
+			() =>
+				updateErrorText(
+					{ kind: "busy", detail: { component: APP_COMPONENT } },
+					{ fallback, component },
+				),
+		],
+		[
+			"the reCAPTCHA helper's running download",
+			() =>
+				updateErrorText(
+					{
+						kind: "busy",
+						detail: { component: RECAPTCHA_COMPONENT },
+					},
+					{ fallback, component },
+				),
+		],
+		[
+			"a release replaced twice",
+			() =>
+				updateErrorText(
+					{ kind: "assetReplaced" },
+					{ fallback, component },
+				),
+		],
+		[
+			"an unwritable directory",
+			() =>
+				unsupportedText(
+					{ reason: "locationNotWritable" },
+					{ component },
+				),
+		],
+		["a problem from elsewhere", () => "Finish the other install first"],
+	])("names the Google OAuth app under the message for %s", (_, title) => {
+		expect(problemBody({ component, title: title() })).toBe(
+			addonNames[component],
 		);
 	});
 
@@ -254,9 +391,39 @@ describe("the subject line under a problem", () => {
 		expect(
 			problemBody({
 				component: APP_COMPONENT,
-				title: "Couldn't reach the release server",
+				title: updateErrorText({ kind: "network" }, { fallback }),
 			}),
 		).toBe(undefined);
+	});
+});
+
+describe("the subject line in another language", () => {
+	const component = GOOGLE_OAUTH_COMPONENT;
+
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("is still left out under the add-on's own message", async () => {
+		await setLocale({ locale: "en-XA" });
+		const title = installFailedText({ component, kind: "install" });
+
+		expect(title).toMatch(PSEUDO_MESSAGE);
+		expect(problemBody({ component, title })).toBeUndefined();
+	});
+
+	it("names the add-on in that language under a generic message", async () => {
+		await setLocale({ locale: "en-XA" });
+		const body = problemBody({
+			component,
+			title: updateErrorText(
+				{ kind: "network" },
+				{ fallback: "fallback", component },
+			),
+		});
+
+		expect(body).toMatch(PSEUDO_MESSAGE);
+		expect(body).toBe(t(ADDON_NAME[component]));
 	});
 });
 
@@ -267,20 +434,20 @@ describe("copy for the reCAPTCHA helper", () => {
 		expect(
 			unsupportedText({ reason: "foreignTarget" }, { component }),
 		).toBe(
-			"The installed Open Grind reCAPTCHA helper isn't signed by Open Grind. Uninstall it to install the official one.",
+			"The installed Open Grind reCAPTCHA helper isn’t signed by Open Grind. Uninstall it to install the official one.",
 		);
 		expect(
 			updateErrorText(
 				{ kind: "signature" },
 				{ fallback: "fallback", component },
 			),
-		).toBe("Failed to verify the Open Grind reCAPTCHA helper");
+		).toBe("Couldn’t verify the Open Grind reCAPTCHA helper");
 		expect(
 			updateErrorText(
 				{ kind: "install" },
 				{ fallback: "fallback", component, kind: "update" },
 			),
-		).toBe("Couldn't update the Open Grind reCAPTCHA helper");
+		).toBe("Couldn’t update the Open Grind reCAPTCHA helper");
 		expect(noReleaseText({ component })).toBe(
 			"No Open Grind reCAPTCHA helper release is published yet",
 		);
@@ -313,14 +480,14 @@ describe("copy for the reCAPTCHA helper", () => {
 	});
 
 	it("puts the helper's name under a problem title that lacks it", () => {
+		const titleFor = (kind: "network" | "signature") =>
+			updateErrorText({ kind }, { fallback: "fallback", component });
+
+		expect(problemBody({ component, title: titleFor("network") })).toBe(
+			addonNames[component],
+		);
 		expect(
-			problemBody({ component, title: "Couldn't check for updates" }),
-		).toBe("Open Grind reCAPTCHA helper");
-		expect(
-			problemBody({
-				component,
-				title: "Failed to verify the Open Grind reCAPTCHA helper",
-			}),
+			problemBody({ component, title: titleFor("signature") }),
 		).toBeUndefined();
 	});
 });
@@ -332,14 +499,14 @@ describe("copy for the FCM service", () => {
 		expect(
 			unsupportedText({ reason: "foreignTarget" }, { component }),
 		).toBe(
-			"The installed Open Grind FCM service isn't signed by Open Grind. Uninstall it to install the official one.",
+			"The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
 		);
 		expect(
 			updateErrorText(
 				{ kind: "signature" },
 				{ fallback: "fallback", component },
 			),
-		).toBe("Failed to verify the Open Grind FCM service");
+		).toBe("Couldn’t verify the Open Grind FCM service");
 		expect(noReleaseText({ component })).toBe(
 			"No Open Grind FCM service release is published yet",
 		);
@@ -347,8 +514,14 @@ describe("copy for the FCM service", () => {
 			installFailedText({ code: -4, component, kind: "install" }),
 		).toBe("Not enough storage to install the Open Grind FCM service");
 		expect(
-			problemBody({ component, title: "Couldn't check for updates" }),
-		).toBe("Open Grind FCM service");
+			problemBody({
+				component,
+				title: updateErrorText(
+					{ kind: "network" },
+					{ fallback: "fallback", component },
+				),
+			}),
+		).toBe(addonNames[component]);
 	});
 });
 

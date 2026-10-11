@@ -30,8 +30,8 @@ beforeEach(() => {
 
 describe("an install that does not go through", () => {
 	it.each<[InstallKind, string]>([
-		["update", "problem:Couldn't update the Open Grind Google OAuth app"],
-		["install", "problem:Couldn't install the Open Grind Google OAuth app"],
+		["update", "problem:Couldn’t update the Open Grind Google OAuth app"],
+		["install", "problem:Couldn’t install the Open Grind Google OAuth app"],
 	])(
 		"names a Google OAuth app %s the system refused to install",
 		async (kind, problem) => {
@@ -49,14 +49,14 @@ describe("an install that does not go through", () => {
 		[
 			"google-oauth",
 			"update",
-			"problem:Couldn't update the Open Grind Google OAuth app",
+			"problem:Couldn’t update the Open Grind Google OAuth app",
 		],
 		[
 			"google-oauth",
 			"install",
-			"problem:Couldn't install the Open Grind Google OAuth app",
+			"problem:Couldn’t install the Open Grind Google OAuth app",
 		],
-		["app", "update", "problem:Couldn't install the update"],
+		["app", "update", "problem:Couldn’t install the update"],
 	])(
 		"words a %s %s the system refused without the system's own message",
 		async (component, kind, problem) => {

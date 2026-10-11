@@ -10,6 +10,21 @@ import type { Release } from "./types";
 
 type VersionMessageKey = MessageKeyWith<{ tag: string }>;
 
+export type AddonErrorName =
+	| "externallyManaged"
+	| "foreignSigner"
+	| "foreignTarget"
+	| "noReleaseArtifacts"
+	| "undetermined"
+	| "verifyFailed"
+	| "saveDownloadFailed"
+	| "installFailed"
+	| "updateFailed"
+	| "noStorageToInstall"
+	| "noStorageToUpdate"
+	| "busy"
+	| "noRelease";
+
 type AddonMessages = {
 	readonly stage: Readonly<
 		Record<Release["kind"], Readonly<Record<UpdateStage, PlainMessageKey>>>
@@ -19,6 +34,7 @@ type AddonMessages = {
 	readonly updated: PlainMessageKey;
 	readonly updatedVersion: VersionMessageKey;
 	readonly upToDate: PlainMessageKey;
+	readonly errors: Readonly<Record<AddonErrorName, PlainMessageKey>>;
 };
 
 export const ADDON_MESSAGES = {
@@ -50,6 +66,26 @@ export const ADDON_MESSAGES = {
 		updated: "updates.addons.googleOauth.updated",
 		updatedVersion: "updates.addons.googleOauth.updatedVersion",
 		upToDate: "updates.addons.googleOauth.upToDate",
+		errors: {
+			externallyManaged:
+				"updates.addons.googleOauth.errors.externallyManaged",
+			foreignSigner: "updates.addons.googleOauth.errors.foreignSigner",
+			foreignTarget: "updates.addons.googleOauth.errors.foreignTarget",
+			noReleaseArtifacts:
+				"updates.addons.googleOauth.errors.noReleaseArtifacts",
+			undetermined: "updates.addons.googleOauth.errors.undetermined",
+			verifyFailed: "updates.addons.googleOauth.errors.verifyFailed",
+			saveDownloadFailed:
+				"updates.addons.googleOauth.errors.saveDownloadFailed",
+			installFailed: "updates.addons.googleOauth.errors.installFailed",
+			updateFailed: "updates.addons.googleOauth.errors.updateFailed",
+			noStorageToInstall:
+				"updates.addons.googleOauth.errors.noStorageToInstall",
+			noStorageToUpdate:
+				"updates.addons.googleOauth.errors.noStorageToUpdate",
+			busy: "updates.addons.googleOauth.errors.busy",
+			noRelease: "updates.addons.googleOauth.errors.noRelease",
+		},
 	},
 	[RECAPTCHA_COMPONENT]: {
 		stage: {
@@ -77,6 +113,26 @@ export const ADDON_MESSAGES = {
 		updated: "updates.addons.recaptcha.updated",
 		updatedVersion: "updates.addons.recaptcha.updatedVersion",
 		upToDate: "updates.addons.recaptcha.upToDate",
+		errors: {
+			externallyManaged:
+				"updates.addons.recaptcha.errors.externallyManaged",
+			foreignSigner: "updates.addons.recaptcha.errors.foreignSigner",
+			foreignTarget: "updates.addons.recaptcha.errors.foreignTarget",
+			noReleaseArtifacts:
+				"updates.addons.recaptcha.errors.noReleaseArtifacts",
+			undetermined: "updates.addons.recaptcha.errors.undetermined",
+			verifyFailed: "updates.addons.recaptcha.errors.verifyFailed",
+			saveDownloadFailed:
+				"updates.addons.recaptcha.errors.saveDownloadFailed",
+			installFailed: "updates.addons.recaptcha.errors.installFailed",
+			updateFailed: "updates.addons.recaptcha.errors.updateFailed",
+			noStorageToInstall:
+				"updates.addons.recaptcha.errors.noStorageToInstall",
+			noStorageToUpdate:
+				"updates.addons.recaptcha.errors.noStorageToUpdate",
+			busy: "updates.addons.recaptcha.errors.busy",
+			noRelease: "updates.addons.recaptcha.errors.noRelease",
+		},
 	},
 	[FCM_COMPONENT]: {
 		stage: {
@@ -102,5 +158,20 @@ export const ADDON_MESSAGES = {
 		updated: "updates.addons.fcm.updated",
 		updatedVersion: "updates.addons.fcm.updatedVersion",
 		upToDate: "updates.addons.fcm.upToDate",
+		errors: {
+			externallyManaged: "updates.addons.fcm.errors.externallyManaged",
+			foreignSigner: "updates.addons.fcm.errors.foreignSigner",
+			foreignTarget: "updates.addons.fcm.errors.foreignTarget",
+			noReleaseArtifacts: "updates.addons.fcm.errors.noReleaseArtifacts",
+			undetermined: "updates.addons.fcm.errors.undetermined",
+			verifyFailed: "updates.addons.fcm.errors.verifyFailed",
+			saveDownloadFailed: "updates.addons.fcm.errors.saveDownloadFailed",
+			installFailed: "updates.addons.fcm.errors.installFailed",
+			updateFailed: "updates.addons.fcm.errors.updateFailed",
+			noStorageToInstall: "updates.addons.fcm.errors.noStorageToInstall",
+			noStorageToUpdate: "updates.addons.fcm.errors.noStorageToUpdate",
+			busy: "updates.addons.fcm.errors.busy",
+			noRelease: "updates.addons.fcm.errors.noRelease",
+		},
 	},
 } as const satisfies Record<AddonKey, AddonMessages>;

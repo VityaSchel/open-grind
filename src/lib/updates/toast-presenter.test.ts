@@ -16,6 +16,7 @@ const toasts = vi.hoisted(() => ({
 vi.mock("./toasts", () => toasts);
 
 import { toastPresenter } from "./toast-presenter";
+import { addonNames } from "./updates-test-helpers";
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -23,40 +24,38 @@ beforeEach(() => {
 
 describe("a Google OAuth app problem toast", () => {
 	it("does not repeat the Google OAuth app under a title that names it", () => {
-		toastPresenter("google-oauth").problem(
-			"Couldn't install the Open Grind Google OAuth app",
-		);
+		const title = t("updates.addons.googleOauth.errors.installFailed");
 
+		toastPresenter("google-oauth").problem(title);
+
+		expect(title).toBe("Couldn’t install the Open Grind Google OAuth app");
 		expect(toasts.showProblem.mock.calls).toEqual([
-			[
-				{
-					title: "Couldn't install the Open Grind Google OAuth app",
-					body: undefined,
-				},
-			],
+			[{ title, body: undefined }],
 		]);
 	});
 
-	it("names the Google OAuth app under a title that does not", () => {
-		toastPresenter("google-oauth").problem(
-			"Couldn't reach the release server",
-		);
+	it.each([
+		["a generic title", t("updates.errors.network")],
+		[
+			"another add-on's title",
+			t("updates.addons.recaptcha.errors.installFailed"),
+		],
+	])("names the Google OAuth app under %s", (_, title) => {
+		toastPresenter("google-oauth").problem(title);
 
 		expect(toasts.showProblem.mock.calls).toEqual([
-			[
-				{
-					title: "Couldn't reach the release server",
-					body: "Open Grind Google OAuth app",
-				},
-			],
+			[{ title, body: addonNames["google-oauth"] }],
 		]);
 	});
 
 	it("carries no subject line for the app", () => {
-		toastPresenter("app").problem("Couldn't reach the release server");
+		const title = t("updates.errors.network");
 
+		toastPresenter("app").problem(title);
+
+		expect(title).toBe("Couldn’t reach the release server");
 		expect(toasts.showProblem.mock.calls).toEqual([
-			[{ title: "Couldn't reach the release server", body: undefined }],
+			[{ title, body: undefined }],
 		]);
 	});
 });

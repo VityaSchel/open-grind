@@ -327,7 +327,7 @@ describe("the Check for updates action", () => {
 		await checkForUpdatesNow(storeBuild);
 
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-			title: "The installed Open Grind Google OAuth app isn't signed by Open Grind. Uninstall it to install the official one.",
+			title: "The installed Open Grind Google OAuth app isn’t signed by Open Grind. Uninstall it to install the official one.",
 			body: undefined,
 		});
 	});

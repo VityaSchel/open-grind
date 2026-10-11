@@ -248,7 +248,7 @@ describe("an install outcome recorded before this launch", () => {
 		await startAppWatch();
 
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-			title: "Couldn't install the update",
+			title: "Couldn’t install the update",
 		});
 	});
 
@@ -286,7 +286,7 @@ describe("an install outcome delivered while the app is alive", () => {
 		await settled();
 
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-			title: "Couldn't install the update",
+			title: "Couldn’t install the update",
 		});
 		expect(api.takeInstallOutcome.mock.calls.length).toBe(consumed + 1);
 	});
