@@ -145,7 +145,7 @@
 
 {#snippet bubbleContent()}
 	<ImagesIcon size={24} weight="fill" class="shrink-0" />
-	<span>{t("chat.messagePreview.expiringImage")}</span>
+	<span>{t("chat.messagePreview.expiringPhoto")}</span>
 	{@render media.adornments?.()}
 {/snippet}
 

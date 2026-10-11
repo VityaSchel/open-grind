@@ -4,7 +4,7 @@
 	},
 	"messagePreview": {
 		"album": "Album",
-		"expiringImage": "Expiring photo",
+		"expiringPhoto": "Expiring photo",
 		"expiringVideo": "Expiring video",
 		"photo": "Photo",
 		"unsent": "Unsent message",

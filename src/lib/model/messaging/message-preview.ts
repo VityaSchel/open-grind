@@ -62,7 +62,7 @@ const EXPIRING_VIDEO_TYPES = new Set(["Video", "PrivateVideo"]);
 
 const previewTypeKeys = {
 	album: "chat.messagePreview.album",
-	expiringImage: "chat.messagePreview.expiringImage",
+	expiringPhoto: "chat.messagePreview.expiringPhoto",
 	expiringVideo: "chat.messagePreview.expiringVideo",
 	photo: "chat.messagePreview.photo",
 	unsent: "chat.messagePreview.unsent",
@@ -100,7 +100,7 @@ const quoteTypes: Partial<Record<string, PreviewType>> = {
 
 function mediaType(preview: MessagePreview): PreviewType | null {
 	if ((preview.albumId ?? null) !== null) return "album";
-	if (preview.type === "ExpiringImage") return "expiringImage";
+	if (preview.type === "ExpiringImage") return "expiringPhoto";
 	if (EXPIRING_VIDEO_TYPES.has(preview.type)) return "expiringVideo";
 	if ((preview.imageHash ?? null) !== null || preview.type === "Image") {
 		return "photo";

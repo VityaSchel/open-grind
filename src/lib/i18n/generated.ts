@@ -209,7 +209,7 @@ export interface Messages {
 	"chat.message.video.errors.loadFailed": undefined;
 	"chat.message.video.errors.openFailed": undefined;
 	"chat.messagePreview.album": undefined;
-	"chat.messagePreview.expiringImage": undefined;
+	"chat.messagePreview.expiringPhoto": undefined;
 	"chat.messagePreview.expiringVideo": undefined;
 	"chat.messagePreview.gaymoji": undefined;
 	"chat.messagePreview.gif": undefined;
