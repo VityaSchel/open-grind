@@ -138,21 +138,23 @@
 	{/snippet}
 </MediaGrid>
 
-{#if menu.current}
-	{@const { item, tile } = menu.current}
-	{@const { key, video } = describe(item)}
-	<MediaTileMenu
-		{tile}
-		{video}
-		selected={selected.has(key)}
-		onDelete={() => (deleteTarget = item)}
-		onClose={() => menu.close()}
-	>
-		{#snippet overlay()}
-			{@render itemOverlay?.(item)}
-		{/snippet}
-	</MediaTileMenu>
-{/if}
+{#key menu.current}
+	{#if menu.current}
+		{@const { item, tile } = menu.current}
+		{@const { key, video } = describe(item)}
+		<MediaTileMenu
+			{tile}
+			{video}
+			selected={selected.has(key)}
+			onDelete={() => (deleteTarget = item)}
+			onClose={() => menu.close()}
+		>
+			{#snippet overlay()}
+				{@render itemOverlay?.(item)}
+			{/snippet}
+		</MediaTileMenu>
+	{/if}
+{/key}
 
 <DeleteMediaDialog
 	bind:target={deleteTarget}

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
+import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { rightClick } from "$lib/test/context-menu";
@@ -46,6 +47,23 @@ function renderSheet({
 			onSubmit,
 		},
 	});
+}
+
+function openMenuLabels(): (string | null)[] {
+	return [...document.querySelectorAll("dialog[open]")].map(
+		(dialog) =>
+			dialog.querySelector("[role='menu']")?.getAttribute("aria-label") ??
+			null,
+	);
+}
+
+function holdCloseEvent(dialog: HTMLDialogElement): () => void {
+	let fire = () => {};
+	dialog.close = () => {
+		dialog.open = false;
+		fire = () => dialog.dispatchEvent(new Event("close"));
+	};
+	return () => fire();
 }
 
 afterEach(() => {
@@ -146,6 +164,23 @@ describe("previous uploads sheet", () => {
 			expect(queryByRole("button", { name: "Video 2" })).toBeNull(),
 		);
 		expect(getByRole("button", { name: "Photo 1" })).toBeTruthy();
+	});
+
+	it("reopens a tile's menu asked for again while it is still closing", async () => {
+		const { findByRole } = renderSheet({ uploads: [photo(1), video(2)] });
+		const tile = await findByRole("button", { name: "Video 2" });
+
+		await rightClick(tile);
+		const closing = document.querySelector("dialog[open]");
+		if (!(closing instanceof HTMLDialogElement))
+			throw new Error("the menu did not open");
+		const fireCloseEvent = holdCloseEvent(closing);
+		await fireEvent.mouseDown(closing);
+		await rightClick(tile);
+		fireCloseEvent();
+		await tick();
+
+		expect(openMenuLabels()).toEqual(["Video options"]);
 	});
 
 	it("keeps an upload the server refused to delete and says so", async () => {

@@ -129,7 +129,9 @@
 			contextMenuDialog.close();
 		}
 	}}
-	onclose={() => onClose()}
+	onclose={(event) => {
+		if (event.currentTarget.isConnected) onClose();
+	}}
 >
 	<div
 		class="absolute"
