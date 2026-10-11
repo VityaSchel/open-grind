@@ -2,6 +2,13 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import {
+	enterAlbum,
+	openAlbums,
+	serveAlbumMedia,
+	SHARED_ALBUM,
+} from "./support/albums";
+import {
+	DEMO_CONVERSATION,
 	DEMO_GEOHASH,
 	EXPIRING_IMAGE,
 	FIRST_ROUTE_COMPILE_MS,
@@ -10,7 +17,8 @@ import {
 	pathname,
 	runPaletteCommand,
 } from "./support/app";
-import { DRAWER } from "./support/drawer";
+import { DRAWER, MEDIA_TILE } from "./support/drawer";
+import { ACTIVE_SURFACE, CLIP, LIGHTBOX } from "./support/video";
 
 const FAILING_ROUTE = "/interest";
 const FAILING_LOAD = /\/interest\/\+page\.ts(?:\?|$)/;
@@ -28,6 +36,15 @@ const VIEWED_PREVIEW_CARD = '.photo-grid > div:not([data-slot="skeleton"])';
 const RECEIVED_TAP = '[data-slot="taps-scroller"] a[href^="/profile/"]';
 const PHOTO_CONVERSATION = "/chat/100002:123456000";
 const DRAWER_PILL = "button:not([aria-label], [aria-pressed])";
+const MENU_TRIGGER = '[aria-haspopup="menu"]';
+const ADD_TILE = '[data-slot="add-tile"]';
+const CANCEL_BUTTON = '[data-slot="alert-dialog-cancel"]';
+const PLAYED_OUT_CONVERSATION = "/chat/100006:123456000";
+const ALBUM_PREVIEW = '[data-slot="album-preview"]';
+const COUNTER = ".pswp__counter";
+const ACTIVE_SLIDE = '.pswp__item[aria-hidden="false"]';
+const NO_PLAYS_LEFT = '[data-slot="no-plays-left"]';
+const VIDEO_CONTROLS = "[data-pswp-interactive]";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -92,13 +109,20 @@ function readPseudoText(
 			.flatMap((root) => [root, ...root.querySelectorAll("*")])
 			.filter(translatable)
 			.flatMap((element) =>
-				["aria-label", "title", "placeholder", "alt"].map(
-					(name) => element.getAttribute(name) ?? "",
-				),
+				[
+					"aria-label",
+					"aria-roledescription",
+					"title",
+					"placeholder",
+					"alt",
+				].map((name) => element.getAttribute(name) ?? ""),
 			);
 		const title = document.title === brand ? "" : document.title;
+		const pseudoCount = (values: string[]) =>
+			values.join("").match(/⟦/g)?.length ?? 0;
 		return {
-			messages: texts.join("").match(/⟦/g)?.length ?? 0,
+			messages: pseudoCount(texts),
+			labels: pseudoCount(attributes),
 			leaks: [...texts, title, ...attributes].flatMap(outsidePseudo),
 		};
 	}, brandTitle);
@@ -272,7 +296,7 @@ test("the inbox and its quick-filter drawers render only pseudo-translated text"
 	}
 });
 
-test("a conversation, a message menu and the attachment tabs render only pseudo-translated text", async ({
+test("a conversation, a message menu, the attachment tabs and a media tile's menu render only pseudo-translated text", async ({
 	page,
 }) => {
 	await installTauriShim(page);
@@ -305,6 +329,22 @@ test("a conversation, a message menu and the attachment tabs render only pseudo-
 		),
 	);
 
+	const mediaTile = attachments.locator(MEDIA_TILE).first();
+	await mediaTile.waitFor();
+	const tiles = await readPseudoText(attachments.getByRole("tabpanel"));
+	await mediaTile.click({ button: "right" });
+	const tileMenu = page.getByRole("menu");
+	await tileMenu.waitFor();
+	scans.push(await readPseudoText(tileMenu));
+	await tileMenu.getByRole("menuitem").click();
+	const confirm = page.getByRole("alertdialog");
+	await confirm.waitFor();
+	scans.push(await readPseudoText(confirm));
+	await page.keyboard.press("Escape");
+	await expect(confirm).toBeHidden();
+
+	expect(tiles.labels).toBeGreaterThan(0);
+	expect(tiles.leaks).toEqual([]);
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
@@ -330,7 +370,7 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 	await page.keyboard.press("Escape");
 	await expect(dialog).toBeHidden();
 
-	await pane.locator('[aria-haspopup="menu"]').click();
+	await pane.locator(MENU_TRIGGER).click();
 	const menu = page.getByRole("menu");
 	await menu.waitFor();
 	scans.push(await readPseudoText(menu));
@@ -350,6 +390,104 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
 	}
+});
+
+test("my albums, an album, its previous uploads and its menu render only pseudo-translated text", async ({
+	page,
+}) => {
+	await openAlbums(page, { locale: "en-XA" });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const content = page.getByRole("main");
+	const landmarks = content.or(page.getByRole("navigation"));
+	await expect(landmarks).toHaveCount(3);
+	const scans = [await readPseudoText(landmarks)];
+
+	await enterAlbum(page, SHARED_ALBUM);
+	scans.push(await readPseudoText(content));
+
+	await content.locator(ADD_TILE).click();
+	const uploads = page.getByRole("dialog");
+	await uploads.locator(MEDIA_TILE).first().waitFor();
+	scans.push(await readPseudoText(uploads));
+	await page.keyboard.press("Escape");
+	await expect(uploads).toBeHidden();
+
+	await page.getByRole("navigation").locator(MENU_TRIGGER).click();
+	const menu = page.getByRole("menu");
+	await menu.waitFor();
+	scans.push(await readPseudoText(menu));
+	await menu.getByRole("menuitem").click();
+	const confirm = page.getByRole("alertdialog");
+	await confirm.waitFor();
+	scans.push(await readPseudoText(confirm));
+	await confirm.locator(CANCEL_BUTTON).click();
+	await expect(confirm).toBeHidden();
+
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+async function openAlbumLightbox(
+	page: Page,
+	{ conversation }: { conversation: string },
+): Promise<Locator> {
+	await page.goto(`${conversation}?locale=en-XA`);
+	await page
+		.locator(ALBUM_PREVIEW)
+		.first()
+		.click({ timeout: FIRST_ROUTE_COMPILE_MS });
+	const lightbox = page.locator(LIGHTBOX);
+	await lightbox.waitFor({ timeout: 30_000 });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	await expect(lightbox.locator(COUNTER)).not.toBeEmpty();
+	return lightbox;
+}
+
+async function showLastSlide(page: Page): Promise<void> {
+	const counter = page.locator(COUNTER);
+	await expect(async () => {
+		if ((await counter.textContent()) === "1 / 3") {
+			await page.keyboard.press("ArrowLeft");
+		}
+		await expect(counter).toHaveText("3 / 3", { timeout: 1_000 });
+	}).toPass({ timeout: 15_000 });
+}
+
+test("an album lightbox and its played-out video slide render only pseudo-translated text", async ({
+	page,
+}) => {
+	await serveAlbumMedia(page);
+	const lightbox = await openAlbumLightbox(page, {
+		conversation: PLAYED_OUT_CONVERSATION,
+	});
+	const controls = await readPseudoText(lightbox);
+
+	await showLastSlide(page);
+	const slide = page.locator(ACTIVE_SLIDE);
+	await slide.locator(NO_PLAYS_LEFT).waitFor();
+	const playedOut = await readPseudoText(slide);
+
+	expect(controls.labels).toBeGreaterThan(0);
+	expect(playedOut.messages).toBeGreaterThan(0);
+	expect([...controls.leaks, ...playedOut.leaks]).toEqual([]);
+});
+
+test("album video controls render only pseudo-translated text", async ({
+	page,
+}) => {
+	await serveAlbumMedia(page);
+	await page.route(CLIP, () => {});
+	await openAlbumLightbox(page, { conversation: DEMO_CONVERSATION });
+	await showLastSlide(page);
+	const surface = page.locator(ACTIVE_SURFACE);
+	await surface.hover();
+	await surface.locator(VIDEO_CONTROLS).waitFor();
+
+	const { labels, leaks } = await readPseudoText(surface);
+	expect(labels).toBeGreaterThan(0);
+	expect(leaks).toEqual([]);
 });
 
 test("ar-XB lays the navigation bar out right to left", async ({ page }) => {
