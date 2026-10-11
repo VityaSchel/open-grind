@@ -12,6 +12,7 @@
 	import SetLocationByGeohashCommand from "$lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte";
 	import * as Command from "$lib/components/ui/command";
 	import { t } from "$lib/i18n";
+	import { commandCenterKeybinding } from "$lib/platform/keybindings";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -24,7 +25,7 @@
 
 	onMount(() => {
 		return tinykeys(window, {
-			"$mod+k": (event) => {
+			[commandCenterKeybinding]: (event) => {
 				event.preventDefault();
 				commandCenterState.open = true;
 			},

@@ -234,6 +234,7 @@ export interface Messages {
 	"commands.commandCenter.suggestions.openProfileById": { prefix: string };
 	"commands.commandCenter.suggestions.quickGoTo": { prefix: string };
 	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: string };
+	"commands.trigger.controlKey": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
 	"common.actions.continue": undefined;

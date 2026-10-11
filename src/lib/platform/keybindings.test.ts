@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-async function labelOn(platform: string) {
+async function commandCenterShortcutOn(platform: string) {
 	vi.resetModules();
 	vi.stubGlobal("navigator", { platform });
-	const { modifierKeyLabel } = await import("$lib/platform/keybindings");
-	return modifierKeyLabel();
+	const { commandCenterKeybinding, parseShortcut } =
+		await import("$lib/platform/keybindings");
+	return parseShortcut(commandCenterKeybinding);
 }
 
 afterEach(() => {
@@ -12,16 +13,22 @@ afterEach(() => {
 	vi.resetModules();
 });
 
-describe("modifierKeyLabel", () => {
-	it("names the key tinykeys binds $mod to on Apple platforms", async () => {
+describe("parseShortcut", () => {
+	it("reads the meta key tinykeys binds $mod to on Apple platforms", async () => {
 		for (const platform of ["MacIntel", "iPhone", "iPad"]) {
-			expect(await labelOn(platform)).toBe("⌘");
+			expect(await commandCenterShortcutOn(platform)).toEqual({
+				modifier: "meta",
+				key: "K",
+			});
 		}
 	});
 
-	it("names Ctrl where tinykeys falls back to Control", async () => {
+	it("reads the control key where tinykeys falls back to Control", async () => {
 		for (const platform of ["Win32", "Linux x86_64", ""]) {
-			expect(await labelOn(platform)).toBe("Ctrl");
+			expect(await commandCenterShortcutOn(platform)).toEqual({
+				modifier: "control",
+				key: "K",
+			});
 		}
 	});
 });

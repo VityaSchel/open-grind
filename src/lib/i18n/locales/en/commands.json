@@ -12,5 +12,8 @@
 			"quickGoTo": "Start with {{prefix}} to quick go to",
 			"setLocationByGeohash": "Start with {{prefix}} to set location by geohash"
 		}
+	},
+	"trigger": {
+		"controlKey": "Ctrl"
 	}
 }
