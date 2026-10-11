@@ -321,6 +321,7 @@ export interface Messages {
 	"common.updates.checkAutomatically": undefined;
 	"feedback.accountStatus.ageVerification.description": undefined;
 	"feedback.accountStatus.ageVerification.title": undefined;
+	"feedback.accountStatus.banned.copyDetails": undefined;
 	"feedback.accountStatus.banned.description": undefined;
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: string };
 	"feedback.accountStatus.banned.title": undefined;

@@ -51,7 +51,7 @@ vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
 
 const ban = { kind: "BANNED", code: 403, message: "Account banned" };
 
-const COPY_ERROR_DETAILS = "Copy error details";
+const COPY_BAN_DETAILS = "Copy ban details";
 
 const descriptionWithoutReason =
 	"Grindr has banned this account. You can’t sign in until the ban is lifted.";
@@ -153,7 +153,7 @@ describe("AccountStatusAlert", () => {
 			status: "a ban",
 			event: "auth:banned",
 			payload: { ...ban, reason: "spam" },
-			buttons: [COPY_ERROR_DETAILS, "Sign out"],
+			buttons: [COPY_BAN_DETAILS, "Sign out"],
 		},
 		{
 			status: "an age check",
@@ -217,7 +217,7 @@ describe("AccountStatusAlert", () => {
 			await renderAlert();
 			emit("auth:banned", info);
 			const copyButton = await screen.findByRole("button", {
-				name: COPY_ERROR_DETAILS,
+				name: COPY_BAN_DETAILS,
 			});
 			await setLocale({ locale });
 
@@ -240,7 +240,7 @@ describe("AccountStatusAlert", () => {
 		emit("auth:banned", ban);
 
 		await fireEvent.click(
-			await screen.findByRole("button", { name: COPY_ERROR_DETAILS }),
+			await screen.findByRole("button", { name: COPY_BAN_DETAILS }),
 		);
 
 		await vi.waitFor(() => {
@@ -260,7 +260,7 @@ describe("AccountStatusAlert", () => {
 
 		expect(button("Sign out").getAttribute("aria-busy")).toBe("true");
 		expect(button("Sign out").matches(":disabled")).toBe(true);
-		expect(button(COPY_ERROR_DETAILS).matches(":disabled")).toBe(true);
+		expect(button(COPY_BAN_DETAILS).matches(":disabled")).toBe(true);
 
 		signOut.resolve();
 		await vi.waitFor(() => expect(accountStatusState.open).toBe(false));

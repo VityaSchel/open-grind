@@ -81,7 +81,8 @@
 		"banned": {
 			"title": "Your account is banned",
 			"description": "Grindr has banned this account. You can’t sign in until the ban is lifted.",
-			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can’t sign in until the ban is lifted."
+			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can’t sign in until the ban is lifted.",
+			"copyDetails": "Copy ban details"
 		},
 		"ageVerification": {
 			"title": "Age verification required",

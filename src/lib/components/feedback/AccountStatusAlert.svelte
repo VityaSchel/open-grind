@@ -111,7 +111,7 @@
 			<fieldset disabled={signingOut} class="contents">
 				{#if status?.kind === "banned"}
 					<Button variant="ghost" onclick={copyDetails}>
-						{t("common.actions.copyError")}
+						{t("feedback.accountStatus.banned.copyDetails")}
 					</Button>
 				{/if}
 				<Button onclick={onSignOut} aria-busy={signingOut}>
