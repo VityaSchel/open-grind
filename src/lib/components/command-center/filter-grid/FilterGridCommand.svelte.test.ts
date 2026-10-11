@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, screen, within } from "@testing-library/svelte";
+import { fireEvent, within } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { gotoMock, showErrorToastMock } = vi.hoisted(() => ({
@@ -15,12 +15,14 @@ vi.mock("$lib/grid/grid-state.svelte", () => ({
 }));
 
 import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
-import { slot } from "$lib/i18n/fixtures/dom";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { commandCenterState } from "../command-center-state.svelte";
-import { openWith, option } from "../command-center-test-helpers";
-
-const textOf = (node: Node) => node.textContent?.trim() ?? "";
+import {
+	expectCommandGroup,
+	openWith,
+	option,
+	resetCommandCenter,
+	textOf,
+} from "../command-center-test-helpers";
 
 function filterOption(query: string): HTMLElement {
 	const item = option(query);
@@ -47,10 +49,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-	cleanup();
-	commandCenterState.open = false;
-	commandCenterState.query = "";
-	commandCenterState.value = "";
+	resetCommandCenter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -58,10 +57,7 @@ describe("filter grid command", () => {
 	it("hints at the query syntax under its heading", async () => {
 		await openWith("?");
 
-		expect(screen.getByRole("group", { name: "Filter grid…" })).toBe(
-			within(slot("command-group")).getByRole("group"),
-		);
-		expect(slot("command-group").dataset.value).toBe("filter-grid");
+		expectCommandGroup({ name: "Filter grid…", value: "filter-grid" });
 		const hint = filterOption("?");
 		expect(textOf(hint)).toBe(
 			"Type a Grindr grid query, e.g. online=true&age=18-99&tribes=2,12",
@@ -140,10 +136,7 @@ describe("filter grid command", () => {
 		await openWith("?online=true");
 		await setLocale({ locale: "en-XA" });
 
-		expect(screen.getByRole("group", { name: PSEUDO_MESSAGE })).toBe(
-			within(slot("command-group")).getByRole("group"),
-		);
-		expect(slot("command-group").dataset.value).toBe("filter-grid");
+		expectCommandGroup({ name: PSEUDO_MESSAGE, value: "filter-grid" });
 		const [badge] = badges();
 		expect(badge?.name).toMatch(PSEUDO_MESSAGE);
 		expect(badge?.value).toMatch(PSEUDO_MESSAGE);

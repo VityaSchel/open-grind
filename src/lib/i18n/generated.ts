@@ -249,6 +249,9 @@ export interface Messages {
 	"commands.filterGrid.hint": { example: string };
 	"commands.filterGrid.no": undefined;
 	"commands.filterGrid.yes": undefined;
+	"commands.openProfileById.heading": undefined;
+	"commands.openProfileById.hint": undefined;
+	"commands.quickGoTo.heading": undefined;
 	"commands.trigger.controlKey": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;

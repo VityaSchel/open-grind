@@ -35,5 +35,12 @@
 			"invalidGenderId": "Invalid gender ID “{{value}}”",
 			"applyFailed": "Couldn’t apply filters"
 		}
+	},
+	"openProfileById": {
+		"heading": "Open profile by ID…",
+		"hint": "Enter the profile ID to search"
+	},
+	"quickGoTo": {
+		"heading": "Quick go to…"
 	}
 }

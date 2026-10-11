@@ -2,6 +2,7 @@
 	import z from "zod";
 
 	import * as Command from "$lib/components/ui/command";
+	import { t } from "$lib/i18n";
 	import { commandCenterState } from "../command-center-state.svelte";
 	import OpenProfileByIdCommandItem from "./OpenProfileByIdCommandItem.svelte";
 
@@ -17,7 +18,10 @@
 </script>
 
 {#if !queryHasValue || profileId !== null}
-	<Command.Group heading="Open profile by id...">
+	<Command.Group
+		heading={t("commands.openProfileById.heading")}
+		value="open-profile-by-id"
+	>
 		<OpenProfileByIdCommandItem {profileId} />
 	</Command.Group>
 {/if}

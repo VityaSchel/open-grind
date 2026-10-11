@@ -9,6 +9,7 @@
 
 <Command.Item
 	value="/{value}"
+	translate="no"
 	onSelect={() => {
 		void goto(link);
 		commandCenterClose();
