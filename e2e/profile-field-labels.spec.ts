@@ -18,7 +18,7 @@ const DROPDOWNS = [
 	"Ethnicity",
 	"Relationship status",
 	"My tribes",
-	"Tribes I'm into",
+	"Tribes I’m into",
 	"Looking for",
 	"Meet at",
 	"Accept NSFW pics",
@@ -82,6 +82,13 @@ test("every picker takes its name from its label", async ({ page }) => {
 
 	await combobox(page, "Tags").click();
 	await expect(page.getByRole("listbox", { name: "Tags" })).toBeVisible();
+});
+
+test("the age wheel speaks the age in years", async ({ page }) => {
+	await expect(page.getByRole("slider", { name: "Age" })).toHaveAttribute(
+		"aria-valuetext",
+		/^\d+ years$/,
+	);
 });
 
 test("tapping a picker's label leaves the picker closed", async ({ page }) => {

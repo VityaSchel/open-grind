@@ -3,6 +3,7 @@
 	import type { EmblaCarouselType, EmblaOptionsType } from "embla-carousel";
 	import type { HTMLAttributes } from "svelte/elements";
 
+	import { formatInteger } from "$lib/i18n/format";
 	import {
 		cn,
 		type WithElementRef,
@@ -16,6 +17,7 @@
 		max = 23,
 		loop = false,
 		unit,
+		valueText,
 		disabled = false,
 		class: className,
 		...restProps
@@ -27,6 +29,7 @@
 				max?: number;
 				loop?: boolean;
 				unit?: string;
+				valueText?: (value: number) => string;
 				disabled?: boolean;
 			}
 		>
@@ -169,7 +172,8 @@
 	aria-valuenow={value}
 	aria-valuemin={min}
 	aria-valuemax={max}
-	aria-valuetext={unit ? `${value} ${unit}` : undefined}
+	aria-valuetext={valueText?.(value) ??
+		(unit ? `${formatInteger(value)} ${unit}` : undefined)}
 	aria-disabled={disabled}
 	class={cn(
 		"relative mx-auto flex h-44 w-full touch-pan-x items-center justify-center overflow-hidden select-none",
@@ -188,7 +192,7 @@
 				<div
 					class="flex h-full w-full items-center justify-center text-center text-lg font-medium tabular-nums opacity-0 backface-hidden"
 				>
-					{item}
+					{formatInteger(item)}
 				</div>
 			{/each}
 		</div>

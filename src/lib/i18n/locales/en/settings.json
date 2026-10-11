@@ -201,9 +201,50 @@
 		}
 	},
 	"profile": {
+		"sections": {
+			"photos": "Photos",
+			"basics": "Basics",
+			"about": "About"
+		},
 		"fields": {
+			"displayName": "Display name",
+			"age": "Age",
+			"showAge": "Show my age",
+			"position": "Position",
+			"showPosition": "Show my position",
 			"height": "Height",
-			"weight": "Weight"
+			"weight": "Weight",
+			"bodyType": "Body type",
+			"tags": "Tags",
+			"aboutMe": "About me",
+			"gender": "Gender",
+			"pronouns": "Pronouns",
+			"myTribes": "My tribes",
+			"showTribes": "Show my tribes",
+			"ethnicity": "Ethnicity",
+			"relationshipStatus": "Relationship status",
+			"lookingFor": "Looking for",
+			"meetAt": "Meet at",
+			"acceptNsfwPics": "Accept NSFW pics",
+			"tribesImInto": "Tribes I’m into",
+			"hivStatus": "HIV status",
+			"lastTested": "Last tested",
+			"sexualHealthPractices": "Sexual health practices",
+			"vaccines": "Vaccines"
+		},
+		"placeholders": {
+			"displayName": "Everyone will see this on the Grid…",
+			"aboutMe": "Tell people who you are and what you’re looking for (not what you’re not looking for)",
+			"searchGenders": "Search genders…",
+			"searchPronouns": "Search pronouns…"
+		},
+		"age": {
+			"unit_one": "year",
+			"unit_other": "years",
+			"a11y": {
+				"value_one": "{{count}} year",
+				"value_other": "{{count}} years"
+			}
 		},
 		"units": {
 			"centimeters": "cm",
@@ -222,6 +263,12 @@
 				"remove": "Remove {{label}}",
 				"toggleList": "Toggle list"
 			}
+		},
+		"saved": "Profile updated",
+		"errors": {
+			"loadFailed": "Couldn’t load your profile. Try again.",
+			"saveFailed": "Couldn’t save profile changes",
+			"bannedTerms": "Couldn’t save — these terms aren’t allowed"
 		}
 	}
 }

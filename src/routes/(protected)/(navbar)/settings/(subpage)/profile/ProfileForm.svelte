@@ -22,6 +22,7 @@
 	import TextField from "$lib/components/fields/TextField.svelte";
 	import SaveChangesBar from "$lib/components/shared/SaveChangesBar.svelte";
 	import { WheelPicker } from "$lib/components/ui/carousel";
+	import { t } from "$lib/i18n";
 	import {
 		type Profile,
 		PROFILE_PHOTO_AWAITING_REVIEW,
@@ -200,17 +201,20 @@
 			);
 			form.removedPhotos = [];
 			savedForm = { ...sent, medias: keptPhotos, removedPhotos: [] };
-			toast.success("Profile updated");
+			toast.success(t("settings.profile.saved"));
 		} catch (error) {
 			if (error instanceof ProfileModerationError) {
 				const detail = error.rejected
 					.map((r) => `${r.field}: ${r.terms.join(", ")}`)
 					.join("; ");
-				toast.error("Couldn't save — these terms aren't allowed", {
+				toast.error(t("settings.profile.errors.bannedTerms"), {
 					description: detail || undefined,
 				});
 			} else {
-				showErrorToast({ label: "Failed to update profile", error });
+				showErrorToast({
+					label: t("settings.profile.errors.saveFailed"),
+					error,
+				});
 			}
 		} finally {
 			saving = false;
@@ -224,7 +228,7 @@
 	onsubmit={(event) => event.preventDefault()}
 >
 	<fieldset disabled={saving} class="contents">
-		<ProfileFormSection title="Photos">
+		<ProfileFormSection title={t("settings.profile.sections.photos")}>
 			<ProfilePicturesUpload
 				bind:medias={form.medias}
 				bind:removed={form.removedPhotos}
@@ -233,149 +237,165 @@
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="Basics">
+		<ProfileFormSection title={t("settings.profile.sections.basics")}>
 			<TextField
-				label="Display name"
+				label={t("settings.profile.fields.displayName")}
 				bind:value={form.displayName}
 				maxLength={fieldLimits.displayName}
-				placeholder="Everyone will see this on the grid..."
+				placeholder={t("settings.profile.placeholders.displayName")}
 			/>
 			<FieldPair>
-				<Field label="Age">
+				<Field label={t("settings.profile.fields.age")}>
 					{#snippet picker({ labelId })}
 						<WheelPicker
 							bind:value={form.age}
 							min={ageRange.min}
 							max={ageRange.max}
-							unit="years"
+							unit={t("settings.profile.age.unit", {
+								count: form.age,
+							})}
+							valueText={(age) =>
+								t("settings.profile.age.a11y.value", {
+									count: age,
+								})}
 							disabled={saving}
 							aria-labelledby={labelId}
 						/>
 					{/snippet}
 				</Field>
-				<SwitchRow label="Show my age" bind:checked={form.showAge} />
+				<SwitchRow
+					label={t("settings.profile.fields.showAge")}
+					bind:checked={form.showAge}
+				/>
 			</FieldPair>
 			<FieldPair>
 				<SelectField
-					label="Position"
+					label={t("settings.profile.fields.position")}
 					bind:value={form.sexualPosition}
 					options={positionOptions}
 				/>
 				<SwitchRow
-					label="Show my position"
+					label={t("settings.profile.fields.showPosition")}
 					bind:checked={form.showPosition}
 				/>
 			</FieldPair>
 			<HeightField bind:value={form.height} />
 			<WeightField bind:value={form.weightKg} />
 			<SelectField
-				label="Body type"
+				label={t("settings.profile.fields.bodyType")}
 				bind:value={form.bodyType}
 				options={bodyTypeOptions}
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="About">
+		<ProfileFormSection title={t("settings.profile.sections.about")}>
 			<ComboField
-				label="Tags"
+				label={t("settings.profile.fields.tags")}
 				bind:values={form.profileTags}
 				options={tagOptions}
 				resolveLabel={resolveTagLabel}
 				max={maxProfileTags}
-				searchPlaceholder="Search tags..."
+				searchPlaceholder={t("common.tags.searchPlaceholder")}
 			/>
 			<MultilineField
-				label="About me"
+				label={t("settings.profile.fields.aboutMe")}
 				bind:value={form.aboutMe}
 				maxLength={fieldLimits.aboutMe}
-				placeholder="Tell people who you are and what you're looking for (not what you're not looking for)"
+				placeholder={t("settings.profile.placeholders.aboutMe")}
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="Stats">
+		<ProfileFormSection title={t("common.profileSections.stats")}>
 			<ComboField
-				label="Gender"
+				label={t("settings.profile.fields.gender")}
 				bind:values={form.genderIds}
 				options={genderOptions}
 				resolveLabel={resolveGenderLabel}
 				exclude={genderExclusions}
 				max={maxProfileGenders}
-				searchPlaceholder="Search genders..."
+				searchPlaceholder={t(
+					"settings.profile.placeholders.searchGenders",
+				)}
 			/>
 			<ComboField
-				label="Pronouns"
+				label={t("settings.profile.fields.pronouns")}
 				bind:values={form.pronounIds}
 				options={pronounOptions}
 				resolveLabel={resolvePronounLabel}
 				max={maxProfilePronouns}
-				searchPlaceholder="Search pronouns..."
+				searchPlaceholder={t(
+					"settings.profile.placeholders.searchPronouns",
+				)}
 			/>
 			<FieldPair>
 				<MultiSelectField
-					label="My tribes"
+					label={t("settings.profile.fields.myTribes")}
 					bind:values={form.grindrTribes}
 					options={tribeOptions}
 				/>
 				<SwitchRow
-					label="Show my tribes"
+					label={t("settings.profile.fields.showTribes")}
 					bind:checked={form.showTribes}
 				/>
 			</FieldPair>
 			<SelectField
-				label="Ethnicity"
+				label={t("settings.profile.fields.ethnicity")}
 				bind:value={form.ethnicity}
 				options={ethnicityOptions}
 			/>
 			<SelectField
-				label="Relationship status"
+				label={t("settings.profile.fields.relationshipStatus")}
 				bind:value={form.relationshipStatus}
 				options={relationshipOptions}
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="Expectations">
+		<ProfileFormSection title={t("common.profileSections.expectations")}>
 			<MultiSelectField
-				label="Looking for"
+				label={t("settings.profile.fields.lookingFor")}
 				bind:values={form.lookingFor}
 				options={lookingForOptions}
 			/>
 			<MultiSelectField
-				label="Meet at"
+				label={t("settings.profile.fields.meetAt")}
 				bind:values={form.meetAt}
 				options={meetAtOptions}
 			/>
 			<SelectField
-				label="Accept NSFW pics"
+				label={t("settings.profile.fields.acceptNsfwPics")}
 				bind:value={form.nsfw}
 				options={nsfwOptions}
 			/>
 			<MultiSelectField
-				label="Tribes I'm into"
+				label={t("settings.profile.fields.tribesImInto")}
 				bind:values={form.tribesImInto}
 				options={tribeOptions}
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="Health">
+		<ProfileFormSection title={t("common.profileSections.health")}>
 			<SelectField
-				label="HIV status"
+				label={t("settings.profile.fields.hivStatus")}
 				bind:value={form.hivStatus}
 				options={hivOptions}
 			/>
-			<DateField label="Last tested" bind:value={form.lastTestedDate} />
+			<DateField
+				label={t("settings.profile.fields.lastTested")}
+				bind:value={form.lastTestedDate}
+			/>
 			<MultiSelectField
-				label="Sexual health practices"
+				label={t("settings.profile.fields.sexualHealthPractices")}
 				bind:values={form.sexualHealth}
 				options={healthOptions}
 			/>
 			<MultiSelectField
-				label="Vaccines"
+				label={t("settings.profile.fields.vaccines")}
 				bind:values={form.vaccineIds}
 				options={vaccineOptions}
 			/>
 		</ProfileFormSection>
 
-		<ProfileFormSection title="Socials">
+		<ProfileFormSection title={t("common.profileSections.socials")}>
 			<SocialField
 				label="Instagram"
 				bind:value={form.instagram}

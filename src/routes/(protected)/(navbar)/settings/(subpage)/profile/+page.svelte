@@ -4,6 +4,7 @@
 	import { getProfile } from "$lib/api/users/profiles";
 	import { getPronouns } from "$lib/api/users/pronouns";
 	import { getTags } from "$lib/api/users/tags";
+	import { t } from "$lib/i18n";
 	import ProfileForm from "./ProfileForm.svelte";
 	import ProfileFormSkeleton from "./ProfileFormSkeleton.svelte";
 
@@ -44,6 +45,6 @@
 	/>
 {:catch}
 	<p class="px-1 py-8 text-center text-destructive">
-		Failed to load your profile. Please try again.
+		{t("settings.profile.errors.loadFailed")}
 	</p>
 {/await}
