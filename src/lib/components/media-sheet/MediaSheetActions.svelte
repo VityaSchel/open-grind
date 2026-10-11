@@ -5,6 +5,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { formatInteger } from "$lib/i18n/format";
 	import { fly } from "$lib/util/reduced-motion";
 	import { cn } from "$lib/util/utils";
 
@@ -51,7 +52,7 @@
 				variant="secondary"
 				class="bg-primary-foreground/10 text-primary-foreground"
 			>
-				{count}
+				{formatInteger(count)}
 			</Badge>
 		</Button>
 	</div>

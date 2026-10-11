@@ -31,6 +31,18 @@
 		"errors": {
 			"deletePhotoFailed": "Couldn’t delete photo",
 			"deleteVideoFailed": "Couldn’t delete video"
+		},
+		"previousUploads": {
+			"title": "Previous Uploads",
+			"empty": {
+				"title": "No Previous Uploads"
+			}
+		}
+	},
+	"grid": {
+		"a11y": {
+			"maxSelected_one": "Maximum {{count}} selected",
+			"maxSelected_other": "Maximum {{count}} selected"
 		}
 	}
 }

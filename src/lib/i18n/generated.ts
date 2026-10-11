@@ -344,6 +344,7 @@ export interface Messages {
 	"interest.views.untracked.description": undefined;
 	"interest.views.untracked.enable": undefined;
 	"interest.views.untracked.title": undefined;
+	"media.grid.a11y.maxSelected": { count: number };
 	"media.lightbox.errors.loadFailed": undefined;
 	"media.lightbox.errors.playFailed": undefined;
 	"media.lightbox.next": undefined;
@@ -354,6 +355,8 @@ export interface Messages {
 	"media.sheet.deleteDialog.videoTitle": undefined;
 	"media.sheet.errors.deletePhotoFailed": undefined;
 	"media.sheet.errors.deleteVideoFailed": undefined;
+	"media.sheet.previousUploads.empty.title": undefined;
+	"media.sheet.previousUploads.title": undefined;
 	"media.sheet.tile.a11y.photo": { position: string };
 	"media.sheet.tile.a11y.video": { position: string };
 	"media.sheet.tileMenu.a11y.photoOptions": undefined;

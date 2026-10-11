@@ -2,6 +2,7 @@
 	import { untrack } from "svelte";
 
 	import * as Drawer from "$lib/components/ui/drawer";
+	import { t } from "$lib/i18n";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import MediaSheetActions from "./MediaSheetActions.svelte";
 	import MediaSheetBody from "./MediaSheetBody.svelte";
@@ -69,7 +70,9 @@
 </script>
 
 <MediaSheetBody>
-	<Drawer.Title class="mb-3 px-1">Previous uploads</Drawer.Title>
+	<Drawer.Title class="mb-3 px-1">
+		{t("media.sheet.previousUploads.title")}
+	</Drawer.Title>
 	<MediaSheetGrid
 		{items}
 		{error}
@@ -77,7 +80,7 @@
 		{describe}
 		{selected}
 		onToggle={(key) => selected.toggle(key)}
-		emptyTitle="No previous uploads"
+		emptyTitle={t("media.sheet.previousUploads.empty.title")}
 		addLabel={uploadLabel}
 		onAdd={upload}
 		remove={onDelete}

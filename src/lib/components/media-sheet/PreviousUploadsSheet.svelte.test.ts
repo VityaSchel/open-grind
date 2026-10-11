@@ -71,7 +71,7 @@ describe("previous uploads sheet", () => {
 		expect(onUpload).toHaveBeenCalledOnce();
 		await vi.waitFor(() =>
 			expect(
-				queryByRole("dialog", { name: "Previous uploads" }),
+				queryByRole("dialog", { name: "Previous Uploads" }),
 			).toBeNull(),
 		);
 	});
@@ -194,5 +194,38 @@ describe("previous uploads sheet", () => {
 		for (const button of within(dialog).getAllByRole("button")) {
 			expect(button.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
+	});
+
+	it("announces a full selection in the active locale", async () => {
+		const { findByRole, getByRole } = renderSheet({
+			uploads: [photo(1), photo(2)],
+			max: 2,
+		});
+
+		await fireEvent.click(await findByRole("button", { name: "Photo 1" }));
+		expect(getByRole("status").textContent.trim()).toBe("");
+		await fireEvent.click(getByRole("button", { name: "Photo 2" }));
+		expect(getByRole("status").textContent.trim()).toBe(
+			"Maximum 2 selected",
+		);
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(getByRole("status").textContent.trim()).toMatch(PSEUDO_MESSAGE);
+	});
+
+	it("titles the sheet and its empty state in the active locale", async () => {
+		const { findByRole, findByText } = renderSheet({ uploads: [] });
+		expect(
+			await findByRole("dialog", { name: "Previous Uploads" }),
+		).toBeTruthy();
+		const emptyTitle = await findByText("No Previous Uploads");
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			await findByRole("dialog", { name: PSEUDO_MESSAGE }),
+		).toBeTruthy();
+		expect(emptyTitle.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 });

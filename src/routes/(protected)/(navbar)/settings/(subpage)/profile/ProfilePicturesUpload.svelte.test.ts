@@ -165,7 +165,7 @@ describe("profile pictures upload", () => {
 		).toBeTruthy();
 	});
 
-	it("titles its sheet Previous uploads", async () => {
+	it("titles its sheet Previous Uploads", async () => {
 		const { findByRole, getByRole } = render(ProfilePicturesUpload, {
 			props: { ourProfileId: 1, medias: [] },
 		});
@@ -173,7 +173,7 @@ describe("profile pictures upload", () => {
 		await fireEvent.click(getByRole("button", { name: "Add photos" }));
 
 		expect(
-			await findByRole("dialog", { name: "Previous uploads" }),
+			await findByRole("dialog", { name: "Previous Uploads" }),
 		).toBeTruthy();
 	});
 
