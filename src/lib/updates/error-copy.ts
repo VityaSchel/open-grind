@@ -177,10 +177,14 @@ export function updateErrorText(
 		fallback,
 		component = APP_COMPONENT,
 		kind = "install",
-	}: { fallback: string; component?: ComponentKey; kind?: Release["kind"] },
+	}: {
+		fallback: PlainMessageKey;
+		component?: ComponentKey;
+		kind?: Release["kind"];
+	},
 ): string {
 	const known = asUpdateError(error);
-	if (!known) return fallback;
+	if (!known) return t(fallback);
 	if (known.kind === "unsupported") {
 		return unsupportedText(known.detail, { component });
 	}

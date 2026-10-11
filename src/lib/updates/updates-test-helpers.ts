@@ -8,8 +8,9 @@ import {
 	type ComponentKey,
 	GOOGLE_OAUTH_COMPONENT,
 } from "./components";
-import type { InstallKind, StagePresenter, UpdateFlow } from "./flow";
+import type { UpdateFlow } from "./flow";
 import type * as UpdateApi from "./index";
+import type { InstallKind, StagePresenter } from "./stage";
 import type * as Toasts from "./toasts";
 import type {
 	Capability,
@@ -246,6 +247,7 @@ export function recorder() {
 		presenter,
 		events,
 		activate: () => lastShow?.onActivate(),
+		cancel: () => lastShow?.onCancel(),
 		shownKind: () => lastShow?.kind ?? null,
 		swipe: () => lastShow?.onDismiss(),
 		problems: () => events.filter((event) => event.startsWith("problem:")),

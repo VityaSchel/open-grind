@@ -4,8 +4,12 @@
 
 	import { Progress } from "$lib/components/ui/progress";
 	import { APP_COMPONENT, type ComponentKey } from "./components";
-	import type { InstallKind } from "./flow";
-	import { stageBody, stageTitle, type UpdateStage } from "./stage";
+	import {
+		type InstallKind,
+		stageBody,
+		stageTitle,
+		type UpdateStage,
+	} from "./stage";
 	import ToastCard from "./ToastCard.svelte";
 
 	let {

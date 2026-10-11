@@ -170,6 +170,7 @@
 		"busyApp": "Wait for the Open Grind update to finish downloading",
 		"noStorage": "Not enough storage to install the update",
 		"noRelease": "No Open Grind release is published yet",
+		"checkFailed": "Couldn’t check for updates",
 		"unsupported": {
 			"externallyManaged": "Updates are managed by the store that installed the app",
 			"foreignSigner": "This build isn’t signed by Open Grind",
@@ -178,6 +179,15 @@
 			"noReleaseArtifacts": "No release is published for this platform",
 			"sandboxed": "The sandbox this app runs in manages its own updates",
 			"locationNotWritable": "Open Grind can’t install the update in its directory"
+		}
+	},
+	"flow": {
+		"finishOtherInstall": "Finish the other install first",
+		"errors": {
+			"startDownloadFailed": "Couldn’t start the download",
+			"openPermissionScreenFailed": "Couldn’t open the install permission screen",
+			"stopDownloadFailed": "Couldn’t stop the download",
+			"downloadFailed": "Couldn’t download the update"
 		}
 	}
 }

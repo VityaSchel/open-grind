@@ -376,6 +376,7 @@ const translatedScriptFiles = [
 	"src/lib/updates/addon.svelte.ts",
 	"src/lib/updates/components.ts",
 	"src/lib/updates/error-copy.ts",
+	"src/lib/updates/flow.ts",
 	"src/lib/updates/index.ts",
 	"src/lib/updates/manual-install.ts",
 	"src/lib/updates/on-return.ts",

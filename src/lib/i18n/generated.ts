@@ -939,6 +939,7 @@ export interface Messages {
 	"updates.errors.busy": undefined;
 	"updates.errors.busyApp": undefined;
 	"updates.errors.canceled": undefined;
+	"updates.errors.checkFailed": undefined;
 	"updates.errors.checkTooSoon": undefined;
 	"updates.errors.foreignUrl": undefined;
 	"updates.errors.installFailed": undefined;
@@ -962,6 +963,11 @@ export interface Messages {
 	"updates.errors.unsupported.undetermined": undefined;
 	"updates.errors.verifyFailed": undefined;
 	"updates.errors.writeFailed": undefined;
+	"updates.flow.errors.downloadFailed": undefined;
+	"updates.flow.errors.openPermissionScreenFailed": undefined;
+	"updates.flow.errors.startDownloadFailed": undefined;
+	"updates.flow.errors.stopDownloadFailed": undefined;
+	"updates.flow.finishOtherInstall": undefined;
 	"updates.stage.available": undefined;
 	"updates.stage.downloading": undefined;
 	"updates.stage.hints.download": undefined;

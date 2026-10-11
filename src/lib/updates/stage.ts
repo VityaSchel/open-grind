@@ -13,6 +13,23 @@ export type UpdateStage =
 
 export type StageView = { stage: UpdateStage; received: number; total: number };
 
+export type InstallKind = Release["kind"];
+
+export type StagePresenter = {
+	show(args: {
+		view: StageView;
+		kind: InstallKind;
+		onActivate: () => void;
+		onCancel: () => void;
+		onDismiss: () => void;
+	}): void;
+	dismiss(): void;
+	problem(title: string): void;
+	manualInstall(body: string): void;
+	installed(args: { tag: string | null; kind: InstallKind }): void;
+	upToDate(): void;
+};
+
 export type StageChange =
 	| { view: StageView }
 	| { failed: UpdateError | undefined };
@@ -44,7 +61,7 @@ const appTitleKeys = {
 
 type StageCopyArgs = {
 	component: ComponentKey;
-	kind: Release["kind"];
+	kind: InstallKind;
 	stage: UpdateStage;
 };
 

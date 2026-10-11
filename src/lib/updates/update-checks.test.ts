@@ -309,7 +309,7 @@ describe("the Check for updates action", () => {
 		expect(googleOAuth.checkNow).not.toHaveBeenCalled();
 		expect(toasts.showUpToDate).not.toHaveBeenCalled();
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-			title: "Couldn't check for updates",
+			title: "Couldn’t check for updates",
 			body: "Open Grind Google OAuth app",
 		});
 	});
@@ -451,7 +451,7 @@ describe.each<[AddonKey, string]>(addonCases)(
 
 			expect(flow.checkNow).not.toHaveBeenCalled();
 			expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-				title: "Couldn't check for updates",
+				title: "Couldn’t check for updates",
 				body: name,
 			});
 		});

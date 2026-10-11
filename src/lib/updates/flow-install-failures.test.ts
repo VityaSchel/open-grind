@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ComponentKey } from "./components";
-import type { InstallKind } from "./flow";
+import type { InstallKind } from "./stage";
 import {
 	awaitingPermission,
 	flowFor,
+	offer,
 	outcomeOf,
 	ready,
 	settled,
@@ -126,7 +127,7 @@ describe("an install that does not go through", () => {
 
 			expect(view.events).toEqual([
 				"show:ready",
-				"problem:Couldn't open the install permission screen",
+				"problem:Couldn’t open the install permission screen",
 			]);
 		},
 	);
@@ -146,5 +147,47 @@ describe("an install that does not go through", () => {
 		expect(view.problems()).toEqual([
 			"problem:The store that installed the Open Grind Google OAuth app manages its updates",
 		]);
+	});
+});
+
+describe("a failure the updater gives no reason for", () => {
+	it("says the download did not finish", async () => {
+		api.checkForUpdate.mockResolvedValue(
+			offer("update", { component: "app" }),
+		);
+		const { flow, view } = await flowFor("app");
+		await flow.start();
+		api.startUpdateDownload.mockRejectedValue(new Error("no plugin"));
+
+		view.activate();
+		await settled();
+
+		expect(view.problems()).toEqual([
+			"problem:Couldn’t download the update",
+		]);
+	});
+
+	it("says the check did not finish when asked to report it", async () => {
+		api.checkForUpdate.mockRejectedValue(new Error("no plugin"));
+		const { flow, view } = await flowFor("app");
+
+		expect(await flow.checkNow({ reportFailure: true })).toBe("failed");
+		expect(view.problems()).toEqual(["problem:Couldn’t check for updates"]);
+	});
+
+	it("says the download could not be stopped", async () => {
+		api.checkForUpdate.mockResolvedValue(
+			offer("update", { component: "app" }),
+		);
+		const { flow, view } = await flowFor("app");
+		await flow.start();
+		view.activate();
+		await settled();
+		api.cancelUpdateDownload.mockRejectedValue(new Error("no plugin"));
+
+		view.cancel();
+		await settled();
+
+		expect(view.problems()).toEqual(["problem:Couldn’t stop the download"]);
 	});
 });

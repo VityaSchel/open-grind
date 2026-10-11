@@ -264,7 +264,7 @@ describe("an add-on that changed outside Open Grind before its download started"
 			"dismiss",
 			"show:downloading",
 			"dismiss",
-			"problem:Couldn't start the download",
+			"problem:Couldn’t start the download",
 		]);
 	});
 });

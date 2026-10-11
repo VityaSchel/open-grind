@@ -74,7 +74,7 @@ async function checkInstalledAddon(
 	} catch (error) {
 		if (reportFailure) {
 			const title = updateErrorText(error, {
-				fallback: "Couldn't check for updates",
+				fallback: "updates.errors.checkFailed",
 				component,
 			});
 			showProblem({ title, body: problemBody({ component, title }) });

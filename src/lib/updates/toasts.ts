@@ -14,8 +14,7 @@ import {
 	COMPONENT_REPO,
 	type ComponentKey,
 } from "./components";
-import type { InstallKind } from "./flow";
-import type { StageView } from "./stage";
+import type { InstallKind, StageView } from "./stage";
 import ToastCard from "./ToastCard.svelte";
 import UpdateToast from "./UpdateToast.svelte";
 

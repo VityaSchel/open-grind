@@ -2,7 +2,7 @@ import { t } from "$lib/i18n";
 import { ADDON_MESSAGES } from "./addon-messages";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import { problemBody } from "./error-copy";
-import type { StagePresenter } from "./flow";
+import type { StagePresenter } from "./stage";
 import {
 	dismissStage,
 	showAddonInstalled,

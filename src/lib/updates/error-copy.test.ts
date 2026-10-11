@@ -20,6 +20,8 @@ import {
 } from "./error-copy";
 import { addonNames } from "./updates-test-helpers";
 
+const fallback = "updates.flow.errors.downloadFailed";
+
 const foreignTarget = {
 	kind: "unsupported",
 	detail: { reason: "foreignTarget" },
@@ -32,7 +34,7 @@ describe("copy for an installed package signed by someone else", () => {
 		);
 		expect(
 			updateErrorText(foreignTarget, {
-				fallback: "fallback",
+				fallback,
 				component: APP_COMPONENT,
 			}),
 		).toBe("The installed app isn’t signed by Open Grind");
@@ -51,7 +53,7 @@ describe("copy for an installed package signed by someone else", () => {
 		for (const kind of ["install", "update"] as const) {
 			expect(
 				updateErrorText(foreignTarget, {
-					fallback: "fallback",
+					fallback,
 					component: GOOGLE_OAUTH_COMPONENT,
 					kind,
 				}),
@@ -78,7 +80,7 @@ describe("copy for an Open Grind build signed by someone else", () => {
 		expect(
 			updateErrorText(
 				{ kind: "unsupported", detail: { reason: "foreignSigner" } },
-				{ fallback: "fallback", component: GOOGLE_OAUTH_COMPONENT },
+				{ fallback, component: GOOGLE_OAUTH_COMPONENT },
 			),
 		).toBe(text);
 	});
@@ -194,7 +196,7 @@ describe("copy for a download refused while another one runs", () => {
 			expect(
 				updateErrorText(
 					{ kind: "busy", detail: { component: running } },
-					{ fallback: "fallback", component },
+					{ fallback, component },
 				),
 			).toBe(text);
 		},
@@ -206,7 +208,7 @@ describe("copy for a download refused while another one runs", () => {
 	])("keeps the generic text for %s", (_, error) => {
 		expect(
 			updateErrorText(error, {
-				fallback: "fallback",
+				fallback,
 				component: GOOGLE_OAUTH_COMPONENT,
 			}),
 		).toBe("Another download is already running");
@@ -222,7 +224,7 @@ describe("copy for a release replaced after its one automatic retry", () => {
 			expect(
 				updateErrorText(
 					{ kind: "assetReplaced" },
-					{ fallback: "fallback", component },
+					{ fallback, component },
 				),
 			).toBe("The release changed during the download. Try again.");
 		}
@@ -254,13 +256,13 @@ describe("copy for the app's own update errors", () => {
 			"Open Grind can’t install the update in its directory",
 		],
 	])("words %j", (error, text) => {
-		expect(updateErrorText(error, { fallback: "fallback" })).toBe(text);
+		expect(updateErrorText(error, { fallback })).toBe(text);
 	});
 
 	it("keeps the caller's fallback for an error it does not know", () => {
-		expect(
-			updateErrorText(new Error("no plugin"), { fallback: "fallback" }),
-		).toBe("fallback");
+		expect(updateErrorText(new Error("no plugin"), { fallback })).toBe(
+			"Couldn’t download the update",
+		);
 	});
 });
 
@@ -291,15 +293,12 @@ describe("copy for the Google OAuth app's own errors", () => {
 			"Open Grind can’t tell whether it may install the Open Grind Google OAuth app",
 		],
 	])("words %j", (error, text) => {
-		expect(
-			updateErrorText(error, { fallback: "fallback", component }),
-		).toBe(text);
+		expect(updateErrorText(error, { fallback, component })).toBe(text);
 	});
 });
 
 describe("the subject line under a problem", () => {
 	const component = GOOGLE_OAUTH_COMPONENT;
-	const fallback = "fallback";
 
 	it.each<[string, () => string]>([
 		[
@@ -380,7 +379,10 @@ describe("the subject line under a problem", () => {
 					{ component },
 				),
 		],
-		["a problem from elsewhere", () => "Finish the other install first"],
+		[
+			"a problem from elsewhere",
+			() => t("updates.flow.finishOtherInstall"),
+		],
 	])("names the Google OAuth app under the message for %s", (_, title) => {
 		expect(problemBody({ component, title: title() })).toBe(
 			addonNames[component],
@@ -418,7 +420,7 @@ describe("the subject line in another language", () => {
 			component,
 			title: updateErrorText(
 				{ kind: "network" },
-				{ fallback: "fallback", component },
+				{ fallback, component },
 			),
 		});
 
@@ -437,15 +439,12 @@ describe("copy for the reCAPTCHA helper", () => {
 			"The installed Open Grind reCAPTCHA helper isn’t signed by Open Grind. Uninstall it to install the official one.",
 		);
 		expect(
-			updateErrorText(
-				{ kind: "signature" },
-				{ fallback: "fallback", component },
-			),
+			updateErrorText({ kind: "signature" }, { fallback, component }),
 		).toBe("Couldn’t verify the Open Grind reCAPTCHA helper");
 		expect(
 			updateErrorText(
 				{ kind: "install" },
-				{ fallback: "fallback", component, kind: "update" },
+				{ fallback, component, kind: "update" },
 			),
 		).toBe("Couldn’t update the Open Grind reCAPTCHA helper");
 		expect(noReleaseText({ component })).toBe(
@@ -468,11 +467,7 @@ describe("copy for the reCAPTCHA helper", () => {
 				] as const
 			).map((reason) => unsupportedText({ reason }, { component })),
 			...(["unsigned", "signature", "storage", "install"] as const).map(
-				(kind) =>
-					updateErrorText(
-						{ kind },
-						{ fallback: "fallback", component },
-					),
+				(kind) => updateErrorText({ kind }, { fallback, component }),
 			),
 			installFailedText({ code: -4, component, kind: "install" }),
 		];
@@ -481,7 +476,7 @@ describe("copy for the reCAPTCHA helper", () => {
 
 	it("puts the helper's name under a problem title that lacks it", () => {
 		const titleFor = (kind: "network" | "signature") =>
-			updateErrorText({ kind }, { fallback: "fallback", component });
+			updateErrorText({ kind }, { fallback, component });
 
 		expect(problemBody({ component, title: titleFor("network") })).toBe(
 			addonNames[component],
@@ -502,10 +497,7 @@ describe("copy for the FCM service", () => {
 			"The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
 		);
 		expect(
-			updateErrorText(
-				{ kind: "signature" },
-				{ fallback: "fallback", component },
-			),
+			updateErrorText({ kind: "signature" }, { fallback, component }),
 		).toBe("Couldn’t verify the Open Grind FCM service");
 		expect(noReleaseText({ component })).toBe(
 			"No Open Grind FCM service release is published yet",
@@ -518,7 +510,7 @@ describe("copy for the FCM service", () => {
 				component,
 				title: updateErrorText(
 					{ kind: "network" },
-					{ fallback: "fallback", component },
+					{ fallback, component },
 				),
 			}),
 		).toBe(addonNames[component]);
@@ -531,7 +523,7 @@ describe("copy that must name every add-on", () => {
 			expect(
 				updateErrorText(
 					{ kind: "busy", detail: { component } },
-					{ fallback: "fallback", component: APP_COMPONENT },
+					{ fallback, component: APP_COMPONENT },
 				),
 			).toBe(
 				`Wait for the ${addonNames[component]} to finish downloading`,
