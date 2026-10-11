@@ -7,6 +7,12 @@ import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
 } from "$lib/demo/mock/albums";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import {
+	bracketCounts,
+	restoreCountFormatter,
+} from "$lib/i18n/fixtures/count-formatter";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { untranslatableTexts } from "$lib/test/untranslatable";
 import type { MyAlbum } from "$lib/model/messaging/albums";
 import AlbumTile from "./AlbumTile.svelte";
@@ -32,10 +38,16 @@ function stillProcessing(item: MyAlbum["content"][number]) {
 const BROKEN = '[data-slot="broken-media"]';
 const COUNT_BADGE = '[data-slot="album-count-badge"]';
 const VIDEO_BADGE = '[data-slot="album-video-badge"]';
+const SHARED_BADGE = '[data-slot="album-shared-badge"]';
+const LOCKED = '[data-slot="album-locked"]';
+const NAME_BADGE = '[data-slot="badge"]';
 
-function tileOf(album: MyAlbum): Element {
+function tileOf(
+	album: MyAlbum,
+	{ shared = false, shareLocked = false } = {},
+): Element {
 	const { container } = render(AlbumTile, {
-		props: { album, clickable: false },
+		props: { album, clickable: false, shared, shareLocked },
 	});
 	const tile = container.querySelector('[data-slot="album-tile"]');
 	if (tile === null) throw new Error("no album tile");
@@ -53,7 +65,15 @@ function coverOf(album: MyAlbum): Element | null {
 	return tileOf(album).firstElementChild;
 }
 
-afterEach(() => cleanup());
+function textOf(element: Element | null): string | undefined {
+	return element?.textContent?.trim();
+}
+
+afterEach(async () => {
+	cleanup();
+	restoreCountFormatter();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("album tile", () => {
 	it("shows the same cover as an empty album while every item is processing", () => {
@@ -124,7 +144,7 @@ describe("album tile", () => {
 
 		const untitled = tileOf({ ...album, albumName: null });
 
-		expect(untitled.textContent).toContain("Untitled album");
+		expect(untitled.textContent).toContain("Untitled Album");
 		expect(untranslatableTexts(untitled)).toEqual([]);
 	});
 
@@ -150,5 +170,47 @@ describe("album tile", () => {
 		expect(readyVideo.querySelector(VIDEO_BADGE)).not.toBeNull();
 		expect(countBadgeText(processingVideo)).toBe("2 2 items");
 		expect(processingVideo.querySelector(VIDEO_BADGE)).toBeNull();
+	});
+
+	it("prints both counts of the count badge with the count formatter", () => {
+		const bracketed = bracketCounts();
+		const album = demoAlbum();
+		const ready = album.content.filter((item) => !item.processing).length;
+
+		expect(countBadgeText(tileOf(album))).toBe(
+			`${bracketed(ready)} ${bracketed(ready)} items`,
+		);
+	});
+
+	it("words its badges and screen reader texts in the active locale", async () => {
+		const album = demoAlbum();
+		const [first] = album.content;
+		if (first === undefined) throw new Error("no demo album content");
+		const named = { ...album, albumName: "Studio" };
+		const video = { ...first, contentType: "video/mp4", processing: false };
+		const shared = tileOf({ ...named, content: [video] }, { shared: true });
+		const locked = tileOf(
+			{ ...album, albumName: null },
+			{ shareLocked: true },
+		);
+		expect(textOf(shared.querySelector(SHARED_BADGE))).toBe("Shared");
+		expect(textOf(shared.querySelector(VIDEO_BADGE))).toBe(
+			"Contains video",
+		);
+		expect(textOf(locked.querySelector(LOCKED))).toBe("Can’t be shared");
+
+		await setLocale({ locale: "en-XA" });
+
+		for (const text of [
+			textOf(shared.querySelector(SHARED_BADGE)),
+			textOf(shared.querySelector(VIDEO_BADGE)),
+			textOf(shared.querySelector(`${COUNT_BADGE} .sr-only`)),
+			textOf(locked.querySelector(LOCKED)),
+			textOf(locked.querySelector(NAME_BADGE)),
+		]) {
+			expect(text).toMatch(PSEUDO_MESSAGE);
+		}
+		expect(textOf(shared.querySelector(NAME_BADGE))).toBe("Studio");
+		expect(untranslatableTexts(shared)).toEqual(["Studio"]);
 	});
 });

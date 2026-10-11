@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import {
+	bracketCounts,
+	restoreCountFormatter,
+} from "$lib/i18n/fixtures/count-formatter";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	albumCoverContent,
 	albumDisplayName,
@@ -11,13 +17,25 @@ import {
 	readyAlbumMedia,
 } from "./album";
 
+afterEach(async () => {
+	restoreCountFormatter();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
+
 describe("albumDisplayName", () => {
 	it("falls back for an unnamed album", () => {
-		expect(albumDisplayName(null)).toBe("Untitled album");
-		expect(albumDisplayName("")).toBe("Untitled album");
+		expect(albumDisplayName(null)).toBe("Untitled Album");
+		expect(albumDisplayName("")).toBe("Untitled Album");
 	});
 
 	it("keeps a real name", () => {
+		expect(albumDisplayName("Studio")).toBe("Studio");
+	});
+
+	it("words the fallback in the active locale but never a real name", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(albumDisplayName(null)).toMatch(PSEUDO_MESSAGE);
 		expect(albumDisplayName("Studio")).toBe("Studio");
 	});
 });
@@ -27,6 +45,21 @@ describe("albumItemCountLabel", () => {
 		expect(albumItemCountLabel(0)).toBe("0 items");
 		expect(albumItemCountLabel(1)).toBe("1 item");
 		expect(albumItemCountLabel(4)).toBe("4 items");
+	});
+
+	it("prints the count with the count formatter", () => {
+		const bracketed = bracketCounts();
+
+		expect(albumItemCountLabel(1)).toBe(`${bracketed(1)} item`);
+		expect(albumItemCountLabel(1200)).toBe(`${bracketed(1200)} items`);
+	});
+
+	it("words the count in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(albumItemCountLabel(1)).toMatch(PSEUDO_MESSAGE);
+		expect(albumItemCountLabel(4)).toMatch(PSEUDO_MESSAGE);
+		expect(albumItemCountLabel(4)).toContain("4");
 	});
 });
 

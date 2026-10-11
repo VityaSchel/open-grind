@@ -346,7 +346,12 @@ export interface Messages {
 	"interest.views.untracked.description": undefined;
 	"interest.views.untracked.enable": undefined;
 	"interest.views.untracked.title": undefined;
+	"media.album.itemCount": { count: number };
 	"media.album.noPlaysLeft": undefined;
+	"media.album.tile.a11y.cantBeShared": undefined;
+	"media.album.tile.a11y.containsVideo": undefined;
+	"media.album.tile.shared": undefined;
+	"media.album.untitled": undefined;
 	"media.grid.a11y.maxSelected": { count: number };
 	"media.lightbox.errors.loadFailed": undefined;
 	"media.lightbox.errors.playFailed": undefined;

@@ -10,7 +10,17 @@
 		}
 	},
 	"album": {
-		"noPlaysLeft": "No plays left"
+		"noPlaysLeft": "No plays left",
+		"untitled": "Untitled Album",
+		"itemCount_one": "{{count}} item",
+		"itemCount_other": "{{count}} items",
+		"tile": {
+			"shared": "Shared",
+			"a11y": {
+				"containsVideo": "Contains video",
+				"cantBeShared": "Can’t be shared"
+			}
+		}
 	},
 	"sheet": {
 		"tile": {

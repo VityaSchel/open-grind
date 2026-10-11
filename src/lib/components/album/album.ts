@@ -1,3 +1,4 @@
+import { t } from "$lib/i18n";
 import { type MediaFileKind, mediaFileKindOf } from "$lib/platform/media-file";
 import type {
 	AlbumContent,
@@ -71,9 +72,9 @@ export function albumRoom({
 }
 
 export function albumDisplayName(albumName: string | null): string {
-	return albumName || "Untitled album";
+	return albumName || t("media.album.untitled");
 }
 
 export function albumItemCountLabel(count: number): string {
-	return `${count} ${count === 1 ? "item" : "items"}`;
+	return t("media.album.itemCount", { count });
 }

@@ -11,6 +11,7 @@ const vendoredGlob = "src/lib/components/ui/**";
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/routes/+layout.svelte",
+	"src/lib/components/album/AlbumTile.svelte",
 	"src/lib/components/album/NoPlaysLeftSlide.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
@@ -248,6 +249,7 @@ const translatedScriptFiles = [
 	"src/lib/chat/unread-while-missing.ts",
 	"src/lib/credits/highlights.ts",
 	"src/lib/components/album/album-lightbox.ts",
+	"src/lib/components/album/album.ts",
 	"src/lib/components/filters/distance/distance-steps.ts",
 	"src/lib/components/filters/gender-chips.ts",
 	"src/lib/components/filters/option-filters.ts",
