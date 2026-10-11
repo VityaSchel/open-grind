@@ -88,7 +88,9 @@ describe.each<BooleanPreference>([
 
 		await fireEvent.click(toggle());
 		await vi.waitFor(() =>
-			expect(showErrorToastMock).toHaveBeenCalledOnce(),
+			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith(
+				expect.objectContaining({ label: "Couldn’t save setting" }),
+			),
 		);
 
 		expect(toggle().getAttribute("aria-checked")).toBe("true");

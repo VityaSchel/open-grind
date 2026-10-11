@@ -10,6 +10,7 @@
 	import * as Item from "$lib/components/ui/item";
 	import Link from "$lib/components/ui/link/Link.svelte";
 	import { hapticsAvailable } from "$lib/haptics";
+	import { t } from "$lib/i18n";
 	import { desktopEntryAvailable } from "$lib/platform/desktop-entry.svelte";
 	import { addonInstallerAvailable } from "$lib/updates/addon.svelte";
 	import {
@@ -64,14 +65,14 @@
 		{/snippet}
 	</Item.Root>
 {/snippet}
-<h2>Display</h2>
+<h2>{t("settings.app.sections.display")}</h2>
 <UnitsSetting />
 <BackdropBlurSetting />
 {#if hapticsAvailable()}
 	<PreferenceSwitchSetting
 		preference="hapticFeedback"
-		title="Haptic feedback"
-		description="Use the haptic engine for interactions."
+		title={t("settings.app.hapticFeedback.title")}
+		description={t("settings.app.hapticFeedback.description")}
 	/>
 {/if}
 {#if desktopEntryAvailable()}
@@ -80,48 +81,50 @@
 <Item.Root variant="outline">
 	{#snippet child({ props })}
 		<a href="/settings/app/notifications" {...props}>
-			{@render rowContent({ title: "Notifications" })}
+			{@render rowContent({
+				title: t("settings.subpage.titles.notifications"),
+			})}
 		</a>
 	{/snippet}
 </Item.Root>
-<h2>Privacy</h2>
+<h2>{t("settings.app.sections.privacy")}</h2>
 <PreferenceSwitchSetting
 	preference="stayOnline"
-	title="Stay online while the app is open"
-	description="Refresh your online status in the background automatically, while the app is open."
+	title={t("settings.app.stayOnline.title")}
+	description={t("settings.app.stayOnline.description")}
 />
 <PreferenceSwitchSetting
 	preference="revealMessageRead"
-	title="Reveal message read status"
-	description="Let others know when you've read their messages. Your read receipts remain unaffected."
+	title={t("settings.app.revealMessageRead.title")}
+	description={t("settings.app.revealMessageRead.description")}
 />
 <PreferenceSwitchSetting
 	preference="revealProfileViews"
-	title="Reveal profile views"
-	description="Let others know when you've viewed their profile. Your profile view history remains unaffected."
+	title={t("settings.app.revealProfileViews.title")}
+	description={t("settings.app.revealProfileViews.description")}
 />
-<h2>Security</h2>
+<h2>{t("settings.app.sections.security")}</h2>
 {@render item({
-	title: "Discreet app icon",
+	title: t("settings.app.discreetAppIcon.title"),
 	unimplemented: {
 		message: "settings.app.discreetAppIcon.unimplemented",
 		issue: 97,
 	},
 })}
 {@render item({
-	title: "PIN",
+	title: t("settings.app.pin.title"),
 	unimplemented: { message: "settings.app.pin.unimplemented", issue: 50 },
 })}
 {#if updatesSelfManaged() || updatesUnsupportedReason() !== null || addonInstallerAvailable()}
-	<h2>Updates</h2>
+	<h2>{t("settings.app.sections.updates")}</h2>
 	<AutomaticUpdatesSetting />
 {/if}
-<h2>About</h2>
+<h2>{t("settings.app.sections.about")}</h2>
 <Item.Root variant="outline">
 	{#snippet child({ props })}
 		<Link href="https://opengrind.org/privacy" {...props}>
 			{@render rowContent({
-				title: "Privacy policy",
+				title: t("settings.app.privacyPolicy"),
 				trailingIcon: ArrowSquareOutIcon,
 			})}
 		</Link>
@@ -130,7 +133,9 @@
 <Item.Root variant="outline">
 	{#snippet child({ props })}
 		<a href="/settings/app/credits" {...props}>
-			{@render rowContent({ title: "Credits & Licenses" })}
+			{@render rowContent({
+				title: t("settings.subpage.titles.credits"),
+			})}
 		</a>
 	{/snippet}
 </Item.Root>

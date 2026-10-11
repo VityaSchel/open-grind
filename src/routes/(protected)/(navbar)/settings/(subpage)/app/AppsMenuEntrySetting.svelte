@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { showErrorToast } from "$lib/api/error-toast";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
+	import { t } from "$lib/i18n";
 	import {
 		desktopEntryInstalled,
 		setDesktopEntryInstalled,
@@ -11,8 +12,8 @@
 </script>
 
 <SwitchField
-	title="Show in apps menu"
-	description="Add Open Grind to your applications list so it appears in your launcher and gets its icon."
+	title={t("settings.app.appsMenuEntry.title")}
+	description={t("settings.app.appsMenuEntry.description")}
 	bind:checked={
 		() => value,
 		(newValue: boolean) => {
@@ -21,8 +22,8 @@
 				.catch((error: unknown) => {
 					showErrorToast({
 						label: newValue
-							? "Couldn't add Open Grind to your apps"
-							: "Couldn't remove Open Grind from your apps",
+							? t("common.desktopEntry.errors.addFailed")
+							: t("common.desktopEntry.errors.removeFailed"),
 						error,
 					});
 				})

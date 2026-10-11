@@ -11,10 +11,15 @@ import {
 	vi,
 } from "vitest";
 
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { toastsFake, updateApiFake } from "$lib/updates/updates-test-helpers";
 import type { Capability } from "$lib/updates/types";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
+const FOREIGN_SIGNER = {
+	state: "unsupported",
+	detail: { reason: "foreignSigner" },
+} satisfies Capability;
 
 const fake = updateApiFake();
 const toasts = toastsFake();
@@ -127,10 +132,7 @@ describe("the Updates section of the app settings on Android", () => {
 	}, 60_000);
 
 	it("stays hidden on a build someone else signed", async () => {
-		const screen = await opened({
-			state: "unsupported",
-			detail: { reason: "foreignSigner" },
-		});
+		const screen = await opened(FOREIGN_SIGNER);
 
 		expect(screen.getByRole("heading", { name: "About" })).toBeTruthy();
 		expect(screen.queryByRole("heading", { name: "Updates" })).toBeNull();
@@ -144,10 +146,7 @@ describe("the Updates section of the app settings on Android", () => {
 
 describe("the About section of the app settings", () => {
 	it("lists the privacy policy right before the credits and opens it in the system browser", async () => {
-		const screen = await opened({
-			state: "unsupported",
-			detail: { reason: "foreignSigner" },
-		});
+		const screen = await opened(FOREIGN_SIGNER);
 
 		const privacyPolicy = screen.getByRole("link", {
 			name: "Privacy policy",
@@ -162,5 +161,56 @@ describe("the About section of the app settings", () => {
 		expect(linkOpener.openExternalLink).toHaveBeenCalledExactlyOnceWith(
 			PRIVACY_POLICY,
 		);
+	}, 60_000);
+});
+
+describe("the app settings copy", () => {
+	it("names its sections and rows", async () => {
+		const screen = await opened(FOREIGN_SIGNER);
+
+		expect(
+			screen
+				.getAllByRole("heading")
+				.map((heading) => heading.textContent.trim()),
+		).toEqual(["Display", "Privacy", "Security", "About"]);
+		expect(
+			screen.getAllByRole("link").map((link) => link.textContent.trim()),
+		).toEqual([
+			"Notifications",
+			"Discreet App Icon",
+			"PIN",
+			"Privacy policy",
+			"Credits & Licenses",
+		]);
+		expect(
+			screen.getByText(
+				"Let others know when you’ve read their messages. Your read receipts remain unaffected.",
+			),
+		).toBeTruthy();
+		expect(
+			screen.getByText(
+				"Let others know when you’ve viewed their profile. Your profile view history remains unaffected.",
+			),
+		).toBeTruthy();
+	}, 60_000);
+
+	it("follows the active locale", async () => {
+		const screen = await opened(FOREIGN_SIGNER);
+		const copy = [
+			...screen.getAllByRole("heading"),
+			...screen.getAllByRole("link"),
+			screen.getByText("Haptic feedback"),
+			screen.getByText("Stay online while the app is open"),
+			screen.getByText(/^Refresh your online status/),
+			screen.getByText("Reveal message read status"),
+			screen.getByText("Reveal profile views"),
+		];
+		const { setLocale } = await import("$lib/i18n");
+
+		await setLocale({ locale: "en-XA" });
+
+		for (const element of copy) {
+			expect(element.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
 	}, 60_000);
 });

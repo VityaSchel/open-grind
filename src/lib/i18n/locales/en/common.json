@@ -52,7 +52,8 @@
 	},
 	"desktopEntry": {
 		"errors": {
-			"addFailed": "Couldn’t add Open Grind to your apps menu"
+			"addFailed": "Couldn’t add Open Grind to your apps menu",
+			"removeFailed": "Couldn’t remove Open Grind from your apps menu"
 		}
 	},
 	"sections": {

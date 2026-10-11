@@ -50,12 +50,48 @@
 		}
 	},
 	"app": {
+		"sections": {
+			"display": "Display",
+			"privacy": "Privacy",
+			"security": "Security",
+			"updates": "Updates",
+			"about": "About"
+		},
+		"units": {
+			"title": "Units",
+			"description": "Choose how distance, height, and weight are displayed.",
+			"metric": "Metric",
+			"imperial": "Imperial"
+		},
+		"hapticFeedback": {
+			"title": "Haptic feedback",
+			"description": "Use the haptic engine for interactions."
+		},
+		"appsMenuEntry": {
+			"title": "Show in apps menu",
+			"description": "Add Open Grind to your applications list so it appears in your launcher and gets its icon."
+		},
+		"stayOnline": {
+			"title": "Stay online while the app is open",
+			"description": "Refresh your online status in the background automatically, while the app is open."
+		},
+		"revealMessageRead": {
+			"title": "Reveal message read status",
+			"description": "Let others know when you’ve read their messages. Your read receipts remain unaffected."
+		},
+		"revealProfileViews": {
+			"title": "Reveal profile views",
+			"description": "Let others know when you’ve viewed their profile. Your profile view history remains unaffected."
+		},
 		"discreetAppIcon": {
+			"title": "Discreet App Icon",
 			"unimplemented": "Discreet App Icon isn’t implemented yet. Follow the progress in {{issueLink}}."
 		},
 		"pin": {
+			"title": "PIN",
 			"unimplemented": "The PIN lock isn’t implemented yet. Follow the progress in {{issueLink}}."
-		}
+		},
+		"privacyPolicy": "Privacy policy"
 	},
 	"credits": {
 		"highlights": {

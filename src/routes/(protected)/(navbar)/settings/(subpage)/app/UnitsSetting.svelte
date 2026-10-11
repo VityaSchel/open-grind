@@ -6,6 +6,7 @@
 	} from "$lib/app-data/preferences.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
+	import { t } from "$lib/i18n";
 	import type { UnitSystem } from "$lib/util/units";
 
 	let pending = $state<UnitSystem | null>(null);
@@ -14,9 +15,9 @@
 
 <Item.Root variant="outline" class="gap-3 p-4">
 	<Item.Content class="gap-1">
-		<Item.Title>Units</Item.Title>
+		<Item.Title>{t("settings.app.units.title")}</Item.Title>
 		<Item.Description>
-			Choose how distance, height, and weight are displayed.
+			{t("settings.app.units.description")}
 		</Item.Description>
 	</Item.Content>
 	<ToggleGroup.Root
@@ -31,7 +32,7 @@
 				setPreferences({ units }).catch((error) => {
 					pending = null;
 					showErrorToast({
-						label: "Failed to save preferences",
+						label: t("settings.setting.errors.saveFailed"),
 						error,
 					});
 				});
@@ -39,10 +40,10 @@
 		}
 	>
 		<ToggleGroup.Item value="metric" class="flex-1 justify-center">
-			Metric
+			{t("settings.app.units.metric")}
 		</ToggleGroup.Item>
 		<ToggleGroup.Item value="imperial" class="flex-1 justify-center">
-			Imperial
+			{t("settings.app.units.imperial")}
 		</ToggleGroup.Item>
 	</ToggleGroup.Root>
 </Item.Root>
