@@ -38,7 +38,7 @@ test("the @ command copies the current location and still sets a new one", async
 	await page.keyboard.press("Enter");
 	await expect(palette).toHaveCount(0);
 	await expect(
-		page.getByText("Location copied to clipboard").first(),
+		page.getByText("Copied to clipboard", { exact: true }).first(),
 	).toBeVisible();
 
 	// copying is not a mutation: the location is still the one we copied

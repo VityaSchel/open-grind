@@ -252,6 +252,10 @@ export interface Messages {
 	"commands.openProfileById.heading": undefined;
 	"commands.openProfileById.hint": undefined;
 	"commands.quickGoTo.heading": undefined;
+	"commands.setLocationByGeohash.copyCurrent": { geohash: string };
+	"commands.setLocationByGeohash.errors.copyFailed": undefined;
+	"commands.setLocationByGeohash.heading": undefined;
+	"commands.setLocationByGeohash.hint": { length: string };
 	"commands.trigger.controlKey": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
@@ -723,6 +727,8 @@ export interface RichMessages {
 	"commands.filterGrid.errors.rangeSyntax": { example: "placeholder" };
 	"commands.filterGrid.errors.unknownValue": { value: "placeholder" };
 	"commands.filterGrid.hint": { example: "placeholder" };
+	"commands.setLocationByGeohash.copyCurrent": { geohash: "placeholder" };
+	"commands.setLocationByGeohash.hint": { length: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };

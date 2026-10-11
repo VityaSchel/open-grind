@@ -23,6 +23,8 @@ const translatedSvelteFiles = [
 	"src/lib/components/command-center/open-profile-by-id/OpenProfileByIdCommandItem.svelte",
 	"src/lib/components/command-center/quick-go-to/QuickGoToCommandGroup.svelte",
 	"src/lib/components/command-center/quick-go-to/QuickGoToCommandItem.svelte",
+	"src/lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommand.svelte",
+	"src/lib/components/command-center/set-location-by-geohash/SetLocationByGeohashCommandItem.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/AutoLocationToast.svelte",

@@ -7,6 +7,10 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { setPreferences } from "$lib/app-data/preferences.svelte";
 	import * as Command from "$lib/components/ui/command";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
+	import Rich from "$lib/i18n/Rich.svelte";
+	import { GEOHASH_PRECISION } from "$lib/model/geohash";
 	import { commandCenterClose } from "../command-center-state.svelte";
 
 	let {
@@ -16,7 +20,9 @@
 
 	const geohashToCopy = $derived(geohash === null ? currentGeohash : null);
 	const geohashToSet = $derived(
-		geohash !== null && geohash.length === 12 ? geohash : null,
+		geohash !== null && geohash.length === GEOHASH_PRECISION
+			? geohash
+			: null,
 	);
 
 	async function setLocation(geohash: string) {
@@ -25,17 +31,23 @@
 			await goto("/", { replaceState: page.url.pathname === "/" });
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to save location", error });
+			showErrorToast({
+				label: t("common.location.errors.saveFailed"),
+				error,
+			});
 		}
 	}
 
 	async function copyLocation(geohash: string) {
 		try {
 			await writeText(geohash);
-			toast.success("Location copied to clipboard");
+			toast.success(t("feedback.errorCopy.copied"));
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to copy location", error });
+			showErrorToast({
+				label: t("commands.setLocationByGeohash.errors.copyFailed"),
+				error,
+			});
 		}
 	}
 
@@ -47,6 +59,10 @@
 	}
 </script>
 
+{#snippet selectedGeohash()}
+	<span class="font-mono" translate="no">{geohashToCopy}</span>
+{/snippet}
+
 <Command.Item
 	value={geohashToCopy === null ? `@${geohash ?? ""}` : "@copy"}
 	disabled={geohashToCopy === null && geohashToSet === null}
@@ -54,20 +70,25 @@
 		"text-muted-foreground": geohashToCopy === null && geohash === null,
 		"gap-0 font-mono": geohash !== null,
 	}}
+	translate={geohash === null ? undefined : "no"}
 	onSelect={select}
 >
 	{#if geohashToCopy !== null}
 		<span>
-			Copy currently selected location:
-			<span class="font-mono">{geohashToCopy}</span>
+			<Rich
+				key="commands.setLocationByGeohash.copyCurrent"
+				geohash={selectedGeohash}
+			/>
 		</span>
 	{:else if geohash === null}
-		Enter the 12-character geohash to set your location
+		{t("commands.setLocationByGeohash.hint", {
+			length: formatInteger(GEOHASH_PRECISION),
+		})}
 	{:else}
 		@{#each Array.from(geohash) as char, i (i)}
 			<span class="w-2.25">{char}</span>
 		{/each}
-		{#each Array(12 - geohash.length)}
+		{#each Array(GEOHASH_PRECISION - geohash.length)}
 			<span class="ms-px h-px w-2 self-end bg-muted-foreground"></span>
 		{/each}
 	{/if}

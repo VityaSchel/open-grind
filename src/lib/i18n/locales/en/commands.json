@@ -42,5 +42,13 @@
 	},
 	"quickGoTo": {
 		"heading": "Quick go to…"
+	},
+	"setLocationByGeohash": {
+		"heading": "Set location by geohash…",
+		"copyCurrent": "Copy currently selected location: {{geohash}}",
+		"hint": "Enter the {{length}}-character geohash to set your location",
+		"errors": {
+			"copyFailed": "Couldn’t copy location"
+		}
 	}
 }
