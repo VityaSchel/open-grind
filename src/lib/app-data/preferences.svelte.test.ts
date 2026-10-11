@@ -6,11 +6,12 @@ import {
 	NATIVE_READ_TIMEOUT_MS,
 } from "$lib/platform/regional-settings";
 
-const { files, invokeMock, listenMock, tauri } = vi.hoisted(() => ({
+const { files, invokeMock, listenMock, tauri, toastError } = vi.hoisted(() => ({
 	files: new Map<string, Uint8Array>(),
 	invokeMock: vi.fn(),
 	listenMock: vi.fn(),
 	tauri: { enabled: true },
+	toastError: vi.fn(),
 }));
 
 vi.mock("$lib/app-data", () => ({
@@ -45,6 +46,8 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
+vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
+
 const PREFERENCES = "preferences.data";
 
 async function launch({ system }: { system: () => Promise<unknown> }) {
@@ -63,6 +66,7 @@ beforeEach(() => {
 	files.clear();
 	invokeMock.mockReset();
 	listenMock.mockReset().mockResolvedValue(() => {});
+	toastError.mockReset();
 	tauri.enabled = true;
 	vi.useRealTimers();
 });
@@ -202,5 +206,27 @@ describe("stored units", () => {
 		await preferences.clearAccountPreferences();
 
 		expect(files.has(PREFERENCES)).toBe(false);
+	});
+});
+
+describe("stored settings that can’t be read", () => {
+	it("offer a reset to defaults", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		files.set(PREFERENCES, Uint8Array.of(0xc1));
+		const { preferences } = await launch({
+			system: systemWith({
+				locale: "en-US",
+				measurementSystem: "metric",
+			}),
+		});
+
+		await expect(preferences.getPreferences()).rejects.toThrow();
+
+		expect(toastError).toHaveBeenCalledExactlyOnceWith(
+			"Couldn’t load app settings. Reset to defaults?",
+			expect.objectContaining({
+				action: expect.objectContaining({ label: "Reset" }),
+			}),
+		);
 	});
 });

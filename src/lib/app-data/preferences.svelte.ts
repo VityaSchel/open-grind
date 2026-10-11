@@ -4,7 +4,7 @@ import z from "zod";
 
 import { backdropBlurCalibrationSchema } from "$lib/blur/calibration/decide";
 import { backdropBlurQualitySchema } from "$lib/blur/quality";
-import { getRegionalSettings } from "$lib/i18n";
+import { getRegionalSettings, t } from "$lib/i18n";
 import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
 import { regionalSettingsReady } from "$lib/platform/regional-settings";
@@ -90,9 +90,9 @@ export async function getPreferences(): Promise<Preferences> {
 		})
 		.catch((error: unknown) => {
 			console.error(error);
-			toast.error("Failed to load preferences. Reset to defaults?", {
+			toast.error(t("settings.preferences.errors.loadFailed"), {
 				action: {
-					label: "Reset",
+					label: t("settings.preferences.reset"),
 					onClick: () => void resetToDefaults(),
 				},
 				duration: 10000,

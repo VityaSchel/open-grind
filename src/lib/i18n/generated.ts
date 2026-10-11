@@ -696,6 +696,8 @@ export interface Messages {
 	"settings.hidden.a11y.toggle": undefined;
 	"settings.hidden.empty.description": undefined;
 	"settings.hidden.empty.title": undefined;
+	"settings.preferences.errors.loadFailed": undefined;
+	"settings.preferences.reset": undefined;
 	"settings.privacy.showDistance.description": { distance: string };
 	"settings.privacy.showDistance.title": undefined;
 	"settings.setting.errors.saveFailed": undefined;

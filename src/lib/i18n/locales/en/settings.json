@@ -19,6 +19,12 @@
 			"saveFailed": "Couldn’t save setting"
 		}
 	},
+	"preferences": {
+		"reset": "Reset",
+		"errors": {
+			"loadFailed": "Couldn’t load app settings. Reset to defaults?"
+		}
+	},
 	"account": {
 		"email": "Email",
 		"password": "Password",

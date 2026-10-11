@@ -268,6 +268,7 @@ const translatedScriptFiles = [
 	"src/lib/api/users/profile-viewability.ts",
 	"src/lib/api/users/pronouns.ts",
 	"src/lib/api/users/tags.ts",
+	"src/lib/app-data/preferences.svelte.ts",
 	"src/lib/blur/quality.ts",
 	"src/lib/chat/album-shares.svelte.ts",
 	"src/lib/chat/cached-conversation.ts",
