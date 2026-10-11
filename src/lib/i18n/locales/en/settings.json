@@ -117,7 +117,7 @@
 		},
 		"appsMenuEntry": {
 			"title": "Show in apps menu",
-			"description": "Add Open Grind to your applications list so it appears in your launcher and gets its icon."
+			"description": "Add Open Grind to your apps menu so it appears in your launcher and gets its icon."
 		},
 		"stayOnline": {
 			"title": "Stay online while the app is open",

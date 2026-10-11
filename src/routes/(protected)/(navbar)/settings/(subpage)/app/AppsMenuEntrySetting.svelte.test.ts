@@ -34,7 +34,7 @@ describe("AppsMenuEntrySetting", () => {
 		render(AppsMenuEntrySetting);
 		const title = screen.getByText("Show in apps menu");
 		const description = screen.getByText(
-			"Add Open Grind to your applications list so it appears in your launcher and gets its icon.",
+			"Add Open Grind to your apps menu so it appears in your launcher and gets its icon.",
 		);
 
 		await setLocale({ locale: "en-XA" });
