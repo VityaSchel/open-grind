@@ -12,7 +12,7 @@
 		markRequestBlocked,
 		summarizeServerMessage,
 	} from "$lib/api/methods";
-	import { capText } from "$lib/api/redact/text";
+	import { capText, scrubText } from "$lib/api/redact/text";
 	import {
 		clearSessionError,
 		type SessionErrorKind,
@@ -137,9 +137,9 @@
 			: detail;
 	}
 
-	const detail = $derived(
+	const copiedDetail = $derived(
 		withAttempts({
-			detail: sessionErrorState.message,
+			detail: scrubText(sessionErrorState.message),
 			translate: sourceText,
 		}),
 	);
@@ -217,7 +217,7 @@
 			<fieldset disabled={running !== false} class="contents">
 				<Button
 					variant="ghost"
-					onclick={() => void copyToClipboard({ text: detail })}
+					onclick={() => void copyToClipboard({ text: copiedDetail })}
 				>
 					{t("common.actions.copyError")}
 				</Button>

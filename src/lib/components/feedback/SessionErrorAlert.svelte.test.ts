@@ -273,17 +273,34 @@ describe("SessionErrorAlert", () => {
 	});
 
 	it("shows a bounded excerpt of a huge error but copies all of it", async () => {
-		sessionErrorState.message = "x".repeat(400);
+		sessionErrorState.message = "x".repeat(2400);
 		render(SessionErrorAlert);
 
 		await fireEvent.click(button("Copy error details"));
 
 		expect(
-			screen.getByText(`${"x".repeat(200)}…<+200 chars>`),
+			screen.getByText(`${"x".repeat(200)}…<+2200 chars>`),
 		).toBeTruthy();
 		await vi.waitFor(() => {
-			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(400));
+			expect(writeTextMock).toHaveBeenCalledWith("x".repeat(2400));
 		});
+	});
+
+	it("redacts the error it copies without asking first", async () => {
+		sessionErrorState.message =
+			"Refresh failed for me@example.com: POST https://grindr.mobi/v3/sessions/eyJhbGciOiJIUzI1NiJ9?token=Zm9vYmFy returned 401";
+		render(SessionErrorAlert);
+
+		await fireEvent.click(button("Copy error details"));
+
+		await vi.waitFor(() => {
+			expect(writeTextMock).toHaveBeenCalledExactlyOnceWith(
+				"Refresh failed for <email>: POST https://grindr.mobi/v3/sessions/{id}?token={string:8} returned 401",
+			);
+		});
+		expect(toastSuccessMock).toHaveBeenCalledExactlyOnceWith(
+			"Copied to clipboard",
+		);
 	});
 
 	it("reports a copy the clipboard refuses instead of claiming it copied", async () => {
