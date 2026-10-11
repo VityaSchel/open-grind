@@ -3725,6 +3725,7 @@ dependencies = [
  "moxcms",
  "objc2",
  "objc2-app-kit",
+ "objc2-foundation",
  "rfd",
  "rmp-serde",
  "semver",
@@ -3753,6 +3754,7 @@ dependencies = [
  "windows-native-keyring-store",
  "wreq",
  "wry",
+ "zbus",
 ]
 
 [[package]]

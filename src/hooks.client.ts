@@ -13,7 +13,7 @@ async function applyLocaleParam(): Promise<void> {
 
 export const init: ClientInit = async () => {
 	ws.connect();
-	startRegionalSettings();
+	await startRegionalSettings();
 	if (import.meta.env.DEV) await applyLocaleParam();
 };
 

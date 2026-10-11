@@ -16,6 +16,7 @@ mod pin_support;
 mod plugin_rejection;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
+mod regional;
 mod scroll_phase;
 mod state;
 mod storage;
@@ -173,6 +174,7 @@ pub fn run() {
         .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
         .plugin(media_picker::plugin())
+        .plugin(regional::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -245,6 +247,7 @@ pub fn run() {
             app_settings::open_app_settings,
             media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
+            regional::regional_settings,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,
@@ -279,6 +282,8 @@ pub fn run() {
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]
                 quit_when_closed(&window);
+                #[cfg(desktop)]
+                regional::refresh_on_focus(&window);
             }
 
             #[cfg(desktop)]
