@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 import { emitMessageSent, FIRST_ROUTE_COMPILE_MS } from "./support/app";
 import {
-	backToChats,
+	backToInbox,
 	base,
 	listScroller,
 	openConversation,
@@ -224,7 +224,7 @@ test.describe("the list a conversation covers on a phone", () => {
 			SHEET,
 		);
 		const paused = pauseMidSlide(page, { pane: SHEET });
-		await backToChats(page).click();
+		await backToInbox(page).click();
 		const edge = await paused;
 
 		await expectListPaintedInStrip(page, { width: Math.floor(edge) });
@@ -258,7 +258,7 @@ test.describe("the list a conversation covers on a phone", () => {
 		expect(await listIsRendered(page)).toBe(false);
 
 		const paused = pauseMidSlide(page, { pane: SHEET });
-		await backToChats(page).click();
+		await backToInbox(page).click();
 		await paused;
 		expect(await listSnapshot(page)).toEqual(before);
 
@@ -302,7 +302,7 @@ test.describe("the list a conversation covers on a phone", () => {
 		await expect(base(page)).toHaveCSS("content-visibility", "hidden");
 		expect(await listIsRendered(page)).toBe(false);
 
-		await backToChats(page).click();
+		await backToInbox(page).click();
 		await expect(sheet(page)).toHaveCount(0);
 		expect(await listSnapshot(page)).toEqual(before);
 	});
@@ -343,7 +343,7 @@ test.describe("the list a conversation covers on a phone", () => {
 			reactions: [],
 			replyToMessage: null,
 		});
-		await backToChats(page).click();
+		await backToInbox(page).click();
 		await expect(sheet(page)).toHaveCount(0);
 
 		const late = row(page, { href: `/chat/${QUIET_CONVERSATION_ID}` });
@@ -362,7 +362,7 @@ test("wide screens keep the list rendered beside an open conversation", async ({
 	await page.setViewportSize(WIDE);
 	await openInbox(page);
 	await rows(page).nth(1).click();
-	await backToChats(page).waitFor();
+	await backToInbox(page).waitFor();
 
 	expect(await listIsRendered(page)).toBe(true);
 });

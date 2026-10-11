@@ -22,14 +22,14 @@ function linkLabels() {
 
 function renderBoth() {
 	render(BackLink, { props: { href: "/" } });
-	render(BackLink, { props: { href: "/chat", label: "Back to chats" } });
+	render(BackLink, { props: { href: "/chat", label: "Back to Inbox" } });
 }
 
 describe("BackLink", () => {
 	it("is named Back unless its caller names it", () => {
 		renderBoth();
 
-		expect(linkLabels()).toEqual(["Back", "Back to chats"]);
+		expect(linkLabels()).toEqual(["Back", "Back to Inbox"]);
 	});
 
 	it("renames its own label when the locale changes and keeps the caller's", async () => {
@@ -40,7 +40,7 @@ describe("BackLink", () => {
 		await vi.waitFor(() =>
 			expect(linkLabels()).toEqual([
 				t("shell.backLink.a11y.label"),
-				"Back to chats",
+				"Back to Inbox",
 			]),
 		);
 		expect(linkLabels()[0]).toMatch(PSEUDO_MESSAGE);
