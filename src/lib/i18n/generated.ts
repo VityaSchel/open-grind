@@ -643,6 +643,18 @@ export interface Messages {
 	"settings.account.unimplemented": { issueLink: string };
 	"settings.app.appsMenuEntry.description": undefined;
 	"settings.app.appsMenuEntry.title": undefined;
+	"settings.app.backdropBlur.automatic": undefined;
+	"settings.app.backdropBlur.description.max": undefined;
+	"settings.app.backdropBlur.description.medium": undefined;
+	"settings.app.backdropBlur.description.min": undefined;
+	"settings.app.backdropBlur.description.off": undefined;
+	"settings.app.backdropBlur.quality.max": undefined;
+	"settings.app.backdropBlur.quality.medium": undefined;
+	"settings.app.backdropBlur.quality.min": undefined;
+	"settings.app.backdropBlur.quality.off": undefined;
+	"settings.app.backdropBlur.title": undefined;
+	"settings.app.backdropBlur.trialPending": undefined;
+	"settings.app.backdropBlur.unsupported": undefined;
 	"settings.app.discreetAppIcon.title": undefined;
 	"settings.app.discreetAppIcon.unimplemented": { issueLink: string };
 	"settings.app.hapticFeedback.description": undefined;

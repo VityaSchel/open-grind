@@ -17,19 +17,6 @@ export const BACKDROP_BLUR_QUALITY_ORDER = [
 	"max",
 ] as const satisfies readonly BackdropBlurQuality[];
 
-export const BACKDROP_BLUR_QUALITY_LABELS: Record<BackdropBlurQuality, string> =
-	{ off: "Off", min: "Low", medium: "Medium", max: "Full" };
-
-export const BACKDROP_BLUR_QUALITY_DESCRIPTIONS: Record<
-	BackdropBlurQuality,
-	string
-> = {
-	off: "No blur. Bars and menus use solid shading instead.",
-	min: "A single light blur behind bars and menus.",
-	medium: "A softer gradient blur. Best on older devices.",
-	max: "The full gradient blur.",
-};
-
 export const UNCALIBRATED_BACKDROP_BLUR_QUALITY =
 	"max" satisfies BackdropBlurQuality;
 

@@ -19,6 +19,8 @@ vi.mock("$lib/app-data", () => ({
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { BackdropBlurQuality } from "$lib/blur/quality";
 import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
 
@@ -42,7 +44,10 @@ beforeEach(async () => {
 	await storedQuality(null);
 });
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("BackdropBlurSetting", () => {
 	it("shows the effective quality and names it for screen readers", async () => {
@@ -96,7 +101,11 @@ describe("BackdropBlurSetting", () => {
 		writeMock.mockRejectedValueOnce(new Error("disk full"));
 		render(BackdropBlurSetting);
 		await fireEvent.keyDown(slider(), { key: "ArrowLeft" });
-		await vi.waitFor(() => expect(showErrorToastMock).toHaveBeenCalled());
+		await vi.waitFor(() =>
+			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith(
+				expect.objectContaining({ label: "Couldn’t save setting" }),
+			),
+		);
 
 		expect(slider().getAttribute("aria-valuetext")).toBe("Full");
 	});
@@ -110,8 +119,36 @@ describe("BackdropBlurSetting", () => {
 		expect(slider().getAttribute("aria-disabled")).toBe("true");
 		expect(
 			screen.getByText(
-				"This system cannot blur backgrounds, so blur is always off.",
+				"This system can’t blur backgrounds, so blur is always off.",
 			),
 		).toBeTruthy();
+	});
+
+	it("words its title, description and steps in the active locale", async () => {
+		await storedQuality("min");
+		render(BackdropBlurSetting);
+		const thumb = slider();
+		const steps = [
+			...document.querySelectorAll('[data-slot="blur-step-label"]'),
+		];
+		expect(steps.map((step) => step.textContent.trim())).toEqual([
+			"Off",
+			"Low",
+			"Medium",
+			"Full",
+		]);
+		const copy = [
+			screen.getByText("Background blur"),
+			screen.getByText("A single light blur behind bars and menus."),
+			...steps,
+		];
+
+		await setLocale({ locale: "en-XA" });
+
+		for (const element of copy) {
+			expect(element.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
+		expect(thumb.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(thumb.getAttribute("aria-valuetext")).toMatch(PSEUDO_MESSAGE);
 	});
 });

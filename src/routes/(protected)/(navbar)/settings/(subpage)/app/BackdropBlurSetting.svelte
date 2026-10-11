@@ -6,8 +6,6 @@
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import {
-		BACKDROP_BLUR_QUALITY_DESCRIPTIONS,
-		BACKDROP_BLUR_QUALITY_LABELS,
 		BACKDROP_BLUR_QUALITY_ORDER,
 		type BackdropBlurQuality,
 		UNCALIBRATED_BACKDROP_BLUR_QUALITY,
@@ -19,6 +17,21 @@
 	} from "$lib/blur/quality.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Slider } from "$lib/components/ui/slider";
+	import { type PlainMessageKey, t } from "$lib/i18n";
+
+	const qualityKeys = {
+		off: "settings.app.backdropBlur.quality.off",
+		min: "settings.app.backdropBlur.quality.min",
+		medium: "settings.app.backdropBlur.quality.medium",
+		max: "settings.app.backdropBlur.quality.max",
+	} as const satisfies Record<BackdropBlurQuality, PlainMessageKey>;
+
+	const descriptionKeys = {
+		off: "settings.app.backdropBlur.description.off",
+		min: "settings.app.backdropBlur.description.min",
+		medium: "settings.app.backdropBlur.description.medium",
+		max: "settings.app.backdropBlur.description.max",
+	} as const satisfies Record<BackdropBlurQuality, PlainMessageKey>;
 
 	const supported = $derived(backdropBlurRenderable());
 	let pending = $state<BackdropBlurQuality | null>(null);
@@ -45,16 +58,19 @@
 		pending = backdropBlurQuality;
 		setPreferences({ backdropBlurQuality }).catch((error) => {
 			pending = null;
-			showErrorToast({ label: "Failed to save preferences", error });
+			showErrorToast({
+				label: t("settings.setting.errors.saveFailed"),
+				error,
+			});
 		});
 	}
 </script>
 
 <Item.Root variant="outline" class="gap-3 p-4">
 	<Item.Content class="gap-1">
-		<Item.Title>Background blur</Item.Title>
+		<Item.Title>{t("settings.app.backdropBlur.title")}</Item.Title>
 		<Item.Description>
-			{BACKDROP_BLUR_QUALITY_DESCRIPTIONS[quality]}
+			{t(descriptionKeys[quality])}
 		</Item.Description>
 	</Item.Content>
 	<Slider
@@ -64,8 +80,8 @@
 		max={lastStep}
 		step={1}
 		disabled={!preferencesLoaded() || !supported}
-		thumbLabels={["Background blur"]}
-		thumbValueTexts={[BACKDROP_BLUR_QUALITY_LABELS[quality]]}
+		thumbLabels={[t("settings.app.backdropBlur.title")]}
+		thumbValueTexts={[t(qualityKeys[quality])]}
 		bind:value={() => position, choose}
 	/>
 	<div aria-hidden="true" class="relative h-4 w-full text-xs">
@@ -81,20 +97,20 @@
 				]}
 				style:left={stepCenter(step)}
 			>
-				{BACKDROP_BLUR_QUALITY_LABELS[option]}
+				{t(qualityKeys[option])}
 			</span>
 		{/each}
 	</div>
 	{#if !supported}
 		<Item.Description class="w-full">
-			This system cannot blur backgrounds, so blur is always off.
+			{t("settings.app.backdropBlur.unsupported")}
 		</Item.Description>
 	{:else if automatic}
 		<Item.Description class="w-full">
 			{#if trialPending}
-				Being chosen automatically as you scroll.
+				{t("settings.app.backdropBlur.trialPending")}
 			{:else}
-				Chosen automatically for this device.
+				{t("settings.app.backdropBlur.automatic")}
 			{/if}
 		</Item.Description>
 	{/if}

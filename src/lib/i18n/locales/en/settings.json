@@ -63,6 +63,24 @@
 			"metric": "Metric",
 			"imperial": "Imperial"
 		},
+		"backdropBlur": {
+			"title": "Background blur",
+			"quality": {
+				"off": "Off",
+				"min": "Low",
+				"medium": "Medium",
+				"max": "Full"
+			},
+			"description": {
+				"off": "No blur. Bars and menus use solid shading instead.",
+				"min": "A single light blur behind bars and menus.",
+				"medium": "A softer gradient blur. Best on older devices.",
+				"max": "The full gradient blur."
+			},
+			"unsupported": "This system can’t blur backgrounds, so blur is always off.",
+			"trialPending": "Being chosen automatically as you scroll.",
+			"automatic": "Chosen automatically for this device."
+		},
 		"hapticFeedback": {
 			"title": "Haptic feedback",
 			"description": "Use the haptic engine for interactions."
