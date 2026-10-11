@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ApiError } from "$lib/api/api-error";
 import {
 	asAppError,
 	asBanned,
@@ -10,10 +11,12 @@ import {
 	markRequestBlocked,
 	methods,
 	restrictionSchema,
+	uploadRefusalMessage,
 } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod } from "$lib/demo";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
@@ -213,6 +216,125 @@ describe("diagnosticMessage", () => {
 			"socket hang up",
 		);
 		expect(diagnosticMessage("offline")).toBe("offline");
+	});
+});
+
+describe("uploadRefusalMessage", () => {
+	const limitLabel = "120.00 MB";
+	const photoTooLarge = { reason: "photoTooLarge", maxBytes: 64 * 2 ** 20 };
+	const missingFile = {
+		reason: "io",
+		detail: "No such file or directory (os error 2)",
+	};
+
+	function mediaError(message: Record<string, unknown>) {
+		return { kind: "Media", message };
+	}
+
+	function uploadError(cause: unknown): ApiError {
+		return new ApiError({
+			message: diagnosticMessage(cause),
+			request: { method: "POST", path: "/v5/chat/media/upload" },
+			kind: "Media",
+			cause,
+		});
+	}
+
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it.each([
+		[{ reason: "notMedia" }, "That file isn’t a photo or video"],
+		[{ reason: "videoUnreadable" }, "That video’s format can’t be read"],
+		[photoTooLarge, "Photos over 64 MB can’t be uploaded"],
+		[{ reason: "notAPhoto" }, "Only photos can be sent here"],
+		[{ reason: "photoSizeUnreadable" }, "That photo’s size can’t be read"],
+		[{ reason: "photoDamaged" }, "Unreadable or damaged photo"],
+		[
+			{ reason: "heicUnsupported" },
+			"HEIC photos aren’t supported on this platform yet",
+		],
+		[
+			{
+				reason: "photoUndecodable",
+				detail: "BitmapFactory returned null",
+			},
+			"Undecodable photo",
+		],
+		[
+			{ reason: "outsideReadableFolders" },
+			"That file is outside the folders this app may read",
+		],
+	])("says why the backend refused %o", (refusal, expected) => {
+		expect(
+			uploadRefusalMessage({ error: mediaError(refusal), limitLabel }),
+		).toBe(expected);
+		expect(
+			uploadRefusalMessage({
+				error: uploadError(mediaError(refusal)),
+				limitLabel,
+			}),
+		).toBe(expected);
+	});
+
+	it.each([
+		missingFile,
+		{ reason: "pickerFailed", detail: "Activity not found" },
+		{ reason: "photoTooLarge" },
+		{ reason: "unknownReason" },
+	])("leaves %o to the caller's fallback", (failure) => {
+		expect(
+			uploadRefusalMessage({ error: mediaError(failure), limitLabel }),
+		).toBeNull();
+		expect(
+			uploadRefusalMessage({
+				error: uploadError(mediaError(failure)),
+				limitLabel,
+			}),
+		).toBeNull();
+	});
+
+	it("leaves an error that is not a media refusal to the caller's fallback", () => {
+		expect(
+			uploadRefusalMessage({
+				error: { kind: "Http", message: "photoDamaged" },
+				limitLabel,
+			}),
+		).toBeNull();
+		expect(
+			uploadRefusalMessage({ error: new Error("offline"), limitLabel }),
+		).toBeNull();
+	});
+
+	it("names the limit the caller formatted when the body is too large", () => {
+		expect(
+			uploadRefusalMessage({
+				error: { kind: "ContentTooLarge" },
+				limitLabel,
+			}),
+		).toBe("Larger than the 120.00 MB limit");
+	});
+
+	it("shows a refusal in the app language but keeps its diagnostic English", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		expect(
+			uploadRefusalMessage({
+				error: mediaError(photoTooLarge),
+				limitLabel,
+			}),
+		).toMatch(PSEUDO_MESSAGE);
+		expect(diagnosticMessage(mediaError(photoTooLarge))).toBe(
+			"Photos over 64 MB can’t be uploaded",
+		);
+	});
+
+	it("keeps the detail of a failure without a reason worth showing for diagnostics", () => {
+		expect(diagnosticMessage(mediaError(missingFile))).toBe(
+			missingFile.detail,
+		);
+		expect(asAppError(mediaError(missingFile))?.message).toEqual(
+			missingFile,
+		);
 	});
 });
 

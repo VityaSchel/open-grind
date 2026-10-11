@@ -6,10 +6,10 @@ use serde::Deserialize;
 use tauri::Runtime;
 use tauri_plugin_fs::FsExt;
 
+use crate::error::MediaError;
+
 const CONTENT_SCHEME: &str = "content://";
 
-const OUTSIDE_SCOPE: &str =
-	"That file is outside the folders this app may read";
 #[cfg(not(target_os = "android"))]
 const NOT_ANDROID: &str = "Android file URIs can only be opened on Android";
 
@@ -39,10 +39,7 @@ impl PickedFile {
 					.try_fs_scope()
 					.is_some_and(|scope| scope.is_allowed(path));
 				if !allowed {
-					return Err(io::Error::new(
-						io::ErrorKind::PermissionDenied,
-						OUTSIDE_SCOPE,
-					));
+					return Err(outside_readable_folders());
 				}
 				File::open(path)
 			}
@@ -55,15 +52,19 @@ impl PickedFile {
 						)
 					});
 				if refused {
-					return Err(io::Error::new(
-						io::ErrorKind::PermissionDenied,
-						OUTSIDE_SCOPE,
-					));
+					return Err(outside_readable_folders());
 				}
 				open_android(app, uri)
 			}
 		}
 	}
+}
+
+fn outside_readable_folders() -> io::Error {
+	io::Error::new(
+		io::ErrorKind::PermissionDenied,
+		MediaError::OutsideReadableFolders,
+	)
 }
 
 fn authority(after_scheme: &str) -> &str {
@@ -112,7 +113,17 @@ fn open_android<R: Runtime>(
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::error::AppError;
+	use crate::upload::media_error;
 	use crate::upload::test_support::{app, TempFile};
+
+	fn assert_outside_readable_folders(refused: io::Error) {
+		assert_eq!(refused.kind(), io::ErrorKind::PermissionDenied);
+		assert!(matches!(
+			media_error(refused),
+			AppError::Media(MediaError::OutsideReadableFolders)
+		));
+	}
 
 	#[test]
 	fn a_desktop_path_outside_the_scope_is_refused() {
@@ -123,8 +134,7 @@ mod tests {
 
 		let refused = picked.open(app.handle()).expect_err("refused");
 
-		assert_eq!(refused.kind(), io::ErrorKind::PermissionDenied);
-		assert_eq!(refused.to_string(), OUTSIDE_SCOPE);
+		assert_outside_readable_folders(refused);
 	}
 
 	#[test]
@@ -142,8 +152,7 @@ mod tests {
 
 		let refused = picked.open(app.handle()).expect_err("refused");
 
-		assert_eq!(refused.kind(), io::ErrorKind::PermissionDenied);
-		assert_eq!(refused.to_string(), OUTSIDE_SCOPE);
+		assert_outside_readable_folders(refused);
 	}
 
 	#[test]
@@ -193,8 +202,7 @@ mod tests {
 
 		let refused = picked.open(app.handle()).expect_err("refused");
 
-		assert_eq!(refused.kind(), io::ErrorKind::PermissionDenied);
-		assert_eq!(refused.to_string(), OUTSIDE_SCOPE);
+		assert_outside_readable_folders(refused);
 	}
 
 	#[test]
@@ -210,6 +218,11 @@ mod tests {
 		let refused = picked.open(app.handle()).expect_err("refused");
 
 		assert_eq!(refused.kind(), io::ErrorKind::Unsupported);
+		assert!(matches!(
+			media_error(refused),
+			AppError::Media(MediaError::Io { detail })
+				if detail == NOT_ANDROID
+		));
 	}
 
 	#[test]

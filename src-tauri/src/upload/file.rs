@@ -11,7 +11,7 @@ use tauri::Runtime;
 
 use crate::api::rest::{self, encode_response, RawResponse};
 use crate::api::update::TransferHold;
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::hex::hex;
 use crate::photo;
 use crate::state::AppState;
@@ -24,9 +24,6 @@ use crate::video::strip::{self, Patch};
 
 const MAX_PHOTO_BYTES: u64 = 64 * 1024 * 1024;
 const VIDEO_MP4: &str = "video/mp4";
-
-const NOT_MEDIA: &str = "That file is not a photo or a video";
-const VIDEO_UNREADABLE: &str = "That video's format can't be read";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -125,11 +122,11 @@ fn prepare_body(
 	})
 }
 
-fn photo_too_large() -> String {
-	format!(
-		"Photos over {} MB can't be uploaded",
-		MAX_PHOTO_BYTES / 1024 / 1024
-	)
+fn photo_too_large() -> AppError {
+	MediaError::PhotoTooLarge {
+		max_bytes: MAX_PHOTO_BYTES,
+	}
+	.into()
 }
 
 pub(super) fn sha256_hex(bytes: &[u8]) -> String {
@@ -180,19 +177,19 @@ fn read_source(mut file: File) -> Result<Source, AppError> {
 			let uploaded_at = strip::movie_time(SystemTime::now());
 			let patches = strip::plan(&mut file, uploaded_at)
 				.map_err(media_error)?
-				.ok_or_else(|| AppError::Media(VIDEO_UNREADABLE.to_owned()))?;
+				.ok_or(MediaError::VideoUnreadable)?;
 			Ok(Source::Video {
 				size: inspection.size,
 				patches: Arc::from(patches),
 			})
 		}
-		MediaKind::Unsupported => Err(AppError::Media(NOT_MEDIA.to_owned())),
+		MediaKind::Unsupported => Err(MediaError::NotMedia.into()),
 	}
 }
 
 fn read_photo(file: &mut File, size: u64) -> Result<Vec<u8>, AppError> {
 	if size > MAX_PHOTO_BYTES {
-		return Err(AppError::Media(photo_too_large()));
+		return Err(photo_too_large());
 	}
 	file.seek(SeekFrom::Start(0)).map_err(media_error)?;
 	let mut bytes = Vec::with_capacity(size.min(MAX_PHOTO_BYTES) as usize);
@@ -200,7 +197,7 @@ fn read_photo(file: &mut File, size: u64) -> Result<Vec<u8>, AppError> {
 		.read_to_end(&mut bytes)
 		.map_err(media_error)?;
 	if bytes.len() as u64 > MAX_PHOTO_BYTES {
-		return Err(AppError::Media(photo_too_large()));
+		return Err(photo_too_large());
 	}
 	Ok(bytes)
 }
@@ -523,9 +520,7 @@ mod tests {
 		let refused =
 			read_source(File::open(&path).expect("open")).expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == NOT_MEDIA)
-		);
+		assert!(matches!(refused, AppError::Media(MediaError::NotMedia)));
 	}
 
 	#[test]
@@ -542,9 +537,10 @@ mod tests {
 		let refused =
 			read_source(File::open(&path).expect("open")).expect_err("refused");
 
-		assert!(
-			matches!(refused, AppError::Media(message) if message == VIDEO_UNREADABLE)
-		);
+		assert!(matches!(
+			refused,
+			AppError::Media(MediaError::VideoUnreadable)
+		));
 	}
 
 	#[test]
@@ -555,9 +551,7 @@ mod tests {
 		let stray_error =
 			read_source(File::open(&stray).expect("open")).expect_err("stray");
 
-		assert!(
-			matches!(stray_error, AppError::Media(message) if message == NOT_MEDIA)
-		);
+		assert!(matches!(stray_error, AppError::Media(MediaError::NotMedia)));
 	}
 
 	#[test]

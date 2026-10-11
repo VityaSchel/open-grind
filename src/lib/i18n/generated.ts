@@ -255,7 +255,15 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.media.errors.heicUnsupported": undefined;
+	"common.media.errors.notAPhoto": undefined;
+	"common.media.errors.outsideReadableFolders": undefined;
+	"common.media.errors.photoDamaged": undefined;
+	"common.media.errors.photoSizeUnreadable": undefined;
+	"common.media.errors.photoTooLarge": { megabytes: string };
+	"common.media.errors.photoUndecodable": undefined;
 	"common.media.errors.unsupportedFile": undefined;
+	"common.media.errors.videoUnreadable": undefined;
 	"common.media.uploadPhotosOrVideos": undefined;
 	"common.profileFields.healthPractices": undefined;
 	"common.profileSections.expectations": undefined;
@@ -631,6 +639,7 @@ export interface RichMessages {
 	"chat.message.status.sentAt": { time: "placeholder" };
 	"chat.message.unsupported": { type: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
+	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: "placeholder" };
 	"feedback.appError.overLimit": { limit: "placeholder" };

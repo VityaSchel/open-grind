@@ -3,7 +3,7 @@ use std::io::Cursor;
 use image::{ImageFormat, ImageReader};
 
 use crate::api::rest::{encode_response, RawResponse};
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::photo;
 use crate::state::AppState;
 use crate::upload::file::{
@@ -11,14 +11,11 @@ use crate::upload::file::{
 };
 use crate::upload::picked::PickedFile;
 
-const NOT_A_PHOTO: &str = "Only photos can be sent here";
-const UNREADABLE_SIZE: &str = "That photo's size can't be read";
-
 fn with_square_thumb(path: &str, jpeg: &[u8]) -> Result<String, AppError> {
 	let (width, height) =
 		ImageReader::with_format(Cursor::new(jpeg), ImageFormat::Jpeg)
 			.into_dimensions()
-			.map_err(|_| AppError::Media(UNREADABLE_SIZE.to_owned()))?;
+			.map_err(|_| MediaError::PhotoSizeUnreadable)?;
 	let side = width.min(height);
 	let left = (width - side) / 2;
 	let top = (height - side) / 2;
@@ -46,7 +43,7 @@ pub async fn upload_media(
 		return Err(AppError::NotSignedIn);
 	};
 	let Some(bytes) = open_photo(app.clone(), file).await? else {
-		return Err(AppError::Media(NOT_A_PHOTO.to_owned()));
+		return Err(MediaError::NotAPhoto.into());
 	};
 	let photo = photo::normalize(&app, bytes, photo::JPEG.to_owned()).await?;
 	let path = if square_thumb.unwrap_or(false) {
@@ -127,6 +124,9 @@ mod tests {
 		let refused = with_square_thumb("/v4/media/upload", b"not a jpeg")
 			.expect_err("refused");
 
-		assert!(matches!(refused, AppError::Media(_)));
+		assert!(matches!(
+			refused,
+			AppError::Media(MediaError::PhotoSizeUnreadable)
+		));
 	}
 }

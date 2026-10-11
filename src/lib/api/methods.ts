@@ -15,8 +15,16 @@ import {
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled } from "$lib/demo";
-import { type MessageKey, sourceText, t, type Translate } from "$lib/i18n";
+import {
+	type MessageKey,
+	type PlainMessageKey,
+	sourceText,
+	t,
+	type Translate,
+} from "$lib/i18n";
+import { formatInteger } from "$lib/i18n/format";
 import { geohashSchema } from "$lib/model/geohash";
+import { BYTES_PER_MEGABYTE } from "$lib/util/bytes";
 
 const maxPrettyMessageChars = 200;
 
@@ -38,11 +46,68 @@ const appErrorSchema = z.object({
 	message: z
 		.string()
 		.or(z.object({ code: z.number(), message: z.string() }))
-		.or(z.object({ reason: z.string(), detail: z.string().nullish() }))
+		.or(
+			z.object({
+				reason: z.string(),
+				detail: z.string().nullish(),
+				maxBytes: z.number().optional(),
+			}),
+		)
 		.optional(),
 });
 
 type AppError = z.infer<typeof appErrorSchema>;
+
+const namedMediaReasons = [
+	"notMedia",
+	"videoUnreadable",
+	"notAPhoto",
+	"photoSizeUnreadable",
+	"photoDamaged",
+	"heicUnsupported",
+	"photoUndecodable",
+	"outsideReadableFolders",
+] as const;
+
+type NamedMediaReason = (typeof namedMediaReasons)[number];
+
+const mediaReasonMessageKeys = {
+	notMedia: "common.media.errors.unsupportedFile",
+	videoUnreadable: "common.media.errors.videoUnreadable",
+	notAPhoto: "common.media.errors.notAPhoto",
+	photoSizeUnreadable: "common.media.errors.photoSizeUnreadable",
+	photoDamaged: "common.media.errors.photoDamaged",
+	heicUnsupported: "common.media.errors.heicUnsupported",
+	photoUndecodable: "common.media.errors.photoUndecodable",
+	outsideReadableFolders: "common.media.errors.outsideReadableFolders",
+} as const satisfies Record<NamedMediaReason, PlainMessageKey>;
+
+const mediaRefusalSchema = z.discriminatedUnion("reason", [
+	z.object({ reason: z.enum(namedMediaReasons) }),
+	z.object({
+		reason: z.literal("photoTooLarge"),
+		maxBytes: z.int().positive(),
+	}),
+]);
+
+type MediaRefusal = z.infer<typeof mediaRefusalSchema>;
+
+const mediaRefusalErrorSchema = z.object({
+	kind: z.literal("Media"),
+	message: mediaRefusalSchema,
+});
+
+type Wording = {
+	translate: Translate;
+	formatInteger: (value: number) => string;
+};
+
+const shownWording: Wording = { translate: t, formatInteger };
+
+const diagnosticWording: Wording = {
+	translate: sourceText,
+	formatInteger: String,
+};
 
 export const banInfoSchema = z.object({
 	kind: z.string(),
@@ -202,13 +267,31 @@ function messagelessMessageKey(kind: ApiErrorKind): MessagelessMessageKey {
 	return keys[kind] ?? "feedback.appError.unknown";
 }
 
+function describeMediaRefusal({
+	refusal,
+	wording: { translate, formatInteger },
+}: {
+	refusal: MediaRefusal;
+	wording: Wording;
+}): string {
+	if (refusal.reason === "photoTooLarge") {
+		return translate("common.media.errors.photoTooLarge", {
+			megabytes: formatInteger(
+				Math.floor(refusal.maxBytes / BYTES_PER_MEGABYTE),
+			),
+		});
+	}
+	return translate(mediaReasonMessageKeys[refusal.reason]);
+}
+
 function describeAppError({
 	appError: { kind, message },
-	translate,
+	wording,
 }: {
 	appError: AppError;
-	translate: Translate;
+	wording: Wording;
 }): string {
+	const { translate } = wording;
 	if (kind === "Connect") {
 		return translate("feedback.appError.connectionFailed");
 	}
@@ -224,6 +307,18 @@ function describeAppError({
 			}),
 		});
 	}
+	if (kind === "Media" && message !== undefined) {
+		const refusal = mediaRefusalSchema.safeParse(message);
+		if (refusal.success) {
+			return describeMediaRefusal({ refusal: refusal.data, wording });
+		}
+		if (typeof message.detail === "string") {
+			return describeServerMessage({
+				message: message.detail,
+				translate,
+			});
+		}
+	}
 	return translate(messagelessMessageKey(kind));
 }
 
@@ -232,7 +327,7 @@ export function asAppError(error: unknown) {
 	if (success) {
 		const prettyMessage = describeAppError({
 			appError: data,
-			translate: t,
+			wording: shownWording,
 		});
 		return { ...data, prettyMessage };
 	}
@@ -241,7 +336,7 @@ export function asAppError(error: unknown) {
 export function diagnosticMessage(error: unknown): string {
 	const { data, success } = appErrorSchema.safeParse(error);
 	if (success) {
-		return describeAppError({ appError: data, translate: sourceText });
+		return describeAppError({ appError: data, wording: diagnosticWording });
 	}
 	return error instanceof Error ? error.message : String(error);
 }
@@ -263,9 +358,15 @@ export function uploadRefusalMessage({
 	if (kind === "ContentTooLarge" || httpStatusOf(error) === 413) {
 		return t("feedback.appError.overLimit", { limit: limitLabel });
 	}
-	if (kind !== "Media") return null;
-	const detail = asAppError(error)?.message;
-	return typeof detail === "string" && detail !== "" ? detail : null;
+	const refused = mediaRefusalErrorSchema.safeParse(
+		error instanceof ApiError ? error.cause : error,
+	);
+	return refused.success
+		? describeMediaRefusal({
+				refusal: refused.data.message,
+				wording: shownWording,
+			})
+		: null;
 }
 
 function describeServerMessage({

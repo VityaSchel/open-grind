@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Runtime};
 
-use crate::error::AppError;
+use crate::error::{AppError, MediaError};
 use crate::photo::encode::MAX_EDGE;
 use crate::photo::source::{self, Format, Source};
 
@@ -55,9 +55,12 @@ pub async fn decode<R: Runtime>(
 
 	crate::photo::off_thread(move || source::decode(Format::Png, &png))
 		.await?
-		.ok_or_else(|| AppError::Media(super::UNSUPPORTED.to_owned()))
+		.ok_or_else(|| MediaError::HeicUnsupported.into())
 }
 
 fn undecodable(error: impl Display) -> AppError {
-	AppError::Media(format!("Undecodable photo: {error}"))
+	MediaError::PhotoUndecodable {
+		detail: error.to_string(),
+	}
+	.into()
 }

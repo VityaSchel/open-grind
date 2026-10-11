@@ -36,13 +36,75 @@ impl From<grindr::BanInfo> for BanInfo {
 	}
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(
+	tag = "reason",
+	rename_all = "camelCase",
+	rename_all_fields = "camelCase"
+)]
+pub enum MediaError {
+	NotMedia,
+	VideoUnreadable,
+	PhotoTooLarge { max_bytes: u64 },
+	NotAPhoto,
+	PhotoSizeUnreadable,
+	PhotoDamaged,
+	HeicUnsupported,
+	PhotoUndecodable { detail: String },
+	OutsideReadableFolders,
+	PickerFailed { detail: String },
+	Io { detail: String },
+}
+
+impl fmt::Display for MediaError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		match self {
+			Self::NotMedia => write!(f, "That file is not a photo or a video"),
+			Self::VideoUnreadable => {
+				write!(f, "That video's format can't be read")
+			}
+			Self::PhotoTooLarge { max_bytes } => write!(
+				f,
+				"Photos over {} MB can't be uploaded",
+				max_bytes / 1024 / 1024
+			),
+			Self::NotAPhoto => write!(f, "Only photos can be sent here"),
+			Self::PhotoSizeUnreadable => {
+				write!(f, "That photo's size can't be read")
+			}
+			Self::PhotoDamaged => write!(f, "Unreadable or damaged photo"),
+			Self::HeicUnsupported => {
+				write!(f, "HEIC photos aren't supported on this platform yet")
+			}
+			Self::PhotoUndecodable { detail } => {
+				write!(f, "Undecodable photo: {detail}")
+			}
+			Self::OutsideReadableFolders => {
+				write!(f, "That file is outside the folders this app may read")
+			}
+			Self::PickerFailed { detail } => {
+				write!(f, "Could not open the photo picker: {detail}")
+			}
+			Self::Io { detail } => write!(f, "{detail}"),
+		}
+	}
+}
+
+impl std::error::Error for MediaError {}
+
+impl From<MediaError> for AppError {
+	fn from(error: MediaError) -> Self {
+		AppError::Media(error)
+	}
+}
+
 #[derive(Debug, Serialize)]
 #[serde(tag = "kind", content = "message")]
 pub enum AppError {
 	Http(String),
 	Connect(String),
 	Auth(String),
-	Media(String),
+	Media(MediaError),
 	NotSignedIn,
 	SessionStale,
 	Api { code: i32, message: String },
@@ -88,7 +150,7 @@ impl fmt::Display for AppError {
 			AppError::Http(msg) => write!(f, "HTTP error: {msg}"),
 			AppError::Connect(msg) => write!(f, "Could not connect: {msg}"),
 			AppError::Auth(msg) => write!(f, "Auth error: {msg}"),
-			AppError::Media(msg) => write!(f, "Media error: {msg}"),
+			AppError::Media(error) => write!(f, "Media error: {error}"),
 			AppError::NotSignedIn => write!(f, "Not signed in"),
 			AppError::SessionStale => {
 				write!(f, "Could not refresh the session")
@@ -188,6 +250,8 @@ impl AppError {
 
 #[cfg(test)]
 mod tests {
+	use serde_json::json;
+
 	use super::*;
 
 	#[test]
@@ -204,7 +268,7 @@ mod tests {
 			AppError::Http(String::new()),
 			AppError::Connect(String::new()),
 			AppError::Auth(String::new()),
-			AppError::Media(String::new()),
+			AppError::Media(MediaError::NotMedia),
 			AppError::NotSignedIn,
 			AppError::SessionStale,
 			AppError::Api {
@@ -230,6 +294,51 @@ mod tests {
 				error.kind()
 			);
 		}
+	}
+
+	#[test]
+	fn a_media_refusal_reaches_the_frontend_as_its_reason() {
+		let refusals = [
+			(MediaError::NotMedia, json!({ "reason": "notMedia" })),
+			(MediaError::NotAPhoto, json!({ "reason": "notAPhoto" })),
+			(
+				MediaError::PhotoTooLarge {
+					max_bytes: 64 * 1024 * 1024,
+				},
+				json!({ "reason": "photoTooLarge", "maxBytes": 67_108_864 }),
+			),
+			(
+				MediaError::Io {
+					detail: "No such file or directory (os error 2)".to_owned(),
+				},
+				json!({
+					"reason": "io",
+					"detail": "No such file or directory (os error 2)",
+				}),
+			),
+		];
+		for (refusal, expected) in refusals {
+			let json = serde_json::to_value(AppError::from(refusal)).unwrap();
+			assert_eq!(json, json!({ "kind": "Media", "message": expected }));
+		}
+	}
+
+	#[test]
+	fn a_media_refusal_keeps_its_english_wording_for_diagnostics() {
+		assert_eq!(
+			AppError::from(MediaError::PhotoTooLarge {
+				max_bytes: 64 * 1024 * 1024,
+			})
+			.to_string(),
+			"Media error: Photos over 64 MB can't be uploaded"
+		);
+		assert_eq!(
+			MediaError::PhotoUndecodable {
+				detail: "BitmapFactory returned null".to_owned(),
+			}
+			.to_string(),
+			"Undecodable photo: BitmapFactory returned null"
+		);
 	}
 
 	#[test]
