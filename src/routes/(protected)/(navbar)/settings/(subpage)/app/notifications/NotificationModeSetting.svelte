@@ -3,31 +3,30 @@
 	import * as Item from "$lib/components/ui/item";
 	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { type PlainMessageKey, t } from "$lib/i18n";
 	import { selectNotificationMode } from "$lib/push/delivery.svelte";
 	import { notificationSettings } from "$lib/push/notification-state.svelte";
 	import { cn } from "$lib/util/utils";
 	import type { NotificationMode } from "$lib/push/types";
 	import PushAddonAlert from "./PushAddonAlert.svelte";
 
-	const modes: {
-		mode: NotificationMode;
-		title: string;
-		description: string;
-		recommended?: boolean;
-	}[] = [
-		{
-			mode: "fast",
-			title: "Fast mode",
-			description:
-				"Use Google's Firebase proprietary service to receive push notifications instantly",
-			recommended: true,
+	const modeKeys = {
+		fast: {
+			title: "settings.notifications.mode.fast.title",
+			description: "settings.notifications.mode.fast.description",
 		},
-		{
-			mode: "slow",
-			title: "Slow mode",
-			description:
-				"Poll for new notifications periodically in the background using Android's native scheduler",
+		slow: {
+			title: "settings.notifications.mode.slow.title",
+			description: "settings.notifications.mode.slow.description",
 		},
+	} as const satisfies Record<
+		NotificationMode,
+		Record<"title" | "description", PlainMessageKey>
+	>;
+
+	const modes: { mode: NotificationMode; recommended: boolean }[] = [
+		{ mode: "fast", recommended: true },
+		{ mode: "slow", recommended: false },
 	];
 
 	let group = $state<HTMLElement | null>(null);
@@ -42,7 +41,7 @@
 
 <RadioGroup.Root
 	bind:ref={group}
-	aria-label="Delivery mode"
+	aria-label={t("settings.notifications.mode.a11y.group")}
 	disabled={notificationSettings.busy || !notificationSettings.enabled}
 	class="overflow-hidden rounded-2xl border border-border transition-opacity data-disabled:opacity-60"
 	bind:value={
@@ -50,7 +49,7 @@
 		(next) => void selectNotificationMode(next as NotificationMode)
 	}
 >
-	{#each modes as { mode, title, description, recommended } (mode)}
+	{#each modes as { mode, recommended } (mode)}
 		{@const enabling =
 			mode === "fast" && notificationSettings.phase === "enablingFast"}
 		<RadioGroup.Item
@@ -64,18 +63,18 @@
 			{#snippet children({ checked })}
 				<Item.Content>
 					<Item.Title>
-						{title}
+						{t(modeKeys[mode].title)}
 						{#if recommended}
 							<Badge
 								variant="secondary"
 								class="font-normal text-primary"
 							>
-								Recommended
+								{t("settings.notifications.mode.recommended")}
 							</Badge>
 						{/if}
 					</Item.Title>
 					<Item.Description class="line-clamp-none text-wrap">
-						{description}
+						{t(modeKeys[mode].description)}
 					</Item.Description>
 				</Item.Content>
 				<Item.Actions class="self-start pt-0.5">

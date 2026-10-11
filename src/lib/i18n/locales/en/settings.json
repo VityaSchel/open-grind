@@ -117,6 +117,36 @@
 		},
 		"privacyPolicy": "Privacy policy"
 	},
+	"notifications": {
+		"unsupportedOn": "Notifications aren’t supported on {{platform}} yet.",
+		"unsupported": "Notifications aren’t supported on this platform yet.",
+		"enable": "Enable notifications",
+		"mode": {
+			"fast": {
+				"title": "Fast Mode",
+				"description": "Use Google’s Firebase proprietary service to receive push notifications instantly."
+			},
+			"slow": {
+				"title": "Slow Mode",
+				"description": "Poll for new notifications periodically in the background using Android’s native scheduler."
+			},
+			"recommended": "Recommended",
+			"a11y": {
+				"group": "Delivery mode"
+			}
+		},
+		"categories": {
+			"messages": "New messages",
+			"taps": "Received taps",
+			"errors": {
+				"saveFailed": "Couldn’t save notification settings"
+			}
+		},
+		"addon": {
+			"title": "Install push notifications add-on",
+			"description": "To enable the fast mode, download and install the Open Grind FCM service. It includes Google’s proprietary Firebase library and needs Google Play services or microG, so it’s not installed by default."
+		}
+	},
 	"credits": {
 		"highlights": {
 			"svelte": "Thanks to {{projectLink}} for the awesome UI building framework!",

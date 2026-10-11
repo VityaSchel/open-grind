@@ -14,6 +14,7 @@ import {
 	opened,
 	push,
 	resetNotificationsPage,
+	showErrorToast,
 	stored,
 } from "./notifications-page-test-helpers.svelte";
 
@@ -140,6 +141,22 @@ describe("the notification categories", () => {
 		expect(account.setPushSettings).toHaveBeenCalledWith({
 			tapPushNotification: false,
 		});
+	});
+
+	it("names the failure and keeps Received taps when saving fails", async () => {
+		const failure = new Error("offline");
+		push.setPushCategory.mockRejectedValueOnce(failure);
+		const { taps } = await opened(NotificationsPage);
+
+		await fireEvent.click(taps);
+
+		await waitFor(() =>
+			expect(showErrorToast).toHaveBeenCalledWith({
+				label: "Couldn’t save notification settings",
+				error: failure,
+			}),
+		);
+		expect(checked(taps)).toBe("true");
 	});
 
 	it("disables every category while notifications are off", async () => {

@@ -133,8 +133,8 @@ export async function opened(page: typeof NotificationsPage) {
 	return {
 		master: screen.getByRole("switch", { name: "Enable notifications" }),
 		delivery: screen.getByRole("radiogroup", { name: "Delivery mode" }),
-		fast: screen.getByRole("radio", { name: /^Fast mode/ }),
-		slow: screen.getByRole("radio", { name: /^Slow mode/ }),
+		fast: screen.getByRole("radio", { name: /^Fast Mode/ }),
+		slow: screen.getByRole("radio", { name: /^Slow Mode/ }),
 		messages: screen.getByRole("switch", { name: "New messages" }),
 		taps: screen.getByRole("switch", { name: "Received taps" }),
 	};

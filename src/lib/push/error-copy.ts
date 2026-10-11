@@ -28,7 +28,6 @@ export const pushFailures = {
 	turnOff: "Couldn't turn off notifications",
 	fastMode: "Couldn't enable the fast mode for push notifications",
 	slowMode: "Couldn't switch push notifications to the slow mode",
-	saveCategory: "Couldn't save notification settings",
 };
 
 export function explainedPushError(error: unknown): unknown {

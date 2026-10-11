@@ -696,6 +696,20 @@ export interface Messages {
 	"settings.hidden.a11y.toggle": undefined;
 	"settings.hidden.empty.description": undefined;
 	"settings.hidden.empty.title": undefined;
+	"settings.notifications.addon.description": undefined;
+	"settings.notifications.addon.title": undefined;
+	"settings.notifications.categories.errors.saveFailed": undefined;
+	"settings.notifications.categories.messages": undefined;
+	"settings.notifications.categories.taps": undefined;
+	"settings.notifications.enable": undefined;
+	"settings.notifications.mode.a11y.group": undefined;
+	"settings.notifications.mode.fast.description": undefined;
+	"settings.notifications.mode.fast.title": undefined;
+	"settings.notifications.mode.recommended": undefined;
+	"settings.notifications.mode.slow.description": undefined;
+	"settings.notifications.mode.slow.title": undefined;
+	"settings.notifications.unsupported": undefined;
+	"settings.notifications.unsupportedOn": { platform: string };
 	"settings.preferences.errors.loadFailed": undefined;
 	"settings.preferences.reset": undefined;
 	"settings.privacy.showDistance.description": { distance: string };
@@ -835,5 +849,6 @@ export interface RichMessages {
 	"settings.credits.highlights.tauri": { projectLink: "placeholder" };
 	"settings.credits.highlights.vaulSvelte": { projectLink: "placeholder" };
 	"settings.credits.highlights.zod": { projectLink: "placeholder" };
+	"settings.notifications.unsupportedOn": { platform: "placeholder" };
 	"settings.privacy.showDistance.description": { distance: "placeholder" };
 }

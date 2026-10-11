@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import {
 		continueToAddon,
@@ -7,12 +8,9 @@
 	} from "$lib/push/delivery.svelte";
 	import { notificationSettings } from "$lib/push/notification-state.svelte";
 	import { installedFromFdroid } from "$lib/updates/capability.svelte";
-	import { ADDON_NAME, FCM_COMPONENT } from "$lib/updates/components";
 
 	let { onCloseAutoFocus }: { onCloseAutoFocus: (event: Event) => void } =
 		$props();
-
-	const ADDON = ADDON_NAME[FCM_COMPONENT];
 
 	dismissOnBackGesture({
 		active: () => notificationSettings.addonDialog !== null,
@@ -30,25 +28,25 @@
 >
 	<AlertDialog.Content interactOutsideBehavior="close" {onCloseAutoFocus}>
 		<AlertDialog.Header>
-			<AlertDialog.Title
-				>Install push notifications add-on</AlertDialog.Title
-			>
+			<AlertDialog.Title>
+				{t("settings.notifications.addon.title")}
+			</AlertDialog.Title>
 			<AlertDialog.Description class="text-wrap">
-				To enable the fast mode, download and install {ADDON} add-on for Open
-				Grind. It includes Google's proprietary Firebase library and needs
-				Google Play services or microG, so it's not installed by default.
+				{t("settings.notifications.addon.description")}
 				{#if installedFromFdroid()}
-					This add-on bypasses F-Droid's checks.
+					{t("auth.signIn.google.install.fdroidNotice")}
 				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				size="lg"
 				onclick={() => void continueToAddon()}
 			>
-				Continue
+				{t("common.actions.continue")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
