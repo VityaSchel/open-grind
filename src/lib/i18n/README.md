@@ -40,6 +40,10 @@ Text must update when the language changes, so call `t()` where the text is show
 
 Diagnostics such as console output and copied error details stay English. To reuse a message there, render it with `sourceText()`, which always returns the English text.
 
+## Regional formats
+
+Words follow the app's language. Numbers, dates and times follow the system's regional settings: the 12- or 24-hour clock and its hour padding, decimal and grouping separators, and a numbering system the user chose. Dates use the language's variant for the system region when CLDR has one, so their day and month order follows the system, along with that variant's month abbreviations. Without such a variant they keep the language's own order, because reordering would break its grammar. Format with the helpers in `format.ts`, never with a fixed pattern. Plural forms stay on the language. In dev builds, `?regional=de-DE-u-hc-h12` or a JSON snapshot pins the regional settings for the session.
+
 ## Changing a string
 
 A new meaning, tag or placeholder needs a new key. To rename a key, lock the Weblate components and merge their pending changes, then run `bun scripts/i18n/rename-key.ts <old> <new>`. It moves the key in every language and rewrites its quoted uses in `src/`.

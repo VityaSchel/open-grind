@@ -1,5 +1,4 @@
 import {
-	format,
 	type FormatDistanceFn,
 	formatDistanceStrict,
 	type FormatDistanceToken,
@@ -8,6 +7,7 @@ import {
 import { t } from "./index";
 import {
 	formatCount,
+	getFormatLocales,
 	getLocale,
 	getTextDirection,
 } from "./locale-state.svelte";
@@ -83,6 +83,7 @@ const datePresets = {
 	monthDayYear: { month: "short", day: "numeric", year: "numeric" },
 	weekdayMonthDay: { weekday: "short", month: "short", day: "numeric" },
 	monthYear: { month: "long", year: "numeric" },
+	dayMonthYear: { day: "numeric", month: "long", year: "numeric" },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 type DistanceUnitToken = Extract<FormatDistanceToken, `x${string}`>;
@@ -107,14 +108,15 @@ const relativeTimeFormats = new Map<string, Intl.RelativeTimeFormat>();
 
 function cachedFormatter<Formatter>({
 	cache,
+	locale,
 	preset,
 	create,
 }: {
 	cache: Map<string, Formatter>;
+	locale: string;
 	preset: string;
 	create: (locales: string[]) => Formatter;
 }): Formatter {
-	const locale = getLocale();
 	const key = `${locale} ${preset}`;
 	const known = cache.get(key);
 	if (known !== undefined) return known;
@@ -131,17 +133,28 @@ export function formatNumber({
 	preset: NumberPresetName;
 }): string {
 	const { options, round } = numberPresets[preset];
+	const { text: locale, decimal, group } = getFormatLocales();
 	const formatter = cachedFormatter({
 		cache: numberFormats,
+		locale,
 		preset,
 		create: (locales) => new Intl.NumberFormat(locales, options),
 	});
-	const text = formatter.format(round(value));
+	const text = formatter
+		.formatToParts(round(value))
+		.map((part) =>
+			part.type === "decimal"
+				? decimal
+				: part.type === "group"
+					? group
+					: part.value,
+		)
+		.join("");
 	return markFormatted({ locale: getLocale(), text });
 }
 
 export function formatInteger(value: number): string {
-	return formatCount({ count: value, locale: getLocale() });
+	return formatCount({ count: value, locales: getFormatLocales() });
 }
 
 export function formatDate({
@@ -153,6 +166,7 @@ export function formatDate({
 }): string {
 	const formatter = cachedFormatter({
 		cache: dateFormats,
+		locale: getFormatLocales().dates,
 		preset,
 		create: (locales) =>
 			new Intl.DateTimeFormat(locales, datePresets[preset]),
@@ -160,8 +174,36 @@ export function formatDate({
 	return markFormatted({ locale: getLocale(), text: formatter.format(date) });
 }
 
+function zeroDigit(locale: string): string {
+	return cachedFormatter({
+		cache: numberFormats,
+		locale,
+		preset: "zeroDigit",
+		create: (locales) => new Intl.NumberFormat(locales),
+	}).format(0);
+}
+
 export function formatClockTime(date: Date | number): string {
-	return markFormatted({ locale: getLocale(), text: format(date, "H:mm") });
+	const { text: locale, twoDigitHour } = getFormatLocales();
+	const hour = twoDigitHour ? "2-digit" : "numeric";
+	const formatter = cachedFormatter({
+		cache: dateFormats,
+		locale,
+		preset: `clockTime ${hour}`,
+		create: (locales) =>
+			new Intl.DateTimeFormat(locales, { hour, minute: "2-digit" }),
+	});
+	const text = formatter.format(date);
+	if (twoDigitHour) return markFormatted({ locale: getLocale(), text });
+	const hours =
+		formatter.formatToParts(date).find(({ type }) => type === "hour")
+			?.value ?? "";
+	const [first, ...rest] = hours;
+	const unpadded =
+		rest.length === 1 && first === zeroDigit(locale)
+			? text.replace(hours, rest.join(""))
+			: text;
+	return markFormatted({ locale: getLocale(), text: unpadded });
 }
 
 export function formatRelativeTime({
@@ -173,6 +215,7 @@ export function formatRelativeTime({
 }): string {
 	const formatter = cachedFormatter({
 		cache: relativeTimeFormats,
+		locale: getFormatLocales().text,
 		preset: "always",
 		create: (locales) =>
 			new Intl.RelativeTimeFormat(locales, { numeric: "always" }),
@@ -196,6 +239,7 @@ export function formatRelativeTime({
 export function formatList(items: readonly string[]): string {
 	return cachedFormatter({
 		cache: listFormats,
+		locale: getLocale(),
 		preset: "unitShort",
 		create: (locales) =>
 			new Intl.ListFormat(locales, { type: "unit", style: "short" }),

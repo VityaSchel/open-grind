@@ -25,6 +25,7 @@ export default defineConfig({
 		baseURL: `http://localhost:${PORT}`,
 		trace: "retain-on-failure",
 		...devices["Desktop Chrome"],
+		locale: "en-US",
 		actionTimeout: 30_000,
 		viewport: { width: 420, height: 800 },
 		hasTouch: true,

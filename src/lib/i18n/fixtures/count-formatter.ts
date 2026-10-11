@@ -1,7 +1,7 @@
-import { setCountFormatter } from "../index";
+import { defaultCountFormatter, setCountFormatter } from "../index";
 
 export function restoreCountFormatter(): void {
-	setCountFormatter(({ count }) => String(count));
+	setCountFormatter(defaultCountFormatter);
 }
 
 export function bracketCounts(): (value: number) => string {

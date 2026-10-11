@@ -14,13 +14,20 @@ import {
 	isolate,
 	type NumberPresetName,
 } from "./format";
-import { setCountFormatter, setLocale, SOURCE_LOCALE } from "./index";
+import {
+	setCountFormatter,
+	setLocale,
+	setRegionalSettings,
+	SOURCE_LOCALE,
+} from "./index";
+import { type RegionalSettings, webRegionalSettings } from "./regional";
 
 vi.mock("./catalog-files", () => import("./fixtures/mock-catalog-files"));
 
 afterEach(async () => {
 	vi.restoreAllMocks();
 	restoreCountFormatter();
+	setRegionalSettings(webRegionalSettings());
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
@@ -122,14 +129,22 @@ const dateCases: Record<DatePresetName, [Date, string][]> = {
 		[new Date(2019, 4, 31, 23, 59), "May 2019"],
 		[new Date(2030, 1, 1), "February 2030"],
 	],
+	dayMonthYear: [
+		[new Date(2026, 9, 5, 9, 5), "October 5, 2026"],
+		[new Date(1999, 11, 31, 23, 59), "December 31, 1999"],
+		[new Date(2024, 1, 29), "February 29, 2024"],
+	],
 };
 
 const clockTimeCases: [text: string, date: Date][] = [
-	["9:05", new Date(2026, 9, 5, 9, 5)],
-	["0:00", new Date(2026, 9, 5, 0, 0)],
-	["12:30", new Date(2026, 9, 5, 12, 30)],
-	["23:59", new Date(2026, 9, 5, 23, 59, 59)],
+	["9:05 AM", new Date(2026, 9, 5, 9, 5)],
+	["12:00 AM", new Date(2026, 9, 5, 0, 0)],
+	["12:30 PM", new Date(2026, 9, 5, 12, 30)],
+	["11:59 PM", new Date(2026, 9, 5, 23, 59, 59)],
 ];
+
+const MORNING = new Date(2026, 9, 5, 9, 5);
+const MIDNIGHT = new Date(2026, 9, 5, 0, 5);
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -191,12 +206,157 @@ describe("date presets", () => {
 
 describe("formatClockTime", () => {
 	it.each(clockTimeCases)(
-		"prints %s on a 24-hour clock without a leading zero",
+		"prints %s on the en-US system's 12-hour clock",
 		(text, date) => {
 			expect(formatClockTime(date)).toBe(text);
 			expect(formatClockTime(date.getTime())).toBe(text);
 		},
 	);
+
+	it.each([
+		["h23", "09:05", "00:05"],
+		["h24", "09:05", "24:05"],
+		["h12", "9:05 AM", "12:05 AM"],
+		["h11", "9:05 AM", "0:05 AM"],
+	] as const)(
+		"follows the system's %s hour cycle",
+		(hourCycle, morning, midnight) => {
+			setRegionalSettings({ locale: "en-US", hourCycle });
+			expect(formatClockTime(MORNING)).toBe(morning);
+			expect(formatClockTime(MIDNIGHT)).toBe(midnight);
+		},
+	);
+
+	it("takes the clock from the system region, not the language", async () => {
+		setRegionalSettings({ locale: "de-DE" });
+		expect(formatClockTime(MORNING)).toBe("9:05");
+
+		await setLocale({ locale: "ru" });
+		setRegionalSettings({ locale: "en-US" });
+		expect(formatClockTime(MORNING)).toBe("9:05 AM");
+
+		await setLocale({ locale: "ja" });
+		setRegionalSettings({ locale: "ja-JP", hourCycle: "h11" });
+		expect(formatClockTime(MIDNIGHT)).toBe("午前0:05");
+	});
+
+	it("pads the hour as the system does, whatever the language pads", async () => {
+		setRegionalSettings({ locale: "de-DE", twoDigitHour: true });
+		expect(formatClockTime(MORNING)).toBe("09:05");
+
+		setRegionalSettings({
+			locale: "en-US",
+			hourCycle: "h23",
+			twoDigitHour: false,
+		});
+		expect(formatClockTime(MORNING)).toBe("9:05");
+		expect(formatClockTime(MIDNIGHT)).toBe("0:05");
+
+		await setLocale({ locale: "ar" });
+		setRegionalSettings({
+			locale: "de-DE",
+			numberingSystem: "arab",
+			twoDigitHour: false,
+		});
+		expect(formatClockTime(MORNING)).toBe("٩:٠٥");
+
+		setRegionalSettings({ locale: "en-US", twoDigitHour: true });
+		expect(formatClockTime(MORNING)).toMatch(/^09:05 \S+$/);
+	});
+});
+
+describe("words across system regions", () => {
+	const snapshots: RegionalSettings[] = [
+		"en-US",
+		"en-GB",
+		"en-CA",
+		"en-AU",
+		"en-IN",
+		"de-DE",
+		"pt-PT",
+		"pt-BR",
+		"es-ES",
+		"es-MX",
+		"ar-EG",
+		"ru-RU",
+	].map((locale) => ({ locale, hourCycle: "h12" }));
+
+	const letters = (text: string) =>
+		text.replaceAll(/[^\p{L}]+/gu, " ").trim();
+
+	const words = () =>
+		[
+			formatClockTime(MORNING),
+			formatClockTime(new Date(2026, 9, 5, 21, 5)),
+			formatNumber({ value: 1.5, preset: "distanceKilometers" }),
+			formatNumber({ value: 3, preset: "distanceMiles" }),
+			formatNumber({ value: 5, preset: "durationSeconds" }),
+			timeAgo(5 * MINUTE),
+			timeAgo(-3 * HOUR),
+			timeAgo(2 * DAY),
+		].map(letters);
+
+	it.each(["en", "pt-BR", "es-419", "ru", "ar"])(
+		"keeps the %s words of clocks, units and relative times",
+		async (locale) => {
+			await setLocale({ locale });
+			const [first, ...rest] = snapshots.map((settings) => {
+				setRegionalSettings(settings);
+				return words();
+			});
+
+			expect(first?.every((word) => word !== "")).toBe(true);
+			for (const each of rest) expect(each).toEqual(first);
+		},
+	);
+});
+
+describe("regional formats", () => {
+	it("words in the language and orders by the system region", async () => {
+		const date = new Date(2026, 9, 5);
+		setRegionalSettings({ locale: "de-DE" });
+		expect(formatDate({ date, preset: "monthDay" })).toBe("5 Oct");
+
+		await setLocale({ locale: "ru" });
+		setRegionalSettings({ locale: "en-US" });
+		expect(formatDate({ date, preset: "monthDay" })).toBe("5 окт.");
+	});
+
+	it("separates decimals as the system does, in the language's units", async () => {
+		const value = 1.5;
+		const preset = "distanceKilometers";
+		setRegionalSettings({ locale: "de-DE" });
+		expect(formatNumber({ value, preset })).toBe("1,5 km");
+
+		setRegionalSettings({ locale: "en-US", decimalSeparator: "," });
+		expect(formatNumber({ value, preset })).toBe("1,5 km");
+
+		await setLocale({ locale: "ru" });
+		setRegionalSettings({ locale: "en-US" });
+		expect(formatNumber({ value, preset })).toBe("1.5 км");
+	});
+
+	it("separates count decimals as the system does", async () => {
+		await setLocale({ locale: "ru" });
+		expect(formatInteger(1.5)).toBe("1.5");
+		setRegionalSettings({ locale: "de-DE" });
+		expect(formatInteger(1.5)).toBe("1,5");
+	});
+
+	it("writes digits in a numbering system the user chose", () => {
+		setRegionalSettings({ locale: "de-DE", numberingSystem: "arab" });
+		expect(formatInteger(1234)).toBe("١٢٣٤");
+		expect(formatNumber({ value: 1.5, preset: "distanceKilometers" })).toBe(
+			"١٫٥ km",
+		);
+		expect(formatClockTime(MORNING)).toBe("٩:٠٥");
+	});
+
+	it("words relative times in the language with the system's digits", async () => {
+		await setLocale({ locale: "fr" });
+		setRegionalSettings({ locale: "en-US", numberingSystem: "arab" });
+		expect(timeAgo(5 * MINUTE)).toBe("il y a ٥ minutes");
+	});
 });
 
 describe("formatRelativeTime", () => {
@@ -242,10 +402,11 @@ describe("formatInteger", () => {
 		expect(formatInteger(1234)).toBe("1234");
 	});
 
-	it("uses the count formatter with the active locale", async () => {
+	it("uses the count formatter with the formatting locale", async () => {
 		setCountFormatter(({ count, locale }) => `${locale}:${count}`);
 		await setLocale({ locale: "en-XA" });
-		expect(formatInteger(50)).toBe("en-XA:50");
+		setRegionalSettings({ locale: "de-DE", numberingSystem: "arab" });
+		expect(formatInteger(50)).toBe("en-XA-u-hc-h23-nu-arab:50");
 	});
 });
 
@@ -272,6 +433,36 @@ describe("formatter cache", () => {
 		expect(construct.mock.calls.length).toBe(built);
 	});
 
+	it("builds one formatter per formatting locale and preset", () => {
+		const NativeDateTimeFormat = Intl.DateTimeFormat;
+		const construct = vi
+			.spyOn(Intl, "DateTimeFormat")
+			.mockImplementation(function (locales, options) {
+				return new NativeDateTimeFormat(locales, options);
+			});
+		setRegionalSettings({
+			locale: "en-AU",
+			hourCycle: "h24",
+			numberingSystem: "thai",
+		});
+		formatClockTime(MORNING);
+		formatClockTime(MIDNIGHT);
+		formatDate({ date: MORNING, preset: "dayMonthYear" });
+		formatClockTime(MORNING);
+		expect(
+			construct.mock.calls.filter(([locales]) => Array.isArray(locales)),
+		).toEqual([
+			[
+				["en-u-hc-h24-nu-thai", SOURCE_LOCALE],
+				{ hour: "2-digit", minute: "2-digit" },
+			],
+			[
+				["en-AU-u-hc-h24-nu-thai", SOURCE_LOCALE],
+				{ day: "numeric", month: "long", year: "numeric" },
+			],
+		]);
+	});
+
 	it("follows the active locale on the next call", async () => {
 		const date = new Date(2026, 8, 9);
 		await setLocale({ locale: "ar-XB" });
@@ -290,7 +481,7 @@ describe("pseudo-locales", () => {
 		expect(
 			formatDate({ date: new Date(2026, 8, 9), preset: "monthDay" }),
 		).toBe("⟦Sep 9⟧");
-		expect(formatClockTime(new Date(2026, 8, 9, 9, 5))).toBe("⟦9:05⟧");
+		expect(formatClockTime(new Date(2026, 8, 9, 9, 5))).toBe("⟦9:05 AM⟧");
 		expect(formatList(["⟦Ţöþ⟧", "⟦Ɓöţţöɱ⟧"])).toBe("⟦Ţöþ⟧, ⟦Ɓöţţöɱ⟧");
 	});
 });

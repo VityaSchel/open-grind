@@ -1,6 +1,7 @@
 import type { ClientInit, HandleClientError } from "@sveltejs/kit";
 
 import { locales, setLocale } from "$lib/i18n";
+import { startRegionalSettings } from "$lib/platform/regional-settings";
 import { ws } from "$lib/ws.svelte";
 
 async function applyLocaleParam(): Promise<void> {
@@ -12,6 +13,7 @@ async function applyLocaleParam(): Promise<void> {
 
 export const init: ClientInit = async () => {
 	ws.connect();
+	startRegionalSettings();
 	if (import.meta.env.DEV) await applyLocaleParam();
 };
 

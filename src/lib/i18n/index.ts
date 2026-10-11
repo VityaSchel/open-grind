@@ -3,9 +3,10 @@ import {
 	type Catalog,
 	formatCount,
 	getCatalogs,
-	getLocale,
+	getFormatLocales,
 	getSourceCatalog,
 } from "./locale-state.svelte";
+import type { FormatLocales } from "./regional";
 import { PLACEHOLDER, RICH_TOKEN, SOURCE_LOCALE } from "./syntax";
 import type {
 	KeyArgs,
@@ -16,8 +17,8 @@ import type {
 	RichPart,
 } from "./types";
 
+export { type CountFormatter, defaultCountFormatter } from "./counts";
 export {
-	type CountFormatter,
 	followLocale,
 	getFormatLocales,
 	getLocale,
@@ -30,6 +31,14 @@ export {
 export type { FormatLocales, RegionalSettings } from "./regional";
 export { SOURCE_LOCALE } from "./syntax";
 export type * from "./types";
+
+const SOURCE_FORMAT_LOCALES: FormatLocales = {
+	text: SOURCE_LOCALE,
+	dates: SOURCE_LOCALE,
+	twoDigitHour: false,
+	decimal: ".",
+	group: ",",
+};
 
 const pluralRules = new Map<string, Intl.PluralRules>();
 
@@ -86,32 +95,32 @@ function lookup({
 function formatValue({
 	name,
 	params,
-	locale,
+	locales,
 }: {
 	name: string;
 	params: Params | undefined;
-	locale: string;
+	locales: FormatLocales;
 }): string | undefined {
 	if (params === undefined || !Object.hasOwn(params, name)) return undefined;
 	const value = params[name];
 	return name === "count" && typeof value === "number"
-		? formatCount({ count: value, locale })
+		? formatCount({ count: value, locales })
 		: String(value);
 }
 
 function interpolate({
 	template,
 	params,
-	locale,
+	locales,
 }: {
 	template: string;
 	params: Params | undefined;
-	locale: string;
+	locales: FormatLocales;
 }): string {
 	return template.replace(
 		PLACEHOLDER,
 		(placeholder, inner: string) =>
-			formatValue({ name: inner.trim(), params, locale }) ?? placeholder,
+			formatValue({ name: inner.trim(), params, locales }) ?? placeholder,
 	);
 }
 
@@ -121,7 +130,7 @@ export function t<K extends MessageKey>(
 ): string {
 	const [params] = args;
 	const template = lookup({ key, params, catalogs: getCatalogs() });
-	return interpolate({ template, params, locale: getLocale() });
+	return interpolate({ template, params, locales: getFormatLocales() });
 }
 
 export function sourceText<K extends MessageKey>(
@@ -130,7 +139,7 @@ export function sourceText<K extends MessageKey>(
 ): string {
 	const [params] = args;
 	const template = lookup({ key, params, catalogs: [getSourceCatalog()] });
-	return interpolate({ template, params, locale: SOURCE_LOCALE });
+	return interpolate({ template, params, locales: SOURCE_FORMAT_LOCALES });
 }
 
 export type Translate = typeof t;
@@ -140,7 +149,7 @@ export function richParts<K extends RichKey>(
 	...args: RichArgs<K>
 ): RichPart[] {
 	const [params] = args;
-	const locale = getLocale();
+	const locales = getFormatLocales();
 	const template = lookup({ key, params, catalogs: getCatalogs() });
 	const parts: RichPart[] = [];
 	const appendText = (text: string) => {
@@ -157,12 +166,12 @@ export function richParts<K extends RichKey>(
 		appendText(template.slice(end, match.index));
 		end = match.index + token.length;
 		if (tag !== undefined) {
-			const text = interpolate({ template: inner, params, locale });
+			const text = interpolate({ template: inner, params, locales });
 			parts.push({ kind: "tag", name: tag, text });
 			continue;
 		}
 		const name = (placeholder ?? "").trim();
-		const value = formatValue({ name, params, locale });
+		const value = formatValue({ name, params, locales });
 		if (value === undefined) {
 			parts.push({ kind: "placeholder", name, text: token });
 		} else {

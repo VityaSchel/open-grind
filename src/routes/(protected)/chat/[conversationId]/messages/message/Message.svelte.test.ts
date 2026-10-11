@@ -142,9 +142,9 @@ describe("message translation boundary", () => {
 
 describe("message status line", () => {
 	it.each([
-		{ isRead: true, status: "sent", text: "Read 9:05" },
-		{ isRead: false, status: "sent", text: "Sent 9:05" },
-		{ isRead: null, status: "sent", text: "9:05" },
+		{ isRead: true, status: "sent", text: "Read 9:05 AM" },
+		{ isRead: false, status: "sent", text: "Sent 9:05 AM" },
+		{ isRead: null, status: "sent", text: "9:05 AM" },
 		{ isRead: false, status: "pending", text: "Sending…" },
 		{ isRead: false, status: "error", text: "Not sent" },
 	] as const)(

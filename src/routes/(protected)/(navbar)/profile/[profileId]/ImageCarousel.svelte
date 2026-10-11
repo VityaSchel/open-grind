@@ -1,12 +1,11 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { format } from "date-fns";
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 	import UserSilhouette from "$lib/components/profile/UserSilhouette.svelte";
-	import { t } from "$lib/i18n";
-	import { formatInteger } from "$lib/i18n/format";
+	import { followLocale, t } from "$lib/i18n";
+	import { formatDate, formatInteger } from "$lib/i18n/format";
 	import { profileMediaUrl } from "$lib/util/media";
 	import {
 		applyPhotoSwipeBackGesture,
@@ -98,12 +97,21 @@
 										pswp.currSlide?.data.element?.dataset
 											.createdAt,
 									);
-								if (createdAt !== undefined) {
-									element.textContent = format(
-										createdAt,
-										"dd MMMM yyyy",
-									);
+								if (
+									createdAt === undefined ||
+									pswp.isDestroying
+								) {
+									return;
 								}
+								pswp.on(
+									"destroy",
+									followLocale(() => {
+										element.textContent = formatDate({
+											date: createdAt,
+											preset: "dayMonthYear",
+										});
+									}),
+								);
 							}, 0);
 						},
 					});

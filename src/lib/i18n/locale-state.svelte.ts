@@ -5,6 +5,7 @@ import {
 	sourceFiles,
 	translationFiles,
 } from "./catalog-files";
+import { type CountFormatter, defaultCountFormatter } from "./counts";
 import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
 import {
 	composeFormatLocales,
@@ -19,11 +20,6 @@ export type Catalog = {
 	readonly locale: string;
 	readonly dictionary: ReadonlyMap<string, string>;
 };
-
-export type CountFormatter = (options: {
-	count: number;
-	locale: string;
-}) => string;
 
 const RTL_SCRIPTS = new Set([
 	"Adlm",
@@ -138,7 +134,7 @@ const sourceCatalog = toCatalog({
 class LocaleState {
 	source: Catalog = $state.raw(sourceCatalog);
 	translations: readonly Catalog[] = $state.raw([]);
-	countFormatter: CountFormatter = ({ count }) => String(count);
+	countFormatter: CountFormatter = defaultCountFormatter;
 	requested = SOURCE_LOCALE;
 	regional: RegionalSettings = $state.raw(webRegionalSettings());
 	regionalKey = settingsKey(this.regional);
@@ -216,12 +212,13 @@ export function getSourceCatalog(): Catalog {
 
 export function formatCount({
 	count,
-	locale,
+	locales,
 }: {
 	count: number;
-	locale: string;
+	locales: FormatLocales;
 }): string {
-	return state.countFormatter({ count, locale });
+	const { text: locale, decimal } = locales;
+	return state.countFormatter({ count, locale, decimal });
 }
 
 export function setCountFormatter(formatter: CountFormatter): void {

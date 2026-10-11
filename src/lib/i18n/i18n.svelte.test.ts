@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { restoreCountFormatter } from "./fixtures/count-formatter";
 import { markup, slot } from "./fixtures/dom";
 import Probe from "./fixtures/Probe.svelte";
+import { formatClockTime } from "./format";
 import {
 	followLocale,
 	getFormatLocales,
@@ -175,6 +176,21 @@ describe("regional formats", () => {
 		const expected = ["en-u-hc-h12", "en-u-hc-h23"];
 		expect(derived).toEqual(expected);
 		expect(applied).toEqual(expected);
+	});
+
+	it("re-renders a $derived time when the system clock changes", () => {
+		const seen: string[] = [];
+		const stop = $effect.root(() => {
+			const time = $derived(formatClockTime(new Date(2026, 9, 5, 9, 5)));
+			$effect(() => {
+				seen.push(time);
+			});
+		});
+		flushSync();
+		setRegionalSettings({ locale: "en-US", hourCycle: "h23" });
+		flushSync();
+		stop();
+		expect(seen).toEqual(["9:05 AM", "09:05"]);
 	});
 });
 
@@ -622,6 +638,7 @@ describe("Spanish fallback", () => {
 		setCountFormatter(({ count, locale }) =>
 			new Intl.NumberFormat(locale).format(count),
 		);
+		setRegionalSettings({ locale: "es-ES" });
 		await setLocale({ locale: "es" });
 		expect(
 			translateFixture("sample.chat.unread", { count: 1_000_000 }),
