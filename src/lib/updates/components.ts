@@ -1,3 +1,5 @@
+import type { PlainMessageKey } from "$lib/i18n";
+
 export const APP_COMPONENT = "app";
 export const GOOGLE_OAUTH_COMPONENT = "google-oauth";
 export const RECAPTCHA_COMPONENT = "recaptcha";
@@ -31,7 +33,7 @@ export const COMPONENT_REPO = {
 } as const satisfies Record<ComponentKey, string>;
 
 export const ADDON_NAME = {
-	[GOOGLE_OAUTH_COMPONENT]: "Google OAuth app",
-	[RECAPTCHA_COMPONENT]: "reCAPTCHA helper",
-	[FCM_COMPONENT]: "FCM service",
-} as const satisfies Record<AddonKey, string>;
+	[GOOGLE_OAUTH_COMPONENT]: "updates.addons.googleOauth.name",
+	[RECAPTCHA_COMPONENT]: "updates.addons.recaptcha.name",
+	[FCM_COMPONENT]: "updates.addons.fcm.name",
+} as const satisfies Record<AddonKey, PlainMessageKey>;

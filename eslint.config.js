@@ -370,6 +370,7 @@ const translatedScriptFiles = [
 	"src/lib/platform/keybindings.ts",
 	"src/lib/platform/media-file.ts",
 	"src/lib/platform/media-picker.ts",
+	"src/lib/updates/components.ts",
 	"src/lib/util/format-time.ts",
 	"src/lib/util/photoswipe.ts",
 	"src/lib/util/reconciling-list-state.svelte.ts",

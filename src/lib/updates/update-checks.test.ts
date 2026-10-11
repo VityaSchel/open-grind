@@ -2,12 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ADDON_KEYS, type AddonKey } from "./components";
 import type { CheckReport } from "./flow";
-
-const addonNames = {
-	"google-oauth": "Google OAuth app",
-	recaptcha: "reCAPTCHA helper",
-	fcm: "FCM service",
-} satisfies Record<AddonKey, string>;
+import { addonNames } from "./updates-test-helpers";
 
 const addonCases = ADDON_KEYS.map((addon): [AddonKey, string] => [
 	addon,
@@ -315,7 +310,7 @@ describe("the Check for updates action", () => {
 		expect(toasts.showUpToDate).not.toHaveBeenCalled();
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
 			title: "Couldn't check for updates",
-			body: "Google OAuth app",
+			body: "Open Grind Google OAuth app",
 		});
 	});
 
@@ -332,7 +327,7 @@ describe("the Check for updates action", () => {
 		await checkForUpdatesNow(storeBuild);
 
 		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
-			title: "The installed Google OAuth app isn't signed by Open Grind. Uninstall it to install the official one.",
+			title: "The installed Open Grind Google OAuth app isn't signed by Open Grind. Uninstall it to install the official one.",
 			body: undefined,
 		});
 	});

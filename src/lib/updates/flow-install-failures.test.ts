@@ -30,8 +30,8 @@ beforeEach(() => {
 
 describe("an install that does not go through", () => {
 	it.each<[InstallKind, string]>([
-		["update", "problem:Couldn't update the Google OAuth app"],
-		["install", "problem:Couldn't install the Google OAuth app"],
+		["update", "problem:Couldn't update the Open Grind Google OAuth app"],
+		["install", "problem:Couldn't install the Open Grind Google OAuth app"],
 	])(
 		"names a Google OAuth app %s the system refused to install",
 		async (kind, problem) => {
@@ -49,12 +49,12 @@ describe("an install that does not go through", () => {
 		[
 			"google-oauth",
 			"update",
-			"problem:Couldn't update the Google OAuth app",
+			"problem:Couldn't update the Open Grind Google OAuth app",
 		],
 		[
 			"google-oauth",
 			"install",
-			"problem:Couldn't install the Google OAuth app",
+			"problem:Couldn't install the Open Grind Google OAuth app",
 		],
 		["app", "update", "problem:Couldn't install the update"],
 	])(
@@ -81,9 +81,12 @@ describe("an install that does not go through", () => {
 	it.each<[InstallKind, string]>([
 		[
 			"install",
-			"problem:Not enough storage to install the Google OAuth app",
+			"problem:Not enough storage to install the Open Grind Google OAuth app",
 		],
-		["update", "problem:Not enough storage to update the Google OAuth app"],
+		[
+			"update",
+			"problem:Not enough storage to update the Open Grind Google OAuth app",
+		],
 	])(
 		"says storage ran out for a Google OAuth app %s",
 		async (kind, problem) => {
@@ -141,7 +144,7 @@ describe("an install that does not go through", () => {
 		await flow.installNow();
 
 		expect(view.problems()).toEqual([
-			"problem:The store that installed the Google OAuth app manages its updates",
+			"problem:The store that installed the Open Grind Google OAuth app manages its updates",
 		]);
 	});
 });

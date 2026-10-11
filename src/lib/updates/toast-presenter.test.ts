@@ -1,4 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { setLocale, SOURCE_LOCALE, t } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 
 const toasts = vi.hoisted(() => ({
 	dismissStage: vi.fn(),
@@ -21,13 +24,13 @@ beforeEach(() => {
 describe("a Google OAuth app problem toast", () => {
 	it("does not repeat the Google OAuth app under a title that names it", () => {
 		toastPresenter("google-oauth").problem(
-			"Couldn't install the Google OAuth app",
+			"Couldn't install the Open Grind Google OAuth app",
 		);
 
 		expect(toasts.showProblem.mock.calls).toEqual([
 			[
 				{
-					title: "Couldn't install the Google OAuth app",
+					title: "Couldn't install the Open Grind Google OAuth app",
 					body: undefined,
 				},
 			],
@@ -43,7 +46,7 @@ describe("a Google OAuth app problem toast", () => {
 			[
 				{
 					title: "Couldn't reach the release server",
-					body: "Google OAuth app",
+					body: "Open Grind Google OAuth app",
 				},
 			],
 		]);
@@ -65,10 +68,29 @@ describe("the up-to-date toast", () => {
 		toastPresenter("fcm").upToDate();
 
 		expect(toasts.showUpToDate.mock.calls).toStrictEqual([
-			["The reCAPTCHA helper is up to date"],
-			["The Google OAuth app is up to date"],
-			["The FCM service is up to date"],
+			["The Open Grind reCAPTCHA helper is up to date"],
+			["The Open Grind Google OAuth app is up to date"],
+			["The Open Grind FCM service is up to date"],
 		]);
+	});
+
+	describe("in another language", () => {
+		afterEach(async () => {
+			await setLocale({ locale: SOURCE_LOCALE });
+		});
+
+		it("names the add-on in the language active when it shows", async () => {
+			const presenter = toastPresenter("fcm");
+			await setLocale({ locale: "en-XA" });
+			const name = t("updates.addons.fcm.name");
+
+			presenter.upToDate();
+
+			expect(name).toMatch(PSEUDO_MESSAGE);
+			expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(
+				`The ${name} is up to date`,
+			);
+		});
 	});
 
 	it("names Open Grind for the app itself", () => {

@@ -149,7 +149,7 @@ describe("an add-on uninstalled while its update is on screen", () => {
 		expect(view.events).toEqual([
 			"show:ready",
 			"dismiss",
-			"problem:The store that installed the Google OAuth app manages its updates",
+			"problem:The store that installed the Open Grind Google OAuth app manages its updates",
 		]);
 	});
 });
@@ -226,7 +226,7 @@ describe("an add-on that changed outside Open Grind before its download started"
 			[
 				"show:downloading",
 				"dismiss",
-				"problem:No Google OAuth app release is published yet",
+				"problem:No Open Grind Google OAuth app release is published yet",
 			],
 		],
 		[offer("update"), ["show:downloading", "dismiss", "show:downloading"]],

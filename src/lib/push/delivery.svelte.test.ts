@@ -281,7 +281,9 @@ describe("falling back to Slow mode", () => {
 			"Couldn't enable Fast Mode for push notifications",
 		);
 		expect(toastDetails()).toMatchObject({
-			message: expect.stringMatching(/^The FCM service is disabled/),
+			message: expect.stringMatching(
+				/^The Open Grind FCM service is disabled/,
+			),
 		});
 	});
 

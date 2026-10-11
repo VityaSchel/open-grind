@@ -100,18 +100,18 @@ export async function androidAddon({
 					'tap "Install"; the button reads "Downloading…" while the toast shows the progress',
 					...(permitted ? [] : [permissionStep]),
 					'the button reads "Installing…"; confirm Android\'s install dialog',
-					`the toast reads "Google OAuth app installed: ${tag}" and the card switches to "Continue"; cancelling the dialog leaves an "Install" button that asks again only when tapped`,
+					`the toast reads "Open Grind Google OAuth app installed: ${tag}" and the card switches to "Continue"; cancelling the dialog leaves an "Install" button that asks again only when tapped`,
 				]
 			: [
 					'press "Get started" — the update checkbox is already on',
-					'a "Google OAuth app update available" toast drops in — tap it to download',
-					`tap "Google OAuth app update is downloaded"${
+					'an "Open Grind Google OAuth app update available" toast drops in — tap it to download',
+					`tap "Open Grind Google OAuth app update is downloaded"${
 						permitted
 							? ""
 							: " — the install-permission screen opens first; allow it and come back"
 					}`,
 					"confirm Android's update dialog — Open Grind stays open",
-					`the toast now reads "Google OAuth app updated: ${tag}"`,
+					`the toast now reads "Open Grind Google OAuth app updated: ${tag}"`,
 					`the served APK is the same build re-tagged, so the device still reports ${companionVersion}; the next check offers ${tag} again`,
 				];
 

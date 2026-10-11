@@ -1,3 +1,4 @@
+import { t } from "$lib/i18n";
 import { ADDON_NAME, APP_COMPONENT, type ComponentKey } from "./components";
 import type { Progress, Release, UpdateError } from "./types";
 
@@ -69,7 +70,7 @@ type StageCopyArgs = {
 
 export function stageTitle({ component, kind, stage }: StageCopyArgs): string {
 	if (component === APP_COMPONENT) return appTitles[stage];
-	return addonTitles[kind][stage](ADDON_NAME[component]);
+	return addonTitles[kind][stage](t(ADDON_NAME[component]));
 }
 
 const installBodies: Record<UpdateStage, string | undefined> = {

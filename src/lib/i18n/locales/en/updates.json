@@ -1,0 +1,13 @@
+{
+	"addons": {
+		"googleOauth": {
+			"name": "Open Grind Google OAuth app"
+		},
+		"recaptcha": {
+			"name": "Open Grind reCAPTCHA helper"
+		},
+		"fcm": {
+			"name": "Open Grind FCM service"
+		}
+	}
+}

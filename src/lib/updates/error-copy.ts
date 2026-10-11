@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { t } from "$lib/i18n";
 import {
 	ADDON_NAME,
 	APP_COMPONENT,
@@ -100,7 +101,7 @@ const PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE = -4;
 function busyText(component: ComponentKey): string {
 	return component === APP_COMPONENT
 		? "Wait for the Open Grind update to finish downloading"
-		: `Wait for the ${ADDON_NAME[component]} to finish downloading`;
+		: `Wait for the ${t(ADDON_NAME[component])} to finish downloading`;
 }
 
 export function unsupportedText(
@@ -110,7 +111,7 @@ export function unsupportedText(
 	const addonText =
 		component === APP_COMPONENT
 			? undefined
-			: addonUnsupportedCopy[reason]?.(ADDON_NAME[component]);
+			: addonUnsupportedCopy[reason]?.(t(ADDON_NAME[component]));
 	return addonText ?? unsupportedCopy[reason];
 }
 
@@ -120,7 +121,7 @@ export function noReleaseText({
 	component: ComponentKey;
 }): string {
 	const subject =
-		component === APP_COMPONENT ? "Open Grind" : ADDON_NAME[component];
+		component === APP_COMPONENT ? "Open Grind" : t(ADDON_NAME[component]);
 	return `No ${subject} release is published yet`;
 }
 
@@ -142,7 +143,7 @@ export function updateErrorText(
 		return running.success ? busyText(running.data.component) : copy.busy;
 	}
 	if (component === APP_COMPONENT) return copy[known.kind];
-	const addon = ADDON_NAME[component];
+	const addon = t(ADDON_NAME[component]);
 	const updateText =
 		kind === "update" ? addonUpdateCopy[known.kind]?.(addon) : undefined;
 	return updateText ?? addonCopy[known.kind]?.(addon) ?? copy[known.kind];
@@ -160,7 +161,7 @@ export function installFailedText({
 	if (code === PACKAGE_MANAGER_INSTALL_FAILED_INSUFFICIENT_STORAGE) {
 		return component === APP_COMPONENT
 			? "Not enough storage to install the update"
-			: addonNoStorageCopy[kind](ADDON_NAME[component]);
+			: addonNoStorageCopy[kind](t(ADDON_NAME[component]));
 	}
 	return updateErrorText(
 		{ kind: "install" },
@@ -176,7 +177,7 @@ export function problemBody({
 	title: string;
 }): string | undefined {
 	if (component === APP_COMPONENT) return undefined;
-	const addon = ADDON_NAME[component];
+	const addon = t(ADDON_NAME[component]);
 	return title.toLowerCase().includes(addon.toLowerCase())
 		? undefined
 		: addon;

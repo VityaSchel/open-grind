@@ -218,6 +218,9 @@ mod pins {
 	const CAPABILITY_TS: &str =
 		include_str!("../../../../../src/lib/updates/capability.svelte.ts");
 
+	const UPDATES_CATALOG: &str =
+		include_str!("../../../../../src/lib/i18n/locales/en/updates.json");
+
 	const INSTALLER: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/update/ApkInstaller.kt"
 	);
@@ -803,6 +806,19 @@ mod pins {
 		entries
 	}
 
+	fn updates_message(key: &str) -> String {
+		let catalog: serde_json::Value = serde_json::from_str(UPDATES_CATALOG)
+			.expect("en/updates.json is not JSON");
+		let path = key.strip_prefix("updates.").unwrap_or_else(|| {
+			panic!("{key} is not a message in en/updates.json")
+		});
+		catalog
+			.pointer(&format!("/{}", path.replace('.', "/")))
+			.and_then(serde_json::Value::as_str)
+			.unwrap_or_else(|| panic!("en/updates.json has no {key}"))
+			.to_owned()
+	}
+
 	#[test]
 	fn the_frontend_component_table_matches_the_rust_one() {
 		use super::super::component;
@@ -846,7 +862,8 @@ mod pins {
 			"ADDON_NAME must name every add-on the component table knows"
 		);
 
-		for (key, name) in names {
+		for (key, message) in names {
+			let name = updates_message(&message);
 			let resource = format!("addon_name_{}", key.replace('-', "_"));
 			assert!(
 				squashed(ANDROID_STRINGS).contains(&squashed(&format!(

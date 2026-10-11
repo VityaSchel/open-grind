@@ -5,6 +5,7 @@ import InfoIcon from "phosphor-svelte/lib/InfoIcon";
 import SealWarningIcon from "phosphor-svelte/lib/SealWarningIcon";
 import { toast } from "svelte-sonner";
 
+import { t } from "$lib/i18n";
 import { openExternalLink } from "$lib/platform/link-opener";
 import {
 	ADDON_NAME,
@@ -119,7 +120,7 @@ export function showAddonInstalled({
 	tag: string | null;
 	kind: InstallKind;
 }): void {
-	const addon = ADDON_NAME[component];
+	const addon = t(ADDON_NAME[component]);
 	const done = kind === "install" ? `${addon} installed` : `${addon} updated`;
 	toast.custom(ToastCard, {
 		...PLACEMENT,

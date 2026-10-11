@@ -841,6 +841,9 @@ export interface Messages {
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;
+	"updates.addons.fcm.name": undefined;
+	"updates.addons.googleOauth.name": undefined;
+	"updates.addons.recaptcha.name": undefined;
 }
 
 export interface RichMessages {
