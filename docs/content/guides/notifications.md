@@ -29,13 +29,13 @@ Fast mode on Android **shows notifications instantly**, but uses closed-source G
 
 To enable the fast mode:
 
-1. Choose "Fast mode" in Notifications settings
+1. Choose "Fast Mode" in Notifications settings
 2. Tap "Continue"
    - If your version of Open Grind allows direct add-on downloads, it will be downloaded & installed automatically, in which case you can skip the remaining steps
    - Otherwise (e.g. when Open Grind was downloaded from F-Droid or Google Play), download and install the add-on manually:
 3. Open [fcm-service add-on releases](https://git.opengrind.org/open-grind/fcm-service/releases) page
 4. Download `open-grind-fcm-service-<version>-android.apk` and open it; Android asks your browser for permission to install apps once
-5. Return to Open Grind and choose "Fast mode" again
+5. Return to Open Grind and choose "Fast Mode" again
 
 ## Windows
 
