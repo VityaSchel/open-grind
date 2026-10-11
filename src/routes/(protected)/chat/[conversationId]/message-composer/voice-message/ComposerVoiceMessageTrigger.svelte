@@ -3,6 +3,7 @@
 	import { toast } from "svelte-sonner";
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
+	import { t } from "$lib/i18n";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 	import PrimaryComposerButton from "../PrimaryComposerButton.svelte";
 
@@ -10,7 +11,7 @@
 </script>
 
 <PrimaryComposerButton
-	aria-label="Record voice message"
+	aria-label={t("chat.composer.voiceMessage.a11y.record")}
 	onclick={() => {
 		toast(ToastUnimplemented, {
 			componentProps: {

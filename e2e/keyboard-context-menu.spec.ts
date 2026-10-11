@@ -317,7 +317,7 @@ test.describe("keyboard access to context menus", () => {
 		const composer = page.locator('[data-slot="message-composer"]');
 		const actions = page.getByRole("button", MESSAGE_ACTIONS);
 		const count = await actions.count();
-		await page.getByRole("textbox", { name: "Say something..." }).focus();
+		await page.getByRole("textbox", { name: "Write a message…" }).focus();
 
 		const tucked: number[] = [];
 		for (let index = count - 1; index >= 0; index -= 1) {

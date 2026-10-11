@@ -2,6 +2,7 @@
 	import { PaperclipIcon } from "phosphor-svelte";
 	import { expoOut } from "svelte/easing";
 
+	import { t } from "$lib/i18n";
 	import { scale } from "$lib/util/reduced-motion";
 	import ComposerButton from "../ComposerButton.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
@@ -18,7 +19,7 @@
 >
 	<ComposerButton
 		class="static right-7 pe-1.5"
-		aria-label="Add attachment"
+		aria-label={t("chat.composer.attachments.a11y.add")}
 		onclick={() => {
 			onClick?.();
 		}}

@@ -4,6 +4,7 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
+	import { t } from "$lib/i18n";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
@@ -51,7 +52,10 @@
 			drafts.discard(conversationId);
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to send message", error });
+			showErrorToast({
+				label: t("chat.composer.errors.sendFailed"),
+				error,
+			});
 		}
 	}
 

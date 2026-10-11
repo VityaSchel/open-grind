@@ -123,10 +123,16 @@ export interface Messages {
 	"browse.locationEmpty.useCurrentLocation": undefined;
 	"browse.quickFilters.a11y.allFilters": undefined;
 	"browse.rightNow.unimplemented": { issueLink: string };
+	"chat.composer.a11y.send": undefined;
+	"chat.composer.attachments.a11y.add": undefined;
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
 	"chat.composer.attachments.location.unimplemented": { issueLink: string };
+	"chat.composer.errors.sendFailed": undefined;
+	"chat.composer.replyPreview.a11y.cancel": undefined;
+	"chat.composer.textInput.placeholder": undefined;
+	"chat.composer.voiceMessage.a11y.record": undefined;
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
 	"chat.conversation.bypassReason.unsend": undefined;

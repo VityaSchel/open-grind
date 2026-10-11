@@ -161,7 +161,24 @@
 		}
 	},
 	"composer": {
+		"errors": {
+			"sendFailed": "Couldn’t send message"
+		},
+		"textInput": {
+			"placeholder": "Write a message…"
+		},
+		"replyPreview": {
+			"a11y": {
+				"cancel": "Cancel reply"
+			}
+		},
+		"a11y": {
+			"send": "Send message"
+		},
 		"attachments": {
+			"a11y": {
+				"add": "Add attachment"
+			},
 			"actions": {
 				"send": "Send",
 				"share": "Share",
@@ -172,6 +189,9 @@
 			}
 		},
 		"voiceMessage": {
+			"a11y": {
+				"record": "Record voice message"
+			},
 			"unimplemented": "Voice messages aren’t implemented yet. Follow the progress in {{issueLink}}."
 		}
 	}

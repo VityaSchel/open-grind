@@ -10,8 +10,10 @@ import { draftFromMessage } from "$lib/model/messaging/messages";
 const { conversations } = vi.hoisted(() => ({
 	conversations: { drafts: null as Drafts | null },
 }));
+const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 
 vi.mock("$app/navigation", () => ({ onNavigate: vi.fn() }));
+vi.mock("svelte-sonner", () => sonner);
 vi.mock("$lib/chat/conversations-context.svelte", () => ({
 	getConversations: () => conversations,
 }));
@@ -75,7 +77,10 @@ describe("MessageComposer drafts", () => {
 		conversations.drafts = drafts;
 	});
 
-	afterEach(cleanup);
+	afterEach(() => {
+		cleanup();
+		vi.restoreAllMocks();
+	});
 
 	it("opens empty when the conversation has no draft", () => {
 		expect(renderComposer().textarea.value).toBe("");
@@ -177,6 +182,24 @@ describe("MessageComposer drafts", () => {
 		expect(onSend).toHaveBeenCalledWith([
 			draftFromMessage({ type: "Text", body: { text: "sending this" } }),
 		]);
+	});
+
+	it("keeps the text and says it couldn’t be sent when sending fails", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const { textarea } = renderComposer({
+			onSend: () => Promise.reject(new Error("offline")),
+		});
+
+		await type(textarea, "sending this");
+		await fireEvent.submit(textarea.form!);
+
+		await vi.waitFor(() =>
+			expect(sonner.toast.error).toHaveBeenCalledWith(
+				"Couldn’t send message",
+				expect.anything(),
+			),
+		);
+		expect(textarea.value).toBe("sending this");
 	});
 });
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Textarea } from "$lib/components/ui/textarea";
+	import { t } from "$lib/i18n";
 	import { isMobilePlatform } from "$lib/platform/os";
 	import { getMessageComposerContext } from "./message-composer-context.svelte";
 
@@ -19,7 +20,7 @@
 </script>
 
 <Textarea
-	placeholder="Say something..."
+	placeholder={t("chat.composer.textInput.placeholder")}
 	class="h-fit! max-h-31.5 min-h-9.5 shrink-0 rounded-composer py-2 pr-9 leading-5 placeholder-shown:truncate"
 	enterkeyhint={isMobile ? "enter" : "send"}
 	onkeydown={(

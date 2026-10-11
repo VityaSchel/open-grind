@@ -3,6 +3,7 @@
 	import { expoOut } from "svelte/easing";
 
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 	import {
 		previewFromMessage,
 		quoteIsUserText,
@@ -36,7 +37,7 @@
 		variant="ghost"
 		size="icon-xs"
 		class="rounded-full text-muted-foreground"
-		aria-label="Cancel reply"
+		aria-label={t("chat.composer.replyPreview.a11y.cancel")}
 		onclick={onCancel}
 	>
 		<XIcon />
