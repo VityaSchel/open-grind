@@ -148,7 +148,7 @@
 			},
 			"saved": "Album updated",
 			"errors": {
-				"stillProcessing": "This video is still processing. Try removing it again in a moment",
+				"stillProcessing": "This video is still processing. Try removing it again in a moment.",
 				"saveFailed": "Couldn’t save album changes"
 			},
 			"a11y": {
@@ -167,7 +167,7 @@
 			}
 		},
 		"uploads": {
-			"addedReopen": "Added. Reopen the album to see it",
+			"addedReopen": "Added. Reopen the album to see it.",
 			"errors": {
 				"albumFull": "The album is full. Remove something to add more.",
 				"videoLimit_one": "You can have {{count}} video in your album. Remove one to add another.",

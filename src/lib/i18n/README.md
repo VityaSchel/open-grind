@@ -16,6 +16,7 @@ Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. E
 - Use sentence case for everything else: buttons, menu items, links, error and status titles even when short, titles that are statements or questions (with no period), and all prose.
 - Proper names and Grindr feature names keep their capitals in any case, such as Open Grind, Grindr, Right Now and Viewed Me.
 - Write curly quotes and apostrophes (“ ” ’), primes for heights (5′11″), a closed en dash for ranges (18–30) and the single-character ellipsis (…).
+- End every sentence of a message that has more than one sentence with a period.
 - Word a one-time failure as “Couldn’t …” and a lasting state as “Can’t …” or a plain statement. Use “Still can’t …” only after the user retries a lasting state by hand, and keep “Failed to …” for English-only diagnostics.
 - Leave out “we”, “us”, “our” and “please”.
 - Say “user” for another member’s account (block, hide, report), “profile” for what is shown, and “account” only for your own.

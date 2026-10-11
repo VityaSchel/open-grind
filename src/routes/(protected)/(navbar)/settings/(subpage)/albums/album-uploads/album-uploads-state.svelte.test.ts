@@ -246,7 +246,7 @@ describe("album uploads", () => {
 			await vi.advanceTimersByTimeAsync(40_000);
 
 			expect(toastSuccess).toHaveBeenCalledWith(
-				"Added. Reopen the album to see it",
+				"Added. Reopen the album to see it.",
 			);
 			expect(getAlbumContent).toHaveBeenCalledTimes(13);
 			expect(draft.land).not.toHaveBeenCalled();

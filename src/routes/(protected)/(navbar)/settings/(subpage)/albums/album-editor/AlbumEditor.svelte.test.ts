@@ -139,7 +139,7 @@ describe("album editor", () => {
 
 		await waitFor(() =>
 			expect(sonner.toast.error).toHaveBeenCalledWith(
-				"This video is still processing. Try removing it again in a moment",
+				"This video is still processing. Try removing it again in a moment.",
 			),
 		);
 	});
