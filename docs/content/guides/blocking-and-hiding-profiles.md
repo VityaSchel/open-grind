@@ -1,10 +1,10 @@
 ---
 prev: false
 next: false
-title: "Blocking and hiding profiles"
+title: "Blocking and hiding users"
 ---
 
-# Blocking and hiding profiles
+# Blocking and hiding users
 
 ## How to block users in Open Grind? {#block}
 
@@ -14,7 +14,7 @@ title: "Blocking and hiding profiles"
 
 You can also tap **Block user** right after you report someone.
 
-To unblock, open the profile and tap **Unblock**, or turn it off in **Settings → Account Settings → Blocked users**.
+To unblock, open the profile and tap **Unblock**, or turn it off in **Settings → Account Settings → Blocked Users**.
 
 ## How to hide users in Open Grind? {#hide}
 
@@ -22,7 +22,7 @@ To unblock, open the profile and tap **Unblock**, or turn it off in **Settings �
 2. Tap the **⋯** menu
 3. Tap **Hide user**
 
-To unhide, open the profile and tap **Unhide**, or turn it off in **Settings → Account Settings → Hidden users**.
+To unhide, open the profile and tap **Unhide**, or turn it off in **Settings → Account Settings → Hidden Users**.
 
 ## What's the difference between blocking and hiding users in Grindr? {#difference}
 
