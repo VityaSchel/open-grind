@@ -23,7 +23,6 @@ function limitsOf({
 }): UploadLimits {
 	return {
 		maxContentSize: 10_000_000,
-		maxContentSizeHumanReadable: "10 MB",
 		maxContentItemsPerAlbum: photos,
 		maxVideosPerAlbum: videos,
 	};

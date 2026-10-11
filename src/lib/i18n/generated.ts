@@ -363,6 +363,17 @@ export interface Messages {
 	"media.album.tile.a11y.containsVideo": undefined;
 	"media.album.tile.shared": undefined;
 	"media.album.untitled": undefined;
+	"media.albums.new.errors.albumLimit": undefined;
+	"media.albums.new.errors.createFailed": undefined;
+	"media.albums.uploads.addedReopen": undefined;
+	"media.albums.uploads.errors.addFailed": undefined;
+	"media.albums.uploads.errors.addPhotoFailed": undefined;
+	"media.albums.uploads.errors.addVideoFailed": undefined;
+	"media.albums.uploads.errors.albumFull": undefined;
+	"media.albums.uploads.errors.leftOut": { count: number };
+	"media.albums.uploads.errors.photosFull": { count: number };
+	"media.albums.uploads.errors.videoLimit": { count: number };
+	"media.albums.uploads.errors.videosFull": { count: number };
 	"media.grid.a11y.maxSelected": { count: number };
 	"media.lightbox.errors.loadFailed": undefined;
 	"media.lightbox.errors.playFailed": undefined;

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const mediaFile = vi.hoisted(() => ({ inspectMediaFile: vi.fn() }));
@@ -15,6 +15,8 @@ vi.mock("$lib/platform/media-file", async (importOriginal) => ({
 vi.mock("$lib/platform/media-picker", () => picker);
 vi.mock("svelte-sonner", () => sonner);
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { addAlbumMedia, pickInspectedAlbumMedia } from "./add-album-media";
@@ -22,7 +24,6 @@ import type { AlbumUploads } from "./album-uploads-state.svelte";
 
 const limits = {
 	maxContentSize: 125829120,
-	maxContentSizeHumanReadable: "120.00 MB",
 	maxContentItemsPerAlbum: 10,
 	maxVideosPerAlbum: 1,
 };
@@ -74,6 +75,10 @@ beforeEach(() => {
 	picker.pickMultipleMedia.mockResolvedValue(picked);
 });
 
+afterEach(async () => {
+	await setLocale({ locale: SOURCE_LOCALE });
+});
+
 describe("picking media for an album", () => {
 	it("offers only the kinds the album has room for", async () => {
 		await pickInspectedAlbumMedia({ room: { photos: true, videos: true } });
@@ -117,7 +122,7 @@ describe("picking media for an album", () => {
 			},
 		]);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
+			"That file isn’t a photo or video",
 		);
 	});
 
@@ -130,7 +135,7 @@ describe("picking media for an album", () => {
 			}),
 		).toEqual([]);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
+			"That file isn’t a photo or video",
 		);
 	});
 });
@@ -237,6 +242,35 @@ describe("adding media to an album", () => {
 		);
 	});
 
+	it("names a video limit above one in the plural", async () => {
+		api.getAlbumStorageLimits.mockResolvedValue({
+			...limits,
+			maxVideosPerAlbum: 2,
+		});
+		store.enqueue.mockReturnValue({ leftOutFull: 0, leftOutVideoSlot: 1 });
+
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
+
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"You can have 2 videos in your album. Remove one to add another.",
+		);
+	});
+
+	it("words the video limit in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+		api.getAlbumStorageLimits.mockResolvedValue({
+			...limits,
+			maxVideosPerAlbum: 2,
+		});
+		store.enqueue.mockReturnValue({ leftOutFull: 0, leftOutVideoSlot: 1 });
+
+		await addAlbumMedia({ uploads, albumId: 903, content: () => [] });
+
+		const [message] = sonner.toast.error.mock.calls.at(-1) ?? [];
+		expect(message).toMatch(PSEUDO_MESSAGE);
+		expect(message).toContain(" 2 ");
+	});
+
 	it("counts what the album holds once the picker closes", async () => {
 		let content: AlbumContent[] = [];
 		picker.pickMultipleMedia.mockImplementation(() => {
@@ -264,7 +298,7 @@ describe("adding media to an album", () => {
 		expect(store.enqueue).not.toHaveBeenCalled();
 		expect(sonner.toast.error).toHaveBeenCalledTimes(1);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
+			"That file isn’t a photo or video",
 		);
 	});
 
@@ -291,7 +325,7 @@ describe("adding media to an album", () => {
 
 		expect(picker.pickMultipleMedia).not.toHaveBeenCalled();
 		expect(errorToast.showErrorToast).toHaveBeenCalledWith({
-			label: "Couldn't add to album",
+			label: "Couldn’t add to album",
 			error,
 		});
 	});

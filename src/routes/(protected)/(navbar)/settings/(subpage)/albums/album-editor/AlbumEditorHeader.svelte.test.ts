@@ -15,7 +15,6 @@ import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
 
 const limits: UploadLimits = {
 	maxContentSize: 10_000_000,
-	maxContentSizeHumanReadable: "10 MB",
 	maxContentItemsPerAlbum: 10,
 	maxVideosPerAlbum: 1,
 };

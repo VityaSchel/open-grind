@@ -3,6 +3,7 @@ import { toast } from "svelte-sonner";
 import { showErrorToast } from "$lib/api/error-toast";
 import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
 import { type AlbumRoom, albumRoom } from "$lib/components/album/album";
+import { t } from "$lib/i18n";
 import {
 	inspectMediaFile,
 	type MediaFileInspection,
@@ -20,9 +21,6 @@ import {
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
 
-const UNSUPPORTED_MESSAGE = "That file isn't a photo or video";
-const ALBUM_FULL_MESSAGE = "The album is full. Remove something to add more.";
-
 function isUploadable(
 	inspection: MediaFileInspection,
 ): inspection is InspectedPick["inspection"] {
@@ -34,7 +32,7 @@ async function inspectPicks(picked: PickedMedia[]): Promise<InspectedPick[]> {
 	for (const media of picked) {
 		const inspection = await inspectMediaFile(media).catch(() => null);
 		if (inspection === null || !isUploadable(inspection)) {
-			toast.error(UNSUPPORTED_MESSAGE);
+			toast.error(t("common.media.errors.unsupportedFile"));
 			continue;
 		}
 		inspected.push({ media, inspection });
@@ -59,11 +57,6 @@ export async function pickInspectedAlbumMedia({
 	return await inspectPicks(await pickMultipleMedia(kind));
 }
 
-function videoLimitMessage(maxVideosPerAlbum: number): string {
-	const noun = maxVideosPerAlbum === 1 ? "video" : "videos";
-	return `You can have ${maxVideosPerAlbum} ${noun} in your album. Remove one to add another.`;
-}
-
 export function enqueueAlbumMedia({
 	uploads,
 	albumId,
@@ -84,9 +77,15 @@ export function enqueueAlbumMedia({
 		content,
 	});
 	if (leftOutVideoSlot > 0)
-		toast.error(videoLimitMessage(limits.maxVideosPerAlbum));
+		toast.error(
+			t("media.albums.uploads.errors.videoLimit", {
+				count: limits.maxVideosPerAlbum,
+			}),
+		);
 	if (leftOutFull > 0)
-		toast.error(`${leftOutFull} left out, the album is full`);
+		toast.error(
+			t("media.albums.uploads.errors.leftOut", { count: leftOutFull }),
+		);
 }
 
 export async function addAlbumMedia({
@@ -106,7 +105,7 @@ export async function addAlbumMedia({
 			limits,
 		});
 		if (!room.photos && !room.videos) {
-			toast.error(ALBUM_FULL_MESSAGE);
+			toast.error(t("media.albums.uploads.errors.albumFull"));
 			return;
 		}
 		const inspected = await pickInspectedAlbumMedia({ room });
@@ -120,7 +119,10 @@ export async function addAlbumMedia({
 		});
 	} catch (error) {
 		console.error(error);
-		showErrorToast({ label: "Couldn't add to album", error });
+		showErrorToast({
+			label: t("media.albums.uploads.errors.addFailed"),
+			error,
+		});
 	}
 }
 
@@ -141,9 +143,12 @@ export async function addPreviousUploads({
 	} catch (error) {
 		console.error(error);
 		if (isPlanLimitReached(error)) {
-			toast.error(ALBUM_FULL_MESSAGE);
+			toast.error(t("media.albums.uploads.errors.albumFull"));
 		} else {
-			showErrorToast({ label: "Couldn't add to album", error });
+			showErrorToast({
+				label: t("media.albums.uploads.errors.addFailed"),
+				error,
+			});
 		}
 		return false;
 	}

@@ -86,5 +86,30 @@
 			"video": "Videos",
 			"media": "Media"
 		}
+	},
+	"albums": {
+		"new": {
+			"errors": {
+				"albumLimit": "You can’t create more albums",
+				"createFailed": "Couldn’t create album"
+			}
+		},
+		"uploads": {
+			"addedReopen": "Added. Reopen the album to see it",
+			"errors": {
+				"albumFull": "The album is full. Remove something to add more.",
+				"videoLimit_one": "You can have {{count}} video in your album. Remove one to add another.",
+				"videoLimit_other": "You can have {{count}} videos in your album. Remove one to add another.",
+				"leftOut_one": "{{count}} left out, the album is full",
+				"leftOut_other": "{{count}} left out, the album is full",
+				"addFailed": "Couldn’t add to album",
+				"photosFull_one": "This album already holds {{count}} photo",
+				"photosFull_other": "This album already holds {{count}} photos",
+				"videosFull_one": "This album already holds {{count}} video",
+				"videosFull_other": "This album already holds {{count}} videos",
+				"addPhotoFailed": "Couldn’t add photo",
+				"addVideoFailed": "Couldn’t add video"
+			}
+		}
 	}
 }

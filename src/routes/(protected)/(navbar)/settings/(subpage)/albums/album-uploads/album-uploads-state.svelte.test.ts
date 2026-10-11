@@ -2,14 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { ApiError } from "$lib/api/api-error";
-import type { AlbumContent } from "$lib/model/messaging/albums";
-import type { PickedMedia } from "$lib/platform/media-picker";
+import { getAlbumUploads } from "./album-uploads-state.svelte";
 import {
-	type AlbumUploads,
-	getAlbumUploads,
-	type InspectedPick,
-	type UploadLimits,
-} from "./album-uploads-state.svelte";
+	ALBUM_ID,
+	albumItem,
+	albumWith,
+	draftSpy,
+	enqueue,
+	httpError,
+	limits,
+	OUR_PROFILE_ID,
+	pick,
+	videoItem,
+} from "./album-uploads-test-helpers";
 
 const { toastError, toastSuccess } = vi.hoisted(() => ({
 	toastError: vi.fn(),
@@ -42,71 +47,6 @@ const { forgetAlbumSlides } =
 	await import("$lib/components/album/album-lightbox");
 
 vi.spyOn(console, "error").mockImplementation(() => undefined);
-
-const ALBUM_ID = 4;
-
-const OUR_PROFILE_ID = 11;
-
-const limits: UploadLimits = {
-	maxContentSize: 125_829_120,
-	maxContentSizeHumanReadable: "120 MB",
-	maxContentItemsPerAlbum: 3,
-	maxVideosPerAlbum: 1,
-};
-
-function media(key: string, mimeType: string): PickedMedia {
-	return { key, mimeType, source: "desktop", path: `/tmp/${key}` };
-}
-
-function pick(key: string, mimeType: string): InspectedPick {
-	const kind = mimeType.startsWith("video/") ? "video" : "photo";
-	return { media: media(key, mimeType), inspection: { kind, size: 1024 } };
-}
-
-function albumItem(contentId: number, contentHash?: string): AlbumContent {
-	return {
-		contentId,
-		contentType: "image/jpeg",
-		coverUrl: null,
-		statusId: 1,
-		thumbUrl: "https://example.invalid/thumb.jpg",
-		url: "https://example.invalid/full.jpg",
-		processing: false,
-		rejectionId: null,
-		...(contentHash === undefined ? {} : { contentHash }),
-	};
-}
-
-function videoItem(contentId: number, processing: boolean): AlbumContent {
-	return {
-		...albumItem(contentId),
-		contentType: "video/mp4",
-		processing,
-		statusId: processing ? 3 : 1,
-	};
-}
-
-function albumWith(...content: AlbumContent[]) {
-	return { content } as unknown as Awaited<
-		ReturnType<typeof getAlbumContent>
-	>;
-}
-
-function httpError(status: number): ApiError {
-	return new ApiError({
-		message: `HTTP ${status}`,
-		request: { method: "POST", path: "/v1/albums" },
-		response: { status, body: "" },
-	});
-}
-
-function enqueue(uploads: AlbumUploads, ...inspected: InspectedPick[]) {
-	uploads.enqueue({ albumId: ALBUM_ID, inspected, limits, content: [] });
-}
-
-function draftSpy() {
-	return { land: vi.fn(), replace: vi.fn(), forget: vi.fn() };
-}
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -366,7 +306,7 @@ describe("album uploads", () => {
 			await vi.advanceTimersByTimeAsync(60_000);
 
 			expect(draft.land).not.toHaveBeenCalled();
-			expect(toastError).toHaveBeenCalledWith("Couldn't add photo");
+			expect(toastError).toHaveBeenCalledWith("Couldn’t add photo");
 		} finally {
 			vi.useRealTimers();
 		}
@@ -381,7 +321,7 @@ describe("album uploads", () => {
 			enqueue(uploads, pick("a", "video/mp4"));
 			await vi.advanceTimersByTimeAsync(60_000);
 
-			expect(toastError).toHaveBeenCalledWith("Couldn't add video");
+			expect(toastError).toHaveBeenCalledWith("Couldn’t add video");
 		} finally {
 			vi.useRealTimers();
 		}
@@ -404,75 +344,6 @@ describe("album uploads", () => {
 		} finally {
 			vi.useRealTimers();
 		}
-	});
-
-	it("stops uploading a kind the album has no room for", async () => {
-		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(402));
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
-		await vi.waitFor(() =>
-			expect(uploads.hasPending(ALBUM_ID)).toBe(false),
-		);
-
-		expect(uploadAlbumContent).toHaveBeenCalledTimes(1);
-		expect(toastError).toHaveBeenCalledWith(
-			"This album already holds 3 photos",
-		);
-	});
-
-	it("keeps uploading a queued video after the album refuses a photo", async () => {
-		vi.mocked(uploadAlbumContent)
-			.mockRejectedValueOnce(httpError(402))
-			.mockReturnValue(new Promise(() => {}));
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "image/jpeg"));
-		enqueue(uploads, pick("b", "video/mp4"));
-		await vi.waitFor(() =>
-			expect(uploadAlbumContent).toHaveBeenCalledTimes(2),
-		);
-
-		expect(vi.mocked(uploadAlbumContent).mock.calls[1]?.[0]).toMatchObject({
-			inspection: { kind: "video" },
-		});
-		expect(toastError).toHaveBeenCalledWith(
-			"This album already holds 3 photos",
-		);
-	});
-
-	it("names a one-video limit in the singular", async () => {
-		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(402));
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "video/mp4"));
-		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
-
-		expect(toastError).toHaveBeenCalledWith(
-			"This album already holds 1 video",
-		);
-	});
-
-	it("reports a refused upload without reconciling", async () => {
-		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(400));
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "image/jpeg"));
-		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
-
-		expect(toastError).toHaveBeenCalledWith("Couldn't add photo");
-		expect(getMyAlbums).not.toHaveBeenCalled();
-	});
-
-	it("names the size limit when the server refuses the body", async () => {
-		vi.mocked(uploadAlbumContent).mockRejectedValue(httpError(413));
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "image/jpeg"));
-		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
-
-		expect(toastError).toHaveBeenCalledWith("Larger than the 120 MB limit");
-		expect(getMyAlbums).not.toHaveBeenCalled();
 	});
 
 	it("stops uploading once the signed-in account changes", async () => {
@@ -549,23 +420,6 @@ describe("album uploads", () => {
 			expect(toastError).not.toHaveBeenCalled();
 		},
 	);
-
-	it("names the size limit when the backend refuses the file as too large", async () => {
-		vi.mocked(uploadAlbumContent).mockRejectedValue(
-			new ApiError({
-				message: "Too large",
-				request: { method: "POST", path: "/v1/albums" },
-				kind: "ContentTooLarge",
-			}),
-		);
-		const uploads = getAlbumUploads(OUR_PROFILE_ID);
-
-		enqueue(uploads, pick("a", "video/mp4"));
-		await vi.waitFor(() => expect(toastError).toHaveBeenCalled());
-
-		expect(toastError).toHaveBeenCalledWith("Larger than the 120 MB limit");
-		expect(getMyAlbums).not.toHaveBeenCalled();
-	});
 
 	it("replaces a video the server finished processing", async () => {
 		vi.useFakeTimers();

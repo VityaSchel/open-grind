@@ -13,6 +13,9 @@ import {
 import { errorKindOf, uploadRefusalMessage } from "$lib/api/methods";
 import { albumMediaCounts } from "$lib/components/album/album";
 import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
+import { t } from "$lib/i18n";
+import { formatNumber } from "$lib/i18n/format";
+import { BYTES_PER_MEGABYTE } from "$lib/util/bytes";
 import { delay } from "$lib/util/delay";
 import { Generation } from "$lib/util/generation";
 import type {
@@ -42,10 +45,7 @@ type UploadLanding = {
 
 export type UploadLimits = Pick<
 	AlbumStorageLimits,
-	| "maxContentSize"
-	| "maxContentSizeHumanReadable"
-	| "maxContentItemsPerAlbum"
-	| "maxVideosPerAlbum"
+	"maxContentSize" | "maxContentItemsPerAlbum" | "maxVideosPerAlbum"
 >;
 
 type QueuedUpload = InspectedPick & { albumId: number; limits: UploadLimits };
@@ -57,8 +57,6 @@ const RECONCILE_ATTEMPTS = 12;
 const PROCESSING_INTERVAL_MS = 2_500;
 
 const PROCESSING_ATTEMPTS = 120;
-
-const LOST_READ_MESSAGE = "Added. Reopen the album to see it";
 
 export function isPlanLimitReached(error: unknown): boolean {
 	return httpStatusOf(error) === 402;
@@ -77,16 +75,19 @@ function isRefusal(error: unknown): boolean {
 }
 
 function outOfRoomMessage({ inspection, limits }: QueuedUpload): string {
-	const count =
-		inspection.kind === "video"
-			? limits.maxVideosPerAlbum
-			: limits.maxContentItemsPerAlbum;
-	const noun = inspection.kind === "video" ? "video" : "photo";
-	return `This album already holds ${count} ${noun}${count === 1 ? "" : "s"}`;
+	return inspection.kind === "video"
+		? t("media.albums.uploads.errors.videosFull", {
+				count: limits.maxVideosPerAlbum,
+			})
+		: t("media.albums.uploads.errors.photosFull", {
+				count: limits.maxContentItemsPerAlbum,
+			});
 }
 
 function failureMessage(kind: UploadKind): string {
-	return kind === "video" ? "Couldn't add video" : "Couldn't add photo";
+	return kind === "video"
+		? t("media.albums.uploads.errors.addVideoFailed")
+		: t("media.albums.uploads.errors.addPhotoFailed");
 }
 
 class AlbumUploadsState {
@@ -317,7 +318,10 @@ class AlbumUploadsState {
 		toast.error(
 			uploadRefusalMessage({
 				error,
-				limitLabel: entry.limits.maxContentSizeHumanReadable,
+				limitLabel: formatNumber({
+					value: entry.limits.maxContentSize / BYTES_PER_MEGABYTE,
+					preset: "sizeMegabytes",
+				}),
 			}) ?? failureMessage(entry.inspection.kind),
 		);
 	}
@@ -377,7 +381,7 @@ class AlbumUploadsState {
 		const content = await this.#readContent(albumId);
 		if (this.#generation.isStale(generation)) return;
 		if (content === null) {
-			toast.success(LOST_READ_MESSAGE);
+			toast.success(t("media.albums.uploads.addedReopen"));
 			return;
 		}
 		const draft = this.#drafts.get(albumId);
@@ -405,7 +409,7 @@ class AlbumUploadsState {
 		const content = await this.#readContent(albumId);
 		if (this.#generation.isStale(generation)) return;
 		if (content === null) {
-			toast.success(LOST_READ_MESSAGE);
+			toast.success(t("media.albums.uploads.addedReopen"));
 			return;
 		}
 		const item = content.find((present) => present.contentId === contentId);

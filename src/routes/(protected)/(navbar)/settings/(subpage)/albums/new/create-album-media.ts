@@ -4,6 +4,7 @@ import { toast } from "svelte-sonner";
 import { showErrorToast } from "$lib/api/error-toast";
 import { createAlbum, getAlbumStorageLimits } from "$lib/api/messaging/albums";
 import { albumRoom } from "$lib/components/album/album";
+import { t } from "$lib/i18n";
 import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 import {
 	enqueueAlbumMedia,
@@ -13,8 +14,6 @@ import {
 	type AlbumUploads,
 	isPlanLimitReached,
 } from "../album-uploads/album-uploads-state.svelte";
-
-const ALBUM_LIMIT_MESSAGE = "You can't create more albums";
 
 export async function createAlbumFromMedia({
 	uploads,
@@ -38,9 +37,12 @@ export async function createAlbumFromMedia({
 	} catch (error) {
 		console.error(error);
 		if (isPlanLimitReached(error)) {
-			toast.error(ALBUM_LIMIT_MESSAGE);
+			toast.error(t("media.albums.new.errors.albumLimit"));
 			return;
 		}
-		showErrorToast({ label: "Couldn't create album", error });
+		showErrorToast({
+			label: t("media.albums.new.errors.createFailed"),
+			error,
+		});
 	}
 }
