@@ -42,6 +42,7 @@
 	let media = $state<DrawerMedia[] | null>(null);
 	let error = $state<unknown>(null);
 	let uploadingCount = $state(0);
+	let picking = false;
 
 	async function load() {
 		media = null;
@@ -71,6 +72,8 @@
 	}
 
 	async function addMedia() {
+		if (picking) return;
+		picking = true;
 		let picked;
 		try {
 			picked = await pickMultipleMedia("media");
@@ -80,6 +83,8 @@
 				t("chat.composer.attachments.media.errors.openPickerFailed"),
 			);
 			return;
+		} finally {
+			picking = false;
 		}
 		if (picked.length === 0) return;
 

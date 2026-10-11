@@ -28,6 +28,8 @@ const failures = new WeakMap<object, Failure>();
 
 const CODECS_GUIDE = "https://opengrind.org/guides/codecs";
 
+const LAYOUT_UNIT_PX = 1 / 64;
+
 const buttonTitleKeys = {
 	close: "common.actions.close",
 	zoom: "media.lightbox.zoom",
@@ -156,9 +158,26 @@ export function applyPhotoSwipeLabels(lightbox: PhotoSwipeLightbox): void {
 	});
 }
 
+function wholePixelsCovering(length: number): number {
+	return Math.ceil(length - LAYOUT_UNIT_PX);
+}
+
 export function applyPhotoSwipeViewportSync(
 	lightbox: PhotoSwipeLightbox,
 ): void {
+	lightbox.options.getViewportSizeFn = () => {
+		const root = lightbox.pswp?.element;
+		if (root === undefined)
+			return {
+				x: document.documentElement.clientWidth,
+				y: window.innerHeight,
+			};
+		const { width, height } = root.getBoundingClientRect();
+		return {
+			x: wholePixelsCovering(width),
+			y: wholePixelsCovering(height),
+		};
+	};
 	lightbox.on("openingAnimationEnd", () => {
 		lightbox.pswp?.updateSize(true);
 	});

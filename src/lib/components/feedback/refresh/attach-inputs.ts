@@ -16,6 +16,7 @@ import {
 	chainAllowsPull,
 	type PullPosition,
 } from "./scroll-chain";
+import { edgeGap } from "./scroll-geometry";
 import { attachTouchPull } from "./touch-adapter";
 
 const TRACKPAD_TAIL_MS = 100;
@@ -73,6 +74,9 @@ export function attachPullInputs(
 		else if (shouldConceal()) restingButton.shown = false;
 	};
 
+	const cannotScroll = () =>
+		edgeGap(target.scrollHeight - target.clientHeight) === 0;
+
 	const onWheel = (event: WheelEvent) => {
 		// A wheel that is not vertical-dominant is no attempt to pull; the swipe
 		// gesture cancels such wheels, and probing on their vertical crumbs
@@ -80,6 +84,8 @@ export function attachPullInputs(
 		if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
 		if (trackpadScrolling()) return;
 		const toward = position === "top" ? -event.deltaY : event.deltaY;
+		if (toward < 0 && !model.gestureActive && cannotScroll())
+			restingButton.withdraw();
 		if (toward <= 0 || boundaryDistance() >= AT_BOUNDARY_PX) return;
 		restingButton.probePointer();
 	};

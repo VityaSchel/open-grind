@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import {
 	ageRange,
+	buildGenderOptions,
+	buildTagOptions,
 	fieldLimits,
 	heightCmRange,
 	heightInchOptions,
@@ -68,5 +70,75 @@ describe("profile edit options", () => {
 		await setLocale({ locale: SOURCE_LOCALE });
 		expect(tribeOptions[0]?.label).toBe("Bear");
 		expect(positionOptions[0]?.label).toBe("Top");
+	});
+
+	it("lists the primary genders first, then by profile sort position", () => {
+		const { options } = buildGenderOptions([
+			{ genderId: 0, gender: "-", displayGroup: 0 },
+			{
+				genderId: 62,
+				gender: "Ask Me",
+				displayGroup: 2,
+				sortProfile: 16,
+			},
+			{
+				genderId: 10,
+				gender: "Agender",
+				displayGroup: 2,
+				sortProfile: 1,
+			},
+			{ genderId: 3, gender: "Non-Binary", displayGroup: 1 },
+			{ genderId: 2, gender: "Woman", displayGroup: 1 },
+			{ genderId: 4, gender: "Cis Man", displayGroup: 1 },
+			{ genderId: 1, gender: "Man", displayGroup: 1 },
+		]);
+
+		expect(options.map((option) => option.label)).toEqual([
+			"Man",
+			"Cis Man",
+			"Woman",
+			"Non-Binary",
+			"Agender",
+			"Ask Me",
+		]);
+	});
+});
+
+describe("buildTagOptions", () => {
+	const tags = [
+		{
+			language: "en",
+			categoryCollection: [
+				{
+					text: "Identity",
+					possessiveText: null,
+					tags: [
+						{ tagId: 1, key: "ftm", text: "FTM" },
+						{ tagId: 2, key: "hiking", text: "Hiking" },
+						{ tagId: 3, key: "mtf", text: "MTF" },
+					],
+				},
+			],
+		},
+	];
+
+	it("offers only the tags it is told to and still labels the rest", () => {
+		const { options, resolveLabel } = buildTagOptions({
+			tags,
+			isOffered: (key) => key === "hiking",
+		});
+
+		expect(options.map(({ value }) => value)).toEqual(["hiking"]);
+		expect(resolveLabel("ftm")).toBe("FTM");
+	});
+
+	it("sorts the offered tags by their text", () => {
+		const { options } = buildTagOptions({ tags, isOffered: () => true });
+
+		expect(options.map(({ label }) => label)).toEqual([
+			"FTM",
+			"Hiking",
+			"MTF",
+		]);
 	});
 });

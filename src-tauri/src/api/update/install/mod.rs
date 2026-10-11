@@ -1062,6 +1062,9 @@ mod pins {
 				"Untrusted" => {
 					("ERROR_UNTRUSTED", RecaptchaError::AddonUntrusted)
 				}
+				"Hidden" | "TurnedOff" | "Outdated" => {
+					("ERROR_UNAVAILABLE", RecaptchaError::AddonUnavailable)
+				}
 				unknown => panic!(
 					"AddonGate.Verdict.{unknown} has no reCAPTCHA reason"
 				),

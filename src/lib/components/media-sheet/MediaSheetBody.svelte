@@ -66,7 +66,7 @@
 	<div
 		data-slot="sheet-panel"
 		class={[
-			"rounded-t-4xl border border-border bg-popover px-4 pb-20 shadow-xl",
+			"flow-root rounded-t-4xl bg-popover px-4 pb-20 shadow-xl ring-1 ring-border ring-inset",
 			{ "min-h-full": fullsize },
 		]}
 	>

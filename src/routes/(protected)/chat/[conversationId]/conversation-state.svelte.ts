@@ -9,7 +9,10 @@ import {
 	sendMessage,
 } from "$lib/api/messaging/messages";
 import { getPreferences } from "$lib/app-data/preferences.svelte";
-import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+import {
+	offerEntitlementBypass,
+	reportRefusedDespiteBypass,
+} from "$lib/entitlements/bypass.svelte";
 import { t } from "$lib/i18n";
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import { reconciler } from "$lib/util/reconcile";
@@ -428,10 +431,13 @@ export class ConversationState {
 				delivery.message.type === "ExpiringImage" &&
 				urn === "urn:gr:err:entitlement_limit"
 			) {
-				offerEntitlementBypass({
+				const lease = await offerEntitlementBypass({
 					reason: "chat.conversation.bypassReason.expiringPhotoLimit",
-					retry: () => this.#attemptSend(delivery),
 				});
+				if (lease === null) return;
+				await this.#attemptSend(delivery)
+					.catch(reportRefusedDespiteBypass)
+					.finally(lease.release);
 			}
 		}
 	}

@@ -108,6 +108,10 @@ export default defineConfig({
 							text: "Notifications",
 							link: "/guides/notifications",
 						},
+						{
+							text: "Blocking and hiding",
+							link: "/guides/blocking-and-hiding-profiles",
+						},
 						{ text: "FAQ", link: "/guides/faq" },
 						{
 							text: "Grindr API bypasses",

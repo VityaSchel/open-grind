@@ -15,7 +15,7 @@
 	let gridElement: HTMLElement | null = $state(null);
 
 	const pendingSkeletons = $derived(
-		gridState.loadingMore ? PAGE_SKELETONS : 0,
+		gridState.paging.running ? PAGE_SKELETONS : 0,
 	);
 	const view = virtualGrid({
 		grid: () => gridElement,
@@ -101,17 +101,27 @@
 		{/if}
 	</div>
 	<div role="status" class="sr-only">
-		{#if gridState.loadingMore}
-			{t("browse.grid.a11y.loadingMore")}
-		{/if}
+		{gridState.paging.running
+			? t("browse.grid.a11y.loadingMore")
+			: gridState.paging.failure
+				? t("browse.grid.errors.loadMoreFailed")
+				: ""}
 	</div>
 	{#if gridState.nextPage !== 0 && gridState.nextPage !== null}
-		<div
-			class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
-			use:observeIntersection={{
-				handle: () => gridState.loadMore(),
-				rootMargin: "400px",
-			}}
-		></div>
+		{#if gridState.paging.failure}
+			<ApiErrorDisplay
+				error={gridState.paging.failure}
+				onRetry={() => gridState.paging.retry()}
+			/>
+		{/if}
+		{#key gridState.paging.armToken}
+			<div
+				class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+				use:observeIntersection={{
+					handle: () => gridState.paging.run(),
+					rootMargin: "400px",
+				}}
+			></div>
+		{/key}
 	{/if}
 </div>

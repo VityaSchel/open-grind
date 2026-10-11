@@ -401,6 +401,25 @@ describe("demo route data matches the real schemas", () => {
 		).toBe(true);
 	});
 
+	it("lists hides out of the order they were hidden in, like Grindr", () => {
+		const hiddenIds = [100901, 100902, 100903];
+		const listedIds = () =>
+			(
+				route("/v1/hides") as { hides: { profileId: number }[] }
+			).hides.map(({ profileId }) => profileId);
+
+		for (const profileId of hiddenIds)
+			route(`/v1/me/hides/${profileId}`, "POST");
+		const listed = listedIds();
+		for (const profileId of hiddenIds)
+			route(`/v1/hides/${profileId}`, "DELETE");
+
+		expect(listed.toSorted((a, b) => a - b)).toEqual(hiddenIds);
+		expect(listed).not.toEqual(hiddenIds);
+		expect(listed).not.toEqual(hiddenIds.toReversed());
+		expect(listedIds()).toEqual([]);
+	});
+
 	it("keeps every conversation peer's profile favorite in agreement with its row", () => {
 		const body = route("/v4/inbox?page=1", "POST") as {
 			entries: unknown[];

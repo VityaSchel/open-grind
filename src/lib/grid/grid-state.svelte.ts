@@ -3,6 +3,10 @@ import type z from "zod";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import { showErrorToast } from "$lib/api/error-toast";
+import {
+	genderFilterFlag,
+	refreshFeatureFlags,
+} from "$lib/api/feature-flags-state.svelte";
 import { onProfileViewabilityChange } from "$lib/api/users/profile-viewability";
 import { onProfileEdit } from "$lib/api/users/profiles";
 import {
@@ -11,7 +15,9 @@ import {
 } from "$lib/app-data/preferences.svelte";
 import { t } from "$lib/i18n";
 import { autoLocation } from "$lib/location/auto-location";
+import { Generation } from "$lib/util/generation";
 import { reconciler } from "$lib/util/reconcile";
+import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import type { cascadeV4QuerySchema } from "$lib/model/browse/grid/cascade/query/v4";
 import {
 	getCachedProfile,
@@ -30,7 +36,10 @@ class GridState {
 	items: GridProfile[] = $state.raw([]);
 	readonly profiles: GridProfile[] = $derived(dedupeGridProfiles(this.items));
 	nextPage: number | null = $state(0);
-	loadingMore = $state(false);
+	readonly paging = new SentinelPaging({
+		loadPage: (page) => this.#loadPage(page),
+		cursor: () => this.nextPage || null,
+	});
 	loading = $state(false);
 	refreshing = $state(false);
 	error: Error | null = $state(null);
@@ -47,7 +56,8 @@ class GridState {
 	#retargeted: string | null = null;
 	#resolvingIds = new Set<number>();
 	#firstPageIds = new Set<number>();
-	#fetchToken = 0;
+	#generation = new Generation();
+	#startOverListeners = new Set<() => void>();
 	#indexById = $derived(indexProfilesById(this.profiles));
 
 	indexInProfiles(profileId: number): number {
@@ -85,21 +95,33 @@ class GridState {
 		this.items = this.items.filter((item) => item.id !== profileId);
 	}
 
+	onStartOver(listener: () => void): () => void {
+		this.#startOverListeners.add(listener);
+		return () => {
+			this.#startOverListeners.delete(listener);
+		};
+	}
+
 	load(geohash: string): void {
 		if (untrack(() => this.#retargeted === geohash)) return;
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
 			return;
 		this.#geohash = geohash;
-		this.#reset();
-		this.scrollY = 0;
-		void this.#fetchProfiles(geohash);
+		this.#startOver(geohash);
 	}
 
 	retry(): void {
 		if (!this.#geohash) return;
+		this.#startOver(this.#geohash);
+	}
+
+	#startOver(geohash: string): void {
 		this.#reset();
 		this.scrollY = 0;
-		void this.#fetchProfiles(this.#geohash);
+		untrack(() => {
+			for (const listener of this.#startOverListeners) listener();
+		});
+		void this.#fetchProfiles(geohash);
 	}
 
 	async refresh({
@@ -125,7 +147,6 @@ class GridState {
 	#reset(): void {
 		this.items = [];
 		this.nextPage = 0;
-		this.loadingMore = false;
 		this.loading = true;
 		this.error = null;
 		this.currentQuery = null;
@@ -135,7 +156,7 @@ class GridState {
 	}
 
 	reset(): void {
-		this.#fetchToken += 1;
+		this.#generation.next();
 		this.#reset();
 		this.loading = false;
 		this.refreshing = false;
@@ -145,39 +166,32 @@ class GridState {
 		this.filters.reset();
 	}
 
-	async loadMore(): Promise<void> {
-		if (this.loadingMore || !this.nextPage || !this.currentQuery) return;
-		this.loadingMore = true;
-		const token = this.#fetchToken;
+	async #loadPage(page: number): Promise<void> {
+		const generation = this.#generation.current;
 		const query = this.currentQuery;
-		try {
-			const result = await getGrid({
-				...query,
-				pageNumber: this.nextPage,
-			});
-			if (token !== this.#fetchToken || query !== this.currentQuery)
-				return;
-			const loadedIds = new Set(this.items.map((item) => item.id));
-			this.items = [
-				...this.items,
-				...result.items.filter((item) => !loadedIds.has(item.id)),
-			];
-			this.nextPage = result.nextPage;
-		} catch (error) {
-			console.error(error);
-			showErrorToast({
-				label: t("browse.grid.errors.loadMoreFailed"),
-				error,
-			});
-		} finally {
-			this.loadingMore = false;
-		}
+		if (query === null) return;
+		const isCurrent = () =>
+			!this.#generation.isStale(generation) &&
+			query === this.currentQuery;
+		const result = await getGrid({ ...query, pageNumber: page }).catch(
+			(error: unknown) => {
+				if (isCurrent()) throw error;
+				return null;
+			},
+		);
+		if (result === null || !isCurrent()) return;
+		const loadedIds = new Set(this.items.map((item) => item.id));
+		this.items = [
+			...this.items,
+			...result.items.filter((item) => !loadedIds.has(item.id)),
+		];
+		this.nextPage = result.nextPage;
 	}
 
 	async resolveProfile(id: number): Promise<void> {
 		if (this.#resolvingIds.has(id)) return;
 		this.#resolvingIds.add(id);
-		const token = this.#fetchToken;
+		const generation = this.#generation.current;
 		try {
 			const item = this.items.find((i) => i.id === id);
 			if (!item || item.type !== "lazy") return;
@@ -190,7 +204,7 @@ class GridState {
 			}
 
 			const resolved = await resolveLazyProfile(item);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const idx = this.items.findIndex((i) => i.id === id);
 			if (idx === -1) return;
 			if (resolved) {
@@ -212,13 +226,14 @@ class GridState {
 
 	async #withLiveLocation(
 		geohash: string,
-		token: number,
+		generation: number,
 		background: boolean,
 	): Promise<string> {
 		const resolved = await autoLocation.resolveGeohash(geohash, {
 			background,
 		});
-		if (token !== this.#fetchToken || resolved === geohash) return geohash;
+		if (this.#generation.isStale(generation) || resolved === geohash)
+			return geohash;
 		this.#geohash = resolved;
 		this.#retargeted = resolved;
 		setPreferences({ geohash: resolved }).catch((error: unknown) =>
@@ -236,28 +251,30 @@ class GridState {
 			keepLoadedPages?: boolean;
 		},
 	): Promise<void> {
-		const token = ++this.#fetchToken;
+		const generation = this.#generation.next();
 		this.#retargeted = null;
 		try {
 			await this.filters.ready;
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const [geohash] = await Promise.all([
 				(opts?.sampleLocation ?? true)
 					? this.#withLiveLocation(
 							requestedGeohash,
-							token,
+							generation,
 							opts?.background ?? false,
 						)
 					: requestedGeohash,
 				this.filters.resolveTagKeys(),
+				refreshFeatureFlags(),
 			]);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			const query = buildCascadeQuery({
 				geohash,
 				filters: this.filters.value,
+				genderFilterFlag: genderFilterFlag(),
 			});
 			const result = await getGrid(query);
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			this.currentQuery = query;
 			this.#resolvingIds.clear();
 			const firstPageIds = new Set(result.items.map((item) => item.id));
@@ -272,10 +289,11 @@ class GridState {
 			this.#firstPageIds = firstPageIds;
 			this.items = [...result.items, ...laterPages];
 			if (laterPages.length === 0) this.nextPage = result.nextPage;
+			this.paging.rearm();
 			this.error = null;
 			this.loading = false;
 		} catch (err) {
-			if (token !== this.#fetchToken) return;
+			if (this.#generation.isStale(generation)) return;
 			console.error(err);
 			this.loading = false;
 			if (opts?.background) return;

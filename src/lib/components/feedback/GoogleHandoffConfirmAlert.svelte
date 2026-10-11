@@ -7,11 +7,17 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { t } from "$lib/i18n";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	const switching = $derived(googleHandoffState.phase === "switchingAccount");
 	const open = $derived(
 		switching || googleHandoffState.phase === "confirmingSwitch",
 	);
+
+	dismissOnBackGesture({
+		active: () => open,
+		dismiss: () => answerAccountSwitch(false),
+	});
 </script>
 
 <AlertDialog.Root
@@ -36,9 +42,12 @@
 				<AlertDialog.Cancel
 					>{t("common.actions.cancel")}</AlertDialog.Cancel
 				>
-				<Button onclick={() => answerAccountSwitch(true)}>
+				<Button
+					onclick={() => answerAccountSwitch(true)}
+					aria-busy={switching}
+				>
 					{#if switching}
-						<Spinner />
+						<Spinner aria-hidden="true" />
 					{/if}
 					{t("common.actions.continue")}
 				</Button>

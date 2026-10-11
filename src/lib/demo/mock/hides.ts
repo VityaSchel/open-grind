@@ -1,7 +1,14 @@
 const hiddenIds = new Set<number>();
 
 export function demoHiddenUsers(): { profileId: number }[] {
-	return [...hiddenIds].map((profileId) => ({ profileId }));
+	return idsOutOfHidingOrderLikeTheServer().map((profileId) => ({
+		profileId,
+	}));
+}
+
+function idsOutOfHidingOrderLikeTheServer(): number[] {
+	const [oldestHidden, ...newerHidden] = hiddenIds;
+	return oldestHidden === undefined ? [] : [...newerHidden, oldestHidden];
 }
 
 export function demoSetHidden({

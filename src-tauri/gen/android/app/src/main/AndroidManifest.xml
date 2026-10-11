@@ -63,7 +63,7 @@
 		<service
 			android:name="org.opengrind.update.TransferService"
 			android:exported="false"
-			android:stopWithTask="false"
+			android:stopWithTask="true"
 			android:foregroundServiceType="dataSync" />
 
 		<receiver

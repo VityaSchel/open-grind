@@ -5,7 +5,7 @@ import { getCascadeV4 } from "$lib/api/browse/grid";
 import { updateLocation } from "$lib/api/browse/location";
 import { TtlCache } from "$lib/api/cache";
 import { clearProfileCaches, getProfiles } from "$lib/api/users/profiles";
-import { awaitEntitlementGrant } from "$lib/entitlements/bypass.svelte";
+import { atHomeLocation } from "$lib/entitlements/honduras-hold";
 import { coarsenGeohash } from "$lib/model/geohash";
 import { now } from "$lib/util/clock";
 import type { cascadeV4ResponseFullProfileV1Schema } from "$lib/model/browse/grid/cascade/response/v4";
@@ -86,14 +86,15 @@ function gridProfile({
 }
 
 export async function getGrid(query: Parameters<typeof getCascadeV4>[0]) {
-	await awaitEntitlementGrant();
-	if (query.favorites && !query.pageNumber) {
-		await updateLocation({ geohash: query.nearbyGeoHash }).then(
-			() => recordStoredLocation(query.nearbyGeoHash),
-			(error: unknown) => console.error(error),
-		);
-	}
-	const response = await getCascadeV4(query);
+	const response = await atHomeLocation(async () => {
+		if (query.favorites && !query.pageNumber) {
+			await updateLocation({ geohash: query.nearbyGeoHash }).then(
+				() => recordStoredLocation(query.nearbyGeoHash),
+				(error: unknown) => console.error(error),
+			);
+		}
+		return getCascadeV4(query);
+	});
 	if (!query.favorites) recordStoredLocation(query.nearbyGeoHash);
 	const items: GridProfile[] = [];
 

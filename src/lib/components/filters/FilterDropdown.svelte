@@ -34,15 +34,12 @@
 	});
 
 	const hide = instantWhenReducedMotion(
-		(node: HTMLDivElement): TransitionConfig => {
-			const height = node.scrollHeight;
-			return {
-				duration: 400,
-				css: (t: number, u: number) =>
-					`height: calc(${t} * ${height}px); opacity: ${t}; margin-top: calc(${u} * -8px)`,
-				easing: expoOut,
-			};
-		},
+		(): TransitionConfig => ({
+			duration: 400,
+			css: (t: number) =>
+				`grid-template-rows: minmax(0, ${t}fr); opacity: ${t}`,
+			easing: expoOut,
+		}),
 	);
 </script>
 
@@ -74,11 +71,10 @@
 		/>
 	</FilterBoolean>
 	{#if expanded}
-		<div
-			class={["shrink-0 overflow-clip ps-6 pt-2", contentClass]}
-			transition:hide
-		>
-			{@render children?.()}
+		<div class="grid shrink-0 grid-cols-1 overflow-clip" transition:hide>
+			<div class={["ps-6 pt-2", contentClass]}>
+				{@render children?.()}
+			</div>
 		</div>
 	{/if}
 </div>

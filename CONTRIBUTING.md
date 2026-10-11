@@ -61,7 +61,7 @@ Projects reference:
     ```
 
     - Run with `PUBLIC_ENABLE_BLUR_EFFECTS=1` to blur all avatars in the app.
-    - Run with `PUBLIC_ENABLE_DEMO=1` to switch to SFW mock data.
+    - Run with `OPEN_GRIND_DEMO=1` to switch to SFW mock data.
 
 ### Project structure
 
@@ -87,7 +87,7 @@ const securityHeaders = {
 	requireRealDeviceInfo: "true",
 	"L-Time-Zone": "Europe/Madrid",
 	"User-Agent":
-		"grindr3/26.18.0.184315;184315;Free;Android 13;Pixel 7;Google",
+		"grindr3/26.20.0.187695;187695;Free;Android 13;Pixel 7;Google",
 	"L-Device-Info":
 		"1fAf9fB2aFfd47Fd;GLOBAL;2;3543028095;2400x1080;a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 	// modify L-Device-Info values randomly if you're getting ACCOUNT_BANNED at sign-in
@@ -177,6 +177,7 @@ v0.1.0-beta.3   = 1030 (due to error, the actual release is 1020)
 v0.1.0-beta.4   = 1040 (error fixed, actual release jumps from 1020 to 1040)
 v0.1.0-beta.4.1 = 1041
 v0.1.0-beta.5   = 1050
+v0.1.0-beta.5.1 = 1051
 ```
 
 Post-mvp versioning:

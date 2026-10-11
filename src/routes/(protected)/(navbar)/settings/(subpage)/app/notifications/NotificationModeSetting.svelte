@@ -51,8 +51,11 @@
 	}
 >
 	{#each modes as { mode, title, description, recommended } (mode)}
+		{@const enabling =
+			mode === "fast" && notificationSettings.phase === "enablingFast"}
 		<RadioGroup.Item
 			value={mode}
+			aria-busy={enabling}
 			class={cn(
 				Item.itemVariants(),
 				"items-start rounded-none border-0 text-left not-first:border-t not-first:border-border focus-visible:ring-inset",
@@ -76,8 +79,8 @@
 					</Item.Description>
 				</Item.Content>
 				<Item.Actions class="self-start pt-0.5">
-					{#if mode === "fast" && notificationSettings.phase === "enablingFast"}
-						<Spinner />
+					{#if enabling}
+						<Spinner aria-hidden="true" />
 					{:else}
 						<span
 							class={[

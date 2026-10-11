@@ -105,6 +105,8 @@ export function demoCallMethod(method: string): unknown {
 			};
 		case "storage_backend":
 			return "keyring";
+		case "session_feature_flags":
+			return [];
 		default:
 			return null;
 	}

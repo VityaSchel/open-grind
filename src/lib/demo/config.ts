@@ -1,7 +1,5 @@
-import { env } from "$env/dynamic/public";
-
 export const demoEnabled =
-	!("VITEST" in import.meta) && "PUBLIC_ENABLE_DEMO" in env;
+	!import.meta.env.VITEST && import.meta.env.OPEN_GRIND_DEMO === "1";
 
 export const demoMeProfileId = 123456000;
 

@@ -1,5 +1,13 @@
 import type { PullPosition } from "./scroll-chain";
 
+const roundingSlopPx = () => 1 + 1 / devicePixelRatio;
+
+export const edgeGap = (rawGap: number) =>
+	Math.abs(rawGap) <= roundingSlopPx() ? 0 : rawGap;
+
+const floorGap = (el: Element) =>
+	edgeGap(el.scrollHeight - el.clientHeight - el.scrollTop);
+
 export function scrollGeometry({
 	container,
 	position,
@@ -7,25 +15,22 @@ export function scrollGeometry({
 	container: () => HTMLElement | null | undefined;
 	position: () => PullPosition;
 }) {
-	const scrollTop = () => container()?.scrollTop ?? 0;
-	const maxScrollY = () => {
+	const boundaryDistance = () => {
 		const el = container();
-		return el ? el.scrollHeight - el.clientHeight : 0;
+		if (!el) return 0;
+		return position() === "top" ? el.scrollTop : floorGap(el);
 	};
-	const restTop = () => (position() === "top" ? 0 : maxScrollY());
 
 	return {
-		scrollTop,
-		maxScrollY,
-		overscrollPx: () =>
-			position() === "top" ? -scrollTop() : scrollTop() - maxScrollY(),
-		boundaryDistance: () =>
-			position() === "top" ? scrollTop() : maxScrollY() - scrollTop(),
+		boundaryDistance,
+		overscrollPx: () => -boundaryDistance(),
 		scrollToRest: (behavior: ScrollBehavior = "instant") => {
 			const el = container();
 			if (!el) return;
-			const top = restTop();
-			if (Math.abs(scrollTop() - top) >= 1) el.scroll({ top, behavior });
+			el.scroll({
+				top: position() === "top" ? 0 : el.scrollHeight,
+				behavior,
+			});
 		},
 	};
 }

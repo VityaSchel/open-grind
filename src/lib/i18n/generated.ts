@@ -232,6 +232,7 @@ export interface Messages {
 	"common.actions.continue": undefined;
 	"common.actions.copyError": undefined;
 	"common.actions.delete": undefined;
+	"common.actions.learnMore": undefined;
 	"common.actions.retry": undefined;
 	"common.actions.save": undefined;
 	"common.albumShare.errors.shareFailed": undefined;
@@ -507,6 +508,7 @@ export interface Messages {
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
 	"profile.viewability.errors.blockFailed": undefined;
+	"profile.viewability.errors.blockIgnored": undefined;
 	"profile.viewability.errors.hideFailed": undefined;
 	"profile.viewability.errors.unblockFailed": undefined;
 	"profile.viewability.errors.unhideFailed": undefined;

@@ -14,6 +14,7 @@ import { sessionErrorState } from "$lib/api/session-error-state.svelte";
 import { sessionRecovery } from "$lib/api/session-recovery.svelte";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import SessionErrorAlert from "./SessionErrorAlert.svelte";
 
 const {
@@ -72,6 +73,14 @@ function emit(event: string, payload: unknown) {
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+const button = (name: string) => screen.getByRole("button", { name });
+
+function hang(mock: typeof callMethodMock) {
+	const { promise, resolve } = Promise.withResolvers<void>();
+	mock.mockReturnValueOnce(promise);
+	return resolve;
+}
 
 describe("SessionErrorAlert", () => {
 	beforeEach(() => {
@@ -159,7 +168,7 @@ describe("SessionErrorAlert", () => {
 	it("can be dismissed", async () => {
 		render(SessionErrorAlert);
 
-		await fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+		await fireEvent.click(button("Dismiss"));
 
 		expect(sessionErrorState.open).toBe(false);
 	});
@@ -247,9 +256,7 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockResolvedValue({ profileId: 1, restriction: null });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
-		);
+		await fireEvent.click(button("Try again"));
 
 		expect(signOutMock).not.toHaveBeenCalled();
 		expect(sessionErrorState.open).toBe(false);
@@ -259,9 +266,7 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockRejectedValue({ kind: "NotSignedIn" });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
-		);
+		await fireEvent.click(button("Try again"));
 
 		expect(signOutMock).toHaveBeenCalledOnce();
 		expect(sessionErrorState.open).toBe(false);
@@ -271,9 +276,7 @@ describe("SessionErrorAlert", () => {
 		sessionErrorState.message = "x".repeat(400);
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Copy error details" }),
-		);
+		await fireEvent.click(button("Copy error details"));
 
 		expect(
 			screen.getByText(`${"x".repeat(200)}…<+200 chars>`),
@@ -341,9 +344,7 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockRejectedValue({ kind: "RequestBlocked" });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
-		);
+		await fireEvent.click(button("Try again"));
 
 		expect(requestBlockedAlertState.open).toBe(true);
 		expect(toastErrorMock).not.toHaveBeenCalled();
@@ -355,9 +356,7 @@ describe("SessionErrorAlert", () => {
 		callMethodMock.mockRejectedValue({ kind: "RequestBlocked" });
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
-		);
+		await fireEvent.click(button("Try again"));
 
 		expect(requestBlockedAlertState.open).toBe(false);
 		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
@@ -372,9 +371,7 @@ describe("SessionErrorAlert", () => {
 		});
 		render(SessionErrorAlert);
 
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Try again" }),
-		);
+		await fireEvent.click(button("Try again"));
 
 		expect(signOutMock).not.toHaveBeenCalled();
 		expect(sessionErrorState.open).toBe(true);
@@ -430,4 +427,75 @@ describe("SessionErrorAlert", () => {
 			);
 		},
 	);
+
+	it("dismisses on Escape for as long as Dismiss would", async () => {
+		const refused = {
+			message: "Could not refresh the session",
+			unauthorized: false,
+			kind: "SessionStale",
+			attempts: 3,
+			transient: true,
+		};
+		sessionErrorState.open = false;
+		render(SessionErrorAlert);
+		emit("auth:session-error", refused);
+		await settle();
+		expect(sessionErrorState.open).toBe(true);
+
+		await fireEvent.keyDown(document, { key: "Escape" });
+		await vi.waitFor(() => expect(sessionErrorState.open).toBe(false));
+		emit("auth:session-error", refused);
+		await settle();
+
+		expect(sessionErrorState.open).toBe(false);
+	});
+
+	it("marks Try again busy and locks every button while a retry is in flight", async () => {
+		const finishRetry = hang(callMethodMock);
+		render(SessionErrorAlert);
+		await fireEvent.click(button("Try again"));
+
+		expect(button("Try again").getAttribute("aria-busy")).toBe("true");
+		for (const name of [
+			"Copy error details",
+			"Dismiss",
+			"Sign out",
+			"Try again",
+		]) {
+			expect(button(name).matches(":disabled")).toBe(true);
+		}
+
+		finishRetry();
+		await vi.waitFor(() => expect(sessionErrorState.open).toBe(false));
+	});
+
+	it("keeps Escape and the back gesture from closing the dialog while a retry is in flight", async () => {
+		const finishRetry = hang(callMethodMock);
+		render(SessionErrorAlert);
+		await fireEvent.click(button("Try again"));
+
+		await fireEvent.keyDown(document, { key: "Escape" });
+		expect(backGestureEventHandlers.size).toBe(1);
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(sessionErrorState.open).toBe(true);
+		finishRetry();
+		await vi.waitFor(() => expect(sessionErrorState.open).toBe(false));
+	});
+
+	it("moves the busy mark to Sign out once a retry finds the session gone", async () => {
+		callMethodMock.mockRejectedValue({ kind: "NotSignedIn" });
+		const finishSignOut = hang(signOutMock);
+		render(SessionErrorAlert);
+
+		await fireEvent.click(button("Try again"));
+
+		await vi.waitFor(() => {
+			expect(button("Sign out").getAttribute("aria-busy")).toBe("true");
+		});
+		expect(button("Try again").getAttribute("aria-busy")).toBe("false");
+		expect(button("Try again").matches(":disabled")).toBe(true);
+		finishSignOut();
+		await vi.waitFor(() => expect(sessionErrorState.open).toBe(false));
+	});
 });

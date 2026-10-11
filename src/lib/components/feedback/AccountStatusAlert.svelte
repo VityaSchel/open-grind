@@ -15,7 +15,9 @@
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { t } from "$lib/i18n";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	const status = $derived(accountStatusState.status);
 
@@ -71,7 +73,12 @@
 		};
 	});
 
-	let busy = $state(false);
+	let signingOut = $state(false);
+
+	dismissOnBackGesture({
+		active: () => accountStatusState.open,
+		dismiss: () => {},
+	});
 
 	function copyDetails() {
 		if (status?.kind !== "banned") return;
@@ -79,11 +86,11 @@
 	}
 
 	async function onSignOut() {
-		busy = true;
+		signingOut = true;
 		try {
 			await signOut();
 		} finally {
-			busy = false;
+			signingOut = false;
 			accountStatusState.open = false;
 		}
 	}
@@ -101,14 +108,19 @@
 			>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			{#if status?.kind === "banned"}
-				<Button variant="ghost" onclick={copyDetails} disabled={busy}>
-					{t("common.actions.copyError")}
+			<fieldset disabled={signingOut} class="contents">
+				{#if status?.kind === "banned"}
+					<Button variant="ghost" onclick={copyDetails}>
+						{t("common.actions.copyError")}
+					</Button>
+				{/if}
+				<Button onclick={onSignOut} aria-busy={signingOut}>
+					{#if signingOut}
+						<Spinner aria-hidden="true" />
+					{/if}
+					{t("feedback.actions.signOut")}
 				</Button>
-			{/if}
-			<Button onclick={onSignOut} disabled={busy}
-				>{t("feedback.actions.signOut")}</Button
-			>
+			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

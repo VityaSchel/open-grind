@@ -13,7 +13,7 @@ index 0988872..aa12f07 100644
  level = "warn"
  priority = 0
 diff --git a/src/android/binding.rs b/src/android/binding.rs
-index 031cd09..ca862c8 100644
+index 031cd09..7ffb2dc 100644
 --- a/src/android/binding.rs
 +++ b/src/android/binding.rs
 @@ -9,8 +9,8 @@ use http::{
@@ -76,6 +76,22 @@ index 031cd09..ca862c8 100644
          webview_id,
          final_request,
          is_document_start_script_enabled != 0,
+@@ -393,8 +410,13 @@ pub unsafe fn ipc(mut env: JNIEnv, _: JClass, webview_id: JString, url: JString,
+       let url = url.to_string_lossy().to_string();
+       let body = body.to_string_lossy().to_string();
+       let webview_id = webview_id.to_string_lossy().to_string();
+-      if let Some(ipc) = IPC.lock().unwrap().get(&webview_id) {
+-        (ipc.handler)(Request::builder().uri(url).body(body).unwrap())
++      let handler = IPC
++        .lock()
++        .unwrap()
++        .get(&webview_id)
++        .map(|ipc| ipc.handler.clone());
++      if let Some(handler) = handler {
++        handler(Request::builder().uri(url).body(body).unwrap())
+       }
+     }
+     (Err(_e), _, _) | (_, Err(_e), _) | (_, _, Err(_e)) => {
 diff --git a/src/android/kotlin/Rust.kt b/src/android/kotlin/Rust.kt
 index b5b6bdf..5e13aad 100644
 --- a/src/android/kotlin/Rust.kt
@@ -168,7 +184,7 @@ index a0f19c6..40df27b 100644
 +  public <methods>;
 +}
 diff --git a/src/android/mod.rs b/src/android/mod.rs
-index 8f44c70..cf10b0c 100644
+index 8f44c70..7772b89 100644
 --- a/src/android/mod.rs
 +++ b/src/android/mod.rs
 @@ -21,7 +21,7 @@ use raw_window_handle::HasWindowHandle;
@@ -189,11 +205,13 @@ index 8f44c70..cf10b0c 100644
  pub struct Context<'a, 'b> {
    pub env: &'a mut JNIEnv<'b>,
    pub activity: &'a JObject<'b>,
-@@ -70,7 +72,7 @@ macro_rules! define_static_handlers {
+@@ -69,8 +71,8 @@ macro_rules! define_static_handlers {
+ }
  
  define_static_handlers! {
-   IPC = UnsafeIpc { handler: Box<dyn Fn(Request<String>)> };
+-  IPC = UnsafeIpc { handler: Box<dyn Fn(Request<String>)> };
 -  REQUEST_HANDLER = UnsafeRequestHandler { handler:  Box<dyn Fn(&str, Request<Vec<u8>>, bool) -> Option<HttpResponse<Cow<'static, [u8]>>>> };
++  IPC = UnsafeIpc { handler: Arc<dyn Fn(Request<String>)> };
 +  REQUEST_HANDLER = UnsafeRequestHandler { handler:  Arc<dyn Fn(&str, Request<Vec<u8>>, bool) -> Option<HttpResponse<Cow<'static, [u8]>>> + Send + Sync> };
    TITLE_CHANGE_HANDLER = UnsafeTitleHandler { handler: Box<dyn Fn(String)> };
    URL_LOADING_OVERRIDE = UnsafeUrlLoadingOverride { handler: Box<dyn Fn(String) -> bool> };
@@ -207,6 +225,15 @@ index 8f44c70..cf10b0c 100644
            move |webview_id: &str, mut request, is_document_start_script_enabled| {
              let uri = request.uri().to_string();
              if let Some((custom_protocol, custom_protocol_handler)) =
+@@ -291,7 +293,7 @@ impl InnerWebView {
+       IPC
+         .lock()
+         .unwrap()
+-        .insert(id.clone(), UnsafeIpc::new(Box::new(i)));
++        .insert(id.clone(), UnsafeIpc::new(Arc::from(i)));
+     }
+ 
+     if let Some(i) = attributes.document_title_changed_handler {
 diff --git b/src/android/stream.rs b/src/android/stream.rs
 new file mode 100644
 index 0000000..4ae189d

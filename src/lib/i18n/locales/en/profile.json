@@ -215,6 +215,7 @@
 	"viewability": {
 		"errors": {
 			"blockFailed": "Couldn’t block",
+			"blockIgnored": "Can’t block this user. Try hiding instead.",
 			"unblockFailed": "Couldn’t unblock",
 			"hideFailed": "Couldn’t hide",
 			"unhideFailed": "Couldn’t unhide"

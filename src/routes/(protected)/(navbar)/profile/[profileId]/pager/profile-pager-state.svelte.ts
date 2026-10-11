@@ -21,8 +21,7 @@ export type ProfilePagerSource = Pick<
 	| "indexInProfiles"
 	| "profileById"
 	| "revealProfileId"
-	| "nextPage"
-	| "loadMore"
+	| "paging"
 >;
 
 export type ProfilePagerEntry = {
@@ -281,9 +280,9 @@ export class ProfilePagerState {
 	}
 
 	#loadAhead(): void {
-		if (!this.#browsing || !this.#source.nextPage) return;
+		if (!this.#browsing) return;
 		const remaining =
 			this.#order.length - (this.#trackStart + this.#activePosition) - 1;
-		if (remaining < LOAD_AHEAD_REMAINING) void this.#source.loadMore();
+		if (remaining < LOAD_AHEAD_REMAINING) void this.#source.paging.run();
 	}
 }

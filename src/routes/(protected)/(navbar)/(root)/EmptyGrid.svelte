@@ -3,6 +3,7 @@
 	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
+	import { genderFilterFlag } from "$lib/api/feature-flags-state.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { sentFilterKeys } from "$lib/grid/grid-query";
@@ -11,7 +12,10 @@
 	import { defaultFilters } from "$lib/model/browse/grid/filters";
 
 	const sentFilters = $derived(
-		sentFilterKeys(gridState.filters.value ?? defaultFilters),
+		sentFilterKeys({
+			filters: gridState.filters.value ?? defaultFilters,
+			genderFilterFlag: genderFilterFlag(),
+		}),
 	);
 	const favorites = $derived(sentFilters.some((key) => key === "favorites"));
 	const otherFilters = $derived(

@@ -1,18 +1,7 @@
-export class FetchEpochs {
-	#current = 0;
+import { Generation } from "$lib/util/generation";
+
+export class FetchEpochs extends Generation {
 	#inFlight = new Set<Promise<unknown>>();
-
-	get current(): number {
-		return this.#current;
-	}
-
-	claim(): number {
-		return ++this.#current;
-	}
-
-	isStale(fetchEpoch: number): boolean {
-		return fetchEpoch !== this.#current;
-	}
 
 	track<T>(fetch: Promise<T>): Promise<T> {
 		this.#inFlight.add(fetch);

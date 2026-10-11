@@ -30,6 +30,12 @@
 			});
 		},
 	});
+
+	$effect(() =>
+		gridState.onStartOver(() => {
+			if (gridContainer) gridContainer.scrollTop = 0;
+		}),
+	);
 </script>
 
 <svelte:head>
@@ -60,6 +66,7 @@
 			>
 				<div
 					data-slot="grid-content"
+					data-refresh-content
 					class="@container/photo-grid min-h-overscrollable flex flex-col gap-4 px-4 pt-header-clear-17 pb-nav-clear"
 				>
 					<Grid {geohash} />

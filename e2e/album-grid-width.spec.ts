@@ -22,7 +22,11 @@ async function albumGrid(page: Page) {
 }
 
 for (const viewport of [
+	{ width: 360, height: 800 },
+	{ width: 361, height: 800 },
 	{ width: 420, height: 800 },
+	{ width: 640, height: 800 },
+	{ width: 641, height: 800 },
 	{ width: 1280, height: 800 },
 	{ width: 1920, height: 1000 },
 ]) {

@@ -8,13 +8,15 @@ const {
 	blockUserMock,
 	hideUserMock,
 	showErrorToastMock,
+	showBlockFailureMock,
 	toastSuccessMock,
 	writeTextMock,
 } = vi.hoisted(() => ({
 	reportSheetMock: vi.fn(),
-	blockUserMock: vi.fn(),
+	blockUserMock: vi.fn<() => Promise<void>>(),
 	hideUserMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
+	showBlockFailureMock: vi.fn(),
 	toastSuccessMock: vi.fn(),
 	writeTextMock: vi.fn(),
 }));
@@ -25,6 +27,9 @@ vi.mock("$lib/components/report/ReportSheet.svelte", () => ({
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
 vi.mock("$lib/api/browse/hides", () => ({ hideUser: hideUserMock }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("$lib/components/report/block-failure", () => ({
+	showBlockFailure: showBlockFailureMock,
+}));
 vi.mock("svelte-sonner", () => ({ toast: { success: toastSuccessMock } }));
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
@@ -32,9 +37,10 @@ vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { applyBackGestureHandler } from "$lib/platform/android-native-bridge";
 import ProfileActionsMenu from "./ProfileActionsMenu.svelte";
 
-const PROFILE_ID = 100001;
+const PROFILE_ID = 100010;
 const ITEMS = ["Copy profile ID", "Report user", "Hide user", "Block user"];
 
 const failures = [
@@ -44,21 +50,31 @@ const failures = [
 		label: "Couldn’t copy profile ID",
 	},
 	{ item: "Hide user", request: hideUserMock, label: "Couldn’t hide" },
-	{ item: "Block user", request: blockUserMock, label: "Couldn’t block" },
 ];
 
-function renderMenu({ blockable }: { blockable: boolean }) {
-	const pending = () => ({ revert: vi.fn(), settle: vi.fn() });
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+const backHandledInApp = () => window.__AndroidOnBackGesture?.() === false;
+
+function renderMenu() {
+	const blocking = { revert: vi.fn(), settle: vi.fn() };
+	const markBlocked = vi.fn(() => blocking);
 	render(ProfileActionsMenu, {
 		props: {
 			profileId: PROFILE_ID,
-			blockable,
 			changingViewability: false,
-			markBlocked: pending,
-			markHidden: pending,
+			markBlocked,
+			markHidden: () => ({ revert: vi.fn(), settle: vi.fn() }),
 		},
 	});
-	return screen.getByRole("button");
+	return { trigger: screen.getByRole("button"), blocking, markBlocked };
+}
+
+function reportSheetProps() {
+	const [, props] = reportSheetMock.mock.lastCall as [
+		unknown,
+		{ onBlock: () => void },
+	];
+	return props;
 }
 
 async function openMenu(): Promise<HTMLElement[]> {
@@ -66,10 +82,14 @@ async function openMenu(): Promise<HTMLElement[]> {
 	return screen.findAllByRole("menuitem", { hidden: true });
 }
 
+async function menuItem(item: string): Promise<HTMLElement> {
+	const found = (await openMenu())[ITEMS.indexOf(item)];
+	if (found === undefined) throw new Error(`no ${item} item`);
+	return found;
+}
+
 async function choose(item: string) {
-	const chosen = (await openMenu())[ITEMS.indexOf(item)];
-	if (chosen === undefined) throw new Error(`no ${item} item`);
-	await fireEvent.click(chosen);
+	await fireEvent.click(await menuItem(item));
 }
 
 async function fail({
@@ -99,6 +119,8 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	writeTextMock.mockResolvedValue(undefined);
+	blockUserMock.mockResolvedValue(undefined);
+	applyBackGestureHandler();
 });
 
 afterEach(async () => {
@@ -107,55 +129,98 @@ afterEach(async () => {
 	await setLocale({ locale: SOURCE_LOCALE });
 });
 
-it("settles a block the report sheet has already sent instead of leaving it in flight", () => {
-	const blocking = { revert: vi.fn(), settle: vi.fn() };
-	const markBlocked = vi.fn(() => blocking);
-	render(ProfileActionsMenu, {
-		props: {
-			profileId: PROFILE_ID,
-			blockable: true,
-			changingViewability: false,
-			markBlocked,
-			markHidden: vi.fn(),
-		},
+it("shows the profile as blocked at once and settles once the block is confirmed", async () => {
+	const block = Promise.withResolvers<void>();
+	blockUserMock.mockReturnValueOnce(block.promise);
+	const { blocking, markBlocked } = renderMenu();
+
+	const item = await menuItem("Block user");
+	expect(item.textContent.trim()).toBe("Block user");
+	expect(item.getAttribute("aria-disabled")).not.toBe("true");
+	await fireEvent.click(item);
+	await flush();
+	expect(markBlocked).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
+
+	block.resolve();
+	await flush();
+
+	expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
+		profileId: PROFILE_ID,
 	});
-	const [, reportSheet] = reportSheetMock.mock.lastCall as [
-		unknown,
-		{ onBlocked: () => void },
-	];
+	expect(blocking.settle).toHaveBeenCalledOnce();
+	expect(showBlockFailureMock).not.toHaveBeenCalled();
+});
 
-	reportSheet.onBlocked();
+it("brings the profile back and explains a block that did not stick", async () => {
+	const rejection = new Error("not listed");
+	blockUserMock.mockRejectedValueOnce(rejection);
+	const { blocking } = renderMenu();
 
+	await choose("Block user");
+	await flush();
+
+	expect(blocking.revert).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
+	expect(showBlockFailureMock).toHaveBeenCalledExactlyOnceWith(rejection);
+	expect(showErrorToastMock).not.toHaveBeenCalled();
+});
+
+it("shows a block from the report sheet at once and settles it once confirmed", async () => {
+	const block = Promise.withResolvers<void>();
+	blockUserMock.mockReturnValueOnce(block.promise);
+	const { blocking, markBlocked } = renderMenu();
+
+	reportSheetProps().onBlock();
+	expect(markBlocked).toHaveBeenCalledOnce();
+	expect(blocking.settle).not.toHaveBeenCalled();
+	block.resolve();
+	await flush();
+
+	expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
+		profileId: PROFILE_ID,
+	});
 	expect(markBlocked).toHaveBeenCalledOnce();
 	expect(blocking.settle).toHaveBeenCalledOnce();
 	expect(blocking.revert).not.toHaveBeenCalled();
 });
 
+it("closes on Back instead of letting Back leave the profile", async () => {
+	const { trigger } = renderMenu();
+	expect(backHandledInApp(), "a closed menu leaves Back alone").toBe(false);
+
+	await openMenu();
+	expect(backHandledInApp(), "the open menu takes Back").toBe(true);
+	await flush();
+
+	expect(trigger.getAttribute("aria-expanded")).toBe("false");
+	await vi.waitFor(() =>
+		expect(
+			screen.queryAllByRole("menuitem", { hidden: true }),
+		).toHaveLength(0),
+	);
+	expect(backHandledInApp(), "the next Back leaves the profile").toBe(false);
+});
+
 describe("ProfileActionsMenu wording", () => {
 	it("names the trigger Profile menu", () => {
-		const trigger = renderMenu({ blockable: true });
+		const { trigger } = renderMenu();
 
 		expect(screen.getByRole("button", { name: "Profile menu" })).toBe(
 			trigger,
 		);
 	});
 
-	it.each([
-		{ blockable: true, items: ITEMS },
-		{ blockable: false, items: ITEMS.slice(0, -1) },
-	])(
-		"lists $items when blockable is $blockable",
-		async ({ blockable, items }) => {
-			renderMenu({ blockable });
+	it("lists every action", async () => {
+		renderMenu();
 
-			const shown = await openMenu();
+		const shown = await openMenu();
 
-			expect(shown.map((item) => item.textContent.trim())).toEqual(items);
-		},
-	);
+		expect(shown.map((item) => item.textContent.trim())).toEqual(ITEMS);
+	});
 
 	it("copies the profile ID and says so", async () => {
-		renderMenu({ blockable: true });
+		renderMenu();
 
 		await copyId();
 
@@ -170,7 +235,7 @@ describe("ProfileActionsMenu wording", () => {
 	it.each(failures)(
 		"toasts $label when $item fails",
 		async ({ item, request, label }) => {
-			renderMenu({ blockable: true });
+			renderMenu();
 
 			const failure = await fail({ item, request });
 
@@ -182,7 +247,7 @@ describe("ProfileActionsMenu wording", () => {
 	);
 
 	it("words the trigger and the items in the active locale", async () => {
-		const trigger = renderMenu({ blockable: true });
+		const { trigger } = renderMenu();
 
 		await setLocale({ locale: "en-XA" });
 		const shown = await openMenu();
@@ -195,7 +260,7 @@ describe("ProfileActionsMenu wording", () => {
 	});
 
 	it("words the copy toast in the active locale", async () => {
-		renderMenu({ blockable: true });
+		renderMenu();
 
 		await setLocale({ locale: "en-XA" });
 		await copyId();
@@ -206,7 +271,7 @@ describe("ProfileActionsMenu wording", () => {
 	it.each(failures)(
 		"words the $item failure in the active locale",
 		async ({ item, request }) => {
-			renderMenu({ blockable: true });
+			renderMenu();
 
 			await setLocale({ locale: "en-XA" });
 			await fail({ item, request });

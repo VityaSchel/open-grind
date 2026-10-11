@@ -1,6 +1,4 @@
-use std::sync::OnceLock;
-
-use crate::error::AppError;
+use std::sync::{Mutex, PoisonError};
 
 mod entries;
 #[cfg(any(
@@ -8,15 +6,10 @@ mod entries;
 	all(target_os = "macos", not(feature = "keychain"))
 ))]
 mod file_store;
+mod keyring;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
-
-const SERVICE: &str = "open-grind";
-
-pub(crate) fn entry(name: &str) -> Result<keyring_core::Entry, AppError> {
-	keyring_core::Entry::new(SERVICE, name)
-		.map_err(|e| AppError::Auth(e.to_string()))
-}
+pub(crate) use keyring::{entry, Entry};
 
 #[cfg(any(
 	target_os = "linux",
@@ -40,20 +33,21 @@ const HAS_FILE_STORE: bool = cfg!(any(
 ));
 
 pub fn init_keyring() -> StorageBackend {
-	static USABLE: OnceLock<StorageBackend> = OnceLock::new();
+	static USABLE: Mutex<Option<StorageBackend>> = Mutex::new(None);
 	cached(&USABLE, probe_keyring)
 }
 
 fn cached(
-	usable: &OnceLock<StorageBackend>,
+	usable: &Mutex<Option<StorageBackend>>,
 	probe: impl FnOnce() -> StorageBackend,
 ) -> StorageBackend {
-	if let Some(backend) = usable.get() {
-		return *backend;
+	let mut usable = usable.lock().unwrap_or_else(PoisonError::into_inner);
+	if let Some(backend) = *usable {
+		return backend;
 	}
 	let backend = probe();
 	if backend != StorageBackend::Unavailable {
-		let _ = usable.set(backend);
+		*usable = Some(backend);
 	}
 	backend
 }
@@ -177,6 +171,9 @@ pub(crate) mod test_support {
 	)
 ))]
 mod tests {
+	use std::sync::Barrier;
+	use std::time::Duration;
+
 	use super::test_support::{lock, with_file_store};
 	use super::*;
 
@@ -259,7 +256,7 @@ mod tests {
 
 	#[test]
 	fn a_failed_probe_is_tried_again_and_a_usable_one_is_kept() {
-		let usable = OnceLock::new();
+		let usable = Mutex::new(None);
 
 		assert_eq!(
 			cached(&usable, || StorageBackend::Unavailable),
@@ -273,6 +270,28 @@ mod tests {
 			cached(&usable, || unreachable!("a usable backend is probed once")),
 			StorageBackend::File
 		);
+	}
+
+	#[test]
+	fn probes_from_many_threads_never_overlap() {
+		let usable = Mutex::new(None);
+		let probing = Mutex::new(());
+		let start = Barrier::new(8);
+
+		std::thread::scope(|scope| {
+			for _ in 0..8 {
+				scope.spawn(|| {
+					start.wait();
+					cached(&usable, || {
+						let _probing = probing
+							.try_lock()
+							.expect("another probe is already running");
+						std::thread::sleep(Duration::from_millis(20));
+						StorageBackend::Unavailable
+					})
+				});
+			}
+		});
 	}
 
 	#[test]

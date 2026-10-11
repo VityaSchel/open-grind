@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const {
 	getCascadeV4Mock,
 	updateLocationMock,
-	awaitEntitlementGrantMock,
+	atHomeLocationMock,
 	getProfilesMock,
 	clearProfileCachesMock,
 } = vi.hoisted(() => ({
 	getCascadeV4Mock: vi.fn(),
 	updateLocationMock: vi.fn(),
-	awaitEntitlementGrantMock: vi.fn(),
+	atHomeLocationMock:
+		vi.fn<(request: () => Promise<unknown>) => Promise<unknown>>(),
 	getProfilesMock: vi.fn(),
 	clearProfileCachesMock: vi.fn(),
 }));
@@ -22,8 +23,8 @@ vi.mock("$lib/api/users/profiles", () => ({
 	getProfiles: getProfilesMock,
 	clearProfileCaches: clearProfileCachesMock,
 }));
-vi.mock("$lib/entitlements/bypass.svelte", () => ({
-	awaitEntitlementGrant: awaitEntitlementGrantMock,
+vi.mock("$lib/entitlements/honduras-hold", () => ({
+	atHomeLocation: atHomeLocationMock,
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
@@ -39,6 +40,15 @@ import { rendered } from "./grid-test-helpers";
 afterEach(() => {
 	resetNowForTesting();
 });
+
+const gateHomeLocation = () => {
+	const gate = Promise.withResolvers<void>();
+	atHomeLocationMock.mockImplementation(async (request) => {
+		await gate.promise;
+		return request();
+	});
+	return gate.resolve;
+};
 
 describe("grid profile cache TTL", () => {
 	it("returns a cached profile within the TTL and drops it after", () => {
@@ -104,7 +114,9 @@ describe("getGrid", () => {
 			.mockReset()
 			.mockResolvedValue({ items: [], nextPage: null, shuffled: false });
 		updateLocationMock.mockReset().mockResolvedValue(undefined);
-		awaitEntitlementGrantMock.mockResolvedValue(undefined);
+		atHomeLocationMock
+			.mockReset()
+			.mockImplementation((request) => request());
 	});
 
 	it("moves the stored location to the grid geohash before a favorites cascade", async () => {
@@ -164,41 +176,94 @@ describe("getGrid", () => {
 		consoleError.mockRestore();
 	});
 
-	it("holds the favorites location update until an entitlement handover is done", async () => {
-		let finishHandover!: () => void;
-		awaitEntitlementGrantMock.mockReturnValue(
-			new Promise<void>((resolve) => {
-				finishHandover = resolve;
-			}),
-		);
+	it("holds the favorites location update and its cascade until the profile is back home", async () => {
+		const openGate = gateHomeLocation();
 
 		const pending = getGrid({ nearbyGeoHash: NEARBY, favorites: true });
-		await vi.waitFor(() => expect(finishHandover).toBeDefined());
-		expect(updateLocationMock).not.toHaveBeenCalled();
-
-		finishHandover();
-		await pending;
-
-		expect(updateLocationMock).toHaveBeenCalledOnce();
-	});
-
-	it("holds the cascade until an entitlement handover is done", async () => {
-		let finishHandover!: () => void;
-		awaitEntitlementGrantMock.mockReturnValue(
-			new Promise<void>((resolve) => {
-				finishHandover = resolve;
-			}),
+		await vi.waitFor(() =>
+			expect(atHomeLocationMock).toHaveBeenCalledOnce(),
 		);
-
-		const pending = cascade([]);
-		await vi.waitFor(() => expect(finishHandover).toBeDefined());
+		expect(updateLocationMock).not.toHaveBeenCalled();
 		expect(getCascadeV4Mock).not.toHaveBeenCalled();
 
-		finishHandover();
+		openGate();
 		await pending;
 
+		expect(updateLocationMock).toHaveBeenCalledExactlyOnceWith({
+			geohash: NEARBY,
+		});
 		expect(getCascadeV4Mock).toHaveBeenCalledOnce();
 	});
+
+	it("holds a plain cascade until the profile is back home", async () => {
+		const openGate = gateHomeLocation();
+
+		const pending = cascade([]);
+		await vi.waitFor(() =>
+			expect(atHomeLocationMock).toHaveBeenCalledOnce(),
+		);
+		expect(getCascadeV4Mock).not.toHaveBeenCalled();
+
+		openGate();
+		await pending;
+
+		expect(getCascadeV4Mock).toHaveBeenCalledExactlyOnceWith({
+			nearbyGeoHash: NEARBY,
+		});
+	});
+
+	it.each([
+		{
+			query: { favorites: true },
+			expected: [
+				"request started",
+				"location moved",
+				"cascade answered",
+				"request settled",
+			],
+		},
+		{
+			query: {},
+			expected: [
+				"request started",
+				"cascade answered",
+				"request settled",
+			],
+		},
+	])(
+		"sends every location-moving request of $query as one home-location request",
+		async ({ query, expected }) => {
+			const events: string[] = [];
+			atHomeLocationMock.mockImplementation(async (request) => {
+				events.push("request started");
+				const result = await request();
+				events.push("request settled");
+				return result;
+			});
+			updateLocationMock.mockImplementation(async () => {
+				await Promise.resolve();
+				events.push("location moved");
+			});
+			getCascadeV4Mock.mockImplementation(async () => {
+				await Promise.resolve();
+				events.push("cascade answered");
+				return {
+					items: [{ type: "full_profile_v1", data: v4Profile(5) }],
+					nextPage: null,
+					shuffled: false,
+				};
+			});
+
+			const { items } = await getGrid({
+				nearbyGeoHash: NEARBY,
+				...query,
+			});
+
+			expect(atHomeLocationMock).toHaveBeenCalledOnce();
+			expect(events).toEqual(expected);
+			expect(items).toMatchObject([{ id: 5 }]);
+		},
+	);
 
 	it.each([
 		{ type: "full_profile_v1", age: 27 },
@@ -328,7 +393,9 @@ describe("cached profiles after the stored location moves", () => {
 			.mockReset()
 			.mockResolvedValue({ items: [], nextPage: null, shuffled: false });
 		updateLocationMock.mockReset().mockResolvedValue(undefined);
-		awaitEntitlementGrantMock.mockResolvedValue(undefined);
+		atHomeLocationMock
+			.mockReset()
+			.mockImplementation((request) => request());
 		await getGrid({ nearbyGeoHash: NEARBY });
 		clearProfileCachesMock.mockReset();
 	});

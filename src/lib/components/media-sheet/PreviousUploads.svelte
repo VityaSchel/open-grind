@@ -88,6 +88,6 @@
 <MediaSheetActions
 	label={submitLabel}
 	count={selected.size}
-	disabled={submitting}
+	busy={submitting}
 	onSubmit={() => void submit()}
 />

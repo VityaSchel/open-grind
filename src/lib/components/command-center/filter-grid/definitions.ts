@@ -1,3 +1,4 @@
+import { isTribeOfferedNow } from "$lib/api/feature-flags-state.svelte";
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 import { formatList, formatRange } from "$lib/i18n/format";
 import {
@@ -16,7 +17,6 @@ import {
 	HEIGHT_CM_MAX,
 	HEIGHT_CM_MIN,
 	isFilterableGenderId,
-	isFilterableTribe,
 	rangeBoundTexts,
 	WEIGHT_GRAMS_MAX,
 	WEIGHT_GRAMS_MIN,
@@ -128,6 +128,7 @@ function enumFilter({
 	enabled,
 	enumObject,
 	labelMap,
+	isOffered = () => true,
 }: {
 	label: string;
 	keys: string[];
@@ -135,6 +136,7 @@ function enumFilter({
 	enabled: BooleanKey;
 	enumObject: Record<string, number>;
 	labelMap: Record<number, string>;
+	isOffered?: (id: number) => boolean;
 }): Filter {
 	const allowed = new Set(Object.values(enumObject));
 	const labelOf = (id: number) =>
@@ -153,7 +155,7 @@ function enumFilter({
 				apply: idListApply({
 					target,
 					enabled,
-					isValid: (id) => allowed.has(id),
+					isValid: (id) => allowed.has(id) && isOffered(id),
 					invalidLabel: "Unknown value",
 				}),
 			},
@@ -262,12 +264,9 @@ export const filters: Filter[] = [
 		keys: ["tribes", "tribe"],
 		target: "tribes",
 		enabled: "tribesEnabled",
-		enumObject: Object.fromEntries(
-			Object.entries(FilterTribe).filter(([, id]) =>
-				isFilterableTribe(id),
-			),
-		),
+		enumObject: FilterTribe,
 		labelMap: tribes,
+		isOffered: isTribeOfferedNow,
 	}),
 	enumFilter({
 		label: "body type",

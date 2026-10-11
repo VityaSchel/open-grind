@@ -3,7 +3,7 @@
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { t } from "$lib/i18n";
 	import { observeIntersection } from "$lib/util/observe-intersection";
-	import type { InboxPaging } from "$lib/chat/inbox-paging.svelte";
+	import type { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
 
 	let {
@@ -12,7 +12,7 @@
 		listEmpty,
 		filtered,
 	}: {
-		paging: InboxPaging;
+		paging: SentinelPaging;
 		hasMore: boolean;
 		listEmpty: boolean;
 		filtered: boolean;

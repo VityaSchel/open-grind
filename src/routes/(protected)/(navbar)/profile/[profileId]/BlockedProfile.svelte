@@ -15,12 +15,10 @@
 	let {
 		profileId,
 		blockedByUs,
-		changingViewability,
 		markViewable,
 	}: {
 		profileId: number;
 		blockedByUs: boolean;
-		changingViewability: boolean;
 		markViewable: () => PendingViewabilityChange;
 	} = $props();
 </script>
@@ -41,7 +39,6 @@
 			{#if blockedByUs}
 				<Button
 					variant="secondary"
-					disabled={changingViewability}
 					onclick={() =>
 						applyViewabilityChange({
 							change: markViewable,

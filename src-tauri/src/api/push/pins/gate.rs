@@ -95,7 +95,7 @@ fn the_fcm_addon_is_reached_only_through_the_shared_gate() {
 	);
 	assert!(
 		plugin.contains(&squashed(
-			"when (AddonLaunchCheck.decideService(activity, PushContract.bindIntent(), PushContract.ADDON_PACKAGE))"
+			"when (AddonLaunchCheck.decideService(activity, PushContract.bindIntent(), PushContract.ADDON_PACKAGE, PushContract.MIN_ADDON_VERSION_CODE,))"
 		)),
 		"PushPlugin.kt no longer checks the FCM add-on through AddonLaunchCheck before binding it"
 	);

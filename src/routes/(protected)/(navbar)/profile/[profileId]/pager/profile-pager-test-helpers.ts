@@ -1,6 +1,7 @@
 import { vi } from "vitest";
 
 import { rendered } from "$lib/grid/grid-test-helpers";
+import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 import type { GridProfile, RenderedGridProfile } from "$lib/grid/grid";
 import type { Profile } from "$lib/model/users/profiles";
 import type { ProfileState } from "../profile-state.svelte";
@@ -74,15 +75,16 @@ export function fullProfile({
 export function gridSource({
 	ids,
 	nextPage = null,
+	loadPage = vi.fn(() => Promise.resolve()),
 }: {
 	ids: number[];
 	nextPage?: number | null;
+	loadPage?: (page: number) => Promise<void>;
 }) {
 	const source = {
 		profiles: ids.map(row) as GridProfile[],
 		revealProfileId: null as number | null,
-		nextPage,
-		loadMore: vi.fn(() => Promise.resolve()),
+		paging: new SentinelPaging({ loadPage, cursor: () => nextPage }),
 		indexInProfiles: (profileId: number): number =>
 			source.profiles.findIndex(
 				({ id }: GridProfile) => id === profileId,
@@ -91,7 +93,7 @@ export function gridSource({
 			source.profiles.find(({ id }: GridProfile) => id === profileId) ??
 			null,
 	} satisfies ProfilePagerSource;
-	return source;
+	return Object.assign(source, { loadPage });
 }
 
 const openedPagers: ProfilePagerState[] = [];

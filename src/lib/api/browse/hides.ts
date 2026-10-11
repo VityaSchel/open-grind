@@ -1,7 +1,6 @@
 import z from "zod";
 
-import { createRecentlyLifted } from "$lib/api/browse/recently-lifted";
-import { FetchCache } from "$lib/api/cache";
+import { EditableServerList } from "$lib/api/browse/editable-server-list";
 import { fetchRest } from "$lib/api/transport";
 import {
 	markProfileUnviewable,
@@ -15,25 +14,37 @@ const getHiddenUsersResponseSchema = z.object({
 
 type HiddenUsers = z.infer<typeof getHiddenUsersResponseSchema>["hides"];
 
-const hiddenUsers = new FetchCache<null, HiddenUsers>(
-	() =>
+const hiddenUsers = new EditableServerList({
+	request: () =>
 		fetchRest("/v1/hides").then(
 			(res) => res.jsonParsed(getHiddenUsersResponseSchema).hides,
 		),
-	{ ttlMs: 5_000 },
-);
-
-const recentlyUnhidden = createRecentlyLifted();
+	ttlMs: 5_000,
+});
 
 export function getHiddenUsers(): Promise<HiddenUsers> {
-	return hiddenUsers.fetch(null);
+	return hiddenUsers.entries();
+}
+
+export async function getHiddenUserIdsNewestFirst(): Promise<number[]> {
+	const idsInUnstableServerOrder = (await getHiddenUsers()).map(
+		({ profileId }) => profileId,
+	);
+	const listedIds = new Set(idsInUnstableServerOrder);
+	const hiddenHereNewestFirst = hiddenUsers
+		.addedHereNewestFirst()
+		.filter((profileId) => listedIds.has(profileId));
+	return [
+		...new Set([
+			...hiddenHereNewestFirst,
+			...idsInUnstableServerOrder.toReversed(),
+		]),
+	];
 }
 
 export async function markHiddenProfilesUnviewable(): Promise<void> {
-	for (const { profileId } of await getHiddenUsers()) {
-		if (recentlyUnhidden.has(profileId)) continue;
+	for (const { profileId } of await getHiddenUsers())
 		markProfileUnviewable(profileId);
-	}
 }
 
 export async function hideUser({
@@ -41,10 +52,13 @@ export async function hideUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v1/me/hides/${profileId}`, { method: "POST" }).then(
-		(res) => res.assertOk(),
-	);
-	hiddenUsers.clear();
+	await hiddenUsers.add({
+		profileId,
+		request: () =>
+			fetchRest(`/v1/me/hides/${profileId}`, { method: "POST" }).then(
+				(res) => res.assertOk(),
+			),
+	});
 	markProfileUnviewable(profileId);
 }
 
@@ -53,12 +67,12 @@ export async function unhideUser({
 }: {
 	profileId: Profile["profileId"];
 }) {
-	await fetchRest(`/v1/hides/${profileId}`, { method: "DELETE" }).then(
-		(res) => res.assertOk(),
-	);
-	recentlyUnhidden.remember(profileId);
-	hiddenUsers.update(null, (hides) =>
-		hides.filter((hidden) => hidden.profileId !== profileId),
-	);
+	await hiddenUsers.remove({
+		profileId,
+		request: () =>
+			fetchRest(`/v1/hides/${profileId}`, { method: "DELETE" }).then(
+				(res) => res.assertOk(),
+			),
+	});
 	markProfileViewable(profileId);
 }

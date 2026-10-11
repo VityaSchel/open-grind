@@ -16,11 +16,15 @@ import {
 } from "$lib/api/google-handoff-state.svelte";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import GoogleHandoffConfirmAlert from "./GoogleHandoffConfirmAlert.svelte";
 
 const TITLE = "Switch Google account?";
 const DESCRIPTION =
 	"You have signed in to another Google account using the Open Grind Google OAuth app.";
+
+const continueButton = () => screen.getByRole("button", { name: "Continue" });
+const dialogShown = () => screen.queryByText(TITLE) !== null;
 
 function askToSwitch(): Promise<boolean> {
 	const answer = confirmAccountSwitch();
@@ -78,10 +82,13 @@ describe("GoogleHandoffConfirmAlert", () => {
 
 		const prompt = await findPrompt();
 		const progress = within(prompt).getByRole("button", {
-			name: "Loading Continue",
+			name: "Continue",
 		});
 
-		expect(within(progress).getByRole("status")).toBeTruthy();
+		expect(progress.getAttribute("aria-busy")).toBe("true");
+		expect(
+			within(progress).getByRole("status", { hidden: true }),
+		).toBeTruthy();
 	});
 
 	it("words the prompt in the active locale", async () => {
@@ -98,5 +105,28 @@ describe("GoogleHandoffConfirmAlert", () => {
 		for (const line of lines) {
 			expect(line.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
+	});
+
+	it("cancels the account switch on the back gesture", async () => {
+		const answer = askToSwitch();
+
+		expect(backGestureEventHandlers.size).toBe(1);
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(await answer).toBe(false);
+		expect(googleHandoffState.phase).toBe("idle");
+	});
+
+	it("marks Continue busy and swallows the back gesture while switching accounts", async () => {
+		const answer = askToSwitch();
+		await fireEvent.click(continueButton());
+
+		expect(continueButton().getAttribute("aria-busy")).toBe("true");
+		expect(backGestureEventHandlers.size).toBe(1);
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(await answer).toBe(true);
+		expect(googleHandoffState.phase).toBe("switchingAccount");
+		expect(dialogShown()).toBe(true);
 	});
 });

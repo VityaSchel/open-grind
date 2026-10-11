@@ -5,11 +5,10 @@
   common,
 }:
 let
-  # Parsed from gradle.properties so versions live in exactly one place.
-  gradleProperties =
+  readProperties =
+    file:
     let
-      raw = builtins.readFile ../src-tauri/gen/android/gradle.properties;
-      lines = lib.splitString "\n" raw;
+      lines = lib.splitString "\n" (builtins.readFile file);
       isPair = l: !(lib.hasPrefix "#" l) && (builtins.match ".+=.+" l != null);
       toPair =
         l:
@@ -22,6 +21,16 @@ let
         };
     in
     builtins.listToAttrs (map toPair (builtins.filter isPair lines));
+
+  # Parsed from gradle.properties so versions live in exactly one place.
+  gradleProperties = readProperties ../src-tauri/gen/android/gradle.properties;
+
+  fdroidPins = readProperties ../ci/fdroid/toolchain.properties;
+  stalePins = lib.filterAttrs (name: version: fdroidPins."${name}.version" != version) {
+    node = pkgs.nodejs_24.version;
+    bun = pkgs.bun.version;
+    libclang = pkgs.libclang.version;
+  };
 
   androidPlatformVersion = gradleProperties."opengrind.android.compileSdk";
   androidBuildToolsVersion = gradleProperties."opengrind.android.buildTools";
@@ -172,7 +181,12 @@ let
   };
 in
 {
-  package = buildAndroidScript;
+  package =
+    lib.throwIf (stalePins != { })
+      "flake.lock now resolves ${
+        lib.concatStringsSep ", " (lib.mapAttrsToList (name: version: "${name} ${version}") stalePins)
+      }; update ci/fdroid/toolchain.properties (versions and sha256s) or F-Droid stops reproducing the APK"
+      buildAndroidScript;
 
   devShell = pkgs.mkShell (
     buildEnv

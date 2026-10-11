@@ -27,12 +27,18 @@ class AddonGateTest {
 	private fun decide(
 		resolves: Boolean = true,
 		presence: AddonGate.Presence = AddonGate.Presence.Enabled,
+		turnedOff: Boolean = false,
 		certificates: AddonGate.SigningCertificates = device(),
+		version: Long? = null,
+		minVersion: Long = 0,
 	): AddonGate.Verdict = AddonGate.decide(
 		addonPackage = addon,
 		resolves = resolves,
 		presence = presence,
+		turnedOff = turnedOff,
 		certificates = certificates,
+		version = version,
+		minVersion = minVersion,
 	)
 
 	@Test
@@ -113,6 +119,76 @@ class AddonGateTest {
 			decide(
 				resolves = false,
 				presence = AddonGate.Presence.Disabled,
+				certificates = device(signers = mapOf(addon to someoneElsesCert)),
+			),
+		)
+	}
+
+	@Test
+	fun `a hidden or frozen add-on is reported as hidden, since its signature cannot be read`() {
+		assertEquals(
+			AddonGate.Verdict.Hidden,
+			decide(
+				resolves = false,
+				presence = AddonGate.Presence.Hidden,
+				certificates = device(signers = emptyMap()),
+			),
+		)
+	}
+
+	@Test
+	fun `an enabled add-on whose component is turned off is reported as turned off`() {
+		assertEquals(
+			AddonGate.Verdict.TurnedOff,
+			decide(resolves = false, turnedOff = true),
+		)
+	}
+
+	@Test
+	fun `a turned off component of an add-on signed by someone else is untrusted`() {
+		assertEquals(
+			AddonGate.Verdict.Untrusted,
+			decide(
+				resolves = false,
+				turnedOff = true,
+				certificates = device(signers = mapOf(addon to someoneElsesCert)),
+			),
+		)
+	}
+
+	@Test
+	fun `a disabled add-on is reported as disabled even when its component is turned off too`() {
+		assertEquals(
+			AddonGate.Verdict.Disabled,
+			decide(resolves = false, presence = AddonGate.Presence.Disabled, turnedOff = true),
+		)
+	}
+
+	@Test
+	fun `an add-on older than the minimum version is outdated`() {
+		assertEquals(
+			AddonGate.Verdict.Outdated,
+			decide(version = 1_000_000, minVersion = 1_000_001),
+		)
+	}
+
+	@Test
+	fun `an add-on at or above the minimum version, or of unknown version, is launched`() {
+		for (version in listOf(1_000_001L, 2_000_000L, null)) {
+			assertEquals(
+				AddonGate.Verdict.Launch,
+				decide(version = version, minVersion = 1_000_001),
+			)
+		}
+	}
+
+	@Test
+	fun `an outdated add-on signed by someone else is untrusted`() {
+		assertEquals(
+			AddonGate.Verdict.Untrusted,
+			decide(
+				version = 1_000_000,
+				minVersion = 1_000_001,
 				certificates = device(signers = mapOf(addon to someoneElsesCert)),
 			),
 		)

@@ -2,6 +2,7 @@ import { tick } from "svelte";
 import type { OnNavigate } from "@sveltejs/kit";
 
 import { StackSettle } from "$lib/components/navigation/stack/settle";
+import { Generation } from "$lib/util/generation";
 import { canGoBack } from "$lib/util/history";
 import { isWithin } from "$lib/util/pathname";
 import type { StackMotion } from "$lib/components/navigation/stack/motion";
@@ -27,7 +28,7 @@ export class PageStackState {
 
 	#ancestors: PaneSnapshot[] = [];
 	#pushedFrom: { path: string }[];
-	#generation = 0;
+	#generation = new Generation();
 	#backOwed = false;
 	#committedByGesture = false;
 
@@ -64,7 +65,7 @@ export class PageStackState {
 
 		this.tracking = false;
 		this.#backOwed = false;
-		const generation = ++this.#generation;
+		const generation = this.#generation.next();
 
 		if (this.#committedByGesture) {
 			this.#committedByGesture = false;
@@ -121,7 +122,7 @@ export class PageStackState {
 		this.#settle.apply();
 
 		return () => {
-			if (generation !== this.#generation) return;
+			if (this.#generation.isStale(generation)) return;
 			void this.#settle
 				.settleTo({ target, intent: "commit" })
 				.then((settled) => {

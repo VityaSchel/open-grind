@@ -120,7 +120,7 @@ describe("ProfilePagerState track", () => {
 		expect(mountedPositions(pager)).toEqual([0]);
 		expect(pager.row(2)).toBeNull();
 		expect(pager.heroHash(2)).toBeNull();
-		expect(source.loadMore).not.toHaveBeenCalled();
+		expect(source.loadPage).not.toHaveBeenCalled();
 	});
 
 	it("opens one stop that never grows when the entry is missing from the grid", () => {
@@ -131,7 +131,7 @@ describe("ProfilePagerState track", () => {
 		pager.absorbGridGrowth();
 
 		expect(pager.track).toEqual([50]);
-		expect(source.loadMore).not.toHaveBeenCalled();
+		expect(source.loadPage).not.toHaveBeenCalled();
 	});
 });
 
@@ -514,10 +514,10 @@ describe("ProfilePagerState grid growth", () => {
 		const pager = openPager({ source, profileId: 11 });
 
 		pager.commit({ position: 13 });
-		expect(source.loadMore).not.toHaveBeenCalled();
+		expect(source.loadPage).not.toHaveBeenCalled();
 
 		pager.commit({ position: 14 });
-		expect(source.loadMore).toHaveBeenCalledOnce();
+		expect(source.loadPage).toHaveBeenCalledOnce();
 	});
 
 	it("loads the next grid page on an entry deep in the grid with fewer than six profiles after it", () => {
@@ -527,8 +527,24 @@ describe("ProfilePagerState grid growth", () => {
 		openPager({ source: farEnough, profileId: 114 });
 		openPager({ source: nearEnd, profileId: 115 });
 
-		expect(farEnough.loadMore).not.toHaveBeenCalled();
-		expect(nearEnd.loadMore).toHaveBeenCalledOnce();
+		expect(farEnough.loadPage).not.toHaveBeenCalled();
+		expect(nearEnd.loadPage).toHaveBeenCalledOnce();
+	});
+
+	it("stops asking for the next grid page while its last request failed", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const loadPage = vi.fn(() => Promise.reject(new Error("offline")));
+		const source = gridSource({ ids: range(1, 20), nextPage: 1, loadPage });
+		const pager = openPager({ source, profileId: 15 });
+		await flush();
+
+		pager.commit({ position: 15 });
+		pager.commit({ position: 16 });
+		await flush();
+		expect(loadPage).toHaveBeenCalledOnce();
+
+		source.paging.retry();
+		expect(loadPage).toHaveBeenCalledTimes(2);
 	});
 
 	it("never loads more when the grid has no next page", () => {
@@ -537,6 +553,6 @@ describe("ProfilePagerState grid growth", () => {
 
 		pager.commit({ position: 19 });
 
-		expect(source.loadMore).not.toHaveBeenCalled();
+		expect(source.loadPage).not.toHaveBeenCalled();
 	});
 });

@@ -2,6 +2,7 @@ import z from "zod";
 
 import { t } from "$lib/i18n";
 import { formatRange } from "$lib/i18n/format";
+import { type Gender, primaryGenderRank } from "$lib/model/users/genders";
 import {
 	AcceptNSFWPics,
 	BodyType,
@@ -17,7 +18,6 @@ import {
 	tagsOf,
 	tagTextByKey,
 } from "$lib/model/users/tags";
-import type { Gender } from "$lib/model/users/genders";
 import type { UnitSystem } from "$lib/util/units";
 
 export const filterIsFavoriteSchema = z.boolean();
@@ -81,21 +81,32 @@ export const GENDER_ASK_ME = 62;
 
 export const isFilterableGenderId = (id: number) => id !== GENDER_ASK_ME;
 
-export const isFilterableGender = (
-	gender: Gender,
-): gender is Gender & { sortFilter: number } =>
-	typeof gender.sortFilter === "number" &&
-	isFilterableGenderId(gender.genderId);
+export const isFilterableGender = ({
+	genderId,
+	displayGroup,
+}: Pick<Gender, "genderId" | "displayGroup">) =>
+	displayGroup > 0 && isFilterableGenderId(genderId);
+
+type SortableFilterGender = Pick<Gender, "genderId" | "sortFilter">;
+
+export const compareFilterGenders = (
+	a: SortableFilterGender,
+	b: SortableFilterGender,
+) =>
+	primaryGenderRank(a.genderId) - primaryGenderRank(b.genderId) ||
+	(a.sortFilter ?? Infinity) - (b.sortFilter ?? Infinity) ||
+	a.genderId - b.genderId;
 
 export const filterTagsEnabledSchema = z.boolean();
 export const filterTagsSchema = z.array(z.string());
 
-const TAG_KEYS_MOVED_TO_GENDERS = ["ftm", "mtf"];
-
-export const isFilterableTagKey = (key: string) =>
-	!TAG_KEYS_MOVED_TO_GENDERS.includes(key);
-
-export function tagCatalog(languages: ProfileTagsResponse) {
+export function tagCatalog({
+	languages,
+	isOffered = () => true,
+}: {
+	languages: ProfileTagsResponse;
+	isOffered?: (key: string) => boolean;
+}) {
 	const textByKey = tagTextByKey(languages);
 	const textsByKey = new Map<string, string[]>();
 	const keyByText = new Map<string, string>();
@@ -108,13 +119,11 @@ export function tagCatalog(languages: ProfileTagsResponse) {
 		categories: (languages[0]?.categoryCollection ?? []).map(
 			(category) => ({
 				...category,
-				tags: category.tags.filter(({ key }) =>
-					isFilterableTagKey(key),
-				),
+				tags: category.tags.filter(({ key }) => isOffered(key)),
 			}),
 		),
 		flat: [...textByKey]
-			.filter(([key]) => isFilterableTagKey(key))
+			.filter(([key]) => isOffered(key))
 			.map(([key, text]) => ({
 				key,
 				text,
@@ -150,8 +159,6 @@ export const filterTribesEnabledSchema = z.boolean();
 export const FilterTribe = { ...Tribe, NotSpecified: -1 } as const;
 export type FilterTribeId = (typeof FilterTribe)[keyof typeof FilterTribe];
 export const filterTribesSchema = z.array(z.enum(FilterTribe));
-
-export const isFilterableTribe = (id: number) => id !== Tribe.Trans;
 
 export const filterBodyTypeEnabledSchema = z.boolean();
 export const FilterBodyType = { ...BodyType, NotSpecified: -1 } as const;

@@ -2,7 +2,7 @@
 
 Diffs against crates pulled from crates.io. Their sources are not committed.
 
-`bun run patch-deps` downloads each `.crate`, checks it against the sha256 in [`scripts/patch-deps.ts`](../../scripts/patch-deps.ts), applies the diff, and writes `src-tauri/.patched/<name>`, which `[patch.crates-io]` points at and git ignores. It runs from `postinstall` and from `reproPreamble` in [`nix/common.nix`](../../nix/common.nix), which every release build and the F-Droid recipe use. Re-runs compare a stamp and skip the network.
+`bun run patch-deps` downloads each `.crate`, checks it against the sha256 in [`scripts/patch-deps.ts`](../../scripts/patch-deps.ts), applies the diff, and writes `src-tauri/.patched/<name>`, which `[patch.crates-io]` points at and git ignores. It runs from `postinstall`, from `reproPreamble` in [`nix/common.nix`](../../nix/common.nix), which every release build uses, and from [`ci/fdroid/build-android.sh`](../../ci/fdroid/build-android.sh), which the F-Droid recipe uses. Re-runs compare a stamp and skip the network.
 
 Edit the tree and write the diff back with:
 
@@ -40,6 +40,15 @@ On Android the custom-protocol handler runs while the process-global `REQUEST_HA
 | `Cargo.toml`                 | Allow warnings, since a path dependency gets no `--cap-lints allow`.                                                     |
 
 Backport of [wry 0.56.0](https://github.com/tauri-apps/wry/releases/tag/wry-v0.56.0). **Delete when a `tauri-runtime-wry` requiring `wry >= 0.56` is published**.
+
+On Android `ipc()` runs the IPC handler while holding the process-global `IPC` mutex, and `destroy_webview` takes it on the main thread when an activity is destroyed, so a sync command that waits on the main thread (`run_mobile_plugin`, any `app.path()` getter) never returns once a teardown is queued ahead of it.
+
+| File                 | Change                                                                     |
+| -------------------- | -------------------------------------------------------------------------- |
+| `android/binding.rs` | Clone the IPC handler out of the map and drop the guard before calling it. |
+| `android/mod.rs`     | Store it as `Arc<dyn Fn(Request<String>)>` so it can be cloned.            |
+
+Not a backport: wry 0.57.0 still holds the lock. **Keep it.**
 
 Android WebView paints `WebChromeClient.getDefaultVideoPoster()`, a gray play icon when it returns null, on every `<video>` without a `poster` until it plays or seeks. `android/kotlin/RustWebChromeClient.kt` returns a transparent bitmap instead. Backport of [wry#1804](https://github.com/tauri-apps/wry/pull/1804) from 0.56.1: **delete once the lock resolves `wry >= 0.56.1`**.
 

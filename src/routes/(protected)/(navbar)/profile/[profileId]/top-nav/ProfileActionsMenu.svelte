@@ -11,6 +11,7 @@
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { hideUser } from "$lib/api/browse/hides";
 	import { showErrorToast } from "$lib/api/error-toast";
+	import { showBlockFailure } from "$lib/components/report/block-failure";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
@@ -22,19 +23,25 @@
 
 	let {
 		profileId,
-		blockable,
 		changingViewability,
 		markBlocked,
 		markHidden,
 	}: {
 		profileId: number;
-		blockable: boolean;
 		changingViewability: boolean;
 		markBlocked: () => PendingViewabilityChange;
 		markHidden: () => PendingViewabilityChange;
 	} = $props();
 
 	let reportOpen = $state(false);
+
+	function block() {
+		void applyViewabilityChange({
+			change: markBlocked,
+			request: () => blockUser({ profileId }),
+			showFailure: showBlockFailure,
+		});
+	}
 </script>
 
 <DropdownMenu.Root>
@@ -88,27 +95,11 @@
 			<EyeSlashIcon class="size-5" />
 			{t("profile.topNav.actionsMenu.hide")}
 		</DropdownMenu.Item>
-		{#if blockable}
-			<DropdownMenu.Item
-				onSelect={() =>
-					applyViewabilityChange({
-						change: markBlocked,
-						request: () => blockUser({ profileId }),
-						failureLabel: t(
-							"profile.viewability.errors.blockFailed",
-						),
-					})}
-			>
-				<ProhibitIcon class="size-5" />
-				{t("profile.topNav.actionsMenu.block")}
-			</DropdownMenu.Item>
-		{/if}
+		<DropdownMenu.Item onSelect={block}>
+			<ProhibitIcon class="size-5" />
+			{t("profile.topNav.actionsMenu.block")}
+		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<ReportSheet
-	bind:open={reportOpen}
-	{profileId}
-	{blockable}
-	onBlocked={() => markBlocked().settle()}
-/>
+<ReportSheet bind:open={reportOpen} {profileId} onBlock={block} />

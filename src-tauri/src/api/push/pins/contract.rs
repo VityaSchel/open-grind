@@ -107,6 +107,9 @@ fn every_fcm_rejection_classifies_to_its_reason() {
 			"Unavailable" => "ERROR_UNAVAILABLE",
 			"Disabled" => "ERROR_DISABLED",
 			"Untrusted" => "ERROR_UNTRUSTED",
+			"Hidden" => "ERROR_HIDDEN",
+			"TurnedOff" => "ERROR_TURNED_OFF",
+			"Outdated" => "ERROR_OUTDATED",
 			unknown => {
 				panic!("AddonGate.Verdict.{unknown} has no FCM add-on reason")
 			}
@@ -120,7 +123,7 @@ fn every_fcm_rejection_classifies_to_its_reason() {
 	}
 
 	let request = squashed(FCM_REQUEST);
-	for constant in ["ERROR_REFUSED", "ERROR_TIMED_OUT"] {
+	for constant in ["ERROR_REFUSED", "ERROR_TIMED_OUT", "ERROR_BLOCKED"] {
 		assert!(
 			request.contains(&format!(
 				"FcmOutcome.Failed(PushContract.{constant},"
@@ -141,6 +144,10 @@ fn every_fcm_rejection_classifies_to_its_reason() {
 		("ERROR_UNTRUSTED", PushError::AddonUntrusted),
 		("ERROR_REFUSED", PushError::AddonRefused),
 		("ERROR_TIMED_OUT", PushError::TimedOut),
+		("ERROR_OUTDATED", PushError::AddonOutdated),
+		("ERROR_HIDDEN", PushError::AddonHidden),
+		("ERROR_TURNED_OFF", PushError::AddonTurnedOff),
+		("ERROR_BLOCKED", PushError::AddonBlocked),
 	];
 	assert_eq!(
 		fcm_markers(),

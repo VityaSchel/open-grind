@@ -6,13 +6,14 @@ import {
 	unshareAlbum,
 } from "$lib/api/messaging/albums";
 import { albumShares } from "$lib/chat/album-shares.svelte";
+import { Generation } from "$lib/util/generation";
 
 export class AlbumSharedWith {
 	#albumId: number;
 	#sharedCount: number;
 	#shared = new SvelteSet<number>();
 	#loaded = $state(false);
-	#generation = 0;
+	#generation = new Generation();
 
 	constructor({
 		albumId,
@@ -30,9 +31,9 @@ export class AlbumSharedWith {
 	}
 
 	async load(): Promise<number[]> {
-		const generation = ++this.#generation;
+		const generation = this.#generation.next();
 		const { profileIds } = await getAlbumShares(this.#albumId);
-		if (generation !== this.#generation) return profileIds;
+		if (this.#generation.isStale(generation)) return profileIds;
 		this.#shared.clear();
 		for (const profileId of profileIds) this.#shared.add(profileId);
 		this.#loaded = true;
@@ -61,7 +62,7 @@ export class AlbumSharedWith {
 	}): Promise<void> {
 		const albumId = this.#albumId;
 		const wasShared = this.#shared.has(profileId);
-		this.#generation++;
+		this.#generation.next();
 		this.#apply({ profileId, shared });
 		try {
 			if (shared) await shareAlbum({ albumId, profileIds: [profileId] });

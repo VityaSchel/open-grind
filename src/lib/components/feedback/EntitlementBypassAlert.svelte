@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import {
 		dismissEntitlementBypass,
 		entitlementBypassState,
@@ -50,18 +51,22 @@
 				</Rich>
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<fieldset disabled={entitlementBypassState.busy} class="contents">
-			<AlertDialog.Footer>
+		<AlertDialog.Footer>
+			<fieldset disabled={entitlementBypassState.busy} class="contents">
 				<AlertDialog.Cancel size="lg"
 					>{t("common.actions.cancel")}</AlertDialog.Cancel
 				>
 				<AlertDialog.Action
 					size="lg"
 					onclick={() => void runEntitlementBypass()}
+					aria-busy={entitlementBypassState.busy}
 				>
+					{#if entitlementBypassState.busy}
+						<Spinner aria-hidden="true" />
+					{/if}
 					{t("feedback.entitlementBypass.bypass")}
 				</AlertDialog.Action>
-			</AlertDialog.Footer>
-		</fieldset>
+			</fieldset>
+		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

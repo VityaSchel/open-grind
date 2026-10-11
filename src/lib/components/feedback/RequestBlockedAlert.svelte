@@ -10,8 +10,10 @@
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { Label } from "$lib/components/ui/label";
 	import Link from "$lib/components/ui/link/Link.svelte";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { type MessageKey, t } from "$lib/i18n";
 	import Rich from "$lib/i18n/Rich.svelte";
+	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	const copyKeys = {
 		cloudflare: {
@@ -31,13 +33,37 @@
 
 	let submitting = $state(false);
 
+	const escapeKeydownBehavior = $derived(submitting ? "ignore" : "close");
+
+	dismissOnBackGesture({
+		active: () => requestBlockedAlertState.open,
+		dismiss: () => {
+			if (!submitting) requestBlockedAlertState.open = false;
+		},
+	});
+
 	const cloudflare = $derived(requestBlockedAlertState.kind === "cloudflare");
 
 	const copy = $derived(copyKeys[requestBlockedAlertState.kind]);
+
+	async function rotateParameters() {
+		submitting = true;
+		try {
+			await callMethod("rotate_api_params");
+			toast.success(t("feedback.requestBlocked.rotated"), {
+				id: "rotate-api-params-success",
+			});
+		} catch (error) {
+			console.error(error);
+		} finally {
+			submitting = false;
+			requestBlockedAlertState.open = false;
+		}
+	}
 </script>
 
 <AlertDialog.Root bind:open={requestBlockedAlertState.open}>
-	<AlertDialog.Content>
+	<AlertDialog.Content {escapeKeydownBehavior}>
 		<AlertDialog.Header>
 			<AlertDialog.Title>{t(copy.title)}</AlertDialog.Title>
 			<AlertDialog.Description>
@@ -69,28 +95,20 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={submitting}
-				>{t("common.actions.close")}</AlertDialog.Cancel
-			>
-			<AlertDialog.Action
-				onclick={async () => {
-					submitting = true;
-					try {
-						await callMethod("rotate_api_params");
-						toast.success(t("feedback.requestBlocked.rotated"), {
-							id: "rotate-api-params-success",
-						});
-					} catch (error) {
-						console.error(error);
-					} finally {
-						submitting = false;
-						requestBlockedAlertState.open = false;
-					}
-				}}
-				disabled={submitting}
-			>
-				{t("feedback.requestBlocked.rotate")}
-			</AlertDialog.Action>
+			<fieldset disabled={submitting} class="contents">
+				<AlertDialog.Cancel
+					>{t("common.actions.close")}</AlertDialog.Cancel
+				>
+				<AlertDialog.Action
+					onclick={rotateParameters}
+					aria-busy={submitting}
+				>
+					{#if submitting}
+						<Spinner aria-hidden="true" />
+					{/if}
+					{t("feedback.requestBlocked.rotate")}
+				</AlertDialog.Action>
+			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

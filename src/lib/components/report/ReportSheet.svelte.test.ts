@@ -10,19 +10,24 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "svelte";
 
-const { blockUserMock, reportProfileMock, showErrorToastMock } = vi.hoisted(
-	() => ({
-		blockUserMock: vi.fn(),
-		reportProfileMock: vi.fn(),
-		showErrorToastMock: vi.fn(),
-	}),
-);
+const {
+	blockUserMock,
+	reportProfileMock,
+	showErrorToastMock,
+	showBlockFailureMock,
+} = vi.hoisted(() => ({
+	blockUserMock: vi.fn<() => Promise<void>>(),
+	reportProfileMock: vi.fn(),
+	showErrorToastMock: vi.fn(),
+	showBlockFailureMock: vi.fn(),
+}));
 
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
 vi.mock("$lib/api/safety/reports", () => ({
 	reportProfile: reportProfileMock,
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
+vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { slot } from "$lib/i18n/fixtures/dom";
@@ -37,7 +42,7 @@ import ReportSheet from "./ReportSheet.svelte";
 
 type SheetProps = Pick<
 	ComponentProps<typeof ReportSheet>,
-	"subject" | "locations" | "blockable"
+	"subject" | "locations" | "onBlock"
 >;
 
 const PROFILE_ID = 7;
@@ -87,11 +92,9 @@ const subjects = [
 }[];
 
 function renderSheet(props: SheetProps = {}) {
-	const onBlocked = vi.fn();
 	render(ReportSheet, {
-		props: { open: true, profileId: PROFILE_ID, onBlocked, ...props },
+		props: { open: true, profileId: PROFILE_ID, ...props },
 	});
-	return onBlocked;
 }
 
 const reasonToggles = () =>
@@ -140,23 +143,10 @@ async function failSubmit(): Promise<Error> {
 	return failure;
 }
 
-async function failBlock(): Promise<Error> {
+async function blockButton(): Promise<HTMLElement> {
 	await submitAndWait("SPAM");
-	const failure = new Error("offline");
-	blockUserMock.mockRejectedValueOnce(failure);
-	const [block] = footerButtons();
-	if (block === undefined) throw new Error("no Block user button");
-	await fireEvent.click(block);
-	await vi.waitFor(() => {
-		expect(showErrorToastMock).toHaveBeenCalledOnce();
-	});
-	return failure;
+	return screen.getByRole("button", { name: "Block user" });
 }
-
-const failures = [
-	{ action: "sending", fail: failSubmit, label: "Couldn’t send report" },
-	{ action: "blocking", fail: failBlock, label: "Couldn’t block" },
-];
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -270,46 +260,69 @@ describe("ReportSheet", () => {
 	});
 
 	it("offers to block the profile once the report is in", async () => {
-		const onBlocked = renderSheet();
+		renderSheet();
 
 		await submitAndWait("SPAM");
 
 		expect(slot("report-submitted").textContent).toContain(BLOCK_HINT);
 		expect(texts(footerButtons())).toEqual(["Block user", "Done"]);
-		await fireEvent.click(
-			screen.getByRole("button", { name: "Block user" }),
-		);
-		await vi.waitFor(() => {
-			expect(onBlocked).toHaveBeenCalledOnce();
-		});
+	});
+
+	it("closes at once and blocks the reported profile in the background", async () => {
+		const block = Promise.withResolvers<void>();
+		blockUserMock.mockReturnValueOnce(block.promise);
+		renderSheet();
+
+		await fireEvent.click(await blockButton());
+
 		expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
 			profileId: PROFILE_ID,
 		});
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+		block.resolve();
+		await Promise.resolve();
+		expect(showBlockFailureMock).not.toHaveBeenCalled();
 	});
 
-	it("only says Done for a profile that cannot be blocked", async () => {
-		renderSheet({ blockable: false });
+	it("reports a background block that fails after it closed", async () => {
+		const rejection = new Error("not listed");
+		const block = Promise.withResolvers<void>();
+		blockUserMock.mockReturnValueOnce(block.promise);
+		renderSheet();
 
-		await submitAndWait("SPAM");
+		await fireEvent.click(await blockButton());
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+		block.reject(rejection);
 
-		expect(slot("report-submitted").textContent).not.toContain(BLOCK_HINT);
-		expect(slot("report-submitted").querySelectorAll("p")).toHaveLength(1);
-		expect(texts(footerButtons())).toEqual(["Done"]);
+		await vi.waitFor(() =>
+			expect(showBlockFailureMock).toHaveBeenCalledExactlyOnceWith(
+				rejection,
+			),
+		);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
 	});
 
-	it.each(failures)(
-		"toasts $label when $action fails",
-		async ({ fail, label }) => {
-			renderSheet();
+	it("closes at once and leaves the block to its owner", async () => {
+		const onBlock = vi.fn();
+		renderSheet({ onBlock });
 
-			const failure = await fail();
+		await fireEvent.click(await blockButton());
 
-			expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
-				label,
-				error: failure,
-			});
-		},
-	);
+		expect(onBlock).toHaveBeenCalledOnce();
+		expect(blockUserMock).not.toHaveBeenCalled();
+		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+	});
+
+	it("toasts Couldn’t send report when sending fails", async () => {
+		renderSheet();
+
+		const failure = await failSubmit();
+
+		expect(showErrorToastMock).toHaveBeenCalledExactlyOnceWith({
+			label: "Couldn’t send report",
+			error: failure,
+		});
+	});
 
 	it.each(subjects)(
 		"words the $props.subject report form in the active locale",
@@ -364,17 +377,14 @@ describe("ReportSheet", () => {
 		},
 	);
 
-	it.each(failures)(
-		"words the failure toast when $action fails in the active locale",
-		async ({ fail }) => {
-			renderSheet();
+	it("words the failure toast when sending fails in the active locale", async () => {
+		renderSheet();
 
-			await setLocale({ locale: "en-XA" });
-			await fail();
+		await setLocale({ locale: "en-XA" });
+		await failSubmit();
 
-			expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(
-				PSEUDO_MESSAGE,
-			);
-		},
-	);
+		expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(
+			PSEUDO_MESSAGE,
+		);
+	});
 });

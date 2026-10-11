@@ -421,7 +421,7 @@ describe("ProfilePane hiding and blocking", () => {
 		expect(
 			within(section).getByText("You have blocked this user"),
 		).not.toBeNull();
-		expect(button("Unblock").disabled).toBe(true);
+		expect(button("Unblock").disabled).toBe(false);
 
 		const rejection = new Error("offline");
 		block.reject(rejection);
@@ -432,6 +432,52 @@ describe("ProfilePane hiding and blocking", () => {
 			label: "Couldn’t block",
 			error: rejection,
 		});
+	});
+
+	it("unblocks right away while the block is still on its way, without reporting the block", async () => {
+		const block = pendingRequest(blockUserMock);
+		const unblock = pendingRequest(unblockUserMock);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+		await chooseFromProfileMenu("Block user");
+
+		await fireEvent.click(button("Unblock"));
+		await flush();
+		expect(heading(section)).toBe("Loaded, 30");
+
+		block.resolve();
+		await flush();
+		expect(
+			button("Profile menu").disabled,
+			"the unblock is still on its way",
+		).toBe(true);
+
+		unblock.resolve();
+		await flush();
+
+		expect(heading(section)).toBe("Loaded, 30");
+		expect(button("Profile menu").disabled).toBe(false);
+		expect(showErrorToastMock).not.toHaveBeenCalled();
+	});
+
+	it("blocks a profile Grindr marks as non-blockable like any other", async () => {
+		getProfileMock.mockResolvedValue({
+			...fullProfile(LOADED),
+			isBlockable: false,
+		});
+		blockUserMock.mockResolvedValueOnce(undefined);
+		const { section } = renderPane({ active: true, row: gridRow() });
+		await flush();
+
+		await chooseFromProfileMenu("Block user");
+		await flush();
+
+		expect(blockUserMock).toHaveBeenCalledExactlyOnceWith({
+			profileId: PROFILE_ID,
+		});
+		expect(
+			within(section).getByText("You have blocked this user"),
+		).not.toBeNull();
 	});
 
 	it("shows the profile again at once on Unhide and holds its menu until the request lands", async () => {

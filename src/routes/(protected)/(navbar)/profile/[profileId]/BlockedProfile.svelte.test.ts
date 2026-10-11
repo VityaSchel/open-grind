@@ -31,7 +31,6 @@ function renderBlocked({ blockedByUs }: { blockedByUs: boolean }) {
 		props: {
 			profileId: PROFILE_ID,
 			blockedByUs,
-			changingViewability: false,
 			markViewable: () => pending,
 		},
 	});

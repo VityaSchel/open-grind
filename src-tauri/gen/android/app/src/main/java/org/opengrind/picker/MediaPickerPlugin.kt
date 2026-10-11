@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.activity.result.ActivityResult
-import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
 import app.tauri.annotation.TauriPlugin
@@ -14,6 +13,7 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import org.opengrind.launchForResult
 
 @InvokeArg
 internal class PickMediaArgs {
@@ -22,7 +22,7 @@ internal class PickMediaArgs {
 }
 
 @TauriPlugin
-class MediaPickerPlugin(activity: Activity) : Plugin(activity) {
+class MediaPickerPlugin(private val activity: Activity) : Plugin(activity) {
 
 	@Command
 	fun pickMedia(invoke: Invoke) {
@@ -37,14 +37,13 @@ class MediaPickerPlugin(activity: Activity) : Plugin(activity) {
 			.putExtra(Intent.EXTRA_MIME_TYPES, args.mimeTypes)
 			.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, args.multiple)
 		try {
-			startActivityForResult(invoke, intent, "pickResult")
+			activity.launchForResult(intent) { pickResult(invoke, it) }
 		} catch (_: ActivityNotFoundException) {
 			resolveUnsupported(invoke)
 		}
 	}
 
-	@ActivityCallback
-	fun pickResult(invoke: Invoke, result: ActivityResult) {
+	private fun pickResult(invoke: Invoke, result: ActivityResult) {
 		val uris = if (result.resultCode == Activity.RESULT_OK) pickedUris(result.data) else emptyList()
 		invoke.resolve(JSObject().apply { put("uris", JSArray(uris.map(Uri::toString))) })
 	}

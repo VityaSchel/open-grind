@@ -12,10 +12,12 @@ export function showErrorToast({
 	label = t("feedback.appError.unknown"),
 	error,
 	onRetry,
+	id,
 }: {
 	label?: string;
 	error: unknown;
 	onRetry?: () => void;
+	id?: string;
 }) {
 	if (error instanceof ApiError && isSessionGone(error)) return;
 	const copyDetails = {
@@ -24,10 +26,11 @@ export function showErrorToast({
 	};
 	if (onRetry) {
 		toast.error(label, {
+			id,
 			action: { label: t("common.actions.retry"), onClick: onRetry },
 			cancel: copyDetails,
 		});
 		return;
 	}
-	toast.error(label, { action: copyDetails });
+	toast.error(label, { id, action: copyDetails });
 }

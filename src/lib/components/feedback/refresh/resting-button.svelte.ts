@@ -30,6 +30,12 @@ export class RestingButtonModel {
 		this.#offered = true;
 	}
 
+	withdraw(): void {
+		this.cancelProbe();
+		this.#offered = false;
+		this.shown = false;
+	}
+
 	leaveBoundary(): void {
 		this.#sawPull = true;
 		this.#offered = false;

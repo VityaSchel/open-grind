@@ -7,7 +7,10 @@
 		unsendMessage,
 	} from "$lib/api/messaging/messages";
 	import ReportSheet from "$lib/components/report/ReportSheet.svelte";
-	import { offerEntitlementBypass } from "$lib/entitlements/bypass.svelte";
+	import {
+		offerEntitlementBypass,
+		reportRefusedDespiteBypass,
+	} from "$lib/entitlements/bypass.svelte";
 	import { t } from "$lib/i18n";
 	import {
 		type ConversationState,
@@ -61,10 +64,13 @@
 		} catch (error) {
 			console.error(error);
 			if (tieredFeature(error) === "UnsentMessage") {
-				offerEntitlementBypass({
+				const lease = await offerEntitlementBypass({
 					reason: "chat.conversation.bypassReason.unsend",
-					retry: () => unsend({ state, messageId }),
 				});
+				if (lease === null) return;
+				await unsend({ state, messageId })
+					.catch(reportRefusedDespiteBypass)
+					.finally(lease.release);
 				return;
 			}
 			showErrorToast({

@@ -192,6 +192,7 @@ pub fn run() {
             api::auth::refresh_session,
             api::auth::sign_out,
             api::auth::account_restriction,
+            api::auth::session_feature_flags,
             api::auth::recaptcha_first_party_enabled,
             api::recaptcha::mint_recaptcha_token,
             api::push::push_addon_ready,
@@ -371,7 +372,8 @@ pub fn run() {
                 tauri::async_runtime::spawn(async move {
                     SigningKeyStorage::restore(&client).await;
                     while key_rx.changed().await.is_ok() {
-                        match key_rx.borrow().clone() {
+                        let key = key_rx.borrow().clone();
+                        match key {
                             Some(k) => {
                                 if let Err(e) = SigningKeyStorage::save(&k) {
                                     tracing::error!("[signing] persist failed: {e}");

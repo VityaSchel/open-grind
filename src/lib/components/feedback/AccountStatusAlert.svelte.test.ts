@@ -12,16 +12,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { accountStatusState } from "$lib/api/account-status-state.svelte";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import AccountStatusAlert from "./AccountStatusAlert.svelte";
 
 const {
 	callMethodMock,
+	signOutMock,
 	tauriListeners,
 	toastErrorMock,
 	toastSuccessMock,
 	writeTextMock,
 } = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
+	signOutMock: vi.fn(),
 	tauriListeners: new Map<string, (event: { payload: unknown }) => void>(),
 	toastErrorMock: vi.fn(),
 	toastSuccessMock: vi.fn(),
@@ -44,6 +47,7 @@ vi.mock("svelte-sonner", () => ({
 vi.mock("@tauri-apps/plugin-clipboard-manager", () => ({
 	writeText: writeTextMock,
 }));
+vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
 
 const ban = { kind: "BANNED", code: 403, message: "Account banned" };
 
@@ -68,6 +72,14 @@ function dialogText(slot: "title" | "description") {
 	return screen
 		.getByRole("alertdialog")
 		.querySelector(`[data-slot="alert-dialog-${slot}"]`)?.textContent;
+}
+
+const button = (name: string) => screen.getByRole("button", { name });
+
+async function showBan() {
+	await renderAlert();
+	emit("auth:banned", { kind: "banned", code: 27, message: "Banned" });
+	await vi.waitFor(() => button("Sign out"));
 }
 
 beforeEach(() => {
@@ -169,7 +181,7 @@ describe("AccountStatusAlert", () => {
 			const lines = [
 				dialogText("title"),
 				dialogText("description"),
-				...shownButtons.map((button) => button.textContent),
+				...shownButtons.map((button) => button.textContent.trim()),
 			];
 			expect(lines).toHaveLength(buttons.length + 2);
 			for (const line of lines) expect(line).toMatch(PSEUDO_MESSAGE);
@@ -237,5 +249,29 @@ describe("AccountStatusAlert", () => {
 			);
 		});
 		expect(toastSuccessMock).not.toHaveBeenCalled();
+	});
+
+	it("marks Sign out busy and locks both buttons while signing out", async () => {
+		const signOut = Promise.withResolvers<void>();
+		signOutMock.mockReturnValueOnce(signOut.promise);
+		await showBan();
+
+		await fireEvent.click(button("Sign out"));
+
+		expect(button("Sign out").getAttribute("aria-busy")).toBe("true");
+		expect(button("Sign out").matches(":disabled")).toBe(true);
+		expect(button(COPY_ERROR_DETAILS).matches(":disabled")).toBe(true);
+
+		signOut.resolve();
+		await vi.waitFor(() => expect(accountStatusState.open).toBe(false));
+	});
+
+	it("swallows the back gesture while open", async () => {
+		await showBan();
+
+		expect(backGestureEventHandlers.size).toBe(1);
+		for (const handler of backGestureEventHandlers) handler();
+
+		expect(accountStatusState.open).toBe(true);
 	});
 });

@@ -49,7 +49,8 @@
 	/>
 {:else}
 	<div
-		class="h-24.5 w-full shrink-0 rounded-2xl bg-muted/30"
+		data-slot="conversation-placeholder"
+		class="box-content h-24 shrink-0 rounded-2xl border border-transparent bg-muted/30"
 		{@attach enqueue}
 		{@attach promoteInView}
 		use:observeIntersection={{

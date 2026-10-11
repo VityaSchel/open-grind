@@ -42,7 +42,7 @@ class FcmRequest(
 			context.bindService(PushContract.bindIntent(), this, Context.BIND_AUTO_CREATE)
 		}.getOrDefault(false)
 		if (!bound) {
-			settle(FcmOutcome.Failed(PushContract.ERROR_UNAVAILABLE, null))
+			settle(FcmOutcome.Failed(PushContract.ERROR_BLOCKED, null))
 			return
 		}
 		handler.postDelayed(expire, TIMEOUT_MS)

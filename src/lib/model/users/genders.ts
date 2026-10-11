@@ -21,3 +21,10 @@ export const gendersSchema = arrayOfParsableEntries({
 	entries: genderSchema,
 	label: "genders",
 });
+
+const primaryGenderOrder = [1, 4, 5, 2, 6, 7, 3];
+
+export const primaryGenderRank = (genderId: number) => {
+	const index = primaryGenderOrder.indexOf(genderId);
+	return index === -1 ? Infinity : index;
+};

@@ -11,6 +11,7 @@
 	import TextField from "$lib/components/fields/TextField.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { t } from "$lib/i18n";
 	import {
 		type FavoriteNote,
@@ -112,7 +113,14 @@
 				/>
 			</ResponsiveDialog.Body>
 			<ResponsiveDialog.Footer drawerClass="pt-0">
-				<Button disabled={!dirty || over} onclick={() => save()}>
+				<Button
+					disabled={!dirty || over}
+					aria-busy={saving}
+					onclick={() => save()}
+				>
+					{#if saving}
+						<Spinner aria-hidden="true" />
+					{/if}
 					{t("common.actions.save")}
 				</Button>
 			</ResponsiveDialog.Footer>

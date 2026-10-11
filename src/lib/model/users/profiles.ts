@@ -151,6 +151,14 @@ export const Tribe = {
 	Sober: 13,
 } as const;
 
+export const isTribeOffered = ({
+	id,
+	genderFilterFlag,
+}: {
+	id: number;
+	genderFilterFlag: boolean;
+}) => !genderFilterFlag || id !== Tribe.Trans;
+
 const tribeKeys = {
 	[Tribe.Bear]: "profile.tribe.bear",
 	[Tribe.CleanCut]: "profile.tribe.cleanCut",

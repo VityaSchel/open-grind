@@ -7,7 +7,7 @@ const PORT = 5177;
 const chromiumSandbox = process.getuid?.() !== 0;
 
 export const DEMO_ENV = {
-	PUBLIC_ENABLE_DEMO: "1",
+	OPEN_GRIND_DEMO: "1",
 	PUBLIC_TEST_INSETS: "1",
 	PUBLIC_BACKDROP_BLUR: "max",
 };

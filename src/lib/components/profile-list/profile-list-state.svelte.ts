@@ -3,6 +3,7 @@ import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
 import { showErrorToast } from "$lib/api/error-toast";
 import { getProfiles } from "$lib/api/users/profiles";
+import { Generation } from "$lib/util/generation";
 import type { ProfileListOptions, ProfileListProfile } from "./profile-list";
 
 const CHUNK_SIZE = 50;
@@ -18,7 +19,7 @@ export class ProfileListState {
 	#requestedChunks = new SvelteSet<number>();
 	#visible = { start: 0, end: 0 };
 	#resolving = false;
-	#token = 0;
+	#generation = new Generation();
 	#options: () => ProfileListOptions;
 
 	constructor(options: () => ProfileListOptions) {
@@ -39,19 +40,19 @@ export class ProfileListState {
 	}
 
 	async load(): Promise<void> {
-		const token = ++this.#token;
+		const generation = this.#generation.next();
 		this.loading = true;
 		this.error = null;
 		this.#profiles.clear();
 		this.#requestedChunks.clear();
 		try {
 			const ids = await this.#options().loadIds();
-			if (token !== this.#token) return;
+			if (this.#generation.isStale(generation)) return;
 			this.ids = ids;
 			if (this.#options().eager)
 				this.#visible = { start: 0, end: ids.length };
 		} catch (caught) {
-			if (token !== this.#token) return;
+			if (this.#generation.isStale(generation)) return;
 			console.error(caught);
 			this.error =
 				caught instanceof Error
@@ -59,7 +60,7 @@ export class ProfileListState {
 					: new Error("Failed to load profiles", { cause: caught });
 			return;
 		} finally {
-			if (token === this.#token) this.loading = false;
+			if (!this.#generation.isStale(generation)) this.loading = false;
 		}
 		void this.#resolveVisible();
 	}
@@ -70,7 +71,7 @@ export class ProfileListState {
 	}
 
 	dispose(): void {
-		this.#token += 1;
+		this.#generation.next();
 	}
 
 	async toggle(profileId: number): Promise<void> {
@@ -119,20 +120,20 @@ export class ProfileListState {
 		const chunks = this.#pendingChunks();
 		if (chunks.length === 0) return;
 		this.#resolving = true;
-		const token = this.#token;
+		const generation = this.#generation.current;
 		const ids = chunks.flatMap((chunk) =>
 			this.ids.slice(chunk * CHUNK_SIZE, (chunk + 1) * CHUNK_SIZE),
 		);
 		for (const chunk of chunks) this.#requestedChunks.add(chunk);
 		try {
 			const resolved = await getProfiles(ids);
-			if (token === this.#token) {
+			if (!this.#generation.isStale(generation)) {
 				for (const id of ids) this.#profiles.set(id, null);
 				for (const profile of resolved)
 					this.#profiles.set(profile.profileId, profile);
 			}
 		} catch (error) {
-			if (token === this.#token) {
+			if (!this.#generation.isStale(generation)) {
 				for (const chunk of chunks) this.#requestedChunks.delete(chunk);
 				console.error(error);
 				showErrorToast({

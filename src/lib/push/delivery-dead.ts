@@ -5,6 +5,8 @@ const DELIVERY_DEAD: ReadonlySet<PushErrorReason> = new Set<PushErrorReason>([
 	"addonDisabled",
 	"addonRefused",
 	"addonUntrusted",
+	"addonOutdated",
+	"addonHidden",
 	"untrustedCaller",
 	"firebaseUnavailable",
 ]);
@@ -13,6 +15,10 @@ const ADDON_GONE: ReadonlySet<PushErrorReason> = new Set<PushErrorReason>([
 	"addonUnavailable",
 	"addonDisabled",
 	"addonUntrusted",
+	"addonOutdated",
+	"addonHidden",
+	"addonTurnedOff",
+	"addonBlocked",
 ]);
 
 export async function fastDeliveryDead(error: unknown): Promise<boolean> {

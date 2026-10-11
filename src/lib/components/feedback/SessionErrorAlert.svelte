@@ -23,6 +23,7 @@
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { Spinner } from "$lib/components/ui/spinner";
 	import { type MessageKey, sourceText, t, type Translate } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { ws } from "$lib/ws.svelte";
@@ -105,12 +106,16 @@
 		};
 	});
 
+	let running: false | "tryAgain" | "signOut" = $state(false);
+
+	const escapeKeydownBehavior = $derived(running ? "ignore" : "close");
+
 	dismissOnBackGesture({
 		active: () => sessionErrorState.open,
-		dismiss: () => sessionRecovery.dismiss(),
+		dismiss: () => {
+			if (!running) sessionRecovery.dismiss();
+		},
 	});
-
-	let busy = $state(false);
 
 	const copy = $derived(copyKeys[variants[sessionErrorState.kind]]);
 
@@ -150,7 +155,7 @@
 	);
 
 	async function tryAgain() {
-		busy = true;
+		running = "tryAgain";
 		try {
 			await callMethod("refresh_session");
 			clearSessionError();
@@ -170,24 +175,29 @@
 					t("feedback.sessionError.errors.tryAgainFailed"),
 			);
 		} finally {
-			busy = false;
+			running = false;
 		}
 	}
 
 	async function onSignOut() {
-		busy = true;
+		running = "signOut";
 		try {
 			await signOut();
 		} finally {
-			busy = false;
+			running = false;
 			sessionErrorState.open = false;
 		}
 	}
 </script>
 
-<AlertDialog.Root bind:open={sessionErrorState.open}>
+<AlertDialog.Root
+	bind:open={sessionErrorState.open}
+	onOpenChange={(open) => {
+		if (!open) sessionRecovery.dismiss();
+	}}
+>
 	<AlertDialog.Content
-		escapeKeydownBehavior="ignore"
+		{escapeKeydownBehavior}
 		interactOutsideBehavior="ignore"
 	>
 		<AlertDialog.Header>
@@ -204,26 +214,36 @@
 			</p>
 		{/if}
 		<AlertDialog.Footer>
-			<Button
-				variant="ghost"
-				onclick={() => void copyToClipboard({ text: detail })}
-				disabled={busy}
-			>
-				{t("common.actions.copyError")}
-			</Button>
-			<Button
-				variant="ghost"
-				onclick={() => sessionRecovery.dismiss()}
-				disabled={busy}
-			>
-				{t("feedback.sessionError.dismiss")}
-			</Button>
-			<Button variant="outline" onclick={onSignOut} disabled={busy}>
-				{t("feedback.actions.signOut")}
-			</Button>
-			<Button onclick={tryAgain} disabled={busy}
-				>{t("common.actions.retry")}</Button
-			>
+			<fieldset disabled={running !== false} class="contents">
+				<Button
+					variant="ghost"
+					onclick={() => void copyToClipboard({ text: detail })}
+				>
+					{t("common.actions.copyError")}
+				</Button>
+				<Button
+					variant="ghost"
+					onclick={() => sessionRecovery.dismiss()}
+				>
+					{t("feedback.sessionError.dismiss")}
+				</Button>
+				<Button
+					variant="outline"
+					onclick={onSignOut}
+					aria-busy={running === "signOut"}
+				>
+					{#if running === "signOut"}
+						<Spinner aria-hidden="true" />
+					{/if}
+					{t("feedback.actions.signOut")}
+				</Button>
+				<Button onclick={tryAgain} aria-busy={running === "tryAgain"}>
+					{#if running === "tryAgain"}
+						<Spinner aria-hidden="true" />
+					{/if}
+					{t("common.actions.retry")}
+				</Button>
+			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
