@@ -22,6 +22,10 @@ function parsedAt<T>(entries: readonly T[], index: number): T {
 	return entry;
 }
 
+function valueText({ valueParts }: ParsedFilter): string {
+	return valueParts.map(({ text }) => text).join("");
+}
+
 function errorTextAt(entries: readonly ParsedFilter[], index: number): string {
 	const { error } = parsedAt(entries, index);
 	if (!error) throw new Error(`no error at index ${index}`);
@@ -112,23 +116,20 @@ describe("parseFilterGridQuery", () => {
 
 	it("words yes and no for boolean filters", () => {
 		const result = parseFilterGridQuery("?online=true&favorites=false");
-		expect(result.parsed.map((filter) => filter.valueText)).toEqual([
-			"Yes",
-			"No",
-		]);
+		expect(result.parsed.map(valueText)).toEqual(["Yes", "No"]);
 	});
 
 	it("renders min and max as a single field, matching the filters UI", () => {
 		const result = parseFilterGridQuery("?ageMin=25&ageMax=40");
 		expect(result.parsed).toHaveLength(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("age");
-		expect(parsedAt(result.parsed, 0).valueText).toBe("25–40");
+		expect(valueText(parsedAt(result.parsed, 0))).toBe("25–40");
 	});
 
 	it("supports the combined `age=min-max` syntax with an open bound", () => {
 		const result = parseFilterGridQuery("?age=30-");
 		expect(result.filters.age).toEqual([30, defaultFilters.age[1]]);
-		expect(parsedAt(result.parsed, 0).valueText).toBe("30 years and over");
+		expect(valueText(parsedAt(result.parsed, 0))).toBe("30 years and over");
 	});
 
 	it("accepts aliases", () => {
@@ -137,7 +138,7 @@ describe("parseFilterGridQuery", () => {
 		expect(result.filters.positionEnabled).toBe(true);
 		expect(result.filters.positions).toEqual([1, 3]);
 		expect(result.parsed.map((p) => p.key)).toEqual(["online", "position"]);
-		expect(parsedAt(result.parsed, 1).valueText).toBe("Top, Versatile");
+		expect(valueText(parsedAt(result.parsed, 1))).toBe("Top, Versatile");
 	});
 
 	it("turns Fresh on from fresh=true", () => {
@@ -161,20 +162,20 @@ describe("parseFilterGridQuery", () => {
 
 	it("renders human labels for enum values", () => {
 		const result = parseFilterGridQuery("?tribes=1,6");
-		expect(parsedAt(result.parsed, 0).valueText).toBe("Bear, Jock");
+		expect(valueText(parsedAt(result.parsed, 0))).toBe("Bear, Jock");
 	});
 
 	it("renders enum labels in the active locale", async () => {
 		await setLocale({ locale: "en-XA" });
 		const result = parseFilterGridQuery("?tribes=1");
-		expect(parsedAt(result.parsed, 0).valueText).toContain("⟦Ɓéáŕ ö⟧");
+		expect(valueText(parsedAt(result.parsed, 0))).toContain("⟦Ɓéáŕ ö⟧");
 	});
 
 	it("combines photo flags into a single photos field", () => {
 		const result = parseFilterGridQuery("?photoOnly=true&hasAlbum=true");
 		expect(result.parsed).toHaveLength(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("photos");
-		expect(parsedAt(result.parsed, 0).valueText).toBe(
+		expect(valueText(parsedAt(result.parsed, 0))).toBe(
 			"Has Photos, Has Albums",
 		);
 		expect(result.filters.photos).toEqual(["has-photos", "has-albums"]);
@@ -214,13 +215,33 @@ describe("parseFilterGridQuery", () => {
 		expect(parsedAt(nsfw.parsed, 0).valid).toBe(true);
 		expect(nsfw.filters.acceptNSFWPicsEnabled).toBe(true);
 		expect(nsfw.filters.acceptNSFWPics).toEqual([1, -1]);
-		expect(parsedAt(nsfw.parsed, 0).valueText).toBe("Never, Not Specified");
+		expect(valueText(parsedAt(nsfw.parsed, 0))).toBe(
+			"Never, Not Specified",
+		);
 
 		const genders = parseFilterGridQuery("?genders=-1,42");
 		expect(parsedAt(genders.parsed, 0).valid).toBe(true);
 		expect(genders.filters.genderEnabled).toBe(true);
 		expect(genders.filters.genders).toEqual([-1, 42]);
-		expect(parsedAt(genders.parsed, 0).valueText).toBe("Not Specified, 42");
+		expect(valueText(parsedAt(genders.parsed, 0))).toBe(
+			"Not Specified, 42",
+		);
+	});
+
+	it("keeps typed gender IDs and tags verbatim and names translatable", () => {
+		const result = parseFilterGridQuery("?genders=-1,42&tags=bear,otter");
+		expect(result.parsed.map((filter) => filter.valueParts)).toEqual([
+			[
+				{ text: "Not Specified", verbatim: false },
+				{ text: ", ", verbatim: false },
+				{ text: "42", verbatim: true },
+			],
+			[
+				{ text: "bear", verbatim: true },
+				{ text: ", ", verbatim: false },
+				{ text: "otter", verbatim: true },
+			],
+		]);
 	});
 
 	it("flags the Ask me gender as invalid because the server fails on it", () => {

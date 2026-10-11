@@ -17,6 +17,11 @@
 		"controlKey": "Ctrl"
 	},
 	"filterGrid": {
+		"heading": "Filter grid…",
+		"hint": "Type a Grindr grid query, e.g. {{example}}",
+		"applyHint_one": "Press Enter to apply {{count}} filter",
+		"applyHint_other": "Press Enter to apply {{count}} filters",
+		"fixHint": "Fix the highlighted filters to apply",
 		"yes": "Yes",
 		"no": "No",
 		"errors": {
@@ -27,7 +32,8 @@
 			"rangeSyntax": "Use min-max, e.g. {{example}}",
 			"noValues": "No values",
 			"unknownValue": "Unknown value “{{value}}”",
-			"invalidGenderId": "Invalid gender ID “{{value}}”"
+			"invalidGenderId": "Invalid gender ID “{{value}}”",
+			"applyFailed": "Couldn’t apply filters"
 		}
 	}
 }

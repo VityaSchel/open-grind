@@ -27,7 +27,7 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 		if (!handler) {
 			parsed.push({
 				key,
-				valueText: value,
+				valueParts: [{ text: value, verbatim: true }],
 				valid: false,
 				error: { kind: "unknownFilter" },
 			});
@@ -38,7 +38,7 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 			badge = {
 				key: handler.filter.id,
 				label: handler.filter.label,
-				valueText: "",
+				valueParts: [],
 				valid: true,
 			};
 			badges.set(handler.filter, badge);
@@ -52,7 +52,7 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 	}
 
 	for (const [filter, badge] of badges)
-		if (badge.valid) badge.valueText = filter.render(draft);
+		if (badge.valid) badge.valueParts = filter.render(draft);
 
 	const validCount = parsed.filter((badge) => badge.valid).length;
 	return {

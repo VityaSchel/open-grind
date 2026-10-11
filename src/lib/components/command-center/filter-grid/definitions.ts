@@ -4,7 +4,7 @@ import {
 	optionFilters,
 } from "$lib/components/filters/option-filters";
 import { type PlainMessageKey, t } from "$lib/i18n";
-import { formatList, formatRange } from "$lib/i18n/format";
+import { formatListParts, formatRange } from "$lib/i18n/format";
 import {
 	AGE_MAX,
 	AGE_MIN,
@@ -41,7 +41,20 @@ import {
 	type RangeTarget,
 	splitList,
 } from "./apply";
-import type { BooleanKey, Filter, FilterId, ListKey, Render } from "./types";
+import type { BooleanKey, Filter, FilterId, ListKey, ValuePart } from "./types";
+
+const translated = (text: string): ValuePart => ({ text, verbatim: false });
+const verbatim = (text: string): ValuePart => ({ text, verbatim: true });
+
+function listParts(items: readonly ValuePart[]): ValuePart[] {
+	const elements = [...items];
+	return formatListParts(items.map(({ text }) => text)).map(
+		({ type, value }) =>
+			type === "element"
+				? { text: value, verbatim: elements.shift()?.verbatim ?? false }
+				: translated(value),
+	);
+}
 
 function rangeText(
 	bounds: Omit<Parameters<typeof rangeBoundTexts>[0], "units">,
@@ -67,10 +80,13 @@ function booleanFilter({
 	return {
 		id,
 		label,
-		render: (filters) =>
-			filters[field]
-				? t("commands.filterGrid.yes")
-				: t("commands.filterGrid.no"),
+		render: (filters) => [
+			translated(
+				filters[field]
+					? t("commands.filterGrid.yes")
+					: t("commands.filterGrid.no"),
+			),
+		],
 		params: [{ keys, apply: booleanApply(field) }],
 	};
 }
@@ -85,7 +101,7 @@ function rangeFilter(options: {
 	rawMin?: number;
 	rawMax?: number;
 	store?: (value: number) => number;
-	render: Render;
+	render: (filters: GridSearchFilters) => string;
 }): Filter {
 	const { target, min, max, store } = options;
 	const rawMin = options.rawMin ?? min;
@@ -93,7 +109,7 @@ function rangeFilter(options: {
 	return {
 		id: target,
 		label: options.label,
-		render: options.render,
+		render: (filters) => [translated(options.render(filters))],
 		params: [
 			{
 				keys: [options.minKey],
@@ -144,10 +160,13 @@ function enumFilter({
 		id,
 		label,
 		render: (filters) =>
-			formatList(
-				(filters[target] as number[]).map(
-					(id) => labelOf(id) ?? String(id),
-				),
+			listParts(
+				(filters[target] as number[]).map((id) => {
+					const label = labelOf(id);
+					return label === undefined
+						? verbatim(String(id))
+						: translated(label);
+				}),
 			),
 		params: [
 			{
@@ -206,7 +225,8 @@ export const filters: Filter[] = [
 	{
 		id: "photos",
 		label: "browse.filters.photos.label",
-		render: (f) => formatList(f.photos.map((tag) => t(photoLabels[tag]))),
+		render: (f) =>
+			listParts(f.photos.map((tag) => translated(t(photoLabels[tag])))),
 		params: [
 			{
 				keys: ["photoOnly", "hasPhotos"],
@@ -335,9 +355,11 @@ export const filters: Filter[] = [
 		id: "genders",
 		label: "browse.filters.genders.label",
 		render: (f) =>
-			formatList(
+			listParts(
 				f.genders.map((id) =>
-					id === -1 ? t("common.filters.notSpecified") : String(id),
+					id === -1
+						? translated(t("common.filters.notSpecified"))
+						: verbatim(String(id)),
 				),
 			),
 		params: [
@@ -356,7 +378,7 @@ export const filters: Filter[] = [
 	{
 		id: "tags",
 		label: "browse.filters.tags.label",
-		render: (f) => formatList(f.tags),
+		render: (f) => listParts(f.tags.map(verbatim)),
 		params: [
 			{
 				keys: ["tags", "tag"],

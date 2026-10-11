@@ -234,6 +234,8 @@ export interface Messages {
 	"commands.commandCenter.suggestions.openProfileById": { prefix: string };
 	"commands.commandCenter.suggestions.quickGoTo": { prefix: string };
 	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: string };
+	"commands.filterGrid.applyHint": { count: number };
+	"commands.filterGrid.errors.applyFailed": undefined;
 	"commands.filterGrid.errors.expectedBoolean": { falseValue: string; trueValue: string };
 	"commands.filterGrid.errors.invalidGenderId": { value: string };
 	"commands.filterGrid.errors.noValues": undefined;
@@ -242,6 +244,9 @@ export interface Messages {
 	"commands.filterGrid.errors.rangeSyntax": { example: string };
 	"commands.filterGrid.errors.unknownFilter": undefined;
 	"commands.filterGrid.errors.unknownValue": { value: string };
+	"commands.filterGrid.fixHint": undefined;
+	"commands.filterGrid.heading": undefined;
+	"commands.filterGrid.hint": { example: string };
 	"commands.filterGrid.no": undefined;
 	"commands.filterGrid.yes": undefined;
 	"commands.trigger.controlKey": undefined;
@@ -714,6 +719,7 @@ export interface RichMessages {
 	"commands.filterGrid.errors.outOfRange": { max: "placeholder"; min: "placeholder" };
 	"commands.filterGrid.errors.rangeSyntax": { example: "placeholder" };
 	"commands.filterGrid.errors.unknownValue": { value: "placeholder" };
+	"commands.filterGrid.hint": { example: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };

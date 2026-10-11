@@ -18,6 +18,7 @@ const translatedSvelteFiles = [
 	"src/lib/components/command-center/CommandCenterSuggestion.svelte",
 	"src/lib/components/command-center/CommandCenterTrigger.svelte",
 	"src/lib/components/command-center/CommandSuggestion.svelte",
+	"src/lib/components/command-center/filter-grid/FilterGridCommand.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",
 	"src/lib/components/feedback/ApiErrorDisplay.svelte",
 	"src/lib/components/feedback/AutoLocationToast.svelte",

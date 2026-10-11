@@ -7,6 +7,7 @@
 	import * as Command from "$lib/components/ui/command";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { t } from "$lib/i18n";
+	import Rich from "$lib/i18n/Rich.svelte";
 	import {
 		commandCenterClose,
 		commandCenterState,
@@ -16,6 +17,8 @@
 		type ParsedFilter,
 		parseFilterGridQuery,
 	} from "./filter-grid-query";
+
+	const QUERY_EXAMPLE = "online=true&age=18-99&tribes=2,12";
 
 	const result = $derived(parseFilterGridQuery(commandCenterState.query));
 	const canApply = $derived(
@@ -30,7 +33,10 @@
 			await goto("/");
 		} catch (error) {
 			console.error(error);
-			showErrorToast({ label: "Failed to apply filters", error });
+			showErrorToast({
+				label: t("commands.filterGrid.errors.applyFailed"),
+				error,
+			});
 		}
 	}
 </script>
@@ -39,7 +45,25 @@
 	{#if label}{t(label)}{:else}<span translate="no">{key}</span>{/if}
 {/snippet}
 
-<Command.Group heading="Filter grid...">
+{#snippet filterValue({ valueParts }: ParsedFilter)}
+	<span>
+		{#each valueParts as part, index (index)}
+			{#if part.verbatim}<span translate="no">{part.text}</span
+				>{:else}{part.text}{/if}
+		{/each}
+	</span>
+{/snippet}
+
+{#snippet example()}
+	<code
+		class="rounded-xs bg-muted px-1 py-px font-mono text-sm"
+		translate="no"
+	>
+		{QUERY_EXAMPLE}
+	</code>
+{/snippet}
+
+<Command.Group heading={t("commands.filterGrid.heading")} value="filter-grid">
 	<Command.Item
 		value={commandCenterState.query || "?"}
 		disabled={!canApply}
@@ -49,14 +73,7 @@
 		<FunnelIcon />
 		<div class="flex min-w-0 flex-1 flex-col gap-2">
 			{#if result.parsed.length === 0}
-				<span>
-					Type a Grindr grid query, e.g.
-					<code
-						class="rounded-xs bg-muted px-1 py-px font-mono text-sm"
-					>
-						online=true&age=18-99&tribes=2,12
-					</code>
-				</span>
+				<span><Rich key="commands.filterGrid.hint" {example} /></span>
 			{:else}
 				<div class="flex flex-wrap gap-1">
 					{#each result.parsed as filter, index (index)}
@@ -65,7 +82,7 @@
 								<span class="opacity-60">
 									{@render filterName(filter)}
 								</span>
-								{filter.valueText}
+								{@render filterValue(filter)}
 							</Badge>
 						{:else}
 							<Badge variant="destructive">
@@ -79,16 +96,13 @@
 				</div>
 				{#if canApply}
 					<span class="text-xs text-muted-foreground">
-						Press Enter to apply {result.validCount}
-						{#if result.validCount === 1}
-							filter
-						{:else}
-							filters
-						{/if}
+						{t("commands.filterGrid.applyHint", {
+							count: result.validCount,
+						})}
 					</span>
 				{:else}
 					<span class="text-xs text-destructive">
-						Fix the highlighted filters to apply
+						{t("commands.filterGrid.fixHint")}
 					</span>
 				{/if}
 			{/if}

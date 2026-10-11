@@ -236,14 +236,24 @@ export function formatRelativeTime({
 	return markFormatted({ locale: getLocale(), text });
 }
 
-export function formatList(items: readonly string[]): string {
+function listFormat(): Intl.ListFormat {
 	return cachedFormatter({
 		cache: listFormats,
 		locale: getLocale(),
 		preset: "unitShort",
 		create: (locales) =>
 			new Intl.ListFormat(locales, { type: "unit", style: "short" }),
-	}).format(items);
+	});
+}
+
+export function formatList(items: readonly string[]): string {
+	return listFormat().format(items);
+}
+
+export type ListPart = { type: "element" | "literal"; value: string };
+
+export function formatListParts(items: readonly string[]): ListPart[] {
+	return listFormat().formatToParts(items);
 }
 
 export function formatRange({

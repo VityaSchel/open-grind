@@ -8,6 +8,7 @@ import {
 	formatDate,
 	formatInteger,
 	formatList,
+	formatListParts,
 	formatNumber,
 	formatRange,
 	formatRelativeTime,
@@ -393,6 +394,27 @@ describe("formatList", () => {
 		expect(formatList(["Top", "Bottom", "Versatile"])).toBe(
 			"Top, Bottom, Versatile",
 		);
+	});
+});
+
+describe("formatListParts", () => {
+	it("splits the joined list into its items and separators", () => {
+		expect(formatListParts(["Top", "Bottom", "Versatile"])).toEqual([
+			{ type: "element", value: "Top" },
+			{ type: "literal", value: ", " },
+			{ type: "element", value: "Bottom" },
+			{ type: "literal", value: ", " },
+			{ type: "element", value: "Versatile" },
+		]);
+	});
+
+	it("takes the separators of the active locale", async () => {
+		await setLocale({ locale: "fr" });
+		expect(
+			formatListParts(["Top", "Bottom", "Versatile"])
+				.filter(({ type }) => type === "literal")
+				.map(({ value }) => value),
+		).toEqual([", ", " et "]);
 	});
 });
 

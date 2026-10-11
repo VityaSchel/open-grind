@@ -13,10 +13,12 @@ export type FilterError =
 
 export type InvalidValueKind = Extract<FilterError, { value: string }>["kind"];
 
+export type ValuePart = { text: string; verbatim: boolean };
+
 export type ParsedFilter = {
 	key: string;
 	label?: PlainMessageKey;
-	valueText: string;
+	valueParts: ValuePart[];
 	valid: boolean;
 	error?: FilterError;
 };
@@ -30,7 +32,7 @@ export type ParsedFilterGridQuery = {
 
 export type ApplyResult = { ok: true } | { ok: false; error: FilterError };
 export type Apply = (raw: string, draft: GridSearchFilters) => ApplyResult;
-export type Render = (filters: GridSearchFilters) => string;
+export type Render = (filters: GridSearchFilters) => ValuePart[];
 
 export type Param = { keys: string[]; apply: Apply };
 export type FilterId =
