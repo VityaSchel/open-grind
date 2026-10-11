@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { t } from "$lib/i18n";
 	import { cmToInches, inchesToCm } from "$lib/util/units";
 	import { heightCmRange, heightInchOptions } from "../options";
 	import NumberField from "./NumberField.svelte";
@@ -24,17 +25,17 @@
 
 {#if units === "imperial"}
 	<SelectField
-		label="Height"
+		label={t("settings.profile.fields.height")}
 		bind:value={() => inches, storeInches}
 		options={heightInchOptions}
 	/>
 {:else}
 	<NumberField
-		label="Height"
+		label={t("settings.profile.fields.height")}
 		bind:value
 		min={heightCmRange.min}
 		max={heightCmRange.max}
-		unit="cm"
+		unit={t("settings.profile.units.centimeters")}
 		placeholder="—"
 	/>
 {/if}

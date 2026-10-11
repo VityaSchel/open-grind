@@ -199,5 +199,29 @@
 		"errors": {
 			"loadFailed": "Couldn’t load the credits. Try again."
 		}
+	},
+	"profile": {
+		"fields": {
+			"height": "Height",
+			"weight": "Weight"
+		},
+		"units": {
+			"centimeters": "cm",
+			"kilograms": "kg",
+			"pounds": "lb"
+		},
+		"notSet": "Not Set",
+		"socialPlaceholder": "username",
+		"combo": {
+			"selected_one": "{{count}}/{{max}} selected",
+			"selected_other": "{{count}}/{{max}} selected",
+			"selectedAtMax_one": "{{count}}/{{max}} selected · remove one to add another",
+			"selectedAtMax_other": "{{count}}/{{max}} selected · remove one to add another",
+			"noMatches": "No matches",
+			"a11y": {
+				"remove": "Remove {{label}}",
+				"toggleList": "Toggle list"
+			}
+		}
 	}
 }

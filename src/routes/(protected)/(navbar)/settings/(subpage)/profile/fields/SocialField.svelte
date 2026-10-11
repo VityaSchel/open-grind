@@ -3,6 +3,7 @@
 
 	import Field from "$lib/components/fields/Field.svelte";
 	import { Input } from "$lib/components/ui/input";
+	import { t } from "$lib/i18n";
 
 	let {
 		label,
@@ -17,7 +18,7 @@
 	} = $props();
 </script>
 
-<Field {label}>
+<Field {label} translateLabel={false}>
 	{#snippet control({ id })}
 		<div class="relative">
 			{#if Icon}
@@ -36,7 +37,7 @@
 							newValue.trim() === "" ? null : newValue.trim())
 				}
 				maxlength={maxLength}
-				placeholder="username"
+				placeholder={t("settings.profile.socialPlaceholder")}
 				autocapitalize="off"
 				autocomplete="off"
 				spellcheck={false}

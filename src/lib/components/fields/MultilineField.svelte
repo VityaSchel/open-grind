@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Label } from "$lib/components/ui/label";
 	import { Textarea } from "$lib/components/ui/textarea";
+	import { formatInteger } from "$lib/i18n/format";
 
 	let {
 		label,
@@ -38,7 +39,7 @@
 				{ "text-destructive": over, "text-muted-foreground": !over },
 			]}
 		>
-			{remaining}
+			{formatInteger(remaining)}
 		</span>
 	</div>
 </div>

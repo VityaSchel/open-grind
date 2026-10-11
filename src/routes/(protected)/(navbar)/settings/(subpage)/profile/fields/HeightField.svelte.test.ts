@@ -88,7 +88,7 @@ describe("HeightField in imperial units", () => {
 		const offered = (await openMenu()).map(labelOf);
 
 		expect(offered).toHaveLength(53);
-		expect(offered.slice(0, 3)).toEqual(["Not set", "3′11″", "4′0″"]);
+		expect(offered.slice(0, 3)).toEqual(["Not Set", "3′11″", "4′0″"]);
 		expect(offered.at(-1)).toBe("8′2″");
 	});
 
@@ -113,11 +113,11 @@ describe("HeightField in imperial units", () => {
 		expect(picker().textContent?.trim()).toBe("3′11″");
 	});
 
-	it("clears the stored height when Not set is picked", async () => {
+	it("clears the stored height when Not Set is picked", async () => {
 		preferences.units = "imperial";
 		const { stored } = renderField(180);
 
-		await pick("Not set");
+		await pick("Not Set");
 
 		expect(stored.heightCm).toBeNull();
 	});

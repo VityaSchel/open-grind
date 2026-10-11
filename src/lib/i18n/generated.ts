@@ -734,6 +734,18 @@ export interface Messages {
 	"settings.preferences.reset": undefined;
 	"settings.privacy.showDistance.description": { distance: string };
 	"settings.privacy.showDistance.title": undefined;
+	"settings.profile.combo.a11y.remove": { label: string };
+	"settings.profile.combo.a11y.toggleList": undefined;
+	"settings.profile.combo.noMatches": undefined;
+	"settings.profile.combo.selected": { count: number; max: string };
+	"settings.profile.combo.selectedAtMax": { count: number; max: string };
+	"settings.profile.fields.height": undefined;
+	"settings.profile.fields.weight": undefined;
+	"settings.profile.notSet": undefined;
+	"settings.profile.socialPlaceholder": undefined;
+	"settings.profile.units.centimeters": undefined;
+	"settings.profile.units.kilograms": undefined;
+	"settings.profile.units.pounds": undefined;
 	"settings.setting.errors.saveFailed": undefined;
 	"settings.subpage.titles.account": undefined;
 	"settings.subpage.titles.albums": undefined;
@@ -874,4 +886,7 @@ export interface RichMessages {
 	"settings.credits.sections.platformLibraries": { platform: "placeholder" };
 	"settings.notifications.unsupportedOn": { platform: "placeholder" };
 	"settings.privacy.showDistance.description": { distance: "placeholder" };
+	"settings.profile.combo.a11y.remove": { label: "placeholder" };
+	"settings.profile.combo.selected": { count: "count"; max: "placeholder" };
+	"settings.profile.combo.selectedAtMax": { count: "count"; max: "placeholder" };
 }

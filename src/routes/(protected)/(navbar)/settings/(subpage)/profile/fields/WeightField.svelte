@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+	import { t } from "$lib/i18n";
 	import { kgToPounds, poundsToKg } from "$lib/util/units";
 	import { weightKgRange, weightPoundRange } from "../options";
 	import NumberField from "./NumberField.svelte";
@@ -30,22 +31,22 @@
 
 {#if units === "imperial"}
 	<NumberField
-		label="Weight"
+		label={t("settings.profile.fields.weight")}
 		bind:value={() => pounds, storePounds}
 		min={weightPoundRange.min}
 		max={weightPoundRange.max}
-		unit="lb"
+		unit={t("settings.profile.units.pounds")}
 		placeholder="—"
 		onfocus={() => (kgBeforeEditing = value)}
 	/>
 {:else}
 	<NumberField
-		label="Weight"
+		label={t("settings.profile.fields.weight")}
 		bind:value
 		min={weightKgRange.min}
 		max={weightKgRange.max}
 		step={0.5}
-		unit="kg"
+		unit={t("settings.profile.units.kilograms")}
 		placeholder="—"
 	/>
 {/if}

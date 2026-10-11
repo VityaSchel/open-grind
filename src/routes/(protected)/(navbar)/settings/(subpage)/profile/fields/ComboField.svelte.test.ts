@@ -3,6 +3,12 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import {
+	bracketCounts,
+	restoreCountFormatter,
+} from "$lib/i18n/fixtures/count-formatter";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import type { Option } from "$lib/util/options";
 import ComboField from "./ComboField.svelte";
 
@@ -15,7 +21,13 @@ const OPTIONS: Option<number>[] = [
 
 function renderField(props: Partial<Record<string, unknown>> = {}) {
 	return render(ComboField, {
-		props: { label: "Tribes", values: [], options: OPTIONS, ...props },
+		props: {
+			label: "Tribes",
+			values: [],
+			options: OPTIONS,
+			searchPlaceholder: "Search tribes…",
+			...props,
+		},
 	});
 }
 
@@ -51,7 +63,11 @@ async function search(input: HTMLInputElement, query: string) {
 	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-afterEach(cleanup);
+afterEach(async () => {
+	cleanup();
+	restoreCountFormatter();
+	await setLocale({ locale: SOURCE_LOCALE });
+});
 
 describe("ComboField chips", () => {
 	it("shows one chip per selected value, labelled from the options", () => {
@@ -125,6 +141,15 @@ describe("ComboField selection limit", () => {
 
 		expect(hint(container)).toBe("2/3 selected");
 	});
+
+	it("prints the count and the maximum with the count formatter", () => {
+		const bracketed = bracketCounts();
+		const { container } = renderField({ values: [1], max: 3 });
+
+		expect(hint(container)).toBe(
+			`${bracketed(1)}/${bracketed(3)} selected`,
+		);
+	});
 });
 
 describe("ComboField list", () => {
@@ -187,5 +212,39 @@ describe("ComboField list", () => {
 			{ label: "Twink", disabled: true },
 			{ label: "Daddy", disabled: false },
 		]);
+	});
+});
+
+describe("ComboField copy", () => {
+	it("keeps the option names out of page translation", async () => {
+		const { container } = renderField({ values: [2] });
+		await openList();
+
+		expect(
+			[...container.querySelectorAll("[translate=no]")].map((element) =>
+				element.textContent.trim(),
+			),
+		).toEqual(["Otter"]);
+		expect(
+			[...document.querySelectorAll("[role=option]")].map((option) =>
+				option.getAttribute("translate"),
+			),
+		).toEqual(["no", "no", "no", "no"]);
+	});
+
+	it("words its hint and its button names in the active locale", async () => {
+		const { container } = renderField({ values: [1], max: 3 });
+		const removeButton = screen.getByRole("button", {
+			name: "Remove Bear",
+		});
+		const listToggle = screen.getByRole("button", { name: "Toggle list" });
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(hint(container)).toMatch(PSEUDO_MESSAGE);
+		expect(hint(container)).toContain("1/3");
+		expect(removeButton.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
+		expect(removeButton.getAttribute("aria-label")).toContain("Bear");
+		expect(listToggle.getAttribute("aria-label")).toMatch(PSEUDO_MESSAGE);
 	});
 });

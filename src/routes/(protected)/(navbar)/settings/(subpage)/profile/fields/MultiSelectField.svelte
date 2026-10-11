@@ -4,6 +4,7 @@
 	import Field from "$lib/components/fields/Field.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { t } from "$lib/i18n";
 	import { formatList } from "$lib/i18n/format";
 	import { type Option, selectionKeepingUnlisted } from "$lib/util/options";
 
@@ -11,7 +12,7 @@
 		label,
 		values = $bindable(),
 		options,
-		placeholder = "Not set",
+		placeholder,
 	}: {
 		label: string;
 		values: T[];
@@ -44,7 +45,7 @@
 						>
 							{selectedLabels.length
 								? formatList(selectedLabels)
-								: placeholder}
+								: (placeholder ?? t("settings.profile.notSet"))}
 						</span>
 						<CaretUpDownIcon class="size-4 shrink-0 opacity-60" />
 					</Button>

@@ -139,7 +139,7 @@ test("the position menu runs from top to side with an icon per position", async 
 	await position.click();
 
 	const items = page.getByRole("menuitemradio");
-	await expect(items).toHaveText(["Not set", ...POSITION_SPECTRUM]);
+	await expect(items).toHaveText(["Not Set", ...POSITION_SPECTRUM]);
 	for (const name of POSITION_SPECTRUM) {
 		await expect(
 			page

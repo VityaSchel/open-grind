@@ -4,6 +4,8 @@
 
 	import Field from "$lib/components/fields/Field.svelte";
 	import * as Combobox from "$lib/components/ui/combobox";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import type { Option } from "$lib/util/options";
 
 	let {
@@ -14,7 +16,7 @@
 		resolveLabel,
 		exclude,
 		max,
-		searchPlaceholder = "Search...",
+		searchPlaceholder,
 	}: {
 		label: string;
 		hint?: string;
@@ -23,7 +25,7 @@
 		resolveLabel?: (id: T) => string | undefined;
 		exclude?: (id: T) => T[];
 		max?: number;
-		searchPlaceholder?: string;
+		searchPlaceholder: string;
 	} = $props();
 
 	let searchValue = $state("");
@@ -84,8 +86,10 @@
 
 	const effectiveHint = $derived.by(() => {
 		if (max === undefined) return hint;
-		const count = `${values.length}/${max} selected`;
-		return atMax ? `${count} · remove one to add another` : count;
+		const params = { count: values.length, max: formatInteger(max) };
+		return atMax
+			? t("settings.profile.combo.selectedAtMax", params)
+			: t("settings.profile.combo.selected", params);
 	});
 
 	function remove(id: T) {
@@ -115,11 +119,14 @@
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pr-1.5 pl-3 text-sm text-secondary-foreground"
 					>
-						{chip.label}
+						<span translate="no">{chip.label}</span>
 						<button
 							type="button"
 							onclick={() => remove(chip.id)}
-							aria-label="Remove {chip.label}"
+							aria-label={t(
+								"settings.profile.combo.a11y.remove",
+								{ label: chip.label },
+							)}
 							class="-my-1 grid size-5 place-items-center rounded-full transition-colors hover:bg-foreground/10"
 						>
 							<XIcon class="size-3.5" />
@@ -154,7 +161,9 @@
 					placeholder={searchPlaceholder}
 					aria-labelledby={labelId}
 				/>
-				<Combobox.Trigger aria-label="Toggle list" />
+				<Combobox.Trigger
+					aria-label={t("settings.profile.combo.a11y.toggleList")}
+				/>
 			</div>
 
 			<Combobox.Content aria-labelledby={labelId}>
@@ -162,11 +171,14 @@
 					<Combobox.Item
 						value={String(option.value)}
 						disabled={isDisabled(option.value)}
+						translate="no"
 					>
 						{option.label}
 					</Combobox.Item>
 				{:else}
-					<Combobox.Empty>No matches</Combobox.Empty>
+					<Combobox.Empty>
+						{t("settings.profile.combo.noMatches")}
+					</Combobox.Empty>
 				{/each}
 			</Combobox.Content>
 		</Combobox.Root>
