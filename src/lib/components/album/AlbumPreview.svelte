@@ -7,6 +7,7 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { t } from "$lib/i18n";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import { stableSignedUrl } from "$lib/util/signed-url";
 	import {
@@ -20,7 +21,7 @@
 		coverUrl,
 		hasPhoto,
 		hasVideo,
-		label = "Open album",
+		label,
 		class: className,
 		contentClass,
 		attach = () => {},
@@ -70,7 +71,7 @@
 				if (controller.signal.aborted) return;
 				console.error(error);
 				showErrorToast({
-					label: "Failed to load album content",
+					label: t("media.album.preview.errors.loadFailed"),
 					error,
 				});
 				preview = { status: "idle" };
@@ -90,7 +91,10 @@
 		}).catch((error: unknown) => {
 			if (controller.signal.aborted) return;
 			console.error(error);
-			showErrorToast({ label: "Failed to open album", error });
+			showErrorToast({
+				label: t("media.album.preview.errors.openFailed"),
+				error,
+			});
 			preview = { status: "idle" };
 		});
 		return () => controller.abort();
@@ -108,7 +112,7 @@
 			"opacity-50": preview.status === "loading",
 		},
 	]}
-	aria-label={label}
+	aria-label={label ?? t("media.album.preview.a11y.open")}
 	onclick={open}
 	disabled={preview.status !== "idle"}
 	{@attach attach}

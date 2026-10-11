@@ -11,6 +11,7 @@ const vendoredGlob = "src/lib/components/ui/**";
 const translatedSvelteFiles = [
 	"src/routes/+error.svelte",
 	"src/routes/+layout.svelte",
+	"src/lib/components/album/AlbumPreview.svelte",
 	"src/lib/components/album/AlbumTile.svelte",
 	"src/lib/components/album/NoPlaysLeftSlide.svelte",
 	"src/lib/components/feedback/AccountStatusAlert.svelte",

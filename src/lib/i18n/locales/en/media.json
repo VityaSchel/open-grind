@@ -20,6 +20,15 @@
 				"containsVideo": "Contains video",
 				"cantBeShared": "Can’t be shared"
 			}
+		},
+		"preview": {
+			"errors": {
+				"loadFailed": "Couldn’t load album",
+				"openFailed": "Couldn’t open album"
+			},
+			"a11y": {
+				"open": "Open album"
+			}
 		}
 	},
 	"sheet": {

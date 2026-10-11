@@ -348,6 +348,9 @@ export interface Messages {
 	"interest.views.untracked.title": undefined;
 	"media.album.itemCount": { count: number };
 	"media.album.noPlaysLeft": undefined;
+	"media.album.preview.a11y.open": undefined;
+	"media.album.preview.errors.loadFailed": undefined;
+	"media.album.preview.errors.openFailed": undefined;
 	"media.album.tile.a11y.cantBeShared": undefined;
 	"media.album.tile.a11y.containsVideo": undefined;
 	"media.album.tile.shared": undefined;
