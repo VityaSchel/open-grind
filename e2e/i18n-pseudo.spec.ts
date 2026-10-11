@@ -118,7 +118,6 @@ test("an unknown locale parameter leaves the app in English", async ({
 
 interface ChromeRoute {
 	path: string;
-	roles: readonly ("main" | "navigation")[];
 	landmarks: number;
 	shows?: readonly string[];
 	brandTitle?: string;
@@ -126,45 +125,29 @@ interface ChromeRoute {
 
 test.describe("converted navigation chrome under en-XA", () => {
 	const routes: readonly ChromeRoute[] = [
-		{
-			path: "/",
-			roles: ["main", "navigation"],
-			landmarks: 2,
-			brandTitle: BRAND_TITLE,
-		},
-		{ path: "/right-now", roles: ["main", "navigation"], landmarks: 2 },
-		{ path: "/settings/app", roles: ["navigation"], landmarks: 2 },
+		{ path: "/", landmarks: 2, brandTitle: BRAND_TITLE },
+		{ path: "/right-now", landmarks: 2 },
 		{
 			path: "/interest/views",
-			roles: ["main", "navigation"],
 			landmarks: 3,
 			shows: [VIEWED_PROFILE_CARD, VIEWED_PREVIEW_CARD],
 		},
-		{
-			path: "/interest/taps",
-			roles: ["main", "navigation"],
-			landmarks: 3,
-			shows: [RECEIVED_TAP],
-		},
-		{
-			path: DEMO_PROFILE,
-			roles: ["main", "navigation"],
-			landmarks: PROFILE_NAVIGATIONS + 1,
-		},
+		{ path: "/interest/taps", landmarks: 3, shows: [RECEIVED_TAP] },
+		{ path: DEMO_PROFILE, landmarks: PROFILE_NAVIGATIONS + 1 },
 	];
 
 	test.beforeEach(async ({ page }) => {
 		await installTauriShim(page);
 	});
 
-	for (const { path, roles, landmarks, shows = [], brandTitle } of routes) {
-		test(`${path} renders its ${roles.join(" and ")} landmarks only pseudo-translated`, async ({
+	for (const { path, landmarks, shows = [], brandTitle } of routes) {
+		test(`${path} renders its main and navigation landmarks only pseudo-translated`, async ({
 			page,
 		}) => {
 			await page.goto(`${path}?locale=en-XA`);
-			const roots = roles
-				.map((role) => page.getByRole(role))
-				.reduce((all, landmark) => all.or(landmark));
+			const roots = page
+				.getByRole("main")
+				.or(page.getByRole("navigation"));
 			await expect(roots).toHaveCount(landmarks, {
 				timeout: FIRST_ROUTE_COMPILE_MS,
 			});

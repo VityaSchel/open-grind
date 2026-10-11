@@ -50,4 +50,4 @@ A new meaning, tag or placeholder needs a new key. To rename a key, lock the Web
 
 ## Finding raw English
 
-In dev builds, `?locale=en-XA` shows every translated string accented and padded, and `?locale=ar-XB` shows it right to left, so raw English stands out. `e2e/i18n-pseudo.spec.ts` fails when raw English shows on the pages it visits.
+In dev builds, `?locale=en-XA` shows every translated string accented and padded, and `?locale=ar-XB` shows it right to left, so raw English stands out. `e2e/i18n-pseudo.spec.ts` and `e2e/i18n-pseudo-settings.spec.ts` fail when raw English shows on the pages they visit.
