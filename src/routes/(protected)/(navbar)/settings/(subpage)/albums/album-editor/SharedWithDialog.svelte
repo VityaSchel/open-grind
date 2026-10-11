@@ -3,6 +3,7 @@
 
 	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
+	import { t } from "$lib/i18n";
 	import type { AlbumSharedWith } from "./shared-with-state.svelte";
 
 	let {
@@ -26,7 +27,9 @@
 		dialogProps={{ showCloseButton: true }}
 	>
 		<ResponsiveDialog.Header class="pb-2">
-			<ResponsiveDialog.Title>Shared with</ResponsiveDialog.Title>
+			<ResponsiveDialog.Title>
+				{t("media.albums.sharedWith.title")}
+			</ResponsiveDialog.Title>
 		</ResponsiveDialog.Header>
 		<ResponsiveDialog.Body
 			data-slot="shared-with-list"
@@ -42,15 +45,14 @@
 				{emptyIcon}
 				control="checkbox"
 				skeletons={2}
-				label="Sharing"
+				label={t("media.albums.sharedWith.a11y.sharing")}
 				errorLabel={{
-					turningOn: "Couldn't share album",
-					turningOff: "Couldn't unshare album",
+					turningOn: t("common.albumShare.errors.shareFailed"),
+					turningOff: t("common.albumShare.errors.unshareFailed"),
 				}}
 				empty={{
-					title: "Not shared yet",
-					description:
-						"People you share this album with appear here.",
+					title: t("media.albums.sharedWith.empty.title"),
+					description: t("media.albums.sharedWith.empty.description"),
 				}}
 			/>
 		</ResponsiveDialog.Body>

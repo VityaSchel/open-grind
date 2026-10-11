@@ -111,6 +111,30 @@
 			"name": {
 				"label": "Album name",
 				"hint": "Only you see the album name"
+			},
+			"menu": {
+				"delete": "Delete album",
+				"deleted": "Your album has been deleted",
+				"confirm": {
+					"title": "Delete album?",
+					"description": "This album and everything in it will be deleted, and anyone you shared it with will lose access. This can’t be undone."
+				},
+				"errors": {
+					"deleteFailed": "Couldn’t delete album"
+				},
+				"a11y": {
+					"trigger": "Album menu"
+				}
+			}
+		},
+		"sharedWith": {
+			"title": "Shared With",
+			"empty": {
+				"title": "Not shared yet",
+				"description": "People you share this album with appear here."
+			},
+			"a11y": {
+				"sharing": "Sharing"
 			}
 		},
 		"uploads": {
