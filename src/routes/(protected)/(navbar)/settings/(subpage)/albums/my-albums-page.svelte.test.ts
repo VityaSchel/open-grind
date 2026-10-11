@@ -11,6 +11,8 @@ vi.mock("$lib/api/messaging/albums", () => api);
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { demoMyAlbums } from "$lib/demo/mock/albums";
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import MyAlbumsPage from "./+page.svelte";
 
 const ALBUM_TILE = '[data-slot="album-tile"]';
@@ -35,10 +37,11 @@ function addAlbum(): HTMLElement | null {
 	return screen.queryByRole("link", { name: "Add album" });
 }
 
-afterEach(() => {
+afterEach(async () => {
 	cleanup();
 	vi.restoreAllMocks();
 	clearAccountCaches();
+	await setLocale({ locale: SOURCE_LOCALE });
 });
 
 describe("my albums page", () => {
@@ -110,5 +113,17 @@ describe("my albums page", () => {
 		expect(tiles).toBe(albums.length);
 		expect(addAlbum()).not.toBeNull();
 		expect(logged).toHaveBeenCalledWith(failure);
+	});
+
+	it("names the add cell in the active locale", async () => {
+		api.getAlbumStorageLimits.mockResolvedValueOnce({
+			maxAlbums: albums.length + 1,
+		});
+		await tilesOf(opened());
+		const add = addAlbum();
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(add?.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 });

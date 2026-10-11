@@ -5,6 +5,7 @@
 	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
 	import AddTile from "$lib/components/shared/AddTile.svelte";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
+	import { t } from "$lib/i18n";
 
 	const { data }: import("./$types").PageProps = $props();
 
@@ -20,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>My albums</title>
+	<title>{t("settings.subpage.titles.albums")}</title>
 </svelte:head>
 
 <MediaGrid
@@ -36,7 +37,7 @@
 		{#if !atAlbumCap}
 			<AddTile
 				href="/settings/albums/new"
-				label="Add album"
+				label={t("media.albums.add")}
 				class="aspect-(--photo-grid-aspect)"
 			/>
 		{/if}

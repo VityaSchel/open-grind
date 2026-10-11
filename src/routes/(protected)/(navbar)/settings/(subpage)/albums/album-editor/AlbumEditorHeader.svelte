@@ -11,6 +11,8 @@
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
 	import type {
 		PendingUpload,
@@ -44,9 +46,18 @@
 	const itemCountLabel = $derived(
 		limits === null
 			? albumItemCountLabel(counts.photos + counts.videos)
-			: `${counts.photos}/${limits.maxContentItemsPerAlbum} photos, ${counts.videos}/${limits.maxVideosPerAlbum} videos`,
+			: t("media.albums.editor.header.mediaUsage", {
+					photos: formatInteger(counts.photos),
+					maxPhotos: formatInteger(limits.maxContentItemsPerAlbum),
+					videos: formatInteger(counts.videos),
+					maxVideos: formatInteger(limits.maxVideosPerAlbum),
+				}),
 	);
-	const updatedLabel = $derived(albumUpdatedLabel(updatedAt));
+	const updatedLabel = $derived(
+		t("media.albums.editor.header.updated", {
+			date: albumUpdatedLabel(updatedAt),
+		}),
+	);
 	const cover = $derived(albumCoverContent(content));
 	const readyMedia = $derived(readyAlbumMedia(content));
 </script>
@@ -61,7 +72,7 @@
 				coverUrl={cover.thumbUrl}
 				hasPhoto={readyMedia.hasPhoto}
 				hasVideo={readyMedia.hasVideo}
-				label="Preview album"
+				label={t("media.albums.editor.header.a11y.preview")}
 				class="aspect-3/4 w-full"
 				contentClass="rounded-xl"
 			/>
@@ -73,16 +84,18 @@
 		class="mt-1 h-11 w-full justify-between"
 		onclick={onOpenShares}
 	>
-		<span class="truncate">Shared with</span>
+		<span class="truncate">
+			{t("media.albums.editor.header.sharedWith")}
+		</span>
 		<span class="flex items-center gap-1.5">
-			<Badge variant="secondary">{sharedCount}</Badge>
+			<Badge variant="secondary">{formatInteger(sharedCount)}</Badge>
 			<CaretRightIcon class="size-4" />
 		</span>
 	</Button>
 	<div
 		class="flex items-baseline justify-between gap-2 px-1 text-xs text-muted-foreground"
 	>
-		<span class="truncate">Updated {updatedLabel}</span>
+		<span class="truncate">{updatedLabel}</span>
 		<span class="shrink-0">{itemCountLabel}</span>
 	</div>
 </AlbumHeaderLayout>

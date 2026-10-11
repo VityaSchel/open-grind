@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
+	import { t } from "$lib/i18n";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 	import AlbumMediaEmpty from "../album-editor/AlbumMediaEmpty.svelte";
 	import AlbumNameField from "../album-editor/AlbumNameField.svelte";
@@ -28,7 +29,7 @@
 </script>
 
 <svelte:head>
-	<title>New album</title>
+	<title>{t("settings.subpage.titles.newAlbum")}</title>
 </svelte:head>
 
 <AlbumHeaderLayout>
@@ -38,8 +39,8 @@
 	<AlbumNameField bind:value={albumName} disabled={creating} />
 </AlbumHeaderLayout>
 <AlbumMediaEmpty
-	title="Add a photo to start your album"
-	description="The album is created once you add its first photo or video."
+	title={t("media.albums.new.empty.title")}
+	description={t("media.albums.new.empty.description")}
 	disabled={creating}
 	onAdd={() => void add()}
 />

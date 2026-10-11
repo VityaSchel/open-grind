@@ -88,10 +88,29 @@
 		}
 	},
 	"albums": {
+		"add": "Add album",
 		"new": {
+			"empty": {
+				"title": "Add a photo to start your album",
+				"description": "The album is created once you add its first photo or video."
+			},
 			"errors": {
 				"albumLimit": "You can’t create more albums",
 				"createFailed": "Couldn’t create album"
+			}
+		},
+		"editor": {
+			"header": {
+				"sharedWith": "Shared with",
+				"updated": "Updated {{date}}",
+				"mediaUsage": "{{photos}}/{{maxPhotos}} photos, {{videos}}/{{maxVideos}} videos",
+				"a11y": {
+					"preview": "Preview album"
+				}
+			},
+			"name": {
+				"label": "Album name",
+				"hint": "Only you see the album name"
 			}
 		},
 		"uploads": {

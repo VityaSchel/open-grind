@@ -149,6 +149,12 @@ const translatedSvelteFiles = [
 	"src/routes/(protected)/(navbar)/profile/[[]profileId]/top-nav/ProfileTopNavBar.svelte",
 	"src/routes/(protected)/(navbar)/right-now/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/+layout.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/+page.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/[[]albumId]/+page.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumEditorHeader.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumHeaderLayout.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-editor/AlbumNameField.svelte",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/new/+page.svelte",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/app/credits/BlurbText.svelte",
 	"src/routes/(protected)/chat/+layout[@](protected).svelte",
 	"src/routes/(protected)/chat/Conversation.svelte",
@@ -215,6 +221,7 @@ const translatedSvelteFiles = [
 ];
 
 const translatedScriptFiles = [
+	"src/lib/albums/my-albums-state.svelte.ts",
 	"src/lib/api/api-error.ts",
 	"src/lib/api/error-copy.ts",
 	"src/lib/api/error-toast.ts",

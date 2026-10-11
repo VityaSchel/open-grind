@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Input } from "$lib/components/ui/input";
+	import { t } from "$lib/i18n";
 
 	let {
 		value = $bindable(),
@@ -13,13 +14,13 @@
 <div class={["flex flex-col gap-1.5", className]}>
 	<Input
 		bind:value
-		placeholder="Album Name"
-		aria-label="Album name"
+		placeholder={t("media.albums.editor.name.label")}
+		aria-label={t("media.albums.editor.name.label")}
 		aria-describedby={hintId}
 		maxlength={255}
 		{disabled}
 	/>
 	<p id={hintId} class="px-1 text-xs text-muted-foreground">
-		Only you see the album name
+		{t("media.albums.editor.name.hint")}
 	</p>
 </div>

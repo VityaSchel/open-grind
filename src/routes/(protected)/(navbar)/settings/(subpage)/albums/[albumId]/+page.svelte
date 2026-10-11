@@ -4,6 +4,7 @@
 	import { getAlbumContent } from "$lib/api/messaging/albums";
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { t } from "$lib/i18n";
 	import AlbumEditor from "../album-editor/AlbumEditor.svelte";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 
@@ -20,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>Edit album</title>
+	<title>{t("settings.subpage.titles.editAlbum")}</title>
 </svelte:head>
 
 {#await album}

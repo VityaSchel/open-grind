@@ -363,6 +363,15 @@ export interface Messages {
 	"media.album.tile.a11y.containsVideo": undefined;
 	"media.album.tile.shared": undefined;
 	"media.album.untitled": undefined;
+	"media.albums.add": undefined;
+	"media.albums.editor.header.a11y.preview": undefined;
+	"media.albums.editor.header.mediaUsage": { maxPhotos: string; maxVideos: string; photos: string; videos: string };
+	"media.albums.editor.header.sharedWith": undefined;
+	"media.albums.editor.header.updated": { date: string };
+	"media.albums.editor.name.hint": undefined;
+	"media.albums.editor.name.label": undefined;
+	"media.albums.new.empty.description": undefined;
+	"media.albums.new.empty.title": undefined;
 	"media.albums.new.errors.albumLimit": undefined;
 	"media.albums.new.errors.createFailed": undefined;
 	"media.albums.uploads.addedReopen": undefined;
@@ -663,6 +672,8 @@ export interface RichMessages {
 	"interest.taps.empty.description": { gridLink: "tag" };
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
+	"media.albums.editor.header.mediaUsage": { maxPhotos: "placeholder"; maxVideos: "placeholder"; photos: "placeholder"; videos: "placeholder" };
+	"media.albums.editor.header.updated": { date: "placeholder" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
 	"media.sheet.tile.a11y.photo": { position: "placeholder" };
 	"media.sheet.tile.a11y.video": { position: "placeholder" };
