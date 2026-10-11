@@ -1,18 +1,21 @@
-import { encode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { defaultFilters } from "$lib/model/browse/grid/filters";
 import {
 	NATIVE_READ_LIMIT_MS,
 	NATIVE_READ_TIMEOUT_MS,
 } from "$lib/platform/regional-settings";
 
-const { files, invokeMock, listenMock, tauri, toastError } = vi.hoisted(() => ({
-	files: new Map<string, Uint8Array>(),
-	invokeMock: vi.fn(),
-	listenMock: vi.fn(),
-	tauri: { enabled: true },
-	toastError: vi.fn(),
-}));
+const { files, invokeMock, listenMock, storage, tauri, toastError } =
+	vi.hoisted(() => ({
+		files: new Map<string, Uint8Array>(),
+		invokeMock: vi.fn(),
+		listenMock: vi.fn(),
+		storage: { writable: true },
+		tauri: { enabled: true },
+		toastError: vi.fn(),
+	}));
 
 vi.mock("$lib/app-data", () => ({
 	existsAppDataFile: (path: string) => Promise.resolve(files.has(path)),
@@ -22,10 +25,6 @@ vi.mock("$lib/app-data", () => ({
 			? Promise.reject(new Error(`No app data file at ${path}`))
 			: Promise.resolve(content);
 	},
-	removeAppDataFile: (path: string) => {
-		files.delete(path);
-		return Promise.resolve();
-	},
 	writeAppDataFileAtomic: ({
 		path,
 		content,
@@ -33,6 +32,7 @@ vi.mock("$lib/app-data", () => ({
 		path: string;
 		content: Uint8Array;
 	}) => {
+		if (!storage.writable) return Promise.reject(new Error("read-only"));
 		files.set(path, content);
 		return Promise.resolve();
 	},
@@ -62,8 +62,16 @@ async function launch({ system }: { system: () => Promise<unknown> }) {
 
 const systemWith = (settings: object) => () => Promise.resolve(settings);
 
+function stored(): Record<string, unknown> | undefined {
+	const content = files.get(PREFERENCES);
+	return content === undefined
+		? undefined
+		: (decode(content) as Record<string, unknown>);
+}
+
 beforeEach(() => {
 	files.clear();
+	storage.writable = true;
 	invokeMock.mockReset();
 	listenMock.mockReset().mockResolvedValue(() => {});
 	toastError.mockReset();
@@ -84,7 +92,7 @@ describe("units on first run", () => {
 			});
 
 			expect((await preferences.getPreferences()).units).toBe(units);
-			expect(files.has(PREFERENCES)).toBe(false);
+			expect(stored()?.units).toBe(units);
 		},
 	);
 
@@ -115,6 +123,7 @@ describe("units on first run", () => {
 		const { preferences } = await launch({ system });
 
 		expect((await preferences.getPreferences()).units).toBe("metric");
+		expect(stored()?.units).toBe("metric");
 	});
 
 	it("wait for a system read that outlasts the startup timeout", async () => {
@@ -161,6 +170,40 @@ describe("units on first run", () => {
 		await vi.advanceTimersByTimeAsync(1);
 
 		expect((await loaded).units).toBe("metric");
+		expect(stored()?.units).toBe("metric");
+	});
+
+	it("stay as first written when the system changes later", async () => {
+		const first = await launch({
+			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
+		});
+		await first.preferences.getPreferences();
+
+		const next = await launch({
+			system: systemWith({
+				locale: "de-DE",
+				measurementSystem: "metric",
+			}),
+		});
+
+		expect((await next.preferences.getPreferences()).units).toBe(
+			"imperial",
+		);
+	});
+
+	it("still load when the first write fails", async () => {
+		const consoleError = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => {});
+		storage.writable = false;
+		const { preferences } = await launch({
+			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
+		});
+
+		expect((await preferences.getPreferences()).units).toBe("imperial");
+		expect(files.has(PREFERENCES)).toBe(false);
+		expect(consoleError).toHaveBeenCalledWith(new Error("read-only"));
+		expect(toastError).not.toHaveBeenCalled();
 	});
 });
 
@@ -198,14 +241,52 @@ describe("stored units", () => {
 		expect((await next.preferences.getPreferences()).units).toBe("metric");
 	});
 
-	it("are dropped with the rest of the defaults on signing out", async () => {
+	it("survive signing out and a later system change when they match the system's", async () => {
+		const first = await launch({
+			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
+		});
+		await first.preferences.setPreferences({ units: "imperial" });
+		await first.preferences.clearAccountPreferences();
+
+		const next = await launch({
+			system: systemWith({
+				locale: "de-DE",
+				measurementSystem: "metric",
+			}),
+		});
+
+		expect((await next.preferences.getPreferences()).units).toBe(
+			"imperial",
+		);
+	});
+});
+
+describe("signing out", () => {
+	it("drops the account settings and keeps the app settings", async () => {
 		const { preferences } = await launch({
 			system: systemWith({ locale: "en-US", measurementSystem: "us" }),
 		});
-		await preferences.setPreferences({ units: "imperial" });
+		await preferences.setPreferences({
+			autoUpdateLocation: true,
+			geohash: "u33dc0cpke7v",
+			gridSearchFilters: { ...defaultFilters, genders: [1, 2] },
+			hapticFeedback: false,
+			notificationsEnabled: true,
+			stayOnline: false,
+			units: "metric",
+		});
+
 		await preferences.clearAccountPreferences();
 
-		expect(files.has(PREFERENCES)).toBe(false);
+		expect(stored()).toMatchObject({
+			autoUpdateLocation: false,
+			geohash: null,
+			hapticFeedback: false,
+			notificationsEnabled: false,
+			stayOnline: false,
+			units: "metric",
+		});
+		expect(stored()).not.toHaveProperty("gridSearchFilters");
 	});
 });
 

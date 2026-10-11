@@ -9,12 +9,7 @@ import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
 import { regionalSettingsReady } from "$lib/platform/regional-settings";
 import { unitSystemFor, unitSystemSchema } from "$lib/util/units";
-import {
-	existsAppDataFile,
-	readAppDataFile,
-	removeAppDataFile,
-	writeAppDataFileAtomic,
-} from ".";
+import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
 
 const preferencesSchema = z.object({
 	autoUpdateLocation: z.boolean().default(false),
@@ -73,12 +68,21 @@ async function defaultPreferences(): Promise<Preferences> {
 	return preferencesSchema.parse({ units: unitSystemFor(measurementSystem) });
 }
 
+async function writePreferences(preferences: Preferences): Promise<void> {
+	await writeAppDataFileAtomic({
+		path: "preferences.data",
+		content: encode(preferences),
+	});
+}
+
 async function readFromDisk(): Promise<Preferences> {
-	if (!(await existsAppDataFile("preferences.data"))) {
-		return defaultPreferences();
+	if (await existsAppDataFile("preferences.data")) {
+		const bytes = await readAppDataFile("preferences.data");
+		return preferencesSchema.parse(decode(bytes));
 	}
-	const bytes = await readAppDataFile("preferences.data");
-	return preferencesSchema.parse(decode(bytes));
+	const preferences = await defaultPreferences();
+	await writePreferences(preferences).catch(console.error);
+	return preferences;
 }
 
 export async function getPreferences(): Promise<Preferences> {
@@ -127,10 +131,7 @@ export async function setPreferences(
 			...oldValues,
 			...newValues,
 		});
-		await writeAppDataFileAtomic({
-			path: "preferences.data",
-			content: encode(preferences),
-		});
+		await writePreferences(preferences);
 		publish(preferences);
 	});
 }
@@ -138,10 +139,7 @@ export async function setPreferences(
 async function resetToDefaults(): Promise<void> {
 	await enqueueWrite(async () => {
 		const preferences = await defaultPreferences();
-		await writeAppDataFileAtomic({
-			path: "preferences.data",
-			content: encode(preferences),
-		});
+		await writePreferences(preferences);
 		publish(preferences);
 	});
 	window.location.reload();
@@ -154,24 +152,12 @@ const accountPreferenceKeys = [
 	"notificationsEnabled",
 ] as const;
 
-function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-	return a.length === b.length && a.every((byte, index) => byte === b[index]);
-}
-
 export async function clearAccountPreferences(): Promise<void> {
 	await enqueueWrite(async () => {
 		const kept: Partial<Preferences> = { ...(await getPreferences()) };
 		for (const key of accountPreferenceKeys) delete kept[key];
 		const preferences = preferencesSchema.parse(kept);
 		publish(preferences);
-		const encoded = encode(preferences);
-		if (bytesEqual(encoded, encode(await defaultPreferences()))) {
-			await removeAppDataFile("preferences.data");
-		} else {
-			await writeAppDataFileAtomic({
-				path: "preferences.data",
-				content: encoded,
-			});
-		}
+		await writePreferences(preferences);
 	});
 }
