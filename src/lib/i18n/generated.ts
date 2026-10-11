@@ -742,6 +742,8 @@ export interface Messages {
 	"settings.profile.combo.selected": { count: number; max: string };
 	"settings.profile.combo.selectedAtMax": { count: number; max: string };
 	"settings.profile.errors.bannedTerms": undefined;
+	"settings.profile.errors.bannedTermsEntries": { entries: string; entry: string };
+	"settings.profile.errors.bannedTermsField": { field: string; terms: string };
 	"settings.profile.errors.loadFailed": undefined;
 	"settings.profile.errors.saveFailed": undefined;
 	"settings.profile.fields.aboutMe": undefined;
@@ -936,6 +938,8 @@ export interface RichMessages {
 	"settings.profile.combo.a11y.remove": { label: "placeholder" };
 	"settings.profile.combo.selected": { count: "count"; max: "placeholder" };
 	"settings.profile.combo.selectedAtMax": { count: "count"; max: "placeholder" };
+	"settings.profile.errors.bannedTermsEntries": { entries: "placeholder"; entry: "placeholder" };
+	"settings.profile.errors.bannedTermsField": { field: "placeholder"; terms: "placeholder" };
 	"settings.profile.photos.a11y.keepSlot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.removeSlot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };

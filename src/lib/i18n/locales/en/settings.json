@@ -287,7 +287,9 @@
 		"errors": {
 			"loadFailed": "Couldn’t load your profile. Try again.",
 			"saveFailed": "Couldn’t save profile changes",
-			"bannedTerms": "Couldn’t save — these terms aren’t allowed"
+			"bannedTerms": "Couldn’t save — these terms aren’t allowed",
+			"bannedTermsField": "{{field}}: {{terms}}",
+			"bannedTermsEntries": "{{entries}}; {{entry}}"
 		}
 	}
 }

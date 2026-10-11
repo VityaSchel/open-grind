@@ -304,6 +304,7 @@ const translatedScriptFiles = [
 	"src/lib/api/storage-notice.ts",
 	"src/lib/api/users/favorites.ts",
 	"src/lib/api/users/genders.ts",
+	"src/lib/api/users/profile-moderation.ts",
 	"src/lib/api/users/profile-viewability.ts",
 	"src/lib/api/users/pronouns.ts",
 	"src/lib/api/users/tags.ts",
@@ -391,6 +392,7 @@ const translatedScriptFiles = [
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/album-uploads/album-uploads-state.svelte.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/albums/new/create-album-media.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/app/credits/frame-counter.svelte.ts",
+	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/banned-terms.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/options.ts",
 	"src/routes/(protected)/(navbar)/settings/(subpage)/profile/profile-photo-order.ts",
 	"src/routes/(protected)/(navbar)/settings/page-stack/hierarchy.ts",
@@ -442,7 +444,7 @@ const literalText = `:matches(Literal[value=${letter}], TemplateLiteral:has(> Te
 const proseValue = `[value=${capitalized}]:not([value=${identifier}], [value=${brandOnly}])`;
 const proseLiteral = `Literal${proseValue}`;
 const proseTemplate = `TemplateLiteral:matches(:has(> TemplateElement:first-child[value.cooked=${capitalized}]), :has(> TemplateElement:first-child[value.cooked=${letterless}]):has(> TemplateElement[value.cooked=${spacedWord}]))`;
-const diagnosticCall = `:matches(CallExpression[callee.object.name="console"], CallExpression[callee.name="writeText"], CallExpression[callee.property.name="writeText"], NewExpression[callee.name=/Error$/])`;
+const diagnosticCall = `:matches(CallExpression[callee.object.name="console"], CallExpression[callee.name="writeText"], CallExpression[callee.property.name="writeText"], NewExpression[callee.name=/Error$/], ClassDeclaration[superClass.name=/Error$/] CallExpression[callee.type="Super"])`;
 const proseText = `:matches(${proseLiteral}, ${proseTemplate}):not(${diagnosticCall} *)`;
 const toastCall = `CallExpression:matches([callee.name="toast"], [callee.object.name="toast"][callee.property.name!="dismiss"])`;
 const toastTextProperty = `:matches(${toastCall} > ObjectExpression Property[key.name=/^(?:description|label)$/], CallExpression[callee.name="showErrorToast"] > ObjectExpression > Property[key.name="label"])`;

@@ -31,6 +31,7 @@
 	import type { Gender } from "$lib/model/users/genders";
 	import type { Pronoun } from "$lib/model/users/pronouns";
 	import type { ProfileTagsResponse } from "$lib/model/users/tags";
+	import { bannedTermsDetail } from "./banned-terms";
 	import ComboField from "./fields/ComboField.svelte";
 	import DateField from "./fields/DateField.svelte";
 	import FieldPair from "./fields/FieldPair.svelte";
@@ -204,11 +205,8 @@
 			toast.success(t("settings.profile.saved"));
 		} catch (error) {
 			if (error instanceof ProfileModerationError) {
-				const detail = error.rejected
-					.map((r) => `${r.field}: ${r.terms.join(", ")}`)
-					.join("; ");
 				toast.error(t("settings.profile.errors.bannedTerms"), {
-					description: detail || undefined,
+					description: bannedTermsDetail(error.rejected) || undefined,
 				});
 			} else {
 				showErrorToast({
