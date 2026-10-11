@@ -6,6 +6,13 @@ import {
 	translationFiles,
 } from "./catalog-files";
 import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
+import {
+	composeFormatLocales,
+	type FormatLocales,
+	type RegionalSettings,
+	regionalSettingsSchema,
+	webRegionalSettings,
+} from "./regional";
 import { FALLBACK_LOCALES, parseLocalePath, SOURCE_LOCALE } from "./syntax";
 
 export type Catalog = {
@@ -119,6 +126,10 @@ function textDirection(locale: string): "ltr" | "rtl" {
 	return RTL_SCRIPTS.has(script) ? "rtl" : "ltr";
 }
 
+function settingsKey(regional: RegionalSettings): string {
+	return JSON.stringify(regionalSettingsSchema.parse(regional));
+}
+
 const sourceCatalog = toCatalog({
 	locale: SOURCE_LOCALE,
 	files: Object.entries(sourceFiles),
@@ -129,6 +140,8 @@ class LocaleState {
 	translations: readonly Catalog[] = $state.raw([]);
 	countFormatter: CountFormatter = ({ count }) => String(count);
 	requested = SOURCE_LOCALE;
+	regional: RegionalSettings = $state.raw(webRegionalSettings());
+	regionalKey = settingsKey(this.regional);
 }
 
 const hotData: { state?: LocaleState } | undefined = import.meta.hot?.data;
@@ -154,10 +167,36 @@ export function getLocale(): string {
 	return state.translations[0]?.locale ?? SOURCE_LOCALE;
 }
 
+let composed: { key: string; locales: FormatLocales } | undefined;
+
+export function getRegionalSettings(): RegionalSettings {
+	return state.regional;
+}
+
+export function setRegionalSettings(regional: RegionalSettings): void {
+	const key = settingsKey(regional);
+	if (key === state.regionalKey) return;
+	state.regionalKey = key;
+	state.regional = regionalSettingsSchema.parse(regional);
+}
+
+export function getFormatLocales(): FormatLocales {
+	const language = getLocale();
+	const regional = state.regional;
+	const key = `${language}|${state.regionalKey}`;
+	if (composed?.key !== key) {
+		composed = {
+			key,
+			locales: composeFormatLocales({ language, regional }),
+		};
+	}
+	return composed.locales;
+}
+
 export function followLocale(apply: () => void): () => void {
 	return $effect.root(() => {
 		$effect(() => {
-			getLocale();
+			getFormatLocales();
 			untrack(apply);
 		});
 	});

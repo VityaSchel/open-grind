@@ -19,11 +19,15 @@ import type {
 export {
 	type CountFormatter,
 	followLocale,
+	getFormatLocales,
 	getLocale,
+	getRegionalSettings,
 	locales,
 	setCountFormatter,
 	setLocale,
+	setRegionalSettings,
 } from "./locale-state.svelte";
+export type { FormatLocales, RegionalSettings } from "./regional";
 export { SOURCE_LOCALE } from "./syntax";
 export type * from "./types";
 

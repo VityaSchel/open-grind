@@ -6,14 +6,18 @@ import { markup, slot } from "./fixtures/dom";
 import Probe from "./fixtures/Probe.svelte";
 import {
 	followLocale,
+	getFormatLocales,
 	getLocale,
+	getRegionalSettings,
 	locales,
 	setCountFormatter,
 	setLocale,
+	setRegionalSettings,
 	SOURCE_LOCALE,
 	sourceText,
 	t,
 } from "./index";
+import { webRegionalSettings } from "./regional";
 
 vi.mock("./catalog-files", () => import("./fixtures/mock-catalog-files"));
 
@@ -30,6 +34,7 @@ const html = (name: string) => markup(slot(name));
 
 afterEach(async () => {
 	restoreCountFormatter();
+	setRegionalSettings(webRegionalSettings());
 	await setLocale({ locale: SOURCE_LOCALE });
 	document.body.replaceChildren();
 });
@@ -96,6 +101,80 @@ describe("live locale switching", () => {
 		await setLocale({ locale: SOURCE_LOCALE });
 		flushSync();
 		expect(label.title).toBe("Schließen");
+	});
+});
+
+describe("regional formats", () => {
+	it("words with the language and formats with the system region", async () => {
+		setRegionalSettings({ locale: "de-DE" });
+		expect(getFormatLocales()).toEqual({
+			text: "en-u-hc-h23",
+			dates: "en-DE-u-hc-h23",
+			twoDigitHour: false,
+			decimal: ",",
+			group: ".",
+		});
+
+		await setLocale({ locale: "pt-BR" });
+		setRegionalSettings({ locale: "pt-PT" });
+		expect(getLocale()).toBe("pt-BR");
+		expect(getFormatLocales()).toMatchObject({
+			text: "pt-BR-u-hc-h23",
+			dates: "pt-PT-u-hc-h23",
+		});
+	});
+
+	it("starts from the browser's language", () => {
+		expect(getRegionalSettings()).toEqual({ locale: navigator.language });
+		expect(getFormatLocales()).toMatchObject({
+			text: "en-u-hc-h12",
+			dates: "en-US-u-hc-h12",
+		});
+	});
+
+	it("keeps the composed locales until the language or settings change", async () => {
+		const first = getFormatLocales();
+		setRegionalSettings({ locale: navigator.language });
+		expect(getFormatLocales()).toBe(first);
+
+		setRegionalSettings({ locale: "en-US", hourCycle: "h23" });
+		const second = getFormatLocales();
+		expect(second).not.toBe(first);
+		expect(second.text).toBe("en-u-hc-h23");
+
+		await setLocale({ locale: "de" });
+		expect(getFormatLocales().text).toBe("de-u-hc-h23");
+	});
+
+	it("drops fields the schema cannot read", () => {
+		setRegionalSettings({ locale: "de-DE", hourCycle: "h25" as "h23" });
+		expect(getRegionalSettings()).toEqual({ locale: "de-DE" });
+	});
+
+	it("re-evaluates $derived and followLocale when the settings change", () => {
+		const derived: string[] = [];
+		const applied: string[] = [];
+		const stopDerived = $effect.root(() => {
+			const text = $derived(getFormatLocales().text);
+			$effect(() => {
+				derived.push(text);
+			});
+		});
+		const stopFollowing = followLocale(() => {
+			applied.push(getFormatLocales().text);
+		});
+		flushSync();
+
+		setRegionalSettings({ locale: "de-DE" });
+		flushSync();
+		setRegionalSettings({ locale: "de-DE" });
+		flushSync();
+		stopDerived();
+		stopFollowing();
+
+		const expected = ["en-u-hc-h12", "en-u-hc-h23"];
+		expect(derived).toEqual(expected);
+		expect(applied).toEqual(expected);
 	});
 });
 
