@@ -3,6 +3,8 @@
 
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import VideoPreview from "$lib/components/shared/VideoPreview.svelte";
+	import { t } from "$lib/i18n";
+	import { formatInteger } from "$lib/i18n/format";
 	import { longPressHandlers } from "$lib/util/long-press";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
 
@@ -30,7 +32,14 @@
 		overlay?: Snippet;
 	} = $props();
 
-	const label = $derived(`${video ? "Video" : "Photo"} ${index + 1}`);
+	const label = $derived(
+		t(
+			video
+				? "media.sheet.tile.a11y.video"
+				: "media.sheet.tile.a11y.photo",
+			{ position: formatInteger(index + 1) },
+		),
+	);
 
 	let tile = $state<HTMLButtonElement | null>(null);
 	let pressedHere = false;

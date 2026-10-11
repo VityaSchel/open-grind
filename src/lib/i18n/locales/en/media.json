@@ -8,5 +8,29 @@
 			"playFailed": "This system can’t play this video.",
 			"decoderMissing": "Playing this video needs an H.264 decoder, which isn’t installed on this system. <codecsGuideLink>How to install video codecs</codecsGuideLink>"
 		}
+	},
+	"sheet": {
+		"tile": {
+			"a11y": {
+				"photo": "Photo {{position}}",
+				"video": "Video {{position}}"
+			}
+		},
+		"tileMenu": {
+			"deletePermanently": "Delete permanently",
+			"a11y": {
+				"photoOptions": "Photo options",
+				"videoOptions": "Video options"
+			}
+		},
+		"deleteDialog": {
+			"photoTitle": "Delete this photo?",
+			"videoTitle": "Delete this video?",
+			"description": "It will be deleted from your uploads. This can’t be undone."
+		},
+		"errors": {
+			"deletePhotoFailed": "Couldn’t delete photo",
+			"deleteVideoFailed": "Couldn’t delete video"
+		}
 	}
 }

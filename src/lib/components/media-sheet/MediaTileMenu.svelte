@@ -5,6 +5,7 @@
 	import ContextMenu from "$lib/components/shared/ContextMenu.svelte";
 	import ContextMenuPanel from "$lib/components/shared/ContextMenuPanel.svelte";
 	import { Button } from "$lib/components/ui/button";
+	import { t } from "$lib/i18n";
 	import MediaTileOverlay from "./MediaTileOverlay.svelte";
 	import { isPastMiddleColumn } from "./tile-menu.svelte";
 
@@ -96,7 +97,11 @@
 				<MediaTileOverlay {video} {selected} {overlay} />
 			</div>
 		{/snippet}
-		<ContextMenuPanel label={`${video ? "Video" : "Photo"} options`}>
+		<ContextMenuPanel
+			label={video
+				? t("media.sheet.tileMenu.a11y.videoOptions")
+				: t("media.sheet.tileMenu.a11y.photoOptions")}
+		>
 			<Button
 				variant="ghost"
 				role="menuitem"
@@ -106,7 +111,8 @@
 					onDelete();
 				}}
 			>
-				<TrashIcon /> Delete permanently
+				<TrashIcon />
+				{t("media.sheet.tileMenu.deletePermanently")}
 			</Button>
 		</ContextMenuPanel>
 	</ContextMenu>

@@ -1,5 +1,6 @@
 <script lang="ts" generics="Item">
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 
 	let {
@@ -17,7 +18,7 @@
 		if (target !== null) latched = target;
 		return latched;
 	});
-	const noun = $derived(shown !== null && video(shown) ? "video" : "photo");
+	const shownVideo = $derived(shown !== null && video(shown));
 
 	dismissOnBackGesture({
 		active: () => target !== null,
@@ -37,13 +38,19 @@
 >
 	<AlertDialog.Content>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Delete this {noun}?</AlertDialog.Title>
+			<AlertDialog.Title>
+				{shownVideo
+					? t("media.sheet.deleteDialog.videoTitle")
+					: t("media.sheet.deleteDialog.photoTitle")}
+			</AlertDialog.Title>
 			<AlertDialog.Description>
-				It will be deleted from your uploads. This can't be undone.
+				{t("media.sheet.deleteDialog.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				variant="destructive"
 				size="lg"
@@ -53,7 +60,7 @@
 					if (item !== null) onConfirm(item);
 				}}
 			>
-				Delete
+				{t("common.actions.delete")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

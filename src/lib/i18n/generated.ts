@@ -349,6 +349,16 @@ export interface Messages {
 	"media.lightbox.next": undefined;
 	"media.lightbox.previous": undefined;
 	"media.lightbox.zoom": undefined;
+	"media.sheet.deleteDialog.description": undefined;
+	"media.sheet.deleteDialog.photoTitle": undefined;
+	"media.sheet.deleteDialog.videoTitle": undefined;
+	"media.sheet.errors.deletePhotoFailed": undefined;
+	"media.sheet.errors.deleteVideoFailed": undefined;
+	"media.sheet.tile.a11y.photo": { position: string };
+	"media.sheet.tile.a11y.video": { position: string };
+	"media.sheet.tileMenu.a11y.photoOptions": undefined;
+	"media.sheet.tileMenu.a11y.videoOptions": undefined;
+	"media.sheet.tileMenu.deletePermanently": undefined;
 	"profile.acceptNsfwPics.never": undefined;
 	"profile.acceptNsfwPics.notAtFirst": undefined;
 	"profile.acceptNsfwPics.yesPlease": undefined;
@@ -612,6 +622,8 @@ export interface RichMessages {
 	"interest.views.preview.cappedViewCount": { count: "count"; srOnly: "tag" };
 	"interest.views.preview.viewCount": { count: "count"; srOnly: "tag" };
 	"media.lightbox.errors.decoderMissing": { codecsGuideLink: "tag" };
+	"media.sheet.tile.a11y.photo": { position: "placeholder" };
+	"media.sheet.tile.a11y.video": { position: "placeholder" };
 	"profile.blocked.bugHint": { reportIssueLink: "tag" };
 	"profile.imageCarousel.a11y.photo": { position: "placeholder"; total: "placeholder" };
 	"profile.item.a11y.profileLink": { name: "placeholder" };
