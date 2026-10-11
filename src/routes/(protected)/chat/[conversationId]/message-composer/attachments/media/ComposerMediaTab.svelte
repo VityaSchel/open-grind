@@ -3,7 +3,7 @@
 
 	import {
 		addMediaToDrawer,
-		CHAT_MEDIA_MAX_LABEL,
+		CHAT_MEDIA_MAX_MEGABYTES,
 		UnsupportedChatMediaError,
 	} from "$lib/api/messaging/chat-media";
 	import {
@@ -13,6 +13,8 @@
 	} from "$lib/api/messaging/drawer";
 	import { uploadRefusalMessage } from "$lib/api/methods";
 	import MediaSheetGrid from "$lib/components/media-sheet/MediaSheetGrid.svelte";
+	import { t } from "$lib/i18n";
+	import { formatNumber } from "$lib/i18n/format";
 	import { mediaFileKindOf } from "$lib/platform/media-file";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { proxyMediaUrl } from "$lib/util/media";
@@ -55,12 +57,16 @@
 	void load();
 
 	function addFailureMessage(err: unknown): string {
-		if (err instanceof UnsupportedChatMediaError) return err.message;
+		if (err instanceof UnsupportedChatMediaError)
+			return t("common.media.errors.unsupportedFile");
 		return (
 			uploadRefusalMessage({
 				error: err,
-				limitLabel: CHAT_MEDIA_MAX_LABEL,
-			}) ?? "Couldn't upload photo or video"
+				limitLabel: formatNumber({
+					value: CHAT_MEDIA_MAX_MEGABYTES,
+					preset: "sizeMegabytes",
+				}),
+			}) ?? t("chat.composer.attachments.media.errors.uploadFailed")
 		);
 	}
 
@@ -70,7 +76,9 @@
 			picked = await pickMultipleMedia("media");
 		} catch (err) {
 			console.error(err);
-			toast.error("Couldn't open the picker");
+			toast.error(
+				t("chat.composer.attachments.media.errors.openPickerFailed"),
+			);
 			return;
 		}
 		if (picked.length === 0) return;
@@ -128,8 +136,8 @@
 	{describe}
 	{selected}
 	onToggle={toggleSelected}
-	emptyTitle="No media sent yet"
-	addLabel="Upload photos or videos"
+	emptyTitle={t("chat.composer.attachments.media.empty.title")}
+	addLabel={t("common.media.uploadPhotosOrVideos")}
 	onAdd={addMedia}
 	pending={uploadingCount}
 	remove={(item) => deleteDrawerMedia(item.id)}

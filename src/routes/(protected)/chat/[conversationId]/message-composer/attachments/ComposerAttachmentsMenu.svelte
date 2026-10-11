@@ -11,6 +11,7 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
 	import { t } from "$lib/i18n";
+	import { formatNumber } from "$lib/i18n/format";
 	import ComposerAlbumsTab from "./albums/ComposerAlbumsTab.svelte";
 	import ComposerUnimplementedTab from "./ComposerUnimplementedTab.svelte";
 	import ComposerMediaTab from "./media/ComposerMediaTab.svelte";
@@ -18,10 +19,12 @@
 		selectionActionKeys,
 		type SelectionTab,
 		type Tab,
+		tabLabelKeys,
 		type TabSelection,
 	} from "./tabs";
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
+	const EXPIRING_PHOTO_SECONDS = 10;
 
 	let { open = $bindable() }: { open: boolean } = $props();
 
@@ -47,7 +50,9 @@
 </script>
 
 <MediaSheet bind:open fullsize={isFullsizeTab}>
-	<Drawer.Title class="sr-only">Attachments</Drawer.Title>
+	<Drawer.Title class="sr-only">
+		{t("chat.composer.attachments.a11y.title")}
+	</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}
 		class={["min-h-0 gap-0", { "h-full": isFullsizeTab }]}
@@ -89,7 +94,10 @@
 			{#snippet leading()}
 				{#if selectedTab === "media"}
 					<Toggle
-						aria-label="Set photo as expiring after 10 seconds"
+						aria-label={t(
+							"chat.composer.attachments.expiring.a11y.toggle",
+							{ count: EXPIRING_PHOTO_SECONDS },
+						)}
 						size="lg"
 						class={{
 							"bg-muted hover:bg-muted/80": !expiring,
@@ -104,9 +112,12 @@
 							class="size-5"
 						/>
 						{#if expiring}
-							10s
+							{formatNumber({
+								value: EXPIRING_PHOTO_SECONDS,
+								preset: "durationSeconds",
+							})}
 						{:else}
-							Off
+							{t("chat.composer.attachments.expiring.off")}
 						{/if}
 					</Toggle>
 				{/if}
@@ -129,13 +140,11 @@
 	<Tabs.Trigger value={tab} class="h-auto flex-col gap-0.5 px-4 py-1.5">
 		{#if tab === "media"}
 			<ImageIcon weight="fill" class="size-5" />
-			Media
 		{:else if tab === "albums"}
 			<FolderOpenIcon weight="fill" class="size-5" />
-			Albums
 		{:else if tab === "location"}
 			<NavigationArrowIcon weight="fill" class="size-5" />
-			Location
 		{/if}
+		{t(tabLabelKeys[tab])}
 	</Tabs.Trigger>
 {/snippet}

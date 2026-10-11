@@ -33,16 +33,27 @@ function whole(unit: string): NumberPreset {
 	};
 }
 
-function tenths(unit: string): NumberPreset {
+function fixed({
+	unit,
+	digits,
+}: {
+	unit: string;
+	digits: number;
+}): NumberPreset {
 	return {
 		options: {
 			...unitStyle,
 			unit,
-			minimumFractionDigits: 1,
-			maximumFractionDigits: 1,
+			minimumFractionDigits: digits,
+			maximumFractionDigits: digits,
 		},
-		round: (value) => Number(value.toFixed(1)),
+		round: (value) => Number(value.toFixed(digits)),
 	};
+}
+
+function narrow(unit: string): NumberPreset {
+	const { options, round } = whole(unit);
+	return { options: { ...options, unitDisplay: "narrow" }, round };
 }
 
 function asGiven(unit: string): NumberPreset {
@@ -54,14 +65,16 @@ function asGiven(unit: string): NumberPreset {
 
 const numberPresets = {
 	distanceMeters: whole("meter"),
-	distanceKilometers: tenths("kilometer"),
+	distanceKilometers: fixed({ unit: "kilometer", digits: 1 }),
 	distanceFeet: whole("foot"),
-	distanceMiles: tenths("mile"),
+	distanceMiles: fixed({ unit: "mile", digits: 1 }),
 	radiusKilometers: asGiven("kilometer"),
 	radiusMiles: asGiven("mile"),
 	heightCentimeters: whole("centimeter"),
 	weightKilograms: whole("kilogram"),
 	weightPounds: whole("pound"),
+	durationSeconds: narrow("second"),
+	sizeMegabytes: fixed({ unit: "megabyte", digits: 2 }),
 } as const satisfies Record<string, NumberPreset>;
 
 const datePresets = {

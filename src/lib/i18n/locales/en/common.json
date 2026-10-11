@@ -73,6 +73,12 @@
 			}
 		}
 	},
+	"media": {
+		"errors": {
+			"unsupportedFile": "That file isn’t a photo or video"
+		},
+		"uploadPhotosOrVideos": "Upload photos or videos"
+	},
 	"location": {
 		"errors": {
 			"saveFailed": "Couldn’t save location"

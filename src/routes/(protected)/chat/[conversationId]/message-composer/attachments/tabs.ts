@@ -2,6 +2,12 @@ import type { MessageKey } from "$lib/i18n";
 
 export type Tab = "media" | "albums" | "location";
 
+export const tabLabelKeys = {
+	media: "chat.composer.attachments.tabs.media",
+	albums: "chat.composer.attachments.tabs.albums",
+	location: "chat.composer.attachments.tabs.location",
+} as const satisfies Record<Tab, MessageKey>;
+
 export type SelectionAction = "send" | "share" | "unshare";
 
 export const selectionActionKeys = {

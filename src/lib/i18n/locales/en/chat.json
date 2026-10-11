@@ -177,12 +177,35 @@
 		},
 		"attachments": {
 			"a11y": {
-				"add": "Add attachment"
+				"add": "Add attachment",
+				"title": "Attachments"
+			},
+			"tabs": {
+				"media": "Media",
+				"albums": "Albums",
+				"location": "Location"
+			},
+			"expiring": {
+				"off": "Off",
+				"a11y": {
+					"toggle_one": "Set photo as expiring after {{count}} second",
+					"toggle_other": "Set photo as expiring after {{count}} seconds"
+				}
 			},
 			"actions": {
 				"send": "Send",
 				"share": "Share",
 				"unshare": "Unshare"
+			},
+			"media": {
+				"empty": {
+					"title": "No Media Sent Yet"
+				},
+				"errors": {
+					"uploadFailed": "Couldn’t upload photo or video",
+					"openPickerFailed": "Couldn’t open the picker"
+				},
+				"sent": "Sent"
 			},
 			"location": {
 				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}."

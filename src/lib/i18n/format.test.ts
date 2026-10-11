@@ -82,6 +82,18 @@ const numberCases: Record<NumberPresetName, [number, string][]> = {
 		[176, "176 lb"],
 		[1600, "1600 lb"],
 	],
+	durationSeconds: [
+		[0, "0s"],
+		[1, "1s"],
+		[10, "10s"],
+		[59.5, "60s"],
+	],
+	sizeMegabytes: [
+		[0.5, "0.50 MB"],
+		[2.345, "2.35 MB"],
+		[120, "120.00 MB"],
+		[1024, "1024.00 MB"],
+	],
 };
 
 const dateCases: Record<DatePresetName, [Date, string][]> = {

@@ -12,8 +12,8 @@ import {
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { type DrawerMedia, saveMediaToDrawer } from "./drawer";
 
-export const CHAT_MEDIA_MAX_BYTES = 120 * 1024 * 1024;
-export const CHAT_MEDIA_MAX_LABEL = "120.00 MB";
+export const CHAT_MEDIA_MAX_MEGABYTES = 120;
+export const CHAT_MEDIA_MAX_BYTES = CHAT_MEDIA_MAX_MEGABYTES * 1024 * 1024;
 
 const VIDEO_CONTENT_TYPE = "video/mp4";
 const PHOTO_CONTENT_TYPE = "image/jpeg";
