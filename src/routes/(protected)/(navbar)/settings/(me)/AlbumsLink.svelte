@@ -7,6 +7,7 @@
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { t } from "$lib/i18n";
 	import { proxyMediaUrl } from "$lib/util/media";
 
 	let { ourProfileId }: { ourProfileId: number } = $props();
@@ -53,7 +54,7 @@
 				<Item.Title
 					class="inline-block w-full min-w-0 truncate text-left"
 				>
-					My Albums
+					{t("settings.subpage.titles.albums")}
 				</Item.Title>
 			</Item.Content>
 			<Item.Actions>

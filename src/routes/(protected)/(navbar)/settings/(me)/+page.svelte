@@ -28,6 +28,7 @@
 				<Socials />
 				<span
 					data-slot="me-version"
+					translate="no"
 					class="px-4 pt-2 pb-7 font-mono text-xs break-all whitespace-pre-wrap text-muted-foreground select-text"
 				>
 					{version}

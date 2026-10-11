@@ -5,6 +5,7 @@
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import * as Item from "$lib/components/ui/item";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { t } from "$lib/i18n";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import ButtonItemContent from "./ButtonItemContent.svelte";
 
@@ -45,7 +46,7 @@
 				<Item.Title
 					class="inline-block w-full min-w-0 truncate text-left"
 				>
-					Sign Out
+					{t("feedback.actions.signOut")}
 				</Item.Title>
 			</Item.Content>
 			<Item.Actions>
@@ -57,15 +58,18 @@
 <AlertDialog.Root bind:open={alertOpen}>
 	<AlertDialog.Content {escapeKeydownBehavior}>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Sign out?</AlertDialog.Title>
+			<AlertDialog.Title
+				>{t("settings.me.signOut.title")}</AlertDialog.Title
+			>
 			<AlertDialog.Description>
-				Are you sure you want to sign out? You can sign back in at any
-				time.
+				{t("settings.me.signOut.description")}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<fieldset disabled={signingOut} class="contents">
-				<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+				<AlertDialog.Cancel size="lg">
+					{t("common.actions.cancel")}
+				</AlertDialog.Cancel>
 				<AlertDialog.Action
 					onclick={() => void confirmSignOut()}
 					size="lg"
@@ -74,7 +78,7 @@
 					{#if signingOut}
 						<Spinner aria-hidden="true" />
 					{/if}
-					Continue
+					{t("common.actions.continue")}
 				</AlertDialog.Action>
 			</fieldset>
 		</AlertDialog.Footer>

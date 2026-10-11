@@ -16,7 +16,7 @@ const cancelButton = () => screen.getByRole("button", { name: "Cancel" });
 const dialogShown = () => screen.queryByText("Sign out?") !== null;
 
 async function openDialog() {
-	await fireEvent.click(screen.getByRole("button", { name: "Sign Out" }));
+	await fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 	await vi.waitFor(continueButton);
 }
 

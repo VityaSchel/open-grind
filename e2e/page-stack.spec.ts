@@ -113,7 +113,7 @@ test("a pushed page enters over a snapshot of the page it came from", async ({
 	await page.getByRole("link", { name: "App Settings" }).click();
 	await expect(dim(page)).toBeAttached();
 	await expect(ghost(page)).toHaveCount(1);
-	await expect(ghost(page)).toContainText("Sign Out");
+	await expect(ghost(page)).toContainText("Sign out");
 
 	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
 	await expect(backLink(page)).toBeVisible();
@@ -126,14 +126,14 @@ test("My Albums slides onto the settings stack and swipes back off it", async ({
 
 	await page.getByRole("link", { name: "My Albums" }).click();
 	await expect(dim(page)).toBeAttached();
-	await expect(ghost(page)).toContainText("Sign Out");
+	await expect(ghost(page)).toContainText("Sign out");
 	await expect(page).toHaveURL(/\/settings\/albums$/);
 	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
 
 	expect(await startSystemBack(page), "the Me screen waits behind").toBe(
 		true,
 	);
-	await expect(ghost(page)).toContainText("Sign Out");
+	await expect(ghost(page)).toContainText("Sign out");
 	await progressSystemBack(page, 0.8);
 	await commitSystemBack(page);
 
@@ -412,7 +412,7 @@ test("a back gesture during the slide-in picks the page up where it is, lets the
 	expect(pickedUp, "the page stays where it was").toBeCloseTo(before, -1);
 	expect(aFrameLater, "the page must not snap fully in").toBeGreaterThan(0);
 	expect(aFrameLater).toBeLessThanOrEqual(before);
-	await expect(ghost(page)).toContainText("Sign Out");
+	await expect(ghost(page)).toContainText("Sign out");
 
 	await progressSystemBack(page, 0.5);
 	expect((await panePosition(page)).live).toBeGreaterThanOrEqual(
@@ -453,7 +453,7 @@ test("a back swipe started while the last one is still sliding out goes back fro
 	await page.evaluate(() => history.back());
 	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
 	await expect(ghost(page)).toHaveCount(0, { timeout: 5_000 });
-	await expect(pane(page)).toContainText("Sign Out");
+	await expect(pane(page)).toContainText("Sign out");
 });
 
 test("canceling the system back gesture stays on the page", async ({
@@ -514,7 +514,7 @@ test("a modal opened from settings covers both panes and the nav bar", async ({
 	page,
 }) => {
 	await openSettings(page, { platform: "android" });
-	await page.getByRole("button", { name: "Sign Out" }).click();
+	await page.getByRole("button", { name: "Sign out" }).click();
 	await expect(
 		page.locator('[data-slot="alert-dialog-content"]'),
 	).toBeVisible();

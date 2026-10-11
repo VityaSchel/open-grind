@@ -25,6 +25,30 @@
 			"loadFailed": "Couldn’t load app settings. Reset to defaults?"
 		}
 	},
+	"me": {
+		"profile": {
+			"viewProfile": "View your profile",
+			"errors": {
+				"loadNameFailed": "Couldn’t load name"
+			}
+		},
+		"signOut": {
+			"title": "Sign out?",
+			"description": "Are you sure you want to sign out? You can sign back in at any time."
+		},
+		"socials": {
+			"website": "Open Grind website",
+			"sourceCode": "Open Grind source code",
+			"announcements": "Open Grind announcements",
+			"discussion": "Open Grind discussion",
+			"telegram": {
+				"title": "Telegram channel is semiofficial",
+				"description": "You’re about to visit a Telegram channel that operates as a convenient mirror of the official announcements room hosted on Matrix.",
+				"openTelegram": "Open Telegram channel",
+				"joinMatrix": "Join official Matrix room"
+			}
+		}
+	},
 	"account": {
 		"email": "Email",
 		"password": "Password",

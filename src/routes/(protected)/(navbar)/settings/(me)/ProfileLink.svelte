@@ -7,6 +7,7 @@
 	import UserAvatar from "$lib/components/profile/UserAvatar.svelte";
 	import * as Item from "$lib/components/ui/item";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { t } from "$lib/i18n";
 
 	let { id }: { id: number } = $props();
 
@@ -46,12 +47,12 @@
 						<DisplayName name={profile.displayName} />
 					{:catch}
 						<span class="text-muted-foreground italic">
-							Failed to load name
+							{t("settings.me.profile.errors.loadNameFailed")}
 						</span>
 					{/await}
 				</Item.Title>
 				<Item.Description class="inline-block truncate">
-					View your profile
+					{t("settings.me.profile.viewProfile")}
 				</Item.Description>
 			</Item.Content>
 			<Item.Actions class="max-cramped:hidden">

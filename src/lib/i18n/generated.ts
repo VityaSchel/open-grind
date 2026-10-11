@@ -704,6 +704,18 @@ export interface Messages {
 	"settings.hidden.a11y.toggle": undefined;
 	"settings.hidden.empty.description": undefined;
 	"settings.hidden.empty.title": undefined;
+	"settings.me.profile.errors.loadNameFailed": undefined;
+	"settings.me.profile.viewProfile": undefined;
+	"settings.me.signOut.description": undefined;
+	"settings.me.signOut.title": undefined;
+	"settings.me.socials.announcements": undefined;
+	"settings.me.socials.discussion": undefined;
+	"settings.me.socials.sourceCode": undefined;
+	"settings.me.socials.telegram.description": undefined;
+	"settings.me.socials.telegram.joinMatrix": undefined;
+	"settings.me.socials.telegram.openTelegram": undefined;
+	"settings.me.socials.telegram.title": undefined;
+	"settings.me.socials.website": undefined;
 	"settings.notifications.addon.description": undefined;
 	"settings.notifications.addon.title": undefined;
 	"settings.notifications.categories.errors.saveFailed": undefined;

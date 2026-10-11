@@ -6,10 +6,14 @@
 		MegaphoneIcon,
 	} from "phosphor-svelte";
 
+	import { t } from "$lib/i18n";
 	import Link from "./LinkItem.svelte";
 </script>
 
-<Link destination="https://opengrind.org/" label="Open Grind Website">
+<Link
+	destination="https://opengrind.org/"
+	label={t("settings.me.socials.website")}
+>
 	{#snippet icon()}
 		<GlobeIcon weight="bold" class="size-5" />
 	{/snippet}
@@ -17,7 +21,7 @@
 
 <Link
 	destination="https://git.opengrind.org/open-grind/open-grind/"
-	label="Open Grind Source Code"
+	label={t("settings.me.socials.sourceCode")}
 >
 	{#snippet icon()}
 		<CodeIcon weight="bold" class="size-5" />
@@ -25,17 +29,16 @@
 </Link>
 <Link
 	destination="https://t.me/opengrind"
-	label="Open Grind Announcements"
+	label={t("settings.me.socials.announcements")}
 	warning={{
-		title: "Telegram channel is semiofficial",
-		description:
-			"You're about to visit a Telegram channel that operates as a convenient mirror of the official announcements room hosted on Matrix. ",
+		title: t("settings.me.socials.telegram.title"),
+		description: t("settings.me.socials.telegram.description"),
 		primary: {
-			label: "Open Telegram channel",
+			label: t("settings.me.socials.telegram.openTelegram"),
 			destination: "https://t.me/opengrind",
 		},
 		secondary: {
-			label: "Join official Matrix room",
+			label: t("settings.me.socials.telegram.joinMatrix"),
 			destination: "https://matrix.to/#/#announcements:opengrind.org",
 		},
 	}}
@@ -46,7 +49,7 @@
 </Link>
 <Link
 	destination="https://matrix.to/#/#general:opengrind.org"
-	label="Open Grind Discussion"
+	label={t("settings.me.socials.discussion")}
 >
 	{#snippet icon()}
 		<ChatsCircleIcon weight="bold" class="size-5" />
