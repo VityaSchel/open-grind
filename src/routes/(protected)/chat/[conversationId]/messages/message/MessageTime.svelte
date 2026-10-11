@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { format } from "date-fns";
-
+	import { formatClockTime } from "$lib/i18n/format";
 	import { getMessageContext } from "./context";
 
 	const { timestamp } = $derived(getMessageContext()());
 </script>
 
-{format(new Date(timestamp), "H:mm")}
+{formatClockTime(timestamp)}

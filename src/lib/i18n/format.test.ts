@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { restoreCountFormatter } from "./fixtures/count-formatter";
 import {
 	type DatePresetName,
+	formatClockTime,
 	formatDate,
 	formatInteger,
 	formatList,
@@ -111,6 +112,13 @@ const dateCases: Record<DatePresetName, [Date, string][]> = {
 	],
 };
 
+const clockTimeCases: [text: string, date: Date][] = [
+	["9:05", new Date(2026, 9, 5, 9, 5)],
+	["0:00", new Date(2026, 9, 5, 0, 0)],
+	["12:30", new Date(2026, 9, 5, 12, 30)],
+	["23:59", new Date(2026, 9, 5, 23, 59, 59)],
+];
+
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
@@ -165,6 +173,16 @@ describe("date presets", () => {
 					text,
 				);
 			}
+		},
+	);
+});
+
+describe("formatClockTime", () => {
+	it.each(clockTimeCases)(
+		"prints %s on a 24-hour clock without a leading zero",
+		(text, date) => {
+			expect(formatClockTime(date)).toBe(text);
+			expect(formatClockTime(date.getTime())).toBe(text);
 		},
 	);
 });
@@ -260,6 +278,7 @@ describe("pseudo-locales", () => {
 		expect(
 			formatDate({ date: new Date(2026, 8, 9), preset: "monthDay" }),
 		).toBe("⟦Sep 9⟧");
+		expect(formatClockTime(new Date(2026, 8, 9, 9, 5))).toBe("⟦9:05⟧");
 		expect(formatList(["⟦Ţöþ⟧", "⟦Ɓöţţöɱ⟧"])).toBe("⟦Ţöþ⟧, ⟦Ɓöţţöɱ⟧");
 	});
 });

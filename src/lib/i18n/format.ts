@@ -1,4 +1,5 @@
 import {
+	format,
 	type FormatDistanceFn,
 	formatDistanceStrict,
 	type FormatDistanceToken,
@@ -144,6 +145,10 @@ export function formatDate({
 			new Intl.DateTimeFormat(locales, datePresets[preset]),
 	});
 	return markFormatted({ locale: getLocale(), text: formatter.format(date) });
+}
+
+export function formatClockTime(date: Date | number): string {
+	return markFormatted({ locale: getLocale(), text: format(date, "H:mm") });
 }
 
 export function formatRelativeTime({
