@@ -1,10 +1,22 @@
 import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
 
+export type FilterError =
+	| { kind: "unknownFilter" }
+	| { kind: "expectedBoolean" }
+	| { kind: "notANumber" }
+	| { kind: "outOfRange"; min: number; max: number }
+	| { kind: "rangeSyntax" }
+	| { kind: "noValues" }
+	| { kind: "unknownValue"; value: string }
+	| { kind: "invalidGenderId"; value: string };
+
+export type InvalidValueKind = Extract<FilterError, { value: string }>["kind"];
+
 export type ParsedFilter = {
 	key: string;
 	valueText: string;
 	valid: boolean;
-	error?: string;
+	error?: FilterError;
 };
 
 export type ParsedFilterGridQuery = {
@@ -14,7 +26,7 @@ export type ParsedFilterGridQuery = {
 	invalidCount: number;
 };
 
-export type ApplyResult = { ok: true } | { ok: false; error: string };
+export type ApplyResult = { ok: true } | { ok: false; error: FilterError };
 export type Apply = (raw: string, draft: GridSearchFilters) => ApplyResult;
 export type Render = (filters: GridSearchFilters) => string;
 

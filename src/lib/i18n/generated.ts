@@ -234,6 +234,14 @@ export interface Messages {
 	"commands.commandCenter.suggestions.openProfileById": { prefix: string };
 	"commands.commandCenter.suggestions.quickGoTo": { prefix: string };
 	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: string };
+	"commands.filterGrid.errors.expectedBoolean": { falseValue: string; trueValue: string };
+	"commands.filterGrid.errors.invalidGenderId": { value: string };
+	"commands.filterGrid.errors.noValues": undefined;
+	"commands.filterGrid.errors.notANumber": undefined;
+	"commands.filterGrid.errors.outOfRange": { max: string; min: string };
+	"commands.filterGrid.errors.rangeSyntax": { example: string };
+	"commands.filterGrid.errors.unknownFilter": undefined;
+	"commands.filterGrid.errors.unknownValue": { value: string };
 	"commands.trigger.controlKey": undefined;
 	"common.actions.cancel": undefined;
 	"common.actions.close": undefined;
@@ -699,6 +707,11 @@ export interface RichMessages {
 	"commands.commandCenter.suggestions.openProfileById": { prefix: "placeholder" };
 	"commands.commandCenter.suggestions.quickGoTo": { prefix: "placeholder" };
 	"commands.commandCenter.suggestions.setLocationByGeohash": { prefix: "placeholder" };
+	"commands.filterGrid.errors.expectedBoolean": { falseValue: "placeholder"; trueValue: "placeholder" };
+	"commands.filterGrid.errors.invalidGenderId": { value: "placeholder" };
+	"commands.filterGrid.errors.outOfRange": { max: "placeholder"; min: "placeholder" };
+	"commands.filterGrid.errors.rangeSyntax": { example: "placeholder" };
+	"commands.filterGrid.errors.unknownValue": { value: "placeholder" };
 	"common.format.range": { max: "placeholder"; min: "placeholder" };
 	"common.media.errors.photoTooLarge": { megabytes: "placeholder" };
 	"common.units.feetInches": { feet: "placeholder"; inches: "placeholder" };

@@ -3,12 +3,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { featureFlagsState } from "$lib/api/feature-flags-state.svelte";
 import { sentFilterKeys } from "$lib/grid/grid-query";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	defaultFilters,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
 } from "$lib/model/browse/grid/filters";
-import { parseFilterGridQuery } from "./filter-grid-query";
+import { filterErrorText } from "./filter-error-text";
+import { type ParsedFilter, parseFilterGridQuery } from "./filter-grid-query";
 
 afterEach(async () => {
 	await setLocale({ locale: SOURCE_LOCALE });
@@ -18,6 +20,12 @@ function parsedAt<T>(entries: readonly T[], index: number): T {
 	const entry = entries[index];
 	if (!entry) throw new Error(`no parsed filter at index ${index}`);
 	return entry;
+}
+
+function errorTextAt(entries: readonly ParsedFilter[], index: number): string {
+	const { error } = parsedAt(entries, index);
+	if (!error) throw new Error(`no error at index ${index}`);
+	return filterErrorText(error);
 }
 
 describe("parseFilterGridQuery", () => {
@@ -101,7 +109,7 @@ describe("parseFilterGridQuery", () => {
 			const result = parseFilterGridQuery(query);
 			expect(result.parsed).toHaveLength(1);
 			expect(parsedAt(result.parsed, 0).valid).toBe(false);
-			expect(parsedAt(result.parsed, 0).error).toBe(
+			expect(errorTextAt(result.parsed, 0)).toBe(
 				"Use min-max, e.g. 25-40",
 			);
 		}
@@ -135,12 +143,26 @@ describe("parseFilterGridQuery", () => {
 		expect(result.invalidCount).toBe(1);
 		expect(parsedAt(result.parsed, 0).key).toBe("age");
 		expect(parsedAt(result.parsed, 0).valid).toBe(false);
+		expect(errorTextAt(result.parsed, 0)).toBe("Must be between 18 and 99");
 		expect(result.filters.ageEnabled).toBe(false);
+	});
+
+	it("flags values that aren't booleans or numbers", () => {
+		expect(
+			errorTextAt(parseFilterGridQuery("?online=maybe").parsed, 0),
+		).toBe("Expected true or false");
+		expect(errorTextAt(parseFilterGridQuery("?ageMin=old").parsed, 0)).toBe(
+			"Not a number",
+		);
+		expect(errorTextAt(parseFilterGridQuery("?tags=,").parsed, 0)).toBe(
+			"No values",
+		);
 	});
 
 	it("flags unknown enum ids as invalid", () => {
 		const result = parseFilterGridQuery("?tribes=1,99");
 		expect(parsedAt(result.parsed, 0).valid).toBe(false);
+		expect(errorTextAt(result.parsed, 0)).toBe("Unknown value “99”");
 		expect(result.filters.tribesEnabled).toBe(false);
 	});
 
@@ -161,6 +183,7 @@ describe("parseFilterGridQuery", () => {
 	it("flags the Ask me gender as invalid because the server fails on it", () => {
 		const result = parseFilterGridQuery("?genders=1,62");
 		expect(parsedAt(result.parsed, 0).valid).toBe(false);
+		expect(errorTextAt(result.parsed, 0)).toBe("Invalid gender ID “62”");
 		expect(result.filters.genderEnabled).toBe(false);
 	});
 
@@ -187,6 +210,14 @@ describe("parseFilterGridQuery", () => {
 		const result = parseFilterGridQuery("?nope=1");
 		expect(parsedAt(result.parsed, 0).valid).toBe(false);
 		expect(parsedAt(result.parsed, 0).key).toBe("nope");
-		expect(parsedAt(result.parsed, 0).error).toBe("Unknown filter");
+		expect(errorTextAt(result.parsed, 0)).toBe("Unknown filter");
+	});
+
+	it("words errors in the active locale", async () => {
+		await setLocale({ locale: "en-XA" });
+		const result = parseFilterGridQuery("?nope=1&tribes=99");
+		expect(errorTextAt(result.parsed, 0)).toMatch(PSEUDO_MESSAGE);
+		expect(errorTextAt(result.parsed, 1)).toMatch(PSEUDO_MESSAGE);
+		expect(errorTextAt(result.parsed, 1)).toContain("99");
 	});
 });

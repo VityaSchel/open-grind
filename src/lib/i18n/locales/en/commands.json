@@ -15,5 +15,17 @@
 	},
 	"trigger": {
 		"controlKey": "Ctrl"
+	},
+	"filterGrid": {
+		"errors": {
+			"unknownFilter": "Unknown filter",
+			"expectedBoolean": "Expected {{trueValue}} or {{falseValue}}",
+			"notANumber": "Not a number",
+			"outOfRange": "Must be between {{min}} and {{max}}",
+			"rangeSyntax": "Use min-max, e.g. {{example}}",
+			"noValues": "No values",
+			"unknownValue": "Unknown value “{{value}}”",
+			"invalidGenderId": "Invalid gender ID “{{value}}”"
+		}
 	}
 }

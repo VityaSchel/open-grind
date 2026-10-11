@@ -1,13 +1,25 @@
 import type { GridSearchFilters } from "$lib/model/browse/grid/filters";
-import type { Apply, ApplyResult, BooleanKey, ListKey } from "./types";
+import type {
+	Apply,
+	ApplyResult,
+	BooleanKey,
+	FilterError,
+	InvalidValueKind,
+	ListKey,
+} from "./types";
 
 export const ok: ApplyResult = { ok: true };
-export const err = (error: string): ApplyResult => ({ ok: false, error });
+export const err = (error: FilterError): ApplyResult => ({ ok: false, error });
+
+export const booleanTokens = {
+	trueValue: "true",
+	falseValue: "false",
+} as const;
 
 export function parseBoolean(raw: string): boolean | null {
 	const value = raw.trim().toLowerCase();
-	if (value === "true" || value === "1") return true;
-	if (value === "false" || value === "0") return false;
+	if (value === booleanTokens.trueValue || value === "1") return true;
+	if (value === booleanTokens.falseValue || value === "0") return false;
 	return null;
 }
 
@@ -26,11 +38,11 @@ function parseBounded({
 	raw: string;
 	min: number;
 	max: number;
-}): { value: number } | { error: string } {
+}): { value: number } | { error: FilterError } {
 	const value = Number(raw.trim());
-	if (!Number.isFinite(value)) return { error: "Not a number" };
+	if (!Number.isFinite(value)) return { error: { kind: "notANumber" } };
 	if (value < min || value > max)
-		return { error: `Must be between ${min} and ${max}` };
+		return { error: { kind: "outOfRange", min, max } };
 	return { value };
 }
 
@@ -61,7 +73,7 @@ function setBound({
 export function booleanApply(field: BooleanKey): Apply {
 	return (raw, draft) => {
 		const value = parseBoolean(raw);
-		if (value === null) return err("Expected true or false");
+		if (value === null) return err({ kind: "expectedBoolean" });
 		draft[field] = value;
 		return ok;
 	};
@@ -70,7 +82,7 @@ export function booleanApply(field: BooleanKey): Apply {
 export function photoApply(tag: GridSearchFilters["photos"][number]): Apply {
 	return (raw, draft) => {
 		const value = parseBoolean(raw);
-		if (value === null) return err("Expected true or false");
+		if (value === null) return err({ kind: "expectedBoolean" });
 		if (value) {
 			draft.photosEnabled = true;
 			if (!draft.photos.includes(tag))
@@ -117,9 +129,9 @@ export function combinedRangeApply({
 }): Apply {
 	return (raw, draft) => {
 		const parts = raw.split("-").map((part) => part.trim());
-		if (parts.length !== 2) return err("Use min-max, e.g. 25-40");
+		if (parts.length !== 2) return err({ kind: "rangeSyntax" });
 		const [minRaw = "", maxRaw = ""] = parts;
-		if (minRaw === "" && maxRaw === "") return err("No values");
+		if (minRaw === "" && maxRaw === "") return err({ kind: "noValues" });
 		for (const [bound, raw] of [
 			[0, minRaw],
 			[1, maxRaw],
@@ -137,21 +149,21 @@ export function idListApply({
 	target,
 	enabled,
 	isValid,
-	invalidLabel,
+	invalid,
 }: {
 	target: ListKey;
 	enabled: BooleanKey;
 	isValid: (id: number) => boolean;
-	invalidLabel: string;
+	invalid: InvalidValueKind;
 }): Apply {
 	return (raw, draft) => {
 		const parts = splitList(raw);
-		if (parts.length === 0) return err("No values");
+		if (parts.length === 0) return err({ kind: "noValues" });
 		const ids: number[] = [];
 		for (const part of parts) {
 			const id = Number(part);
 			if (!Number.isInteger(id) || !isValid(id))
-				return err(`${invalidLabel} "${part}"`);
+				return err({ kind: invalid, value: part });
 			ids.push(id);
 		}
 		draft[enabled] = true;

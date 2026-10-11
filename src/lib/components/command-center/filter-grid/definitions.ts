@@ -156,7 +156,7 @@ function enumFilter({
 					target,
 					enabled,
 					isValid: (id) => allowed.has(id) && isOffered(id),
-					invalidLabel: "Unknown value",
+					invalid: "unknownValue",
 				}),
 			},
 		],
@@ -332,7 +332,7 @@ export const filters: Filter[] = [
 					enabled: "genderEnabled",
 					isValid: (id) =>
 						id === -1 || (id >= 0 && isFilterableGenderId(id)),
-					invalidLabel: "Invalid gender ID",
+					invalid: "invalidGenderId",
 				}),
 			},
 		],
@@ -345,7 +345,7 @@ export const filters: Filter[] = [
 				keys: ["tags", "tag"],
 				apply: (raw, draft) => {
 					const parts = splitList(raw);
-					if (parts.length === 0) return err("No values");
+					if (parts.length === 0) return err({ kind: "noValues" });
 					draft.tagsEnabled = true;
 					draft.tags = parts;
 					return ok;

@@ -10,6 +10,7 @@
 		commandCenterClose,
 		commandCenterState,
 	} from "../command-center-state.svelte";
+	import { filterErrorText } from "./filter-error-text";
 	import { parseFilterGridQuery } from "./filter-grid-query";
 
 	const result = $derived(parseFilterGridQuery(commandCenterState.query));
@@ -51,7 +52,7 @@
 			{:else}
 				<div class="flex flex-wrap gap-1">
 					{#each result.parsed as filter, index (index)}
-						{#if filter.valid}
+						{#if filter.error === undefined}
 							<Badge variant="secondary">
 								<span class="opacity-60">{filter.key}</span>
 								{filter.valueText}
@@ -59,7 +60,7 @@
 						{:else}
 							<Badge variant="destructive">
 								<span class="opacity-80">{filter.key}</span>
-								{filter.error}
+								{filterErrorText(filter.error)}
 							</Badge>
 						{/if}
 					{/each}

@@ -29,7 +29,7 @@ export function parseFilterGridQuery(query: string): ParsedFilterGridQuery {
 				key,
 				valueText: value,
 				valid: false,
-				error: "Unknown filter",
+				error: { kind: "unknownFilter" },
 			});
 			continue;
 		}
