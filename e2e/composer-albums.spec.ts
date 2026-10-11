@@ -49,7 +49,7 @@ test.describe("composer albums tab", () => {
 		await share.click();
 		await expect(page.locator(DRAWER)).toBeHidden();
 
-		await expectNoToast(page, "Couldn't share album");
+		await expectNoToast(page, "Couldn’t share album");
 	});
 
 	test("already shared albums are badged and unshare instead", async ({
@@ -82,7 +82,7 @@ test.describe("composer albums tab", () => {
 			"unsharing keeps the drawer open to show the result",
 		).toBeVisible();
 		await expect(unshare).toBeHidden();
-		await expectNoToast(page, "Couldn't unshare album");
+		await expectNoToast(page, "Couldn’t unshare album");
 		await expect(
 			page.locator(SHARED_ALBUM_TILE),
 			"an unshared album loses its badge",

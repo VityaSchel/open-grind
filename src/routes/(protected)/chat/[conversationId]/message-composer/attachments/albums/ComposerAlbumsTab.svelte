@@ -7,6 +7,7 @@
 	import AlbumTile from "$lib/components/album/AlbumTile.svelte";
 	import MediaGrid from "$lib/components/shared/MediaGrid.svelte";
 	import * as Empty from "$lib/components/ui/empty";
+	import { t } from "$lib/i18n";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { MyAlbum } from "$lib/model/messaging/albums";
 	import { getConversationState } from "../../../conversation-state.svelte";
@@ -98,7 +99,7 @@
 			.update({ albumId, profileId, shared: true })
 			.catch((err: unknown) => {
 				console.error(err);
-				toast.error("Couldn't share album");
+				toast.error(t("common.albumShare.errors.shareFailed"));
 			});
 	}
 
@@ -114,7 +115,7 @@
 			await shareActions.update({ albumId, profileId, shared: false });
 		} catch (err) {
 			console.error(err);
-			toast.error("Couldn't unshare album");
+			toast.error(t("common.albumShare.errors.unshareFailed"));
 			selected.add(albumId);
 			onSelectionChange({ count: selected.size, action });
 		} finally {
@@ -155,9 +156,11 @@
 				<Empty.Media variant="icon">
 					<FolderOpenIcon weight="fill" />
 				</Empty.Media>
-				<Empty.Title>No albums yet</Empty.Title>
+				<Empty.Title>
+					{t("chat.composer.attachments.albums.empty.title")}
+				</Empty.Title>
 				<Empty.Description>
-					Albums you create appear here, ready to share.
+					{t("chat.composer.attachments.albums.empty.description")}
 				</Empty.Description>
 			</Empty.Header>
 		</Empty.Root>

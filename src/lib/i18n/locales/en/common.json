@@ -79,6 +79,12 @@
 		},
 		"uploadPhotosOrVideos": "Upload photos or videos"
 	},
+	"albumShare": {
+		"errors": {
+			"shareFailed": "Couldn’t share album",
+			"unshareFailed": "Couldn’t unshare album"
+		}
+	},
 	"location": {
 		"errors": {
 			"saveFailed": "Couldn’t save location"

@@ -129,6 +129,8 @@ export interface Messages {
 	"chat.composer.attachments.actions.send": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
+	"chat.composer.attachments.albums.empty.description": undefined;
+	"chat.composer.attachments.albums.empty.title": undefined;
 	"chat.composer.attachments.expiring.a11y.toggle": { count: number };
 	"chat.composer.attachments.expiring.off": undefined;
 	"chat.composer.attachments.location.unimplemented": { issueLink: string };
@@ -232,6 +234,8 @@ export interface Messages {
 	"common.actions.delete": undefined;
 	"common.actions.retry": undefined;
 	"common.actions.save": undefined;
+	"common.albumShare.errors.shareFailed": undefined;
+	"common.albumShare.errors.unshareFailed": undefined;
 	"common.carousel.a11y.next": undefined;
 	"common.carousel.a11y.previous": undefined;
 	"common.commandDialog.a11y.description": undefined;

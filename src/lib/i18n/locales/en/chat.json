@@ -207,6 +207,12 @@
 				},
 				"sent": "Sent"
 			},
+			"albums": {
+				"empty": {
+					"title": "No Albums Yet",
+					"description": "Albums you create appear here, ready to share."
+				}
+			},
 			"location": {
 				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}."
 			}

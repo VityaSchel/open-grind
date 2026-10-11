@@ -197,6 +197,22 @@ describe("composer albums tab", () => {
 		expect(api.unshareAlbum).not.toHaveBeenCalled();
 	});
 
+	it("rolls back the badge and says so when a share fails", async () => {
+		api.shareAlbum.mockRejectedValue(new Error("403"));
+		const component = await mount();
+		await settle();
+
+		tile(UNSHARED_ALBUM).click();
+		await tick();
+		component.submitSelection();
+
+		await vi.waitFor(() =>
+			expect(toastError).toHaveBeenCalledWith("Couldn’t share album"),
+		);
+		await tick();
+		expect(isBadgedShared(UNSHARED_ALBUM)).toBe(false);
+	});
+
 	it("rolls back the badge, the lock and the selection when an unshare fails", async () => {
 		api.unshareAlbum.mockRejectedValue(new Error("403"));
 		const component = await mount();
@@ -209,7 +225,7 @@ describe("composer albums tab", () => {
 		await tick();
 
 		expect(isBadgedShared(SHARED_ALBUM)).toBe(true);
-		expect(toastError).toHaveBeenCalledWith("Couldn't unshare album");
+		expect(toastError).toHaveBeenCalledWith("Couldn’t unshare album");
 		expect(tile(SHARED_ALBUM).disabled).toBe(false);
 		expect(tile(SHARED_ALBUM).getAttribute("aria-pressed")).toBe("true");
 		expect(armed()).toEqual({ count: 1, action: "unshare" });
