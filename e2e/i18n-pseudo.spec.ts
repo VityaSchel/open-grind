@@ -46,6 +46,10 @@ const COUNTER = ".pswp__counter";
 const ACTIVE_SLIDE = '.pswp__item[aria-hidden="false"]';
 const NO_PLAYS_LEFT = '[data-slot="no-plays-left"]';
 const VIDEO_CONTROLS = "[data-pswp-interactive]";
+const KBD = '[data-slot="kbd"]';
+const SUGGESTIONS_GROUP =
+	'[data-slot="command-group"][data-value="suggestions"]';
+const COMMAND_EMPTY = '[data-slot="command-empty"]';
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -206,6 +210,63 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 		await page.keyboard.press("Escape");
 		await expect(drawer).toBeHidden();
 	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+interface PaletteView {
+	query: string;
+	shows?: string;
+}
+
+const paletteOption = (value: string) =>
+	`[role="option"][data-value="${value}"]`;
+
+test("the command center trigger, palette and commands render only pseudo-translated text", async ({
+	page,
+}) => {
+	const views: readonly PaletteView[] = [
+		{ query: "", shows: SUGGESTIONS_GROUP },
+		{ query: "?online=true&ageMin=25" },
+		{ query: "?nope=1" },
+		{ query: "?genders=-1,1&tags=bear,otter" },
+		{ query: "#" },
+		{ query: "/", shows: paletteOption("/grid") },
+		{ query: "@", shows: paletteOption("@copy") },
+		{ query: "grid", shows: COMMAND_EMPTY },
+	];
+	await installTauriShim(page);
+	await page.goto("/?locale=en-XA");
+	await page
+		.locator("nav a")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
+	const palette = page.getByRole("dialog");
+	await expect(palette).toBeHidden();
+	const trigger = page
+		.locator('[data-fixed-header] [data-slot="button"]')
+		.filter({ has: page.locator(KBD) });
+	await trigger.waitFor({ timeout: 60_000 });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const triggerScan = await readPseudoText(trigger, {
+		brandTitle: BRAND_TITLE,
+	});
+
+	await page.keyboard.press("ControlOrMeta+k");
+	const input = palette.getByRole("combobox");
+	await input.waitFor();
+	const scans = [];
+	for (const { query, shows = paletteOption(query) } of views) {
+		await input.fill(query);
+		await palette.locator(shows).waitFor();
+		scans.push(await readPseudoText(palette, { brandTitle: BRAND_TITLE }));
+	}
+
+	expect(triggerScan.labels).toBeGreaterThan(0);
+	expect(triggerScan.leaks).toEqual([]);
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
