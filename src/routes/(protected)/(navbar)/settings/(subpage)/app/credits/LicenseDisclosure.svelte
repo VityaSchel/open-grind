@@ -1,15 +1,23 @@
 <script lang="ts">
 	import { CaretRightIcon } from "phosphor-svelte";
 
+	import { t } from "$lib/i18n";
+	import { formatList } from "$lib/i18n/format";
 	import type { LoadedEntry } from "$lib/credits";
 
 	let { entry }: { entry: LoadedEntry } = $props();
 
 	let open = $state(false);
 
-	const label = $derived(
-		`${entry.shipped ?? entry.spdx} license${entry.versions.length ? ` · ${entry.versions.join(", ")}` : ""}`,
-	);
+	const label = $derived.by(() => {
+		const license = entry.shipped ?? entry.spdx;
+		return entry.versions.length
+			? t("settings.credits.licenseWithVersions", {
+					license,
+					versions: formatList(entry.versions),
+				})
+			: t("settings.credits.license", { license });
+	});
 </script>
 
 {#if entry.texts.length}
@@ -25,6 +33,7 @@
 		{#if open}
 			{#each entry.texts as text, index (index)}
 				<pre
+					translate="no"
 					class="mt-1 max-h-72 overflow-auto rounded-md bg-muted/40 p-3 font-mono text-2xs leading-relaxed whitespace-pre-wrap text-muted-foreground select-text">{text}</pre>
 			{/each}
 		{/if}

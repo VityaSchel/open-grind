@@ -21,7 +21,7 @@ describe("BlurbText", () => {
 		});
 
 		expect(markup(container)).toBe(
-			'<p class="text-sm wrap-anywhere text-muted-foreground">Thanks to <a href="https://svelte.dev" class="font-semibold hover:underline">Svelte</a> for the awesome UI building framework!</p>',
+			'<p class="text-sm wrap-anywhere text-muted-foreground">Thanks to <a href="https://svelte.dev" class="font-semibold hover:underline" translate="no">Svelte</a> for the awesome UI building framework!</p>',
 		);
 	});
 
@@ -29,7 +29,7 @@ describe("BlurbText", () => {
 		const { container } = render(BlurbText, { props: { name: "zlib" } });
 
 		expect(markup(container)).toBe(
-			'<p class="text-sm wrap-anywhere text-muted-foreground"><span class="font-semibold">zlib</span></p>',
+			'<p class="text-sm wrap-anywhere text-muted-foreground"><span class="font-semibold" translate="no">zlib</span></p>',
 		);
 	});
 });

@@ -680,6 +680,7 @@ export interface Messages {
 	"settings.blocked.a11y.toggle": undefined;
 	"settings.blocked.empty.description": undefined;
 	"settings.blocked.empty.title": undefined;
+	"settings.credits.errors.loadFailed": undefined;
 	"settings.credits.highlights.bitsUi": { projectLink: string };
 	"settings.credits.highlights.emblaCarouselSvelte": { projectLink: string };
 	"settings.credits.highlights.phosphorSvelte": { projectLink: string };
@@ -693,6 +694,13 @@ export interface Messages {
 	"settings.credits.highlights.tauri": { projectLink: string };
 	"settings.credits.highlights.vaulSvelte": { projectLink: string };
 	"settings.credits.highlights.zod": { projectLink: string };
+	"settings.credits.license": { license: string };
+	"settings.credits.licenseWithVersions": { license: string; versions: string };
+	"settings.credits.sections.platformLibraries": { platform: string };
+	"settings.credits.sections.rustCrates": undefined;
+	"settings.credits.sections.webPackages": undefined;
+	"settings.credits.specialThanks": undefined;
+	"settings.credits.suggestEdit": undefined;
 	"settings.hidden.a11y.toggle": undefined;
 	"settings.hidden.empty.description": undefined;
 	"settings.hidden.empty.title": undefined;
@@ -849,6 +857,9 @@ export interface RichMessages {
 	"settings.credits.highlights.tauri": { projectLink: "placeholder" };
 	"settings.credits.highlights.vaulSvelte": { projectLink: "placeholder" };
 	"settings.credits.highlights.zod": { projectLink: "placeholder" };
+	"settings.credits.license": { license: "placeholder" };
+	"settings.credits.licenseWithVersions": { license: "placeholder"; versions: "placeholder" };
+	"settings.credits.sections.platformLibraries": { platform: "placeholder" };
 	"settings.notifications.unsupportedOn": { platform: "placeholder" };
 	"settings.privacy.showDistance.description": { distance: "placeholder" };
 }

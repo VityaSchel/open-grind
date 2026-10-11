@@ -11,8 +11,11 @@
 </script>
 
 {#snippet projectLink()}
-	{#if url}<Link href={url} class="font-semibold hover:underline">{name}</Link
-		>{:else}<span class="font-semibold">{name}</span>{/if}
+	{#if url}<Link
+			href={url}
+			class="font-semibold hover:underline"
+			translate="no">{name}</Link
+		>{:else}<span class="font-semibold" translate="no">{name}</span>{/if}
 {/snippet}
 
 <p class="text-sm wrap-anywhere text-muted-foreground">

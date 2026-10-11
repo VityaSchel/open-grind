@@ -28,14 +28,14 @@ const sharedRows = (ecosystems: string[]) =>
 const platformRows = (platform: string) =>
 	listed.filter((entry) => entry.platform === platform).length;
 const SECTION_ROWS = {
-	"Web packages": sharedRows(["npm", "asset"]),
-	"Rust crates": sharedRows(["rust"]),
-	"Android libraries": platformRows("android"),
-	"Linux libraries": platformRows("linux"),
-	"macOS libraries": platformRows("macos"),
-	"Windows libraries": platformRows("windows"),
+	"Web Packages": sharedRows(["npm", "asset"]),
+	"Rust Crates": sharedRows(["rust"]),
+	"Android Libraries": platformRows("android"),
+	"Linux Libraries": platformRows("linux"),
+	"macOS Libraries": platformRows("macos"),
+	"Windows Libraries": platformRows("windows"),
 };
-const HEADINGS = ["Special thanks", ...Object.keys(SECTION_ROWS)];
+const HEADINGS = ["Special Thanks", ...Object.keys(SECTION_ROWS)];
 
 const rows = (scope: Page | Locator) =>
 	scope.locator('[data-slot="credit-row"]');
@@ -131,7 +131,7 @@ test.describe("credits page", () => {
 			});
 		await expect(webview2(page)).toHaveCount(1);
 		await expect(
-			webview2(section({ page, title: "Windows libraries" })),
+			webview2(section({ page, title: "Windows Libraries" })),
 		).toHaveCount(1);
 	});
 

@@ -148,6 +148,7 @@
 		}
 	},
 	"credits": {
+		"specialThanks": "Special Thanks",
 		"highlights": {
 			"svelte": "Thanks to {{projectLink}} for the awesome UI building framework!",
 			"svelteKit": "Thanks to {{projectLink}} for the awesome frontend framework!",
@@ -162,6 +163,17 @@
 			"emblaCarouselSvelte": "Thanks to {{projectLink}} for the awesome image carousel library!",
 			"phosphorSvelte": "Thanks to {{projectLink}} for providing the awesome Phosphor Icons set!",
 			"vaulSvelte": "Thanks to {{projectLink}} for the awesome Drawer component!"
+		},
+		"sections": {
+			"webPackages": "Web Packages",
+			"rustCrates": "Rust Crates",
+			"platformLibraries": "{{platform}} Libraries"
+		},
+		"license": "{{license}} license",
+		"licenseWithVersions": "{{license}} license · {{versions}}",
+		"suggestEdit": "Suggest an edit",
+		"errors": {
+			"loadFailed": "Couldn’t load the credits. Try again."
 		}
 	}
 }

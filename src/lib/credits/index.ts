@@ -1,4 +1,3 @@
-import { platformNames } from "$lib/platform/os";
 import { highlights } from "./highlights";
 import {
 	type CreditEcosystem,
@@ -21,20 +20,20 @@ export type LoadedEntry = {
 
 export type HighlightCard = Highlight & { entry?: LoadedEntry };
 
-type CreditGroup = { title: string; entries: LoadedEntry[] };
+export type SharedCreditSection = "webPackages" | "rustCrates";
+
+export type CreditSection =
+	| { kind: "shared"; id: SharedCreditSection; ecosystems: CreditEcosystem[] }
+	| { kind: "platform"; id: CreditPlatform };
+
+export type CreditGroup = CreditSection & { entries: LoadedEntry[] };
 
 export type Credits = { cards: HighlightCard[]; groups: CreditGroup[] };
 
-const GROUPS: ({ title: string } & (
-	| { ecosystems: CreditEcosystem[] }
-	| { platform: CreditPlatform }
-))[] = [
-	{ title: "Web packages", ecosystems: ["npm", "asset"] },
-	{ title: "Rust crates", ecosystems: ["rust"] },
-	...creditPlatforms.map((platform) => ({
-		title: `${platformNames[platform]} libraries`,
-		platform,
-	})),
+const SECTIONS: CreditSection[] = [
+	{ kind: "shared", id: "webPackages", ecosystems: ["npm", "asset"] },
+	{ kind: "shared", id: "rustCrates", ecosystems: ["rust"] },
+	...creditPlatforms.map((id): CreditSection => ({ kind: "platform", id })),
 ];
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -64,14 +63,14 @@ export const loadCredits = async (): Promise<Credits> => {
 	const featured = new Set(cards.map((card) => card.entry));
 
 	const rest = loaded.filter((entry) => !featured.has(entry));
-	const groups = GROUPS.map(({ title, ...scope }) => ({
-		title,
+	const groups = SECTIONS.map((section) => ({
+		...section,
 		entries: rest
 			.filter((entry) =>
-				"platform" in scope
-					? entry.platform === scope.platform
+				section.kind === "platform"
+					? entry.platform === section.id
 					: entry.platform === undefined &&
-						scope.ecosystems.includes(entry.ecosystem),
+						section.ecosystems.includes(entry.ecosystem),
 			)
 			.sort(compareEntries),
 	})).filter((group) => group.entries.length > 0);
