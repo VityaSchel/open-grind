@@ -3,11 +3,14 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import {
 	DEMO_GEOHASH,
+	EXPIRING_IMAGE,
 	FIRST_ROUTE_COMPILE_MS,
+	INCOMING_ROW,
 	installTauriShim,
 	pathname,
 	runPaletteCommand,
 } from "./support/app";
+import { DRAWER } from "./support/drawer";
 
 const FAILING_ROUTE = "/interest";
 const FAILING_LOAD = /\/interest\/\+page\.ts(?:\?|$)/;
@@ -23,6 +26,8 @@ const REPORT_MENU_ITEM = 1;
 const VIEWED_PROFILE_CARD = '.photo-grid > a[href^="/profile/"]';
 const VIEWED_PREVIEW_CARD = '.photo-grid > div:not([data-slot="skeleton"])';
 const RECEIVED_TAP = '[data-slot="taps-scroller"] a[href^="/profile/"]';
+const PHOTO_CONVERSATION = "/chat/100002:123456000";
+const DRAWER_PILL = "button:not([aria-label], [aria-pressed])";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -216,7 +221,7 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 	await runPaletteCommand(page, `@${DEMO_GEOHASH}`);
 	const topBar = page.locator("[data-fixed-header]");
 	const drawerPills = topBar
-		.locator("button:not([aria-label], [aria-pressed])")
+		.locator(DRAWER_PILL)
 		.filter({ hasText: PSEUDO_MESSAGE });
 	await expect(drawerPills).toHaveCount(2, { timeout: 60_000 });
 	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
@@ -229,6 +234,77 @@ test("the browse grid top bar and its quick-filter drawers render only pseudo-tr
 		await page.keyboard.press("Escape");
 		await expect(drawer).toBeHidden();
 	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+test("the inbox and its quick-filter drawers render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto("/chat?locale=en-XA");
+	const inbox = page.getByRole("main");
+	await inbox
+		.locator(`a[href="${PHOTO_CONVERSATION}"]`)
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const landmarks = inbox.or(page.getByRole("navigation"));
+	await expect(landmarks).toHaveCount(2);
+	const scans = [await readPseudoText(landmarks)];
+	const drawerPills = inbox
+		.locator(`[data-fixed-header] ${DRAWER_PILL}`)
+		.filter({ hasText: PSEUDO_MESSAGE });
+	await expect(drawerPills).toHaveCount(2);
+	for (const pill of await drawerPills.all()) {
+		await pill.click();
+		const drawer = page.getByRole("dialog");
+		await drawer.waitFor();
+		scans.push(await readPseudoText(drawer));
+		await page.keyboard.press("Escape");
+		await expect(drawer).toBeHidden();
+	}
+	for (const { messages, leaks } of scans) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+});
+
+test("a conversation, a message menu and the attachment tabs render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto(`${PHOTO_CONVERSATION}?locale=en-XA`);
+	const conversation = page.getByRole("main");
+	await conversation
+		.locator(EXPIRING_IMAGE)
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const landmarks = conversation.or(page.getByRole("navigation"));
+	await expect(landmarks).toHaveCount(2);
+	const scans = [await readPseudoText(landmarks)];
+
+	await conversation.locator(INCOMING_ROW).last().click({ button: "right" });
+	const menu = page.getByRole("dialog");
+	await menu.waitFor();
+	scans.push(await readPseudoText(menu));
+	await page.keyboard.press("Escape");
+	await expect(menu).toBeHidden();
+
+	await conversation
+		.locator('[data-slot="composer-attachments-trigger"] button')
+		.click();
+	const attachments = page.locator(DRAWER);
+	const tabList = attachments.getByRole("tablist");
+	await tabList.waitFor();
+	scans.push(
+		await readPseudoText(
+			tabList.or(attachments.locator('[data-slot="drawer-title"]')),
+		),
+	);
+
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
