@@ -71,6 +71,11 @@ const recipe = async ({
 		file: "ci/fdroid/toolchain.properties",
 		key: "libclang.version",
 	});
+	const libclangMajor = libclangVersion.match(/^\d+(?=\.|$)/)?.[0];
+	if (!libclangMajor)
+		throw new Error(
+			`libclang.version ${libclangVersion} has no major version`,
+		);
 	const values = {
 		versionName: conf.version,
 		versionCode: conf.bundle.android.versionCode.toString(),
@@ -80,7 +85,7 @@ const recipe = async ({
 			file: "src-tauri/gen/android/gradle.properties",
 			key: "opengrind.android.ndk",
 		}),
-		libclangMajor: libclangVersion.split(".")[0],
+		libclangMajor,
 	};
 	const rendered = Object.entries(values).reduce(
 		(text, [key, value]) => text.replaceAll(`\${${key}}`, value),

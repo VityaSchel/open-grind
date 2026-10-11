@@ -17,7 +17,8 @@ export class TileMenuState<Item> {
 		item: Item;
 		tile: HTMLButtonElement;
 	}): void {
-		if (this.current === null) this.current = { key, item, tile };
+		if (this.current === null || this.current.key === key)
+			this.current = { key, item, tile };
 	}
 
 	isLifted(key: string | number): boolean {
