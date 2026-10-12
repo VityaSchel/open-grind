@@ -27,7 +27,6 @@ let
 
   fdroidPins = readProperties ../ci/fdroid/toolchain.properties;
   stalePins = lib.filterAttrs (name: version: fdroidPins."${name}.version" != version) {
-    node = pkgs.nodejs_24.version;
     bun = pkgs.bun.version;
     libclang = pkgs.libclang.version;
   };

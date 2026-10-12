@@ -19,14 +19,10 @@ fetch() {
 TOOLS="${OPEN_GRIND_TOOLCHAIN_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/open-grind-toolchain}"
 mkdir -p "$TOOLS"
 
-node_version="$(pin node.version)"
-node_dir="$TOOLS/node-v$node_version-linux-x64"
-if [ ! -x "$node_dir/bin/node" ]; then
-	fetch "https://nodejs.org/dist/v$node_version/node-v$node_version-linux-x64.tar.gz" \
-		"$(pin node.sha256)" "$TOOLS/node.tar.gz"
-	tar -xzf "$TOOLS/node.tar.gz" -C "$TOOLS"
-	rm "$TOOLS/node.tar.gz"
-fi
+command -v node >/dev/null || {
+	echo "node is not on PATH, and bun's own node builds a different frontend" >&2
+	exit 1
+}
 
 bun_version="$(pin bun.version)"
 bun_dir="$TOOLS/bun-v$bun_version"
@@ -78,7 +74,7 @@ export ANDROID_NDK_ROOT="$ndk_root"
 export NDK_HOME="$ndk_root"
 export LIBCLANG_PATH="/usr/lib/llvm-$libclang_major/lib"
 export CMAKE_GENERATOR=Ninja
-export PATH="$sdk/build-tools/$build_tools:$sdk/cmake/$cmake/bin:$CARGO_HOME/bin:$bun_dir/bin:$node_dir/bin:$JAVA_HOME/bin:$PATH"
+export PATH="$sdk/build-tools/$build_tools:$sdk/cmake/$cmake/bin:$CARGO_HOME/bin:$bun_dir/bin:$JAVA_HOME/bin:$PATH"
 export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
 
 export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=$ROOT=/open-grind"
