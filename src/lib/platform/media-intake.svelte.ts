@@ -18,13 +18,26 @@ import {
 	mediaFileKindOf,
 } from "$lib/platform/media-file";
 import { mimeTypeFromPath, type PickedMedia } from "$lib/platform/media-picker";
-import { isDesktopPlatform } from "$lib/platform/os";
+import { isLinuxPlatform } from "$lib/platform/os";
 import { toBase64 } from "$lib/util/base64";
 
 const STAGE_CHUNK_BYTES = 4 * 1024 * 1024;
 
+const DRAG_IDLE_MS = 1_000;
+
+const LINK = /^https?:\/\//i;
+const SECURE_LINK = /^https:\/\//i;
+
 const UNREADABLE_MESSAGE = "Couldn't read that file";
+const LINK_FAILED_MESSAGE = "Couldn't download that image";
 const TOO_LARGE_MESSAGE = `Larger than the ${CHAT_MEDIA_MAX_LABEL} limit`;
+
+const stagedLinkSchema = z.object({ id: z.string(), mimeType: z.string() });
+
+const mediaRefusalSchema = z.object({
+	kind: z.literal("Media"),
+	message: z.string(),
+});
 
 const rejections = {
 	unsupported: "That file isn't a photo or video",
@@ -63,6 +76,7 @@ let dragging = $state(false);
 let draggedKinds = $state.raw<DraggedKind[]>([]);
 let draggingFromPage = false;
 let htmlDragDepth = 0;
+let dragIdle: ReturnType<typeof setTimeout> | undefined;
 
 export const mediaDrop = {
 	get label(): string | null {
@@ -97,7 +111,7 @@ function draggedKindOfType(mimeType: string): DraggedKind {
 }
 
 function draggedKindOfPath(path: string): DraggedKind {
-	if (PATH_EXTENSION.test(path) && !MEDIA_PATH.test(path))
+	if (!LINK.test(path) && PATH_EXTENSION.test(path) && !MEDIA_PATH.test(path))
 		return "unsupported";
 	const kind = mediaFileKindOf(mimeTypeFromPath(path));
 	return kind === "unsupported" ? "unknown" : kind;
@@ -132,11 +146,12 @@ export function listenForMedia(): () => void {
 	window.addEventListener("dragover", onDragOver, options);
 	window.addEventListener("dragleave", onDragLeave, options);
 	window.addEventListener("drop", onDrop, options);
-	const nativeDrops = isDesktopPlatform()
+	const nativeDrops = isLinuxPlatform()
 		? getCurrentWebview().onDragDropEvent(onNativeDrag)
 		: null;
 	return () => {
 		controller.abort();
+		hideDrag();
 		draggingFromPage = false;
 		void nativeDrops?.then((unlisten) => unlisten());
 	};
@@ -147,7 +162,12 @@ function onPaste(event: ClipboardEvent) {
 	const files = Array.from(event.clipboardData?.files ?? []);
 	if (target === undefined || files.length === 0) return;
 	event.preventDefault();
-	void deliver({ target, files: withinSizeLimit(files) });
+	void deliver({
+		target,
+		items: withinSizeLimit(files),
+		stage: stageFile,
+		failure: () => UNREADABLE_MESSAGE,
+	});
 }
 
 function withinSizeLimit(files: File[]): File[] {
@@ -164,23 +184,48 @@ function onDragEnd() {
 	draggingFromPage = false;
 }
 
+function draggedTypes(event: DragEvent): readonly string[] {
+	return event.dataTransfer?.types ?? [];
+}
+
 function carriesFiles(event: DragEvent): boolean {
-	return event.dataTransfer?.types.includes("Files") ?? false;
+	return draggedTypes(event).includes("Files");
+}
+
+function carriesMarkup(event: DragEvent): boolean {
+	return !carriesFiles(event) && draggedTypes(event).includes("text/html");
+}
+
+function showDrag(kinds: DraggedKind[]) {
+	dragging = true;
+	draggedKinds = kinds;
+	clearTimeout(dragIdle);
+	dragIdle = setTimeout(hideDrag, DRAG_IDLE_MS);
+}
+
+function hideDrag() {
+	clearTimeout(dragIdle);
+	htmlDragDepth = 0;
+	dragging = false;
+	draggedKinds = [];
 }
 
 function onDragEnter(event: DragEvent) {
 	if (draggingFromPage || !carriesFiles(event)) return;
 	event.preventDefault();
 	htmlDragDepth += 1;
-	dragging = true;
-	draggedKinds = draggedKindsOf(event);
+	showDrag(draggedKindsOf(event));
 }
 
 function onDragOver(event: DragEvent) {
 	if (draggingFromPage) return;
+	if (carriesMarkup(event) && targets.length > 0) {
+		event.preventDefault();
+		return;
+	}
 	if (!carriesFiles(event)) return;
 	event.preventDefault();
-	draggedKinds = draggedKindsOf(event);
+	showDrag(draggedKindsOf(event));
 	if (event.dataTransfer !== null) {
 		const accepted = targets.length > 0 && mediaDrop.refusal === null;
 		event.dataTransfer.dropEffect = accepted ? "copy" : "none";
@@ -190,23 +235,62 @@ function onDragOver(event: DragEvent) {
 function onDragLeave(event: DragEvent) {
 	if (draggingFromPage || !carriesFiles(event)) return;
 	htmlDragDepth = Math.max(0, htmlDragDepth - 1);
-	if (htmlDragDepth === 0) {
-		dragging = false;
-		draggedKinds = [];
-	}
+	if (htmlDragDepth === 0) hideDrag();
 }
 
 function onDrop(event: DragEvent) {
 	if (draggingFromPage) return;
+	const target = targets.at(-1);
+	if (carriesMarkup(event)) {
+		const source = imageSourceOf(event);
+		if (target === undefined || source === undefined) return;
+		event.preventDefault();
+		if (source === null) {
+			toast.error(LINK_FAILED_MESSAGE);
+			return;
+		}
+		void deliver({
+			target,
+			items: [source],
+			stage: stageLink,
+			failure: linkFailure,
+		});
+		return;
+	}
 	if (!carriesFiles(event)) return;
 	event.preventDefault();
-	htmlDragDepth = 0;
-	dragging = false;
-	draggedKinds = [];
-	const target = targets.at(-1);
+	hideDrag();
 	const files = Array.from(event.dataTransfer?.files ?? []);
 	if (target === undefined || files.length === 0) return;
-	void deliver({ target, files: withinSizeLimit(files) });
+	void deliver({
+		target,
+		items: withinSizeLimit(files),
+		stage: stageFile,
+		failure: () => UNREADABLE_MESSAGE,
+	});
+}
+
+function secureLink(source: string | null | undefined): string | null {
+	const link = source?.trim().replace(/^\/\//, "https://") ?? "";
+	return SECURE_LINK.test(link) ? link : null;
+}
+
+function imageSourceOf(event: DragEvent): string | null | undefined {
+	const data = event.dataTransfer;
+	const image = new DOMParser()
+		.parseFromString(data?.getData("text/html") ?? "", "text/html")
+		.querySelector("img");
+	if (image === null) return undefined;
+	const listed = (data?.getData("text/uri-list") ?? "")
+		.split(/\r?\n/)
+		.find((line) => line !== "" && !line.startsWith("#"));
+	const candidates = [
+		image.getAttribute("src"),
+		image.getAttribute("srcset")?.split(",")[0]?.trim().split(/\s+/)[0],
+		image.getAttribute("data-src"),
+		listed,
+	];
+	return candidates.map(secureLink).find((link) => link !== null) ?? null;
 }
 
 function onNativeDrag({ payload }: Event<DragDropEvent>) {
@@ -227,34 +311,56 @@ function onNativeDrag({ payload }: Event<DragDropEvent>) {
 			draggedKinds = [];
 			const target = targets.at(-1);
 			if (target === undefined || payload.paths.length === 0) return;
-			target.receive(
-				payload.paths.map(
-					(path): PickedMedia => ({
-						source: "desktop",
-						key: crypto.randomUUID(),
-						mimeType: mimeTypeFromPath(path),
-						path,
-					}),
-				),
-			);
+			void deliver({
+				target,
+				items: payload.paths,
+				stage: stagePath,
+				failure: linkFailure,
+			});
 		}
 	}
 }
 
-async function deliver({
+function linkFailure(error: unknown): string {
+	const refusal = mediaRefusalSchema.safeParse(error);
+	return refusal.success ? refusal.data.message : LINK_FAILED_MESSAGE;
+}
+
+async function stageLink(url: string): Promise<PickedMedia> {
+	const { id, mimeType } = stagedLinkSchema.parse(
+		await invoke("stage_linked_media", { url }),
+	);
+	return { source: "staged", key: crypto.randomUUID(), mimeType, id };
+}
+
+async function stagePath(path: string): Promise<PickedMedia> {
+	if (LINK.test(path)) return stageLink(path);
+	return {
+		source: "desktop",
+		key: crypto.randomUUID(),
+		mimeType: mimeTypeFromPath(path),
+		path,
+	};
+}
+
+async function deliver<T>({
 	target,
-	files,
+	items,
+	stage,
+	failure,
 }: {
 	target: Registration;
-	files: File[];
+	items: T[];
+	stage: (item: T) => Promise<PickedMedia>;
+	failure: (error: unknown) => string;
 }): Promise<void> {
 	const staged: PickedMedia[] = [];
-	for (const file of files) {
+	for (const item of items) {
 		try {
-			staged.push(await stageFile(file));
+			staged.push(await stage(item));
 		} catch (error) {
 			console.error(error);
-			toast.error(UNREADABLE_MESSAGE);
+			toast.error(failure(error));
 		}
 	}
 	if (staged.length === 0) return;

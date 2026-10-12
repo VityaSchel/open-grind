@@ -24,7 +24,12 @@ impl StagedMedia {
 			.map_err(io::Error::other)
 	}
 
-	#[cfg(target_os = "android")]
+	#[cfg(test)]
+	pub fn at(directory: PathBuf) -> Self {
+		Self(directory)
+	}
+
+	#[cfg(any(test, target_os = "android"))]
 	pub fn directory(&self) -> &std::path::Path {
 		&self.0
 	}
@@ -43,11 +48,12 @@ impl StagedMedia {
 		Ok(id)
 	}
 
+	pub fn appender(&self, id: &str) -> io::Result<File> {
+		OpenOptions::new().append(true).open(self.path(id)?)
+	}
+
 	pub fn append(&self, id: &str, bytes: &[u8]) -> io::Result<()> {
-		OpenOptions::new()
-			.append(true)
-			.open(self.path(id)?)?
-			.write_all(bytes)
+		self.appender(id)?.write_all(bytes)
 	}
 
 	pub fn discard(&self, id: &str) -> io::Result<()> {

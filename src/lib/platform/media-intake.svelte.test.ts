@@ -82,6 +82,23 @@ function drag(type: string, files: File[] = []) {
 	return event as DragEvent & { dataTransfer: DataTransfer };
 }
 
+function dragMarkup(type: string, markup: string, uriList = "") {
+	const event = new Event(type, { bubbles: true, cancelable: true });
+	const data: Record<string, string> = {
+		"text/html": markup,
+		"text/uri-list": uriList,
+	};
+	Object.defineProperty(event, "dataTransfer", {
+		value: {
+			types: ["text/html", "text/plain"],
+			files: [],
+			getData: (format: string) => data[format] ?? "",
+		},
+	});
+	window.dispatchEvent(event);
+	return event;
+}
+
 function stagingSucceeds() {
 	let next = 0;
 	invokeMock.mockImplementation((command: string) => {
@@ -260,6 +277,108 @@ describe("dragging", () => {
 		expect(album.receive.mock.calls[0]?.[0]).toHaveLength(2);
 	});
 
+	it("downloads an image a browser dragged in only as markup", async () => {
+		invokeMock.mockResolvedValue({ id: "linked-1", mimeType: "image/png" });
+		const chat = target();
+		register(chat);
+		const markup =
+			'<meta charset="utf-8"><img src="https://example.org/cat.png" alt="cat">';
+
+		expect(dragMarkup("dragover", markup).defaultPrevented).toBe(true);
+		const event = dragMarkup("drop", markup);
+
+		expect(event.defaultPrevented).toBe(true);
+		await vi.waitFor(() =>
+			expect(chat.receive).toHaveBeenCalledWith([
+				expect.objectContaining({ source: "staged", id: "linked-1" }),
+			]),
+		);
+		expect(invokeMock).toHaveBeenCalledWith("stage_linked_media", {
+			url: "https://example.org/cat.png",
+		});
+	});
+
+	it("finds a secure address for an image a page links relatively", async () => {
+		invokeMock.mockResolvedValue({
+			id: "linked-1",
+			mimeType: "image/jpeg",
+		});
+		register(target());
+
+		for (const [markup, uriList, expected] of [
+			[
+				'<img src="//cdn.example.org/a.jpg">',
+				"",
+				"https://cdn.example.org/a.jpg",
+			],
+			[
+				'<img src="/a.jpg" srcset="https://cdn.example.org/a-2x.jpg 2x">',
+				"",
+				"https://cdn.example.org/a-2x.jpg",
+			],
+			[
+				'<img src="data:image/gif;base64,R0lGOD" data-src="https://cdn.example.org/lazy.jpg">',
+				"",
+				"https://cdn.example.org/lazy.jpg",
+			],
+			[
+				'<img src="a.jpg">',
+				"# from the page\r\nhttps://example.org/a.jpg",
+				"https://example.org/a.jpg",
+			],
+		] as const) {
+			invokeMock.mockClear();
+			dragMarkup("drop", markup, uriList);
+
+			await vi.waitFor(() =>
+				expect(invokeMock).toHaveBeenCalledWith("stage_linked_media", {
+					url: expected,
+				}),
+			);
+		}
+	});
+
+	it("says so when a dragged image has no secure address", () => {
+		register(target());
+
+		const event = dragMarkup(
+			"drop",
+			'<img src="http://example.org/a.jpg">',
+		);
+
+		expect(event.defaultPrevented).toBe(true);
+		expect(toastError).toHaveBeenCalledWith("Couldn't download that image");
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("leaves a dragged link or text to the page", () => {
+		register(target());
+
+		const event = dragMarkup(
+			"drop",
+			'<a href="https://example.org/">example</a>',
+		);
+
+		expect(event.defaultPrevented).toBe(false);
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("hides the overlay once a drag stops moving without a drop", () => {
+		vi.useFakeTimers();
+		try {
+			register(target("Drop to attach"));
+
+			drag("dragenter");
+			drag("dragover");
+			expect(mediaDrop.label).toBe("Drop to attach");
+			vi.advanceTimersByTime(1_000);
+
+			expect(mediaDrop.label).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it("leaves drags that start inside the page to the page", () => {
 		register(target("Drop to send"));
 
@@ -326,11 +445,41 @@ describe("dragging", () => {
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
-	it("judges paths dragged over a desktop window by their extension", () => {
+	function onLinux() {
 		stopListening();
 		tauri.isTauri = true;
-		platformMock.mockReturnValue("macos");
+		platformMock.mockReturnValue("linux");
 		stopListening = listenForMedia();
+	}
+
+	it("passes paths dropped on a Linux window straight to the target", async () => {
+		onLinux();
+		const chat = target("Drop to attach");
+		register(chat);
+
+		nativeDrop.handler?.({
+			payload: { type: "enter", paths: ["/home/me/clip.mov"] },
+		});
+		expect(mediaDrop.label).toBe("Drop to attach");
+		nativeDrop.handler?.({
+			payload: { type: "drop", paths: ["/home/me/clip.mov"] },
+		});
+
+		expect(mediaDrop.label).toBeNull();
+		await vi.waitFor(() =>
+			expect(chat.receive).toHaveBeenCalledWith([
+				expect.objectContaining({
+					source: "desktop",
+					path: "/home/me/clip.mov",
+					mimeType: "video/quicktime",
+				}),
+			]),
+		);
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("judges paths dragged over a Linux window by their extension", () => {
+		onLinux();
 		register(target("Drop to send"));
 
 		const refusalFor = (paths: string[]) => {
@@ -340,42 +489,77 @@ describe("dragging", () => {
 			return refusal;
 		};
 
-		expect(refusalFor(["/Users/me/notes.pdf"])).toBe(
+		expect(refusalFor(["/home/me/notes.pdf"])).toBe(
 			"Only photos and videos can be dropped here",
 		);
 		for (const paths of [
-			["/Users/me/scan"],
-			["/Users/me/photo.HEIC"],
-			["/Users/me/notes.pdf", "/Users/me/loop.gif"],
+			["/home/me/scan"],
+			["/home/me/photo.HEIC"],
+			["/home/me/notes.pdf", "/home/me/loop.gif"],
+			["https://example.org/cat.webp?w=200"],
 		]) {
 			expect(refusalFor(paths), paths.join()).toBeNull();
 		}
 	});
 
-	it("passes paths dropped on a desktop window straight to the target", () => {
-		stopListening();
-		tauri.isTauri = true;
-		platformMock.mockReturnValue("macos");
-		stopListening = listenForMedia();
-		const chat = target("Drop to attach");
+	it("downloads an image dragged out of a browser on Linux", async () => {
+		onLinux();
+		invokeMock.mockResolvedValue({
+			id: "linked-1",
+			mimeType: "image/jpeg",
+		});
+		const chat = target();
 		register(chat);
 
 		nativeDrop.handler?.({
-			payload: { type: "enter", paths: ["/Users/me/clip.mov"] },
-		});
-		expect(mediaDrop.label).toBe("Drop to attach");
-		nativeDrop.handler?.({
-			payload: { type: "drop", paths: ["/Users/me/clip.mov"] },
+			payload: { type: "drop", paths: ["https://example.org/cat.jpg"] },
 		});
 
-		expect(mediaDrop.label).toBeNull();
-		expect(chat.receive).toHaveBeenCalledWith([
-			expect.objectContaining({
-				source: "desktop",
-				path: "/Users/me/clip.mov",
-				mimeType: "video/quicktime",
-			}),
-		]);
+		await vi.waitFor(() =>
+			expect(chat.receive).toHaveBeenCalledWith([
+				expect.objectContaining({
+					source: "staged",
+					id: "linked-1",
+					mimeType: "image/jpeg",
+				}),
+			]),
+		);
+		expect(invokeMock).toHaveBeenCalledWith("stage_linked_media", {
+			url: "https://example.org/cat.jpg",
+		});
+	});
+
+	it("says why a dragged link couldn't be added", async () => {
+		onLinux();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		invokeMock.mockRejectedValue({
+			kind: "Media",
+			message: "That link isn't a photo or video",
+		});
+		const chat = target();
+		register(chat);
+
+		nativeDrop.handler?.({
+			payload: { type: "drop", paths: ["https://example.org/page"] },
+		});
+
+		await vi.waitFor(() =>
+			expect(toastError).toHaveBeenCalledWith(
+				"That link isn't a photo or video",
+			),
+		);
+		expect(chat.receive).not.toHaveBeenCalled();
+	});
+
+	it("leaves macOS and Windows drops to the webview", () => {
+		stopListening();
+		tauri.isTauri = true;
+		platformMock.mockReturnValue("macos");
+		nativeDrop.handler = null;
+
+		stopListening = listenForMedia();
+
+		expect(nativeDrop.handler).toBeNull();
 	});
 });
 

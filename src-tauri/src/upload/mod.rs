@@ -2,6 +2,7 @@ pub(crate) mod bytes;
 pub(crate) mod file;
 mod form;
 pub(crate) mod inspect;
+pub(crate) mod linked;
 mod picked;
 pub(crate) mod preview;
 pub(crate) mod staged;

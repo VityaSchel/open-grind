@@ -223,6 +223,7 @@ pub fn run() {
             upload::staged::stage_media,
             upload::staged::append_staged_media,
             upload::staged::discard_staged_media,
+            upload::linked::stage_linked_media,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
             api::ws::ws_send,
@@ -279,6 +280,8 @@ pub fn run() {
                         .on_navigation(|url| {
                             app_origin::is_app_url(url, app_origin::SERVED_HOSTNAME)
                         });
+                #[cfg(any(target_os = "macos", target_os = "windows"))]
+                let builder = builder.disable_drag_drop_handler();
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
