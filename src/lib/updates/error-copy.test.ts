@@ -71,15 +71,15 @@ describe("copy for an Open Grind build signed by someone else", () => {
 	it.each([
 		[
 			GOOGLE_OAUTH_COMPONENT,
-			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
+			"This build isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
 		],
 		[
 			RECAPTCHA_COMPONENT,
-			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
+			"This build isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
 		],
 		[
 			FCM_COMPONENT,
-			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
+			"This build isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
 		],
 	] as const)(
 		"blames this build, not the %s add-on, when the add-on cannot be installed",
