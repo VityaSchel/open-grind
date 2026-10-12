@@ -23,5 +23,6 @@ keystore.properties
 
 .local
 /coverage
+/i18n-screenshots/
 /.updater-dev/
 /e2e/updater/.state/

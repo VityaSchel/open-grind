@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 const COVERING_SELECTOR = "vite-error-overlay, [data-sonner-toast]";
 const INTEREST_BADGE_SELECTOR = 'nav a[href="/interest"] [data-slot="badge"]';
 
-async function brokenImagesOnceReady(page: Page): Promise<string[]> {
+export async function brokenImagesOnceReady(page: Page): Promise<string[]> {
 	const ready = await page.waitForFunction(() => {
 		const inViewport = (element: Element) => {
 			const rect = element.getBoundingClientRect();
@@ -42,7 +42,7 @@ async function brokenImagesOnceReady(page: Page): Promise<string[]> {
 	return ready.jsonValue() as Promise<string[]>;
 }
 
-async function renderTwoFrames(page: Page): Promise<void> {
+export async function renderTwoFrames(page: Page): Promise<void> {
 	await page.evaluate(
 		() =>
 			new Promise((resolve) =>

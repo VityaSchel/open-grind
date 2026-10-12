@@ -17,5 +17,5 @@
 		"noImplicitOverride": true
 	},
 	"include": ["ci/**/*.ts", "scripts/**/*.ts", "e2e/updater/**/*.ts"],
-	"exclude": ["scripts/store-screenshots/"]
+	"exclude": ["scripts/store-screenshots/", "scripts/i18n-screenshots/"]
 }
