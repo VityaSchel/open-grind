@@ -1,6 +1,7 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { realpathSync } from "node:fs";
+import { env } from "node:process";
 import { searchForWorkspaceRoot } from "vite";
 import { defineConfig } from "vitest/config";
 
@@ -16,7 +17,12 @@ export default defineConfig(async ({ command }) => ({
 	// here lets the bundle drop what a store build may not carry.
 	envPrefix: ["VITE_", "OPEN_GRIND_"],
 
-	esbuild: { drop: command === "build" ? ["console", "debugger"] : [] },
+	esbuild: {
+		drop:
+			command === "build" && env.OPEN_GRIND_SCREENSHOTS !== "1"
+				? ["console", "debugger"]
+				: [],
+	},
 
 	optimizeDeps: { include: ["leaflet", "sveaflet"] },
 

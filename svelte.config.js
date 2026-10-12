@@ -7,43 +7,54 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import { env } from "process";
 import { fileURLToPath } from "url";
 
-const projectVersion = JSON.parse(
-	fs.readFileSync(
-		path.join(
-			path.dirname(fileURLToPath(import.meta.url)),
-			"./package.json",
-		),
-		"utf-8",
-	),
-).version;
+const SCREENSHOT_VERSION_NAME = "OpenGrind/0.0.0\ngrindr3/0.0.0;0";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const cargoMetadata = JSON.parse(
-	execSync("cargo metadata --format-version 1", {
-		cwd: path.join(__dirname, "src-tauri"),
-		maxBuffer: 16 * 1024 * 1024,
-	}),
-);
-const grindrManifest = cargoMetadata.packages.find(
-	(p) => p.name === "grindr",
-)?.manifest_path;
-if (!grindrManifest)
-	throw new Error("grindr crate not found in cargo metadata");
-const headersRs = fs.readFileSync(
-	path.join(path.dirname(grindrManifest), "src", "headers.rs"),
-	"utf-8",
-);
-function scrapeHeaderConst(name) {
-	const match = headersRs.match(
-		new RegExp(`const ${name}: &str = "([^"]+)";`),
+
+function releaseVersionName() {
+	const projectVersion = JSON.parse(
+		fs.readFileSync(path.join(__dirname, "./package.json"), "utf-8"),
+	).version;
+	const cargoMetadata = JSON.parse(
+		execSync("cargo metadata --format-version 1", {
+			cwd: path.join(__dirname, "src-tauri"),
+			maxBuffer: 16 * 1024 * 1024,
+		}),
 	);
-	if (!match)
-		throw new Error(`${name} not found in the grindr crate headers`);
-	return match[1];
+	const grindrManifest = cargoMetadata.packages.find(
+		(p) => p.name === "grindr",
+	)?.manifest_path;
+	if (!grindrManifest)
+		throw new Error("grindr crate not found in cargo metadata");
+	const headersRs = fs.readFileSync(
+		path.join(path.dirname(grindrManifest), "src", "headers.rs"),
+		"utf-8",
+	);
+	function scrapeHeaderConst(name) {
+		const match = headersRs.match(
+			new RegExp(`const ${name}: &str = "([^"]+)";`),
+		);
+		if (!match)
+			throw new Error(`${name} not found in the grindr crate headers`);
+		return match[1];
+	}
+	const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
+	const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
+	return `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`;
 }
-const grindrApiVersion = scrapeHeaderConst("APP_VERSION");
-const grindrApiBuildNumber = scrapeHeaderConst("BUILD_NUMBER");
+
+function versionName() {
+	if (env.OPEN_GRIND_SCREENSHOTS !== "1") return releaseVersionName();
+	if (env.OPEN_GRIND_DEMO !== "1") {
+		throw new Error(
+			"OPEN_GRIND_SCREENSHOTS=1 only builds the demo, so it needs OPEN_GRIND_DEMO=1",
+		);
+	}
+	return SCREENSHOT_VERSION_NAME;
+}
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -52,9 +63,7 @@ const config = {
 	kit: {
 		adapter: adapter({ fallback: "index.html" }),
 		alias: { $layout: "src/layout.css" },
-		version: {
-			name: `OpenGrind/${projectVersion}\ngrindr3/${grindrApiVersion};${grindrApiBuildNumber}`,
-		},
+		version: { name: versionName() },
 	},
 };
 
