@@ -202,10 +202,10 @@
 		"automaticChecks": {
 			"addonsTitle": "Check add-on updates automatically",
 			"description": {
-				"app": "Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
-				"appAndAddons": "Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
-				"addonsOnly": "Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, no requests are stored or analyzed.",
-				"addonsOnlyWithReason": "{{reason}}. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, no requests are stored or analyzed."
+				"app": "Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"appAndAddons": "Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"addonsOnly": "Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, and no requests are stored or analyzed.",
+				"addonsOnlyWithReason": "{{reason}}. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, and no requests are stored or analyzed."
 			}
 		},
 		"errors": {

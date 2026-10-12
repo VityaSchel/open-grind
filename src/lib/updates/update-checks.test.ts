@@ -100,7 +100,7 @@ describe("the automatic update checks switch", () => {
 		).toEqual({
 			title: "Check updates automatically",
 			description:
-				"Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
 			blocked: false,
 		});
 	});
@@ -113,7 +113,7 @@ describe("the automatic update checks switch", () => {
 				addonAvailable: false,
 			}).description,
 		).toBe(
-			"Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
+			"Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, and no requests are stored or analyzed.",
 		);
 	});
 
@@ -121,7 +121,7 @@ describe("the automatic update checks switch", () => {
 		expect(automaticChecksSetting(storeBuild)).toEqual({
 			title: "Check add-on updates automatically",
 			description:
-				"Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, and no requests are stored or analyzed.",
 			blocked: false,
 		});
 	});
@@ -135,7 +135,7 @@ describe("the automatic update checks switch", () => {
 		expect(setting.blocked).toBe(false);
 		expect(setting.title).toBe("Check add-on updates automatically");
 		expect(setting.description).toBe(
-			"Open Grind can’t tell whether it may update itself. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, no requests are stored or analyzed.",
+			"Open Grind can’t tell whether it may update itself. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, and no requests are stored or analyzed.",
 		);
 	});
 
