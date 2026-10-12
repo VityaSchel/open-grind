@@ -4,6 +4,7 @@ import {
 	getPreferences,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { t } from "$lib/i18n";
 import { addonGone } from "./delivery-dead";
 import { fallBackToSlow, freshPushToken } from "./delivery.svelte";
 import { pushFailures } from "./error-copy";
@@ -82,7 +83,7 @@ async function turningOn(steps: () => Promise<void>): Promise<void> {
 		await steps();
 	} catch (error) {
 		await setNotificationsEnabled(false).catch(() => {});
-		showErrorToast({ label: pushFailures.turnOn, error });
+		showErrorToast({ label: t(pushFailures.enable), error });
 	} finally {
 		notificationState.permissionPending = false;
 	}
@@ -104,7 +105,7 @@ async function turnNotificationsOff(): Promise<void> {
 	try {
 		await stopNotifications();
 	} catch (error) {
-		showErrorToast({ label: pushFailures.turnOff, error });
+		showErrorToast({ label: t(pushFailures.turnOff), error });
 	} finally {
 		notificationState.phase = "idle";
 	}

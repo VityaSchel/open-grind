@@ -46,6 +46,13 @@ export const toasts = {
 	showErrorToast: vi.fn<(toast: { label: string; error: unknown }) => void>(),
 };
 
+export const failureLabels = {
+	enable: "Couldn’t enable notifications",
+	turnOff: "Couldn’t turn off notifications",
+	enableFastMode: "Couldn’t enable Fast Mode for push notifications",
+	switchToSlowMode: "Couldn’t switch push notifications to Slow Mode",
+};
+
 const stored = { notificationsEnabled: false };
 
 export const preferences = {

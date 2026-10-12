@@ -1,5 +1,6 @@
 import { showErrorToast } from "$lib/api/error-toast";
 import { registerPushToken } from "$lib/api/settings/account";
+import { t } from "$lib/i18n";
 import { openExternalLink } from "$lib/platform/link-opener";
 import {
 	addonFlow,
@@ -8,7 +9,8 @@ import {
 } from "$lib/updates/addon.svelte";
 import { FCM_COMPONENT } from "$lib/updates/components";
 import { manualInstallHref } from "$lib/updates/manual-install";
-import { explainedPushError, pushFailures } from "./error-copy";
+import { pushFailures } from "./error-copy";
+import { explainedPushError } from "./explained-error";
 import {
 	addonReady,
 	deletePushToken,
@@ -66,12 +68,15 @@ export async function fallBackToSlow({
 	try {
 		await setMode("slow");
 	} catch (failure) {
-		showErrorToast({ label: pushFailures.slowMode, error: failure });
+		showErrorToast({
+			label: t(pushFailures.switchToSlowMode),
+			error: failure,
+		});
 		return;
 	}
 	notificationState.mode = "slow";
 	showErrorToast({
-		label: pushFailures.fastMode,
+		label: t(pushFailures.enableFastMode),
 		error: explainedPushError(error),
 	});
 }
@@ -97,7 +102,7 @@ async function enableFastMode(): Promise<void> {
 		notificationState.mode = "fast";
 	} catch (error) {
 		showErrorToast({
-			label: pushFailures.fastMode,
+			label: t(pushFailures.enableFastMode),
 			error: explainedPushError(error),
 		});
 	} finally {
@@ -113,7 +118,7 @@ async function switchToSlow(): Promise<void> {
 		notificationState.mode = "slow";
 		await deletePushToken().catch(() => {});
 	} catch (error) {
-		showErrorToast({ label: pushFailures.slowMode, error });
+		showErrorToast({ label: t(pushFailures.switchToSlowMode), error });
 	} finally {
 		notificationState.phase = "idle";
 	}

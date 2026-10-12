@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import {
 	account,
 	addon,
 	addonInstalled,
+	failureLabels,
 	freshModule,
 	inFast,
 	installNow,
@@ -81,9 +83,7 @@ describe("turning Fast mode on", () => {
 		expect(push.setMode).not.toHaveBeenCalled();
 		expect(module.notificationSettings.mode).toBe("slow");
 		expect(module.notificationSettings.phase).toBe("idle");
-		expect(toastLabel()).toBe(
-			"Couldn't enable Fast Mode for push notifications",
-		);
+		expect(toastLabel()).toBe(failureLabels.enableFastMode);
 	});
 
 	it("keeps the toast short and puts the reason in its details", async () => {
@@ -96,9 +96,7 @@ describe("turning Fast mode on", () => {
 
 		expect(account.registerPushToken).not.toHaveBeenCalled();
 		expect(module.notificationSettings.mode).toBe("slow");
-		expect(toastLabel()).toBe(
-			"Couldn't enable Fast Mode for push notifications",
-		);
+		expect(toastLabel()).toBe(failureLabels.enableFastMode);
 		expect(toastDetails()).toMatchObject({
 			message: "This device has no Google Play services or microG.",
 			cause: failure,
@@ -252,9 +250,7 @@ describe("going back to Slow mode", () => {
 
 		expect(module.notificationSettings.mode).toBe("fast");
 		expect(module.notificationSettings.phase).toBe("idle");
-		expect(toastLabel()).toBe(
-			"Couldn't switch push notifications to Slow Mode",
-		);
+		expect(toastLabel()).toBe(failureLabels.switchToSlowMode);
 	});
 
 	it("leaves Grindr alone when Android is already in Slow mode", async () => {
@@ -277,9 +273,7 @@ describe("falling back to Slow mode", () => {
 
 		expect(push.setMode).toHaveBeenCalledWith("slow");
 		expect(module.notificationSettings.mode).toBe("slow");
-		expect(toastLabel()).toBe(
-			"Couldn't enable Fast Mode for push notifications",
-		);
+		expect(toastLabel()).toBe(failureLabels.enableFastMode);
 		expect(toastDetails()).toMatchObject({
 			message: expect.stringMatching(
 				/^The Open Grind FCM service is disabled/,
@@ -296,9 +290,28 @@ describe("falling back to Slow mode", () => {
 		await module.fallBackToSlow({ error: new Error("disabled") });
 
 		expect(module.notificationSettings.mode).toBe("fast");
-		expect(toastLabel()).toBe(
-			"Couldn't switch push notifications to Slow Mode",
-		);
+		expect(toastLabel()).toBe(failureLabels.switchToSlowMode);
 		expect(toastDetails()).toBe(refusal);
+	});
+});
+
+describe("a failure toast in another language", () => {
+	afterEach(async () => {
+		const { setLocale, SOURCE_LOCALE } = await import("$lib/i18n");
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("words the label in the language active when it shows", async () => {
+		account.registerPushToken.mockRejectedValue(new Error("500"));
+		const module = await freshModule();
+		const { setLocale, t } = await import("$lib/i18n");
+		await setLocale({ locale: "en-XA" });
+
+		await module.selectNotificationMode("fast");
+
+		expect(toastLabel()).toBe(
+			t("updates.push.errors.enableFastModeFailed"),
+		);
+		expect(toastLabel()).toMatch(PSEUDO_MESSAGE);
 	});
 });

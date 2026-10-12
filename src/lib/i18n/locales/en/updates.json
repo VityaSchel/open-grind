@@ -209,5 +209,13 @@
 			"loadFailed": "Couldn’t load update settings",
 			"saveFailed": "Couldn’t save update settings"
 		}
+	},
+	"push": {
+		"errors": {
+			"enableFailed": "Couldn’t enable notifications",
+			"turnOffFailed": "Couldn’t turn off notifications",
+			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
+			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
+		}
 	}
 }

@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
+import { failureLabels } from "$lib/push/push-test-helpers";
 import type * as Os from "$lib/platform/os";
 import type { PushToken } from "$lib/push/types";
 import type * as Capability from "$lib/updates/capability.svelte";
@@ -208,7 +209,7 @@ describe("choosing Fast mode", () => {
 		await waitFor(() =>
 			expect(showErrorToast).toHaveBeenCalledWith(
 				expect.objectContaining({
-					label: "Couldn't enable Fast Mode for push notifications",
+					label: failureLabels.enableFastMode,
 				}),
 			),
 		);

@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
-import { explainedPushError } from "./error-copy";
+import { explainedPushError } from "./explained-error";
 
 function pushFailure(reason: string) {
 	return { kind: "Push", message: { reason, detail: null } };
 }
 
 const explanations: [reason: string, message: string][] = [
+	["unsupportedPlatform", "Fast Mode only works on Android."],
 	[
 		"addonOutdated",
 		"The Open Grind FCM service is out of date. Update it to the latest version.",
@@ -27,6 +28,10 @@ const explanations: [reason: string, message: string][] = [
 	[
 		"addonUnavailable",
 		"Open Grind couldn't reach the Open Grind FCM service.",
+	],
+	[
+		"addonUntrusted",
+		"The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
 	],
 ];
 

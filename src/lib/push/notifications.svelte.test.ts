@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	account,
 	addon,
+	failureLabels,
 	freshModule,
 	granted,
 	inFast,
@@ -112,9 +113,7 @@ describe("the notifications master switch", () => {
 			expect(push.setMode).toHaveBeenCalledWith("slow");
 			expect(module.notificationSettings.mode).toBe("slow");
 			expect(module.notificationSettings.enabled).toBe(true);
-			expect(toastLabel()).toBe(
-				"Couldn't enable Fast Mode for push notifications",
-			);
+			expect(toastLabel()).toBe(failureLabels.enableFastMode);
 		},
 	);
 
@@ -126,7 +125,7 @@ describe("the notifications master switch", () => {
 
 		expect(push.setNotificationsEnabled).toHaveBeenLastCalledWith(false);
 		expect(module.notificationSettings.enabled).toBe(false);
-		expect(toastLabel()).toBe("Couldn't turn on notifications");
+		expect(toastLabel()).toBe(failureLabels.enable);
 	});
 
 	it("stops rendering before it asks Grindr to forget the token", async () => {
@@ -157,7 +156,7 @@ describe("the notifications master switch", () => {
 
 		expect(module.notificationSettings.enabled).toBe(true);
 		expect(module.notificationSettings.phase).toBe("idle");
-		expect(toastLabel()).toBe("Couldn't turn off notifications");
+		expect(toastLabel()).toBe(failureLabels.turnOff);
 	});
 });
 
@@ -238,9 +237,7 @@ describe("reconciling with Android", () => {
 
 		expect(push.setMode).toHaveBeenCalledWith("slow");
 		expect(module.notificationSettings.mode).toBe("slow");
-		expect(toastLabel()).toBe(
-			"Couldn't enable Fast Mode for push notifications",
-		);
+		expect(toastLabel()).toBe(failureLabels.enableFastMode);
 		expect(toastDetails()).toMatchObject({
 			message: expect.stringMatching(/^Open Grind couldn't reach/),
 		});
