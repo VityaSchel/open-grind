@@ -27,7 +27,7 @@
 <FilterDrawer
 	bind:open
 	bind:enabled
-	title={t("browse.filters.age.label")}
+	title={t("common.filters.age.label")}
 	switchLabel={t("browse.filters.age.a11y.toggle")}
 	onreset={() => {
 		value = defaultFilters.age;

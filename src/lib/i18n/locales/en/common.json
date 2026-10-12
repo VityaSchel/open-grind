@@ -76,6 +76,38 @@
 			"a11y": {
 				"toggle": "Filter by Distance"
 			}
+		},
+		"favorites": "Favorites",
+		"fresh": "Fresh",
+		"haventChattedToday": "Haven’t Chatted Today",
+		"age": {
+			"label": "Age"
+		},
+		"height": {
+			"label": "Height"
+		},
+		"weight": {
+			"label": "Weight"
+		},
+		"genders": {
+			"label": "Gender"
+		},
+		"tags": {
+			"label": "Tags"
+		},
+		"photos": {
+			"label": "Photos",
+			"hasPhotos": "Has Photos",
+			"hasFacePics": "Has Face Pics",
+			"hasAlbums": "Has Albums"
+		},
+		"options": {
+			"tribes": "Tribes",
+			"bodyType": "Body Type",
+			"relationshipStatus": "Relationship Status",
+			"acceptNsfwPics": "Accept NSFW Pics",
+			"lookingFor": "Looking For",
+			"meetAt": "Meet At"
 		}
 	},
 	"media": {

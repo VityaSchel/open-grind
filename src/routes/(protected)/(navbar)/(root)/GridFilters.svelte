@@ -61,7 +61,7 @@
 
 {#snippet col1()}
 	<FilterBoolean id="favorite" bind:checked={filters.isFavorite}>
-		{t("browse.filters.favorites")}
+		{t("common.filters.favorites")}
 	</FilterBoolean>
 	<FilterBoolean id="online" bind:checked={filters.isOnline}>
 		{t("common.filters.online")}
@@ -70,7 +70,7 @@
 		{t("common.filters.rightNow")}
 	</FilterBoolean>
 	<FilterBoolean id="fresh" bind:checked={filters.isFresh}>
-		{t("browse.filters.fresh")}
+		{t("common.filters.fresh")}
 	</FilterBoolean>
 	<AgeFilter bind:checked={filters.ageEnabled} bind:value={filters.age} />
 	<GendersFilter
@@ -132,7 +132,7 @@
 		id="havent-chatted-today"
 		bind:checked={filters.haventChattedTodayEnabled}
 	>
-		{t("browse.filters.haventChattedToday")}
+		{t("common.filters.haventChattedToday")}
 	</FilterBoolean>
 	<OptionFilter
 		filter={optionFilters.healthPractices}

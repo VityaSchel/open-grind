@@ -29,7 +29,7 @@
 	<SlidersHorizontalIcon />
 </Button>
 <QuickFilterButton active={ageEnabled} onclick={() => (openFilters.age = true)}>
-	{t("browse.filters.age.label")}
+	{t("common.filters.age.label")}
 </QuickFilterButton>
 <QuickFilterButton
 	active={positionEnabled}
@@ -69,7 +69,7 @@
 		value="isFresh"
 		class={buttonVariants({ variant: "secondary" })}
 	>
-		{t("browse.filters.fresh")}
+		{t("common.filters.fresh")}
 	</ToggleGroup.Item>
 </ToggleGroup.Root>
 

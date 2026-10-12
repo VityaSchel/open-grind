@@ -183,9 +183,9 @@ function enumFilter({
 }
 
 const photoLabels = {
-	"has-photos": "browse.filters.photos.hasPhotos",
-	"has-face-pics": "browse.filters.photos.hasFacePics",
-	"has-albums": "browse.filters.photos.hasAlbums",
+	"has-photos": "common.filters.photos.hasPhotos",
+	"has-face-pics": "common.filters.photos.hasFacePics",
+	"has-albums": "common.filters.photos.hasAlbums",
 } as const satisfies Record<
 	GridSearchFilters["photos"][number],
 	PlainMessageKey
@@ -200,7 +200,7 @@ export const filters: Filter[] = [
 	}),
 	booleanFilter({
 		id: "favorites",
-		label: "browse.filters.favorites",
+		label: "common.filters.favorites",
 		keys: ["favorites", "favorite", "fav"],
 		field: "isFavorite",
 	}),
@@ -212,19 +212,19 @@ export const filters: Filter[] = [
 	}),
 	booleanFilter({
 		id: "fresh",
-		label: "browse.filters.fresh",
+		label: "common.filters.fresh",
 		keys: ["fresh"],
 		field: "isFresh",
 	}),
 	booleanFilter({
 		id: "notRecentlyChatted",
-		label: "browse.filters.haventChattedToday",
+		label: "common.filters.haventChattedToday",
 		keys: ["notRecentlyChatted", "haventChattedToday"],
 		field: "haventChattedTodayEnabled",
 	}),
 	{
 		id: "photos",
-		label: "browse.filters.photos.label",
+		label: "common.filters.photos.label",
 		render: (f) =>
 			listParts(f.photos.map((tag) => translated(t(photoLabels[tag])))),
 		params: [
@@ -243,7 +243,7 @@ export const filters: Filter[] = [
 		],
 	},
 	rangeFilter({
-		label: "browse.filters.age.label",
+		label: "common.filters.age.label",
 		target: "age",
 		min: AGE_MIN,
 		max: AGE_MAX,
@@ -252,7 +252,7 @@ export const filters: Filter[] = [
 		render: (f) => ageRangeLabel(f.age),
 	}),
 	rangeFilter({
-		label: "browse.filters.height.label",
+		label: "common.filters.height.label",
 		target: "height",
 		min: HEIGHT_CM_MIN,
 		max: HEIGHT_CM_MAX,
@@ -267,7 +267,7 @@ export const filters: Filter[] = [
 			}),
 	}),
 	rangeFilter({
-		label: "browse.filters.weight.label",
+		label: "common.filters.weight.label",
 		target: "weight",
 		min: WEIGHT_KG_MIN,
 		max: WEIGHT_KG_MAX,
@@ -353,7 +353,7 @@ export const filters: Filter[] = [
 	}),
 	{
 		id: "genders",
-		label: "browse.filters.genders.label",
+		label: "common.filters.genders.label",
 		render: (f) =>
 			listParts(
 				f.genders.map((id) =>
@@ -377,7 +377,7 @@ export const filters: Filter[] = [
 	},
 	{
 		id: "tags",
-		label: "browse.filters.tags.label",
+		label: "common.filters.tags.label",
 		render: (f) => listParts(f.tags.map(verbatim)),
 		params: [
 			{

@@ -53,7 +53,7 @@
 
 <FilterDropdown
 	id="tags"
-	label={t("browse.filters.tags.label")}
+	label={t("common.filters.tags.label")}
 	endLabel={value.length > 5 || valueLabel.length > 20
 		? t("browse.filters.tags.selected", { count: value.length })
 		: valueLabel}

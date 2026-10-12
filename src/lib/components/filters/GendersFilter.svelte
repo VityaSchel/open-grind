@@ -38,7 +38,7 @@
 
 <div data-slot="gender-filter" class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="gender" bind:checked>
-		{t("browse.filters.genders.label")}
+		{t("common.filters.genders.label")}
 	</FilterBoolean>
 	<div class="ps-6">
 		{#await genders}

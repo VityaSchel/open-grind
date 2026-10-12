@@ -59,11 +59,7 @@
 		"reset": "Reset",
 		"less": "Less",
 		"more": "More",
-		"favorites": "Favorites",
-		"fresh": "Fresh",
-		"haventChattedToday": "Haven’t Chatted Today",
 		"age": {
-			"label": "Age",
 			"a11y": {
 				"minimum": "Minimum Age",
 				"maximum": "Maximum Age",
@@ -71,14 +67,12 @@
 			}
 		},
 		"height": {
-			"label": "Height",
 			"a11y": {
 				"minimum": "Minimum Height",
 				"maximum": "Maximum Height"
 			}
 		},
 		"weight": {
-			"label": "Weight",
 			"a11y": {
 				"minimum": "Minimum Weight",
 				"maximum": "Maximum Weight"
@@ -89,25 +83,7 @@
 				"maximum": "Maximum Distance"
 			}
 		},
-		"options": {
-			"tribes": "Tribes",
-			"bodyType": "Body Type",
-			"relationshipStatus": "Relationship Status",
-			"acceptNsfwPics": "Accept NSFW Pics",
-			"lookingFor": "Looking For",
-			"meetAt": "Meet At"
-		},
-		"photos": {
-			"label": "Photos",
-			"hasPhotos": "Has Photos",
-			"hasFacePics": "Has Face Pics",
-			"hasAlbums": "Has Albums"
-		},
-		"genders": {
-			"label": "Gender"
-		},
 		"tags": {
-			"label": "Tags",
 			"selected_one": "{{count}} selected",
 			"selected_other": "{{count}} selected",
 			"truncated_one": "Showing the first {{shown}} of {{count}} match. Keep typing to narrow the results.",

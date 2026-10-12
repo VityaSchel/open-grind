@@ -16,7 +16,7 @@
 
 <div class="flex min-w-0 flex-col gap-2">
 	<FilterBoolean id="photos" bind:checked>
-		{t("browse.filters.photos.label")}
+		{t("common.filters.photos.label")}
 	</FilterBoolean>
 	<div class="ps-6">
 		<ToggleGroup.Root
@@ -31,15 +31,15 @@
 		>
 			<ToggleGroup.Item value="has-photos">
 				<ImageIcon />
-				{t("browse.filters.photos.hasPhotos")}
+				{t("common.filters.photos.hasPhotos")}
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-face-pics">
 				<SmileyWinkIcon />
-				{t("browse.filters.photos.hasFacePics")}
+				{t("common.filters.photos.hasFacePics")}
 			</ToggleGroup.Item>
 			<ToggleGroup.Item value="has-albums">
 				<FolderLockIcon />
-				{t("browse.filters.photos.hasAlbums")}
+				{t("common.filters.photos.hasAlbums")}
 			</ToggleGroup.Item>
 		</ToggleGroup.Root>
 	</div>

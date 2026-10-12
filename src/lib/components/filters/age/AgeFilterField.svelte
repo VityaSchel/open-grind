@@ -19,7 +19,7 @@
 <div class="inline-block w-full space-y-3">
 	<FilterField>
 		<Checkbox id="filters-age-{uid}" bind:checked />
-		<Label for="filters-age-{uid}">{t("browse.filters.age.label")}</Label>
+		<Label for="filters-age-{uid}">{t("common.filters.age.label")}</Label>
 		<span class="ml-auto min-w-0 truncate">
 			{label}
 		</span>

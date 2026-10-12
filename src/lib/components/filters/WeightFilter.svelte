@@ -35,7 +35,7 @@
 <div class="block w-full space-y-3">
 	<FilterDropdown
 		id="weight"
-		label={t("browse.filters.weight.label")}
+		label={t("common.filters.weight.label")}
 		bind:checked
 		endLabel={formatRange({ min: minText, max: maxText })}
 		contentClass="ps-7 h-6"

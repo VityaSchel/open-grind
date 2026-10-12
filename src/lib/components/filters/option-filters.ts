@@ -20,33 +20,33 @@ export type OptionFilterDefinition = {
 export const optionFilters = {
 	tribes: {
 		id: "tribes",
-		label: "browse.filters.options.tribes",
+		label: "common.filters.options.tribes",
 		table: tribes,
 		isOffered: isTribeOfferedNow,
 	},
 	bodyTypes: {
 		id: "body-type",
-		label: "browse.filters.options.bodyType",
+		label: "common.filters.options.bodyType",
 		table: bodyTypes,
 	},
 	relationshipStatuses: {
 		id: "relationship-status",
-		label: "browse.filters.options.relationshipStatus",
+		label: "common.filters.options.relationshipStatus",
 		table: relationshipStatuses,
 	},
 	acceptNSFWPics: {
 		id: "accept-nsfw-pics",
-		label: "browse.filters.options.acceptNsfwPics",
+		label: "common.filters.options.acceptNsfwPics",
 		table: acceptNSFWPics,
 	},
 	lookingFor: {
 		id: "looking-for",
-		label: "browse.filters.options.lookingFor",
+		label: "common.filters.options.lookingFor",
 		table: lookingFor,
 	},
 	meetAt: {
 		id: "meet-at",
-		label: "browse.filters.options.meetAt",
+		label: "common.filters.options.meetAt",
 		table: meetAt,
 	},
 	healthPractices: {
