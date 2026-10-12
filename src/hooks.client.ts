@@ -13,6 +13,11 @@ async function applyLocaleParam(): Promise<void> {
 }
 
 export const init: ClientInit = async () => {
+	if (screenshotsEnabled) {
+		const { installScreenshotHooks } =
+			await import("$lib/demo/screenshot-hooks");
+		installScreenshotHooks();
+	}
 	ws.connect();
 	await startRegionalSettings();
 	if (import.meta.env.DEV || screenshotsEnabled) await applyLocaleParam();

@@ -12,7 +12,7 @@ import {
 import { accountPreferencesUpdateSchema } from "$lib/model/settings/account";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { FavoriteNote } from "$lib/model/users/favorites";
-import { demoMeProfileId } from "./config";
+import { demoMeProfileId, screenshotsEnabled } from "./config";
 import {
 	demoAddToAlbum,
 	demoAlbumContent,
@@ -36,6 +36,7 @@ import {
 	demoDeleteConversation,
 	demoDeleteDrawerMedia,
 	demoDrawerMedia,
+	demoEmptyInbox,
 	demoMessagesById,
 	demoSentMessage,
 	demoSetConversationMuted,
@@ -76,11 +77,20 @@ import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
 } from "./mock/settings";
+import { type DemoList, screenshotScene } from "./screenshot-scene";
 
 type DemoResponse = { status: number; body: unknown };
 
 function ok(body: unknown): DemoResponse {
 	return { status: 200, body };
+}
+
+function emptied(list: DemoList): boolean {
+	return screenshotsEnabled && screenshotScene.emptyLists.includes(list);
+}
+
+function signedOut(): boolean {
+	return screenshotsEnabled && screenshotScene.signedOut;
 }
 
 export function demoCallMethod(method: string): unknown {
@@ -99,10 +109,12 @@ export function demoCallMethod(method: string): unknown {
 			return "demo-recaptcha-token";
 		case "current_session":
 			return {
-				profileId: demoMeProfileId,
+				profileId: signedOut() ? null : demoMeProfileId,
 				expiresAt: null,
 				stale: false,
 			};
+		case "account_restriction":
+			return screenshotsEnabled ? screenshotScene.restriction : null;
 		case "storage_backend":
 			return "keyring";
 		case "session_feature_flags":
@@ -128,10 +140,17 @@ export function demoRoute({
 	const messageId = segments[5] ?? "";
 
 	if (method === "GET" && rawPath === "/v4/cascade") {
-		return ok(demoCascadeV4(params));
+		const cascade = demoCascadeV4(params);
+		return ok(
+			emptied("grid")
+				? { ...cascade, items: [], nextPage: null }
+				: cascade,
+		);
 	}
 	if (method === "GET" && rawPath === "/v7/search") {
-		return ok({ profiles: demoSearchProfiles(params) });
+		return ok({
+			profiles: emptied("grid") ? [] : demoSearchProfiles(params),
+		});
 	}
 	if (method === "GET" && rawPath.startsWith("/v7/profiles/")) {
 		const id = Number(segments.at(-1));
@@ -150,17 +169,20 @@ export function demoRoute({
 		return ok({ profiles: demoGetProfiles(ids) });
 	}
 	if (rawPath === "/v3.1/me/profile/images" && method === "GET") {
-		return ok(demoMyUploadedPhotos());
+		return ok(emptied("photos") ? { medias: [] } : demoMyUploadedPhotos());
 	}
 	if (rawPath === "/public/v2/genders") return ok(demoGenders);
 	if (rawPath === "/v1/pronouns") return ok(demoPronouns);
 	if (rawPath === "/v1/tags") return ok(demoTags);
 	if (rawPath === "/v2/taps/received")
-		return ok({ profiles: demoReceivedTaps() });
+		return ok({ profiles: emptied("taps") ? [] : demoReceivedTaps() });
 	if (rawPath === "/v2/taps/add") return ok({ isMutual: false });
-	if (rawPath === "/v7/views/list") return ok(demoViews());
+	if (rawPath === "/v7/views/list")
+		return ok(
+			emptied("views") ? { profiles: [], previews: [] } : demoViews(),
+		);
 	if (rawPath === "/v3.1/me/blocks")
-		return ok({ blocking: demoBlockedUsers() });
+		return ok({ blocking: emptied("blocks") ? [] : demoBlockedUsers() });
 	if (
 		(method === "POST" || method === "DELETE") &&
 		segments[0] === "v3" &&
@@ -234,6 +256,7 @@ export function demoRoute({
 		}
 	}
 	if (method === "POST" && rawPath === "/v4/inbox") {
+		if (emptied("inbox")) return ok(demoEmptyInbox);
 		return ok(
 			demoConversations({
 				page: num(params.get("page")) ?? 1,
@@ -272,7 +295,7 @@ export function demoRoute({
 		return ok(demoMessagesById({ conversationId, messageIds }));
 	}
 	if (method === "GET" && rawPath === "/v1/albums") {
-		return ok(demoMyAlbums());
+		return ok(emptied("albums") ? { albums: [] } : demoMyAlbums());
 	}
 	if (method === "GET" && rawPath === "/v1/albums/storage") {
 		return ok(demoAlbumStorageLimits);
@@ -443,7 +466,7 @@ export function demoRoute({
 		return ok({});
 	}
 	if (method === "GET" && rawPath.startsWith("/v4/chat/media/drawer")) {
-		return ok(demoDrawerMedia());
+		return ok(emptied("drawer") ? [] : demoDrawerMedia());
 	}
 	if (method === "DELETE" && rawPath.startsWith("/v4/chat/media/drawer/")) {
 		demoDeleteDrawerMedia(Number(segments.at(-1)));

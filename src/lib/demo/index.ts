@@ -1,4 +1,4 @@
-export { demoEnabled, demoMeProfileId } from "./config";
+export { demoEnabled, demoMeProfileId, screenshotsEnabled } from "./config";
 export { demoBaseAvatarUrl, demoMediaUrl } from "./mock/avatars";
 export { demoUploadAlbumContent } from "./mock/albums";
 export { demoSentMessage, demoUploadChatMedia } from "./mock/conversations";

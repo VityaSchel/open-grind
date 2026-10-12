@@ -11,7 +11,8 @@ import {
 } from "$lib/api/methods";
 import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
-import { demoEnabled, demoRoute } from "$lib/demo";
+import { demoEnabled, demoRoute, screenshotsEnabled } from "$lib/demo";
+import { sceneRestFault } from "$lib/demo/screenshot-scene";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -199,6 +200,19 @@ export async function uploadFileRest(
 	}
 }
 
+function demoRestResponse({
+	status,
+	body,
+	requestInfo,
+}: {
+	status: number;
+	body?: unknown;
+	requestInfo: RequestInfo;
+}) {
+	const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
+	return buildRestResponse({ status, responseBody, requestInfo });
+}
+
 export async function fetchRest(
 	path: string,
 	options: {
@@ -210,15 +224,21 @@ export async function fetchRest(
 	const method = options.method ?? "GET";
 	const requestInfo = { method, path, body: options.body };
 	if (demoEnabled) {
+		const fault = screenshotsEnabled
+			? sceneRestFault({ path, method })
+			: undefined;
+		if (fault !== undefined) {
+			if ("error" in fault) {
+				throw restInvokeError({ error: fault.error, requestInfo });
+			}
+			return demoRestResponse({ ...fault, requestInfo });
+		}
 		const { status, body } = demoRoute({
 			path,
 			method,
 			body: options.body,
 		});
-		const responseBody = new TextEncoder().encode(
-			JSON.stringify(body ?? null),
-		);
-		return buildRestResponse({ status, responseBody, requestInfo });
+		return demoRestResponse({ status, body, requestInfo });
 	}
 	const payload = encode({
 		method,

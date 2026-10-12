@@ -14,7 +14,8 @@ import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod, demoEnabled } from "$lib/demo";
+import { demoCallMethod, demoEnabled, screenshotsEnabled } from "$lib/demo";
+import { sceneMethodFault } from "$lib/demo/screenshot-scene";
 import {
 	type MessageKey,
 	type PlainMessageKey,
@@ -212,20 +213,28 @@ export const methods = {
 	},
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
-export async function callMethod<T extends keyof typeof methods>(
-	method: T,
-	...args: undefined extends z.infer<(typeof methods)[T]["request"]>
-		? [data?: z.infer<(typeof methods)[T]["request"]>]
-		: [data: z.infer<(typeof methods)[T]["request"]>]
-): Promise<z.infer<(typeof methods)[T]["response"]>> {
-	type Result = z.infer<(typeof methods)[T]["response"]>;
-	if (demoEnabled) {
-		return methods[method].response.parse(demoCallMethod(method)) as Result;
-	}
+function demoMethodAnswer(method: string): unknown {
+	const fault = screenshotsEnabled ? sceneMethodFault(method) : undefined;
+	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object
+	if (fault !== undefined) throw fault;
+	return demoCallMethod(method);
+}
+
+type MethodResult<T extends keyof typeof methods> = z.infer<
+	(typeof methods)[T]["response"]
+>;
+
+async function parseAnswer<T extends keyof typeof methods>({
+	method,
+	answer,
+}: {
+	method: T;
+	answer: () => unknown;
+}): Promise<MethodResult<T>> {
 	try {
 		return methods[method].response.parse(
-			await invoke(method, args[0]),
-		) as Result;
+			await answer(),
+		) as MethodResult<T>;
 	} catch (error) {
 		const kind = blockedKindOf(asAppError(error)?.kind);
 		if (kind !== undefined) {
@@ -233,6 +242,18 @@ export async function callMethod<T extends keyof typeof methods>(
 		}
 		throw error;
 	}
+}
+
+export async function callMethod<T extends keyof typeof methods>(
+	method: T,
+	...args: undefined extends z.infer<(typeof methods)[T]["request"]>
+		? [data?: z.infer<(typeof methods)[T]["request"]>]
+		: [data: z.infer<(typeof methods)[T]["request"]>]
+): Promise<MethodResult<T>> {
+	if (demoEnabled) {
+		return parseAnswer({ method, answer: () => demoMethodAnswer(method) });
+	}
+	return parseAnswer({ method, answer: () => invoke(method, args[0]) });
 }
 
 export function markRequestBlocked({

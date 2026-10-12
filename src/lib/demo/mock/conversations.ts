@@ -327,7 +327,7 @@ function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 
 const GATED_FULL_ENTRY_LIMIT = 2;
 
-const emptyInbox = {
+export const demoEmptyInbox = {
 	entries: [],
 	showsFreeHeaderLabel: false,
 	totalFullConversations: 0,
@@ -357,7 +357,7 @@ export function demoConversations({
 	page: number;
 	filters?: Partial<InboxFilterRequest>;
 }) {
-	if (page > 1) return emptyInbox;
+	if (page > 1) return demoEmptyInbox;
 	const entries: Conversation[] = demoConversationSeeds
 		.filter(
 			(conv) =>
