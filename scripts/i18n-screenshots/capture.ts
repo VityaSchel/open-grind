@@ -18,6 +18,11 @@ import { guardNetwork, type NetworkGuard } from "./network";
 import { type Platform, type Scene, scenes } from "./scenes";
 import { BUILD_DIR, serveBuild, SERVER_PORT, waitUntilServing } from "./serve";
 import { settle } from "./settle";
+import {
+	installNativeStubs,
+	installNeutralGeolocation,
+	seedScene,
+} from "./stubs";
 
 const REPO_ROOT = Bun.fileURLToPath(new URL("../..", import.meta.url));
 const OUT_DIR = join(REPO_ROOT, "i18n-screenshots");
@@ -169,8 +174,15 @@ async function openScene({
 	await installTauriShim(page, {
 		platform: displays[scene.platform].shimPlatform,
 	});
+	await installNativeStubs(page);
+	await installNeutralGeolocation(page);
+	if (scene.demo) await seedScene({ page, scene: scene.demo });
 	await freezeClockOnEveryLoad(page);
 	await scene.open(page);
+	const hooked = await page.evaluate(
+		() => window.__openGrindScreenshots !== undefined,
+	);
+	if (!hooked) throw new Error("The build installed no screenshot hooks");
 	await settle({ page });
 }
 
