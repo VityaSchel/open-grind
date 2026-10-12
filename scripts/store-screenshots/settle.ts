@@ -8,6 +8,7 @@ export async function brokenImagesOnceReady(page: Page): Promise<string[]> {
 		const inViewport = (element: Element) => {
 			const rect = element.getBoundingClientRect();
 			return (
+				element.checkVisibility({ visibilityProperty: true }) &&
 				rect.width > 0 &&
 				rect.height > 0 &&
 				rect.bottom > 0 &&
