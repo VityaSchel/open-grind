@@ -2423,7 +2423,7 @@
 					}
 				},
 				"x-wip": true,
-				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Behavior for missing, hidden, or expired posts is undocumented."
+				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
 			}
 		},
 		"/{version}/rightnow/posts/{postId}": {
@@ -2532,6 +2532,9 @@
 				"responses": {
 					"204": {
 						"description": "No Content"
+					},
+					"400": {
+						"description": "`urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
 				"x-wip": true,
@@ -2657,7 +2660,7 @@
 						"description": "No Content"
 					},
 					"400": {
-						"description": "Action not allowed at this time."
+						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
 				"x-wip": true,
@@ -11092,7 +11095,7 @@
 				],
 				"operationId": "uploadRightNowMediaV2",
 				"summary": "Upload Right Now media (v2)",
-				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit.",
+				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
 				"parameters": [
 					{
 						"name": "crop_top",
@@ -11767,7 +11770,7 @@
 										"requests": {
 											"type": "array",
 											"items": {},
-											"description": "Observed empty on 2026-10-09; nonempty request item structure and states remain unverified."
+											"description": "Item structure is undocumented."
 										}
 									},
 									"x-original-type": "RightNowGetReceivedRequestsResponse"
@@ -11802,7 +11805,7 @@
 										"requests": {
 											"type": "array",
 											"items": {},
-											"description": "Observed empty on 2026-10-09; nonempty request item structure and states remain unverified."
+											"description": "Item structure is undocumented."
 										}
 									},
 									"x-original-type": "RightNowGetSentRequestsResponse"
@@ -21425,13 +21428,6 @@
 						"type": "object",
 						"nullable": true,
 						"description": "object, the latest submitted text and its moderation state, or `null`",
-						"required": [
-							"id",
-							"postId",
-							"text",
-							"createdAt",
-							"updatedAt"
-						],
 						"properties": {
 							"id": {
 								"type": "integer",
@@ -21569,17 +21565,10 @@
 					}
 				},
 				"x-render-on-tag": "right-now",
-				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
-				"required": [
-					"id",
-					"profileId"
-				]
+				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state."
 			},
 			"RightNowPostResponse": {
 				"type": "object",
-				"required": [
-					"post"
-				],
 				"properties": {
 					"post": {
 						"allOf": [
