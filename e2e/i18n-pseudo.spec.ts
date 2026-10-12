@@ -18,7 +18,7 @@ import {
 	runPaletteCommand,
 } from "./support/app";
 import { DRAWER, MEDIA_TILE } from "./support/drawer";
-import { readPseudoText } from "./support/pseudo";
+import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
 import { ACTIVE_SURFACE, CLIP, LIGHTBOX } from "./support/video";
 
 const FAILING_ROUTE = "/interest";
@@ -28,7 +28,6 @@ const THROWING_LOAD =
 const MISSING_ROUTE = "/no-such-page";
 const AUTH_LAYOUT_LOAD = /\/routes\/auth\/\+layout\.ts(?:\?|$)/;
 const SIGNED_OUT_LOAD = "export const load = () => {};";
-const BRAND_TITLE = "Open Grind";
 const DEMO_PROFILE = "/profile/100001";
 const PROFILE_NAVIGATIONS = 4;
 const REPORT_MENU_ITEM = 1;

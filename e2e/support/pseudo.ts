@@ -1,5 +1,7 @@
 import type { Locator } from "@playwright/test";
 
+export const BRAND_TITLE = "Open Grind";
+
 export function readPseudoText(
 	roots: Locator,
 	{ brandTitle = "" }: { brandTitle?: string } = {},
