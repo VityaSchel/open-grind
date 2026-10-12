@@ -1,9 +1,13 @@
+mod activator;
+
+pub use activator::install;
+
+use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
-use windows::core::{HRESULT, HSTRING};
-use windows::Foundation::TypedEventHandler;
+use windows::core::{h, HRESULT, HSTRING};
+use windows::Data::Xml::Dom::XmlDocument;
 use windows::UI::Notifications::{
 	NotificationSetting, ToastNotification, ToastNotificationManager,
-	ToastTemplateType,
 };
 
 use super::super::{Announcement, NotificationPermission, PushError};
@@ -17,34 +21,60 @@ const GROUP: &str = "open-grind";
 // registers it, while toasts are already allowed by default
 const NOT_REGISTERED_YET: HRESULT = HRESULT(0x8007_0490_u32 as i32);
 
+#[derive(Serialize, Deserialize)]
+struct Launch {
+	tag: String,
+	deeplink: String,
+}
+
 fn app_id(app: &AppHandle) -> HSTRING {
 	HSTRING::from(&app.config().identifier)
 }
 
-pub fn install(_app: &AppHandle) {}
+fn activated(app: &AppHandle, arguments: &str) {
+	if let Ok(launch) = serde_json::from_str::<Launch>(arguments) {
+		super::open(app, &launch.tag, Some(launch.deeplink));
+	}
+	// A toast that starts the app activates before setup creates the window
+	let handle = app.clone();
+	if let Err(error) =
+		app.run_on_main_thread(move || crate::focus_main_window(&handle))
+	{
+		tracing::warn!("[push] could not focus the window: {error}");
+	}
+}
+
+fn content(announcement: &Announcement) -> windows::core::Result<XmlDocument> {
+	let launch = serde_json::to_string(&Launch {
+		tag: announcement.tag.clone(),
+		deeplink: announcement.deeplink.clone(),
+	})
+	.unwrap_or_default();
+	let document = XmlDocument::new()?;
+	let toast = document.CreateElement(h!("toast"))?;
+	toast.SetAttribute(h!("launch"), &HSTRING::from(launch))?;
+	let visual = document.CreateElement(h!("visual"))?;
+	let binding = document.CreateElement(h!("binding"))?;
+	binding.SetAttribute(h!("template"), h!("ToastGeneric"))?;
+	for text in [&announcement.title, &announcement.body] {
+		let line = document.CreateElement(h!("text"))?;
+		line.AppendChild(&document.CreateTextNode(&HSTRING::from(text))?)?;
+		binding.AppendChild(&line)?;
+	}
+	visual.AppendChild(&binding)?;
+	toast.AppendChild(&visual)?;
+	document.AppendChild(&toast)?;
+	Ok(document)
+}
 
 fn toast(
 	app: &AppHandle,
 	announcement: &Announcement,
 ) -> windows::core::Result<()> {
-	let content = ToastNotificationManager::GetTemplateContent(
-		ToastTemplateType::ToastText02,
-	)?;
-	let lines = content.GetElementsByTagName(&HSTRING::from("text"))?;
-	for (line, text) in (0..).zip([&announcement.title, &announcement.body]) {
-		lines
-			.Item(line)?
-			.AppendChild(&content.CreateTextNode(&HSTRING::from(text))?)?;
-	}
-	let toast = ToastNotification::CreateToastNotification(&content)?;
+	let toast =
+		ToastNotification::CreateToastNotification(&content(announcement)?)?;
 	toast.SetTag(&HSTRING::from(&announcement.tag))?;
 	toast.SetGroup(&HSTRING::from(GROUP))?;
-	let clicked = app.clone();
-	let tag = announcement.tag.clone();
-	toast.Activated(&TypedEventHandler::new(move |_, _| {
-		super::open(&clicked, &tag);
-		Ok(())
-	}))?;
 	ToastNotificationManager::CreateToastNotifierWithId(&app_id(app))?
 		.Show(&toast)
 }

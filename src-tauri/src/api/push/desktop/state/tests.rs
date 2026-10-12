@@ -141,11 +141,23 @@ fn opening_a_notification_leaves_its_deeplink_for_the_app_once() {
 	let push = DesktopPush::load(scratch.file());
 	push.record(&message("1:2", "m1"));
 
-	assert!(push.open("1:2"));
+	assert!(push.open("1:2", None));
 	assert_eq!(
 		push.take_deeplink().as_deref(),
 		Some("grindr://conversation?id=1:2")
 	);
 	assert_eq!(push.take_deeplink(), None);
-	assert!(!push.open("1:2"));
+	assert!(!push.open("1:2", None));
+}
+
+#[test]
+fn opening_a_notification_from_an_earlier_launch_uses_the_link_it_carries() {
+	let scratch = Scratch::new("open-carried");
+	let push = DesktopPush::load(scratch.file());
+
+	assert!(push.open("1:2", Some("grindr://conversation?id=1:2".to_owned())));
+	assert_eq!(
+		push.take_deeplink().as_deref(),
+		Some("grindr://conversation?id=1:2")
+	);
 }

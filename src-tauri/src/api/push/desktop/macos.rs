@@ -62,7 +62,7 @@ define_class!(
 			});
 			if opened {
 				let tag = response.notification().request().identifier();
-				super::open(self.ivars(), &tag.to_string());
+				super::open(self.ivars(), &tag.to_string(), None);
 			}
 			completion.call(());
 		}

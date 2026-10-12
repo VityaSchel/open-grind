@@ -37,8 +37,8 @@ pub fn plugin() -> TauriPlugin<Wry> {
 		.build()
 }
 
-fn open(app: &AppHandle, tag: &str) {
-	if app.state::<DesktopPush>().open(tag) {
+fn open(app: &AppHandle, tag: &str, carried: Option<String>) {
+	if app.state::<DesktopPush>().open(tag, carried) {
 		crate::focus_main_window(app);
 	}
 }
@@ -69,7 +69,10 @@ pub async fn set_notifications_enabled(
 	app: &AppHandle,
 	enabled: bool,
 ) -> Result<(), PushError> {
-	let withdrawn = app.state::<DesktopPush>().set_enabled(enabled);
+	let mut withdrawn = app.state::<DesktopPush>().set_enabled(enabled);
+	if !enabled {
+		withdrawn.extend(system::delivered(app).await.unwrap_or_default());
+	}
 	system::withdraw(app, &withdrawn);
 	Ok(())
 }

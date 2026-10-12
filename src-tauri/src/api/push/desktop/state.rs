@@ -152,11 +152,13 @@ impl DesktopPush {
 		showing_it
 	}
 
-	pub fn open(&self, tag: &str) -> bool {
-		let Some(shown) = self.shown.lock().unwrap().remove(tag) else {
+	pub fn open(&self, tag: &str, carried: Option<String>) -> bool {
+		let shown = self.shown.lock().unwrap().remove(tag);
+		let Some(deeplink) = carried.or(shown.map(|shown| shown.deeplink))
+		else {
 			return false;
 		};
-		*self.deeplink.lock().unwrap() = Some(shown.deeplink);
+		*self.deeplink.lock().unwrap() = Some(deeplink);
 		if let Some(watcher) = self.watcher.lock().unwrap().as_ref() {
 			let _ = watcher.send(PushSignal {
 				deeplink_pending: true,

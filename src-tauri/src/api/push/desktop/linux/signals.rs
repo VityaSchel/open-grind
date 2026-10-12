@@ -43,7 +43,7 @@ fn open(app: &AppHandle, tag: String, token: Option<String>) {
 		if let Some(token) = token {
 			hand_over_activation(&token);
 		}
-		super::super::open(&handle, &tag);
+		super::super::open(&handle, &tag, None);
 	});
 	if let Err(error) = opened {
 		tracing::warn!("[push] could not open the notification: {error}");
