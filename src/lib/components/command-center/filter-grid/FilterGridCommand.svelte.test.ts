@@ -57,10 +57,10 @@ describe("filter grid command", () => {
 	it("hints at the query syntax under its heading", async () => {
 		await openWith("?");
 
-		expectCommandGroup({ name: "Filter grid…", value: "filter-grid" });
+		expectCommandGroup({ name: "Filter Grid…", value: "filter-grid" });
 		const hint = filterOption("?");
 		expect(textOf(hint)).toBe(
-			"Type a Grindr grid query, e.g. online=true&age=18-99&tribes=2,12",
+			"Type a Grid query, e.g. online=true&age=18-99&tribes=2,12",
 		);
 		expect(
 			within(hint)

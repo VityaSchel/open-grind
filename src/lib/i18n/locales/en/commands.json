@@ -8,7 +8,7 @@
 		"suggestions": {
 			"heading": "Suggestions",
 			"openProfileById": "Start with {{prefix}} to open profile by ID",
-			"filterGrid": "Start with {{prefix}} to filter grid",
+			"filterGrid": "Start with {{prefix}} to filter Grid",
 			"quickGoTo": "Start with {{prefix}} to quick go to",
 			"setLocationByGeohash": "Start with {{prefix}} to set location by geohash"
 		}
@@ -17,8 +17,8 @@
 		"controlKey": "Ctrl"
 	},
 	"filterGrid": {
-		"heading": "Filter grid…",
-		"hint": "Type a Grindr grid query, e.g. {{example}}",
+		"heading": "Filter Grid…",
+		"hint": "Type a Grid query, e.g. {{example}}",
 		"applyHint_one": "Press Enter to apply {{count}} filter",
 		"applyHint_other": "Press Enter to apply {{count}} filters",
 		"fixHint": "Fix the highlighted filters to apply",

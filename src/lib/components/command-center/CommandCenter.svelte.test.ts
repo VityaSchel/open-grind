@@ -41,7 +41,7 @@ describe("CommandCenter", () => {
 			within(slot("command-group")).getAllByRole("option").map(textOf),
 		).toEqual([
 			"Start with # to open profile by ID",
-			"Start with ? to filter grid",
+			"Start with ? to filter Grid",
 			"Start with / to quick go to",
 			"Start with @ to set location by geohash",
 		]);

@@ -15,4 +15,4 @@ With this query composed, locate the <img src="../command-center-trigger.webp" w
 
 Finally, in the Command Center, put the query, starting with `?`.
 
-<img src="./command-center-quick-filters-preset.webp" width="408" height="165" style="margin-inline: auto" alt="“Filter grid…” sub-menu of the popup">
+<img src="./command-center-quick-filters-preset.webp" width="408" height="165" style="margin-inline: auto" alt="“Filter Grid…” sub-menu of the popup">
