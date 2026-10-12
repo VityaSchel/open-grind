@@ -1,10 +1,10 @@
 import type { PlainMessageKey } from "$lib/i18n";
 
-type PushFailure = "enable" | "turnOff" | "enableFastMode" | "switchToSlowMode";
+type PushFailure = "enable" | "disable" | "enableFastMode" | "switchToSlowMode";
 
 export const pushFailures = {
 	enable: "updates.push.errors.enableFailed",
-	turnOff: "updates.push.errors.turnOffFailed",
+	disable: "updates.push.errors.disableFailed",
 	enableFastMode: "updates.push.errors.enableFastModeFailed",
 	switchToSlowMode: "updates.push.errors.switchToSlowModeFailed",
 } as const satisfies Record<PushFailure, PlainMessageKey>;

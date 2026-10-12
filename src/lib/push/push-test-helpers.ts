@@ -48,7 +48,7 @@ export const toasts = {
 
 export const failureLabels = {
 	enable: "Couldn’t enable notifications",
-	turnOff: "Couldn’t disable notifications",
+	disable: "Couldn’t disable notifications",
 	enableFastMode: "Couldn’t enable Fast Mode for push notifications",
 	switchToSlowMode: "Couldn’t switch push notifications to Slow Mode",
 };

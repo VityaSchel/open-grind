@@ -974,10 +974,10 @@ export interface Messages {
 	"updates.flow.errors.startDownloadFailed": undefined;
 	"updates.flow.errors.stopDownloadFailed": undefined;
 	"updates.flow.finishOtherInstall": undefined;
+	"updates.push.errors.disableFailed": undefined;
 	"updates.push.errors.enableFailed": undefined;
 	"updates.push.errors.enableFastModeFailed": undefined;
 	"updates.push.errors.switchToSlowModeFailed": undefined;
-	"updates.push.errors.turnOffFailed": undefined;
 	"updates.settings.automaticChecks.addonsTitle": undefined;
 	"updates.settings.automaticChecks.description.addonsOnly": undefined;
 	"updates.settings.automaticChecks.description.addonsOnlyWithReason": { reason: string };

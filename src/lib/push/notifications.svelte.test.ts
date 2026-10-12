@@ -156,7 +156,7 @@ describe("the notifications master switch", () => {
 
 		expect(module.notificationSettings.enabled).toBe(true);
 		expect(module.notificationSettings.phase).toBe("idle");
-		expect(toastLabel()).toBe(failureLabels.turnOff);
+		expect(toastLabel()).toBe(failureLabels.disable);
 	});
 });
 

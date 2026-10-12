@@ -105,7 +105,7 @@ async function turnNotificationsOff(): Promise<void> {
 	try {
 		await stopNotifications();
 	} catch (error) {
-		showErrorToast({ label: t(pushFailures.turnOff), error });
+		showErrorToast({ label: t(pushFailures.disable), error });
 	} finally {
 		notificationState.phase = "idle";
 	}

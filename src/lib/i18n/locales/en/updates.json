@@ -216,7 +216,7 @@
 	"push": {
 		"errors": {
 			"enableFailed": "Couldn’t enable notifications",
-			"turnOffFailed": "Couldn’t disable notifications",
+			"disableFailed": "Couldn’t disable notifications",
 			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
 			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
 		}
