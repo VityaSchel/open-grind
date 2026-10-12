@@ -11,8 +11,10 @@ export type ShownKey = {
 	top: boolean;
 };
 
+export type ScannedKey = ShownKey & { boxes: KeyBox[] };
+
 export type ViewScan = {
-	keys: ShownKey[];
+	keys: ScannedKey[];
 	unmarked: string[];
 	emoji: string[];
 };
@@ -83,7 +85,7 @@ type Placement = {
 	untranslated: boolean;
 };
 
-type Found = Map<string, ShownKey>;
+type Found = Map<string, ScannedKey>;
 
 function alphaOf(color: string): number {
 	const slashed = /\/\s*([\d.]+)(%?)\s*\)$/.exec(color);
@@ -209,7 +211,7 @@ function rank({ via, top }: ShownKey): number {
 	return (top ? 2 : 0) + (via === "text" ? 1 : 0);
 }
 
-function record({ found, shown }: { found: Found; shown: ShownKey }): void {
+function record({ found, shown }: { found: Found; shown: ScannedKey }): void {
 	const earlier = found.get(shown.key);
 	if (earlier === undefined) {
 		found.set(shown.key, shown);
@@ -219,6 +221,7 @@ function record({ found, shown }: { found: Found; shown: ShownKey }): void {
 	found.set(shown.key, {
 		key: shown.key,
 		box: best.box,
+		boxes: [...earlier.boxes, ...shown.boxes],
 		via: earlier.via === "text" ? "text" : shown.via,
 		top: earlier.top || shown.top,
 	});
@@ -284,7 +287,9 @@ function scanText({
 			}
 		}
 	}
-	for (const key of shown.values()) record({ found, shown: key });
+	for (const key of shown.values()) {
+		record({ found, shown: { ...key, boxes: [key.box] } });
+	}
 }
 
 type LabelValue = { value: string; via: KeySource };
@@ -338,7 +343,7 @@ function scanAttributes({
 		if (element.closest(UNTRANSLATED_SELECTOR)) continue;
 		const top = element.closest(OVERLAY_SELECTOR) !== null;
 		for (const { key, via } of spans) {
-			record({ found, shown: { key, box, via, top } });
+			record({ found, shown: { key, box, boxes: [box], via, top } });
 		}
 	}
 }
@@ -378,7 +383,11 @@ export function scanView(): ViewScan {
 		return {
 			keys: [...found.values()]
 				.sort((a, b) => (a.key < b.key ? -1 : 1))
-				.map((shown) => ({ ...shown, box: inPixels(shown.box) })),
+				.map((shown) => ({
+					...shown,
+					box: inPixels(shown.box),
+					boxes: shown.boxes.map(inPixels),
+				})),
 			unmarked: [...new Set(unmarked)],
 			emoji: [...new Set(emoji)],
 		};

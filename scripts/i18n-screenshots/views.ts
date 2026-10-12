@@ -1,17 +1,23 @@
 import type { BrowserContext, Locator, Page, Route } from "@playwright/test";
-import { rm } from "node:fs/promises";
+import { readdir, rm, rmdir } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import { join } from "node:path";
 
 import { installTauriShim } from "../../e2e/support/app";
+import type { ScannedKey } from "../../src/lib/demo/screenshot-scan";
 import { freezeClockOnEveryLoad } from "../store-screenshots/clock";
 import { displays, type PlatformContext } from "./browser";
-import { encodeView } from "./encode";
+import { decodeCapture, encodeView, type Pixels } from "./encode";
+import { drawHighlight } from "./highlight";
 import {
 	type Captured,
 	emptyCapture,
+	highlightPath,
 	imagePath,
 	isScreenOf,
 	numberedViewId,
+	screenPath,
+	type ViewKey,
 } from "./manifest";
 import {
 	captureFrame,
@@ -33,8 +39,11 @@ import {
 const MAX_SCREENS = 6;
 const SCREEN_STEP = 0.85;
 const PARKED_POINTER = { x: -1, y: -1 };
+const HIGHLIGHT_CONCURRENCY = availableParallelism();
 
 type Session = { page: Page; uncaught: string[]; viewId: string };
+
+type HighlightedKey = { key: ViewKey; webp: Buffer };
 
 type ViewRun = {
 	platformContext: PlatformContext;
@@ -196,6 +205,44 @@ function requireCleanFrame({
 	}
 }
 
+async function highlightKey({
+	id,
+	pixels,
+	shown: { key, box, boxes, via, top },
+}: {
+	id: string;
+	pixels: Pixels;
+	shown: ScannedKey;
+}): Promise<HighlightedKey> {
+	const image = highlightPath({ viewId: id, key });
+	const { webp, sha256, pixelHash } = await encodeView(
+		drawHighlight({ pixels, boxes, via }),
+	);
+	const highlight = { image, sha256, pixelHash };
+	return { key: { key, box, via, top, highlight }, webp };
+}
+
+async function highlightKeys({
+	id,
+	pixels,
+	keys,
+}: {
+	id: string;
+	pixels: Pixels;
+	keys: ScannedKey[];
+}): Promise<HighlightedKey[]> {
+	const highlighted: HighlightedKey[] = [];
+	for (let start = 0; start < keys.length; start += HIGHLIGHT_CONCURRENCY) {
+		const batch = keys.slice(start, start + HIGHLIGHT_CONCURRENCY);
+		highlighted.push(
+			...(await Promise.all(
+				batch.map((shown) => highlightKey({ id, pixels, shown })),
+			)),
+		);
+	}
+	return highlighted;
+}
+
 async function recordScreen({
 	run: { platformContext, outDir, captured },
 	id,
@@ -208,22 +255,39 @@ async function recordScreen({
 	startedAt: number;
 }): Promise<void> {
 	const encodeStartedAt = performance.now();
-	const { webp, sha256, pixelHash, width, height } = await encodeView(png);
+	const pixels = await decodeCapture(png);
+	const view = await encodeView(pixels);
+	const encodeMs = elapsedSince(encodeStartedAt);
+	const highlightStartedAt = performance.now();
+	const highlighted = await highlightKeys({ id, pixels, keys: scan.keys });
+	const highlightMs = elapsedSince(highlightStartedAt);
 	const image = imagePath(id);
-	await Bun.write(join(outDir, image), webp);
-	const ms = elapsedSince(startedAt);
+	await Bun.write(join(outDir, image), view.webp);
+	const ms = elapsedSince(startedAt) - highlightMs;
 	captured.views[id] = {
 		image,
-		sha256,
-		pixelHash,
+		sha256: view.sha256,
+		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
-		keys: scan.keys,
+		keys: highlighted.map(({ key }) => key),
 		ms,
 	};
 	captured.unmarked[id] = scan.unmarked;
-	console.log(
-		`${id}: ${scan.keys.length} keys in ${ms} ms (encoded in ${elapsedSince(encodeStartedAt)} ms), ${width}x${height}, ${webp.byteLength} bytes`,
+	for (const { key, webp } of highlighted) {
+		await Bun.write(join(outDir, key.highlight.image), webp);
+	}
+	const highlightBytes = highlighted.reduce(
+		(total, { webp }) => total + webp.byteLength,
+		0,
 	);
+	console.log(
+		`${id}: ${scan.keys.length} keys in ${ms} ms (encoded in ${encodeMs} ms), ${pixels.width}x${pixels.height}, ${view.webp.byteLength} bytes; highlighted in ${highlightMs} ms, ${highlightBytes} bytes`,
+	);
+}
+
+async function removeIfEmpty(directory: string): Promise<void> {
+	const entries = await readdir(directory).catch(() => null);
+	if (entries?.length === 0) await rmdir(directory);
 }
 
 export async function dropScreens({
@@ -235,9 +299,16 @@ export async function dropScreens({
 	outDir: string;
 	id: string;
 }): Promise<void> {
-	for (const viewId of Object.keys(captured.views)) {
+	for (const [viewId, view] of Object.entries(captured.views)) {
 		if (!isScreenOf({ viewId, id })) continue;
-		await rm(join(outDir, imagePath(viewId)), { force: true });
+		const images = [
+			...view.keys.map(({ highlight }) => highlight.image),
+			imagePath(viewId),
+		];
+		for (const image of images) {
+			await rm(join(outDir, image), { force: true });
+		}
+		await removeIfEmpty(join(outDir, screenPath(viewId)));
 		delete captured.views[viewId];
 		delete captured.unmarked[viewId];
 	}

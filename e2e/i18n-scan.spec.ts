@@ -66,6 +66,8 @@ async function mountFixture(page: Page): Promise<void> {
 			"position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px;background:rgb(20 20 20);color:white;font:14px/1.3 sans-serif";
 		fixture.innerHTML = `
 			<p id="plain">${m("plain", "Plain")}</p>
+			<p>${m("twice", "Twice")}</p>
+			<p>${m("twice", "Twice")}</p>
 			<p>${m("rich", 'Browse the <a href="#">Grid</a>.')}</p>
 			<p>${m("outer", `Tap “${m("inner", "Sign in")}”.`)}</p>
 			<p>${m("cut", "Truncated").slice(0, -4)}</p>
@@ -188,6 +190,11 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 	expect(
 		result.keys.filter(({ key }) => !key.startsWith("fixture.")),
 	).toEqual([]);
+	const twice = result.keys.find(({ key }) => key === "fixture.twice");
+	const [above, below] = twice?.boxes ?? [];
+	expect(twice?.boxes).toHaveLength(2);
+	expect(above && below && below.y >= above.y + above.height).toBe(true);
+	expect(twice?.box).toEqual(above);
 	expect(result.unmarked).toEqual(["Plain English", "i", "OK"]);
 	expect(result.emoji).toEqual(["Raw 🦊", "Typed 🦊"]);
 });
@@ -222,7 +229,9 @@ test.describe("at a fractional device scale factor", () => {
 				Math.round(edge * scale),
 			);
 		});
-		const box = result.keys.find(({ key }) => key === "fixture.plain")?.box;
+		const plain = result.keys.find(({ key }) => key === "fixture.plain");
+		const box = plain?.box;
+		expect(plain?.boxes).toEqual([box]);
 		expect(
 			box && [box.x, box.y, box.x + box.width, box.y + box.height],
 		).toEqual(textBox);

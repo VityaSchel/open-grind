@@ -55,6 +55,7 @@ export default defineConfig(async ({ command }) => ({
 			"e2e-live/support/**/*.test.ts",
 			"scripts/credits/**/*.test.ts",
 			"scripts/i18n/**/*.test.ts",
+			"scripts/i18n-screenshots/**/*.test.ts",
 		],
 		setupFiles: ["src/test-setup.ts"],
 		// tinykeys caches navigator.platform at load, so vi.resetModules() cannot

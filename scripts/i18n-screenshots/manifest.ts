@@ -2,12 +2,16 @@ import type { ShownKey } from "../../src/lib/demo/screenshot-scan";
 
 export type Platform = "phone" | "desktop";
 
+export type Highlight = { image: string; sha256: string; pixelHash: string };
+
+export type ViewKey = ShownKey & { highlight: Highlight };
+
 export type View = {
 	image: string;
 	sha256: string;
 	pixelHash: string;
 	platform: Platform;
-	keys: ShownKey[];
+	keys: ViewKey[];
 	ms: number;
 };
 
@@ -22,6 +26,7 @@ export type Captured = Omit<Manifest, "commit"> & {
 };
 
 const VIEW_ID = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/;
+const MESSAGE_KEY = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/;
 
 export function requireViewId(id: string): void {
 	if (!VIEW_ID.test(id)) throw new Error(`Invalid view id ${id}`);
@@ -47,8 +52,23 @@ export function isScreenOf({
 	return viewId === id || viewId.startsWith(`${id}#`);
 }
 
+export function screenPath(viewId: string): string {
+	return `images/${viewId.replace("#", ".")}`;
+}
+
 export function imagePath(viewId: string): string {
-	return `images/${viewId.replace("#", ".")}.webp`;
+	return `${screenPath(viewId)}.webp`;
+}
+
+export function highlightPath({
+	viewId,
+	key,
+}: {
+	viewId: string;
+	key: string;
+}): string {
+	if (!MESSAGE_KEY.test(key)) throw new Error(`Invalid message key ${key}`);
+	return `${screenPath(viewId)}/${key}.webp`;
 }
 
 export function emptyCapture(): Captured {
