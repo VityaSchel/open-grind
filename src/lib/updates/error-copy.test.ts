@@ -68,23 +68,36 @@ describe("copy for an installed package signed by someone else", () => {
 });
 
 describe("copy for an Open Grind build signed by someone else", () => {
-	it("blames this build, not the Google OAuth app, when the Google OAuth app cannot be installed", () => {
-		const text =
-			"This copy of Open Grind isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app";
-
-		expect(
-			unsupportedText(
-				{ reason: "foreignSigner" },
-				{ component: GOOGLE_OAUTH_COMPONENT },
-			),
-		).toBe(text);
-		expect(
-			updateErrorText(
-				{ kind: "unsupported", detail: { reason: "foreignSigner" } },
-				{ fallback, component: GOOGLE_OAUTH_COMPONENT },
-			),
-		).toBe(text);
-	});
+	it.each([
+		[
+			GOOGLE_OAUTH_COMPONENT,
+			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
+		],
+		[
+			RECAPTCHA_COMPONENT,
+			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
+		],
+		[
+			FCM_COMPONENT,
+			"This copy isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
+		],
+	] as const)(
+		"blames this build, not the %s add-on, when the add-on cannot be installed",
+		(component, text) => {
+			expect(
+				unsupportedText({ reason: "foreignSigner" }, { component }),
+			).toBe(text);
+			expect(
+				updateErrorText(
+					{
+						kind: "unsupported",
+						detail: { reason: "foreignSigner" },
+					},
+					{ fallback, component },
+				),
+			).toBe(text);
+		},
+	);
 
 	it("keeps the app's own wording", () => {
 		expect(unsupportedText({ reason: "foreignSigner" })).toBe(

@@ -27,7 +27,7 @@
 			"upToDate": "The Open Grind Google OAuth app is up to date",
 			"errors": {
 				"externallyManaged": "The store that installed the Open Grind Google OAuth app manages its updates",
-				"foreignSigner": "This copy of Open Grind isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
+				"foreignSigner": "This copy isn’t signed by Open Grind, so it can’t install the Open Grind Google OAuth app",
 				"foreignTarget": "The installed Open Grind Google OAuth app isn’t signed by Open Grind. Uninstall it to install the official one.",
 				"noReleaseArtifacts": "The Open Grind Google OAuth app isn’t published for this device",
 				"undetermined": "Open Grind can’t tell whether it may install the Open Grind Google OAuth app",
@@ -69,7 +69,7 @@
 			"upToDate": "The Open Grind reCAPTCHA helper is up to date",
 			"errors": {
 				"externallyManaged": "The store that installed the Open Grind reCAPTCHA helper manages its updates",
-				"foreignSigner": "This copy of Open Grind isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
+				"foreignSigner": "This copy isn’t signed by Open Grind, so it can’t install the Open Grind reCAPTCHA helper",
 				"foreignTarget": "The installed Open Grind reCAPTCHA helper isn’t signed by Open Grind. Uninstall it to install the official one.",
 				"noReleaseArtifacts": "The Open Grind reCAPTCHA helper isn’t published for this device",
 				"undetermined": "Open Grind can’t tell whether it may install the Open Grind reCAPTCHA helper",
@@ -111,7 +111,7 @@
 			"upToDate": "The Open Grind FCM service is up to date",
 			"errors": {
 				"externallyManaged": "The store that installed the Open Grind FCM service manages its updates",
-				"foreignSigner": "This copy of Open Grind isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
+				"foreignSigner": "This copy isn’t signed by Open Grind, so it can’t install the Open Grind FCM service",
 				"foreignTarget": "The installed Open Grind FCM service isn’t signed by Open Grind. Uninstall it to install the official one.",
 				"noReleaseArtifacts": "The Open Grind FCM service isn’t published for this device",
 				"undetermined": "Open Grind can’t tell whether it may install the Open Grind FCM service",
