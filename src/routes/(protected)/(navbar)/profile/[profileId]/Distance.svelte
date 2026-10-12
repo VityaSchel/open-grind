@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { NavigationArrowIcon } from "phosphor-svelte";
+	import NavigationArrowIcon from "phosphor-svelte/lib/NavigationArrowIcon";
 
 	import DistanceFormatted from "$lib/components/profile/DistanceFormatted.svelte";
 

@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import {
-		BellIcon,
-		BellSimpleSlashIcon,
-		PushPinIcon,
-		PushPinSlashIcon,
-		TrashIcon,
-	} from "phosphor-svelte";
+	import BellIcon from "phosphor-svelte/lib/BellIcon";
+	import BellSimpleSlashIcon from "phosphor-svelte/lib/BellSimpleSlashIcon";
+	import PushPinIcon from "phosphor-svelte/lib/PushPinIcon";
+	import PushPinSlashIcon from "phosphor-svelte/lib/PushPinSlashIcon";
+	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
 	import FavoriteStar from "$lib/components/profile/FavoriteStar.svelte";

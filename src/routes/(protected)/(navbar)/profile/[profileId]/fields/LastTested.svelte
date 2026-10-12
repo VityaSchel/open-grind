@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { format } from "date-fns";
-	import { ClockIcon } from "phosphor-svelte";
+	import ClockIcon from "phosphor-svelte/lib/ClockIcon";
 
 	import ProfileField from "./ProfileField.svelte";
 	import ProfileValueLabel from "./ProfileValueLabel.svelte";

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowClockwiseIcon } from "phosphor-svelte";
+	import ArrowClockwiseIcon from "phosphor-svelte/lib/ArrowClockwiseIcon";
 
 	import {
 		BlockedProfileError,

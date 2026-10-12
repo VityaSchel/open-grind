@@ -19,4 +19,21 @@ export default defineConfig(
 			"e2e/updater/",
 		],
 	}),
+	{
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					paths: [
+						{
+							name: "phosphor-svelte",
+							allowTypeImports: true,
+							message:
+								'Import each icon from "phosphor-svelte/lib/<Name>".',
+						},
+					],
+				},
+			],
+		},
+	},
 );

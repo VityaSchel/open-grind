@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { StarIcon } from "phosphor-svelte";
+	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
 	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";

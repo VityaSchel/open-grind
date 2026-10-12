@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CaretRightIcon, FolderOpenIcon } from "phosphor-svelte";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
+	import FolderOpenIcon from "phosphor-svelte/lib/FolderOpenIcon";
 	import { untrack } from "svelte";
 
 	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";

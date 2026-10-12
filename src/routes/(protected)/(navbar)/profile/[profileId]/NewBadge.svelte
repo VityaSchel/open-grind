@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SparkleIcon } from "phosphor-svelte";
+	import SparkleIcon from "phosphor-svelte/lib/SparkleIcon";
 
 	let { isNew }: { isNew: boolean } = $props();
 </script>

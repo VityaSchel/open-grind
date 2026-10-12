@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PaperclipIcon } from "phosphor-svelte";
+	import PaperclipIcon from "phosphor-svelte/lib/PaperclipIcon";
 	import { expoOut } from "svelte/easing";
 
 	import { scale } from "$lib/util/reduced-motion";

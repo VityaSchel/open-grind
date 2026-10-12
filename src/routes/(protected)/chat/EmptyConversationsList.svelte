@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChatCircleSlashIcon, FunnelIcon } from "phosphor-svelte";
+	import ChatCircleSlashIcon from "phosphor-svelte/lib/ChatCircleSlashIcon";
+	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
 	import * as Empty from "$lib/components/ui/empty";
 

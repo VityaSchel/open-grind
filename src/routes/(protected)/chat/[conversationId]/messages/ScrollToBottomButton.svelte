@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CaretDownIcon } from "phosphor-svelte";
+	import CaretDownIcon from "phosphor-svelte/lib/CaretDownIcon";
 
 	import ScrollJumpButton from "$lib/components/shared/ScrollJumpButton.svelte";
 	import { Badge } from "$lib/components/ui/badge";

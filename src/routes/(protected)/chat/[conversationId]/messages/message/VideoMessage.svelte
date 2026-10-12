@@ -1,6 +1,6 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { VideoCameraIcon } from "phosphor-svelte";
+	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 	import { untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";

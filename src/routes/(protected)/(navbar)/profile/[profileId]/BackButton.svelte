@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeftIcon } from "phosphor-svelte";
+	import ArrowLeftIcon from "phosphor-svelte/lib/ArrowLeftIcon";
 
 	import BackLink from "$lib/components/navigation/BackLink.svelte";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from "$env/dynamic/public";
-	import { ChatIcon, StarIcon } from "phosphor-svelte";
+	import ChatIcon from "phosphor-svelte/lib/ChatIcon";
+	import StarIcon from "phosphor-svelte/lib/StarIcon";
 	import type { Snippet } from "svelte";
 
 	import DisplayName from "$lib/components/profile/DisplayName.svelte";
