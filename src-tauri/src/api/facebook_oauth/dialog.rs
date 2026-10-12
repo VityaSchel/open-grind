@@ -1,6 +1,7 @@
 use tauri::Url;
 
 use crate::api::oauth::CANCELED;
+use crate::app_origin::is_served_locally;
 use crate::error::AppError;
 
 const DIALOG_URL: &str = "https://www.facebook.com/v16.0/dialog/oauth";
@@ -33,6 +34,7 @@ pub fn dialog_url(state: &str) -> Result<Url, AppError> {
 
 pub fn is_allowed_target(url: &Url) -> bool {
 	ALLOWED_SCHEMES.contains(&url.scheme())
+		&& !url.host_str().is_some_and(is_served_locally)
 }
 
 pub fn is_redirect_url(url: &Url) -> bool {
@@ -199,6 +201,12 @@ mod tests {
 			"intent://authorize/#Intent;package=com.facebook.katana;end",
 			"fb1273378622718674://authorize/",
 			"http://web.grindr.com/",
+			"https://app.opengrind.org/",
+			"https://tauri.localhost/",
+			"https://ogmedia.localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"https://ogmedia.localhost./aHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"https://ipc.localhost/",
+			"https://localhost/",
 		] {
 			assert!(
 				!is_allowed_target(&url(refused)),

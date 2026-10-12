@@ -13,7 +13,7 @@ index 0988872..aa12f07 100644
  level = "warn"
  priority = 0
 diff --git a/src/android/binding.rs b/src/android/binding.rs
-index 031cd09..7ffb2dc 100644
+index 031cd09..7ea733f 100644
 --- a/src/android/binding.rs
 +++ b/src/android/binding.rs
 @@ -9,8 +9,8 @@ use http::{
@@ -27,15 +27,35 @@ index 031cd09..7ffb2dc 100644
    JNIEnv,
  };
  pub use ndk;
-@@ -22,6 +22,7 @@ use super::{
-   ASSET_LOADER_DOMAIN, EVAL_CALLBACKS, IPC, ON_LOAD_HANDLER, REQUEST_HANDLER, TITLE_CHANGE_HANDLER,
-   URL_LOADING_OVERRIDE, WITH_ASSET_LOADER,
+@@ -19,9 +19,10 @@ use std::os::fd::{AsFd, AsRawFd};
+ 
+ use super::{
+   main_pipe::{MainPipe, MAIN_PIPE},
+-  ASSET_LOADER_DOMAIN, EVAL_CALLBACKS, IPC, ON_LOAD_HANDLER, REQUEST_HANDLER, TITLE_CHANGE_HANDLER,
+-  URL_LOADING_OVERRIDE, WITH_ASSET_LOADER,
++  ASSET_LOADER_DOMAIN, CUSTOM_PROTOCOL_HOSTS, EVAL_CALLBACKS, IPC, ON_LOAD_HANDLER,
++  REQUEST_HANDLER, TITLE_CHANGE_HANDLER, URL_LOADING_OVERRIDE, WITH_ASSET_LOADER,
  };
 +pub use super::stream::*;
  
  use crate::PageLoadEvent;
  
-@@ -87,6 +88,17 @@ macro_rules! android_binding {
+@@ -68,6 +69,14 @@ macro_rules! android_binding {
+       [JString],
+       jstring
+     );
++    android_fn!(
++      $domain,
++      $package,
++      Rust,
++      customProtocolHosts,
++      [JString],
++      jobject
++    );
+     android_fn!(
+       $domain,
+       $package,
+@@ -87,6 +96,17 @@ macro_rules! android_binding {
        handleReceivedTitle,
        [JString, JString],
      );
@@ -53,7 +73,7 @@ index 031cd09..7ffb2dc 100644
    }};
  }
  
-@@ -99,7 +111,12 @@ fn handle_request(
+@@ -99,7 +119,12 @@ fn handle_request(
    let webview_id = env.get_string(&webview_id)?;
    let webview_id = webview_id.to_str().ok().unwrap_or_default();
  
@@ -67,7 +87,7 @@ index 031cd09..7ffb2dc 100644
      #[cfg(feature = "tracing")]
      let span =
        tracing::info_span!(parent: None, "wry::custom_protocol::handle", uri = tracing::field::Empty).entered();
-@@ -162,7 +179,7 @@ fn handle_request(
+@@ -162,7 +187,7 @@ fn handle_request(
      let response = {
        #[cfg(feature = "tracing")]
        let _span = tracing::info_span!("wry::custom_protocol::call_handler").entered();
@@ -76,7 +96,7 @@ index 031cd09..7ffb2dc 100644
          webview_id,
          final_request,
          is_document_start_script_enabled != 0,
-@@ -393,8 +410,13 @@ pub unsafe fn ipc(mut env: JNIEnv, _: JClass, webview_id: JString, url: JString,
+@@ -393,8 +418,13 @@ pub unsafe fn ipc(mut env: JNIEnv, _: JClass, webview_id: JString, url: JString,
        let url = url.to_string_lossy().to_string();
        let body = body.to_string_lossy().to_string();
        let webview_id = webview_id.to_string_lossy().to_string();
@@ -92,11 +112,44 @@ index 031cd09..7ffb2dc 100644
        }
      }
      (Err(_e), _, _) | (_, Err(_e), _) | (_, _, Err(_e)) => {
+@@ -448,6 +478,24 @@ pub unsafe fn assetLoaderDomain(mut env: JNIEnv, _: JClass, webview_id: JString)
+   }
+ }
+ 
++#[allow(non_snake_case)]
++pub unsafe fn customProtocolHosts(mut env: JNIEnv, _: JClass, webview_id: JString) -> jobject {
++  fn custom_protocol_hosts_inner(env: &mut JNIEnv, webview_id: JString) -> Option<jobject> {
++    let webview_id: String = env.get_string(&webview_id).ok()?.into();
++    let custom_protocol_hosts = CUSTOM_PROTOCOL_HOSTS.lock().unwrap();
++    let hosts = custom_protocol_hosts.get(&webview_id)?;
++    let array = env
++      .new_object_array(hosts.len() as jint, "java/lang/String", JObject::null())
++      .ok()?;
++    for (i, host) in hosts.iter().enumerate() {
++      let host = env.new_string(host).ok()?;
++      env.set_object_array_element(&array, i as jint, host).ok()?;
++    }
++    Some(array.as_raw())
++  }
++  custom_protocol_hosts_inner(&mut env, webview_id).unwrap_or_else(|| JObject::null().as_raw())
++}
++
+ #[allow(non_snake_case)]
+ pub unsafe fn onPageLoading(mut env: JNIEnv, _: JClass, webview_id: JString, url: JString) {
+   match (env.get_string(&url), env.get_string(&webview_id)) {
 diff --git a/src/android/kotlin/Rust.kt b/src/android/kotlin/Rust.kt
-index b5b6bdf..5e13aad 100644
+index b5b6bdf..57b1599 100644
 --- a/src/android/kotlin/Rust.kt
 +++ b/src/android/kotlin/Rust.kt
-@@ -43,4 +43,9 @@ object Rust {
+@@ -36,6 +36,7 @@ object Rust {
+ 
+     @JvmStatic external fun assetLoaderDomain(webviewId: String): String
+     @JvmStatic external fun withAssetLoader(webviewId: String): Boolean
++    @JvmStatic external fun customProtocolHosts(webviewId: String): Array<String>?
+     @JvmStatic external fun handleRequest(webviewId: String, request: WebResourceRequest, isDocumentStartScriptEnabled: Boolean): WebResourceResponse?
+     @JvmStatic external fun shouldOverride(webviewId: String, url: String): Boolean
+     @JvmStatic external fun onPageLoading(webviewId: String, url: String)
+@@ -43,4 +44,9 @@ object Rust {
      @JvmStatic external fun onEval(webviewId: String, id: Int, result: String)
  
      @JvmStatic external fun handleReceivedTitle(webviewId: String, title: String)
@@ -159,17 +212,126 @@ index bba26db..f6958a2 100644
      val isRequestPermissionRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
      val permissionList: MutableList<String> = ArrayList()
 diff --git a/src/android/kotlin/RustWebViewClient.kt b/src/android/kotlin/RustWebViewClient.kt
-index 3dae460..c698b94 100644
+index 3dae460..ab720f5 100644
 --- a/src/android/kotlin/RustWebViewClient.kt
 +++ b/src/android/kotlin/RustWebViewClient.kt
-@@ -41,6 +41,7 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+@@ -8,9 +8,14 @@ import android.net.Uri
+ import android.webkit.*
+ import android.content.Context
+ import android.graphics.Bitmap
++import android.os.Build
+ import android.os.Handler
+ import android.os.Looper
++import androidx.webkit.ServiceWorkerClientCompat
++import androidx.webkit.ServiceWorkerControllerCompat
+ import androidx.webkit.WebViewAssetLoader
++import androidx.webkit.WebViewFeature
++import java.io.ByteArrayInputStream
+ 
+ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient() {
+     private val interceptedState = mutableMapOf<String, Boolean>()
+@@ -23,6 +28,12 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+         .addPathHandler("/", WebViewAssetLoader.AssetsPathHandler(context))
+         .build()
+ 
++    private val customProtocolHosts = Rust.customProtocolHosts(webView.id)?.toSet().orEmpty()
++
++    init {
++        CustomProtocolHostGuard.blockServiceWorkers(customProtocolHosts)
++    }
++
+     override fun shouldInterceptRequest(
+         view: WebView,
+         request: WebResourceRequest
+@@ -32,7 +43,7 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+               view.loadUrl(it)
+             }
+             pendingUrlRedirect = null
+-            return null
++            return forbiddenIfCustomProtocolHost(request.url)
+         }
+ 
+         lastInterceptedUrl = request.url
+@@ -40,7 +51,9 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+             assetLoader.shouldInterceptRequest(request.url)
          } else {
              val response = Rust.handleRequest(view.id, request, view.isDocumentStartScriptEnabled)
++                ?: forbiddenIfCustomProtocolHost(request.url)
              if (response != null) {
 +                response.responseHeaders?.remove("x-wry-stream")?.let { response.data = RustInputStream(it.toLong()) }
                  if (response.responseHeaders != null) {
                      response.responseHeaders["Cache-Control"] = "no-store"
                  } else {
+@@ -56,6 +69,11 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+         view: WebView,
+         request: WebResourceRequest
+     ): Boolean {
++        // redirects skip shouldInterceptRequest, so reload the host to serve it locally
++        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && request.isRedirect && request.isForMainFrame && isCustomProtocolHost(request.url)) {
++            view.loadUrl(request.url.toString())
++            return true
++        }
+         return Rust.shouldOverride((view as RustWebView).id, request.url.toString())
+     }
+ 
+@@ -82,7 +100,8 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+         // we get a net::ERR_CONNECTION_REFUSED when an external URL redirects to a custom protocol
+         // e.g. oauth flow, because shouldInterceptRequest is not called on redirects
+         // so we must force retry here with loadUrl() to get a chance of the custom protocol to kick in
+-        if (error.errorCode == ERROR_CONNECT && request.isForMainFrame && request.url != lastInterceptedUrl) {
++        // custom protocol hosts are real domains, so their loads can fail with any error code
++        if ((error.errorCode == ERROR_CONNECT || isCustomProtocolHost(request.url)) && request.isForMainFrame && request.url != lastInterceptedUrl) {
+             // prevent the default error page from showing
+             view.stopLoading()
+             // without this initial loadUrl the app is stuck
+@@ -94,5 +113,47 @@ class RustWebViewClient(webView: RustWebView, context: Context): WebViewClient()
+         }
+     }
+ 
++    private fun isCustomProtocolHost(url: Uri) = CustomProtocolHostGuard.matches(customProtocolHosts, url)
++
++    private fun forbiddenIfCustomProtocolHost(url: Uri) =
++        if (isCustomProtocolHost(url)) CustomProtocolHostGuard.forbiddenResponse() else null
++
+     {{class-extension}}
+ }
++
++private object CustomProtocolHostGuard {
++    @Volatile
++    private var serviceWorkerHosts = emptySet<String>()
++    private var serviceWorkerClientInstalled = false
++
++    fun matches(hosts: Set<String>, url: Uri) =
++        hosts.isNotEmpty() && url.host?.lowercase()?.trimEnd('.') in hosts
++
++    fun forbiddenResponse() = WebResourceResponse(
++        "text/plain",
++        null,
++        403,
++        "Forbidden",
++        hashMapOf("Cache-Control" to "no-store"),
++        ByteArrayInputStream(ByteArray(0))
++    )
++
++    // the service worker client is process-wide, so it covers every webview's hosts
++    @Synchronized
++    fun blockServiceWorkers(hosts: Set<String>) {
++        if (hosts.isEmpty()) return
++        serviceWorkerHosts = serviceWorkerHosts + hosts
++        if (serviceWorkerClientInstalled) return
++        serviceWorkerClientInstalled = true
++
++        if (!WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_BASIC_USAGE) ||
++            !WebViewFeature.isFeatureSupported(WebViewFeature.SERVICE_WORKER_SHOULD_INTERCEPT_REQUEST)) {
++            Logger.warn("WebView can't intercept service worker requests to custom protocol hosts")
++            return
++        }
++        ServiceWorkerControllerCompat.getInstance().setServiceWorkerClient(object : ServiceWorkerClientCompat() {
++            override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? =
++                if (matches(serviceWorkerHosts, request.url)) forbiddenResponse() else null
++        })
++    }
++}
 diff --git a/src/android/kotlin/proguard-wry.pro b/src/android/kotlin/proguard-wry.pro
 index a0f19c6..40df27b 100644
 --- a/src/android/kotlin/proguard-wry.pro
@@ -184,10 +346,22 @@ index a0f19c6..40df27b 100644
 +  public <methods>;
 +}
 diff --git a/src/android/mod.rs b/src/android/mod.rs
-index 8f44c70..7772b89 100644
+index 8f44c70..b0ba679 100644
 --- a/src/android/mod.rs
 +++ b/src/android/mod.rs
-@@ -21,7 +21,7 @@ use raw_window_handle::HasWindowHandle;
+@@ -4,8 +4,9 @@
+ 
+ use super::{PageLoadEvent, WebViewAttributes, RGBA};
+ use crate::{
+-  custom_protocol_workaround, inject_initialization_scripts::inject_scripts_into_html, Error,
+-  RequestAsyncResponder, Result,
++  custom_protocol_workaround::{self, MappedHost},
++  inject_initialization_scripts::inject_scripts_into_html,
++  Error, RequestAsyncResponder, Result,
+ };
+ use crossbeam_channel::*;
+ 
+@@ -21,7 +22,7 @@ use raw_window_handle::HasWindowHandle;
  use std::{
    borrow::Cow,
    collections::HashMap,
@@ -196,7 +370,7 @@ index 8f44c70..7772b89 100644
    time::Duration,
  };
  
-@@ -37,6 +37,8 @@ use crate::util::Counter;
+@@ -37,6 +38,8 @@ use crate::util::Counter;
  static COUNTER: Counter = Counter::new();
  const MAIN_PIPE_TIMEOUT: Duration = Duration::from_secs(10);
  
@@ -205,7 +379,15 @@ index 8f44c70..7772b89 100644
  pub struct Context<'a, 'b> {
    pub env: &'a mut JNIEnv<'b>,
    pub activity: &'a JObject<'b>,
-@@ -69,8 +71,8 @@ macro_rules! define_static_handlers {
+@@ -44,6 +47,7 @@ pub struct Context<'a, 'b> {
+ }
+ 
+ type WebviewId = String;
++type CustomProtocolHosts = Vec<String>;
+ 
+ macro_rules! define_static_handlers {
+   ($($key: ident, $var:ident = $type_name:ident);+ $(;)?) => {
+@@ -69,8 +73,8 @@ macro_rules! define_static_handlers {
  }
  
  define_static_handlers! {
@@ -216,16 +398,163 @@ index 8f44c70..7772b89 100644
    TITLE_CHANGE_HANDLER = UnsafeTitleHandler { handler: Box<dyn Fn(String)> };
    URL_LOADING_OVERRIDE = UnsafeUrlLoadingOverride { handler: Box<dyn Fn(String) -> bool> };
    ON_LOAD_HANDLER = UnsafeOnPageLoadHandler { handler: Box<dyn Fn(PageLoadEvent, String)> };
-@@ -247,7 +249,7 @@ impl InnerWebView {
+@@ -78,6 +82,7 @@ define_static_handlers! {
+ define_static_handlers! {
+   WebviewId, WITH_ASSET_LOADER = bool;
+   WebviewId, ASSET_LOADER_DOMAIN = String;
++  WebviewId, CUSTOM_PROTOCOL_HOSTS = CustomProtocolHosts;
+   ActivityId, WEBVIEW_ATTRIBUTES = CreateWebViewAttributes;
+ }
+ 
+@@ -97,6 +102,7 @@ pub fn destroy_webview(activity_id: ActivityId, webview_id: &WebviewId) {
+   ON_LOAD_HANDLER.lock().unwrap().remove(webview_id);
+   WITH_ASSET_LOADER.lock().unwrap().remove(webview_id);
+   ASSET_LOADER_DOMAIN.lock().unwrap().remove(webview_id);
++  CUSTOM_PROTOCOL_HOSTS.lock().unwrap().remove(webview_id);
+ }
+ 
+ /// Sets up the necessary logic for wry to be able to create the webviews later.
+@@ -209,13 +215,33 @@ impl InnerWebView {
+       with_asset_loader,
+       asset_loader_domain,
+       https_scheme,
++      custom_protocol_hosts: mapped_hosts,
+     } = pl_attrs;
+ 
++    if with_asset_loader && !mapped_hosts.is_empty() {
++      return Err(Error::InvalidCustomProtocolHost(
++        "custom protocol hosts cannot be combined with `with_asset_loader`".into(),
++      ));
++    }
++    custom_protocol_workaround::validate_mappings(&mapped_hosts, |protocol| {
++      custom_protocols.contains_key(protocol)
++    })
++    .map_err(Error::InvalidCustomProtocolHost)?;
++
+     let http_or_https = if https_scheme { "https" } else { "http" };
+ 
+     let url = if let Some(mut url) = url {
+       if let Some((protocol, _)) = url.split_once("://") {
+-        if custom_protocols.contains_key(protocol) {
++        let mapped_host = mapped_hosts
++          .iter()
++          .find_map(|(mapped, host)| (mapped == protocol).then_some(host));
++        if let Some(host) = mapped_host {
++          if let Some(mapped_url) =
++            custom_protocol_workaround::apply_mapped_host(&url, protocol, host)
++          {
++            url = mapped_url;
++          }
++        } else if custom_protocols.contains_key(protocol) {
+           url = custom_protocol_workaround::apply_uri_work_around(&url, http_or_https, protocol)
+         }
+       }
+@@ -241,49 +267,70 @@ impl InnerWebView {
+         .insert(id.clone(), domain);
+     }
+ 
++    if !mapped_hosts.is_empty() {
++      CUSTOM_PROTOCOL_HOSTS.lock().unwrap().insert(
++        id.clone(),
++        mapped_hosts.iter().map(|(_, host)| host.clone()).collect(),
++      );
++    }
++
+     let initialization_scripts_ = initialization_scripts.clone();
+     REQUEST_HANDLER
+       .lock()
        .unwrap()
        .insert(
          id.clone(),
 -        UnsafeRequestHandler::new(Box::new(
 +        UnsafeRequestHandler::new(Arc::new(
            move |webview_id: &str, mut request, is_document_start_script_enabled| {
-             let uri = request.uri().to_string();
-             if let Some((custom_protocol, custom_protocol_handler)) =
-@@ -291,7 +293,7 @@ impl InnerWebView {
+-            let uri = request.uri().to_string();
+-            if let Some((custom_protocol, custom_protocol_handler)) =
+-              custom_protocols.iter().find(|(protocol, _)| {
+-                custom_protocol_workaround::is_work_around_uri(&uri, http_or_https, protocol)
+-              })
+-            {
+-              let uri_res = custom_protocol_workaround::revert_uri_work_around(
+-                &uri,
+-                http_or_https,
+-                custom_protocol,
+-              )
+-              .parse();
+-
+-                if let Ok(uri) = uri_res {
+-                  *request.uri_mut() = uri;
++            let custom_protocol_handler =
++              match custom_protocol_workaround::match_mapped_host(request.uri(), &mapped_hosts) {
++                MappedHost::Serve {
++                  protocol,
++                  canonical,
++                } => {
++                  *request.uri_mut() = canonical;
++                  custom_protocols.get(protocol)?
+                 }
+-
+-              let (tx, rx) = channel();
+-              let initialization_scripts = initialization_scripts_.clone();
+-              let responder: Box<dyn FnOnce(HttpResponse<Cow<'static, [u8]>>)> =
+-                Box::new(move |mut response| {
+-                  if !is_document_start_script_enabled {
+-                    #[cfg(feature = "tracing")]
+-                    tracing::info!("`addDocumentStartJavaScript` is not supported; injecting initialization scripts via custom protocol handler");
+-                    response = inject_scripts_into_html(response, &initialization_scripts);
++                MappedHost::Block => return Some(custom_protocol_workaround::forbidden_response()),
++                MappedHost::NoMatch => {
++                  let uri = request.uri().to_string();
++                  let (custom_protocol, custom_protocol_handler) =
++                    custom_protocols.iter().find(|(protocol, _)| {
++                      !mapped_hosts.iter().any(|(mapped, _)| mapped == *protocol)
++                        && custom_protocol_workaround::is_work_around_uri(&uri, http_or_https, protocol)
++                    })?;
++
++                  let uri_res = custom_protocol_workaround::revert_uri_work_around(
++                    &uri,
++                    http_or_https,
++                    custom_protocol,
++                  )
++                  .parse();
++
++                  if let Ok(uri) = uri_res {
++                    *request.uri_mut() = uri;
+                   }
+-                  let _ = tx.send(response);
+-                });
+-
+-              (custom_protocol_handler)(webview_id, request, RequestAsyncResponder { responder });
+-              // 3x the timeout while we monitor https://github.com/tauri-apps/wry/issues/1551
+-              // TODO: Remove timeout
+-              return rx.recv_timeout(MAIN_PIPE_TIMEOUT * 3).inspect_err(|e| {eprintln!("custom protocol timed out: {e}");}).ok();
+-            }
+-            None
++
++                  custom_protocol_handler
++                }
++              };
++
++            let (tx, rx) = channel();
++            let initialization_scripts = initialization_scripts_.clone();
++            let responder: Box<dyn FnOnce(HttpResponse<Cow<'static, [u8]>>)> =
++              Box::new(move |mut response| {
++                if !is_document_start_script_enabled {
++                  #[cfg(feature = "tracing")]
++                  tracing::info!("`addDocumentStartJavaScript` is not supported; injecting initialization scripts via custom protocol handler");
++                  response = inject_scripts_into_html(response, &initialization_scripts);
++                }
++                let _ = tx.send(response);
++              });
++
++            (custom_protocol_handler)(webview_id, request, RequestAsyncResponder { responder });
++            // 3x the timeout while we monitor https://github.com/tauri-apps/wry/issues/1551
++            // TODO: Remove timeout
++            rx.recv_timeout(MAIN_PIPE_TIMEOUT * 3).inspect_err(|e| {eprintln!("custom protocol timed out: {e}");}).ok()
+           },
+       )));
+ 
+@@ -291,7 +338,7 @@ impl InnerWebView {
        IPC
          .lock()
          .unwrap()
@@ -347,11 +676,472 @@ index 0000000..4ae189d
 +    Ok(())
 +  })
 +}
+diff --git a/src/custom_protocol_workaround.rs b/src/custom_protocol_workaround.rs
+index 122b134..6ade563 100644
+--- a/src/custom_protocol_workaround.rs
++++ b/src/custom_protocol_workaround.rs
+@@ -7,6 +7,17 @@
+ //! 1. Use [`apply_uri_work_around`] to convert the URI we want to navigate to
+ //! 2. Intercept http(s) requests, test the request URI against [`is_work_around_uri`],
+ //!    if it matches, we apply [`revert_uri_work_around`] to the URI and feed it to the custom protocol handler
++//!
++//! On Android, a protocol mapped with `WebViewBuilderExtAndroid::with_custom_protocol_host` is served
++//! from exactly `https://{host}` instead, using [`apply_mapped_host`] and [`match_mapped_host`].
++
++use std::borrow::Cow;
++
++use http::{
++  Response, StatusCode, Uri,
++  header::{CACHE_CONTROL, CONTENT_TYPE},
++  uri::Scheme,
++};
+ 
+ /// If the URI is a work around URI for this protocol which starts with `{http_or_https}://{protocol}.`
+ pub fn is_work_around_uri(uri: &str, http_or_https: &str, protocol: &str) -> bool {
+@@ -42,9 +53,151 @@ pub fn work_around_uri_prefix(http_or_https: &str, protocol: &str) -> String {
+   format!("{http_or_https}://{protocol}.")
+ }
+ 
++#[derive(Debug, PartialEq, Eq)]
++pub enum MappedHost<'a> {
++  /// `https://{host}` on the default port, which `protocol` serves as `canonical`.
++  Serve {
++    protocol: &'a str,
++    canonical: Uri,
++  },
++  /// Any other form of a mapped host, e.g. `http`, another port, userinfo or a trailing dot.
++  Block,
++  NoMatch,
++}
++
++/// Routes `uri` against validated `(protocol, host)` mappings.
++pub fn match_mapped_host<'a>(uri: &Uri, mappings: &'a [(String, String)]) -> MappedHost<'a> {
++  let Some(authority) = uri.authority() else {
++    return MappedHost::NoMatch;
++  };
++  let host = authority.host().trim_end_matches('.');
++  let Some((protocol, mapped_host)) = mappings
++    .iter()
++    .find(|(_, mapped_host)| mapped_host.eq_ignore_ascii_case(host))
++  else {
++    return MappedHost::NoMatch;
++  };
++
++  let authority = authority.as_str();
++  let authority = authority.strip_suffix(":443").unwrap_or(authority);
++  if uri.scheme() != Some(&Scheme::HTTPS) || !authority.eq_ignore_ascii_case(mapped_host) {
++    return MappedHost::Block;
++  }
++
++  match canonical_uri(protocol, uri) {
++    Some(canonical) => MappedHost::Serve {
++      protocol,
++      canonical,
++    },
++    None => MappedHost::Block,
++  }
++}
++
++fn canonical_uri(protocol: &str, uri: &Uri) -> Option<Uri> {
++  let path = uri.path();
++  let path_and_query = match uri.query() {
++    Some(query) => format!("{path}?{query}"),
++    None => path.to_string(),
++  };
++  Uri::builder()
++    .scheme(protocol)
++    .authority("localhost")
++    .path_and_query(path_and_query)
++    .build()
++    .ok()
++}
++
++/// Converting `{protocol}://localhost/abc` to `https://{host}/abc`, or `None` for any other authority
++pub fn apply_mapped_host(uri: &str, protocol: &str, host: &str) -> Option<String> {
++  let rest = uri.strip_prefix(protocol)?.strip_prefix("://")?;
++  let (authority, tail) = rest.split_at(rest.find(['/', '?', '#']).unwrap_or(rest.len()));
++  authority
++    .eq_ignore_ascii_case("localhost")
++    .then(|| format!("https://{host}{tail}"))
++}
++
++pub fn validate_mappings(
++  mappings: &[(String, String)],
++  is_registered: impl Fn(&str) -> bool,
++) -> Result<(), String> {
++  for (i, (protocol, host)) in mappings.iter().enumerate() {
++    validate_host(host).map_err(|reason| format!("`{host}` for protocol `{protocol}` {reason}"))?;
++    if !is_registered(protocol) || Scheme::try_from(protocol.as_str()).is_err() {
++      return Err(format!(
++        "`{protocol}` must be a registered custom protocol to be mapped to `{host}`"
++      ));
++    }
++    let earlier = &mappings[..i];
++    if earlier.iter().any(|(mapped, _)| mapped == protocol) {
++      return Err(format!(
++        "custom protocol `{protocol}` is already mapped to a host"
++      ));
++    }
++    if let Some((mapped, _)) = earlier.iter().find(|(_, mapped_host)| mapped_host == host) {
++      return Err(format!(
++        "`{host}` is already mapped to custom protocol `{mapped}`"
++      ));
++    }
++  }
++  Ok(())
++}
++
++fn validate_host(host: &str) -> Result<(), &'static str> {
++  if host.len() > 253 {
++    return Err("must not be longer than 253 characters");
++  }
++  if host.ends_with('.') {
++    return Err("must not end with a dot");
++  }
++  if host == "localhost" || host.ends_with(".localhost") {
++    return Err("must not be `localhost` or a subdomain of it");
++  }
++  let Some((_, last_label)) = host.rsplit_once('.') else {
++    return Err("must have at least two labels, like `app.example.com`");
++  };
++  for label in host.split('.') {
++    if label.is_empty() || label.len() > 63 {
++      return Err("must have labels of 1 to 63 characters");
++    }
++    if !label
++      .bytes()
++      .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
++    {
++      return Err(
++        "must only contain lowercase ASCII letters, digits, hyphens and dots, without a scheme, port or path",
++      );
++    }
++    if label.starts_with('-') || label.ends_with('-') {
++      return Err("must not have labels starting or ending with a hyphen");
++    }
++  }
++  if ends_in_number(last_label) {
++    return Err("must not be an IP address");
++  }
++  Ok(())
++}
++
++/// Whether URL parsers treat a host whose last label is `label` as an IPv4 address,
++/// see <https://url.spec.whatwg.org/#ends-in-a-number-checker>.
++fn ends_in_number(label: &str) -> bool {
++  label.bytes().all(|b| b.is_ascii_digit())
++    || label
++      .strip_prefix("0x")
++      .is_some_and(|hex| hex.bytes().all(|b| b.is_ascii_hexdigit()))
++}
++
++pub fn forbidden_response() -> Response<Cow<'static, [u8]>> {
++  Response::builder()
++    .status(StatusCode::FORBIDDEN)
++    .header(CACHE_CONTROL, "no-store")
++    .header(CONTENT_TYPE, "text/plain")
++    .body(Cow::Borrowed(&[][..]))
++    .unwrap()
++}
++
+ #[cfg(test)]
+ mod tests {
+-  use super::is_work_around_uri;
++  use super::*;
+ 
+   #[test]
+   fn checks_if_custom_protocol_uri() {
+@@ -53,4 +206,263 @@ mod tests {
+     assert!(is_work_around_uri(uri, scheme, "wry"));
+     assert!(!is_work_around_uri(uri, scheme, "asset"));
+   }
++
++  fn mapping(protocol: &str, host: &str) -> (String, String) {
++    (protocol.to_string(), host.to_string())
++  }
++
++  fn route<'a>(uri: &str, mappings: &'a [(String, String)]) -> MappedHost<'a> {
++    match_mapped_host(&uri.parse().unwrap(), mappings)
++  }
++
++  #[test]
++  fn serves_exact_https_host() {
++    let mappings = [mapping("tauri", "app.example.com")];
++    for (uri, canonical) in [
++      ("https://app.example.com", "tauri://localhost/"),
++      ("https://app.example.com/", "tauri://localhost/"),
++      (
++        "https://app.example.com/assets/index.js",
++        "tauri://localhost/assets/index.js",
++      ),
++      (
++        "https://app.example.com/a%20b/c?d=e&f",
++        "tauri://localhost/a%20b/c?d=e&f",
++      ),
++      ("https://app.example.com?b=c", "tauri://localhost/?b=c"),
++      ("https://app.example.com/a?", "tauri://localhost/a?"),
++      ("https://app.example.com:443/a", "tauri://localhost/a"),
++      ("https://APP.Example.COM/a", "tauri://localhost/a"),
++      ("HTTPS://app.example.com/a", "tauri://localhost/a"),
++      (
++        "https://app.example.com/a?r=https://app.example.com/b&s=https%3A%2F%2Fapp.example.com",
++        "tauri://localhost/a?r=https://app.example.com/b&s=https%3A%2F%2Fapp.example.com",
++      ),
++      (
++        "https://app.example.com/https://app.example.com/",
++        "tauri://localhost/https://app.example.com/",
++      ),
++    ] {
++      match route(uri, &mappings) {
++        MappedHost::Serve {
++          protocol: "tauri",
++          canonical: served,
++        } => assert_eq!(served.to_string(), canonical, "{uri}"),
++        other => panic!("{uri} routed to {other:?}"),
++      }
++    }
++  }
++
++  #[test]
++  fn blocks_other_forms_of_mapped_host() {
++    let mappings = [mapping("tauri", "app.example.com")];
++    for uri in [
++      "http://app.example.com/",
++      "http://app.example.com:443/",
++      "http://app.example.com:8443/",
++      "https://app.example.com:8443/",
++      "https://app.example.com:80/",
++      "https://app.example.com:0443/",
++      "https://user@app.example.com/",
++      "https://user:pass@app.example.com/",
++      "https://app.example.com@app.example.com/",
++      "https://app.example.com./",
++      "https://app.example.com.:443/",
++      "https://APP.EXAMPLE.COM./",
++      "wss://app.example.com/",
++      "ftp://app.example.com/",
++    ] {
++      assert_eq!(route(uri, &mappings), MappedHost::Block, "{uri}");
++    }
++  }
++
++  #[test]
++  fn ignores_lookalike_hosts() {
++    let mappings = [mapping("tauri", "app.example.com")];
++    for uri in [
++      "https://app.example.com.evil.net/",
++      "https://app.example.company/",
++      "https://sub.app.example.com/",
++      "https://example.com/",
++      "https://pp.example.com/",
++      "https://app-example.com/",
++      "https://appxexample.com/",
++      "https://app.example.com@evil.net/",
++      "https://evil.net/?next=https://app.example.com/",
++      "https://evil.net/app.example.com",
++      "https://tauri.localhost/",
++      "http://tauri.localhost/",
++      "/relative/app.example.com",
++    ] {
++      assert_eq!(route(uri, &mappings), MappedHost::NoMatch, "{uri}");
++    }
++    for uri in ["https://app.example.com/", "http://wry.localhost/path"] {
++      assert_eq!(route(uri, &[]), MappedHost::NoMatch, "{uri}");
++    }
++  }
++
++  #[test]
++  fn routes_each_host_to_its_protocol() {
++    let mappings = [
++      mapping("tauri", "app.example.com"),
++      mapping("assets", "static.example.com"),
++    ];
++    assert_eq!(
++      route("https://static.example.com/a", &mappings),
++      MappedHost::Serve {
++        protocol: "assets",
++        canonical: "assets://localhost/a".parse().unwrap()
++      }
++    );
++    assert_eq!(
++      route("https://app.example.com/a", &mappings),
++      MappedHost::Serve {
++        protocol: "tauri",
++        canonical: "tauri://localhost/a".parse().unwrap()
++      }
++    );
++    assert_eq!(
++      route("http://static.example.com/a", &mappings),
++      MappedHost::Block
++    );
++  }
++
++  #[test]
++  fn applies_mapped_host_to_localhost_urls() {
++    let host = "app.example.com";
++    for (uri, mapped) in [
++      ("tauri://localhost", "https://app.example.com"),
++      ("tauri://localhost/", "https://app.example.com/"),
++      (
++        "tauri://localhost/index.html?q=1#/route",
++        "https://app.example.com/index.html?q=1#/route",
++      ),
++      ("tauri://LocalHost/a", "https://app.example.com/a"),
++      (
++        "tauri://localhost?q=tauri://localhost/",
++        "https://app.example.com?q=tauri://localhost/",
++      ),
++      ("tauri://localhost#x", "https://app.example.com#x"),
++    ] {
++      assert_eq!(
++        apply_mapped_host(uri, "tauri", host).as_deref(),
++        Some(mapped),
++        "{uri}"
++      );
++    }
++    for uri in [
++      "tauri://localhost:8080/",
++      "tauri://user@localhost/",
++      "tauri://localhost.evil.net/",
++      "tauri://localhostx/",
++      "tauri://example.com/localhost",
++      "wry://localhost/",
++      "https://localhost/",
++      "tauri:localhost/",
++    ] {
++      assert_eq!(apply_mapped_host(uri, "tauri", host), None, "{uri}");
++    }
++  }
++
++  #[test]
++  fn validates_hosts() {
++    let longest = format!(
++      "{}.{}.{}.{}",
++      "a".repeat(63),
++      "b".repeat(63),
++      "c".repeat(63),
++      "d".repeat(61)
++    );
++    assert_eq!(longest.len(), 253);
++
++    for host in [
++      "app.example.com",
++      "a.b",
++      "xn--bcher-kva.example",
++      "app-1.example.com",
++      "1app.example.com",
++      "app.example.co.uk",
++      &format!("{}.com", "a".repeat(63)),
++      &longest,
++    ] {
++      assert_eq!(validate_host(host), Ok(()), "{host}");
++    }
++
++    for host in [
++      "",
++      ".",
++      "com",
++      "localhost",
++      "app.localhost",
++      "a.b.localhost",
++      "App.example.com",
++      "app.example.com.",
++      "app..example.com",
++      ".app.example.com",
++      "-app.example.com",
++      "app-.example.com",
++      "app_x.example.com",
++      "*.example.com",
++      "app.example.com:443",
++      "https://app.example.com/",
++      "app.example.com/",
++      "user@app.example.com",
++      "bücher.example",
++      "127.0.0.1",
++      "1.2.3",
++      "app.123",
++      "app.example.0x7f",
++      "app.example.0x",
++      "[::1]",
++      "::1",
++      &format!("{}.com", "a".repeat(64)),
++      &format!("{longest}a"),
++    ] {
++      assert!(validate_host(host).is_err(), "{host}");
++    }
++  }
++
++  #[test]
++  fn validates_mappings() {
++    let registered = |protocol: &str| ["tauri", "assets"].contains(&protocol);
++
++    assert_eq!(
++      validate_mappings(
++        &[
++          mapping("tauri", "app.example.com"),
++          mapping("assets", "static.example.com")
++        ],
++        registered
++      ),
++      Ok(())
++    );
++
++    for mappings in [
++      vec![mapping("other", "app.example.com")],
++      vec![mapping("tauri", "localhost")],
++      vec![
++        mapping("tauri", "app.example.com"),
++        mapping("tauri", "other.example.com"),
++      ],
++      vec![
++        mapping("tauri", "app.example.com"),
++        mapping("assets", "app.example.com"),
++      ],
++    ] {
++      assert!(
++        validate_mappings(&mappings, registered).is_err(),
++        "{mappings:?}"
++      );
++    }
++
++    assert!(validate_mappings(&[mapping("not a scheme", "app.example.com")], |_| true).is_err());
++  }
++
++  #[test]
++  fn forbidden_response_is_empty_and_not_cached() {
++    let response = forbidden_response();
++    assert_eq!(response.status(), StatusCode::FORBIDDEN);
++    assert_eq!(response.headers()[CACHE_CONTROL], "no-store");
++    assert!(response.body().is_empty());
++  }
+ }
+diff --git a/src/error.rs b/src/error.rs
+index 9598993..0dd3140 100644
+--- a/src/error.rs
++++ b/src/error.rs
+@@ -77,4 +77,7 @@ pub enum Error {
+   #[cfg(target_os = "android")]
+   #[error("Activity not found")]
+   ActivityNotFound,
++  #[cfg(target_os = "android")]
++  #[error("Invalid custom protocol host: {0}")]
++  InvalidCustomProtocolHost(String),
+ }
 diff --git a/src/lib.rs b/src/lib.rs
-index 38fbc9e..e18f691 100644
+index 38fbc9e..572828c 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -368,6 +368,10 @@ pub mod prelude {
+@@ -347,7 +347,8 @@
+ // #[macro_use]
+ // extern crate objc;
+ 
+-#[cfg(any(target_os = "windows", target_os = "android"))]
++#[cfg(any(target_os = "windows", target_os = "android", test))]
++#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+ mod custom_protocol_workaround;
+ mod error;
+ #[cfg(any(target_os = "android", test))]
+@@ -368,6 +369,10 @@ pub mod prelude {
  }
  #[cfg(target_os = "android")]
  pub use android::JniHandle;
@@ -362,7 +1152,16 @@ index 38fbc9e..e18f691 100644
  #[cfg(target_os = "android")]
  use android::*;
  
-@@ -644,7 +648,7 @@ struct WebViewAttributes<'a> {
+@@ -636,7 +641,7 @@ struct WebViewAttributes<'a> {
+   /// different Origin headers across platforms:
+   ///
+   /// - macOS, iOS and Linux: `<scheme_name>://<path>` (so it will be `wry://path/to/page/`).
+-  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`].
++  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`]. On Android, a protocol mapped to a host with [`WebViewBuilderExtAndroid::with_custom_protocol_host`] uses `https://<host>/<path>` instead.
+   ///
+   /// # Reading assets on mobile
+   ///
+@@ -644,7 +649,7 @@ struct WebViewAttributes<'a> {
    ///   locate your files in those directories. For more information, see [Loading in-app content](https://developer.android.com/guide/webapps/load-local-content) page.
    /// - iOS: To get the path of your assets, you can call [`CFBundle::resources_path`](https://docs.rs/core-foundation/latest/core_foundation/bundle/struct.CFBundle.html#method.resources_path). So url like `wry://assets/index.html` could get the html file in assets directory.
    pub custom_protocols:
@@ -371,7 +1170,16 @@ index 38fbc9e..e18f691 100644
  
    /// The IPC handler to receive the message from Javascript on webview
    /// using `window.ipc.postMessage("insert_message_here")` to host Rust code.
-@@ -1037,7 +1041,7 @@ impl<'a> WebViewBuilder<'a> {
+@@ -1024,7 +1029,7 @@ impl<'a> WebViewBuilder<'a> {
+   /// different Origin headers across platforms:
+   ///
+   /// - macOS, iOS and Linux: `<scheme_name>://<path>` (so it will be `wry://path/to/page).
+-  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`].
++  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`]. On Android, a protocol mapped to a host with [`WebViewBuilderExtAndroid::with_custom_protocol_host`] uses `https://<host>/<path>` instead.
+   ///
+   /// # Reading assets on mobile
+   ///
+@@ -1037,7 +1042,7 @@ impl<'a> WebViewBuilder<'a> {
    #[cfg(feature = "protocol")]
    pub fn with_custom_protocol<F>(mut self, name: String, handler: F) -> Self
    where
@@ -380,7 +1188,16 @@ index 38fbc9e..e18f691 100644
    {
      #[cfg(any(
        target_os = "linux",
-@@ -1102,7 +1106,7 @@ impl<'a> WebViewBuilder<'a> {
+@@ -1082,7 +1087,7 @@ impl<'a> WebViewBuilder<'a> {
+   /// different Origin headers across platforms:
+   ///
+   /// - macOS, iOS and Linux: `<scheme_name>://<path>` (so it will be `wry://path/to/page).
+-  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`].
++  /// - Windows and Android: `http://<scheme_name>.<path>` by default (so it will be `http://wry.path/to/page`). To use `https` instead of `http`, use [`WebViewBuilderExtWindows::with_https_scheme`] and [`WebViewBuilderExtAndroid::with_https_scheme`]. On Android, a protocol mapped to a host with [`WebViewBuilderExtAndroid::with_custom_protocol_host`] uses `https://<host>/<path>` instead.
+   ///
+   /// # Examples
+   ///
+@@ -1102,7 +1107,7 @@ impl<'a> WebViewBuilder<'a> {
    #[cfg(feature = "protocol")]
    pub fn with_asynchronous_custom_protocol<F>(mut self, name: String, handler: F) -> Self
    where
@@ -389,6 +1206,72 @@ index 38fbc9e..e18f691 100644
    {
      #[cfg(any(
        target_os = "linux",
+@@ -1169,7 +1174,9 @@ impl<'a> WebViewBuilder<'a> {
+   ///
+   /// - **Windows and Android:** if the URL's scheme is a registered custom protocol,
+   ///   a work around is used that changes the URL this navigates to
+-  ///   from `{protocol}://localhost/abc` to `{http_or_https}://{protocol}.localhost/abc`
++  ///   from `{protocol}://localhost/abc` to `{http_or_https}://{protocol}.localhost/abc`,
++  ///   or to `https://{host}/abc` on Android when the protocol is mapped to a host with
++  ///   [`WebViewBuilderExtAndroid::with_custom_protocol_host`]
+   pub fn with_url_and_headers(mut self, url: impl Into<String>, headers: http::HeaderMap) -> Self {
+     self.attrs.url = Some(url.into());
+     self.attrs.headers = Some(headers);
+@@ -1187,7 +1194,9 @@ impl<'a> WebViewBuilder<'a> {
+   ///
+   /// - **Windows and Android:** if the URL's scheme is a registered custom protocol,
+   ///   a work around is used that changes the URL this navigates to
+-  ///   from `{protocol}://localhost/abc` to `{http_or_https}://{protocol}.localhost/abc`
++  ///   from `{protocol}://localhost/abc` to `{http_or_https}://{protocol}.localhost/abc`,
++  ///   or to `https://{host}/abc` on Android when the protocol is mapped to a host with
++  ///   [`WebViewBuilderExtAndroid::with_custom_protocol_host`]
+   pub fn with_url(mut self, url: impl Into<String>) -> Self {
+     self.attrs.url = Some(url.into());
+     self.attrs.headers = None;
+@@ -1840,6 +1849,7 @@ pub(crate) struct PlatformSpecificWebViewAttributes {
+   with_asset_loader: bool,
+   asset_loader_domain: Option<String>,
+   https_scheme: bool,
++  custom_protocol_hosts: Vec<(String, String)>,
+ }
+ 
+ #[cfg(target_os = "android")]
+@@ -1870,6 +1880,20 @@ pub trait WebViewBuilderExtAndroid {
+   ///
+   /// The default value is `false`.
+   fn with_https_scheme(self, enabled: bool) -> Self;
++
++  /// Serves the custom `protocol` from `https://<host>` instead of `http(s)://<protocol>.localhost`,
++  /// for example to link the host to the app with [Digital Asset Links](https://developers.google.com/digital-asset-links).
++  /// The handler still receives `<protocol>://localhost/<path>` URIs. Requests to the host over `http`, on another port
++  /// or from a service worker get `403 Forbidden`, and setting this replaces the process-wide service worker client.
++  ///
++  /// Building fails with [`Error::InvalidCustomProtocolHost`] if `host` isn't a lowercase domain name such as
++  /// `app.example.com`, `protocol` isn't registered, either is already mapped, or [`Self::with_asset_loader`] is set.
++  ///
++  /// ## Warning
++  ///
++  /// Requests redirected to the host and WebSocket connections to it can reach the real server, so use
++  /// a host that serves only `/.well-known/assetlinks.json`.
++  fn with_custom_protocol_host(self, protocol: String, host: String) -> Self;
+ }
+ 
+ #[cfg(target_os = "android")]
+@@ -1907,6 +1931,14 @@ impl WebViewBuilderExtAndroid for WebViewBuilder<'_> {
+     self.platform_specific.https_scheme = enabled;
+     self
+   }
++
++  fn with_custom_protocol_host(mut self, protocol: String, host: String) -> Self {
++    self
++      .platform_specific
++      .custom_protocol_hosts
++      .push((protocol, host));
++    self
++  }
+ }
+ 
+ #[cfg(any(
 diff --git b/src/stream.rs b/src/stream.rs
 new file mode 100644
 index 0000000..7c4e563

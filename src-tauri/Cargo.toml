@@ -110,3 +110,7 @@ wry = { path = ".patched/wry" }
 tauri-codegen = { path = ".patched/tauri-codegen" }
 http2 = { path = ".patched/http2" }
 tauri-plugin-geolocation = { path = ".patched/tauri-plugin-geolocation" }
+tauri = { path = ".patched/tauri" }
+tauri-utils = { path = ".patched/tauri-utils" }
+tauri-runtime = { path = ".patched/tauri-runtime" }
+tauri-runtime-wry = { path = ".patched/tauri-runtime-wry" }

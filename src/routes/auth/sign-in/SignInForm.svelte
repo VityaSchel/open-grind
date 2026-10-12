@@ -217,6 +217,7 @@
 						type="email"
 						placeholder="m@example.com"
 						required
+						autocomplete="username"
 						bind:value={email}
 						disabled={submitting !== false}
 					/>
