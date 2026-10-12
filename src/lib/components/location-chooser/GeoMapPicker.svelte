@@ -12,12 +12,14 @@
 	import { fade } from "svelte/transition";
 	import type {
 		DragEndEvent,
+		LatLngTuple,
 		Map as LeafletMap,
 		Marker as LeafletMarker,
 		LeafletMouseEventHandlerFn,
 	} from "leaflet";
 
 	import Spinner from "$lib/components/ui/spinner/spinner.svelte";
+	import { screenshotsEnabled } from "$lib/demo/config";
 	import { t } from "$lib/i18n";
 	import { locationRequest } from "$lib/location/location-request.svelte";
 	import { openExternalLink } from "$lib/platform/link-opener";
@@ -37,6 +39,8 @@
 	const ACCURACY_VIEWPORT_FACTOR = 4;
 	const MAX_ZOOM = 18;
 	const LOCATE_MIN_ZOOM = 16;
+	const DEFAULT_CENTER: LatLngTuple = [40.42267869390329, -3.697633348267032];
+	const OPEN_OCEAN: LatLngTuple = [10, -35];
 
 	const locating = $derived(locationRequest.pending);
 	const covering = $derived(locked && locating);
@@ -186,7 +190,7 @@
 <div class="relative h-[inherit] w-[inherit]">
 	<Map
 		options={{
-			center: [40.42267869390329, -3.697633348267032],
+			center: screenshotsEnabled ? OPEN_OCEAN : DEFAULT_CENTER,
 			zoom: 2,
 			attributionControl: false,
 			zoomAnimation: !prefersReducedMotion.current,

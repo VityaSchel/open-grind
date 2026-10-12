@@ -23,8 +23,16 @@ import {
 	type Rng,
 	subset,
 } from "$lib/util/random";
-import { DAY, demoMeProfileId, HOUR, MINUTE, NOW } from "../config";
+import {
+	DAY,
+	demoMeProfileId,
+	HOUR,
+	MINUTE,
+	NOW,
+	screenshotsEnabled,
+} from "../config";
 import { registerPhoto } from "./avatars";
+import { neutralText } from "./neutral";
 
 export type DemoSeed = {
 	id: number;
@@ -372,16 +380,26 @@ export const meSeed: DemoSeed = {
 	online: true,
 	favorite: false,
 	unread: 0,
-	instagram: "demo.user",
+	instagram: "demo-user",
 	blockable: true,
 };
 
 const seedCache = new Map<number, DemoSeed>();
 
+function neutralSeed(seed: DemoSeed): DemoSeed {
+	if (!screenshotsEnabled) return seed;
+	const { name, bio } = seed;
+	return {
+		...seed,
+		name: name && neutralText(name),
+		bio: bio && neutralText(bio),
+	};
+}
+
 export function profileSeed(id: number): DemoSeed {
 	const cached = seedCache.get(id);
 	if (cached) return cached;
-	const seed = id === demoMeProfileId ? meSeed : buildSeed(id);
+	const seed = neutralSeed(id === demoMeProfileId ? meSeed : buildSeed(id));
 	seedCache.set(id, seed);
 	return seed;
 }
@@ -422,7 +440,7 @@ function buildSeed(id: number): DemoSeed {
 		favorite: chance({ rng, probability: 0.12 }),
 		unread: 0,
 		instagram: chance({ rng, probability: 0.25 })
-			? `${pick({ rng, items: FIRST_NAMES }).toLowerCase()}_${id % 1000}`
+			? `${pick({ rng, items: FIRST_NAMES }).toLowerCase()}-${id % 1000}`
 			: null,
 		blockable: true,
 	};

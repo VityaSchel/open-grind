@@ -8,6 +8,7 @@ import { albumCoverUrl, demoAlbumContent } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";
 import { isTierGatedFilter, matchesInboxFilters } from "./conversation-filters";
 import { demoFavoriteOf } from "./favorites";
+import { neutralText } from "./neutral";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 type DemoMessage = { fromMe: boolean; reactions?: number } & (
@@ -304,7 +305,7 @@ function buildMessage({
 		default:
 			return {
 				type: "Text",
-				body: { text: message.text },
+				body: { text: neutralText(message.text) },
 				...base,
 				unsent: false,
 			};
