@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Item from "$lib/components/ui/item";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { t } from "$lib/i18n";
 	import { checkForUpdatesNow } from "$lib/updates/update-checks";
 
 	let {
@@ -35,7 +36,7 @@
 		>
 			<Item.Content class="max-cramped:min-w-0">
 				<Item.Title class="inline-block max-w-full min-w-0 truncate">
-					Check for updates
+					{t("updates.settings.checkNow")}
 				</Item.Title>
 			</Item.Content>
 			{#if checking}

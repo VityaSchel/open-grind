@@ -934,6 +934,8 @@ export interface Messages {
 	"updates.addons.recaptcha.upToDate": undefined;
 	"updates.addons.recaptcha.updated": undefined;
 	"updates.addons.recaptcha.updatedVersion": { tag: string };
+	"updates.checks.noAddons": undefined;
+	"updates.checks.noUpdates": undefined;
 	"updates.errors.assetReplaced": undefined;
 	"updates.errors.autoChecksDisabled": undefined;
 	"updates.errors.busy": undefined;
@@ -968,6 +970,14 @@ export interface Messages {
 	"updates.flow.errors.startDownloadFailed": undefined;
 	"updates.flow.errors.stopDownloadFailed": undefined;
 	"updates.flow.finishOtherInstall": undefined;
+	"updates.settings.automaticChecks.addonsTitle": undefined;
+	"updates.settings.automaticChecks.description.addonsOnly": undefined;
+	"updates.settings.automaticChecks.description.addonsOnlyWithReason": { reason: string };
+	"updates.settings.automaticChecks.description.app": undefined;
+	"updates.settings.automaticChecks.description.appAndAddons": undefined;
+	"updates.settings.checkNow": undefined;
+	"updates.settings.errors.loadFailed": undefined;
+	"updates.settings.errors.saveFailed": undefined;
 	"updates.stage.available": undefined;
 	"updates.stage.downloading": undefined;
 	"updates.stage.hints.download": undefined;
@@ -1095,5 +1105,6 @@ export interface RichMessages {
 	"updates.addons.googleOauth.updatedVersion": { tag: "placeholder" };
 	"updates.addons.recaptcha.installedVersion": { tag: "placeholder" };
 	"updates.addons.recaptcha.updatedVersion": { tag: "placeholder" };
+	"updates.settings.automaticChecks.description.addonsOnlyWithReason": { reason: "placeholder" };
 	"updates.toasts.updatedTo": { tag: "placeholder" };
 }

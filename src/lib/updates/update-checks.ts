@@ -1,42 +1,47 @@
+import { t } from "$lib/i18n";
 import { addonFlow } from "./addon.svelte";
 import { ADDON_KEYS, type AddonKey } from "./components";
-import { problemBody, updateErrorText } from "./error-copy";
+import { problemBody, unsupportedText, updateErrorText } from "./error-copy";
 import type { CheckReport } from "./flow";
 import { getInstalledVersion } from "./index";
 import { showNotice, showProblem, showUpToDate } from "./toasts";
+import type { Unsupported } from "./types";
 import { checkForUpdateNow } from "./updates-manager";
 
 export type UpdatesScope = {
 	selfManaged: boolean;
-	unsupportedReason: string | null;
+	unsupportedReason: Unsupported["reason"] | null;
 	addonAvailable: boolean;
 };
 
 type CheckScope = Pick<UpdatesScope, "selfManaged" | "addonAvailable">;
-
-const privacyNote =
-	"No personally identifiable information is sent, no requests are stored or analyzed.";
-const addonCheck =
-	"Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published.";
 
 function describeChecks({
 	selfManaged,
 	unsupportedReason,
 	addonAvailable,
 }: UpdatesScope): string {
+	const reason =
+		unsupportedReason === null
+			? null
+			: unsupportedText({ reason: unsupportedReason });
 	if (selfManaged || !addonAvailable) {
-		const subject = addonAvailable
-			? "Open Grind and its add-ons"
-			: "Open Grind";
 		return (
-			unsupportedReason ??
-			`Periodically request updates for ${subject} from git.opengrind.org. ${privacyNote}`
+			reason ??
+			t(
+				addonAvailable
+					? "updates.settings.automaticChecks.description.appAndAddons"
+					: "updates.settings.automaticChecks.description.app",
+			)
 		);
 	}
-	if (unsupportedReason !== null) {
-		return `${unsupportedReason}. ${addonCheck} ${privacyNote}`;
+	if (reason !== null) {
+		return t(
+			"updates.settings.automaticChecks.description.addonsOnlyWithReason",
+			{ reason },
+		);
 	}
-	return `${addonCheck} Open Grind itself isn't updated from here. ${privacyNote}`;
+	return t("updates.settings.automaticChecks.description.addonsOnly");
 }
 
 export function automaticChecksSetting(scope: UpdatesScope): {
@@ -46,9 +51,11 @@ export function automaticChecksSetting(scope: UpdatesScope): {
 } {
 	const addonsOnly = scope.addonAvailable && !scope.selfManaged;
 	return {
-		title: addonsOnly
-			? "Check add-on updates automatically"
-			: "Check updates automatically",
+		title: t(
+			addonsOnly
+				? "updates.settings.automaticChecks.addonsTitle"
+				: "common.updates.checkAutomatically",
+		),
 		description: describeChecks(scope),
 		blocked: scope.unsupportedReason !== null && !scope.addonAvailable,
 	};
@@ -107,8 +114,8 @@ export async function checkAfterOptIn(scope: CheckScope): Promise<void> {
 export async function checkForUpdatesNow(scope: CheckScope): Promise<void> {
 	const reports = await checkEachComponent({ ...scope, reportFailure: true });
 	if (reports.length === 0) {
-		showNotice("No add-ons installed");
+		showNotice(t("updates.checks.noAddons"));
 	} else if (reports.every((report) => report === "current")) {
-		showUpToDate("No updates available");
+		showUpToDate(t("updates.checks.noUpdates"));
 	}
 }

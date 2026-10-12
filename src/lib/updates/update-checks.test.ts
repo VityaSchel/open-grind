@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
+import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 import { ADDON_KEYS, type AddonKey } from "./components";
+import { unsupportedText } from "./error-copy";
 import type { CheckReport } from "./flow";
 import { addonNames } from "./updates-test-helpers";
 
@@ -118,7 +121,7 @@ describe("the automatic update checks switch", () => {
 		expect(automaticChecksSetting(storeBuild)).toEqual({
 			title: "Check add-on updates automatically",
 			description:
-				"Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn't updated from here. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, no requests are stored or analyzed.",
 			blocked: false,
 		});
 	});
@@ -126,14 +129,13 @@ describe("the automatic update checks switch", () => {
 	it("stays usable for the add-ons when the app cannot update itself", () => {
 		const setting = automaticChecksSetting({
 			...storeBuild,
-			unsupportedReason:
-				"Open Grind can't tell whether it may update itself",
+			unsupportedReason: "undetermined",
 		});
 
 		expect(setting.blocked).toBe(false);
 		expect(setting.title).toBe("Check add-on updates automatically");
-		expect(setting.description).toMatch(
-			/^Open Grind can't tell whether it may update itself\. Periodically ask git\.opengrind\.org whether newer versions of your installed add-ons/,
+		expect(setting.description).toBe(
+			"Open Grind can’t tell whether it may update itself. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, no requests are stored or analyzed.",
 		);
 	});
 
@@ -141,14 +143,52 @@ describe("the automatic update checks switch", () => {
 		expect(
 			automaticChecksSetting({
 				selfManaged: false,
-				unsupportedReason:
-					"Open Grind can't install the update in its directory",
+				unsupportedReason: "locationNotWritable",
 				addonAvailable: false,
 			}),
 		).toEqual({
 			title: "Check updates automatically",
-			description: "Open Grind can't install the update in its directory",
+			description: "Open Grind can’t install the update in its directory",
 			blocked: true,
+		});
+	});
+});
+
+describe("the update checks in another language", () => {
+	afterEach(async () => {
+		await setLocale({ locale: SOURCE_LOCALE });
+	});
+
+	it("words the switch around the whole reason the app cannot update", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		const { title, description } = automaticChecksSetting({
+			...storeBuild,
+			unsupportedReason: "undetermined",
+		});
+
+		expect(title).toMatch(PSEUDO_MESSAGE);
+		expect(description).toMatch(PSEUDO_MESSAGE);
+		expect(description).toContain(
+			unsupportedText({ reason: "undetermined" }),
+		);
+	});
+
+	it("words the check results in that language", async () => {
+		await setLocale({ locale: "en-XA" });
+
+		await checkForUpdatesNow(selfManagedBuild);
+		installed({});
+		await checkForUpdatesNow(storeBuild);
+		installed({ "google-oauth": { rejects: new Error("no plugin") } });
+		await checkForUpdatesNow(storeBuild);
+
+		const words = expect.stringMatching(PSEUDO_MESSAGE);
+		expect(toasts.showUpToDate).toHaveBeenCalledExactlyOnceWith(words);
+		expect(toasts.showNotice).toHaveBeenCalledExactlyOnceWith(words);
+		expect(toasts.showProblem).toHaveBeenCalledExactlyOnceWith({
+			title: words,
+			body: words,
 		});
 	});
 });

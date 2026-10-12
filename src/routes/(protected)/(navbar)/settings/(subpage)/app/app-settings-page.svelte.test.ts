@@ -12,7 +12,11 @@ import {
 } from "vitest";
 
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import { toastsFake, updateApiFake } from "$lib/updates/updates-test-helpers";
+import {
+	installedBy,
+	toastsFake,
+	updateApiFake,
+} from "$lib/updates/updates-test-helpers";
 import type { Capability } from "$lib/updates/types";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
@@ -20,6 +24,7 @@ const FOREIGN_SIGNER = {
 	state: "unsupported",
 	detail: { reason: "foreignSigner" },
 } satisfies Capability;
+const FDROID_BUILD = installedBy("org.fdroid.fdroid");
 
 const fake = updateApiFake();
 const toasts = toastsFake();
@@ -85,13 +90,7 @@ afterEach(() => {
 
 describe("the Updates section of the app settings on Android", () => {
 	it("offers Google OAuth app updates on a store build signed by Open Grind", async () => {
-		const screen = await opened({
-			state: "unsupported",
-			detail: {
-				reason: "externallyManaged",
-				detail: { installer: "org.fdroid.fdroid" },
-			},
-		});
+		const screen = await opened(FDROID_BUILD);
 
 		expect(screen.getByRole("heading", { name: "Updates" })).toBeTruthy();
 		expect(
@@ -106,19 +105,12 @@ describe("the Updates section of the app settings on Android", () => {
 
 	it("shows the saved automatic checks value on the first frame when opened again", async () => {
 		updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: true });
-		const addonUpdates = {
-			state: "unsupported",
-			detail: {
-				reason: "externallyManaged",
-				detail: { installer: "org.fdroid.fdroid" },
-			},
-		} satisfies Capability;
 		const automaticChecks = () =>
 			testing.screen.getByRole("switch", {
 				name: /^Check add-on updates automatically/,
 			});
 
-		await opened(addonUpdates);
+		await opened(FDROID_BUILD);
 		await testing.waitFor(() => {
 			expect(automaticChecks().getAttribute("aria-checked")).toBe("true");
 		});
@@ -141,6 +133,41 @@ describe("the Updates section of the app settings on Android", () => {
 		).toBeNull();
 		expect(screen.queryByText(/updates automatically/)).toBeNull();
 		expect(updateSettings.getUpdateSettings).not.toHaveBeenCalled();
+	}, 60_000);
+});
+
+describe("the Updates rows in another language", () => {
+	it("follow the active locale", async () => {
+		updateSettings.setAutomaticUpdateChecks.mockRejectedValueOnce(
+			new Error("read-only"),
+		);
+		const screen = await opened(FDROID_BUILD);
+		const automaticChecks = screen.getByRole<HTMLButtonElement>("switch", {
+			name: /^Check add-on updates automatically/,
+		});
+		await testing.waitFor(() => {
+			expect(automaticChecks.disabled).toBe(false);
+		});
+		const copy = [
+			screen.getByText("Check add-on updates automatically"),
+			screen.getByText(/^Periodically ask git\.opengrind\.org/),
+			screen.getByRole("button", { name: "Check for updates" }),
+		];
+		const { setLocale } = await import("$lib/i18n");
+		const { showErrorToast } = await import("$lib/api/error-toast");
+
+		await setLocale({ locale: "en-XA" });
+		automaticChecks.click();
+
+		for (const element of copy) {
+			expect(element.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		}
+		await testing.waitFor(() => {
+			expect(showErrorToast).toHaveBeenCalledExactlyOnceWith({
+				label: expect.stringMatching(PSEUDO_MESSAGE),
+				error: new Error("read-only"),
+			});
+		});
 	}, 60_000);
 });
 

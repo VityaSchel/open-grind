@@ -189,5 +189,25 @@
 			"stopDownloadFailed": "Couldn’t stop the download",
 			"downloadFailed": "Couldn’t download the update"
 		}
+	},
+	"checks": {
+		"noUpdates": "No updates available",
+		"noAddons": "No add-ons installed"
+	},
+	"settings": {
+		"checkNow": "Check for updates",
+		"automaticChecks": {
+			"addonsTitle": "Check add-on updates automatically",
+			"description": {
+				"app": "Periodically request updates for Open Grind from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"appAndAddons": "Periodically request updates for Open Grind and its add-ons from git.opengrind.org. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"addonsOnly": "Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. Open Grind itself isn’t updated from here. No personally identifiable information is sent, no requests are stored or analyzed.",
+				"addonsOnlyWithReason": "{{reason}}. Periodically ask git.opengrind.org whether newer versions of your installed add-ons are published. No personally identifiable information is sent, no requests are stored or analyzed."
+			}
+		},
+		"errors": {
+			"loadFailed": "Couldn’t load update settings",
+			"saveFailed": "Couldn’t save update settings"
+		}
 	}
 }
