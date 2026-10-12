@@ -843,6 +843,7 @@ export interface Messages {
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;
 	"updates.addons.fcm.errors.busy": undefined;
+	"updates.addons.fcm.errors.downloadFailed": undefined;
 	"updates.addons.fcm.errors.externallyManaged": undefined;
 	"updates.addons.fcm.errors.foreignSigner": undefined;
 	"updates.addons.fcm.errors.foreignTarget": undefined;
@@ -874,6 +875,7 @@ export interface Messages {
 	"updates.addons.fcm.updated": undefined;
 	"updates.addons.fcm.updatedVersion": { tag: string };
 	"updates.addons.googleOauth.errors.busy": undefined;
+	"updates.addons.googleOauth.errors.downloadFailed": undefined;
 	"updates.addons.googleOauth.errors.externallyManaged": undefined;
 	"updates.addons.googleOauth.errors.foreignSigner": undefined;
 	"updates.addons.googleOauth.errors.foreignTarget": undefined;
@@ -905,6 +907,7 @@ export interface Messages {
 	"updates.addons.googleOauth.updated": undefined;
 	"updates.addons.googleOauth.updatedVersion": { tag: string };
 	"updates.addons.recaptcha.errors.busy": undefined;
+	"updates.addons.recaptcha.errors.downloadFailed": undefined;
 	"updates.addons.recaptcha.errors.externallyManaged": undefined;
 	"updates.addons.recaptcha.errors.foreignSigner": undefined;
 	"updates.addons.recaptcha.errors.foreignTarget": undefined;

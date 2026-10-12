@@ -171,6 +171,16 @@ export function noReleaseText({
 	);
 }
 
+export function downloadFailedKey({
+	component,
+}: {
+	component: ComponentKey;
+}): PlainMessageKey {
+	return component === APP_COMPONENT
+		? "updates.flow.errors.downloadFailed"
+		: ADDON_MESSAGES[component].errors.downloadFailed;
+}
+
 export function updateErrorText(
 	error: unknown,
 	{

@@ -11,6 +11,7 @@ import {
 	RECAPTCHA_COMPONENT,
 } from "./components";
 import {
+	downloadFailedKey,
 	installFailedText,
 	noReleaseText,
 	problemBody,
@@ -231,6 +232,28 @@ describe("copy for a release replaced after its one automatic retry", () => {
 	});
 });
 
+describe("copy for a download that fails for no known reason", () => {
+	it.each([
+		[APP_COMPONENT, "Couldn’t download the update"],
+		[
+			GOOGLE_OAUTH_COMPONENT,
+			"Couldn’t download the Open Grind Google OAuth app",
+		],
+		[
+			RECAPTCHA_COMPONENT,
+			"Couldn’t download the Open Grind reCAPTCHA helper",
+		],
+		[FCM_COMPONENT, "Couldn’t download the Open Grind FCM service"],
+	] as const)("names what the %s flow was downloading", (component, text) => {
+		expect(
+			updateErrorText(new Error("no plugin"), {
+				fallback: downloadFailedKey({ component }),
+				component,
+			}),
+		).toBe(text);
+	});
+});
+
 describe("copy for the app's own update errors", () => {
 	it.each([
 		[{ kind: "unsigned" }, "Couldn’t verify the update"],
@@ -321,6 +344,10 @@ describe("the subject line under a problem", () => {
 			"a failed verification",
 			() =>
 				updateErrorText({ kind: "signature" }, { fallback, component }),
+		],
+		[
+			"an unexplained download failure",
+			() => t(downloadFailedKey({ component })),
 		],
 		["no published release", () => noReleaseText({ component })],
 		[

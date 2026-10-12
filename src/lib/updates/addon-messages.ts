@@ -16,6 +16,7 @@ export type AddonErrorName =
 	| "foreignTarget"
 	| "noReleaseArtifacts"
 	| "undetermined"
+	| "downloadFailed"
 	| "verifyFailed"
 	| "saveDownloadFailed"
 	| "installFailed"
@@ -74,6 +75,7 @@ export const ADDON_MESSAGES = {
 			noReleaseArtifacts:
 				"updates.addons.googleOauth.errors.noReleaseArtifacts",
 			undetermined: "updates.addons.googleOauth.errors.undetermined",
+			downloadFailed: "updates.addons.googleOauth.errors.downloadFailed",
 			verifyFailed: "updates.addons.googleOauth.errors.verifyFailed",
 			saveDownloadFailed:
 				"updates.addons.googleOauth.errors.saveDownloadFailed",
@@ -121,6 +123,7 @@ export const ADDON_MESSAGES = {
 			noReleaseArtifacts:
 				"updates.addons.recaptcha.errors.noReleaseArtifacts",
 			undetermined: "updates.addons.recaptcha.errors.undetermined",
+			downloadFailed: "updates.addons.recaptcha.errors.downloadFailed",
 			verifyFailed: "updates.addons.recaptcha.errors.verifyFailed",
 			saveDownloadFailed:
 				"updates.addons.recaptcha.errors.saveDownloadFailed",
@@ -164,6 +167,7 @@ export const ADDON_MESSAGES = {
 			foreignTarget: "updates.addons.fcm.errors.foreignTarget",
 			noReleaseArtifacts: "updates.addons.fcm.errors.noReleaseArtifacts",
 			undetermined: "updates.addons.fcm.errors.undetermined",
+			downloadFailed: "updates.addons.fcm.errors.downloadFailed",
 			verifyFailed: "updates.addons.fcm.errors.verifyFailed",
 			saveDownloadFailed: "updates.addons.fcm.errors.saveDownloadFailed",
 			installFailed: "updates.addons.fcm.errors.installFailed",

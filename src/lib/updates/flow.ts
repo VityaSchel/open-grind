@@ -6,6 +6,7 @@ import {
 	type ComponentKey,
 } from "./components";
 import {
+	downloadFailedKey,
 	installFailedText,
 	noReleaseText,
 	unsupportedText,
@@ -624,7 +625,7 @@ export class UpdateFlow {
 		this.#hide();
 		this.#problem({
 			error,
-			fallback: "updates.flow.errors.downloadFailed",
+			fallback: downloadFailedKey({ component: this.component }),
 		});
 
 		if (known?.kind !== "server") return;
