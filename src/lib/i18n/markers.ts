@@ -19,6 +19,7 @@ export interface MarkerSpan {
 
 export interface MarkedRun {
 	text: string;
+	offset: number;
 	spans: readonly MarkerSpan[];
 }
 
@@ -61,21 +62,27 @@ export class MarkerReader {
 
 	read(chunk: string): MarkedRun[] {
 		const runs: MarkedRun[] = [];
-		const appendText = (text: string) => {
+		const appendText = (offset: number, until?: number) => {
+			const text = chunk.slice(offset, until);
 			if (text === "") return;
 			for (const span of this.#open) span.text += text;
-			runs.push({ text, spans: [...this.#open] });
+			runs.push({ text, offset, spans: [...this.#open] });
 		};
 		let end = 0;
 		for (const match of chunk.matchAll(MARKER)) {
-			appendText(chunk.slice(end, match.index));
+			appendText(end, match.index);
 			end = match.index + match[0].length;
 			const [, tags] = match;
 			if (tags === "") this.#close();
 			else if (tags !== undefined) this.#openSpan(decodeKey(tags));
 		}
-		appendText(chunk.slice(end));
+		appendText(end);
 		return runs;
+	}
+
+	unwind(stillOpen: (span: MarkerSpan) => boolean): void {
+		const ended = this.#open.findIndex((span) => !stillOpen(span));
+		if (ended !== -1) this.#open.length = ended;
 	}
 
 	#openSpan(key: string): void {

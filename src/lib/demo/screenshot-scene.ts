@@ -1,3 +1,5 @@
+import type { ViewScan } from "./screenshot-scan";
+
 export const demoLists = [
 	"albums",
 	"blocks",
@@ -34,35 +36,40 @@ export type ScreenshotScene = {
 	methodFaults: MethodFault[];
 };
 
-type UpdateToastPresenter = {
-	show(stage: {
-		view: { stage: string; received: number; total: number };
-		kind: string;
-		onActivate(): void;
-		onCancel(): void;
-		onDismiss(): void;
-	}): void;
-	dismiss(): void;
-	problem(title: string): void;
-	manualInstall(body: string): void;
-	installed(install: { tag: string | null; kind: string }): void;
-	upToDate(): void;
+type UpdateStageToast = {
+	view: {
+		stage:
+			| "available"
+			| "downloading"
+			| "verifying"
+			| "paused"
+			| "ready"
+			| "installing";
+		received: number;
+		total: number;
+	};
+	kind: "install" | "update";
+	onActivate: () => void;
+	onCancel: () => void;
+	onDismiss: () => void;
+};
+
+type UpdateToasts = {
+	show: (stage: UpdateStageToast) => void;
+	upToDate: () => void;
 };
 
 export type ScreenshotHooks = {
-	scene: ScreenshotScene;
-	setLocale(options: { locale: string }): Promise<void>;
-	goto(path: string): Promise<void>;
-	showErrorToast(options: {
+	setLocale: (options: { locale: string }) => Promise<void>;
+	showErrorToast: (options: {
 		label?: string;
 		error: unknown;
 		onRetry?: () => void;
-	}): void;
-	updateToasts(component: string): UpdateToastPresenter;
-	updateErrorText(
-		error: unknown,
-		options: { fallback: string; component?: string; kind?: string },
-	): string;
+	}) => void;
+	updateToasts: (
+		component: "app" | "google-oauth" | "recaptcha" | "fcm",
+	) => UpdateToasts;
+	scan: () => ViewScan;
 };
 
 declare global {

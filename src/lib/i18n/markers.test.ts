@@ -127,6 +127,49 @@ describe("MarkerReader", () => {
 		]);
 	});
 
+	it("gives each run its offset in the text it was read from", () => {
+		const reader = new MarkerReader();
+		const chunk = `(${marked(OUTER_KEY, `Tap “${marked(INNER_KEY, "Sign in")}”.`)})`;
+		const runs = reader.read(chunk);
+		expect(runs.map(({ text }) => text)).toEqual([
+			"(",
+			"Tap “",
+			"Sign in",
+			"”.",
+			")",
+		]);
+		for (const { text, offset } of runs) {
+			expect(chunk.slice(offset, offset + text.length)).toBe(text);
+		}
+	});
+
+	it("leaves the messages it unwinds unclosed and out of later text", () => {
+		const reader = new MarkerReader();
+		reader.read(marked("a.outer", "Outer").slice(0, -4));
+		reader.read(marked("a.inner", "Inner").slice(0, -4));
+		reader.unwind(({ key }) => key !== "a.inner");
+		const [run] = reader.read(" tail");
+		expect(run?.spans.map(({ key }) => key)).toEqual(["a.outer"]);
+		reader.unwind(() => false);
+		expect(reader.read("more")[0]?.spans).toEqual([]);
+		expect(reader.spans).toEqual([
+			{ key: "a.outer", text: "OuterInner tail", closed: false },
+			{ key: "a.inner", text: "Inner", closed: false },
+		]);
+	});
+
+	it("unwinds every message opened after the first one that ended", () => {
+		const reader = new MarkerReader();
+		reader.read(marked("a.outer", "Outer").slice(0, -4));
+		reader.read(marked("a.inner", "Inner").slice(0, -4));
+		reader.unwind(({ key }) => key !== "a.outer");
+		expect(reader.read("rest")[0]?.spans).toEqual([]);
+		expect(reader.spans.map(({ text }) => text)).toEqual([
+			"OuterInner",
+			"Inner",
+		]);
+	});
+
 	it("keeps an unclosed message open for the text read after it", () => {
 		const reader = new MarkerReader();
 		reader.read(marked("a.first", "One").slice(0, -4));

@@ -8,28 +8,31 @@ import {
 	vi,
 } from "vitest";
 
-const { goto, toast } = vi.hoisted(() => ({
-	goto: vi.fn(),
-	toast: { error: vi.fn(), custom: vi.fn(), dismiss: vi.fn() },
-}));
+const { toast, hookedAtStartup, noteHooked } = vi.hoisted(() => {
+	const hooked: string[] = [];
+	return {
+		toast: { error: vi.fn(), custom: vi.fn(), dismiss: vi.fn() },
+		hookedAtStartup: hooked,
+		noteHooked: (step: string) => {
+			if (window.__openGrindScreenshots !== undefined) hooked.push(step);
+		},
+	};
+});
 
-vi.mock("$app/navigation", () => ({ goto }));
 vi.mock("svelte-sonner", () => ({ toast }));
-vi.mock("$lib/ws.svelte", () => ({ ws: { connect: vi.fn() } }));
+vi.mock("$lib/ws.svelte", () => ({
+	ws: { connect: vi.fn(() => noteHooked("ws.connect")) },
+}));
 vi.mock("$lib/platform/regional-settings", () => ({
-	startRegionalSettings: vi.fn(() => Promise.resolve()),
+	startRegionalSettings: vi.fn(() => {
+		noteHooked("startRegionalSettings");
+		return Promise.resolve();
+	}),
 }));
 
 import type { ScreenshotHooks } from "./screenshot-scene";
 
-const HOOK_NAMES = [
-	"goto",
-	"scene",
-	"setLocale",
-	"showErrorToast",
-	"updateErrorText",
-	"updateToasts",
-];
+const HOOK_NAMES = ["scan", "setLocale", "showErrorToast", "updateToasts"];
 const FRESH_IMPORTS = { timeout: 60_000 };
 
 async function startApp(): Promise<ScreenshotHooks | undefined> {
@@ -51,6 +54,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	hookedAtStartup.length = 0;
 });
 
 afterEach(() => {
@@ -83,6 +87,10 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 	it("installs the hooks before the app starts", async () => {
 		const hooks = await startHookedApp();
 		expect(Object.keys(hooks).sort()).toEqual(HOOK_NAMES);
+		expect(hookedAtStartup).toEqual([
+			"ws.connect",
+			"startRegionalSettings",
+		]);
 	});
 
 	it("starts from the scene the page seeded and shares it", async () => {
@@ -90,10 +98,9 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			signedOut: true,
 			emptyLists: ["taps"],
 		};
-		const hooks = await startHookedApp();
+		await startHookedApp();
 		const { screenshotScene } = await import("./screenshot-scene");
-		expect(hooks.scene).toBe(screenshotScene);
-		expect(hooks.scene).toEqual({
+		expect(screenshotScene).toEqual({
 			signedOut: true,
 			onboarding: false,
 			updates: false,
@@ -112,12 +119,6 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 		expect(document.documentElement.lang).toBe("en-XM");
 		await hooks.setLocale({ locale: "en" });
 		expect(getLocale()).toBe("en");
-	});
-
-	it("navigates inside the app", async () => {
-		const hooks = await startHookedApp();
-		await hooks.goto("/auth/sign-in");
-		expect(goto).toHaveBeenCalledWith("/auth/sign-in");
 	});
 
 	it("shows the error toast with retry and copy actions", async () => {
@@ -174,21 +175,5 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 				}),
 			],
 		]);
-	});
-
-	it("words update errors as the update flow does", async () => {
-		const hooks = await startHookedApp();
-		const { t } = await import("$lib/i18n");
-		expect(
-			hooks.updateErrorText(
-				{ kind: "storage" },
-				{ fallback: "updates.flow.errors.downloadFailed" },
-			),
-		).toBe(t("updates.errors.writeFailed"));
-		expect(
-			hooks.updateErrorText(new Error("unknown"), {
-				fallback: "updates.flow.errors.downloadFailed",
-			}),
-		).toBe(t("updates.flow.errors.downloadFailed"));
 	});
 });
