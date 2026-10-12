@@ -72,6 +72,9 @@
 				"installerHooks": "installer-hooks.nsh"
 			}
 		},
+		"macOS": {
+			"minimumSystemVersion": "11.6"
+		},
 		"android": {
 			"autoIncrementVersionCode": false,
 			"minSdkVersion": 28,
