@@ -89,7 +89,7 @@
 				applyViewabilityChange({
 					change: markHidden,
 					request: () => hideUser({ profileId }),
-					failureLabel: t("profile.viewability.errors.hideFailed"),
+					failureLabel: t("common.viewability.errors.hideFailed"),
 				})}
 		>
 			<EyeSlashIcon class="size-5" />

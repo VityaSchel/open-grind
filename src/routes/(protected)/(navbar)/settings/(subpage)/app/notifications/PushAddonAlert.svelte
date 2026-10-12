@@ -34,7 +34,7 @@
 			<AlertDialog.Description class="text-wrap">
 				{t("settings.notifications.addon.description")}
 				{#if installedFromFdroid()}
-					{t("auth.signIn.google.install.fdroidNotice")}
+					{t("common.addons.fdroidNotice")}
 				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>

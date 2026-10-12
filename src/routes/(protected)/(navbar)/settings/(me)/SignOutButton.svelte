@@ -46,7 +46,7 @@
 				<Item.Title
 					class="inline-block w-full min-w-0 truncate text-left"
 				>
-					{t("feedback.actions.signOut")}
+					{t("common.actions.signOut")}
 				</Item.Title>
 			</Item.Content>
 			<Item.Actions>

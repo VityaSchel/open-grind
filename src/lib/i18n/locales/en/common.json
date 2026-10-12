@@ -7,7 +7,8 @@
 		"retry": "Try again",
 		"copyError": "Copy error details",
 		"learnMore": "Learn more",
-		"save": "Save"
+		"save": "Save",
+		"signOut": "Sign out"
 	},
 	"time": {
 		"justNow": "Just now",
@@ -132,5 +133,16 @@
 	},
 	"chat": {
 		"writeMessage": "Write a message…"
+	},
+	"addons": {
+		"fdroidNotice": "By installing it, you choose to bypass F-Droid’s checks."
+	},
+	"viewability": {
+		"errors": {
+			"blockFailed": "Couldn’t block",
+			"unblockFailed": "Couldn’t unblock",
+			"hideFailed": "Couldn’t hide",
+			"unhideFailed": "Couldn’t unhide"
+		}
 	}
 }

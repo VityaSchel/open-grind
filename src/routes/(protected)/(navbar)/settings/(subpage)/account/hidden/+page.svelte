@@ -31,8 +31,8 @@
 	{scroll}
 	label={t("settings.hidden.a11y.toggle")}
 	errorLabel={{
-		turningOn: t("profile.viewability.errors.hideFailed"),
-		turningOff: t("profile.viewability.errors.unhideFailed"),
+		turningOn: t("common.viewability.errors.hideFailed"),
+		turningOff: t("common.viewability.errors.unhideFailed"),
 	}}
 	empty={{
 		title: t("settings.hidden.empty.title"),

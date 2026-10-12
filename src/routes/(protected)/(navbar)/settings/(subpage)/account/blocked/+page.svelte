@@ -31,8 +31,8 @@
 	{scroll}
 	label={t("settings.blocked.a11y.toggle")}
 	errorLabel={{
-		turningOn: t("profile.viewability.errors.blockFailed"),
-		turningOff: t("profile.viewability.errors.unblockFailed"),
+		turningOn: t("common.viewability.errors.blockFailed"),
+		turningOff: t("common.viewability.errors.unblockFailed"),
 	}}
 	empty={{
 		title: t("settings.blocked.empty.title"),

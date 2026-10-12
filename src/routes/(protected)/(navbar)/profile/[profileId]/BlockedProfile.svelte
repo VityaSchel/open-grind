@@ -44,7 +44,7 @@
 							change: markViewable,
 							request: () => unblockUser({ profileId }),
 							failureLabel: t(
-								"profile.viewability.errors.unblockFailed",
+								"common.viewability.errors.unblockFailed",
 							),
 						})}>{t("profile.blocked.unblock")}</Button
 				>

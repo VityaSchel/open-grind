@@ -1,7 +1,4 @@
 {
-	"actions": {
-		"signOut": "Sign out"
-	},
 	"errorCopy": {
 		"copied": "Copied to clipboard",
 		"errors": {

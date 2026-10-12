@@ -19,7 +19,7 @@ export function showBlockFailure(error: unknown): void {
 		return;
 	}
 	showErrorToast({
-		label: t("profile.viewability.errors.blockFailed"),
+		label: t("common.viewability.errors.blockFailed"),
 		error,
 	});
 }

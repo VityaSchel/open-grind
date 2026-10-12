@@ -235,7 +235,7 @@
 					{#if running === "signOut"}
 						<Spinner aria-hidden="true" />
 					{/if}
-					{t("feedback.actions.signOut")}
+					{t("common.actions.signOut")}
 				</Button>
 				<Button onclick={tryAgain} aria-busy={running === "tryAgain"}>
 					{#if running === "tryAgain"}

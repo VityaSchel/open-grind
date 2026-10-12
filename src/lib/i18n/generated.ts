@@ -30,7 +30,6 @@ export interface Messages {
 	"auth.signIn.facebook.errors.unverified": undefined;
 	"auth.signIn.forgotPassword": undefined;
 	"auth.signIn.google.goBack": undefined;
-	"auth.signIn.google.install.fdroidNotice": undefined;
 	"auth.signIn.google.installButton.downloading": undefined;
 	"auth.signIn.google.installButton.install": undefined;
 	"auth.signIn.google.installButton.installing": undefined;
@@ -265,6 +264,8 @@ export interface Messages {
 	"common.actions.learnMore": undefined;
 	"common.actions.retry": undefined;
 	"common.actions.save": undefined;
+	"common.actions.signOut": undefined;
+	"common.addons.fdroidNotice": undefined;
 	"common.albumShare.errors.shareFailed": undefined;
 	"common.albumShare.errors.unshareFailed": undefined;
 	"common.carousel.a11y.carouselRole": undefined;
@@ -319,6 +320,10 @@ export interface Messages {
 	"common.unimplemented.title": undefined;
 	"common.units.feetInches": { feet: string; inches: string };
 	"common.updates.checkAutomatically": undefined;
+	"common.viewability.errors.blockFailed": undefined;
+	"common.viewability.errors.hideFailed": undefined;
+	"common.viewability.errors.unblockFailed": undefined;
+	"common.viewability.errors.unhideFailed": undefined;
 	"feedback.accountStatus.ageVerification.description": undefined;
 	"feedback.accountStatus.ageVerification.title": undefined;
 	"feedback.accountStatus.banned.copyDetails": undefined;
@@ -327,7 +332,6 @@ export interface Messages {
 	"feedback.accountStatus.banned.title": undefined;
 	"feedback.accountStatus.restricted.description": undefined;
 	"feedback.accountStatus.restricted.title": undefined;
-	"feedback.actions.signOut": undefined;
 	"feedback.apiError.connect": undefined;
 	"feedback.apiError.http": undefined;
 	"feedback.apiError.networkBlocked": undefined;
@@ -632,11 +636,7 @@ export interface Messages {
 	"profile.vaccine.covid19": undefined;
 	"profile.vaccine.meningitis": undefined;
 	"profile.vaccine.monkeypox": undefined;
-	"profile.viewability.errors.blockFailed": undefined;
 	"profile.viewability.errors.blockIgnored": undefined;
-	"profile.viewability.errors.hideFailed": undefined;
-	"profile.viewability.errors.unblockFailed": undefined;
-	"profile.viewability.errors.unhideFailed": undefined;
 	"profile.visit.errors.recordFailed": undefined;
 	"settings.account.deleteAccount": undefined;
 	"settings.account.email": undefined;

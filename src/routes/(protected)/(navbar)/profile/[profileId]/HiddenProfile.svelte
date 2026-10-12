@@ -36,7 +36,7 @@
 						change: markViewable,
 						request: () => unhideUser({ profileId }),
 						failureLabel: t(
-							"profile.viewability.errors.unhideFailed",
+							"common.viewability.errors.unhideFailed",
 						),
 					})}>{t("profile.hidden.unhide")}</Button
 			>

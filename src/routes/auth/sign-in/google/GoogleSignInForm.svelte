@@ -211,9 +211,7 @@
 							/>
 							{#if installedFromFdroid()}
 								<span class="mt-2 block">
-									{t(
-										"auth.signIn.google.install.fdroidNotice",
-									)}
+									{t("common.addons.fdroidNotice")}
 								</span>
 							{/if}
 						{:else if view === "continue"}

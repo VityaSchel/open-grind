@@ -118,7 +118,7 @@
 					{#if signingOut}
 						<Spinner aria-hidden="true" />
 					{/if}
-					{t("feedback.actions.signOut")}
+					{t("common.actions.signOut")}
 				</Button>
 			</fieldset>
 		</AlertDialog.Footer>
