@@ -1,5 +1,6 @@
 import type { ClientInit, HandleClientError } from "@sveltejs/kit";
 
+import { screenshotsEnabled } from "$lib/demo/config";
 import { locales, setLocale } from "$lib/i18n";
 import { startRegionalSettings } from "$lib/platform/regional-settings";
 import { ws } from "$lib/ws.svelte";
@@ -14,7 +15,7 @@ async function applyLocaleParam(): Promise<void> {
 export const init: ClientInit = async () => {
 	ws.connect();
 	await startRegionalSettings();
-	if (import.meta.env.DEV) await applyLocaleParam();
+	if (import.meta.env.DEV || screenshotsEnabled) await applyLocaleParam();
 };
 
 export const handleError: HandleClientError = ({ error, event, message }) => {

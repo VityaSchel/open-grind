@@ -52,3 +52,7 @@ A new meaning, tag or placeholder needs a new key. To rename a key, lock the Web
 ## Finding raw English
 
 In dev builds, `?locale=en-XA` shows every translated string accented and padded, and `?locale=ar-XB` shows it right to left, so raw English stands out. `e2e/i18n-pseudo.spec.ts`, `e2e/i18n-pseudo-settings.spec.ts` and `e2e/i18n-pseudo-updates.spec.ts` fail when raw English shows on the pages they visit or in the toasts they show.
+
+## Marking keys
+
+`?locale=en-XM` shows English with each message wrapped in invisible markers: tag characters that spell its key, or the base key of a plural form. Formatted numbers and dates carry no markers. `markers.ts` writes and reads them, so a tool can tell which keys a screen shows. The text looks as it does in English, except that text with letter spacing moves by one letter space per marker, and `e2e/i18n-markers.spec.ts` fails when a marker shows. Builds made with `OPEN_GRIND_SCREENSHOTS=1` accept `?locale=` and the pseudo-locales, as dev builds do.

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { locales, richParts, setLocale, SOURCE_LOCALE, t } from "./index";
+import { decodeMarkers, MarkerReader, stripMarkers } from "./markers";
 import { pseudoDictionary } from "./pseudo";
 import { MARKUP } from "./syntax";
 
@@ -69,18 +70,118 @@ describe("ar-XB", () => {
 	});
 });
 
+describe("en-XM", () => {
+	const dictionary = pseudoDictionary({ locale: "en-XM", source });
+
+	it("wraps each message in markers naming its key and changes nothing else", () => {
+		for (const key of ["sample.close", "sample.shared"]) {
+			const marked = dictionary.get(key) ?? "";
+			expect(decodeMarkers(marked)).toEqual([
+				{ key, text: stripMarkers(marked), closed: true },
+			]);
+			expect(stripMarkers(marked)).toBe(source.get(key));
+		}
+	});
+
+	it("names the base key in every plural form", () => {
+		expect(
+			[...dictionary]
+				.filter(([key]) => key.startsWith("sample.photos"))
+				.map(([key, marked]) => [key, decodeMarkers(marked)[0]?.key]),
+		).toEqual([
+			["sample.photos_one", "sample.photos"],
+			["sample.photos_other", "sample.photos"],
+		]);
+	});
+});
+
 describe("pseudo-locales at runtime", () => {
 	it("are listed in dev builds only", async () => {
-		expect(locales).toEqual(expect.arrayContaining(["en-XA", "ar-XB"]));
+		expect(locales).toEqual(
+			expect.arrayContaining(["en-XA", "ar-XB", "en-XM"]),
+		);
 
 		vi.stubEnv("DEV", false);
 		vi.resetModules();
 		const production = await import("./locale-state.svelte");
-		expect(production.locales).not.toContain("en-XA");
-		expect(production.locales).not.toContain("ar-XB");
-		await expect(production.setLocale({ locale: "en-XA" })).rejects.toThrow(
-			RangeError,
+		for (const locale of ["en-XA", "ar-XB", "en-XM"]) {
+			expect(production.locales).not.toContain(locale);
+			await expect(production.setLocale({ locale })).rejects.toThrow(
+				RangeError,
+			);
+		}
+	});
+
+	it("stay out of builds that set the screenshot flag without the demo", async () => {
+		vi.stubEnv("DEV", false);
+		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.resetModules();
+		const production = await import("./index");
+		expect(production.locales).not.toContain("en-XM");
+	});
+
+	it("are listed in screenshot builds", async () => {
+		vi.stubEnv("DEV", false);
+		vi.stubEnv("OPEN_GRIND_DEMO", "1");
+		vi.stubEnv("OPEN_GRIND_SCREENSHOTS", "1");
+		vi.resetModules();
+		const screenshots = await import("./index");
+		expect(screenshots.locales).toEqual(
+			expect.arrayContaining(["en-XA", "ar-XB", "en-XM"]),
 		);
+		await screenshots.setLocale({ locale: "en-XM" });
+		expect(decodeMarkers(screenshots.t("common.actions.close"))).toEqual([
+			{ key: "common.actions.close", text: "Close", closed: true },
+		]);
+	});
+
+	it("renders en-XM as English inside invisible markers", async () => {
+		const english = {
+			minutes: t("common.time.minutes", { count: 2 }),
+			submit: t("auth.signIn.google.paste.steps.submit", {
+				button: t("auth.signIn.submit"),
+			}),
+			button: t("auth.signIn.submit"),
+		};
+		await setLocale({ locale: "en-XM" });
+		expect(document.documentElement.lang).toBe("en-XM");
+		expect(document.documentElement.dir).toBe("ltr");
+		expect(decodeMarkers(t("common.time.minutes", { count: 2 }))).toEqual([
+			{ key: "common.time.minutes", text: english.minutes, closed: true },
+		]);
+		expect(
+			decodeMarkers(
+				t("auth.signIn.google.paste.steps.submit", {
+					button: t("auth.signIn.submit"),
+				}),
+			),
+		).toEqual([
+			{
+				key: "auth.signIn.google.paste.steps.submit",
+				text: english.submit,
+				closed: true,
+			},
+			{ key: "auth.signIn.submit", text: english.button, closed: true },
+		]);
+	});
+
+	it("keeps a rich message's markers around its tags", async () => {
+		const key = "feedback.requestBlocked.cloudflare.knownIssue";
+		const english = richParts(key);
+		await setLocale({ locale: "en-XM" });
+		const parts = richParts(key);
+		expect(
+			parts.map(({ kind, text }) => ({ kind, text: stripMarkers(text) })),
+		).toEqual(english.map(({ kind, text }) => ({ kind, text })));
+		const reader = new MarkerReader();
+		for (const { text } of parts) reader.read(text);
+		expect(reader.spans).toEqual([
+			{
+				key,
+				text: english.map(({ text }) => text).join(""),
+				closed: true,
+			},
+		]);
 	});
 
 	it("renders en-XA left to right with English plural rules", async () => {

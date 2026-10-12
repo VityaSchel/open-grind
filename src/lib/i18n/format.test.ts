@@ -506,6 +506,20 @@ describe("pseudo-locales", () => {
 		expect(formatClockTime(new Date(2026, 8, 9, 9, 5))).toBe("⟦9:05 AM⟧");
 		expect(formatList(["⟦Ţöþ⟧", "⟦Ɓöţţöɱ⟧"])).toBe("⟦Ţöþ⟧, ⟦Ɓöţţöɱ⟧");
 	});
+
+	it("leaves numbers and dates as English formats them under en-XM", async () => {
+		const date = new Date(2026, 8, 9, 9, 5);
+		const formatAll = () => [
+			formatNumber({ value: 1200, preset: "distanceMeters" }),
+			formatInteger(12_000),
+			formatDate({ date, preset: "weekdayMonthDay" }),
+			formatClockTime(date),
+			formatRelativeTime({ date, baseDate: date.getTime() + 5 * MINUTE }),
+		];
+		const english = formatAll();
+		await setLocale({ locale: "en-XM" });
+		expect(formatAll()).toEqual(english);
+	});
 });
 
 describe("isolate", () => {

@@ -6,7 +6,12 @@ import {
 	translationFiles,
 } from "./catalog-files";
 import { type CountFormatter, defaultCountFormatter } from "./counts";
-import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
+import {
+	isPseudoLocale,
+	PSEUDO_LOCALES,
+	pseudoDictionary,
+	pseudoLocalesEnabled,
+} from "./pseudo";
 import {
 	composeFormatLocales,
 	type FormatLocales,
@@ -94,7 +99,7 @@ function toCatalog({
 }
 
 async function loadCatalog(locale: string): Promise<Catalog> {
-	if (import.meta.env.DEV && isPseudoLocale(locale)) {
+	if (pseudoLocalesEnabled && isPseudoLocale(locale)) {
 		const source = state.source.dictionary;
 		return { locale, dictionary: pseudoDictionary({ locale, source }) };
 	}
@@ -154,7 +159,7 @@ export const locales: readonly string[] = [
 	...Object.keys(translationFiles).map(
 		(path) => parseLocalePath(path).locale,
 	),
-	...(import.meta.env.DEV ? PSEUDO_LOCALES : []),
+	...(pseudoLocalesEnabled ? PSEUDO_LOCALES : []),
 ]
 	.filter((locale, index, all) => all.indexOf(locale) === index)
 	.sort();

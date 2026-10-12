@@ -1,3 +1,5 @@
+import { screenshotsEnabled } from "$lib/demo/config";
+import { markMessage } from "./markers";
 import { MARKUP, PLURAL_KEY } from "./syntax";
 
 const ASCII_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -28,40 +30,60 @@ function overrideRightToLeft(message: string): string {
 	return `\u202E${message}\u202C`;
 }
 
-const transforms = {
-	"en-XA": { message: expand, formatted: bracket },
-	"ar-XB": { message: overrideRightToLeft, formatted: (text) => text },
-} satisfies Record<
-	string,
-	Record<"message" | "formatted", (text: string) => string>
->;
+interface PseudoTransform {
+	message: (source: { key: string; message: string }) => string;
+	formatted: (text: string) => string;
+}
 
-export type PseudoLocale = keyof typeof transforms;
+const unchanged = (text: string): string => text;
 
-export const PSEUDO_LOCALES = Object.keys(transforms);
+export const pseudoLocalesEnabled = import.meta.env.DEV || screenshotsEnabled;
 
-export function isPseudoLocale(locale: string): locale is PseudoLocale {
-	return Object.hasOwn(transforms, locale);
+const transforms = new Map<string, PseudoTransform>([
+	[
+		"en-XA",
+		{ message: ({ message }) => expand(message), formatted: bracket },
+	],
+	[
+		"ar-XB",
+		{
+			message: ({ message }) => overrideRightToLeft(message),
+			formatted: unchanged,
+		},
+	],
+	...(pseudoLocalesEnabled
+		? [["en-XM", { message: markMessage, formatted: unchanged }] as const]
+		: []),
+]);
+
+export const PSEUDO_LOCALES = [...transforms.keys()];
+
+export function isPseudoLocale(locale: string): boolean {
+	return transforms.has(locale);
 }
 
 export function pseudoDictionary({
 	locale,
 	source,
 }: {
-	locale: PseudoLocale;
+	locale: string;
 	source: ReadonlyMap<string, string>;
 }): Map<string, string> {
-	const transform = transforms[locale].message;
+	const transform = transforms.get(locale)?.message;
+	if (transform === undefined) {
+		throw new RangeError(`"${locale}" is not a pseudo-locale`);
+	}
 	const { pluralCategories } = new Intl.PluralRules(locale).resolvedOptions();
 	const manyForms = pluralCategories.filter((category) => category !== "one");
 	const dictionary = new Map<string, string>();
 	for (const [key, message] of source) {
-		const [, base, category] = PLURAL_KEY.exec(key) ?? [];
+		const [, base = key, category] = PLURAL_KEY.exec(key) ?? [];
 		const keys =
 			category === "other"
 				? manyForms.map((form) => `${base}_${form}`)
 				: [key];
-		for (const target of keys) dictionary.set(target, transform(message));
+		const text = transform({ key: base, message });
+		for (const target of keys) dictionary.set(target, text);
 	}
 	return dictionary;
 }
@@ -73,5 +95,5 @@ export function markFormatted({
 	locale: string;
 	text: string;
 }): string {
-	return isPseudoLocale(locale) ? transforms[locale].formatted(text) : text;
+	return transforms.get(locale)?.formatted(text) ?? text;
 }

@@ -203,6 +203,7 @@ describe("setLocale", () => {
 			"de",
 			"en",
 			"en-XA",
+			"en-XM",
 			"eo",
 			"es",
 			"es-419",
