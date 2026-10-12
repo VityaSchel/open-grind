@@ -1,10 +1,8 @@
 <script lang="ts">
-	import {
-		ChatsCircleIcon,
-		CodeIcon,
-		GlobeIcon,
-		MegaphoneIcon,
-	} from "phosphor-svelte";
+	import ChatsCircleIcon from "phosphor-svelte/lib/ChatsCircleIcon";
+	import CodeIcon from "phosphor-svelte/lib/CodeIcon";
+	import GlobeIcon from "phosphor-svelte/lib/GlobeIcon";
+	import MegaphoneIcon from "phosphor-svelte/lib/MegaphoneIcon";
 
 	import Link from "./LinkItem.svelte";
 </script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { EyeSlashIcon } from "phosphor-svelte";
+	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
 
 	import { unhideUser } from "$lib/api/browse/hides";
 	import { Button } from "$lib/components/ui/button";

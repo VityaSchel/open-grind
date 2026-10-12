@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ImageBrokenIcon } from "phosphor-svelte";
+	import ImageBrokenIcon from "phosphor-svelte/lib/ImageBrokenIcon";
 	import type { Attachment } from "svelte/attachments";
 
 	let {

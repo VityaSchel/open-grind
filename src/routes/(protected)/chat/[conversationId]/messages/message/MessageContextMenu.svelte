@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-	import {
-		ArrowBendUpLeftIcon,
-		ArrowUUpLeftIcon,
-		CopyIcon,
-		FlagIcon,
-		TrashIcon,
-		WarningCircleIcon,
-	} from "phosphor-svelte";
+	import ArrowBendUpLeftIcon from "phosphor-svelte/lib/ArrowBendUpLeftIcon";
+	import ArrowUUpLeftIcon from "phosphor-svelte/lib/ArrowUUpLeftIcon";
+	import CopyIcon from "phosphor-svelte/lib/CopyIcon";
+	import FlagIcon from "phosphor-svelte/lib/FlagIcon";
+	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
+	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import { toast } from "svelte-sonner";
 	import type { ComponentProps } from "svelte";
 

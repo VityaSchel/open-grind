@@ -1,11 +1,9 @@
 <script lang="ts">
-	import {
-		CopyIcon,
-		DotsThreeIcon,
-		EyeSlashIcon,
-		FlagIcon,
-		ProhibitIcon,
-	} from "phosphor-svelte";
+	import CopyIcon from "phosphor-svelte/lib/CopyIcon";
+	import DotsThreeIcon from "phosphor-svelte/lib/DotsThreeIcon";
+	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
+	import FlagIcon from "phosphor-svelte/lib/FlagIcon";
+	import ProhibitIcon from "phosphor-svelte/lib/ProhibitIcon";
 	import { toast } from "svelte-sonner";
 
 	import { blockUser } from "$lib/api/browse/blocks";

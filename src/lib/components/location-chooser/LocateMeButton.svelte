@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { GpsFixIcon } from "phosphor-svelte";
+	import GpsFixIcon from "phosphor-svelte/lib/GpsFixIcon";
 
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { reportLocationFailure } from "$lib/location/location-feedback";

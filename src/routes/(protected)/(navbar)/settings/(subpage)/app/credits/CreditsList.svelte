@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowSquareOutIcon } from "phosphor-svelte";
+	import ArrowSquareOutIcon from "phosphor-svelte/lib/ArrowSquareOutIcon";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
 	import type { Credits } from "$lib/credits";

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WarningCircleIcon } from "phosphor-svelte";
+	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 
 	import Link from "$lib/components/ui/link/Link.svelte";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LockIcon } from "phosphor-svelte";
+	import LockIcon from "phosphor-svelte/lib/LockIcon";
 
 	let { still }: { still: string | null } = $props();
 

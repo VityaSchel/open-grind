@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CaretRightIcon, GearIcon } from "phosphor-svelte";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
+	import GearIcon from "phosphor-svelte/lib/GearIcon";
 
 	import * as Item from "$lib/components/ui/item";
 </script>

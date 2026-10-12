@@ -1,10 +1,8 @@
 <script lang="ts">
-	import {
-		PauseIcon,
-		PlayIcon,
-		SpeakerSimpleHighIcon,
-		SpeakerSimpleSlashIcon,
-	} from "phosphor-svelte";
+	import PauseIcon from "phosphor-svelte/lib/PauseIcon";
+	import PlayIcon from "phosphor-svelte/lib/PlayIcon";
+	import SpeakerSimpleHighIcon from "phosphor-svelte/lib/SpeakerSimpleHighIcon";
+	import SpeakerSimpleSlashIcon from "phosphor-svelte/lib/SpeakerSimpleSlashIcon";
 	import { sineOut } from "svelte/easing";
 	import { fade } from "svelte/transition";
 	import type { SvelteMediaTimeRange } from "svelte/elements";

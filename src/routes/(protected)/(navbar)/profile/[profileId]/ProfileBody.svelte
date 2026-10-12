@@ -1,14 +1,12 @@
 <script lang="ts">
-	import {
-		CameraIcon,
-		EyesIcon,
-		GlobeStandIcon,
-		HeartbeatIcon,
-		HouseIcon,
-		SyringeIcon,
-		UsersIcon,
-		UsersThreeIcon,
-	} from "phosphor-svelte";
+	import CameraIcon from "phosphor-svelte/lib/CameraIcon";
+	import EyesIcon from "phosphor-svelte/lib/EyesIcon";
+	import GlobeStandIcon from "phosphor-svelte/lib/GlobeStandIcon";
+	import HeartbeatIcon from "phosphor-svelte/lib/HeartbeatIcon";
+	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
+	import SyringeIcon from "phosphor-svelte/lib/SyringeIcon";
+	import UsersIcon from "phosphor-svelte/lib/UsersIcon";
+	import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 
 	import {
 		acceptNSFWPics,

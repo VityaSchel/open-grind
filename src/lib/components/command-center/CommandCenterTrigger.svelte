@@ -1,5 +1,5 @@
 <script>
-	import { TerminalIcon } from "phosphor-svelte";
+	import TerminalIcon from "phosphor-svelte/lib/TerminalIcon";
 
 	import { Button } from "$lib/components/ui/button";
 	import * as Kbd from "$lib/components/ui/kbd";
