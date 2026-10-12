@@ -69,4 +69,6 @@ A key counts when its text or one of its labels is on screen: `aria-label`, `ari
 
 To add a view, add a scene to a file in `scripts/i18n-screenshots/scenes` and list it in `scenes/index.ts`. A scene names its platform, `phone` or `desktop`, and can seed the demo state the app reads at startup: empty lists, signed out, onboarding, updates, an account restriction, or REST and native faults. Each view has an id such as `chat/inbox/filter` and a `drive` step that gets there in English with the e2e selectors. `visit()` loads a path and waits for a locator, and `holdToast()` keeps a toast open until the capture. Run `bun run gen:i18n-screenshots --view <id>`, then check the image and the keys `manifest.json` lists for it.
 
+`.forgejo/workflows/i18n-screenshots.yml` runs the capture on CI when a push to `i18n` changes the English messages or `scripts/i18n-screenshots`, or when someone starts it by hand. It needs no Rust and no secrets, and keeps the output for 7 days as the `i18n-screenshots` artifact, which the Weblate uploader reads.
+
 The screenshots are public. Images and map tiles are generated during the run, every other request outside localhost is blocked, and these builds keep emoji, real places and real handles out of the demo data.
