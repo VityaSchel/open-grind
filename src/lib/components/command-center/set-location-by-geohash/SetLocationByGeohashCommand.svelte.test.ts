@@ -91,7 +91,7 @@ describe("set location by geohash command", () => {
 		await fireEvent.click(option("@copy")!);
 		await vi.waitFor(() =>
 			expect(toastMock.success).toHaveBeenCalledExactlyOnceWith(
-				"Copied to clipboard",
+				"Location copied to clipboard",
 			),
 		);
 

@@ -251,6 +251,7 @@ export interface Messages {
 	"commands.openProfileById.heading": undefined;
 	"commands.openProfileById.hint": undefined;
 	"commands.quickGoTo.heading": undefined;
+	"commands.setLocationByGeohash.copied": undefined;
 	"commands.setLocationByGeohash.copyCurrent": { geohash: string };
 	"commands.setLocationByGeohash.errors.copyFailed": undefined;
 	"commands.setLocationByGeohash.heading": undefined;

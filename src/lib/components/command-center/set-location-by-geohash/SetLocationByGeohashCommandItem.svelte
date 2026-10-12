@@ -41,7 +41,7 @@
 	async function copyLocation(geohash: string) {
 		try {
 			await writeText(geohash);
-			toast.success(t("feedback.errorCopy.copied"));
+			toast.success(t("commands.setLocationByGeohash.copied"));
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
