@@ -164,7 +164,7 @@
 		"needsManualInstall": "Quit Open Grind, then drag it onto Applications",
 		"installFailed": "Couldn’t install the update",
 		"checkTooSoon": "Already checked for updates recently",
-		"autoChecksDisabled": "Automatic update checks are turned off",
+		"autoChecksDisabled": "Automatic update checks are disabled",
 		"unknownComponent": "Open Grind doesn’t know that component",
 		"busy": "Another download is already running",
 		"busyApp": "Wait for the Open Grind update to finish downloading",
@@ -213,7 +213,7 @@
 	"push": {
 		"errors": {
 			"enableFailed": "Couldn’t enable notifications",
-			"turnOffFailed": "Couldn’t turn off notifications",
+			"turnOffFailed": "Couldn’t disable notifications",
 			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
 			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
 		}

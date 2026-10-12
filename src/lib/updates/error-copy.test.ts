@@ -238,6 +238,10 @@ describe("copy for the app's own update errors", () => {
 		[{ kind: "network" }, "Couldn’t reach the release server"],
 		[{ kind: "storage" }, "Couldn’t write the update to storage"],
 		[
+			{ kind: "autoChecksDisabled" },
+			"Automatic update checks are disabled",
+		],
+		[
 			{ kind: "unknownComponent" },
 			"Open Grind doesn’t know that component",
 		],
