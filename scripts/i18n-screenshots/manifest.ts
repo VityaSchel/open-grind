@@ -37,6 +37,16 @@ export function numberedViewId({
 	return screen === 1 ? id : `${id}#${screen}`;
 }
 
+export function isScreenOf({
+	viewId,
+	id,
+}: {
+	viewId: string;
+	id: string;
+}): boolean {
+	return viewId === id || viewId.startsWith(`${id}#`);
+}
+
 export function imagePath(viewId: string): string {
 	return `images/${viewId.replace("#", ".")}.webp`;
 }

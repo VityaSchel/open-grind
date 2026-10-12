@@ -1,24 +1,21 @@
 import type { Browser } from "@playwright/test";
-import { rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import {
-	launchBrowser,
-	openPlatformContext,
-	type PlatformContext,
-} from "./browser";
+import { launchBrowser, openPlatformContext } from "./browser";
 import { writeCoverage } from "./coverage";
 import {
 	type Captured,
+	isScreenOf,
 	type Manifest,
 	mergeCaptures,
-	type Platform,
 	requireViewId,
 } from "./manifest";
 import { type Scene, scenes } from "./scenes";
 import { BUILD_DIR, serveBuild, SERVER_PORT, waitUntilServing } from "./serve";
-import { captureScene } from "./views";
+import { captureScene, dropScreens, elapsedSince } from "./views";
 
 const REPO_ROOT = Bun.fileURLToPath(new URL("../..", import.meta.url));
 const OUT_DIR = join(REPO_ROOT, "i18n-screenshots");
@@ -29,10 +26,7 @@ const BUILD_ENV = {
 };
 const TEST_ONLY_ENV = ["PUBLIC_TEST_INSETS"];
 const OUTPUTS = ["images", "manifest.json", "coverage.json"];
-
-function elapsedSince(startedAt: number): number {
-	return Math.round(performance.now() - startedAt);
-}
+const STEADY_VIEW = "settings/app";
 
 async function buildScreenshotBundle(): Promise<void> {
 	const inherited = Object.entries(Bun.env).filter(
@@ -72,20 +66,78 @@ async function captureScenes({
 	origin: string;
 	outDir: string;
 }): Promise<Captured> {
-	const platformContexts = new Map<Platform, PlatformContext>();
 	const captures: Captured[] = [];
 	for (const scene of selected) {
-		const platformContext =
-			platformContexts.get(scene.platform) ??
-			(await openPlatformContext({
-				browser,
-				platform: scene.platform,
-				origin,
-			}));
-		platformContexts.set(scene.platform, platformContext);
-		captures.push(await captureScene({ platformContext, scene, outDir }));
+		const platformContext = await openPlatformContext({
+			browser,
+			platform: scene.platform,
+			origin,
+		});
+		try {
+			captures.push(
+				await captureScene({ platformContext, scene, outDir }),
+			);
+		} finally {
+			await platformContext.context.close();
+		}
 	}
 	return mergeCaptures(captures);
+}
+
+function screenHashes({
+	captured,
+	id,
+}: {
+	captured: Captured;
+	id: string;
+}): Map<string, string> {
+	return new Map(
+		Object.entries(captured.views)
+			.filter(([viewId]) => isScreenOf({ viewId, id }))
+			.map(([viewId, { pixelHash }]) => [viewId, pixelHash]),
+	);
+}
+
+async function requireSteadyPixels({
+	browser,
+	origin,
+	outDir,
+	captured,
+}: {
+	browser: Browser;
+	origin: string;
+	outDir: string;
+	captured: Captured;
+}): Promise<void> {
+	const scene = scenes.find(({ views }) =>
+		views.some(({ id }) => id === STEADY_VIEW),
+	);
+	if (scene === undefined || !(STEADY_VIEW in captured.views)) return;
+	console.log(`${STEADY_VIEW}: capturing it again to check its pixels`);
+	const recaptureDir = await mkdtemp(join(tmpdir(), "i18n-screenshots-"));
+	try {
+		const first = screenHashes({ captured, id: STEADY_VIEW });
+		const again = screenHashes({
+			captured: await captureScenes({
+				browser,
+				selected: [scene],
+				origin,
+				outDir: recaptureDir,
+			}),
+			id: STEADY_VIEW,
+		});
+		const differing = [
+			...new Set([...first.keys(), ...again.keys()]),
+		].filter((viewId) => first.get(viewId) !== again.get(viewId));
+		if (differing.length === 0) return;
+		console.error(
+			`${STEADY_VIEW}: failed: a second capture differs in ${differing.join(", ")}, so unchanged views can get new pixel hashes`,
+		);
+		await dropScreens({ captured, outDir, id: STEADY_VIEW });
+		captured.failed.push(STEADY_VIEW);
+	} finally {
+		await rm(recaptureDir, { recursive: true, force: true });
+	}
 }
 
 function selectScenes(ids: string[] | undefined): Scene[] {
@@ -120,7 +172,14 @@ async function captureWithBrowser({
 		`Chromium launched with GPU compositing in ${elapsedSince(launchStartedAt)} ms`,
 	);
 	try {
-		return await captureScenes({ browser, selected, origin, outDir });
+		const captured = await captureScenes({
+			browser,
+			selected,
+			origin,
+			outDir,
+		});
+		await requireSteadyPixels({ browser, origin, outDir, captured });
+		return captured;
 	} finally {
 		await browser.close();
 	}
@@ -171,8 +230,13 @@ await Bun.write(
 	join(outDir, "manifest.json"),
 	`${JSON.stringify(manifest, null, "\t")}\n`,
 );
-const coverage = await writeCoverage({ outDir, commit, captured });
 console.log(
-	`${Object.keys(manifest.views).length} views in ${elapsedSince(captureStartedAt)} ms, ${manifest.failed.length} failed, ${coverage.shown} of ${coverage.keys} keys shown, written to ${outDir}`,
+	`${Object.keys(manifest.views).length} views in ${elapsedSince(captureStartedAt)} ms, ${manifest.failed.length} failed, written to ${outDir}`,
 );
+try {
+	const { shown, keys } = await writeCoverage({ outDir, commit, captured });
+	console.log(`${shown} of ${keys} keys shown`);
+} catch (error) {
+	console.error(`Wrote no coverage.json: ${String(error)}`);
+}
 if (Object.keys(manifest.views).length === 0) process.exit(1);

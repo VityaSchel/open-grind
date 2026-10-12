@@ -10,6 +10,7 @@ import {
 	type Captured,
 	emptyCapture,
 	imagePath,
+	isScreenOf,
 	numberedViewId,
 } from "./manifest";
 import {
@@ -225,15 +226,17 @@ async function recordScreen({
 	);
 }
 
-async function dropScreens({
-	run: { captured, outDir },
+export async function dropScreens({
+	captured,
+	outDir,
 	id,
 }: {
-	run: ViewRun;
+	captured: Captured;
+	outDir: string;
 	id: string;
 }): Promise<void> {
 	for (const viewId of Object.keys(captured.views)) {
-		if (viewId !== id && !viewId.startsWith(`${id}#`)) continue;
+		if (!isScreenOf({ viewId, id })) continue;
 		await rm(join(outDir, imagePath(viewId)), { force: true });
 		delete captured.views[viewId];
 		delete captured.unmarked[viewId];
@@ -338,7 +341,7 @@ export async function captureScene({
 				session = await reachMarkedView({ run, session, index });
 				await captureScreens({ run, session, view, startedAt });
 			} catch (error) {
-				await dropScreens({ run, id: view.id });
+				await dropScreens({ captured, outDir, id: view.id });
 				const ids = scene.views.slice(index).map(({ id }) => id);
 				captured.failed.push(...ids);
 				console.error(`${view.id}: failed: ${String(error)}`);
