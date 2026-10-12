@@ -10,16 +10,15 @@ const drawer = vi.hoisted(() => ({
 	getDrawerMedia: vi.fn(),
 	deleteDrawerMedia: vi.fn(),
 }));
-const chatMedia = vi.hoisted(() => ({
-	addMediaToDrawer: vi.fn(),
-	CHAT_MEDIA_MAX_LABEL: "120.00 MB",
-	UnsupportedChatMediaError: class extends Error {},
-}));
+const chatMedia = vi.hoisted(() => ({ addMediaToDrawer: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 
 vi.mock("$lib/api/messaging/drawer", () => drawer);
-vi.mock("$lib/api/messaging/chat-media", () => chatMedia);
+vi.mock("$lib/api/messaging/chat-media", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	...chatMedia,
+}));
 vi.mock("$lib/platform/media-picker", () => picker);
 vi.mock("svelte-sonner", () => sonner);
 vi.mock("../../message-composer-context.svelte", () => ({

@@ -4,7 +4,10 @@ import { toast } from "svelte-sonner";
 import { showErrorToast } from "$lib/api/error-toast";
 import { createAlbum, getAlbumStorageLimits } from "$lib/api/messaging/albums";
 import { albumRoom } from "$lib/components/album/album";
+import { discardStagedMedia } from "$lib/platform/media-file";
+import { screenMedia } from "$lib/platform/media-intake.svelte";
 import type { MyAlbumsState } from "$lib/albums/my-albums-state.svelte";
+import type { PickedMedia } from "$lib/platform/media-picker";
 import {
 	enqueueAlbumMedia,
 	pickInspectedAlbumMedia,
@@ -20,16 +23,21 @@ export async function createAlbumFromMedia({
 	uploads,
 	myAlbums,
 	albumName,
+	media,
 }: {
 	uploads: AlbumUploads;
 	myAlbums: MyAlbumsState;
 	albumName: string | null;
+	media?: PickedMedia[];
 }): Promise<void> {
 	try {
 		const limits = await getAlbumStorageLimits();
-		const inspected = await pickInspectedAlbumMedia({
-			room: albumRoom({ content: [], pending: [], limits }),
-		});
+		const inspected =
+			media === undefined
+				? await pickInspectedAlbumMedia({
+						room: albumRoom({ content: [], pending: [], limits }),
+					})
+				: await screenMedia({ media, videos: true });
 		if (inspected.length === 0) return;
 		const { albumId } = await createAlbum({ albumName });
 		void myAlbums.reload();
@@ -37,6 +45,7 @@ export async function createAlbumFromMedia({
 		enqueueAlbumMedia({ uploads, albumId, inspected, limits, content: [] });
 	} catch (error) {
 		console.error(error);
+		void discardStagedMedia(media ?? []);
 		if (isPlanLimitReached(error)) {
 			toast.error(ALBUM_LIMIT_MESSAGE);
 			return;

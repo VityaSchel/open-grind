@@ -15,6 +15,9 @@ vi.mock("$app/navigation", () => ({ onNavigate: vi.fn() }));
 vi.mock("$lib/chat/conversations-context.svelte", () => ({
 	getConversations: () => conversations,
 }));
+vi.mock("./send-media/send-media-offer.svelte", () => ({
+	getSendMediaOffer: () => ({ lend: () => {}, offer: async () => {} }),
+}));
 
 vi.stubGlobal(
 	"ResizeObserver",

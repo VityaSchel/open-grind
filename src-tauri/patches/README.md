@@ -77,6 +77,14 @@ On Android wry serves custom protocols from `http(s)://<protocol>.localhost`, wh
 
 Backport of [wry#1879](https://github.com/tauri-apps/wry/pull/1879). **Delete when a `tauri-runtime-wry` requiring a `wry` with `with_custom_protocol_host` is published.**
 
+Android keyboards insert stickers and GIFs with `commitContent`, which the WebView accepts only in rich-text fields. `RustWebView` hands its input connection to the app's `KeyboardMedia`, which declares image types and stages what the keyboard sends. `WRY_RUSTWEBVIEW_CLASS_EXTENSION` can't carry this: Tauri's Gradle task runs cargo from the repo root, so `src-tauri/.cargo/config.toml` is never read.
+
+| File                            | Change                                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `android/kotlin/RustWebView.kt` | Override `onCreateInputConnection` to wrap the connection with `{{package}}.keyboard.KeyboardMedia`. |
+
+Not upstreamable: it calls app code. **Keep it.**
+
 On macOS wry runs its drag code even when the app disables its drag-drop handler. It reads `NSFilenamesPboardType` with `unwrap`, which aborts on a drag that declares file names it never supplies ([wry#1756](https://github.com/tauri-apps/wry/issues/1756)), and it turns WebKit's "no operation" into Copy, so a drop the page didn't accept loads the dragged URL.
 
 | File                                                  | Change                                                                       |

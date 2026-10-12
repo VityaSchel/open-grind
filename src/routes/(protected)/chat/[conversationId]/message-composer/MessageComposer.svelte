@@ -17,6 +17,7 @@
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
 	import { setMessageComposerContext } from "./message-composer-context.svelte";
 	import MessageTextInput from "./MessageTextInput.svelte";
+	import ComposerSendMedia from "./send-media/ComposerSendMedia.svelte";
 	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
 
 	let {
@@ -94,7 +95,11 @@
 		dismiss: () => onCancelReply?.(),
 	});
 
-	setMessageComposerContext(() => ({ disabled, sendMessages: onSend }));
+	setMessageComposerContext(() => ({
+		conversationId,
+		disabled,
+		sendMessages: onSend,
+	}));
 </script>
 
 <form
@@ -127,4 +132,7 @@
 			<ComposerSubmitButton />
 		{/if}
 	</div>
+	{#key conversationId}
+		<ComposerSendMedia />
+	{/key}
 </form>

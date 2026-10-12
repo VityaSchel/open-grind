@@ -39,6 +39,7 @@ pub async fn upload_media(
 	file: PickedFile,
 	square_thumb: Option<bool>,
 ) -> Result<String, AppError> {
+	let _single_use = file.single_use(&app);
 	let client = state.client()?;
 	let mut sessions = client.session_receiver();
 	let Some(profile_id) = profile_of(&sessions.borrow()).map(str::to_owned)

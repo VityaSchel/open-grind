@@ -11,13 +11,19 @@ import {
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
 
-const { toastError, toastSuccess } = vi.hoisted(() => ({
+const { toastError, toastSuccess, discardStagedMedia } = vi.hoisted(() => ({
 	toastError: vi.fn(),
 	toastSuccess: vi.fn(),
+	discardStagedMedia: vi.fn<(media: PickedMedia[]) => Promise<void>>(),
 }));
 
 vi.mock("svelte-sonner", () => ({
 	toast: { error: toastError, success: toastSuccess },
+}));
+
+vi.mock("$lib/platform/media-file", async (importOriginal) => ({
+	...(await importOriginal<object>()),
+	discardStagedMedia,
 }));
 
 vi.mock("$lib/api/messaging/albums", async (importOriginal) => ({
@@ -419,6 +425,27 @@ describe("album uploads", () => {
 		expect(toastError).toHaveBeenCalledWith(
 			"This album already holds 3 photos",
 		);
+	});
+
+	it("discards the copies it gives up on, never the one uploading", async () => {
+		vi.mocked(uploadAlbumContent)
+			.mockRejectedValueOnce(httpError(402))
+			.mockReturnValue(new Promise(() => {}));
+		const uploads = getAlbumUploads(OUR_PROFILE_ID);
+		const discarded = () =>
+			discardStagedMedia.mock.calls.flat(2).map(({ key }) => key);
+
+		enqueue(uploads, pick("a", "image/jpeg"), pick("b", "image/jpeg"));
+		enqueue(uploads, pick("c", "video/mp4"));
+		await vi.waitFor(() =>
+			expect(uploadAlbumContent).toHaveBeenCalledTimes(2),
+		);
+		expect(discarded()).toEqual(["b"]);
+
+		enqueue(uploads, pick("e", "image/jpeg"));
+		uploads.destroy();
+
+		expect(discarded()).toEqual(["b", "e"]);
 	});
 
 	it("keeps uploading a queued video after the album refuses a photo", async () => {

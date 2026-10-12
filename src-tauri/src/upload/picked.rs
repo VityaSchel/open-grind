@@ -3,8 +3,10 @@ use std::io;
 use std::path::PathBuf;
 
 use serde::Deserialize;
-use tauri::Runtime;
+use tauri::{AppHandle, Runtime};
 use tauri_plugin_fs::FsExt;
+
+use crate::upload::staged::StagedMedia;
 
 const CONTENT_SCHEME: &str = "content://";
 
@@ -26,14 +28,41 @@ pub struct AndroidUri {
 pub enum PickedFile {
 	Android { uri: AndroidUri },
 	Desktop { path: PathBuf },
+	Staged { id: String },
+}
+
+pub struct SingleUse<R: Runtime> {
+	app: AppHandle<R>,
+	staged: Option<String>,
+}
+
+impl<R: Runtime> Drop for SingleUse<R> {
+	fn drop(&mut self) {
+		let Some(id) = &self.staged else { return };
+		if let Err(error) =
+			StagedMedia::of(&self.app).and_then(|staged| staged.discard(id))
+		{
+			tracing::warn!("[upload] could not discard staged media: {error}");
+		}
+	}
 }
 
 impl PickedFile {
-	pub fn open<R: Runtime>(
-		&self,
-		app: &tauri::AppHandle<R>,
-	) -> io::Result<File> {
+	pub fn single_use<R: Runtime>(&self, app: &AppHandle<R>) -> SingleUse<R> {
+		SingleUse {
+			app: app.clone(),
+			staged: match self {
+				PickedFile::Staged { id } => Some(id.clone()),
+				_ => None,
+			},
+		}
+	}
+
+	pub fn open<R: Runtime>(&self, app: &AppHandle<R>) -> io::Result<File> {
 		match self {
+			PickedFile::Staged { id } => {
+				File::open(StagedMedia::of(app)?.path(id)?)
+			}
 			PickedFile::Desktop { path } => {
 				let allowed = app
 					.try_fs_scope()
@@ -230,9 +259,55 @@ mod tests {
 			matches!(android, PickedFile::Android { uri } if uri.uri == "content://x")
 		);
 
+		let staged: PickedFile = serde_json::from_str(
+			r#"{"source":"staged","key":"k","mimeType":"image/png","id":"0b0c3d5e-55d4-4a2b-9c55-0e2d2f6b8a11"}"#,
+		)
+		.expect("staged");
+		assert!(
+			matches!(staged, PickedFile::Staged { id } if id == "0b0c3d5e-55d4-4a2b-9c55-0e2d2f6b8a11")
+		);
+
 		assert!(serde_json::from_str::<PickedFile>(
 			r#"{"source":"web","key":"k","mimeType":null}"#
 		)
 		.is_err());
+	}
+
+	#[test]
+	fn a_staged_file_is_read_once_and_then_discarded() {
+		let app = app();
+		let staged = StagedMedia::of(app.handle()).expect("staged");
+		let id = staged.create().expect("create");
+		staged.append(&id, b"\x89PNG").expect("append");
+		let picked = PickedFile::Staged { id };
+
+		{
+			let _single_use = picked.single_use(app.handle());
+			let mut bytes = Vec::new();
+			io::Read::read_to_end(
+				&mut picked.open(app.handle()).expect("open"),
+				&mut bytes,
+			)
+			.expect("read");
+			assert_eq!(bytes, b"\x89PNG");
+		}
+
+		assert_eq!(
+			picked.open(app.handle()).expect_err("gone").kind(),
+			io::ErrorKind::NotFound
+		);
+	}
+
+	#[test]
+	fn a_picked_file_outlives_its_upload() {
+		let app = app();
+		let temp = TempFile::new("kept.jpg", b"\xFF\xD8\xFF");
+		let path = temp.path().to_path_buf();
+		app.fs_scope().allow_file(&path).expect("allow");
+		let picked = PickedFile::Desktop { path: path.clone() };
+
+		drop(picked.single_use(app.handle()));
+
+		assert!(path.exists());
 	}
 }

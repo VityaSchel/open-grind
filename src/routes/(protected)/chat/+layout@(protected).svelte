@@ -12,6 +12,8 @@
 	import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
 	import { below } from "$lib/util/breakpoints.svelte";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
+	import { provideSendMediaOffer } from "./[conversationId]/message-composer/send-media/send-media-offer.svelte";
+	import SendMediaDialog from "./[conversationId]/message-composer/send-media/SendMediaDialog.svelte";
 	import ConversationsList from "./ConversationsList.svelte";
 	import LiveStack from "./live-stack/LiveStack.svelte";
 
@@ -50,6 +52,9 @@
 	});
 
 	const conversationId = $derived(page.params.conversationId ?? null);
+
+	const sendMediaOffer = provideSendMediaOffer();
+	$effect(() => sendMediaOffer.keepFor(conversationId));
 
 	const mobile = below("split");
 </script>
@@ -129,3 +134,5 @@
 	</main>
 	<NavBar ourProfileId={data.ourProfileId} />
 {/if}
+
+<SendMediaDialog offer={sendMediaOffer} />

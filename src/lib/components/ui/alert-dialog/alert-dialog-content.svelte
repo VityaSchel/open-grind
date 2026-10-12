@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { AlertDialog as AlertDialogPrimitive } from "bits-ui";
 	import type { ComponentProps } from "svelte";
+	import type { ClassValue } from "svelte/elements";
 
 	import ScreenChromeCover from "$lib/components/shared/ScreenChromeCover.svelte";
 	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
@@ -15,6 +16,7 @@
 	let {
 		ref = $bindable(null),
 		class: className,
+		overlayClass,
 		size = "default",
 		portalProps,
 		preventOverflowTextSelection = false,
@@ -22,6 +24,7 @@
 		children,
 		...restProps
 	}: WithoutChild<AlertDialogPrimitive.ContentProps> & {
+		overlayClass?: ClassValue;
 		size?: "default" | "sm";
 		portalProps?: WithoutChildrenOrChild<
 			ComponentProps<typeof AlertDialogPortal>
@@ -30,7 +33,7 @@
 </script>
 
 <AlertDialogPortal {...portalProps}>
-	<AlertDialogOverlay />
+	<AlertDialogOverlay class={overlayClass} />
 	<AlertDialogPrimitive.Content
 		bind:ref
 		data-slot="alert-dialog-content"

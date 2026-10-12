@@ -1,4 +1,8 @@
-import { mediaFileKindOf } from "$lib/platform/media-file";
+import {
+	type MediaFileInspection,
+	mediaFileKindOf,
+	type MediaPreview,
+} from "$lib/platform/media-file";
 import type { DrawerMedia } from "$lib/api/messaging/drawer";
 import type { MessageDraft } from "$lib/model/messaging/messages";
 
@@ -72,6 +76,59 @@ export function mediaMessageDraft({
 				imageHash: imageHashFromUrl(item.url),
 				takenOnGrindr: item.takenOnGrindr,
 				createdAt: item.createdTs,
+			},
+		},
+	};
+}
+
+export function sendNowDraft({
+	inspection,
+	preview,
+	upload,
+}: {
+	inspection: MediaFileInspection & { kind: "photo" | "video" };
+	preview: MediaPreview | null;
+	upload: () => Promise<number>;
+}): MessageDraft {
+	if (inspection.kind === "video") {
+		return {
+			outbound: async () => ({
+				type: "Video",
+				body: {
+					mediaId: await upload(),
+					looping: false,
+					maxViews: REPLAYABLE_MAX_VIEWS,
+				},
+			}),
+			optimistic: {
+				type: "Video",
+				body: {
+					mediaId: 0,
+					url: "",
+					contentType: "video/mp4",
+					length: inspection.durationMs ?? 0,
+					maxViews: REPLAYABLE_MAX_VIEWS,
+					viewsRemaining: REPLAYABLE_MAX_VIEWS,
+					looping: false,
+				},
+			},
+		};
+	}
+	return {
+		outbound: async () => ({
+			type: "Image",
+			body: { mediaId: await upload() },
+		}),
+		optimistic: {
+			type: "Image",
+			body: {
+				mediaId: 0,
+				url: preview?.dataUrl ?? "",
+				width: preview?.width ?? null,
+				height: preview?.height ?? null,
+				imageHash: "",
+				takenOnGrindr: false,
+				createdAt: Date.now(),
 			},
 		},
 	};

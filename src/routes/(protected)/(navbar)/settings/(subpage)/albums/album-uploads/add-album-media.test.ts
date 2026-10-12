@@ -295,4 +295,26 @@ describe("adding media to an album", () => {
 			error,
 		});
 	});
+
+	it("adds dropped media without opening the picker", async () => {
+		const photo = desktopPick("dropped", "image/png");
+		const document = desktopPick("notes", "application/pdf");
+
+		await addAlbumMedia({
+			uploads,
+			albumId: 903,
+			content: () => [],
+			media: [photo, document],
+		});
+
+		expect(picker.pickMultipleMedia).not.toHaveBeenCalled();
+		expect(store.enqueue).toHaveBeenCalledWith(
+			expect.objectContaining({
+				inspected: [expect.objectContaining({ media: photo })],
+			}),
+		);
+		expect(sonner.toast.error).toHaveBeenCalledWith(
+			"That file isn't a photo or video",
+		);
+	});
 });

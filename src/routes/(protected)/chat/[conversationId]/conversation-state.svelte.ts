@@ -28,7 +28,6 @@ import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
 import type {
 	ApiResponseMessage,
 	MessageDraft,
-	OutboundMessage,
 } from "$lib/model/messaging/messages";
 import { DynamicMessagesRefresh } from "./dynamic-refresh";
 import {
@@ -54,7 +53,7 @@ function asSent(message: ApiResponseMessage): OptimisticMessage {
 
 type MessageDelivery = {
 	tempId: string;
-	message: OutboundMessage;
+	message: MessageDraft["outbound"];
 	replyToMessageId?: string;
 };
 
@@ -431,6 +430,7 @@ export class ConversationState {
 			);
 			if (
 				!this.#destroyed &&
+				typeof delivery.message !== "function" &&
 				delivery.message.type === "ExpiringImage" &&
 				urn === "urn:gr:err:entitlement_limit"
 			) {

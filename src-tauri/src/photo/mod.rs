@@ -6,6 +6,7 @@ use tauri::{AppHandle, Runtime};
 
 use crate::error::AppError;
 
+pub use encode::Thumbnail;
 use source::Format;
 
 pub const JPEG: &str = "image/jpeg";
@@ -31,22 +32,46 @@ pub async fn normalize<R: Runtime>(
 		});
 	};
 
-	let source = if format == Format::Heif {
-		heif::decode(app, bytes).await?
-	} else {
-		off_thread(move || source::decode(format, &bytes))
-			.await?
-			.ok_or_else(|| AppError::Media(DAMAGED.to_owned()))?
-	};
-
+	let source = decode(app, format, bytes).await?;
 	let bytes = off_thread(move || encode::to_jpeg(source))
 		.await?
-		.ok_or_else(|| AppError::Media(DAMAGED.to_owned()))?;
+		.ok_or_else(damaged)?;
 
 	Ok(Photo {
 		bytes,
 		content_type: JPEG.to_owned(),
 	})
+}
+
+pub async fn thumbnail<R: Runtime>(
+	app: &AppHandle<R>,
+	bytes: Vec<u8>,
+) -> Result<Option<Thumbnail>, AppError> {
+	let Some(format) = source::sniff(&bytes) else {
+		return Ok(None);
+	};
+	let source = decode(app, format, bytes).await?;
+	off_thread(move || encode::to_thumbnail(source))
+		.await?
+		.ok_or_else(damaged)
+		.map(Some)
+}
+
+async fn decode<R: Runtime>(
+	app: &AppHandle<R>,
+	format: Format,
+	bytes: Vec<u8>,
+) -> Result<source::Source, AppError> {
+	if format == Format::Heif {
+		return heif::decode(app, bytes).await;
+	}
+	off_thread(move || source::decode(format, &bytes))
+		.await?
+		.ok_or_else(damaged)
+}
+
+fn damaged() -> AppError {
+	AppError::Media(DAMAGED.to_owned())
 }
 
 pub(crate) async fn off_thread<T: Send + 'static>(

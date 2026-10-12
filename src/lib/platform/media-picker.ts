@@ -43,6 +43,7 @@ export type MediaKind = keyof typeof filtersByKind;
 export type PickedMedia = { key: string; mimeType: string | null } & (
 	| { source: "android"; uri: AndroidFsUri }
 	| { source: "desktop"; path: string }
+	| { source: "staged"; id: string; file?: File }
 	| { source: "web"; file: File }
 );
 
@@ -131,7 +132,7 @@ async function pickAndroidUris({
 	});
 }
 
-function mimeTypeFromPath(path: string): string | null {
+export function mimeTypeFromPath(path: string): string | null {
 	const extension = path.slice(path.lastIndexOf(".") + 1).toLowerCase();
 	return mimeTypesByExtension[extension] ?? null;
 }

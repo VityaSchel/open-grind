@@ -276,6 +276,7 @@ pub async fn upload_media_file(
 	max_body_size: u64,
 	profile_id: String,
 ) -> Result<UploadOutcome, AppError> {
+	let _single_use = file.single_use(&app);
 	let client = state.client()?;
 	rest::refuse_signed_path(&request.path)?;
 	let method = rest::parse_method(&request.method)?;

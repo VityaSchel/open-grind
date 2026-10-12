@@ -457,4 +457,91 @@ describe("ConversationState send failures", () => {
 
 		expect(offerBypassMock).not.toHaveBeenCalled();
 	});
+
+	function uploadingPhoto() {
+		const upload = Promise.withResolvers<OutboundMessage>();
+		const draft: MessageDraft = {
+			outbound: () => upload.promise,
+			optimistic: {
+				type: "Image",
+				body: {
+					mediaId: 0,
+					url: "data:image/jpeg;base64,/9j/",
+					width: 4,
+					height: 3,
+					imageHash: "",
+					takenOnGrindr: false,
+					createdAt: 0,
+				},
+			},
+		};
+		return { draft, upload };
+	}
+
+	const uploaded: OutboundMessage = {
+		type: "Image",
+		body: { mediaId: 920_001 },
+	};
+
+	function sendAfterUploads(): OutboundMessage[] {
+		const sent: OutboundMessage[] = [];
+		sendMessageMock.mockImplementation(
+			async ({ message }: { message: MessageDraft["outbound"] }) => {
+				sent.push(
+					typeof message === "function" ? await message() : message,
+				);
+				return delivered("server-1", 1234);
+			},
+		);
+		return sent;
+	}
+
+	it("shows a photo as sending while it uploads, then sends what the upload returned", async () => {
+		const sent = sendAfterUploads();
+		const { draft, upload } = uploadingPhoto();
+		const state = create();
+		await flush();
+
+		state.send([draft]);
+		await flush();
+		expect(state.messages[0]?.status).toBe("pending");
+		expect(sent).toEqual([]);
+
+		upload.resolve(uploaded);
+		await flush();
+
+		expect(sent).toEqual([uploaded]);
+		expect(state.messages[0]?.status).toBe("sent");
+	});
+
+	it("marks the photo failed and sends nothing when its upload fails", async () => {
+		const sent = sendAfterUploads();
+		const { draft, upload } = uploadingPhoto();
+		const state = create();
+		await flush();
+
+		state.send([draft]);
+		upload.reject(new Error("offline"));
+		await flush();
+
+		expect(state.messages[0]?.status).toBe("error");
+		expect(sent).toEqual([]);
+	});
+
+	it("still sends a photo whose upload finishes after the chat closed", async () => {
+		const sent = sendAfterUploads();
+		const { draft, upload } = uploadingPhoto();
+		const state = create();
+		await flush();
+
+		state.send([draft]);
+		state.destroy();
+		upload.resolve(uploaded);
+		await flush();
+
+		expect(sent).toEqual([uploaded]);
+		expect(sendMessageMock).toHaveBeenCalledWith(
+			expect.objectContaining({ toUserId: PEER_ID }),
+		);
+	});
 });
