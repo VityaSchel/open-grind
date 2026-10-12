@@ -56,3 +56,15 @@ In dev builds, `?locale=en-XA` shows every translated string accented and padded
 ## Marking keys
 
 `?locale=en-XM` shows English with each message wrapped in invisible markers: tag characters that spell its key, or the base key of a plural form. Formatted numbers and dates carry no markers. `markers.ts` writes and reads them, so a tool can tell which keys a screen shows. The text looks as it does in English, except that text with letter spacing moves by one letter space per marker, and `e2e/i18n-markers.spec.ts` fails when a marker shows. Builds made with `OPEN_GRIND_SCREENSHOTS=1` accept `?locale=` and the pseudo-locales, as dev builds do.
+
+## Screenshots for translators
+
+`bun run gen:i18n-screenshots` builds the demo with `OPEN_GRIND_SCREENSHOTS=1`, serves it on port 5396 and captures the views in `scripts/i18n-screenshots/scenes` into `i18n-screenshots/`. `--skip-build` reuses `build/`, `--view <id>` captures only the scenes that contain that view, and `--out` and `--port` move the output and the server.
+
+A scene seeds the demo state, then drives its views in English, one after another. For each view the capture switches to `en-XM`, takes the screenshot and scans the same frame for markers, then switches back to English before the next view. A view that changes with the language, or that sets `survivesLocaleSwitch: false` because its text was fixed when it appeared, as a toast's is, is driven again from the start in a page loaded with `?locale=en-XM`. A view with a `scroller` goes on one screen at a time, and each screen that shows a new key becomes a numbered view such as `settings/app#2`.
+
+A key counts when its text or one of its labels is on screen: `aria-label`, `aria-description`, `aria-roledescription`, `aria-valuetext`, `aria-placeholder`, `title`, `alt`, an input's value, an empty input's placeholder or option text. On screen means outside `translate="no"`, rendered and not transparent, inside the viewport, and not covered by anything that paints over it. Text only for screen readers counts as a label of the element around it, and a message that lost its closing marker ends with the element it started in.
+
+`manifest.json` holds `commit`, the `failed` view ids and each view as `{image, sha256, pixelHash, platform, keys: [{key, box, via, top}], ms}`. `box` is in image pixels, `via` is `text` or `attribute`, and `top` is true inside a dialog, menu, popover or toast. `pixelHash` hashes the decoded pixels, so it stays the same when only the WebP encoder changes. A view fails when its steps throw, a request leaves localhost, the page throws or an emoji shows, and the later views of its scene fail with it. The other scenes still run. `coverage.json` lists the keys no view showed and visible text without markers, leaving out fixture text, numbers and punctuation. It never fails the run. Keys that no browser screen shows go into `scripts/i18n-screenshots/uncapturable.json` with the reason.
+
+The screenshots are public. Images and map tiles are generated during the run, every other request outside localhost is blocked, and these builds keep emoji, real places and real handles out of the demo data.

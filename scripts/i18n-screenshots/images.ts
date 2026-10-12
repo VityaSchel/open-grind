@@ -1,13 +1,14 @@
 import type { BrowserContext } from "@playwright/test";
 
 const TILE_HOST = "tile.openstreetmap.org";
+const VIDEO_HOST = "d3w4wp6rol9nvz.cloudfront.net";
 const PHOTO_HOSTS = [
 	"api.dicebear.com",
 	"picsum.photos",
 	"images.unsplash.com",
 	"cdns.grindr.com",
 ];
-const VIDEO_PATH = /\.(?:mp4|webm|mov)$/i;
+const VIDEO = new URL("video.webm", import.meta.url);
 const SIZE_IN_PATH = /\/(\d+)x(\d+)(?:\/|$)/;
 const TILE_SIZE = 256;
 const DEFAULT_SIDE = 512;
@@ -45,11 +46,8 @@ function tile(): string {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${TILE_SIZE}" height="${TILE_SIZE}"><rect width="${TILE_SIZE}" height="${TILE_SIZE}" fill="#d9dcd6"/><path d="M0 0.5H${TILE_SIZE}M0.5 0V${TILE_SIZE}" stroke="#c3c7bf"/></svg>`;
 }
 
-function servesSeededImage(url: URL): boolean {
-	return (
-		url.hostname === TILE_HOST ||
-		(PHOTO_HOSTS.includes(url.hostname) && !VIDEO_PATH.test(url.pathname))
-	);
+function servesLocalMedia(url: URL): boolean {
+	return [TILE_HOST, VIDEO_HOST, ...PHOTO_HOSTS].includes(url.hostname);
 }
 
 function seededImage(url: URL): string {
@@ -58,13 +56,17 @@ function seededImage(url: URL): string {
 		: photo({ seed: url.href, ...photoSize(url) });
 }
 
-export async function serveSeededImages(
-	context: BrowserContext,
-): Promise<void> {
-	await context.route(servesSeededImage, (route) =>
-		route.fulfill({
+export async function serveLocalMedia(context: BrowserContext): Promise<void> {
+	const video = Buffer.from(await Bun.file(VIDEO).arrayBuffer());
+	await context.route(servesLocalMedia, (route) => {
+		const request = route.request();
+		const url = new URL(request.url());
+		if (url.hostname === VIDEO_HOST || request.resourceType() === "media") {
+			return route.fulfill({ contentType: "video/webm", body: video });
+		}
+		return route.fulfill({
 			contentType: "image/svg+xml",
-			body: seededImage(new URL(route.request().url())),
-		}),
-	);
+			body: seededImage(url),
+		});
+	});
 }

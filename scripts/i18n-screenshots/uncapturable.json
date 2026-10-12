@@ -1,0 +1,3 @@
+{
+	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog."
+}

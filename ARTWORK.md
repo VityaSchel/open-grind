@@ -8,7 +8,7 @@ To the extent possible under law, Open Grind Governance has waived all copyright
 
 - The logo and app icons: `contrib/logo/`, `src-tauri/icons/`, `fastlane/metadata/android/en-US/images/icon.png` and `logo.svg`, `logo.png`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png` in `docs/content/public/`
 - `contrib/88x31.png` and `contrib/promo/`
-- Video test fixtures in `src-tauri/src/video/fixtures/`
+- Video test fixtures in `src-tauri/src/video/fixtures/` and `scripts/i18n-screenshots/video.webm`
 - Screenshots in `docs/content/guides/features/command-center/` and `fastlane/metadata/android/en-US/images/phoneScreenshots/` `4.jpeg`, `5.jpeg`, `6.jpeg`
 
 ## Third-party content
