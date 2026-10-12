@@ -2395,15 +2395,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowGetActivePostResponse"
+									"$ref": "#/components/schemas/RightNowPostResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired."
 			}
 		},
 		"/v3/rightnow/profiles/{profileId}": {
@@ -2422,15 +2422,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowGetOtherUserPostResponse"
+									"$ref": "#/components/schemas/RightNowPostResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
 			}
 		},
 		"/{version}/rightnow/posts/{postId}": {
@@ -2441,7 +2441,17 @@
 				"operationId": "updateRightNowPost",
 				"parameters": [
 					{
-						"$ref": "#/components/parameters/VersionPath"
+						"name": "version",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"v4",
+								"v5"
+							]
+						},
+						"example": "v4"
 					},
 					{
 						"name": "postId",
@@ -2457,22 +2467,86 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
+								"type": "object",
+								"properties": {
+									"hosting": {
+										"type": "boolean"
+									},
+									"text": {
+										"type": "string",
+										"description": "Submitted for moderation; read moderatedText before assuming activeText has changed."
+									},
+									"media": {
+										"type": "array",
+										"description": "Replaces the attached media array.",
+										"items": {
+											"type": "object",
+											"required": [
+												"type",
+												"data"
+											],
+											"properties": {
+												"type": {
+													"type": "string",
+													"description": "Media kind, e.g. `image_v1`.",
+													"example": "image_v1"
+												},
+												"data": {
+													"type": "object",
+													"required": [
+														"id"
+													],
+													"properties": {
+														"id": {
+															"type": "integer",
+															"format": "int64",
+															"description": "The integer mediaId returned by POST /v1/media/upload or /v2/media/upload. The request uses data.id; own-post readback uses mediaId."
+														}
+													}
+												}
+											}
+										}
+									},
+									"hidden": {
+										"type": "boolean",
+										"description": "Whether the post is hidden."
+									},
+									"shareLocation": {
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									},
+									"locationRadius": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 100,
+										"description": "Location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters."
+									},
+									"isDiscreet": {
+										"description": "Discreet-post setting. The request value type is undocumented.",
+										"x-wip": true
+									},
+									"sharedFields": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
 									}
-								],
+								},
 								"x-original-type": "UpdatePostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
+					},
+					"400": {
+						"description": "`urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Update Right Now post",
+				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration."
 			}
 		},
 		"/v4/rightnow/posts": {
@@ -2570,22 +2644,35 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
+								"type": "object",
+								"properties": {
+									"shareLocation": {
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									},
+									"hosting": {
+										"type": "boolean"
+									},
+									"hidden": {
+										"type": "boolean",
+										"description": "true hides the post; false makes it active again."
 									}
-								],
+								},
 								"x-original-type": "UpdatePostSettingsRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Update Right Now post settings",
+				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration."
 			}
 		},
 		"/v5/rightnow/feed": {
@@ -2600,7 +2687,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v5)",
-				"description": "Feature-flag `v5` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
+				"description": "Get the Right Now feed (v5), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -2612,7 +2699,51 @@
 						},
 						"description": "OK"
 					}
-				}
+				},
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"DISTANCE",
+								"NEWEST"
+							],
+							"description": "sort order"
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean",
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				]
 			}
 		},
 		"/v1/media/upload": {
@@ -2667,15 +2798,16 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowMediaUploadResponse"
+									"$ref": "#/components/schemas/RightNowMediaUploadResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Upload Right Now media",
+				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit."
 			}
 		},
 		"/v1/rightnow/googleplay/sku": {
@@ -11396,7 +11528,7 @@
 				],
 				"operationId": "uploadRightNowMediaV2",
 				"summary": "Upload Right Now media (v2)",
-				"description": "Uploads an uncropped photo with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Used when the `right-now-media-upload-v2` server flag is on.",
+				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
 				"parameters": [
 					{
 						"name": "crop_top",
@@ -11496,12 +11628,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
-										}
-									],
-									"x-original-type": "RightNowMediaUploadResponse"
+									"$ref": "#/components/schemas/RightNowMediaUploadResponse"
 								}
 							}
 						},
@@ -12071,7 +12198,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
+									"type": "object",
+									"properties": {
+										"requests": {
+											"type": "array",
+											"items": {},
+											"description": "Item structure is undocumented."
+										}
+									},
 									"x-original-type": "RightNowGetReceivedRequestsResponse"
 								}
 							}
@@ -12099,7 +12233,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
+									"type": "object",
+									"properties": {
+										"requests": {
+											"type": "array",
+											"items": {},
+											"description": "Item structure is undocumented."
+										}
+									},
 									"x-original-type": "RightNowGetSentRequestsResponse"
 								}
 							}
@@ -12530,7 +12671,7 @@
 					}
 				],
 				"summary": "Get Right Now feed",
-				"description": "Right Now feed of nearby posts. The path version is chosen by feature flag: `v4` is the default; `v5` and `v6` are currently identical and unused but supported by the API.",
+				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"parameters": [
 					{
 						"name": "sort",
@@ -12549,7 +12690,7 @@
 						"in": "query",
 						"schema": {
 							"type": "boolean",
-							"description": "only posts from hosting profiles"
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
 						}
 					},
 					{
@@ -12601,7 +12742,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v6)",
-				"description": "Feature-flag `v6` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
+				"description": "Get the Right Now feed (v6), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -12613,7 +12754,51 @@
 						},
 						"description": "OK"
 					}
-				}
+				},
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"DISTANCE",
+								"NEWEST"
+							],
+							"description": "sort order"
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean",
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				]
 			}
 		},
 		"/v1/hookup-intent/post": {
@@ -21918,6 +22103,20 @@
 					},
 					"favorite": {
 						"type": "boolean"
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "Latitude; may be absent."
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "Longitude; may be absent."
+					},
+					"isOnPrep": {
+						"type": "boolean",
+						"description": "Whether the profile is on PrEP."
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -22127,6 +22326,218 @@
 					}
 				},
 				"x-render-on-tag": "settings/account"
+			},
+			"RightNowMediaUploadResponse": {
+				"type": "object",
+				"description": "Response from either Right Now media upload version. Attach mediaId using the image_v1/data.id edit payload.",
+				"x-render-on-tag": "right-now",
+				"properties": {
+					"mediaId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"url": {
+						"type": "string",
+						"format": "uri"
+					},
+					"thumbnailUrl": {
+						"type": "string",
+						"format": "uri"
+					}
+				}
+			},
+			"RightNowPostDetails": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"posted": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"expiration": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"hosting": {
+						"type": "boolean",
+						"description": "boolean, may be absent"
+					},
+					"activeText": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, the post's live text; `moderatedText` holds the latest submitted text"
+					},
+					"moderatedText": {
+						"type": "object",
+						"nullable": true,
+						"description": "object, the latest submitted text and its moderation state, or `null`",
+						"properties": {
+							"id": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"postId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"text": {
+								"type": "string"
+							},
+							"textStatus": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, known values: `\"AWAITING_MODERATION\"`, `\"MODERATION_FAILED\"`, `\"ERROR\"`"
+							},
+							"rejectReasons": {
+								"type": "array",
+								"nullable": true,
+								"items": {
+									"type": "string"
+								}
+							},
+							"createdAt": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"updatedAt": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					},
+					"media": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "object",
+							"properties": {
+								"mediaId": {
+									"type": "integer",
+									"format": "int64"
+								},
+								"thumbnailUrl": {
+									"type": "string",
+									"format": "uri"
+								},
+								"fullImageUrl": {
+									"type": "string",
+									"format": "uri"
+								},
+								"contentType": {
+									"type": "string",
+									"description": "e.g. `image/jpeg`"
+								},
+								"state": {
+									"type": "string",
+									"description": "moderation state, e.g. `APPROVED`"
+								},
+								"reason": {
+									"type": "string",
+									"nullable": true,
+									"description": "moderation reason or `null`"
+								},
+								"isRejectAutomated": {
+									"type": "boolean",
+									"nullable": true,
+									"description": "Whether a rejection is automated; true alone does not indicate rejection."
+								},
+								"shouldBlur": {
+									"type": "boolean"
+								},
+								"isNsfw": {
+									"type": "boolean"
+								},
+								"source": {
+									"type": "string",
+									"description": "e.g. `RIGHT_NOW`"
+								}
+							}
+						}
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"postStatus": {
+						"type": "string",
+						"description": "Post visibility status, including ACTIVE and HIDDEN. Hiding a post retains its data."
+					},
+					"shareLocation": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowShareLocation"
+							}
+						],
+						"nullable": true
+					},
+					"locationRadius": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Location precision value from 0 to 100, or null. Not a distance in meters; null does not mean zero.",
+						"nullable": true
+					},
+					"isDiscreet": {
+						"type": "string",
+						"nullable": true,
+						"description": "string, `\"TRUE\"`, `\"FALSE\"` or `null`"
+					},
+					"sharedFields": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					},
+					"boostUpsellOfferAvailableUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "right-now",
+				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state."
+			},
+			"RightNowPostResponse": {
+				"type": "object",
+				"properties": {
+					"post": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowPostDetails"
+							}
+						],
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "right-now"
 			}
 		}
 	},
