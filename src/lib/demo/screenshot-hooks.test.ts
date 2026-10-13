@@ -111,6 +111,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			signedOut: true,
 			onboarding: false,
 			updates: false,
+			playBuild: false,
 			emptyLists: ["taps"],
 			inbox: null,
 			profiles: {},

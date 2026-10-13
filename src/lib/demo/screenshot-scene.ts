@@ -15,7 +15,7 @@ export const demoLists = [
 
 export type DemoList = (typeof demoLists)[number];
 
-export type NativeError = { kind: string; message?: unknown };
+export type NativeError = { kind: string; message?: unknown } | string;
 
 export type Pending = { pending: true };
 
@@ -54,6 +54,7 @@ export type ScreenshotScene = {
 	signedOut: boolean;
 	onboarding: boolean;
 	updates: boolean;
+	playBuild: boolean;
 	emptyLists: DemoList[];
 	inbox: DemoInbox | null;
 	profiles: Record<number, DemoProfilePatch>;
@@ -126,6 +127,7 @@ export const screenshotScene: ScreenshotScene = {
 	signedOut: false,
 	onboarding: false,
 	updates: false,
+	playBuild: false,
 	emptyLists: [],
 	inbox: null,
 	profiles: {},

@@ -19,9 +19,11 @@ import { ApiError } from "$lib/api/api-error";
 import { callMethod } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { fetchRest } from "$lib/api/transport";
+import { isPlayBuild } from "$lib/platform/store";
 import { updatesAvailableHere } from "$lib/updates";
 import { load } from "../../routes/+layout";
 import { demoMeProfileId } from "./config";
+import { settlesSoon } from "./demo-test-helpers";
 import { demoRoute } from "./route";
 import {
 	type DemoList,
@@ -34,15 +36,6 @@ const initialScene = structuredClone(screenshotScene);
 
 function setScene(scene: Partial<ScreenshotScene>): void {
 	Object.assign(screenshotScene, scene);
-}
-
-async function settlesSoon(pending: Promise<unknown>): Promise<boolean> {
-	const later = new Promise((resolve) => setTimeout(resolve, 50, false));
-	const settled = pending.then(
-		() => true,
-		() => true,
-	);
-	return (await Promise.race([settled, later])) as boolean;
 }
 
 afterEach(() => {
@@ -342,6 +335,16 @@ describe("updates", () => {
 		expect(updatesAvailableHere()).toBe(true);
 		flags.screenshots = false;
 		expect(updatesAvailableHere()).toBe(false);
+	});
+});
+
+describe("play build", () => {
+	it("answers as the Play build only in a scene that asks for it", () => {
+		expect(isPlayBuild()).toBe(false);
+		setScene({ playBuild: true });
+		expect(isPlayBuild()).toBe(true);
+		flags.screenshots = false;
+		expect(isPlayBuild()).toBe(false);
 	});
 });
 
