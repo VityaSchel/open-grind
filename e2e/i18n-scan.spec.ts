@@ -73,6 +73,7 @@ async function mountFixture(page: Page): Promise<void> {
 			<p>${m("cut", "Truncated").slice(0, -4)}</p>
 			<p>Plain English</p>
 			<p translate="no">${m("untranslated", "Name")} Raw 🦊</p>
+			<p translate="no"><span translate="yes">${m("retranslated", "Draft:")}</span> Raw</p>
 			<p id="inert" style="pointer-events:none">${m("inert", "Disabled")}</p>
 			<div style="position:relative">
 				<p>${m("covered", "Covered")}</p>
@@ -141,6 +142,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 				"inner",
 				"cut",
 				"untranslated",
+				"retranslated",
 				"inert",
 				"covered",
 				"glass",
@@ -168,6 +170,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 		inner: text,
 		cut: text,
 		untranslated: undefined,
+		retranslated: text,
 		inert: text,
 		covered: undefined,
 		glass: text,

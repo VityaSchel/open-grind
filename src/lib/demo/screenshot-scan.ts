@@ -66,7 +66,8 @@ const REPLACED_ELEMENTS = new Set([
 	"object",
 	"embed",
 ]);
-const UNTRANSLATED_SELECTOR = '[translate="no"]';
+const TRANSLATION_MODE =
+	'[translate=""], [translate="yes" i], [translate="no" i]';
 const HIT_TESTABLE =
 	"*, ::before, ::after { pointer-events: auto !important; }";
 const COVERING_ALPHA = 0.5;
@@ -86,6 +87,11 @@ type Placement = {
 };
 
 type Found = Map<string, ScannedKey>;
+
+function untranslated(element: Element): boolean {
+	const mode = element.closest(TRANSLATION_MODE)?.getAttribute("translate");
+	return mode?.toLowerCase() === "no";
+}
 
 function alphaOf(color: string): number {
 	const slashed = /\/\s*([\d.]+)(%?)\s*\)$/.exec(color);
@@ -203,7 +209,7 @@ function placeText(parent: Element): Placement | null {
 		host: labelHost ?? boxed,
 		via: labelHost ? "attribute" : "text",
 		top: parent.closest(OVERLAY_SELECTOR) !== null,
-		untranslated: parent.closest(UNTRANSLATED_SELECTOR) !== null,
+		untranslated: untranslated(parent),
 	};
 }
 
@@ -340,7 +346,7 @@ function scanAttributes({
 		const box = visibleBox({ rects, element: host });
 		if (box === null) continue;
 		emoji.push(...shownEmoji.map(({ value }) => normalized(value)));
-		if (element.closest(UNTRANSLATED_SELECTOR)) continue;
+		if (untranslated(element)) continue;
 		const top = element.closest(OVERLAY_SELECTOR) !== null;
 		for (const { key, via } of spans) {
 			record({ found, shown: { key, box, boxes: [box], via, top } });
