@@ -1,23 +1,53 @@
 #[cfg(target_os = "android")]
 mod android;
+#[cfg(target_os = "macos")]
+mod apple;
+#[cfg(desktop)]
+mod desktop;
+#[cfg(all(desktop, not(any(target_os = "macos", target_os = "windows"))))]
+mod linux;
+#[cfg(desktop)]
+mod tags;
+#[cfg(target_os = "windows")]
+mod windows;
 
+#[cfg(mobile)]
 use serde_json::Value;
 use tauri::plugin::{Builder, TauriPlugin};
-#[cfg(target_os = "android")]
+#[cfg(any(desktop, target_os = "android"))]
 use tauri::AppHandle;
+#[cfg(desktop)]
+use tauri::Manager;
 use tauri::Wry;
 
-#[cfg(any(target_os = "android", test))]
+#[cfg(desktop)]
+pub use desktop::refresh_on_focus;
+#[cfg(desktop)]
+use desktop::{AppLanguages, LastRead};
+
+#[cfg(any(desktop, target_os = "android"))]
 const CHANGED_EVENT: &str = "app-language-changed";
+
+#[cfg(any(desktop, target_os = "ios"))]
+const NO_PER_APP_SETTING: &str =
+	"this platform has no per-app language setting";
 
 pub fn plugin() -> TauriPlugin<Wry> {
 	Builder::new("app-language")
 		.setup(|_app, _api| {
+			#[cfg(desktop)]
+			_app.manage(LastRead::default());
 			#[cfg(target_os = "android")]
 			android::register(_app, &_api)?;
 			Ok(())
 		})
 		.build()
+}
+
+#[cfg(desktop)]
+#[tauri::command]
+pub async fn app_languages(app: AppHandle) -> AppLanguages {
+	desktop::current(&app)
 }
 
 #[cfg(target_os = "android")]
@@ -26,10 +56,19 @@ pub async fn app_languages(app: AppHandle) -> Value {
 	android::current(&app).await
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(target_os = "ios")]
 #[tauri::command]
 pub async fn app_languages() -> Value {
 	Value::Null
+}
+
+#[cfg(desktop)]
+#[tauri::command]
+pub async fn set_app_language(
+	app: AppHandle,
+	tag: Option<String>,
+) -> Result<(), String> {
+	desktop::set(&app, tag.as_deref())
 }
 
 #[cfg(target_os = "android")]
@@ -41,10 +80,10 @@ pub async fn set_app_language(
 	android::set(&app, tag).await
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(target_os = "ios")]
 #[tauri::command]
 pub async fn set_app_language() -> Result<(), String> {
-	Err("this platform has no per-app language setting".into())
+	Err(NO_PER_APP_SETTING.into())
 }
 
 #[cfg(test)]

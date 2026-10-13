@@ -22,6 +22,11 @@ use tauri::Wry;
 pub use desktop::refresh_on_focus;
 #[cfg(desktop)]
 use desktop::{LastRead, RegionalSettings};
+#[cfg(all(
+	desktop,
+	any(not(any(target_os = "macos", target_os = "windows")), test)
+))]
+pub use pattern::posix_locale;
 
 #[cfg(any(desktop, target_os = "android"))]
 const CHANGED_EVENT: &str = "regional-settings-changed";

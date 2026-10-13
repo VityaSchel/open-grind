@@ -288,6 +288,8 @@ pub fn run() {
                 quit_when_closed(&window);
                 #[cfg(desktop)]
                 regional::refresh_on_focus(&window);
+                #[cfg(desktop)]
+                app_language::refresh_on_focus(&window);
             }
 
             #[cfg(desktop)]
