@@ -805,6 +805,7 @@ export interface Messages {
 	"settings.subpage.titles.credits": undefined;
 	"settings.subpage.titles.editAlbum": undefined;
 	"settings.subpage.titles.hidden": undefined;
+	"settings.subpage.titles.language": undefined;
 	"settings.subpage.titles.newAlbum": undefined;
 	"settings.subpage.titles.notifications": undefined;
 	"settings.subpage.titles.privacy": undefined;

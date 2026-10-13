@@ -21,6 +21,7 @@
 	import AppsMenuEntrySetting from "./AppsMenuEntrySetting.svelte";
 	import AutomaticUpdatesSetting from "./AutomaticUpdatesSetting.svelte";
 	import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
+	import LanguageSetting from "./LanguageSetting.svelte";
 	import PreferenceSwitchSetting from "./PreferenceSwitchSetting.svelte";
 	import UnitsSetting from "./UnitsSetting.svelte";
 </script>
@@ -66,6 +67,7 @@
 	</Item.Root>
 {/snippet}
 <h2>{t("settings.app.sections.display")}</h2>
+<LanguageSetting />
 <UnitsSetting />
 <BackdropBlurSetting />
 {#if hapticsAvailable()}

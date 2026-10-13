@@ -110,6 +110,10 @@ test.describe("settings pages under en-XA", () => {
 			titled: true,
 		},
 		{ path: APP_SETTINGS, shows: `a[href="${APP_SETTINGS}/credits"]` },
+		{
+			path: `${APP_SETTINGS}/language`,
+			shows: '[data-slot="language-option"]',
+		},
 		{ path: `${APP_SETTINGS}/notifications`, shows: "p" },
 		{ path: `${APP_SETTINGS}/credits`, shows: 'a[href$="/issues/new"]' },
 		{ path: `${SETTINGS}/profile`, shows: '[data-slot="profile-form"]' },
