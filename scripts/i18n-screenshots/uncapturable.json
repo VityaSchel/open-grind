@@ -1,4 +1,6 @@
 {
+	"common.carousel.a11y.next": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
+	"common.carousel.a11y.previous": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
 	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog.",
 	"profile.miniCard.a11y.anonymous": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
 	"shell.notFound.clippy.*": "Only in the tooltip beside clippy.avif, which has no license, and the image's alt text is on its hidden back face until it flips."

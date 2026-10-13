@@ -90,9 +90,9 @@ export async function serveLocalMedia({
 	);
 }
 
-export function generatedPhotos(
-	count: number,
-): Promise<{ name: string; mimeType: string; buffer: Buffer }[]> {
+export type GeneratedFile = { name: string; mimeType: string; buffer: Buffer };
+
+export function generatedPhotos(count: number): Promise<GeneratedFile[]> {
 	return Promise.all(
 		Array.from({ length: count }, async (_, index) => ({
 			name: `photo-${index + 1}.jpg`,
@@ -106,4 +106,13 @@ export function generatedPhotos(
 				.toBuffer(),
 		})),
 	);
+}
+
+export async function generatedVideos(count: number): Promise<GeneratedFile[]> {
+	const buffer = Buffer.from(await Bun.file(VIDEO).arrayBuffer());
+	return Array.from({ length: count }, (_, index) => ({
+		name: `clip-${index + 1}.webm`,
+		mimeType: "video/webm",
+		buffer,
+	}));
 }

@@ -3,6 +3,21 @@ import type { Page } from "@playwright/test";
 import type { ScreenshotScene } from "../../../src/lib/demo/screenshot-scene";
 import type { Platform } from "../manifest";
 import type { NativeOverrides } from "../stubs";
+import {
+	albumDeletion,
+	albumSlots,
+	emptyAlbum,
+	emptySharedWith,
+	newAlbum,
+	sharedWith,
+} from "./album-editor";
+import {
+	albumAddResults,
+	albumUploading,
+	albumUploadLimits,
+	albumUploadsFull,
+	albumUploadsRefused,
+} from "./album-uploads";
 import { albums } from "./albums";
 import { onboarding, signIn } from "./auth";
 import { chooseLocation, grid } from "./browse";
@@ -59,6 +74,14 @@ import {
 	requestBlocked,
 } from "./feedback";
 import { emptyTaps } from "./interest";
+import {
+	albumPreviewFailures,
+	albumVideoPlayer,
+	profileLightbox,
+	videoDecoderMissing,
+	videoPlayFailed,
+} from "./media-lightbox";
+import { drawerTileMenus } from "./media-sheet";
 import { profile } from "./profile";
 import {
 	copyProfileId,
@@ -257,4 +280,21 @@ export const scenes: Scene[] = [
 	reportMessages,
 	copyProfileId,
 	profileRefreshFailure,
+	profileLightbox,
+	albumVideoPlayer,
+	albumPreviewFailures,
+	videoPlayFailed,
+	videoDecoderMissing,
+	newAlbum,
+	emptyAlbum,
+	albumSlots,
+	albumDeletion,
+	emptySharedWith,
+	sharedWith,
+	albumUploadLimits,
+	albumUploadsFull,
+	albumUploadsRefused,
+	albumUploading,
+	albumAddResults,
+	drawerTileMenus,
 ];

@@ -20,11 +20,11 @@ import {
 	failRandomUuids,
 	lastIncoming,
 	openConversation,
-	pauseToasts,
+	toastsShown,
 } from "./chat-drive";
 import { PREVIEWS_INBOX, QUOTES_ID } from "./chat-fixtures";
-import { ALERT, chooseGeneratedPhotos } from "./drive";
-import { holdToast, SHOWN_TOAST } from "./toast";
+import { ALERT, chooseGeneratedMedia } from "./drive";
+import { holdToast } from "./toast";
 import { visit } from "./visit";
 
 const FIRST_UPLOADED_MEDIA_ID = 920_000;
@@ -73,7 +73,7 @@ function savingUpload({
 	};
 }
 
-async function openAttachments(page: Page): Promise<void> {
+export async function openAttachments(page: Page): Promise<void> {
 	await visit({
 		page,
 		path: DEMO_CONVERSATION,
@@ -108,9 +108,9 @@ function uploadPhotos({
 	page: Page;
 	count: number;
 }): Promise<void> {
-	return chooseGeneratedPhotos({
+	return chooseGeneratedMedia({
 		page,
-		count,
+		photos: count,
 		open: () =>
 			page.getByRole("button", { name: UPLOAD_LABEL }).first().click(),
 	});
@@ -347,13 +347,7 @@ export const uploadRefusals: Scene[] = REFUSAL_VIEWS.map((reasons, view) => ({
 			drive: async (page) => {
 				await openAttachments(page);
 				await uploadPhotos({ page, count: reasons.length });
-				await page.locator(SHOWN_TOAST).first().waitFor();
-				await pauseToasts(page);
-				await page
-					.locator(SHOWN_TOAST)
-					.nth(reasons.length - 1)
-					.waitFor();
-				await holdToast(page);
+				await toastsShown({ page, count: reasons.length });
 			},
 		},
 	],

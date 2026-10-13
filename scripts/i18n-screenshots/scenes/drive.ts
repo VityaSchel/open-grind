@@ -1,9 +1,15 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import type { ScreenshotScene } from "../../../src/lib/demo/screenshot-scene";
-import { generatedPhotos } from "../images";
+import { generatedPhotos, generatedVideos } from "../images";
 
 export const ALERT = '[role="alertdialog"]';
+
+export async function scrollToCenter(target: Locator): Promise<void> {
+	await target.evaluate((element) =>
+		element.scrollIntoView({ block: "center", behavior: "instant" }),
+	);
+}
 
 export async function changeScene({
 	page,
@@ -41,18 +47,23 @@ export async function emitEvent({
 	);
 }
 
-export async function chooseGeneratedPhotos({
+export async function chooseGeneratedMedia({
 	page,
 	open,
-	count = 1,
+	photos = 1,
+	videos = 0,
 }: {
 	page: Page;
 	open: () => Promise<void>;
-	count?: number;
+	photos?: number;
+	videos?: number;
 }): Promise<void> {
 	const [chooser] = await Promise.all([
 		page.waitForEvent("filechooser"),
 		open(),
 	]);
-	await chooser.setFiles(await generatedPhotos(count));
+	await chooser.setFiles([
+		...(await generatedPhotos(photos)),
+		...(await generatedVideos(videos)),
+	]);
 }
