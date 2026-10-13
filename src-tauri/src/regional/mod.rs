@@ -57,3 +57,27 @@ pub async fn regional_settings(app: AppHandle) -> serde_json::Value {
 pub async fn regional_settings() -> serde_json::Value {
 	serde_json::Value::Null
 }
+
+#[cfg(test)]
+mod pins {
+	use crate::pin_support::{manifest_element, xml_attribute};
+
+	#[test]
+	fn a_system_language_change_reaches_the_running_activities() {
+		for activity in [".MainActivity", ".FacebookOauthActivity"] {
+			let handled: Vec<&str> = xml_attribute(
+				manifest_element("activity", activity),
+				"android:configChanges",
+			)
+			.unwrap_or_default()
+			.split('|')
+			.collect();
+			for change in ["locale", "layoutDirection"] {
+				assert!(
+					handled.contains(&change),
+					"{activity} no longer handles {change} changes, so a system language change relaunches it and reloads its WebView instead of reaching onConfigurationChanged"
+				);
+			}
+		}
+	}
+}

@@ -188,7 +188,8 @@ mod pins {
 	use crate::pin_support::{
 		addon_gate_verdicts, assert_rejections_classify_as, braced_block,
 		camel_case, is_identifier, kotlin_constant, kotlin_package,
-		source_tokens, spaced_match, squashed, ADDON_GATE, MANIFEST,
+		manifest_element, source_tokens, spaced_match, squashed, xml_attribute,
+		ADDON_GATE, MANIFEST,
 	};
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
@@ -297,32 +298,6 @@ mod pins {
 			tag.starts_with(|c: char| c.is_ascii_alphabetic())
 				.then_some((tag, element))
 		})
-	}
-
-	fn xml_attribute<'a>(element: &'a str, name: &str) -> Option<&'a str> {
-		let assignment = format!("{name}=\"");
-		element.match_indices(&assignment).find_map(|(at, _)| {
-			let value = &element[at + assignment.len()..];
-			element[..at]
-				.ends_with(char::is_whitespace)
-				.then(|| value.split('"').next().unwrap_or_default())
-		})
-	}
-
-	fn manifest_element(tag: &str, name: &str) -> &'static str {
-		let opening = format!("<{tag}");
-		let named = format!("android:name=\"{name}\"");
-		MANIFEST
-			.match_indices(&opening)
-			.map(|(at, _)| {
-				let end =
-					MANIFEST[at..].find('>').map_or(MANIFEST.len(), |i| at + i);
-				&MANIFEST[at..end]
-			})
-			.find(|element| element.contains(&named))
-			.unwrap_or_else(|| {
-				panic!("the manifest has no <{tag}> named {name}")
-			})
 	}
 
 	fn gate_verdicts() -> Vec<String> {

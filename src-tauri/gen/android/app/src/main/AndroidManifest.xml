@@ -32,7 +32,7 @@
 		android:theme="@style/Theme.open_grind"
 		android:usesCleartextTraffic="${usesCleartextTraffic}">
 		<activity
-			android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+			android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout|uiMode"
 			android:launchMode="singleTask"
 			android:label="@string/main_activity_title"
 			android:name=".MainActivity"
@@ -46,7 +46,7 @@
 		</activity>
 
 		<activity
-			android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+			android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout|uiMode"
 			android:label="@string/main_activity_title"
 			android:name=".FacebookOauthActivity"
 			android:exported="false"

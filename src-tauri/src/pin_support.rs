@@ -123,6 +123,30 @@ pub fn kotlin_package<'a>(source: &'a str, file: &str) -> &'a str {
 		.trim()
 }
 
+pub fn xml_attribute<'a>(element: &'a str, name: &str) -> Option<&'a str> {
+	let assignment = format!("{name}=\"");
+	element.match_indices(&assignment).find_map(|(at, _)| {
+		let value = &element[at + assignment.len()..];
+		element[..at]
+			.ends_with(char::is_whitespace)
+			.then(|| value.split('"').next().unwrap_or_default())
+	})
+}
+
+pub fn manifest_element(tag: &str, name: &str) -> &'static str {
+	let opening = format!("<{tag}");
+	let named = format!("android:name=\"{name}\"");
+	MANIFEST
+		.match_indices(&opening)
+		.map(|(at, _)| {
+			let end =
+				MANIFEST[at..].find('>').map_or(MANIFEST.len(), |i| at + i);
+			&MANIFEST[at..end]
+		})
+		.find(|element| element.contains(&named))
+		.unwrap_or_else(|| panic!("the manifest has no <{tag}> named {name}"))
+}
+
 pub fn addon_gate_verdicts() -> Vec<&'static str> {
 	braced_block(ADDON_GATE, "AddonGate.kt", "enum class Verdict")
 		.split(',')
