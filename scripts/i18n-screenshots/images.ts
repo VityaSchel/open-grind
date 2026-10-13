@@ -1,4 +1,7 @@
 import type { BrowserContext } from "@playwright/test";
+import sharp from "sharp";
+
+import type { NetworkGuard } from "./network";
 
 const TILE_HOST = "tile.openstreetmap.org";
 const VIDEO_HOST = "d3w4wp6rol9nvz.cloudfront.net";
@@ -12,6 +15,7 @@ const VIDEO = new URL("video.webm", import.meta.url);
 const SIZE_IN_PATH = /\/(\d+)x(\d+)(?:\/|$)/;
 const TILE_SIZE = 256;
 const DEFAULT_SIDE = 512;
+const PICKED_PHOTO = { width: 1200, height: 1600 };
 
 type Size = { width: number; height: number };
 
@@ -56,17 +60,50 @@ function seededImage(url: URL): string {
 		: photo({ seed: url.href, ...photoSize(url) });
 }
 
-export async function serveLocalMedia(context: BrowserContext): Promise<void> {
+export async function serveLocalMedia({
+	context,
+	guard,
+}: {
+	context: BrowserContext;
+	guard: NetworkGuard;
+}): Promise<void> {
 	const video = Buffer.from(await Bun.file(VIDEO).arrayBuffer());
-	await context.route(servesLocalMedia, (route) => {
-		const request = route.request();
-		const url = new URL(request.url());
-		if (url.hostname === VIDEO_HOST || request.resourceType() === "media") {
-			return route.fulfill({ contentType: "video/webm", body: video });
-		}
-		return route.fulfill({
-			contentType: "image/svg+xml",
-			body: seededImage(url),
-		});
-	});
+	await context.route(
+		servesLocalMedia,
+		guard.catching((route) => {
+			const request = route.request();
+			const url = new URL(request.url());
+			if (
+				url.hostname === VIDEO_HOST ||
+				request.resourceType() === "media"
+			) {
+				return route.fulfill({
+					contentType: "video/webm",
+					body: video,
+				});
+			}
+			return route.fulfill({
+				contentType: "image/svg+xml",
+				body: seededImage(url),
+			});
+		}),
+	);
+}
+
+export function generatedPhotos(
+	count: number,
+): Promise<{ name: string; mimeType: string; buffer: Buffer }[]> {
+	return Promise.all(
+		Array.from({ length: count }, async (_, index) => ({
+			name: `photo-${index + 1}.jpg`,
+			mimeType: "image/jpeg",
+			buffer: await sharp(
+				Buffer.from(
+					photo({ seed: `picked-${index}`, ...PICKED_PHOTO }),
+				),
+			)
+				.jpeg()
+				.toBuffer(),
+		})),
+	);
 }

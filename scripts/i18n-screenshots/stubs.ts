@@ -9,7 +9,21 @@ export const NEUTRAL_GEOHASH = "e1z0gs3y0zh7";
 const APP_VERSION = "1.2.0";
 const NEXT_CHECK_AT = Date.parse("2026-07-22T13:12:00Z");
 
-const nativeAnswers = {
+export type NativeOverride =
+	| { answer: unknown }
+	| { reject: unknown }
+	| { pending: true }
+	| { sequence: NativeOverride[] };
+
+export type NativeOverrides = Record<string, NativeOverride>;
+
+declare global {
+	interface Window {
+		__openGrindNativeOverrides?: NativeOverrides;
+	}
+}
+
+const nativeAnswers: Record<string, unknown> = {
 	"plugin:app|version": APP_VERSION,
 	regional_settings: {
 		locale: "en-US",
@@ -40,9 +54,24 @@ const nativeAnswers = {
 	updater_take_install_outcome: null,
 };
 
-export async function installNativeStubs(page: Page): Promise<void> {
+function answered(answers: Record<string, unknown>): NativeOverrides {
+	return Object.fromEntries(
+		Object.entries(answers).map(([command, answer]) => [
+			command,
+			{ answer },
+		]),
+	);
+}
+
+export async function installNativeStubs({
+	page,
+	overrides = {},
+}: {
+	page: Page;
+	overrides?: NativeOverrides;
+}): Promise<void> {
 	await page.addInitScript(
-		({ answers, nextCheckAt }) => {
+		({ seeded, nextCheckAt }) => {
 			const internals = (
 				window as unknown as {
 					__TAURI_INTERNALS__: {
@@ -55,22 +84,52 @@ export async function installNativeStubs(page: Page): Promise<void> {
 				}
 			).__TAURI_INTERNALS__;
 			const passThrough = internals.invoke;
+			const calls = new Map<string, number>();
+			const table = (window.__openGrindNativeOverrides = seeded);
+			const respond = (
+				command: string,
+				override: NativeOverride,
+			): Promise<unknown> => {
+				if ("sequence" in override) {
+					const index = calls.get(command) ?? 0;
+					calls.set(command, index + 1);
+					const step = override.sequence.at(
+						Math.min(index, override.sequence.length - 1),
+					);
+					return respond(command, step ?? { answer: null });
+				}
+				if ("reject" in override)
+					return Promise.reject(override.reject);
+				if ("pending" in override) return new Promise(() => {});
+				return Promise.resolve(override.answer);
+			};
 			internals.invoke = (cmd, args, opts) => {
+				const override = table[cmd];
+				if (override !== undefined) return respond(cmd, override);
 				if (cmd === "updater_set_auto_check") {
 					const { enabled } = args as { enabled: boolean };
 					return Promise.resolve({ autoCheck: enabled, nextCheckAt });
-				}
-				if (Object.hasOwn(answers, cmd)) {
-					return Promise.resolve(answers[cmd]);
 				}
 				return passThrough(cmd, args, opts);
 			};
 		},
 		{
-			answers: nativeAnswers as Record<string, unknown>,
+			seeded: { ...answered(nativeAnswers), ...overrides },
 			nextCheckAt: NEXT_CHECK_AT,
 		},
 	);
+}
+
+export async function overrideNative({
+	page,
+	overrides,
+}: {
+	page: Page;
+	overrides: NativeOverrides;
+}): Promise<void> {
+	await page.evaluate((changed) => {
+		Object.assign(window.__openGrindNativeOverrides ?? {}, changed);
+	}, overrides);
 }
 
 export async function seedScene({

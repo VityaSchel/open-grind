@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import type { ScreenshotScene } from "../../../src/lib/demo/screenshot-scene";
 import type { Platform } from "../manifest";
+import type { NativeOverrides } from "../stubs";
 import { albums } from "./albums";
 import { onboarding, signIn } from "./auth";
 import { chooseLocation, grid } from "./browse";
@@ -26,6 +27,8 @@ export type SceneView = {
 
 export type Scene = {
 	platform: Platform;
+	shim?: "linux" | "windows" | "ios";
+	native?: NativeOverrides;
 	demo?: Partial<ScreenshotScene>;
 	views: [SceneView, ...SceneView[]];
 };

@@ -1,9 +1,9 @@
-import type { BrowserContext, Locator, Page, Route } from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
 import { readdir, rm, rmdir } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { join } from "node:path";
 
-import { installTauriShim } from "../../e2e/support/app";
+import { installEventInjection, installTauriShim } from "../../e2e/support/app";
 import type { ScannedKey } from "../../src/lib/demo/screenshot-scan";
 import { freezeClockOnEveryLoad } from "../store-screenshots/clock";
 import { displays, type PlatformContext } from "./browser";
@@ -50,6 +50,7 @@ type ViewRun = {
 	scene: Scene;
 	outDir: string;
 	captured: Captured;
+	strayRejections: string[];
 };
 
 export function elapsedSince(startedAt: number): number {
@@ -74,9 +75,10 @@ async function openSession({
 		}
 	});
 	await installTauriShim(page, {
-		platform: displays[scene.platform].shimPlatform,
+		platform: scene.shim ?? displays[scene.platform].shimPlatform,
 	});
-	await installNativeStubs(page);
+	await installEventInjection(page);
+	await installNativeStubs({ page, overrides: scene.native });
 	await installNeutralGeolocation(page);
 	if (scene.demo) await seedScene({ page, scene: scene.demo });
 	await freezeClockOnEveryLoad(page);
@@ -96,26 +98,33 @@ async function requireHooks(page: Page): Promise<void> {
 
 async function loadInLocale({
 	page,
-	origin,
+	platformContext: { origin, guard },
 	locale,
 }: {
 	page: Page;
-	origin: string;
+	platformContext: PlatformContext;
 	locale: string;
-}): Promise<() => Promise<void>> {
-	const unlocalized = (url: URL) =>
-		url.origin === origin && !url.searchParams.has("locale");
-	const redirect = async (route: Route) => {
-		if (!route.request().isNavigationRequest()) {
-			await route.fallback();
-			return;
-		}
-		const url = new URL(route.request().url());
-		url.searchParams.set("locale", locale);
-		await route.fulfill({ status: 302, headers: { location: url.href } });
+}): Promise<() => void> {
+	let redirecting = true;
+	await page.route(
+		(url) => url.origin === origin && !url.searchParams.has("locale"),
+		guard.catching(async (route) => {
+			const request = route.request();
+			if (!redirecting || !request.isNavigationRequest()) {
+				await route.fallback();
+				return;
+			}
+			const url = new URL(request.url());
+			url.searchParams.set("locale", locale);
+			await route.fulfill({
+				status: 302,
+				headers: { location: url.href },
+			});
+		}),
+	);
+	return () => {
+		redirecting = false;
 	};
-	await page.route(unlocalized, redirect);
-	return () => page.unroute(unlocalized, redirect);
 }
 
 async function replayMarked({
@@ -136,14 +145,14 @@ async function replayMarked({
 	try {
 		const stopLoadingMarked = await loadInLocale({
 			page: replay.page,
-			origin: platformContext.origin,
+			platformContext,
 			locale: MARKER_LOCALE,
 		});
 		for (const view of scene.views.slice(0, index + 1)) {
 			await view.drive(replay.page);
 		}
 		await parkPointer(replay.page);
-		await stopLoadingMarked();
+		stopLoadingMarked();
 		await waitForLocale({ page: replay.page, locale: MARKER_LOCALE });
 		await settle({ page: replay.page });
 		return replay;
@@ -179,23 +188,38 @@ async function reachMarkedView({
 	return replayMarked({ run, session, index });
 }
 
-function requireNothingBlocked(platformContext: PlatformContext): void {
-	const blocked = platformContext.guard.takeBlocked();
+async function requireNothingBlocked({
+	platformContext,
+	strayRejections,
+}: ViewRun): Promise<void> {
+	const blocked = await platformContext.guard.takeBlocked();
 	if (blocked.length > 0) {
 		throw new Error(`Requests left localhost: ${blocked.join(", ")}`);
 	}
+	const unanswered = platformContext.guard.takeRouteErrors();
+	if (unanswered.length > 0) {
+		throw new Error(`Requests went unanswered: ${unanswered.join("; ")}`);
+	}
+	const stray = strayRejections.splice(0);
+	if (stray.length > 0) {
+		throw new Error(`Unhandled rejections: ${stray.join("; ")}`);
+	}
+	const unlicensed = await platformContext.guard.takeUnlicensed();
+	if (unlicensed.length > 0) {
+		throw new Error(`Served unlicensed assets: ${unlicensed.join(", ")}`);
+	}
 }
 
-function requireCleanFrame({
+async function requireCleanFrame({
 	frame,
 	session,
-	platformContext,
+	run,
 }: {
 	frame: Frame;
 	session: Session;
-	platformContext: PlatformContext;
-}): void {
-	requireNothingBlocked(platformContext);
+	run: ViewRun;
+}): Promise<void> {
+	await requireNothingBlocked(run);
 	const uncaught = session.uncaught.splice(0);
 	if (uncaught.length > 0) {
 		throw new Error(`Uncaught errors: ${uncaught.join("; ")}`);
@@ -358,11 +382,7 @@ async function captureScreens({
 	let kept = 0;
 	for (let screen = 1; screen <= MAX_SCREENS; screen += 1) {
 		const frame = await captureFrame(page);
-		requireCleanFrame({
-			frame,
-			session,
-			platformContext: run.platformContext,
-		});
+		await requireCleanFrame({ frame, session, run });
 		const keys = frame.scan.keys.map(({ key }) => key);
 		if (kept === 0 || keys.some((key) => !seen.has(key))) {
 			kept += 1;
@@ -379,7 +399,7 @@ async function captureScreens({
 		await scrollTo({ scroller, top });
 		await settle({ page });
 	}
-	requireNothingBlocked(run.platformContext);
+	await requireNothingBlocked(run);
 }
 
 export async function captureScene({
@@ -392,12 +412,23 @@ export async function captureScene({
 	outDir: string;
 }): Promise<Captured> {
 	const captured = emptyCapture();
-	const run: ViewRun = { platformContext, scene, outDir, captured };
+	const strayRejections: string[] = [];
+	const recordStray = (reason: unknown) => {
+		strayRejections.push(String(reason));
+	};
+	const run: ViewRun = {
+		platformContext,
+		scene,
+		outDir,
+		captured,
+		strayRejections,
+	};
 	let session = await openSession({
 		context: platformContext.context,
 		scene,
 		viewId: scene.views[0].id,
 	});
+	process.on("unhandledRejection", recordStray);
 	try {
 		for (const [index, view] of scene.views.entries()) {
 			const startedAt = performance.now();
@@ -426,6 +457,7 @@ export async function captureScene({
 		}
 	} finally {
 		await session.page.close();
+		process.off("unhandledRejection", recordStray);
 	}
 	return captured;
 }

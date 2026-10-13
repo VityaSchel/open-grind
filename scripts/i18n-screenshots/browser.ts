@@ -12,10 +12,12 @@ import {
 } from "../store-screenshots/gpu";
 import { serveLocalMedia } from "./images";
 import type { Platform } from "./manifest";
-import { guardNetwork, type NetworkGuard } from "./network";
+import { guardNetwork, type NetworkGuard, openEscapeSink } from "./network";
 
 const SCENE_TIMEOUT_MS = 30_000;
 const RASTER_EVERY_TILE_BEFORE_DRAW = "--run-all-compositor-stages-before-draw";
+const RESOLVE_ONLY_LOCALHOST =
+	"--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1";
 
 export const displays = {
 	phone: {
@@ -45,6 +47,7 @@ export async function launchBrowser(): Promise<Browser> {
 			...(launchOptions?.args ?? []),
 			GPU_COMPOSITING_ON_SWIFTSHADER,
 			RASTER_EVERY_TILE_BEFORE_DRAW,
+			RESOLVE_ONLY_LOCALHOST,
 		],
 	});
 	try {
@@ -66,6 +69,7 @@ export async function openPlatformContext({
 	origin: string;
 }): Promise<PlatformContext> {
 	const { viewport, deviceScaleFactor } = displays[platform];
+	const escapes = openEscapeSink();
 	const context = await browser.newContext({
 		...devices["Desktop Chrome"],
 		baseURL: origin,
@@ -77,9 +81,10 @@ export async function openPlatformContext({
 		colorScheme: "dark",
 		reducedMotion: "reduce",
 		serviceWorkers: "block",
+		proxy: escapes.proxy,
 	});
 	context.setDefaultTimeout(SCENE_TIMEOUT_MS);
-	const guard = await guardNetwork({ context, origin });
-	await serveLocalMedia(context);
+	const guard = await guardNetwork({ context, origin, escapes });
+	await serveLocalMedia({ context, guard });
 	return { context, guard, origin, platform };
 }
