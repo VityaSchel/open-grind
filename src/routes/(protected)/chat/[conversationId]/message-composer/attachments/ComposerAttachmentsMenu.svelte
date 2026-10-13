@@ -7,6 +7,7 @@
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
 	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
 	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
+	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
@@ -70,7 +71,7 @@
 		</MediaSheetBody>
 
 		<MediaSheetActions
-			class="bottom-18"
+			aboveTabBar
 			label={selection?.label ?? ""}
 			count={selection?.count ?? 0}
 			onSubmit={submitSelection}
@@ -102,15 +103,11 @@
 			{/snippet}
 		</MediaSheetActions>
 
-		<Drawer.Footer
-			class="absolute inset-x-0 bottom-0 items-center rounded-b-4xl pt-1 pb-2 select-none"
-		>
-			<Tabs.List>
-				{@render tab("media")}
-				{@render tab("albums")}
-				{@render tab("location")}
-			</Tabs.List>
-		</Drawer.Footer>
+		<MediaSheetTabBar>
+			{@render tab("media")}
+			{@render tab("albums")}
+			{@render tab("location")}
+		</MediaSheetTabBar>
 	</Tabs.Root>
 </MediaSheet>
 

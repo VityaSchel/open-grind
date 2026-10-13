@@ -187,6 +187,58 @@ test.describe("composer stickers sheet", () => {
 	});
 });
 
+test.describe("composer sheet tab bars", () => {
+	const SHEETS = [
+		{ trigger: "Add attachment", tile: '[data-slot="media-tile"]' },
+		{ trigger: "GIFs and stickers", tile: STICKER_TILE },
+	] as const;
+
+	for (const { trigger, tile } of SHEETS) {
+		test(`${trigger}: the tab bar is a progressive blur under the Send pill`, async ({
+			page,
+		}) => {
+			await openComposerSheet(page, { trigger });
+			const bar = page
+				.locator(DRAWER)
+				.locator('[data-slot="media-sheet-tab-bar"]');
+			const visibleLayers = () =>
+				bar.evaluate(
+					(el) =>
+						[...el.querySelectorAll(".pblur-layer")].filter(
+							(layer) =>
+								getComputedStyle(layer).display !== "none",
+						).length,
+				);
+			expect(await visibleLayers()).toBe(9);
+
+			await page.locator(tile).first().click();
+			const pill = page.locator('[data-slot="sheet-actions"]');
+			await expect(pill).toBeVisible();
+			await pill.evaluate((el) =>
+				Promise.all(el.getAnimations().map((a) => a.finished)),
+			);
+			const gap = async () => {
+				const pillBox = (await pill.boundingBox())!;
+				const barBox = (await bar.boundingBox())!;
+				return barBox.y - (pillBox.y + pillBox.height);
+			};
+			const fullGap = await gap();
+			expect(fullGap, "the pill clears the bar").toBeGreaterThanOrEqual(
+				0,
+			);
+
+			await page.evaluate(() =>
+				document.documentElement.setAttribute(
+					"data-backdrop-blur",
+					"min",
+				),
+			);
+			expect(await visibleLayers()).toBe(1);
+			expect((await gap()) - fullGap).toBeCloseTo(12, 0);
+		});
+	}
+});
+
 test.describe("composer geometry", () => {
 	test("the one-line composer is 44px tall and every button spans it", async ({
 		page,

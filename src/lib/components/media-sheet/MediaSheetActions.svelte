@@ -13,16 +13,16 @@
 		count,
 		showCount = true,
 		busy = false,
+		aboveTabBar = false,
 		onSubmit,
-		class: className,
 		leading,
 	}: {
 		label: string;
 		count: number;
 		showCount?: boolean;
 		busy?: boolean;
+		aboveTabBar?: boolean;
 		onSubmit: () => void;
-		class?: string;
 		leading?: Snippet;
 	} = $props();
 </script>
@@ -32,7 +32,10 @@
 		data-slot="sheet-actions"
 		class={cn(
 			"pointer-events-none absolute inset-x-0 bottom-6 flex justify-center gap-2 *:pointer-events-auto",
-			className,
+			{
+				"bottom-[calc(--spacing(18)+var(--bar-content-gap))] z-20":
+					aboveTabBar,
+			},
 		)}
 		in:fly={{ duration: 600, y: 100, easing: expoOut }}
 		out:fly={{ duration: 400, y: 100, easing: sineIn }}
