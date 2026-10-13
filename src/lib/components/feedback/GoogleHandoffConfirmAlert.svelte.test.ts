@@ -25,7 +25,7 @@ describe("GoogleHandoffConfirmAlert", () => {
 		render(GoogleHandoffConfirmAlert);
 
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(await answer).toBe(false);
 		expect(googleHandoffState.phase).toBe("idle");
@@ -38,7 +38,7 @@ describe("GoogleHandoffConfirmAlert", () => {
 
 		expect(continueButton().getAttribute("aria-busy")).toBe("true");
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(await answer).toBe(true);
 		expect(googleHandoffState.phase).toBe("switchingAccount");

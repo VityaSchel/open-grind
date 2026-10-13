@@ -129,7 +129,7 @@ describe("RequestBlockedAlert", () => {
 
 		await fireEvent.keyDown(document, { key: "Escape" });
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(requestBlockedAlertState.open).toBe(true);
 		finishRotation();
@@ -141,7 +141,7 @@ describe("RequestBlockedAlert", () => {
 	it("closes on the back gesture without rotating parameters", () => {
 		render(RequestBlockedAlert);
 
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(requestBlockedAlertState.open).toBe(false);
 		expect(callMethodMock).not.toHaveBeenCalled();

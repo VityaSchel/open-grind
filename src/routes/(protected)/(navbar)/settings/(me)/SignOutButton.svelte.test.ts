@@ -62,7 +62,7 @@ describe("SignOutButton", () => {
 		const finishSignOut = await startSignOutThatHangs();
 
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 		await tick();
 
 		expect(screen.getByRole("alertdialog").dataset.state).toBe("open");
@@ -73,7 +73,7 @@ describe("SignOutButton", () => {
 	it("closes on the back gesture without signing out", async () => {
 		await openDialog();
 
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		await vi.waitFor(() => expect(dialogShown()).toBe(false));
 		expect(signOutMock).not.toHaveBeenCalled();

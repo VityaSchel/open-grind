@@ -226,7 +226,7 @@ describe("EntitlementBypassAlert", () => {
 		const lease = await bypassAndHoldLease();
 
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(entitlementBypassState.open).toBe(true);
 		expect(entitlementBypassState.busy).toBe(true);
@@ -280,7 +280,7 @@ describe("EntitlementBypassAlert", () => {
 	it("cancels the action on the back gesture", async () => {
 		const { answer } = await offer();
 
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		await expect(answer).resolves.toBeNull();
 		await expectDialogClosed();

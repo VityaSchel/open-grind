@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import {
+	backGestureEventHandlers,
+	runBackGestureHandlers,
+} from "$lib/platform/back-gesture-event.svelte";
 import {
 	attachSystemBackGesture,
 	type SwipeBackStack,
@@ -51,7 +54,7 @@ describe("attachSystemBackGesture", () => {
 	it("refuses to start while an overlay owns the back gesture", () => {
 		const { stack, calls } = makeStack();
 		const detach = attachSystemBackGesture(stack);
-		backGestureEventHandlers.add(() => false);
+		backGestureEventHandlers.set(() => false, "overlay");
 
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
 		expect(calls.begin, "the swipe must not arm").toBe(0);
@@ -66,10 +69,45 @@ describe("attachSystemBackGesture", () => {
 		const { stack, calls } = makeStack();
 		const detach = attachSystemBackGesture(stack);
 		const overlay = () => false;
-		backGestureEventHandlers.add(overlay);
+		backGestureEventHandlers.set(overlay, "overlay");
 		window.__AndroidOnBackGestureStart?.();
 		backGestureEventHandlers.delete(overlay);
 
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(calls.begin).toBe(1);
+
+		detach();
+	});
+
+	it("refuses to start under an overlay that opened before the stack attached", () => {
+		const overlay = vi.fn(() => false);
+		backGestureEventHandlers.set(overlay, "overlay");
+		const { stack, calls } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(calls.begin).toBe(0);
+		expect(runBackGestureHandlers()).toBe(true);
+		expect(overlay).toHaveBeenCalledOnce();
+		expect(calls.commit).toBe(0);
+
+		backGestureEventHandlers.delete(overlay);
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
+		expect(calls.begin).toBe(1);
+
+		detach();
+	});
+
+	it("refuses to start under a screen handler that registered before the stack attached", () => {
+		const cancelReply = () => false;
+		backGestureEventHandlers.set(cancelReply, "screen");
+		const { stack, calls } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+
+		expect(window.__AndroidOnBackGestureStart?.()).toBe(false);
+		expect(calls.begin).toBe(0);
+
+		backGestureEventHandlers.delete(cancelReply);
 		expect(window.__AndroidOnBackGestureStart?.()).toBe(true);
 		expect(calls.begin).toBe(1);
 
