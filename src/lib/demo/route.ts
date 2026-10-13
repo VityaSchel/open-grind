@@ -34,8 +34,6 @@ import {
 	demoConversationMessages,
 	demoConversations,
 	demoDeleteConversation,
-	demoDeleteDrawerMedia,
-	demoDrawerMedia,
 	demoEmptyInbox,
 	demoMessagesById,
 	demoSentMessage,
@@ -43,6 +41,7 @@ import {
 	demoSetConversationPinned,
 	demoSingleMessage,
 } from "./mock/conversations";
+import { demoDeleteDrawerMedia, demoDrawerMedia } from "./mock/drawer";
 import {
 	demoDeleteFavoriteNote,
 	demoFavoriteNoteOf,

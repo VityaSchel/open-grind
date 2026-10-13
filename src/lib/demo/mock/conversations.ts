@@ -1,162 +1,32 @@
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
-import { type ApiResponseMessage } from "$lib/model/messaging/messages";
+import {
+	type ApiResponseMessage,
+	apiResponseMessageSchema,
+} from "$lib/model/messaging/messages";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
-import { DAY, demoMeProfileId, HOUR, MINUTE, NOW, SECOND } from "../config";
+import {
+	DAY,
+	demoMeProfileId,
+	MINUTE,
+	NOW,
+	screenshotsEnabled,
+	SECOND,
+} from "../config";
+import { screenshotScene } from "../screenshot-scene";
 import { albumCoverUrl, demoAlbumContent } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";
 import { isTierGatedFilter, matchesInboxFilters } from "./conversation-filters";
+import {
+	type DemoConversation,
+	demoConversationSeeds,
+	type DemoMessage,
+} from "./conversation-seeds";
+import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
 import { neutralText } from "./neutral";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
-
-type DemoMessage = { fromMe: boolean; reactions?: number } & (
-	| { kind?: "text"; text: string }
-	| { kind: "image" }
-	| { kind: "expiringImage"; expired?: boolean }
-	| {
-			kind: "album";
-			albumId: number;
-			expiring?: "v1" | "v2";
-			locked?: boolean;
-			unseen?: boolean;
-			coverUrl?: null;
-	  }
-	| { kind: "unsent" }
-);
-
-type DemoConversation = {
-	withId: number;
-	unread: number;
-	pinned: boolean;
-	favorite: boolean;
-	muted: boolean;
-	lastActivityAgo: number;
-	rightNow?: Conversation["data"]["rightNow"];
-	chemistry?: boolean;
-	messages: DemoMessage[];
-};
-
-const demoConversationSeeds: DemoConversation[] = [
-	{
-		withId: 100001,
-		unread: 2,
-		pinned: false,
-		favorite: true,
-		muted: true,
-		lastActivityAgo: 4,
-		messages: [
-			{ fromMe: false, text: "Hey! Lorem ipsum dolor sit amet." },
-			{
-				fromMe: true,
-				text: "Hello — consectetur adipiscing elit.",
-				reactions: 1,
-			},
-			{ fromMe: false, text: "Sed do eiusmod tempor incididunt?" },
-			{ fromMe: false, kind: "album", albumId: 5001, unseen: true },
-			{
-				fromMe: false,
-				kind: "album",
-				albumId: 5001,
-				coverUrl: null,
-				unseen: true,
-			},
-			{ fromMe: true, kind: "album", albumId: 901 },
-		],
-	},
-	{
-		withId: 100006,
-		unread: 1,
-		pinned: false,
-		favorite: false,
-		muted: false,
-		lastActivityAgo: 1,
-		rightNow: "HOSTING",
-		messages: [
-			{ fromMe: true, text: "Hi, how are you?" },
-			{ fromMe: true, kind: "expiringImage" },
-			{ fromMe: false, kind: "expiringImage", expired: true },
-			{ fromMe: false, text: "Did you catch it? 👀" },
-			{ fromMe: false, kind: "album", albumId: 5004, reactions: 1 },
-		],
-	},
-	{
-		withId: 100009,
-		unread: 0,
-		pinned: true,
-		favorite: false,
-		muted: false,
-		lastActivityAgo: 52,
-		chemistry: true,
-		messages: [
-			{ fromMe: true, text: "Quis nostrud exercitation." },
-			{ fromMe: false, text: "Ullamco laboris nisi." },
-			{ fromMe: true, kind: "unsent" },
-			{
-				fromMe: false,
-				kind: "album",
-				albumId: 5002,
-				expiring: "v1",
-				locked: true,
-			},
-			{ fromMe: true, text: "Ut aliquip ex ea commodo." },
-		],
-	},
-	{
-		withId: 100250,
-		unread: 0,
-		pinned: false,
-		favorite: false,
-		muted: true,
-		lastActivityAgo: 18,
-		messages: [
-			{ fromMe: false, text: "Lorem ipsum" },
-			{ fromMe: false, kind: "album", albumId: 5003, expiring: "v2" },
-			{ fromMe: true, text: "ok 👍" },
-		],
-	},
-	{
-		withId: 100777,
-		unread: 3,
-		pinned: false,
-		favorite: false,
-		muted: false,
-		lastActivityAgo: 7,
-		messages: [
-			{ fromMe: false, text: "Lorem ipsum dolor sit amet consectetur." },
-			{ fromMe: false, text: "Lorem ipsum dolor sit amet." },
-			{ fromMe: false, text: "Lorem ipsum dolor sit." },
-		],
-	},
-	{
-		withId: 100002,
-		unread: 0,
-		pinned: false,
-		favorite: false,
-		muted: false,
-		lastActivityAgo: 320,
-		messages: [
-			{ fromMe: true, text: "Duis aute irure dolor." },
-			{ fromMe: false, kind: "expiringImage" },
-			{ fromMe: false, kind: "image" },
-			{ fromMe: false, text: "🐻 lorem ipsum", reactions: 2 },
-		],
-	},
-
-	{
-		withId: 100333,
-		unread: 0,
-		pinned: false,
-		favorite: false,
-		muted: false,
-		lastActivityAgo: 45,
-		messages: Array.from({ length: 80 }, (_, i) => ({
-			fromMe: i % 3 === 0,
-			text: `Backlog message ${i + 1}`,
-		})),
-	},
-];
 
 const MESSAGE_GAP = 7 * MINUTE;
 const MESSAGES_PER_PAGE = 8;
@@ -167,9 +37,21 @@ export function conversationIdFor(withId: number): string {
 	return `${Math.min(demoMeProfileId, withId)}:${Math.max(demoMeProfileId, withId)}`;
 }
 
-const demoConversationById = new Map(
-	demoConversationSeeds.map((conv) => [conversationIdFor(conv.withId), conv]),
-);
+function sceneInbox() {
+	return screenshotsEnabled ? screenshotScene.inbox : null;
+}
+
+function conversationSeeds(): DemoConversation[] {
+	return sceneInbox()?.conversations ?? demoConversationSeeds();
+}
+
+function conversationSeed(
+	conversationId: string,
+): DemoConversation | undefined {
+	return conversationSeeds().find(
+		(conv) => conversationIdFor(conv.withId) === conversationId,
+	);
+}
 
 const pinnedOverrides = new Map<string, boolean>();
 const mutedOverrides = new Map<string, boolean>();
@@ -208,14 +90,16 @@ function buildMessage({
 	message,
 	index,
 	timestamp,
+	quoted = false,
 }: {
 	conv: DemoConversation;
 	message: DemoMessage;
 	index: number;
 	timestamp: number;
+	quoted?: boolean;
 }): ApiResponseMessage {
 	const conversationId = conversationIdFor(conv.withId);
-	const messageId = `${index}:demo-${conv.withId}-${index}`;
+	const messageId = `${index}:demo-${conv.withId}-${index}${quoted ? "-quoted" : ""}`;
 	const senderId = message.fromMe ? demoMeProfileId : conv.withId;
 	const reactions = Array.from({ length: message.reactions ?? 0 }, () => ({
 		profileId: message.fromMe ? conv.withId : demoMeProfileId,
@@ -302,6 +186,13 @@ function buildMessage({
 		}
 		case "unsent":
 			return { type: "Unsent", body: null, ...base, unsent: true };
+		case "wire":
+			return apiResponseMessageSchema.parse({
+				type: message.type,
+				body: message.body,
+				...base,
+				unsent: false,
+			});
 		default:
 			return {
 				type: "Text",
@@ -312,11 +203,34 @@ function buildMessage({
 	}
 }
 
+function buildReply({
+	conv,
+	message,
+	index,
+	timestamp,
+}: {
+	conv: DemoConversation;
+	message: DemoMessage;
+	index: number;
+	timestamp: number;
+}): ApiResponseMessage {
+	const built = buildMessage({ conv, message, index, timestamp });
+	if (message.quote === undefined) return built;
+	const replyToMessage = buildMessage({
+		conv,
+		message: message.quote,
+		index,
+		timestamp: timestamp - MESSAGE_GAP,
+		quoted: true,
+	});
+	return { ...built, replyToMessage };
+}
+
 function threadMessages(conv: DemoConversation): ApiResponseMessage[] {
 	const lastActivity = lastActivityOf(conv);
 	const count = conv.messages.length;
 	const ordered = conv.messages.map((message, i) =>
-		buildMessage({
+		buildReply({
 			conv,
 			message,
 			index: i,
@@ -359,7 +273,7 @@ export function demoConversations({
 	filters?: Partial<InboxFilterRequest>;
 }) {
 	if (page > 1) return demoEmptyInbox;
-	const entries: Conversation[] = demoConversationSeeds
+	const entries: Conversation[] = conversationSeeds()
 		.filter(
 			(conv) =>
 				!deletedConversationIds.has(conversationIdFor(conv.withId)),
@@ -373,7 +287,7 @@ export function demoConversations({
 				type: "full_conversation_v1",
 				data: {
 					conversationId,
-					name: seed.name ?? "Grindr user",
+					name: conv.name ?? seed.name ?? "Grindr user",
 					participants: [
 						{
 							profileId: conv.withId,
@@ -420,7 +334,7 @@ export function demoConversations({
 		totalFullConversations: Math.min(gatedFrom, entries.length),
 		totalPartialConversations: Math.max(entries.length - gatedFrom, 0),
 		maxDisplayLockCount: 99,
-		nextPage: null,
+		nextPage: sceneInbox()?.nextPage ?? null,
 	};
 }
 
@@ -431,16 +345,17 @@ export function demoConversationMessages({
 	conversationId: string;
 	pageKey?: string;
 }) {
-	const conv = demoConversationById.get(conversationId);
+	const conv = conversationSeed(conversationId);
 	const seed = conv ? profileSeed(conv.withId) : undefined;
 	const photos = conv ? photosOf(conv.withId) : [];
+	const distance = conv?.hidesDistance ? null : (seed?.distanceM ?? null);
 	const profile = {
-		distance: seed?.distanceM ?? null,
+		distance,
 		mediaHash: photos[0] ?? null,
 		name: seed?.name ?? null,
 		onlineUntil: seed ? onlineUntilOf(seed) : null,
 		profileId: conv?.withId ?? 0,
-		showDistance: seed?.distanceM !== null && seed?.distanceM !== undefined,
+		showDistance: distance !== null,
 	};
 	if (!conv) return { lastReadTimestamp: null, messages: [], profile };
 	const thread = threadMessages(conv);
@@ -469,7 +384,7 @@ export function demoSingleMessage({
 	conversationId: string;
 	messageId: string;
 }) {
-	const conv = demoConversationById.get(conversationId);
+	const conv = conversationSeed(conversationId);
 	const message = conv
 		? threadMessages(conv).find((entry) => entry.messageId === messageId)
 		: undefined;
@@ -483,7 +398,7 @@ export function demoMessagesById({
 	conversationId: string;
 	messageIds: string[];
 }) {
-	const conv = demoConversationById.get(conversationId);
+	const conv = conversationSeed(conversationId);
 	const wanted = new Set(messageIds);
 	return {
 		messages: conv
@@ -570,59 +485,4 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 				: { text: "" },
 		...overlay,
 	};
-}
-
-type DemoDrawerMedia = {
-	id: number;
-	url: string;
-	contentType: string;
-	createdTs: number;
-	used: boolean;
-	takenOnGrindr: boolean;
-};
-
-let uploadedDrawerMediaId = 920_000;
-const uploadedDrawerMedia: DemoDrawerMedia[] = [];
-
-export function demoUploadChatMedia({
-	bytes,
-	contentType,
-}: {
-	bytes: Uint8Array<ArrayBuffer>;
-	contentType: string;
-}): { mediaId: number; url: string; mediaHash: string } {
-	const item: DemoDrawerMedia = {
-		id: uploadedDrawerMediaId++,
-		url: URL.createObjectURL(new Blob([bytes], { type: contentType })),
-		contentType,
-		createdTs: Date.now(),
-		used: false,
-		takenOnGrindr: false,
-	};
-	uploadedDrawerMedia.unshift(item);
-	return {
-		mediaId: item.id,
-		url: item.url,
-		mediaHash: hashFromSeed(`drawer-${item.id}`),
-	};
-}
-
-const deletedDrawerMedia = new Set<number>();
-
-export function demoDrawerMedia(): DemoDrawerMedia[] {
-	return [
-		...uploadedDrawerMedia,
-		...Array.from({ length: 10 }, (_, index) => ({
-			id: 910_000 + index,
-			url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
-			contentType: "image/jpeg",
-			createdTs: NOW - (index + 1) * HOUR,
-			used: index % 3 === 0,
-			takenOnGrindr: false,
-		})),
-	].filter(({ id }) => !deletedDrawerMedia.has(id));
-}
-
-export function demoDeleteDrawerMedia(mediaId: number): void {
-	deletedDrawerMedia.add(mediaId);
 }

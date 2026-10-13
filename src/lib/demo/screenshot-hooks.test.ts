@@ -112,6 +112,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			onboarding: false,
 			updates: false,
 			emptyLists: ["taps"],
+			inbox: null,
 			restriction: null,
 			restFaults: [],
 			methodFaults: [],

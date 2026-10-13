@@ -1,4 +1,5 @@
 import type { PlainMessageKey } from "../i18n/types";
+import type { DemoInbox } from "./mock/conversation-seeds";
 import type { ViewScan } from "./screenshot-scan";
 
 export const demoLists = [
@@ -38,6 +39,7 @@ export type ScreenshotScene = {
 	onboarding: boolean;
 	updates: boolean;
 	emptyLists: DemoList[];
+	inbox: DemoInbox | null;
 	restriction: {
 		kind: string;
 		region?: string | null;
@@ -107,6 +109,7 @@ export const screenshotScene: ScreenshotScene = {
 	onboarding: false,
 	updates: false,
 	emptyLists: [],
+	inbox: null,
 	restriction: null,
 	restFaults: [],
 	methodFaults: [],
