@@ -12,6 +12,8 @@ import {
 	messageChain,
 	normalizeTag,
 	type Offered,
+	type Resolution,
+	resolveLocale,
 } from "./matcher";
 import { everyLanguageOffered } from "./offered";
 import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
@@ -120,6 +122,20 @@ export const locales: readonly string[] = [
 	.sort();
 
 const offered: Offered = { catalogs: locales, pseudo: PSEUDO_LOCALES };
+
+export function offersLanguage(tag: string): boolean {
+	return catalogFor({ tag, offered }) !== undefined;
+}
+
+export function resolveLanguage({
+	choice,
+	system,
+}: {
+	choice: string | null;
+	system: readonly string[];
+}): Resolution {
+	return resolveLocale({ choice, system, offered });
+}
 
 export function getLocale(): string {
 	return state.locale;

@@ -25,6 +25,8 @@ export {
 	getLocale,
 	getRegionalSettings,
 	locales,
+	offersLanguage,
+	resolveLanguage,
 	setCountFormatter,
 	setLocale,
 	setRegionalSettings,

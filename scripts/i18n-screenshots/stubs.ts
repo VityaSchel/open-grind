@@ -25,6 +25,7 @@ declare global {
 
 const nativeAnswers: Record<string, unknown> = {
 	"plugin:app|version": APP_VERSION,
+	app_languages: { tier: "none", app: null, system: ["en-US"] },
 	regional_settings: {
 		locale: "en-US",
 		numberLocale: "en-US",

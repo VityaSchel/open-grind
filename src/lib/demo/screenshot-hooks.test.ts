@@ -29,6 +29,12 @@ vi.mock("$lib/platform/regional-settings", () => ({
 		return Promise.resolve();
 	}),
 }));
+vi.mock("$lib/platform/app-language", () => ({
+	startLanguage: vi.fn(() => {
+		noteHooked("startLanguage");
+		return Promise.resolve();
+	}),
+}));
 
 import type { ScreenshotHooks } from "./screenshot-scene";
 
@@ -97,6 +103,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 		expect(hookedAtStartup).toEqual([
 			"ws.connect",
 			"startRegionalSettings",
+			"startLanguage",
 		]);
 	});
 
