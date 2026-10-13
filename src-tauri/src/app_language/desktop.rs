@@ -14,7 +14,7 @@ use super::CHANGED_EVENT;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum SyncTier {
-	#[cfg_attr(not(test), allow(dead_code))]
+	#[cfg_attr(not(any(target_os = "macos", test)), allow(dead_code))]
 	TwoWay,
 	None,
 }

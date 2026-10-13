@@ -1,6 +1,18 @@
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
 use crate::regional::posix_locale;
 
+#[cfg(any(target_os = "macos", test))]
+pub fn is_language_tag(tag: &str) -> bool {
+	let mut subtags = tag.split('-');
+	let language = subtags.next().unwrap_or_default();
+	(2..=8).contains(&language.len())
+		&& language.chars().all(|c| c.is_ascii_alphabetic())
+		&& subtags.all(|subtag| {
+			(1..=8).contains(&subtag.len())
+				&& subtag.chars().all(|c| c.is_ascii_alphanumeric())
+		})
+}
+
 #[cfg(any(not(any(target_os = "macos", target_os = "windows")), test))]
 pub fn posix_languages(
 	variable: impl Fn(&str) -> Option<String>,
@@ -129,5 +141,27 @@ mod tests {
 			multi_string(&[0xd800, 0, u16::from(b'f'), u16::from(b'r'), 0, 0]),
 			["fr"]
 		);
+	}
+
+	#[test]
+	fn only_well_formed_tags_are_written() {
+		for tag in ["en", "en-US", "es-419", "zh-Hant-TW", "sr-Latn-RS", "fil"]
+		{
+			assert!(is_language_tag(tag), "{tag}");
+		}
+		for tag in [
+			"",
+			"e",
+			"en_US",
+			"en--US",
+			"-en",
+			"en-",
+			"1en",
+			"en-toolongsub",
+			"日本",
+			"en US",
+		] {
+			assert!(!is_language_tag(tag), "{tag}");
+		}
 	}
 }
