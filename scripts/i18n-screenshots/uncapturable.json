@@ -1,3 +1,4 @@
 {
-	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog."
+	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog.",
+	"shell.notFound.clippy.*": "Only in the tooltip beside clippy.avif, which has no license, and the image's alt text is on its hidden back face until it flips."
 }

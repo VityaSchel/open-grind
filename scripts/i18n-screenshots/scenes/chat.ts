@@ -14,7 +14,7 @@ const INBOX_ROW = 'main a[href^="/chat/"]';
 const FILTER_PILL =
 	"[data-fixed-header] button:not([aria-label], [aria-pressed])";
 const DEMO_CONVERSATION_ROW = `main a[href="${DEMO_CONVERSATION}"]`;
-const TEXT_CONVERSATION = "/chat/100009:123456000";
+export const TEXT_CONVERSATION = "/chat/100009:123456000";
 const MESSAGE_BUBBLE = '[data-slot="message"] [data-slot="message-bubble"]';
 const MESSAGE_MENU = 'dialog[open] [data-slot="context-menu-list"]';
 

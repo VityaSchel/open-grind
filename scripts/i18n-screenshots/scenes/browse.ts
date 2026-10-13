@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
 	GRID_READY_SELECTOR,
 	runPaletteCommand,
@@ -8,7 +10,8 @@ import { NEUTRAL_GEOHASH } from "../stubs";
 import type { Scene } from ".";
 import { visit } from "./visit";
 
-const LOCATION_TITLE = '[data-slot="empty-title"]';
+export const LOCATION_TITLE = '[data-slot="empty-title"]';
+export const GRID_SCROLLER = '.pull-scroller:has([data-slot="grid-content"])';
 const MAP_SEARCH = '[data-slot="map-controls"] input';
 const FILTERS_SCROLLER = '[role="dialog"] [data-slot="grid-filters-scroller"]';
 
@@ -33,18 +36,18 @@ export const chooseLocation: Scene = {
 	],
 };
 
+export async function chooseNeutralLocation(page: Page): Promise<void> {
+	await visit({ page, path: "/", ready: page.locator(LOCATION_TITLE) });
+	await runPaletteCommand(page, `@${NEUTRAL_GEOHASH}`);
+}
+
 export const grid: Scene = {
 	platform: "phone",
 	views: [
 		{
 			id: "browse/grid",
 			drive: async (page) => {
-				await visit({
-					page,
-					path: "/",
-					ready: page.locator(LOCATION_TITLE),
-				});
-				await runPaletteCommand(page, `@${NEUTRAL_GEOHASH}`);
+				await chooseNeutralLocation(page);
 				await page.locator(GRID_READY_SELECTOR).waitFor();
 				await profileTile(page).nth(8).waitFor();
 			},
