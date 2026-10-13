@@ -3,17 +3,16 @@ import type { Page } from "@playwright/test";
 import { MESSAGE_ROW } from "../../../e2e/support/app";
 import { profileTile } from "../../../e2e/support/gps";
 import type { RestFault } from "../../../src/lib/demo/screenshot-scene";
-import { overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { chooseNeutralLocation, LOCATION_TITLE } from "./browse";
 import { TEXT_CONVERSATION } from "./chat";
+import { chooseFromMessageMenu, lastOutgoing } from "./chat-drive";
 import { ALERT, changeScene } from "./drive";
+import { failClipboard } from "./faults";
 import { holdToast } from "./toast";
 import { visit } from "./visit";
 
 const CASCADE = { pattern: "^/v4/cascade" };
-const OUTGOING_BUBBLE = `${MESSAGE_ROW}.ps-3 [data-slot="message-bubble"]`;
-const MESSAGE_MENU = 'dialog[open] [data-slot="context-menu-list"]';
 const UNSEND_REFUSED: RestFault = {
 	method: "POST",
 	path: "/v4/chat/message/unsend",
@@ -25,11 +24,12 @@ function copyErrorButton(page: Page) {
 	return page.getByRole("button", { name: "Copy error details" });
 }
 
-async function openConversation(page: Page): Promise<void> {
+async function askToUnsendLastMessage(page: Page): Promise<void> {
 	await page.locator(MESSAGE_ROW).first().waitFor();
-	await page.locator(OUTGOING_BUBBLE).last().click({ button: "right" });
-	await page.locator(MESSAGE_MENU).waitFor();
-	await page.getByRole("button", { name: "Unsend message" }).click();
+	await chooseFromMessageMenu({
+		row: lastOutgoing(page),
+		action: "Unsend message",
+	});
 	await page.locator(ALERT).waitFor();
 }
 
@@ -135,14 +135,7 @@ export const copyError: Scene = {
 			id: "feedback/copy-error/failed",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await overrideNative({
-					page,
-					overrides: {
-						"plugin:clipboard-manager|write_text": {
-							reject: "Clipboard unavailable",
-						},
-					},
-				});
+				await failClipboard(page);
 				await showFailureToast(page);
 				await confirmCopyError(page);
 				await copyConfirmed(page);
@@ -250,7 +243,7 @@ export const bypassWithoutLocation: Scene = {
 					path: TEXT_CONVERSATION,
 					ready: page.locator(MESSAGE_ROW),
 				});
-				await openConversation(page);
+				await askToUnsendLastMessage(page);
 			},
 		},
 		{
@@ -279,7 +272,7 @@ export const bypassFailure: Scene = {
 					.locator(`main a[href="${TEXT_CONVERSATION}"]`)
 					.first()
 					.click();
-				await openConversation(page);
+				await askToUnsendLastMessage(page);
 				await changeScene({
 					page,
 					scene: {

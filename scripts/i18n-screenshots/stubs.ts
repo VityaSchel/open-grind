@@ -83,20 +83,34 @@ export async function installNativeStubs({
 					};
 				}
 			).__TAURI_INTERNALS__;
+			const events = window as unknown as {
+				__TAURI_EVENT_PLUGIN_INTERNALS__?: {
+					unregisterListener: () => void;
+				};
+			};
+			events.__TAURI_EVENT_PLUGIN_INTERNALS__ ??= {
+				unregisterListener: () => {},
+			};
 			const passThrough = internals.invoke;
 			const calls = new Map<string, number>();
 			const table = (window.__openGrindNativeOverrides = seeded);
-			const respond = (
-				command: string,
-				override: NativeOverride,
-			): Promise<unknown> => {
+			const respond = ({
+				command,
+				override,
+			}: {
+				command: string;
+				override: NativeOverride;
+			}): Promise<unknown> => {
 				if ("sequence" in override) {
 					const index = calls.get(command) ?? 0;
 					calls.set(command, index + 1);
 					const step = override.sequence.at(
 						Math.min(index, override.sequence.length - 1),
 					);
-					return respond(command, step ?? { answer: null });
+					return respond({
+						command,
+						override: step ?? { answer: null },
+					});
 				}
 				if ("reject" in override)
 					return Promise.reject(override.reject);
@@ -105,7 +119,8 @@ export async function installNativeStubs({
 			};
 			internals.invoke = (cmd, args, opts) => {
 				const override = table[cmd];
-				if (override !== undefined) return respond(cmd, override);
+				if (override !== undefined)
+					return respond({ command: cmd, override });
 				if (cmd === "updater_set_auto_check") {
 					const { enabled } = args as { enabled: boolean };
 					return Promise.resolve({ autoCheck: enabled, nextCheckAt });
