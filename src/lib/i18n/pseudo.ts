@@ -1,5 +1,5 @@
-import { screenshotsEnabled } from "$lib/demo/config";
 import { markMessage } from "./markers";
+import { everyLanguageOffered } from "./offered";
 import { MARKUP, PLURAL_KEY } from "./syntax";
 
 const ASCII_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -37,8 +37,6 @@ interface PseudoTransform {
 
 const unchanged = (text: string): string => text;
 
-export const pseudoLocalesEnabled = import.meta.env.DEV || screenshotsEnabled;
-
 const transforms = new Map<string, PseudoTransform>([
 	[
 		"en-XA",
@@ -51,7 +49,7 @@ const transforms = new Map<string, PseudoTransform>([
 			formatted: unchanged,
 		},
 	],
-	...(pseudoLocalesEnabled
+	...(everyLanguageOffered
 		? [["en-XM", { message: markMessage, formatted: unchanged }] as const]
 		: []),
 ]);

@@ -10,6 +10,8 @@ export const LOCALES = path.join(I18N, "locales");
 
 export const FIXTURES = path.join(I18N, "fixtures");
 
+export const SHIPPED = path.join(I18N, "shipped.json");
+
 export const sourceFile = (json: unknown): SourceFile => ({
 	namespace: "ns",
 	text: JSON.stringify(json),

@@ -6,9 +6,12 @@ pre-commit:
     text:
       exclude:
         - "src/lib/i18n/locales/en/*.json"
+        - "src/lib/i18n/shipped.json"
     i18n:
-      glob: "src/lib/i18n/locales/en/*.json"
-      run: bun run gen:i18n && git diff --exit-code -- src/lib/i18n/generated.ts && bunx prettier --write {staged_files}
+      glob:
+        - "src/lib/i18n/locales/en/*.json"
+        - "src/lib/i18n/shipped.json"
+      run: bun run gen:i18n && git diff --exit-code -- src/lib/i18n/generated.ts src/lib/i18n/shipped-files.ts && bunx prettier --write {staged_files}
       stage_fixed: true
     clippy:
       glob: "*.rs"

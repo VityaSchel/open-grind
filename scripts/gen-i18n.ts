@@ -1,11 +1,12 @@
 import path from "node:path";
 
 import { SOURCE_LOCALE } from "../src/lib/i18n/syntax";
-import { LOCALES, readLocaleFiles } from "./i18n/locale-files";
+import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
 import { renderTypes } from "./i18n/render-types";
+import { checkShipped, renderShippedFiles } from "./i18n/shipped";
 import { checkTranslation, collectMessages } from "./i18n/source-messages";
 
-const OUTPUT = path.join(import.meta.dir, "../src/lib/i18n/generated.ts");
+const ROOT = path.join(import.meta.dir, "..");
 
 const catalogs = readLocaleFiles(LOCALES);
 const source = catalogs.get(SOURCE_LOCALE) ?? [];
@@ -23,27 +24,56 @@ for (const { locale, warnings, translated, total } of reports) {
 	console.log(`${locale}: ${translated}/${total} messages translated`);
 }
 
-const problems = [...errors, ...reports.flatMap((report) => report.errors)];
+const shipped = checkShipped({
+	text: await Bun.file(SHIPPED).text(),
+	completion: new Map(
+		reports.map(({ locale, translated, total }) => [
+			locale,
+			{ translated, total },
+		]),
+	),
+	release: process.argv.includes("--release"),
+});
+
+for (const warning of shipped.warnings) console.warn(`warning: ${warning}`);
+
+const problems = [
+	...errors,
+	...reports.flatMap((report) => report.errors),
+	...shipped.errors,
+];
 
 if (problems.length > 0) {
 	console.error(problems.map((problem) => `error: ${problem}`).join("\n"));
 	process.exit(1);
 }
 
-const output = renderTypes(messages);
-const relative = path.relative(process.cwd(), OUTPUT);
-const current = await Bun.file(OUTPUT)
-	.text()
-	.catch(() => "");
+const outputs = [
+	{ file: "src/lib/i18n/generated.ts", text: renderTypes(messages) },
+	{
+		file: "src/lib/i18n/shipped-files.ts",
+		text: renderShippedFiles(shipped.languages),
+	},
+];
 
-if (current === output) {
-	console.log(`i18n types up to date (${messages.length} messages)`);
+const changed: typeof outputs = [];
+
+for (const output of outputs) {
+	const current = await Bun.file(path.join(ROOT, output.file))
+		.text()
+		.catch(() => "");
+	if (current !== output.text) changed.push(output);
+}
+
+if (changed.length === 0) {
+	console.log(`i18n files up to date (${messages.length} messages)`);
 } else if (process.argv.includes("--check")) {
-	console.error(
-		`${relative} is out of date. Run \`bun run gen:i18n\` and commit the result.`,
-	);
+	for (const { file } of changed) console.error(`${file} is out of date.`);
+	console.error("Run `bun run gen:i18n` and commit the result.");
 	process.exit(1);
 } else {
-	await Bun.write(OUTPUT, output);
-	console.log(`wrote ${relative} (${messages.length} messages)`);
+	for (const { file, text } of changed) {
+		await Bun.write(path.join(ROOT, file), text);
+		console.log(`wrote ${file} (${messages.length} messages)`);
+	}
 }

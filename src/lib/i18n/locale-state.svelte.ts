@@ -6,18 +6,15 @@ import {
 	translationFiles,
 } from "./catalog-files";
 import { type CountFormatter, defaultCountFormatter } from "./counts";
+import { textDirection } from "./direction";
 import {
 	catalogFor,
 	messageChain,
 	normalizeTag,
 	type Offered,
 } from "./matcher";
-import {
-	isPseudoLocale,
-	PSEUDO_LOCALES,
-	pseudoDictionary,
-	pseudoLocalesEnabled,
-} from "./pseudo";
+import { everyLanguageOffered } from "./offered";
+import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
 import {
 	composeFormatLocales,
 	type FormatLocales,
@@ -31,45 +28,6 @@ export type Catalog = {
 	readonly locale: string;
 	readonly dictionary: ReadonlyMap<string, string>;
 };
-
-const RTL_SCRIPTS = new Set([
-	"Adlm",
-	"Aran",
-	"Arab",
-	"Armi",
-	"Avst",
-	"Chrs",
-	"Cprt",
-	"Elym",
-	"Hatr",
-	"Hebr",
-	"Hung",
-	"Khar",
-	"Lydi",
-	"Mand",
-	"Mani",
-	"Mend",
-	"Merc",
-	"Mero",
-	"Narb",
-	"Nbat",
-	"Nkoo",
-	"Orkh",
-	"Ougr",
-	"Palm",
-	"Phli",
-	"Phlp",
-	"Phnx",
-	"Prti",
-	"Rohg",
-	"Samr",
-	"Sarb",
-	"Sogd",
-	"Sogo",
-	"Syrc",
-	"Thaa",
-	"Yezi",
-]);
 
 function flatten({
 	json,
@@ -105,7 +63,7 @@ function toCatalog({
 }
 
 async function loadCatalog(locale: string): Promise<Catalog> {
-	if (pseudoLocalesEnabled && isPseudoLocale(locale)) {
+	if (everyLanguageOffered && isPseudoLocale(locale)) {
 		const source = state.source.dictionary;
 		return { locale, dictionary: pseudoDictionary({ locale, source }) };
 	}
@@ -121,11 +79,6 @@ async function loadCatalog(locale: string): Promise<Catalog> {
 		),
 	);
 	return toCatalog({ locale, files: loaded });
-}
-
-function textDirection(locale: string): "ltr" | "rtl" {
-	const { script = "" } = new Intl.Locale(locale).maximize();
-	return RTL_SCRIPTS.has(script) ? "rtl" : "ltr";
 }
 
 function settingsKey(regional: RegionalSettings): string {
@@ -161,7 +114,7 @@ export const locales: readonly string[] = [
 	...Object.keys(translationFiles).map(
 		(path) => parseLocalePath(path).locale,
 	),
-	...(pseudoLocalesEnabled ? PSEUDO_LOCALES : []),
+	...(everyLanguageOffered ? PSEUDO_LOCALES : []),
 ]
 	.filter((locale, index, all) => all.indexOf(locale) === index)
 	.sort();

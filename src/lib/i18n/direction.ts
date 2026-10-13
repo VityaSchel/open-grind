@@ -1,0 +1,43 @@
+const RTL_SCRIPTS = new Set([
+	"Adlm",
+	"Aran",
+	"Arab",
+	"Armi",
+	"Avst",
+	"Chrs",
+	"Cprt",
+	"Elym",
+	"Hatr",
+	"Hebr",
+	"Hung",
+	"Khar",
+	"Lydi",
+	"Mand",
+	"Mani",
+	"Mend",
+	"Merc",
+	"Mero",
+	"Narb",
+	"Nbat",
+	"Nkoo",
+	"Orkh",
+	"Ougr",
+	"Palm",
+	"Phli",
+	"Phlp",
+	"Phnx",
+	"Prti",
+	"Rohg",
+	"Samr",
+	"Sarb",
+	"Sogd",
+	"Sogo",
+	"Syrc",
+	"Thaa",
+	"Yezi",
+]);
+
+export function textDirection(locale: string): "ltr" | "rtl" {
+	const { script = "" } = new Intl.Locale(locale).maximize();
+	return RTL_SCRIPTS.has(script) ? "rtl" : "ltr";
+}
