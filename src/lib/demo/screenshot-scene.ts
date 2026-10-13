@@ -29,6 +29,22 @@ export type MethodFault = { command: string } & (
 	| Pending
 );
 
+export type DemoProfilePatch = {
+	isNew?: boolean;
+	isVisiting?: boolean;
+	onlineUntil?: number | null;
+	seen?: number | null;
+	unreadCount?: number;
+	height?: number | null;
+	nsfw?: number | null;
+	meetAt?: number[];
+	hivStatus?: number | null;
+	sexualHealth?: number[];
+	genders?: number[] | null;
+	pronouns?: number[] | null;
+	tapType?: 0 | 1 | 2 | null;
+};
+
 export type MethodOutcome =
 	| { error: NativeError }
 	| Pending
@@ -40,6 +56,8 @@ export type ScreenshotScene = {
 	updates: boolean;
 	emptyLists: DemoList[];
 	inbox: DemoInbox | null;
+	profiles: Record<number, DemoProfilePatch>;
+	maskedProfiles: number[];
 	restriction: {
 		kind: string;
 		region?: string | null;
@@ -110,6 +128,8 @@ export const screenshotScene: ScreenshotScene = {
 	updates: false,
 	emptyLists: [],
 	inbox: null,
+	profiles: {},
+	maskedProfiles: [],
 	restriction: null,
 	restFaults: [],
 	methodFaults: [],
@@ -143,6 +163,14 @@ export function sceneRestFault({
 			(fault.method ?? method) === method &&
 			pathMatches({ match: fault.path, path }),
 	);
+}
+
+export function sceneProfile(profileId: number): DemoProfilePatch {
+	return screenshotScene.profiles[profileId] ?? {};
+}
+
+export function sceneMasksProfile(profileId: number): boolean {
+	return screenshotScene.maskedProfiles.includes(profileId);
 }
 
 export function sceneMethodOutcome(command: string): MethodOutcome | undefined {

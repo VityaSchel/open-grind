@@ -113,6 +113,8 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			updates: false,
 			emptyLists: ["taps"],
 			inbox: null,
+			profiles: {},
+			maskedProfiles: [],
 			restriction: null,
 			restFaults: [],
 			methodFaults: [],

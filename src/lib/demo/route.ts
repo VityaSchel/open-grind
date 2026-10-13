@@ -76,7 +76,13 @@ import {
 	demoAccountPreferences,
 	demoSetAccountPreferences,
 } from "./mock/settings";
-import { type DemoList, screenshotScene } from "./screenshot-scene";
+import {
+	type DemoList,
+	type DemoProfilePatch,
+	sceneMasksProfile,
+	sceneProfile,
+	screenshotScene,
+} from "./screenshot-scene";
 
 type DemoResponse = { status: number; body: unknown };
 
@@ -90,6 +96,14 @@ function emptied(list: DemoList): boolean {
 
 function signedOut(): boolean {
 	return screenshotsEnabled && screenshotScene.signedOut;
+}
+
+function masked(profileId: number): boolean {
+	return screenshotsEnabled && sceneMasksProfile(profileId);
+}
+
+function patchOf(profileId: number): DemoProfilePatch {
+	return screenshotsEnabled ? sceneProfile(profileId) : {};
 }
 
 export function demoCallMethod(method: string): unknown {
@@ -156,9 +170,9 @@ export function demoRoute({
 		const seed = profileSeed(id);
 		return ok({
 			profiles: [
-				demoProfileHidden(id)
+				demoProfileHidden(id) || masked(id)
 					? buildMaskedProfile(seed)
-					: buildFullProfile(seed),
+					: { ...buildFullProfile(seed), ...patchOf(id) },
 			],
 		});
 	}
