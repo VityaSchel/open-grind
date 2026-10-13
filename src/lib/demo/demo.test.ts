@@ -20,6 +20,8 @@ import {
 	conversationEntrySchema,
 	fullConversationSchema,
 } from "$lib/model/messaging/conversations";
+import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
+import { giphyResponseSchema } from "$lib/model/messaging/giphy";
 import { previewLabel } from "$lib/model/messaging/message-preview";
 import {
 	apiResponseMessageSchema,
@@ -323,6 +325,26 @@ describe("demo route data matches the real schemas", () => {
 				body: undefined,
 			}).status,
 		).toBe(200);
+	});
+
+	it("GIPHY pages and the Gaymoji manifest validate", () => {
+		const key = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
+		const trending = giphyResponseSchema.parse(
+			route(
+				`api.giphy.com/v1/gifs/trending?limit=50&rating=r&api_key=${key}`,
+			),
+		);
+		const search = giphyResponseSchema.parse(
+			route(
+				`api.giphy.com/v1/gifs/search?limit=50&rating=r&q=hi&offset=0&api_key=${key}&lang=en`,
+			),
+		);
+		const manifest = gaymojiManifestSchema.parse(
+			route("cdns.grindr.com/grindr/chat/gaymoji"),
+		);
+		expect(trending.data).toHaveLength(50);
+		expect(search.data).toHaveLength(50);
+		expect(manifest.gaymoji).toHaveLength(579);
 	});
 
 	it("conversation pin/mute/delete mutations persist across inbox fetches", () => {

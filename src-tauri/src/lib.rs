@@ -218,6 +218,7 @@ pub fn run() {
             api::push::push_watch,
             storage::storage_backend,
             api::rest::request,
+            api::rest::fetch_external,
             media::media_failure,
             upload::bytes::upload_media,
             upload::inspect::inspect_media_file,
@@ -482,6 +483,7 @@ mod webview_floor_pins {
 mod frontend_method_pins {
 	const THIS: &str = include_str!("lib.rs");
 	const METHODS: &str = include_str!("../../src/lib/api/methods.ts");
+	const TRANSPORT: &str = include_str!("../../src/lib/api/transport.ts");
 
 	fn between<'a>(haystack: &'a str, open: &str, close: &str) -> &'a str {
 		let start = haystack.find(open).expect(open) + open.len();
@@ -489,13 +491,34 @@ mod frontend_method_pins {
 		&haystack[start..start + len]
 	}
 
+	fn registered_commands() -> Vec<&'static str> {
+		between(THIS, "tauri::generate_handler![", "])")
+			.split(',')
+			.filter_map(|entry| entry.trim().rsplit("::").next())
+			.collect()
+	}
+
+	#[test]
+	fn every_command_the_transport_invokes_is_registered() {
+		let registered = registered_commands();
+		let invoked: Vec<&str> = ["invoke(\"", "invokeRest(\""]
+			.into_iter()
+			.flat_map(|opener| TRANSPORT.split(opener).skip(1))
+			.filter_map(|rest| rest.split_once('"'))
+			.map(|(command, _)| command)
+			.collect();
+		assert!(invoked.contains(&"fetch_external"), "{invoked:?}");
+		for command in invoked {
+			assert!(
+				registered.contains(&command),
+				"{command} is invoked by transport.ts but not registered"
+			);
+		}
+	}
+
 	#[test]
 	fn every_frontend_method_is_a_registered_command() {
-		let registered: Vec<&str> =
-			between(THIS, "tauri::generate_handler![", "])")
-				.split(',')
-				.filter_map(|entry| entry.trim().rsplit("::").next())
-				.collect();
+		let registered = registered_commands();
 		let methods: Vec<&str> =
 			between(METHODS, "export const methods = {", "\n}")
 				.lines()

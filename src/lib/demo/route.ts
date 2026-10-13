@@ -49,6 +49,8 @@ import {
 	demoSetFavorite,
 	demoSetFavoriteNote,
 } from "./mock/favorites";
+import { demoGaymojiManifest } from "./mock/gaymoji";
+import { demoGiphySearch, demoGiphyTrending } from "./mock/giphy";
 import {
 	buildFullProfile,
 	buildMaskedProfile,
@@ -112,6 +114,25 @@ export function demoCallMethod(method: string): unknown {
 	}
 }
 
+function demoExternalRoute({
+	path,
+	method,
+	params,
+}: {
+	path: string;
+	method: string;
+	params: URLSearchParams;
+}): DemoResponse {
+	if (method !== "GET") return { status: 405, body: null };
+	if (path === "api.giphy.com/v1/gifs/trending")
+		return ok(demoGiphyTrending(params));
+	if (path === "api.giphy.com/v1/gifs/search")
+		return ok(demoGiphySearch(params));
+	if (path === "cdns.grindr.com/grindr/chat/gaymoji")
+		return ok(demoGaymojiManifest());
+	return { status: 404, body: null };
+}
+
 export function demoRoute({
 	path,
 	method,
@@ -127,6 +148,9 @@ export function demoRoute({
 	const conversationId = segments[3] ?? "";
 	const messageId = segments[5] ?? "";
 
+	if (!rawPath.startsWith("/")) {
+		return demoExternalRoute({ path: rawPath, method, params });
+	}
 	if (method === "GET" && rawPath === "/v4/cascade") {
 		return ok(demoCascadeV4(params));
 	}
