@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const flags = vi.hoisted(() => ({ screenshots: true }));
 
@@ -15,6 +15,7 @@ vi.mock("$lib/demo/config", async (importOriginal) => {
 
 import { ApiError, httpStatusOf } from "$lib/api/api-error";
 import { uploadAlbumContent } from "$lib/api/messaging/albums";
+import { loadDemo } from "$lib/demo";
 import type { MediaFileInspection } from "$lib/platform/media-file";
 import { settlesSoon } from "./demo-test-helpers";
 import {
@@ -63,6 +64,8 @@ function upload({
 		profileId: 1,
 	});
 }
+
+beforeAll(loadDemo);
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));

@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 
 const TRANSPORT_MODULE = /\/src\/lib\/api\/transport\.ts(\?.*)?$/;
-const DEMO_RESPONSE = "const { status, body } = demoRoute({";
+const DEMO_RESPONSE = "const { status, body } = demo().demoRoute({";
 const FAULTY_DEMO_RESPONSE =
-	"const { status, body } = (await globalThis.__demoFault?.({ path, method })) ?? demoRoute({";
+	"const { status, body } = (await globalThis.__demoFault?.({ path, method })) ?? demo().demoRoute({";
 
 export async function routeDemoThroughFaultHook(page: Page): Promise<void> {
 	await page.route(TRANSPORT_MODULE, async (route) => {

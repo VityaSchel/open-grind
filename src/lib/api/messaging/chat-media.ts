@@ -2,7 +2,7 @@ import z from "zod";
 
 import { signedInProfileId } from "$lib/api/current-session";
 import { invokeRest, uploadFileRest } from "$lib/api/transport";
-import { demoEnabled, demoUploadChatMedia } from "$lib/demo";
+import { demo, demoEnabled } from "$lib/demo";
 import { mediaUrlSchema } from "$lib/model/media";
 import {
 	inspectMediaFile,
@@ -66,7 +66,7 @@ async function uploadChatMedia({
 		if (media.source !== "web") {
 			throw new Error("The demo only reads files picked in the browser");
 		}
-		return demoUploadChatMedia({
+		return demo().demoUploadChatMedia({
 			bytes: new Uint8Array(await media.file.arrayBuffer()),
 			contentType,
 		});

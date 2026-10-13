@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const flags = vi.hoisted(() => ({ screenshots: true }));
 
@@ -15,6 +15,7 @@ vi.mock("$lib/demo/config", async (importOriginal) => {
 
 import { ApiError, httpStatusOf } from "$lib/api/api-error";
 import { uploadProfilePhoto } from "$lib/api/users/profiles";
+import { loadDemo } from "$lib/demo";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { settlesSoon } from "./demo-test-helpers";
 import {
@@ -53,6 +54,8 @@ function answered(state: string): UploadAnswer {
 		body: { imageSizes: [{ mediaHash: UPLOADED_HASH, state }] },
 	};
 }
+
+beforeAll(loadDemo);
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));

@@ -6,7 +6,7 @@ import {
 	sceneFaultResponse,
 	uploadFileRest,
 } from "$lib/api/transport";
-import { demoEnabled, demoUploadAlbumContent } from "$lib/demo";
+import { demo, demoEnabled } from "$lib/demo";
 import {
 	type AlbumContentOrderRequest,
 	albumContentProcessingResponseSchema,
@@ -208,7 +208,7 @@ export async function uploadAlbumContent({
 	const path = `/v1/albums/${albumId}/content?${albumContentQuery(inspection)}isFresh=false`;
 	if (demoEnabled) {
 		(await sceneFaultResponse({ method: "POST", path }))?.assertOk();
-		const uploaded = demoUploadAlbumContent({
+		const uploaded = demo().demoUploadAlbumContent({
 			albumId,
 			kind: inspection.kind,
 		});

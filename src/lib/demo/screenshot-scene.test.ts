@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const flags = vi.hoisted(() => ({ demo: true, screenshots: true }));
 
@@ -19,6 +19,7 @@ import { ApiError } from "$lib/api/api-error";
 import { callMethod } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { fetchRest } from "$lib/api/transport";
+import { loadDemo } from "$lib/demo";
 import { isPlayBuild } from "$lib/platform/store";
 import { updatesAvailableHere } from "$lib/updates";
 import { load } from "../../routes/+layout";
@@ -37,6 +38,8 @@ const initialScene = structuredClone(screenshotScene);
 function setScene(scene: Partial<ScreenshotScene>): void {
 	Object.assign(screenshotScene, scene);
 }
+
+beforeAll(loadDemo);
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));

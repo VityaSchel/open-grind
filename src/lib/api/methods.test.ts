@@ -14,7 +14,7 @@ import {
 	uploadRefusalMessage,
 } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod } from "$lib/demo";
+import { demoCallMethod } from "$lib/demo/route";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 

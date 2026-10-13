@@ -1,7 +1,6 @@
-import { screenshotsEnabled } from "$lib/demo/config";
-import { screenshotScene } from "$lib/demo/screenshot-scene";
+import { demo, screenshotsEnabled } from "$lib/demo";
 
 export function isPlayBuild(): boolean {
-	if (screenshotsEnabled && screenshotScene.playBuild) return true;
+	if (screenshotsEnabled && demo().screenshotScene.playBuild) return true;
 	return import.meta.env.OPEN_GRIND_STORE === "play";
 }
