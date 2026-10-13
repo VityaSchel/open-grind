@@ -3,8 +3,11 @@ import type { Page } from "@playwright/test";
 const COVERING_SELECTOR = "vite-error-overlay, [data-sonner-toast]";
 const INTEREST_BADGE_SELECTOR = 'nav a[href="/interest"] [data-slot="badge"]';
 
-export async function brokenImagesOnceReady(page: Page): Promise<string[]> {
-	const ready = await page.waitForFunction(() => {
+export async function brokenImagesOnceReady(
+	page: Page,
+	{ waitForLoading = true }: { waitForLoading?: boolean } = {},
+): Promise<string[]> {
+	const ready = await page.waitForFunction((waitsForLoading) => {
 		const inViewport = (element: Element) => {
 			const rect = element.getBoundingClientRect();
 			return (
@@ -17,9 +20,11 @@ export async function brokenImagesOnceReady(page: Page): Promise<string[]> {
 				rect.left < innerWidth
 			);
 		};
-		const loading = document.querySelectorAll(
-			'[data-slot="skeleton"], [role="status"][aria-label="Loading"]',
-		);
+		const loading = waitsForLoading
+			? document.querySelectorAll(
+					'[data-slot="skeleton"], [role="status"][aria-label="Loading"]',
+				)
+			: [];
 		const animating = document
 			.getAnimations()
 			.some(
@@ -39,7 +44,7 @@ export async function brokenImagesOnceReady(page: Page): Promise<string[]> {
 		return images
 			.filter((image) => image.naturalWidth === 0)
 			.map((image) => image.currentSrc || image.src);
-	});
+	}, waitForLoading);
 	return ready.jsonValue() as Promise<string[]>;
 }
 

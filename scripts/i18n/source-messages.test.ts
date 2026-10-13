@@ -249,7 +249,12 @@ describe("checkTranslation", () => {
 		}),
 	];
 	const check = (json: unknown, locale = "ru") =>
-		checkTranslation({ locale, files: [sourceFile(json)], source });
+		checkTranslation({
+			locale,
+			files: [sourceFile(json)],
+			source,
+			offered: [SOURCE_LOCALE, locale],
+		});
 
 	it.each([
 		{
@@ -435,6 +440,7 @@ describe("checkTranslation", () => {
 					locale,
 					files: [sourceFile(json)],
 					source: [english],
+					offered: [SOURCE_LOCALE, locale],
 				}).errors,
 			).toEqual(errors);
 		},
@@ -523,8 +529,12 @@ describe("checkTranslation", () => {
 		],
 	])("rejects the locale directory %s", (locale, error) => {
 		expect(
-			checkTranslation({ locale, files: [sourceFile({})], source })
-				.errors,
+			checkTranslation({
+				locale,
+				files: [sourceFile({})],
+				source,
+				offered: [SOURCE_LOCALE],
+			}).errors,
 		).toEqual([error]);
 	});
 
@@ -534,6 +544,7 @@ describe("checkTranslation", () => {
 				locale: "ru",
 				files: [{ namespace: "extra", text: '{ "a": "x" }' }],
 				source,
+				offered: [SOURCE_LOCALE, "ru"],
 			}).errors,
 		).toEqual([
 			"ru/extra.json: has no English en/extra.json; rename or remove it",
@@ -544,6 +555,7 @@ describe("checkTranslation", () => {
 describe("Weblate-saved files", () => {
 	const fixtures = readLocaleFiles(FIXTURES);
 	const source = fixtures.get(SOURCE_LOCALE) ?? [];
+	const offered = [...fixtures.keys()];
 
 	it("covers the plural shapes of ten languages and Spanish", () => {
 		expect([...fixtures.keys()]).toEqual([
@@ -625,7 +637,9 @@ describe("Weblate-saved files", () => {
 		"accepts %s and warns only about its cleared form",
 		(locale, warning) => {
 			const files = fixtures.get(locale) ?? [];
-			expect(checkTranslation({ locale, files, source })).toEqual({
+			expect(
+				checkTranslation({ locale, files, source, offered }),
+			).toEqual({
 				errors: [],
 				warnings: [warning],
 				translated: 1,
@@ -641,31 +655,12 @@ describe("Weblate-saved files", () => {
 					locale,
 					files: fixtures.get(locale) ?? [],
 					source,
+					offered,
 				}),
 			),
 		).toEqual([
 			{ errors: [], warnings: [], translated: 3, total: 12 },
 			{ errors: [], warnings: [], translated: 4, total: 12 },
-		]);
-	});
-
-	it("names es-419 before English for gaps in es", () => {
-		expect(
-			checkTranslation({
-				locale: "es",
-				files: [
-					{
-						namespace: "sample",
-						text: JSON.stringify({
-							photos_one: "Una foto",
-							photos_other: "{{count}} fotos",
-						}),
-					},
-				],
-				source,
-			}).warnings,
-		).toEqual([
-			"es/sample.photos: has no text for _many, so those counts show in es-419, then English",
 		]);
 	});
 });

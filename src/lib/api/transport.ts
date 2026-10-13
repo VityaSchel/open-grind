@@ -12,7 +12,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute, screenshotsEnabled } from "$lib/demo";
-import { sceneRestFault } from "$lib/demo/screenshot-scene";
+import { neverSettles, sceneRestFault } from "$lib/demo/screenshot-scene";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -213,6 +213,19 @@ function demoRestResponse({
 	return buildRestResponse({ status, responseBody, requestInfo });
 }
 
+export async function sceneFaultResponse(requestInfo: RequestInfo) {
+	const { path, method } = requestInfo;
+	const fault = screenshotsEnabled
+		? sceneRestFault({ path, method })
+		: undefined;
+	if (fault === undefined) return undefined;
+	if ("pending" in fault) return neverSettles();
+	if ("error" in fault) {
+		throw restInvokeError({ error: fault.error, requestInfo });
+	}
+	return demoRestResponse({ ...fault, requestInfo });
+}
+
 export async function fetchRest(
 	path: string,
 	options: {
@@ -224,15 +237,8 @@ export async function fetchRest(
 	const method = options.method ?? "GET";
 	const requestInfo = { method, path, body: options.body };
 	if (demoEnabled) {
-		const fault = screenshotsEnabled
-			? sceneRestFault({ path, method })
-			: undefined;
-		if (fault !== undefined) {
-			if ("error" in fault) {
-				throw restInvokeError({ error: fault.error, requestInfo });
-			}
-			return demoRestResponse({ ...fault, requestInfo });
-		}
+		const faulted = await sceneFaultResponse(requestInfo);
+		if (faulted !== undefined) return faulted;
 		const { status, body } = demoRoute({
 			path,
 			method,

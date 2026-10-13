@@ -66,15 +66,11 @@ test("starts in miles on a system that measures in US units", async ({
 test.describe("on a browser set to German", () => {
 	test.use({ locale: "de-DE" });
 
-	test("formats like the browser and keeps English words", async ({
-		page,
-	}) => {
+	test("formats like the browser in its language", async ({ page }) => {
 		await openHenry(page);
 
 		await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();
 		await expect(page.getByText("9,3 km", { exact: true })).toBeVisible();
-		await expect(
-			page.getByRole("button", { name: "Add attachment" }),
-		).toBeVisible();
+		await expect(page.locator("html")).toHaveAttribute("lang", "de-DE");
 	});
 });

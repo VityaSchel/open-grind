@@ -19,9 +19,11 @@ import { ApiError } from "$lib/api/api-error";
 import { callMethod } from "$lib/api/methods";
 import { requestBlockedAlertState } from "$lib/api/request-blocked-state.svelte";
 import { fetchRest } from "$lib/api/transport";
+import { isPlayBuild } from "$lib/platform/store";
 import { updatesAvailableHere } from "$lib/updates";
 import { load } from "../../routes/+layout";
 import { demoMeProfileId } from "./config";
+import { settlesSoon } from "./demo-test-helpers";
 import { demoRoute } from "./route";
 import {
 	type DemoList,
@@ -104,6 +106,14 @@ describe("REST faults", () => {
 		expect((await fetchRest("/v4/cascade?pageNumber=0")).status).toBe(200);
 	});
 
+	it("leaves a pending request unanswered", async () => {
+		setScene({
+			restFaults: [{ path: "/v2/taps/received", pending: true }],
+		});
+		expect(await settlesSoon(fetchRest("/v2/taps/received"))).toBe(false);
+		expect(await settlesSoon(fetchRest("/v7/views/list"))).toBe(true);
+	});
+
 	it("leaves requests alone without the flag", async () => {
 		flags.screenshots = false;
 		setScene({ restFaults: [{ path: "/v2/taps/received", status: 503 }] });
@@ -144,6 +154,42 @@ describe("method faults", () => {
 		});
 	});
 
+	it("leaves a pending command unanswered", async () => {
+		setScene({ methodFaults: [{ command: "sign_out", pending: true }] });
+		expect(await settlesSoon(callMethod("sign_out"))).toBe(false);
+		expect(await settlesSoon(callMethod("storage_backend"))).toBe(true);
+	});
+
+	it("answers a command with the scene's answer", async () => {
+		setScene({ methodAnswers: { storage_backend: "unavailable" } });
+		await expect(callMethod("storage_backend")).resolves.toBe(
+			"unavailable",
+		);
+		await expect(callMethod("recaptcha_first_party_enabled")).resolves.toBe(
+			false,
+		);
+	});
+
+	it("still checks an answer against the command's schema", async () => {
+		setScene({ methodAnswers: { storage_backend: "floppy" } });
+		await expect(callMethod("storage_backend")).rejects.toThrow();
+	});
+
+	it("lets a fault win over an answer", async () => {
+		setScene({
+			methodAnswers: { storage_backend: "file" },
+			methodFaults: [
+				{
+					command: "storage_backend",
+					error: { kind: "NotInitialized" },
+				},
+			],
+		});
+		await expect(callMethod("storage_backend")).rejects.toEqual({
+			kind: "NotInitialized",
+		});
+	});
+
 	it("leaves commands alone without the flag", async () => {
 		flags.screenshots = false;
 		setScene({
@@ -154,6 +200,12 @@ describe("method faults", () => {
 				},
 			],
 		});
+		await expect(callMethod("storage_backend")).resolves.toBe("keyring");
+	});
+
+	it("ignores answers without the flag", async () => {
+		flags.screenshots = false;
+		setScene({ methodAnswers: { storage_backend: "unavailable" } });
 		await expect(callMethod("storage_backend")).resolves.toBe("keyring");
 	});
 });
@@ -283,6 +335,16 @@ describe("updates", () => {
 		expect(updatesAvailableHere()).toBe(true);
 		flags.screenshots = false;
 		expect(updatesAvailableHere()).toBe(false);
+	});
+});
+
+describe("play build", () => {
+	it("answers as the Play build only in a scene that asks for it", () => {
+		expect(isPlayBuild()).toBe(false);
+		setScene({ playBuild: true });
+		expect(isPlayBuild()).toBe(true);
+		flags.screenshots = false;
+		expect(isPlayBuild()).toBe(false);
 	});
 });
 

@@ -29,10 +29,23 @@ vi.mock("$lib/platform/regional-settings", () => ({
 		return Promise.resolve();
 	}),
 }));
+vi.mock("$lib/platform/app-language", () => ({
+	startLanguage: vi.fn(() => {
+		noteHooked("startLanguage");
+		return Promise.resolve();
+	}),
+}));
 
 import type { ScreenshotHooks } from "./screenshot-scene";
 
-const HOOK_NAMES = ["scan", "setLocale", "showErrorToast", "updateToasts"];
+const HOOK_NAMES = [
+	"scan",
+	"setLocale",
+	"setScene",
+	"showErrorToast",
+	"updateProblem",
+	"updateToasts",
+];
 const FRESH_IMPORTS = { timeout: 60_000 };
 
 async function startApp(): Promise<ScreenshotHooks | undefined> {
@@ -90,6 +103,7 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 		expect(hookedAtStartup).toEqual([
 			"ws.connect",
 			"startRegionalSettings",
+			"startLanguage",
 		]);
 	});
 
@@ -104,10 +118,32 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			signedOut: true,
 			onboarding: false,
 			updates: false,
+			playBuild: false,
 			emptyLists: ["taps"],
+			inbox: null,
+			profiles: {},
+			maskedProfiles: [],
 			restriction: null,
 			restFaults: [],
 			methodFaults: [],
+			methodAnswers: {},
+		});
+	});
+
+	it("merges a later scene change into the seeded scene", async () => {
+		window.__openGrindScreenshotScene = {
+			signedOut: true,
+			methodAnswers: { storage_backend: "file" },
+		};
+		const hooks = await startHookedApp();
+		const restFaults = [{ path: "/v4/inbox", status: 500 }];
+		hooks.setScene({ restFaults });
+		hooks.setScene({ methodAnswers: { storage_backend: "unavailable" } });
+		const { screenshotScene } = await import("./screenshot-scene");
+		expect(screenshotScene).toMatchObject({
+			signedOut: true,
+			restFaults,
+			methodAnswers: { storage_backend: "unavailable" },
 		});
 	});
 
@@ -174,6 +210,79 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 					}),
 				}),
 			],
+		]);
+	});
+
+	it("titles an update problem by key and names the add-on it is about", async () => {
+		const hooks = await startHookedApp();
+		const { t } = await import("$lib/i18n");
+		hooks.updateProblem({
+			component: "fcm",
+			key: "updates.errors.network",
+		});
+		hooks.updateProblem({
+			component: "fcm",
+			key: "updates.addons.fcm.errors.busy",
+		});
+		hooks.updateProblem({
+			component: "app",
+			key: "updates.errors.busyApp",
+		});
+		expect(
+			toast.custom.mock.calls.map(([, { componentProps }]) => ({
+				title: componentProps.title,
+				body: componentProps.body,
+				tone: componentProps.tone,
+			})),
+		).toEqual([
+			{
+				title: t("updates.errors.network"),
+				body: t("updates.addons.fcm.name"),
+				tone: "error",
+			},
+			{
+				title: t("updates.addons.fcm.errors.busy"),
+				body: undefined,
+				tone: "error",
+			},
+			{
+				title: t("updates.errors.busyApp"),
+				body: undefined,
+				tone: "error",
+			},
+		]);
+	});
+
+	it("shows every update result the update flow shows", async () => {
+		const hooks = await startHookedApp();
+		const { t } = await import("$lib/i18n");
+		hooks
+			.updateToasts("recaptcha")
+			.installed({ tag: "v1.2.0", kind: "install" });
+		hooks.updateToasts("fcm").installed({ tag: null, kind: "update" });
+		hooks.updateToasts("google-oauth").upToDate();
+		hooks.updateToasts("app").manualInstall("Drag it onto Applications");
+		expect(
+			toast.custom.mock.calls.map(([, { componentProps }]) => ({
+				title: componentProps.title,
+				body: componentProps.body,
+			})),
+		).toEqual([
+			{
+				title: t("updates.addons.recaptcha.installedVersion", {
+					tag: "v1.2.0",
+				}),
+				body: t("updates.toasts.changelog"),
+			},
+			{ title: t("updates.addons.fcm.updated"), body: undefined },
+			{
+				title: t("updates.addons.googleOauth.upToDate"),
+				body: undefined,
+			},
+			{
+				title: t("updates.toasts.manualInstall"),
+				body: "Drag it onto Applications",
+			},
 		]);
 	});
 });

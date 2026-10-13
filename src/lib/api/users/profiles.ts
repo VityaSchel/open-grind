@@ -4,7 +4,7 @@ import { ApiError } from "$lib/api/api-error";
 import { getBlockedUsers } from "$lib/api/browse/blocks";
 import { getHiddenUsers } from "$lib/api/browse/hides";
 import { FetchCache } from "$lib/api/cache";
-import { fetchRest, invokeRest } from "$lib/api/transport";
+import { fetchRest, invokeRest, sceneFaultResponse } from "$lib/api/transport";
 import {
 	ProfileModerationError,
 	readBannedTerms,
@@ -351,18 +351,29 @@ const uploadProfilePhotoResponseSchema = z.object({
 	),
 });
 
+async function demoProfilePhotoUpload(path: string) {
+	const answered = await sceneFaultResponse({ method: "POST", path });
+	if (answered === undefined) {
+		throw new Error("Profile photos can't be uploaded in the demo");
+	}
+	return answered;
+}
+
 export async function uploadProfilePhoto(
 	media: PickedMedia,
 ): Promise<{ mediaHash: string; pending: boolean }> {
-	if (demoEnabled) {
-		throw new Error("Profile photos can't be uploaded in the demo");
-	}
-	const file = mediaFileDescriptor(media);
 	const path = "/v4/media/upload?takenOnGrindr=false";
-	const response = await invokeRest("upload_media", {
-		args: { path, signed: false, file, squareThumb: true },
-		requestInfo: { method: "POST", path },
-	});
+	const response = demoEnabled
+		? await demoProfilePhotoUpload(path)
+		: await invokeRest("upload_media", {
+				args: {
+					path,
+					signed: false,
+					file: mediaFileDescriptor(media),
+					squareThumb: true,
+				},
+				requestInfo: { method: "POST", path },
+			});
 	const [uploaded] = response.jsonParsed(
 		uploadProfilePhotoResponseSchema,
 	).imageSizes;

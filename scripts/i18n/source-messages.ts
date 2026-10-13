@@ -1,9 +1,5 @@
-import {
-	FALLBACK_LOCALES,
-	NAME,
-	PLURAL_KEY,
-	SOURCE_LOCALE,
-} from "../../src/lib/i18n/syntax";
+import { messageChain } from "../../src/lib/i18n/matcher";
+import { NAME, PLURAL_KEY, SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
 import { type Inspection, inspect } from "./message-text";
 import { type PluralForms, weblatePluralForms } from "./weblate-plurals";
 
@@ -24,8 +20,21 @@ type Catalog = {
 
 const baseOf = (key: string) => PLURAL_KEY.exec(key)?.[1] ?? key;
 
-const shownIn = (locale: string) =>
-	[...(FALLBACK_LOCALES.get(locale) ?? []), "English"].join(", then ");
+function shownIn({
+	locale,
+	offered,
+}: {
+	locale: string;
+	offered: readonly string[];
+}): string {
+	return messageChain({
+		catalog: locale,
+		offered: { catalogs: offered, pseudo: [] },
+	})
+		.slice(1)
+		.map((catalog) => (catalog === SOURCE_LOCALE ? "English" : catalog))
+		.join(", then ");
+}
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
@@ -262,6 +271,7 @@ type EnglishForm = { message: Message; category?: string };
 
 type DriftContext = {
 	locale: string;
+	fallbacks: string;
 	index: SourceIndex;
 	plurals: PluralForms;
 	partial: ReadonlyMap<string, string[]>;
@@ -373,7 +383,7 @@ function reportDrift({
 	context: DriftContext;
 	into: Findings;
 }): void {
-	const { locale, index, plurals, partial } = context;
+	const { locale, fallbacks, index, plurals, partial } = context;
 	if (form === undefined) {
 		if (index.objects.has(key)) {
 			into.errors.push(
@@ -393,9 +403,7 @@ function reportDrift({
 		);
 	} else if (text === "") {
 		if (!partial.has(message.key)) {
-			into.warnings.push(
-				`${key}: is empty, so it shows in ${shownIn(locale)}`,
-			);
+			into.warnings.push(`${key}: is empty, so it shows in ${fallbacks}`);
 		}
 	} else {
 		const expected = expectedTokens({ index, plurals, form });
@@ -457,10 +465,12 @@ export function checkTranslation({
 	locale,
 	files,
 	source,
+	offered,
 }: {
 	locale: string;
 	files: SourceFile[];
 	source: SourceFile[];
+	offered: readonly string[];
 }): TranslationReport {
 	const index = indexSource(source);
 	const total = index.messages.size;
@@ -496,12 +506,13 @@ export function checkTranslation({
 	}
 	const plurals = weblatePluralForms(locale);
 	const { translated, partial } = completeness({ index, texts, plurals });
+	const fallbacks = shownIn({ locale, offered });
 	for (const [base, missing] of partial) {
 		findings.warnings.push(
-			`${base}: has no text for ${missing.join(", ")}, so those counts show in ${shownIn(locale)}`,
+			`${base}: has no text for ${missing.join(", ")}, so those counts show in ${fallbacks}`,
 		);
 	}
-	const context = { locale, index, plurals, partial };
+	const context = { locale, fallbacks, index, plurals, partial };
 	for (const [key, text] of texts) {
 		const found = inspect(text);
 		findings.errors.push(

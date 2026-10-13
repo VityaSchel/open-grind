@@ -21,6 +21,22 @@ export const appSettings: Scene = {
 	views: [subpage({ id: "settings/app", path: "/settings/app" })],
 };
 
+export const languageSettings: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "settings/language",
+			scroller: SUBPAGE_SCROLLER,
+			drive: (page) =>
+				visit({
+					page,
+					path: "/settings/app/language",
+					ready: page.getByRole("radio", { checked: true }),
+				}),
+		},
+	],
+};
+
 export const meSettings: Scene = {
 	platform: "phone",
 	views: [

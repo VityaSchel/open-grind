@@ -73,6 +73,7 @@ async function mountFixture(page: Page): Promise<void> {
 			<p>${m("cut", "Truncated").slice(0, -4)}</p>
 			<p>Plain English</p>
 			<p translate="no">${m("untranslated", "Name")} Raw 🦊</p>
+			<p translate="no"><span translate="yes">${m("retranslated", "Draft:")}</span> Raw</p>
 			<p id="inert" style="pointer-events:none">${m("inert", "Disabled")}</p>
 			<div style="position:relative">
 				<p>${m("covered", "Covered")}</p>
@@ -90,10 +91,13 @@ async function mountFixture(page: Page): Promise<void> {
 			<button aria-label="${m("label", "Close")}" style="width:32px;height:32px"><svg width="16" height="16"><circle cx="8" cy="8" r="8" fill="white"/></svg></button>
 			<img alt="${m("alt", "Photo")}" width="24" height="24" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'/%3E">
 			<span title="${m("title", "Hint")}">i</span>
+			<nav aria-label="${m("boxless", "Back")}"><a href="#back" style="position:fixed;right:8px;bottom:8px;width:24px;height:24px;background:white"></a></nav>
+			<span aria-label="${m("empty", "Nothing")}"></span>
 			<div><input value="${m("value", "Typed")}"> <input value="Typed 🦊" size="8"><input value="Unseen 🦊" style="display:none"></div>
 			<input placeholder="${m("placeholder", "Search")}">
 			<input value="Filled" placeholder="${m("filledPlaceholder", "Hidden")}">
 			<button>OK<span style="${hiddenText}">${m("screenReader", "Close dialog")}</span></button>
+			<div style="width:120px;height:24px"><h2 style="${hiddenText};padding:16px">${m("paddedScreenReader", "Choose Location")}</h2></div>
 			<div role="dialog"><p>${m("dialog", "In a dialog")}</p></div>
 			<select><option>${m("selected", "Metric")}</option><option>${m("option", "Imperial")}</option></select>
 		`;
@@ -141,6 +145,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 				"inner",
 				"cut",
 				"untranslated",
+				"retranslated",
 				"inert",
 				"covered",
 				"glass",
@@ -152,10 +157,13 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 				"label",
 				"alt",
 				"title",
+				"boxless",
+				"empty",
 				"value",
 				"placeholder",
 				"filledPlaceholder",
 				"screenReader",
+				"paddedScreenReader",
 				"dialog",
 				"selected",
 				"option",
@@ -168,6 +176,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 		inner: text,
 		cut: text,
 		untranslated: undefined,
+		retranslated: text,
 		inert: text,
 		covered: undefined,
 		glass: text,
@@ -179,10 +188,13 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 		label: attribute,
 		alt: attribute,
 		title: attribute,
+		boxless: attribute,
+		empty: undefined,
 		value: text,
 		placeholder: text,
 		filledPlaceholder: undefined,
 		screenReader: attribute,
+		paddedScreenReader: attribute,
 		dialog: { via: "text", top: true },
 		selected: text,
 		option: attribute,
@@ -197,6 +209,60 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 	expect(twice?.box).toEqual(above);
 	expect(result.unmarked).toEqual(["Plain English", "i", "OK"]);
 	expect(result.emoji).toEqual(["Raw 🦊", "Typed 🦊"]);
+});
+
+test("the scan measures animated text where the screenshot shows it", async ({
+	page,
+}) => {
+	await openDemo(page, { path: "/settings/app" });
+	await page
+		.locator("main h2")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await page.evaluate(async (module) => {
+		const { markMessage }: typeof Markers = await import(module);
+		const fixture = document.createElement("div");
+		fixture.style.cssText =
+			"position:fixed;inset:0;z-index:2147483647;padding:40px;background:rgb(20 20 20);color:white;font:14px/1 sans-serif";
+		fixture.innerHTML = `
+			<p id="arriving" style="width:100px">${markMessage({ key: "fixture.arriving", message: "Arriving" })}</p>
+			<p id="spinning" style="width:100px;height:20px;margin-top:80px">${markMessage({ key: "fixture.spinning", message: "Spinning" })}</p>
+		`;
+		document.body.append(fixture);
+		fixture
+			.querySelector("#arriving")
+			?.animate([{ translate: "0 300px" }, { translate: "0 0" }], {
+				duration: 100_000,
+			});
+		fixture
+			.querySelector("#spinning")
+			?.animate([{ rotate: "0deg" }, { rotate: "360deg" }], {
+				duration: 4000,
+				delay: -1000,
+				iterations: Infinity,
+			});
+	}, MARKERS_MODULE);
+	const arrivingTop = await page
+		.locator("#arriving")
+		.evaluate((element) => element.getBoundingClientRect().top);
+
+	const result = await scan(page);
+
+	const box = (name: string) =>
+		result.keys.find(({ key }) => key === `fixture.${name}`)?.box;
+	const scale = await page.evaluate(() => devicePixelRatio);
+	const arriving = box("arriving");
+	const spinning = box("spinning");
+	expect(arriving && arriving.y < (arrivingTop - 200) * scale).toBe(true);
+	expect(spinning && spinning.width > spinning.height).toBe(true);
+	expect(
+		await page.evaluate(() =>
+			document
+				.querySelector("#spinning")
+				?.getAnimations()
+				.map(({ playState }) => playState),
+		),
+	).toEqual(["running"]);
 });
 
 test.describe("at a fractional device scale factor", () => {

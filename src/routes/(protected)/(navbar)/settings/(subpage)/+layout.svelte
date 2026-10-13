@@ -38,6 +38,10 @@
 			title: "settings.subpage.titles.app",
 			back: "/settings",
 		},
+		[`${base}/app/language`]: {
+			title: "settings.subpage.titles.language",
+			back: "/settings/app",
+		},
 		[`${base}/app/notifications`]: {
 			title: "settings.subpage.titles.notifications",
 			back: "/settings/app",

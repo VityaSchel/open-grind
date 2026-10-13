@@ -20,10 +20,13 @@ import type {
 export { type CountFormatter, defaultCountFormatter } from "./counts";
 export {
 	followLocale,
+	getCatalogLocale,
 	getFormatLocales,
 	getLocale,
 	getRegionalSettings,
 	locales,
+	offersLanguage,
+	resolveLanguage,
 	setCountFormatter,
 	setLocale,
 	setRegionalSettings,

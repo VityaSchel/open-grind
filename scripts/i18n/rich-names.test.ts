@@ -13,8 +13,12 @@ describe("checkTranslation of rich names", () => {
 		}),
 	];
 	const check = (json: unknown) =>
-		checkTranslation({ locale: "ru", files: [sourceFile(json)], source })
-			.errors;
+		checkTranslation({
+			locale: "ru",
+			files: [sourceFile(json)],
+			source,
+			offered: ["en", "ru"],
+		}).errors;
 
 	it("accepts names kept in place and wrapped placeholders kept wrapped", () => {
 		expect(

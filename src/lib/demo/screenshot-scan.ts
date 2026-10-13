@@ -66,10 +66,12 @@ const REPLACED_ELEMENTS = new Set([
 	"object",
 	"embed",
 ]);
-const UNTRANSLATED_SELECTOR = '[translate="no"]';
+const TRANSLATION_MODE =
+	'[translate=""], [translate="yes" i], [translate="no" i]';
 const HIT_TESTABLE =
 	"*, ::before, ::after { pointer-events: auto !important; }";
 const COVERING_ALPHA = 0.5;
+const CLIPPED_AWAY = "inset(50%)";
 const PROBES = [0.5, 0.25, 0.75];
 const EMOJI = /\p{Emoji_Presentation}|\p{Extended_Pictographic}\uFE0F/u;
 const VISIBILITY: CheckVisibilityOptions = {
@@ -86,6 +88,11 @@ type Placement = {
 };
 
 type Found = Map<string, ScannedKey>;
+
+function untranslated(element: Element): boolean {
+	const mode = element.closest(TRANSLATION_MODE)?.getAttribute("translate");
+	return mode?.toLowerCase() === "no";
+}
 
 function alphaOf(color: string): number {
 	const slashed = /\/\s*([\d.]+)(%?)\s*\)$/.exec(color);
@@ -148,12 +155,14 @@ function union(a: KeyBox | null, b: KeyBox): KeyBox {
 function visibleBox({
 	rects,
 	element,
+	area = element.getBoundingClientRect(),
 }: {
-	rects: Iterable<DOMRectReadOnly>;
+	rects: Iterable<KeyBox>;
 	element: Element;
+	area?: KeyBox;
 }): KeyBox | null {
 	const viewport = { x: 0, y: 0, width: innerWidth, height: innerHeight };
-	const bounds = intersect(element.getBoundingClientRect(), viewport);
+	const bounds = intersect(area, viewport);
 	if (bounds === null) return null;
 	let box: KeyBox | null = null;
 	for (const rect of rects) {
@@ -168,6 +177,20 @@ function visibleBox({
 	return box;
 }
 
+function hasArea({ width, height }: KeyBox): boolean {
+	return width > 0 && height > 0;
+}
+
+function renderedArea(element: Element): KeyBox {
+	const own = element.getBoundingClientRect();
+	if (hasArea(own)) return own;
+	const content = [...element.querySelectorAll("*")]
+		.map((descendant) => descendant.getBoundingClientRect())
+		.filter(hasArea)
+		.reduce<KeyBox | null>((area, part) => union(area, part), null);
+	return content ?? own;
+}
+
 function boxedAncestor(element: Element): Element | null {
 	let current: Element | null = element;
 	while (current && getComputedStyle(current).display === "contents") {
@@ -177,10 +200,11 @@ function boxedAncestor(element: Element): Element | null {
 }
 
 function clipsToNothing(element: Element): boolean {
+	const { overflowX, clipPath } = getComputedStyle(element);
+	if (overflowX !== "hidden" && overflowX !== "clip") return false;
+	if (clipPath === CLIPPED_AWAY) return true;
 	const { width, height } = element.getBoundingClientRect();
-	if (width > 1 || height > 1) return false;
-	const { overflowX } = getComputedStyle(element);
-	return overflowX === "hidden" || overflowX === "clip";
+	return width <= 1 && height <= 1;
 }
 
 function screenReaderHost(element: Element): Element | null {
@@ -203,7 +227,7 @@ function placeText(parent: Element): Placement | null {
 		host: labelHost ?? boxed,
 		via: labelHost ? "attribute" : "text",
 		top: parent.closest(OVERLAY_SELECTOR) !== null,
-		untranslated: parent.closest(UNTRANSLATED_SELECTOR) !== null,
+		untranslated: untranslated(parent),
 	};
 }
 
@@ -336,11 +360,11 @@ function scanAttributes({
 		if (spans.length === 0 && shownEmoji.length === 0) continue;
 		const host = boxedAncestor(element);
 		if (!host?.checkVisibility(VISIBILITY)) continue;
-		const rects = [host.getBoundingClientRect()];
-		const box = visibleBox({ rects, element: host });
+		const area = renderedArea(host);
+		const box = visibleBox({ rects: [area], element: host, area });
 		if (box === null) continue;
 		emoji.push(...shownEmoji.map(({ value }) => normalized(value)));
-		if (element.closest(UNTRANSLATED_SELECTOR)) continue;
+		if (untranslated(element)) continue;
 		const top = element.closest(OVERLAY_SELECTOR) !== null;
 		for (const { key, via } of spans) {
 			record({ found, shown: { key, box, boxes: [box], via, top } });
@@ -373,23 +397,43 @@ function withHitTestableElements<T>(scan: () => T): T {
 	}
 }
 
+function withAnimationsAsScreenshotted<T>(scan: () => T): T {
+	const infinite: Animation[] = [];
+	for (const animation of document.getAnimations()) {
+		if (animation.effect === null || animation.playbackRate === 0) continue;
+		if (Number.isFinite(animation.effect.getComputedTiming().endTime)) {
+			animation.finish();
+		} else {
+			animation.cancel();
+			infinite.push(animation);
+		}
+	}
+	try {
+		return scan();
+	} finally {
+		for (const animation of infinite) animation.play();
+	}
+}
+
 export function scanView(): ViewScan {
-	return withHitTestableElements(() => {
-		const found: Found = new Map();
-		const unmarked: string[] = [];
-		const emoji: string[] = [];
-		scanText({ found, unmarked, emoji });
-		scanAttributes({ found, emoji });
-		return {
-			keys: [...found.values()]
-				.sort((a, b) => (a.key < b.key ? -1 : 1))
-				.map((shown) => ({
-					...shown,
-					box: inPixels(shown.box),
-					boxes: shown.boxes.map(inPixels),
-				})),
-			unmarked: [...new Set(unmarked)],
-			emoji: [...new Set(emoji)],
-		};
-	});
+	return withAnimationsAsScreenshotted(() =>
+		withHitTestableElements(() => {
+			const found: Found = new Map();
+			const unmarked: string[] = [];
+			const emoji: string[] = [];
+			scanText({ found, unmarked, emoji });
+			scanAttributes({ found, emoji });
+			return {
+				keys: [...found.values()]
+					.sort((a, b) => (a.key < b.key ? -1 : 1))
+					.map((shown) => ({
+						...shown,
+						box: inPixels(shown.box),
+						boxes: shown.boxes.map(inPixels),
+					})),
+				unmarked: [...new Set(unmarked)],
+				emoji: [...new Set(emoji)],
+			};
+		}),
+	);
 }

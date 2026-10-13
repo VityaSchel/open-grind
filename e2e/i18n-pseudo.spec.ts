@@ -113,7 +113,7 @@ test("an unknown locale parameter leaves the app in English", async ({
 	page,
 }) => {
 	await openNotFoundPage(page, { locale: "xx-YY" });
-	await expect(page.locator("html")).toHaveAttribute("lang", "en");
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
 	await expect(page).not.toHaveTitle(/[⟦\u202E]/);
 });
 

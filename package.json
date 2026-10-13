@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"postinstall": "bun run patch-deps",
-		"build": "bun run patch-deps && vite build",
+		"build": "bun run patch-deps && bun run check:i18n-release && vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:tools": "bun x tsc --noEmit -p tsconfig.tools.json && bun x tsc --noEmit -p scripts/store-screenshots && bun x tsc --noEmit -p scripts/i18n-screenshots",
 		"check:config": "opengrind-config check",
@@ -31,6 +31,7 @@
 		"gen:i18n": "bun scripts/gen-i18n.ts",
 		"gen:i18n-screenshots": "bun scripts/i18n-screenshots/capture.ts",
 		"check:i18n": "bun scripts/gen-i18n.ts --check",
+		"check:i18n-release": "bun scripts/gen-i18n.ts --check --release",
 		"package:linux": "podman build -t open-grind-linux ci/linux && podman run --rm -v \"$PWD:/work\" open-grind-linux sh ci/linux/build.sh",
 		"package:macos": "nix run .#build-macos --",
 		"lint": "svelte-kit sync && eslint --concurrency=2 .",

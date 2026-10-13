@@ -86,6 +86,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	testing.cleanup();
+	vi.unstubAllEnvs();
 });
 
 describe("the Updates section of the app settings on Android", () => {
@@ -171,6 +172,27 @@ describe("the Updates rows in another language", () => {
 	}, 60_000);
 });
 
+describe("the Display section of the app settings", () => {
+	it("starts with the Language row", async () => {
+		const screen = await opened(FOREIGN_SIGNER);
+
+		expect(
+			screen.getByRole("heading", { name: "Display" }).nextElementSibling,
+		).toBe(screen.getByRole("link", { name: "Language English" }));
+	}, 60_000);
+
+	it("keeps the Language row in a release build that offers only English", async () => {
+		vi.stubEnv("DEV", false);
+		const screen = await opened(FOREIGN_SIGNER);
+		const { locales } = await import("$lib/i18n");
+
+		expect(locales).toEqual(["en"]);
+		expect(
+			screen.getByRole("link", { name: "Language English" }),
+		).toBeTruthy();
+	}, 60_000);
+});
+
 describe("the About section of the app settings", () => {
 	it("lists the privacy policy right before the credits and opens it in the system browser", async () => {
 		const screen = await opened(FOREIGN_SIGNER);
@@ -201,8 +223,11 @@ describe("the app settings copy", () => {
 				.map((heading) => heading.textContent.trim()),
 		).toEqual(["Display", "Privacy", "Security", "About"]);
 		expect(
-			screen.getAllByRole("link").map((link) => link.textContent.trim()),
+			screen
+				.getAllByRole("link")
+				.map((link) => link.textContent.replace(/\s+/g, " ").trim()),
 		).toEqual([
+			"Language English",
 			"Notifications",
 			"Discreet App Icon",
 			"PIN",
@@ -225,7 +250,14 @@ describe("the app settings copy", () => {
 		const screen = await opened(FOREIGN_SIGNER);
 		const copy = [
 			...screen.getAllByRole("heading"),
-			...screen.getAllByRole("link"),
+			...screen
+				.getAllByRole("link")
+				.map(
+					(link) =>
+						link.querySelector<HTMLElement>(
+							'[data-slot="item-title"]',
+						) ?? link,
+				),
 			screen.getByText("Haptic feedback"),
 			screen.getByText("Stay online while the app is open"),
 			screen.getByText(/^Refresh your online status/),

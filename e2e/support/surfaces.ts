@@ -164,6 +164,12 @@ export const SURFACES: Surface[] = [
 		},
 	},
 	{
+		name: "Language",
+		path: "/settings/app/language",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => page.locator('[data-slot="language-option"]')),
+	},
+	{
 		name: "Notifications",
 		path: "/settings/app/notifications",
 		bars: BARS_OVER_CONTENT,

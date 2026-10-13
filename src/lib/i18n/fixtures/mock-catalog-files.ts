@@ -54,6 +54,11 @@ export const translationFiles = {
 				"<b>{{name}}</b> dividis {{count}} fotojn en {{album}}",
 		},
 	}),
+	"./locales/pt-PT/sample.json": inline({
+		photos_one: "PT:one {{count}}",
+		photos_many: "PT:many {{count}}",
+		photos_other: "PT:other {{count}}",
+	}),
 	"./locales/ur/common.json": inline({}),
 	"./locales/ur-Aran/common.json": inline({}),
 	"./locales/ur-Arab/common.json": inline({}),
