@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { demoMeProfileId } from "../../../src/lib/demo/config";
 import type {
 	MethodFault,
 	NativeError,
@@ -7,10 +8,15 @@ import type {
 import { showsLoading } from "../settle";
 import type { Scene } from ".";
 import { ALERT, changeScene, emitEvent } from "./drive";
-import { holdToast } from "./toast";
+import { holdToast, waitForNewToast } from "./toast";
 import { visit } from "./visit";
 
-const SHOWN_TOAST = '[data-sonner-toast][data-mounted="true"]';
+const STALE_SESSION = {
+	profileId: demoMeProfileId,
+	expiresAt: null,
+	stale: true,
+};
+const IPC_FAILURE = "IPC connection closed";
 const SIGN_IN_FAILURES = {
 	server: [
 		{ kind: "Api", message: { code: 27, message: "Profile not found" } },
@@ -21,18 +27,14 @@ const SIGN_IN_FAILURES = {
 				"<html><head><title>Service unavailable</title></head></html>",
 		},
 	],
-	app: [
-		{ kind: "NotSignedIn" },
-		{ kind: "ContentTooLarge" },
-		{ kind: "NotInitialized" },
-	],
+	app: [{ kind: "NotInitialized" }],
 } satisfies Record<string, NativeError[]>;
 
 type SessionReport = {
 	kind: string;
 	message: string;
 	attempts: number;
-	unauthorized?: boolean;
+	transient?: boolean;
 };
 
 function openSettings(page: Page): Promise<void> {
@@ -45,29 +47,23 @@ function openSettings(page: Page): Promise<void> {
 
 async function reportSessionError({
 	page,
-	report: { unauthorized = false, ...report },
+	report: { transient = false, ...report },
 }: {
 	page: Page;
 	report: SessionReport;
 }): Promise<void> {
+	if (transient) {
+		await changeScene({
+			page,
+			scene: { methodAnswers: { current_session: STALE_SESSION } },
+		});
+	}
 	await emitEvent({
 		page,
 		event: "auth:session-error",
-		payload: { ...report, unauthorized, transient: false },
+		payload: { ...report, transient, unauthorized: false },
 	});
 	await page.locator(ALERT).waitFor();
-}
-
-async function addToast({
-	page,
-	action,
-}: {
-	page: Page;
-	action: () => Promise<void>;
-}): Promise<void> {
-	const shown = await page.locator(SHOWN_TOAST).count();
-	await action();
-	await page.locator(SHOWN_TOAST).nth(shown).waitFor();
 }
 
 async function tryAgainFailing({
@@ -88,7 +84,7 @@ async function tryAgainFailing({
 			],
 		},
 	});
-	await addToast({
+	await waitForNewToast({
 		page,
 		action: () =>
 			page
@@ -98,7 +94,7 @@ async function tryAgainFailing({
 	});
 }
 
-async function fillSignIn(page: Page): Promise<void> {
+export async function fillSignIn(page: Page): Promise<void> {
 	await visit({
 		page,
 		path: "/auth/sign-in",
@@ -109,7 +105,7 @@ async function fillSignIn(page: Page): Promise<void> {
 }
 
 function submitSignIn(page: Page): Promise<void> {
-	return addToast({
+	return waitForNewToast({
 		page,
 		action: () => page.locator("form button[type=submit]").click(),
 	});
@@ -152,6 +148,7 @@ export const sessionAlerts: Scene = {
 						kind: "Auth",
 						message: "Token refresh failed with status 403",
 						attempts: 3,
+						transient: true,
 					},
 				});
 			},
@@ -165,6 +162,7 @@ export const sessionAlerts: Scene = {
 						kind: "RateLimited",
 						message: "Token refresh failed with status 429",
 						attempts: 3,
+						transient: true,
 					},
 				});
 				await page.getByText("Too many requests").first().waitFor();
@@ -177,12 +175,14 @@ export const sessionAlerts: Scene = {
 				await reportSessionError({
 					page,
 					report: {
-						kind: "Unauthorized",
-						message: "Connection reset",
-						attempts: 0,
+						kind: "Http",
+						message: "error sending request: connection reset",
+						attempts: 3,
+						transient: true,
 					},
 				});
 				await page.getByText("Can’t connect to Grindr").waitFor();
+				await holdToast(page);
 			},
 		},
 	],
@@ -201,11 +201,15 @@ export const sessionTryAgain: Scene = {
 					report: {
 						kind: "Auth",
 						message: "Token refresh failed with status 403",
-						attempts: 1,
+						attempts: 0,
 					},
 				});
-				for (const kind of ["Unexpected", "Connect", "RateLimited"]) {
-					await tryAgainFailing({ page, error: { kind } });
+				for (const error of [
+					IPC_FAILURE,
+					{ kind: "Connect" },
+					{ kind: "RateLimited" },
+				]) {
+					await tryAgainFailing({ page, error });
 				}
 				await holdToast(page);
 			},

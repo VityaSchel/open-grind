@@ -17,15 +17,51 @@ import {
 	albumUploadLimits,
 	albumUploadsFull,
 	albumUploadsRefused,
+	albumUploadsTooLarge,
 } from "./album-uploads";
 import { albums } from "./albums";
-import { onboarding, signIn } from "./auth";
+import {
+	captchaRefusals,
+	linuxOnboarding,
+	onboarding,
+	signIn,
+	signInRefusals,
+	unimplementedAuthPages,
+} from "./auth";
+import {
+	googleContinue,
+	googleHandoff,
+	googleInstall,
+	googleInstallStages,
+	googlePaste,
+	googlePlayInstall,
+	googleSigningIn,
+} from "./auth-google";
 import { chooseLocation, grid } from "./browse";
+import {
+	bodyFilters,
+	quickFilters,
+	tagFilters,
+	tagSearchTruncated,
+	tagsLoadFailure,
+} from "./browse-filters";
+import {
+	autoLocationFailure,
+	locationChange,
+	locationFailures,
+} from "./browse-location";
+import {
+	gridEmpty,
+	gridLoadingMore,
+	gridLoadMoreFailure,
+	gridProfileFailure,
+	gridRefreshFailures,
+	rightNow,
+} from "./browse-states";
 import { attachments, conversation, inbox, inboxPinFailure } from "./chat";
 import {
 	albumShareFailures,
 	attachmentTabs,
-	composerSendFailure,
 	emptyAttachments,
 	expiringPhotoLimit,
 	pickerFailure,
@@ -61,7 +97,7 @@ import {
 	inboxSelection,
 	rowMenus,
 } from "./chat-inbox";
-import { commandCenter } from "./command-center";
+import { commandCenter, locationCopy } from "./command-center";
 import {
 	autoLocation,
 	bypassFailure,
@@ -73,7 +109,13 @@ import {
 	profileFailure,
 	requestBlocked,
 } from "./feedback";
-import { emptyTaps } from "./interest";
+import {
+	emptyTaps,
+	emptyViews,
+	interestRefreshFailures,
+	untrackedViews,
+	viewsGrid,
+} from "./interest";
 import {
 	albumPreviewFailures,
 	albumVideoPlayer,
@@ -299,7 +341,6 @@ export const scenes: Scene[] = [
 	syncFailure,
 	replyPreview,
 	voiceMessage,
-	composerSendFailure,
 	attachmentTabs,
 	emptyAttachments,
 	albumShareFailures,
@@ -340,6 +381,7 @@ export const scenes: Scene[] = [
 	albumUploadLimits,
 	albumUploadsFull,
 	albumUploadsRefused,
+	albumUploadsTooLarge,
 	albumUploading,
 	albumAddResults,
 	drawerTileMenus,
@@ -380,4 +422,34 @@ export const scenes: Scene[] = [
 	profilePhotoSlots,
 	profilePhotoLimits,
 	profilePhotoFailures,
+	gridEmpty,
+	gridLoadingMore,
+	gridLoadMoreFailure,
+	gridRefreshFailures,
+	gridProfileFailure,
+	bodyFilters,
+	tagFilters,
+	tagSearchTruncated,
+	tagsLoadFailure,
+	quickFilters,
+	locationFailures,
+	autoLocationFailure,
+	locationChange,
+	rightNow,
+	viewsGrid,
+	emptyViews,
+	untrackedViews,
+	interestRefreshFailures,
+	locationCopy,
+	signInRefusals,
+	captchaRefusals,
+	googleInstall,
+	googlePlayInstall,
+	googleContinue,
+	googlePaste,
+	googleSigningIn,
+	googleHandoff,
+	googleInstallStages,
+	unimplementedAuthPages,
+	linuxOnboarding,
 ];

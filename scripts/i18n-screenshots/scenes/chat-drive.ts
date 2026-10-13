@@ -1,19 +1,13 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { INCOMING_ROW, MESSAGE_ROW } from "../../../e2e/support/app";
-import type { NativeError } from "../../../src/lib/demo/screenshot-scene";
 import { conversationPath } from "./chat-fixtures";
-import { holdToast, SHOWN_TOAST } from "./toast";
 import { visit } from "./visit";
 
-const INBOX_ROW = 'main a[href^="/chat/"]';
-export const CONVERSATIONS_SCROLLER = '[data-slot="conversations-scroller"]';
+export const INBOX_ROW = 'main a[href^="/chat/"]';
 export const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 export const MESSAGE_MENU = 'dialog[open] [data-slot="context-menu-list"]';
 const OUTGOING_ROW = `${MESSAGE_ROW}.ps-3`;
-export const CONNECT_FAILED: NativeError = { kind: "Connect" };
-
-const TOASTER = "ol[data-sonner-toaster]";
 const WHEEL_DELTA = 40;
 
 export function inboxRow({
@@ -75,40 +69,6 @@ export async function chooseFromMessageMenu({
 	const menu = row.page().locator(MESSAGE_MENU);
 	await menu.getByRole("button", { name: action }).click();
 	await menu.waitFor({ state: "hidden" });
-}
-
-export async function addingToast({
-	page,
-	action,
-}: {
-	page: Page;
-	action: () => Promise<void>;
-}): Promise<void> {
-	const shown = await page.locator(SHOWN_TOAST).count();
-	await action();
-	await page.locator(SHOWN_TOAST).nth(shown).waitFor();
-	await pauseToasts(page);
-	await holdToast(page);
-}
-
-export async function toastsShown({
-	page,
-	count,
-}: {
-	page: Page;
-	count: number;
-}): Promise<void> {
-	await page.locator(SHOWN_TOAST).first().waitFor();
-	await pauseToasts(page);
-	await page
-		.locator(SHOWN_TOAST)
-		.nth(count - 1)
-		.waitFor();
-	await holdToast(page);
-}
-
-export async function pauseToasts(page: Page): Promise<void> {
-	await page.locator(TOASTER).first().dispatchEvent("pointerdown");
 }
 
 export async function revealRefreshButton({

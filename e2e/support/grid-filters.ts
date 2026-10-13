@@ -7,7 +7,7 @@ export const filtersScroller = (page: Page) =>
 	page.locator(`${DIALOG} [data-slot="grid-filters-scroller"]`);
 
 export async function openAllFilters(page: Page): Promise<void> {
-	await page.locator('[aria-label="All filters"]').click();
+	await page.locator('[aria-label*="All filters"]').click();
 	await page.locator(`${DIALOG}:focus-within`).waitFor();
 }
 

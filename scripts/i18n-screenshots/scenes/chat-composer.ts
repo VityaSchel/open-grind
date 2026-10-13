@@ -13,18 +13,15 @@ import type {
 } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
 import {
-	addingToast,
 	chooseFromMessageMenu,
-	composerInput,
-	CONNECT_FAILED,
 	failRandomUuids,
 	lastIncoming,
 	openConversation,
-	toastsShown,
 } from "./chat-drive";
 import { PREVIEWS_INBOX, QUOTES_ID } from "./chat-fixtures";
 import { ALERT, chooseGeneratedMedia } from "./drive";
-import { holdToast } from "./toast";
+import { CONNECT_FAILED } from "./faults";
+import { addingToast, holdToast, toastsShown } from "./toast";
 import { visit } from "./visit";
 
 const FIRST_UPLOADED_MEDIA_ID = 920_000;
@@ -147,26 +144,6 @@ export const voiceMessage: Scene = {
 				await openConversation({ page, withId: QUOTES_ID });
 				await page
 					.getByRole("button", { name: "Record voice message" })
-					.click();
-				await holdToast(page);
-			},
-		},
-	],
-};
-
-export const composerSendFailure: Scene = {
-	platform: "phone",
-	demo: { inbox: PREVIEWS_INBOX },
-	views: [
-		{
-			id: "chat/composer/send-failed",
-			survivesLocaleSwitch: false,
-			drive: async (page) => {
-				await openConversation({ page, withId: QUOTES_ID });
-				await composerInput(page).fill("Lorem ipsum dolor");
-				await failRandomUuids(page);
-				await page
-					.getByRole("button", { name: "Send message" })
 					.click();
 				await holdToast(page);
 			},
