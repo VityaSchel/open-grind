@@ -61,6 +61,31 @@ import {
 import { emptyTaps } from "./interest";
 import { profile } from "./profile";
 import {
+	copyProfileId,
+	favoriteFailures,
+	favoriteNote,
+	favoriteNoteFailure,
+	profileRefreshFailure,
+	reportFailure,
+	reportFlow,
+	reportMessages,
+} from "./profile-actions";
+import { profileFieldMenus } from "./profile-fields";
+import {
+	imperialVisit,
+	ownProfile,
+	profileDetails,
+	tapFailure,
+	tapStates,
+	visitingTiles,
+} from "./profile-states";
+import {
+	blockedByThem,
+	blockedByUs,
+	hiddenProfile,
+	viewabilityFailures,
+} from "./profile-viewability";
+import {
 	accountStatus,
 	sessionAlerts,
 	sessionTryAgain,
@@ -213,4 +238,23 @@ export const scenes: Scene[] = [
 	uploadFailure,
 	pickerFailure,
 	...uploadRefusals,
+	profileFieldMenus,
+	profileDetails,
+	imperialVisit,
+	visitingTiles,
+	ownProfile,
+	tapStates,
+	tapFailure,
+	blockedByUs,
+	blockedByThem,
+	hiddenProfile,
+	viewabilityFailures,
+	favoriteFailures,
+	favoriteNote,
+	favoriteNoteFailure,
+	reportFlow,
+	reportFailure,
+	reportMessages,
+	copyProfileId,
+	profileRefreshFailure,
 ];
