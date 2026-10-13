@@ -17,7 +17,10 @@ const profiles = vi.hoisted(() => ({
 }));
 const picker = vi.hoisted(() => ({ pickMultipleMedia: vi.fn() }));
 const sonner = vi.hoisted(() => ({ toast: { error: vi.fn() } }));
-const demo = vi.hoisted(() => ({ demoEnabled: false }));
+const demo = vi.hoisted(() => ({
+	demoEnabled: false,
+	screenshotsEnabled: false,
+}));
 
 vi.mock("$lib/api/users/profiles", () => profiles);
 vi.mock("$lib/platform/media-picker", () => picker);
@@ -75,6 +78,7 @@ afterEach(async () => {
 	cleanup();
 	vi.clearAllMocks();
 	demo.demoEnabled = false;
+	demo.screenshotsEnabled = false;
 	restoreCountFormatter();
 	await setLocale({ locale: SOURCE_LOCALE });
 });
@@ -230,6 +234,16 @@ describe("profile pictures upload", () => {
 		});
 
 		expect(queryByRole("button", { name: "Add photos" })).toBeNull();
+	});
+
+	it("offers uploads in a screenshot build of the demo", () => {
+		demo.demoEnabled = true;
+		demo.screenshotsEnabled = true;
+		const { queryByRole } = render(ProfilePicturesUpload, {
+			props: { ourProfileId: 1, medias: [] },
+		});
+
+		expect(queryByRole("button", { name: "Add photos" })).toBeTruthy();
 	});
 
 	it("offers adding photos only while a slot is free", () => {
