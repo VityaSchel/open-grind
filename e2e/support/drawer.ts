@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 
 import { DEMO_CONVERSATION, installTauriShim } from "./app";
+import { seedPreferences } from "./app-data";
 
 export const DRAWER = "[data-vaul-drawer]";
 const PANEL = "[data-slot=sheet-panel]";
@@ -29,18 +30,40 @@ export function openAttachments(page: Page): Promise<void> {
 	return openComposerSheet(page, { trigger: "Add attachment" });
 }
 
+type ComposerSheetTrigger = "Add attachment" | "GIFs and stickers";
+
 export async function openComposerSheet(
 	page: Page,
-	{ trigger }: { trigger: "Add attachment" | "GIFs and stickers" },
+	{
+		trigger,
+		preferences,
+		stretchPanel = true,
+	}: {
+		trigger: ComposerSheetTrigger;
+		preferences?: Record<string, unknown>;
+		stretchPanel?: boolean;
+	},
 ): Promise<void> {
 	await installTauriShim(page);
+	if (preferences) await seedPreferences(page, { preferences });
 	await page.goto(DEMO_CONVERSATION);
+	await openSheetFromComposer(page, { trigger, stretchPanel });
+}
+
+export async function openSheetFromComposer(
+	page: Page,
+	{
+		trigger,
+		stretchPanel = true,
+	}: { trigger: ComposerSheetTrigger; stretchPanel?: boolean },
+): Promise<void> {
 	const button = page.getByRole("button", { name: trigger });
 	await button.waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
 	await button.click();
 	await page.locator(DRAWER).waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(900);
+	if (!stretchPanel) return;
 	await page.evaluate((panel) => {
 		const el = document.querySelector<HTMLElement>(panel);
 		if (el) el.style.minHeight = "2400px";

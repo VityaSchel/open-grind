@@ -6,6 +6,7 @@ import {
 	TrustedTouch,
 	wheel,
 } from "./support/app";
+import { holdDemoRequests } from "./support/demo-faults";
 import {
 	box,
 	DRAWER,
@@ -13,17 +14,22 @@ import {
 	openComposerSheet,
 	snapTops,
 } from "./support/drawer";
-
-const STICKER_TILE = '[data-slot="sticker-tile"]';
-const SELECTED_STICKER_TILE = `${STICKER_TILE}[aria-pressed="true"]`;
-
-function openStickers(page: Page) {
-	return openComposerSheet(page, { trigger: "GIFs and stickers" });
-}
-
-function sendButton(page: Page) {
-	return page.locator(DRAWER).getByRole("button", { name: /^Send / });
-}
+import {
+	GAYMOJI_MANIFEST_PATH,
+	gaymojiPanel,
+	gaymojiTiles,
+	gifPanel,
+	gifSearchBox,
+	gifTiles,
+	openStickers,
+	SELECTED_STICKER_TILE,
+	STICKER_GRID_SKELETON,
+	STICKER_TILE,
+	stickerSendButton,
+	stickersTab,
+	visibleColumns,
+	visibleTileAspectRatios,
+} from "./support/stickers";
 
 test.describe("composer stickers sheet", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
@@ -120,7 +126,7 @@ test.describe("composer stickers sheet", () => {
 	}) => {
 		await openStickers(page);
 		const touch = await TrustedTouch.attach(page);
-		const tile = page.locator(STICKER_TILE).first();
+		const tile = gifTiles(page).first();
 		const rect = (await tile.boundingBox())!;
 		const centre = {
 			x: rect.x + rect.width / 2,
@@ -130,7 +136,7 @@ test.describe("composer stickers sheet", () => {
 		await page.waitForTimeout(1000);
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
 
-		const still = (await page.locator(STICKER_TILE).first().boundingBox())!;
+		const still = (await gifTiles(page).first().boundingBox())!;
 		await touch.start(
 			still.x + still.width / 2,
 			still.y + still.height / 2,
@@ -140,64 +146,217 @@ test.describe("composer stickers sheet", () => {
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
 	});
 
-	test("only one tile is selected at a time, and Send shows no count", async ({
+	test("one GIF at a time is selected, and Send shows no count", async ({
 		page,
 	}) => {
 		await openStickers(page);
-		const first = page.getByRole("button", { name: "GIF 1", exact: true });
-		const second = page.getByRole("button", { name: "GIF 2", exact: true });
+		const first = gifTiles(page).nth(0);
+		const second = gifTiles(page).nth(1);
 
 		await first.click();
 		await expect(first).toHaveAttribute("aria-pressed", "true");
-		await expect(sendButton(page)).toHaveText("Send GIF");
+		await expect(stickerSendButton(page)).toHaveText("Send GIF");
 
 		await second.click();
 		await expect(second).toHaveAttribute("aria-pressed", "true");
 		await expect(first).toHaveAttribute("aria-pressed", "false");
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
+		await expect(stickerSendButton(page)).toHaveText("Send GIF");
 
 		await second.click();
+		await expect(second).toHaveAttribute("aria-pressed", "false");
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
-		await expect(sendButton(page)).toHaveCount(0);
+		await expect(stickerSendButton(page)).toHaveCount(0);
 	});
 
-	test("the tabs switch between a two-column GIF grid and a four-column Gaymoji grid", async ({
+	test("one Gaymoji at a time is selected, and Send shows no count", async ({
 		page,
 	}) => {
 		await openStickers(page);
-		const columns = () =>
-			page.evaluate((tile) => {
-				const visible = [
-					...document.querySelectorAll<HTMLElement>(tile),
-				].filter((el) => el.offsetParent !== null);
-				const top = visible[0]?.getBoundingClientRect().top;
-				return visible.filter(
-					(el) => el.getBoundingClientRect().top === top,
-				).length;
-			}, STICKER_TILE);
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		const first = gaymojiTiles(page).nth(0);
+		const second = gaymojiTiles(page).nth(1);
+		await expect(first).toBeVisible();
 
-		expect(await columns()).toBe(2);
-		await page.getByRole("tab", { name: "Gaymoji" }).click();
-		await expect(
-			page.getByRole("button", { name: "Gaymoji 1", exact: true }),
-		).toBeVisible();
-		expect(await columns()).toBe(4);
-		await page.getByRole("tab", { name: "GIFs" }).click();
-		expect(await columns()).toBe(2);
+		await first.click();
+		await expect(first).toHaveAttribute("aria-pressed", "true");
+		await expect(stickerSendButton(page)).toHaveText("Send Gaymoji");
+
+		await second.click();
+		await expect(second).toHaveAttribute("aria-pressed", "true");
+		await expect(first).toHaveAttribute("aria-pressed", "false");
+		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
+		await expect(stickerSendButton(page)).toHaveText("Send Gaymoji");
+
+		await second.click();
+		await expect(second).toHaveAttribute("aria-pressed", "false");
+		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
+		await expect(stickerSendButton(page)).toHaveCount(0);
+	});
+
+	test("switching tabs keeps the GIF search and its results", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await gifSearchBox(page).fill("party");
+		const firstResult = gifPanel(page).getByRole("button", {
+			name: "Party GIF 1",
+			exact: true,
+		});
+		await expect(firstResult).toBeVisible();
+		const results = await gifTiles(page).count();
+
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		await expect(gaymojiTiles(page).first()).toBeVisible();
+		await expect(gifSearchBox(page)).toBeHidden();
+
+		await stickersTab(page, { name: "GIFs" }).click();
+		await expect(gifSearchBox(page)).toHaveValue("party");
+		await expect(firstResult).toBeVisible();
+		expect(await gifTiles(page).count()).toBe(results);
+	});
+});
+
+test.describe("sticker grid layout", () => {
+	const SHEET_PANEL_PADDING = 32;
+	const MEDIA_PANEL_WIDTH = 800;
+	const LAYOUTS = [
+		{ viewport: 1280, grid: 768, gifs: 3, gaymoji: 8 },
+		{ viewport: 720, grid: 688, gifs: 3, gaymoji: 8 },
+		{ viewport: 640, grid: 608, gifs: 3, gaymoji: 7 },
+		{ viewport: 520, grid: 488, gifs: 3, gaymoji: 6 },
+		{ viewport: 420, grid: 388, gifs: 3, gaymoji: 5 },
+		{ viewport: 280, grid: 248, gifs: 2, gaymoji: 4 },
+		{ viewport: 200, grid: 168, gifs: 1, gaymoji: 3 },
+	];
+
+	function visibleGridWidth(page: Page): Promise<number | undefined> {
+		return page.evaluate(
+			() =>
+				[
+					...document.querySelectorAll<HTMLElement>(
+						'[data-slot="sticker-grid"]',
+					),
+				]
+					.find((grid) => grid.checkVisibility())
+					?.getBoundingClientRect().width,
+		);
+	}
+
+	async function measureTab(page: Page, name: "GIFs" | "Gaymoji") {
+		await stickersTab(page, { name }).click();
+		const tiles = name === "GIFs" ? gifTiles(page) : gaymojiTiles(page);
+		await expect(tiles.first()).toBeVisible();
+		await page.waitForTimeout(100);
+		return {
+			grid: await visibleGridWidth(page),
+			columns: await visibleColumns(page),
+		};
+	}
+
+	test("the grids drop columns as the sheet narrows", async ({ page }) => {
+		await openStickers(page);
+		const panelPadding = await page
+			.locator(DRAWER)
+			.locator("[data-slot=sheet-panel]")
+			.evaluate((panel) => {
+				const style = getComputedStyle(panel);
+				return (
+					parseFloat(style.paddingLeft) +
+					parseFloat(style.paddingRight)
+				);
+			});
+		expect(panelPadding).toBe(SHEET_PANEL_PADDING);
+
+		for (const { viewport, grid, gifs, gaymoji } of LAYOUTS) {
+			expect(
+				Math.min(viewport, MEDIA_PANEL_WIDTH) - SHEET_PANEL_PADDING,
+			).toBe(grid);
+			await page.setViewportSize({ width: viewport, height: 800 });
+			const gifLayout = await measureTab(page, "GIFs");
+			const gaymojiLayout = await measureTab(page, "Gaymoji");
+			expect({
+				viewport,
+				gifGrid: gifLayout.grid,
+				gifColumns: gifLayout.columns,
+				gaymojiGrid: gaymojiLayout.grid,
+				gaymojiColumns: gaymojiLayout.columns,
+			}).toEqual({
+				viewport,
+				gifGrid: grid,
+				gifColumns: gifs,
+				gaymojiGrid: grid,
+				gaymojiColumns: gaymoji,
+			});
+		}
+	});
+
+	test("the Gaymoji skeleton fills three whole rows at every width", async ({
+		page,
+	}) => {
+		await holdDemoRequests(page, { pathPrefix: GAYMOJI_MANIFEST_PATH });
+		await openStickers(page);
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		const skeleton = gaymojiPanel(page).locator(STICKER_GRID_SKELETON);
+		await expect(skeleton).toBeVisible();
+
+		for (const { viewport, gaymoji } of LAYOUTS) {
+			await page.setViewportSize({ width: viewport, height: 800 });
+			await page.waitForTimeout(100);
+			const layout = await skeleton.evaluate((grid) => {
+				const tiles = [...grid.children].filter((tile) =>
+					tile.checkVisibility(),
+				);
+				return {
+					tiles: tiles.length,
+					rows: new Set(
+						tiles.map((tile) =>
+							Math.round(tile.getBoundingClientRect().top),
+						),
+					).size,
+				};
+			});
+			expect({ viewport, ...layout }).toEqual({
+				viewport,
+				tiles: gaymoji * 3,
+				rows: 3,
+			});
+		}
+	});
+
+	test("GIF tiles are 4:3 and Gaymoji tiles are square", async ({ page }) => {
+		await openStickers(page);
+		const gifRatios = await visibleTileAspectRatios(page);
+		expect(gifRatios.length).toBeGreaterThan(3);
+		for (const ratio of gifRatios) expect(ratio).toBeCloseTo(4 / 3, 1);
+
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		await expect(gaymojiTiles(page).first()).toBeVisible();
+		const gaymojiRatios = await visibleTileAspectRatios(page);
+		expect(gaymojiRatios.length).toBeGreaterThan(3);
+		for (const ratio of gaymojiRatios) expect(ratio).toBeCloseTo(1, 1);
 	});
 });
 
 test.describe("composer sheet tab bars", () => {
 	const SHEETS = [
-		{ trigger: "Add attachment", tile: '[data-slot="media-tile"]' },
-		{ trigger: "GIFs and stickers", tile: STICKER_TILE },
+		{
+			trigger: "Add attachment",
+			tile: '[data-slot="media-tile"]',
+			preferences: undefined,
+		},
+		{
+			trigger: "GIFs and stickers",
+			tile: STICKER_TILE,
+			preferences: { giphyConsent: true },
+		},
 	] as const;
 
-	for (const { trigger, tile } of SHEETS) {
+	for (const { trigger, tile, preferences } of SHEETS) {
 		test(`${trigger}: the tab bar is a progressive blur under the Send pill`, async ({
 			page,
 		}) => {
-			await openComposerSheet(page, { trigger });
+			await openComposerSheet(page, { trigger, preferences });
 			const bar = page
 				.locator(DRAWER)
 				.locator('[data-slot="media-sheet-tab-bar"]');

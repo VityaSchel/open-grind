@@ -27,7 +27,7 @@
 	});
 </script>
 
-<Drawer.Root bind:open>
+<Drawer.Root bind:open repositionInputs={false}>
 	<Drawer.Content
 		class={[
 			"mx-auto max-w-media-panel border-none bg-transparent p-0 shadow-none before:hidden",

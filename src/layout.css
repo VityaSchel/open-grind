@@ -138,6 +138,8 @@
 
 	/* overlap that seams an SVG message tail onto its bubble */
 	--spacing-hairline: 0.5px;
+
+	--border-width-hairline: 0.5px;
 }
 
 /* .photo-grid column-count thresholds, queried against the nearest
@@ -151,6 +153,16 @@
 	--container-grid5: 736px;
 	--container-grid6: 992px;
 	--container-grid7: 1248px;
+}
+
+@theme {
+	--container-gif2: 200px;
+	--container-gif3: 320px;
+	--container-gaymoji4: 240px;
+	--container-gaymoji5: 320px;
+	--container-gaymoji6: 448px;
+	--container-gaymoji7: 560px;
+	--container-gaymoji8: 672px;
 }
 
 @layer base {
