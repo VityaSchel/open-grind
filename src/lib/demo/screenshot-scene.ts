@@ -1,3 +1,4 @@
+import type { PlainMessageKey } from "../i18n/types";
 import type { ViewScan } from "./screenshot-scan";
 
 export const demoLists = [
@@ -47,26 +48,32 @@ export type ScreenshotScene = {
 	methodAnswers: Record<string, unknown>;
 };
 
-type UpdateStageToast = {
-	view: {
-		stage:
-			| "available"
-			| "downloading"
-			| "verifying"
-			| "paused"
-			| "ready"
-			| "installing";
-		received: number;
-		total: number;
-	};
-	kind: "install" | "update";
-	onActivate: () => void;
-	onCancel: () => void;
-	onDismiss: () => void;
-};
+export type UpdateComponent = "app" | "google-oauth" | "recaptcha" | "fcm";
 
-type UpdateToasts = {
-	show: (stage: UpdateStageToast) => void;
+export type InstallKind = "install" | "update";
+
+export type UpdateStagePresenter = {
+	show: (stage: {
+		view: {
+			stage:
+				| "available"
+				| "downloading"
+				| "verifying"
+				| "paused"
+				| "ready"
+				| "installing";
+			received: number;
+			total: number;
+		};
+		kind: InstallKind;
+		onActivate: () => void;
+		onCancel: () => void;
+		onDismiss: () => void;
+	}) => void;
+	dismiss: () => void;
+	problem: (title: string) => void;
+	manualInstall: (body: string) => void;
+	installed: (install: { tag: string | null; kind: InstallKind }) => void;
 	upToDate: () => void;
 };
 
@@ -78,9 +85,11 @@ export type ScreenshotHooks = {
 		error: unknown;
 		onRetry?: () => void;
 	}) => void;
-	updateToasts: (
-		component: "app" | "google-oauth" | "recaptcha" | "fcm",
-	) => UpdateToasts;
+	updateToasts: (component: UpdateComponent) => UpdateStagePresenter;
+	updateProblem: (problem: {
+		component: UpdateComponent;
+		key: PlainMessageKey;
+	}) => void;
 	scan: () => ViewScan;
 };
 

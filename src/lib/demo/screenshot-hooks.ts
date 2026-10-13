@@ -1,5 +1,5 @@
 import { showErrorToast } from "$lib/api/error-toast";
-import { setLocale } from "$lib/i18n";
+import { setLocale, t } from "$lib/i18n";
 import { toastPresenter } from "$lib/updates/toast-presenter";
 import { scanView } from "./screenshot-scan";
 import { type ScreenshotHooks, screenshotScene } from "./screenshot-scene";
@@ -13,6 +13,9 @@ export function installScreenshotHooks(): ScreenshotHooks {
 		},
 		showErrorToast,
 		updateToasts: toastPresenter,
+		updateProblem: ({ component, key }) => {
+			toastPresenter(component).problem(t(key));
+		},
 		scan: scanView,
 	};
 	window.__openGrindScreenshots = hooks;
