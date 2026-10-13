@@ -15,7 +15,7 @@ import {
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
 import { demoCallMethod, demoEnabled, screenshotsEnabled } from "$lib/demo";
-import { sceneMethodFault } from "$lib/demo/screenshot-scene";
+import { neverSettles, sceneMethodOutcome } from "$lib/demo/screenshot-scene";
 import {
 	type MessageKey,
 	type PlainMessageKey,
@@ -214,10 +214,13 @@ export const methods = {
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 function demoMethodAnswer(method: string): unknown {
-	const fault = screenshotsEnabled ? sceneMethodFault(method) : undefined;
+	const scripted = screenshotsEnabled
+		? sceneMethodOutcome(method)
+		: undefined;
+	if (scripted === undefined) return demoCallMethod(method);
 	// eslint-disable-next-line @typescript-eslint/only-throw-error -- Tauri commands reject with the bare AppError object
-	if (fault !== undefined) throw fault;
-	return demoCallMethod(method);
+	if ("error" in scripted) throw scripted.error;
+	return "pending" in scripted ? neverSettles() : scripted.answer;
 }
 
 type MethodResult<T extends keyof typeof methods> = z.infer<

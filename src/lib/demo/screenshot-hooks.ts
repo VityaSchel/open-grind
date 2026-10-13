@@ -8,6 +8,9 @@ export function installScreenshotHooks(): ScreenshotHooks {
 	Object.assign(screenshotScene, window.__openGrindScreenshotScene);
 	const hooks: ScreenshotHooks = {
 		setLocale,
+		setScene: (scene) => {
+			Object.assign(screenshotScene, scene);
+		},
 		showErrorToast,
 		updateToasts: toastPresenter,
 		scan: scanView,

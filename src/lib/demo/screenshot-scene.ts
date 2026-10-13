@@ -15,12 +15,22 @@ export type DemoList = (typeof demoLists)[number];
 
 export type NativeError = { kind: string; message?: unknown };
 
+export type Pending = { pending: true };
+
 export type RestFault = {
 	method?: string;
 	path: string | { pattern: string };
-} & ({ status: number; body?: unknown } | { error: NativeError });
+} & ({ status: number; body?: unknown } | { error: NativeError } | Pending);
 
-export type MethodFault = { command: string; error: NativeError };
+export type MethodFault = { command: string } & (
+	| { error: NativeError }
+	| Pending
+);
+
+export type MethodOutcome =
+	| { error: NativeError }
+	| Pending
+	| { answer: unknown };
 
 export type ScreenshotScene = {
 	signedOut: boolean;
@@ -34,6 +44,7 @@ export type ScreenshotScene = {
 	} | null;
 	restFaults: RestFault[];
 	methodFaults: MethodFault[];
+	methodAnswers: Record<string, unknown>;
 };
 
 type UpdateStageToast = {
@@ -61,6 +72,7 @@ type UpdateToasts = {
 
 export type ScreenshotHooks = {
 	setLocale: (options: { locale: string }) => Promise<void>;
+	setScene: (scene: Partial<ScreenshotScene>) => void;
 	showErrorToast: (options: {
 		label?: string;
 		error: unknown;
@@ -89,7 +101,12 @@ export const screenshotScene: ScreenshotScene = {
 	restriction: null,
 	restFaults: [],
 	methodFaults: [],
+	methodAnswers: {},
 };
+
+export function neverSettles(): Promise<never> {
+	return new Promise(() => {});
+}
 
 function pathMatches({
 	match,
@@ -116,11 +133,15 @@ export function sceneRestFault({
 	);
 }
 
-export function sceneMethodFault(command: string): NativeError | undefined {
+export function sceneMethodOutcome(command: string): MethodOutcome | undefined {
 	if (screenshotScene.signedOut && command === "refresh_session") {
-		return NOT_SIGNED_IN;
+		return { error: NOT_SIGNED_IN };
 	}
-	return screenshotScene.methodFaults.find(
-		(fault) => fault.command === command,
-	)?.error;
+	const fault = screenshotScene.methodFaults.find(
+		(candidate) => candidate.command === command,
+	);
+	if (fault !== undefined) return fault;
+	return Object.hasOwn(screenshotScene.methodAnswers, command)
+		? { answer: screenshotScene.methodAnswers[command] }
+		: undefined;
 }

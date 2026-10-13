@@ -12,7 +12,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute, screenshotsEnabled } from "$lib/demo";
-import { sceneRestFault } from "$lib/demo/screenshot-scene";
+import { neverSettles, sceneRestFault } from "$lib/demo/screenshot-scene";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -228,6 +228,7 @@ export async function fetchRest(
 			? sceneRestFault({ path, method })
 			: undefined;
 		if (fault !== undefined) {
+			if ("pending" in fault) return neverSettles();
 			if ("error" in fault) {
 				throw restInvokeError({ error: fault.error, requestInfo });
 			}

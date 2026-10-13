@@ -32,7 +32,13 @@ vi.mock("$lib/platform/regional-settings", () => ({
 
 import type { ScreenshotHooks } from "./screenshot-scene";
 
-const HOOK_NAMES = ["scan", "setLocale", "showErrorToast", "updateToasts"];
+const HOOK_NAMES = [
+	"scan",
+	"setLocale",
+	"setScene",
+	"showErrorToast",
+	"updateToasts",
+];
 const FRESH_IMPORTS = { timeout: 60_000 };
 
 async function startApp(): Promise<ScreenshotHooks | undefined> {
@@ -108,6 +114,24 @@ describe("with OPEN_GRIND_SCREENSHOTS=1", FRESH_IMPORTS, () => {
 			restriction: null,
 			restFaults: [],
 			methodFaults: [],
+			methodAnswers: {},
+		});
+	});
+
+	it("merges a later scene change into the seeded scene", async () => {
+		window.__openGrindScreenshotScene = {
+			signedOut: true,
+			methodAnswers: { storage_backend: "file" },
+		};
+		const hooks = await startHookedApp();
+		const restFaults = [{ path: "/v4/inbox", status: 500 }];
+		hooks.setScene({ restFaults });
+		hooks.setScene({ methodAnswers: { storage_backend: "unavailable" } });
+		const { screenshotScene } = await import("./screenshot-scene");
+		expect(screenshotScene).toMatchObject({
+			signedOut: true,
+			restFaults,
+			methodAnswers: { storage_backend: "unavailable" },
 		});
 	});
 
