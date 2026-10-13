@@ -49,6 +49,23 @@ import {
 	signOutConfirm,
 } from "./shell";
 import { downloadToast, upToDateToast } from "./updates";
+import { addonProblemToasts, appProblemToasts } from "./updates-problems";
+import {
+	addonUpdateSettings,
+	appAndAddonUpdateSettings,
+	appUpdateSettings,
+	blockedUpdateSettings,
+	fastModeFailure,
+	fdroidAddonAlert,
+	manualInstall,
+	pushFailures,
+	undeterminedUpdateSettings,
+} from "./updates-settings";
+import {
+	addonInstalledToasts,
+	addonStageToasts,
+	appStageToasts,
+} from "./updates-stages";
 
 export type SceneView = {
 	id: string;
@@ -82,6 +99,20 @@ export const scenes: Scene[] = [
 	emptyTaps,
 	upToDateToast,
 	downloadToast,
+	...appStageToasts,
+	...addonStageToasts,
+	...addonInstalledToasts,
+	...appProblemToasts,
+	...addonProblemToasts,
+	manualInstall,
+	appUpdateSettings,
+	appAndAddonUpdateSettings,
+	addonUpdateSettings,
+	undeterminedUpdateSettings,
+	blockedUpdateSettings,
+	fdroidAddonAlert,
+	pushFailures,
+	fastModeFailure,
 	inbox,
 	commandCenter,
 	requestBlocked,
