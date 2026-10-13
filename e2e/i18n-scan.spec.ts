@@ -91,6 +91,8 @@ async function mountFixture(page: Page): Promise<void> {
 			<button aria-label="${m("label", "Close")}" style="width:32px;height:32px"><svg width="16" height="16"><circle cx="8" cy="8" r="8" fill="white"/></svg></button>
 			<img alt="${m("alt", "Photo")}" width="24" height="24" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'/%3E">
 			<span title="${m("title", "Hint")}">i</span>
+			<nav aria-label="${m("boxless", "Back")}"><a href="#back" style="position:fixed;right:8px;bottom:8px;width:24px;height:24px;background:white"></a></nav>
+			<span aria-label="${m("empty", "Nothing")}"></span>
 			<div><input value="${m("value", "Typed")}"> <input value="Typed 🦊" size="8"><input value="Unseen 🦊" style="display:none"></div>
 			<input placeholder="${m("placeholder", "Search")}">
 			<input value="Filled" placeholder="${m("filledPlaceholder", "Hidden")}">
@@ -154,6 +156,8 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 				"label",
 				"alt",
 				"title",
+				"boxless",
+				"empty",
 				"value",
 				"placeholder",
 				"filledPlaceholder",
@@ -182,6 +186,8 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 		label: attribute,
 		alt: attribute,
 		title: attribute,
+		boxless: attribute,
+		empty: undefined,
 		value: text,
 		placeholder: text,
 		filledPlaceholder: undefined,

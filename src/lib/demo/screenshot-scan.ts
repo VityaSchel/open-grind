@@ -154,12 +154,14 @@ function union(a: KeyBox | null, b: KeyBox): KeyBox {
 function visibleBox({
 	rects,
 	element,
+	area = element.getBoundingClientRect(),
 }: {
-	rects: Iterable<DOMRectReadOnly>;
+	rects: Iterable<KeyBox>;
 	element: Element;
+	area?: KeyBox;
 }): KeyBox | null {
 	const viewport = { x: 0, y: 0, width: innerWidth, height: innerHeight };
-	const bounds = intersect(element.getBoundingClientRect(), viewport);
+	const bounds = intersect(area, viewport);
 	if (bounds === null) return null;
 	let box: KeyBox | null = null;
 	for (const rect of rects) {
@@ -172,6 +174,20 @@ function visibleBox({
 		if (hit) box = union(box, part);
 	}
 	return box;
+}
+
+function hasArea({ width, height }: KeyBox): boolean {
+	return width > 0 && height > 0;
+}
+
+function renderedArea(element: Element): KeyBox {
+	const own = element.getBoundingClientRect();
+	if (hasArea(own)) return own;
+	const content = [...element.querySelectorAll("*")]
+		.map((descendant) => descendant.getBoundingClientRect())
+		.filter(hasArea)
+		.reduce<KeyBox | null>((area, part) => union(area, part), null);
+	return content ?? own;
 }
 
 function boxedAncestor(element: Element): Element | null {
@@ -342,8 +358,8 @@ function scanAttributes({
 		if (spans.length === 0 && shownEmoji.length === 0) continue;
 		const host = boxedAncestor(element);
 		if (!host?.checkVisibility(VISIBILITY)) continue;
-		const rects = [host.getBoundingClientRect()];
-		const box = visibleBox({ rects, element: host });
+		const area = renderedArea(host);
+		const box = visibleBox({ rects: [area], element: host, area });
 		if (box === null) continue;
 		emoji.push(...shownEmoji.map(({ value }) => normalized(value)));
 		if (untranslated(element)) continue;
