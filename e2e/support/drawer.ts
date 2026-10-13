@@ -25,13 +25,20 @@ export interface DrawerBox {
 	safeBottom: number;
 }
 
-export async function openAttachments(page: Page): Promise<void> {
+export function openAttachments(page: Page): Promise<void> {
+	return openComposerSheet(page, { trigger: "Add attachment" });
+}
+
+export async function openComposerSheet(
+	page: Page,
+	{ trigger }: { trigger: "Add attachment" | "GIFs and stickers" },
+): Promise<void> {
 	await installTauriShim(page);
 	await page.goto(DEMO_CONVERSATION);
-	const paperclip = page.getByRole("button", { name: "Add attachment" });
-	await paperclip.waitFor({ timeout: 30_000 });
+	const button = page.getByRole("button", { name: trigger });
+	await button.waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
-	await paperclip.click();
+	await button.click();
 	await page.locator(DRAWER).waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(900);
 	await page.evaluate((panel) => {

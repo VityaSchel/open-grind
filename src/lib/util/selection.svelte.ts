@@ -37,6 +37,12 @@ export class SelectionSet<T> {
 		}
 	}
 
+	toggleExclusive(item: T): void {
+		const wasSelected = this.#selected.has(item);
+		this.#selected.clear();
+		if (!wasSelected) this.add(item);
+	}
+
 	values(): T[] {
 		return [...this.#selected];
 	}

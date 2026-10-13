@@ -18,6 +18,7 @@
 	import { setMessageComposerContext } from "./message-composer-context.svelte";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import ComposerSendMedia from "./send-media/ComposerSendMedia.svelte";
+	import ComposerStickers from "./stickers/ComposerStickers.svelte";
 	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
 
 	let {
@@ -123,6 +124,9 @@
 			bind:ref={textInput}
 			onEscape={onCancelReply}
 		/>
+		{#key conversationId}
+			<ComposerStickers />
+		{/key}
 		{#if textContent === ""}
 			{#key conversationId}
 				<ComposerAttachments />

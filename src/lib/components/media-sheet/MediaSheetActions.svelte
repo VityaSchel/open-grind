@@ -11,6 +11,7 @@
 	let {
 		label,
 		count,
+		showCount = true,
 		busy = false,
 		onSubmit,
 		class: className,
@@ -18,6 +19,7 @@
 	}: {
 		label: string;
 		count: number;
+		showCount?: boolean;
 		busy?: boolean;
 		onSubmit: () => void;
 		class?: string;
@@ -47,12 +49,14 @@
 				<Spinner aria-hidden="true" />
 			{/if}
 			{label}
-			<Badge
-				variant="secondary"
-				class="bg-primary-foreground/10 text-primary-foreground"
-			>
-				{count}
-			</Badge>
+			{#if showCount}
+				<Badge
+					variant="secondary"
+					class="bg-primary-foreground/10 text-primary-foreground"
+				>
+					{count}
+				</Badge>
+			{/if}
 		</Button>
 	</div>
 {/if}
