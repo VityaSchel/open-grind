@@ -7,8 +7,14 @@
 	let {
 		open = $bindable(),
 		fullsize = true,
+		onCloseAutoFocus,
 		children,
-	}: { open: boolean; fullsize?: boolean; children: Snippet } = $props();
+	}: {
+		open: boolean;
+		fullsize?: boolean;
+		onCloseAutoFocus?: (event: Event) => void;
+		children: Snippet;
+	} = $props();
 
 	let pressedOutside = false;
 
@@ -34,6 +40,7 @@
 			{ "h-full": fullsize, "h-fit": !fullsize },
 		]}
 		handle={null}
+		{onCloseAutoFocus}
 		onpointerdown={(e) => (pressedOutside = isScroller(e.target))}
 		onclick={(e) => {
 			const outside = pressedOutside && isScroller(e.target);

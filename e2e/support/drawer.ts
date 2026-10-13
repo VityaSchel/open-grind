@@ -30,7 +30,7 @@ export function openAttachments(page: Page): Promise<void> {
 	return openComposerSheet(page, { trigger: "Add attachment" });
 }
 
-type ComposerSheetTrigger = "Add attachment" | "GIFs and stickers";
+export type ComposerSheetTrigger = "Add attachment" | "GIFs and stickers";
 
 export async function openComposerSheet(
 	page: Page,

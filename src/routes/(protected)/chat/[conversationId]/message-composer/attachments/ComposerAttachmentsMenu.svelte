@@ -18,7 +18,10 @@
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
-	let { open = $bindable() }: { open: boolean } = $props();
+	let {
+		open = $bindable(),
+		onCloseAutoFocus,
+	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
 	let selectedTab = $state<Tab>("media");
 
@@ -41,7 +44,7 @@
 	});
 </script>
 
-<MediaSheet bind:open fullsize={isFullsizeTab}>
+<MediaSheet bind:open fullsize={isFullsizeTab} {onCloseAutoFocus}>
 	<Drawer.Title class="sr-only">Attachments</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}

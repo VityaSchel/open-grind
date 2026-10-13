@@ -20,6 +20,17 @@ vi.mock("$lib/chat/conversations-context.svelte", () => ({
 vi.mock("./send-media/send-media-offer.svelte", () => ({
 	getSendMediaOffer: () => ({ lend: () => {}, offer: async () => {} }),
 }));
+vi.mock("../conversation-state.svelte", () => ({
+	getConversationState: () => () => ({}),
+}));
+vi.mock("./composer-sheets-state.svelte", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("./composer-sheets-state.svelte")>();
+	return {
+		...actual,
+		getComposerSheets: () => new actual.ComposerSheetsState(),
+	};
+});
 
 // the module builds a WsState on import, which reaches for a Tauri host that a
 // jsdom run has no business providing

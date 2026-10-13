@@ -6,7 +6,10 @@
 	import ComposerButton from "../ComposerButton.svelte";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 
-	let { onClick }: { onClick?: () => void } = $props();
+	let {
+		onClick,
+		ref = $bindable(null),
+	}: { onClick?: () => void; ref?: HTMLElement | null } = $props();
 
 	const { disabled } = $derived(getMessageComposerContext()());
 </script>
@@ -17,6 +20,7 @@
 	transition:scale={{ duration: 400, easing: expoOut, start: 0 }}
 >
 	<ComposerButton
+		bind:ref
 		class="static pe-1.5"
 		aria-label="Add attachment"
 		onclick={() => {

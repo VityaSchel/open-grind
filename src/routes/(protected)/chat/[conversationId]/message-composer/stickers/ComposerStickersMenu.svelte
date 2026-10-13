@@ -21,7 +21,10 @@
 
 	type StickerTab = "gifs" | "gaymoji";
 
-	let { open = $bindable() }: { open: boolean } = $props();
+	let {
+		open = $bindable(),
+		onCloseAutoFocus,
+	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
 	let selectedTab = $state<StickerTab>("gifs");
 	let tabs = $state<Partial<Record<StickerTab, SelectionTab | null>>>({});
@@ -54,7 +57,7 @@
 	});
 </script>
 
-<MediaSheet bind:open {fullsize}>
+<MediaSheet bind:open {fullsize} {onCloseAutoFocus}>
 	<Drawer.Title class="sr-only">GIFs and stickers</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}

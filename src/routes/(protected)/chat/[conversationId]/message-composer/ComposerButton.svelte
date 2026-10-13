@@ -4,6 +4,7 @@
 	let {
 		icon,
 		class: className,
+		ref = $bindable(null),
 		...props
 	}: {
 		icon: import("svelte").Snippet<
@@ -14,6 +15,7 @@
 </script>
 
 <Button
+	bind:ref
 	type="button"
 	variant="ghost"
 	size="icon"
