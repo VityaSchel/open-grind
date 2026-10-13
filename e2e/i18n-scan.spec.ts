@@ -97,6 +97,7 @@ async function mountFixture(page: Page): Promise<void> {
 			<input placeholder="${m("placeholder", "Search")}">
 			<input value="Filled" placeholder="${m("filledPlaceholder", "Hidden")}">
 			<button>OK<span style="${hiddenText}">${m("screenReader", "Close dialog")}</span></button>
+			<div style="width:120px;height:24px"><h2 style="${hiddenText};padding:16px">${m("paddedScreenReader", "Choose Location")}</h2></div>
 			<div role="dialog"><p>${m("dialog", "In a dialog")}</p></div>
 			<select><option>${m("selected", "Metric")}</option><option>${m("option", "Imperial")}</option></select>
 		`;
@@ -162,6 +163,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 				"placeholder",
 				"filledPlaceholder",
 				"screenReader",
+				"paddedScreenReader",
 				"dialog",
 				"selected",
 				"option",
@@ -192,6 +194,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 		placeholder: text,
 		filledPlaceholder: undefined,
 		screenReader: attribute,
+		paddedScreenReader: attribute,
 		dialog: { via: "text", top: true },
 		selected: text,
 		option: attribute,
@@ -206,6 +209,60 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 	expect(twice?.box).toEqual(above);
 	expect(result.unmarked).toEqual(["Plain English", "i", "OK"]);
 	expect(result.emoji).toEqual(["Raw 🦊", "Typed 🦊"]);
+});
+
+test("the scan measures animated text where the screenshot shows it", async ({
+	page,
+}) => {
+	await openDemo(page, { path: "/settings/app" });
+	await page
+		.locator("main h2")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await page.evaluate(async (module) => {
+		const { markMessage }: typeof Markers = await import(module);
+		const fixture = document.createElement("div");
+		fixture.style.cssText =
+			"position:fixed;inset:0;z-index:2147483647;padding:40px;background:rgb(20 20 20);color:white;font:14px/1 sans-serif";
+		fixture.innerHTML = `
+			<p id="arriving" style="width:100px">${markMessage({ key: "fixture.arriving", message: "Arriving" })}</p>
+			<p id="spinning" style="width:100px;height:20px;margin-top:80px">${markMessage({ key: "fixture.spinning", message: "Spinning" })}</p>
+		`;
+		document.body.append(fixture);
+		fixture
+			.querySelector("#arriving")
+			?.animate([{ translate: "0 300px" }, { translate: "0 0" }], {
+				duration: 100_000,
+			});
+		fixture
+			.querySelector("#spinning")
+			?.animate([{ rotate: "0deg" }, { rotate: "360deg" }], {
+				duration: 4000,
+				delay: -1000,
+				iterations: Infinity,
+			});
+	}, MARKERS_MODULE);
+	const arrivingTop = await page
+		.locator("#arriving")
+		.evaluate((element) => element.getBoundingClientRect().top);
+
+	const result = await scan(page);
+
+	const box = (name: string) =>
+		result.keys.find(({ key }) => key === `fixture.${name}`)?.box;
+	const scale = await page.evaluate(() => devicePixelRatio);
+	const arriving = box("arriving");
+	const spinning = box("spinning");
+	expect(arriving && arriving.y < (arrivingTop - 200) * scale).toBe(true);
+	expect(spinning && spinning.width > spinning.height).toBe(true);
+	expect(
+		await page.evaluate(() =>
+			document
+				.querySelector("#spinning")
+				?.getAnimations()
+				.map(({ playState }) => playState),
+		),
+	).toEqual(["running"]);
 });
 
 test.describe("at a fractional device scale factor", () => {

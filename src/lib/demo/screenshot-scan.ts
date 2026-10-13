@@ -71,6 +71,7 @@ const TRANSLATION_MODE =
 const HIT_TESTABLE =
 	"*, ::before, ::after { pointer-events: auto !important; }";
 const COVERING_ALPHA = 0.5;
+const CLIPPED_AWAY = "inset(50%)";
 const PROBES = [0.5, 0.25, 0.75];
 const EMOJI = /\p{Emoji_Presentation}|\p{Extended_Pictographic}\uFE0F/u;
 const VISIBILITY: CheckVisibilityOptions = {
@@ -199,10 +200,11 @@ function boxedAncestor(element: Element): Element | null {
 }
 
 function clipsToNothing(element: Element): boolean {
+	const { overflowX, clipPath } = getComputedStyle(element);
+	if (overflowX !== "hidden" && overflowX !== "clip") return false;
+	if (clipPath === CLIPPED_AWAY) return true;
 	const { width, height } = element.getBoundingClientRect();
-	if (width > 1 || height > 1) return false;
-	const { overflowX } = getComputedStyle(element);
-	return overflowX === "hidden" || overflowX === "clip";
+	return width <= 1 && height <= 1;
 }
 
 function screenReaderHost(element: Element): Element | null {
@@ -395,23 +397,43 @@ function withHitTestableElements<T>(scan: () => T): T {
 	}
 }
 
+function withAnimationsAsScreenshotted<T>(scan: () => T): T {
+	const infinite: Animation[] = [];
+	for (const animation of document.getAnimations()) {
+		if (animation.effect === null || animation.playbackRate === 0) continue;
+		if (Number.isFinite(animation.effect.getComputedTiming().endTime)) {
+			animation.finish();
+		} else {
+			animation.cancel();
+			infinite.push(animation);
+		}
+	}
+	try {
+		return scan();
+	} finally {
+		for (const animation of infinite) animation.play();
+	}
+}
+
 export function scanView(): ViewScan {
-	return withHitTestableElements(() => {
-		const found: Found = new Map();
-		const unmarked: string[] = [];
-		const emoji: string[] = [];
-		scanText({ found, unmarked, emoji });
-		scanAttributes({ found, emoji });
-		return {
-			keys: [...found.values()]
-				.sort((a, b) => (a.key < b.key ? -1 : 1))
-				.map((shown) => ({
-					...shown,
-					box: inPixels(shown.box),
-					boxes: shown.boxes.map(inPixels),
-				})),
-			unmarked: [...new Set(unmarked)],
-			emoji: [...new Set(emoji)],
-		};
-	});
+	return withAnimationsAsScreenshotted(() =>
+		withHitTestableElements(() => {
+			const found: Found = new Map();
+			const unmarked: string[] = [];
+			const emoji: string[] = [];
+			scanText({ found, unmarked, emoji });
+			scanAttributes({ found, emoji });
+			return {
+				keys: [...found.values()]
+					.sort((a, b) => (a.key < b.key ? -1 : 1))
+					.map((shown) => ({
+						...shown,
+						box: inPixels(shown.box),
+						boxes: shown.boxes.map(inPixels),
+					})),
+				unmarked: [...new Set(unmarked)],
+				emoji: [...new Set(emoji)],
+			};
+		}),
+	);
 }
