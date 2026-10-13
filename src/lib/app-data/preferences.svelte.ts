@@ -7,6 +7,10 @@ import { backdropBlurQualitySchema } from "$lib/blur/quality";
 import { getRegionalSettings, t } from "$lib/i18n";
 import { gridSearchFiltersSchema } from "$lib/model/browse/grid/filters";
 import { geohashSchema } from "$lib/model/geohash";
+import {
+	languageSyncSchema,
+	languageTagSchema,
+} from "$lib/platform/language-sync";
 import { regionalSettingsReady } from "$lib/platform/regional-settings";
 import { unitSystemFor, unitSystemSchema } from "$lib/util/units";
 import { existsAppDataFile, readAppDataFile, writeAppDataFileAtomic } from ".";
@@ -23,6 +27,8 @@ const preferencesSchema = z.object({
 		.catch(null),
 	geohash: geohashSchema.nullable().default(null),
 	hapticFeedback: z.boolean().default(true),
+	language: languageTagSchema.nullable().default(null).catch(null),
+	languageSync: languageSyncSchema.nullable().default(null).catch(null),
 	onboardingComplete: z.boolean().default(false),
 	gridSearchFilters: gridSearchFiltersSchema.optional(),
 	notificationsEnabled: z.boolean().default(false),

@@ -290,6 +290,69 @@ describe("signing out", () => {
 	});
 });
 
+describe("the interface language", () => {
+	const system = systemWith({ locale: "de-DE", measurementSystem: "metric" });
+
+	it("starts undecided and is not detected into the first write", async () => {
+		const { preferences } = await launch({ system });
+
+		expect(await preferences.getPreferences()).toMatchObject({
+			language: null,
+			languageSync: null,
+		});
+		expect(stored()).toMatchObject({ language: null, languageSync: null });
+	});
+
+	it("survives signing out", async () => {
+		const first = await launch({ system });
+		await first.preferences.setPreferences({
+			language: "es-419",
+			languageSync: { native: "es-419" },
+		});
+		await first.preferences.clearAccountPreferences();
+
+		const next = await launch({ system });
+
+		expect(await next.preferences.getPreferences()).toMatchObject({
+			language: "es-419",
+			languageSync: { native: "es-419" },
+		});
+	});
+
+	it.each([
+		["seen with no system language", { native: null }],
+		["never seen", null],
+	])("keeps a sync state %s apart", async (_, languageSync) => {
+		const first = await launch({ system });
+		await first.preferences.setPreferences({ languageSync });
+
+		const next = await launch({ system });
+
+		expect((await next.preferences.getPreferences()).languageSync).toEqual(
+			languageSync,
+		);
+		expect(stored()?.languageSync).toEqual(languageSync);
+	});
+
+	it("drops stored values it can’t read and keeps the rest", async () => {
+		files.set(
+			PREFERENCES,
+			encode({
+				language: "C",
+				languageSync: { native: 5 },
+				hapticFeedback: false,
+			}),
+		);
+		const { preferences } = await launch({ system });
+
+		expect(await preferences.getPreferences()).toMatchObject({
+			language: null,
+			languageSync: null,
+			hapticFeedback: false,
+		});
+	});
+});
+
 describe("stored settings that can’t be read", () => {
 	it("offer a reset to defaults", async () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
