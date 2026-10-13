@@ -47,7 +47,7 @@ Diagnostics such as console output and copied error details stay English. To reu
 
 ## Shipping a language
 
-Release builds offer English and the directories listed in `shipped.json`, and leave every other catalog out of the bundle. Dev and screenshot builds offer every directory and the pseudo-locales. Add a directory to `shipped.json` only when its own catalog has every message translated, without counting text a sibling variant would fill in, and when the app shows it correctly: its fonts, wrapping, truncation and layout. Right-to-left languages cannot ship yet. Then run `bun run gen:i18n`, which regenerates `shipped-files.ts`. `bun run check:i18n` warns about a shipped language that lacks a message, and `bun run check:i18n --release` fails on it.
+Release builds offer English and the directories listed in `shipped.json`, and leave every other catalog out of the bundle. Dev and screenshot builds offer every directory and the pseudo-locales. Add a directory to `shipped.json` only when its own catalog has every message translated, without counting text a sibling variant would fill in, and when the app shows it correctly: its fonts, wrapping, truncation and layout. Right-to-left languages cannot ship yet. Then run `bun run gen:i18n`. It regenerates `shipped-files.ts` and the language lists for the per-app language settings of Android and macOS: `locales_config.xml` and `CFBundleLocalizations` in `src-tauri/Info.plist`, whose other keys stay as they are. `bun run check:i18n` warns about a shipped language that lacks a message, and `bun run check:i18n-release` fails on it. `bun run build`, which `tauri build` runs for every release, runs `check:i18n-release` first.
 
 ## Regional formats
 

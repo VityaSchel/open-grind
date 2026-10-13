@@ -2,6 +2,12 @@ import path from "node:path";
 
 import { SOURCE_LOCALE } from "../src/lib/i18n/syntax";
 import { LOCALES, readLocaleFiles, SHIPPED } from "./i18n/locale-files";
+import {
+	INFO_PLIST,
+	LOCALES_CONFIG,
+	renderLocalesConfig,
+	withBundleLocalizations,
+} from "./i18n/native-languages";
 import { renderTypes } from "./i18n/render-types";
 import { checkShipped, renderShippedFiles } from "./i18n/shipped";
 import { checkTranslation, collectMessages } from "./i18n/source-messages";
@@ -37,13 +43,29 @@ const shipped = checkShipped({
 
 for (const warning of shipped.warnings) console.warn(`warning: ${warning}`);
 
+const readText = (file: string) =>
+	Bun.file(path.join(ROOT, file))
+		.text()
+		.catch(() => "");
+
+const infoPlist = withBundleLocalizations({
+	plist: await readText(INFO_PLIST),
+	shipped: shipped.languages,
+});
+
 const problems = [
 	...errors,
 	...reports.flatMap((report) => report.errors),
 	...shipped.errors,
 ];
 
-if (problems.length > 0) {
+if (infoPlist === undefined) {
+	problems.push(
+		`${INFO_PLIST}: has no top-level <dict> to hold CFBundleLocalizations`,
+	);
+}
+
+if (problems.length > 0 || infoPlist === undefined) {
 	console.error(problems.map((problem) => `error: ${problem}`).join("\n"));
 	process.exit(1);
 }
@@ -54,15 +76,14 @@ const outputs = [
 		file: "src/lib/i18n/shipped-files.ts",
 		text: renderShippedFiles(shipped.languages),
 	},
+	{ file: LOCALES_CONFIG, text: renderLocalesConfig(shipped.languages) },
+	{ file: INFO_PLIST, text: infoPlist },
 ];
 
 const changed: typeof outputs = [];
 
 for (const output of outputs) {
-	const current = await Bun.file(path.join(ROOT, output.file))
-		.text()
-		.catch(() => "");
-	if (current !== output.text) changed.push(output);
+	if ((await readText(output.file)) !== output.text) changed.push(output);
 }
 
 if (changed.length === 0) {
@@ -74,6 +95,6 @@ if (changed.length === 0) {
 } else {
 	for (const { file, text } of changed) {
 		await Bun.write(path.join(ROOT, file), text);
-		console.log(`wrote ${file} (${messages.length} messages)`);
+		console.log(`wrote ${file}`);
 	}
 }
