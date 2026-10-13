@@ -81,7 +81,7 @@ class ConversationsState {
 	#onConversationRead: ConversationReadHandler;
 	#reads: ConversationReads;
 	#readRequests = new ConversationReadRequests();
-	#activeConversationId: string | null = null;
+	#activeClaim: { conversationId: string } | null = null;
 	#wsPromises: Promise<() => void>[] = [];
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- read only by getCachedConversation(), never from a template or $derived
 	#messageCache = new Map<string, CachedConversation>();
@@ -122,7 +122,8 @@ class ConversationsState {
 		this.#reads = new ConversationReads({
 			ourProfileId,
 			known: (id) => this.#find(id),
-			activeConversationId: () => this.#activeConversationId,
+			activeConversationId: () =>
+				this.#activeClaim?.conversationId ?? null,
 			clearUnread: (conversation) => (conversation.data.unreadCount = 0),
 			markRead: (conversationId) => void this.markRead(conversationId),
 			onRead: onConversationRead,
@@ -263,7 +264,7 @@ class ConversationsState {
 			if (this.#fetches.isStale(fetchEpoch)) return;
 			this.nextPage = reachedEnd ? null : nextPage;
 
-			const activeId = this.#activeConversationId;
+			const activeId = this.#activeClaim?.conversationId;
 			for (const id of [...this.#messageCache.keys()]) {
 				if (id !== activeId) this.#messageCache.delete(id);
 			}
@@ -467,7 +468,7 @@ class ConversationsState {
 	}
 
 	#isActive(conversationId: string): boolean {
-		return conversationId === this.#activeConversationId;
+		return conversationId === this.#activeClaim?.conversationId;
 	}
 
 	remove(conversationId: string) {
@@ -491,18 +492,16 @@ class ConversationsState {
 		return { revert };
 	}
 
-	setActive(conversationId: string): void {
-		this.#activeConversationId = conversationId;
+	setActive(conversationId: string): () => void {
+		const claim = { conversationId };
+		this.#activeClaim = claim;
 		if (!this.#find(conversationId))
 			this.#readRequests.noteUnlistedUnread(conversationId);
 		void this.markRead(conversationId);
 		this.#onConversationRead(conversationId);
-	}
-
-	clearActive(conversationId: string): void {
-		if (this.#activeConversationId === conversationId) {
-			this.#activeConversationId = null;
-		}
+		return () => {
+			if (this.#activeClaim === claim) this.#activeClaim = null;
+		};
 	}
 
 	get hasUnread(): boolean {
