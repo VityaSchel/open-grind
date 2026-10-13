@@ -1,6 +1,6 @@
 # i18n
 
-Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. Edit `en` only. Weblate writes the other languages, and a missing translation falls back to English. Spain Spanish (`es`) first falls back to Latin American Spanish (`es-419`).
+Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. Edit `en` only. Weblate writes the other languages. A missing translation falls back to another variant of the same language and script, such as `es` and `es-419` or `pt-BR` and `pt-PT` but never `zh-Hans` and `zh-Hant`, and then to English.
 
 ## Adding a string
 
@@ -40,6 +40,10 @@ Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. E
 Text must update when the language changes, so call `t()` where the text is shown. Reapply text that a library writes into the DOM once from an `$effect`, or with `followLocale()` outside a component. Show an error toast that stays open with `showPersistentErrorToast()`. Map enum ids to message keys, and wrap the map in `translatedLabels()` where code reads labels by id. Its labels translate on each read, so copy them only where they are shown.
 
 Diagnostics such as console output and copied error details stay English. To reuse a message there, render it with `sourceText()`, which always returns the English text.
+
+## Matching languages
+
+`matcher.ts` picks the catalog for a BCP 47 tag the way CLDR and browsers do, with only the CLDR data the directories need written into it. A tag without a region means its CLDR default: `pt` is Brazilian, `es` is Spain Spanish, `zh` is Simplified and `en` is American English. Regional variants follow CLDR's parent locales: Spanish of the Americas uses `es-419`, Portuguese outside Brazil uses `pt-PT` and English of the Commonwealth and Europe uses `en-GB`. A match never crosses languages, except that Norwegian and Nynorsk use Bokmål, and a tag in another script than the language's usual one, such as `hi-Latn`, matches nothing. POSIX names such as `de_AT.UTF-8` read as `de-AT`, and a pseudo-locale matches only its own tag. `getLocale()` returns the tag as given, such as `es-MX`, which sets `lang` and the regional formats, and `getCatalogLocale()` returns the catalog that supplies the text, such as `es-419`. Plural forms follow each catalog's own language. A new regional directory may need a parent or default-region entry, and `matcher.test.ts` checks that each directory is reached by its own tag and by its bare language.
 
 ## Regional formats
 

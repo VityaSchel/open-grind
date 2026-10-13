@@ -1,8 +1,6 @@
 export const SOURCE_LOCALE = "en";
 
-export const FALLBACK_LOCALES: ReadonlyMap<string, readonly string[]> = new Map(
-	[["es", ["es-419"]]],
-);
+export const DEFAULT_LOCALE = "en-US";
 
 const NAME_PATTERN = "[a-z][A-Za-z0-9]*";
 

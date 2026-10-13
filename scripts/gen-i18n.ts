@@ -9,12 +9,13 @@ const OUTPUT = path.join(import.meta.dir, "../src/lib/i18n/generated.ts");
 
 const catalogs = readLocaleFiles(LOCALES);
 const source = catalogs.get(SOURCE_LOCALE) ?? [];
+const offered = [...catalogs.keys()];
 const { messages, errors } = collectMessages(source);
 const reports = [...catalogs]
 	.filter(([locale]) => locale !== SOURCE_LOCALE)
 	.map(([locale, files]) => ({
 		locale,
-		...checkTranslation({ locale, files, source }),
+		...checkTranslation({ locale, files, source, offered }),
 	}));
 
 for (const { locale, warnings, translated, total } of reports) {

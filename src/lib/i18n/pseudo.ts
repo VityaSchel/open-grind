@@ -56,7 +56,7 @@ const transforms = new Map<string, PseudoTransform>([
 		: []),
 ]);
 
-export const PSEUDO_LOCALES = [...transforms.keys()];
+export const PSEUDO_LOCALES = ["ar-XB", "en-XA", "en-XM"];
 
 export function isPseudoLocale(locale: string): boolean {
 	return transforms.has(locale);

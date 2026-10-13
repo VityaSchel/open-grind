@@ -7,6 +7,12 @@ import {
 } from "./catalog-files";
 import { type CountFormatter, defaultCountFormatter } from "./counts";
 import {
+	catalogFor,
+	messageChain,
+	normalizeTag,
+	type Offered,
+} from "./matcher";
+import {
 	isPseudoLocale,
 	PSEUDO_LOCALES,
 	pseudoDictionary,
@@ -19,7 +25,7 @@ import {
 	regionalSettingsSchema,
 	webRegionalSettings,
 } from "./regional";
-import { FALLBACK_LOCALES, parseLocalePath, SOURCE_LOCALE } from "./syntax";
+import { DEFAULT_LOCALE, parseLocalePath, SOURCE_LOCALE } from "./syntax";
 
 export type Catalog = {
 	readonly locale: string;
@@ -117,11 +123,6 @@ async function loadCatalog(locale: string): Promise<Catalog> {
 	return toCatalog({ locale, files: loaded });
 }
 
-function loadTranslations(locale: string): Promise<Catalog[]> {
-	const chain = [locale, ...(FALLBACK_LOCALES.get(locale) ?? [])];
-	return Promise.all(chain.map((chainLocale) => loadCatalog(chainLocale)));
-}
-
 function textDirection(locale: string): "ltr" | "rtl" {
 	const { script = "" } = new Intl.Locale(locale).maximize();
 	return RTL_SCRIPTS.has(script) ? "rtl" : "ltr";
@@ -140,7 +141,8 @@ class LocaleState {
 	source: Catalog = $state.raw(sourceCatalog);
 	translations: readonly Catalog[] = $state.raw([]);
 	countFormatter: CountFormatter = defaultCountFormatter;
-	requested = SOURCE_LOCALE;
+	locale: string = $state(DEFAULT_LOCALE);
+	requested: string = DEFAULT_LOCALE;
 	regional: RegionalSettings = $state.raw(webRegionalSettings());
 	regionalKey = settingsKey(this.regional);
 }
@@ -164,7 +166,13 @@ export const locales: readonly string[] = [
 	.filter((locale, index, all) => all.indexOf(locale) === index)
 	.sort();
 
+const offered: Offered = { catalogs: locales, pseudo: PSEUDO_LOCALES };
+
 export function getLocale(): string {
+	return state.locale;
+}
+
+export function getCatalogLocale(): string {
 	return state.translations[0]?.locale ?? SOURCE_LOCALE;
 }
 
@@ -231,14 +239,23 @@ export function setCountFormatter(formatter: CountFormatter): void {
 }
 
 export async function setLocale({ locale }: { locale: string }): Promise<void> {
-	if (!locales.includes(locale)) {
+	const tag = normalizeTag(locale);
+	const catalog =
+		tag === undefined ? undefined : catalogFor({ tag, offered });
+	if (tag === undefined || catalog === undefined) {
 		throw new RangeError(`No translations for locale "${locale}"`);
 	}
-	state.requested = locale;
+	state.requested = tag;
+	const chain = messageChain({ catalog, offered }).filter(
+		(id) => id !== SOURCE_LOCALE,
+	);
 	const translations =
-		locale === SOURCE_LOCALE ? [] : await loadTranslations(locale);
-	if (state.requested !== locale) return;
+		chain.length === 0
+			? []
+			: await Promise.all(chain.map((id) => loadCatalog(id)));
+	if (state.requested !== tag) return;
 	state.translations = translations;
-	document.documentElement.lang = locale;
-	document.documentElement.dir = textDirection(locale);
+	state.locale = tag;
+	document.documentElement.lang = tag;
+	document.documentElement.dir = textDirection(tag);
 }

@@ -212,6 +212,7 @@ describe("setLocale", () => {
 			"ja",
 			"pl",
 			"pt-BR",
+			"pt-PT",
 			"ru",
 			"uk",
 			"ur",
@@ -232,14 +233,6 @@ describe("setLocale", () => {
 		const en = setLocale({ locale: "en" });
 		expect(getLocale()).toBe("en");
 		await Promise.all([ru, en]);
-		expect(getLocale()).toBe("en");
-	});
-
-	it("rejects locales without translations", async () => {
-		await expect(setLocale({ locale: "ru@formal" })).rejects.toThrow(
-			RangeError,
-		);
-		await expect(setLocale({ locale: "pt" })).rejects.toThrow(RangeError);
 		expect(getLocale()).toBe("en");
 	});
 
@@ -580,7 +573,7 @@ const SPANISH_TEXTS = {
 	"es-419": [
 		"Todavía no hay mensajes",
 		"Archivados",
-		"Light",
+		"Claro",
 		"A free client — no ads, no tracking",
 	],
 	de: [
@@ -601,7 +594,7 @@ describe("Spanish fallback", () => {
 		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS.es);
 	});
 
-	it("falls back from es-419 straight to English", async () => {
+	it("renders es-419, then es, then English key by key", async () => {
 		await setLocale({ locale: "es-419" });
 		expect(renderSpanishKeys()).toEqual(SPANISH_TEXTS["es-419"]);
 	});

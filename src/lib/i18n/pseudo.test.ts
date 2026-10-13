@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { locales, richParts, setLocale, SOURCE_LOCALE, t } from "./index";
 import { decodeMarkers, MarkerReader, stripMarkers } from "./markers";
-import { pseudoDictionary } from "./pseudo";
+import { isPseudoLocale, PSEUDO_LOCALES, pseudoDictionary } from "./pseudo";
 import { MARKUP } from "./syntax";
 
 const SHARED = "{{name}} shared <b>{{count}} photo</b> in {{album}}";
@@ -96,6 +96,10 @@ describe("en-XM", () => {
 });
 
 describe("pseudo-locales at runtime", () => {
+	it.each(PSEUDO_LOCALES)("transform %s in dev builds", (locale) => {
+		expect(isPseudoLocale(locale)).toBe(true);
+	});
+
 	it("are listed in dev builds only", async () => {
 		expect(locales).toEqual(
 			expect.arrayContaining(["en-XA", "ar-XB", "en-XM"]),
