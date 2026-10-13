@@ -161,6 +161,7 @@ import {
 import {
 	accountSettings,
 	appSettings,
+	languageSettings,
 	meSettings,
 	profileSettings,
 } from "./settings";
@@ -271,6 +272,7 @@ export const scenes: Scene[] = [
 	profileSettings,
 	accountSettings,
 	appSettings,
+	languageSettings,
 	emptyTaps,
 	upToDateToast,
 	downloadToast,
