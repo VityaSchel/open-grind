@@ -9,6 +9,10 @@ test("Playwright reads the app's page on the live emulator", async () => {
 		await expect(page.getByRole("button").first()).toBeVisible({
 			timeout: 60_000,
 		});
+		await expect(
+			page.locator("html"),
+			"the live suite reads English text, so the emulator and the app must show American English",
+		).toHaveAttribute("lang", "en-US");
 	} finally {
 		await browser.close();
 	}

@@ -1,5 +1,6 @@
 pub mod api;
 mod app_data;
+mod app_language;
 mod app_settings;
 mod appearance;
 mod appimage;
@@ -175,6 +176,7 @@ pub fn run() {
         .plugin(app_settings::plugin())
         .plugin(media_picker::plugin())
         .plugin(regional::plugin())
+        .plugin(app_language::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -248,6 +250,8 @@ pub fn run() {
             media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
             regional::regional_settings,
+            app_language::app_languages,
+            app_language::set_app_language,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,
