@@ -161,6 +161,7 @@ import {
 import {
 	accountSettings,
 	appSettings,
+	desktopAppSettings,
 	languageSettings,
 	meSettings,
 	profileSettings,
@@ -247,6 +248,7 @@ export type SceneView = {
 	id: string;
 	drive: (page: Page) => Promise<void>;
 	scroller?: string;
+	screen?: string;
 	survivesLocaleSwitch?: boolean;
 };
 
@@ -272,6 +274,7 @@ export const scenes: Scene[] = [
 	profileSettings,
 	accountSettings,
 	appSettings,
+	desktopAppSettings,
 	languageSettings,
 	emptyTaps,
 	upToDateToast,

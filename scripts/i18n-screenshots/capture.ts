@@ -15,6 +15,7 @@ import {
 	requireViewId,
 } from "./manifest";
 import { type Scene, scenes } from "./scenes";
+import { screenProblems, STANDALONE, unkeptScreens } from "./scenes/overlays";
 import {
 	dropScreens,
 	removeRawCaptures,
@@ -146,12 +147,32 @@ async function requireSteadyPixels({
 	}
 }
 
+async function failUnkeptScreens({
+	captured,
+	outDir,
+}: {
+	captured: Captured;
+	outDir: string;
+}): Promise<void> {
+	for (const { id, screen } of unkeptScreens(captured.views)) {
+		console.error(
+			`${id}: failed: names ${screen}, which this run did not keep`,
+		);
+		await dropScreens({ captured, outDir, id });
+		captured.failed.push(id);
+	}
+}
+
 function selectScenes(ids: string[] | undefined): Scene[] {
 	const seen = new Set<string>();
 	for (const { id } of scenes.flatMap(({ views }) => views)) {
 		requireViewId(id);
 		if (seen.has(id)) throw new Error(`Duplicate view id ${id}`);
 		seen.add(id);
+	}
+	const problems = screenProblems({ scenes, standalone: STANDALONE });
+	if (problems.length > 0) {
+		throw new Error(`Wrong screens: ${problems.join("; ")}`);
 	}
 	if (!ids) return scenes;
 	const unknown = ids.filter((id) => !seen.has(id));
@@ -185,6 +206,7 @@ async function captureWithBrowser({
 			outDir,
 		});
 		await requireSteadyPixels({ browser, origin, outDir, captured });
+		await failUnkeptScreens({ captured, outDir });
 		return captured;
 	} finally {
 		await browser.close();

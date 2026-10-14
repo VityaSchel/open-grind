@@ -120,6 +120,7 @@ export const bodyFilters: Scene = {
 	views: [
 		{
 			id: "browse/filters/height-weight",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await showGrid(page);
 				await openAllFilters(page);
@@ -141,6 +142,7 @@ export const tagFilters: Scene = {
 	views: [
 		{
 			id: "browse/filters/tags",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await openTags(page);
 				for (const name of PICKED_TAGS) {
@@ -162,6 +164,7 @@ export const tagFilters: Scene = {
 		},
 		{
 			id: "browse/filters/tags/no-matches",
+			screen: "browse/grid",
 			drive: (page) =>
 				searchTags({
 					page,
@@ -187,6 +190,7 @@ export const tagSearchTruncated: Scene = {
 	views: [
 		{
 			id: "browse/filters/tags/truncated",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await openTags(page);
 				await searchTags({
@@ -209,6 +213,7 @@ export const tagsLoadFailure: Scene = {
 	views: [
 		{
 			id: "browse/filters/tags/load-failed",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await showGrid(page);
 				await runPaletteCommand(page, "?tags=coffee");
@@ -244,6 +249,7 @@ export const quickFilters: Scene = {
 	views: [
 		{
 			id: "browse/quick-filters/age",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await showGrid(page);
 				await openQuickFilter({
@@ -255,6 +261,7 @@ export const quickFilters: Scene = {
 		},
 		{
 			id: "browse/quick-filters/position",
+			screen: "browse/grid",
 			drive: async (page) => {
 				const ageDrawer = page.getByRole("dialog", { name: "Age" });
 				await ageDrawer.getByRole("button", { name: "Apply" }).click();

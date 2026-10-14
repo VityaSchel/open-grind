@@ -38,6 +38,25 @@ function rankOf(views: RankedViews): string[] | undefined {
 	return rankViews(views).get(KEY);
 }
 
+function toasts(count: number): ShownKey[] {
+	return Array.from({ length: count }, (_, index) =>
+		shown({ key: `toast.message${index}`, top: true }),
+	);
+}
+
+function highlightedIn({
+	views,
+	key,
+}: {
+	views: RankedViews;
+	key: string;
+}): string[] {
+	return [...chooseHighlights(views)]
+		.filter(([, keys]) => keys.has(key))
+		.map(([viewId]) => viewId)
+		.sort();
+}
+
 describe("rankViews", () => {
 	it("puts a view where the key sits on the top layer first", () => {
 		expect(
@@ -156,5 +175,207 @@ describe("chooseHighlights", () => {
 
 	it("chooses nothing when no view shows a key", () => {
 		expect(chooseHighlights({ empty: { keys: [] } }).size).toBe(0);
+	});
+});
+
+describe("rankViews on screens", () => {
+	it("keeps one view per screen for a key outside the top layer", () => {
+		expect(
+			rankOf({
+				base: {
+					keys: [
+						shown({}),
+						...others({ namespace: "settings", count: 4 }),
+					],
+				},
+				"base/toast": {
+					screen: "base",
+					keys: [shown({}), ...toasts(1)],
+				},
+				"base/dialog": {
+					screen: "base",
+					keys: [shown({}), ...toasts(2)],
+				},
+			}),
+		).toEqual(["base"]);
+	});
+
+	it("keeps the view with the fewest top-layer keys on a screen", () => {
+		expect(
+			rankOf({
+				"base/one": {
+					screen: "base",
+					keys: [
+						shown({ via: "attribute" }),
+						...others({ namespace: "settings", count: 4 }),
+						...toasts(1),
+					],
+				},
+				"base/three": {
+					screen: "base",
+					keys: [shown({}), ...toasts(3)],
+				},
+			}),
+		).toEqual(["base/one"]);
+	});
+
+	it("counts each top-layer key once", () => {
+		expect(
+			rankOf({
+				"base/a": {
+					screen: "base",
+					keys: [
+						shown({ via: "attribute" }),
+						...toasts(1),
+						...toasts(1),
+					],
+				},
+				"base/b": { screen: "base", keys: [shown({}), ...toasts(2)] },
+			}),
+		).toEqual(["base/a"]);
+	});
+
+	it("breaks a tie on top-layer keys in the usual order", () => {
+		expect(
+			rankOf({
+				"base/a": {
+					screen: "base",
+					keys: [shown({ via: "attribute" }), ...toasts(1)],
+				},
+				"base/b": { screen: "base", keys: [shown({}), ...toasts(1)] },
+			}),
+		).toEqual(["base/b"]);
+		expect(
+			rankOf({
+				"base/a": {
+					screen: "base",
+					keys: [
+						shown({}),
+						...others({ namespace: "settings", count: 2 }),
+						...toasts(1),
+					],
+				},
+				"base/b": {
+					screen: "base",
+					keys: [
+						shown({}),
+						...others({ namespace: "settings", count: 1 }),
+						...toasts(1),
+					],
+				},
+			}),
+		).toEqual(["base/b"]);
+		expect(
+			rankOf({
+				"base/b": { screen: "base", keys: [shown({}), ...toasts(1)] },
+				"base/a": { screen: "base", keys: [shown({}), ...toasts(1)] },
+			}),
+		).toEqual(["base/a"]);
+	});
+
+	it("lets a view where the key is top stand beside its screen", () => {
+		expect(
+			rankOf({
+				base: { keys: [shown({})] },
+				"base/menu": {
+					screen: "base",
+					keys: [
+						shown({ via: "attribute", top: true }),
+						...toasts(4),
+					],
+				},
+				"base/toast": {
+					screen: "base",
+					keys: [shown({}), ...toasts(1)],
+				},
+			}),
+		).toEqual(["base/menu", "base"]);
+	});
+
+	it("keeps every view where the key is top on one screen", () => {
+		expect(
+			rankOf({
+				"base/first": {
+					screen: "base",
+					keys: [shown({ top: true }), ...toasts(2)],
+				},
+				"base/second": { screen: "base", keys: [shown({ top: true })] },
+			}),
+		).toEqual(["base/first", "base/second"]);
+	});
+
+	it("groups a variant with the numbered screen it names", () => {
+		expect(
+			rankOf({
+				page: { keys: [shown({})] },
+				"page#2": {
+					keys: [
+						shown({}),
+						...others({ namespace: "settings", count: 3 }),
+					],
+				},
+				"page/toast": {
+					screen: "page#2",
+					keys: [shown({}), ...toasts(1)],
+				},
+			}),
+		).toEqual(["page", "page#2"]);
+	});
+
+	it("keeps a variant when the screen it names failed", () => {
+		expect(
+			rankOf({
+				"failed/one": {
+					screen: "failed",
+					keys: [shown({}), ...toasts(2)],
+				},
+				"failed/two": {
+					screen: "failed",
+					keys: [shown({}), ...toasts(1)],
+				},
+				other: { keys: [shown({ via: "attribute" })] },
+			}),
+		).toEqual(["failed/two", "other"]);
+	});
+});
+
+describe("chooseHighlights on screens", () => {
+	it("highlights a sign-in button shown under toasts only on the sign-in screen", () => {
+		const signIn = "auth/sign-in";
+		const withGoogle = "auth.signIn.withGoogle";
+		const views: RankedViews = {
+			[signIn]: {
+				keys: [
+					shown({ key: withGoogle }),
+					...others({ namespace: "auth", count: 8 }),
+				],
+			},
+		};
+		for (const variant of ["refused", "server-errors", "captcha-checks"]) {
+			views[`${signIn}/${variant}`] = {
+				screen: signIn,
+				keys: [
+					shown({ key: withGoogle }),
+					...others({ namespace: "auth", count: 2 }),
+					...toasts(3),
+				],
+			};
+		}
+		expect(highlightedIn({ views, key: withGoogle })).toEqual([signIn]);
+		expect(chooseHighlights(views).get(`${signIn}/refused`)).toEqual(
+			new Set(["toast.message0", "toast.message1", "toast.message2"]),
+		);
+	});
+
+	it(`highlights a key on at most ${HIGHLIGHTS_PER_KEY} distinct screens`, () => {
+		const views: RankedViews = {};
+		for (const base of ["a", "b", "c", "d"]) {
+			views[base] = { keys: [shown({})] };
+			views[`${base}/toast`] = {
+				screen: base,
+				keys: [shown({ key: "other.key" }), shown({}), ...toasts(1)],
+			};
+		}
+		expect(highlightedIn({ views, key: KEY })).toEqual(["a", "b", "c"]);
 	});
 });

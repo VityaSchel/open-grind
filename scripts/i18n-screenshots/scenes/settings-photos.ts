@@ -72,6 +72,7 @@ function uploadToasts({
 		views: [
 			{
 				id,
+				screen: "settings/profile",
 				survivesLocaleSwitch: false,
 				drive: async (page) => {
 					await openProfileEdit(page);
@@ -89,6 +90,7 @@ export const previousProfilePhotos: Scene = {
 	views: [
 		{
 			id: "settings/profile/photos/sheet",
+			screen: "settings/profile",
 			drive: async (page) => {
 				await openProfileEdit(page);
 				await openPhotoSheet(page);

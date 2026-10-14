@@ -129,6 +129,7 @@ export const gridRefreshFailures: Scene = {
 	views: [
 		{
 			id: "browse/grid/refresh-failures",
+			screen: "feedback/network-blocked/grid",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await showGrid(page);
@@ -181,6 +182,7 @@ export const gridProfileFailure: Scene = {
 	views: [
 		{
 			id: "browse/grid/load-profile-failed",
+			screen: "browse/grid",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				showsLoading(page);

@@ -114,6 +114,7 @@ export const profileLightbox: Scene = {
 	views: [
 		{
 			id: "profile/lightbox/load-failed",
+			screen: "profile/details",
 			drive: async (page) => {
 				await page.route(
 					(url) => url.href.includes(MISSING_PHOTO_SEED),
@@ -140,15 +141,21 @@ export const albumVideoPlayer: Scene = {
 	views: [
 		{
 			id: "media/lightbox",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAlbumConversation(page);
 				await openAlbumLightbox(albumPreview({ page }));
 				await showMouseControls(page);
 			},
 		},
-		{ id: "media/video-player", drive: showEndedAlbumVideo },
+		{
+			id: "media/video-player",
+			screen: "chat/conversation",
+			drive: showEndedAlbumVideo,
+		},
 		{
 			id: "media/video-player/playing",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await page
 					.locator(ACTIVE_SURFACE)
@@ -163,6 +170,7 @@ export const albumVideoPlayer: Scene = {
 		},
 		{
 			id: "chat/album/no-plays-left",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await closeLightbox(page);
 				await openLastSlide(albumPreview({ page, last: true }));
@@ -189,6 +197,7 @@ export const albumPreviewFailures: Scene = {
 	views: [
 		{
 			id: "chat/album/failures",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAlbumConversation(page);
@@ -211,7 +220,11 @@ export const videoPlayFailed: Scene = {
 	platform: "phone",
 	demo: { inbox: ALBUMS_INBOX },
 	views: [
-		{ id: "media/video-player/play-failed", drive: openUndecodableVideo },
+		{
+			id: "media/video-player/play-failed",
+			screen: "chat/conversation",
+			drive: openUndecodableVideo,
+		},
 	],
 };
 
@@ -222,6 +235,7 @@ export const videoDecoderMissing: Scene = {
 	views: [
 		{
 			id: "media/video-player/decoder-missing",
+			screen: "chat/conversation/actions-button",
 			drive: async (page) => {
 				await withoutH264(page);
 				await openUndecodableVideo(page);

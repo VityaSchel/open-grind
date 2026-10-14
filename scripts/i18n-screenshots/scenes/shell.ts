@@ -179,6 +179,7 @@ export const loadingFilters: Scene = {
 	views: [
 		{
 			id: "browse/filters/loading",
+			screen: "browse/grid",
 			drive: async (page) => {
 				showsLoading(page);
 				await chooseNeutralLocation(page);
@@ -197,6 +198,7 @@ export const signOutConfirm: Scene = {
 	views: [
 		{
 			id: "settings/sign-out",
+			screen: "settings/me",
 			drive: async (page) => {
 				await visit({
 					page,
@@ -215,6 +217,7 @@ export const deleteConversations: Scene = {
 	views: [
 		{
 			id: "chat/inbox/row-menu",
+			screen: "chat/inbox",
 			drive: async (page) => {
 				await openInbox(page);
 				await page
@@ -226,6 +229,7 @@ export const deleteConversations: Scene = {
 		},
 		{
 			id: "chat/inbox/delete",
+			screen: "chat/inbox",
 			drive: async (page) => {
 				await page.getByRole("menuitem", { name: "Delete" }).click();
 				await page.getByRole("alertdialog").waitFor();
@@ -240,6 +244,7 @@ export const blockIgnored: Scene = {
 	views: [
 		{
 			id: "profile/block-ignored",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const menu = page

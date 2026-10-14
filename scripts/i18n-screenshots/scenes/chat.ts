@@ -23,6 +23,7 @@ export const inbox: Scene = {
 		{ id: "chat/inbox", drive: openInbox },
 		{
 			id: "chat/inbox/filter",
+			screen: "chat/inbox",
 			drive: async (page) => {
 				await page.locator(FILTER_PILL).first().click();
 				await page.getByRole("dialog").waitFor();
@@ -62,6 +63,7 @@ export const inboxPinFailure: Scene = {
 		},
 		{
 			id: "chat/inbox/pin-failed",
+			screen: "chat/inbox/previews",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await page
@@ -87,6 +89,7 @@ export const conversation: Scene = {
 		{ id: "chat/conversation", drive: openConversation },
 		{
 			id: "chat/conversation/menu",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await page
 					.locator(MESSAGE_BUBBLE)
@@ -103,6 +106,7 @@ export const attachments: Scene = {
 	views: [
 		{
 			id: "chat/attachments",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openConversation(page);
 				await page

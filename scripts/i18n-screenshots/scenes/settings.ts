@@ -21,6 +21,21 @@ export const appSettings: Scene = {
 	views: [subpage({ id: "settings/app", path: "/settings/app" })],
 };
 
+export const desktopAppSettings: Scene = {
+	platform: "desktop",
+	views: [
+		{
+			id: "settings/app/macos",
+			drive: (page) =>
+				visit({
+					page,
+					path: "/settings/app",
+					ready: page.getByRole("main").getByRole("heading"),
+				}),
+		},
+	],
+};
+
 export const languageSettings: Scene = {
 	platform: "phone",
 	views: [

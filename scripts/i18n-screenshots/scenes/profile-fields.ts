@@ -5,16 +5,24 @@ import { visit } from "./visit";
 
 const MENU = '[data-slot="dropdown-menu-content"]';
 
+const STATS = "settings/profile#3";
+const EXPECTATIONS = "settings/profile/expectations";
+const HEALTH = "settings/profile#4";
+
 const LATER_MENUS = [
-	{ id: "tribes", label: "My tribes" },
-	{ id: "ethnicity", label: "Ethnicity" },
-	{ id: "relationship-status", label: "Relationship status" },
-	{ id: "looking-for", label: "Looking for" },
-	{ id: "meet-at", label: "Meet at" },
-	{ id: "nsfw-pics", label: "Accept NSFW pics" },
-	{ id: "hiv-status", label: "HIV status" },
-	{ id: "health-practices", label: "Sexual health practices" },
-	{ id: "vaccines", label: "Vaccines" },
+	{ id: "tribes", label: "My tribes", screen: STATS },
+	{ id: "ethnicity", label: "Ethnicity", screen: STATS },
+	{ id: "relationship-status", label: "Relationship status", screen: STATS },
+	{ id: "looking-for", label: "Looking for", screen: EXPECTATIONS },
+	{ id: "meet-at", label: "Meet at", screen: EXPECTATIONS },
+	{ id: "nsfw-pics", label: "Accept NSFW pics", screen: EXPECTATIONS },
+	{ id: "hiv-status", label: "HIV status", screen: EXPECTATIONS },
+	{
+		id: "health-practices",
+		label: "Sexual health practices",
+		screen: HEALTH,
+	},
+	{ id: "vaccines", label: "Vaccines", screen: HEALTH },
 ];
 
 async function closeMenus(page: Page): Promise<void> {
@@ -50,14 +58,17 @@ function openProfileForm(page: Page): Promise<void> {
 function fieldMenu({
 	id,
 	label,
+	screen,
 	from,
 }: {
 	id: string;
 	label: string;
+	screen: string;
 	from?: (page: Page) => Promise<void>;
 }): SceneView {
 	return {
 		id: `settings/profile/${id}`,
+		screen,
 		scroller: MENU,
 		drive: async (page) => {
 			await from?.(page);
@@ -72,6 +83,7 @@ export const profileFieldMenus: Scene = {
 		fieldMenu({
 			id: "body-type",
 			label: "Body type",
+			screen: "settings/profile#2",
 			from: openProfileForm,
 		}),
 		...LATER_MENUS.map(fieldMenu),

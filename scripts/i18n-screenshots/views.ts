@@ -9,6 +9,7 @@ import {
 	type Captured,
 	emptyCapture,
 	imagePath,
+	MAX_SCREENS,
 	numberedViewId,
 } from "./manifest";
 import {
@@ -21,6 +22,7 @@ import {
 	waitForLocale,
 } from "./scan";
 import type { Scene, SceneView } from "./scenes";
+import { requireScreen } from "./scenes/overlays";
 import { dropScreens, keepRawCapture } from "./screens";
 import { settle } from "./settle";
 import {
@@ -29,7 +31,6 @@ import {
 	seedScene,
 } from "./stubs";
 
-const MAX_SCREENS = 6;
 const SCREEN_STEP = 0.85;
 const PARKED_POINTER = { x: -1, y: -1 };
 
@@ -222,11 +223,13 @@ async function requireCleanFrame({
 async function recordScreen({
 	run: { platformContext, outDir, captured },
 	id,
+	screen,
 	frame: { png, scan },
 	startedAt,
 }: {
 	run: ViewRun;
 	id: string;
+	screen: string | undefined;
 	frame: Frame;
 	startedAt: number;
 }): Promise<void> {
@@ -243,6 +246,7 @@ async function recordScreen({
 		sha256: view.sha256,
 		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
+		screen,
 		keys: scan.keys.map(({ key, box, via, top }) => ({
 			key,
 			box,
@@ -305,11 +309,18 @@ async function captureScreens({
 	for (let screen = 1; screen <= MAX_SCREENS; screen += 1) {
 		const frame = await captureFrame(page);
 		await requireCleanFrame({ frame, session, run });
+		requireScreen({ view, keys: frame.scan.keys });
 		const keys = frame.scan.keys.map(({ key }) => key);
 		if (kept === 0 || keys.some((key) => !seen.has(key))) {
 			kept += 1;
 			const id = numberedViewId({ id: view.id, screen: kept });
-			await recordScreen({ run, id, frame, startedAt: screenStartedAt });
+			await recordScreen({
+				run,
+				id,
+				screen: view.screen,
+				frame,
+				startedAt: screenStartedAt,
+			});
 		}
 		for (const key of keys) seen.add(key);
 		screenStartedAt = performance.now();

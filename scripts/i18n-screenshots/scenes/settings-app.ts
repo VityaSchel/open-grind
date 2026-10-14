@@ -101,6 +101,7 @@ export const appsMenuEntry: Scene = {
 	views: [
 		{
 			id: "settings/app/apps-menu",
+			screen: "settings/app/macos",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAppSettings(page);
@@ -139,6 +140,7 @@ export const appUnimplemented: Scene = {
 	views: [
 		{
 			id: "settings/app/unimplemented",
+			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAppSettings(page);
@@ -160,6 +162,7 @@ export const settingSaveFailed: Scene = {
 	views: [
 		{
 			id: "settings/app/save-failed",
+			screen: "settings/app",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAppSettings(page);
@@ -181,6 +184,7 @@ export const preferencesLoadFailed: Scene = {
 	views: [
 		{
 			id: "settings/app/load-failed",
+			screen: "settings/app",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAppSettings(page);

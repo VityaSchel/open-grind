@@ -141,6 +141,7 @@ export const rowMenus: Scene = {
 	views: [
 		{
 			id: "chat/inbox/row-menu/pinned",
+			screen: "chat/inbox",
 			drive: async (page) => {
 				await openInbox(page);
 				await openRowMenu({ page, withId: PINNED_MUTED_ID });
@@ -149,6 +150,7 @@ export const rowMenus: Scene = {
 		},
 		{
 			id: "chat/inbox/row-menu/unpinned",
+			screen: "chat/inbox",
 			drive: async (page) => {
 				await page.keyboard.press("Escape");
 				await page.getByRole("menu").waitFor({ state: "hidden" });
@@ -175,6 +177,7 @@ export const inboxSelection: Scene = {
 		},
 		{
 			id: "chat/inbox/delete-many",
+			screen: "chat/inbox/selection/pinned",
 			drive: async (page) => {
 				await page
 					.getByRole("button", { name: "Benjamin", pressed: false })
@@ -220,6 +223,7 @@ export const inboxFlagFailures: Scene = {
 	views: [
 		{
 			id: "chat/inbox/flag-failures",
+			screen: "chat/inbox",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openInbox(page);
@@ -246,6 +250,7 @@ export const inboxRefreshFailures: Scene = {
 	views: [
 		{
 			id: "chat/inbox/refresh-failures",
+			screen: "chat/inbox",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openInbox(page);

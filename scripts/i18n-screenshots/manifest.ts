@@ -11,6 +11,7 @@ export type View = {
 	sha256: string;
 	pixelHash: string;
 	platform: Platform;
+	screen?: string;
 	keys: ViewKey[];
 	ms: number;
 };
@@ -27,6 +28,7 @@ export type Captured = Omit<Manifest, "commit"> & {
 };
 
 export const RAW_DIR = ".raw";
+export const MAX_SCREENS = 6;
 
 const VIEW_ID = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/;
 const MESSAGE_KEY = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/;

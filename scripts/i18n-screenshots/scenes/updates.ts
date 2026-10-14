@@ -50,6 +50,11 @@ export const UPDATE_STAGES = [
 	"installing",
 ] as const satisfies readonly UpdateStage[];
 
+const APP_SETTINGS_SCREENS = {
+	phone: "settings/app",
+	desktop: "settings/app/macos",
+} as const satisfies Record<Scene["platform"], string>;
+
 const DOWNLOAD_BYTES = 61_800_000;
 const RECEIVED_BYTES = 23_400_000;
 const STAGE_PROGRESS = {
@@ -137,6 +142,7 @@ export function updateToastScene({
 		views: [
 			{
 				id,
+				screen: APP_SETTINGS_SCREENS[platform],
 				survivesLocaleSwitch: false,
 				drive: async (page) => {
 					await openAppSettings(page);

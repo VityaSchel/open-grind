@@ -123,6 +123,27 @@ function pendingScreens(captured: Captured): PendingScreen[] {
 	});
 }
 
+async function dropOutrankedHighlights({
+	captured,
+	outDir,
+}: {
+	captured: Captured;
+	outDir: string;
+}): Promise<void> {
+	const chosen = chooseHighlights(captured.views);
+	for (const [viewId, view] of Object.entries(captured.views)) {
+		let dropped = false;
+		for (const shown of view.keys) {
+			if (!shown.highlight || chosen.get(viewId)?.has(shown.key))
+				continue;
+			await rm(join(outDir, shown.highlight.image), { force: true });
+			delete shown.highlight;
+			dropped = true;
+		}
+		if (dropped) await removeIfEmpty(join(outDir, screenPath(viewId)));
+	}
+}
+
 async function highlightInParallel({
 	captured,
 	outDir,
@@ -193,6 +214,7 @@ export async function writeHighlightedCopies({
 				await dropScreens({ captured, outDir, id });
 				captured.failed.push(id);
 			}
+			await dropOutrankedHighlights({ captured, outDir });
 		}
 	} finally {
 		await removeRawCaptures(outDir);

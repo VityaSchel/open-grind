@@ -19,6 +19,7 @@ const FILTER_ERRORS = [
 ].join("&");
 const COPY_LOCATION = "Copy currently selected location";
 const COPY_OPTION = '[role="option"][data-value="@copy"][aria-selected="true"]';
+const DESKTOP_GRID = "feedback/network-blocked/grid";
 
 function palette(page: Page) {
 	return page.getByRole("combobox");
@@ -134,6 +135,7 @@ export const locationCopy: Scene = {
 	views: [
 		{
 			id: "command-center/copy-location",
+			screen: DESKTOP_GRID,
 			drive: async (page) => {
 				await showGrid(page);
 				await openPalette(page);
@@ -142,11 +144,13 @@ export const locationCopy: Scene = {
 		},
 		{
 			id: "command-center/copy-location/copied",
+			screen: DESKTOP_GRID,
 			survivesLocaleSwitch: false,
 			drive: copyOffered,
 		},
 		{
 			id: "command-center/copy-location/failed",
+			screen: DESKTOP_GRID,
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await failClipboard(page);

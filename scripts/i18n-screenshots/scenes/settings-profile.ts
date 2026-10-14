@@ -63,9 +63,11 @@ function saveProfile(page: Page): Promise<void> {
 
 function savingScene({
 	id,
+	screen,
 	restFaults = [],
 }: {
 	id: string;
+	screen: string;
 	restFaults?: RestFault[];
 }): Scene {
 	return {
@@ -74,6 +76,7 @@ function savingScene({
 		views: [
 			{
 				id,
+				screen,
 				survivesLocaleSwitch: false,
 				drive: async (page) => {
 					await openProfileEdit(page);
@@ -130,6 +133,7 @@ export const profileCombos: Scene = {
 		},
 		{
 			id: "settings/profile/combo-no-matches",
+			screen: "settings/profile/combo-at-max",
 			drive: async (page) => {
 				await pronounsField(page).click();
 				await pronounsField(page).fill(UNMATCHED_SEARCH);
@@ -141,6 +145,7 @@ export const profileCombos: Scene = {
 
 export const profileBannedTerms = savingScene({
 	id: "settings/profile/banned-terms",
+	screen: "shell/save-changes",
 	restFaults: [
 		{ ...PROFILE_UPDATE, status: UNPROCESSABLE, body: BANNED_TERMS },
 	],
@@ -148,10 +153,14 @@ export const profileBannedTerms = savingScene({
 
 export const profileSaveFailed = savingScene({
 	id: "settings/profile/save-failed",
+	screen: "shell/save-changes",
 	restFaults: [failing(PROFILE_UPDATE)],
 });
 
-export const profileSaved = savingScene({ id: "settings/profile/saved" });
+export const profileSaved = savingScene({
+	id: "settings/profile/saved",
+	screen: "settings/profile",
+});
 
 export const profileLoadFailed: Scene = {
 	platform: "phone",

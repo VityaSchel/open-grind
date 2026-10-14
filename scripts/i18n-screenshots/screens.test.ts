@@ -60,7 +60,25 @@ function exists(path: string): Promise<boolean> {
 	);
 }
 
-async function capturedScreens(): Promise<Captured> {
+const GROUPED: Record<string, ShownKey[]> = {
+	alpha: [shown({})],
+	beta: [shown({})],
+	gamma: [
+		shown({}),
+		shown({ key: "settings.one" }),
+		shown({ key: "settings.two" }),
+	],
+	page: [shown({ via: "attribute" }), shown({ key: "common.save" })],
+	"page-menu": [shown({}), shown({ key: "common.cancel", top: true })],
+};
+
+async function capturedScreens({
+	views = SCREENS,
+	screens = {},
+}: {
+	views?: Record<string, ShownKey[]>;
+	screens?: Record<string, string>;
+} = {}): Promise<Captured> {
 	const png = await sharp({
 		create: {
 			width: SIZE,
@@ -72,7 +90,7 @@ async function capturedScreens(): Promise<Captured> {
 		.png()
 		.toBuffer();
 	const captured = emptyCapture();
-	for (const [viewId, keys] of Object.entries(SCREENS)) {
+	for (const [viewId, keys] of Object.entries(views)) {
 		await keepRawCapture({ outDir, viewId, png });
 		const image = imagePath(viewId);
 		await mkdir(dirname(join(outDir, image)), { recursive: true });
@@ -82,6 +100,7 @@ async function capturedScreens(): Promise<Captured> {
 			sha256: "plain",
 			pixelHash: "plain",
 			platform: "phone",
+			screen: screens[viewId],
 			keys: keys.map((key) => ({ ...key })),
 			ms: 1,
 		};
@@ -201,5 +220,23 @@ describe("the manifest", () => {
 		expect(await exists(imagePath("beta"))).toBe(false);
 		expect(await exists("images/beta")).toBe(false);
 		expect(await exists(RAW_DIR)).toBe(false);
+	});
+
+	it("keeps a key in 3 views when a failed view hands its screen on", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const captured = await capturedScreens({
+			views: GROUPED,
+			screens: { "page-menu": "page" },
+		});
+		await rm(join(outDir, rawCapturePath("page")));
+		await writeHighlightedCopies({ captured, outDir });
+		expect(captured.failed).toEqual(["page"]);
+		expect(highlightedViews({ captured, key: KEY })).toEqual([
+			"alpha",
+			"beta",
+			"page-menu",
+		]);
+		expect(await exists("images/gamma/settings.title.webp")).toBe(false);
+		expect(await exists("images/gamma/settings.one.webp")).toBe(true);
 	});
 });

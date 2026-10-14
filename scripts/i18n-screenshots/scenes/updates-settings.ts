@@ -112,6 +112,7 @@ export const appUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/app",
+			screen: "settings/updates/blocked",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdatesSection(page);
@@ -134,6 +135,7 @@ export const appAndAddonUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/app-and-addons",
+			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdatesSection(page);
@@ -161,6 +163,7 @@ export const addonUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only",
+			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdatesSection(page);
@@ -178,6 +181,7 @@ export const fdroidAddonAlert: Scene = {
 	views: [
 		{
 			id: "settings/notifications/fdroid-addon",
+			screen: "settings/notifications",
 			drive: async (page) => {
 				await openNotifications(page);
 				await enableNotifications(page);
@@ -198,6 +202,7 @@ export const undeterminedUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only-with-reason",
+			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdatesSection(page);
@@ -223,6 +228,7 @@ export const pushFailures: Scene = {
 	views: [
 		{
 			id: "settings/notifications/push-errors",
+			screen: "settings/notifications",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openNotifications(page);
@@ -260,6 +266,7 @@ export const fastModeFailure: Scene = {
 	views: [
 		{
 			id: "settings/notifications/fast-mode-failed",
+			screen: "settings/notifications",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openNotifications(page);
@@ -307,6 +314,7 @@ export const manualInstall: Scene = {
 	views: [
 		{
 			id: "updates/manual-install",
+			screen: "settings/updates/blocked",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdatesSection(page);

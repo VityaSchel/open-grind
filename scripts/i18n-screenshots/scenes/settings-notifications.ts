@@ -43,6 +43,7 @@ export const androidNotifications: Scene = {
 		{ id: "settings/notifications", drive: enableNotifications },
 		{
 			id: "settings/notifications/addon",
+			screen: "settings/notifications",
 			drive: async (page) => {
 				await page.getByRole("radio", { name: "Fast Mode" }).click();
 				await page.locator(ALERT).waitFor();
@@ -62,6 +63,7 @@ export const notificationCategoryFailure: Scene = {
 	views: [
 		{
 			id: "settings/notifications/category-failed",
+			screen: "settings/notifications",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await enableNotifications(page);

@@ -43,6 +43,7 @@ export const locationFailures: Scene = {
 	views: [
 		{
 			id: "browse/location/failures",
+			screen: "browse/location",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({
@@ -73,6 +74,7 @@ export const autoLocationFailure: Scene = {
 	views: [
 		{
 			id: "browse/location/auto-update-failed",
+			screen: "browse/grid",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({
@@ -101,6 +103,7 @@ export const locationChange: Scene = {
 	views: [
 		{
 			id: "browse/location/change",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await showGrid(page);
 				await page.locator(CHANGE_LOCATION).click();

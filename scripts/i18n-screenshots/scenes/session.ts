@@ -140,6 +140,7 @@ export const sessionAlerts: Scene = {
 	views: [
 		{
 			id: "feedback/session/refused",
+			screen: "settings/me",
 			drive: async (page) => {
 				await openSettings(page);
 				await reportSessionError({
@@ -155,6 +156,7 @@ export const sessionAlerts: Scene = {
 		},
 		{
 			id: "feedback/session/rate-limited",
+			screen: "settings/me",
 			drive: async (page) => {
 				await reportSessionError({
 					page,
@@ -171,6 +173,7 @@ export const sessionAlerts: Scene = {
 		},
 		{
 			id: "feedback/session/unreachable",
+			screen: "settings/me",
 			drive: async (page) => {
 				await reportSessionError({
 					page,
@@ -193,6 +196,7 @@ export const sessionTryAgain: Scene = {
 	views: [
 		{
 			id: "feedback/session/try-again",
+			screen: "settings/me",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openSettings(page);
@@ -216,6 +220,7 @@ export const sessionTryAgain: Scene = {
 		},
 		{
 			id: "feedback/session/expired",
+			screen: "settings/me",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				showsLoading(page);
@@ -235,6 +240,7 @@ export const accountStatus: Scene = {
 	views: [
 		{
 			id: "feedback/account/age-verification",
+			screen: "settings/me",
 			drive: async (page) => {
 				await openSettings(page);
 				await emitEvent({
@@ -247,6 +253,7 @@ export const accountStatus: Scene = {
 		},
 		{
 			id: "feedback/account/restricted",
+			screen: "settings/me",
 			drive: async (page) => {
 				await emitEvent({
 					page,
@@ -258,6 +265,7 @@ export const accountStatus: Scene = {
 		},
 		{
 			id: "feedback/account/banned",
+			screen: "settings/me",
 			drive: async (page) => {
 				await emitEvent({
 					page,
@@ -274,6 +282,7 @@ export const accountStatus: Scene = {
 		},
 		{
 			id: "feedback/account/banned-without-reason",
+			screen: "settings/me",
 			drive: async (page) => {
 				await emitEvent({
 					page,
@@ -296,6 +305,7 @@ export const signInFailures: Scene = {
 	views: [
 		{
 			id: "auth/sign-in/server-errors",
+			screen: "auth/sign-in",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await fillSignIn(page);
@@ -304,6 +314,7 @@ export const signInFailures: Scene = {
 		},
 		{
 			id: "auth/sign-in/app-errors",
+			screen: "auth/sign-in",
 			survivesLocaleSwitch: false,
 			drive: (page) =>
 				failSignIns({ page, failures: SIGN_IN_FAILURES.app }),
@@ -317,7 +328,13 @@ export const storageUnavailable: Scene = {
 		signedOut: true,
 		methodAnswers: { storage_backend: "unavailable" },
 	},
-	views: [{ id: "feedback/storage/unavailable", drive: signInWithStorage }],
+	views: [
+		{
+			id: "feedback/storage/unavailable",
+			screen: "browse/location",
+			drive: signInWithStorage,
+		},
+	],
 };
 
 export const storagePlainFile: Scene = {

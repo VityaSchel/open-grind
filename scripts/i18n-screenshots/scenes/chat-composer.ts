@@ -139,6 +139,7 @@ export const voiceMessage: Scene = {
 	views: [
 		{
 			id: "chat/composer/voice-unimplemented",
+			screen: "chat/conversation/quotes",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
@@ -156,6 +157,7 @@ export const attachmentTabs: Scene = {
 	views: [
 		{
 			id: "chat/attachments/media-selected",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
 				await page.locator(SELECTABLE_MEDIA_TILE).first().click();
@@ -164,6 +166,7 @@ export const attachmentTabs: Scene = {
 		},
 		{
 			id: "chat/attachments/albums-share",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openTab({ page, tab: "Albums" });
 				await page.locator(UNSHARED_ALBUM_TILE).first().click();
@@ -172,6 +175,7 @@ export const attachmentTabs: Scene = {
 		},
 		{
 			id: "chat/attachments/albums-unshare",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await page.locator(UNSHARED_ALBUM_TILE).first().click();
 				await page.locator(SHARED_ALBUM_TILE).first().click();
@@ -180,6 +184,7 @@ export const attachmentTabs: Scene = {
 		},
 		{
 			id: "chat/attachments/location",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openTab({ page, tab: "Location" });
 				await page.getByText("isn’t implemented yet").waitFor();
@@ -194,6 +199,7 @@ export const emptyAttachments: Scene = {
 	views: [
 		{
 			id: "chat/attachments/media-empty",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
 				await page.getByText("No Media Sent Yet").waitFor();
@@ -201,6 +207,7 @@ export const emptyAttachments: Scene = {
 		},
 		{
 			id: "chat/attachments/albums-empty",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openTab({ page, tab: "Albums" });
 				await page.getByText("No Albums Yet").waitFor();
@@ -228,6 +235,7 @@ export const albumShareFailures: Scene = {
 	views: [
 		{
 			id: "chat/attachments/share-failures",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAttachments(page);
@@ -265,6 +273,7 @@ export const expiringPhotoLimit: Scene = {
 	views: [
 		{
 			id: "chat/attachments/expiring-limit",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
 				await page.locator(SELECTABLE_MEDIA_TILE).first().click();
@@ -284,6 +293,7 @@ export const uploadFailure: Scene = {
 	views: [
 		{
 			id: "chat/attachments/upload-failed",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAttachments(page);
@@ -299,6 +309,7 @@ export const pickerFailure: Scene = {
 	views: [
 		{
 			id: "chat/attachments/picker-failed",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAttachments(page);
@@ -320,6 +331,7 @@ export const uploadRefusals: Scene[] = REFUSAL_VIEWS.map((reasons, view) => ({
 	views: [
 		{
 			id: `chat/attachments/refusals/${view + 1}`,
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAttachments(page);

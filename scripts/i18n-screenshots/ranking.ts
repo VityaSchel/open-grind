@@ -2,9 +2,15 @@ import type { ShownKey } from "../../src/lib/demo/screenshot-scan";
 
 export const HIGHLIGHTS_PER_KEY = 3;
 
-export type RankedViews = Record<string, { keys: ShownKey[] }>;
+export type RankedViews = Record<string, { keys: ShownKey[]; screen?: string }>;
 
-type Placement = { viewId: string; shown: ShownKey; namespaceKeys: number };
+type Placement = {
+	viewId: string;
+	screen: string;
+	shown: ShownKey;
+	namespaceKeys: number;
+	topKeys: number;
+};
 
 function namespaceOf(key: string): string {
 	return key.replace(/\..*$/, "");
@@ -24,6 +30,10 @@ function comparePlacements(a: Placement, b: Placement): number {
 	);
 }
 
+function compareOnScreen(a: Placement, b: Placement): number {
+	return a.topKeys - b.topKeys || comparePlacements(a, b);
+}
+
 function countNamespaces(keys: ShownKey[]): Map<string, number> {
 	const counts = new Map<string, number>();
 	for (const { key } of keys) {
@@ -33,21 +43,41 @@ function countNamespaces(keys: ShownKey[]): Map<string, number> {
 	return counts;
 }
 
+function countTopKeys(keys: ShownKey[]): number {
+	return new Set(keys.filter(({ top }) => top).map(({ key }) => key)).size;
+}
+
+function onePerScreen(placed: Placement[]): Placement[] {
+	const standing = placed.filter(({ shown }) => shown.top);
+	const kept = new Map<string, Placement>();
+	for (const placement of placed) {
+		if (placement.shown.top) continue;
+		const earlier = kept.get(placement.screen);
+		if (earlier === undefined || compareOnScreen(placement, earlier) < 0) {
+			kept.set(placement.screen, placement);
+		}
+	}
+	return [...standing, ...kept.values()];
+}
+
 export function rankViews(views: RankedViews): Map<string, string[]> {
 	const placements = new Map<string, Placement[]>();
-	for (const [viewId, { keys }] of Object.entries(views)) {
+	for (const [viewId, { keys, screen = viewId }] of Object.entries(views)) {
 		const namespaces = countNamespaces(keys);
+		const topKeys = countTopKeys(keys);
 		for (const shown of keys) {
 			const namespaceKeys = namespaces.get(namespaceOf(shown.key)) ?? 0;
 			const placed = placements.get(shown.key) ?? [];
-			placed.push({ viewId, shown, namespaceKeys });
+			placed.push({ viewId, screen, shown, namespaceKeys, topKeys });
 			placements.set(shown.key, placed);
 		}
 	}
 	return new Map(
 		[...placements].map(([key, placed]) => [
 			key,
-			placed.sort(comparePlacements).map(({ viewId }) => viewId),
+			onePerScreen(placed)
+				.sort(comparePlacements)
+				.map(({ viewId }) => viewId),
 		]),
 	);
 }
