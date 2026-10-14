@@ -127,6 +127,15 @@ androidComponents {
 	}
 }
 
+if (providers.environmentVariable("OPEN_GRIND_ANDROID_SPLITS").isPresent) {
+	val assembleSplits = android.productFlavors.names
+		.filter { it != "universal" }
+		.map { flavor -> "assemble${flavor.replaceFirstChar { it.uppercase() }}Release" }
+	tasks.matching { it.name == "assembleUniversalRelease" }.configureEach {
+		dependsOn(assembleSplits)
+	}
+}
+
 // Reproducibility: disable assets/dexopt/baseline.prof[m] and kotlin-tooling-metadata.json
 tasks.whenTaskAdded {
     if (name.contains("ArtProfile") || name == "buildKotlinToolingMetadata") {
