@@ -39,6 +39,8 @@ vi.mock("$lib/platform/app-language", () => ({
 import type { ScreenshotHooks } from "./screenshot-scene";
 
 const HOOK_NAMES = [
+	"matchSourceLayout",
+	"recordSourceLayout",
 	"scan",
 	"setLocale",
 	"setScene",

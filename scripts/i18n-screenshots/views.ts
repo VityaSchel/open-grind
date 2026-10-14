@@ -16,6 +16,8 @@ import {
 	captureFrame,
 	type Frame,
 	MARKER_LOCALE,
+	matchSourceLayout,
+	recordSourceLayout,
 	SOURCE_LOCALE,
 	switchLocale,
 	viewState,
@@ -169,9 +171,17 @@ async function reachMarkedView({
 	await requireHooks(session.page);
 	await settle({ page: session.page });
 	if (view.survivesLocaleSwitch !== false) {
+		await recordSourceLayout(session.page);
 		const before = await viewState(session.page);
 		await switchLocale({ page: session.page, locale: MARKER_LOCALE });
-		if ((await viewState(session.page)) === before) return session;
+		if ((await viewState(session.page)) === before) {
+			if (!(await matchSourceLayout(session.page))) {
+				console.log(
+					`${view.id}: the language moved its text, so it gets no wraps or clipped`,
+				);
+			}
+			return session;
+		}
 		console.log(
 			`${view.id}: the view changed with the language, replaying it in ${MARKER_LOCALE}`,
 		);
@@ -247,15 +257,12 @@ async function recordScreen({
 		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
 		screen,
-		keys: scan.keys.map(({ key, box, via, top }) => ({
-			key,
-			box,
-			via,
-			top,
-		})),
+		keys: scan.keys.map(({ boxes: _boxes, ...shown }) => shown),
 		ms,
 	};
 	captured.unmarked[id] = scan.unmarked;
+	if (scan.measured) captured.measured.push(id);
+	captured.compositeButtons[id] = scan.compositeButtons;
 	captured.boxes[id] = Object.fromEntries(
 		scan.keys.map(({ key, boxes }) => [key, boxes]),
 	);

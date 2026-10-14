@@ -1,4 +1,5 @@
 import type { ShownKey } from "../../src/lib/demo/screenshot-scan";
+import { byCodeUnits } from "./manifest";
 
 export const HIGHLIGHTS_PER_KEY = 3;
 
@@ -14,11 +15,6 @@ type Placement = {
 
 function namespaceOf(key: string): string {
 	return key.replace(/\..*$/, "");
-}
-
-function byCodeUnits(a: string, b: string): number {
-	if (a === b) return 0;
-	return a < b ? -1 : 1;
 }
 
 function comparePlacements(a: Placement, b: Placement): number {

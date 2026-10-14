@@ -1,10 +1,8 @@
 import type { Page } from "@playwright/test";
 import { isDeepStrictEqual } from "node:util";
 
-import {
-	OVERLAY_SELECTOR,
-	type ViewScan,
-} from "../../src/lib/demo/screenshot-scan";
+import { OVERLAY_SELECTOR } from "../../src/lib/demo/screenshot-labels";
+import type { ViewScan } from "../../src/lib/demo/screenshot-scan";
 import { renderTwoFrames } from "../store-screenshots/settle";
 import { settle } from "./settle";
 
@@ -28,11 +26,19 @@ function scanFrame(page: Page): Promise<ViewScan> {
 	});
 }
 
-function withoutBoxes({ keys, unmarked, emoji }: ViewScan) {
+function withoutBoxes({
+	keys,
+	unmarked,
+	emoji,
+	measured,
+	compositeButtons,
+}: ViewScan) {
 	return {
-		keys: keys.map(({ key, via, top }) => ({ key, via, top })),
+		keys: keys.map(({ box: _box, boxes: _boxes, ...labels }) => labels),
 		unmarked,
 		emoji,
+		measured,
+		compositeButtons,
 	};
 }
 
@@ -72,6 +78,26 @@ export async function captureFrame(page: Page): Promise<Frame> {
 		}
 		await settle({ page });
 	}
+}
+
+export async function recordSourceLayout(page: Page): Promise<void> {
+	await page.evaluate(() => {
+		const hooks = window.__openGrindScreenshots;
+		if (hooks === undefined) {
+			throw new Error("The build installed no screenshot hooks");
+		}
+		hooks.recordSourceLayout();
+	});
+}
+
+export function matchSourceLayout(page: Page): Promise<boolean> {
+	return page.evaluate(() => {
+		const hooks = window.__openGrindScreenshots;
+		if (hooks === undefined) {
+			throw new Error("The build installed no screenshot hooks");
+		}
+		return hooks.matchSourceLayout();
+	});
 }
 
 export function viewState(page: Page): Promise<string> {

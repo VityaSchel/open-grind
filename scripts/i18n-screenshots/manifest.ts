@@ -25,6 +25,8 @@ export type Manifest = {
 export type Captured = Omit<Manifest, "commit"> & {
 	unmarked: Record<string, string[]>;
 	boxes: Record<string, Record<string, KeyBox[]>>;
+	measured: string[];
+	compositeButtons: Record<string, string[][]>;
 };
 
 export const RAW_DIR = ".raw";
@@ -32,6 +34,11 @@ export const MAX_SCREENS = 6;
 
 const VIEW_ID = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/;
 const MESSAGE_KEY = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/;
+
+export function byCodeUnits(a: string, b: string): number {
+	if (a === b) return 0;
+	return a < b ? -1 : 1;
+}
 
 export function requireViewId(id: string): void {
 	if (!VIEW_ID.test(id)) throw new Error(`Invalid view id ${id}`);
@@ -89,7 +96,14 @@ export function highlightPath({
 }
 
 export function emptyCapture(): Captured {
-	return { views: {}, failed: [], unmarked: {}, boxes: {} };
+	return {
+		views: {},
+		failed: [],
+		unmarked: {},
+		boxes: {},
+		measured: [],
+		compositeButtons: {},
+	};
 }
 
 export function mergeCaptures(captures: Captured[]): Captured {
@@ -101,5 +115,10 @@ export function mergeCaptures(captures: Captured[]): Captured {
 			...captures.map(({ unmarked }) => unmarked),
 		),
 		boxes: Object.assign({}, ...captures.map(({ boxes }) => boxes)),
+		measured: captures.flatMap(({ measured }) => measured),
+		compositeButtons: Object.assign(
+			{},
+			...captures.map(({ compositeButtons }) => compositeButtons),
+		),
 	};
 }
