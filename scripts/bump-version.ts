@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { lstat, symlink } from "node:fs/promises";
 import path from "path";
 import { parseVersion, type Version } from "./lib/semver";
 
@@ -34,6 +35,36 @@ function versionCodeFor({
 	if (tag !== "rc" || !Number.isInteger(candidate)) return null;
 	if (candidate < 1 || candidate > 99) return null;
 	return release - 1000 + 10 * candidate;
+}
+
+async function linkAbiChangelogs(code: number): Promise<string[]> {
+	const offsets = (
+		await Bun.file(
+			path.join(root, "src-tauri/gen/android/gradle.properties"),
+		).text()
+	).match(/^opengrind\.android\.abiVersionCodeOffsets=(.+)$/m)?.[1];
+	if (!offsets) {
+		fail(
+			"gradle.properties has no opengrind.android.abiVersionCodeOffsets",
+		);
+	}
+	const linked: string[] = [];
+	const changelogs = new Bun.Glob(
+		`fastlane/metadata/android/*/changelogs/${code}.txt`,
+	).scan(root);
+	for await (const changelog of changelogs) {
+		for (const entry of offsets.split(",")) {
+			const offset = Number(entry.split(":")[1]);
+			const link = path.join(
+				path.dirname(changelog),
+				`${code + offset}.txt`,
+			);
+			if (await lstat(path.join(root, link)).catch(() => null)) continue;
+			await symlink(`${code}.txt`, path.join(root, link));
+			linked.push(link);
+		}
+	}
+	return linked;
 }
 
 function versionOccurrences({
@@ -99,12 +130,16 @@ const conf: { version: string; bundle: { android: { versionCode: number } } } =
 const current = conf.version;
 const currentCode = conf.bundle.android.versionCode;
 
-if (version === current && code === currentCode) {
-	console.log(`already at ${current} (versionCode ${currentCode})`);
-	process.exit(0);
-}
 if (code < currentCode) {
 	fail(`versionCode ${code} is below ${currentCode}; codes must not go back`);
+}
+
+const linkedChangelogs = await linkAbiChangelogs(code);
+
+if (version === current && code === currentCode) {
+	console.log(`already at ${current} (versionCode ${currentCode})`);
+	for (const link of linkedChangelogs) console.log(`  linked ${link}`);
+	process.exit(0);
 }
 
 const pendingWrites = new Map<string, string>();
@@ -172,11 +207,14 @@ for (const [file, text] of pendingWrites) {
 
 console.log(`${current} (${currentCode}) -> ${version} (${code})`);
 for (const file of pendingWrites.keys()) console.log(`  updated ${file}`);
+for (const link of linkedChangelogs) console.log(`  linked ${link}`);
 
 const changelog = `fastlane/metadata/android/en-US/changelogs/${code}.txt`;
 const stillToDo: string[] = [];
 if (!(await Bun.file(path.join(root, changelog)).exists())) {
-	stillToDo.push(`write ${changelog}`);
+	stillToDo.push(
+		`write ${changelog}, then rerun this bump to link its per-ABI copies`,
+	);
 }
 if (cuttingARelease) {
 	stillToDo.push(

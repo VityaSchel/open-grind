@@ -8,7 +8,7 @@ Self-hosted Forgejo runners on rented ephemeral VMs.
 | ----------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `build.yml`       | manual               | Builds the Android APKs, Linux AppImages and debs (x86_64, arm64) and Windows installers on several providers, verifies reproducibility |
 | `check.yml`       | pull request         | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                      |
-| `fdroid.yml`      | manual               | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                               |
+| `fdroid.yml`      | manual               | Rebuilds the per-ABI APKs the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                      |
 | `audit.yml`       | weekly, pull request | `cargo deny` and `bun audit`                                                                                                            |
 | `credits.yml`     | pull request, push   | Regenerates the third-party credits and fails when they drift                                                                           |
 | `keys.yml`        | push                 | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                          |
