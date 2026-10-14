@@ -30,6 +30,11 @@ const versionCode = tauriConfJson.bundle?.android?.versionCode;
 if (!Number.isInteger(versionCode)) {
 	throw new Error("bundle.android.versionCode must be an integer");
 }
+if (versionCode % 10 !== 0) {
+	throw new Error(
+		`bundle.android.versionCode ${versionCode} must end in 0; the last digit is the per-ABI offset from opengrind.android.abiVersionCodeOffsets`,
+	);
+}
 
 const isDev =
 	prerelease.split(".").includes("dev") || prerelease.endsWith("-dev");

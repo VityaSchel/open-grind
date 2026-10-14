@@ -8,9 +8,7 @@ const usage = "usage: bun scripts/bump-version.ts <version> [--code <n>]";
 const DEV_SUFFIX = /[.-]?dev$/;
 const PRE_MVP_VERSION = "0.1.0";
 const handAssignedPreMvpCodes: Record<string, (index: number) => number> = {
-	alpha: (index) => 999 + index,
-	beta: (index) => 1000 + 10 * index,
-	rc: (index) => 1000 + 100 * index,
+	rc: (index) => 10_000 + 1000 * index,
 };
 
 type Occurrence = { file: string; literal: string };
@@ -27,7 +25,7 @@ function versionCodeFor({
 	prerelease,
 }: Version): number | null {
 	const [tag, index] = prerelease.replace(DEV_SUFFIX, "").split(".");
-	const release = major * 1_000_000 + minor * 10_000 + patch * 100;
+	const release = major * 10_000_000 + minor * 100_000 + patch * 1000;
 	if (!tag) return release;
 	if (`${major}.${minor}.${patch}` === PRE_MVP_VERSION) {
 		return handAssignedPreMvpCodes[tag]?.(Number(index)) ?? null;
@@ -35,7 +33,7 @@ function versionCodeFor({
 	const candidate = Number(index);
 	if (tag !== "rc" || !Number.isInteger(candidate)) return null;
 	if (candidate < 1 || candidate > 99) return null;
-	return release - 100 + candidate;
+	return release - 1000 + 10 * candidate;
 }
 
 function versionOccurrences({
@@ -89,6 +87,11 @@ const code =
 		: Number(process.argv[codeFlag + 1]);
 if (code === null || !Number.isInteger(code) || code <= 0) {
 	fail(`${usage}\n${version} needs an explicit positive --code`);
+}
+if (code % 10 !== 0) {
+	fail(
+		`versionCode ${code} must end in 0; the last digit is the per-ABI offset from opengrind.android.abiVersionCodeOffsets`,
+	);
 }
 
 const conf: { version: string; bundle: { android: { versionCode: number } } } =
