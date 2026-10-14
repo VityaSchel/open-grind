@@ -17,6 +17,7 @@ const manifest = {
 	category: [
 		{ name: "wen_ching_taiwan_stickers", expiredTime: 1621843200000 },
 		{ name: "featured", expiredTime: 0 },
+		{ name: "mood", expiredTime: 0 },
 	],
 	gaymoji: [
 		{ name: "1_2_Yass", id: "1_2_Yass.png", category: "featured" },
@@ -71,22 +72,36 @@ describe("getGaymoji", () => {
 		});
 	});
 
-	it("lists every item in manifest order, expired ones included", async () => {
+	it("groups items in the manifest's category order, then the categories it misses, expired ones included", async () => {
 		respondWithManifest();
 
-		const items = await getGaymoji();
+		const categories = await getGaymoji();
 
-		expect(items.map(({ id }) => id)).toEqual(
-			manifest.gaymoji.map(({ id }) => id),
-		);
+		expect(
+			categories.map(({ name, items }) => [
+				name,
+				items.map(({ id }) => id),
+			]),
+		).toEqual([
+			["wen_ching_taiwan_stickers", ["wen_ching_01_hi.png"]],
+			["featured", ["1_2_Yass.png"]],
+			[
+				"profile",
+				[
+					"Man_with_medium-light_skin_tone_buzzed_hair,_and_blonde_beard.png",
+					"f_Male_to_female_with_dark_skin_tone..png",
+				],
+			],
+			["body", ["man_b_Hairy_body.png"]],
+		]);
 	});
 
 	it("describes an item for sending and showing", async () => {
 		respondWithManifest();
 
-		const [yass] = await getGaymoji();
+		const [, featured] = await getGaymoji();
 
-		expect(yass).toEqual({
+		expect(featured?.items[0]).toEqual({
 			id: "1_2_Yass.png",
 			label: "Yass",
 			imageUrl:
@@ -98,12 +113,13 @@ describe("getGaymoji", () => {
 	it("encodes the asset name in the image URL", async () => {
 		respondWithManifest();
 
-		const items = await getGaymoji();
+		const [, , profile] = await getGaymoji();
+		const [beard] = profile?.items ?? [];
 
-		expect(items[1]?.imageUrl).toBe(
+		expect(beard?.imageUrl).toBe(
 			"https://cdns.grindr.com/grindr/chat/gaymoji/Man_with_medium-light_skin_tone_buzzed_hair%2C_and_blonde_beard.png",
 		);
-		expect(items[1]?.imageHash).toBe(
+		expect(beard?.imageHash).toBe(
 			"gaymoji/Man_with_medium-light_skin_tone_buzzed_hair,_and_blonde_beard.png",
 		);
 	});
@@ -111,14 +127,16 @@ describe("getGaymoji", () => {
 	it("labels items in words without their sort prefixes", async () => {
 		respondWithManifest();
 
-		const items = await getGaymoji();
+		const categories = await getGaymoji();
 
-		expect(items.map(({ label }) => label)).toEqual([
+		expect(
+			categories.flatMap(({ items }) => items.map(({ label }) => label)),
+		).toEqual([
+			"wen ching 01 hi",
 			"Yass",
 			"Man with medium-light skin tone buzzed hair, and blonde beard",
 			"Male to female with dark skin tone",
 			"Hairy body",
-			"wen ching 01 hi",
 		]);
 	});
 
@@ -136,7 +154,7 @@ describe("getGaymoji", () => {
 		respondWithManifest();
 
 		await expect(getGaymoji()).rejects.toThrow();
-		await expect(getGaymoji()).resolves.toHaveLength(5);
+		await expect(getGaymoji()).resolves.toHaveLength(4);
 		expect(invokeMock).toHaveBeenCalledTimes(2);
 	});
 });

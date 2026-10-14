@@ -11,12 +11,13 @@ vi.mock("$lib/api/messaging/gaymoji", () => api);
 vi.mock("svelte-sonner", () => ({ toast }));
 
 import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
-import type { GaymojiItem } from "$lib/api/messaging/gaymoji";
+import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
 import type { TabSelection } from "../../attachments/tabs";
 import ComposerGaymojiTab from "./ComposerGaymojiTab.svelte";
 
 const MANIFEST_SIZE = 579;
 const SKELETON = '[data-slot="sticker-grid-skeleton"]';
+const TILE_IMAGE = '[data-slot="sticker-tile"] img';
 
 function gaymojiItem(index: number): GaymojiItem {
 	const name = `${index}_Sticker_${index}`;
@@ -28,10 +29,18 @@ function gaymojiItem(index: number): GaymojiItem {
 	};
 }
 
-const fullManifest = Array.from({ length: MANIFEST_SIZE }, (_, index) =>
+const fullItems = Array.from({ length: MANIFEST_SIZE }, (_, index) =>
 	gaymojiItem(index),
 );
-const shortManifest = fullManifest.slice(0, 12);
+const fullManifest: GaymojiCategory[] = [
+	{ name: "body", items: fullItems.slice(0, 300) },
+	{ name: "mood", items: fullItems.slice(300) },
+];
+const shortItems = fullItems.slice(0, 12);
+const shortManifest: GaymojiCategory[] = [
+	{ name: "body", items: shortItems.slice(0, 6) },
+	{ name: "mood", items: shortItems.slice(6) },
+];
 
 const onClose = vi.fn<() => void>();
 let selections: TabSelection[];
@@ -44,6 +53,7 @@ function mount({ active }: { active: boolean }) {
 			onSelectionChange: (selection: TabSelection) => {
 				selections.push(selection);
 			},
+			holdSheetSize: () => () => {},
 		},
 	});
 }
@@ -87,9 +97,9 @@ describe("composer Gaymoji tab", () => {
 		expect(container.querySelector(SKELETON)).toBeNull();
 		expect(tiles()).toHaveLength(0);
 
-		let answer!: (gaymoji: GaymojiItem[]) => void;
+		let answer!: (categories: GaymojiCategory[]) => void;
 		api.getGaymoji.mockReturnValue(
-			new Promise<GaymojiItem[]>((resolve) => (answer = resolve)),
+			new Promise<GaymojiCategory[]>((resolve) => (answer = resolve)),
 		);
 		await rerender({ active: true });
 		expect(api.getGaymoji).toHaveBeenCalledOnce();
@@ -98,7 +108,7 @@ describe("composer Gaymoji tab", () => {
 		answer(shortManifest);
 		await settle();
 		expect(container.querySelector(SKELETON)).toBeNull();
-		expect(tiles()).toHaveLength(shortManifest.length);
+		expect(tiles()).toHaveLength(shortItems.length);
 
 		await rerender({ active: false });
 		await rerender({ active: true });
@@ -109,9 +119,11 @@ describe("composer Gaymoji tab", () => {
 		const { container, rerender } = mount({ active: true });
 		await settle();
 		await fireEvent.click(tile("Sticker 3"));
-		const labels = shortManifest.map((gaymoji) => gaymoji.label);
+		const labels = shortItems.map((gaymoji) => gaymoji.label);
 		expect(tileLabels()).toEqual(labels);
-		expect(container.querySelectorAll("img")).toHaveLength(labels.length);
+		expect(container.querySelectorAll(TILE_IMAGE)).toHaveLength(
+			labels.length,
+		);
 
 		await rerender({ active: false });
 		expect(tiles()).toHaveLength(0);
@@ -119,7 +131,9 @@ describe("composer Gaymoji tab", () => {
 
 		await rerender({ active: true });
 		expect(tileLabels()).toEqual(labels);
-		expect(container.querySelectorAll("img")).toHaveLength(labels.length);
+		expect(container.querySelectorAll(TILE_IMAGE)).toHaveLength(
+			labels.length,
+		);
 		expect(tile("Sticker 3").getAttribute("aria-pressed")).toBe("true");
 		expect(api.getGaymoji).toHaveBeenCalledOnce();
 	});
@@ -132,11 +146,35 @@ describe("composer Gaymoji tab", () => {
 		const rendered = tiles();
 		expect(
 			rendered.map((button) => button.getAttribute("aria-label")),
-		).toEqual(fullManifest.map((gaymoji) => gaymoji.label));
+		).toEqual(fullItems.map((gaymoji) => gaymoji.label));
 		const last = rendered.at(-1)!;
 		expect(last.querySelector("img")?.getAttribute("alt")).toBe(
 			`Sticker ${MANIFEST_SIZE - 1}`,
 		);
+	});
+
+	it("titles a section per category and lists them in a category strip", async () => {
+		mount({ active: true });
+		await settle();
+
+		const strip = screen.getByRole("navigation", {
+			name: "Gaymoji categories",
+		});
+		expect(
+			[...strip.querySelectorAll("button")].map((button) =>
+				button.getAttribute("aria-label"),
+			),
+		).toEqual(["Body", "Mood"]);
+		expect(
+			screen
+				.getAllByRole("heading", { level: 3 })
+				.map((heading) => heading.textContent?.trim()),
+		).toEqual(["Body", "Mood"]);
+		expect(
+			screen
+				.getByRole("region", { name: "Mood" })
+				.querySelectorAll('[data-slot="sticker-tile"]'),
+		).toHaveLength(6);
 	});
 
 	it("keeps a single Gaymoji selected at a time", async () => {
@@ -171,7 +209,7 @@ describe("composer Gaymoji tab", () => {
 
 		expect(api.getGaymoji).toHaveBeenCalledTimes(2);
 		expect(screen.queryByText("Couldn't load Gaymoji")).toBeNull();
-		expect(tiles()).toHaveLength(shortManifest.length);
+		expect(tiles()).toHaveLength(shortItems.length);
 	});
 
 	it("closes the sheet and reports sending as unimplemented on submit", async () => {

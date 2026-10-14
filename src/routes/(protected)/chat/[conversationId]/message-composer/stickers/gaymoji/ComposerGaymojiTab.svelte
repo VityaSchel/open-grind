@@ -2,27 +2,37 @@
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	import { type GaymojiItem, getGaymoji } from "$lib/api/messaging/gaymoji";
+	import {
+		type GaymojiCategory,
+		getGaymoji,
+	} from "$lib/api/messaging/gaymoji";
+	import { gaymojiSections } from "$lib/chat/gaymoji-sections";
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { TabSelection } from "../../attachments/tabs";
-	import GaymojiTile from "./GaymojiTile.svelte";
+	import GaymojiSection from "./GaymojiSection.svelte";
+	import GaymojiSectionStrip from "./GaymojiSectionStrip.svelte";
+	import { SectionScroll } from "./section-scroll.svelte";
+	import { SectionWindows } from "./section-windows.svelte";
+	import { GAYMOJI_GRID_CLASS } from "./sticker-grid";
 
 	let {
 		active,
 		onSelectionChange,
 		onClose,
+		holdSheetSize,
 	}: {
 		active: boolean;
 		onSelectionChange: (selection: TabSelection) => void;
 		onClose: () => void;
+		holdSheetSize: () => () => void;
 	} = $props();
 
 	type Manifest =
 		| { status: "idle" | "loading" | "failed" }
-		| { status: "ready"; gaymoji: GaymojiItem[] };
+		| { status: "ready"; categories: GaymojiCategory[] };
 
 	const SKELETON_ROWS = 3;
 	const SKELETON_COLUMNS = [
@@ -35,17 +45,31 @@
 		"hidden @gaymoji7/sticker-grid:block",
 		"hidden @gaymoji8/sticker-grid:block",
 	];
-	const GRID_CLASS =
-		"grid grid-cols-3 gap-1 @gaymoji4/sticker-grid:grid-cols-4 @gaymoji5/sticker-grid:grid-cols-5 @gaymoji6/sticker-grid:grid-cols-6 @gaymoji7/sticker-grid:grid-cols-7 @gaymoji8/sticker-grid:grid-cols-8";
 
-	const selected = new SelectionSet<string>();
+	const selection = new SelectionSet<string>();
+	const windows = new SectionWindows();
 
 	let manifest = $state.raw<Manifest>({ status: "idle" });
+	let content = $state<HTMLElement | null>(null);
+	let strip = $state<HTMLElement | null>(null);
+
+	const sections = $derived(
+		manifest.status === "ready" ? gaymojiSections(manifest.categories) : [],
+	);
+	const scroll = new SectionScroll({
+		keys: () => sections.map(({ key }) => key),
+		strip: () => strip,
+		holdSheetSize: () => holdSheetSize(),
+	});
+
+	$effect(() => {
+		if (content && strip) return scroll.follow(content);
+	});
 
 	async function load() {
 		manifest = { status: "loading" };
 		try {
-			manifest = { status: "ready", gaymoji: await getGaymoji() };
+			manifest = { status: "ready", categories: await getGaymoji() };
 		} catch (error) {
 			console.error(error);
 			manifest = { status: "failed" };
@@ -61,8 +85,8 @@
 	});
 
 	function toggle(id: string) {
-		selected.toggleExclusive(id);
-		onSelectionChange({ count: selected.size, label: "Send Gaymoji" });
+		selection.toggleExclusive(id);
+		onSelectionChange({ count: selection.size, label: "Send Gaymoji" });
 	}
 
 	export function submitSelection() {
@@ -73,22 +97,32 @@
 	}
 </script>
 
-<div class="@container/sticker-grid">
+<div
+	bind:this={content}
+	data-slot="gaymoji-tab"
+	class="@container/sticker-grid flex flex-1 flex-col"
+>
 	{#if active && manifest.status === "ready"}
-		<div data-slot="sticker-grid" class={GRID_CLASS}>
-			{#each manifest.gaymoji as gaymoji, index (index)}
-				<GaymojiTile
-					{gaymoji}
-					selected={selected.has(gaymoji.id)}
-					onclick={() => toggle(gaymoji.id)}
-				/>
-			{/each}
-		</div>
+		<GaymojiSectionStrip
+			bind:ref={strip}
+			{sections}
+			current={scroll.current}
+			onPick={(key) => scroll.jumpTo(key)}
+		/>
+		{#each sections as section (section.key)}
+			<GaymojiSection
+				{section}
+				headers={scroll.headers}
+				{windows}
+				{selection}
+				onToggle={toggle}
+			/>
+		{/each}
 	{:else if manifest.status === "loading"}
 		<div
 			data-slot="sticker-grid-skeleton"
 			aria-busy="true"
-			class={GRID_CLASS}
+			class={GAYMOJI_GRID_CLASS}
 		>
 			{#each SKELETON_COLUMNS as columnClass, column (column)}
 				{#each { length: SKELETON_ROWS }, row (row)}

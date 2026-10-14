@@ -14,7 +14,7 @@
 <button
 	type="button"
 	data-slot="sticker-tile"
-	class="relative aspect-square cursor-pointer rounded-lg"
+	class="relative aspect-square cursor-pointer scroll-mt-18 rounded-lg"
 	aria-label={gaymoji.label}
 	aria-pressed={selected}
 	{onclick}

@@ -3,6 +3,7 @@ import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoGaymojiImageUrl } from "$lib/demo";
 import {
 	type Gaymoji,
+	type GaymojiManifest,
 	gaymojiManifestSchema,
 } from "$lib/model/messaging/gaymoji";
 import { proxyMediaUrl } from "$lib/util/media";
@@ -16,6 +17,8 @@ export type GaymojiItem = {
 	imageUrl: string;
 	imageHash: string;
 };
+
+export type GaymojiCategory = { name: string; items: GaymojiItem[] };
 
 const sortPrefix = /^(?:(?:\d+|[a-z]|man_[a-z])_)+/;
 
@@ -40,9 +43,26 @@ function gaymojiItem({ id, name }: Gaymoji): GaymojiItem {
 	};
 }
 
-export const getGaymoji = cachedFetch(async (): Promise<GaymojiItem[]> => {
+function groupByCategory({
+	category,
+	gaymoji,
+}: GaymojiManifest): GaymojiCategory[] {
+	const groups = new Map<string, GaymojiItem[]>(
+		category.map(({ name }) => [name, []]),
+	);
+	for (const entry of gaymoji) {
+		const items = groups.get(entry.category);
+		if (items) items.push(gaymojiItem(entry));
+		else groups.set(entry.category, [gaymojiItem(entry)]);
+	}
+	return [...groups]
+		.filter(([, items]) => items.length > 0)
+		.map(([name, items]) => ({ name, items }));
+}
+
+export const getGaymoji = cachedFetch(async (): Promise<GaymojiCategory[]> => {
 	const response = await fetchExternal({
 		url: new URL(GAYMOJI_MANIFEST_URL),
 	});
-	return response.jsonParsed(gaymojiManifestSchema).gaymoji.map(gaymojiItem);
+	return groupByCategory(response.jsonParsed(gaymojiManifestSchema));
 });

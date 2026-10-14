@@ -78,13 +78,17 @@
 					onSearchFocus={() => sheetBody?.expand()}
 				/>
 			</Tabs.Content>
-			<Tabs.Content value="gaymoji">
+			<Tabs.Content
+				value="gaymoji"
+				class="flex-1 flex-col data-[state=active]:flex"
+			>
 				<ComposerGaymojiTab
 					bind:this={tabs.gaymoji}
 					active={selectedTab === "gaymoji"}
 					onSelectionChange={(gaymojiSelection) =>
 						(selections.gaymoji = gaymojiSelection)}
 					onClose={() => (open = false)}
+					holdSheetSize={() => sheetBody?.holdSize() ?? (() => {})}
 				/>
 			</Tabs.Content>
 		</MediaSheetBody>

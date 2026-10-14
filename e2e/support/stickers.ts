@@ -6,6 +6,7 @@ import { DRAWER, openComposerSheet } from "./drawer";
 export const STICKER_TILE = '[data-slot="sticker-tile"]';
 export const SELECTED_STICKER_TILE = `${STICKER_TILE}[aria-pressed="true"]`;
 export const STICKER_GRID_SKELETON = '[data-slot="sticker-grid-skeleton"]';
+export const GAYMOJI_TAB = '[data-slot="gaymoji-tab"]';
 export const SHEET_SCROLLER = '[data-slot="sheet-scroller"]';
 export const GIF_SEARCH_BAR = '[data-slot="gif-search-bar"]';
 export const GIPHY_CONSENT_NOTE = '[data-slot="giphy-consent-note"]';
@@ -14,7 +15,7 @@ export const TRANSPARENT_PIXEL =
 
 export const DEMO_GIPHY_TRENDING_TOTAL = 172;
 export const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
-export const DEMO_GAYMOJI_COUNT = 579;
+export const DEMO_GAYMOJI_TILE_COUNT = 518;
 export const GIPHY_PAGE_SIZE = 50;
 const DEMO_TRENDING_PHRASES = [
 	"Hello",
@@ -85,6 +86,19 @@ export function gaymojiTiles(page: Page): Locator {
 	return gaymojiPanel(page).locator(STICKER_TILE);
 }
 
+export function gaymojiSectionStrip(page: Page): Locator {
+	return gaymojiPanel(page).getByRole("navigation", {
+		name: "Gaymoji categories",
+	});
+}
+
+export function gaymojiRegion(
+	page: Page,
+	{ title }: { title: string },
+): Locator {
+	return gaymojiPanel(page).getByRole("region", { name: title });
+}
+
 export function scrollSheetTo(
 	page: Page,
 	{ top }: { top: number | "end" },
@@ -103,6 +117,61 @@ export function scrollSheetTo(
 				}),
 			top,
 		);
+}
+
+export type TileChurn = { added: number; removed: number };
+
+declare global {
+	interface Window {
+		__gaymojiTileChurn?: TileChurn;
+	}
+}
+
+export async function countGaymojiTileChurn(
+	page: Page,
+): Promise<{ read: () => Promise<TileChurn>; reset: () => Promise<void> }> {
+	await page.addInitScript(
+		({ tile, tab }) => {
+			const seen = new WeakSet<Element>();
+			const churn: TileChurn = { added: 0, removed: 0 };
+			window.__gaymojiTileChurn = churn;
+			const tilesIn = (node: Node): Element[] => {
+				if (!(node instanceof Element)) return [];
+				return node.matches(tile)
+					? [node]
+					: [...node.querySelectorAll(tile)];
+			};
+			new MutationObserver((records) => {
+				for (const { target, addedNodes, removedNodes } of records) {
+					const inTab =
+						target instanceof Element &&
+						(target.closest(tab) !== null ||
+							target.querySelector(tab) !== null);
+					if (!inTab) continue;
+					for (const node of addedNodes) {
+						for (const element of tilesIn(node)) {
+							if (seen.has(element)) continue;
+							seen.add(element);
+							churn.added += 1;
+						}
+					}
+					for (const node of removedNodes)
+						churn.removed += tilesIn(node).length;
+				}
+			}).observe(document, { childList: true, subtree: true });
+		},
+		{ tile: STICKER_TILE, tab: GAYMOJI_TAB },
+	);
+	return {
+		read: () => page.evaluate(() => ({ ...window.__gaymojiTileChurn! })),
+		reset: () =>
+			page.evaluate(() => {
+				Object.assign(window.__gaymojiTileChurn!, {
+					added: 0,
+					removed: 0,
+				});
+			}),
+	};
 }
 
 export function gifSearchBox(page: Page): Locator {

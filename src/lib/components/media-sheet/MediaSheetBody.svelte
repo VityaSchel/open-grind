@@ -14,7 +14,9 @@
 	let sheet = $state<HTMLDivElement | null>(null);
 	let peek = $state<HTMLDivElement | null>(null);
 	let settleTimer: ReturnType<typeof setTimeout> | null = null;
+	let sizeHolds = 0;
 	let atTop = $state(true);
+	let expanded = $state(false);
 	let observedPeekHeight = 0;
 	let expandedContentScrollTop: number | null = null;
 
@@ -72,25 +74,45 @@
 			sheet.scrollTo({ top, behavior: preferredScrollBehavior() });
 	}
 
+	export function holdSize(): () => void {
+		sizeHolds += 1;
+		cancelSettle();
+		let held = true;
+		return () => {
+			if (!held) return;
+			held = false;
+			sizeHolds -= 1;
+			scheduleSettle();
+		};
+	}
+
 	function onScroll() {
-		atTop = (sheet?.scrollTop ?? 0) < 1;
+		const scrollTop = sheet?.scrollTop ?? 0;
+		atTop = scrollTop < 1;
+		expanded =
+			peek !== null &&
+			scrollTop >= peek.offsetHeight - EXPANDED_TOLERANCE_PX;
 		// A scroll event can land between a resize's layout and its ResizeObserver callback, carrying either a scroll-anchoring adjustment or a pre-resize offset
 		if (!resizeAwaitingObserver())
 			expandedContentScrollTop = measureExpandedContentScrollTop();
 		scheduleSettle();
 	}
 
-	function scheduleSettle() {
+	function cancelSettle() {
 		if (settleTimer !== null) clearTimeout(settleTimer);
+		settleTimer = null;
+	}
+
+	function scheduleSettle() {
+		cancelSettle();
+		if (sizeHolds > 0) return;
 		settleTimer = setTimeout(() => {
 			settleTimer = null;
 			settleToNearestSize();
 		}, SETTLE_QUIET_MS);
 	}
 
-	$effect(() => () => {
-		if (settleTimer !== null) clearTimeout(settleTimer);
-	});
+	$effect(() => cancelSettle);
 
 	$effect(() => {
 		if (!sheet || !peek) return;
@@ -104,12 +126,20 @@
 	});
 </script>
 
+{#if fullsize && expanded}
+	<div
+		aria-hidden="true"
+		data-slot="sheet-backdrop"
+		class="pointer-events-none absolute inset-x-0 top-8 bottom-0 -z-10 bg-popover"
+	></div>
+{/if}
 <div
 	bind:this={sheet}
 	data-slot="sheet-scroller"
+	data-at-top={fullsize && atTop ? "" : undefined}
 	onscroll={onScroll}
 	class={[
-		"no-scrollbar overflow-x-hidden overscroll-contain select-none",
+		"group/sheet no-scrollbar overflow-x-hidden overscroll-contain select-none",
 		{
 			"h-full scroll-pb-[calc(--spacing(30)+var(--bar-content-gap))] overflow-y-auto":
 				fullsize,

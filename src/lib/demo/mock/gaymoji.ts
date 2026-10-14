@@ -1,3 +1,8 @@
+import {
+	FEATURED_CATEGORY,
+	FEATURED_ORIGINAL_IDS,
+	KNOWN_GAYMOJI_CATEGORIES,
+} from "$lib/chat/gaymoji-sections";
 import { hashString } from "$lib/util/random";
 
 const LAST_UPDATE_TIME = 1605145583000;
@@ -5,14 +10,14 @@ const EXPIRED_TIME = 1621843200000;
 const IMAGE_SIZE = 256;
 
 const CATEGORIES = [
-	{ name: "body", count: 63, prefix: "a" },
-	{ name: "dating+sex", count: 103, prefix: "1" },
-	{ name: "featured", count: 67, prefix: "1" },
-	{ name: "holiday", count: 92, prefix: "1_1_0" },
-	{ name: "mood", count: 34, prefix: "" },
-	{ name: "objects", count: 99, prefix: "1" },
-	{ name: "profile", count: 111, prefix: "Man" },
 	{ name: "wen_ching_taiwan_stickers", count: 10, prefix: "wen_ching" },
+	{ name: "featured", count: 67, prefix: "1" },
+	{ name: "dating+sex", count: 103, prefix: "1" },
+	{ name: "body", count: 63, prefix: "a" },
+	{ name: "profile", count: 111, prefix: "Man" },
+	{ name: "holiday", count: 92, prefix: "1_1_0" },
+	{ name: "objects", count: 99, prefix: "1" },
+	{ name: "mood", count: 34, prefix: "" },
 ] as const;
 
 const EXPIRING_CATEGORY = "wen_ching_taiwan_stickers";
@@ -82,14 +87,23 @@ function gaymojiName({
 		: `${prefix}_${ordinal}_${word}`;
 }
 
+function realIds(category: string): string[] {
+	if (category === FEATURED_CATEGORY) return [...FEATURED_ORIGINAL_IDS];
+	const known = KNOWN_GAYMOJI_CATEGORIES.get(category);
+	return known ? [known.iconId] : [];
+}
+
 function buildManifest() {
 	const gaymoji: DemoGaymoji[] = [];
 	let wordIndex = 0;
 	for (const { name: category, count, prefix } of CATEGORIES) {
-		for (let index = 0; index < count; index++) {
+		const real = realIds(category).map((id) => id.replace(/\.png$/, ""));
+		const made = Array.from({ length: count - real.length }, (_, index) => {
 			const word = WORDS[wordIndex % WORDS.length] ?? "Heart";
 			wordIndex += 1;
-			const name = gaymojiName({ prefix, index, word });
+			return gaymojiName({ prefix, index, word });
+		});
+		for (const name of [...real, ...made]) {
 			gaymoji.push({
 				...(category === EXPIRING_CATEGORY
 					? { expiredTime: EXPIRED_TIME }

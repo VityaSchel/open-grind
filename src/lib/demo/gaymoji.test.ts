@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import {
+	FEATURED_CATEGORY,
+	FEATURED_ORIGINAL_IDS,
+	KNOWN_GAYMOJI_CATEGORIES,
+} from "$lib/chat/gaymoji-sections";
 import { demoGaymojiImageUrl, demoRoute } from "$lib/demo";
 import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
 
@@ -14,17 +19,28 @@ function manifest() {
 }
 
 describe("demo Gaymoji", () => {
-	it("lists every documented category", () => {
+	it("lists every documented category in the live manifest's order", () => {
 		expect(manifest().category.map(({ name }) => name)).toEqual([
-			"body",
-			"dating+sex",
-			"featured",
-			"holiday",
-			"mood",
-			"objects",
-			"profile",
 			"wen_ching_taiwan_stickers",
+			"featured",
+			"dating+sex",
+			"body",
+			"profile",
+			"holiday",
+			"objects",
+			"mood",
 		]);
+	});
+
+	it("carries every picked section icon and Featured original in its category", () => {
+		const categoryOf = new Map(
+			manifest().gaymoji.map(({ id, category }) => [id, category]),
+		);
+
+		for (const [category, { iconId }] of KNOWN_GAYMOJI_CATEGORIES)
+			expect(categoryOf.get(iconId)).toBe(category);
+		for (const id of FEATURED_ORIGINAL_IDS)
+			expect(categoryOf.get(id)).toBe(FEATURED_CATEGORY);
 	});
 
 	it("lists unique items, a few of them expired", () => {
