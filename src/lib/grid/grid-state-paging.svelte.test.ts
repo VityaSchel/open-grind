@@ -18,7 +18,8 @@ vi.mock("$lib/util/reconcile", () => ({
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () => Promise.resolve({}),
-	preferencesSnapshot: () => ({ geohash: null }),
+	preferencesLoaded: () => true,
+	preferencesSnapshot: () => ({ geohash: null, stayOnline: true }),
 	setPreferences: () => Promise.resolve(),
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));

@@ -14,6 +14,11 @@ import {
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
 import { autoLocation } from "$lib/location/auto-location";
+import { showsOnReturn, staysOnline } from "$lib/presence/presence-gate";
+import {
+	pushDeeplinkAhead,
+	untilPushDeeplinkOpened,
+} from "$lib/push/opening-deeplink";
 import { Generation } from "$lib/util/generation";
 import { reconciler } from "$lib/util/reconcile";
 import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
@@ -29,6 +34,8 @@ import {
 import { dedupeGridProfiles, indexProfilesById } from "./grid-profiles";
 import { buildCascadeQuery } from "./grid-query";
 import { GridSearchFiltersState } from "./grid-search-filters-state.svelte";
+
+const PUSH_DEEPLINK_WAIT_MS = 5000;
 
 class GridState {
 	filters = new GridSearchFiltersState({ onQueryChange: () => this.retry() });
@@ -53,6 +60,7 @@ class GridState {
 
 	#geohash: string | null = null;
 	#retargeted: string | null = null;
+	#stale = false;
 	#resolvingIds = new Set<number>();
 	#firstPageIds = new Set<number>();
 	#generation = new Generation();
@@ -106,7 +114,22 @@ class GridState {
 		if (untrack(() => this.#geohash === geohash && this.items.length > 0))
 			return;
 		this.#geohash = geohash;
-		this.#startOver(geohash);
+		if (untrack(staysOnline)) {
+			this.#startOver(geohash);
+			return;
+		}
+		this.loading = true;
+		void this.#startOverUnlessOpeningPush(geohash);
+	}
+
+	async #startOverUnlessOpeningPush(geohash: string): Promise<void> {
+		const generation = this.#generation.next();
+		const ahead = await pushDeeplinkAhead();
+		if (ahead) await untilPushDeeplinkOpened({ ms: PUSH_DEEPLINK_WAIT_MS });
+		if (this.#generation.isStale(generation) || this.#geohash !== geohash)
+			return;
+		if (!ahead || this.viewActive) this.#startOver(geohash);
+		else this.loading = false;
 	}
 
 	retry(): void {
@@ -121,6 +144,31 @@ class GridState {
 			for (const listener of this.#startOverListeners) listener();
 		});
 		void this.#fetchProfiles(geohash);
+	}
+
+	async refreshOrDefer({ attended }: { attended: boolean }): Promise<void> {
+		if (
+			staysOnline() ||
+			(attended && (await showsOnReturn({ viewActive: this.viewActive })))
+		)
+			return this.refresh();
+		this.#stale = true;
+	}
+
+	catchUpOnResume(): Promise<void> {
+		return this.#stale
+			? this.refreshOrDefer({ attended: true })
+			: Promise.resolve();
+	}
+
+	attachView(): () => void {
+		this.viewActive = true;
+		untrack(() => {
+			if (this.#stale && !this.loading) void this.refresh();
+		});
+		return () => {
+			this.viewActive = false;
+		};
 	}
 
 	async refresh({
@@ -157,6 +205,7 @@ class GridState {
 	reset(): void {
 		this.#generation.next();
 		this.#reset();
+		this.#stale = false;
 		this.loading = false;
 		this.refreshing = false;
 		this.scrollY = 0;
@@ -249,6 +298,7 @@ class GridState {
 	): Promise<void> {
 		const generation = this.#generation.next();
 		this.#retargeted = null;
+		this.#stale = false;
 		try {
 			await this.filters.ready;
 			if (this.#generation.isStale(generation)) return;
@@ -315,12 +365,15 @@ class GridState {
 export const gridState = new GridState();
 
 registerAccountCache({ reset: () => gridState.reset() });
-reconciler.subscribe(() => gridState.refresh());
+reconciler.subscribe(
+	(cause) => gridState.refreshOrDefer({ attended: cause === "resume" }),
+	{ onFoldedResume: () => gridState.catchUpOnResume() },
+);
 onProfileEdit(({ profileId, patch }) => {
 	if (patch.isFavorite === undefined) return;
 	gridState.setFavorite({ profileId, isFavorite: patch.isFavorite });
 });
 onProfileViewabilityChange(({ profileId, viewable }) => {
-	if (viewable) void gridState.refresh();
+	if (viewable) void gridState.refreshOrDefer({ attended: false });
 	else gridState.removeProfile(profileId);
 });

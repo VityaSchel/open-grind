@@ -20,6 +20,18 @@ export function onPushDeeplinkOpened(listener: () => void): () => void {
 	return () => openedListeners.delete(listener);
 }
 
+export function untilPushDeeplinkOpened({ ms }: { ms: number }): Promise<void> {
+	return new Promise((resolve) => {
+		const finish = () => {
+			clearTimeout(timer);
+			stop();
+			resolve();
+		};
+		const stop = onPushDeeplinkOpened(finish);
+		const timer = setTimeout(finish, ms);
+	});
+}
+
 export async function whileOpeningPushDeeplink(
 	open: () => Promise<void>,
 ): Promise<void> {

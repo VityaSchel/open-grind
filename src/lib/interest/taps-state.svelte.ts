@@ -35,7 +35,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 	#unsubscribeViewability = onProfileViewabilityChange(
 		({ profileId, viewable }) => {
 			if (viewable) {
-				void this.refresh();
+				void this.refreshOrDefer({ attended: false });
 				return;
 			}
 			this.#all = this.#all.filter((tap) => tap.profileId !== profileId);
@@ -56,6 +56,7 @@ export class TapsState extends ReconcilingListState<TapProfile, TapsSnapshot> {
 		super({
 			pageSize: PAGE_SIZE,
 			refreshErrorLabel: "Failed to refresh taps",
+			marksOnline: true,
 		});
 		this.ourProfileId = ourProfileId;
 		this.#onIncomingTap = onIncomingTap;

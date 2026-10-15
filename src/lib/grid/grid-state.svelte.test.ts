@@ -14,12 +14,16 @@ const {
 	getGridMock: vi.fn(),
 	getTagsMock: vi.fn(),
 	patchCachedProfileMock: vi.fn(),
-	reconcileHandlers: [] as (() => unknown)[],
+	reconcileHandlers: [] as ((cause?: string) => unknown)[],
 	resolveGeohashMock: vi.fn(),
 	resolveLazyProfileMock: vi.fn(),
 	setPreferencesMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
-	storedPreferences: { geohash: null as string | null },
+	storedPreferences: {
+		geohash: null as string | null,
+		loaded: true,
+		stayOnline: true,
+	},
 }));
 
 vi.mock("./grid", () => ({
@@ -32,7 +36,7 @@ vi.mock("./grid", () => ({
 vi.mock("$lib/api/users/tags", () => ({ getTags: getTagsMock }));
 vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {
-		subscribe: (handler: () => unknown) => {
+		subscribe: (handler: (cause?: string) => unknown) => {
 			reconcileHandlers.push(handler);
 			return () => {};
 		},
@@ -40,6 +44,7 @@ vi.mock("$lib/util/reconcile", () => ({
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () => Promise.resolve({}),
+	preferencesLoaded: () => storedPreferences.loaded,
 	preferencesSnapshot: () => storedPreferences,
 	setPreferences: setPreferencesMock,
 }));

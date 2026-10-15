@@ -245,6 +245,114 @@ describe("Reconciler on returning to the app", () => {
 	});
 });
 
+describe("Reconciler causes", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		isMobilePlatformMock.mockReturnValue(true);
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+		vi.restoreAllMocks();
+		isMobilePlatformMock.mockReturnValue(false);
+	});
+
+	async function subscribed() {
+		const reconciler = await freshReconciler();
+		const handler = vi.fn();
+		const onFoldedResume = vi.fn();
+		reconciler.subscribe(handler, { onFoldedResume });
+		reconnect();
+		return { handler, onFoldedResume };
+	}
+
+	it("tells handlers what started each reconcile", async () => {
+		const { handler, onFoldedResume } = await subscribed();
+
+		reconnect();
+		await flushMockSubscriptions();
+		await vi.advanceTimersByTimeAsync(2 * SECOND_MS);
+		dropEvents(1);
+		await flushMockSubscriptions();
+		await vi.advanceTimersByTimeAsync(2 * SECOND_MS);
+		await hideFor(SECOND_MS);
+
+		expect(handler.mock.calls).toEqual([
+			["reconnect"],
+			["resync"],
+			["resume"],
+		]);
+		expect(onFoldedResume).not.toHaveBeenCalled();
+	});
+
+	it("hands a return to the app right after a reconnect only to the catch-up handlers", async () => {
+		const { handler, onFoldedResume } = await subscribed();
+
+		setVisibility("hidden");
+		await vi.advanceTimersByTimeAsync(10 * SECOND_MS);
+		reconnect();
+		await flushMockSubscriptions();
+		setVisibility("visible");
+		await flushMockSubscriptions();
+
+		expect(handler.mock.calls).toEqual([["reconnect"]]);
+		expect(onFoldedResume).toHaveBeenCalledOnce();
+	});
+
+	it("lets a folded return catch up only once the round it folds into handed its handlers out", async () => {
+		const { handler, onFoldedResume } = await subscribed();
+		const order: string[] = [];
+		handler.mockImplementation(() => void order.push("round"));
+		onFoldedResume.mockImplementation(() => void order.push("catch-up"));
+		setVisibility("hidden");
+		await vi.advanceTimersByTimeAsync(10 * SECOND_MS);
+		let answerSession!: () => void;
+		callMethodMock.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					answerSession = () =>
+						resolve({
+							profileId: 1,
+							expiresAt: null,
+							stale: false,
+						});
+				}),
+		);
+		reconnect();
+		await flushMockSubscriptions();
+		setVisibility("visible");
+		await flushMockSubscriptions();
+		expect(order).toEqual([]);
+
+		answerSession();
+		await flushMockSubscriptions();
+
+		expect(order).toEqual(["round", "catch-up"]);
+	});
+
+	it("drops a reconnect that follows a return to the app", async () => {
+		const { handler, onFoldedResume } = await subscribed();
+
+		await hideFor(SECOND_MS);
+		reconnect();
+		await flushMockSubscriptions();
+
+		expect(handler.mock.calls).toEqual([["resume"]]);
+		expect(onFoldedResume).not.toHaveBeenCalled();
+	});
+
+	it("drops a second return to the app inside the throttle window", async () => {
+		const { handler, onFoldedResume } = await subscribed();
+
+		await hideFor(SECOND_MS);
+		await hideFor(SECOND_MS / 2);
+
+		expect(handler.mock.calls).toEqual([["resume"]]);
+		expect(onFoldedResume).not.toHaveBeenCalled();
+	});
+});
+
 describe("Reconciler while the profile is away from home", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
