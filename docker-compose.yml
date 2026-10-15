@@ -1,4 +1,4 @@
-# Result: src-tauri/gen/android/app/build/outputs/apk/universal/release/
+# Result: src-tauri/gen/android/app/build/outputs/apk/*/release/
 services:
   build:
     platform: linux/amd64

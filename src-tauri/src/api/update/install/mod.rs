@@ -77,16 +77,29 @@ pub struct Outcome {
 	pub message: Option<String>,
 }
 
+fn android_abi(arch: &str) -> Option<&'static str> {
+	match arch {
+		"aarch64" => Some("arm64-v8a"),
+		"arm" => Some("armeabi-v7a"),
+		"x86" => Some("x86"),
+		"x86_64" => Some("x86_64"),
+		_ => None,
+	}
+}
+
 fn suffix_for(os: &str, arch: &str) -> Option<String> {
-	let arch = match arch {
+	let desktop_arch = match arch {
 		"aarch64" => "arm64",
 		other => other,
 	};
 	match os {
-		"android" => Some("-android.apk".to_owned()),
+		"android" => Some(match android_abi(arch) {
+			Some(abi) => format!("-android-{abi}.apk"),
+			None => "-android.apk".to_owned(),
+		}),
 		"macos" => Some("-macos.zip".to_owned()),
-		"windows" => Some(format!("-windows-{arch}.exe")),
-		"linux" => Some(format!("-linux-{arch}.AppImage")),
+		"windows" => Some(format!("-windows-{desktop_arch}.exe")),
+		"linux" => Some(format!("-linux-{desktop_arch}.AppImage")),
 		_ => None,
 	}
 }
@@ -150,6 +163,8 @@ mod pins {
 
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
 	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
+	const ANDROID_OUTPUTS: &str =
+		include_str!("../../../../../ci/android-outputs.sh");
 	const GATE: &str = include_str!(
 		"../../../../android-logic/src/main/kotlin/org/opengrind/update/InstallGate.kt"
 	);
@@ -1181,6 +1196,34 @@ mod pins {
 		assert!(
 			LINUX_BUILD.contains("aarch64) arch=arm64"),
 			"build.sh no longer maps aarch64 to arm64"
+		);
+	}
+
+	#[test]
+	fn the_android_suffix_matches_the_split_names_the_build_writes() {
+		for (arch, flavor, abi) in [
+			("aarch64", "arm64", "arm64-v8a"),
+			("arm", "arm", "armeabi-v7a"),
+			("x86", "x86", "x86"),
+			("x86_64", "x86_64", "x86_64"),
+		] {
+			assert_eq!(
+				suffix_for("android", arch).unwrap(),
+				format!("-android-{abi}.apk")
+			);
+			assert!(
+				ANDROID_OUTPUTS.contains(&format!("{flavor}) abi=\"-{abi}\"")),
+				"android-outputs.sh no longer names the {flavor} split -{abi}"
+			);
+		}
+	}
+
+	#[test]
+	fn an_android_abi_without_a_split_takes_the_universal_apk() {
+		assert_eq!(suffix_for("android", "riscv64").unwrap(), "-android.apk");
+		assert!(
+			ANDROID_OUTPUTS.contains("universal) abi=\"\""),
+			"android-outputs.sh no longer names the universal APK -android.apk"
 		);
 	}
 

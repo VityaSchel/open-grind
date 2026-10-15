@@ -89,14 +89,11 @@ mkdir -p "$GRADLE_USER_HOME"
 printf 'android.aapt2FromMavenOverride=%s/aapt2\n' "$sdk/build-tools/$build_tools" > "$GRADLE_USER_HOME/gradle.properties"
 
 bun ci
+rm -rf "$ROOT/src-tauri/gen/android/app/build/outputs/apk"
 if [ -n "${OPEN_GRIND_ANDROID_ABI:-}" ]; then
-	bun run tauri android build --apk --target "$OPEN_GRIND_ANDROID_ABI"
+	bun run tauri android build --apk --split-per-abi --target "$OPEN_GRIND_ANDROID_ABI"
 else
-	bun run tauri android build --apk
+	OPEN_GRIND_ANDROID_SPLITS=1 bun run tauri android build --apk
 fi
 
-reldir="$ROOT/src-tauri/gen/android/app/build/outputs/apk/universal/release"
-version="$(sed -n 's/^tauri\.android\.versionName=//p' "$ROOT/src-tauri/gen/android/app/tauri.properties")"
-artifact="$reldir/open-grind-v$version-android-unsigned.apk"
-mv -f "$reldir/app-universal-release-unsigned.apk" "$artifact"
-printf 'Produced: %s (%s)\n' "$artifact" "$(du -h "$artifact" | cut -f1)"
+"$ROOT/ci/android-outputs.sh"

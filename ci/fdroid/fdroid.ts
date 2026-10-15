@@ -10,6 +10,12 @@ type TauriConf = {
 };
 
 const APPID = "org.opengrind";
+const RUST_TARGETS: Record<string, string> = {
+	"armeabi-v7a": "armv7",
+	"arm64-v8a": "aarch64",
+	x86: "i686",
+	x86_64: "x86_64",
+};
 const IMAGE = "registry.gitlab.com/fdroid/fdroidserver:buildserver-trixie";
 const root = path.join(import.meta.dir, "../..");
 
@@ -59,12 +65,37 @@ const readProperty = async ({
 	return value;
 };
 
+type Split = { abi: string; offset: number };
+
+const readSplits = async (commit: string): Promise<Split[]> =>
+	(
+		await readProperty({
+			commit,
+			file: "src-tauri/gen/android/gradle.properties",
+			key: "opengrind.android.abiVersionCodeOffsets",
+		})
+	)
+		.split(",")
+		.map((entry) => {
+			const [abi = "", offset = ""] = entry.split(":");
+			return { abi, offset: Number(offset) };
+		})
+		.sort((a, b) => a.offset - b.offset);
+
+const fill = (text: string, values: Record<string, string>): string =>
+	Object.entries(values).reduce(
+		(filled, [key, value]) => filled.replaceAll(`\${${key}}`, value),
+		text,
+	);
+
 const recipe = async ({
 	commit,
 	conf,
+	splits,
 }: {
 	commit: string;
 	conf: TauriConf;
+	splits: Split[];
 }): Promise<string> => {
 	const libclangVersion = await readProperty({
 		commit,
@@ -76,9 +107,28 @@ const recipe = async ({
 		throw new Error(
 			`libclang.version ${libclangVersion} has no major version`,
 		);
+	const baseCode = conf.bundle.android.versionCode;
+	const entry = recipeTemplate.match(/^Builds:\n((?: {2}.*\n)+)/m)?.[1];
+	if (!entry) throw new Error("recipe template has no Builds entry");
+	const builds = splits
+		.map(({ abi, offset }) => {
+			const rustTarget = RUST_TARGETS[abi];
+			if (!rustTarget) throw new Error(`no Rust target builds ${abi}`);
+			return fill(entry, {
+				abi,
+				rustTarget,
+				versionCode: String(baseCode + offset),
+			});
+		})
+		.join("\n");
 	const values = {
 		versionName: conf.version,
-		versionCode: conf.bundle.android.versionCode.toString(),
+		currentVersionCode: String(
+			baseCode + Math.max(...splits.map(({ offset }) => offset)),
+		),
+		vercodeOperations: splits
+			.map(({ offset }) => `'%c + ${offset}'`)
+			.join("\n  - "),
 		commit,
 		ndkVersion: await readProperty({
 			commit,
@@ -87,9 +137,9 @@ const recipe = async ({
 		}),
 		libclangMajor,
 	};
-	const rendered = Object.entries(values).reduce(
-		(text, [key, value]) => text.replaceAll(`\${${key}}`, value),
-		recipeTemplate,
+	const rendered = fill(
+		recipeTemplate.replace(entry, () => builds),
+		values,
 	);
 	const unfilled = rendered.match(/\$\{[A-Za-z0-9]+\}/);
 	if (unfilled)
@@ -97,30 +147,35 @@ const recipe = async ({
 	return rendered;
 };
 
-const withoutReferenceBinary = (rendered: string): string =>
-	rendered.replace(/^Binaries:.*\n/m, "");
+const withoutReferenceBinaries = (rendered: string): string =>
+	rendered.replace(/^ {4}binary:.*\n/gm, "");
 
 if (process.argv[2] === "emit") {
 	const ref = process.argv[3];
 	if (!ref) throw new Error("usage: fdroid.ts emit <tag|commit>");
 	const commit = await resolveCommit(ref);
 	process.stdout.write(
-		await recipe({ commit, conf: await readConf(commit) }),
+		await recipe({
+			commit,
+			conf: await readConf(commit),
+			splits: await readSplits(commit),
+		}),
 	);
 	process.exit(0);
 }
 
 const sha = await resolveCommit(process.env.FORGEJO_SHA ?? "HEAD");
 const conf = await readConf(sha);
-const versionCode = conf.bundle.android.versionCode;
+const splits = await readSplits(sha);
+const baseCode = conf.bundle.android.versionCode;
 console.log(
-	`>>> commit=${sha} versionName=${conf.version} versionCode=${versionCode}`,
+	`>>> commit=${sha} versionName=${conf.version} versionCode=${baseCode}`,
 );
 
 const fdd = await mkdtemp(path.join(tmpdir(), "fdroid-"));
 await Bun.write(
 	path.join(fdd, "metadata", `${APPID}.yml`),
-	withoutReferenceBinary(await recipe({ commit: sha, conf })),
+	withoutReferenceBinaries(await recipe({ commit: sha, conf, splits })),
 );
 
 await $`docker pull ${IMAGE}`;
@@ -133,30 +188,26 @@ const buildScript = await Bun.file(path.join(root, "ci/fdroid/build.sh"))
 	.then((s) =>
 		s
 			.replaceAll("${APPID}", APPID)
-			.replaceAll("${versionCode}", versionCode.toString())
 			.replaceAll("${commit}", sha)
 			.replaceAll("${repoUrl}", repoUrl),
 	);
 await $`docker run --rm -v ${fdd}:/repo ${IMAGE} bash -lc ${buildScript}`;
 
-const apks: string[] = [];
-for await (const path of new Bun.Glob("**/release/*.apk").scan({
-	cwd: fdd,
-	absolute: true,
-})) {
-	apks.push(path);
+console.log(">>> F-Droid build sha256 (APKs uploaded as workflow artifact):");
+for (const { abi, offset } of splits) {
+	const built = path.join(fdd, "tmp", `${APPID}_${baseCode + offset}.apk`);
+	if (!(await Bun.file(built).exists())) {
+		console.error(`fdroid build produced no ${abi} APK at ${built}`);
+		process.exit(1);
+	}
+	const out = path.join(
+		root,
+		"fdroid-out",
+		`open-grind-v${conf.version}-android-${abi}-unsigned.apk`,
+	);
+	await Bun.write(out, Bun.file(built));
+	const digest = new Bun.CryptoHasher("sha256")
+		.update(await Bun.file(out).bytes())
+		.digest("hex");
+	console.log(`${digest}  ${out}`);
 }
-apks.sort();
-const [apk] = apks;
-if (!apk) {
-	console.error("fdroid build produced no APK");
-	process.exit(1);
-}
-
-const out = path.join(root, "fdroid-out", path.basename(apk));
-await Bun.write(out, Bun.file(apk));
-const digest = new Bun.CryptoHasher("sha256")
-	.update(await Bun.file(out).bytes())
-	.digest("hex");
-console.log(">>> F-Droid build sha256 (APK uploaded as workflow artifact):");
-console.log(`${digest}  ${out}`);
