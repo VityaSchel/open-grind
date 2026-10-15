@@ -78,6 +78,7 @@ function toggleFailure({
 		views: [
 			{
 				id: `${list.id}/toggle-failed`,
+				screen: list.id,
 				survivesLocaleSwitch: false,
 				drive: async (page) => {
 					await openList({ page, list });
@@ -161,6 +162,7 @@ export const profileListLoadFailed: Scene = {
 	views: [
 		{
 			id: "settings/account/blocked/load-failed",
+			screen: "settings/account/blocked",
 			survivesLocaleSwitch: false,
 			drive: (page) => {
 				showsLoading(page);
@@ -183,6 +185,7 @@ export const accountUnimplemented: Scene = {
 	views: [
 		{
 			id: "settings/account/unimplemented",
+			screen: "settings/account",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({
@@ -225,6 +228,7 @@ export const privacySaveFailed: Scene = {
 	views: [
 		{
 			id: "settings/account/privacy/save-failed",
+			screen: "settings/account/privacy",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openPrivacy(page);
@@ -248,6 +252,7 @@ export const telegramWarning: Scene = {
 	views: [
 		{
 			id: "settings/me/telegram",
+			screen: "settings/me",
 			drive: async (page) => {
 				const announcements = page.getByRole("button", {
 					name: "Open Grind announcements",

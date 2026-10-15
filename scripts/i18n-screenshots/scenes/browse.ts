@@ -25,6 +25,7 @@ export const chooseLocation: Scene = {
 		},
 		{
 			id: "browse/location/map",
+			screen: "browse/location",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await page
@@ -54,6 +55,7 @@ export const grid: Scene = {
 		},
 		{
 			id: "browse/filters",
+			screen: "browse/grid",
 			scroller: FILTERS_SCROLLER,
 			drive: (page) => openAllFilters(page),
 		},

@@ -1,5 +1,6 @@
 import { toast } from "svelte-sonner";
 
+import { registerAccountCache } from "$lib/api/account-caches";
 import {
 	blockedKindOf,
 	callMethod,
@@ -120,3 +121,5 @@ class SessionRecovery {
 }
 
 export const sessionRecovery = new SessionRecovery();
+
+registerAccountCache({ reset: () => toast.dismiss(TRANSPORT_TOAST_ID) });

@@ -80,6 +80,7 @@ export const imperialVisit: Scene = {
 	views: [
 		{
 			id: "profile/imperial",
+			screen: "profile#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({
@@ -183,6 +184,7 @@ export const tapStates: Scene = {
 	views: [
 		{
 			id: "profile/tap-options",
+			screen: "profile",
 			drive: async (page) => {
 				await openProfile({ page, profileId: OTHER_ID });
 				await inActivePane({ page, name: SEND_FIRE_TAP }).click({
@@ -203,6 +205,7 @@ export const tapFailure: Scene = {
 	views: [
 		{
 			id: "profile/tap-failed",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openProfile({ page, profileId: OTHER_ID });

@@ -1,16 +1,17 @@
-import type { ShownKey } from "../../src/lib/demo/screenshot-scan";
+import type { KeyBox, ShownKey } from "../../src/lib/demo/screenshot-scan";
 
 export type Platform = "phone" | "desktop";
 
 export type Highlight = { image: string; sha256: string; pixelHash: string };
 
-export type ViewKey = ShownKey & { highlight: Highlight };
+export type ViewKey = ShownKey & { highlight?: Highlight };
 
 export type View = {
 	image: string;
 	sha256: string;
 	pixelHash: string;
 	platform: Platform;
+	screen?: string;
 	keys: ViewKey[];
 	ms: number;
 };
@@ -23,10 +24,21 @@ export type Manifest = {
 
 export type Captured = Omit<Manifest, "commit"> & {
 	unmarked: Record<string, string[]>;
+	boxes: Record<string, Record<string, KeyBox[]>>;
+	measured: string[];
+	compositeButtons: Record<string, string[][]>;
 };
+
+export const RAW_DIR = ".raw";
+export const MAX_SCREENS = 6;
 
 const VIEW_ID = /^[a-z0-9-]+(?:\/[a-z0-9-]+)*$/;
 const MESSAGE_KEY = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/;
+
+export function byCodeUnits(a: string, b: string): number {
+	if (a === b) return 0;
+	return a < b ? -1 : 1;
+}
 
 export function requireViewId(id: string): void {
 	if (!VIEW_ID.test(id)) throw new Error(`Invalid view id ${id}`);
@@ -42,6 +54,10 @@ export function numberedViewId({
 	return screen === 1 ? id : `${id}#${screen}`;
 }
 
+export function baseViewId(viewId: string): string {
+	return viewId.replace(/#\d+$/, "");
+}
+
 export function isScreenOf({
 	viewId,
 	id,
@@ -52,12 +68,20 @@ export function isScreenOf({
 	return viewId === id || viewId.startsWith(`${id}#`);
 }
 
+function fileStem(viewId: string): string {
+	return viewId.replace("#", ".");
+}
+
 export function screenPath(viewId: string): string {
-	return `images/${viewId.replace("#", ".")}`;
+	return `images/${fileStem(viewId)}`;
 }
 
 export function imagePath(viewId: string): string {
 	return `${screenPath(viewId)}.webp`;
+}
+
+export function rawCapturePath(viewId: string): string {
+	return `${RAW_DIR}/${fileStem(viewId)}.png`;
 }
 
 export function highlightPath({
@@ -72,7 +96,14 @@ export function highlightPath({
 }
 
 export function emptyCapture(): Captured {
-	return { views: {}, failed: [], unmarked: {} };
+	return {
+		views: {},
+		failed: [],
+		unmarked: {},
+		boxes: {},
+		measured: [],
+		compositeButtons: {},
+	};
 }
 
 export function mergeCaptures(captures: Captured[]): Captured {
@@ -82,6 +113,12 @@ export function mergeCaptures(captures: Captured[]): Captured {
 		unmarked: Object.assign(
 			{},
 			...captures.map(({ unmarked }) => unmarked),
+		),
+		boxes: Object.assign({}, ...captures.map(({ boxes }) => boxes)),
+		measured: captures.flatMap(({ measured }) => measured),
+		compositeButtons: Object.assign(
+			{},
+			...captures.map(({ compositeButtons }) => compositeButtons),
 		),
 	};
 }

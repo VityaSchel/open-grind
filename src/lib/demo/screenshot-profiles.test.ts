@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const flags = vi.hoisted(() => ({ screenshots: true }));
 
@@ -18,6 +18,7 @@ import {
 	clearProfileCaches,
 	getProfile,
 } from "$lib/api/users/profiles";
+import { loadDemo } from "$lib/demo";
 import { profileSchema } from "$lib/model/users/profiles";
 import { demoRoute } from "./route";
 import { type ScreenshotScene, screenshotScene } from "./screenshot-scene";
@@ -70,6 +71,8 @@ async function blockedByUs(profileId: number): Promise<boolean> {
 	}
 	return error.blockedByUs;
 }
+
+beforeAll(loadDemo);
 
 afterEach(() => {
 	Object.assign(screenshotScene, structuredClone(initialScene));

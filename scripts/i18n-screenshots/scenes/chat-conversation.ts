@@ -90,6 +90,7 @@ export const touchMessageMenu: Scene = {
 	views: [
 		{
 			id: "chat/conversation/incoming-menu",
+			screen: "chat/conversation/quotes",
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
 				const bubble = lastOutgoing(page).locator(
@@ -117,6 +118,7 @@ export const pointerMessageMenu: Scene = {
 	views: [
 		{
 			id: "chat/conversation/react-menu",
+			screen: "chat/conversation/actions-button",
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
 				await openMessageMenu(lastIncoming(page));
@@ -150,6 +152,7 @@ export const copiedMessage: Scene = {
 	views: [
 		{
 			id: "chat/conversation/copied",
+			screen: "chat/conversation/quotes",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
@@ -176,6 +179,7 @@ export const messageFailures: Scene = {
 	views: [
 		{
 			id: "chat/conversation/message-failures",
+			screen: "chat/conversation/actions-button",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
@@ -211,6 +215,7 @@ export const expiringMediaFailures: Scene = {
 	views: [
 		{
 			id: "chat/conversation/media-load-failures",
+			screen: "chat/conversation/kinds#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: KINDS_ID });
@@ -231,6 +236,7 @@ export const expiringMediaOpenFailures: Scene = {
 	views: [
 		{
 			id: "chat/conversation/media-open-failures",
+			screen: "chat/conversation/kinds#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await failChunks({ page, containing: LIGHTBOX_BANNER });
@@ -283,6 +289,7 @@ export const conversationRefreshFailures: Scene = {
 	views: [
 		{
 			id: "chat/conversation/refresh-failures",
+			screen: "chat/conversation/actions-button",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await addingToast({
@@ -359,6 +366,7 @@ export const markReadFailure: Scene = {
 	views: [
 		{
 			id: "chat/conversation/mark-read-failed",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openInbox(page);
@@ -383,6 +391,7 @@ export const syncFailure: Scene = {
 	views: [
 		{
 			id: "chat/conversation/sync-failed",
+			screen: "chat/conversation/quotes",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });

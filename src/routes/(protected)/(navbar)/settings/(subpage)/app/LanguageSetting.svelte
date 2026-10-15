@@ -2,10 +2,10 @@
 	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
 	import * as Item from "$lib/components/ui/item";
-	import { getCatalogLocale, t } from "$lib/i18n";
-	import { languageName } from "$lib/i18n/language-names";
+	import { t } from "$lib/i18n";
+	import { getListedLanguage } from "$lib/i18n/listed-languages";
 
-	const current = $derived(languageName(getCatalogLocale()));
+	const current = $derived(getListedLanguage());
 </script>
 
 <Item.Root variant="outline" class="flex-nowrap">

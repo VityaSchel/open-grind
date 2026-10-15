@@ -112,6 +112,8 @@ export type ScreenshotHooks = {
 		key: PlainMessageKey;
 	}) => void;
 	scan: () => ViewScan;
+	recordSourceLayout: () => void;
+	matchSourceLayout: () => boolean;
 };
 
 declare global {

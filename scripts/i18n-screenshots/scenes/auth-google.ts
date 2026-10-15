@@ -91,6 +91,7 @@ export const googleContinue: Scene = {
 		},
 		{
 			id: "auth/google/continue/unavailable",
+			screen: "auth/google/install",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await changeScene({
@@ -132,6 +133,7 @@ export const googlePaste: Scene = {
 		},
 		{
 			id: "auth/google/paste/companion-refusals",
+			screen: "auth/google/paste",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				for (const message of [
@@ -219,11 +221,13 @@ export const googleHandoff: Scene = {
 	views: [
 		{
 			id: "auth/google-handoff/switch-account",
+			screen: "browse/location",
 			drive: (page) =>
 				finishOnboarding({ page, lands: page.locator(ALERT) }),
 		},
 		{
 			id: "auth/google-handoff/expired",
+			screen: "browse/location",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await page
@@ -269,6 +273,7 @@ export const googleInstallStages: Scene = {
 	views: [
 		{
 			id: "auth/google/install/downloading",
+			screen: "auth/google/install",
 			drive: async (page) => {
 				showsLoading(page);
 				await finishOnboarding({
@@ -302,6 +307,7 @@ export const googleInstallStages: Scene = {
 		},
 		{
 			id: "auth/google/install/verifying",
+			screen: "auth/google/install",
 			drive: (page) =>
 				showCompanionProgress({
 					page,
@@ -312,6 +318,7 @@ export const googleInstallStages: Scene = {
 		},
 		{
 			id: "auth/google/install/installing",
+			screen: "auth/google/install",
 			drive: async (page) => {
 				await overrideNative({
 					page,

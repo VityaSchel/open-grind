@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 
-import { demoRoute } from "$lib/demo";
 import { demoMeProfileId } from "$lib/demo/config";
+import { demoRoute } from "$lib/demo/route";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { FilterPosition } from "$lib/model/browse/grid/filters";
 import { searchProfileSchema } from "$lib/model/browse/grid/search";

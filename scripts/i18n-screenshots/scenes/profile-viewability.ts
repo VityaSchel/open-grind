@@ -47,6 +47,7 @@ export const blockedByUs: Scene = {
 		},
 		{
 			id: "profile/unblock-failed",
+			screen: "profile/blocked-by-us",
 			survivesLocaleSwitch: false,
 			drive: (page) =>
 				retryFailing({
@@ -90,6 +91,7 @@ export const hiddenProfile: Scene = {
 		},
 		{
 			id: "profile/unhide-failed",
+			screen: "profile/hidden",
 			survivesLocaleSwitch: false,
 			drive: (page) =>
 				retryFailing({
@@ -115,6 +117,7 @@ export const viewabilityFailures: Scene = {
 	views: [
 		{
 			id: "profile/hide-block-failed",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openProfile({ page, profileId: FAVORITE_ID });

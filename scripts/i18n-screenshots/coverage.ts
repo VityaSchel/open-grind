@@ -1,6 +1,11 @@
 import { join } from "node:path";
 
 import { PLURAL_KEY } from "../../src/lib/i18n/syntax";
+import {
+	type CompositeButton,
+	compositeButtons,
+	englishMeasured,
+} from "./labels";
 import type { Captured } from "./manifest";
 
 const SOURCE_DIR = Bun.fileURLToPath(
@@ -25,6 +30,8 @@ export type Coverage = {
 	missing: string[];
 	unmarked: Record<string, string[]>;
 	staleUncapturable: string[];
+	englishMeasured: string[];
+	compositeButtons: CompositeButton[];
 };
 
 function flatten({
@@ -126,6 +133,8 @@ export async function writeCoverage({
 		staleUncapturable: patterns.filter(
 			(pattern) => !keys.some((key) => matches({ key, pattern })),
 		),
+		englishMeasured: englishMeasured(captured),
+		compositeButtons: compositeButtons(captured),
 	};
 	await Bun.write(
 		join(outDir, "coverage.json"),

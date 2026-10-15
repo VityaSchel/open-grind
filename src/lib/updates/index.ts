@@ -2,8 +2,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
-import { demoEnabled, screenshotsEnabled } from "$lib/demo";
-import { screenshotScene } from "$lib/demo/screenshot-scene";
+import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
 	type Capability,
@@ -69,7 +68,7 @@ export { COMPONENT_PACKAGE, GOOGLE_OAUTH_COMPONENT } from "./components";
 export { APP_COMPONENT, type ComponentKey };
 
 export function updatesAvailableHere(): boolean {
-	if (screenshotsEnabled && screenshotScene.updates) return isTauri();
+	if (screenshotsEnabled && demo().screenshotScene.updates) return isTauri();
 	return isTauri() && !demoEnabled;
 }
 

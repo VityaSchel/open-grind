@@ -4,18 +4,19 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import * as Item from "$lib/components/ui/item";
-	import { getCatalogLocale, locales, t } from "$lib/i18n";
-	import { languageNamesOf } from "$lib/i18n/language-names";
+	import { t } from "$lib/i18n";
+	import {
+		getListedLanguage,
+		listedLanguages,
+	} from "$lib/i18n/listed-languages";
 	import { pickerTag } from "$lib/i18n/matcher";
 	import { chooseLanguage } from "$lib/platform/app-language";
 	import { cn } from "$lib/util/utils";
 
-	const languages = languageNamesOf(locales);
-
 	let pending = $state<string | null>(null);
 	let latestChoice = 0;
 	let list = $state<HTMLElement | null>(null);
-	const checked = $derived(pending ?? getCatalogLocale());
+	const checked = $derived(pending ?? getListedLanguage().catalog);
 
 	afterNavigate(({ type }) => {
 		if (type === "popstate") return;
@@ -51,7 +52,7 @@
 	bind:ref={list}
 	bind:value={() => checked, choose}
 >
-	{#each languages as { catalog, english, own } (catalog)}
+	{#each listedLanguages as { catalog, english, own } (catalog)}
 		<ToggleGroup.Item
 			value={catalog}
 			data-slot="language-option"

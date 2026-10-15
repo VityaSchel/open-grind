@@ -89,6 +89,7 @@ export const newAlbum: Scene = {
 		},
 		{
 			id: "settings/albums/new/failures",
+			screen: "settings/albums/new",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const add = page.getByRole("button", {
@@ -128,6 +129,7 @@ export const emptyAlbum: Scene = {
 		},
 		{
 			id: "settings/albums/album/previous-uploads-empty",
+			screen: "settings/albums/album/empty",
 			drive: async (page) => {
 				await changeScene({ page, scene: { emptyLists: ["drawer"] } });
 				await openPreviousUploads(page);
@@ -164,6 +166,7 @@ export const albumSlots: Scene = {
 		},
 		{
 			id: "settings/albums/album/add-to-album",
+			screen: "settings/albums/album/slots-removed",
 			drive: async (page) => {
 				await openPreviousUploads(page);
 				await sheetTiles(page).first().click();
@@ -174,6 +177,7 @@ export const albumSlots: Scene = {
 		},
 		{
 			id: "settings/albums/album/save-results",
+			screen: "settings/albums/album/slots-removed",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await closeSheet(page);
@@ -203,6 +207,7 @@ export const albumDeletion: Scene = {
 	views: [
 		{
 			id: "settings/albums/album/menu",
+			screen: "settings/albums/album",
 			drive: async (page) => {
 				await openAlbum({ page, albumId: MY_ALBUM_ID });
 				await albumMenu(page).click();
@@ -213,6 +218,7 @@ export const albumDeletion: Scene = {
 		},
 		{
 			id: "settings/albums/album/delete-confirm",
+			screen: "settings/albums/album",
 			drive: async (page) => {
 				await page
 					.getByRole("menuitem", { name: "Delete album" })
@@ -222,6 +228,7 @@ export const albumDeletion: Scene = {
 		},
 		{
 			id: "settings/albums/album/delete-results",
+			screen: "settings/albums",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const confirm = () =>
@@ -258,6 +265,7 @@ export const emptySharedWith: Scene = {
 	views: [
 		{
 			id: "settings/albums/album/shared-with-empty",
+			screen: "settings/albums/album",
 			drive: async (page) => {
 				await openSharedWith({ page, albumId: MY_ALBUM_ID });
 				await page.getByText("Not shared yet").waitFor();
@@ -271,6 +279,7 @@ export const sharedWith: Scene = {
 	views: [
 		{
 			id: "settings/albums/album/shared-with",
+			screen: "settings/albums/album",
 			drive: async (page) => {
 				await openSharedWith({ page, albumId: SHARED_ALBUM_ID });
 				await page.getByRole("checkbox").first().waitFor();

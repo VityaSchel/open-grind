@@ -3,50 +3,17 @@ import { expect, type Page, test } from "@playwright/test";
 import type * as Scan from "../src/lib/demo/screenshot-scan";
 import type * as Markers from "../src/lib/i18n/markers";
 import {
-	animationsFinished,
-	FIRST_ROUTE_COMPILE_MS,
-	installTauriShim,
-} from "./support/app";
-import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
+	MARKERS_MODULE,
+	openAppSettings,
+	openInbox,
+	openInboxDrawer,
+	scan,
+	switchToMarkers,
+} from "./support/scan";
 
-const I18N_MODULE = "/src/lib/i18n/index.ts";
-const MARKERS_MODULE = "/src/lib/i18n/markers.ts";
-const SCAN_MODULE = "/src/lib/demo/screenshot-scan.ts";
-const MARKER_LOCALE = "en-XM";
-const FIXED_TIME = new Date("2026-07-21T13:12:00Z");
 const FRACTIONAL_SCALE = 1.5;
-const INBOX_ROW = 'main a[href^="/chat/"]';
-const DRAWER_PILL =
-	"[data-fixed-header] button:not([aria-label], [aria-pressed])";
 
 test.describe.configure({ timeout: 180_000 });
-
-async function openDemo(page: Page, { path }: { path: string }) {
-	await page.clock.setFixedTime(FIXED_TIME);
-	for (const host of [AVATAR_HOST, CHAT_MEDIA_HOST]) {
-		await serveImages(page, host);
-	}
-	await installTauriShim(page, { platform: "android" });
-	await page.goto(path);
-}
-
-async function switchToMarkers(page: Page): Promise<void> {
-	await page.evaluate(
-		async ({ module, locale }) => {
-			const { setLocale } = await import(module);
-			await setLocale({ locale });
-		},
-		{ module: I18N_MODULE, locale: MARKER_LOCALE },
-	);
-	await expect(page.locator("html")).toHaveAttribute("lang", MARKER_LOCALE);
-}
-
-function scan(page: Page): Promise<Scan.ViewScan> {
-	return page.evaluate(async (module) => {
-		const { scanView }: typeof Scan = await import(module);
-		return scanView();
-	}, SCAN_MODULE);
-}
 
 function shownKey(result: Scan.ViewScan, key: string) {
 	const shown = result.keys.find((candidate) => candidate.key === key);
@@ -106,11 +73,7 @@ async function mountFixture(page: Page): Promise<void> {
 }
 
 test("the scan names the keys a settings page shows", async ({ page }) => {
-	await openDemo(page, { path: "/settings/app" });
-	await page
-		.locator("main h2")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await openAppSettings(page);
 	await switchToMarkers(page);
 
 	const result = await scan(page);
@@ -124,11 +87,7 @@ test("the scan names the keys a settings page shows", async ({ page }) => {
 });
 
 test("the scan decodes, places and filters marked text", async ({ page }) => {
-	await openDemo(page, { path: "/settings/app" });
-	await page
-		.locator("main h2")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await openAppSettings(page);
 	await switchToMarkers(page);
 	await mountFixture(page);
 
@@ -214,11 +173,7 @@ test("the scan decodes, places and filters marked text", async ({ page }) => {
 test("the scan measures animated text where the screenshot shows it", async ({
 	page,
 }) => {
-	await openDemo(page, { path: "/settings/app" });
-	await page
-		.locator("main h2")
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await openAppSettings(page);
 	await page.evaluate(async (module) => {
 		const { markMessage }: typeof Markers = await import(module);
 		const fixture = document.createElement("div");
@@ -271,11 +226,7 @@ test.describe("at a fractional device scale factor", () => {
 	test("the scan reports boxes in image pixels and leaves no style behind", async ({
 		page,
 	}) => {
-		await openDemo(page, { path: "/settings/app" });
-		await page
-			.locator("main h2")
-			.first()
-			.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await openAppSettings(page);
 		await mountFixture(page);
 		expect(await page.evaluate(() => devicePixelRatio)).toBe(
 			FRACTIONAL_SCALE,
@@ -312,20 +263,13 @@ test.describe("at a fractional device scale factor", () => {
 	});
 });
 
-test("the scan puts an open drawer in the top layer and hides the page behind its scrim", async ({
+test("the scan puts an open drawer in the top layer as a sheet and hides the page behind its scrim", async ({
 	page,
 }) => {
-	await openDemo(page, { path: "/chat" });
-	await page
-		.locator(INBOX_ROW)
-		.first()
-		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await openInbox(page);
 	await switchToMarkers(page);
 	const inbox = await scan(page);
-	await page.locator(DRAWER_PILL).first().click();
-	const drawer = page.getByRole("dialog");
-	await drawer.waitFor();
-	await animationsFinished(drawer, { subtree: true });
+	const drawer = await openInboxDrawer(page);
 
 	const drawerKeys = await drawer.evaluate(async (element, module) => {
 		const { decodeMarkers }: typeof Markers = await import(module);
@@ -340,4 +284,7 @@ test("the scan puts an open drawer in the top layer and hides the page behind it
 		expect(shownKey(result, key), key).toEqual({ via: "text", top: true });
 	}
 	expect(result.keys.filter(({ top }) => !top)).toEqual([]);
+	expect(new Set(result.keys.map(({ overlay }) => overlay))).toEqual(
+		new Set(["sheet"]),
+	);
 });

@@ -14,8 +14,7 @@ import {
 	requestBlockedAlertState,
 	type RequestBlockKind,
 } from "$lib/api/request-blocked-state.svelte";
-import { demoCallMethod, demoEnabled, screenshotsEnabled } from "$lib/demo";
-import { neverSettles, sceneMethodOutcome } from "$lib/demo/screenshot-scene";
+import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
 import {
 	type MessageKey,
 	type PlainMessageKey,
@@ -214,6 +213,7 @@ export const methods = {
 } satisfies Record<string, { request: z.ZodType; response: z.ZodType }>;
 
 function demoMethodAnswer(method: string): unknown {
+	const { demoCallMethod, neverSettles, sceneMethodOutcome } = demo();
 	const scripted = screenshotsEnabled
 		? sceneMethodOutcome(method)
 		: undefined;

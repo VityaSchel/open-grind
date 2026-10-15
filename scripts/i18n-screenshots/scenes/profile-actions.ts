@@ -76,6 +76,7 @@ function favoriteToggleFailure({
 }): SceneView {
 	return {
 		id: `profile/favorite-${id}-failed`,
+		screen: "profile",
 		survivesLocaleSwitch: false,
 		drive: async (page) => {
 			await openProfile({ page, profileId });
@@ -120,9 +121,10 @@ export const favoriteFailures: Scene = {
 export const favoriteNote: Scene = {
 	platform: "phone",
 	views: [
-		{ id: "profile/note", drive: openNote },
+		{ id: "profile/note", screen: "profile", drive: openNote },
 		{
 			id: "profile/note/saved",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await noteField(page).fill(NOTE_TEXT);
@@ -131,6 +133,7 @@ export const favoriteNote: Scene = {
 		},
 		{
 			id: "profile/note/deleted",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await page.getByRole("button", { name: NOTE_TEXT }).click();
@@ -147,6 +150,7 @@ export const favoriteNoteFailure: Scene = {
 	views: [
 		{
 			id: "profile/note/save-failed",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openNote(page);
@@ -162,6 +166,7 @@ export const reportFlow: Scene = {
 	views: [
 		{
 			id: "profile/report/details",
+			screen: "profile",
 			scroller: `${DIALOG} [data-slot="drawer-body"]`,
 			drive: async (page) => {
 				await openReport(page);
@@ -179,6 +184,7 @@ export const reportFlow: Scene = {
 		},
 		{
 			id: "profile/report/submitted",
+			screen: "profile",
 			drive: async (page) => {
 				await submitReport(page);
 				await page.locator('[data-slot="report-submitted"]').waitFor();
@@ -193,6 +199,7 @@ export const reportFailure: Scene = {
 	views: [
 		{
 			id: "profile/report/failed",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openReport(page);
@@ -212,6 +219,7 @@ export const reportMessages: Scene = {
 	views: [
 		{
 			id: "chat/conversation/report",
+			screen: "chat/conversation/actions-button",
 			drive: async (page) => {
 				await openConversation({ page, withId: QUOTES_ID });
 				await chooseFromMessageMenu({
@@ -229,6 +237,7 @@ export const copyProfileId: Scene = {
 	views: [
 		{
 			id: "profile/id-copied",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openProfile({ page, profileId: FAVORITE_ID });
@@ -237,6 +246,7 @@ export const copyProfileId: Scene = {
 		},
 		{
 			id: "profile/copy-id-failed",
+			screen: "profile",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openProfile({ page, profileId: FAVORITE_ID });

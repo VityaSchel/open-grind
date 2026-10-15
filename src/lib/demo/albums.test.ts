@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { demoRoute } from "$lib/demo";
+import { demoRoute } from "$lib/demo/route";
 import {
 	albumContentProcessingResponseSchema,
 	albumNameResponseSchema,

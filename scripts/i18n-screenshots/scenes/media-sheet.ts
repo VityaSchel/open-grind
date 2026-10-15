@@ -52,6 +52,7 @@ export const drawerTileMenus: Scene = {
 	views: [
 		{
 			id: "chat/attachments/video-tile",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await openAttachments(page);
 				await chooseGeneratedMedia({
@@ -69,19 +70,30 @@ export const drawerTileMenus: Scene = {
 		},
 		{
 			id: "chat/attachments/video-menu",
+			screen: "chat/conversation",
 			drive: (page) => openTileMenu(videoTile(page)),
 		},
-		{ id: "chat/attachments/delete-video", drive: deletePermanently },
+		{
+			id: "chat/attachments/delete-video",
+			screen: "chat/conversation",
+			drive: deletePermanently,
+		},
 		{
 			id: "chat/attachments/photo-menu",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await cancelDelete(page);
 				await openTileMenu(photoTile(page));
 			},
 		},
-		{ id: "chat/attachments/delete-photo", drive: deletePermanently },
+		{
+			id: "chat/attachments/delete-photo",
+			screen: "chat/conversation",
+			drive: deletePermanently,
+		},
 		{
 			id: "chat/attachments/delete-failures",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await changeScene({

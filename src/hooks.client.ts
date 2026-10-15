@@ -1,11 +1,12 @@
 import type { ClientInit, HandleClientError } from "@sveltejs/kit";
 
-import { screenshotsEnabled } from "$lib/demo/config";
+import { demoEnabled, loadDemo, screenshotsEnabled } from "$lib/demo";
 import { startLanguage } from "$lib/platform/app-language";
 import { startRegionalSettings } from "$lib/platform/regional-settings";
 import { ws } from "$lib/ws.svelte";
 
 export const init: ClientInit = async () => {
+	if (demoEnabled) await loadDemo();
 	if (screenshotsEnabled) {
 		const { installScreenshotHooks } =
 			await import("$lib/demo/screenshot-hooks");

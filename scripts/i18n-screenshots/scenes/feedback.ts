@@ -62,11 +62,13 @@ function blockedGrid({
 	platform,
 	id,
 	answer,
+	screen,
 }: {
 	kind: string;
 	platform: Scene["platform"];
 	id: string;
 	answer: "Rotate device parameters" | "Close";
+	screen?: string;
 }): Scene {
 	return {
 		platform,
@@ -74,6 +76,7 @@ function blockedGrid({
 		views: [
 			{
 				id,
+				screen: screen ?? `${id}/grid`,
 				drive: async (page) => {
 					await chooseNeutralLocation(page);
 					await page.locator(ALERT).waitFor();
@@ -81,6 +84,7 @@ function blockedGrid({
 			},
 			{
 				id: `${id}/grid`,
+				screen,
 				survivesLocaleSwitch: answer === "Close",
 				drive: async (page) => {
 					await page
@@ -101,6 +105,7 @@ export const requestBlocked = blockedGrid({
 	platform: "phone",
 	id: "feedback/request-blocked",
 	answer: "Rotate device parameters",
+	screen: "feedback/api-error/http",
 });
 
 export const networkBlocked = blockedGrid({
@@ -115,6 +120,7 @@ export const copyError: Scene = {
 	views: [
 		{
 			id: "feedback/error-toast",
+			screen: "settings/me",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({
@@ -125,14 +131,20 @@ export const copyError: Scene = {
 				await showFailureToast(page);
 			},
 		},
-		{ id: "feedback/copy-error", drive: confirmCopyError },
+		{
+			id: "feedback/copy-error",
+			screen: "settings/me",
+			drive: confirmCopyError,
+		},
 		{
 			id: "feedback/copy-error/copied",
+			screen: "settings/me",
 			survivesLocaleSwitch: false,
 			drive: copyConfirmed,
 		},
 		{
 			id: "feedback/copy-error/failed",
+			screen: "settings/me",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await failClipboard(page);
@@ -237,6 +249,7 @@ export const bypassWithoutLocation: Scene = {
 	views: [
 		{
 			id: "feedback/bypass",
+			screen: "chat/conversation",
 			drive: async (page) => {
 				await visit({
 					page,
@@ -248,6 +261,7 @@ export const bypassWithoutLocation: Scene = {
 		},
 		{
 			id: "feedback/bypass/needs-location",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await page.getByRole("button", { name: "Bypass" }).click();
@@ -263,6 +277,7 @@ export const bypassFailure: Scene = {
 	views: [
 		{
 			id: "feedback/bypass/failed",
+			screen: "chat/conversation",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await chooseNeutralLocation(page);
@@ -301,6 +316,7 @@ export const autoLocation: Scene = {
 	views: [
 		{
 			id: "feedback/auto-location",
+			screen: "browse/grid",
 			drive: async (page) => {
 				await visit({
 					page,

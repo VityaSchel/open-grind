@@ -3,6 +3,7 @@
 		hydratePreferences,
 		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
+	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
 	import DataRefreshControl from "$lib/components/feedback/DataRefreshControl.svelte";
 	import ScrollToTopButton from "$lib/components/shared/ScrollToTopButton.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
@@ -12,7 +13,7 @@
 	import LocationChooser from "./LocationEmpty.svelte";
 	import TopBar from "./top-bar/TopBar.svelte";
 
-	const preferencesHydrated = hydratePreferences();
+	let preferencesHydrated = $state(hydratePreferences());
 	const geohash = $derived(preferencesSnapshot().geohash);
 
 	let gridContainer: HTMLElement | null = $state(null);
@@ -78,4 +79,12 @@
 			/>
 		</main>
 	{/if}
+{:catch error}
+	<main class="m-auto flex max-w-full flex-1">
+		<ApiErrorDisplay
+			{error}
+			onRetry={() => (preferencesHydrated = hydratePreferences())}
+			class="m-auto"
+		/>
+	</main>
 {/await}

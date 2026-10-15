@@ -45,24 +45,19 @@ const addingFull: RestFault = {
 
 const addingFails = failing({ method: "POST", path: ADD_FROM_DRAWER });
 
-function uploadToasts({
-	id,
-	albumId,
-	status,
-}: {
-	id: string;
-	albumId: number;
-	status: number;
-}): Scene {
+function uploadToasts({ id, status }: { id: string; status: number }): Scene {
 	return {
 		platform: "phone",
-		demo: { restFaults: [uploadsAnswered({ albumId, status })] },
+		demo: {
+			restFaults: [uploadsAnswered({ albumId: PHOTO_ALBUM_ID, status })],
+		},
 		views: [
 			{
 				id,
+				screen: "settings/albums/album",
 				survivesLocaleSwitch: false,
 				drive: async (page) => {
-					await openAlbum({ page, albumId });
+					await openAlbum({ page, albumId: PHOTO_ALBUM_ID });
 					await uploadToAlbum({ page, photos: 1, videos: 1 });
 					await toastsShown({ page, count: 2 });
 				},
@@ -76,6 +71,7 @@ export const albumUploadLimits: Scene = {
 	views: [
 		{
 			id: "settings/albums/album/upload-limits",
+			screen: "settings/albums/album",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAlbum({ page, albumId: PHOTO_ALBUM_ID });
@@ -92,19 +88,16 @@ export const albumUploadLimits: Scene = {
 
 export const albumUploadsFull = uploadToasts({
 	id: "settings/albums/album/uploads-full",
-	albumId: PHOTO_ALBUM_ID,
 	status: PLAN_LIMIT,
 });
 
 export const albumUploadsRefused = uploadToasts({
 	id: "settings/albums/album/uploads-refused",
-	albumId: PHOTO_ALBUM_ID,
 	status: REFUSED,
 });
 
 export const albumUploadsTooLarge = uploadToasts({
 	id: "settings/albums/album/uploads-too-large",
-	albumId: PHOTO_ALBUM_ID,
 	status: TOO_LARGE,
 });
 
@@ -140,6 +133,7 @@ export const albumAddResults: Scene = {
 	views: [
 		{
 			id: "settings/albums/album/add-results",
+			screen: "settings/albums/album",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				const submit = () =>

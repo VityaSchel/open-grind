@@ -11,11 +11,18 @@ import {
 	isScreenOf,
 	type Manifest,
 	mergeCaptures,
+	RAW_DIR,
 	requireViewId,
 } from "./manifest";
 import { type Scene, scenes } from "./scenes";
+import { screenProblems, STANDALONE, unkeptScreens } from "./scenes/overlays";
+import {
+	dropScreens,
+	removeRawCaptures,
+	writeHighlightedCopies,
+} from "./screens";
 import { BUILD_DIR, serveBuild, SERVER_PORT, waitUntilServing } from "./serve";
-import { captureScene, dropScreens, elapsedSince } from "./views";
+import { captureScene, elapsedSince } from "./views";
 
 const REPO_ROOT = Bun.fileURLToPath(new URL("../..", import.meta.url));
 const OUT_DIR = join(REPO_ROOT, "i18n-screenshots");
@@ -25,7 +32,7 @@ const BUILD_ENV = {
 	PUBLIC_BACKDROP_BLUR: "max",
 };
 const TEST_ONLY_ENV = ["PUBLIC_TEST_INSETS"];
-const OUTPUTS = ["images", "manifest.json", "coverage.json"];
+const OUTPUTS = ["images", "manifest.json", "coverage.json", RAW_DIR];
 const STEADY_VIEW = "settings/app";
 
 async function buildScreenshotBundle(): Promise<void> {
@@ -140,12 +147,32 @@ async function requireSteadyPixels({
 	}
 }
 
+async function failUnkeptScreens({
+	captured,
+	outDir,
+}: {
+	captured: Captured;
+	outDir: string;
+}): Promise<void> {
+	for (const { id, screen } of unkeptScreens(captured.views)) {
+		console.error(
+			`${id}: failed: names ${screen}, which this run did not keep`,
+		);
+		await dropScreens({ captured, outDir, id });
+		captured.failed.push(id);
+	}
+}
+
 function selectScenes(ids: string[] | undefined): Scene[] {
 	const seen = new Set<string>();
 	for (const { id } of scenes.flatMap(({ views }) => views)) {
 		requireViewId(id);
 		if (seen.has(id)) throw new Error(`Duplicate view id ${id}`);
 		seen.add(id);
+	}
+	const problems = screenProblems({ scenes, standalone: STANDALONE });
+	if (problems.length > 0) {
+		throw new Error(`Wrong screens: ${problems.join("; ")}`);
 	}
 	if (!ids) return scenes;
 	const unknown = ids.filter((id) => !seen.has(id));
@@ -179,6 +206,7 @@ async function captureWithBrowser({
 			outDir,
 		});
 		await requireSteadyPixels({ browser, origin, outDir, captured });
+		await failUnkeptScreens({ captured, outDir });
 		return captured;
 	} finally {
 		await browser.close();
@@ -219,7 +247,18 @@ const captured = await captureWithBrowser({
 	selected,
 	origin: server.origin,
 	outDir,
-}).finally(server.stop);
+})
+	.catch(async (error: unknown) => {
+		await removeRawCaptures(outDir);
+		throw error;
+	})
+	.finally(server.stop);
+const captureMs = elapsedSince(captureStartedAt);
+const highlightStartedAt = performance.now();
+const copies = await writeHighlightedCopies({ captured, outDir });
+console.log(
+	`${copies.count} highlighted copies in ${elapsedSince(highlightStartedAt)} ms, ${copies.bytes} bytes`,
+);
 const commit = (await Bun.$`git rev-parse HEAD`.cwd(REPO_ROOT).text()).trim();
 const manifest: Manifest = {
 	commit,
@@ -231,7 +270,7 @@ await Bun.write(
 	`${JSON.stringify(manifest, null, "\t")}\n`,
 );
 console.log(
-	`${Object.keys(manifest.views).length} views in ${elapsedSince(captureStartedAt)} ms, ${manifest.failed.length} failed, written to ${outDir}`,
+	`${Object.keys(manifest.views).length} views in ${captureMs} ms, ${manifest.failed.length} failed, written to ${outDir}`,
 );
 try {
 	const { shown, keys } = await writeCoverage({ outDir, commit, captured });

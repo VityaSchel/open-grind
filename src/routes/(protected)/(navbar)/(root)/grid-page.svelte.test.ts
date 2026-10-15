@@ -1,7 +1,8 @@
-import { cleanup, render } from "@testing-library/svelte";
+import { cleanup, render, screen } from "@testing-library/svelte";
 import { flushSync, tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { t } from "$lib/i18n";
 import type { GridProfile } from "$lib/grid/grid";
 import GridPage from "./+page.svelte";
 import { revealedGridScrollTop } from "./grid-reveal";
@@ -47,6 +48,7 @@ class FakeGridState {
 }
 
 let fakeGrid = new FakeGridState();
+let hydratePreferences = vi.fn(() => Promise.resolve());
 
 vi.mock("$lib/grid/grid-state.svelte", () => ({
 	get gridState() {
@@ -54,7 +56,7 @@ vi.mock("$lib/grid/grid-state.svelte", () => ({
 	},
 }));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
-	hydratePreferences: () => Promise.resolve(),
+	hydratePreferences: () => hydratePreferences(),
 	preferencesSnapshot: () => ({ geohash: "u33dbc" }),
 }));
 vi.mock("./top-bar/TopBar.svelte", () => ({ default: () => {} }));
@@ -110,6 +112,7 @@ describe("the grid page", () => {
 		cleanup();
 		vi.restoreAllMocks();
 		fakeGrid = new FakeGridState();
+		hydratePreferences = vi.fn(() => Promise.resolve());
 	});
 
 	it("reveals the profile handed back to the grid, by its index in the shared order", async () => {
@@ -154,5 +157,32 @@ describe("the grid page", () => {
 		cleanup();
 
 		expect(fakeGrid.startOverListeners.size).toBe(0);
+	});
+
+	it("offers a retry instead of a blank page when saved preferences cannot be read", async () => {
+		hydratePreferences = vi.fn(() =>
+			Promise.reject(new Error("preferences.data is corrupt")),
+		);
+		render(GridPage);
+
+		const retry = await screen.findByRole("button", {
+			name: t("common.actions.retry"),
+		});
+
+		expect(screen.getByText(t("feedback.appError.unknown"))).toBeDefined();
+		expect(document.querySelector('[data-slot="grid-cells"]')).toBeNull();
+
+		hydratePreferences = vi.fn(() => Promise.resolve());
+		retry.click();
+
+		await vi.waitFor(() => {
+			expect(
+				document.querySelector('[data-slot="grid-cells"]'),
+			).not.toBeNull();
+		});
+		expect(hydratePreferences).toHaveBeenCalledOnce();
+		expect(
+			screen.queryByRole("button", { name: t("common.actions.retry") }),
+		).toBeNull();
 	});
 });

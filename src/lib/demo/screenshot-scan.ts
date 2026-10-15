@@ -1,4 +1,19 @@
 import { decodeMarkers, MarkerReader, type MarkerSpan } from "../i18n/markers";
+import {
+	buttonHolding,
+	buttonNamedBy,
+	clipsText,
+	countLines,
+	type LabelSource,
+	type OverlayKind,
+	overlayOf,
+} from "./screenshot-labels";
+import {
+	laidOutAsSource,
+	UNREAD_TEXT_PARENTS,
+	withAnimationsAsScreenshotted,
+	withStyleSheet,
+} from "./screenshot-layout";
 
 export type KeyBox = { x: number; y: number; width: number; height: number };
 
@@ -9,6 +24,10 @@ export type ShownKey = {
 	box: KeyBox;
 	via: KeySource;
 	top: boolean;
+	button?: true;
+	overlay?: OverlayKind;
+	wraps?: true;
+	clipped?: true;
 };
 
 export type ScannedKey = ShownKey & { boxes: KeyBox[] };
@@ -17,18 +36,9 @@ export type ViewScan = {
 	keys: ScannedKey[];
 	unmarked: string[];
 	emoji: string[];
+	measured: boolean;
+	compositeButtons: string[][];
 };
-
-export const OVERLAY_SELECTOR = [
-	"dialog[open]",
-	":popover-open",
-	'[role="dialog"]',
-	'[role="alertdialog"]',
-	'[role="menu"]',
-	'[role="listbox"]',
-	'[role="tooltip"]',
-	"[data-sonner-toast]",
-].join(", ");
 
 const LABEL_ATTRIBUTES = [
 	"aria-label",
@@ -39,6 +49,7 @@ const LABEL_ATTRIBUTES = [
 	"title",
 	"alt",
 ];
+const NAMING_ATTRIBUTES = new Set(["aria-label", "title"]);
 const TEXT_INPUT_TYPES = new Set([
 	"text",
 	"search",
@@ -48,15 +59,6 @@ const TEXT_INPUT_TYPES = new Set([
 	"button",
 	"submit",
 	"reset",
-]);
-const UNREAD_TEXT_PARENTS = new Set([
-	"script",
-	"style",
-	"noscript",
-	"template",
-	"title",
-	"textarea",
-	"option",
 ]);
 const REPLACED_ELEMENTS = new Set([
 	"img",
@@ -79,15 +81,39 @@ const VISIBILITY: CheckVisibilityOptions = {
 	visibilityProperty: true,
 	contentVisibilityAuto: true,
 };
+const COMPOSITE_KEYS = 3;
 
 type Placement = {
 	host: Element;
 	via: KeySource;
-	top: boolean;
+	overlay: OverlayKind | undefined;
+	button: Element | null;
 	untranslated: boolean;
 };
 
-type Found = Map<string, ScannedKey>;
+type Occurrence = {
+	key: string;
+	box: KeyBox;
+	boxes: KeyBox[];
+	via: KeySource;
+	overlay: OverlayKind | undefined;
+	button: boolean;
+	wraps: boolean;
+	clipped: boolean;
+};
+
+type SpanOccurrence = Omit<Occurrence, "boxes" | "button" | "wraps"> & {
+	button: Element | null;
+	textRects: KeyBox[];
+};
+
+type Scan = {
+	found: Map<string, Occurrence>;
+	held: Map<Element, Set<string>>;
+	unmarked: string[];
+	emoji: string[];
+	measured: boolean;
+};
 
 function untranslated(element: Element): boolean {
 	const mode = element.closest(TRANSLATION_MODE)?.getAttribute("translate");
@@ -226,16 +252,30 @@ function placeText(parent: Element): Placement | null {
 	return {
 		host: labelHost ?? boxed,
 		via: labelHost ? "attribute" : "text",
-		top: parent.closest(OVERLAY_SELECTOR) !== null,
+		overlay: overlayOf(parent),
+		button: buttonHolding(parent),
 		untranslated: untranslated(parent),
 	};
 }
 
-function rank({ via, top }: ShownKey): number {
-	return (top ? 2 : 0) + (via === "text" ? 1 : 0);
+function rank({ via, overlay }: Occurrence): number {
+	return (overlay === undefined ? 0 : 2) + (via === "text" ? 1 : 0);
 }
 
-function record({ found, shown }: { found: Found; shown: ScannedKey }): void {
+function record({
+	scan: { found, held },
+	shown,
+	button,
+}: {
+	scan: Scan;
+	shown: Occurrence;
+	button: Element | null;
+}): void {
+	if (button !== null) {
+		const keys = held.get(button) ?? new Set<string>();
+		keys.add(shown.key);
+		held.set(button, keys);
+	}
 	const earlier = found.get(shown.key);
 	if (earlier === undefined) {
 		found.set(shown.key, shown);
@@ -247,7 +287,10 @@ function record({ found, shown }: { found: Found; shown: ScannedKey }): void {
 		box: best.box,
 		boxes: [...earlier.boxes, ...shown.boxes],
 		via: earlier.via === "text" ? "text" : shown.via,
-		top: earlier.top || shown.top,
+		overlay: best.overlay,
+		button: earlier.button || shown.button,
+		wraps: earlier.wraps || shown.wraps,
+		clipped: earlier.clipped || shown.clipped,
 	});
 }
 
@@ -255,18 +298,80 @@ function normalized(text: string): string {
 	return text.replace(/\s+/g, " ").trim();
 }
 
-function scanText({
-	found,
-	unmarked,
-	emoji,
+function spanOccurrence({
+	earlier,
+	key,
+	box,
+	rects,
+	placement: { via, overlay, button },
+	cut,
 }: {
-	found: Found;
-	unmarked: string[];
-	emoji: string[];
+	earlier: SpanOccurrence | undefined;
+	key: string;
+	box: KeyBox;
+	rects: KeyBox[];
+	placement: Placement;
+	cut: boolean;
+}): SpanOccurrence {
+	const textRects = earlier?.textRects ?? [];
+	return {
+		key,
+		box: union(earlier?.box ?? null, box),
+		via: earlier?.via === "text" ? "text" : via,
+		overlay: earlier?.overlay ?? overlay,
+		button: earlier?.button ?? button,
+		textRects: via === "text" ? [...textRects, ...rects] : textRects,
+		clipped: earlier?.clipped === true || cut,
+	};
+}
+
+function recordSpans({
+	scan,
+	shown,
+	untranslatedRects,
+}: {
+	scan: Scan;
+	shown: Map<MarkerSpan, SpanOccurrence>;
+	untranslatedRects: Map<MarkerSpan, KeyBox[]>;
 }): void {
+	for (const [span, { textRects, button, ...occurrence }] of shown) {
+		const lines = countLines([
+			...textRects,
+			...(untranslatedRects.get(span) ?? []),
+		]);
+		record({
+			scan,
+			shown: {
+				...occurrence,
+				boxes: [occurrence.box],
+				button: button !== null,
+				wraps: scan.measured && lines > 1,
+			},
+			button,
+		});
+	}
+}
+
+function addRects({
+	into,
+	spans,
+	rects,
+}: {
+	into: Map<MarkerSpan, KeyBox[]>;
+	spans: readonly MarkerSpan[];
+	rects: KeyBox[];
+}): void {
+	for (const span of spans) {
+		into.set(span, [...(into.get(span) ?? []), ...rects]);
+	}
+}
+
+function scanText(scan: Scan): void {
+	const { unmarked, emoji, measured } = scan;
 	const reader = new MarkerReader();
 	const scopes = new Map<MarkerSpan, Element>();
-	const shown = new Map<MarkerSpan, ShownKey>();
+	const shown = new Map<MarkerSpan, SpanOccurrence>();
+	const untranslatedRects = new Map<MarkerSpan, KeyBox[]>();
 	const range = document.createRange();
 	const walker = document.createTreeWalker(
 		document.body,
@@ -282,46 +387,59 @@ function scanText({
 		for (const span of reader.spans.slice(opened)) scopes.set(span, parent);
 		const placement = placeText(parent);
 		if (placement === null) continue;
-		const { host, via, top, untranslated } = placement;
+		const { host, via, untranslated } = placement;
 		for (const { text, offset, spans } of runs) {
 			if (normalized(text) === "") continue;
 			range.setStart(node, offset);
 			range.setEnd(node, offset + text.length);
 			const rects =
 				via === "text"
-					? range.getClientRects()
+					? [...range.getClientRects()]
 					: [host.getBoundingClientRect()];
 			const box = visibleBox({ rects, element: host });
 			if (box === null) continue;
 			if (via === "text" && EMOJI.test(text)) {
 				emoji.push(normalized(text));
 			}
-			if (untranslated) continue;
+			if (untranslated) {
+				if (via === "text") {
+					addRects({ into: untranslatedRects, spans, rects });
+				}
+				continue;
+			}
 			if (spans.length === 0 && via === "text") {
 				unmarked.push(normalized(text));
 			}
+			if (spans.length === 0) continue;
+			const cut =
+				measured &&
+				via === "text" &&
+				clipsText({ element: parent, rects });
 			for (const span of spans) {
-				const earlier = shown.get(span);
-				shown.set(span, {
-					key: span.key,
-					box: union(earlier?.box ?? null, box),
-					via: earlier?.via === "text" ? "text" : via,
-					top: earlier?.top === true || top,
-				});
+				shown.set(
+					span,
+					spanOccurrence({
+						earlier: shown.get(span),
+						key: span.key,
+						box,
+						rects,
+						placement,
+						cut,
+					}),
+				);
 			}
 		}
 	}
-	for (const key of shown.values()) {
-		record({ found, shown: { ...key, boxes: [key.box] } });
-	}
+	recordSpans({ scan, shown, untranslatedRects });
 }
 
-type LabelValue = { value: string; via: KeySource };
+type LabelValue = { value: string; via: KeySource; source: LabelSource };
 
 function labelValues(element: Element): LabelValue[] {
 	const values = LABEL_ATTRIBUTES.flatMap((name): LabelValue[] => {
 		const value = element.getAttribute(name);
-		return value ? [{ value, via: "attribute" }] : [];
+		const source = NAMING_ATTRIBUTES.has(name) ? "name" : "attribute";
+		return value ? [{ value, via: "attribute", source }] : [];
 	});
 	if (
 		element instanceof HTMLTextAreaElement ||
@@ -329,33 +447,28 @@ function labelValues(element: Element): LabelValue[] {
 			TEXT_INPUT_TYPES.has(element.type))
 	) {
 		const value = element.value || element.placeholder;
-		if (value) values.push({ value, via: "text" });
+		if (value) values.push({ value, via: "text", source: "value" });
 	}
 	if (element instanceof HTMLSelectElement) {
 		for (const option of element.options) {
 			values.push({
 				value: option.text,
 				via: option.selected ? "text" : "attribute",
+				source: "option",
 			});
 		}
 	}
 	return values;
 }
 
-function scanAttributes({
-	found,
-	emoji,
-}: {
-	found: Found;
-	emoji: string[];
-}): void {
+function scanAttributes(scan: Scan): void {
 	for (const element of document.body.querySelectorAll("*")) {
 		const values = labelValues(element);
 		const shownEmoji = values.filter(
 			({ value, via }) => via === "text" && EMOJI.test(value),
 		);
-		const spans = values.flatMap(({ value, via }) =>
-			decodeMarkers(value).map(({ key }) => ({ key, via })),
+		const spans = values.flatMap(({ value, via, source }) =>
+			decodeMarkers(value).map(({ key }) => ({ key, via, source })),
 		);
 		if (spans.length === 0 && shownEmoji.length === 0) continue;
 		const host = boxedAncestor(element);
@@ -363,11 +476,25 @@ function scanAttributes({
 		const area = renderedArea(host);
 		const box = visibleBox({ rects: [area], element: host, area });
 		if (box === null) continue;
-		emoji.push(...shownEmoji.map(({ value }) => normalized(value)));
+		scan.emoji.push(...shownEmoji.map(({ value }) => normalized(value)));
 		if (untranslated(element)) continue;
-		const top = element.closest(OVERLAY_SELECTOR) !== null;
-		for (const { key, via } of spans) {
-			record({ found, shown: { key, box, boxes: [box], via, top } });
+		const overlay = overlayOf(element);
+		for (const { key, via, source } of spans) {
+			const button = buttonNamedBy({ element, source });
+			record({
+				scan,
+				shown: {
+					key,
+					box,
+					boxes: [box],
+					via,
+					overlay,
+					button: button !== null,
+					wraps: false,
+					clipped: false,
+				},
+				button,
+			});
 		}
 	}
 }
@@ -384,56 +511,59 @@ function inPixels(box: KeyBox): KeyBox {
 	};
 }
 
-function withHitTestableElements<T>(scan: () => T): T {
-	const sheet = new CSSStyleSheet();
-	sheet.replaceSync(HIT_TESTABLE);
-	document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
-	try {
-		return scan();
-	} finally {
-		document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-			(adopted) => adopted !== sheet,
-		);
-	}
+function scannedKey({
+	key,
+	box,
+	boxes,
+	via,
+	overlay,
+	button,
+	wraps,
+	clipped,
+}: Occurrence): ScannedKey {
+	return {
+		key,
+		box: inPixels(box),
+		via,
+		top: overlay !== undefined,
+		...(button ? { button } : {}),
+		...(overlay === undefined ? {} : { overlay }),
+		...(wraps ? { wraps } : {}),
+		...(clipped ? { clipped } : {}),
+		boxes: boxes.map(inPixels),
+	};
 }
 
-function withAnimationsAsScreenshotted<T>(scan: () => T): T {
-	const infinite: Animation[] = [];
-	for (const animation of document.getAnimations()) {
-		if (animation.effect === null || animation.playbackRate === 0) continue;
-		if (Number.isFinite(animation.effect.getComputedTiming().endTime)) {
-			animation.finish();
-		} else {
-			animation.cancel();
-			infinite.push(animation);
-		}
-	}
-	try {
-		return scan();
-	} finally {
-		for (const animation of infinite) animation.play();
-	}
+function compositeButtons(held: Map<Element, Set<string>>): string[][] {
+	const lists = [...held.values()]
+		.filter(({ size }) => size >= COMPOSITE_KEYS)
+		.map((keys) => [...keys].sort().join("\n"));
+	return [...new Set(lists)].sort().map((list) => list.split("\n"));
+}
+
+function scanShown(): ViewScan {
+	const scan: Scan = {
+		found: new Map(),
+		held: new Map(),
+		unmarked: [],
+		emoji: [],
+		measured: laidOutAsSource(),
+	};
+	scanText(scan);
+	scanAttributes(scan);
+	return {
+		keys: [...scan.found.values()]
+			.sort((a, b) => (a.key < b.key ? -1 : 1))
+			.map(scannedKey),
+		unmarked: [...new Set(scan.unmarked)],
+		emoji: [...new Set(scan.emoji)],
+		measured: scan.measured,
+		compositeButtons: compositeButtons(scan.held),
+	};
 }
 
 export function scanView(): ViewScan {
 	return withAnimationsAsScreenshotted(() =>
-		withHitTestableElements(() => {
-			const found: Found = new Map();
-			const unmarked: string[] = [];
-			const emoji: string[] = [];
-			scanText({ found, unmarked, emoji });
-			scanAttributes({ found, emoji });
-			return {
-				keys: [...found.values()]
-					.sort((a, b) => (a.key < b.key ? -1 : 1))
-					.map((shown) => ({
-						...shown,
-						box: inPixels(shown.box),
-						boxes: shown.boxes.map(inPixels),
-					})),
-				unmarked: [...new Set(unmarked)],
-				emoji: [...new Set(emoji)],
-			};
-		}),
+		withStyleSheet({ css: HIT_TESTABLE, read: scanShown }),
 	);
 }

@@ -1,34 +1,31 @@
 import type { BrowserContext, Locator, Page } from "@playwright/test";
-import { readdir, rm, rmdir } from "node:fs/promises";
-import { availableParallelism } from "node:os";
 import { join } from "node:path";
 
 import { installEventInjection, installTauriShim } from "../../e2e/support/app";
-import type { ScannedKey } from "../../src/lib/demo/screenshot-scan";
 import { freezeClockOnEveryLoad } from "../store-screenshots/clock";
 import { displays, type PlatformContext } from "./browser";
-import { decodeCapture, encodeView, type Pixels } from "./encode";
-import { drawHighlight } from "./highlight";
+import { decodeCapture, encodeView } from "./encode";
 import {
 	type Captured,
 	emptyCapture,
-	highlightPath,
 	imagePath,
-	isScreenOf,
+	MAX_SCREENS,
 	numberedViewId,
-	screenPath,
-	type ViewKey,
 } from "./manifest";
 import {
 	captureFrame,
 	type Frame,
 	MARKER_LOCALE,
+	matchSourceLayout,
+	recordSourceLayout,
 	SOURCE_LOCALE,
 	switchLocale,
 	viewState,
 	waitForLocale,
 } from "./scan";
 import type { Scene, SceneView } from "./scenes";
+import { requireScreen } from "./scenes/overlays";
+import { dropScreens, keepRawCapture } from "./screens";
 import { settle } from "./settle";
 import {
 	installNativeStubs,
@@ -36,14 +33,10 @@ import {
 	seedScene,
 } from "./stubs";
 
-const MAX_SCREENS = 6;
 const SCREEN_STEP = 0.85;
 const PARKED_POINTER = { x: -1, y: -1 };
-const HIGHLIGHT_CONCURRENCY = availableParallelism();
 
 type Session = { page: Page; uncaught: string[]; viewId: string };
-
-type HighlightedKey = { key: ViewKey; webp: Buffer };
 
 type ViewRun = {
 	platformContext: PlatformContext;
@@ -178,9 +171,17 @@ async function reachMarkedView({
 	await requireHooks(session.page);
 	await settle({ page: session.page });
 	if (view.survivesLocaleSwitch !== false) {
+		await recordSourceLayout(session.page);
 		const before = await viewState(session.page);
 		await switchLocale({ page: session.page, locale: MARKER_LOCALE });
-		if ((await viewState(session.page)) === before) return session;
+		if ((await viewState(session.page)) === before) {
+			if (!(await matchSourceLayout(session.page))) {
+				console.log(
+					`${view.id}: the language moved its text, so it gets no wraps or clipped`,
+				);
+			}
+			return session;
+		}
 		console.log(
 			`${view.id}: the view changed with the language, replaying it in ${MARKER_LOCALE}`,
 		);
@@ -229,52 +230,16 @@ async function requireCleanFrame({
 	}
 }
 
-async function highlightKey({
-	id,
-	pixels,
-	shown: { key, box, boxes, via, top },
-}: {
-	id: string;
-	pixels: Pixels;
-	shown: ScannedKey;
-}): Promise<HighlightedKey> {
-	const image = highlightPath({ viewId: id, key });
-	const { webp, sha256, pixelHash } = await encodeView(
-		drawHighlight({ pixels, boxes, via }),
-	);
-	const highlight = { image, sha256, pixelHash };
-	return { key: { key, box, via, top, highlight }, webp };
-}
-
-async function highlightKeys({
-	id,
-	pixels,
-	keys,
-}: {
-	id: string;
-	pixels: Pixels;
-	keys: ScannedKey[];
-}): Promise<HighlightedKey[]> {
-	const highlighted: HighlightedKey[] = [];
-	for (let start = 0; start < keys.length; start += HIGHLIGHT_CONCURRENCY) {
-		const batch = keys.slice(start, start + HIGHLIGHT_CONCURRENCY);
-		highlighted.push(
-			...(await Promise.all(
-				batch.map((shown) => highlightKey({ id, pixels, shown })),
-			)),
-		);
-	}
-	return highlighted;
-}
-
 async function recordScreen({
 	run: { platformContext, outDir, captured },
 	id,
+	screen,
 	frame: { png, scan },
 	startedAt,
 }: {
 	run: ViewRun;
 	id: string;
+	screen: string | undefined;
 	frame: Frame;
 	startedAt: number;
 }): Promise<void> {
@@ -282,60 +247,28 @@ async function recordScreen({
 	const pixels = await decodeCapture(png);
 	const view = await encodeView(pixels);
 	const encodeMs = elapsedSince(encodeStartedAt);
-	const highlightStartedAt = performance.now();
-	const highlighted = await highlightKeys({ id, pixels, keys: scan.keys });
-	const highlightMs = elapsedSince(highlightStartedAt);
 	const image = imagePath(id);
 	await Bun.write(join(outDir, image), view.webp);
-	const ms = elapsedSince(startedAt) - highlightMs;
+	await keepRawCapture({ outDir, viewId: id, png });
+	const ms = elapsedSince(startedAt);
 	captured.views[id] = {
 		image,
 		sha256: view.sha256,
 		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
-		keys: highlighted.map(({ key }) => key),
+		screen,
+		keys: scan.keys.map(({ boxes: _boxes, ...shown }) => shown),
 		ms,
 	};
 	captured.unmarked[id] = scan.unmarked;
-	for (const { key, webp } of highlighted) {
-		await Bun.write(join(outDir, key.highlight.image), webp);
-	}
-	const highlightBytes = highlighted.reduce(
-		(total, { webp }) => total + webp.byteLength,
-		0,
+	if (scan.measured) captured.measured.push(id);
+	captured.compositeButtons[id] = scan.compositeButtons;
+	captured.boxes[id] = Object.fromEntries(
+		scan.keys.map(({ key, boxes }) => [key, boxes]),
 	);
 	console.log(
-		`${id}: ${scan.keys.length} keys in ${ms} ms (encoded in ${encodeMs} ms), ${pixels.width}x${pixels.height}, ${view.webp.byteLength} bytes; highlighted in ${highlightMs} ms, ${highlightBytes} bytes`,
+		`${id}: ${scan.keys.length} keys in ${ms} ms (encoded in ${encodeMs} ms), ${pixels.width}x${pixels.height}, ${view.webp.byteLength} bytes`,
 	);
-}
-
-async function removeIfEmpty(directory: string): Promise<void> {
-	const entries = await readdir(directory).catch(() => null);
-	if (entries?.length === 0) await rmdir(directory);
-}
-
-export async function dropScreens({
-	captured,
-	outDir,
-	id,
-}: {
-	captured: Captured;
-	outDir: string;
-	id: string;
-}): Promise<void> {
-	for (const [viewId, view] of Object.entries(captured.views)) {
-		if (!isScreenOf({ viewId, id })) continue;
-		const images = [
-			...view.keys.map(({ highlight }) => highlight.image),
-			imagePath(viewId),
-		];
-		for (const image of images) {
-			await rm(join(outDir, image), { force: true });
-		}
-		await removeIfEmpty(join(outDir, screenPath(viewId)));
-		delete captured.views[viewId];
-		delete captured.unmarked[viewId];
-	}
 }
 
 function scrollTopOf(scroller: Locator): Promise<number> {
@@ -383,11 +316,18 @@ async function captureScreens({
 	for (let screen = 1; screen <= MAX_SCREENS; screen += 1) {
 		const frame = await captureFrame(page);
 		await requireCleanFrame({ frame, session, run });
+		requireScreen({ view, keys: frame.scan.keys });
 		const keys = frame.scan.keys.map(({ key }) => key);
 		if (kept === 0 || keys.some((key) => !seen.has(key))) {
 			kept += 1;
 			const id = numberedViewId({ id: view.id, screen: kept });
-			await recordScreen({ run, id, frame, startedAt: screenStartedAt });
+			await recordScreen({
+				run,
+				id,
+				screen: view.screen,
+				frame,
+				startedAt: screenStartedAt,
+			});
 		}
 		for (const key of keys) seen.add(key);
 		screenStartedAt = performance.now();

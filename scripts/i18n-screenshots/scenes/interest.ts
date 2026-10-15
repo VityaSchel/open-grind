@@ -133,6 +133,7 @@ export const untrackedViews: Scene = {
 		},
 		{
 			id: "interest/views/untracked/failed",
+			screen: "interest/views/untracked",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await changeScene({
@@ -163,6 +164,7 @@ export const interestRefreshFailures: Scene = {
 	views: [
 		{
 			id: "interest/refresh-failures",
+			screen: "interest/views",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await visit({

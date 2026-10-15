@@ -21,6 +21,7 @@ export const profile: Scene = {
 		},
 		{
 			id: "profile/menu",
+			screen: "profile",
 			drive: async (page) => {
 				await page
 					.locator(ACTIVE_PANE)
@@ -31,6 +32,7 @@ export const profile: Scene = {
 		},
 		{
 			id: "profile/report",
+			screen: "profile",
 			drive: async (page) => {
 				await page
 					.getByRole("menuitem", { name: "Report user" })

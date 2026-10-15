@@ -107,6 +107,7 @@ function failingView({
 }): SceneView {
 	return {
 		id,
+		screen: "auth/sign-in",
 		survivesLocaleSwitch: false,
 		drive: async (page) => {
 			if (opensSignIn) await fillSignIn(page);
@@ -268,6 +269,7 @@ export const linuxOnboarding: Scene = {
 		},
 		{
 			id: "onboarding/linux/failed",
+			screen: "onboarding/linux",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await addingToast({
