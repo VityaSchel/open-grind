@@ -33,6 +33,8 @@ const MEET_AT_EVERYWHERE = [1, 2, 3, 4, 5];
 const NSFW_NOT_AT_FIRST = 2;
 const HIV_PREFER_TO_DISCUSS = 5;
 const SOBER_AND_DRUG_FREE = [6, 7];
+const INTO_OTTERS_AND_JOCKS = [8, 6];
+const VACCINATED_FOR_COVID_AND_MONKEYPOX = [1, 2];
 
 const failingGendersAndPronouns: RestFault[] = [
 	failing({ method: "GET", path: "/public/v2/genders" }),
@@ -51,6 +53,8 @@ export const profileDetails: Scene = {
 				meetAt: MEET_AT_EVERYWHERE,
 				hivStatus: HIV_PREFER_TO_DISCUSS,
 				sexualHealth: SOBER_AND_DRUG_FREE,
+				tribesImInto: INTO_OTTERS_AND_JOCKS,
+				vaccines: VACCINATED_FOR_COVID_AND_MONKEYPOX,
 				genders: [1],
 				pronouns: [1],
 			},
