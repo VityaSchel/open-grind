@@ -1,29 +1,28 @@
+import { type PlainMessageKey, t } from "$lib/i18n";
 import { isDesktopPlatform } from "$lib/platform/os";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import { conversationDeeplink, TAPS_DEEPLINK } from "./deeplink";
 import { notify } from "./index";
 import { type Announcement, TAP_TAG_PREFIX } from "./types";
 
-const SOMEONE = "Someone";
-const MESSAGE_BODY = "Sent you a message";
-const TAP_BODY = "Tapped you";
-
-const MESSAGE_BODIES: Partial<Record<ApiResponseMessage["type"], string>> = {
-	Image: "Sent you a picture",
-	ProfilePhotoReply: "Sent you a picture",
-	ExpiringImage: "Sent you an expiring image",
-	Album: "Shared their album",
-	ExpiringAlbum: "Shared their album",
-	ExpiringAlbumV2: "Shared their album",
-	AlbumContentReply: "Shared their album",
-	AlbumContentReaction: "Liked your album content",
-	Audio: "Sent you an audio message",
-	Video: "Sent you a video",
-	PrivateVideo: "Sent you a video",
-	NonExpiringVideo: "Sent you a video",
-	Gaymoji: "Sent you a Gaymoji",
-	Giphy: "Sent you a GIF",
-	Location: "Sent you their location",
+const MESSAGE_BODIES: Partial<
+	Record<ApiResponseMessage["type"], PlainMessageKey>
+> = {
+	Image: "chat.notification.picture",
+	ProfilePhotoReply: "chat.notification.picture",
+	ExpiringImage: "chat.notification.expiringImage",
+	Album: "chat.notification.album",
+	ExpiringAlbum: "chat.notification.album",
+	ExpiringAlbumV2: "chat.notification.album",
+	AlbumContentReply: "chat.notification.album",
+	AlbumContentReaction: "chat.notification.albumReaction",
+	Audio: "chat.notification.audio",
+	Video: "chat.notification.video",
+	PrivateVideo: "chat.notification.video",
+	NonExpiringVideo: "chat.notification.video",
+	Gaymoji: "chat.notification.gaymoji",
+	Giphy: "chat.notification.gif",
+	Location: "chat.notification.location",
 };
 
 function typedText(message: ApiResponseMessage): string {
@@ -57,10 +56,10 @@ export function announceMessage({
 		category: "messages",
 		tag: message.conversationId,
 		messageId: message.messageId,
-		title: sender || SOMEONE,
+		title: sender || t("common.someone"),
 		body:
 			typedText(message) ||
-			(MESSAGE_BODIES[message.type] ?? MESSAGE_BODY),
+			t(MESSAGE_BODIES[message.type] ?? "chat.notification.message"),
 		deeplink: conversationDeeplink(message.conversationId),
 	});
 }
@@ -76,8 +75,8 @@ export function announceTap({
 		category: "taps",
 		tag: `${TAP_TAG_PREFIX}${senderId}`,
 		messageId: null,
-		title: senderName || SOMEONE,
-		body: TAP_BODY,
+		title: senderName || t("common.someone"),
+		body: t("interest.taps.notification"),
 		deeplink: TAPS_DEEPLINK,
 	});
 }

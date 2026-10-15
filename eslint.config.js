@@ -553,7 +553,6 @@ export default defineConfig(
 		ignores: [
 			"src/**/*.test.ts",
 			"src/**/*-test-helpers.ts",
-			"src/lib/push/announce.ts",
 			"src/lib/push/explained-error.ts",
 		],
 		rules: {

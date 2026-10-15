@@ -207,6 +207,16 @@ export interface Messages {
 	"chat.messages.errors.reactFailed": undefined;
 	"chat.messages.errors.unsendFailed": undefined;
 	"chat.messages.scrollToBottomButton.a11y.label": undefined;
+	"chat.notification.album": undefined;
+	"chat.notification.albumReaction": undefined;
+	"chat.notification.audio": undefined;
+	"chat.notification.expiringImage": undefined;
+	"chat.notification.gaymoji": undefined;
+	"chat.notification.gif": undefined;
+	"chat.notification.location": undefined;
+	"chat.notification.message": undefined;
+	"chat.notification.picture": undefined;
+	"chat.notification.video": undefined;
 	"commands.commandCenter.a11y.list": undefined;
 	"commands.commandCenter.empty": undefined;
 	"commands.commandCenter.placeholder": undefined;
@@ -388,6 +398,7 @@ export interface Messages {
 	"interest.tabs.views": undefined;
 	"interest.taps.empty.title": undefined;
 	"interest.taps.errors.refreshFailed": undefined;
+	"interest.taps.notification": undefined;
 	"interest.views.empty.description": undefined;
 	"interest.views.empty.title": undefined;
 	"interest.views.errors.refreshFailed": undefined;

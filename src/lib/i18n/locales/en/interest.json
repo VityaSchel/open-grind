@@ -10,7 +10,8 @@
 		},
 		"errors": {
 			"refreshFailed": "Couldn’t refresh taps"
-		}
+		},
+		"notification": "Tapped you"
 	},
 	"views": {
 		"empty": {
