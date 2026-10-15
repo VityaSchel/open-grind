@@ -47,6 +47,7 @@ export type FilterId =
 	| "weight"
 	| "position"
 	| "tribes"
+	| "tribesImInto"
 	| "bodyType"
 	| "relationship"
 	| "nsfw"

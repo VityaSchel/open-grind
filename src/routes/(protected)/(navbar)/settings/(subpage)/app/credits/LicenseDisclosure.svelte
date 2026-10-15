@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CaretRightIcon } from "phosphor-svelte";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
 	import { t } from "$lib/i18n";
 	import { formatList } from "$lib/i18n/format";

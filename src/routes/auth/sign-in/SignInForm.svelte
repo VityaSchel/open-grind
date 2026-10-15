@@ -243,6 +243,7 @@
 						type="email"
 						placeholder={t("auth.signIn.email.placeholder")}
 						required
+						autocomplete="username"
 						bind:value={email}
 						disabled={submitting !== false}
 					/>

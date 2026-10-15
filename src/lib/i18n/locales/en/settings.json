@@ -163,6 +163,7 @@
 		"categories": {
 			"messages": "New messages",
 			"taps": "Received taps",
+			"unavailableInSlowMode": "Not available in Slow Mode",
 			"errors": {
 				"saveFailed": "Couldn’t save notification settings"
 			}

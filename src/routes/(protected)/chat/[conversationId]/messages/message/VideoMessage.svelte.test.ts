@@ -6,10 +6,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const lightbox = vi.hoisted(() => ({
 	openLightbox: vi.fn(() => Promise.resolve()),
 }));
-const dimensions = vi.hoisted(() => ({
-	measureVideo: vi.fn(() => Promise.resolve({ width: 720, height: 1280 })),
-	measureImage: vi.fn(),
-}));
 const messagesApi = vi.hoisted(() => ({ getSingleMessage: vi.fn() }));
 const errorToast = vi.hoisted(() => ({ showErrorToast: vi.fn() }));
 
@@ -17,7 +13,6 @@ vi.mock("$lib/util/photoswipe", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/util/photoswipe")>()),
 	...lightbox,
 }));
-vi.mock("$lib/util/media-dimensions", () => dimensions);
 vi.mock("$lib/api/error-toast", () => errorToast);
 vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/messaging/messages")>()),
@@ -164,20 +159,13 @@ describe("video message", () => {
 		});
 		const { items, videoAt } = openedLightbox();
 		expect(items).toEqual([
-			expect.objectContaining({
-				src: REFETCHED_URL,
-				width: 720,
-				height: 1280,
-			}),
+			expect.objectContaining({ src: REFETCHED_URL }),
 		]);
 		expect(videoAt?.(0)).toEqual({
 			src: REFETCHED_URL,
 			poster: null,
 			loop: true,
 		});
-		expect(dimensions.measureVideo).toHaveBeenCalledExactlyOnceWith(
-			REFETCHED_URL,
-		);
 	});
 
 	it("does not loop unless the sender asked", async () => {

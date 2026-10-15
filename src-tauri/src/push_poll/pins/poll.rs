@@ -6,8 +6,7 @@ use super::{LINES, PAYLOAD, POLL, POLL_SERVICE, SCHEDULE, STRINGS};
 use crate::pin_support::{braced_block, kotlin_constant, squashed};
 use crate::push_poll::pushes::{
 	Poll, ShownConversation, BODY_KEYS, CHATS_CHANNEL, CLEAR_DEEPLINK,
-	CONVERSATION_DEEPLINK, GENERIC_BODY, MESSAGE_LINES, TAPS_CHANNEL,
-	TAPS_DEEPLINK, UNSEND_DEEPLINK,
+	CONVERSATION_DEEPLINK, GENERIC_BODY, MESSAGE_LINES, UNSEND_DEEPLINK,
 };
 
 fn payload_constant(name: &str) -> &'static str {
@@ -103,17 +102,11 @@ fn every_link_and_channel_the_poll_emits_is_one_kotlin_routes() {
 			"PushPayload.kt no longer reads {parameter} from the {kotlin} link"
 		);
 	}
-	for (rust, kotlin) in [
-		(TAPS_DEEPLINK, "TAPS_DEEPLINK"),
-		(CHATS_CHANNEL, "CHATS_CHANNEL"),
-		(TAPS_CHANNEL, "TAPS_CHANNEL"),
-	] {
-		assert_eq!(
-			rust,
-			payload_constant(kotlin),
-			"the poll's {kotlin} is not the one PushPayload.kt routes"
-		);
-	}
+	assert_eq!(
+		CHATS_CHANNEL,
+		payload_constant("CHATS_CHANNEL"),
+		"the poll's CHATS_CHANNEL is not the one PushPayload.kt routes"
+	);
 }
 
 #[test]

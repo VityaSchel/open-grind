@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { routeForDeeplink } from "./deeplink";
+import { conversationDeeplink, routeForDeeplink } from "./deeplink";
 
 describe("routing a Grindr push deeplink", () => {
 	it("opens the conversation the notification names", () => {
@@ -9,6 +9,12 @@ describe("routing a Grindr push deeplink", () => {
 				"grindr://conversation?id=852120758%3A858049792&senderId=852120758",
 			),
 		).toBe("/chat/852120758%3A858049792");
+	});
+
+	it("opens the conversation a desktop notification names", () => {
+		expect(routeForDeeplink(conversationDeeplink("1:2"))).toBe(
+			"/chat/1%3A2",
+		);
 	});
 
 	it("opens the taps tab", () => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CaretDownIcon } from "phosphor-svelte";
+	import CaretDownIcon from "phosphor-svelte/lib/CaretDownIcon";
 	import { onMount } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import type { TransitionConfig } from "svelte/transition";

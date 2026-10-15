@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::appimage;
 
-const ENTRY_FILE: &str = "open-grind.desktop";
+pub(crate) const ENTRY_FILE: &str = "open-grind.desktop";
 const WM_CLASS: &str = "open-grind";
 
 #[derive(Debug, Serialize)]

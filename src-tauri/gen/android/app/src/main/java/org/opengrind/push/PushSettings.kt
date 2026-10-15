@@ -7,8 +7,7 @@ object PushSettings {
 	private const val MODE = "mode"
 	private const val ENABLED = "notifications_enabled"
 	private const val NONCE = "addon_nonce"
-	private const val INBOX_WATERMARK = "poll_watermark_inbox"
-	private const val TAPS_WATERMARK = "poll_watermark_taps"
+	private const val WATERMARK = "poll_watermark_inbox"
 	private const val CATEGORY = "category_"
 
 	fun mode(context: Context): PushMode =
@@ -31,25 +30,17 @@ object PushSettings {
 		preferences(context).edit().putString(NONCE, nonce).commit()
 	}
 
-	fun watermarks(context: Context): Watermarks = preferences(context).let { stored ->
-		Watermarks(
-			inbox = stored.getLong(INBOX_WATERMARK, 0L),
-			taps = stored.getLong(TAPS_WATERMARK, 0L),
-		)
+	fun watermark(context: Context): Watermark =
+		Watermark(preferences(context).getLong(WATERMARK, 0L))
+
+	@Synchronized
+	fun setWatermark(context: Context, watermark: Watermark) {
+		preferences(context).edit().putLong(WATERMARK, watermark.at).commit()
 	}
 
 	@Synchronized
-	fun setWatermarks(context: Context, watermarks: Watermarks) {
-		preferences(context)
-			.edit()
-			.putLong(INBOX_WATERMARK, watermarks.inbox)
-			.putLong(TAPS_WATERMARK, watermarks.taps)
-			.commit()
-	}
-
-	@Synchronized
-	fun advanceWatermarks(context: Context, to: Watermarks) {
-		setWatermarks(context, watermarks(context).newest(to))
+	fun advanceWatermark(context: Context, to: Watermark) {
+		setWatermark(context, watermark(context).newest(to))
 	}
 
 	fun categoryEnabled(context: Context, kind: PushKind): Boolean =

@@ -277,6 +277,7 @@ export interface Messages {
 	"common.filters.options.meetAt": undefined;
 	"common.filters.options.relationshipStatus": undefined;
 	"common.filters.options.tribes": undefined;
+	"common.filters.options.tribesImInto": undefined;
 	"common.filters.photos.hasAlbums": undefined;
 	"common.filters.photos.hasFacePics": undefined;
 	"common.filters.photos.hasPhotos": undefined;
@@ -515,10 +516,12 @@ export interface Messages {
 	"profile.favoriteStar.a11y.label": undefined;
 	"profile.fields.acceptNsfwPics": undefined;
 	"profile.fields.hivStatus": undefined;
+	"profile.fields.imInto": undefined;
 	"profile.fields.lastTested": undefined;
 	"profile.fields.lookingFor": undefined;
 	"profile.fields.meetAt": undefined;
 	"profile.fields.pronouns.errors.loadFailed": undefined;
+	"profile.fields.vaccinatedFor": undefined;
 	"profile.healthPractice.condoms": undefined;
 	"profile.healthPractice.doxyPep": undefined;
 	"profile.healthPractice.drugFree": undefined;
@@ -723,6 +726,7 @@ export interface Messages {
 	"settings.notifications.categories.errors.saveFailed": undefined;
 	"settings.notifications.categories.messages": undefined;
 	"settings.notifications.categories.taps": undefined;
+	"settings.notifications.categories.unavailableInSlowMode": undefined;
 	"settings.notifications.enable": undefined;
 	"settings.notifications.mode.a11y.group": undefined;
 	"settings.notifications.mode.fast.description": undefined;

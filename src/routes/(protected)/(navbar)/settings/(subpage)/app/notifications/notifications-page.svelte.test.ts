@@ -68,11 +68,15 @@ vi.mock("$lib/platform/link-opener", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof Os>()),
-	currentPlatform: (await import("./notifications-page-test-helpers.svelte"))
-		.currentPlatform,
-}));
+vi.mock("$lib/platform/os", async (importOriginal) => {
+	const { currentPlatform } =
+		await import("./notifications-page-test-helpers.svelte");
+	return {
+		...(await importOriginal<typeof Os>()),
+		currentPlatform,
+		isAndroidPlatform: () => currentPlatform() === "android",
+	};
+});
 vi.mock("$lib/api/app-lifecycle.svelte", () => ({
 	appLifecycle: { active: true },
 }));
@@ -95,31 +99,50 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it.each([
-		["macos", "Notifications aren’t supported on macOS yet."],
-		["windows", "Notifications aren’t supported on Windows yet."],
-		["linux", "Notifications aren’t supported on Linux yet."],
-		["ios", "Notifications aren’t supported on this platform yet."],
-		["web", "Notifications aren’t supported on this platform yet."],
-	] as const)("says on %s: %s", (platform, message) => {
-		currentPlatform.mockReturnValue(platform);
+	it.each(["ios", "web"] as const)(
+		"says on %s that notifications aren’t supported on this platform yet",
+		(platform) => {
+			currentPlatform.mockReturnValue(platform);
 
-		render(NotificationsPage);
+			render(NotificationsPage);
 
-		expect(screen.getByText(message)).toBeTruthy();
-		expect(screen.queryByRole("switch")).toBeNull();
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-	});
+			expect(
+				screen.getByText(
+					"Notifications aren’t supported on this platform yet.",
+				),
+			).toBeTruthy();
+			expect(screen.queryByRole("switch")).toBeNull();
+			expect(screen.queryByRole("radiogroup")).toBeNull();
+		},
+	);
+
+	it.each(["macos", "windows", "linux"] as const)(
+		"offers the switch and both categories on %s, with no delivery modes",
+		async (platform) => {
+			currentPlatform.mockReturnValue(platform);
+
+			render(NotificationsPage);
+
+			await screen.findByRole("switch", { name: "Received taps" });
+			expect(
+				screen.getByRole("switch", { name: "Enable notifications" }),
+			).toBeTruthy();
+			expect(
+				screen.getByRole("switch", { name: "New messages" }),
+			).toBeTruthy();
+			expect(screen.queryByRole("radiogroup")).toBeNull();
+		},
+	);
 
 	it("opens turned on in Slow mode with every editable control usable", async () => {
-		const { master, delivery, fast, slow, taps } =
+		const { master, delivery, fast, slow, messages } =
 			await opened(NotificationsPage);
 
 		expect(checked(master)).toBe("true");
 		expect(delivery.hasAttribute("data-disabled")).toBe(false);
 		expect(checked(slow)).toBe("true");
 		expect(checked(fast)).toBe("false");
-		for (const control of [fast, slow, taps])
+		for (const control of [fast, slow, messages])
 			expect(disabled(control)).toBe(false);
 		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
@@ -418,7 +441,7 @@ describe("the notifications copy", () => {
 			expect(button.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 	});
 
-	it.each(["macos", "web"] as const)(
+	it.each(["ios", "web"] as const)(
 		"says on %s that notifications are unsupported in the active locale",
 		async (platform) => {
 			currentPlatform.mockReturnValue(platform);

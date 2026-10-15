@@ -23,6 +23,8 @@ To change alert level, sound, whether text of the notification appears on the lo
 
 Slow Mode is the default notifications mode on Android. Open Grind checks for new events in the background **about every 15 minutes**. Android may force the interval to be longer, for example in battery saver or when you haven't opened the app for a while.
 
+Slow Mode doesn't notify about received taps, because Grindr marks you online every time an app checks for them. Use [Fast Mode](#android-fast-mode) to get tap notifications.
+
 ### Fast Mode {#android-fast-mode}
 
 Fast Mode on Android **shows notifications instantly**, but uses closed-source Google's Firebase services, which requires installing Open Grind's [FCM service add-on](https://git.opengrind.org/open-grind/fcm-service) and having Google Play services or microG.

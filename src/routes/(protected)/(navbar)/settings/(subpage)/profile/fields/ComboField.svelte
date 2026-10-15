@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends string | number">
-	import { XIcon } from "phosphor-svelte";
+	import XIcon from "phosphor-svelte/lib/XIcon";
 	import { tick } from "svelte";
 
 	import Field from "$lib/components/fields/Field.svelte";

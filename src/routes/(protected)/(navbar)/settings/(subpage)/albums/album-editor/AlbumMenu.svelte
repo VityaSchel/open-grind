@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { DotsThreeVerticalIcon, TrashIcon } from "phosphor-svelte";
+	import DotsThreeVerticalIcon from "phosphor-svelte/lib/DotsThreeVerticalIcon";
+	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import { toast } from "svelte-sonner";
 
 	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";

@@ -11,7 +11,6 @@ use std::collections::{BTreeMap, HashMap};
 use serde::Serialize;
 use serde_json::Value;
 
-use body::{set_body_key, TAP_BODY};
 #[cfg(test)]
 pub(super) use body::{BODY_KEYS, GENERIC_BODY};
 use conversation::Conversation;
@@ -24,25 +23,17 @@ pub type Answer = (u16, Value);
 
 pub type Pages = HashMap<String, Answer>;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize)]
-pub struct Watermarks {
-	#[serde(rename = "inboxWatermark")]
-	pub inbox: i64,
-	#[serde(rename = "tapsWatermark")]
-	pub taps: i64,
-}
-
 #[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct Poll {
-	#[serde(flatten)]
-	pub watermarks: Watermarks,
+	#[serde(rename = "inboxWatermark")]
+	pub watermark: i64,
 	pub pushes: Vec<Push>,
 }
 
 impl Poll {
-	pub fn unchanged(watermarks: Watermarks) -> Self {
+	pub fn unchanged(watermark: i64) -> Self {
 		Self {
-			watermarks,
+			watermark,
 			pushes: Vec::new(),
 		}
 	}
@@ -50,9 +41,7 @@ impl Poll {
 
 pub(super) const CHATS_CHANNEL: &str =
 	"id_grindr_notifications_channel_individual_v2";
-pub(super) const TAPS_CHANNEL: &str = "id_grindr_notifications_channel_tap_v2";
 pub(super) const CONVERSATION_DEEPLINK: &str = "grindr://conversation?id=";
-pub(super) const TAPS_DEEPLINK: &str = "grindr://taps-inbox";
 pub(super) const CLEAR_DEEPLINK: &str = "grindr://clear?conversationId=";
 pub(super) const UNSEND_DEEPLINK: &str = "grindr://unsend?notificationId=";
 const CATCH_UP_LINE: &str = "unread";
@@ -104,25 +93,17 @@ pub fn pages_wanted(
 pub fn poll(
 	inbox: Option<&Inbox>,
 	pages: &Pages,
-	taps: Option<&Value>,
-	since: Watermarks,
+	since: i64,
 	me: Option<&str>,
 ) -> Poll {
 	let mut poll = Poll::unchanged(since);
 	for conversation in conversations(inbox, me) {
 		let page = pages.get(conversation.id);
-		if let Some(pushes) = conversation.messages(since.inbox, page) {
-			poll.watermarks.inbox = poll.watermarks.inbox.max(conversation.at);
+		if let Some(pushes) = conversation.messages(since, page) {
+			poll.watermark = poll.watermark.max(conversation.at);
 			poll.pushes.extend(pushes);
 		}
 		poll.pushes.extend(conversation.read_elsewhere());
-	}
-	let taps = taps.and_then(|taps| taps["profiles"].as_array());
-	for profile in taps.into_iter().flatten() {
-		if let Some((at, push)) = tap(profile, since.taps) {
-			poll.watermarks.taps = poll.watermarks.taps.max(at);
-			poll.pushes.push(push);
-		}
 	}
 	poll
 }
@@ -135,30 +116,11 @@ fn profile_id(value: &Value) -> Option<String> {
 		.filter(|id| !id.is_empty())
 }
 
-fn tap(profile: &Value, since: i64) -> Option<(i64, Push)> {
-	let at = profile["timestamp"].as_i64()?;
-	let id = profile_id(&profile["profileId"])?;
-	if at <= since {
-		return None;
-	}
-	let mut push = base(at, format!("poll:tap:{id}"), TAPS_CHANNEL);
-	push.insert("action", TAPS_DEEPLINK.to_owned());
-	push.insert("senderId", id);
-	set_body_key(&mut push, TAP_BODY);
-	if let Some(name) = profile["displayName"]
-		.as_str()
-		.filter(|name| !name.is_empty())
-	{
-		push.insert("title", name.to_owned());
-	}
-	Some((at, push))
-}
-
-fn base(at: i64, notification_id: String, channel: &str) -> Push {
+fn base(at: i64, notification_id: String) -> Push {
 	Push::from([
 		("version", "2".to_owned()),
 		("notificationId", notification_id),
-		("channel", channel.to_owned()),
+		("channel", CHATS_CHANNEL.to_owned()),
 		("timestamp", at.to_string()),
 	])
 }

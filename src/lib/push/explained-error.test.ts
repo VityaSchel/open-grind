@@ -8,7 +8,10 @@ function pushFailure(reason: string) {
 }
 
 const explanations: [reason: string, message: string][] = [
-	["unsupportedPlatform", "Fast Mode only works on Android."],
+	[
+		"unsupportedPlatform",
+		"This build of Open Grind can't show notifications.",
+	],
 	[
 		"addonOutdated",
 		"The Open Grind FCM service is out of date. Update it to the latest version.",

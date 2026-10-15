@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { NotePencilIcon } from "phosphor-svelte";
+	import NotePencilIcon from "phosphor-svelte/lib/NotePencilIcon";
 
 	import { Button } from "$lib/components/ui/button";
 	import { t } from "$lib/i18n";

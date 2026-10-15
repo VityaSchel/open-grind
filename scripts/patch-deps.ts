@@ -41,6 +41,64 @@ const CRATES = [
 		sha256: "6bd11644962add2549a60b7e7c6800f17d7020156e02f516021d8103e80cc528",
 		keep: ["Cargo.toml", "LICENSE_MIT", "LICENSE_APACHE-2.0", "src"],
 	},
+	{
+		name: "tauri-utils",
+		version: "2.9.1",
+		sha256: "d57200389a2f82b4b0a40ae29ca19b6978116e8f4d4e974c3234ce40c0ffbdec",
+		keep: ["Cargo.toml", "LICENSE_APACHE-2.0", "LICENSE_MIT", "src"],
+	},
+	{
+		name: "tauri-runtime",
+		version: "2.11.1",
+		sha256: "8fef478ba1d2ac21c2d528740b24d0cb315e1e8b1111aae53fafac34804371fc",
+		keep: [
+			"Cargo.toml",
+			"LICENSE_APACHE-2.0",
+			"LICENSE_MIT",
+			"build.rs",
+			"src",
+		],
+	},
+	{
+		name: "tauri-runtime-wry",
+		version: "2.11.1",
+		sha256: "a3989df2ae1c476404fe0a2e8ffc4cfbde97e51efd613c2bb5355fbc9ab52cf0",
+		keep: [
+			"Cargo.toml",
+			"LICENSE_APACHE-2.0",
+			"LICENSE_MIT",
+			"build.rs",
+			"src",
+		],
+	},
+	{
+		name: "tauri",
+		version: "2.11.1",
+		sha256: "b93bd86d231f0a8138f11a02a584769fe4b703dc36ae133d783228dbc4801405",
+		keep: [
+			"Cargo.toml",
+			"LICENSE_APACHE-2.0",
+			"LICENSE_MIT",
+			"build.rs",
+			"mobile",
+			"permissions",
+			"scripts",
+			"src",
+		],
+	},
+];
+
+const BUILD_OUTPUT = [
+	"(",
+	"-name",
+	".build",
+	"-o",
+	"-name",
+	".tauri",
+	"-o",
+	"-path",
+	"*/android/build",
+	")",
 ];
 
 const repoRoot = `${import.meta.dir}/..`;
@@ -113,6 +171,7 @@ async function rediff(crate: Crate) {
 		await pristine(crate, work);
 		await $`cp -R ${outDir}/${crate.name} ${work}/b`;
 		await $`rm -f ${work}/b/.stamp`;
+		await $`find ${work} -type d ${BUILD_OUTPUT} -prune -exec rm -rf ${"{}"} +`;
 		const diff = await $`git diff --no-index --no-color --no-prefix a b`
 			.cwd(work)
 			.nothrow()

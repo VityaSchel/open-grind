@@ -4,7 +4,7 @@ import { pushErrorReason } from "./index";
 import type { PushErrorReason } from "./types";
 
 const reasons = (addon: string): Record<PushErrorReason, string | null> => ({
-	unsupportedPlatform: "Fast Mode only works on Android.",
+	unsupportedPlatform: "This build of Open Grind can't show notifications.",
 	addonUnavailable: `Open Grind couldn't reach the ${addon}.`,
 	addonDisabled: `The ${addon} is disabled. Enable it in Android settings.`,
 	addonUntrusted: sourceText("updates.addons.fcm.errors.foreignTarget"),

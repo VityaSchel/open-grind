@@ -3,8 +3,7 @@ use std::io::{BufWriter, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use tauri::{AppHandle, Runtime};
-use tokio::sync::watch;
+use tauri::Runtime;
 use wreq::Client;
 
 use super::super::client;
@@ -14,7 +13,7 @@ use super::super::storage::{Stage, Staged};
 use super::super::verify;
 use super::resume;
 use super::stage::flush;
-use super::{emit, Phase, Progress};
+use super::{Phase, Progress, ProgressFeed};
 
 const SIGNATURE_MAX_BYTES: usize = 64 * 1024;
 const CHECKPOINT_BYTES: u64 = 4 * 1024 * 1024;
@@ -40,30 +39,28 @@ impl Halt<'_> {
 }
 
 pub(super) async fn transfer<R: Runtime>(
-	app: &AppHandle<R>,
+	feed: &mut ProgressFeed<'_, R>,
 	client: &Client,
 	target: Target<'_>,
 	candidate: &Candidate,
 	halt: &Halt<'_>,
-	progress: &watch::Sender<Progress>,
 ) -> Result<(), UpdateError> {
 	let Target {
 		stage,
 		staged,
 		digest,
 	} = target;
-	let (mut response, written) = match resume::open(client, stage, staged)
-		.await?
-	{
-		resume::Opening::Complete => {
-			rehash(app, progress, candidate, digest, stage, staged.downloaded)?;
-			return Ok(());
-		}
-		resume::Opening::Body(response, written) => (response, written),
-	};
+	let (mut response, written) =
+		match resume::open(client, stage, staged).await? {
+			resume::Opening::Complete => {
+				rehash(feed, candidate, digest, stage, staged.downloaded)?;
+				return Ok(());
+			}
+			resume::Opening::Body(response, written) => (response, written),
+		};
 	let mut written = written;
 	stage.save(staged)?;
-	rehash(app, progress, candidate, digest, stage, written)?;
+	rehash(feed, candidate, digest, stage, written)?;
 
 	let file = OpenOptions::new()
 		.create(true)
@@ -79,11 +76,7 @@ pub(super) async fn transfer<R: Runtime>(
 	loop {
 		if halt.requested() {
 			flush(&mut sink, stage, staged, written)?;
-			emit(
-				app,
-				progress,
-				Progress::new(candidate, written, Phase::Downloading),
-			);
+			feed.emit(Progress::new(candidate, written, Phase::Downloading));
 			return Err(UpdateError::Canceled);
 		}
 		let chunk = match response.chunk().await {
@@ -113,11 +106,7 @@ pub(super) async fn transfer<R: Runtime>(
 		if written - emitted_at >= EMIT_BYTES
 			|| emitted_time.elapsed() >= EMIT_INTERVAL
 		{
-			emit(
-				app,
-				progress,
-				Progress::new(candidate, written, Phase::Downloading),
-			);
+			feed.emit(Progress::new(candidate, written, Phase::Downloading));
 			emitted_at = written;
 			emitted_time = Instant::now();
 		}
@@ -134,19 +123,14 @@ pub(super) async fn transfer<R: Runtime>(
 }
 
 fn rehash<R: Runtime>(
-	app: &AppHandle<R>,
-	progress: &watch::Sender<Progress>,
+	feed: &mut ProgressFeed<'_, R>,
 	candidate: &Candidate,
 	digest: &mut verify::Prehash,
 	stage: &Stage,
 	upto: u64,
 ) -> Result<(), UpdateError> {
 	if upto > 0 && digest.hashed() != upto {
-		emit(
-			app,
-			progress,
-			Progress::new(candidate, upto, Phase::Verifying),
-		);
+		feed.emit(Progress::new(candidate, upto, Phase::Verifying));
 	}
 	digest.sync(&stage.part(), upto)
 }
@@ -174,6 +158,7 @@ mod tests {
 	use std::fs;
 
 	use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
+	use tokio::sync::watch;
 
 	use crate::api::update::storage;
 
@@ -263,8 +248,10 @@ mod tests {
 			Phase::Downloading,
 		));
 		let abort = AtomicBool::new(false);
+		let mut feed =
+			ProgressFeed::begin(app.handle(), &sender, &fixture.candidate);
 		transfer(
-			app.handle(),
+			&mut feed,
 			&plain_client(),
 			Target {
 				stage: &fixture.stage,
@@ -276,7 +263,6 @@ mod tests {
 				user: cancel,
 				abort: &abort,
 			},
-			&sender,
 		)
 		.await
 	}

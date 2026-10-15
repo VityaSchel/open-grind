@@ -2,7 +2,9 @@ package org.opengrind.update
 
 import java.util.concurrent.atomic.AtomicInteger
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TransferHoldsTest {
@@ -94,6 +96,49 @@ class TransferHoldsTest {
 		assertEquals(upload, holds.newest())
 		holds.end(upload)
 		assertNull(holds.newest())
+	}
+
+	@Test
+	fun `a held transfer shows the progress it reported last`() {
+		val holds = TransferHolds()
+		holds.begin(appUpdate)
+
+		assertTrue(holds.report(appUpdate, TransferProgress.Percent(40)))
+		assertTrue(holds.report(appUpdate, TransferProgress.Indeterminate))
+		assertEquals(TransferProgress.Indeterminate, holds.progressOf(appUpdate))
+	}
+
+	@Test
+	fun `progress for a transfer that is not held is dropped`() {
+		val holds = TransferHolds()
+		holds.begin(upload)
+
+		assertFalse(holds.report(appUpdate, TransferProgress.Percent(40)))
+		assertNull(holds.progressOf(appUpdate))
+	}
+
+	@Test
+	fun `a transfer that ends forgets its progress before it runs again`() {
+		val holds = TransferHolds()
+		holds.begin(appUpdate)
+		holds.report(appUpdate, TransferProgress.Percent(90))
+
+		holds.end(appUpdate)
+		holds.begin(appUpdate)
+		assertNull(holds.progressOf(appUpdate))
+	}
+
+	@Test
+	fun `a transfer held twice keeps its progress until both end`() {
+		val holds = TransferHolds()
+		holds.begin(upload)
+		holds.begin(upload)
+		holds.report(upload, TransferProgress.Percent(10))
+
+		holds.end(upload)
+		assertEquals(TransferProgress.Percent(10), holds.progressOf(upload))
+		holds.end(upload)
+		assertNull(holds.progressOf(upload))
 	}
 
 	@Test

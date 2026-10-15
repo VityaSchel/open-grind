@@ -1,10 +1,12 @@
 {
 	"fields": {
 		"lastTested": "Last Tested",
+		"imInto": "I’m Into",
 		"lookingFor": "Looking For",
 		"meetAt": "Meet At",
 		"acceptNsfwPics": "NSFW Pics?",
 		"hivStatus": "HIV Status",
+		"vaccinatedFor": "Vaccinated For",
 		"pronouns": {
 			"errors": {
 				"loadFailed": "Couldn’t load pronouns"

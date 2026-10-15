@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MapPinIcon } from "phosphor-svelte";
+	import MapPinIcon from "phosphor-svelte/lib/MapPinIcon";
 
 	import Rich from "$lib/i18n/Rich.svelte";
 </script>

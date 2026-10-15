@@ -58,7 +58,7 @@ Every input that affects the output bytes is pinned in exactly one place:
 
 - **Canonical builder:** Linux x86_64; `nix run .#build-android`
 - **Official releases:** multiple providers in `build.yml` CI and F-Droid
-- **F-Droid:** builds use [`ci/fdroid/build-android.sh`](./ci/fdroid/build-android.sh) instead of Nix
+- **F-Droid:** per-ABI builds use [`ci/fdroid/build-android.sh`](./ci/fdroid/build-android.sh) instead of Nix, with Node.js from Debian. Node.js 20 to 26 build the same frontend; Bun's built-in `node` does not, so the script stops when `node` is missing
 - Cross-compilation table **for Android builds**:
 
     |            | On x86_64   | On arm64                 |
@@ -90,10 +90,10 @@ Needs `apksigcopier` and `apksigner`, both on `PATH` in `nix develop .#android`.
 # 1. Reproduce the unsigned APK locally
 git checkout v<tag>
 nix run .#build-android
-LOCAL="$(find src-tauri/gen/android/app/build/outputs/apk/universal/release -name '*-unsigned.apk')"
 
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
-PUBLISHED=/path/to/open-grind-v<tag>-android.apk
+PUBLISHED=/path/to/open-grind-v<tag>-android-arm64-v8a.apk
+LOCAL="$(find src-tauri/gen/android/app/build/outputs/apk -name "$(basename "$PUBLISHED" .apk)-unsigned.apk")"
 RELEASE_CERT=2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c # KEYS.md
 
 # 3. Confirm the content reproduces

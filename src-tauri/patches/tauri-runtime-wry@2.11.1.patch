@@ -1,0 +1,27 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 27590d6..0a0daa7 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -149,3 +149,6 @@ features = [
+     "Win32_Foundation",
+     "Win32_Graphics_Dwm",
+ ]
++
++[lints.rust]
++warnings = { level = "allow", priority = -1 }
+diff --git a/src/lib.rs b/src/lib.rs
+index 7cfbe18..183267c 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -4836,6 +4836,11 @@ You may have it installed on another user account, but it is not available for t
+     webview_builder = webview_builder.with_https_scheme(webview_attributes.use_https_scheme);
+   }
+ 
++  #[cfg(target_os = "android")]
++  if let Some(hostname) = &webview_attributes.android_hostname {
++    webview_builder = webview_builder.with_custom_protocol_host("tauri".into(), hostname.clone());
++  }
++
+   if let Some(background_throttling) = webview_attributes.background_throttling {
+     webview_builder = webview_builder.with_background_throttling(match background_throttling {
+       tauri_utils::config::BackgroundThrottlingPolicy::Disabled => {

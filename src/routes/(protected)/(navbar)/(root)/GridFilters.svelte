@@ -96,6 +96,11 @@
 		bind:value={filters.tribes}
 	/>
 	<OptionFilter
+		filter={optionFilters.tribesImInto}
+		bind:checked={filters.tribesImIntoEnabled}
+		bind:value={filters.tribesImInto}
+	/>
+	<OptionFilter
 		filter={optionFilters.bodyTypes}
 		bind:checked={filters.bodyTypesEnabled}
 		bind:value={filters.bodyTypes}

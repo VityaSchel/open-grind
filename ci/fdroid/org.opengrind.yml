@@ -19,7 +19,6 @@ AutoName: Open Grind
 
 RepoType: git
 Repo: https://git.opengrind.org/open-grind/open-grind.git
-Binaries: https://git.opengrind.org/open-grind/open-grind/releases/download/v%v/open-grind-v%v-android.apk
 
 Builds:
   - versionName: ${versionName}
@@ -29,8 +28,12 @@ Builds:
       - apt-get update
       - apt-get install -y gcc libc-dev rustup
       - apt-get install -y -t trixie-backports libclang1-${libclangMajor} libclang-common-${libclangMajor}-dev
-    output: src-tauri/gen/android/app/build/outputs/apk/universal/release/open-grind-v*-unsigned.apk
-    build: ci/fdroid/build-android.sh
+      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+      - apt-get update
+      - apt-get install -y -t forky nodejs
+    output: src-tauri/gen/android/app/build/outputs/apk/*/release/open-grind-v*-android-${abi}-unsigned.apk
+    binary: https://git.opengrind.org/open-grind/open-grind/releases/download/v%v/open-grind-v%v-android-${abi}.apk
+    build: OPEN_GRIND_ANDROID_ABI=${rustTarget} ci/fdroid/build-android.sh
     ndk: ${ndkVersion}
 
 AllowedAPKSigningKeys: 2805fdd8f0badb9424d3244c5e5b3473cef5b8798ec1117382e89eda45c3658c
@@ -39,6 +42,8 @@ MaintainerNotes: ci/fdroid/build-android.sh mirrors the Nix release toolchain.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$
+VercodeOperation:
+  - ${vercodeOperations}
 UpdateCheckData: src-tauri/tauri.conf.json|"versionCode":\s*(\d+)|.|"version":\s*"([^"]+)"
 CurrentVersion: ${versionName}
-CurrentVersionCode: ${versionCode}
+CurrentVersionCode: ${currentVersionCode}

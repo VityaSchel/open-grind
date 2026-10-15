@@ -11,14 +11,12 @@ const merge = ({
 	existing,
 	incoming,
 	pendingFlags = [],
-	keepUnreadCount = false,
 }: {
 	existing: Conversation;
 	incoming: Conversation;
 	pendingFlags?: ("pinned" | "muted")[];
-	keepUnreadCount?: boolean;
 }) => {
-	mergeConversation({ existing, incoming, pendingFlags, keepUnreadCount });
+	mergeConversation({ existing, incoming, pendingFlags });
 	return existing.data;
 };
 
@@ -37,15 +35,6 @@ describe("mergeConversation", () => {
 		expect(merged.pinned).toBe(true);
 		expect(merged.lastActivityTimestamp).toBe(2000);
 		expect(merged.unreadCount).toBe(3);
-	});
-
-	it("keeps the unread count of the conversation being read", () => {
-		const existing = conversation("a:1", 1000, { unreadCount: 0 });
-		const incoming = conversation("a:1", 2000, { unreadCount: 7 });
-
-		expect(
-			merge({ existing, incoming, keepUnreadCount: true }).unreadCount,
-		).toBe(0);
 	});
 
 	it("keeps a flag whose request is still in flight", () => {

@@ -18,7 +18,7 @@ export const liveDevice = {
 	appPackage: "org.opengrind",
 	appActivity: "org.opengrind/.MainActivity",
 	devtoolsPort: 9590,
-	appOrigin: "http://tauri.localhost",
+	appOrigin: "https://app.opengrind.org",
 } as const;
 
 const adbPath = join(sdk, "platform-tools", "adb");

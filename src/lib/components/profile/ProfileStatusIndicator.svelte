@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AirplaneTiltIcon } from "phosphor-svelte";
+	import AirplaneTiltIcon from "phosphor-svelte/lib/AirplaneTiltIcon";
 
 	import { t } from "$lib/i18n";
 	import { getNow } from "$lib/util/now";

@@ -131,13 +131,13 @@ describe("startOnlineHeartbeat", () => {
 		});
 	});
 
-	it("still refreshes an open grid when the preference is off", async () => {
+	it("stays quiet on an open grid when the preference is off", async () => {
 		preferences.stayOnline = false;
 		gridState.viewActive = true;
 
 		await withHeartbeat(async () => {
-			await vi.advanceTimersByTimeAsync(MINUTE);
-			expect(refreshMock).toHaveBeenCalledOnce();
+			await vi.advanceTimersByTimeAsync(2 * MINUTE);
+			expect(refreshMock).not.toHaveBeenCalled();
 		});
 	});
 

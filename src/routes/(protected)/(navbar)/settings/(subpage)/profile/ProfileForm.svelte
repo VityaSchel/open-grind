@@ -1,9 +1,7 @@
 <script lang="ts">
-	import {
-		FacebookLogoIcon,
-		InstagramLogoIcon,
-		XLogoIcon,
-	} from "phosphor-svelte";
+	import FacebookLogoIcon from "phosphor-svelte/lib/FacebookLogoIcon";
+	import InstagramLogoIcon from "phosphor-svelte/lib/InstagramLogoIcon";
+	import XLogoIcon from "phosphor-svelte/lib/XLogoIcon";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { StarIcon } from "phosphor-svelte";
+	import StarIcon from "phosphor-svelte/lib/StarIcon";
 
 	import { t } from "$lib/i18n";
 </script>

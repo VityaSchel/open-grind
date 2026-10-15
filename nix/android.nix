@@ -27,7 +27,6 @@ let
 
   fdroidPins = readProperties ../ci/fdroid/toolchain.properties;
   stalePins = lib.filterAttrs (name: version: fdroidPins."${name}.version" != version) {
-    node = pkgs.nodejs_24.version;
     bun = pkgs.bun.version;
     libclang = pkgs.libclang.version;
   };
@@ -150,33 +149,18 @@ let
       TARGET="''${1:-apk}"
 
       bun ci
-      # OPEN_GRIND_ANDROID_ABI=aarch64 builds one ABI instead of universal.
+      rm -rf "$ROOT/src-tauri/gen/android/app/build/outputs/apk" "$ROOT/src-tauri/gen/android/app/build/outputs/bundle"
+      # OPEN_GRIND_ANDROID_ABI=aarch64 builds only that ABI's split.
       if [ -n "''${OPEN_GRIND_ANDROID_ABI:-}" ]; then
-        bun run tauri android build --"$TARGET" --target "''${OPEN_GRIND_ANDROID_ABI}"
+        bun run tauri android build --"$TARGET" --split-per-abi --target "''${OPEN_GRIND_ANDROID_ABI}"
+      elif [ "$TARGET" = "apk" ]; then
+        OPEN_GRIND_ANDROID_SPLITS=1 bun run tauri android build --apk
       else
         bun run tauri android build --"$TARGET"
       fi
 
-      if [ -n "''${OPEN_GRIND_KEYSTORE_PROPERTIES:-}" ]; then sfx=""; else sfx="-unsigned"; fi
-      base="$ROOT/src-tauri/gen/android/app/build/outputs"
-
       echo
-      if [ "$TARGET" = "aab" ]; then
-        reldir="$base/bundle/universalRelease"
-        src="$reldir/app-universal-release.aab"
-      else
-        reldir="$base/apk/universal/release"
-        src="$reldir/app-universal-release$sfx.apk"
-      fi
-      version="$(sed -n 's/^tauri\.android\.versionName=//p' \
-        "$ROOT/src-tauri/gen/android/app/tauri.properties")"
-      artifact="$reldir/open-grind-v$version-android$sfx.$TARGET"
-      if [ -f "$src" ]; then
-        mv -f "$src" "$artifact"
-        printf 'Produced: %s (%s)\n' "$artifact" "$(du -h "$artifact" | cut -f1)"
-      else
-        printf 'Produced: %s (expected, not found)\n' "$src"
-      fi
+      "$ROOT/ci/android-outputs.sh"
     '';
   };
 in

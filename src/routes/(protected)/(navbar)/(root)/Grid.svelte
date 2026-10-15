@@ -36,12 +36,7 @@
 		gridState.load(geohash);
 	});
 
-	$effect(() => {
-		gridState.viewActive = true;
-		return () => {
-			gridState.viewActive = false;
-		};
-	});
+	$effect(() => gridState.attachView());
 </script>
 
 <div class="relative flex flex-1 flex-col">

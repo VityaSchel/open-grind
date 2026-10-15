@@ -296,23 +296,7 @@ const translatedScriptFiles = [
 	"src/lib/api/users/tags.ts",
 	"src/lib/app-data/preferences.svelte.ts",
 	"src/lib/blur/quality.ts",
-	"src/lib/chat/album-shares.svelte.ts",
-	"src/lib/chat/cached-conversation.ts",
-	"src/lib/chat/conversation-filters.svelte.ts",
-	"src/lib/chat/conversation-flags.ts",
-	"src/lib/chat/conversation-order.ts",
-	"src/lib/chat/conversation-window.ts",
-	"src/lib/chat/conversations-context.svelte.ts",
-	"src/lib/chat/conversations-state.svelte.ts",
-	"src/lib/chat/drafts.svelte.ts",
-	"src/lib/chat/fetch-epochs.ts",
-	"src/lib/chat/inbox-last-viewed.svelte.ts",
-	"src/lib/chat/merge-conversation.ts",
-	"src/lib/chat/optimistic-batch.ts",
-	"src/lib/chat/pending-deletes.ts",
-	"src/lib/chat/pending-flags.ts",
-	"src/lib/chat/seen-messages.ts",
-	"src/lib/chat/unread-while-missing.ts",
+	"src/lib/chat/*.ts",
 	"src/lib/credits/highlights.ts",
 	"src/lib/credits/index.ts",
 	"src/lib/components/album/album-lightbox.ts",
@@ -359,7 +343,7 @@ const translatedScriptFiles = [
 	"src/lib/push/*.ts",
 	"src/lib/updates/*.ts",
 	"src/lib/util/format-time.ts",
-	"src/lib/util/photoswipe.ts",
+	"src/lib/util/photoswipe/*.ts",
 	"src/lib/util/reconciling-list-state.svelte.ts",
 	"src/lib/util/sentinel-paging.svelte.ts",
 	"src/lib/util/units.ts",
@@ -569,6 +553,7 @@ export default defineConfig(
 		ignores: [
 			"src/**/*.test.ts",
 			"src/**/*-test-helpers.ts",
+			"src/lib/push/announce.ts",
 			"src/lib/push/explained-error.ts",
 		],
 		rules: {
@@ -576,6 +561,23 @@ export default defineConfig(
 				"error",
 				...scriptRawTextSelectors,
 				...scriptStaleTextSelectors,
+			],
+		},
+	},
+	{
+		rules: {
+			"@typescript-eslint/no-restricted-imports": [
+				"error",
+				{
+					paths: [
+						{
+							name: "phosphor-svelte",
+							allowTypeImports: true,
+							message:
+								'Import each icon from "phosphor-svelte/lib/<Name>".',
+						},
+					],
+				},
 			],
 		},
 	},

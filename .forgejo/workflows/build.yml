@@ -78,13 +78,13 @@ jobs:
         run: cd "${BUILD_ROOT:?}" && sh ci/setup-build.sh nix
       - name: Build
         run: cd "${BUILD_ROOT:?}" && nix run .#build-android
-      - name: Collect APK
+      - name: Collect APKs
         run: |
           : "${BUILD_ROOT:?}"
-          apk=("$BUILD_ROOT"/src-tauri/gen/android/app/build/outputs/apk/universal/release/*-unsigned.apk)
-          [ ${#apk[@]} -eq 1 ]
+          apks=("$BUILD_ROOT"/src-tauri/gen/android/app/build/outputs/apk/*/release/*-unsigned.apk)
+          [ ${#apks[@]} -eq 5 ]
           mkdir -p out
-          cp "${apk[0]}" out/
+          cp "${apks[@]}" out/
       - name: Check the Android credits
         run: |
           cd "${BUILD_ROOT:?}"

@@ -1,6 +1,7 @@
 pub mod api;
 mod app_data;
 mod app_language;
+mod app_origin;
 mod app_settings;
 mod appearance;
 mod appimage;
@@ -37,7 +38,7 @@ const MIN_CHROMIUM_MAJOR: u32 = 111;
 const MIN_WEBKITGTK: (u32, u32) = (2, 42);
 
 #[cfg(desktop)]
-const MAIN_WINDOW_LABEL: &str = "main";
+pub(crate) const MAIN_WINDOW_LABEL: &str = "main";
 
 const OPEN_GRIND_PLATFORM: &str = if cfg!(target_os = "android") {
 	"android"
@@ -60,19 +61,6 @@ fn open_grind_platform_plugin<R: tauri::Runtime>(
 			r#"window.__OPEN_GRIND_PLATFORM = "{OPEN_GRIND_PLATFORM}";"#
 		))
 		.build()
-}
-
-fn is_app_url(url: &tauri::Url) -> bool {
-	let host = url.host_str();
-	match url.scheme() {
-		"tauri" => host == Some("localhost"),
-		"http" | "https" => {
-			host == Some("tauri.localhost")
-				|| (cfg!(debug_assertions)
-					&& matches!(host, Some("localhost") | Some("127.0.0.1")))
-		}
-		_ => false,
-	}
 }
 
 // macOS reports a WebKit build number that doesn't track Safari versions
@@ -113,6 +101,15 @@ fn outdated_webview_notice() -> Option<String> {
 	None
 }
 
+#[cfg(desktop)]
+pub(crate) fn focus_main_window(app: &tauri::AppHandle) {
+	if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+		let _ = window.unminimize();
+		let _ = window.show();
+		let _ = window.set_focus();
+	}
+}
+
 // Tauri exits only once every window is gone, and sign-in opens a second one.
 #[cfg(desktop)]
 fn quit_when_closed(window: &tauri::WebviewWindow) {
@@ -137,19 +134,16 @@ pub fn run() {
 	#[cfg(feature = "devtools")]
 	let devtools = tauri_plugin_devtools::init();
 
+	let mut context = tauri::generate_context!();
+	context.config_mut().app.android_hostname = app_origin::android_hostname();
+
 	let builder = tauri::Builder::default();
 
 	// Plugins run in registration order and this one must be first:
 	// https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/single-instance
 	#[cfg(desktop)]
 	let builder = builder.plugin(tauri_plugin_single_instance::init(
-		|app, _args, _cwd| {
-			if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-				let _ = window.unminimize();
-				let _ = window.show();
-				let _ = window.set_focus();
-			}
-		},
+		|app, _args, _cwd| focus_main_window(app),
 	));
 
 	#[cfg(feature = "devtools")]
@@ -160,7 +154,9 @@ pub fn run() {
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
 		.plugin(api::recaptcha::plugin())
-		.plugin(api::push::plugin());
+		.plugin(app_origin::android::plugin());
+
+	let builder = builder.plugin(api::push::plugin());
 
 	builder
         .plugin(open_grind_platform_plugin())
@@ -205,6 +201,7 @@ pub fn run() {
             api::push::push_notifications_enabled,
             api::push::push_set_notifications_enabled,
             api::push::push_dismiss_conversation,
+            api::push::push_shown_conversations,
             api::push::push_open_notification_settings,
             api::push::push_mode,
             api::push::push_set_mode,
@@ -213,7 +210,9 @@ pub fn run() {
             api::push::push_open_category_settings,
             api::push::push_notification_permission,
             api::push::push_request_notification_permission,
+            api::push::push_notify,
             api::push::push_take_deeplink,
+            api::push::push_deeplink_pending,
             api::push::push_watch,
             storage::storage_backend,
             api::rest::request,
@@ -258,6 +257,8 @@ pub fn run() {
         ])
         .setup(|app| {
             scroll_phase::install_scroll_gesture_bridge(app.handle());
+            #[cfg(target_os = "android")]
+            app_origin::android::prepare_served_origin(app.handle());
             let user_agent = format!(
                 "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
                 app.package_info().version
@@ -274,7 +275,9 @@ pub fn run() {
                 let builder =
                     tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
                         .user_agent(&user_agent)
-                        .on_navigation(is_app_url);
+                        .on_navigation(|url| {
+                            app_origin::is_app_url(url, app_origin::SERVED_HOSTNAME)
+                        });
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
@@ -406,14 +409,12 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-
 	#[test]
 	fn release_builds_discard_every_tracing_event() {
 		let expected = if cfg!(debug_assertions) {
@@ -422,34 +423,6 @@ mod tests {
 			tracing::level_filters::LevelFilter::OFF
 		};
 		assert_eq!(tracing::level_filters::STATIC_MAX_LEVEL, expected);
-	}
-
-	fn allows(url: &str) -> bool {
-		is_app_url(&tauri::Url::parse(url).unwrap())
-	}
-
-	#[test]
-	fn admits_the_bundled_asset_origins() {
-		assert!(allows("tauri://localhost/"));
-		assert!(allows("tauri://localhost/chat/1"));
-		assert!(allows("http://tauri.localhost/"));
-		assert!(allows("https://tauri.localhost/"));
-	}
-
-	#[test]
-	fn refuses_navigation_away_from_the_app() {
-		for url in [
-			"https://example.org/",
-			"tauri://example.org/",
-			"http://tauri.localhost.example.org/",
-			"file:///etc/passwd",
-			"javascript:alert(1)",
-			"data:text/html,<script>1</script>",
-			"ogmedia://localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
-			"http://ogmedia.localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
-		] {
-			assert!(!allows(url), "{url} must not load in the main webview");
-		}
 	}
 }
 
@@ -552,10 +525,14 @@ mod opener_scope_pins {
 			.flat_map(|permission| permission["deny"].as_array().unwrap())
 			.map(|scope| scope["url"].as_str().unwrap())
 			.collect();
+		let android_origin =
+			format!("https://{}", crate::app_origin::ANDROID_HOSTNAME);
 		for origin in [
 			"http://tauri.localhost",
 			"https://tauri.localhost",
+			&android_origin,
 			"http://ogmedia.localhost",
+			"https://ogmedia.localhost",
 			"http://localhost",
 			"http://127.0.0.1",
 		] {

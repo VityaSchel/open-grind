@@ -2,8 +2,10 @@ import { flushSync } from "svelte";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+	foldedResumeHandlers,
 	getReceivedTapsMock,
 	markBlockedProfilesUnviewableMock,
+	preferences,
 	reconcileHandlers,
 	showErrorToastMock,
 	subscriptions,
@@ -13,7 +15,9 @@ const {
 } = vi.hoisted(() => ({
 	getReceivedTapsMock: vi.fn(),
 	markBlockedProfilesUnviewableMock: vi.fn(() => Promise.resolve()),
-	reconcileHandlers: [] as (() => void | Promise<void>)[],
+	foldedResumeHandlers: [] as (() => unknown)[],
+	preferences: { stayOnline: true },
+	reconcileHandlers: [] as ((cause?: string) => void | Promise<void>)[],
 	showErrorToastMock: vi.fn(),
 	subscriptions: [] as {
 		eventType: string;
@@ -32,10 +36,25 @@ vi.mock("$lib/api/browse/blocks", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/browse/blocks")>()),
 	markBlockedProfilesUnviewable: markBlockedProfilesUnviewableMock,
 }));
+vi.mock("$lib/app-data/preferences.svelte", async (importOriginal) => ({
+	...(await importOriginal<
+		typeof import("$lib/app-data/preferences.svelte")
+	>()),
+	preferencesLoaded: () => true,
+	preferencesSnapshot: () => preferences,
+}));
+vi.mock("$lib/push/opening-deeplink", () => ({
+	pushDeeplinkAhead: () => Promise.resolve(false),
+}));
 vi.mock("$lib/util/reconcile", () => ({
 	reconciler: {
-		subscribe(handler: () => void | Promise<void>) {
+		subscribe(
+			handler: (cause?: string) => void | Promise<void>,
+			options?: { onFoldedResume?: () => unknown },
+		) {
 			reconcileHandlers.push(handler);
+			if (options?.onFoldedResume)
+				foldedResumeHandlers.push(options.onFoldedResume);
 			return unsubscribeReconcileMock;
 		},
 	},
@@ -142,8 +161,93 @@ beforeEach(() => {
 	unsubscribeReconcileMock.mockReset();
 	unlistenTapMock.mockReset();
 	reconcileHandlers.length = 0;
+	foldedResumeHandlers.length = 0;
 	subscriptions.length = 0;
 	tapHandlers.length = 0;
+	preferences.stayOnline = true;
+});
+
+describe("TapsState while Stay online is off", () => {
+	beforeEach(() => {
+		preferences.stayOnline = false;
+		getReceivedTapsMock.mockResolvedValue({ profiles: [tap(1)] });
+	});
+
+	it("waits for the taps screen before its first fetch", async () => {
+		const state = new TapsState({ ourProfileId: 99 });
+		await Promise.resolve();
+
+		expect(getReceivedTapsMock).not.toHaveBeenCalled();
+		expect(state.loading).toBe(true);
+
+		const detach = state.attachView();
+		await vi.waitFor(() => expect(state.taps).toHaveLength(1));
+		detach();
+
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+	});
+
+	it("refreshes on returning to the app only while the taps screen is shown", async () => {
+		const state = new TapsState({ ourProfileId: 99 });
+		const detach = state.attachView();
+		await waitForLoaded(state);
+		getReceivedTapsMock.mockClear();
+
+		await reconcileHandlers[0]?.("resume");
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+
+		detach();
+		await reconcileHandlers[0]?.("resume");
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+	});
+
+	it("never refetches for a reconnect, and catches up once the screen is shown", async () => {
+		const state = new TapsState({ ourProfileId: 99 });
+		state.attachView()();
+		await waitForLoaded(state);
+		getReceivedTapsMock.mockClear();
+
+		const detach = state.attachView();
+		await reconcileHandlers[0]?.("reconnect");
+		await reconcileHandlers[0]?.("resync");
+		detach();
+		expect(getReceivedTapsMock).not.toHaveBeenCalled();
+
+		state.attachView()();
+		await vi.waitFor(() => expect(state.refreshing).toBe(false));
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+	});
+
+	it("catches up the taps screen when a return lands right after a reconnect", async () => {
+		const state = new TapsState({ ourProfileId: 99 });
+		const detach = state.attachView();
+		await waitForLoaded(state);
+		getReceivedTapsMock.mockClear();
+
+		await reconcileHandlers[0]?.("reconnect");
+		expect(getReceivedTapsMock).not.toHaveBeenCalled();
+
+		await foldedResumeHandlers[0]?.();
+		detach();
+
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+	});
+
+	it("waits for the taps screen before refetching for an unblock", async () => {
+		const state = new TapsState({ ourProfileId: 99 });
+		state.attachView()();
+		await waitForLoaded(state);
+		getReceivedTapsMock.mockClear();
+
+		markProfileViewable(1);
+		expect(state.refreshing).toBe(false);
+		await new Promise((resolve) => setTimeout(resolve));
+		expect(getReceivedTapsMock).not.toHaveBeenCalled();
+
+		state.attachView()();
+		await vi.waitFor(() => expect(state.refreshing).toBe(false));
+		expect(getReceivedTapsMock).toHaveBeenCalledOnce();
+	});
 });
 
 describe("TapsState", () => {
@@ -203,6 +307,21 @@ describe("TapsState", () => {
 		emitTap(tapEvent({ senderId: 1, recipientId: 99 }));
 
 		expect(state.taps[0]?.isFavorite).toBe(true);
+	});
+
+	it("hands only a tap sent to us to the incoming-tap handler", async () => {
+		getReceivedTapsMock.mockResolvedValue({ profiles: [] });
+		const onIncomingTap = vi.fn();
+		const state = new TapsState({ ourProfileId: 99, onIncomingTap });
+		await waitForLoaded(state);
+
+		emitTap(tapEvent({ senderId: 1, recipientId: 99 }));
+		emitTap(tapEvent({ senderId: 2, recipientId: 7 }));
+
+		expect(onIncomingTap).toHaveBeenCalledExactlyOnceWith({
+			senderId: 1,
+			senderName: "Profile 1",
+		});
 	});
 
 	it("records initial load errors and retries", async () => {

@@ -6,10 +6,10 @@ Self-hosted Forgejo runners on rented ephemeral VMs.
 
 | Workflow           | Trigger                  | Description                                                                                                                                            |
 | ------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `build.yml`        | manual                   | Builds the universal Android APK, the x86_64 and arm64 Linux AppImage and deb and Windows installers on several providers, verifies reproducibility    |
+| `build.yml`        | manual                   | Builds the Android APKs, Linux AppImages and debs (x86_64, arm64) and Windows installers on several providers, verifies reproducibility                |
 | `check.yml`        | pull request             | Lint, format, types, unit, Rust and end-to-end tests, plus the version and backup-rules invariants                                                     |
 | `translations.yml` | translation pull request | `check:i18n` and Prettier on the non-English locale files when a pull request changes them; `check.yml` skips a pull request that changes nothing else |
-| `fdroid.yml`       | manual                   | Rebuilds the APK the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                                              |
+| `fdroid.yml`       | manual                   | Rebuilds the per-ABI APKs the way F-Droid's buildserver does ([fdroid/](./fdroid))                                                                     |
 | `audit.yml`        | weekly, pull request     | `cargo deny` and `bun audit`                                                                                                                           |
 | `credits.yml`      | pull request, push       | Regenerates the third-party credits and fails when they drift                                                                                          |
 | `keys.yml`         | push                     | Checks the published keys against `KEYS.md` (`verify-keys.ts`)                                                                                         |
@@ -25,6 +25,7 @@ Self-hosted Forgejo runners on rented ephemeral VMs.
 | `check-release-version.sh` | Refuse to build a `-dev` version unless the run allows it                                                              |
 | `linux/build.sh`           | Build, repack and name the `.deb`, then assemble the `.AppImage`, inside the Linux image                               |
 | `windows/build.sh`         | Cross-build and name one installer, `x64` or `arm64`                                                                   |
+| `android-outputs.sh`       | Name the universal and per-ABI APKs and the AAB                                                                        |
 | `verify.ts`                | Every artifact, one copy per box in `BOXES`/`ARM_BOXES`; either may be empty                                           |
 | `sign.ts`                  | Sign. APK: apksigner and minisign; AAB: code transparency, then jarsigner with the Play upload key; the rest: minisign |
 | `play-upload.sh`           | Upload a signed AAB, its release notes and the store listing to Google Play with fastlane                              |

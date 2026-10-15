@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ArrowBendUpLeftIcon, DotsThreeIcon } from "phosphor-svelte";
+	import ArrowBendUpLeftIcon from "phosphor-svelte/lib/ArrowBendUpLeftIcon";
+	import DotsThreeIcon from "phosphor-svelte/lib/DotsThreeIcon";
 	import { untrack } from "svelte";
 	import { expoOut } from "svelte/easing";
 	import type { VirtualElement } from "@floating-ui/dom";

@@ -10,6 +10,8 @@ Edit the tree and write the diff back with:
 bun run patch-deps -- --diff http2
 ```
 
+`cargo deny` skips path dependencies, so check advisories for the patched versions by hand when bumping them.
+
 ## http2
 
 The HTTP/2 stack under `wreq`. Cloudflare sees every frame we send, so these hunks make them match okhttp.
@@ -64,11 +66,36 @@ On Android and Apple wry hands the WebView the fully buffered body. A handler ca
 
 Not a backport: **keep it when the 0.56 hunks are deleted.**
 
+On Android wry serves custom protocols from `http(s)://<protocol>.localhost`, which Digital Asset Links can't verify. `WebViewBuilderExtAndroid::with_custom_protocol_host` serves one from `https://<host>` instead and answers every other form of that host with 403.
+
+| File                                   | Change                                                                                                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib.rs`, `error.rs`                   | `with_custom_protocol_host` and `Error::InvalidCustomProtocolHost`.                                                                                         |
+| `custom_protocol_workaround.rs`        | Validate the host, map `<protocol>://localhost` to `https://<host>` and back, block the host over `http`, on another port, with userinfo or a trailing dot. |
+| `android/mod.rs`, `android/binding.rs` | Map the start URL, route requests through the mapping, and hand the hosts to Kotlin.                                                                        |
+| `android/kotlin/RustWebViewClient.kt`  | 403 for unhandled and service worker requests to the host, reload redirects to it.                                                                          |
+
+Backport of [wry#1879](https://github.com/tauri-apps/wry/pull/1879). **Delete when a `tauri-runtime-wry` requiring a `wry` with `with_custom_protocol_host` is published.**
+
 ## tauri-codegen
 
 Embedded assets and CSP hashes are emitted in hash-map and `readdir` order. The patch sorts both.
 
 **Delete when `tauri-codegen > 2.6.3` publishes** — [tauri#15777](https://github.com/tauri-apps/tauri/pull/15777) is merged and supersedes it.
+
+## tauri, tauri-utils, tauri-runtime, tauri-runtime-wry
+
+`app > androidHostname` serves the Android app from `https://<host>` instead of `http://tauri.localhost`, so autofill services can verify the origin through Digital Asset Links. The stock CLI rejects the key in `tauri.conf.json`, so the app sets it through `context.config_mut()`.
+
+| Crate                                | Change                                                                                                         |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `tauri-utils`                        | `AppConfig::android_hostname` and the validated `AndroidHostname`.                                             |
+| `tauri-runtime`, `tauri-runtime-wry` | `WebviewAttributes::android_hostname`, passed to wry's `with_custom_protocol_host`.                            |
+| `tauri`                              | Move `tauri://localhost` URLs to the host, force `use_https_scheme`, and trust only that exact origin for IPC. |
+| `tauri`                              | Test only: the mock runtime reports the webview's `use_https_scheme`, as upstream `dev` does.                  |
+| `Cargo.toml`                         | Allow warnings, since a path dependency gets no `--cap-lints allow`.                                           |
+
+Backport of [tauri#16220](https://github.com/tauri-apps/tauri/pull/16220). **Delete when a tauri release ships `app > androidHostname`**, and move the host into `tauri.conf.json`. Until then these four crates, wry and tauri-codegen move together: tauri-codegen 2.7 already requires tauri-utils 2.10.
 
 ## tauri-plugin-geolocation
 

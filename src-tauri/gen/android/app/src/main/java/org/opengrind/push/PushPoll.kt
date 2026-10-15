@@ -8,14 +8,13 @@ object PushPoll {
 		System.loadLibrary("open_grind_lib")
 	}
 
-	external fun nativePoll(sinceInbox: Long, sinceTaps: Long, shownConversations: String): String?
+	external fun nativePoll(sinceInbox: Long, shownConversations: String): String?
 
-	fun since(watermarks: Watermarks, shown: List<ShownConversation>): Poll {
-		val nothing = Poll(watermarks, emptyList())
+	fun since(watermark: Watermark, shown: List<ShownConversation>): Poll {
+		val nothing = Poll(watermark, emptyList())
 		val answer = runCatching {
 			nativePoll(
-				sinceInbox = watermarks.inbox,
-				sinceTaps = watermarks.taps,
+				sinceInbox = watermark.at,
 				shownConversations = encode(shown),
 			)
 		}.getOrNull() ?: return nothing
@@ -30,11 +29,7 @@ object PushPoll {
 				push.keys().asSequence().associateWith { key -> push.optString(key) }
 			}
 		}
-		val watermarks = Watermarks(
-			inbox = root.getLong("inboxWatermark"),
-			taps = root.getLong("tapsWatermark"),
-		)
-		return Poll(watermarks, payloads)
+		return Poll(Watermark(root.getLong("inboxWatermark")), payloads)
 	}
 
 	private fun encode(shown: List<ShownConversation>): String =
@@ -46,7 +41,7 @@ object PushPoll {
 			},
 		).toString()
 
-	data class Poll(val watermarks: Watermarks, val payloads: List<Map<String, String>>)
+	data class Poll(val watermark: Watermark, val payloads: List<Map<String, String>>)
 
 	data class ShownConversation(val conversationId: String, val keys: List<String>)
 }
