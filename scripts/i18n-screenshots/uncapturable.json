@@ -14,6 +14,7 @@
 	"interest.taps.notification": "Only in the system notification that a desktop build shows for a received tap, which the system draws outside the page, so no page screenshot shows it.",
 	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog.",
 	"profile.miniCard.a11y.anonymous": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
+	"settings.notifications.unsupportedOn": "Obsolete, and no code shows it: every platform the app names (Android, macOS, Windows and Linux) now shows the notification settings, and every other one shows settings.notifications.unsupported instead. It stays until the key is removed in Weblate.",
 	"shell.notFound.clippy.*": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
 	"shell.onboarding.title": "Only the document title of the onboarding page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"shell.toaster.a11y.close": "Only the toaster's close button carries this label, and no toast in the app shows a close button."
