@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, waitFor } from "@testing-library/svelte";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,7 +16,9 @@ import {
 	appLifecycle,
 	categories,
 	checked,
+	currentPlatform,
 	disabled,
+	inMode,
 	opened,
 	push,
 	resetNotificationsPage,
@@ -60,12 +68,22 @@ vi.mock("$lib/api/app-lifecycle.svelte", async () => ({
 
 const NotificationsPage = (await import("./+page.svelte")).default;
 
+const { reconcileNotifications } =
+	await import("$lib/push/notifications.svelte");
+
+async function deliveredFast(): Promise<void> {
+	inMode("fast");
+	await reconcileNotifications();
+	vi.clearAllMocks();
+}
+
 beforeEach(resetNotificationsPage);
 
 afterEach(cleanup);
 
 describe("the notification categories", () => {
-	it("titles both switches without a description and shows them on", async () => {
+	it("titles both switches without a description and shows them on in Fast mode", async () => {
+		await deliveredFast();
 		const { messages, taps } = await opened(NotificationsPage);
 
 		expect(messages.closest("label")?.textContent.trim()).toBe(
@@ -76,6 +94,47 @@ describe("the notification categories", () => {
 			expect(checked(control)).toBe("true");
 		expect(disabled(taps)).toBe(false);
 	});
+
+	it("turns Received taps off and locks it in Slow mode, with a caption under the switch", async () => {
+		const { messages, taps } = await opened(NotificationsPage);
+
+		expect(checked(taps)).toBe("false");
+		expect(disabled(taps)).toBe(true);
+		expect(checked(messages)).toBe("true");
+		expect(disabled(messages)).toBe(false);
+		const caption = screen.getByText("Not available in slow mode");
+		expect(caption.closest("label")).toBeNull();
+		expect(caption.previousElementSibling).toBe(taps.closest("label"));
+	});
+
+	it("brings the saved Received taps choice back once Fast mode is on", async () => {
+		const { taps } = await opened(NotificationsPage);
+		expect(checked(taps)).toBe("false");
+
+		inMode("fast");
+		await reconcileNotifications();
+
+		await waitFor(() => expect(checked(taps)).toBe("true"));
+		expect(disabled(taps)).toBe(false);
+		expect(screen.queryByText("Not available in slow mode")).toBeNull();
+		expect(push.setPushCategory).not.toHaveBeenCalled();
+		expect(account.setPushSettings).not.toHaveBeenCalled();
+	});
+
+	it.each(["macos", "windows", "linux"] as const)(
+		"leaves Received taps usable on %s, which has no delivery modes",
+		async (platform) => {
+			currentPlatform.mockReturnValue(platform);
+			render(NotificationsPage);
+			const taps = await screen.findByRole("switch", {
+				name: "Received taps",
+			});
+
+			expect(checked(taps)).toBe("true");
+			expect(disabled(taps)).toBe(false);
+			expect(screen.queryByText("Not available in slow mode")).toBeNull();
+		},
+	);
 
 	it("opens Android's settings when New messages is turned off and stays on", async () => {
 		const { messages } = await opened(NotificationsPage);
@@ -112,6 +171,7 @@ describe("the notification categories", () => {
 	});
 
 	it("opens Android's settings and saves nothing when a blocked category is turned on", async () => {
+		await deliveredFast();
 		push.pushCategories.mockResolvedValue(
 			categories({}, { systemBlocked: true }),
 		);
@@ -132,6 +192,7 @@ describe("the notification categories", () => {
 	});
 
 	it("disables Received taps while it saves", async () => {
+		await deliveredFast();
 		const saving = Promise.withResolvers<void>();
 		push.setPushCategory.mockReturnValueOnce(saving.promise);
 		const { taps } = await opened(NotificationsPage);
@@ -147,6 +208,7 @@ describe("the notification categories", () => {
 	});
 
 	it("disables every category while notifications are off", async () => {
+		await deliveredFast();
 		stored.notificationsEnabled = false;
 		push.pushCategories.mockResolvedValue(
 			categories({ systemBlocked: true }),
@@ -158,6 +220,7 @@ describe("the notification categories", () => {
 	});
 
 	it("reloads the categories only when the app resumes", async () => {
+		await deliveredFast();
 		const { taps } = await opened(NotificationsPage);
 		expect(push.pushCategories).toHaveBeenCalledOnce();
 

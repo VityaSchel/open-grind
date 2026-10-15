@@ -25,20 +25,20 @@ class PushPollService : JobService() {
 
 	private fun sweep(params: JobParameters) {
 		runCatching {
-			val poll = PushPoll.since(PushSettings.watermarks(this), PushNotifier.shownConversations(this))
+			val poll = PushPoll.since(PushSettings.watermark(this), PushNotifier.shownConversations(this))
 			val now = System.currentTimeMillis()
 			if (!abandoned.get()) {
-				val seen = PushSettings.watermarks(this)
+				val seen = PushSettings.watermark(this)
 				val decisions = poll.payloads
 					.map { payload -> PushPayload.decide(payload, now) }
 					.filterNot { decision -> decision is PushDecision.Notify && caughtUp(seen, decision) }
 				PushNotifier.applyAll(this, decisions)
-				PushSettings.advanceWatermarks(this, poll.watermarks)
+				PushSettings.advanceWatermark(this, poll.watermark)
 			}
 		}
 		jobFinished(params, false)
 	}
 
-	private fun caughtUp(seen: Watermarks, decision: PushDecision.Notify): Boolean =
-		AppForeground.visible() || seen.covers(decision.kind, decision.timestamp)
+	private fun caughtUp(seen: Watermark, decision: PushDecision.Notify): Boolean =
+		AppForeground.visible() || seen.covers(decision.timestamp)
 }

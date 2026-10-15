@@ -4,7 +4,7 @@ use super::body::{describe, describe_message, set_body_key, GENERIC_BODY};
 use super::page::{self, Page};
 use super::{
 	base, cleared, line_key, profile_id, Answer, Push, CATCH_UP_LINE,
-	CHATS_CHANNEL, CONVERSATION_DEEPLINK,
+	CONVERSATION_DEEPLINK,
 };
 
 pub(super) struct Conversation<'a> {
@@ -92,7 +92,7 @@ impl<'a> Conversation<'a> {
 	}
 
 	fn push(&self, at: i64, line: &str) -> Push {
-		let mut push = base(at, line_key(self.id, line), CHATS_CHANNEL);
+		let mut push = base(at, line_key(self.id, line));
 		let conversation = format!("{CONVERSATION_DEEPLINK}{}", self.id);
 		match &self.peer {
 			Some(peer) => {

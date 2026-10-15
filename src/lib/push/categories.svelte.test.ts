@@ -57,7 +57,7 @@ beforeEach(() => {
 });
 
 describe("loading notification categories", () => {
-	it("adopts the account's tap setting so the background poll obeys it too", async () => {
+	it("adopts the account's tap setting so tap notifications obey it too", async () => {
 		account.getPushSettings.mockResolvedValue({
 			tapPushNotification: false,
 		});

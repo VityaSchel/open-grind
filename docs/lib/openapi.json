@@ -5893,7 +5893,8 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get received taps"
+				"summary": "Get received taps",
+				"description": "Fetching received taps also marks our profile online by setting `onlineUntil` to current time + 600 s, like Get Cascade."
 			}
 		},
 		"/v2/taps/add": {

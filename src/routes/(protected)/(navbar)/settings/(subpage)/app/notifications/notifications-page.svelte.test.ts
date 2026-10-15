@@ -127,14 +127,14 @@ describe("the notifications page", () => {
 	);
 
 	it("opens turned on in Slow mode with every editable control usable", async () => {
-		const { master, delivery, fast, slow, taps } =
+		const { master, delivery, fast, slow, messages } =
 			await opened(NotificationsPage);
 
 		expect(checked(master)).toBe("true");
 		expect(delivery.hasAttribute("data-disabled")).toBe(false);
 		expect(checked(slow)).toBe("true");
 		expect(checked(fast)).toBe("false");
-		for (const control of [fast, slow, taps])
+		for (const control of [fast, slow, messages])
 			expect(disabled(control)).toBe(false);
 		expect(screen.queryByRole("status", { hidden: true })).toBeNull();
 	});
