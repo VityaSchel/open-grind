@@ -75,7 +75,7 @@ test("Escape is left to a focused composer and closes the chat otherwise", async
 	await page.goto("/chat");
 	await page.locator('a[href^="/chat/"]').first().click();
 	await expect(page).toHaveURL(/\/chat\/.+/);
-	const composer = page.getByPlaceholder("Say something...");
+	const composer = page.getByPlaceholder("Write a message…");
 
 	await composer.fill("draft");
 	await page.keyboard.press("Escape");
@@ -101,7 +101,7 @@ test("Escape cancels a pending reply before it closes the chat", async ({
 	const replyBar = page.getByLabel("Cancel reply");
 	await expect(replyBar).toBeVisible();
 
-	await page.getByPlaceholder("Say something...").blur();
+	await page.getByPlaceholder("Write a message…").blur();
 	await page.keyboard.press("Escape");
 	await expect(replyBar).toHaveCount(0);
 	await expect(page).toHaveURL(new RegExp(`${DEMO_CONVERSATION}$`));
