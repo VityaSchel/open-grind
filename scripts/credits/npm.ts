@@ -1,7 +1,6 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { build } from "vite";
-import { collectedRoots } from "./collected-roots";
 import { hashText } from "./hash";
 import { cssImportsCreditedElsewhere, npmOverrides } from "./npm-overrides";
 import type { CreditEntry, CreditsChunk } from "./types";
@@ -9,7 +8,7 @@ import type { CreditEntry, CreditsChunk } from "./types";
 const repoRoot = path.resolve(import.meta.dir, "../..");
 const textsDir = path.join(import.meta.dir, "texts");
 const sourceDir = path.join(repoRoot, "src");
-const collectConfig = path.join(import.meta.dir, "vite.config.collect.ts");
+const collectClient = path.join(import.meta.dir, "collect-client.ts");
 const svelteConfig = path.join(repoRoot, "svelte.config.js");
 
 const licenseFilePattern =
@@ -155,7 +154,7 @@ const serviceWorkerEntry = () => {
 	return entry && path.relative(repoRoot, entry);
 };
 
-const bundledPackageRoots = async () => {
+const bundledPackageRoots = () => {
 	const serviceWorker = serviceWorkerEntry();
 	if (serviceWorker) {
 		throw new Error(
@@ -164,30 +163,23 @@ const bundledPackageRoots = async () => {
 		);
 	}
 
-	const roots = collectedRoots();
-	roots.clear();
-	const cwd = process.cwd();
-	process.chdir(repoRoot);
-	const failure = await build({
-		configFile: collectConfig,
-		logLevel: "silent",
-	}).then(
-		() => null,
-		(error: unknown) => error,
-	);
-	process.chdir(cwd);
-
-	if (roots.size === 0) {
-		if (failure === null) {
+	const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "og-credits-"));
+	const rootsFile = path.join(scratch, "roots.json");
+	try {
+		const collector = Bun.spawnSync(["node", collectClient, rootsFile], {
+			cwd: repoRoot,
+			stdout: "inherit",
+			stderr: "inherit",
+		});
+		if (!collector.success) {
 			throw new Error(
-				"the credits collector never saw the client bundle",
+				`the credits collector failed with ${collector.exitCode ?? collector.signalCode}`,
 			);
 		}
-		throw failure instanceof Error
-			? failure
-			: new Error(String(failure), { cause: failure });
+		return JSON.parse(fs.readFileSync(rootsFile, "utf-8")) as string[];
+	} finally {
+		fs.rmSync(scratch, { recursive: true, force: true });
 	}
-	return [...roots];
 };
 
 export const collectNpmCredits = async (): Promise<CreditsChunk> => {
@@ -195,7 +187,7 @@ export const collectNpmCredits = async (): Promise<CreditsChunk> => {
 		string,
 		{ root: string; manifest: PackageManifest }
 	>();
-	for (const root of [...(await bundledPackageRoots()), ...cssPackageRoots()]
+	for (const root of [...bundledPackageRoots(), ...cssPackageRoots()]
 		.filter((root) => !path.basename(root).startsWith("."))
 		.sort()) {
 		const manifest = JSON.parse(
