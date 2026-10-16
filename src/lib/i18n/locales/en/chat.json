@@ -28,7 +28,8 @@
 		"video": "Sent you a video",
 		"gaymoji": "Sent you a Gaymoji",
 		"gif": "Sent you a GIF",
-		"location": "Sent you their location"
+		"location": "Sent you their location",
+		"you": "You"
 	},
 	"conversation": {
 		"bypassReason": {

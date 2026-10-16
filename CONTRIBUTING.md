@@ -203,7 +203,7 @@ Before opening a pull request, run the same checks CI runs:
 
 - `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
 - `bun run check` — `svelte-check` type checking.
-- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json` and the files `bun run gen:i18n` generates from them. `bun run check:i18n-release` also fails when a shipped language lacks a message, and `bun run build` runs it before every release build.
+- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json` and the files `bun run gen:i18n` generates from them, the Android `strings.xml` files included. `bun run check:i18n-release` also fails when a shipped language lacks a message, and `bun run build` runs it before every release build.
 - `bun run check:release-bundle` — fails when text from the demo fixtures in `src/lib/demo/mock` ships in `build/`. `bun run build` runs it after every release build; builds made with `OPEN_GRIND_DEMO=1` skip it.
 - `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
 - `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
@@ -234,7 +234,7 @@ The dev server also serves a Google OAuth app release when given `COMPANION_PAYL
 
 - `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
 - `*.{json,md,yml,yaml,css,html}` — Prettier
-- `src/lib/i18n/locales/en/*.json` and `src/lib/i18n/shipped.json` — `bun run gen:i18n`, which stops the commit until the files it generates are staged, then Prettier
+- `src/lib/i18n/locales/en/*.json`, `src/lib/i18n/shipped.json` and `src/lib/i18n/android-strings.json` — `bun run gen:i18n`, which stops the commit until the files it generates are staged, new Android `strings.xml` files included, then Prettier
 - `*.sh` — ShellCheck
 - `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
 

@@ -7,11 +7,13 @@ pre-commit:
       exclude:
         - "src/lib/i18n/locales/en/*.json"
         - "src/lib/i18n/shipped.json"
+        - "src/lib/i18n/android-strings.json"
     i18n:
       glob:
         - "src/lib/i18n/locales/en/*.json"
         - "src/lib/i18n/shipped.json"
-      run: bun run gen:i18n && git diff --exit-code -- src/lib/i18n/generated.ts src/lib/i18n/shipped-files.ts src-tauri/Info.plist src-tauri/gen/android/app/src/main/res/xml/locales_config.xml && bunx prettier --write {staged_files}
+        - "src/lib/i18n/android-strings.json"
+      run: bun run gen:i18n && git diff --exit-code -- src/lib/i18n/generated.ts src/lib/i18n/shipped-files.ts src-tauri/Info.plist src-tauri/gen/android/app/src/main/res/xml/locales_config.xml ':(glob)src-tauri/gen/android/app/src/main/res/values*/strings.xml' && ! git ls-files --others --exclude-standard -- ':(glob)src-tauri/gen/android/app/src/main/res/values*/strings.xml' | grep . && bunx prettier --write {staged_files}
       stage_fixed: true
     clippy:
       glob: "*.rs"

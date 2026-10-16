@@ -71,5 +71,14 @@
 		"errors": {
 			"finishSetupFailed": "Couldn’t finish setup"
 		}
+	},
+	"webViewWarning": {
+		"title": "Android WebView may be too old",
+		"description": "Open Grind may not display correctly on older Android System WebView versions. This build expects WebView {{minimumVersion}} or newer.",
+		"detected": "Detected provider: {{provider}} ({{version}})",
+		"unknownProvider": "Unknown provider",
+		"unknownVersion": "Unknown version",
+		"update": "Update WebView",
+		"continue": "Continue anyway"
 	}
 }

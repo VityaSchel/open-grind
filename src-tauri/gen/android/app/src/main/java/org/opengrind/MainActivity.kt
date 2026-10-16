@@ -199,6 +199,7 @@ class MainActivity : TauriActivity() {
 		webView.visibility = WebView.INVISIBLE
 
 		val view = layoutInflater.inflate(R.layout.dialog_webview_warning, null, false)
+		view.findViewById<TextView>(R.id.dialog_title).text = getString(R.string.webview_warning_title)
 		view.findViewById<TextView>(R.id.dialog_message).text = buildWebViewWarningMessage(warning)
 
 		val dialog = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_OpenGrind_WebViewDialog)
@@ -206,14 +207,20 @@ class MainActivity : TauriActivity() {
 			.setCancelable(false)
 			.create()
 
-		view.findViewById<MaterialButton>(R.id.button_update).setOnClickListener {
-			dialog.dismiss()
-			openWebViewUpdate(warning)
-			revealWebView()
+		view.findViewById<MaterialButton>(R.id.button_update).apply {
+			text = getString(R.string.webview_warning_update)
+			setOnClickListener {
+				dialog.dismiss()
+				openWebViewUpdate(warning)
+				revealWebView()
+			}
 		}
-		view.findViewById<MaterialButton>(R.id.button_continue).setOnClickListener {
-			dialog.dismiss()
-			revealWebView()
+		view.findViewById<MaterialButton>(R.id.button_continue).apply {
+			text = getString(R.string.webview_warning_continue)
+			setOnClickListener {
+				dialog.dismiss()
+				revealWebView()
+			}
 		}
 
 		dialog.show()
@@ -224,11 +231,11 @@ class MainActivity : TauriActivity() {
 	}
 
 	private fun buildWebViewWarningMessage(status: WebViewSupport.Status): String {
-		val provider = status.packageName ?: "Unknown provider"
-		val version = status.versionName ?: "Unknown version"
-		return "Open Grind may not display correctly on older Android System WebView " +
-			"versions. This build expects WebView ${status.minSupportedMajor} or newer.\n\n" +
-			"Detected provider: $provider ($version)"
+		val provider = status.packageName ?: getString(R.string.webview_warning_unknown_provider)
+		val version = status.versionName ?: getString(R.string.webview_warning_unknown_version)
+		val description = getString(R.string.webview_warning_description, status.minSupportedMajor.toString())
+		val detected = getString(R.string.webview_warning_detected, provider, version)
+		return "$description\n\n$detected"
 	}
 
 	private fun openWebViewUpdate(status: WebViewSupport.Status) {

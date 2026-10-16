@@ -1,0 +1,21 @@
+{
+	"push_self": "chat.notification.you",
+	"push_channel_messages": "settings.notifications.categories.messages",
+	"push_channel_taps": "settings.notifications.categories.taps",
+	"transfer_channel_name": "updates.transfers.channel",
+	"update_transfer_title": "updates.stage.downloading",
+	"addon_install_transfer_title_google_oauth": "updates.addons.googleOauth.stage.install.downloading",
+	"addon_install_transfer_title_recaptcha": "updates.addons.recaptcha.stage.install.downloading",
+	"addon_install_transfer_title_fcm": "updates.addons.fcm.stage.install.downloading",
+	"addon_update_transfer_title_google_oauth": "updates.addons.googleOauth.stage.update.downloading",
+	"addon_update_transfer_title_recaptcha": "updates.addons.recaptcha.stage.update.downloading",
+	"addon_update_transfer_title_fcm": "updates.addons.fcm.stage.update.downloading",
+	"media_upload_transfer_title": "media.uploads.notification",
+	"webview_warning_title": "shell.webViewWarning.title",
+	"webview_warning_description": "shell.webViewWarning.description",
+	"webview_warning_detected": "shell.webViewWarning.detected",
+	"webview_warning_unknown_provider": "shell.webViewWarning.unknownProvider",
+	"webview_warning_unknown_version": "shell.webViewWarning.unknownVersion",
+	"webview_warning_update": "shell.webViewWarning.update",
+	"webview_warning_continue": "shell.webViewWarning.continue"
+}

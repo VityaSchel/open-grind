@@ -4,8 +4,12 @@
 		"explanation": "Error toast for a chat message that couldn’t be sent; today a message that fails to send shows “Not sent” on it instead, so this toast never appears."
 	},
 	"chat.notification.*": {
-		"reason": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
-		"explanation": "Body of the system notification for a new chat message, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+		"reason": "Only in the system notifications that the desktop and Android builds show for chat messages, which the system draws outside the page, so no page screenshot shows them.",
+		"explanation": "Body of the system notification that the desktop and Android apps show for a new chat message, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+	},
+	"chat.notification.you": {
+		"reason": "Only the user's name in the MessagingStyle of the Android chat notifications, which Android requires and uses only for messages from the user, and the system draws those notifications outside the page, so no page screenshot shows it.",
+		"explanation": "Name for you in the chat message notifications of the Android app, which Android uses to label a message from you; the system draws them in the notification shade, outside the app, so no screenshot shows it."
 	},
 	"commands.filterGrid.errors.applyFailed": {
 		"reason": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
@@ -28,12 +32,16 @@
 		"explanation": "Error message for an action that needs you to be signed in, shown in an error toast; signing in never fails this way and an expired session shows its own message, so this text never appears today."
 	},
 	"interest.taps.notification": {
-		"reason": "Only in the system notification that a desktop build shows for a received tap, which the system draws outside the page, so no page screenshot shows it.",
-		"explanation": "Body of the system notification for a received tap, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+		"reason": "Only in the system notification that the desktop and Android builds show for a received tap, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Body of the system notification that the desktop and Android apps show for a received tap, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
 	},
 	"media.picker.filters.*": {
 		"reason": "The native file dialog shows these file type names, and the web build has no native dialog.",
 		"explanation": "Name of a file type choice in the system file dialog that the desktop app opens to pick photos and videos; the system draws that dialog, so no screenshot shows it."
+	},
+	"media.uploads.notification": {
+		"reason": "Only in the Android notification that shows while media uploads, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Title of the notification that the Android app shows in the notification shade while photos or videos upload; the system draws it outside the app, so no screenshot shows it."
 	},
 	"profile.miniCard.a11y.anonymous": {
 		"reason": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
@@ -46,5 +54,13 @@
 	"shell.toaster.a11y.close": {
 		"reason": "Only the toaster's close button carries this label, and no toast in the app shows a close button.",
 		"explanation": "Screen reader label of the close button on a toast notification; no toast in the app has that button, so the label is never read out."
+	},
+	"shell.webViewWarning.*": {
+		"reason": "Only in the native dialog that the Android app shows over the page when the system WebView is older than the app supports, so no page screenshot shows it.",
+		"explanation": "Part of the warning dialog that the Android app shows as it opens when the phone’s Android System WebView is older than the app supports; Android draws the dialog, so no screenshot shows it."
+	},
+	"updates.transfers.channel": {
+		"reason": "Only the name of the Android notification channel for downloads and uploads, which the system notification settings show, so no page screenshot shows it.",
+		"explanation": "Name of the notification category for downloads and uploads that Android lists in the app’s notification settings; the system draws those settings, so no screenshot shows it."
 	}
 }

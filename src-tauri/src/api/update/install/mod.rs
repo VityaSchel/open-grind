@@ -162,6 +162,8 @@ mod pins {
 		ADDON_GATE, MANIFEST,
 	};
 
+	mod addon_titles;
+
 	const KEYS: &str = include_str!("../../../../../KEYS.md");
 	const LINUX_BUILD: &str = include_str!("../../../../../ci/linux/build.sh");
 	const ANDROID_OUTPUTS: &str =
@@ -190,9 +192,6 @@ mod pins {
 
 	const CAPABILITY_TS: &str =
 		include_str!("../../../../../src/lib/updates/capability.svelte.ts");
-
-	const UPDATES_CATALOG: &str =
-		include_str!("../../../../../src/lib/i18n/locales/en/updates.json");
 
 	const INSTALLER: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/update/ApkInstaller.kt"
@@ -226,14 +225,6 @@ mod pins {
 
 	const MINT_TOKEN_PERMISSION: &str =
 		"org.opengrind.recaptcha.permission.MINT_TOKEN";
-
-	const ADDON_NAMES: &str = include_str!(
-		"../../../../gen/android/app/src/main/java/org/opengrind/addon/AddonNames.kt"
-	);
-
-	const ANDROID_STRINGS: &str = include_str!(
-		"../../../../gen/android/app/src/main/res/values/strings.xml"
-	);
 
 	const SIGNING_CERTIFICATES: &str = include_str!(
 		"../../../../gen/android/app/src/main/java/org/opengrind/addon/PackageSigningCertificates.kt"
@@ -774,19 +765,6 @@ mod pins {
 		entries
 	}
 
-	fn updates_message(key: &str) -> String {
-		let catalog: serde_json::Value = serde_json::from_str(UPDATES_CATALOG)
-			.expect("en/updates.json is not JSON");
-		let path = key.strip_prefix("updates.").unwrap_or_else(|| {
-			panic!("{key} is not a message in en/updates.json")
-		});
-		catalog
-			.pointer(&format!("/{}", path.replace('.', "/")))
-			.and_then(serde_json::Value::as_str)
-			.unwrap_or_else(|| panic!("en/updates.json has no {key}"))
-			.to_owned()
-	}
-
 	#[test]
 	fn the_frontend_component_table_matches_the_rust_one() {
 		use super::super::component;
@@ -807,46 +785,6 @@ mod pins {
 			expected,
 			"install outcomes are routed by COMPONENT_PACKAGE, so it must name every component's install target"
 		);
-	}
-
-	#[test]
-	fn every_addon_is_named_the_same_in_the_app_and_in_its_download_notification(
-	) {
-		use super::super::component;
-
-		let names = components_ts_table("ADDON_NAME");
-		let mut addons: Vec<&str> = component::ALL
-			.iter()
-			.filter(|component| !component.is_self())
-			.map(|component| component.key)
-			.collect();
-		addons.sort_unstable();
-		assert_eq!(
-			names
-				.iter()
-				.map(|(key, _)| key.as_str())
-				.collect::<Vec<_>>(),
-			addons,
-			"ADDON_NAME must name every add-on the component table knows"
-		);
-
-		for (key, message) in names {
-			let name = updates_message(&message);
-			let resource = format!("addon_name_{}", key.replace('-', "_"));
-			assert!(
-				squashed(ANDROID_STRINGS).contains(&squashed(&format!(
-					"<string name=\"{resource}\">{name}</string>"
-				))),
-				"strings.xml {resource} does not match ADDON_NAME, so the download notification names the add-on differently from the rest of the app"
-			);
-			let package = component::by_key(&key).unwrap().install_target();
-			assert!(
-				squashed(ADDON_NAMES).contains(&squashed(&format!(
-					"\"{package}\"->R.string.{resource}"
-				))),
-				"AddonNames.kt does not map {package} to {resource}"
-			);
-		}
 	}
 
 	#[test]

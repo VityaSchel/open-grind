@@ -10,7 +10,24 @@ export type AndroidManifestCheck = {
 
 export type RenderedAndroidStrings = { text: string; errors: string[] };
 
+export type AndroidFile = { file: string; text: string };
+
+export type AndroidDrift = {
+	errors: string[];
+	warnings: string[];
+	writes: AndroidFile[];
+	deletes: string[];
+};
+
+export const ANDROID_MANIFEST = "src/lib/i18n/android-strings.json";
+
+export const ANDROID_RES = "src-tauri/gen/android/app/src/main/res";
+
+export const ENGLISH_STRINGS = `${ANDROID_RES}/values/strings.xml`;
+
 const MANIFEST = "android-strings.json";
+
+const DECLARED_STRING = /<string\s[^>]*?\bname="([^"]*)"/g;
 
 const RESOURCE_NAME = /^[a-z][a-z0-9_]*$/;
 
@@ -51,6 +68,64 @@ export function androidQualifier(directory: string): string {
 		return `${code}-r${region}`;
 	}
 	return ["b", code, ...subtags].join("+");
+}
+
+export const stringsFileOf = (directory: string) =>
+	`${ANDROID_RES}/values-${androidQualifier(directory)}/strings.xml`;
+
+export function declaredStrings(
+	files: readonly AndroidFile[],
+): Map<string, string> {
+	const declared = new Map<string, string>();
+	for (const { file, text } of files) {
+		for (const [, name = ""] of text.matchAll(DECLARED_STRING)) {
+			declared.set(name, file);
+		}
+	}
+	return declared;
+}
+
+export function androidDrift({
+	english,
+	translated,
+	existing,
+	release,
+}: {
+	english: AndroidFile;
+	translated: readonly AndroidFile[];
+	existing: ReadonlyMap<string, string>;
+	release: boolean;
+}): AndroidDrift {
+	const drift: AndroidDrift = {
+		errors: [],
+		warnings: [],
+		writes: [],
+		deletes: [],
+	};
+	const outputs = [english, ...translated];
+	for (const output of outputs) {
+		const current = existing.get(output.file);
+		if (current === output.text) continue;
+		drift.writes.push(output);
+		if (current === undefined) {
+			drift.errors.push(`${output.file} is missing.`);
+		} else if (output === english || release) {
+			drift.errors.push(`${output.file} is out of date.`);
+		} else {
+			drift.warnings.push(
+				`${output.file}: is out of date, so Android shows older text; run \`bun run gen:i18n\` and commit the result before a release`,
+			);
+		}
+	}
+	const owned = new Set(outputs.map(({ file }) => file));
+	for (const file of [...existing.keys()].sort()) {
+		if (owned.has(file)) continue;
+		drift.deletes.push(file);
+		drift.errors.push(
+			`${file} is for a language that shipped.json doesn’t list.`,
+		);
+	}
+	return drift;
 }
 
 function placeholderOrder(english: string): Map<string, number> {

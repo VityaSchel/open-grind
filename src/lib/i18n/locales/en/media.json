@@ -183,5 +183,8 @@
 				"addVideoFailed": "Couldn’t add video"
 			}
 		}
+	},
+	"uploads": {
+		"notification": "Uploading media…"
 	}
 }

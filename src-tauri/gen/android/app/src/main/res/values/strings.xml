@@ -1,19 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Open Grind</string>
-	<string name="main_activity_title">Open Grind</string>
-	<string name="webview_warning_title">Android WebView may be too old</string>
-	<string name="webview_warning_update">Update WebView</string>
-	<string name="webview_warning_continue">Continue anyway</string>
-	<string name="transfer_channel_name">Transfers</string>
-	<string name="update_transfer_title">Downloading update</string>
-	<string name="addon_install_transfer_title">Downloading the %1$s</string>
-	<string name="addon_update_transfer_title">Downloading the %1$s update</string>
-	<string name="addon_name_google_oauth">Open Grind Google OAuth app</string>
-	<string name="addon_name_recaptcha">Open Grind reCAPTCHA helper</string>
-	<string name="addon_name_fcm">Open Grind FCM service</string>
-	<string name="addon_name_generic">add-on</string>
-	<string name="media_upload_transfer_title">Uploading media</string>
+	<string name="addon_install_transfer_title_fcm">Downloading the Open Grind FCM service…</string>
+	<string name="addon_install_transfer_title_google_oauth">Downloading the Open Grind Google OAuth app…</string>
+	<string name="addon_install_transfer_title_recaptcha">Downloading the Open Grind reCAPTCHA helper…</string>
+	<string name="addon_update_transfer_title_fcm">Downloading the Open Grind FCM service update…</string>
+	<string name="addon_update_transfer_title_google_oauth">Downloading the Open Grind Google OAuth app update…</string>
+	<string name="addon_update_transfer_title_recaptcha">Downloading the Open Grind reCAPTCHA helper update…</string>
+	<string name="media_upload_transfer_title">Uploading media…</string>
 	<string name="push_channel_messages">New messages</string>
 	<string name="push_channel_taps">Received taps</string>
 	<string name="push_self">You</string>
+	<string name="transfer_channel_name">Transfers</string>
+	<string name="update_transfer_title">Downloading update…</string>
+	<string name="webview_warning_continue">Continue anyway</string>
+	<string name="webview_warning_description">Open Grind may not display correctly on older Android System WebView versions. This build expects WebView %1$s or newer.</string>
+	<string name="webview_warning_detected">Detected provider: %1$s (%2$s)</string>
+	<string name="webview_warning_title">Android WebView may be too old</string>
+	<string name="webview_warning_unknown_provider">Unknown provider</string>
+	<string name="webview_warning_unknown_version">Unknown version</string>
+	<string name="webview_warning_update">Update WebView</string>
 </resources>

@@ -217,6 +217,7 @@ export interface Messages {
 	"chat.notification.message": undefined;
 	"chat.notification.picture": undefined;
 	"chat.notification.video": undefined;
+	"chat.notification.you": undefined;
 	"commands.commandCenter.a11y.list": undefined;
 	"commands.commandCenter.empty": undefined;
 	"commands.commandCenter.placeholder": undefined;
@@ -487,6 +488,7 @@ export interface Messages {
 	"media.sheet.tileMenu.a11y.photoOptions": undefined;
 	"media.sheet.tileMenu.a11y.videoOptions": undefined;
 	"media.sheet.tileMenu.deletePermanently": undefined;
+	"media.uploads.notification": undefined;
 	"media.videoPlayer.a11y.mute": undefined;
 	"media.videoPlayer.a11y.pause": undefined;
 	"media.videoPlayer.a11y.play": undefined;
@@ -857,6 +859,13 @@ export interface Messages {
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;
+	"shell.webViewWarning.continue": undefined;
+	"shell.webViewWarning.description": { minimumVersion: string };
+	"shell.webViewWarning.detected": { provider: string; version: string };
+	"shell.webViewWarning.title": undefined;
+	"shell.webViewWarning.unknownProvider": undefined;
+	"shell.webViewWarning.unknownVersion": undefined;
+	"shell.webViewWarning.update": undefined;
 	"updates.addons.fcm.errors.busy": undefined;
 	"updates.addons.fcm.errors.downloadFailed": undefined;
 	"updates.addons.fcm.errors.externallyManaged": undefined;
@@ -1017,6 +1026,7 @@ export interface Messages {
 	"updates.toasts.manualInstall": undefined;
 	"updates.toasts.upToDate": undefined;
 	"updates.toasts.updatedTo": { tag: string };
+	"updates.transfers.channel": undefined;
 }
 
 export interface RichMessages {
@@ -1121,6 +1131,8 @@ export interface RichMessages {
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
 	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
+	"shell.webViewWarning.description": { minimumVersion: "placeholder" };
+	"shell.webViewWarning.detected": { provider: "placeholder"; version: "placeholder" };
 	"updates.addons.fcm.installedVersion": { tag: "placeholder" };
 	"updates.addons.fcm.updatedVersion": { tag: "placeholder" };
 	"updates.addons.googleOauth.installedVersion": { tag: "placeholder" };

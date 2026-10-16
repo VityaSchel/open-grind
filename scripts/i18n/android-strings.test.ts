@@ -1,12 +1,18 @@
-import { readdirSync } from "node:fs";
+import { globSync, readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_LOCALE } from "../../src/lib/i18n/syntax";
 import {
+	ANDROID_MANIFEST,
+	ANDROID_RES,
+	androidDrift,
 	androidQualifier,
 	checkAndroidManifest,
+	declaredStrings,
 	renderAndroidStrings,
+	stringsFileOf,
 } from "./android-strings";
 import { LOCALES, sourceFile } from "./locale-files";
 import { catalogTexts, collectMessages } from "./source-messages";
@@ -368,5 +374,193 @@ describe("checkAndroidManifest", () => {
 		expect(manifest).toEqual(new Map());
 		expect(errors).toHaveLength(1);
 		expect(errors[0]).toMatch(error);
+	});
+});
+
+describe("stringsFileOf", () => {
+	it("puts a translation in the folder of its qualifier", () => {
+		expect(stringsFileOf("es-419")).toBe(
+			`${ANDROID_RES}/values-b+es+419/strings.xml`,
+		);
+	});
+});
+
+describe("declaredStrings", () => {
+	it("names the file of each string, whatever its attribute order", () => {
+		expect(
+			declaredStrings([
+				{
+					file: "values/brand.xml",
+					text: [
+						'<string translatable="false" name="app_name">A</string>',
+						'<string name="main_activity_title">B</string>',
+						'<string-array name="choices"/>',
+						'<plurals name="photos"/>',
+					].join("\n"),
+				},
+				{
+					file: "values/other.xml",
+					text: '<string name="extra">C</string>',
+				},
+			]),
+		).toEqual(
+			new Map([
+				["app_name", "values/brand.xml"],
+				["main_activity_title", "values/brand.xml"],
+				["extra", "values/other.xml"],
+			]),
+		);
+	});
+});
+
+describe("androidDrift", () => {
+	const english = { file: "values/strings.xml", text: "en" };
+	const german = { file: "values-de/strings.xml", text: "de" };
+	const current = { [english.file]: "en", [german.file]: "de" };
+	const drift = ({
+		existing,
+		release = false,
+	}: {
+		existing: Record<string, string>;
+		release?: boolean;
+	}) =>
+		androidDrift({
+			english,
+			translated: [german],
+			existing: new Map(Object.entries(existing)),
+			release,
+		});
+	const nothing = { errors: [], warnings: [], writes: [], deletes: [] };
+
+	it("reports nothing when every file is current", () => {
+		expect(drift({ existing: current })).toEqual(nothing);
+		expect(drift({ existing: current, release: true })).toEqual(nothing);
+	});
+
+	it("fails on an out-of-date English file", () => {
+		expect(
+			drift({ existing: { ...current, [english.file]: "old" } }),
+		).toEqual({
+			...nothing,
+			errors: ["values/strings.xml is out of date."],
+			writes: [english],
+		});
+	});
+
+	it("fails on a missing English file", () => {
+		expect(drift({ existing: { [german.file]: "de" } })).toEqual({
+			...nothing,
+			errors: ["values/strings.xml is missing."],
+			writes: [english],
+		});
+	});
+
+	it("only warns about an out-of-date translated file", () => {
+		expect(
+			drift({ existing: { ...current, [german.file]: "old" } }),
+		).toEqual({
+			...nothing,
+			warnings: [
+				"values-de/strings.xml: is out of date, so Android shows older text; run `bun run gen:i18n` and commit the result before a release",
+			],
+			writes: [german],
+		});
+	});
+
+	it("fails on an out-of-date translated file in a release", () => {
+		expect(
+			drift({
+				existing: { ...current, [german.file]: "old" },
+				release: true,
+			}),
+		).toEqual({
+			...nothing,
+			errors: ["values-de/strings.xml is out of date."],
+			writes: [german],
+		});
+	});
+
+	it("fails on a shipped language without a file", () => {
+		expect(drift({ existing: { [english.file]: "en" } })).toEqual({
+			...nothing,
+			errors: ["values-de/strings.xml is missing."],
+			writes: [german],
+		});
+	});
+
+	it("deletes and fails on a file of a language that is not shipped", () => {
+		expect(
+			drift({
+				existing: {
+					...current,
+					"values-fr/strings.xml": "fr",
+					"values-ar/strings.xml": "ar",
+				},
+			}),
+		).toEqual({
+			...nothing,
+			errors: [
+				"values-ar/strings.xml is for a language that shipped.json doesn’t list.",
+				"values-fr/strings.xml is for a language that shipped.json doesn’t list.",
+			],
+			deletes: ["values-ar/strings.xml", "values-fr/strings.xml"],
+		});
+	});
+});
+
+describe("the Android app", () => {
+	const root = path.join(import.meta.dirname, "../..");
+	const main = path.join(root, "src-tauri/gen/android/app/src/main");
+	const read = (file: string) => readFileSync(file, "utf8");
+	const mapped = Object.keys(
+		JSON.parse(read(path.join(root, ANDROID_MANIFEST))) as object,
+	);
+	const brand = declaredStrings([
+		{
+			file: "brand.xml",
+			text: read(path.join(root, ANDROID_RES, "values/brand.xml")),
+		},
+	]);
+	const namesIn = ({
+		files,
+		pattern,
+	}: {
+		files: string[];
+		pattern: RegExp;
+	}) =>
+		files.flatMap((file) =>
+			[...read(path.join(main, file)).matchAll(pattern)].map(
+				([, name = ""]) => name,
+			),
+		);
+	const kotlin = namesIn({
+		files: globSync("java/**/*.kt", { cwd: main }),
+		pattern: /(?<!android\.)\bR\.string\.(\w+)/g,
+	});
+	const xml = namesIn({
+		files: [
+			"AndroidManifest.xml",
+			...globSync("res/layout/*.xml", { cwd: main }),
+		],
+		pattern: /@string\/(\w+)/g,
+	});
+	const referenced = new Set([...kotlin, ...xml]);
+
+	it("reads references from Kotlin and from XML", () => {
+		expect(kotlin).toContain("push_self");
+		expect(xml).toContain("app_name");
+		expect(brand.has("app_name")).toBe(true);
+	});
+
+	it("declares every string resource it references", () => {
+		expect(
+			[...referenced].filter(
+				(name) => !mapped.includes(name) && !brand.has(name),
+			),
+		).toEqual([]);
+	});
+
+	it("references every string resource the manifest maps", () => {
+		expect(mapped.filter((name) => !referenced.has(name))).toEqual([]);
 	});
 });
