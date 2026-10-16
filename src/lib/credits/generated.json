@@ -5602,6 +5602,21 @@
 			]
 		},
 		{
+			"id": "objc2-user-notifications",
+			"name": "objc2-user-notifications",
+			"ecosystem": "rust",
+			"platform": "macos",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
 			"id": "objc2-web-kit",
 			"name": "objc2-web-kit",
 			"ecosystem": "rust",
