@@ -1,3 +1,5 @@
+/* eslint max-lines: ["error", { "max": 630, "skipBlankLines": true, "skipComments": true }] -- Keep lifecycle guards with the state they protect. */
+
 import { page } from "$app/state";
 
 import { showErrorToast } from "$lib/api/error-toast";
@@ -162,6 +164,7 @@ class ConversationsState {
 
 	async destroy(): Promise<void> {
 		this.#destroyed = true;
+		this.#fetches.next();
 		this.paging.destroy();
 		this.drafts.destroy();
 		this.#unsubscribeReconcile();
@@ -204,6 +207,7 @@ class ConversationsState {
 		} else {
 			if (counts) this.#unreadWhileMissing.add(conversationId);
 			entry = await this.#loadMissing(conversationId);
+			if (this.#destroyed) return;
 			if (entry) {
 				const arrived = this.#unreadWhileMissing.take(conversationId);
 				const { data } = entry;
@@ -239,9 +243,13 @@ class ConversationsState {
 		this.refreshing = true;
 		let reconciled = false;
 		try {
-			const fetchEpoch = await this.#claimEpochAfterInitial();
+			await this.#initialLoad.catch(() => {});
+			if (this.#destroyed) return;
+			const fetchEpoch = this.#fetches.next();
 			this.#refreshRequestedSinceFetchStart = false;
-			const startedWith = this.#reads.lastActivities(this.entries);
+			const lastActivitiesAtFetchStart = this.#reads.lastActivities(
+				this.entries,
+			);
 
 			const oldestLoadedTs = this.entries.reduce(
 				(min, e) => Math.min(min, e.data.lastActivityTimestamp),
@@ -264,7 +272,11 @@ class ConversationsState {
 			for (const incoming of fetched.values()) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					this.#mergeIncoming({ existing, incoming });
+					this.#mergeIncoming({
+						existing,
+						incoming,
+						lastActivitiesAtFetchStart,
+					});
 				} else if (
 					!this.#pendingDeletes.blocks({
 						conversationId: incoming.data.conversationId,
@@ -282,6 +294,14 @@ class ConversationsState {
 				const id = entry.data.conversationId;
 				if (fetched.has(id)) continue;
 				if (
+					entry.data.lastActivityTimestamp >
+					(lastActivitiesAtFetchStart.get(id) ??
+						Number.NEGATIVE_INFINITY)
+				) {
+					this.#refreshRequestedSinceFetchStart = true;
+					continue;
+				}
+				if (
 					this.#pendingDeletes.blocks({
 						conversationId: id,
 						fetchEpoch,
@@ -292,7 +312,7 @@ class ConversationsState {
 					this.remove(id);
 					this.#reads.reportDropped({
 						conversation: entry,
-						startedWith,
+						startedWith: lastActivitiesAtFetchStart,
 						dropsOnlyReadChats: this.filters.dropsOnlyReadChats,
 					});
 				}
@@ -303,6 +323,7 @@ class ConversationsState {
 			this.error = null;
 			reconciled = true;
 		} catch (error) {
+			if (this.#destroyed) return;
 			console.error(error);
 			showErrorToast({
 				label: "Failed to refresh conversations",
@@ -334,19 +355,27 @@ class ConversationsState {
 	}: {
 		errorLabel?: string;
 	}): Promise<boolean> {
+		if (this.#destroyed) return false;
 		// Claiming would make an in-flight #load drop the nextPage it fetched.
 		const fetchEpoch = this.#fetches.current;
+		const lastActivitiesAtFetchStart = this.#reads.lastActivities(
+			this.entries,
+		);
 		try {
 			const result = await getConversations({
 				page: 1,
 				filters: this.filters.request,
 			});
-			if (this.#fetches.isStale(fetchEpoch)) return true;
+			if (this.#fetches.isStale(fetchEpoch)) return !this.#destroyed;
 			this.#reads.reportFresh(result.entries);
 			for (const incoming of result.entries) {
 				const existing = this.#find(incoming.data.conversationId);
 				if (existing) {
-					this.#mergeIncoming({ existing, incoming });
+					this.#mergeIncoming({
+						existing,
+						incoming,
+						lastActivitiesAtFetchStart,
+					});
 				} else if (
 					!this.#pendingDeletes.blocks({
 						conversationId: incoming.data.conversationId,
@@ -359,8 +388,10 @@ class ConversationsState {
 			this.#sortEntries();
 			this.#reads.readOpenChat();
 			this.error = null;
+			this.#runRequestedRefresh();
 			return true;
 		} catch (error) {
+			if (this.#destroyed) return false;
 			console.error(error);
 			if (errorLabel) showErrorToast({ label: errorLabel, error });
 			return false;
@@ -389,11 +420,6 @@ class ConversationsState {
 		this.nextPage = result.nextPage;
 		this.#sortEntries();
 		this.#reads.readOpenChat();
-	}
-
-	async #claimEpochAfterInitial(): Promise<number> {
-		await this.#initialLoad.catch(() => {});
-		return this.#fetches.next();
 	}
 
 	refresh(): Promise<void> {
@@ -425,6 +451,7 @@ class ConversationsState {
 	}
 
 	async ensureLoaded(conversationId: string): Promise<boolean> {
+		if (this.#destroyed) return false;
 		if (this.#find(conversationId)) return true;
 		const errorLabel = "Failed to sync conversation into sidebar";
 		return this.#fetches.track(this.#syncLatest({ errorLabel }));
@@ -611,17 +638,23 @@ class ConversationsState {
 	#mergeIncoming({
 		existing,
 		incoming,
+		lastActivitiesAtFetchStart,
 	}: {
 		existing: Conversation;
 		incoming: Conversation;
+		lastActivitiesAtFetchStart: Map<string, number>;
 	}): void {
 		const { conversationId } = incoming.data;
 		this.#readRequests.noteSnapshot(conversationId);
-		mergeConversation({
+		const keptLiveActivity = mergeConversation({
 			existing,
 			incoming,
 			pendingFlags: this.#pendingFlags.fields(conversationId),
+			lastActivityAtFetchStart:
+				lastActivitiesAtFetchStart.get(conversationId) ??
+				Number.NEGATIVE_INFINITY,
 		});
+		if (keptLiveActivity) this.#refreshRequestedSinceFetchStart = true;
 	}
 
 	#sortEntries(): void {

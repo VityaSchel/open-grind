@@ -27,10 +27,42 @@ const sent = (id: string, timestamp: number): OptimisticMessage => ({
 });
 
 describe("mergeServerMessages", () => {
+	it.each([{ server: [] }, { server: [message("a", 1000)] }])(
+		"keeps a live message absent from a snapshot started before it arrived: $server",
+		({ server }) => {
+			const live = sent("live", 3000);
+			const result = mergeServerMessages({
+				local: [live, sent("deleted", 2000), sent("a", 1000)],
+				server,
+				localIdsAtFetchStart: ["deleted", "a"],
+			});
+			expect(result.messages).toEqual([
+				live,
+				...server.map((entry) => ({ ...entry, status: "sent" })),
+			]);
+			expect(result.fresh).toEqual([]);
+			expect(result.changed).toBe(true);
+		},
+	);
+
+	it("applies server metadata to a live message received during a snapshot", () => {
+		const live = sent("live", 3000);
+		const result = mergeServerMessages({
+			local: [live],
+			server: [{ ...message("live", 3000), unsent: true }],
+			localIdsAtFetchStart: [],
+		});
+		expect(result.messages).toMatchObject([
+			{ messageId: "live", unsent: true, status: "sent" },
+		]);
+		expect(result.changed).toBe(true);
+	});
+
 	it("empties the thread when the server has nothing left", () => {
 		const result = mergeServerMessages({
 			local: [sent("b", 2000), sent("a", 1000)],
 			server: [],
+			localIdsAtFetchStart: ["b", "a"],
 		});
 
 		expect(result.messages).toEqual([]);
@@ -46,6 +78,7 @@ describe("mergeServerMessages", () => {
 		const result = mergeServerMessages({
 			local: [pending, sent("a", 1000)],
 			server: [],
+			localIdsAtFetchStart: ["draft", "a"],
 		});
 
 		expect(result.messages).toEqual([pending]);
@@ -58,6 +91,7 @@ describe("mergeServerMessages", () => {
 		const result = mergeServerMessages({
 			local: [sent("b", 2000), older],
 			server: [message("b", 2000)],
+			localIdsAtFetchStart: ["b", "a"],
 		});
 
 		expect(result.messages.map((m) => m.messageId)).toEqual(["b", "a"]);
@@ -70,6 +104,7 @@ describe("mergeServerMessages", () => {
 		const result = mergeServerMessages({
 			local: [kept],
 			server: [message("b", 2000), message("a", 1000)],
+			localIdsAtFetchStart: ["a"],
 		});
 
 		expect(result.messages.map((m) => m.messageId)).toEqual(["b", "a"]);
@@ -80,6 +115,7 @@ describe("mergeServerMessages", () => {
 		const result = mergeServerMessages({
 			local: [sent("a", 1000)],
 			server: [message("a", 1500)],
+			localIdsAtFetchStart: ["a"],
 		});
 
 		expect(result.messages.map((m) => m.timestamp)).toEqual([1500]);
@@ -128,6 +164,7 @@ describe("mergeServerMessages with signed media", () => {
 		const result = mergeServerMessages({
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ signedAt: SIGNED_AT_S + 9 * 60 })],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(false);
@@ -137,6 +174,7 @@ describe("mergeServerMessages with signed media", () => {
 		const result = mergeServerMessages({
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ signedAt: SIGNED_AT_S + 10 * 60 })],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(true);
@@ -149,10 +187,12 @@ describe("mergeServerMessages with signed media", () => {
 		const renewal = {
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ signedAt: SIGNED_AT_S + 60 * 60 })],
+			localIdsAtFetchStart: ["album"],
 		};
 		const rotation = {
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ signedAt: SIGNED_AT_S + 60 })],
+			localIdsAtFetchStart: ["album"],
 		};
 
 		for (const skewS of [-20 * 60, 20 * 60]) {
@@ -168,6 +208,7 @@ describe("mergeServerMessages with signed media", () => {
 		const result = mergeServerMessages({
 			local: local(same),
 			server: [same],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(false);
@@ -180,6 +221,7 @@ describe("mergeServerMessages with signed media", () => {
 				message("new", 2000),
 				album({ signedAt: SIGNED_AT_S + 60 }),
 			],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(true);
@@ -192,6 +234,7 @@ describe("mergeServerMessages with signed media", () => {
 		const result = mergeServerMessages({
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ cover: "b.jpg", signedAt: SIGNED_AT_S + 60 })],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(true);
@@ -201,6 +244,7 @@ describe("mergeServerMessages with signed media", () => {
 		const result = mergeServerMessages({
 			local: local(album({ signedAt: SIGNED_AT_S })),
 			server: [album({ signedAt: SIGNED_AT_S, isViewable: false })],
+			localIdsAtFetchStart: ["album"],
 		});
 
 		expect(result.changed).toBe(true);
