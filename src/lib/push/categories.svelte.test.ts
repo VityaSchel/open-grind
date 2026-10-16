@@ -11,6 +11,7 @@ const push = vi.hoisted(() => ({
 		>(),
 	openPushCategorySettings: vi.fn<(category: string) => Promise<void>>(),
 }));
+const os = vi.hoisted(() => ({ android: true }));
 const account = vi.hoisted(() => ({
 	getPushSettings:
 		vi.fn<() => Promise<{ tapPushNotification?: boolean | null }>>(),
@@ -20,6 +21,7 @@ const account = vi.hoisted(() => ({
 
 vi.mock("./index", () => push);
 vi.mock("$lib/api/settings/account", () => account);
+vi.mock("$lib/platform/os", () => ({ isAndroidPlatform: () => os.android }));
 
 const open: PushCategory[] = [
 	{ category: "messages", enabled: true, systemBlocked: false },
@@ -46,6 +48,7 @@ async function loaded() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	os.android = true;
 	deviceReports(open);
 	push.setPushCategory.mockResolvedValue(undefined);
 	push.openPushCategorySettings.mockResolvedValue(undefined);
@@ -54,7 +57,7 @@ beforeEach(() => {
 });
 
 describe("loading notification categories", () => {
-	it("adopts the account's tap setting so the background poll obeys it too", async () => {
+	it("adopts the account's tap setting so tap notifications obey it too", async () => {
 		account.getPushSettings.mockResolvedValue({
 			tapPushNotification: false,
 		});
@@ -139,6 +142,22 @@ describe("toggling a notification category", () => {
 		expect(push.openPushCategorySettings).toHaveBeenCalledWith("messages");
 		expect(push.setPushCategory).not.toHaveBeenCalled();
 		expect(account.setPushSettings).not.toHaveBeenCalled();
+	});
+
+	it("saves New messages like any other category on desktop", async () => {
+		os.android = false;
+		const module = await loaded();
+
+		await module.toggleNotificationCategory({
+			category: "messages",
+			enabled: false,
+		});
+
+		expect(push.openPushCategorySettings).not.toHaveBeenCalled();
+		expect(push.setPushCategory).toHaveBeenCalledWith({
+			category: "messages",
+			enabled: false,
+		});
 	});
 
 	it.each(["messages", "taps"] as const)(

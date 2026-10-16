@@ -1,6 +1,7 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { ImagesIcon, VideoIcon } from "phosphor-svelte";
+	import ImagesIcon from "phosphor-svelte/lib/ImagesIcon";
+	import VideoIcon from "phosphor-svelte/lib/VideoIcon";
 	import type { Snippet } from "svelte";
 	import type { Attachment } from "svelte/attachments";
 	import type { ClassValue } from "svelte/elements";

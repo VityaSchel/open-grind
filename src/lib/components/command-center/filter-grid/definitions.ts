@@ -304,6 +304,14 @@ export const filters: Filter[] = [
 		option: optionFilters.tribes,
 	}),
 	enumFilter({
+		id: "tribesImInto",
+		keys: ["tribesImInto"],
+		target: "tribesImInto",
+		enabled: "tribesImIntoEnabled",
+		enumObject: FilterTribe,
+		option: optionFilters.tribesImInto,
+	}),
+	enumFilter({
 		id: "bodyType",
 		keys: ["bodyTypes", "bodyType", "body"],
 		target: "bodyTypes",

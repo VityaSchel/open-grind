@@ -5,12 +5,11 @@ use serde_json::Value;
 
 use super::{
 	messages_path, pages_wanted, poll, Inbox, Pages, Poll, Push,
-	ShownConversation, Watermarks,
+	ShownConversation,
 };
 use crate::state;
 use crate::storage::{AuthStorage, DeviceStorage};
 
-const TAPS: &str = "/v2/taps/received";
 const PAGE_BUDGET: Duration = Duration::from_secs(30);
 
 pub fn client() -> Option<GrindrClient> {
@@ -31,7 +30,7 @@ pub fn client() -> Option<GrindrClient> {
 
 pub async fn collect(
 	client: &GrindrClient,
-	since: Watermarks,
+	since: i64,
 	shown: &[ShownConversation],
 ) -> Poll {
 	let me = client
@@ -39,12 +38,10 @@ pub async fn collect(
 		.borrow()
 		.as_ref()
 		.and_then(|session| session.credentials.profile_id.clone());
-	let inbox = inbox(client, since.inbox).await;
-	let taps = fetch(client, Method::GET, TAPS).await;
-	let wanted = pages_wanted(inbox.as_ref(), since.inbox, me.as_deref());
+	let inbox = inbox(client, since).await;
+	let wanted = pages_wanted(inbox.as_ref(), since, me.as_deref());
 	let pages = pages(client, wanted).await;
-	let mut polled =
-		poll(inbox.as_ref(), &pages, taps.as_ref(), since, me.as_deref());
+	let mut polled = poll(inbox.as_ref(), &pages, since, me.as_deref());
 	for conversation in shown {
 		let withdrawn = match pages.get(&conversation.conversation_id) {
 			Some(answer) if conversation.answered_by(answer) => {

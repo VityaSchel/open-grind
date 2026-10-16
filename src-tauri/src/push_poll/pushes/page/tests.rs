@@ -32,7 +32,7 @@ fn page(messages: &[Value]) -> Answer {
 fn fetched(over: Value, answer: Answer) -> Poll {
 	let entries = json!([conversation_entry(over)]);
 	let pages = Pages::from([("111:222".to_owned(), answer)]);
-	poll(Some(&inbox(entries)), &pages, None, SINCE, ME)
+	poll(Some(&inbox(entries)), &pages, SINCE, ME)
 }
 
 fn lines(result: &Poll) -> Vec<(&str, &str, &str)> {
@@ -75,7 +75,7 @@ fn a_burst_between_two_checks_becomes_one_line_per_message() {
 		assert_eq!(push["senderId"], "222");
 		assert_eq!(push["title"], "Viktor");
 	}
-	assert_eq!(result.watermarks.inbox, 2000);
+	assert_eq!(result.watermark, 2000);
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn a_message_sent_after_the_inbox_was_read_waits_for_the_next_check() {
 			("poll:111:222:2000:c0ffee", "hey", "2000"),
 		]
 	);
-	assert_eq!(result.watermarks.inbox, 2000);
+	assert_eq!(result.watermark, 2000);
 }
 
 #[test]
@@ -245,7 +245,7 @@ fn our_reply_last_with_nothing_new_from_the_peer_announces_nothing_and_moves_on(
 	);
 
 	assert!(result.pushes.is_empty());
-	assert_eq!(result.watermarks.inbox, 2000);
+	assert_eq!(result.watermark, 2000);
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn a_blocked_chat_announces_nothing_and_is_not_asked_about_again() {
 	);
 
 	assert!(result.pushes.is_empty());
-	assert_eq!(result.watermarks.inbox, 2000);
+	assert_eq!(result.watermark, 2000);
 }
 
 #[test]
@@ -340,7 +340,7 @@ fn a_media_message_on_a_page_reads_like_its_preview_would() {
 }
 
 fn wanted(entries: Value) -> Vec<String> {
-	pages_wanted(Some(&inbox(entries)), SINCE.inbox, ME)
+	pages_wanted(Some(&inbox(entries)), SINCE, ME)
 }
 
 #[test]
@@ -365,7 +365,7 @@ fn our_reply_last_asks_for_the_page() {
 #[test]
 fn quiet_muted_or_read_chats_ask_for_nothing() {
 	for over in [
-		json!({ "unreadCount": 2, "lastActivityTimestamp": SINCE.inbox }),
+		json!({ "unreadCount": 2, "lastActivityTimestamp": SINCE }),
 		json!({ "unreadCount": 2, "muted": true }),
 		json!({ "unreadCount": 0 }),
 	] {

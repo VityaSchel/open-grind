@@ -7,6 +7,7 @@ const ALBUM_TRIGGER = 'button[aria-label="Open album"]';
 export const LIGHTBOX = ".pswp";
 const SURFACE = '[data-slot="video-surface"]';
 export const ACTIVE_SURFACE = `.pswp__item:not([aria-hidden="true"]) ${SURFACE}`;
+export const CONTROLS = `${ACTIVE_SURFACE} [data-pswp-interactive]`;
 
 /** The demo clip is the last item of the conversation's album. */
 export const CLIP = "**/picsum.photos/seed/album-5001-2/600/800";

@@ -6,6 +6,7 @@ mod bundle;
 mod installer;
 #[cfg(target_os = "macos")]
 mod location;
+mod taskbar;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -15,7 +16,7 @@ use tauri::{AppHandle, Manager};
 use super::super::baseline::Baseline;
 use super::super::component::Component;
 use super::super::error::UpdateError;
-use super::{Outcome, Unsupported};
+use super::{Outcome, TransferProgress, TransferPurpose, Unsupported};
 
 const INSTALLED_MARKER: &str = "update-installed";
 
@@ -92,14 +93,25 @@ pub async fn install(
 
 pub(super) fn begin_transfer<R: tauri::Runtime>(
 	_app: &AppHandle<R>,
-	_purpose: super::TransferPurpose,
+	_purpose: TransferPurpose,
 ) {
 }
 
-pub(super) fn end_transfer<R: tauri::Runtime>(
-	_app: &AppHandle<R>,
-	_purpose: super::TransferPurpose,
+pub(super) fn report_transfer<R: tauri::Runtime>(
+	app: &AppHandle<R>,
+	_purpose: TransferPurpose,
+	progress: TransferProgress,
 ) {
+	taskbar::show(app, progress);
+}
+
+pub(super) fn end_transfer<R: tauri::Runtime>(
+	app: &AppHandle<R>,
+	purpose: TransferPurpose,
+) {
+	if matches!(purpose, TransferPurpose::Update { .. }) {
+		taskbar::clear(app);
+	}
 }
 
 pub fn install_pending(_app: &AppHandle) -> bool {

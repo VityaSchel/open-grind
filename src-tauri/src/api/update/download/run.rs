@@ -9,14 +9,13 @@ use tokio::sync::watch;
 use wreq::Client;
 
 use super::super::error::UpdateError;
-use super::super::install::TransferHold;
 use super::super::release::Candidate;
 use super::super::storage::{self, Stage, Staged};
 use super::super::verify;
 use super::stage::accept;
 use super::transfer;
 use super::transfer::fetch_signature;
-use super::{emit, retained, Phase, Progress};
+use super::{retained, Phase, Progress, ProgressFeed};
 
 const MAX_STALLED_ATTEMPTS: u32 = 6;
 const MAX_ATTEMPTS: u32 = 60;
@@ -45,7 +44,7 @@ pub(super) async fn run<R: Runtime>(
 	let mut digest = verify::Prehash::default();
 	retained.restore(&stage, candidate, &mut staged, &mut digest)?;
 
-	let _hold = TransferHold::update(app, candidate);
+	let mut feed = ProgressFeed::begin(app, progress, candidate);
 	let signature_abort = Arc::new(AtomicBool::new(false));
 	let signature = {
 		let client = client.clone();
@@ -70,7 +69,7 @@ pub(super) async fn run<R: Runtime>(
 		attempts += 1;
 		let carried = staged.downloaded;
 		let outcome = transfer::transfer(
-			app,
+			&mut feed,
 			client,
 			transfer::Target {
 				stage: &stage,
@@ -79,7 +78,6 @@ pub(super) async fn run<R: Runtime>(
 			},
 			candidate,
 			&halt,
-			progress,
 		)
 		.await;
 
@@ -114,11 +112,11 @@ pub(super) async fn run<R: Runtime>(
 		let signature = fetched?;
 		downloaded?;
 
-		emit(
-			app,
-			progress,
-			Progress::new(candidate, staged.downloaded, Phase::Verifying),
-		);
+		feed.emit(Progress::new(
+			candidate,
+			staged.downloaded,
+			Phase::Verifying,
+		));
 
 		let verified = verify::verify_digest(
 			&signature,

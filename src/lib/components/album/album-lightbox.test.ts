@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({ getAlbumContent: vi.fn() }));
-const dimensions = vi.hoisted(() => ({
-	measureImage: vi.fn(),
-	measureVideo: vi.fn(),
-}));
+const dimensions = vi.hoisted(() => ({ measureImage: vi.fn() }));
 
 const failures = vi.hoisted(() => ({ mediaFailure: vi.fn() }));
 
@@ -45,6 +42,14 @@ function readyItem({
 	};
 }
 
+function playedOutVideo(contentId: number) {
+	return {
+		...readyItem({ contentId, contentType: "video/mp4" }),
+		coverUrl: null,
+		url: "",
+	};
+}
+
 function processingVideo(contentId: number) {
 	return {
 		contentId,
@@ -66,28 +71,25 @@ beforeEach(() => {
 	forgetAlbumSlides(ALBUM_ID);
 	api.getAlbumContent.mockReset();
 	dimensions.measureImage.mockReset();
-	dimensions.measureVideo.mockReset();
 	dimensions.measureImage.mockResolvedValue({ width: 300, height: 400 });
-	dimensions.measureVideo.mockResolvedValue({ width: 720, height: 1280 });
 	failures.mediaFailure.mockReset();
 });
 
 describe("loadAlbumSlides", () => {
-	it("opens a photo album without downloading a photo", async () => {
-		serveAlbum(
-			[1, 2, 3].map((contentId) =>
-				readyItem({ contentId, contentType: "image/jpeg" }),
-			),
-		);
+	it("opens an album of photos and playable videos without downloading any of them", async () => {
+		serveAlbum([
+			readyItem({ contentId: 1, contentType: "image/jpeg" }),
+			readyItem({ contentId: 2, contentType: "video/mp4" }),
+			readyItem({ contentId: 3, contentType: "image/jpeg" }),
+		]);
 
 		const slides = await loadAlbumSlides(ALBUM_ID);
 
 		expect(dimensions.measureImage).not.toHaveBeenCalled();
-		expect(dimensions.measureVideo).not.toHaveBeenCalled();
 		expect(slides.map(({ width, height }) => [width, height])).toEqual([
-			[0, 0],
-			[0, 0],
-			[0, 0],
+			[undefined, undefined],
+			[undefined, undefined],
+			[undefined, undefined],
 		]);
 	});
 
@@ -101,19 +103,13 @@ describe("loadAlbumSlides", () => {
 		const slides = await loadAlbumSlides(ALBUM_ID);
 
 		expect(slides.map((slide) => slide.contentId)).toEqual([1, 3]);
-		const measured = [
-			...dimensions.measureImage.mock.calls,
-			...dimensions.measureVideo.mock.calls,
-		].map(([url]) => url);
-		expect(measured).not.toContain(albumProcessingPlaceholderUrl);
+		expect(dimensions.measureImage).not.toHaveBeenCalledWith(
+			albumProcessingPlaceholderUrl,
+		);
 	});
 
 	it("opens an album whose video has no plays left by measuring its thumbnail", async () => {
-		const playedOut = {
-			...readyItem({ contentId: 2, contentType: "video/mp4" }),
-			coverUrl: null,
-			url: "",
-		};
+		const playedOut = playedOutVideo(2);
 		serveAlbum([
 			readyItem({ contentId: 1, contentType: "image/jpeg" }),
 			playedOut,
@@ -122,17 +118,13 @@ describe("loadAlbumSlides", () => {
 		const slides = await loadAlbumSlides(ALBUM_ID);
 
 		expect(slides.map((slide) => slide.contentId)).toEqual([1, 2]);
-		expect(dimensions.measureVideo).not.toHaveBeenCalled();
-		expect(dimensions.measureImage).toHaveBeenCalledWith(
+		expect(dimensions.measureImage).toHaveBeenCalledExactlyOnceWith(
 			playedOut.thumbUrl,
 		);
 	});
 
-	it("opens the album even when a video cover cannot be measured", async () => {
-		serveAlbum([
-			readyItem({ contentId: 1, contentType: "video/mp4" }),
-			readyItem({ contentId: 2, contentType: "video/mp4" }),
-		]);
+	it("opens the album even when a played-out video's thumbnail cannot be measured", async () => {
+		serveAlbum([playedOutVideo(1), playedOutVideo(2)]);
 		dimensions.measureImage.mockRejectedValueOnce(new Error("gone"));
 
 		const slides = await loadAlbumSlides(ALBUM_ID);
@@ -165,7 +157,7 @@ describe("loadAlbumSlides", () => {
 	});
 
 	it("does not cache slides whose album was forgotten while they were measured", async () => {
-		serveAlbum([readyItem({ contentId: 1, contentType: "video/mp4" })]);
+		serveAlbum([playedOutVideo(1)]);
 		let finishMeasuring!: (dimensions: {
 			width: number;
 			height: number;

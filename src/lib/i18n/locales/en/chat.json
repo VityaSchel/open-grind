@@ -18,6 +18,18 @@
 		"rightNow": "Right Now",
 		"message": "Message"
 	},
+	"notification": {
+		"message": "Sent you a message",
+		"picture": "Sent you a picture",
+		"expiringImage": "Sent you an expiring image",
+		"album": "Shared their album",
+		"albumReaction": "Liked your album content",
+		"audio": "Sent you an audio message",
+		"video": "Sent you a video",
+		"gaymoji": "Sent you a Gaymoji",
+		"gif": "Sent you a GIF",
+		"location": "Sent you their location"
+	},
 	"conversation": {
 		"bypassReason": {
 			"expiringPhotoLimit": "Daily expiring photo limit reached. Sending more requires a Grindr subscription.",

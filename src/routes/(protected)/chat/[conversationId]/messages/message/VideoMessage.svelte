@@ -1,23 +1,19 @@
 <script lang="ts">
 	import "photoswipe/style.css";
-	import { VideoCameraIcon } from "phosphor-svelte";
+	import VideoCameraIcon from "phosphor-svelte/lib/VideoCameraIcon";
 	import { untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getSingleMessage } from "$lib/api/messaging/messages";
 	import { t } from "$lib/i18n";
 	import { proxyMediaUrl } from "$lib/util/media";
-	import {
-		measureVideo,
-		type MediaDimensions,
-	} from "$lib/util/media-dimensions";
 	import { openLightbox } from "$lib/util/photoswipe";
 	import type { VideoMessage } from "$lib/model/messaging/messages";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	type VideoBody = VideoMessage["body"];
 
-	type LightboxVideo = { src: string; loop: boolean } & MediaDimensions;
+	type LightboxVideo = { src: string; loop: boolean };
 
 	let {
 		conversationId,
@@ -30,8 +26,6 @@
 		message: VideoBody;
 		delivered: boolean;
 	} = $props();
-
-	const UNMEASURED: MediaDimensions = { width: 1080, height: 1920 };
 
 	const media = new MessageMediaState();
 
@@ -67,14 +61,8 @@
 		}
 		const src = proxyMediaUrl(refetched.body.url, { as: "video" });
 		if (src === null) return null;
-		const size = await measureVideo(src).catch(() => UNMEASURED);
 		return {
-			video: {
-				src,
-				loop: refetched.body.looping === true,
-				width: size.width,
-				height: size.height,
-			},
+			video: { src, loop: refetched.body.looping === true },
 			viewsLeft: refetched.body.viewsRemaining ?? 0,
 		};
 	}

@@ -36,6 +36,7 @@ internal class TransferArgs {
 	var packageName: String? = null
 	var kind: String? = null
 	var purpose: String? = null
+	var percent: Int? = null
 }
 
 @InvokeArg
@@ -191,21 +192,35 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 
 	@Command
 	fun beginTransfer(invoke: Invoke) {
-		val transfer = transfer(invoke)
+		val transfer = transfer(transferArgs(invoke))
 		runCatching { TransferService.start(context = activity, transfer = transfer) }
 		invoke.resolve()
 	}
 
 	@Command
+	fun transferProgress(invoke: Invoke) {
+		val args = transferArgs(invoke)
+		runCatching {
+			TransferService.report(
+				context = activity,
+				transfer = transfer(args),
+				progress = TransferProgress.of(args?.percent),
+			)
+		}
+		invoke.resolve()
+	}
+
+	@Command
 	fun endTransfer(invoke: Invoke) {
-		val transfer = transfer(invoke)
+		val transfer = transfer(transferArgs(invoke))
 		runCatching { TransferService.stop(context = activity, transfer = transfer) }
 		invoke.resolve()
 	}
 
-	private fun transfer(invoke: Invoke): Transfer {
-		val args = runCatching { invoke.parseArgs(TransferArgs::class.java) }.getOrNull()
-		return Transfer(
+	private fun transferArgs(invoke: Invoke): TransferArgs? = runCatching { invoke.parseArgs(TransferArgs::class.java) }.getOrNull()
+
+	private fun transfer(args: TransferArgs?): Transfer =
+		Transfer(
 			title = TransferTitle.of(
 				updatesThisApp = args == null || args.packageName == activity.packageName,
 				kind = args?.kind,
@@ -213,7 +228,6 @@ class UpdatePlugin(private val activity: Activity) : Plugin(activity) {
 			),
 			addonPackage = args?.packageName,
 		)
-	}
 
 	private companion object {
 		const val GOOGLE_OAUTH = "org.opengrind.google_oauth"

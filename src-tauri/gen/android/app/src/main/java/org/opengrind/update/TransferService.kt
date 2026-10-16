@@ -105,6 +105,7 @@ class TransferService : Service() {
 		private const val EXTRA_ADDON_PACKAGE = "org.opengrind.update.extra.ADDON_PACKAGE"
 		private const val CHANNEL_ID = "org.opengrind.update.transfer"
 		private const val NOTIFICATION_ID = 4711
+		private const val PERCENT_MAX = 100
 		private const val WAKE_LOCK_TAG = "opengrind:update"
 		private const val WAKE_LOCK_TIMEOUT_MS = 30L * 60L * 1000L
 		private val holds = TransferHolds()
@@ -120,6 +121,16 @@ class TransferService : Service() {
 					.putExtra(EXTRA_TITLE, transfer.title.name)
 					.putExtra(EXTRA_ADDON_PACKAGE, transfer.addonPackage),
 			)
+		}
+
+		fun report(
+			context: Context,
+			transfer: Transfer,
+			progress: TransferProgress,
+		) {
+			if (holds.report(transfer, progress) && holds.newest() == transfer) {
+				ContextCompat.getMainExecutor(context).execute { running?.get()?.settle() }
+			}
 		}
 
 		fun stop(
@@ -142,7 +153,7 @@ class TransferService : Service() {
 				).apply { setShowBadge(false) }
 				context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 			}
-			return NotificationCompat.Builder(context, CHANNEL_ID)
+			val builder = NotificationCompat.Builder(context, CHANNEL_ID)
 				.setContentTitle(titleText(context, transfer))
 				.setSmallIcon(
 					if (transfer.title == TransferTitle.MediaUpload) {
@@ -155,7 +166,12 @@ class TransferService : Service() {
 				.setOngoing(true)
 				.setSilent(true)
 				.setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_DEFERRED)
-				.build()
+			when (val progress = holds.progressOf(transfer)) {
+				is TransferProgress.Percent -> builder.setProgress(PERCENT_MAX, progress.value, false)
+				TransferProgress.Indeterminate -> builder.setProgress(0, 0, true)
+				null -> Unit
+			}
+			return builder.build()
 		}
 
 		private fun titleText(

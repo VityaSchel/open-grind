@@ -1,10 +1,11 @@
-import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
+import { Channel, invoke } from "@tauri-apps/api/core";
 
 import { asAppError } from "$lib/api/methods";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { isAndroidPlatform, isDesktopPlatform } from "$lib/platform/os";
 import { getInstalledVersion } from "$lib/updates";
 import { FCM_COMPONENT } from "$lib/updates/components";
 import {
+	type Announcement,
 	type NotificationMode,
 	notificationModeSchema,
 	type NotificationPermission,
@@ -18,12 +19,14 @@ import {
 	pushSignalSchema,
 	type PushToken,
 	pushTokenSchema,
+	shownConversationsSchema,
+	TAP_TAG_PREFIX,
 } from "./types";
 
 export * from "./types";
 
 export function pushAvailableHere(): boolean {
-	return isTauri() && isAndroidPlatform();
+	return isAndroidPlatform() || isDesktopPlatform();
 }
 
 export function pushErrorReason(error: unknown): PushErrorReason | null {
@@ -60,6 +63,13 @@ export async function dismissPushConversation({
 	messageId?: string;
 }): Promise<void> {
 	await invoke("push_dismiss_conversation", { conversationId, messageId });
+}
+
+export async function shownPushConversations(): Promise<string[]> {
+	const tags = shownConversationsSchema.parse(
+		await invoke("push_shown_conversations"),
+	);
+	return tags.filter((tag) => !tag.startsWith(TAP_TAG_PREFIX));
 }
 
 export async function openNotificationSettings(): Promise<void> {
@@ -114,6 +124,10 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 	return notificationPermissionSchema.parse(
 		await invoke("push_request_notification_permission"),
 	);
+}
+
+export async function notify(announcement: Announcement): Promise<void> {
+	await invoke("push_notify", { announcement });
 }
 
 export async function takePushDeeplink(): Promise<string | null> {

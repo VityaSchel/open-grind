@@ -1,13 +1,12 @@
 <script lang="ts">
-	import {
-		CameraIcon,
-		EyesIcon,
-		GlobeStandIcon,
-		HeartbeatIcon,
-		HouseIcon,
-		UsersIcon,
-		UsersThreeIcon,
-	} from "phosphor-svelte";
+	import CameraIcon from "phosphor-svelte/lib/CameraIcon";
+	import EyesIcon from "phosphor-svelte/lib/EyesIcon";
+	import GlobeStandIcon from "phosphor-svelte/lib/GlobeStandIcon";
+	import HeartbeatIcon from "phosphor-svelte/lib/HeartbeatIcon";
+	import HouseIcon from "phosphor-svelte/lib/HouseIcon";
+	import SyringeIcon from "phosphor-svelte/lib/SyringeIcon";
+	import UsersIcon from "phosphor-svelte/lib/UsersIcon";
+	import UsersThreeIcon from "phosphor-svelte/lib/UsersThreeIcon";
 
 	import { t } from "$lib/i18n";
 	import {
@@ -19,6 +18,7 @@
 		meetAt as meetAtLabels,
 		relationshipStatuses,
 		tribes,
+		vaccines as vaccineLabels,
 	} from "$lib/model/users/profiles";
 	import AboutMe from "./AboutMe.svelte";
 	import Distance from "./Distance.svelte";
@@ -61,11 +61,13 @@
 		ethnicity,
 		relationshipStatus,
 		grindrTribes,
+		tribesImInto,
 		lookingFor,
 		meetAt,
 		nsfw,
 		hivStatus,
 		lastTestedDate: lastTestedDateValue,
+		vaccines,
 		sexualHealth: sexualHealthValue,
 		socialNetworks,
 	} = profile}
@@ -120,6 +122,12 @@
 		</ProfileSection>
 		<ProfileSection title={t("common.profileSections.expectations")}>
 			<LookupField
+				icon={UsersThreeIcon}
+				label={t("profile.fields.imInto")}
+				value={tribesImInto}
+				options={tribes}
+			/>
+			<LookupField
 				icon={EyesIcon}
 				weight="fill"
 				label={t("profile.fields.lookingFor")}
@@ -147,6 +155,12 @@
 				options={hivStatusLabels}
 			/>
 			<LastTested lastTestedDate={lastTestedDateValue} />
+			<LookupField
+				icon={SyringeIcon}
+				label={t("profile.fields.vaccinatedFor")}
+				value={vaccines}
+				options={vaccineLabels}
+			/>
 			<LookupField
 				icon={HeartbeatIcon}
 				label={t("common.profileFields.healthPractices")}

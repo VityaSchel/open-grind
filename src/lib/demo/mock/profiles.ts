@@ -14,6 +14,8 @@ import {
 	type SocialNetworks,
 	Tribe,
 	type TribeId,
+	Vaccine,
+	type VaccineId,
 } from "$lib/model/users/profiles";
 import {
 	chance,
@@ -43,11 +45,13 @@ export type DemoSeed = {
 	photos: number;
 	bio: string | null;
 	tribes: TribeId[];
+	tribesImInto: TribeId[] | null;
 	lookingFor: LookingForId[];
 	body: BodyTypeId | null;
 	ethnicity: EthnicityId | null;
 	relationship: RelationshipStatusId | null;
 	hiv: HivStatusId | null;
+	vaccines: VaccineId[];
 	heightCm: number | null;
 	weightG: number | null;
 	distanceM: number | null;
@@ -253,6 +257,8 @@ const featuredOverrides = new Map<number, Partial<DemoSeed>>([
 			bio: "",
 			distanceM: 2,
 			tribes: [Tribe.Bear, Tribe.Daddy],
+			tribesImInto: [Tribe.Otter, Tribe.Jock],
+			vaccines: [Vaccine.COVID19, Vaccine.Monkeypox],
 		},
 	],
 	[
@@ -369,11 +375,13 @@ export const meSeed: DemoSeed = {
 	photos: 2,
 	bio: "Lorem ipsum — this is you.",
 	tribes: [Tribe.Geek],
+	tribesImInto: null,
 	lookingFor: [LookingFor.Chat, LookingFor.Friends],
 	body: BodyType.Average,
 	ethnicity: null,
 	relationship: RelationshipStatus.Single,
 	hiv: HivStatus.NegativeOnPrep,
+	vaccines: [],
 	heightCm: 178,
 	weightG: 75_000,
 	distanceM: null,
@@ -416,6 +424,7 @@ function buildSeed(id: number): DemoSeed {
 		photos: generatedPhotoCount(rng),
 		bio: generatedBio(rng),
 		tribes: subset({ rng, items: TRIBES, max: 3 }),
+		tribesImInto: null,
 		lookingFor: subset({ rng, items: LOOKING_FOR, max: 3 }),
 		body: chance({ rng, probability: 0.7 })
 			? pick({ rng, items: BODIES })
@@ -429,6 +438,7 @@ function buildSeed(id: number): DemoSeed {
 		hiv: chance({ rng, probability: 0.45 })
 			? pick({ rng, items: HIV })
 			: null,
+		vaccines: [],
 		heightCm: chance({ rng, probability: 0.6 })
 			? 160 + Math.floor(rng() * 40)
 			: null,

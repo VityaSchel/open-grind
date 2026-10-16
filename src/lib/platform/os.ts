@@ -16,6 +16,10 @@ export function isMobilePlatform(): boolean {
 	return isTauri() && ["android", "ios"].includes(platform());
 }
 
+export function isDesktopPlatform(): boolean {
+	return isTauri() && ["linux", "macos", "windows"].includes(platform());
+}
+
 export function isAndroidPlatform(): boolean {
 	return isTauri() && platform() === "android";
 }

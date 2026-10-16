@@ -14,10 +14,10 @@
 	let { ourProfileId, active }: { ourProfileId: number; active: boolean } =
 		$props();
 
-	const taps = untrack(() => {
-		const state = getTapsState(ourProfileId);
-		state.load();
-		return state;
+	const taps = untrack(() => getTapsState(ourProfileId));
+
+	$effect(() => {
+		if (active) return taps.attachView();
 	});
 
 	$effect(() => {

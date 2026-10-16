@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	AGE_MAX,
 	defaultFilters,
+	FilterTribe,
 	GENDER_ASK_ME,
 	WEIGHT_KG_MAX,
 	WEIGHT_KG_MIN,
@@ -67,6 +68,35 @@ describe("buildCascadeQuery", () => {
 		},
 	);
 
+	it.each([
+		["on", true],
+		["off", false],
+	])(
+		"while the gender filter flag is %s, sends every tribe they're into, Trans included",
+		(_, genderFilterFlag) => {
+			const query = buildCascadeQuery({
+				geohash,
+				genderFilterFlag,
+				filters: {
+					...defaultFilters,
+					tribesImIntoEnabled: true,
+					tribesImInto: [
+						Tribe.Bear,
+						Tribe.Trans,
+						FilterTribe.NotSpecified,
+					],
+				},
+			});
+
+			expect(query.tribesImInto).toEqual([
+				Tribe.Bear,
+				Tribe.Trans,
+				FilterTribe.NotSpecified,
+			]);
+			expect(query.tribes).toBeUndefined();
+		},
+	);
+
 	it("asks for fresh profiles only while Fresh is on", () => {
 		const on = buildCascadeQuery({
 			geohash,
@@ -93,6 +123,7 @@ describe("buildCascadeQuery", () => {
 				genders: [GENDER_ASK_ME],
 				tribesEnabled: true,
 				tribes: [Tribe.Trans],
+				tribesImIntoEnabled: true,
 				positionEnabled: true,
 				bodyTypesEnabled: true,
 				relationshipStatusesEnabled: true,

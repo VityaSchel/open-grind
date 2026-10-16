@@ -1,5 +1,5 @@
 <script>
-	import { MicrophoneIcon } from "phosphor-svelte";
+	import MicrophoneIcon from "phosphor-svelte/lib/MicrophoneIcon";
 	import { toast } from "svelte-sonner";
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";

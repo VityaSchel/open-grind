@@ -18,12 +18,15 @@ class FakeGridState {
 	paging = { running: false, failure: null, armToken: "" };
 	nextPage: number | null = null;
 	profiles: GridProfile[] = [];
-	viewActive = false;
 	scrollY = SAVED_TOP;
 	revealProfileId: number | null = REVEALED_ID;
 	startOverListeners = new Set<() => void>();
 
 	load() {}
+
+	attachView(): () => void {
+		return () => {};
+	}
 
 	onStartOver(listener: () => void): () => void {
 		this.startOverListeners.add(listener);

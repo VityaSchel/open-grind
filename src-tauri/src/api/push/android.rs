@@ -3,7 +3,8 @@ use tauri::plugin::{Builder, PluginHandle, TauriPlugin};
 use tauri::{AppHandle, Manager, Wry};
 
 use super::{
-	NotificationPermission, PushCategory, PushError, PushMode, PushSignal,
+	Announcement, NotificationPermission, PushCategory, PushError, PushMode,
+	PushSignal,
 };
 use crate::plugin_rejection::classify;
 
@@ -72,8 +73,19 @@ struct CategoriesResponse {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ShownResponse {
+	conversation_ids: Vec<String>,
+}
+
+#[derive(Deserialize)]
 struct DeeplinkResponse {
 	deeplink: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct DeeplinkPendingResponse {
+	pending: bool,
 }
 
 pub async fn addon_ready(app: &AppHandle) -> Result<(), PushError> {
@@ -127,6 +139,14 @@ pub async fn dismiss_conversation(
 	.await
 }
 
+pub async fn shown_conversations(
+	app: &AppHandle,
+) -> Result<Vec<String>, PushError> {
+	call::<ShownResponse>(app, "shownConversations", ())
+		.await
+		.map(|response| response.conversation_ids)
+}
+
 pub async fn mode(app: &AppHandle) -> Result<PushMode, PushError> {
 	call::<ModePayload>(app, "mode", ())
 		.await
@@ -175,12 +195,25 @@ pub async fn request_notification_permission(
 	call(app, "requestNotificationPermission", ()).await
 }
 
+pub async fn notify(
+	_app: &AppHandle,
+	_announcement: Announcement,
+) -> Result<(), PushError> {
+	Err(PushError::UnsupportedPlatform)
+}
+
 pub async fn take_deeplink(
 	app: &AppHandle,
 ) -> Result<Option<String>, PushError> {
 	call::<DeeplinkResponse>(app, "takeDeeplink", ())
 		.await
 		.map(|response| response.deeplink)
+}
+
+pub async fn deeplink_pending(app: &AppHandle) -> Result<bool, PushError> {
+	call::<DeeplinkPendingResponse>(app, "deeplinkPending", ())
+		.await
+		.map(|response| response.pending)
 }
 
 pub fn watch(

@@ -92,11 +92,11 @@ fn jni_signature<'a>(
 #[test]
 fn a_signature_is_read_as_named_typed_parameters_in_order() {
 	let kotlin =
-		"external fun nativePoll(sinceInbox: Long,\n\tsinceTaps: Long,\n): String?\n";
+		"external fun nativePoll(sinceInbox: Long,\n\tshownConversations: String,\n): String?\n";
 	assert_eq!(
 		kotlin_signature(kotlin, NATIVE_POLL),
 		(
-			vec![("sinceInbox", "Long"), ("sinceTaps", "Long")],
+			vec![("sinceInbox", "Long"), ("shownConversations", "String")],
 			"String?"
 		)
 	);
@@ -171,20 +171,5 @@ fn the_poll_bridge_takes_and_returns_what_kotlin_declares() {
 		jni_answer,
 		jni_type(answer),
 		"push_poll/android.rs {symbol} returns something other than the {answer} PushPoll.kt expects"
-	);
-}
-
-#[test]
-fn each_watermark_reaches_the_poll_under_its_own_name() {
-	assert!(
-		squashed(POLL).contains(
-			"nativePoll(sinceInbox=watermarks.inbox,sinceTaps=watermarks.taps,shownConversations=encode(shown),)"
-		),
-		"PushPoll.kt no longer passes each watermark to nativePoll by name, so the two can swap unnoticed"
-	);
-	assert!(
-		squashed(POLL_BRIDGE)
-			.contains("Watermarks{inbox:since_inbox,taps:since_taps"),
-		"push_poll/android.rs no longer reads each watermark from the parameter of the same name"
 	);
 }

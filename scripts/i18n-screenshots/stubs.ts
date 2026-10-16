@@ -53,6 +53,7 @@ const nativeAnswers: Record<string, unknown> = {
 	updater_install_pending: false,
 	updater_installed_version: null,
 	updater_take_install_outcome: null,
+	push_shown_conversations: [],
 };
 
 function answered(answers: Record<string, unknown>): NativeOverrides {

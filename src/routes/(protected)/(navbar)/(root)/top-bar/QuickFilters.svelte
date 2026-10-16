@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SlidersHorizontalIcon } from "phosphor-svelte";
+	import SlidersHorizontalIcon from "phosphor-svelte/lib/SlidersHorizontalIcon";
 
 	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
 	import { Button, buttonVariants } from "$lib/components/ui/button";

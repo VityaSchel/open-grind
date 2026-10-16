@@ -1,10 +1,8 @@
 <script lang="ts">
-	import {
-		FunnelIcon,
-		MagnifyingGlassIcon,
-		MapPinIcon,
-		UserIcon,
-	} from "phosphor-svelte";
+	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
+	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
+	import MapPinIcon from "phosphor-svelte/lib/MapPinIcon";
+	import UserIcon from "phosphor-svelte/lib/UserIcon";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 

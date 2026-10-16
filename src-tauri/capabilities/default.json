@@ -19,7 +19,13 @@
 					"url": "https://tauri.localhost*"
 				},
 				{
+					"url": "https://app.opengrind.org*"
+				},
+				{
 					"url": "http://ogmedia.localhost*"
+				},
+				{
+					"url": "https://ogmedia.localhost*"
 				},
 				{
 					"url": "http://localhost*"

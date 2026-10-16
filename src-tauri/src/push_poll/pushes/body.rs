@@ -4,7 +4,6 @@ use super::Push;
 
 pub(in crate::push_poll) const GENERIC_BODY: &str =
 	"CHAT_MESSAGE_NOTIFICATION_BODY";
-pub(super) const TAP_BODY: &str = "TAP_NOTIFICATION_BODY";
 
 pub(super) const MESSAGE_BODIES: [(&str, &[&str]); 9] = [
 	(
@@ -36,14 +35,13 @@ pub(super) const MESSAGE_BODIES: [(&str, &[&str]); 9] = [
 ];
 
 #[cfg(test)]
-pub(in crate::push_poll) const BODY_KEYS: [&str; MESSAGE_BODIES.len() + 2] = {
-	let mut keys = [GENERIC_BODY; MESSAGE_BODIES.len() + 2];
+pub(in crate::push_poll) const BODY_KEYS: [&str; MESSAGE_BODIES.len() + 1] = {
+	let mut keys = [GENERIC_BODY; MESSAGE_BODIES.len() + 1];
 	let mut index = 0;
 	while index < MESSAGE_BODIES.len() {
 		keys[index] = MESSAGE_BODIES[index].0;
 		index += 1;
 	}
-	keys[index] = TAP_BODY;
 	keys
 };
 

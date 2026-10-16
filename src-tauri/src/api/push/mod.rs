@@ -1,19 +1,19 @@
 #[cfg(target_os = "android")]
 mod android;
+mod announcement;
+#[cfg(not(target_os = "android"))]
+mod desktop;
 mod error;
 #[cfg(test)]
 mod pins;
-#[cfg(not(target_os = "android"))]
-mod unsupported;
-
-#[cfg(target_os = "android")]
-pub use android::plugin;
-pub use error::PushError;
 
 #[cfg(target_os = "android")]
 use android as backend;
+pub use announcement::{Announcement, Category};
+pub use backend::plugin;
 #[cfg(not(target_os = "android"))]
-use unsupported as backend;
+use desktop as backend;
+pub use error::PushError;
 
 use std::time::Duration;
 
@@ -55,6 +55,20 @@ pub enum NotificationPermissionState {
 pub struct NotificationPermission {
 	pub granted: bool,
 	pub state: NotificationPermissionState,
+}
+
+#[cfg_attr(target_os = "android", allow(dead_code))]
+impl NotificationPermission {
+	const fn settled(granted: bool) -> Self {
+		Self {
+			granted,
+			state: if granted {
+				NotificationPermissionState::Granted
+			} else {
+				NotificationPermissionState::Denied
+			},
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -135,6 +149,13 @@ pub async fn push_dismiss_conversation(
 }
 
 #[tauri::command]
+pub async fn push_shown_conversations(
+	app: AppHandle,
+) -> Result<Vec<String>, AppError> {
+	Ok(backend::shown_conversations(&app).await?)
+}
+
+#[tauri::command]
 pub async fn push_open_notification_settings(
 	app: AppHandle,
 ) -> Result<(), AppError> {
@@ -193,10 +214,23 @@ pub async fn push_request_notification_permission(
 }
 
 #[tauri::command]
+pub async fn push_notify(
+	app: AppHandle,
+	announcement: Announcement,
+) -> Result<(), AppError> {
+	Ok(backend::notify(&app, announcement).await?)
+}
+
+#[tauri::command]
 pub async fn push_take_deeplink(
 	app: AppHandle,
 ) -> Result<Option<String>, AppError> {
 	Ok(backend::take_deeplink(&app).await?)
+}
+
+#[tauri::command]
+pub async fn push_deeplink_pending(app: AppHandle) -> Result<bool, AppError> {
+	Ok(backend::deeplink_pending(&app).await?)
 }
 
 #[tauri::command]

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CheckCircleIcon, ShareNetworkIcon } from "phosphor-svelte";
+	import CheckCircleIcon from "phosphor-svelte/lib/CheckCircleIcon";
+	import ShareNetworkIcon from "phosphor-svelte/lib/ShareNetworkIcon";
 
 	import ProfileList from "$lib/components/profile-list/ProfileList.svelte";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";

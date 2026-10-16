@@ -1,10 +1,8 @@
 <script lang="ts">
-	import {
-		ArrowSquareOutIcon,
-		CaretRightIcon,
-		type IconComponentProps,
-	} from "phosphor-svelte";
+	import ArrowSquareOutIcon from "phosphor-svelte/lib/ArrowSquareOutIcon";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 	import { toast } from "svelte-sonner";
+	import type { IconComponentProps } from "phosphor-svelte";
 
 	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import * as Item from "$lib/components/ui/item";

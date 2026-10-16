@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import { ProhibitIcon } from "phosphor-svelte";
+	import ProhibitIcon from "phosphor-svelte/lib/ProhibitIcon";
 
 	import {
 		blockUser,

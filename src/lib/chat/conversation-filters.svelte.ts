@@ -32,6 +32,13 @@ export class ConversationFilters {
 		return this.request !== null;
 	}
 
+	get dropsOnlyReadChats(): boolean {
+		return deepEqual(
+			{ ...this.value, unread: defaultConversationFilters.unread },
+			defaultConversationFilters,
+		);
+	}
+
 	set(values: Partial<ConversationFilterValues>): boolean {
 		const merged = { ...this.value, ...values };
 		if (deepEqual(this.value, merged)) return false;

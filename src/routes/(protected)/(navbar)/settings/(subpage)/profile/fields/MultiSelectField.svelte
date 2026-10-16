@@ -1,5 +1,5 @@
 <script lang="ts" generics="T extends number">
-	import { CaretUpDownIcon } from "phosphor-svelte";
+	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDownIcon";
 
 	import Field from "$lib/components/fields/Field.svelte";
 	import { Button } from "$lib/components/ui/button";

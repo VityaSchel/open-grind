@@ -1,4 +1,8 @@
-import { assetSuffix } from "../../../scripts/lib/asset-suffix";
+import {
+	ANDROID_SPLITS,
+	androidSplitSuffix,
+	isAndroidTarget,
+} from "../../../scripts/lib/asset-suffix";
 
 const here = Bun.fileURLToPath(new URL(".", import.meta.url)).replace(
 	/\/$/,
@@ -31,8 +35,15 @@ export function cachedBundle(version: string): string {
 }
 
 export const androidPackage = "org.opengrind";
-export const androidSuffix = assetSuffix("apk");
-export const androidAbi = Bun.env.ABI ?? "aarch64";
+const requestedAbi = Bun.env.ABI ?? "aarch64";
+if (!isAndroidTarget(requestedAbi)) {
+	throw new Error(
+		`ABI must be one of ${Object.keys(ANDROID_SPLITS).join(", ")}`,
+	);
+}
+export const androidAbi = requestedAbi;
+export const androidFlavor = ANDROID_SPLITS[androidAbi].flavor;
+export const androidSuffix = androidSplitSuffix(androidAbi);
 export const oldCode = Number(Bun.env.OLD_CODE ?? 1030);
 export const newCode = Number(Bun.env.NEW_CODE ?? 1031);
 export const overrideFile = "/data/local/tmp/open-grind-update.env";

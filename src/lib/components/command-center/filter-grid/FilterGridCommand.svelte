@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { FunnelIcon } from "phosphor-svelte";
+	import FunnelIcon from "phosphor-svelte/lib/FunnelIcon";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { Badge } from "$lib/components/ui/badge";

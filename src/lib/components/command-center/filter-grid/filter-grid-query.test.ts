@@ -84,7 +84,8 @@ describe("parseFilterGridQuery", () => {
 			[
 				"?online=true&favorites=true&rightNow=true&fresh=true",
 				"notRecentlyChatted=true&hasPhotos=true&age=18-30",
-				"height=150-200&weight=60-80&position=1&tribes=1&bodyType=1",
+				"height=150-200&weight=60-80&position=1&tribes=1&tribesImInto=1",
+				"bodyType=1",
 				"relationship=1&nsfw=1&lookingFor=1&meetAt=1&health=1",
 				"genders=-1&tags=bear",
 			].join("&"),
@@ -102,7 +103,8 @@ describe("parseFilterGridQuery", () => {
 			"Height",
 			"Weight",
 			"Position",
-			"Tribes",
+			"Their Tribes",
+			"Tribes They’re Into",
 			"Body Type",
 			"Relationship Status",
 			"Accept NSFW Pics",
@@ -267,6 +269,18 @@ describe("parseFilterGridQuery", () => {
 			const result = parseFilterGridQuery("?tribes=1,11");
 			expect(parsedAt(result.parsed, 0).valid).toBe(true);
 			expect(result.filters.tribes).toEqual([1, 11]);
+		});
+
+		it("is accepted among the tribes they're into while the gender filter flag is on", () => {
+			featureFlagsState.keys = ["gender-filter"];
+			const result = parseFilterGridQuery("?tribesImInto=1,11,-1");
+			expect(parsedAt(result.parsed, 0).valid).toBe(true);
+			expect(valueText(parsedAt(result.parsed, 0))).toBe(
+				"Bear, Trans, Not Specified",
+			);
+			expect(result.filters.tribesImIntoEnabled).toBe(true);
+			expect(result.filters.tribesImInto).toEqual([1, 11, -1]);
+			expect(result.filters.tribesEnabled).toBe(false);
 		});
 	});
 

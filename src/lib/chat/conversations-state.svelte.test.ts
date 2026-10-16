@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 const {
 	getConversationsMock,
@@ -128,57 +128,6 @@ describe("ConversationsState initial load", () => {
 
 		expect(entryFor(state, "b:2").data.pinned).toBe(false);
 		expect(order()).toEqual(["a:1", "b:2"]);
-	});
-});
-
-describe("ConversationsState incoming-message handler (P6.3)", () => {
-	async function stateAwayFromTheInbox(
-		overrides: Partial<Conversation["data"]> = {},
-	) {
-		currentPage.route.id = "/(protected)/(navbar)";
-		singleColumn.current = true;
-		getConversationsMock.mockResolvedValue({
-			entries: [conversation("a:1", 1000, overrides)],
-			nextPage: null,
-		});
-		const state = new ConversationsState({
-			ourProfileId: OUR_ID,
-			onIncomingMessage,
-		});
-		await settled(state);
-		return state;
-	}
-
-	it("hands an incoming message to the handler with its conversation", async () => {
-		const state = await stateAwayFromTheInbox();
-		const message = fromPeer("a:1", 2000);
-
-		emitMessageSent(message);
-
-		expect(onIncomingMessage).toHaveBeenCalledExactlyOnceWith({
-			message,
-			conversation: entryFor(state, "a:1"),
-		});
-	});
-
-	it("stays silent for a muted conversation", async () => {
-		await stateAwayFromTheInbox({ muted: true });
-
-		emitMessageSent(fromPeer("a:1", 2000));
-
-		expect(onIncomingMessage).not.toHaveBeenCalled();
-	});
-
-	it("stays silent while the conversations list is on screen", async () => {
-		const state = await stateAwayFromTheInbox();
-		currentPage.route.id = "/(protected)/chat";
-		onIncomingMessage.mockClear();
-
-		emitMessageSent(fromPeer("a:1", 2000));
-		await microtasks();
-
-		expect(onIncomingMessage).not.toHaveBeenCalled();
-		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
 	});
 });
 
@@ -388,6 +337,8 @@ describe("ConversationsState unread accounting", () => {
 	});
 
 	it("leaves no badge on a conversation opened while its sync was in flight", async () => {
+		const focus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
+		onTestFinished(() => focus.mockRestore());
 		const state = await inboxWith([conversation("a:1", 1000)]);
 		currentPage.route.id = "/(protected)/(navbar)";
 		singleColumn.current = true;
@@ -408,7 +359,12 @@ describe("ConversationsState unread accounting", () => {
 		await microtasks();
 
 		expect(entryFor(state, "b:2").data.unreadCount).toBe(0);
-		expect(onIncomingMessage).not.toHaveBeenCalled();
+		expect(markConversationAsReadMock).toHaveBeenCalledWith({
+			conversationId: "b:2",
+		});
+		expect(onIncomingMessage).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({ inView: true }),
+		);
 	});
 
 	it("keeps the server count for a conversation the inbox had not loaded yet", async () => {

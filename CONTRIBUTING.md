@@ -163,7 +163,7 @@ Never select on Tailwind utility classes, tag shape, or computed style: `div.abs
 
 Open Grind adopts semver and uses it for canonical version names, i.e. `vMAJOR.MINOR.PATCH` with optional `-TAG` or `-TAG.X` semver metadata (where `MAJOR`, `MINOR`, `PATCH` and `X` are non-negative integers), e.g. `v0.1.0`, `v1.0.0-rc` or `v1.2.3-beta.1`.
 
-Android version code is calculated using `major * 1000000 + minor * 1000 + patch`, but for pre-mvp (v0.1.0) this convention is broken:
+Android version code is `major * 10000000 + minor * 100000 + patch * 1000`, and `-rc.N` is `release - 1000 + 10 * N`. Per-ABI APKs add their last digit from `opengrind.android.abiVersionCodeOffsets` in [gradle.properties](./src-tauri/gen/android/gradle.properties). For pre-mvp (v0.1.0) this convention is broken:
 
 ```
 v0.1.0-alpha.1  = 1000
@@ -178,19 +178,21 @@ v0.1.0-beta.4   = 1040 (error fixed, actual release jumps from 1020 to 1040)
 v0.1.0-beta.4.1 = 1041
 v0.1.0-beta.5   = 1050
 v0.1.0-beta.5.1 = 1051
+v0.1.0-rc.1     = 11000
+v0.1.0-rc.2     = 12000
 ```
 
 Post-mvp versioning:
 
 ```
-v0.2.0      =    2000
-v0.2.1      =    2001
-v0.3.0-rc.1 =    3000
-v0.3.0      =    3000
-v0.123.0    =  123000
-v1.0.0      = 1000000
-v1.1.0      = 1001000
-v1.123.0    = 1123000
+v0.2.0      =   200000
+v0.2.1      =   201000
+v0.3.0-rc.1 =   299010
+v0.3.0      =   300000
+v0.123.0    = 12300000
+v1.0.0      = 10000000
+v1.1.0      = 10100000
+v1.123.0    = 22300000
 ```
 
 ## Submitting your changes

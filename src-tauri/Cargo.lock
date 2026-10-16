@@ -3669,6 +3669,8 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9df9128cbbfef73cda168416ccf7f837b62737d748333bfe9ab71c245d76613e"
 dependencies = [
+ "bitflags 2.11.0",
+ "block2",
  "objc2",
  "objc2-foundation",
 ]
@@ -3717,6 +3719,8 @@ dependencies = [
  "cc",
  "dbus-secret-service-keyring-store",
  "ed25519-dalek",
+ "gdk",
+ "gdkwayland-sys",
  "getrandom 0.3.4",
  "grindr",
  "image",
@@ -3726,6 +3730,7 @@ dependencies = [
  "objc2",
  "objc2-app-kit",
  "objc2-foundation",
+ "objc2-user-notifications",
  "rfd",
  "rmp-serde",
  "semver",
@@ -5526,8 +5531,6 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 [[package]]
 name = "tauri"
 version = "2.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b93bd86d231f0a8138f11a02a584769fe4b703dc36ae133d783228dbc4801405"
 dependencies = [
  "anyhow",
  "bytes",
@@ -5826,8 +5829,6 @@ dependencies = [
 [[package]]
 name = "tauri-runtime"
 version = "2.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fef478ba1d2ac21c2d528740b24d0cb315e1e8b1111aae53fafac34804371fc"
 dependencies = [
  "cookie",
  "dpi",
@@ -5851,8 +5852,6 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "2.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3989df2ae1c476404fe0a2e8ffc4cfbde97e51efd613c2bb5355fbc9ab52cf0"
 dependencies = [
  "gtk",
  "http 1.4.0",
@@ -5878,8 +5877,6 @@ dependencies = [
 [[package]]
 name = "tauri-utils"
 version = "2.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d57200389a2f82b4b0a40ae29ca19b6978116e8f4d4e974c3234ce40c0ffbdec"
 dependencies = [
  "anyhow",
  "brotli",

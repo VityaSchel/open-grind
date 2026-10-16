@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { CaretRightIcon, SignOutIcon } from "phosphor-svelte";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
+	import SignOutIcon from "phosphor-svelte/lib/SignOutIcon";
 
 	import { signOut } from "$lib/api/sign-out";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";

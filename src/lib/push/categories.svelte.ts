@@ -1,4 +1,5 @@
 import { getPushSettings, setPushSettings } from "$lib/api/settings/account";
+import { isAndroidPlatform } from "$lib/platform/os";
 import {
 	openPushCategorySettings,
 	pushAvailableHere,
@@ -60,7 +61,7 @@ export async function toggleNotificationCategory({
 		sentToSettings = category;
 		return;
 	}
-	if (ANDROID_OWNED.has(category)) {
+	if (isAndroidPlatform() && ANDROID_OWNED.has(category)) {
 		if (!enabled) await openPushCategorySettings(category);
 		return;
 	}

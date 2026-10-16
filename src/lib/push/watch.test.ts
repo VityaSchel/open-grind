@@ -29,6 +29,14 @@ const categories = vi.hoisted(() => ({
 const chatWithdrawals = vi.hoisted(() => ({
 	watchChatWithdrawals: vi.fn<() => Promise<(() => void)[]>>(),
 }));
+const readSync = vi.hoisted(() => ({
+	recheckReadsWhileAway: vi.fn<() => () => void>(),
+	resyncWhileShown: vi.fn<() => Promise<void>>(),
+}));
+const os = vi.hoisted(() => ({ desktop: false }));
+const focusListeners = vi.hoisted(
+	() => [] as ((event: { payload: boolean }) => void)[],
+);
 const push = vi.hoisted(() => ({
 	fcmServiceInstalled: vi.fn<() => Promise<boolean>>(),
 	inFastMode: vi.fn<() => Promise<boolean>>(),
@@ -48,7 +56,17 @@ vi.mock("./notifications.svelte", () => notifications);
 vi.mock("./delivery.svelte", () => delivery);
 vi.mock("./categories.svelte", () => categories);
 vi.mock("./chat-withdrawals", () => chatWithdrawals);
+vi.mock("./read-sync", () => readSync);
 vi.mock("./index", () => push);
+vi.mock("$lib/platform/os", () => ({ isDesktopPlatform: () => os.desktop }));
+vi.mock("@tauri-apps/api/window", () => ({
+	getCurrentWindow: () => ({
+		onFocusChanged: (listener: (event: { payload: boolean }) => void) => {
+			focusListeners.push(listener);
+			return Promise.resolve(() => {});
+		},
+	}),
+}));
 
 const token: PushToken = {
 	token: "fid:APA91b",
@@ -71,6 +89,8 @@ async function signOutRelease(): Promise<() => Promise<void>> {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	os.desktop = false;
+	focusListeners.length = 0;
 	goto.mockResolvedValue(undefined);
 	push.pushAvailableHere.mockReturnValue(true);
 	push.inFastMode.mockResolvedValue(true);
@@ -100,6 +120,39 @@ describe("watching push", () => {
 		expect(signOut.onSignOut).not.toHaveBeenCalled();
 		expect(categories.loadNotificationCategories).not.toHaveBeenCalled();
 		expect(chatWithdrawals.watchChatWithdrawals).not.toHaveBeenCalled();
+	});
+
+	it("rechecks notifications each time a desktop window regains focus", async () => {
+		os.desktop = true;
+		const module = await freshModule();
+		await module.startPushWatch();
+		vi.clearAllMocks();
+
+		for (const listener of focusListeners) listener({ payload: false });
+		expect(notifications.reconcileNotifications).not.toHaveBeenCalled();
+
+		for (const listener of focusListeners) listener({ payload: true });
+		expect(notifications.reconcileNotifications).toHaveBeenCalledOnce();
+		expect(categories.loadNotificationCategories).toHaveBeenCalledOnce();
+		expect(readSync.resyncWhileShown).toHaveBeenCalledOnce();
+	});
+
+	it("rechecks reads made elsewhere while a desktop window is away", async () => {
+		os.desktop = true;
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(readSync.recheckReadsWhileAway).toHaveBeenCalledOnce();
+	});
+
+	it("listens for window focus only on desktop", async () => {
+		const module = await freshModule();
+
+		await module.startPushWatch();
+
+		expect(focusListeners).toHaveLength(0);
+		expect(readSync.recheckReadsWhileAway).not.toHaveBeenCalled();
 	});
 
 	it("clears chats the websocket reports unsent or deleted while the app runs", async () => {
@@ -153,6 +206,28 @@ describe("watching push", () => {
 		await module.startPushWatch();
 
 		expect(goto).toHaveBeenCalledWith("/chat/1%3A2");
+	});
+
+	it("counts a tapped notification as opening until its chat has opened", async () => {
+		const module = await freshModule();
+		const opening = await import("./opening-deeplink");
+		const seenWhileOpening: boolean[] = [];
+		push.takePushDeeplink.mockImplementation(() => {
+			seenWhileOpening.push(opening.openingPushDeeplink());
+			return Promise.resolve("grindr://conversation?id=1:2&senderId=2");
+		});
+		goto.mockImplementation(() => {
+			seenWhileOpening.push(opening.openingPushDeeplink());
+			return Promise.resolve();
+		});
+		const opened = vi.fn();
+		opening.onPushDeeplinkOpened(opened);
+
+		await module.startPushWatch();
+
+		expect(seenWhileOpening).toEqual([true, true]);
+		expect(opening.openingPushDeeplink()).toBe(false);
+		expect(opened).toHaveBeenCalledOnce();
 	});
 
 	it("keeps going when navigation to a deeplink fails", async () => {

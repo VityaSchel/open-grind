@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { XIcon } from "phosphor-svelte";
+	import XIcon from "phosphor-svelte/lib/XIcon";
 	import type z from "zod";
 
 	import {

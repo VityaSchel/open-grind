@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CaretRightIcon } from "phosphor-svelte";
+	import CaretRightIcon from "phosphor-svelte/lib/CaretRightIcon";
 
 	import { getProfile } from "$lib/api/users/profiles";
 	import BrokenUserAvatar from "$lib/components/profile/BrokenUserAvatar.svelte";

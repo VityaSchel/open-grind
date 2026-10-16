@@ -85,7 +85,7 @@
 		},
 		{
 			"name": "messaging/gifs",
-			"x-wip": true
+			"description": "GIPHY's own API on `https://api.giphy.com`, Grindr's official Android app key is `zf7gBZ531pHaTJN3ne0jDdAepsNreB2X`. A GIF from it is sent as a [GiphyBody](/grindr-api/messaging/messages#giphybody)."
 		},
 		{
 			"name": "commerce/grindrstore",
@@ -1028,18 +1028,29 @@
 				"operationId": "getTrendingGifs",
 				"parameters": [
 					{
+						"name": "api_key",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, GIPHY API key"
+					},
+					{
 						"name": "limit",
 						"in": "query",
 						"schema": {
 							"type": "integer"
-						}
+						},
+						"description": "integer, number of GIFs, default `25`, at most `50` for a beta key"
 					},
 					{
 						"name": "rating",
 						"in": "query",
 						"schema": {
 							"type": "string"
-						}
+						},
+						"description": "string, highest content rating to include: `g`, `pg`, `pg-13` or `r`; every rating when omitted"
 					}
 				],
 				"responses": {
@@ -1054,7 +1065,8 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"summary": "Get trending GIFs",
+				"description": "GIPHY's current trending GIFs. Send one with a [GiphyBody](/grindr-api/messaging/messages#giphybody)."
 			}
 		},
 		"/v1/gifs/search": {
@@ -1070,32 +1082,54 @@
 				"operationId": "searchGifs",
 				"parameters": [
 					{
-						"name": "limit",
+						"name": "api_key",
 						"in": "query",
-						"schema": {
-							"type": "integer"
-						}
-					},
-					{
-						"name": "rating",
-						"in": "query",
+						"required": true,
 						"schema": {
 							"type": "string"
-						}
+						},
+						"description": "string, GIPHY API key"
 					},
 					{
 						"name": "q",
 						"in": "query",
+						"required": true,
 						"schema": {
 							"type": "string"
-						}
+						},
+						"description": "string, search query, at most 50 characters"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, number of GIFs, default `25`, at most `50` for a beta key"
 					},
 					{
 						"name": "offset",
 						"in": "query",
 						"schema": {
 							"type": "integer"
-						}
+						},
+						"description": "integer, position of the first GIF in the results, default `0`, at most `4999`"
+					},
+					{
+						"name": "rating",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, highest content rating to include: `g`, `pg`, `pg-13` or `r`; every rating when omitted"
+					},
+					{
+						"name": "lang",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, two-letter ISO 639-1 code of the language of `q`, e.g. `en`"
 					}
 				],
 				"responses": {
@@ -1110,7 +1144,8 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"summary": "Search GIFs",
+				"description": "Searches GIPHY. Page through results with `offset`, see `pagination` in the response. Send a result with a [GiphyBody](/grindr-api/messaging/messages#giphybody)."
 			}
 		},
 		"/v3.1/store/grindrstore/coupons": {
@@ -2395,15 +2430,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowGetActivePostResponse"
+									"$ref": "#/components/schemas/RightNowPostResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"description": "Get the current Right Now post, including a hidden post before expiration. Returns {\"post\":null} when there is no current post or it has expired."
 			}
 		},
 		"/v3/rightnow/profiles/{profileId}": {
@@ -2422,15 +2457,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowGetOtherUserPostResponse"
+									"$ref": "#/components/schemas/RightNowPostResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"description": "Get a profile’s Right Now post. Uses activeText for live text and a flat media array rather than the feed’s type/data wrappers. Returns `{\"post\":null}` when the profile has no post, including for a nonexistent profile ID. Behavior for hidden or expired posts is undocumented."
 			}
 		},
 		"/{version}/rightnow/posts/{postId}": {
@@ -2441,7 +2476,17 @@
 				"operationId": "updateRightNowPost",
 				"parameters": [
 					{
-						"$ref": "#/components/parameters/VersionPath"
+						"name": "version",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"v4",
+								"v5"
+							]
+						},
+						"example": "v4"
 					},
 					{
 						"name": "postId",
@@ -2457,22 +2502,86 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
+								"type": "object",
+								"properties": {
+									"hosting": {
+										"type": "boolean"
+									},
+									"text": {
+										"type": "string",
+										"description": "Submitted for moderation; read moderatedText before assuming activeText has changed."
+									},
+									"media": {
+										"type": "array",
+										"description": "Replaces the attached media array.",
+										"items": {
+											"type": "object",
+											"required": [
+												"type",
+												"data"
+											],
+											"properties": {
+												"type": {
+													"type": "string",
+													"description": "Media kind, e.g. `image_v1`.",
+													"example": "image_v1"
+												},
+												"data": {
+													"type": "object",
+													"required": [
+														"id"
+													],
+													"properties": {
+														"id": {
+															"type": "integer",
+															"format": "int64",
+															"description": "The integer mediaId returned by POST /v1/media/upload or /v2/media/upload. The request uses data.id; own-post readback uses mediaId."
+														}
+													}
+												}
+											}
+										}
+									},
+									"hidden": {
+										"type": "boolean",
+										"description": "Whether the post is hidden."
+									},
+									"shareLocation": {
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									},
+									"locationRadius": {
+										"type": "integer",
+										"minimum": 0,
+										"maximum": 100,
+										"description": "Location precision value. On this edit route, locationRadius = 100 − slider value. This is not a distance in meters."
+									},
+									"isDiscreet": {
+										"description": "Discreet-post setting. The request value type is undocumented.",
+										"x-wip": true
+									},
+									"sharedFields": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
 									}
-								],
+								},
 								"x-original-type": "UpdatePostRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
+					},
+					"400": {
+						"description": "`urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Update Right Now post",
+				"description": "Partially edit an existing Right Now post. Send only the fields being changed. Edits preserve the post identity and expiration."
 			}
 		},
 		"/v4/rightnow/posts": {
@@ -2570,22 +2679,35 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/UndocumentedObject"
+								"type": "object",
+								"properties": {
+									"shareLocation": {
+										"$ref": "#/components/schemas/RightNowShareLocation"
+									},
+									"hosting": {
+										"type": "boolean"
+									},
+									"hidden": {
+										"type": "boolean",
+										"description": "true hides the post; false makes it active again."
 									}
-								],
+								},
 								"x-original-type": "UpdatePostSettingsRequest"
 							}
 						}
 					}
 				},
 				"responses": {
-					"200": {
-						"description": "OK"
+					"204": {
+						"description": "No Content"
+					},
+					"400": {
+						"description": "`urn:gr:err:client_action` when the body has no recognized settings key (`hosting`, `shareLocation` or `hidden`), checked before the post ID. `urn:gr:err:resource_not_found` when no post has this ID."
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Update Right Now post settings",
+				"description": "Update hosting, location sharing, or visibility. Send hidden: true to deactivate the post and hidden: false to reactivate it before expiration; this preserves its identity and expiration."
 			}
 		},
 		"/v5/rightnow/feed": {
@@ -2600,7 +2722,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v5)",
-				"description": "Feature-flag `v5` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
+				"description": "Get the Right Now feed (v5), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -2612,7 +2734,51 @@
 						},
 						"description": "OK"
 					}
-				}
+				},
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"DISTANCE",
+								"NEWEST"
+							],
+							"description": "sort order"
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean",
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				]
 			}
 		},
 		"/v1/media/upload": {
@@ -2667,15 +2833,16 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
-									"x-original-type": "RightNowMediaUploadResponse"
+									"$ref": "#/components/schemas/RightNowMediaUploadResponse"
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Upload Right Now media",
+				"description": "Upload raw image bytes as application/octet-stream. Attach the returned mediaId using an image_v1/data.id post edit."
 			}
 		},
 		"/v1/rightnow/googleplay/sku": {
@@ -4318,7 +4485,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "array of integers concatenated with a `,`, same IDs as `tribes`, matches the tribes a profile is into (`tribesImInto`) instead of its own, see [Tribes](/grindr-api/users/profiles#tribes)"
+						"description": "array of integers concatenated with a `,`, same IDs as `tribes`, `-1` means \"Not Specified\", matches the tribes a profile is into (`tribesImInto`) instead of its own, see [Tribes](/grindr-api/users/profiles#tribes)"
 					}
 				],
 				"responses": {
@@ -5726,7 +5893,8 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Get received taps"
+				"summary": "Get received taps",
+				"description": "Fetching received taps also marks our profile online by setting `onlineUntil` to current time + 600 s, like Get Cascade."
 			}
 		},
 		"/v2/taps/add": {
@@ -6046,10 +6214,11 @@
 								}
 							}
 						},
-						"description": "OK"
+						"description": "OK. The JSON is served with `Content-Type: binary/octet-stream` and no CORS headers."
 					}
 				},
-				"summary": "Grindr Gaymoji"
+				"summary": "Grindr Gaymoji",
+				"description": "Lists every Gaymoji. Send one with a [GaymojiBody](/grindr-api/messaging/messages#gaymojibody) whose `imageHash` is `gaymoji/` followed by the item's `id`."
 			}
 		},
 		"/grindr/chat/gaymoji/{id}": {
@@ -7915,6 +8084,9 @@
 							}
 						},
 						"description": "Created"
+					},
+					"400": {
+						"description": "`{\"type\":\"urn:gr:err:bad_request\",\"title\":\"Invalid request\",\"status\":400,\"traceId\":\"…\"}` when `body` is not valid for `type`, e.g. a `Giphy` body whose URLs are not on GIPHY's media hosts."
 					},
 					"402": {
 						"description": "Returns for free-tier users. Sending expiring photos is capped per day; a paid subscription lifts the cap. The body is an [EntitlementLimitProblemResponse](/grindr-api/messaging/messages#entitlementlimitproblemresponse).",
@@ -10384,10 +10556,13 @@
 							}
 						},
 						"description": "OK"
+					},
+					"400": {
+						"description": "`{\"type\":\"urn:gr:err:bad_request\",\"title\":\"Invalid request\",\"status\":400,\"traceId\":\"…\",\"detail\":\"Image parsing failed for WEBP. …\"}` when an image cannot be decoded, e.g. an animated WebP."
 					}
 				},
 				"summary": "Upload media",
-				"description": "Requires a correct `Content-Type`. Set `length` for audio and video, and `looping` for video. Videos are uploaded as `video/mp4`."
+				"description": "Requires a correct `Content-Type`. Set `length` for audio and video, and `looping` for video. Videos are uploaded as `video/mp4`.\n\nImages are stored as a single frame: an animated GIF becomes a JPEG of its first frame, and its `mediaHash` is the SHA-256 of that JPEG. A video is stored as uploaded, and its `mediaHash` is the SHA-256 of the uploaded bytes."
 			}
 		},
 		"/v4/media/upload": {
@@ -11396,7 +11571,7 @@
 				],
 				"operationId": "uploadRightNowMediaV2",
 				"summary": "Upload Right Now media (v2)",
-				"description": "Uploads an uncropped photo with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Used when the `right-now-media-upload-v2` server flag is on.",
+				"description": "Upload raw, uncropped image bytes as application/octet-stream with a separate crop rectangle (`crop_*`), a thumbnail crop (`img_1_*`), plus `rotate` and `flip_vertical`. Attach the returned mediaId using an image_v1/data.id post edit.",
 				"parameters": [
 					{
 						"name": "crop_top",
@@ -11496,12 +11671,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"allOf": [
-										{
-											"$ref": "#/components/schemas/UndocumentedObject"
-										}
-									],
-									"x-original-type": "RightNowMediaUploadResponse"
+									"$ref": "#/components/schemas/RightNowMediaUploadResponse"
 								}
 							}
 						},
@@ -12071,7 +12241,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
+									"type": "object",
+									"properties": {
+										"requests": {
+											"type": "array",
+											"items": {},
+											"description": "Item structure is undocumented."
+										}
+									},
 									"x-original-type": "RightNowGetReceivedRequestsResponse"
 								}
 							}
@@ -12099,7 +12276,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject",
+									"type": "object",
+									"properties": {
+										"requests": {
+											"type": "array",
+											"items": {},
+											"description": "Item structure is undocumented."
+										}
+									},
 									"x-original-type": "RightNowGetSentRequestsResponse"
 								}
 							}
@@ -12530,7 +12714,7 @@
 					}
 				],
 				"summary": "Get Right Now feed",
-				"description": "Right Now feed of nearby posts. The path version is chosen by feature flag: `v4` is the default; `v5` and `v6` are currently identical and unused but supported by the API.",
+				"description": "Get the Right Now feed. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"parameters": [
 					{
 						"name": "sort",
@@ -12549,7 +12733,7 @@
 						"in": "query",
 						"schema": {
 							"type": "boolean",
-							"description": "only posts from hosting profiles"
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
 						}
 					},
 					{
@@ -12601,7 +12785,7 @@
 					}
 				],
 				"summary": "Get Right Now feed (v6)",
-				"description": "Feature-flag `v6` of the Right Now feed. Verified to return the same shape as [GET /v4/rightnow/feed](/grindr-api/right-now#get-right-now-feed); see it for query parameters.",
+				"description": "Get the Right Now feed (v6), with the same response shape and query parameters as v4. DISTANCE orders posts by ascending distance; NEWEST orders posts by descending posted time. Multiple sexualPositions select their union; position and hosting filters combine as an intersection. An active own post can remain included despite age and position filters. Card representation may change with filters, so filtered standard-post sets need not be subsets of unfiltered standard-post sets.",
 				"responses": {
 					"200": {
 						"content": {
@@ -12613,7 +12797,51 @@
 						},
 						"description": "OK"
 					}
-				}
+				},
+				"parameters": [
+					{
+						"name": "sort",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"enum": [
+								"DISTANCE",
+								"NEWEST"
+							],
+							"description": "sort order"
+						}
+					},
+					{
+						"name": "hosting",
+						"in": "query",
+						"schema": {
+							"type": "boolean",
+							"description": "true selects hosting posts; false selects non-hosting posts. Omit to include both."
+						}
+					},
+					{
+						"name": "sexualPositions",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "array of integers concatenated with a `,`, `-1` means \"Not Specified\", see [Sexual position](/grindr-api/users/profiles#sexual-position-id)"
+						}
+					},
+					{
+						"name": "ageMin",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					},
+					{
+						"name": "ageMax",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						}
+					}
+				]
 			}
 		},
 		"/v1/hookup-intent/post": {
@@ -17555,7 +17783,7 @@
 					"url": {
 						"type": "string",
 						"nullable": true,
-						"description": "for `Image`, the image's [media hash](/grindr-api/media/public-cdn-files), not a URL; `null` for `Text`, `Location`, `Audio`, `Album` and `AlbumContentReply`"
+						"description": "for `Image`, the image's [media hash](/grindr-api/media/public-cdn-files), not a URL; for `Giphy`, the message's `urlPath`; for `Gaymoji`, the message's `imageHash`, e.g. `gaymoji/1_2_Yass.png`; `null` for `Text`, `Location`, `Audio`, `Album` and `AlbumContentReply`"
 					},
 					"lat": {
 						"type": "number",
@@ -17591,7 +17819,7 @@
 					"imageHash": {
 						"type": "string",
 						"nullable": true,
-						"description": "for `ProfilePhotoReply`, the [media hash](/grindr-api/media/public-cdn-files) of the profile photo replied to; `null` for `Text`, `Location`, `Image`, `Audio`, `Album` and `AlbumContentReply`"
+						"description": "for `ProfilePhotoReply`, the [media hash](/grindr-api/media/public-cdn-files) of the profile photo replied to; `null` for `Text`, `Location`, `Image`, `Audio`, `Album`, `AlbumContentReply`, `Giphy` and `Gaymoji`"
 					},
 					"photoContentReply": {
 						"type": "string",
@@ -17939,6 +18167,7 @@
 					"expiring_image",
 					"private_video",
 					"expiring_video",
+					"video",
 					"gaymoji",
 					"giphy",
 					"audio",
@@ -17952,7 +18181,8 @@
 					"album_share",
 					"album_react",
 					"album_content_reaction",
-					"album_content_reply"
+					"album_content_reply",
+					"profile_photo_reply"
 				],
 				"description": "Legacy message type.",
 				"x-render-on-tag": "messaging/messages"
@@ -18138,36 +18368,50 @@
 					},
 					"url": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "string, signed URL of the video, or `null`"
 					},
 					"fileCacheKey": {
-						"type": "string"
+						"type": "string",
+						"description": "string, may be absent; not sent in any observed response"
 					},
 					"contentType": {
 						"type": "string",
-						"nullable": true
+						"nullable": true,
+						"description": "string, e.g. `video/mp4`, or `null`"
 					},
 					"length": {
-						"type": "number"
+						"type": "number",
+						"description": "number, duration in milliseconds as uploaded, `0` when `url` is `null`"
 					},
 					"maxViews": {
 						"type": "integer",
-						"nullable": true
+						"nullable": true,
+						"description": "integer as sent in [SendVideoBody](#sendvideobody), or `null`"
 					},
 					"looping": {
 						"type": "boolean",
 						"nullable": true
 					},
 					"viewsRemaining": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, starts at `maxViews`"
+					},
+					"expiresAt": {
+						"nullable": true,
+						"description": "unix timestamp in milliseconds, 15 minutes, when `url` stops working, or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
 					}
 				},
-				"description": "Body for `\"Video\"` message type. Additionally, for expiring videos `viewsRemaining` is set; capped at `2147483647` for \"unlimited\" views.",
+				"description": "Body for `\"Video\"` message type. Additionally, for expiring videos `viewsRemaining` is set; capped at `2147483647` for \"unlimited\" views.\n\nIn [Get messages in a conversation](/grindr-api/messaging/messages#get-messages-in-a-conversation), a video received from the other profile has `mediaId`, `url`, `contentType` and `expiresAt` set to `null` and `length` set to `0`. [Get a single message in a conversation](/grindr-api/messaging/messages#get-a-single-message-in-a-conversation) returns them and uses one of `viewsRemaining`.",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"mediaId",
 					"url",
-					"fileCacheKey",
 					"contentType",
 					"length",
 					"maxViews",
@@ -18198,10 +18442,11 @@
 				"type": "object",
 				"properties": {
 					"imageHash": {
-						"type": "string"
+						"type": "string",
+						"description": "string, `gaymoji/` followed by the `id` of an item in the [Gaymoji manifest](/grindr-api/media/public-cdn-files#grindr-gaymoji), e.g. `gaymoji/1_2_Yass.png`. The image is at `https://cdns.grindr.com/grindr/chat/<imageHash>`, see [Get gaymoji asset](/grindr-api/media/public-cdn-files#get-gaymoji-asset)."
 					}
 				},
-				"description": "Body for `\"Gaymoji\"` message type.",
+				"description": "Body for `\"Gaymoji\"` message type. Sent and received as is.",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"imageHash"
@@ -18211,30 +18456,35 @@
 				"type": "object",
 				"properties": {
 					"id": {
-						"type": "string"
+						"type": "string",
+						"description": "string, GIPHY GIF ID, e.g. `xT0xeChUR33EsYNNRK`"
 					},
 					"urlPath": {
 						"type": "string",
-						"description": "full URL to gif file"
+						"description": "string, URL of the animated GIF, e.g. `https://media2.giphy.com/media/v1.<…>/<id>/200.gif` or `https://media.giphy.com/media/<id>/200.gif`"
 					},
 					"stillPath": {
 						"type": "string",
-						"description": "single frame, URL to gif file"
+						"description": "string, URL of a still frame of the GIF, e.g. `https://media.giphy.com/media/<id>/200_s.gif`"
 					},
 					"previewPath": {
-						"type": "string"
+						"type": "string",
+						"description": "string, URL of the animated GIF, may equal `urlPath`"
 					},
 					"width": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, width of `urlPath` in pixels"
 					},
 					"height": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, height of `urlPath` in pixels"
 					},
 					"imageHash": {
-						"type": "string"
+						"type": "string",
+						"description": "string, `giphy/` followed by `id`"
 					}
 				},
-				"description": "Body for `\"Giphy\"` message type. URLs point at `https://media0.giphy.com`.",
+				"description": "Body for `\"Giphy\"` message type. Sent and received as is. The URLs point at GIPHY's media hosts (`media.giphy.com`, `media0.giphy.com` to `media4.giphy.com`). [Send a message to a conversation](/grindr-api/messaging/messages#send-a-message-to-a-conversation) answers `400` when the URLs point at any other host; it does not check that the GIF exists on GIPHY. `id` and the URLs are those of a [GiphyGif](/grindr-api/messaging/gifs#giphygif) and its [renditions](/grindr-api/messaging/gifs#giphyrendition).",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
 					"id",
@@ -18660,7 +18910,7 @@
 					},
 					"dynamic": {
 						"type": "boolean",
-						"description": "boolean, `true` for `Album` messages and `false` for `Text`, `Image` and `ExpiringImage` messages. Current bodies of dynamic messages are returned by [Refresh messages](/grindr-api/messaging/conversations#refresh-messages)"
+						"description": "boolean, `true` for `Album` messages and `false` for `Text`, `Image`, `ExpiringImage`, `Video`, `Giphy` and `Gaymoji` messages. Current bodies of dynamic messages are returned by [Refresh messages](/grindr-api/messaging/conversations#refresh-messages)"
 					},
 					"chat1Type": {
 						"description": "string, see [Message type](/grindr-api/messaging/messages#message-type)",
@@ -18863,10 +19113,12 @@
 						"type": "number"
 					},
 					"looping": {
-						"type": "boolean"
+						"type": "boolean",
+						"description": "boolean, whether the video plays in a loop"
 					},
 					"maxViews": {
-						"type": "integer"
+						"type": "integer",
+						"description": "integer, how many times the recipient can play the video, e.g. `1` or `2`. Other values are accepted as well, e.g. `50`; `0` leaves no plays."
 					}
 				},
 				"description": "Request body for sending a `\"Video\"` message. Unlike the other media types the sender does control playback here — `looping` and `maxViews` are chosen client-side. Everything else on [VideoMessageBody](#videomessagebody) is server-populated.",
@@ -18951,7 +19203,7 @@
 						"$ref": "#/components/schemas/SendAlbumContentReplyBody"
 					}
 				],
-				"description": "What you may put in `body` when sending a message. This is **not** the same shape you get back: server-owned fields (signed `url`s, hashes, dimensions, timestamps, expiry counters) exist only on [Message contents](#message-contents).\n\nFive types send exactly what they receive — `Text`, `Location`, `Gaymoji`, `Giphy`, `ProfilePhotoReply` — and are reused as-is below. The media and album-reaction types send a strict subset.\n\nTypes absent from this list are receive-only: `Album`/`ExpiringAlbum` are shared through [Share an album](/grindr-api/messaging/albums), and `Retract`, `VideoCall`, `PrivateVideo`, `Generative`, `ProfileLink`, `NonExpiringVideo`, `Unknown` arrive as server notifications.",
+				"description": "What you may put in `body` when sending a message. This is **not** the same shape you get back: server-owned fields (signed `url`s, hashes, dimensions, timestamps, expiry counters) exist only on [Message contents](#message-contents).\n\nFive types send exactly what they receive — `Text`, `Location`, `Gaymoji`, `Giphy`, `ProfilePhotoReply` — and are reused as-is below. A `Giphy` body must point at GIPHY's media hosts, see [GiphyBody](#giphybody). The media and album-reaction types send a strict subset.\n\nTypes absent from this list are receive-only: `Album`/`ExpiringAlbum` are shared through [Share an album](/grindr-api/messaging/albums), and `Retract`, `VideoCall`, `PrivateVideo`, `Generative`, `ProfileLink`, `NonExpiringVideo`, `Unknown` arrive as server notifications.",
 				"x-render-on-tag": "messaging/messages"
 			},
 			"SendMessageRequest": {
@@ -20506,11 +20758,13 @@
 								},
 								"tag": {
 									"type": "string",
-									"nullable": true
+									"nullable": true,
+									"description": "string or `null`, may be absent; not sent in any observed response"
 								},
 								"href": {
 									"type": "string",
-									"nullable": true
+									"nullable": true,
+									"description": "string or `null`, may be absent; not sent in any observed response"
 								},
 								"expiredTime": {
 									"allOf": [
@@ -20518,7 +20772,7 @@
 											"$ref": "#/components/schemas/TimestampMs"
 										}
 									],
-									"description": "unix timestamp in milliseconds, may be `0`"
+									"description": "unix timestamp in milliseconds after which the item is expired, may be absent when it does not expire"
 								}
 							}
 						}
@@ -20537,7 +20791,7 @@
 											"$ref": "#/components/schemas/TimestampMs"
 										}
 									],
-									"description": "unix timestamp in milliseconds, may be `0`"
+									"description": "unix timestamp in milliseconds after which the category is expired, `0` when it does not expire"
 								}
 							}
 						}
@@ -20567,9 +20821,311 @@
 			},
 			"GiphyResponse": {
 				"type": "object",
-				"additionalProperties": true,
-				"x-render-on-tag": "messaging/gifs",
-				"x-exclude-from-markdown": true
+				"properties": {
+					"data": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/GiphyGif"
+						}
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/GiphyPagination"
+					},
+					"meta": {
+						"$ref": "#/components/schemas/GiphyMeta"
+					}
+				},
+				"description": "GIPHY's list response.",
+				"x-render-on-tag": "messaging/gifs"
+			},
+			"GiphyGif": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string",
+						"description": "string, `gif`"
+					},
+					"id": {
+						"type": "string",
+						"description": "string, GIPHY GIF ID, the `id` of a [GiphyBody](/grindr-api/messaging/messages#giphybody)"
+					},
+					"url": {
+						"type": "string",
+						"description": "string, URL of the GIF's page on `giphy.com`"
+					},
+					"slug": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"alt_text": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"rating": {
+						"type": "string",
+						"description": "string, `g`, `pg`, `pg-13` or `r`"
+					},
+					"username": {
+						"type": "string",
+						"description": "string, GIPHY channel that uploaded the GIF, may be empty"
+					},
+					"user": {
+						"type": "object",
+						"description": "object, the uploading channel, may be absent"
+					},
+					"source": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"source_tld": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"source_post_url": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"embed_url": {
+						"type": "string"
+					},
+					"bitly_url": {
+						"type": "string"
+					},
+					"bitly_gif_url": {
+						"type": "string"
+					},
+					"content_url": {
+						"type": "string",
+						"description": "string, may be empty"
+					},
+					"import_datetime": {
+						"type": "string",
+						"description": "string, `YYYY-MM-DD HH:MM:SS`"
+					},
+					"trending_datetime": {
+						"type": "string",
+						"description": "string, `YYYY-MM-DD HH:MM:SS`, `0000-00-00 00:00:00` when the GIF never trended"
+					},
+					"is_sticker": {
+						"type": "integer",
+						"description": "integer, `0` or `1`"
+					},
+					"is_low_contrast": {
+						"type": "boolean"
+					},
+					"images": {
+						"$ref": "#/components/schemas/GiphyImages"
+					},
+					"analytics": {
+						"type": "object",
+						"description": "object with `onload`, `onclick` and `onsent`, each holding a GIPHY analytics `url`"
+					},
+					"analytics_response_payload": {
+						"type": "string"
+					}
+				},
+				"description": "A GIF on GIPHY.",
+				"x-render-on-tag": "messaging/gifs"
+			},
+			"GiphyImages": {
+				"type": "object",
+				"properties": {
+					"original": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, the GIF as uploaded, see [GiphyRendition](#giphyrendition)"
+					},
+					"original_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"original_mp4": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"downsized": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"downsized_large": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"downsized_medium": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"downsized_small": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"downsized_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_height": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, 200 pixels tall, file name `200.gif`, see [GiphyRendition](#giphyrendition)"
+					},
+					"fixed_height_still": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, still frame of `fixed_height`, file name `200_s.gif`, see [GiphyRendition](#giphyrendition)"
+					},
+					"fixed_height_downsampled": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_height_small": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_height_small_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_width": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, 200 pixels wide, file name `200w.gif`, see [GiphyRendition](#giphyrendition)"
+					},
+					"fixed_width_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_width_downsampled": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_width_small": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"fixed_width_small_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"looping": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"preview": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"preview_gif": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"preview_webp": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, may be absent, see [GiphyRendition](#giphyrendition)"
+					},
+					"480w_still": {
+						"$ref": "#/components/schemas/GiphyRendition"
+					},
+					"hd": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, may be absent, see [GiphyRendition](#giphyrendition)"
+					},
+					"4k": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/GiphyRendition"
+							}
+						],
+						"description": "object, may be absent, see [GiphyRendition](#giphyrendition)"
+					}
+				},
+				"description": "Renditions of a GIF, keyed by name.",
+				"x-render-on-tag": "messaging/gifs"
+			},
+			"GiphyRendition": {
+				"type": "object",
+				"properties": {
+					"url": {
+						"type": "string",
+						"description": "string, URL of the GIF or still image on a GIPHY media host, may be absent on video-only renditions"
+					},
+					"width": {
+						"type": "string",
+						"description": "string, width in pixels as a decimal number, e.g. `\"200\"`"
+					},
+					"height": {
+						"type": "string",
+						"description": "string, height in pixels as a decimal number, e.g. `\"200\"`"
+					},
+					"size": {
+						"type": "string",
+						"description": "string, size of `url` in bytes as a decimal number, may be absent"
+					},
+					"mp4": {
+						"type": "string",
+						"description": "string, URL of an MP4 version, may be absent"
+					},
+					"mp4_size": {
+						"type": "string",
+						"description": "string, size of `mp4` in bytes as a decimal number, may be absent"
+					},
+					"webp": {
+						"type": "string",
+						"description": "string, URL of an animated WebP version, may be absent"
+					},
+					"webp_size": {
+						"type": "string",
+						"description": "string, size of `webp` in bytes as a decimal number, may be absent"
+					},
+					"frames": {
+						"type": "string",
+						"description": "string, number of frames as a decimal number, only on `original`"
+					},
+					"hash": {
+						"type": "string",
+						"description": "string, only on `original`, appears to be the MD5 of its `url` file"
+					}
+				},
+				"description": "One file of a GIF. Every number is sent as a string.",
+				"x-render-on-tag": "messaging/gifs"
+			},
+			"GiphyPagination": {
+				"type": "object",
+				"properties": {
+					"total_count": {
+						"type": "integer"
+					},
+					"count": {
+						"type": "integer",
+						"description": "integer, number of GIFs in `data`"
+					},
+					"offset": {
+						"type": "integer",
+						"description": "integer, the request's `offset`, `0` when omitted"
+					}
+				},
+				"x-render-on-tag": "messaging/gifs"
+			},
+			"GiphyMeta": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "integer",
+						"description": "integer, HTTP status, e.g. `200`"
+					},
+					"msg": {
+						"type": "string",
+						"description": "string, e.g. `OK`"
+					},
+					"response_id": {
+						"type": "string"
+					}
+				},
+				"x-render-on-tag": "messaging/gifs"
 			},
 			"RandomPromotionImagesResponse": {
 				"type": "object",
@@ -21918,6 +22474,20 @@
 					},
 					"favorite": {
 						"type": "boolean"
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"description": "Latitude; may be absent."
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"description": "Longitude; may be absent."
+					},
+					"isOnPrep": {
+						"type": "boolean",
+						"description": "Whether the profile is on PrEP."
 					}
 				},
 				"x-render-on-tag": "right-now"
@@ -22127,6 +22697,218 @@
 					}
 				},
 				"x-render-on-tag": "settings/account"
+			},
+			"RightNowMediaUploadResponse": {
+				"type": "object",
+				"description": "Response from either Right Now media upload version. Attach mediaId using the image_v1/data.id edit payload.",
+				"x-render-on-tag": "right-now",
+				"properties": {
+					"mediaId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"url": {
+						"type": "string",
+						"format": "uri"
+					},
+					"thumbnailUrl": {
+						"type": "string",
+						"format": "uri"
+					}
+				}
+			},
+			"RightNowPostDetails": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"profileId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"posted": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"expiration": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"hosting": {
+						"type": "boolean",
+						"description": "boolean, may be absent"
+					},
+					"activeText": {
+						"type": "string",
+						"nullable": true,
+						"description": "string or `null`, the post's live text; `moderatedText` holds the latest submitted text"
+					},
+					"moderatedText": {
+						"type": "object",
+						"nullable": true,
+						"description": "object, the latest submitted text and its moderation state, or `null`",
+						"properties": {
+							"id": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"postId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"text": {
+								"type": "string"
+							},
+							"textStatus": {
+								"type": "string",
+								"nullable": true,
+								"description": "string or `null`, known values: `\"AWAITING_MODERATION\"`, `\"MODERATION_FAILED\"`, `\"ERROR\"`"
+							},
+							"rejectReasons": {
+								"type": "array",
+								"nullable": true,
+								"items": {
+									"type": "string"
+								}
+							},
+							"createdAt": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"updatedAt": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"deleted": {
+								"type": "boolean"
+							}
+						}
+					},
+					"media": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "object",
+							"properties": {
+								"mediaId": {
+									"type": "integer",
+									"format": "int64"
+								},
+								"thumbnailUrl": {
+									"type": "string",
+									"format": "uri"
+								},
+								"fullImageUrl": {
+									"type": "string",
+									"format": "uri"
+								},
+								"contentType": {
+									"type": "string",
+									"description": "e.g. `image/jpeg`"
+								},
+								"state": {
+									"type": "string",
+									"description": "moderation state, e.g. `APPROVED`"
+								},
+								"reason": {
+									"type": "string",
+									"nullable": true,
+									"description": "moderation reason or `null`"
+								},
+								"isRejectAutomated": {
+									"type": "boolean",
+									"nullable": true,
+									"description": "Whether a rejection is automated; true alone does not indicate rejection."
+								},
+								"shouldBlur": {
+									"type": "boolean"
+								},
+								"isNsfw": {
+									"type": "boolean"
+								},
+								"source": {
+									"type": "string",
+									"description": "e.g. `RIGHT_NOW`"
+								}
+							}
+						}
+					},
+					"lat": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"lon": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"postStatus": {
+						"type": "string",
+						"description": "Post visibility status, including ACTIVE and HIDDEN. Hiding a post retains its data."
+					},
+					"shareLocation": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowShareLocation"
+							}
+						],
+						"nullable": true
+					},
+					"locationRadius": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100,
+						"description": "Location precision value from 0 to 100, or null. Not a distance in meters; null does not mean zero.",
+						"nullable": true
+					},
+					"isDiscreet": {
+						"type": "string",
+						"nullable": true,
+						"description": "string, `\"TRUE\"`, `\"FALSE\"` or `null`"
+					},
+					"sharedFields": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						}
+					},
+					"boostUpsellOfferAvailableUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "right-now",
+				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state."
+			},
+			"RightNowPostResponse": {
+				"type": "object",
+				"properties": {
+					"post": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowPostDetails"
+							}
+						],
+						"nullable": true
+					}
+				},
+				"x-render-on-tag": "right-now"
 			}
 		}
 	},

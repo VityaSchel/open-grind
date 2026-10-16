@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RulerIcon } from "phosphor-svelte";
+	import RulerIcon from "phosphor-svelte/lib/RulerIcon";
 
 	import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
 	import { Separator } from "$lib/components/ui/separator";

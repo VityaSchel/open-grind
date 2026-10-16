@@ -2,6 +2,7 @@ import { $ } from "bun";
 
 import {
 	androidAbi,
+	androidFlavor,
 	bundleName,
 	cache,
 	cachedApk,
@@ -80,7 +81,7 @@ export async function ensureState(): Promise<void> {
 const project = "src-tauri/gen/android";
 const manifest = `${repo}/${project}/app/src/main/AndroidManifest.xml`;
 const keystore = `${repo}/${project}/keystore.properties`;
-const output = `${repo}/${project}/app/build/outputs/apk/universal/debug/app-universal-debug.apk`;
+const output = `${repo}/${project}/app/build/outputs/apk/${androidFlavor}/debug/app-${androidFlavor}-debug.apk`;
 
 export async function clearKeystore(): Promise<void> {
 	await Bun.file(keystore)
@@ -119,7 +120,7 @@ export async function buildApk({
 	const pristineManifest = await Bun.file(manifest).text();
 	await Bun.write(keystore, Bun.file(keystoreProperties));
 	try {
-		await $`bun run tauri android build --debug --apk --target ${androidAbi} --config ${JSON.stringify(
+		await $`bun run tauri android build --debug --apk --split-per-abi --target ${androidAbi} --config ${JSON.stringify(
 			{ version, bundle: { android: { versionCode } } },
 		)}`.cwd(repo);
 	} finally {

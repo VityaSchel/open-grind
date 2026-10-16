@@ -1,6 +1,7 @@
 package org.opengrind
 
 import android.os.Bundle
+import android.os.Process
 import android.util.Log
 import android.view.View
 import android.webkit.WebView
@@ -21,6 +22,11 @@ private fun isolatedProfileSupported() =
 class FacebookOauthActivity : TauriActivity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
+		if (savedInstanceState != null && !signInStartedInProcess) {
+			restartAtMainActivity()
+			return
+		}
+		signInStartedInProcess = true
 		enableEdgeToEdge()
 		if (isolatedProfileSupported()) {
 			clearIsolatedProfile()
@@ -50,6 +56,11 @@ class FacebookOauthActivity : TauriActivity() {
 		ViewCompat.requestApplyInsets(webView)
 	}
 
+	private fun restartAtMainActivity() {
+		finish()
+		Process.killProcess(Process.myPid())
+	}
+
 	override fun onDestroy() {
 		if (live?.get() === this) {
 			live = null
@@ -60,6 +71,8 @@ class FacebookOauthActivity : TauriActivity() {
 	companion object {
 		@Volatile
 		private var live: WeakReference<FacebookOauthActivity>? = null
+
+		private var signInStartedInProcess = false
 
 		fun clearIsolatedProfile() {
 			if (!isolatedProfileSupported()) {

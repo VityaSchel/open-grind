@@ -1,13 +1,11 @@
 <script lang="ts">
-	import {
-		BellIcon,
-		BellSimpleSlashIcon,
-		DotsThreeVerticalIcon,
-		PushPinIcon,
-		PushPinSlashIcon,
-		TrashIcon,
-		XIcon,
-	} from "phosphor-svelte";
+	import BellIcon from "phosphor-svelte/lib/BellIcon";
+	import BellSimpleSlashIcon from "phosphor-svelte/lib/BellSimpleSlashIcon";
+	import DotsThreeVerticalIcon from "phosphor-svelte/lib/DotsThreeVerticalIcon";
+	import PushPinIcon from "phosphor-svelte/lib/PushPinIcon";
+	import PushPinSlashIcon from "phosphor-svelte/lib/PushPinSlashIcon";
+	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
+	import XIcon from "phosphor-svelte/lib/XIcon";
 
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";

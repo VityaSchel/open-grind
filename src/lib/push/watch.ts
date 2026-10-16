@@ -1,7 +1,9 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { goto } from "$app/navigation";
 
 import { registerPushToken } from "$lib/api/settings/account";
 import { onSignOut } from "$lib/api/sign-out";
+import { isDesktopPlatform } from "$lib/platform/os";
 import { loadNotificationCategories } from "./categories.svelte";
 import { watchChatWithdrawals } from "./chat-withdrawals";
 import { routeForDeeplink } from "./deeplink";
@@ -16,6 +18,8 @@ import {
 	watchPush,
 } from "./index";
 import { reconcileNotifications } from "./notifications.svelte";
+import { whileOpeningPushDeeplink } from "./opening-deeplink";
+import { recheckReadsWhileAway, resyncWhileShown } from "./read-sync";
 import { forgetPushRegistration } from "./teardown";
 
 export async function startPushWatch(): Promise<void> {
@@ -30,6 +34,18 @@ export async function startPushWatch(): Promise<void> {
 	await reconcileNotifications();
 	await loadNotificationCategories();
 	await syncPushToken({ rotated: false });
+	if (!isDesktopPlatform()) return;
+	await recheckWhenFocused();
+	recheckReadsWhileAway();
+}
+
+function recheckWhenFocused(): Promise<() => void> {
+	return getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+		if (!focused) return;
+		void reconcileNotifications();
+		void loadNotificationCategories();
+		void resyncWhileShown();
+	});
 }
 
 async function releaseRegistration(): Promise<void> {
@@ -37,12 +53,14 @@ async function releaseRegistration(): Promise<void> {
 		await forgetPushRegistration();
 }
 
-async function openPendingDeeplink(): Promise<void> {
-	const deeplink = await takePushDeeplink().catch(() => null);
-	const route = deeplink === null ? null : routeForDeeplink(deeplink);
-	if (!route) return;
-	await goto(route).catch((error: unknown) => {
-		console.error("Failed to open the push notification", error);
+function openPendingDeeplink(): Promise<void> {
+	return whileOpeningPushDeeplink(async () => {
+		const deeplink = await takePushDeeplink().catch(() => null);
+		const route = deeplink === null ? null : routeForDeeplink(deeplink);
+		if (!route) return;
+		await goto(route).catch((error: unknown) => {
+			console.error("Failed to open the push notification", error);
+		});
 	});
 }
 

@@ -1,12 +1,10 @@
 <script lang="ts">
-	import {
-		ArrowBendUpLeftIcon,
-		ArrowUUpLeftIcon,
-		CopyIcon,
-		FlagIcon,
-		TrashIcon,
-		WarningCircleIcon,
-	} from "phosphor-svelte";
+	import ArrowBendUpLeftIcon from "phosphor-svelte/lib/ArrowBendUpLeftIcon";
+	import ArrowUUpLeftIcon from "phosphor-svelte/lib/ArrowUUpLeftIcon";
+	import CopyIcon from "phosphor-svelte/lib/CopyIcon";
+	import FlagIcon from "phosphor-svelte/lib/FlagIcon";
+	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
+	import WarningCircleIcon from "phosphor-svelte/lib/WarningCircleIcon";
 	import type { ComponentProps } from "svelte";
 
 	import { copyToClipboard } from "$lib/api/error-copy";

@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import { EyeSlashIcon } from "phosphor-svelte";
+	import EyeSlashIcon from "phosphor-svelte/lib/EyeSlashIcon";
 
 	import {
 		getHiddenUserIdsNewestFirst,

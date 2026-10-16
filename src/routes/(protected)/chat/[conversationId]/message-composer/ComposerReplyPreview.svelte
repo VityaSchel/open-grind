@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ArrowBendUpLeftIcon, XIcon } from "phosphor-svelte";
+	import ArrowBendUpLeftIcon from "phosphor-svelte/lib/ArrowBendUpLeftIcon";
+	import XIcon from "phosphor-svelte/lib/XIcon";
 	import { expoOut } from "svelte/easing";
 
 	import { Button } from "$lib/components/ui/button";

@@ -40,6 +40,8 @@ export type DemoProfilePatch = {
 	meetAt?: number[];
 	hivStatus?: number | null;
 	sexualHealth?: number[];
+	tribesImInto?: number[] | null;
+	vaccines?: number[];
 	genders?: number[] | null;
 	pronouns?: number[] | null;
 	tapType?: 0 | 1 | 2 | null;

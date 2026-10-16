@@ -13,34 +13,56 @@ const CATEGORIES = [
 	{ category: "taps", enabled: true, systemBlocked: false },
 ];
 
-const ANDROID_PUSH: NativeOverrides = {
+const DESKTOP_PUSH: NativeOverrides = {
 	push_notification_permission: { answer: GRANTED },
 	push_request_notification_permission: { answer: GRANTED },
-	push_mode: { answer: "slow" },
 	push_categories: { answer: CATEGORIES },
+};
+
+const ANDROID_PUSH: NativeOverrides = {
+	...DESKTOP_PUSH,
+	push_mode: { answer: "slow" },
 };
 
 function notificationsSwitch(page: Page) {
 	return page.getByRole("switch", { name: "Enable notifications" });
 }
 
-async function enableNotifications(page: Page): Promise<void> {
+async function enableNotifications({
+	page,
+	unlocks,
+}: {
+	page: Page;
+	unlocks: string;
+}): Promise<void> {
 	await visit({
 		page,
 		path: NOTIFICATIONS_PATH,
-		ready: page.getByRole("switch", { name: "Received taps" }),
+		ready: page.getByRole("switch", { name: unlocks }),
 	});
 	await notificationsSwitch(page).click();
 	await page
-		.getByRole("switch", { name: "Received taps", disabled: false })
+		.getByRole("switch", { name: unlocks, disabled: false })
 		.waitFor();
 }
+
+const enableAndroidNotifications = (page: Page) =>
+	enableNotifications({ page, unlocks: "New messages" });
+
+const enableDesktopNotifications = (page: Page) =>
+	enableNotifications({ page, unlocks: "Received taps" });
 
 export const androidNotifications: Scene = {
 	platform: "phone",
 	native: ANDROID_PUSH,
 	views: [
-		{ id: "settings/notifications", drive: enableNotifications },
+		{
+			id: "settings/notifications",
+			drive: async (page) => {
+				await enableAndroidNotifications(page);
+				await page.getByText("Not available in Slow Mode").waitFor();
+			},
+		},
 		{
 			id: "settings/notifications/addon",
 			screen: "settings/notifications",
@@ -53,9 +75,9 @@ export const androidNotifications: Scene = {
 };
 
 export const notificationCategoryFailure: Scene = {
-	platform: "phone",
+	platform: "desktop",
 	native: {
-		...ANDROID_PUSH,
+		...DESKTOP_PUSH,
 		push_set_category: {
 			reject: { kind: "Push", message: { reason: "failed" } },
 		},
@@ -63,15 +85,15 @@ export const notificationCategoryFailure: Scene = {
 	views: [
 		{
 			id: "settings/notifications/category-failed",
-			screen: "settings/notifications",
+			screen: "settings/notifications/macos",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await enableNotifications(page);
+				await enableDesktopNotifications(page);
 				await addingToast({
 					page,
 					action: () =>
 						page
-							.getByRole("switch", { name: "Received taps" })
+							.getByRole("switch", { name: "New messages" })
 							.click(),
 				});
 			},
@@ -79,43 +101,29 @@ export const notificationCategoryFailure: Scene = {
 	],
 };
 
-function unsupportedOn({
-	id,
-	platform,
-	shim,
-	notice,
-}: {
-	id: string;
-	platform: Scene["platform"];
-	shim?: Scene["shim"];
-	notice: RegExp;
-}): Scene {
-	return {
-		platform,
-		shim,
-		views: [
-			{
-				id,
-				drive: (page) =>
-					visit({
-						page,
-						path: NOTIFICATIONS_PATH,
-						ready: page.getByText(notice),
-					}),
-			},
-		],
-	};
-}
-
-export const macosNotifications = unsupportedOn({
-	id: "settings/notifications/macos",
+export const macosNotifications: Scene = {
 	platform: "desktop",
-	notice: /supported on macOS/,
-});
+	native: DESKTOP_PUSH,
+	views: [
+		{
+			id: "settings/notifications/macos",
+			drive: enableDesktopNotifications,
+		},
+	],
+};
 
-export const iosNotifications = unsupportedOn({
-	id: "settings/notifications/ios",
+export const iosNotifications: Scene = {
 	platform: "phone",
 	shim: "ios",
-	notice: /supported on this platform/,
-});
+	views: [
+		{
+			id: "settings/notifications/ios",
+			drive: (page) =>
+				visit({
+					page,
+					path: NOTIFICATIONS_PATH,
+					ready: page.getByText(/supported on this platform/),
+				}),
+		},
+	],
+};

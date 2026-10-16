@@ -95,6 +95,12 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	}
 
 	@Command
+	fun shownConversations(invoke: Invoke) {
+		val shown = PushNotifier.shownConversations(activity).map { it.conversationId }
+		invoke.resolve(JSObject().apply { put("conversationIds", JSArray(shown)) })
+	}
+
+	@Command
 	fun openNotificationSettings(invoke: Invoke) =
 		settingsOpened(invoke, PushNotifier.openAppNotificationSettings(activity))
 
@@ -176,6 +182,10 @@ class PushPlugin(private val activity: Activity) : Plugin(activity) {
 	@Command
 	fun takeDeeplink(invoke: Invoke) =
 		invoke.resolve(JSObject().apply { put("deeplink", PushEvents.takeDeeplink()) })
+
+	@Command
+	fun deeplinkPending(invoke: Invoke) =
+		invoke.resolve(JSObject().apply { put("pending", PushEvents.deeplinkPending()) })
 
 	private fun offerDeeplink(intent: Intent?) {
 		val deeplink = intent?.getStringExtra(PushNotifier.EXTRA_DEEPLINK) ?: return

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LockIcon } from "phosphor-svelte";
+	import LockIcon from "phosphor-svelte/lib/LockIcon";
 
 	import { t } from "$lib/i18n";
 

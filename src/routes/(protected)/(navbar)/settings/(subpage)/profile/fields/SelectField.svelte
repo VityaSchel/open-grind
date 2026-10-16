@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends number">
 	import { IsUsingKeyboard } from "bits-ui";
-	import { CaretUpDownIcon, type IconComponentProps } from "phosphor-svelte";
+	import CaretUpDownIcon from "phosphor-svelte/lib/CaretUpDownIcon";
+	import type { IconComponentProps } from "phosphor-svelte";
 	import type { Component } from "svelte";
 
 	import Field from "$lib/components/fields/Field.svelte";

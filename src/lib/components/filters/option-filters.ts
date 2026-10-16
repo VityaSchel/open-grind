@@ -24,6 +24,11 @@ export const optionFilters = {
 		table: tribes,
 		isOffered: isTribeOfferedNow,
 	},
+	tribesImInto: {
+		id: "tribes-im-into",
+		label: "common.filters.options.tribesImInto",
+		table: tribes,
+	},
 	bodyTypes: {
 		id: "body-type",
 		label: "common.filters.options.bodyType",

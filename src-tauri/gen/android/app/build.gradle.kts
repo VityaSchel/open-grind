@@ -27,6 +27,11 @@ fun expandHome(path: String): String =
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val hasKeystore = keystorePropertiesFile.exists()
 
+val baseVersionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+val abiVersionCodeOffsets = prop("opengrind.android.abiVersionCodeOffsets")
+	.split(",")
+	.associate { entry -> entry.substringBefore(":") to entry.substringAfter(":").toInt() }
+
 val store = providers.environmentVariable("OPEN_GRIND_STORE").getOrElse("")
 val storeManifestOverlay = when (store) {
 	"" -> null
@@ -47,7 +52,7 @@ android {
         applicationId = "org.opengrind"
         minSdk = prop("opengrind.android.minSdk").toInt()
         targetSdk = prop("opengrind.android.targetSdk").toInt()
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+        versionCode = baseVersionCode
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
         // Mirror of MIN_CHROMIUM_MAJOR in src-tauri/src/lib.rs.
         buildConfigField("int", "MIN_SUPPORTED_WEBVIEW_MAJOR", "111")
@@ -103,6 +108,32 @@ android {
     buildFeatures {
         buildConfig = true
     }
+}
+
+val versionCodeOffsetByFlavor = mutableMapOf("universal" to 0)
+
+androidComponents {
+	finalizeDsl { android ->
+		android.productFlavors
+			.filter { it.name != "universal" }
+			.forEach { flavor ->
+				versionCodeOffsetByFlavor[flavor.name] =
+					abiVersionCodeOffsets.getValue(flavor.ndk.abiFilters.single())
+			}
+	}
+	onVariants { variant ->
+		val offset = versionCodeOffsetByFlavor.getValue(variant.flavorName!!)
+		variant.outputs.forEach { it.versionCode.set(baseVersionCode + offset) }
+	}
+}
+
+if (providers.environmentVariable("OPEN_GRIND_ANDROID_SPLITS").isPresent) {
+	val assembleSplits = android.productFlavors.names
+		.filter { it != "universal" }
+		.map { flavor -> "assemble${flavor.replaceFirstChar { it.uppercase() }}Release" }
+	tasks.matching { it.name == "assembleUniversalRelease" }.configureEach {
+		dependsOn(assembleSplits)
+	}
 }
 
 // Reproducibility: disable assets/dexopt/baseline.prof[m] and kotlin-tooling-metadata.json

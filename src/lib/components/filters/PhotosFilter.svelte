@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { FolderLockIcon, ImageIcon, SmileyWinkIcon } from "phosphor-svelte";
+	import FolderLockIcon from "phosphor-svelte/lib/FolderLockIcon";
+	import ImageIcon from "phosphor-svelte/lib/ImageIcon";
+	import SmileyWinkIcon from "phosphor-svelte/lib/SmileyWinkIcon";
 	import type z from "zod";
 
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";

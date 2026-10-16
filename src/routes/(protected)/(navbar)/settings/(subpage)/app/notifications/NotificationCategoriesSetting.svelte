@@ -6,6 +6,7 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
 	import { type PlainMessageKey, t } from "$lib/i18n";
+	import { isAndroidPlatform } from "$lib/platform/os";
 	import {
 		loadNotificationCategories,
 		notificationCategories,
@@ -20,6 +21,10 @@
 	} as const satisfies Record<PushCategoryName, PlainMessageKey>;
 
 	const saving = new SvelteSet<PushCategoryName>();
+
+	const inSlowMode = $derived(
+		isAndroidPlatform() && notificationSettings.mode === "slow",
+	);
 
 	$effect(() => {
 		if (appLifecycle.active)
@@ -49,12 +54,22 @@
 </script>
 
 {#each notificationCategories.list as { category, enabled, systemBlocked } (category)}
-	<SwitchField
-		title={t(titleKeys[category])}
-		disabled={!notificationSettings.enabled || saving.has(category)}
-		bind:checked={
-			() => enabled && !systemBlocked,
-			(next: boolean) => void change({ category, enabled: next })
-		}
-	/>
+	{@const unavailable = inSlowMode && category === "taps"}
+	<div class="flex flex-col gap-1.5">
+		<SwitchField
+			title={t(titleKeys[category])}
+			disabled={!notificationSettings.enabled ||
+				unavailable ||
+				saving.has(category)}
+			bind:checked={
+				() => enabled && !systemBlocked && !unavailable,
+				(next: boolean) => void change({ category, enabled: next })
+			}
+		/>
+		{#if unavailable}
+			<p class="px-4 text-sm text-muted-foreground">
+				{t("settings.notifications.categories.unavailableInSlowMode")}
+			</p>
+		{/if}
+	</div>
 {/each}

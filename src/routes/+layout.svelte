@@ -4,7 +4,7 @@
 
 	import "../layout.css";
 	import { beforeNavigate } from "$app/navigation";
-	import { IconContext } from "phosphor-svelte";
+	import IconContext from "phosphor-svelte/lib/IconContext";
 	import { onMount, untrack } from "svelte";
 	import { Toaster } from "svelte-sonner";
 

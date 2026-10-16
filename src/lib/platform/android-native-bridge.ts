@@ -1,12 +1,14 @@
 import { addPluginListener } from "@tauri-apps/api/core";
 
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
+import {
+	announceSafeAreaChange,
+	SAFE_AREA_SIDES,
+	type SafeAreaSide,
+} from "$lib/util/safe-area";
 import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 
-const SAFE_AREA_SIDES = ["top", "bottom", "left", "right"] as const;
 const IME_RESIZE_FALLBACK_MS = 150;
-
-type SafeAreaSide = (typeof SAFE_AREA_SIDES)[number];
 
 export type NativeInsets = Record<SafeAreaSide, number> & { ime: boolean };
 
@@ -36,7 +38,9 @@ function writeSafeAreaInsets(valueOf: (side: SafeAreaSide) => string) {
 		rootStyle.setProperty(property, value);
 		written = true;
 	}
-	if (written) remeasureScreenChrome();
+	if (!written) return;
+	remeasureScreenChrome();
+	announceSafeAreaChange();
 }
 
 function applyNativeInsets(insets: NativeInsets) {
@@ -102,13 +106,6 @@ export function softKeyboardHidden({
 		const timeout = setTimeout(done, settleMs);
 		window.addEventListener("resize", done);
 	});
-}
-
-function runBackGestureHandlers(): boolean {
-	for (const handler of [...backGestureEventHandlers].reverse()) {
-		if (handler() !== true) return true;
-	}
-	return false;
 }
 
 export function applyBackGestureHandler() {
