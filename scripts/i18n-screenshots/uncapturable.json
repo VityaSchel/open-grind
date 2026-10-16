@@ -4,7 +4,7 @@
 	"auth.signUp.title": "Only the document title of the sign-up page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"chat.composer.errors.sendFailed": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 	"chat.notification.*": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
-	"commands.filterGrid.errors.applyFailed": "Only when navigating to Grid after applying the filters rejects, and SvelteKit's goto resolves even when another navigation aborts it, so the web demo cannot make it reject.",
+	"commands.filterGrid.errors.applyFailed": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
 	"common.carousel.a11y.next": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
 	"common.carousel.a11y.previous": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
 	"feedback.appError.contentTooLarge": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
