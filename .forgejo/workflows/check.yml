@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ["fork", "toolchain", "8c16g", "hetzner"]
+    runs-on: ["fork", "toolchain", "amd-4c8g", "hetzner"]
     timeout-minutes: 60
     defaults:
       run:
@@ -92,6 +92,8 @@ jobs:
         run: cd "$CI_WORKSPACE" && bun run check:credits-sync
 
       - name: Lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=2048
         run: cd "$CI_WORKSPACE" && bun ci/lint.ts
 
       - name: Formatting
