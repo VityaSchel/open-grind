@@ -1,3 +1,5 @@
+/* eslint max-lines: ["error", { "max": 601, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
+
 import { createContext } from "svelte";
 
 import { showErrorToast } from "$lib/api/error-toast";
@@ -222,6 +224,7 @@ export class ConversationState {
 		}
 		this.refreshing = true;
 		this.#refreshRequestedSinceFetchStart = false;
+		const localIdsAtFetchStart = this.messages.map((m) => m.messageId);
 		try {
 			const result = await getConversation({
 				conversationId: this.conversationId,
@@ -234,6 +237,7 @@ export class ConversationState {
 			const { messages, fresh, changed } = mergeServerMessages({
 				local: this.messages,
 				server: result.messages,
+				localIdsAtFetchStart,
 			});
 
 			this.#advanceLastRead(result.lastReadTimestamp);
