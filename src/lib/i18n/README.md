@@ -71,7 +71,7 @@ A new meaning, tag or placeholder needs a new key. To rename a key, lock the Web
 
 ## Finding raw English
 
-In dev builds, `?locale=en-XA` shows every translated string accented and padded, and `?locale=ar-XB` shows it right to left, so raw English stands out. `e2e/i18n-pseudo.spec.ts`, `e2e/i18n-pseudo-settings.spec.ts` and `e2e/i18n-pseudo-updates.spec.ts` fail when raw English shows on the pages they visit or in the toasts they show.
+In dev builds, `?locale=en-XA` shows every translated string accented and padded, and `?locale=ar-XB` shows it right to left, so raw English stands out. Debug Android builds also have Android's own `en-XA` and `ar-XB`, so these two pins show Android's native text, such as notifications, in Android's pseudo text, where Android's `en-XA` is wrapped in `[…]` rather than `⟦…⟧`. `e2e/i18n-pseudo.spec.ts`, `e2e/i18n-pseudo-settings.spec.ts` and `e2e/i18n-pseudo-updates.spec.ts` fail when raw English shows on the pages they visit or in the toasts they show.
 
 ## Marking keys
 
