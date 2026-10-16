@@ -251,6 +251,7 @@ pub fn run() {
             regional::regional_settings,
             app_language::app_languages,
             app_language::set_app_language,
+            app_language::set_native_language,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,

@@ -10,11 +10,13 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.service.notification.StatusBarNotification
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import org.opengrind.MainActivity
 import org.opengrind.R
+import org.opengrind.language.NativeLanguage
 
 object PushNotifier {
 	const val EXTRA_DEEPLINK = "org.opengrind.push.extra.DEEPLINK"
@@ -89,20 +91,22 @@ object PushNotifier {
 
 	fun createChannels(context: Context) {
 		val manager = context.getSystemService(NotificationManager::class.java)
-		manager.createNotificationChannel(
-			NotificationChannel(
-				MESSAGES_CHANNEL,
-				context.getString(R.string.push_channel_messages),
-				NotificationManager.IMPORTANCE_HIGH,
-			),
-		)
-		manager.createNotificationChannel(
-			NotificationChannel(
-				TAPS_CHANNEL,
-				context.getString(R.string.push_channel_taps),
-				NotificationManager.IMPORTANCE_DEFAULT,
-			),
-		)
+		val localized = NativeLanguage.localized(context)
+		for (channel in channels) {
+			manager.createNotificationChannel(
+				NotificationChannel(channel.id, localized.getString(channel.name), channel.importance),
+			)
+		}
+	}
+
+	fun renameChannels(context: Context) {
+		val manager = context.getSystemService(NotificationManager::class.java)
+		val localized = NativeLanguage.localized(context)
+		for (channel in channels) {
+			val existing = manager.getNotificationChannel(channel.id) ?: continue
+			existing.name = localized.getString(channel.name)
+			manager.createNotificationChannel(existing)
+		}
 	}
 
 	fun channelOf(kind: PushKind) = when (kind) {
@@ -206,4 +210,11 @@ object PushNotifier {
 	}
 
 	private data class Posted(val tag: String?, val id: Int)
+
+	private class Channel(val id: String, @StringRes val name: Int, val importance: Int)
+
+	private val channels = listOf(
+		Channel(MESSAGES_CHANNEL, R.string.push_channel_messages, NotificationManager.IMPORTANCE_HIGH),
+		Channel(TAPS_CHANNEL, R.string.push_channel_taps, NotificationManager.IMPORTANCE_DEFAULT),
+	)
 }

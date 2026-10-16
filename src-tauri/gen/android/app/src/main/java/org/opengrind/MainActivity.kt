@@ -1,6 +1,7 @@
 package org.opengrind
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -19,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.opengrind.language.NativeLanguage
 import org.opengrind.push.AppForeground
 import org.opengrind.push.PushNotifier
 
@@ -198,9 +200,10 @@ class MainActivity : TauriActivity() {
 		shownWebViewWarning = true
 		webView.visibility = WebView.INVISIBLE
 
+		val localized = NativeLanguage.localized(this)
 		val view = layoutInflater.inflate(R.layout.dialog_webview_warning, null, false)
-		view.findViewById<TextView>(R.id.dialog_title).text = getString(R.string.webview_warning_title)
-		view.findViewById<TextView>(R.id.dialog_message).text = buildWebViewWarningMessage(warning)
+		view.findViewById<TextView>(R.id.dialog_title).text = localized.getString(R.string.webview_warning_title)
+		view.findViewById<TextView>(R.id.dialog_message).text = buildWebViewWarningMessage(localized, warning)
 
 		val dialog = MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_OpenGrind_WebViewDialog)
 			.setView(view)
@@ -208,7 +211,7 @@ class MainActivity : TauriActivity() {
 			.create()
 
 		view.findViewById<MaterialButton>(R.id.button_update).apply {
-			text = getString(R.string.webview_warning_update)
+			text = localized.getString(R.string.webview_warning_update)
 			setOnClickListener {
 				dialog.dismiss()
 				openWebViewUpdate(warning)
@@ -216,7 +219,7 @@ class MainActivity : TauriActivity() {
 			}
 		}
 		view.findViewById<MaterialButton>(R.id.button_continue).apply {
-			text = getString(R.string.webview_warning_continue)
+			text = localized.getString(R.string.webview_warning_continue)
 			setOnClickListener {
 				dialog.dismiss()
 				revealWebView()
@@ -230,11 +233,11 @@ class MainActivity : TauriActivity() {
 		webViewRef?.visibility = WebView.VISIBLE
 	}
 
-	private fun buildWebViewWarningMessage(status: WebViewSupport.Status): String {
-		val provider = status.packageName ?: getString(R.string.webview_warning_unknown_provider)
-		val version = status.versionName ?: getString(R.string.webview_warning_unknown_version)
-		val description = getString(R.string.webview_warning_description, status.minSupportedMajor.toString())
-		val detected = getString(R.string.webview_warning_detected, provider, version)
+	private fun buildWebViewWarningMessage(localized: Context, status: WebViewSupport.Status): String {
+		val provider = status.packageName ?: localized.getString(R.string.webview_warning_unknown_provider)
+		val version = status.versionName ?: localized.getString(R.string.webview_warning_unknown_version)
+		val description = localized.getString(R.string.webview_warning_description, status.minSupportedMajor.toString())
+		val detected = localized.getString(R.string.webview_warning_detected, provider, version)
 		return "$description\n\n$detected"
 	}
 

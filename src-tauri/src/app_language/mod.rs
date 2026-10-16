@@ -32,6 +32,10 @@ const CHANGED_EVENT: &str = "app-language-changed";
 const NO_PER_APP_SETTING: &str =
 	"this platform has no per-app language setting";
 
+#[cfg(not(target_os = "android"))]
+const NO_NATIVE_TEXT: &str =
+	"only Android shows native text in a language of its own";
+
 pub fn plugin() -> TauriPlugin<Wry> {
 	Builder::new("app-language")
 		.setup(|_app, _api| {
@@ -86,6 +90,21 @@ pub async fn set_app_language() -> Result<(), String> {
 	Err(NO_PER_APP_SETTING.into())
 }
 
+#[cfg(target_os = "android")]
+#[tauri::command]
+pub async fn set_native_language(
+	app: AppHandle,
+	tag: Option<String>,
+) -> Result<(), String> {
+	android::set_native(&app, tag).await
+}
+
+#[cfg(not(target_os = "android"))]
+#[tauri::command]
+pub async fn set_native_language() -> Result<(), String> {
+	Err(NO_NATIVE_TEXT.into())
+}
+
 #[cfg(test)]
 mod pins {
 	use std::collections::BTreeSet;
@@ -105,11 +124,13 @@ mod pins {
 	const LIB: &str = include_str!("../lib.rs");
 	const FRONTEND: &str =
 		include_str!("../../../src/lib/platform/app-language.ts");
+	const NATIVE_FRONTEND: &str =
+		include_str!("../../../src/lib/platform/native-language.ts");
 
 	fn bridge_commands() -> BTreeSet<&'static str> {
-		BRIDGE
-			.split(">(")
-			.skip(1)
+		[">(", "send_tag(app,"]
+			.into_iter()
+			.flat_map(|call| BRIDGE.split(call).skip(1))
 			.filter_map(|call| call.trim_start().strip_prefix('"'))
 			.filter_map(|call| call.split('"').next())
 			.collect()
@@ -130,7 +151,7 @@ mod pins {
 	fn the_bridge_and_the_android_plugin_agree_on_every_command() {
 		let bridge = bridge_commands();
 		assert!(
-			bridge.contains("setAppLanguage") && bridge.len() == 3,
+			bridge.contains("setNativeLanguage") && bridge.len() == 4,
 			"the bridge commands were not parsed: {bridge:?}"
 		);
 		assert_eq!(
@@ -149,6 +170,37 @@ mod pins {
 	}
 
 	#[test]
+	fn the_native_language_is_stored_before_the_channels_take_its_names() {
+		let plugin = squashed(PLUGIN);
+		let command = plugin
+			.split_once("funsetNativeLanguage(invoke:Invoke){")
+			.expect("AppLanguagePlugin.kt declares no setNativeLanguage")
+			.1;
+		assert!(
+			command.contains(
+				"if(!NativeLanguage.remember(context,tag)){invoke.reject(\"set-failed\")return}renameChannels(context)invoke.resolve()"
+			),
+			"setNativeLanguage must store the tag before renaming the channels, or they keep the previous language's names, and must reject when the tag was not stored"
+		);
+		assert!(
+			plugin.contains(
+				"privatefunrenameChannels(source:Context){PushNotifier.renameChannels(source)TransferService.renameChannel(source)}"
+			),
+			"AppLanguagePlugin.renameChannels no longer renames both the push and the transfer channels"
+		);
+	}
+
+	#[test]
+	fn the_channels_take_the_names_of_a_new_android_language() {
+		assert!(
+			squashed(PLUGIN).contains(
+				"overridefunonConfigurationChanged(newConfig:Configuration){if(newConfig.locales!=namedFor){namedFor=newConfig.localesrunCatching{renameChannels(activity)}}publish()}"
+			),
+			"AppLanguagePlugin must rename the channels when Android's language changes, since the web sends no new tag for a per-app or system language"
+		);
+	}
+
+	#[test]
 	fn android_lists_the_app_under_the_generated_languages() {
 		let start = MANIFEST.find("<application").expect("<application");
 		let end = start + MANIFEST[start..].find('>').expect("<application>");
@@ -162,14 +214,18 @@ mod pins {
 
 	#[test]
 	fn the_frontend_uses_the_commands_and_event_registered_here() {
-		for command in ["app_languages", "set_app_language"] {
+		for (command, file, frontend) in [
+			("app_languages", "app-language.ts", FRONTEND),
+			("set_app_language", "app-language.ts", FRONTEND),
+			("set_native_language", "native-language.ts", NATIVE_FRONTEND),
+		] {
 			assert!(
 				LIB.contains(&format!("app_language::{command},")),
 				"lib.rs does not register {command}"
 			);
 			assert!(
-				FRONTEND.contains(&format!("\"{command}\"")),
-				"app-language.ts no longer invokes {command}"
+				frontend.contains(&format!("\"{command}\"")),
+				"{file} no longer invokes {command}"
 			);
 		}
 		assert!(

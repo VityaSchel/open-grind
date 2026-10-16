@@ -22,6 +22,10 @@ import {
 	planLanguageChoice,
 	reconcileLanguage,
 } from "./language-sync";
+import {
+	publishNativeLanguage,
+	publishPinnedNativeLanguage,
+} from "./native-language";
 import { NATIVE_READ_TIMEOUT_MS } from "./regional-settings";
 
 const READ_COMMAND = "app_languages";
@@ -32,6 +36,7 @@ type AppLanguages = {
 	readonly tier: LanguageSyncTier;
 	readonly app: string | null;
 	readonly system: readonly string[];
+	readonly fromNative: boolean;
 };
 
 const systemLanguagesSchema = z.object({
@@ -47,7 +52,12 @@ const nativeSyncSchema = z.object({
 	app: z.string().nullable(),
 });
 
-const NOTHING_SEEN: AppLanguages = { tier: "none", app: null, system: [] };
+const NOTHING_SEEN: AppLanguages = {
+	tier: "none",
+	app: null,
+	system: [],
+	fromNative: false,
+};
 
 let current = NOTHING_SEEN;
 let followsBrowser = true;
@@ -65,12 +75,15 @@ function appLanguages(value: unknown): AppLanguages | undefined {
 	if (!languages.success) return undefined;
 	const { system } = languages.data;
 	const sync = nativeSyncSchema.safeParse(value);
-	if (!sync.success) return { tier: "none", app: null, system };
+	if (!sync.success) {
+		return { tier: "none", app: null, system, fromNative: true };
+	}
 	const { tier, app } = sync.data;
 	return {
 		tier,
 		app: app === null ? null : (normalizeTag(app) ?? app),
 		system,
+		fromNative: true,
 	};
 }
 
@@ -79,7 +92,7 @@ function browserLanguages(): AppLanguages {
 		navigator.languages.length > 0
 			? navigator.languages
 			: [navigator.language];
-	return { tier: "none", app: null, system: [...system] };
+	return { tier: "none", app: null, system: [...system], fromNative: false };
 }
 
 async function storedSettings(): Promise<LanguageSettings | undefined> {
@@ -97,6 +110,11 @@ function sameSettings(a: LanguageSettings, b: LanguageSettings): boolean {
 		(a.languageSync === null) === (b.languageSync === null) &&
 		a.languageSync?.native === b.languageSync?.native
 	);
+}
+
+function followNativeText(choice: string | null): void {
+	if (!current.fromNative) return;
+	void publishNativeLanguage({ choice, tier: current.tier });
 }
 
 async function showLanguage(choice: string | null): Promise<void> {
@@ -135,6 +153,7 @@ async function sync(languages: AppLanguages): Promise<void> {
 		await setPreferences(settled).catch(console.error);
 	}
 	await showLanguage(settled.language);
+	followNativeText(settled.language);
 }
 
 function followBrowserChange(): void {
@@ -209,6 +228,7 @@ export async function startLanguage(): Promise<void> {
 		const pinned = pinnedLanguage();
 		if (pinned !== undefined) {
 			await setLocale({ locale: pinned });
+			void publishPinnedNativeLanguage();
 			return;
 		}
 		window.addEventListener("languagechange", followBrowserChange);
@@ -229,7 +249,7 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 		if (!offersLanguage(tag)) {
 			throw new RangeError(`No translations for language "${tag}"`);
 		}
-		const { languageSync } = await getPreferences();
+		const { language, languageSync } = await getPreferences();
 		const plan = planLanguageChoice({
 			tier: current.tier,
 			tag,
@@ -244,6 +264,7 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 			});
 		} catch (error) {
 			await setLocale({ locale: shown }).catch(console.error);
+			followNativeText(language);
 			throw error;
 		}
 		if (!(await writeNative(plan))) {
@@ -251,5 +272,6 @@ export function chooseLanguage({ tag }: { tag: string }): Promise<void> {
 				languageSync: { native: current.app },
 			}).catch(console.error);
 		}
+		followNativeText(plan.language);
 	});
 }

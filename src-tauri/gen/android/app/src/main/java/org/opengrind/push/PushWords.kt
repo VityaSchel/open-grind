@@ -3,9 +3,13 @@ package org.opengrind.push
 import android.content.Context
 import androidx.annotation.StringRes
 import org.opengrind.R
+import org.opengrind.language.NativeLanguage
 
 object PushWords {
-	fun of(context: Context): (PushText) -> String = { text -> context.getString(resourceOf(text)) }
+	fun of(context: Context): (PushText) -> String {
+		val localized = NativeLanguage.localized(context)
+		return { text -> localized.getString(resourceOf(text)) }
+	}
 
 	@StringRes
 	private fun resourceOf(text: PushText): Int = when (text) {

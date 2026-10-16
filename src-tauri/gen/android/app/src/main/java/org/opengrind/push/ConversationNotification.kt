@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat.MessagingStyle
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import org.opengrind.R
+import org.opengrind.language.NativeLanguage
 import org.opengrind.push.ConversationLines.Line
 
 object ConversationNotification {
@@ -73,7 +74,8 @@ object ConversationNotification {
 	}
 
 	private fun style(context: Context, peer: Person, lines: List<Line>): MessagingStyle {
-		val self = Person.Builder().setName(context.getString(R.string.push_self)).build()
+		val name = NativeLanguage.localized(context).getString(R.string.push_self)
+		val self = Person.Builder().setName(name).build()
 		return lines.fold(MessagingStyle(self)) { style, line ->
 			style.addMessage(
 				MessagingStyle.Message(line.text, line.timestamp, peer).apply {
