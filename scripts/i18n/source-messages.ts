@@ -113,6 +113,10 @@ function readCatalog(files: SourceFile[]): Catalog {
 	return catalog;
 }
 
+export const catalogTexts = (
+	files: SourceFile[],
+): ReadonlyMap<string, string> => readCatalog(files).texts;
+
 function groupForms(
 	texts: ReadonlyMap<string, string>,
 ): Map<string, Map<string, string>> {
