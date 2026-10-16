@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   audit:
-    runs-on: ["fork", "toolchain", "8c16g", "hetzner"]
+    runs-on: ["fork", "toolchain", "2c4g", "hetzner"]
     timeout-minutes: 30
     steps:
       - name: Check dependencies for advisories, licenses and unknown sources

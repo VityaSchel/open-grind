@@ -49,7 +49,7 @@ concurrency:
 
 jobs:
   credits:
-    runs-on: ["fork", "toolchain", "8c16g", "hetzner"]
+    runs-on: ["fork", "toolchain", "2c4g", "hetzner"]
     timeout-minutes: 30
     defaults:
       run:
@@ -66,7 +66,7 @@ jobs:
       CI_WORKSPACE: /opt/open-grind-credits
       RUSTUP_HOME: /opt/rust/rustup
       CARGO_TERM_PROGRESS_WHEN: never
-      NODE_OPTIONS: --max-old-space-size=6144
+      NODE_OPTIONS: --max-old-space-size=2048
     steps:
       - name: Verify CI environment
         run: |
