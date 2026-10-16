@@ -3,12 +3,14 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, platformMock, toastError, nativeDrop } = vi.hoisted(() => ({
-	invokeMock: vi.fn(),
-	platformMock: vi.fn(),
-	toastError: vi.fn(),
-	nativeDrop: { handler: null as ((event: unknown) => void) | null },
-}));
+const { invokeMock, platformMock, toastError, nativeDrop, systemDrag } =
+	vi.hoisted(() => ({
+		invokeMock: vi.fn(),
+		platformMock: vi.fn(),
+		toastError: vi.fn(),
+		nativeDrop: { handler: null as ((event: unknown) => void) | null },
+		systemDrag: { handler: null as ((event: unknown) => void) | null },
+	}));
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
@@ -24,6 +26,14 @@ vi.mock("@tauri-apps/api/webview", () => ({
 			});
 		},
 	}),
+}));
+vi.mock("@tauri-apps/api/event", () => ({
+	listen: (_event: string, handler: (event: unknown) => void) => {
+		systemDrag.handler = handler;
+		return Promise.resolve(() => {
+			systemDrag.handler = null;
+		});
+	},
 }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 
@@ -435,6 +445,48 @@ describe("dragging", () => {
 			expect(mediaDrop.refusal).toBeNull();
 			expect(over.dataTransfer.dropEffect).toBe("copy");
 			drag("dragleave");
+		}
+	});
+
+	it("judges by the types Android reports when the webview hides them", () => {
+		stopListening();
+		tauri.isTauri = true;
+		platformMock.mockReturnValue("android");
+		stopListening = listenForMedia();
+		register(target("Drop to send"));
+		const hidden = [file("shared", "")];
+
+		const verdictFor = (mimeTypes: string[]) => {
+			systemDrag.handler?.({ payload: { mimeTypes } });
+			drag("dragenter", hidden);
+			const over = drag("dragover", hidden);
+			const verdict = {
+				refusal: mediaDrop.refusal,
+				dropEffect: over.dataTransfer.dropEffect,
+			};
+			drag("dragleave");
+			return verdict;
+		};
+
+		for (const mimeTypes of [
+			["application/pdf"],
+			["application/octet-stream"],
+		]) {
+			expect(verdictFor(mimeTypes), mimeTypes.join()).toEqual({
+				refusal: "Only photos and videos can be dropped here",
+				dropEffect: "none",
+			});
+		}
+		for (const mimeTypes of [
+			["image/jpeg"],
+			["application/pdf", "video/mp4"],
+			["*/*"],
+			[],
+		]) {
+			expect(verdictFor(mimeTypes), mimeTypes.join()).toEqual({
+				refusal: null,
+				dropEffect: "copy",
+			});
 		}
 	});
 

@@ -1,9 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
+import { type Event, listen } from "@tauri-apps/api/event";
 import { type DragDropEvent, getCurrentWebview } from "@tauri-apps/api/webview";
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 import z from "zod";
-import type { Event } from "@tauri-apps/api/event";
 
 import { demoEnabled } from "$lib/demo";
 import {
@@ -18,7 +18,7 @@ import {
 	mediaFileKindOf,
 } from "$lib/platform/media-file";
 import { mimeTypeFromPath, type PickedMedia } from "$lib/platform/media-picker";
-import { isLinuxPlatform } from "$lib/platform/os";
+import { isAndroidPlatform, isLinuxPlatform } from "$lib/platform/os";
 import { toBase64 } from "$lib/util/base64";
 
 const STAGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -56,6 +56,12 @@ const MEDIA_PATH =
 
 const PATH_EXTENSION = /\.[^./\\]+$/;
 
+const UNTYPED = new Set(["", "*/*"]);
+
+const MEDIA_DRAG_EVENT = "media-drag";
+
+const mediaDragSchema = z.object({ mimeTypes: z.array(z.string()) });
+
 export type MediaTarget = {
 	label: string;
 	videos: boolean;
@@ -74,6 +80,7 @@ type Registration = MediaTarget & { owner: object };
 let targets = $state.raw<Registration[]>([]);
 let dragging = $state(false);
 let draggedKinds = $state.raw<DraggedKind[]>([]);
+let systemDragKinds: DraggedKind[] = [];
 let draggingFromPage = false;
 let htmlDragDepth = 0;
 let dragIdle: ReturnType<typeof setTimeout> | undefined;
@@ -107,7 +114,7 @@ export function dragRejection({
 }
 
 function draggedKindOfType(mimeType: string): DraggedKind {
-	return mimeType === "" ? "unknown" : mediaFileKindOf(mimeType);
+	return UNTYPED.has(mimeType) ? "unknown" : mediaFileKindOf(mimeType);
 }
 
 function draggedKindOfPath(path: string): DraggedKind {
@@ -118,9 +125,11 @@ function draggedKindOfPath(path: string): DraggedKind {
 }
 
 function draggedKindsOf(event: DragEvent): DraggedKind[] {
-	return Array.from(event.dataTransfer?.items ?? [])
+	const kinds = Array.from(event.dataTransfer?.items ?? [])
 		.filter((item) => item.kind === "file")
 		.map((item) => draggedKindOfType(item.type));
+	const typed = kinds.length > 0 && !kinds.includes("unknown");
+	return typed || systemDragKinds.length === 0 ? kinds : systemDragKinds;
 }
 
 export function receiveMedia(target: () => MediaTarget | null): void {
@@ -149,11 +158,20 @@ export function listenForMedia(): () => void {
 	const nativeDrops = isLinuxPlatform()
 		? getCurrentWebview().onDragDropEvent(onNativeDrag)
 		: null;
+	const systemDrags = isAndroidPlatform()
+		? listen(MEDIA_DRAG_EVENT, ({ payload }) => {
+				systemDragKinds = mediaDragSchema
+					.parse(payload)
+					.mimeTypes.map(draggedKindOfType);
+			})
+		: null;
 	return () => {
 		controller.abort();
 		hideDrag();
+		systemDragKinds = [];
 		draggingFromPage = false;
 		void nativeDrops?.then((unlisten) => unlisten());
+		void systemDrags?.then((unlisten) => unlisten());
 	};
 }
 

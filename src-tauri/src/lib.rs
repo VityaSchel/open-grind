@@ -12,6 +12,8 @@ mod hex;
 #[cfg(target_os = "android")]
 mod keyboard_media;
 pub mod media;
+#[cfg(target_os = "android")]
+mod media_drag;
 mod media_picker;
 mod photo;
 #[cfg(test)]
@@ -154,6 +156,7 @@ pub fn run() {
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
 		.plugin(keyboard_media::plugin())
+		.plugin(media_drag::plugin())
 		.plugin(api::recaptcha::plugin())
 		.plugin(app_origin::android::plugin());
 
