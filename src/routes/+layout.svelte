@@ -37,6 +37,7 @@
 	import {
 		bottomBlurBarClearance,
 		bottomChromeClearance,
+		screenChromeCovered,
 		topBlurBarClearance,
 		topChromeClearance,
 	} from "$lib/util/screen-chrome.svelte";
@@ -138,10 +139,17 @@
 		};
 	});
 
-	const toastOffset = $derived({
-		top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px, ${topBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
-		bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px, ${bottomBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
-	});
+	const toastOffset = $derived(
+		screenChromeCovered()
+			? {
+					top: "calc(var(--safe-area-top) + 0.5rem)",
+					bottom: "calc(var(--safe-area-bottom) + 0.5rem)",
+				}
+			: {
+					top: `calc(max(var(--safe-area-top), ${topChromeClearance()}px, ${topBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
+					bottom: `calc(max(var(--safe-area-bottom), ${bottomChromeClearance()}px, ${bottomBlurBarClearance()}px + var(--bar-content-gap)) + 0.5rem)`,
+				},
+	);
 </script>
 
 <svelte:head>
