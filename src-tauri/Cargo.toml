@@ -104,6 +104,23 @@ tauri-plugin-single-instance = "2"
 [profile.release]
 strip = "symbols"
 
+# Photo decoding and resizing take seconds without optimizations
+[profile.dev.package]
+image = { opt-level = 3 }
+png = { opt-level = 3 }
+fdeflate = { opt-level = 3 }
+miniz_oxide = { opt-level = 3 }
+simd-adler32 = { opt-level = 3 }
+crc32fast = { opt-level = 3 }
+zune-jpeg = { opt-level = 3 }
+zune-core = { opt-level = 3 }
+image-webp = { opt-level = 3 }
+gif = { opt-level = 3 }
+weezl = { opt-level = 3 }
+moxcms = { opt-level = 3 }
+pxfm = { opt-level = 3 }
+base64 = { opt-level = 3 }
+
 # See https://github.com/tauri-apps/tauri/pull/15777
 [patch.crates-io]
 wry = { path = ".patched/wry" }
