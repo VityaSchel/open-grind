@@ -426,6 +426,31 @@ describe("InterestPager", () => {
 		expect(pager.settling).toEqual({ unsettled: false, restingTab: 1 });
 	});
 
+	it("stays unsettled through the lift of a swipe whose scroll has not reached the page yet", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart", { at: { x: 100, y: 300 } });
+		pager.touch("touchend", { at: { x: 320, y: 305 }, cancelable: false });
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.scroll(0.6 * WIDTH);
+		pager.scroll(0);
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 0 });
+	});
+
+	it("settles once the list that took a sideways swipe stops scrolling", () => {
+		const pager = mountPager();
+
+		pager.touch("touchstart", { at: { x: 100, y: 300 } });
+		pager.touch("touchend", { at: { x: 320, y: 305 }, cancelable: false });
+		expect(pager.settling).toEqual({ unsettled: true, restingTab: 1 });
+
+		pager.node
+			.querySelector('[data-slot="interest-pane-taps"]')
+			?.dispatchEvent(new Event("scrollend"));
+		expect(pager.settling).toEqual({ unsettled: false, restingTab: 1 });
+	});
+
 	it("is unsettled for the whole glide to a tab picked outside the pager", () => {
 		const pager = mountPager();
 
