@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   translations:
-    runs-on: ["fork", "toolchain", "8c16g", "hetzner"]
+    runs-on: ["fork", "toolchain", "2c4g", "hetzner"]
     timeout-minutes: 15
     defaults:
       run:
