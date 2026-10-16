@@ -45,6 +45,13 @@ dirs=$(cd "$work/root" && find . -path ./DEBIAN -prune -o -type d -print | wc -l
 sed -i "s/^Installed-Size: .*/Installed-Size: $((files_kib + dirs))/" "$work/root/DEBIAN/control"
 . ci/version.sh
 version=$(json_version src-tauri/tauri.conf.json)
+control_version=$(deb_version "$version")
+# apt users installed 0.1.0-beta.5.1 before deb_version existed, so nothing may sort below it
+dpkg --compare-versions "$control_version" gt 0.1.0-beta.5.1 || {
+	echo "FATAL: deb version $control_version would not upgrade 0.1.0-beta.5.1" >&2
+	exit 1
+}
+sed -i "s/^Version: .*/Version: $control_version/" "$work/root/DEBIAN/control"
 case "$(uname -m)" in aarch64) arch=arm64 ;; *) arch=$(uname -m) ;; esac
 deb="$out/bundle/deb/open-grind-v$version-linux-$arch.deb"
 dpkg-deb --root-owner-group -Zgzip -z9 --uniform-compression -b "$work/root" "$deb"
