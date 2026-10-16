@@ -337,6 +337,7 @@ const translatedScriptFiles = [
 	"src/lib/model/interest/taps.ts",
 	"src/lib/model/messaging/message-preview.ts",
 	"src/lib/model/users/profiles.ts",
+	"src/lib/platform/app-menu.ts",
 	"src/lib/platform/keybindings.ts",
 	"src/lib/platform/media-file.ts",
 	"src/lib/platform/media-picker.ts",

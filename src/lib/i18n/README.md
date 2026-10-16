@@ -14,6 +14,7 @@ Interface text lives in `locales/<bcp47>/<namespace>.json` as i18next JSON v4. E
 
 - Use Apple title case only for names: titles that are names or noun phrases, such as “Choose Location” or “No Taps Yet”, section headings, tabs, navigation and landmarks, badges, filter names, chips, toggles and sliders, and picker options.
 - Use sentence case for everything else: buttons, menu items, links, error and status titles even when short, titles that are statements or questions (with no period), and all prose.
+- The macOS menu bar is the one exception: its `shell.menuBar` items use Apple title case, such as “Hide Others” and “Select All”, like the items macOS adds to the same menus.
 - Proper names and Grindr feature names keep their capitals in any case, such as Open Grind, Grindr, Right Now and Viewed Me.
 - Write curly quotes and apostrophes (“ ” ’), primes for heights (5′11″), a closed en dash for ranges (18–30) and the single-character ellipsis (…).
 - End every sentence of a message that has more than one sentence with a period.
@@ -60,6 +61,8 @@ Release builds offer English and the directories listed in `shipped.json`, and l
 ## Native strings
 
 Text that Android draws itself, such as notifications, notification channel names and the warning about an outdated WebView, comes from the same messages. `android-strings.json` maps each Android string resource name to a message key, and the message can have placeholders but no tags or plural forms. `bun run gen:i18n` writes `src-tauri/gen/android/app/src/main/res/values/strings.xml` in English and a `values-<qualifier>/strings.xml` for each shipped language, so a Gradle build needs no Bun. Never edit them by hand, and reference a resource from Kotlin only once the manifest maps it. Placeholders become `%1$s`, `%2$s` and so on in the alphabetical order of their names, so a translation can reorder them and rewording the English never renumbers them. Kotlin passes the values in that order, each as a string. Names that never translate, such as `app_name`, live in the hand-written `res/values/brand.xml`. `bun run check:i18n` fails when the English file is out of date, a shipped language has no file, or a file belongs to a language that is not shipped. It only warns about an out-of-date translated file, because Weblate's pull requests do not regenerate it, and `check:i18n-release` fails on it, so run `bun run gen:i18n` and commit the result before a release.
+
+The macOS menu bar uses the `shell.menuBar` messages, in Apple’s title case like the items macOS adds to the same menus. `$lib/platform/app-menu.ts` relabels it when the language changes, but the items macOS titles itself, such as Enter Full Screen, Start Dictation and the Help search, change only after a relaunch.
 
 ## Regional formats
 

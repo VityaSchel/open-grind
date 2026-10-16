@@ -80,5 +80,26 @@
 		"unknownVersion": "Unknown version",
 		"update": "Update WebView",
 		"continue": "Continue anyway"
+	},
+	"menuBar": {
+		"about": "About Open Grind",
+		"services": "Services",
+		"hide": "Hide Open Grind",
+		"hideOthers": "Hide Others",
+		"quit": "Quit Open Grind",
+		"file": "File",
+		"closeWindow": "Close Window",
+		"edit": "Edit",
+		"undo": "Undo",
+		"redo": "Redo",
+		"cut": "Cut",
+		"copy": "Copy",
+		"paste": "Paste",
+		"selectAll": "Select All",
+		"view": "View",
+		"window": "Window",
+		"minimize": "Minimize",
+		"zoom": "Zoom",
+		"help": "Help"
 	}
 }

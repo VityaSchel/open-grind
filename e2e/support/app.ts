@@ -291,11 +291,16 @@ export async function installTauriShim(
 		}
 
 		const files = new Map<string, Uint8Array>();
+		let menuResources = 0;
 
 		const invoke = (cmd: string, args?: unknown): unknown => {
 			const { file = "", content = "" } = (args ?? {}) as AppDataArgs;
 
 			if (cmd.startsWith("plugin:event|")) return null;
+			if (cmd === "plugin:menu|new") {
+				menuResources += 1;
+				return [menuResources, `menu-${menuResources}`];
+			}
 			if (cmd === "read_app_data") {
 				return files.get(file)?.slice().buffer ?? null;
 			}
