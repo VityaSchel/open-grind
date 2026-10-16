@@ -194,6 +194,72 @@ test.describe("composer stickers sheet", () => {
 		await expect(stickerSendButton(page)).toHaveCount(0);
 	});
 
+	test("a Send pill flying out turns back from where it is when a tile is picked again", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		const tile = gaymojiTiles(page).nth(0);
+		await expect(tile).toBeVisible();
+		await tile.click();
+		await expect(stickerSendButton(page)).toBeVisible();
+		await page.waitForTimeout(800);
+
+		type Sample = { at: number; offset: number; opacity: number };
+		const flight = await tile.evaluate(
+			(tileElement) =>
+				new Promise<{ turn: Sample; samples: Sample[] }>((resolve) => {
+					const pill = () =>
+						document.querySelector<HTMLElement>(
+							'[data-slot="sheet-actions"]',
+						)!;
+					const samples: Sample[] = [];
+					let started = 0;
+					const measure = (): Sample => {
+						const style = getComputedStyle(pill());
+						return {
+							at: performance.now() - started,
+							offset: new DOMMatrix(style.transform).m42,
+							opacity: Number(style.opacity),
+						};
+					};
+					(tileElement as HTMLElement).click();
+					setTimeout(() => {
+						started = performance.now();
+						const turn = measure();
+						(tileElement as HTMLElement).click();
+						const sample = () => {
+							samples.push(measure());
+							if (performance.now() - started < 900)
+								requestAnimationFrame(sample);
+							else resolve({ turn, samples });
+						};
+						requestAnimationFrame(sample);
+					}, 260);
+				}),
+		);
+
+		const { turn, samples } = flight;
+		expect(turn.offset, "the pill was well on its way out").toBeGreaterThan(
+			20,
+		);
+		expect(
+			Math.max(...samples.map(({ offset }) => offset)),
+			"the pill turns back without dropping below where it was",
+		).toBeLessThanOrEqual(turn.offset + 25);
+		expect(
+			Math.min(...samples.map(({ opacity }) => opacity)),
+			"the pill never fades further once it turns",
+		).toBeGreaterThanOrEqual(turn.opacity - 0.15);
+		expect(
+			samples.some(
+				({ at, offset }) => at <= 300 && offset < turn.offset / 2,
+			),
+			"the pill is halfway home within 300 ms, not stalled",
+		).toBe(true);
+		expect(samples.at(-1)).toMatchObject({ offset: 0, opacity: 1 });
+	});
+
 	test("switching tabs keeps the GIF search and its results", async ({
 		page,
 	}) => {
