@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/svelte";
+import { cleanup, render, screen, within } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Shortcut } from "$lib/platform/keybindings";
@@ -48,6 +48,16 @@ describe("CommandCenterTrigger", () => {
 		const trigger = renderTriggerWith("control");
 
 		expect(trigger.textContent.trim()).toBe("Ctrl + K");
+	});
+
+	it("leaves the Control key open to translation and keeps the key verbatim", () => {
+		const trigger = renderTriggerWith("control");
+
+		const controlKey = within(trigger).getByText("Ctrl");
+		expect(controlKey.closest('[translate="no"]')).toBeNull();
+		expect(within(trigger).getByText("+ K").getAttribute("translate")).toBe(
+			"no",
+		);
 	});
 
 	it("leaves the shortcut out on mobile platforms", () => {

@@ -127,6 +127,7 @@ export const gridLoadMoreFailure: Scene = {
 
 export const gridRefreshFailures: Scene = {
 	platform: "desktop",
+	shim: "linux",
 	views: [
 		{
 			id: "browse/grid/refresh-failures",

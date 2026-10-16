@@ -133,6 +133,7 @@ export const commandCenter: Scene = {
 
 export const locationCopy: Scene = {
 	platform: "desktop",
+	shim: "linux",
 	views: [
 		{
 			id: "command-center/copy-location",

@@ -5,7 +5,6 @@
 	"chat.composer.errors.sendFailed": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 	"chat.notification.*": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
 	"commands.filterGrid.errors.applyFailed": "Only when navigating to Grid after applying the filters rejects, and SvelteKit's goto resolves even when another navigation aborts it, so the web demo cannot make it reject.",
-	"commands.trigger.controlKey": "Only in the command center button's shortcut hint, which is marked translate=\"no\" so the scan skips it, and only on Windows and Linux hosts; macOS shows ⌘.",
 	"common.carousel.a11y.next": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
 	"common.carousel.a11y.previous": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
 	"feedback.appError.contentTooLarge": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
