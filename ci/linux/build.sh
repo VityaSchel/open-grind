@@ -16,6 +16,11 @@ export CXXFLAGS="${CXXFLAGS:-} $prefixMaps"
 export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=4096}"
 
 cd /work
+# dpkg-parsechangelog only warns about malformed entries
+if ! news_warnings=$(dpkg-parsechangelog -l ci/linux/NEWS.Debian --all 2>&1 >/dev/null) || [ -n "$news_warnings" ]; then
+	echo "FATAL: ci/linux/NEWS.Debian: $news_warnings" >&2
+	exit 1
+fi
 # bun's tarball extraction and hardlink install both break on overlayfs, so
 # keep the cache on the mounted filesystem and copy instead of hardlinking.
 export BUN_INSTALL_CACHE_DIR="${BUN_INSTALL_CACHE_DIR:-/work/.bun-cache}"
@@ -35,6 +40,10 @@ set -- "$out"/bundle/deb/*.deb
 bundled=$1
 work=$(mktemp -d)
 dpkg-deb --raw-extract "$bundled" "$work/root"
+news=usr/share/doc/open-grind/NEWS.Debian.gz
+mkdir -p "$work/root/${news%/*}"
+gzip -9n < ci/linux/NEWS.Debian > "$work/root/$news"
+(cd "$work/root" && md5sum "$news") >> "$work/root/DEBIAN/md5sums"
 LC_ALL=C sort -k2 -o "$work/root/DEBIAN/md5sums" "$work/root/DEBIAN/md5sums"
 find "$work/root" -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} +
 # tauri-bundler sums directory entry sizes into Installed-Size, and those are
