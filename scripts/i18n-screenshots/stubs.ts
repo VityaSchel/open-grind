@@ -6,6 +6,16 @@ import type { ScreenshotScene } from "../../src/lib/demo/screenshot-scene";
 export const NEUTRAL_COORDINATES = { latitude: 10, longitude: -35 };
 export const NEUTRAL_GEOHASH = "e1z0gs3y0zh7";
 
+const NAVIGATOR_PLATFORMS = {
+	android: "Linux armv81",
+	ios: "iPhone",
+	linux: "Linux x86_64",
+	macos: "MacIntel",
+	windows: "Win32",
+} as const;
+
+type ShimPlatform = keyof typeof NAVIGATOR_PLATFORMS;
+
 const APP_VERSION = "1.2.0";
 const NEXT_CHECK_AT = Date.parse("2026-07-22T13:12:00Z");
 
@@ -159,6 +169,20 @@ export async function seedScene({
 	await page.addInitScript((seeded) => {
 		window.__openGrindScreenshotScene = seeded;
 	}, scene);
+}
+
+export async function pinNavigatorPlatform({
+	page,
+	platform,
+}: {
+	page: Page;
+	platform: ShimPlatform;
+}): Promise<void> {
+	await page.addInitScript((pinned) => {
+		Object.defineProperty(Navigator.prototype, "platform", {
+			get: () => pinned,
+		});
+	}, NAVIGATOR_PLATFORMS[platform]);
 }
 
 export function installNeutralGeolocation(page: Page): Promise<void> {

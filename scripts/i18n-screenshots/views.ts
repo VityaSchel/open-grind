@@ -30,6 +30,7 @@ import { settle } from "./settle";
 import {
 	installNativeStubs,
 	installNeutralGeolocation,
+	pinNavigatorPlatform,
 	seedScene,
 } from "./stubs";
 
@@ -67,9 +68,9 @@ async function openSession({
 			console.warn(`${session.viewId}: console error: ${message.text()}`);
 		}
 	});
-	await installTauriShim(page, {
-		platform: scene.shim ?? displays[scene.platform].shimPlatform,
-	});
+	const platform = scene.shim ?? displays[scene.platform].shimPlatform;
+	await installTauriShim(page, { platform });
+	await pinNavigatorPlatform({ page, platform });
 	await installEventInjection(page);
 	await installNativeStubs({ page, overrides: scene.native });
 	await installNeutralGeolocation(page);

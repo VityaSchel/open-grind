@@ -30,7 +30,7 @@ export const displays = {
 		deviceScaleFactor: 1.5,
 		shimPlatform: "macos",
 	},
-} satisfies Record<Platform, unknown>;
+} as const satisfies Record<Platform, unknown>;
 
 export type PlatformContext = {
 	context: BrowserContext;
