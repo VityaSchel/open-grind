@@ -59,7 +59,11 @@ object PushPayload {
 	private val trackingKeys = listOf("_ab", "af-uinstall-tracking")
 	private val campaignKeys = listOf("campaignId", "pinpoint.campaign.campaign_id")
 
-	fun decide(data: Map<String, String>, fallbackTimestamp: Long): PushDecision {
+	fun decide(
+		data: Map<String, String>,
+		fallbackTimestamp: Long,
+		words: (PushText) -> String,
+	): PushDecision {
 		if (isCampaign(data)) return PushDecision.Ignore
 		if (data["version"] != VERSION_2) return PushDecision.Ignore
 
@@ -77,9 +81,10 @@ object PushPayload {
 		val kind = kindOf(target, data["channel"]) ?: return PushDecision.Ignore
 		val notificationId = data["notificationId"].orEmpty()
 		val body = PushStrings.resolve(
-			data["body"],
-			data["translateBody"],
-			PushStrings.defaultBody(kind),
+			value = data["body"],
+			translate = data["translateBody"],
+			fallback = PushStrings.defaultBody(kind),
+			words = words,
 		)
 		if (notificationId.isEmpty() || body == null) return PushDecision.Ignore
 
@@ -88,10 +93,11 @@ object PushPayload {
 			dedupeKey = notificationId,
 			groupKey = queryParameter(action, "id"),
 			title = PushStrings.resolve(
-				data["title"],
-				data["translateTitle"],
-				PushStrings.SOMEONE,
-			) ?: PushStrings.SOMEONE,
+				value = data["title"],
+				translate = data["translateTitle"],
+				fallback = PushText.Someone,
+				words = words,
+			) ?: words(PushText.Someone),
 			body = body,
 			deeplink = action,
 			senderId = data["senderId"]?.takeIf(String::isNotBlank),

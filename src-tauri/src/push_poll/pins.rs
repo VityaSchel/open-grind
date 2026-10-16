@@ -26,3 +26,16 @@ const STRINGS: &str = include_str!(
 const LINES: &str = include_str!(
 	"../../android-logic/src/main/kotlin/org/opengrind/push/ConversationLines.kt"
 );
+
+const PUSH_TEXT: &str = include_str!(
+	"../../android-logic/src/main/kotlin/org/opengrind/push/PushText.kt"
+);
+
+const PUSH_WORDS: &str = include_str!(
+	"../../gen/android/app/src/main/java/org/opengrind/push/PushWords.kt"
+);
+
+const ANDROID_STRINGS: &str =
+	include_str!("../../../src/lib/i18n/android-strings.json");
+
+const ANNOUNCE: &str = include_str!("../../../src/lib/push/announce.ts");
