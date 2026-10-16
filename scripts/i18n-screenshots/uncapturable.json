@@ -2,7 +2,6 @@
 	"auth.passwordReset.title": "Only the document title of the password reset page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"auth.signIn.title": "Only the document title of the sign-in page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"auth.signUp.title": "Only the document title of the sign-up page, which a page screenshot does not show, and the app window keeps its fixed title.",
-	"browse.grid.searchFilters.errors.loadFailed": "Shows only when the app settings can't be read after signing in from a signed-out start. The Browse grid page then awaits the same failed read with no error branch and throws, which fails the view (an app bug that leaves the grid blank).",
 	"chat.composer.errors.sendFailed": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 	"chat.notification.*": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
 	"commands.filterGrid.errors.applyFailed": "Only when navigating to Grid after applying the filters rejects, and SvelteKit's goto resolves even when another navigation aborts it, so the web demo cannot make it reject.",

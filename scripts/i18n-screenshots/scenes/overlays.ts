@@ -32,6 +32,10 @@ export const STANDALONE: Standalone[] = [
 		],
 	},
 	{
+		reason: "No view captures the Browse grid when the app settings can't be read",
+		views: ["browse/grid/settings-unreadable"],
+	},
+	{
 		reason: "No view captures a profile on desktop",
 		views: ["profile/refresh-failed"],
 	},

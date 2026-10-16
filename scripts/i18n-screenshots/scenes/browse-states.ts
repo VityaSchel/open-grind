@@ -9,7 +9,8 @@ import type { Scene } from ".";
 import { chooseNeutralLocation, GRID_SCROLLER } from "./browse";
 import { revealRefreshButton, scrollToBottom } from "./chat-drive";
 import { changeScene } from "./drive";
-import { CONNECT_FAILED, STORAGE_FULL } from "./faults";
+import { CONNECT_FAILED, STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
+import { fillSignIn } from "./session";
 import { addingToast, toastsShown } from "./toast";
 import { visit } from "./visit";
 
@@ -189,6 +190,25 @@ export const gridProfileFailure: Scene = {
 				await chooseNeutralLocation(page);
 				await page.locator(GRID_READY).waitFor();
 				await toastsShown({ page, count: 1 });
+			},
+		},
+	],
+};
+
+export const gridPreferencesUnreadable: Scene = {
+	platform: "phone",
+	demo: { signedOut: true },
+	native: { read_app_data: { answer: UNREADABLE_PREFERENCES } },
+	views: [
+		{
+			id: "browse/grid/settings-unreadable",
+			survivesLocaleSwitch: false,
+			drive: async (page) => {
+				await fillSignIn(page);
+				await changeScene({ page, scene: { signedOut: false } });
+				await page.locator("form button[type=submit]").click();
+				await page.getByRole("button", { name: "Try again" }).waitFor();
+				await toastsShown({ page, count: 2 });
 			},
 		},
 	],
