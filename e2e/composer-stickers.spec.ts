@@ -209,6 +209,32 @@ test.describe("composer stickers sheet", () => {
 		).toBeVisible();
 	});
 
+	test("a sent GIF lines up with the sent text bubbles", async ({ page }) => {
+		await openStickers(page);
+		await gifTiles(page).nth(1).click();
+		await stickerSendButton(page).click();
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+		await page
+			.getByRole("textbox", { name: "Say something..." })
+			.fill("Lined up?");
+		await page.getByRole("button", { name: "Send message" }).click();
+
+		const gif = page.locator('[data-slot="giphy-message"]').last();
+		const bubble = page
+			.locator('[data-slot="message-bubble"]')
+			.filter({ hasText: "Lined up?" });
+		await expect(bubble).toBeVisible();
+		const [gifBox, bubbleBox] = await Promise.all([
+			gif.boundingBox(),
+			bubble.boundingBox(),
+		]);
+		expect(
+			(gifBox?.x ?? 0) +
+				(gifBox?.width ?? 0) -
+				((bubbleBox?.x ?? 0) + (bubbleBox?.width ?? 0)),
+		).toBeCloseTo(0, 0);
+	});
+
 	test("a GIF in the chat opens to fill the screen in the photo lightbox", async ({
 		page,
 	}) => {

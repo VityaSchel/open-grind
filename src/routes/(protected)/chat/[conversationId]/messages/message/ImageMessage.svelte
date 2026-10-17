@@ -42,7 +42,7 @@
 </script>
 
 <div
-	class={["relative", { "ms-3 w-2/5 max-w-60 min-w-35": !media.clone }]}
+	class={["relative", { "w-2/5 max-w-60 min-w-35": !media.clone }]}
 	{@attach media.attach}
 >
 	<a

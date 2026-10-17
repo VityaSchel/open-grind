@@ -12,7 +12,7 @@
 
 <div
 	data-slot="gaymoji-message"
-	class={["relative size-30", { "ms-3": !media.clone }]}
+	class="relative size-30"
 	{@attach media.attach}
 >
 	<MediaImage
