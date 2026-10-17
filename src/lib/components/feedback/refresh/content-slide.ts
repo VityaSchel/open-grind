@@ -10,7 +10,13 @@ const translateY = (px: number): Keyframe => ({
 
 const unnoticeable = (px: number) => Math.abs(px) < 0.5;
 
-export function contentSlide({ timing }: { timing: KeyframeAnimationOptions }) {
+export function contentSlide({
+	duration,
+	easing,
+}: {
+	duration: number;
+	easing: string;
+}) {
 	let running: Animation | undefined;
 	let startedAt = 0;
 
@@ -55,7 +61,11 @@ export function contentSlide({ timing }: { timing: KeyframeAnimationOptions }) {
 		keyframes: Keyframe[];
 		fill: FillMode;
 	}): Animation {
-		running = content.animate(keyframes, { ...timing, fill });
+		const [first, ...rest] = keyframes;
+		running = content.animate([{ ...first, easing }, ...rest], {
+			duration,
+			fill,
+		});
 		running.startTime = document.timeline.currentTime;
 		return running;
 	}
