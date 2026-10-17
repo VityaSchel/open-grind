@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { demoGiphyMediaUrl, demoRoute } from "$lib/demo";
+import { demoGiphyMessageBody } from "$lib/demo/mock/giphy";
 import { giphyResponseSchema } from "$lib/model/messaging/giphy";
 
 const key = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
@@ -76,6 +77,14 @@ describe("demo GIPHY", () => {
 			expect(svg).toContain(`width="${rendition.width}"`);
 			expect(svg).toContain(`height="${rendition.height}"`);
 		}
+	});
+
+	it("puts GIFs in demo chats whose media matches the size they were sent with", () => {
+		const body = demoGiphyMessageBody("message-100001-3");
+		const svg = decodeURIComponent(demoGiphyMediaUrl(body.urlPath));
+
+		expect(svg).toContain(`width="${body.width}" height="${body.height}"`);
+		expect(body.imageHash).toBe(`giphy/${body.id}`);
 	});
 
 	it("refuses routes GIPHY does not serve", () => {

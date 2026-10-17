@@ -143,7 +143,9 @@ describe("composer GIF tab", () => {
 		preferences.values.set("giphyConsent", false);
 		await mount();
 
-		expect(screen.getByText(/Enable GIPHY to send GIFs/)).toBeTruthy();
+		expect(
+			screen.getByText(/GIFs in your chats will load on their own/),
+		).toBeTruthy();
 		expect(screen.queryByRole("searchbox")).toBeNull();
 		expect(api.getTrendingGifs).not.toHaveBeenCalled();
 

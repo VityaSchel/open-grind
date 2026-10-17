@@ -63,7 +63,7 @@ function nextGiphyOffset({
 	return next;
 }
 
-function giphyMediaSrc(url: string): string {
+export function giphyMediaSrc(url: string): string {
 	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
 }
 

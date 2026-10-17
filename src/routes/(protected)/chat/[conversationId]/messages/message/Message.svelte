@@ -21,6 +21,7 @@
 	import { type MessageRefs, setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";
 	import GaymojiMessage from "./GaymojiMessage.svelte";
+	import GiphyMessage from "./GiphyMessage.svelte";
 	import ImageMessage from "./ImageMessage.svelte";
 	import MessageContextMenu from "./MessageContextMenu.svelte";
 	import MessageDateGroup from "./MessageDateGroup.svelte";
@@ -281,6 +282,8 @@
 			/>
 		{:else if message.type === "Gaymoji"}
 			<GaymojiMessage message={message.body} />
+		{:else if message.type === "Giphy"}
+			<GiphyMessage message={message.body} />
 		{:else if message.type === "Unsent"}
 			<UnsentMessage />
 		{:else}

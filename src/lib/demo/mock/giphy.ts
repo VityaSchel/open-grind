@@ -175,6 +175,20 @@ export function demoGiphySearch(params: URLSearchParams) {
 	});
 }
 
+export function demoGiphyMessageBody(seed: string) {
+	const id = demoGifId(seed);
+	const animated = mediaUrl({ id, file: "200.gif" });
+	return {
+		id,
+		urlPath: animated,
+		previewPath: animated,
+		stillPath: mediaUrl({ id, file: "200_s.gif" }),
+		width: fixedHeightWidth(id),
+		height: RENDITION_SIZE,
+		imageHash: `giphy/${id}`,
+	};
+}
+
 function svgDataUrl(svg: string): string {
 	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

@@ -170,6 +170,26 @@ test.describe("composer stickers sheet", () => {
 		await expect(stickerSendButton(page)).toHaveCount(0);
 	});
 
+	test("a sent GIF closes the sheet and plays in the chat", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await gifTiles(page).nth(1).click();
+		await stickerSendButton(page).click();
+
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+		const newest = page.locator(MESSAGE_ROW).last();
+		await expect(newest.getByText("Sending...")).toHaveCount(0);
+		const gif = newest
+			.locator('[data-slot="giphy-message"]')
+			.getByRole("img", { name: "GIF" });
+		await expect(gif).toBeVisible();
+		await expect(gif).toHaveJSProperty("complete", true);
+		expect(
+			await gif.evaluate((image: HTMLImageElement) => image.naturalWidth),
+		).toBeGreaterThan(1);
+	});
+
 	test("a sent Gaymoji closes the sheet and stays a Gaymoji in the chat", async ({
 		page,
 	}) => {

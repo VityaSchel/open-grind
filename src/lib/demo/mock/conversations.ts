@@ -12,6 +12,7 @@ import { hashFromSeed, picsum } from "./avatars";
 import { isTierGatedFilter, matchesInboxFilters } from "./conversation-filters";
 import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
+import { demoGiphyMessageBody } from "./giphy";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 type DemoMessage = { fromMe: boolean; reactions?: number } & (
@@ -27,6 +28,7 @@ type DemoMessage = { fromMe: boolean; reactions?: number } & (
 			coverUrl?: null;
 	  }
 	| { kind: "unsent" }
+	| { kind: "gif" }
 );
 
 type DemoConversation = {
@@ -57,6 +59,7 @@ const demoConversationSeeds: DemoConversation[] = [
 				reactions: 1,
 			},
 			{ fromMe: false, text: "Sed do eiusmod tempor incididunt?" },
+			{ fromMe: false, kind: "gif" },
 			{ fromMe: false, kind: "album", albumId: 5001, unseen: true },
 			{
 				fromMe: false,
@@ -78,6 +81,7 @@ const demoConversationSeeds: DemoConversation[] = [
 		rightNow: "HOSTING",
 		messages: [
 			{ fromMe: true, text: "Hi, how are you?" },
+			{ fromMe: true, kind: "gif" },
 			{ fromMe: true, kind: "expiringImage" },
 			{ fromMe: false, kind: "expiringImage", expired: true },
 			{ fromMe: false, text: "Did you catch it? 👀" },
@@ -303,6 +307,13 @@ function buildMessage({
 				};
 			return { type: "Album", body: albumBody, ...base, unsent: false };
 		}
+		case "gif":
+			return {
+				type: "Giphy",
+				body: demoGiphyMessageBody(`message-${conv.withId}-${index}`),
+				...base,
+				unsent: false,
+			};
 		case "unsent":
 			return { type: "Unsent", body: null, ...base, unsent: true };
 		default:
