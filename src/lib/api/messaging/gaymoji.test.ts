@@ -9,7 +9,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
-import { getGaymoji } from "$lib/api/messaging/gaymoji";
+import { gaymojiFromImageHash, getGaymoji } from "$lib/api/messaging/gaymoji";
 import { toBase64 } from "$lib/util/base64";
 
 const manifest = {
@@ -156,5 +156,21 @@ describe("getGaymoji", () => {
 		await expect(getGaymoji()).rejects.toThrow();
 		await expect(getGaymoji()).resolves.toHaveLength(4);
 		expect(invokeMock).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe("gaymojiFromImageHash", () => {
+	it("shows a sent Gaymoji the way the sheet shows it", () => {
+		expect(gaymojiFromImageHash("gaymoji/1_2_Yass.png")).toEqual({
+			imageUrl:
+				"https://cdns.grindr.com/grindr/chat/gaymoji/1_2_Yass.png",
+			label: "Yass",
+		});
+	});
+
+	it("keeps a crafted hash inside the Gaymoji folder", () => {
+		expect(gaymojiFromImageHash("gaymoji/../avatar.png").imageUrl).toBe(
+			"https://cdns.grindr.com/grindr/chat/gaymoji/..%2Favatar.png",
+		);
 	});
 });

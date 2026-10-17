@@ -11,6 +11,8 @@ import { proxyMediaUrl } from "$lib/util/media";
 export const GAYMOJI_MANIFEST_URL =
 	"https://cdns.grindr.com/grindr/chat/gaymoji";
 
+const IMAGE_HASH_PREFIX = "gaymoji/";
+
 export type GaymojiItem = {
 	id: string;
 	label: string;
@@ -39,7 +41,20 @@ function gaymojiItem({ id, name }: Gaymoji): GaymojiItem {
 		id,
 		label: gaymojiLabel(name),
 		imageUrl: gaymojiImageUrl(id),
-		imageHash: `gaymoji/${id}`,
+		imageHash: `${IMAGE_HASH_PREFIX}${id}`,
+	};
+}
+
+export function gaymojiFromImageHash(imageHash: string): {
+	imageUrl: string;
+	label: string;
+} {
+	const id = imageHash.startsWith(IMAGE_HASH_PREFIX)
+		? imageHash.slice(IMAGE_HASH_PREFIX.length)
+		: imageHash;
+	return {
+		imageUrl: gaymojiImageUrl(id),
+		label: gaymojiLabel(id.replace(/\.png$/, "")),
 	};
 }
 

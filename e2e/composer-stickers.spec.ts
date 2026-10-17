@@ -3,6 +3,7 @@ import { expect, type Page, test } from "@playwright/test";
 import {
 	DEMO_CONVERSATION,
 	installTauriShim,
+	MESSAGE_ROW,
 	TrustedTouch,
 	wheel,
 } from "./support/app";
@@ -167,6 +168,28 @@ test.describe("composer stickers sheet", () => {
 		await expect(second).toHaveAttribute("aria-pressed", "false");
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
 		await expect(stickerSendButton(page)).toHaveCount(0);
+	});
+
+	test("a sent Gaymoji closes the sheet and stays a Gaymoji in the chat", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await stickersTab(page, { name: "Gaymoji" }).click();
+		const tile = gaymojiTiles(page).nth(2);
+		await expect(tile).toBeVisible();
+		const name = (await tile.getAttribute("aria-label")) ?? "";
+
+		await tile.click();
+		await stickerSendButton(page).click();
+
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+		const newest = page.locator(MESSAGE_ROW).last();
+		await expect(newest.getByText("Sending...")).toHaveCount(0);
+		await expect(
+			newest
+				.locator('[data-slot="gaymoji-message"]')
+				.getByRole("img", { name }),
+		).toBeVisible();
 	});
 
 	test("one Gaymoji at a time is selected, and Send shows no count", async ({
