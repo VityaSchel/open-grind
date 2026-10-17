@@ -3,11 +3,19 @@ import { listen } from "@tauri-apps/api/event";
 
 export type ScrollGesturePhase = "idle" | "fingers" | "momentum";
 
-export type ScrollGestureEvent = { state?: string; dx?: number; dy?: number };
+export type ScrollGestureEvent = {
+	state?: string;
+	dx?: number;
+	dy?: number;
+	vx?: number;
+	vy?: number;
+};
+
+export type ReleaseVelocity = { x: number; y: number };
 
 export class ScrollGestureState {
 	#phase: ScrollGesturePhase = "idle";
-	readonly #releaseListeners = new Set<() => void>();
+	readonly #releaseListeners = new Set<(velocity: ReleaseVelocity) => void>();
 	readonly #phaseListeners = new Set<(phase: ScrollGesturePhase) => void>();
 	readonly #deltaListeners = new Set<(dx: number, dy: number) => void>();
 
@@ -19,10 +27,11 @@ export class ScrollGestureState {
 		return this.#phase === "fingers";
 	}
 
-	ingest({ state, dx, dy }: ScrollGestureEvent): void {
+	ingest({ state, dx, dy, vx = 0, vy = 0 }: ScrollGestureEvent): void {
 		if (state === "released") {
 			this.#setPhase("idle");
-			for (const listener of this.#releaseListeners) listener();
+			for (const listener of this.#releaseListeners)
+				listener({ x: vx, y: vy });
 			return;
 		}
 		if (state !== undefined)
@@ -44,7 +53,7 @@ export class ScrollGestureState {
 		return () => this.#phaseListeners.delete(listener);
 	}
 
-	onRelease(listener: () => void): () => void {
+	onRelease(listener: (velocity: ReleaseVelocity) => void): () => void {
 		this.#releaseListeners.add(listener);
 		return () => this.#releaseListeners.delete(listener);
 	}

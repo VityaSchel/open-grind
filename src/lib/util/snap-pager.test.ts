@@ -4,6 +4,7 @@ import {
 	detachPagers,
 	harness,
 	macosGesture,
+	waylandGesture,
 	WIDTH,
 } from "./snap-pager-test-helpers";
 
@@ -594,6 +595,85 @@ describe("SnapPager while macOS trackpad momentum carries it", () => {
 			behavior: "smooth",
 		});
 		expect(vi.getTimerCount()).toBe(0);
+	});
+});
+
+describe("SnapPager when a Wayland touchpad lifts", () => {
+	function dragged(page: number) {
+		vi.useFakeTimers();
+		const touchpad = waylandGesture();
+		const h = harness({ fingerPhase: touchpad.gesture });
+		touchpad.fingers();
+		h.scroll(page * WIDTH);
+		return { touchpad, h };
+	}
+
+	function passStillFrames() {
+		for (let frame = 0; frame < 3; frame += 1)
+			vi.advanceTimersToNextFrame();
+	}
+
+	it("flings on to the next profile when the fingers lift moving forward", () => {
+		const { touchpad, h } = dragged(1.2);
+
+		touchpad.lift({ vx: 3 });
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: 2 * WIDTH,
+			behavior: "smooth",
+		});
+		expect(h.onHeading).toHaveBeenLastCalledWith(2);
+	});
+
+	it("flings back to the previous profile when the fingers lift moving backward", () => {
+		const { touchpad, h } = dragged(1.8);
+
+		touchpad.lift({ vx: -3 });
+
+		expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+			left: WIDTH,
+			behavior: "smooth",
+		});
+	});
+
+	it("rests on the flung profile once the glide lands, and glides nowhere else", () => {
+		const { touchpad, h } = dragged(1.2);
+
+		touchpad.lift({ vx: 3 });
+		passStillFrames();
+		h.scroll(2 * WIDTH);
+		passStillFrames();
+
+		expect(h.scrollTo).toHaveBeenCalledOnce();
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(2);
+	});
+
+	it.each([
+		["slower than a fling", { vx: 0.5 }],
+		["mostly vertical", { vx: 2, vy: 5 }],
+	])(
+		"glides to the nearest profile three still frames after a lift %s",
+		(_, velocity) => {
+			const { touchpad, h } = dragged(1.2);
+
+			touchpad.lift(velocity);
+			expect(h.scrollTo).not.toHaveBeenCalled();
+			passStillFrames();
+
+			expect(h.scrollTo).toHaveBeenCalledExactlyOnceWith({
+				left: WIDTH,
+				behavior: "smooth",
+			});
+		},
+	);
+
+	it("ignores a fling the pager did not follow", () => {
+		const { touchpad, h } = dragged(1);
+
+		touchpad.lift({ vx: 3 });
+		passStillFrames();
+
+		expect(h.scrollTo).not.toHaveBeenCalled();
 	});
 });
 

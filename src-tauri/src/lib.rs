@@ -292,6 +292,8 @@ pub fn run() {
                 let window = builder.build()?;
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
+                #[cfg(target_os = "linux")]
+                scroll_phase::follow_touchpad(&window);
                 appearance::unlock_visual_effects(&window);
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]

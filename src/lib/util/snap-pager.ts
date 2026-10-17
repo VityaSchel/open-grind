@@ -1,8 +1,9 @@
 import { prefersReducedMotion } from "svelte/motion";
 import type { Attachment } from "svelte/attachments";
 
-import { isMacosPlatform } from "$lib/platform/os";
+import { isLinuxPlatform, isMacosPlatform } from "$lib/platform/os";
 import {
+	type ReleaseVelocity,
 	scrollGesture,
 	type ScrollGestureState,
 } from "$lib/platform/scroll-gesture";
@@ -15,6 +16,7 @@ const TOUCH_LIFTS = ["touchend", "touchcancel"] as const;
 const STILL_FRAMES_BEFORE_GLIDE = 3;
 const SIDEWAYS_SLOP_PX = 8;
 const UNSEEN_PAN_GRACE_MS = 500;
+const FLING_PX_PER_MS = 1;
 
 export type VisiblePositions = { first: number; last: number };
 
@@ -50,7 +52,9 @@ export class SnapPager {
 		onVisible,
 		onRest,
 		onHeading = () => {},
-		fingerPhase = isMacosPlatform() ? scrollGesture : null,
+		fingerPhase = isMacosPlatform() || isLinuxPlatform()
+			? scrollGesture
+			: null,
 		reducedMotion = () => prefersReducedMotion.current,
 	}: {
 		count: () => number;
@@ -105,11 +109,15 @@ export class SnapPager {
 			this.settleNow();
 			if (phase === "idle") this.#watchRelease();
 		});
+		const stopRelease = this.#fingerPhase?.onRelease((velocity) =>
+			this.#fling(velocity),
+		);
 
 		return () => {
 			listening.abort();
 			resize.disconnect();
 			stopPhase?.();
+			stopRelease?.();
 			this.#touchLifts?.abort();
 			this.#touchLifts = null;
 			this.#fingers = 0;
@@ -349,6 +357,17 @@ export class SnapPager {
 		}
 		this.#scrollToPosition(position, { animated: true });
 	};
+
+	#fling({ x, y }: ReleaseVelocity): void {
+		if (Math.abs(x) < FLING_PX_PER_MS || Math.abs(x) <= Math.abs(y)) return;
+		if (!this.#canSnap() || this.#aligned(this.#nearestPosition())) return;
+		const page = this.#left / this.#width;
+		this.#stepTarget = this.#clamp(
+			x > 0 ? Math.ceil(page) : Math.floor(page),
+		);
+		this.#reportHeading();
+		this.#scrollToPosition(this.#stepTarget, { animated: true });
+	}
 
 	#snapStranded(): void {
 		if (!this.#canGlideToNearest()) return;
