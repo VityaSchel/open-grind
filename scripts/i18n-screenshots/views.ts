@@ -11,6 +11,7 @@ import {
 	imagePath,
 	MAX_SCREENS,
 	numberedViewId,
+	viewKeys,
 } from "./manifest";
 import {
 	captureFrame,
@@ -258,7 +259,7 @@ async function recordScreen({
 		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
 		screen,
-		keys: scan.keys.map(({ boxes: _boxes, ...shown }) => shown),
+		keys: viewKeys({ scan, viewId: id, screen }),
 		ms,
 	};
 	captured.unmarked[id] = scan.unmarked;

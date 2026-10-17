@@ -17,8 +17,11 @@ import {
 	type Captured,
 	emptyCapture,
 	imagePath,
+	onPage,
 	RAW_DIR,
 	rawCapturePath,
+	type TitleKey,
+	type ViewKey,
 } from "./manifest";
 import { keepRawCapture, writeHighlightedCopies } from "./screens";
 
@@ -37,6 +40,8 @@ function shown({
 }): ShownKey {
 	return { key, box: BOX, via, top };
 }
+
+const TITLED: TitleKey = { key: KEY, via: "document-title", top: false };
 
 const SCREENS: Record<string, ShownKey[]> = {
 	alpha: [shown({}), shown({ key: "common.save" })],
@@ -76,7 +81,7 @@ async function capturedScreens({
 	views = SCREENS,
 	screens = {},
 }: {
-	views?: Record<string, ShownKey[]>;
+	views?: Record<string, ViewKey[]>;
 	screens?: Record<string, string>;
 } = {}): Promise<Captured> {
 	const png = await sharp({
@@ -106,7 +111,7 @@ async function capturedScreens({
 		};
 		captured.unmarked[viewId] = [];
 		captured.boxes[viewId] = Object.fromEntries(
-			keys.map(({ key }) => [key, [BOX]]),
+			keys.filter(onPage).map(({ key }) => [key, [BOX]]),
 		);
 	}
 	return captured;
@@ -121,7 +126,10 @@ function highlightedViews({
 }): string[] {
 	return Object.entries(captured.views)
 		.filter(([, view]) =>
-			view.keys.some((shown) => shown.key === key && shown.highlight),
+			view.keys.some(
+				(shown) =>
+					onPage(shown) && shown.key === key && shown.highlight,
+			),
 		)
 		.map(([viewId]) => viewId)
 		.sort();
@@ -180,7 +188,7 @@ describe("the manifest", () => {
 		const copies = await writeHighlightedCopies({ captured, outDir });
 		let bytes = 0;
 		for (const view of Object.values(captured.views)) {
-			for (const { highlight } of view.keys) {
+			for (const { highlight } of view.keys.filter(onPage)) {
 				if (!highlight) continue;
 				const webp = await readFile(join(outDir, highlight.image));
 				bytes += webp.byteLength;
@@ -238,5 +246,24 @@ describe("the manifest", () => {
 		]);
 		expect(await exists("images/gamma/settings.title.webp")).toBe(false);
 		expect(await exists("images/gamma/settings.one.webp")).toBe(true);
+	});
+
+	it("never draws a highlight for a document title entry", async () => {
+		const captured = await capturedScreens({
+			views: { "auth/sign-in": [TITLED, shown({ key: "common.save" })] },
+		});
+		const copies = await writeHighlightedCopies({ captured, outDir });
+		expect(captured.failed).toEqual([]);
+		expect(captured.views["auth/sign-in"]?.keys).toEqual([
+			TITLED,
+			{
+				...shown({ key: "common.save" }),
+				highlight: expect.objectContaining({
+					image: "images/auth/sign-in/common.save.webp",
+				}),
+			},
+		]);
+		expect(copies.count).toBe(1);
+		expect(await exists(`images/auth/sign-in/${KEY}.webp`)).toBe(false);
 	});
 });

@@ -1,7 +1,4 @@
 {
-	"auth.passwordReset.title": "Only the document title of the password reset page, which a page screenshot does not show, and the app window keeps its fixed title.",
-	"auth.signIn.title": "Only the document title of the sign-in page, which a page screenshot does not show, and the app window keeps its fixed title.",
-	"auth.signUp.title": "Only the document title of the sign-up page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"chat.composer.errors.sendFailed": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
 	"chat.notification.*": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
 	"commands.filterGrid.errors.applyFailed": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
@@ -14,6 +11,5 @@
 	"profile.miniCard.a11y.anonymous": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
 	"settings.notifications.unsupportedOn": "Obsolete, and no code shows it: every platform the app names (Android, macOS, Windows and Linux) now shows the notification settings, and every other one shows settings.notifications.unsupported instead. It stays until the key is removed in Weblate.",
 	"shell.notFound.clippy.*": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
-	"shell.onboarding.title": "Only the document title of the onboarding page, which a page screenshot does not show, and the app window keeps its fixed title.",
 	"shell.toaster.a11y.close": "Only the toaster's close button carries this label, and no toast in the app shows a close button."
 }

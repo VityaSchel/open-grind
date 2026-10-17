@@ -7,6 +7,7 @@ import {
 	englishMeasured,
 } from "./labels";
 import type { Captured } from "./manifest";
+import { tallyKeys } from "./tally";
 
 const SOURCE_DIR = Bun.fileURLToPath(
 	new URL("../../src/lib/i18n/locales/en", import.meta.url),
@@ -73,12 +74,6 @@ async function fixtureText(): Promise<string> {
 	return sources.join("\n");
 }
 
-function matches({ key, pattern }: { key: string; pattern: string }): boolean {
-	return pattern.endsWith(".*")
-		? key.startsWith(pattern.slice(0, -1))
-		: key === pattern;
-}
-
 function worthReporting({
 	text,
 	fixtures,
@@ -105,14 +100,11 @@ export async function writeCoverage({
 		(await Bun.file(UNCAPTURABLE).json()) as Record<string, string>,
 	);
 	const fixtures = await fixtureText();
-	const shown = new Set(
-		Object.values(captured.views).flatMap((view) =>
-			view.keys.map(({ key }) => key),
-		),
-	);
-	const uncapturable = keys.filter((key) =>
-		patterns.some((pattern) => matches({ key, pattern })),
-	);
+	const { shown, uncapturable, missing, staleUncapturable } = tallyKeys({
+		keys,
+		patterns,
+		views: Object.values(captured.views),
+	});
 	const unmarked = Object.fromEntries(
 		Object.entries(captured.unmarked)
 			.map(([id, texts]): [string, string[]] => [
@@ -124,15 +116,11 @@ export async function writeCoverage({
 	const coverage: Coverage = {
 		commit,
 		keys: keys.length,
-		shown: keys.filter((key) => shown.has(key)).length,
-		uncapturable: uncapturable.length,
-		missing: keys.filter(
-			(key) => !shown.has(key) && !uncapturable.includes(key),
-		),
+		shown,
+		uncapturable,
+		missing,
 		unmarked,
-		staleUncapturable: patterns.filter(
-			(pattern) => !keys.some((key) => matches({ key, pattern })),
-		),
+		staleUncapturable,
 		englishMeasured: englishMeasured(captured),
 		compositeButtons: compositeButtons(captured),
 	};

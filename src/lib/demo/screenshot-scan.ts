@@ -34,6 +34,7 @@ export type ScannedKey = ShownKey & { boxes: KeyBox[] };
 
 export type ViewScan = {
 	keys: ScannedKey[];
+	titleKeys: string[];
 	unmarked: string[];
 	emoji: string[];
 	measured: boolean;
@@ -541,6 +542,11 @@ function compositeButtons(held: Map<Element, Set<string>>): string[][] {
 	return [...new Set(lists)].sort().map((list) => list.split("\n"));
 }
 
+function documentTitleKeys(): string[] {
+	const keys = decodeMarkers(document.title).map(({ key }) => key);
+	return [...new Set(keys)].sort();
+}
+
 function scanShown(): ViewScan {
 	const scan: Scan = {
 		found: new Map(),
@@ -555,6 +561,7 @@ function scanShown(): ViewScan {
 		keys: [...scan.found.values()]
 			.sort((a, b) => (a.key < b.key ? -1 : 1))
 			.map(scannedKey),
+		titleKeys: documentTitleKeys(),
 		unmarked: [...new Set(scan.unmarked)],
 		emoji: [...new Set(scan.emoji)],
 		measured: scan.measured,

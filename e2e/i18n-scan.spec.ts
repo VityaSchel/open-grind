@@ -7,6 +7,7 @@ import {
 	openAppSettings,
 	openInbox,
 	openInboxDrawer,
+	openSignIn,
 	scan,
 	switchToMarkers,
 } from "./support/scan";
@@ -84,6 +85,33 @@ test("the scan names the keys a settings page shows", async ({ page }) => {
 	});
 	expect(result.keys.length).toBeGreaterThan(5);
 	expect(result.emoji).toEqual([]);
+});
+
+test("the scan reads the document title's keys apart from the page's", async ({
+	page,
+}) => {
+	await openSignIn(page);
+	await switchToMarkers(page);
+
+	const signIn = await scan(page);
+	await page.evaluate(async (module) => {
+		const { markMessage }: typeof Markers = await import(module);
+		const inner = markMessage({ key: "fixture.inner", message: "Grid" });
+		document.title = markMessage({
+			key: "fixture.outer",
+			message: `${inner} and ${inner}`,
+		});
+	}, MARKERS_MODULE);
+	const nested = await scan(page);
+
+	expect(signIn.titleKeys).toEqual(["auth.signIn.title"]);
+	expect(shownKey(signIn, "auth.signIn.title")).toBeUndefined();
+	expect(shownKey(signIn, "auth.signIn.submit")).toEqual({
+		via: "text",
+		top: false,
+	});
+	expect(nested.titleKeys).toEqual(["fixture.inner", "fixture.outer"]);
+	expect(nested.keys).toEqual(signIn.keys);
 });
 
 test("the scan decodes, places and filters marked text", async ({ page }) => {

@@ -1,10 +1,20 @@
-import type { KeyBox, ShownKey } from "../../src/lib/demo/screenshot-scan";
+import type {
+	KeyBox,
+	ShownKey,
+	ViewScan,
+} from "../../src/lib/demo/screenshot-scan";
 
 export type Platform = "phone" | "desktop";
 
 export type Highlight = { image: string; sha256: string; pixelHash: string };
 
-export type ViewKey = ShownKey & { highlight?: Highlight };
+export const DOCUMENT_TITLE = "document-title";
+
+export type TitleKey = { key: string; via: typeof DOCUMENT_TITLE; top: false };
+
+export type PageKey = ShownKey & { highlight?: Highlight };
+
+export type ViewKey = PageKey | TitleKey;
 
 export type View = {
 	image: string;
@@ -56,6 +66,30 @@ export function numberedViewId({
 
 export function baseViewId(viewId: string): string {
 	return viewId.replace(/#\d+$/, "");
+}
+
+export function onPage<Key extends { via: string }>(
+	shown: Key,
+): shown is Exclude<Key, TitleKey> {
+	return shown.via !== DOCUMENT_TITLE;
+}
+
+export function viewKeys({
+	scan: { keys, titleKeys },
+	viewId,
+	screen,
+}: {
+	scan: ViewScan;
+	viewId: string;
+	screen: string | undefined;
+}): ViewKey[] {
+	const shown: ViewKey[] = keys.map(({ boxes: _boxes, ...key }) => key);
+	if (screen !== undefined || baseViewId(viewId) !== viewId) return shown;
+	const pageKeys = new Set(keys.map(({ key }) => key));
+	const titled = titleKeys
+		.filter((key) => !pageKeys.has(key))
+		.map((key): TitleKey => ({ key, via: DOCUMENT_TITLE, top: false }));
+	return [...shown, ...titled].sort((a, b) => byCodeUnits(a.key, b.key));
 }
 
 export function isScreenOf({

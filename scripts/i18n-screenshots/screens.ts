@@ -18,6 +18,8 @@ import {
 	highlightPath,
 	imagePath,
 	isScreenOf,
+	onPage,
+	type PageKey,
 	RAW_DIR,
 	rawCapturePath,
 	screenPath,
@@ -29,7 +31,13 @@ const HIGHLIGHT_CONCURRENCY = availableParallelism();
 
 type HighlightedCopies = { count: number; bytes: number };
 
-type PendingScreen = { viewId: string; pending: ViewKey[] };
+type PendingScreen = { viewId: string; pending: PageKey[] };
+
+function highlightImages(keys: ViewKey[]): string[] {
+	return keys
+		.filter(onPage)
+		.flatMap(({ highlight }) => (highlight ? [highlight.image] : []));
+}
 
 async function writeInside({
 	outDir,
@@ -74,9 +82,7 @@ export async function dropScreens({
 	for (const [viewId, view] of Object.entries(captured.views)) {
 		if (!isScreenOf({ viewId, id })) continue;
 		const files = [
-			...view.keys.flatMap(({ highlight }) =>
-				highlight ? [highlight.image] : [],
-			),
+			...highlightImages(view.keys),
 			imagePath(viewId),
 			rawCapturePath(viewId),
 		];
@@ -116,9 +122,9 @@ async function highlightScreen({
 
 function pendingScreens(captured: Captured): PendingScreen[] {
 	return [...chooseHighlights(captured.views)].flatMap(([viewId, chosen]) => {
-		const pending = (captured.views[viewId]?.keys ?? []).filter(
-			({ key, highlight }) => chosen.has(key) && !highlight,
-		);
+		const pending = (captured.views[viewId]?.keys ?? [])
+			.filter(onPage)
+			.filter(({ key, highlight }) => chosen.has(key) && !highlight);
 		return pending.length > 0 ? [{ viewId, pending }] : [];
 	});
 }
@@ -133,7 +139,7 @@ async function dropOutrankedHighlights({
 	const chosen = chooseHighlights(captured.views);
 	for (const [viewId, view] of Object.entries(captured.views)) {
 		let dropped = false;
-		for (const shown of view.keys) {
+		for (const shown of view.keys.filter(onPage)) {
 			if (!shown.highlight || chosen.get(viewId)?.has(shown.key))
 				continue;
 			await rm(join(outDir, shown.highlight.image), { force: true });
@@ -177,7 +183,7 @@ async function countCopies({
 	outDir: string;
 }): Promise<HighlightedCopies> {
 	const images = Object.values(captured.views).flatMap(({ keys }) =>
-		keys.flatMap(({ highlight }) => (highlight ? [highlight.image] : [])),
+		highlightImages(keys),
 	);
 	const sizes = await Promise.all(
 		images.map(async (image) => (await stat(join(outDir, image))).size),
