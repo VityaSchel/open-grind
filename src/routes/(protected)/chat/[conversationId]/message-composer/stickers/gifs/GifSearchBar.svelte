@@ -3,7 +3,7 @@
 	import XIcon from "phosphor-svelte/lib/XIcon";
 
 	import * as InputGroup from "$lib/components/ui/input-group";
-	import { GIF_SEARCH_MAX_LENGTH } from "./gif-feed.svelte";
+	import { GIF_INPUT_MAX_LENGTH } from "./gif-feed.svelte";
 
 	let {
 		value,
@@ -42,14 +42,21 @@
 				data-vaul-no-drag={focused ? "" : undefined}
 				type="search"
 				enterkeyhint="search"
-				maxlength={GIF_SEARCH_MAX_LENGTH}
-				placeholder="Search GIPHY"
-				aria-label="Search GIPHY"
+				maxlength={GIF_INPUT_MAX_LENGTH}
+				placeholder="Search GIFs or paste GIPHY link"
+				aria-label="Search GIFs or paste GIPHY link"
 				onfocus={() => {
 					focused = true;
 					onFocus?.();
 				}}
 				onblur={() => (focused = false)}
+				oninput={(event) => {
+					if (
+						event instanceof InputEvent &&
+						event.inputType === "insertFromPaste"
+					)
+						queueMicrotask(onSubmit);
+				}}
 				onkeydown={submitOnEnter}
 			/>
 			<InputGroup.Addon>

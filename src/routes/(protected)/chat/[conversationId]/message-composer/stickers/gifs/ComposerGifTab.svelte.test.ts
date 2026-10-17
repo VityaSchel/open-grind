@@ -252,6 +252,25 @@ describe("composer GIF tab", () => {
 		expect(screen.getByText("No GIFs found")).toBeTruthy();
 	});
 
+	it("searches pasted text right away", async () => {
+		await mount();
+		const searchbox = screen.getByRole<HTMLInputElement>("searchbox");
+		searchbox.value = "cat";
+
+		searchbox.dispatchEvent(
+			new InputEvent("input", {
+				inputType: "insertFromPaste",
+				bubbles: true,
+			}),
+		);
+		await settle();
+
+		expect(api.searchGifs).toHaveBeenCalledExactlyOnceWith({
+			query: "cat",
+			offset: 0,
+		});
+	});
+
 	it("leaves the search to the debounce when Enter confirms an IME conversion", async () => {
 		await mount();
 		const searchbox = screen.getByRole("searchbox");

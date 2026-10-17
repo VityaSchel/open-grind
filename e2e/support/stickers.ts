@@ -15,6 +15,7 @@ export const TRANSPARENT_PIXEL =
 
 export const DEMO_GIPHY_TRENDING_TOTAL = 172;
 export const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
+export const DEMO_GIPHY_MISSING_ID = "NoSuchDemoGif";
 export const DEMO_GAYMOJI_TILE_COUNT = 518;
 export const GIPHY_PAGE_SIZE = 50;
 const DEMO_TRENDING_PHRASES = [
@@ -175,7 +176,9 @@ export async function countGaymojiTileChurn(
 }
 
 export function gifSearchBox(page: Page): Locator {
-	return page.getByRole("searchbox", { name: "Search GIPHY" });
+	return page.getByRole("searchbox", {
+		name: "Search GIFs or paste GIPHY link",
+	});
 }
 
 export function stickerSendButton(page: Page): Locator {

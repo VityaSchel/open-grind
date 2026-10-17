@@ -4,26 +4,40 @@ import {
 	type GiphyTile,
 	searchGifs,
 } from "$lib/api/messaging/giphy";
+import { getGifByLink, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
 import { Generation } from "$lib/util/generation";
 import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 
 export const SEARCH_DEBOUNCE_MS = 400;
-export const GIF_SEARCH_MAX_LENGTH = 50;
+const GIF_SEARCH_MAX_LENGTH = 50;
+export const GIF_INPUT_MAX_LENGTH = 500;
 
-export function normalizeGifQuery(input: string): string {
-	return Array.from(input).slice(0, GIF_SEARCH_MAX_LENGTH).join("").trim();
+type GifQuery = { text: string; linkedId: string | null };
+
+function gifQuery(input: string): GifQuery {
+	const trimmed = input.trim();
+	const linkedId = giphyIdFromLink(trimmed);
+	if (linkedId !== null) return { text: trimmed, linkedId };
+	return {
+		text: Array.from(input).slice(0, GIF_SEARCH_MAX_LENGTH).join("").trim(),
+		linkedId: null,
+	};
 }
 
 async function fetchGifPage({
 	query,
 	offset,
 }: {
-	query: string;
+	query: GifQuery;
 	offset: number;
 }): Promise<GiphyPage> {
-	return query === ""
+	if (query.linkedId !== null) {
+		const gif = await getGifByLink(query.linkedId);
+		return { gifs: gif === null ? [] : [gif], nextOffset: null };
+	}
+	return query.text === ""
 		? await getTrendingGifs({ offset })
-		: await searchGifs({ query, offset });
+		: await searchGifs({ query: query.text, offset });
 }
 
 function appendUnseen({
@@ -54,7 +68,7 @@ export class GifFeed {
 	nextOffset: number | null = $state(null);
 	#paging: SentinelPaging = $state.raw(this.#createPaging());
 
-	#query = "";
+	#query: GifQuery = { text: "", linkedId: null };
 	#started = false;
 	#generation = new Generation();
 	#debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -81,12 +95,16 @@ export class GifFeed {
 
 	setInput(input: string): void {
 		this.input = input;
-		const query = normalizeGifQuery(input);
-		if (query === this.#query) return;
+		const query = gifQuery(input);
+		if (
+			query.text === this.#query.text &&
+			query.linkedId === this.#query.linkedId
+		)
+			return;
 		this.#query = query;
 		if (!this.#started) return;
 		const generation = this.#restart();
-		if (query === "") {
+		if (query.text === "") {
 			void this.#loadFirstPage({ query, generation });
 			return;
 		}
@@ -141,7 +159,7 @@ export class GifFeed {
 		query,
 		generation,
 	}: {
-		query: string;
+		query: GifQuery;
 		generation: number;
 	}): Promise<void> {
 		if (this.#generation.isStale(generation)) return;

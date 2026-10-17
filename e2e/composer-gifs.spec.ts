@@ -17,6 +17,7 @@ import {
 } from "./support/drawer";
 import {
 	DEMO_GIPHY_EMPTY_QUERY,
+	DEMO_GIPHY_MISSING_ID,
 	DEMO_GIPHY_TRENDING_TOTAL,
 	demoTrendingLabel,
 	GIF_SEARCH_BAR,
@@ -37,7 +38,9 @@ import {
 const SEARCH_DEBOUNCE_MS = 400;
 const FIRST_PAGING_AUTO_RETRY_MS = 2_000;
 const GIPHY_RATE_LIMITED = 429;
-const GIF_SEARCH_INPUT = 'input[aria-label="Search GIPHY"]';
+const GIPHY_LINK =
+	"https://giphy.com/gifs/portlandia-season-2-episode-xT0xeChUR33EsYNNRK";
+const GIF_SEARCH_INPUT = 'input[aria-label="Search GIFs or paste GIPHY link"]';
 const GIF_PAGING_SENTINEL = '[data-slot="gif-paging-sentinel"]';
 const GIF_ERROR = '[data-slot="gif-error"]';
 
@@ -339,6 +342,36 @@ test.describe("GIF search", () => {
 			{ endpoint: "search", query: DEMO_GIPHY_EMPTY_QUERY },
 			{ endpoint: "trending", query: null },
 		]);
+	});
+
+	test("a pasted GIPHY link shows just that GIF, unselected, without searching", async ({
+		page,
+	}) => {
+		const requests = await recordDemoRequests(page);
+		await openStickers(page);
+
+		await gifSearchBox(page).fill(GIPHY_LINK);
+
+		await expect(gifSearchBox(page)).toHaveValue(GIPHY_LINK);
+		await expect(gifTiles(page)).toHaveCount(1);
+		await expect(gifTiles(page)).toHaveAccessibleName(
+			"GIF from a GIPHY link",
+		);
+		await expect(gifTiles(page)).toHaveAttribute("aria-pressed", "false");
+		expect(
+			giphyCalls(await requests()).map(({ endpoint }) => endpoint),
+		).toEqual(["trending"]);
+	});
+
+	test("a link to a GIF GIPHY doesn't know says so", async ({ page }) => {
+		await openStickers(page);
+
+		await gifSearchBox(page).fill(
+			`https://giphy.com/gifs/${DEMO_GIPHY_MISSING_ID}`,
+		);
+
+		await expect(gifPanel(page).getByText("No GIFs found")).toBeVisible();
+		await expect(gifTiles(page)).toHaveCount(0);
 	});
 
 	test("touch: a slow drag down on the unfocused search box of the short sheet closes it", async ({

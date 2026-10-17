@@ -318,13 +318,18 @@ function hostQualifiedPath(url: URL): string {
 
 async function sendExternalRequest({
 	url,
+	range,
 	requestInfo,
 }: {
 	url: URL;
+	range?: string;
 	requestInfo: RequestInfo;
 }) {
 	try {
-		const encoded = await invoke("fetch_external", { url: url.href });
+		const encoded = await invoke("fetch_external", {
+			url: url.href,
+			range,
+		});
 		return decodeRestResponse({
 			encoded,
 			requestInfo,
@@ -335,12 +340,18 @@ async function sendExternalRequest({
 	}
 }
 
-export async function fetchExternal({ url }: { url: URL }) {
+export async function fetchExternal({
+	url,
+	range,
+}: {
+	url: URL;
+	range?: string;
+}) {
 	const requestInfo = { method: "GET", path: hostQualifiedPath(url) };
 	return await respondFromDemoOrSend({
 		requestInfo,
 		ErrorType: ExternalRequestError,
-		send: () => sendExternalRequest({ url, requestInfo }),
+		send: () => sendExternalRequest({ url, range, requestInfo }),
 	});
 }
 

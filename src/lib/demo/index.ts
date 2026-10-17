@@ -4,5 +4,5 @@ export { demoUploadAlbumContent } from "./mock/albums";
 export { demoSentMessage } from "./mock/conversations";
 export { demoUploadChatMedia } from "./mock/drawer";
 export { demoGaymojiImageUrl } from "./mock/gaymoji";
-export { demoGiphyMediaUrl } from "./mock/giphy";
+export { demoGiphyMediaUrl, demoLinkedGifSize } from "./mock/giphy";
 export { demoCallMethod, demoRoute } from "./route";

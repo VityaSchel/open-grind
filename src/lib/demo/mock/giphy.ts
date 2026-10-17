@@ -1,7 +1,8 @@
 import { hashString } from "$lib/util/random";
 
-export const DEMO_GIPHY_TRENDING_TOTAL = 172;
-export const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
+const DEMO_GIPHY_TRENDING_TOTAL = 172;
+const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
+const DEMO_GIPHY_MISSING_ID = "NoSuchDemoGif";
 
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 50;
@@ -187,6 +188,13 @@ export function demoGiphyMessageBody(seed: string) {
 		height: RENDITION_SIZE,
 		imageHash: `giphy/${id}`,
 	};
+}
+
+export function demoLinkedGifSize(
+	id: string,
+): { width: number; height: number } | null {
+	if (id === DEMO_GIPHY_MISSING_ID) return null;
+	return { width: fixedHeightWidth(id), height: RENDITION_SIZE };
 }
 
 function svgDataUrl(svg: string): string {
