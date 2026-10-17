@@ -119,6 +119,17 @@ describe("requireScreen", () => {
 		);
 	});
 
+	it("refuses a screen with no overlay over it", () => {
+		expect(() =>
+			requireScreen({
+				view: view({ id: "variant", screen: "page" }),
+				keys: [PAGE],
+			}),
+		).toThrow(
+			"Names page as the screen under its overlay but shows no overlay",
+		);
+	});
+
 	it("accepts an overlay over a screen", () => {
 		expect(() =>
 			requireScreen({

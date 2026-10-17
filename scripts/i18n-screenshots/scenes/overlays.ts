@@ -54,9 +54,16 @@ export function requireScreen({
 	view: SceneView;
 	keys: ShownKey[];
 }): void {
-	if (view.screen !== undefined || STANDALONE_VIEWS.has(view.id)) return;
 	const top = keys.filter(({ top }) => top).map(({ key }) => key);
-	if (top.length > 0) {
+	if (view.screen !== undefined) {
+		if (top.length === 0) {
+			throw new Error(
+				`Names ${view.screen} as the screen under its overlay but shows no overlay`,
+			);
+		}
+		return;
+	}
+	if (top.length > 0 && !STANDALONE_VIEWS.has(view.id)) {
 		throw new Error(
 			`Shows ${top.join(", ")} in an overlay but names no screen under it and is not standalone`,
 		);
