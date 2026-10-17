@@ -1,6 +1,8 @@
 <script lang="ts">
 	import MagnifyingGlassIcon from "phosphor-svelte/lib/MagnifyingGlassIcon";
+	import { prefersReducedMotion } from "svelte/motion";
 
+	import GifBadge from "$lib/components/shared/GifBadge.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -66,12 +68,17 @@
 					onclick={() => onToggle(gif.id)}
 				>
 					<MediaImage
-						src={gif.tileUrl}
+						src={prefersReducedMotion.current
+							? gif.stillTileUrl
+							: gif.tileUrl}
 						alt={gif.alt}
 						loading="lazy"
 						fallbackAspectRatio={TILE_ASPECT}
 						class="size-full rounded-[inherit]"
 					/>
+					{#if prefersReducedMotion.current}
+						<GifBadge />
+					{/if}
 					{#if isSelected}
 						<SelectionOverlay />
 					{/if}

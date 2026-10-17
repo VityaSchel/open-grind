@@ -138,6 +138,7 @@ describe("getTrendingGifs", () => {
 				{
 					id: "xT0xeChUR33EsYNNRK",
 					tileUrl: `${media}/200w_d.webp`,
+					stillTileUrl: `${media}/200_s.gif`,
 					alt: "Season 2 No GIF by Portlandia",
 					body: {
 						id: "xT0xeChUR33EsYNNRK",

@@ -35,6 +35,7 @@ function gif(id: string): GiphyTile {
 	return {
 		id,
 		tileUrl: `https://media.giphy.com/media/${id}/200w.webp`,
+		stillTileUrl: `https://media.giphy.com/media/${id}/200_s.gif`,
 		alt: `GIF ${id}`,
 		body: {
 			id,

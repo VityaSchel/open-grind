@@ -114,6 +114,7 @@ export async function getGifByLink(id: string): Promise<GiphyTile | null> {
 		return {
 			id,
 			tileUrl: giphyMediaSrc(urlPath),
+			stillTileUrl: giphyMediaSrc(stillPath),
 			alt: "GIF from a GIPHY link",
 			body: {
 				id,

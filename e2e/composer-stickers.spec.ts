@@ -190,6 +190,25 @@ test.describe("composer stickers sheet", () => {
 		).toBeGreaterThan(1);
 	});
 
+	test("with reduced motion a GIF holds still with a badge and opens in the lightbox", async ({
+		page,
+	}) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await openStickers(page);
+		await gifTiles(page).nth(1).click();
+		await stickerSendButton(page).click();
+		const gif = page
+			.locator(MESSAGE_ROW)
+			.last()
+			.locator('[data-slot="giphy-message"]');
+
+		await expect(gif.locator('[data-slot="gif-badge"]')).toHaveText("GIF");
+		await gif.getByRole("link", { name: "GIF" }).click();
+		await expect(
+			page.locator(".pswp .pswp__item[aria-hidden=false] img").last(),
+		).toBeVisible();
+	});
+
 	test("a GIF in the chat opens to fill the screen in the photo lightbox", async ({
 		page,
 	}) => {

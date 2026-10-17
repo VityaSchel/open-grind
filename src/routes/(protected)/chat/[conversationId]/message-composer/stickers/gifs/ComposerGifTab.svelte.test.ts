@@ -16,6 +16,7 @@ const api = vi.hoisted(() => ({
 		>(),
 }));
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn() }));
+const reducedMotion = vi.hoisted(() => ({ current: false }));
 const composer = vi.hoisted(() => ({
 	sendMessages: vi.fn<(drafts: MessageDraft[]) => void>(),
 }));
@@ -38,6 +39,10 @@ vi.mock("$lib/app-data/preferences.svelte", async () => {
 	};
 });
 vi.mock("svelte-sonner", () => ({ toast }));
+vi.mock("svelte/motion", async (importOriginal) => ({
+	...(await importOriginal<typeof import("svelte/motion")>()),
+	prefersReducedMotion: reducedMotion,
+}));
 vi.mock("../../message-composer-context.svelte", () => ({
 	getMessageComposerContext: () => () => composer,
 }));
@@ -59,6 +64,7 @@ function trendingPage(ids: string[]): GiphyPage {
 		gifs: ids.map((id) => ({
 			id,
 			tileUrl: `https://media.giphy.com/media/${id}/200w.webp`,
+			stillTileUrl: `https://media.giphy.com/media/${id}/200_s.gif`,
 			alt: `Trending ${id}`,
 			body: {
 				id,
@@ -103,6 +109,7 @@ const tile = (name: string) => screen.getByRole("button", { name });
 
 beforeEach(() => {
 	vi.stubGlobal("IntersectionObserver", InertIntersectionObserver);
+	reducedMotion.current = false;
 	selections = [];
 	onClose.mockReset();
 	onFeedRestart.mockReset();
@@ -188,6 +195,17 @@ describe("composer GIF tab", () => {
 		await settle();
 
 		expect(api.getTrendingGifs).toHaveBeenCalledOnce();
+	});
+
+	it("marks its tiles as GIFs only when reduced motion holds them still", async () => {
+		await mount();
+		expect(screen.queryAllByText("GIF")).toHaveLength(0);
+		cleanup();
+
+		reducedMotion.current = true;
+		await mount();
+
+		expect(screen.getAllByText("GIF")).toHaveLength(2);
 	});
 
 	it("selects one GIF at a time and offers to send it", async () => {

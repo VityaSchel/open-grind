@@ -11,6 +11,7 @@
 	import "photoswipe/style.css";
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
 	import { tick } from "svelte";
+	import { prefersReducedMotion } from "svelte/motion";
 
 	import { giphyMediaSrc } from "$lib/api/messaging/giphy";
 	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
@@ -18,6 +19,7 @@
 		preferencesLoaded,
 		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
+	import GifBadge from "$lib/components/shared/GifBadge.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
 	import { openInLightbox } from "./message-lightbox";
@@ -34,7 +36,10 @@
 	const shown = $derived(
 		consented || loadedWithoutConsent.has(message.urlPath),
 	);
-	const src = $derived(giphyMediaSrc(message.urlPath));
+	const still = $derived(prefersReducedMotion.current);
+	const src = $derived(
+		giphyMediaSrc(still ? message.stillPath : message.urlPath),
+	);
 	const href = $derived(giphyMediaSrc(giphyOriginalUrl(message)));
 
 	let measured = $state<{
@@ -94,6 +99,9 @@
 						height: naturalHeight,
 					})}
 			/>
+			{#if still}
+				<GifBadge />
+			{/if}
 		</a>
 	{:else}
 		<button

@@ -20,6 +20,7 @@ export type GiphyBody = Extract<OutboundMessage, { type: "Giphy" }>["body"];
 export type GiphyTile = {
 	id: string;
 	tileUrl: string;
+	stillTileUrl: string;
 	alt: string;
 	body: GiphyBody;
 };
@@ -78,6 +79,7 @@ function giphyTile(gif: GiphyGif): GiphyTile {
 	return {
 		id: gif.id,
 		tileUrl: giphyMediaSrc(tileUrlOf(gif.images)),
+		stillTileUrl: giphyMediaSrc(still.url),
 		alt: gif.title || gif.alt_text || "GIF",
 		body: {
 			id: gif.id,

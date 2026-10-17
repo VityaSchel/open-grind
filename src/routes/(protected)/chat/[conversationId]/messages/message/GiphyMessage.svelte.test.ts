@@ -5,10 +5,15 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const preferences = vi.hoisted(() => ({ giphyConsent: false }));
+const reducedMotion = vi.hoisted(() => ({ current: false }));
 
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesLoaded: () => true,
 	preferencesSnapshot: () => ({ giphyConsent: preferences.giphyConsent }),
+}));
+vi.mock("svelte/motion", async (importOriginal) => ({
+	...(await importOriginal<typeof import("svelte/motion")>()),
+	prefersReducedMotion: reducedMotion,
 }));
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
@@ -60,6 +65,7 @@ const lightboxLink = () =>
 
 beforeEach(() => {
 	preferences.giphyConsent = false;
+	reducedMotion.current = false;
 	clearAccountCaches();
 });
 
@@ -132,6 +138,20 @@ describe("a GIF message", () => {
 
 		expect(lightboxLink()).toBeNull();
 		expect(init).not.toHaveBeenCalled();
+	});
+
+	it("holds still with reduced motion and plays in the lightbox", async () => {
+		preferences.giphyConsent = true;
+		reducedMotion.current = true;
+		renderGif();
+
+		expect(await requestedSources()).toEqual([
+			"https://media.giphy.com/media/abc/200_s.gif",
+		]);
+		expect(screen.getByText("GIF")).toBeTruthy();
+		expect(lightboxLink()?.getAttribute("href")).toBe(
+			"https://media.giphy.com/media/abc/giphy.gif",
+		);
 	});
 
 	it("moves keyboard focus onto the GIF it loads", async () => {

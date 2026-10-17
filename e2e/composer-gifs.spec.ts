@@ -363,6 +363,29 @@ test.describe("GIF search", () => {
 		).toEqual(["trending"]);
 	});
 
+	test("with reduced motion the GIF tiles show stills with a badge", async ({
+		page,
+	}) => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		await openStickers(page);
+		const first = gifTiles(page).first();
+		await expect(first.locator('[data-slot="gif-badge"]')).toBeVisible();
+
+		await expect
+			.poll(() =>
+				gifTiles(page)
+					.locator("img")
+					.evaluateAll((images) =>
+						(images as HTMLImageElement[]).some(
+							(image) =>
+								image.naturalHeight === 200 &&
+								image.naturalWidth !== 200,
+						),
+					),
+			)
+			.toBe(true);
+	});
+
 	test("a link to a GIF GIPHY doesn't know says so", async ({ page }) => {
 		await openStickers(page);
 
