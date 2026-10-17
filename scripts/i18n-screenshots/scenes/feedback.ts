@@ -60,18 +60,21 @@ async function copyConfirmed(page: Page): Promise<void> {
 function blockedGrid({
 	kind,
 	platform,
+	shim,
 	id,
 	answer,
 	screen,
 }: {
 	kind: string;
 	platform: Scene["platform"];
+	shim?: Scene["shim"];
 	id: string;
 	answer: "Rotate device parameters" | "Close";
 	screen?: string;
 }): Scene {
 	return {
 		platform,
+		shim,
 		demo: { restFaults: [{ path: CASCADE, error: { kind } }] },
 		views: [
 			{
@@ -111,6 +114,7 @@ export const requestBlocked = blockedGrid({
 export const networkBlocked = blockedGrid({
 	kind: "NetworkBlocked",
 	platform: "desktop",
+	shim: "linux",
 	id: "feedback/network-blocked",
 	answer: "Close",
 });

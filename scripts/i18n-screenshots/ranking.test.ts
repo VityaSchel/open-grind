@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { KeySource, ShownKey } from "../../src/lib/demo/screenshot-scan";
+import type { TitleKey } from "./manifest";
 import {
 	chooseHighlights,
 	HIGHLIGHTS_PER_KEY,
@@ -20,6 +21,10 @@ function shown({
 	top?: boolean;
 }): ShownKey {
 	return { key, box: { x: 0, y: 0, width: 10, height: 10 }, via, top };
+}
+
+function titled(key = KEY): TitleKey {
+	return { key, via: "document-title", top: false };
 }
 
 function others({
@@ -377,5 +382,42 @@ describe("chooseHighlights on screens", () => {
 			};
 		}
 		expect(highlightedIn({ views, key: KEY })).toEqual(["a", "b", "c"]);
+	});
+});
+
+describe("document title entries", () => {
+	it("ranks no view where the key is only the document title", () => {
+		expect(
+			rankOf({ a: { keys: [titled()] }, b: { keys: [shown({})] } }),
+		).toEqual(["b"]);
+		expect(rankOf({ a: { keys: [titled()] } })).toBeUndefined();
+		expect(chooseHighlights({ a: { keys: [titled()] } }).size).toBe(0);
+	});
+
+	it("leaves a document title out of the namespace count", () => {
+		expect(
+			rankOf({
+				a: {
+					keys: [
+						shown({}),
+						titled("settings.pageTitle"),
+						titled("settings.otherTitle"),
+					],
+				},
+				z: { keys: [shown({}), shown({ key: "settings.other0" })] },
+			}),
+		).toEqual(["a", "z"]);
+	});
+
+	it("keeps a document title out of the same-screen collapse", () => {
+		expect(
+			rankOf({
+				base: { keys: [titled()] },
+				"base/toast": {
+					screen: "base",
+					keys: [shown({}), ...toasts(1)],
+				},
+			}),
+		).toEqual(["base/toast"]);
 	});
 });

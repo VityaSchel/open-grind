@@ -28,6 +28,7 @@ function scanFrame(page: Page): Promise<ViewScan> {
 
 function withoutBoxes({
 	keys,
+	titleKeys,
 	unmarked,
 	emoji,
 	measured,
@@ -35,6 +36,7 @@ function withoutBoxes({
 }: ViewScan) {
 	return {
 		keys: keys.map(({ box: _box, boxes: _boxes, ...labels }) => labels),
+		titleKeys,
 		unmarked,
 		emoji,
 		measured,

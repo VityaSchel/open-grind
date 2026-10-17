@@ -257,11 +257,16 @@ export async function openGrid(page: Page): Promise<void> {
 	await ensureGridLocation(page);
 }
 
+export async function commandCenterShortcut(page: Page): Promise<string> {
+	const platform = await page.evaluate(() => navigator.platform);
+	return /Mac|iPod|iPhone|iPad/.test(platform) ? "Meta+k" : "Control+k";
+}
+
 export async function runPaletteCommand(
 	page: Page,
 	command: string,
 ): Promise<void> {
-	await page.keyboard.press("ControlOrMeta+k");
+	await page.keyboard.press(await commandCenterShortcut(page));
 	const palette = page.getByRole("combobox");
 	await palette.waitFor();
 	await palette.fill(command);

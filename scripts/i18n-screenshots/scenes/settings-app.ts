@@ -2,12 +2,11 @@ import type { Page } from "@playwright/test";
 
 import { overrideNative } from "../stubs";
 import type { Scene } from ".";
-import { STORAGE_FULL } from "./faults";
+import { STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
 import { addingToast, toastsShown } from "./toast";
 import { openAppSettings } from "./updates";
 
 const BLUR_THUMB = '[data-slot="slider-thumb"]';
-const UNREADABLE_PREFERENCES = [0xc1];
 const DESKTOP_ENTRY = { available: true, installed: false };
 const UNIMPLEMENTED_LINKS = [/Discreet App Icon/, /PIN/];
 

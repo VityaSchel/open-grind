@@ -1,9 +1,12 @@
 import type { ShownKey } from "../../src/lib/demo/screenshot-scan";
-import { byCodeUnits } from "./manifest";
+import { byCodeUnits, onPage, type TitleKey } from "./manifest";
 
 export const HIGHLIGHTS_PER_KEY = 3;
 
-export type RankedViews = Record<string, { keys: ShownKey[]; screen?: string }>;
+export type RankedViews = Record<
+	string,
+	{ keys: (ShownKey | TitleKey)[]; screen?: string }
+>;
 
 type Placement = {
 	viewId: string;
@@ -58,7 +61,10 @@ function onePerScreen(placed: Placement[]): Placement[] {
 
 export function rankViews(views: RankedViews): Map<string, string[]> {
 	const placements = new Map<string, Placement[]>();
-	for (const [viewId, { keys, screen = viewId }] of Object.entries(views)) {
+	for (const [viewId, { keys: entries, screen = viewId }] of Object.entries(
+		views,
+	)) {
+		const keys = entries.filter(onPage);
 		const namespaces = countNamespaces(keys);
 		const topKeys = countTopKeys(keys);
 		for (const shown of keys) {

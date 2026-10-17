@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { commandCenterShortcut } from "../../../e2e/support/app";
 import type { Scene, SceneView } from ".";
 import { LOCATION_TITLE } from "./browse";
 import { showGrid } from "./browse-states";
@@ -36,7 +37,7 @@ async function decodeImages(page: Page): Promise<void> {
 }
 
 async function openPalette(page: Page): Promise<void> {
-	await page.keyboard.press("ControlOrMeta+k");
+	await page.keyboard.press(await commandCenterShortcut(page));
 	await palette(page).waitFor();
 }
 
@@ -132,6 +133,7 @@ export const commandCenter: Scene = {
 
 export const locationCopy: Scene = {
 	platform: "desktop",
+	shim: "linux",
 	views: [
 		{
 			id: "command-center/copy-location",

@@ -143,7 +143,6 @@
 		"privacyPolicy": "Privacy policy"
 	},
 	"notifications": {
-		"unsupportedOn": "Notifications aren’t supported on {{platform}} yet.",
 		"unsupported": "Notifications aren’t supported on this platform yet.",
 		"enable": "Enable notifications",
 		"mode": {

@@ -16,6 +16,7 @@
 	const modifierKey = $derived(
 		shortcut.modifier === "meta" ? "⌘" : t("commands.trigger.controlKey"),
 	);
+	const keySuffix = ` + ${shortcut.key}`;
 </script>
 
 <Button
@@ -26,6 +27,8 @@
 >
 	<TerminalIcon />
 	{#if !isMobile}
-		<Kbd.Root translate="no">{modifierKey} + {shortcut.key}</Kbd.Root>
+		<Kbd.Root>
+			<span>{modifierKey}<span translate="no">{keySuffix}</span></span>
+		</Kbd.Root>
 	{/if}
 </Button>

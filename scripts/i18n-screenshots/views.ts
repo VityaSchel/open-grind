@@ -11,6 +11,7 @@ import {
 	imagePath,
 	MAX_SCREENS,
 	numberedViewId,
+	viewKeys,
 } from "./manifest";
 import {
 	captureFrame,
@@ -30,6 +31,7 @@ import { settle } from "./settle";
 import {
 	installNativeStubs,
 	installNeutralGeolocation,
+	pinNavigatorPlatform,
 	seedScene,
 } from "./stubs";
 
@@ -67,9 +69,9 @@ async function openSession({
 			console.warn(`${session.viewId}: console error: ${message.text()}`);
 		}
 	});
-	await installTauriShim(page, {
-		platform: scene.shim ?? displays[scene.platform].shimPlatform,
-	});
+	const platform = scene.shim ?? displays[scene.platform].shimPlatform;
+	await installTauriShim(page, { platform });
+	await pinNavigatorPlatform({ page, platform });
 	await installEventInjection(page);
 	await installNativeStubs({ page, overrides: scene.native });
 	await installNeutralGeolocation(page);
@@ -257,7 +259,7 @@ async function recordScreen({
 		pixelHash: view.pixelHash,
 		platform: platformContext.platform,
 		screen,
-		keys: scan.keys.map(({ boxes: _boxes, ...shown }) => shown),
+		keys: viewKeys({ scan, viewId: id, screen }),
 		ms,
 	};
 	captured.unmarked[id] = scan.unmarked;

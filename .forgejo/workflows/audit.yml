@@ -24,36 +24,6 @@ jobs:
     runs-on: ["fork", "toolchain", "2c4g", "hetzner"]
     timeout-minutes: 30
     steps:
-      - name: Watch memory for trial
-        env:
-          GITHUB_TOKEN: ""
-          FORGEJO_TOKEN: ""
-          ACTIONS_RUNTIME_TOKEN: ""
-        run: |
-          set +e
-
-          cat >/run/memory-trial.sh <<'EOF'
-          cg=$1
-          min=
-          max=0
-          while :; do
-            avail=$(awk '/^MemAvailable:/ { print $2 }' /proc/meminfo)
-            anon=$(awk '/^anon / { print $2 }' "$cg/memory.stat")
-            if [ -z "$min" ] || [ "$avail" -lt "$min" ]; then
-              min=$avail
-              echo "MemAvailable minimum: $((min / 1024)) MiB at $(date -u +%T)" >/run/memory-trial-available
-            fi
-            if [ "$anon" -gt "$max" ]; then
-              max=$anon
-              echo "job anon peak: $((max / 1048576)) MiB at $(date -u +%T)" >/run/memory-trial-anon
-            fi
-            sleep 0.5
-          done
-          EOF
-          systemd-run --collect --unit=memory-trial /bin/sh /run/memory-trial.sh \
-            "/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)"
-          exit 0
-
       - name: Check dependencies for advisories, licenses and unknown sources
         env:
           GITHUB_TOKEN: ""
@@ -90,26 +60,3 @@ jobs:
           # A [patch.crates-io] entry that stops matching is only a warning, so
           # cargo would quietly build the unpatched crate and still exit 0.
           step sh -c '! grep -q "\[\[patch.unused\]\]" src-tauri/Cargo.lock'
-
-      - name: Report the machine and peak memory
-        if: always()
-        env:
-          GITHUB_TOKEN: ""
-          FORGEJO_TOKEN: ""
-          ACTIONS_RUNTIME_TOKEN: ""
-        run: |
-          set +e
-
-          cg="/sys/fs/cgroup$(cut -d: -f3 /proc/self/cgroup)"
-          systemctl stop memory-trial
-          echo "nproc: $(nproc)"
-          grep MemTotal /proc/meminfo
-          lscpu | grep 'Model name'
-          cat /run/memory-trial-available /run/memory-trial-anon
-          peak=$(cat "$cg/memory.peak")
-          echo "memory.peak, page cache included: ${peak} bytes ($(( ${peak:-0} / 1048576 )) MiB)"
-          grep -E '^(anon|file|shmem|pgmajfault|workingset_refault_anon|workingset_refault_file) ' "$cg/memory.stat" | sed 's/^/memory.stat: /'
-          sed 's/^/memory.events: /' "$cg/memory.events"
-          sed 's/^/memory pressure: /' /proc/pressure/memory
-          dmesg | grep -iE 'oom|out of memory'
-          exit 0

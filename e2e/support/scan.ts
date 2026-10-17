@@ -15,6 +15,8 @@ const FIXED_TIME = new Date("2026-07-21T13:12:00Z");
 const INBOX_ROW = 'main a[href^="/chat/"]';
 const DRAWER_PILL =
 	"[data-fixed-header] button:not([aria-label], [aria-pressed])";
+const AUTH_LAYOUT_LOAD = /\/routes\/auth\/\+layout\.ts(?:\?|$)/;
+const SIGNED_OUT_LOAD = "export const load = () => {};";
 
 export const MARKERS_MODULE = "/src/lib/i18n/markers.ts";
 export const LAYOUT_MODULE = "/src/lib/demo/screenshot-layout.ts";
@@ -41,6 +43,19 @@ export async function openCredits(page: Page): Promise<void> {
 	await page
 		.getByRole("link", { name: "Suggest an edit" })
 		.waitFor({ state: "attached", timeout: FIRST_ROUTE_COMPILE_MS });
+}
+
+export async function openSignIn(page: Page): Promise<void> {
+	await page.route(AUTH_LAYOUT_LOAD, (route) =>
+		route.fulfill({
+			contentType: "text/javascript",
+			body: SIGNED_OUT_LOAD,
+		}),
+	);
+	await openDemo(page, { path: "/auth/sign-in" });
+	await page
+		.locator("form button[type=submit]")
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
 export async function openInbox(page: Page): Promise<void> {

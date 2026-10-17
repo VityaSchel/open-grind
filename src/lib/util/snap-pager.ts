@@ -16,6 +16,8 @@ const STILL_FRAMES_BEFORE_GLIDE = 3;
 
 export type VisiblePositions = { first: number; last: number };
 
+type PanOrigin = { id: number; x: number; y: number; left: number };
+
 export class SnapPager {
 	readonly #count: () => number;
 	readonly #onVisible: (positions: VisiblePositions) => void;
@@ -26,6 +28,8 @@ export class SnapPager {
 
 	#node: HTMLElement | null = null;
 	#fingers = 0;
+	#panOrigin: PanOrigin | null = null;
+	#restDeferred = false;
 	#stillFrames = 0;
 	#releaseWatch: number | null = null;
 	#width = 0;
@@ -79,6 +83,11 @@ export class SnapPager {
 		);
 		for (const type of TOUCH_LIFTS)
 			window.addEventListener(type, this.#onTouchLift, onWindow);
+		window.addEventListener(
+			"scrollend",
+			() => this.#restAfterAnotherScroller(),
+			onWindow,
+		);
 		node.addEventListener("pointerdown", dropStepTarget, options);
 		node.addEventListener("focusin", dropStepTarget, options);
 		node.addEventListener(
@@ -106,6 +115,7 @@ export class SnapPager {
 			this.#touchLifts?.abort();
 			this.#touchLifts = null;
 			this.#fingers = 0;
+			this.#restDeferred = false;
 			if (this.#releaseWatch !== null)
 				cancelAnimationFrame(this.#releaseWatch);
 			this.#releaseWatch = null;
@@ -237,6 +247,7 @@ export class SnapPager {
 
 	#onScroll(): void {
 		this.#stillFrames = 0;
+		this.#restDeferred = false;
 		if (!this.#widthMatchesLayout()) return;
 		const left = this.#left;
 		this.#travel = Math.sign(left - this.#lastLeft) || this.#travel;
@@ -248,6 +259,15 @@ export class SnapPager {
 	}
 
 	#onTouchStart(event: TouchEvent): void {
+		this.#restDeferred = false;
+		const first = event.touches[0];
+		if (this.#fingers === 0 && first !== undefined)
+			this.#panOrigin = {
+				id: first.identifier,
+				x: first.clientX,
+				y: first.clientY,
+				left: this.#left,
+			};
 		this.#fingers = event.touches.length;
 		this.#touchLifts ??= new AbortController();
 		for (const type of TOUCH_LIFTS)
@@ -268,9 +288,31 @@ export class SnapPager {
 		if (this.#fingers > 0) return;
 		this.#touchLifts?.abort();
 		this.#touchLifts = null;
-		this.settleNow();
+		if (this.#liftsOffAnUnseenPan(event)) this.#restDeferred = true;
+		else this.settleNow();
 		this.#watchRelease();
 	};
+
+	#restAfterAnotherScroller(): void {
+		if (!this.#restDeferred) return;
+		this.#restDeferred = false;
+		this.settleNow();
+	}
+
+	#liftsOffAnUnseenPan(lift: TouchEvent): boolean {
+		const origin = this.#panOrigin;
+		this.#panOrigin = null;
+		if (lift.type !== "touchend" || lift.cancelable || origin === null)
+			return false;
+		const point = Array.from(lift.changedTouches).find(
+			({ identifier }) => identifier === origin.id,
+		);
+		if (point === undefined || this.#left !== origin.left) return false;
+		const dx = point.clientX - origin.x;
+		if (Math.abs(dx) <= Math.abs(point.clientY - origin.y)) return false;
+		const position = this.#nearestPosition();
+		return this.#clamp(position - Math.sign(dx)) !== position;
+	}
 
 	#watchRelease(): void {
 		this.#stillFrames = 0;

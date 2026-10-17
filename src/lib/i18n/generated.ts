@@ -746,7 +746,6 @@ export interface Messages {
 	"settings.notifications.mode.slow.description": undefined;
 	"settings.notifications.mode.slow.title": undefined;
 	"settings.notifications.unsupported": undefined;
-	"settings.notifications.unsupportedOn": { platform: string };
 	"settings.preferences.errors.loadFailed": undefined;
 	"settings.preferences.reset": undefined;
 	"settings.privacy.showDistance.description": { distance: string };
@@ -1111,7 +1110,6 @@ export interface RichMessages {
 	"settings.credits.license": { license: "placeholder" };
 	"settings.credits.licenseWithVersions": { license: "placeholder"; versions: "placeholder" };
 	"settings.credits.sections.platformLibraries": { platform: "placeholder" };
-	"settings.notifications.unsupportedOn": { platform: "placeholder" };
 	"settings.privacy.showDistance.description": { distance: "placeholder" };
 	"settings.profile.combo.a11y.remove": { label: "placeholder" };
 	"settings.profile.combo.selected": { count: "count"; max: "placeholder" };

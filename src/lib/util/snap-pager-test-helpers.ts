@@ -7,6 +7,18 @@ export const WIDTH = 411.43;
 
 type ResizeCallback = (entries: ResizeObserverEntry[]) => void;
 
+type ScreenPoint = { x: number; y: number };
+
+function touchPoint({
+	identifier,
+	point,
+}: {
+	identifier: number;
+	point: ScreenPoint;
+}) {
+	return { identifier, clientX: point.x, clientY: point.y };
+}
+
 export function fakePagerLayout({
 	mount,
 	touchTarget,
@@ -38,24 +50,33 @@ export function fakePagerLayout({
 	});
 	const scrollTo = vi.spyOn(node, "scrollTo");
 
-	const touchesOnScreen = new Set<number>();
+	const touchesOnScreen = new Map<number, ScreenPoint>();
 	const touch = (
 		type: "touchstart" | "touchend" | "touchcancel",
 		{
 			id = 0,
 			target = touchTarget ?? node,
-		}: { id?: number; target?: EventTarget } = {},
+			at = { x: 0, y: 0 },
+			cancelable = true,
+		}: {
+			id?: number;
+			target?: EventTarget;
+			at?: ScreenPoint;
+			cancelable?: boolean;
+		} = {},
 	) => {
-		if (type === "touchstart") touchesOnScreen.add(id);
+		if (type === "touchstart") touchesOnScreen.set(id, at);
 		else touchesOnScreen.delete(id);
-		const event = new Event(type, { bubbles: true });
+		const event = new Event(type, { bubbles: true, cancelable });
 		Object.defineProperties(event, {
 			touches: {
-				value: Array.from(touchesOnScreen, (identifier) => ({
-					identifier,
-				})),
+				value: Array.from(touchesOnScreen, ([identifier, point]) =>
+					touchPoint({ identifier, point }),
+				),
 			},
-			changedTouches: { value: [{ identifier: id }] },
+			changedTouches: {
+				value: [touchPoint({ identifier: id, point: at })],
+			},
 		});
 		target.dispatchEvent(event);
 	};
