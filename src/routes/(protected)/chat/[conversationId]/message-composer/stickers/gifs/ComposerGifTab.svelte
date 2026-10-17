@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { untrack } from "svelte";
-	import { toast } from "svelte-sonner";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
@@ -8,9 +7,10 @@
 		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
-	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
+	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { TabSelection } from "../../attachments/tabs";
+	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import { GifFeed } from "./gif-feed.svelte";
 	import GifGrid from "./GifGrid.svelte";
 	import GifSearchBar from "./GifSearchBar.svelte";
@@ -32,6 +32,7 @@
 
 	const SEND_LABEL = "Send GIF";
 
+	const composer = getMessageComposerContext();
 	const consented = $derived(
 		preferencesLoaded() && preferencesSnapshot().giphyConsent,
 	);
@@ -72,10 +73,13 @@
 	}
 
 	export function submitSelection() {
+		const gif = feed.gifs.find(({ id }) => selected.has(id));
+		clearSelection();
 		onClose();
-		toast(ToastUnimplemented, {
-			componentProps: { feature: "Sending a GIF", issue: 31 },
-		});
+		if (gif === undefined) return;
+		void composer().sendMessages([
+			draftFromMessage({ type: "Giphy", body: gif.body }),
+		]);
 	}
 </script>
 

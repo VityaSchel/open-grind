@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { untrack } from "svelte";
-	import { toast } from "svelte-sonner";
 
 	import {
 		type GaymojiCategory,
 		getGaymoji,
 	} from "$lib/api/messaging/gaymoji";
 	import { gaymojiSections } from "$lib/chat/gaymoji-sections";
-	import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { TabSelection } from "../../attachments/tabs";
+	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import GaymojiSection from "./GaymojiSection.svelte";
 	import GaymojiSectionStrip from "./GaymojiSectionStrip.svelte";
 	import { SectionScroll } from "./section-scroll.svelte";
@@ -34,6 +34,7 @@
 		| { status: "idle" | "loading" | "failed" }
 		| { status: "ready"; categories: GaymojiCategory[] };
 
+	const SEND_LABEL = "Send Gaymoji";
 	const SKELETON_ROWS = 3;
 	const SKELETON_COLUMNS = [
 		"",
@@ -46,6 +47,7 @@
 		"hidden @gaymoji8/sticker-grid:block",
 	];
 
+	const composer = getMessageComposerContext();
 	const selection = new SelectionSet<string>();
 	const windows = new SectionWindows();
 
@@ -86,14 +88,23 @@
 
 	function toggle(id: string) {
 		selection.toggleExclusive(id);
-		onSelectionChange({ count: selection.size, label: "Send Gaymoji" });
+		onSelectionChange({ count: selection.size, label: SEND_LABEL });
 	}
 
 	export function submitSelection() {
+		const gaymoji = sections
+			.flatMap(({ items }) => items)
+			.find(({ id }) => selection.has(id));
+		selection.clear();
+		onSelectionChange({ count: 0, label: SEND_LABEL });
 		onClose();
-		toast(ToastUnimplemented, {
-			componentProps: { feature: "Sending a Gaymoji", issue: 31 },
-		});
+		if (gaymoji === undefined) return;
+		void composer().sendMessages([
+			draftFromMessage({
+				type: "Gaymoji",
+				body: { imageHash: gaymoji.imageHash },
+			}),
+		]);
 	}
 </script>
 

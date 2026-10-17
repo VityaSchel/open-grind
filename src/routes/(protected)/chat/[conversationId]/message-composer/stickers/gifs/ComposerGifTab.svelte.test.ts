@@ -5,6 +5,7 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { GiphyPage } from "$lib/api/messaging/giphy";
+import type { MessageDraft } from "$lib/model/messaging/messages";
 
 const api = vi.hoisted(() => ({
 	getTrendingGifs:
@@ -15,6 +16,9 @@ const api = vi.hoisted(() => ({
 		>(),
 }));
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn() }));
+const composer = vi.hoisted(() => ({
+	sendMessages: vi.fn<(drafts: MessageDraft[]) => void>(),
+}));
 const preferences = vi.hoisted(() => ({
 	values: new Map<string, boolean>(),
 	setPreferences:
@@ -34,6 +38,9 @@ vi.mock("$lib/app-data/preferences.svelte", async () => {
 	};
 });
 vi.mock("svelte-sonner", () => ({ toast }));
+vi.mock("../../message-composer-context.svelte", () => ({
+	getMessageComposerContext: () => () => composer,
+}));
 
 import type { TabSelection } from "../../attachments/tabs";
 import ComposerGifTab from "./ComposerGifTab.svelte";
@@ -101,6 +108,7 @@ beforeEach(() => {
 	onFeedRestart.mockReset();
 	toast.mockReset();
 	toast.error.mockReset();
+	composer.sendMessages.mockReset();
 	api.getTrendingGifs.mockReset();
 	api.searchGifs.mockReset();
 	api.getTrendingGifs.mockResolvedValue(trendingPage(["a", "b"]));
@@ -303,14 +311,37 @@ describe("composer GIF tab", () => {
 		expect(tile("Trending a")).toBeTruthy();
 	});
 
-	it("closes and explains that sending is not ready yet", async () => {
+	it("sends the picked GIF as a Giphy message and closes", async () => {
+		const { component } = await mount();
+		await fireEvent.click(tile("Trending b"));
+
+		component.submitSelection();
+
+		const message = {
+			type: "Giphy",
+			body: {
+				id: "b",
+				urlPath: "https://media.giphy.com/media/b/200.gif",
+				previewPath: "https://media.giphy.com/media/b/200.gif",
+				stillPath: "https://media.giphy.com/media/b/200_s.gif",
+				width: 200,
+				height: 150,
+				imageHash: "giphy/b",
+			},
+		};
+		expect(composer.sendMessages).toHaveBeenCalledExactlyOnceWith([
+			{ outbound: message, optimistic: message },
+		]);
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(selections.at(-1)).toEqual({ count: 0, label: "Send GIF" });
+	});
+
+	it("only closes when nothing is picked", async () => {
 		const { component } = await mount();
 
 		component.submitSelection();
 
 		expect(onClose).toHaveBeenCalledOnce();
-		expect(toast).toHaveBeenCalledWith(expect.anything(), {
-			componentProps: { feature: "Sending a GIF", issue: 31 },
-		});
+		expect(composer.sendMessages).not.toHaveBeenCalled();
 	});
 });

@@ -4,13 +4,18 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { MessageDraft } from "$lib/model/messaging/messages";
+
 const api = vi.hoisted(() => ({ getGaymoji: vi.fn() }));
-const toast = vi.hoisted(() => vi.fn());
+const composer = vi.hoisted(() => ({
+	sendMessages: vi.fn<(drafts: MessageDraft[]) => void>(),
+}));
 
 vi.mock("$lib/api/messaging/gaymoji", () => api);
-vi.mock("svelte-sonner", () => ({ toast }));
+vi.mock("../../message-composer-context.svelte", () => ({
+	getMessageComposerContext: () => () => composer,
+}));
 
-import ToastUnimplemented from "$lib/components/feedback/ToastUnimplemented.svelte";
 import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
 import type { TabSelection } from "../../attachments/tabs";
 import ComposerGaymojiTab from "./ComposerGaymojiTab.svelte";
@@ -78,7 +83,7 @@ function tile(label: string): HTMLButtonElement {
 beforeEach(() => {
 	selections = [];
 	onClose.mockReset();
-	toast.mockReset();
+	composer.sendMessages.mockReset();
 	api.getGaymoji.mockReset();
 	api.getGaymoji.mockResolvedValue(shortManifest);
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -212,16 +217,31 @@ describe("composer Gaymoji tab", () => {
 		expect(tiles()).toHaveLength(shortItems.length);
 	});
 
-	it("closes the sheet and reports sending as unimplemented on submit", async () => {
+	it("sends the picked Gaymoji by its image hash and closes", async () => {
 		const { component } = mount({ active: true });
 		await settle();
-		await fireEvent.click(tile("Sticker 0"));
+		await fireEvent.click(tile("Sticker 7"));
+
+		component.submitSelection();
+
+		const message = {
+			type: "Gaymoji",
+			body: { imageHash: "gaymoji/7_Sticker_7.png" },
+		};
+		expect(composer.sendMessages).toHaveBeenCalledExactlyOnceWith([
+			{ outbound: message, optimistic: message },
+		]);
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(selections.at(-1)).toEqual({ count: 0, label: "Send Gaymoji" });
+	});
+
+	it("only closes when nothing is picked", async () => {
+		const { component } = mount({ active: true });
+		await settle();
 
 		component.submitSelection();
 
 		expect(onClose).toHaveBeenCalledOnce();
-		expect(toast).toHaveBeenCalledWith(ToastUnimplemented, {
-			componentProps: { feature: "Sending a Gaymoji", issue: 31 },
-		});
+		expect(composer.sendMessages).not.toHaveBeenCalled();
 	});
 });
