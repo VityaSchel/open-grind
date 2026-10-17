@@ -7,24 +7,57 @@ export type KeyTally = {
 	staleUncapturable: string[];
 };
 
+export type Uncapturable = Record<
+	string,
+	{ reason: string; explanation: string }
+>;
+
 function matches({ key, pattern }: { key: string; pattern: string }): boolean {
 	return pattern.endsWith(".*")
 		? key.startsWith(pattern.slice(0, -1))
 		: key === pattern;
 }
 
+function specificity(pattern: string): number {
+	return pattern.endsWith(".*") ? pattern.length - 1 : pattern.length;
+}
+
+export function shownKeys(views: View[]): Set<string> {
+	return new Set(views.flatMap((view) => view.keys.map(({ key }) => key)));
+}
+
+export function explainKeys({
+	keys,
+	uncapturable,
+	shown,
+}: {
+	keys: string[];
+	uncapturable: Uncapturable;
+	shown: ReadonlySet<string>;
+}): Record<string, string> {
+	const entries = Object.entries(uncapturable).sort(
+		([a], [b]) => specificity(b) - specificity(a),
+	);
+	return Object.fromEntries(
+		keys.flatMap((key) => {
+			if (shown.has(key)) return [];
+			const entry = entries.find(([pattern]) =>
+				matches({ key, pattern }),
+			);
+			return entry === undefined ? [] : [[key, entry[1].explanation]];
+		}),
+	);
+}
+
 export function tallyKeys({
 	keys,
 	patterns,
-	views,
+	shown,
 }: {
 	keys: string[];
 	patterns: string[];
-	views: View[];
+	shown: ReadonlySet<string>;
 }): KeyTally {
-	const shown = new Set(
-		views.flatMap((view) => view.keys.map(({ key }) => key)),
-	);
 	const uncapturable = keys.filter((key) =>
 		patterns.some((pattern) => matches({ key, pattern })),
 	);

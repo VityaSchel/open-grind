@@ -1,15 +1,54 @@
 {
-	"chat.composer.errors.sendFailed": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
-	"chat.notification.*": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
-	"commands.filterGrid.errors.applyFailed": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
-	"common.carousel.a11y.next": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
-	"common.carousel.a11y.previous": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
-	"feedback.appError.contentTooLarge": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
-	"feedback.appError.notSignedIn": "Only sign-in and Try Again failure toasts show this message. Sign-in commands never fail with this error, and Try Again shows its own expired message for it instead.",
-	"interest.taps.notification": "Only in the system notification that a desktop build shows for a received tap, which the system draws outside the page, so no page screenshot shows it.",
-	"media.picker.filters.*": "The native file dialog shows these file type names, and the web build has no native dialog.",
-	"profile.miniCard.a11y.anonymous": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
-	"settings.notifications.unsupportedOn": "Obsolete, and no code shows it: every platform the app names (Android, macOS, Windows and Linux) now shows the notification settings, and every other one shows settings.notifications.unsupported instead. It stays until the key is removed in Weblate.",
-	"shell.notFound.clippy.*": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
-	"shell.toaster.a11y.close": "Only the toaster's close button carries this label, and no toast in the app shows a close button."
+	"chat.composer.errors.sendFailed": {
+		"reason": "Only shown when sending throws right away, and sending only queues the message: a failed send shows “Not sent” on the message instead.",
+		"explanation": "Error toast for a chat message that couldn’t be sent; today a message that fails to send shows “Not sent” on it instead, so this toast never appears."
+	},
+	"chat.notification.*": {
+		"reason": "Only in the system notification that a desktop build shows for a new chat message, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Body of the system notification for a new chat message, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+	},
+	"commands.filterGrid.errors.applyFailed": {
+		"reason": "Only when applying the filters or closing the command center throws, or navigating to Grid rejects. Applying them sets them in memory, starts Grid over and saves them in the background, and a failed save shows browse.grid.searchFilters.errors.updateFailed instead. Closing only changes state, and SvelteKit's goto resolves even when another navigation aborts it and rejects only when a navigation callback throws, which none of the app's callbacks do.",
+		"explanation": "Error toast for when the “Filter Grid…” command in the Command Center couldn’t apply the filters; only saving them can fail, and that shows a different message, so this toast never appears."
+	},
+	"common.carousel.a11y.next": {
+		"reason": "Only the Carousel.Next button carries this label, and no screen in the app renders that component.",
+		"explanation": "Screen reader label of the next-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
+	},
+	"common.carousel.a11y.previous": {
+		"reason": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
+		"explanation": "Screen reader label of the previous-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
+	},
+	"feedback.appError.contentTooLarge": {
+		"reason": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
+		"explanation": "Error message for a file larger than the upload limit, shown in an error toast; files that are too large name the limit in their own message instead, so this text never appears today."
+	},
+	"feedback.appError.notSignedIn": {
+		"reason": "Only sign-in and Try Again failure toasts show this message. Sign-in commands never fail with this error, and Try Again shows its own expired message for it instead.",
+		"explanation": "Error message for an action that needs you to be signed in, shown in an error toast; signing in never fails this way and an expired session shows its own message, so this text never appears today."
+	},
+	"interest.taps.notification": {
+		"reason": "Only in the system notification that a desktop build shows for a received tap, which the system draws outside the page, so no page screenshot shows it.",
+		"explanation": "Body of the system notification for a received tap, under the sender’s name; the system draws it outside the app, so no screenshot shows it."
+	},
+	"media.picker.filters.*": {
+		"reason": "The native file dialog shows these file type names, and the web build has no native dialog.",
+		"explanation": "Name of a file type choice in the system file dialog that the desktop app opens to pick photos and videos; the system draws that dialog, so no screenshot shows it."
+	},
+	"profile.miniCard.a11y.anonymous": {
+		"reason": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
+		"explanation": "Screen reader label of a profile card link that doesn’t show who the user is; the only such card, the locked preview of a viewer in Viewed Me, has no link, so the label is never read out."
+	},
+	"settings.notifications.unsupportedOn": {
+		"reason": "Obsolete, and no code shows it: every platform the app names (Android, macOS, Windows and Linux) now shows the notification settings, and every other one shows settings.notifications.unsupported instead. It stays until the key is removed in Weblate.",
+		"explanation": "Former notice on the Notifications settings page, naming a platform without notifications; no version of the app shows it anymore, and it will be removed."
+	},
+	"shell.notFound.clippy.*": {
+		"reason": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
+		"explanation": "Part of the hidden Clippy joke on the “Page not found” page, shown by pressing and holding the “?”, where each list item finishes “Don’t worry, Clippy would never”; screenshots leave it out because the Clippy image has no license."
+	},
+	"shell.toaster.a11y.close": {
+		"reason": "Only the toaster's close button carries this label, and no toast in the app shows a close button.",
+		"explanation": "Screen reader label of the close button on a toast notification; no toast in the app has that button, so the label is never read out."
+	}
 }
