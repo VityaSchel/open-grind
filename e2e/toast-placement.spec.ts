@@ -221,13 +221,13 @@ test.describe("in Low blur, a toast keeps the bar gap", () => {
 	});
 });
 
-test("the save confirmation stays put while the save bar flies away", async ({
+test("the save confirmation glides once to its resting place while the save bar flies away", async ({
 	page,
 }) => {
 	await page.goto("/settings/profile");
 	await makeDirty(profileDisplayName(page));
 	await scrollSettingsToEnd(page);
-	const scrolledMidFlight = page.evaluate(async () => {
+	const flight = page.evaluate(async () => {
 		const nextFrame = () =>
 			new Promise((framed) => requestAnimationFrame(framed));
 		const saveBar = await new Promise<EventTarget | null>((leaving) =>
@@ -241,20 +241,35 @@ test("the save confirmation stays put while the save bar flies away", async ({
 		document
 			.querySelector('[data-slot="subpage-scroller"]')
 			?.dispatchEvent(new Event("scroll"));
-		await nextFrame();
-		const toaster = document.querySelector(
-			'[data-sonner-toaster][data-y-position="bottom"]',
-		);
-		return {
-			bottom: toaster && getComputedStyle(toaster).bottom,
-			saveBarFlying: saveBar instanceof Element && saveBar.isConnected,
-		};
+		const saveBarFlying = saveBar instanceof Element && saveBar.isConnected;
+		const bottoms: number[] = [];
+		const started = performance.now();
+		while (performance.now() - started < 600) {
+			await nextFrame();
+			const toaster = document.querySelector(
+				'[data-sonner-toaster][data-y-position="bottom"]',
+			);
+			if (toaster)
+				bottoms.push(
+					Number.parseFloat(getComputedStyle(toaster).bottom),
+				);
+		}
+		return { bottoms, saveBarFlying };
 	});
 	await saveButton(page).click();
 
-	const { bottom, saveBarFlying } = await scrolledMidFlight;
+	const { bottoms, saveBarFlying } = await flight;
 	expect(saveBarFlying).toBe(true);
 	await expect(saveButton(page)).toHaveCount(0);
-	expect(await bottomToasterOffset(page)).toBe(bottom);
+	const resting = Number.parseFloat(await bottomToasterOffset(page));
+	expect(bottoms.length).toBeGreaterThan(0);
+	expect(
+		Math.min(...bottoms),
+		"the toast never dips below its resting place",
+	).toBeGreaterThanOrEqual(resting - 0.5);
+	for (const [index, bottom] of bottoms.entries())
+		expect(bottom, "the toast only glides down").toBeLessThanOrEqual(
+			(bottoms[index - 1] ?? bottom) + 0.5,
+		);
 	await expectToastGap({ obstruction: meTab(page), edge: "bottom" });
 });

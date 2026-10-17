@@ -404,6 +404,18 @@ a {
 	pointer-events: auto;
 }
 
+[data-sonner-toaster][data-y-position="bottom"] {
+	transition:
+		transform 400ms ease,
+		bottom 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-sonner-toaster][data-y-position="bottom"] {
+		transition: none;
+	}
+}
+
 .toast[data-styled="true"] {
 	background-color: var(--color-accent) !important;
 	color: var(--popover) !important;
