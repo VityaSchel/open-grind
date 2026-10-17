@@ -410,6 +410,17 @@ a {
 		bottom 300ms ease-out;
 }
 
+[data-sonner-toaster][data-y-position="bottom"][data-sheet-anchored] {
+	bottom: min(
+		max(var(--offset-bottom), var(--sheet-anchor, 0px)),
+		calc(
+			100dvh - var(--safe-area-top) - 0.5rem -
+				var(--toast-stack-height, 0px)
+		)
+	);
+	transition: transform 400ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	[data-sonner-toaster][data-y-position="bottom"] {
 		transition: none;
