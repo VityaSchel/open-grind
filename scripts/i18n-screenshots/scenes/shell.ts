@@ -12,7 +12,7 @@ import { showsLoading } from "../settle";
 import type { Scene } from ".";
 import { chooseNeutralLocation, GRID_SCROLLER } from "./browse";
 import { INBOX_ROW, openInbox } from "./chat-drive";
-import { holdToast } from "./toast";
+import { addingToast } from "./toast";
 import { visit } from "./visit";
 
 const GRID_SCROLL_PX = 2400;
@@ -252,13 +252,13 @@ export const blockIgnored: Scene = {
 					.getByRole("button", { name: "Profile menu" });
 				await visit({ page, path: "/profile/100001", ready: menu });
 				await menu.click();
-				await page
-					.getByRole("menuitem", { name: "Block user" })
-					.click();
-				await page
-					.getByRole("button", { name: "Learn more" })
-					.waitFor();
-				await holdToast(page);
+				await addingToast({
+					page,
+					action: () =>
+						page
+							.getByRole("menuitem", { name: "Block user" })
+							.click(),
+				});
 			},
 		},
 	],
