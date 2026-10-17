@@ -8,18 +8,24 @@
 </script>
 
 <script lang="ts">
+	import "photoswipe/style.css";
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
+	import { tick } from "svelte";
 
 	import { giphyMediaSrc } from "$lib/api/messaging/giphy";
+	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
 	import {
 		preferencesLoaded,
 		preferencesSnapshot,
 	} from "$lib/app-data/preferences.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
+	import { openInLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: GiphyMessage["body"] } = $props();
+
+	const LIGHTBOX_SCALE = 4;
 
 	const media = new MessageMediaState();
 	const consented = $derived(
@@ -29,6 +35,7 @@
 		consented || loadedWithoutConsent.has(message.urlPath),
 	);
 	const src = $derived(giphyMediaSrc(message.urlPath));
+	const href = $derived(giphyMediaSrc(giphyOriginalUrl(message)));
 
 	let measured = $state<{
 		src: string;
@@ -43,6 +50,22 @@
 			? `${size.width} / ${size.height}`
 			: undefined,
 	);
+
+	let link = $state<HTMLAnchorElement | null>(null);
+
+	$effect(() => {
+		const gallery = media.el;
+		if (!gallery || !shown) return;
+		return openInLightbox({ gallery, thumbScale: LIGHTBOX_SCALE });
+	});
+
+	async function loadOnTap(event: MouseEvent) {
+		const hadFocus = document.activeElement === event.currentTarget;
+		loadedWithoutConsent.add(message.urlPath);
+		if (!hadFocus) return;
+		await tick();
+		link?.focus({ preventScroll: true });
+	}
 </script>
 
 <div
@@ -51,19 +74,27 @@
 	{@attach media.attach}
 >
 	{#if shown}
-		<MediaImage
-			{src}
-			alt="GIF"
-			{aspectRatio}
-			class={["w-full rounded-lg", media.cornerClass]}
-			imgClass="bg-card-foreground/10"
-			onload={({ naturalWidth, naturalHeight }) =>
-				(measured = {
-					src,
-					width: naturalWidth,
-					height: naturalHeight,
-				})}
-		/>
+		<a
+			bind:this={link}
+			{href}
+			rel="noreferrer"
+			aria-label="GIF"
+			class="item relative block"
+		>
+			<MediaImage
+				{src}
+				alt="GIF"
+				{aspectRatio}
+				class={["w-full rounded-lg", media.cornerClass]}
+				imgClass="bg-card-foreground/10"
+				onload={({ naturalWidth, naturalHeight }) =>
+					(measured = {
+						src,
+						width: naturalWidth,
+						height: naturalHeight,
+					})}
+			/>
+		</a>
 	{:else}
 		<button
 			type="button"
@@ -72,7 +103,7 @@
 				media.cornerClass,
 			]}
 			style:aspect-ratio={aspectRatio ?? "1 / 1"}
-			onclick={() => loadedWithoutConsent.add(message.urlPath)}
+			onclick={loadOnTap}
 		>
 			<GifIcon weight="fill" class="size-6" />
 			<span>GIF from GIPHY</span>

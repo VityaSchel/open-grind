@@ -48,6 +48,18 @@ function idInPath({ hostname, pathname }: URL): string | undefined {
 	return undefined;
 }
 
+export function giphyOriginalUrl({
+	id,
+	urlPath,
+}: {
+	id: string;
+	urlPath: string;
+}): string {
+	return GIPHY_ID.test(id)
+		? `https://media.giphy.com/media/${id}/giphy.gif`
+		: urlPath;
+}
+
 export function giphyIdFromLink(text: string): string | null {
 	const url = linkUrl(text);
 	const id = url === null ? undefined : idInPath(url);

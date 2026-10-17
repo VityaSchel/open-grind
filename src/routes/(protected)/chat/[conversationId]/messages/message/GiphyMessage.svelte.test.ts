@@ -11,6 +11,8 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesSnapshot: () => ({ giphyConsent: preferences.giphyConsent }),
 }));
 
+import PhotoSwipeLightbox from "photoswipe/lightbox";
+
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import Message from "./Message.svelte";
@@ -52,6 +54,9 @@ async function requestedSources(): Promise<(string | null)[]> {
 		img.getAttribute("src"),
 	);
 }
+
+const lightboxLink = () =>
+	document.querySelector<HTMLAnchorElement>('a[aria-label="GIF"]');
 
 beforeEach(() => {
 	preferences.giphyConsent = false;
@@ -105,6 +110,39 @@ describe("a GIF message", () => {
 			container.querySelector<HTMLElement>('[style*="aspect-ratio"]')
 				?.style.aspectRatio,
 		).toBe("356 / 200");
+	});
+
+	it("opens GIPHY's original in the photo lightbox", async () => {
+		const init = vi.spyOn(PhotoSwipeLightbox.prototype, "init");
+		preferences.giphyConsent = true;
+		renderGif();
+
+		expect(lightboxLink()?.getAttribute("href")).toBe(
+			"https://media.giphy.com/media/abc/giphy.gif",
+		);
+		await vi.waitFor(() => expect(init).toHaveBeenCalledTimes(1));
+	});
+
+	it("starts no lightbox for a GIF that isn't loaded yet", async () => {
+		const init = vi.spyOn(PhotoSwipeLightbox.prototype, "init");
+		renderGif();
+
+		await import("photoswipe/lightbox");
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(lightboxLink()).toBeNull();
+		expect(init).not.toHaveBeenCalled();
+	});
+
+	it("moves keyboard focus onto the GIF it loads", async () => {
+		renderGif();
+		const button = tapToLoad()!;
+		button.focus();
+
+		await fireEvent.click(button);
+		await tick();
+
+		expect(document.activeElement).toBe(lightboxLink());
 	});
 
 	it("asks again after switching accounts", async () => {

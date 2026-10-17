@@ -57,15 +57,32 @@ function setThumbsVisibility({
 	});
 }
 
+function scaleThumbSize({
+	lightbox,
+	thumbScale,
+}: {
+	lightbox: PhotoSwipeLightbox;
+	thumbScale: number;
+}) {
+	lightbox.addFilter("itemData", (itemData) => ({
+		...itemData,
+		width: (itemData.width ?? 0) * thumbScale,
+		height: (itemData.height ?? 0) * thumbScale,
+	}));
+}
+
 function configure({
 	lightbox,
 	gallery,
+	thumbScale,
 }: {
 	lightbox: PhotoSwipeLightbox;
 	gallery: HTMLElement;
+	thumbScale: number;
 }) {
 	applyPhotoSwipeErrorUi(lightbox);
 	applyPhotoSwipeThumbDimensions(lightbox);
+	if (thumbScale !== 1) scaleThumbSize({ lightbox, thumbScale });
 	applyPhotoSwipeViewportSync(lightbox);
 	applyPhotoSwipeBackGesture(lightbox);
 
@@ -91,8 +108,10 @@ function configure({
 
 export function openInLightbox({
 	gallery,
+	thumbScale = 1,
 }: {
 	gallery: HTMLElement;
+	thumbScale?: number;
 }): () => void {
 	let disposed = false;
 	let lightbox: PhotoSwipeLightbox | undefined;
@@ -107,7 +126,7 @@ export function openInLightbox({
 				showAnimationDuration: 500,
 				hideAnimationDuration: 500,
 			});
-			configure({ lightbox, gallery });
+			configure({ lightbox, gallery, thumbScale });
 			lightbox.init();
 		})
 		.catch((error) => console.error(error));

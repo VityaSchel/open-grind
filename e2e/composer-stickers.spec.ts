@@ -190,6 +190,38 @@ test.describe("composer stickers sheet", () => {
 		).toBeGreaterThan(1);
 	});
 
+	test("a GIF in the chat opens to fill the screen in the photo lightbox", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await gifTiles(page).nth(1).click();
+		await stickerSendButton(page).click();
+		const newest = page.locator(MESSAGE_ROW).last();
+		await expect(newest.getByText("Sending...")).toHaveCount(0);
+		await expect(
+			newest
+				.locator('[data-slot="giphy-message"]')
+				.getByRole("img", { name: "GIF" }),
+		).toHaveJSProperty("complete", true);
+
+		await newest.getByRole("link", { name: "GIF" }).click();
+
+		const shown = page
+			.locator(".pswp .pswp__item[aria-hidden=false] img")
+			.last();
+		await expect(shown).toBeVisible();
+		const viewport = page.viewportSize()!;
+		await expect
+			.poll(async () => {
+				const box = await shown.boundingBox();
+				return Math.max(
+					(box?.width ?? 0) / viewport.width,
+					(box?.height ?? 0) / viewport.height,
+				);
+			})
+			.toBeGreaterThan(0.95);
+	});
+
 	test("a sent Gaymoji closes the sheet and stays a Gaymoji in the chat", async ({
 		page,
 	}) => {
