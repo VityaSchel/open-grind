@@ -39,10 +39,6 @@
 		"reason": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
 		"explanation": "Screen reader label of a profile card link that doesn’t show who the user is; the only such card, the locked preview of a viewer in Viewed Me, has no link, so the label is never read out."
 	},
-	"settings.notifications.unsupportedOn": {
-		"reason": "Obsolete, and no code shows it: every platform the app names (Android, macOS, Windows and Linux) now shows the notification settings, and every other one shows settings.notifications.unsupported instead. It stays until the key is removed in Weblate.",
-		"explanation": "Former notice on the Notifications settings page, naming a platform without notifications; no version of the app shows it anymore, and it will be removed."
-	},
 	"shell.notFound.clippy.*": {
 		"reason": "Reachable by pressing and holding the “?” on the 404 page, which flips it to clippy.avif and opens this tooltip, but left out on purpose: clippy.avif has no license, so no screenshot shows the flipped face, even with a placeholder in its place.",
 		"explanation": "Part of the hidden Clippy joke on the “Page not found” page, shown by pressing and holding the “?”, where each list item finishes “Don’t worry, Clippy would never”; screenshots leave it out because the Clippy image has no license."
