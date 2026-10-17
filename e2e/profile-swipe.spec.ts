@@ -54,6 +54,7 @@ async function pagerHeldAt(page: Page, { fraction }: { fraction: number }) {
 		{ x: box.x + width * (0.8 - fraction), y },
 		{ steps: 16, holdMs: 16, release: false },
 	);
+	await afterTwoFrames(page);
 	return touch;
 }
 
