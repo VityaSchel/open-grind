@@ -255,6 +255,7 @@ pub fn run() {
             app_settings::open_app_settings,
             media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
+            appearance::webview_engine,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,

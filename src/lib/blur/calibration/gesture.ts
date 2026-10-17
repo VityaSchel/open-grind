@@ -1,6 +1,6 @@
 import { REFERENCE_PERIOD_MS, STALL_CLIP_PERIODS } from "./constants";
 
-const CLIP_MS = STALL_CLIP_PERIODS * REFERENCE_PERIOD_MS;
+export const CLIP_MS = STALL_CLIP_PERIODS * REFERENCE_PERIOD_MS;
 
 export function clippedMeanMs(intervalsMs: readonly number[]): number {
 	if (intervalsMs.length === 0) return Number.NaN;

@@ -62,7 +62,12 @@ describe("BackdropBlurSetting", () => {
 	it("says the device decided once the trial settles", async () => {
 		await setPreferences({
 			backdropBlurQuality: null,
-			backdropBlurCalibration: { quality: "medium", samples: [] },
+			backdropBlurCalibration: {
+				quality: "medium",
+				rung: "max",
+				engine: null,
+				samples: [],
+			},
 		});
 		render(BackdropBlurSetting);
 		expect(

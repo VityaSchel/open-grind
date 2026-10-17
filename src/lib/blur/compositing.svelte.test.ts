@@ -15,6 +15,7 @@ vi.mock("@tauri-apps/api/core", () => ({
 import {
 	backdropCompositingRenders,
 	hydrateBackdropCompositing,
+	webviewEngine,
 } from "./compositing.svelte";
 
 beforeEach(() => {
@@ -31,9 +32,14 @@ async function freshModule() {
 describe("hydrateBackdropCompositing", () => {
 	it("reports what the platform answered", async () => {
 		const module = await freshModule();
-		invokeMock.mockResolvedValue(false);
+		invokeMock.mockImplementation((command: string) =>
+			Promise.resolve(command === "webview_engine" ? "2.54.1" : false),
+		);
+		expect(module.backdropCompositingHydrated()).toBe(false);
 		await module.hydrateBackdropCompositing();
 		expect(module.backdropCompositingRenders()).toBe(false);
+		expect(module.webviewEngine()).toBe("2.54.1");
+		expect(module.backdropCompositingHydrated()).toBe(true);
 	});
 
 	it("keeps the blur when the platform answers nothing usable", async () => {
@@ -48,6 +54,8 @@ describe("hydrateBackdropCompositing", () => {
 			);
 			await module.hydrateBackdropCompositing();
 			expect(module.backdropCompositingRenders()).toBe(true);
+			expect(module.webviewEngine()).toBeNull();
+			expect(module.backdropCompositingHydrated()).toBe(true);
 		}
 	});
 
@@ -55,6 +63,7 @@ describe("hydrateBackdropCompositing", () => {
 		isTauriMock.mockReturnValue(false);
 		await hydrateBackdropCompositing();
 		expect(backdropCompositingRenders()).toBe(true);
+		expect(webviewEngine()).toBe(navigator.userAgent);
 		expect(invokeMock).not.toHaveBeenCalled();
 
 		const module = await freshModule();
@@ -62,6 +71,9 @@ describe("hydrateBackdropCompositing", () => {
 		isTauriMock.mockReturnValue(true);
 		await module.hydrateBackdropCompositing();
 		await module.hydrateBackdropCompositing();
-		expect(invokeMock).toHaveBeenCalledTimes(1);
+		expect(invokeMock.mock.calls.map(([command]) => command)).toEqual([
+			"backdrop_filter_renders",
+			"webview_engine",
+		]);
 	});
 });

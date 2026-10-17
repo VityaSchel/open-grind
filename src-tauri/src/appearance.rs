@@ -95,6 +95,11 @@ fn disabled_by_environment(read: impl Fn(&str) -> Option<String>) -> bool {
 }
 
 #[tauri::command]
+pub async fn webview_engine() -> Option<String> {
+	tauri::webview_version().ok()
+}
+
+#[tauri::command]
 pub fn backdrop_filter_renders() -> bool {
 	#[cfg(target_os = "linux")]
 	{
