@@ -44,7 +44,9 @@ export function fakePagerLayout({
 		{
 			id = 0,
 			target = touchTarget ?? node,
-		}: { id?: number; target?: EventTarget } = {},
+			x = 0,
+			y = 0,
+		}: { id?: number; target?: EventTarget; x?: number; y?: number } = {},
 	) => {
 		if (type === "touchstart") touchesOnScreen.add(id);
 		else touchesOnScreen.delete(id);
@@ -55,7 +57,9 @@ export function fakePagerLayout({
 					identifier,
 				})),
 			},
-			changedTouches: { value: [{ identifier: id }] },
+			changedTouches: {
+				value: [{ identifier: id, clientX: x, clientY: y }],
+			},
 		});
 		target.dispatchEvent(event);
 	};
