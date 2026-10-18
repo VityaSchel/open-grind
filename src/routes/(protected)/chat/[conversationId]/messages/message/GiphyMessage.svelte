@@ -20,7 +20,7 @@
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
 	import type { MediaDimensions } from "$lib/util/media-dimensions";
 	import { giphyConsented } from "../../giphy-consent/giphy-consent";
-	import { openInLightbox } from "./message-lightbox";
+	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: GiphyMessage["body"] } = $props();
@@ -52,7 +52,7 @@
 	$effect(() => {
 		const gallery = media.el;
 		if (!gallery || !shown) return;
-		return openInLightbox({ gallery, thumbScale: LIGHTBOX_SCALE });
+		return attachGalleryLightbox({ gallery, thumbScale: LIGHTBOX_SCALE });
 	});
 
 	async function loadOnTap(event: MouseEvent) {

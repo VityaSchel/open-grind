@@ -25,18 +25,18 @@ export class ExternalRequestError extends ApiError {
 	}
 }
 
-type ErrorType = typeof ApiError;
+type ApiErrorClass = typeof ApiError;
 
 function buildRestResponse({
 	status,
 	responseBody,
 	requestInfo,
-	ErrorType = ApiError,
+	ErrorClass = ApiError,
 }: {
 	status: number;
 	responseBody: Uint8Array;
 	requestInfo: RequestInfo;
-	ErrorType?: ErrorType;
+	ErrorClass?: ApiErrorClass;
 }) {
 	let decoded: string | undefined;
 	const text = () => (decoded ??= new TextDecoder().decode(responseBody));
@@ -50,7 +50,7 @@ function buildRestResponse({
 			if (status >= 200 && status < 300) {
 				return;
 			}
-			throw new ErrorType({
+			throw new ErrorClass({
 				message: `API request failed with status ${status}`,
 				request: requestInfo,
 				response: { status, body: text() },
@@ -64,7 +64,7 @@ function buildRestResponse({
 					path: requestInfo.path,
 					text: text(),
 				});
-				throw new ErrorType({
+				throw new ErrorClass({
 					message: "Failed to parse API response",
 					request: requestInfo,
 					response: { status, body: text() },
@@ -84,7 +84,7 @@ function buildRestResponse({
 				});
 			} catch (error) {
 				if (error instanceof ApiError) throw error;
-				throw new ErrorType({
+				throw new ErrorClass({
 					message: schemaMismatchMessage({
 						schema,
 						error,
@@ -102,11 +102,11 @@ function buildRestResponse({
 function decodeRestResponse({
 	encoded,
 	requestInfo,
-	ErrorType,
+	ErrorClass,
 }: {
 	encoded: unknown;
 	requestInfo: RequestInfo;
-	ErrorType?: ErrorType;
+	ErrorClass?: ApiErrorClass;
 }) {
 	if (typeof encoded !== "string") {
 		throw new Error("Invalid response from backend");
@@ -115,18 +115,18 @@ function decodeRestResponse({
 	const { status, body: responseBody } = z
 		.object({ status: z.number(), body: z.instanceof(Uint8Array) })
 		.parse(decoded);
-	return buildRestResponse({ status, responseBody, requestInfo, ErrorType });
+	return buildRestResponse({ status, responseBody, requestInfo, ErrorClass });
 }
 
 type RestResponse = ReturnType<typeof buildRestResponse>;
 
 async function respondFromDemoOrSend({
 	requestInfo,
-	ErrorType,
+	ErrorClass,
 	send,
 }: {
 	requestInfo: RequestInfo;
-	ErrorType?: ErrorType;
+	ErrorClass?: ApiErrorClass;
 	send: () => Promise<RestResponse>;
 }): Promise<RestResponse> {
 	if (!demoEnabled) return await send();
@@ -137,7 +137,7 @@ async function respondFromDemoOrSend({
 		body: requestInfo.body,
 	});
 	const responseBody = new TextEncoder().encode(JSON.stringify(body ?? null));
-	return buildRestResponse({ status, responseBody, requestInfo, ErrorType });
+	return buildRestResponse({ status, responseBody, requestInfo, ErrorClass });
 }
 
 function restInvokeError({
@@ -249,14 +249,14 @@ export async function fetchRest(
 	return await respondFromDemoOrSend({
 		requestInfo,
 		send: () =>
-			sendRequest({
+			sendRestRequest({
 				requestInfo,
 				abortController: options.abortController,
 			}),
 	});
 }
 
-async function sendRequest({
+async function sendRestRequest({
 	requestInfo,
 	abortController,
 }: {
@@ -333,7 +333,7 @@ async function sendExternalRequest({
 		return decodeRestResponse({
 			encoded,
 			requestInfo,
-			ErrorType: ExternalRequestError,
+			ErrorClass: ExternalRequestError,
 		});
 	} catch (error) {
 		throw externalInvokeError({ error, requestInfo });
@@ -350,7 +350,7 @@ export async function fetchExternal({
 	const requestInfo = { method: "GET", path: hostQualifiedPath(url) };
 	return await respondFromDemoOrSend({
 		requestInfo,
-		ErrorType: ExternalRequestError,
+		ErrorClass: ExternalRequestError,
 		send: () => sendExternalRequest({ url, range, requestInfo }),
 	});
 }

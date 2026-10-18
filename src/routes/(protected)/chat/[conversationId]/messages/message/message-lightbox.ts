@@ -106,7 +106,7 @@ function configure({
 	);
 }
 
-export function openInLightbox({
+export function attachGalleryLightbox({
 	gallery,
 	thumbScale = 1,
 }: {

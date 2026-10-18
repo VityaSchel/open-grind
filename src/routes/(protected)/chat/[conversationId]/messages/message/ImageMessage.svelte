@@ -7,7 +7,7 @@
 	import type { ImageMessage } from "$lib/model/messaging/messages";
 	import type { MediaDimensions } from "$lib/util/media-dimensions";
 	import { mediaRenewal } from "./media-renewal";
-	import { openInLightbox } from "./message-lightbox";
+	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: ImageMessage["body"] } = $props();
@@ -37,7 +37,7 @@
 	$effect(() => {
 		const gallery = media.el;
 		if (!gallery) return;
-		return openInLightbox({ gallery });
+		return attachGalleryLightbox({ gallery });
 	});
 </script>
 
