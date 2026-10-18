@@ -3,10 +3,6 @@
 	import SmileyIcon from "phosphor-svelte/lib/SmileyIcon";
 	import { untrack } from "svelte";
 
-	import {
-		preferencesLoaded,
-		preferencesSnapshot,
-	} from "$lib/app-data/preferences.svelte";
 	import poweredByGiphyBoxed from "$lib/assets/giphy/powered-by-giphy-boxed.png";
 	import poweredByGiphy from "$lib/assets/giphy/powered-by-giphy.png";
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
@@ -15,6 +11,7 @@
 	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
+	import { giphyConsented } from "../../giphy-consent/giphy-consent";
 	import type { SelectionTab, TabSelection } from "../attachments/tabs";
 	import ComposerGaymojiTab from "./gaymoji/ComposerGaymojiTab.svelte";
 	import ComposerGifTab from "./gifs/ComposerGifTab.svelte";
@@ -32,10 +29,8 @@
 	let sheetBody = $state<ReturnType<typeof MediaSheetBody> | null>(null);
 
 	const selection = $derived(selections[selectedTab]);
-	const giphyConsented = $derived(
-		preferencesLoaded() && preferencesSnapshot().giphyConsent,
-	);
-	const fullsize = $derived(selectedTab === "gaymoji" || giphyConsented);
+	const consented = $derived(giphyConsented());
+	const fullsize = $derived(selectedTab === "gaymoji" || consented);
 
 	const contentOffsets: Partial<Record<StickerTab, number>> = {};
 
@@ -102,7 +97,7 @@
 		/>
 
 		<MediaSheetTabBar
-			trailing={selectedTab === "gifs" && giphyConsented
+			trailing={selectedTab === "gifs" && consented
 				? giphyAttribution
 				: undefined}
 		>

@@ -15,13 +15,11 @@
 
 	import { giphyMediaSrc } from "$lib/api/messaging/giphy";
 	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
-	import {
-		preferencesLoaded,
-		preferencesSnapshot,
-	} from "$lib/app-data/preferences.svelte";
 	import GifBadge from "$lib/components/shared/GifBadge.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
+	import type { MediaDimensions } from "$lib/util/media-dimensions";
+	import { giphyConsented } from "../../giphy-consent/giphy-consent";
 	import { openInLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 
@@ -30,11 +28,8 @@
 	const LIGHTBOX_SCALE = 4;
 
 	const media = new MessageMediaState();
-	const consented = $derived(
-		preferencesLoaded() && preferencesSnapshot().giphyConsent,
-	);
 	const shown = $derived(
-		consented || loadedWithoutConsent.has(message.urlPath),
+		giphyConsented() || loadedWithoutConsent.has(message.urlPath),
 	);
 	const still = $derived(prefersReducedMotion.current);
 	const src = $derived(
@@ -42,11 +37,7 @@
 	);
 	const href = $derived(giphyMediaSrc(giphyOriginalUrl(message)));
 
-	let measured = $state<{
-		src: string;
-		width: number;
-		height: number;
-	} | null>(null);
+	let measured = $state<({ src: string } & MediaDimensions) | null>(null);
 	const size = $derived(
 		measured !== null && measured.src === src ? measured : message,
 	);

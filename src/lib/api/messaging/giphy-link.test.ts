@@ -8,7 +8,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
-import { getGifByLink, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
+import { getGifById, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
 import { toBase64 } from "$lib/util/base64";
 
 const ID = "xT0xeChUR33EsYNNRK";
@@ -71,12 +71,12 @@ describe("giphyIdFromLink", () => {
 	});
 });
 
-describe("getGifByLink", () => {
+describe("getGifById", () => {
 	it("reads only the headers of the 200 px tall GIF and its still, and sends the bare renditions", async () => {
 		respond({ status: 206, body: gifHeader({ width: 356, height: 200 }) });
 		respond({ status: 206, body: gifHeader({ width: 356, height: 200 }) });
 
-		const gif = await getGifByLink(ID);
+		const gif = await getGifById(ID);
 
 		expect(invokeMock).toHaveBeenCalledTimes(2);
 		expect(invokeMock).toHaveBeenCalledWith("fetch_external", {
@@ -104,7 +104,7 @@ describe("getGifByLink", () => {
 		respond({ status: 206, body: SQUARE });
 		respond({ status: 206, body: SQUARE });
 
-		const gif = await getGifByLink(ID);
+		const gif = await getGifById(ID);
 
 		expect(requestedUrls()).toEqual([
 			`${MEDIA}/200.gif`,
@@ -128,7 +128,7 @@ describe("getGifByLink", () => {
 		respond({ status: 206, body: gifHeader({ width: 480, height: 480 }) });
 		respond({ status: 206, body: gifHeader({ width: 480, height: 480 }) });
 
-		const gif = await getGifByLink(ID);
+		const gif = await getGifById(ID);
 
 		expect(gif?.body).toMatchObject({
 			urlPath: `${MEDIA}/giphy.gif`,
@@ -146,7 +146,7 @@ describe("getGifByLink", () => {
 		respond({ status: 206, body: gifHeader({ width: 480, height: 270 }) });
 		respond({ status: 404, body: PLACEHOLDER });
 
-		await expect(getGifByLink(ID)).resolves.toBeNull();
+		await expect(getGifById(ID)).resolves.toBeNull();
 		expect(requestedUrls()).toHaveLength(6);
 	});
 
@@ -157,6 +157,6 @@ describe("getGifByLink", () => {
 		});
 		respond({ status: 206, body: SQUARE });
 
-		await expect(getGifByLink(ID)).rejects.toThrow();
+		await expect(getGifById(ID)).rejects.toThrow();
 	});
 });

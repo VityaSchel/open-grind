@@ -1,9 +1,9 @@
 import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoLinkedGifSize } from "$lib/demo";
-import { giphyMediaSrc, type GiphyTile } from "./giphy";
+import type { MediaDimensions } from "$lib/util/media-dimensions";
+import { giphyBody, giphyMediaSrc, type GiphyTile } from "./giphy";
 
-type GifSize = { width: number; height: number };
-
+const GIPHY_MEDIA = "https://media.giphy.com/media";
 const RENDITIONS = [
 	{ animated: "200.gif", still: "200_s.gif" },
 	{ animated: "200w.gif", still: "200w_s.gif" },
@@ -55,9 +55,7 @@ export function giphyOriginalUrl({
 	id: string;
 	urlPath: string;
 }): string {
-	return GIPHY_ID.test(id)
-		? `https://media.giphy.com/media/${id}/giphy.gif`
-		: urlPath;
+	return GIPHY_ID.test(id) ? `${GIPHY_MEDIA}/${id}/giphy.gif` : urlPath;
 }
 
 export function giphyIdFromLink(text: string): string | null {
@@ -66,7 +64,7 @@ export function giphyIdFromLink(text: string): string | null {
 	return id !== undefined && GIPHY_ID.test(id) ? id : null;
 }
 
-function gifSize(bytes: Uint8Array): GifSize {
+function gifSize(bytes: Uint8Array): MediaDimensions {
 	const signature = new TextDecoder().decode(bytes.subarray(0, 4));
 	if (signature !== GIF_SIGNATURE || bytes.length < GIF_HEADER_LENGTH)
 		throw new Error("GIPHY sent something that isn't a GIF");
@@ -77,7 +75,7 @@ function gifSize(bytes: Uint8Array): GifSize {
 	};
 }
 
-async function fetchHeaderSize(url: string): Promise<GifSize | null> {
+async function fetchHeaderSize(url: string): Promise<MediaDimensions | null> {
 	const response = await fetchExternal({
 		url: new URL(url),
 		range: `bytes=0-${GIF_HEADER_LENGTH - 1}`,
@@ -95,7 +93,7 @@ async function fetchRenditionSize({
 	id: string;
 	urlPath: string;
 	stillPath: string;
-}): Promise<GifSize | null> {
+}): Promise<MediaDimensions | null> {
 	if (demoEnabled) return demoLinkedGifSize(id);
 	const [size, stillSize] = await Promise.all([
 		fetchHeaderSize(urlPath),
@@ -104,11 +102,10 @@ async function fetchRenditionSize({
 	return stillSize === null ? null : size;
 }
 
-export async function getGifByLink(id: string): Promise<GiphyTile | null> {
-	const media = `https://media.giphy.com/media/${id}`;
+export async function getGifById(id: string): Promise<GiphyTile | null> {
 	for (const { animated, still } of RENDITIONS) {
-		const urlPath = `${media}/${animated}`;
-		const stillPath = `${media}/${still}`;
+		const urlPath = `${GIPHY_MEDIA}/${id}/${animated}`;
+		const stillPath = `${GIPHY_MEDIA}/${id}/${still}`;
 		const size = await fetchRenditionSize({ id, urlPath, stillPath });
 		if (size === null) continue;
 		return {
@@ -116,14 +113,7 @@ export async function getGifByLink(id: string): Promise<GiphyTile | null> {
 			tileUrl: giphyMediaSrc(urlPath),
 			stillTileUrl: giphyMediaSrc(stillPath),
 			alt: "GIF from a GIPHY link",
-			body: {
-				id,
-				urlPath,
-				previewPath: urlPath,
-				stillPath,
-				...size,
-				imageHash: `giphy/${id}`,
-			},
+			body: giphyBody({ id, urlPath, stillPath, ...size }),
 		};
 	}
 	return null;

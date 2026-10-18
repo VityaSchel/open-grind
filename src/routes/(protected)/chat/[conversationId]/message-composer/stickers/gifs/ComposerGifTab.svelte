@@ -4,11 +4,11 @@
 	import { showErrorToast } from "$lib/api/error-toast";
 	import {
 		preferencesLoaded,
-		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { SelectionSet } from "$lib/util/selection.svelte";
+	import { giphyConsented } from "../../../giphy-consent/giphy-consent";
 	import type { TabSelection } from "../../attachments/tabs";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import { GifFeed } from "./gif-feed.svelte";
@@ -33,9 +33,7 @@
 	const SEND_LABEL = "Send GIF";
 
 	const composer = getMessageComposerContext();
-	const consented = $derived(
-		preferencesLoaded() && preferencesSnapshot().giphyConsent,
-	);
+	const consented = $derived(giphyConsented());
 	const selected = new SelectionSet<string>();
 	const feed = new GifFeed({
 		onRestart: () => {

@@ -15,6 +15,8 @@ export const GIPHY_PAGE_SIZE = 50;
 export const GIPHY_RATING = "r";
 export const GIPHY_MAX_OFFSET = { trending: 499, search: 4999 } as const;
 
+const IMAGE_HASH_PREFIX = "giphy/";
+
 export type GiphyBody = Extract<OutboundMessage, { type: "Giphy" }>["body"];
 
 export type GiphyTile = {
@@ -68,6 +70,24 @@ export function giphyMediaSrc(url: string): string {
 	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
 }
 
+export function giphyBody({
+	id,
+	urlPath,
+	stillPath,
+	width,
+	height,
+}: Omit<GiphyBody, "previewPath" | "imageHash">): GiphyBody {
+	return {
+		id,
+		urlPath,
+		previewPath: urlPath,
+		stillPath,
+		width,
+		height,
+		imageHash: `${IMAGE_HASH_PREFIX}${id}`,
+	};
+}
+
 function tileUrlOf({
 	fixed_width_downsampled: rendition,
 }: GiphyGif["images"]): string {
@@ -81,15 +101,13 @@ function giphyTile(gif: GiphyGif): GiphyTile {
 		tileUrl: giphyMediaSrc(tileUrlOf(gif.images)),
 		stillTileUrl: giphyMediaSrc(still.url),
 		alt: gif.title || gif.alt_text || "GIF",
-		body: {
+		body: giphyBody({
 			id: gif.id,
 			urlPath: animated.url,
-			previewPath: animated.url,
 			stillPath: still.url,
 			width: animated.width,
 			height: animated.height,
-			imageHash: `giphy/${gif.id}`,
-		},
+		}),
 	};
 }
 

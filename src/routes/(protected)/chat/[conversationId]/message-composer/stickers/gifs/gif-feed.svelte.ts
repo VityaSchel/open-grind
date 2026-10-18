@@ -4,7 +4,7 @@ import {
 	type GiphyTile,
 	searchGifs,
 } from "$lib/api/messaging/giphy";
-import { getGifByLink, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
+import { getGifById, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
 import { Generation } from "$lib/util/generation";
 import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 
@@ -32,7 +32,7 @@ async function fetchGifPage({
 	offset: number;
 }): Promise<GiphyPage> {
 	if (query.linkedId !== null) {
-		const gif = await getGifByLink(query.linkedId);
+		const gif = await getGifById(query.linkedId);
 		return { gifs: gif === null ? [] : [gif], nextOffset: null };
 	}
 	return query.text === ""
