@@ -257,5 +257,11 @@
 				"previewFailed": "Couldn’t read that photo"
 			}
 		}
+	},
+	"keyboardMedia": {
+		"errors": {
+			"readFailed": "Couldn’t read what the keyboard sent",
+			"notInChat": "Stickers can only be sent in a chat"
+		}
 	}
 }

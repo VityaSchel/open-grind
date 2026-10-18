@@ -175,6 +175,8 @@ export interface Messages {
 	"chat.deleteConversations.one.title": undefined;
 	"chat.filters.a11y.favoritesOnly": undefined;
 	"chat.filters.unread": undefined;
+	"chat.keyboardMedia.errors.notInChat": undefined;
+	"chat.keyboardMedia.errors.readFailed": undefined;
 	"chat.layout.selectConversation": undefined;
 	"chat.message.a11y.actions": undefined;
 	"chat.message.contextMenu.a11y.reactWithFire": undefined;

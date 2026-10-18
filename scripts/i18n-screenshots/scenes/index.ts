@@ -119,6 +119,10 @@ import {
 	viewsGrid,
 } from "./interest";
 import {
+	keyboardMediaFailed,
+	keyboardMediaOutsideChat,
+} from "./keyboard-media";
+import {
 	albumDropTarget,
 	chatDropFailures,
 	chatDropTarget,
@@ -483,4 +487,6 @@ export const scenes: Scene[] = [
 	sendPhotos,
 	sendVideos,
 	sendPreviewFailure,
+	keyboardMediaFailed,
+	keyboardMediaOutsideChat,
 ];

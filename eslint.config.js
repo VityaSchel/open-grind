@@ -343,6 +343,7 @@ const translatedScriptFiles = [
 	"src/lib/model/users/profiles.ts",
 	"src/lib/platform/app-menu.ts",
 	"src/lib/platform/keybindings.ts",
+	"src/lib/platform/keyboard-media.svelte.ts",
 	"src/lib/platform/media-file.ts",
 	"src/lib/platform/media-intake.svelte.ts",
 	"src/lib/platform/media-picker.ts",
