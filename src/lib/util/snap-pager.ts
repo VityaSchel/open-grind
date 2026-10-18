@@ -313,8 +313,6 @@ export class SnapPager {
 		this.#watchRelease();
 	};
 
-	// Behind a busy main thread the lift can arrive before the engine pans the
-	// pager for it, so the pager still reads as resting where the swipe began.
 	#panStillComing(event: TouchEvent): boolean {
 		const origin = this.#touchOrigin;
 		if (origin === null || this.#scrolledSinceTouch || this.#width <= 0)
