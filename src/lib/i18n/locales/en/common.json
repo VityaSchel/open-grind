@@ -116,6 +116,9 @@
 			"unsupportedFile": "That file isn’t a photo or video",
 			"linkNotMedia": "That link isn’t a photo or video",
 			"linkTooLarge": "That file is too large to add",
+			"readFailed": "Couldn’t read that file",
+			"linkFailed": "Couldn’t download that image",
+			"videosNotAllowed": "Videos can’t be added here",
 			"videoUnreadable": "That video’s format can’t be read",
 			"photoTooLarge": "Photos over {{megabytes}} MB can’t be uploaded",
 			"notAPhoto": "Only photos can be sent here",
@@ -125,7 +128,11 @@
 			"photoUndecodable": "Undecodable photo",
 			"outsideReadableFolders": "That file is outside the folders this app may read"
 		},
-		"uploadPhotosOrVideos": "Upload photos or videos"
+		"uploadPhotosOrVideos": "Upload photos or videos",
+		"drop": {
+			"onlyPhotosAndVideos": "Only photos and videos can be dropped here",
+			"onlyPhotos": "Only photos can be dropped here"
+		}
 	},
 	"albumShare": {
 		"errors": {

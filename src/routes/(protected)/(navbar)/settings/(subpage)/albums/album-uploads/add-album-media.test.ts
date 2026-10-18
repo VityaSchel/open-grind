@@ -348,7 +348,7 @@ describe("adding media to an album", () => {
 			}),
 		);
 		expect(sonner.toast.error).toHaveBeenCalledWith(
-			"That file isn't a photo or video",
+			"That file isn’t a photo or video",
 		);
 	});
 });

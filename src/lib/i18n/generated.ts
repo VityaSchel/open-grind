@@ -122,6 +122,7 @@ export interface Messages {
 	"chat.composer.attachments.tabs.albums": undefined;
 	"chat.composer.attachments.tabs.location": undefined;
 	"chat.composer.attachments.tabs.media": undefined;
+	"chat.composer.dropToSend": undefined;
 	"chat.composer.errors.sendFailed": undefined;
 	"chat.composer.replyPreview.a11y.cancel": undefined;
 	"chat.composer.voiceMessage.a11y.record": undefined;
@@ -301,7 +302,10 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.media.drop.onlyPhotos": undefined;
+	"common.media.drop.onlyPhotosAndVideos": undefined;
 	"common.media.errors.heicUnsupported": undefined;
+	"common.media.errors.linkFailed": undefined;
 	"common.media.errors.linkNotMedia": undefined;
 	"common.media.errors.linkTooLarge": undefined;
 	"common.media.errors.notAPhoto": undefined;
@@ -310,8 +314,10 @@ export interface Messages {
 	"common.media.errors.photoSizeUnreadable": undefined;
 	"common.media.errors.photoTooLarge": { megabytes: string };
 	"common.media.errors.photoUndecodable": undefined;
+	"common.media.errors.readFailed": undefined;
 	"common.media.errors.unsupportedFile": undefined;
 	"common.media.errors.videoUnreadable": undefined;
+	"common.media.errors.videosNotAllowed": undefined;
 	"common.media.uploadPhotosOrVideos": undefined;
 	"common.profileFields.healthPractices": undefined;
 	"common.profileList.a11y.profileId": { id: string };

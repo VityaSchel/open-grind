@@ -253,7 +253,7 @@ describe("pasting", () => {
 		paste([png()]);
 
 		await vi.waitFor(() =>
-			expect(toastError).toHaveBeenCalledWith("Couldn't read that file"),
+			expect(toastError).toHaveBeenCalledWith("Couldn’t read that file"),
 		);
 		expect(invokeMock).toHaveBeenCalledWith("discard_staged_media", {
 			id: "staged-1",
@@ -357,7 +357,7 @@ describe("dragging", () => {
 		);
 
 		expect(event.defaultPrevented).toBe(true);
-		expect(toastError).toHaveBeenCalledWith("Couldn't download that image");
+		expect(toastError).toHaveBeenCalledWith("Couldn’t download that image");
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
@@ -655,7 +655,7 @@ describe("screenMedia", () => {
 			"video",
 		]);
 		expect(toastError.mock.calls).toEqual([
-			["That file isn't a photo or video"],
+			["That file isn’t a photo or video"],
 		]);
 		for (const id of ["pdf", "zip"]) {
 			expect(invokeMock).toHaveBeenCalledWith("discard_staged_media", {
@@ -676,6 +676,6 @@ describe("screenMedia", () => {
 		});
 
 		expect(accepted.map(({ media }) => media.key)).toEqual(["photo"]);
-		expect(toastError).toHaveBeenCalledWith("Videos can't be added here");
+		expect(toastError).toHaveBeenCalledWith("Videos can’t be added here");
 	});
 });

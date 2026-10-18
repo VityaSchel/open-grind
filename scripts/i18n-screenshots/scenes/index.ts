@@ -118,6 +118,17 @@ import {
 	viewsGrid,
 } from "./interest";
 import {
+	albumDropTarget,
+	chatDropFailures,
+	chatDropTarget,
+	chatLinkRefusals,
+	newAlbumDropTarget,
+	profilePhotoDropRefusals,
+	profilePhotosDropTarget,
+	unsupportedDrag,
+	videoDragOnPhotos,
+} from "./media-drop";
+import {
 	albumPreviewFailures,
 	albumVideoPlayer,
 	profileLightbox,
@@ -459,4 +470,13 @@ export const scenes: Scene[] = [
 	googleInstallStages,
 	unimplementedAuthPages,
 	linuxOnboarding,
+	chatDropTarget,
+	albumDropTarget,
+	newAlbumDropTarget,
+	profilePhotosDropTarget,
+	unsupportedDrag,
+	videoDragOnPhotos,
+	profilePhotoDropRefusals,
+	chatDropFailures,
+	chatLinkRefusals,
 ];

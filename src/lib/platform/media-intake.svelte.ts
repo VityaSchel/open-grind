@@ -7,6 +7,7 @@ import z from "zod";
 
 import { uploadRefusalMessage } from "$lib/api/methods";
 import { demoEnabled } from "$lib/demo";
+import { type PlainMessageKey, t } from "$lib/i18n";
 import {
 	CHAT_MEDIA_MAX_BYTES,
 	chatMediaMaxLabel,
@@ -29,22 +30,19 @@ const DRAG_IDLE_MS = 1_000;
 const LINK = /^https?:\/\//i;
 const SECURE_LINK = /^https:\/\//i;
 
-const UNREADABLE_MESSAGE = "Couldn't read that file";
-const LINK_FAILED_MESSAGE = "Couldn't download that image";
-
 const stagedLinkSchema = z.object({ id: z.string(), mimeType: z.string() });
 
-const rejections = {
-	unsupported: "That file isn't a photo or video",
-	video: "Videos can't be added here",
-} as const;
+const rejectionMessageKeys = {
+	unsupported: "common.media.errors.unsupportedFile",
+	video: "common.media.errors.videosNotAllowed",
+} as const satisfies Record<string, PlainMessageKey>;
 
-type Rejection = keyof typeof rejections;
+type Rejection = keyof typeof rejectionMessageKeys;
 
-const dragRefusals = {
-	unsupported: "Only photos and videos can be dropped here",
-	video: "Only photos can be dropped here",
-} as const satisfies Record<Rejection, string>;
+const dragRefusalKeys = {
+	unsupported: "common.media.drop.onlyPhotosAndVideos",
+	video: "common.media.drop.onlyPhotos",
+} as const satisfies Record<Rejection, PlainMessageKey>;
 
 const MEDIA_PATH =
 	/\.(jpe?g|jfif|png|webp|gif|heic|heif|bmp|tiff?|mp4|mov|m4v|3gp)$/i;
@@ -91,7 +89,7 @@ export const mediaDrop = {
 			kinds: draggedKinds,
 			videos: target.videos,
 		});
-		return rejection === null ? null : dragRefusals[rejection];
+		return rejection === null ? null : t(dragRefusalKeys[rejection]);
 	},
 };
 
@@ -179,14 +177,17 @@ function onPaste(event: ClipboardEvent) {
 		target,
 		items: withinSizeLimit(files),
 		stage: stageFile,
-		failure: () => UNREADABLE_MESSAGE,
+		failure: () => t("common.media.errors.readFailed"),
 	});
 }
 
 function withinSizeLimit(files: File[]): File[] {
 	const fitting = files.filter((file) => file.size <= CHAT_MEDIA_MAX_BYTES);
-	if (fitting.length < files.length)
-		toast.error(`Larger than the ${chatMediaMaxLabel()} limit`);
+	if (fitting.length < files.length) {
+		toast.error(
+			t("feedback.appError.overLimit", { limit: chatMediaMaxLabel() }),
+		);
+	}
 	return fitting;
 }
 
@@ -203,7 +204,7 @@ function draggedTypes(event: DragEvent): readonly string[] {
 }
 
 function carriesFiles(event: DragEvent): boolean {
-	return draggedTypes(event).includes("Files");
+	return draggedTypes(event).some((type) => type === "Files");
 }
 
 function carriesMarkup(event: DragEvent): boolean {
@@ -260,7 +261,7 @@ function onDrop(event: DragEvent) {
 		if (target === undefined || source === undefined) return;
 		event.preventDefault();
 		if (source === null) {
-			toast.error(LINK_FAILED_MESSAGE);
+			toast.error(t("common.media.errors.linkFailed"));
 			return;
 		}
 		void deliver({
@@ -280,7 +281,7 @@ function onDrop(event: DragEvent) {
 		target,
 		items: withinSizeLimit(files),
 		stage: stageFile,
-		failure: () => UNREADABLE_MESSAGE,
+		failure: () => t("common.media.errors.readFailed"),
 	});
 }
 
@@ -338,7 +339,7 @@ function onNativeDrag({ payload }: Event<DragDropEvent>) {
 function linkFailure(error: unknown): string {
 	return (
 		uploadRefusalMessage({ error, limitLabel: chatMediaMaxLabel() }) ??
-		LINK_FAILED_MESSAGE
+		t("common.media.errors.linkFailed")
 	);
 }
 
@@ -452,9 +453,9 @@ export async function screenMedia({
 		}
 		refused.push({ media: item, rejection: rejection ?? "unsupported" });
 	}
-	for (const [rejection, message] of Object.entries(rejections)) {
+	for (const [rejection, key] of Object.entries(rejectionMessageKeys)) {
 		if (refused.some((item) => item.rejection === rejection)) {
-			toast.error(message);
+			toast.error(t(key));
 		}
 	}
 	await discardStagedMedia(refused.map((item) => item.media));

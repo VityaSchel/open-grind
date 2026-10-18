@@ -182,6 +182,7 @@
 		"errors": {
 			"sendFailed": "Couldn’t send message"
 		},
+		"dropToSend": "Drop to send",
 		"replyPreview": {
 			"a11y": {
 				"cancel": "Cancel reply"

@@ -322,7 +322,7 @@ test.describe("pasting and dropping media", () => {
 		await paste(page, PDF);
 
 		const toast = page.locator("[data-sonner-toast]", {
-			hasText: "That file isn't a photo or video",
+			hasText: "That file isn’t a photo or video",
 		});
 		await expect(toast).toBeVisible();
 		const onTop = await toast.evaluate((element) => {
