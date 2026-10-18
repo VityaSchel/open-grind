@@ -8,8 +8,7 @@ import {
 } from "$lib/model/messaging/gaymoji";
 import { proxyMediaUrl } from "$lib/util/media";
 
-export const GAYMOJI_MANIFEST_URL =
-	"https://cdns.grindr.com/grindr/chat/gaymoji";
+const GAYMOJI_MANIFEST_URL = "https://cdns.grindr.com/grindr/chat/gaymoji";
 
 const IMAGE_HASH_PREFIX = "gaymoji/";
 

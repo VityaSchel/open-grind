@@ -21,7 +21,7 @@ import {
 	fullConversationSchema,
 } from "$lib/model/messaging/conversations";
 import { gaymojiManifestSchema } from "$lib/model/messaging/gaymoji";
-import { giphyResponseSchema } from "$lib/model/messaging/giphy";
+import { giphyResponseSchema } from "$lib/model/messaging/gifs";
 import { previewLabel } from "$lib/model/messaging/message-preview";
 import {
 	apiResponseMessageSchema,

@@ -8,7 +8,7 @@ import {
 	vi,
 } from "vitest";
 
-import type { GiphyPage, GiphyTile } from "$lib/api/messaging/giphy";
+import type { GiphyPage, GiphyTile } from "$lib/api/messaging/gifs";
 
 const api = vi.hoisted(() => ({
 	getTrendingGifs:
@@ -23,7 +23,7 @@ const link = vi.hoisted(() => ({
 	getGifById: vi.fn<(id: string) => Promise<GiphyTile | null>>(),
 }));
 
-vi.mock("$lib/api/messaging/giphy", () => api);
+vi.mock("$lib/api/messaging/gifs", () => api);
 vi.mock("$lib/api/messaging/giphy-link", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/api/messaging/giphy-link")>()),
 	getGifById: link.getGifById,

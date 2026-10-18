@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { giphyResponseSchema } from "$lib/model/messaging/giphy";
+import { giphyResponseSchema } from "$lib/model/messaging/gifs";
 
 const portlandia =
 	"https://media2.giphy.com/media/v1.Y2lkPTA1Njg2OTFlaTZubjdsdG9kcWZ1eXJhemIyMnV3Zmg4ZmMyeGM2MHkycDY0OWYwOCZlcD12MV9naWZzX3RyZW5kaW5nJmN0PWc/xT0xeChUR33EsYNNRK";

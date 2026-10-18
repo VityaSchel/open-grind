@@ -1,4 +1,6 @@
+import { giphyBody } from "$lib/model/messaging/gifs";
 import { hashString } from "$lib/util/random";
+import type { MediaDimensions } from "$lib/util/media-dimensions";
 
 const DEMO_GIPHY_TRENDING_TOTAL = 172;
 const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
@@ -46,12 +48,22 @@ function aspectRatioOf(id: string): number {
 	return ASPECT_RATIOS[hashString(id) % ASPECT_RATIOS.length] ?? 1;
 }
 
-function fixedWidthHeight(id: string): number {
-	return Math.round(RENDITION_SIZE / aspectRatioOf(id));
+function fixedWidthSize(id: string): MediaDimensions {
+	return {
+		width: RENDITION_SIZE,
+		height: Math.round(RENDITION_SIZE / aspectRatioOf(id)),
+	};
 }
 
-function fixedHeightWidth(id: string): number {
-	return Math.round(RENDITION_SIZE * aspectRatioOf(id));
+function fixedHeightSize(id: string): MediaDimensions {
+	return {
+		width: Math.round(RENDITION_SIZE * aspectRatioOf(id)),
+		height: RENDITION_SIZE,
+	};
+}
+
+function wireSize({ width, height }: MediaDimensions) {
+	return { width: String(width), height: String(height) };
 }
 
 function mediaUrl({ id, file }: { id: string; file: string }): string {
@@ -59,14 +71,8 @@ function mediaUrl({ id, file }: { id: string; file: string }): string {
 }
 
 function demoGifObject({ id, title }: DemoGif) {
-	const fixedWidth = {
-		width: String(RENDITION_SIZE),
-		height: String(fixedWidthHeight(id)),
-	};
-	const fixedHeight = {
-		width: String(fixedHeightWidth(id)),
-		height: String(RENDITION_SIZE),
-	};
+	const fixedWidth = wireSize(fixedWidthSize(id));
+	const fixedHeight = wireSize(fixedHeightSize(id));
 	return {
 		type: "gif",
 		id,
@@ -178,37 +184,32 @@ export function demoGiphySearch(params: URLSearchParams) {
 
 export function demoGiphyMessageBody(seed: string) {
 	const id = demoGifId(seed);
-	const animated = mediaUrl({ id, file: "200.gif" });
-	return {
+	return giphyBody({
 		id,
-		urlPath: animated,
-		previewPath: animated,
+		urlPath: mediaUrl({ id, file: "200.gif" }),
 		stillPath: mediaUrl({ id, file: "200_s.gif" }),
-		width: fixedHeightWidth(id),
-		height: RENDITION_SIZE,
-		imageHash: `giphy/${id}`,
-	};
+		...fixedHeightSize(id),
+	});
 }
 
-export function demoLinkedGifSize(
-	id: string,
-): { width: number; height: number } | null {
+export function demoLinkedGifSize(id: string): MediaDimensions | null {
 	if (id === DEMO_GIPHY_MISSING_ID) return null;
-	return { width: fixedHeightWidth(id), height: RENDITION_SIZE };
+	return fixedHeightSize(id);
 }
 
 function svgDataUrl(svg: string): string {
 	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-function renditionSize({ id, file }: { id: string; file: string }): {
-	width: number;
-	height: number;
-} {
-	if (file.startsWith("200w"))
-		return { width: RENDITION_SIZE, height: fixedWidthHeight(id) };
-	if (file.startsWith("200"))
-		return { width: fixedHeightWidth(id), height: RENDITION_SIZE };
+function renditionSize({
+	id,
+	file,
+}: {
+	id: string;
+	file: string;
+}): MediaDimensions {
+	if (file.startsWith("200w")) return fixedWidthSize(id);
+	if (file.startsWith("200")) return fixedHeightSize(id);
 	return { width: RENDITION_SIZE, height: RENDITION_SIZE };
 }
 

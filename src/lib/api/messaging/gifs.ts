@@ -1,23 +1,20 @@
 import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoGiphyMediaUrl } from "$lib/demo";
 import {
+	type GiphyBody,
+	giphyBody,
 	type GiphyGif,
 	type GiphyPagination,
 	giphyResponseSchema,
-} from "$lib/model/messaging/giphy";
+} from "$lib/model/messaging/gifs";
 import { searchLanguage } from "$lib/util/language";
 import { proxyMediaUrl } from "$lib/util/media";
-import type { OutboundMessage } from "$lib/model/messaging/messages";
 
-export const GIPHY_ORIGIN = "https://api.giphy.com";
-export const GIPHY_API_KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
-export const GIPHY_PAGE_SIZE = 50;
-export const GIPHY_RATING = "r";
-export const GIPHY_MAX_OFFSET = { trending: 499, search: 4999 } as const;
-
-const IMAGE_HASH_PREFIX = "giphy/";
-
-export type GiphyBody = Extract<OutboundMessage, { type: "Giphy" }>["body"];
+const GIPHY_ORIGIN = "https://api.giphy.com";
+const GIPHY_API_KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
+const GIPHY_PAGE_SIZE = 50;
+const GIPHY_RATING = "r";
+const GIPHY_MAX_OFFSET = { trending: 499, search: 4999 } as const;
 
 export type GiphyTile = {
 	id: string;
@@ -68,24 +65,6 @@ function nextGiphyOffset({
 
 export function giphyMediaSrc(url: string): string {
 	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
-}
-
-export function giphyBody({
-	id,
-	urlPath,
-	stillPath,
-	width,
-	height,
-}: Omit<GiphyBody, "previewPath" | "imageHash">): GiphyBody {
-	return {
-		id,
-		urlPath,
-		previewPath: urlPath,
-		stillPath,
-		width,
-		height,
-		imageHash: `${IMAGE_HASH_PREFIX}${id}`,
-	};
 }
 
 function tileUrlOf({

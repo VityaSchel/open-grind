@@ -2,10 +2,7 @@
 	import { untrack } from "svelte";
 
 	import { preferencesLoaded } from "$lib/app-data/preferences.svelte";
-	import {
-		giphyConsented,
-		turnOnGiphy,
-	} from "../../../giphy-consent/giphy-consent";
+	import { giphyConsented } from "../../../giphy/giphy-consent";
 	import type { StickerPick } from "../sticker-pick";
 	import { GifFeed } from "./gif-feed.svelte";
 	import GifGrid from "./GifGrid.svelte";
@@ -29,19 +26,11 @@
 	const consented = $derived(giphyConsented());
 	const feed = new GifFeed({ onRestart: () => onFeedRestart?.() });
 
-	let agreeing = $state(false);
-
 	$effect(() => {
 		if (consented && active) untrack(() => feed.start());
 	});
 
 	$effect(() => () => feed.destroy());
-
-	async function agree() {
-		agreeing = true;
-		await turnOnGiphy();
-		agreeing = false;
-	}
 </script>
 
 {#if preferencesLoaded()}
@@ -66,6 +55,6 @@
 			{/if}
 		</div>
 	{:else}
-		<GiphyConsentNote pending={agreeing} onAgree={() => void agree()} />
+		<GiphyConsentNote />
 	{/if}
 {/if}

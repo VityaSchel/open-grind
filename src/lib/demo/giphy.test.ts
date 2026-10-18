@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { demoGiphyMediaUrl, demoRoute } from "$lib/demo";
 import { demoGiphyMessageBody } from "$lib/demo/mock/giphy";
-import { giphyResponseSchema } from "$lib/model/messaging/giphy";
+import { giphyResponseSchema } from "$lib/model/messaging/gifs";
 
 const key = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
 
@@ -84,7 +84,6 @@ describe("demo GIPHY", () => {
 		const svg = decodeURIComponent(demoGiphyMediaUrl(body.urlPath));
 
 		expect(svg).toContain(`width="${body.width}" height="${body.height}"`);
-		expect(body.imageHash).toBe(`giphy/${body.id}`);
 	});
 
 	it("refuses routes GIPHY does not serve", () => {

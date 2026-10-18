@@ -3,14 +3,14 @@
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import { giphyMediaSrc } from "$lib/api/messaging/giphy";
+	import { giphyMediaSrc } from "$lib/api/messaging/gifs";
 	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
-	import GifBadge from "$lib/components/shared/GifBadge.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
 	import type { MediaDimensions } from "$lib/util/media-dimensions";
-	import { giphyConsented } from "../../giphy-consent/giphy-consent";
-	import GiphyConsentDialog from "../../giphy-consent/GiphyConsentDialog.svelte";
+	import GifBadge from "../../giphy/GifBadge.svelte";
+	import { giphyConsented } from "../../giphy/giphy-consent";
+	import GiphyConsentDialog from "../../giphy/GiphyConsentDialog.svelte";
 	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 

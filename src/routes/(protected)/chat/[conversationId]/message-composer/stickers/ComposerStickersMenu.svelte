@@ -13,7 +13,7 @@
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
-	import { giphyConsented } from "../../giphy-consent/giphy-consent";
+	import { giphyConsented } from "../../giphy/giphy-consent";
 	import { getMessageComposerContext } from "../message-composer-context.svelte";
 	import ComposerGaymojiTab from "./gaymoji/ComposerGaymojiTab.svelte";
 	import ComposerGifTab from "./gifs/ComposerGifTab.svelte";

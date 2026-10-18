@@ -1,6 +1,9 @@
 import z from "zod";
 
 import { arrayOfParsableEntries } from "$lib/model/tolerance";
+import type { OutboundMessage } from "$lib/model/messaging/messages";
+
+const IMAGE_HASH_PREFIX = "giphy/";
 
 const giphyMediaUrlSchema = z.url({
 	protocol: /^https$/,
@@ -71,3 +74,23 @@ export const giphyResponseSchema = z.object({
 });
 
 export type GiphyResponse = z.infer<typeof giphyResponseSchema>;
+
+export type GiphyBody = Extract<OutboundMessage, { type: "Giphy" }>["body"];
+
+export function giphyBody({
+	id,
+	urlPath,
+	stillPath,
+	width,
+	height,
+}: Omit<GiphyBody, "previewPath" | "imageHash">): GiphyBody {
+	return {
+		id,
+		urlPath,
+		previewPath: urlPath,
+		stillPath,
+		width,
+		height,
+		imageHash: `${IMAGE_HASH_PREFIX}${id}`,
+	};
+}

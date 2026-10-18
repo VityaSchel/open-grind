@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import GiphyConsentText from "../../../giphy-consent/GiphyConsentText.svelte";
+	import { turnOnGiphy } from "../../../giphy/giphy-consent";
+	import GiphyConsentText from "../../../giphy/GiphyConsentText.svelte";
 
-	let { pending, onAgree }: { pending: boolean; onAgree: () => void } =
-		$props();
+	let pending = $state(false);
+
+	async function agree() {
+		pending = true;
+		await turnOnGiphy();
+		pending = false;
+	}
 </script>
 
 <div
@@ -16,7 +22,7 @@
 	>
 		Enable GIPHY? <GiphyConsentText />
 	</p>
-	<Button disabled={pending} aria-busy={pending} onclick={onAgree}>
+	<Button disabled={pending} aria-busy={pending} onclick={() => void agree()}>
 		{#if pending}
 			<Spinner aria-hidden="true" />
 		{/if}

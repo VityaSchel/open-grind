@@ -21,7 +21,7 @@ vi.mock("$lib/api/session-lost", () => ({
 }));
 
 import { ApiError } from "$lib/api/api-error";
-import { getTrendingGifs, searchGifs } from "$lib/api/messaging/giphy";
+import { getTrendingGifs, searchGifs } from "$lib/api/messaging/gifs";
 import { toBase64 } from "$lib/util/base64";
 
 const KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";

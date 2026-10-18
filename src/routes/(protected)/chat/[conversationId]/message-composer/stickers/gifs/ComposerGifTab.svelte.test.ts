@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { GiphyPage } from "$lib/api/messaging/giphy";
+import type { GiphyPage } from "$lib/api/messaging/gifs";
 
 const api = vi.hoisted(() => ({
 	getTrendingGifs:
@@ -22,7 +22,7 @@ const preferences = vi.hoisted(() => ({
 		vi.fn<(values: { giphyConsent: boolean }) => Promise<void>>(),
 }));
 
-vi.mock("$lib/api/messaging/giphy", () => api);
+vi.mock("$lib/api/messaging/gifs", () => api);
 vi.mock("$lib/app-data/preferences.svelte", async () => {
 	const { SvelteMap } = await import("svelte/reactivity");
 	preferences.values = new SvelteMap();

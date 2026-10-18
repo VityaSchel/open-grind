@@ -3,7 +3,7 @@ import {
 	type GiphyPage,
 	type GiphyTile,
 	searchGifs,
-} from "$lib/api/messaging/giphy";
+} from "$lib/api/messaging/gifs";
 import { getGifById, giphyIdFromLink } from "$lib/api/messaging/giphy-link";
 import { Generation } from "$lib/util/generation";
 import { SentinelPaging } from "$lib/util/sentinel-paging.svelte";

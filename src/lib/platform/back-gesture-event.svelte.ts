@@ -3,7 +3,7 @@ import { SvelteMap } from "svelte/reactivity";
 
 export type BackGestureLayer = "stack" | "screen" | "overlay";
 
-export type BackGestureHandler = () => boolean;
+type BackGestureHandler = () => boolean;
 
 const LAYERS_TOP_FIRST: readonly BackGestureLayer[] = [
 	"overlay",

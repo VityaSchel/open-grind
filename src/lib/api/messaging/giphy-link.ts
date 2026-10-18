@@ -1,7 +1,8 @@
 import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoLinkedGifSize } from "$lib/demo";
+import { giphyBody } from "$lib/model/messaging/gifs";
 import type { MediaDimensions } from "$lib/util/media-dimensions";
-import { giphyBody, giphyMediaSrc, type GiphyTile } from "./giphy";
+import { giphyMediaSrc, type GiphyTile } from "./gifs";
 
 const GIPHY_MEDIA = "https://media.giphy.com/media";
 const RENDITIONS = [

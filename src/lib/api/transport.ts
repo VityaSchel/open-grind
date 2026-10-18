@@ -17,7 +17,7 @@ import type { MediaFileDescriptor } from "$lib/platform/media-file";
 
 type RequestInfo = { method: string; path: string; body?: unknown };
 
-export class ExternalRequestError extends ApiError {
+class ExternalRequestError extends ApiError {
 	override get retryable(): boolean {
 		if (this.kind === "Http" || this.kind === "Connect") return true;
 		const status = this.response?.status;
