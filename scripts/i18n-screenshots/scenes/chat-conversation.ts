@@ -14,6 +14,7 @@ import {
 	lastIncoming,
 	lastOutgoing,
 	MESSAGE_MENU,
+	messageMenuClosed,
 	MESSAGES_SCROLLER,
 	openConversation,
 	openInbox,
@@ -131,7 +132,7 @@ export const pointerMessageMenu: Scene = {
 			id: "chat/conversation/actions-button",
 			drive: async (page) => {
 				await page.keyboard.press("Escape");
-				await page.locator(MESSAGE_MENU).waitFor({ state: "hidden" });
+				await messageMenuClosed(page);
 				await page.keyboard.press("Tab");
 				const actions = page.getByRole("button", {
 					name: "Message actions",
