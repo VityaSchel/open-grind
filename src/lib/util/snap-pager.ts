@@ -404,6 +404,7 @@ export class SnapPager {
 
 // Blink floors contentBoxSize to a layout unit while panes sit at exact device
 // pixels, so every page would add the dropped fraction to position * width.
+// https://issues.chromium.org/issues/575023846
 function exactInlineSize({
 	contentBoxSize,
 	devicePixelContentBoxSize,
