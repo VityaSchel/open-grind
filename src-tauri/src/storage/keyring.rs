@@ -2,7 +2,10 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 
 use crate::error::AppError;
 
-const SERVICE: &str = "open-grind";
+#[cfg(target_os = "macos")]
+pub(super) const SERVICE: &str = "org.opengrind.app";
+#[cfg(not(target_os = "macos"))]
+pub(super) const SERVICE: &str = "open-grind";
 
 static KEYRING_LOCK: Mutex<()> = Mutex::new(());
 
@@ -31,7 +34,7 @@ impl Entry {
 	}
 }
 
-fn exclusive() -> MutexGuard<'static, ()> {
+pub(super) fn exclusive() -> MutexGuard<'static, ()> {
 	KEYRING_LOCK.lock().unwrap_or_else(PoisonError::into_inner)
 }
 

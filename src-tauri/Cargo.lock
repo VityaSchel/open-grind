@@ -3733,6 +3733,7 @@ dependencies = [
  "objc2-user-notifications",
  "rfd",
  "rmp-serde",
+ "security-framework",
  "semver",
  "serde",
  "serde_bytes",

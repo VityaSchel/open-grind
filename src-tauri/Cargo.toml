@@ -22,7 +22,7 @@ name = "live-counterpart"
 path = "../e2e-live/counterpart/main.rs"
 
 [features]
-keychain = ["dep:apple-native-keyring-store"]
+keychain = ["dep:apple-native-keyring-store", "dep:security-framework"]
 private-api = []
 devtools = ["dep:tauri-plugin-devtools"]
 
@@ -64,6 +64,7 @@ sha2 = "0.10"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
+security-framework = { version = "3.7", optional = true }
 # Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs
 objc2 = "0.6"
 # Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs

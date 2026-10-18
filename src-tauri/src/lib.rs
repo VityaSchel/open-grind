@@ -322,7 +322,12 @@ pub fn run() {
             ))]
             storage::init_file_store(app.path().app_local_data_dir()?);
 
-            app.manage(storage::init_keyring());
+            let backend = storage::init_keyring();
+            #[cfg(all(target_os = "macos", feature = "keychain"))]
+            if backend == storage::StorageBackend::Keyring {
+                storage::adopt_legacy_items();
+            }
+            app.manage(backend);
 
             let device = DeviceStorage::load_or_create();
 
