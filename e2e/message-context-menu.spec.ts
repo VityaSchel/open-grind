@@ -154,6 +154,24 @@ test("a message arriving under an open context menu leaves the menu in place", a
 	);
 });
 
+function userSelectOf(page: Page, selector: string): Promise<string> {
+	return page
+		.locator(selector)
+		.evaluate((node) => getComputedStyle(node).userSelect);
+}
+
+test("only the message's own text can be selected in its context menu", async ({
+	page,
+}) => {
+	await openConversation(page, { width: 420, height: 800 });
+	const held = await deliver(page, { text: "Select me", senderId: THEM });
+	await openMenuOn(held);
+
+	expect(await userSelectOf(page, "dialog[open]")).toBe("none");
+	expect(await userSelectOf(page, MENU_LIST)).toBe("none");
+	expect(await userSelectOf(page, LIFTED_BUBBLE)).toBe("text");
+});
+
 async function openMenuNearBottom(page: Page): Promise<void> {
 	await openConversation(page, { width: 420, height: 800 });
 	const held = await deliver(page, { text: LONG_TEXT, senderId: THEM });
