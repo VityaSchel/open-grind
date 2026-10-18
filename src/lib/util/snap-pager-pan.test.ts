@@ -22,7 +22,7 @@ function restingOnSecond({ count }: { count?: number } = {}) {
 	return h;
 }
 
-describe("SnapPager at the lift of a pan the page has not seen move it", () => {
+describe("SnapPager when a swipe lifts before its pan reaches the page", () => {
 	it("waits for the swipe's own scroll back toward the previous profile", () => {
 		const h = restingOnSecond();
 		h.touch("touchstart", START);
