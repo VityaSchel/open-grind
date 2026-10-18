@@ -253,6 +253,67 @@ describe("SnapPager under its own touches", () => {
 	});
 });
 
+describe("SnapPager when a swipe lifts before its pan reaches the page", () => {
+	function swipedLeftUnseen() {
+		vi.useFakeTimers();
+		const h = harness();
+		h.touch("touchstart", { x: 300, y: 400 });
+		h.touch("touchend", { x: 80, y: 410 });
+		return h;
+	}
+
+	it("waits for the pan instead of resting where the swipe began", () => {
+		const h = swipedLeftUnseen();
+		expect(h.onRest).not.toHaveBeenCalled();
+
+		h.scroll(0.6 * WIDTH);
+		h.scroll(WIDTH);
+
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(1);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("rests where the swipe began once no pan comes", () => {
+		const h = swipedLeftUnseen();
+
+		vi.advanceTimersByTime(499);
+		expect(h.onRest).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(1);
+
+		expect(h.onRest).toHaveBeenCalledExactlyOnceWith(0);
+	});
+
+	it("stops waiting on teardown", () => {
+		const h = swipedLeftUnseen();
+
+		h.detach();
+
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it("rests at the lift when no pan can follow", () => {
+		vi.useFakeTimers();
+		const h = harness();
+		const swipes = {
+			"past the first page": [{ x: 80 }, { x: 300 }],
+			"mostly downward": [
+				{ x: 300, y: 100 },
+				{ x: 200, y: 400 },
+			],
+			"within the touch slop": [{ x: 300 }, { x: 294 }],
+		};
+
+		for (const [swipe, [from, to]] of Object.entries(swipes)) {
+			h.onRest.mockClear();
+			h.touch("touchstart", from);
+			h.touch("touchend", to);
+
+			expect(h.onRest, swipe).toHaveBeenCalledExactlyOnceWith(0);
+		}
+		expect(vi.getTimerCount()).toBe(0);
+	});
+});
+
 describe("SnapPager when the engine leaves it between profiles", () => {
 	it("glides to the nearest profile once scrolling ends", () => {
 		const h = harness();

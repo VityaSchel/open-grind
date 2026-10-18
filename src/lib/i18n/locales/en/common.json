@@ -114,6 +114,8 @@
 	"media": {
 		"errors": {
 			"unsupportedFile": "That file isn’t a photo or video",
+			"linkNotMedia": "That link isn’t a photo or video",
+			"linkTooLarge": "That file is too large to add",
 			"videoUnreadable": "That video’s format can’t be read",
 			"photoTooLarge": "Photos over {{megabytes}} MB can’t be uploaded",
 			"notAPhoto": "Only photos can be sent here",

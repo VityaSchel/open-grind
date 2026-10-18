@@ -44,6 +44,33 @@ test("the bottom navbar fits a 1080px physical-width screen", async ({
 	}
 });
 
+test("tab widths don't change when selecting a tab", async ({ page }) => {
+	await installTauriShim(page);
+	await page.goto("/right-now");
+	await page.evaluate(() => document.fonts.ready);
+
+	const navbar = page.getByRole("navigation", { name: "Main" });
+	const tabs = ["Browse", "Right Now", "Interest", "Inbox"].map((name) =>
+		navbar.getByRole("link", { name }),
+	);
+
+	const getWidths = () =>
+		Promise.all(
+			tabs.map((tab) =>
+				tab.evaluate((el) => el.getBoundingClientRect().width),
+			),
+		);
+
+	const initialWidths = await getWidths();
+
+	for (const tab of tabs) {
+		await tab.click();
+		await expect(tab).toHaveAttribute("data-active", "true");
+		const widths = await getWidths();
+		expect(widths).toEqual(initialWidths);
+	}
+});
+
 test.describe("in a 308 × 404 pop-up window", () => {
 	test.use({ viewport: { width: 308, height: 404 } });
 

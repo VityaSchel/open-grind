@@ -10,8 +10,10 @@
 	import MediaSlotGrid from "$lib/components/shared/MediaSlotGrid.svelte";
 	import { type MessageKeyWith, type PlainMessageKey, t } from "$lib/i18n";
 	import { formatInteger } from "$lib/i18n/format";
+	import { receiveMedia } from "$lib/platform/media-intake.svelte";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import type { AlbumContent } from "$lib/model/messaging/albums";
+	import type { PickedMedia } from "$lib/platform/media-picker";
 	import {
 		addAlbumMedia,
 		addPreviousUploads,
@@ -127,14 +129,29 @@
 		return drawer.filter((item) => !isVideoContent(item.contentType));
 	}
 
-	async function add() {
+	async function add(media?: PickedMedia[]) {
 		adding = true;
 		try {
-			await addAlbumMedia({ uploads, albumId, content: () => content });
+			await addAlbumMedia({
+				uploads,
+				albumId,
+				content: () => content,
+				media,
+			});
 		} finally {
 			adding = false;
 		}
 	}
+
+	receiveMedia(() =>
+		saving || adding
+			? null
+			: {
+					label: t("media.albums.editor.content.dropToAdd"),
+					videos: true,
+					receive: (media) => void add(media),
+				},
+	);
 </script>
 
 {#if slots.length === 0}

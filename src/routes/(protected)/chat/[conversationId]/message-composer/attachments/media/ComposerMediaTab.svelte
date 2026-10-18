@@ -3,18 +3,15 @@
 
 	import {
 		addMediaToDrawer,
-		CHAT_MEDIA_MAX_MEGABYTES,
-		UnsupportedChatMediaError,
+		chatMediaFailureMessage,
 	} from "$lib/api/messaging/chat-media";
 	import {
 		deleteDrawerMedia,
 		type DrawerMedia,
 		getDrawerMedia,
 	} from "$lib/api/messaging/drawer";
-	import { uploadRefusalMessage } from "$lib/api/methods";
 	import MediaSheetGrid from "$lib/components/media-sheet/MediaSheetGrid.svelte";
 	import { t } from "$lib/i18n";
-	import { formatNumber } from "$lib/i18n/format";
 	import { mediaFileKindOf } from "$lib/platform/media-file";
 	import { pickMultipleMedia } from "$lib/platform/media-picker";
 	import { proxyMediaUrl } from "$lib/util/media";
@@ -57,20 +54,6 @@
 
 	void load();
 
-	function addFailureMessage(err: unknown): string {
-		if (err instanceof UnsupportedChatMediaError)
-			return t("common.media.errors.unsupportedFile");
-		return (
-			uploadRefusalMessage({
-				error: err,
-				limitLabel: formatNumber({
-					value: CHAT_MEDIA_MAX_MEGABYTES,
-					preset: "sizeMegabytes",
-				}),
-			}) ?? t("chat.composer.attachments.media.errors.uploadFailed")
-		);
-	}
-
 	async function addMedia() {
 		if (picking) return;
 		picking = true;
@@ -98,7 +81,7 @@
 				];
 			} catch (err) {
 				console.error(err);
-				toast.error(addFailureMessage(err));
+				toast.error(chatMediaFailureMessage(err));
 			} finally {
 				uploadingCount--;
 			}

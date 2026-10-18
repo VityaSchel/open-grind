@@ -17,6 +17,9 @@ vi.mock("svelte-sonner", () => sonner);
 vi.mock("$lib/chat/conversations-context.svelte", () => ({
 	getConversations: () => conversations,
 }));
+vi.mock("./send-media/send-media-offer.svelte", () => ({
+	getSendMediaOffer: () => ({ lend: () => {}, offer: async () => {} }),
+}));
 
 vi.stubGlobal(
 	"ResizeObserver",

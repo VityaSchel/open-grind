@@ -94,6 +94,7 @@
 				"title": "Add a photo to start your album",
 				"description": "The album is created once you add its first photo or video."
 			},
+			"dropToStart": "Drop to start an album",
 			"errors": {
 				"albumLimit": "You can’t create more albums",
 				"createFailed": "Couldn’t create album"
@@ -129,6 +130,7 @@
 			"content": {
 				"addMedia": "Add photos or videos",
 				"addToAlbum": "Add to album",
+				"dropToAdd": "Drop to add to album",
 				"empty": {
 					"title": "No Media Yet",
 					"description": "Photos and videos you add appear here."

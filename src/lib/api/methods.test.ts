@@ -244,6 +244,8 @@ describe("uploadRefusalMessage", () => {
 
 	it.each([
 		[{ reason: "notMedia" }, "That file isn’t a photo or video"],
+		[{ reason: "linkNotMedia" }, "That link isn’t a photo or video"],
+		[{ reason: "linkTooLarge" }, "That file is too large to add"],
 		[{ reason: "videoUnreadable" }, "That video’s format can’t be read"],
 		[photoTooLarge, "Photos over 64 MB can’t be uploaded"],
 		[{ reason: "notAPhoto" }, "Only photos can be sent here"],

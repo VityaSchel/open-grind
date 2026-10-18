@@ -211,6 +211,19 @@ index bba26db..f6958a2 100644
    override fun onPermissionRequest(request: PermissionRequest) {
      val isRequestPermissionRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
      val permissionList: MutableList<String> = ArrayList()
+diff --git a/src/android/kotlin/RustWebView.kt b/src/android/kotlin/RustWebView.kt
+index 31356c3..5b25ff6 100644
+--- a/src/android/kotlin/RustWebView.kt
++++ b/src/android/kotlin/RustWebView.kt
+@@ -92,5 +92,8 @@ class RustWebView(context: Context, val initScripts: Array<String>, val id: Stri
+         return cookieManager.getCookie(url)
+     }
+ 
++    override fun onCreateInputConnection(outAttrs: android.view.inputmethod.EditorInfo): android.view.inputmethod.InputConnection? =
++        {{package}}.keyboard.KeyboardMedia.wrap(this, outAttrs, super.onCreateInputConnection(outAttrs))
++
+     {{class-extension}}
+ }
 diff --git a/src/android/kotlin/RustWebViewClient.kt b/src/android/kotlin/RustWebViewClient.kt
 index 3dae460..ab720f5 100644
 --- a/src/android/kotlin/RustWebViewClient.kt
@@ -1585,8 +1598,103 @@ index 254bbb6..5cd7a9a 100644
 +    unregister_stream(id);
 +  }
  }
+diff --git a/src/wkwebview/class/wry_web_view.rs b/src/wkwebview/class/wry_web_view.rs
+index 11dca16..5884e5e 100644
+--- a/src/wkwebview/class/wry_web_view.rs
++++ b/src/wkwebview/class/wry_web_view.rs
+@@ -26,7 +26,7 @@ use objc2_web_kit::WKWebView;
+ pub struct WryWebViewIvars {
+   pub(crate) is_child: bool,
+   #[cfg(target_os = "macos")]
+-  pub(crate) drag_drop_handler: Box<dyn Fn(DragDropEvent) -> bool>,
++  pub(crate) drag_drop_handler: Option<Box<dyn Fn(DragDropEvent) -> bool>>,
+   #[cfg(target_os = "macos")]
+   pub(crate) accept_first_mouse: objc2::runtime::Bool,
+   #[cfg(target_os = "ios")]
+diff --git a/src/wkwebview/drag_drop.rs b/src/wkwebview/drag_drop.rs
+index e28364e..3f6bce2 100644
+--- a/src/wkwebview/drag_drop.rs
++++ b/src/wkwebview/drag_drop.rs
+@@ -21,10 +21,16 @@ pub(crate) unsafe fn collect_paths(drag_info: &ProtocolObject<dyn NSDraggingInfo
+   let types = NSArray::arrayWithObject(NSFilenamesPboardType);
+ 
+   if pb.availableTypeFromArray(&types).is_some() {
+-    let paths = pb.propertyListForType(NSFilenamesPboardType).unwrap();
+-    let paths = paths.downcast::<NSArray>().unwrap();
++    let Some(paths) = pb.propertyListForType(NSFilenamesPboardType) else {
++      return drag_drop_paths;
++    };
++    let Ok(paths) = paths.downcast::<NSArray>() else {
++      return drag_drop_paths;
++    };
+     for path in paths {
+-      let path = path.downcast::<NSString>().unwrap();
++      let Ok(path) = path.downcast::<NSString>() else {
++        continue;
++      };
+       let path = CStr::from_ptr(path.UTF8String()).to_string_lossy();
+       drag_drop_paths.push(PathBuf::from(path.into_owned()));
+     }
+@@ -36,12 +42,14 @@ pub(crate) fn dragging_entered(
+   this: &WryWebView,
+   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
+ ) -> NSDragOperation {
++  let Some(listener) = &this.ivars().drag_drop_handler else {
++    return unsafe { objc2::msg_send![super(this), draggingEntered: drag_info] };
++  };
+   let paths = unsafe { collect_paths(drag_info) };
+   let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+   let frame: NSRect = this.frame();
+   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
+ 
+-  let listener = &this.ivars().drag_drop_handler;
+   if !listener(DragDropEvent::Enter { paths, position }) {
+     // Reject the Wry file drop (invoke the OS default behaviour)
+     unsafe { objc2::msg_send![super(this), draggingEntered: drag_info] }
+@@ -54,11 +62,13 @@ pub(crate) fn dragging_updated(
+   this: &WryWebView,
+   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
+ ) -> NSDragOperation {
++  let Some(listener) = &this.ivars().drag_drop_handler else {
++    return unsafe { objc2::msg_send![super(this), draggingUpdated: drag_info] };
++  };
+   let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+   let frame: NSRect = this.frame();
+   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
+ 
+-  let listener = &this.ivars().drag_drop_handler;
+   if !listener(DragDropEvent::Over { position }) {
+     unsafe {
+       let os_operation = objc2::msg_send![super(this), draggingUpdated: drag_info];
+@@ -81,12 +91,14 @@ pub(crate) fn perform_drag_operation(
+   this: &WryWebView,
+   drag_info: &ProtocolObject<dyn NSDraggingInfo>,
+ ) -> Bool {
++  let Some(listener) = &this.ivars().drag_drop_handler else {
++    return unsafe { objc2::msg_send![super(this), performDragOperation: drag_info] };
++  };
+   let paths = unsafe { collect_paths(drag_info) };
+   let dl: NSPoint = unsafe { drag_info.draggingLocation() };
+   let frame: NSRect = this.frame();
+   let position = (dl.x as i32, (frame.size.height - dl.y) as i32);
+ 
+-  let listener = &this.ivars().drag_drop_handler;
+   if !listener(DragDropEvent::Drop { paths, position }) {
+     // Reject the Wry drop (invoke the OS default behaviour)
+     unsafe { objc2::msg_send![super(this), performDragOperation: drag_info] }
+@@ -96,7 +108,9 @@ pub(crate) fn perform_drag_operation(
+ }
+ 
+ pub(crate) fn dragging_exited(this: &WryWebView, drag_info: &ProtocolObject<dyn NSDraggingInfo>) {
+-  let listener = &this.ivars().drag_drop_handler;
++  let Some(listener) = &this.ivars().drag_drop_handler else {
++    return unsafe { objc2::msg_send![super(this), draggingExited: drag_info] };
++  };
+   if !listener(DragDropEvent::Leave) {
+     // Reject the Wry drop (invoke the OS default behaviour)
+     unsafe { objc2::msg_send![super(this), draggingExited: drag_info] }
 diff --git a/src/wkwebview/mod.rs b/src/wkwebview/mod.rs
-index 6856349..b492a14 100644
+index 6856349..13eb248 100644
 --- a/src/wkwebview/mod.rs
 +++ b/src/wkwebview/mod.rs
 @@ -109,7 +109,8 @@ static COUNTER: Counter = Counter::new();
@@ -1599,3 +1707,15 @@ index 6856349..b492a14 100644
  }
  
  unsafe impl Send for WebViewState {}
+@@ -301,10 +302,7 @@ impl InnerWebView {
+       let webview = WryWebView::alloc(mtm).set_ivars(WryWebViewIvars {
+         is_child,
+         #[cfg(target_os = "macos")]
+-        drag_drop_handler: match attributes.drag_drop_handler {
+-          Some(handler) => handler,
+-          None => Box::new(|_| false),
+-        },
++        drag_drop_handler: attributes.drag_drop_handler,
+         #[cfg(target_os = "macos")]
+         accept_first_mouse: Bool::new(attributes.accept_first_mouse),
+         #[cfg(target_os = "ios")]

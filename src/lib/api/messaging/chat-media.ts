@@ -1,9 +1,15 @@
 import z from "zod";
 
 import { signedInProfileId } from "$lib/api/current-session";
+import { uploadRefusalMessage } from "$lib/api/methods";
 import { invokeRest, uploadFileRest } from "$lib/api/transport";
 import { demo, demoEnabled } from "$lib/demo";
+import { t } from "$lib/i18n";
 import { mediaUrlSchema } from "$lib/model/media";
+import {
+	CHAT_MEDIA_MAX_BYTES,
+	chatMediaMaxLabel,
+} from "$lib/model/messaging/chat-media-limits";
 import {
 	inspectMediaFile,
 	mediaFileDescriptor,
@@ -11,9 +17,6 @@ import {
 } from "$lib/platform/media-file";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { type DrawerMedia, saveMediaToDrawer } from "./drawer";
-
-export const CHAT_MEDIA_MAX_MEGABYTES = 120;
-export const CHAT_MEDIA_MAX_BYTES = CHAT_MEDIA_MAX_MEGABYTES * 1024 * 1024;
 
 const VIDEO_CONTENT_TYPE = "video/mp4";
 const PHOTO_CONTENT_TYPE = "image/jpeg";
@@ -31,6 +34,16 @@ export class UnsupportedChatMediaError extends Error {
 		super("That file isn't a photo or video");
 		this.name = "UnsupportedChatMediaError";
 	}
+}
+
+export function chatMediaFailureMessage(error: unknown): string {
+	if (error instanceof UnsupportedChatMediaError) {
+		return t("common.media.errors.unsupportedFile");
+	}
+	return (
+		uploadRefusalMessage({ error, limitLabel: chatMediaMaxLabel() }) ??
+		t("chat.composer.attachments.media.errors.uploadFailed")
+	);
 }
 
 function chatMediaUploadPath({
@@ -103,11 +116,16 @@ function uploadedContentType({
 	return media.source === "web" ? (media.mimeType ?? fallback) : fallback;
 }
 
-export async function addMediaToDrawer(
+export type UploadedChatMedia = MediaUploadResponse & {
+	contentType: string;
+	inspection: MediaFileInspection;
+};
+
+export async function uploadChatMediaFile(
 	media: PickedMedia,
-): Promise<DrawerMedia> {
-	const takenOnGrindr = false;
-	const inspection = await inspectMediaFile(media);
+	{ inspection: known }: { inspection?: MediaFileInspection } = {},
+): Promise<UploadedChatMedia> {
+	const inspection = known ?? (await inspectMediaFile(media));
 	if (inspection.kind === "unsupported") {
 		throw new UnsupportedChatMediaError();
 	}
@@ -116,21 +134,28 @@ export async function addMediaToDrawer(
 		media,
 		inspection,
 		contentType,
-		takenOnGrindr,
+		takenOnGrindr: false,
 	});
+	return { ...uploaded, contentType, inspection };
+}
+
+export async function addMediaToDrawer(
+	media: PickedMedia,
+): Promise<DrawerMedia> {
+	const uploaded = await uploadChatMediaFile(media);
 	try {
 		await saveMediaToDrawer(uploaded.mediaId);
 	} catch (error) {
-		if (inspection.kind !== "video") throw error;
+		if (uploaded.inspection.kind !== "video") throw error;
 		console.error(error);
 	}
 
 	return {
 		id: uploaded.mediaId,
 		url: uploaded.url,
-		contentType,
+		contentType: uploaded.contentType,
 		createdTs: Date.now(),
 		used: false,
-		takenOnGrindr,
+		takenOnGrindr: false,
 	};
 }

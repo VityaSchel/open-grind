@@ -13,10 +13,12 @@ const VISIBLE_EDGE_PX = 1;
 const LAYOUT_UNIT_PX = 1 / 64;
 const TOUCH_LIFTS = ["touchend", "touchcancel"] as const;
 const STILL_FRAMES_BEFORE_GLIDE = 3;
+const SIDEWAYS_SLOP_PX = 8;
+const UNSEEN_PAN_GRACE_MS = 500;
 
 export type VisiblePositions = { first: number; last: number };
 
-type PanOrigin = { id: number; x: number; y: number; left: number };
+type TouchOrigin = { id: number; x: number; y: number };
 
 export class SnapPager {
 	readonly #count: () => number;
@@ -28,8 +30,6 @@ export class SnapPager {
 
 	#node: HTMLElement | null = null;
 	#fingers = 0;
-	#panOrigin: PanOrigin | null = null;
-	#restDeferred = false;
 	#stillFrames = 0;
 	#releaseWatch: number | null = null;
 	#width = 0;
@@ -39,6 +39,9 @@ export class SnapPager {
 	#travel = 0;
 	#visible: VisiblePositions | null = null;
 	#touchLifts: AbortController | null = null;
+	#touchOrigin: TouchOrigin | null = null;
+	#scrolledSinceTouch = false;
+	#unseenPan: ReturnType<typeof setTimeout> | null = null;
 	#stepTarget: number | null = null;
 	#pendingPlace: number | null = null;
 
@@ -83,11 +86,6 @@ export class SnapPager {
 		);
 		for (const type of TOUCH_LIFTS)
 			window.addEventListener(type, this.#onTouchLift, onWindow);
-		window.addEventListener(
-			"scrollend",
-			() => this.#restAfterAnotherScroller(),
-			onWindow,
-		);
 		node.addEventListener("pointerdown", dropStepTarget, options);
 		node.addEventListener("focusin", dropStepTarget, options);
 		node.addEventListener(
@@ -115,7 +113,8 @@ export class SnapPager {
 			this.#touchLifts?.abort();
 			this.#touchLifts = null;
 			this.#fingers = 0;
-			this.#restDeferred = false;
+			this.#touchOrigin = null;
+			this.#forgetUnseenPan();
 			if (this.#releaseWatch !== null)
 				cancelAnimationFrame(this.#releaseWatch);
 			this.#releaseWatch = null;
@@ -247,7 +246,8 @@ export class SnapPager {
 
 	#onScroll(): void {
 		this.#stillFrames = 0;
-		this.#restDeferred = false;
+		this.#scrolledSinceTouch = true;
+		this.#forgetUnseenPan();
 		if (!this.#widthMatchesLayout()) return;
 		const left = this.#left;
 		this.#travel = Math.sign(left - this.#lastLeft) || this.#travel;
@@ -259,15 +259,7 @@ export class SnapPager {
 	}
 
 	#onTouchStart(event: TouchEvent): void {
-		this.#restDeferred = false;
-		const first = event.touches[0];
-		if (this.#fingers === 0 && first !== undefined)
-			this.#panOrigin = {
-				id: first.identifier,
-				x: first.clientX,
-				y: first.clientY,
-				left: this.#left,
-			};
+		if (this.#fingers === 0) this.#beginTouch(event);
 		this.#fingers = event.touches.length;
 		this.#touchLifts ??= new AbortController();
 		for (const type of TOUCH_LIFTS)
@@ -282,36 +274,61 @@ export class SnapPager {
 			);
 	}
 
+	#beginTouch(event: TouchEvent): void {
+		this.#forgetUnseenPan();
+		this.#scrolledSinceTouch = false;
+		const touch = event.changedTouches[0];
+		this.#touchOrigin = touch
+			? { id: touch.identifier, x: touch.clientX, y: touch.clientY }
+			: null;
+	}
+
 	readonly #onTouchLift = (event: TouchEvent): void => {
 		if (this.#fingers === 0) return;
 		this.#fingers = event.touches.length;
 		if (this.#fingers > 0) return;
 		this.#touchLifts?.abort();
 		this.#touchLifts = null;
-		if (this.#liftsOffAnUnseenPan(event)) this.#restDeferred = true;
-		else this.settleNow();
+		if (this.#panStillComing(event)) {
+			this.#unseenPan = setTimeout(
+				this.#settleAfterLift,
+				UNSEEN_PAN_GRACE_MS,
+			);
+			return;
+		}
+		this.#settleAfterLift();
+	};
+
+	readonly #settleAfterLift = (): void => {
+		this.#unseenPan = null;
+		this.settleNow();
 		this.#watchRelease();
 	};
 
-	#restAfterAnotherScroller(): void {
-		if (!this.#restDeferred) return;
-		this.#restDeferred = false;
-		this.settleNow();
-	}
-
-	#liftsOffAnUnseenPan(lift: TouchEvent): boolean {
-		const origin = this.#panOrigin;
-		this.#panOrigin = null;
-		if (lift.type !== "touchend" || lift.cancelable || origin === null)
+	// Behind a busy main thread the lift can arrive before the engine pans the
+	// pager for it, so the pager still reads as resting where the swipe began.
+	#panStillComing(event: TouchEvent): boolean {
+		const origin = this.#touchOrigin;
+		if (origin === null || this.#scrolledSinceTouch || this.#width <= 0)
 			return false;
-		const point = Array.from(lift.changedTouches).find(
+		const lift = Array.from(event.changedTouches).find(
 			({ identifier }) => identifier === origin.id,
 		);
-		if (point === undefined || this.#left !== origin.left) return false;
-		const dx = point.clientX - origin.x;
-		if (Math.abs(dx) <= Math.abs(point.clientY - origin.y)) return false;
-		const position = this.#nearestPosition();
-		return this.#clamp(position - Math.sign(dx)) !== position;
+		if (lift === undefined) return false;
+		const dx = lift.clientX - origin.x;
+		if (
+			Math.abs(dx) < SIDEWAYS_SLOP_PX ||
+			Math.abs(dx) < Math.abs(lift.clientY - origin.y)
+		)
+			return false;
+		const end = (this.#count() - 1) * this.#width;
+		return dx > 0 ? this.#left > ALIGNED_PX : this.#left < end - ALIGNED_PX;
+	}
+
+	#forgetUnseenPan(): void {
+		if (this.#unseenPan === null) return;
+		clearTimeout(this.#unseenPan);
+		this.#unseenPan = null;
 	}
 
 	#watchRelease(): void {

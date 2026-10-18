@@ -12,17 +12,14 @@ const MAX_BYTES: usize = 1024 * 1024;
 const QUALITY_STEPS: [u8; 3] = [85, 75, 65];
 const OPAQUE_BACKGROUND: u8 = 0xFF;
 
-pub fn to_jpeg(source: Source) -> Option<Vec<u8>> {
-	let Source {
-		mut image,
-		orientation,
-		icc,
-	} = source;
+pub struct Thumbnail {
+	pub jpeg: Vec<u8>,
+	pub width: u32,
+	pub height: u32,
+}
 
-	image.apply_orientation(orientation);
-	let image = downscale(image);
-	let mut pixels = flatten(image);
-	convert_to_srgb(&mut pixels, icc);
+pub fn to_jpeg(source: Source) -> Option<Vec<u8>> {
+	let pixels = prepare(source, downscale);
 
 	let mut smallest = None;
 	for &quality in &QUALITY_STEPS {
@@ -35,11 +32,44 @@ pub fn to_jpeg(source: Source) -> Option<Vec<u8>> {
 	smallest
 }
 
+pub fn to_thumbnail(source: Source) -> Option<Thumbnail> {
+	let pixels = prepare(source, shrink);
+	Some(Thumbnail {
+		jpeg: encode(&pixels, QUALITY_STEPS[0])?,
+		width: pixels.width(),
+		height: pixels.height(),
+	})
+}
+
+fn prepare(source: Source, fit: fn(DynamicImage) -> DynamicImage) -> RgbImage {
+	let Source {
+		mut image,
+		orientation,
+		icc,
+	} = source;
+
+	image.apply_orientation(orientation);
+	let mut pixels = flatten(fit(image));
+	convert_to_srgb(&mut pixels, icc);
+	pixels
+}
+
+fn fits(image: &DynamicImage) -> bool {
+	image.width() <= MAX_EDGE && image.height() <= MAX_EDGE
+}
+
 fn downscale(image: DynamicImage) -> DynamicImage {
-	if image.width() <= MAX_EDGE && image.height() <= MAX_EDGE {
+	if fits(&image) {
 		return image;
 	}
 	image.resize(MAX_EDGE, MAX_EDGE, FilterType::Lanczos3)
+}
+
+fn shrink(image: DynamicImage) -> DynamicImage {
+	if fits(&image) {
+		return image;
+	}
+	image.thumbnail(MAX_EDGE, MAX_EDGE)
 }
 
 fn flatten(image: DynamicImage) -> RgbImage {
@@ -140,6 +170,50 @@ mod tests {
 
 		let out = decode(&jpeg);
 		assert_eq!((out.width(), out.height()), (512, MAX_EDGE));
+	}
+
+	#[test]
+	fn a_thumbnail_has_the_size_and_orientation_of_the_upload() {
+		for (width, height, orientation) in [
+			(4000, 3000, Orientation::NoTransforms),
+			(4000, 3000, Orientation::Rotate90),
+			(300, 200, Orientation::NoTransforms),
+		] {
+			let mut uploaded = source(noise(width, height));
+			uploaded.orientation = orientation;
+			let mut previewed = source(noise(width, height));
+			previewed.orientation = orientation;
+
+			let upload = decode(&to_jpeg(uploaded).expect("encode"));
+			let thumbnail = to_thumbnail(previewed).expect("thumbnail");
+
+			assert_eq!(
+				(thumbnail.width, thumbnail.height),
+				upload.dimensions(),
+				"{width}x{height} {orientation:?}"
+			);
+			assert_eq!(
+				decode(&thumbnail.jpeg).dimensions(),
+				upload.dimensions()
+			);
+		}
+	}
+
+	#[test]
+	fn a_thumbnail_flattens_transparency_like_the_upload() {
+		let image = DynamicImage::ImageRgba8(image::RgbaImage::from_pixel(
+			2000,
+			2000,
+			Rgba([255, 0, 0, 0]),
+		));
+
+		let thumbnail = to_thumbnail(source(image)).expect("thumbnail");
+
+		let pixel = decode(&thumbnail.jpeg).get_pixel(500, 500);
+		assert!(
+			pixel[0] > 240 && pixel[1] > 240 && pixel[2] > 240,
+			"hidden red leaked through: {pixel:?}"
+		);
 	}
 
 	#[test]

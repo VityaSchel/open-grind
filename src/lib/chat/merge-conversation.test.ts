@@ -16,7 +16,12 @@ const merge = ({
 	incoming: Conversation;
 	pendingFlags?: ("pinned" | "muted")[];
 }) => {
-	mergeConversation({ existing, incoming, pendingFlags });
+	mergeConversation({
+		existing,
+		incoming,
+		pendingFlags,
+		lastActivityAtFetchStart: existing.data.lastActivityTimestamp,
+	});
 	return existing.data;
 };
 

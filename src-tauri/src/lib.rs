@@ -10,7 +10,11 @@ mod desktop_entry;
 mod error;
 mod haptics;
 mod hex;
+#[cfg(target_os = "android")]
+mod keyboard_media;
 pub mod media;
+#[cfg(target_os = "android")]
+mod media_drag;
 mod media_picker;
 mod photo;
 #[cfg(test)]
@@ -153,6 +157,8 @@ pub fn run() {
 	let builder = builder
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
+		.plugin(keyboard_media::plugin())
+		.plugin(media_drag::plugin())
 		.plugin(api::recaptcha::plugin())
 		.plugin(app_origin::android::plugin());
 
@@ -219,7 +225,12 @@ pub fn run() {
             media::media_failure,
             upload::bytes::upload_media,
             upload::inspect::inspect_media_file,
+            upload::preview::preview_media,
             upload::file::upload_media_file,
+            upload::staged::stage_media,
+            upload::staged::append_staged_media,
+            upload::staged::discard_staged_media,
+            upload::linked::stage_linked_media,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
             api::ws::ws_send,
@@ -260,6 +271,7 @@ pub fn run() {
             scroll_phase::install_scroll_gesture_bridge(app.handle());
             #[cfg(target_os = "android")]
             app_origin::android::prepare_served_origin(app.handle());
+            upload::staged::discard_all(app.handle());
             let user_agent = format!(
                 "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
                 app.package_info().version
@@ -279,6 +291,8 @@ pub fn run() {
                         .on_navigation(|url| {
                             app_origin::is_app_url(url, app_origin::SERVED_HOSTNAME)
                         });
+                #[cfg(any(target_os = "macos", target_os = "windows"))]
+                let builder = builder.disable_drag_drop_handler();
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),

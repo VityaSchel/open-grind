@@ -302,6 +302,8 @@ export interface Messages {
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
 	"common.media.errors.heicUnsupported": undefined;
+	"common.media.errors.linkNotMedia": undefined;
+	"common.media.errors.linkTooLarge": undefined;
 	"common.media.errors.notAPhoto": undefined;
 	"common.media.errors.outsideReadableFolders": undefined;
 	"common.media.errors.photoDamaged": undefined;
@@ -433,6 +435,7 @@ export interface Messages {
 	"media.albums.editor.content.a11y.videoSlotProcessing": { slot: string };
 	"media.albums.editor.content.addMedia": undefined;
 	"media.albums.editor.content.addToAlbum": undefined;
+	"media.albums.editor.content.dropToAdd": undefined;
 	"media.albums.editor.content.empty.description": undefined;
 	"media.albums.editor.content.empty.title": undefined;
 	"media.albums.editor.errors.saveFailed": undefined;
@@ -450,6 +453,7 @@ export interface Messages {
 	"media.albums.editor.name.hint": undefined;
 	"media.albums.editor.name.label": undefined;
 	"media.albums.editor.saved": undefined;
+	"media.albums.new.dropToStart": undefined;
 	"media.albums.new.empty.description": undefined;
 	"media.albums.new.empty.title": undefined;
 	"media.albums.new.errors.albumLimit": undefined;
@@ -795,6 +799,7 @@ export interface Messages {
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: string };
 	"settings.profile.photos.a11y.uploading": undefined;
 	"settings.profile.photos.add": undefined;
+	"settings.profile.photos.dropToAdd": undefined;
 	"settings.profile.photos.errors.dailyLimit": undefined;
 	"settings.profile.photos.errors.leftOut": { count: number; max: string };
 	"settings.profile.photos.errors.openPickerFailed": undefined;

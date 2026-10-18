@@ -21,6 +21,11 @@ case "$tauri" in
 	echo "building development version $tauri, this artifact must never be released"
 	;;
 *)
+	news=$(sed -n '1s/^open-grind (\([^)]*\)).*/\1/p' ci/linux/NEWS.Debian)
+	if [ "$news" != "$(deb_version "$tauri")" ]; then
+		echo "ci/linux/NEWS.Debian starts with '$news', add an entry for $(deb_version "$tauri") first" >&2
+		exit 1
+	fi
 	echo "building release version $tauri"
 	;;
 esac

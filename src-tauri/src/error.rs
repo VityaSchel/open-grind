@@ -44,6 +44,8 @@ impl From<grindr::BanInfo> for BanInfo {
 )]
 pub enum MediaError {
 	NotMedia,
+	LinkNotMedia,
+	LinkTooLarge,
 	VideoUnreadable,
 	PhotoTooLarge { max_bytes: u64 },
 	NotAPhoto,
@@ -60,6 +62,8 @@ impl fmt::Display for MediaError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::NotMedia => write!(f, "That file is not a photo or a video"),
+			Self::LinkNotMedia => write!(f, "That link isn't a photo or video"),
+			Self::LinkTooLarge => write!(f, "That file is too large to add"),
 			Self::VideoUnreadable => {
 				write!(f, "That video's format can't be read")
 			}
@@ -300,6 +304,14 @@ mod tests {
 	fn a_media_refusal_reaches_the_frontend_as_its_reason() {
 		let refusals = [
 			(MediaError::NotMedia, json!({ "reason": "notMedia" })),
+			(
+				MediaError::LinkNotMedia,
+				json!({ "reason": "linkNotMedia" }),
+			),
+			(
+				MediaError::LinkTooLarge,
+				json!({ "reason": "linkTooLarge" }),
+			),
 			(MediaError::NotAPhoto, json!({ "reason": "notAPhoto" })),
 			(
 				MediaError::PhotoTooLarge {

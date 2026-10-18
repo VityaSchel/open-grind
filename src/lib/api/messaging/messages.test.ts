@@ -268,6 +268,47 @@ describe("message API wrappers", () => {
 		});
 	});
 
+	it("sends a photo still uploading once its upload lands", async () => {
+		const upload = Promise.withResolvers<number>();
+		const responseMessage = apiMessage({
+			type: "Image",
+			body: {
+				mediaId: 910_002,
+				width: null,
+				height: null,
+				url: "https://cdns.grindr.com/images/chat/c".padEnd(100, "d"),
+				imageHash: "c".repeat(64),
+				takenOnGrindr: false,
+				createdAt: 1_710_000_000_000,
+			},
+		});
+		fetchRestMock.mockResolvedValue(response({ data: responseMessage }));
+
+		const sending = sendMessage({
+			toUserId: 99,
+			message: async () => ({
+				type: "Image",
+				body: { mediaId: await upload.promise },
+			}),
+		});
+		await Promise.resolve();
+		expect(
+			fetchRestMock,
+			"nothing goes out mid-upload",
+		).not.toHaveBeenCalled();
+		upload.resolve(910_002);
+
+		await expect(sending).resolves.toEqual(responseMessage);
+		expect(fetchRestMock).toHaveBeenCalledWith("/v4/chat/message/send", {
+			method: "POST",
+			body: {
+				type: "Image",
+				target: { type: "Direct", targetId: 99 },
+				body: { mediaId: 910_002 },
+			},
+		});
+	});
+
 	it("sends expiring images as a media reference plus the expiring flag", async () => {
 		const responseMessage = apiMessage({
 			type: "ExpiringImage",

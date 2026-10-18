@@ -144,15 +144,18 @@ export function sentMessages(
 export function mergeServerMessages({
 	local,
 	server,
+	localIdsAtFetchStart,
 }: {
 	local: OptimisticMessage[];
 	server: ApiResponseMessage[];
+	localIdsAtFetchStart: string[];
 }): {
 	messages: OptimisticMessage[];
 	fresh: OptimisticMessage[];
 	changed: boolean;
 } {
 	const serverById = new Map(server.map((m) => [m.messageId, m] as const));
+	const messageIdsAtFetchStart = new Set(localIdsAtFetchStart);
 	const serverPageIsEmpty = server.length === 0;
 	const oldestServerTs = server.at(-1)?.timestamp ?? Number.POSITIVE_INFINITY;
 
@@ -176,7 +179,10 @@ export function mergeServerMessages({
 			});
 			merged.push(merge.message);
 			if (merge.updated) updated++;
-		} else if (!serverPageIsEmpty && message.timestamp < oldestServerTs) {
+		} else if (
+			!messageIdsAtFetchStart.has(message.messageId) ||
+			(!serverPageIsEmpty && message.timestamp < oldestServerTs)
+		) {
 			merged.push(message);
 		} else {
 			dropped++;

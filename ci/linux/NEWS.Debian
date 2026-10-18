@@ -1,0 +1,39 @@
+open-grind (0.1.0-beta.5.1) beta; urgency=medium
+
+  Follow-up update to v0.1.0-beta.5 with bug fixes and cosmetic improvements.
+
+  - Fixed the Honduras bypass
+  - Block button is available again, ignoring server's "non-blockable
+    profile" flag
+  - Fixed unresponsive profiles opened deep in the Browse grid
+  - Fixed Men/Cis Man/Trans Man and Women/Cis Woman/Trans Woman chips in
+    filters
+  - The grid now scrolls to top when changing filters or location and
+    tapping "Retry"
+  - Fixed the nav bar avatar not updating after a photo change
+  - Fixed Refresh button reveal animation FPS on Linux
+  - Fixed Hidden users list not showing recently hidden in current session
+    users
+  - Fixed photo carousel photos bleeding alignment
+  - Visual improvements to dropdowns positioning, dividers at edges, gender
+    chips reveal animation
+  - Fixed pull-to-refresh at the newest message on scaled displays
+  - Fixed Refresh button appearing in short conversation when wheeling up
+  - Fixed deep scroll restoration on the Inbox page after switching tabs
+  - Fixed number of columns in the Albums tab in the media attachments
+    drawer
+  - Fixed inconsistent media tile menu positioning
+  - Improved media drag'n'drop positioning
+  - Fixed failing Browse page retrying in a loop
+  - Fixed infinite scroll stalling when its trigger leaves and re-enters
+    view in one batch
+  - Fixed overlapping preferences saves corrupting them
+  - Fixed detached earlier rows in sliding-out Credits page
+  - Improved spinners/skeletons usage consistency in app design
+  - API UA moved from 26.18.0 to 26.20.0
+  - Community translations portal opens in the coming days
+
+  Full changelog:
+  https://git.opengrind.org/open-grind/open-grind/compare/v0.1.0-beta.5...v0.1.0-beta.5.1
+
+ -- Open Grind Governance <https://opengrind.org/governance>  Fri, 09 Oct 2026 21:31:56 +0200
