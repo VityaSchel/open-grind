@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { untrack } from "svelte";
 
-	import { showErrorToast } from "$lib/api/error-toast";
-	import {
-		preferencesLoaded,
-		setPreferences,
-	} from "$lib/app-data/preferences.svelte";
+	import { preferencesLoaded } from "$lib/app-data/preferences.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { SelectionSet } from "$lib/util/selection.svelte";
-	import { giphyConsented } from "../../../giphy-consent/giphy-consent";
+	import {
+		giphyConsented,
+		turnOnGiphy,
+	} from "../../../giphy-consent/giphy-consent";
 	import type { TabSelection } from "../../attachments/tabs";
 	import { getMessageComposerContext } from "../../message-composer-context.svelte";
 	import { GifFeed } from "./gif-feed.svelte";
@@ -61,13 +60,10 @@
 		onSelectionChange({ count: selected.size, label: SEND_LABEL });
 	}
 
-	function agree() {
+	async function agree() {
 		agreeing = true;
-		setPreferences({ giphyConsent: true })
-			.catch((error: unknown) =>
-				showErrorToast({ label: "Failed to save preferences", error }),
-			)
-			.finally(() => (agreeing = false));
+		await turnOnGiphy();
+		agreeing = false;
 	}
 
 	export function submitSelection() {
@@ -95,6 +91,6 @@
 			{/if}
 		</div>
 	{:else}
-		<GiphyConsentNote pending={agreeing} onAgree={agree} />
+		<GiphyConsentNote pending={agreeing} onAgree={() => void agree()} />
 	{/if}
 {/if}

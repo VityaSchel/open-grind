@@ -4,13 +4,26 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const preferences = vi.hoisted(() => ({ giphyConsent: false }));
-const reducedMotion = vi.hoisted(() => ({ current: false }));
-
-vi.mock("$lib/app-data/preferences.svelte", () => ({
-	preferencesLoaded: () => true,
-	preferencesSnapshot: () => ({ giphyConsent: preferences.giphyConsent }),
+const preferences = vi.hoisted(() => ({
+	values: new Map<string, boolean>(),
+	setPreferences:
+		vi.fn<(values: { giphyConsent: boolean }) => Promise<void>>(),
 }));
+const reducedMotion = vi.hoisted(() => ({ current: false }));
+const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn() }));
+
+vi.mock("$lib/app-data/preferences.svelte", async () => {
+	const { SvelteMap } = await import("svelte/reactivity");
+	preferences.values = new SvelteMap();
+	return {
+		preferencesLoaded: () => true,
+		preferencesSnapshot: () => ({
+			giphyConsent: preferences.values.get("giphyConsent") ?? false,
+		}),
+		setPreferences: preferences.setPreferences,
+	};
+});
+vi.mock("svelte-sonner", () => ({ toast }));
 vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: reducedMotion,
@@ -18,8 +31,8 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 
-import { clearAccountCaches } from "$lib/api/account-caches";
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import Message from "./Message.svelte";
 
 const GIF_URL = "https://media.giphy.com/media/abc/200.gif";
@@ -63,13 +76,41 @@ async function requestedSources(): Promise<(string | null)[]> {
 const lightboxLink = () =>
 	document.querySelector<HTMLAnchorElement>('a[aria-label="GIF"]');
 
+function giveConsent() {
+	preferences.values.set("giphyConsent", true);
+}
+
+const consentDialog = () => screen.queryByRole("alertdialog");
+const choice = (name: "Continue" | "Cancel") =>
+	screen.getByRole("button", { name });
+
+async function tapAndChoose(choice: "Continue" | "Cancel") {
+	await fireEvent.click(tapToLoad()!);
+	await vi.waitFor(() =>
+		expect(consentDialog()?.contains(document.activeElement)).toBe(true),
+	);
+	await fireEvent.click(screen.getByRole("button", { name: choice }));
+	await tick();
+}
+
 beforeEach(() => {
-	preferences.giphyConsent = false;
+	preferences.values.clear();
+	preferences.setPreferences.mockReset();
+	toast.mockReset();
+	toast.error.mockReset();
+	preferences.setPreferences.mockImplementation(({ giphyConsent }) => {
+		preferences.values.set("giphyConsent", giphyConsent);
+		return Promise.resolve();
+	});
 	reducedMotion.current = false;
-	clearAccountCaches();
 });
 
-afterEach(() => {
+afterEach(async () => {
+	const cancel = screen.queryByRole("button", { name: "Cancel" });
+	if (cancel) {
+		await fireEvent.click(cancel);
+		await vi.waitFor(() => expect(consentDialog()).toBeNull());
+	}
 	cleanup();
 	vi.restoreAllMocks();
 });
@@ -82,21 +123,96 @@ describe("a GIF message", () => {
 		expect(await requestedSources()).not.toContain(GIF_URL);
 	});
 
-	it("loads on tap and stays loaded when it scrolls back in", async () => {
+	it("asks to enable GIPHY on tap, with GIPHY's privacy policy", async () => {
 		renderGif();
 		await fireEvent.click(tapToLoad()!);
 
-		expect(await requestedSources()).toContain(GIF_URL);
+		const dialog = await screen.findByRole("alertdialog");
+		expect(dialog.textContent).toContain("Enable GIPHY?");
+		expect(
+			screen
+				.getByRole("link", { name: "Privacy Policy" })
+				.getAttribute("href"),
+		).toContain("giphy.com");
+		expect(await requestedSources()).not.toContain(GIF_URL);
+	});
 
-		cleanup();
+	it("turns GIPHY on and loads the GIF after Continue", async () => {
 		renderGif();
 
+		await tapAndChoose("Continue");
+
+		expect(preferences.setPreferences).toHaveBeenCalledExactlyOnceWith({
+			giphyConsent: true,
+		});
+		await vi.waitFor(() => expect(consentDialog()).toBeNull());
 		expect(tapToLoad()).toBeNull();
 		expect(await requestedSources()).toContain(GIF_URL);
 	});
 
+	it("loads nothing when the question is cancelled", async () => {
+		renderGif();
+
+		await tapAndChoose("Cancel");
+
+		await vi.waitFor(() => expect(consentDialog()).toBeNull());
+		expect(preferences.setPreferences).not.toHaveBeenCalled();
+		expect(tapToLoad()).not.toBeNull();
+		expect(await requestedSources()).not.toContain(GIF_URL);
+	});
+
+	it("keeps asking when turning GIPHY on fails", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		preferences.setPreferences.mockRejectedValue(new Error("disk full"));
+		renderGif();
+
+		await tapAndChoose("Continue");
+
+		await vi.waitFor(() =>
+			expect(toast.error).toHaveBeenCalledWith(
+				"Failed to save preferences",
+				expect.anything(),
+			),
+		);
+		expect(consentDialog()).not.toBeNull();
+		expect(choice("Continue").matches(":disabled")).toBe(false);
+		expect(choice("Cancel").matches(":disabled")).toBe(false);
+		expect(await requestedSources()).not.toContain(GIF_URL);
+	});
+
+	it("locks the question while GIPHY is being turned on", async () => {
+		let finish!: () => void;
+		preferences.setPreferences.mockImplementation(
+			({ giphyConsent }) =>
+				new Promise<void>((resolve) => {
+					finish = () => {
+						preferences.values.set("giphyConsent", giphyConsent);
+						resolve();
+					};
+				}),
+		);
+		renderGif();
+
+		await tapAndChoose("Continue");
+
+		expect(choice("Continue").getAttribute("aria-busy")).toBe("true");
+		expect(choice("Continue").matches(":disabled")).toBe(true);
+		expect(choice("Cancel").matches(":disabled")).toBe(true);
+		await fireEvent.keyDown(document.activeElement ?? document.body, {
+			key: "Escape",
+		});
+		expect(consentDialog()?.dataset.state).toBe("open");
+		for (const handler of backGestureEventHandlers.keys()) handler();
+		await tick();
+		expect(consentDialog()?.dataset.state).toBe("open");
+
+		finish();
+		await vi.waitFor(() => expect(consentDialog()).toBeNull());
+		expect(await requestedSources()).toContain(GIF_URL);
+	});
+
 	it("loads right away once GIPHY is agreed to", async () => {
-		preferences.giphyConsent = true;
+		giveConsent();
 		renderGif();
 
 		expect(tapToLoad()).toBeNull();
@@ -104,7 +220,7 @@ describe("a GIF message", () => {
 	});
 
 	it("takes its shape from the GIF that loads, not the size it was sent with", async () => {
-		preferences.giphyConsent = true;
+		giveConsent();
 		const { container } = renderGif({ width: 200, height: 200 });
 		const image = container.querySelector("img")!;
 		Object.defineProperty(image, "naturalWidth", { get: () => 356 });
@@ -120,7 +236,7 @@ describe("a GIF message", () => {
 
 	it("opens GIPHY's original in the photo lightbox", async () => {
 		const init = vi.spyOn(PhotoSwipeLightbox.prototype, "init");
-		preferences.giphyConsent = true;
+		giveConsent();
 		renderGif();
 
 		expect(lightboxLink()?.getAttribute("href")).toBe(
@@ -141,7 +257,7 @@ describe("a GIF message", () => {
 	});
 
 	it("holds still with reduced motion and plays in the lightbox", async () => {
-		preferences.giphyConsent = true;
+		giveConsent();
 		reducedMotion.current = true;
 		renderGif();
 
@@ -156,23 +272,22 @@ describe("a GIF message", () => {
 
 	it("moves keyboard focus onto the GIF it loads", async () => {
 		renderGif();
-		const button = tapToLoad()!;
-		button.focus();
+		tapToLoad()!.focus();
 
-		await fireEvent.click(button);
-		await tick();
+		await tapAndChoose("Continue");
 
-		expect(document.activeElement).toBe(lightboxLink());
+		await vi.waitFor(() =>
+			expect(document.activeElement).toBe(lightboxLink()),
+		);
 	});
 
-	it("asks again after switching accounts", async () => {
+	it("gives focus back to the tile when the question is cancelled", async () => {
 		renderGif();
-		await fireEvent.click(tapToLoad()!);
-		cleanup();
+		const tile = tapToLoad()!;
+		tile.focus();
 
-		clearAccountCaches();
-		renderGif();
+		await tapAndChoose("Cancel");
 
-		expect(tapToLoad()).not.toBeNull();
+		await vi.waitFor(() => expect(document.activeElement).toBe(tile));
 	});
 });

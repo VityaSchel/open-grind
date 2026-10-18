@@ -1,16 +1,6 @@
-<script module lang="ts">
-	import { SvelteSet } from "svelte/reactivity";
-
-	import { registerAccountCache } from "$lib/api/account-caches";
-
-	const loadedWithoutConsent = new SvelteSet<string>();
-	registerAccountCache({ reset: () => loadedWithoutConsent.clear() });
-</script>
-
 <script lang="ts">
 	import "photoswipe/style.css";
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
-	import { tick } from "svelte";
 	import { prefersReducedMotion } from "svelte/motion";
 
 	import { giphyMediaSrc } from "$lib/api/messaging/giphy";
@@ -20,6 +10,7 @@
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
 	import type { MediaDimensions } from "$lib/util/media-dimensions";
 	import { giphyConsented } from "../../giphy-consent/giphy-consent";
+	import GiphyConsentDialog from "../../giphy-consent/GiphyConsentDialog.svelte";
 	import { attachGalleryLightbox } from "./message-lightbox";
 	import { MessageMediaState } from "./message-media.svelte";
 
@@ -28,9 +19,7 @@
 	const LIGHTBOX_SCALE = 4;
 
 	const media = new MessageMediaState();
-	const shown = $derived(
-		giphyConsented() || loadedWithoutConsent.has(message.urlPath),
-	);
+	const shown = $derived(giphyConsented());
 	const still = $derived(prefersReducedMotion.current);
 	const src = $derived(
 		giphyMediaSrc(still ? message.stillPath : message.urlPath),
@@ -48,6 +37,8 @@
 	);
 
 	let link = $state<HTMLAnchorElement | null>(null);
+	let asked = $state(false);
+	let asking = $state(false);
 
 	$effect(() => {
 		const gallery = media.el;
@@ -55,12 +46,10 @@
 		return attachGalleryLightbox({ gallery, thumbScale: LIGHTBOX_SCALE });
 	});
 
-	async function loadOnTap(event: MouseEvent) {
-		const hadFocus = document.activeElement === event.currentTarget;
-		loadedWithoutConsent.add(message.urlPath);
-		if (!hadFocus) return;
-		await tick();
-		link?.focus({ preventScroll: true });
+	function focusLoadedGif(event: Event) {
+		if (link === null) return;
+		event.preventDefault();
+		link.focus({ preventScroll: true });
 	}
 </script>
 
@@ -102,7 +91,10 @@
 				media.cornerClass,
 			]}
 			style:aspect-ratio={aspectRatio ?? "1 / 1"}
-			onclick={loadOnTap}
+			onclick={() => {
+				asked = true;
+				asking = true;
+			}}
 		>
 			<GifIcon weight="fill" class="size-6" />
 			<span>GIF from GIPHY</span>
@@ -111,3 +103,7 @@
 	{/if}
 	{@render media.adornments?.()}
 </div>
+
+{#if asked}
+	<GiphyConsentDialog bind:open={asking} onCloseAutoFocus={focusLoadedGif} />
+{/if}
