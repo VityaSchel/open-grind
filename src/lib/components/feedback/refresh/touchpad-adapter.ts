@@ -31,9 +31,18 @@ export function attachTouchpadPull(
 	const atPullEdge = () => boundaryDistance() < AT_BOUNDARY_PX;
 
 	const letGo = () => {
-		if (engaged) model.cancel();
+		if (engaged) {
+			model.cancel();
+			fingerPhase.capture(false);
+		}
 		engaged = false;
 		landedAtPullEdge = false;
+	};
+
+	const pullToward = (deltaY: number) => {
+		const toward = position === "top" ? -deltaY : deltaY;
+		pull = Math.max(0, pull + toward);
+		model.updatePull(pull);
 	};
 
 	const engage = (event: WheelEvent): boolean => {
@@ -61,9 +70,9 @@ export function attachTouchpadPull(
 			}
 			engaged = true;
 			pull = 0;
+			fingerPhase.capture(true);
 		}
-		pull = Math.max(0, pull + toward);
-		model.updatePull(pull);
+		pullToward(event.deltaY);
 	};
 
 	const onScroll = () => {
@@ -75,7 +84,11 @@ export function attachTouchpadPull(
 	});
 	const stopWatchingRelease = fingerPhase.onRelease(() => {
 		if (engaged) model.release();
-		letGo();
+		engaged = false;
+		landedAtPullEdge = false;
+	});
+	const stopWatchingDeltas = fingerPhase.onDelta((_, dy) => {
+		if (engaged) pullToward(dy);
 	});
 
 	listenTarget.addEventListener("wheel", onWheel, { passive: true });
@@ -85,6 +98,7 @@ export function attachTouchpadPull(
 		listenTarget.removeEventListener("scroll", onScroll);
 		stopWatchingPhase();
 		stopWatchingRelease();
+		stopWatchingDeltas();
 		letGo();
 	};
 }

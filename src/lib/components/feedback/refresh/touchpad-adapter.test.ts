@@ -18,6 +18,7 @@ function harness() {
 	model.onTrigger = onTrigger;
 	const onPull = vi.fn();
 	const fingerPhase = new ScrollGestureState();
+	const capture = vi.spyOn(fingerPhase, "capture");
 	let distance = 0;
 	const detach = attachTouchpadPull(model, {
 		listenTarget: target,
@@ -30,8 +31,10 @@ function harness() {
 		model,
 		onTrigger,
 		onPull,
+		capture,
 		detach,
 		fingers: () => fingerPhase.ingest({ state: "fingers" }),
+		capturedMotion: (dy: number) => fingerPhase.ingest({ dx: 0, dy }),
 		lift: () => fingerPhase.ingest({ state: "released" }),
 		wheel: ({ deltaY, deltaX = 0 }: { deltaY: number; deltaX?: number }) =>
 			target.dispatchEvent(new WheelEvent("wheel", { deltaX, deltaY })),
@@ -146,5 +149,32 @@ describe("a touchpad pull where the engine draws no band", () => {
 		h.detach();
 
 		expect(h.model.settledOutcome).toBe("canceled");
+	});
+
+	it("locks the pull in once it engages, so motion away from the edge shrinks it instead of scrolling the list", () => {
+		const h = harness();
+
+		h.fingers();
+		h.pullBy(ARMING_WHEELS);
+		expect(h.capture).toHaveBeenCalledExactlyOnceWith(true);
+		const armedPx = h.model.displayPx;
+		h.capturedMotion(WHEEL_PX * ARMING_WHEELS);
+		expect(h.model.phase).toBe("pulling");
+		expect(h.model.displayPx).toBeLessThan(armedPx);
+		h.capturedMotion(-WHEEL_PX * ARMING_WHEELS);
+		expect(h.model.phase).toBe("armed");
+		h.lift();
+
+		expect(h.onTrigger).toHaveBeenCalledOnce();
+	});
+
+	it("hands the gesture back when a pull is let go of before the fingers lift", () => {
+		const h = harness();
+
+		h.fingers();
+		h.pullBy(ARMING_WHEELS);
+		h.scrollTo(30);
+
+		expect(h.capture).toHaveBeenLastCalledWith(false);
 	});
 });

@@ -128,11 +128,17 @@ pub struct TouchpadGesture {
 
 #[cfg(any(target_os = "linux", test))]
 impl TouchpadGesture {
+	#[cfg(target_os = "linux")]
+	pub fn fingers_down(&self) -> bool {
+		self.fingers_down
+	}
+
 	pub fn scroll(
 		&mut self,
 		time: u32,
 		(dx, dy): (f64, f64),
 		stop: bool,
+		captured: bool,
 	) -> Option<ScrollGesture> {
 		self.recent
 			.retain(|&(at, ..)| time.wrapping_sub(at) <= FLING_HISTORY_MS);
@@ -142,7 +148,11 @@ impl TouchpadGesture {
 			return self.release(vx, vy);
 		}
 		if std::mem::replace(&mut self.fingers_down, true) {
-			return None;
+			return captured.then(|| ScrollGesture {
+				dx: Some(dx * WEBKIT_PIXELS_PER_DELTA),
+				dy: Some(dy * WEBKIT_PIXELS_PER_DELTA),
+				..ScrollGesture::default()
+			});
 		}
 		Some(ScrollGesture {
 			state: Some("fingers"),
@@ -189,12 +199,13 @@ impl TouchpadGesture {
 mod linux {
 	use std::cell::RefCell;
 	use std::rc::Rc;
+	use std::sync::atomic::Ordering;
 
 	use gdk::glib::prelude::{ObjectExt, ToValue};
 	use gdk::prelude::DeviceExt;
 	use tauri::{Emitter, Manager, Runtime, WebviewWindow};
 
-	use super::{ScrollGesture, TouchpadGesture};
+	use super::{ScrollGesture, TouchpadGesture, CAPTURE};
 
 	fn from_touchpad(event: &gdk::Event) -> bool {
 		event
@@ -229,20 +240,28 @@ mod linux {
 					.get(1)
 					.and_then(|value| value.get::<gdk::Event>().ok())
 					.filter(from_touchpad);
-				if let Some(scroll) = event
+				let Some(scroll) = event
 					.as_ref()
 					.and_then(|event| event.downcast_ref::<gdk::EventScroll>())
-				{
-					announce_scroll(scrolled.borrow_mut().scroll(
-						scroll.time(),
-						scroll.delta(),
-						scroll.is_stop(),
-					));
+				else {
+					return Some(false.to_value());
+				};
+				let mid_gesture = scrolled.borrow().fingers_down();
+				if !mid_gesture || scroll.is_stop() {
+					CAPTURE.store(false, Ordering::Relaxed);
 				}
-				Some(false.to_value())
+				let captured = CAPTURE.load(Ordering::Relaxed);
+				announce_scroll(scrolled.borrow_mut().scroll(
+					scroll.time(),
+					scroll.delta(),
+					scroll.is_stop(),
+					captured,
+				));
+				Some(captured.to_value())
 			});
 
 			view.connect_local("leave-notify-event", false, move |_| {
+				CAPTURE.store(false, Ordering::Relaxed);
 				announce(gesture.borrow_mut().leave());
 				Some(false.to_value())
 			});
@@ -445,7 +464,7 @@ mod tests {
 	fn flick() -> TouchpadGesture {
 		let mut gesture = TouchpadGesture::default();
 		for time in (0..=96).step_by(8) {
-			gesture.scroll(time, (1.0, 0.0), false);
+			gesture.scroll(time, (1.0, 0.0), false, false);
 		}
 		gesture
 	}
@@ -453,14 +472,14 @@ mod tests {
 	#[test]
 	fn a_touchpad_gesture_announces_its_fingers_once() {
 		let mut gesture = TouchpadGesture::default();
-		let first = gesture.scroll(0, (1.0, 0.0), false);
+		let first = gesture.scroll(0, (1.0, 0.0), false, false);
 		assert_eq!(first.and_then(|g| g.state), Some("fingers"));
-		assert_eq!(gesture.scroll(8, (1.0, 0.0), false), None);
+		assert_eq!(gesture.scroll(8, (1.0, 0.0), false, false), None);
 	}
 
 	#[test]
 	fn a_flick_is_released_with_the_pixel_velocity_of_its_last_150_ms() {
-		let released = flick().scroll(104, (0.0, 0.0), true).unwrap();
+		let released = flick().scroll(104, (0.0, 0.0), true, false).unwrap();
 		assert_eq!(released.state, Some("released"));
 		assert_eq!(released.vx, Some(13.0 * 40.0 / 104.0));
 		assert_eq!(released.vy, Some(0.0));
@@ -468,14 +487,14 @@ mod tests {
 
 	#[test]
 	fn fingers_that_rest_before_lifting_are_released_without_velocity() {
-		let released = flick().scroll(300, (0.0, 0.0), true).unwrap();
+		let released = flick().scroll(300, (0.0, 0.0), true, false).unwrap();
 		assert_eq!(released.vx, Some(0.0));
 	}
 
 	#[test]
 	fn a_touchpad_stop_without_fingers_down_announces_nothing() {
 		let mut gesture = TouchpadGesture::default();
-		assert_eq!(gesture.scroll(0, (0.0, 0.0), true), None);
+		assert_eq!(gesture.scroll(0, (0.0, 0.0), true, false), None);
 	}
 
 	#[test]
@@ -483,5 +502,16 @@ mod tests {
 		let mut gesture = flick();
 		assert_eq!(gesture.leave().and_then(|g| g.vx), Some(0.0));
 		assert_eq!(gesture.leave(), None);
+	}
+
+	#[test]
+	fn a_captured_gesture_forwards_its_motion_in_page_pixels() {
+		let mut gesture = TouchpadGesture::default();
+		let first = gesture.scroll(0, (0.0, -1.0), false, true);
+		assert_eq!(first.and_then(|g| g.dy), None);
+		let next = gesture.scroll(8, (0.25, -1.5), false, true).unwrap();
+		assert_eq!(next.state, None);
+		assert_eq!(next.dx, Some(10.0));
+		assert_eq!(next.dy, Some(-60.0));
 	}
 }
