@@ -5,7 +5,6 @@ import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { GiphyPage } from "$lib/api/messaging/giphy";
-import type { MessageDraft } from "$lib/model/messaging/messages";
 
 const api = vi.hoisted(() => ({
 	getTrendingGifs:
@@ -17,9 +16,6 @@ const api = vi.hoisted(() => ({
 }));
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn() }));
 const reducedMotion = vi.hoisted(() => ({ current: false }));
-const composer = vi.hoisted(() => ({
-	sendMessages: vi.fn<(drafts: MessageDraft[]) => void>(),
-}));
 const preferences = vi.hoisted(() => ({
 	values: new Map<string, boolean>(),
 	setPreferences:
@@ -43,11 +39,8 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: reducedMotion,
 }));
-vi.mock("../../message-composer-context.svelte", () => ({
-	getMessageComposerContext: () => () => composer,
-}));
 
-import type { TabSelection } from "../../attachments/tabs";
+import type { StickerPick } from "../sticker-pick";
 import ComposerGifTab from "./ComposerGifTab.svelte";
 
 class InertIntersectionObserver {
@@ -80,9 +73,8 @@ function trendingPage(ids: string[]): GiphyPage {
 	};
 }
 
-const onClose = vi.fn<() => void>();
+const onPick = vi.fn<(pick: StickerPick) => void>();
 const onFeedRestart = vi.fn<() => void>();
-let selections: TabSelection[];
 
 async function settle() {
 	await tick();
@@ -90,32 +82,27 @@ async function settle() {
 	await tick();
 }
 
-async function mount({ active = true } = {}) {
+async function mount({
+	active = true,
+	pickedId = null,
+}: { active?: boolean; pickedId?: string | null } = {}) {
 	const rendered = render(ComposerGifTab, {
-		props: {
-			active,
-			onClose,
-			onFeedRestart,
-			onSelectionChange: (selection: TabSelection) => {
-				selections.push(selection);
-			},
-		},
+		props: { active, pickedId, onPick, onFeedRestart },
 	});
 	await settle();
 	return rendered;
 }
 
 const tile = (name: string) => screen.getByRole("button", { name });
+const pressed = (name: string) => tile(name).getAttribute("aria-pressed");
 
 beforeEach(() => {
 	vi.stubGlobal("IntersectionObserver", InertIntersectionObserver);
 	reducedMotion.current = false;
-	selections = [];
-	onClose.mockReset();
+	onPick.mockReset();
 	onFeedRestart.mockReset();
 	toast.mockReset();
 	toast.error.mockReset();
-	composer.sendMessages.mockReset();
 	api.getTrendingGifs.mockReset();
 	api.searchGifs.mockReset();
 	api.getTrendingGifs.mockResolvedValue(trendingPage(["a", "b"]));
@@ -208,27 +195,28 @@ describe("composer GIF tab", () => {
 		expect(screen.getAllByText("GIF")).toHaveLength(2);
 	});
 
-	it("selects one GIF at a time and offers to send it", async () => {
-		await mount();
+	it("presses only the GIF its menu has picked", async () => {
+		const { rerender } = await mount({ pickedId: "b" });
+		expect(pressed("Trending a")).toBe("false");
+		expect(pressed("Trending b")).toBe("true");
 
-		await fireEvent.click(tile("Trending a"));
-		await fireEvent.click(tile("Trending b"));
+		await rerender({ pickedId: "a" });
+		expect(pressed("Trending a")).toBe("true");
+		expect(pressed("Trending b")).toBe("false");
 
-		expect(selections.at(-1)).toEqual({ count: 1, label: "Send GIF" });
-		expect(tile("Trending a").getAttribute("aria-pressed")).toBe("false");
-		expect(tile("Trending b").getAttribute("aria-pressed")).toBe("true");
+		await rerender({ pickedId: null });
+		expect(pressed("Trending a")).toBe("false");
+		expect(pressed("Trending b")).toBe("false");
 	});
 
-	it("clears the selection and rewinds the sheet when the query changes", async () => {
+	it("rewinds the sheet when the query changes", async () => {
 		await mount();
-		await fireEvent.click(tile("Trending a"));
 		onFeedRestart.mockClear();
 
 		await fireEvent.input(screen.getByRole("searchbox"), {
 			target: { value: "cat" },
 		});
 
-		expect(selections.at(-1)).toEqual({ count: 0, label: "Send GIF" });
 		expect(onFeedRestart).toHaveBeenCalledOnce();
 		expect(screen.queryByRole("button", { name: "Trending a" })).toBeNull();
 	});
@@ -350,37 +338,26 @@ describe("composer GIF tab", () => {
 		expect(tile("Trending a")).toBeTruthy();
 	});
 
-	it("sends the picked GIF as a Giphy message and closes", async () => {
-		const { component } = await mount();
+	it("hands a tapped GIF to its menu as a Giphy message", async () => {
+		await mount();
+
 		await fireEvent.click(tile("Trending b"));
 
-		component.submitSelection();
-
-		const message = {
-			type: "Giphy",
-			body: {
-				id: "b",
-				urlPath: "https://media.giphy.com/media/b/200.gif",
-				previewPath: "https://media.giphy.com/media/b/200.gif",
-				stillPath: "https://media.giphy.com/media/b/200_s.gif",
-				width: 200,
-				height: 150,
-				imageHash: "giphy/b",
+		expect(onPick).toHaveBeenCalledExactlyOnceWith({
+			id: "b",
+			message: {
+				type: "Giphy",
+				body: {
+					id: "b",
+					urlPath: "https://media.giphy.com/media/b/200.gif",
+					previewPath: "https://media.giphy.com/media/b/200.gif",
+					stillPath: "https://media.giphy.com/media/b/200_s.gif",
+					width: 200,
+					height: 150,
+					imageHash: "giphy/b",
+				},
 			},
-		};
-		expect(composer.sendMessages).toHaveBeenCalledExactlyOnceWith([
-			{ outbound: message, optimistic: message },
-		]);
-		expect(onClose).toHaveBeenCalledOnce();
-		expect(selections.at(-1)).toEqual({ count: 0, label: "Send GIF" });
-	});
-
-	it("only closes when nothing is picked", async () => {
-		const { component } = await mount();
-
-		component.submitSelection();
-
-		expect(onClose).toHaveBeenCalledOnce();
-		expect(composer.sendMessages).not.toHaveBeenCalled();
+		});
+		expect(pressed("Trending b")).toBe("false");
 	});
 });

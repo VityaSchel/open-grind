@@ -8,10 +8,7 @@
 	import { gaymojiSections } from "$lib/chat/gaymoji-sections";
 	import { Button } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { draftFromMessage } from "$lib/model/messaging/messages";
-	import { SelectionSet } from "$lib/util/selection.svelte";
-	import type { TabSelection } from "../../attachments/tabs";
-	import { getMessageComposerContext } from "../../message-composer-context.svelte";
+	import type { StickerPick } from "../sticker-pick";
 	import GaymojiSection from "./GaymojiSection.svelte";
 	import GaymojiSectionStrip from "./GaymojiSectionStrip.svelte";
 	import { SectionScroll } from "./section-scroll.svelte";
@@ -20,13 +17,13 @@
 
 	let {
 		active,
-		onSelectionChange,
-		onClose,
+		pickedId,
+		onPick,
 		holdSheetSize,
 	}: {
 		active: boolean;
-		onSelectionChange: (selection: TabSelection) => void;
-		onClose: () => void;
+		pickedId: string | null;
+		onPick: (pick: StickerPick) => void;
 		holdSheetSize: () => () => void;
 	} = $props();
 
@@ -34,7 +31,6 @@
 		| { status: "idle" | "loading" | "failed" }
 		| { status: "ready"; categories: GaymojiCategory[] };
 
-	const SEND_LABEL = "Send Gaymoji";
 	const SKELETON_ROWS = 3;
 	const SKELETON_COLUMNS = [
 		"",
@@ -47,8 +43,6 @@
 		"hidden @gaymoji8/sticker-grid:block",
 	];
 
-	const composer = getMessageComposerContext();
-	const selection = new SelectionSet<string>();
 	const windows = new SectionWindows();
 
 	let manifest = $state.raw<Manifest>({ status: "idle" });
@@ -85,27 +79,6 @@
 	$effect(() => {
 		if (active) untrack(loadOnFirstVisit);
 	});
-
-	function toggle(id: string) {
-		selection.toggleExclusive(id);
-		onSelectionChange({ count: selection.size, label: SEND_LABEL });
-	}
-
-	export function submitSelection() {
-		const gaymoji = sections
-			.flatMap(({ items }) => items)
-			.find(({ id }) => selection.has(id));
-		selection.clear();
-		onSelectionChange({ count: 0, label: SEND_LABEL });
-		onClose();
-		if (gaymoji === undefined) return;
-		void composer().sendMessages([
-			draftFromMessage({
-				type: "Gaymoji",
-				body: { imageHash: gaymoji.imageHash },
-			}),
-		]);
-	}
 </script>
 
 <div
@@ -125,8 +98,15 @@
 				{section}
 				headers={scroll.headers}
 				{windows}
-				{selection}
-				onToggle={toggle}
+				{pickedId}
+				onToggle={(gaymoji) =>
+					onPick({
+						id: gaymoji.id,
+						message: {
+							type: "Gaymoji",
+							body: { imageHash: gaymoji.imageHash },
+						},
+					})}
 			/>
 		{/each}
 	{:else if manifest.status === "loading"}

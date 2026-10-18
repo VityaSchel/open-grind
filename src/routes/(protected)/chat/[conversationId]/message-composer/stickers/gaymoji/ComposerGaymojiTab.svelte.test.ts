@@ -4,20 +4,12 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { MessageDraft } from "$lib/model/messaging/messages";
-
 const api = vi.hoisted(() => ({ getGaymoji: vi.fn() }));
-const composer = vi.hoisted(() => ({
-	sendMessages: vi.fn<(drafts: MessageDraft[]) => void>(),
-}));
 
 vi.mock("$lib/api/messaging/gaymoji", () => api);
-vi.mock("../../message-composer-context.svelte", () => ({
-	getMessageComposerContext: () => () => composer,
-}));
 
 import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
-import type { TabSelection } from "../../attachments/tabs";
+import type { StickerPick } from "../sticker-pick";
 import ComposerGaymojiTab from "./ComposerGaymojiTab.svelte";
 
 const MANIFEST_SIZE = 579;
@@ -47,19 +39,17 @@ const shortManifest: GaymojiCategory[] = [
 	{ name: "mood", items: shortItems.slice(6) },
 ];
 
-const onClose = vi.fn<() => void>();
-let selections: TabSelection[];
+const onPick = vi.fn<(pick: StickerPick) => void>();
 
-function mount({ active }: { active: boolean }) {
+function mount({
+	active,
+	pickedId = null,
+}: {
+	active: boolean;
+	pickedId?: string | null;
+}) {
 	return render(ComposerGaymojiTab, {
-		props: {
-			active,
-			onClose,
-			onSelectionChange: (selection: TabSelection) => {
-				selections.push(selection);
-			},
-			holdSheetSize: () => () => {},
-		},
+		props: { active, pickedId, onPick, holdSheetSize: () => () => {} },
 	});
 }
 
@@ -80,10 +70,12 @@ function tile(label: string): HTMLButtonElement {
 	return screen.getByRole("button", { name: label });
 }
 
+function pressed(label: string): string | null {
+	return tile(label).getAttribute("aria-pressed");
+}
+
 beforeEach(() => {
-	selections = [];
-	onClose.mockReset();
-	composer.sendMessages.mockReset();
+	onPick.mockReset();
 	api.getGaymoji.mockReset();
 	api.getGaymoji.mockResolvedValue(shortManifest);
 	vi.spyOn(console, "error").mockImplementation(() => {});
@@ -121,9 +113,11 @@ describe("composer Gaymoji tab", () => {
 	});
 
 	it("drops its tile images while hidden and restores them without refetching", async () => {
-		const { container, rerender } = mount({ active: true });
+		const { container, rerender } = mount({
+			active: true,
+			pickedId: gaymojiItem(3).id,
+		});
 		await settle();
-		await fireEvent.click(tile("Sticker 3"));
 		const labels = shortItems.map((gaymoji) => gaymoji.label);
 		expect(tileLabels()).toEqual(labels);
 		expect(container.querySelectorAll(TILE_IMAGE)).toHaveLength(
@@ -139,7 +133,7 @@ describe("composer Gaymoji tab", () => {
 		expect(container.querySelectorAll(TILE_IMAGE)).toHaveLength(
 			labels.length,
 		);
-		expect(tile("Sticker 3").getAttribute("aria-pressed")).toBe("true");
+		expect(pressed("Sticker 3")).toBe("true");
 		expect(api.getGaymoji).toHaveBeenCalledOnce();
 	});
 
@@ -182,22 +176,24 @@ describe("composer Gaymoji tab", () => {
 		).toHaveLength(6);
 	});
 
-	it("keeps a single Gaymoji selected at a time", async () => {
-		mount({ active: true });
+	it("presses only the Gaymoji its menu has picked", async () => {
+		const { rerender } = mount({
+			active: true,
+			pickedId: gaymojiItem(3).id,
+		});
 		await settle();
+		expect(pressed("Sticker 3")).toBe("true");
+		expect(pressed("Sticker 7")).toBe("false");
 
-		await fireEvent.click(tile("Sticker 3"));
-		expect(tile("Sticker 3").getAttribute("aria-pressed")).toBe("true");
-		expect(selections.at(-1)).toEqual({ count: 1, label: "Send Gaymoji" });
+		await rerender({ pickedId: gaymojiItem(7).id });
+		expect(pressed("Sticker 3")).toBe("false");
+		expect(pressed("Sticker 7")).toBe("true");
 
-		await fireEvent.click(tile("Sticker 7"));
-		expect(tile("Sticker 3").getAttribute("aria-pressed")).toBe("false");
-		expect(tile("Sticker 7").getAttribute("aria-pressed")).toBe("true");
-		expect(selections.at(-1)).toEqual({ count: 1, label: "Send Gaymoji" });
-
-		await fireEvent.click(tile("Sticker 7"));
-		expect(tile("Sticker 7").getAttribute("aria-pressed")).toBe("false");
-		expect(selections.at(-1)).toEqual({ count: 0, label: "Send Gaymoji" });
+		await rerender({ pickedId: null });
+		expect(pressed("Sticker 7")).toBe("false");
+		expect(screen.queryAllByRole("button", { pressed: true })).toHaveLength(
+			0,
+		);
 	});
 
 	it("shows a neutral error and loads again on retry", async () => {
@@ -217,31 +213,19 @@ describe("composer Gaymoji tab", () => {
 		expect(tiles()).toHaveLength(shortItems.length);
 	});
 
-	it("sends the picked Gaymoji by its image hash and closes", async () => {
-		const { component } = mount({ active: true });
+	it("hands a tapped Gaymoji to its menu by its image hash", async () => {
+		mount({ active: true });
 		await settle();
+
 		await fireEvent.click(tile("Sticker 7"));
 
-		component.submitSelection();
-
-		const message = {
-			type: "Gaymoji",
-			body: { imageHash: "gaymoji/7_Sticker_7.png" },
-		};
-		expect(composer.sendMessages).toHaveBeenCalledExactlyOnceWith([
-			{ outbound: message, optimistic: message },
-		]);
-		expect(onClose).toHaveBeenCalledOnce();
-		expect(selections.at(-1)).toEqual({ count: 0, label: "Send Gaymoji" });
-	});
-
-	it("only closes when nothing is picked", async () => {
-		const { component } = mount({ active: true });
-		await settle();
-
-		component.submitSelection();
-
-		expect(onClose).toHaveBeenCalledOnce();
-		expect(composer.sendMessages).not.toHaveBeenCalled();
+		expect(onPick).toHaveBeenCalledExactlyOnceWith({
+			id: "7_Sticker_7.png",
+			message: {
+				type: "Gaymoji",
+				body: { imageHash: "gaymoji/7_Sticker_7.png" },
+			},
+		});
+		expect(pressed("Sticker 7")).toBe("false");
 	});
 });

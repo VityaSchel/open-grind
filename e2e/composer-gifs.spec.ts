@@ -31,7 +31,9 @@ import {
 	giphyTrendingPageAt,
 	openStickers,
 	refuseRealGiphy,
+	SELECTED_STICKER_TILE,
 	STICKER_GRID_SKELETON,
+	stickerSendButton,
 	tileLabels,
 } from "./support/stickers";
 
@@ -229,6 +231,19 @@ test.describe("GIPHY consent", () => {
 });
 
 test.describe("GIF search", () => {
+	test("typing a new search drops the GIF picked from the old results", async ({
+		page,
+	}) => {
+		await openStickers(page);
+		await gifTiles(page).first().click();
+		await expect(stickerSendButton(page)).toBeVisible();
+
+		await gifSearchBox(page).fill("cats");
+
+		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
+		await expect(stickerSendButton(page)).toHaveCount(0);
+	});
+
 	test("typing shows skeletons at once and searches once after the burst", async ({
 		page,
 	}) => {

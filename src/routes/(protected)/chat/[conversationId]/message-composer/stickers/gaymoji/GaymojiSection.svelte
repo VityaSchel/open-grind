@@ -1,6 +1,6 @@
 <script lang="ts">
+	import type { GaymojiItem } from "$lib/api/messaging/gaymoji";
 	import type { GaymojiSection } from "$lib/chat/gaymoji-sections";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ElementRegistry } from "./element-registry";
 	import GaymojiTile from "./GaymojiTile.svelte";
 	import { sectionView, type SectionWindows } from "./section-windows.svelte";
@@ -10,14 +10,14 @@
 		section,
 		headers,
 		windows,
-		selection,
+		pickedId,
 		onToggle,
 	}: {
 		section: GaymojiSection;
 		headers: ElementRegistry<HTMLElement>;
 		windows: SectionWindows;
-		selection: SelectionSet<string>;
-		onToggle: (id: string) => void;
+		pickedId: string | null;
+		onToggle: (gaymoji: GaymojiItem) => void;
 	} = $props();
 
 	const headingId = $props.id();
@@ -52,8 +52,8 @@
 		{#each visibleItems as gaymoji (gaymoji.id)}
 			<GaymojiTile
 				{gaymoji}
-				selected={selection.has(gaymoji.id)}
-				onclick={() => onToggle(gaymoji.id)}
+				selected={gaymoji.id === pickedId}
+				onclick={() => onToggle(gaymoji)}
 			/>
 		{/each}
 	</div>

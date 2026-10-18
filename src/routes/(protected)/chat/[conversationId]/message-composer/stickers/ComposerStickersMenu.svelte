@@ -11,10 +11,12 @@
 	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
+	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { giphyConsented } from "../../giphy-consent/giphy-consent";
-	import type { SelectionTab, TabSelection } from "../attachments/tabs";
+	import { getMessageComposerContext } from "../message-composer-context.svelte";
 	import ComposerGaymojiTab from "./gaymoji/ComposerGaymojiTab.svelte";
 	import ComposerGifTab from "./gifs/ComposerGifTab.svelte";
+	import type { StickerPick } from "./sticker-pick";
 
 	type StickerTab = "gifs" | "gaymoji";
 
@@ -23,12 +25,18 @@
 		onCloseAutoFocus,
 	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
+	const SEND_LABELS: Record<StickerTab, string> = {
+		gifs: "Send GIF",
+		gaymoji: "Send Gaymoji",
+	};
+
+	const composer = getMessageComposerContext();
+
 	let selectedTab = $state<StickerTab>("gifs");
-	let tabs = $state<Partial<Record<StickerTab, SelectionTab | null>>>({});
-	let selections = $state<Partial<Record<StickerTab, TabSelection>>>({});
+	let picks = $state.raw<Partial<Record<StickerTab, StickerPick>>>({});
 	let sheetBody = $state<ReturnType<typeof MediaSheetBody> | null>(null);
 
-	const selection = $derived(selections[selectedTab]);
+	const picked = $derived(picks[selectedTab]);
 	const consented = $derived(giphyConsented());
 	const fullsize = $derived(selectedTab === "gaymoji" || consented);
 
@@ -36,26 +44,43 @@
 
 	$effect(() => {
 		if (open) return;
-		selections = {};
-	});
-
-	$effect.pre(() => {
-		const tab = selectedTab;
-		return () => {
-			contentOffsets[tab] = sheetBody?.contentScrollTop() ?? 0;
-		};
+		picks = {};
 	});
 
 	$effect(() => {
 		const offset = contentOffsets[selectedTab] ?? 0;
 		untrack(() => sheetBody?.restoreContentScrollTop(offset));
 	});
+
+	function selectTab(tab: StickerTab) {
+		contentOffsets[selectedTab] = sheetBody?.contentScrollTop() ?? 0;
+		selectedTab = tab;
+	}
+
+	function toggle({ tab, pick }: { tab: StickerTab; pick: StickerPick }) {
+		picks = {
+			...picks,
+			[tab]: picks[tab]?.id === pick.id ? undefined : pick,
+		};
+	}
+
+	function restartGifFeed() {
+		picks = { ...picks, gifs: undefined };
+		sheetBody?.scrollContentToTop();
+	}
+
+	function submit() {
+		const pick = picked;
+		open = false;
+		if (pick === undefined) return;
+		void composer().sendMessages([draftFromMessage(pick.message)]);
+	}
 </script>
 
 <MediaSheet bind:open {fullsize} {onCloseAutoFocus}>
 	<Drawer.Title class="sr-only">GIFs and stickers</Drawer.Title>
 	<Tabs.Root
-		bind:value={selectedTab}
+		bind:value={() => selectedTab, selectTab}
 		class={["min-h-0 gap-0", { "h-full": fullsize }]}
 	>
 		<MediaSheetBody bind:this={sheetBody} {fullsize}>
@@ -64,12 +89,10 @@
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerGifTab
-					bind:this={tabs.gifs}
 					active={selectedTab === "gifs"}
-					onSelectionChange={(gifSelection) =>
-						(selections.gifs = gifSelection)}
-					onClose={() => (open = false)}
-					onFeedRestart={() => sheetBody?.scrollContentToTop()}
+					pickedId={picks.gifs?.id ?? null}
+					onPick={(pick) => toggle({ tab: "gifs", pick })}
+					onFeedRestart={restartGifFeed}
 					onSearchFocus={() => sheetBody?.expand()}
 				/>
 			</Tabs.Content>
@@ -78,11 +101,9 @@
 				class="flex-1 flex-col data-[state=active]:flex"
 			>
 				<ComposerGaymojiTab
-					bind:this={tabs.gaymoji}
 					active={selectedTab === "gaymoji"}
-					onSelectionChange={(gaymojiSelection) =>
-						(selections.gaymoji = gaymojiSelection)}
-					onClose={() => (open = false)}
+					pickedId={picks.gaymoji?.id ?? null}
+					onPick={(pick) => toggle({ tab: "gaymoji", pick })}
 					holdSheetSize={() => sheetBody?.holdSize() ?? (() => {})}
 				/>
 			</Tabs.Content>
@@ -90,10 +111,10 @@
 
 		<MediaSheetActions
 			aboveTabBar
-			label={selection?.label ?? ""}
-			count={selection?.count ?? 0}
+			label={SEND_LABELS[selectedTab]}
+			count={picked === undefined ? 0 : 1}
 			showCount={false}
-			onSubmit={() => tabs[selectedTab]?.submitSelection()}
+			onSubmit={submit}
 		/>
 
 		<MediaSheetTabBar

@@ -2,14 +2,11 @@
 	import { untrack } from "svelte";
 
 	import { preferencesLoaded } from "$lib/app-data/preferences.svelte";
-	import { draftFromMessage } from "$lib/model/messaging/messages";
-	import { SelectionSet } from "$lib/util/selection.svelte";
 	import {
 		giphyConsented,
 		turnOnGiphy,
 	} from "../../../giphy-consent/giphy-consent";
-	import type { TabSelection } from "../../attachments/tabs";
-	import { getMessageComposerContext } from "../../message-composer-context.svelte";
+	import type { StickerPick } from "../sticker-pick";
 	import { GifFeed } from "./gif-feed.svelte";
 	import GifGrid from "./GifGrid.svelte";
 	import GifSearchBar from "./GifSearchBar.svelte";
@@ -17,29 +14,20 @@
 
 	let {
 		active,
-		onSelectionChange,
-		onClose,
+		pickedId,
+		onPick,
 		onFeedRestart,
 		onSearchFocus,
 	}: {
 		active: boolean;
-		onSelectionChange: (selection: TabSelection) => void;
-		onClose: () => void;
+		pickedId: string | null;
+		onPick: (pick: StickerPick) => void;
 		onFeedRestart?: () => void;
 		onSearchFocus?: () => void;
 	} = $props();
 
-	const SEND_LABEL = "Send GIF";
-
-	const composer = getMessageComposerContext();
 	const consented = $derived(giphyConsented());
-	const selected = new SelectionSet<string>();
-	const feed = new GifFeed({
-		onRestart: () => {
-			clearSelection();
-			onFeedRestart?.();
-		},
-	});
+	const feed = new GifFeed({ onRestart: () => onFeedRestart?.() });
 
 	let agreeing = $state(false);
 
@@ -49,31 +37,10 @@
 
 	$effect(() => () => feed.destroy());
 
-	function clearSelection() {
-		if (selected.size === 0) return;
-		selected.clear();
-		onSelectionChange({ count: 0, label: SEND_LABEL });
-	}
-
-	function toggle(id: string) {
-		selected.toggleExclusive(id);
-		onSelectionChange({ count: selected.size, label: SEND_LABEL });
-	}
-
 	async function agree() {
 		agreeing = true;
 		await turnOnGiphy();
 		agreeing = false;
-	}
-
-	export function submitSelection() {
-		const gif = feed.gifs.find(({ id }) => selected.has(id));
-		clearSelection();
-		onClose();
-		if (gif === undefined) return;
-		void composer().sendMessages([
-			draftFromMessage({ type: "Giphy", body: gif.body }),
-		]);
 	}
 </script>
 
@@ -87,7 +54,15 @@
 				onFocus={onSearchFocus}
 			/>
 			{#if active}
-				<GifGrid {feed} {selected} onToggle={toggle} />
+				<GifGrid
+					{feed}
+					{pickedId}
+					onToggle={(gif) =>
+						onPick({
+							id: gif.id,
+							message: { type: "Giphy", body: gif.body },
+						})}
+				/>
 			{/if}
 		</div>
 	{:else}

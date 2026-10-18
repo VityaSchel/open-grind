@@ -8,17 +8,17 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty";
 	import { observeIntersection } from "$lib/util/observe-intersection";
-	import type { SelectionSet } from "$lib/util/selection.svelte";
+	import type { GiphyTile } from "$lib/api/messaging/giphy";
 	import type { GifFeed } from "./gif-feed.svelte";
 
 	let {
 		feed,
-		selected,
+		pickedId,
 		onToggle,
 	}: {
 		feed: GifFeed;
-		selected: SelectionSet<string>;
-		onToggle: (id: string) => void;
+		pickedId: string | null;
+		onToggle: (gif: GiphyTile) => void;
 	} = $props();
 
 	const SKELETON_COUNT = 12;
@@ -58,14 +58,14 @@
 	{:else}
 		<div data-slot="sticker-grid" class={GRID_CLASS}>
 			{#each feed.gifs as gif (gif.id)}
-				{@const isSelected = selected.has(gif.id)}
+				{@const isSelected = gif.id === pickedId}
 				<button
 					type="button"
 					data-slot="sticker-tile"
 					class="relative aspect-4/3 cursor-pointer scroll-mt-18 rounded-lg bg-muted"
 					aria-label={gif.alt}
 					aria-pressed={isSelected}
-					onclick={() => onToggle(gif.id)}
+					onclick={() => onToggle(gif)}
 				>
 					<MediaImage
 						src={prefersReducedMotion.current
