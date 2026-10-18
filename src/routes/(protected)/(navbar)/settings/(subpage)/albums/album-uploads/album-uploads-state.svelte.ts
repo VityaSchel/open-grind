@@ -15,6 +15,11 @@ import { albumMediaCounts } from "$lib/components/album/album";
 import { forgetAlbumSlides } from "$lib/components/album/album-lightbox";
 import { t } from "$lib/i18n";
 import { formatNumber } from "$lib/i18n/format";
+import {
+	discardStagedMedia,
+	type MediaFileInspection,
+	type MediaFileKind,
+} from "$lib/platform/media-file";
 import { BYTES_PER_MEGABYTE } from "$lib/util/bytes";
 import { delay } from "$lib/util/delay";
 import { Generation } from "$lib/util/generation";
@@ -22,10 +27,6 @@ import type {
 	AlbumContent,
 	AlbumStorageLimits,
 } from "$lib/model/messaging/albums";
-import type {
-	MediaFileInspection,
-	MediaFileKind,
-} from "$lib/platform/media-file";
 import type { PickedMedia } from "$lib/platform/media-picker";
 
 type UploadKind = Exclude<MediaFileKind, "unsupported">;
@@ -166,6 +167,7 @@ class AlbumUploadsState {
 			pending: this.pending(albumId),
 		});
 		const accepted: QueuedUpload[] = [];
+		const leftOut: PickedMedia[] = [];
 		for (const pick of [
 			...inspected.filter(
 				({ inspection }) => inspection.kind === "video",
@@ -177,12 +179,14 @@ class AlbumUploadsState {
 			if (pick.inspection.kind === "video") {
 				if (videos >= limits.maxVideosPerAlbum) {
 					leftOutVideoSlot += 1;
+					leftOut.push(pick.media);
 					continue;
 				}
 				videos += 1;
 			} else {
 				if (photos >= limits.maxContentItemsPerAlbum) {
 					leftOutFull += 1;
+					leftOut.push(pick.media);
 					continue;
 				}
 				photos += 1;
@@ -190,6 +194,7 @@ class AlbumUploadsState {
 			accepted.push({ ...pick, albumId, limits });
 		}
 
+		void discardStagedMedia(leftOut);
 		this.#queue = [...this.#queue, ...accepted];
 		void this.#run();
 		return { leftOutFull, leftOutVideoSlot };
@@ -197,6 +202,8 @@ class AlbumUploadsState {
 
 	#drop(): void {
 		this.#generation.next();
+		const waiting = this.#queue.slice(this.#running ? 1 : 0);
+		void discardStagedMedia(waiting.map(({ media }) => media));
 		this.#queue = [];
 		this.#landing = [];
 		this.#landings.clear();
@@ -306,12 +313,14 @@ class AlbumUploadsState {
 			}
 		}
 		if (isPlanLimitReached(error)) {
-			this.#queue = this.#queue.filter(
-				(queued) =>
-					queued === entry ||
-					queued.albumId !== entry.albumId ||
-					queued.inspection.kind !== entry.inspection.kind,
+			const outOfRoom = (queued: QueuedUpload) =>
+				queued !== entry &&
+				queued.albumId === entry.albumId &&
+				queued.inspection.kind === entry.inspection.kind;
+			void discardStagedMedia(
+				this.#queue.filter(outOfRoom).map(({ media }) => media),
 			);
+			this.#queue = this.#queue.filter((queued) => !outOfRoom(queued));
 			toast.error(outOfRoomMessage(entry));
 			return;
 		}

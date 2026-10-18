@@ -192,6 +192,7 @@ pub(crate) async fn end_session(
 	let _one_at_a_time = SIGN_OUT.lock().await;
 	forget_account(state.client()?, media).await?;
 	super::facebook_oauth::forget_sign_in_profile(app).await;
+	crate::upload::staged::discard_all(app);
 	Ok(())
 }
 

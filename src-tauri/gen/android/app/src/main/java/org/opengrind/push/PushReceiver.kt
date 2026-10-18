@@ -26,7 +26,7 @@ class PushReceiver : BroadcastReceiver() {
 			PushContract.EXTRA_SENT_TIME,
 			System.currentTimeMillis(),
 		)
-		val decision = PushPayload.decide(data.toStringMap(), sentTime)
+		val decision = PushPayload.decide(data.toStringMap(), sentTime, PushWords.of(context))
 		if (decision is PushDecision.Notify && AppForeground.visible()) return
 		PushNotifier.apply(context, decision)
 	}

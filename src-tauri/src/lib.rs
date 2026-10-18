@@ -10,7 +10,11 @@ mod desktop_entry;
 mod error;
 mod haptics;
 mod hex;
+#[cfg(target_os = "android")]
+mod keyboard_media;
 pub mod media;
+#[cfg(target_os = "android")]
+mod media_drag;
 mod media_picker;
 mod photo;
 #[cfg(test)]
@@ -153,6 +157,8 @@ pub fn run() {
 	let builder = builder
 		.plugin(tauri_plugin_android_fs::init())
 		.plugin(photo::plugin())
+		.plugin(keyboard_media::plugin())
+		.plugin(media_drag::plugin())
 		.plugin(api::recaptcha::plugin())
 		.plugin(app_origin::android::plugin());
 
@@ -219,7 +225,12 @@ pub fn run() {
             media::media_failure,
             upload::bytes::upload_media,
             upload::inspect::inspect_media_file,
+            upload::preview::preview_media,
             upload::file::upload_media_file,
+            upload::staged::stage_media,
+            upload::staged::append_staged_media,
+            upload::staged::discard_staged_media,
+            upload::linked::stage_linked_media,
             api::ws::ws_connect,
             api::ws::ws_reconnect,
             api::ws::ws_send,
@@ -248,9 +259,11 @@ pub fn run() {
             app_settings::open_app_settings,
             media_picker::pick_android_media,
             appearance::backdrop_filter_renders,
+            appearance::webview_engine,
             regional::regional_settings,
             app_language::app_languages,
             app_language::set_app_language,
+            app_language::set_native_language,
             app_data::read_app_data,
             app_data::write_app_data,
             app_data::remove_app_data,
@@ -259,6 +272,7 @@ pub fn run() {
             scroll_phase::install_scroll_gesture_bridge(app.handle());
             #[cfg(target_os = "android")]
             app_origin::android::prepare_served_origin(app.handle());
+            upload::staged::discard_all(app.handle());
             let user_agent = format!(
                 "open-grind/{} (+https://opengrind.org/; contact: admin@opengrind.org)",
                 app.package_info().version
@@ -278,6 +292,8 @@ pub fn run() {
                         .on_navigation(|url| {
                             app_origin::is_app_url(url, app_origin::SERVED_HOSTNAME)
                         });
+                #[cfg(any(target_os = "macos", target_os = "windows"))]
+                let builder = builder.disable_drag_drop_handler();
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
@@ -285,6 +301,8 @@ pub fn run() {
                 let window = builder.build()?;
                 #[cfg(target_os = "linux")]
                 media::serve_element_opens(&window);
+                #[cfg(target_os = "linux")]
+                scroll_phase::follow_touchpad(&window);
                 appearance::unlock_visual_effects(&window);
                 context_menu::trim_native_menu(&window);
                 #[cfg(desktop)]

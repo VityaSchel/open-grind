@@ -5,9 +5,11 @@ import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
 import { type AlbumRoom, albumRoom } from "$lib/components/album/album";
 import { t } from "$lib/i18n";
 import {
+	discardStagedMedia,
 	inspectMediaFile,
 	type MediaFileInspection,
 } from "$lib/platform/media-file";
+import { screenMedia } from "$lib/platform/media-intake.svelte";
 import {
 	type MediaKind,
 	type PickedMedia,
@@ -92,10 +94,12 @@ export async function addAlbumMedia({
 	uploads,
 	albumId,
 	content,
+	media,
 }: {
 	uploads: AlbumUploads;
 	albumId: number;
 	content: () => AlbumContent[];
+	media?: PickedMedia[];
 }): Promise<void> {
 	try {
 		const limits = await getAlbumStorageLimits();
@@ -106,9 +110,13 @@ export async function addAlbumMedia({
 		});
 		if (!room.photos && !room.videos) {
 			toast.error(t("media.albums.uploads.errors.albumFull"));
+			await discardStagedMedia(media ?? []);
 			return;
 		}
-		const inspected = await pickInspectedAlbumMedia({ room });
+		const inspected =
+			media === undefined
+				? await pickInspectedAlbumMedia({ room })
+				: await screenMedia({ media, videos: true });
 		if (inspected.length === 0) return;
 		enqueueAlbumMedia({
 			uploads,
@@ -119,6 +127,7 @@ export async function addAlbumMedia({
 		});
 	} catch (error) {
 		console.error(error);
+		void discardStagedMedia(media ?? []);
 		showErrorToast({
 			label: t("media.albums.uploads.errors.addFailed"),
 			error,

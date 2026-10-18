@@ -2,6 +2,7 @@ import type { ClientInit, HandleClientError } from "@sveltejs/kit";
 
 import { demoEnabled, loadDemo, screenshotsEnabled } from "$lib/demo";
 import { startLanguage } from "$lib/platform/app-language";
+import { isMacosPlatform } from "$lib/platform/os";
 import { startRegionalSettings } from "$lib/platform/regional-settings";
 import { ws } from "$lib/ws.svelte";
 
@@ -14,6 +15,11 @@ export const init: ClientInit = async () => {
 	}
 	ws.connect();
 	await Promise.all([startRegionalSettings(), startLanguage()]);
+	if (isMacosPlatform()) {
+		void import("$lib/platform/app-menu")
+			.then(({ startAppMenu }) => startAppMenu())
+			.catch(console.error);
+	}
 };
 
 export const handleError: HandleClientError = ({ error, event, message }) => {

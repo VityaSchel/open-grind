@@ -8,8 +8,18 @@ const { readMock, writeMock } = vi.hoisted(() => ({
 	writeMock: vi.fn(),
 }));
 
-const { compositingMock } = vi.hoisted(() => ({
+const { compositingMock, hydratedMock } = vi.hoisted(() => ({
 	compositingMock: vi.fn(() => true),
+	hydratedMock: vi.fn(() => true),
+}));
+
+const ENGINE = "2.52.6";
+
+const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
+
+vi.mock("$lib/platform/os", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/platform/os")>()),
+	isLinuxPlatform: linuxMock,
 }));
 
 const { remeasureMock } = vi.hoisted(() => ({ remeasureMock: vi.fn() }));
@@ -20,7 +30,9 @@ vi.mock("$lib/util/screen-chrome.svelte", () => ({
 
 vi.mock("./compositing.svelte", () => ({
 	backdropCompositingRenders: compositingMock,
+	backdropCompositingHydrated: hydratedMock,
 	hydrateBackdropCompositing: () => Promise.resolve(),
+	webviewEngine: () => ENGINE,
 }));
 
 vi.mock("$lib/app-data", () => ({
@@ -31,7 +43,7 @@ vi.mock("$lib/app-data", () => ({
 }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
-import { MEDIUM_MIN_PAIRS, REFERENCE_PERIOD_MS } from "./calibration/constants";
+import { DEMOTE_MIN_PAIRS, REFERENCE_PERIOD_MS } from "./calibration/constants";
 import {
 	backdropBlurTrialArm,
 	syncBackdropBlurTrial,
@@ -58,6 +70,8 @@ beforeEach(async () => {
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);
 	compositingMock.mockReturnValue(true);
+	hydratedMock.mockReturnValue(true);
+	linuxMock.mockReturnValue(false);
 	document.documentElement.removeAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE);
 	syncBackdropBlurTrial({ needed: false });
 	await setPreferences({
@@ -75,6 +89,12 @@ describe("effectiveBackdropBlurQuality", () => {
 		expect(UNCALIBRATED_BACKDROP_BLUR_QUALITY).toBe("max");
 	});
 
+	it("renders Low before calibrating on Linux, where Full can freeze WebKitGTK", () => {
+		withBackdropSupport(true);
+		linuxMock.mockReturnValue(true);
+		expect(effectiveBackdropBlurQuality()).toBe("min");
+	});
+
 	it("falls to off when the engine cannot blur backdrops", async () => {
 		withBackdropSupport(false);
 		await setPreferences({ backdropBlurQuality: "max" });
@@ -84,9 +104,30 @@ describe("effectiveBackdropBlurQuality", () => {
 	it("prefers the device calibration over the uncalibrated default", async () => {
 		withBackdropSupport(true);
 		await setPreferences({
-			backdropBlurCalibration: { quality: "medium", samples: [] },
+			backdropBlurCalibration: {
+				quality: "medium",
+				rung: "max",
+				engine: ENGINE,
+				samples: [],
+			},
 		});
 		expect(effectiveBackdropBlurQuality()).toBe("medium");
+	});
+
+	it("drops a calibration measured under another WebView engine", async () => {
+		withBackdropSupport(true);
+		await setPreferences({
+			backdropBlurCalibration: {
+				quality: "min",
+				rung: "medium",
+				engine: "2.50.4",
+				samples: [],
+			},
+		});
+		expect(effectiveBackdropBlurQuality()).toBe(
+			UNCALIBRATED_BACKDROP_BLUR_QUALITY,
+		);
+		expect(backdropBlurTrialPending()).toBe(true);
 	});
 
 	it("falls to off when the compositor cannot execute the blur, whatever the engine claims", async () => {
@@ -108,7 +149,12 @@ describe("effectiveBackdropBlurQuality", () => {
 		withBackdropSupport(true);
 		await setPreferences({
 			backdropBlurQuality: "min",
-			backdropBlurCalibration: { quality: "medium", samples: [] },
+			backdropBlurCalibration: {
+				quality: "medium",
+				rung: "max",
+				engine: ENGINE,
+				samples: [],
+			},
 		});
 		expect(effectiveBackdropBlurQuality()).toBe("min");
 	});
@@ -138,7 +184,12 @@ describe("applyBackdropBlurQuality", () => {
 		withBackdropSupport(true);
 		await setPreferences({
 			backdropBlurQuality: null,
-			backdropBlurCalibration: { quality: null, samples: [[20, 16.7]] },
+			backdropBlurCalibration: {
+				quality: null,
+				rung: "max",
+				engine: ENGINE,
+				samples: [[20, 16.7]],
+			},
 		});
 		applyBackdropBlurQuality();
 		expect(localStorage.getItem(BACKDROP_BLUR_MIRROR_KEY)).toBe("max");
@@ -149,17 +200,33 @@ describe("applyBackdropBlurQuality", () => {
 		await setPreferences({
 			backdropBlurCalibration: {
 				quality: null,
-				samples: Array.from({ length: MEDIUM_MIN_PAIRS }, () => [
+				rung: "medium",
+				engine: ENGINE,
+				samples: Array.from({ length: DEMOTE_MIN_PAIRS }, () => [
 					20,
 					REFERENCE_PERIOD_MS,
 				]),
 			},
 		});
 		applyBackdropBlurQuality();
-		expect(backdropBlurTrialArm()).toBe("medium");
-		await setPreferences({ backdropBlurQuality: "min" });
+		expect(backdropBlurTrialArm()).toBe("min");
+		await setPreferences({ backdropBlurQuality: "off" });
 		applyBackdropBlurQuality();
 		expect(backdropBlurTrialArm()).toBeNull();
+		expect(
+			document.documentElement.getAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE),
+		).toBe("off");
+	});
+
+	it("leaves the mirror-stamped attribute alone until the engine has answered", async () => {
+		withBackdropSupport(true);
+		hydratedMock.mockReturnValue(false);
+		document.documentElement.setAttribute(
+			BACKDROP_BLUR_ROOT_ATTRIBUTE,
+			"min",
+		);
+		await setPreferences({ backdropBlurQuality: "off" });
+		applyBackdropBlurQuality();
 		expect(
 			document.documentElement.getAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE),
 		).toBe("min");

@@ -60,6 +60,8 @@ type AppError = z.infer<typeof appErrorSchema>;
 
 const namedMediaReasons = [
 	"notMedia",
+	"linkNotMedia",
+	"linkTooLarge",
 	"videoUnreadable",
 	"notAPhoto",
 	"photoSizeUnreadable",
@@ -73,6 +75,8 @@ type NamedMediaReason = (typeof namedMediaReasons)[number];
 
 const mediaReasonMessageKeys = {
 	notMedia: "common.media.errors.unsupportedFile",
+	linkNotMedia: "common.media.errors.linkNotMedia",
+	linkTooLarge: "common.media.errors.linkTooLarge",
 	videoUnreadable: "common.media.errors.videoUnreadable",
 	notAPhoto: "common.media.errors.notAPhoto",
 	photoSizeUnreadable: "common.media.errors.photoSizeUnreadable",

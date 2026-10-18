@@ -122,8 +122,16 @@ export interface Messages {
 	"chat.composer.attachments.tabs.albums": undefined;
 	"chat.composer.attachments.tabs.location": undefined;
 	"chat.composer.attachments.tabs.media": undefined;
+	"chat.composer.dropToSend": undefined;
 	"chat.composer.errors.sendFailed": undefined;
 	"chat.composer.replyPreview.a11y.cancel": undefined;
+	"chat.composer.sendMedia.a11y.preview": undefined;
+	"chat.composer.sendMedia.a11y.title.photo": undefined;
+	"chat.composer.sendMedia.a11y.title.photos": { count: number };
+	"chat.composer.sendMedia.a11y.title.photosAndVideos": { count: number };
+	"chat.composer.sendMedia.a11y.title.video": undefined;
+	"chat.composer.sendMedia.a11y.title.videos": { count: number };
+	"chat.composer.sendMedia.errors.previewFailed": undefined;
 	"chat.composer.voiceMessage.a11y.record": undefined;
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
@@ -167,6 +175,8 @@ export interface Messages {
 	"chat.deleteConversations.one.title": undefined;
 	"chat.filters.a11y.favoritesOnly": undefined;
 	"chat.filters.unread": undefined;
+	"chat.keyboardMedia.errors.notInChat": undefined;
+	"chat.keyboardMedia.errors.readFailed": undefined;
 	"chat.layout.selectConversation": undefined;
 	"chat.message.a11y.actions": undefined;
 	"chat.message.contextMenu.a11y.reactWithFire": undefined;
@@ -217,6 +227,7 @@ export interface Messages {
 	"chat.notification.message": undefined;
 	"chat.notification.picture": undefined;
 	"chat.notification.video": undefined;
+	"chat.notification.you": undefined;
 	"commands.commandCenter.a11y.list": undefined;
 	"commands.commandCenter.empty": undefined;
 	"commands.commandCenter.placeholder": undefined;
@@ -300,15 +311,22 @@ export interface Messages {
 	"common.format.range": { max: string; min: string };
 	"common.genders.errors.loadFailed": undefined;
 	"common.location.errors.saveFailed": undefined;
+	"common.media.drop.onlyPhotos": undefined;
+	"common.media.drop.onlyPhotosAndVideos": undefined;
 	"common.media.errors.heicUnsupported": undefined;
+	"common.media.errors.linkFailed": undefined;
+	"common.media.errors.linkNotMedia": undefined;
+	"common.media.errors.linkTooLarge": undefined;
 	"common.media.errors.notAPhoto": undefined;
 	"common.media.errors.outsideReadableFolders": undefined;
 	"common.media.errors.photoDamaged": undefined;
 	"common.media.errors.photoSizeUnreadable": undefined;
 	"common.media.errors.photoTooLarge": { megabytes: string };
 	"common.media.errors.photoUndecodable": undefined;
+	"common.media.errors.readFailed": undefined;
 	"common.media.errors.unsupportedFile": undefined;
 	"common.media.errors.videoUnreadable": undefined;
+	"common.media.errors.videosNotAllowed": undefined;
 	"common.media.uploadPhotosOrVideos": undefined;
 	"common.profileFields.healthPractices": undefined;
 	"common.profileList.a11y.profileId": { id: string };
@@ -432,6 +450,7 @@ export interface Messages {
 	"media.albums.editor.content.a11y.videoSlotProcessing": { slot: string };
 	"media.albums.editor.content.addMedia": undefined;
 	"media.albums.editor.content.addToAlbum": undefined;
+	"media.albums.editor.content.dropToAdd": undefined;
 	"media.albums.editor.content.empty.description": undefined;
 	"media.albums.editor.content.empty.title": undefined;
 	"media.albums.editor.errors.saveFailed": undefined;
@@ -449,6 +468,7 @@ export interface Messages {
 	"media.albums.editor.name.hint": undefined;
 	"media.albums.editor.name.label": undefined;
 	"media.albums.editor.saved": undefined;
+	"media.albums.new.dropToStart": undefined;
 	"media.albums.new.empty.description": undefined;
 	"media.albums.new.empty.title": undefined;
 	"media.albums.new.errors.albumLimit": undefined;
@@ -487,6 +507,7 @@ export interface Messages {
 	"media.sheet.tileMenu.a11y.photoOptions": undefined;
 	"media.sheet.tileMenu.a11y.videoOptions": undefined;
 	"media.sheet.tileMenu.deletePermanently": undefined;
+	"media.uploads.notification": undefined;
 	"media.videoPlayer.a11y.mute": undefined;
 	"media.videoPlayer.a11y.pause": undefined;
 	"media.videoPlayer.a11y.play": undefined;
@@ -793,6 +814,7 @@ export interface Messages {
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: string };
 	"settings.profile.photos.a11y.uploading": undefined;
 	"settings.profile.photos.add": undefined;
+	"settings.profile.photos.dropToAdd": undefined;
 	"settings.profile.photos.errors.dailyLimit": undefined;
 	"settings.profile.photos.errors.leftOut": { count: number; max: string };
 	"settings.profile.photos.errors.openPickerFailed": undefined;
@@ -833,6 +855,25 @@ export interface Messages {
 	"shell.error.pageNotFound": undefined;
 	"shell.error.reportIssue": undefined;
 	"shell.error.title": undefined;
+	"shell.menuBar.about": undefined;
+	"shell.menuBar.closeWindow": undefined;
+	"shell.menuBar.copy": undefined;
+	"shell.menuBar.cut": undefined;
+	"shell.menuBar.edit": undefined;
+	"shell.menuBar.file": undefined;
+	"shell.menuBar.help": undefined;
+	"shell.menuBar.hide": undefined;
+	"shell.menuBar.hideOthers": undefined;
+	"shell.menuBar.minimize": undefined;
+	"shell.menuBar.paste": undefined;
+	"shell.menuBar.quit": undefined;
+	"shell.menuBar.redo": undefined;
+	"shell.menuBar.selectAll": undefined;
+	"shell.menuBar.services": undefined;
+	"shell.menuBar.undo": undefined;
+	"shell.menuBar.view": undefined;
+	"shell.menuBar.window": undefined;
+	"shell.menuBar.zoom": undefined;
 	"shell.navBar.a11y.me": undefined;
 	"shell.navBar.a11y.navigation": undefined;
 	"shell.navBar.tabs.browse": undefined;
@@ -857,6 +898,13 @@ export interface Messages {
 	"shell.subpageScreen.a11y.navigation": undefined;
 	"shell.toaster.a11y.close": undefined;
 	"shell.toaster.a11y.region": undefined;
+	"shell.webViewWarning.continue": undefined;
+	"shell.webViewWarning.description": { minimumVersion: string };
+	"shell.webViewWarning.detected": { provider: string; version: string };
+	"shell.webViewWarning.title": undefined;
+	"shell.webViewWarning.unknownProvider": undefined;
+	"shell.webViewWarning.unknownVersion": undefined;
+	"shell.webViewWarning.update": undefined;
 	"updates.addons.fcm.errors.busy": undefined;
 	"updates.addons.fcm.errors.downloadFailed": undefined;
 	"updates.addons.fcm.errors.externallyManaged": undefined;
@@ -1017,6 +1065,7 @@ export interface Messages {
 	"updates.toasts.manualInstall": undefined;
 	"updates.toasts.upToDate": undefined;
 	"updates.toasts.updatedTo": { tag: string };
+	"updates.transfers.channel": undefined;
 }
 
 export interface RichMessages {
@@ -1121,6 +1170,8 @@ export interface RichMessages {
 	"settings.profile.photos.a11y.slot": { slot: "placeholder" };
 	"settings.profile.photos.a11y.slotAwaitingReview": { slot: "placeholder" };
 	"settings.profile.photos.errors.leftOut": { count: "count"; max: "placeholder" };
+	"shell.webViewWarning.description": { minimumVersion: "placeholder" };
+	"shell.webViewWarning.detected": { provider: "placeholder"; version: "placeholder" };
 	"updates.addons.fcm.installedVersion": { tag: "placeholder" };
 	"updates.addons.fcm.updatedVersion": { tag: "placeholder" };
 	"updates.addons.googleOauth.installedVersion": { tag: "placeholder" };

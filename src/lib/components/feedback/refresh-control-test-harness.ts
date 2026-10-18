@@ -14,10 +14,7 @@ export const STALE_KEY_MS = 600;
 export const MIN_REFRESHING_MS = 500;
 export const BUTTON_REST_PX = 56;
 export const BUTTON_REST_HEIGHT = `${BUTTON_REST_PX}px`;
-export const CONTENT_SLIDE_TIMING = {
-	duration: 250,
-	easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-};
+export const CONTENT_SLIDE_TIMING = { duration: 250 };
 export const CONTENT_HEIGHT = 2000;
 export const VIEWPORT_HEIGHT = 500;
 export const SHORT_CONTENT_HEIGHT = 300;

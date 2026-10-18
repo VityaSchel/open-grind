@@ -211,6 +211,7 @@
 			"add": "Add photos",
 			"upload": "Upload photos",
 			"submit": "Add to profile",
+			"dropToAdd": "Drop to add photos",
 			"a11y": {
 				"slot": "Profile photo in slot {{slot}}",
 				"slotAwaitingReview": "Profile photo in slot {{slot}}, awaiting review",

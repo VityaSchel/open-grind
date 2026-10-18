@@ -2,6 +2,8 @@
 	import { getMyAlbumsState } from "$lib/albums/my-albums-state.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { t } from "$lib/i18n";
+	import { receiveMedia } from "$lib/platform/media-intake.svelte";
+	import type { PickedMedia } from "$lib/platform/media-picker";
 	import AlbumHeaderLayout from "../album-editor/AlbumHeaderLayout.svelte";
 	import AlbumMediaEmpty from "../album-editor/AlbumMediaEmpty.svelte";
 	import AlbumNameField from "../album-editor/AlbumNameField.svelte";
@@ -13,7 +15,7 @@
 	let albumName = $state("");
 	let creating = $state(false);
 
-	async function add() {
+	async function add(media?: PickedMedia[]) {
 		creating = true;
 		try {
 			const name = albumName.trim();
@@ -21,11 +23,22 @@
 				uploads: getAlbumUploads(data.ourProfileId),
 				myAlbums: getMyAlbumsState(data.ourProfileId),
 				albumName: name === "" ? null : name,
+				media,
 			});
 		} finally {
 			creating = false;
 		}
 	}
+
+	receiveMedia(() =>
+		creating
+			? null
+			: {
+					label: t("media.albums.new.dropToStart"),
+					videos: true,
+					receive: (media) => void add(media),
+				},
+	);
 </script>
 
 <svelte:head>

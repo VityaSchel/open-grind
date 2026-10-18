@@ -5,9 +5,14 @@ import {
 import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
 import {
 	backdropBlurTrialArm,
+	calibratesFromLow,
+	engineCalibration,
 	syncBackdropBlurTrial,
 } from "./calibration/trial.svelte";
-import { backdropCompositingRenders } from "./compositing.svelte";
+import {
+	backdropCompositingHydrated,
+	backdropCompositingRenders,
+} from "./compositing.svelte";
 import {
 	BACKDROP_BLUR_MIRROR_KEY,
 	BACKDROP_BLUR_ROOT_ATTRIBUTE,
@@ -25,9 +30,13 @@ function chosenBackdropBlurQuality(): BackdropBlurQuality | null {
 	const preferences = preferencesSnapshot();
 	return (
 		preferences.backdropBlurQuality ??
-		preferences.backdropBlurCalibration?.quality ??
+		engineCalibration()?.quality ??
 		configuredBackdropBlurQuality()
 	);
+}
+
+function uncalibratedBackdropBlurQuality(): BackdropBlurQuality {
+	return calibratesFromLow() ? "min" : UNCALIBRATED_BACKDROP_BLUR_QUALITY;
 }
 
 export function backdropBlurTrialPending(): boolean {
@@ -36,7 +45,7 @@ export function backdropBlurTrialPending(): boolean {
 
 export function settledBackdropBlurQuality(): BackdropBlurQuality {
 	if (!backdropBlurRenderable()) return "off";
-	return chosenBackdropBlurQuality() ?? UNCALIBRATED_BACKDROP_BLUR_QUALITY;
+	return chosenBackdropBlurQuality() ?? uncalibratedBackdropBlurQuality();
 }
 
 export function effectiveBackdropBlurQuality(): BackdropBlurQuality {
@@ -44,7 +53,7 @@ export function effectiveBackdropBlurQuality(): BackdropBlurQuality {
 	return (
 		chosenBackdropBlurQuality() ??
 		backdropBlurTrialArm() ??
-		UNCALIBRATED_BACKDROP_BLUR_QUALITY
+		uncalibratedBackdropBlurQuality()
 	);
 }
 
@@ -57,7 +66,7 @@ function rememberForNextLaunch(quality: BackdropBlurQuality): void {
 }
 
 export function applyBackdropBlurQuality(): void {
-	if (!preferencesLoaded()) return;
+	if (!preferencesLoaded() || !backdropCompositingHydrated()) return;
 	syncBackdropBlurTrial({ needed: backdropBlurTrialPending() });
 	const quality = effectiveBackdropBlurQuality();
 	const root = document.documentElement;

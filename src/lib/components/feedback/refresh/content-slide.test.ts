@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 
 import { expoOut } from "svelte/easing";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from "vitest";
 
 import { contentSlide } from "./content-slide";
 import { contentSlideRecorder } from "./content-slide-test-helpers";
@@ -16,6 +24,7 @@ const ROOM_PX = 56;
 const TIMING = { duration: 250, easing: "cubic-bezier(0.16, 1, 0.3, 1)" };
 
 let recorder = contentSlideRecorder();
+let animate: MockInstance<Element["animate"]>;
 
 function mountList() {
 	const scroller = document.createElement("div");
@@ -29,7 +38,7 @@ function mountList() {
 	scroller.append(content);
 	document.body.append(scroller);
 
-	const slide = contentSlide({ timing: TIMING });
+	const slide = contentSlide(TIMING);
 	const giveRoomBack = vi.fn(() => (layoutTop = 0));
 	const keepRoom = vi.fn();
 	const frames = (count: number) => {
@@ -53,13 +62,14 @@ describe("contentSlide", () => {
 		});
 		recorder = contentSlideRecorder();
 		recorder.installTimeline();
-		vi.spyOn(Element.prototype, "animate").mockImplementation(
-			(keyframes, timing) =>
+		animate = vi
+			.spyOn(Element.prototype, "animate")
+			.mockImplementation((keyframes, timing) =>
 				recorder.record({
 					keyframes: keyframes as [Keyframe, Keyframe],
 					timing: timing as KeyframeAnimationOptions,
 				}),
-		);
+			);
 	});
 
 	afterEach(() => {
@@ -67,6 +77,20 @@ describe("contentSlide", () => {
 		recorder.removeTimeline();
 		vi.restoreAllMocks();
 		vi.useRealTimers();
+	});
+
+	it("eases on the first keyframe, since WebKitGTK plays an effect-level easing as linear", () => {
+		const list = mountList();
+
+		list.slide.across({
+			scroller: list.scroller,
+			edge: "top",
+			change: list.giveRoomBack,
+		});
+
+		const [keyframes, timing] = animate.mock.calls[0]!;
+		expect((keyframes as Keyframe[])[0]?.easing).toBe(TIMING.easing);
+		expect(timing).not.toHaveProperty("easing");
 	});
 
 	it("slides the list up by the room first and gives the room back once the list is there", () => {

@@ -29,8 +29,9 @@ class PushPollService : JobService() {
 			val now = System.currentTimeMillis()
 			if (!abandoned.get()) {
 				val seen = PushSettings.watermark(this)
+				val words = PushWords.of(this)
 				val decisions = poll.payloads
-					.map { payload -> PushPayload.decide(payload, now) }
+					.map { payload -> PushPayload.decide(payload, now, words) }
 					.filterNot { decision -> decision is PushDecision.Notify && caughtUp(seen, decision) }
 				PushNotifier.applyAll(this, decisions)
 				PushSettings.advanceWatermark(this, poll.watermark)

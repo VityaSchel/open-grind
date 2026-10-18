@@ -54,12 +54,24 @@ pub async fn current(app: &AppHandle) -> Value {
 }
 
 pub async fn set(app: &AppHandle, tag: Option<String>) -> Result<(), String> {
+	send_tag(app, "setAppLanguage", tag).await
+}
+
+pub async fn set_native(
+	app: &AppHandle,
+	tag: Option<String>,
+) -> Result<(), String> {
+	send_tag(app, "setNativeLanguage", tag).await
+}
+
+async fn send_tag(
+	app: &AppHandle,
+	command: &str,
+	tag: Option<String>,
+) -> Result<(), String> {
 	let handle = app.state::<AndroidAppLanguage>().0.clone();
 	handle
-		.run_mobile_plugin_async::<Value>(
-			"setAppLanguage",
-			LanguageRequest { tag },
-		)
+		.run_mobile_plugin_async::<Value>(command, LanguageRequest { tag })
 		.await
 		.map(drop)
 		.map_err(|error| error.to_string())

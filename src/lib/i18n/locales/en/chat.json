@@ -28,7 +28,8 @@
 		"video": "Sent you a video",
 		"gaymoji": "Sent you a Gaymoji",
 		"gif": "Sent you a GIF",
-		"location": "Sent you their location"
+		"location": "Sent you their location",
+		"you": "You"
 	},
 	"conversation": {
 		"bypassReason": {
@@ -181,6 +182,7 @@
 		"errors": {
 			"sendFailed": "Couldn’t send message"
 		},
+		"dropToSend": "Drop to send",
 		"replyPreview": {
 			"a11y": {
 				"cancel": "Cancel reply"
@@ -236,6 +238,30 @@
 				"record": "Record voice message"
 			},
 			"unimplemented": "Voice messages aren’t implemented yet. Follow the progress in {{issueLink}}."
+		},
+		"sendMedia": {
+			"a11y": {
+				"title": {
+					"photo": "Preview of the photo to send",
+					"video": "Preview of the video to send",
+					"photos_one": "Preview of {{count}} photo to send",
+					"photos_other": "Preview of {{count}} photos to send",
+					"videos_one": "Preview of {{count}} video to send",
+					"videos_other": "Preview of {{count}} videos to send",
+					"photosAndVideos_one": "Preview of {{count}} photos and videos to send",
+					"photosAndVideos_other": "Preview of {{count}} photos and videos to send"
+				},
+				"preview": "To send"
+			},
+			"errors": {
+				"previewFailed": "Couldn’t read that photo"
+			}
+		}
+	},
+	"keyboardMedia": {
+		"errors": {
+			"readFailed": "Couldn’t read what the keyboard sent",
+			"notInChat": "Stickers can only be sent in a chat"
 		}
 	}
 }

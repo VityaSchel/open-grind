@@ -273,7 +273,12 @@ console.log(
 	`${Object.keys(manifest.views).length} views in ${captureMs} ms, ${manifest.failed.length} failed, written to ${outDir}`,
 );
 try {
-	const { shown, keys } = await writeCoverage({ outDir, commit, captured });
+	const { shown, keys } = await writeCoverage({
+		outDir,
+		commit,
+		captured,
+		sceneData: selected.map(({ demo, native }) => ({ demo, native })),
+	});
 	console.log(`${shown} of ${keys} keys shown`);
 } catch (error) {
 	console.error(`Wrote no coverage.json: ${String(error)}`);

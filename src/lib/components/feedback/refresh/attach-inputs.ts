@@ -1,4 +1,4 @@
-import { isMacosPlatform } from "$lib/platform/os";
+import { isLinuxPlatform, isMacosPlatform } from "$lib/platform/os";
 import {
 	scrollGesture,
 	type ScrollGestureState,
@@ -18,6 +18,7 @@ import {
 } from "./scroll-chain";
 import { edgeGap } from "./scroll-geometry";
 import { attachTouchPull } from "./touch-adapter";
+import { attachTouchpadPull } from "./touchpad-adapter";
 
 const TRACKPAD_TAIL_MS = 100;
 
@@ -34,6 +35,7 @@ export type PullInputsOptions = {
 	shouldReveal: () => boolean;
 	shouldConceal: () => boolean;
 	fingerPhase?: ScrollGestureState | null;
+	nativeBand?: boolean;
 };
 
 export function attachPullInputs(
@@ -50,7 +52,10 @@ export function attachPullInputs(
 		setDistance,
 		shouldReveal,
 		shouldConceal,
-		fingerPhase = isMacosPlatform() ? scrollGesture : null,
+		fingerPhase = isMacosPlatform() || isLinuxPlatform()
+			? scrollGesture
+			: null,
+		nativeBand = !isLinuxPlatform(),
 	}: PullInputsOptions,
 ): () => void {
 	let trackpadEndedAt = -Infinity;
@@ -141,6 +146,16 @@ export function attachPullInputs(
 			onKeyBand: () => restingButton.offerWithoutPull(),
 		}),
 	];
+	if (fingerPhase && !nativeBand)
+		detach.push(
+			attachTouchpadPull(model, {
+				listenTarget: target,
+				fingerPhase,
+				boundaryDistance,
+				position,
+				onPull: () => restingButton.leaveBoundary(),
+			}),
+		);
 
 	setDistance(boundaryDistance());
 

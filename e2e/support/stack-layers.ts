@@ -9,7 +9,7 @@ export const LIVE_STACK = {
 	sheet: '[data-slot="live-stack-sheet"]',
 	dim: '[data-slot="live-stack-dim"]',
 };
-const NO_EDGE = "0 0 #0000";
+const NO_EDGE = "-1px 0 0 rgb(255 255 255 / 0.001)";
 const VISIBLE_STEP = 8;
 
 type Clip = { x: number; y: number; width: number; height: number };

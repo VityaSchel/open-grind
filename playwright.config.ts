@@ -19,7 +19,7 @@ export default defineConfig({
 	testDir: "e2e",
 	testIgnore: "layout-guard.spec.ts",
 	fullyParallel: false,
-	workers: 1,
+	workers: process.env.CI ? 2 : 1,
 	retries: 1,
 	timeout: 60_000,
 	expect: { timeout: 10_000 },

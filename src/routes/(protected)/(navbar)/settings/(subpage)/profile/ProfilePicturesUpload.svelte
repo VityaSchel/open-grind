@@ -14,7 +14,15 @@
 	import { t } from "$lib/i18n";
 	import { formatInteger } from "$lib/i18n/format";
 	import { PROFILE_PHOTO_AWAITING_REVIEW } from "$lib/model/users/profiles";
-	import { pickMultipleMedia } from "$lib/platform/media-picker";
+	import { discardStagedMedia } from "$lib/platform/media-file";
+	import {
+		receiveMedia,
+		screenMedia,
+	} from "$lib/platform/media-intake.svelte";
+	import {
+		type PickedMedia,
+		pickMultipleMedia,
+	} from "$lib/platform/media-picker";
 	import { profileMediaUrl } from "$lib/util/media";
 	import { moveItem } from "$lib/util/reorder";
 	import { maxProfilePhotos } from "./options";
@@ -112,25 +120,46 @@
 		return true;
 	}
 
-	async function add() {
+	async function add(received?: PickedMedia[]) {
 		if (adding) return;
 		adding = true;
 		try {
-			await pickAndUpload();
+			const photos =
+				received === undefined
+					? await pickPhotos()
+					: (
+							await screenMedia({
+								media: received,
+								videos: false,
+							})
+						).map(({ media }) => media);
+			await upload(photos);
 		} finally {
 			adding = false;
 		}
 	}
 
-	async function pickAndUpload() {
-		let picked;
+	receiveMedia(() =>
+		canAdd && !disabled && !adding
+			? {
+					label: t("settings.profile.photos.dropToAdd"),
+					videos: false,
+					receive: (media) => void add(media),
+				}
+			: null,
+	);
+
+	async function pickPhotos(): Promise<PickedMedia[]> {
 		try {
-			picked = await pickMultipleMedia("image");
+			return await pickMultipleMedia("image");
 		} catch (error) {
 			console.error(error);
 			toast.error(t("settings.profile.photos.errors.openPickerFailed"));
-			return;
+			return [];
 		}
+	}
+
+	async function upload(picked: PickedMedia[]) {
 		const accepted = picked.slice(0, Math.max(0, room));
 		if (picked.length > accepted.length) {
 			toast.error(
@@ -139,10 +168,14 @@
 					max: formatInteger(maxProfilePhotos),
 				}),
 			);
+			void discardStagedMedia(picked.slice(accepted.length));
 		}
 		uploading = [...uploading, ...accepted.map(({ key }) => key)];
 		for (const [index, media] of accepted.entries()) {
-			if (!mounted) return;
+			if (!mounted) {
+				void discardStagedMedia(accepted.slice(index));
+				return;
+			}
 			try {
 				const uploaded = await uploadProfilePhoto(media);
 				medias = [...medias, uploaded];
@@ -161,6 +194,7 @@
 						accepted.slice(index).map(({ key }) => key),
 					);
 					uploading = uploading.filter((key) => !dropped.has(key));
+					void discardStagedMedia(accepted.slice(index + 1));
 					return;
 				}
 			} finally {

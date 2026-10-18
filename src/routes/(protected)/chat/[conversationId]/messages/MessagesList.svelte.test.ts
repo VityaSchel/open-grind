@@ -238,6 +238,7 @@ describe("MessagesList rows", () => {
 
 		live.messages = mergeServerMessages({
 			local: live.messages,
+			localIdsAtFetchStart: live.messages.map((m) => m.messageId),
 			server: [
 				textMessage({
 					messageId: "d",

@@ -2,7 +2,10 @@
 	import { onMount } from "svelte";
 
 	import CommandCenter from "$lib/components/command-center/CommandCenter.svelte";
+	import MediaDropOverlay from "$lib/components/shared/MediaDropOverlay.svelte";
 	import { restoreStrandedLocation } from "$lib/entitlements/honduras-hold";
+	import { listenForKeyboardMedia } from "$lib/platform/keyboard-media.svelte";
+	import { listenForMedia } from "$lib/platform/media-intake.svelte";
 	import { startOnlineHeartbeat } from "$lib/presence/online-heartbeat";
 	import { retryBrokenMediaWhenOnline } from "$lib/util/media-retry-signals";
 
@@ -10,6 +13,8 @@
 
 	$effect(() => startOnlineHeartbeat());
 	$effect(() => retryBrokenMediaWhenOnline());
+	$effect(() => listenForMedia());
+	$effect(() => listenForKeyboardMedia());
 
 	onMount(() => {
 		restoreStrandedLocation().catch((error: unknown) => {
@@ -20,3 +25,4 @@
 
 {@render children()}
 <CommandCenter />
+<MediaDropOverlay />

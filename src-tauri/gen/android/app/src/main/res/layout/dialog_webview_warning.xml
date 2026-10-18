@@ -12,7 +12,6 @@
 		android:id="@+id/dialog_title"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/webview_warning_title"
 		android:textColor="@color/brand_on_surface"
 		android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
 		android:textAllCaps="false"
@@ -33,14 +32,12 @@
 		style="@style/Widget.OpenGrind.Dialog.Button.Filled"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="24dp"
-		android:text="@string/webview_warning_update" />
+		android:layout_marginTop="24dp" />
 
 	<com.google.android.material.button.MaterialButton
 		android:id="@+id/button_continue"
 		style="@style/Widget.OpenGrind.Dialog.Button.Text"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="4dp"
-		android:text="@string/webview_warning_continue" />
+		android:layout_marginTop="4dp" />
 </LinearLayout>

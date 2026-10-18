@@ -10,11 +10,14 @@ export const GESTURE_QUIET_MS = 120;
 export const SETTLE_FRAMES = 3;
 export const MIN_GESTURE_FRAMES = 24;
 export const MIN_GESTURE_TRAVEL_PX = 160;
+export const STALLED_GESTURE_MIN_MS = 600;
 export const PAIR_MAX_AGE_MS = 30_000;
 
 export const SMOOTH_MIN_PAIRS = 6;
 export const SMOOTH_MAX_DROP = 0.05;
-export const MEDIUM_MIN_PAIRS = 5;
-export const MEDIUM_MIN_GAIN = 0.08;
-export const MEDIUM_MIN_WIN_RATE = 0.75;
+export const STALLED_DROP = 0.65;
+export const STALLED_MIN_PAIRS = 2;
+export const DEMOTE_MIN_PAIRS = 5;
+export const DEMOTE_MIN_DROP = 0.08;
+export const DEMOTE_MIN_WIN_RATE = 0.75;
 export const MAX_PAIRS = 24;

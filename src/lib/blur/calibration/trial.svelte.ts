@@ -2,7 +2,9 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { isLinuxPlatform } from "$lib/platform/os";
 import { consumesScrollKeys, scrollKeys } from "$lib/util/scroll-keys";
+import { webviewEngine } from "../compositing.svelte";
 import {
 	ARM_MIN_EVENTS,
 	ARM_TRAVEL_PX,
@@ -13,15 +15,19 @@ import {
 	MIN_GESTURE_TRAVEL_PX,
 	PAIR_MAX_AGE_MS,
 	SETTLE_FRAMES,
+	STALLED_GESTURE_MIN_MS,
 } from "./constants";
 import {
 	type AutoQuality,
-	decideTrial,
+	type BackdropBlurCalibration,
+	firstRung,
+	nextStep,
 	otherArm,
 	pairFirstArm,
+	type Rung,
 	type TrialSample,
 } from "./decide";
-import { clippedMeanMs } from "./gesture";
+import { CLIP_MS, clippedMeanMs } from "./gesture";
 
 type Point = { x: number; y: number };
 
@@ -38,6 +44,7 @@ type ArmedGesture = {
 	scroller: Element;
 	arm: AutoQuality;
 	startTop: number;
+	armedAt: number;
 	lastScrollAt: number;
 	frames: number;
 	previousTimestamp: number;
@@ -58,6 +65,7 @@ type PairHalf = {
 let arm = $state<AutoQuality | null>(null);
 let running = false;
 let listeners: AbortController | null = null;
+let rung: Rung = "max";
 let samples: TrialSample[] = [];
 let verdictToApplyUnderMotion: AutoQuality | null = null;
 let half: PairHalf | null = null;
@@ -70,9 +78,23 @@ export function backdropBlurTrialArm(): AutoQuality | null {
 	return arm;
 }
 
+export function calibratesFromLow(): boolean {
+	return isLinuxPlatform();
+}
+
+export function engineCalibration(): BackdropBlurCalibration | null {
+	const stored = preferencesSnapshot().backdropBlurCalibration;
+	return stored?.engine === webviewEngine() ? stored : null;
+}
+
 function persist(quality: AutoQuality | null): void {
 	void setPreferences({
-		backdropBlurCalibration: { quality, samples },
+		backdropBlurCalibration: {
+			quality,
+			rung,
+			engine: webviewEngine(),
+			samples,
+		},
 	}).catch((error: unknown) => {
 		console.error("Failed to store backdrop blur calibration", error);
 	});
@@ -178,7 +200,9 @@ function armGesture(pending: PendingGesture): Gesture {
 	}
 	if (!measurable(pending.scroller)) return ignored;
 	const nextArm =
-		half === null ? pairFirstArm(samples.length) : otherArm(half.arm);
+		half === null
+			? pairFirstArm({ rung, pairIndex: samples.length })
+			: otherArm({ rung, arm: half.arm });
 	arm = nextArm;
 	frameHandle = requestAnimationFrame(onFrame);
 	return {
@@ -186,6 +210,7 @@ function armGesture(pending: PendingGesture): Gesture {
 		scroller: pending.scroller,
 		arm: nextArm,
 		startTop: pending.scroller.scrollTop,
+		armedAt: pending.lastScrollAt,
 		lastScrollAt: pending.lastScrollAt,
 		frames: 0,
 		previousTimestamp: Number.NaN,
@@ -238,15 +263,49 @@ function endGesture(now: number): void {
 	if (open?.phase !== "armed") return;
 	if (document.visibilityState !== "visible") return;
 	if (!open.scroller.isConnected) return;
-	if (open.intervals.length < MIN_GESTURE_FRAMES) return;
 	const travel = Math.abs(open.scroller.scrollTop - open.startTop);
 	if (travel < MIN_GESTURE_TRAVEL_PX) return;
+	const meanMs = gestureMeanMs({ gesture: open, now });
+	if (meanMs === null) return;
 	recordHalf({
 		arm: open.arm,
-		meanMs: clippedMeanMs(open.intervals),
+		meanMs,
 		at: now,
 		scroller: new WeakRef(open.scroller),
 	});
+	if (meanMs === CLIP_MS) leaveStalledArm();
+}
+
+function leaveStalledArm(): void {
+	if (verdictToApplyUnderMotion !== null)
+		commitVerdict(verdictToApplyUnderMotion);
+	else if (running) arm = "min";
+}
+
+function gestureMeanMs({
+	gesture,
+	now,
+}: {
+	gesture: ArmedGesture;
+	now: number;
+}): number | null {
+	if (gesture.intervals.length >= MIN_GESTURE_FRAMES)
+		return clippedMeanMs(gesture.intervals);
+	const span = now - gesture.armedAt;
+	const stalled =
+		span >= STALLED_GESTURE_MIN_MS &&
+		span / Math.max(1, gesture.frames) >= CLIP_MS;
+	return stalled ? CLIP_MS : null;
+}
+
+function settle(): AutoQuality | null {
+	const step = nextStep({ rung, samples, climbing: calibratesFromLow() });
+	if (step === null) return null;
+	if ("settle" in step) return step.settle;
+	rung = step.rung;
+	samples = [];
+	half = null;
+	return null;
 }
 
 function recordHalf(next: PairHalf): void {
@@ -261,10 +320,10 @@ function recordHalf(next: PairHalf): void {
 		return;
 	}
 	half = null;
-	const maxHalf = next.arm === "max" ? next : previous;
-	const mediumHalf = next.arm === "max" ? previous : next;
-	samples = [...samples, [maxHalf.meanMs, mediumHalf.meanMs]];
-	const quality = decideTrial(samples);
+	const upperHalf = next.arm === rung ? next : previous;
+	const lowerHalf = next.arm === rung ? previous : next;
+	samples = [...samples, [upperHalf.meanMs, lowerHalf.meanMs]];
+	const quality = settle();
 	if (quality === null || quality === arm) {
 		persist(quality);
 		return;
@@ -318,8 +377,10 @@ function listen(): void {
 
 function start(): void {
 	running = true;
-	samples = preferencesSnapshot().backdropBlurCalibration?.samples ?? [];
-	const quality = decideTrial(samples);
+	const stored = engineCalibration();
+	rung = stored?.rung ?? firstRung({ climbing: calibratesFromLow() });
+	samples = stored?.samples ?? [];
+	const quality = settle();
 	if (quality !== null) {
 		commitVerdict(quality);
 		return;

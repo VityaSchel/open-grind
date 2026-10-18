@@ -1,4 +1,4 @@
-use std::io::Cursor;
+use std::io::{BufRead, Cursor, Seek};
 
 use image::metadata::Orientation;
 use image::{DynamicImage, ImageDecoder, ImageFormat, ImageReader, Limits};
@@ -86,6 +86,25 @@ pub fn decode(format: Format, bytes: &[u8]) -> Option<Source> {
 		image,
 		orientation,
 		icc,
+	})
+}
+
+/// The size the photo is shown at, read from its headers alone
+pub fn dimensions<R: BufRead + Seek>(
+	format: Format,
+	reader: R,
+) -> Option<(u32, u32)> {
+	let mut decoder =
+		ImageReader::with_format(reader, format.decoded_by_image()?)
+			.into_decoder()
+			.ok()?;
+	let (width, height) = decoder.dimensions();
+	Some(match decoder.orientation().ok()? {
+		Orientation::Rotate90
+		| Orientation::Rotate270
+		| Orientation::Rotate90FlipH
+		| Orientation::Rotate270FlipH => (height, width),
+		_ => (width, height),
 	})
 }
 
@@ -218,5 +237,95 @@ mod tests {
 		assert_eq!(source.image.width(), 16);
 		assert_eq!(source.orientation, Orientation::NoTransforms);
 		assert_eq!(source.icc, None);
+	}
+
+	fn rgba() -> image::RgbaImage {
+		image::RgbaImage::from_pixel(4, 4, image::Rgba([200, 100, 50, 255]))
+	}
+
+	fn animated_gif() -> Vec<u8> {
+		let mut bytes = Vec::new();
+		image::codecs::gif::GifEncoder::new(&mut bytes)
+			.encode_frames((0..3).map(|_| image::Frame::new(rgba())))
+			.expect("encode");
+		bytes
+	}
+
+	fn crc32(bytes: &[u8]) -> u32 {
+		let mut crc = u32::MAX;
+		for byte in bytes {
+			crc ^= u32::from(*byte);
+			for _ in 0..8 {
+				crc = if crc & 1 == 1 {
+					(crc >> 1) ^ 0xEDB8_8320
+				} else {
+					crc >> 1
+				};
+			}
+		}
+		!crc
+	}
+
+	fn apng() -> Vec<u8> {
+		let mut still = Vec::new();
+		image::codecs::png::PngEncoder::new(&mut still)
+			.write_image(rgba().as_raw(), 4, 4, image::ExtendedColorType::Rgba8)
+			.expect("encode");
+		let header_end = 8 + 25;
+		let mut actl = Vec::new();
+		actl.extend_from_slice(&8u32.to_be_bytes());
+		actl.extend_from_slice(b"acTL");
+		actl.extend_from_slice(&1u32.to_be_bytes());
+		actl.extend_from_slice(&0u32.to_be_bytes());
+		actl.extend_from_slice(&crc32(&actl[4..]).to_be_bytes());
+		[&still[..header_end], &actl, &still[header_end..]].concat()
+	}
+
+	fn animated_webp() -> Vec<u8> {
+		let mut still = Vec::new();
+		image::codecs::webp::WebPEncoder::new_lossless(&mut still)
+			.write_image(rgba().as_raw(), 4, 4, image::ExtendedColorType::Rgba8)
+			.expect("encode");
+		let mut vp8x = Vec::new();
+		vp8x.extend_from_slice(b"VP8X");
+		vp8x.extend_from_slice(&10u32.to_le_bytes());
+		vp8x.extend_from_slice(&[0x02, 0, 0, 0]);
+		vp8x.extend_from_slice(&[3, 0, 0, 3, 0, 0]);
+		let mut anim = Vec::new();
+		anim.extend_from_slice(b"ANIM");
+		anim.extend_from_slice(&6u32.to_le_bytes());
+		anim.extend_from_slice(&[0; 6]);
+		let mut frame = Vec::new();
+		frame.extend_from_slice(&[0, 0, 0, 0, 0, 0]);
+		frame.extend_from_slice(&[3, 0, 0, 3, 0, 0]);
+		frame.extend_from_slice(&[100, 0, 0, 0]);
+		frame.extend_from_slice(&still[12..]);
+		let mut anmf = Vec::new();
+		anmf.extend_from_slice(b"ANMF");
+		anmf.extend_from_slice(&(frame.len() as u32).to_le_bytes());
+		anmf.extend_from_slice(&frame);
+		if frame.len() % 2 == 1 {
+			anmf.push(0);
+		}
+		let body = [&b"WEBP"[..], &vp8x, &anim, &anmf].concat();
+		[&b"RIFF"[..], &(body.len() as u32).to_le_bytes(), &body].concat()
+	}
+
+	#[test]
+	fn an_animated_image_decodes_to_its_first_frame_for_upload() {
+		for (format, bytes) in [
+			(Format::Gif, animated_gif()),
+			(Format::Png, apng()),
+			(Format::Webp, animated_webp()),
+		] {
+			assert_eq!(sniff(&bytes), Some(format));
+			let decoded = decode(format, &bytes)
+				.unwrap_or_else(|| panic!("{format:?} must decode"));
+			assert_eq!(
+				(decoded.image.width(), decoded.image.height()),
+				(4, 4),
+				"{format:?}"
+			);
+		}
 	}
 }

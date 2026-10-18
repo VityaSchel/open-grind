@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::io::{self, BufReader, Seek, SeekFrom};
 
 use serde::Serialize;
 
@@ -46,23 +46,49 @@ pub fn inspect(file: &mut File) -> io::Result<Inspection> {
 	let size = file.metadata()?.len();
 	let mut head = [0u8; SNIFF_LEN];
 	let filled = boxes::read_up_to(file, &mut head)?;
-	let sniffed = sniff(&head[..filled]);
-	let probed = match sniffed {
-		MediaKind::Video => probe::probe(file).ok().flatten(),
-		_ => None,
-	};
-	let kind = if sniffed == MediaKind::Video && probed.is_none() {
-		MediaKind::Unsupported
-	} else {
-		sniffed
-	};
-	Ok(Inspection {
+	let head = &head[..filled];
+	let bare = |kind| Inspection {
 		kind,
 		size,
-		width: probed.map(|probed| probed.width),
-		height: probed.map(|probed| probed.height),
-		duration_ms: probed.and_then(|probed| probed.duration_ms),
+		width: None,
+		height: None,
+		duration_ms: None,
+	};
+	Ok(match sniff(head) {
+		MediaKind::Photo => bare(MediaKind::Photo),
+		MediaKind::Video => match probe::probe(file).ok().flatten() {
+			Some(probed) => Inspection {
+				width: Some(probed.width),
+				height: Some(probed.height),
+				duration_ms: probed.duration_ms,
+				..bare(MediaKind::Video)
+			},
+			None => bare(MediaKind::Unsupported),
+		},
+		MediaKind::Unsupported => bare(MediaKind::Unsupported),
 	})
+}
+
+fn inspect_as_shown(file: &mut File) -> io::Result<Inspection> {
+	let inspection = inspect(file)?;
+	if inspection.kind != MediaKind::Photo {
+		return Ok(inspection);
+	}
+	let upright = photo_dimensions(file);
+	Ok(Inspection {
+		width: upright.map(|(width, _)| width),
+		height: upright.map(|(_, height)| height),
+		..inspection
+	})
+}
+
+fn photo_dimensions(file: &mut File) -> Option<(u32, u32)> {
+	file.seek(SeekFrom::Start(0)).ok()?;
+	let mut head = [0u8; SNIFF_LEN];
+	let filled = boxes::read_up_to(file, &mut head).ok()?;
+	let format = source::sniff(&head[..filled])?;
+	file.seek(SeekFrom::Start(0)).ok()?;
+	source::dimensions(format, BufReader::new(file))
 }
 
 #[tauri::command]
@@ -70,7 +96,7 @@ pub async fn inspect_media_file(
 	app: tauri::AppHandle,
 	file: PickedFile,
 ) -> Result<Inspection, AppError> {
-	photo::off_thread(move || inspect(&mut file.open(&app)?))
+	photo::off_thread(move || inspect_as_shown(&mut file.open(&app)?))
 		.await?
 		.map_err(media_error)
 }
@@ -152,6 +178,77 @@ mod tests {
 				duration_ms: None,
 			}
 		);
+	}
+
+	fn jpeg_turned_by_exif(
+		width: u32,
+		height: u32,
+		orientation: u8,
+	) -> Vec<u8> {
+		let mut jpeg = Vec::new();
+		image::DynamicImage::new_rgb8(width, height)
+			.write_to(
+				&mut std::io::Cursor::new(&mut jpeg),
+				image::ImageFormat::Jpeg,
+			)
+			.expect("encode");
+		let mut exif =
+			b"\xFF\xE1\0\x22Exif\0\0MM\0\x2A\0\0\0\x08\0\x01".to_vec();
+		exif.extend_from_slice(b"\x01\x12\0\x03\0\0\0\x01\0");
+		exif.extend_from_slice(&[orientation, 0, 0, 0, 0, 0, 0]);
+		jpeg.splice(2..2, exif);
+		jpeg
+	}
+
+	fn inspect_bytes(name: &str, bytes: &[u8]) -> Inspection {
+		let app = app();
+		let temp = TempFile::new(name, bytes);
+		let path = temp.path().to_path_buf();
+		app.fs_scope().allow_file(&path).expect("allow");
+		let picked = PickedFile::Desktop { path: path.clone() };
+		let quick = inspect(&mut picked.open(app.handle()).expect("open"))
+			.expect("inspect");
+		assert_eq!(
+			(quick.width, quick.height),
+			(None, None),
+			"uploads and previews never decode headers just to inspect"
+		);
+		inspect_as_shown(&mut picked.open(app.handle()).expect("open"))
+			.expect("inspect")
+	}
+
+	#[test]
+	fn a_photo_inspects_with_the_size_it_is_shown_at() {
+		let mut png = Vec::new();
+		image::DynamicImage::new_rgba8(40, 20)
+			.write_to(
+				&mut std::io::Cursor::new(&mut png),
+				image::ImageFormat::Png,
+			)
+			.expect("encode");
+
+		let inspection = inspect_bytes("wide.png", &png);
+
+		assert_eq!(inspection.kind, MediaKind::Photo);
+		assert_eq!((inspection.width, inspection.height), (Some(40), Some(20)));
+	}
+
+	#[test]
+	fn a_photo_turned_by_exif_inspects_upright() {
+		for (orientation, upright) in
+			[(1, (40, 20)), (6, (20, 40)), (8, (20, 40))]
+		{
+			let inspection = inspect_bytes(
+				"turned.jpg",
+				&jpeg_turned_by_exif(40, 20, orientation),
+			);
+
+			assert_eq!(
+				(inspection.width, inspection.height),
+				(Some(upright.0), Some(upright.1)),
+				"orientation {orientation}"
+			);
+		}
 	}
 
 	#[test]

@@ -71,5 +71,35 @@
 		"errors": {
 			"finishSetupFailed": "Couldn’t finish setup"
 		}
+	},
+	"webViewWarning": {
+		"title": "Android WebView may be too old",
+		"description": "Open Grind may not display correctly on older Android System WebView versions. This build expects WebView {{minimumVersion}} or newer.",
+		"detected": "Detected provider: {{provider}} ({{version}})",
+		"unknownProvider": "Unknown provider",
+		"unknownVersion": "Unknown version",
+		"update": "Update WebView",
+		"continue": "Continue anyway"
+	},
+	"menuBar": {
+		"about": "About Open Grind",
+		"services": "Services",
+		"hide": "Hide Open Grind",
+		"hideOthers": "Hide Others",
+		"quit": "Quit Open Grind",
+		"file": "File",
+		"closeWindow": "Close Window",
+		"edit": "Edit",
+		"undo": "Undo",
+		"redo": "Redo",
+		"cut": "Cut",
+		"copy": "Copy",
+		"paste": "Paste",
+		"selectAll": "Select All",
+		"view": "View",
+		"window": "Window",
+		"minimize": "Minimize",
+		"zoom": "Zoom",
+		"help": "Help"
 	}
 }

@@ -98,6 +98,7 @@ import {
 	inboxSelection,
 	rowMenus,
 } from "./chat-inbox";
+import { sendPhotos, sendPreviewFailure, sendVideos } from "./chat-send-media";
 import { commandCenter, locationCopy } from "./command-center";
 import {
 	autoLocation,
@@ -117,6 +118,21 @@ import {
 	untrackedViews,
 	viewsGrid,
 } from "./interest";
+import {
+	keyboardMediaFailed,
+	keyboardMediaOutsideChat,
+} from "./keyboard-media";
+import {
+	albumDropTarget,
+	chatDropFailures,
+	chatDropTarget,
+	chatLinkRefusals,
+	newAlbumDropTarget,
+	profilePhotoDropRefusals,
+	profilePhotosDropTarget,
+	unsupportedDrag,
+	videoDragOnPhotos,
+} from "./media-drop";
 import {
 	albumPreviewFailures,
 	albumVideoPlayer,
@@ -459,4 +475,18 @@ export const scenes: Scene[] = [
 	googleInstallStages,
 	unimplementedAuthPages,
 	linuxOnboarding,
+	chatDropTarget,
+	albumDropTarget,
+	newAlbumDropTarget,
+	profilePhotosDropTarget,
+	unsupportedDrag,
+	videoDragOnPhotos,
+	profilePhotoDropRefusals,
+	chatDropFailures,
+	chatLinkRefusals,
+	sendPhotos,
+	sendVideos,
+	sendPreviewFailure,
+	keyboardMediaFailed,
+	keyboardMediaOutsideChat,
 ];

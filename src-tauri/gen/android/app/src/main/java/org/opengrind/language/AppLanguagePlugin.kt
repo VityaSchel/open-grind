@@ -2,6 +2,7 @@ package org.opengrind.language
 
 import android.app.Activity
 import android.app.LocaleManager
+import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
@@ -14,9 +15,9 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
-import java.util.IllformedLocaleException
-import java.util.Locale
 import org.json.JSONObject
+import org.opengrind.push.PushNotifier
+import org.opengrind.update.TransferService
 
 @InvokeArg
 internal class WatchArgs {
@@ -29,14 +30,21 @@ internal class LanguageArgs {
 }
 
 @TauriPlugin
-class AppLanguagePlugin(activity: Activity) : Plugin(activity) {
+class AppLanguagePlugin(private val activity: Activity) : Plugin(activity) {
 	private val context = activity.applicationContext
 	private var watcher: Channel? = null
 	private var lastSent: String? = null
+	private var namedFor: LocaleList = activity.resources.configuration.locales
 
 	override fun onResume() = publish()
 
-	override fun onConfigurationChanged(newConfig: Configuration) = publish()
+	override fun onConfigurationChanged(newConfig: Configuration) {
+		if (newConfig.locales != namedFor) {
+			namedFor = newConfig.locales
+			runCatching { renameChannels(activity) }
+		}
+		publish()
+	}
 
 	@Command
 	fun getAppLanguages(invoke: Invoke) {
@@ -74,6 +82,26 @@ class AppLanguagePlugin(activity: Activity) : Plugin(activity) {
 	}
 
 	@Command
+	fun setNativeLanguage(invoke: Invoke) {
+		val tag = try {
+			invoke.parseArgs(LanguageArgs::class.java).tag
+		} catch (e: Exception) {
+			invoke.reject("missing")
+			return
+		}
+		try {
+			if (!NativeLanguage.remember(context, tag)) {
+				invoke.reject("set-failed")
+				return
+			}
+			renameChannels(context)
+			invoke.resolve()
+		} catch (e: Exception) {
+			invoke.reject("set-failed")
+		}
+	}
+
+	@Command
 	fun watchAppLanguages(invoke: Invoke) {
 		try {
 			val channel = invoke.parseArgs(WatchArgs::class.java).onChange
@@ -95,6 +123,11 @@ class AppLanguagePlugin(activity: Activity) : Plugin(activity) {
 		if (key == lastSent) return
 		lastSent = key
 		channel.send(languages)
+	}
+
+	private fun renameChannels(source: Context) {
+		PushNotifier.renameChannels(source)
+		TransferService.renameChannel(source)
 	}
 
 	private fun snapshot(): JSObject = JSObject().apply {
@@ -119,11 +152,6 @@ class AppLanguagePlugin(activity: Activity) : Plugin(activity) {
 
 	private fun localesFor(tag: String?): LocaleList? {
 		if (tag == null) return LocaleList.getEmptyLocaleList()
-		val locale = try {
-			Locale.Builder().setLanguageTag(tag).build()
-		} catch (e: IllformedLocaleException) {
-			return null
-		}
-		return if (locale.language.isEmpty()) null else LocaleList(locale)
+		return LanguageTags.localeOf(tag)?.let { LocaleList(it) }
 	}
 }

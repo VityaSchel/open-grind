@@ -24,6 +24,8 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 
+vi.mock("@tauri-apps/plugin-os", () => ({ platform: () => "macos" }));
+
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: () =>
 		preferences.readable

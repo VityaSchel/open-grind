@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	type ReleaseVelocity,
 	type ScrollGesturePhase,
 	ScrollGestureState,
 } from "$lib/platform/scroll-gesture";
@@ -45,5 +46,23 @@ describe("ScrollGestureState.onPhaseChange", () => {
 
 		expect(phases).toEqual(["fingers"]);
 		expect(gesture.phase).toBe("idle");
+	});
+});
+
+describe("ScrollGestureState.onRelease", () => {
+	it("hands over the lift velocity, and none where the bridge reports none", () => {
+		const gesture = new ScrollGestureState();
+		const velocities: ReleaseVelocity[] = [];
+		gesture.onRelease((velocity) => velocities.push(velocity));
+
+		gesture.ingest({ state: "fingers" });
+		gesture.ingest({ state: "released", vx: 2.5, vy: -0.5 });
+		gesture.ingest({ state: "fingers" });
+		gesture.ingest({ state: "released" });
+
+		expect(velocities).toEqual([
+			{ x: 2.5, y: -0.5 },
+			{ x: 0, y: 0 },
+		]);
 	});
 });

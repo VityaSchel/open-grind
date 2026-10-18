@@ -7,6 +7,7 @@ import { visit } from "./visit";
 export const INBOX_ROW = 'main a[href^="/chat/"]';
 export const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 export const MESSAGE_MENU = 'dialog[open] [data-slot="context-menu-list"]';
+const MENU_LIST = '[data-slot="context-menu-list"]';
 const OUTGOING_ROW = `${MESSAGE_ROW}.ps-3`;
 const WHEEL_DELTA = 40;
 
@@ -68,7 +69,11 @@ export async function chooseFromMessageMenu({
 	await openMessageMenu(row);
 	const menu = row.page().locator(MESSAGE_MENU);
 	await menu.getByRole("button", { name: action }).click();
-	await menu.waitFor({ state: "hidden" });
+	await messageMenuClosed(row.page());
+}
+
+export async function messageMenuClosed(page: Page): Promise<void> {
+	await page.locator(MENU_LIST).waitFor({ state: "detached" });
 }
 
 export async function revealRefreshButton({

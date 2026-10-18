@@ -8,6 +8,17 @@ const { readMock, writeMock } = vi.hoisted(() => ({
 	writeMock: vi.fn(),
 }));
 
+const ENGINE = "2.52.6";
+
+const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
+
+vi.mock("$lib/platform/os", async (importOriginal) => ({
+	...(await importOriginal<typeof import("$lib/platform/os")>()),
+	isLinuxPlatform: linuxMock,
+}));
+
+vi.mock("../compositing.svelte", () => ({ webviewEngine: () => ENGINE }));
+
 vi.mock("$lib/app-data", () => ({
 	existsAppDataFile: () => Promise.resolve(true),
 	readAppDataFile: readMock,
@@ -22,13 +33,17 @@ import {
 } from "$lib/app-data/preferences.svelte";
 import {
 	ARM_TRAVEL_PX,
-	MEDIUM_MIN_PAIRS,
+	DEMOTE_MIN_PAIRS,
 	MIN_GESTURE_FRAMES,
 	MIN_GESTURE_TRAVEL_PX,
 	REFERENCE_PERIOD_MS,
 	SETTLE_FRAMES,
+	SMOOTH_MIN_PAIRS,
+	STALLED_MIN_PAIRS,
 } from "./constants";
 import { backdropBlurTrialArm, syncBackdropBlurTrial } from "./trial.svelte";
+
+const SMOOTH_FRAME_MS = 15;
 
 let now = 0;
 let frameCallback: FrameRequestCallback | null = null;
@@ -92,8 +107,25 @@ function scrollOneGesture(frameIntervalMs: number) {
 	runFrame();
 }
 
+function stallOneGesture() {
+	armingScrolls();
+	stallFrames();
+}
+
+function stallFrames() {
+	const start = scroller.scrollTop;
+	for (let frame = 1; frame <= SETTLE_FRAMES; frame += 1) {
+		now += 2000;
+		scrollTo(start + frame * MIN_GESTURE_TRAVEL_PX);
+		runFrame();
+	}
+	now += 500;
+	runFrame();
+}
+
 beforeEach(async () => {
 	vi.restoreAllMocks();
+	linuxMock.mockReturnValue(false);
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);
 	document.body.replaceChildren();
@@ -173,13 +205,105 @@ describe("backdrop blur scroll trial", () => {
 		await setPreferences({
 			backdropBlurCalibration: {
 				quality: null,
-				samples: Array.from({ length: MEDIUM_MIN_PAIRS }, () => [
+				rung: "medium",
+				engine: ENGINE,
+				samples: Array.from({ length: DEMOTE_MIN_PAIRS }, () => [
 					20,
 					REFERENCE_PERIOD_MS,
 				]),
 			},
 		});
 		syncBackdropBlurTrial({ needed: true });
+		expect(backdropBlurTrialArm()).toBe("min");
+	});
+
+	it("steps down a rung from stored samples and trials medium against Low next", async () => {
+		syncBackdropBlurTrial({ needed: false });
+		await setPreferences({
+			backdropBlurCalibration: {
+				quality: null,
+				rung: "max",
+				engine: ENGINE,
+				samples: Array.from({ length: DEMOTE_MIN_PAIRS }, () => [
+					20,
+					REFERENCE_PERIOD_MS,
+				]),
+			},
+		});
+		syncBackdropBlurTrial({ needed: true });
+		expect(backdropBlurTrialArm()).toBeNull();
+		armingScrolls();
 		expect(backdropBlurTrialArm()).toBe("medium");
+	});
+
+	it("ignores samples measured under another WebView engine", async () => {
+		syncBackdropBlurTrial({ needed: false });
+		await setPreferences({
+			backdropBlurCalibration: {
+				quality: null,
+				rung: "max",
+				engine: "2.54.1",
+				samples: Array.from({ length: DEMOTE_MIN_PAIRS }, () => [
+					20,
+					REFERENCE_PERIOD_MS,
+				]),
+			},
+		});
+		syncBackdropBlurTrial({ needed: true });
+		expect(backdropBlurTrialArm()).toBeNull();
+	});
+
+	it("stores the engine it measured under with every sample", async () => {
+		scrollOneGesture(20);
+		scrollOneGesture(20);
+		await vi.waitFor(() => {
+			expect(preferencesSnapshot().backdropBlurCalibration?.engine).toBe(
+				ENGINE,
+			);
+		});
+	});
+
+	it("counts a gesture that drew almost no frames as stalled, and steps down a rung at a time", async () => {
+		armingScrolls();
+		expect(backdropBlurTrialArm()).toBe("max");
+		stallFrames();
+		expect(backdropBlurTrialArm()).toBe("min");
+		for (let gesture = 1; gesture < 2 * STALLED_MIN_PAIRS; gesture += 1)
+			stallOneGesture();
+		await vi.waitFor(() => {
+			const stored = preferencesSnapshot().backdropBlurCalibration;
+			expect(stored?.rung).toBe("medium");
+			expect(stored?.samples).toHaveLength(0);
+		});
+		armingScrolls();
+		expect(backdropBlurTrialArm()).toBe("medium");
+		stallFrames();
+		for (let gesture = 1; gesture < 2 * STALLED_MIN_PAIRS; gesture += 1)
+			stallOneGesture();
+		expect(backdropBlurTrialArm()).toBe("min");
+		await vi.waitFor(() => {
+			expect(preferencesSnapshot().backdropBlurCalibration?.quality).toBe(
+				"min",
+			);
+		});
+	});
+
+	it("climbs from Low on Linux, where trialing Full first can freeze WebKitGTK", async () => {
+		syncBackdropBlurTrial({ needed: false });
+		linuxMock.mockReturnValue(true);
+		syncBackdropBlurTrial({ needed: true });
+		scrollOneGesture(SMOOTH_FRAME_MS);
+		expect(backdropBlurTrialArm()).toBe("medium");
+		scrollOneGesture(SMOOTH_FRAME_MS);
+		expect(backdropBlurTrialArm()).toBe("min");
+		for (let gesture = 2; gesture < 2 * SMOOTH_MIN_PAIRS; gesture += 1)
+			scrollOneGesture(SMOOTH_FRAME_MS);
+		await vi.waitFor(() => {
+			expect(preferencesSnapshot().backdropBlurCalibration?.rung).toBe(
+				"max",
+			);
+		});
+		armingScrolls();
+		expect(backdropBlurTrialArm()).toBe("max");
 	});
 });

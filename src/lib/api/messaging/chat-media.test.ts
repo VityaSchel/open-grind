@@ -18,9 +18,10 @@ vi.mock("$lib/api/transport", async (importOriginal) => ({
 import { ApiError } from "$lib/api/api-error";
 import {
 	addMediaToDrawer,
-	CHAT_MEDIA_MAX_BYTES,
 	UnsupportedChatMediaError,
+	uploadChatMediaFile,
 } from "$lib/api/messaging/chat-media";
+import { CHAT_MEDIA_MAX_BYTES } from "$lib/model/messaging/chat-media-limits";
 import { toBase64 } from "$lib/util/base64";
 import type { MediaFileInspection } from "$lib/platform/media-file";
 import type { PickedMedia } from "$lib/platform/media-picker";
@@ -179,6 +180,22 @@ describe("addMediaToDrawer", () => {
 
 		expect(uploadCall()).toBeUndefined();
 		expect(fetchRestMock).not.toHaveBeenCalled();
+	});
+
+	it("reuses an inspection the caller already made", async () => {
+		backend();
+
+		await uploadChatMediaFile(pickedMedia, {
+			inspection: { kind: "photo", size: 2048 },
+		});
+
+		expect(invokeMock).not.toHaveBeenCalledWith(
+			"inspect_media_file",
+			expect.anything(),
+		);
+		expect(uploadCall()).toMatchObject({
+			request: { path: photoUploadPath },
+		});
 	});
 
 	it("refuses a browser-picked file outside the demo without calling the backend", async () => {

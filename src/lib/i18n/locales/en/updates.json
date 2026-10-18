@@ -220,5 +220,8 @@
 			"enableFastModeFailed": "Couldn’t enable Fast Mode for push notifications",
 			"switchToSlowModeFailed": "Couldn’t switch push notifications to Slow Mode"
 		}
+	},
+	"transfers": {
+		"channel": "Transfers"
 	}
 }

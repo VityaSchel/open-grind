@@ -117,6 +117,8 @@
 }
 
 @theme {
+	--z-index-modal: 130000;
+	--z-index-drop: 135000;
 	--z-index-toast: 140000;
 	--z-index-popover: 145000;
 	--z-index-safe-area: 150000;

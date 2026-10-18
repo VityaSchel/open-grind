@@ -94,6 +94,27 @@ describe("inspectMediaFile", () => {
 		await expect(inspectMediaFile(media)).rejects.toThrow();
 	});
 
+	it("sends a staged file by its id", async () => {
+		invokeMock.mockResolvedValue({ kind: "photo", size: 9 });
+		const media = {
+			source: "staged",
+			key: "staged-1",
+			mimeType: "image/gif",
+			id: "0b0c3d5e-55d4-4a2b-9c55-0e2d2f6b8a11",
+		} satisfies PickedMedia;
+
+		await expect(inspectMediaFile(media)).resolves.toEqual({
+			kind: "photo",
+			size: 9,
+		});
+		expect(invokeMock).toHaveBeenCalledWith("inspect_media_file", {
+			file: {
+				source: "staged",
+				id: "0b0c3d5e-55d4-4a2b-9c55-0e2d2f6b8a11",
+			},
+		});
+	});
+
 	it("sends the Android URI descriptor to the backend", async () => {
 		invokeMock.mockResolvedValue({ kind: "video", size: 1 });
 		const media = {
