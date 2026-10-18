@@ -7,7 +7,7 @@ pub enum Category {
 	Taps,
 }
 
-#[cfg_attr(target_os = "android", allow(dead_code))]
+#[cfg_attr(not(desktop), allow(dead_code))]
 impl Category {
 	pub(super) const ALL: [Self; 2] = [Self::Messages, Self::Taps];
 
@@ -25,7 +25,7 @@ impl Category {
 	}
 }
 
-#[cfg_attr(target_os = "android", allow(dead_code))]
+#[cfg_attr(not(desktop), allow(dead_code))]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Announcement {

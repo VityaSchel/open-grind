@@ -6,6 +6,7 @@ mod bundle;
 mod installer;
 #[cfg(target_os = "macos")]
 mod location;
+#[cfg(desktop)]
 mod taskbar;
 
 use std::fs;
@@ -97,18 +98,22 @@ pub(super) fn begin_transfer<R: tauri::Runtime>(
 ) {
 }
 
+#[cfg_attr(not(desktop), allow(unused_variables))]
 pub(super) fn report_transfer<R: tauri::Runtime>(
 	app: &AppHandle<R>,
 	_purpose: TransferPurpose,
 	progress: TransferProgress,
 ) {
+	#[cfg(desktop)]
 	taskbar::show(app, progress);
 }
 
+#[cfg_attr(not(desktop), allow(unused_variables))]
 pub(super) fn end_transfer<R: tauri::Runtime>(
 	app: &AppHandle<R>,
 	purpose: TransferPurpose,
 ) {
+	#[cfg(desktop)]
 	if matches!(purpose, TransferPurpose::Update { .. }) {
 		taskbar::clear(app);
 	}
