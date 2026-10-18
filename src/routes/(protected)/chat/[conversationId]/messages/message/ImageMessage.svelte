@@ -1,14 +1,11 @@
 <script lang="ts">
-	import "photoswipe/style.css";
-
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import { proxyMediaUrl } from "$lib/util/media";
 	import { stableSignedUrl } from "$lib/util/signed-url";
 	import type { ImageMessage } from "$lib/model/messaging/messages";
-	import type { MediaDimensions } from "$lib/util/media-dimensions";
 	import { mediaRenewal } from "./media-renewal";
 	import { attachGalleryLightbox } from "./message-lightbox";
-	import { MessageMediaState } from "./message-media.svelte";
+	import { MeasuredSize, MessageMediaState } from "./message-media.svelte";
 
 	let { message }: { message: ImageMessage["body"] } = $props();
 
@@ -24,15 +21,11 @@
 	let failedSrc: string | null = $state(null);
 	const failed = $derived(failedSrc === src);
 
-	let measured = $state<({ src: string } & MediaDimensions) | null>(null);
-	const size = $derived(
-		measured !== null && measured.src === src ? measured : message,
-	);
-	const aspectRatio = $derived(
-		size.width === null || size.height === null
-			? undefined
-			: `${size.width} / ${size.height}`,
-	);
+	const size = new MeasuredSize({
+		src: () => src,
+		fallback: () => message,
+		ratioAllowsZero: true,
+	});
 
 	$effect(() => {
 		const gallery = media.el;
@@ -41,10 +34,7 @@
 	});
 </script>
 
-<div
-	class={["relative", { "w-2/5 max-w-60 min-w-35": !media.clone }]}
-	{@attach media.attach}
->
+<div class={["relative", media.widthClass]} {@attach media.attach}>
 	<a
 		href={failed ? undefined : href}
 		rel="noreferrer"
@@ -58,10 +48,10 @@
 			{src}
 			class={["w-full rounded-lg", media.cornerClass]}
 			imgClass="bg-card-foreground/10"
-			{aspectRatio}
-			onload={({ naturalWidth, naturalHeight }) => {
+			aspectRatio={size.aspectRatio}
+			onload={(image) => {
 				loadedUrl = tileUrl;
-				measured = { src, width: naturalWidth, height: naturalHeight };
+				size.measure(image);
 			}}
 			bind:failedSrc
 			onexpired={renewMedia}
