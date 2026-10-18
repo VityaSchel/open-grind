@@ -268,7 +268,7 @@ The default build uses two private macOS APIs: WebKit's `_setUseSystemAppearance
 | `MACOS_NOTARY_KEY_ID` | unset   | App Store Connect API key ID; with `MACOS_NOTARY_ISSUER`, notarizes and staples |
 | `MACOS_NOTARY_ISSUER` | unset   | App Store Connect API key issuer ID                                             |
 
-Ad-hoc builds are signed by the pinned `rcodesign`. Developer ID builds are signed by macOS `codesign` and notarized by the Command Line Tools' `notarytool` with the key at `~/.appstoreconnect/private_keys/AuthKey_<key ID>.p8`.
+Ad-hoc builds are signed by the pinned `rcodesign`. Developer ID builds are signed by macOS `codesign` and notarized by the Command Line Tools' `notarytool` with the key at `~/.appstoreconnect/private_keys/AuthKey_<key ID>.p8`. A Developer ID build also writes the ad-hoc zip to `src-tauri/target/release/ad-hoc/` and fails unless the shipped app, re-signed ad-hoc, matches it byte for byte.
 
 ```bash
 MACOS_SIGN_IDENTITY="Developer ID Application: Name (TEAMID)" \

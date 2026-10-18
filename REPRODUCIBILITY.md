@@ -245,7 +245,7 @@ fi
     | Zip archive                                      | `flake.lock` (nixpkgs `zip`)                               |
     | `lipo`, `install_name_tool`, `codesign_allocate` | `flake.lock` (nixpkgs `cctools`)                           |
 
-Releases are signed ad-hoc by the pinned `rcodesign` and zipped by the pinned `zip`.
+Releases are signed with a Developer ID of the Apple team [KEYS.md](./KEYS.md) publishes and notarized by Apple. `--resign-ad-hoc` checks that a release is notarized, carries no entitlements and requires that team, then removes the notarization ticket and signs the app ad-hoc with the pinned `rcodesign`, which turns it back into the zip a local build produces.
 
 ```bash
 # 1. Reproduce the zip locally
@@ -256,9 +256,13 @@ LOCAL=src-tauri/target/release/artifacts/open-grind-v<tag>-macos.zip
 # 2. Fetch from https://git.opengrind.org/open-grind/open-grind/releases
 PUBLISHED=/path/to/open-grind-v<tag>-macos.zip
 
-# 3. Confirm the zip reproduces
-shasum -a 256 "$LOCAL" "$PUBLISHED"
-if cmp -s "$LOCAL" "$PUBLISHED"; then
+# 3. Re-sign the release ad-hoc
+nix run .#build-macos -- --resign-ad-hoc "$PUBLISHED"
+RESIGNED=src-tauri/target/release/ad-hoc/open-grind-v<tag>-macos.zip
+
+# 4. Confirm the zip reproduces
+shasum -a 256 "$LOCAL" "$RESIGNED"
+if cmp -s "$LOCAL" "$RESIGNED"; then
   echo "✓ zip matches"
 else
   echo "✗ zip mismatch, local build does not match the published zip" >&2

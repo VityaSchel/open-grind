@@ -1,4 +1,4 @@
-import { basename, dirname } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 
 import { $ } from "bun";
 
@@ -18,6 +18,7 @@ const variant = appStore
 const features = appStore ? "keychain" : "keychain,private-api";
 const bundles = macosBundle(root, profile);
 const out = `${root}/src-tauri/target/${profile}/artifacts`;
+const adHocOut = `${root}/src-tauri/target/${profile}/ad-hoc`;
 const EXECUTABLE = "Contents/MacOS/open-grind";
 
 const identity = Bun.env.MACOS_SIGN_IDENTITY ?? "-";
@@ -141,6 +142,14 @@ async function notarize(zip: string, credentials: string[]): Promise<void> {
 	throw new Error(`notarization ended ${status}:\n${log}`);
 }
 
+async function resignAdHoc(zip: string, into: string): Promise<void> {
+	const app = await unpack(zip);
+	await $`rm -f ${app}/Contents/CodeResources`;
+	await signAdHoc(app);
+	await archive(app, into);
+	await $`rm -rf ${dirname(app)}`;
+}
+
 const MACH_O_MAGIC = ["cffaedfe", "cafebabe"];
 
 type Signature = "ad-hoc" | "Developer ID" | "notarized";
@@ -194,12 +203,34 @@ async function sha256(file: string): Promise<string> {
 		.digest("hex");
 }
 
+async function assertReproduces(zip: string, reference: string): Promise<void> {
+	const resigned = `${adHocOut}/resigned-${basename(zip)}`;
+	await resignAdHoc(zip, resigned);
+	const { exitCode } = await $`cmp -s ${resigned} ${reference}`.nothrow();
+	if (exitCode !== 0) {
+		throw new Error(
+			`${resigned}, the shipped app re-signed ad-hoc, differs from the ad-hoc build ${reference}`,
+		);
+	}
+	await $`rm -f ${resigned}`;
+}
+
+async function reproduce(published: string): Promise<void> {
+	await $`mkdir -p ${adHocOut}`;
+	const resigned = `${adHocOut}/${basename(published)}`;
+	await verifyShipped(resolve(published), "notarized");
+	await resignAdHoc(resolve(published), resigned);
+	console.log(`
+${resigned}
+  sha256 ${await sha256(resigned)}`);
+}
+
 async function build(): Promise<void> {
 	await $`bun run tauri build ${profile === "debug" ? ["--debug"] : []} ${variant} --no-sign --features ${features} --target ${MACOS_TARGET} --bundles app`.cwd(
 		root,
 	);
 
-	await $`rm -rf ${out}`;
+	await $`rm -rf ${out} ${adHocOut}`;
 	await $`mkdir -p ${out}`;
 
 	const app = await only("*.app", bundles);
@@ -217,6 +248,14 @@ ${zip}
 		return;
 	}
 
+	const reference = `${adHocOut}/${zipName}`;
+	const unsigned = `${adHocOut}/${basename(app)}`;
+	await $`mkdir -p ${adHocOut}`;
+	await $`ditto ${app} ${unsigned}`;
+	await signAdHoc(unsigned);
+	await archive(unsigned, reference);
+	await $`rm -rf ${unsigned}`;
+
 	await $`codesign --force --sign ${identity} --options runtime --timestamp ${app}`;
 	if (notary) {
 		await archive(app, zip);
@@ -225,12 +264,22 @@ ${zip}
 	}
 	await archive(app, zip);
 	await verifyShipped(zip, notary ? "notarized" : "Developer ID");
+	await assertReproduces(zip, reference);
 
 	console.log(`
 ${zip}
   sha256 ${await sha256(zip)}
   signed ${identity}
-  notarized ${notary ? "yes, ticket stapled" : "no"}`);
+  notarized ${notary ? "yes, ticket stapled" : "no"}
+  re-signed ad-hoc it matches ${reference}
+  sha256 ${await sha256(reference)}`);
 }
 
-await build();
+const resignIndex = Bun.argv.indexOf("--resign-ad-hoc");
+if (resignIndex === -1) {
+	await build();
+} else {
+	const published = Bun.argv[resignIndex + 1];
+	if (!published) throw new Error("--resign-ad-hoc needs a zip path");
+	await reproduce(published);
+}
