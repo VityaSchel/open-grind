@@ -1,12 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-import { DRAWER, expandToFull } from "./support/drawer";
 import {
-	gaymojiTiles,
-	gifTiles,
-	openStickers,
+	DRAWER,
+	expandToFull,
 	scrollSheetTo,
 	SHEET_SCROLLER,
+} from "./support/drawer";
+import {
+	gifTiles,
+	openGaymoji,
+	openStickers,
+	showGaymojiTab,
 	STICKER_TILE,
 	stickersTab,
 } from "./support/stickers";
@@ -25,8 +29,7 @@ test("each tab keeps its own place in the expanded sheet", async ({ page }) => {
 		);
 	await scrollSheetTo(page, { top: peek + 900 });
 
-	await stickersTab(page, { name: "Gaymoji" }).click();
-	await expect(gaymojiTiles(page).first()).toBeVisible();
+	await showGaymojiTab(page);
 	await expect.poll(contentTop).toBeLessThanOrEqual(1);
 
 	await stickersTab(page, { name: "GIFs" }).click();
@@ -37,9 +40,7 @@ test("each tab keeps its own place in the expanded sheet", async ({ page }) => {
 test("a tile focused from the keyboard scrolls clear of the tab bar", async ({
 	page,
 }) => {
-	await openStickers(page);
-	await stickersTab(page, { name: "Gaymoji" }).click();
-	await expect(gaymojiTiles(page).first()).toBeVisible();
+	await openGaymoji(page);
 	await expandToFull(page);
 
 	const clearance = await page.evaluate(

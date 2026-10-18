@@ -6,6 +6,7 @@ import {
 	installTauriShim,
 } from "./support/app";
 import { seedPreferences, storedPreferences } from "./support/app-data";
+import { GIPHY_MESSAGE } from "./support/stickers";
 
 async function openChatWithGiphy(page: Page, { on }: { on: boolean }) {
 	await installTauriShim(page);
@@ -14,7 +15,11 @@ async function openChatWithGiphy(page: Page, { on }: { on: boolean }) {
 }
 
 function receivedGif(page: Page) {
-	return page.locator('[data-slot="giphy-message"]').first();
+	return page.locator(GIPHY_MESSAGE).first();
+}
+
+function lightboxImage(page: Page) {
+	return page.locator(".pswp .pswp__item[aria-hidden=false] img").last();
 }
 
 async function askToLoad(page: Page) {
@@ -88,4 +93,45 @@ test("with GIPHY on, a received GIF plays without asking", async ({ page }) => {
 	await expect(
 		receivedGif(page).getByRole("button", { name: /Tap to load/ }),
 	).toHaveCount(0);
+});
+
+test("with reduced motion a GIF holds still with a badge and opens in the lightbox", async ({
+	page,
+}) => {
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	await openChatWithGiphy(page, { on: true });
+	const gif = receivedGif(page);
+
+	await expect(gif.locator('[data-slot="gif-badge"]')).toHaveText("GIF", {
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	await gif.getByRole("link", { name: "GIF" }).click();
+	await expect(lightboxImage(page)).toBeVisible();
+});
+
+test("a GIF in the chat opens to fill the screen in the photo lightbox", async ({
+	page,
+}) => {
+	await openChatWithGiphy(page, { on: true });
+	const gif = receivedGif(page);
+	await expect(gif.getByRole("img", { name: "GIF" })).toHaveJSProperty(
+		"complete",
+		true,
+		{ timeout: FIRST_ROUTE_COMPILE_MS },
+	);
+
+	await gif.getByRole("link", { name: "GIF" }).click();
+
+	const shown = lightboxImage(page);
+	await expect(shown).toBeVisible();
+	const viewport = page.viewportSize()!;
+	await expect
+		.poll(async () => {
+			const box = await shown.boundingBox();
+			return Math.max(
+				(box?.width ?? 0) / viewport.width,
+				(box?.height ?? 0) / viewport.height,
+			);
+		})
+		.toBeGreaterThan(0.95);
 });

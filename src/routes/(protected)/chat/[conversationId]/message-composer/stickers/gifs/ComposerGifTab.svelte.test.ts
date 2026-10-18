@@ -42,6 +42,7 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 
 import type { StickerPick } from "../sticker-pick";
 import ComposerGifTab from "./ComposerGifTab.svelte";
+import { gifTile } from "./gif-test-helpers";
 
 class InertIntersectionObserver {
 	observe() {}
@@ -54,21 +55,7 @@ class InertIntersectionObserver {
 
 function trendingPage(ids: string[]): GiphyPage {
 	return {
-		gifs: ids.map((id) => ({
-			id,
-			tileUrl: `https://media.giphy.com/media/${id}/200w.webp`,
-			stillTileUrl: `https://media.giphy.com/media/${id}/200_s.gif`,
-			alt: `Trending ${id}`,
-			body: {
-				id,
-				urlPath: `https://media.giphy.com/media/${id}/200.gif`,
-				previewPath: `https://media.giphy.com/media/${id}/200.gif`,
-				stillPath: `https://media.giphy.com/media/${id}/200_s.gif`,
-				width: 200,
-				height: 150,
-				imageHash: `giphy/${id}`,
-			},
-		})),
+		gifs: ids.map((id) => gifTile(id, { alt: `Trending ${id}` })),
 		nextOffset: null,
 	};
 }

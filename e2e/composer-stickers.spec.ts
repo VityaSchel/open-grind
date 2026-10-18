@@ -13,6 +13,7 @@ import {
 	DRAWER,
 	expandToFull,
 	openComposerSheet,
+	SHEET_PANEL,
 	snapTops,
 } from "./support/drawer";
 import {
@@ -22,8 +23,12 @@ import {
 	gifPanel,
 	gifSearchBox,
 	gifTiles,
+	GIPHY_MESSAGE,
+	openGaymoji,
 	openStickers,
 	SELECTED_STICKER_TILE,
+	sendGif,
+	showGaymojiTab,
 	STICKER_GRID_SKELETON,
 	STICKER_TILE,
 	stickerSendButton,
@@ -147,41 +152,51 @@ test.describe("composer stickers sheet", () => {
 		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
 	});
 
-	test("one GIF at a time is selected, and Send shows no count", async ({
-		page,
-	}) => {
-		await openStickers(page);
-		const first = gifTiles(page).nth(0);
-		const second = gifTiles(page).nth(1);
+	for (const { noun, tab, tiles, label } of [
+		{ noun: "GIF", tab: "GIFs", tiles: gifTiles, label: "Send GIF" },
+		{
+			noun: "Gaymoji",
+			tab: "Gaymoji",
+			tiles: gaymojiTiles,
+			label: "Send Gaymoji",
+		},
+	] as const) {
+		test(`one ${noun} at a time is selected, and Send shows no count`, async ({
+			page,
+		}) => {
+			await openStickers(page);
+			await stickersTab(page, { name: tab }).click();
+			const first = tiles(page).nth(0);
+			const second = tiles(page).nth(1);
+			await expect(first).toBeVisible();
 
-		await first.click();
-		await expect(first).toHaveAttribute("aria-pressed", "true");
-		await expect(stickerSendButton(page)).toHaveText("Send GIF");
+			await first.click();
+			await expect(first).toHaveAttribute("aria-pressed", "true");
+			await expect(stickerSendButton(page)).toHaveText(label);
 
-		await second.click();
-		await expect(second).toHaveAttribute("aria-pressed", "true");
-		await expect(first).toHaveAttribute("aria-pressed", "false");
-		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
-		await expect(stickerSendButton(page)).toHaveText("Send GIF");
+			await second.click();
+			await expect(second).toHaveAttribute("aria-pressed", "true");
+			await expect(first).toHaveAttribute("aria-pressed", "false");
+			await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
+			await expect(stickerSendButton(page)).toHaveText(label);
 
-		await second.click();
-		await expect(second).toHaveAttribute("aria-pressed", "false");
-		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
-		await expect(stickerSendButton(page)).toHaveCount(0);
-	});
+			await second.click();
+			await expect(second).toHaveAttribute("aria-pressed", "false");
+			await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
+			await expect(stickerSendButton(page)).toHaveCount(0);
+		});
+	}
 
 	test("a sent GIF closes the sheet and plays in the chat", async ({
 		page,
 	}) => {
-		await openStickers(page);
-		await gifTiles(page).nth(1).click();
-		await stickerSendButton(page).click();
+		await sendGif(page);
 
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		const newest = page.locator(MESSAGE_ROW).last();
 		await expect(newest.getByText("Sending...")).toHaveCount(0);
 		const gif = newest
-			.locator('[data-slot="giphy-message"]')
+			.locator(GIPHY_MESSAGE)
 			.getByRole("img", { name: "GIF" });
 		await expect(gif).toBeVisible();
 		await expect(gif).toHaveJSProperty("complete", true);
@@ -190,36 +205,15 @@ test.describe("composer stickers sheet", () => {
 		).toBeGreaterThan(1);
 	});
 
-	test("with reduced motion a GIF holds still with a badge and opens in the lightbox", async ({
-		page,
-	}) => {
-		await page.emulateMedia({ reducedMotion: "reduce" });
-		await openStickers(page);
-		await gifTiles(page).nth(1).click();
-		await stickerSendButton(page).click();
-		const gif = page
-			.locator(MESSAGE_ROW)
-			.last()
-			.locator('[data-slot="giphy-message"]');
-
-		await expect(gif.locator('[data-slot="gif-badge"]')).toHaveText("GIF");
-		await gif.getByRole("link", { name: "GIF" }).click();
-		await expect(
-			page.locator(".pswp .pswp__item[aria-hidden=false] img").last(),
-		).toBeVisible();
-	});
-
 	test("a sent GIF lines up with the sent text bubbles", async ({ page }) => {
-		await openStickers(page);
-		await gifTiles(page).nth(1).click();
-		await stickerSendButton(page).click();
+		await sendGif(page);
 		await expect(page.locator(DRAWER)).toHaveCount(0);
 		await page
 			.getByRole("textbox", { name: "Say something..." })
 			.fill("Lined up?");
 		await page.getByRole("button", { name: "Send message" }).click();
 
-		const gif = page.locator('[data-slot="giphy-message"]').last();
+		const gif = page.locator(GIPHY_MESSAGE).last();
 		const bubble = page
 			.locator('[data-slot="message-bubble"]')
 			.filter({ hasText: "Lined up?" });
@@ -235,43 +229,10 @@ test.describe("composer stickers sheet", () => {
 		).toBeCloseTo(0, 0);
 	});
 
-	test("a GIF in the chat opens to fill the screen in the photo lightbox", async ({
-		page,
-	}) => {
-		await openStickers(page);
-		await gifTiles(page).nth(1).click();
-		await stickerSendButton(page).click();
-		const newest = page.locator(MESSAGE_ROW).last();
-		await expect(newest.getByText("Sending...")).toHaveCount(0);
-		await expect(
-			newest
-				.locator('[data-slot="giphy-message"]')
-				.getByRole("img", { name: "GIF" }),
-		).toHaveJSProperty("complete", true);
-
-		await newest.getByRole("link", { name: "GIF" }).click();
-
-		const shown = page
-			.locator(".pswp .pswp__item[aria-hidden=false] img")
-			.last();
-		await expect(shown).toBeVisible();
-		const viewport = page.viewportSize()!;
-		await expect
-			.poll(async () => {
-				const box = await shown.boundingBox();
-				return Math.max(
-					(box?.width ?? 0) / viewport.width,
-					(box?.height ?? 0) / viewport.height,
-				);
-			})
-			.toBeGreaterThan(0.95);
-	});
-
 	test("a sent Gaymoji closes the sheet and stays a Gaymoji in the chat", async ({
 		page,
 	}) => {
-		await openStickers(page);
-		await stickersTab(page, { name: "Gaymoji" }).click();
+		await openGaymoji(page);
 		const tile = gaymojiTiles(page).nth(2);
 		await expect(tile).toBeVisible();
 		const name = (await tile.getAttribute("aria-label")) ?? "";
@@ -289,38 +250,11 @@ test.describe("composer stickers sheet", () => {
 		).toBeVisible();
 	});
 
-	test("one Gaymoji at a time is selected, and Send shows no count", async ({
-		page,
-	}) => {
-		await openStickers(page);
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		const first = gaymojiTiles(page).nth(0);
-		const second = gaymojiTiles(page).nth(1);
-		await expect(first).toBeVisible();
-
-		await first.click();
-		await expect(first).toHaveAttribute("aria-pressed", "true");
-		await expect(stickerSendButton(page)).toHaveText("Send Gaymoji");
-
-		await second.click();
-		await expect(second).toHaveAttribute("aria-pressed", "true");
-		await expect(first).toHaveAttribute("aria-pressed", "false");
-		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(1);
-		await expect(stickerSendButton(page)).toHaveText("Send Gaymoji");
-
-		await second.click();
-		await expect(second).toHaveAttribute("aria-pressed", "false");
-		await expect(page.locator(SELECTED_STICKER_TILE)).toHaveCount(0);
-		await expect(stickerSendButton(page)).toHaveCount(0);
-	});
-
 	test("a Send pill flying out turns back from where it is when a tile is picked again", async ({
 		page,
 	}) => {
-		await openStickers(page);
-		await stickersTab(page, { name: "Gaymoji" }).click();
+		await openGaymoji(page);
 		const tile = gaymojiTiles(page).nth(0);
-		await expect(tile).toBeVisible();
 		await tile.click();
 		await expect(stickerSendButton(page)).toBeVisible();
 		await page.waitForTimeout(800);
@@ -392,8 +326,7 @@ test.describe("composer stickers sheet", () => {
 		await expect(firstResult).toBeVisible();
 		const results = await gifTiles(page).count();
 
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		await expect(gaymojiTiles(page).first()).toBeVisible();
+		await showGaymojiTab(page);
 		await expect(gifSearchBox(page)).toBeHidden();
 
 		await stickersTab(page, { name: "GIFs" }).click();
@@ -444,7 +377,7 @@ test.describe("sticker grid layout", () => {
 		await openStickers(page);
 		const panelPadding = await page
 			.locator(DRAWER)
-			.locator("[data-slot=sheet-panel]")
+			.locator(SHEET_PANEL)
 			.evaluate((panel) => {
 				const style = getComputedStyle(panel);
 				return (
@@ -516,8 +449,7 @@ test.describe("sticker grid layout", () => {
 		expect(gifRatios.length).toBeGreaterThan(3);
 		for (const ratio of gifRatios) expect(ratio).toBeCloseTo(4 / 3, 1);
 
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		await expect(gaymojiTiles(page).first()).toBeVisible();
+		await showGaymojiTab(page);
 		const gaymojiRatios = await visibleTileAspectRatios(page);
 		expect(gaymojiRatios.length).toBeGreaterThan(3);
 		for (const ratio of gaymojiRatios) expect(ratio).toBeCloseTo(1, 1);

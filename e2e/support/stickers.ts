@@ -7,9 +7,9 @@ export const STICKER_TILE = '[data-slot="sticker-tile"]';
 export const SELECTED_STICKER_TILE = `${STICKER_TILE}[aria-pressed="true"]`;
 export const STICKER_GRID_SKELETON = '[data-slot="sticker-grid-skeleton"]';
 export const GAYMOJI_TAB = '[data-slot="gaymoji-tab"]';
-export const SHEET_SCROLLER = '[data-slot="sheet-scroller"]';
 export const GIF_SEARCH_BAR = '[data-slot="gif-search-bar"]';
 export const GIPHY_CONSENT_NOTE = '[data-slot="giphy-consent-note"]';
+export const GIPHY_MESSAGE = '[data-slot="giphy-message"]';
 export const TRANSPARENT_PIXEL =
 	"data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -49,12 +49,11 @@ export function giphyTrendingPageAt({ offset }: { offset: number }): string {
 	return `${GIPHY_TRENDING_PATH}?limit=${GIPHY_PAGE_SIZE}&rating=r&offset=${offset}&`;
 }
 
+type StickersSheetOptions = { giphyConsent?: boolean; stretchPanel?: boolean };
+
 export async function openStickers(
 	page: Page,
-	{
-		giphyConsent = true,
-		stretchPanel = true,
-	}: { giphyConsent?: boolean; stretchPanel?: boolean } = {},
+	{ giphyConsent = true, stretchPanel = true }: StickersSheetOptions = {},
 ): Promise<void> {
 	await openComposerSheet(page, {
 		trigger: "GIFs and stickers",
@@ -62,6 +61,25 @@ export async function openStickers(
 		stretchPanel,
 	});
 	if (giphyConsent) await expect(gifTiles(page).first()).toBeVisible();
+}
+
+export async function openGaymoji(
+	page: Page,
+	options: StickersSheetOptions = {},
+): Promise<void> {
+	await openStickers(page, options);
+	await showGaymojiTab(page);
+}
+
+export async function showGaymojiTab(page: Page): Promise<void> {
+	await stickersTab(page, { name: "Gaymoji" }).click();
+	await expect(gaymojiTiles(page).first()).toBeVisible();
+}
+
+export async function sendGif(page: Page): Promise<void> {
+	await openStickers(page);
+	await gifTiles(page).nth(1).click();
+	await stickerSendButton(page).click();
 }
 
 export function stickersTab(
@@ -98,26 +116,6 @@ export function gaymojiRegion(
 	{ title }: { title: string },
 ): Locator {
 	return gaymojiPanel(page).getByRole("region", { name: title });
-}
-
-export function scrollSheetTo(
-	page: Page,
-	{ top }: { top: number | "end" },
-): Promise<void> {
-	return page
-		.locator(DRAWER)
-		.locator(SHEET_SCROLLER)
-		.evaluate(
-			(scroller, top) =>
-				new Promise<void>((resolve) => {
-					scroller.scrollTop =
-						top === "end" ? scroller.scrollHeight : top;
-					requestAnimationFrame(() =>
-						requestAnimationFrame(() => resolve()),
-					);
-				}),
-			top,
-		);
 }
 
 export type TileChurn = { added: number; removed: number };

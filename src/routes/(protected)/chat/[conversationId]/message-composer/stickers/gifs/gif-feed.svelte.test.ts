@@ -30,27 +30,10 @@ vi.mock("$lib/api/messaging/giphy-link", async (importOriginal) => ({
 }));
 
 import { GifFeed, SEARCH_DEBOUNCE_MS } from "./gif-feed.svelte";
-
-function gif(id: string): GiphyTile {
-	return {
-		id,
-		tileUrl: `https://media.giphy.com/media/${id}/200w.webp`,
-		stillTileUrl: `https://media.giphy.com/media/${id}/200_s.gif`,
-		alt: `GIF ${id}`,
-		body: {
-			id,
-			urlPath: `https://media.giphy.com/media/${id}/200.gif`,
-			previewPath: `https://media.giphy.com/media/${id}/200.gif`,
-			stillPath: `https://media.giphy.com/media/${id}/200_s.gif`,
-			width: 200,
-			height: 150,
-			imageHash: `giphy/${id}`,
-		},
-	};
-}
+import { gifTile } from "./gif-test-helpers";
 
 function page(ids: string[], nextOffset: number | null = null): GiphyPage {
-	return { gifs: ids.map(gif), nextOffset };
+	return { gifs: ids.map((id) => gifTile(id)), nextOffset };
 }
 
 function deferred<T>() {
@@ -443,7 +426,7 @@ describe("GifFeed", () => {
 
 	it("waits out the debounce before looking up a typed GIPHY link", async () => {
 		await startedFeed();
-		link.getGifById.mockResolvedValue(gif("xT0xeChUR33EsYNNRK"));
+		link.getGifById.mockResolvedValue(gifTile("xT0xeChUR33EsYNNRK"));
 
 		feed.setInput("https://giphy.com/gifs/x");
 		feed.setInput("https://giphy.com/gifs/xT");
@@ -457,7 +440,7 @@ describe("GifFeed", () => {
 
 	it("shows a flushed GIPHY link at once as its only GIF, uncut", async () => {
 		await startedFeed();
-		link.getGifById.mockResolvedValue(gif("xT0xeChUR33EsYNNRK"));
+		link.getGifById.mockResolvedValue(gifTile("xT0xeChUR33EsYNNRK"));
 
 		feed.setInput(
 			"https://giphy.com/gifs/portlandia-season-2-episode-xT0xeChUR33EsYNNRK",
@@ -491,7 +474,7 @@ describe("GifFeed", () => {
 
 	it("switches between the linked GIF and a text search as words after a link come and go", async () => {
 		await startedFeed();
-		link.getGifById.mockResolvedValue(gif("xT0xeChUR33EsYNNRK"));
+		link.getGifById.mockResolvedValue(gifTile("xT0xeChUR33EsYNNRK"));
 		api.searchGifs.mockResolvedValue(page([]));
 		const fiftyCharacterLink =
 			"https://giphy.com/gifs/funnycat-xT0xeChUR33EsYNNRK";

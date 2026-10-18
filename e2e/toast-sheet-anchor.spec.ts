@@ -1,58 +1,34 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
-import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
-import { DRAWER, openComposerSheet } from "./support/drawer";
-import { scrollSheetTo } from "./support/stickers";
-import { showRestingToast } from "./support/toast";
+import {
+	afterTwoFrames,
+	animationsFinished,
+	DEMO_CONVERSATION,
+	installTauriShim,
+} from "./support/app";
+import { DRAWER, scrollSheetTo, SHEET_PANEL } from "./support/drawer";
+import { openStickers } from "./support/stickers";
+import {
+	bottomToaster,
+	showRestingToast,
+	TOAST_GAP_PX,
+	toastGap,
+} from "./support/toast";
 
-const TOAST_GAP_PX = 8;
 const RAISED_BOTTOM_INSET_PX = 120;
 
 const composer = (page: Page) => page.locator('[data-slot="message-composer"]');
-const sheetPanel = (page: Page) =>
-	page.locator(DRAWER).locator('[data-slot="sheet-panel"]');
-const bottomToaster = (page: Page) =>
-	page.locator('[data-sonner-toaster][data-y-position="bottom"]');
+const sheetPanel = (page: Page) => page.locator(DRAWER).locator(SHEET_PANEL);
 
-function settled(page: Page): Promise<void> {
-	return bottomToaster(page).evaluate(
-		(toaster) =>
-			new Promise<void>((done) => {
-				void Promise.all(
-					toaster.getAnimations().map(({ finished }) => finished),
-				).then(() =>
-					requestAnimationFrame(() =>
-						requestAnimationFrame(() => done()),
-					),
-				);
-			}),
-	);
-}
-
-async function gapAbove({
-	toast,
-	edge,
-}: {
-	toast: Locator;
-	edge: Locator;
-}): Promise<number> {
-	const toastBox = (await toast.boundingBox())!;
-	const edgeBox = (await edge.boundingBox())!;
-	return edgeBox.y - (toastBox.y + toastBox.height);
-}
-
-async function openStickersSheet(page: Page): Promise<void> {
-	await openComposerSheet(page, {
-		trigger: "GIFs and stickers",
-		preferences: { giphyConsent: true },
-		stretchPanel: false,
-	});
+async function settled(page: Page): Promise<void> {
+	await animationsFinished(bottomToaster(page));
+	await afterTwoFrames(page);
 }
 
 test("a toast rides 8px above an open sheet and pins under the status bar once the sheet fills the screen", async ({
 	page,
 }) => {
-	await openStickersSheet(page);
+	await openStickers(page, { stretchPanel: false });
 
 	const collapsed = await showRestingToast({
 		page,
@@ -61,7 +37,11 @@ test("a toast rides 8px above an open sheet and pins under the status bar once t
 	});
 	await settled(page);
 	expect(
-		await gapAbove({ toast: collapsed, edge: sheetPanel(page) }),
+		await toastGap({
+			toast: collapsed,
+			obstruction: sheetPanel(page),
+			edge: "bottom",
+		}),
 	).toBeCloseTo(TOAST_GAP_PX, 0);
 
 	await scrollSheetTo(page, { top: 1500 });
@@ -99,16 +79,19 @@ test("a toast rides 8px above an open sheet and pins under the status bar once t
 		label: "Collapsed again probe",
 	});
 	await settled(page);
-	expect(await gapAbove({ toast: back, edge: sheetPanel(page) })).toBeCloseTo(
-		TOAST_GAP_PX,
-		0,
-	);
+	expect(
+		await toastGap({
+			toast: back,
+			obstruction: sheetPanel(page),
+			edge: "bottom",
+		}),
+	).toBeCloseTo(TOAST_GAP_PX, 0);
 });
 
 test("the last toast leaving over an open sheet stays above the sheet", async ({
 	page,
 }) => {
-	await openStickersSheet(page);
+	await openStickers(page, { stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",
@@ -116,21 +99,17 @@ test("the last toast leaving over an open sheet stays above the sheet", async ({
 	});
 	await settled(page);
 
-	await bottomToaster(page).evaluate(
-		(toaster) =>
-			new Promise<void>((done) => {
-				toaster.style.setProperty(
-					"--front-toast-height",
-					"undefinedpx",
-				);
-				requestAnimationFrame(() =>
-					requestAnimationFrame(() => done()),
-				);
-			}),
+	await bottomToaster(page).evaluate((toaster) =>
+		toaster.style.setProperty("--front-toast-height", "undefinedpx"),
 	);
+	await afterTwoFrames(page);
 
 	expect(
-		await gapAbove({ toast, edge: sheetPanel(page) }),
+		await toastGap({
+			toast,
+			obstruction: sheetPanel(page),
+			edge: "bottom",
+		}),
 		"sonner's front height goes invalid while the last toast leaves",
 	).toBeCloseTo(TOAST_GAP_PX, 0);
 });
@@ -138,7 +117,7 @@ test("the last toast leaving over an open sheet stays above the sheet", async ({
 test("a toast glides back above the composer when the sheet closes", async ({
 	page,
 }) => {
-	await openStickersSheet(page);
+	await openStickers(page, { stretchPanel: false });
 	const toast = await showRestingToast({
 		page,
 		edge: "bottom",
@@ -150,10 +129,9 @@ test("a toast glides back above the composer when the sheet closes", async ({
 	await expect(page.locator(DRAWER)).toHaveCount(0);
 	await settled(page);
 
-	expect(await gapAbove({ toast, edge: composer(page) })).toBeCloseTo(
-		TOAST_GAP_PX,
-		0,
-	);
+	expect(
+		await toastGap({ toast, obstruction: composer(page), edge: "bottom" }),
+	).toBeCloseTo(TOAST_GAP_PX, 0);
 });
 
 test("an offset change glides the toasts to their new place instead of jumping", async ({
@@ -196,6 +174,10 @@ test("an offset change glides the toasts to their new place instead of jumping",
 	await settled(page);
 	const resting = page.locator('[data-sonner-toast][data-front="true"]');
 	expect(
-		await gapAbove({ toast: resting, edge: composer(page) }),
+		await toastGap({
+			toast: resting,
+			obstruction: composer(page),
+			edge: "bottom",
+		}),
 	).toBeCloseTo(TOAST_GAP_PX, 0);
 });

@@ -1,6 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { box, DRAWER, snapTops } from "./support/drawer";
+import { afterTwoFrames } from "./support/app";
+import {
+	box,
+	DRAWER,
+	expandSheet,
+	scrollSheetBy,
+	SHEET_SCROLLER,
+	type SheetSnap,
+	sheetSnap,
+	snapTops,
+} from "./support/drawer";
 import {
 	gifSearchBox,
 	gifTiles,
@@ -11,24 +21,13 @@ import {
 const VIEWPORT_WIDTH = 420;
 const TALL_VIEWPORT = 800;
 const KEYBOARD_VIEWPORT = 500;
-const SNAP_TOLERANCE_PX = 1;
 const GRID_SCROLL = 300;
-const SCROLLER = "[data-slot=sheet-scroller]";
 const SCROLL_ANCHORING = [
 	{ anchoring: "with scroll anchoring", overflowAnchor: "auto" },
 	{ anchoring: "without scroll anchoring", overflowAnchor: "none" },
 ] as const;
 
-type SheetSnap = "full" | "short" | "between";
 type OverflowAnchor = (typeof SCROLL_ANCHORING)[number]["overflowAnchor"];
-
-async function sheetSnap(page: Page): Promise<SheetSnap> {
-	const { full, short } = await snapTops(page);
-	const { top } = await box(page);
-	if (Math.abs(top - full) <= SNAP_TOLERANCE_PX) return "full";
-	if (Math.abs(top - short) <= SNAP_TOLERANCE_PX) return "short";
-	return "between";
-}
 
 async function expectSheetAt(
 	page: Page,
@@ -42,22 +41,11 @@ async function expectSheetAt(
 		.toEqual({ viewport: viewportHeight, snap });
 }
 
-function afterPendingScrollEvents(page: Page): Promise<void> {
-	return page.evaluate(
-		() =>
-			new Promise<void>((resolve) =>
-				requestAnimationFrame(() =>
-					requestAnimationFrame(() => resolve()),
-				),
-			),
-	);
-}
-
 async function setViewportHeight(
 	page: Page,
 	{ height }: { height: number },
 ): Promise<void> {
-	await afterPendingScrollEvents(page);
+	await afterTwoFrames(page);
 	await page.setViewportSize({ width: VIEWPORT_WIDTH, height });
 }
 
@@ -66,24 +54,9 @@ async function openSheet(
 	{ overflowAnchor }: { overflowAnchor: OverflowAnchor },
 ): Promise<void> {
 	await openStickers(page);
-	await page.locator(SCROLLER).evaluate((scroller, value) => {
+	await page.locator(SHEET_SCROLLER).evaluate((scroller, value) => {
 		scroller.style.overflowAnchor = value;
 	}, overflowAnchor);
-}
-
-function expandSheet(page: Page) {
-	return page.evaluate((scrollerSelector) => {
-		const scroller = document.querySelector<HTMLElement>(scrollerSelector)!;
-		scroller.scrollTop = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-peek]",
-		)!.offsetHeight;
-	}, SCROLLER);
-}
-
-function scrollGridBy(page: Page, { pixels }: { pixels: number }) {
-	return page.locator(SCROLLER).evaluate((scroller, delta) => {
-		scroller.scrollTop += delta;
-	}, pixels);
 }
 
 function drawerHeight(page: Page): Promise<number> {
@@ -132,7 +105,7 @@ for (const { anchoring, overflowAnchor } of SCROLL_ANCHORING) {
 		}) => {
 			await openSheet(page, { overflowAnchor });
 			await expandSheet(page);
-			await scrollGridBy(page, { pixels: GRID_SCROLL });
+			await scrollSheetBy(page, { pixels: GRID_SCROLL });
 			await expect
 				.poll(async () => (await box(page)).gridScrollTop)
 				.toBe(GRID_SCROLL);

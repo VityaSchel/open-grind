@@ -5,7 +5,31 @@ import { animationsFinished } from "./app";
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
 const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 
+export const TOAST_GAP_PX = 8;
+export const BOTTOM_TOASTER = '[data-sonner-toaster][data-y-position="bottom"]';
+
 export type ToastEdge = "top" | "bottom";
+
+export function bottomToaster(page: Page): Locator {
+	return page.locator(BOTTOM_TOASTER);
+}
+
+export async function toastGap({
+	toast,
+	obstruction,
+	edge,
+}: {
+	toast: Locator;
+	obstruction: Locator;
+	edge: ToastEdge;
+}): Promise<number> {
+	const toastBox = await toast.boundingBox();
+	const obstructionBox = await obstruction.boundingBox();
+	if (!toastBox || !obstructionBox) throw new Error("Nothing to measure");
+	return edge === "top"
+		? toastBox.y - (obstructionBox.y + obstructionBox.height)
+		: obstructionBox.y - (toastBox.y + toastBox.height);
+}
 
 // Not toHaveCount(0) — that retries, outliving the toast, and can never fail.
 export async function expectNoToast(page: Page, text: string): Promise<void> {

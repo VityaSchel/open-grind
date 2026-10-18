@@ -10,9 +10,12 @@ import { failDemoRequests, recordDemoRequests } from "./support/demo-faults";
 import {
 	box,
 	DRAWER,
+	expandSheet,
 	expandToFull,
 	openComposerSheet,
 	openSheetFromComposer,
+	scrollSheetBy,
+	scrollSheetTo,
 	snapTops,
 } from "./support/drawer";
 import {
@@ -110,35 +113,6 @@ async function watchSearchTimeline(
 		page.evaluate(
 			() => (window as unknown as TimelineWindow).__searchTimeline,
 		);
-}
-
-function scrollSheetBy(page: Page, { pixels }: { pixels: number }) {
-	return page.evaluate((delta) => {
-		const scroller = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-scroller]",
-		)!;
-		scroller.scrollTop += delta;
-	}, pixels);
-}
-
-function expandSheet(page: Page) {
-	return page.evaluate(() => {
-		const scroller = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-scroller]",
-		)!;
-		scroller.scrollTop = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-peek]",
-		)!.offsetHeight;
-	});
-}
-
-function scrollSheetToBottom(page: Page) {
-	return page.evaluate(() => {
-		const scroller = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-scroller]",
-		)!;
-		scroller.scrollTop = scroller.scrollHeight;
-	});
 }
 
 test.describe("GIPHY consent", () => {
@@ -463,12 +437,12 @@ test.describe("GIF feed scrolling", () => {
 		await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
 
 		for (const expected of [100, 150, DEMO_GIPHY_TRENDING_TOTAL]) {
-			await scrollSheetToBottom(page);
+			await scrollSheetTo(page, { top: "end" });
 			await expect(gifTiles(page)).toHaveCount(expected);
 		}
 		await expect(page.locator(GIF_PAGING_SENTINEL)).toHaveCount(0);
 		await scrollSheetBy(page, { pixels: -400 });
-		await scrollSheetToBottom(page);
+		await scrollSheetTo(page, { top: "end" });
 		await page.waitForTimeout(800);
 
 		await expect(gifTiles(page)).toHaveCount(DEMO_GIPHY_TRENDING_TOTAL);
@@ -559,7 +533,7 @@ test.describe("GIF failures", () => {
 		await openStickers(page, { stretchPanel: false });
 		await expect(gifTiles(page)).toHaveCount(GIPHY_PAGE_SIZE);
 		await expandSheet(page);
-		await scrollSheetToBottom(page);
+		await scrollSheetTo(page, { top: "end" });
 
 		const failure = gifPanel(page).locator(STICKER_ERROR);
 		const retry = failure.getByRole("button", { name: "Retry" });

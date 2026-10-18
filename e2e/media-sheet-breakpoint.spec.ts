@@ -9,14 +9,14 @@ import {
 import { openConversation, openInbox, row } from "./support/chat-stack";
 import { recordDemoRequests } from "./support/demo-faults";
 import {
-	box,
 	type ComposerSheetTrigger,
 	DRAWER,
+	expandSheet,
 	MEDIA_TILE,
 	openAttachments,
 	openSheetFromComposer,
 	SELECTABLE_MEDIA_TILE,
-	snapTops,
+	sheetSnap,
 } from "./support/drawer";
 import { LIVE_STACK } from "./support/stack-layers";
 import {
@@ -43,7 +43,6 @@ const CROSSINGS = [
 	{ from: 420, to: 600 },
 	{ from: 1600, to: 420 },
 ];
-const SNAP_TOLERANCE_PX = 1;
 const GIF_QUERY = "party";
 const FIRST_PARTY_GIF = "Party GIF 1";
 const SECOND_QUERY = "wink";
@@ -53,8 +52,6 @@ const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const REPLIABLE_TEXT = "consectetur adipiscing elit";
 const OPEN_CHAT_PEER = 100002;
 const OTHER_CHAT_PEER = 100009;
-
-type SheetSnap = "full" | "short" | "between";
 
 function conversationIdWith({ peer }: { peer: number }): string {
 	return `${peer}:123456000`;
@@ -84,26 +81,6 @@ async function crossTo(page: Page, { width }: { width: number }) {
 
 function isConnected(handle: ElementHandle): Promise<boolean> {
 	return handle.evaluate((element) => element.isConnected);
-}
-
-async function sheetSnap(page: Page): Promise<SheetSnap> {
-	const { full, short } = await snapTops(page);
-	const { top } = await box(page);
-	if (Math.abs(top - full) <= SNAP_TOLERANCE_PX) return "full";
-	if (Math.abs(top - short) <= SNAP_TOLERANCE_PX) return "short";
-	return "between";
-}
-
-async function expandSheet(page: Page): Promise<void> {
-	await page.evaluate(() => {
-		const scroller = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-scroller]",
-		)!;
-		scroller.scrollTop = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-peek]",
-		)!.offsetHeight;
-	});
-	await expect.poll(() => sheetSnap(page)).toBe("full");
 }
 
 function attachmentsTab(page: Page, { name }: { name: "Media" | "Albums" }) {
@@ -232,6 +209,7 @@ async function seedStickers(page: Page): Promise<() => Promise<void>> {
 	await gifSearchBox(page).fill(GIF_QUERY);
 	await partyGif(page).click();
 	await expandSheet(page);
+	await expect.poll(() => sheetSnap(page)).toBe("full");
 
 	const expectKept = async () => {
 		await expect(gifSearchBox(page)).toHaveValue(GIF_QUERY);
@@ -257,6 +235,7 @@ async function seedAttachments(page: Page): Promise<() => Promise<void>> {
 	await expect(expiringToggle(page)).toHaveAttribute("aria-pressed", "true");
 	await attachmentsTab(page, { name: "Albums" }).click();
 	await expandSheet(page);
+	await expect.poll(() => sheetSnap(page)).toBe("full");
 	await expect(attachmentsTab(page, { name: "Albums" })).toHaveAttribute(
 		"aria-selected",
 		"true",
