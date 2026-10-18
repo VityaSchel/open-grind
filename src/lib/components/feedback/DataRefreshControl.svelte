@@ -44,13 +44,10 @@
 	const ARM_PX = 18;
 	const BOUNDARY_SETTLE_MS = 50;
 	const MOUSE_PROBE_MS = BOUNDARY_SETTLE_MS + 70;
+	const REVEAL_MS = 250;
 	const REVEAL_TRANSITION: TransitionConfig = {
-		duration: 250,
+		duration: REVEAL_MS,
 		easing: expoOut,
-	};
-	const CONTENT_SLIDE: KeyframeAnimationOptions = {
-		duration: REVEAL_TRANSITION.duration,
-		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
 	};
 
 	const mounted = $derived(!!container);
@@ -208,7 +205,10 @@
 		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
 	);
 
-	const slide = contentSlide({ timing: CONTENT_SLIDE });
+	const slide = contentSlide({
+		duration: REVEAL_MS,
+		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+	});
 
 	$effect(() => {
 		void buttonSpace.current;

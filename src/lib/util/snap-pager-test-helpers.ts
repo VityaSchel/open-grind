@@ -212,3 +212,13 @@ export function macosGesture() {
 		idle: () => gesture.ingest({ state: "idle" }),
 	};
 }
+
+export function waylandGesture() {
+	const gesture = new ScrollGestureState();
+	return {
+		gesture,
+		fingers: () => gesture.ingest({ state: "fingers" }),
+		lift: ({ vx = 0, vy = 0 }: { vx?: number; vy?: number } = {}) =>
+			gesture.ingest({ state: "released", vx, vy }),
+	};
+}

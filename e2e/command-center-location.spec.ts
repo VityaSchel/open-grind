@@ -33,7 +33,10 @@ test("the @ command copies the current location and still sets a new one", async
 	await expect(page.locator(OPTION)).toHaveAttribute("data-selected", "");
 
 	await palette.fill("@");
-	await expect(page.locator(OPTION)).toHaveCount(1);
+	await expect(page.locator(OPTION)).toHaveText([
+		`Copy currently selected location: ${DEMO_GEOHASH}`,
+	]);
+	await expect(page.locator(OPTION)).toHaveAttribute("data-selected", "");
 
 	await page.keyboard.press("Enter");
 	await expect(palette).toHaveCount(0);

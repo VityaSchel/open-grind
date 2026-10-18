@@ -5,10 +5,13 @@ const COMPOSITING_OFF_VARS: [&str; 2] = [
 ];
 
 #[cfg(any(target_os = "linux", test))]
-const ENVIRONMENT_DEFAULTS: [(&str, &str); 1] = [
+const ENVIRONMENT_DEFAULTS: [(&str, &str); 2] = [
 	// GTK 3 crashes on NVIDIA under Wayland without it:
 	// https://gitlab.gnome.org/GNOME/gtk/-/issues/8056
 	("__NV_DISABLE_EXPLICIT_SYNC", "1"),
+	// WebKitGTK 2.54's Skia compositor repaints stacked backdrop blurs 2^n
+	// times: https://bugs.webkit.org/show_bug.cgi?id=327701
+	("WEBKIT_USE_SKIA_FOR_COMPOSITION", "0"),
 ];
 
 #[cfg(any(target_os = "linux", test))]
@@ -92,6 +95,11 @@ fn disabled_by_environment(read: impl Fn(&str) -> Option<String>) -> bool {
 		.iter()
 		.filter_map(|name| read(name))
 		.any(|value| !matches!(value.as_str(), "" | "0"))
+}
+
+#[tauri::command]
+pub async fn webview_engine() -> Option<String> {
+	tauri::webview_version().ok()
 }
 
 #[tauri::command]

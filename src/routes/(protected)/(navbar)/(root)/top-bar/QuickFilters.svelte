@@ -1,14 +1,16 @@
 <script lang="ts">
 	import SlidersHorizontalIcon from "phosphor-svelte/lib/SlidersHorizontalIcon";
 
+	import { genderFilterFlag } from "$lib/api/feature-flags-state.svelte";
 	import QuickFilterButton from "$lib/components/filters/QuickFilterButton.svelte";
-	import { Button, buttonVariants } from "$lib/components/ui/button";
+	import { buttonVariants } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { gridState } from "$lib/grid/grid-state.svelte";
 	import { t } from "$lib/i18n";
 	import { defaultFilters } from "$lib/model/browse/grid/filters";
 	import AgeQuickFilter from "./AgeQuickFilter.svelte";
 	import PositionQuickFilter from "./PositionQuickFilter.svelte";
+	import { sentFilterKeysWithoutQuickFilter } from "./quick-filters";
 
 	let {
 		openFilters = $bindable(),
@@ -19,15 +21,21 @@
 
 	const filters = $derived(gridState.filters.value ?? defaultFilters);
 	const { ageEnabled, positionEnabled } = $derived(filters);
+	const sheetOnlyFiltersSent = $derived(
+		sentFilterKeysWithoutQuickFilter({
+			filters,
+			genderFilterFlag: genderFilterFlag(),
+		}).length > 0,
+	);
 </script>
 
-<Button
-	variant="secondary"
-	aria-label={t("browse.quickFilters.a11y.allFilters")}
+<QuickFilterButton
+	active={sheetOnlyFiltersSent}
+	label={t("browse.quickFilters.a11y.allFilters")}
 	onclick={() => (openFilters.all = true)}
 >
 	<SlidersHorizontalIcon />
-</Button>
+</QuickFilterButton>
 <QuickFilterButton active={ageEnabled} onclick={() => (openFilters.age = true)}>
 	{t("common.filters.age.label")}
 </QuickFilterButton>

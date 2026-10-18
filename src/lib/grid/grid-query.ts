@@ -44,6 +44,7 @@ const weightGrams = ({
 
 type CascadeQuery = z.infer<typeof cascadeV4QuerySchema>;
 type CascadeFilters = Omit<CascadeQuery, "nearbyGeoHash">;
+export type CascadeFilterKey = keyof CascadeFilters;
 
 export function buildCascadeQuery({
 	geohash,
@@ -66,10 +67,10 @@ export function sentFilterKeys({
 }: {
 	filters: GridSearchFilters;
 	genderFilterFlag: boolean;
-}): (keyof CascadeFilters)[] {
+}): CascadeFilterKey[] {
 	return Object.entries(cascadeFilters({ filters, genderFilterFlag }))
 		.filter(([, value]) => value !== undefined)
-		.map(([key]) => key as keyof CascadeFilters);
+		.map(([key]) => key as CascadeFilterKey);
 }
 
 function cascadeFilters({
