@@ -3,10 +3,12 @@
 
 	let {
 		active,
+		label,
 		onclick,
 		children,
 	}: {
 		active: boolean;
+		label?: string;
 		onclick: () => void;
 		children: import("svelte").Snippet;
 	} = $props();
@@ -14,6 +16,7 @@
 
 <Button
 	variant="secondary"
+	aria-label={label}
 	{onclick}
 	class={{ "bg-white text-popover hover:bg-neutral-200": active }}
 >
