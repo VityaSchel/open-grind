@@ -53,14 +53,35 @@ function catalogKeys(catalogs: Record<string, CatalogJson>): string[] {
 	return [...keys].sort(byCodeUnits);
 }
 
+function collectStrings({
+	value,
+	into,
+}: {
+	value: unknown;
+	into: Set<string>;
+}): Set<string> {
+	if (typeof value === "string") {
+		into.add(value);
+	} else if (typeof value === "object" && value !== null) {
+		for (const child of Object.values(value)) {
+			collectStrings({ value: child, into });
+		}
+	}
+	return into;
+}
+
 function worthReporting({
 	text,
 	fixtures,
+	sceneStrings,
 }: {
 	text: string;
 	fixtures: string;
+	sceneStrings: Set<string>;
 }): boolean {
-	if (DIGIT.test(text) || BRAND_NAMES.has(text)) return false;
+	if (DIGIT.test(text) || BRAND_NAMES.has(text) || sceneStrings.has(text)) {
+		return false;
+	}
 	const letters = text.match(LETTER)?.length ?? 0;
 	return letters >= MIN_LETTERS && !fixtures.includes(text);
 }
@@ -70,15 +91,18 @@ export function coverageReport({
 	catalogs,
 	uncapturable,
 	fixtures,
+	sceneData,
 	captured,
 }: {
 	commit: string;
 	catalogs: Record<string, CatalogJson>;
 	uncapturable: Uncapturable;
 	fixtures: string;
+	sceneData: unknown;
 	captured: Captured;
 }): Coverage {
 	const keys = catalogKeys(catalogs);
+	const sceneStrings = collectStrings({ value: sceneData, into: new Set() });
 	const shown = shownKeys(Object.values(captured.views));
 	const tally = tallyKeys({
 		keys,
@@ -89,7 +113,9 @@ export function coverageReport({
 		Object.entries(captured.unmarked)
 			.map(([id, texts]): [string, string[]] => [
 				id,
-				texts.filter((text) => worthReporting({ text, fixtures })),
+				texts.filter((text) =>
+					worthReporting({ text, fixtures, sceneStrings }),
+				),
 			])
 			.filter(([, texts]) => texts.length > 0),
 	);

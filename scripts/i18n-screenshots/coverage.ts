@@ -36,16 +36,19 @@ export async function writeCoverage({
 	outDir,
 	commit,
 	captured,
+	sceneData,
 }: {
 	outDir: string;
 	commit: string;
 	captured: Captured;
+	sceneData: unknown;
 }): Promise<Coverage> {
 	const coverage = coverageReport({
 		commit,
 		catalogs: await sourceCatalogs(),
 		uncapturable: (await Bun.file(UNCAPTURABLE).json()) as Uncapturable,
 		fixtures: await fixtureText(),
+		sceneData,
 		captured,
 	});
 	await Bun.write(

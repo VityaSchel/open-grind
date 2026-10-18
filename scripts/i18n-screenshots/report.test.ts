@@ -55,6 +55,7 @@ describe("coverageReport", () => {
 				catalogs: CATALOGS,
 				uncapturable: UNCAPTURABLE,
 				fixtures: "const name = 'Demo Name';",
+				sceneData: [],
 				captured: captured(),
 			}),
 		).toEqual({
@@ -97,6 +98,7 @@ describe("coverageReport", () => {
 			catalogs: CATALOGS,
 			uncapturable: UNCAPTURABLE,
 			fixtures: "",
+			sceneData: [],
 			captured: capture,
 		});
 		expect(shown).toBe(2);
@@ -112,6 +114,7 @@ describe("coverageReport", () => {
 			catalogs: { interest: CATALOGS.interest, chat: CATALOGS.chat },
 			uncapturable: UNCAPTURABLE,
 			fixtures: "",
+			sceneData: [],
 			captured: emptyCapture(),
 		});
 		expect(Object.keys(explanations)).toEqual([
@@ -119,5 +122,37 @@ describe("coverageReport", () => {
 			"chat.notification.photos",
 			"interest.taps.count",
 		]);
+	});
+
+	it("reports no text that a scene hands the app as server data", () => {
+		const capture = emptyCapture();
+		capture.unmarked.tags = ["Kitesurfing", "Show more tags"];
+		const { unmarked } = coverageReport({
+			commit: "abc123",
+			catalogs: CATALOGS,
+			uncapturable: UNCAPTURABLE,
+			fixtures: "",
+			sceneData: [
+				{
+					demo: {
+						restFaults: [
+							{
+								path: "/v1/tags",
+								status: 200,
+								body: [
+									{
+										tags: [
+											{ tagId: 1, text: "Kitesurfing" },
+										],
+									},
+								],
+							},
+						],
+					},
+				},
+			],
+			captured: capture,
+		});
+		expect(unmarked).toEqual({ tags: ["Show more tags"] });
 	});
 });
