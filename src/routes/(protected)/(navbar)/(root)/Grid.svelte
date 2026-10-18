@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
 	import { gridState } from "$lib/grid/grid-state.svelte";
-	import { observeIntersection } from "$lib/util/observe-intersection";
 	import { virtualGrid } from "$lib/util/virtual-grid.svelte";
 	import EmptyGrid from "./EmptyGrid.svelte";
 	import GridCellSkeleton from "./GridCellSkeleton.svelte";
@@ -108,14 +108,9 @@
 				onRetry={() => gridState.paging.retry()}
 			/>
 		{/if}
-		{#key gridState.paging.armToken}
-			<div
-				class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
-				use:observeIntersection={{
-					handle: () => gridState.paging.run(),
-					rootMargin: "400px",
-				}}
-			></div>
-		{/key}
+		<PagingSentinel
+			paging={gridState.paging}
+			class="pointer-events-none absolute inset-x-0 bottom-0 h-px"
+		/>
 	{/if}
 </div>

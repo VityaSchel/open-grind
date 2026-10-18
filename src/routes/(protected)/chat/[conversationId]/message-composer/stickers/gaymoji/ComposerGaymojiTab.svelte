@@ -6,14 +6,14 @@
 		getGaymoji,
 	} from "$lib/api/messaging/gaymoji";
 	import { gaymojiSections } from "$lib/chat/gaymoji-sections";
-	import { Button } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import type { StickerPick } from "../sticker-pick";
+	import StickerLoadFailure from "../StickerLoadFailure.svelte";
+	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
 	import GaymojiSection from "./GaymojiSection.svelte";
 	import GaymojiSectionStrip from "./GaymojiSectionStrip.svelte";
 	import { SectionScroll } from "./section-scroll.svelte";
 	import { SectionWindows } from "./section-windows.svelte";
-	import { GAYMOJI_GRID_CLASS } from "./sticker-grid";
 
 	let {
 		active,
@@ -124,11 +124,9 @@
 			{/each}
 		</div>
 	{:else if manifest.status === "failed"}
-		<div class="flex flex-col items-center gap-2 p-4">
-			<p class="text-center text-sm text-muted-foreground">
-				Couldn't load Gaymoji
-			</p>
-			<Button size="sm" onclick={() => void load()}>Retry</Button>
-		</div>
+		<StickerLoadFailure
+			message="Couldn't load Gaymoji"
+			onRetry={() => void load()}
+		/>
 	{/if}
 </div>

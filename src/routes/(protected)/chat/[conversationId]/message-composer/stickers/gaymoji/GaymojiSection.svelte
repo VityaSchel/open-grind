@@ -1,10 +1,11 @@
 <script lang="ts">
+	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GaymojiItem } from "$lib/api/messaging/gaymoji";
 	import type { GaymojiSection } from "$lib/chat/gaymoji-sections";
+	import StickerTile from "../StickerTile.svelte";
 	import type { ElementRegistry } from "./element-registry";
-	import GaymojiTile from "./GaymojiTile.svelte";
+	import { GAYMOJI_GRID_CLASS } from "./gaymoji-grid";
 	import { sectionView, type SectionWindows } from "./section-windows.svelte";
-	import { GAYMOJI_GRID_CLASS } from "./sticker-grid";
 
 	let {
 		section,
@@ -50,11 +51,21 @@
 		style:padding-bottom="{view.paddingBottomPx}px"
 	>
 		{#each visibleItems as gaymoji (gaymoji.id)}
-			<GaymojiTile
-				{gaymoji}
+			<StickerTile
+				label={gaymoji.label}
 				selected={gaymoji.id === pickedId}
 				onclick={() => onToggle(gaymoji)}
-			/>
+				class="aspect-square"
+			>
+				<MediaImage
+					src={gaymoji.imageUrl}
+					alt={gaymoji.label}
+					loading="lazy"
+					fit="contain"
+					skeleton
+					class="block size-full rounded-lg"
+				/>
+			</StickerTile>
 		{/each}
 	</div>
 </section>

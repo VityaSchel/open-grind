@@ -8,6 +8,7 @@
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
 	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
 	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
+	import MediaSheetTab from "$lib/components/media-sheet/MediaSheetTab.svelte";
 	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
@@ -122,8 +123,14 @@
 				? giphyAttribution
 				: undefined}
 		>
-			{@render tab("gifs")}
-			{@render tab("gaymoji")}
+			<MediaSheetTab value="gifs">
+				<GifIcon weight="fill" class="size-5" />
+				GIFs
+			</MediaSheetTab>
+			<MediaSheetTab value="gaymoji">
+				<SmileyIcon class="size-5" />
+				Gaymoji
+			</MediaSheetTab>
 		</MediaSheetTabBar>
 	</Tabs.Root>
 </MediaSheet>
@@ -141,16 +148,4 @@
 			class="block w-full dark:hidden"
 		/>
 	</div>
-{/snippet}
-
-{#snippet tab(tab: StickerTab)}
-	<Tabs.Trigger value={tab} class="h-auto flex-col gap-0.5 px-4 py-1.5">
-		{#if tab === "gifs"}
-			<GifIcon weight="fill" class="size-5" />
-			GIFs
-		{:else if tab === "gaymoji"}
-			<SmileyIcon class="size-5" />
-			Gaymoji
-		{/if}
-	</Tabs.Trigger>
 {/snippet}

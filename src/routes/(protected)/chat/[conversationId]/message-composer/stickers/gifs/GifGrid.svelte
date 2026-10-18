@@ -4,11 +4,11 @@
 
 	import GifBadge from "$lib/components/shared/GifBadge.svelte";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
-	import SelectionOverlay from "$lib/components/shared/SelectionOverlay.svelte";
-	import { Button } from "$lib/components/ui/button";
+	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
 	import * as Empty from "$lib/components/ui/empty";
-	import { observeIntersection } from "$lib/util/observe-intersection";
 	import type { GiphyTile } from "$lib/api/messaging/giphy";
+	import StickerLoadFailure from "../StickerLoadFailure.svelte";
+	import StickerTile from "../StickerTile.svelte";
 	import type { GifFeed } from "./gif-feed.svelte";
 
 	let {
@@ -42,10 +42,10 @@
 			{/each}
 		</div>
 	{:else if feed.error}
-		{@render failure({
-			message: "Couldn't load GIFs",
-			onRetry: () => feed.retry(),
-		})}
+		<StickerLoadFailure
+			message="Couldn't load GIFs"
+			onRetry={() => feed.retry()}
+		/>
 	{:else if feed.empty}
 		<Empty.Root class="flex-1">
 			<Empty.Header>
@@ -58,14 +58,11 @@
 	{:else}
 		<div data-slot="sticker-grid" class={GRID_CLASS}>
 			{#each feed.gifs as gif (gif.id)}
-				{@const isSelected = gif.id === pickedId}
-				<button
-					type="button"
-					data-slot="sticker-tile"
-					class="relative aspect-4/3 cursor-pointer scroll-mt-18 rounded-lg bg-muted"
-					aria-label={gif.alt}
-					aria-pressed={isSelected}
+				<StickerTile
+					label={gif.alt}
+					selected={gif.id === pickedId}
 					onclick={() => onToggle(gif)}
+					class="aspect-4/3 bg-muted"
 				>
 					<MediaImage
 						src={prefersReducedMotion.current
@@ -79,10 +76,7 @@
 					{#if prefersReducedMotion.current}
 						<GifBadge />
 					{/if}
-					{#if isSelected}
-						<SelectionOverlay />
-					{/if}
-				</button>
+				</StickerTile>
 			{/each}
 			{#if feed.paging.running}
 				{@render skeletonTile()}
@@ -98,22 +92,17 @@
 					: ""}
 		</div>
 		{#if feed.paging.failure}
-			{@render failure({
-				message: "Couldn't load more GIFs",
-				onRetry: () => feed.paging.retry(),
-			})}
+			<StickerLoadFailure
+				message="Couldn't load more GIFs"
+				onRetry={() => feed.paging.retry()}
+			/>
 		{/if}
 		{#if feed.nextOffset !== null}
-			{#key feed.paging.armToken}
-				<div
-					data-slot="gif-paging-sentinel"
-					class="h-0"
-					use:observeIntersection={{
-						handle: () => feed.paging.run(),
-						rootMargin: "400px",
-					}}
-				></div>
-			{/key}
+			<PagingSentinel
+				paging={feed.paging}
+				data-slot="gif-paging-sentinel"
+				class="h-0"
+			/>
 		{/if}
 	{/if}
 </div>
@@ -124,17 +113,4 @@
 		pending
 		class={["aspect-4/3 rounded-lg", className]}
 	/>
-{/snippet}
-
-{#snippet failure({
-	message,
-	onRetry,
-}: {
-	message: string;
-	onRetry: () => void;
-})}
-	<div data-slot="gif-error" class="flex flex-col items-center gap-2 p-4">
-		<p class="text-center text-sm text-muted-foreground">{message}</p>
-		<Button size="sm" onclick={onRetry}>Retry</Button>
-	</div>
 {/snippet}

@@ -44,7 +44,7 @@ const GIPHY_LINK =
 	"https://giphy.com/gifs/portlandia-season-2-episode-xT0xeChUR33EsYNNRK";
 const GIF_SEARCH_INPUT = 'input[aria-label="Search GIFs or paste GIPHY link"]';
 const GIF_PAGING_SENTINEL = '[data-slot="gif-paging-sentinel"]';
-const GIF_ERROR = '[data-slot="gif-error"]';
+const STICKER_ERROR = '[data-slot="sticker-error"]';
 
 type SearchTimeline = {
 	inputs: number[];
@@ -537,7 +537,7 @@ test.describe("GIF failures", () => {
 			preferences: { giphyConsent: true },
 		});
 
-		const failure = gifPanel(page).locator(GIF_ERROR);
+		const failure = gifPanel(page).locator(STICKER_ERROR);
 		await expect(
 			failure.getByText("Couldn't load GIFs", { exact: true }),
 		).toBeVisible();
@@ -561,7 +561,7 @@ test.describe("GIF failures", () => {
 		await expandSheet(page);
 		await scrollSheetToBottom(page);
 
-		const failure = gifPanel(page).locator(GIF_ERROR);
+		const failure = gifPanel(page).locator(STICKER_ERROR);
 		const retry = failure.getByRole("button", { name: "Retry" });
 		await expect(
 			failure.getByText("Couldn't load more GIFs", { exact: true }),
