@@ -1,0 +1,10 @@
+{
+	"identifier": "org.opengrind.app",
+	"bundle": {
+		"iOS": {
+			"developmentTeam": "L3W5ZXTBAF",
+			"minimumSystemVersion": "16.4",
+			"bundleVersion": "11000"
+		}
+	}
+}

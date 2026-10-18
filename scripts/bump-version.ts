@@ -86,6 +86,10 @@ function versionOccurrences({
 			literal: `"versionCode": ${code}`,
 		},
 		{
+			file: "src-tauri/tauri.ios.conf.json",
+			literal: `"bundleVersion": "${code}"`,
+		},
+		{
 			file: "src-tauri/Cargo.lock",
 			literal: `name = "open-grind"\nversion = "${version}"`,
 		},
