@@ -49,7 +49,14 @@
 
 <div
 	{@attach attachFrame}
-	class={["flex w-full flex-col", { "items-end": isOut }]}
+	class={[
+		"flex w-full flex-col",
+		{
+			"items-end": isOut,
+			"ps-3": !clone && !isOut,
+			"pe-3": !clone && isOut,
+		},
+	]}
 >
 	{#if quoted}
 		<MessageQuote {quoted} />

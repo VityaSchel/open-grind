@@ -1,28 +1,48 @@
 <script lang="ts">
 	import { expoOut, sineIn } from "svelte/easing";
+	import { prefersReducedMotion } from "svelte/motion";
 	import type { Snippet } from "svelte";
+	import type { TransitionConfig } from "svelte/transition";
 
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import { fly } from "$lib/util/reduced-motion";
 	import { cn } from "$lib/util/utils";
 
 	let {
 		label,
 		count,
+		showCount = true,
 		busy = false,
+		aboveTabBar = false,
 		onSubmit,
-		class: className,
 		leading,
 	}: {
 		label: string;
 		count: number;
+		showCount?: boolean;
 		busy?: boolean;
+		aboveTabBar?: boolean;
 		onSubmit: () => void;
-		class?: string;
 		leading?: Snippet;
 	} = $props();
+
+	const FLIGHT_PX = 100;
+
+	const flyFromBelow: (
+		node: Element,
+	) => (options?: { direction?: "in" | "out" }) => TransitionConfig =
+		() => (options) => {
+			const intro = options?.direction === "in";
+			return {
+				duration: intro ? 600 : 400,
+				easing: intro ? expoOut : sineIn,
+				css: (t, u) =>
+					prefersReducedMotion.current
+						? `opacity: ${t}`
+						: `transform: translateY(${u * FLIGHT_PX}px); opacity: ${t}`,
+			};
+		};
 </script>
 
 {#if count > 0}
@@ -30,10 +50,12 @@
 		data-slot="sheet-actions"
 		class={cn(
 			"pointer-events-none absolute inset-x-0 bottom-6 flex justify-center gap-2 *:pointer-events-auto",
-			className,
+			{
+				"bottom-[calc(--spacing(18)+var(--bar-content-gap))] z-20":
+					aboveTabBar,
+			},
 		)}
-		in:fly={{ duration: 600, y: 100, easing: expoOut }}
-		out:fly={{ duration: 400, y: 100, easing: sineIn }}
+		transition:flyFromBelow
 	>
 		{@render leading?.()}
 		<Button
@@ -47,12 +69,14 @@
 				<Spinner aria-hidden="true" />
 			{/if}
 			{label}
-			<Badge
-				variant="secondary"
-				class="bg-primary-foreground/10 text-primary-foreground"
-			>
-				{count}
-			</Badge>
+			{#if showCount}
+				<Badge
+					variant="secondary"
+					class="bg-primary-foreground/10 text-primary-foreground"
+				>
+					{count}
+				</Badge>
+			{/if}
 		</Button>
 	</div>
 {/if}

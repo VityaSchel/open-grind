@@ -7,6 +7,8 @@
 	import MediaSheet from "$lib/components/media-sheet/MediaSheet.svelte";
 	import MediaSheetActions from "$lib/components/media-sheet/MediaSheetActions.svelte";
 	import MediaSheetBody from "$lib/components/media-sheet/MediaSheetBody.svelte";
+	import MediaSheetTab from "$lib/components/media-sheet/MediaSheetTab.svelte";
+	import MediaSheetTabBar from "$lib/components/media-sheet/MediaSheetTabBar.svelte";
 	import * as Drawer from "$lib/components/ui/drawer";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import { Toggle } from "$lib/components/ui/toggle";
@@ -17,7 +19,10 @@
 
 	const FULLSIZE_TABS: Tab[] = ["media", "albums"];
 
-	let { open = $bindable() }: { open: boolean } = $props();
+	let {
+		open = $bindable(),
+		onCloseAutoFocus,
+	}: { open: boolean; onCloseAutoFocus?: (event: Event) => void } = $props();
 
 	let selectedTab = $state<Tab>("media");
 
@@ -40,7 +45,7 @@
 	});
 </script>
 
-<MediaSheet bind:open fullsize={isFullsizeTab}>
+<MediaSheet bind:open fullsize={isFullsizeTab} {onCloseAutoFocus}>
 	<Drawer.Title class="sr-only">Attachments</Drawer.Title>
 	<Tabs.Root
 		bind:value={selectedTab}
@@ -70,7 +75,7 @@
 		</MediaSheetBody>
 
 		<MediaSheetActions
-			class="bottom-18"
+			aboveTabBar
 			label={selection?.label ?? ""}
 			count={selection?.count ?? 0}
 			onSubmit={submitSelection}
@@ -102,29 +107,19 @@
 			{/snippet}
 		</MediaSheetActions>
 
-		<Drawer.Footer
-			class="absolute inset-x-0 bottom-0 items-center rounded-b-4xl pt-1 pb-2 select-none"
-		>
-			<Tabs.List>
-				{@render tab("media")}
-				{@render tab("albums")}
-				{@render tab("location")}
-			</Tabs.List>
-		</Drawer.Footer>
+		<MediaSheetTabBar>
+			<MediaSheetTab value="media">
+				<ImageIcon weight="fill" class="size-5" />
+				Media
+			</MediaSheetTab>
+			<MediaSheetTab value="albums">
+				<FolderOpenIcon weight="fill" class="size-5" />
+				Albums
+			</MediaSheetTab>
+			<MediaSheetTab value="location">
+				<NavigationArrowIcon weight="fill" class="size-5" />
+				Location
+			</MediaSheetTab>
+		</MediaSheetTabBar>
 	</Tabs.Root>
 </MediaSheet>
-
-{#snippet tab(tab: Tab)}
-	<Tabs.Trigger value={tab} class="h-auto flex-col gap-0.5 px-4 py-1.5">
-		{#if tab === "media"}
-			<ImageIcon weight="fill" class="size-5" />
-			Media
-		{:else if tab === "albums"}
-			<FolderOpenIcon weight="fill" class="size-5" />
-			Albums
-		{:else if tab === "location"}
-			<NavigationArrowIcon weight="fill" class="size-5" />
-			Location
-		{/if}
-	</Tabs.Trigger>
-{/snippet}

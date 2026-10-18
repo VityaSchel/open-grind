@@ -158,7 +158,6 @@ describe("quoteLabel", () => {
 	it.each([
 		["Unsent", "Unsent message"],
 		["Audio", "Voice message"],
-		["Giphy", "GIF"],
 		["Location", "Location"],
 		["NonExpiringVideo", "Video"],
 		["Unknown", "Message"],
@@ -167,10 +166,17 @@ describe("quoteLabel", () => {
 		expect(quoteLabel(preview(type))).toBe(expected);
 	});
 
-	it("defers to the inbox wording for a type the preview already names", () => {
-		expect(previewLabel(preview("ExpiringImage"))).toBe("Expiring image");
-		expect(quoteLabel(preview("ExpiringImage"))).toBe("Expiring image");
-	});
+	it.each([
+		["ExpiringImage", "Expiring image"],
+		["Giphy", "GIF"],
+		["Gaymoji", "Gaymoji"],
+	])(
+		"defers to the inbox wording for a %s, which the preview already names",
+		(type, expected) => {
+			expect(previewLabel(preview(type))).toBe(expected);
+			expect(quoteLabel(preview(type))).toBe(expected);
+		},
+	);
 
 	it("does not render an empty pill for a blank text message", () => {
 		expect(quoteLabel(preview("Text", "   "))).toBe("Message");

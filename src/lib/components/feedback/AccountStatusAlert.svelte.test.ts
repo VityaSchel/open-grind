@@ -101,7 +101,7 @@ describe("AccountStatusAlert", () => {
 		await showBan();
 
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(accountStatusState.open).toBe(true);
 	});

@@ -1,13 +1,18 @@
 import { previewFromMessage } from "$lib/model/messaging/message-preview";
-import { type ApiResponseMessage } from "$lib/model/messaging/messages";
+import {
+	type ApiResponseMessage,
+	outboundMessageSchema,
+} from "$lib/model/messaging/messages";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
 import type { Conversation } from "$lib/model/messaging/conversations";
-import { DAY, demoMeProfileId, HOUR, MINUTE, NOW, SECOND } from "../config";
+import { DAY, demoMeProfileId, MINUTE, NOW, SECOND } from "../config";
 import { albumCoverUrl, demoAlbumContent } from "./albums";
 import { hashFromSeed, picsum } from "./avatars";
 import { isTierGatedFilter, matchesInboxFilters } from "./conversation-filters";
+import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
+import { demoGiphyMessageBody } from "./giphy";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
 type DemoMessage = { fromMe: boolean; reactions?: number } & (
@@ -23,6 +28,7 @@ type DemoMessage = { fromMe: boolean; reactions?: number } & (
 			coverUrl?: null;
 	  }
 	| { kind: "unsent" }
+	| { kind: "gif" }
 );
 
 type DemoConversation = {
@@ -53,6 +59,7 @@ const demoConversationSeeds: DemoConversation[] = [
 				reactions: 1,
 			},
 			{ fromMe: false, text: "Sed do eiusmod tempor incididunt?" },
+			{ fromMe: false, kind: "gif" },
 			{ fromMe: false, kind: "album", albumId: 5001, unseen: true },
 			{
 				fromMe: false,
@@ -74,6 +81,7 @@ const demoConversationSeeds: DemoConversation[] = [
 		rightNow: "HOSTING",
 		messages: [
 			{ fromMe: true, text: "Hi, how are you?" },
+			{ fromMe: true, kind: "gif" },
 			{ fromMe: true, kind: "expiringImage" },
 			{ fromMe: false, kind: "expiringImage", expired: true },
 			{ fromMe: false, text: "Did you catch it? 👀" },
@@ -299,6 +307,13 @@ function buildMessage({
 				};
 			return { type: "Album", body: albumBody, ...base, unsent: false };
 		}
+		case "gif":
+			return {
+				type: "Giphy",
+				body: demoGiphyMessageBody(`message-${conv.withId}-${index}`),
+				...base,
+				unsent: false,
+			};
 		case "unsent":
 			return { type: "Unsent", body: null, ...base, unsent: true };
 		default:
@@ -561,6 +576,16 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 			...overlay,
 		};
 	}
+	const sticker = outboundMessageSchema.safeParse({
+		type: sent.type,
+		body: sent.body,
+	});
+	if (
+		sticker.success &&
+		(sticker.data.type === "Giphy" || sticker.data.type === "Gaymoji")
+	) {
+		return { ...sticker.data, ...overlay };
+	}
 	return {
 		type: "Text",
 		body:
@@ -569,59 +594,4 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 				: { text: "" },
 		...overlay,
 	};
-}
-
-type DemoDrawerMedia = {
-	id: number;
-	url: string;
-	contentType: string;
-	createdTs: number;
-	used: boolean;
-	takenOnGrindr: boolean;
-};
-
-let uploadedDrawerMediaId = 920_000;
-const uploadedDrawerMedia: DemoDrawerMedia[] = [];
-
-export function demoUploadChatMedia({
-	bytes,
-	contentType,
-}: {
-	bytes: Uint8Array<ArrayBuffer>;
-	contentType: string;
-}): { mediaId: number; url: string; mediaHash: string } {
-	const item: DemoDrawerMedia = {
-		id: uploadedDrawerMediaId++,
-		url: URL.createObjectURL(new Blob([bytes], { type: contentType })),
-		contentType,
-		createdTs: Date.now(),
-		used: false,
-		takenOnGrindr: false,
-	};
-	uploadedDrawerMedia.unshift(item);
-	return {
-		mediaId: item.id,
-		url: item.url,
-		mediaHash: hashFromSeed(`drawer-${item.id}`),
-	};
-}
-
-const deletedDrawerMedia = new Set<number>();
-
-export function demoDrawerMedia(): DemoDrawerMedia[] {
-	return [
-		...uploadedDrawerMedia,
-		...Array.from({ length: 10 }, (_, index) => ({
-			id: 910_000 + index,
-			url: `https://picsum.photos/seed/opengrind-drawer-${index}/600/800`,
-			contentType: "image/jpeg",
-			createdTs: NOW - (index + 1) * HOUR,
-			used: index % 3 === 0,
-			takenOnGrindr: false,
-		})),
-	].filter(({ id }) => !deletedDrawerMedia.has(id));
-}
-
-export function demoDeleteDrawerMedia(mediaId: number): void {
-	deletedDrawerMedia.add(mediaId);
 }

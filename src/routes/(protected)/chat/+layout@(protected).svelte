@@ -12,6 +12,11 @@
 	import { defaultConversationFilters } from "$lib/model/messaging/conversation-filters";
 	import { below } from "$lib/util/breakpoints.svelte";
 	import ConversationScreen from "./[conversationId]/ConversationScreen.svelte";
+	import {
+		ComposerSheetsState,
+		setComposerSheets,
+	} from "./[conversationId]/message-composer/composer-sheets-state.svelte";
+	import ComposerSheets from "./[conversationId]/message-composer/ComposerSheets.svelte";
 	import { provideSendMediaOffer } from "./[conversationId]/message-composer/send-media/send-media-offer.svelte";
 	import SendMediaDialog from "./[conversationId]/message-composer/send-media/SendMediaDialog.svelte";
 	import ConversationsList from "./ConversationsList.svelte";
@@ -23,6 +28,7 @@
 		getOrCreateConversationsState(data.ourProfileId),
 	);
 	setConversations(conversations);
+	setComposerSheets(new ComposerSheetsState());
 	onDestroy(() => conversations.setFilters(defaultConversationFilters));
 
 	const CONVERSATIONS_LIST_MIN_WIDTH_PX = 200;
@@ -133,6 +139,12 @@
 		</Resizable.PaneGroup>
 	</main>
 	<NavBar ourProfileId={data.ourProfileId} />
+{/if}
+
+{#if conversationId !== null}
+	{#key conversationId}
+		<ComposerSheets {conversationId} />
+	{/key}
 {/if}
 
 <SendMediaDialog offer={sendMediaOffer} />

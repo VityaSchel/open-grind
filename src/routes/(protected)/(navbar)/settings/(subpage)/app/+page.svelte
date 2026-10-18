@@ -97,6 +97,11 @@
 	title="Reveal profile views"
 	description="Let others know when you've viewed their profile. Your profile view history remains unaffected."
 />
+<PreferenceSwitchSetting
+	preference="giphyConsent"
+	title="GIF search via GIPHY"
+	description="Search and load GIFs from GIPHY in chats. GIPHY sees your IP address, what you search for and that the requests come from a Grindr app."
+/>
 <h2>Security</h2>
 {@render item({
 	title: "Discreet app icon",

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	type GridMetrics,
 	gridWindow,
+	type GridWindow,
 	revealRowScrollTop,
 } from "./grid-window";
 
@@ -103,6 +104,91 @@ describe("gridWindow", () => {
 		expect(windowAt(-500)).toMatchObject({
 			startIndex: 0,
 			paddingTopPx: 0,
+		});
+	});
+
+	describe("height", () => {
+		function heightOf({
+			view,
+			metrics: { columns, cellPx, gapPx },
+		}: {
+			view: GridWindow;
+			metrics: GridMetrics;
+		}): number {
+			const renderedRows = Math.ceil(
+				Math.max(0, view.endIndex - view.startIndex) / columns,
+			);
+			const renderedPx =
+				renderedRows > 0 ? renderedRows * (cellPx + gapPx) - gapPx : 0;
+			return view.paddingTopPx + renderedPx + view.paddingBottomPx;
+		}
+
+		const FULL_HEIGHT = 20 * ROW_STRIDE - metrics.gapPx;
+
+		it.each([0, 600])(
+			"matches a fully rendered grid at every offset with %ipx of overscan",
+			(overscanPx) => {
+				for (const offsetPx of [
+					-10_000, -1301, -1300, -701, -700, 0, 137, 1000, 2597, 2598,
+					2599, 3200, 10_000,
+				]) {
+					expect({
+						offsetPx,
+						height: heightOf({
+							view: windowAt(offsetPx, 60, overscanPx),
+							metrics,
+						}),
+					}).toEqual({ offsetPx, height: FULL_HEIGHT });
+				}
+			},
+		);
+
+		it("pads a grid below the viewport from its bottom, leaving out the gap after its last row", () => {
+			expect(windowAt(-10_000, 61)).toMatchObject({
+				endIndex: 0,
+				paddingTopPx: 0,
+				paddingBottomPx: 21 * ROW_STRIDE - metrics.gapPx,
+				hasRowsAbove: false,
+				hasRowsBelow: true,
+			});
+		});
+
+		it("pads a grid above the viewport from its top, leaving out the gap after its last row", () => {
+			const view = windowAt(10_000, 61);
+
+			expect(view.endIndex).toBeLessThanOrEqual(view.startIndex);
+			expect(view).toMatchObject({
+				paddingTopPx: 21 * ROW_STRIDE - metrics.gapPx,
+				paddingBottomPx: 0,
+				hasRowsAbove: true,
+				hasRowsBelow: false,
+			});
+		});
+
+		it("matches a fully rendered grid on fractional tracks", () => {
+			const fractional: GridMetrics = {
+				columns: 5,
+				cellPx: 68.4,
+				gapPx: 4,
+			};
+			const fullHeight =
+				Math.ceil(103 / fractional.columns) *
+					(fractional.cellPx + fractional.gapPx) -
+				fractional.gapPx;
+			for (const offsetPx of [-5000, -900, 0, 777, 1500, 5000]) {
+				const view = gridWindow({
+					count: 103,
+					metrics: fractional,
+					offsetPx,
+					viewportPx: 700,
+					overscanPx: 600,
+				});
+
+				expect(heightOf({ view, metrics: fractional })).toBeCloseTo(
+					fullHeight,
+					9,
+				);
+			}
 		});
 	});
 
