@@ -19,6 +19,8 @@ mod photo;
 #[cfg(test)]
 mod pin_support;
 mod plugin_rejection;
+#[cfg(target_os = "macos")]
+mod predecessor;
 #[cfg(any(target_os = "android", test))]
 mod push_poll;
 mod scroll_phase;
@@ -132,6 +134,8 @@ pub fn run() {
 	appearance::apply_environment_defaults();
 
 	api::update::enforce_home();
+	#[cfg(target_os = "macos")]
+	predecessor::adopt_data();
 
 	#[cfg(feature = "devtools")]
 	let devtools = tauri_plugin_devtools::init();
