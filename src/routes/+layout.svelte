@@ -140,6 +140,15 @@
 		};
 	});
 
+	let toaster = $state<HTMLElement>();
+
+	$effect(() => {
+		const region = toaster?.querySelector("section");
+		if (!region) return;
+		region.ariaLabel = t("shell.toaster.a11y.region");
+		region.ariaKeyShortcuts = "Alt+T";
+	});
+
 	const toastOffset = $derived(
 		screenChromeCovered()
 			? {
@@ -181,15 +190,16 @@
 ></div>
 <FrostFilters />
 <IconContext values={{ "aria-hidden": true }}>
-	<Toaster
-		position="bottom-center"
-		offset={toastOffset}
-		mobileOffset={toastOffset}
-		toastOptions={{ class: "toast" }}
-		expand
-		containerAriaLabel={t("shell.toaster.a11y.region")}
-		closeButtonAriaLabel={t("shell.toaster.a11y.close")}
-	/>
+	<div class="contents" bind:this={toaster}>
+		<Toaster
+			position="bottom-center"
+			offset={toastOffset}
+			mobileOffset={toastOffset}
+			toastOptions={{ class: "toast" }}
+			expand
+			closeButtonAriaLabel={t("shell.toaster.a11y.close")}
+		/>
+	</div>
 	{@render children?.()}
 	<RequestBlockedAlert />
 	<SessionErrorAlert />
