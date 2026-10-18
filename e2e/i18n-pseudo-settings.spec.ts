@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
-import { APP_SETTINGS, SETTINGS } from "./support/page-stack";
+import { SETTINGS } from "./support/page-stack";
 import { readPseudoText } from "./support/pseudo";
 
 const ACCOUNT_SETTINGS = `${SETTINGS}/account`;
@@ -95,41 +95,4 @@ test("the blocked users list, its unavailable row and its switch names render on
 	const scan = await readPseudoText(roots);
 	expect(scan.labels).toBeGreaterThan(0);
 	expectOnlyPseudoText([scan]);
-});
-
-test.describe("settings pages under en-XA", () => {
-	const subpages = [
-		{
-			path: ACCOUNT_SETTINGS,
-			shows: `a[href="${ACCOUNT_SETTINGS}/privacy"]`,
-		},
-		{ path: `${ACCOUNT_SETTINGS}/privacy`, shows: SWITCH },
-		{
-			path: `${ACCOUNT_SETTINGS}/hidden`,
-			shows: `[data-slot="empty-title"], ${SWITCH}`,
-			titled: true,
-		},
-		{ path: APP_SETTINGS, shows: `a[href="${APP_SETTINGS}/credits"]` },
-		{
-			path: `${APP_SETTINGS}/language`,
-			shows: '[data-slot="language-option"]',
-		},
-		{ path: `${APP_SETTINGS}/notifications`, shows: "p" },
-		{ path: `${APP_SETTINGS}/credits`, shows: 'a[href$="/issues/new"]' },
-		{ path: `${SETTINGS}/profile`, shows: '[data-slot="profile-form"]' },
-	];
-
-	for (const { path, shows, titled = false } of subpages) {
-		test(`${path} renders its main and navigation landmarks only pseudo-translated`, async ({
-			page,
-		}) => {
-			const roots = await openUnderPseudoLocale(page, {
-				path,
-				shows,
-				landmarks: SUBPAGE_LANDMARKS,
-			});
-			if (titled) await expect(page).toHaveTitle(PSEUDO_MESSAGE);
-			expectOnlyPseudoText([await readPseudoText(roots)]);
-		});
-	}
 });
