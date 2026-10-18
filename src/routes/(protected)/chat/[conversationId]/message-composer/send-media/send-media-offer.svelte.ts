@@ -6,6 +6,7 @@ import {
 	uploadChatMediaFile,
 } from "$lib/api/messaging/chat-media";
 import { uploadRefusalMessage } from "$lib/api/methods";
+import { t } from "$lib/i18n";
 import { chatMediaMaxLabel } from "$lib/model/messaging/chat-media-limits";
 import {
 	discardStagedMedia,
@@ -20,8 +21,6 @@ import { createSerialQueue } from "$lib/util/serial-queue";
 import type { PickedMedia } from "$lib/platform/media-picker";
 import { sendNowDraft } from "../attachments/media/media-messages";
 import type { MessageComposerContext } from "../message-composer-context.svelte";
-
-const UNREADABLE_PHOTO_MESSAGE = "Couldn't read that photo";
 
 export type OfferedMedia = ScreenedMedia & {
 	preview: MediaPreview | null;
@@ -107,7 +106,7 @@ export class SendMediaOffer {
 				uploadRefusalMessage({
 					error,
 					limitLabel: chatMediaMaxLabel(),
-				}) ?? UNREADABLE_PHOTO_MESSAGE,
+				}) ?? t("chat.composer.sendMedia.errors.previewFailed"),
 			);
 			this.items = this.items.filter((offered) => offered !== item);
 			void discardStagedMedia([item.media]);

@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import { t } from "$lib/i18n";
 	import type {
 		OfferedMedia,
 		SendMediaOffer,
@@ -10,11 +11,25 @@
 		).length;
 		const photos = items.length - videos;
 		if (items.length === 1) {
-			return `Preview of the ${videos === 1 ? "video" : "photo"} to send`;
+			return t(
+				videos === 1
+					? "chat.composer.sendMedia.a11y.title.video"
+					: "chat.composer.sendMedia.a11y.title.photo",
+			);
 		}
-		if (videos === 0) return `Preview of ${photos} photos to send`;
-		if (photos === 0) return `Preview of ${videos} videos to send`;
-		return `Preview of ${items.length} photos and videos to send`;
+		if (videos === 0) {
+			return t("chat.composer.sendMedia.a11y.title.photos", {
+				count: photos,
+			});
+		}
+		if (photos === 0) {
+			return t("chat.composer.sendMedia.a11y.title.videos", {
+				count: videos,
+			});
+		}
+		return t("chat.composer.sendMedia.a11y.title.photosAndVideos", {
+			count: items.length,
+		});
 	}
 </script>
 
@@ -66,13 +81,15 @@
 			{/each}
 		</div>
 		<AlertDialog.Footer class="shrink-0">
-			<AlertDialog.Cancel size="lg">Cancel</AlertDialog.Cancel>
+			<AlertDialog.Cancel size="lg">
+				{t("common.actions.cancel")}
+			</AlertDialog.Cancel>
 			<AlertDialog.Action
 				size="lg"
 				disabled={previewing || !offer.sendable}
 				onclick={() => offer.send()}
 			>
-				Send
+				{t("chat.composer.attachments.actions.send")}
 			</AlertDialog.Action>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

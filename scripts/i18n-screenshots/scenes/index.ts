@@ -98,6 +98,7 @@ import {
 	inboxSelection,
 	rowMenus,
 } from "./chat-inbox";
+import { sendPhotos, sendPreviewFailure, sendVideos } from "./chat-send-media";
 import { commandCenter, locationCopy } from "./command-center";
 import {
 	autoLocation,
@@ -479,4 +480,7 @@ export const scenes: Scene[] = [
 	profilePhotoDropRefusals,
 	chatDropFailures,
 	chatLinkRefusals,
+	sendPhotos,
+	sendVideos,
+	sendPreviewFailure,
 ];

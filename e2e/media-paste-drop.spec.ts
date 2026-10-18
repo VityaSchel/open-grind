@@ -415,7 +415,7 @@ test.describe("pasting and dropping media", () => {
 
 		await expect(
 			page.locator("[data-sonner-toast]", {
-				hasText: "Couldn't read that photo",
+				hasText: "Couldn’t read that photo",
 			}),
 		).toBeVisible();
 		await expect(sendDialog(page)).toHaveCount(0);

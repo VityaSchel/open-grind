@@ -125,6 +125,13 @@ export interface Messages {
 	"chat.composer.dropToSend": undefined;
 	"chat.composer.errors.sendFailed": undefined;
 	"chat.composer.replyPreview.a11y.cancel": undefined;
+	"chat.composer.sendMedia.a11y.preview": undefined;
+	"chat.composer.sendMedia.a11y.title.photo": undefined;
+	"chat.composer.sendMedia.a11y.title.photos": { count: number };
+	"chat.composer.sendMedia.a11y.title.photosAndVideos": { count: number };
+	"chat.composer.sendMedia.a11y.title.video": undefined;
+	"chat.composer.sendMedia.a11y.title.videos": { count: number };
+	"chat.composer.sendMedia.errors.previewFailed": undefined;
 	"chat.composer.voiceMessage.a11y.record": undefined;
 	"chat.composer.voiceMessage.unimplemented": { issueLink: string };
 	"chat.conversation.bypassReason.expiringPhotoLimit": undefined;
