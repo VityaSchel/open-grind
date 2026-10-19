@@ -3,6 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+XCRUN=(/usr/bin/env -u DEVELOPER_DIR -u SDKROOT /usr/bin/xcrun)
+if [[ "$(uname)" != Darwin ]] || ! "${XCRUN[@]}" --find actool >/dev/null 2>&1; then
+  echo "gen-icons needs macOS with Xcode 26 or later to compile the Liquid Glass icon" >&2
+  exit 1
+fi
+
 RES="src-tauri/gen/android/app/src/main/res"
 
 # Desktop + iOS icons
@@ -57,4 +63,15 @@ cat > "$RES/values/ic_launcher_background.xml" <<'XML'
 </resources>
 XML
 
-cp contrib/logo/icon.icns src-tauri/icons/icon.icns
+# macOS: actool output differs between runs, so the compiled icon is committed
+cp contrib/logo/app-icon.svg contrib/logo/AppIcon.icon/Assets/mark.svg
+minimum=$(bun -e 'console.log((await Bun.file("src-tauri/tauri.conf.json").json()).bundle.macOS.minimumSystemVersion)')
+catalog=$(mktemp -d)
+trap 'rm -rf "$catalog"' EXIT
+"${XCRUN[@]}" actool contrib/logo/AppIcon.icon --compile "$catalog" \
+  --output-format human-readable-text --errors --warnings \
+  --output-partial-info-plist "$catalog/Info.plist" \
+  --app-icon AppIcon --include-all-app-icons \
+  --platform macosx --target-device mac --minimum-deployment-target "$minimum"
+cp "$catalog/Assets.car" src-tauri/icons/Assets.car
+cp "$catalog/AppIcon.icns" src-tauri/icons/icon.icns

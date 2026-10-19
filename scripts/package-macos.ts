@@ -151,12 +151,20 @@ async function resignAdHoc(zip: string, into: string): Promise<void> {
 }
 
 const MACH_O_MAGIC = ["cffaedfe", "cafebabe"];
+const APP_ICON = "AppIcon";
 
 type Signature = "ad-hoc" | "Developer ID" | "notarized";
 
 async function verifyShipped(zip: string, signature: Signature): Promise<void> {
 	const shipped = await unpack(zip);
 	await $`codesign --verify --strict --deep ${shipped}`;
+	const iconName =
+		await $`/usr/bin/plutil -extract CFBundleIconName raw -o - ${shipped}/Contents/Info.plist`
+			.nothrow()
+			.quiet();
+	if (iconName.stdout.toString().trim() !== APP_ICON) {
+		throw new Error(`${shipped} ships without its Liquid Glass icon`);
+	}
 	for await (const path of new Bun.Glob("**").scan({ cwd: shipped })) {
 		const file = `${shipped}/${path}`;
 		const head = await Bun.file(file).slice(0, 4).bytes();

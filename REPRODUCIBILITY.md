@@ -244,6 +244,7 @@ fi
     | Ad-hoc signature                                 | `flake.lock` (nixpkgs `rcodesign`)                         |
     | Zip archive                                      | `flake.lock` (nixpkgs `zip`)                               |
     | `lipo`, `install_name_tool`, `codesign_allocate` | `flake.lock` (nixpkgs `cctools`)                           |
+    | App icon (`Assets.car`, `icon.icns`)             | `src-tauri/icons/`, committed (`actool` output varies)     |
 
 Releases are signed with a Developer ID of the Apple team [KEYS.md](./KEYS.md) publishes and notarized by Apple. `--resign-ad-hoc` checks that a release is notarized, carries no entitlements and requires that team, then removes the notarization ticket and signs the app ad-hoc with the pinned `rcodesign`, which turns it back into the zip a local build produces.
 
