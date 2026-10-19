@@ -230,13 +230,14 @@ The dev server also serves a Google OAuth app release when given `COMPANION_PAYL
 
 `e2e/updater/run.ts android-addon` drives the guided companion runs on a device, with `ADDON` set to `install` (default) or `update`. `ADDON=install` uninstalls the companion and serves the published `COMPANION_RELEASE`, downloaded and verified against the minisign key in [KEYS.md](./KEYS.md). A local `COMPANION_APK` is not checked against that key and must be signed with the release keystore: a companion with another signer is never offered an update, and sign-in refuses it. `ADDON=update` installs it first and re-serves it under the next patch tag, or `COMPANION_TAG`. The companion ABI follows `ABI`.
 
-`bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml)) that runs over staged files only:
+`bun ci` also installs a pre-commit hook ([lefthook](https://lefthook.dev/), configured in [lefthook.yml](./lefthook.yml) on top of the shared one in `@opengrind/config`). Each command runs when a staged file matches it, all of them in parallel, and fixes made to staged files are staged again:
 
 - `*.{js,mjs,ts,svelte}` — Prettier, then ESLint with `--fix`
-- `*.{json,md,yml,yaml,css,html}` — Prettier
+- `*.{json,md,yml,yaml,css,html}`, except the three i18n files below — Prettier
 - `src/lib/i18n/locales/en/*.json`, `src/lib/i18n/shipped.json` and `src/lib/i18n/android-strings.json` — `bun run gen:i18n`, which stops the commit until the files it generates are staged, new Android `strings.xml` files included, then Prettier
 - `*.sh` — ShellCheck
-- `*.rs` — `rustfmt`, then `cargo clippy` over the whole crate
+- `*.rs` — `rustfmt` on the staged files and, at the same time, `cargo clippy` over the whole crate
+- `.editorconfig` and `rustfmt.toml` — `opengrind-config check`, which stops the commit when they differ from `@opengrind/config`
 
 [ShellCheck](https://www.shellcheck.net/) and [rustfmt](https://github.com/rust-lang/rustfmt) must be on `PATH`. `nix develop` provides both, along with the pinned Rust and Android toolchains.
 
