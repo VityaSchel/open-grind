@@ -26,4 +26,3 @@ These files contain work owned by others, so no license is granted for them:
 - `src/lib/assets/clippy.avif`: Microsoft's Clippy
 - `src/lib/assets/favicon.png`: the Svelte logo
 - `src/lib/assets/giphy/`: GIPHY's "Powered by GIPHY" marks, used under the [GIPHY API Terms](https://support.giphy.com/hc/en-us/articles/360028134111-GIPHY-API-Terms-of-Service)
-- `docs/content/guides/assets/guides/download/macos-quarantine-system-settings.png`: Apple's macOS interface
