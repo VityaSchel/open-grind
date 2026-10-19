@@ -1060,7 +1060,7 @@
 			"name": "@sveltejs/kit",
 			"ecosystem": "npm",
 			"versions": [
-				"2.70.2"
+				"2.70.3"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/sveltejs/kit",
@@ -1157,7 +1157,7 @@
 			"name": "bits-ui",
 			"ecosystem": "npm",
 			"versions": [
-				"2.19.2"
+				"2.19.5"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/huntabyte/bits-ui",

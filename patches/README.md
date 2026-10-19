@@ -2,6 +2,8 @@
 
 Applied on `bun install`.
 
+Bun applies each hunk at its recorded line number without matching the context, so a patch that only shifted by a line on a newer version corrupts the file without an error, and `bun patch --commit` then records the corruption. After a version bump, apply the old patch to the pristine tarball with `patch -p1`, which does match context, regenerate the patch from that tree, and check the installed package matches it.
+
 ## `@sveltejs/kit`
 
 Sorts the five `fs.readdirSync()` calls whose order decides build output, so a rebuild elsewhere produces the same bytes.
