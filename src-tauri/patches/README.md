@@ -139,3 +139,11 @@ UIKit asks the app delegate for a scene configuration, and tao answers with a po
 | `Cargo.toml`                    | Allow warnings, since a path dependency gets no `--cap-lints allow`.          |
 
 Backport of [tao#1245](https://github.com/tauri-apps/tao/pull/1245), requested for 0.35 in [tao#1340](https://github.com/tauri-apps/tao/issues/1340). **Delete when tauri-runtime-wry accepts a tao that has it**: 0.37 does, tauri-runtime-wry 2.11 requires 0.35.
+
+On iOS tao never reports a dropped window as destroyed, so Tauri keeps its label and opening another window with that label fails until the app restarts.
+
+| File                              | Change                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `src/platform_impl/ios/window.rs` | Emit `WindowEvent::Destroyed` when a window is dropped, as tao does on desktop. |
+
+Not a backport: tao 0.37 still drops iOS windows silently. **Keep it.**

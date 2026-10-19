@@ -22,3 +22,18 @@ index 7f37832..81ed2e8 100644
      }
    }
  
+diff --git a/src/platform_impl/ios/window.rs b/src/platform_impl/ios/window.rs
+index 7407a4b..7d3a983 100644
+--- a/src/platform_impl/ios/window.rs
++++ b/src/platform_impl/ios/window.rs
+@@ -70,6 +70,10 @@ impl Drop for Inner {
+         window_id: RootWindowId(self.window.into()),
+         event: WindowEvent::Focused(false),
+       }));
++      app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::WindowEvent {
++        window_id: RootWindowId(self.window.into()),
++        event: WindowEvent::Destroyed,
++      }));
+     }
+   }
+ }
