@@ -30,12 +30,12 @@ grep -A3 '"nixpkgs"' flake.lock # note the "rev" value
 
 ### Verifying the Gradle wrapper jar
 
-The wrapper jar at `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar` is committed and pinned to Gradle 8.14.5.
+The wrapper jar at `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar` is committed and pinned to Gradle 8.14.6.
 
 ```bash
 shasum -a 256 src-tauri/gen/android/gradle/wrapper/gradle-wrapper.jar
-# -> 7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172
-# Compare against Gradle's published checksums at https://gradle.org/release-checksums/#8.14.5
+# -> ad16bca46cb71bb5887c546860d93992aeee35c1fdaf4a242b0a612375d937e0
+# Compare against Gradle's published checksums at https://gradle.org/release-checksums/#8.14.6
 ```
 
 ## Pinned inputs
