@@ -128,3 +128,14 @@ Backport of [tauri#16220](https://github.com/tauri-apps/tauri/pull/16220). **Del
 Accuracy and time to first fix are worse where Play Services exists, since the platform API does no sensor fusion.
 
 **Delete when upstream drops `play-services-location`.** [plugins-workspace#3377](https://github.com/tauri-apps/plugins-workspace/pull/3377) does not: it keeps the dependency and the GMS-first path, and needs API 31.
+
+## tao
+
+UIKit asks the app delegate for a scene configuration, and tao answers with a pointer to an object it frees on return. Release iOS builds crash at launch once `Info.ios.plist` declares a scene manifest, which the iOS 27 SDK requires.
+
+| File                            | Change                                                                        |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| `src/platform_impl/ios/view.rs` | Return the configuration autoreleased, not a pointer to a dropped `Retained`. |
+| `Cargo.toml`                    | Allow warnings, since a path dependency gets no `--cap-lints allow`.          |
+
+Backport of [tao#1245](https://github.com/tauri-apps/tao/pull/1245), requested for 0.35 in [tao#1340](https://github.com/tauri-apps/tao/issues/1340). **Delete when tauri-runtime-wry accepts a tao that has it**: 0.37 does, tauri-runtime-wry 2.11 requires 0.35.

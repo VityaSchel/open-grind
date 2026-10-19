@@ -1,0 +1,24 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 3f0674d..593100b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -404,3 +404,6 @@ version = "0.1"
+ 
+ [target.'cfg(target_os = "windows")'.dev-dependencies.softbuffer]
+ version = "0.4"
++
++[lints.rust]
++warnings = { level = "allow", priority = -1 }
+diff --git a/src/platform_impl/ios/view.rs b/src/platform_impl/ios/view.rs
+index 7f37832..81ed2e8 100644
+--- a/src/platform_impl/ios/view.rs
++++ b/src/platform_impl/ios/view.rs
+@@ -643,7 +643,7 @@ pub fn create_delegate_class() {
+ 
+       // Dynamically set the delegate class name
+       config.setDelegateClass(Some(super::scene::TaoSceneDelegate::class()));
+-      Retained::as_ptr(&config) as _
++      Retained::autorelease_ptr(config) as _
+     }
+   }
+ 

@@ -86,6 +86,12 @@ const CRATES = [
 			"src",
 		],
 	},
+	{
+		name: "tao",
+		version: "0.35.2",
+		sha256: "a33f7f9e486ade65fcf1e45c440f9236c904f5c1002cdc7fc6ae582777345ce4",
+		keep: ["Cargo.toml", "LICENSE", "LICENSE.spdx", "src"],
+	},
 ];
 
 const BUILD_OUTPUT = [

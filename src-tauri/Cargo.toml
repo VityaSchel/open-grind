@@ -132,3 +132,4 @@ tauri = { path = ".patched/tauri" }
 tauri-utils = { path = ".patched/tauri-utils" }
 tauri-runtime = { path = ".patched/tauri-runtime" }
 tauri-runtime-wry = { path = ".patched/tauri-runtime-wry" }
+tao = { path = ".patched/tao" }
