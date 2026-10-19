@@ -57,6 +57,30 @@ index a7f08aded437b9f34cbf3878043fe5426c1cd050..fd1fbef3b2deec5ac95ec25a86c99543
  	ondragend={handleDragEnd}
  >
  	{#if closeButton && !toast.component && toastType !== 'loading' && closeIcon !== null}
+diff --git a/dist/Toaster.svelte b/dist/Toaster.svelte
+index 4f1d7e42cd1765bc6fdec56828493c914d603576..ecbcc7f27aed9100d33d5c972bd155032001cced 100644
+--- a/dist/Toaster.svelte
++++ b/dist/Toaster.svelte
+@@ -103,7 +103,8 @@ let actualTheme = $state(getInitialTheme(theme));
+ let listRef = $state();
+ let lastFocusedElementRef = $state(null);
+ let isFocusWithin = $state(false);
+-const hotkeyLabel = $derived(hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, ''));
++const ariaModifiers = { altKey: 'Alt', ctrlKey: 'Control', metaKey: 'Meta', shiftKey: 'Shift' };
++const ariaKeyShortcuts = $derived(hotkey.map((key) => ariaModifiers[key] ?? key.replace(/^(Key|Digit)/, '')).join('+'));
+ $effect(() => {
+     if (toastState.toasts.length <= 1) {
+         expanded = false;
+@@ -237,7 +238,8 @@ sonnerContext.set(new SonnerState());
+ <!-- eslint-disable-next-line svelte/valid-compile -->
+ <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+ <section
+-	aria-label="{containerAriaLabel} {hotkeyLabel}"
++	aria-label={containerAriaLabel}
++	aria-keyshortcuts={ariaKeyShortcuts}
+ 	tabindex={-1}
+ 	aria-live="polite"
+ 	aria-relevant="additions text"
 diff --git a/dist/types.d.ts b/dist/types.d.ts
 index ac2ebd014d034d91b66dfae0d0ca977594d9ba57..7466aa5c02102c8bb868deb6a432be124dfc888a 100644
 --- a/dist/types.d.ts
