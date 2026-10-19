@@ -18,6 +18,13 @@ import {
 } from "./support/app";
 import { DRAWER, MEDIA_TILE } from "./support/drawer";
 import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+import {
+	DEMO_GIPHY_EMPTY_QUERY,
+	GAYMOJI_TAB,
+	GIPHY_CONSENT_NOTE,
+	GIPHY_MESSAGE,
+	STICKER_TILE,
+} from "./support/stickers";
 import { ACTIVE_SURFACE, CLIP, LIGHTBOX } from "./support/video";
 
 const FAILING_ROUTE = "/interest";
@@ -45,6 +52,8 @@ const KBD = '[data-slot="kbd"]';
 const SUGGESTIONS_GROUP =
 	'[data-slot="command-group"][data-value="suggestions"]';
 const COMMAND_EMPTY = '[data-slot="command-empty"]';
+const COMPOSER_BUTTON = '[data-slot="message-composer"] button';
+const EMPTY_TITLE = '[data-slot="empty-title"]';
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -284,6 +293,51 @@ test("a conversation, a message menu, the attachment tabs and a media tile's men
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
 	}
+});
+
+test("a GIF message, the GIPHY prompt and the GIFs and stickers sheet render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto(`${DEMO_CONVERSATION}?locale=en-XA`);
+	const gif = page.locator(GIPHY_MESSAGE).first();
+	await gif.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const scans = [await readPseudoText(gif)];
+
+	await gif.getByRole("button").click();
+	const prompt = page.getByRole("alertdialog");
+	await prompt.waitFor();
+	scans.push(await readPseudoText(prompt));
+	await page.keyboard.press("Escape");
+	await expect(prompt).toBeHidden();
+
+	await page.locator(COMPOSER_BUTTON).first().click();
+	const sheet = page.locator(DRAWER);
+	const consent = sheet.locator(GIPHY_CONSENT_NOTE);
+	await consent.waitFor();
+	scans.push(await readPseudoText(sheet));
+
+	await consent.getByRole("button").click();
+	await sheet.locator(STICKER_TILE).first().waitFor();
+	const gifs = await readPseudoText(sheet);
+
+	const search = sheet.getByRole("searchbox");
+	await search.fill(DEMO_GIPHY_EMPTY_QUERY);
+	await search.press("Enter");
+	await sheet.locator(EMPTY_TITLE).waitFor();
+	scans.push(await readPseudoText(sheet));
+
+	await sheet.getByRole("tab").last().click();
+	await sheet.locator(GAYMOJI_TAB).locator(STICKER_TILE).first().waitFor();
+	const gaymoji = await readPseudoText(sheet);
+
+	for (const { messages, leaks } of [...scans, gifs, gaymoji]) {
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	}
+	expect(gifs.labels).toBeGreaterThan(0);
+	expect(gaymoji.labels).toBeGreaterThan(0);
 });
 
 test("the profile note editor, actions menu and report sheet render only pseudo-translated text", async ({
