@@ -99,6 +99,31 @@ pub async fn request(
 	})
 }
 
+const MAX_EXTERNAL_BYTES: usize = 4 * 1024 * 1024;
+
+#[tauri::command]
+pub async fn fetch_external(
+	state: tauri::State<'_, AppState>,
+	url: String,
+	range: Option<String>,
+) -> Result<String, AppError> {
+	let client = state.client()?;
+	let response = client
+		.fetch_media(grindr::MediaRequest {
+			url: &url,
+			range: range.as_deref(),
+			max_bytes: MAX_EXTERNAL_BYTES,
+			fetcher: grindr::MediaFetcher::Plain,
+		})
+		.await
+		.map_err(|e| AppError::from_client_error(e, client))?;
+
+	encode_response(&RawResponse {
+		status: response.status,
+		body: Vec::from(response.body),
+	})
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;

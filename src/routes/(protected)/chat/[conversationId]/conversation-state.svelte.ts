@@ -1,4 +1,4 @@
-/* eslint max-lines: ["error", { "max": 602, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
+/* eslint max-lines: ["error", { "max": 603, "skipBlankLines": true, "skipComments": true }] -- Keep the fetch snapshot beside its reconciliation. */
 
 import { createContext } from "svelte";
 
@@ -84,6 +84,7 @@ export class ConversationState {
 	readonly ourProfileId: number;
 
 	#conversations: ConversationsState;
+	#releaseActive: () => void;
 	#readReceipts = new ReadReceiptQueue({
 		markRead: (messageId) => this.#markRead(messageId),
 	});
@@ -102,7 +103,7 @@ export class ConversationState {
 		this.conversationId = conversationId;
 		this.ourProfileId = ourProfileId;
 		this.#conversations = conversations;
-		conversations.setActive(conversationId);
+		this.#releaseActive = conversations.setActive(conversationId);
 		void this.#initialLoad();
 
 		this.#unsubscribeReconcile = reconciler.subscribe(() =>
@@ -208,7 +209,7 @@ export class ConversationState {
 	destroy(): void {
 		if (this.#destroyed) return;
 		this.#destroyed = true;
-		this.#conversations.clearActive(this.conversationId);
+		this.#releaseActive();
 		stopListening(this.#wsPromises);
 		this.#wsPromises = [];
 		this.#unsubscribeReconcile();

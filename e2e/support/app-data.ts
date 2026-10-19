@@ -1,4 +1,4 @@
-import { decode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
 import { expect, type Page } from "@playwright/test";
 
 import { FIRST_ROUTE_COMPILE_MS } from "./app";
@@ -59,6 +59,21 @@ export async function installPersistentAppData(page: Page): Promise<void> {
 			};
 		},
 		[APP_DATA_PREFIX, WRITE_DELAY_KEY] as const,
+	);
+}
+
+export async function seedPreferences(
+	page: Page,
+	{ preferences }: { preferences: Record<string, unknown> },
+): Promise<void> {
+	await installPersistentAppData(page);
+	const encoded = Buffer.from(encode(preferences)).toString("base64");
+	await page.addInitScript(
+		([key, value]) => {
+			if (localStorage.getItem(key) === null)
+				localStorage.setItem(key, value);
+		},
+		[`${APP_DATA_PREFIX}preferences`, encoded] as const,
 	);
 }
 

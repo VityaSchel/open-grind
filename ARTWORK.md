@@ -25,4 +25,5 @@ These files contain work owned by others, so no license is granted for them:
 - `fastlane/metadata/android/en-US/images/phoneScreenshots/` `1.jpeg`, `2.jpeg`, `3.jpeg` and the images made from them: `contrib/app-screenshots-*`, `contrib/hero-*`, `contrib/banner.avif`, `fastlane/metadata/android/en-US/images/featureGraphic.png` and their copies in `docs/content/public/`; they show Apple's emoji
 - `src/lib/assets/clippy.avif`: Microsoft's Clippy
 - `src/lib/assets/favicon.png`: the Svelte logo
+- `src/lib/assets/giphy/`: GIPHY's "Powered by GIPHY" marks, used under the [GIPHY API Terms](https://support.giphy.com/hc/en-us/articles/360028134111-GIPHY-API-Terms-of-Service)
 - `docs/content/guides/assets/guides/download/macos-quarantine-system-settings.png`: Apple's macOS interface

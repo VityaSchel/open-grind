@@ -106,6 +106,10 @@
 				"loadFailed": "Couldn’t load expiring video",
 				"openFailed": "Couldn’t open expiring video"
 			}
+		},
+		"gif": {
+			"fromGiphy": "GIF from GIPHY",
+			"tapToLoad": "Tap to load"
 		}
 	},
 	"conversations": {
@@ -233,6 +237,52 @@
 				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}."
 			}
 		},
+		"stickers": {
+			"a11y": {
+				"open": "GIFs and stickers",
+				"title": "GIFs and Stickers"
+			},
+			"tabs": {
+				"gifs": "GIFs",
+				"gaymoji": "Gaymoji"
+			},
+			"actions": {
+				"sendGif": "Send GIF",
+				"sendGaymoji": "Send Gaymoji"
+			},
+			"poweredByGiphy": "Powered by GIPHY",
+			"gifs": {
+				"search": "Search GIFs or paste GIPHY link",
+				"empty": "No GIFs Found",
+				"linkedGif": "GIF from a GIPHY link",
+				"a11y": {
+					"clearSearch": "Clear search",
+					"loadingMore": "Loading more GIFs"
+				},
+				"errors": {
+					"loadFailed": "Couldn’t load GIFs",
+					"loadMoreFailed": "Couldn’t load more GIFs"
+				}
+			},
+			"gaymoji": {
+				"a11y": {
+					"categories": "Gaymoji Categories"
+				},
+				"sections": {
+					"wenChing": "Wen Ching",
+					"datingAndSex": "Dating & Sex",
+					"body": "Body",
+					"profile": "Profile",
+					"holidays": "Holidays",
+					"objects": "Objects",
+					"mood": "Mood",
+					"other": "Other"
+				},
+				"errors": {
+					"loadFailed": "Couldn’t load Gaymoji"
+				}
+			}
+		},
 		"voiceMessage": {
 			"a11y": {
 				"record": "Record voice message"
@@ -262,6 +312,17 @@
 		"errors": {
 			"readFailed": "Couldn’t read what the keyboard sent",
 			"notInChat": "Stickers can only be sent in a chat"
+		}
+	},
+	"giphy": {
+		"badge": "GIF",
+		"consent": {
+			"title": "Enable GIPHY?",
+			"description": "You can search and send GIFs, and GIFs in your chats will load on their own. GIPHY will see your IP address, what you search for and that the requests come from a Grindr app.",
+			"privacyPolicy": "Privacy policy",
+			"errors": {
+				"saveFailed": "Couldn’t enable GIPHY"
+			}
 		}
 	}
 }

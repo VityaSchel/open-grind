@@ -82,10 +82,10 @@ async function openChat({ focused }: { focused: boolean }) {
 	states.push(state);
 	await settled(state);
 	focusWindow({ focused });
-	state.setActive(CHAT);
+	const closeChat = state.setActive(CHAT);
 	markConversationAsRead.mockClear();
 	onConversationRead.mockClear();
-	return state;
+	return { state, closeChat };
 }
 
 async function receive(timestamp: number, { unsent = false } = {}) {
@@ -119,7 +119,7 @@ afterEach(async () => {
 
 describe("ConversationsState reads the open chat only while it is seen", () => {
 	it("marks a message read on the server when it arrives in the chat on screen", async () => {
-		const state = await openChat({ focused: true });
+		const { state } = await openChat({ focused: true });
 
 		await receive(2000);
 
@@ -130,7 +130,7 @@ describe("ConversationsState reads the open chat only while it is seen", () => {
 	});
 
 	it("counts a message that arrives while the window is away and reads it on return", async () => {
-		const state = await openChat({ focused: false });
+		const { state } = await openChat({ focused: false });
 
 		await receive(2000);
 		expect(entryFor(state, CHAT).data.unreadCount).toBe(1);
@@ -148,7 +148,7 @@ describe("ConversationsState reads the open chat only while it is seen", () => {
 	});
 
 	it("reads the open chat on the server when a refresh shows it unread", async () => {
-		const state = await openChat({ focused: true });
+		const { state } = await openChat({ focused: true });
 		getConversationsMock.mockResolvedValue(page(2, 2000));
 
 		await state.refresh();
@@ -160,7 +160,7 @@ describe("ConversationsState reads the open chat only while it is seen", () => {
 	});
 
 	it("keeps the server count of the open chat while the window is away", async () => {
-		const state = await openChat({ focused: false });
+		const { state } = await openChat({ focused: false });
 		getConversationsMock.mockResolvedValue(page(2, 2000));
 
 		await state.refresh();
@@ -189,7 +189,7 @@ describe("ConversationsState reads the open chat it could not see yet", () => {
 	});
 
 	it("reads the open chat when an inbox resync shows it unread", async () => {
-		const state = await openChat({ focused: true });
+		const { state } = await openChat({ focused: true });
 		getConversationsMock.mockResolvedValue(page(2, 2000));
 
 		requestInboxResync();
@@ -224,7 +224,7 @@ describe("ConversationsState reads the open chat it could not see yet", () => {
 	});
 
 	it("does not count an unsent message as unread", async () => {
-		const state = await openChat({ focused: false });
+		const { state } = await openChat({ focused: false });
 
 		await receive(2000, { unsent: true });
 
@@ -245,7 +245,7 @@ describe("ConversationsState reads the open chat it could not see yet", () => {
 	});
 
 	it("does not give back a count that a newer refresh replaced when a read fails", async () => {
-		const state = await openChat({ focused: true });
+		const { state } = await openChat({ focused: true });
 		const firstRead = deferred<void>();
 		markConversationAsRead.mockReturnValueOnce(firstRead.promise);
 		getConversationsMock.mockResolvedValue(page(2, 2000));
@@ -264,12 +264,12 @@ describe("ConversationsState reads the open chat it could not see yet", () => {
 
 describe("ConversationsState and notifications that open a chat", () => {
 	it("leaves the open chat unread when another chat's notification brings the window back", async () => {
-		const state = await openChat({ focused: false });
+		const { state, closeChat } = await openChat({ focused: false });
 		await receive(2000);
 
 		await whileOpeningPushDeeplink(() => {
 			focusWindow({ focused: true });
-			state.clearActive(CHAT);
+			closeChat();
 			return Promise.resolve();
 		});
 
@@ -279,7 +279,7 @@ describe("ConversationsState and notifications that open a chat", () => {
 	});
 
 	it("leaves the open chat alone while a tapped notification waits on the native side", async () => {
-		const state = await openChat({ focused: false });
+		const { state } = await openChat({ focused: false });
 		await receive(2000);
 		invokeMock.mockResolvedValue(true);
 
@@ -293,7 +293,7 @@ describe("ConversationsState and notifications that open a chat", () => {
 	});
 
 	it("reads the open chat once its own notification has opened it", async () => {
-		const state = await openChat({ focused: false });
+		const { state } = await openChat({ focused: false });
 		await receive(2000);
 
 		await whileOpeningPushDeeplink(() => {

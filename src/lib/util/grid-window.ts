@@ -46,14 +46,17 @@ export function gridWindow({
 			Math.ceil((offsetPx + viewportPx + overscanPx) / rowStride),
 		),
 	);
+	const surplusGapPx = firstRow === lastRow ? gapPx : 0;
+	const hasRowsBelow = lastRow < rows;
 
 	return {
 		startIndex: firstRow * columns,
 		endIndex: Math.min(count, lastRow * columns),
-		paddingTopPx: firstRow * rowStride,
-		paddingBottomPx: (rows - lastRow) * rowStride,
+		paddingTopPx: firstRow * rowStride - (hasRowsBelow ? 0 : surplusGapPx),
+		paddingBottomPx:
+			(rows - lastRow) * rowStride - (hasRowsBelow ? surplusGapPx : 0),
 		hasRowsAbove: firstRow > 0,
-		hasRowsBelow: lastRow < rows,
+		hasRowsBelow,
 	};
 }
 

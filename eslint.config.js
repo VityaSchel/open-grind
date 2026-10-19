@@ -16,6 +16,7 @@ const testFiles = [
 ];
 
 const untranslatedData = [
+	"src/lib/chat/gaymoji-sections.ts",
 	"src/lib/demo/mock/**",
 	"src/lib/i18n/language-names.ts",
 	"src/lib/i18n/matcher.ts",

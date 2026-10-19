@@ -307,8 +307,8 @@ describe("ConversationsState reports chats that became read", () => {
 	it("reports nothing on focus while no chat is open", async () => {
 		const state = await stateWithUnread(0);
 		focusWindow({ focused: false });
-		state.setActive(CHAT);
-		state.clearActive(CHAT);
+		const closeChat = state.setActive(CHAT);
+		closeChat();
 		await microtasks();
 		onConversationRead.mockClear();
 
