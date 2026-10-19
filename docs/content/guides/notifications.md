@@ -45,7 +45,9 @@ Not supported yet. See [#384](https://git.opengrind.org/open-grind/open-grind/is
 
 ## macOS
 
-Not supported yet. See [#385](https://git.opengrind.org/open-grind/open-grind/issues/385).
+Notifications only arrive when Open Grind is running.
+
+To change the alert style, sound or previews, go to System Settings → Notifications → Open Grind.
 
 ## Linux
 
