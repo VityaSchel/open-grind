@@ -1,10 +1,8 @@
 import path from "node:path";
 
-import { LOCALES, readLocaleFiles } from "./locale-files";
-import { type LocaleFile, moveMessage, renameLiterals } from "./move-message";
+import { planRename, type RenamePlan } from "./rename-plan";
 
 const ROOT = path.join(import.meta.dir, "../..");
-const SOURCES = new Bun.Glob("src/**/*.{js,ts,svelte}");
 
 function fail(reason: string): never {
 	console.error(`error: ${reason}`);
@@ -19,35 +17,21 @@ if (args.length !== 2 || from === undefined || to === undefined) {
 	);
 }
 
-const catalogs = [...readLocaleFiles(LOCALES)].flatMap(([locale, files]) =>
-	files.map(({ namespace, text }) => ({ locale, namespace, text })),
-);
-
-let moved: LocaleFile[] = [];
+let plan: RenamePlan;
 try {
-	moved = moveMessage({ files: catalogs, from, to });
+	plan = planRename({ root: ROOT, from, to });
 } catch (error) {
 	fail(error instanceof Error ? error.message : String(error));
 }
 
-for (const { locale, namespace, text } of moved) {
-	await Bun.write(path.join(LOCALES, locale, `${namespace}.json`), text);
-}
-
-let rewritten = 0;
-for (const relative of SOURCES.scanSync({ cwd: ROOT })) {
-	const file = Bun.file(path.join(ROOT, relative));
-	const text = await file.text();
-	const renamed = renameLiterals({ text, from, to });
-	if (renamed !== text) {
-		await Bun.write(file, renamed);
-		rewritten += 1;
-	}
+for (const { file, text } of [...plan.catalogs, ...plan.references]) {
+	await Bun.write(path.join(ROOT, file), text);
 }
 
 console.log(
-	`moved ${from} to ${to} in ${moved.length} catalog files and ${rewritten} source files`,
+	`moved ${from} to ${to} in ${plan.catalogs.length} catalog files and ${plan.references.length} files that name it`,
 );
+for (const note of plan.undecided) console.warn(`warning: ${note}`);
 
 const generate = Bun.spawnSync([process.execPath, "run", "gen:i18n"], {
 	cwd: ROOT,
