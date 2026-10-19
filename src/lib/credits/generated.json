@@ -7396,7 +7396,7 @@
 			"name": "tauri",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.6"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7410,7 +7410,7 @@
 			"name": "tauri-build",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7424,7 +7424,7 @@
 			"name": "tauri-codegen",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7438,7 +7438,7 @@
 			"name": "tauri-macros",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7580,7 +7580,7 @@
 			"name": "tauri-runtime",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7594,7 +7594,7 @@
 			"name": "tauri-runtime-wry",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.4"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7608,7 +7608,7 @@
 			"name": "tauri-utils",
 			"ecosystem": "rust",
 			"versions": [
-				"2.9.1"
+				"2.9.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -8813,7 +8813,7 @@
 			"name": "windows-sys",
 			"ecosystem": "rust",
 			"versions": [
-				"0.45.0, 0.52.0, 0.59.0, 0.60.2, 0.61.2"
+				"0.45.0, 0.48.0, 0.52.0, 0.59.0, 0.60.2, 0.61.2"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
@@ -8827,7 +8827,7 @@
 			"name": "windows-targets",
 			"ecosystem": "rust",
 			"versions": [
-				"0.42.2, 0.52.6, 0.53.5"
+				"0.42.2, 0.48.5, 0.52.6, 0.53.5"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
@@ -8871,7 +8871,7 @@
 			"name": "windows_aarch64_msvc",
 			"ecosystem": "rust",
 			"versions": [
-				"0.42.2, 0.52.6, 0.53.1"
+				"0.42.2, 0.48.5, 0.52.6, 0.53.1"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
@@ -8885,7 +8885,7 @@
 			"name": "windows_x86_64_gnu",
 			"ecosystem": "rust",
 			"versions": [
-				"0.52.6, 0.53.1"
+				"0.48.5, 0.52.6, 0.53.1"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
@@ -8899,7 +8899,7 @@
 			"name": "windows_x86_64_msvc",
 			"ecosystem": "rust",
 			"versions": [
-				"0.42.2, 0.52.6, 0.53.1"
+				"0.42.2, 0.48.5, 0.52.6, 0.53.1"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
