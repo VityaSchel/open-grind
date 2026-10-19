@@ -14,7 +14,7 @@ See [sveltejs/kit#15313](https://github.com/sveltejs/kit/issues/15313). [#16074]
 
 Drawers bounced back into view during the close animation. A `pointerout` that ended a drag while the pointer was still captured and a `swipeAmount` of `0` read as absent.
 
-See ([huntabyte/vaul-svelte#138](https://github.com/huntabyte/vaul-svelte/issues/138)).
+See [huntabyte/vaul-svelte#139](https://github.com/huntabyte/vaul-svelte/issues/139). [#140](https://github.com/huntabyte/vaul-svelte/pull/140) fixes only the `animation-fill-mode` part.
 
 ## `svelte-sonner`
 
