@@ -14,6 +14,7 @@ const EXPIRING_VIDEO_ID = 100016;
 const NAMELESS_ID = 100003;
 export const PINNED_ID = 100009;
 export const PINNED_MUTED_ID = 100014;
+export const GIF_ID = 100017;
 
 const HOUR_MINUTES = 60;
 const YESTERDAY_MINUTES = 25 * HOUR_MINUTES;
@@ -253,3 +254,22 @@ export const PREVIEWS_INBOX: DemoInbox = {
 };
 
 export const PAGED_INBOX: DemoInbox = { ...PREVIEWS_INBOX, nextPage: 2 };
+
+export const GIF_INBOX: DemoInbox = {
+	nextPage: null,
+	conversations: [
+		conversation({
+			withId: GIF_ID,
+			lastActivityAgo: 2,
+			messages: [
+				{ fromMe: true, text: "Lorem ipsum dolor." },
+				wire({
+					fromMe: false,
+					type: "Location",
+					body: { lat: 10, lon: -35 },
+				}),
+				{ fromMe: false, kind: "gif" },
+			],
+		}),
+	],
+};

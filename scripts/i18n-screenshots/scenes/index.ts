@@ -99,6 +99,13 @@ import {
 	rowMenus,
 } from "./chat-inbox";
 import { sendPhotos, sendPreviewFailure, sendVideos } from "./chat-send-media";
+import {
+	gifsLoadingMore,
+	gifsLoadMoreFailure,
+	giphyConsentInChat,
+	stickerLoadFailures,
+	stickers,
+} from "./chat-stickers";
 import { commandCenter, locationCopy } from "./command-center";
 import {
 	autoLocation,
@@ -370,6 +377,11 @@ export const scenes: Scene[] = [
 	uploadFailure,
 	pickerFailure,
 	...uploadRefusals,
+	stickers,
+	stickerLoadFailures,
+	gifsLoadingMore,
+	gifsLoadMoreFailure,
+	giphyConsentInChat,
 	profileFieldMenus,
 	profileDetails,
 	imperialVisit,

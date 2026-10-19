@@ -21,12 +21,11 @@ export type EscapeSink = {
 	stop: () => void;
 };
 
-const UNLICENSED_ASSETS = [
-	new URL("../../src/lib/assets/clippy.avif", import.meta.url),
-];
-const UNLICENSED_PATH = /\/clippy[^/]*\.avif$/;
+type UnlicensedAsset = { file: URL; path: RegExp; placeholder: string };
+
 const PLACEHOLDER_HEADER = "x-i18n-screenshots-placeholder";
 const PLACEHOLDER_SIDE = 96;
+const PLACEHOLDER_FILL = "#d4d4d4";
 const REMOTE_PROTOCOLS = new Set(["http:", "https:", "ws:", "wss:"]);
 const CANCELLED_BY_PAGE = "net::ERR_ABORTED";
 const LOOPBACK = "127.0.0.1";
@@ -37,14 +36,52 @@ function sha256Hex(bytes: Uint8Array): string {
 
 async function unlicensedHashes(): Promise<Set<string>> {
 	const files = await Promise.all(
-		UNLICENSED_ASSETS.map((url) => Bun.file(url).bytes()),
+		UNLICENSED_ASSETS.map(({ file }) => Bun.file(file).bytes()),
 	);
 	return new Set(files.map(sha256Hex));
 }
 
 function placeholderFace(): string {
 	const side = PLACEHOLDER_SIDE;
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${side}" height="${side}" viewBox="0 0 ${side} ${side}"><rect width="${side}" height="${side}" fill="#d4d4d4"/><circle cx="${side / 2}" cy="${side / 2}" r="${side * 0.3}" fill="#a3a3a3"/></svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${side}" height="${side}" viewBox="0 0 ${side} ${side}"><rect width="${side}" height="${side}" fill="${PLACEHOLDER_FILL}"/><circle cx="${side / 2}" cy="${side / 2}" r="${side * 0.3}" fill="#a3a3a3"/></svg>`;
+}
+
+function placeholderMark({
+	width,
+	height,
+}: {
+	width: number;
+	height: number;
+}): string {
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="${width}" height="${height}" rx="${height / 8}" fill="${PLACEHOLDER_FILL}"/></svg>`;
+}
+
+const UNLICENSED_ASSETS: UnlicensedAsset[] = [
+	{
+		file: new URL("../../src/lib/assets/clippy.avif", import.meta.url),
+		path: /\/clippy[^/]*\.avif$/,
+		placeholder: placeholderFace(),
+	},
+	{
+		file: new URL(
+			"../../src/lib/assets/giphy/powered-by-giphy.png",
+			import.meta.url,
+		),
+		path: /\/powered-by-giphy(?:\.[^/]*)?\.png$/,
+		placeholder: placeholderMark({ width: 641, height: 167 }),
+	},
+	{
+		file: new URL(
+			"../../src/lib/assets/giphy/powered-by-giphy-boxed.png",
+			import.meta.url,
+		),
+		path: /\/powered-by-giphy-boxed(?:\.[^/]*)?\.png$/,
+		placeholder: placeholderMark({ width: 640, height: 225 }),
+	},
+];
+
+function unlicensedAssetAt(pathname: string): UnlicensedAsset | undefined {
+	return UNLICENSED_ASSETS.find(({ path }) => path.test(pathname));
 }
 
 async function servedUnlicensed({
@@ -129,12 +166,16 @@ export async function guardNetwork({
 		}),
 	);
 	await context.route(
-		(url) => url.origin === origin && UNLICENSED_PATH.test(url.pathname),
+		(url) =>
+			url.origin === origin &&
+			unlicensedAssetAt(url.pathname) !== undefined,
 		catching((route) =>
 			route.fulfill({
 				contentType: "image/svg+xml",
 				headers: { [PLACEHOLDER_HEADER]: "1" },
-				body: placeholderFace(),
+				body:
+					unlicensedAssetAt(new URL(route.request().url()).pathname)
+						?.placeholder ?? "",
 			}),
 		),
 	);
