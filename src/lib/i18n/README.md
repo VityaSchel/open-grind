@@ -72,7 +72,7 @@ Words follow the app's language. Numbers, dates and times follow the system's re
 
 ## Changing a string
 
-A new meaning, tag or placeholder needs a new key. To rename a key, lock the Weblate components and merge their pending changes, then run `bun scripts/i18n/rename-key.ts <old> <new>`. It moves the key in every language and rewrites its quoted uses in `src/`.
+A new meaning, tag or placeholder needs a new key. To rename a key, lock the Weblate components and merge their pending changes, then run `bun scripts/i18n/rename-key.ts <old> <new>`. It moves the key with all its plural forms in every language, rewrites its quoted uses in `src/`, `e2e/` and the screenshot scenes, and renames it in `android-strings.json` and in `uncapturable.json`, both its entry and the reasons that name it. It refuses a new key that a catalog or `uncapturable.json` already has. A wildcard entry in `uncapturable.json` that covered the old key but not the new one stays, and the script warns about it, so give the new key its own entry or show it in a screenshot view.
 
 ## Finding raw English
 
