@@ -15,8 +15,12 @@ export function readPseudoText(
 			withoutPseudo(text).match(/\p{Script=Latin}+/gu) ?? [];
 		const translationOff = (element: Element) =>
 			element.closest("[translate]")?.getAttribute("translate") === "no";
+		const announcesBrand = (element: Element) =>
+			element.id === "svelte-announcer" &&
+			element.textContent.trim() === brand;
 		const translatable = (element: Element) =>
 			!translationOff(element) &&
+			!announcesBrand(element) &&
 			element.checkVisibility({ visibilityProperty: true });
 		const texts = elements.map((root) => {
 			const walker = document.createTreeWalker(

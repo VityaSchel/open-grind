@@ -60,7 +60,10 @@
 	>
 		<img src={icon} alt="" class="size-28" />
 		<div class="flex flex-col gap-1">
-			<h1 class="font-heading text-3xl font-semibold tracking-tight">
+			<h1
+				class="font-heading text-3xl font-semibold tracking-tight"
+				translate="no"
+			>
 				Open Grind
 			</h1>
 			<p class="text-xl text-muted-foreground">

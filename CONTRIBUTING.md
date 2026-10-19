@@ -201,9 +201,9 @@ v1.123.0    = 22300000
 
 Before opening a pull request, run the same checks CI runs:
 
-- `bun run lint` — ESLint. Formatting is separate: `bun run format` (Prettier).
+- `bun run lint` — ESLint, which also flags interface text in `src` that skips the translation files. Formatting is separate: `bun run format` (Prettier).
 - `bun run check` — `svelte-check` type checking.
-- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json` and the files `bun run gen:i18n` generates from them, the Android `strings.xml` files included. `bun run check:i18n-release` also fails when a shipped language lacks a message, and `bun run build` runs it before every release build.
+- `bun run check:i18n` — translation files, `src/lib/i18n/shipped.json`, `src/lib/i18n/android-strings.json` and the files `bun run gen:i18n` generates from them, the Android `strings.xml` files included. `bun run check:i18n-release` also fails when a shipped language lacks a message or its Android `strings.xml` is out of date, and `bun run build` runs it before every release build. After merging Weblate's pull requests, run `bun run gen:i18n` and commit the result before a release.
 - `bun run check:release-bundle` — fails when text from the demo fixtures in `src/lib/demo/mock` ships in `build/`. `bun run build` runs it after every release build; builds made with `OPEN_GRIND_DEMO=1` skip it.
 - `bun run check:deps` — `cargo deny` (advisories, licenses, duplicate and unknown-source crates) plus `bun audit` over every workspace. Needs [cargo-deny](https://github.com/EmbarkStudios/cargo-deny) on `PATH`; CI runs it on a weekly schedule and on any pull request that touches a manifest or lockfile.
 - `bun run test` — frontend unit tests (Vitest) and Rust backend tests (`cargo test`) together. Individually: `bun run test:unit` and `bun run test:rust`.
