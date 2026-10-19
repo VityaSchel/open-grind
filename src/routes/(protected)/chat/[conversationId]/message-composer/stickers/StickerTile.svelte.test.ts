@@ -13,12 +13,14 @@ const children = createRawSnippet(() => ({
 function renderTile({
 	selected,
 	onclick = () => {},
+	translateLabel,
 }: {
 	selected: boolean;
 	onclick?: () => void;
+	translateLabel?: boolean;
 }) {
 	render(StickerTile, {
-		props: { label: "Yass", selected, onclick, children },
+		props: { label: "Yass", translateLabel, selected, onclick, children },
 	});
 	return screen.getByRole("button", { name: "Yass" });
 }
@@ -44,6 +46,19 @@ describe("StickerTile", () => {
 			tile.querySelector('[data-slot="sticker-content"]'),
 		).not.toBeNull();
 		expect(tile.querySelector("svg")).not.toBeNull();
+	});
+
+	it("keeps a label that names the sticker's own data out of page translation", () => {
+		expect(renderTile({ selected: false }).hasAttribute("translate")).toBe(
+			false,
+		);
+		cleanup();
+
+		expect(
+			renderTile({ selected: false, translateLabel: false }).getAttribute(
+				"translate",
+			),
+		).toBe("no");
 	});
 
 	it("reports a tap", async () => {

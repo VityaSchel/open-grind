@@ -54,6 +54,7 @@
 				type="button"
 				data-slot="gaymoji-section-button"
 				aria-label={section.title}
+				translate={section.titleFromCategory ? "no" : undefined}
 				aria-current={section.key === current ? "true" : undefined}
 				class={[
 					"flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/30",

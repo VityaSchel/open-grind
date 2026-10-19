@@ -179,7 +179,27 @@ describe("composer GIF tab", () => {
 		reducedMotion.current = true;
 		await mount();
 
-		expect(screen.getAllByText("GIF")).toHaveLength(2);
+		const badges = screen.getAllByText("GIF");
+		expect(badges).toHaveLength(2);
+		for (const badge of badges) {
+			expect(
+				badge.closest("[translate]")?.getAttribute("translate"),
+			).toBe("yes");
+		}
+	});
+
+	it("keeps GIPHY's titles out of page translation and names an untitled GIF itself", async () => {
+		api.getTrendingGifs.mockResolvedValue({
+			gifs: [
+				gifTile("a", { alt: "Trending a" }),
+				{ ...gifTile("b"), alt: { kind: "untitled" } },
+			],
+			nextOffset: null,
+		});
+		await mount();
+
+		expect(tile("Trending a").getAttribute("translate")).toBe("no");
+		expect(tile("GIF").hasAttribute("translate")).toBe(false);
 	});
 
 	it("presses only the GIF its menu has picked", async () => {

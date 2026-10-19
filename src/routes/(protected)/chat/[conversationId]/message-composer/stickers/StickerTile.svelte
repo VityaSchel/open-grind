@@ -6,12 +6,14 @@
 
 	let {
 		label,
+		translateLabel = true,
 		selected,
 		onclick,
 		class: className,
 		children,
 	}: {
 		label: string;
+		translateLabel?: boolean;
 		selected: boolean;
 		onclick: () => void;
 		class?: ClassValue;
@@ -24,6 +26,7 @@
 	data-slot="sticker-tile"
 	class={["relative cursor-pointer scroll-mt-18 rounded-lg", className]}
 	aria-label={label}
+	translate={translateLabel ? undefined : "no"}
 	aria-pressed={selected}
 	{onclick}
 >

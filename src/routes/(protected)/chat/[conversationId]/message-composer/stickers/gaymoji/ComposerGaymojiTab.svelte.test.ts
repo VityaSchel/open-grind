@@ -176,6 +176,31 @@ describe("composer Gaymoji tab", () => {
 		).toHaveLength(6);
 	});
 
+	it("keeps a title made from an unknown category out of page translation", async () => {
+		api.getGaymoji.mockResolvedValue([
+			{ name: "body", items: shortItems.slice(0, 6) },
+			{ name: "bears+otters_2024", items: shortItems.slice(6) },
+		]);
+		mount({ active: true });
+		await settle();
+
+		const translateOf = (element: HTMLElement) =>
+			element.getAttribute("translate");
+		const unknown = "Bears & otters 2024";
+		expect(
+			translateOf(screen.getByRole("heading", { name: unknown })),
+		).toBe("no");
+		expect(translateOf(screen.getByRole("button", { name: unknown }))).toBe(
+			"no",
+		);
+		expect(translateOf(screen.getByRole("heading", { name: "Body" }))).toBe(
+			null,
+		);
+		expect(translateOf(screen.getByRole("button", { name: "Body" }))).toBe(
+			null,
+		);
+	});
+
 	it("presses only the Gaymoji its menu has picked", async () => {
 		const { rerender } = mount({
 			active: true,

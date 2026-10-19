@@ -15,12 +15,14 @@
 	class="relative size-30"
 	{@attach media.attach}
 >
-	<MediaImage
-		src={gaymoji.imageUrl}
-		alt={gaymoji.label}
-		fit="contain"
-		skeleton
-		class="block size-full rounded-lg"
-	/>
+	<div translate="no" class="contents">
+		<MediaImage
+			src={gaymoji.imageUrl}
+			alt={gaymoji.label}
+			fit="contain"
+			skeleton
+			class="block size-full rounded-lg"
+		/>
+	</div>
 	{@render media.adornments?.()}
 </div>

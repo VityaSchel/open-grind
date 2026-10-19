@@ -64,6 +64,7 @@
 			{#each feed.gifs as gif (gif.id)}
 				<StickerTile
 					label={gifAltText(gif.alt)}
+					translateLabel={gif.alt.kind !== "title"}
 					selected={gif.id === pickedId}
 					onclick={() => onToggle(gif)}
 					class="aspect-4/3 bg-muted"

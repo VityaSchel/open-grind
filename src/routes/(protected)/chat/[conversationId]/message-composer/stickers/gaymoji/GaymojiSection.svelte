@@ -36,6 +36,7 @@
 	<h3
 		{@attach headers.register(section.key)}
 		id={headingId}
+		translate={section.titleFromCategory ? "no" : undefined}
 		class="px-1 pt-3 pb-2 text-sm font-medium text-muted-foreground"
 	>
 		{section.title}
@@ -53,6 +54,7 @@
 		{#each visibleItems as gaymoji (gaymoji.id)}
 			<StickerTile
 				label={gaymoji.label}
+				translateLabel={false}
 				selected={gaymoji.id === pickedId}
 				onclick={() => onToggle(gaymoji)}
 				class="aspect-square"

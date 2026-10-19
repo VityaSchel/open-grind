@@ -90,6 +90,21 @@ describe("gaymojiSections", () => {
 		]);
 	});
 
+	it("marks only a title made from a category name as untranslated", () => {
+		expect(
+			gaymojiSections([
+				category("mood", ["4_Happy_Mask.png"]),
+				category("bears+otters_2024", ["Bear.png"]),
+			]).map(({ key, titleFromCategory }) => ({
+				key,
+				titleFromCategory,
+			})),
+		).toEqual([
+			{ key: "mood", titleFromCategory: false },
+			{ key: "bears+otters_2024", titleFromCategory: true },
+		]);
+	});
+
 	it("leaves out Other when Featured has no originals", () => {
 		expect(
 			outline([

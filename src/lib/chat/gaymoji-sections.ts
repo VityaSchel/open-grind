@@ -4,6 +4,7 @@ import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
 export type GaymojiSection = {
 	key: string;
 	title: string;
+	titleFromCategory: boolean;
 	icon: GaymojiItem;
 	items: GaymojiItem[];
 };
@@ -124,6 +125,7 @@ export function gaymojiSections(
 					look === undefined
 						? titleFromCategory(key)
 						: t(look.titleKey),
+				titleFromCategory: look === undefined,
 				icon,
 				items,
 			},
