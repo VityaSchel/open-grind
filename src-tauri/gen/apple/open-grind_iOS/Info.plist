@@ -45,5 +45,7 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<true/>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Open Grind can use your GPS to automatically set your location for the grid.</string>
 </dict>
 </plist>
