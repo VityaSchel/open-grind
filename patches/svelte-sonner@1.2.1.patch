@@ -1,0 +1,21 @@
+diff --git a/dist/Toast.svelte b/dist/Toast.svelte
+index a15126a2550dcbd6bd14df6ed4c8a25e328ff9f6..d8f6afc019c5b522796a154dbc1c5c2908e50901 100644
+--- a/dist/Toast.svelte
++++ b/dist/Toast.svelte
+@@ -355,7 +355,7 @@
+ 
+ 		// ensure we maintain correct pointer capture even when going outside of the toast (e.g. when swiping)
+ 		target.setPointerCapture(event.pointerId);
+-		if (target.tagName === 'BUTTON') return;
++		if (target.tagName === 'BUTTON' || !dismissible) return;
+ 		swiping = true;
+ 		pointerStart = { x: event.clientX, y: event.clientY };
+ 	};
+@@ -559,6 +559,7 @@
+ 	onpointermove={handlePointerMove}
+ 	onpointerup={handlePointerUp}
+ 	onpointerdown={handlePointerDown}
++	onpointercancel={handleDragEnd}
+ 	ondragend={handleDragEnd}
+ >
+ 	{#if closeButton && !toast.component && toastType !== 'loading' && closeIcon !== null}

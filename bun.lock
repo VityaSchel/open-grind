@@ -20,7 +20,7 @@
         "photoswipe": "^5.4.4",
         "postcss": "^8.5.24",
         "sveaflet": "^0.1.4",
-        "svelte-sonner": "^1.1.1",
+        "svelte-sonner": "^1.2.1",
         "tailwindcss": "^4.2.4",
         "tauri-plugin-android-fs-api": "28.2.2",
         "tinykeys": "^4.0.0",
@@ -66,9 +66,9 @@
   },
   "patchedDependencies": {
     "vaul-svelte@1.0.0-next.7": "patches/vaul-svelte@1.0.0-next.7.patch",
-    "svelte-sonner@1.1.1": "patches/svelte-sonner@1.1.1.patch",
     "@sveltejs/kit@2.70.3": "patches/@sveltejs%2Fkit@2.70.3.patch",
     "bits-ui@2.19.5": "patches/bits-ui@2.19.5.patch",
+    "svelte-sonner@1.2.1": "patches/svelte-sonner@1.2.1.patch",
   },
   "overrides": {
     "brace-expansion": "^5.0.12",
@@ -948,7 +948,7 @@
 
     "svelte-meta-tags": ["svelte-meta-tags@4.6.0", "", { "dependencies": { "schema-dts": "^1.1.5" }, "peerDependencies": { "svelte": "^5.0.0" } }, "sha512-UvoylslTqnhoWISfcimskFayGOqgJRLmk5ZWwNoIqfGyRBdc5yq2lxeH+nhxWp9C3x3ywXAw+GL1QyjQpM9WEw=="],
 
-    "svelte-sonner": ["svelte-sonner@1.1.1", "", { "dependencies": { "runed": "^0.28.0" }, "peerDependencies": { "svelte": "^5.0.0" } }, "sha512-5cd3p7wa4cq0NsqslMwdlPb7x1JglEZ/GKrLePWNr5bCxR1nagAVrY01FRFrXfUGs41miLt3C327+8XJo5BzZw=="],
+    "svelte-sonner": ["svelte-sonner@1.2.1", "", { "dependencies": { "runed": "^0.28.0" }, "peerDependencies": { "svelte": "^5.0.0" } }, "sha512-N00LOWb60fjKXULbpngku+7E9Krb16KpNq4/Eax5Vu7o1Dpbca55QpaLPsB+yp82JIEdFhfJuv5cVXLoe0ZtVA=="],
 
     "svelte-toolbelt": ["svelte-toolbelt@0.10.6", "", { "dependencies": { "clsx": "^2.1.1", "runed": "^0.35.1", "style-to-object": "^1.0.8" }, "peerDependencies": { "svelte": "^5.30.2" } }, "sha512-YWuX+RE+CnWYx09yseAe4ZVMM7e7GRFZM6OYWpBKOb++s+SQ8RBIMMe+Bs/CznBMc0QPLjr+vDBxTAkozXsFXQ=="],
 
