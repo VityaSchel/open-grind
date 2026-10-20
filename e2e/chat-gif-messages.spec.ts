@@ -23,7 +23,9 @@ function lightboxImage(page: Page) {
 }
 
 async function askToLoad(page: Page) {
-	const tile = receivedGif(page).getByRole("button", { name: /Tap to load/ });
+	const tile = receivedGif(page).getByRole("button", {
+		name: /^GIF from GIPHY/,
+	});
 	await tile.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await tile.focus();
 	await page.keyboard.press("Enter");
@@ -84,6 +86,32 @@ test("Cancel and Escape leave the GIF unloaded and GIPHY off", async ({
 	expect((await storedPreferences(page))?.giphyConsent).toBe(false);
 });
 
+test("the load hint says tap after a touch and click after a hovering pointer", async ({
+	page,
+}) => {
+	await openChatWithGiphy(page, { on: false });
+	const gif = receivedGif(page);
+	const tapHint = gif.getByText("Tap to load");
+	const clickHint = gif.getByText("Click to load");
+	await tapHint.waitFor({
+		state: "attached",
+		timeout: FIRST_ROUTE_COMPILE_MS,
+	});
+	const composer = page.getByRole("textbox", { name: "Write a message…" });
+
+	await composer.tap();
+	await expect(tapHint).toBeVisible();
+	await expect(clickHint).toBeHidden();
+
+	await gif.hover();
+	await expect(clickHint).toBeVisible();
+	await expect(tapHint).toBeHidden();
+
+	await composer.tap();
+	await expect(tapHint).toBeVisible();
+	await expect(clickHint).toBeHidden();
+});
+
 test("with GIPHY on, a received GIF plays without asking", async ({ page }) => {
 	await openChatWithGiphy(page, { on: true });
 
@@ -91,7 +119,7 @@ test("with GIPHY on, a received GIF plays without asking", async ({ page }) => {
 		receivedGif(page).getByRole("img", { name: "GIF" }),
 	).toHaveJSProperty("complete", true, { timeout: FIRST_ROUTE_COMPILE_MS });
 	await expect(
-		receivedGif(page).getByRole("button", { name: /Tap to load/ }),
+		receivedGif(page).getByRole("button", { name: /^GIF from GIPHY/ }),
 	).toHaveCount(0);
 });
 

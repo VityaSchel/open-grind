@@ -109,7 +109,8 @@
 		},
 		"gif": {
 			"fromGiphy": "GIF from GIPHY",
-			"tapToLoad": "Tap to load"
+			"tapToLoad": "Tap to load",
+			"clickToLoad": "Click to load"
 		}
 	},
 	"conversations": {

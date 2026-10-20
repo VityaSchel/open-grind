@@ -84,7 +84,12 @@
 		>
 			<GifIcon weight="fill" class="size-6" />
 			<span>{t("chat.message.gif.fromGiphy")}</span>
-			<span class="text-xs">{t("chat.message.gif.tapToLoad")}</span>
+			<span class="text-xs can-hover:hidden">
+				{t("chat.message.gif.tapToLoad")}
+			</span>
+			<span class="hidden text-xs can-hover:inline">
+				{t("chat.message.gif.clickToLoad")}
+			</span>
 		</button>
 	{/if}
 	{@render media.adornments?.()}

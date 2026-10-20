@@ -103,6 +103,7 @@ import {
 	gifsLoadingMore,
 	gifsLoadMoreFailure,
 	giphyConsentInChat,
+	pointerGifHint,
 	stickerLoadFailures,
 	stickers,
 } from "./chat-stickers";
@@ -382,6 +383,7 @@ export const scenes: Scene[] = [
 	gifsLoadingMore,
 	gifsLoadMoreFailure,
 	giphyConsentInChat,
+	pointerGifHint,
 	profileFieldMenus,
 	profileDetails,
 	imperialVisit,

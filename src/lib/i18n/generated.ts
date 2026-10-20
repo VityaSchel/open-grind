@@ -218,6 +218,7 @@ export interface Messages {
 	"chat.message.expiringImage.errors.loadFailed": undefined;
 	"chat.message.expiringImage.errors.openFailed": undefined;
 	"chat.message.expiringImage.expired": undefined;
+	"chat.message.gif.clickToLoad": undefined;
 	"chat.message.gif.fromGiphy": undefined;
 	"chat.message.gif.tapToLoad": undefined;
 	"chat.message.reaction.a11y.fire": undefined;

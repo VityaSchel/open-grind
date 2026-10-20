@@ -270,3 +270,18 @@ export const giphyConsentInChat: Scene = {
 		},
 	],
 };
+
+export const pointerGifHint: Scene = {
+	platform: "desktop",
+	demo: { inbox: GIF_INBOX },
+	views: [
+		{
+			id: "chat/conversation/gif-pointer",
+			drive: async (page) => {
+				await openConversation({ page, withId: GIF_ID });
+				await receivedGif(page).hover();
+				await receivedGif(page).getByText("Click to load").waitFor();
+			},
+		},
+	],
+};
