@@ -66,6 +66,8 @@ When preparing a release, run `bun run gen:i18n` after merging Weblate's pull re
 
 The macOS menu bar uses the `shell.menuBar` messages, in Apple’s title case like the items macOS adds to the same menus. `$lib/platform/app-menu.ts` relabels it when the language changes, but the items macOS titles itself, such as Enter Full Screen, Start Dictation and the Help search, change only after a relaunch.
 
+Dialogs that the desktop app shows before its web view loads stay English: the warning about an outdated WebView2 or WebKitGTK, and the macOS requests to quit an older Open Grind or to move it to Applications.
+
 ## Regional formats
 
 Words follow the app's language. Numbers, dates and times follow the system's regional settings: the 12- or 24-hour clock and its hour padding, decimal and grouping separators, and a numbering system the user chose. Dates use the language's variant for the system region when CLDR has one, so their day and month order follows the system, along with that variant's month abbreviations. Without one, they use the language's world or European variant, such as `en-001`, when its order matches the system's, and otherwise keep the language's own order, because reordering would break its grammar. Format with the helpers in `format.ts`, never with a fixed pattern. Plural forms stay on the language. In dev builds, `?regional=de-DE-u-hc-h12` or a JSON snapshot pins the regional settings for the session.
