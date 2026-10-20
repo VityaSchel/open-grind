@@ -319,7 +319,7 @@
 		"badge": "GIF",
 		"consent": {
 			"title": "Enable GIPHY?",
-			"description": "You can search and send GIFs, and GIFs in your chats will load on their own. GIPHY will see your IP address, what you search for and that the requests come from a Grindr app.",
+			"description": "Search, send and see GIFs from GIPHY. GIPHY sees your IP address, your searches and their language, which GIFs load and that you use a Grindr app.",
 			"privacyPolicy": "Privacy policy",
 			"errors": {
 				"saveFailed": "Couldn’t enable GIPHY"
