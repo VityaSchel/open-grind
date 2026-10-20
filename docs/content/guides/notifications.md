@@ -41,7 +41,9 @@ To enable the fast mode:
 
 ## Windows
 
-Not supported yet. See [#384](https://git.opengrind.org/open-grind/open-grind/issues/384).
+Notifications only arrive when Open Grind is running.
+
+To change the banners, sound or lock screen previews, go to Settings → System → Notifications → Open Grind.
 
 ## macOS
 
