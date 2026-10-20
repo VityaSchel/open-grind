@@ -17734,7 +17734,13 @@
 						"description": "not sent by `/v1/inbox/conversation`; may be absent"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations"
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"profileId",
+					"primaryMediaHash",
+					"lastOnline",
+					"distanceMetres"
+				]
 			},
 			"ConversationPreview": {
 				"type": "object",
@@ -17835,7 +17841,25 @@
 						"description": "for `ProfilePhotoReply`, the reply text; otherwise `null`"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations"
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"conversationId",
+					"messageId",
+					"chat1MessageId",
+					"senderId",
+					"type",
+					"chat1Type",
+					"text",
+					"url",
+					"lat",
+					"lon",
+					"albumId",
+					"albumContentId",
+					"albumContentReply",
+					"duration",
+					"imageHash",
+					"photoContentReply"
+				]
 			},
 			"ConversationData": {
 				"type": "object",
@@ -17921,7 +17945,23 @@
 						"description": "`null` in every observed response; not sent by `/v1/inbox/conversation`; may be absent"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations"
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"conversationId",
+					"name",
+					"participants",
+					"lastActivityTimestamp",
+					"unreadCount",
+					"preview",
+					"muted",
+					"pinned",
+					"favorite",
+					"context",
+					"onlineUntil",
+					"translatable",
+					"rightNow",
+					"hasUnreadThrob"
+				]
 			},
 			"Conversation": {
 				"type": "object",
@@ -18116,7 +18156,14 @@
 						"description": "integer, e.g. `2`; `null` or absent on the last page"
 					}
 				},
-				"x-render-on-tag": "messaging/conversations"
+				"x-render-on-tag": "messaging/conversations",
+				"required": [
+					"entries",
+					"showsFreeHeaderLabel",
+					"totalFullConversations",
+					"totalPartialConversations",
+					"maxDisplayLockCount"
+				]
 			},
 			"MessageReaction": {
 				"type": "object",
@@ -22765,6 +22812,13 @@
 						"type": "object",
 						"nullable": true,
 						"description": "object, the latest submitted text and its moderation state, or `null`",
+						"required": [
+							"id",
+							"postId",
+							"text",
+							"createdAt",
+							"updatedAt"
+						],
 						"properties": {
 							"id": {
 								"type": "integer",
@@ -22902,10 +22956,17 @@
 					}
 				},
 				"x-render-on-tag": "right-now",
-				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state."
+				"description": "Right Now post returned by the own-post and profile-post endpoints. Text edits may leave activeText unchanged while moderatedText holds the submitted text and moderation state.",
+				"required": [
+					"id",
+					"profileId"
+				]
 			},
 			"RightNowPostResponse": {
 				"type": "object",
+				"required": [
+					"post"
+				],
 				"properties": {
 					"post": {
 						"allOf": [
