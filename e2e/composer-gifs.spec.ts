@@ -63,7 +63,7 @@ function trendingLabels(count: number): string[] {
 }
 
 function consentSwitch(page: Page) {
-	return page.getByRole("switch", { name: /^GIF search via GIPHY/ });
+	return page.getByRole("switch", { name: /^Enable GIPHY/ });
 }
 
 function agreeButton(page: Page) {
