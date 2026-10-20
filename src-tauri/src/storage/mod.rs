@@ -7,9 +7,13 @@ mod entries;
 ))]
 mod file_store;
 mod keyring;
+#[cfg(any(test, all(target_os = "macos", feature = "keychain")))]
+mod legacy;
 
 pub use entries::{AuthStorage, DeviceStorage, SigningKeyStorage};
 pub(crate) use keyring::{entry, Entry};
+#[cfg(all(target_os = "macos", feature = "keychain"))]
+pub use legacy::adopt_legacy_items;
 
 #[cfg(any(
 	target_os = "linux",
@@ -26,6 +30,8 @@ pub enum StorageBackend {
 	File,
 	Unavailable,
 }
+
+const STARTUP_PROBE: &str = "startup-probe";
 
 const HAS_FILE_STORE: bool = cfg!(any(
 	target_os = "linux",
@@ -126,7 +132,7 @@ pub fn storage_backend(
 }
 
 fn round_trips() -> bool {
-	let Ok(entry) = entry("startup-probe") else {
+	let Ok(entry) = entry(STARTUP_PROBE) else {
 		return false;
 	};
 	let ok = entry.set_secret(b"ok").is_ok()

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onNavigate } from "$app/navigation";
-	import { tick, untrack } from "svelte";
+	import { onDestroy, tick, untrack } from "svelte";
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
@@ -13,12 +13,18 @@
 		ApiResponseMessage,
 		MessageDraft,
 	} from "$lib/model/messaging/messages";
-	import ComposerAttachments from "./attachments/ComposerAttachments.svelte";
+	import { getConversationState } from "../conversation-state.svelte";
+	import ComposerAttachmentsTrigger from "./attachments/ComposerAttachmentsTrigger.svelte";
+	import {
+		type ComposerSheet,
+		getComposerSheets,
+	} from "./composer-sheets-state.svelte";
 	import ComposerReplyPreview from "./ComposerReplyPreview.svelte";
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
 	import { setMessageComposerContext } from "./message-composer-context.svelte";
 	import MessageTextInput from "./MessageTextInput.svelte";
 	import ComposerSendMedia from "./send-media/ComposerSendMedia.svelte";
+	import ComposerStickersTrigger from "./stickers/ComposerStickersTrigger.svelte";
 	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
 
 	let {
@@ -38,11 +44,14 @@
 	} = $props();
 
 	const { drafts } = getConversations();
+	const sheets = getComposerSheets();
 	const mobile = below("split");
 
 	let textContent = $state(untrack(() => drafts.get(conversationId)));
 	let form: HTMLFormElement | null = $state(null);
 	let textInput: HTMLTextAreaElement | null = $state(null);
+	let stickersTrigger: HTMLElement | null = $state(null);
+	let attachmentsTrigger: HTMLElement | null = $state(null);
 
 	async function onSubmit() {
 		const text = textContent.trim();
@@ -91,25 +100,44 @@
 	// Arming a reply should hand the user straight back to the composer, which
 	// on touch is also what raises the keyboard.
 	$effect(() => {
-		if (replyTo) textInput?.focus();
+		if (!replyTo || !textInput) return;
+		if (untrack(() => sheets.hasOpenSheet({ conversationId }))) return;
+		textInput.focus();
 	});
 
 	dismissOnBackGesture({
 		active: () => replyTo !== null && replyTo !== undefined,
 		dismiss: () => onCancelReply?.(),
+		layer: "screen",
 	});
 
-	setMessageComposerContext(() => ({
+	function focusTrigger({ sheet }: { sheet: ComposerSheet }) {
+		const trigger =
+			sheet === "attachments" && attachmentsTrigger?.isConnected
+				? attachmentsTrigger
+				: stickersTrigger;
+		trigger?.focus();
+	}
+
+	const composerContext = () => ({
 		conversationId,
 		disabled,
 		sendMessages: onSend,
-	}));
+	});
+	setMessageComposerContext(composerContext);
+	onDestroy(
+		sheets.bind({
+			conversationState: getConversationState(),
+			context: composerContext,
+			focusTrigger,
+		}),
+	);
 </script>
 
 <form
 	bind:this={form}
 	data-slot="message-composer"
-	class="absolute bottom-0 z-20 flex min-h-9.5 w-full min-w-0 shrink-0 flex-col gap-1 px-2 pb-2"
+	class="absolute bottom-0 z-20 flex min-h-11 w-full min-w-0 shrink-0 flex-col gap-1 px-2 pb-2"
 	bind:clientHeight={height}
 	{@attach mobile.current && bottomChrome}
 	oninput={remeasureBeforeResizeObserverCatchesUp}
@@ -122,15 +150,30 @@
 		<ComposerReplyPreview message={replyTo} onCancel={onCancelReply} />
 	{/if}
 	<div class="relative h-full w-full rounded-composer bg-popover">
+		<ComposerStickersTrigger
+			bind:ref={stickersTrigger}
+			onClick={() =>
+				sheets.setOpen({
+					conversationId,
+					sheet: "stickers",
+					open: true,
+				})}
+		/>
 		<MessageTextInput
 			bind:value={textContent}
 			bind:ref={textInput}
 			onEscape={onCancelReply}
 		/>
 		{#if textContent === ""}
-			{#key conversationId}
-				<ComposerAttachments />
-			{/key}
+			<ComposerAttachmentsTrigger
+				bind:ref={attachmentsTrigger}
+				onClick={() =>
+					sheets.setOpen({
+						conversationId,
+						sheet: "attachments",
+						open: true,
+					})}
+			/>
 			<ComposerVoiceMessage />
 		{:else}
 			<ComposerSubmitButton />

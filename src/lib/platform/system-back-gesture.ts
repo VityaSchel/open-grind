@@ -1,4 +1,7 @@
-import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import {
+	backGestureEventHandlers,
+	topBackGestureHandler,
+} from "$lib/platform/back-gesture-event.svelte";
 
 export type SwipeBackStack = {
 	readonly tracking: boolean;
@@ -33,8 +36,7 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 		return false;
 	};
 
-	const ownsTheGesture = () =>
-		[...backGestureEventHandlers].at(-1) === commitInFlight;
+	const ownsTheGesture = () => topBackGestureHandler() === commitInFlight;
 
 	const start = () => {
 		if (!ownsTheGesture() || !stack.beginSwipeBack()) return false;
@@ -47,7 +49,7 @@ export function attachSystemBackGesture(stack: SwipeBackStack): () => void {
 	};
 	window.__AndroidOnBackGestureStart = start;
 	window.__AndroidOnBackGestureCancel = cancel;
-	backGestureEventHandlers.add(commitInFlight);
+	backGestureEventHandlers.set(commitInFlight, "stack");
 
 	return () => {
 		stopReading();

@@ -2,6 +2,7 @@ import { previewFromMessage } from "$lib/model/messaging/message-preview";
 import {
 	type ApiResponseMessage,
 	apiResponseMessageSchema,
+	outboundMessageSchema,
 } from "$lib/model/messaging/messages";
 import type { InboxFilterRequest } from "$lib/api/messaging/conversations";
 import type { AlbumExpirationType } from "$lib/model/messaging/albums";
@@ -25,6 +26,7 @@ import {
 } from "./conversation-seeds";
 import { demoDrawerMedia } from "./drawer";
 import { demoFavoriteOf } from "./favorites";
+import { demoGiphyMessageBody } from "./giphy";
 import { neutralText } from "./neutral";
 import { lastOnlineOf, onlineUntilOf, photosOf, profileSeed } from "./profiles";
 
@@ -184,6 +186,13 @@ function buildMessage({
 				};
 			return { type: "Album", body: albumBody, ...base, unsent: false };
 		}
+		case "gif":
+			return {
+				type: "Giphy",
+				body: demoGiphyMessageBody(`message-${conv.withId}-${index}`),
+				...base,
+				unsent: false,
+			};
 		case "unsent":
 			return { type: "Unsent", body: null, ...base, unsent: true };
 		case "wire":
@@ -476,6 +485,16 @@ export function demoSentMessage(body: unknown): ApiResponseMessage {
 			},
 			...overlay,
 		};
+	}
+	const sticker = outboundMessageSchema.safeParse({
+		type: sent.type,
+		body: sent.body,
+	});
+	if (
+		sticker.success &&
+		(sticker.data.type === "Giphy" || sticker.data.type === "Gaymoji")
+	) {
+		return { ...sticker.data, ...overlay };
 	}
 	return {
 		type: "Text",

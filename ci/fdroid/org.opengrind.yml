@@ -2,7 +2,7 @@ AntiFeatures:
   NonFreeAdd:
     en-US: Offers optional add-ons (push notifications, reCAPTCHA helper) that include Google's proprietary libraries.
   NonFreeNet:
-    en-US: The app is exclusively a client for Grindr's proprietary, closed API.
+    en-US: The app is a client for Grindr's proprietary, closed API. Optional GIF search uses GIPHY's proprietary API.
   TetheredNet:
     en-US: Depends on Grindr's servers, which cannot be self-hosted or replaced.
 Categories:

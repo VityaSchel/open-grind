@@ -181,15 +181,17 @@
 ></div>
 <FrostFilters />
 <IconContext values={{ "aria-hidden": true }}>
-	<Toaster
-		position="bottom-center"
-		offset={toastOffset}
-		mobileOffset={toastOffset}
-		toastOptions={{ class: "toast" }}
-		expand
-		containerAriaLabel={t("shell.toaster.a11y.region")}
-		closeButtonAriaLabel={t("shell.toaster.a11y.close")}
-	/>
+	<div data-slot="toast-host" class="contents">
+		<Toaster
+			position="bottom-center"
+			offset={toastOffset}
+			mobileOffset={toastOffset}
+			toastOptions={{ class: "toast" }}
+			expand
+			containerAriaLabel={t("shell.toaster.a11y.region")}
+			closeButtonAriaLabel={t("shell.toaster.a11y.close")}
+		/>
+	</div>
 	{@render children?.()}
 	<RequestBlockedAlert />
 	<SessionErrorAlert />

@@ -13,6 +13,6 @@
 <div class="block" transition:fade={{ duration: 400, easing: expoOut }}>
 	<ComposerButton
 		{...props}
-		class={["absolute right-0 bottom-0 rounded-e-composer", className]}
+		class={["absolute right-0 bottom-0 rounded-e-composer pe-3", className]}
 	/>
 </div>

@@ -17,6 +17,7 @@ export type DemoMessage = {
 			coverUrl?: null;
 	  }
 	| { kind: "unsent" }
+	| { kind: "gif" }
 	| { kind: "wire"; type: string; body: unknown }
 );
 
@@ -58,6 +59,7 @@ export function demoConversationSeeds(): DemoConversation[] {
 					reactions: 1,
 				},
 				{ fromMe: false, text: "Sed do eiusmod tempor incididunt?" },
+				{ fromMe: false, kind: "gif" },
 				{ fromMe: false, kind: "album", albumId: 5001, unseen: true },
 				{
 					fromMe: false,
@@ -79,6 +81,7 @@ export function demoConversationSeeds(): DemoConversation[] {
 			rightNow: "HOSTING",
 			messages: [
 				{ fromMe: true, text: "Hi, how are you?" },
+				{ fromMe: true, kind: "gif" },
 				{ fromMe: true, kind: "expiringImage" },
 				{ fromMe: false, kind: "expiringImage", expired: true },
 				{ fromMe: false, text: "Did you catch it? 👀" },

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ApiErrorDisplay from "$lib/components/feedback/ApiErrorDisplay.svelte";
+	import PagingSentinel from "$lib/components/shared/PagingSentinel.svelte";
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { t } from "$lib/i18n";
-	import { observeIntersection } from "$lib/util/observe-intersection";
 	import type { SentinelPaging } from "$lib/util/sentinel-paging.svelte";
 	import EmptyConversationsList from "./EmptyConversationsList.svelte";
 
@@ -43,13 +43,5 @@
 			<Skeleton class="h-24.5 w-full shrink-0" />
 		{/each}
 	{/if}
-	{#key paging.armToken}
-		<div
-			class="h-0"
-			use:observeIntersection={{
-				handle: () => paging.run(),
-				rootMargin: "400px",
-			}}
-		></div>
-	{/key}
+	<PagingSentinel {paging} class="h-0" />
 {/if}

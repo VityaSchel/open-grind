@@ -1045,6 +1045,14 @@
 						"description": "integer, number of GIFs, default `25`, at most `50` for a beta key"
 					},
 					{
+						"name": "offset",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"description": "integer, position of the first GIF in the results, default `0`, at most `499`"
+					},
+					{
 						"name": "rating",
 						"in": "query",
 						"schema": {
@@ -1066,7 +1074,7 @@
 					}
 				},
 				"summary": "Get trending GIFs",
-				"description": "GIPHY's current trending GIFs. Send one with a [GiphyBody](/grindr-api/messaging/messages#giphybody)."
+				"description": "GIPHY's current trending GIFs. Page through them with `offset`, see `pagination` in the response; an `offset` past `total_count` answers `200` with an empty `data`. Send one with a [GiphyBody](/grindr-api/messaging/messages#giphybody)."
 			}
 		},
 		"/v1/gifs/search": {
@@ -20747,7 +20755,7 @@
 							"properties": {
 								"name": {
 									"type": "string",
-									"description": "unique identifier consisting of alphanumeric characters, hyphens and underscores"
+									"description": "unique identifier consisting of letters, digits, hyphens, underscores, commas and dots"
 								},
 								"id": {
 									"type": "string",

@@ -1,0 +1,35 @@
+.pswp__img {
+	--pswp-radius: var(--pswp-thumb-radius);
+}
+
+img.pswp__img--placeholder {
+	--pswp-radius: var(--pswp-placeholder-radius);
+}
+
+.pswp--radius-opening .pswp__img {
+	animation: pswp-radius-open var(--pswp-transition-duration)
+		var(--default-transition-timing-function, ease) forwards;
+}
+
+.pswp--radius-closing .pswp__img {
+	animation: pswp-radius-close var(--pswp-transition-duration)
+		var(--default-transition-timing-function, ease) forwards;
+}
+
+@keyframes pswp-radius-open {
+	from {
+		border-radius: var(--pswp-radius);
+	}
+	to {
+		border-radius: 0px;
+	}
+}
+
+@keyframes pswp-radius-close {
+	from {
+		border-radius: 0px;
+	}
+	to {
+		border-radius: var(--pswp-radius);
+	}
+}

@@ -313,8 +313,6 @@ export class SnapPager {
 		this.#watchRelease();
 	};
 
-	// Behind a busy main thread the lift can arrive before the engine pans the
-	// pager for it, so the pager still reads as resting where the swipe began.
 	#panStillComing(event: TouchEvent): boolean {
 		const origin = this.#touchOrigin;
 		if (origin === null || this.#scrolledSinceTouch || this.#width <= 0)
@@ -406,6 +404,7 @@ export class SnapPager {
 
 // Blink floors contentBoxSize to a layout unit while panes sit at exact device
 // pixels, so every page would add the dropped fraction to position * width.
+// https://issues.chromium.org/issues/575023846
 function exactInlineSize({
 	contentBoxSize,
 	devicePixelContentBoxSize,

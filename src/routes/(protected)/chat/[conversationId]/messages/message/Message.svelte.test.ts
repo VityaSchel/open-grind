@@ -138,6 +138,20 @@ describe("message translation boundary", () => {
 		);
 		expect(untranslatableTexts(row)).toEqual(["SomethingNew"]);
 	});
+
+	it("keeps a Gaymoji's name out of page translation", () => {
+		const row = renderMessage({
+			type: "Gaymoji",
+			body: { imageHash: "gaymoji/4_Happy_Mask.png" },
+		});
+
+		expect(
+			within(row)
+				.getByRole("img", { name: "Happy Mask" })
+				.closest("[translate]")
+				?.getAttribute("translate"),
+		).toBe("no");
+	});
 });
 
 describe("message status line", () => {

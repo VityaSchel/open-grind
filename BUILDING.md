@@ -262,21 +262,18 @@ The default build uses two private macOS APIs: WebKit's `_setUseSystemAppearance
 
 ### Sign and notarize macOS build
 
-| Variable               | Default | Description                                                    |
-| ---------------------- | ------- | -------------------------------------------------------------- |
-| `MACOS_SIGN_IDENTITY`  | `-`     | `-` is ad-hoc                                                  |
-| `MACOS_NOTARY_PROFILE` | unset   | `notarytool` keychain profile; when set, notarizes and staples |
+| Variable              | Default | Description                                                                     |
+| --------------------- | ------- | ------------------------------------------------------------------------------- |
+| `MACOS_SIGN_IDENTITY` | `-`     | `-` is ad-hoc                                                                   |
+| `MACOS_NOTARY_KEY_ID` | unset   | App Store Connect API key ID; with `MACOS_NOTARY_ISSUER`, notarizes and staples |
+| `MACOS_NOTARY_ISSUER` | unset   | App Store Connect API key issuer ID                                             |
 
-`src-tauri/entitlements.plist` is passed to the signer when it exists. Ad-hoc builds are signed by the pinned `rcodesign`, Developer ID builds by macOS `codesign`.
-
-For distribution, store the notary credentials once, then build:
+Ad-hoc builds are signed by the pinned `rcodesign`. Developer ID builds are signed by macOS `codesign` and notarized by the Command Line Tools' `notarytool` with the key at `~/.appstoreconnect/private_keys/AuthKey_<key ID>.p8`. A Developer ID build also writes the ad-hoc zip to `src-tauri/target/release/ad-hoc/` and fails unless the shipped app, re-signed ad-hoc, matches it byte for byte.
 
 ```bash
-xcrun notarytool store-credentials open-grind \
-  --apple-id you@example.com --team-id TEAMID --password app-specific-password
-
 MACOS_SIGN_IDENTITY="Developer ID Application: Name (TEAMID)" \
-MACOS_NOTARY_PROFILE=open-grind \
+MACOS_NOTARY_KEY_ID=KEYID \
+MACOS_NOTARY_ISSUER=issuer-uuid \
   nix run .#build-macos
 ```
 
@@ -284,6 +281,7 @@ MACOS_NOTARY_PROFILE=open-grind \
 
 - [Verify minisign signature](#verify-minisign-signature) to prove the .zip was built by Open Grind developers
 - [Reproduce the release](./REPRODUCIBILITY.md#macos) to prove the .app was built from the open source code
+- Run `spctl -a -vv "/Applications/Open Grind.app"` to see that Apple notarized it: `source=Notarized Developer ID`
 
 ## Credential storage
 

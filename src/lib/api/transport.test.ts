@@ -11,6 +11,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 
 import { ApiError } from "$lib/api/api-error";
 import {
+	fetchExternal,
 	fetchRest,
 	parseApiResponse,
 	schemaMismatchMessage,
@@ -185,4 +186,36 @@ describe("fetchRest", () => {
 			message: "Too many requests. Wait a moment and try again.",
 		});
 	});
+});
+
+describe("fetchExternal", () => {
+	afterEach(() => setLocale({ locale: SOURCE_LOCALE }));
+
+	it.each([
+		["Connect", "Failed to connect to the server"],
+		[
+			"NetworkBlocked",
+			"Failed to reach the server because something blocked the request",
+		],
+		[
+			"RequestBlocked",
+			"Failed to get a response because the server blocked the request",
+		],
+		[
+			"RateLimited",
+			"Failed to get a response because the server rate-limited the request",
+		],
+	])(
+		"keeps a %s failure's message English for error reports",
+		async (kind, message) => {
+			await setLocale({ locale: "en-XA" });
+			invokeMock.mockRejectedValue({ kind });
+
+			await expect(
+				fetchExternal({
+					url: new URL("https://api.giphy.com/v1/gifs/trending"),
+				}),
+			).rejects.toMatchObject({ kind, message });
+		},
+	);
 });

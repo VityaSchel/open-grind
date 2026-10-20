@@ -25,8 +25,6 @@
 		"relative w-fit max-w-100 shrink-0 overflow-visible rounded-xl px-3 py-2 select-text",
 		{
 			"pointer-coarse:select-none": !clone,
-			"ms-3": !isOut && !clone,
-			"me-3": isOut && !clone,
 			"rounded-es-none": lastInStack && !isOut,
 			"rounded-ee-none": lastInStack && isOut,
 			"text-black": sent,

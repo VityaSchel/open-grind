@@ -22,7 +22,7 @@ name = "live-counterpart"
 path = "../e2e-live/counterpart/main.rs"
 
 [features]
-keychain = ["dep:apple-native-keyring-store"]
+keychain = ["dep:apple-native-keyring-store", "dep:security-framework"]
 private-api = []
 devtools = ["dep:tauri-plugin-devtools"]
 
@@ -39,7 +39,7 @@ tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-grindr = "0.29"
+grindr = "0.30"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "gif", "bmp", "tiff"] }
 moxcms = "0.8"
 tokio = { version = "1", features = ["sync", "time", "rt", "macros"] }
@@ -64,11 +64,12 @@ sha2 = "0.10"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.1", features = ["keychain", "protected"], optional = true }
+security-framework = { version = "3.7", optional = true }
 # Private WKWebView selector behind `-apple-visual-effect`, see src/appearance.rs
 objc2 = "0.6"
 # Scroll-wheel gesture phases for the debug probe, see src/scroll_phase.rs
 block2 = "0.6"
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSHapticFeedback", "block2", "objc2-core-foundation"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSHapticFeedback", "NSRunningApplication", "block2", "objc2-core-foundation"] }
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "block2", "NSArray", "NSBundle", "NSCalendar", "NSDateFormatter", "NSDictionary", "NSError", "NSFormatter", "NSLocale", "NSNotification", "NSObject", "NSOperation", "NSString", "NSUserDefaults"] }
 objc2-user-notifications = { version = "0.3", default-features = false, features = ["std", "bitflags", "block2", "UNNotification", "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse", "UNNotificationSettings", "UNNotificationSound", "UNNotificationTrigger", "UNUserNotificationCenter"] }
 rfd = "0.16"

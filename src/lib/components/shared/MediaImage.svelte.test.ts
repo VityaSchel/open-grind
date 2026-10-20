@@ -64,6 +64,25 @@ class FakeIntersectionObserver {
 	disconnect() {}
 }
 
+function renderLazySkeleton() {
+	vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+	const { container } = render(MediaImage, {
+		props: {
+			src: SRC,
+			loading: "lazy" as const,
+			fit: "contain" as const,
+			skeleton: true,
+		},
+	});
+	return container.querySelector("img")!;
+}
+
+async function comeIntoView(image: HTMLImageElement) {
+	FakeIntersectionObserver.latest!.enter();
+	await tick();
+	return image;
+}
+
 describe("MediaImage", () => {
 	beforeEach(async () => {
 		const { LoadSlots } = await vi.importActual<
@@ -183,6 +202,32 @@ describe("MediaImage", () => {
 
 		expect(onload).not.toHaveBeenCalled();
 		expect(container.querySelector(BROKEN)).toBeNull();
+	});
+
+	it("holds a lazy skeleton at a still muted tone while out of view", () => {
+		const image = renderLazySkeleton();
+
+		expect(image.getAttribute("src")).toBe(TRANSPARENT_PIXEL);
+		expect(image.classList).toContain("bg-muted");
+		expect(image.classList).not.toContain("animate-pulse");
+	});
+
+	it("pulses a skeleton only while its source is loading", async () => {
+		const image = await comeIntoView(renderLazySkeleton());
+
+		expect(image.getAttribute("src")).toBe(SRC);
+		expect(image.classList).toContain("bg-muted");
+		expect(image.classList).toContain("animate-pulse");
+	});
+
+	it("drops the skeleton tone once loaded so a transparent image shows through", async () => {
+		const image = await comeIntoView(renderLazySkeleton());
+
+		await loadedImage(image, 256);
+
+		expect(image.classList).not.toContain("bg-muted");
+		expect(image.classList).not.toContain("animate-pulse");
+		expect(image.classList).toContain("object-contain");
 	});
 
 	it("requests an eager source straight away", () => {

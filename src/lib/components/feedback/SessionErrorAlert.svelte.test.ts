@@ -493,7 +493,7 @@ describe("SessionErrorAlert", () => {
 
 		await fireEvent.keyDown(document, { key: "Escape" });
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers) handler();
+		for (const handler of backGestureEventHandlers.keys()) handler();
 
 		expect(sessionErrorState.open).toBe(true);
 		finishRetry();

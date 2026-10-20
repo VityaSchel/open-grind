@@ -123,3 +123,63 @@ describe("ConversationsState incoming-message handler (P6.3)", () => {
 		expect(entryFor(state, "a:1").data.unreadCount).toBe(1);
 	});
 });
+
+describe("ConversationsState open chat ownership", () => {
+	let latestTimestamp = 2000;
+
+	async function inboxHiddenBehindAChat() {
+		currentPage.route.id = "/(protected)/chat/[conversationId]";
+		singleColumn.current = true;
+		getConversationsMock.mockResolvedValue({
+			entries: [conversation("a:1", 1000), conversation("b:2", 1000)],
+			nextPage: null,
+		});
+		const state = new ConversationsState({
+			ourProfileId: OUR_ID,
+			onIncomingMessage,
+		});
+		await settled(state);
+		return state;
+	}
+
+	async function arrivesInView(conversationId: string): Promise<boolean> {
+		latestTimestamp += 1000;
+		emitMessageSent(fromPeer(conversationId, latestTimestamp));
+		await microtasks();
+		return onIncomingMessage.mock.lastCall?.[0].inView;
+	}
+
+	it("keeps a chat open when an earlier owner of the same chat lets go", async () => {
+		const state = await inboxHiddenBehindAChat();
+		const releaseFirst = state.setActive("a:1");
+		state.setActive("a:1");
+
+		releaseFirst();
+
+		expect(await arrivesInView("a:1")).toBe(true);
+		expect(await arrivesInView("b:2")).toBe(false);
+	});
+
+	it("closes a chat once its latest owner lets go", async () => {
+		const state = await inboxHiddenBehindAChat();
+		const releaseFirst = state.setActive("a:1");
+		const releaseSecond = state.setActive("a:1");
+		releaseFirst();
+		expect(await arrivesInView("a:1")).toBe(true);
+
+		releaseSecond();
+
+		expect(await arrivesInView("a:1")).toBe(false);
+	});
+
+	it("keeps the newly opened chat when the previous one lets go", async () => {
+		const state = await inboxHiddenBehindAChat();
+		const releasePrevious = state.setActive("a:1");
+		state.setActive("b:2");
+
+		releasePrevious();
+
+		expect(await arrivesInView("b:2")).toBe(true);
+		expect(await arrivesInView("a:1")).toBe(false);
+	});
+});

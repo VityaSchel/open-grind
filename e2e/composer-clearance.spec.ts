@@ -10,8 +10,8 @@ const MULTILINE_TEXT =
 	"one two three four five six seven eight nine ten eleven twelve thirteen " +
 	"fourteen fifteen sixteen seventeen eighteen nineteen twenty twentyone";
 
-/** px between the newest message and the composer, from the scroller padding-bottom (composer height + --spacing * 1.5) */
-const GAP_PX = 6;
+/** px between the newest message and the composer, from the scroller padding-bottom (composer height + --spacing * 3) */
+const GAP_PX = 12;
 
 type Metrics = {
 	composerHeight: number;

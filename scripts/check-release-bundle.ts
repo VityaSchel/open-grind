@@ -13,6 +13,11 @@ const TEST_ONLY = /\.test\.ts$|^test-setup\.ts$/;
 const MIN_FIXTURE_LENGTH = 10;
 const PRINTABLE_ASCII = /^[\x20-\x7e]+$/;
 const ESCAPED_IN_BUNDLE = /["'`\\]|\$\{/;
+const MEDIA_TYPE = String.raw`(?:application|audio|font|image|model|text|video)/[\w.+-]+`;
+const BARE_MEDIA_TYPE = new RegExp(`^${MEDIA_TYPE}$`);
+const DATA_URL_PREFIX = new RegExp(
+	String.raw`^data:(?:${MEDIA_TYPE})?(?:;[\w.+-]+(?:=[\w.+-]+)?)*,$`,
+);
 
 type Fixture = { text: string; source: string };
 
@@ -45,7 +50,9 @@ function distinctive(text: string): boolean {
 	return (
 		text.length >= MIN_FIXTURE_LENGTH &&
 		PRINTABLE_ASCII.test(text) &&
-		!ESCAPED_IN_BUNDLE.test(text)
+		!ESCAPED_IN_BUNDLE.test(text) &&
+		!BARE_MEDIA_TYPE.test(text) &&
+		!DATA_URL_PREFIX.test(text)
 	);
 }
 

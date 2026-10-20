@@ -1,9 +1,13 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 import { DEMO_CONVERSATION, installTauriShim } from "./app";
+import { seedPreferences } from "./app-data";
 
 export const DRAWER = "[data-vaul-drawer]";
-const PANEL = "[data-slot=sheet-panel]";
+export const SHEET_PANEL = "[data-slot=sheet-panel]";
+export const SHEET_SCROLLER = '[data-slot="sheet-scroller"]';
+const SHEET_PEEK = "[data-slot=sheet-peek]";
+const SNAP_TOLERANCE_PX = 1;
 
 export const MEDIA_TILE = '[data-slot="media-tile"]';
 export const LIFTED_MEDIA_TILE = '[data-slot="media-tile-lifted"]';
@@ -13,6 +17,8 @@ export const SELECTABLE_MEDIA_TILE = `${MEDIA_TILE}[aria-pressed="false"]`;
 export const SELECTED_ALBUM_TILE = `${ALBUM_TILE}[aria-pressed="true"]`;
 export const SHARED_ALBUM_TILE = `${ALBUM_TILE}:has([data-slot="album-shared-badge"])`;
 export const UNSHARED_ALBUM_TILE = `${ALBUM_TILE}:not(:has([data-slot="album-shared-badge"])):not(:has([data-slot="album-locked"]))`;
+
+export type SheetSnap = "full" | "short" | "between";
 
 export interface DrawerBox {
 	top: number;
@@ -25,19 +31,48 @@ export interface DrawerBox {
 	safeBottom: number;
 }
 
-export async function openAttachments(page: Page): Promise<void> {
+export function openAttachments(page: Page): Promise<void> {
+	return openComposerSheet(page, { trigger: "Add attachment" });
+}
+
+export type ComposerSheetTrigger = "Add attachment" | "GIFs and stickers";
+
+export async function openComposerSheet(
+	page: Page,
+	{
+		trigger,
+		preferences,
+		stretchPanel = true,
+	}: {
+		trigger: ComposerSheetTrigger;
+		preferences?: Record<string, unknown>;
+		stretchPanel?: boolean;
+	},
+): Promise<void> {
 	await installTauriShim(page);
+	if (preferences) await seedPreferences(page, { preferences });
 	await page.goto(DEMO_CONVERSATION);
-	const paperclip = page.getByRole("button", { name: "Add attachment" });
-	await paperclip.waitFor({ timeout: 30_000 });
+	await openSheetFromComposer(page, { trigger, stretchPanel });
+}
+
+export async function openSheetFromComposer(
+	page: Page,
+	{
+		trigger,
+		stretchPanel = true,
+	}: { trigger: ComposerSheetTrigger; stretchPanel?: boolean },
+): Promise<void> {
+	const button = page.getByRole("button", { name: trigger });
+	await button.waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);
-	await paperclip.click();
+	await button.click();
 	await page.locator(DRAWER).waitFor({ timeout: 10_000 });
 	await page.waitForTimeout(900);
+	if (!stretchPanel) return;
 	await page.evaluate((panel) => {
 		const el = document.querySelector<HTMLElement>(panel);
 		if (el) el.style.minHeight = "2400px";
-	}, PANEL);
+	}, SHEET_PANEL);
 	await page.waitForTimeout(100);
 }
 
@@ -114,14 +149,51 @@ export async function expandToFull(page: Page): Promise<void> {
 	await expect
 		.poll(async () => (await box(page)).top, { timeout: 5000 })
 		.toBeLessThanOrEqual(full + 4);
-	await page.evaluate(() => {
-		const scroller = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-scroller]",
-		);
-		const peek = document.querySelector<HTMLElement>(
-			"[data-slot=sheet-peek]",
-		);
-		if (scroller && peek) scroller.scrollTop = peek.offsetHeight;
-	});
+	await expandSheet(page);
 	await page.waitForTimeout(200);
+}
+
+export async function sheetSnap(page: Page): Promise<SheetSnap> {
+	const { full, short } = await snapTops(page);
+	const { top } = await box(page);
+	if (Math.abs(top - full) <= SNAP_TOLERANCE_PX) return "full";
+	if (Math.abs(top - short) <= SNAP_TOLERANCE_PX) return "short";
+	return "between";
+}
+
+function sheetScroller(page: Page): Locator {
+	return page.locator(DRAWER).locator(SHEET_SCROLLER);
+}
+
+export function expandSheet(page: Page): Promise<void> {
+	return sheetScroller(page).evaluate((scroller, peek) => {
+		scroller.scrollTop =
+			scroller.querySelector<HTMLElement>(peek)!.offsetHeight;
+	}, SHEET_PEEK);
+}
+
+export function scrollSheetBy(
+	page: Page,
+	{ pixels }: { pixels: number },
+): Promise<void> {
+	return sheetScroller(page).evaluate((scroller, delta) => {
+		scroller.scrollTop += delta;
+	}, pixels);
+}
+
+export function scrollSheetTo(
+	page: Page,
+	{ top }: { top: number | "end" },
+): Promise<void> {
+	return sheetScroller(page).evaluate(
+		(scroller, top) =>
+			new Promise<void>((resolve) => {
+				scroller.scrollTop =
+					top === "end" ? scroller.scrollHeight : top;
+				requestAnimationFrame(() =>
+					requestAnimationFrame(() => resolve()),
+				);
+			}),
+		top,
+	);
 }

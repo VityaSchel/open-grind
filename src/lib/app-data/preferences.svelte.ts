@@ -26,6 +26,7 @@ const preferencesSchema = z.object({
 		.default(null)
 		.catch(null),
 	geohash: geohashSchema.nullable().default(null),
+	giphyConsent: z.boolean().default(false),
 	hapticFeedback: z.boolean().default(true),
 	language: languageTagSchema.nullable().default(null).catch(null),
 	languageSync: languageSyncSchema.nullable().default(null).catch(null),

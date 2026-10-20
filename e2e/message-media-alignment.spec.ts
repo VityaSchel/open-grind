@@ -8,7 +8,7 @@ const CONVERSATION = "/chat/100002:123456000";
 const SCROLLER = '[data-slot="messages-scroller"]';
 const PHOTO = 'a[aria-label="Photo"]';
 
-// ms-3/me-3: the gutter a message keeps against the conversation edge
+// ps-3/pe-3: the gutter MessageWrapper keeps against the conversation edge
 const GUTTER = 12;
 // ImageMessage sizes itself `w-2/5 min-w-35 max-w-60`, and min-w-35 is 8.75rem
 const MIN_WIDTH = 140;

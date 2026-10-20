@@ -127,9 +127,9 @@
 @theme {
 	--radius-grid: 17px;
 
-	--radius-composer: 19px;
+	--radius-composer: 22px;
 
-	--radius-chat-panel: 27px;
+	--radius-chat-panel: 30px;
 
 	--spacing-count-badge: 5.5px;
 
@@ -138,6 +138,8 @@
 
 	/* overlap that seams an SVG message tail onto its bubble */
 	--spacing-hairline: 0.5px;
+
+	--border-width-hairline: 0.5px;
 }
 
 /* .photo-grid column-count thresholds, queried against the nearest
@@ -151,6 +153,16 @@
 	--container-grid5: 736px;
 	--container-grid6: 992px;
 	--container-grid7: 1248px;
+}
+
+@theme {
+	--container-gif2: 200px;
+	--container-gif3: 320px;
+	--container-gaymoji4: 240px;
+	--container-gaymoji5: 320px;
+	--container-gaymoji6: 448px;
+	--container-gaymoji7: 560px;
+	--container-gaymoji8: 672px;
 }
 
 @layer base {
@@ -390,6 +402,29 @@ a {
 	z-index: var(--z-index-toast) !important;
 	/* bits-ui modal dialogs set body { pointer-events: none }; toasts must stay tappable */
 	pointer-events: auto;
+}
+
+[data-sonner-toaster][data-y-position="bottom"] {
+	transition:
+		transform 400ms ease,
+		bottom 300ms ease-out;
+}
+
+[data-sonner-toaster][data-y-position="bottom"][data-sheet-anchored] {
+	bottom: min(
+		max(var(--offset-bottom), var(--sheet-anchor, 0px)),
+		calc(
+			100dvh - var(--safe-area-top) - 0.5rem -
+				var(--toast-stack-height, 0px)
+		)
+	);
+	transition: transform 400ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-sonner-toaster][data-y-position="bottom"] {
+		transition: none;
+	}
 }
 
 .toast[data-styled="true"] {

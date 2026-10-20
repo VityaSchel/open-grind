@@ -85,8 +85,7 @@ describe("ConversationState signed media", () => {
 			conversationId: CONVERSATION_ID,
 			ourProfileId: 1,
 			conversations: {
-				setActive: vi.fn(),
-				clearActive: vi.fn(),
+				setActive: vi.fn(() => vi.fn()),
 				getCachedConversation: vi.fn(() =>
 					page(
 						photo({
@@ -148,8 +147,7 @@ describe("ConversationState signed media", () => {
 			conversationId: CONVERSATION_ID,
 			ourProfileId: 1,
 			conversations: {
-				setActive: vi.fn(),
-				clearActive: vi.fn(),
+				setActive: vi.fn(() => vi.fn()),
 				getCachedConversation: vi.fn(() => ({
 					...page(newer),
 					messages: [newer, album("OLD", SIGNED_AT_S + 15 * 60)],

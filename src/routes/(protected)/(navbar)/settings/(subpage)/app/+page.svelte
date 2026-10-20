@@ -103,6 +103,11 @@
 	title={t("settings.app.revealProfileViews.title")}
 	description={t("settings.app.revealProfileViews.description")}
 />
+<PreferenceSwitchSetting
+	preference="giphyConsent"
+	title={t("settings.app.giphy.title")}
+	description={t("settings.app.giphy.description")}
+/>
 <h2>{t("settings.app.sections.security")}</h2>
 {@render item({
 	title: t("settings.app.discreetAppIcon.title"),

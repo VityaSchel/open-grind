@@ -112,7 +112,11 @@
 		}
 	});
 
-	dismissOnBackGesture({ active: () => selecting, dismiss: exitSelection });
+	dismissOnBackGesture({
+		active: () => selecting,
+		dismiss: exitSelection,
+		layer: "screen",
+	});
 	dismissOnBackGesture({
 		active: () => deleteDialogOpen,
 		dismiss: () => {
