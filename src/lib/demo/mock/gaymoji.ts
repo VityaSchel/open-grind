@@ -4,7 +4,6 @@ import {
 	KNOWN_GAYMOJI_CATEGORIES,
 } from "$lib/chat/gaymoji-sections";
 import { hashString } from "$lib/util/random";
-import { svgDataUrl } from "./svg";
 
 const LAST_UPDATE_TIME = 1605145583000;
 const EXPIRED_TIME = 1621843200000;
@@ -142,5 +141,5 @@ export function demoGaymojiImageUrl(id: string): string {
 		`<circle cx="${center + 36}" cy="${center - 24}" r="14" fill="#1f1f1f"/>` +
 		`<path d="M${center - 52} ${center + 28} Q${center} ${center + 84} ${center + 52} ${center + 28}" fill="none" stroke="#1f1f1f" stroke-width="12" stroke-linecap="round"/>` +
 		`</svg>`;
-	return svgDataUrl(svg);
+	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

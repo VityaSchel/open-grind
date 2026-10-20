@@ -1,7 +1,6 @@
 import { giphyBody } from "$lib/model/messaging/gifs";
 import { hashString } from "$lib/util/random";
 import type { MediaDimensions } from "$lib/util/media-dimensions";
-import { svgDataUrl } from "./svg";
 
 const DEMO_GIPHY_TRENDING_TOTAL = 172;
 const DEMO_GIPHY_EMPTY_QUERY = "zzzz";
@@ -196,6 +195,10 @@ export function demoGiphyMessageBody(seed: string) {
 export function demoLinkedGifSize(id: string): MediaDimensions | null {
 	if (id === DEMO_GIPHY_MISSING_ID) return null;
 	return fixedHeightSize(id);
+}
+
+function svgDataUrl(svg: string): string {
+	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 function renditionSize({
