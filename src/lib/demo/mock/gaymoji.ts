@@ -1,6 +1,6 @@
+import { FEATURED_ORIGINAL_IDS } from "$lib/chat/gaymoji-ids";
 import {
 	FEATURED_CATEGORY,
-	FEATURED_ORIGINAL_IDS,
 	KNOWN_GAYMOJI_CATEGORIES,
 } from "$lib/chat/gaymoji-sections";
 import { hashString } from "$lib/util/random";

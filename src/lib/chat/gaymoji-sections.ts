@@ -1,3 +1,7 @@
+import {
+	FEATURED_ORIGINAL_IDS,
+	GAYMOJI_SECTION_ICON_IDS,
+} from "$lib/chat/gaymoji-ids";
 import { type MessageKey, t } from "$lib/i18n";
 import type { GaymojiCategory, GaymojiItem } from "$lib/api/messaging/gaymoji";
 
@@ -30,61 +34,58 @@ export const KNOWN_GAYMOJI_CATEGORIES = new Map<string, SectionLook>([
 		"wen_ching_taiwan_stickers",
 		{
 			titleKey: sectionTitleKeys.wenChing,
-			iconId: "wen_ching_05_type.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.wenChing,
 		},
 	],
 	[
 		"dating+sex",
 		{
 			titleKey: sectionTitleKeys.datingAndSex,
-			iconId: "2_1_Eggplant_1.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.datingAndSex,
 		},
 	],
 	[
 		"body",
 		{
 			titleKey: sectionTitleKeys.body,
-			iconId: "Bicep_with_medium_skin_tone.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.body,
 		},
 	],
 	[
 		"profile",
 		{
 			titleKey: sectionTitleKeys.profile,
-			iconId: "Man_with_dark_skin_tone_and_short_hair.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.profile,
 		},
 	],
 	[
 		"holiday",
 		{
 			titleKey: sectionTitleKeys.holidays,
-			iconId: "1_1_0_Pride_02_PrideHeartStripe.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.holidays,
 		},
 	],
 	[
 		"objects",
 		{
 			titleKey: sectionTitleKeys.objects,
-			iconId: "f_ice_cream_Rainbow.png",
+			iconId: GAYMOJI_SECTION_ICON_IDS.objects,
 		},
 	],
-	["mood", { titleKey: sectionTitleKeys.mood, iconId: "4_Happy_Mask.png" }],
+	[
+		"mood",
+		{
+			titleKey: sectionTitleKeys.mood,
+			iconId: GAYMOJI_SECTION_ICON_IDS.mood,
+		},
+	],
 ]);
 
 export const FEATURED_CATEGORY = "featured";
 
-export const FEATURED_ORIGINAL_IDS = new Set([
-	"Pinky_up.png",
-	"2_6_Three_girls_sitting_at_table.png",
-	"2_0_rainingMen2tiny.png",
-	"1_6_2_WGbed.png",
-	"1_6_2_WGgaysRule.png",
-	"1_6_2_WGgrace.png",
-]);
-
 const OTHER_SECTION: SectionLook = {
 	titleKey: sectionTitleKeys.other,
-	iconId: "1_6_2_WGgaysRule.png",
+	iconId: GAYMOJI_SECTION_ICON_IDS.other,
 };
 
 function titleFromCategory(category: string): string {
