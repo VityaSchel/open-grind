@@ -252,7 +252,7 @@
 			},
 			"poweredByGiphy": "Powered by GIPHY",
 			"gifs": {
-				"search": "Search GIFs or paste GIPHY link",
+				"search": "Search GIFs or paste GIPHY link…",
 				"empty": "No GIFs Found",
 				"linkedGif": "GIF from a GIPHY link",
 				"a11y": {

@@ -175,7 +175,7 @@ export async function countGaymojiTileChurn(
 
 export function gifSearchBox(page: Page): Locator {
 	return page.getByRole("searchbox", {
-		name: "Search GIFs or paste GIPHY link",
+		name: "Search GIFs or paste GIPHY link…",
 	});
 }
 

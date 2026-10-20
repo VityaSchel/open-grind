@@ -45,7 +45,7 @@ const FIRST_PAGING_AUTO_RETRY_MS = 2_000;
 const GIPHY_RATE_LIMITED = 429;
 const GIPHY_LINK =
 	"https://giphy.com/gifs/portlandia-season-2-episode-xT0xeChUR33EsYNNRK";
-const GIF_SEARCH_INPUT = 'input[aria-label="Search GIFs or paste GIPHY link"]';
+const GIF_SEARCH_INPUT = 'input[aria-label="Search GIFs or paste GIPHY link…"]';
 const GIF_PAGING_SENTINEL = '[data-slot="gif-paging-sentinel"]';
 const STICKER_ERROR = '[data-slot="sticker-error"]';
 
