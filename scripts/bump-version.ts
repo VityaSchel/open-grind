@@ -99,6 +99,7 @@ function lastReleaseOccurrences({
 }): Occurrence[] {
 	return [
 		{ file: "ci/aur/PKGBUILD", literal: `_ver=${version}` },
+		{ file: "ci/homebrew/open-grind.rb", literal: `version "${version}"` },
 		{
 			file: ".forgejo/issue_template/bug.yaml",
 			literal: `placeholder: e.g. v${version}`,
@@ -219,9 +220,12 @@ if (!(await Bun.file(path.join(root, changelog)).exists())) {
 if (cuttingARelease) {
 	stillToDo.push(
 		"on Arch: cd ci/aur && updpkgsums && makepkg --printsrcinfo > .SRCINFO",
+		`put the sha256 of open-grind-v${version}-macos.zip into ci/homebrew/open-grind.rb`,
 	);
 } else {
-	stillToDo.push("ci/aur and the issue template stay on the last release");
+	stillToDo.push(
+		"ci/aur, ci/homebrew and the issue template stay on the last release",
+	);
 }
 console.log("\nstill to do:");
 for (const step of stillToDo) console.log(`  - ${step}`);
