@@ -332,11 +332,13 @@ async function sendRestRequest({
 }
 
 const externalErrorMessages: Partial<Record<ApiErrorKind, string>> = {
-	Connect: "Couldn't connect. Check your internet connection and try again.",
+	Connect: "Failed to connect to the server",
 	NetworkBlocked:
-		"Something blocked the request before it reached the server",
-	RequestBlocked: "The server blocked the request",
-	RateLimited: "Too many requests, try again later",
+		"Failed to reach the server because something blocked the request",
+	RequestBlocked:
+		"Failed to get a response because the server blocked the request",
+	RateLimited:
+		"Failed to get a response because the server rate-limited the request",
 };
 
 function externalInvokeError({
