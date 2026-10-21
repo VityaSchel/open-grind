@@ -134,7 +134,7 @@
 		},
 		"giphy": {
 			"title": "Enable GIPHY",
-			"description": "Search and load GIFs from GIPHY in chats. GIPHY sees your IP address, what you search for and that the requests come from a Grindr app."
+			"description": "Search, send and see GIFs from GIPHY. GIPHY sees your IP address, your searches and their language, which GIFs load and that you use a Grindr app."
 		},
 		"discreetAppIcon": {
 			"title": "Discreet App Icon",
