@@ -152,7 +152,7 @@ export const SURFACES: Surface[] = [
 		name: "App settings",
 		path: "/settings/app",
 		bars: BARS_OVER_CONTENT,
-		ready: shows((page) => page.getByRole("slider")),
+		ready: shows((page) => subpage(page).getByRole("link")),
 	},
 	{
 		name: "Credits",

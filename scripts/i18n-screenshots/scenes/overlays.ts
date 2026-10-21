@@ -39,6 +39,17 @@ export const STANDALONE: Standalone[] = [
 		reason: "No view captures a profile on desktop",
 		views: ["profile/refresh-failed"],
 	},
+	{
+		reason: "No view captures the App Settings subscreens under these overlays",
+		views: [
+			"settings/app/apps-menu",
+			"settings/app/save-failed",
+			"settings/app/unimplemented",
+			"settings/updates/addons-only",
+			"settings/updates/addons-only-with-reason",
+			"settings/updates/app-and-addons",
+		],
+	},
 ];
 
 function standaloneViews(standalone: Standalone[]): Set<string> {

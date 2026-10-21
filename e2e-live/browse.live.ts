@@ -5,7 +5,7 @@ import { navigateInApp, pressSystemBack } from "./support/navigation";
 test("a Browse tile opens a profile and system Back returns to the grid", async ({
 	app,
 }) => {
-	await navigateInApp({ page: app, path: "/settings/app" });
+	await navigateInApp({ page: app, path: "/settings/app/privacy" });
 	await expect(
 		app.getByRole("switch", { name: /Reveal profile views/ }),
 		"opening a stranger's profile must not record a view",

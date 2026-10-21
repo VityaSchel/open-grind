@@ -94,7 +94,7 @@ export async function chooseUnits(
 	page: Page,
 	{ units }: { units: "Imperial" | "Metric" },
 ): Promise<void> {
-	await page.goto("/settings/app");
+	await page.goto("/settings/app/display");
 	const option = page.getByRole("radio", { name: units });
 	await option.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 	await option.click();

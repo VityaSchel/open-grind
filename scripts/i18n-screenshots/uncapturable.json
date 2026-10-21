@@ -47,6 +47,10 @@
 		"reason": "Only an anonymous profile card with a link carries this label, and the app's only anonymous card, a hidden viewer's preview in Viewed Me, has no link.",
 		"explanation": "Screen reader label of a profile card link that doesn’t show who the user is; the only such card, the locked preview of a viewer in Viewed Me, has no link, so the label is never read out."
 	},
+	"settings.app.sections.about": {
+		"reason": "No screen shows it since the app settings became a menu without section headings; it stays in the catalog until the Weblate components drop it.",
+		"explanation": "Heading of a section of the app settings that the app no longer shows, so this text never appears and needs no translation."
+	},
 	"shell.menuBar.*": {
 		"reason": "Only in the macOS menu bar, which the system draws outside the page, so no page screenshot shows it.",
 		"explanation": "Name of a menu or a menu command in the macOS menu bar at the top of the screen, beside items that macOS names itself in each language; the system draws the menu bar, so no screenshot shows it."

@@ -2,7 +2,7 @@ import type { Scene } from ".";
 import { emitEvent } from "./drive";
 import { openConversation } from "./media-drop";
 import { addingToast } from "./toast";
-import { visit } from "./visit";
+import { openAppSettings } from "./updates";
 
 const KEYBOARD_MEDIA = "keyboard-media";
 const DISCARD = { discard_staged_media: { answer: null } };
@@ -39,11 +39,7 @@ export const keyboardMediaOutsideChat: Scene = {
 			screen: "settings/app",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await visit({
-					page,
-					path: "/settings/app",
-					ready: page.getByRole("main").getByRole("heading"),
-				});
+				await openAppSettings(page);
 				await addingToast({
 					page,
 					action: () =>

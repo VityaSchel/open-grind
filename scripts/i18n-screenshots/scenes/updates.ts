@@ -70,7 +70,7 @@ export async function openAppSettings(page: Page): Promise<void> {
 	await visit({
 		page,
 		path: "/settings/app",
-		ready: page.getByRole("main").getByRole("heading"),
+		ready: page.getByRole("link", { name: "Credits & Licenses" }),
 	});
 }
 

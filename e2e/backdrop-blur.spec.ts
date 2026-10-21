@@ -171,7 +171,7 @@ test("low lifts the save changes bar off the navbar by the bar gap", async ({
 test("the settings slider restyles the app without a reload", async ({
 	page,
 }) => {
-	await openWithBlurReady(page, "/settings/app");
+	await openWithBlurReady(page, "/settings/app/display");
 
 	const slider = page.getByRole("slider", { name: "Background blur" });
 	await expect(slider).toHaveAttribute("aria-valuetext", "Full");
@@ -189,7 +189,7 @@ test("the settings slider restyles the app without a reload", async ({
 });
 
 test("every step label sits on its own thumb position", async ({ page }) => {
-	await openWithBlurReady(page, "/settings/app");
+	await openWithBlurReady(page, "/settings/app/display");
 
 	const slider = page.getByRole("slider", { name: "Background blur" });
 	const lastStep = Number(await slider.getAttribute("aria-valuemax"));

@@ -1,39 +1,49 @@
-import type { Scene, SceneView } from ".";
+import type { Page } from "@playwright/test";
+
+import type { Scene } from ".";
+import { openAppSettings } from "./updates";
 import { visit } from "./visit";
 
 const SUBPAGE_SCROLLER = '[data-slot="subpage-scroller"]';
 
-function subpage({ id, path }: { id: string; path: string }): SceneView {
-	return {
-		id,
-		scroller: SUBPAGE_SCROLLER,
-		drive: (page) =>
-			visit({
-				page,
-				path,
-				ready: page.getByRole("main").getByRole("heading"),
-			}),
-	};
+export function openDisplaySettings(page: Page): Promise<void> {
+	return visit({
+		page,
+		path: "/settings/app/display",
+		ready: page.getByRole("slider", { name: "Background blur" }),
+	});
+}
+
+export function openPrivacySettings(page: Page): Promise<void> {
+	return visit({
+		page,
+		path: "/settings/app/privacy",
+		ready: page.getByRole("switch", { name: "Enable GIPHY" }),
+	});
+}
+
+export function openSecuritySettings(page: Page): Promise<void> {
+	return visit({
+		page,
+		path: "/settings/app/security",
+		ready: page.getByRole("link", { name: /PIN/ }),
+	});
 }
 
 export const appSettings: Scene = {
 	platform: "phone",
-	views: [subpage({ id: "settings/app", path: "/settings/app" })],
+	views: [
+		{
+			id: "settings/app",
+			scroller: SUBPAGE_SCROLLER,
+			drive: openAppSettings,
+		},
+	],
 };
 
 export const desktopAppSettings: Scene = {
 	platform: "desktop",
-	views: [
-		{
-			id: "settings/app/macos",
-			drive: (page) =>
-				visit({
-					page,
-					path: "/settings/app",
-					ready: page.getByRole("main").getByRole("heading"),
-				}),
-		},
-	],
+	views: [{ id: "settings/app/macos", drive: openAppSettings }],
 };
 
 export const languageSettings: Scene = {
@@ -69,7 +79,18 @@ export const meSettings: Scene = {
 
 export const profileSettings: Scene = {
 	platform: "phone",
-	views: [subpage({ id: "settings/profile", path: "/settings/profile" })],
+	views: [
+		{
+			id: "settings/profile",
+			scroller: SUBPAGE_SCROLLER,
+			drive: (page) =>
+				visit({
+					page,
+					path: "/settings/profile",
+					ready: page.getByRole("main").getByRole("heading"),
+				}),
+		},
+	],
 };
 
 export const accountSettings: Scene = {

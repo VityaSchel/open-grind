@@ -3,6 +3,11 @@ import type { Page } from "@playwright/test";
 import { overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
+import {
+	openDisplaySettings,
+	openPrivacySettings,
+	openSecuritySettings,
+} from "./settings";
 import { addingToast, toastsShown } from "./toast";
 import { openAppSettings } from "./updates";
 
@@ -30,7 +35,7 @@ export const blurQualities: Scene = {
 		{
 			id: "settings/app/blur-medium",
 			drive: async (page) => {
-				await openAppSettings(page);
+				await openDisplaySettings(page);
 				await lowerBlur({
 					page,
 					description: "A softer gradient blur.",
@@ -56,7 +61,7 @@ export const blurUnsupported: Scene = {
 		{
 			id: "settings/app/blur-unsupported",
 			drive: async (page) => {
-				await openAppSettings(page);
+				await openDisplaySettings(page);
 				await page.getByText("can’t blur backgrounds").waitFor();
 			},
 		},
@@ -75,7 +80,7 @@ export const blurTrial: Scene = {
 						body: "export const env={}",
 					}),
 				);
-				await openAppSettings(page);
+				await openDisplaySettings(page);
 				await page
 					.getByText("chosen automatically as you scroll")
 					.waitFor();
@@ -100,10 +105,9 @@ export const appsMenuEntry: Scene = {
 	views: [
 		{
 			id: "settings/app/apps-menu",
-			screen: "settings/app/macos",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openAppSettings(page);
+				await openDisplaySettings(page);
 				await addingToast({
 					page,
 					action: () => appsMenuSwitch(page).click(),
@@ -139,10 +143,9 @@ export const appUnimplemented: Scene = {
 	views: [
 		{
 			id: "settings/app/unimplemented",
-			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openAppSettings(page);
+				await openSecuritySettings(page);
 				for (const name of UNIMPLEMENTED_LINKS) {
 					await addingToast({
 						page,
@@ -161,10 +164,9 @@ export const settingSaveFailed: Scene = {
 	views: [
 		{
 			id: "settings/app/save-failed",
-			screen: "settings/app",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openAppSettings(page);
+				await openPrivacySettings(page);
 				await addingToast({
 					page,
 					action: () =>

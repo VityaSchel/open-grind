@@ -11,8 +11,8 @@ import {
 	OTHER_ID,
 	profilePath,
 } from "./profile-drive";
+import { openDisplaySettings } from "./settings";
 import { addingToast } from "./toast";
-import { visit } from "./visit";
 
 const DETAILED_ID = 100004;
 const COOKIE_TAPPED_ID = 100005;
@@ -87,12 +87,10 @@ export const imperialVisit: Scene = {
 			screen: "profile#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await visit({
-					page,
-					path: "/settings/app",
-					ready: page.getByText("Imperial"),
-				});
+				await openDisplaySettings(page);
 				await page.getByText("Imperial").click();
+				await page.locator('a[href="/settings/app"]').click();
+				await page.locator('a[href="/settings/app/privacy"]').click();
 				await page
 					.getByRole("switch", { name: "Reveal profile views" })
 					.click();

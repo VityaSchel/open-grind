@@ -4,7 +4,6 @@ import { type NativeOverrides, overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { ALERT, emitEvent } from "./drive";
 import { holdToast, SHOWN_TOAST, waitForNewToast } from "./toast";
-import { openAppSettings } from "./updates";
 import { visit } from "./visit";
 
 const PUSH_FAILED = { kind: "Push", message: { reason: "failed" } };
@@ -49,11 +48,12 @@ const FDROID_MANAGED = unsupported({
 	detail: { installer: "org.fdroid.fdroid" },
 });
 
-async function openUpdatesSection(page: Page): Promise<void> {
-	await openAppSettings(page);
-	await page
-		.getByRole("heading", { name: "Updates" })
-		.evaluate((heading) => heading.scrollIntoView({ block: "start" }));
+function openUpdateSettings(page: Page): Promise<void> {
+	return visit({
+		page,
+		path: "/settings/app/updates",
+		ready: automaticChecksSwitch(page),
+	});
 }
 
 function checkForUpdatesButton(page: Page) {
@@ -115,7 +115,7 @@ export const appUpdateSettings: Scene = {
 			screen: "settings/updates/blocked",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openUpdatesSection(page);
+				await openUpdateSettings(page);
 				await overrideNative({
 					page,
 					overrides: {
@@ -135,10 +135,9 @@ export const appAndAddonUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/app-and-addons",
-			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openUpdatesSection(page);
+				await openUpdateSettings(page);
 				await overrideNative({
 					page,
 					overrides: {
@@ -163,10 +162,9 @@ export const addonUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only",
-			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openUpdatesSection(page);
+				await openUpdateSettings(page);
 				await checkForUpdates(page);
 				await holdToast(page);
 			},
@@ -202,10 +200,9 @@ export const undeterminedUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only-with-reason",
-			screen: "settings/app#2",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openUpdatesSection(page);
+				await openUpdateSettings(page);
 				await holdToast(page);
 			},
 		},
@@ -219,7 +216,7 @@ export const blockedUpdateSettings: Scene = {
 		reason: "locationNotWritable",
 		detail: { path: "/opt/open-grind" },
 	}),
-	views: [{ id: "settings/updates/blocked", drive: openUpdatesSection }],
+	views: [{ id: "settings/updates/blocked", drive: openUpdateSettings }],
 };
 
 export const pushFailures: Scene = {
@@ -317,7 +314,7 @@ export const manualInstall: Scene = {
 			screen: "settings/updates/blocked",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
-				await openUpdatesSection(page);
+				await openUpdateSettings(page);
 				await checkForUpdatesButton(page).click();
 				await page.locator(TAPPABLE_TOAST).click();
 				await page.locator(`${LIVE_TOAST} [role="status"]`).waitFor();

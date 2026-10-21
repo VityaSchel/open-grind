@@ -33,8 +33,7 @@ async function openDemo(page: Page, { path }: { path: string }): Promise<void> {
 export async function openAppSettings(page: Page): Promise<void> {
 	await openDemo(page, { path: "/settings/app" });
 	await page
-		.locator("main h2")
-		.first()
+		.locator('main a[href="/settings/app/credits"]')
 		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
 
