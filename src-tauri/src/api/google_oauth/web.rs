@@ -3,7 +3,9 @@ use std::sync::Arc;
 use tauri::{AppHandle, Manager, Url, WebviewUrl, WebviewWindowBuilder};
 use tokio::sync::oneshot;
 
-use crate::api::oauth::{new_nonce, without_secrets, CANCELED};
+use crate::api::oauth::{
+	is_allowed_target, new_nonce, without_secrets, CANCELED,
+};
 use crate::error::AppError;
 
 use super::GoogleOauthBridge;
@@ -21,10 +23,6 @@ const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
      AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
 
 const RESULT_PATH: &str = "/__open_grind_oauth__";
-
-/// The nonce and the exact result URL are what keep a foreign origin from
-/// delivering a token; this only stops the two schemes a page must never reach.
-const REFUSED_SCHEMES: [&str; 2] = ["file", "javascript"];
 
 const OAUTH_UI_CSS: &str = include_str!(concat!(
 	env!("CARGO_MANIFEST_DIR"),
@@ -48,10 +46,6 @@ const OAUTH_INIT: &str = include_str!("oauth_init.js");
 fn init_script(nonce: &str) -> String {
 	let config = serde_json::json!({ "css": OAUTH_UI_CSS, "nonce": nonce });
 	format!("{PRELUDE}\n({OAUTH_INIT})({config});")
-}
-
-fn is_allowed_target(url: &Url) -> bool {
-	!REFUSED_SCHEMES.contains(&url.scheme())
 }
 
 fn is_result_url(url: &Url) -> bool {
@@ -184,8 +178,11 @@ mod tests {
 	}
 
 	#[test]
-	fn refuses_schemes_that_cannot_be_part_of_the_flow() {
-		for url in ["file:///etc/passwd", "javascript:alert(1)"] {
+	fn a_page_in_the_window_cannot_open_the_media_proxy() {
+		for url in [
+			"ogmedia://localhost/iaHR0cHM6Ly9kMS5jbG91ZGZyb250Lm5ldC9h",
+			"http://ogmedia.localhost/iaHR0cHM6Ly9kMS5jbG91ZGZyb250Lm5ldC9h",
+		] {
 			assert!(
 				!allows(url),
 				"{url} must never load in the sign-in window"

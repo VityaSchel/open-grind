@@ -5,6 +5,7 @@ use base64::Engine;
 use tauri::Url;
 use tokio::sync::oneshot;
 
+use crate::app_origin::is_served_locally;
 use crate::error::AppError;
 
 /// Matched verbatim by the frontend, which stays silent for it.
@@ -87,6 +88,13 @@ pub fn new_nonce() -> String {
 	let mut bytes = [0u8; 32];
 	getrandom::fill(&mut bytes).expect("system randomness unavailable");
 	base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
+}
+
+const ALLOWED_SCHEMES: [&str; 2] = ["https", "about"];
+
+pub fn is_allowed_target(url: &Url) -> bool {
+	ALLOWED_SCHEMES.contains(&url.scheme())
+		&& !url.host_str().is_some_and(is_served_locally)
 }
 
 pub fn without_secrets(url: &Url) -> String {
@@ -344,5 +352,32 @@ mod tests {
 		assert!(a
 			.chars()
 			.all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
+	}
+
+	#[test]
+	fn a_sign_in_window_never_loads_a_page_the_app_serves() {
+		for refused in [
+			"file:///etc/passwd",
+			"javascript:alert(1)",
+			"http://web.grindr.com/",
+			"ogmedia://localhost/iaHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"http://ogmedia.localhost/iaHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"https://ogmedia.localhost/iaHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"https://ogmedia.localhost./iaHR0cHM6Ly9leGFtcGxlLm9yZw",
+			"tauri://localhost/",
+			"http://tauri.localhost/",
+			"https://tauri.localhost/",
+			"ipc://localhost/",
+			"https://ipc.localhost/",
+			"asset://localhost/",
+			"https://app.opengrind.org/",
+			"http://localhost:1420/",
+			"https://localhost/",
+		] {
+			assert!(
+				!is_allowed_target(&Url::parse(refused).unwrap()),
+				"{refused} must not load in a sign-in window"
+			);
+		}
 	}
 }

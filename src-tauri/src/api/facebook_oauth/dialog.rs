@@ -1,7 +1,6 @@
 use tauri::Url;
 
 use crate::api::oauth::CANCELED;
-use crate::app_origin::is_served_locally;
 use crate::error::AppError;
 
 const DIALOG_URL: &str = "https://www.facebook.com/v16.0/dialog/oauth";
@@ -10,8 +9,6 @@ const SCOPE: &str = "public_profile,email";
 const REDIRECT_URI: &str = "https://web.grindr.com/";
 const REDIRECT_HOST: &str = "web.grindr.com";
 const REDIRECT_PATH: &str = "/";
-
-const ALLOWED_SCHEMES: [&str; 2] = ["https", "about"];
 
 /// Matched verbatim by the frontend; Meta's own wording only reaches the log.
 pub const DIALOG_ERROR: &str = "facebook-dialog-error";
@@ -30,11 +27,6 @@ pub fn dialog_url(state: &str) -> Result<Url, AppError> {
 		],
 	)
 	.map_err(|e| AppError::Http(format!("invalid dialog URL: {e}")))
-}
-
-pub fn is_allowed_target(url: &Url) -> bool {
-	ALLOWED_SCHEMES.contains(&url.scheme())
-		&& !url.host_str().is_some_and(is_served_locally)
 }
 
 pub fn is_redirect_url(url: &Url) -> bool {
@@ -193,23 +185,21 @@ mod tests {
 			"https://web.grindr.com/",
 			"about:blank",
 		] {
-			assert!(is_allowed_target(&url(allowed)), "{allowed} must load");
+			assert!(
+				crate::api::oauth::is_allowed_target(&url(allowed)),
+				"{allowed} must load"
+			);
 		}
+	}
+
+	#[test]
+	fn the_facebook_app_handoff_never_leaves_the_window() {
 		for refused in [
-			"file:///etc/passwd",
-			"javascript:alert(1)",
 			"intent://authorize/#Intent;package=com.facebook.katana;end",
 			"fb1273378622718674://authorize/",
-			"http://web.grindr.com/",
-			"https://app.opengrind.org/",
-			"https://tauri.localhost/",
-			"https://ogmedia.localhost/aHR0cHM6Ly9leGFtcGxlLm9yZw",
-			"https://ogmedia.localhost./aHR0cHM6Ly9leGFtcGxlLm9yZw",
-			"https://ipc.localhost/",
-			"https://localhost/",
 		] {
 			assert!(
-				!is_allowed_target(&url(refused)),
+				!crate::api::oauth::is_allowed_target(&url(refused)),
 				"{refused} must not load"
 			);
 		}
