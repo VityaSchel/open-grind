@@ -7,8 +7,8 @@ import type {
 } from "../../../src/lib/demo/screenshot-scene";
 import type { PlainMessageKey } from "../../../src/lib/i18n/types";
 import type { Scene } from ".";
+import { openAppSettings } from "./settings";
 import { holdToast, SHOWN_TOAST } from "./toast";
-import { visit } from "./visit";
 
 export type UpdateStageView = Parameters<
 	UpdateStagePresenter["show"]
@@ -65,14 +65,6 @@ const STAGE_PROGRESS = {
 	ready: { received: DOWNLOAD_BYTES, total: DOWNLOAD_BYTES },
 	installing: { received: DOWNLOAD_BYTES, total: DOWNLOAD_BYTES },
 } as const satisfies Record<UpdateStage, Omit<UpdateStageView, "stage">>;
-
-export async function openAppSettings(page: Page): Promise<void> {
-	await visit({
-		page,
-		path: "/settings/app",
-		ready: page.getByRole("link", { name: "Credits & Licenses" }),
-	});
-}
 
 function withProgress(toast: UpdateToast): ShownUpdateToast {
 	if (toast.type !== "stage") return toast;

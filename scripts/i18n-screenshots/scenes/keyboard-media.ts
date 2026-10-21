@@ -1,8 +1,8 @@
 import type { Scene } from ".";
 import { emitEvent } from "./drive";
 import { openConversation } from "./media-drop";
+import { openAppSettings } from "./settings";
 import { addingToast } from "./toast";
-import { openAppSettings } from "./updates";
 
 const KEYBOARD_MEDIA = "keyboard-media";
 const DISCARD = { discard_staged_media: { answer: null } };

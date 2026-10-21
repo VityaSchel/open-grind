@@ -1,10 +1,17 @@
 import type { Page } from "@playwright/test";
 
 import type { Scene } from ".";
-import { openAppSettings } from "./updates";
 import { visit } from "./visit";
 
 const SUBPAGE_SCROLLER = '[data-slot="subpage-scroller"]';
+
+export async function openAppSettings(page: Page): Promise<void> {
+	await visit({
+		page,
+		path: "/settings/app",
+		ready: page.getByRole("link", { name: "Credits & Licenses" }),
+	});
+}
 
 export function openDisplaySettings(page: Page): Promise<void> {
 	return visit({
@@ -44,6 +51,44 @@ export const appSettings: Scene = {
 export const desktopAppSettings: Scene = {
 	platform: "desktop",
 	views: [{ id: "settings/app/macos", drive: openAppSettings }],
+};
+
+export const displaySettings: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "settings/display",
+			scroller: SUBPAGE_SCROLLER,
+			drive: openDisplaySettings,
+		},
+	],
+};
+
+export const desktopDisplaySettings: Scene = {
+	platform: "desktop",
+	views: [{ id: "settings/display/macos", drive: openDisplaySettings }],
+};
+
+export const appPrivacySettings: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "settings/privacy",
+			scroller: SUBPAGE_SCROLLER,
+			drive: openPrivacySettings,
+		},
+	],
+};
+
+export const securitySettings: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "settings/security",
+			scroller: SUBPAGE_SCROLLER,
+			drive: openSecuritySettings,
+		},
+	],
 };
 
 export const languageSettings: Scene = {

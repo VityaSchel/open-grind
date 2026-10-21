@@ -185,11 +185,15 @@ import {
 } from "./session";
 import {
 	accountSettings,
+	appPrivacySettings,
 	appSettings,
 	desktopAppSettings,
+	desktopDisplaySettings,
+	displaySettings,
 	languageSettings,
 	meSettings,
 	profileSettings,
+	securitySettings,
 } from "./settings";
 import {
 	accountUnimplemented,
@@ -262,6 +266,7 @@ import {
 	manualInstall,
 	pushFailures,
 	undeterminedUpdateSettings,
+	updateSettings,
 } from "./updates-settings";
 import {
 	addonInstalledToasts,
@@ -300,6 +305,10 @@ export const scenes: Scene[] = [
 	accountSettings,
 	appSettings,
 	desktopAppSettings,
+	displaySettings,
+	desktopDisplaySettings,
+	appPrivacySettings,
+	securitySettings,
 	languageSettings,
 	emptyTaps,
 	upToDateToast,
@@ -310,6 +319,7 @@ export const scenes: Scene[] = [
 	...appProblemToasts,
 	...addonProblemToasts,
 	manualInstall,
+	updateSettings,
 	appUpdateSettings,
 	appAndAddonUpdateSettings,
 	addonUpdateSettings,

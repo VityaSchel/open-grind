@@ -129,12 +129,19 @@ export const appUpdateSettings: Scene = {
 	],
 };
 
+export const updateSettings: Scene = {
+	platform: "phone",
+	demo: { updates: true },
+	views: [{ id: "settings/updates", drive: openUpdateSettings }],
+};
+
 export const appAndAddonUpdateSettings: Scene = {
 	platform: "phone",
 	demo: { updates: true },
 	views: [
 		{
 			id: "settings/updates/app-and-addons",
+			screen: "settings/updates",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdateSettings(page);
@@ -162,6 +169,7 @@ export const addonUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only",
+			screen: "settings/updates",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdateSettings(page);
@@ -200,6 +208,7 @@ export const undeterminedUpdateSettings: Scene = {
 	views: [
 		{
 			id: "settings/updates/addons-only-with-reason",
+			screen: "settings/updates",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openUpdateSettings(page);

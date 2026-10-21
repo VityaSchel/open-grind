@@ -4,12 +4,12 @@ import { overrideNative } from "../stubs";
 import type { Scene } from ".";
 import { STORAGE_FULL, UNREADABLE_PREFERENCES } from "./faults";
 import {
+	openAppSettings,
 	openDisplaySettings,
 	openPrivacySettings,
 	openSecuritySettings,
 } from "./settings";
 import { addingToast, toastsShown } from "./toast";
-import { openAppSettings } from "./updates";
 
 const BLUR_THUMB = '[data-slot="slider-thumb"]';
 const DESKTOP_ENTRY = { available: true, installed: false };
@@ -33,7 +33,7 @@ export const blurQualities: Scene = {
 	platform: "phone",
 	views: [
 		{
-			id: "settings/app/blur-medium",
+			id: "settings/display/blur-medium",
 			drive: async (page) => {
 				await openDisplaySettings(page);
 				await lowerBlur({
@@ -43,12 +43,12 @@ export const blurQualities: Scene = {
 			},
 		},
 		{
-			id: "settings/app/blur-low",
+			id: "settings/display/blur-low",
 			drive: (page) =>
 				lowerBlur({ page, description: "A single light blur" }),
 		},
 		{
-			id: "settings/app/blur-off",
+			id: "settings/display/blur-off",
 			drive: (page) => lowerBlur({ page, description: "No blur." }),
 		},
 	],
@@ -59,7 +59,7 @@ export const blurUnsupported: Scene = {
 	native: { backdrop_filter_renders: { answer: false } },
 	views: [
 		{
-			id: "settings/app/blur-unsupported",
+			id: "settings/display/blur-unsupported",
 			drive: async (page) => {
 				await openDisplaySettings(page);
 				await page.getByText("can’t blur backgrounds").waitFor();
@@ -72,7 +72,7 @@ export const blurTrial: Scene = {
 	platform: "phone",
 	views: [
 		{
-			id: "settings/app/blur-trial",
+			id: "settings/display/blur-trial",
 			drive: async (page) => {
 				await page.route("**/_app/env.js", (route) =>
 					route.fulfill({
@@ -104,7 +104,8 @@ export const appsMenuEntry: Scene = {
 	},
 	views: [
 		{
-			id: "settings/app/apps-menu",
+			id: "settings/display/apps-menu",
+			screen: "settings/display/macos",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openDisplaySettings(page);
@@ -142,7 +143,8 @@ export const appUnimplemented: Scene = {
 	platform: "phone",
 	views: [
 		{
-			id: "settings/app/unimplemented",
+			id: "settings/security/unimplemented",
+			screen: "settings/security",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openSecuritySettings(page);
@@ -163,7 +165,8 @@ export const settingSaveFailed: Scene = {
 	native: { write_app_data: { reject: STORAGE_FULL } },
 	views: [
 		{
-			id: "settings/app/save-failed",
+			id: "settings/privacy/save-failed",
+			screen: "settings/privacy",
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openPrivacySettings(page);
