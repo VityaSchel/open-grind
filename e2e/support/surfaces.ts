@@ -155,6 +155,24 @@ export const SURFACES: Surface[] = [
 		ready: shows((page) => subpage(page).getByRole("link")),
 	},
 	{
+		name: "Display settings",
+		path: "/settings/app/display",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => page.getByRole("slider")),
+	},
+	{
+		name: "Privacy settings",
+		path: "/settings/app/privacy",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("switch")),
+	},
+	{
+		name: "Security settings",
+		path: "/settings/app/security",
+		bars: BARS_OVER_CONTENT,
+		ready: shows((page) => subpage(page).getByRole("link")),
+	},
+	{
 		name: "Credits",
 		path: "/settings/app/credits",
 		bars: BARS_OVER_CONTENT,
