@@ -5,9 +5,11 @@ import type { OutboundMessage } from "$lib/model/messaging/messages";
 
 const IMAGE_HASH_PREFIX = "giphy/";
 
+export const GIPHY_MEDIA_HOST = /^media[0-4]?\.giphy\.com$/;
+
 const giphyMediaUrlSchema = z.url({
 	protocol: /^https$/,
-	hostname: /^media[0-4]?\.giphy\.com$/,
+	hostname: GIPHY_MEDIA_HOST,
 });
 
 const giphyDimensionSchema = z

@@ -21,7 +21,11 @@ vi.mock("$lib/api/session-lost", () => ({
 }));
 
 import { ApiError } from "$lib/api/api-error";
-import { getTrendingGifs, searchGifs } from "$lib/api/messaging/gifs";
+import {
+	getTrendingGifs,
+	receivedGiphySrc,
+	searchGifs,
+} from "$lib/api/messaging/gifs";
 import { toBase64 } from "$lib/util/base64";
 
 const KEY = "zf7gBZ531pHaTJN3ne0jDdAepsNreB2X";
@@ -340,5 +344,37 @@ describe("GIPHY request failures", () => {
 			ApiError,
 		);
 		expect(signOutIfSessionLostMock).not.toHaveBeenCalled();
+	});
+});
+
+describe("receivedGiphySrc", () => {
+	it("loads the renditions the official app sends", () => {
+		const url = `${media}/200.gif`;
+		expect(receivedGiphySrc(url)).toBe(url);
+	});
+
+	it("loads bare media.giphy.com links from pasted GIPHY links", () => {
+		const url = "https://media.giphy.com/media/xT0xeChUR33EsYNNRK/200.gif";
+		expect(receivedGiphySrc(url)).toBe(url);
+	});
+
+	it.each(["media0", "media1", "media2", "media3", "media4"])(
+		"loads GIPHY's %s host",
+		(host) => {
+			const url = `https://${host}.giphy.com/media/xT0xeChUR33EsYNNRK/200.gif`;
+			expect(receivedGiphySrc(url)).toBe(url);
+		},
+	);
+
+	it.each([
+		"https://d1abcdef.cloudfront.net/200.gif",
+		"https://cdns.grindr.com/images/thumb/320x320/abc",
+		"https://i.giphy.com/xT0xeChUR33EsYNNRK.gif",
+		"https://media.giphy.com.example.org/media/x/200.gif",
+		"https://media.giphy.com@d1abcdef.cloudfront.net/200.gif",
+		"http://media.giphy.com/media/xT0xeChUR33EsYNNRK/200.gif",
+		"not a url",
+	])("refuses a sender-chosen URL off GIPHY's media hosts: %s", (url) => {
+		expect(receivedGiphySrc(url)).toBeNull();
 	});
 });

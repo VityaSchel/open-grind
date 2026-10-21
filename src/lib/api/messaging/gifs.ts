@@ -1,6 +1,7 @@
 import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoGiphyMediaUrl } from "$lib/demo";
 import {
+	GIPHY_MEDIA_HOST,
 	type GiphyBody,
 	giphyBody,
 	type GiphyGif,
@@ -65,6 +66,19 @@ function nextGiphyOffset({
 
 export function giphyMediaSrc(url: string): string {
 	return demoEnabled ? demoGiphyMediaUrl(url) : proxyMediaUrl(url);
+}
+
+function isGiphyMediaUrl(url: string): boolean {
+	try {
+		const { protocol, hostname } = new URL(url);
+		return protocol === "https:" && GIPHY_MEDIA_HOST.test(hostname);
+	} catch {
+		return false;
+	}
+}
+
+export function receivedGiphySrc(url: string): string | null {
+	return isGiphyMediaUrl(url) ? giphyMediaSrc(url) : null;
 }
 
 function tileUrlOf({

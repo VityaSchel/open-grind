@@ -1,6 +1,6 @@
 import { fetchExternal } from "$lib/api/transport";
 import { demoEnabled, demoLinkedGifSize } from "$lib/demo";
-import { giphyBody } from "$lib/model/messaging/gifs";
+import { GIPHY_MEDIA_HOST, giphyBody } from "$lib/model/messaging/gifs";
 import type { MediaDimensions } from "$lib/util/media-dimensions";
 import { giphyMediaSrc, type GiphyTile } from "./gifs";
 
@@ -12,7 +12,6 @@ const RENDITIONS = [
 ] as const;
 
 const GIPHY_ID = /^[A-Za-z0-9]+$/;
-const MEDIA_HOST = /^media[0-4]?\.giphy\.com$/;
 const GIF_SIGNATURE = "GIF8";
 const GIF_HEADER_LENGTH = 10;
 
@@ -40,7 +39,7 @@ function idInPath({ hostname, pathname }: URL): string | undefined {
 			return second?.split("-").at(-1);
 		return first === "embed" ? second : undefined;
 	}
-	if (MEDIA_HOST.test(host) && first === "media")
+	if (GIPHY_MEDIA_HOST.test(host) && first === "media")
 		return second?.startsWith("v1.") ? third : second;
 	if (host === "i.giphy.com")
 		return first === "media"

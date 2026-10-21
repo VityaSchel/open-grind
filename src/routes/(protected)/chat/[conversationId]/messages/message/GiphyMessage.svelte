@@ -2,7 +2,7 @@
 	import GifIcon from "phosphor-svelte/lib/GifIcon";
 	import { prefersReducedMotion } from "svelte/motion";
 
-	import { giphyMediaSrc } from "$lib/api/messaging/gifs";
+	import { receivedGiphySrc } from "$lib/api/messaging/gifs";
 	import { giphyOriginalUrl } from "$lib/api/messaging/giphy-link";
 	import MediaImage from "$lib/components/shared/MediaImage.svelte";
 	import type { GiphyMessage } from "$lib/model/messaging/messages";
@@ -20,9 +20,9 @@
 	const shown = $derived(giphyConsented());
 	const still = $derived(prefersReducedMotion.current);
 	const src = $derived(
-		giphyMediaSrc(still ? message.stillPath : message.urlPath),
+		receivedGiphySrc(still ? message.stillPath : message.urlPath),
 	);
-	const href = $derived(giphyMediaSrc(giphyOriginalUrl(message)));
+	const href = $derived(receivedGiphySrc(giphyOriginalUrl(message)));
 
 	const size = new MeasuredSize({ src: () => src, fallback: () => message });
 
