@@ -34,6 +34,7 @@ export type InstallKind = Release["kind"];
 export type CheckReport = "offered" | "current" | "busy" | "failed";
 export type CheckOptions = { reportFailure?: boolean };
 type FailureReport = "all" | "unsigned" | "none";
+type DownloadOptions = { byUser?: boolean; arm?: boolean; trigger?: Trigger };
 
 export type StagePresenter = {
 	show(args: {
@@ -126,7 +127,7 @@ export class UpdateFlow {
 			this.#readyKind = running.kind;
 			if (await this.#download(resumed.view)) return;
 		}
-		if (await this.#settle({ atLaunch: true })) return;
+		if (await this.#settle({ trigger: "launch" })) return;
 		await this.#offerCheck("launch");
 	}
 
@@ -223,20 +224,19 @@ export class UpdateFlow {
 
 	async #download(
 		{ received, total }: { received: number; total: number },
-		{
-			byUser = false,
-			arm = false,
-		}: { byUser?: boolean; arm?: boolean } = {},
+		{ byUser, arm, trigger = "manual" }: DownloadOptions = {},
 	): Promise<boolean> {
 		const before = this.#visible ? this.#shown : null;
 		this.#show({ stage: "downloading", received, total });
 		try {
-			const started = await startUpdateDownload(this.component);
+			const started = await startUpdateDownload(this.component, {
+				trigger,
+			});
 			if (arm) this.#armedTag = started.tag;
 			return true;
 		} catch (error) {
 			const kind = asUpdateError(error)?.kind;
-			if (kind === "busy") {
+			if (kind === "busy" || kind === "autoChecksDisabled") {
 				this.#armedTag = null;
 				this.#show(before ?? { stage: "paused", received, total });
 				if (byUser) this.#problem({ error, fallback: "" });
@@ -384,7 +384,7 @@ export class UpdateFlow {
 		this.#hide();
 	}
 
-	async #settle({ atLaunch = false }: { atLaunch?: boolean } = {}) {
+	async #settle({ trigger = "manual" }: { trigger?: Trigger } = {}) {
 		this.#settling ??= (async () => {
 			const readiness = await getUpdateReadiness(this.component).catch(
 				() => null,
@@ -395,13 +395,13 @@ export class UpdateFlow {
 				(readiness?.state === "ready" ||
 					readiness?.state === "resumable") &&
 				readiness.detail.kind !== "update";
-			if (atLaunch && offersInstall) return false;
+			if (trigger === "launch" && offersInstall) return false;
 
 			switch (readiness?.state) {
 				case "resumable":
 					this.#readyKind = readiness.detail.kind;
 					this.#offerTag = readiness.detail.tag;
-					return await this.#download(fromScratch);
+					return await this.#download(fromScratch, { trigger });
 				case "ready":
 					this.#readyTag = readiness.detail.tag;
 					this.#readyKind = readiness.detail.kind;

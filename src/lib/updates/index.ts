@@ -97,9 +97,10 @@ export async function checkForUpdate({
 }
 
 export async function startUpdateDownload(
-	component: ComponentKey = APP_COMPONENT,
+	component: ComponentKey,
+	{ trigger }: { trigger: "manual" | "launch" | "automatic" },
 ): Promise<Progress> {
-	return parsed("updater_download", progressSchema, { component });
+	return parsed("updater_download", progressSchema, { component, trigger });
 }
 
 export async function cancelUpdateDownload(
