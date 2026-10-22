@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { INCOMING_ROW, installTauriShim, MESSAGE_ROW } from "./support/app";
+import {
+	captureOpenedUrls,
+	INCOMING_ROW,
+	installTauriShim,
+	MESSAGE_ROW,
+} from "./support/app";
 import { DRAWER } from "./support/drawer";
 
 const DEMO_PROFILE = "/profile/100001";
@@ -82,6 +87,37 @@ test("a spam report asks for nothing else", async ({ page }) => {
 	await expect(page.getByText("You have blocked this profile.")).toHaveCount(
 		0,
 	);
+});
+
+test("a serious in-person incident opens Grindr's help form instead of a report", async ({
+	page,
+}) => {
+	test.setTimeout(240_000);
+	const drawer = await openReportSheet(page);
+	const openedUrls = await captureOpenedUrls(page);
+
+	await drawer
+		.getByRole("radio", { name: "Serious In Person Incident" })
+		.click();
+
+	expect(
+		await drawer.getByRole("textbox", { name: "Details" }).count(),
+		"the help form asks for details itself",
+	).toBe(0);
+	expect(
+		await drawer.getByRole("button", { name: "Submit report" }).count(),
+	).toBe(0);
+
+	await drawer.getByRole("link", { name: "Open help form" }).click();
+
+	await expect
+		.poll(openedUrls)
+		.toEqual([
+			expect.stringMatching(
+				/^https:\/\/help\.grindr\.com\/hc\/[a-z]{2,3}\/requests\/new\?ticket_form_id=16925729533971$/,
+			),
+		]);
+	await expect(drawer).toBeVisible();
 });
 
 test("reporting a chat message titles the sheet for the message and prefills the chat location", async ({

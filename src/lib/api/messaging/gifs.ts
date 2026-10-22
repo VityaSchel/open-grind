@@ -8,7 +8,7 @@ import {
 	type GiphyPagination,
 	giphyResponseSchema,
 } from "$lib/model/messaging/gifs";
-import { searchLanguage } from "$lib/util/language";
+import { systemLanguage } from "$lib/util/language";
 import { proxyMediaUrl } from "$lib/util/media";
 
 const GIPHY_ORIGIN = "https://api.giphy.com";
@@ -138,7 +138,7 @@ export async function searchGifs({
 	offset: number;
 }): Promise<GiphyPage> {
 	return await fetchGiphyPage({
-		path: giphySearchPath({ query, offset, language: searchLanguage() }),
+		path: giphySearchPath({ query, offset, language: systemLanguage() }),
 		maxOffset: GIPHY_MAX_OFFSET.search,
 	});
 }

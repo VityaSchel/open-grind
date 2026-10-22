@@ -3,13 +3,17 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { reportProfileMock, blockUserMock, showBlockFailureMock } = vi.hoisted(
-	() => ({
-		reportProfileMock: vi.fn<() => Promise<void>>(),
-		blockUserMock: vi.fn<() => Promise<void>>(),
-		showBlockFailureMock: vi.fn(),
-	}),
-);
+const {
+	reportProfileMock,
+	blockUserMock,
+	showBlockFailureMock,
+	openExternalLinkMock,
+} = vi.hoisted(() => ({
+	reportProfileMock: vi.fn<() => Promise<void>>(),
+	blockUserMock: vi.fn<() => Promise<void>>(),
+	showBlockFailureMock: vi.fn(),
+	openExternalLinkMock: vi.fn(),
+}));
 
 vi.mock("$lib/api/safety/reports", () => ({
 	reportProfile: reportProfileMock,
@@ -17,6 +21,9 @@ vi.mock("$lib/api/safety/reports", () => ({
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
 vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
+vi.mock("$lib/platform/link-opener", () => ({
+	openExternalLink: openExternalLinkMock,
+}));
 
 import ReportSheet from "./ReportSheet.svelte";
 
@@ -93,5 +100,45 @@ describe("report sheet", () => {
 		expect(onBlock).toHaveBeenCalledOnce();
 		expect(blockUserMock).not.toHaveBeenCalled();
 		await vi.waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+	});
+});
+
+describe("serious in-person incident", () => {
+	async function chooseIncident() {
+		vi.spyOn(navigator, "language", "get").mockReturnValue("de-AT");
+		render(ReportSheet, { props: { open: true, profileId: PROFILE_ID } });
+		await fireEvent.click(
+			await screen.findByRole("radio", {
+				name: "Serious In Person Incident",
+			}),
+		);
+	}
+
+	it("opens Grindr's help form in the system language instead of sending a report", async () => {
+		await chooseIncident();
+
+		await fireEvent.click(
+			screen.getByRole("link", { name: "Open help form" }),
+		);
+
+		expect(openExternalLinkMock).toHaveBeenCalledExactlyOnceWith(
+			"https://help.grindr.com/hc/de/requests/new?ticket_form_id=16925729533971",
+		);
+		expect(reportProfileMock).not.toHaveBeenCalled();
+		expect(
+			screen.queryByRole("button", { name: "Submit report" }),
+		).toBeNull();
+	});
+
+	it("asks for neither where it happened nor details", async () => {
+		await chooseIncident();
+
+		expect(
+			screen.queryByRole("group", { name: "Where it happened" }),
+		).toBeNull();
+		expect(screen.queryByRole("textbox")).toBeNull();
+		expect(
+			screen.getByText(/handles serious in-person incidents/),
+		).not.toBeNull();
 	});
 });

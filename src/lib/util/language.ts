@@ -1,6 +1,6 @@
 const fallbackLanguage = "en";
 
-export function searchLanguage(): string {
+export function systemLanguage(): string {
 	try {
 		return new Intl.Locale(navigator.language).language || fallbackLanguage;
 	} catch {
