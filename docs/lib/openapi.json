@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.20.0.187695 (2026-10-09)"
+		"version": "26.21.0.190550 (2026-10-20)"
 	},
 	"servers": [
 		{
@@ -960,6 +960,35 @@
 				"x-wip": true
 			}
 		},
+		"/v1/boost/preferences/ultra": {
+			"post": {
+				"tags": [
+					"commerce/boosting"
+				],
+				"operationId": "setUltraBoostPreferences",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UndocumentedObject"
+									}
+								],
+								"x-original-type": "SuperBoostPreferencesRequest"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					}
+				},
+				"x-wip": true
+			}
+		},
 		"/v1/boost/preferences/standard": {
 			"post": {
 				"tags": [
@@ -1674,6 +1703,240 @@
 					}
 				},
 				"x-wip": true
+			}
+		},
+		"/v1/consent/experience": {
+			"get": {
+				"tags": [
+					"safety/legal-agreements"
+				],
+				"operationId": "getConsentExperience",
+				"summary": "Get consent experience",
+				"description": "Returns the consent prompt for a surface and whether to show it. Works with or without [Authorization](/grindr-api/api-authorization).",
+				"parameters": [
+					{
+						"name": "surface",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, `\"AI_CONSENT\"`; `\"PRIVACY_SETTINGS\"` is accepted but publishes no experience"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"surface",
+										"experienceType",
+										"experienceVersion",
+										"promptRequired",
+										"consents"
+									],
+									"properties": {
+										"surface": {
+											"type": "string",
+											"description": "string, the requested surface"
+										},
+										"experienceType": {
+											"type": "string",
+											"description": "string, `\"AGREEMENT\"` (accept or decline each consent) or `\"NOTICE\"` (informational)"
+										},
+										"experienceVersion": {
+											"type": "string",
+											"description": "string, e.g. `\"ai-consent.agreement.1\"`; pass it to [Get consent copy](#get-consent-copy) and back in [Submit consent decisions](#submit-consent-decisions)"
+										},
+										"variant": {
+											"type": "string",
+											"nullable": true,
+											"description": "string, experiment treatment"
+										},
+										"promptRequired": {
+											"type": "boolean",
+											"description": "boolean, `true` when the prompt should be shown"
+										},
+										"consents": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"required": [
+													"consentType",
+													"preselectedValue",
+													"responded"
+												],
+												"properties": {
+													"consentType": {
+														"type": "string",
+														"description": "string, `\"AI_USAGE_AND_FEATURES\"` or `\"AI_SENSITIVE_DATA_TRAINING\"`"
+													},
+													"preselectedValue": {
+														"type": "boolean",
+														"description": "boolean, the value to show as selected"
+													},
+													"responded": {
+														"type": "boolean",
+														"description": "boolean, appears to be `true` once a decision for this type was submitted"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `surface` is missing or unknown; `urn:gr:err:bad_request` when the surface publishes no experience."
+					}
+				}
+			}
+		},
+		"/v1/consent/copy": {
+			"get": {
+				"tags": [
+					"safety/legal-agreements"
+				],
+				"operationId": "getConsentCopy",
+				"summary": "Get consent copy",
+				"description": "Returns the localized texts of a consent experience version. Works with or without [Authorization](/grindr-api/api-authorization).",
+				"parameters": [
+					{
+						"name": "version",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, `experienceVersion` from [Get consent experience](#get-consent-experience), e.g. `\"ai-consent.agreement.1\"` or `\"ai-consent.notice.1\"`"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"experienceVersion",
+										"resolvedLocale",
+										"strings"
+									],
+									"properties": {
+										"experienceVersion": {
+											"type": "string",
+											"description": "string, the requested version"
+										},
+										"resolvedLocale": {
+											"type": "string",
+											"description": "string, locale of the texts, e.g. `\"en\"`"
+										},
+										"strings": {
+											"type": "object",
+											"additionalProperties": {
+												"type": "string"
+											},
+											"description": "object of strings keyed by text id. `ai-consent.agreement.1` has `aiConsent.agreement.` + `screenTitle`, `eyebrow`, `title`, `body`, `offLimitsBody`, `personalizationTitle`, `personalizationBody`, `trainingTitle`, `trainingBody`, `accept`, `decline`, `continue`, `confirm`, `incomplete`, `incompleteConfirm`; `ai-consent.notice.1` has `aiConsent.agreement.` + `screenTitle`, `eyebrow`, `title`, `nonEuBody`, `nonEuOffLimits`, `nonEuWithdrawal`, `gotIt`"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `version` is missing; `urn:gr:err:bad_request` when the version is not published."
+					}
+				}
+			}
+		},
+		"/v1/consent": {
+			"post": {
+				"tags": [
+					"safety/legal-agreements"
+				],
+				"operationId": "submitConsentDecisions",
+				"summary": "Submit consent decisions",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"submissionId",
+									"surface",
+									"decisions"
+								],
+								"properties": {
+									"submissionId": {
+										"type": "string",
+										"format": "uuid",
+										"description": "string, random UUID, reused when retrying the same submission"
+									},
+									"surface": {
+										"type": "string",
+										"description": "string, `\"AI_CONSENT\"` or `\"PRIVACY_SETTINGS\"`"
+									},
+									"surfaceContext": {
+										"type": "string",
+										"description": "string, `\"ONBOARDING\"` or `\"IN_APP\"`"
+									},
+									"experimentTreatment": {
+										"type": "string",
+										"description": "string, `variant` from [Get consent experience](#get-consent-experience), optional"
+									},
+									"decisions": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"required": [
+												"consentType",
+												"consentValue"
+											],
+											"properties": {
+												"consentType": {
+													"type": "string",
+													"description": "string, `\"AI_USAGE_AND_FEATURES\"` or `\"AI_SENSITIVE_DATA_TRAINING\"`"
+												},
+												"consentValue": {
+													"type": "boolean",
+													"description": "boolean, `true` to consent"
+												},
+												"experienceVersion": {
+													"type": "string",
+													"description": "string, `experienceVersion` the decision was made on"
+												},
+												"policyVersion": {
+													"type": "string",
+													"description": "string, optional"
+												}
+											}
+										},
+										"description": "array of decisions, at most one per consent type"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:internal_error` when the body does not parse, including `{}`."
+					}
+				}
 			}
 		},
 		"/v1/opt-out": {
@@ -5446,7 +5709,10 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Get A-List profile (legacy)",
+				"description": "Removed in the official Android client between v25.20.0 and v26.9.2. Superseded by [Get A-List profile](#get-a-list-profile).",
+				"deprecated": true
 			},
 			"delete": {
 				"tags": [
@@ -5464,6 +5730,197 @@
 					}
 				},
 				"x-wip": true
+			}
+		},
+		"/v2/alist/profiles/{profileId}": {
+			"get": {
+				"tags": [
+					"interest/alist"
+				],
+				"operationId": "getAListProfileV2",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/ProfileIdIntegerPath"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "integer",
+											"format": "int64"
+										},
+										"realName": {
+											"type": "string",
+											"nullable": true
+										},
+										"displayName": {
+											"type": "string",
+											"nullable": true
+										},
+										"onlineUntil": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											],
+											"nullable": true
+										},
+										"seen": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											],
+											"nullable": true
+										},
+										"profileThumbUrl": {
+											"type": "string",
+											"nullable": true
+										},
+										"summaryBullets": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											}
+										},
+										"conversationId": {
+											"type": "string"
+										},
+										"recap": {
+											"type": "string"
+										},
+										"distanceMeters": {
+											"type": "number",
+											"nullable": true
+										},
+										"insightTags": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													}
+												}
+											}
+										},
+										"into": {
+											"type": "string",
+											"nullable": true
+										},
+										"lookingFor": {
+											"type": "string",
+											"nullable": true
+										},
+										"albums": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"coverUrl": {
+														"type": "string"
+													},
+													"albumId": {
+														"type": "integer",
+														"format": "int64"
+													}
+												}
+											}
+										},
+										"chatMedia": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"imageUrl": {
+														"type": "string"
+													},
+													"mediaId": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"mediaHash": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/MediaHash"
+															}
+														],
+														"nullable": true
+													}
+												}
+											}
+										},
+										"isApproximateDistance": {
+											"type": "boolean",
+											"nullable": true
+										},
+										"rightNowStatus": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/RightNowAttributionStatus"
+												}
+											],
+											"nullable": true
+										},
+										"isFavorite": {
+											"type": "boolean"
+										},
+										"visiting": {
+											"type": "boolean"
+										},
+										"activities": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"id": {
+														"type": "integer",
+														"format": "int64"
+													},
+													"type": {
+														"type": "string"
+													},
+													"eventTime": {
+														"$ref": "#/components/schemas/TimestampMs"
+													}
+												}
+											}
+										},
+										"isFreemium": {
+											"type": "boolean"
+										},
+										"locationName": {
+											"type": "string",
+											"nullable": true
+										},
+										"hasSmartPhoto": {
+											"type": "boolean",
+											"nullable": true
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:bad_request` for an unknown profile id."
+					}
+				},
+				"summary": "Get A-List profile"
 			}
 		},
 		"/v1/alist/updates": {
@@ -5485,7 +5942,54 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Get A-List updates (legacy)",
+				"description": "Removed in the official Android client between v25.20.0 and v26.9.2. Superseded by [Get A-List updates](#get-a-list-updates).",
+				"deprecated": true
+			}
+		},
+		"/v3/alist/updates": {
+			"get": {
+				"tags": [
+					"interest/alist"
+				],
+				"operationId": "getAListUpdatesV3",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"newActivities",
+										"earlierActivities"
+									],
+									"properties": {
+										"newActivities": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/AListUpdate"
+											}
+										},
+										"earlierActivities": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/AListUpdate"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get A-List updates"
 			}
 		},
 		"/v1/alist/feedback/{conversationId}": {
@@ -5555,7 +6059,100 @@
 						"description": "OK"
 					}
 				},
-				"x-wip": true
+				"x-wip": true,
+				"summary": "Get A-List profiles (legacy)",
+				"description": "Removed in the official Android client between v25.20.0 and v26.9.2. Superseded by [Get A-List profiles](#get-a-list-profiles).",
+				"deprecated": true
+			}
+		},
+		"/v6/alist/profiles": {
+			"get": {
+				"tags": [
+					"interest/alist"
+				],
+				"operationId": "getAListProfilesV6",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "filter",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "array",
+							"items": {
+								"type": "string"
+							}
+						},
+						"style": "form",
+						"explode": true,
+						"description": "repeated string, a `filter.id` from `filterCounts`; unknown values are ignored"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"profiles",
+										"filterCounts",
+										"state"
+									],
+									"properties": {
+										"profiles": {
+											"type": "array",
+											"items": {
+												"$ref": "#/components/schemas/AListProfile"
+											}
+										},
+										"filterCounts": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"filter": {
+														"type": "object",
+														"properties": {
+															"id": {
+																"type": "string"
+															},
+															"name": {
+																"type": "string"
+															}
+														}
+													},
+													"count": {
+														"type": "integer"
+													}
+												}
+											}
+										},
+										"state": {
+											"type": "string",
+											"description": "string, `\"A_LIST_NOT_GENERATED\"`, `\"PREMIUM_UPSELL\"`, `\"UNLIMITED_UPSELL\"`, `\"GENERATING\"`, `\"EMPTY\"`, `\"FREEMIUM_GENERATED\"`, `\"FULL_ACCESS_GENERATED\"` or `\"PRIVACY_OPT_OUT\"`"
+										},
+										"updateProfileUrls": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											}
+										},
+										"updateCount": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get A-List profiles"
 			}
 		},
 		"/v1/matches": {
@@ -5779,15 +6376,27 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"story": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/Story"
+												}
+											],
+											"nullable": true
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
+					},
+					"404": {
+						"description": "Story not found or no longer available."
 					}
 				},
-				"summary": "Get story",
-				"x-wip": true
+				"summary": "Get story"
 			},
 			"delete": {
 				"tags": [
@@ -5809,8 +6418,7 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Delete story",
-				"x-wip": true
+				"summary": "Delete story"
 			}
 		},
 		"/v1/stories/{storyId}/views": {
@@ -5834,8 +6442,52 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Record story view",
-				"x-wip": true
+				"summary": "Record story view"
+			}
+		},
+		"/v1/stories/reactions": {
+			"get": {
+				"tags": [
+					"users/stories"
+				],
+				"operationId": "getStoryReactions",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"reactions": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"reactionId": {
+														"type": "string",
+														"description": "string, sent back as `reactionId` of a [SendStoryReactionBody](/grindr-api/messaging/messages#sendstoryreactionbody)"
+													},
+													"unicode": {
+														"type": "string",
+														"description": "string, appears to be space-separated code points such as `U+1F525`"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get story reactions",
+				"description": "Lists the reactions that can be sent to a story."
 			}
 		},
 		"/v1/stories/profiles/{profileId}": {
@@ -5892,6 +6544,82 @@
 											"type": "array",
 											"items": {
 												"$ref": "#/components/schemas/TapProfile"
+											}
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get received taps (legacy)",
+				"description": "Removed in the official Android client v26.21.0. Superseded by [Get received taps](#get-received-taps). Fetching received taps also marks our profile online by setting `onlineUntil` to current time + 600 s, like Get Cascade.",
+				"deprecated": true
+			}
+		},
+		"/v3/taps/received": {
+			"get": {
+				"tags": [
+					"interest/taps"
+				],
+				"operationId": "getReceivedTapItems",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "withTappedSent",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "boolean"
+						},
+						"description": "boolean, `true` adds `tapped` to each profile"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"items"
+									],
+									"properties": {
+										"items": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"required": [
+													"type",
+													"data"
+												],
+												"properties": {
+													"type": {
+														"type": "string",
+														"description": "string, `\"tap_profile_v1\"`"
+													},
+													"data": {
+														"allOf": [
+															{
+																"$ref": "#/components/schemas/TapProfile"
+															},
+															{
+																"type": "object",
+																"properties": {
+																	"tapped": {
+																		"type": "boolean",
+																		"description": "boolean, appears to be `true` when we tapped the sender; present only with `withTappedSent=true`"
+																	}
+																}
+															}
+														]
+													}
+												}
 											}
 										}
 									}
@@ -10962,6 +11690,89 @@
 				"x-wip": true
 			}
 		},
+		"/v1/edge-insights/{profileId}": {
+			"get": {
+				"tags": [
+					"users/profiles"
+				],
+				"operationId": "getEdgeInsights",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/ProfileIdIntegerPath"
+					},
+					{
+						"name": "source",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "string, `\"CHAT\"` or `\"GRID\"`, case-insensitive"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"profileId": {
+											"type": "integer",
+											"format": "int64",
+											"description": "long integer, our profile"
+										},
+										"counterPartyProfileId": {
+											"type": "integer",
+											"format": "int64",
+											"description": "long integer, the requested profile"
+										},
+										"status": {
+											"type": "string",
+											"description": "string, e.g. `\"VIEWER_OPTED_OUT\"`"
+										},
+										"badge": {
+											"type": "object",
+											"nullable": true,
+											"description": "object or `null`, shape unknown"
+										},
+										"chatSummary": {
+											"type": "object",
+											"nullable": true,
+											"description": "object or `null`, shape unknown"
+										},
+										"profileInsights": {
+											"type": "object",
+											"nullable": true,
+											"description": "object or `null`, shape unknown"
+										},
+										"recentActivity": {
+											"type": "array",
+											"items": {
+												"type": "object"
+											},
+											"description": "array, item shape unknown"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `source` is missing; `urn:gr:err:bad_request` when `source` is unknown."
+					}
+				},
+				"summary": "Get Edge insights",
+				"description": "Returns `200` for any profile id, including ones that do not exist.",
+				"x-wip": true
+			}
+		},
 		"/v2/profile-insights/{profileId}": {
 			"get": {
 				"tags": [
@@ -11570,6 +12381,113 @@
 						"description": "OK"
 					}
 				}
+			}
+		},
+		"/v1/invites": {
+			"post": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "createEdgeInvite",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"requestId"
+								],
+								"properties": {
+									"requestId": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"invite": {
+											"type": "object",
+											"properties": {
+												"code": {
+													"type": "string"
+												},
+												"shareUrl": {
+													"type": "string"
+												},
+												"status": {
+													"type": "string"
+												},
+												"expiresAt": {
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											}
+										},
+										"remaining": {
+											"type": "integer",
+											"description": "integer, invites left"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Create Edge invite",
+				"x-wip": true
+			}
+		},
+		"/v1/referrals/allowance": {
+			"get": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "getReferralAllowance",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"granted": {
+											"type": "integer"
+										},
+										"consumed": {
+											"type": "integer"
+										},
+										"remaining": {
+											"type": "integer"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					}
+				},
+				"summary": "Get referral allowance",
+				"description": "Counts of [Edge invites](#create-edge-invite-wip).",
+				"x-wip": true
 			}
 		},
 		"/v2/media/upload": {
@@ -13617,6 +14535,9 @@
 							"tapped": {
 								"type": "boolean",
 								"nullable": true
+							},
+							"isOnPrep": {
+								"type": "boolean"
 							}
 						}
 					}
@@ -13865,7 +14786,7 @@
 						"properties": {
 							"options": {
 								"type": "array",
-								"description": "array of strings, e.g. `[\"EVERYONE\"]`",
+								"description": "array of strings, `[\"EVERYONE\"]` or any of `\"NEARBY\"`, `\"FAVORITES\"`, `\"MESSAGED\"`, `\"ALBUM_SHARED\"`",
 								"items": {
 									"type": "string"
 								}
@@ -15800,6 +16721,9 @@
 								"items": {
 									"$ref": "#/components/schemas/RightNowMedia"
 								}
+							},
+							"isOnPrep": {
+								"type": "boolean"
 							}
 						}
 					}
@@ -18204,6 +19128,8 @@
 					"ProfilePhotoReply",
 					"Retract",
 					"RightNowRequest",
+					"StoryReaction",
+					"StoryReply",
 					"Text",
 					"Unknown",
 					"NonExpiringVideo",
@@ -18365,6 +19291,82 @@
 					"albumContentReply",
 					"contentType"
 				]
+			},
+			"StoryReactionBody": {
+				"type": "object",
+				"properties": {
+					"storyId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"reactionId": {
+						"type": "string"
+					},
+					"unicode": {
+						"type": "string",
+						"description": "string, same format as in [Get story reactions](/grindr-api/users/stories#get-story-reactions)"
+					},
+					"ownerProfileId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true,
+						"description": "integer or `null`, author of the story"
+					},
+					"previewUrl": {
+						"type": "string",
+						"nullable": true
+					},
+					"expiresAt": {
+						"nullable": true,
+						"description": "unix timestamp in milliseconds or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"viewable": {
+						"type": "boolean"
+					}
+				},
+				"description": "Body for `\"StoryReaction\"` message type: a reaction to a [story](/grindr-api/users/stories).",
+				"x-render-on-tag": "messaging/messages"
+			},
+			"StoryReplyBody": {
+				"type": "object",
+				"properties": {
+					"storyId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"text": {
+						"type": "string"
+					},
+					"ownerProfileId": {
+						"type": "integer",
+						"format": "int64",
+						"nullable": true,
+						"description": "integer or `null`, author of the story"
+					},
+					"previewUrl": {
+						"type": "string",
+						"nullable": true
+					},
+					"expiresAt": {
+						"nullable": true,
+						"description": "unix timestamp in milliseconds or `null`",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						]
+					},
+					"viewable": {
+						"type": "boolean"
+					}
+				},
+				"description": "Body for `\"StoryReply\"` message type: a text reply to a [story](/grindr-api/users/stories).",
+				"x-render-on-tag": "messaging/messages"
 			},
 			"AudioMessageBody": {
 				"type": "object",
@@ -18895,6 +19897,12 @@
 					},
 					{
 						"$ref": "#/components/schemas/ProfileLinkBody"
+					},
+					{
+						"$ref": "#/components/schemas/StoryReactionBody"
+					},
+					{
+						"$ref": "#/components/schemas/StoryReplyBody"
 					}
 				],
 				"x-render-on-tag": "messaging/messages",
@@ -19222,6 +20230,43 @@
 					"albumContentReply"
 				]
 			},
+			"SendStoryReactionBody": {
+				"type": "object",
+				"properties": {
+					"storyId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"reactionId": {
+						"type": "string",
+						"description": "string, from [Get story reactions](/grindr-api/users/stories#get-story-reactions)"
+					}
+				},
+				"description": "Request body for sending a `\"StoryReaction\"` message to the story's author. The other fields of [StoryReactionBody](#storyreactionbody) are server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"storyId",
+					"reactionId"
+				]
+			},
+			"SendStoryReplyBody": {
+				"type": "object",
+				"properties": {
+					"storyId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"text": {
+						"type": "string"
+					}
+				},
+				"description": "Request body for sending a `\"StoryReply\"` message to the story's author. The other fields of [StoryReplyBody](#storyreplybody) are server-populated.",
+				"x-render-on-tag": "messaging/messages",
+				"required": [
+					"storyId",
+					"text"
+				]
+			},
 			"SendMessageBody": {
 				"oneOf": [
 					{
@@ -19256,6 +20301,12 @@
 					},
 					{
 						"$ref": "#/components/schemas/SendAlbumContentReplyBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendStoryReactionBody"
+					},
+					{
+						"$ref": "#/components/schemas/SendStoryReplyBody"
 					}
 				],
 				"description": "What you may put in `body` when sending a message. This is **not** the same shape you get back: server-owned fields (signed `url`s, hashes, dimensions, timestamps, expiry counters) exist only on [Message contents](#message-contents).\n\nFive types send exactly what they receive — `Text`, `Location`, `Gaymoji`, `Giphy`, `ProfilePhotoReply` — and are reused as-is below. A `Giphy` body must point at GIPHY's media hosts, see [GiphyBody](#giphybody). The media and album-reaction types send a strict subset.\n\nTypes absent from this list are receive-only: `Album`/`ExpiringAlbum` are shared through [Share an album](/grindr-api/messaging/albums), and `Retract`, `VideoCall`, `PrivateVideo`, `Generative`, `ProfileLink`, `NonExpiringVideo`, `Unknown` arrive as server notifications.",
@@ -19513,11 +20564,24 @@
 						"$ref": "#/components/schemas/ProfileMaskedMin"
 					},
 					{
-						"$ref": "#/components/schemas/ProfileMin"
-					},
-					{
 						"type": "object",
 						"properties": {
+							"profileId": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"displayName": {
+								"type": "string",
+								"nullable": true
+							},
+							"onlineUntil": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/TimestampMs"
+									}
+								],
+								"nullable": true
+							},
 							"timestamp": {
 								"$ref": "#/components/schemas/TimestampMs"
 							},
@@ -19525,7 +20589,12 @@
 								"$ref": "#/components/schemas/TapType"
 							},
 							"lastOnline": {
-								"$ref": "#/components/schemas/TimestampMs"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/TimestampMs"
+									}
+								],
+								"nullable": true
 							},
 							"isBoosting": {
 								"type": "boolean"
@@ -19553,6 +20622,12 @@
 							},
 							"unreadMessageCount": {
 								"type": "integer"
+							},
+							"isOnPrep": {
+								"type": "boolean"
+							},
+							"receivedDuringBoost": {
+								"type": "boolean"
 							}
 						}
 					}
@@ -19572,8 +20647,161 @@
 					"rightNowType",
 					"isViewable",
 					"hasChatted",
-					"unreadMessageCount"
+					"unreadMessageCount",
+					"isOnPrep",
+					"onlineUntil",
+					"receivedDuringBoost"
 				]
+			},
+			"AListProfile": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"realName": {
+						"type": "string",
+						"nullable": true
+					},
+					"displayName": {
+						"type": "string",
+						"nullable": true
+					},
+					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"profileThumbUrl": {
+						"type": "string",
+						"nullable": true
+					},
+					"conversationId": {
+						"type": "string"
+					},
+					"recap": {
+						"type": "string"
+					},
+					"distanceMeters": {
+						"type": "number",
+						"nullable": true
+					},
+					"locationName": {
+						"type": "string",
+						"nullable": true
+					},
+					"hasMedia": {
+						"type": "boolean"
+					},
+					"rightNowStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowAttributionStatus"
+							}
+						],
+						"nullable": true
+					},
+					"isFavorite": {
+						"type": "boolean"
+					},
+					"visiting": {
+						"type": "boolean"
+					},
+					"lastChatted": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"updated": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"isNew": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"hasSmartPhoto": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"isLocked": {
+						"type": "boolean",
+						"nullable": true
+					},
+					"isOnPrep": {
+						"type": "boolean",
+						"nullable": true
+					}
+				},
+				"description": "A-List entry.",
+				"x-render-on-tag": "interest/alist"
+			},
+			"AListUpdate": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"counterpartyId": {
+						"type": "integer",
+						"format": "int64"
+					},
+					"displayName": {
+						"type": "string"
+					},
+					"realName": {
+						"type": "string",
+						"nullable": true
+					},
+					"type": {
+						"type": "string"
+					},
+					"eventTime": {
+						"$ref": "#/components/schemas/TimestampMs"
+					},
+					"profileThumbUrl": {
+						"type": "string"
+					},
+					"onlineUntil": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
+					"rightNowStatus": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RightNowAttributionStatus"
+							}
+						],
+						"nullable": true
+					},
+					"viewedMe": {
+						"type": "boolean"
+					},
+					"isFavorite": {
+						"type": "boolean"
+					},
+					"visiting": {
+						"type": "boolean"
+					},
+					"hasSmartPhoto": {
+						"type": "boolean",
+						"nullable": true
+					}
+				},
+				"description": "A-List activity entry.",
+				"x-render-on-tag": "interest/alist"
 			},
 			"ViewsEyeballResponse": {
 				"type": "object",
@@ -19645,6 +20873,9 @@
 								],
 								"nullable": true,
 								"description": "Right Now attribution status. Added in app 26.11.0 under key `rightNowStatus` (distinct from `rightNow`)."
+							},
+							"isOnPrep": {
+								"type": "boolean"
 							}
 						}
 					}
@@ -19809,7 +21040,7 @@
 					"data": {
 						"type": "object",
 						"additionalProperties": true,
-						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1), [edge_carousel_v1](/grindr-api/browse/grid#edge-carousel-v1), [for_you_now_v1](/grindr-api/browse/grid#for-you-now-v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
+						"description": "object, shape depends on `type` — [full_profile_v1](/grindr-api/browse/grid#full_profile_v1), [partial_profile_v1](/grindr-api/browse/grid#partial_profile_v1), [advert_v1](/grindr-api/browse/grid#advert_v1), [top_picks_v1](/grindr-api/browse/grid#top_picks_v1), [explore_aggregation_v1](/grindr-api/browse/grid#explore_aggregation_v1), [boost_upsell_v1](/grindr-api/browse/grid#boost_upsell_v1), [unlimited_mpu_v1](/grindr-api/browse/grid#unlimited_mpu_v1), [xtra_mpu_v1](/grindr-api/browse/grid#xtra_mpu_v1), [favs_header_v1](/grindr-api/browse/grid#favs_header_v1), [hidden_profile_v1](/grindr-api/browse/grid#hidden_profile_v1), [smart_boost_profile_v1](/grindr-api/browse/grid#smart_boost_profile_v1), [sponsored_profile_v1](/grindr-api/browse/grid#sponsored_profile_v1), [braze_event_profile_v1](/grindr-api/browse/grid#braze_event_profile_v1), [favs_xtra_upsell_v1](/grindr-api/browse/grid#favs_xtra_upsell_v1), [favs_unlimited_upsell_v1](/grindr-api/browse/grid#favs_unlimited_upsell_v1), [day_pass_unlimited_upsell_v1](/grindr-api/browse/grid#day-pass-unlimited-upsell-v1), [favorites_header_no_free_results_v1](/grindr-api/browse/grid#favorites_header_no_free_results_v1), [favorites_header_no_xtra_results_v1](/grindr-api/browse/grid#favorites_header_no_xtra_results_v1), [profile_hide_status](/grindr-api/browse/grid#profile_hide_status), [rewarded_profiles_entry_point_v1](/grindr-api/browse/grid#rewarded_profiles_entry_point_v1), [right_now_carousel_v1](/grindr-api/browse/grid#right_now_carousel_v1), [edge_carousel_v1](/grindr-api/browse/grid#edge-carousel-v1), [for_you_now_v1](/grindr-api/browse/grid#for-you-now-v1), [map_unavailable_in_region_v1](/grindr-api/browse/grid#map-unavailable-in-region-v1). For `profile_hide_status`, `count` is on the item itself, not under `data`."
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -20218,6 +21449,9 @@
 									"nullable": true,
 									"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
 								},
+								"isOnPrep": {
+									"type": "boolean"
+								},
 								"rightNowPost": {
 									"type": "object",
 									"nullable": true,
@@ -20479,6 +21713,9 @@
 									"type": "object",
 									"nullable": true,
 									"description": "the pin thumbnail: `thumbnailUrl`, `fullImageUrl`, `isNsfw`, `text`"
+								},
+								"isOnPrep": {
+									"type": "boolean"
 								}
 							},
 							"required": [
@@ -20529,6 +21766,12 @@
 					"recommendationUuid",
 					"items"
 				]
+			},
+			"MapUnavailableInRegionV1": {
+				"type": "object",
+				"description": "Empty. Appears to mark a requested area where the grid is not available.",
+				"x-render-on-tag": "browse/grid",
+				"x-display-name": "map_unavailable_in_region_v1"
 			},
 			"FavoritesHeaderNoFreeResultsV1": {
 				"type": "object",
@@ -21439,6 +22682,9 @@
 					},
 					"isPopular": {
 						"type": "boolean"
+					},
+					"isOnPrep": {
+						"type": "boolean"
 					}
 				},
 				"x-render-on-tag": "browse/grid",
@@ -21627,7 +22873,8 @@
 					"READ_RECEIPTS",
 					"CASCADE_PROFILES_UNLOCK",
 					"TAPS_RECEIVED_UNLOCK",
-					"INCOGNITO_SESSION"
+					"INCOGNITO_SESSION",
+					"FREE_BOOST"
 				],
 				"description": "Feature that can be temporarily unlocked by watching a rewarded ad.",
 				"x-enum-labels": {
@@ -21636,7 +22883,8 @@
 					"READ_RECEIPTS": "Temporarily enable message read receipts",
 					"CASCADE_PROFILES_UNLOCK": "Unlock additional cascade (grid) profiles",
 					"TAPS_RECEIVED_UNLOCK": "Reveal taps you have received",
-					"INCOGNITO_SESSION": "Temporarily enable Incognito"
+					"INCOGNITO_SESSION": "Temporarily enable Incognito",
+					"FREE_BOOST": "Start a free boost"
 				},
 				"x-render-on-tag": "commerce/rewarded-ads",
 				"x-display-name": "Rewarded Ad Type"
