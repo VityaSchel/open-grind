@@ -8521,7 +8521,7 @@
 			"name": "webpki-root-certs",
 			"ecosystem": "rust",
 			"versions": [
-				"0.26.11, 1.0.7"
+				"0.26.11, 1.0.10"
 			],
 			"spdx": "CDLA-Permissive-2.0",
 			"shipped": "CDLA-Permissive-2.0",
