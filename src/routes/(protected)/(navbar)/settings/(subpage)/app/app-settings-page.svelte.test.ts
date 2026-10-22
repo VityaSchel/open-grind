@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { encode } from "@msgpack/msgpack";
 import {
 	afterEach,
 	beforeAll,
@@ -12,11 +11,7 @@ import {
 } from "vitest";
 
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
-import {
-	installedBy,
-	toastsFake,
-	updateApiFake,
-} from "$lib/updates/updates-test-helpers";
+import { installedBy, updateApiFake } from "$lib/updates/updates-test-helpers";
 import type { Capability } from "$lib/updates/types";
 
 const PRIVACY_POLICY = "https://opengrind.org/privacy";
@@ -25,33 +20,47 @@ const FOREIGN_SIGNER = {
 	detail: { reason: "foreignSigner" },
 } satisfies Capability;
 const FDROID_BUILD = installedBy("org.fdroid.fdroid");
+const SELF_UPDATING = {
+	state: "supported",
+	detail: { payloadSuffix: "universal-release.apk", canInstallNow: true },
+} satisfies Capability;
+const READ_ONLY_INSTALL = {
+	state: "unsupported",
+	detail: {
+		reason: "locationNotWritable",
+		detail: { path: "/opt/open-grind" },
+	},
+} satisfies Capability;
+const DISTRIBUTION_PACKAGE = {
+	state: "unsupported",
+	detail: { reason: "noReleaseArtifacts", detail: { target: "flatpak" } },
+} satisfies Capability;
+const SUBSCREENS = [
+	{ name: "Language English", href: "/settings/app/language" },
+	{ name: "Display", href: "/settings/app/display" },
+	{ name: "Notifications", href: "/settings/app/notifications" },
+	{ name: "Privacy", href: "/settings/app/privacy" },
+	{ name: "Security", href: "/settings/app/security" },
+];
+const UPDATES = { name: "Updates", href: "/settings/app/updates" };
+const ABOUT = [
+	{ name: "Privacy policy", href: PRIVACY_POLICY },
+	{ name: "Credits & Licenses", href: "/settings/app/credits" },
+];
 
 const fake = updateApiFake();
-const toasts = toastsFake();
-const { updateSettings, platform, linkOpener } = vi.hoisted(() => ({
-	updateSettings: {
-		getUpdateCapability: vi.fn<() => Promise<Capability>>(),
-		getUpdateSettings: vi.fn(),
-		setAutomaticUpdateChecks: vi.fn(),
-	},
+const { capabilityApi, platform, linkOpener } = vi.hoisted(() => ({
+	capabilityApi: { getUpdateCapability: vi.fn<() => Promise<Capability>>() },
 	platform: { isAndroidPlatform: vi.fn(() => true) },
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
-vi.mock("$lib/app-data", () => ({
-	existsAppDataFile: () => Promise.resolve(true),
-	readAppDataFile: () => Promise.resolve(encode({})),
-	removeAppDataFile: () => Promise.resolve(),
-	writeAppDataFileAtomic: () => Promise.resolve(),
-}));
-vi.mock("$lib/api/error-toast", () => ({ showErrorToast: vi.fn() }));
 vi.mock("$lib/updates/index", async () => ({
 	...(await import("$lib/updates/types")),
 	...(await import("$lib/updates/components")),
 	...fake.api,
-	...updateSettings,
+	...capabilityApi,
 }));
-vi.mock("$lib/updates/toasts", () => toasts);
 vi.mock("$lib/platform/os", async (importOriginal) => ({
 	...(await importOriginal<typeof import("$lib/platform/os")>()),
 	...platform,
@@ -60,8 +69,15 @@ vi.mock("$lib/platform/link-opener", () => linkOpener);
 
 let testing: typeof import("@testing-library/svelte");
 
-async function opened(capability: Capability) {
-	updateSettings.getUpdateCapability.mockResolvedValue(capability);
+async function opened({
+	capability,
+	android = true,
+}: {
+	capability: Capability;
+	android?: boolean;
+}) {
+	capabilityApi.getUpdateCapability.mockResolvedValue(capability);
+	platform.isAndroidPlatform.mockReturnValue(android);
 	testing = await import("@testing-library/svelte");
 	const { hydrateUpdateCapability } =
 		await import("$lib/updates/capability.svelte");
@@ -69,6 +85,25 @@ async function opened(capability: Capability) {
 	const { default: AppSettingsPage } = await import("./+page.svelte");
 	testing.render(AppSettingsPage);
 	return testing.screen;
+}
+
+function rows(): { name: string; href: string | null }[] {
+	return testing.screen
+		.getAllByRole("link")
+		.map((link) => ({
+			name: link.textContent.replace(/\s+/g, " ").trim(),
+			href: link.getAttribute("href"),
+		}));
+}
+
+function groups(): string[][] {
+	const found: string[][] = [[]];
+	for (const element of document.querySelectorAll('a, [role="separator"]')) {
+		if (element.getAttribute("role") === "separator") found.push([]);
+		else
+			found.at(-1)!.push(element.textContent.replace(/\s+/g, " ").trim());
+	}
+	return found;
 }
 
 beforeAll(async () => {
@@ -80,8 +115,6 @@ beforeEach(() => {
 	vi.resetModules();
 	vi.clearAllMocks();
 	fake.reset();
-	platform.isAndroidPlatform.mockReturnValue(true);
-	updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: false });
 });
 
 afterEach(() => {
@@ -89,101 +122,76 @@ afterEach(() => {
 	vi.unstubAllEnvs();
 });
 
-describe("the Updates section of the app settings on Android", () => {
-	it("offers Google OAuth app updates on a store build signed by Open Grind", async () => {
-		const screen = await opened(FDROID_BUILD);
+describe("the app settings menu", () => {
+	it("lists Language, the subscreens, then the privacy policy and the credits, under no headings", async () => {
+		const screen = await opened({ capability: FDROID_BUILD });
 
-		expect(screen.getByRole("heading", { name: "Updates" })).toBeTruthy();
-		expect(
-			screen.getByRole("switch", {
-				name: /^Check add-on updates automatically/,
-			}),
-		).toBeTruthy();
-		expect(
-			screen.getByRole("button", { name: "Check for updates" }),
-		).toBeTruthy();
+		expect(rows()).toEqual([...SUBSCREENS, UPDATES, ...ABOUT]);
+		expect(screen.queryAllByRole("heading")).toEqual([]);
 	}, 60_000);
 
-	it("shows the saved automatic checks value on the first frame when opened again", async () => {
-		updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: true });
-		const automaticChecks = () =>
-			testing.screen.getByRole("switch", {
-				name: /^Check add-on updates automatically/,
-			});
+	it.each([
+		{ capability: FDROID_BUILD, updates: ["Updates"] },
+		{ capability: FOREIGN_SIGNER, updates: [] },
+	])(
+		"sets Language, the subscreens and the about rows apart, with $updates.length Updates rows",
+		async ({ capability, updates }) => {
+			await opened({ capability });
 
-		await opened(FDROID_BUILD);
-		await testing.waitFor(() => {
-			expect(automaticChecks().getAttribute("aria-checked")).toBe("true");
-		});
-		testing.cleanup();
+			expect(groups()).toEqual([
+				["Language English"],
+				[...SUBSCREENS.slice(1).map(({ name }) => name), ...updates],
+				ABOUT.map(({ name }) => name),
+			]);
+		},
+		60_000,
+	);
 
-		const { default: AppSettingsPage } = await import("./+page.svelte");
-		testing.render(AppSettingsPage);
+	it.each([
+		{ build: "a self-updating build", capability: SELF_UPDATING },
+		{
+			build: "a store build signed by Open Grind",
+			capability: FDROID_BUILD,
+			android: true,
+		},
+		{
+			build: "a desktop build installed where it can’t update itself",
+			capability: READ_ONLY_INSTALL,
+		},
+	])(
+		"offers Updates on $build",
+		async ({ capability, android = false }) => {
+			await opened({ capability, android });
 
-		expect(automaticChecks().getAttribute("aria-checked")).toBe("true");
-		expect(updateSettings.getUpdateSettings).toHaveBeenCalledOnce();
-	}, 60_000);
+			expect(rows()).toEqual([...SUBSCREENS, UPDATES, ...ABOUT]);
+		},
+		60_000,
+	);
 
-	it("stays hidden on a build someone else signed", async () => {
-		const screen = await opened(FOREIGN_SIGNER);
+	it.each([
+		{
+			build: "a build someone else signed",
+			capability: FOREIGN_SIGNER,
+			android: true,
+		},
+		{
+			build: "a distribution package",
+			capability: DISTRIBUTION_PACKAGE,
+			android: false,
+		},
+	])(
+		"leaves Updates out on $build",
+		async ({ capability, android }) => {
+			await opened({ capability, android });
 
-		expect(screen.getByRole("heading", { name: "About" })).toBeTruthy();
-		expect(screen.queryByRole("heading", { name: "Updates" })).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: "Check for updates" }),
-		).toBeNull();
-		expect(screen.queryByText(/updates automatically/)).toBeNull();
-		expect(updateSettings.getUpdateSettings).not.toHaveBeenCalled();
-	}, 60_000);
-});
-
-describe("the Updates rows in another language", () => {
-	it("follow the active locale", async () => {
-		updateSettings.setAutomaticUpdateChecks.mockRejectedValueOnce(
-			new Error("read-only"),
-		);
-		const screen = await opened(FDROID_BUILD);
-		const automaticChecks = screen.getByRole<HTMLButtonElement>("switch", {
-			name: /^Check add-on updates automatically/,
-		});
-		await testing.waitFor(() => {
-			expect(automaticChecks.disabled).toBe(false);
-		});
-		const copy = [
-			screen.getByText("Check add-on updates automatically"),
-			screen.getByText(/^Periodically ask git\.opengrind\.org/),
-			screen.getByRole("button", { name: "Check for updates" }),
-		];
-		const { setLocale } = await import("$lib/i18n");
-		const { showErrorToast } = await import("$lib/api/error-toast");
-
-		await setLocale({ locale: "en-XA" });
-		automaticChecks.click();
-
-		for (const element of copy) {
-			expect(element.textContent.trim()).toMatch(PSEUDO_MESSAGE);
-		}
-		await testing.waitFor(() => {
-			expect(showErrorToast).toHaveBeenCalledExactlyOnceWith({
-				label: expect.stringMatching(PSEUDO_MESSAGE),
-				error: new Error("read-only"),
-			});
-		});
-	}, 60_000);
-});
-
-describe("the Display section of the app settings", () => {
-	it("starts with the Language row", async () => {
-		const screen = await opened(FOREIGN_SIGNER);
-
-		expect(
-			screen.getByRole("heading", { name: "Display" }).nextElementSibling,
-		).toBe(screen.getByRole("link", { name: "Language English" }));
-	}, 60_000);
+			expect(rows()).toEqual([...SUBSCREENS, ...ABOUT]);
+		},
+		60_000,
+	);
 
 	it("keeps the Language row in a release build that offers only English", async () => {
 		vi.stubEnv("DEV", false);
-		const screen = await opened(FOREIGN_SIGNER);
+		const screen = await opened({ capability: FOREIGN_SIGNER });
 		const { locales } = await import("$lib/i18n");
 
 		expect(locales).toEqual(["en"]);
@@ -191,85 +199,34 @@ describe("the Display section of the app settings", () => {
 			screen.getByRole("link", { name: "Language English" }),
 		).toBeTruthy();
 	}, 60_000);
-});
 
-describe("the About section of the app settings", () => {
-	it("lists the privacy policy right before the credits and opens it in the system browser", async () => {
-		const screen = await opened(FOREIGN_SIGNER);
+	it("opens the privacy policy in the system browser", async () => {
+		const screen = await opened({ capability: FOREIGN_SIGNER });
 
-		const privacyPolicy = screen.getByRole("link", {
-			name: "Privacy policy",
-		});
-		expect(privacyPolicy.nextElementSibling).toBe(
-			screen.getByRole("link", { name: "Credits & Licenses" }),
-		);
-		expect(privacyPolicy.getAttribute("href")).toBe(PRIVACY_POLICY);
-
-		privacyPolicy.click();
+		screen.getByRole("link", { name: "Privacy policy" }).click();
 
 		expect(linkOpener.openExternalLink).toHaveBeenCalledExactlyOnceWith(
 			PRIVACY_POLICY,
 		);
 	}, 60_000);
-});
-
-describe("the app settings copy", () => {
-	it("names its sections and rows", async () => {
-		const screen = await opened(FOREIGN_SIGNER);
-
-		expect(
-			screen
-				.getAllByRole("heading")
-				.map((heading) => heading.textContent.trim()),
-		).toEqual(["Display", "Privacy", "Security", "About"]);
-		expect(
-			screen
-				.getAllByRole("link")
-				.map((link) => link.textContent.replace(/\s+/g, " ").trim()),
-		).toEqual([
-			"Language English",
-			"Notifications",
-			"Discreet App Icon",
-			"PIN",
-			"Privacy policy",
-			"Credits & Licenses",
-		]);
-		expect(
-			screen.getByText(
-				"Let others know when you’ve read their messages. Your read receipts remain unaffected.",
-			),
-		).toBeTruthy();
-		expect(
-			screen.getByText(
-				"Let others know when you’ve viewed their profile. Your profile view history remains unaffected.",
-			),
-		).toBeTruthy();
-	}, 60_000);
 
 	it("follows the active locale", async () => {
-		const screen = await opened(FOREIGN_SIGNER);
-		const copy = [
-			...screen.getAllByRole("heading"),
-			...screen
-				.getAllByRole("link")
-				.map(
-					(link) =>
-						link.querySelector<HTMLElement>(
-							'[data-slot="item-title"]',
-						) ?? link,
-				),
-			screen.getByText("Haptic feedback"),
-			screen.getByText("Stay online while the app is open"),
-			screen.getByText(/^Refresh your online status/),
-			screen.getByText("Reveal message read status"),
-			screen.getByText("Reveal profile views"),
-		];
+		const screen = await opened({ capability: FDROID_BUILD });
+		const titles = screen
+			.getAllByRole("link")
+			.map(
+				(link) =>
+					link.querySelector<HTMLElement>(
+						'[data-slot="item-title"]',
+					) ?? link,
+			);
 		const { setLocale } = await import("$lib/i18n");
 
 		await setLocale({ locale: "en-XA" });
 
-		for (const element of copy) {
-			expect(element.textContent.trim()).toMatch(PSEUDO_MESSAGE);
+		expect(titles).toHaveLength(SUBSCREENS.length + 1 + ABOUT.length);
+		for (const title of titles) {
+			expect(title.textContent.trim()).toMatch(PSEUDO_MESSAGE);
 		}
 	}, 60_000);
 });

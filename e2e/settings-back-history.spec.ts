@@ -1,20 +1,106 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import { historyDepth, pathname } from "./support/app";
 import {
 	APP_SETTINGS,
+	APP_SUBSCREENS,
 	clickMeTab,
 	clickNavBarBack,
 	openAppSettings,
+	openAppSubscreen,
 	openDeepLink,
 	openSettings,
 	SETTINGS,
+	stackSettled,
 	systemBack,
 } from "./support/page-stack";
 
 const ROUNDS = 3;
+const PLATFORMS = [
+	{ platform: "android", viewport: { width: 420, height: 800 } },
+	{ platform: "macos", viewport: { width: 1280, height: 800 } },
+];
 
 test.describe.configure({ timeout: 180_000 });
+
+const entryIndex = (page: Page) =>
+	page.evaluate(() => navigation.currentEntry!.index);
+
+async function platformBack(page: Page, platform: string) {
+	if (platform === "android") {
+		await systemBack(page);
+		return;
+	}
+	await page.evaluate(() => history.back());
+	await stackSettled(page);
+}
+
+for (const { platform, viewport } of PLATFORMS) {
+	test.describe(`App Settings subscreens on ${platform}`, () => {
+		test.use({ viewport });
+
+		test("the navbar Back walks from each subscreen to App Settings, then to the Me screen, without adding history", async ({
+			page,
+		}) => {
+			await openSettings(page, { platform });
+			const start = await historyDepth(page);
+			await openAppSettings(page);
+			const atAppSettings = await entryIndex(page);
+
+			for (const subscreen of APP_SUBSCREENS) {
+				await openAppSubscreen(page, subscreen);
+				expect(
+					await historyDepth(page),
+					`opening ${subscreen.row} pushes one entry over App Settings`,
+				).toBe(start + 2);
+
+				await clickNavBarBack(page);
+
+				await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+				expect(
+					await entryIndex(page),
+					`Back from ${subscreen.row} went back to App Settings`,
+				).toBe(atAppSettings);
+			}
+			await clickNavBarBack(page);
+
+			await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
+			expect(await entryIndex(page)).toBe(atAppSettings - 1);
+			expect(
+				await historyDepth(page),
+				"history never grew past one subscreen",
+			).toBe(start + 2);
+		});
+
+		test("the navbar Back and the platform back do not oscillate between App Settings and its subscreens", async ({
+			page,
+		}) => {
+			await openSettings(page, { platform });
+			const start = await historyDepth(page);
+			const visited: string[] = [];
+
+			for (const subscreen of APP_SUBSCREENS) {
+				await openAppSettings(page);
+				await openAppSubscreen(page, subscreen);
+				await clickNavBarBack(page);
+				visited.push(await pathname(page));
+				await platformBack(page, platform);
+				visited.push(await pathname(page));
+			}
+			await platformBack(page, platform);
+			visited.push(await pathname(page));
+
+			expect(visited, visited.join(" -> ")).toEqual([
+				...APP_SUBSCREENS.flatMap(() => [APP_SETTINGS, SETTINGS]),
+				expect.not.stringMatching(/^\/settings/),
+			]);
+			expect(
+				(await historyDepth(page)) - start,
+				"history.length grew",
+			).toBeLessThanOrEqual(2);
+		});
+	});
+}
 
 test("the navbar Back returns to the previous entry instead of pushing one", async ({
 	page,

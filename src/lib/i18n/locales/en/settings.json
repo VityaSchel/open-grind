@@ -85,8 +85,7 @@
 			"display": "Display",
 			"privacy": "Privacy",
 			"security": "Security",
-			"updates": "Updates",
-			"about": "About"
+			"updates": "Updates"
 		},
 		"units": {
 			"title": "Units",

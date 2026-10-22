@@ -42,8 +42,24 @@
 			title: "settings.subpage.titles.language",
 			back: "/settings/app",
 		},
+		[`${base}/app/display`]: {
+			title: "settings.app.sections.display",
+			back: "/settings/app",
+		},
 		[`${base}/app/notifications`]: {
 			title: "settings.subpage.titles.notifications",
+			back: "/settings/app",
+		},
+		[`${base}/app/privacy`]: {
+			title: "settings.app.sections.privacy",
+			back: "/settings/app",
+		},
+		[`${base}/app/security`]: {
+			title: "settings.app.sections.security",
+			back: "/settings/app",
+		},
+		[`${base}/app/updates`]: {
+			title: "settings.app.sections.updates",
 			back: "/settings/app",
 		},
 		[`${base}/app/credits`]: {

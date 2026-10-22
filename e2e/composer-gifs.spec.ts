@@ -175,21 +175,13 @@ test.describe("GIPHY consent", () => {
 		await expect(page.locator(GIPHY_CONSENT_NOTE)).toHaveCount(0);
 
 		await page.goto("/settings/app");
+		await page
+			.getByRole("link", { name: "Privacy", exact: true })
+			.click({ timeout: FIRST_ROUTE_COMPILE_MS });
+		await expect(page).toHaveURL(/\/settings\/app\/privacy$/);
 		await consentSwitch(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 		await expect(consentSwitch(page)).toBeChecked();
 		await expect(consentSwitch(page)).toBeEnabled();
-		const section = await consentSwitch(page).evaluate((control) =>
-			[...document.querySelectorAll("h2")]
-				.filter(
-					(heading) =>
-						(heading.compareDocumentPosition(control) &
-							Node.DOCUMENT_POSITION_FOLLOWING) !==
-						0,
-				)
-				.at(-1)
-				?.textContent?.trim(),
-		);
-		expect(section).toBe("Privacy");
 
 		await consentSwitch(page).click();
 		await expect(consentSwitch(page)).not.toBeChecked();

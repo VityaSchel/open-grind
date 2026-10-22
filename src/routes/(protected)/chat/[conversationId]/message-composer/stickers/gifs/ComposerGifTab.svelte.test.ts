@@ -125,7 +125,7 @@ describe("composer GIF tab", () => {
 		await mount();
 
 		expect(
-			screen.getByText(/GIFs in your chats will load on their own/),
+			screen.getByText(/which GIFs load and that you use a Grindr app/),
 		).toBeTruthy();
 		expect(screen.queryByRole("searchbox")).toBeNull();
 		expect(api.getTrendingGifs).not.toHaveBeenCalled();

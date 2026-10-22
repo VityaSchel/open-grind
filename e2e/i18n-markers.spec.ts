@@ -39,7 +39,21 @@ interface MarkerView {
 }
 
 const views: readonly MarkerView[] = [
-	{ name: "App Settings", path: "/settings/app", ready: "main h2" },
+	{
+		name: "App Settings",
+		path: "/settings/app",
+		ready: 'main a[href="/settings/app/credits"]',
+	},
+	{
+		name: "Display settings",
+		path: "/settings/app/display",
+		ready: '[role="slider"]',
+	},
+	{
+		name: "Privacy settings",
+		path: "/settings/app/privacy",
+		ready: '[role="switch"]',
+	},
 	{ name: "inbox", path: "/chat", ready: INBOX_ROW },
 	{ name: "profile", path: "/profile/100001", ready: "main h1" },
 ];

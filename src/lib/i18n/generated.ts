@@ -737,7 +737,6 @@ export interface Messages {
 	"settings.app.revealMessageRead.title": undefined;
 	"settings.app.revealProfileViews.description": undefined;
 	"settings.app.revealProfileViews.title": undefined;
-	"settings.app.sections.about": undefined;
 	"settings.app.sections.display": undefined;
 	"settings.app.sections.privacy": undefined;
 	"settings.app.sections.security": undefined;

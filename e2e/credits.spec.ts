@@ -138,6 +138,7 @@ test.describe("credits page", () => {
 	test("each settings page keeps its own scroll offset across Back", async ({
 		page,
 	}) => {
+		await page.setViewportSize({ width: 420, height: 560 });
 		await installTauriShim(page);
 		await page.goto(APP_SETTINGS);
 		const link = page.getByRole("link", { name: "Credits & Licenses" });

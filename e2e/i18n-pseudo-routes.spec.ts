@@ -145,6 +145,11 @@ const routes: readonly RouteCase[] = [
 		shows: 'a[href$="/issues/new"]',
 	},
 	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/display",
+		path: `${APP}/display`,
+		shows: '[role="slider"]',
+	},
+	{
 		route: "/(protected)/(navbar)/settings/(subpage)/app/language",
 		path: `${APP}/language`,
 		shows: '[data-slot="language-option"]',
@@ -153,6 +158,21 @@ const routes: readonly RouteCase[] = [
 		route: "/(protected)/(navbar)/settings/(subpage)/app/notifications",
 		path: `${APP}/notifications`,
 		shows: "main p",
+	},
+	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/privacy",
+		path: `${APP}/privacy`,
+		shows: SWITCH,
+	},
+	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/security",
+		path: `${APP}/security`,
+		shows: 'main a[href="#/"]',
+	},
+	{
+		route: "/(protected)/(navbar)/settings/(subpage)/app/updates",
+		path: `${APP}/updates`,
+		shows: `nav a[href="${APP}"]`,
 	},
 	{
 		route: "/(protected)/(navbar)/settings/(subpage)/profile",
