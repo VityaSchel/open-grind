@@ -9,6 +9,10 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
+import {
+	accountStatusState,
+	dismissAccountStatus,
+} from "$lib/api/account-status-state.svelte";
 import { ApiError } from "$lib/api/api-error";
 import {
 	fetchRest,
@@ -169,5 +173,48 @@ describe("jsonParsed", () => {
 			response: { status: 500 },
 			retryable: true,
 		});
+	});
+});
+
+describe("account status errors", () => {
+	function respondWith({ status, body }: { status: number; body: unknown }) {
+		invokeMock.mockResolvedValue(
+			toBase64(
+				encode({
+					status,
+					body: new TextEncoder().encode(JSON.stringify(body)),
+				}),
+			),
+		);
+	}
+
+	it("asks for phone verification once and stays quiet after it is dismissed", async () => {
+		respondWith({
+			status: 403,
+			body: {
+				code: 30,
+				message: "Verification required",
+				profileId: "1",
+			},
+		});
+
+		await fetchRest("/v3/me/prefs");
+		expect(accountStatusState).toMatchObject({
+			open: true,
+			status: { kind: "phoneVerificationRequired", error: { code: 30 } },
+		});
+
+		dismissAccountStatus();
+		await fetchRest("/v3/me/prefs");
+		expect(accountStatusState.open).toBe(false);
+	});
+
+	it("leaves other error codes to the caller", async () => {
+		respondWith({ status: 403, body: { code: 27, message: "Banned" } });
+		accountStatusState.status = null;
+
+		await fetchRest("/v3/me/prefs");
+
+		expect(accountStatusState.status).toBeNull();
 	});
 });

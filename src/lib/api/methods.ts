@@ -50,6 +50,8 @@ export const restrictionSchema = z.object({
 	]),
 	region: z.string().nullish(),
 	reason: z.string().nullish(),
+	subReason: z.string().nullish(),
+	endsAt: z.int().nullish(),
 });
 export type Restriction = z.infer<typeof restrictionSchema>;
 

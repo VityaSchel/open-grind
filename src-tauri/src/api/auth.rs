@@ -30,36 +30,44 @@ pub struct Restriction {
 	pub kind: String,
 	pub region: Option<String>,
 	pub reason: Option<String>,
+	pub sub_reason: Option<String>,
+	pub ends_at: Option<i64>,
+}
+
+impl Restriction {
+	fn of_kind(kind: &str) -> Self {
+		Self {
+			kind: kind.to_owned(),
+			region: None,
+			reason: None,
+			sub_reason: None,
+			ends_at: None,
+		}
+	}
 }
 
 impl From<grindr::Restriction> for Restriction {
 	fn from(r: grindr::Restriction) -> Self {
 		match r {
 			grindr::Restriction::AgeVerification { region, reason } => Self {
-				kind: "ageVerification".to_owned(),
 				region: Some(region_str(region).to_owned()),
 				reason: Some(reason),
+				..Self::of_kind("ageVerification")
 			},
 			grindr::Restriction::TimedBan(details) => Self {
-				kind: "timedBan".to_owned(),
-				region: None,
 				reason: details.reason,
+				sub_reason: details.sub_reason,
+				ends_at: details.expiry_time,
+				..Self::of_kind("timedBan")
 			},
-			grindr::Restriction::TrustVendorRejected => Self {
-				kind: "trustVendorRejected".to_owned(),
-				region: None,
-				reason: None,
-			},
+			grindr::Restriction::TrustVendorRejected => {
+				Self::of_kind("trustVendorRejected")
+			}
 			grindr::Restriction::Other(raw) => Self {
-				kind: "other".to_owned(),
-				region: None,
 				reason: Some(raw),
+				..Self::of_kind("other")
 			},
-			_ => Self {
-				kind: "other".to_owned(),
-				region: None,
-				reason: None,
-			},
+			_ => Self::of_kind("other"),
 		}
 	}
 }
@@ -356,6 +364,26 @@ mod tests {
 		assert_eq!(json["kind"], "ageVerification");
 		assert_eq!(json["region"], "uk");
 		assert_eq!(json["reason"], "UK_VERIFICATION_REQUIRED");
+	}
+
+	#[test]
+	fn a_timed_ban_passes_its_end_time_and_sub_reason_to_the_frontend() {
+		let restriction: grindr::Restriction =
+			serde_json::from_value(serde_json::json!({ "TimedBan": {
+				"expiryTime": 1_792_000_000_000_i64,
+				"reason": "Scam / Spam",
+				"subReason": "PROFILE_SPAM",
+				"isAutomated": true,
+			}}))
+			.unwrap();
+
+		let json =
+			serde_json::to_value(Restriction::from(restriction)).unwrap();
+
+		assert_eq!(json["kind"], "timedBan");
+		assert_eq!(json["reason"], "Scam / Spam");
+		assert_eq!(json["subReason"], "PROFILE_SPAM");
+		assert_eq!(json["endsAt"], 1_792_000_000_000_i64);
 	}
 
 	fn jwt_with_payload(payload: serde_json::Value) -> String {

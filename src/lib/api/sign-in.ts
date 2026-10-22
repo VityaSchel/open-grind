@@ -2,8 +2,9 @@ import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
 
 import {
-	accountStatusState,
 	showAccountRestriction,
+	showAccountStatus,
+	showAccountStatusForApiError,
 } from "$lib/api/account-status-state.svelte";
 import { showErrorToast } from "$lib/api/error-toast";
 import {
@@ -66,8 +67,14 @@ export function reportSignInFailure({
 	if (appError && onFailure(appError)) return;
 	const ban = asBanned(error);
 	if (ban) {
-		accountStatusState.status = { kind: "banned", info: ban };
-		accountStatusState.open = true;
+		showAccountStatus({ kind: "banned", info: ban });
+		return;
+	}
+	if (
+		typeof appError?.message === "object" &&
+		"code" in appError.message &&
+		showAccountStatusForApiError(appError.message)
+	) {
 		return;
 	}
 	if (appError?.kind === "RateLimited") {

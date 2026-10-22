@@ -2,6 +2,7 @@ import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
+import { noticeAccountStatusInResponse } from "$lib/api/account-status-state.svelte";
 import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
 import {
 	asAppError,
@@ -11,6 +12,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
+import { verificationRequiredErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -246,7 +248,7 @@ export async function fetchRest(
 ) {
 	const method = options.method ?? "GET";
 	const requestInfo = { method, path, body: options.body };
-	return await respondFromDemoOrSend({
+	const response = await respondFromDemoOrSend({
 		requestInfo,
 		send: () =>
 			sendRestRequest({
@@ -254,6 +256,20 @@ export async function fetchRest(
 				abortController: options.abortController,
 			}),
 	});
+	noticeAccountStatusIn(response);
+	return response;
+}
+
+function noticeAccountStatusIn(response: RestResponse): void {
+	if (response.status < 400) return;
+	let body: unknown;
+	try {
+		body = JSON.parse(response.text());
+	} catch {
+		return;
+	}
+	const error = verificationRequiredErrorSchema.safeParse(body);
+	if (error.success) noticeAccountStatusInResponse(error.data);
 }
 
 async function sendRestRequest({
