@@ -6,13 +6,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import BackButton from "./BackButton.svelte";
 
-const { afterNavigateCallbacks } = vi.hoisted(() => ({
+const { afterNavigateCallbacks, gotoMock } = vi.hoisted(() => ({
 	afterNavigateCallbacks: [] as (() => void)[],
+	gotoMock: vi.fn(),
 }));
 
 vi.mock("$app/navigation", () => ({
 	afterNavigate: (callback: () => void) =>
 		afterNavigateCallbacks.push(callback),
+	goto: gotoMock,
 }));
 
 function renderBackLink({
@@ -80,6 +82,7 @@ describe("BackButton", () => {
 		document.body.replaceChildren();
 		vi.unstubAllGlobals();
 		afterNavigateCallbacks.length = 0;
+		gotoMock.mockReset();
 	});
 
 	it("goes back through history when there is a previous screen", () => {
@@ -87,23 +90,50 @@ describe("BackButton", () => {
 
 		expect(clickFollowsLink(link)).toBe(false);
 		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
 	});
 
-	it("opens Browse when the profile is the first screen", () => {
+	it("replaces the profile with Browse when it is the first screen", () => {
 		const { back, link } = renderBackLink({
 			canGoBack: false,
 			historyLength: 5,
 		});
 
 		expect(link.getAttribute("href")).toBe("/");
-		expect(clickFollowsLink(link)).toBe(true);
+		expect(clickFollowsLink(link)).toBe(false);
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replaceState: true,
+		});
 		expect(back).not.toHaveBeenCalled();
 	});
 
-	it("opens Browse on a lone entry where the Navigation API is missing", () => {
+	it("replaces a lone entry with Browse where the Navigation API is missing", () => {
 		const { back, link } = renderBackLink({ historyLength: 1 });
 
-		expect(clickFollowsLink(link)).toBe(true);
+		expect(clickFollowsLink(link)).toBe(false);
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replaceState: true,
+		});
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("replaces once for a double tap on the first screen", () => {
+		const { link } = renderBackLink({ canGoBack: false });
+
+		clickFollowsLink(link);
+
+		expect(clickFollowsLink(link)).toBe(false);
+		expect(gotoMock).toHaveBeenCalledOnce();
+	});
+
+	it("replaces the first screen with Browse on Escape", () => {
+		const { back } = renderBackLink({ canGoBack: false });
+
+		pressEscape();
+
+		expect(gotoMock).toHaveBeenCalledExactlyOnceWith("/", {
+			replaceState: true,
+		});
 		expect(back).not.toHaveBeenCalled();
 	});
 
@@ -139,6 +169,7 @@ describe("BackButton", () => {
 		pressEscape();
 
 		expect(back).toHaveBeenCalledOnce();
+		expect(gotoMock).not.toHaveBeenCalled();
 	});
 
 	it("pops once for Escape pressed twice before the navigation lands", () => {
@@ -197,6 +228,14 @@ describe("BackButton", () => {
 		const { back, link } = renderBackLink({ canGoBack: true });
 
 		expect(clickFollowsLink(link, { metaKey: true })).toBe(true);
+		expect(back).not.toHaveBeenCalled();
+	});
+
+	it("leaves a modified click on the first screen to the browser", () => {
+		const { back, link } = renderBackLink({ canGoBack: false });
+
+		expect(clickFollowsLink(link, { metaKey: true })).toBe(true);
+		expect(gotoMock).not.toHaveBeenCalled();
 		expect(back).not.toHaveBeenCalled();
 	});
 });

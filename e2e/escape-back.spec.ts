@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 import {
+	backLink,
 	DEMO_CONVERSATION,
+	FIRST_ROUTE_COMPILE_MS,
+	historyEntries,
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
@@ -118,4 +121,20 @@ test("Escape closes a settings page", async ({ page }) => {
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(/\/settings\/app$/);
+});
+
+test("Escape walks up a deep-linked settings page in place", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await page.goto("/settings/app/credits");
+	await backLink(page).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+
+	await page.keyboard.press("Escape");
+	await expect(page).toHaveURL(/\/settings\/app$/);
+
+	expect(
+		await historyEntries(page),
+		"Escape replaced Credits with its parent",
+	).toEqual({ index: 0, paths: ["/settings/app"] });
 });

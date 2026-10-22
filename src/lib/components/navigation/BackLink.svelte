@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { afterNavigate } from "$app/navigation";
+	import { afterNavigate, goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
@@ -45,16 +45,12 @@
 	aria-keyshortcuts="Escape"
 	onclick={(event) => {
 		if (!isPlainClick(event)) return;
-		if (leaving) {
-			event.preventDefault();
-			return;
-		}
+		event.preventDefault();
+		if (leaving) return;
 		leaving = true;
 
-		if (canGoBack()) {
-			event.preventDefault();
-			history.back();
-		}
+		if (canGoBack()) history.back();
+		else void goto(href, { replaceState: true });
 	}}
 >
 	{@render children?.()}

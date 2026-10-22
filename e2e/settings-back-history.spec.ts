@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { historyDepth, pathname } from "./support/app";
+import {
+	backLink,
+	historyDepth,
+	historyEntries,
+	pathname,
+} from "./support/app";
 import {
 	APP_SETTINGS,
 	clickMeTab,
@@ -9,10 +14,12 @@ import {
 	openDeepLink,
 	openSettings,
 	SETTINGS,
+	stackSettled,
 	systemBack,
 } from "./support/page-stack";
 
 const ROUNDS = 3;
+const CREDITS = `${APP_SETTINGS}/credits`;
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -206,4 +213,54 @@ test("the Me tab still navigates from a deep-linked subpage", async ({
 	await clickMeTab(page);
 
 	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
+});
+
+test("the navbar Back pops two levels opened in the app", async ({ page }) => {
+	await openSettings(page, { platform: "android" });
+	await openAppSettings(page);
+	await page.getByRole("link", { name: "Credits & Licenses" }).click();
+	await expect(page).toHaveURL(new RegExp(`${CREDITS}$`));
+	await stackSettled(page);
+	const atCredits = await historyEntries(page);
+
+	await clickNavBarBack(page);
+	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+	const atAppSettings = await historyEntries(page);
+
+	await clickNavBarBack(page);
+	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
+	const atSettings = await historyEntries(page);
+
+	expect(
+		[atAppSettings.index, atSettings.index],
+		`entries ${atCredits.paths.join(" ")} @${atCredits.index}`,
+	).toEqual([atCredits.index - 1, atCredits.index - 2]);
+	expect(
+		atSettings.paths,
+		"both subpages stayed forward entries instead of being stacked again",
+	).toEqual(atCredits.paths);
+});
+
+test("the navbar Back walks up from a deep-linked subpage instead of looping", async ({
+	page,
+}) => {
+	await openDeepLink(page, CREDITS, { platform: "android" });
+
+	await clickNavBarBack(page);
+	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+	expect(
+		await historyEntries(page),
+		"App Settings took the place of Credits",
+	).toEqual({ index: 0, paths: [APP_SETTINGS] });
+
+	await clickNavBarBack(page);
+	await expect(page).toHaveURL(new RegExp(`${SETTINGS}$`));
+	expect(
+		await historyEntries(page),
+		"Me took the place of App Settings",
+	).toEqual({ index: 0, paths: [SETTINGS] });
+	expect(
+		await backLink(page).count(),
+		"Me offers no Back that could return to Credits",
+	).toBe(0);
 });

@@ -22,6 +22,13 @@ export const meTab = (page: Page) =>
 
 export const pathname = (page: Page) => page.evaluate(() => location.pathname);
 export const historyDepth = (page: Page) => page.evaluate(() => history.length);
+export const historyEntries = (page: Page) =>
+	page.evaluate(() => ({
+		index: navigation.currentEntry!.index,
+		paths: navigation
+			.entries()
+			.map((entry) => (entry.url ? new URL(entry.url).pathname : "")),
+	}));
 
 export function afterTwoFrames(page: Page): Promise<void> {
 	return page.evaluate(
