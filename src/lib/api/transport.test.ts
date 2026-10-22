@@ -209,6 +209,27 @@ describe("account status errors", () => {
 		expect(accountStatusState.open).toBe(false);
 	});
 
+	it("opens one update popup for a burst of refused-version responses", async () => {
+		respondWith({
+			status: 412,
+			body: { code: 8, message: "The client version is deprecated" },
+		});
+
+		await Promise.all([
+			fetchRest("/v3/me/prefs"),
+			fetchRest("/v4/cascade"),
+			fetchRest("/v4/inbox"),
+		]);
+		expect(accountStatusState).toMatchObject({
+			open: true,
+			status: { kind: "unsupportedVersion" },
+		});
+
+		dismissAccountStatus();
+		await fetchRest("/v3/me/prefs");
+		expect(accountStatusState.open).toBe(false);
+	});
+
 	it("leaves other error codes to the caller", async () => {
 		respondWith({ status: 403, body: { code: 27, message: "Banned" } });
 		accountStatusState.status = null;

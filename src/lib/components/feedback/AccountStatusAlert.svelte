@@ -8,6 +8,7 @@
 	import {
 		accountStatusState,
 		dismissAccountStatus,
+		noticeAccountStatusInResponse,
 		showAccountRestriction,
 		showAccountStatus,
 	} from "$lib/api/account-status-state.svelte";
@@ -21,7 +22,10 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import Link from "$lib/components/ui/link/Link.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
+	import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
+	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
+	import { checkForUpdatesNow } from "$lib/updates/update-checks";
 	import {
 		ageVerificationArticleUrl,
 		BAN_APPEAL_URL,
@@ -40,11 +44,14 @@
 		appealHref?: string;
 		verifyAgeHref?: string;
 		details?: unknown;
-		closeLabel: "Sign out" | "OK";
+		closeLabel?: "Sign out" | "OK";
+		checksForUpdates?: boolean;
 		signsOut: boolean;
 	};
 
 	const signOutEnding = { closeLabel: "Sign out", signsOut: true } as const;
+
+	const DOWNLOAD_PAGE_URL = "https://opengrind.org/guides/download";
 
 	const status = $derived(accountStatusState.status);
 
@@ -135,6 +142,16 @@
 				...signOutEnding,
 			};
 		}
+		if (status?.kind === "unsupportedVersion") {
+			return {
+				title: "Update Open Grind",
+				description:
+					"Grindr no longer supports this version of Open Grind.",
+				details: status.error,
+				checksForUpdates: true,
+				signsOut: false,
+			};
+		}
 		if (status?.kind === "phoneVerificationRequired") {
 			return {
 				title: "Phone verification required",
@@ -159,6 +176,16 @@
 			if (!parsed.success) return;
 			showAccountRestriction(parsed.data);
 		});
+		const unlistenUnsupportedVersion = listen(
+			"auth:unsupported-version",
+			(event) => {
+				const parsed = deprecatedClientVersionErrorSchema.safeParse(
+					event.payload,
+				);
+				if (!parsed.success) return;
+				noticeAccountStatusInResponse(parsed.data);
+			},
+		);
 
 		void callMethod("account_restriction")
 			.then(showAccountRestriction)
@@ -167,12 +194,13 @@
 		return () => {
 			void unlistenBanned.then((fn) => fn());
 			void unlistenRestriction.then((fn) => fn());
+			void unlistenUnsupportedVersion.then((fn) => fn());
 		};
 	});
 
-	let signingOut = $state(false);
+	let running: false | "signOut" | "checkForUpdates" = $state(false);
 
-	const dismissible = $derived(!content.signsOut && !signingOut);
+	const dismissible = $derived(!content.signsOut && running === false);
 
 	dismissOnBackGesture({
 		active: () => accountStatusState.open,
@@ -192,16 +220,28 @@
 		}
 	}
 
+	async function checkForUpdates() {
+		running = "checkForUpdates";
+		try {
+			await checkForUpdatesNow({
+				selfManaged: true,
+				addonAvailable: false,
+			});
+		} finally {
+			running = false;
+		}
+	}
+
 	async function close() {
 		if (!content.signsOut) {
 			dismissAccountStatus();
 			return;
 		}
-		signingOut = true;
+		running = "signOut";
 		try {
 			await signOut();
 		} finally {
-			signingOut = false;
+			running = false;
 			accountStatusState.open = false;
 		}
 	}
@@ -231,7 +271,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<fieldset disabled={signingOut} class="contents">
+			<fieldset disabled={running !== false} class="contents">
 				{#if content.details !== undefined}
 					<Button variant="ghost" onclick={copyDetails}>
 						Copy details
@@ -253,12 +293,29 @@
 						Verify age <ArrowUpRightIcon />
 					</Link>
 				{/if}
-				<Button onclick={close} aria-busy={signingOut}>
-					{#if signingOut}
-						<Spinner aria-hidden="true" />
-					{/if}
-					{content.closeLabel}
-				</Button>
+				{#if content.checksForUpdates && updatesSelfManaged()}
+					<Button
+						onclick={checkForUpdates}
+						aria-busy={running === "checkForUpdates"}
+					>
+						{#if running === "checkForUpdates"}
+							<Spinner aria-hidden="true" />
+						{/if}
+						Check for updates
+					</Button>
+				{:else if content.checksForUpdates}
+					<Link href={DOWNLOAD_PAGE_URL} class={buttonVariants()}>
+						Check for updates <ArrowUpRightIcon />
+					</Link>
+				{/if}
+				{#if content.closeLabel}
+					<Button onclick={close} aria-busy={running === "signOut"}>
+						{#if running === "signOut"}
+							<Spinner aria-hidden="true" />
+						{/if}
+						{content.closeLabel}
+					</Button>
+				{/if}
 			</fieldset>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>

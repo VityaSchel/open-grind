@@ -12,7 +12,7 @@ import {
 import { redactPath } from "$lib/api/redact/text";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
-import { verificationRequiredErrorSchema } from "$lib/model/authentication";
+import { accountStatusErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -268,7 +268,7 @@ function noticeAccountStatusIn(response: RestResponse): void {
 	} catch {
 		return;
 	}
-	const error = verificationRequiredErrorSchema.safeParse(body);
+	const error = accountStatusErrorSchema.safeParse(body);
 	if (error.success) noticeAccountStatusInResponse(error.data);
 }
 

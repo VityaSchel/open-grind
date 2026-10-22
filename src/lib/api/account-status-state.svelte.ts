@@ -8,7 +8,8 @@ export type ApiErrorBody = { code: number; message: string };
 export type AccountStatus =
 	| { kind: "banned"; info: BanInfo }
 	| { kind: "restriction"; restriction: Restriction }
-	| { kind: "phoneVerificationRequired"; error: ApiErrorBody };
+	| { kind: "phoneVerificationRequired"; error: ApiErrorBody }
+	| { kind: "unsupportedVersion"; error: ApiErrorBody };
 
 export const accountStatusState = $state<{
 	open: boolean;
@@ -40,6 +41,7 @@ export function showAccountRestriction(
 
 function accountStatusOfApiError(error: ApiErrorBody): AccountStatus | null {
 	if (error.code === 30) return { kind: "phoneVerificationRequired", error };
+	if (error.code === 8) return { kind: "unsupportedVersion", error };
 	return null;
 }
 

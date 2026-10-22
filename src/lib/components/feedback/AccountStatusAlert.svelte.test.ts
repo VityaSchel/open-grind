@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import {
 	accountStatusState,
 	showAccountStatusForApiError,
@@ -10,9 +11,17 @@ import {
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
 import AccountStatusAlert from "./AccountStatusAlert.svelte";
 
-const { callMethodMock, signOutMock, tauriListeners } = vi.hoisted(() => ({
+const {
+	callMethodMock,
+	signOutMock,
+	checkForUpdatesNowMock,
+	updater,
+	tauriListeners,
+} = vi.hoisted(() => ({
 	callMethodMock: vi.fn(),
 	signOutMock: vi.fn(),
+	checkForUpdatesNowMock: vi.fn<() => Promise<void>>(),
+	updater: { selfManaged: false },
 	tauriListeners: new Map<string, (event: { payload: unknown }) => void>(),
 }));
 
@@ -27,6 +36,12 @@ vi.mock("$lib/api/methods", async (importOriginal) => ({
 	callMethod: callMethodMock,
 }));
 vi.mock("$lib/api/sign-out", () => ({ signOut: signOutMock }));
+vi.mock("$lib/updates/capability.svelte", () => ({
+	updatesSelfManaged: () => updater.selfManaged,
+}));
+vi.mock("$lib/updates/update-checks", () => ({
+	checkForUpdatesNow: checkForUpdatesNowMock,
+}));
 
 function emit(event: string, payload: unknown) {
 	tauriListeners.get(event)?.({ payload });
@@ -51,8 +66,7 @@ afterEach(() => {
 	cleanup();
 	vi.clearAllMocks();
 	tauriListeners.clear();
-	accountStatusState.open = false;
-	accountStatusState.status = null;
+	clearAccountCaches();
 });
 
 describe("AccountStatusAlert", () => {
@@ -238,6 +252,91 @@ describe("account status variants", () => {
 		await screen.findByRole("alertdialog");
 
 		for (const handler of backGestureEventHandlers.keys()) handler();
+
+		expect(accountStatusState.open).toBe(false);
+	});
+});
+
+describe("unsupported app version", () => {
+	const deprecated = { code: 8, message: "The client version is deprecated" };
+
+	async function showUnsupportedVersion() {
+		render(AccountStatusAlert);
+		showAccountStatusForApiError(deprecated);
+		return await screen.findByRole("alertdialog");
+	}
+
+	afterEach(() => {
+		updater.selfManaged = false;
+	});
+
+	it("asks to update Open Grind", async () => {
+		const dialog = await showUnsupportedVersion();
+
+		expect(screen.getByRole("heading").textContent).toBe(
+			"Update Open Grind",
+		);
+		expect(dialog.textContent).toContain(
+			"Grindr no longer supports this version of Open Grind.",
+		);
+		expect(button("Copy details")).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
+	});
+
+	it("runs the update check and stays open while its toasts take over", async () => {
+		updater.selfManaged = true;
+		const check = Promise.withResolvers<void>();
+		checkForUpdatesNowMock.mockReturnValueOnce(check.promise);
+		await showUnsupportedVersion();
+
+		await fireEvent.click(button("Check for updates"));
+
+		expect(checkForUpdatesNowMock).toHaveBeenCalledExactlyOnceWith({
+			selfManaged: true,
+			addonAvailable: false,
+		});
+		expect(button("Check for updates").getAttribute("aria-busy")).toBe(
+			"true",
+		);
+		expect(button("Copy details").matches(":disabled")).toBe(true);
+
+		check.resolve();
+		await vi.waitFor(() =>
+			expect(button("Check for updates").getAttribute("aria-busy")).toBe(
+				"false",
+			),
+		);
+		expect(accountStatusState.open).toBe(true);
+	});
+
+	it("links the download page where the app can't update itself", async () => {
+		await showUnsupportedVersion();
+
+		expect(
+			screen
+				.getByRole("link", { name: "Check for updates" })
+				.getAttribute("href"),
+		).toBe("https://opengrind.org/guides/download");
+	});
+
+	it("can be dismissed with the back gesture", async () => {
+		await showUnsupportedVersion();
+
+		for (const handler of backGestureEventHandlers.keys()) handler();
+
+		expect(accountStatusState.open).toBe(false);
+	});
+
+	it("opens from a refused session refresh once and stays closed after it is dismissed", async () => {
+		render(AccountStatusAlert);
+		await vi.waitFor(() => {
+			expect(tauriListeners.has("auth:unsupported-version")).toBe(true);
+		});
+
+		emit("auth:unsupported-version", deprecated);
+		await screen.findByRole("alertdialog");
+		for (const handler of backGestureEventHandlers.keys()) handler();
+		emit("auth:unsupported-version", deprecated);
 
 		expect(accountStatusState.open).toBe(false);
 	});

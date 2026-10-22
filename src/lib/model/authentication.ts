@@ -10,6 +10,16 @@ export type VerificationRequiredError = z.infer<
 	typeof verificationRequiredErrorSchema
 >;
 
+export const deprecatedClientVersionErrorSchema = z.object({
+	code: z.literal(8),
+	message: z.string(),
+});
+
+export const accountStatusErrorSchema = z.discriminatedUnion("code", [
+	verificationRequiredErrorSchema,
+	deprecatedClientVersionErrorSchema,
+]);
+
 export const banSubReasonSchema = z.enum([
 	"UNDERAGE_ACCESS",
 	"UNDERAGE_IMPERSONATION",

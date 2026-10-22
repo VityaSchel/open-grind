@@ -15462,6 +15462,28 @@
 				],
 				"x-render-on-tag": "authentication"
 			},
+			"DeprecatedClientVersionError": {
+				"type": "object",
+				"description": "Error body (HTTP 412) when the server no longer accepts the client's app version. Any request can return it.",
+				"properties": {
+					"code": {
+						"type": "integer",
+						"enum": [
+							8
+						],
+						"description": "integer, `8`"
+					},
+					"message": {
+						"type": "string",
+						"description": "string, `\"The client version is deprecated\"`"
+					}
+				},
+				"required": [
+					"code",
+					"message"
+				],
+				"x-render-on-tag": "authentication"
+			},
 			"VerificationRequiredError": {
 				"type": "object",
 				"description": "Error body (HTTP 403) from sign-in when the account must verify a phone number by SMS first.",
