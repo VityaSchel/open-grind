@@ -116,12 +116,13 @@ pub fn newest_upgrade(
 		if release.draft {
 			continue;
 		}
-		if release.prerelease && !channel.accepts_prereleases() {
-			continue;
-		}
 		let Some(version) = parse_version(&release.tag_name) else {
 			continue;
 		};
+		let prerelease = release.prerelease || !version.pre.is_empty();
+		if prerelease && !channel.accepts_prereleases() {
+			continue;
+		}
 		if !baseline.superseded_by(&version) {
 			continue;
 		}
@@ -371,6 +372,27 @@ mod tests {
 			index(&[&release("1.1.0-rc.1", true), &release("1.0.1", false)]);
 		let found = upgrade(&json, "1.0.0", ".apk").unwrap().unwrap();
 		assert_eq!(found.version, "1.0.1");
+	}
+
+	#[test]
+	fn a_stable_install_trusts_the_signed_tag_over_the_index_flag() {
+		let mislabeled =
+			index(&[&release("1.1.0-rc.1", false), &release("1.0.1", false)]);
+		let found = upgrade(&mislabeled, "1.0.0", ".apk").unwrap().unwrap();
+		assert_eq!(found.version, "1.0.1");
+
+		let only_mislabeled = index(&[&release("v1.1.0-beta.2", false)]);
+		assert!(
+			upgrade(&only_mislabeled, "1.0.0", ".apk").unwrap().is_none(),
+			"an index that drops the prerelease flag must not reach stable installs"
+		);
+	}
+
+	#[test]
+	fn a_prerelease_install_still_takes_a_prerelease_tag() {
+		let json = index(&[&release("0.1.0-beta.5", false)]);
+		let found = upgrade(&json, "0.1.0-beta.4", ".apk").unwrap().unwrap();
+		assert_eq!(found.version, "0.1.0-beta.5");
 	}
 
 	#[test]

@@ -1060,7 +1060,7 @@
 			"name": "@sveltejs/kit",
 			"ecosystem": "npm",
 			"versions": [
-				"2.70.2"
+				"2.70.3"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/sveltejs/kit",
@@ -1157,7 +1157,7 @@
 			"name": "bits-ui",
 			"ecosystem": "npm",
 			"versions": [
-				"2.19.2"
+				"2.19.5"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/huntabyte/bits-ui",
@@ -1395,7 +1395,7 @@
 			"name": "svelte-sonner",
 			"ecosystem": "npm",
 			"versions": [
-				"1.1.1"
+				"1.2.1"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/wobsoriano/svelte-sonner",
@@ -7396,7 +7396,7 @@
 			"name": "tauri",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.6"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7410,7 +7410,7 @@
 			"name": "tauri-build",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7424,7 +7424,7 @@
 			"name": "tauri-codegen",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7438,7 +7438,7 @@
 			"name": "tauri-macros",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.1"
+				"2.6.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7580,7 +7580,7 @@
 			"name": "tauri-runtime",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7594,7 +7594,7 @@
 			"name": "tauri-runtime-wry",
 			"ecosystem": "rust",
 			"versions": [
-				"2.11.1"
+				"2.11.4"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -7608,7 +7608,7 @@
 			"name": "tauri-utils",
 			"ecosystem": "rust",
 			"versions": [
-				"2.9.1"
+				"2.9.3"
 			],
 			"spdx": "Apache-2.0 OR MIT",
 			"shipped": "MIT",
@@ -8521,7 +8521,7 @@
 			"name": "webpki-root-certs",
 			"ecosystem": "rust",
 			"versions": [
-				"0.26.11, 1.0.7"
+				"0.26.11, 1.0.10"
 			],
 			"spdx": "CDLA-Permissive-2.0",
 			"shipped": "CDLA-Permissive-2.0",

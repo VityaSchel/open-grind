@@ -41,12 +41,20 @@ To enable Fast Mode:
 
 ## Windows
 
-Not supported yet. See [#384](https://git.opengrind.org/open-grind/open-grind/issues/384).
+Notifications only arrive when Open Grind is running.
+
+To change the banners, sound or lock screen previews, go to Settings → System → Notifications → Open Grind.
 
 ## macOS
 
-Not supported yet. See [#385](https://git.opengrind.org/open-grind/open-grind/issues/385).
+Notifications only arrive when Open Grind is running.
+
+To change the alert style, sound or previews, go to System Settings → Notifications → Open Grind.
 
 ## Linux
 
-Not supported yet. See [#386](https://git.opengrind.org/open-grind/open-grind/issues/386).
+Open Grind shows notifications through your desktop's notification service. GNOME, KDE Plasma and most other desktops work out of the box. On a standalone window manager, install a notification service, such as [dunst](https://dunst-project.org/) or [mako](https://github.com/emersion/mako) manually.
+
+Notifications only arrive when Open Grind is running.
+
+To change how notifications look or sound, use your desktop's notification settings.

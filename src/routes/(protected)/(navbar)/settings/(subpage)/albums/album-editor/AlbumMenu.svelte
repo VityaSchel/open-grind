@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import DotsThreeVerticalIcon from "phosphor-svelte/lib/DotsThreeVerticalIcon";
 	import TrashIcon from "phosphor-svelte/lib/TrashIcon";
 	import { toast } from "svelte-sonner";
@@ -11,7 +10,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { t } from "$lib/i18n";
-	import { traverseBackTo } from "$lib/util/history";
+	import { returnTo } from "$lib/util/history";
 
 	let {
 		albumId,
@@ -28,8 +27,7 @@
 			await deleteAlbum({ albumId });
 			getMyAlbumsState(ourProfileId).remove(albumId);
 			toast.success(t("media.albums.editor.menu.deleted"));
-			if (!traverseBackTo("/settings/albums"))
-				await goto("/settings/albums", { replaceState: true });
+			returnTo("/settings/albums");
 		} catch (error) {
 			console.error(error);
 			showErrorToast({

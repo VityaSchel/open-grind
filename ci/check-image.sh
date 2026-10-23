@@ -18,8 +18,8 @@ set -euxo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
-BUN_VERSION=1.3.14
-BUN_SHA256=a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7
+BUN_VERSION=1.3.13
+BUN_SHA256=9d8a24292a7068090205daac0a5a223f5f69736f5287e37bf88d3b4031edc750
 NODE_VERSION=24.13.1
 NODE_SHA256=30215f90ea3cd04dfbc06e762c021393fa173a1d392974298bbc871a8e461089
 # grindr.rs .forgejo/workflows/crates.yml pins the same version and fails on a mismatch.

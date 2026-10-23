@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 477a4f8..ad56c83 100644
+index 76a4d66..312534e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -131,3 +131,6 @@ features = [

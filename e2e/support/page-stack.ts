@@ -14,6 +14,7 @@ import {
 
 export const SETTINGS = "/settings";
 export const APP_SETTINGS = "/settings/app";
+export const CREDITS = `${APP_SETTINGS}/credits`;
 
 export const STACK_PANE = '[data-slot="page-stack-pane"]';
 export const STACK_DIM = '[data-slot="page-stack-dim"]';

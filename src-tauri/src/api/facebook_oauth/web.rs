@@ -5,11 +5,13 @@ use tokio::sync::oneshot;
 
 use crate::error::AppError;
 
-use crate::api::oauth::{new_nonce, without_secrets, CANCELED};
+use crate::api::oauth::{
+	is_allowed_target, new_nonce, without_secrets, CANCELED,
+};
 
 use super::dialog::{
-	dialog_url, is_allowed_target, is_redirect_url, result_from_redirect,
-	wait_for_result, HANDOFF_REFUSED,
+	dialog_url, is_redirect_url, result_from_redirect, wait_for_result,
+	HANDOFF_REFUSED,
 };
 use super::FacebookOauthBridge;
 

@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import { navigating, page } from "$app/state";
 
 export function canGoBack(): boolean {
@@ -20,6 +21,10 @@ export function traverseBackTo(pathname: string): boolean {
 	if (steps < 0) return false;
 	history.go(-(steps + 1));
 	return true;
+}
+
+export function returnTo(pathname: string): void {
+	if (!traverseBackTo(pathname)) void goto(pathname, { replaceState: true });
 }
 
 export function navigationPending({

@@ -117,8 +117,11 @@ pub async fn updater_check(
 pub async fn updater_download(
 	app: AppHandle,
 	component: String,
+	trigger: Trigger,
 ) -> Result<Progress, UpdateError> {
-	let session = Session::open(&app, component::by_key(&component)?)?;
+	let component = component::by_key(&component)?;
+	schedule::admit_download(&app, trigger)?;
+	let session = Session::open(&app, component)?;
 	let component = session.component;
 
 	let state = app.state::<UpdateState>();

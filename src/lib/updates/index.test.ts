@@ -219,10 +219,13 @@ describe("download and install", () => {
 			total: 72294080,
 		});
 
-		const progress = await startUpdateDownload();
+		const progress = await startUpdateDownload("app", {
+			trigger: "launch",
+		});
 
 		expect(invokeMock).toHaveBeenCalledWith("updater_download", {
 			component: "app",
+			trigger: "launch",
 		});
 		expect(progress.phase).toBe("downloading");
 		expect(progress.kind).toBe("update");

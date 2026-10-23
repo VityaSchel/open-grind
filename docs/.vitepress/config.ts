@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitepress";
+import { type DefaultTheme, defineConfig } from "vitepress";
 import footnote from "markdown-it-footnote";
 
 import { icons } from "./icons";
@@ -40,6 +40,96 @@ const grindrApiReference = buildSidebar(
 	staticPages,
 );
 
+const isolatedGuideGroups = new Set(["Security"]);
+
+const guidesSidebar: DefaultTheme.SidebarItem[] = [
+	{
+		text: "User guides",
+		items: [
+			{ text: "Download", link: "/guides/download" },
+			{
+				text: "Sign in with Google",
+				link: "/guides/sign-in-with-google",
+			},
+			{
+				text: "Sign in with Facebook",
+				link: "/guides/sign-in-with-facebook",
+			},
+			{ text: "Video codecs on Linux", link: "/guides/codecs" },
+			{ text: "Notifications", link: "/guides/notifications" },
+			{
+				text: "Blocking and hiding",
+				link: "/guides/blocking-and-hiding-profiles",
+			},
+			{ text: "FAQ", link: "/guides/faq" },
+			{ text: "Grindr API bypasses", link: "/guides/bypasses" },
+		],
+	},
+	{
+		text: "Features",
+		items: [
+			{
+				text: "Unlimited profiles",
+				link: "/guides/features/unlimited-profiles",
+			},
+			{ text: "No ads", link: "/guides/features/no-ads" },
+			{ text: "Privacy", link: "/guides/features/privacy" },
+			{
+				text: "Location spoofing",
+				link: "/guides/features/location-spoofing-teleport",
+			},
+			{
+				text: "Command Center",
+				link: "/guides/features/command-center/",
+				collapsed: true,
+				items: [
+					{
+						text: "Open profile by ID",
+						link: "/guides/features/command-center/open-profile-by-id/",
+					},
+					{
+						text: "Quick filters preset",
+						link: "/guides/features/command-center/quick-filters-preset/",
+					},
+					{
+						text: "Quick go to",
+						link: "/guides/features/command-center/quick-go-to/",
+					},
+					{
+						text: "Quick warp",
+						link: "/guides/features/command-center/quick-warp/",
+					},
+				],
+			},
+		],
+	},
+	{
+		text: "Security",
+		items: [
+			{
+				text: "Malware Third-party Grindr Clients advisory (2026-10-22)",
+				link: "/guides/security/malware-third-party-grindr-clients-advisory-2026-10-22",
+			},
+		],
+	},
+];
+
+function sidebarLinks(items: DefaultTheme.SidebarItem[]): string[] {
+	return items.flatMap((item) => [
+		...(item.link ? [item.link] : []),
+		...sidebarLinks(item.items ?? []),
+	]);
+}
+
+const guidesPageOrder = guidesSidebar.flatMap((group) =>
+	sidebarLinks(group.items ?? []).map((link) => ({
+		link,
+		section: isolatedGuideGroups.has(group.text ?? "")
+			? group.text
+			: "guides",
+	})),
+);
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 	srcDir: "content",
@@ -47,6 +137,17 @@ export default defineConfig({
 	cleanUrls: true,
 
 	rewrites: { "generated/:path*": ":path*" },
+
+	transformPageData(pageData) {
+		const link = `/${pageData.relativePath.replace(/(index)?\.md$/, "")}`;
+		const index = guidesPageOrder.findIndex((page) => page.link === link);
+		if (index === -1) return;
+		const { section } = guidesPageOrder[index];
+		if (guidesPageOrder[index - 1]?.section !== section)
+			pageData.frontmatter.prev ??= false;
+		if (guidesPageOrder[index + 1]?.section !== section)
+			pageData.frontmatter.next ??= false;
+	},
 
 	title: "Open Grind",
 	description: "Open Grind project documentation and Grindr API reference",
@@ -87,77 +188,7 @@ export default defineConfig({
 		search: { provider: "local" },
 
 		sidebar: {
-			"/guides/": [
-				{
-					text: "User guides",
-					items: [
-						{ text: "Download", link: "/guides/download" },
-						{
-							text: "Sign in with Google",
-							link: "/guides/sign-in-with-google",
-						},
-						{
-							text: "Sign in with Facebook",
-							link: "/guides/sign-in-with-facebook",
-						},
-						{
-							text: "Video codecs on Linux",
-							link: "/guides/codecs",
-						},
-						{
-							text: "Notifications",
-							link: "/guides/notifications",
-						},
-						{
-							text: "Blocking and hiding",
-							link: "/guides/blocking-and-hiding-profiles",
-						},
-						{ text: "FAQ", link: "/guides/faq" },
-						{
-							text: "Grindr API bypasses",
-							link: "/guides/bypasses",
-						},
-					],
-				},
-				{
-					text: "Features",
-					items: [
-						{
-							text: "Unlimited profiles",
-							link: "/guides/features/unlimited-profiles",
-						},
-						{ text: "No ads", link: "/guides/features/no-ads" },
-						{ text: "Privacy", link: "/guides/features/privacy" },
-						{
-							text: "Location spoofing",
-							link: "/guides/features/location-spoofing-teleport",
-						},
-						{
-							text: "Command Center",
-							link: "/guides/features/command-center/",
-							collapsed: true,
-							items: [
-								{
-									text: "Open profile by ID",
-									link: "/guides/features/command-center/open-profile-by-id/",
-								},
-								{
-									text: "Quick filters preset",
-									link: "/guides/features/command-center/quick-filters-preset/",
-								},
-								{
-									text: "Quick go to",
-									link: "/guides/features/command-center/quick-go-to/",
-								},
-								{
-									text: "Quick warp",
-									link: "/guides/features/command-center/quick-warp/",
-								},
-							],
-						},
-					],
-				},
-			],
+			"/guides/": guidesSidebar,
 			"/grindr-api/": [
 				{
 					text: "Grindr API",

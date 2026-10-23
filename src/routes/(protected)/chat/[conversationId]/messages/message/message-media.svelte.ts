@@ -48,10 +48,10 @@ export class MessageMediaState {
 type KnownDimensions = { width: number | null; height: number | null };
 
 export class MeasuredSize {
-	#src: () => string;
+	#src: () => string | null;
 	#fallback: () => KnownDimensions;
 	#ratioAllowsZero: boolean;
-	#measured = $state<({ src: string } & MediaDimensions) | null>(null);
+	#measured = $state<({ src: string | null } & MediaDimensions) | null>(null);
 	#size: KnownDimensions = $derived.by(() =>
 		this.#measured !== null && this.#measured.src === this.#src()
 			? this.#measured
@@ -63,7 +63,7 @@ export class MeasuredSize {
 		fallback,
 		ratioAllowsZero = false,
 	}: {
-		src: () => string;
+		src: () => string | null;
 		fallback: () => KnownDimensions;
 		ratioAllowsZero?: boolean;
 	}) {

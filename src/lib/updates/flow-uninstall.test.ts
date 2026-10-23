@@ -110,7 +110,9 @@ describe("an add-on uninstalled while its update is on screen", () => {
 			trigger: "manual",
 			component: "google-oauth",
 		});
-		expect(api.startUpdateDownload).toHaveBeenCalledWith("google-oauth");
+		expect(api.startUpdateDownload).toHaveBeenCalledWith("google-oauth", {
+			trigger: "manual",
+		});
 	});
 
 	it("clears a downloaded update when the add-on is uninstalled behind the permission screen", async () => {

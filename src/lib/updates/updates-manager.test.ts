@@ -168,6 +168,41 @@ describe("a staged update that vanished before the install", () => {
 		expect(toasts.showProblem).not.toHaveBeenCalled();
 	});
 
+	it("resumes an interrupted download at launch only as a launch request", async () => {
+		readiness.app = resumable("update", { tag: RELEASE_TAG });
+
+		await startAppWatch();
+		await settled();
+
+		expect(api.startUpdateDownload).toHaveBeenCalledExactlyOnceWith("app", {
+			trigger: "launch",
+		});
+		expect(lastShown().view.stage).toBe("downloading");
+	});
+
+	it("leaves an interrupted download paused at launch while automatic checks are off", async () => {
+		readiness.app = resumable("update", { tag: RELEASE_TAG });
+		api.startUpdateDownload.mockRejectedValueOnce({
+			kind: "autoChecksDisabled",
+		});
+
+		await startAppWatch();
+		await settled();
+
+		expect(lastShown().view.stage).toBe("paused");
+		expect(api.checkForUpdate).not.toHaveBeenCalled();
+		expect(api.discardStagedUpdate).not.toHaveBeenCalled();
+		expect(toasts.showProblem).not.toHaveBeenCalled();
+
+		lastShown().onActivate();
+		await settled();
+
+		expect(api.startUpdateDownload).toHaveBeenLastCalledWith("app", {
+			trigger: "manual",
+		});
+		expect(lastShown().view.stage).toBe("downloading");
+	});
+
 	it("resumes from disk when there is still something to resume", async () => {
 		await startAppWatch();
 

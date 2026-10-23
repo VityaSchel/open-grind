@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index a1bc44d..c5eb988 100644
+index 60afad6..bdded9c 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -224,3 +224,6 @@ version = "3.15.0"

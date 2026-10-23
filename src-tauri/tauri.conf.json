@@ -27,7 +27,7 @@
 			}
 		],
 		"security": {
-			"csp": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'self' 'unsafe-inline'; img-src 'self' data: ogmedia: http://ogmedia.localhost https://ogmedia.localhost https://tile.openstreetmap.org; media-src 'self' blob: ogmedia: http://ogmedia.localhost https://ogmedia.localhost; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost; object-src 'none'; base-uri 'self'; form-action 'self'"
+			"csp": "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'self' 'unsafe-inline'; img-src 'self' data: ogmedia: http://ogmedia.localhost https://ogmedia.localhost https://tile.openstreetmap.org; media-src 'self' blob: ogmedia: http://ogmedia.localhost https://ogmedia.localhost; connect-src 'self' ipc: http://ipc.localhost https://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'"
 		}
 	},
 	"bundle": {
@@ -42,6 +42,7 @@
 			"icons/128x128.png",
 			"icons/128x128@2x.png",
 			"icons/icon.icns",
+			"icons/Assets.car",
 			"icons/icon.ico"
 		],
 		"publisher": "Open Grind Governance",

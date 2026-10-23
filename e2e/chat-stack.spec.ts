@@ -4,6 +4,7 @@ import {
 	afterTwoFrames,
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
+	historyEntries,
 	installTauriShim,
 	MESSAGE_ROW,
 	pathname,
@@ -334,7 +335,7 @@ test.describe("the chat stack on a phone", () => {
 		await expect(page).toHaveURL(new RegExp(`${href}$`));
 	});
 
-	test("a conversation opened directly leaves the gesture to the platform, yet Back still slides over the list", async ({
+	test("a conversation opened directly leaves the gesture to the platform, yet Back still slides over the list and takes its place", async ({
 		page,
 	}) => {
 		await installTauriShim(page, { platform: "android" });
@@ -349,6 +350,10 @@ test.describe("the chat stack on a phone", () => {
 		expect(frames.length).toBeGreaterThan(3);
 		await expect(page).toHaveURL(/\/chat$/);
 		await expect(rows(page).nth(1)).toBeVisible();
+		expect(
+			await historyEntries(page),
+			"the list replaced the conversation instead of stacking on it",
+		).toEqual({ index: 0, paths: ["/chat"] });
 	});
 
 	test("reduced motion swaps at once, yet the gesture still follows the finger with the list held still", async ({

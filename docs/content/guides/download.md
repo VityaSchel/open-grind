@@ -146,23 +146,12 @@ When you [report a rendering problem](https://git.opengrind.org/open-grind/open-
     <VPButton href="https://git.opengrind.org/open-grind/open-grind/releases/download/v0.1.0-beta.5.1/open-grind-v0.1.0-beta.5.1-macos.zip" size="medium">Download for macOS (universal)</VPButton>
 </div>
 
-Extract Open&nbsp;Grind.app from zip archive and move to Applications folder.
+Requires macOS 11.6 or later. Extract Open&nbsp;Grind.app from the zip archive and move it to the Applications folder. Open Grind updates itself in place, so it only runs from Applications.
 
-::: info If you get "Apple could not verify “Open Grind” is free of malware that may harm your Mac or compromise your privacy.",
-
-1. Open System Settings
-2. Go to "Privacy & Security"
-3. Scroll to "“Open Grind” was blocked to protect your Mac."
-
-![System Settings](assets/guides/download/macos-quarantine-system-settings.png)
-
-4. Click "Open Anyway"
-5. In the "Open “Open Grind”?" dialog click "Open Anyway"
-6. Enter administrator password or Touch ID
-:::
-
+- **Updating from 0.1.0-beta.5.1 or earlier**, macOS asks up to three times whether Open Grind may use what it saved in your keychain. Enter your Mac password and click "Allow" each time to stay signed in. If you deny, sign in again.
 - **To install updates**, enable the auto-updater.
-- **To uninstall**, move the app from Applications to Trash.
+- **To verify the download**, follow [Reproducibility → macOS](https://git.opengrind.org/open-grind/open-grind/src/branch/main/REPRODUCIBILITY.md#macos).
+- **To uninstall**, move the app from Applications to Trash. To also remove your data, delete the `org.opengrind.app` folders in `~/Library/Application Support`, `~/Library/Caches` and `~/Library/WebKit`, and the `org.opengrind.app` items in Keychain Access.
 
 ## iOS
 

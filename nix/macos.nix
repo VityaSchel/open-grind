@@ -28,7 +28,7 @@ in
     runtimeInputs = toolchainInputs;
     inherit env;
     text = ''
-      for tool in hdiutil osascript codesign ditto xcrun; do
+      for tool in hdiutil osascript codesign ditto xcrun assetutil; do
         command -v "$tool" >/dev/null \
           || { echo "FATAL: $tool not found — run xcode-select --install" >&2; exit 1; }
       done

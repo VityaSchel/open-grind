@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index a5630c9..ccc3fa9 100644
+index 2aab29e..dbc6a1b 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -416,3 +416,6 @@ features = [
+@@ -419,3 +419,6 @@ features = [
      "Win32_UI",
      "Win32_UI_WindowsAndMessaging",
  ]
@@ -10,7 +10,7 @@ index a5630c9..ccc3fa9 100644
 +[lints.rust]
 +warnings = { level = "allow", priority = -1 }
 diff --git a/src/manager/mod.rs b/src/manager/mod.rs
-index 8215cf1..7db7793 100644
+index c07ae0f..e5f956a 100644
 --- a/src/manager/mod.rs
 +++ b/src/manager/mod.rs
 @@ -219,6 +219,9 @@ pub struct AppManager<R: Runtime> {
@@ -65,7 +65,7 @@ index 8215cf1..7db7793 100644
        Cow::Owned(Url::parse(&format!("{scheme}://tauri.localhost")).unwrap())
      } else {
 diff --git a/src/manager/webview.rs b/src/manager/webview.rs
-index 57e617e..3d43cb0 100644
+index 8c99afb..a3959ec 100644
 --- a/src/manager/webview.rs
 +++ b/src/manager/webview.rs
 @@ -439,7 +439,6 @@ impl<R: Runtime> WebviewManager<R> {
@@ -195,13 +195,16 @@ index 8542e2a..36c2be4 100644
 +  }
 +}
 diff --git a/src/protocol/tauri.rs b/src/protocol/tauri.rs
-index a346754..d75d57c 100644
+index 57a8690..089d483 100644
 --- a/src/protocol/tauri.rs
 +++ b/src/protocol/tauri.rs
-@@ -105,6 +105,19 @@ fn get_response<R: Runtime>(
+@@ -169,8 +169,22 @@ async fn get_response<R: Runtime>(
+     .header("Access-Control-Allow-Origin", window_origin);
  
    #[cfg(all(dev, mobile))]
-   let mut response = {
+-  let mut response =
+-    proxy_dev_request(client, url, response_cache, path, builder, &request).await?;
++  let mut response = {
 +    if let Some(origin) = manager
 +      .custom_app_origin
 +      .as_ref()
@@ -215,9 +218,11 @@ index a346754..d75d57c 100644
 +      );
 +    }
 +
-     let decoded_path = percent_encoding::percent_decode(path.as_bytes())
-       .decode_utf8_lossy()
-       .to_string();
++    proxy_dev_request(client, url, response_cache, path, builder, &request).await?
++  };
+ 
+   #[cfg(not(all(dev, mobile)))]
+   let mut response = {
 diff --git a/src/test/mock_runtime.rs b/src/test/mock_runtime.rs
 index f51c488..d6b03f1 100644
 --- a/src/test/mock_runtime.rs
@@ -509,7 +514,7 @@ index b89d3c9..a5437b9 100644
    #[test]
    fn test_webview_window_has_set_simple_fullscreen_method() {
 diff --git a/src/webview/webview_window.rs b/src/webview/webview_window.rs
-index 8db5db2..fbe37e7 100644
+index c61b96e..3c14637 100644
 --- a/src/webview/webview_window.rs
 +++ b/src/webview/webview_window.rs
 @@ -1148,6 +1148,10 @@ impl<R: Runtime, M: Manager<R>> WebviewWindowBuilder<'_, R, M> {

@@ -2,10 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import {
 	DEMO_CONVERSATION,
+	historyEntries,
 	installTauriShim,
 	MESSAGE_ROW,
 } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
+import { APP_SETTINGS, CREDITS, openDeepLink } from "./support/page-stack";
 import {
 	activeProfilePane,
 	openGridProfile,
@@ -118,4 +120,18 @@ test("Escape closes a settings page", async ({ page }) => {
 
 	await page.keyboard.press("Escape");
 	await expect(page).toHaveURL(/\/settings\/app$/);
+});
+
+test("Escape walks up a deep-linked settings page in place", async ({
+	page,
+}) => {
+	await openDeepLink(page, CREDITS);
+
+	await page.keyboard.press("Escape");
+	await expect(page).toHaveURL(new RegExp(`${APP_SETTINGS}$`));
+
+	expect(
+		await historyEntries(page),
+		"Escape replaced Credits with its parent",
+	).toEqual({ index: 0, paths: [APP_SETTINGS] });
 });

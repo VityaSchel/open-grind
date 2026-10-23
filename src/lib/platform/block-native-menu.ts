@@ -11,8 +11,29 @@ const TEXT_INPUT_TYPES = new Set([
 	"url",
 ]);
 
+type Point = { x: number; y: number };
+
 function elementOf(node: Node): Element | null {
 	return node instanceof Element ? node : node.parentElement;
+}
+
+function caretRangeAt({ x, y }: Point): Range | null {
+	if (typeof document.caretRangeFromPoint !== "function") return null;
+	return document.caretRangeFromPoint(x, y);
+}
+
+function isOnSelectedText({
+	range,
+	point,
+}: {
+	range: Range;
+	point: Point;
+}): boolean {
+	const caret = caretRangeAt(point);
+	return (
+		caret !== null &&
+		range.isPointInRange(caret.startContainer, caret.startOffset)
+	);
 }
 
 function isTextEditable(element: Element): boolean {
@@ -30,9 +51,11 @@ function isTextEditable(element: Element): boolean {
 function selectionTouches({
 	selection,
 	node,
+	point,
 }: {
 	selection: Selection;
 	node: Node;
+	point?: Point;
 }): boolean {
 	if (selection.isCollapsed) return false;
 	for (let index = 0; index < selection.rangeCount; index++) {
@@ -42,6 +65,9 @@ function selectionTouches({
 		if (node === selectedElement || !node.contains(selectedElement)) {
 			return true;
 		}
+		if (point !== undefined && isOnSelectedText({ range, point })) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -49,21 +75,27 @@ function selectionTouches({
 export function allowsNativeMenu({
 	target,
 	selection,
+	point,
 }: {
 	target: EventTarget | null;
 	selection: Selection | null;
+	point?: Point;
 }): boolean {
 	if (!(target instanceof Node)) return false;
 	const element = elementOf(target);
 	if (element !== null && isTextEditable(element)) return true;
-	return selection !== null && selectionTouches({ selection, node: target });
+	return (
+		selection !== null &&
+		selectionTouches({ selection, node: target, point })
+	);
 }
 
 export function blockNativeMenu(): () => void {
 	const onContextMenu = (event: MouseEvent) => {
 		if (event.defaultPrevented) return;
 		const selection = window.getSelection();
-		if (allowsNativeMenu({ target: event.target, selection })) {
+		const point = { x: event.clientX, y: event.clientY };
+		if (allowsNativeMenu({ target: event.target, selection, point })) {
 			if (firedByTouch(event)) playHaptic("longPress");
 			return;
 		}

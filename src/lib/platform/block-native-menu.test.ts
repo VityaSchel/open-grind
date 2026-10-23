@@ -56,9 +56,58 @@ function contextMenuOn(
 	return event;
 }
 
+const MENU_POINT = { x: 32, y: 345 };
+const MENU_TEXT = "Hi there you";
+const SELECTED_WORD = "there";
+const SELECTED_WORD_START = MENU_TEXT.indexOf(SELECTED_WORD);
+const SELECTED_WORD_END = SELECTED_WORD_START + SELECTED_WORD.length;
+
+function selectWordInMenu(): {
+	menu: Element;
+	text: Node;
+	selection: Selection;
+} {
+	mount(`<dialog id="menu" open><p id="about">${MENU_TEXT}</p></dialog>`);
+	const text = query("#about").firstChild;
+	if (text === null) throw new Error("Missing text");
+	return {
+		menu: query("#menu"),
+		text,
+		selection: selectWord({ text, word: SELECTED_WORD }),
+	};
+}
+
+function placeCaret({ node, offset }: { node: Node; offset: number }): void {
+	Object.defineProperty(document, "caretRangeFromPoint", {
+		configurable: true,
+		value: (x: number, y: number) => {
+			if (x !== MENU_POINT.x || y !== MENU_POINT.y) return null;
+			const caret = document.createRange();
+			caret.setStart(node, offset);
+			return caret;
+		},
+	});
+}
+
+function reopenedSelectionMenuOn(target: Element): MouseEvent {
+	const event = new MouseEvent("contextmenu", {
+		bubbles: true,
+		cancelable: true,
+		clientX: MENU_POINT.x,
+		clientY: MENU_POINT.y,
+	});
+	for (const coordinate of ["pageX", "pageY", "offsetX", "offsetY"]) {
+		Object.defineProperty(event, coordinate, { value: 0 });
+	}
+	target.dispatchEvent(event);
+	return event;
+}
+
 afterEach(() => {
 	window.getSelection()?.removeAllRanges();
 	document.body.innerHTML = "";
+	Reflect.deleteProperty(document, "caretRangeFromPoint");
+	Reflect.deleteProperty(document, "caretPositionFromPoint");
 });
 
 describe("allowsNativeMenu", () => {
@@ -114,6 +163,60 @@ describe("allowsNativeMenu", () => {
 		expect(allowsNativeMenu({ target: query("#page"), selection })).toBe(
 			false,
 		);
+	});
+
+	it("allows it on a container when the menu opens at the start of the selected text", () => {
+		const { menu, text, selection } = selectWordInMenu();
+		placeCaret({ node: text, offset: SELECTED_WORD_START });
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(true);
+	});
+
+	it("allows it on a container when the menu opens at the end of the selected text", () => {
+		const { menu, text, selection } = selectWordInMenu();
+		placeCaret({ node: text, offset: SELECTED_WORD_END });
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(true);
+	});
+
+	it("blocks it on a container when the menu opens before the selected text", () => {
+		const { menu, text, selection } = selectWordInMenu();
+		placeCaret({ node: text, offset: SELECTED_WORD_START - 1 });
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(false);
+	});
+
+	it("blocks it on a container when the menu opens past the selected text", () => {
+		const { menu, text, selection } = selectWordInMenu();
+		placeCaret({ node: text, offset: SELECTED_WORD_END + 1 });
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(false);
+	});
+
+	it("blocks it on a container when the browser can't find the caret at a point", () => {
+		const { menu, selection } = selectWordInMenu();
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(false);
+	});
+
+	it("blocks it on a container when the caret lands in a text field", () => {
+		const { menu, selection } = selectWordInMenu();
+		const field = document.createElement("input");
+		field.value = "typed text";
+		menu.append(field);
+		placeCaret({ node: menu, offset: menu.childNodes.length });
+		Object.defineProperty(document, "caretPositionFromPoint", {
+			configurable: true,
+			value: () => ({ offsetNode: field, offset: field.value.length }),
+		});
+		expect(
+			allowsNativeMenu({ target: menu, selection, point: MENU_POINT }),
+		).toBe(false);
 	});
 
 	it("blocks it on a plain element", () => {
@@ -193,6 +296,12 @@ describe("blockNativeMenu", () => {
 		const event = contextMenuOn(query("#row"));
 		expect(cancelledBeforeRow).toBe(false);
 		expect(event.defaultPrevented).toBe(true);
+	});
+
+	it("leaves alone the selection menu Android reopens on the focused dialog", () => {
+		const { menu, text } = selectWordInMenu();
+		placeCaret({ node: text, offset: SELECTED_WORD_START });
+		expect(reopenedSelectionMenuOn(menu).defaultPrevented).toBe(false);
 	});
 
 	it("stops cancelling once released", () => {

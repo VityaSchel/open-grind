@@ -1,6 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { backLink, DEMO_CONVERSATION, installTauriShim } from "./support/app";
+import {
+	backLink,
+	DEMO_CONVERSATION,
+	historyEntries,
+	installTauriShim,
+} from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 const DEMO_PROFILE = "/profile/100001";
@@ -50,12 +55,18 @@ test("returns to the screen the profile was opened from", async ({ page }) => {
 	).toBe(true);
 });
 
-test("opens Browse when the profile was the first screen", async ({ page }) => {
+test("opens Browse in place of a profile that was the first screen", async ({
+	page,
+}) => {
 	await openProfileDirectly(page);
 
 	await backLink(page).click();
 
 	await expect(page).toHaveURL(BROWSE_URL);
+	expect(
+		await historyEntries(page),
+		"Browse replaced the profile instead of stacking on it",
+	).toEqual({ index: 0, paths: ["/"] });
 });
 
 test("opens Browse after coming back to a profile that was the first screen", async ({
