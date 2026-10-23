@@ -11,8 +11,9 @@ fi
 
 RES="src-tauri/gen/android/app/src/main/res"
 
-# Desktop + iOS icons
+# Desktop icons
 bun tauri icon ./contrib/logo/app-icon.svg --ios-color='#0A0A0A'
+rm -rf src-tauri/gen/apple/Assets.xcassets
 
 # Android
 rm -f "$RES"/mipmap-*dpi/ic_launcher.png \
@@ -63,15 +64,28 @@ cat > "$RES/values/ic_launcher_background.xml" <<'XML'
 </resources>
 XML
 
-# macOS: actool output differs between runs, so the compiled icon is committed
+# macOS and iOS: actool output differs between runs, so the compiled icons are committed
 cp contrib/logo/app-icon.svg contrib/logo/AppIcon.icon/Assets/mark.svg
-minimum=$(bun -e 'console.log((await Bun.file("src-tauri/tauri.conf.json").json()).bundle.macOS.minimumSystemVersion)')
 catalog=$(mktemp -d)
 trap 'rm -rf "$catalog"' EXIT
-"${XCRUN[@]}" actool "$PWD/contrib/logo/AppIcon.icon" --compile "$catalog" \
-  --output-format human-readable-text --errors --warnings \
-  --output-partial-info-plist "$catalog/Info.plist" \
-  --app-icon AppIcon --include-all-app-icons \
-  --platform macosx --target-device mac --minimum-deployment-target "$minimum"
-cp "$catalog/Assets.car" src-tauri/icons/Assets.car
-cp "$catalog/AppIcon.icns" src-tauri/icons/icon.icns
+
+compile_icon() {
+  local out="$catalog/$1"
+  shift
+  mkdir -p "$out"
+  "${XCRUN[@]}" actool "$PWD/contrib/logo/AppIcon.icon" --compile "$out" \
+    --output-format human-readable-text --errors --warnings \
+    --output-partial-info-plist "$out/Info.plist" \
+    --app-icon AppIcon --include-all-app-icons "$@"
+}
+
+compile_icon macos --platform macosx --target-device mac \
+  --minimum-deployment-target "$(bun -e 'console.log((await Bun.file("src-tauri/tauri.conf.json").json()).bundle.macOS.minimumSystemVersion)')"
+cp "$catalog/macos/Assets.car" src-tauri/icons/Assets.car
+cp "$catalog/macos/AppIcon.icns" src-tauri/icons/icon.icns
+
+compile_icon ios --platform iphoneos --target-device iphone --target-device ipad \
+  --minimum-deployment-target "$(bun -e 'console.log((await Bun.file("src-tauri/tauri.ios.conf.json").json()).bundle.iOS.minimumSystemVersion)')"
+rm -rf src-tauri/gen/apple/AppIcon
+mkdir src-tauri/gen/apple/AppIcon
+cp "$catalog/ios/Assets.car" "$catalog"/ios/AppIcon*.png src-tauri/gen/apple/AppIcon/

@@ -30,7 +30,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources
-      - path: Assets.xcassets
+      - path: AppIcon
+        buildPhase: resources
       - path: Externals
       - path: open-grind_iOS
       - path: assets
@@ -69,6 +70,8 @@ targets:
         LIBRARY_SEARCH_PATHS[arch=arm64]: $(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)
         ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: true
         EXCLUDED_ARCHS[sdk=iphoneos*]: x86_64
+        COMPRESS_PNG_FILES: false
+        STRIP_PNG_TEXT: false
       groups: [app]
     dependencies:
       - framework: libapp.a
