@@ -2510,7 +2510,7 @@
 			"ecosystem": "rust",
 			"platform": "windows",
 			"versions": [
-				"5.4.1"
+				"5.4.3"
 			],
 			"spdx": "BSL-1.0",
 			"shipped": "BSL-1.0",
@@ -5188,7 +5188,7 @@
 			"name": "mio",
 			"ecosystem": "rust",
 			"versions": [
-				"1.1.1"
+				"1.2.4"
 			],
 			"spdx": "MIT",
 			"shipped": "MIT",
@@ -7236,7 +7236,7 @@
 			"name": "syn",
 			"ecosystem": "rust",
 			"versions": [
-				"1.0.109, 2.0.117"
+				"1.0.109, 2.0.117, 3.0.9"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
@@ -7762,7 +7762,7 @@
 			"name": "tokio",
 			"ecosystem": "rust",
 			"versions": [
-				"1.50.0"
+				"1.54.1"
 			],
 			"spdx": "MIT",
 			"shipped": "MIT",
@@ -7790,7 +7790,7 @@
 			"name": "tokio-macros",
 			"ecosystem": "rust",
 			"versions": [
-				"2.6.0"
+				"2.7.2"
 			],
 			"spdx": "MIT",
 			"shipped": "MIT",
