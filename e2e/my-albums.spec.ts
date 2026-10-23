@@ -8,11 +8,21 @@ import {
 	openAlbums,
 	openSharedAlbum,
 	SHARED_ALBUM,
+	SHARED_ALBUM_ID,
 } from "./support/albums";
-import { installTauriShim, watchRendered } from "./support/app";
+import {
+	afterTwoFrames,
+	historyEntries,
+	installTauriShim,
+	pathname,
+	watchRendered,
+} from "./support/app";
 import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
+import { STACK_DIM, stackSettled } from "./support/page-stack";
 
 const ADD_ALBUM = 'a[href="/settings/albums/new"]';
+const myAlbumsTitle = (page: Page) =>
+	page.getByRole("navigation").getByText("My Albums");
 const LOADING_TILE = '[data-slot="media-image-pending"]';
 
 const TINY_PNG =
@@ -46,9 +56,7 @@ test.describe("my albums", () => {
 			.getByRole("link", { name: /My Albums/ })
 			.click({ timeout: 60_000 });
 		await expect(page).toHaveURL(/\/albums$/);
-		await expect(
-			page.getByRole("navigation").getByText("My Albums"),
-		).toBeVisible();
+		await expect(myAlbumsTitle(page)).toBeVisible();
 
 		const addAlbum = page.getByRole("link", { name: "Add album" });
 		await expect(addAlbum, "the add cell leads the grid").toBeVisible();
@@ -171,6 +179,42 @@ test.describe("my albums", () => {
 		).toBe(atAlbums);
 		await expect(page.locator(SHARED_ALBUM)).toHaveCount(0);
 		await expect(page.locator(ALBUM_TILE)).toHaveCount(before - 1);
+	});
+
+	test("Forward does not reopen a deleted album", async ({ page }) => {
+		await openAlbums(page);
+		const atAlbums = await historyEntries(page);
+		await page.locator(SHARED_ALBUM).click();
+		await page
+			.getByRole("button", { name: "Album menu" })
+			.click({ timeout: 30_000 });
+		await page.getByRole("menuitem", { name: "Delete album" }).click();
+		await page.getByRole("button", { name: "Delete", exact: true }).click();
+		await expect(page).toHaveURL(/\/albums$/, { timeout: 30_000 });
+		await expect(myAlbumsTitle(page)).toBeVisible();
+		await stackSettled(page);
+		const slid = await watchRendered(page, { selector: STACK_DIM });
+
+		await page.goForward();
+
+		await expect
+			.poll(() => historyEntries(page), {
+				message: "Forward stays on the My Albums entry",
+			})
+			.toEqual({
+				index: atAlbums.index,
+				paths: [
+					...atAlbums.paths,
+					`/settings/albums/${SHARED_ALBUM_ID}`,
+				],
+			});
+		await afterTwoFrames(page);
+		expect(await pathname(page)).toBe("/settings/albums");
+		await expect(myAlbumsTitle(page)).toBeVisible();
+		expect(await page.getByText("Edit Album").count()).toBe(0);
+		expect(await slid(), "the stack never slid toward the album").toBe(
+			false,
+		);
 	});
 
 	test("a removal is marked, undoable, and only lands on save", async ({

@@ -9,7 +9,7 @@
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { returnTo } from "$lib/util/history";
+	import { leaveDeletedPages } from "$lib/util/deleted-pages";
 
 	let {
 		albumId,
@@ -26,7 +26,10 @@
 			await deleteAlbum({ albumId });
 			getMyAlbumsState(ourProfileId).remove(albumId);
 			toast.success("Your album has been deleted");
-			returnTo("/settings/albums");
+			leaveDeletedPages({
+				pathnames: [`/settings/albums/${albumId}`],
+				parent: "/settings/albums",
+			});
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Couldn't delete album", error });
