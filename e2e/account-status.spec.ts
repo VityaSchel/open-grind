@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import {
 	captureOpenedUrls,
@@ -11,6 +11,10 @@ import { answerDemoRequests } from "./support/demo-faults";
 import { restingToast, UPDATE_TOASTS_MODULE_URL } from "./support/toast";
 
 const TRANSPORT_MODULE_URL = "/src/lib/api/transport.ts";
+
+function clickBackground(page: Page) {
+	return page.mouse.click(10, 400);
+}
 
 test("ban events explain a blocked network and when a suspension ends", async ({
 	page,
@@ -50,7 +54,11 @@ test("ban events explain a blocked network and when a suspension ends", async ({
 		.toEqual(["https://web.grindr.com/ban-appeal"]);
 
 	await page.keyboard.press("Escape");
-	await expect(dialog, "a suspension can't be dismissed").toBeVisible();
+	expect(await dialog.getAttribute("data-state"), "Escape").toBe("open");
+	await clickBackground(page);
+	expect(await dialog.getAttribute("data-state"), "a background click").toBe(
+		"open",
+	);
 });
 
 test("Grindr refusing the app version asks once to update, and the update toast works over it", async ({
@@ -121,7 +129,7 @@ test("Grindr refusing the app version asks once to update, and the update toast 
 		"the update toast doesn't close the popup",
 	).toBeVisible();
 
-	await page.keyboard.press("Escape");
+	await clickBackground(page);
 	await expect(dialog).toBeHidden();
 	const answered = await cascade.hits();
 	await onlineFilter.click();

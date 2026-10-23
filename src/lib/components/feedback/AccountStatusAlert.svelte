@@ -195,6 +195,8 @@
 
 	const dismissible = $derived(!signsOut && running === false);
 
+	const dismissBehavior = $derived(dismissible ? "close" : "ignore");
+
 	dismissOnBackGesture({
 		active: () => accountStatusState.open,
 		dismiss: () => {
@@ -249,8 +251,8 @@
 	}
 >
 	<AlertDialog.Content
-		escapeKeydownBehavior={dismissible ? "close" : "ignore"}
-		interactOutsideBehavior="ignore"
+		escapeKeydownBehavior={dismissBehavior}
+		interactOutsideBehavior={dismissBehavior}
 	>
 		<AlertDialog.Header>
 			<AlertDialog.Title>{content.title}</AlertDialog.Title>
