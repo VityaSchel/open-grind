@@ -68,7 +68,7 @@ cp contrib/logo/app-icon.svg contrib/logo/AppIcon.icon/Assets/mark.svg
 minimum=$(bun -e 'console.log((await Bun.file("src-tauri/tauri.conf.json").json()).bundle.macOS.minimumSystemVersion)')
 catalog=$(mktemp -d)
 trap 'rm -rf "$catalog"' EXIT
-"${XCRUN[@]}" actool contrib/logo/AppIcon.icon --compile "$catalog" \
+"${XCRUN[@]}" actool "$PWD/contrib/logo/AppIcon.icon" --compile "$catalog" \
   --output-format human-readable-text --errors --warnings \
   --output-partial-info-plist "$catalog/Info.plist" \
   --app-icon AppIcon --include-all-app-icons \
