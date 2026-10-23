@@ -5,10 +5,12 @@ import {
 	canGoBack,
 	earlierPathnames,
 	navigationPending,
+	returnTo,
 	traverseBackTo,
 } from "$lib/util/history";
 
-const { navigating, page } = vi.hoisted(() => ({
+const { goto, navigating, page } = vi.hoisted(() => ({
+	goto: vi.fn(),
 	navigating: {
 		type: null as NavigationType | null,
 		to: null as { url: URL } | null,
@@ -16,6 +18,7 @@ const { navigating, page } = vi.hoisted(() => ({
 	page: { url: new URL("https://app.test/") },
 }));
 
+vi.mock("$app/navigation", () => ({ goto }));
 vi.mock("$app/state", () => ({ navigating, page }));
 
 function stubEntries(paths: string[], index: number) {
@@ -32,6 +35,7 @@ function stubEntries(paths: string[], index: number) {
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	goto.mockClear();
 });
 
 describe("traverseBackTo", () => {
@@ -87,6 +91,26 @@ describe("traverseBackTo", () => {
 		vi.stubGlobal("history", { go, length: 3 });
 
 		expect(traverseBackTo("/settings")).toBe(false);
+		expect(go).not.toHaveBeenCalled();
+	});
+});
+
+describe("returnTo", () => {
+	it("walks back to the screen when it is behind this one", () => {
+		const go = stubEntries(["/", "/chat", "/chat/1:2"], 2);
+
+		returnTo("/chat");
+
+		expect(go).toHaveBeenCalledWith(-1);
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it("takes this entry's place when the screen is not behind it", () => {
+		const go = stubEntries(["/", "/chat/1:2"], 1);
+
+		returnTo("/chat");
+
+		expect(goto).toHaveBeenCalledWith("/chat", { replaceState: true });
 		expect(go).not.toHaveBeenCalled();
 	});
 });

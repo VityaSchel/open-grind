@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { afterNavigate, goto } from "$app/navigation";
+	import { afterNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { tinykeys } from "tinykeys";
 	import type { HTMLAnchorAttributes } from "svelte/elements";
 
 	import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
-	import { canGoBack } from "$lib/util/history";
+	import { canGoBack, returnTo } from "$lib/util/history";
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { escapeMeansBack } from "./escape-back";
 
@@ -50,7 +50,7 @@
 		leaving = true;
 
 		if (canGoBack()) history.back();
-		else void goto(href, { replaceState: true });
+		else returnTo(href);
 	}}
 >
 	{@render children?.()}

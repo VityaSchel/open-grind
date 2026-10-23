@@ -25,9 +25,19 @@ function renderBackLink({
 	historyLength?: number;
 }) {
 	const back = vi.fn();
+	const index = canGoBack ? 1 : 0;
 	vi.stubGlobal(
 		"navigation",
-		canGoBack === undefined ? undefined : { canGoBack },
+		canGoBack === undefined
+			? undefined
+			: {
+					canGoBack,
+					currentEntry: { index },
+					entries: () =>
+						Array.from({ length: index + 1 }, () => ({
+							url: location.href,
+						})),
+				},
 	);
 	vi.stubGlobal("history", { length: historyLength, back });
 	return {

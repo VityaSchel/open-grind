@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import ChatCircleIcon from "phosphor-svelte/lib/ChatCircleIcon";
 	import DotsNineIcon from "phosphor-svelte/lib/DotsNineIcon";
@@ -15,7 +14,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { tabsListVariants } from "$lib/components/ui/tabs";
 	import { getTapsState } from "$lib/interest/taps-state.svelte";
-	import { traverseBackTo } from "$lib/util/history";
+	import { returnTo } from "$lib/util/history";
 	import { isWithin } from "$lib/util/pathname";
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { bottomChrome } from "$lib/util/screen-chrome.svelte";
@@ -62,8 +61,7 @@
 			if (!isWithin({ pathname: current, root: href })) return;
 
 			event.preventDefault();
-			if (!traverseBackTo(landsOn))
-				void goto(landsOn, { replaceState: true });
+			returnTo(landsOn);
 		};
 	}
 </script>
