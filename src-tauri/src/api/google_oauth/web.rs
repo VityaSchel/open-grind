@@ -129,13 +129,27 @@ async fn run_flow(
 			.data_directory(crate::api::oauth::oauth_data_dir(app, &nonce)?);
 	}
 
+	#[cfg(target_os = "ios")]
+	{
+		builder = builder
+			.visible(false)
+			.background_color(tauri::window::Color(10, 10, 10, 255));
+	}
+
 	let window = builder.build().map_err(|e| {
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
 
+	#[cfg(target_os = "ios")]
+	crate::api::oauth::sheet::present(&window, "Sign in with Google");
+
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {
-		if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+		if matches!(
+			event,
+			tauri::WindowEvent::CloseRequested { .. }
+				| tauri::WindowEvent::Destroyed
+		) {
 			bridge_for_close.fulfill(Err(CANCELED.to_owned()));
 		}
 	});

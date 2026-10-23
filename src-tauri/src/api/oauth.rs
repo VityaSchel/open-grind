@@ -8,6 +8,9 @@ use tokio::sync::oneshot;
 use crate::app_origin::is_served_locally;
 use crate::error::AppError;
 
+#[cfg(target_os = "ios")]
+pub mod sheet;
+
 /// Matched verbatim by the frontend, which stays silent for it.
 pub const CANCELED: &str = "Sign-in canceled";
 

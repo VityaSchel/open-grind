@@ -97,9 +97,17 @@ async fn run_flow(
 			.data_directory(crate::api::oauth::oauth_data_dir(app, &state)?);
 	}
 
+	#[cfg(target_os = "ios")]
+	{
+		builder = builder.visible(false);
+	}
+
 	let window = builder.build().map_err(|e| {
 		AppError::Http(format!("failed to open sign-in window: {e}"))
 	})?;
+
+	#[cfg(target_os = "ios")]
+	crate::api::oauth::sheet::present(&window, "Sign in with Facebook");
 
 	let bridge_for_close = bridge.clone();
 	window.on_window_event(move |event| {
