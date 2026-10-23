@@ -290,6 +290,8 @@ pub fn run() {
                         });
                 #[cfg(any(target_os = "macos", target_os = "windows"))]
                 let builder = builder.disable_drag_drop_handler();
+                #[cfg(target_os = "ios")]
+                let builder = builder.with_input_accessory_view_builder(|_| None);
                 #[cfg(target_os = "linux")]
                 let builder = builder.extensions_path(
                     app.path().resource_dir()?.join(media::WEBKIT_EXTENSIONS),
