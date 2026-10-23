@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { onDestroy, tick } from "svelte";
 
@@ -10,6 +9,7 @@
 	import Skeleton from "$lib/components/ui/skeleton/skeleton.svelte";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
+	import { returnTo } from "$lib/util/history";
 	import { restoreScrollOnce } from "$lib/util/scroll-restore.svelte";
 	import { SelectionSet } from "$lib/util/selection.svelte";
 	import type { ConversationsState } from "$lib/chat/conversations-state.svelte";
@@ -143,10 +143,10 @@
 		deleteDialogOpen = true;
 	}
 
-	async function confirmDelete() {
+	function confirmDelete() {
 		exitSelection();
 		if (deleteIds.some((id) => id === page.params.conversationId)) {
-			await goto("/chat");
+			returnTo("/chat");
 		}
 		const known = new Set(
 			conversations.entries.map((entry) => entry.data.conversationId),
@@ -171,7 +171,7 @@
 <DeleteConversationsDialog
 	bind:open={deleteDialogOpen}
 	count={deleteIds.length}
-	onConfirm={() => void confirmDelete()}
+	onConfirm={confirmDelete}
 />
 
 <div class="flex h-full w-full min-w-list-rail flex-col">

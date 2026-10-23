@@ -27,6 +27,7 @@ import type { Capability } from "$lib/updates/types";
 const COMPANION_RELEASES =
 	"https://git.opengrind.org/open-grind/google-oauth-app/releases#install";
 const SCREEN_URL = "http://localhost/auth/sign-in/google";
+const ADDON_TAP = ["google-oauth", { trigger: "manual" }] as const;
 
 const fake = updateApiFake();
 const toasts = toastsFake();
@@ -160,7 +161,7 @@ describe("GoogleSignInForm", () => {
 		await fireEvent.click(button("Install"));
 		await settled();
 
-		expect(api.startUpdateDownload).toHaveBeenCalledWith("google-oauth");
+		expect(api.startUpdateDownload).toHaveBeenCalledWith(...ADDON_TAP);
 		expect(toasts.showStage).toHaveBeenLastCalledWith(
 			expect.objectContaining({
 				view: expect.objectContaining({ stage: "downloading" }),
@@ -646,7 +647,7 @@ describe("GoogleSignInForm", () => {
 		await settled();
 
 		expect(api.getUpdateReadiness).toHaveBeenCalledWith("google-oauth");
-		expect(api.startUpdateDownload).toHaveBeenCalledWith("google-oauth");
+		expect(api.startUpdateDownload).toHaveBeenCalledWith(...ADDON_TAP);
 		expectBusy("Downloading…");
 	});
 

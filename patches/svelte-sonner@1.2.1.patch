@@ -1,0 +1,52 @@
+diff --git a/dist/Toast.svelte b/dist/Toast.svelte
+index a15126a2550dcbd6bd14df6ed4c8a25e328ff9f6..d8f6afc019c5b522796a154dbc1c5c2908e50901 100644
+--- a/dist/Toast.svelte
++++ b/dist/Toast.svelte
+@@ -355,7 +355,7 @@
+ 
+ 		// ensure we maintain correct pointer capture even when going outside of the toast (e.g. when swiping)
+ 		target.setPointerCapture(event.pointerId);
+-		if (target.tagName === 'BUTTON') return;
++		if (target.tagName === 'BUTTON' || !dismissible) return;
+ 		swiping = true;
+ 		pointerStart = { x: event.clientX, y: event.clientY };
+ 	};
+@@ -559,6 +559,7 @@
+ 	onpointermove={handlePointerMove}
+ 	onpointerup={handlePointerUp}
+ 	onpointerdown={handlePointerDown}
++	onpointercancel={handleDragEnd}
+ 	ondragend={handleDragEnd}
+ >
+ 	{#if closeButton && !toast.component && toastType !== 'loading' && closeIcon !== null}
+diff --git a/dist/Toaster.svelte b/dist/Toaster.svelte
+index 51385c9b78c82edfefb1b12d51ad23383ca08b6f..36319e75787312cea51be12daa1e521a46148976 100644
+--- a/dist/Toaster.svelte
++++ b/dist/Toaster.svelte
+@@ -199,8 +199,14 @@
+ 	let isFocusWithin = $state(false);
+ 	let lastMousePosition: { x: number; y: number } | null = null;
+ 
+-	const hotkeyLabel = $derived(
+-		hotkey.join('+').replace(/Key/g, '').replace(/Digit/g, '')
++	const ariaModifiers: Record<string, string> = {
++		altKey: 'Alt',
++		ctrlKey: 'Control',
++		metaKey: 'Meta',
++		shiftKey: 'Shift'
++	};
++	const ariaKeyShortcuts = $derived(
++		hotkey.map((key) => ariaModifiers[key] ?? key.replace(/^(Key|Digit)/, '')).join('+')
+ 	);
+ 
+ 	$effect(() => {
+@@ -386,7 +392,8 @@
+ <!-- eslint-disable-next-line svelte/valid-compile -->
+ <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+ <section
+-	aria-label="{containerAriaLabel} {hotkeyLabel}"
++	aria-label={containerAriaLabel}
++	aria-keyshortcuts={ariaKeyShortcuts}
+ 	tabindex={-1}
+ 	aria-live="polite"
+ 	aria-relevant="additions text"

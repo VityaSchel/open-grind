@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 27590d6..0a0daa7 100644
+index 0b2a1b4..e046784 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -149,3 +149,6 @@ features = [
@@ -10,10 +10,10 @@ index 27590d6..0a0daa7 100644
 +[lints.rust]
 +warnings = { level = "allow", priority = -1 }
 diff --git a/src/lib.rs b/src/lib.rs
-index 7cfbe18..183267c 100644
+index aef855c..77b067e 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -4836,6 +4836,11 @@ You may have it installed on another user account, but it is not available for t
+@@ -4837,6 +4837,11 @@ You may have it installed on another user account, but it is not available for t
      webview_builder = webview_builder.with_https_scheme(webview_attributes.use_https_scheme);
    }
  

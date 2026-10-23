@@ -21,7 +21,7 @@ use std::time::Duration;
 
 use grindr::MediaFetcher;
 use tauri::async_runtime::JoinHandle;
-use tauri::http::{header, Method, Request, Response, StatusCode};
+use tauri::http::{header, HeaderValue, Method, Request, Response, StatusCode};
 use tauri::{
 	AppHandle, Manager, Runtime, UriSchemeContext, UriSchemeResponder,
 };
@@ -150,23 +150,36 @@ pub fn handle<R: Runtime>(
 	responder: UriSchemeResponder,
 ) {
 	let app = context.app_handle().clone();
-	let is_head = request.method() == Method::HEAD;
-	let allowed_method = is_head || request.method() == Method::GET;
-	let target = decode_target(request.uri().path());
-	let range = request
-		.headers()
-		.get(header::RANGE)
-		.and_then(|value| value.to_str().ok())
-		.map(str::to_owned);
+	let webview_label = context.webview_label().to_owned();
 
 	tauri::async_runtime::spawn(async move {
-		let response = if allowed_method {
-			serve(&app, target, range, is_head).await
-		} else {
-			refused(StatusCode::METHOD_NOT_ALLOWED)
-		};
-		responder.respond(response);
+		responder.respond(answer(&app, &webview_label, &request).await);
 	});
+}
+
+async fn answer<R: Runtime>(
+	app: &AppHandle<R>,
+	webview_label: &str,
+	request: &Request<Vec<u8>>,
+) -> Response<Vec<u8>> {
+	let is_head = request.method() == Method::HEAD;
+	let mut response = if webview_label != crate::MAIN_WINDOW_LABEL {
+		refused(StatusCode::FORBIDDEN)
+	} else if is_head || request.method() == Method::GET {
+		let range = request
+			.headers()
+			.get(header::RANGE)
+			.and_then(|value| value.to_str().ok())
+			.map(str::to_owned);
+		serve(app, decode_target(request.uri().path()), range, is_head).await
+	} else {
+		refused(StatusCode::METHOD_NOT_ALLOWED)
+	};
+	response.headers_mut().insert(
+		header::CONTENT_SECURITY_POLICY,
+		HeaderValue::from_static("sandbox"),
+	);
+	response
 }
 
 async fn serve<R: Runtime>(
@@ -296,6 +309,48 @@ mod tests {
 	#[tokio::test(start_paused = true)]
 	async fn a_desktop_video_session_waits_out_a_retried_header_wait() {
 		assert_waits_out_a_retried_header_wait(Delivery::Sessioned).await;
+	}
+
+	fn get(url: &str) -> Request<Vec<u8>> {
+		use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+
+		Request::builder()
+			.uri(format!(
+				"ogmedia://localhost/i{}",
+				URL_SAFE_NO_PAD.encode(url)
+			))
+			.body(Vec::new())
+			.unwrap()
+	}
+
+	#[tokio::test]
+	async fn only_the_main_window_may_load_proxied_media() {
+		let app = app_without_a_client();
+		cache(&app, PHOTO, b"webpbytes").await;
+
+		let main =
+			answer(app.handle(), crate::MAIN_WINDOW_LABEL, &get(PHOTO)).await;
+		let sign_in = answer(app.handle(), "google-oauth", &get(PHOTO)).await;
+
+		assert_eq!(main.status(), StatusCode::OK);
+		assert_eq!(main.body().as_slice(), b"webpbytes");
+		assert_eq!(sign_in.status(), StatusCode::FORBIDDEN);
+		assert!(sign_in.body().is_empty());
+	}
+
+	#[tokio::test]
+	async fn proxied_media_opened_as_a_page_runs_no_script() {
+		let app = app_without_a_client();
+		cache(&app, PHOTO, b"<script>").await;
+
+		for label in [crate::MAIN_WINDOW_LABEL, "google-oauth"] {
+			let response = answer(app.handle(), label, &get(PHOTO)).await;
+			assert_eq!(
+				header_str(&response, header::CONTENT_SECURITY_POLICY),
+				Some("sandbox"),
+				"{label}"
+			);
+		}
 	}
 
 	#[tokio::test]

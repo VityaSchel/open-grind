@@ -6,7 +6,7 @@
 
 	import { t } from "$lib/i18n";
 	import { runBackGestureHandlers } from "$lib/platform/back-gesture-event.svelte";
-	import { canGoBack } from "$lib/util/history";
+	import { canGoBack, returnTo } from "$lib/util/history";
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { escapeMeansBack } from "./escape-back";
 
@@ -46,16 +46,12 @@
 	aria-keyshortcuts="Escape"
 	onclick={(event) => {
 		if (!isPlainClick(event)) return;
-		if (leaving) {
-			event.preventDefault();
-			return;
-		}
+		event.preventDefault();
+		if (leaving) return;
 		leaving = true;
 
-		if (canGoBack()) {
-			event.preventDefault();
-			history.back();
-		}
+		if (canGoBack()) history.back();
+		else returnTo(href);
 	}}
 >
 	{@render children?.()}

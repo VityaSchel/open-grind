@@ -117,7 +117,7 @@
 </script>
 
 <dialog
-	class="menu-scrim fixed top-0 left-0 z-9999 size-full max-h-none max-w-none bg-transparent"
+	class="menu-scrim fixed top-0 left-0 z-9999 size-full max-h-none max-w-none bg-transparent select-none"
 	bind:this={contextMenuDialog}
 	onmousedown={(event) => {
 		if (

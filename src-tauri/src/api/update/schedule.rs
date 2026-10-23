@@ -259,6 +259,23 @@ fn admit_check_in(
 	Ok(Admission { component, trigger })
 }
 
+pub fn admit_download(
+	app: &AppHandle,
+	trigger: Trigger,
+) -> Result<(), UpdateError> {
+	admit_download_in(|| path(app), trigger)
+}
+
+fn admit_download_in(
+	ledger: impl FnOnce() -> Result<PathBuf, UpdateError>,
+	trigger: Trigger,
+) -> Result<(), UpdateError> {
+	if trigger == Trigger::Manual || load_from(&ledger()?)?.auto_check {
+		return Ok(());
+	}
+	Err(UpdateError::AutoChecksDisabled)
+}
+
 fn worth_checking(
 	component: &Component,
 	baseline: &Baseline,
@@ -464,6 +481,56 @@ mod tests {
 				"a {trigger:?} check must not reach the network without a due date"
 			);
 		}
+		assert!(path.is_dir());
+		let _ = fs::remove_dir_all(path.parent().unwrap());
+	}
+
+	#[test]
+	fn a_download_the_user_started_needs_no_ledger() {
+		assert!(admit_download_in(
+			|| Err(UpdateError::Storage("no data directory".into())),
+			Trigger::Manual,
+		)
+		.is_ok());
+	}
+
+	#[test]
+	fn an_unattended_download_waits_for_automatic_checks() {
+		let missing = ledger_file("download-missing");
+		let opted_out = ledger_file("download-opted-out");
+		save(&opted_out, &ledger(false, 0)).unwrap();
+		let opted_in = ledger_file("download-opted-in");
+		save(&opted_in, &ledger(true, u64::MAX)).unwrap();
+
+		for trigger in [Trigger::Launch, Trigger::Automatic] {
+			for refused in [&missing, &opted_out] {
+				assert!(
+					matches!(
+						admit_download_in(|| Ok(refused.clone()), trigger),
+						Err(UpdateError::AutoChecksDisabled)
+					),
+					"a {trigger:?} download must not start while automatic checks are off"
+				);
+			}
+			assert!(
+				admit_download_in(|| Ok(opted_in.clone()), trigger).is_ok(),
+				"a {trigger:?} download ignores the check interval"
+			);
+		}
+		for path in [missing, opted_out, opted_in] {
+			let _ = fs::remove_dir_all(path.parent().unwrap());
+		}
+	}
+
+	#[test]
+	fn an_unattended_download_is_refused_when_the_ledger_is_unreadable() {
+		let path = ledger_file("download-unreadable");
+		fs::create_dir_all(&path).unwrap();
+
+		assert!(matches!(
+			admit_download_in(|| Ok(path.clone()), Trigger::Launch),
+			Err(UpdateError::Storage(_))
+		));
 		assert!(path.is_dir());
 		let _ = fs::remove_dir_all(path.parent().unwrap());
 	}

@@ -37,20 +37,20 @@ const CRATES = [
 	},
 	{
 		name: "tauri-codegen",
-		version: "2.6.1",
-		sha256: "6bd11644962add2549a60b7e7c6800f17d7020156e02f516021d8103e80cc528",
+		version: "2.6.3",
+		sha256: "08279169ff42f8fc45a1dbc9dcae888893ba95288142e5880c59b93a26d2cfc5",
 		keep: ["Cargo.toml", "LICENSE_MIT", "LICENSE_APACHE-2.0", "src"],
 	},
 	{
 		name: "tauri-utils",
-		version: "2.9.1",
-		sha256: "d57200389a2f82b4b0a40ae29ca19b6978116e8f4d4e974c3234ce40c0ffbdec",
+		version: "2.9.3",
+		sha256: "3e176a18e67764923c4f1ce66f25ae4abe5f688384d5eb1a0fa6c77f3d90f887",
 		keep: ["Cargo.toml", "LICENSE_APACHE-2.0", "LICENSE_MIT", "src"],
 	},
 	{
 		name: "tauri-runtime",
-		version: "2.11.1",
-		sha256: "8fef478ba1d2ac21c2d528740b24d0cb315e1e8b1111aae53fafac34804371fc",
+		version: "2.11.3",
+		sha256: "b0b4bc95aed361b0019067d189a1174a603d460d0f6c72606512d59fc9c12ec8",
 		keep: [
 			"Cargo.toml",
 			"LICENSE_APACHE-2.0",
@@ -61,8 +61,8 @@ const CRATES = [
 	},
 	{
 		name: "tauri-runtime-wry",
-		version: "2.11.1",
-		sha256: "a3989df2ae1c476404fe0a2e8ffc4cfbde97e51efd613c2bb5355fbc9ab52cf0",
+		version: "2.11.4",
+		sha256: "4e6fac707727b7a2f48e4ded90976324267371073edbb415ffb73bb0458d203f",
 		keep: [
 			"Cargo.toml",
 			"LICENSE_APACHE-2.0",
@@ -73,8 +73,8 @@ const CRATES = [
 	},
 	{
 		name: "tauri",
-		version: "2.11.1",
-		sha256: "b93bd86d231f0a8138f11a02a584769fe4b703dc36ae133d783228dbc4801405",
+		version: "2.11.6",
+		sha256: "6fa5bacdb9bbad5954af3d1bd6cf6ae9192cab1b2e270f4a07f904610b9e85f4",
 		keep: [
 			"Cargo.toml",
 			"LICENSE_APACHE-2.0",
