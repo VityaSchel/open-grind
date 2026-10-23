@@ -10,6 +10,7 @@ import {
 	APP_SETTINGS,
 	clickMeTab,
 	clickNavBarBack,
+	CREDITS,
 	openAppSettings,
 	openDeepLink,
 	openSettings,
@@ -19,7 +20,6 @@ import {
 } from "./support/page-stack";
 
 const ROUNDS = 3;
-const CREDITS = `${APP_SETTINGS}/credits`;
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -182,13 +182,7 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 
 	await clickMeTab(page);
 
-	const after = await page.evaluate(() => ({
-		index: navigation.currentEntry!.index,
-		paths: navigation
-			.entries()
-			.map((entry) => (entry.url ? new URL(entry.url).pathname : "")),
-		canGoForward: navigation.canGoForward,
-	}));
+	const after = await historyEntries(page);
 
 	expect(atBlocked, "two pushes down the settings tree").toBe(atSettings + 2);
 	expect(
@@ -202,7 +196,10 @@ test("the Me tab collapses every entry between here and the Me screen", async ({
 		after.paths.slice(after.index + 1),
 		`both deeper entries stayed ahead: ${after.paths.join(" ")} @${after.index}`,
 	).toEqual(["/settings/account", "/settings/account/blocked"]);
-	expect(after.canGoForward, "it traversed rather than pushed").toBe(true);
+	expect(
+		await page.evaluate(() => navigation.canGoForward),
+		"it traversed rather than pushed",
+	).toBe(true);
 });
 
 test("the Me tab still navigates from a deep-linked subpage", async ({
