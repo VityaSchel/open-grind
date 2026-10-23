@@ -2,7 +2,7 @@ import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
-import { noticeAccountStatusInResponse } from "$lib/api/account-status-state.svelte";
+import { noticeAccountStatusError } from "$lib/api/account-status-state.svelte";
 import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
 import {
 	asAppError,
@@ -10,9 +10,10 @@ import {
 	markRequestBlocked,
 } from "$lib/api/methods";
 import { redactPath } from "$lib/api/redact/text";
+import { parseJson } from "$lib/api/redact/value";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demoEnabled, demoRoute } from "$lib/demo";
-import { accountStatusErrorSchema } from "$lib/model/authentication";
+import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -256,20 +257,16 @@ export async function fetchRest(
 				abortController: options.abortController,
 			}),
 	});
-	noticeAccountStatusIn(response);
+	noticeRefusedVersion(response);
 	return response;
 }
 
-function noticeAccountStatusIn(response: RestResponse): void {
-	if (response.status < 400) return;
-	let body: unknown;
-	try {
-		body = JSON.parse(response.text());
-	} catch {
-		return;
-	}
-	const error = accountStatusErrorSchema.safeParse(body);
-	if (error.success) noticeAccountStatusInResponse(error.data);
+function noticeRefusedVersion(response: RestResponse): void {
+	if (response.status !== 412) return;
+	const body = parseJson(response.text());
+	if (!body.ok) return;
+	const error = deprecatedClientVersionErrorSchema.safeParse(body.value);
+	if (error.success) noticeAccountStatusError(error.data);
 }
 
 async function sendRestRequest({

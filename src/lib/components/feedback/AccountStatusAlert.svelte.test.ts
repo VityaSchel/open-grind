@@ -6,9 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { clearAccountCaches } from "$lib/api/account-caches";
 import {
 	accountStatusState,
-	showAccountStatusForApiError,
+	showAccountStatusForError,
 } from "$lib/api/account-status-state.svelte";
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
+import type { AccountStatusError } from "$lib/model/authentication";
 import AccountStatusAlert from "./AccountStatusAlert.svelte";
 
 const {
@@ -43,20 +45,48 @@ vi.mock("$lib/updates/update-checks", () => ({
 	checkForUpdatesNow: checkForUpdatesNowMock,
 }));
 
+const verificationRequired = {
+	code: 30,
+	message: "Verification required",
+} as const;
+const deprecatedVersion = {
+	code: 8,
+	message: "The client version is deprecated",
+} as const;
+
 function emit(event: string, payload: unknown) {
 	tauriListeners.get(event)?.({ payload });
 }
 
-const button = (name: string) => screen.getByRole("button", { name });
-
-async function showBan() {
+async function showOn(event: string, payload: unknown) {
 	render(AccountStatusAlert);
-	await vi.waitFor(() => {
-		expect(tauriListeners.has("auth:banned")).toBe(true);
-	});
-	emit("auth:banned", { kind: "banned", code: 27, message: "Banned" });
-	await vi.waitFor(() => button("Sign out"));
+	emit(event, payload);
+	return await screen.findByRole("alertdialog");
 }
+
+function showBanned(info: Record<string, unknown> = {}) {
+	return showOn("auth:banned", {
+		kind: "profile",
+		code: 27,
+		message: "Banned",
+		...info,
+	});
+}
+
+async function showError(error: AccountStatusError) {
+	render(AccountStatusAlert);
+	showAccountStatusForError(error);
+	return await screen.findByRole("alertdialog");
+}
+
+function swipeBack() {
+	for (const handler of backGestureEventHandlers.keys()) handler();
+}
+
+const button = (name: string) => screen.getByRole("button", { name });
+const heading = () => screen.getByRole("heading").textContent;
+const link = (name: string) =>
+	screen.getByRole("link", { name }).getAttribute("href");
 
 beforeEach(() => {
 	callMethodMock.mockResolvedValue(null);
@@ -67,32 +97,23 @@ afterEach(() => {
 	vi.clearAllMocks();
 	tauriListeners.clear();
 	clearAccountCaches();
+	resetNowForTesting();
+	updater.selfManaged = false;
 });
 
 describe("AccountStatusAlert", () => {
 	it("shows the restriction pushed after a relaunch mints the first token", async () => {
-		render(AccountStatusAlert);
-		await vi.waitFor(() => {
-			expect(tauriListeners.has("auth:restriction")).toBe(true);
-		});
-
-		emit("auth:restriction", {
+		await showOn("auth:restriction", {
 			kind: "ageVerification",
 			region: "GB",
 			reason: "age_verification_required",
 		});
 
-		expect(accountStatusState.open).toBe(true);
-		expect(
-			await screen.findByText("Age verification required"),
-		).toBeTruthy();
+		expect(heading()).toBe("Age verification required");
 	});
 
-	it("ignores a malformed restriction payload", async () => {
+	it("ignores a malformed restriction payload", () => {
 		render(AccountStatusAlert);
-		await vi.waitFor(() => {
-			expect(tauriListeners.has("auth:restriction")).toBe(true);
-		});
 
 		emit("auth:restriction", { unexpected: true });
 
@@ -102,7 +123,7 @@ describe("AccountStatusAlert", () => {
 	it("marks Sign out busy and locks both buttons while signing out", async () => {
 		const signOut = Promise.withResolvers<void>();
 		signOutMock.mockReturnValueOnce(signOut.promise);
-		await showBan();
+		await showBanned();
 
 		await fireEvent.click(button("Sign out"));
 
@@ -115,31 +136,18 @@ describe("AccountStatusAlert", () => {
 	});
 
 	it("swallows the back gesture while open", async () => {
-		await showBan();
+		await showBanned();
 
 		expect(backGestureEventHandlers.size).toBe(1);
-		for (const handler of backGestureEventHandlers.keys()) handler();
+		swipeBack();
 
 		expect(accountStatusState.open).toBe(true);
 	});
 });
 
-describe("account status variants", () => {
-	async function showBanned(info: Record<string, unknown>) {
-		render(AccountStatusAlert);
-		await vi.waitFor(() => {
-			expect(tauriListeners.has("auth:banned")).toBe(true);
-		});
-		emit("auth:banned", { kind: "profile", message: "Banned", ...info });
-		return await screen.findByRole("alertdialog");
-	}
-
-	const link = (name: string) =>
-		screen.getByRole("link", { name }).getAttribute("href");
-
+describe("bans and restrictions", () => {
 	it("explains a permanent ban with its sub-reason, Learn more and Appeal", async () => {
 		const dialog = await showBanned({
-			code: 27,
 			reason: "Scam / Spam",
 			subReason: "PHISHING_AND_FRAUD",
 		});
@@ -156,7 +164,6 @@ describe("account status variants", () => {
 
 	it("offers no appeal for a ban Grindr made through its block decision", async () => {
 		const dialog = await showBanned({
-			code: 27,
 			reason: "TRUST_VENDOR_REJECTED",
 			subReason: "BLOCK_DECISION",
 		});
@@ -168,7 +175,7 @@ describe("account status variants", () => {
 	it("tells a blocked network apart from a ban", async () => {
 		const dialog = await showBanned({ kind: "network", code: 31 });
 
-		expect(screen.getByRole("heading").textContent).toBe("Network blocked");
+		expect(heading()).toBe("Network blocked");
 		expect(dialog.textContent).not.toContain("banned");
 		expect(
 			screen.queryByRole("button", { name: "Copy details" }),
@@ -178,49 +185,45 @@ describe("account status variants", () => {
 		expect(signOutMock).toHaveBeenCalledOnce();
 	});
 
-	it("reports a failed security check for code 28", async () => {
+	it("reports a failed security check for a device ban", async () => {
 		await showBanned({ kind: "device", code: 28 });
 
-		expect(screen.getByRole("heading").textContent).toBe(
-			"Security check failed",
-		);
+		expect(heading()).toBe("Security check failed");
 		expect(button("Copy details")).toBeTruthy();
 	});
 
-	it("links age verification for an underage restriction", async () => {
+	it("links age verification for a teen underage ban", async () => {
 		await showBanned({ kind: "underage", code: 35 });
 
-		expect(screen.getByRole("heading").textContent).toBe("Age restricted");
+		expect(heading()).toBe("Age restricted");
 		expect(link("Verify age")).toMatch(/\/articles\/4417616146963$/);
 	});
 
-	async function showTimedBan(subReason: string) {
-		render(AccountStatusAlert);
-		await vi.waitFor(() => {
-			expect(tauriListeners.has("auth:restriction")).toBe(true);
-		});
-		emit("auth:restriction", {
+	it("shows a child underage ban as a plain ban", async () => {
+		await showBanned({ kind: "underage", code: 36 });
+
+		expect(heading()).toBe("Account banned");
+	});
+
+	function showTimedBan(subReason: string) {
+		return showOn("auth:restriction", {
 			kind: "timedBan",
 			reason: "Scam / Spam",
 			subReason,
 			endsAt: new Date(2026, 9, 25, 14, 0).getTime(),
 		});
-		return await screen.findByRole("alertdialog");
 	}
 
 	it("says until when a timed ban suspends the account", async () => {
-		vi.useFakeTimers({ now: new Date(2026, 9, 22, 12), toFake: ["Date"] });
+		setNowForTesting(() => new Date(2026, 9, 22, 12).getTime());
 
 		const dialog = await showTimedBan("PROFILE_SPAM");
 
-		expect(screen.getByRole("heading").textContent).toBe(
-			"Account suspended",
-		);
+		expect(heading()).toBe("Account suspended");
 		expect(dialog.textContent).toContain(
 			"Grindr suspended this account (Profile spam and advertising) until Oct 25, 14:00.",
 		);
 		expect(screen.queryByRole("link", { name: "Appeal" })).toBeNull();
-		vi.useRealTimers();
 	});
 
 	it("offers an appeal only for timed bans Grindr lets users appeal", async () => {
@@ -228,14 +231,11 @@ describe("account status variants", () => {
 
 		expect(link("Appeal")).toBe("https://web.grindr.com/ban-appeal");
 	});
+});
 
-	it("lets phone verification be dismissed without signing out", async () => {
-		render(AccountStatusAlert);
-		showAccountStatusForApiError({
-			code: 30,
-			message: "Verification required",
-		});
-		await screen.findByRole("alertdialog");
+describe("phone verification", () => {
+	it("can be dismissed without signing out", async () => {
+		await showError(verificationRequired);
 
 		await fireEvent.click(button("OK"));
 
@@ -243,39 +243,20 @@ describe("account status variants", () => {
 		expect(signOutMock).not.toHaveBeenCalled();
 	});
 
-	it("closes phone verification on the back gesture", async () => {
-		render(AccountStatusAlert);
-		showAccountStatusForApiError({
-			code: 30,
-			message: "Verification required",
-		});
-		await screen.findByRole("alertdialog");
+	it("closes on the back gesture", async () => {
+		await showError(verificationRequired);
 
-		for (const handler of backGestureEventHandlers.keys()) handler();
+		swipeBack();
 
 		expect(accountStatusState.open).toBe(false);
 	});
 });
 
 describe("unsupported app version", () => {
-	const deprecated = { code: 8, message: "The client version is deprecated" };
-
-	async function showUnsupportedVersion() {
-		render(AccountStatusAlert);
-		showAccountStatusForApiError(deprecated);
-		return await screen.findByRole("alertdialog");
-	}
-
-	afterEach(() => {
-		updater.selfManaged = false;
-	});
-
 	it("asks to update Open Grind", async () => {
-		const dialog = await showUnsupportedVersion();
+		const dialog = await showError(deprecatedVersion);
 
-		expect(screen.getByRole("heading").textContent).toBe(
-			"Update Open Grind",
-		);
+		expect(heading()).toBe("Update Open Grind");
 		expect(dialog.textContent).toContain(
 			"Grindr no longer supports this version of Open Grind.",
 		);
@@ -287,7 +268,7 @@ describe("unsupported app version", () => {
 		updater.selfManaged = true;
 		const check = Promise.withResolvers<void>();
 		checkForUpdatesNowMock.mockReturnValueOnce(check.promise);
-		await showUnsupportedVersion();
+		await showError(deprecatedVersion);
 
 		await fireEvent.click(button("Check for updates"));
 
@@ -310,33 +291,27 @@ describe("unsupported app version", () => {
 	});
 
 	it("links the download page where the app can't update itself", async () => {
-		await showUnsupportedVersion();
+		await showError(deprecatedVersion);
 
-		expect(
-			screen
-				.getByRole("link", { name: "Check for updates" })
-				.getAttribute("href"),
-		).toBe("https://opengrind.org/guides/download");
+		expect(link("Check for updates")).toBe(
+			"https://opengrind.org/guides/download",
+		);
 	});
 
 	it("can be dismissed with the back gesture", async () => {
-		await showUnsupportedVersion();
+		await showError(deprecatedVersion);
 
-		for (const handler of backGestureEventHandlers.keys()) handler();
+		swipeBack();
 
 		expect(accountStatusState.open).toBe(false);
 	});
 
 	it("opens from a refused session refresh once and stays closed after it is dismissed", async () => {
-		render(AccountStatusAlert);
-		await vi.waitFor(() => {
-			expect(tauriListeners.has("auth:unsupported-version")).toBe(true);
-		});
+		const refusedRefresh = { kind: "Api", message: deprecatedVersion };
+		await showOn("auth:unsupported-version", refusedRefresh);
 
-		emit("auth:unsupported-version", deprecated);
-		await screen.findByRole("alertdialog");
-		for (const handler of backGestureEventHandlers.keys()) handler();
-		emit("auth:unsupported-version", deprecated);
+		swipeBack();
+		emit("auth:unsupported-version", refusedRefresh);
 
 		expect(accountStatusState.open).toBe(false);
 	});

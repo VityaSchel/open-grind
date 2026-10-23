@@ -2,14 +2,17 @@ import { SvelteSet } from "svelte/reactivity";
 
 import { registerAccountCache } from "$lib/api/account-caches";
 import type { BanInfo, Restriction } from "$lib/api/methods";
-
-export type ApiErrorBody = { code: number; message: string };
+import type {
+	AccountStatusError,
+	DeprecatedClientVersionError,
+	VerificationRequiredError,
+} from "$lib/model/authentication";
 
 export type AccountStatus =
 	| { kind: "banned"; info: BanInfo }
 	| { kind: "restriction"; restriction: Restriction }
-	| { kind: "phoneVerificationRequired"; error: ApiErrorBody }
-	| { kind: "unsupportedVersion"; error: ApiErrorBody };
+	| { kind: "phoneVerificationRequired"; error: VerificationRequiredError }
+	| { kind: "unsupportedVersion"; error: DeprecatedClientVersionError };
 
 export const accountStatusState = $state<{
 	open: boolean;
@@ -39,22 +42,18 @@ export function showAccountRestriction(
 	return true;
 }
 
-function accountStatusOfApiError(error: ApiErrorBody): AccountStatus | null {
-	if (error.code === 30) return { kind: "phoneVerificationRequired", error };
-	if (error.code === 8) return { kind: "unsupportedVersion", error };
-	return null;
+function accountStatusOf(error: AccountStatusError): AccountStatus {
+	return error.code === 30
+		? { kind: "phoneVerificationRequired", error }
+		: { kind: "unsupportedVersion", error };
 }
 
-export function showAccountStatusForApiError(error: ApiErrorBody): boolean {
-	const status = accountStatusOfApiError(error);
-	if (!status) return false;
-	showAccountStatus(status);
-	return true;
+export function showAccountStatusForError(error: AccountStatusError): void {
+	showAccountStatus(accountStatusOf(error));
 }
 
-export function noticeAccountStatusInResponse(error: ApiErrorBody): void {
-	const status = accountStatusOfApiError(error);
-	if (!status) return;
+export function noticeAccountStatusError(error: AccountStatusError): void {
+	const status = accountStatusOf(error);
 	if (accountStatusState.open || dismissedKinds.has(status.kind)) return;
 	showAccountStatus(status);
 }

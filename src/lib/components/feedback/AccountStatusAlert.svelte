@@ -8,11 +8,12 @@
 	import {
 		accountStatusState,
 		dismissAccountStatus,
-		noticeAccountStatusInResponse,
+		noticeAccountStatusError,
 		showAccountRestriction,
 		showAccountStatus,
 	} from "$lib/api/account-status-state.svelte";
 	import {
+		asAccountStatusError,
 		banInfoSchema,
 		callMethod,
 		restrictionSchema,
@@ -22,91 +23,88 @@
 	import { Button, buttonVariants } from "$lib/components/ui/button";
 	import Link from "$lib/components/ui/link/Link.svelte";
 	import { Spinner } from "$lib/components/ui/spinner";
-	import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { updatesSelfManaged } from "$lib/updates/capability.svelte";
 	import { checkForUpdatesNow } from "$lib/updates/update-checks";
-	import {
-		ageVerificationArticleUrl,
-		BAN_APPEAL_URL,
-		bannedProfilesArticleUrl,
-	} from "$lib/util/grindr-help";
+	import { now } from "$lib/util/clock";
+	import { BAN_APPEAL_URL, grindrHelpUrl } from "$lib/util/grindr-help";
 	import {
 		banOffersAppeal,
 		banSubReasonLabel,
 		timedBanOffersAppeal,
 	} from "./ban-sub-reasons";
 
+	type ExternalAction = { label: string; href: string };
+
 	type Content = {
 		title: string;
 		description: string;
 		learnMoreHref?: string;
-		appealHref?: string;
-		verifyAgeHref?: string;
+		externalAction?: ExternalAction;
 		details?: unknown;
-		closeLabel?: "Sign out" | "OK";
+		closeLabel?: string;
 		checksForUpdates?: boolean;
-		signsOut: boolean;
 	};
-
-	const signOutEnding = { closeLabel: "Sign out", signsOut: true } as const;
 
 	const DOWNLOAD_PAGE_URL = "https://opengrind.org/guides/download";
 
+	const appeal: ExternalAction = { label: "Appeal", href: BAN_APPEAL_URL };
+
 	const status = $derived(accountStatusState.status);
 
-	function withReason(sentence: string, reason: string | null | undefined) {
+	const signsOut = $derived(
+		status?.kind === "banned" || status?.kind === "restriction",
+	);
+
+	function withReason(sentence: string, reason: string | null) {
 		return reason ? `${sentence} (${reason})` : sentence;
 	}
 
 	function formatEnd(endsAt: number) {
 		return format(
 			endsAt,
-			isSameYear(endsAt, Date.now())
-				? "MMM d, H:mm"
-				: "MMM d, yyyy, H:mm",
+			isSameYear(endsAt, now()) ? "MMM d, H:mm" : "MMM d, yyyy, H:mm",
 		);
 	}
 
 	const content = $derived.by((): Content => {
 		if (status?.kind === "banned") {
 			const { info } = status;
-			if (info.code === 31) {
+			if (info.kind === "network") {
 				return {
 					title: "Network blocked",
 					description:
 						"This network was blocked by Grindr. Switch it or turn off your VPN, then sign in again.",
 					closeLabel: "OK",
-					signsOut: true,
 				};
 			}
-			if (info.code === 28) {
+			if (info.kind === "device") {
 				return {
 					title: "Security check failed",
 					description:
 						"Couldn't pass Grindr security check. Please sign out and try again.",
 					details: info,
-					...signOutEnding,
 				};
 			}
-			if (info.code === 35) {
+			if (info.kind === "underage" && info.code === 35) {
 				return {
 					title: "Age restricted",
 					description:
 						"Grindr requires your account to complete an age verification check. Please complete it in the official app, then sign in again.",
-					verifyAgeHref: ageVerificationArticleUrl(),
-					...signOutEnding,
+					externalAction: {
+						label: "Verify age",
+						href: grindrHelpUrl("ageVerification"),
+					},
 				};
 			}
 			return {
 				title: "Account banned",
 				description: `${withReason("Grindr banned this account", banSubReasonLabel(info.subReason))}.`,
-				learnMoreHref: bannedProfilesArticleUrl(),
-				appealHref: banOffersAppeal(info.subReason)
-					? BAN_APPEAL_URL
+				learnMoreHref: grindrHelpUrl("bannedProfiles"),
+				externalAction: banOffersAppeal(info.subReason)
+					? appeal
 					: undefined,
 				details: info,
-				...signOutEnding,
 			};
 		}
 		if (status?.kind === "restriction") {
@@ -116,7 +114,6 @@
 					title: "Age verification required",
 					description:
 						"Grindr requires you to verify your age before continuing. Complete it in the official Grindr app, then sign in again. Open Grind does not bypass age verification.",
-					...signOutEnding,
 				};
 			}
 			if (restriction.kind === "timedBan") {
@@ -129,17 +126,15 @@
 					description: restriction.endsAt
 						? `${sentence} until ${formatEnd(restriction.endsAt)}.`
 						: `${sentence}.`,
-					appealHref: timedBanOffersAppeal(restriction.subReason)
-						? BAN_APPEAL_URL
+					externalAction: timedBanOffersAppeal(restriction.subReason)
+						? appeal
 						: undefined,
-					...signOutEnding,
 				};
 			}
 			return {
 				title: "Account restricted",
 				description:
 					"Your account is currently restricted and can't be used. Check the official Grindr app for details.",
-				...signOutEnding,
 			};
 		}
 		if (status?.kind === "unsupportedVersion") {
@@ -149,7 +144,6 @@
 					"Grindr no longer supports this version of Open Grind.",
 				details: status.error,
 				checksForUpdates: true,
-				signsOut: false,
 			};
 		}
 		if (status?.kind === "phoneVerificationRequired") {
@@ -159,48 +153,47 @@
 					"Verify your phone number in the official Grindr app, then sign in again.",
 				details: status.error,
 				closeLabel: "OK",
-				signsOut: false,
 			};
 		}
-		return { title: "", description: "", ...signOutEnding };
+		return { title: "", description: "" };
 	});
 
+	const closeLabel = $derived(
+		content.closeLabel ?? (signsOut ? "Sign out" : undefined),
+	);
+
 	onMount(() => {
-		const unlistenBanned = listen("auth:banned", (event) => {
-			const parsed = banInfoSchema.safeParse(event.payload);
-			if (!parsed.success) return;
-			showAccountStatus({ kind: "banned", info: parsed.data });
-		});
-		const unlistenRestriction = listen("auth:restriction", (event) => {
-			const parsed = restrictionSchema.safeParse(event.payload);
-			if (!parsed.success) return;
-			showAccountRestriction(parsed.data);
-		});
-		const unlistenUnsupportedVersion = listen(
-			"auth:unsupported-version",
-			(event) => {
-				const parsed = deprecatedClientVersionErrorSchema.safeParse(
-					event.payload,
-				);
+		const unlisteners = [
+			listen("auth:banned", (event) => {
+				const parsed = banInfoSchema.safeParse(event.payload);
 				if (!parsed.success) return;
-				noticeAccountStatusInResponse(parsed.data);
-			},
-		);
+				showAccountStatus({ kind: "banned", info: parsed.data });
+			}),
+			listen("auth:restriction", (event) => {
+				const parsed = restrictionSchema.safeParse(event.payload);
+				if (!parsed.success) return;
+				showAccountRestriction(parsed.data);
+			}),
+			listen("auth:unsupported-version", (event) => {
+				const error = asAccountStatusError(event.payload);
+				if (error) noticeAccountStatusError(error);
+			}),
+		];
 
 		void callMethod("account_restriction")
 			.then(showAccountRestriction)
 			.catch(() => {});
 
 		return () => {
-			void unlistenBanned.then((fn) => fn());
-			void unlistenRestriction.then((fn) => fn());
-			void unlistenUnsupportedVersion.then((fn) => fn());
+			for (const unlisten of unlisteners) {
+				void unlisten.then((fn) => fn());
+			}
 		};
 	});
 
 	let running: false | "signOut" | "checkForUpdates" = $state(false);
 
-	const dismissible = $derived(!content.signsOut && running === false);
+	const dismissible = $derived(!signsOut && running === false);
 
 	dismissOnBackGesture({
 		active: () => accountStatusState.open,
@@ -233,7 +226,7 @@
 	}
 
 	async function close() {
-		if (!content.signsOut) {
+		if (!signsOut) {
 			dismissAccountStatus();
 			return;
 		}
@@ -277,43 +270,38 @@
 						Copy details
 					</Button>
 				{/if}
-				{#if content.appealHref}
+				{#if content.externalAction}
 					<Link
-						href={content.appealHref}
+						href={content.externalAction.href}
 						class={buttonVariants({ variant: "outline" })}
 					>
-						Appeal <ArrowUpRightIcon />
+						{content.externalAction.label}
+						<ArrowUpRightIcon />
 					</Link>
 				{/if}
-				{#if content.verifyAgeHref}
-					<Link
-						href={content.verifyAgeHref}
-						class={buttonVariants({ variant: "outline" })}
-					>
-						Verify age <ArrowUpRightIcon />
-					</Link>
+				{#if content.checksForUpdates}
+					{#if updatesSelfManaged()}
+						<Button
+							onclick={checkForUpdates}
+							aria-busy={running === "checkForUpdates"}
+						>
+							{#if running === "checkForUpdates"}
+								<Spinner aria-hidden="true" />
+							{/if}
+							Check for updates
+						</Button>
+					{:else}
+						<Link href={DOWNLOAD_PAGE_URL} class={buttonVariants()}>
+							Check for updates <ArrowUpRightIcon />
+						</Link>
+					{/if}
 				{/if}
-				{#if content.checksForUpdates && updatesSelfManaged()}
-					<Button
-						onclick={checkForUpdates}
-						aria-busy={running === "checkForUpdates"}
-					>
-						{#if running === "checkForUpdates"}
-							<Spinner aria-hidden="true" />
-						{/if}
-						Check for updates
-					</Button>
-				{:else if content.checksForUpdates}
-					<Link href={DOWNLOAD_PAGE_URL} class={buttonVariants()}>
-						Check for updates <ArrowUpRightIcon />
-					</Link>
-				{/if}
-				{#if content.closeLabel}
+				{#if closeLabel}
 					<Button onclick={close} aria-busy={running === "signOut"}>
 						{#if running === "signOut"}
 							<Spinner aria-hidden="true" />
 						{/if}
-						{content.closeLabel}
+						{closeLabel}
 					</Button>
 				{/if}
 			</fieldset>

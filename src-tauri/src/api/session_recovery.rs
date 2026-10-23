@@ -29,12 +29,6 @@ pub struct SessionErrorPayload {
 	pub transient: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct ApiErrorBody {
-	pub code: i32,
-	pub message: String,
-}
-
 pub struct SessionRecovery {
 	running: AtomicBool,
 	pub foreground: AtomicBool,
@@ -128,7 +122,7 @@ pub fn report_refresh_failure(
 				app.emit("auth:banned", info).ok();
 			}
 			Outcome::UnsupportedVersion(error) => {
-				app.emit("auth:unsupported-version", error).ok();
+				app.emit("auth:unsupported-version", &error).ok();
 			}
 		}
 	});
@@ -138,19 +132,16 @@ enum Outcome {
 	Quiet,
 	Failed(SessionErrorPayload),
 	Banned(BanInfo),
-	UnsupportedVersion(ApiErrorBody),
+	UnsupportedVersion(AppError),
 }
 
 fn settled_by(error: AppError, attempts: u32) -> Result<Outcome, AppError> {
 	match error {
 		AppError::Banned(info) => Ok(Outcome::Banned(info)),
-		AppError::Api {
+		refused @ AppError::Api {
 			code: DEPRECATED_CLIENT_VERSION,
-			message,
-		} => Ok(Outcome::UnsupportedVersion(ApiErrorBody {
-			code: DEPRECATED_CLIENT_VERSION,
-			message,
-		})),
+			..
+		} => Ok(Outcome::UnsupportedVersion(refused)),
 		AppError::Unauthorized { .. } | AppError::NotSignedIn => {
 			Ok(Outcome::Failed(SessionErrorPayload {
 				message: error.to_string(),
@@ -325,8 +316,12 @@ mod tests {
 			panic!("a refused app version must not be retried");
 		};
 		let json = serde_json::to_value(error).unwrap();
-		assert_eq!(json["code"], 8);
-		assert_eq!(json["message"], "The client version is deprecated");
+		assert_eq!(json["kind"], "Api");
+		assert_eq!(json["message"]["code"], 8);
+		assert_eq!(
+			json["message"]["message"],
+			"The client version is deprecated"
+		);
 	}
 
 	#[test]

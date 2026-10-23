@@ -5,31 +5,34 @@ const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import { accountStatusState } from "$lib/api/account-status-state.svelte";
 import { reportSignInFailure } from "$lib/api/sign-in";
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
-	accountStatusState.open = false;
-	accountStatusState.status = null;
+	clearAccountCaches();
 });
 
 describe("reportSignInFailure", () => {
-	it("asks for phone verification instead of showing error 30", () => {
-		const error = {
-			kind: "Api",
-			message: { code: 30, message: "Verification required" },
-		};
+	it.each([
+		[30, "Verification required", "phoneVerificationRequired"],
+		[8, "The client version is deprecated", "unsupportedVersion"],
+	])(
+		"shows error %i in the account popup instead of a toast",
+		(code, message, kind) => {
+			reportSignInFailure({
+				error: { kind: "Api", message: { code, message } },
+			});
 
-		reportSignInFailure({ error });
-
-		expect(accountStatusState).toMatchObject({
-			open: true,
-			status: { kind: "phoneVerificationRequired" },
-		});
-		expect(toastError).not.toHaveBeenCalled();
-	});
+			expect(accountStatusState).toMatchObject({
+				open: true,
+				status: { kind },
+			});
+			expect(toastError).not.toHaveBeenCalled();
+		},
+	);
 
 	it("keeps showing other API errors as a toast", () => {
 		reportSignInFailure({

@@ -15,10 +15,16 @@ export const deprecatedClientVersionErrorSchema = z.object({
 	message: z.string(),
 });
 
+export type DeprecatedClientVersionError = z.infer<
+	typeof deprecatedClientVersionErrorSchema
+>;
+
 export const accountStatusErrorSchema = z.discriminatedUnion("code", [
 	verificationRequiredErrorSchema,
 	deprecatedClientVersionErrorSchema,
 ]);
+
+export type AccountStatusError = z.infer<typeof accountStatusErrorSchema>;
 
 export const banSubReasonSchema = z.enum([
 	"UNDERAGE_ACCESS",

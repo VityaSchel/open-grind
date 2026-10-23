@@ -24,7 +24,7 @@ impl From<grindr::SignInResult> for SignInResult {
 	}
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Restriction {
 	pub kind: String,
@@ -38,10 +38,7 @@ impl Restriction {
 	fn of_kind(kind: &str) -> Self {
 		Self {
 			kind: kind.to_owned(),
-			region: None,
-			reason: None,
-			sub_reason: None,
-			ends_at: None,
+			..Self::default()
 		}
 	}
 }

@@ -68,7 +68,7 @@ export function banSubReasonLabel(
 }
 
 export function banOffersAppeal(subReason: string | null | undefined): boolean {
-	return subReason?.toUpperCase() !== "BLOCK_DECISION";
+	return parse(subReason) !== "BLOCK_DECISION";
 }
 
 export function timedBanOffersAppeal(

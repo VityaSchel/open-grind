@@ -17,7 +17,7 @@
 		type ReportReason,
 		reportReasonSchema,
 	} from "$lib/model/safety/reports";
-	import { inPersonIncidentFormUrl } from "$lib/util/grindr-help";
+	import { grindrHelpUrl } from "$lib/util/grindr-help";
 	import type { Profile } from "$lib/model/users/profiles";
 	import { showBlockFailure } from "./block-failure";
 	import { buildProfileReport } from "./report-request";
@@ -85,13 +85,11 @@
 	let submitted = $state(false);
 
 	const copy = $derived(subjectCopy[subject]);
-	const isSpam = $derived(reason === "SPAM");
 	const isInPersonIncident = $derived(
 		reason === "SERIOUS_IN_PERSON_INCIDENT",
 	);
-	const reasonChosen = $derived(reason !== null);
 	const detailsShown = $derived(
-		reasonChosen && !isSpam && !isInPersonIncident,
+		reason !== null && reason !== "SPAM" && !isInPersonIncident,
 	);
 	const wherePickerShown = $derived(
 		detailsShown && presetLocations === undefined,
@@ -257,7 +255,7 @@
 				<ResponsiveDialog.Footer>
 					{#if isInPersonIncident}
 						<Link
-							href={inPersonIncidentFormUrl()}
+							href={grindrHelpUrl("inPersonIncidentForm")}
 							class={buttonVariants()}
 						>
 							Open help form <ArrowUpRightIcon />

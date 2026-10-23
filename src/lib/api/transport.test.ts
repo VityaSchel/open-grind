@@ -1,5 +1,5 @@
 import { encode } from "@msgpack/msgpack";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 
 const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
@@ -9,6 +9,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
 import {
 	accountStatusState,
 	dismissAccountStatus,
@@ -21,6 +22,12 @@ import {
 } from "$lib/api/transport";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { toBase64 } from "$lib/util/base64";
+
+function respondWith({ status, body }: { status: number; body: string }) {
+	invokeMock.mockResolvedValue(
+		toBase64(encode({ status, body: new TextEncoder().encode(body) })),
+	);
+}
 
 describe("parseApiResponse", () => {
 	it("returns schema-parsed response data", () => {
@@ -132,11 +139,7 @@ describe("schemaMismatchMessage", () => {
 
 describe("jsonParsed", () => {
 	it("rejects a failed status even when the body matches the schema", async () => {
-		invokeMock.mockResolvedValue(
-			toBase64(
-				encode({ status: 404, body: new TextEncoder().encode("{}") }),
-			),
-		);
+		respondWith({ status: 404, body: "{}" });
 
 		const response = await fetchRest("/v7/profiles/1");
 
@@ -148,15 +151,13 @@ describe("jsonParsed", () => {
 	});
 
 	it("reports a failed status instead of a schema mismatch", async () => {
-		const body = { type: "urn:gr:err:internal_error", status: 500 };
-		invokeMock.mockResolvedValue(
-			toBase64(
-				encode({
-					status: 500,
-					body: new TextEncoder().encode(JSON.stringify(body)),
-				}),
-			),
-		);
+		respondWith({
+			status: 500,
+			body: JSON.stringify({
+				type: "urn:gr:err:internal_error",
+				status: 500,
+			}),
+		});
 
 		const response = await fetchRest("/v4/cascade?genders=62");
 		const error = (() => {
@@ -177,42 +178,17 @@ describe("jsonParsed", () => {
 });
 
 describe("account status errors", () => {
-	function respondWith({ status, body }: { status: number; body: unknown }) {
-		invokeMock.mockResolvedValue(
-			toBase64(
-				encode({
-					status,
-					body: new TextEncoder().encode(JSON.stringify(body)),
-				}),
-			),
-		);
-	}
-
-	it("asks for phone verification once and stays quiet after it is dismissed", async () => {
-		respondWith({
-			status: 403,
-			body: {
-				code: 30,
-				message: "Verification required",
-				profileId: "1",
-			},
-		});
-
-		await fetchRest("/v3/me/prefs");
-		expect(accountStatusState).toMatchObject({
-			open: true,
-			status: { kind: "phoneVerificationRequired", error: { code: 30 } },
-		});
-
-		dismissAccountStatus();
-		await fetchRest("/v3/me/prefs");
-		expect(accountStatusState.open).toBe(false);
+	afterEach(() => {
+		clearAccountCaches();
 	});
 
-	it("opens one update popup for a burst of refused-version responses", async () => {
+	it("opens one update popup for a burst of refused-version responses and stays quiet after it is dismissed", async () => {
 		respondWith({
 			status: 412,
-			body: { code: 8, message: "The client version is deprecated" },
+			body: JSON.stringify({
+				code: 8,
+				message: "The client version is deprecated",
+			}),
 		});
 
 		await Promise.all([
@@ -230,9 +206,14 @@ describe("account status errors", () => {
 		expect(accountStatusState.open).toBe(false);
 	});
 
-	it("leaves other error codes to the caller", async () => {
-		respondWith({ status: 403, body: { code: 27, message: "Banned" } });
-		accountStatusState.status = null;
+	it("leaves sign-in errors on other responses to the caller", async () => {
+		respondWith({
+			status: 403,
+			body: JSON.stringify({
+				code: 30,
+				message: "Verification required",
+			}),
+		});
 
 		await fetchRest("/v3/me/prefs");
 
