@@ -6,6 +6,7 @@ import {
 	DRAWER,
 	openAttachments,
 	SELECTABLE_MEDIA_TILE,
+	SHEET_SCROLLER,
 } from "./support/drawer";
 
 const BELOW_FLICK_SPEED = { steps: 24, holdMs: 40, release: false };
@@ -55,23 +56,30 @@ test.describe("attachments drawer: touch drag to close", () => {
 		await touch.drag(
 			page,
 			{ x: 210, y: start.top + 300 },
-			{ x: 210, y: 60 },
+			{ x: 210, y: start.top - 100 },
 			{ steps: 30 },
 		);
-		await page.waitForTimeout(600);
-		expect(
-			(await box(page)).gridScrollTop,
-			"content scrolled",
-		).toBeGreaterThan(0);
+		await expect
+			.poll(async () => (await box(page)).gridScrollTop, {
+				message: "content scrolled",
+			})
+			.toBeGreaterThan(0);
 		await touch.drag(
 			page,
-			{ x: 210, y: 200 },
-			{ x: 210, y: 760 },
+			{ x: 210, y: 80 },
+			{ x: 210, y: 780 },
 			{ steps: 40 },
 		);
-		await page.waitForTimeout(700);
+		await expect
+			.poll(async () => (await box(page)).sheetScrollTop, {
+				message: "back at the short size",
+			})
+			.toBe(0);
+		await expect(page.locator(SHEET_SCROLLER)).toHaveAttribute(
+			"data-at-top",
+			"",
+		);
 		const back = await box(page);
-		expect(back.sheetScrollTop, "back at the short size").toBe(0);
 
 		await touch.drag(
 			page,
