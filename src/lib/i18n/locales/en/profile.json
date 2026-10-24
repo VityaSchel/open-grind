@@ -286,6 +286,10 @@
 		},
 		"whereItHappened": "Where it happened",
 		"details": "Details (optional)",
+		"inPersonIncident": {
+			"note": "Grindr’s trust and safety team handles serious in-person incidents through its help center. The form opens in your browser.",
+			"openHelpForm": "Open help form"
+		},
 		"submit": "Submit report",
 		"errors": {
 			"sendFailed": "Couldn’t send report"

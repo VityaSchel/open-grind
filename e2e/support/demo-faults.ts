@@ -57,6 +57,39 @@ export async function holdDemoRequests(
 	await routeDemoThroughFaultHook(page);
 }
 
+type DemoAnswer = { answering: boolean; hits: number };
+type AnsweringWindow = Window & { __demoAnswer: DemoAnswer };
+
+export async function answerDemoRequests(
+	page: Page,
+	answer: { pathPrefix: string; status: number; body: unknown },
+): Promise<{ start: () => Promise<void>; hits: () => Promise<number> }> {
+	await page.addInitScript(({ pathPrefix, status, body }) => {
+		const state: DemoAnswer = { answering: false, hits: 0 };
+		Object.assign(window, {
+			__demoAnswer: state,
+			__demoFault: ({ path }: { path: string }) => {
+				if (!state.answering || !path.startsWith(pathPrefix))
+					return undefined;
+				state.hits += 1;
+				return { status, body };
+			},
+		});
+	}, answer);
+	await routeDemoThroughFaultHook(page);
+	return {
+		start: () =>
+			page.evaluate(() => {
+				(window as unknown as AnsweringWindow).__demoAnswer.answering =
+					true;
+			}),
+		hits: () =>
+			page.evaluate(
+				() => (window as unknown as AnsweringWindow).__demoAnswer.hits,
+			),
+	};
+}
+
 export async function failDemoRequests(
 	page: Page,
 	{

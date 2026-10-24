@@ -15462,6 +15462,55 @@
 				],
 				"x-render-on-tag": "authentication"
 			},
+			"DeprecatedClientVersionError": {
+				"type": "object",
+				"description": "Error body (HTTP 412) when the server no longer accepts the client's app version. Any request can return it.",
+				"properties": {
+					"code": {
+						"type": "integer",
+						"enum": [
+							8
+						],
+						"description": "integer, `8`"
+					},
+					"message": {
+						"type": "string",
+						"description": "string, `\"The client version is deprecated\"`"
+					}
+				},
+				"required": [
+					"code",
+					"message"
+				],
+				"x-render-on-tag": "authentication"
+			},
+			"VerificationRequiredError": {
+				"type": "object",
+				"description": "Error body (HTTP 403) from sign-in when the account must verify a phone number by SMS first.",
+				"properties": {
+					"code": {
+						"type": "integer",
+						"enum": [
+							30
+						],
+						"description": "integer, `30`"
+					},
+					"message": {
+						"type": "string",
+						"description": "string, `\"Verification required\"`"
+					},
+					"profileId": {
+						"type": "string",
+						"nullable": true,
+						"description": "string, the account's profile ID"
+					}
+				},
+				"required": [
+					"code",
+					"message"
+				],
+				"x-render-on-tag": "authentication"
+			},
 			"BanReason": {
 				"type": "string",
 				"description": "Account ban reason (timed-ban classification), from the JWT `banDetails.reason` claim. Unknown values map to `Safety & Privacy` on the client.",
@@ -15522,6 +15571,41 @@
 					"BLOCK_DECISION",
 					"Other"
 				],
+				"x-enum-labels": {
+					"UNDERAGE_ACCESS": "Underage access",
+					"UNDERAGE_IMPERSONATION": "Underage impersonation",
+					"CHILD_ENDANGERMENT": "Child protection and endangerment",
+					"UNWANTED_MESSAGING": "Repeated or unwanted messaging",
+					"PROFILE_SPAM": "Profile spam and advertising",
+					"PHISHING_AND_FRAUD": "Phishing, fraud, and harmful links",
+					"BOT_ACTIVITY": "Automated/bot activity",
+					"DRUG_SALES": "Drug sale and distribution",
+					"FREQUENT_DRUG_SOLICITATION": "Frequent drug solicitation",
+					"OCCASIONAL_DRUG_SOLICITATION": "Occasional drug solicitation",
+					"DRUG_PROMOTION": "Drug promotion or glorification drug solicitation",
+					"NON_ILLICIT_SUBSTANCES": "Casual mentions of legal or non-illicit substances and symbols",
+					"PAID_SEXUAL_SERVICES": "Paid sexual services",
+					"MILD_SOLICITATION": "Mild solicitation and casual offers",
+					"SALE_OF_SEXUAL_CONTENT": "Sale of sexually explicit content",
+					"MILD_INSULTS": "Mild insults and disrespect",
+					"BULLYING": "Targeted bullying and repeated abuse",
+					"HATE_SPEECH": "Hate speech and offensive content",
+					"BLACKMAIL_AND_THREATS": "Blackmail, extortion, and direct threats",
+					"PRIVACY_VIOLATIONS": "Privacy violations and doxxing",
+					"IMPERSONATION": "Impersonation and identity misuse",
+					"CONSENT_VIOLATIONS": "Consent violations",
+					"OFFLINE_INCIDENTS": "Serious offline incidents",
+					"GENERAL_ADVERTISING": "General advertising and solicitation",
+					"BUSINESS_SOLICITATION": "Business solicitation",
+					"TRANSACTIONAL_SERVICES": "Transactional services",
+					"SCAMS_AND_PROMOTIONS": "Scam and fraudulent promotions",
+					"DRUG_SEEKING": "Drug Seeking",
+					"DRUG_FACILITATION": "Drug Facilitation",
+					"NON_CONSENSUAL_INTIMATE_IMAGERY": "Non-Consensual Intimate Imagery",
+					"SEXTORTION": "Sextortion",
+					"BLOCK_DECISION": "Account Banned",
+					"Other": "Account Banned"
+				},
 				"x-render-on-tag": "authentication"
 			},
 			"AuthSessionResponse": {
@@ -22620,7 +22704,7 @@
 			},
 			"SessionId": {
 				"type": "object",
-				"description": "JWT obtained from authentication flow. Decoded JWT content:\n\nHeaders claims structure:\n\n- `kid` — key ID\n- `alg` — `\"RS256\"`\n- `typ` — `\"JWT\"`\n\nPayload claims:\n\n- `exp` — number, unix timestamp in seconds defining token expiration date\n- `profileId` — string with numbers, account's ID\n- `roles` — unknown array, appears to be empty\n- `features` — array of strings, e.g. `\"HidePremiumStore\"`, `\"CreateVideoCall\"`, `\"VideoCallDailyFree\"`\n- `featureFlags` — array of strings, e.g. `\"profile-insights\"`, `\"online-until-updates\"`, `\"enable-account-filters-bulk-exposure\"`, `\"a-list-v3\"`, `\"discover-v2\"`, `\"boost_purchase_fixes\"`, `\"discover-studfinder-upsell\"`\n- `experiments` — object with experiment name → variant string, known keys:\n  - `explore-paywall-profiles` — string, e.g. `\"test\"`\n  - `limiting_chat_credits_from_unlimited_to_5_for_xtra_users_in_explore` — string, e.g. `\"treatment\"`\n  - `validation-aa-backend-profileid` — string, e.g. `\"test\"`\n  - `grindr-core-day-pass` — string, e.g. `\"control\"`\n  - `llm-age-verification-methods` — string, e.g. `\"variant_b\"`\n  - `trans_tribe_filtering_changes` — string, e.g. `\"Test\"`\n  - `green_dot_v2` — string, e.g. `\"treatment-1\"`\n  - `sponsored-profiles-cascade-selection-mode` — string, e.g. `\"treatment\"`\n  - `read-receipt-ad-reward` — string, e.g. `\"variant_2\"`\n  - `taps-paywall` — string, e.g. `\"treatment-1\"`\n  - `explore-insertables-v1` — string, e.g. `\"treatment-insertables-below-mpu\"`\n  - `reduce_number_of_free_profiles_from_99_to_90` — string, e.g. `\"test\"`\n  - `cascade-mpu-explore-studfinder-2026-03-12` — string, e.g. `\"control\"`\n  - `reduce_number_of_results_with_age_filter_for_free_users` — string, e.g. `\"test\"`\n  - `mpu-heuristic-algorithm-optimizations-q125` — string, e.g. `\"control\"`\n  - `ships_in_the_night_v3` — string, e.g. `\"treatment\"`\n  - `cascade-mpu-disable-poc-heuristic-2026-03-02` — string, e.g. `\"treatment\"`\n  - `for-you-recsys-v1_1` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-profile-limit-2026-03-12` — string, e.g. `\"treatment\"`\n  - `reduce_free_user_results_with_any_filter` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-unlimited-2026-02-02` — string, e.g. `\"treatment\"`\n  - `mpu-rest-of-world` — string, e.g. `\"treatment\"`\n  - `top_18_mpu_profiles_are_online_in_extended_cascade_and_explore` — string, e.g. `\"control\"`\n  - `for-you-v2` — string, e.g. `\"Test\"`\n  - `rewarded-ads-viewed-me-v2` — string, e.g. `\"variant_1\"`\n  - `mega-boost-v1` — string, e.g. `\"mega-boost-low\"`\n- `systemTime` — unix timestamp in milliseconds\n- `upsells` — unknown object, appears to be empty\n- `restriction` — string or `null`; account restriction type, one of `\"AGE_RESTRICTED\"`, `\"TIMED_BAN\"`, `\"TRUST_VENDOR_REJECTED\"`; absent/`null` when unrestricted\n- `restrictionReason` — string or `null`; for `AGE_RESTRICTED` one of `\"UK_VERIFICATION_REQUIRED\"`, `\"BR_VERIFICATION_REQUIRED\"`, `\"AU_VERIFICATION_REQUIRED\"`, `\"US_VERIFICATION_REQUIRED\"` (calls for an app store age signal, see [Submit store age verification result](/grindr-api/browse/age-verification#submit-store-age-verification-result-wip)), `\"BANNED_USER\"`, `\"VERIFICATION_REQUESTED\"`; for `TRUST_VENDOR_REJECTED` a free-form reason\n- `banDetails` — object, present when `restriction` is `\"TIMED_BAN\"`: `expiryTime` (unix seconds), `reason` (see `BanReason`), `subReason` (see `BanSubReason`), `isAutomated`, `isAgreementCompleted`, `systemTime` (unix ms)\n- `grit` — unknown UUIDv4 string",
+				"description": "JWT obtained from authentication flow. Decoded JWT content:\n\nHeaders claims structure:\n\n- `kid` — key ID\n- `alg` — `\"RS256\"`\n- `typ` — `\"JWT\"`\n\nPayload claims:\n\n- `exp` — number, unix timestamp in seconds defining token expiration date\n- `profileId` — string with numbers, account's ID\n- `roles` — unknown array, appears to be empty\n- `features` — array of strings, e.g. `\"HidePremiumStore\"`, `\"CreateVideoCall\"`, `\"VideoCallDailyFree\"`\n- `featureFlags` — array of strings, e.g. `\"profile-insights\"`, `\"online-until-updates\"`, `\"enable-account-filters-bulk-exposure\"`, `\"a-list-v3\"`, `\"discover-v2\"`, `\"boost_purchase_fixes\"`, `\"discover-studfinder-upsell\"`\n- `experiments` — object with experiment name → variant string, known keys:\n  - `explore-paywall-profiles` — string, e.g. `\"test\"`\n  - `limiting_chat_credits_from_unlimited_to_5_for_xtra_users_in_explore` — string, e.g. `\"treatment\"`\n  - `validation-aa-backend-profileid` — string, e.g. `\"test\"`\n  - `grindr-core-day-pass` — string, e.g. `\"control\"`\n  - `llm-age-verification-methods` — string, e.g. `\"variant_b\"`\n  - `trans_tribe_filtering_changes` — string, e.g. `\"Test\"`\n  - `green_dot_v2` — string, e.g. `\"treatment-1\"`\n  - `sponsored-profiles-cascade-selection-mode` — string, e.g. `\"treatment\"`\n  - `read-receipt-ad-reward` — string, e.g. `\"variant_2\"`\n  - `taps-paywall` — string, e.g. `\"treatment-1\"`\n  - `explore-insertables-v1` — string, e.g. `\"treatment-insertables-below-mpu\"`\n  - `reduce_number_of_free_profiles_from_99_to_90` — string, e.g. `\"test\"`\n  - `cascade-mpu-explore-studfinder-2026-03-12` — string, e.g. `\"control\"`\n  - `reduce_number_of_results_with_age_filter_for_free_users` — string, e.g. `\"test\"`\n  - `mpu-heuristic-algorithm-optimizations-q125` — string, e.g. `\"control\"`\n  - `ships_in_the_night_v3` — string, e.g. `\"treatment\"`\n  - `cascade-mpu-disable-poc-heuristic-2026-03-02` — string, e.g. `\"treatment\"`\n  - `for-you-recsys-v1_1` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-profile-limit-2026-03-12` — string, e.g. `\"treatment\"`\n  - `reduce_free_user_results_with_any_filter` — string, e.g. `\"control\"`\n  - `cascade-mpu-studfinder-unlimited-2026-02-02` — string, e.g. `\"treatment\"`\n  - `mpu-rest-of-world` — string, e.g. `\"treatment\"`\n  - `top_18_mpu_profiles_are_online_in_extended_cascade_and_explore` — string, e.g. `\"control\"`\n  - `for-you-v2` — string, e.g. `\"Test\"`\n  - `rewarded-ads-viewed-me-v2` — string, e.g. `\"variant_1\"`\n  - `mega-boost-v1` — string, e.g. `\"mega-boost-low\"`\n- `systemTime` — unix timestamp in milliseconds\n- `upsells` — unknown object, appears to be empty\n- `restriction` — string or `null`; account restriction type, one of `\"AGE_RESTRICTED\"`, `\"TIMED_BAN\"`, `\"TRUST_VENDOR_REJECTED\"`; absent/`null` when unrestricted\n- `restrictionReason` — string or `null`; for `AGE_RESTRICTED` one of `\"UK_VERIFICATION_REQUIRED\"`, `\"BR_VERIFICATION_REQUIRED\"`, `\"AU_VERIFICATION_REQUIRED\"`, `\"US_VERIFICATION_REQUIRED\"` (calls for an app store age signal, see [Submit store age verification result](/grindr-api/browse/age-verification#submit-store-age-verification-result-wip)), `\"BANNED_USER\"`, `\"VERIFICATION_REQUESTED\"`; for `TRUST_VENDOR_REJECTED` a free-form reason\n- `banDetails` — object, present when `restriction` is `\"TIMED_BAN\"`: `expiryTime` (when the ban ends, appears to be unix ms), `reason` (see `BanReason`), `subReason` (see `BanSubReason`), `isAutomated`, `isAgreementCompleted`\n- `grit` — unknown UUIDv4 string",
 				"x-render-on-tag": "authentication",
 				"x-display-name": "Session ID"
 			},

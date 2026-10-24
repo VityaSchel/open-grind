@@ -7,9 +7,12 @@
 	import { listenForKeyboardMedia } from "$lib/platform/keyboard-media.svelte";
 	import { listenForMedia } from "$lib/platform/media-intake.svelte";
 	import { startOnlineHeartbeat } from "$lib/presence/online-heartbeat";
+	import { guardDeletedPages } from "$lib/util/deleted-pages";
 	import { retryBrokenMediaWhenOnline } from "$lib/util/media-retry-signals";
 
 	let { children }: { children: import("svelte").Snippet } = $props();
+
+	guardDeletedPages();
 
 	$effect(() => startOnlineHeartbeat());
 	$effect(() => retryBrokenMediaWhenOnline());

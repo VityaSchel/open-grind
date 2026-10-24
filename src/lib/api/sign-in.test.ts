@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { clearAccountCaches } from "$lib/api/account-caches";
+import { accountStatusState } from "$lib/api/account-status-state.svelte";
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { PSEUDO_MESSAGE } from "$lib/i18n/fixtures/pseudo-message";
 
@@ -17,6 +19,7 @@ const {
 
 beforeEach(() => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
+	clearAccountCaches();
 });
 
 afterEach(async () => {
@@ -65,6 +68,38 @@ const companionMessages = [
 ];
 
 describe("reportSignInFailure", () => {
+	it.each([
+		[30, "Verification required", "phoneVerificationRequired"],
+		[8, "The client version is deprecated", "unsupportedVersion"],
+	])(
+		"shows error %i in the account popup instead of a toast",
+		(code, message, kind) => {
+			reportSignInFailure({
+				error: { kind: "Api", message: { code, message } },
+			});
+
+			expect(accountStatusState).toMatchObject({
+				open: true,
+				status: { kind },
+			});
+			expect(toastErrorMock).not.toHaveBeenCalled();
+		},
+	);
+
+	it("keeps showing other API errors as a toast", () => {
+		reportSignInFailure({
+			error: {
+				kind: "Api",
+				message: { code: 4, message: "Wrong password" },
+			},
+		});
+
+		expect(accountStatusState.open).toBe(false);
+		expect(toastErrorMock).toHaveBeenCalledExactlyOnceWith(
+			"Error 4: Wrong password",
+		);
+	});
+
 	it.each(failures)("explains $failure", ({ error, english }) => {
 		reportSignInFailure({ error });
 

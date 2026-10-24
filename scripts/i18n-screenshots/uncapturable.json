@@ -23,6 +23,10 @@
 		"reason": "Only the Carousel.Previous button carries this label, and no screen in the app renders that component.",
 		"explanation": "Screen reader label of the previous-slide button of a carousel component that no screen in the app uses; the photo viewer’s arrow buttons have their own labels, so this label is never read out."
 	},
+	"feedback.accountStatus.banned.copyDetails": {
+		"reason": "No screen shows it since every account popup shares the Copy details button; it stays in the catalog until the Weblate components drop it.",
+		"explanation": "Button of the account ban popup that the app no longer shows, so this text never appears and needs no translation."
+	},
 	"feedback.appError.contentTooLarge": {
 		"reason": "Only sign-in and Try Again failure toasts show this message, and neither command fails with this error. Only file uploads do, and upload screens show feedback.appError.overLimit for it instead.",
 		"explanation": "Error message for a file larger than the upload limit, shown in an error toast; files that are too large name the limit in their own message instead, so this text never appears today."

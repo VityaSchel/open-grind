@@ -76,10 +76,63 @@
 	},
 	"accountStatus": {
 		"banned": {
-			"title": "Your account is banned",
-			"description": "Grindr has banned this account. You can’t sign in until the ban is lifted.",
-			"descriptionWithReason": "Grindr has banned this account ({{reason}}). You can’t sign in until the ban is lifted.",
+			"title": "Account banned",
+			"description": "Grindr banned this account.",
+			"descriptionWithReason": "Grindr banned this account ({{reason}}).",
 			"copyDetails": "Copy ban details"
+		},
+		"suspended": {
+			"title": "Account suspended",
+			"description": "Grindr suspended this account.",
+			"descriptionWithReason": "Grindr suspended this account ({{reason}}).",
+			"descriptionUntil": "Grindr suspended this account until {{date}}, {{time}}.",
+			"descriptionWithReasonUntil": "Grindr suspended this account ({{reason}}) until {{date}}, {{time}}."
+		},
+		"banReason": {
+			"underageAccess": "Underage access",
+			"underageImpersonation": "Underage impersonation",
+			"childEndangerment": "Child protection and endangerment",
+			"unwantedMessaging": "Repeated or unwanted messaging",
+			"profileSpam": "Profile spam and advertising",
+			"phishingAndFraud": "Phishing, fraud, and harmful links",
+			"botActivity": "Automated/bot activity",
+			"drugSales": "Drug sale and distribution",
+			"frequentDrugSolicitation": "Frequent drug solicitation",
+			"occasionalDrugSolicitation": "Occasional drug solicitation",
+			"drugPromotion": "Drug promotion or glorification drug solicitation",
+			"nonIllicitSubstances": "Casual mentions of legal or non-illicit substances and symbols",
+			"paidSexualServices": "Paid sexual services",
+			"mildSolicitation": "Mild solicitation and casual offers",
+			"saleOfSexualContent": "Sale of sexually explicit content",
+			"mildInsults": "Mild insults and disrespect",
+			"bullying": "Targeted bullying and repeated abuse",
+			"hateSpeech": "Hate speech and offensive content",
+			"blackmailAndThreats": "Blackmail, extortion, and direct threats",
+			"privacyViolations": "Privacy violations and doxxing",
+			"impersonation": "Impersonation and identity misuse",
+			"consentViolations": "Consent violations",
+			"offlineIncidents": "Serious offline incidents",
+			"generalAdvertising": "General advertising and solicitation",
+			"businessSolicitation": "Business solicitation",
+			"transactionalServices": "Transactional services",
+			"scamsAndPromotions": "Scam and fraudulent promotions",
+			"drugSeeking": "Drug seeking",
+			"drugFacilitation": "Drug facilitation",
+			"nonConsensualIntimateImagery": "Non-consensual intimate imagery",
+			"sextortion": "Sextortion"
+		},
+		"networkBlocked": {
+			"title": "Network blocked",
+			"description": "This network was blocked by Grindr. Switch it or turn off your VPN, then sign in again."
+		},
+		"securityCheck": {
+			"title": "Security check failed",
+			"description": "Couldn’t pass Grindr security check. Sign out and try again."
+		},
+		"ageRestricted": {
+			"title": "Age restricted",
+			"description": "Grindr requires your account to complete an age verification check. Complete it in the official app, then sign in again.",
+			"verifyAge": "Verify age"
 		},
 		"ageVerification": {
 			"title": "Age verification required",
@@ -88,7 +141,19 @@
 		"restricted": {
 			"title": "Account restricted",
 			"description": "Your account is currently restricted and can’t be used. Check the official Grindr app for details."
-		}
+		},
+		"unsupportedVersion": {
+			"title": "Update Open Grind",
+			"description": "Grindr no longer supports this version of Open Grind.",
+			"checkForUpdates": "Check for updates"
+		},
+		"phoneVerification": {
+			"title": "Phone verification required",
+			"description": "Verify your phone number in the official Grindr app, then sign in again."
+		},
+		"copyDetails": "Copy details",
+		"appeal": "Appeal",
+		"ok": "OK"
 	},
 	"storageNotice": {
 		"unavailable": "This device can’t keep you signed in. You’ll be signed out when the app closes.",

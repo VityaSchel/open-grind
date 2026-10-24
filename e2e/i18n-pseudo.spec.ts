@@ -10,9 +10,11 @@ import {
 import {
 	DEMO_CONVERSATION,
 	DEMO_GEOHASH,
+	emitTauriEvent,
 	EXPIRING_IMAGE,
 	FIRST_ROUTE_COMPILE_MS,
 	INCOMING_ROW,
+	installEventInjection,
 	installTauriShim,
 	runPaletteCommand,
 } from "./support/app";
@@ -54,6 +56,7 @@ const SUGGESTIONS_GROUP =
 const COMMAND_EMPTY = '[data-slot="command-empty"]';
 const COMPOSER_BUTTON = '[data-slot="message-composer"] button';
 const EMPTY_TITLE = '[data-slot="empty-title"]';
+const ACCOUNT_STATUS_MODULE_URL = "/src/lib/api/account-status-state.svelte.ts";
 
 test.describe.configure({ timeout: 180_000 });
 
@@ -370,6 +373,17 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 	await dialog.locator('[data-slot="report-locations"]').waitFor();
 	scans.push(await readPseudoText(dialog));
 	await dialog
+		.locator(
+			'[data-slot="report-reasons"] [data-value="SERIOUS_IN_PERSON_INCIDENT"]',
+		)
+		.click();
+	await dialog.locator('[data-slot="report-incident-note"]').waitFor();
+	scans.push(await readPseudoText(dialog));
+	await dialog
+		.locator('[data-slot="report-reasons"] [data-value="IMPERSONATION"]')
+		.click();
+	await dialog.locator('[data-slot="report-locations"]').waitFor();
+	await dialog
 		.locator('[data-slot="drawer-footer"] [data-slot="button"]')
 		.click();
 	await dialog.locator('[data-slot="report-submitted"]').waitFor();
@@ -378,6 +392,76 @@ test("the profile note editor, actions menu and report sheet render only pseudo-
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);
+	}
+});
+
+test("the account popups render only pseudo-translated text", async ({
+	page,
+}) => {
+	await installTauriShim(page);
+	await installEventInjection(page);
+	await page.goto("/?locale=en-XA");
+	await page
+		.locator("nav a")
+		.first()
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
+	await expect(page.locator("html")).toHaveAttribute("lang", "en-XA");
+	const dialog = page.getByRole("alertdialog");
+	const scanPopup = async (show: () => Promise<void>) => {
+		const shown = (await dialog.count()) > 0;
+		const before = shown ? await dialog.textContent() : null;
+		await show();
+		await expect.poll(() => dialog.textContent()).not.toBe(before);
+		const { messages, leaks } = await readPseudoText(dialog, {
+			brandTitle: BRAND_TITLE,
+		});
+		expect(messages).toBeGreaterThan(0);
+		expect(leaks).toEqual([]);
+	};
+	const banned = (payload: Record<string, unknown>) => () =>
+		emitTauriEvent(page, {
+			event: "auth:banned",
+			payload: { message: "Banned", ...payload },
+		});
+	const restricted = (payload: Record<string, unknown>) => () =>
+		emitTauriEvent(page, { event: "auth:restriction", payload });
+
+	await scanPopup(() =>
+		emitTauriEvent(page, {
+			event: "auth:unsupported-version",
+			payload: {
+				kind: "Api",
+				message: {
+					code: 8,
+					message: "The client version is deprecated",
+				},
+			},
+		}),
+	);
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+	await scanPopup(() =>
+		page.evaluate(async (module) => {
+			const { showAccountStatusForError } = await import(module);
+			showAccountStatusForError({
+				code: 30,
+				message: "Verification required",
+			});
+		}, ACCOUNT_STATUS_MODULE_URL),
+	);
+	for (const show of [
+		banned({ kind: "profile", code: 27, subReason: "PHISHING_AND_FRAUD" }),
+		banned({ kind: "network", code: 31 }),
+		banned({ kind: "device", code: 28 }),
+		banned({ kind: "underage", code: 35 }),
+		restricted({
+			kind: "timedBan",
+			subReason: "DRUG_SALES",
+			endsAt: Date.now() + 3 * 24 * 60 * 60 * 1000,
+		}),
+		restricted({ kind: "timedBan" }),
+	]) {
+		await scanPopup(show);
 	}
 });
 

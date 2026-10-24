@@ -10,7 +10,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { t } from "$lib/i18n";
-	import { returnTo } from "$lib/util/history";
+	import { leaveDeletedPages } from "$lib/util/deleted-pages";
 
 	let {
 		albumId,
@@ -27,7 +27,10 @@
 			await deleteAlbum({ albumId });
 			getMyAlbumsState(ourProfileId).remove(albumId);
 			toast.success(t("media.albums.editor.menu.deleted"));
-			returnTo("/settings/albums");
+			leaveDeletedPages({
+				pathnames: [`/settings/albums/${albumId}`],
+				parent: "/settings/albums",
+			});
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
