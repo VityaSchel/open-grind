@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { animationsFinished } from "./app";
 
 const ERROR_TOAST_MODULE_URL = "/src/lib/api/error-toast.ts";
-const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
+export const UPDATE_TOASTS_MODULE_URL = "/src/lib/updates/toasts.ts";
 
 export const TOAST_GAP_PX = 8;
 export const BOTTOM_TOASTER = '[data-sonner-toaster][data-y-position="bottom"]';
@@ -72,6 +72,16 @@ export async function showRestingToast({
 	label: string;
 }): Promise<Locator> {
 	await showToast({ page, edge, label });
+	return await restingToast({ page, label });
+}
+
+export async function restingToast({
+	page,
+	label,
+}: {
+	page: Page;
+	label: string;
+}): Promise<Locator> {
 	const toast = page.locator('[data-sonner-toast][data-front="true"]', {
 		hasText: label,
 	});

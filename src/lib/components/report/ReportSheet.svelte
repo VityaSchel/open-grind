@@ -1,10 +1,12 @@
 <script lang="ts">
+	import ArrowUpRightIcon from "phosphor-svelte/lib/ArrowUpRightIcon";
 	import { untrack } from "svelte";
 
 	import { blockUser } from "$lib/api/browse/blocks";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { reportProfile } from "$lib/api/safety/reports";
-	import { Button } from "$lib/components/ui/button";
+	import { Button, buttonVariants } from "$lib/components/ui/button";
+	import Link from "$lib/components/ui/link/Link.svelte";
 	import * as ResponsiveDialog from "$lib/components/ui/responsive-dialog";
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { Textarea } from "$lib/components/ui/textarea";
@@ -16,6 +18,7 @@
 		type ReportReason,
 		reportReasonSchema,
 	} from "$lib/model/safety/reports";
+	import { grindrHelpUrl } from "$lib/util/grindr-help";
 	import type { Profile } from "$lib/model/users/profiles";
 	import { showBlockFailure } from "./block-failure";
 	import { buildProfileReport } from "./report-request";
@@ -79,12 +82,15 @@
 	let submitted = $state(false);
 
 	const subjectKey = $derived(subjectKeys[subject]);
-	const isSpam = $derived(reason === "SPAM");
-	const reasonChosen = $derived(reason !== null);
-	const wherePickerShown = $derived(
-		reasonChosen && !isSpam && presetLocations === undefined,
+	const isInPersonIncident = $derived(
+		reason === "SERIOUS_IN_PERSON_INCIDENT",
 	);
-	const detailsShown = $derived(reasonChosen && !isSpam);
+	const detailsShown = $derived(
+		reason !== null && reason !== "SPAM" && !isInPersonIncident,
+	);
+	const wherePickerShown = $derived(
+		detailsShown && presetLocations === undefined,
+	);
 
 	$effect(() => {
 		if (!open) return;
@@ -237,18 +243,36 @@
 							class="min-h-24"
 						/>
 					{/if}
+					{#if isInPersonIncident}
+						<p
+							data-slot="report-incident-note"
+							class="px-1 text-sm text-muted-foreground"
+						>
+							{t("profile.report.inPersonIncident.note")}
+						</p>
+					{/if}
 				</ResponsiveDialog.Body>
 				<ResponsiveDialog.Footer>
-					<Button
-						disabled={submitting || reason === null}
-						aria-busy={submitting}
-						onclick={() => void submit()}
-					>
-						{#if submitting}
-							<Spinner aria-hidden="true" />
-						{/if}
-						{t("profile.report.submit")}
-					</Button>
+					{#if isInPersonIncident}
+						<Link
+							href={grindrHelpUrl("inPersonIncidentForm")}
+							class={buttonVariants()}
+						>
+							{t("profile.report.inPersonIncident.openHelpForm")}
+							<ArrowUpRightIcon />
+						</Link>
+					{:else}
+						<Button
+							disabled={submitting || reason === null}
+							aria-busy={submitting}
+							onclick={() => void submit()}
+						>
+							{#if submitting}
+								<Spinner aria-hidden="true" />
+							{/if}
+							{t("profile.report.submit")}
+						</Button>
+					{/if}
 				</ResponsiveDialog.Footer>
 			</fieldset>
 		{/if}

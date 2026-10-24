@@ -17,6 +17,8 @@ const ATTEMPT_DELAYS: [Duration; 3] = [
 
 const REFRESH_BUFFER_SECS: u64 = 60;
 
+const DEPRECATED_CLIENT_VERSION: i32 = 8;
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionErrorPayload {
@@ -119,6 +121,9 @@ pub fn report_refresh_failure(
 			Outcome::Banned(info) => {
 				app.emit("auth:banned", info).ok();
 			}
+			Outcome::UnsupportedVersion(error) => {
+				app.emit("auth:unsupported-version", &error).ok();
+			}
 		}
 	});
 }
@@ -127,6 +132,27 @@ enum Outcome {
 	Quiet,
 	Failed(SessionErrorPayload),
 	Banned(BanInfo),
+	UnsupportedVersion(AppError),
+}
+
+fn settled_by(error: AppError, attempts: u32) -> Result<Outcome, AppError> {
+	match error {
+		AppError::Banned(info) => Ok(Outcome::Banned(info)),
+		refused @ AppError::Api {
+			code: DEPRECATED_CLIENT_VERSION,
+			..
+		} => Ok(Outcome::UnsupportedVersion(refused)),
+		AppError::Unauthorized { .. } | AppError::NotSignedIn => {
+			Ok(Outcome::Failed(SessionErrorPayload {
+				message: error.to_string(),
+				unauthorized: true,
+				kind: error.kind().to_owned(),
+				attempts,
+				transient: false,
+			}))
+		}
+		other => Err(other),
+	}
 }
 
 async fn supervise(client: &grindr::GrindrClient) -> Outcome {
@@ -146,23 +172,13 @@ async fn supervise(client: &grindr::GrindrClient) -> Outcome {
 		match client.refresh_session().await {
 			Ok(_) => return Outcome::Quiet,
 			Err(error) => {
-				let mapped = AppError::from_client_error(error, client);
-				if let AppError::Banned(info) = mapped {
-					return Outcome::Banned(info);
-				}
-				if matches!(
-					mapped,
-					AppError::Unauthorized { .. } | AppError::NotSignedIn
+				match settled_by(
+					AppError::from_client_error(error, client),
+					attempts,
 				) {
-					return Outcome::Failed(SessionErrorPayload {
-						message: mapped.to_string(),
-						unauthorized: true,
-						kind: mapped.kind().to_owned(),
-						attempts,
-						transient: false,
-					});
+					Ok(outcome) => return outcome,
+					Err(retryable) => last = Some(retryable),
 				}
-				last = Some(mapped);
 			}
 		}
 	}
@@ -284,6 +300,40 @@ mod tests {
 
 		let signed_out = serde_json::to_value(session_of(None)).unwrap();
 		assert!(signed_out["profileId"].is_null());
+	}
+
+	#[test]
+	fn a_refused_app_version_stops_the_retries_and_asks_for_an_update() {
+		let outcome = settled_by(
+			AppError::Api {
+				code: 8,
+				message: "The client version is deprecated".to_owned(),
+			},
+			1,
+		);
+
+		let Ok(Outcome::UnsupportedVersion(error)) = outcome else {
+			panic!("a refused app version must not be retried");
+		};
+		let json = serde_json::to_value(error).unwrap();
+		assert_eq!(json["kind"], "Api");
+		assert_eq!(json["message"]["code"], 8);
+		assert_eq!(
+			json["message"]["message"],
+			"The client version is deprecated"
+		);
+	}
+
+	#[test]
+	fn other_api_errors_are_retried() {
+		assert!(settled_by(
+			AppError::Api {
+				code: 500,
+				message: "internal".to_owned(),
+			},
+			1,
+		)
+		.is_err());
 	}
 
 	#[test]

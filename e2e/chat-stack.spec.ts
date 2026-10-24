@@ -16,6 +16,7 @@ import {
 	listScroller,
 	openConversation,
 	openInbox,
+	recordFrames,
 	row,
 	rows,
 	SHEET,
@@ -69,37 +70,6 @@ const historyPathnames = (page: Page) =>
 			({ url }) => new URL(url ?? "").pathname,
 		),
 	);
-
-type Frame = { base: number; sheet: number | null; path: string };
-
-function recordFrames(page: Page): Promise<Frame[]> {
-	return page.evaluate(
-		() =>
-			new Promise<Frame[]>((resolve) => {
-				const frames: Frame[] = [];
-				const x = (slot: string) => {
-					const pane = document.querySelector(
-						`[data-slot="live-stack-${slot}"]`,
-					);
-					return pane
-						? new DOMMatrix(getComputedStyle(pane).transform).m41
-						: null;
-				};
-				const started = performance.now();
-				const sample = () => {
-					frames.push({
-						base: x("base") ?? 0,
-						sheet: x("sheet"),
-						path: location.pathname,
-					});
-					if (performance.now() - started < 2000)
-						requestAnimationFrame(sample);
-					else resolve(frames);
-				};
-				requestAnimationFrame(sample);
-			}),
-	);
-}
 
 test.describe("the chat stack on a phone", () => {
 	test.use({ viewport: PHONE });

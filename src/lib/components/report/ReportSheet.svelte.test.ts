@@ -15,11 +15,13 @@ const {
 	reportProfileMock,
 	showErrorToastMock,
 	showBlockFailureMock,
+	openExternalLinkMock,
 } = vi.hoisted(() => ({
 	blockUserMock: vi.fn<() => Promise<void>>(),
 	reportProfileMock: vi.fn(),
 	showErrorToastMock: vi.fn(),
 	showBlockFailureMock: vi.fn(),
+	openExternalLinkMock: vi.fn(),
 }));
 
 vi.mock("$lib/api/browse/blocks", () => ({ blockUser: blockUserMock }));
@@ -28,6 +30,9 @@ vi.mock("$lib/api/safety/reports", () => ({
 }));
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 vi.mock("./block-failure", () => ({ showBlockFailure: showBlockFailureMock }));
+vi.mock("$lib/platform/link-opener", () => ({
+	openExternalLink: openExternalLinkMock,
+}));
 
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { slot } from "$lib/i18n/fixtures/dom";
@@ -384,6 +389,53 @@ describe("ReportSheet", () => {
 		await failSubmit();
 
 		expect(showErrorToastMock.mock.lastCall?.[0].label).toMatch(
+			PSEUDO_MESSAGE,
+		);
+	});
+});
+
+describe("serious in-person incident", () => {
+	async function chooseIncident() {
+		vi.spyOn(navigator, "language", "get").mockReturnValue("de-AT");
+		renderSheet();
+		await fireEvent.click(reasonToggle("SERIOUS_IN_PERSON_INCIDENT"));
+	}
+
+	it("opens Grindr's help form in the system language instead of sending a report", async () => {
+		await chooseIncident();
+
+		await fireEvent.click(
+			screen.getByRole("link", { name: "Open help form" }),
+		);
+
+		expect(openExternalLinkMock).toHaveBeenCalledExactlyOnceWith(
+			"https://help.grindr.com/hc/de/requests/new?ticket_form_id=16925729533971",
+		);
+		expect(reportProfileMock).not.toHaveBeenCalled();
+		expect(
+			screen.queryByRole("button", { name: "Submit report" }),
+		).toBeNull();
+	});
+
+	it("asks for neither where it happened nor details", async () => {
+		await chooseIncident();
+
+		expect(screen.queryByRole("group", { name: WHERE })).toBeNull();
+		expect(screen.queryByRole("textbox")).toBeNull();
+		expect(slot("report-incident-note").textContent.trim()).toBe(
+			"Grindr’s trust and safety team handles serious in-person incidents through its help center. The form opens in your browser.",
+		);
+	});
+
+	it("words the help form note and link in the active locale", async () => {
+		await chooseIncident();
+
+		await setLocale({ locale: "en-XA" });
+
+		expect(slot("report-incident-note").textContent).toMatch(
+			PSEUDO_MESSAGE,
+		);
+		expect(screen.getByRole("link").textContent.trim()).toMatch(
 			PSEUDO_MESSAGE,
 		);
 	});

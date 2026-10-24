@@ -193,6 +193,27 @@ export const reportFlow: Scene = {
 	],
 };
 
+export const reportInPersonIncident: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "profile/report/in-person-incident",
+			screen: "profile",
+			scroller: `${DIALOG} [data-slot="drawer-body"]`,
+			drive: async (page) => {
+				await openReport(page);
+				await page
+					.locator(DIALOG)
+					.getByRole("radio", { name: "Serious In-Person Incident" })
+					.click();
+				await page
+					.locator('[data-slot="report-incident-note"]')
+					.waitFor();
+			},
+		},
+	],
+};
+
 export const reportFailure: Scene = {
 	platform: "phone",
 	demo: { restFaults: [failing({ method: "POST", path: REPORT })] },

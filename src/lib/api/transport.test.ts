@@ -9,6 +9,11 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	invoke: invokeMock,
 }));
 
+import { clearAccountCaches } from "$lib/api/account-caches";
+import {
+	accountStatusState,
+	dismissAccountStatus,
+} from "$lib/api/account-status-state.svelte";
 import { ApiError } from "$lib/api/api-error";
 import {
 	fetchExternal,
@@ -19,6 +24,12 @@ import {
 import { setLocale, SOURCE_LOCALE } from "$lib/i18n";
 import { cascadeV4ResponseSchema } from "$lib/model/browse/grid/cascade/response/v4";
 import { toBase64 } from "$lib/util/base64";
+
+function respondWith({ status, body }: { status: number; body: string }) {
+	invokeMock.mockResolvedValue(
+		toBase64(encode({ status, body: new TextEncoder().encode(body) })),
+	);
+}
 
 describe("parseApiResponse", () => {
 	it("returns schema-parsed response data", () => {
@@ -130,11 +141,7 @@ describe("schemaMismatchMessage", () => {
 
 describe("jsonParsed", () => {
 	it("rejects a failed status even when the body matches the schema", async () => {
-		invokeMock.mockResolvedValue(
-			toBase64(
-				encode({ status: 404, body: new TextEncoder().encode("{}") }),
-			),
-		);
+		respondWith({ status: 404, body: "{}" });
 
 		const response = await fetchRest("/v7/profiles/1");
 
@@ -146,15 +153,13 @@ describe("jsonParsed", () => {
 	});
 
 	it("reports a failed status instead of a schema mismatch", async () => {
-		const body = { type: "urn:gr:err:internal_error", status: 500 };
-		invokeMock.mockResolvedValue(
-			toBase64(
-				encode({
-					status: 500,
-					body: new TextEncoder().encode(JSON.stringify(body)),
-				}),
-			),
-		);
+		respondWith({
+			status: 500,
+			body: JSON.stringify({
+				type: "urn:gr:err:internal_error",
+				status: 500,
+			}),
+		});
 
 		const response = await fetchRest("/v4/cascade?genders=62");
 		const error = (() => {
@@ -218,4 +223,48 @@ describe("fetchExternal", () => {
 			).rejects.toMatchObject({ kind, message });
 		},
 	);
+});
+
+describe("account status errors", () => {
+	afterEach(() => {
+		clearAccountCaches();
+	});
+
+	it("opens one update popup for a burst of refused-version responses and stays quiet after it is dismissed", async () => {
+		respondWith({
+			status: 412,
+			body: JSON.stringify({
+				code: 8,
+				message: "The client version is deprecated",
+			}),
+		});
+
+		await Promise.all([
+			fetchRest("/v3/me/prefs"),
+			fetchRest("/v4/cascade"),
+			fetchRest("/v4/inbox"),
+		]);
+		expect(accountStatusState).toMatchObject({
+			open: true,
+			status: { kind: "unsupportedVersion" },
+		});
+
+		dismissAccountStatus();
+		await fetchRest("/v3/me/prefs");
+		expect(accountStatusState.open).toBe(false);
+	});
+
+	it("leaves sign-in errors on other responses to the caller", async () => {
+		respondWith({
+			status: 403,
+			body: JSON.stringify({
+				code: 30,
+				message: "Verification required",
+			}),
+		});
+
+		await fetchRest("/v3/me/prefs");
+
+		expect(accountStatusState.status).toBeNull();
+	});
 });

@@ -2,6 +2,7 @@ import { decode, encode } from "@msgpack/msgpack";
 import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
+import { noticeAccountStatusError } from "$lib/api/account-status-state.svelte";
 import { ApiError, type ApiErrorKind } from "$lib/api/api-error";
 import {
 	asAppError,
@@ -10,8 +11,10 @@ import {
 	markRequestBlocked,
 } from "$lib/api/methods";
 import { redactPath } from "$lib/api/redact/text";
+import { parseJson } from "$lib/api/redact/value";
 import { signOutIfSessionLost } from "$lib/api/session-lost";
 import { demo, demoEnabled, screenshotsEnabled } from "$lib/demo";
+import { deprecatedClientVersionErrorSchema } from "$lib/model/authentication";
 import { schemaName } from "$lib/model/schema-names";
 import { fromBase64, toBase64 } from "$lib/util/base64";
 import type { MediaFileDescriptor } from "$lib/platform/media-file";
@@ -293,7 +296,7 @@ export async function fetchRest(
 ) {
 	const method = options.method ?? "GET";
 	const requestInfo = { method, path, body: options.body };
-	return await respondFromDemoOrSend({
+	const response = await respondFromDemoOrSend({
 		requestInfo,
 		invokeError: restInvokeError,
 		send: () =>
@@ -302,6 +305,16 @@ export async function fetchRest(
 				abortController: options.abortController,
 			}),
 	});
+	noticeRefusedVersion(response);
+	return response;
+}
+
+function noticeRefusedVersion(response: RestResponse): void {
+	if (response.status !== 412) return;
+	const body = parseJson(response.text());
+	if (!body.ok) return;
+	const error = deprecatedClientVersionErrorSchema.safeParse(body.value);
+	if (error.success) noticeAccountStatusError(error.data);
 }
 
 async function sendRestRequest({

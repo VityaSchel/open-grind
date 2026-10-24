@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { searchLanguage } from "$lib/util/language";
+import { systemLanguage } from "$lib/util/language";
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -10,7 +10,7 @@ function withLanguage(language: string) {
 	vi.spyOn(navigator, "language", "get").mockReturnValue(language);
 }
 
-describe("searchLanguage", () => {
+describe("systemLanguage", () => {
 	it.each([
 		["en-US", "en"],
 		["de-AT", "de"],
@@ -20,7 +20,7 @@ describe("searchLanguage", () => {
 	])("reads the language of %s", (locale, language) => {
 		withLanguage(locale);
 
-		expect(searchLanguage()).toBe(language);
+		expect(systemLanguage()).toBe(language);
 	});
 
 	it.each([[""], ["not a locale"]])(
@@ -28,7 +28,7 @@ describe("searchLanguage", () => {
 		(locale) => {
 			withLanguage(locale);
 
-			expect(searchLanguage()).toBe("en");
+			expect(systemLanguage()).toBe("en");
 		},
 	);
 });
