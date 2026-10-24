@@ -5,8 +5,12 @@ import type {
 	MethodFault,
 	NativeError,
 } from "../../../src/lib/demo/screenshot-scene";
+import {
+	type BanSubReason,
+	banSubReasonSchema,
+} from "../../../src/lib/model/authentication";
 import { showsLoading } from "../settle";
-import type { Scene } from ".";
+import type { Scene, SceneView } from ".";
 import { ALERT, changeScene, emitEvent } from "./drive";
 import { holdToast, waitForNewToast } from "./toast";
 import { visit } from "./visit";
@@ -235,6 +239,82 @@ export const sessionTryAgain: Scene = {
 	],
 };
 
+const BANNED = { kind: "profile", code: 27, message: "Account banned" };
+const SUSPENSION_ENDS_AT = Date.parse("2026-07-24T18:30:00Z");
+const SHOWN_BAN_REASONS = new Set<BanSubReason>([
+	"PROFILE_SPAM",
+	"DRUG_SALES",
+	"MILD_INSULTS",
+]);
+const UNLABELED_BAN_REASONS = new Set<BanSubReason>([
+	"BLOCK_DECISION",
+	"Other",
+]);
+const ALERT_DESCRIPTION = `${ALERT} [data-slot="alert-dialog-description"]`;
+
+async function showAccountStatus({
+	page,
+	event,
+	payload,
+}: {
+	page: Page;
+	event: string;
+	payload: unknown;
+}): Promise<void> {
+	const description = page.locator(ALERT_DESCRIPTION);
+	const before =
+		(await description.count()) > 0
+			? await description.textContent()
+			: null;
+	await emitEvent({ page, event, payload });
+	await page.waitForFunction(
+		({ selector, previous }) => {
+			const text = document.querySelector(selector)?.textContent ?? null;
+			return text !== null && text !== previous;
+		},
+		{ selector: ALERT_DESCRIPTION, previous: before },
+	);
+}
+
+function accountStatusView({
+	id,
+	event,
+	payload,
+}: {
+	id: string;
+	event: "auth:banned" | "auth:restriction";
+	payload: Record<string, unknown>;
+}): SceneView {
+	return {
+		id: `feedback/account/${id}`,
+		screen: "settings/me",
+		drive: (page) => showAccountStatus({ page, event, payload }),
+	};
+}
+
+function banReasonView(subReason: BanSubReason): SceneView {
+	return accountStatusView({
+		id: `ban-reason/${subReason.toLowerCase().replaceAll("_", "-")}`,
+		event: "auth:banned",
+		payload: { ...BANNED, subReason },
+	});
+}
+
+async function failSignInWith({
+	page,
+	error,
+}: {
+	page: Page;
+	error: NativeError;
+}): Promise<void> {
+	await changeScene({
+		page,
+		scene: { methodFaults: [{ command: "sign_in_with_email", error }] },
+	});
+	await page.locator("form button[type=submit]").click();
+	await page.locator(ALERT).waitFor();
+}
+
 export const accountStatus: Scene = {
 	platform: "phone",
 	views: [
@@ -243,57 +323,123 @@ export const accountStatus: Scene = {
 			screen: "settings/me",
 			drive: async (page) => {
 				await openSettings(page);
-				await emitEvent({
+				await showAccountStatus({
 					page,
 					event: "auth:restriction",
 					payload: { kind: "ageVerification" },
 				});
-				await page.locator(ALERT).waitFor();
 			},
 		},
-		{
-			id: "feedback/account/restricted",
-			screen: "settings/me",
-			drive: async (page) => {
-				await emitEvent({
-					page,
-					event: "auth:restriction",
-					payload: { kind: "other" },
-				});
-				await page.getByText("Account restricted").waitFor();
+		accountStatusView({
+			id: "restricted",
+			event: "auth:restriction",
+			payload: { kind: "other" },
+		}),
+		accountStatusView({
+			id: "banned",
+			event: "auth:banned",
+			payload: {
+				...BANNED,
+				reason: "Scam / Spam",
+				subReason: "PROFILE_SPAM",
 			},
-		},
+		}),
+		accountStatusView({
+			id: "banned-without-reason",
+			event: "auth:banned",
+			payload: BANNED,
+		}),
+		accountStatusView({
+			id: "network-blocked",
+			event: "auth:banned",
+			payload: { kind: "network", code: 31, message: "IP is banned" },
+		}),
+		accountStatusView({
+			id: "security-check-failed",
+			event: "auth:banned",
+			payload: { kind: "device", code: 28, message: "Device is banned" },
+		}),
+		accountStatusView({
+			id: "age-restricted",
+			event: "auth:banned",
+			payload: { kind: "underage", code: 35, message: "Age restricted" },
+		}),
+		accountStatusView({
+			id: "suspended",
+			event: "auth:restriction",
+			payload: {
+				kind: "timedBan",
+				reason: "Drug Selling",
+				subReason: "DRUG_SALES",
+				endsAt: SUSPENSION_ENDS_AT,
+			},
+		}),
+		accountStatusView({
+			id: "suspended-without-reason",
+			event: "auth:restriction",
+			payload: { kind: "timedBan", endsAt: SUSPENSION_ENDS_AT },
+		}),
+		accountStatusView({
+			id: "suspended-indefinitely",
+			event: "auth:restriction",
+			payload: {
+				kind: "timedBan",
+				reason: "Insults",
+				subReason: "MILD_INSULTS",
+			},
+		}),
+		accountStatusView({
+			id: "suspended-indefinitely-without-reason",
+			event: "auth:restriction",
+			payload: { kind: "timedBan" },
+		}),
+		...banSubReasonSchema.options
+			.filter(
+				(subReason) =>
+					!SHOWN_BAN_REASONS.has(subReason) &&
+					!UNLABELED_BAN_REASONS.has(subReason),
+			)
+			.map(banReasonView),
+	],
+};
+
+export const signInAccountStatus: Scene = {
+	platform: "phone",
+	demo: { signedOut: true },
+	views: [
 		{
-			id: "feedback/account/banned",
-			screen: "settings/me",
+			id: "feedback/account/phone-verification",
+			screen: "auth/sign-in",
 			drive: async (page) => {
-				await emitEvent({
+				await fillSignIn(page);
+				await failSignInWith({
 					page,
-					event: "auth:banned",
-					payload: {
-						kind: "ban",
-						code: 0,
-						message: "Account banned",
-						reason: "spam",
+					error: {
+						kind: "Api",
+						message: { code: 30, message: "Verification required" },
 					},
 				});
-				await page.getByText("(spam)").waitFor();
 			},
 		},
 		{
-			id: "feedback/account/banned-without-reason",
-			screen: "settings/me",
+			id: "feedback/account/update-required",
+			screen: "auth/sign-in",
 			drive: async (page) => {
-				await emitEvent({
+				await page
+					.locator(ALERT)
+					.getByRole("button", { name: "OK" })
+					.click();
+				await page.locator(ALERT).waitFor({ state: "detached" });
+				await failSignInWith({
 					page,
-					event: "auth:banned",
-					payload: {
-						kind: "ban",
-						code: 0,
-						message: "Account banned",
+					error: {
+						kind: "Api",
+						message: {
+							code: 8,
+							message: "The client version is deprecated",
+						},
 					},
 				});
-				await page.getByText("(spam)").waitFor({ state: "detached" });
 			},
 		},
 	],

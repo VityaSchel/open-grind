@@ -158,6 +158,7 @@ import {
 	profileRefreshFailure,
 	reportFailure,
 	reportFlow,
+	reportInPersonIncident,
 	reportMessages,
 } from "./profile-actions";
 import { profileFieldMenus } from "./profile-fields";
@@ -179,6 +180,7 @@ import {
 	accountStatus,
 	sessionAlerts,
 	sessionTryAgain,
+	signInAccountStatus,
 	signInFailures,
 	storagePlainFile,
 	storageUnavailable,
@@ -342,6 +344,7 @@ export const scenes: Scene[] = [
 	sessionAlerts,
 	sessionTryAgain,
 	accountStatus,
+	signInAccountStatus,
 	signInFailures,
 	storageUnavailable,
 	storagePlainFile,
@@ -409,6 +412,7 @@ export const scenes: Scene[] = [
 	favoriteNote,
 	favoriteNoteFailure,
 	reportFlow,
+	reportInPersonIncident,
 	reportFailure,
 	reportMessages,
 	copyProfileId,
