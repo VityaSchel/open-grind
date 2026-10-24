@@ -78,8 +78,7 @@
 		"banned": {
 			"title": "Account banned",
 			"description": "Grindr banned this account.",
-			"descriptionWithReason": "Grindr banned this account ({{reason}}).",
-			"copyDetails": "Copy ban details"
+			"descriptionWithReason": "Grindr banned this account ({{reason}})."
 		},
 		"suspended": {
 			"title": "Account suspended",

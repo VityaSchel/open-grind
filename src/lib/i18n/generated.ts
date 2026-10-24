@@ -423,7 +423,6 @@ export interface Messages {
 	"feedback.accountStatus.banReason.underageAccess": undefined;
 	"feedback.accountStatus.banReason.underageImpersonation": undefined;
 	"feedback.accountStatus.banReason.unwantedMessaging": undefined;
-	"feedback.accountStatus.banned.copyDetails": undefined;
 	"feedback.accountStatus.banned.description": undefined;
 	"feedback.accountStatus.banned.descriptionWithReason": { reason: string };
 	"feedback.accountStatus.banned.title": undefined;
