@@ -36,6 +36,17 @@ export const historyEntries = (page: Page) =>
 			.map((entry) => (entry.url ? new URL(entry.url).pathname : "")),
 	}));
 
+export function fontLoaded(target: Locator): Promise<void> {
+	return target.evaluate(async (node) => {
+		const { fontStyle, fontWeight, fontSize, fontFamily } =
+			getComputedStyle(node);
+		await document.fonts.load(
+			`${fontStyle} ${fontWeight} ${fontSize} ${fontFamily}`,
+			node.textContent ?? "",
+		);
+	});
+}
+
 export function afterTwoFrames(page: Page): Promise<void> {
 	return page.evaluate(
 		() =>

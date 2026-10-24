@@ -4,6 +4,7 @@ import {
 	DEMO_CONVERSATION,
 	DEMO_CONVERSATION_ID,
 	emitMessageSent,
+	fontLoaded,
 	installEventInjection,
 	installTauriShim,
 } from "./support/app";
@@ -97,6 +98,9 @@ async function deliverText(
 		replyToMessage: null,
 	});
 	await messageRow(page, text).waitFor();
+	await fontLoaded(
+		messageRow(page, text).locator('[data-slot="message-bubble"]'),
+	);
 	await expect
 		.poll(() => floorRest(page))
 		.toEqual({ atFloor: true, scrolling: false });
