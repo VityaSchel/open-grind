@@ -1,4 +1,10 @@
-import type { CDPSession, Locator, Page, test } from "@playwright/test";
+import {
+	type CDPSession,
+	expect,
+	type Locator,
+	type Page,
+	type test,
+} from "@playwright/test";
 
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
@@ -398,6 +404,16 @@ export class TrustedTouch {
 	}
 }
 
+function hitCenter(target: Locator): Promise<{ x: number; y: number } | null> {
+	return target.evaluate((element) => {
+		const { x, y, width, height } = element.getBoundingClientRect();
+		const center = { x: x + width / 2, y: y + height / 2 };
+		return element.contains(document.elementFromPoint(center.x, center.y))
+			? center
+			: null;
+	});
+}
+
 export async function hoverPen({
 	page,
 	target,
@@ -405,13 +421,17 @@ export async function hoverPen({
 	page: Page;
 	target: Locator;
 }): Promise<void> {
-	const box = await target.boundingBox();
-	if (box === null) throw new Error("The pen target has no box");
+	await expect
+		.poll(() => hitCenter(target), {
+			message: "the pen target is the topmost element at its center",
+		})
+		.not.toBeNull();
+	const center = await hitCenter(target);
+	if (center === null) throw new Error("The pen target lost its center");
 	const pen = await page.context().newCDPSession(page);
 	await pen.send("Input.dispatchMouseEvent", {
 		type: "mouseMoved",
-		x: box.x + box.width / 2,
-		y: box.y + box.height / 2,
+		...center,
 		pointerType: "pen",
 		buttons: 0,
 	});
