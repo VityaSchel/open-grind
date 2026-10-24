@@ -24,7 +24,6 @@
 	}) {
 		try {
 			await setPreferences(submission);
-			geoMapPickerOpen = false;
 		} catch (error) {
 			console.error(error);
 			showErrorToast({ label: "Failed to save location", error });
