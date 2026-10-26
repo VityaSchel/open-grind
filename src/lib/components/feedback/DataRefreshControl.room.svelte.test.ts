@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { expoOut } from "svelte/easing";
+import { Tween } from "svelte/motion";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -66,6 +68,36 @@ describe("the refresh control's room for its button", () => {
 		await view.wheelWithoutBand();
 		const opening = await view.contentFramesOver(TWEEN_FRAMES);
 
+		expect(distinctBands(opening).length).toBeGreaterThan(2);
+		for (const { band, contentTop } of opening)
+			expect(contentTop).toBeCloseTo(parseFloat(band));
+		expect(view.contentTop()).toBe(BUTTON_REST_PX);
+	});
+
+	it("keeps the list in step with the button's box when the page stalls right after the button starts moving", async () => {
+		const view = await mountAtRest("top");
+		const unstalledNow = performance.now.bind(performance);
+		let stalledMs = 0;
+		vi.spyOn(performance, "now").mockImplementation(
+			() => unstalledNow() + stalledMs,
+		);
+		const startTween = Object.getOwnPropertyDescriptor(
+			Tween.prototype,
+			"set",
+		)!.value as Tween<number>["set"];
+		vi.spyOn(Tween.prototype, "set").mockImplementation(function (
+			this: Tween<number>,
+			...args
+		) {
+			const started = startTween.apply(this, args);
+			stalledMs += FRAME_MS / 4;
+			return started;
+		});
+
+		await view.wheelWithoutBand();
+		const opening = await view.contentFramesOver(TWEEN_FRAMES);
+
+		expect(stalledMs).toBeGreaterThan(0);
 		expect(distinctBands(opening).length).toBeGreaterThan(2);
 		for (const { band, contentTop } of opening)
 			expect(contentTop).toBeCloseTo(parseFloat(band));
@@ -215,6 +247,36 @@ describe("the refresh control's room for its button", () => {
 			{ fromPx: BUTTON_REST_PX, toPx: 0, cancelled: false },
 		]);
 		expect(view.contentBottom()).toBe(restingBottom - BUTTON_REST_PX);
+		expect(view.button()).not.toBeNull();
+	});
+
+	it("slides a conversation from where it is, on its own clock, into a room above the composer that reopens while the button is still going away", async () => {
+		const view = await mountAtRest("bottom");
+		const restingBottom = view.contentBottom();
+		const gap = () => restingBottom - view.contentBottom();
+		await view.wheelWithoutBand();
+		await view.wait(TWEEN_MS);
+
+		await view.touchList();
+		await view.wait(FRAME_MS * 3);
+		const goingAway = parseFloat(view.band().style.height);
+		expect(view.contentInset()).toBe("0px");
+		expect(goingAway).toBeGreaterThan(0);
+		expect(goingAway).toBeLessThan(BUTTON_REST_PX);
+
+		await view.pressInsideList("End");
+		expect(view.contentInset()).toBe(BUTTON_REST_HEIGHT);
+		expect(gap()).toBeCloseTo(goingAway);
+		for (let frame = 1; frame <= TWEEN_FRAMES; frame += 1) {
+			await view.wait(FRAME_MS);
+			const progress = Math.min(
+				1,
+				(frame * FRAME_MS) / CONTENT_SLIDE_TIMING.duration,
+			);
+			expect(gap()).toBeCloseTo(
+				goingAway + (BUTTON_REST_PX - goingAway) * expoOut(progress),
+			);
+		}
 		expect(view.button()).not.toBeNull();
 	});
 

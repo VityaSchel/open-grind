@@ -7,7 +7,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { scale } from "$lib/util/reduced-motion";
 	import { attachPullInputs } from "./refresh/attach-inputs";
-	import { contentSlide } from "./refresh/content-slide";
+	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {
 		MAX_SLINGSHOT_TENSION,
 		slingshotTension,
@@ -63,7 +63,7 @@
 	const restingButton = new RestingButtonModel({ probeMs: MOUSE_PROBE_MS });
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
-	const buttonSpace = new Tween(0, REVEAL_TRANSITION);
+	const buttonSpace = new PacingTween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
 	model.space = ARM_PX;
 
@@ -208,7 +208,7 @@
 		position === "top" ? "--refresh-inset-top" : "--refresh-inset-bottom",
 	);
 
-	const slide = contentSlide(CONTENT_SLIDE);
+	const slide = contentSlide({ ...CONTENT_SLIDE, pacedBy: buttonSpace });
 
 	$effect(() => {
 		void buttonSpace.current;
