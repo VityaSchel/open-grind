@@ -491,9 +491,17 @@ test.describe("composer sheet tab bars", () => {
 			await page.locator(tile).first().click();
 			const pill = page.locator('[data-slot="sheet-actions"]');
 			await expect(pill).toBeVisible();
-			await pill.evaluate((el) =>
-				Promise.all(el.getAnimations().map((a) => a.finished)),
-			);
+			await expect
+				.poll(() =>
+					pill.evaluate((el) => {
+						const style = getComputedStyle(el);
+						return {
+							offset: new DOMMatrix(style.transform).m42,
+							opacity: Number(style.opacity),
+						};
+					}),
+				)
+				.toEqual({ offset: 0, opacity: 1 });
 			const gap = async () => {
 				const pillBox = (await pill.boundingBox())!;
 				const barBox = (await bar.boundingBox())!;
