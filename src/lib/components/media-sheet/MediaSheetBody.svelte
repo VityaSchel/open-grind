@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+	import type { Attachment } from "svelte/attachments";
 
 	import { preferredScrollBehavior } from "$lib/util/reduced-motion";
 
@@ -86,6 +87,30 @@
 		};
 	}
 
+	const holdSizeWhileTouched: Attachment<HTMLElement> = (scroller) => {
+		let release: (() => void) | null = null;
+		const hold = () => {
+			release ??= holdSize();
+		};
+		const releaseOnceUntouched = (event: TouchEvent) => {
+			if (event.touches.length > 0) return;
+			release?.();
+			release = null;
+		};
+		scroller.addEventListener("touchstart", hold, { passive: true });
+		scroller.addEventListener("touchend", releaseOnceUntouched, {
+			passive: true,
+		});
+		scroller.addEventListener("touchcancel", releaseOnceUntouched, {
+			passive: true,
+		});
+		return () => {
+			scroller.removeEventListener("touchstart", hold);
+			scroller.removeEventListener("touchend", releaseOnceUntouched);
+			scroller.removeEventListener("touchcancel", releaseOnceUntouched);
+		};
+	};
+
 	function onScroll() {
 		const scrollTop = sheet?.scrollTop ?? 0;
 		atTop = scrollTop < 1;
@@ -138,6 +163,7 @@
 	data-slot="sheet-scroller"
 	data-at-top={fullsize && atTop ? "" : undefined}
 	onscroll={onScroll}
+	{@attach holdSizeWhileTouched}
 	class={[
 		"group/sheet no-scrollbar overflow-x-hidden overscroll-contain select-none",
 		{
