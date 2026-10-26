@@ -9,7 +9,13 @@ import {
 	openPrivacySettings,
 	openSecuritySettings,
 } from "./settings";
-import { addingToast, toastsShown } from "./toast";
+import {
+	addingToast,
+	pauseToasts,
+	SHOWN_TOAST,
+	swipeAwayToastIfShown,
+	toastsShown,
+} from "./toast";
 
 const BLUR_THUMB = '[data-slot="slider-thumb"]';
 const DESKTOP_ENTRY = { available: true, installed: false };
@@ -192,6 +198,16 @@ export const preferencesLoadFailed: Scene = {
 			survivesLocaleSwitch: false,
 			drive: async (page) => {
 				await openAppSettings(page);
+				await page
+					.locator(SHOWN_TOAST, {
+						hasText: "Couldn’t load app settings",
+					})
+					.waitFor();
+				await pauseToasts(page);
+				await swipeAwayToastIfShown({
+					page,
+					text: "Couldn’t load filters",
+				});
 				await toastsShown({ page, count: 1 });
 			},
 		},
