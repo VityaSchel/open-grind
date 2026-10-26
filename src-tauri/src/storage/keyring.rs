@@ -4,7 +4,12 @@ use crate::error::AppError;
 
 #[cfg(target_os = "macos")]
 pub(super) const SERVICE: &str = "org.opengrind.app";
-#[cfg(not(target_os = "macos"))]
+#[cfg(any(
+	target_os = "android",
+	target_os = "ios",
+	target_os = "linux",
+	target_os = "windows"
+))]
 pub(super) const SERVICE: &str = "open-grind";
 
 static KEYRING_LOCK: Mutex<()> = Mutex::new(());
@@ -21,7 +26,7 @@ pub(crate) fn entry(name: &str) -> Result<Entry, AppError> {
 			"after-first-unlock-this-device-only",
 		)]),
 	);
-	#[cfg(not(target_os = "ios"))]
+	#[cfg(any(target_os = "android", desktop))]
 	let entry = keyring_core::Entry::new(SERVICE, name);
 	entry.map(Entry).map_err(|e| AppError::Auth(e.to_string()))
 }

@@ -40,7 +40,7 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 pub async fn forget_sign_in_profile(app: &AppHandle) {
 	#[cfg(target_os = "android")]
 	android::clear_profile(app).await;
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	let _ = app;
 }
 

@@ -6,12 +6,10 @@ use tauri::Url;
 
 pub const ANDROID_HOSTNAME: &str = "app.opengrind.org";
 
-pub const SERVED_HOSTNAME: Option<&str> =
-	if cfg!(all(target_os = "android", not(dev))) {
-		Some(ANDROID_HOSTNAME)
-	} else {
-		None
-	};
+#[cfg(all(target_os = "android", not(dev)))]
+pub const SERVED_HOSTNAME: Option<&str> = Some(ANDROID_HOSTNAME);
+#[cfg(any(all(target_os = "android", dev), target_os = "ios", desktop))]
+pub const SERVED_HOSTNAME: Option<&str> = None;
 
 pub fn android_hostname() -> Option<AndroidHostname> {
 	SERVED_HOSTNAME.map(|hostname| {

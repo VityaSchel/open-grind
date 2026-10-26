@@ -7,7 +7,10 @@ use super::super::target::host_of;
 use super::super::upstream::GatewayFailure;
 use super::adapter::WebViewStream;
 
-pub const TELLS_THE_LENGTH: bool = cfg!(target_vendor = "apple");
+#[cfg(any(target_os = "ios", target_os = "macos"))]
+pub const TELLS_THE_LENGTH: bool = true;
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "windows"))]
+pub const TELLS_THE_LENGTH: bool = false;
 
 pub struct Streamed {
 	pub id: u64,

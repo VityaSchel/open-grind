@@ -86,19 +86,24 @@ fn universal_asset_suffix() -> Option<String> {
 }
 
 pub(super) fn abi_token(os: &str, arch: &str) -> Option<&'static str> {
-	if os != "android" {
-		return None;
-	}
-	match arch {
-		"aarch64" => Some("-arm64-v8a.apk"),
-		"arm" => Some("-v7a.apk"),
-		"x86_64" => Some("-x86_64.apk"),
+	match os {
+		"android" => match arch {
+			"aarch64" => Some("-arm64-v8a.apk"),
+			"arm" => Some("-v7a.apk"),
+			"x86_64" => Some("-x86_64.apk"),
+			_ => None,
+		},
+		"ios" | "linux" | "macos" | "windows" => None,
 		_ => None,
 	}
 }
 
 pub(super) fn universal_token(os: &str) -> Option<&'static str> {
-	(os == "android").then_some("-android.apk")
+	match os {
+		"android" => Some("-android.apk"),
+		"ios" | "linux" | "macos" | "windows" => None,
+		_ => None,
+	}
 }
 
 pub fn by_key(key: &str) -> Result<&'static Component, UpdateError> {

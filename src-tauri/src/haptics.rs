@@ -16,10 +16,10 @@ pub fn play_haptic(window: tauri::WebviewWindow, kind: HapticKind) {
 	#[cfg(target_os = "macos")]
 	macos::play(kind);
 
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	let _ = window;
 
-	#[cfg(not(any(target_os = "android", target_os = "macos")))]
+	#[cfg(any(target_os = "ios", target_os = "linux", target_os = "windows"))]
 	let _ = kind;
 }
 

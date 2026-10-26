@@ -2,24 +2,21 @@
 pub use tauri::wry::{
 	register_stream, unregister_stream, ResponseStream, STREAM_HEADER,
 };
-#[cfg(all(test, target_vendor = "apple"))]
+#[cfg(all(test, any(target_os = "ios", target_os = "macos")))]
 pub use wry::with_stream;
-#[cfg(target_vendor = "apple")]
+#[cfg(any(target_os = "ios", target_os = "macos"))]
 pub use wry::{
 	register_stream, unregister_stream, ResponseStream, STREAM_HEADER,
 };
 
-#[cfg(all(
-	any(test, target_os = "linux"),
-	not(any(target_os = "android", target_vendor = "apple"))
-))]
+#[cfg(any(target_os = "linux", all(test, target_os = "windows")))]
 pub use local::with_stream;
-#[cfg(not(any(target_os = "android", target_vendor = "apple")))]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 pub use local::{
 	register_stream, unregister_stream, ResponseStream, STREAM_HEADER,
 };
 
-#[cfg(not(any(target_os = "android", target_vendor = "apple")))]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 mod local {
 	use std::collections::HashMap;
 	use std::io;

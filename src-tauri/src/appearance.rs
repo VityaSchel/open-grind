@@ -109,7 +109,12 @@ pub fn backdrop_filter_renders() -> bool {
 		!disabled_by_environment(|name| std::env::var(name).ok())
 	}
 
-	#[cfg(not(target_os = "linux"))]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "macos",
+		target_os = "windows"
+	))]
 	true
 }
 
@@ -156,7 +161,13 @@ pub fn unlock_visual_effects<R: tauri::Runtime>(
 		}
 	}
 
-	#[cfg(not(all(target_os = "macos", feature = "private-api")))]
+	#[cfg(any(
+		all(target_os = "macos", not(feature = "private-api")),
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "windows"
+	))]
 	let _ = window;
 }
 

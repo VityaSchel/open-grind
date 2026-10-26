@@ -1,6 +1,6 @@
 #[cfg(target_os = "android")]
 mod android;
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "ios", desktop))]
 mod web;
 
 use tauri::{AppHandle, Manager};
@@ -8,7 +8,7 @@ use tauri::{AppHandle, Manager};
 use crate::api::oauth::{OauthBridge, OauthProvider};
 use crate::error::AppError;
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "ios", desktop))]
 use std::sync::Arc;
 
 pub struct Google;
@@ -31,7 +31,7 @@ pub fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 				_app.manage(android::AndroidGoogleOauth { handle });
 				watch_handoff(_app);
 			}
-			#[cfg(not(target_os = "android"))]
+			#[cfg(any(target_os = "ios", desktop))]
 			{
 				_app.manage(Arc::new(GoogleOauthBridge::new()));
 			}
@@ -49,7 +49,7 @@ pub async fn fetch_google_access_token(
 	{
 		return android::fetch_companion_token(app).await;
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let bridge = app.state::<Arc<GoogleOauthBridge>>().inner().clone();
 		web::fetch_access_token(app, bridge).await
@@ -80,7 +80,7 @@ pub fn handoff_pending(app: &AppHandle) -> bool {
 	{
 		android::handoff_pending(app)
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let _ = app;
 		false
@@ -92,7 +92,7 @@ pub fn take_handoff(app: &AppHandle) -> Option<String> {
 	{
 		android::take_handoff(app)
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let _ = app;
 		None
@@ -104,7 +104,7 @@ pub fn discard_handoff(app: &AppHandle) {
 	{
 		android::discard_handoff(app);
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let _ = app;
 	}

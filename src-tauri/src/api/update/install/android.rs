@@ -227,8 +227,6 @@ pub(super) fn end_transfer<R: tauri::Runtime>(
 
 pub fn sweep_replaced() {}
 
-pub fn enforce_home() {}
-
 pub fn take_outcome(app: &AppHandle) -> Option<Outcome> {
 	let response: OutcomeResponse = plugin(app)
 		.ok()?

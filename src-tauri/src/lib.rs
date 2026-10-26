@@ -132,6 +132,7 @@ pub fn run() {
 	#[cfg(target_os = "linux")]
 	appearance::apply_environment_defaults();
 
+	#[cfg(target_os = "macos")]
 	api::update::enforce_home();
 	#[cfg(target_os = "macos")]
 	predecessor::adopt_data();

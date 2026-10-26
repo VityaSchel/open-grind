@@ -12,14 +12,14 @@ const CONTENT_SCHEME: &str = "content://";
 
 const OUTSIDE_SCOPE: &str =
 	"That file is outside the folders this app may read";
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "ios", desktop))]
 const NOT_ANDROID: &str = "Android file URIs can only be opened on Android";
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AndroidUri {
 	pub uri: String,
-	#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+	#[cfg_attr(any(target_os = "ios", desktop), allow(dead_code))]
 	pub document_top_tree_uri: Option<String>,
 }
 
@@ -130,7 +130,7 @@ fn open_android<R: Runtime>(
 		.map_err(|error| io::Error::other(error.to_string()))
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "ios", desktop))]
 fn open_android<R: Runtime>(
 	_app: &tauri::AppHandle<R>,
 	_uri: &AndroidUri,
@@ -268,7 +268,7 @@ mod tests {
 		);
 
 		assert!(serde_json::from_str::<PickedFile>(
-			r#"{"source":"web","key":"k","mimeType":null}"#
+			r#"{"source":"demo","key":"k","mimeType":null}"#
 		)
 		.is_err());
 	}

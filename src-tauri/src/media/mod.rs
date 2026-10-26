@@ -46,7 +46,10 @@ pub const SCHEME: &str = "ogmedia";
 
 const MAX_MEDIA_BYTES: usize = 16 * 1024 * 1024;
 const OFFICIAL_APP_REQUESTS_PER_HOST: usize = 20;
-const STREAMING_PLATFORM: bool = cfg!(target_os = "android");
+#[cfg(target_os = "android")]
+const STREAMING_PLATFORM: bool = true;
+#[cfg(any(target_os = "ios", desktop))]
+const STREAMING_PLATFORM: bool = false;
 const ANDROID_ANSWER_DEADLINE: Duration = Duration::from_secs(25);
 const RETRIED_HEADERS_DEADLINE: Duration = Duration::from_secs(45);
 
@@ -61,8 +64,14 @@ const HOST: Host = if cfg!(target_os = "android") {
 	Host::AndroidWebView
 } else if cfg!(target_os = "macos") {
 	Host::WkWebView
-} else {
+} else if cfg!(any(
+	target_os = "ios",
+	target_os = "linux",
+	target_os = "windows"
+)) {
 	Host::WholeBodies
+} else {
+	panic!("unsupported target OS")
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

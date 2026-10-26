@@ -41,6 +41,6 @@ pub async fn open_app_settings(_app: AppHandle) -> Result<(), AppError> {
 			})?;
 		Ok(())
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	Err(AppError::Http("Only available on Android".into()))
 }

@@ -24,7 +24,7 @@ const WINDOW_INNER_SIZE: (f64, f64) = (600.0, 700.0);
 #[cfg(mobile)]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "ios", desktop))]
 const DESKTOP_USER_AGENT: &str =
 	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
 	 AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15";
@@ -79,7 +79,7 @@ async fn run_flow(
 		false
 	});
 
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		builder = builder.user_agent(DESKTOP_USER_AGENT);
 	}

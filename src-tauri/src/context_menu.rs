@@ -18,7 +18,12 @@ pub fn trim_native_menu<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
 		}
 	}
 
-	#[cfg(not(target_os = "windows"))]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "macos"
+	))]
 	let _ = window;
 }
 

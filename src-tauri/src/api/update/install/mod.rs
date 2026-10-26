@@ -97,6 +97,7 @@ fn suffix_for(os: &str, arch: &str) -> Option<String> {
 			Some(abi) => format!("-android-{abi}.apk"),
 			None => "-android.apk".to_owned(),
 		}),
+		"ios" => None,
 		"macos" => Some("-macos.zip".to_owned()),
 		"windows" => Some(format!("-windows-{desktop_arch}.exe")),
 		"linux" => Some(format!("-linux-{desktop_arch}.AppImage")),
@@ -147,9 +148,11 @@ use android as platform;
 #[cfg(not(target_os = "android"))]
 use desktop as platform;
 
+#[cfg(target_os = "macos")]
+pub use platform::enforce_home;
 pub use platform::{
-	enforce_home, install, install_pending, open_install_permission_settings,
-	sweep_replaced, take_outcome, watch_install,
+	install, install_pending, open_install_permission_settings, sweep_replaced,
+	take_outcome, watch_install,
 };
 
 #[cfg(test)]
@@ -1225,6 +1228,11 @@ mod pins {
 			ANDROID_OUTPUTS.contains("universal) abi=\"\""),
 			"android-outputs.sh no longer names the universal APK -android.apk"
 		);
+	}
+
+	#[test]
+	fn ios_has_no_release_artifact_to_update_from() {
+		assert_eq!(suffix_for("ios", "aarch64"), None);
 	}
 
 	#[cfg(target_os = "linux")]

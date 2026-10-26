@@ -21,7 +21,7 @@ pub async fn decode<R: Runtime>(
 	{
 		android::decode(app, bytes).await
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let _ = (app, bytes);
 		Err(AppError::Media(UNSUPPORTED.to_owned()))

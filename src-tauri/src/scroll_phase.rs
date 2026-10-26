@@ -23,7 +23,12 @@ pub fn install_scroll_gesture_bridge<R: tauri::Runtime>(
 	#[cfg(target_os = "macos")]
 	macos::install(app.clone());
 
-	#[cfg(not(target_os = "macos"))]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "windows"
+	))]
 	let _ = app;
 }
 

@@ -141,8 +141,8 @@ pub fn sweep_replaced() {
 	binary::sweep_replaced();
 }
 
+#[cfg(target_os = "macos")]
 pub fn enforce_home() {
-	#[cfg(target_os = "macos")]
 	location::enforce();
 }
 

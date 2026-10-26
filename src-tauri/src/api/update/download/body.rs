@@ -1,5 +1,10 @@
 use std::fs;
-#[cfg(unix)]
+#[cfg(any(
+	target_os = "android",
+	target_os = "ios",
+	target_os = "linux",
+	target_os = "macos"
+))]
 use std::fs::File;
 use std::io;
 use std::path::Path;
@@ -7,9 +12,14 @@ use std::path::Path;
 use super::super::error::UpdateError;
 
 pub(super) struct Body {
-	#[cfg(unix)]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "macos"
+	))]
 	file: File,
-	#[cfg(not(unix))]
+	#[cfg(target_os = "windows")]
 	bytes: Vec<u8>,
 	length: u64,
 }
@@ -19,7 +29,12 @@ impl Body {
 		self.length
 	}
 
-	#[cfg(unix)]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "macos"
+	))]
 	pub(super) fn take(part: &Path) -> Result<Option<Self>, UpdateError> {
 		let file = match File::open(part) {
 			Ok(file) => file,
@@ -34,7 +49,7 @@ impl Body {
 		Ok(Some(Self { file, length }))
 	}
 
-	#[cfg(not(unix))]
+	#[cfg(target_os = "windows")]
 	pub(super) fn take(part: &Path) -> Result<Option<Self>, UpdateError> {
 		let bytes = match fs::read(part) {
 			Ok(bytes) => bytes,
@@ -49,7 +64,12 @@ impl Body {
 		Ok(Some(Self { bytes, length }))
 	}
 
-	#[cfg(unix)]
+	#[cfg(any(
+		target_os = "android",
+		target_os = "ios",
+		target_os = "linux",
+		target_os = "macos"
+	))]
 	pub(super) fn write_back(
 		&mut self,
 		part: &Path,
@@ -68,7 +88,7 @@ impl Body {
 		Ok(())
 	}
 
-	#[cfg(not(unix))]
+	#[cfg(target_os = "windows")]
 	pub(super) fn write_back(
 		&mut self,
 		part: &Path,

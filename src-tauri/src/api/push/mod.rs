@@ -1,7 +1,7 @@
 #[cfg(target_os = "android")]
 mod android;
 mod announcement;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(desktop)]
 mod desktop;
 mod error;
 #[cfg(test)]
@@ -13,7 +13,7 @@ mod unsupported;
 use android as backend;
 pub use announcement::{Announcement, Category};
 pub use backend::plugin;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
+#[cfg(desktop)]
 use desktop as backend;
 pub use error::PushError;
 #[cfg(target_os = "ios")]

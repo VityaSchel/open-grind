@@ -16,7 +16,7 @@ const WINDOW_LABEL: &str = "google-oauth";
 
 #[cfg(desktop)]
 const WINDOW_INNER_SIZE: (f64, f64) = (800.0, 500.0);
-#[cfg(mobile)]
+#[cfg(target_os = "ios")]
 const WINDOW_INNER_SIZE: (f64, f64) = (500.0, 720.0);
 
 const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \

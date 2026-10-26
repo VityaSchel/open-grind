@@ -69,7 +69,7 @@ pub async fn pick_android_media(
 			})?;
 		Ok(response.uris)
 	}
-	#[cfg(not(target_os = "android"))]
+	#[cfg(any(target_os = "ios", desktop))]
 	{
 		let _ = (mime_types, multiple);
 		Ok(None)
