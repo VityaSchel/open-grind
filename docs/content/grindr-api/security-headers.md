@@ -198,7 +198,7 @@ Getting all of HTTP security headers right is enough for the API to respond, but
 
 Request fingerprint is a characteristic derived from many factors, such as ClientHello, TLS encryption negotiation, HTTP pseudo-headers, TCP frame size, etc. The goal is to make all of these parameters match official Grindr clients (we focus on Android apk specifically, using the Java library used in the official Grindr app).
 
-As of Grindr APK v26.8.2 (162647), the version of OkHttp used in the official app is `5.3.2`.
+As of Grindr APK v26.22.0 (192710), the version of OkHttp used in the official app is `5.5.0`.
 
 ### TLS parameters
 
@@ -209,6 +209,8 @@ Both TLS 1.3 and TLS 1.2 are offered. The `SSLContext.getInstance("TLSv1.2")` ca
 ```
 Cipher suites = MODERN_TLS list ∩ Conscrypt-supported (order preserved from MODERN_TLS)
 ```
+
+`MODERN_TLS` lists 16 suites. The last one, `SSL_RSA_WITH_3DES_EDE_CBC_SHA`, is not enabled in Conscrypt, so the ClientHello carries the 15 [listed below](#cipher-suites).
 
 **Record layer:** `legacy_version = 0x0303` (TLS 1.2/TLS 1.3).
 
@@ -309,7 +311,7 @@ Sources: `okhttp3.internal.http2.Http2Connection` and `okhttp3.internal.http2.Ht
 - **PRIORITY frames absent**
 - **max frame size** = `16384` until peer's SETTINGS overrides
 - **Stream IDs**: client uses odd IDs starting at 3
-- **HPACK**: writer starts with table size 0 and follows peer-acknowledged size: `hpackWriter = new Hpack.Writer(0, false, buffer, ...)`, okhttp dynamically resizes only when the peer sends `SETTINGS_HEADER_TABLE_SIZE`
+- **HPACK**: dynamic table of 4096 bytes (the protocol default), resized only when the peer sends `SETTINGS_HEADER_TABLE_SIZE` (capped at 16384). Exact matches in the dynamic table, or in static entries 2–7 (`:method`, `:path` and `:scheme` values), are sent indexed; any other header is a literal with incremental indexing, `authorization` included. Pseudo-headers other than `:authority` without an exact match are literals without indexing. Huffman coding is used only when it is strictly shorter.
 
 #### Pseudoheaders
 
