@@ -33,11 +33,10 @@ const entryIndex = (page: Page) =>
 	page.evaluate(() => navigation.currentEntry!.index);
 
 async function platformBack(page: Page, platform: string) {
-	if (platform === "android") {
-		await systemBack(page);
-		return;
-	}
-	await page.evaluate(() => history.back());
+	const from = page.url();
+	if (platform === "android") await systemBack(page);
+	else await page.evaluate(() => history.back());
+	await expect(page, `the platform back left ${from}`).not.toHaveURL(from);
 	await stackSettled(page);
 }
 
