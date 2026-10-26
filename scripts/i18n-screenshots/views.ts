@@ -37,6 +37,7 @@ import {
 
 const SCREEN_STEP = 0.85;
 const PARKED_POINTER = { x: -1, y: -1 };
+const BLANK_PAGE = "about:blank";
 
 type Session = { page: Page; uncaught: string[]; viewId: string };
 
@@ -122,6 +123,11 @@ async function loadInLocale({
 	};
 }
 
+async function closeUnloaded(page: Page): Promise<void> {
+	await page.goto(BLANK_PAGE);
+	await page.close();
+}
+
 async function replayMarked({
 	run: { platformContext, scene },
 	session,
@@ -131,7 +137,7 @@ async function replayMarked({
 	session: Session;
 	index: number;
 }): Promise<Session> {
-	await session.page.close();
+	await closeUnloaded(session.page);
 	const replay = await openSession({
 		context: platformContext.context,
 		scene,
