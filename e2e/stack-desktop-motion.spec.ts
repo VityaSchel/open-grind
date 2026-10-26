@@ -85,7 +85,6 @@ function recordTransition(
 						edge: style.boxShadow,
 					};
 				};
-				const started = performance.now();
 				const sample = () => {
 					const scrim = document.querySelector(dim);
 					if (!scrim) return;
@@ -101,10 +100,12 @@ function recordTransition(
 				};
 				// Svelte's async-mode tick() resolves in a later rAF callback than
 				// ours, so read each frame once all of its callbacks have run.
-				const frame = () => {
-					const last = performance.now() - started >= 1500;
+				let begunAt: number | undefined;
+				const frame = (now: number) => {
 					const begunBeforeFrame =
 						document.querySelector(dim) !== null;
+					if (begunBeforeFrame) begunAt ??= now;
+					const last = begunAt !== undefined && now - begunAt >= 1500;
 					setTimeout(() => {
 						if (begunBeforeFrame) sample();
 						if (last) resolve({ frames, midway });
