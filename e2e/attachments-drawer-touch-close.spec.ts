@@ -1,15 +1,31 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 import { TrustedTouch } from "./support/app";
 import {
 	box,
 	DRAWER,
+	MEDIA_TILE,
 	openAttachments,
 	SELECTABLE_MEDIA_TILE,
 	SHEET_SCROLLER,
 } from "./support/drawer";
+import { CHAT_MEDIA_HOST, holdImages } from "./support/media";
 
 const BELOW_FLICK_SPEED = { steps: 24, holdMs: 40, release: false };
+
+function loadedTileImages(page: Page): Promise<number> {
+	return page
+		.locator(`${MEDIA_TILE} img`)
+		.evaluateAll(
+			(images) =>
+				images.filter(
+					(image) =>
+						image instanceof HTMLImageElement &&
+						image.complete &&
+						image.naturalWidth > 1,
+				).length,
+		);
+}
 
 test.describe("attachments drawer: touch drag to close", () => {
 	for (const origin of ["handle", "tile"] as const) {
@@ -89,6 +105,47 @@ test.describe("attachments drawer: touch drag to close", () => {
 		);
 		expect(
 			(await box(page)).top - back.top,
+			"the sheet is still under the finger",
+		).toBeGreaterThan(200);
+
+		await touch.end();
+		await expect(page.locator(DRAWER)).toHaveCount(0);
+	});
+
+	test("a slow drag down keeps following the finger while images load under a resting mouse", async ({
+		page,
+	}) => {
+		const images = await holdImages(page, CHAT_MEDIA_HOST);
+		await openAttachments(page);
+		const tile = (await page
+			.locator(SELECTABLE_MEDIA_TILE)
+			.first()
+			.boundingBox())!;
+		await page.mouse.move(
+			tile.x + tile.width / 2,
+			tile.y + tile.height / 2,
+		);
+		const touch = await TrustedTouch.attach(page);
+		const start = await box(page);
+		const from = { x: 210, y: start.top + 12 };
+		const halfway = { x: from.x, y: from.y + 120 };
+
+		await touch.drag(page, from, halfway, {
+			...BELOW_FLICK_SPEED,
+			steps: 12,
+		});
+		await images.release();
+		await expect
+			.poll(() => loadedTileImages(page), {
+				message: "the tiles' images loaded",
+			})
+			.toBeGreaterThan(0);
+		for (let step = 1; step <= 12; step++) {
+			await touch.move(halfway.x, halfway.y + step * 10);
+			await page.waitForTimeout(BELOW_FLICK_SPEED.holdMs);
+		}
+		expect(
+			(await box(page)).top - start.top,
 			"the sheet is still under the finger",
 		).toBeGreaterThan(200);
 

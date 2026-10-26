@@ -2,6 +2,7 @@
 	import { Drawer as DrawerPrimitive } from "vaul-svelte";
 	import type { ComponentProps } from "svelte";
 
+	import { stopOtherPointerOutWhilePressed } from "$lib/util/pressed-pointer";
 	import { exemptToastsFromDismissal } from "$lib/util/toast-interaction";
 	import { cn } from "$lib/util/utils.js";
 	import type { WithoutChildrenOrChild } from "$lib/util/utils.js";
@@ -23,6 +24,10 @@
 			ComponentProps<typeof DrawerPortal>
 		>;
 	} = $props();
+
+	$effect(() => {
+		if (ref) return stopOtherPointerOutWhilePressed(ref);
+	});
 </script>
 
 {#snippet handleDefault()}
