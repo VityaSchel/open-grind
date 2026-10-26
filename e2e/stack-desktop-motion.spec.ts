@@ -103,8 +103,10 @@ function recordTransition(
 				// ours, so read each frame once all of its callbacks have run.
 				const frame = () => {
 					const last = performance.now() - started >= 1500;
+					const begunBeforeFrame =
+						document.querySelector(dim) !== null;
 					setTimeout(() => {
-						sample();
+						if (begunBeforeFrame) sample();
 						if (last) resolve({ frames, midway });
 					});
 					if (!last) requestAnimationFrame(frame);
