@@ -560,12 +560,14 @@ test("a field popover in settings opens above the pane", async ({ page }) => {
 	await expect(
 		page.locator('[data-slot="combobox-item"]').first(),
 	).toBeVisible();
-	expect(
-		await centerIsInside(
-			page,
-			'[data-slot="combobox-item"]',
-			'[data-slot="combobox-content"]',
-		),
-	).toBe(true);
+	await expect
+		.poll(() =>
+			centerIsInside(
+				page,
+				'[data-slot="combobox-item"]',
+				'[data-slot="combobox-content"]',
+			),
+		)
+		.toBe(true);
 	expect(await navBarHitTest(page)).toEqual({ present: true, onTop: true });
 });
