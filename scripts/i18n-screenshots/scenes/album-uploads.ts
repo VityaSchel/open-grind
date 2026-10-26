@@ -45,6 +45,12 @@ const addingFull: RestFault = {
 
 const addingFails = failing({ method: "POST", path: ADD_FROM_DRAWER });
 
+const uploadsStayProcessing: RestFault = {
+	method: "GET",
+	path: { pattern: `^${uploadPath(PHOTO_ALBUM_ID)}/\\d+/processing$` },
+	pending: true,
+};
+
 function uploadToasts({ id, status }: { id: string; status: number }): Scene {
 	return {
 		platform: "phone",
@@ -68,6 +74,7 @@ function uploadToasts({ id, status }: { id: string; status: number }): Scene {
 
 export const albumUploadLimits: Scene = {
 	platform: "phone",
+	demo: { restFaults: [uploadsStayProcessing] },
 	views: [
 		{
 			id: "settings/albums/album/upload-limits",
