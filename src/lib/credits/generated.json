@@ -7222,7 +7222,7 @@
 			"name": "swift-rs",
 			"ecosystem": "rust",
 			"versions": [
-				"1.0.7"
+				"1.0.9"
 			],
 			"spdx": "MIT OR Apache-2.0",
 			"shipped": "MIT",
