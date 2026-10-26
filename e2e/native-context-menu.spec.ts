@@ -41,7 +41,7 @@ test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, AVATAR_HOST);
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("cancels the browser menu on a Browse profile link", async ({ page }) => {

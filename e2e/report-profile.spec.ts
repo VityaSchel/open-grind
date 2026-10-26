@@ -12,7 +12,7 @@ const DEMO_PROFILE = "/profile/100001";
 const DEMO_CHAT = "/chat/100001:123456000";
 
 async function openReportSheet(page: import("@playwright/test").Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Report profile" }).click();
@@ -124,7 +124,7 @@ test("reporting a chat message titles the sheet for the message and prefills the
 	page,
 }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CHAT);
 	await page.locator(MESSAGE_ROW).first().waitFor();
 
@@ -166,7 +166,7 @@ test("the report opens as a dialog on a desktop-width viewport", async ({
 }) => {
 	test.setTimeout(240_000);
 	await page.setViewportSize({ width: 1280, height: 900 });
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_PROFILE);
 	await page.getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Report profile" }).click();

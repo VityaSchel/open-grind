@@ -289,11 +289,11 @@ export async function runPaletteCommand(
 	await page.keyboard.press("Enter");
 }
 
-// The platform decides which wheel path the app takes: "macos" (the
-// default) runs the gesture-phase bridge.
+export type ShimPlatform = "android" | "ios" | "linux" | "macos" | "windows";
+
 export async function installTauriShim(
 	page: Page,
-	{ platform = "macos" } = {},
+	{ platform }: { platform: ShimPlatform },
 ): Promise<void> {
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {
@@ -327,8 +327,6 @@ export async function installTauriShim(
 		};
 
 		Object.assign(window, {
-			// the real runtime defines this; isTauri() reads it, and the
-			// wheel-input mode hangs off isTauri()
 			isTauri: true,
 			__TAURI_OS_PLUGIN_INTERNALS__: {
 				eol: "\n",

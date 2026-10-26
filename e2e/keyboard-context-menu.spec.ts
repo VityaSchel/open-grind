@@ -23,7 +23,7 @@ const LONG_TEXT = Array.from(
 type Box = { left: number; right: number; top: number; bottom: number };
 
 async function openConversation(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page

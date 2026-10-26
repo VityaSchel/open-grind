@@ -10,7 +10,7 @@ test("grid tile opens a profile, which opens a conversation that accepts a messa
 	page,
 }) => {
 	test.setTimeout(240_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);

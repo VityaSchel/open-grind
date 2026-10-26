@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openGrid } from "./support/app";
+import { installTauriShim, openGrid } from "./support/app";
 import {
 	dividers,
 	openAllFilters,
@@ -29,6 +29,10 @@ test.use({
 				`--window-size=${WINDOW.width},${WINDOW.height}`,
 			],
 		}),
+});
+
+test.beforeEach(async ({ page }) => {
+	await installTauriShim(page, { platform: "android" });
 });
 
 test("the footer divider hides at the bottom of a sheet with a fractional height", async ({

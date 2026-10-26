@@ -1,6 +1,6 @@
 import { type Page } from "@playwright/test";
 
-import { backLink, installTauriShim } from "./app";
+import { backLink, installTauriShim, type ShimPlatform } from "./app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./media";
 import { stackSettled } from "./page-stack";
 
@@ -16,24 +16,34 @@ export function albumTileNamed(name: string): string {
 	return `a[data-slot="album-tile"]:has-text("${name}")`;
 }
 
-export async function openAlbums(page: Page): Promise<void> {
-	await installTauriShim(page);
+export async function openAlbums(
+	page: Page,
+	{ platform = "macos" }: { platform?: ShimPlatform } = {},
+): Promise<void> {
+	await installTauriShim(page, { platform });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
 	await page.goto("/settings/albums");
 	await page.locator(ALBUM_TILE).first().waitFor({ timeout: 60_000 });
 }
 
-export async function openAlbum(page: Page, tile: string): Promise<void> {
-	await openAlbums(page);
+export async function openAlbum(
+	page: Page,
+	tile: string,
+	{ platform }: { platform?: ShimPlatform } = {},
+): Promise<void> {
+	await openAlbums(page, { platform });
 	await page.locator(tile).click();
 	await page.locator(MEDIA_SLOT).first().waitFor({ timeout: 30_000 });
 	await stackSettled(page);
 	await page.waitForTimeout(500);
 }
 
-export function openSharedAlbum(page: Page): Promise<void> {
-	return openAlbum(page, SHARED_ALBUM);
+export function openSharedAlbum(
+	page: Page,
+	{ platform }: { platform?: ShimPlatform } = {},
+): Promise<void> {
+	return openAlbum(page, SHARED_ALBUM, { platform });
 }
 
 export function back(page: Page): Promise<void> {

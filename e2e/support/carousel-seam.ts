@@ -21,7 +21,7 @@ async function openFourPhotoProfile(page: Page): Promise<void> {
 	await page.route(AVATAR_HOST, (route) =>
 		route.fulfill({ contentType: "image/svg+xml", body: RED_OVER_BLUE }),
 	);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(FOUR_PHOTO_PROFILE);
 	await page.locator(CAROUSEL).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }

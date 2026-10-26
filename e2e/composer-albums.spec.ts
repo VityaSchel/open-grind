@@ -146,7 +146,7 @@ test.describe("composer albums tab", () => {
 	test("a conversation change closes the armed drawer", async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await serveImages(page, CHAT_MEDIA_HOST);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 
 		await page.goto(DEMO_CONVERSATION);
 		await page.waitForTimeout(2500);

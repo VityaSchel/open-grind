@@ -8,7 +8,7 @@ test("editing the profile arms the save button and saving disarms it", async ({
 	page,
 }) => {
 	test.setTimeout(120_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/profile");
 
 	const displayName = page.getByRole("textbox", { name: "Display name" });

@@ -40,7 +40,7 @@ test.use({
 });
 
 async function openConversation(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page
 		.locator(MESSAGE_ROW)

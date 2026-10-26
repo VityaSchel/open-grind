@@ -11,7 +11,7 @@ const NO_DEMO_PROFILE_AGE = "age=90-99";
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);

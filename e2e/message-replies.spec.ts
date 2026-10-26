@@ -5,6 +5,7 @@ import {
 	INCOMING_ROW,
 	installTauriShim,
 	MESSAGE_ROW,
+	type ShimPlatform,
 	trackpadSwipe,
 	TrustedTouch,
 } from "./support/app";
@@ -17,7 +18,10 @@ const REPLIABLE = "consectetur adipiscing elit";
 
 async function openConversation(
 	page: Page,
-	{ path = CONVERSATION, platform = "macos" } = {},
+	{
+		path = CONVERSATION,
+		platform = "macos",
+	}: { path?: string; platform?: ShimPlatform } = {},
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

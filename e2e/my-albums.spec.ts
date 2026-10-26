@@ -48,7 +48,7 @@ test.describe("my albums", () => {
 	test("settings reaches the grid, which reaches one album and the new one", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/settings");
 

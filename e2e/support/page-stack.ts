@@ -5,6 +5,7 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	meTab,
+	type ShimPlatform,
 } from "./app";
 import {
 	commitSystemBack,
@@ -31,8 +32,8 @@ export async function openSettings(
 	page: Page,
 	{
 		reducedMotion,
-		platform,
-	}: { reducedMotion?: "reduce"; platform?: string } = {},
+		platform = "macos",
+	}: { reducedMotion?: "reduce"; platform?: ShimPlatform } = {},
 ) {
 	if (reducedMotion) await page.emulateMedia({ reducedMotion });
 	await installTauriShim(page, { platform });
@@ -46,7 +47,7 @@ export async function openSettings(
 export async function openDeepLink(
 	page: Page,
 	path: string,
-	{ platform }: { platform?: string } = {},
+	{ platform = "macos" }: { platform?: ShimPlatform } = {},
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

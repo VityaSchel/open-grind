@@ -4,6 +4,7 @@ import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
+	type ShimPlatform,
 	TrustedTouch,
 } from "./app";
 
@@ -35,7 +36,7 @@ declare global {
 
 export async function openTaps(
 	page: Page,
-	{ platform }: { platform?: string } = {},
+	{ platform = "macos" }: { platform?: ShimPlatform } = {},
 ): Promise<void> {
 	await installTauriShim(page, { platform });
 	await page.addInitScript(

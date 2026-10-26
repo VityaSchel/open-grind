@@ -42,7 +42,7 @@ test.use({
 
 async function openDeepGridProfile(page: Page): Promise<number> {
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	const scroller = page.locator(GRID_SCROLLER);
 	const loadingMore = page.getByText("Loading more profiles");

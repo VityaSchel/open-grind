@@ -24,7 +24,7 @@ type Metrics = {
 };
 
 async function openConversation(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 30_000 });
 	await page.waitForTimeout(600);

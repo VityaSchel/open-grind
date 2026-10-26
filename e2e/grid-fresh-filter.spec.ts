@@ -17,7 +17,7 @@ test("Fresh in the filter sheet narrows the grid and stays in step with the top 
 	page,
 }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });

@@ -4,7 +4,7 @@ import { ensureGridLocation, installTauriShim } from "./support/app";
 
 async function openAgeFilter(page: Page) {
 	await page.setViewportSize({ width: 412, height: 915 });
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);

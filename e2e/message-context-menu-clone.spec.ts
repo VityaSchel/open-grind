@@ -23,7 +23,7 @@ const QUOTE = '[data-slot="message-quote"]';
 
 async function openConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });

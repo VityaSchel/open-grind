@@ -13,7 +13,7 @@ function background(element: Locator): Promise<string> {
 }
 
 async function openBrowseTab(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	const browse = page
 		.getByRole("navigation", { name: "Main" })
@@ -55,7 +55,7 @@ test("a hovering pen shows hover styles", async ({ page }) => {
 });
 
 test("a hovering pen highlights the menu item under it", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/profile");
 	const position = page.getByRole("button", { name: /^Position / });
 	await position.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
@@ -76,7 +76,7 @@ test.describe("with a cursor", () => {
 	test("typing in a combobox highlights the first match before the mouse moves", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings/profile");
 		const tags = page.getByRole("combobox", { name: "Tags", exact: true });
 		await tags.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

@@ -137,7 +137,7 @@ test("a toast glides back above the composer when the sheet closes", async ({
 test("an offset change glides the toasts to their new place instead of jumping", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await composer(page).waitFor({ timeout: 60_000 });
 	await showRestingToast({ page, edge: "bottom", label: "Offset probe" });

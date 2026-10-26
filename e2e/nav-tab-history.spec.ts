@@ -13,7 +13,7 @@ const PROFILE_LINK = 'a[href^="/profile/"]';
 test.describe.configure({ timeout: 300_000 });
 
 test("switching interest tabs never grows history", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(TAPS);
 	await page
 		.locator(PROFILE_LINK)
@@ -38,7 +38,7 @@ test("switching interest tabs never grows history", async ({ page }) => {
 test("the Browse tab returns to the grid instead of pushing a duplicate", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page
 		.locator("nav a")

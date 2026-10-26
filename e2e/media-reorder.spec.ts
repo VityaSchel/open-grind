@@ -221,7 +221,7 @@ test.describe("media reorder", () => {
 	test("profile photos reorder without a save round trip", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/settings/profile");
 		await page.locator(CELL).first().waitFor({ timeout: 60_000 });
@@ -345,7 +345,7 @@ test.describe("media reorder while the page scrolls under a held photo", () => {
 	test("a wheel turn keeps the held profile photo under the pointer, and it lands where it is released", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await serveImages(page, CHAT_MEDIA_HOST);
 		await page.goto("/settings/profile");
 		await page.locator(CELL).first().waitFor({ timeout: 60_000 });

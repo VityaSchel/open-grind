@@ -5,7 +5,7 @@ import { installTauriShim } from "./support/app";
 const BLOCKED_LIST = "/settings/account/blocked";
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("account settings link to the profile lists", async ({ page }) => {

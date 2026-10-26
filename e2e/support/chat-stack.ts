@@ -4,6 +4,7 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installEventInjection,
 	installTauriShim,
+	type ShimPlatform,
 } from "./app";
 import { LIVE_STACK } from "./stack-layers";
 
@@ -22,7 +23,10 @@ export const backToChats = (page: Page) =>
 
 export async function openInbox(
 	page: Page,
-	{ platform = "macos", injectEvents = false } = {},
+	{
+		platform = "macos",
+		injectEvents = false,
+	}: { platform?: ShimPlatform; injectEvents?: boolean } = {},
 ) {
 	await installTauriShim(page, { platform });
 	if (injectEvents) await installEventInjection(page);

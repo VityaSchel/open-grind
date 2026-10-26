@@ -49,7 +49,7 @@ export async function openComposerSheet(
 		stretchPanel?: boolean;
 	},
 ): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	if (preferences) await seedPreferences(page, { preferences });
 	await page.goto(DEMO_CONVERSATION);
 	await openSheetFromComposer(page, { trigger, stretchPanel });

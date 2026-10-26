@@ -13,7 +13,7 @@ const SCROLLED_TOP = 1200;
 const ELSEWHERE = "ezs42e44yx96";
 
 async function scrolledIntoGrid(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });
 	const scroller = page.locator(SCROLLER);

@@ -16,7 +16,7 @@ type Tile = { armed: boolean; gapBelow: number; onScreen: boolean };
 
 async function openGrid(page: Page) {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, AVATAR_HOST);
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });

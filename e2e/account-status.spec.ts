@@ -20,7 +20,7 @@ test("ban events explain a blocked network and when a suspension ends", async ({
 	page,
 }) => {
 	test.setTimeout(120_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await openGrid(page);
 	const openedUrls = await captureOpenedUrls(page);
@@ -65,7 +65,7 @@ test("Grindr refusing the app version asks once to update, and the update toast 
 	page,
 }) => {
 	test.setTimeout(120_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	const cascade = await answerDemoRequests(page, {
 		pathPrefix: "/v4/cascade",
 		status: 412,

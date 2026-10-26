@@ -13,7 +13,7 @@ export const CONTROLS = `${ACTIVE_SURFACE} [data-pswp-interactive]`;
 const CLIP = "**/picsum.photos/seed/album-5001-2/600/800";
 
 export async function openClip(page: Page): Promise<void> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await serveImages(page, CHAT_MEDIA_HOST);
 	// left pending on purpose: an errored <video> is swapped for a placeholder
 	await page.route(CLIP, () => {});

@@ -20,7 +20,7 @@ async function navigationNames(page: Page): Promise<string[]> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test.describe("every navigation bar has a name of its own", () => {

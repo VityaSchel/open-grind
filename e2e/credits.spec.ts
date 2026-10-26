@@ -56,7 +56,7 @@ const scrollTop = (page: Page) =>
 	scroller(page).evaluate((el) => Math.round(el.scrollTop));
 
 async function openCredits(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(CREDITS);
 	await rows(page).first().waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 }
@@ -138,7 +138,7 @@ test.describe("credits page", () => {
 	test("each settings page keeps its own scroll offset across Back", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(APP_SETTINGS);
 		const link = page.getByRole("link", { name: "Credits & Licenses" });
 		await link.scrollIntoViewIfNeeded();

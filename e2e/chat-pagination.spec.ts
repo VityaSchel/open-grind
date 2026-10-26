@@ -11,7 +11,7 @@ const MESSAGE = '[data-slot="message"]';
 type AnchorProbe = { anchorDrifts: number[]; sampleAnchor: () => void };
 
 async function openLongConversation(page: Page): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(LONG_CONVERSATION);
 	await page
 		.getByText(NEWEST_MESSAGE, { exact: true })

@@ -128,7 +128,7 @@ test.describe("scrolled to the bottom with unsaved changes", () => {
 		page,
 	}) => {
 		test.setTimeout(120_000);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/settings/profile");
 		const displayName = page.getByRole("textbox", { name: "Display name" });
 		await displayName.waitFor({ timeout: 60_000 });

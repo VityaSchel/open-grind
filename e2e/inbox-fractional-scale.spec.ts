@@ -32,7 +32,7 @@ test.use({
 test("a conversation still waiting to mount takes up exactly the height of its row", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page
 		.locator(`${SCROLLER} ${ROW_LINK}`)

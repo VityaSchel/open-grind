@@ -208,8 +208,8 @@ Before opening a pull request, run the same checks CI runs:
 
 End-to-end tests are a separate tier:
 
-- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the web build and runs the browser serially, which is why it stays out of `bun run test`.
-- `bun run test:e2e:guard` — the layout guard. It builds the web demo for production, then checks every signed-in page and the 404 page at a phone and a desktop size: the bars can't scroll and stay see-through in every blur mode, nothing overflows, and the page structure passes axe. About 5 minutes, build included.
+- `bun run test:e2e` — Playwright. One-time setup: `bunx playwright install chromium`. It drives the demo build in Chromium under a Tauri shim and runs the browser serially, which is why it stays out of `bun run test`.
+- `bun run test:e2e:guard` — the layout guard. It builds the demo for production, then checks every signed-in page and the 404 page at a phone and a desktop size: the bars can't scroll and stay see-through in every blur mode, nothing overflows, and the page structure passes axe. About 5 minutes, build included.
 - `bun run test:android` — JUnit tests for the Android sources. Needs the Android SDK and the Gradle files that `bun run tauri android build` generates, which is why it stays out of `bun run test`.
 
 Local updater testing:

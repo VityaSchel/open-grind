@@ -97,7 +97,7 @@ async function useLowBlur(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test.describe("a top toast rests 8px below the top chrome", () => {

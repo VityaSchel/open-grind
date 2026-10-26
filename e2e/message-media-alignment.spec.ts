@@ -57,7 +57,7 @@ test("a sent photo hugs its own edge and is as wide as a received one", async ({
 	page,
 }) => {
 	await serveImages(page, CHAT_MEDIA_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(CONVERSATION);
 	await page.locator(SCROLLER).waitFor({ timeout: 30_000 });
 	await expect(page.locator(PHOTO)).toHaveCount(1, { timeout: 30_000 });

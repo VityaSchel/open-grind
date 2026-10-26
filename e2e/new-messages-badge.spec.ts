@@ -45,7 +45,7 @@ async function scrollAwayFromFloor(page: Page): Promise<void> {
 test("a message is judged visible against the conversation, not a box of its own", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
@@ -81,7 +81,7 @@ test("a message is judged visible against the conversation, not a box of its own
 test("the scroll-down button rides above the composer at the list's trailing edge", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });
 
@@ -113,7 +113,7 @@ test("the scroll-down button rides above the composer at the list's trailing edg
 test("a message arriving while scrolled away badges the scroll-down button until the floor is revisited", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });

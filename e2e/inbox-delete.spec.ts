@@ -8,6 +8,7 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 	pathname,
+	type ShimPlatform,
 	watchRendered,
 } from "./support/app";
 import {
@@ -24,7 +25,7 @@ import { PHONE } from "./support/stack-layers";
 
 async function openInboxFromHome(
 	page: Page,
-	{ platform }: { platform?: string } = {},
+	{ platform = "macos" }: { platform?: ShimPlatform } = {},
 ) {
 	await page.setViewportSize(WIDE);
 	await installTauriShim(page, { platform });
@@ -136,7 +137,7 @@ test("deleting a conversation opened directly takes its place in history", async
 	page,
 }) => {
 	await page.setViewportSize(WIDE);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 
 	const opened = row(page, { href: DEMO_CONVERSATION });

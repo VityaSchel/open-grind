@@ -31,7 +31,7 @@ test("a width-fit photo reaches the right edge of a fractional-width lightbox", 
 	page,
 }) => {
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(FOUR_PHOTO_PROFILE);
 	const firstPhoto = page.locator(CAROUSEL_ITEM).first();
 	await firstPhoto.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

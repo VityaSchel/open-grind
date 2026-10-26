@@ -34,7 +34,7 @@ test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("returns to the screen the profile was opened from", async ({ page }) => {

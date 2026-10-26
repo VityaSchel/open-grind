@@ -27,7 +27,7 @@ type Rect = { top: number; width: number; height: number };
 async function enterConversation(page: Page): Promise<void> {
 	await serveImages(page, CHAT_MEDIA_HOST);
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page.locator(ALBUM_TRIGGER).first().waitFor({ timeout: 60_000 });
 }
@@ -39,7 +39,7 @@ async function openAlbum(page: Page): Promise<void> {
 
 async function enterFourPhotoProfile(page: Page): Promise<void> {
 	await serveImages(page, AVATAR_HOST);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(FOUR_PHOTO_PROFILE);
 	await expect(page.locator(CAROUSEL_PHOTO)).toHaveCount(4, {
 		timeout: 120_000,

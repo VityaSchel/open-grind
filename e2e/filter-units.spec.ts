@@ -69,7 +69,7 @@ async function pickInImperial(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
 });
 

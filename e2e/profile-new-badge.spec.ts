@@ -20,7 +20,7 @@ async function openProfile(
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("marks a recently joined profile as new", async ({ page }) => {

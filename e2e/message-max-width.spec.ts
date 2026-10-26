@@ -7,6 +7,7 @@ import {
 	installEventInjection,
 	installTauriShim,
 	MESSAGE_ROW,
+	type ShimPlatform,
 } from "./support/app";
 
 const ME = 123456000;
@@ -130,7 +131,7 @@ function message({
 
 async function openConversation(
 	page: Page,
-	{ width, platform = "macos" }: { width: number; platform?: string },
+	{ width, platform = "macos" }: { width: number; platform?: ShimPlatform },
 ): Promise<void> {
 	await page.setViewportSize({ width, height: 800 });
 	await installTauriShim(page, { platform });

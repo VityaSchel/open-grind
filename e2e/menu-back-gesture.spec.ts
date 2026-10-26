@@ -74,7 +74,7 @@ test("Back closes the profile menu and stays, the next Back leaves", async ({
 test("an open menu keeps the back gesture from sliding the settings page", async ({
 	page,
 }) => {
-	await openSharedAlbum(page);
+	await openSharedAlbum(page, { platform: "android" });
 	expect(await startSystemBack(page), "the page slides with no menu").toBe(
 		true,
 	);

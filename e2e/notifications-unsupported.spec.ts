@@ -14,7 +14,7 @@ const SCREENS = [
 	{ name: "a 420 × 800 phone", viewport: { width: 420, height: 800 } },
 	{ name: "a 1040 × 800 desktop", viewport: { width: 1040, height: 800 } },
 ];
-const UNSUPPORTED = { platform: "ios", named: "this platform" };
+const UNSUPPORTED = { platform: "ios", named: "this platform" } as const;
 
 test.describe.configure({ timeout: 180_000 });
 

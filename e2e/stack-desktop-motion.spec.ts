@@ -144,7 +144,7 @@ for (const { platform, travel, settleMs } of [
 	{ platform: "macos", travel: 0, settleMs: 250 },
 	{ platform: "windows", travel: 40, settleMs: 300 },
 	{ platform: "linux", travel: 0, settleMs: 250 },
-]) {
+] as const) {
 	test(`on ${platform} a settings page fades in over the page behind and fades back out, moving ${travel} px`, async ({
 		page,
 	}) => {
@@ -183,7 +183,7 @@ test.describe("a narrow macOS window", () => {
 	test("a conversation fades in over the chat list and fades back out without moving either", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		const conversation = page.locator('a[href^="/chat/"]:visible').nth(1);
 		await conversation.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
@@ -219,7 +219,7 @@ test.describe("a narrow macOS window", () => {
 	test("another conversation opens through the one still fading out", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		const conversations = page.locator('a[href^="/chat/"]:visible');
 		await conversations.nth(2).waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });

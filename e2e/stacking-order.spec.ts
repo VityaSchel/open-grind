@@ -87,7 +87,7 @@ function stackLevels(layers: Locator): Promise<number[]> {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 for (const { trigger, url, edge } of MENUS_REACHING_A_TOAST) {

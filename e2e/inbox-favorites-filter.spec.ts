@@ -21,7 +21,7 @@ async function listedConversations(page: Page): Promise<string[]> {
 test("the inbox star filter narrows the list to favorites and back", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
@@ -44,7 +44,7 @@ test("the inbox star filter narrows the list to favorites and back", async ({
 test("unstarring the last favorite leaves the filter with no results", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
@@ -70,7 +70,7 @@ test("unstarring the last favorite leaves the filter with no results", async ({
 });
 
 test("leaving the chat section clears the filter", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
@@ -95,7 +95,7 @@ test("leaving the chat section clears the filter", async ({ page }) => {
 test("the filter is session-only and its bar stays pinned while scrolling", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
@@ -121,7 +121,7 @@ test("the filter is session-only and its bar stays pinned while scrolling", asyn
 test("the refresh control anchors below the filters bar, not under it", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 
@@ -141,7 +141,7 @@ test("the refresh control anchors below the filters bar, not under it", async ({
 test("selection mode takes the filters bar away and gives it back", async ({
 	page,
 }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/chat");
 	await page.locator(CONVERSATION_LINK).first().waitFor({ timeout: 60_000 });
 

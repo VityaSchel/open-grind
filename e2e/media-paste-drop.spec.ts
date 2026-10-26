@@ -63,7 +63,7 @@ function bottomOf(locator: Locator): Promise<number> {
 }
 
 async function openChat(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	const composer = page.getByPlaceholder("Say something...");
 	await composer.waitFor({ timeout: 30_000 });

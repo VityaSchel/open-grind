@@ -52,7 +52,7 @@ async function openProfileMenu({
 	page: Page;
 	profile: string;
 }) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(profile);
 	await page.getByLabel("Profile menu").click();
 	await page.getByRole("menuitem", { name: "Hide profile" }).waitFor();

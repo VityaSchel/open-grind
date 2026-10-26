@@ -12,7 +12,7 @@ import { ALBUM_TILE } from "./support/drawer";
 const DEMO_PROFILE = "/profile/100001";
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test.describe("every control has an accessible name", () => {

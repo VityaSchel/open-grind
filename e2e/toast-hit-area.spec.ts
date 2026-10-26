@@ -34,7 +34,7 @@ async function showPinnedToast(
 
 test.describe("a toast that cannot be swiped away", () => {
 	test.beforeEach(async ({ page }) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/");
 		await showPinnedToast(page);
 	});

@@ -63,7 +63,7 @@ export async function installFakeOverscroll(page: Page): Promise<void> {
 }
 
 export async function openInbox(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installFakeOverscroll(page);
 	await page.goto("/chat");
 	await page

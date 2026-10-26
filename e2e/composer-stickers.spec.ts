@@ -520,7 +520,7 @@ test.describe("composer geometry", () => {
 	test("the one-line composer is 44px tall and every button spans it", async ({
 		page,
 	}) => {
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto(DEMO_CONVERSATION);
 		const textarea = page.locator(
 			'[data-slot="message-composer"] textarea',

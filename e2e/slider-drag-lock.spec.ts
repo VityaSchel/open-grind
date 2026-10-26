@@ -34,7 +34,7 @@ interface Surface {
 
 async function openBrowse(page: Page) {
 	await page.setViewportSize(VIEWPORT);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page
 		.locator("nav a")
@@ -72,7 +72,7 @@ const DISTANCE_QUICK_FILTER: Surface = {
 	thumb: "Maximum distance",
 	open: async (page) => {
 		await page.setViewportSize(VIEWPORT);
-		await installTauriShim(page);
+		await installTauriShim(page, { platform: "macos" });
 		await page.goto("/chat");
 		const pill = page.getByRole("button", {
 			name: "Distance",

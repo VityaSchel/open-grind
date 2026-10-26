@@ -46,7 +46,7 @@ async function openRefreshableTaps(page: Page) {
 
 async function openBrowse(page: Page) {
 	test.setTimeout(GRID_PREPARE_MS);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	await page.locator(BROWSE_TILE).first().waitFor();
 	await page.locator("[data-refresh-phase]").waitFor({ state: "attached" });
@@ -54,7 +54,7 @@ async function openBrowse(page: Page) {
 }
 
 async function openConversation(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	await page
 		.locator(MESSAGE_ROW)

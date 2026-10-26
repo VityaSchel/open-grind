@@ -7,7 +7,7 @@ import { activeProfilePane } from "./support/profile-pager";
 const GRID_CARD = '.photo-grid a[href^="/profile/"]';
 
 async function openFirstGridProfile(page: Page): Promise<string> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);

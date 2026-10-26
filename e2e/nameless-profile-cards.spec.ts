@@ -6,7 +6,7 @@ const CARD = '.photo-grid a[href^="/profile/"]';
 const NAMELESS = { hasText: "Someone" };
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("a grid profile without a display name still shows its online dot", async ({

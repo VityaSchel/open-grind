@@ -7,14 +7,11 @@ import {
 	MESSAGE_ROW,
 } from "./support/app";
 
-// The default shim platform is macos, so these pages run the gesture-phase
-// bridge; its scroll:gesture events are injected the same way the app would
-// receive them from AppKit, while real mouse wheels feed the axis decision.
 const CONVERSATION = "/chat/100001:123456000";
 const SCROLLER = '[data-slot="messages-scroller"]';
 
 async function openConversation(page: Page) {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(CONVERSATION);
 	await page.locator(MESSAGE_ROW).first().waitFor({ timeout: 60_000 });

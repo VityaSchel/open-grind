@@ -59,14 +59,14 @@ test("swipes replace the history entry, so Back and Browse return to the grid", 
 });
 
 test("a profile opened by link stands alone", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/profile/100002");
 
 	await expectSingleStop(page);
 });
 
 test("a profile opened from a chat stands alone", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto(DEMO_CONVERSATION);
 	const avatar = page.locator('a[href^="/profile/"]:visible').first();
 	await avatar.waitFor({ timeout: 180_000 });
@@ -76,7 +76,7 @@ test("a profile opened from a chat stands alone", async ({ page }) => {
 });
 
 test("a profile opened from Taps stands alone", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/interest/taps");
 	const tap = page.locator('a[href^="/profile/"]').first();
 	await tap.waitFor({ timeout: 180_000 });

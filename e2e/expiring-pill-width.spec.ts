@@ -82,7 +82,7 @@ const PILLS: Pill[] = [
 ];
 
 async function openPill(page: Page, pill: Pill): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installEventInjection(page);
 	await page.goto(`/chat/${CONVERSATION_ID}`);
 	await page

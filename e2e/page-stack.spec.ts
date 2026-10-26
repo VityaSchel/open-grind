@@ -542,7 +542,7 @@ test("a modal opened from settings covers both panes and the nav bar", async ({
 });
 
 test("a field popover in settings opens above the pane", async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/settings/profile");
 
 	const toggle = page.getByRole("button", { name: "Toggle list" }).first();

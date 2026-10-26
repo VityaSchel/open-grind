@@ -31,7 +31,7 @@ for (const screen of SCREENS) {
 			test(`${surface.name} fits the screen, keeps its bars still and see-through, and has a sound structure`, async ({
 				page,
 			}) => {
-				await installTauriShim(page);
+				await installTauriShim(page, { platform: "macos" });
 				await page.goto(surface.path);
 				await surface.ready(page);
 				await settle(page);

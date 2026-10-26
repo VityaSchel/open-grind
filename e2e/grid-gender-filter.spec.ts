@@ -52,7 +52,7 @@ async function storedGenderFilter(page: Page) {
 
 test.beforeEach(async ({ page }) => {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await installPersistentAppData(page);
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });

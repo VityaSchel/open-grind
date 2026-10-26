@@ -28,7 +28,7 @@ export function profileUrl(profileId: number): RegExp {
 }
 
 export async function openBrowse(page: Page): Promise<number[]> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await openGrid(page);
 	const tiles = page.locator(GRID_TILE);
 	await tiles.nth(8).waitFor({ timeout: 60_000 });

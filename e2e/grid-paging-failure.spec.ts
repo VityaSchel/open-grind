@@ -100,7 +100,7 @@ async function openFailingGrid({
 	latencyMs: number;
 	status: number;
 }): Promise<Locator> {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await injectCascadeFaults(page);
 	await openGrid(page);
 	await page.locator(PROFILE_LINK).first().waitFor({ timeout: 60_000 });

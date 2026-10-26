@@ -9,7 +9,7 @@ const PAGES_TO_LOAD = 5;
 
 async function openGrid(page: Page) {
 	test.setTimeout(180_000);
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await ensureGridLocation(page);

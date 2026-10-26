@@ -11,7 +11,7 @@ test("leaflet is not loaded until the location picker opens", async ({
 		if (/leaflet/i.test(request.url())) leafletRequests.push(request.url());
 	});
 
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 	await page.goto("/");
 	await page.locator("nav a").first().waitFor({ timeout: 120_000 });
 	await page.getByRole("button", { name: "Pick manually" }).waitFor();

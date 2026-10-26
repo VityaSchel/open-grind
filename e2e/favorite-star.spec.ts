@@ -11,7 +11,7 @@ function starIn(page: Page, rowHref: string) {
 }
 
 test.beforeEach(async ({ page }) => {
-	await installTauriShim(page);
+	await installTauriShim(page, { platform: "macos" });
 });
 
 test("only the favorited conversation is starred", async ({ page }) => {
