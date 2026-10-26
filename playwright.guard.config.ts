@@ -8,6 +8,7 @@ export default defineConfig({
 	...base,
 	testIgnore: [],
 	testMatch: "layout-guard.spec.ts",
+	fullyParallel: true,
 	use: { ...base.use, baseURL: `http://localhost:${PORT}` },
 	webServer: {
 		command: `bunx vite build && bunx vite preview --port ${PORT} --strictPort`,
