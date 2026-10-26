@@ -5,7 +5,8 @@ import { routeDemoThroughFaultHook } from "./support/demo-faults";
 import { refreshButton } from "./support/pull";
 
 const SCROLLER = ".pull-scroller";
-const PROFILE_LINK = '[data-slot="grid-cells"] a[href^="/profile/"]';
+const GRID = '[data-slot="grid-cells"]';
+const PROFILE_LINK = `${GRID} a[href^="/profile/"]`;
 const TOAST = "[data-sonner-toast]";
 const FIRST_RETRY_MS = 2_000;
 const SECOND_RETRY_MS = 6_000;
@@ -229,6 +230,7 @@ test("a pull-to-refresh lifts a failed next page", async ({ page }) => {
 
 	await scroller.evaluate((el) => el.scrollTo({ top: 0 }));
 	await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0);
+	await expect(page.locator(GRID)).not.toHaveAttribute("data-rows-above");
 	const box = await page.locator(PROFILE_LINK).first().boundingBox();
 	if (box === null) throw new Error("the grid shows no profile");
 	await wheel(
