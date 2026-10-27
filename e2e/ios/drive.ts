@@ -43,11 +43,29 @@ async function build(destination: string): Promise<string> {
 	return run;
 }
 
+const usage = `usage: bun e2e/ios/drive.ts <steps.json | '[{"tap":"Get started"}]'>
+
+Steps (labels match label, identifier or placeholder; points are normalized 0..1):
+	{"launch": true} | {"activate": true} | {"home": true}
+	{"rotate": "portrait" | "landscapeLeft" | "landscapeRight"}
+	{"pasteboardImage": "<host png path>"}
+	{"tap": label} | {"tapIfPresent": label} | {"doubleTap": label}
+	{"press": label, "seconds": 1}
+	{"springboard": label} taps a SpringBoard element, such as a system alert button ("Allow While Using App")
+	{"tapAt": [x, y]} | {"drag": [x1, y1, x2, y2]}
+	{"dragHold": {"path": [x1, y1, x2, y2], "hold": 2, "velocity": 1000, "screenshot": path, "tree": path}}
+	{"type": text} | {"swipe": "up" | "down" | "left" | "right", "on": label}
+	{"wait": seconds} | {"expect": label} | {"expectGone": label} | {"keyboard": true | false}
+	{"screenshot": "<host path>"} | {"tree": "<host path>"}
+
+dragHold presses, drags at velocity points/s and holds without lifting; it captures once, about hold/2 into the hold, timed from the call because the gesture runs as one synthesized event. The gesture starts about 0.5 s after the call, so keep hold at 2 s or more.
+Screenshots keep the portrait pixel buffer, so landscape content comes out rotated; tree frames follow the app's orientation.
+Runs that need the software keyboard need: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false`;
+
 const [stepsArgument] = Bun.argv.slice(2);
 if (!stepsArgument) {
-	throw new Error(
-		'usage: bun e2e/ios/drive.ts <steps.json | \'[{"tap":"Get started"}]\'>',
-	);
+	console.error(usage);
+	process.exit(2);
 }
 
 const udid = await simulatorId();
@@ -66,7 +84,7 @@ if (stepsArgument.trimStart().startsWith("[")) {
 }
 
 const result =
-	await $`${xcrun} xcodebuild test-without-building -xctestrun ${run} -destination ${destination} -only-testing:OpenGrindUITests/Driver/testSteps`
+	await $`${xcrun} xcodebuild test-without-building -xctestrun ${run} -destination ${destination} -only-testing:OpenGrindUITests/Driver/testSteps -collect-test-diagnostics never`
 		.env({ ...process.env, TEST_RUNNER_OG_STEPS: stepsPath })
 		.nothrow()
 		.quiet();
