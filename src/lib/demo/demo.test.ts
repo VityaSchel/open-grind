@@ -269,6 +269,18 @@ describe("demo route data matches the real schemas", () => {
 		apiResponseMessageSchema.parse(body);
 	});
 
+	it("sending a location preserves its coordinates", () => {
+		const body = { lat: 52.52, lon: 13.405 };
+		const sent = apiResponseMessageSchema.parse(
+			route("/v4/chat/message/send", "POST", {
+				type: "Location",
+				target: { type: "Direct", targetId: 100001 },
+				body,
+			}),
+		);
+		expect(sent).toMatchObject({ type: "Location", body });
+	});
+
 	it("sending media echoes it back under the type it was sent as", () => {
 		const send = (type: string, body: unknown) =>
 			apiResponseMessageSchema.parse(

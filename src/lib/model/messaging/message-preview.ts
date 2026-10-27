@@ -59,9 +59,10 @@ export function previewFromMessage(
 
 const EXPIRING_VIDEO_TYPES = new Set(["Video", "PrivateVideo"]);
 
-const STICKER_LABELS: Record<string, string> = {
+const PREVIEW_LABELS: Record<string, string> = {
 	Gaymoji: "Gaymoji",
 	Giphy: "GIF",
+	Location: "Location",
 };
 
 export function previewLabel(
@@ -70,8 +71,8 @@ export function previewLabel(
 	if (preview === null || preview === undefined) return null;
 	const text = preview.text ?? null;
 	if (text !== null) return text;
-	const sticker = STICKER_LABELS[preview.type];
-	if (sticker !== undefined) return sticker;
+	const label = PREVIEW_LABELS[preview.type];
+	if (label !== undefined) return label;
 	if ((preview.albumId ?? null) !== null) return "Album";
 	if (preview.type === "ExpiringImage") return "Expiring image";
 	if (EXPIRING_VIDEO_TYPES.has(preview.type)) return "Expiring video";
@@ -86,7 +87,6 @@ const QUOTE_LABELS: Record<string, string> = {
 	Audio: "Voice message",
 	NonExpiringVideo: "Video",
 	VideoCall: "Video call",
-	Location: "Location",
 	ProfileLink: "Profile",
 	ProfilePhotoReply: "Photo",
 	AlbumContentReaction: "Album",
