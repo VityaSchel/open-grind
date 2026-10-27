@@ -307,6 +307,11 @@ pub fn run() {
                 .cloned()
                 .collect();
             for window in deferred {
+                #[cfg(target_os = "ios")]
+                let window = tauri::utils::config::WindowConfig {
+                    allow_link_preview: false,
+                    ..window
+                };
                 let builder =
                     tauri::WebviewWindowBuilder::from_config(app.handle(), &window)?
                         .user_agent(&user_agent)

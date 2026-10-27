@@ -185,6 +185,7 @@ body {
 	overscroll-behavior: none;
 	user-select: none;
 	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 	--nav-height: 4rem;
 	--slider-thumb-size: 1.5rem;
 	--selection-bar-height: 4.75rem;
@@ -202,6 +203,13 @@ body {
 
 a {
 	-webkit-user-drag: none;
+}
+
+input,
+textarea,
+[contenteditable],
+.select-text {
+	-webkit-touch-callout: default;
 }
 
 [class^="scroll-lock-"] {
