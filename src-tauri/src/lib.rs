@@ -171,9 +171,12 @@ pub fn run() {
 
 	let builder = builder.plugin(api::push::plugin());
 
+	let builder = builder.plugin(open_grind_platform_plugin());
+
+	#[cfg(desktop)]
+	let builder = builder.plugin(tauri_plugin_dialog::init());
+
 	let builder = builder
-		.plugin(open_grind_platform_plugin())
-		.plugin(tauri_plugin_dialog::init())
 		.plugin(tauri_plugin_clipboard_manager::init())
 		.plugin(tauri_plugin_os::init())
 		.plugin(tauri_plugin_geolocation::init())

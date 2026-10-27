@@ -36,7 +36,6 @@
 			]
 		},
 		"clipboard-manager:default",
-		"clipboard-manager:allow-write-text",
-		"dialog:allow-open"
+		"clipboard-manager:allow-write-text"
 	]
 }
