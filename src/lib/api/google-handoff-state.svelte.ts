@@ -1,3 +1,19 @@
+import { currentPlatform } from "$lib/platform/os";
+
+export type GoogleSignInMode = "companion" | "paste";
+
+export function googleSignInMode(): GoogleSignInMode {
+	switch (currentPlatform()) {
+		case "android":
+			return "companion";
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return "paste";
+	}
+}
+
 export type GoogleHandoffPhase =
 	| "idle"
 	| "confirmingSwitch"

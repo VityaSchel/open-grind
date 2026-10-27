@@ -7,11 +7,11 @@ import { signedInProfileId } from "$lib/api/current-session";
 import {
 	confirmAccountSwitch,
 	googleHandoffState,
+	googleSignInMode,
 } from "$lib/api/google-handoff-state.svelte";
 import { signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { signOut } from "$lib/api/sign-out";
-import { currentPlatform } from "$lib/platform/os";
 import { delay } from "$lib/util/delay";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
@@ -19,18 +19,6 @@ const GOOGLE_SIGN_IN = "/auth/sign-in/google";
 const EXPIRED = "That Google sign-in expired. Try again.";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
-
-function handoffAvailableHere(): boolean {
-	switch (currentPlatform()) {
-		case "android":
-			return true;
-		case "ios":
-		case "linux":
-		case "macos":
-		case "windows":
-			return false;
-	}
-}
 
 async function pending(): Promise<boolean> {
 	try {
@@ -115,7 +103,7 @@ export function consumeGoogleHandoff(): Promise<void> {
 }
 
 export async function startGoogleHandoffWatch(): Promise<() => void> {
-	if (!handoffAvailableHere()) return () => {};
+	if (googleSignInMode() !== "companion") return () => {};
 
 	const unlisten = await listen(HANDOFF_EVENT, () => {
 		void consumeGoogleHandoff();

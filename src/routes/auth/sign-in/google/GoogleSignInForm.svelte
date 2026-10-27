@@ -2,7 +2,10 @@
 	import { page } from "$app/state";
 	import { toast } from "svelte-sonner";
 
-	import { googleHandoffState } from "$lib/api/google-handoff-state.svelte";
+	import {
+		googleHandoffState,
+		googleSignInMode,
+	} from "$lib/api/google-handoff-state.svelte";
 	import { callMethod } from "$lib/api/methods";
 	import {
 		companionDisabled,
@@ -33,7 +36,6 @@
 	import { installedFromFdroid } from "$lib/updates/capability.svelte";
 	import { manualInstallHref } from "$lib/updates/manual-install";
 	import {
-		googleSignInMode,
 		googleSignInView,
 		installButton,
 		stageAwaitsUser,

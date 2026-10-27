@@ -1,19 +1,4 @@
-import { currentPlatform } from "$lib/platform/os";
 import type { UpdateStage } from "$lib/updates/stage";
-
-export type GoogleSignInMode = "companion" | "paste";
-
-export function googleSignInMode(): GoogleSignInMode {
-	switch (currentPlatform()) {
-		case "android":
-			return "companion";
-		case "ios":
-		case "linux":
-		case "macos":
-		case "windows":
-			return "paste";
-	}
-}
 
 export type GoogleSignInView = "install" | "continue" | "paste";
 
