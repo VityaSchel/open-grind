@@ -19,6 +19,8 @@ use tokio::sync::oneshot;
 
 use crate::MAIN_WINDOW_LABEL;
 
+pub const UNAVAILABLE: &str = "Couldn't show the sign-in page";
+
 thread_local! {
 	static PRESENTED: RefCell<Option<Presented>> = const { RefCell::new(None) };
 }
@@ -83,7 +85,10 @@ pub async fn present(
 		let _ = page_window.with_webview(move |page_webview| {
 			let page = page_webview.inner() as usize;
 			let sign_in = SignInWindow { app, label };
-			let outcome = match MainThreadMarker::new() {
+			let report = move |outcome| {
+				let _ = shown_tx.send(outcome);
+			};
+			match MainThreadMarker::new() {
 				Some(mtm) => unsafe {
 					show(
 						mtm,
@@ -91,11 +96,11 @@ pub async fn present(
 						page as *mut UIView,
 						title,
 						sign_in,
-					)
+						report,
+					);
 				},
-				None => Err("not on the main thread"),
-			};
-			let _ = shown_tx.send(outcome);
+				None => report(Err("not on the main thread")),
+			}
 		});
 	})
 	.map_err(|e| e.to_string())?;
@@ -119,13 +124,15 @@ unsafe fn show(
 	page: *mut UIView,
 	title: &str,
 	sign_in: SignInWindow,
-) -> Result<(), &'static str> {
+	report: impl FnOnce(Result<(), &'static str>) + 'static,
+) {
 	let (Some(host), Some(page)) =
 		(unsafe { Retained::retain(host) }, unsafe {
 			Retained::retain(page)
 		})
 	else {
-		return Err("the sign-in views are gone");
+		report(Err("the sign-in views are gone"));
+		return;
 	};
 
 	if let Some(window) = page.window() {
@@ -181,23 +188,22 @@ unsafe fn show(
 			controller.setDelegate(Some(ProtocolObject::from_ref(&*delegate)))
 		};
 	}
-	let mut presenter = host;
-	while let Some(presented) = presenter.presentedViewController() {
-		presenter = presented;
-	}
-	presenter.presentViewController_animated_completion(
-		&navigation,
-		true,
-		None,
+	let sheet = Presented {
+		navigation: navigation.clone(),
+		_delegate: delegate,
+	};
+	crate::presenting::present_on_top(
+		host,
+		Retained::into_super(navigation),
+		move |outcome| {
+			if outcome.is_ok() {
+				PRESENTED.with(|presented| {
+					*presented.borrow_mut() = Some(sheet);
+				});
+			}
+			report(outcome);
+		},
 	);
-
-	PRESENTED.with(|presented| {
-		*presented.borrow_mut() = Some(Presented {
-			navigation,
-			_delegate: delegate,
-		});
-	});
-	Ok(())
 }
 
 fn hide_top_edge_effect(page: &UIView) {

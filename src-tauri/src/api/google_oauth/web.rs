@@ -147,8 +147,10 @@ async fn run_flow(
 	if let Err(e) =
 		crate::api::oauth::sheet::present(&window, "Sign in with Google").await
 	{
-		tracing::warn!("[oauth] could not show the sign-in sheet: {e}");
-		bridge.fulfill(Err(CANCELED.to_owned()));
+		bridge.fulfill(Err(format!(
+			"{}: {e}",
+			crate::api::oauth::sheet::UNAVAILABLE
+		)));
 	}
 
 	let bridge_for_close = bridge.clone();

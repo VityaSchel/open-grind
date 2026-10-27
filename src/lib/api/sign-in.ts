@@ -31,6 +31,8 @@ export const refusedCompanionMessage =
 export const disabledCompanionMessage =
 	"The Open Grind Google OAuth app is turned off. Turn it on in Android settings, then try again.";
 
+const unavailablePageMessage = "Couldn't show the sign-in page";
+
 export function finishSignIn(result: {
 	restriction?: Restriction | null;
 }): void {
@@ -57,6 +59,10 @@ export function reportSignInFailure({
 	if (blockedKind && markRequestBlocked({ kind: blockedKind })) return;
 	if (appError?.kind === "Auth" && typeof appError.message === "string") {
 		if (appError.message === "Sign-in canceled") return;
+		if (appError.message.startsWith(`${unavailablePageMessage}: `)) {
+			showErrorToast({ label: unavailablePageMessage, error });
+			return;
+		}
 		if (appError.message === "account not registered") {
 			toast.error(
 				"Account not registered in Grindr. Register first using the official Grindr app",

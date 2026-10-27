@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }));
+const { toastError, promptCopyError } = vi.hoisted(() => ({
+	toastError: vi.fn(),
+	promptCopyError: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock("$app/navigation", () => ({ goto: vi.fn() }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
+vi.mock("$lib/api/error-copy", () => ({ promptCopyError }));
 
 import { clearAccountCaches } from "$lib/api/account-caches";
 import { accountStatusState } from "$lib/api/account-status-state.svelte";
@@ -33,6 +37,33 @@ describe("reportSignInFailure", () => {
 			expect(toastError).not.toHaveBeenCalled();
 		},
 	);
+
+	it("names the sign-in page it couldn't show and keeps the reason for Copy details", () => {
+		const error = {
+			kind: "Auth",
+			message:
+				"Couldn't show the sign-in page: UIKit refused the presentation",
+		};
+
+		reportSignInFailure({ error });
+
+		expect(toastError).toHaveBeenCalledExactlyOnceWith(
+			"Couldn't show the sign-in page",
+			expect.objectContaining({
+				action: expect.objectContaining({ label: "Copy details" }),
+			}),
+		);
+		toastError.mock.calls[0]?.[1].action.onClick();
+		expect(promptCopyError).toHaveBeenCalledExactlyOnceWith(error);
+	});
+
+	it("stays quiet when the person cancels the sign-in page", () => {
+		reportSignInFailure({
+			error: { kind: "Auth", message: "Sign-in canceled" },
+		});
+
+		expect(toastError).not.toHaveBeenCalled();
+	});
 
 	it("keeps showing other API errors as a toast", () => {
 		reportSignInFailure({
