@@ -42,6 +42,9 @@ final class Driver: XCTestCase {
 				try rejectUnknownKeys(in: options, known: Self.dragHoldKeys, of: "step \(index + 1) dragHold")
 			}
 		}
+		if steps.contains(where: { $0["pasteboardText"] != nil }) {
+			addTeardownBlock { UIPasteboard.general.items = [] }
+		}
 		let app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
 
 		for (index, step) in steps.enumerated() {
@@ -69,7 +72,11 @@ final class Driver: XCTestCase {
 			guard UIPasteboard.general.hasImages else { throw failure("pasteboard holds no image") }
 		}
 		if let path: String = try value("pasteboardText", in: step) {
-			UIPasteboard.general.string = try String(contentsOfFile: path, encoding: .utf8)
+			let text = try String(contentsOfFile: path, encoding: .utf8)
+			UIPasteboard.general.setItems(
+				[["public.utf8-plain-text": text]],
+				options: [.expirationDate: Date(timeIntervalSinceNow: 60)]
+			)
 			guard UIPasteboard.general.hasStrings else { throw failure("pasteboard holds no text") }
 		}
 		if let label: String = try value("tap", in: step) {

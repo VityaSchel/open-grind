@@ -69,7 +69,7 @@ An unknown step key fails the run before any step runs; a wrongly typed value or
 Steps (labels match label, identifier or placeholder; points are normalized 0..1):
 	{"launch": true} | {"activate": true} | {"home": true}
 	{"rotate": "portrait" | "landscapeLeft" | "landscapeRight"}
-	{"pasteboardImage": "<host png path>"} | {"pasteboardText": "<host text file path>"} (for secrets: the text never enters a log, unlike "type")
+	{"pasteboardImage": "<host png path>"} | {"pasteboardText": "<host text file path>"} (for secrets: the text never enters a log, unlike "type", expires after 60 s and is cleared when the run ends)
 	{"tap": label} | {"tapIfPresent": label} | {"doubleTap": label} | {"tapSecure": label} (a secure text field, not its <label>)
 	{"press": label, "seconds": 1}
 	{"springboard": label} taps a SpringBoard element, such as a system alert button ("Allow While Using App")
@@ -81,7 +81,8 @@ Steps (labels match label, identifier or placeholder; points are normalized 0..1
 
 dragHold presses, drags at velocity points/s and holds without lifting; it captures once, about hold/2 into the hold, timed from the call because the gesture runs as one synthesized event. The gesture starts about 0.5 s after the call, so keep hold at 2 s or more.
 Screenshots keep the portrait pixel buffer, so landscape content comes out rotated; tree frames follow the app's orientation.
-Runs that need the software keyboard need: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false`;
+Runs that need the software keyboard need: defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
+Runs that paste secrets need: defaults write com.apple.iphonesimulator PasteboardAutomaticSync -bool false (or a running Simulator app copies them to the Mac clipboard)`;
 
 const [stepsArgument] = Bun.argv.slice(2);
 if (!stepsArgument) {
