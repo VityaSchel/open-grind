@@ -19,13 +19,15 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
+pub use baseline::InstallKind;
 pub use download::Progress;
 pub use error::UpdateError;
 #[cfg(target_os = "macos")]
 pub use install::enforce_home;
-pub use install::TransferHold;
+#[cfg(target_os = "android")]
+pub use install::AndroidUpdater;
 
-use baseline::{Baseline, InstallKind};
+use baseline::Baseline;
 use release::Candidate;
 
 #[derive(Default)]

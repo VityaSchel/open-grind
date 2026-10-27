@@ -1,23 +1,10 @@
 use std::time::{Duration, Instant};
 
-use tauri::{AppHandle, Runtime};
+use tauri::Runtime;
 
-use super::super::baseline::InstallKind;
-use super::super::component::{self, Component};
-use super::super::release::Candidate;
-use super::platform;
+use super::{platform, TransferHold};
 
 const REPORT_INTERVAL: Duration = Duration::from_secs(1);
-
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
-#[derive(Debug, Clone, Copy)]
-pub(super) enum TransferPurpose {
-	Update {
-		package_name: &'static str,
-		kind: InstallKind,
-	},
-	MediaUpload,
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TransferProgress {
@@ -39,38 +26,7 @@ impl TransferProgress {
 	}
 }
 
-pub struct TransferHold<'a, R: Runtime> {
-	app: &'a AppHandle<R>,
-	purpose: TransferPurpose,
-	reported: Option<(TransferProgress, Instant)>,
-}
-
-impl<'a, R: Runtime> TransferHold<'a, R> {
-	pub fn update(app: &'a AppHandle<R>, candidate: &Candidate) -> Self {
-		let package_name = component::by_key(&candidate.component)
-			.map_or(component::SELF_PACKAGE, Component::install_target);
-		Self::begin(
-			app,
-			TransferPurpose::Update {
-				package_name,
-				kind: candidate.kind,
-			},
-		)
-	}
-
-	pub fn media_upload(app: &'a AppHandle<R>) -> Self {
-		Self::begin(app, TransferPurpose::MediaUpload)
-	}
-
-	fn begin(app: &'a AppHandle<R>, purpose: TransferPurpose) -> Self {
-		platform::begin_transfer(app, purpose);
-		Self {
-			app,
-			purpose,
-			reported: None,
-		}
-	}
-
+impl<R: Runtime> TransferHold<'_, R> {
 	pub fn report(&mut self, progress: TransferProgress) {
 		let now = Instant::now();
 		if !progress.due(self.reported, now) {
@@ -78,12 +34,6 @@ impl<'a, R: Runtime> TransferHold<'a, R> {
 		}
 		self.reported = Some((progress, now));
 		platform::report_transfer(self.app, self.purpose, progress);
-	}
-}
-
-impl<R: Runtime> Drop for TransferHold<'_, R> {
-	fn drop(&mut self) {
-		platform::end_transfer(self.app, self.purpose);
 	}
 }
 

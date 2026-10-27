@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { invokeMock, listenMock, demo } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
@@ -10,6 +10,7 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
 vi.mock("$lib/demo", () => demo);
 
+import { resetPlatform, runningOn } from "$lib/test/platform";
 import {
 	asUpdateError,
 	cancelUpdateDownload,
@@ -24,6 +25,7 @@ import {
 	onUpdateProgress,
 	setAutomaticUpdateChecks,
 	startUpdateDownload,
+	updatesAvailableHere,
 } from "$lib/updates";
 import { stageOf } from "$lib/updates/stage";
 import type { Progress } from "$lib/updates/types";
@@ -53,6 +55,57 @@ beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset();
 	demo.demoEnabled = false;
+	runningOn("android");
+});
+
+afterEach(resetPlatform);
+
+describe("where updates exist", () => {
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"updates %s",
+		(platform) => {
+			runningOn(platform);
+			expect(updatesAvailableHere()).toBe(true);
+		},
+	);
+
+	it.each(["android", "linux", "macos", "windows"] as const)(
+		"leaves %s alone in the demo",
+		(platform) => {
+			runningOn(platform);
+			demo.demoEnabled = true;
+			expect(updatesAvailableHere()).toBe(false);
+		},
+	);
+
+	it("never updates iOS, whose app ships no updater", () => {
+		runningOn("ios");
+		expect(updatesAvailableHere()).toBe(false);
+	});
+});
+
+describe("on iOS", () => {
+	beforeEach(() => {
+		runningOn("ios");
+	});
+
+	it("reports no capability or readiness without asking the backend", async () => {
+		expect(await getUpdateCapability()).toMatchObject({
+			state: "unsupported",
+			detail: { reason: "noReleaseArtifacts" },
+		});
+		expect(await getUpdateReadiness("google-oauth")).toMatchObject({
+			state: "unsupported",
+			detail: { reason: "noReleaseArtifacts" },
+		});
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
+
+	it("reports no install state without asking the backend", async () => {
+		expect(await installPending()).toBe(false);
+		expect(await getInstalledVersion("fcm")).toBeNull();
+		expect(invokeMock).not.toHaveBeenCalled();
+	});
 });
 
 describe("update checks", () => {

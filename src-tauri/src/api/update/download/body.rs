@@ -1,7 +1,6 @@
 use std::fs;
 #[cfg(any(
 	target_os = "android",
-	target_os = "ios",
 	target_os = "linux",
 	target_os = "macos"
 ))]
@@ -14,7 +13,6 @@ use super::super::error::UpdateError;
 pub(super) struct Body {
 	#[cfg(any(
 		target_os = "android",
-		target_os = "ios",
 		target_os = "linux",
 		target_os = "macos"
 	))]
@@ -31,7 +29,6 @@ impl Body {
 
 	#[cfg(any(
 		target_os = "android",
-		target_os = "ios",
 		target_os = "linux",
 		target_os = "macos"
 	))]
@@ -66,7 +63,6 @@ impl Body {
 
 	#[cfg(any(
 		target_os = "android",
-		target_os = "ios",
 		target_os = "linux",
 		target_os = "macos"
 	))]

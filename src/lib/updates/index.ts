@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
 import { demoEnabled } from "$lib/demo";
+import { currentPlatform } from "$lib/platform/os";
 import { APP_COMPONENT, type ComponentKey } from "./components";
 import {
 	type Capability,
@@ -68,7 +69,15 @@ export { COMPONENT_PACKAGE, GOOGLE_OAUTH_COMPONENT } from "./components";
 export { APP_COMPONENT, type ComponentKey };
 
 export function updatesAvailableHere(): boolean {
-	return !demoEnabled;
+	switch (currentPlatform()) {
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return !demoEnabled;
+		case "ios":
+			return false;
+	}
 }
 
 export async function getUpdateCapability(): Promise<Capability> {

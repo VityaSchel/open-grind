@@ -138,6 +138,27 @@ describe("the Updates section of the app settings on Android", () => {
 	}, 60_000);
 });
 
+describe("the app settings on iOS", () => {
+	it("have no Updates section, because the app ships no updater", async () => {
+		runningOn("ios");
+		const actual =
+			await vi.importActual<typeof import("$lib/updates/index")>(
+				"$lib/updates/index",
+			);
+		fake.api.updatesAvailableHere.mockImplementation(
+			actual.updatesAvailableHere,
+		);
+		const screen = await opened(await actual.getUpdateCapability());
+
+		expect(screen.getByRole("heading", { name: "About" })).toBeTruthy();
+		expect(screen.queryByRole("heading", { name: "Updates" })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Check for updates" }),
+		).toBeNull();
+		expect(updateSettings.getUpdateSettings).not.toHaveBeenCalled();
+	}, 60_000);
+});
+
 describe("the About section of the app settings", () => {
 	it("lists the privacy policy right before the credits and opens it in the system browser", async () => {
 		const screen = await opened({

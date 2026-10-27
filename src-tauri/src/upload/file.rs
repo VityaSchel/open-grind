@@ -10,11 +10,11 @@ use sha2::{Digest, Sha256};
 use tauri::Runtime;
 
 use crate::api::rest::{self, encode_response, RawResponse};
-use crate::api::update::TransferHold;
 use crate::error::AppError;
 use crate::hex::hex;
 use crate::photo;
 use crate::state::AppState;
+use crate::transfer::TransferHold;
 use crate::upload::form::{FormPart, Framing};
 use crate::upload::inspect::{inspect, MediaKind};
 use crate::upload::picked::PickedFile;

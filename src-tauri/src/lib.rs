@@ -3,8 +3,10 @@ mod app_data;
 mod app_origin;
 mod app_settings;
 mod appearance;
+#[cfg(target_os = "linux")]
 mod appimage;
 mod context_menu;
+#[cfg(target_os = "linux")]
 mod desktop_entry;
 mod error;
 mod haptics;
@@ -26,6 +28,7 @@ mod push_poll;
 mod scroll_phase;
 mod state;
 mod storage;
+mod transfer;
 mod upload;
 mod video;
 
@@ -166,17 +169,21 @@ pub fn run() {
 
 	let builder = builder.plugin(api::push::plugin());
 
+	let builder = builder
+		.plugin(open_grind_platform_plugin())
+		.plugin(tauri_plugin_dialog::init())
+		.plugin(tauri_plugin_clipboard_manager::init())
+		.plugin(tauri_plugin_os::init())
+		.plugin(tauri_plugin_geolocation::init())
+		.plugin(tauri_plugin_fs::init())
+		.plugin(tauri_plugin_opener::init())
+		.plugin(api::google_oauth::plugin())
+		.plugin(api::facebook_oauth::plugin());
+
+	#[cfg(any(target_os = "android", desktop))]
+	let builder = builder.plugin(api::update::plugin());
+
 	builder
-        .plugin(open_grind_platform_plugin())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_geolocation::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(api::google_oauth::plugin())
-        .plugin(api::facebook_oauth::plugin())
-        .plugin(api::update::plugin())
         .plugin(app_settings::plugin())
         .plugin(media_picker::plugin())
         .manage(AppState {
@@ -240,22 +247,39 @@ pub fn run() {
             api::session_recovery::current_session,
             haptics::play_haptic,
             scroll_phase::set_scroll_gesture_capture,
+            #[cfg(target_os = "linux")]
             desktop_entry::desktop_entry_state,
+            #[cfg(target_os = "linux")]
             desktop_entry::desktop_entry_install,
+            #[cfg(target_os = "linux")]
             desktop_entry::desktop_entry_remove,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_capability,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_settings,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_set_auto_check,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_check,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_download,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_cancel_download,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_progress,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_readiness,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_install,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_install_pending,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_installed_version,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_take_install_outcome,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_open_install_permission_settings,
+            #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_discard,
             app_settings::open_app_settings,
             media_picker::pick_android_media,
@@ -502,11 +526,50 @@ mod frontend_method_pins {
 		&haystack[start..start + len]
 	}
 
-	fn registered_commands() -> Vec<&'static str> {
-		between(THIS, "tauri::generate_handler![", "])")
+	fn without_attributes(source: &str) -> String {
+		let mut kept = String::new();
+		let mut rest = source;
+		while let Some(start) = rest.find("#[") {
+			kept.push_str(&rest[..start]);
+			let mut depth = 0;
+			let end = rest[start..]
+				.char_indices()
+				.find_map(|(offset, character)| {
+					match character {
+						'[' => depth += 1,
+						']' => depth -= 1,
+						_ => return None,
+					}
+					(depth == 0).then_some(start + offset + 1)
+				})
+				.expect("an attribute in generate_handler! never closes");
+			rest = &rest[end..];
+		}
+		kept + rest
+	}
+
+	fn handler_entries(handler: &str) -> Vec<String> {
+		without_attributes(handler)
 			.split(',')
-			.filter_map(|entry| entry.trim().rsplit("::").next())
+			.map(str::trim)
+			.filter(|entry| !entry.is_empty())
+			.filter_map(|entry| entry.rsplit("::").next())
+			.map(str::to_owned)
 			.collect()
+	}
+
+	fn registered_commands() -> Vec<String> {
+		handler_entries(between(THIS, "tauri::generate_handler![", "])"))
+	}
+
+	#[test]
+	fn a_platform_gate_on_a_handler_entry_is_not_read_as_a_command() {
+		assert_eq!(
+			handler_entries(
+				"\n\ta::first,\n\t#[cfg(any(target_os = \"android\", desktop))]\n\tb::second,\n"
+			),
+			["first", "second"]
+		);
 	}
 
 	#[test]
@@ -521,7 +584,7 @@ mod frontend_method_pins {
 		assert!(invoked.contains(&"fetch_external"), "{invoked:?}");
 		for command in invoked {
 			assert!(
-				registered.contains(&command),
+				registered.iter().any(|name| name == command),
 				"{command} is invoked by transport.ts but not registered"
 			);
 		}
@@ -540,7 +603,7 @@ mod frontend_method_pins {
 		assert!(!methods.is_empty());
 		for method in methods {
 			assert!(
-				registered.contains(&method),
+				registered.iter().any(|name| name == method),
 				"{method} is called by the frontend but not registered"
 			);
 		}

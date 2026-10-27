@@ -9,7 +9,7 @@ pub enum InstallKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(not(target_os = "android"), allow(dead_code))]
+#[cfg_attr(desktop, allow(dead_code))]
 pub enum Baseline {
 	Absent,
 	Installed { version: Version },

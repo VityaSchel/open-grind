@@ -48,15 +48,8 @@ fn swap(current: &Path, payload: &Path) -> Result<(), UpdateError> {
 	}
 
 	let _ = fs::remove_file(&replaced);
-	if cfg!(windows) {
-		if let Err(error) = fs::rename(current, &replaced) {
-			let _ = fs::remove_file(&staged);
-			return Err(error.into());
-		}
-	}
 	if let Err(error) = fs::rename(&staged, current) {
 		let _ = fs::remove_file(&staged);
-		let _ = fs::rename(&replaced, current);
 		return Err(error.into());
 	}
 	Ok(())
@@ -68,7 +61,6 @@ fn sibling(current: &Path, extension: &str) -> PathBuf {
 	current.with_file_name(name)
 }
 
-#[cfg(unix)]
 fn make_executable(path: &Path) -> Result<(), UpdateError> {
 	use std::os::unix::fs::PermissionsExt;
 
@@ -76,11 +68,6 @@ fn make_executable(path: &Path) -> Result<(), UpdateError> {
 		path,
 		fs::Permissions::from_mode(0o755),
 	)?)
-}
-
-#[cfg(not(unix))]
-fn make_executable(_path: &Path) -> Result<(), UpdateError> {
-	Ok(())
 }
 
 #[cfg(test)]
@@ -123,7 +110,6 @@ mod tests {
 		let _ = fs::remove_dir_all(dir);
 	}
 
-	#[cfg(unix)]
 	#[test]
 	fn the_replacement_is_executable_even_when_the_download_was_not() {
 		use std::os::unix::fs::PermissionsExt;

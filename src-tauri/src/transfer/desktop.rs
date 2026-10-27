@@ -1,9 +1,19 @@
 use tauri::window::{ProgressBarState, ProgressBarStatus};
 use tauri::{AppHandle, Manager, Runtime};
 
-use super::super::TransferProgress;
+use super::{TransferProgress, TransferPurpose};
 
-pub(super) fn show<R: Runtime>(app: &AppHandle<R>, progress: TransferProgress) {
+pub(super) fn begin_transfer<R: Runtime>(
+	_app: &AppHandle<R>,
+	_purpose: TransferPurpose,
+) {
+}
+
+pub(super) fn report_transfer<R: Runtime>(
+	app: &AppHandle<R>,
+	_purpose: TransferPurpose,
+	progress: TransferProgress,
+) {
 	match progress {
 		TransferProgress::Percent(percent) => {
 			set(app, ProgressBarStatus::Normal, Some(u64::from(percent)));
@@ -14,8 +24,13 @@ pub(super) fn show<R: Runtime>(app: &AppHandle<R>, progress: TransferProgress) {
 	}
 }
 
-pub(super) fn clear<R: Runtime>(app: &AppHandle<R>) {
-	set(app, ProgressBarStatus::None, None);
+pub(super) fn end_transfer<R: Runtime>(
+	app: &AppHandle<R>,
+	purpose: TransferPurpose,
+) {
+	if matches!(purpose, TransferPurpose::Update { .. }) {
+		set(app, ProgressBarStatus::None, None);
+	}
 }
 
 fn set<R: Runtime>(

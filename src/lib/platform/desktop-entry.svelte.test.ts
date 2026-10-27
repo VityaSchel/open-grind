@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { resetPlatform, runningOn } from "$lib/test/platform";
 
 const tauri = vi.hoisted(() => ({ invoke: vi.fn() }));
 
@@ -14,10 +16,13 @@ function backendReports(reported: State) {
 	);
 }
 
-describe("the desktop entry state", () => {
+afterEach(resetPlatform);
+
+describe("the desktop entry state on Linux", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
+		runningOn("linux");
 	});
 
 	it("offers nothing until it has been hydrated", async () => {
@@ -124,3 +129,39 @@ describe("the desktop entry state", () => {
 		);
 	});
 });
+
+describe.each(["android", "ios", "macos", "windows"] as const)(
+	"the desktop entry state on %s",
+	(platform) => {
+		beforeEach(() => {
+			vi.resetModules();
+			vi.clearAllMocks();
+			runningOn(platform);
+			backendReports({ available: true, installed: true });
+		});
+
+		it("is unavailable without asking the backend", async () => {
+			const {
+				hydrateDesktopEntryState,
+				desktopEntryAvailable,
+				desktopEntryInstalled,
+			} = await import("./desktop-entry.svelte");
+
+			await hydrateDesktopEntryState();
+
+			expect(desktopEntryAvailable()).toBe(false);
+			expect(desktopEntryInstalled()).toBe(false);
+			expect(tauri.invoke).not.toHaveBeenCalled();
+		});
+
+		it("never writes an entry", async () => {
+			const { setDesktopEntryInstalled } =
+				await import("./desktop-entry.svelte");
+
+			await setDesktopEntryInstalled(true);
+			await setDesktopEntryInstalled(false);
+
+			expect(tauri.invoke).not.toHaveBeenCalled();
+		});
+	},
+);
