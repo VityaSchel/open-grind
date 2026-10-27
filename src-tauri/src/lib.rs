@@ -1,6 +1,7 @@
 pub mod api;
 mod app_data;
 mod app_origin;
+#[cfg(target_os = "android")]
 mod app_settings;
 mod appearance;
 #[cfg(target_os = "linux")]
@@ -16,6 +17,7 @@ mod keyboard_media;
 pub mod media;
 #[cfg(target_os = "android")]
 mod media_drag;
+#[cfg(mobile)]
 mod media_picker;
 mod photo;
 #[cfg(test)]
@@ -167,7 +169,9 @@ pub fn run() {
 		.plugin(keyboard_media::plugin())
 		.plugin(media_drag::plugin())
 		.plugin(api::recaptcha::plugin())
-		.plugin(app_origin::android::plugin());
+		.plugin(app_origin::android::plugin())
+		.plugin(app_settings::plugin())
+		.plugin(media_picker::android::plugin());
 
 	let builder = builder.plugin(api::push::plugin());
 
@@ -189,8 +193,6 @@ pub fn run() {
 	let builder = builder.plugin(api::update::plugin());
 
 	builder
-        .plugin(app_settings::plugin())
-        .plugin(media_picker::plugin())
         .manage(AppState {
             client: OnceLock::new(),
         })
@@ -286,8 +288,10 @@ pub fn run() {
             api::update::commands::updater_open_install_permission_settings,
             #[cfg(any(target_os = "android", desktop))]
             api::update::commands::updater_discard,
+            #[cfg(target_os = "android")]
             app_settings::open_app_settings,
-            media_picker::pick_android_media,
+            #[cfg(target_os = "android")]
+            media_picker::android::pick_android_media,
             #[cfg(target_os = "ios")]
             media_picker::ios::pick_ios_media,
             appearance::backdrop_filter_renders,
