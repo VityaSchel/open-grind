@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	afterTwoFrames,
 	animationsFinished,
@@ -14,6 +15,8 @@ import {
 	TOAST_GAP_PX,
 	toastGap,
 } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const RAISED_BOTTOM_INSET_PX = 120;
 

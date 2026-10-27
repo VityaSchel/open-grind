@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	DEMO_CONVERSATION,
 	FIRST_ROUTE_COMPILE_MS,
@@ -39,6 +40,8 @@ import {
 	stickerSendButton,
 	tileLabels,
 } from "./support/stickers";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const SEARCH_DEBOUNCE_MS = 400;
 const FIRST_PAGING_AUTO_RETRY_MS = 2_000;

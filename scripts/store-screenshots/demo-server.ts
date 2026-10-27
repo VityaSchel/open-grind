@@ -1,29 +1,10 @@
 import type { BrowserContext } from "@playwright/test";
 
-import playwrightConfig from "../../playwright.config";
+import { DEV_SERVER } from "../../playwright.config";
 
 const REPO_ROOT = Bun.fileURLToPath(new URL("../..", import.meta.url));
 const TEST_ONLY_ENV = ["PUBLIC_TEST_INSETS"];
 const SERVER_START_TIMEOUT_MS = 120_000;
-
-function demoServerConfig() {
-	const { webServer } = playwrightConfig;
-	if (
-		!webServer ||
-		Array.isArray(webServer) ||
-		!webServer.port ||
-		!webServer.env
-	) {
-		throw new Error(
-			"playwright.config.ts must declare one webServer with a port and env",
-		);
-	}
-	return {
-		command: webServer.command,
-		port: webServer.port,
-		env: webServer.env,
-	};
-}
 
 function freePort(): number {
 	const probe = Bun.serve({ port: 0, fetch: () => new Response() });
@@ -34,18 +15,19 @@ function freePort(): number {
 }
 
 export async function startDemoServer() {
-	const config = demoServerConfig();
 	const port = freePort();
-	const command = config.command
+	const command = DEV_SERVER.command
 		.split(" ")
-		.map((token) => (token === String(config.port) ? String(port) : token));
+		.map((token) =>
+			token === String(DEV_SERVER.port) ? String(port) : token,
+		);
 	if (!command.includes(String(port))) {
 		throw new Error(
-			`The playwright webServer command does not pass its port ${config.port}`,
+			`The playwright dev server command does not pass its port ${DEV_SERVER.port}`,
 		);
 	}
 	const env = Object.fromEntries(
-		Object.entries(config.env).filter(
+		Object.entries(DEV_SERVER.env).filter(
 			([name]) => !TEST_ONLY_ENV.includes(name),
 		),
 	);

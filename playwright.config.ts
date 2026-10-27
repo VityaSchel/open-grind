@@ -5,14 +5,33 @@ declare const process: {
 	getuid?: () => number;
 };
 
-const PORT = 5177;
+const DEV_PORT = 5177;
+const BUILD_PORT = 5178;
 // chromium refuses to sandbox as root, and the CI runner executes steps as root
 const chromiumSandbox = process.getuid?.() !== 0;
 
-export const DEMO_ENV = {
+export const DEV_SERVER_URL = `http://localhost:${DEV_PORT}`;
+
+const DEMO_ENV = {
 	OPEN_GRIND_DEMO: "1",
 	PUBLIC_TEST_INSETS: "1",
 	PUBLIC_BACKDROP_BLUR: "max",
+};
+
+export const DEV_SERVER = {
+	command: `bunx vite dev --port ${DEV_PORT} --strictPort`,
+	port: DEV_PORT,
+	reuseExistingServer: true,
+	timeout: 120_000,
+	env: DEMO_ENV,
+};
+
+export const BUILD_SERVER = {
+	command: `bunx vite build && bunx vite preview --port ${BUILD_PORT} --strictPort`,
+	port: BUILD_PORT,
+	reuseExistingServer: false,
+	timeout: 600_000,
+	env: DEMO_ENV,
 };
 
 export default defineConfig({
@@ -25,7 +44,7 @@ export default defineConfig({
 	expect: { timeout: 10_000 },
 	reporter: [["list"]],
 	use: {
-		baseURL: `http://localhost:${PORT}`,
+		baseURL: `http://localhost:${BUILD_PORT}`,
 		trace: process.env.CI ? "off" : "retain-on-failure",
 		...devices["Desktop Chrome"],
 		actionTimeout: 30_000,
@@ -33,11 +52,5 @@ export default defineConfig({
 		hasTouch: true,
 		launchOptions: { chromiumSandbox },
 	},
-	webServer: {
-		command: `bunx vite dev --port ${PORT} --strictPort`,
-		port: PORT,
-		reuseExistingServer: true,
-		timeout: 120_000,
-		env: DEMO_ENV,
-	},
+	webServer: [BUILD_SERVER, DEV_SERVER],
 });

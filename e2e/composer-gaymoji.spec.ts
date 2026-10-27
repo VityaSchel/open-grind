@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { afterTwoFrames, TrustedTouch } from "./support/app";
 import { recordDemoRequests } from "./support/demo-faults";
 import {
@@ -107,28 +108,32 @@ function otherTiles(page: Page): Locator {
 }
 
 test.describe("Gaymoji tab", () => {
-	test("the manifest loads only once the tab opens, and its tiles render", async ({
-		page,
-	}) => {
-		const requests = await recordDemoRequests(page);
-		await openStickers(page);
-		await page.waitForTimeout(500);
-		const beforeTab = await requests();
-		expect(giphyCalls(beforeTab).length).toBeGreaterThan(0);
-		expect(gaymojiManifestCalls(beforeTab)).toHaveLength(0);
+	test.describe(() => {
+		test.use({ baseURL: DEV_SERVER_URL });
 
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		await expect(gaymojiTiles(page).first()).toHaveAccessibleName(
-			FIRST_GAYMOJI,
-		);
-		expect(gaymojiManifestCalls(await requests())).toHaveLength(1);
+		test("the manifest loads only once the tab opens, and its tiles render", async ({
+			page,
+		}) => {
+			const requests = await recordDemoRequests(page);
+			await openStickers(page);
+			await page.waitForTimeout(500);
+			const beforeTab = await requests();
+			expect(giphyCalls(beforeTab).length).toBeGreaterThan(0);
+			expect(gaymojiManifestCalls(beforeTab)).toHaveLength(0);
 
-		await stickersTab(page, { name: "GIFs" }).click();
-		await stickersTab(page, { name: "Gaymoji" }).click();
-		await expect(gaymojiTiles(page).first()).toHaveAccessibleName(
-			FIRST_GAYMOJI,
-		);
-		expect(gaymojiManifestCalls(await requests())).toHaveLength(1);
+			await stickersTab(page, { name: "Gaymoji" }).click();
+			await expect(gaymojiTiles(page).first()).toHaveAccessibleName(
+				FIRST_GAYMOJI,
+			);
+			expect(gaymojiManifestCalls(await requests())).toHaveLength(1);
+
+			await stickersTab(page, { name: "GIFs" }).click();
+			await stickersTab(page, { name: "Gaymoji" }).click();
+			await expect(gaymojiTiles(page).first()).toHaveAccessibleName(
+				FIRST_GAYMOJI,
+			);
+			expect(gaymojiManifestCalls(await requests())).toHaveLength(1);
+		});
 	});
 
 	test("tiles far below the fold are requested only when scrolled near", async ({

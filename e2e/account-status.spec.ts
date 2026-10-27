@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	captureOpenedUrls,
 	emitTauriEvent,
@@ -9,6 +10,8 @@ import {
 } from "./support/app";
 import { answerDemoRequests } from "./support/demo-faults";
 import { restingToast, UPDATE_TOASTS_MODULE_URL } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const TRANSPORT_MODULE_URL = "/src/lib/api/transport.ts";
 
