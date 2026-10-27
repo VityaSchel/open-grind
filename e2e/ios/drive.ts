@@ -48,8 +48,8 @@ const usage = `usage: bun e2e/ios/drive.ts <steps.json | '[{"tap":"Get started"}
 Steps (labels match label, identifier or placeholder; points are normalized 0..1):
 	{"launch": true} | {"activate": true} | {"home": true}
 	{"rotate": "portrait" | "landscapeLeft" | "landscapeRight"}
-	{"pasteboardImage": "<host png path>"}
-	{"tap": label} | {"tapIfPresent": label} | {"doubleTap": label}
+	{"pasteboardImage": "<host png path>"} | {"pasteboardText": "<host text file path>"} (for secrets: the text never enters a log, unlike "type")
+	{"tap": label} | {"tapIfPresent": label} | {"doubleTap": label} | {"tapSecure": label} (a secure text field, not its <label>)
 	{"press": label, "seconds": 1}
 	{"springboard": label} taps a SpringBoard element, such as a system alert button ("Allow While Using App")
 	{"tapAt": [x, y]} | {"drag": [x1, y1, x2, y2]}

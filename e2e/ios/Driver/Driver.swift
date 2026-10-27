@@ -56,8 +56,17 @@ final class Driver: XCTestCase {
 			UIPasteboard.general.image = try XCTUnwrap(UIImage(contentsOfFile: path), "no image at \(path)")
 			XCTAssertTrue(UIPasteboard.general.hasImages, "pasteboard holds no image")
 		}
+		if let path = step["pasteboardText"] as? String {
+			UIPasteboard.general.string = try String(contentsOfFile: path, encoding: .utf8)
+			XCTAssertTrue(UIPasteboard.general.hasStrings, "pasteboard holds no text")
+		}
 		if let label = step["tap"] as? String {
 			try element(label, in: app).tap()
+		}
+		if let label = step["tapSecure"] as? String {
+			let field = app.secureTextFields.matching(labelled(label)).firstMatch
+			guard field.waitForExistence(timeout: 15) else { throw failure("no secure field labelled \(label)") }
+			field.tap()
 		}
 		if let label = step["tapIfPresent"] as? String {
 			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
