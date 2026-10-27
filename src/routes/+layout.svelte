@@ -18,17 +18,13 @@
 	import { abortBackdropBlurTrialGesture } from "$lib/blur/calibration/trial.svelte";
 	import { hydrateBackdropCompositing } from "$lib/blur/compositing.svelte";
 	import { applyBackdropBlurQuality } from "$lib/blur/quality.svelte";
-	import {
-		applyAndroidInsets,
-		applyBackGestureHandler,
-		registerAndroidBackButtonListener,
-	} from "$lib/platform/android-native-bridge";
+	import { applyAndroidInsets } from "$lib/platform/android-native-bridge";
 	import { blockNativeMenu } from "$lib/platform/block-native-menu";
 	import { blockZoom } from "$lib/platform/block-zoom";
 	import { trackHoverPointer } from "$lib/platform/hover-pointer";
 	import { keepLinksInApp } from "$lib/platform/in-app-links";
-	import { isAndroidPlatform } from "$lib/platform/os";
 	import { installScrollGestureBridge } from "$lib/platform/scroll-gesture";
+	import { installSystemBack } from "$lib/platform/system-back-gesture";
 	import { reconcileNotifications } from "$lib/push/notifications.svelte";
 	import { startPushWatch } from "$lib/push/watch";
 	import { startAddonUpdateWatch } from "$lib/updates/addon.svelte";
@@ -61,16 +57,11 @@
 			};
 		}
 		applyAndroidInsets();
-		applyBackGestureHandler();
 		const releaseZoomBlock = blockZoom();
 		const releaseNativeMenuBlock = blockNativeMenu();
 		const releaseHoverPointer = trackHoverPointer();
 		const releaseInAppLinks = keepLinksInApp();
-		if (isAndroidPlatform()) {
-			void registerAndroidBackButtonListener().catch((error) => {
-				console.error("Failed to register back button listener", error);
-			});
-		}
+		installSystemBack();
 		void hydratePreferences().catch((error: unknown) => {
 			console.error("Failed to hydrate preferences", error);
 		});

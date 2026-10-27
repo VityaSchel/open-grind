@@ -7,6 +7,7 @@ import {
 	type SafeAreaSide,
 } from "$lib/util/safe-area";
 import { remeasureScreenChrome } from "$lib/util/screen-chrome.svelte";
+import type { SystemBackAdapter } from "$lib/platform/system-back-gesture";
 
 const IME_RESIZE_FALLBACK_MS = 150;
 
@@ -112,7 +113,7 @@ export function applyBackGestureHandler() {
 	window.__AndroidOnBackGesture = () => !runBackGestureHandlers();
 }
 
-export async function registerAndroidBackButtonListener() {
+async function registerAndroidBackButtonListener() {
 	await addPluginListener(
 		"app",
 		"back-button",
@@ -123,3 +124,23 @@ export async function registerAndroidBackButtonListener() {
 		},
 	);
 }
+
+export const androidSystemBack: SystemBackAdapter = {
+	install: () => {
+		applyBackGestureHandler();
+		void registerAndroidBackButtonListener().catch((error) => {
+			console.error("Failed to register back button listener", error);
+		});
+	},
+	readProgress: () => window.__AndroidBack?.gestureProgress(),
+	expose: ({ start, cancel }) => {
+		window.__AndroidOnBackGestureStart = start;
+		window.__AndroidOnBackGestureCancel = cancel;
+		return () => {
+			if (window.__AndroidOnBackGestureStart === start)
+				delete window.__AndroidOnBackGestureStart;
+			if (window.__AndroidOnBackGestureCancel === cancel)
+				delete window.__AndroidOnBackGestureCancel;
+		};
+	},
+};

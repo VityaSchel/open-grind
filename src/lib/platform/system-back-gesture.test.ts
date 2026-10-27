@@ -1,17 +1,31 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { addPluginListener } = vi.hoisted(() => ({
+	addPluginListener: vi.fn(() =>
+		Promise.resolve({ unregister: () => Promise.resolve() }),
+	),
+}));
+
+vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
+	addPluginListener,
+}));
 
 import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
 } from "$lib/platform/back-gesture-event.svelte";
+import { resetPlatform, runningOn } from "$lib/test/platform";
 import {
 	attachSystemBackGesture,
+	installSystemBack,
 	type SwipeBackStack,
 } from "./system-back-gesture";
 
 function makeStack() {
 	let tracking = false;
 	const calls = { begin: 0, commit: 0, cancel: 0 };
+	const tracked: number[] = [];
 
 	const stack: SwipeBackStack = {
 		get tracking() {
@@ -22,7 +36,9 @@ function makeStack() {
 			tracking = true;
 			return true;
 		},
-		trackSwipeBack: () => {},
+		trackSwipeBack: (progress) => {
+			tracked.push(progress);
+		},
 		commitSwipeBack: () => {
 			calls.commit += 1;
 			tracking = false;
@@ -33,10 +49,21 @@ function makeStack() {
 		},
 	};
 
-	return { stack, calls };
+	return { stack, calls, tracked };
 }
 
+beforeEach(() => {
+	runningOn("android");
+});
+
 afterEach(() => {
+	resetPlatform();
+	delete window.__AndroidBack;
+	delete window.__AndroidOnBackGesture;
+	delete window.__AndroidOnBackGestureStart;
+	delete window.__AndroidOnBackGestureCancel;
+	addPluginListener.mockClear();
+	vi.restoreAllMocks();
 	backGestureEventHandlers.clear();
 });
 
@@ -131,4 +158,82 @@ describe("attachSystemBackGesture", () => {
 		detachCurrent();
 		expect(window.__AndroidOnBackGestureStart).toBeUndefined();
 	});
+
+	it("feeds the stack the native progress once a frame until the swipe ends", () => {
+		const frames: FrameRequestCallback[] = [];
+		vi.spyOn(window, "requestAnimationFrame").mockImplementation(
+			(callback) => frames.push(callback),
+		);
+		const runFrame = () => frames.shift()?.(performance.now());
+		const { stack, tracked } = makeStack();
+		const detach = attachSystemBackGesture(stack);
+		let progress = 0;
+		window.__AndroidBack = {
+			moveTaskToBack: () => {},
+			gestureProgress: () => progress,
+		};
+
+		window.__AndroidOnBackGestureStart?.();
+		progress = 0.25;
+		runFrame();
+		progress = 0.5;
+		runFrame();
+		window.__AndroidOnBackGestureCancel?.();
+		runFrame();
+
+		expect(tracked).toEqual([0.25, 0.5]);
+		expect(frames, "no frame may stay queued").toHaveLength(0);
+
+		detach();
+	});
 });
+
+describe("installSystemBack", () => {
+	it("on Android the native Back learns whether the app took it, and the back button is heard", () => {
+		installSystemBack();
+
+		expect(addPluginListener).toHaveBeenCalledWith(
+			"app",
+			"back-button",
+			expect.any(Function),
+		);
+		expect(window.__AndroidOnBackGesture?.()).toBe(true);
+
+		const overlay = vi.fn(() => false);
+		backGestureEventHandlers.set(overlay, "overlay");
+
+		expect(window.__AndroidOnBackGesture?.()).toBe(false);
+		expect(overlay).toHaveBeenCalledOnce();
+	});
+});
+
+describe.each(["ios", "linux", "macos", "windows"] as const)(
+	"on %s",
+	(platform) => {
+		beforeEach(() => {
+			runningOn(platform);
+		});
+
+		it("exposes no native hooks, yet the stack still lets Back through", () => {
+			const { stack, calls } = makeStack();
+			const detach = attachSystemBackGesture(stack);
+
+			expect(window.__AndroidOnBackGestureStart).toBeUndefined();
+			expect(window.__AndroidOnBackGestureCancel).toBeUndefined();
+			expect(backGestureEventHandlers.size).toBe(1);
+			expect(runBackGestureHandlers()).toBe(false);
+			expect(calls.begin).toBe(0);
+			expect(calls.commit).toBe(0);
+
+			detach();
+			expect(backGestureEventHandlers.size).toBe(0);
+		});
+
+		it("installs no native Back hooks", () => {
+			installSystemBack();
+
+			expect(window.__AndroidOnBackGesture).toBeUndefined();
+			expect(addPluginListener).not.toHaveBeenCalled();
+		});
+	},
+);
