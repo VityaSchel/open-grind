@@ -7,12 +7,13 @@ import {
 	SHARED_ALBUM_TILE,
 	UNSHARED_ALBUM_TILE,
 } from "../../../e2e/support/drawer";
+import { profileTile } from "../../../e2e/support/gps";
 import type {
 	NativeError,
 	RestFault,
 } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
-import { MAP_SEARCH } from "./browse";
+import { chooseNeutralLocation, MAP_SEARCH } from "./browse";
 import {
 	chooseFromMessageMenu,
 	failRandomUuids,
@@ -29,6 +30,7 @@ const FIRST_UPLOADED_MEDIA_ID = 920_000;
 const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 const UPLOAD_LABEL = "Upload photos or videos";
 const SHEET_ACTION = '[data-slot="sheet-actions"] button';
+const MAP_PIN = ".leaflet-marker-icon";
 
 type MediaRefusal =
 	| "notMedia"
@@ -77,8 +79,21 @@ export async function openAttachments(page: Page): Promise<void> {
 		path: DEMO_CONVERSATION,
 		ready: page.locator(MESSAGE_ROW),
 	});
+	await openAttachmentSheet(page);
+}
+
+async function openAttachmentSheet(page: Page): Promise<void> {
 	await page.getByRole("button", { name: "Add attachment" }).click();
 	await page.locator(DRAWER).waitFor();
+}
+
+async function openAttachmentsAtNeutralLocation(page: Page): Promise<void> {
+	await chooseNeutralLocation(page);
+	await profileTile(page).first().waitFor();
+	await page.locator('nav a[href="/chat"]').first().click();
+	await page.locator(`main a[href="${DEMO_CONVERSATION}"]`).first().click();
+	await page.locator(MESSAGE_ROW).first().waitFor();
+	await openAttachmentSheet(page);
 }
 
 function sheetAction(page: Page): Locator {
@@ -189,6 +204,33 @@ export const attachmentTabs: Scene = {
 			drive: async (page) => {
 				await openTab({ page, tab: "Location" });
 				await page.locator(MAP_SEARCH).waitFor();
+			},
+		},
+	],
+};
+
+export const locationSharing: Scene = {
+	platform: "phone",
+	views: [
+		{
+			id: "chat/attachments/location-pinned",
+			screen: "chat/conversation",
+			drive: async (page) => {
+				await openAttachmentsAtNeutralLocation(page);
+				await openTab({ page, tab: "Location" });
+				await page.locator(MAP_PIN).waitFor();
+				await sheetAction(page).getByText("Send location").waitFor();
+			},
+		},
+		{
+			id: "chat/conversation/location",
+			drive: async (page) => {
+				await sheetAction(page).click();
+				await page.locator(DRAWER).waitFor({ state: "hidden" });
+				await page
+					.getByRole("link", { name: /Open map/ })
+					.last()
+					.waitFor();
 			},
 		},
 	],
