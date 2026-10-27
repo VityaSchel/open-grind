@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { meTab } from "./support/app";
+import { afterTwoFrames, meTab } from "./support/app";
 import {
 	activeProfilePane,
 	openGridProfile,
@@ -27,6 +27,19 @@ function offStop({ scrollLeft, width }: PagerGeometry): number {
 	return Math.abs(scrollLeft - Math.round(scrollLeft / width) * width);
 }
 
+async function restingScrollLeft(page: Page): Promise<number> {
+	let resting = Number.NaN;
+	await expect
+		.poll(async () => {
+			const before = (await pagerGeometry(page)).scrollLeft;
+			await afterTwoFrames(page);
+			resting = (await pagerGeometry(page)).scrollLeft;
+			return resting - before;
+		})
+		.toBe(0);
+	return resting;
+}
+
 test("a finger still down outside the pager holds the landing until it lifts", async ({
 	page,
 }) => {
@@ -46,9 +59,9 @@ test("a finger still down outside the pager holds the landing until it lifts", a
 	}
 	await fingers.down({ id: 2, ...outside });
 	await fingers.lift({ id: 1 });
+	const { width } = await pagerGeometry(page);
 	for (let x = outside.x; ; ) {
-		const { scrollLeft, width } = await pagerGeometry(page);
-		const remaining = 2 * width - scrollLeft;
+		const remaining = 2 * width - (await restingScrollLeft(page));
 		if (remaining < 1) break;
 		x -= Math.min(remaining, 12);
 		await fingers.move({ 2: { x, y: outside.y } });

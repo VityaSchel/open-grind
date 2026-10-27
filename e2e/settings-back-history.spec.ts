@@ -82,6 +82,8 @@ for (const { platform, viewport } of PLATFORMS) {
 			page,
 		}) => {
 			await openSettings(page, { platform });
+			await page.goto("/");
+			await clickMeTab(page);
 			const start = await historyDepth(page);
 			const visited: string[] = [];
 

@@ -8,7 +8,7 @@
 	import { t } from "$lib/i18n";
 	import { scale } from "$lib/util/reduced-motion";
 	import { attachPullInputs } from "./refresh/attach-inputs";
-	import { contentSlide } from "./refresh/content-slide";
+	import { contentSlide, PacingTween } from "./refresh/content-slide";
 	import {
 		MAX_SLINGSHOT_TENSION,
 		slingshotTension,
@@ -60,7 +60,7 @@
 	const restingButton = new RestingButtonModel({ probeMs: MOUSE_PROBE_MS });
 
 	const reveal = new Tween(0, REVEAL_TRANSITION);
-	const buttonSpace = new Tween(0, REVEAL_TRANSITION);
+	const buttonSpace = new PacingTween(0, REVEAL_TRANSITION);
 	const model = new PullModel();
 	model.space = ARM_PX;
 
@@ -208,8 +208,8 @@
 	const slide = contentSlide({
 		duration: REVEAL_MS,
 		easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+		pacedBy: buttonSpace,
 	});
-
 	$effect(() => {
 		void buttonSpace.current;
 		slide.follow();

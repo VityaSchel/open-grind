@@ -10,8 +10,10 @@ import {
 	openAttachments,
 	SELECTABLE_MEDIA_TILE,
 	SELECTED_MEDIA_TILE,
+	showsMedia,
 	snapTops,
 } from "./support/drawer";
+import { CHAT_MEDIA_HOST, serveImages } from "./support/media";
 
 test.describe("attachments drawer", () => {
 	test("opens at the short size with the content pinned and unscrollable", async ({
@@ -463,8 +465,14 @@ test.describe("attachments drawer", () => {
 	test("the menu lifts the tile over a blurred scrim, with the menu beside it", async ({
 		page,
 	}) => {
+		await serveImages(page, CHAT_MEDIA_HOST);
 		await openAttachments(page);
 		const tile = page.locator(MEDIA_TILE).nth(1);
+		await expect
+			.poll(() => showsMedia(tile), {
+				message: "the tile shows its media",
+			})
+			.toBe(true);
 		const tileBox = (await tile.boundingBox())!;
 
 		await tile.click({ button: "right" });
@@ -483,17 +491,11 @@ test.describe("attachments drawer", () => {
 			"the menu sits right beside the tile",
 		).toBe(true);
 		expect(Math.abs(menuBox.y - liftedBox.y)).toBeLessThan(12);
-		expect(
-			await lifted.evaluate((copy) => {
-				const image = copy.querySelector("img");
-				const frame = copy.querySelector("canvas");
-				return (
-					(image !== null && image.currentSrc !== "") ||
-					(frame !== null && frame.width > 0)
-				);
-			}),
-			"the lifted copy shows the tile's media",
-		).toBe(true);
+		await expect
+			.poll(() => showsMedia(lifted), {
+				message: "the lifted copy shows the tile's media",
+			})
+			.toBe(true);
 		expect(
 			await page.evaluate(
 				() =>

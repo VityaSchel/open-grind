@@ -56,7 +56,6 @@
 	}) {
 		try {
 			await setPreferences(submission);
-			geoMapPickerOpen = false;
 		} catch (error) {
 			console.error(error);
 			showErrorToast({
