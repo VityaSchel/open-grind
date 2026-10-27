@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import {
 	DEMO_CONVERSATION,
 	DEMO_GEOHASH,
@@ -7,6 +8,8 @@ import {
 } from "./support/app";
 import { seedPreferences } from "./support/app-data";
 import { answerDemoRequests } from "./support/demo-faults";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 test("location sharing loads maps on demand and preserves the searched and panned pin across tabs and resizing", async ({
 	page,
