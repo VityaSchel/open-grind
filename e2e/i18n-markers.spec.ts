@@ -141,7 +141,19 @@ async function differingShare(first: Buffer, second: Buffer): Promise<number> {
 	return count / (a.info.width * a.info.height);
 }
 
-function capture(page: Page): Promise<Buffer> {
+async function rasterAfresh(page: Page): Promise<void> {
+	await page.evaluate(() => {
+		document.documentElement.style.visibility = "hidden";
+	});
+	await renderTwoFrames(page);
+	await page.evaluate(() => {
+		document.documentElement.style.removeProperty("visibility");
+	});
+	await renderTwoFrames(page);
+}
+
+async function capture(page: Page): Promise<Buffer> {
+	await rasterAfresh(page);
 	return page.screenshot({ animations: "disabled", caret: "hide" });
 }
 

@@ -197,3 +197,17 @@ export function scrollSheetTo(
 		top,
 	);
 }
+
+export function showsMedia(element: Locator): Promise<boolean> {
+	return element.evaluate((node) => {
+		const image = node.querySelector("img");
+		const video = node.querySelector("video");
+		const frame = node.querySelector("canvas");
+		return (
+			(image !== null && image.complete && image.naturalWidth > 1) ||
+			(video !== null &&
+				video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) ||
+			(frame !== null && frame.width > 0)
+		);
+	});
+}

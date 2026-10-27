@@ -175,6 +175,10 @@ export async function mountAtRest(
 			scroller.dispatchEvent(new Event("scroll"));
 			await settle();
 		},
+		async touchList() {
+			scroller.dispatchEvent(new Event("touchmove"));
+			await settle();
+		},
 		async pressInsideList(key: string) {
 			scroller.dispatchEvent(
 				new KeyboardEvent("keydown", { key, bubbles: true }),

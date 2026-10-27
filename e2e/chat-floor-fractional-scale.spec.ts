@@ -23,8 +23,16 @@ const WINDOW_HEIGHTS_TO_TRY = Array.from(
 );
 const MESSAGES_SCROLLER = '[data-slot="messages-scroller"]';
 const ROOM_ABOVE_COMPOSER_PROPERTY = "--refresh-inset-bottom";
+const MIDDAY_HOUR = 12;
+
+function timezoneWhereItIsMiddayNow(): string {
+	const hoursAhead = MIDDAY_HOUR - new Date().getUTCHours();
+	if (hoursAhead === 0) return "UTC";
+	return `Etc/GMT${hoursAhead > 0 ? "-" : "+"}${Math.abs(hoursAhead)}`;
+}
 
 test.use({
+	timezoneId: timezoneWhereItIsMiddayNow(),
 	viewport: null,
 	deviceScaleFactor: ({ contextOptions }, use) =>
 		use(contextOptions.deviceScaleFactor),

@@ -42,15 +42,39 @@ type Frame = {
 	scrim: number;
 	settleMs: number[];
 };
+type Transition = { frames: Frame[]; midway: number[] };
 
 function recordTransition(
 	page: Page,
 	selectors: { front: string; back: string; dim: string },
-): Promise<Frame[]> {
+): Promise<Transition> {
 	return page.evaluate(
 		({ front, back, dim }) =>
-			new Promise<Frame[]>((resolve) => {
+			new Promise<Transition>((resolve) => {
 				const frames: Frame[] = [];
+				let midway: number[] = [];
+				const durationOf = (animation: Animation) =>
+					Number(animation.effect?.getTiming().duration);
+				const opacitiesAcrossFade = () => {
+					const pane = document.querySelector(front);
+					const fading = (pane?.getAnimations() ?? []).filter(
+						({ playState }) => playState === "running",
+					);
+					if (!pane || fading.length === 0) return [];
+					const resumeAt = fading.map(
+						(animation) =>
+							[animation, animation.currentTime] as const,
+					);
+					const opacities = [0.25, 0.5, 0.75].map((fraction) => {
+						for (const animation of fading)
+							animation.currentTime =
+								fraction * durationOf(animation);
+						return Number(getComputedStyle(pane).opacity);
+					});
+					for (const [animation, currentTime] of resumeAt)
+						animation.currentTime = currentTime;
+					return opacities;
+				};
 				const sampled = (selector: string) => {
 					const pane = document.querySelector(selector);
 					if (!pane) return null;
@@ -61,30 +85,30 @@ function recordTransition(
 						edge: style.boxShadow,
 					};
 				};
-				const started = performance.now();
 				const sample = () => {
 					const scrim = document.querySelector(dim);
-					if (scrim)
-						frames.push({
-							front: sampled(front),
-							back: sampled(back),
-							scrim: Number(getComputedStyle(scrim).opacity),
-							settleMs: (
-								document
-									.querySelector(front)
-									?.getAnimations() ?? []
-							).map((animation) =>
-								Number(animation.effect?.getTiming().duration),
-							),
-						});
+					if (!scrim) return;
+					frames.push({
+						front: sampled(front),
+						back: sampled(back),
+						scrim: Number(getComputedStyle(scrim).opacity),
+						settleMs: (
+							document.querySelector(front)?.getAnimations() ?? []
+						).map(durationOf),
+					});
+					if (midway.length === 0) midway = opacitiesAcrossFade();
 				};
 				// Svelte's async-mode tick() resolves in a later rAF callback than
 				// ours, so read each frame once all of its callbacks have run.
-				const frame = () => {
-					const last = performance.now() - started >= 1500;
+				let begunAt: number | undefined;
+				const frame = (now: number) => {
+					const begunBeforeFrame =
+						document.querySelector(dim) !== null;
+					if (begunBeforeFrame) begunAt ??= now;
+					const last = begunAt !== undefined && now - begunAt >= 1500;
 					setTimeout(() => {
-						sample();
-						if (last) resolve(frames);
+						if (begunBeforeFrame) sample();
+						if (last) resolve({ frames, midway });
 					});
 					if (!last) requestAnimationFrame(frame);
 				};
@@ -95,7 +119,7 @@ function recordTransition(
 }
 
 function expectFade(
-	frames: Frame[],
+	{ frames, midway }: Transition,
 	{
 		direction,
 		travel,
@@ -105,6 +129,7 @@ function expectFade(
 	const front = frames.flatMap(({ front }) => (front ? [front] : []));
 	const back = frames.flatMap(({ back }) => (back ? [back] : []));
 	const entering = direction === "in" ? front : front.toReversed();
+	const fadingIn = direction === "in" ? midway : midway.toReversed();
 	expect(front.length, "frames were sampled mid-transition").toBeGreaterThan(
 		3,
 	);
@@ -117,10 +142,12 @@ function expectFade(
 		expect(x, "travel only shrinks").toBeLessThanOrEqual(earlier.x);
 		expect(x).toBeGreaterThanOrEqual(0);
 	}
-	expect(
-		front.filter(({ opacity }) => opacity > 0 && opacity < 1).length,
-		"the front page is seen partly faded",
-	).toBeGreaterThan(1);
+	expect(fadingIn, "the fade was caught running").toHaveLength(3);
+	for (const [index, opacity] of fadingIn.entries())
+		expect(opacity, "the front page is seen partly faded").toBeGreaterThan(
+			fadingIn[index - 1] ?? 0,
+		);
+	expect(fadingIn.at(-1)).toBeLessThan(1);
 	expect(Math.max(...front.map(({ x }) => x)) > 0).toBe(travel > 0);
 
 	expect(

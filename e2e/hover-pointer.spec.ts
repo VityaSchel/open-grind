@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import {
+	animationsFinished,
 	FIRST_ROUTE_COMPILE_MS,
 	hoverPen,
 	installTauriShim,
@@ -30,6 +31,7 @@ test("hover styles follow a hovering pointer and stay off after a tap", async ({
 
 	await browse.hover();
 	await expect(browse).not.toHaveCSS("background-color", resting);
+	await animationsFinished(browse);
 	const hover = await background(browse);
 
 	await browse.tap();

@@ -4,6 +4,7 @@ import {
 	DEMO_CONVERSATION,
 	DEMO_CONVERSATION_ID,
 	emitMessageSent,
+	fontLoaded,
 	installEventInjection,
 	installTauriShim,
 } from "./support/app";
@@ -21,10 +22,34 @@ const LONG_TEXT = Array.from(
 ).join(" ");
 
 type Box = { left: number; right: number; top: number; bottom: number };
+type ScrollTracking = { scrollingTargets: WeakSet<EventTarget> };
+
+async function trackScrolling(page: Page): Promise<void> {
+	await page.addInitScript(() => {
+		const scrollingTargets = new WeakSet<EventTarget>();
+		(window as unknown as ScrollTracking).scrollingTargets =
+			scrollingTargets;
+		document.addEventListener(
+			"scroll",
+			({ target }) => {
+				if (target) scrollingTargets.add(target);
+			},
+			{ capture: true, passive: true },
+		);
+		document.addEventListener(
+			"scrollend",
+			({ target }) => {
+				if (target) scrollingTargets.delete(target);
+			},
+			{ capture: true, passive: true },
+		);
+	});
+}
 
 async function openConversation(page: Page): Promise<void> {
 	await installTauriShim(page);
 	await installEventInjection(page);
+	await trackScrolling(page);
 	await page.goto(DEMO_CONVERSATION);
 	await page
 		.locator('[data-slot="message"] [data-slot="message-bubble"]')
@@ -73,7 +98,12 @@ async function deliverText(
 		replyToMessage: null,
 	});
 	await messageRow(page, text).waitFor();
-	await expect.poll(() => distanceFromFloor(page)).toBeLessThanOrEqual(1);
+	await fontLoaded(
+		messageRow(page, text).locator('[data-slot="message-bubble"]'),
+	);
+	await expect
+		.poll(() => floorRest(page))
+		.toEqual({ atFloor: true, scrolling: false });
 }
 
 function messageRow(page: Page, text: string) {
@@ -108,15 +138,21 @@ function sidewaysScroll(page: Page): Promise<number> {
 		.evaluate((scroller) => scroller.scrollWidth - scroller.clientWidth);
 }
 
-function distanceFromFloor(page: Page): Promise<number> {
+function floorRest(
+	page: Page,
+): Promise<{ atFloor: boolean; scrolling: boolean }> {
 	return page
 		.locator('[data-slot="messages-scroller"]')
-		.evaluate(
-			(scroller) =>
+		.evaluate((scroller) => ({
+			atFloor:
 				scroller.scrollHeight -
-				scroller.clientHeight -
-				scroller.scrollTop,
-		);
+					scroller.clientHeight -
+					scroller.scrollTop <=
+				1,
+			scrolling: (
+				window as unknown as ScrollTracking
+			).scrollingTargets.has(scroller),
+		}));
 }
 
 test.describe("keyboard access to context menus", () => {

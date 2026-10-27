@@ -1,9 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
 import { MEDIA_SLOT_CELL as CELL } from "./support/albums";
-import { backLink, FIRST_ROUTE_COMPILE_MS } from "./support/app";
+import { FIRST_ROUTE_COMPILE_MS } from "./support/app";
 import { AVATAR_HOST, serveImages } from "./support/media";
-import { openSettings, stackSettled } from "./support/page-stack";
+import {
+	clickNavBarBack,
+	openSettings,
+	stackSettled,
+} from "./support/page-stack";
 
 const NAVBAR_AVATAR = 'nav[aria-label="Main"] a[aria-label="Me"] img';
 const LOADED_SRC = /^https:\/\/api\.dicebear\.com\//;
@@ -66,8 +70,7 @@ test("the navbar avatar shows the main photo saved in Edit profile without a rel
 	await page.getByRole("button", { name: "Save changes" }).click();
 	await expect(page.getByText("Profile updated")).toBeVisible();
 
-	await backLink(page).click();
-	await stackSettled(page);
+	await clickNavBarBack(page);
 	await expect(page).not.toHaveURL(/\/settings\/profile$/);
 
 	await expect(avatar).toHaveAttribute("src", photos[1]!);

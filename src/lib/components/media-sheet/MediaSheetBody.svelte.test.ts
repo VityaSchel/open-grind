@@ -43,11 +43,25 @@ function renderSheet() {
 		await rerender({ fullsize });
 		if (fullsize) measurePeek(container);
 	};
+	const touch = ({
+		type,
+		fingersLeft,
+	}: {
+		type: "touchstart" | "touchend" | "touchcancel";
+		fingersLeft: number;
+	}) => {
+		const event = new Event(type, { bubbles: true });
+		Object.defineProperty(event, "touches", {
+			value: Array.from({ length: fingersLeft }),
+		});
+		scroller.dispatchEvent(event);
+	};
 	return {
 		sheet: component,
 		scrollTo,
 		leaveAt,
 		setFullsize,
+		touch,
 		scrollTop: () => scrollTop,
 	};
 }
@@ -94,6 +108,24 @@ describe("MediaSheetBody", () => {
 		expect(scrollTo).not.toHaveBeenCalled();
 
 		release();
+		vi.advanceTimersByTime(SETTLE_QUIET_MS);
+
+		expect(scrollTo).toHaveBeenCalledWith(
+			expect.objectContaining({ top: 0 }),
+		);
+	});
+
+	it("keeps its size under a finger that stops moving and settles once the last finger lifts", () => {
+		const { scrollTo, leaveAt, touch } = renderSheet();
+
+		touch({ type: "touchstart", fingersLeft: 1 });
+		leaveAt(100);
+		touch({ type: "touchstart", fingersLeft: 2 });
+		touch({ type: "touchend", fingersLeft: 1 });
+		vi.advanceTimersByTime(SETTLE_QUIET_MS * 4);
+		expect(scrollTo).not.toHaveBeenCalled();
+
+		touch({ type: "touchcancel", fingersLeft: 0 });
 		vi.advanceTimersByTime(SETTLE_QUIET_MS);
 
 		expect(scrollTo).toHaveBeenCalledWith(

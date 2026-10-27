@@ -11,7 +11,7 @@ import {
 	vi,
 } from "vitest";
 
-import { contentSlide } from "./content-slide";
+import { contentSlide, PacingTween, type SlidePacer } from "./content-slide";
 import { contentSlideRecorder } from "./content-slide-test-helpers";
 
 vi.mock("svelte/motion", async (importOriginal) => ({
@@ -20,13 +20,14 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 }));
 
 const FRAME_MS = 16;
+const SHARED_FRAME_LOOP_DRAIN_MS = 300;
 const ROOM_PX = 56;
 const TIMING = { duration: 250, easing: "cubic-bezier(0.16, 1, 0.3, 1)" };
 
 let recorder = contentSlideRecorder();
 let animate: MockInstance<Element["animate"]>;
 
-function mountList() {
+function mountList({ pacedBy }: { pacedBy?: SlidePacer } = {}) {
 	const scroller = document.createElement("div");
 	const content = document.createElement("div");
 	content.dataset.refreshContent = "";
@@ -38,7 +39,7 @@ function mountList() {
 	scroller.append(content);
 	document.body.append(scroller);
 
-	const slide = contentSlide(TIMING);
+	const slide = contentSlide({ ...TIMING, pacedBy });
 	const giveRoomBack = vi.fn(() => (layoutTop = 0));
 	const keepRoom = vi.fn();
 	const frames = (count: number) => {
@@ -177,5 +178,63 @@ describe("contentSlide", () => {
 		expect(recorder.slides().at(-1)?.fromPx).toBeCloseTo(
 			-ROOM_PX * expoOut(progress),
 		);
+	});
+
+	it("keeps the list in step with a button that started moving a stall before the slide", () => {
+		const buttonStartedAt = performance.now();
+		vi.advanceTimersByTime(FRAME_MS / 4);
+		const list = mountList({
+			pacedBy: { clockOrigin: () => buttonStartedAt },
+		});
+		list.slide.across({
+			scroller: list.scroller,
+			edge: "top",
+			change: list.giveRoomBack,
+		});
+		list.frames(2);
+		const buttonProgress =
+			(performance.now() - buttonStartedAt) / TIMING.duration;
+
+		expect(list.top()).toBeCloseTo(ROOM_PX * (1 - expoOut(buttonProgress)));
+	});
+});
+
+describe("PacingTween", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({
+			toFake: [
+				"requestAnimationFrame",
+				"cancelAnimationFrame",
+				"performance",
+			],
+		});
+	});
+
+	afterEach(() => {
+		vi.advanceTimersByTime(SHARED_FRAME_LOOP_DRAIN_MS);
+		vi.useRealTimers();
+	});
+
+	it("dates a slide that starts in the button's flush from the button's start, however long the page stalls in between", () => {
+		const button = new PacingTween(0, { duration: TIMING.duration });
+		vi.advanceTimersByTime(FRAME_MS);
+		const startedAt = performance.now();
+
+		void button.set(ROOM_PX);
+		vi.advanceTimersByTime(FRAME_MS / 4);
+
+		expect(button.clockOrigin()).toBe(startedAt);
+	});
+
+	it("dates a slide that a later change starts from now, even while the button is still moving", async () => {
+		const button = new PacingTween(0, { duration: TIMING.duration });
+		void button.set(ROOM_PX);
+		await Promise.resolve();
+
+		vi.advanceTimersByTime(FRAME_MS * 3);
+
+		expect(button.current).toBeGreaterThan(0);
+		expect(button.current).toBeLessThan(ROOM_PX);
+		expect(button.clockOrigin()).toBe(performance.now());
 	});
 });

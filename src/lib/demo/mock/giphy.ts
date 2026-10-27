@@ -9,6 +9,10 @@ const DEMO_GIPHY_MISSING_ID = "NoSuchDemoGif";
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 50;
 const RENDITION_SIZE = 200;
+const GIF_LABEL_PATH =
+	"M-26 -12H-6V-7H-21V7H-11V4H-15V-1H-6V12H-26Z" +
+	"M-1 -12H4V12H-1Z" +
+	"M9 -12H26V-7H14V-2H23V3H14V12H9Z";
 const ID_ALPHABET =
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const ASPECT_RATIOS = [1, 4 / 3, 16 / 9, 3 / 4, 3 / 2, 9 / 16, 1.85, 5 / 4];
@@ -225,7 +229,7 @@ export function demoGiphyMediaUrl(url: string): string {
 			`<stop offset="1" stop-color="hsl(${(hue + 50) % 360} 70% 35%)"/>` +
 			`</linearGradient></defs>` +
 			`<rect width="${width}" height="${height}" fill="url(#g)"/>` +
-			`<text x="50%" y="50%" fill="#fff" font-family="sans-serif" font-size="32" font-weight="700" text-anchor="middle" dominant-baseline="central">GIF</text>` +
+			`<path transform="translate(${width / 2} ${height / 2})" fill="#fff" d="${GIF_LABEL_PATH}"/>` +
 			`</svg>`,
 	);
 }

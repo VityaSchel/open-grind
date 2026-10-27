@@ -17,6 +17,12 @@ targets = [
 yanked = "deny"
 # Unmaintained transitive crates are upstream's to replace, not ours.
 unmaintained = "workspace"
+ignore = [
+	{ id = "RUSTSEC-2026-0391", reason = "zstd 0.13, via boring2 4.15 <- wreq 0.15, which forces boring2's `cert-compression` feature. boring2 calls only zstd::encode_all and zstd::decode_all, which build a fresh context; the flaw is in Encoder/Decoder::with_context. Those calls run only when the ClientHello offers compress_certificate, and grindr never sets wreq's cert_compression_algorithm. The fix exists only in zstd 0.14.3; wreq 0.16 still requires zstd 0.13. Drop this line once boring2 or wreq leaves zstd 0.13." },
+	{ id = "RUSTSEC-2026-0398", reason = "zstd-safe 7.2, via zstd 0.13 <- boring2 4.15 <- wreq 0.15. The flaw is in Seekable::decompress, behind zstd-safe's `seekable` feature, which nothing in the graph enables: `cargo tree -e features -i zstd-safe` shows no seekable. Drop this line together with RUSTSEC-2026-0391." },
+	{ id = "RUSTSEC-2026-0403", reason = "zstd-safe 7.2, via zstd 0.13 <- boring2 4.15 <- wreq 0.15. Only zstd::stream::write::Decoder is affected; boring2 decompresses with zstd::decode_all, which the advisory lists as unaffected, and only for compressed certificates grindr never offers. Drop this line together with RUSTSEC-2026-0391." },
+	{ id = "RUSTSEC-2026-0410", reason = "zstd-sys 2.0, via zstd-safe 7.2 <- zstd 0.13 <- boring2 4.15. The flaw is in the wasm32 allocator shim, and no target above is wasm32. Drop this line together with RUSTSEC-2026-0391." },
+]
 
 [licenses]
 allow = [

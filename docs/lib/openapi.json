@@ -2,7 +2,7 @@
 	"openapi": "3.0.3",
 	"info": {
 		"title": "Grindr API",
-		"version": "26.21.0.190550 (2026-10-20)"
+		"version": "26.22.0.192710 (2026-10-24)"
 	},
 	"servers": [
 		{
@@ -4778,6 +4778,70 @@
 				]
 			}
 		},
+		"/v1/foryou/now/unlock": {
+			"post": {
+				"tags": [
+					"browse/grid"
+				],
+				"operationId": "unlockForYouNowProfile",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Unlock For You Now profile",
+				"description": "Unlocks a `locked` profile of a [for_you_now_v1](#for-you-now-v1) item.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"profileToUnlock"
+								],
+								"properties": {
+									"profileToUnlock": {
+										"type": "string",
+										"pattern": "^[0-9]+$",
+										"description": "string with numeric profile id"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"status",
+										"unlockCount"
+									],
+									"properties": {
+										"status": {
+											"type": "string",
+											"description": "string, `\"UNLOCK\"` or `\"PAYWALL\"`"
+										},
+										"unlockCount": {
+											"type": "integer",
+											"description": "integer, unlocks left"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK, also for a profile that cannot be unlocked (`PAYWALL`)"
+					},
+					"400": {
+						"description": "`urn:gr:err:internal_error` when the body is not JSON."
+					}
+				}
+			}
+		},
 		"/v3/cascade": {
 			"get": {
 				"tags": [
@@ -6247,15 +6311,24 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"story": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/MyStory"
+												}
+											],
+											"nullable": true
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"summary": "Create story",
-				"x-wip": true
+				"summary": "Create story"
 			}
 		},
 		"/v1/stories/inbox": {
@@ -6340,6 +6413,11 @@
 											"items": {
 												"$ref": "#/components/schemas/MyStory"
 											}
+										},
+										"remaining": {
+											"type": "integer",
+											"nullable": true,
+											"description": "integer, stories we can still post, or `null`"
 										}
 									}
 								}
@@ -6468,15 +6546,20 @@
 											"items": {
 												"type": "object",
 												"properties": {
-													"reactionId": {
-														"type": "string",
-														"description": "string, sent back as `reactionId` of a [SendStoryReactionBody](/grindr-api/messaging/messages#sendstoryreactionbody)"
+													"id": {
+														"type": "integer",
+														"format": "int64"
 													},
-													"unicode": {
+													"type": {
 														"type": "string",
-														"description": "string, appears to be space-separated code points such as `U+1F525`"
+														"description": "string, `\"UNICODE\"`"
+													},
+													"value": {
+														"type": "string",
+														"description": "string, space-separated code points such as `U+1F525`"
 													}
-												}
+												},
+												"description": "a reaction; send it whole as `storyReaction` of a [SendStoryReplyBody](/grindr-api/messaging/messages#sendstoryreplybody)"
 											}
 										}
 									}
@@ -6511,15 +6594,23 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/UndocumentedObject"
+									"type": "object",
+									"properties": {
+										"stories": {
+											"type": "array",
+											"nullable": true,
+											"items": {
+												"$ref": "#/components/schemas/Story"
+											}
+										}
+									}
 								}
 							}
 						},
 						"description": "OK"
 					}
 				},
-				"summary": "Get profile stories",
-				"x-wip": true
+				"summary": "Get profile stories"
 			}
 		},
 		"/v2/taps/received": {
@@ -9795,6 +9886,206 @@
 				"summary": "Set preferences"
 			}
 		},
+		"/v1/prep-reminders/doses": {
+			"get": {
+				"tags": [
+					"settings/account"
+				],
+				"operationId": "getPrepDoses",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Get PrEP doses",
+				"description": "Days on which we logged taking PrEP.",
+				"parameters": [
+					{
+						"name": "today",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, our local date as `yyyy-MM-dd`"
+					},
+					{
+						"name": "from",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, `yyyy-MM-dd`"
+					},
+					{
+						"name": "to",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, `yyyy-MM-dd`"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"takenDays",
+										"currentStreak"
+									],
+									"properties": {
+										"takenDays": {
+											"type": "array",
+											"items": {
+												"type": "string",
+												"format": "date"
+											},
+											"description": "array of `yyyy-MM-dd` strings"
+										},
+										"currentStreak": {
+											"type": "integer",
+											"description": "integer, consecutive days taken up to `today`"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `today` is missing or not a date."
+					}
+				}
+			}
+		},
+		"/v1/prep-reminders/doses/{localDate}": {
+			"put": {
+				"tags": [
+					"settings/account"
+				],
+				"operationId": "logPrepDose",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Log PrEP dose",
+				"description": "Marks a day as taken. No body. A future day returns `200` but is not listed in [Get PrEP doses](#get-prep-doses).",
+				"parameters": [
+					{
+						"name": "localDate",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, the dose day as `yyyy-MM-dd`"
+					},
+					{
+						"name": "today",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, our local date as `yyyy-MM-dd`"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"currentStreak"
+									],
+									"properties": {
+										"currentStreak": {
+											"type": "integer",
+											"description": "integer, consecutive days taken up to `today`"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `localDate` or `today` is not a date."
+					}
+				}
+			},
+			"delete": {
+				"tags": [
+					"settings/account"
+				],
+				"operationId": "removePrepDose",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Remove PrEP dose",
+				"description": "Unmarks a day. No body.",
+				"parameters": [
+					{
+						"name": "localDate",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, the dose day as `yyyy-MM-dd`"
+					},
+					{
+						"name": "today",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date"
+						},
+						"description": "string, our local date as `yyyy-MM-dd`"
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"currentStreak"
+									],
+									"properties": {
+										"currentStreak": {
+											"type": "integer",
+											"description": "integer, consecutive days taken up to `today`"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK"
+					},
+					"400": {
+						"description": "`urn:gr:err:parameter` when `localDate` or `today` is not a date."
+					}
+				}
+			}
+		},
 		"/v1/visiting/settings": {
 			"get": {
 				"tags": [
@@ -11712,7 +12003,7 @@
 						"schema": {
 							"type": "string"
 						},
-						"description": "string, `\"CHAT\"` or `\"GRID\"`, case-insensitive"
+						"description": "string, `\"GRID\"`, `\"CHAT\"`, `\"DISCOVER\"` or `\"ALIST\"`, case-insensitive"
 					}
 				],
 				"responses": {
@@ -11734,29 +12025,262 @@
 										},
 										"status": {
 											"type": "string",
-											"description": "string, e.g. `\"VIEWER_OPTED_OUT\"`"
+											"description": "string, `\"DATA_AVAILABLE\"`, `\"NOT_ENOUGH_DATA\"`, `\"NEW_USER\"`, `\"VIEWER_OPTED_OUT\"` or `\"TARGET_OPTED_OUT\"`"
 										},
 										"badge": {
 											"type": "object",
 											"nullable": true,
-											"description": "object or `null`, shape unknown"
+											"properties": {
+												"type": {
+													"type": "string",
+													"description": "string, `\"RIGHT_NOW\"`, `\"NEARBY\"`, `\"MISSED_CONNECTION\"`, `\"BACK_ONLINE\"`, `\"REPLY_LIKELY\"`, `\"CHATS_WITH\"`, `\"RESPONSIVE\"` or `\"PICKED_FOR_YOU\"`"
+												},
+												"values": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"kind": {
+																"type": "string",
+																"description": "string, `\"AGE\"`, `\"POSITION\"` or `\"TRIBE\"`"
+															},
+															"id": {
+																"type": "integer",
+																"nullable": true,
+																"description": "integer, position or tribe id, or `null`"
+															},
+															"value": {
+																"type": "string",
+																"nullable": true,
+																"description": "string, age text, or `null`"
+															}
+														}
+													}
+												}
+											},
+											"description": "object or `null`, a highlight about the profile"
 										},
 										"chatSummary": {
 											"type": "object",
 											"nullable": true,
-											"description": "object or `null`, shape unknown"
+											"required": [
+												"conversationId",
+												"recap"
+											],
+											"properties": {
+												"conversationId": {
+													"$ref": "#/components/schemas/ConversationId"
+												},
+												"recap": {
+													"type": "string"
+												},
+												"summary": {
+													"type": "array",
+													"items": {
+														"type": "string"
+													}
+												},
+												"realName": {
+													"type": "string",
+													"nullable": true
+												},
+												"locationName": {
+													"type": "string",
+													"nullable": true
+												},
+												"lastChatted": {
+													"allOf": [
+														{
+															"$ref": "#/components/schemas/TimestampMs"
+														}
+													],
+													"nullable": true
+												},
+												"albums": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"coverUrl": {
+																"type": "string",
+																"nullable": true
+															},
+															"albumId": {
+																"type": "integer",
+																"format": "int64"
+															}
+														}
+													}
+												},
+												"chatMedia": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"mediaId": {
+																"type": "integer",
+																"format": "int64"
+															},
+															"mediaHash": {
+																"type": "string",
+																"nullable": true
+															},
+															"imageUrl": {
+																"type": "string",
+																"nullable": true
+															}
+														}
+													}
+												},
+												"into": {
+													"type": "string",
+													"nullable": true
+												}
+											},
+											"description": "object or `null`, our conversation with the profile"
 										},
 										"profileInsights": {
 											"type": "object",
 											"nullable": true,
-											"description": "object or `null`, shape unknown"
+											"properties": {
+												"initiationRate": {
+													"type": "integer",
+													"nullable": true
+												},
+												"responseRate": {
+													"type": "integer",
+													"nullable": true
+												},
+												"intent": {
+													"type": "array",
+													"items": {
+														"type": "object",
+														"properties": {
+															"type": {
+																"type": "string",
+																"description": "string, `\"HOOKUP\"`, `\"DATE\"` or `\"CHATTING\"`"
+															},
+															"value": {
+																"type": "number"
+															}
+														}
+													}
+												},
+												"tendenciesSummary": {
+													"type": "object",
+													"properties": {
+														"position": {
+															"type": "object",
+															"properties": {
+																"position": {
+																	"type": "string",
+																	"description": "string, `\"TOP\"`, `\"BOTTOM\"`, `\"VERSATILE\"`, `\"VERSATILE_BOTTOM\"`, `\"VERSATILE_TOP\"` or `\"SIDE\"`"
+																},
+																"frequency": {
+																	"type": "string",
+																	"description": "string, `\"OFTEN\"`, `\"SOMETIMES\"` or `\"RARELY\"`"
+																}
+															}
+														},
+														"age": {
+															"type": "object",
+															"properties": {
+																"ageBracket": {
+																	"type": "string",
+																	"description": "string, `\"AGE_18_19\"` … `\"AGE_58_59\"` in two-year steps, or `\"AGE_60_PLUS\"`"
+																},
+																"frequency": {
+																	"type": "string",
+																	"description": "string, `\"OFTEN\"`, `\"SOMETIMES\"` or `\"RARELY\"`"
+																}
+															}
+														},
+														"tribes": {
+															"type": "array",
+															"items": {
+																"type": "object",
+																"properties": {
+																	"tribe": {
+																		"type": "string",
+																		"description": "string, tribe name such as `\"BEAR\"` or `\"TWINK\"`"
+																	},
+																	"frequency": {
+																		"type": "string",
+																		"description": "string, `\"OFTEN\"`, `\"SOMETIMES\"` or `\"RARELY\"`"
+																	}
+																}
+															}
+														}
+													}
+												},
+												"tendencies": {
+													"type": "object",
+													"properties": {
+														"positions": {
+															"type": "array",
+															"items": {
+																"type": "object",
+																"properties": {
+																	"position": {
+																		"type": "string",
+																		"description": "string, `\"TOP\"`, `\"BOTTOM\"`, `\"VERSATILE\"`, `\"VERSATILE_BOTTOM\"`, `\"VERSATILE_TOP\"` or `\"SIDE\"`"
+																	},
+																	"frequency": {
+																		"type": "integer"
+																	}
+																}
+															}
+														},
+														"ages": {
+															"type": "array",
+															"items": {
+																"type": "object",
+																"properties": {
+																	"ageBracket": {
+																		"type": "string",
+																		"description": "string, `\"AGE_18_19\"` … `\"AGE_58_59\"` in two-year steps, or `\"AGE_60_PLUS\"`"
+																	},
+																	"frequency": {
+																		"type": "integer"
+																	}
+																}
+															}
+														},
+														"tribes": {
+															"type": "array",
+															"items": {
+																"type": "object",
+																"properties": {
+																	"tribe": {
+																		"type": "string",
+																		"description": "string, tribe name such as `\"BEAR\"` or `\"TWINK\"`"
+																	},
+																	"frequency": {
+																		"type": "integer"
+																	}
+																}
+															}
+														}
+													}
+												}
+											},
+											"description": "object or `null`, how the profile tends to chat"
 										},
 										"recentActivity": {
 											"type": "array",
 											"items": {
-												"type": "object"
+												"type": "object",
+												"properties": {
+													"type": {
+														"type": "string",
+														"description": "string, e.g. `\"PROFILE_VIEWED\"`, `\"ALBUM_UPDATE\"`, `\"PHOTO_SENT\"`"
+													},
+													"eventTime": {
+														"$ref": "#/components/schemas/TimestampMs"
+													}
+												}
 											},
-											"description": "array, item shape unknown"
+											"description": "array, empty when opted out"
 										}
 									}
 								}
@@ -11769,8 +12293,7 @@
 					}
 				},
 				"summary": "Get Edge insights",
-				"description": "Returns `200` for any profile id, including ones that do not exist.",
-				"x-wip": true
+				"description": "Returns `200` for any profile id, including ones that do not exist."
 			}
 		},
 		"/v2/profile-insights/{profileId}": {
@@ -12405,7 +12928,8 @@
 								],
 								"properties": {
 									"requestId": {
-										"type": "string"
+										"type": "string",
+										"description": "string, random UUID, reused when retrying the same request"
 									}
 								}
 							}
@@ -12447,8 +12971,74 @@
 						"description": "OK"
 					}
 				},
-				"summary": "Create Edge invite",
-				"x-wip": true
+				"summary": "Create Edge invite"
+			}
+		},
+		"/v1/invites/claim": {
+			"post": {
+				"tags": [
+					"commerce/storeapirest"
+				],
+				"operationId": "claimEdgeInvite",
+				"security": [
+					{
+						"Grindr3Auth": []
+					}
+				],
+				"summary": "Claim Edge invite",
+				"description": "Redeems the `code` of an [Edge invite](#create-edge-invite). Invite links carry it as `grindr://invite?code=<code>`.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": [
+									"code"
+								],
+								"properties": {
+									"code": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"required": [
+										"outcome",
+										"expiresAt"
+									],
+									"properties": {
+										"outcome": {
+											"type": "string",
+											"description": "string, `\"GRANTED\"`, `\"ALREADY_CLAIMED\"`, `\"EXPIRED\"`, `\"REVOKED\"`, `\"INELIGIBLE\"`, `\"PROGRAM_ENDED\"`, `\"INVALID_CODE\"` or `\"SELF_CLAIM\"`"
+										},
+										"expiresAt": {
+											"allOf": [
+												{
+													"$ref": "#/components/schemas/TimestampMs"
+												}
+											],
+											"nullable": true,
+											"description": "unix timestamp in milliseconds or `null`; `null` with `INVALID_CODE`"
+										}
+									}
+								}
+							}
+						},
+						"description": "OK, including codes that were not granted"
+					},
+					"400": {
+						"description": "`urn:gr:err:internal_error` when the body has no `code`."
+					}
+				}
 			}
 		},
 		"/v1/referrals/allowance": {
@@ -12486,8 +13076,7 @@
 					}
 				},
 				"summary": "Get referral allowance",
-				"description": "Counts of [Edge invites](#create-edge-invite-wip).",
-				"x-wip": true
+				"description": "Counts of [Edge invites](#create-edge-invite)."
 			}
 		},
 		"/v2/media/upload": {
@@ -12669,7 +13258,7 @@
 					}
 				},
 				"x-errors": {
-					"4xx": "Signature rejected. Body is an `UploadSigningErrorResponse` whose `type` contains `timestamp_drift` (with `detail` = server time as ISO-8601; resync and retry) or `nonce_replayed` (retry with a fresh nonce)."
+					"4xx": "Signature rejected. Body is an `UploadSigningErrorResponse` whose `type` contains `timestamp_drift` (with `detail` = server time as ISO-8601; resync and retry), `nonce_replayed` (retry with a fresh nonce) or `resource_not_found` (register a new device key and retry)."
 				}
 			}
 		},
@@ -12749,7 +13338,7 @@
 					}
 				},
 				"x-errors": {
-					"4xx": "Signature rejected; see `UploadSigningErrorResponse` (`timestamp_drift` / `nonce_replayed`)."
+					"4xx": "Signature rejected; see `UploadSigningErrorResponse` (`timestamp_drift` / `nonce_replayed` / `resource_not_found`)."
 				}
 			}
 		},
@@ -14608,10 +15197,10 @@
 						],
 						"nullable": true
 					},
-					"distance": {
+					"distanceMeters": {
 						"type": "integer",
 						"nullable": true,
-						"description": "integer, appears to be in meters"
+						"description": "integer, meters, or `null`"
 					},
 					"media": {
 						"allOf": [
@@ -14679,26 +15268,16 @@
 						],
 						"nullable": true
 					},
-					"hasUnviewed": {
+					"unseenStories": {
 						"type": "boolean"
 					},
 					"isFavorite": {
 						"type": "boolean"
 					},
-					"rightNow": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/RightNowStatus"
-							}
-						],
-						"nullable": true
-					},
-					"stories": {
-						"type": "array",
+					"rightNowStatus": {
+						"type": "string",
 						"nullable": true,
-						"items": {
-							"$ref": "#/components/schemas/Story"
-						}
+						"description": "string, `\"NOT_ACTIVE\"`, `\"HOSTING\"` or `\"NOT_HOSTING\"`, or `null`"
 					}
 				}
 			},
@@ -14715,12 +15294,11 @@
 						"description": "`\"PENDING\"`, `\"ACTIVE\"`, `\"REJECTED\"`, `\"EXPIRED\"` or `null`"
 					},
 					"media": {
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/StoryMedia"
-							}
-						],
-						"nullable": true
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"$ref": "#/components/schemas/StoryMedia"
+						}
 					},
 					"caption": {
 						"type": "object",
@@ -14745,6 +15323,22 @@
 							}
 						}
 					},
+					"audience": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "string"
+						},
+						"description": "array of strings, see `audience` of [Create story](#create-story), or `null`"
+					},
+					"createdAt": {
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/TimestampMs"
+							}
+						],
+						"nullable": true
+					},
 					"posted": {
 						"allOf": [
 							{
@@ -14760,59 +15354,65 @@
 							}
 						],
 						"nullable": true
+					},
+					"views": {
+						"type": "array",
+						"nullable": true,
+						"items": {
+							"type": "object",
+							"properties": {
+								"profileId": {
+									"type": "integer",
+									"format": "int64"
+								},
+								"timestamp": {
+									"$ref": "#/components/schemas/TimestampMs"
+								}
+							}
+						}
 					}
 				}
 			},
 			"StoryRequest": {
 				"type": "object",
 				"required": [
-					"mediaId",
-					"audience"
+					"audience",
+					"media"
 				],
 				"properties": {
-					"mediaId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"caption": {
+					"text": {
 						"type": "string",
-						"description": "string, optional"
+						"description": "string, caption, optional"
 					},
 					"audience": {
-						"type": "object",
-						"required": [
-							"options"
-						],
-						"properties": {
-							"options": {
-								"type": "array",
-								"description": "array of strings, `[\"EVERYONE\"]` or any of `\"NEARBY\"`, `\"FAVORITES\"`, `\"MESSAGED\"`, `\"ALBUM_SHARED\"`",
-								"items": {
-									"type": "string"
-								}
-							},
-							"myType": {
-								"type": "object",
-								"description": "object, optional",
-								"properties": {
-									"ageMin": {
-										"type": "integer",
-										"description": "integer, optional"
-									},
-									"ageMax": {
-										"type": "integer",
-										"description": "integer, optional"
-									},
-									"positions": {
-										"type": "array",
-										"description": "array of [sexual position IDs](/grindr-api/users/profiles#sexual-position-id), optional",
-										"items": {
-											"type": "integer"
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "array of strings, `[\"EVERYONE\"]` or any of `\"NEARBY\"`, `\"FAVORITES\"`, `\"MESSAGED\"`, `\"ALBUM_SHARED\"`"
+					},
+					"media": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"type": {
+									"type": "string",
+									"description": "string, `\"image_v1\"`"
+								},
+								"data": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "integer",
+											"format": "int64",
+											"description": "long integer, `mediaId` from [POST /v2/media/upload](/grindr-api/right-now#upload-right-now-media-v2-wip)"
 										}
 									}
 								}
 							}
-						}
+						},
+						"description": "array with one image"
 					}
 				}
 			},
@@ -16808,6 +17408,10 @@
 							},
 							"isOnPrep": {
 								"type": "boolean"
+							},
+							"chatMinAppVersion": {
+								"type": "string",
+								"description": "string, lowest app version that can open a chat with this profile, compared dot-segment by segment; may be absent"
 							}
 						}
 					}
@@ -17663,6 +18267,15 @@
 					"showOnMap": {
 						"type": "boolean",
 						"description": "Whether the profile is shown on the map."
+					},
+					"prepReminderEnabled": {
+						"type": "boolean",
+						"description": "boolean, whether daily PrEP reminders are on"
+					},
+					"prepReminderTime": {
+						"type": "string",
+						"nullable": true,
+						"description": "string, reminder time as 24-hour `HH:mm`, or `null`"
 					}
 				},
 				"x-render-on-tag": "settings/account",
@@ -17707,6 +18320,13 @@
 								"type": "integer",
 								"nullable": true,
 								"description": "Map-location privacy fuzz radius. Renamed from `mapLocationRadius` in app 26.10.0."
+							},
+							"prepReminderEnabled": {
+								"type": "boolean"
+							},
+							"prepReminderTime": {
+								"type": "string",
+								"description": "string, reminder time as 24-hour `HH:mm`"
 							}
 						}
 					}
@@ -19212,7 +19832,6 @@
 					"ProfilePhotoReply",
 					"Retract",
 					"RightNowRequest",
-					"StoryReaction",
 					"StoryReply",
 					"Text",
 					"Unknown",
@@ -19376,64 +19995,58 @@
 					"contentType"
 				]
 			},
-			"StoryReactionBody": {
-				"type": "object",
-				"properties": {
-					"storyId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"reactionId": {
-						"type": "string"
-					},
-					"unicode": {
-						"type": "string",
-						"description": "string, same format as in [Get story reactions](/grindr-api/users/stories#get-story-reactions)"
-					},
-					"ownerProfileId": {
-						"type": "integer",
-						"format": "int64",
-						"nullable": true,
-						"description": "integer or `null`, author of the story"
-					},
-					"previewUrl": {
-						"type": "string",
-						"nullable": true
-					},
-					"expiresAt": {
-						"nullable": true,
-						"description": "unix timestamp in milliseconds or `null`",
-						"allOf": [
-							{
-								"$ref": "#/components/schemas/TimestampMs"
-							}
-						]
-					},
-					"viewable": {
-						"type": "boolean"
-					}
-				},
-				"description": "Body for `\"StoryReaction\"` message type: a reaction to a [story](/grindr-api/users/stories).",
-				"x-render-on-tag": "messaging/messages"
-			},
 			"StoryReplyBody": {
 				"type": "object",
 				"properties": {
+					"type": {
+						"type": "string",
+						"description": "string, `\"REACTION\"` or `\"TEXT\"`"
+					},
 					"storyId": {
 						"type": "integer",
 						"format": "int64"
 					},
 					"text": {
-						"type": "string"
+						"type": "string",
+						"nullable": true,
+						"description": "string, the reply, for `TEXT`"
 					},
-					"ownerProfileId": {
+					"storyReaction": {
+						"allOf": [
+							{
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "integer",
+										"format": "int64"
+									},
+									"type": {
+										"type": "string",
+										"description": "string, `\"UNICODE\"`"
+									},
+									"value": {
+										"type": "string",
+										"description": "string, space-separated code points such as `U+1F525`"
+									}
+								},
+								"description": ""
+							}
+						],
+						"nullable": true,
+						"description": "the reaction, for `REACTION`"
+					},
+					"storyOwnerId": {
 						"type": "integer",
 						"format": "int64",
 						"nullable": true,
 						"description": "integer or `null`, author of the story"
 					},
-					"previewUrl": {
+					"storyThumbnail": {
 						"type": "string",
+						"nullable": true
+					},
+					"isNSFW": {
+						"type": "boolean",
 						"nullable": true
 					},
 					"expiresAt": {
@@ -19444,12 +20057,9 @@
 								"$ref": "#/components/schemas/TimestampMs"
 							}
 						]
-					},
-					"viewable": {
-						"type": "boolean"
 					}
 				},
-				"description": "Body for `\"StoryReply\"` message type: a text reply to a [story](/grindr-api/users/stories).",
+				"description": "Body for `\"StoryReply\"` message type: a reaction or text reply to a [story](/grindr-api/users/stories).",
 				"x-render-on-tag": "messaging/messages"
 			},
 			"AudioMessageBody": {
@@ -19983,9 +20593,6 @@
 						"$ref": "#/components/schemas/ProfileLinkBody"
 					},
 					{
-						"$ref": "#/components/schemas/StoryReactionBody"
-					},
-					{
 						"$ref": "#/components/schemas/StoryReplyBody"
 					}
 				],
@@ -20314,41 +20921,45 @@
 					"albumContentReply"
 				]
 			},
-			"SendStoryReactionBody": {
-				"type": "object",
-				"properties": {
-					"storyId": {
-						"type": "integer",
-						"format": "int64"
-					},
-					"reactionId": {
-						"type": "string",
-						"description": "string, from [Get story reactions](/grindr-api/users/stories#get-story-reactions)"
-					}
-				},
-				"description": "Request body for sending a `\"StoryReaction\"` message to the story's author. The other fields of [StoryReactionBody](#storyreactionbody) are server-populated.",
-				"x-render-on-tag": "messaging/messages",
-				"required": [
-					"storyId",
-					"reactionId"
-				]
-			},
 			"SendStoryReplyBody": {
 				"type": "object",
 				"properties": {
+					"type": {
+						"type": "string",
+						"description": "string, `\"REACTION\"` or `\"TEXT\"`"
+					},
 					"storyId": {
 						"type": "integer",
 						"format": "int64"
 					},
+					"storyReaction": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "integer",
+								"format": "int64"
+							},
+							"type": {
+								"type": "string",
+								"description": "string, `\"UNICODE\"`"
+							},
+							"value": {
+								"type": "string",
+								"description": "string, space-separated code points such as `U+1F525`"
+							}
+						},
+						"description": "an entry of [Get story reactions](/grindr-api/users/stories#get-story-reactions), for `REACTION`"
+					},
 					"text": {
-						"type": "string"
+						"type": "string",
+						"description": "string, the reply, for `TEXT`"
 					}
 				},
 				"description": "Request body for sending a `\"StoryReply\"` message to the story's author. The other fields of [StoryReplyBody](#storyreplybody) are server-populated.",
 				"x-render-on-tag": "messaging/messages",
 				"required": [
-					"storyId",
-					"text"
+					"type",
+					"storyId"
 				]
 			},
 			"SendMessageBody": {
@@ -20385,9 +20996,6 @@
 					},
 					{
 						"$ref": "#/components/schemas/SendAlbumContentReplyBody"
-					},
-					{
-						"$ref": "#/components/schemas/SendStoryReactionBody"
 					},
 					{
 						"$ref": "#/components/schemas/SendStoryReplyBody"
@@ -23123,7 +23731,7 @@
 					"type": {
 						"type": "string",
 						"nullable": true,
-						"description": "Failure kind; contains `timestamp_drift` or `nonce_replayed`."
+						"description": "Failure kind; contains `timestamp_drift`, `nonce_replayed` or `resource_not_found` (the device key is unknown: register a new one and retry)."
 					},
 					"detail": {
 						"type": "string",
@@ -23405,7 +24013,8 @@
 					"CHAT_MESSAGE",
 					"ALBUM",
 					"RIGHT_NOW_PHOTO",
-					"RIGHT_NOW_TEXT"
+					"RIGHT_NOW_TEXT",
+					"STORY"
 				],
 				"description": "Where the reported content was seen.",
 				"x-enum-labels": {
@@ -23414,7 +24023,8 @@
 					"CHAT_MESSAGE": "Chat Message",
 					"ALBUM": "Album",
 					"RIGHT_NOW_PHOTO": "Right Now Image",
-					"RIGHT_NOW_TEXT": "Right Now Text"
+					"RIGHT_NOW_TEXT": "Right Now Text",
+					"STORY": "Story"
 				},
 				"x-render-on-tag": "safety/reports"
 			},
@@ -23464,6 +24074,16 @@
 						"description": "the reported Right Now post",
 						"properties": {
 							"postId": {
+								"type": "integer",
+								"format": "int64"
+							}
+						}
+					},
+					"storyInfo": {
+						"type": "object",
+						"description": "the reported story, for `STORY` reports",
+						"properties": {
+							"storyId": {
 								"type": "integer",
 								"format": "int64"
 							}

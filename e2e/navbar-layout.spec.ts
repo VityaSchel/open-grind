@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { fontLoaded, installTauriShim } from "./support/app";
 
 test.use({ viewport: { width: 360, height: 800 }, deviceScaleFactor: 3 });
 
@@ -47,12 +47,12 @@ test("the bottom navbar fits a 1080px physical-width screen", async ({
 test("tab widths don't change when selecting a tab", async ({ page }) => {
 	await installTauriShim(page);
 	await page.goto("/right-now");
-	await page.evaluate(() => document.fonts.ready);
 
 	const navbar = page.getByRole("navigation", { name: "Main" });
 	const tabs = ["Browse", "Right Now", "Interest", "Inbox"].map((name) =>
 		navbar.getByRole("link", { name }),
 	);
+	for (const tab of tabs) await fontLoaded(tab);
 
 	const getWidths = () =>
 		Promise.all(

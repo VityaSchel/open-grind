@@ -63,10 +63,26 @@ test("arrow keys leave the profile alone while a menu is open", async ({
 	await openGridProfile(page, { nth: 1 });
 
 	await activeProfilePane(page).getByLabel("Profile menu").click();
-	await page.getByRole("menuitem").first().waitFor({ timeout: 30_000 });
+	await expect(page.getByRole("menu")).toBeFocused({ timeout: 30_000 });
 	const { scrollLeft } = await pagerGeometry(page);
+	await page.evaluate(() => {
+		addEventListener(
+			"keydown",
+			(event) => {
+				document.body.dataset.arrowCancelled = String(
+					event.defaultPrevented,
+				);
+			},
+			{ once: true },
+		);
+	});
 
 	await page.keyboard.press("ArrowRight");
+
+	await expect(
+		page.locator("body"),
+		"the pager leaves the arrow to the menu",
+	).toHaveAttribute("data-arrow-cancelled", "false");
 	await afterTwoFrames(page);
 
 	expect(
