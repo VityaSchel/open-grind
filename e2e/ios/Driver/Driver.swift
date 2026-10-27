@@ -2,6 +2,12 @@ import UIKit
 import XCTest
 
 final class Driver: XCTestCase {
+	private static let stepKeys: Set<String> = [
+		"launch", "activate", "home", "rotate", "pasteboardImage", "pasteboardText", "tap", "tapSecure", "tapIfPresent",
+		"doubleTap", "press", "seconds", "springboard", "tapAt", "drag", "dragHold", "type", "swipe", "on", "wait",
+		"expect", "expectGone", "keyboard", "screenshot", "tree",
+	]
+	private static let dragHoldKeys: Set<String> = ["path", "hold", "velocity", "screenshot", "tree"]
 	private let timeout: TimeInterval = 15
 	private let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
@@ -26,9 +32,16 @@ final class Driver: XCTestCase {
 	}
 
 	func testSteps() throws {
+		continueAfterFailure = false
 		let stepsPath = try XCTUnwrap(ProcessInfo.processInfo.environment["OG_STEPS"], "OG_STEPS is not set")
 		let data = try Data(contentsOf: URL(fileURLWithPath: stepsPath))
 		let steps = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+		for (index, step) in steps.enumerated() {
+			try rejectUnknownKeys(in: step, known: Self.stepKeys, of: "step \(index + 1)")
+			if let options: [String: Any] = try value("dragHold", in: step) {
+				try rejectUnknownKeys(in: options, known: Self.dragHoldKeys, of: "step \(index + 1) dragHold")
+			}
+		}
 		let app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
 
 		for (index, step) in steps.enumerated() {
@@ -48,87 +61,92 @@ final class Driver: XCTestCase {
 		if step["home"] != nil {
 			XCUIDevice.shared.press(.home)
 		}
-		if let name = step["rotate"] as? String {
+		if let name: String = try value("rotate", in: step) {
 			XCUIDevice.shared.orientation = try orientation(name)
 		}
-		if let path = step["pasteboardImage"] as? String {
+		if let path: String = try value("pasteboardImage", in: step) {
 			UIPasteboard.general.image = try XCTUnwrap(UIImage(contentsOfFile: path), "no image at \(path)")
-			XCTAssertTrue(UIPasteboard.general.hasImages, "pasteboard holds no image")
+			guard UIPasteboard.general.hasImages else { throw failure("pasteboard holds no image") }
 		}
-		if let path = step["pasteboardText"] as? String {
+		if let path: String = try value("pasteboardText", in: step) {
 			UIPasteboard.general.string = try String(contentsOfFile: path, encoding: .utf8)
-			XCTAssertTrue(UIPasteboard.general.hasStrings, "pasteboard holds no text")
+			guard UIPasteboard.general.hasStrings else { throw failure("pasteboard holds no text") }
 		}
-		if let label = step["tap"] as? String {
+		if let label: String = try value("tap", in: step) {
 			try element(label, in: app).tap()
 		}
-		if let label = step["tapSecure"] as? String {
+		if let label: String = try value("tapSecure", in: step) {
 			try first(label, in: app.secureTextFields).tap()
 		}
-		if let label = step["tapIfPresent"] as? String {
+		if let label: String = try value("tapIfPresent", in: step) {
 			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
 			if match.waitForExistence(timeout: 3) {
 				match.tap()
 			}
 		}
-		if let label = step["doubleTap"] as? String {
+		if let label: String = try value("doubleTap", in: step) {
 			try element(label, in: app).doubleTap()
 		}
-		if let label = step["press"] as? String {
-			try element(label, in: app).press(forDuration: step["seconds"] as? Double ?? 1)
+		if let label: String = try value("press", in: step) {
+			let seconds: Double = try value("seconds", in: step) ?? 1
+			try element(label, in: app).press(forDuration: seconds)
 		}
-		if let label = step["springboard"] as? String {
+		if let label: String = try value("springboard", in: step) {
 			try element(label, in: springboard).tap()
 		}
-		if let point = step["tapAt"] as? [Double], point.count == 2 {
+		if let point: [Double] = try value("tapAt", in: step) {
+			guard point.count == 2 else { throw failure("tapAt needs a point of [x, y]") }
 			coordinate(point[0], point[1], in: app).tap()
 		}
-		if let path = step["drag"] as? [Double], path.count == 4 {
+		if let path: [Double] = try value("drag", in: step) {
+			guard path.count == 4 else { throw failure("drag needs a path of [x1, y1, x2, y2]") }
 			let start = coordinate(path[0], path[1], in: app)
 			let end = coordinate(path[2], path[3], in: app)
 			start.press(forDuration: 0.05, thenDragTo: end)
 		}
-		if let options = step["dragHold"] as? [String: Any] {
+		if let options: [String: Any] = try value("dragHold", in: step) {
 			try dragHold(options, in: app)
 		}
-		if let text = step["type"] as? String {
+		if let text: String = try value("type", in: step) {
 			app.typeText(text)
 		}
-		if let direction = step["swipe"] as? String {
-			let target: XCUIElement = try (step["on"] as? String).map { try element($0, in: app) } ?? app
+		if let direction: String = try value("swipe", in: step) {
+			let on: String? = try value("on", in: step)
+			let target: XCUIElement = try on.map { try element($0, in: app) } ?? app
 			switch direction {
 			case "up": target.swipeUp()
 			case "down": target.swipeDown()
 			case "left": target.swipeLeft()
 			case "right": target.swipeRight()
-			default: XCTFail("unknown swipe direction \(direction)")
+			default: throw failure("unknown swipe direction \(direction)")
 			}
 		}
-		if let seconds = step["wait"] as? Double {
+		if let seconds: Double = try value("wait", in: step) {
 			Thread.sleep(forTimeInterval: seconds)
 		}
-		if let label = step["expect"] as? String {
+		if let label: String = try value("expect", in: step) {
 			_ = try element(label, in: app)
 		}
-		if let label = step["expectGone"] as? String {
-			let gone = NSPredicate(format: "exists == false")
+		if let label: String = try value("expectGone", in: step) {
 			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
-			let result = XCTWaiter().wait(for: [expectation(for: gone, evaluatedWith: match)], timeout: timeout)
-			XCTAssertEqual(result, .completed, "\(label) is still shown")
+			guard disappears(match) else { throw failure("\(label) is still shown") }
 		}
-		if let visible = step["keyboard"] as? Bool {
-			XCTAssertEqual(app.keyboards.count > 0, visible, "keyboard visible should be \(visible)")
+		if let visible: Bool = try value("keyboard", in: step) {
+			let keyboard = app.keyboards.firstMatch
+			guard visible ? keyboard.waitForExistence(timeout: timeout) : disappears(keyboard) else {
+				throw failure("keyboard visible should be \(visible)")
+			}
 		}
 		try capture(step, of: app)
 	}
 
 	private func dragHold(_ options: [String: Any], in app: XCUIApplication) throws {
-		guard let path = options["path"] as? [Double], path.count == 4 else {
+		guard let path: [Double] = try value("path", in: options), path.count == 4 else {
 			throw failure("dragHold needs a path of [x1, y1, x2, y2]")
 		}
 		let press = 0.05
-		let hold = options["hold"] as? Double ?? 2
-		let velocity = options["velocity"] as? Double ?? 1000
+		let hold: Double = try value("hold", in: options) ?? 2
+		let velocity: Double = try value("velocity", in: options) ?? 1000
 		let start = coordinate(path[0], path[1], in: app)
 		let end = coordinate(path[2], path[3], in: app)
 		let travel = hypot(end.screenPoint.x - start.screenPoint.x, end.screenPoint.y - start.screenPoint.y) / velocity
@@ -153,10 +171,10 @@ final class Driver: XCTestCase {
 	}
 
 	private func capture(_ options: [String: Any], of app: XCUIApplication) throws {
-		if let path = options["screenshot"] as? String {
+		if let path: String = try value("screenshot", in: options) {
 			try XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: path))
 		}
-		if let path = options["tree"] as? String {
+		if let path: String = try value("tree", in: options) {
 			try app.debugDescription.write(toFile: path, atomically: true, encoding: .utf8)
 		}
 	}
@@ -188,6 +206,22 @@ final class Driver: XCTestCase {
 			throw failure("no element labelled \(label)")
 		}
 		return match
+	}
+
+	private func disappears(_ element: XCUIElement) -> Bool {
+		let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+		return XCTWaiter().wait(for: [gone], timeout: timeout) == .completed
+	}
+
+	private func value<T>(_ key: String, in options: [String: Any]) throws -> T? {
+		guard let raw = options[key] else { return nil }
+		guard let typed = raw as? T else { throw failure("\(key) needs a \(T.self), not \(raw)") }
+		return typed
+	}
+
+	private func rejectUnknownKeys(in options: [String: Any], known: Set<String>, of name: String) throws {
+		let unknown = Set(options.keys).subtracting(known)
+		guard unknown.isEmpty else { throw failure("\(name) has unknown keys \(unknown.sorted())") }
 	}
 
 	private func failure(_ message: String) -> NSError {

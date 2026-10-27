@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { exists, mkdtemp, writeFile } from "node:fs/promises";
+import { exists, mkdtemp, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -24,15 +24,33 @@ async function simulatorId(): Promise<string> {
 	throw new Error(`no simulator named ${simulatorName}`);
 }
 
-async function testRun(): Promise<string | undefined> {
+interface TestRun {
+	path: string;
+	modified: number;
+}
+
+async function testRun(): Promise<TestRun | undefined> {
 	const products = join(derivedData, "Build", "Products");
 	if (!(await exists(products))) return undefined;
+	let newest: TestRun | undefined;
 	for await (const file of new Bun.Glob("*.xctestrun").scan({
 		cwd: products,
 	})) {
-		return join(products, file);
+		const path = join(products, file);
+		const { mtimeMs } = await stat(path);
+		if (!newest || mtimeMs > newest.modified)
+			newest = { path, modified: mtimeMs };
 	}
-	return undefined;
+	return newest;
+}
+
+async function sourcesModified(): Promise<number> {
+	const sources = [join(root, "project.yml")];
+	for await (const file of new Bun.Glob("Driver/**").scan({ cwd: root })) {
+		sources.push(join(root, file));
+	}
+	const stats = await Promise.all(sources.map((source) => stat(source)));
+	return Math.max(...stats.map(({ mtimeMs }) => mtimeMs));
 }
 
 async function build(destination: string): Promise<string> {
@@ -40,12 +58,13 @@ async function build(destination: string): Promise<string> {
 	await $`${cleanXcodeEnv} xcodebuild build-for-testing -project ${join(root, "OpenGrindUITests.xcodeproj")} -scheme OpenGrindUITests -destination ${destination} -derivedDataPath ${derivedData} -quiet`;
 	const run = await testRun();
 	if (!run) throw new Error("build-for-testing produced no .xctestrun");
-	return run;
+	return run.path;
 }
 
 const usage = `usage: bun e2e/ios/drive.ts <steps.json | '[{"tap":"Get started"}]'>
 
-Runs on the simulator named OG_SIMULATOR (default og-ios-test), which must exist and boots if it is shut down. OG_REBUILD=1 rebuilds the runner.
+Runs on the simulator named OG_SIMULATOR (default og-ios-test), which must exist and boots if it is shut down. The runner rebuilds when Driver/ or project.yml is newer than its last build, and OG_REBUILD=1 forces a rebuild.
+An unknown step key fails the run before any step runs; a wrongly typed value or any failed step stops it.
 
 Steps (labels match label, identifier or placeholder; points are normalized 0..1):
 	{"launch": true} | {"activate": true} | {"home": true}
@@ -74,9 +93,13 @@ const udid = await simulatorId();
 const destination = `platform=iOS Simulator,id=${udid}`;
 await $`${cleanXcodeEnv} xcrun simctl bootstatus ${udid} -b`.quiet();
 
-const run = Bun.env.OG_REBUILD
-	? await build(destination)
-	: ((await testRun()) ?? (await build(destination)));
+const cached = await testRun();
+const run =
+	!Bun.env.OG_REBUILD &&
+	cached &&
+	cached.modified >= (await sourcesModified())
+		? cached.path
+		: await build(destination);
 
 let stepsPath = stepsArgument;
 if (stepsArgument.trimStart().startsWith("[")) {
