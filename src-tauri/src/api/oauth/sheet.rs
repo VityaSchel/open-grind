@@ -14,12 +14,17 @@ use objc2_ui_kit::{
 	UINavigationController, UIPresentationController, UIRectEdge,
 	UIUserInterfaceStyle, UIView, UIViewAutoresizing, UIViewController,
 };
-use tauri::{AppHandle, Manager, WebviewWindow, WindowEvent};
+use tauri::window::Color;
+use tauri::{
+	AppHandle, Manager, WebviewWindow, WebviewWindowBuilder, WindowEvent, Wry,
+};
 use tokio::sync::oneshot;
 
 use crate::MAIN_WINDOW_LABEL;
 
 pub const UNAVAILABLE: &str = "Couldn't show the sign-in page";
+
+const BACKGROUND: (u8, u8, u8) = (10, 10, 10);
 
 thread_local! {
 	static PRESENTED: RefCell<Option<Presented>> = const { RefCell::new(None) };
@@ -67,6 +72,15 @@ impl SheetDelegate {
 		let this = Self::alloc(mtm).set_ivars(sign_in);
 		unsafe { msg_send![super(this), init] }
 	}
+}
+
+pub fn prepare(
+	builder: WebviewWindowBuilder<'_, Wry, AppHandle>,
+) -> WebviewWindowBuilder<'_, Wry, AppHandle> {
+	let (red, green, blue) = BACKGROUND;
+	builder
+		.visible(false)
+		.background_color(Color(red, green, blue, 255))
 }
 
 pub async fn present(
@@ -138,10 +152,11 @@ unsafe fn show(
 	if let Some(window) = page.window() {
 		window.setHidden(true);
 	}
+	let (red, green, blue) = BACKGROUND;
 	let background = UIColor::colorWithRed_green_blue_alpha(
-		10.0 / 255.0,
-		10.0 / 255.0,
-		10.0 / 255.0,
+		f64::from(red) / 255.0,
+		f64::from(green) / 255.0,
+		f64::from(blue) / 255.0,
 		1.0,
 	);
 	let content = UIViewController::new(mtm);

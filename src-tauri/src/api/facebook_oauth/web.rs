@@ -93,9 +93,7 @@ async fn run_flow(
 
 	#[cfg(target_os = "ios")]
 	{
-		builder = builder
-			.visible(false)
-			.background_color(tauri::window::Color(10, 10, 10, 255));
+		builder = crate::api::oauth::sheet::prepare(builder);
 	}
 
 	let window = builder.build().map_err(|e| {
