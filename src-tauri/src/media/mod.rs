@@ -62,13 +62,9 @@ enum Host {
 
 const HOST: Host = if cfg!(target_os = "android") {
 	Host::AndroidWebView
-} else if cfg!(target_os = "macos") {
+} else if cfg!(any(target_os = "ios", target_os = "macos")) {
 	Host::WkWebView
-} else if cfg!(any(
-	target_os = "ios",
-	target_os = "linux",
-	target_os = "windows"
-)) {
+} else if cfg!(any(target_os = "linux", target_os = "windows")) {
 	Host::WholeBodies
 } else {
 	panic!("unsupported target OS")
