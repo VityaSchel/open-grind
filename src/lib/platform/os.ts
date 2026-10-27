@@ -56,15 +56,3 @@ export function isDesktopPlatform(): boolean {
 			return true;
 	}
 }
-
-export function isAndroidPlatform(): boolean {
-	return currentPlatform() === "android";
-}
-
-export function isLinuxPlatform(): boolean {
-	return currentPlatform() === "linux";
-}
-
-export function isMacosPlatform(): boolean {
-	return currentPlatform() === "macos";
-}

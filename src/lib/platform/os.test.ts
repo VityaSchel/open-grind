@@ -2,10 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
 	currentPlatform,
-	isAndroidPlatform,
 	isDesktopPlatform,
-	isLinuxPlatform,
-	isMacosPlatform,
 	isMobilePlatform,
 	type SupportedPlatform,
 } from "$lib/platform/os";
@@ -19,20 +16,9 @@ const families = {
 	windows: "desktop",
 } as const satisfies Record<SupportedPlatform, "mobile" | "desktop">;
 
-const singlePlatformHelpers = {
-	android: isAndroidPlatform,
-	linux: isLinuxPlatform,
-	macos: isMacosPlatform,
-} as const satisfies Partial<Record<SupportedPlatform, () => boolean>>;
-
 const platforms = Object.keys(families) as SupportedPlatform[];
 
-const helpers = {
-	currentPlatform,
-	isMobilePlatform,
-	isDesktopPlatform,
-	...singlePlatformHelpers,
-};
+const helpers = { currentPlatform, isMobilePlatform, isDesktopPlatform };
 
 afterEach(resetPlatform);
 
@@ -70,14 +56,5 @@ describe("isMobilePlatform and isDesktopPlatform", () => {
 		runningOn(platform);
 		expect(isMobilePlatform()).toBe(families[platform] === "mobile");
 		expect(isDesktopPlatform()).toBe(families[platform] === "desktop");
-	});
-});
-
-describe("single-platform helpers", () => {
-	it.each(platforms)("only the %s helper is true there", (platform) => {
-		runningOn(platform);
-		for (const [name, helper] of Object.entries(singlePlatformHelpers)) {
-			expect(helper()).toBe(name === platform);
-		}
 	});
 });
