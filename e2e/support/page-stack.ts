@@ -71,7 +71,10 @@ export async function clickNavBarBack(page: Page) {
 	await stackSettled(page);
 }
 
-const webViewGoBack = (page: Page) => page.evaluate(() => history.back());
+const webViewGoBack = (page: Page) =>
+	page.evaluate(() => {
+		if (navigation.canGoBack) history.back();
+	});
 
 export async function systemBack(page: Page) {
 	const tracked = await startSystemBack(page);
