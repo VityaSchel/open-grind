@@ -26,11 +26,10 @@ final class Driver: XCTestCase {
 	}
 
 	func testSteps() throws {
-		let environment = ProcessInfo.processInfo.environment
-		let stepsPath = try XCTUnwrap(environment["OG_STEPS"], "OG_STEPS is not set")
+		let stepsPath = try XCTUnwrap(ProcessInfo.processInfo.environment["OG_STEPS"], "OG_STEPS is not set")
 		let data = try Data(contentsOf: URL(fileURLWithPath: stepsPath))
 		let steps = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
-		let app = XCUIApplication(bundleIdentifier: environment["OG_BUNDLE"] ?? "org.opengrind.app")
+		let app = XCUIApplication(bundleIdentifier: "org.opengrind.app")
 
 		for (index, step) in steps.enumerated() {
 			try XCTContext.runActivity(named: "step \(index + 1): \(step)") { _ in
@@ -64,9 +63,7 @@ final class Driver: XCTestCase {
 			try element(label, in: app).tap()
 		}
 		if let label = step["tapSecure"] as? String {
-			let field = app.secureTextFields.matching(labelled(label)).firstMatch
-			guard field.waitForExistence(timeout: 15) else { throw failure("no secure field labelled \(label)") }
-			field.tap()
+			try first(label, in: app.secureTextFields).tap()
 		}
 		if let label = step["tapIfPresent"] as? String {
 			let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
@@ -182,7 +179,11 @@ final class Driver: XCTestCase {
 	}
 
 	private func element(_ label: String, in app: XCUIApplication) throws -> XCUIElement {
-		let match = app.descendants(matching: .any).matching(labelled(label)).firstMatch
+		try first(label, in: app.descendants(matching: .any))
+	}
+
+	private func first(_ label: String, in query: XCUIElementQuery) throws -> XCUIElement {
+		let match = query.matching(labelled(label)).firstMatch
 		guard match.waitForExistence(timeout: timeout) else {
 			throw failure("no element labelled \(label)")
 		}

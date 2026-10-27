@@ -6,7 +6,7 @@ import { join } from "node:path";
 const root = import.meta.dir;
 const derivedData = join(root, "build");
 const simulatorName = Bun.env.OG_SIMULATOR ?? "og-ios-test";
-const xcrun = ["/usr/bin/env", "-u", "DEVELOPER_DIR", "-u", "SDKROOT"];
+const cleanXcodeEnv = ["/usr/bin/env", "-u", "DEVELOPER_DIR", "-u", "SDKROOT"];
 
 interface SimulatorListing {
 	devices: Record<string, { name: string; udid: string }[]>;
@@ -14,7 +14,7 @@ interface SimulatorListing {
 
 async function simulatorId(): Promise<string> {
 	const listing: SimulatorListing =
-		await $`${xcrun} xcrun simctl list devices --json`.json();
+		await $`${cleanXcodeEnv} xcrun simctl list devices --json`.json();
 	for (const devices of Object.values(listing.devices)) {
 		const device = devices.find(
 			(candidate) => candidate.name === simulatorName,
@@ -37,13 +37,15 @@ async function testRun(): Promise<string | undefined> {
 
 async function build(destination: string): Promise<string> {
 	await $`xcodegen generate --spec ${join(root, "project.yml")} --quiet`;
-	await $`${xcrun} xcodebuild build-for-testing -project ${join(root, "OpenGrindUITests.xcodeproj")} -scheme OpenGrindUITests -destination ${destination} -derivedDataPath ${derivedData} -quiet`;
+	await $`${cleanXcodeEnv} xcodebuild build-for-testing -project ${join(root, "OpenGrindUITests.xcodeproj")} -scheme OpenGrindUITests -destination ${destination} -derivedDataPath ${derivedData} -quiet`;
 	const run = await testRun();
 	if (!run) throw new Error("build-for-testing produced no .xctestrun");
 	return run;
 }
 
 const usage = `usage: bun e2e/ios/drive.ts <steps.json | '[{"tap":"Get started"}]'>
+
+Runs on the simulator named OG_SIMULATOR (default og-ios-test), which must exist and boots if it is shut down. OG_REBUILD=1 rebuilds the runner.
 
 Steps (labels match label, identifier or placeholder; points are normalized 0..1):
 	{"launch": true} | {"activate": true} | {"home": true}
@@ -70,8 +72,7 @@ if (!stepsArgument) {
 
 const udid = await simulatorId();
 const destination = `platform=iOS Simulator,id=${udid}`;
-await $`${xcrun} xcrun simctl boot ${udid}`.nothrow().quiet();
-await $`${xcrun} xcrun simctl bootstatus ${udid} -b`.quiet();
+await $`${cleanXcodeEnv} xcrun simctl bootstatus ${udid} -b`.quiet();
 
 const run = Bun.env.OG_REBUILD
 	? await build(destination)
@@ -84,7 +85,7 @@ if (stepsArgument.trimStart().startsWith("[")) {
 }
 
 const result =
-	await $`${xcrun} xcodebuild test-without-building -xctestrun ${run} -destination ${destination} -only-testing:OpenGrindUITests/Driver/testSteps -collect-test-diagnostics never`
+	await $`${cleanXcodeEnv} xcodebuild test-without-building -xctestrun ${run} -destination ${destination} -only-testing:OpenGrindUITests/Driver/testSteps -collect-test-diagnostics never`
 		.env({ ...process.env, TEST_RUNNER_OG_STEPS: stepsPath })
 		.nothrow()
 		.quiet();
