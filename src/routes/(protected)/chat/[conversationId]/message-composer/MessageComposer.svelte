@@ -4,6 +4,7 @@
 
 	import { showErrorToast } from "$lib/api/error-toast";
 	import { getConversations } from "$lib/chat/conversations-context.svelte";
+	import MessageTextInput from "$lib/components/shared/MessageTextInput.svelte";
 	import { draftFromMessage } from "$lib/model/messaging/messages";
 	import { dismissOnBackGesture } from "$lib/platform/back-gesture-event.svelte";
 	import { below } from "$lib/util/breakpoints.svelte";
@@ -21,7 +22,6 @@
 	import ComposerReplyPreview from "./ComposerReplyPreview.svelte";
 	import ComposerSubmitButton from "./ComposerSubmitButton.svelte";
 	import { setMessageComposerContext } from "./message-composer-context.svelte";
-	import MessageTextInput from "./MessageTextInput.svelte";
 	import ComposerSendMedia from "./send-media/ComposerSendMedia.svelte";
 	import ComposerStickersTrigger from "./stickers/ComposerStickersTrigger.svelte";
 	import ComposerVoiceMessage from "./voice-message/ComposerVoiceMessage.svelte";
@@ -156,6 +156,9 @@
 				})}
 		/>
 		<MessageTextInput
+			placeholder="Say something..."
+			padding="pr-10 pl-10"
+			{disabled}
 			bind:value={textContent}
 			bind:ref={textInput}
 			onEscape={onCancelReply}

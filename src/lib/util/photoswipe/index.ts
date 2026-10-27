@@ -8,6 +8,8 @@ import {
 	applyPhotoSwipeViewportSync,
 } from "./sizing";
 import { applyPhotoSwipeVideo, type VideoSlide } from "./video";
+import "photoswipe/style.css";
+
 import "./photoswipe.css";
 
 export { applyPhotoSwipeComponent } from "./component";
@@ -40,12 +42,14 @@ export type LightboxItem = { src: string } & Partial<MediaDimensions>;
 
 export async function openLightbox({
 	items,
+	index = 0,
 	videoAt,
 	configure,
 	signal,
 	onClosed,
 }: {
 	items: LightboxItem[];
+	index?: number;
 	videoAt?: (index: number) => VideoSlide | null;
 	configure?: (lightbox: PhotoSwipeLightbox) => void;
 	signal: AbortSignal;
@@ -78,5 +82,5 @@ export async function openLightbox({
 	lightbox.on("closingAnimationEnd", onClosed);
 	signal.addEventListener("abort", () => lightbox.destroy(), { once: true });
 	lightbox.init();
-	lightbox.loadAndOpen(0);
+	lightbox.loadAndOpen(index);
 }

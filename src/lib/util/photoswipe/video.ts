@@ -2,9 +2,10 @@ import { mount } from "svelte";
 import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
-import { onSafeAreaChange, safeAreaInsets } from "$lib/util/safe-area";
+import { safeAreaInsets } from "$lib/util/safe-area";
 import { applyPhotoSwipeComponent } from "./component";
 import { type Failure, failures } from "./error-ui";
+import { applyPhotoSwipeSafeAreaSync } from "./sizing";
 
 const NO_PADDING = { top: 0, right: 0, bottom: 0, left: 0 };
 
@@ -39,14 +40,7 @@ function fitVideosToSafeArea(
 		slide.height = slide.panAreaSize.y;
 		slide.zoomLevels.update(slide.width, slide.height, slide.panAreaSize);
 	});
-	let stopFollowing: (() => void) | undefined;
-	lightbox.on("beforeOpen", () => {
-		stopFollowing = onSafeAreaChange(() => lightbox.pswp?.updateSize(true));
-	});
-	lightbox.on("destroy", () => {
-		stopFollowing?.();
-		stopFollowing = undefined;
-	});
+	applyPhotoSwipeSafeAreaSync(lightbox);
 }
 
 export function applyPhotoSwipeVideo(

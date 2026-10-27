@@ -1,21 +1,31 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
+
 	import {
 		previewFromMessage,
 		quoteLabel,
 	} from "$lib/model/messaging/message-preview";
 	import type { QuotedMessage } from "$lib/model/messaging/messages";
-	import { getMessageContext } from "./context";
+	import { getMessageContext, getMessageMetaContext } from "./context";
 
-	let { quoted }: { quoted: QuotedMessage } = $props();
+	let { quoted, children }: { quoted?: QuotedMessage; children?: Snippet } =
+		$props();
 
 	const { isOut } = $derived(getMessageContext()());
 
-	const label = $derived(quoteLabel(previewFromMessage(quoted)));
+	const { clone } = $derived(getMessageMetaContext()());
+
+	const label = $derived(
+		quoted ? quoteLabel(previewFromMessage(quoted)) : null,
+	);
 </script>
 
 <div
 	data-slot="message-quote"
-	class={["mb-1 flex max-w-100 items-end", { "flex-row-reverse": isOut }]}
+	class={[
+		"mb-1 flex w-fit max-w-100 items-end",
+		{ "flex-row-reverse": isOut },
+	]}
 >
 	<div
 		class={[
@@ -26,9 +36,14 @@
 			},
 		]}
 	></div>
-	<span
-		class="mx-1 min-w-0 rounded-xl bg-muted px-3 py-1.5 text-sm text-muted-foreground"
+	<div
+		inert={clone}
+		class={[
+			"mx-1 min-w-0 rounded-xl bg-muted text-sm text-muted-foreground",
+			{ "p-2": !!children, "px-3 py-1.5": !children },
+		]}
 	>
-		<span class="line-clamp-1">{label}</span>
-	</span>
+		{#if label}<span class="line-clamp-1">{label}</span>{/if}
+		{@render children?.()}
+	</div>
 </div>

@@ -1,5 +1,3 @@
-import "photoswipe/style.css";
-
 import "./message-lightbox.css";
 
 import type PhotoSwipeLightbox from "photoswipe/lightbox";

@@ -8,6 +8,8 @@ export type MessagePreview = {
 	text?: string | null;
 	albumId?: number | null;
 	imageHash?: string | null;
+	albumContentReply?: string | null;
+	photoContentReply?: string | null;
 };
 
 export function previewFromMessage(
@@ -30,10 +32,24 @@ export function previewFromMessage(
 				albumId: null,
 				imageHash: null,
 			};
+		case "AlbumContentReply":
+			return {
+				type: message.type,
+				albumId: message.body.albumId,
+				text: message.body.albumContentReply,
+				imageHash: null,
+			};
 		case "Image":
 			return {
 				type: "Image",
 				text: null,
+				albumId: null,
+				imageHash: message.body.imageHash,
+			};
+		case "ProfilePhotoReply":
+			return {
+				type: message.type,
+				text: message.body.photoContentReply,
 				albumId: null,
 				imageHash: message.body.imageHash,
 			};
@@ -63,13 +79,19 @@ const PREVIEW_LABELS: Record<string, string> = {
 	Gaymoji: "Gaymoji",
 	Giphy: "GIF",
 	Location: "Location",
+	ProfilePhotoReply: "Replied to a photo",
 };
 
 export function previewLabel(
 	preview: MessagePreview | null | undefined,
 ): string | null {
 	if (preview === null || preview === undefined) return null;
-	const text = preview.text ?? null;
+	if (preview.type === "AlbumContentReaction") return "Reacted to an album";
+	const text =
+		preview.text ??
+		preview.albumContentReply ??
+		preview.photoContentReply ??
+		null;
 	if (text !== null) return text;
 	const label = PREVIEW_LABELS[preview.type];
 	if (label !== undefined) return label;

@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { DEMO_CONVERSATION, installTauriShim } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
@@ -51,12 +51,6 @@ async function openCarouselLightbox(page: Page): Promise<void> {
 	await page.locator(LIGHTBOX).waitFor({ timeout: 30_000 });
 }
 
-async function openProfileCarousel(page: Page): Promise<void> {
-	await page.locator(PROFILE_LINK).first().click();
-	await page.locator(CAROUSEL).waitFor({ timeout: 30_000 });
-	await openCarouselLightbox(page);
-}
-
 function topInset(page: Page): Promise<number> {
 	return page.evaluate(
 		() =>
@@ -66,6 +60,24 @@ function topInset(page: Page): Promise<number> {
 				),
 			) || 0,
 	);
+}
+
+function chromeStyle(control: Locator) {
+	return control.evaluate((node) => {
+		const style = getComputedStyle(node);
+		const icon = getComputedStyle(node.querySelector("svg")!);
+		return {
+			width: style.width,
+			height: style.height,
+			borderRadius: style.borderRadius,
+			backgroundColor: style.backgroundColor,
+			backgroundImage: style.backgroundImage,
+			backdropFilter: style.backdropFilter,
+			opacity: style.opacity,
+			iconWidth: icon.width,
+			iconHeight: icon.height,
+		};
+	});
 }
 
 function openLightboxIndex(page: Page): Promise<number | null> {
@@ -128,8 +140,10 @@ test.describe("lightbox layout", () => {
 		);
 		expect(
 			close?.y,
-			"the close button starts below the status bar",
-		).toBeCloseTo(inset, 0);
+			"the close button keeps a 12 px gap below the status bar",
+		).toBeCloseTo(inset + 12, 0);
+		expect(close?.width).toBe(44);
+		expect(close?.height).toBe(44);
 	});
 
 	test("the chrome clears a side cutout", async ({ page }) => {
@@ -151,7 +165,7 @@ test.describe("lightbox layout", () => {
 		expect(
 			WIDTH - (closeRight ?? 0),
 			"the close button clears the cutout plus its own margin",
-		).toBeGreaterThanOrEqual(CUTOUT);
+		).toBeCloseTo(CUTOUT + 12, 0);
 	});
 
 	test("the photo recenters when the keyboard collapses mid-open", async ({
@@ -162,9 +176,13 @@ test.describe("lightbox layout", () => {
 			width: WIDTH,
 			height: KEYBOARD_OPEN_HEIGHT,
 		});
-		// PhotoSwipe binds its own resize listener only once the opening
-		// animation ends, so nothing may be awaited in between.
-		await openAlbum(page);
+		await page.locator(ALBUM_TRIGGER).first().click();
+		await page.waitForFunction(() => {
+			const { pswp } = window as {
+				pswp?: { opener: { isOpening: boolean } };
+			};
+			return pswp?.opener.isOpening === true;
+		});
 		await page.setViewportSize({ width: WIDTH, height: SETTLED_HEIGHT });
 
 		const stillOpening = await page.evaluate((selector) => {
@@ -182,14 +200,17 @@ test.describe("lightbox layout", () => {
 			.poll(
 				async () => {
 					const rect = await slideRect(page, {
-						selector: SLIDE_IMAGE,
+						selector: ACTIVE_SLIDE_IMAGE,
 					});
-					if (rect === null) return null;
+					const composer = await page
+						.locator(".pswp__reply-composer")
+						.boundingBox();
+					if (rect === null || composer === null) return null;
 					return Math.round(
-						rect.top - (SETTLED_HEIGHT - rect.height) / 2,
+						rect.top - (composer.y - rect.height) / 2,
 					);
 				},
-				{ message: "the photo settles centered in the grown viewport" },
+				{ message: "the photo settles centered above the composer" },
 			)
 			.toBe(0);
 	});
@@ -214,7 +235,12 @@ test.describe("lightbox layout", () => {
 		page,
 	}) => {
 		await enterConversation(page);
-		await openProfileCarousel(page);
+		await page.locator(PROFILE_LINK).first().click();
+		await page.locator(CAROUSEL).waitFor({ timeout: 30_000 });
+		const backStyle = await chromeStyle(
+			page.getByRole("link", { name: "Back", exact: true }),
+		);
+		await openCarouselLightbox(page);
 
 		await expect(
 			page.locator(CLOSE_BUTTON),
@@ -240,6 +266,19 @@ test.describe("lightbox layout", () => {
 			close.y + close.height,
 			"the button stays inside the bar instead of floating over the photo",
 		).toBeLessThanOrEqual(bar.y + bar.height);
+		expect(await chromeStyle(page.locator(CLOSE_BUTTON))).toEqual(
+			backStyle,
+		);
+		await expect(page.locator(`${CLOSE_BUTTON} path`)).toHaveCSS(
+			"stroke-width",
+			"3px",
+		);
+		await expect(
+			page.locator(`${CLOSE_BUTTON} .pswp__icn-shadow`),
+		).toBeHidden();
+		await expect.poll(() => openLightboxIndex(page)).toBe(0);
+		await page.getByRole("button", { name: "Close", exact: true }).click();
+		await expect(page.locator(LIGHTBOX)).toHaveCount(0);
 	});
 
 	test("opening the profile lightbox starts loading every carousel photo", async ({

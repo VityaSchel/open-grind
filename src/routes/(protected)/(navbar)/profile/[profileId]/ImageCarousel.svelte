@@ -1,6 +1,6 @@
 <script lang="ts">
-	import "photoswipe/style.css";
 	import { format } from "date-fns";
+	import { untrack } from "svelte";
 	import z from "zod";
 	import type PhotoSwipeLightbox from "photoswipe/lightbox";
 
@@ -13,24 +13,33 @@
 		applyPhotoSwipeThumbDimensions,
 		applyPhotoSwipeViewportSync,
 	} from "$lib/util/photoswipe";
+	import { applyProfilePhotoReply } from "$lib/util/photoswipe/profile-photo-reply";
 	import { devicePixelHeight } from "./device-pixel-height";
 	import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 	let {
 		medias,
+		onreply,
 	}: {
 		medias: {
 			mediaHash: string;
 			takenOnGrindr: boolean | null;
 			createdAt: number | null;
 		}[];
+		onreply?: (reply: { imageHash: string; text: string }) => void;
 	} = $props();
 
 	const PHOTOS_LOADED_AHEAD = 2;
 	const SUBPIXEL_SNAP_PX = 1;
 
 	let gallery: HTMLDivElement | null = $state(null);
+	let viewer = $state.raw<PhotoSwipeLightbox>();
 	let reach = $state(PHOTOS_LOADED_AHEAD);
+	let refreshReply = () => {};
+	const replyEnabled = $derived(!!onreply);
+	const mainClass = $derived(
+		`pswp--buttons-visible pswp--profile-carousel${replyEnabled ? " pswp--profile-reply" : ""}`,
+	);
 
 	function raiseReach(index: number) {
 		if (index > reach) reach = index;
@@ -48,12 +57,22 @@
 					gallery,
 					children: ".item[href]",
 					pswpModule: () => import("photoswipe"),
-					mainClass: `pswp--buttons-visible pswp--profile-carousel`,
+					mainClass,
 				});
 				applyPhotoSwipeErrorUi(lightbox);
 				applyPhotoSwipeThumbDimensions(lightbox);
 				applyPhotoSwipeViewportSync(lightbox);
 				applyPhotoSwipeBackGesture(lightbox);
+				refreshReply = applyProfilePhotoReply(lightbox, {
+					imageHash: (pswp) =>
+						onreply
+							? (
+									pswp.currSlide?.data ??
+									pswp.getItemData(pswp.currIndex)
+								).element?.dataset.mediaHash
+							: undefined,
+					onreply: (reply) => onreply?.(reply),
+				});
 				stopOpenTracking = applyPhotoSwipeOpenTracking(lightbox);
 				lightbox.on("beforeOpen", () => {
 					raiseReach(medias.length - 1);
@@ -106,6 +125,7 @@
 				});
 
 				lightbox.init();
+				viewer = lightbox;
 			})
 			.catch((error) => console.error(error));
 		return () => {
@@ -113,6 +133,19 @@
 			lightbox?.destroy();
 			stopOpenTracking?.();
 		};
+	});
+
+	$effect(() => {
+		const enabled = replyEnabled;
+		const lightbox = viewer;
+		if (!lightbox) return;
+		lightbox.options.mainClass = mainClass;
+		const pswp = lightbox.pswp;
+		if (!pswp) return;
+		untrack(() => {
+			pswp.element?.classList.toggle("pswp--profile-reply", enabled);
+			refreshReply();
+		});
 	});
 
 	const GAP_PX = 4;
@@ -162,6 +195,7 @@
 				{@const src = profileMediaUrl({ mediaHash, size: "full" })}
 				<ImageCarouselItem
 					{src}
+					{mediaHash}
 					eager={index <= reach}
 					{createdAt}
 					label="Profile photo {index + 1} of {medias.length}"
@@ -201,20 +235,21 @@
 		.pswp--profile-carousel .pswp__button:not(.pswp__button--close) {
 			display: none;
 		}
-		.pswp--profile-carousel .pswp__button--close {
-			@apply mr-3 size-11 self-center rounded-full bg-black/55 opacity-100 backdrop-filter-(--bd-veil) focus:bg-black/55 active:bg-black/55;
-			@variant hover {
-				@apply bg-black/75;
-			}
-		}
-		.pswp--profile-carousel .pswp__button--close .pswp__icn {
-			@apply inset-0 m-auto;
+		.pswp--profile-reply .pswp__reply-composer {
+			@apply bg-background/60;
 		}
 		.pswp--profile-carousel .pswp__created-at-label {
 			text-shadow: 1px 1px 3px var(--pswp-icon-color-secondary);
 			@apply absolute bottom-0 left-1/2 flex w-full -translate-x-1/2 items-center justify-center bg-linear-to-t from-background/60 pt-4 font-medium text-white/90;
 			height: calc(4rem + var(--safe-area-bottom));
 			padding-bottom: calc(0.5rem + var(--safe-area-bottom));
+		}
+		.pswp--profile-reply .pswp__created-at-label {
+			bottom: calc(
+				var(--pswp-reply-composer-height) + var(--safe-area-bottom)
+			);
+			height: 2.5rem;
+			padding-bottom: 0.5rem;
 		}
 	}
 </style>

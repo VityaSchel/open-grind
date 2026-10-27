@@ -17,6 +17,7 @@
 		wheelInputMode,
 	} from "$lib/util/swipe-to-reply.svelte";
 	import type { ApiResponseMessage } from "$lib/model/messaging/messages";
+	import AlbumContentMessage from "./AlbumContentMessage.svelte";
 	import AlbumMessage from "./AlbumMessage.svelte";
 	import { type MessageRefs, setMessageContext } from "./context";
 	import ExpiringImageMessage from "./ExpiringImageMessage.svelte";
@@ -28,6 +29,7 @@
 	import MessageDateGroup from "./MessageDateGroup.svelte";
 	import MessageTime from "./MessageTime.svelte";
 	import MessageWrapper from "./MessageWrapper.svelte";
+	import ProfilePhotoReplyMessage from "./ProfilePhotoReplyMessage.svelte";
 	import Reaction from "./Reaction.svelte";
 	import TextMessage from "./TextMessage.svelte";
 	import UnsentMessage from "./UnsentMessage.svelte";
@@ -75,9 +77,18 @@
 			: null,
 	);
 
-	const textContent = $derived(
-		message.type === "Text" ? message.body.text : undefined,
-	);
+	const textContent = $derived.by(() => {
+		switch (message.type) {
+			case "Text":
+				return message.body.text;
+			case "AlbumContentReply":
+				return message.body.albumContentReply;
+			case "ProfilePhotoReply":
+				return message.body.photoContentReply;
+			default:
+				return undefined;
+		}
+	});
 	const hasMenuActions = $derived(
 		textContent !== undefined ||
 			[onReply, onDelete, onUnsend, onCopyError, onReport].some(
@@ -276,6 +287,10 @@
 			/>
 		{:else if message.type === "Album" || message.type === "ExpiringAlbum" || message.type === "ExpiringAlbumV2"}
 			<AlbumMessage message={message.body} />
+		{:else if message.type === "AlbumContentReply" || message.type === "AlbumContentReaction"}
+			<AlbumContentMessage message={message.body} />
+		{:else if message.type === "ProfilePhotoReply"}
+			<ProfilePhotoReplyMessage message={message.body} {isOut} />
 		{:else if message.type === "Video" || message.type === "PrivateVideo"}
 			<VideoMessage
 				message={message.body}
