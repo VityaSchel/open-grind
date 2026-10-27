@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { installTauriShim } from "./support/app";
+import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 
 const BLOCKED_LIST = "/settings/account/blocked";
 
@@ -10,6 +10,9 @@ test.beforeEach(async ({ page }) => {
 
 test("account settings link to the profile lists", async ({ page }) => {
 	await page.goto("/settings/account");
+	await page
+		.getByRole("link", { name: "Blocked users" })
+		.waitFor({ timeout: FIRST_ROUTE_COMPILE_MS });
 
 	for (const [name, href] of [
 		["Blocked users", BLOCKED_LIST],

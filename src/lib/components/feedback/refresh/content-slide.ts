@@ -1,4 +1,4 @@
-import { prefersReducedMotion } from "svelte/motion";
+import { prefersReducedMotion, Tween } from "svelte/motion";
 
 import type { PullPosition } from "./scroll-chain";
 
@@ -10,12 +10,32 @@ const translateY = (px: number): Keyframe => ({
 
 const unnoticeable = (px: number) => Math.abs(px) < 0.5;
 
+export type SlidePacer = { clockOrigin(): number };
+
+const wallClock: SlidePacer = { clockOrigin: () => performance.now() };
+
+export class PacingTween extends Tween<number> implements SlidePacer {
+	#startedThisFlush: number | undefined;
+
+	override set(...args: Parameters<Tween<number>["set"]>) {
+		this.#startedThisFlush = performance.now();
+		queueMicrotask(() => (this.#startedThisFlush = undefined));
+		return super.set(...args);
+	}
+
+	clockOrigin(): number {
+		return this.#startedThisFlush ?? performance.now();
+	}
+}
+
 export function contentSlide({
 	duration,
 	easing,
+	pacedBy = wallClock,
 }: {
 	duration: number;
 	easing: string;
+	pacedBy?: SlidePacer;
 }) {
 	let running: Animation | undefined;
 	let startedAt = 0;
@@ -45,7 +65,7 @@ export function contentSlide({
 		edge: PullPosition;
 	}) {
 		follow();
-		startedAt = performance.now();
+		startedAt = pacedBy.clockOrigin();
 		const content = contentOf(scroller);
 		const from = content?.getBoundingClientRect()[edge] ?? 0;
 		stop();
