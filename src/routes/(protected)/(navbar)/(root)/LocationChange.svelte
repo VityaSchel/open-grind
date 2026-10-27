@@ -6,7 +6,6 @@
 		preferencesSnapshot,
 		setPreferences,
 	} from "$lib/app-data/preferences.svelte";
-	import { PIN_ZOOM } from "$lib/components/location-chooser/constants";
 	import LocationChooser from "$lib/components/location-chooser/LocationChooser.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { t } from "$lib/i18n";
@@ -15,8 +14,7 @@
 	let { class: className }: { class?: import("svelte/elements").ClassValue } =
 		$props();
 
-	let pinPos: { lat: number; lon: number; zoom: number } | undefined =
-		$state();
+	let pinPos: { lat: number; lon: number } | undefined = $state();
 	let geoMapPickerOpen = $state(false);
 
 	async function onSubmit(submission: {
@@ -36,14 +34,9 @@
 
 	function openPicker() {
 		const geohash = preferencesSnapshot().geohash;
-		pinPos = geohash
-			? { ...decodeGeohash(geohash), zoom: PIN_ZOOM }
-			: undefined;
+		pinPos = geohash ? decodeGeohash(geohash) : undefined;
 		geoMapPickerOpen = true;
-		if (pinPos) locationChooser.centerAt(pinPos);
 	}
-
-	let locationChooser: LocationChooser;
 
 	const autoUpdateLocation = $derived(
 		preferencesSnapshot().autoUpdateLocation,
@@ -73,9 +66,4 @@
 		</span>
 	{/if}
 </div>
-<LocationChooser
-	{onSubmit}
-	bind:open={geoMapPickerOpen}
-	bind:this={locationChooser}
-	bind:pinPos
-/>
+<LocationChooser {onSubmit} bind:open={geoMapPickerOpen} bind:pinPos />

@@ -94,6 +94,7 @@ export interface Messages {
 	"browse.locationChooser.a11y.locateMe": undefined;
 	"browse.locationChooser.a11y.title": undefined;
 	"browse.locationChooser.autoUpdate": undefined;
+	"browse.locationChooser.map.attribution": undefined;
 	"browse.locationChooser.map.selectedLocation": undefined;
 	"browse.locationChooser.map.zoomIn": undefined;
 	"browse.locationChooser.map.zoomOut": undefined;
@@ -108,12 +109,14 @@ export interface Messages {
 	"chat.composer.attachments.a11y.add": undefined;
 	"chat.composer.attachments.a11y.title": undefined;
 	"chat.composer.attachments.actions.send": undefined;
+	"chat.composer.attachments.actions.sendLocation": undefined;
 	"chat.composer.attachments.actions.share": undefined;
 	"chat.composer.attachments.actions.unshare": undefined;
 	"chat.composer.attachments.albums.empty.description": undefined;
 	"chat.composer.attachments.albums.empty.title": undefined;
 	"chat.composer.attachments.expiring.a11y.toggle": { count: number };
 	"chat.composer.attachments.expiring.off": undefined;
+	"chat.composer.attachments.location.a11y.description": undefined;
 	"chat.composer.attachments.location.unimplemented": { issueLink: string };
 	"chat.composer.attachments.media.empty.title": undefined;
 	"chat.composer.attachments.media.errors.openPickerFailed": undefined;
@@ -221,6 +224,8 @@ export interface Messages {
 	"chat.message.gif.clickToLoad": undefined;
 	"chat.message.gif.fromGiphy": undefined;
 	"chat.message.gif.tapToLoad": undefined;
+	"chat.message.location.openMap": undefined;
+	"chat.message.location.title": undefined;
 	"chat.message.reaction.a11y.fire": undefined;
 	"chat.message.status.notSent": undefined;
 	"chat.message.status.readAt": { time: string };

@@ -561,6 +561,27 @@ mod opener_scope_pins {
 	const CAPABILITY: &str = include_str!("../capabilities/default.json");
 
 	#[test]
+	fn geo_urls_can_be_opened_from_the_main_window() {
+		let capability: serde_json::Value =
+			serde_json::from_str(CAPABILITY).unwrap();
+		assert!(capability["windows"]
+			.as_array()
+			.unwrap()
+			.iter()
+			.any(|window| window == "main"));
+		assert!(capability["permissions"].as_array().unwrap().iter().any(
+			|permission| {
+				permission["identifier"] == "opener:allow-open-url"
+					&& permission["allow"]
+						.as_array()
+						.unwrap()
+						.iter()
+						.any(|scope| scope["url"] == "geo:*")
+			}
+		));
+	}
+
+	#[test]
 	fn the_system_browser_is_never_handed_an_app_origin() {
 		let capability: serde_json::Value =
 			serde_json::from_str(CAPABILITY).unwrap();

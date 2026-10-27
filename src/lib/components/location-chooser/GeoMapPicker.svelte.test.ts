@@ -13,6 +13,8 @@ vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => false }));
 
 const GeoMapPicker = (await import("./GeoMapPicker.svelte")).default;
 
+await import("./GeoMap.svelte");
+
 const PARIS = { lat: 48.8566, lon: 2.3522 };
 
 afterEach(async () => {
@@ -34,6 +36,8 @@ function mapLabels(container: HTMLElement) {
 		pin: container
 			.querySelector(".leaflet-marker-icon")
 			?.getAttribute("title"),
+		attribution: container.querySelector(".leaflet-control-attribution a")
+			?.textContent,
 	};
 }
 
@@ -44,11 +48,12 @@ function translatedLabels() {
 		zoomIn: [zoomIn, zoomIn],
 		zoomOut: [zoomOut, zoomOut],
 		pin: t("browse.locationChooser.map.selectedLocation"),
+		attribution: t("browse.locationChooser.map.attribution"),
 	};
 }
 
 describe("GeoMapPicker labels", () => {
-	it("relabels the zoom buttons and the pin when the locale switches", async () => {
+	it("relabels the zoom buttons, the pin and the attribution when the locale switches", async () => {
 		const { container } = render(GeoMapPicker, {
 			props: { pinPos: PARIS },
 		});
@@ -61,6 +66,7 @@ describe("GeoMapPicker labels", () => {
 			zoomIn: ["Zoom in", "Zoom in"],
 			zoomOut: ["Zoom out", "Zoom out"],
 			pin: "Selected location",
+			attribution: "OpenStreetMap contributors",
 		});
 
 		await setLocale({ locale: "en-XA" });
@@ -69,6 +75,12 @@ describe("GeoMapPicker labels", () => {
 			expect(mapLabels(container)).toEqual(translatedLabels()),
 		);
 		expect(mapLabels(container).pin).not.toBe("Selected location");
+		expect(mapLabels(container).attribution).not.toBe(
+			"OpenStreetMap contributors",
+		);
+		expect(
+			container.querySelectorAll(".leaflet-control-attribution a"),
+		).toHaveLength(1);
 	});
 
 	it("rebuilds the zoom control in the current locale when unlocked", async () => {

@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import {
 	enterAlbum,
@@ -29,6 +30,8 @@ import {
 } from "./support/stickers";
 import { ACTIVE_SURFACE, CLIP, LIGHTBOX } from "./support/video";
 
+test.use({ baseURL: DEV_SERVER_URL });
+
 const FAILING_ROUTE = "/interest";
 const FAILING_LOAD = /\/interest\/\+page\.ts(?:\?|$)/;
 const THROWING_LOAD =
@@ -56,6 +59,7 @@ const SUGGESTIONS_GROUP =
 const COMMAND_EMPTY = '[data-slot="command-empty"]';
 const COMPOSER_BUTTON = '[data-slot="message-composer"] button';
 const EMPTY_TITLE = '[data-slot="empty-title"]';
+const MAP_SEARCH = '[data-slot="map-controls"] input';
 const ACCOUNT_STATUS_MODULE_URL = "/src/lib/api/account-status-state.svelte.ts";
 
 test.describe.configure({ timeout: 180_000 });
@@ -243,7 +247,7 @@ test("the inbox and its quick-filter drawers render only pseudo-translated text"
 	}
 });
 
-test("a conversation, a message menu, the attachment tabs and a media tile's menu render only pseudo-translated text", async ({
+test("a conversation, a message menu, the attachment tabs, a media tile's menu and the Location tab render only pseudo-translated text", async ({
 	page,
 }) => {
 	await installTauriShim(page);
@@ -290,8 +294,16 @@ test("a conversation, a message menu, the attachment tabs and a media tile's men
 	await page.keyboard.press("Escape");
 	await expect(confirm).toBeHidden();
 
+	await tabList.getByRole("tab").last().click();
+	const locationTab = attachments.getByRole("tabpanel");
+	await locationTab.locator(MAP_SEARCH).waitFor();
+	await locationTab.locator(".leaflet-control-attribution a").waitFor();
+	const location = await readPseudoText(locationTab);
+	scans.push(location);
+
 	expect(tiles.labels).toBeGreaterThan(0);
 	expect(tiles.leaks).toEqual([]);
+	expect(location.labels).toBeGreaterThan(0);
 	for (const { messages, leaks } of scans) {
 		expect(messages).toBeGreaterThan(0);
 		expect(leaks).toEqual([]);

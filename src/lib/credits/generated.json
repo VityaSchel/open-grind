@@ -1527,7 +1527,7 @@
 			"name": "zod",
 			"ecosystem": "npm",
 			"versions": [
-				"4.4.3"
+				"4.6.7"
 			],
 			"spdx": "MIT",
 			"url": "https://github.com/colinhacks/zod",

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import type * as I18n from "../src/lib/i18n";
 import {
 	APP_COMPONENT,
@@ -13,6 +14,8 @@ import type * as UpdateToasts from "../src/lib/updates/toasts";
 import type * as UpdateChecks from "../src/lib/updates/update-checks";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const TOASTER = "[data-sonner-toaster]";
 const RELEASE_TAG = "v1.2.0";

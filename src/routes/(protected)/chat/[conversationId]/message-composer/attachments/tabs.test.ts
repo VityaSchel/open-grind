@@ -8,6 +8,7 @@ describe("selectionActionKeys", () => {
 		["send", "Send"],
 		["share", "Share"],
 		["unshare", "Unshare"],
+		["sendLocation", "Send location"],
 	] as const)("labels the %s action", (action, label) => {
 		expect(t(selectionActionKeys[action])).toBe(label);
 	});

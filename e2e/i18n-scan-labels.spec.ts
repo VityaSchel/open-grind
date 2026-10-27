@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import type * as Layout from "../src/lib/demo/screenshot-layout";
 import type * as Scan from "../src/lib/demo/screenshot-scan";
 import type * as Markers from "../src/lib/i18n/markers";
@@ -14,6 +15,8 @@ import {
 	scan,
 	switchToMarkers,
 } from "./support/scan";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const ERROR_TOAST_MODULE = "/src/lib/api/error-toast.ts";
 const IMAGE =

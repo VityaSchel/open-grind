@@ -12,7 +12,7 @@ import { visit } from "./visit";
 
 export const LOCATION_TITLE = '[data-slot="empty-title"]';
 export const GRID_SCROLLER = '.pull-scroller:has([data-slot="grid-content"])';
-const MAP_SEARCH = '[data-slot="map-controls"] input';
+export const MAP_SEARCH = '[data-slot="map-controls"] input';
 const FILTERS_SCROLLER = '[role="dialog"] [data-slot="grid-filters-scroller"]';
 
 export const chooseLocation: Scene = {

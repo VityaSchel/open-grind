@@ -111,6 +111,10 @@
 			"fromGiphy": "GIF from GIPHY",
 			"tapToLoad": "Tap to load",
 			"clickToLoad": "Click to load"
+		},
+		"location": {
+			"title": "Location",
+			"openMap": "Open map"
 		}
 	},
 	"conversations": {
@@ -216,7 +220,8 @@
 			"actions": {
 				"send": "Send",
 				"share": "Share",
-				"unshare": "Unshare"
+				"unshare": "Unshare",
+				"sendLocation": "Send location"
 			},
 			"media": {
 				"empty": {
@@ -235,7 +240,10 @@
 				}
 			},
 			"location": {
-				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}."
+				"unimplemented": "Sharing your location isn’t implemented yet. Follow the progress in {{issueLink}}.",
+				"a11y": {
+					"description": "Drag the map to place the pin on the location you want to share."
+				}
 			}
 		},
 		"stickers": {

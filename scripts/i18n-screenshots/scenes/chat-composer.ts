@@ -12,6 +12,7 @@ import type {
 	RestFault,
 } from "../../../src/lib/demo/screenshot-scene";
 import type { Scene } from ".";
+import { MAP_SEARCH } from "./browse";
 import {
 	chooseFromMessageMenu,
 	failRandomUuids,
@@ -187,7 +188,7 @@ export const attachmentTabs: Scene = {
 			screen: "chat/conversation",
 			drive: async (page) => {
 				await openTab({ page, tab: "Location" });
-				await page.getByText("isn’t implemented yet").waitFor();
+				await page.locator(MAP_SEARCH).waitFor();
 			},
 		},
 	],

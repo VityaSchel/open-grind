@@ -101,7 +101,8 @@
 		"map": {
 			"zoomIn": "Zoom in",
 			"zoomOut": "Zoom out",
-			"selectedLocation": "Selected location"
+			"selectedLocation": "Selected location",
+			"attribution": "OpenStreetMap contributors"
 		},
 		"autoUpdate": "Update automatically using GPS",
 		"searchPlaceholder": "Search places…",

@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { readdirSync } from "node:fs";
 import { sep } from "node:path";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import { SHARED_ALBUM_ID } from "./support/albums";
 import {
@@ -13,6 +14,8 @@ import {
 } from "./support/app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./support/media";
 import { BRAND_TITLE, readPseudoText } from "./support/pseudo";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 type Platform = "android" | "desktop" | "web";
 

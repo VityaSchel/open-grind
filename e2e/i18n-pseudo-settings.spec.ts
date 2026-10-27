@@ -1,9 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import { FIRST_ROUTE_COMPILE_MS, installTauriShim } from "./support/app";
 import { SETTINGS } from "./support/page-stack";
 import { readPseudoText } from "./support/pseudo";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const ACCOUNT_SETTINGS = `${SETTINGS}/account`;
 const BLOCKED_USERS = `${ACCOUNT_SETTINGS}/blocked`;

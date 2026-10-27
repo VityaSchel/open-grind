@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { FIRST_ROUTE_COMPILE_MS, MESSAGE_ROW } from "./support/app";
 
 const HENRY = "/chat/100009:123456000";
@@ -40,31 +41,35 @@ test("prints US times and decimals on an en-US system", async ({ page }) => {
 	}
 });
 
-test("follows a German region with English words", async ({ page }) => {
-	await openHenry(page, { query: "?regional=de-DE" });
+test.describe(() => {
+	test.use({ baseURL: DEV_SERVER_URL });
 
-	await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();
-	await expect(statusLines(page, TWELVE_HOUR)).toHaveCount(0);
-	await expect(page.getByText("9,3 km", { exact: true })).toBeVisible();
-});
+	test("follows a German region with English words", async ({ page }) => {
+		await openHenry(page, { query: "?regional=de-DE" });
 
-test("follows a 24-hour clock chosen on a US system", async ({ page }) => {
-	await openHenry(page, { query: "?regional=en-US-u-hc-h23" });
+		await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();
+		await expect(statusLines(page, TWELVE_HOUR)).toHaveCount(0);
+		await expect(page.getByText("9,3 km", { exact: true })).toBeVisible();
+	});
 
-	await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();
-	await expect(page.getByText("9.3 km", { exact: true })).toBeVisible();
-});
+	test("follows a 24-hour clock chosen on a US system", async ({ page }) => {
+		await openHenry(page, { query: "?regional=en-US-u-hc-h23" });
 
-test("starts in miles on a system that measures in US units", async ({
-	page,
-}) => {
-	await openHenry(page, { query: "?regional=en-US-u-ms-ussystem" });
+		await expect(statusLines(page, TWENTY_FOUR_HOUR).first()).toBeVisible();
+		await expect(page.getByText("9.3 km", { exact: true })).toBeVisible();
+	});
 
-	await expect(page.getByText("5.8 mi", { exact: true })).toBeVisible();
+	test("starts in miles on a system that measures in US units", async ({
+		page,
+	}) => {
+		await openHenry(page, { query: "?regional=en-US-u-ms-ussystem" });
+
+		await expect(page.getByText("5.8 mi", { exact: true })).toBeVisible();
+	});
 });
 
 test.describe("on a browser set to German", () => {
-	test.use({ locale: "de-DE" });
+	test.use({ baseURL: DEV_SERVER_URL, locale: "de-DE" });
 
 	test("formats like the browser in its language", async ({ page }) => {
 		await openHenry(page);

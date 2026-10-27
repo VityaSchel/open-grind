@@ -1,6 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { installTauriShim } from "./support/app";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const BELOW_CARD_PX = 40;
 const TOAST = "[data-sonner-toast]";

@@ -1,7 +1,10 @@
 import { encode } from "@msgpack/msgpack";
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { FIRST_ROUTE_COMPILE_MS } from "./support/app";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const PREFERENCES_KEY = "open-grind:app-data:preferences.data";
 

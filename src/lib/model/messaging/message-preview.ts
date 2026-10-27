@@ -83,9 +83,10 @@ type PreviewContent =
 	| { readonly kind: "text"; readonly text: string }
 	| { readonly kind: "type"; readonly type: PreviewType };
 
-const stickerTypes: Partial<Record<string, PreviewType>> = {
+const labeledTypes: Partial<Record<string, PreviewType>> = {
 	Gaymoji: "gaymoji",
 	Giphy: "gif",
+	Location: "location",
 };
 
 const quoteTypes: Partial<Record<string, PreviewType>> = {
@@ -93,7 +94,6 @@ const quoteTypes: Partial<Record<string, PreviewType>> = {
 	Audio: "voiceMessage",
 	NonExpiringVideo: "video",
 	VideoCall: "videoCall",
-	Location: "location",
 	ProfileLink: "profile",
 	ProfilePhotoReply: "photo",
 	AlbumContentReaction: "album",
@@ -102,8 +102,8 @@ const quoteTypes: Partial<Record<string, PreviewType>> = {
 };
 
 function mediaType(preview: MessagePreview): PreviewType | null {
-	const sticker = stickerTypes[preview.type];
-	if (sticker !== undefined) return sticker;
+	const labeled = labeledTypes[preview.type];
+	if (labeled !== undefined) return labeled;
 	if ((preview.albumId ?? null) !== null) return "album";
 	if (preview.type === "ExpiringImage") return "expiringPhoto";
 	if (EXPIRING_VIDEO_TYPES.has(preview.type)) return "expiringVideo";

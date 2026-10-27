@@ -1,9 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import { DEV_SERVER_URL } from "../playwright.config";
 import { PSEUDO_MESSAGE } from "../src/lib/i18n/fixtures/pseudo-message";
 import { FIRST_ROUTE_COMPILE_MS } from "./support/app";
 import { APP_SETTINGS } from "./support/page-stack";
 import { showRestingToast } from "./support/toast";
+
+test.use({ baseURL: DEV_SERVER_URL });
 
 const LANGUAGE_PAGE = `${APP_SETTINGS}/language`;
 const HOTKEY = "Alt+T";
