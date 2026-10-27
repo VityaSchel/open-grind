@@ -3,7 +3,6 @@ options:
   bundleIdPrefix: org.opengrind.app
   deploymentTarget:
     iOS: 16.4
-fileGroups: [../../src]
 configs:
   debug: debug
   release: release
@@ -13,17 +12,6 @@ settingGroups:
       PRODUCT_NAME: Open Grind
       PRODUCT_BUNDLE_IDENTIFIER: org.opengrind.app
       DEVELOPMENT_TEAM: L3W5ZXTBAF
-targetTemplates:
-  app:
-    type: application
-    sources:
-      - path: Sources
-    scheme:
-      environmentVariables:
-        RUST_BACKTRACE: full
-        RUST_LOG: info
-    settings:
-      groups: [app]
 targets:
   open-grind_iOS:
     type: application
