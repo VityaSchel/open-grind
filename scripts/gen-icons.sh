@@ -12,8 +12,8 @@ fi
 RES="src-tauri/gen/android/app/src/main/res"
 
 # Desktop icons
-bun tauri icon ./contrib/logo/app-icon.svg --ios-color='#0A0A0A'
-rm -rf src-tauri/gen/apple/Assets.xcassets
+bun tauri icon ./contrib/logo/app-icon.svg
+rm -rf src-tauri/icons/ios src-tauri/gen/apple/Assets.xcassets
 
 # Android
 rm -f "$RES"/mipmap-*dpi/ic_launcher.png \
