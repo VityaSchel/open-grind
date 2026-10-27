@@ -184,7 +184,7 @@
 	<div
 		data-slot="sheet-panel"
 		class={[
-			"flex flex-col rounded-t-4xl bg-popover px-4 pb-20 shadow-xl ring-1 ring-border ring-inset",
+			"flex flex-col rounded-t-4xl bg-popover px-4 pb-(--sheet-panel-padding-bottom) shadow-xl ring-1 ring-border ring-inset",
 			{ "min-h-full": fullsize },
 		]}
 	>

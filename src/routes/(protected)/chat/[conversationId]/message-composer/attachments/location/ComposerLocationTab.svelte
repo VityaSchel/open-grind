@@ -39,7 +39,7 @@
 	Drag the map to place the pin on the location you want to share.
 </p>
 <div
-	class="relative mx-auto mb-[calc(var(--sheet-actions-clearance)-var(--spacing)*20)] aspect-square w-[min(100%,max(12rem,50svh))] overflow-hidden rounded-lg"
+	class="relative mx-auto mb-[calc(var(--sheet-actions-clearance)-var(--sheet-panel-padding-bottom))] aspect-square w-[min(100%,max(12rem,50svh))] overflow-hidden rounded-lg"
 	data-vaul-no-drag
 >
 	<GeoMapPicker
