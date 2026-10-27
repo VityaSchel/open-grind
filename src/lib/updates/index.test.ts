@@ -89,15 +89,13 @@ describe("on iOS", () => {
 		runningOn("ios");
 	});
 
-	it("reports no capability or readiness without asking the backend", async () => {
-		expect(await getUpdateCapability()).toMatchObject({
+	it("reports no capability or readiness for iOS without asking the backend", async () => {
+		const unsupported = {
 			state: "unsupported",
-			detail: { reason: "noReleaseArtifacts" },
-		});
-		expect(await getUpdateReadiness("google-oauth")).toMatchObject({
-			state: "unsupported",
-			detail: { reason: "noReleaseArtifacts" },
-		});
+			detail: { reason: "noReleaseArtifacts", detail: { target: "ios" } },
+		};
+		expect(await getUpdateCapability()).toEqual(unsupported);
+		expect(await getUpdateReadiness("google-oauth")).toEqual(unsupported);
 		expect(invokeMock).not.toHaveBeenCalled();
 	});
 

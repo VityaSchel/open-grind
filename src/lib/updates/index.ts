@@ -23,18 +23,12 @@ import {
 
 export * from "./types";
 
-const notPackaged: Unsupported = {
-	reason: "noReleaseArtifacts",
-	detail: { target: "demo" },
-};
-const unavailableCapability: Capability = {
-	state: "unsupported",
-	detail: notPackaged,
-};
-const unavailableReadiness: Readiness = {
-	state: "unsupported",
-	detail: notPackaged,
-};
+function notPackaged(): Unsupported {
+	return {
+		reason: "noReleaseArtifacts",
+		detail: { target: demoEnabled ? "demo" : currentPlatform() },
+	};
+}
 
 async function parsed<T>(
 	command: string,
@@ -81,7 +75,8 @@ export function updatesAvailableHere(): boolean {
 }
 
 export async function getUpdateCapability(): Promise<Capability> {
-	if (!updatesAvailableHere()) return unavailableCapability;
+	if (!updatesAvailableHere())
+		return { state: "unsupported", detail: notPackaged() };
 	return parsed("updater_capability", capabilitySchema);
 }
 
@@ -125,7 +120,8 @@ export async function getUpdateProgress(): Promise<Progress | null> {
 export async function getUpdateReadiness(
 	component: ComponentKey = APP_COMPONENT,
 ): Promise<Readiness> {
-	if (!updatesAvailableHere()) return unavailableReadiness;
+	if (!updatesAvailableHere())
+		return { state: "unsupported", detail: notPackaged() };
 	return parsed("updater_readiness", readinessSchema, { component });
 }
 
