@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import type { SupportedPlatform } from "../src/lib/platform/os";
 import {
 	DEMO_CONVERSATION,
 	DEMO_CONVERSATION_ID,
@@ -7,7 +8,6 @@ import {
 	installEventInjection,
 	installTauriShim,
 	MESSAGE_ROW,
-	type ShimPlatform,
 } from "./support/app";
 
 const ME = 123456000;
@@ -131,7 +131,10 @@ function message({
 
 async function openConversation(
 	page: Page,
-	{ width, platform = "macos" }: { width: number; platform?: ShimPlatform },
+	{
+		width,
+		platform = "macos",
+	}: { width: number; platform?: SupportedPlatform },
 ): Promise<void> {
 	await page.setViewportSize({ width, height: 800 });
 	await installTauriShim(page, { platform });

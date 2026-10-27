@@ -308,11 +308,9 @@ export async function runPaletteCommand(
 	await page.keyboard.press("Enter");
 }
 
-export type ShimPlatform = SupportedPlatform;
-
 export async function installTauriShim(
 	page: Page,
-	{ platform }: { platform: ShimPlatform },
+	{ platform }: { platform: SupportedPlatform },
 ): Promise<void> {
 	await page.addInitScript((platformName: string) => {
 		interface AppDataArgs {

@@ -1,6 +1,7 @@
 import { type Page } from "@playwright/test";
 
-import { backLink, installTauriShim, type ShimPlatform } from "./app";
+import type { SupportedPlatform } from "../../src/lib/platform/os";
+import { backLink, installTauriShim } from "./app";
 import { AVATAR_HOST, CHAT_MEDIA_HOST, serveImages } from "./media";
 import { stackSettled } from "./page-stack";
 
@@ -18,7 +19,7 @@ export function albumTileNamed(name: string): string {
 
 export async function openAlbums(
 	page: Page,
-	{ platform = "macos" }: { platform?: ShimPlatform } = {},
+	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
 ): Promise<void> {
 	await installTauriShim(page, { platform });
 	await serveImages(page, CHAT_MEDIA_HOST);
@@ -30,7 +31,7 @@ export async function openAlbums(
 export async function openAlbum(
 	page: Page,
 	tile: string,
-	{ platform }: { platform?: ShimPlatform } = {},
+	{ platform }: { platform?: SupportedPlatform } = {},
 ): Promise<void> {
 	await openAlbums(page, { platform });
 	await page.locator(tile).click();
@@ -41,7 +42,7 @@ export async function openAlbum(
 
 export function openSharedAlbum(
 	page: Page,
-	{ platform }: { platform?: ShimPlatform } = {},
+	{ platform }: { platform?: SupportedPlatform } = {},
 ): Promise<void> {
 	return openAlbum(page, SHARED_ALBUM, { platform });
 }

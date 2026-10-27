@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 
+import type { SupportedPlatform } from "../src/lib/platform/os";
 import {
 	afterTwoFrames,
 	DEMO_CONVERSATION,
@@ -8,7 +9,6 @@ import {
 	installTauriShim,
 	MESSAGE_ROW,
 	pathname,
-	type ShimPlatform,
 	watchRendered,
 } from "./support/app";
 import {
@@ -25,7 +25,7 @@ import { PHONE } from "./support/stack-layers";
 
 async function openInboxFromHome(
 	page: Page,
-	{ platform = "macos" }: { platform?: ShimPlatform } = {},
+	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
 ) {
 	await page.setViewportSize(WIDE);
 	await installTauriShim(page, { platform });

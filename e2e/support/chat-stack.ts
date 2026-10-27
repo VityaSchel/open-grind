@@ -1,10 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import {
 	FIRST_ROUTE_COMPILE_MS,
 	installEventInjection,
 	installTauriShim,
-	type ShimPlatform,
 } from "./app";
 import { LIVE_STACK } from "./stack-layers";
 
@@ -26,7 +26,7 @@ export async function openInbox(
 	{
 		platform = "macos",
 		injectEvents = false,
-	}: { platform?: ShimPlatform; injectEvents?: boolean } = {},
+	}: { platform?: SupportedPlatform; injectEvents?: boolean } = {},
 ) {
 	await installTauriShim(page, { platform });
 	if (injectEvents) await installEventInjection(page);

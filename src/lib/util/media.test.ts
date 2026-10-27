@@ -6,6 +6,7 @@ import {
 	profileMediaUrl,
 	proxyMediaUrl,
 } from "$lib/util/media";
+import type { SupportedPlatform } from "$lib/platform/os";
 
 const PHOTO = "https://cdns.grindr.com/images/thumb/320x320/deadbeef";
 const SIGNED =
@@ -17,11 +18,11 @@ const tauri = globalThis as {
 	};
 };
 
-function runningOn(osName: string) {
+function convertFileSrcAs(platform: SupportedPlatform) {
 	tauri.__TAURI_INTERNALS__ = {
 		convertFileSrc: (filePath, protocol = "asset") => {
 			const path = encodeURIComponent(filePath);
-			return osName === "windows" || osName === "android"
+			return platform === "windows" || platform === "android"
 				? `http://${protocol}.localhost/${path}`
 				: `${protocol}://localhost/${path}`;
 		},
@@ -40,7 +41,7 @@ afterEach(() => {
 
 describe("proxyMediaUrl", () => {
 	it("carries the whole url to the scheme handler", () => {
-		runningOn("macos");
+		convertFileSrcAs("macos");
 
 		const proxied = proxyMediaUrl(SIGNED);
 
@@ -49,7 +50,7 @@ describe("proxyMediaUrl", () => {
 	});
 
 	it("uses the http form the platforms that need it expect", () => {
-		runningOn("android");
+		convertFileSrcAs("android");
 
 		const proxied = proxyMediaUrl(PHOTO);
 
@@ -58,13 +59,13 @@ describe("proxyMediaUrl", () => {
 	});
 
 	it("never percent-encodes, so the android scheme rewrite cannot bite", () => {
-		runningOn("android");
+		convertFileSrcAs("android");
 
 		expect(proxyMediaUrl(SIGNED)).not.toContain("%");
 	});
 
 	it("tags which stack the Rust handler should imitate", () => {
-		runningOn("macos");
+		convertFileSrcAs("macos");
 
 		expect(proxyMediaUrl(PHOTO)).toContain("/i");
 		expect(proxyMediaUrl(PHOTO, { as: "image" })).toBe(
@@ -77,7 +78,7 @@ describe("proxyMediaUrl", () => {
 	});
 
 	it("passes through anything that is not a remote url", () => {
-		runningOn("macos");
+		convertFileSrcAs("macos");
 
 		for (const url of ["blob:nothing", "", "http://cdns.grindr.com/x"]) {
 			expect(proxyMediaUrl(url)).toBe(url);
@@ -89,7 +90,7 @@ describe("proxyMediaUrl", () => {
 
 describe("profileMediaUrl", () => {
 	it("builds the CDN url for each size and proxies it", () => {
-		runningOn("macos");
+		convertFileSrcAs("macos");
 
 		expect(
 			proxiedTarget(
@@ -105,10 +106,10 @@ describe("profileMediaUrl", () => {
 });
 
 describe("isProxiedMediaUrl", () => {
-	it.each(["macos", "android"])(
+	it.each(["macos", "android"] as const)(
 		"recognizes the form the proxy takes on %s",
-		(osName) => {
-			runningOn(osName);
+		(platform) => {
+			convertFileSrcAs(platform);
 
 			expect(isProxiedMediaUrl(new URL(proxyMediaUrl(PHOTO)))).toBe(true);
 		},

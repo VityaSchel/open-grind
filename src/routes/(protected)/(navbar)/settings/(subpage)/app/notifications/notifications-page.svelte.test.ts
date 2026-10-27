@@ -81,22 +81,19 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it.each(["ios"] as const)(
-		"says on %s that notifications are not supported on this platform yet",
-		(platform) => {
-			runningOn(platform);
+	it("says on iOS that notifications are not supported on this platform yet", () => {
+		runningOn("ios");
 
-			render(NotificationsPage);
+		render(NotificationsPage);
 
-			expect(
-				screen.getByText(
-					"Notifications are not supported on this platform yet.",
-				),
-			).toBeTruthy();
-			expect(screen.queryByRole("switch")).toBeNull();
-			expect(screen.queryByRole("radiogroup")).toBeNull();
-		},
-	);
+		expect(
+			screen.getByText(
+				"Notifications are not supported on this platform yet.",
+			),
+		).toBeTruthy();
+		expect(screen.queryByRole("switch")).toBeNull();
+		expect(screen.queryByRole("radiogroup")).toBeNull();
+	});
 
 	it.each(["macos", "windows", "linux"] as const)(
 		"offers the switch and both categories on %s, with no delivery modes",

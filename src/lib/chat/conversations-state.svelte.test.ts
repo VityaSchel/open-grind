@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
 	getConversationsMock,
@@ -339,8 +339,6 @@ describe("ConversationsState unread accounting", () => {
 	});
 
 	it("leaves no badge on a conversation opened while its sync was in flight", async () => {
-		const focus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
-		onTestFinished(() => focus.mockRestore());
 		const state = await inboxWith([conversation("a:1", 1000)]);
 		currentPage.route.id = "/(protected)/(navbar)";
 		singleColumn.current = true;

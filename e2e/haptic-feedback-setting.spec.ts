@@ -1,13 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 
-import { installTauriShim, type ShimPlatform } from "./support/app";
+import type { SupportedPlatform } from "../src/lib/platform/os";
+import { installTauriShim } from "./support/app";
 
 const APP_SETTINGS = "/settings/app";
 const DESCRIPTION = "Use the haptic engine for interactions.";
 
 test.describe.configure({ timeout: 120_000 });
 
-async function openAppSettings(page: Page, platform: ShimPlatform) {
+async function openAppSettings(page: Page, platform: SupportedPlatform) {
 	await installTauriShim(page, { platform });
 	await page.goto(APP_SETTINGS);
 	await page

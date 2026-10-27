@@ -30,10 +30,7 @@ const {
 	signOutMock: vi.fn(),
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: invokeMock,
-	isTauri: () => false,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({
 	listen: (name: string, handler: (event: { payload: unknown }) => void) => {
 		const handlers = listeners.get(name) ?? new Set();
@@ -190,7 +187,6 @@ beforeEach(async () => {
 	vi.spyOn(Date, "now").mockImplementation(() => clock);
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	vi.spyOn(console, "warn").mockImplementation(() => {});
-	vi.spyOn(document, "hasFocus").mockReturnValue(true);
 	invokeMock.mockImplementation((name: string) => {
 		if (name === "current_session")
 			return Promise.resolve({

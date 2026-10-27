@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import { isWithin } from "../../src/lib/util/pathname";
 import { pushedFromChain } from "../../src/routes/(protected)/(navbar)/settings/page-stack/hierarchy";
 import {
@@ -7,7 +8,6 @@ import {
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
 	meTab,
-	type ShimPlatform,
 	watchRendered,
 } from "./app";
 import {
@@ -36,7 +36,7 @@ export async function openSettings(
 	{
 		reducedMotion,
 		platform = "macos",
-	}: { reducedMotion?: "reduce"; platform?: ShimPlatform } = {},
+	}: { reducedMotion?: "reduce"; platform?: SupportedPlatform } = {},
 ) {
 	if (reducedMotion) await page.emulateMedia({ reducedMotion });
 	await installTauriShim(page, { platform });
@@ -50,7 +50,7 @@ export async function openSettings(
 export async function openDeepLink(
 	page: Page,
 	path: string,
-	{ platform = "macos" }: { platform?: ShimPlatform } = {},
+	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

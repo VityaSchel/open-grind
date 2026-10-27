@@ -1,11 +1,11 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
+import type { SupportedPlatform } from "../src/lib/platform/os";
 import {
 	captureInvokes,
 	INCOMING_ROW,
 	installTauriShim,
 	MESSAGE_ROW,
-	type ShimPlatform,
 	trackpadSwipe,
 	TrustedTouch,
 } from "./support/app";
@@ -21,7 +21,7 @@ async function openConversation(
 	{
 		path = CONVERSATION,
 		platform = "macos",
-	}: { path?: string; platform?: ShimPlatform } = {},
+	}: { path?: string; platform?: SupportedPlatform } = {},
 ) {
 	await installTauriShim(page, { platform });
 	await page.goto(path);

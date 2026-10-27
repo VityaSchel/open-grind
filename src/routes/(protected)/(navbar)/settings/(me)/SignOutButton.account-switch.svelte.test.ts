@@ -32,10 +32,7 @@ const { native, goto, page, files, push, toast } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: native,
-	isTauri: () => true,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: native }));
 vi.mock("@tauri-apps/api/event", () => ({
 	listen: () => Promise.resolve(() => {}),
 }));

@@ -40,8 +40,6 @@ function followFocus(): void {
 	following = true;
 	wasFocused = windowFocused();
 	document.addEventListener("visibilitychange", noteFocusChange);
-	window.addEventListener("focus", noteFocusChange);
-	window.addEventListener("blur", noteFocusChange);
 	if (isDesktopPlatform()) followDesktopFocus();
 }
 

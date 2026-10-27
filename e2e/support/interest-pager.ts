@@ -1,10 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
 import {
 	afterTwoFrames,
 	FIRST_ROUTE_COMPILE_MS,
 	installTauriShim,
-	type ShimPlatform,
 	TrustedTouch,
 } from "./app";
 
@@ -36,7 +36,7 @@ declare global {
 
 export async function openTaps(
 	page: Page,
-	{ platform = "macos" }: { platform?: ShimPlatform } = {},
+	{ platform = "macos" }: { platform?: SupportedPlatform } = {},
 ): Promise<void> {
 	await installTauriShim(page, { platform });
 	await page.addInitScript(
