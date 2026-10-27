@@ -1,4 +1,5 @@
 import { preferencesSnapshot } from "$lib/app-data/preferences.svelte";
+import { currentPlatform } from "$lib/platform/os";
 import type { NotificationMode } from "./types";
 
 type Phase = "idle" | "enablingFast" | "working";
@@ -16,6 +17,18 @@ export const notificationState = $state<{
 	permissionPending: false,
 	addonDialog: null,
 });
+
+export function offersDeliveryModes(): boolean {
+	switch (currentPlatform()) {
+		case "android":
+			return true;
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
 
 export function busy(): boolean {
 	return (

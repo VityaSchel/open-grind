@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import type { PushErrorReason, PushToken } from "./types";
 
 type PushWatcher = (event: {
@@ -33,7 +34,6 @@ const readSync = vi.hoisted(() => ({
 	recheckReadsWhileAway: vi.fn<() => () => void>(),
 	resyncWhileShown: vi.fn<() => Promise<void>>(),
 }));
-const os = vi.hoisted(() => ({ desktop: false }));
 const focusListeners = vi.hoisted(
 	() => [] as ((event: { payload: boolean }) => void)[],
 );
@@ -58,7 +58,6 @@ vi.mock("./categories.svelte", () => categories);
 vi.mock("./chat-withdrawals", () => chatWithdrawals);
 vi.mock("./read-sync", () => readSync);
 vi.mock("./index", () => push);
-vi.mock("$lib/platform/os", () => ({ isDesktopPlatform: () => os.desktop }));
 vi.mock("@tauri-apps/api/window", () => ({
 	getCurrentWindow: () => ({
 		onFocusChanged: (listener: (event: { payload: boolean }) => void) => {
@@ -89,7 +88,7 @@ async function signOutRelease(): Promise<() => Promise<void>> {
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	os.desktop = false;
+	runningOn("android");
 	focusListeners.length = 0;
 	goto.mockResolvedValue(undefined);
 	push.pushAvailableHere.mockReturnValue(true);
@@ -123,7 +122,7 @@ describe("watching push", () => {
 	});
 
 	it("rechecks notifications each time a desktop window regains focus", async () => {
-		os.desktop = true;
+		runningOn("macos");
 		const module = await freshModule();
 		await module.startPushWatch();
 		vi.clearAllMocks();
@@ -138,7 +137,7 @@ describe("watching push", () => {
 	});
 
 	it("rechecks reads made elsewhere while a desktop window is away", async () => {
-		os.desktop = true;
+		runningOn("macos");
 		const module = await freshModule();
 
 		await module.startPushWatch();

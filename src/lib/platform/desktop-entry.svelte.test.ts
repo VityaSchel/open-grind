@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const tauri = vi.hoisted(() => ({ invoke: vi.fn(), isTauri: vi.fn() }));
+const tauri = vi.hoisted(() => ({ invoke: vi.fn() }));
 
 vi.mock("@tauri-apps/api/core", () => tauri);
 
@@ -18,7 +18,6 @@ describe("the desktop entry state", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
-		tauri.isTauri.mockReturnValue(true);
 	});
 
 	it("offers nothing until it has been hydrated", async () => {
@@ -89,17 +88,6 @@ describe("the desktop entry state", () => {
 		await hydrateDesktopEntryState();
 
 		expect(tauri.invoke).toHaveBeenCalledTimes(1);
-	});
-
-	it("does not reach for the backend outside Tauri", async () => {
-		tauri.isTauri.mockReturnValue(false);
-		const { hydrateDesktopEntryState, desktopEntryAvailable } =
-			await import("./desktop-entry.svelte");
-
-		await hydrateDesktopEntryState();
-
-		expect(tauri.invoke).not.toHaveBeenCalled();
-		expect(desktopEntryAvailable()).toBe(false);
 	});
 
 	it("installs and re-reads, so the toggle shows what is on disk", async () => {

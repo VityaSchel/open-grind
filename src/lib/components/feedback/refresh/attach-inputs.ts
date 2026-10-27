@@ -1,6 +1,6 @@
-import { isLinuxPlatform, isMacosPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import {
-	scrollGesture,
+	scrollGestureHere,
 	type ScrollGestureState,
 } from "$lib/platform/scroll-gesture";
 import {
@@ -38,6 +38,18 @@ export type PullInputsOptions = {
 	nativeBand?: boolean;
 };
 
+function nativeOverscrollBandHere(): boolean {
+	switch (currentPlatform()) {
+		case "linux":
+			return false;
+		case "android":
+		case "ios":
+		case "macos":
+		case "windows":
+			return true;
+	}
+}
+
 export function attachPullInputs(
 	target: HTMLElement,
 	{
@@ -52,10 +64,8 @@ export function attachPullInputs(
 		setDistance,
 		shouldReveal,
 		shouldConceal,
-		fingerPhase = isMacosPlatform() || isLinuxPlatform()
-			? scrollGesture
-			: null,
-		nativeBand = !isLinuxPlatform(),
+		fingerPhase = scrollGestureHere(),
+		nativeBand = nativeOverscrollBandHere(),
 	}: PullInputsOptions,
 ): () => void {
 	let trackpadEndedAt = -Infinity;

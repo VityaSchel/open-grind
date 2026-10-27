@@ -1,4 +1,4 @@
-import { convertFileSrc, isTauri } from "@tauri-apps/api/core";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { demoEnabled, demoMediaUrl } from "$lib/demo";
 import { toBase64Url } from "$lib/util/base64";
@@ -24,7 +24,7 @@ export function proxyMediaUrl(
 	{ as = "image" }: ProxyOptions = {},
 ): string | null {
 	if (typeof url !== "string") return null;
-	if (demoEnabled || !isTauri()) return url;
+	if (demoEnabled) return url;
 	if (!url.startsWith("https://")) return url;
 	const payload = toBase64Url(new TextEncoder().encode(url));
 	return convertFileSrc(`${FETCHER_TAG[as]}${payload}`, MEDIA_SCHEME);

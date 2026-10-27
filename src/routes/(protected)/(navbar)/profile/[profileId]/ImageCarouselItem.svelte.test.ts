@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import ImageCarouselItem from "./ImageCarouselItem.svelte";
 
 const PROPS = {
@@ -11,6 +12,10 @@ const PROPS = {
 	createdAt: null,
 	label: "Profile photo 1 of 2",
 };
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("ImageCarouselItem", () => {
 	afterEach(cleanup);

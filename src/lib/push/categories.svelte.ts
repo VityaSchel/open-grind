@@ -1,5 +1,5 @@
 import { getPushSettings, setPushSettings } from "$lib/api/settings/account";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import {
 	openPushCategorySettings,
 	pushAvailableHere,
@@ -15,6 +15,20 @@ export const notificationCategories = $state<{ list: PushCategory[] }>({
 const ANDROID_OWNED: ReadonlySet<PushCategoryName> = new Set<PushCategoryName>([
 	"messages",
 ]);
+
+const NONE_OWNED: ReadonlySet<PushCategoryName> = new Set<PushCategoryName>();
+
+function systemOwnedCategories(): ReadonlySet<PushCategoryName> {
+	switch (currentPlatform()) {
+		case "android":
+			return ANDROID_OWNED;
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return NONE_OWNED;
+	}
+}
 
 let sentToSettings: PushCategoryName | null = null;
 
@@ -61,7 +75,7 @@ export async function toggleNotificationCategory({
 		sentToSettings = category;
 		return;
 	}
-	if (isAndroidPlatform() && ANDROID_OWNED.has(category)) {
+	if (systemOwnedCategories().has(category)) {
 		if (!enabled) await openPushCategorySettings(category);
 		return;
 	}

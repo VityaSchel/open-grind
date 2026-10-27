@@ -24,13 +24,13 @@ describe("mediaFileKindOf", () => {
 });
 
 describe("inspectMediaFile", () => {
-	it("answers a web file from its own type and size without the backend", async () => {
+	it("answers a demo file from its own type and size without the backend", async () => {
 		const file = new File([new Uint8Array(12)], "clip.mp4", {
 			type: "video/mp4",
 		});
 		const media = {
-			source: "web",
-			key: "web-1",
+			source: "demo",
+			key: "demo-1",
 			mimeType: "video/mp4",
 			file,
 		} satisfies PickedMedia;

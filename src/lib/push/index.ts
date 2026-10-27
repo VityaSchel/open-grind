@@ -1,7 +1,7 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 
 import { asAppError } from "$lib/api/methods";
-import { isAndroidPlatform, isDesktopPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import { getInstalledVersion } from "$lib/updates";
 import { FCM_COMPONENT } from "$lib/updates/components";
 import {
@@ -26,7 +26,15 @@ import {
 export * from "./types";
 
 export function pushAvailableHere(): boolean {
-	return isAndroidPlatform() || isDesktopPlatform();
+	switch (currentPlatform()) {
+		case "android":
+		case "linux":
+		case "macos":
+		case "windows":
+			return true;
+		case "ios":
+			return false;
+	}
 }
 
 export function pushErrorReason(error: unknown): PushErrorReason | null {

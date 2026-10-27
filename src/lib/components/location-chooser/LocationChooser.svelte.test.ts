@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { encodeGeohash } from "$lib/model/geohash";
+import { runningOn } from "$lib/test/platform";
 
 const {
 	abortMock,
@@ -64,7 +65,6 @@ function reportFix(fix: { lat: number; lon: number; accuracyMeters: number }) {
 	lastFix = fix;
 	return { status: "ok" as const, coords: fix };
 }
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: () => true }));
 vi.mock("$lib/util/breakpoints.svelte", () => ({
 	above: () => ({ current: true }),
 }));
@@ -93,6 +93,7 @@ const saveButton = () => screen.getByRole("button", { name: "Save" });
 
 describe("LocationChooser", () => {
 	beforeEach(() => {
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: false,
 			geohash: null,
@@ -294,6 +295,7 @@ describe("LocationChooser", () => {
 
 describe("LocationChooser GPS feedback", () => {
 	beforeEach(() => {
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: null,

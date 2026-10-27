@@ -3,7 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { AndroidFs, type AndroidFsUri } from "tauri-plugin-android-fs-api";
 
 import { demoEnabled } from "$lib/demo";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 
 type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 
@@ -44,7 +44,7 @@ export type PickedMedia = { key: string; mimeType: string | null } & (
 	| { source: "android"; uri: AndroidFsUri }
 	| { source: "desktop"; path: string }
 	| { source: "staged"; id: string; file?: File }
-	| { source: "web"; file: File }
+	| { source: "demo"; file: File }
 );
 
 export async function pickMedia(kind: MediaKind): Promise<PickedMedia | null> {
@@ -66,10 +66,10 @@ async function pick({
 	const filter = filtersByKind[kind];
 
 	if (demoEnabled) {
-		const files = await pickWebFiles({ filter, multiple });
+		const files = await pickDemoFiles({ filter, multiple });
 		return files.map(
 			(file): PickedMedia => ({
-				source: "web",
+				source: "demo",
 				key: crypto.randomUUID(),
 				mimeType: file.type === "" ? null : file.type,
 				file,
@@ -77,18 +77,33 @@ async function pick({
 		);
 	}
 
-	if (isAndroidPlatform()) {
-		const uris = await pickAndroidUris({ filter, multiple });
-		return uris.map(
-			(uri): PickedMedia => ({
-				source: "android",
-				key: crypto.randomUUID(),
-				mimeType: null,
-				uri,
-			}),
-		);
+	switch (currentPlatform()) {
+		case "android": {
+			const uris = await pickAndroidUris({ filter, multiple });
+			return uris.map(
+				(uri): PickedMedia => ({
+					source: "android",
+					key: crypto.randomUUID(),
+					mimeType: null,
+					uri,
+				}),
+			);
+		}
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return pickWithDialog({ filter, multiple });
 	}
+}
 
+async function pickWithDialog({
+	filter,
+	multiple,
+}: {
+	filter: MediaFilter;
+	multiple: boolean;
+}): Promise<PickedMedia[]> {
 	const filters = [{ name: filter.name, extensions: filter.extensions }];
 	const selection = multiple
 		? await open({ filters, multiple: true })
@@ -137,7 +152,7 @@ export function mimeTypeFromPath(path: string): string | null {
 	return mimeTypesByExtension[extension] ?? null;
 }
 
-function pickWebFiles({
+function pickDemoFiles({
 	filter,
 	multiple,
 }: {

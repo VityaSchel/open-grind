@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fromBase64 } from "$lib/util/base64";
 
@@ -15,8 +15,6 @@ import {
 	removeAppDataFile,
 	writeAppDataFileAtomic,
 } from ".";
-
-const tauri = globalThis as { isTauri?: boolean };
 
 function nativeBackend({
 	deliver = (bytes: Uint8Array): unknown => bytes.slice().buffer,
@@ -51,18 +49,9 @@ const content = Uint8Array.from({ length: 256 }, (_, index) => index);
 
 beforeEach(() => {
 	invokeMock.mockReset();
-	localStorage.clear();
-});
-
-afterEach(() => {
-	delete tauri.isTauri;
 });
 
 describe("in the native app", () => {
-	beforeEach(() => {
-		tauri.isTauri = true;
-	});
-
 	it("reads back every byte it wrote", async () => {
 		nativeBackend();
 
@@ -111,17 +100,5 @@ describe("in the native app", () => {
 			file: "preferences",
 			content: "aGVsbG8=",
 		});
-	});
-});
-
-describe("in the browser", () => {
-	it("keeps files in local storage without calling the native app", async () => {
-		await writeAppDataFileAtomic({ path: "preferences.data", content });
-
-		expect(await existsAppDataFile("preferences.data")).toBe(true);
-		expect(await readAppDataFile("preferences.data")).toEqual(content);
-		await removeAppDataFile("preferences.data");
-		expect(await existsAppDataFile("preferences.data")).toBe(false);
-		expect(invokeMock).not.toHaveBeenCalled();
 	});
 });

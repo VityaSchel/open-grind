@@ -36,6 +36,7 @@ vi.mock("$lib/util/media", async (importOriginal) => ({
 }));
 
 import { mergeProfileEditIntoCaches } from "$lib/api/users/profiles";
+import { runningOn } from "$lib/test/platform";
 import NavBar from "./NavBar.svelte";
 
 function medias(...mediaHashes: string[]): Profile["medias"] {
@@ -71,6 +72,7 @@ async function renderedAvatar(container: HTMLElement): Promise<string | null> {
 
 beforeEach(() => {
 	getProfileMock.mockReset();
+	runningOn("windows");
 });
 
 afterEach(() => cleanup());

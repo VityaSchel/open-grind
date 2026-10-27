@@ -1,16 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, listenMock, isTauriMock } = vi.hoisted(() => ({
+const { invokeMock, listenMock, demo } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
 	listenMock: vi.fn(),
-	isTauriMock: vi.fn(() => true),
+	demo: { demoEnabled: false },
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: invokeMock,
-	isTauri: isTauriMock,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: listenMock }));
+vi.mock("$lib/demo", () => demo);
 
 import {
 	asUpdateError,
@@ -54,7 +52,7 @@ const release = {
 beforeEach(() => {
 	invokeMock.mockReset();
 	listenMock.mockReset();
-	isTauriMock.mockReturnValue(true);
+	demo.demoEnabled = false;
 });
 
 describe("update checks", () => {
@@ -95,12 +93,15 @@ describe("update checks", () => {
 });
 
 describe("capability and readiness", () => {
-	it("never reaches the backend outside a Tauri build", async () => {
-		isTauriMock.mockReturnValue(false);
+	it("never reaches the backend in the demo", async () => {
+		demo.demoEnabled = true;
 
 		expect(await getUpdateCapability()).toEqual({
 			state: "unsupported",
-			detail: { reason: "noReleaseArtifacts", detail: { target: "web" } },
+			detail: {
+				reason: "noReleaseArtifacts",
+				detail: { target: "demo" },
+			},
 		});
 		expect(await getUpdateReadiness()).toMatchObject({
 			state: "unsupported",
@@ -171,8 +172,8 @@ describe("capability and readiness", () => {
 });
 
 describe("local install state", () => {
-	it("never reaches the backend outside a Tauri build", async () => {
-		isTauriMock.mockReturnValue(false);
+	it("never reaches the backend in the demo", async () => {
+		demo.demoEnabled = true;
 
 		expect(await installPending()).toBe(false);
 		expect(await getInstalledVersion("google-oauth")).toBeNull();

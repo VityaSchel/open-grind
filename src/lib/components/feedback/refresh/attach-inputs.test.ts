@@ -41,6 +41,7 @@ function harness({
 		shouldReveal: () => false,
 		shouldConceal: () => false,
 		fingerPhase,
+		nativeBand: true,
 	});
 	const wheel = (deltaX: number, deltaY: number) =>
 		target.dispatchEvent(new WheelEvent("wheel", { deltaX, deltaY }));

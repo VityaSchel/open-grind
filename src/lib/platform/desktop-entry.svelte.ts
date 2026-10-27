@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 
 type State = { available: boolean; installed: boolean };
 
@@ -14,7 +14,6 @@ function toState(value: unknown): State {
 }
 
 async function read(): Promise<State> {
-	if (!isTauri()) return unavailable;
 	return toState(await invoke("desktop_entry_state").catch(() => null));
 }
 

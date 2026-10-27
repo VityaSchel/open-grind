@@ -4,6 +4,11 @@ import { cleanup, render, within } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.hoisted(() => {
+	Object.assign(globalThis, {
+		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
+	});
+});
 const { playHapticMock } = vi.hoisted(() => ({ playHapticMock: vi.fn() }));
 vi.mock("$lib/haptics", () => ({
 	hapticsAvailable: () => true,

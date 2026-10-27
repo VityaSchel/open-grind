@@ -2,24 +2,20 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-	checkPermissionsMock,
-	getCurrentPositionMock,
-	isMobilePlatformMock,
-	requestPermissionsMock,
-} = vi.hoisted(() => ({
-	checkPermissionsMock: vi.fn(),
-	getCurrentPositionMock: vi.fn(),
-	isMobilePlatformMock: vi.fn(),
-	requestPermissionsMock: vi.fn(),
-}));
+import { runningOn } from "$lib/test/platform";
+
+const { checkPermissionsMock, getCurrentPositionMock, requestPermissionsMock } =
+	vi.hoisted(() => ({
+		checkPermissionsMock: vi.fn(),
+		getCurrentPositionMock: vi.fn(),
+		requestPermissionsMock: vi.fn(),
+	}));
 
 vi.mock("@tauri-apps/plugin-geolocation", () => ({
 	checkPermissions: checkPermissionsMock,
 	getCurrentPosition: getCurrentPositionMock,
 	requestPermissions: requestPermissionsMock,
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
 
 const { locationRequest } = await import("./location-request.svelte");
 
@@ -38,7 +34,7 @@ function deferred<T>() {
 
 describe("locationRequest", () => {
 	beforeEach(() => {
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		checkPermissionsMock.mockResolvedValue({ location: "granted" });
 		getCurrentPositionMock.mockResolvedValue(BERLIN);
 		requestPermissionsMock.mockResolvedValue({ location: "granted" });
@@ -95,7 +91,7 @@ describe("locationRequest", () => {
 	});
 
 	it("is unsupported off mobile", async () => {
-		isMobilePlatformMock.mockReturnValue(false);
+		runningOn("macos");
 		await expect(locationRequest.run()).resolves.toEqual({
 			status: "unsupported",
 		});
@@ -173,7 +169,7 @@ describe("locationRequest", () => {
 
 describe("abortStale", () => {
 	beforeEach(() => {
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		checkPermissionsMock.mockResolvedValue({ location: "granted" });
 		getCurrentPositionMock.mockResolvedValue(BERLIN);
 	});

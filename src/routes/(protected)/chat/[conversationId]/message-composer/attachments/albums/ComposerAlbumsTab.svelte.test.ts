@@ -20,6 +20,7 @@ vi.mock("../../../conversation-state.svelte", () => ({
 
 import { albumShares } from "$lib/chat/album-shares.svelte";
 import { demoMyAlbums } from "$lib/demo/mock/albums";
+import { runningOn } from "$lib/test/platform";
 import type { TabSelection } from "../tabs";
 import ComposerAlbumsTab from "./ComposerAlbumsTab.svelte";
 
@@ -93,6 +94,7 @@ beforeEach(() => {
 			}),
 	);
 	vi.spyOn(console, "error").mockImplementation(() => {});
+	runningOn("windows");
 });
 
 afterEach(() => {

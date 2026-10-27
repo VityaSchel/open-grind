@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
 } from "$lib/demo/mock/albums";
+import { runningOn } from "$lib/test/platform";
 import type { MyAlbum } from "$lib/model/messaging/albums";
 import AlbumTile from "./AlbumTile.svelte";
 
@@ -51,6 +52,10 @@ function countBadgeText(tile: Element): string | undefined {
 function coverOf(album: MyAlbum): Element | null {
 	return tileOf(album).firstElementChild;
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => cleanup());
 

@@ -11,6 +11,7 @@ import {
 	vi,
 } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import { toastsFake, updateApiFake } from "$lib/updates/updates-test-helpers";
 import type { Capability } from "$lib/updates/types";
 
@@ -18,13 +19,12 @@ const PRIVACY_POLICY = "https://opengrind.org/privacy";
 
 const fake = updateApiFake();
 const toasts = toastsFake();
-const { updateSettings, platform, linkOpener } = vi.hoisted(() => ({
+const { updateSettings, linkOpener } = vi.hoisted(() => ({
 	updateSettings: {
 		getUpdateCapability: vi.fn<() => Promise<Capability>>(),
 		getUpdateSettings: vi.fn(),
 		setAutomaticUpdateChecks: vi.fn(),
 	},
-	platform: { isAndroidPlatform: vi.fn(() => true) },
 	linkOpener: { openExternalLink: vi.fn() },
 }));
 
@@ -42,10 +42,6 @@ vi.mock("$lib/updates/index", async () => ({
 	...updateSettings,
 }));
 vi.mock("$lib/updates/toasts", () => toasts);
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
-	...platform,
-}));
 vi.mock("$lib/platform/link-opener", () => linkOpener);
 
 let testing: typeof import("@testing-library/svelte");
@@ -70,7 +66,7 @@ beforeEach(() => {
 	vi.resetModules();
 	vi.clearAllMocks();
 	fake.reset();
-	platform.isAndroidPlatform.mockReturnValue(true);
+	runningOn("android");
 	updateSettings.getUpdateSettings.mockResolvedValue({ autoCheck: false });
 });
 

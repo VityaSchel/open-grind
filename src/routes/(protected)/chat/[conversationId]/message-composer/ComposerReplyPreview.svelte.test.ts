@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Drafts } from "$lib/chat/drafts.svelte";
 import { buttonVariants } from "$lib/components/ui/button";
+import { runningOn } from "$lib/test/platform";
 import type { ApiResponseMessage } from "$lib/model/messaging/messages";
 import ComposerReplyPreview from "./ComposerReplyPreview.svelte";
 import MessageComposer from "./MessageComposer.svelte";
@@ -101,6 +102,10 @@ function renderComposerReplying() {
 		input: container.querySelector('[class~="rounded-composer"]')!,
 	};
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("ComposerReplyPreview", () => {
 	beforeEach(() => {

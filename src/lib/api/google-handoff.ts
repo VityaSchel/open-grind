@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { goto } from "$app/navigation";
 import { toast } from "svelte-sonner";
@@ -11,7 +11,7 @@ import {
 import { signInResultSchema } from "$lib/api/methods";
 import { finishSignIn, reportSignInFailure } from "$lib/api/sign-in";
 import { signOut } from "$lib/api/sign-out";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import { delay } from "$lib/util/delay";
 
 const HANDOFF_EVENT = "google-oauth:handoff";
@@ -20,7 +20,17 @@ const EXPIRED = "That Google sign-in expired. Try again.";
 const READY_ATTEMPTS = 25;
 const READY_POLL_MS = 200;
 
-const available = () => isTauri() && isAndroidPlatform();
+function handoffAvailableHere(): boolean {
+	switch (currentPlatform()) {
+		case "android":
+			return true;
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
 
 async function pending(): Promise<boolean> {
 	try {
@@ -105,7 +115,7 @@ export function consumeGoogleHandoff(): Promise<void> {
 }
 
 export async function startGoogleHandoffWatch(): Promise<() => void> {
-	if (!available()) return () => {};
+	if (!handoffAvailableHere()) return () => {};
 
 	const unlisten = await listen(HANDOFF_EVENT, () => {
 		void consumeGoogleHandoff();

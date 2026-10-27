@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 
 let renders = $state(true);
 let engine = $state<string | null>(null);
@@ -8,16 +8,12 @@ let hydrating = false;
 export async function hydrateBackdropCompositing(): Promise<void> {
 	if (hydrating) return;
 	hydrating = true;
-	if (isTauri()) {
-		const [rendersAnswer, engineAnswer] = await Promise.all([
-			invoke("backdrop_filter_renders").catch(() => true),
-			invoke("webview_engine").catch(() => null),
-		]);
-		renders = rendersAnswer !== false;
-		engine = typeof engineAnswer === "string" ? engineAnswer : null;
-	} else {
-		engine = navigator.userAgent;
-	}
+	const [rendersAnswer, engineAnswer] = await Promise.all([
+		invoke("backdrop_filter_renders").catch(() => true),
+		invoke("webview_engine").catch(() => null),
+	]);
+	renders = rendersAnswer !== false;
+	engine = typeof engineAnswer === "string" ? engineAnswer : null;
 	hydrated = true;
 }
 

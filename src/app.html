@@ -54,7 +54,6 @@
 				font-size: 1.4rem;
 			}
 
-			/* Show only the running platform's instruction; web/unknown shows all. */
 			.wv-plat {
 				display: none;
 			}
@@ -64,7 +63,6 @@
 			.plat-windows .wv-plat[data-platform="windows"],
 			.plat-android .wv-plat[data-platform="android"],
 			.plat-ios .wv-plat[data-platform="ios"],
-			.plat-web .wv-plat,
 			.plat-unknown .wv-plat {
 				display: block;
 			}
@@ -86,7 +84,7 @@
 				var root = document.documentElement;
 				root.classList.add("webview-unsupported");
 				root.classList.add(
-					"plat-" + (window.__OPEN_GRIND_PLATFORM || "web"),
+					"plat-" + (window.__OPEN_GRIND_PLATFORM || "unknown"),
 				);
 			})();
 		</script>

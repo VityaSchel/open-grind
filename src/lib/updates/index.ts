@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import z from "zod";
 
@@ -24,7 +24,7 @@ export * from "./types";
 
 const notPackaged: Unsupported = {
 	reason: "noReleaseArtifacts",
-	detail: { target: "web" },
+	detail: { target: "demo" },
 };
 const unavailableCapability: Capability = {
 	state: "unsupported",
@@ -68,7 +68,7 @@ export { COMPONENT_PACKAGE, GOOGLE_OAUTH_COMPONENT } from "./components";
 export { APP_COMPONENT, type ComponentKey };
 
 export function updatesAvailableHere(): boolean {
-	return isTauri() && !demoEnabled;
+	return !demoEnabled;
 }
 
 export async function getUpdateCapability(): Promise<Capability> {

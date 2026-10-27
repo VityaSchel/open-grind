@@ -2,9 +2,10 @@
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { tick } from "svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { rightClick } from "$lib/test/context-menu";
+import { runningOn } from "$lib/test/platform";
 
 const drawer = vi.hoisted(() => ({
 	getDrawerMedia: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock("../../../conversation-state.svelte", () => ({
 	getConversationState: () => () => ({ conversationId: "100001:100002" }),
 }));
 
+import { proxyMediaUrl } from "$lib/util/media";
 import type { DrawerMedia } from "$lib/api/messaging/drawer";
 import ComposerMediaTab from "./ComposerMediaTab.svelte";
 
@@ -62,6 +64,10 @@ function renderTab() {
 		},
 	});
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();
@@ -189,7 +195,9 @@ describe("composer media tab", () => {
 		const tile = await findByRole("button", { name: "Video 2" });
 
 		const preview = tile.querySelector<HTMLVideoElement>(PREVIEW);
-		expect(preview?.src).toBe(`${video.url}#t=0.001`);
+		expect(preview?.src).toBe(
+			`${proxyMediaUrl(video.url, { as: "video" })}#t=0.001`,
+		);
 		expect(preview?.muted).toBe(true);
 		expect(preview?.autoplay).toBe(false);
 		expect(preview?.preload).toBe("metadata");

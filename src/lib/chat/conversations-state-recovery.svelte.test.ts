@@ -53,6 +53,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "$lib/test/platform";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -94,6 +95,7 @@ beforeEach(() => {
 	localStorage.clear();
 	reconcileHandlers.length = 0;
 	messageSentHandlers.length = 0;
+	runningOn("android");
 });
 
 describe.each(["refresh", "ensureLoaded"] as const)(

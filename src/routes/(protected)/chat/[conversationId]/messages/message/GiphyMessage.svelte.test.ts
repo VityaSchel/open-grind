@@ -4,6 +4,11 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/svelte";
 import { tick } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.hoisted(() => {
+	Object.assign(globalThis, {
+		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
+	});
+});
 const preferences = vi.hoisted(() => ({
 	values: new Map<string, boolean>(),
 	setPreferences:
@@ -33,6 +38,7 @@ import PhotoSwipeLightbox from "photoswipe/lightbox";
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
 import { backGestureEventHandlers } from "$lib/platform/back-gesture-event.svelte";
+import { proxyMediaUrl } from "$lib/util/media";
 import Message from "./Message.svelte";
 
 const GIF_URL = "https://media.giphy.com/media/abc/200.gif";
@@ -120,7 +126,7 @@ describe("a GIF message", () => {
 		renderGif();
 
 		expect(tapToLoad()).not.toBeNull();
-		expect(await requestedSources()).not.toContain(GIF_URL);
+		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("asks to enable GIPHY on tap, with GIPHY's privacy policy", async () => {
@@ -134,7 +140,7 @@ describe("a GIF message", () => {
 				.getByRole("link", { name: "Privacy Policy" })
 				.getAttribute("href"),
 		).toContain("giphy.com");
-		expect(await requestedSources()).not.toContain(GIF_URL);
+		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("turns GIPHY on and loads the GIF after Continue", async () => {
@@ -147,7 +153,7 @@ describe("a GIF message", () => {
 		});
 		await vi.waitFor(() => expect(consentDialog()).toBeNull());
 		expect(tapToLoad()).toBeNull();
-		expect(await requestedSources()).toContain(GIF_URL);
+		expect(await requestedSources()).toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("loads nothing when the question is cancelled", async () => {
@@ -158,7 +164,7 @@ describe("a GIF message", () => {
 		await vi.waitFor(() => expect(consentDialog()).toBeNull());
 		expect(preferences.setPreferences).not.toHaveBeenCalled();
 		expect(tapToLoad()).not.toBeNull();
-		expect(await requestedSources()).not.toContain(GIF_URL);
+		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("keeps asking when turning GIPHY on fails", async () => {
@@ -177,7 +183,7 @@ describe("a GIF message", () => {
 		expect(consentDialog()).not.toBeNull();
 		expect(choice("Continue").matches(":disabled")).toBe(false);
 		expect(choice("Cancel").matches(":disabled")).toBe(false);
-		expect(await requestedSources()).not.toContain(GIF_URL);
+		expect(await requestedSources()).not.toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("locks the question while GIPHY is being turned on", async () => {
@@ -208,7 +214,7 @@ describe("a GIF message", () => {
 
 		finish();
 		await vi.waitFor(() => expect(consentDialog()).toBeNull());
-		expect(await requestedSources()).toContain(GIF_URL);
+		expect(await requestedSources()).toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("loads right away once GIPHY is agreed to", async () => {
@@ -216,7 +222,7 @@ describe("a GIF message", () => {
 		renderGif();
 
 		expect(tapToLoad()).toBeNull();
-		expect(await requestedSources()).toContain(GIF_URL);
+		expect(await requestedSources()).toContain(proxyMediaUrl(GIF_URL));
 	});
 
 	it("takes its shape from the GIF that loads, not the size it was sent with", async () => {
@@ -240,7 +246,7 @@ describe("a GIF message", () => {
 		renderGif();
 
 		expect(lightboxLink()?.getAttribute("href")).toBe(
-			"https://media.giphy.com/media/abc/giphy.gif",
+			proxyMediaUrl("https://media.giphy.com/media/abc/giphy.gif"),
 		);
 		await vi.waitFor(() => expect(init).toHaveBeenCalledTimes(1));
 	});
@@ -262,11 +268,11 @@ describe("a GIF message", () => {
 		renderGif();
 
 		expect(await requestedSources()).toEqual([
-			"https://media.giphy.com/media/abc/200_s.gif",
+			proxyMediaUrl("https://media.giphy.com/media/abc/200_s.gif"),
 		]);
 		expect(screen.getByText("GIF")).toBeTruthy();
 		expect(lightboxLink()?.getAttribute("href")).toBe(
-			"https://media.giphy.com/media/abc/giphy.gif",
+			proxyMediaUrl("https://media.giphy.com/media/abc/giphy.gif"),
 		);
 	});
 

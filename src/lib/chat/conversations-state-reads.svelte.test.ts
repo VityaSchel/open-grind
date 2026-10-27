@@ -33,6 +33,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	},
 }));
 
+import { runningOn } from "$lib/test/platform";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -96,15 +97,17 @@ function emitRead({
 }
 
 function focusWindow({ focused }: { focused: boolean }) {
-	vi.spyOn(document, "hasFocus").mockReturnValue(focused);
-	vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
-	window.dispatchEvent(new Event(focused ? "focus" : "blur"));
+	vi.spyOn(document, "visibilityState", "get").mockReturnValue(
+		focused ? "visible" : "hidden",
+	);
+	document.dispatchEvent(new Event("visibilitychange"));
 }
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	localStorage.clear();
 	wsHandlers.clear();
+	runningOn("android");
 });
 
 afterEach(async () => {

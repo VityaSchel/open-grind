@@ -4,7 +4,7 @@ import { toast } from "svelte-sonner";
 import z from "zod";
 
 import { discardStagedMedia } from "$lib/platform/media-file";
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import type { PickedMedia } from "$lib/platform/media-picker";
 
 const KEYBOARD_MEDIA_EVENT = "keyboard-media";
@@ -35,11 +35,19 @@ export function receiveKeyboardMedia(
 }
 
 export function listenForKeyboardMedia(): () => void {
-	if (!isAndroidPlatform()) return () => {};
-	const unlisten = listen(KEYBOARD_MEDIA_EVENT, ({ payload }) => {
-		deliver(stagedSchema.parse(payload));
-	});
-	return () => void unlisten.then((stop) => stop());
+	switch (currentPlatform()) {
+		case "android": {
+			const unlisten = listen(KEYBOARD_MEDIA_EVENT, ({ payload }) => {
+				deliver(stagedSchema.parse(payload));
+			});
+			return () => void unlisten.then((stop) => stop());
+		}
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return () => {};
+	}
 }
 
 function deliver({ id, mimeType }: z.infer<typeof stagedSchema>): void {

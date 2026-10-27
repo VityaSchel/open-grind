@@ -10,13 +10,6 @@ const { readMock, writeMock } = vi.hoisted(() => ({
 
 const ENGINE = "2.52.6";
 
-const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
-
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
-	isLinuxPlatform: linuxMock,
-}));
-
 vi.mock("../compositing.svelte", () => ({ webviewEngine: () => ENGINE }));
 
 vi.mock("$lib/app-data", () => ({
@@ -31,6 +24,7 @@ import {
 	preferencesSnapshot,
 	setPreferences,
 } from "$lib/app-data/preferences.svelte";
+import { runningOn } from "$lib/test/platform";
 import {
 	ARM_TRAVEL_PX,
 	DEMOTE_MIN_PAIRS,
@@ -125,7 +119,7 @@ function stallFrames() {
 
 beforeEach(async () => {
 	vi.restoreAllMocks();
-	linuxMock.mockReturnValue(false);
+	runningOn("macos");
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);
 	document.body.replaceChildren();
@@ -290,7 +284,7 @@ describe("backdrop blur scroll trial", () => {
 
 	it("climbs from Low on Linux, where trialing Full first can freeze WebKitGTK", async () => {
 		syncBackdropBlurTrial({ needed: false });
-		linuxMock.mockReturnValue(true);
+		runningOn("linux");
 		syncBackdropBlurTrial({ needed: true });
 		scrollOneGesture(SMOOTH_FRAME_MS);
 		expect(backdropBlurTrialArm()).toBe("medium");

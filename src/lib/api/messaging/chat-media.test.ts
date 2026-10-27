@@ -198,10 +198,10 @@ describe("addMediaToDrawer", () => {
 		});
 	});
 
-	it("refuses a browser-picked file outside the demo without calling the backend", async () => {
+	it("refuses a demo file outside the demo without calling the backend", async () => {
 		await expect(
 			addMediaToDrawer({
-				source: "web",
+				source: "demo",
 				key: "media-6",
 				mimeType: "image/png",
 				file: new File([new Uint8Array([1])], "photo.png", {

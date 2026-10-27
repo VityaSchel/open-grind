@@ -73,8 +73,8 @@ async function uploadChatMedia({
 	takenOnGrindr: boolean;
 }): Promise<MediaUploadResponse> {
 	if (demoEnabled) {
-		if (media.source !== "web") {
-			throw new Error("The demo only reads files picked in the browser");
+		if (media.source !== "demo") {
+			throw new Error("The demo only uploads files it holds in the page");
 		}
 		return demoUploadChatMedia({
 			bytes: new Uint8Array(await media.file.arrayBuffer()),
@@ -110,7 +110,7 @@ function uploadedContentType({
 }): string {
 	const fallback =
 		inspection.kind === "video" ? VIDEO_CONTENT_TYPE : PHOTO_CONTENT_TYPE;
-	return media.source === "web" ? (media.mimeType ?? fallback) : fallback;
+	return media.source === "demo" ? (media.mimeType ?? fallback) : fallback;
 }
 
 export type UploadedChatMedia = MediaUploadResponse & {

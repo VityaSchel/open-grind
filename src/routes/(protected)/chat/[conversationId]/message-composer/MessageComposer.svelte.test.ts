@@ -10,6 +10,7 @@ import {
 	backGestureEventHandlers,
 	runBackGestureHandlers,
 } from "$lib/platform/back-gesture-event.svelte";
+import { runningOn } from "$lib/test/platform";
 import { ComposerSheetsState } from "./composer-sheets-state.svelte";
 
 const { conversations, composerSheets, conversationState } = vi.hoisted(() => ({
@@ -65,6 +66,7 @@ let sheets: ComposerSheetsState;
 beforeEach(() => {
 	sheets = new ComposerSheetsState();
 	composerSheets.current = sheets;
+	runningOn("windows");
 });
 
 function renderComposer({

@@ -45,6 +45,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 
 import { requestInboxResync } from "$lib/chat/inbox-resync";
 import { whileOpeningPushDeeplink } from "$lib/push/opening-deeplink";
+import { runningOn } from "$lib/test/platform";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -67,9 +68,10 @@ function page(unreadCount: number, at = 1000) {
 }
 
 function focusWindow({ focused }: { focused: boolean }) {
-	vi.spyOn(document, "hasFocus").mockReturnValue(focused);
-	vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
-	window.dispatchEvent(new Event(focused ? "focus" : "blur"));
+	vi.spyOn(document, "visibilityState", "get").mockReturnValue(
+		focused ? "visible" : "hidden",
+	);
+	document.dispatchEvent(new Event("visibilitychange"));
 }
 
 async function openChat({ focused }: { focused: boolean }) {
@@ -110,6 +112,7 @@ beforeEach(() => {
 	localStorage.clear();
 	wsHandlers.clear();
 	invokeMock.mockRejectedValue(new Error("no native side"));
+	runningOn("android");
 });
 
 afterEach(async () => {

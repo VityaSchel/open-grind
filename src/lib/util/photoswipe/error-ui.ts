@@ -2,7 +2,7 @@ import type PhotoSwipeLightbox from "photoswipe/lightbox";
 import type { ComponentProps } from "svelte";
 
 import { openExternalLink } from "$lib/platform/link-opener";
-import { isLinuxPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import { canDecodeH264 } from "$lib/platform/video-codecs";
 import type VideoPlayer from "$lib/components/shared/VideoPlayer.svelte";
 
@@ -16,10 +16,22 @@ export const failures = new WeakMap<object, Failure>();
 
 const CODECS_GUIDE = "https://opengrind.org/guides/codecs";
 
+function h264DecoderMissing(): boolean {
+	switch (currentPlatform()) {
+		case "linux":
+			return !canDecodeH264();
+		case "android":
+		case "ios":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
+
 function undecodableNotice(): HTMLParagraphElement {
 	const notice = document.createElement("p");
 	notice.className = "mt-4 max-w-80 text-center text-sm text-neutral-400";
-	if (!isLinuxPlatform() || canDecodeH264()) {
+	if (!h264DecoderMissing()) {
 		notice.textContent = "This video cannot be played on this system.";
 		return notice;
 	}

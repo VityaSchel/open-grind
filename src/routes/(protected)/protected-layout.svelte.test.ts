@@ -19,12 +19,14 @@ vi.mock("$lib/components/command-center/CommandCenter.svelte", () => ({
 	default: () => {},
 }));
 
+import { runningOn } from "$lib/test/platform";
 import ProtectedLayout from "./+layout.svelte";
 
 const children = createRawSnippet(() => ({ render: () => "<p>page</p>" }));
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	runningOn("windows");
 });
 
 afterEach(() => {

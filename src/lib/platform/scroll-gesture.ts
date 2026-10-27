@@ -1,5 +1,7 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+
+import { currentPlatform } from "$lib/platform/os";
 
 export type ScrollGesturePhase = "idle" | "fingers" | "momentum";
 
@@ -64,7 +66,6 @@ export class ScrollGestureState {
 	}
 
 	capture(on: boolean): void {
-		if (!isTauri()) return;
 		void invoke("set_scroll_gesture_capture", { capture: on }).catch(
 			console.error,
 		);
@@ -72,6 +73,18 @@ export class ScrollGestureState {
 }
 
 export const scrollGesture = new ScrollGestureState();
+
+export function scrollGestureHere(): ScrollGestureState | null {
+	switch (currentPlatform()) {
+		case "linux":
+		case "macos":
+			return scrollGesture;
+		case "android":
+		case "ios":
+		case "windows":
+			return null;
+	}
+}
 
 let installed = false;
 

@@ -1,6 +1,6 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { isDesktopPlatform, isMobilePlatform } from "./os";
+import { currentPlatform, isDesktopPlatform } from "./os";
 
 const returnListeners = new Set<() => void>();
 let desktopFocused = true;
@@ -48,9 +48,16 @@ function followFocus(): void {
 export function windowFocused(): boolean {
 	followFocus();
 	const visible = document.visibilityState === "visible";
-	if (isDesktopPlatform()) return visible && desktopFocused;
-	// Android's WebView keeps document.hasFocus() false while the app is in front
-	return isMobilePlatform() ? visible : visible && document.hasFocus();
+	switch (currentPlatform()) {
+		case "linux":
+		case "macos":
+		case "windows":
+			return visible && desktopFocused;
+		case "android":
+		case "ios":
+			// Android's WebView keeps document.hasFocus() false while the app is in front
+			return visible;
+	}
 }
 
 export function onWindowReturn(listener: () => void): () => void {

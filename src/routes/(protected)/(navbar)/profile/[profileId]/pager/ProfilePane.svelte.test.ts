@@ -60,6 +60,7 @@ import {
 	BlockedProfileError,
 	HiddenProfileError,
 } from "$lib/api/users/profiles";
+import { runningOn } from "$lib/test/platform";
 import type { Profile } from "$lib/model/users/profiles";
 import { flush, fullProfile, OUR_ID } from "./profile-pager-test-helpers";
 import {
@@ -125,6 +126,7 @@ async function chooseFromProfileMenu(name: string) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(fullProfile(LOADED));
+	runningOn("windows");
 });
 
 afterEach(cleanup);

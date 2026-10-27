@@ -1,15 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { os, tauriWindow, focusListeners } = vi.hoisted(() => ({
-	os: { desktop: true, mobile: false },
+import { runningOn } from "$lib/test/platform";
+
+const { tauriWindow, focusListeners } = vi.hoisted(() => ({
 	tauriWindow: { focused: false },
 	focusListeners: [] as ((event: { payload: boolean }) => void)[],
 }));
 
-vi.mock("./os", () => ({
-	isDesktopPlatform: () => os.desktop,
-	isMobilePlatform: () => os.mobile,
-}));
 vi.mock("@tauri-apps/api/window", () => ({
 	getCurrentWindow: () => ({
 		isFocused: () => Promise.resolve(tauriWindow.focused),
@@ -43,8 +40,7 @@ function changeVisibility(
 
 beforeEach(() => {
 	focusListeners.length = 0;
-	os.desktop = true;
-	os.mobile = false;
+	runningOn("macos");
 	tauriWindow.focused = false;
 });
 
@@ -110,47 +106,38 @@ describe("desktop window focus", () => {
 });
 
 describe("mobile window focus", () => {
-	it("counts the app as focused whenever it is visible, as the WebView never holds document focus", async () => {
-		os.desktop = false;
-		os.mobile = true;
-		const { windowFocused } = await freshModule();
-		vi.spyOn(document, "hasFocus").mockReturnValue(false);
-		const visibility = stubVisibility("hidden");
+	it.each(["android", "ios"] as const)(
+		"counts the app as focused on %s whenever it is visible, as the WebView never holds document focus",
+		async (platform) => {
+			runningOn(platform);
+			const { windowFocused } = await freshModule();
+			vi.spyOn(document, "hasFocus").mockReturnValue(false);
+			const visibility = stubVisibility("hidden");
 
-		expect(windowFocused()).toBe(false);
-		visibility.mockReturnValue("visible");
-		expect(windowFocused()).toBe(true);
-	});
+			expect(windowFocused()).toBe(false);
+			visibility.mockReturnValue("visible");
+			expect(windowFocused()).toBe(true);
+		},
+	);
 
-	it("reports a return each time the app becomes visible again", async () => {
-		os.desktop = false;
-		os.mobile = true;
-		const { onWindowReturn } = await freshModule();
-		vi.spyOn(document, "hasFocus").mockReturnValue(false);
-		const visibility = stubVisibility("hidden");
-		const returned = vi.fn();
-		const stop = onWindowReturn(returned);
+	it.each(["android", "ios"] as const)(
+		"reports a return on %s each time the app becomes visible again",
+		async (platform) => {
+			runningOn(platform);
+			const { onWindowReturn } = await freshModule();
+			vi.spyOn(document, "hasFocus").mockReturnValue(false);
+			const visibility = stubVisibility("hidden");
+			const returned = vi.fn();
+			const stop = onWindowReturn(returned);
 
-		changeVisibility(visibility, "visible");
-		changeVisibility(visibility, "hidden");
-		changeVisibility(visibility, "visible");
-		stop();
-		changeVisibility(visibility, "hidden");
-		changeVisibility(visibility, "visible");
+			changeVisibility(visibility, "visible");
+			changeVisibility(visibility, "hidden");
+			changeVisibility(visibility, "visible");
+			stop();
+			changeVisibility(visibility, "hidden");
+			changeVisibility(visibility, "visible");
 
-		expect(returned).toHaveBeenCalledTimes(2);
-	});
-});
-
-describe("browser window focus", () => {
-	it("needs a visible page that also holds focus", async () => {
-		os.desktop = false;
-		const { windowFocused } = await freshModule();
-		stubVisibility("visible");
-		const focus = vi.spyOn(document, "hasFocus").mockReturnValue(false);
-
-		expect(windowFocused()).toBe(false);
-		focus.mockReturnValue(true);
-		expect(windowFocused()).toBe(true);
-	});
+			expect(returned).toHaveBeenCalledTimes(2);
+		},
+	);
 });

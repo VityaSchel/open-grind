@@ -3,96 +3,81 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	currentPlatform,
 	isAndroidPlatform,
+	isDesktopPlatform,
 	isLinuxPlatform,
 	isMacosPlatform,
 	isMobilePlatform,
+	type SupportedPlatform,
 } from "$lib/platform/os";
+import { resetPlatform, runningOn } from "$lib/test/platform";
 
-const tauri = globalThis as {
-	isTauri?: boolean;
-	__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };
+const families = {
+	android: "mobile",
+	ios: "mobile",
+	linux: "desktop",
+	macos: "desktop",
+	windows: "desktop",
+} as const satisfies Record<SupportedPlatform, "mobile" | "desktop">;
+
+const singlePlatformHelpers = {
+	android: isAndroidPlatform,
+	linux: isLinuxPlatform,
+	macos: isMacosPlatform,
+} as const satisfies Partial<Record<SupportedPlatform, () => boolean>>;
+
+const platforms = Object.keys(families) as SupportedPlatform[];
+
+const helpers = {
+	currentPlatform,
+	isMobilePlatform,
+	isDesktopPlatform,
+	...singlePlatformHelpers,
 };
 
-function runningOn(platform: string) {
-	tauri.isTauri = true;
-	tauri.__TAURI_OS_PLUGIN_INTERNALS__ = { platform };
-}
-
-afterEach(() => {
-	delete tauri.isTauri;
-	delete tauri.__TAURI_OS_PLUGIN_INTERNALS__;
-});
-
-describe("isMobilePlatform", () => {
-	it("is false outside Tauri instead of reading the missing os plugin", () => {
-		expect(isMobilePlatform()).toBe(false);
-	});
-
-	it("is true on android and ios", () => {
-		runningOn("android");
-		expect(isMobilePlatform()).toBe(true);
-
-		runningOn("ios");
-		expect(isMobilePlatform()).toBe(true);
-	});
-
-	it("is false on desktop", () => {
-		runningOn("macos");
-		expect(isMobilePlatform()).toBe(false);
-	});
-});
-
-describe("isAndroidPlatform", () => {
-	it("is false outside Tauri instead of reading the missing os plugin", () => {
-		expect(isAndroidPlatform()).toBe(false);
-	});
-
-	it("distinguishes android from the other mobile platform", () => {
-		runningOn("android");
-		expect(isAndroidPlatform()).toBe(true);
-
-		runningOn("ios");
-		expect(isAndroidPlatform()).toBe(false);
-	});
-});
-
-describe("isLinuxPlatform", () => {
-	it("is false outside Tauri instead of reading the missing os plugin", () => {
-		expect(isLinuxPlatform()).toBe(false);
-	});
-
-	it("is true only on linux", () => {
-		runningOn("linux");
-		expect(isLinuxPlatform()).toBe(true);
-
-		runningOn("android");
-		expect(isLinuxPlatform()).toBe(false);
-	});
-});
-
-describe("isMacosPlatform", () => {
-	it("is false outside Tauri instead of reading the missing os plugin", () => {
-		expect(isMacosPlatform()).toBe(false);
-	});
-
-	it("is true only on macos", () => {
-		runningOn("macos");
-		expect(isMacosPlatform()).toBe(true);
-
-		runningOn("ios");
-		expect(isMacosPlatform()).toBe(false);
-	});
-});
+afterEach(resetPlatform);
 
 describe("currentPlatform", () => {
-	it("reports web outside Tauri instead of reading the missing os plugin", () => {
-		expect(currentPlatform()).toBe("web");
+	it.each(platforms)("reports %s", (platform) => {
+		runningOn(platform);
+		expect(currentPlatform()).toBe(platform);
 	});
 
-	it("reports the host platform inside Tauri", () => {
-		runningOn("android");
-		expect(currentPlatform()).toBe("android");
-		runningOn("macos");
-		expect(currentPlatform()).toBe("macos");
+	it.each(["dragonfly", "freebsd", "netbsd", "openbsd", "solaris"])(
+		"refuses %s, which Open Grind does not build for",
+		(host) => {
+			Object.assign(globalThis, {
+				__TAURI_OS_PLUGIN_INTERNALS__: { platform: host },
+			});
+			expect(currentPlatform).toThrow(
+				`Open Grind does not support ${host}`,
+			);
+		},
+	);
+});
+
+describe("without the Tauri os plugin", () => {
+	it.each(Object.entries(helpers))(
+		"%s throws instead of guessing a platform",
+		(_, helper) => {
+			resetPlatform();
+			expect(helper).toThrow(TypeError);
+		},
+	);
+});
+
+describe("isMobilePlatform and isDesktopPlatform", () => {
+	it.each(platforms)("put %s in exactly one family", (platform) => {
+		runningOn(platform);
+		expect(isMobilePlatform()).toBe(families[platform] === "mobile");
+		expect(isDesktopPlatform()).toBe(families[platform] === "desktop");
+	});
+});
+
+describe("single-platform helpers", () => {
+	it.each(platforms)("only the %s helper is true there", (platform) => {
+		runningOn(platform);
+		for (const [name, helper] of Object.entries(singlePlatformHelpers)) {
+			expect(helper()).toBe(name === platform);
+		}
 	});
 });

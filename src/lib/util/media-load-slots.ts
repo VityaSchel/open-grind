@@ -1,4 +1,4 @@
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
 
 const MIN_ANDROID_INTERCEPT_WORKERS = 3;
 const CORES_WITHOUT_ANDROID_INTERCEPT_WORKER = 2;
@@ -6,18 +6,26 @@ const INTERCEPT_WORKERS_KEPT_FOR_BYTE_DELIVERY = 1;
 const DETACHED_LOAD_TIMEOUT_MS = 30_000;
 
 export function mediaLoadCapacity({
-	android,
+	platform,
 	cores,
 }: {
-	android: boolean;
+	platform: SupportedPlatform;
 	cores: number;
 }): number {
-	if (!android) return Number.POSITIVE_INFINITY;
-	const interceptWorkers = Math.max(
-		MIN_ANDROID_INTERCEPT_WORKERS,
-		cores - CORES_WITHOUT_ANDROID_INTERCEPT_WORKER,
-	);
-	return interceptWorkers - INTERCEPT_WORKERS_KEPT_FOR_BYTE_DELIVERY;
+	switch (platform) {
+		case "android": {
+			const interceptWorkers = Math.max(
+				MIN_ANDROID_INTERCEPT_WORKERS,
+				cores - CORES_WITHOUT_ANDROID_INTERCEPT_WORKER,
+			);
+			return interceptWorkers - INTERCEPT_WORKERS_KEPT_FOR_BYTE_DELIVERY;
+		}
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return Number.POSITIVE_INFINITY;
+	}
 }
 
 export class LoadSlots {
@@ -61,7 +69,7 @@ let mediaLoadSlots: LoadSlots | undefined;
 export function acquireMediaLoadSlot(grant: () => void): () => void {
 	mediaLoadSlots ??= new LoadSlots(
 		mediaLoadCapacity({
-			android: isAndroidPlatform(),
+			platform: currentPlatform(),
 			cores: navigator.hardwareConcurrency,
 		}),
 	);

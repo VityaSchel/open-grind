@@ -3,7 +3,7 @@ import type { Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 
 import { playHaptic } from "$lib/haptics";
-import { isMacosPlatform, isMobilePlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import {
 	scrollGesture,
 	type ScrollGestureState,
@@ -46,8 +46,16 @@ export type WheelInputMode = "rail" | "bridge" | "none";
 // stops the rail from latching vertical wheel gestures away from the
 // conversation's own overscroll.
 export function wheelInputMode(): WheelInputMode {
-	if (isMacosPlatform()) return "bridge";
-	return isMobilePlatform() ? "none" : "rail";
+	switch (currentPlatform()) {
+		case "macos":
+			return "bridge";
+		case "android":
+		case "ios":
+			return "none";
+		case "linux":
+		case "windows":
+			return "rail";
+	}
 }
 
 export class SwipeToReply {

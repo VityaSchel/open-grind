@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import { isPhotoSwipeBusy } from "$lib/util/photoswipe";
 import ImageCarousel from "./ImageCarousel.svelte";
 
@@ -37,6 +38,10 @@ function galleryOf({
 		return fireEvent.scroll(gallery);
 	};
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("ImageCarousel", () => {
 	afterEach(cleanup);

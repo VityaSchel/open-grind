@@ -6,16 +6,19 @@
 	import ProgressiveBlur from "$lib/components/shared/ProgressiveBlur.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { toggleVariants } from "$lib/components/ui/toggle";
-	import { isAndroidPlatform } from "$lib/platform/os";
 	import { isPlainClick } from "$lib/util/plain-click";
 	import { topChrome } from "$lib/util/screen-chrome.svelte";
 	import { cn } from "$lib/util/utils";
 	import InterestPager from "./InterestPager.svelte";
-	import { INTEREST_TABS, interestTabIndex } from "./tabs";
+	import {
+		INTEREST_TABS,
+		interestTabIndex,
+		tabChipDetachesAtRest,
+	} from "./tabs";
 
 	let { data }: import("./$types").LayoutProps = $props();
 
-	const chipDetachesAtRest = isAndroidPlatform();
+	const chipDetachesAtRest = tabChipDetachesAtRest();
 
 	let pagerUnsettled = $state(false);
 	let restingTab = $state<number>();

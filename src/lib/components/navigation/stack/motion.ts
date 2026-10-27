@@ -1,6 +1,4 @@
-import type { Platform } from "@tauri-apps/plugin-os";
-
-import { currentPlatform } from "$lib/platform/os";
+import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
 
 export const STACK_Z = { back: "10", dim: "11", front: "12" } as const;
 
@@ -52,9 +50,7 @@ const WINDOWS: StackMotion = { ...FADE_OVER, travel: 40, settleMs: 300 };
 
 export function stackMotion({
 	platform = currentPlatform(),
-	coarsePointer = platform === "web" &&
-		matchMedia("(pointer: coarse)").matches,
-}: { platform?: Platform | "web"; coarsePointer?: boolean } = {}): StackMotion {
+}: { platform?: SupportedPlatform } = {}): StackMotion {
 	switch (platform) {
 		case "android":
 		case "ios":
@@ -63,9 +59,7 @@ export function stackMotion({
 			return MACOS;
 		case "windows":
 			return WINDOWS;
-		case "web":
-			return coarsePointer ? SLIDE : MACOS;
-		default:
+		case "linux":
 			return FADE_OVER;
 	}
 }

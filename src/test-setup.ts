@@ -110,3 +110,10 @@ if (
 if (typeof HTMLMediaElement !== "undefined") {
 	HTMLMediaElement.prototype.load = () => {};
 }
+
+Object.assign(globalThis, {
+	__TAURI_INTERNALS__: {
+		convertFileSrc: (filePath: string, protocol = "asset") =>
+			`${protocol}://localhost/${encodeURIComponent(filePath)}`,
+	},
+});

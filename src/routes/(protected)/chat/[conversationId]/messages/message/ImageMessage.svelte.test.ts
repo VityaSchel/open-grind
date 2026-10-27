@@ -4,7 +4,14 @@ import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.hoisted(() => {
+	Object.assign(globalThis, {
+		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
+	});
+});
+
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { proxyMediaUrl } from "$lib/util/media";
 import Message from "./Message.svelte";
 
 const signed = ({ file, signature }: { file: string; signature: string }) =>
@@ -75,8 +82,8 @@ describe("photo message", () => {
 
 		await photo.renew(RENEWED);
 
-		expect(photo.image().getAttribute("src")).toBe(OLD);
-		expect(photo.link()?.getAttribute("href")).toBe(RENEWED);
+		expect(photo.image().getAttribute("src")).toBe(proxyMediaUrl(OLD));
+		expect(photo.link()?.getAttribute("href")).toBe(proxyMediaUrl(RENEWED));
 	});
 
 	it("loads the renewed url for a photo that failed", async () => {
@@ -85,7 +92,7 @@ describe("photo message", () => {
 
 		await photo.renew(RENEWED);
 
-		expect(photo.image().getAttribute("src")).toBe(RENEWED);
+		expect(photo.image().getAttribute("src")).toBe(proxyMediaUrl(RENEWED));
 	});
 
 	it("switches a loaded photo to a different file", async () => {
@@ -94,7 +101,9 @@ describe("photo message", () => {
 
 		await photo.renew(OTHER_FILE);
 
-		expect(photo.image().getAttribute("src")).toBe(OTHER_FILE);
+		expect(photo.image().getAttribute("src")).toBe(
+			proxyMediaUrl(OTHER_FILE),
+		);
 	});
 
 	it("starts a lightbox for a photo that stays on screen", async () => {

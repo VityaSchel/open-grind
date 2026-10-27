@@ -30,6 +30,7 @@ vi.mock("$lib/components/feedback/DataRefreshControl.svelte", () => ({
 }));
 
 import { HiddenProfileError } from "$lib/api/users/profiles";
+import { runningOn } from "$lib/test/platform";
 import { flush, fullProfile } from "./profile-pager-test-helpers";
 import { gridRow, PROFILE_ID, renderPane } from "./profile-pane-test-helpers";
 
@@ -42,6 +43,7 @@ function inertElements(section: HTMLElement): HTMLElement[] {
 beforeEach(() => {
 	vi.clearAllMocks();
 	getProfileMock.mockResolvedValue(fullProfile({ profileId: PROFILE_ID }));
+	runningOn("windows");
 });
 
 afterEach(cleanup);

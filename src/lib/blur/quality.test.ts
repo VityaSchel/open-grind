@@ -15,13 +15,6 @@ const { compositingMock, hydratedMock } = vi.hoisted(() => ({
 
 const ENGINE = "2.52.6";
 
-const { linuxMock } = vi.hoisted(() => ({ linuxMock: vi.fn(() => false) }));
-
-vi.mock("$lib/platform/os", async (importOriginal) => ({
-	...(await importOriginal<typeof import("$lib/platform/os")>()),
-	isLinuxPlatform: linuxMock,
-}));
-
 const { remeasureMock } = vi.hoisted(() => ({ remeasureMock: vi.fn() }));
 
 vi.mock("$lib/util/screen-chrome.svelte", () => ({
@@ -43,6 +36,7 @@ vi.mock("$lib/app-data", () => ({
 }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { runningOn } from "$lib/test/platform";
 import { DEMOTE_MIN_PAIRS, REFERENCE_PERIOD_MS } from "./calibration/constants";
 import {
 	backdropBlurTrialArm,
@@ -71,7 +65,7 @@ beforeEach(async () => {
 	writeMock.mockReset().mockResolvedValue(undefined);
 	compositingMock.mockReturnValue(true);
 	hydratedMock.mockReturnValue(true);
-	linuxMock.mockReturnValue(false);
+	runningOn("macos");
 	document.documentElement.removeAttribute(BACKDROP_BLUR_ROOT_ATTRIBUTE);
 	syncBackdropBlurTrial({ needed: false });
 	await setPreferences({
@@ -91,7 +85,7 @@ describe("effectiveBackdropBlurQuality", () => {
 
 	it("renders Low before calibrating on Linux, where Full can freeze WebKitGTK", () => {
 		withBackdropSupport(true);
-		linuxMock.mockReturnValue(true);
+		runningOn("linux");
 		expect(effectiveBackdropBlurQuality()).toBe("min");
 	});
 

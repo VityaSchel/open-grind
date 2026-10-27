@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$lib/components/album/album-lightbox", () => ({
 	loadAlbumSlides: vi.fn(),
@@ -9,6 +9,7 @@ vi.mock("$lib/components/album/album-lightbox", () => ({
 }));
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
+import { runningOn } from "$lib/test/platform";
 import type { AlbumContent } from "$lib/model/messaging/albums";
 import type { UploadLimits } from "../album-uploads/album-uploads-state.svelte";
 import AlbumEditorHeader from "./AlbumEditorHeader.svelte";
@@ -61,6 +62,10 @@ function previewAreaOf(content: AlbumContent[]): string {
 	if (area === null) throw new Error("no preview area");
 	return area.outerHTML;
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => cleanup());
 

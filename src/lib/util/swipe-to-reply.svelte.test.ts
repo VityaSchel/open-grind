@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { resetPlatform, runningOn } from "$lib/test/platform";
 import { SwipeToReply, wheelInputMode } from "$lib/util/swipe-to-reply.svelte";
 import {
 	drag,
@@ -107,7 +108,12 @@ describe("SwipeToReply", () => {
 
 	it("drags in the opposite direction for an outgoing message", () => {
 		const onReply = vi.fn();
-		const swipe = new SwipeToReply({ direction: "left", onReply });
+		const swipe = new SwipeToReply({
+			direction: "left",
+			onReply,
+			wheelMode: "rail",
+			onArm: vi.fn(),
+		});
 
 		swipe.handlers.onpointerdown?.(pointer() as never);
 		swipe.handlers.onpointermove?.(
@@ -181,20 +187,7 @@ describe("SwipeToReply", () => {
 });
 
 describe("wheelInputMode", () => {
-	const tauri = globalThis as {
-		isTauri?: boolean;
-		__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };
-	};
-
-	function runningOn(platform: string) {
-		tauri.isTauri = true;
-		tauri.__TAURI_OS_PLUGIN_INTERNALS__ = { platform };
-	}
-
-	afterEach(() => {
-		delete tauri.isTauri;
-		delete tauri.__TAURI_OS_PLUGIN_INTERNALS__;
-	});
+	afterEach(resetPlatform);
 
 	it("takes no wheel input where fingers are the only pointer", () => {
 		runningOn("android");
@@ -212,10 +205,6 @@ describe("wheelInputMode", () => {
 		expect(wheelInputMode()).toBe("rail");
 
 		runningOn("windows");
-		expect(wheelInputMode()).toBe("rail");
-	});
-
-	it("keeps the rail in a plain browser", () => {
 		expect(wheelInputMode()).toBe("rail");
 	});
 });

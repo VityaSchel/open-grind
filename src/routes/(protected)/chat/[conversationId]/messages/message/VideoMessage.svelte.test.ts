@@ -3,6 +3,11 @@
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.hoisted(() => {
+	Object.assign(globalThis, {
+		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "windows" },
+	});
+});
 const lightbox = vi.hoisted(() => ({
 	openLightbox: vi.fn(() => Promise.resolve()),
 }));
@@ -20,6 +25,7 @@ vi.mock("$lib/api/messaging/messages", async (importOriginal) => ({
 }));
 
 import { apiResponseMessageSchema } from "$lib/model/messaging/messages";
+import { proxyMediaUrl } from "$lib/util/media";
 import type { openLightbox } from "$lib/util/photoswipe";
 import Message from "./Message.svelte";
 
@@ -159,10 +165,12 @@ describe("video message", () => {
 		});
 		const { items, videoAt } = openedLightbox();
 		expect(items).toEqual([
-			expect.objectContaining({ src: REFETCHED_URL }),
+			expect.objectContaining({
+				src: proxyMediaUrl(REFETCHED_URL, { as: "video" }),
+			}),
 		]);
 		expect(videoAt?.(0)).toEqual({
-			src: REFETCHED_URL,
+			src: proxyMediaUrl(REFETCHED_URL, { as: "video" }),
 			poster: null,
 			loop: true,
 		});

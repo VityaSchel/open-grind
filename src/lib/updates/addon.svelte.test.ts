@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import type { Capability, Readiness, Unsupported } from "./types";
 import {
 	offer,
@@ -15,7 +16,6 @@ import {
 
 const fake = updateApiFake();
 const toasts = toastsFake();
-const platform = vi.hoisted(() => ({ isAndroidPlatform: vi.fn(() => true) }));
 const getUpdateCapability = vi.hoisted(() =>
 	vi.fn<() => Promise<Capability>>(),
 );
@@ -28,7 +28,6 @@ vi.mock("./index", async () => ({
 	getUpdateCapability,
 }));
 vi.mock("./toasts", () => toasts);
-vi.mock("$lib/platform/os", () => platform);
 
 const releaseSigned: Capability = {
 	state: "supported",
@@ -51,12 +50,15 @@ function lastShownToast() {
 	return shown;
 }
 
+beforeEach(() => {
+	runningOn("android");
+});
+
 describe("the add-on activity the sign-in screen observes", () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
 		fake.reset();
-		platform.isAndroidPlatform.mockReturnValue(true);
 		api.checkForUpdate.mockResolvedValue(offer("install"));
 	});
 
@@ -155,7 +157,6 @@ describe("the reCAPTCHA helper's update flow", () => {
 		vi.resetModules();
 		vi.clearAllMocks();
 		fake.reset();
-		platform.isAndroidPlatform.mockReturnValue(true);
 	});
 
 	afterEach(() => {
@@ -211,7 +212,6 @@ describe("where the Google OAuth app can be installed from here", () => {
 		vi.resetModules();
 		vi.clearAllMocks();
 		fake.reset();
-		platform.isAndroidPlatform.mockReturnValue(true);
 	});
 
 	it("is on Android builds signed by Open Grind", async () => {
@@ -254,13 +254,16 @@ describe("where the Google OAuth app can be installed from here", () => {
 		expect(addonInstallerAvailable()).toBe(false);
 	});
 
-	it("is not off Android", async () => {
-		platform.isAndroidPlatform.mockReturnValue(false);
-		await probedCapability(releaseSigned);
-		const { addonInstallerAvailable } = await import("./addon.svelte");
+	it.each(["ios", "linux", "macos", "windows"] as const)(
+		"is not available on %s",
+		async (platform) => {
+			runningOn(platform);
+			await probedCapability(releaseSigned);
+			const { addonInstallerAvailable } = await import("./addon.svelte");
 
-		expect(addonInstallerAvailable()).toBe(false);
-	});
+			expect(addonInstallerAvailable()).toBe(false);
+		},
+	);
 });
 
 describe("whether the Google OAuth app is published for this device", () => {

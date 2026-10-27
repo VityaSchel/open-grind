@@ -1,9 +1,8 @@
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, platformMock, toastError, keyboard } = vi.hoisted(() => ({
+const { invokeMock, toastError, keyboard } = vi.hoisted(() => ({
 	invokeMock: vi.fn(),
-	platformMock: vi.fn(),
 	toastError: vi.fn(),
 	keyboard: { emit: null as ((event: { payload: unknown }) => void) | null },
 }));
@@ -23,16 +22,14 @@ vi.mock("@tauri-apps/api/event", () => ({
 		});
 	},
 }));
-vi.mock("@tauri-apps/plugin-os", () => ({ platform: platformMock }));
 vi.mock("svelte-sonner", () => ({ toast: { error: toastError } }));
 
 import {
 	listenForKeyboardMedia,
 	receiveKeyboardMedia,
 } from "$lib/platform/keyboard-media.svelte";
+import { runningOn } from "$lib/test/platform";
 import type { PickedMedia } from "$lib/platform/media-picker";
-
-const tauri = globalThis as { isTauri?: boolean };
 
 let stop: () => void;
 let unregister: (() => void) | null = null;
@@ -53,8 +50,7 @@ function insert(payload: object) {
 }
 
 beforeEach(() => {
-	tauri.isTauri = true;
-	platformMock.mockReturnValue("android");
+	runningOn("android");
 	invokeMock.mockReset();
 	toastError.mockReset();
 	stop = listenForKeyboardMedia();
@@ -64,7 +60,6 @@ afterEach(() => {
 	stop();
 	unregister?.();
 	unregister = null;
-	delete tauri.isTauri;
 });
 
 describe("keyboard media", () => {

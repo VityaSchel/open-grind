@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import { attachOverscrollPull } from "./overscroll-adapter";
 import {
 	ARMING_PX,
@@ -10,6 +11,10 @@ import {
 import { scrollGeometry } from "./scroll-geometry";
 
 const KEY_BAND_WINDOW_MS = 500;
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("attachOverscrollPull", () => {
 	function setup() {

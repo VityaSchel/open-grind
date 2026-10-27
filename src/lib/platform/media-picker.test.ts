@@ -1,25 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { androidFsMock, invokeMock, openMock, platformMock } = vi.hoisted(
-	() => ({
-		androidFsMock: { showOpenFilePicker: vi.fn() },
-		invokeMock: vi.fn(),
-		openMock: vi.fn(),
-		platformMock: vi.fn(),
-	}),
-);
+const { androidFsMock, invokeMock, openMock } = vi.hoisted(() => ({
+	androidFsMock: { showOpenFilePicker: vi.fn() },
+	invokeMock: vi.fn(),
+	openMock: vi.fn(),
+}));
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
 }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: openMock }));
-vi.mock("@tauri-apps/plugin-os", () => ({ platform: platformMock }));
 vi.mock("tauri-plugin-android-fs-api", () => ({ AndroidFs: androidFsMock }));
 
 import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
 import { pickMedia, pickMultipleMedia } from "$lib/platform/media-picker";
+import { runningOn } from "$lib/test/platform";
 
 const photoUri = {
 	uri: "content://photo/1",
@@ -34,24 +31,15 @@ const videoUri = {
 const firstKey = "00000000-0000-4000-8000-000000000001";
 const secondKey = "00000000-0000-4000-8000-000000000002";
 
-const tauri = globalThis as { isTauri?: boolean };
-
-function runningOnAndroid() {
-	tauri.isTauri = true;
-	platformMock.mockReturnValue("android");
-}
-
 beforeEach(() => {
 	invokeMock.mockReset();
 	openMock.mockReset();
-	platformMock.mockReset();
 	androidFsMock.showOpenFilePicker.mockReset();
-	platformMock.mockReturnValue("macos");
+	runningOn("macos");
 });
 
 afterEach(() => {
 	vi.restoreAllMocks();
-	delete tauri.isTauri;
 });
 
 describe("pickMedia", () => {
@@ -82,7 +70,7 @@ describe("pickMedia", () => {
 	});
 
 	it("asks the Android content picker for one video when picking a single video", async () => {
-		runningOnAndroid();
+		runningOn("android");
 		vi.spyOn(crypto, "randomUUID").mockReturnValue(firstKey);
 		invokeMock.mockResolvedValue([videoUri.uri]);
 
@@ -163,7 +151,7 @@ describe("pickMultipleMedia", () => {
 	});
 
 	it("opens the Android picker for content when the system routes it to the Photo Picker", async () => {
-		runningOnAndroid();
+		runningOn("android");
 		vi.spyOn(crypto, "randomUUID")
 			.mockReturnValueOnce(firstKey)
 			.mockReturnValueOnce(secondKey);
@@ -188,7 +176,7 @@ describe("pickMultipleMedia", () => {
 	});
 
 	it("resolves nothing without the gallery fallback when the Android content picker is cancelled", async () => {
-		runningOnAndroid();
+		runningOn("android");
 		invokeMock.mockResolvedValue([]);
 
 		await expect(pickMultipleMedia("media")).resolves.toEqual([]);
@@ -198,7 +186,7 @@ describe("pickMultipleMedia", () => {
 	});
 
 	it("falls back to the Android gallery picker with the same filters when the content picker is unsupported", async () => {
-		runningOnAndroid();
+		runningOn("android");
 		vi.spyOn(crypto, "randomUUID")
 			.mockReturnValueOnce(firstKey)
 			.mockReturnValueOnce(secondKey);
@@ -229,7 +217,7 @@ describe("pickMultipleMedia", () => {
 	});
 
 	it("narrows the Android gallery fallback to videos for the video kind", async () => {
-		runningOnAndroid();
+		runningOn("android");
 		invokeMock.mockResolvedValue(null);
 		androidFsMock.showOpenFilePicker.mockResolvedValue([]);
 

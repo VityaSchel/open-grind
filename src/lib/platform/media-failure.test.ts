@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, tauri } = vi.hoisted(() => ({
-	invokeMock: vi.fn(),
-	tauri: { enabled: true },
-}));
+const { invokeMock } = vi.hoisted(() => ({ invokeMock: vi.fn() }));
 
 vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tauri-apps/api/core")>()),
 	invoke: invokeMock,
-	isTauri: () => tauri.enabled,
 }));
 
 import {
@@ -22,7 +18,6 @@ const SRC = "http://ogmedia.localhost/iPAYLOAD";
 
 beforeEach(() => {
 	invokeMock.mockReset();
-	tauri.enabled = true;
 });
 
 describe("mediaFailure", () => {
@@ -38,13 +33,6 @@ describe("mediaFailure", () => {
 
 		await expect(mediaFailure(SRC)).resolves.toEqual(failure);
 		expect(invokeMock).toHaveBeenCalledWith("media_failure", { src: SRC });
-	});
-
-	it("has nothing to say outside the app", async () => {
-		tauri.enabled = false;
-
-		await expect(mediaFailure(SRC)).resolves.toBeNull();
-		expect(invokeMock).not.toHaveBeenCalled();
 	});
 
 	it("treats an answer it cannot read as no answer", async () => {

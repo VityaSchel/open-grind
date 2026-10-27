@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import type { PushCategory } from "./types";
 
 const push = vi.hoisted(() => ({
@@ -11,7 +12,6 @@ const push = vi.hoisted(() => ({
 		>(),
 	openPushCategorySettings: vi.fn<(category: string) => Promise<void>>(),
 }));
-const os = vi.hoisted(() => ({ android: true }));
 const account = vi.hoisted(() => ({
 	getPushSettings:
 		vi.fn<() => Promise<{ tapPushNotification?: boolean | null }>>(),
@@ -21,7 +21,6 @@ const account = vi.hoisted(() => ({
 
 vi.mock("./index", () => push);
 vi.mock("$lib/api/settings/account", () => account);
-vi.mock("$lib/platform/os", () => ({ isAndroidPlatform: () => os.android }));
 
 const open: PushCategory[] = [
 	{ category: "messages", enabled: true, systemBlocked: false },
@@ -48,7 +47,7 @@ async function loaded() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	os.android = true;
+	runningOn("android");
 	deviceReports(open);
 	push.setPushCategory.mockResolvedValue(undefined);
 	push.openPushCategorySettings.mockResolvedValue(undefined);
@@ -144,21 +143,24 @@ describe("toggling a notification category", () => {
 		expect(account.setPushSettings).not.toHaveBeenCalled();
 	});
 
-	it("saves New messages like any other category on desktop", async () => {
-		os.android = false;
-		const module = await loaded();
+	it.each(["ios", "linux", "macos", "windows"] as const)(
+		"saves New messages like any other category on %s",
+		async (platform) => {
+			runningOn(platform);
+			const module = await loaded();
 
-		await module.toggleNotificationCategory({
-			category: "messages",
-			enabled: false,
-		});
+			await module.toggleNotificationCategory({
+				category: "messages",
+				enabled: false,
+			});
 
-		expect(push.openPushCategorySettings).not.toHaveBeenCalled();
-		expect(push.setPushCategory).toHaveBeenCalledWith({
-			category: "messages",
-			enabled: false,
-		});
-	});
+			expect(push.openPushCategorySettings).not.toHaveBeenCalled();
+			expect(push.setPushCategory).toHaveBeenCalledWith({
+				category: "messages",
+				enabled: false,
+			});
+		},
+	);
 
 	it.each(["messages", "taps"] as const)(
 		"sends a %s category Android blocks to its Android settings instead of changing it",

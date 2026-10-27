@@ -2,6 +2,7 @@ import { cleanup, render } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NavigationType } from "@sveltejs/kit";
 
+import { runningOn } from "$lib/test/platform";
 import { fakePagerLayout, WIDTH } from "$lib/util/snap-pager-test-helpers";
 import type { Profile } from "$lib/model/users/profiles";
 import ProfilePage from "./+page.svelte";
@@ -177,6 +178,7 @@ beforeEach(() => {
 	isPhotoSwipeBusyMock.mockReturnValue(false);
 	onPhotoSwipeOpeningMock.mockReturnValue(() => {});
 	goto.mockReturnValue(new Promise(() => {}));
+	runningOn("windows");
 });
 
 afterEach(() => {

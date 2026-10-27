@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import {
 	BUTTON_REST_HEIGHT,
 	BUTTON_REST_PX,
@@ -26,6 +27,10 @@ vi.mock("svelte/motion", async (importOriginal) => ({
 	...(await importOriginal<typeof import("svelte/motion")>()),
 	prefersReducedMotion: reducedMotion,
 }));
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("the refresh control's room for its button", () => {
 	useRefreshControlHarness({ reducedMotion });

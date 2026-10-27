@@ -22,7 +22,6 @@
 	import { Spinner } from "$lib/components/ui/spinner";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { openExternalLink } from "$lib/platform/link-opener";
-	import { isAndroidPlatform } from "$lib/platform/os";
 	import { isPlayBuild } from "$lib/platform/store";
 	import { getInstalledVersion, GOOGLE_OAUTH_COMPONENT } from "$lib/updates";
 	import {
@@ -34,13 +33,14 @@
 	import { installedFromFdroid } from "$lib/updates/capability.svelte";
 	import { manualInstallHref } from "$lib/updates/manual-install";
 	import {
+		googleSignInMode,
 		googleSignInView,
 		installButton,
 		stageAwaitsUser,
 	} from "./google-sign-in-view";
 
 	const companionHref = manualInstallHref(GOOGLE_OAUTH_COMPONENT);
-	const automated = isAndroidPlatform();
+	const automated = googleSignInMode() === "companion";
 
 	let token = $state("");
 	let submitting = $state(false);

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.hoisted(() => {
+	Object.assign(globalThis, {
+		__TAURI_OS_PLUGIN_INTERNALS__: { platform: "android" },
+	});
+});
 const { getConversationsMock, getConversationMock } = vi.hoisted(() => ({
 	getConversationsMock: vi.fn(),
 	getConversationMock: vi.fn(),

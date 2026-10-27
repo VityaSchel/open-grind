@@ -2,8 +2,9 @@ import { render, screen } from "@testing-library/svelte";
 import { SvelteSet } from "svelte/reactivity";
 import { vi } from "vitest";
 
+import { currentPlatform, type SupportedPlatform } from "$lib/platform/os";
+import { runningOn } from "$lib/test/platform";
 import type * as AccountApi from "$lib/api/settings/account";
-import type * as Os from "$lib/platform/os";
 import type * as PushApi from "$lib/push/index";
 import type { PushCategory, PushToken } from "$lib/push/types";
 import type NotificationsPage from "./+page.svelte";
@@ -11,6 +12,14 @@ import type NotificationsPage from "./+page.svelte";
 type InstallListener = () => Promise<void>;
 
 const settled = () => Promise.resolve();
+
+const pushPlatforms = {
+	android: true,
+	ios: false,
+	linux: true,
+	macos: true,
+	windows: true,
+} as const satisfies Record<SupportedPlatform, boolean>;
 
 export const token: PushToken = {
 	token: "fid:APA91b",
@@ -27,8 +36,7 @@ export const push = {
 	notificationPermission: vi.fn<typeof PushApi.notificationPermission>(),
 	openNotificationSettings: vi.fn(settled),
 	openPushCategorySettings: vi.fn(settled),
-	pushAvailableHere: () =>
-		["android", "linux", "macos", "windows"].includes(currentPlatform()),
+	pushAvailableHere: () => pushPlatforms[currentPlatform()],
 	pushCategories: vi.fn<typeof PushApi.pushCategories>(),
 	pushErrorReason: () => null,
 	requestNotificationPermission:
@@ -76,7 +84,6 @@ export async function addonInstalled(): Promise<void> {
 }
 
 export const installedFromFdroid = vi.fn(() => false);
-export const currentPlatform = vi.fn<typeof Os.currentPlatform>();
 export const showErrorToast = vi.fn();
 export const openExternalLink = vi.fn();
 
@@ -101,7 +108,7 @@ export async function resetNotificationsPage(): Promise<void> {
 	stored.notificationsEnabled = true;
 	appLifecycle.active = true;
 	installListeners.clear();
-	currentPlatform.mockReturnValue("android");
+	runningOn("android");
 	installedFromFdroid.mockReturnValue(false);
 	addon.addonInstallerAvailable.mockReturnValue(true);
 	inMode("slow");

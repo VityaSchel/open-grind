@@ -10,7 +10,7 @@ import {
 } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type * as Os from "$lib/platform/os";
+import { runningOn } from "$lib/test/platform";
 import type { PushToken } from "$lib/push/types";
 import type * as Capability from "$lib/updates/capability.svelte";
 import {
@@ -18,7 +18,6 @@ import {
 	addon,
 	addonInstalled,
 	checked,
-	currentPlatform,
 	disabled,
 	inMode,
 	installedFromFdroid,
@@ -65,15 +64,6 @@ vi.mock("$lib/platform/link-opener", async () => ({
 	openExternalLink: (await import("./notifications-page-test-helpers.svelte"))
 		.openExternalLink,
 }));
-vi.mock("$lib/platform/os", async (importOriginal) => {
-	const { currentPlatform } =
-		await import("./notifications-page-test-helpers.svelte");
-	return {
-		...(await importOriginal<typeof Os>()),
-		currentPlatform,
-		isAndroidPlatform: () => currentPlatform() === "android",
-	};
-});
 vi.mock("$lib/api/app-lifecycle.svelte", () => ({
 	appLifecycle: { active: true },
 }));
@@ -91,10 +81,10 @@ afterEach(() => {
 });
 
 describe("the notifications page", () => {
-	it.each(["ios", "web"] as const)(
+	it.each(["ios"] as const)(
 		"says on %s that notifications are not supported on this platform yet",
 		(platform) => {
-			currentPlatform.mockReturnValue(platform);
+			runningOn(platform);
 
 			render(NotificationsPage);
 
@@ -111,7 +101,7 @@ describe("the notifications page", () => {
 	it.each(["macos", "windows", "linux"] as const)(
 		"offers the switch and both categories on %s, with no delivery modes",
 		async (platform) => {
-			currentPlatform.mockReturnValue(platform);
+			runningOn(platform);
 
 			render(NotificationsPage);
 

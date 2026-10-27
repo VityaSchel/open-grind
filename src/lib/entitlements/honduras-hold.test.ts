@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import { setVisibility } from "$lib/test/visibility";
 
 const mocks = vi.hoisted(() => ({
@@ -12,7 +13,6 @@ const mocks = vi.hoisted(() => ({
 	reconnect: vi.fn<() => Promise<void>>(),
 	onSignOut: vi.fn<(release: () => Promise<void>) => void>(),
 	getPreferences: vi.fn<() => Promise<{ geohash: string | null }>>(),
-	isMobilePlatform: vi.fn<() => boolean>(),
 	writeAppDataFileAtomic:
 		vi.fn<(args: { path: string; content: Uint8Array }) => Promise<void>>(),
 	existsAppDataFile: vi.fn<(path: string) => Promise<boolean>>(),
@@ -25,9 +25,6 @@ vi.mock("$lib/api/browse/location", () => ({
 vi.mock("$lib/api/methods", () => ({ callMethod: mocks.callMethod }));
 vi.mock("$lib/api/sign-out", () => ({ onSignOut: mocks.onSignOut }));
 vi.mock("$lib/ws.svelte", () => ({ ws: { reconnect: mocks.reconnect } }));
-vi.mock("$lib/platform/os", () => ({
-	isMobilePlatform: mocks.isMobilePlatform,
-}));
 vi.mock("$lib/app-data/preferences.svelte", () => ({
 	getPreferences: mocks.getPreferences,
 }));
@@ -98,7 +95,7 @@ beforeEach(async () => {
 		return Promise.resolve();
 	});
 	mocks.getPreferences.mockResolvedValue({ geohash: mocks.HOME });
-	mocks.isMobilePlatform.mockReturnValue(false);
+	runningOn("macos");
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	hold = await import("./honduras-hold");
 	accounts = await import("$lib/api/account-caches");
@@ -348,7 +345,7 @@ describe("holdInHonduras", () => {
 	});
 
 	it("moves home as soon as the phone app goes to the background", async () => {
-		mocks.isMobilePlatform.mockReturnValue(true);
+		runningOn("android");
 		const taken = await takeHold();
 		const lease = taken.lease();
 

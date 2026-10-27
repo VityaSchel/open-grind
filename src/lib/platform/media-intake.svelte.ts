@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { type Event, listen } from "@tauri-apps/api/event";
+import { type Event, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { type DragDropEvent, getCurrentWebview } from "@tauri-apps/api/webview";
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
@@ -18,7 +18,7 @@ import {
 	mediaFileKindOf,
 } from "$lib/platform/media-file";
 import { mimeTypeFromPath, type PickedMedia } from "$lib/platform/media-picker";
-import { isAndroidPlatform, isLinuxPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import { toBase64 } from "$lib/util/base64";
 
 const STAGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -155,24 +155,31 @@ export function listenForMedia(): () => void {
 	window.addEventListener("dragover", onDragOver, options);
 	window.addEventListener("dragleave", onDragLeave, options);
 	window.addEventListener("drop", onDrop, options);
-	const nativeDrops = isLinuxPlatform()
-		? getCurrentWebview().onDragDropEvent(onNativeDrag)
-		: null;
-	const systemDrags = isAndroidPlatform()
-		? listen(MEDIA_DRAG_EVENT, ({ payload }) => {
-				systemDragKinds = mediaDragSchema
-					.parse(payload)
-					.mimeTypes.map(draggedKindOfType);
-			})
-		: null;
+	const platformDrags = listenForPlatformDrags();
 	return () => {
 		controller.abort();
 		hideDrag();
 		systemDragKinds = [];
 		draggingFromPage = false;
-		void nativeDrops?.then((unlisten) => unlisten());
-		void systemDrags?.then((unlisten) => unlisten());
+		void platformDrags?.then((unlisten) => unlisten());
 	};
+}
+
+function listenForPlatformDrags(): Promise<UnlistenFn> | null {
+	switch (currentPlatform()) {
+		case "android":
+			return listen(MEDIA_DRAG_EVENT, ({ payload }) => {
+				systemDragKinds = mediaDragSchema
+					.parse(payload)
+					.mimeTypes.map(draggedKindOfType);
+			});
+		case "linux":
+			return getCurrentWebview().onDragDropEvent(onNativeDrag);
+		case "ios":
+		case "macos":
+		case "windows":
+			return null;
+	}
 }
 
 function onPaste(event: ClipboardEvent) {
@@ -393,7 +400,7 @@ async function deliver<T>({
 async function stageFile(file: File): Promise<PickedMedia> {
 	const key = crypto.randomUUID();
 	const mimeType = file.type === "" ? null : file.type;
-	if (demoEnabled) return { source: "web", key, mimeType, file };
+	if (demoEnabled) return { source: "demo", key, mimeType, file };
 	const id = z.string().parse(await invoke("stage_media"));
 	const media: PickedMedia = { source: "staged", key, mimeType, id, file };
 	try {

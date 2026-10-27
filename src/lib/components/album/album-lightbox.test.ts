@@ -14,6 +14,7 @@ vi.mock("$lib/util/media-dimensions", () => dimensions);
 vi.mock("$lib/util/photoswipe", () => ({}));
 
 import { albumProcessingPlaceholderUrl } from "$lib/demo/mock/albums";
+import { proxyMediaUrl } from "$lib/util/media";
 import {
 	albumPhotoRenewal,
 	forgetAlbumSlides,
@@ -119,7 +120,7 @@ describe("loadAlbumSlides", () => {
 
 		expect(slides.map((slide) => slide.contentId)).toEqual([1, 2]);
 		expect(dimensions.measureImage).toHaveBeenCalledExactlyOnceWith(
-			playedOut.thumbUrl,
+			proxyMediaUrl(playedOut.thumbUrl),
 		);
 	});
 
@@ -210,7 +211,7 @@ describe("albumPhotoRenewal", () => {
 		await renew({ index: 0, refresh });
 		await renew({ index: 0, refresh });
 
-		expect(items[0]?.src).toBe(`${photo.url}?renewed`);
+		expect(items[0]?.src).toBe(proxyMediaUrl(`${photo.url}?renewed`));
 		expect(refresh).toHaveBeenCalledOnce();
 		expect(api.getAlbumContent).toHaveBeenCalledTimes(2);
 	});

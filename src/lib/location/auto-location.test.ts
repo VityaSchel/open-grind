@@ -3,12 +3,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { encodeGeohash } from "$lib/model/geohash";
+import { runningOn } from "$lib/test/platform";
 import { resetNowForTesting, setNowForTesting } from "$lib/util/clock";
 
 const {
 	abortStaleMock,
 	preferencesSnapshotMock,
-	isMobilePlatformMock,
 	permissionToastMock,
 	reportFailureMock,
 	runMock,
@@ -17,7 +17,6 @@ const {
 } = vi.hoisted(() => ({
 	abortStaleMock: vi.fn(),
 	preferencesSnapshotMock: vi.fn(),
-	isMobilePlatformMock: vi.fn(),
 	permissionToastMock: vi.fn(),
 	reportFailureMock: vi.fn(),
 	runMock: vi.fn(),
@@ -39,7 +38,6 @@ vi.mock("$lib/app-data/preferences.svelte", () => ({
 	preferencesSnapshot: preferencesSnapshotMock,
 	setPreferences: setPreferencesMock,
 }));
-vi.mock("$lib/platform/os", () => ({ isMobilePlatform: isMobilePlatformMock }));
 vi.mock("./location-request.svelte", () => ({
 	locationRequest: locationRequestMock,
 }));
@@ -69,7 +67,7 @@ function ok(coords: { lat: number; lon: number }) {
 describe("autoLocation.resolveGeohash", () => {
 	beforeEach(() => {
 		setNowForTesting(() => 0);
-		isMobilePlatformMock.mockReturnValue(true);
+		runningOn("android");
 		preferencesSnapshotMock.mockReturnValue({
 			autoUpdateLocation: true,
 			geohash: CURRENT,
@@ -96,7 +94,7 @@ describe("autoLocation.resolveGeohash", () => {
 	});
 
 	it("keeps the current geohash off mobile, without asking", async () => {
-		isMobilePlatformMock.mockReturnValue(false);
+		runningOn("macos");
 		await expect(autoLocation.resolveGeohash(CURRENT)).resolves.toBe(
 			CURRENT,
 		);

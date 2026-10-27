@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
 	getMyAlbums: vi.fn(),
@@ -15,6 +15,8 @@ import {
 	albumProcessingPlaceholderUrl,
 	demoMyAlbums,
 } from "$lib/demo/mock/albums";
+import { runningOn } from "$lib/test/platform";
+import { proxyMediaUrl } from "$lib/util/media";
 import type { MyAlbum } from "$lib/model/messaging/albums";
 import AlbumsLink from "./AlbumsLink.svelte";
 
@@ -48,6 +50,10 @@ async function settledMediaOf(albums: MyAlbum[]): Promise<Element> {
 	});
 }
 
+beforeEach(() => {
+	runningOn("windows");
+});
+
 afterEach(() => cleanup());
 
 describe("albums link", () => {
@@ -73,7 +79,7 @@ describe("albums link", () => {
 		]);
 
 		expect(media.querySelector("img")?.getAttribute("src")).toContain(
-			second.content[0]?.thumbUrl ?? "missing",
+			proxyMediaUrl(second.content[0]?.thumbUrl ?? "missing"),
 		);
 	});
 });

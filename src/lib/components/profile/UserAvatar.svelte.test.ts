@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
+import { profileMediaUrl } from "$lib/util/media";
 import UserAvatar from "./UserAvatar.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("UserAvatar", () => {
 	afterEach(cleanup);
@@ -26,7 +32,9 @@ describe("UserAvatar", () => {
 		});
 
 		const img = container.querySelector("img");
-		expect(img?.src).toContain("deadbeef");
+		expect(img?.src).toBe(
+			profileMediaUrl({ mediaHash: "deadbeef", size: "thumb" }),
+		);
 
 		await fireEvent.error(img!);
 

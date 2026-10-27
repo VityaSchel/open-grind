@@ -25,6 +25,7 @@ vi.mock("svelte-sonner", () => sonner);
 vi.mock("$lib/demo", () => demo);
 
 import { ApiError } from "$lib/api/api-error";
+import { runningOn } from "$lib/test/platform";
 import ProfilePicturesUpload from "./ProfilePicturesUpload.svelte";
 
 function picks(count: number) {
@@ -62,6 +63,10 @@ async function uploadFromSheet(
 		await findByRole("button", { name: "Upload photos" }),
 	);
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 beforeEach(() => previousUploads());
 

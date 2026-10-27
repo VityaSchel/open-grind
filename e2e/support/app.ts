@@ -1,5 +1,7 @@
 import type { CDPSession, Locator, Page, test } from "@playwright/test";
 
+import type { SupportedPlatform } from "../../src/lib/platform/os";
+
 export const DEMO_CONVERSATION_ID = "100001:123456000";
 export const DEMO_CONVERSATION = `/chat/${DEMO_CONVERSATION_ID}`;
 export const MESSAGE_ROW = '[role="article"]';
@@ -289,7 +291,7 @@ export async function runPaletteCommand(
 	await page.keyboard.press("Enter");
 }
 
-export type ShimPlatform = "android" | "ios" | "linux" | "macos" | "windows";
+export type ShimPlatform = SupportedPlatform;
 
 export async function installTauriShim(
 	page: Page,

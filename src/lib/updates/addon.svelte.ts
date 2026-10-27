@@ -1,4 +1,4 @@
-import { isAndroidPlatform } from "$lib/platform/os";
+import { currentPlatform } from "$lib/platform/os";
 import { buildSignedByOpenGrind } from "./capability.svelte";
 import {
 	ADDON_KEYS,
@@ -23,10 +23,22 @@ type AddonRuntime = {
 	installListeners: Set<InstallListener>;
 };
 
+function installsAddonsHere(): boolean {
+	switch (currentPlatform()) {
+		case "android":
+			return true;
+		case "ios":
+		case "linux":
+		case "macos":
+		case "windows":
+			return false;
+	}
+}
+
 export function addonInstallerAvailable(): boolean {
 	return (
 		updatesAvailableHere() &&
-		isAndroidPlatform() &&
+		installsAddonsHere() &&
 		buildSignedByOpenGrind()
 	);
 }

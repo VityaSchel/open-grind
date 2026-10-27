@@ -13,10 +13,7 @@ const mocks = vi.hoisted(() => ({
 	events: [] as string[],
 }));
 
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: mocks.invoke,
-	isTauri: () => true,
-}));
+vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
 vi.mock("@tauri-apps/api/event", () => ({ listen: vi.fn() }));
 vi.mock("$app/navigation", () => ({ goto: mocks.goto }));
 vi.mock("svelte-sonner", () => ({ toast: { error: mocks.toastError } }));

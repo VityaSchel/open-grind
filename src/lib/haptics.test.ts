@@ -20,16 +20,7 @@ vi.mock("$lib/app-data", () => ({
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
 import { hapticsAvailable, playHaptic } from "$lib/haptics";
-
-const tauri = globalThis as {
-	isTauri?: boolean;
-	__TAURI_OS_PLUGIN_INTERNALS__?: { platform: string };
-};
-
-function runningOn(platform: string) {
-	tauri.isTauri = true;
-	tauri.__TAURI_OS_PLUGIN_INTERNALS__ = { platform };
-}
+import { resetPlatform, runningOn } from "$lib/test/platform";
 
 beforeEach(async () => {
 	invokeMock.mockReset().mockResolvedValue(undefined);
@@ -38,10 +29,7 @@ beforeEach(async () => {
 	await setPreferences({ hapticFeedback: true });
 });
 
-afterEach(() => {
-	delete tauri.isTauri;
-	delete tauri.__TAURI_OS_PLUGIN_INTERNALS__;
-});
+afterEach(resetPlatform);
 
 describe("hapticsAvailable", () => {
 	it("is true on the platforms with a native actuator", () => {
@@ -53,6 +41,7 @@ describe("hapticsAvailable", () => {
 	});
 
 	it("is false where nothing can be played", () => {
+		runningOn("ios");
 		expect(hapticsAvailable()).toBe(false);
 
 		runningOn("linux");

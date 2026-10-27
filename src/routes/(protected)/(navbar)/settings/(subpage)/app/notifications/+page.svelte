@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isAndroidPlatform } from "$lib/platform/os";
 	import { pushAvailableHere } from "$lib/push";
+	import { offersDeliveryModes } from "$lib/push/notification-state.svelte";
 	import NotificationCategoriesSetting from "./NotificationCategoriesSetting.svelte";
 	import NotificationMasterSetting from "./NotificationMasterSetting.svelte";
 	import NotificationModeSetting from "./NotificationModeSetting.svelte";
@@ -8,7 +8,7 @@
 
 {#if pushAvailableHere()}
 	<NotificationMasterSetting />
-	{#if isAndroidPlatform()}
+	{#if offersDeliveryModes()}
 		<NotificationModeSetting />
 	{/if}
 	<NotificationCategoriesSetting />

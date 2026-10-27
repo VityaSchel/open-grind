@@ -119,11 +119,14 @@ describe("the update capability probe", () => {
 		);
 	});
 
-	it("says nothing where updates could never apply, such as the web demo", async () => {
+	it("says nothing where updates could never apply, such as the demo", async () => {
 		api.updatesAvailableHere.mockReturnValue(false);
 		api.getUpdateCapability.mockResolvedValue({
 			state: "unsupported",
-			detail: { reason: "noReleaseArtifacts", detail: { target: "web" } },
+			detail: {
+				reason: "noReleaseArtifacts",
+				detail: { target: "demo" },
+			},
 		});
 		const { hydrateUpdateCapability, updatesUnsupportedReason } =
 			await import("./capability.svelte");

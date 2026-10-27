@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScrollGestureState } from "$lib/platform/scroll-gesture";
+import { runningOn } from "$lib/test/platform";
 import { PullModel } from "./pull-model.svelte";
 import { attachTouchpadPull } from "./touchpad-adapter";
 
@@ -53,6 +54,10 @@ function harness() {
 		},
 	};
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	document.body.replaceChildren();

@@ -27,6 +27,7 @@ export function swipeToReply({
 		direction: "right",
 		onReply,
 		onArm,
+		wheelMode: "rail",
 		reducedMotion: () => reducedMotion,
 	});
 	return { swipe, onReply, onArm };
@@ -60,6 +61,7 @@ export function railHarness({
 		onArm,
 		now: () => time,
 		scrollEndSupported,
+		wheelMode: "rail",
 		reducedMotion: () => reducedMotion,
 	});
 	const rail = document.createElement("div");

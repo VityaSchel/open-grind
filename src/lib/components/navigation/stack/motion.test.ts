@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { paneFrame, settleDuration, stackMotion } from "./motion";
 
@@ -48,23 +48,8 @@ describe("stackMotion", () => {
 		});
 	});
 
-	it("fades in place with a decelerating curve on Linux and other desktops", () => {
+	it("fades in place with a decelerating curve on Linux", () => {
 		expect(linux).toEqual({ ...windows, travel: 0, settleMs: 250 });
-		expect(stackMotion({ platform: "freebsd" })).toBe(linux);
-	});
-});
-
-describe("stackMotion in a browser", () => {
-	afterEach(() => vi.unstubAllGlobals());
-
-	it("reads the pointer to slide under a finger and fade under a mouse", () => {
-		vi.stubGlobal("matchMedia", (query: string) => ({
-			matches: query === "(pointer: coarse)",
-		}));
-		expect(stackMotion()).toBe(slide);
-
-		vi.stubGlobal("matchMedia", () => ({ matches: false }));
-		expect(stackMotion()).toBe(macos);
 	});
 });
 

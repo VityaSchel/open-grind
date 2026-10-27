@@ -31,6 +31,7 @@ vi.mock("$lib/ws.svelte", async (importOriginal) => ({
 	ws: { on: () => Promise.resolve(vi.fn()) },
 }));
 
+import { runningOn } from "$lib/test/platform";
 import { ConversationsState } from "./conversations-state.svelte";
 import {
 	conversation,
@@ -73,6 +74,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	localStorage.clear();
 	reconcileHandlers.length = 0;
+	runningOn("android");
 });
 
 describe("tier-gated inbox entries", () => {

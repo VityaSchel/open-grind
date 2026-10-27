@@ -19,6 +19,7 @@ vi.mock("$lib/app-data", () => ({
 vi.mock("$lib/api/error-toast", () => ({ showErrorToast: showErrorToastMock }));
 
 import { setPreferences } from "$lib/app-data/preferences.svelte";
+import { runningOn } from "$lib/test/platform";
 import type { BackdropBlurQuality } from "$lib/blur/quality";
 import BackdropBlurSetting from "./BackdropBlurSetting.svelte";
 
@@ -35,6 +36,7 @@ async function storedQuality(backdropBlurQuality: BackdropBlurQuality | null) {
 }
 
 beforeEach(async () => {
+	runningOn("windows");
 	vi.restoreAllMocks();
 	readMock.mockReset().mockResolvedValue(encode({}));
 	writeMock.mockReset().mockResolvedValue(undefined);

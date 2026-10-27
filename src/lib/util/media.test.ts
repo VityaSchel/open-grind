@@ -12,14 +12,12 @@ const SIGNED =
 	"https://d3lyqctnm3b6pb.cloudfront.net/a.jpg?Expires=1&Signature=x+y/z&Key-Pair-Id=K1";
 
 const tauri = globalThis as {
-	isTauri?: boolean;
 	__TAURI_INTERNALS__?: {
 		convertFileSrc: (filePath: string, protocol?: string) => string;
 	};
 };
 
 function runningOn(osName: string) {
-	tauri.isTauri = true;
 	tauri.__TAURI_INTERNALS__ = {
 		convertFileSrc: (filePath, protocol = "asset") => {
 			const path = encodeURIComponent(filePath);
@@ -37,16 +35,10 @@ function proxiedTarget(url: string): string {
 }
 
 afterEach(() => {
-	delete tauri.isTauri;
 	delete tauri.__TAURI_INTERNALS__;
 });
 
 describe("proxyMediaUrl", () => {
-	it("leaves urls alone outside Tauri, where no handler exists", () => {
-		expect(proxyMediaUrl(PHOTO)).toBe(PHOTO);
-		expect(proxyMediaUrl(SIGNED)).toBe(SIGNED);
-	});
-
 	it("carries the whole url to the scheme handler", () => {
 		runningOn("macos");
 

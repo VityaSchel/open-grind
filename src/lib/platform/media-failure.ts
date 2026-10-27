@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import z from "zod";
 
 const mediaFailureSchema = z.object({
@@ -23,12 +23,7 @@ export type MediaFailure = z.infer<typeof mediaFailureSchema>;
 
 export type MediaRemedy = "retry" | "renew" | "none";
 
-export function explainsMediaFailures(): boolean {
-	return isTauri();
-}
-
 export async function mediaFailure(src: string): Promise<MediaFailure | null> {
-	if (!explainsMediaFailures()) return null;
 	try {
 		return mediaFailureSchema
 			.nullable()

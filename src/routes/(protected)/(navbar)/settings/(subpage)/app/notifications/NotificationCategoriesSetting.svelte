@@ -5,14 +5,16 @@
 	import { appLifecycle } from "$lib/api/app-lifecycle.svelte";
 	import { showErrorToast } from "$lib/api/error-toast";
 	import SwitchField from "$lib/components/ui/switch-field/SwitchField.svelte";
-	import { isAndroidPlatform } from "$lib/platform/os";
 	import {
 		loadNotificationCategories,
 		notificationCategories,
 		toggleNotificationCategory,
 	} from "$lib/push/categories.svelte";
 	import { pushFailures } from "$lib/push/error-copy";
-	import { notificationSettings } from "$lib/push/notification-state.svelte";
+	import {
+		notificationSettings,
+		offersDeliveryModes,
+	} from "$lib/push/notification-state.svelte";
 	import type { PushCategoryName } from "$lib/push/types";
 
 	const TITLES: Record<PushCategoryName, string> = {
@@ -23,7 +25,7 @@
 	const saving = new SvelteSet<PushCategoryName>();
 
 	const inSlowMode = $derived(
-		isAndroidPlatform() && notificationSettings.mode === "slow",
+		offersDeliveryModes() && notificationSettings.mode === "slow",
 	);
 
 	$effect(() => {

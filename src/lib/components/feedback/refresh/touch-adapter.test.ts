@@ -1,8 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { runningOn } from "$lib/test/platform";
 import { makeModel, makeScrollable, touchEvent } from "./pull-test-helpers";
 import { scrollGeometry } from "./scroll-geometry";
 import { attachTouchPull } from "./touch-adapter";
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 describe("attachTouchPull", () => {
 	function setup({

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render } from "@testing-library/svelte";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lightbox = vi.hoisted(() => ({
 	loadAlbumSlides: vi.fn(),
@@ -14,6 +14,8 @@ const sonner = vi.hoisted(() => ({
 vi.mock("./album-lightbox", () => lightbox);
 vi.mock("svelte-sonner", () => sonner);
 
+import { runningOn } from "$lib/test/platform";
+import { proxyMediaUrl } from "$lib/util/media";
 import AlbumPreview from "./AlbumPreview.svelte";
 
 const BROKEN = '[data-slot="broken-media"]';
@@ -26,6 +28,10 @@ function previewWithCover(coverUrl: string | null): Element {
 	if (preview === null) throw new Error("no album preview");
 	return preview;
 }
+
+beforeEach(() => {
+	runningOn("windows");
+});
 
 afterEach(() => {
 	cleanup();
@@ -109,7 +115,7 @@ describe("album preview cover renewal", () => {
 
 		await cover.renew(RENEWED);
 
-		expect(cover.image().getAttribute("src")).toBe(OLD);
+		expect(cover.image().getAttribute("src")).toBe(proxyMediaUrl(OLD));
 	});
 
 	it("loads the renewed url for a cover that failed", async () => {
@@ -118,6 +124,6 @@ describe("album preview cover renewal", () => {
 
 		await cover.renew(RENEWED);
 
-		expect(cover.image().getAttribute("src")).toBe(RENEWED);
+		expect(cover.image().getAttribute("src")).toBe(proxyMediaUrl(RENEWED));
 	});
 });
