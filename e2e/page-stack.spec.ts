@@ -10,6 +10,7 @@ import { BLUR_MODES, setBlurMode } from "./support/layout-guard";
 import {
 	APP_SETTINGS,
 	clickMeTab,
+	clickNavBarBack,
 	dim,
 	ghost,
 	openAppSettings,
@@ -286,9 +287,8 @@ test("Back still slides down the stack after a profile was opened from the block
 
 	for (const parent of [/\/settings\/account$/, /\/settings$/]) {
 		const slid = await watchRendered(page, { selector: STACK_DIM });
-		await backLink(page).click();
+		await clickNavBarBack(page);
 		await expect(page).toHaveURL(parent);
-		await stackSettled(page);
 		expect(await slid(), `onto ${parent}`).toBe(true);
 	}
 });
