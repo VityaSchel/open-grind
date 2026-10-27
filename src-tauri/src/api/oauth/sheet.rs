@@ -3,9 +3,9 @@ use std::ptr::NonNull;
 
 use block2::RcBlock;
 use objc2::rc::Retained;
-use objc2::runtime::{NSObject, NSObjectProtocol, ProtocolObject};
+use objc2::runtime::{AnyObject, NSObject, NSObjectProtocol, ProtocolObject};
 use objc2::{
-	define_class, msg_send, DefinedClass, MainThreadMarker, MainThreadOnly,
+	define_class, msg_send, sel, DefinedClass, MainThreadMarker, MainThreadOnly,
 };
 use objc2_foundation::NSString;
 use objc2_ui_kit::{
@@ -148,6 +148,7 @@ unsafe fn show(
 				| UIViewAutoresizing::FlexibleHeight,
 		);
 		view.addSubview(&page);
+		hide_top_edge_effect(&page);
 	}
 
 	let delegate = SheetDelegate::new(mtm, sign_in);
@@ -197,6 +198,24 @@ unsafe fn show(
 		});
 	});
 	Ok(())
+}
+
+fn hide_top_edge_effect(page: &UIView) {
+	let scroll: Option<Retained<AnyObject>> =
+		unsafe { msg_send![page, scrollView] };
+	let Some(scroll) = scroll else {
+		return;
+	};
+	let supported: bool =
+		unsafe { msg_send![&*scroll, respondsToSelector: sel!(topEdgeEffect)] };
+	if !supported {
+		return;
+	}
+	let effect: Option<Retained<AnyObject>> =
+		unsafe { msg_send![&*scroll, topEdgeEffect] };
+	if let Some(effect) = effect {
+		let _: () = unsafe { msg_send![&*effect, setHidden: true] };
+	}
 }
 
 fn dismiss() {
