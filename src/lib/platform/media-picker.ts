@@ -10,6 +10,8 @@ import { currentPlatform } from "$lib/platform/os";
 type MediaFilter = { name: string; extensions: string[]; mimeTypes: string[] };
 
 const mimeTypesByExtension: Record<string, string> = {
+	heic: "image/heic",
+	heif: "image/heif",
 	jpeg: "image/jpeg",
 	jpg: "image/jpeg",
 	mov: "video/quicktime",
@@ -19,6 +21,8 @@ const mimeTypesByExtension: Record<string, string> = {
 };
 
 const imageExtensions = ["jpg", "jpeg", "png", "webp"];
+
+const heifExtensions = ["heic", "heif"];
 
 const videoExtensions = ["mp4", "mov"];
 
@@ -101,7 +105,7 @@ async function pick({
 		case "linux":
 		case "macos":
 		case "windows":
-			return pickWithDialog({ filter, multiple });
+			return pickWithDialog({ kind, multiple });
 	}
 }
 
@@ -127,13 +131,15 @@ async function pickIosMedia({
 }
 
 async function pickWithDialog({
-	filter,
+	kind,
 	multiple,
 }: {
-	filter: MediaFilter;
+	kind: MediaKind;
 	multiple: boolean;
 }): Promise<PickedMedia[]> {
-	const filters = [{ name: filter.name, extensions: filter.extensions }];
+	const filters = [
+		{ name: filtersByKind[kind].name, extensions: dialogExtensions(kind) },
+	];
 	const selection = multiple
 		? await open({ filters, multiple: true })
 		: await open({ filters, multiple: false });
@@ -151,6 +157,21 @@ async function pickWithDialog({
 			path,
 		}),
 	);
+}
+
+function dialogExtensions(kind: MediaKind): string[] {
+	const { extensions } = filtersByKind[kind];
+	switch (currentPlatform()) {
+		case "macos":
+			return kind === "video"
+				? extensions
+				: [...extensions, ...heifExtensions];
+		case "android":
+		case "ios":
+		case "linux":
+		case "windows":
+			return extensions;
+	}
 }
 
 async function pickAndroidUris({

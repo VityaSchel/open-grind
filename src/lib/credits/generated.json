@@ -5647,6 +5647,21 @@
 			]
 		},
 		{
+			"id": "objc2-image-io",
+			"name": "objc2-image-io",
+			"ecosystem": "rust",
+			"platform": "macos",
+			"versions": [
+				"0.3.2"
+			],
+			"spdx": "Zlib OR Apache-2.0 OR MIT",
+			"shipped": "MIT",
+			"url": "https://github.com/madsmtm/objc2",
+			"textHashes": [
+				"07c7993a082dd284"
+			]
+		},
+		{
 			"id": "objc2-quartz-core",
 			"name": "objc2-quartz-core",
 			"ecosystem": "rust",

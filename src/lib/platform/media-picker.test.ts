@@ -19,6 +19,7 @@ import type { AndroidFsUri } from "tauri-plugin-android-fs-api";
 
 import { pickMedia, pickMultipleMedia } from "$lib/platform/media-picker";
 import { runningOn } from "$lib/test/platform";
+import type { SupportedPlatform } from "$lib/platform/os";
 
 const photoUri = {
 	uri: "content://photo/1",
@@ -53,7 +54,10 @@ describe("pickMedia", () => {
 
 		expect(openMock).toHaveBeenCalledWith({
 			filters: [
-				{ name: "Images", extensions: ["jpg", "jpeg", "png", "webp"] },
+				{
+					name: "Images",
+					extensions: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
+				},
 			],
 			multiple: false,
 		});
@@ -130,7 +134,16 @@ describe("pickMultipleMedia", () => {
 			filters: [
 				{
 					name: "Media",
-					extensions: ["jpg", "jpeg", "png", "webp", "mp4", "mov"],
+					extensions: [
+						"jpg",
+						"jpeg",
+						"png",
+						"webp",
+						"mp4",
+						"mov",
+						"heic",
+						"heif",
+					],
 				},
 			],
 			multiple: true,
@@ -138,10 +151,58 @@ describe("pickMultipleMedia", () => {
 	});
 
 	it.each([
+		{
+			platform: "macos",
+			images: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
+			media: ["jpg", "jpeg", "png", "webp", "mp4", "mov", "heic", "heif"],
+		},
+		{
+			platform: "linux",
+			images: ["jpg", "jpeg", "png", "webp"],
+			media: ["jpg", "jpeg", "png", "webp", "mp4", "mov"],
+		},
+		{
+			platform: "windows",
+			images: ["jpg", "jpeg", "png", "webp"],
+			media: ["jpg", "jpeg", "png", "webp", "mp4", "mov"],
+		},
+	] satisfies {
+		platform: SupportedPlatform;
+		images: string[];
+		media: string[];
+	}[])(
+		"offers the $platform dialog only the photo types it can decode",
+		async ({ platform, images, media }) => {
+			runningOn(platform);
+			openMock.mockResolvedValue([]);
+
+			await pickMultipleMedia("image");
+			await pickMultipleMedia("media");
+
+			expect(openMock.mock.calls).toEqual([
+				[
+					{
+						filters: [{ name: "Images", extensions: images }],
+						multiple: true,
+					},
+				],
+				[
+					{
+						filters: [{ name: "Media", extensions: media }],
+						multiple: true,
+					},
+				],
+			]);
+		},
+	);
+
+	it.each([
 		["/tmp/photo.jpg", "image/jpeg"],
 		["/tmp/photo.jpeg", "image/jpeg"],
 		["/tmp/photo.PNG", "image/png"],
 		["/tmp/photo.webp", "image/webp"],
+		["/tmp/photo.HEIC", "image/heic"],
+		["/tmp/photo.heif", "image/heif"],
 		["/tmp/clip.mp4", "video/mp4"],
 		["/tmp/clip.MOV", "video/quicktime"],
 		["/tmp/clip.webm", null],
