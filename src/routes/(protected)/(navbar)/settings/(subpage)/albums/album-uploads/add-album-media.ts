@@ -3,11 +3,7 @@ import { toast } from "svelte-sonner";
 import { showErrorToast } from "$lib/api/error-toast";
 import { getAlbumStorageLimits } from "$lib/api/messaging/albums";
 import { type AlbumRoom, albumRoom } from "$lib/components/album/album";
-import {
-	discardStagedMedia,
-	inspectMediaFile,
-	type MediaFileInspection,
-} from "$lib/platform/media-file";
+import { discardStagedMedia } from "$lib/platform/media-file";
 import { screenMedia } from "$lib/platform/media-intake.svelte";
 import {
 	type MediaKind,
@@ -22,28 +18,7 @@ import {
 	type UploadLimits,
 } from "./album-uploads-state.svelte";
 
-const UNSUPPORTED_MESSAGE = "That file isn't a photo or video";
 const ALBUM_FULL_MESSAGE = "The album is full. Remove something to add more.";
-
-function isUploadable(
-	inspection: MediaFileInspection,
-): inspection is InspectedPick["inspection"] {
-	return inspection.kind !== "unsupported";
-}
-
-async function inspectPicks(picked: PickedMedia[]): Promise<InspectedPick[]> {
-	const inspected: InspectedPick[] = [];
-	for (const media of picked) {
-		const inspection = await inspectMediaFile(media).catch(() => null);
-		if (inspection === null || !isUploadable(inspection)) {
-			toast.error(UNSUPPORTED_MESSAGE);
-			void discardStagedMedia([media]);
-			continue;
-		}
-		inspected.push({ media, inspection });
-	}
-	return inspected;
-}
 
 function pickerKind(room: AlbumRoom): MediaKind | null {
 	if (room.photos && room.videos) return "media";
@@ -59,7 +34,10 @@ export async function pickInspectedAlbumMedia({
 }): Promise<InspectedPick[]> {
 	const kind = pickerKind(room);
 	if (kind === null) return [];
-	return await inspectPicks(await pickMultipleMedia(kind));
+	return await screenMedia({
+		media: await pickMultipleMedia(kind),
+		videos: true,
+	});
 }
 
 function videoLimitMessage(maxVideosPerAlbum: number): string {

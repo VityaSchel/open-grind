@@ -126,6 +126,22 @@ describe("picking media for an album", () => {
 		);
 	});
 
+	it("gives one toast however many picks it refuses for the same reason", async () => {
+		picker.pickMultipleMedia.mockResolvedValue([
+			desktopPick("a", "application/pdf"),
+			desktopPick("b", "text/plain"),
+		]);
+
+		expect(
+			await pickInspectedAlbumMedia({
+				room: { photos: true, videos: true },
+			}),
+		).toEqual([]);
+		expect(sonner.toast.error).toHaveBeenCalledExactlyOnceWith(
+			"That file isn't a photo or video",
+		);
+	});
+
 	it("discards a staged pick it refuses", async () => {
 		picker.pickMultipleMedia.mockResolvedValue([
 			{ source: "staged", key: "s", mimeType: null, id: "staged-1" },
